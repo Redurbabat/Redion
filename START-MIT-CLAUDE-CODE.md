@@ -329,8 +329,12 @@ Läufe einen echten Browser starten. Sonst braucht das Projekt nichts.
 
 Steht ausführlich in `CLAUDE.md`, hier die Kurzfassung:
 
-- **Keinen Bauschritt einführen.** Kein Vite, kein Webpack, kein React. Die
-  App muss per Doppelklick auf `index.html` laufen — das ist der Kern.
+- **Keinen Bauschritt für die NUTZUNG einführen.** Die App muss per
+  Doppelklick auf `index.html` laufen — das ist der Kern. React gibt es seit
+  E699 nur als Inseln aus dem Touch Kit: Vite baut sie beim Entwickeln
+  (`npm run bauen:ts`), das Ergebnis liegt fertig unter `quell/`, und beim
+  Start wird es nicht einmal geladen. Keine zweite Oberfläche, keine neue
+  Seite, kein Router, kein Webpack — `test578` prüft es.
 - **Keine Schlüssel im Code.** Der KI-Schlüssel wird von dir in einem Feld
   eingetragen und bleibt im Browser.
 - **Auf deinem Rechner nichts hochladen.** Commits ja, `push` machst du

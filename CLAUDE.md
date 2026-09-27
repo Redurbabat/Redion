@@ -199,9 +199,13 @@ fragen**, nicht anfangen und hinterher erklären.
 
 **Redion ist nicht:**
 
-- ein React-Projekt — E78 hat es am 8. August 2026 kurz beschlossen, E80 hat
-  es am 9. August nach Ansicht des Rohbaus widerrufen. Redur braucht keine
-  zweite Oberfläche.
+- eine React-App. React ist seit **E699** (27. September 2026, Redur: „du
+  kannst react nutzen keien problem") erlaubt — aber nur als **Inseln**:
+  Bauteile aus Redurs Touch Kit, die an einer Stelle der bestehenden Schale
+  ein Element ersetzen. Was E80 am 9. August gesagt hat, gilt weiter und
+  wird geprüft: **Redur braucht keine zweite Oberfläche** — ein Einstieg,
+  keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht (§6,
+  `test578`).
 - ein schweres Framework-Projekt
 - eine Server-only-App oder eine reine Wolken-App
 - ein Projekt mit Pflichtkonto oder Abo-Zwang
@@ -278,6 +282,7 @@ Bedeutung der vier Teile unter `quell/`:
 | Was | Wohin | Was daraus wird |
 |---|---|---|
 | Code, den der Browser lädt | `src/…/name.ts` | `npm run bauen:ts` → `quell/…/name.js`, mitversioniert |
+| eine React-Insel (E699) | `src/islands/name.tsx`, Bauteile aus `fremd/touch/` | `npm run bauen:inseln` (Teil von `bauen:ts`) → `quell/islands/islands.js` + `.css`, mitversioniert |
 | Code, den Node ausführt (Prüfläufe, Werkzeuge, Server) | `pruefungen/lauf/testNNN.mts`, `*.mts`, `server/**/*.ts` | nichts — Node führt die Datei unmittelbar aus |
 
 ---
@@ -372,18 +377,39 @@ register/ansichten.js    register/formeln.js
 
 ## 6. Kein Framework-Zwang  **[hart]**
 
-Redion läuft bewusst ohne Browser-Framework.
+Redion läuft ohne Framework-ZWANG: die Schale ist klassisches TypeScript,
+und wer Redion öffnet, braucht weder Node noch npm noch einen Bauschritt.
 
 Nicht einführen ohne sehr starken Grund und ohne eigene Entscheidung in
-`ENTSCHEIDUNGEN.md`: **React, Vue, Svelte, Angular, Next.js**, grosse
-UI-Bibliotheken, grosse State-Management-Bibliotheken, **Bündel-Zwang für die
-normale Nutzung**.
+`ENTSCHEIDUNGEN.md`: **Vue, Svelte, Angular, Next.js**, grosse
+UI-Bibliotheken, grosse State-Management-Bibliotheken, Router, **Bündel-Zwang
+für die normale Nutzung**.
 
-Am 8. August 2026 wurde mit **E78** kurz eine React-Zielarchitektur
-beschlossen und als Rohbau begonnen. Redur hat sie am 9. August nach Ansicht
-des Rohbaus **widerrufen (E80)**. Diese Regel gilt damit unverändert weiter —
-und dieser Absatz steht hier, damit niemand den Versuch für eine offene Frage
-hält.
+**React hat diese Entscheidung: E699** (27. September 2026). Redur: „du kannst
+react nutzen keien problem", im Fragebogen „Mit React (E80 aufheben)".
+Erlaubt ist React als **Inseln** — Bauteile aus Redurs Touch Kit, die an einer
+Stelle der Schale ein Element ersetzen. Die Geschichte davor: E78 beschloss am
+8. August eine React-Zielarchitektur mit eigener Schale, E80 hat sie am
+9. August nach Ansicht des Rohbaus widerrufen, weil **Redur keine zweite
+Oberfläche braucht**. Dieser Satz gilt weiter — als fünf Regeln, die
+`test578` und `test579` prüfen:
+
+```txt
+R1  ein Einstieg        quell/start.js bleibt der einzige (§7); die Inseln
+                        tun beim Laden nichts
+R2  keine neue Seite    keine HTML-Datei ausser index.html lädt React; kein
+                        type="module"
+R3  kein Router         die Schale navigiert, keine Insel fasst Adresse oder
+                        Verlauf an
+R4  an Ort und Stelle   eine Insel ersetzt ein vorhandenes Element — dieselbe
+                        Stelle, derselbe Auslöser, dieselben Daten
+R5  nur Ansicht         Props hinein, Rückrufe hinaus; nie Store, IndexedDB,
+                        localStorage, innerHTML
+```
+
+React kommt nicht beim Start, sondern mit `Inseln.bereit()` beim ersten
+Gebrauch (78 KB über die Leitung, `test388` §5), und `dependencies` bleibt
+leer: React liegt eingepackt in `quell/fremd/react/` wie pdf.js (§57).
 
 Die App muss weiterhin auf **beiden** Wegen funktionieren:
 
@@ -876,6 +902,14 @@ rechnet eine Prüfsumme über den `GRUNDSTOCK` und hebt `VERSION` in
 deshalb **zwei** Einträge: das `<script>` in `index.html` **und** die Zeile
 im `GRUNDSTOCK`.
 
+Was erst beim Gebrauch nachgeladen wird, steht NICHT in `index.html`, aber
+trotzdem im `GRUNDSTOCK` — sonst fehlt es offline: pdf.js (E389), die Chronik
+(E613) und seit E699 React und die Inseln
+(`quell/fremd/react/react.js`, `quell/islands/islands.js`, `.css`, dazu ihr
+Lader `quell/schale/inseln/laden.js`). Der GRUNDSTOCK ist die Ablage, nicht
+die Startliste. Und weil der Dienststand die Bytes des Grundstocks rechnet,
+baut `npm run bauen:ts` die Inseln ZUERST.
+
 ---
 
 ## 29. Einzeldatei-Regeln  **[hart]**
@@ -894,7 +928,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 519 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 521 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1343,19 +1377,51 @@ steht — wer auf zwei Zweigen zugleich zählt, zählt doppelt. Gezählt am
 27. September, beim Zusammenführen: `ls pruefungen/lauf/test*.mts | wc -l`
 sagt 519.*
 
+*Und 520: `test578` — die React-Inseln, gebaut, eingepackt und
+nachgerechnet (E699). Er liest nur Dateien, baut aber selbst: `bauen-inseln.mts`
+zweimal nach /tmp, Byte für Byte gegen das, was im Verzeichnis liegt, und
+zweimal gegeneinander. Sein Kern ist ein Satz aus E80, der seit dem
+9. August nur ein Satz war — „Redur braucht keine zweite Oberfläche" —
+und hier fünf Zeilen geworden ist. Und seine eigenartigste Zusage prüft
+etwas, das NICHT geschieht: die Bündel werden in einer Nachbildung von
+`document` und `window` ausgewertet, die jeden Griff mitschreibt, und das
+Inselbündel darf keinen einzigen tun. Gezählt am 27. September, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 520.*
+
+*Und 521: `test579` — dieselben Inseln im Browser, auf allen drei Wegen,
+auf denen Redion startet: per Doppelklick, als Einzeldatei allein im
+Ordner, und über das Netz mit dem Dienst-Arbeiter und dann ohne Netz. Zwei
+seiner Zusagen hat er im ersten Lauf gegen MICH gefunden: die Fehlergrenze
+meldete über `reportError`, und in der Fehlerliste stand „Script error." —
+unter `file://` schwärzt der Browser die Meldung (L223); und seine eigene
+Messung „was holte der Start?" war unter `file://` blind, was nur seine
+Gegenprobe zeigte. Gezählt am 27. September, im selben Bogen: der Befehl
+sagt 521.*
+
 ### Die Befehle
 
 ```txt
-npm install                          einmalig
+npm install                          einmalig (auch Vite und React, E699)
 npx playwright install chromium      einmalig
-npm run typecheck                    Typen (ändert nichts, prüft alles)
-npm run bauen:ts                     src/**.ts  →  quell/**.js
+npm run typecheck                    Typen (ändert nichts, prüft alles —
+                                     auch die Inseln: tsconfig.islands.json)
+npm run bauen:ts                     IN DIESER FOLGE: 1. die Inseln
+                                     (bauen-inseln.mts → quell/fremd/react/,
+                                     quell/islands/), 2. src/**.ts →
+                                     quell/**.js, 3. dienststand.mts rechnet
+                                     den Grundstock, 4. stand.ts und sw.js
+npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
+npm run stand                        danach: prüft den Dienststand nach
+node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 519 Läufe
+npm run pruefen                      alle 521 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
-node bauen.mts                       redion-einzeldatei.html
-npm run stand                        prüft den Dienststand nach
 ```
+
+Die Folge ist keine Formsache: der Dienststand rechnet die Bytes des
+Grundstocks, und darin stehen die Inselbündel. Wer die Inseln nach dem
+Dienststand baut, liefert einen Dienst aus, der die alten Bytes für neu
+hält (E361, E699). Und die Einzeldatei setzt die Bündel ein — also zuletzt.
 
 Die Dateien heissen **`.mts`**, nicht `.mjs` — seit E28 gibt es keine von
 Hand geschriebene `.js` mehr im Projekt (§54).
@@ -1438,7 +1504,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 519 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 521 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
@@ -1806,7 +1872,8 @@ Die Kurzliste. Jeder Punkt hat oben seinen Abschnitt:
 
 | Nicht tun | Warum, siehe |
 |---|---|
-| React einbauen | §6 (E80 hat den Versuch widerrufen) |
+| React als zweite Oberfläche einbauen (eigene Seite, Router, eigene Schale, eigener Datenweg) — erlaubt sind nur Inseln an Ort und Stelle | §6 (E699; E80s Einwand als Regel, `test578`) |
+| React beim Start laden oder unter `dependencies` führen | §6, §36 (E699, `test388` §5, `test109`) |
 | die App von einem Bauschritt abhängig machen | §6, §52.4 |
 | IndexedDB durch LocalStorage ersetzen | §10 |
 | grosse Dateien in JSON/Base64 sichern | §9, §11 |
@@ -1924,9 +1991,14 @@ Claude soll neuen Code bevorzugt in TypeScript schreiben.
 Neue Dateien sollen, wenn möglich, diese Endungen nutzen:
 
 .ts
-.tsx nur wenn echte UI-Komponenten mit JSX nötig sind
+.tsx nur für die React-Inseln, und nur unter src/islands/
 
-Da Redion aktuell kein React-Projekt ist, soll .tsx nur verwendet werden, wenn später bewusst eine UI-Schicht mit JSX eingeführt wird.
+Diese UI-Schicht mit JSX ist seit E699 bewusst eingeführt: die Inseln aus
+Redurs Touch Kit. Ihr TSX baut `bauen-inseln.mts` (Vite) zu klassischen
+Skripten nach `quell/islands/`; geprüft wird es mit `tsconfig.islands.json`
+(die Schalter des Kits — die Abweichung von 52.6 steht in E699 und L222;
+Redions eigener Inselcode hält die strengen Schalter, `test578` §8).
+Ausserhalb von `src/islands/` gibt es kein `.tsx`.
 
 Für normalen Redion-Code gilt:
 
@@ -2097,6 +2169,14 @@ Wenn React eingeführt werden soll, muss zuerst eine eigene Entscheidung dokumen
 ENTSCHEIDUNGEN.md
 
 Denn Redion ist nicht automatisch BABAT-RED. TypeScript ja, aber React nur nach Plan.
+
+**Der Plan steht seit dem 27. September 2026: E699.** Vite 8.3.1, React und
+React DOM 19.3.0 sind genau festgenagelt unter `devDependencies` — als
+Werkstoff für `bauen-inseln.mts`, nicht als Laufzeitpaket (`dependencies`
+bleibt leer, `test109`). Kein `@vitejs/plugin-react`: Vite übersetzt TSX
+selbst, gemessen Byte für Byte gleich. Kein Router, keine
+State-Management-Bibliothek, kein CSS-Framework. Die Befehle stehen in §30
+(„Die Befehle"); für die NUTZUNG braucht es keinen davon (52.4).
 
 
 
@@ -2650,11 +2730,14 @@ quell/ geschrieben.
 
 ### 53.5 Was das nicht heisst
 
-Kein React. TypeScript ja, React nur nach eigener Entscheidung in
-ENTSCHEIDUNGEN.md.
+Keine React-App. React nur als Inseln an Ort und Stelle (E699) — englisch
+benannt wie jeder neue Code (src/islands/main.tsx, mount, update), mit
+deutschen Kommentaren und deutschen Texten für Menschen.
 
 Keine Build-Pflicht. index.html doppelklicken muss weiter funktionieren, und
 redion-einzeldatei.html muss sich weiter mit node bauen.mts erzeugen lassen.
+Die Inseln ändern daran nichts: ihr Bau läuft beim Entwickeln, und das
+Ergebnis liegt mitversioniert unter quell/ (§54.2).
 
 Kein grosser Umbau auf einmal. Die Phasen stehen in AUFGABEN.md.
 
@@ -2677,6 +2760,7 @@ Beschlossen in ENTSCHEIDUNGEN.md E28. Der ganze Abschnitt in einem Satz:
 ### 54.1 Was benutzt wird
 
 TypeScript   neuer Hauptcode, Typen, Kernlogik, neue Module
+             (dazu TSX — nur unter src/islands/, die React-Inseln, E699)
 JavaScript   nur der bestehende Redion-Code — migrieren, nicht vermehren
 HTML         Startdatei, App-Grundseite, Einzeldatei
 CSS          Aussehen, Aufbau, Hell/Dunkel, Telefon
@@ -2700,6 +2784,18 @@ Code, den der BROWSER lädt:
 
 Das erzeugte .js wird mitversioniert. Es ist Ausgabe, kein Quelltext — und
 es ist der Grund, warum die App weiterhin per Doppelklick startet.
+
+Eine React-INSEL (E699) — die dritte Sorte erzeugtes JavaScript:
+
+    src/islands/name.tsx     wird bearbeitet (Bauteile aus fremd/touch/)
+    npm run bauen:inseln     Vite baut zwei klassische Skripte:
+                             quell/fremd/react/react.js  (React, fremd)
+                             quell/islands/islands.js + .css
+    Inseln.bereit()          lädt sie beim ersten Gebrauch
+
+Auch das ist Ausgabe und wird mitversioniert; `test578` baut sie neu und
+vergleicht Byte für Byte, so wie `test105` es für tsc tut, und
+`pruefungen/buendel-bestand.json` sagt `test109`, dass sie erzeugt sind.
 
 Code, den NODE ausführt — Prüfläufe, bauen, Server:
 
@@ -2738,15 +2834,21 @@ nicht mehr nur Absicht, sondern Zustand. Ein leeres Verzeichnis heisst
 deshalb nicht „gibt es nicht mehr", sondern „ab hier gibt es nichts mehr
 umsonst": die erste neue .js macht test109 rot.
 
-Erzeugtes JavaScript zählt nicht mit; test105 hält es an seiner .ts.
+Erzeugtes JavaScript zählt nicht mit; test105 hält es an seiner .ts, und
+test578 die Bündel der Inseln an ihrer .tsx (E699). Ein Bündel zählt für
+test109 aber nur, wenn Quelle, Bau und Wächter wirklich daliegen — ein
+Eintrag allein entlastet nichts.
 
 ### 54.5 Was das nicht heisst
 
 Nicht: den Bestand in einem Zug übersetzen. Die Reihenfolge steht in
 doku/TYPESCRIPT-MIGRATION.md und beginnt dort, wo ein Fehler nichts kostet.
 
-Nicht: einen Bauschritt für die App einführen. Das bleibt verboten (§6). Die
-zwei Wege oben kommen ohne aus, und genau deshalb sind es diese zwei.
+Nicht: einen Bauschritt für die NUTZUNG der App einführen. Das bleibt
+verboten (§6). Die zwei Wege oben kommen ohne aus, und genau deshalb sind es
+diese zwei. Die Inseln (E699) haben einen Bauschritt — für den, der sie
+ändert, so wie `bauen:ts` für den, der TypeScript ändert. Wer Redion öffnet,
+bekommt das Ergebnis fertig.
 
 
 # Teil XII — Hinsehen
@@ -2902,7 +3004,8 @@ Redion verbessert.** Mit drei Bedingungen, die keine Abwägung kennen:
   Herkunft, Fassung, Lizenz, was es verbessert, was daran geändert ist,
   welcher Wächter es hält. Ein fremdes Stück ohne Eintrag ist ein Fehler.
 
-Was bleibt: §6 (kein Framework ohne eigene Entscheidung), §54 (kein
+Was bleibt: §6 (kein Framework ohne eigene Entscheidung — für React ist es
+E699), §54 (kein
 handgeschriebenes JavaScript — Fremdes kommt eingepackt und geprüft wie
 pdf.js, oder als TypeScript mit Herkunftsvermerk), §19/§20 (kein `eval`,
 kein Fremdcode aus Formeln). Lizenzen: MIT, BSD, Apache-2.0, ISC mit

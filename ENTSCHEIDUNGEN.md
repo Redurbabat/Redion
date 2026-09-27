@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-678 Entscheidungen, E1 bis E698 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+679 Entscheidungen, E1 bis E699 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -741,6 +741,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E696** — Eine Seitenspalte endet im Fenster: die Studioleiste links/rechts war `78vh` hoch, egal wo sie begann, und seit E690 fiel ihr Griff unter den Fensterrand; jetzt rechnet `marken.ts` den Platz unter der Hülle (`--reihe-platz`). Dazu `test533` von 13 auf 14 Werkzeuge nachgezogen, eine Woche nach E670 (`test534`, gebisected auf 4d7436d)
 * **E697** — Direkte Farbwahl und unterbrechungsfreier Freitext: benannte Stift-/Markerpalette, Hex-Feld, echte Deckung in der Vorschau, dieselbe Farbaktion wie im Dock. Textentwurf und Cursor überleben den Farbwähler; Eingabegeometrie höchstens einmal pro Bild, IME-Escape beendet nicht den Text. Auch aufgeklappt bleibt Zubehör werkzeugbezogen. Bestehende Marken, Farbsätze, Werkzeuggedächtnis und eigene Ordnung bleiben. Wächter `test577`, Nachbarn `test458`, `test515`, `test524`, `test527` und Stiftregressionen. *(kam als E681/test568 über `main`; beim Zusammenführen umnummeriert)*
 * **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
+* **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
 
 ---
 
@@ -2906,6 +2907,13 @@ mitgezogen.
 ---
 
 ## E43 · Bewegung: drei Dauern, drei Kurven, keine Federn
+
+> **Ergänzt durch E699 (27. September 2026) — für die Bauteile des Touch
+> Kits.** Redur: „Wie im UI-Kit überall". In den React-Inseln fahren die
+> Bauteile die Federn des Kits samt Überschwingen; ihre Kurven stehen im
+> Inselblatt (`quell/islands/islands.css`), nicht in `grund.css`. Für
+> Redions eigene Bewegung gilt dieser Eintrag unverändert, und `test126`
+> prüft ihn weiter.
 
 **Woher das kommt.** Redurs Vorgabe zum Bewegungssystem, und der Satz, der
 sie zusammenfasst: *„Animations must improve clarity, not distract."*
@@ -5814,6 +5822,14 @@ Vergleich sie freigibt.
 ---
 
 ## E80 · Der React-Umbau ist widerrufen — Redur braucht keine zweite Oberfläche
+
+> **WIDERRUFEN durch E699 am 27. September 2026.** Redur: „du kannst react
+> nutzen keien problem" und „Mit React (E80 aufheben)". Aufgehoben ist das
+> VERBOT von React — nicht der Satz, der diesen Eintrag trägt: „Redur
+> braucht keine zweite Oberfläche" gilt weiter und ist in E699 zu fünf
+> Regeln geworden, die `test578` und `test579` prüfen (ein Einstieg, keine
+> neue Seite, kein Router, an Ort und Stelle, nur Ansicht). Der Eintrag
+> bleibt als Geschichte stehen.
 
 **Datum** 9. August 2026 · **Entschieden von** Redur · **widerruft** E78
 
@@ -52942,6 +52958,12 @@ neuen zwei nicht besser halten.
 
 ## E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet
 
+> **Ergänzt durch E699 (27. September 2026) — für die Bauteile des Touch
+> Kits.** Redur: „Wie im UI-Kit überall". Die kritisch gedämpfte Feder
+> (ζ = 1) unten gilt weiter für Redions untere Leiste und die Werkzeugleiste;
+> die Bauteile des Kits in den React-Inseln federn wie im Kit, mit
+> Überschwingen.
+
 Redur hat am 20. September um 10:12 Uhr eine Aufnahme der unteren Leiste
 geschickt und gefragt: *„Denkst du ist das so gut?"* — dazu sieben Punkte
 und einen fertigen Auftrag.
@@ -56998,3 +57020,268 @@ Stiftpalette, und die Farbe ist dieselbe wie bei jedem anderen Fehler.
 `test105`, `test109`, `test143`, `test225`, `test353`, `test549`, `test550`,
 `test102`, `test131` grün; `npm run typecheck` sauber; `npm run bauen:ts`
 (Dienststand v1372) und `node bauen.mts` neu erzeugt.
+
+---
+
+## E699 — React als Inseln in der bestehenden Schale: E80 ist aufgehoben, sein Einwand wird Regel
+
+**Datum:** 27. September 2026 · **Entschieden von** Redur · **widerruft** E80
+· **ergänzt** E43 und E646 für die Bauteile des Touch Kits · **Wächter:**
+`test578` (Dateien, ohne Browser) und `test579` (im Browser, drei Startwege)
+· **Stufe 1a** — die Grundlage; noch ersetzt keine Insel etwas Sichtbares.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 11:00 UTC   „du kannst react nutzen keien problem"
+ca. 11:05 UTC   im Fragebogen: „Mit React (E80 aufheben)"
+ca. 11:26 UTC   zu den Federn: „Wie im UI-Kit überall"
+ca. 11:27 UTC   je Stück (§57): „React 19.3.0, Touch Kit (dein UI-Kit),
+                Glas-Code (ALEXalesha, MIT)"
+ca. 11:27 UTC   zum Aussehen: „Also beiden bei der ausehen dort aollte ich
+                die fraben ändern kann"
+```
+
+**Was war.** E78 hat am 8. August eine React-Zielarchitektur beschlossen,
+und binnen eines Tages stand ein Rohbau daneben: `app.html`, Router,
+eigene Schale, eigener Datenweg (Dexie, Zod, ProseMirror). Redur sah das
+Bild und fragte „Nein, ich brauche keine neue Shell?" — E80 hat alles
+wieder entfernt, und seither sagten §2, §6, §47 und §53.5: kein React. Seit
+E639/E640 ist das UI-Kit Redurs verbindliches Design-System; Redion hat
+seine Muster bisher von Hand in TypeScript nachgebaut (die Pille der
+unteren Leiste, `selection-flow.ts`) — ein ganzer Bogen für ein Bauteil.
+
+**Was entschieden wurde.**
+
+1. **React kommt — als Inseln, nicht als zweite App.** Eine Insel ist ein
+   Stück Oberfläche aus dem Touch Kit, das an GENAU EINER Stelle der
+   bestehenden Schale steht. Die Schale bleibt, wie sie ist; sie hängt eine
+   Insel mit `(await Inseln.bereit()).mount(element, 'name', props)` dort
+   ein, wo vorher ein Element von Hand gebaut wurde.
+
+2. **E80s Einwand bleibt — und wird zu fünf Regeln, die ein Lauf prüft**
+   (`test578` §5 und §6, `test579` §1–§3). „Redur braucht keine zweite
+   Oberfläche" hiess am 9. August: kein zweites Programm neben dem ersten.
+   Das gilt weiter, nur jetzt nachprüfbar:
+
+   ```txt
+   R1  EIN Einstieg      quell/start.js bleibt der einzige (§7). Die Inseln
+                         tun beim Laden NICHTS: kein Element, kein
+                         Beobachter, kein Zeitgeber (in einer Nachbildung
+                         ausgewertet und mitgeschrieben).
+   R2  KEINE neue Seite  keine HTML-Datei ausser index.html lädt React oder
+                         die Inseln, und keine ist ein Modul.
+   R3  KEIN Router       keine Insel fasst Verlauf oder Adresse an — die
+                         Schale navigiert.
+   R4  AN ORT UND STELLE eine Insel ersetzt ein vorhandenes Element an
+                         derselben Stelle, mit demselben Auslöser und
+                         denselben Daten. In Stufe 1a noch keines: der
+                         Katalog hat genau die Probe für test579, und keine
+                         Stelle der App ruft mount.
+   R5  NUR ANSICHT       Props hinein, Rückrufe hinaus. Keine Insel liest
+                         oder schreibt Store, IndexedDB, localStorage, keine
+                         setzt innerHTML (§9, §10, §19).
+   ```
+
+   E78s drei Regeln gelten sinngemäss weiter: eine Datenquelle, die
+   bestehende App bleibt grün, kein Umbau auf einmal — Stufe für Stufe,
+   jede mit ihrem Bild.
+
+3. **Gebaut wird mit Vite 8 zu zwei klassischen Skripten** (`bauen-inseln.mts`):
+   `quell/fremd/react/react.js` (React 19.3.0 + React DOM + scheduler, ein
+   globaler Name `RedionReact`) und `quell/islands/islands.js` + `.css`
+   (die Inseln und genau die Bauteile des Kits, die sie brauchen; React
+   von aussen). Beide sind Ausgabe und werden mitversioniert, wie
+   `quell/**.js` aus tsc (§54). Gleiche Quelle, gleiche Bytes — `test578`
+   §1 baut nach /tmp und vergleicht Byte für Byte, und die Prüfsumme von
+   `react.js` steht in `pruefungen/fremd-bestand.json`. `npm run bauen:ts`
+   ruft den Bau ZUERST, damit `dienststand.mts` die frischen Bytes in den
+   Stempel rechnet (E361).
+
+4. **React kommt NICHT beim Start** (E389, E613, E688). Gemessen am
+   27. September holte der Start 2761 KB unter einer Decke von 2850 —
+   89 KB Luft. React und die Inseln sind 78 KB über die Leitung (gzip:
+   69 + 4 + 5). Also wie pdf.js und die Chronik:
+
+   ```txt
+   beim ersten Gebrauch   Inseln.bereit() hängt Skripte ein (kein fetch,
+                          §6: file://), einmal, das Versprechen wird behalten
+   im Leerlauf danach     vorgewärmt — aber NUR, wo es nichts über die
+                          Leitung kostet: von der Platte, aus der
+                          Einzeldatei, oder unter einem Dienst-Arbeiter
+   in der Einzeldatei     drei Behälter <script type="text/plain"> an der
+                          Marke „inseln-daten"; der Parser liest sie, führt
+                          sie aber nicht aus. Erst bereit() macht daraus
+                          Skripte (Blob-Adressen, wie pdf.js) und ein
+                          Stilblatt
+   offline                alle vier Dateien im GRUNDSTOCK von sw.ts (§28)
+   ```
+
+   Gemessen danach: **2767 KB** (+6, der Lader mit seinem Kommentar und die
+   Marke in index.html). Und die Gegenprobe zeigt, warum die Decke allein
+   nicht reicht: mit Vorwärmen auf JEDEM Weg holte der Start **2843 KB —
+   sieben unter der Decke**. Sie hätte es nicht gemerkt. `test388` §5 sagt
+   es deshalb ausdrücklich: React und die Inseln kommen beim ersten Besuch
+   über das Netz gar nicht, auch nicht in den Sekunden danach.
+
+   Warum überhaupt vorwärmen: `Inseln.bereit()` braucht kalt nach dem Laden
+   73 ms (Ordner) bzw. 57 ms (Einzeldatei), mit vierfach gedrosselter CPU
+   rund 200 ms (messungen.md §71). Ein Dialog, der beim ersten Mal eine
+   Fünftelsekunde zu spät kommt, fühlt sich kaputt an.
+
+5. **Beides beim Aussehen.** Die Bauteile des Kits tragen Redions Farben:
+   `src/islands/bridge.css` zeigt jede Marke des Kits (`--ui-color-*`,
+   `--ui-font-*`, Radien, `--ui-z-*`) auf Redions Marke (`--accent`,
+   `--auf-accent`, `--text`, `--text-dim`, `--bg`, `--bg-card`, `--line`,
+   `--gefahr`, `--erfolg`, `--font`, `--sheet-radius`, die Ebenen 700 / 760
+   / 800 / 900) — als glatte Werte, ohne `light-dark()`, das Safari erst ab
+   17.5 kennt (Redion läuft ab iOS 16.4, §37). Jedes Schema aus „Aussehen"
+   erreicht damit jede Insel, ohne eine Zeile Inselcode (`test579` §4). Und
+   der Look des Kits ist selbst ein Schema: **„Touch Kit hell" und „Touch
+   Kit dunkel"**, zwei Karten wie „Standard" und „Hell", weil ein Schema in
+   Redion zu EINEM Grundton gehört; die Staffelei merkt sich je Grundton das
+   zuletzt gewählte (`test579` §5). Die Werte sind die Palette aus
+   `fremd/touch/tokens.css`; wo das Kit keine eigene Farbe hat (gedrückt,
+   Eingabefeld), ist seine Füllung über seiner Fläche ausgerechnet. Der
+   dunkle Akzent des Kits ist ein HELLES Violett — Weiss darauf hätte
+   2,38 : 1, also bringt das Schema seine Schrift darauf mit (8,23 : 1).
+
+   `data-ui-theme` spiegelt `data-theme` am Wurzelelement — aber erst mit
+   der ersten Insel, und nur als Etikett: `color-scheme` bleibt am
+   Wurzelelement, wie es war, und gilt nur an den Inseln. Sonst wechselten
+   Bildlaufleisten und Datumsfelder der ganzen App in dem Moment, in dem
+   die erste Insel lädt — die leise Fassung einer zweiten Oberfläche.
+
+6. **Federn wie im Kit — für die Bauteile des Kits.** Redur: „Wie im UI-Kit
+   überall". Die Bauteile behalten die Federn des Kits samt Überschwingen
+   (`press` Bounce 0,3, `snappy` 0,14, `bouncy` 0,36). Das ergänzt E43
+   („keine Federn") und E646 (nur ζ = 1) — für die Kit-Bauteile, nicht für
+   Redions eigene Bewegung: `grund.css`, `test126` und die Pille der unteren
+   Leiste bleiben, wie sie sind. Die Kurven des Kits stehen im Inselblatt,
+   nicht in `grund.css`. „Ruhige Darstellung" hält das Kit an (Redions
+   Regel mit `!important`; das fehlende `::after` ergänzt die Brücke), und
+   „weniger Bewegung" im System auch (`test579` §6). Die Federn des Kits in
+   JavaScript kennen nur die Systemeinstellung — offen in L222, der Haken
+   gehört nach UI-Kit.
+
+7. **Fremdes, je Stück (§57), und die fünf Punkte aus E26.**
+
+   ```txt
+   Stück            Fassung                     Lizenz      Wo
+   React            react 19.3.0, react-dom     MIT         quell/fremd/react/
+                    19.3.0, scheduler 0.28.0                (Prüfsumme je Datei)
+   Touch Kit        UI-Kit @c192821 (Zweig      eigener     fremd/touch/ (nicht
+                    claude/apple-ui-kit-react-  Code von    ausgeliefert, nur
+                    i2ew4y), ohne Vitest        Redur       das Bündel)
+   Glas-Code        ALEXalesha/LiquidGlass      MIT         fremd/touch/glass/
+                    @34d616f, angepasst                     field.ts, filter.ts
+   ```
+
+   *Echter Nutzen, keine kleine Alternative:* das Kit ist Redurs
+   Design-System, geschrieben in React und dort geprüft; es von Hand
+   nachzubauen hiesse, für jedes Bauteil einen Bogen wie die Pille. *Offline
+   nutzbar:* eingepackt, im GRUNDSTOCK und in der Einzeldatei, nichts aus
+   dem Netz zur Laufzeit (`test579` §9, §10). *Lizenz passt:* MIT, und das
+   Kit gehört Redur. *Tests vorhanden:* `test578`, `test579`. *Grösse
+   vertretbar:* nicht im Startweg; die Einzeldatei wächst um 270 KB
+   (11,32 → 11,59 MB, +2,4 %).
+
+   `dependencies` bleibt LEER: React ist Werkstoff (festgenagelt unter
+   `devDependencies`), nicht Laufzeitpaket; ausgeliefert werden die Bytes
+   in `quell/fremd/react/` (`test109`). Das Kit liegt als Kopie unter
+   `fremd/touch/` — ausserhalb von `src/`, weil rund vierzehn Läufe
+   `src/**` lesen und das Kit dort Dinge melden würden, die in Redion nicht
+   gelten (`test401` etwa über `navigation/viewTransition.ts`). Geholt wird
+   es nur mit `skripte/touch-holen.mts` aus einem Commit; jede Datei steht
+   mit Prüfsumme in `fremd/touch/HERKUNFT.txt`, deren Summe in
+   `fremd-bestand.json`. Von Hand geändert wird darin nichts (`test578` §3).
+
+8. **Die Typen.** `tsconfig.islands.json` prüft die Inseln und das Kit mit
+   den Schaltern des Kits, und das ist eine Abweichung von §52.6 mit Grund:
+   unter Redions Schaltern hat das Kit bei c192821 **73 Fehler** (56 aus
+   `noUncheckedIndexedAccess`, 15 aus `exactOptionalPropertyTypes`, 2 aus
+   `noImplicitReturns`). TypeScript prüft ein Programm mit EINEM Satz
+   Schalter, und im Kit von Hand ändern ist verboten. Redions eigener Code
+   darin hält die strengen Schalter trotzdem: `test578` §8 prüft
+   `src/islands/` mit ihnen — null Fehler. Offen in L222, bis UI-Kit den
+   strengen Durchgang selbst macht. `npm run typecheck` fährt beides, und
+   `test105` §3 auch.
+
+9. **Was verboten bleibt:** eine zweite Schale, ein Router, ein eigener
+   Datenweg (Dexie, Zod, ProseMirror), React unter `dependencies`, ein
+   Bauschritt für die NUTZUNG (§6 — wer Redion öffnet, braucht weder Node
+   noch npm; nur wer die Inseln ändert), `.tsx` ausserhalb von
+   `src/islands/`, und eine Insel, die Daten anfasst.
+
+10. **Die Stufen.** 1a (hier): Grundlage und Probe. 1b: die Dialoge —
+    `Dialog.frage`, `Dialog.wahl`, `Dialog.mehrzeilig` und die
+    verbliebenen `confirm`/`prompt` — mit dem gemeinsamen Escape (E302)
+    und `Fokus`, deren Zusammenspiel mit dem Kit dort gelöst wird, bevor
+    der erste Dialog umzieht. Danach Meldungen, Blätter, Menüs; jede Stufe
+    ein eigener Bogen mit ihren Bildern.
+
+**Die Alternativen.** (a) E80 bleibt und das Kit wird Bauteil für Bauteil
+von Hand übersetzt — das ist der bisherige Weg, und er kostet je Bauteil
+einen Bogen. (b) React in den Startweg und die Decke anheben wie E688 —
+78 KB bei jedem Start für etwas, das beim Start niemand sieht. (c) EIN
+Bündel mit React und Inseln — funktioniert, aber dann stehen fremde Bytes
+und Redions Code in einer Datei, und keins von beiden ist nachrechenbar.
+(d) Import-Maps oder `type="module"` — gemessen: unter `file://` blockiert
+(„Access to script … blocked", net::ERR_FAILED). (e) tsc mit klassischem
+JSX und einem React zum Einbinden — React 19 liefert keine solche Fassung
+mehr, das Kit importiert sein CSS, und `module: none` ist in TypeScript 6
+veraltet und in 7 fort (gemessen, TS5107/TS6046). (f) Vite aus dem
+Ordner des UI-Kits statt eigener Pakete — nicht wiederholbar, und die CI
+hätte keinen UI-Kit-Ordner. (g) Das Kit unter `src/touch/`, wie seine
+Anleitung es vorschlägt — vierzehn Läufe hätten es gelesen.
+
+**Was es kostet.**
+
+- Einen Bauschritt für den, der die Inseln ändert: `npm install` und
+  `npm run bauen:ts`. Wer Redion benutzt, braucht nichts davon.
+- Vier erzeugte Dateien, deren Diff niemand lesen kann — `test578` §1 ist
+  deshalb die eigentliche Durchsicht, und er läuft im schnellen CI-Lauf.
+- 518 KB Kit-Kopie unter `fremd/` (nicht ausgeliefert, `.assetsignore`),
+  270 KB mehr Einzeldatei, 6 KB mehr Start.
+- Eine zweite Bewegungssprache in den Bauteilen des Kits (die Federn) und
+  eine zweite Markensprache (`--ui-*`) hinter der Brücke. Beides mit Namen
+  und an einem Ort, aber es ist da.
+- Eine Abweichung von §52.6 (die Schalter des Kits), bis UI-Kit nachzieht.
+- Das Kit lässt sich hier nicht reparieren. Was es anders braucht, steht als
+  Wunsch an UI-Kit in L222: der strenge Typdurchgang, ein Haken für
+  „ruhige Darstellung", die Reihenfolge `-webkit-backdrop-filter` VOR
+  `backdrop-filter` (lightningcss fasst die umgekehrte Folge zu EINER
+  zusammen, und Chrome hätte dort kein Glas — im Inselblatt steht dafür eine
+  benannte Ausnahme, `test578` §9), der MIT-Text des Glas-Codes im Anhang
+  von HERKUNFT.md (die Dateien verweisen dorthin, der Anhang sagt bei
+  c192821 „keine Code-Übernahme"), und c192821 auf `main` statt nur auf
+  einem Zweig.
+
+**Gefunden auf dem Weg.**
+
+- **Die Fehlerliste schwärzt im Ordnerbetrieb.** Die erste Fehlergrenze
+  meldete über `reportError`, und in der Fehlerliste stand „Script error."
+  — unter `file://` ist jede Datei ihr eigener Ursprung, und der Browser
+  schwärzt die Meldung für `window.onerror`. Nachgemessen: das gilt für
+  JEDEN unbehandelten Fehler aus Redions eigenen Skripten, nicht nur für
+  die Inseln (L223). Die Inseln melden jetzt als Ereignis an den Lader, der
+  gibt es an `Reporter.error` — und dort steht der Text (`test579` §8).
+- **`performance.getEntriesByType('resource')` ist unter `file://` leer.**
+  Der erste Entwurf von `test579` §1 mass damit und wäre blind grün
+  gewesen; seine Gegenprobe hat es gezeigt.
+- **`test362` ist auf `main` rot, seit dem Zusammenführen von E697**
+  (`0f73ba1d`): 66 rohe `28px` gegen eine Decke von 65. Nicht durch diesen
+  Bogen — nachgezählt über die Stände davor; ein eigener Bogen „rot zuerst".
+
+**Geprüft:** `test578`, `test579` neu und grün (vorher rot eingecheckt);
+Nachbarn `test87`, `test105`, `test109`, `test143`, `test225`, `test270`,
+`test290`, `test353`, `test388`, `test400`, `test401`, `test402`, `test410`,
+`test412`, `test537`, `test549`, `test550`, `test576`, `test47`, `test510`;
+`test362` rot wie auf `main`. `npm run typecheck`, `npm run bauen:ts`,
+`npm run stand`, `node bauen.mts`.
+
+**Nachbarn, die dafür erweitert wurden — keiner abgeschwächt:** `test109`
+(Bündel zählen nur mit Beweis; React und Vite genau festgenagelt),
+`test105` §3 (der Typcheck der Inseln), `test388` §5 (React nicht beim
+Start), `test290` (das Inselblatt nimmt keinen Namensraum der Schale),
+`test47` und `test510` (zehn Schemata statt acht).

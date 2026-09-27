@@ -8348,6 +8348,81 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L223 · Im Ordnerbetrieb steht in der Fehlerliste nur „Script error." — 27. September 2026
+
+**Gefunden beim Bau von E699**, nicht gesucht. Die erste Fehlergrenze der
+React-Inseln meldete über `reportError` — also über denselben Weg, den jeder
+unbehandelte Fehler in Redion nimmt: `Pflege` hört auf `window` „error" und
+schreibt die Meldung in die Fehlerliste („Erste Hilfe → Fehler ansehen").
+`test579` §8 fand dort aber keinen Text, sondern:
+
+```txt
+{ text: "Script error.", wo: ":" }
+```
+
+**Nachgemessen, und es betrifft nicht nur die Inseln.** Ein Fehler aus
+Redions eigenem Code (`Sanitize.html` mit einem Wert, der beim Umwandeln
+wirft, aus einem Zeitgeber heraus) landet per Doppelklick (`file://`)
+genauso: „Script error." ohne Datei und ohne Zeile. Unter `file://` ist
+jede Datei ihr eigener Ursprung, und der Browser schwärzt Meldungen aus
+fremdem Ursprung für `window.onerror`. Die Fehlerliste — gebaut, damit ein
+Mensch später sieht, was schiefging (§7, `reporter.ts`) — ist im
+Ordnerbetrieb für unbehandelte Fehler also leer an Inhalt. Über das Netz
+und in der Einzeldatei (alles in einer Datei) gilt es nicht.
+
+**Die Inseln sind schon ausgenommen:** sie melden als Ereignis an ihren
+Lader, und der an `Reporter.error` — dort steht der Text (E699).
+
+**Was fehlt:** ein Weg, auf dem Redions eigene unbehandelte Fehler auch im
+Ordnerbetrieb ihren Text behalten. Denkbar: die Einstiegspunkte (Zeitgeber,
+Zuhörer der Schale) über `Reporter.guarded` laufen lassen, oder
+`crossorigin` prüfen (hilft unter `file://` vermutlich nicht). Zuerst ein
+Prüflauf, der den Fall per Doppelklick zeigt (§30), dann die Reparatur.
+
+---
+
+## L222 · Das Touch Kit in Redion: was upstream in UI-Kit noch fehlt — 27. September 2026
+
+**Seit E699** liegt das Touch Kit als Kopie von UI-Kit @c192821 in
+`fremd/touch/`, und hier wird darin nichts von Hand geändert. Fünf Dinge
+gehören deshalb nach UI-Kit, nicht nach Redion:
+
+```txt
+1  STRENGE TYPEN      Unter Redions Schaltern (§52.6) hat das Kit 73 Fehler:
+                      56 noUncheckedIndexedAccess, 15 exactOptionalProperty-
+                      Types, 2 noImplicitReturns. Bis UI-Kit den Durchgang
+                      macht, prüft tsconfig.islands.json mit den Schaltern
+                      des Kits — eine Abweichung von §52.6. Redions eigener
+                      Inselcode hält die strengen (test578 §8).
+2  RUHIGE DARSTELLUNG Die Federn des Kits in JavaScript (animateSpring,
+                      useReducedMotion) fragen nur das System
+                      (prefers-reduced-motion), nicht body[data-bewegung=
+                      "ruhig"]. Für CSS reicht Redions Regel; für die
+                      JS-Federn (Blatt, Navigation, Tab-Leiste — ab den
+                      Stufen, die sie benutzen) braucht es einen Haken im
+                      Kit, über den Redion „ruhig" melden kann.
+3  GLAS-REIHENFOLGE   Das Kit schreibt backdrop-filter VOR -webkit-backdrop-
+                      filter. lightningcss (im Bau von Vite) fasst diese Folge
+                      zu EINER Zeile mit Präfix zusammen — Chrome hätte kein
+                      Glas. Im Inselblatt ist das heute nur
+                      .ui-touch-button--glass, benannt als Ausnahme in
+                      test578 §9, von keiner Insel benutzt.
+4  LIZENZANHANG       glass/field.ts und glass/filter.ts verweisen für den
+                      MIT-Text auf HERKUNFT.md; dessen Anhang sagt bei
+                      c192821 „keine Code-Übernahme". Redion legt den Text
+                      daneben (glass/LIZENZ-ALEXalesha.txt).
+5  STABILER STAND     c192821 liegt auf dem Zweig claude/apple-ui-kit-react-
+                      i2ew4y, nicht auf main von UI-Kit.
+```
+
+**Was fehlt:** diese fünf in UI-Kit, dann `node skripte/touch-holen.mts
+<UI-Kit> <neuer Commit>`, die Prüfsummen in `fremd-bestand.json` nachziehen,
+und — für Punkt 1 — `tsconfig.islands.json` auf Redions Schalter stellen.
+Geschlossen ist die Lücke, wenn `test578` §8 das Kit mit Redions Schaltern
+prüft und die Ausnahme in §9 leer ist.
+
+---
+
 ## L221 · Die leichten Glasleisten sind gerechnet, nicht gemessen — 27. September 2026
 
 **Seit E695 gibt es zwei Glasdichten** mit einer Regel: Fläche mit Schrift
@@ -8818,8 +8893,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 26. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 117 Lücken, 62 offene und 55 geschlossene. Der Befehl dazu ist
+**Gemessen am 27. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 119 Lücken, 64 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

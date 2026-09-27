@@ -117,7 +117,7 @@ und sagte `bausteine.css`, die Animationsregeln kamen mit **E537** dazu, und
 die Spalte sagt jetzt `motion.css`, und dieser Abschnitt sagt, wo das
 Aussehen trotzdem liegt.
 
-## Ein Präfix ausserhalb der Zählung
+## Präfixe ausserhalb der Zählung
 
 `res-` gehört der UI-Reserve (`quell/entwicklung/ui-reserve/reserve.css`,
 E440). Die Datei liegt nicht unter `quell/schale/stil/` und wird von
@@ -125,6 +125,19 @@ E440). Die Datei liegt nicht unter `quell/schale/stil/` und wird von
 Tabelle, weil ein Tabelleneintrag ohne Vorkommen im Stil als Karteileiche
 gemeldet würde. Der Zweck ist derselbe: niemand vergibt `res-` ein zweites
 Mal.
+
+`ui-` gehört dem **Touch Kit** (E699), genauer `ui-touch-`: jede Klasse
+(`.ui-touch-button`, `.ui-touch-toggle-knob` …) und jede Keyframe-Folge des
+Kits beginnt so, jede Marke mit `--ui-` (`--ui-color-accent`,
+`--ui-spring-press`). Das CSS steht nicht in `quell/schale/stil/`, sondern
+wird von `bauen-inseln.mts` ins Inselblatt `quell/islands/islands.css`
+gebündelt — deshalb auch hier als Satz. `test290` §6 liest das Inselblatt
+trotzdem: kein Präfix darin darf der Schale gehören, und jedes muss in
+diesem Abschnitt stehen. `test578` §9 prüft zusätzlich, dass JEDE Klasse im
+Inselblatt mit `ui-touch-` beginnt. Wer in Redion eine Klasse `ui-…` baut,
+greift in den Namensraum des Kits; die Brücke zwischen beiden
+(`src/islands/bridge.css`) benutzt deshalb keine Klassen, sondern
+Merkmale: `data-insel`, `data-insel-wurzel`, `data-insel-fehler`.
 
 ## Das Verzeichnis
 

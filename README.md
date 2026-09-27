@@ -222,11 +222,24 @@ http://localhost:8790
 
 Variante 4: App bauen
 
+Nur nötig, wer am Quelltext arbeitet — wer Redion benutzt, nimmt Variante 1
+oder 2, dort ist alles fertig gebaut.
+
+npm install
+npm run bauen:ts
 node bauen.mts
 
-Erzeugt oder aktualisiert:
+`npm run bauen:ts` baut zuerst die React-Inseln (React und die Bauteile des
+Touch Kits zu zwei klassischen Skripten unter `quell/fremd/react/` und
+`quell/islands/`, E699), dann `src/**.ts` nach `quell/`, dann den
+Dienststand. `node bauen.mts` erzeugt oder aktualisiert danach:
 
 redion-einzeldatei.html
+
+React wird dabei nicht beim Start geladen, sondern erst, wenn eine Insel
+gebraucht wird — per Doppelklick, in der Einzeldatei und offline gleich.
+Stand 27. September 2026 (Stufe 1a): die Grundlage steht, sichtbar ersetzt
+ist noch nichts; als erstes kommen die Dialoge.
 
 
 
@@ -1669,8 +1682,9 @@ keine Secrets im Repo
 
 Tests
 
-Redion nutzt echte Prüfungen gegen die echte App. Es sind 438 Läufe unter
-`pruefungen/lauf/`.
+Redion nutzt echte Prüfungen gegen die echte App. Es sind 521 Läufe unter
+`pruefungen/lauf/` (gezählt am 27. September 2026 mit
+`ls pruefungen/lauf/test*.mts | wc -l`).
 
 Befehle:
 
@@ -1741,20 +1755,26 @@ Scripts
 {
   "bauen": "node bauen.mts",
   "pruefen": "node pruefungen/alle.mts",
-  "typecheck": "tsc --noEmit",
-  "bauen:ts": "tsc -p tsconfig.bauen.json && node dienststand.mts && …",
+  "typecheck": "tsc --noEmit && tsc -p tsconfig.islands.json",
+  "bauen:inseln": "node bauen-inseln.mts",
+  "bauen:ts": "node bauen-inseln.mts && tsc -p tsconfig.bauen.json && node dienststand.mts && …",
   "stand": "node dienststand.mts --pruefen",
   "server": "node server/pruefserver.ts 8790",
   "veroeffentlichen": "npx wrangler deploy"
 }
 
-Lokaler Ablauf
+Lokaler Ablauf — in dieser Folge
 
 npm install
 npm run typecheck
 npm run bauen:ts
+npm run stand
 npm run pruefen -- --schnell
 node bauen.mts
+
+Die Folge zählt: `bauen:ts` baut die Inseln vor dem Dienststand, weil der
+die Bytes des Grundstocks rechnet; die Einzeldatei setzt die Bündel ein und
+kommt deshalb zuletzt.
 
 
 
@@ -1775,7 +1795,7 @@ achtzehnte zu vergessen. Ohne fremde Bibliothek; `zlib` liegt in Node.
 
 Code-Stil
 
-Redion ist ein TypeScript-Projekt ohne Framework und ohne Bauzwang für die normale Nutzung. Die Migration ist seit dem 3. September 2026 abgeschlossen: `pruefungen/js-bestand.json` führte jede von Hand geschriebene `.js` und `.mjs`, und die Liste ist leer. Was der Browser lädt, wird aus `src/**.ts` erzeugt — `npm run bauen:ts` schreibt nach `quell/`, hebt dabei die Fassung des Dienst-Skripts und legt `sw.js` in die Wurzel — und wird mitversioniert; deshalb startet die App weiterhin per Doppelklick auf `index.html`. Prüfläufe laufen als `.mts` direkt unter Node, der Server als `.ts`. Der Weg dorthin steht in `doku/TYPESCRIPT-MIGRATION.md`, die Regel in `ENTSCHEIDUNGEN.md` E28.
+Redion ist ein TypeScript-Projekt ohne Framework-Zwang und ohne Bauzwang für die normale Nutzung. Seit E699 (27. September 2026) gibt es React — aber nur als Inseln: Bauteile aus Redurs Touch Kit, die an einer Stelle der bestehenden Schale ein Element ersetzen, gebaut mit Vite zu klassischen Skripten unter `quell/`, geladen erst beim Gebrauch. Keine zweite Oberfläche, kein Router, und `dependencies` bleibt leer. Die Migration ist seit dem 3. September 2026 abgeschlossen: `pruefungen/js-bestand.json` führte jede von Hand geschriebene `.js` und `.mjs`, und die Liste ist leer. Was der Browser lädt, wird aus `src/**.ts` erzeugt — `npm run bauen:ts` schreibt nach `quell/`, hebt dabei die Fassung des Dienst-Skripts und legt `sw.js` in die Wurzel — und wird mitversioniert; deshalb startet die App weiterhin per Doppelklick auf `index.html`. Prüfläufe laufen als `.mts` direkt unter Node, der Server als `.ts`. Der Weg dorthin steht in `doku/TYPESCRIPT-MIGRATION.md`, die Regel in `ENTSCHEIDUNGEN.md` E28.
 
 Aktuelle Regeln:
 

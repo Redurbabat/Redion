@@ -261,6 +261,50 @@ Der Preis: jedes Modul ist ein globaler Name, und die Reihenfolge in
 `index.html` zählt. Deshalb gibt es **einen** Einstiegspunkt (`start.js`) und
 nichts, was sich selbst startet.
 
+### Die React-Inseln (E699)
+
+Seit dem 27. September 2026 gibt es React — als **Inseln**, nicht als zweite
+App. Eine Insel ist ein Bauteil aus Redurs Touch Kit, das an einer Stelle der
+Schale ein Element ersetzt; die Schale bleibt, wie sie oben beschrieben ist.
+
+```
+src/islands/          TSX, englisch benannt, nur Ansicht
+├─ main.tsx           RedionIslands { version, mount, update, unmount }
+├─ probe.tsx          die Probe für test579 (Stufe 1a — sonst noch keine)
+├─ bridge.tsx         spiegelt data-theme → data-ui-theme (erst ab mount)
+├─ bridge.css         Kit-Marken → Redions Marken (--ui-color-accent → --accent …)
+└─ react-runtime.tsx  was von React ins Bündel kommt
+fremd/touch/          das Touch Kit, Kopie aus UI-Kit @c192821 (nicht ausgeliefert)
+bauen-inseln.mts      Vite 8 → zwei klassische Skripte:
+                      quell/fremd/react/react.js   RedionReact (fremd, Prüfsumme)
+                      quell/islands/islands.js     RedionIslands  + islands.css
+src/schale/inseln/laden.ts   Inseln.bereit() — holt beides beim ersten Gebrauch
+```
+
+**Wer wen ruft.** Nur die Schale ruft eine Insel: `(await
+Inseln.bereit()).mount(element, 'name', props)`. Eine Insel ruft niemanden —
+sie bekommt Props und gibt Rückrufe zurück, sie liest weder `Store` noch
+IndexedDB noch einen Bereich (§5, §9). Fehler gibt sie als Ereignis an den
+Lader, und der an `Reporter` (§7).
+
+**Wann geladen wird.** Nicht beim Start (`test388` §5): beim ersten Gebrauch,
+und im Leerlauf nach dem Laden nur dort, wo es nichts über die Leitung
+kostet — von der Platte, aus der Einzeldatei (dort stehen die Bytes in drei
+`<script type="text/plain">`, die der Browser nicht auswertet), oder aus dem
+Speicher des Dienst-Arbeiters.
+
+**Was die Brücke tut.** Das Kit fragt `data-ui-theme` und seine eigenen
+Marken; Redion setzt `data-theme` und seine Marken. `bridge.css` legt jede
+Kit-Farbe, -Schrift, jeden Radius und jede Ebene auf Redions Marke, als
+glatte Werte (kein `light-dark()`, das iOS unter 17.5 nicht kennt).
+`color-scheme` bleibt am Wurzelelement, wie es war; es gilt nur an den
+Inseln. So erreicht jedes Schema aus „Aussehen" jede Insel — und der Look
+des Kits ist dort selbst ein Schema („Touch Kit hell/dunkel").
+
+**Was nicht geht, und geprüft wird** (`test578` §6): eine zweite
+HTML-Seite, `type="module"`, ein Router, eine Insel, die Daten anfasst,
+eine Insel, die beim Laden etwas tut.
+
 ---
 
 ## Wo trage ich etwas Neues ein
