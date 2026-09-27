@@ -133,6 +133,7 @@ sind der teuerste Teil und der lehrreichste.
 | P117 | 2026-09-26 | Eine Kennung, zwei Bedeutungen: `ellipse` | 🟡 klein | — |
 | P118 | 2026-09-27 | Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste | 🟡 klein | — |
 | P119 | 2026-09-27 | Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster | 🟠 mittel | — |
+| P120 | 2026-09-27 | Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal | 🟠 mittel | — |
 
 ---
 
@@ -2575,4 +2576,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Mit `--reihe-platz` (Raum unter der Hülle bis 12 px vor dem Rand): Spalte 409 … 949, kein Seitenrollen, 52 von 52. Ohne die Regel: 46 von 52, genau die alten Zeilen.
 
 **Die Lehre.** Wer oben etwas einfügt, verschiebt alles darunter — die Nachbarn eines solchen Bogens sind die Läufe, die UNTER der Einfügung messen, nicht die, die sie kennen. Und ein Wächter, der nur „oben im Fenster" fragt, sieht nicht, dass unten etwas hinausragt; die Regel war „endet im Fenster".
+
+
+---
+
+## P120 · Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal
+
+*2026-09-27 · 🟠 mittel*
+
+**Das Bild.** GitHub sperrte den Pull Request: „This branch has conflicts that must be resolved", neun Dateien. Redur fragte, warum er nicht pushen kann.
+
+**Die falsche Vermutung.** Das Hochladen ist kaputt — oder die Konflikte sind nur die üblichen Versionsstempel in sw.ts und stand.ts.
+
+**Wie es gefunden wurde.** Unter den neun Dateien stand `pruefungen/lauf/test568.mts` als „beide hinzugefügt". Der Codex-Commit 9e306b85 auf `main` (23. September) hatte einen test568 und eine E681 angelegt; der Arbeitszweig hatte am 25. September einen ANDEREN test568 (Strg+Z) und eine ANDERE E681 (Plattform-Audit).
+
+**Die Ursache.** Beide Zweige zählten von demselben Stand aus weiter: `main` lag bei E680/test567, und jeder nahm die nächste freie Nummer — für sich. Eine Nummer ist aber erst vergeben, wenn sie auf `main` steht.
+
+**Der Beweis.** `git show 9e306b85 --stat` gegen `git log` des Zweigs; `git status` zeigte `AA pruefungen/lauf/test568.mts`.
+
+**Die Lehre.** Wer auf zwei Zweigen zugleich zählt, zählt doppelt. Beim Zusammenführen bekommt der NEUANKÖMMLING mit den wenigsten Verweisen die nächste freie Nummer (hier: eine Entscheidung und ein Lauf statt sechzehn und neun), und die alte Nummer steht als Herkunft dabei. Und gepusht war die ganze Zeit alles — gesperrt war das Zusammenführen.
 

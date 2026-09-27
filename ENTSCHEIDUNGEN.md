@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-676 Entscheidungen, E1 bis E696 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+677 Entscheidungen, E1 bis E697 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -739,8 +739,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E694** — Eine Werkzeugliste statt drei: `Marken.WERKZEUGE` und `menueband.WERKZEUGE` holen Name, Zeichen und Hinweis aus `Register.werkzeuge` bzw. `Marken.FORMEN`; das Studio hält nur noch die Reihenfolge, das Band eine Folge mit Herkunft — und dabei kam heraus, dass es die Kennung `ellipse` ZWEIMAL gibt (Flächenwerkzeug `◯`, Studio-Form `○`) (`test572`, L218 GESCHLOSSEN)
 * **E695** — Ein Glas statt vier: EINE Unschärfe (`--glas-blur`) für Menüs, Finder, Auswahlleiste, Telefonleiste und PDF-Leiste, zwei Dichten nach einer Regel (Fläche mit Zeichen leicht, mit Schrift dicht), Glas nur unter `@supports` mit Präfix, und auf Glas keine blasse Schrift — die Dichte aus Pixelmessungen, nachdem die erste Schätzung der stillen Schrift 1,43 : 1 gab (`test576`, Redur: „glass efeck … alles verbessern")
 * **E696** — Eine Seitenspalte endet im Fenster: die Studioleiste links/rechts war `78vh` hoch, egal wo sie begann, und seit E690 fiel ihr Griff unter den Fensterrand; jetzt rechnet `marken.ts` den Platz unter der Hülle (`--reihe-platz`). Dazu `test533` von 13 auf 14 Werkzeuge nachgezogen, eine Woche nach E670 (`test534`, gebisected auf 4d7436d)
+* **E697** — Direkte Farbwahl und unterbrechungsfreier Freitext: benannte Stift-/Markerpalette, Hex-Feld, echte Deckung in der Vorschau, dieselbe Farbaktion wie im Dock. Textentwurf und Cursor überleben den Farbwähler; Eingabegeometrie höchstens einmal pro Bild, IME-Escape beendet nicht den Text. Auch aufgeklappt bleibt Zubehör werkzeugbezogen. Bestehende Marken, Farbsätze, Werkzeuggedächtnis und eigene Ordnung bleiben. Wächter `test577`, Nachbarn `test458`, `test515`, `test524`, `test527` und Stiftregressionen. *(kam als E681/test568 über `main`; beim Zusammenführen umnummeriert)*
 
 ---
+
 
 ## Grundregel
 
@@ -56872,3 +56874,71 @@ nachgezogen, `test533` nicht. Rot schon bei E689 (`f2b0b9a`). Jetzt 14, mit
 dem Grund an der Stelle. Dass ein Lauf eine Woche rot stehen konnte, ohne
 dass es jemand sah, ist das Argument für den vollen Lauf, der seit dem
 19. September aussteht.
+---
+
+## E697 — Farbe direkt wählen und im Freitext weiterschreiben
+
+*Umnummeriert beim Zusammenführen am 27. September 2026:* dieser Eintrag kam am
+23. September als **E681** über `main` (Codex-Zweig „dokument-stift-freitext",
+PR #114), mit dem Wächter `test577`. Auf dem Arbeitszweig waren E681
+(Plattform-Audit) und `test577` (Strg+Z gehört der Fläche) inzwischen ebenfalls
+vergeben. Beide bleiben; dieser bekam die nächsten freien Nummern — **E697** und
+**`test577`**. Der Text darunter ist unverändert bis auf diese zwei Verweise.
+
+**Datum:** 23. September 2026 · **Wächter:** `test577`
+
+**Auftrag.** Den aktuellen GitHub-Stand prüfen, im Dokumentbereich Zeichnen,
+Stiftfarben, Markieren, Freitext und Zubehörordnung verbessern. Basis ist
+`a196b65d` vom zuletzt aktualisierten Remote-Branch; `origin/main` steht bei
+`552b7a23`. Eigener Arbeitsbranch: `codex/dokument-stift-freitext`.
+
+**Entscheidung.** „+“ bei den Tupfern öffnet ohne Zwischendialog eine
+`InkMenu`-Palette. Die fünf Grundfarben bleiben, der Marker erhält sechs
+benannte Farbvorschläge. Dazu kommen die vorhandenen vier zuletzt benutzten
+Farben, ein strikt geprüftes `#rrggbb`-Feld und der Systemfarbwähler. Eine
+Vorschau zeigt dieselbe Deckung wie der Zeichner, auf Papierweiss statt
+auf dem dunklen Dock. Farbsätze und Stifteinstellungen bleiben in ihrer
+bisherigen Verwaltung erreichbar — kein neuer Speicher, kein Favoritenkatalog.
+
+Die Palette löst dieselbe Tupferaktion aus wie die Leiste. Der erste Entwurf
+setzte nur die Ink-Farbe: Die Strichprobe blieb violett, obwohl der neue
+Marker gelb zeichnete; nach Neuladen wurde die Dokumentvorliebe schwarz
+(beim Marker gelb dargestellt). Bildkontrolle und ergänzte Zusagen in
+`test577` machten das sichtbar. Der gemeinsame Klickweg aktualisiert jetzt
+Zeichner, Probe und Dokumentvorliebe zusammen.
+
+**Freitext.** Fokuswechsel zur Farbpalette halten den Entwurf offen und
+merken die Einfügestelle. Übernehmen und Escape führen dorthin zurück;
+Aussenklick übernimmt den Entwurf, ohne Fokus zurückzustehlen. Das gilt
+auch für den Popover-Ersatzweg. Während einer Eingabekomposition beendet
+Escape nicht die Notiz. Mehrere `input`-Ereignisse im selben Bild bündeln
+ihre Geometriearbeit in einem `requestAnimationFrame`; Schliessen räumt den
+ausstehenden Auftrag auf. Der Text selbst wächst weiterhin sofort nativ.
+
+**Zubehör.** Die aufgeklappte Studioleiste erzwingt nicht mehr die Anzeige
+aller fremden Gruppen. Die vorhandene Zuordnung Werkzeug → Zubehör bleibt
+auch dort gültig. Einrichten und eigene Reihenfolge bleiben verfügbar.
+
+**Alternative und Kosten.** Nur den Browserfarbwähler zu behalten wäre
+kleiner, böte aber weder transparente Vorschau noch direktes Hex. Eine
+komplett neue Zeichenengine wäre ein anderer Auftrag mit Risiken für alte
+Striche. Hier kommen ein kleines UI-Feld, ein optionaler Abschlussrückruf
+in `InkMenu` und flüchtiger Textfokuszustand hinzu. Keine Datenmigration,
+keine neue Abhängigkeit, keine Cloud, kein neuer Querverweis zwischen Bereichen.
+
+**Beleg und Grenzen.** Der erste neue Wächter war gegen den alten Stand
+rot (kein direktes Farbfeld). Im gebauten Stand hält `test577` 29 Zusagen:
+Text/Cursor/Farbe, Komposition, Abbruch, Ersatz-Popover, echte Markerfarbe,
+Strichprobe, Neuladen, passendes Zubehör, 44-px-Treffflächen und 320/390-px-
+Fenster. 20 synchrone Eingaben lösen genau eine Geometrielesung aus.
+Screenshots aus der echten App liegen lokal unter
+`bilder/stift-farben-rechner.png` und `bilder/stift-farben-handy.png`.
+Das ist keine gemessene Apple-Pencil-/Surface-Latenz und keine Veränderung
+der bestehenden Druckkurve; die offenen Strichfragen in L209 bleiben offen.
+
+**Bestehender Prüfungsfehler:** `test537` bleibt bei 518 gegen 517 rot,
+genau wie in einer frischen Extraktion der GitHub-Basis `a196b65d`.
+L207 bleibt offen; kein Aufweichen des Bereichs-Verzeichnisses. Typprüfung,
+TypeScript-Bau und Einzeldatei-Bau sind erfolgreich. Der Einzeldatei-Bau
+zieht auch die bisher dort fehlenden Änderungen der GitHub-Basis nach;
+deshalb ist dessen erzeugter Unterschied grösser als dieser UI-Bogen.

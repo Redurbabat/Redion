@@ -2629,19 +2629,31 @@ Und ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — sei
 **Besserer Prompt:** 
 
 
+**2 · ca. 13:10**
+
+> wieso kann ich nicht auf github puschen
+
+**Gemeint:** Der Pull Request lässt sich nicht zusammenführen, und es sah aus, als sei das Hochladen kaputt.
+
+**Besser geschrieben:** „Der PR sagt Konflikte — kannst du main reinholen?" Aber das Bild war die beste Beschreibung: es zeigte die neun Dateien, und an `test568.mts` war der eigentliche Fund schon abzulesen.
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | Inventur: Bewegung und Glas in 23 Stilblättern gezählt, Laufzeit-Sonde über laufende Animationen und sichtbares Glas | `` → `` | ca. 08:00–08:30 | ca. 30 min | keine — reines Messen (messungen.md §69) |
 | E695 · Ein Glas statt vier | `` → `` | ca. 08:30–11:30 | ca. 3 h | test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690 |
-| E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen | `` → `` | ca. 11:30–… | ca. 1 h 30 min | test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87 |
+| E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen | `` → `` | ca. 11:30–13:00 | ca. 1 h 30 min | test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87 |
+| main zusammengeführt: der Codex-Stand „Dokument Stift Freitext" (PR #114) — E681 und test568 waren doppelt vergeben, das Codex-Stück wurde E697 und test577 | `` → `` | ca. 13:10–… | ca. 45 min | test577 (der Codex-Lauf), test568 (meiner), test572, test458, test515, test524, test527, test534, test533, test576, test575, test574, test573, test105, test109, test87, test550, test549 |
 
 #### Zahlen des Tages
 
-- **commits:** 4
-- **entscheidungen:** 2
-- **neuePruefläufe:** 1
+- **commits:** 5
+- **entscheidungen:** 3
+- **neuePruefläufe:** 2
 
 #### Das grösste Problem
 
@@ -2662,5 +2674,5 @@ Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deck
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 119 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 120 Einträge.
 

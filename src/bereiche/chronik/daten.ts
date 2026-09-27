@@ -3543,6 +3543,13 @@ const ChronikDaten = {
      "woher": "wörtlich aus dem Gespräch",
      "gemeint": "Die Oberfläche soll sich hochwertiger anfühlen: Bewegungen, Übergänge und besonders das Glas. Keine bestimmte Stelle, sondern das Ganze.",
      "besser": "„Mach das Glas sichtbar und einheitlich, dann die Übergänge — und zeig mir vorher, was du findest.“ Der Satz, wie er war, ist aber gut genug, WENN die Antwort mit einer Messung beginnt statt mit einem Umbau."
+    },
+    {
+     "zeit": "ca. 13:10",
+     "wortlaut": "wieso kann ich nicht auf github puschen",
+     "woher": "wörtlich aus dem Gespräch, mit einem Bild der GitHub-Meldung „This branch has conflicts that must be resolved\"",
+     "gemeint": "Der Pull Request lässt sich nicht zusammenführen, und es sah aus, als sei das Hochladen kaputt.",
+     "besser": "„Der PR sagt Konflikte — kannst du main reinholen?\" Aber das Bild war die beste Beschreibung: es zeigte die neun Dateien, und an `test568.mts` war der eigentliche Fund schon abzulesen."
     }
    ],
    "arbeit": [
@@ -3562,16 +3569,23 @@ const ChronikDaten = {
     },
     {
      "was": "E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen",
-     "vonBis": "c0c34cf → offen",
-     "zeitraum": "ca. 11:30–…",
+     "vonBis": "c0c34cf → 6ad2650",
+     "zeitraum": "ca. 11:30–13:00",
      "dauer": "ca. 1 h 30 min",
      "pruefungen": "test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87"
+    },
+    {
+     "was": "main zusammengeführt: der Codex-Stand „Dokument Stift Freitext\" (PR #114) — E681 und test568 waren doppelt vergeben, das Codex-Stück wurde E697 und test577",
+     "vonBis": "6ad2650 → offen",
+     "zeitraum": "ca. 13:10–…",
+     "dauer": "ca. 45 min",
+     "pruefungen": "test577 (der Codex-Lauf), test568 (meiner), test572, test458, test515, test524, test527, test534, test533, test576, test575, test574, test573, test105, test109, test87, test550, test549"
     }
    ],
    "zahlen": {
-    "commits": 4,
-    "entscheidungen": 2,
-    "neuePruefläufe": 1
+    "commits": 5,
+    "entscheidungen": 3,
+    "neuePruefläufe": 2
    },
    "groesstesProblem": "Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.",
    "interessantesteAnfrage": "„alles verbessern“ — der breiteste Auftrag bisher, und gerade deshalb der, der am dringendsten eine Messung vorneweg brauchte. Ohne sie wäre „besser“ Geschmack gewesen.",
@@ -5174,6 +5188,18 @@ const ChronikDaten = {
    "ursache": "Die Spalte war `78vh` hoch, egal wo sie beginnt, und ragte schon vor E690 123 px unter den Fensterrand. E690 setzte 74 px Umschalter darüber — damit fiel auch der Griff (64. von 68 Knöpfen, tief in der rollenden Spalte) hinunter, und jeder Klick darauf rollte die Seite. E690s Nachbarliste enthielt nur Läufe, die das Neue kannten, keinen, der etwas UNTER ihm misst.",
    "beweis": "Mit `--reihe-platz` (Raum unter der Hülle bis 12 px vor dem Rand): Spalte 409 … 949, kein Seitenrollen, 52 von 52. Ohne die Regel: 46 von 52, genau die alten Zeilen.",
    "lehre": "Wer oben etwas einfügt, verschiebt alles darunter — die Nachbarn eines solchen Bogens sind die Läufe, die UNTER der Einfügung messen, nicht die, die sie kennen. Und ein Wächter, der nur „oben im Fenster\" fragt, sieht nicht, dass unten etwas hinausragt; die Regel war „endet im Fenster\"."
+  },
+  {
+   "nr": "P120",
+   "datum": "2026-09-27",
+   "titel": "Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal",
+   "schwere": "mittel",
+   "symptom": "GitHub sperrte den Pull Request: „This branch has conflicts that must be resolved\", neun Dateien. Redur fragte, warum er nicht pushen kann.",
+   "falscheVermutung": "Das Hochladen ist kaputt — oder die Konflikte sind nur die üblichen Versionsstempel in sw.ts und stand.ts.",
+   "wieGefunden": "Unter den neun Dateien stand `pruefungen/lauf/test568.mts` als „beide hinzugefügt\". Der Codex-Commit 9e306b85 auf `main` (23. September) hatte einen test568 und eine E681 angelegt; der Arbeitszweig hatte am 25. September einen ANDEREN test568 (Strg+Z) und eine ANDERE E681 (Plattform-Audit).",
+   "ursache": "Beide Zweige zählten von demselben Stand aus weiter: `main` lag bei E680/test567, und jeder nahm die nächste freie Nummer — für sich. Eine Nummer ist aber erst vergeben, wenn sie auf `main` steht.",
+   "beweis": "`git show 9e306b85 --stat` gegen `git log` des Zweigs; `git status` zeigte `AA pruefungen/lauf/test568.mts`.",
+   "lehre": "Wer auf zwei Zweigen zugleich zählt, zählt doppelt. Beim Zusammenführen bekommt der NEUANKÖMMLING mit den wenigsten Verweisen die nächste freie Nummer (hier: eine Entscheidung und ein Lauf statt sechzehn und neun), und die alte Nummer steht als Herkunft dabei. Und gepusht war die ganze Zeit alles — gesperrt war das Zusammenführen."
   }
  ]
 } as const;

@@ -267,6 +267,9 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   await s.waitForTimeout(250);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.blatt-werk .blatt-farbe-neu')?.click());
   await s.waitForTimeout(300);
+  /* E697: Der direkte Farbwähler kommt zuerst; die unveränderte Verwaltung
+     der Sätze liegt dahinter. Alle bisherigen Speicherzusagen bleiben. */
+  await s.locator('[data-color-sets]').click();
   const auf = JSON.parse(await s.evaluate(`(() => {
     const o = document.querySelector('.overlay .finder');
     return JSON.stringify({ da: !!o,
@@ -314,6 +317,7 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
      Der Ersatz für `click` muss deshalb stehen bleiben, bis er wirklich
      gerufen wurde — ihn im selben `try` wieder wegzunehmen kam zu früh,
      und dann tat der Knopf scheinbar nichts. */
+  await s.locator('[data-color-sets]').click();
   await s.evaluate(`(() => {
     window.__echterKlick = HTMLInputElement.prototype.click;
     HTMLInputElement.prototype.click = function () {
@@ -339,6 +343,7 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   /* Zurücksetzen über den Dialog nimmt sie wieder weg. */
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.blatt-werk .blatt-farbe-neu')?.click());
   await s.waitForTimeout(300);
+  await s.locator('[data-color-sets]').click();
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.overlay [data-w="zuruecksetzen"]')?.click());
   await s.waitForTimeout(300);
   gleich('Zurücksetzen räumt die Tupfer aus der Leiste',
@@ -407,6 +412,7 @@ for (const [wo, breit, hoch] of [['Rechner', 1280, 900], ['Telefon', 390, 844]] 
   /* GEMESSEN, NICHT ANGESEHEN. „Sichtbar" ist die falsche Frage — der
      letzte Knopf DARF unter der Kante stehen, solange man ihn hinrollen
      kann. Vor E486 konnte man das nicht: `.finder` schnitt ab. */
+  await s.locator('[data-color-sets]').click();
   const m = JSON.parse(await s.evaluate(`(() => {
     const f = document.querySelector('.overlay .finder');
     const k = [...document.querySelectorAll('.overlay [data-w]')];

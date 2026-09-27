@@ -17464,6 +17464,32 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-popover>header button:hover{ background:var(--bg-hover); color:var(--text) }
 .blatt-popover>header button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
 .blatt-popover-body{ display:flex; flex-direction:column; gap:6px; padding:10px 12px 12px }
+/* E697: Direkte Farbwahl. Papierweisse Vorschau auch im dunklen Thema,
+   damit die transparente Markertinte so aussieht wie auf dem Dokument. */
+.blatt-color-panel{gap:10px}
+.blatt-color-preview{position:relative;isolation:isolate;min-height:64px;display:grid;place-items:center;
+  overflow:hidden;border-radius:var(--radius-md);background:#fff;color:#202020;border:1px solid var(--line)}
+.blatt-color-preview span{position:relative;z-index:1;font-size:17px}
+.blatt-color-preview i{position:absolute;width:82%;height:25px;transform:rotate(-2deg);border-radius:4px}
+.blatt-color-panel:not([data-color-tool="marker"]) .blatt-color-preview i{height:4px;top:74%}
+.blatt-color-caption{margin:0;color:var(--text-dim);font-size:.8rem}
+.blatt-color-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.blatt-color-grid button{min-width:var(--touch-min);min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  border:1px solid var(--line);border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);font:inherit;font-size:.75rem;cursor:pointer}
+.blatt-color-grid button i{width:28px;height:20px;border-radius:6px;box-shadow:inset 0 0 0 1px #0002}
+.blatt-color-grid button[aria-pressed="true"]{border-color:var(--accent)}
+.blatt-color-grid button[aria-pressed="true"] span::before{content:'✓ ';color:var(--accent)}
+.blatt-color-grid button:hover{background:var(--bg-hover)}
+.blatt-color-panel :is(button,input):focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.blatt-color-custom{display:grid;grid-template-columns:1fr var(--touch-min);gap:8px;align-items:end}
+.blatt-color-custom label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:.8rem;color:var(--text-dim)}
+.blatt-color-custom input{box-sizing:border-box;min-width:0;width:100%;height:var(--touch-min);border:1px solid var(--line);border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);padding:8px;font:inherit}
+.blatt-color-custom input[type="color"]{padding:4px;cursor:pointer}
+.blatt-color-custom input[aria-invalid="true"]{border-color:var(--danger, #c73939)}
+.blatt-color-error{grid-column:1/-1;color:var(--danger, #c73939);font-size:.8rem}
+.blatt-color-error:empty{display:none}
+.blatt-color-custom button{grid-column:1/-1;min-height:var(--touch-min);border:0;border-radius:var(--radius-md);background:var(--accent);color:var(--auf-accent);font:inherit;cursor:pointer}
+.blatt-color-custom button:disabled{opacity:.45;cursor:not-allowed}
 /* Die Zeilen im Feld: Radiermodi, Laserarten — alles, was `InkMenu` als
    Knopfliste einhängt. Eine Zeile, kein Gitter: die Namen sind verschieden
    lang, und nebeneinander stünden sie krumm. */
@@ -23338,7 +23364,9 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
 @media (prefers-reduced-motion:reduce){.folienband-klapp{transition:none}}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
 /* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
-.document-studio[data-ink-options="open"] .blatt-werk > .blatt-tafel > [data-gruppe]:not(.blatt-staerke){display:inline-flex!important}
+/* E697: Auch aufgeklappt bleibt Zubehör beim gewählten Werkzeug. Die
+   Grundregeln in bausteine.css bestimmen die Gruppen; Einrichten und
+   Verlauf werden oben bereits nur im geschlossenen Zustand ausgeblendet. */
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
 @media(max-width:760px){
@@ -25812,7 +25840,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1369, inhalt: '5587acef373d710e', gebaut: '2026-09-27T10:20:30.668Z' };
+const Stand = { fassung: 1371, inhalt: 'b427b059b5db9c5d', gebaut: '2026-09-27T10:53:48.812Z' };
 window.Stand = Stand;
 
 </script>
@@ -64710,7 +64738,7 @@ const InkMenu = (() => {
             node.remove();
         });
     };
-    const open = (anchor, title, build) => {
+    const open = (anchor, title, build, onClose) => {
         closeAll('weg');
         const panel = document.createElement('div');
         panel.className = 'blatt-popover';
@@ -64799,6 +64827,7 @@ const InkMenu = (() => {
                 if (warum === 'escape' || warum === 'knopf')
                     anchor.focus({ preventScroll: true });
             }
+            onClose?.(warum);
         }
         document.body.append(panel);
         position();
@@ -68586,6 +68615,25 @@ const Marken = (() => {
             return { text, laeufe };
         };
         let schreiber = null;
+        let writerRange = null;
+        let writerFrame = 0;
+        /* E697: Ein Formatwechsel darf weder den Entwurf noch die Einfügestelle
+           verlieren. Nur ausdrücklich zurückkehren — nie nach einem Aussenklick. */
+        const resumeWriting = () => {
+            if (!schreiber?.feld.isConnected)
+                return;
+            schreiber.feld.focus({ preventScroll: true });
+            if (writerRange && schreiber.feld.contains(writerRange.commonAncestorContainer)) {
+                const selection = getSelection();
+                selection?.removeAllRanges();
+                selection?.addRange(writerRange);
+            }
+        };
+        const scheduleWriterLayout = () => {
+            if (writerFrame)
+                return;
+            writerFrame = requestAnimationFrame(() => { writerFrame = 0; schreiberLegen(); });
+        };
         /**
          * Der Text, den eine Textmarke WIRKLICH zeigt.
          *
@@ -68696,6 +68744,9 @@ const Marken = (() => {
             /* ZUERST ABMELDEN: `feld.remove()` löst `blur` aus, und das käme sonst
                genau hier wieder herein. */
             schreiber = null;
+            cancelAnimationFrame(writerFrame);
+            writerFrame = 0;
+            writerRange = null;
             offen.beobachter?.disconnect();
             const gelesen = feldLesen(offen.feld);
             const text = gelesen.text;
@@ -68829,7 +68880,9 @@ const Marken = (() => {
             }
             schreiber = { feld, ziel: vorhanden ? idOf(vorhanden) : '', before, entwurf, beobachter };
             schreiberLegen();
-            feld.addEventListener('input', () => schreiberLegen());
+            /* Das Feld wächst selbst; die Blattgeometrie höchstens einmal pro Bild
+               lesen, auch wenn mehrere Eingabeereignisse zusammen ankommen. */
+            feld.addEventListener('input', scheduleWriterLayout);
             /* ══ EINGEFÜGT WIRD NUR REINER TEXT (§19, E606) ══════════════════════
                Ein `contenteditable` nimmt sonst alles, was in der Zwischenablage
                liegt — samt Elementen, Stilen und allem, was daran hängt. Der
@@ -68858,16 +68911,28 @@ const Marken = (() => {
                 + ' [data-act], [data-wz], [data-document-action], [data-document-tool]';
             feld.addEventListener('blur', event => {
                 const ziel = event.relatedTarget;
+                const selection = getSelection();
+                writerRange = selection?.rangeCount && feld.contains(selection.getRangeAt(0).commonAncestorContainer)
+                    ? selection.getRangeAt(0).cloneRange() : null;
+                if (ziel?.closest('.blatt-color-panel, .blatt-popover:has(.blatt-color-panel)'))
+                    return;
                 if (ziel && typeof ziel.closest === 'function' && ziel.closest(LEISTEN)) {
                     setTimeout(() => {
-                        if (schreiber && schreiber.feld === feld && feld.isConnected)
-                            feld.focus({ preventScroll: true });
+                        if (schreiber && schreiber.feld === feld && feld.isConnected
+                            && !document.querySelector('.blatt-color-panel'))
+                            resumeWriting();
                     }, 0);
                     return;
                 }
                 schreiberSchliessen();
             });
             feld.addEventListener('keydown', event => {
+                /* E697: Escape/Enter gehören während einer Texteingabekomposition
+                   dem Eingabesystem, nicht dem Abschliessen der ganzen Notiz. */
+                if (event.isComposing) {
+                    event.stopPropagation();
+                    return;
+                }
                 /* ESCAPE BEENDET UND BEHÄLT. In OneNote verlässt Escape den Kasten;
                    es wirft ihn nicht weg. Und es darf nicht weiter nach oben laufen,
                    sonst schliesst derselbe Tastendruck das ganze Studio (E302). */
@@ -70056,7 +70121,7 @@ const Marken = (() => {
         const formenAn = () => formen;
         const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
-            setzeSchrift, schriftVon,
+            setzeSchrift, schriftVon, resumeWriting, finishWriting: schreiberSchliessen,
             /* E466: Auswahl wie GoodNotes. */
             cutSelection, nachVorn, nachHinten, sperren, gesperrtGewaehlt,
             /* E468: ein Verweis an der Auswahl. */
@@ -71094,10 +71159,9 @@ const Marken = (() => {
           
                    Der Weg heraus ist der, den GoodNotes ohnehin geht: dort führt EIN
                    Farbknopf in ein Feld, in dem sowohl der Farbwähler als auch die
-                   Paletten stehen. Also hier auch — „+" öffnet die Wahl, ihr erster
-                   Eintrag ist der Farbwähler. Ein Tipp mehr für eine eigene Farbe,
-                   kein Tipp mehr für die fünf festen und die eigenen Tupfer, und die
-                   Leiste bleibt bei zwei Zeilen. */
+                   Paletten stehen. Seit E697 öffnet „+“ direkt die Palette samt
+                   Hex-Feld; die Verwaltung der Farbsätze liegt darin. Die festen
+                   und eigenen Tupfer bleiben ohne zusätzlichen Tipp erreichbar. */
                 '<button class="blatt-farbe-neu" data-act="farbe" data-gruppe="farbe" ' +
                 'title="Farben — eine eigene wählen oder Farbsätze sichern, laden, zurücksetzen" ' +
                 'aria-label="Farben: eigene Farbe wählen oder Farbsätze">+</button>' +
@@ -71634,11 +71698,11 @@ const Marken = (() => {
             if (aktiv)
                 tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.toggle('on', node.dataset.c === aktiv));
         };
-        /* DER DIALOG HINTER DEM „+" (E486).
+        /* DIE FARBSATZ-VERWALTUNG (E486, seit E697 hinter der direkten Palette).
     
            Sein erster Eintrag ist der Farbwähler — der Weg, den E351 gebaut hat
-           und der hier ein Tipp tiefer liegt als vorher. Der Grund steht oben am
-           Knopf: die Zubehörzeile fasst keinen fünfzehnten Knopf.
+           und der als alternativer Zugang erhalten bleibt. Der häufige Weg
+           führt jetzt direkt über die Palette, ohne diesen Verwaltungsdialog.
     
            DREI SACHEN AN IHM SIND ABSICHT:
     
@@ -71679,6 +71743,132 @@ const Marken = (() => {
             feld.addEventListener('change', uebernehmen, { once: true });
             feld.addEventListener('cancel', () => feld.remove(), { once: true });
             feld.click();
+        };
+        /* E697: Farbe ist ein direkter Griff. Die fünf bisherigen Tupfer und
+           gespeicherten Sätze bleiben; die Markerpalette gilt nur für neue
+           Entscheidungen, niemals rückwirkend für vorhandene Marken. */
+        const openColorPanel = (anchor) => {
+            const tool = String(Zeichenziel.werkzeugVon(controls) || 'stift');
+            const marker = tool === 'marker';
+            const palette = marker ? [
+                ['#ffcf33', 'Sonnengelb'], ['#79cf8b', 'Mintgrün'], ['#65c9ed', 'Himmelblau'],
+                ['#ed91be', 'Rosé'], ['#b39aef', 'Lavendel'], ['#f3aa66', 'Apricot']
+            ] : FARBEN.map(value => [value, FARBNAMEN[value] || value]);
+            InkMenu.open(anchor, marker ? 'Markerfarben' : 'Stift- & Textfarben', (body, close) => {
+                body.classList.add('blatt-color-panel');
+                body.dataset.colorTool = tool;
+                let selected = String(Zeichenziel.farbeVon(controls) || FARBEN[0]).toLowerCase();
+                if (marker && selected === FARBEN[0])
+                    selected = MARKER_FARBE;
+                const preview = document.createElement('div');
+                preview.className = 'blatt-color-preview';
+                const sample = document.createElement('span');
+                sample.textContent = marker ? 'Text bleibt lesbar' : 'Meine Notiz';
+                const ink = document.createElement('i');
+                ink.setAttribute('aria-hidden', 'true');
+                ink.style.opacity = String(deckungVon(tool, stiftJetzt()));
+                preview.append(sample, ink);
+                const caption = document.createElement('p');
+                caption.className = 'blatt-color-caption';
+                caption.textContent = marker ? 'Markieren · transparente Tinte auf Papier' : 'Schreiben & Zeichnen';
+                body.append(preview, caption);
+                const apply = (value) => {
+                    if (!/^#[0-9a-f]{6}$/.test(value))
+                        return;
+                    const recent = eigeneFarbeMerken(value);
+                    tupferZeigen(recent, value);
+                    /* Derselbe Weg wie die Leiste: trägt auch die Strichprobe und
+                       die Dokumentvorliebe nach. Ein zweiter Setzer vergässe beides. */
+                    tools.querySelector(`.blatt-farbe[data-c="${value}"]`)?.click();
+                    markiere();
+                    close();
+                };
+                const addSwatches = (colors, label) => {
+                    const grid = document.createElement('div');
+                    grid.className = 'blatt-color-grid';
+                    grid.setAttribute('role', 'group');
+                    grid.setAttribute('aria-label', label);
+                    for (const [value, name] of colors) {
+                        if (!value)
+                            continue;
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.dataset.inkColor = value;
+                        button.setAttribute('aria-label', `${name} ${value}`);
+                        button.setAttribute('aria-pressed', String(value === selected));
+                        const swatch = document.createElement('i');
+                        swatch.style.background = value;
+                        swatch.setAttribute('aria-hidden', 'true');
+                        const text = document.createElement('span');
+                        text.textContent = name || value;
+                        button.append(swatch, text);
+                        button.onclick = () => apply(value);
+                        grid.append(button);
+                    }
+                    body.append(grid);
+                };
+                addSwatches(palette, marker ? 'Markerpalette' : 'Grundfarben');
+                const recent = eigeneFarben().filter(value => !palette.some(([color]) => color === value));
+                if (recent.length) {
+                    const label = document.createElement('p');
+                    label.className = 'blatt-color-caption';
+                    label.textContent = 'Zuletzt verwendet';
+                    body.append(label);
+                    addSwatches(recent.map(value => [value, value]), 'Zuletzt verwendete Farben');
+                }
+                const form = document.createElement('form');
+                form.className = 'blatt-color-custom';
+                const label = document.createElement('label');
+                label.textContent = 'Hex-Farbe';
+                const hex = document.createElement('input');
+                hex.type = 'text';
+                hex.value = selected;
+                hex.setAttribute('aria-label', 'Hex-Farbe');
+                hex.autocomplete = 'off';
+                hex.spellcheck = false;
+                hex.maxLength = 7;
+                label.append(hex);
+                const picker = document.createElement('input');
+                picker.type = 'color';
+                picker.value = selected;
+                picker.setAttribute('aria-label', 'Systemfarbwähler');
+                const error = document.createElement('span');
+                error.className = 'blatt-color-error';
+                error.setAttribute('role', 'status');
+                const submit = document.createElement('button');
+                submit.type = 'submit';
+                submit.textContent = 'Farbe übernehmen';
+                const update = () => {
+                    const value = hex.value.trim().toLowerCase();
+                    const valid = /^#[0-9a-f]{6}$/.test(value);
+                    hex.setAttribute('aria-invalid', String(!valid));
+                    submit.disabled = !valid;
+                    error.textContent = valid ? '' : 'Bitte # und sechs Hex-Zeichen eingeben.';
+                    if (valid) {
+                        selected = value;
+                        picker.value = value;
+                        ink.style.background = value;
+                    }
+                };
+                hex.addEventListener('input', update);
+                picker.addEventListener('input', () => { hex.value = picker.value; update(); });
+                form.addEventListener('submit', event => { event.preventDefault(); if (!submit.disabled)
+                    apply(selected); });
+                form.append(label, picker, error, submit);
+                body.append(form);
+                update();
+                const manage = document.createElement('button');
+                manage.type = 'button';
+                manage.dataset.colorSets = 'true';
+                manage.textContent = 'Farbsätze & Stifteinstellungen …';
+                manage.onclick = () => { close(); controls.finishWriting?.(); void farbenDialog(); };
+                body.append(manage);
+            }, reason => {
+                if (reason === 'knopf' || reason === 'escape')
+                    controls.resumeWriting?.();
+                else if (reason === 'aussen')
+                    controls.finishWriting?.();
+            });
         };
         /**
          * Die Auswahl als Element ablegen (E494).
@@ -72511,7 +72701,7 @@ const Marken = (() => {
                     return;
                 }
                 if (target.dataset.act === 'farbe') {
-                    void farbenDialog();
+                    openColorPanel(target);
                     return;
                 }
                 /* DIE SCHRIFT (E360): Familie im Kreis, Groesse eine Stufe, Fett
@@ -86219,6 +86409,13 @@ const ChronikDaten = {
                     "woher": "wörtlich aus dem Gespräch",
                     "gemeint": "Die Oberfläche soll sich hochwertiger anfühlen: Bewegungen, Übergänge und besonders das Glas. Keine bestimmte Stelle, sondern das Ganze.",
                     "besser": "„Mach das Glas sichtbar und einheitlich, dann die Übergänge — und zeig mir vorher, was du findest.“ Der Satz, wie er war, ist aber gut genug, WENN die Antwort mit einer Messung beginnt statt mit einem Umbau."
+                },
+                {
+                    "zeit": "ca. 13:10",
+                    "wortlaut": "wieso kann ich nicht auf github puschen",
+                    "woher": "wörtlich aus dem Gespräch, mit einem Bild der GitHub-Meldung „This branch has conflicts that must be resolved\"",
+                    "gemeint": "Der Pull Request lässt sich nicht zusammenführen, und es sah aus, als sei das Hochladen kaputt.",
+                    "besser": "„Der PR sagt Konflikte — kannst du main reinholen?\" Aber das Bild war die beste Beschreibung: es zeigte die neun Dateien, und an `test568.mts` war der eigentliche Fund schon abzulesen."
                 }
             ],
             "arbeit": [
@@ -86238,16 +86435,23 @@ const ChronikDaten = {
                 },
                 {
                     "was": "E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen",
-                    "vonBis": "c0c34cf → offen",
-                    "zeitraum": "ca. 11:30–…",
+                    "vonBis": "c0c34cf → 6ad2650",
+                    "zeitraum": "ca. 11:30–13:00",
                     "dauer": "ca. 1 h 30 min",
                     "pruefungen": "test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87"
+                },
+                {
+                    "was": "main zusammengeführt: der Codex-Stand „Dokument Stift Freitext\" (PR #114) — E681 und test568 waren doppelt vergeben, das Codex-Stück wurde E697 und test577",
+                    "vonBis": "6ad2650 → offen",
+                    "zeitraum": "ca. 13:10–…",
+                    "dauer": "ca. 45 min",
+                    "pruefungen": "test577 (der Codex-Lauf), test568 (meiner), test572, test458, test515, test524, test527, test534, test533, test576, test575, test574, test573, test105, test109, test87, test550, test549"
                 }
             ],
             "zahlen": {
-                "commits": 4,
-                "entscheidungen": 2,
-                "neuePruefläufe": 1
+                "commits": 5,
+                "entscheidungen": 3,
+                "neuePruefläufe": 2
             },
             "groesstesProblem": "Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.",
             "interessantesteAnfrage": "„alles verbessern“ — der breiteste Auftrag bisher, und gerade deshalb der, der am dringendsten eine Messung vorneweg brauchte. Ohne sie wäre „besser“ Geschmack gewesen.",
@@ -87850,6 +88054,18 @@ const ChronikDaten = {
             "ursache": "Die Spalte war `78vh` hoch, egal wo sie beginnt, und ragte schon vor E690 123 px unter den Fensterrand. E690 setzte 74 px Umschalter darüber — damit fiel auch der Griff (64. von 68 Knöpfen, tief in der rollenden Spalte) hinunter, und jeder Klick darauf rollte die Seite. E690s Nachbarliste enthielt nur Läufe, die das Neue kannten, keinen, der etwas UNTER ihm misst.",
             "beweis": "Mit `--reihe-platz` (Raum unter der Hülle bis 12 px vor dem Rand): Spalte 409 … 949, kein Seitenrollen, 52 von 52. Ohne die Regel: 46 von 52, genau die alten Zeilen.",
             "lehre": "Wer oben etwas einfügt, verschiebt alles darunter — die Nachbarn eines solchen Bogens sind die Läufe, die UNTER der Einfügung messen, nicht die, die sie kennen. Und ein Wächter, der nur „oben im Fenster\" fragt, sieht nicht, dass unten etwas hinausragt; die Regel war „endet im Fenster\"."
+        },
+        {
+            "nr": "P120",
+            "datum": "2026-09-27",
+            "titel": "Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal",
+            "schwere": "mittel",
+            "symptom": "GitHub sperrte den Pull Request: „This branch has conflicts that must be resolved\", neun Dateien. Redur fragte, warum er nicht pushen kann.",
+            "falscheVermutung": "Das Hochladen ist kaputt — oder die Konflikte sind nur die üblichen Versionsstempel in sw.ts und stand.ts.",
+            "wieGefunden": "Unter den neun Dateien stand `pruefungen/lauf/test568.mts` als „beide hinzugefügt\". Der Codex-Commit 9e306b85 auf `main` (23. September) hatte einen test568 und eine E681 angelegt; der Arbeitszweig hatte am 25. September einen ANDEREN test568 (Strg+Z) und eine ANDERE E681 (Plattform-Audit).",
+            "ursache": "Beide Zweige zählten von demselben Stand aus weiter: `main` lag bei E680/test567, und jeder nahm die nächste freie Nummer — für sich. Eine Nummer ist aber erst vergeben, wenn sie auf `main` steht.",
+            "beweis": "`git show 9e306b85 --stat` gegen `git log` des Zweigs; `git status` zeigte `AA pruefungen/lauf/test568.mts`.",
+            "lehre": "Wer auf zwei Zweigen zugleich zählt, zählt doppelt. Beim Zusammenführen bekommt der NEUANKÖMMLING mit den wenigsten Verweisen die nächste freie Nummer (hier: eine Entscheidung und ein Lauf statt sechzehn und neun), und die alte Nummer steht als Herkunft dabei. Und gepusht war die ganze Zeit alles — gesperrt war das Zusammenführen."
         }
     ]
 };

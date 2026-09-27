@@ -8591,6 +8591,15 @@ anderes sieht, gilt sein Bild.
    Eintrag „Hex eingeben" über `Dialog.frage` (Prüfung `/^#[0-9a-f]{6}$/`
    liegt in `farbenRein`) plus ein festes Gitter aus den zehn
    `LEITER`-Farben zuerst (sie sind der Katalog, §8). `test458` erweitern.
+   **Geschlossen mit E697 am 23. September 2026:** „+“ öffnet direkt ein
+   benanntes Farbgitter, zuletzt verwendete Farben, geprüftes Hex-Feld und
+   Systemfarbwähler. Der Marker erhält sechs eigene Farbvorschläge mit
+   Vorschau bei derselben Deckung wie der echte Strich (0,32). Bewusste
+   Abweichung vom Vorschlag: keine Aderfarben für Textmarker; die bestehenden
+   Leiterfarben bleiben beim Leiterstift. Bestehende Tupfer, Farbsätze und
+   alte Marken bleiben unverändert. `test577` hält Eingabe, Fokus, Cursor,
+   echte Strichfarbe, Vorschau, Neuladen und 320/390-px-Fenster; `test458`
+   hält weiterhin Speichern, Laden, Zurücksetzen und acht erreichbare Sätze.
 10. **Radiermodus nur im Rundlauf** (fünf Modi über EINEN Knopf, der
     weiterschaltet) und kein „danach zurück zum Stift". Fünf Knöpfe mit
     `aria-pressed` in der Gruppe `radierer` (wie `LASER` und `FORMEN`),

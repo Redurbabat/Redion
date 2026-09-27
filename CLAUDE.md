@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 518 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 519 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1331,6 +1331,18 @@ Messung. Zweimal war er aus dem FALSCHEN Grund rot: `color-mix()` liefert
 Ziffer für Ziffer dieselben Werte. Gezählt am 27. September, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 518.*
 
+*Und 519: `test577` — Farben direkt wählen und im Freitext weiterschreiben
+(E697). Er kam am 23. September als `test568` über `main`, aus einem
+Codex-Zweig — während auf dem Arbeitszweig `test568` schon „Strg+Z gehört
+der Fläche" hiess und E681 der Plattform-Audit war. Zwei Stände, die
+einander nie gesehen hatten, vergaben dieselben Nummern; gemerkt hat es
+erst das Zusammenführen, als GitHub den Pull Request sperrte. Beide Läufe
+bleiben, dieser bekam die nächste freie Nummer. Die Lehre steht nicht in
+ihm, sondern daneben: eine Nummer ist erst vergeben, wenn sie auf `main`
+steht — wer auf zwei Zweigen zugleich zählt, zählt doppelt. Gezählt am
+27. September, beim Zusammenführen: `ls pruefungen/lauf/test*.mts | wc -l`
+sagt 519.*
+
 ### Die Befehle
 
 ```txt
@@ -1339,7 +1351,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 518 Läufe
+npm run pruefen                      alle 519 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1426,7 +1438,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 518 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 519 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
