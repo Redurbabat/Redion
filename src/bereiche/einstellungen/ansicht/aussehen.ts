@@ -101,6 +101,7 @@ const Aussehen = (() => {
                                    --accent · --accent-hover · --accent-schwach · --auf-accent
            danger · success · warning · info
                                    --gefahr · --erfolg · --warnung · --info
+                                   (danger nur hell — siehe unten)
 
        Wo das Kit keine eigene Farbe hat (gedrückt, Eingabefeld), steht die
        Füllung des Kits über seiner Fläche ausgerechnet, nicht geschätzt.
@@ -108,7 +109,16 @@ const Aussehen = (() => {
        Akzent des Kits ist ein HELLES Violett (#a39dff), und Weiss darauf
        hätte 2,38 : 1 — also bringt das Schema seine Schrift auf dem Akzent
        mit (#0b0a1a, 8,23 : 1). `test47` hält diese Schrift fest; `test510`
-       misst die Leisten des PDF-Studios in allen zehn. */
+       misst die Leisten des PDF-Studios in allen zehn.
+
+       DAS ROT BLEIBT IM DUNKLEN REDIONS (Durchsicht von E699). Das Rot des
+       Kits im Dunkeln ist ein helles Rosa (#ff7088), gemacht für DUNKLE
+       Schrift darauf. Redion malt aber WEISS auf `--gefahr` — die Zahl an
+       der Glocke, der Gefahrknopf unter dem Zeiger, die Marke am Buchdeckel.
+       Mit dem Rosa waren das 2,65 : 1 statt 3,76 : 1 wie in jedem anderen
+       dunklen Schema. Also steht `--gefahr` hier nicht: es gilt Redions
+       #ef4444 aus `dunkel.css`, und die Bauteile des Kits schreiben darauf
+       mit `--bg` (Brücke: 5,6 : 1). `test579` §5 misst es in allen zehn. */
     { id: 'touchkit-hell', name: 'Touch Kit hell', grund: 'light', akzent: '#5345e0', werte: {
         '--bg': '#f3f2f8', '--bg-side': '#e9e9ef', '--bg-card': '#ffffff',
         '--bg-hover': '#eeeef1', '--bg-press': '#e3e2e8', '--bg-input': '#eeeef1',
@@ -124,7 +134,7 @@ const Aussehen = (() => {
         '--text': '#f5f5f8', '--text-dim': '#a2a2ae', '--text-faint': '#84848f',
         '--auf-accent': '#0b0a1a', '--accent-text': '#a39dff', '--accent-hover': '#b6b1ff',
         '--accent-schwach': 'rgba(143,136,255,.18)',
-        '--gefahr': '#ff7088', '--erfolg': '#2dd4bf', '--warnung': '#fbbf24', '--info': '#22d3ee' } }
+        '--erfolg': '#2dd4bf', '--warnung': '#fbbf24', '--info': '#22d3ee' } }
   ];
 
   const SCHRIFTEN = [

@@ -89,8 +89,12 @@ const Inseln = (() => {
        eine Insel steht (main.tsx). Zwei Dinge, zwei Namen. */
     s.dataset['inselDatei'] = was;
     s.addEventListener('load', () => ja());
-    s.addEventListener('error', () => nein(new Error(
-      'Die Inseln fehlen — ' + was + ' liess sich nicht laden.')));
+    /* Ein gescheitertes Skript geht wieder aus dem Kopf: der nächste Versuch
+       hängt ein neues ein, und halbe Reste gibt es keine (test579 §11). */
+    s.addEventListener('error', () => {
+      s.remove();
+      nein(new Error('Die Inseln fehlen — ' + was + ' liess sich nicht laden.'));
+    });
     document.head.appendChild(s);
   });
 
@@ -113,18 +117,29 @@ const Inseln = (() => {
    * verbietet `test412` mit gutem Grund (E418: Stil gehört in eine Datei).
    * Die Blob-Adresse bleibt stehen, solange die Seite lebt: ein Stilblatt
    * darf der Browser neu lesen wollen.
+   *
+   * SCHEITERT ES, GEHT DAS `<link>` WIEDER. Hier stand es danach weiter im
+   * Kopf, und die erste Zeile unten fand es beim nächsten Versuch und sagte
+   * „schon da" — die Insel hing dann ohne ihr Blatt (ein Knopf von 24 statt
+   * 44 px, durchsichtig). Gefunden bei der Durchsicht von E699, `test579`
+   * §11. Das Versprechen oben in `bereit` („beim nächsten Versuch soll es
+   * wieder gehen") gilt jetzt auch für das Blatt.
    */
   const stilblatt = (): Promise<void> => {
-    if (document.querySelector('[data-insel-datei="stil"]')) return Promise.resolve();
+    if (document.querySelector('link[data-insel-datei="stil"]')) return Promise.resolve();
     const text = behaelter(BEHAELTER.stil);
     return new Promise((ja, nein) => {
       const l = document.createElement('link');
+      const blob = text !== null ? URL.createObjectURL(new Blob([text], { type: 'text/css' })) : null;
       l.rel = 'stylesheet';
-      l.href = text !== null ? URL.createObjectURL(new Blob([text], { type: 'text/css' })) : STIL;
+      l.href = blob ?? STIL;
       l.dataset['inselDatei'] = 'stil';
       l.addEventListener('load', () => ja());
-      l.addEventListener('error', () => nein(new Error(
-        'Die Inseln fehlen — ' + STIL + ' liess sich nicht laden.')));
+      l.addEventListener('error', () => {
+        l.remove();
+        if (blob) URL.revokeObjectURL(blob);
+        nein(new Error('Die Inseln fehlen — ' + STIL + ' liess sich nicht laden.'));
+      });
       document.head.appendChild(l);
     });
   };

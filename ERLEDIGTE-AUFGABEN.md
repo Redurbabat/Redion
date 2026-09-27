@@ -28,6 +28,15 @@ die es allein nicht gemerkt hätte (messungen.md §71).
 error.", für jeden unbehandelten Fehler. Und `test362` ist auf `main` rot
 seit dem Zusammenführen von E697 (66 rohe `28px` gegen 65).
 
+**Durchsicht (derselbe Tag):** zwei Fehler, je zuerst als roter Lauf —
+„Touch Kit dunkel" machte Weiss auf Rot schlechter (2,65 statt 3,76 : 1;
+jetzt bleibt dort Redions Rot, `test579` §5), und ein gescheitertes
+Stilblatt sperrte den nächsten Ladeversuch (die Insel hing ohne ihr Blatt;
+jetzt geht es wieder aus dem Kopf, `test579` §11). `test578` §6 liest die
+Regeln 3 und 4 jetzt auch im gebauten Bündel. L222 nachgeführt: UI-Kit hat
+drei der Punkte nach c192821 schon erledigt; neu Punkt 6, Akzent als
+Schrift (vor Stufe 1b zu lösen).
+
 ---
 
 ## 27. September 2026 · E696 · Rot zuerst: eine Seitenspalte endet im Fenster

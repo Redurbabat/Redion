@@ -1077,7 +1077,12 @@ CLAUDE.md §6: Inseln an Ort und Stelle, keine zweite Oberfläche.
   (`null` gegen `''`). Zuerst lösen: das Zusammenspiel mit `Fokus`
   (fokus.ts setzt alles ausser dem obersten `.overlay` auf `inert`, das Kit
   auch — zwei Verwalter sperren sich gegenseitig) und mit dem gemeinsamen
-  Escape (E302, schale.ts), der `defaultPrevented` nicht beachtet. Die
+  Escape (E302, schale.ts), der `defaultPrevented` nicht beachtet; und
+  **L222 Punkt 6** — die Knöpfe im Dialog des Kits schreiben in
+  Akzentfarbe, und die Brücke legt die auf `--accent`, nicht auf
+  `--accent-text` (3,16 : 1 im dunklen „Standard"). Dabei das Kit neu
+  holen: UI-Kit hat nach c192821 den strengen Typdurchgang,
+  `data-ui-motion` und Hinweise für Dialogknöpfe schon. Die
   Prüfhaken der Läufe (`#fq`, `[data-w]`) bleiben oder werden im selben
   Bogen nachgezogen. Mit Bildern jedes Zustands, Rechner und Telefon.
   **Fertig wenn** kein Dialog mehr von Hand gebaut wird und `test296`,

@@ -478,7 +478,7 @@ Redion/
 ├─ pruefungen/
 │  ├─ alle.mts
 │  ├─ js-bestand.json
-│  └─ lauf/                    438 Läufe
+│  └─ lauf/                    521 Läufe
 │
 ├─ AUFGABEN.md · ERLEDIGTE-AUFGABEN.md
 ├─ LUECKEN.md · ENTSCHEIDUNGEN.md

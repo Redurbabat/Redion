@@ -57145,6 +57145,11 @@ unteren Leiste, `selection-flow.ts`) — ein ganzer Bogen für ein Bauteil.
    Eingabefeld), ist seine Füllung über seiner Fläche ausgerechnet. Der
    dunkle Akzent des Kits ist ein HELLES Violett — Weiss darauf hätte
    2,38 : 1, also bringt das Schema seine Schrift darauf mit (8,23 : 1).
+   Eine Ausnahme, gefunden bei der Durchsicht: im DUNKLEN Schema bleibt das
+   Rot Redions (`--gefahr` #ef4444). Das Rot des Kits ist dort ein helles
+   Rosa für dunkle Schrift, Redion malt aber Weiss auf `--gefahr` (Glocke,
+   Gefahrknopf) — 2,65 statt 3,76 : 1 wie in jedem anderen dunklen Schema
+   (`test579` §5).
 
    `data-ui-theme` spiegelt `data-theme` am Wurzelelement — aber erst mit
    der ersten Insel, und nur als Etikett: `color-scheme` bleibt am
@@ -57162,7 +57167,8 @@ unteren Leiste, `selection-flow.ts`) — ein ganzer Bogen für ein Bauteil.
    Regel mit `!important`; das fehlende `::after` ergänzt die Brücke), und
    „weniger Bewegung" im System auch (`test579` §6). Die Federn des Kits in
    JavaScript kennen nur die Systemeinstellung — offen in L222, der Haken
-   gehört nach UI-Kit.
+   gehört nach UI-Kit. *(Dort gibt es ihn seit `13e7844`,
+   `data-ui-motion="reduce"` — nach c192821; er kommt mit Stufe 1b.)*
 
 7. **Fremdes, je Stück (§57), und die fünf Punkte aus E26.**
 
@@ -57205,7 +57211,10 @@ unteren Leiste, `selection-flow.ts`) — ein ganzer Bogen für ein Bauteil.
    darin hält die strengen Schalter trotzdem: `test578` §8 prüft
    `src/islands/` mit ihnen — null Fehler. Offen in L222, bis UI-Kit den
    strengen Durchgang selbst macht. `npm run typecheck` fährt beides, und
-   `test105` §3 auch.
+   `test105` §3 auch. *(Nachgesehen bei der Durchsicht: UI-Kit hat ihn am
+   selben Nachmittag gemacht, `0d6222b`, nach dem festgenagelten c192821 —
+   er kommt mit dem nächsten Holen in Stufe 1b; L222 sagt, was dann
+   wegfällt.)*
 
 9. **Was verboten bleibt:** eine zweite Schale, ein Router, ein eigener
    Datenweg (Dexie, Zod, ProseMirror), React unter `dependencies`, ein
@@ -57272,6 +57281,27 @@ Anleitung es vorschlägt — vierzehn Läufe hätten es gelesen.
 - **`test362` ist auf `main` rot, seit dem Zusammenführen von E697**
   (`0f73ba1d`): 66 rohe `28px` gegen eine Decke von 65. Nicht durch diesen
   Bogen — nachgezählt über die Stände davor; ein eigener Bogen „rot zuerst".
+
+**Die Durchsicht** (ein zweiter Agent, derselbe Tag; Läufe zuerst rot
+eingecheckt, dann die Reparatur):
+
+- **Weiss auf Rot im dunklen Touch Kit.** Das Schema legte das Rosa des
+  Kits (#ff7088) auf `--gefahr`; Redion malt Weiss darauf. Gemessen an
+  einer echten `.glocke-zahl`: 2,65 : 1 statt 3,76 : 1. Jetzt bleibt im
+  Dunkeln Redions Rot (Punkt 5); `test579` §5 misst alle zehn Schemata.
+- **Ein gescheitertes Stilblatt sperrte den nächsten Versuch.** `laden.ts`
+  versprach, nach einem Fehlschlag gehe es beim nächsten Mal — für das
+  `<link>` stimmte das nicht: es blieb im Kopf, der zweite Versuch meldete
+  „fertig", und die Insel hing ohne ihr Blatt (Knopf 24 statt 44 px,
+  durchsichtig). Jetzt geht ein gescheitertes `<link>` oder `<script>`
+  wieder aus dem Kopf (`test579` §11).
+- **Regel 3 und 4 lasen nur `src/islands/`.** Ins Bündel kommt aber auch
+  Code des Kits; `test578` §6 liest jetzt auch das gebaute `islands.js`, und
+  die Inselquellen samt Unterordnern.
+- **Noch nicht gebraucht, aber vor Stufe 1b zu lösen:** das Kit hat EINE
+  Akzentmarke für Fläche und Schrift, Redion trennt `--accent` und
+  `--accent-text`. Akzentschrift in einer Insel (Dialogknöpfe!) stünde im
+  dunklen „Standard" mit 3,16 : 1 da. Offen in L222 als Punkt 6.
 
 **Geprüft:** `test578`, `test579` neu und grün (vorher rot eingecheckt);
 Nachbarn `test87`, `test105`, `test109`, `test143`, `test225`, `test270`,

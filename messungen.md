@@ -4780,3 +4780,27 @@ Dialog) soll nicht eine Fünftelsekunde auf React warten.
 Dieselben Dateien mit Redions Schaltern (§52.6): 73 Fehler, alle in
 `fremd/touch/` — 25 TS2532, 18 TS18048, 8 TS2322, 8 TS2375, 6 TS2379,
 4 TS2345, 2 TS2538, 2 TS7030; in `src/islands/` keiner.
+
+**Nachtrag, Durchsicht (27. September, Abend).** Zwei Reparaturen
+(`test579` §5 und §11), danach neu gemessen:
+
+```txt
+quell/schale/inseln/laden.js    11'811 B     4'442 B   (+851 / +305: das
+                                                       gescheiterte <link>
+                                                       geht wieder, mit Kommentar)
+Start (test388 §5)              2767 KB   246 Dateien   unverändert
+Einzeldatei                     11'595'301 B   (+1'543 gegenüber oben)
+Dienststand                     v1379
+Bündel (react.js, islands.*)    Byte für Byte unverändert (dieselben sha256)
+```
+
+Und die Kontraste, mit denen die Durchsicht rechnete (WCAG, gerundet):
+
+```txt
+Weiss auf --gefahr        Standard/dunkle Schemata #ef4444   3,76 : 1
+                          „Touch Kit dunkel" vorher #ff7088  2,65 : 1  ← behoben
+                          „Touch Kit hell" #b81c3c           6,42 : 1
+Schwarz (--bg) auf #ef4444, die Schrift der Kit-Bauteile      5,58 : 1
+--accent #6d4aff auf --bg-card #202020 (Akzent als Schrift)   3,16 : 1  (L222 Punkt 6)
+--accent-text #9b87ff auf --bg-card #202020                   5,67 : 1
+```

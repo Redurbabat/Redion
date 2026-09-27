@@ -25840,7 +25840,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1378, inhalt: '9a58bc048092aaae', gebaut: '2026-09-27T13:14:02.844Z' };
+const Stand = { fassung: 1379, inhalt: 'bce699a66c18aaff', gebaut: '2026-09-27T16:09:51.439Z' };
 window.Stand = Stand;
 
 </script>
@@ -48953,7 +48953,12 @@ const Inseln = (() => {
            eine Insel steht (main.tsx). Zwei Dinge, zwei Namen. */
         s.dataset['inselDatei'] = was;
         s.addEventListener('load', () => ja());
-        s.addEventListener('error', () => nein(new Error('Die Inseln fehlen — ' + was + ' liess sich nicht laden.')));
+        /* Ein gescheitertes Skript geht wieder aus dem Kopf: der nächste Versuch
+           hängt ein neues ein, und halbe Reste gibt es keine (test579 §11). */
+        s.addEventListener('error', () => {
+            s.remove();
+            nein(new Error('Die Inseln fehlen — ' + was + ' liess sich nicht laden.'));
+        });
         document.head.appendChild(s);
     });
     /**
@@ -48980,18 +48985,31 @@ const Inseln = (() => {
      * verbietet `test412` mit gutem Grund (E418: Stil gehört in eine Datei).
      * Die Blob-Adresse bleibt stehen, solange die Seite lebt: ein Stilblatt
      * darf der Browser neu lesen wollen.
+     *
+     * SCHEITERT ES, GEHT DAS `<link>` WIEDER. Hier stand es danach weiter im
+     * Kopf, und die erste Zeile unten fand es beim nächsten Versuch und sagte
+     * „schon da" — die Insel hing dann ohne ihr Blatt (ein Knopf von 24 statt
+     * 44 px, durchsichtig). Gefunden bei der Durchsicht von E699, `test579`
+     * §11. Das Versprechen oben in `bereit` („beim nächsten Versuch soll es
+     * wieder gehen") gilt jetzt auch für das Blatt.
      */
     const stilblatt = () => {
-        if (document.querySelector('[data-insel-datei="stil"]'))
+        if (document.querySelector('link[data-insel-datei="stil"]'))
             return Promise.resolve();
         const text = behaelter(BEHAELTER.stil);
         return new Promise((ja, nein) => {
             const l = document.createElement('link');
+            const blob = text !== null ? URL.createObjectURL(new Blob([text], { type: 'text/css' })) : null;
             l.rel = 'stylesheet';
-            l.href = text !== null ? URL.createObjectURL(new Blob([text], { type: 'text/css' })) : STIL;
+            l.href = blob ?? STIL;
             l.dataset['inselDatei'] = 'stil';
             l.addEventListener('load', () => ja());
-            l.addEventListener('error', () => nein(new Error('Die Inseln fehlen — ' + STIL + ' liess sich nicht laden.')));
+            l.addEventListener('error', () => {
+                l.remove();
+                if (blob)
+                    URL.revokeObjectURL(blob);
+                nein(new Error('Die Inseln fehlen — ' + STIL + ' liess sich nicht laden.'));
+            });
             document.head.appendChild(l);
         });
     };
@@ -140905,6 +140923,7 @@ const Aussehen = (() => {
                                        --accent · --accent-hover · --accent-schwach · --auf-accent
                danger · success · warning · info
                                        --gefahr · --erfolg · --warnung · --info
+                                       (danger nur hell — siehe unten)
     
            Wo das Kit keine eigene Farbe hat (gedrückt, Eingabefeld), steht die
            Füllung des Kits über seiner Fläche ausgerechnet, nicht geschätzt.
@@ -140912,7 +140931,16 @@ const Aussehen = (() => {
            Akzent des Kits ist ein HELLES Violett (#a39dff), und Weiss darauf
            hätte 2,38 : 1 — also bringt das Schema seine Schrift auf dem Akzent
            mit (#0b0a1a, 8,23 : 1). `test47` hält diese Schrift fest; `test510`
-           misst die Leisten des PDF-Studios in allen zehn. */
+           misst die Leisten des PDF-Studios in allen zehn.
+    
+           DAS ROT BLEIBT IM DUNKLEN REDIONS (Durchsicht von E699). Das Rot des
+           Kits im Dunkeln ist ein helles Rosa (#ff7088), gemacht für DUNKLE
+           Schrift darauf. Redion malt aber WEISS auf `--gefahr` — die Zahl an
+           der Glocke, der Gefahrknopf unter dem Zeiger, die Marke am Buchdeckel.
+           Mit dem Rosa waren das 2,65 : 1 statt 3,76 : 1 wie in jedem anderen
+           dunklen Schema. Also steht `--gefahr` hier nicht: es gilt Redions
+           #ef4444 aus `dunkel.css`, und die Bauteile des Kits schreiben darauf
+           mit `--bg` (Brücke: 5,6 : 1). `test579` §5 misst es in allen zehn. */
         { id: 'touchkit-hell', name: 'Touch Kit hell', grund: 'light', akzent: '#5345e0', werte: {
                 '--bg': '#f3f2f8', '--bg-side': '#e9e9ef', '--bg-card': '#ffffff',
                 '--bg-hover': '#eeeef1', '--bg-press': '#e3e2e8', '--bg-input': '#eeeef1',
@@ -140929,7 +140957,7 @@ const Aussehen = (() => {
                 '--text': '#f5f5f8', '--text-dim': '#a2a2ae', '--text-faint': '#84848f',
                 '--auf-accent': '#0b0a1a', '--accent-text': '#a39dff', '--accent-hover': '#b6b1ff',
                 '--accent-schwach': 'rgba(143,136,255,.18)',
-                '--gefahr': '#ff7088', '--erfolg': '#2dd4bf', '--warnung': '#fbbf24', '--info': '#22d3ee'
+                '--erfolg': '#2dd4bf', '--warnung': '#fbbf24', '--info': '#22d3ee'
             } }
     ];
     const SCHRIFTEN = [
