@@ -5314,8 +5314,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-color-custom label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:.8rem;color:var(--text-dim)}
 .blatt-color-custom input{box-sizing:border-box;min-width:0;width:100%;height:var(--touch-min);border:1px solid var(--line);border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);padding:8px;font:inherit}
 .blatt-color-custom input[type="color"]{padding:4px;cursor:pointer}
-.blatt-color-custom input[aria-invalid="true"]{border-color:var(--danger, #c73939)}
-.blatt-color-error{grid-column:1/-1;color:var(--danger, #c73939);font-size:.8rem}
+.blatt-color-custom input[aria-invalid="true"]{border-color:var(--gefahr)}
+.blatt-color-error{grid-column:1/-1;color:var(--gefahr);font-size:.8rem}
 .blatt-color-error:empty{display:none}
 .blatt-color-custom button{grid-column:1/-1;min-height:var(--touch-min);border:0;border-radius:var(--radius-md);background:var(--accent);color:var(--auf-accent);font:inherit;cursor:pointer}
 .blatt-color-custom button:disabled{opacity:.45;cursor:not-allowed}

@@ -8140,6 +8140,14 @@ Bis dahin ist `test537` rot und `main` bewegt sich nicht (§46). Das ist
 Absicht: eine rote Zahl, die auf eine Entscheidung wartet, ist besser als
 eine grüne, die nicht stimmt.
 
+**Redur hat entschieden, am 27. September 2026:** „C jetzt, B später" (E698).
+Weg C ist gebaut: die KI öffnet die Einstellungen über die Schale
+(`App.einstellungen('schluessel')`, `App.einstellungen('mcp')`), das Paar
+`ki → Einstellungen` gibt es nicht mehr, das Verzeichnis steht auf
+124 Paaren und 516 Treffern, `test537` ist grün. **Offen bleibt Weg B** — der
+Filter, der `${…}` in Schablonen mitzählt, und das eine Setzen des
+Verzeichnisses auf die Wahrheit. Diese Lücke bleibt offen, bis B gebaut ist.
+
 ## L210 · Der Trainer nach E677 — was offen bleibt
 
 **Gefunden am 22. September 2026**, beim Bau von E677. Der Trainer wohnt

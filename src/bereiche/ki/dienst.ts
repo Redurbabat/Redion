@@ -1000,7 +1000,7 @@ const KI = (() => {
           : 'Kein Anbieter hat geantwortet. Es bleibt bei der eingebauten Liste.');
         return;
       }
-      if (b.dataset.q === 'schluessel') { m.remove(); Einstellungen.oeffne('schluessel'); return; }
+      if (b.dataset.q === 'schluessel') { m.remove(); App.einstellungen('schluessel'); return; }
 
       m.remove();
       zustand.quelle = b.dataset.q ?? zustand.quelle;
@@ -2452,7 +2452,7 @@ const KI = (() => {
           const q2 = UI.menu('<div class="grp">Meine Quellen</div>', r.left, r.top - 160);
           q2.appendChild(quellenLeiste());
         }
-        if (b.dataset.y === 'mcp')     Einstellungen.oeffne('mcp');
+        if (b.dataset.y === 'mcp')     App.einstellungen('mcp');
         if (b.dataset.y === 'modus')   modusWechseln();
         if (b.dataset.y === 'pers')    personalisieren();
       });

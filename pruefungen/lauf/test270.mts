@@ -160,9 +160,11 @@ console.log('\n1b · Persönliches bleibt draussen');
     });
   const geht = wurzel.filter(e => !faellt(e.name, e.isDirectory()))
     .map(e => e.name + (e.isDirectory() ? '/' : ''));
-  /* Was gehen DARF — nachgesehen in index.html, nicht geraten. */
+  /* Was gehen DARF — nachgesehen in index.html, nicht geraten. `lernen/`
+     (der vorläufige Staatskunde-Trainer, L210 Punkt 2) hat Redur am
+     27. September freigegeben: „Darf ins Netz" (E698). */
   const erlaubt = new Set(['index.html', 'sw.js', 'quell/', 'oeffentlich/',
-    'lernpakete/', 'redion-einzeldatei.html', 'worker.ts']);
+    'lernpakete/', 'redion-einzeldatei.html', 'worker.ts', 'lernen/']);
   const zuviel = geht.filter(n => !erlaubt.has(n));
   p('In der Wurzel geht nichts ins Netz, was dort nicht hingehört',
     zuviel.length === 0, JSON.stringify(zuviel));

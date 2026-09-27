@@ -999,7 +999,7 @@ const KI = (() => {
             }
             if (b.dataset.q === 'schluessel') {
                 m.remove();
-                Einstellungen.oeffne('schluessel');
+                App.einstellungen('schluessel');
                 return;
             }
             m.remove();
@@ -2587,7 +2587,7 @@ const KI = (() => {
                     q2.appendChild(quellenLeiste());
                 }
                 if (b.dataset.y === 'mcp')
-                    Einstellungen.oeffne('mcp');
+                    App.einstellungen('mcp');
                 if (b.dataset.y === 'modus')
                     modusWechseln();
                 if (b.dataset.y === 'pers')

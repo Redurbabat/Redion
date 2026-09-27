@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-677 Entscheidungen, E1 bis E697 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+678 Entscheidungen, E1 bis E698 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -740,6 +740,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E695** — Ein Glas statt vier: EINE Unschärfe (`--glas-blur`) für Menüs, Finder, Auswahlleiste, Telefonleiste und PDF-Leiste, zwei Dichten nach einer Regel (Fläche mit Zeichen leicht, mit Schrift dicht), Glas nur unter `@supports` mit Präfix, und auf Glas keine blasse Schrift — die Dichte aus Pixelmessungen, nachdem die erste Schätzung der stillen Schrift 1,43 : 1 gab (`test576`, Redur: „glass efeck … alles verbessern")
 * **E696** — Eine Seitenspalte endet im Fenster: die Studioleiste links/rechts war `78vh` hoch, egal wo sie begann, und seit E690 fiel ihr Griff unter den Fensterrand; jetzt rechnet `marken.ts` den Platz unter der Hülle (`--reihe-platz`). Dazu `test533` von 13 auf 14 Werkzeuge nachgezogen, eine Woche nach E670 (`test534`, gebisected auf 4d7436d)
 * **E697** — Direkte Farbwahl und unterbrechungsfreier Freitext: benannte Stift-/Markerpalette, Hex-Feld, echte Deckung in der Vorschau, dieselbe Farbaktion wie im Dock. Textentwurf und Cursor überleben den Farbwähler; Eingabegeometrie höchstens einmal pro Bild, IME-Escape beendet nicht den Text. Auch aufgeklappt bleibt Zubehör werkzeugbezogen. Bestehende Marken, Farbsätze, Werkzeuggedächtnis und eigene Ordnung bleiben. Wächter `test577`, Nachbarn `test458`, `test515`, `test524`, `test527` und Stiftregressionen. *(kam als E681/test568 über `main`; beim Zusammenführen umnummeriert)*
+* **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
 
 ---
 
@@ -56942,3 +56943,58 @@ L207 bleibt offen; kein Aufweichen des Bereichs-Verzeichnisses. Typprüfung,
 TypeScript-Bau und Einzeldatei-Bau sind erfolgreich. Der Einzeldatei-Bau
 zieht auch die bisher dort fehlenden Änderungen der GitHub-Basis nach;
 deshalb ist dessen erzeugter Unterschied grösser als dieser UI-Bogen.
+
+## E698 — Rot zuerst: drei rote Läufe auf `main`, bevor das Touch Kit kommt
+
+**Datum:** 27. September 2026 · **Entschieden von** Redur (L207, `lernen/`)
+· **Wächter:** `test537`, `test401`, `test270` (alle drei schon da, alle
+drei auf `main` 323f13a rot) · Anlass: der Einbau des Touch Kits beginnt,
+und §46 sagt **rot zuerst**.
+
+**Der Fund.** Vor der ersten Zeile für das Touch Kit sind die Wächter der
+Nachbarschaft gelaufen. Drei waren auf `main` rot, keiner durch den heutigen
+Merge:
+
+```txt
+test537 §4   518 gegen 517      rot seit E661 (L207), auch auf 6ad2650b und 9e306b85
+test401      --danger           var(--danger, #c73939) zweimal in bausteine.css (Farbwahl, E697)
+test270      ["lernen/"]        der vorläufige Staatskunde-Trainer (f7f47c7c, L210 Punkt 2)
+```
+
+Für `test537` Paar für Paar gegen `bereiche-bestand.json` nachgezählt: das
+einzige Paar mit mehr Treffern ist `bereiche/ki → Einstellungen`, 2 statt 1 —
+genau der Fall aus L207.
+
+**Was entschieden wurde.**
+
+1. **L207, Weg C.** Redur: *„C jetzt, B später"*. Die KI greift nicht mehr in
+   den Einstellungsbereich, sondern öffnet ihn über die Schale:
+   `App.einstellungen('schluessel')` im KI-Menü und
+   `App.einstellungen('mcp')` bei den Verbindungen — derselbe Weg, den
+   `datenbanken` und `wissen` schon gehen (`schale.ts`:
+   `einstellungen = (bereich) => Einstellungen.oeffne(bereich)`). Das Paar
+   verschwindet ganz; das Verzeichnis steht auf **124 Paaren und 516
+   Treffern**, und es ist geschrumpft, weil die Kopplung wirklich weg ist —
+   nicht, weil sie unsichtbar wurde. Weg B bleibt in L207 offen.
+2. **`--danger` heisst `--gefahr`.** `--danger` gibt es in Redion nicht; es
+   galt immer die feste Ersatzfarbe `#c73939`. Jetzt zeigen Feld und
+   Fehlerzeile der Farbwahl das Rot der App (hell `#dc2626`, dunkel
+   `#ef4444`), wie jeder andere Fehler.
+3. **`lernen/` darf ins Netz.** Redur: *„Darf ins Netz"*. `test270` führt es
+   in der Liste dessen, was gehen darf. Der doppelte Trainer selbst bleibt
+   wie er ist, bis Redur sagt, dass er weg darf (L210 Punkt 2, §43).
+
+**Die Alternativen.** Für `test537`: das Verzeichnis anheben (Weg A) — es darf
+nur schrumpfen; den Aufruf über `(window as any).Einstellungen` verstecken —
+`test537 §5` zählt den Umweg mit, und es wäre dieselbe Kopplung; ein Ereignis
+auf dem Bus — mehr Maschine für einen Aufruf, den die Schale schon anbietet.
+Für `lernen/`: in `.assetsignore` nehmen — Redur wollte es draussen.
+
+**Was es kostet.** Sichtbar nur die Farbe der Farbwahl-Fehlerzeile. Kein
+Bild: der Zustand zeigt sich erst nach einem ungültigen Hex-Wert in der
+Stiftpalette, und die Farbe ist dieselbe wie bei jedem anderen Fehler.
+
+**Geprüft:** `test537` 17/17, `test401` 4/4, `test270` grün; Nachbarn `test87`,
+`test105`, `test109`, `test143`, `test225`, `test353`, `test549`, `test550`,
+`test102`, `test131` grün; `npm run typecheck` sauber; `npm run bauen:ts`
+(Dienststand v1372) und `node bauen.mts` neu erzeugt.
