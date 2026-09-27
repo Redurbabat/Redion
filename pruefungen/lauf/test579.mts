@@ -6,7 +6,7 @@
  *
  *   index.html per Doppelklick (file://)       §1–§8
  *   redion-einzeldatei.html allein im Ordner   §9
- *   über das Netz, dann ohne Netz (Dienst)     §10
+ *   über das Netz, dann ohne Netz (Dienst)     §10, §11
  *
  *   §1  Der Start holt kein React.
  *   §2  Im Leerlauf danach wird vorgewärmt — und dabei NICHTS eingehängt.
@@ -18,6 +18,12 @@
  *   §8  Eine Insel, die stolpert, bleibt nicht still (§7).
  *   §9  Die Einzeldatei allein: dieselben Bytes, kein Netz, kein React beim Start.
  *   §10 Offline über den Dienst-Arbeiter.
+ *   §11 Scheitert das Laden einmal, geht es beim nächsten Mal — samt Blatt.
+ *
+ * Bei der Durchsicht von E699 dazugekommen: in §5 „Weiss auf Rot" in allen
+ * zehn Schemata (das Rot des dunklen Kits ist für dunkle Schrift gemacht),
+ * und §11 (ein gescheitertes Stilblatt blieb im Kopf und sperrte den
+ * nächsten Versuch). Beide zuerst rot eingecheckt.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Sie WAR es: rot eingecheckt (commit „test579 (rot)"), bevor es Lader,
@@ -298,6 +304,47 @@ gleich('Ein anderes Schema („Wald") erreicht die Insel ohne eine Zeile Inselco
  * ======================================================================== */
 console.log('\n§5 · Das Schema „Touch Kit" — hell und dunkel, je Grundton gemerkt');
 
+/* WEISS AUF ROT (Durchsicht von E699). Redion malt an mehreren Stellen
+   WEISS auf `--gefahr`: die Zahl an der Glocke (`.glocke-zahl`), der
+   Gefahrknopf unter dem Zeiger (`.rb.gefahr:hover`), die Marke am
+   Buchdeckel. Das Rot des Kits im Dunkeln ist ein helles Rosa (#ff7088),
+   gedacht für DUNKLE Schrift darauf — Weiss hätte dort 2,65 : 1. Kein Schema
+   darf das schlechter machen als Redions eigenes Dunkel („Standard",
+   3,76 : 1). Gemessen an einem echten Element mit Redions Stil, nicht an der
+   Marke. */
+const weissAufRot = await s1.evaluate(() => {
+  const hell = (c: string): number => {
+    const [r, g, b] = (c.match(/\d+(\.\d+)?/g) ?? []).map(Number).map(v => {
+      const x = (v ?? 0) / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0);
+  };
+  const kontrast = (a: string, b: string): number => {
+    const x = hell(a), y = hell(b);
+    return Math.round((Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) * 100) / 100;
+  };
+  const vorher = Aussehen.einstellung().schema;
+  const aus: Record<string, number> = {};
+  for (const sch of Aussehen.SCHEMATA as Array<{ id: string }>) {
+    Aussehen.setzen({ schema: sch.id, akzent: '' });
+    const z = document.createElement('i');
+    z.className = 'glocke-zahl';
+    z.textContent = '3';
+    document.body.appendChild(z);
+    const cs = getComputedStyle(z);
+    aus[sch.id] = kontrast(cs.color, cs.backgroundColor);
+    z.remove();
+  }
+  Aussehen.setzen({ schema: vorher, akzent: '' });
+  return aus;
+});
+const rotBoden = weissAufRot['standard'] ?? 0;
+const rotSchlechter = Object.entries(weissAufRot).filter(([, k]) => k < rotBoden).map(([s, k]) => s + ' ' + k);
+p('Kein Schema macht Weiss auf Rot schlechter als Redions eigenes Dunkel (Glocke, Gefahrknopf)',
+  rotBoden >= 3.5 && Object.keys(weissAufRot).length === 10 && rotSchlechter.length === 0,
+  `Standard ${rotBoden} : 1; darunter: ${rotSchlechter.join(', ') || '—'}`);
+
 await s1.evaluate(() => Aussehen.setzen({ schema: 'touchkit-dunkel', akzent: '' }));
 await s1.waitForTimeout(200);
 pr = await probeLesen(s1, 't579-a');
@@ -495,6 +542,52 @@ gleich('… mit Redions Akzent', (await probeLesen(s10, 't579-o')).knopf?.bg, aw
 await k10.setOffline(false);
 alleFehler.push(...f10);
 await k10.close();
+
+/* ==========================================================================
+ * §11 · Scheitert das Laden einmal, geht es beim nächsten Mal (Durchsicht)
+ * --------------------------------------------------------------------------
+ * `laden.ts` verspricht: „Ein gescheitertes Versprechen nicht für immer
+ * behalten: beim nächsten Versuch soll es wieder gehen (Netz zurück, Datei
+ * nachgelegt)." Für die Skripte hielt das. Für das STILBLATT nicht: das
+ * gescheiterte `<link>` blieb im Kopf stehen, `stilblatt()` fand es beim
+ * nächsten Versuch und meldete sofort „fertig" — die Insel hing dann OHNE
+ * ihr Blatt: ein Knopf von 24 statt 44 px, durchsichtig. Gefunden bei der
+ * Durchsicht von E699. Über das Netz, ohne Dienst (der hätte die Dateien im
+ * Speicher), jede Anfrage einmal abgewiesen, dann wieder durchgelassen.
+ * ======================================================================== */
+console.log('\n§11 · Scheitert das Laden einmal, geht es beim nächsten Mal — auch das Stilblatt');
+
+const k11 = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+const s11 = await k11.newPage();
+const f11 = fehlerVon(s11);
+const gesperrt = new Set<string>(['islands.css']);
+await s11.route(/\/quell\/(islands\/islands\.css|fremd\/react\/react\.js)$/, r =>
+  gesperrt.has(r.request().url().split('/').pop() ?? '') ? r.abort('internetdisconnected') : r.continue());
+await s11.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'load' });
+await bereitMachen(s11);
+const versuch11 = (): Promise<string | null> => s11.evaluate(() => Inseln.bereit().then(
+  () => null, (e: unknown) => String(e instanceof Error ? e.message : e)));
+const reste11 = (): Promise<{ stil: number; skripte: number }> => s11.evaluate(() => ({
+  stil: document.querySelectorAll('link[data-insel-datei]').length,
+  skripte: document.querySelectorAll('script[data-insel-datei]').length }));
+const erst11 = await versuch11();
+p('Das Stilblatt fehlt: bereit() sagt es laut', /islands\.css/.test(String(erst11)), String(erst11));
+gleich('… und lässt kein halbes Stilblatt im Kopf stehen', await reste11(), { stil: 0, skripte: 0 });
+gesperrt.clear();
+gesperrt.add('react.js');
+const zweit11 = await versuch11();
+p('React fehlt: bereit() sagt auch das', /react\.js/.test(String(zweit11)), String(zweit11));
+gleich('… das Stilblatt steht jetzt, das gescheiterte Skript nicht', await reste11(), { stil: 1, skripte: 0 });
+gesperrt.clear();
+const f11Haengen = await probeHaengen(s11, 't579-w');
+p('Beim dritten Versuch, mit Netz: Inseln.bereit() und die Probe gehen', f11Haengen === null, String(f11Haengen));
+const pr11 = await probeLesen(s11, 't579-w');
+p('… MIT ihrem Blatt: der Knopf ist mindestens 44 px hoch', (pr11.knopf?.hoehe ?? 0) >= 44,
+  String(pr11.knopf?.hoehe));
+gleich('… und trägt Redions Akzent', pr11.knopf?.bg, await farbe(s11, '--accent'));
+gleich('… und im Kopf steht genau ein Stilblatt der Inseln', (await reste11()).stil, 1);
+alleFehler.push(...f11);
+await k11.close();
 
 console.log('');
 gleich('Keine unerwarteten Fehler auf den Seiten', alleFehler.slice(0, 5), []);
