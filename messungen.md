@@ -4665,3 +4665,30 @@ Telefonleiste dunkel             4,66 (alt, 88 %)       4,66              —
 Die Telefonleiste hell war schon VOR diesem Bogen unter 4,5 — gegen die
 alten Stilblätter nachgemessen, dieselbe Zahl. Gegenprobe für den
 Kontrastteil: `--bg-schwebend` hell auf 22 % → 1,6 : 1, der Lauf wird rot.
+
+---
+
+## §70 · Die Seitenspalte der Studioleiste (E696, 27. September 2026)
+
+**Wo die Leiste steht**, 1440 × 960, Blatt mit Studio, gemessen in
+`test534 §1` (y und Unterkante in Fensterpixeln):
+
+```txt
+                    vor E690 (43432e1)   nach E690 (4d7436d)   E696
+oben                y = 335              y = 409               y = 409
+links               335 … 1084           409 … 1158            409 … 949
+rechts              335 … 1084           −56 … 693 (gerollt)   409 … 949
+Seite gerollt nach
+Klick auf den Griff 0 px                 465 px                0 px
+```
+
+Der Griff „Platz" ist der 64. von 68 Knöpfen und liegt tief in der rollenden
+Spalte. Rollt die Spalte ans Ende, steht er vier Knöpfe über ihrem unteren
+Rand — vor E690 bei y ≈ 923 (im Bild), nach E690 bei ≈ 997 (darunter), also
+rollte der Browser die Seite nach.
+
+**Zurückverfolgt** über Arbeitsbäume: `fd1a778` grün, `43432e1` grün,
+`4d7436d` rot, `e388949` rot, `637eeb6` rot, `387ca8e` rot, `fc6e606` rot.
+
+**Der neue Satz „endet im Fenster"** war auch gegen `43432e1` rot
+(335 … 1084 bei 960) — der Mangel war älter als der Rückfall.

@@ -1,5 +1,30 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 27. September 2026 · E696 · Rot zuerst: eine Seitenspalte endet im Fenster
+
+**Anlass:** der Nachbarlauf von E695 — `test534` rot, und zwar seit E690,
+meinem eigenen Bogen vom Vortag (über Arbeitsbäume auf `4d7436d`
+zurückverfolgt).
+
+**Der Mangel war älter als der Rückfall.** Die Studioleiste links/rechts ist
+eine Spalte an der Blatthülle mit `78vh` Höhe, egal wo sie beginnt — sie
+ragte schon vor E690 123 px unter den Fensterrand. E690 setzte den
+Umschalter der Ansichten darüber (74 px), und damit fiel auch der Griff
+„Platz" hinunter: wer ihn erreichen wollte, musste die Seite um 465 px
+rollen.
+
+**Gebaut:** `marken.ts` rechnet `--reihe-platz`, den Raum von der Oberkante
+der Hülle bis 12 px vor dem Fensterrand (mindestens 220 px); `max-height`
+nimmt den kleinsten Wert. Ein gedrosselter Hörer rechnet bei neuer
+Fenstergrösse nach.
+
+**Geprüft.** `test534` auf 52 Zusagen; der neue Satz „«links»/«rechts» endet
+im Fenster" war auch gegen den Stand VOR E690 rot. Gegenprobe rot mit sechs
+Zeilen. Und im selben Nachbarlauf ein zweiter Roter, eine Woche alt:
+`test533` zählte 13 Studio-Werkzeuge, seit E670 sind es 14 — nachgezogen.
+
+---
+
 ## 27. September 2026 · E695 · Ein Glas statt vier
 
 **Redur:** „Weiter an die animationen übergangen glass efeck usw alles

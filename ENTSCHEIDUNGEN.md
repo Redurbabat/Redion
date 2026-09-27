@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-675 Entscheidungen, E1 bis E695 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+676 Entscheidungen, E1 bis E696 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -738,6 +738,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E693** — Auf der Fläche zeichnen, mit EINEM Formenzeichner: `core/gfx/shapes.ts` bekommt den Zeichner, den Rahmen und die acht Farben, das Whiteboard zieht darauf um (136 Zeilen weniger), und die Seitenfläche bekommt eine Tinten-Lage IN derselben bewegten Ebene wie die Kästen — acht Werkzeuge, Radierer, Farbmenü, Strg+Z aus `GfxHistory`, gespeichert im bestehenden Feld `shapes` (`test575`, Redur: „weiter")
 * **E694** — Eine Werkzeugliste statt drei: `Marken.WERKZEUGE` und `menueband.WERKZEUGE` holen Name, Zeichen und Hinweis aus `Register.werkzeuge` bzw. `Marken.FORMEN`; das Studio hält nur noch die Reihenfolge, das Band eine Folge mit Herkunft — und dabei kam heraus, dass es die Kennung `ellipse` ZWEIMAL gibt (Flächenwerkzeug `◯`, Studio-Form `○`) (`test572`, L218 GESCHLOSSEN)
 * **E695** — Ein Glas statt vier: EINE Unschärfe (`--glas-blur`) für Menüs, Finder, Auswahlleiste, Telefonleiste und PDF-Leiste, zwei Dichten nach einer Regel (Fläche mit Zeichen leicht, mit Schrift dicht), Glas nur unter `@supports` mit Präfix, und auf Glas keine blasse Schrift — die Dichte aus Pixelmessungen, nachdem die erste Schätzung der stillen Schrift 1,43 : 1 gab (`test576`, Redur: „glass efeck … alles verbessern")
+* **E696** — Eine Seitenspalte endet im Fenster: die Studioleiste links/rechts war `78vh` hoch, egal wo sie begann, und seit E690 fiel ihr Griff unter den Fensterrand; jetzt rechnet `marken.ts` den Platz unter der Hülle (`--reihe-platz`). Dazu `test533` von 13 auf 14 Werkzeuge nachgezogen, eine Woche nach E670 (`test534`, gebisected auf 4d7436d)
 
 ---
 
@@ -56801,3 +56802,73 @@ gemessen noch nicht (L221).
 `test412`, `test303`, `test290`, `test332`, `test361`, `test362`,
 `test388`, `test436`, `test492`, `test572`, `test556`, `test105`,
 `test109`, `test550`.
+
+---
+
+## E696 — Eine Seitenspalte endet im Fenster
+
+**Datum:** 27. September 2026 · **Wächter:** `test534` (52 Zusagen, zwei
+neu) · Anlass: der Nachbarlauf von E695 — **rot zuerst** (§46).
+
+**Der Fund.** `test534` war seit gestern rot, mit vier Zeilen: «rechts»
+bleibt nicht im Fenster, in die Mitte gezogen wird die Leiste nicht «frei»,
+sie steht bei y = −103, und nach dem Verkleinern ragt sie hinaus. Über fünf
+Arbeitsbäume zurückverfolgt: grün bei `43432e1`, rot ab **`4d7436d` — E690,
+meinem eigenen Bogen**, der Umschalter der drei Ansichten. Seine
+Nachbarliste hatte `test534` nicht.
+
+**Die Ursache war älter als E690.** Die Leiste steht links und rechts als
+Spalte an der Blatthülle, `position:absolute; top:0`, und ist
+`max-height:min(78vh, 100%)` hoch — **egal wo sie beginnt**. Bei 960 px
+Fensterhöhe und einer Hülle bei 335 px endete sie schon VOR E690 bei 1084,
+also 123 px unter dem Fensterrand. E690 hat 74 px Umschalter darübergesetzt:
+1158, 197 px darunter. Damit fiel der Griff „Platz" (der 64. von 68 Knöpfen,
+tief in der rollenden Spalte) unter den Fensterrand, und wer ihn erreichen
+wollte, musste die ganze Seite rollen — gemessen: 465 px. Der Prüflauf tut
+dasselbe, wenn er klickt, und ab da stimmte jede weitere Lage nicht mehr.
+
+**Was entschieden wurde.** Die Spalte bekommt ihre Höhe aus dem Platz, der
+unter ihr WIRKLICH frei ist: `marken.ts` setzt `--reihe-platz` auf den Raum
+von der Oberkante der Hülle bis 12 px vor dem Fensterrand (mindestens
+220 px), und `max-height` nimmt den kleinsten von ihm, `78vh` und `100%`.
+Was nicht Platz hat, rollt IN der Spalte, wie bisher. Bei neuer
+Fenstergrösse rechnet ein Hörer nach — eine benannte Funktion auf
+Modulebene, gedrosselt auf ein Bild, damit das Anmelden bei jedem Aufbau
+ein Hörer bleibt und nicht viele werden.
+
+**Der Wächter misst jetzt die Regel, nicht die Folge.** `test534 §1` sagt
+neu: «links»/«rechts» **endet im Fenster**, gemessen ohne vorheriges Rollen
+der Seite — wer rollen muss, um die Leiste zu sehen, hat sie nicht. Diese
+Zeile war auch gegen den Stand VOR E690 rot („Spalte 335 … 1084 bei
+960 px"): der Mangel war da, der Lauf hat ihn nur nie gefragt. Gegenprobe
+(die Regel wieder heraus): rot mit sechs Zeilen.
+
+**Die Alternativen.** (a) Den Umschalter aus E690 kleiner machen oder
+anderswo hinstellen — das hätte den Lauf grün gemacht und den Mangel
+gelassen; die Spalte wäre bei jeder anderen Kopfzeile wieder hinausgelaufen.
+(b) Die Spalte `sticky` machen wie «unten» (E622) — dafür müsste sie in den
+Fluss, neben das Papier, und das ändert die Hülle; ein eigener Bogen, wenn
+man es will. (c) Den Prüflauf ohne Klick-Rollen fahren lassen — dann hätte
+er aufgehört zu sehen, was ein Mensch sieht.
+
+**Preis.** Ein Hörer auf `resize` mehr, und eine Zahl, die aus dem Layout
+gelesen wird (`getBoundingClientRect` beim Einordnen). Rollt man die Seite,
+wandert die Spalte mit ihr — wie vorher; sie klebt nicht.
+
+**Und die Lehre für mich** (P119): ein Bogen, der ÜBER dem Seiteninhalt
+etwas einfügt, verschiebt alles darunter. Die Nachbarliste gehört dann
+nicht nur den Läufen, die das neue Ding kennen, sondern allen, die etwas
+messen, das UNTER ihm liegt.
+
+**Nachbarn:** `test534`, `test210`, `test285`, `test424`, `test438`,
+`test463`, `test480`, `test524`, `test533`, `test527`, `test532`,
+`test535`, `test576`, `test572`, `test573`, `test105`, `test109`, `test87`.
+
+**Und ein zweiter Roter im selben Nachbarlauf, eine Woche alt:** `test533`
+zählte die Studio-Werkzeuge als feste Zahl — mit Absicht, damit wer ein
+Werkzeug hinzufügt, es dort merkt — und die Zahl stand auf 13. Seit E670
+(„Text ändern", 21. September) sind es 14; `test480` wurde damals
+nachgezogen, `test533` nicht. Rot schon bei E689 (`f2b0b9a`). Jetzt 14, mit
+dem Grund an der Stelle. Dass ein Lauf eine Woche rot stehen konnte, ohne
+dass es jemand sah, ist das Argument für den vollen Lauf, der seit dem
+19. September aussteht.

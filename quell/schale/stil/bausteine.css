@@ -4768,7 +4768,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    hat kein Prüflauf gefunden, sondern das Hinsehen.) */
 .blatt-reihe[data-lage="links"],
 .blatt-reihe[data-lage="rechts"]{
-  position:absolute; top:0; bottom:auto; max-height:min(78vh, 100%);
+  /* Nie über den Fensterrand hinaus (E696): `--reihe-platz` rechnet
+     `marken.ts` aus der Oberkante der Hülle. Ohne sie gilt der alte Wert. */
+  position:absolute; top:0; bottom:auto; max-height:min(78vh, 100%, var(--reihe-platz, 78vh));
   width:64px; flex-direction:column; z-index:6;
   border-radius:10px; border:1px solid var(--line);
   box-shadow:var(--shadow-3); background:var(--bg-card)

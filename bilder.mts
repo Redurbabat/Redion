@@ -381,6 +381,26 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* ── EINE SEITENSPALTE ENDET IM FENSTER (E696) ─────────────────────────
+     Die Leiste links an der Blatthülle. Vorher war sie `78vh` hoch, egal wo
+     sie begann, und endete unter dem Fensterrand; jetzt reicht sie bis
+     12 px davor und rollt in sich. */
+  studioSpalte: {
+    titel: 'Die Studioleiste als Spalte links — endet im Fenster (E696)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('zeichnen:leistenlage', 'links');
+      const s = Store.addPage(null, { text: 'Blatt mit Spalte' });
+      Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28,
+                                      blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 1100));
+    }
+  },
+
   schaleMehr: {
     titel: 'Die Schale — die Mehr-Lade des Reiters offen',
     bauen: async () => {

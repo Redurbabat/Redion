@@ -3555,15 +3555,22 @@ const ChronikDaten = {
                 },
                 {
                     "was": "E695 · Ein Glas statt vier",
-                    "vonBis": "fc6e606 → offen",
-                    "zeitraum": "ca. 08:30–…",
+                    "vonBis": "fc6e606 → c0c34cf",
+                    "zeitraum": "ca. 08:30–11:30",
                     "dauer": "ca. 3 h",
                     "pruefungen": "test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690"
+                },
+                {
+                    "was": "E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen",
+                    "vonBis": "c0c34cf → offen",
+                    "zeitraum": "ca. 11:30–…",
+                    "dauer": "ca. 1 h 30 min",
+                    "pruefungen": "test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87"
                 }
             ],
             "zahlen": {
-                "commits": 2,
-                "entscheidungen": 1,
+                "commits": 4,
+                "entscheidungen": 2,
                 "neuePruefläufe": 1
             },
             "groesstesProblem": "Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.",
@@ -5155,6 +5162,18 @@ const ChronikDaten = {
             "ursache": "Der Lauf setzte `data-theme` von Hand. `Aussehen` setzt das Attribut kurz danach auf das gespeicherte Schema zurück (`aussehen.ts:113`) — gemessen wurde beide Male dunkel. Ob das Rücksetzen vor oder nach der Messung kam, hing am Zeitpunkt; im ersten Lauf war hell noch hell.",
             "beweis": "Mit `App.theme(t)` statt des Attributs: hell 7,05 / dunkel 6,05 für die Hauptschrift, verschiedene Werte für die stille Schrift. Und der Lauf prüft seither, dass das gewünschte Thema wirklich gilt.",
             "lehre": "Einen Zustand der App über den Weg der App setzen, nicht über das Attribut, das er am Ende hinterlässt. Und zwei Messungen, die exakt gleich ausfallen, sind ein Befund über die Messung, bevor sie einer über das Produkt sind."
+        },
+        {
+            "nr": "P119",
+            "datum": "2026-09-27",
+            "titel": "Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster",
+            "schwere": "mittel",
+            "symptom": "`test534` war seit einem Tag rot: die Studioleiste stand bei y = −103, liess sich nicht mehr «frei» ziehen und ragte nach dem Verkleinern hinaus.",
+            "falscheVermutung": "Der Glasumbau (E695) hat die Leiste verschoben — er lief ja gerade, und `test534` war sein Nachbar.",
+            "wieGefunden": "Gegen die ALTEN Stilblätter dieselben vier Zeilen — also nicht E695. Dann fünf Arbeitsbäume: grün bei 43432e1, rot ab 4d7436d, E690, meinem eigenen Bogen vom Vortag. Und eine Sonde, die beim Klick auf den Griff zeigte, dass die Seite um 465 px rollte (vorher 0).",
+            "ursache": "Die Spalte war `78vh` hoch, egal wo sie beginnt, und ragte schon vor E690 123 px unter den Fensterrand. E690 setzte 74 px Umschalter darüber — damit fiel auch der Griff (64. von 68 Knöpfen, tief in der rollenden Spalte) hinunter, und jeder Klick darauf rollte die Seite. E690s Nachbarliste enthielt nur Läufe, die das Neue kannten, keinen, der etwas UNTER ihm misst.",
+            "beweis": "Mit `--reihe-platz` (Raum unter der Hülle bis 12 px vor dem Rand): Spalte 409 … 949, kein Seitenrollen, 52 von 52. Ohne die Regel: 46 von 52, genau die alten Zeilen.",
+            "lehre": "Wer oben etwas einfügt, verschiebt alles darunter — die Nachbarn eines solchen Bogens sind die Läufe, die UNTER der Einfügung messen, nicht die, die sie kennen. Und ein Wächter, der nur „oben im Fenster\" fragt, sieht nicht, dass unten etwas hinausragt; die Regel war „endet im Fenster\"."
         }
     ]
 };

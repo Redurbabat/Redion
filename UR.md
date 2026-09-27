@@ -2634,12 +2634,13 @@ Und ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — sei
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | Inventur: Bewegung und Glas in 23 Stilblättern gezählt, Laufzeit-Sonde über laufende Animationen und sichtbares Glas | `` → `` | ca. 08:00–08:30 | ca. 30 min | keine — reines Messen (messungen.md §69) |
-| E695 · Ein Glas statt vier | `` → `` | ca. 08:30–… | ca. 3 h | test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690 |
+| E695 · Ein Glas statt vier | `` → `` | ca. 08:30–11:30 | ca. 3 h | test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690 |
+| E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen | `` → `` | ca. 11:30–… | ca. 1 h 30 min | test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87 |
 
 #### Zahlen des Tages
 
-- **commits:** 2
-- **entscheidungen:** 1
+- **commits:** 4
+- **entscheidungen:** 2
 - **neuePruefläufe:** 1
 
 #### Das grösste Problem
@@ -2661,5 +2662,5 @@ Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deck
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 118 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 119 Einträge.
 

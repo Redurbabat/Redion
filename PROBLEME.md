@@ -132,6 +132,7 @@ sind der teuerste Teil und der lehrreichste.
 | P116 | 2026-09-26 | Ein Tastenkürzel, das im Menü steht und nie erreichbar war | 🟠 mittel | — |
 | P117 | 2026-09-26 | Eine Kennung, zwei Bedeutungen: `ellipse` | 🟡 klein | — |
 | P118 | 2026-09-27 | Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste | 🟡 klein | — |
+| P119 | 2026-09-27 | Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster | 🟠 mittel | — |
 
 ---
 
@@ -2555,4 +2556,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Mit `App.theme(t)` statt des Attributs: hell 7,05 / dunkel 6,05 für die Hauptschrift, verschiedene Werte für die stille Schrift. Und der Lauf prüft seither, dass das gewünschte Thema wirklich gilt.
 
 **Die Lehre.** Einen Zustand der App über den Weg der App setzen, nicht über das Attribut, das er am Ende hinterlässt. Und zwei Messungen, die exakt gleich ausfallen, sind ein Befund über die Messung, bevor sie einer über das Produkt sind.
+
+
+---
+
+## P119 · Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster
+
+*2026-09-27 · 🟠 mittel*
+
+**Das Bild.** `test534` war seit einem Tag rot: die Studioleiste stand bei y = −103, liess sich nicht mehr «frei» ziehen und ragte nach dem Verkleinern hinaus.
+
+**Die falsche Vermutung.** Der Glasumbau (E695) hat die Leiste verschoben — er lief ja gerade, und `test534` war sein Nachbar.
+
+**Wie es gefunden wurde.** Gegen die ALTEN Stilblätter dieselben vier Zeilen — also nicht E695. Dann fünf Arbeitsbäume: grün bei 43432e1, rot ab 4d7436d, E690, meinem eigenen Bogen vom Vortag. Und eine Sonde, die beim Klick auf den Griff zeigte, dass die Seite um 465 px rollte (vorher 0).
+
+**Die Ursache.** Die Spalte war `78vh` hoch, egal wo sie beginnt, und ragte schon vor E690 123 px unter den Fensterrand. E690 setzte 74 px Umschalter darüber — damit fiel auch der Griff (64. von 68 Knöpfen, tief in der rollenden Spalte) hinunter, und jeder Klick darauf rollte die Seite. E690s Nachbarliste enthielt nur Läufe, die das Neue kannten, keinen, der etwas UNTER ihm misst.
+
+**Der Beweis.** Mit `--reihe-platz` (Raum unter der Hülle bis 12 px vor dem Rand): Spalte 409 … 949, kein Seitenrollen, 52 von 52. Ohne die Regel: 46 von 52, genau die alten Zeilen.
+
+**Die Lehre.** Wer oben etwas einfügt, verschiebt alles darunter — die Nachbarn eines solchen Bogens sind die Läufe, die UNTER der Einfügung messen, nicht die, die sie kennen. Und ein Wächter, der nur „oben im Fenster" fragt, sieht nicht, dass unten etwas hinausragt; die Regel war „endet im Fenster".
 

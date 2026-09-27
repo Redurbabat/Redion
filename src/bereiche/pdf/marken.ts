@@ -544,6 +544,44 @@ const Marken = (() => {
   };
 
   const M_LAGE = 'zeichnen:leistenlage';
+
+  /* ══ EINE SPALTE ENDET IM FENSTER (E696) ═══════════════════════════════
+     Links und rechts steht die Leiste als Spalte an der Blatthülle, und sie
+     war `78vh` hoch — egal wo sie beginnt. Bei 409 px Abstand von oben
+     endete sie 197 px UNTER dem Fensterrand: die letzten Knöpfe, darunter
+     der Griff „Platz", gab es nur, wenn man die ganze Seite rollte. Schon
+     vor E690 ragte sie 123 px hinaus; seit der Umschalter der Ansichten
+     darübersteht, fiel auch der Griff hinunter (test534, gebisected auf
+     4d7436d).
+
+     CSS weiss nicht, wo die Spalte beginnt — also sagt es ihr diese Stelle:
+     `--reihe-platz` ist der Raum von der Oberkante der Hülle bis 12 px vor
+     dem Fensterrand, und `max-height` nimmt den kleineren von ihm und den
+     alten `78vh`. Mindestens 220 px, damit eine Spalte eine Spalte bleibt;
+     was darin nicht Platz hat, rollt IN der Spalte, wie bisher.
+
+     Der Hörer ist EINE benannte Funktion auf Modulebene: `addEventListener`
+     mit derselben Funktion zweimal ist ein Hörer, nicht zwei — egal wie oft
+     eine Leiste gebaut wird. */
+  const spaltePlatz = (r: HTMLElement): void => {
+    if (r.dataset['lage'] !== 'links' && r.dataset['lage'] !== 'rechts') {
+      r.style.removeProperty('--reihe-platz');
+      return;
+    }
+    const h = r.parentElement;
+    if (!h) return;
+    const oben = Math.max(0, h.getBoundingClientRect().top);
+    r.style.setProperty('--reihe-platz', Math.max(220, Math.round(window.innerHeight - oben - 12)) + 'px');
+  };
+  let spalteBild = 0;
+  const spaltenNachFenster = (): void => {
+    if (spalteBild) return;
+    spalteBild = requestAnimationFrame(() => {
+      spalteBild = 0;
+      document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(spaltePlatz);
+    });
+  };
+
   /* ZWEI ZAHLEN ALS TEXT, durch ein Leerzeichen getrennt: „43.10% 62.80%".
      Prozent, weil ein kleineres Fenster die Leiste sonst hinter den Rand
      schöbe; Text, weil `meta` Text sicher übersteht (§9). */
@@ -5859,6 +5897,9 @@ const Marken = (() => {
       if (!h || !h.classList.contains('blatt-huelle')) return;
       if (r.dataset.lage === 'unten') { if (h.lastElementChild !== r) h.appendChild(r); }
       else if (h.firstElementChild !== r) h.insertBefore(r, h.firstElementChild);
+      /* Die Höhe erst NACH dem Einhängen: vorher hat die Hülle keinen Ort (E696). */
+      spaltePlatz(r);
+      window.addEventListener('resize', spaltenNachFenster, { passive: true });
     };
 
     const lageAnwenden = (id: string, merken = true): void => {
