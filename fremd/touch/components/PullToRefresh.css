@@ -1,0 +1,54 @@
+/* Pull to refresh — the content moves by transform; the spinner is the kit ActivityIndicator. */
+
+.ui-touch-ptr {
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+/* No `top`: the spinner keeps its static position, right under the `header` slot (or at the very top). */
+.ui-touch-ptr-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  height: 52px;
+  color: var(--ui-color-label-secondary);
+  pointer-events: none;
+}
+
+/* The kit ActivityIndicator, a little larger; it must not replay its arrival when it starts spinning. */
+.ui-touch-ptr-indicator .ui-touch-ptr-spinner {
+  --ui-touch-activity-size: 28px;
+
+  animation: none;
+  transition: transform var(--ui-spring-bouncy-duration) var(--ui-spring-bouncy);
+}
+
+/* Armed: a small pop tells "let go now". */
+.ui-touch-ptr[data-phase='armed'] .ui-touch-ptr-indicator .ui-touch-ptr-spinner {
+  transform: scale(1.12);
+}
+
+.ui-touch-ptr-content {
+  position: relative;
+  background: inherit;
+  transition: transform var(--ui-spring-smooth-duration) var(--ui-spring-smooth);
+}
+
+.ui-touch-ptr-content[data-tracking] {
+  transition: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-ptr[data-phase='armed'] .ui-touch-ptr-indicator .ui-touch-ptr-spinner {
+    transform: none;
+  }
+
+  .ui-touch-ptr-content {
+    transition: transform 1ms linear;
+  }
+}

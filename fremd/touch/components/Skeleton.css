@@ -1,0 +1,128 @@
+/*
+ * Skeleton — placeholders while content loads.
+ *
+ * Shimmer: each piece keeps a still tint; a soft light band (::after) is
+ * slid across it with translateX, 1.4 s ease-in-out, forever. Text lines
+ * start their band a little later one after another, so it runs down the
+ * paragraph as a wave.
+ * Reveal: when a SkeletonGroup goes from busy to idle, the arriving content
+ * rises 6 px and fades in on the smooth spring.
+ * Reduced motion: no shimmer (the static tint still says "placeholder"), and
+ * the arriving content only fades.
+ */
+
+.ui-touch-skeleton {
+  --ui-touch-skeleton-tint: var(--ui-color-fill);
+  --ui-touch-skeleton-sheen: light-dark(rgb(255 255 255 / 0.65), rgb(255 255 255 / 0.09));
+
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  width: var(--ui-touch-skeleton-width, 100%);
+  max-width: 100%;
+  height: var(--ui-touch-skeleton-height, 1em);
+  overflow: hidden;
+  border-radius: var(--ui-touch-skeleton-radius, var(--ui-radius-xs));
+  background-color: var(--ui-touch-skeleton-tint);
+  /* Keeps the rounded clip around the moving band in WebKit. */
+  isolation: isolate;
+  pointer-events: none;
+}
+
+.ui-touch-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent 15%, var(--ui-touch-skeleton-sheen) 50%, transparent 85%);
+  transform: translateX(-100%);
+  animation: ui-touch-skeleton-shimmer 1.4s ease-in-out infinite;
+  animation-delay: var(--ui-touch-skeleton-delay, 0ms);
+}
+
+/* Right-to-left pages: the band runs with the reading direction. */
+.ui-touch-skeleton:dir(rtl)::after {
+  animation-direction: reverse;
+}
+
+/* Paragraph placeholder: bars sized to the surrounding font. */
+.ui-touch-skeleton-text {
+  --ui-touch-skeleton-line-height: 0.72em;
+  --ui-touch-skeleton-line-gap: 0.6em;
+
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--ui-touch-skeleton-line-gap);
+  width: 100%;
+  padding-block: calc(var(--ui-touch-skeleton-line-gap) / 2);
+}
+
+.ui-touch-skeleton--line {
+  height: var(--ui-touch-skeleton-line-height);
+  border-radius: var(--ui-radius-pill);
+}
+
+.ui-touch-skeleton-group {
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Only after busy → idle; `backwards` so the children's own transforms win afterwards. */
+.ui-touch-skeleton-group[data-revealed] > * {
+  animation: ui-touch-skeleton-reveal var(--ui-spring-smooth-duration) var(--ui-spring-smooth) backwards;
+}
+
+@keyframes ui-touch-skeleton-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes ui-touch-skeleton-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ui-touch-skeleton-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-skeleton::after {
+    animation: none;
+    display: none;
+  }
+
+  .ui-touch-skeleton-group[data-revealed] > * {
+    animation: ui-touch-skeleton-fade var(--ui-duration-normal) var(--ui-ease-standard) backwards;
+  }
+}
+
+/* Forced colours (Windows contrast themes) drop the tint: draw the pieces in GrayText instead. */
+@media (forced-colors: active) {
+  .ui-touch-skeleton {
+    --ui-touch-skeleton-tint: GrayText;
+
+    forced-color-adjust: none;
+  }
+
+  .ui-touch-skeleton::after {
+    display: none;
+  }
+}

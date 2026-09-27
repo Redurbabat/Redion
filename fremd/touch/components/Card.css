@@ -1,0 +1,325 @@
+/*
+ * Card — surface card, optionally pressable.
+ *
+ * Layers (back to front):
+ *   .ui-touch-card::before      raised shadow, its own layer so a press can fade it (opacity only)
+ *   .ui-touch-card-surface      background, hairline surface shadow, clips media to the radius
+ *   .ui-touch-card-action::after stretched hit area of the title link/button (whole card)
+ *   .ui-touch-card-body         above the hit area but transparent to the pointer; only its
+ *                               controls take events, so they stay separate targets
+ *
+ * The stretched ::after is positioned against the card root (the surface is
+ * not positioned), so the surface's overflow clip does not cut its focus ring.
+ *
+ * Press: individual `scale` sinks at once (instant, press ease) and springs
+ * back on the `press` spring. Mouse tilt lives in `transform`
+ * (perspective + rotateX/Y from JS custom props) with its own timing, so
+ * pointer-follow and press-release never fight over one transition. At rest
+ * the card has no transform at all: flat, crisp text, no 3D layer per card.
+ */
+
+.ui-touch-card {
+  --ui-touch-card-radius: var(--ui-radius-lg);
+  --ui-touch-card-bg: var(--ui-color-surface);
+  --ui-touch-card-pad: var(--ui-space-4);
+  --ui-touch-card-press-scale: 0.97;
+  --ui-touch-card-perspective: 900px;
+  --ui-touch-card-tilt-x: 0deg;
+  --ui-touch-card-tilt-y: 0deg;
+  --ui-touch-card-scale-duration: var(--ui-spring-press-duration);
+  --ui-touch-card-scale-ease: var(--ui-spring-press);
+  --ui-touch-card-tilt-duration: var(--ui-spring-press-duration);
+  --ui-touch-card-tilt-ease: var(--ui-spring-press);
+  --ui-touch-card-media-ratio: 16 / 9;
+  /* Text on imagery: fixed white on a fixed dark scrim, the same in light and dark mode. */
+  --ui-touch-card-on-media: #ffffff;
+  --ui-touch-card-on-media-secondary: rgb(255 255 255 / 0.9);
+  --ui-touch-card-scrim-fade: 72px;
+
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  min-width: 0;
+  margin: 0;
+  border-radius: var(--ui-touch-card-radius);
+  color: var(--ui-color-label);
+  font: var(--ui-text-body);
+  letter-spacing: var(--ui-tracking-body);
+  text-align: start;
+  /* Own stacking context: the stretched hit area (z-index 1) never escapes the card. */
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Raised shadow: fades out while pressed (the surface keeps its hairline shadow). */
+.ui-touch-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--ui-shadow-raised);
+  pointer-events: none;
+}
+
+.ui-touch-card-surface {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background-color: var(--ui-touch-card-bg);
+  box-shadow: var(--ui-shadow-surface);
+}
+
+/* ── Media ── */
+.ui-touch-card-media {
+  box-sizing: border-box;
+  display: grid;
+  min-width: 0;
+  aspect-ratio: var(--ui-touch-card-media-ratio);
+  overflow: hidden;
+  background-color: var(--ui-color-fill);
+}
+
+/* Always deep (both themes' accents are mixed towards black), so the white title keeps its contrast. */
+.ui-touch-card-media--fallback {
+  background-image:
+    radial-gradient(110% 80% at 85% 5%, color-mix(in oklab, var(--ui-color-info) 55%, transparent), transparent 62%),
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--ui-color-accent) 72%, black),
+      color-mix(in oklab, var(--ui-color-accent) 30%, black)
+    );
+}
+
+.ui-touch-card-image,
+.ui-touch-card-media > :is(img, video, picture, svg, canvas) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Text ── */
+.ui-touch-card-heading {
+  box-sizing: border-box;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: var(--ui-touch-card-pad) var(--ui-touch-card-pad) 0;
+  /* Long words (URLs, compound nouns) wrap instead of being cut off by the surface clip. */
+  overflow-wrap: anywhere;
+}
+
+.ui-touch-card-heading:last-child {
+  padding-bottom: var(--ui-touch-card-pad);
+}
+
+.ui-touch-card-eyebrow {
+  box-sizing: border-box;
+  margin: 0;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-caption-2);
+  font-weight: 600;
+  letter-spacing: var(--ui-tracking-caps);
+  text-transform: uppercase;
+}
+
+.ui-touch-card-title {
+  box-sizing: border-box;
+  margin: 0;
+  color: inherit;
+  font: var(--ui-text-title-3);
+  letter-spacing: var(--ui-tracking-tight);
+}
+
+.ui-touch-card-subtitle {
+  box-sizing: border-box;
+  margin: 0;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-subhead);
+}
+
+.ui-touch-card-body {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--ui-space-2) var(--ui-touch-card-pad) var(--ui-touch-card-pad);
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-subhead);
+  overflow-wrap: break-word;
+}
+
+/* ── Action: the title's link / button, stretched over the whole card ── */
+.ui-touch-card-action {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-touch-card-action::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--ui-touch-card-radius);
+  background-color: transparent;
+  transition: background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* The ring is drawn around the whole card (on the stretched layer), not around the title text. */
+.ui-touch-card-action:focus-visible {
+  outline: none;
+}
+
+.ui-touch-card-action:focus-visible::after {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+/*
+ * Controls in the body stay their own targets: the body sits above the
+ * stretched layer (a grid item takes z-index without being positioned, so
+ * absolutely placed consumer elements keep the card as their containing
+ * block) but lets the pointer through; only the controls catch it. Consumer
+ * controls are never re-positioned. Keep this list in sync with
+ * NESTED_CONTROL in Card.tsx.
+ */
+.ui-touch-card--interactive .ui-touch-card-body {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ui-touch-card--interactive .ui-touch-card-body :is(a[href], button, input, select, textarea, label, summary, [tabindex]) {
+  pointer-events: auto;
+}
+
+/* ── Press + tilt ── */
+.ui-touch-card--interactive {
+  transition:
+    scale var(--ui-touch-card-scale-duration) var(--ui-touch-card-scale-ease),
+    transform var(--ui-touch-card-tilt-duration) var(--ui-touch-card-tilt-ease);
+}
+
+.ui-touch-card--interactive::before {
+  transition: opacity var(--ui-duration-normal) var(--ui-ease-standard);
+}
+
+/* Tilt only where a real hovering pointer exists; touch screens never get the 3D layer. */
+@media (hover: hover) and (pointer: fine) {
+  /*
+   * Following the pointer: short and smooth. The transform exists only while
+   * tilting; on leave it interpolates back to `none` on the press spring, so
+   * a resting card is flat with crisp text and no permanent 3D layer.
+   */
+  .ui-touch-card--tilt[data-tilting] {
+    --ui-touch-card-tilt-duration: var(--ui-duration-short);
+    --ui-touch-card-tilt-ease: var(--ui-ease-standard);
+
+    transform: perspective(var(--ui-touch-card-perspective)) rotateX(var(--ui-touch-card-tilt-x))
+      rotateY(var(--ui-touch-card-tilt-y));
+  }
+
+  .ui-touch-card--interactive:hover .ui-touch-card-action::after {
+    background-color: color-mix(in srgb, var(--ui-color-highlight) 40%, transparent);
+  }
+}
+
+.ui-touch-card--interactive[data-pressed] {
+  --ui-touch-card-scale-duration: var(--ui-duration-instant);
+  --ui-touch-card-scale-ease: var(--ui-ease-press);
+
+  scale: var(--ui-touch-card-press-scale);
+}
+
+.ui-touch-card--interactive[data-pressed]::before {
+  opacity: 0;
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/* ── Feature: App-Store-"Today"-like — big media, title on a scrim at its bottom ── */
+.ui-touch-card--feature {
+  --ui-touch-card-radius: var(--ui-radius-xl);
+  --ui-touch-card-pad: var(--ui-space-5);
+  --ui-touch-card-media-ratio: 4 / 5;
+}
+
+.ui-touch-card--feature .ui-touch-card-media,
+.ui-touch-card--feature .ui-touch-card-heading {
+  grid-area: 1 / 1;
+}
+
+/* Long titles make the row taller than 4:5 — the media then stretches with them (object-fit covers). */
+.ui-touch-card--feature .ui-touch-card-media {
+  align-self: stretch;
+  min-height: 0;
+}
+
+.ui-touch-card--feature .ui-touch-card-heading {
+  align-self: end;
+  gap: var(--ui-space-1);
+  padding-top: calc(var(--ui-touch-card-scrim-fade) + var(--ui-space-2));
+  padding-bottom: var(--ui-touch-card-pad);
+  color: var(--ui-touch-card-on-media);
+  /* Scrim: >= 60 % black behind all text (white stays >= 4.5:1 even over a white photo), eased fade above. */
+  background-image: linear-gradient(
+    to top,
+    rgb(0 0 0 / 0.74) 0%,
+    rgb(0 0 0 / 0.6) calc(100% - var(--ui-touch-card-scrim-fade)),
+    rgb(0 0 0 / 0.38) calc(100% - var(--ui-touch-card-scrim-fade) * 0.6),
+    rgb(0 0 0 / 0.12) calc(100% - var(--ui-touch-card-scrim-fade) * 0.25),
+    rgb(0 0 0 / 0) 100%
+  );
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+}
+
+.ui-touch-card--feature .ui-touch-card-eyebrow,
+.ui-touch-card--feature .ui-touch-card-subtitle {
+  color: var(--ui-touch-card-on-media-secondary);
+}
+
+.ui-touch-card--feature .ui-touch-card-title {
+  font: var(--ui-text-title-1);
+  letter-spacing: var(--ui-tracking-tight);
+  text-wrap: balance;
+}
+
+.ui-touch-card--feature .ui-touch-card-body {
+  padding-top: var(--ui-space-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No sinking, no tilt: a press dims the card and its raised shadow still drops. */
+  .ui-touch-card--interactive,
+  .ui-touch-card--tilt,
+  .ui-touch-card--tilt[data-tilting] {
+    transform: none;
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-card--interactive[data-pressed] {
+    scale: none;
+    opacity: 0.82;
+  }
+
+  .ui-touch-card--interactive::before,
+  .ui-touch-card--interactive[data-pressed]::before {
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+}

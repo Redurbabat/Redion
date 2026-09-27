@@ -1,0 +1,204 @@
+/*
+ * Badge — count / dot / short text, plus BadgeAnchor for corner placement.
+ *
+ * The outer `.ui-touch-badge` is only a box for layout and positioning; the
+ * visible capsule is the inner `.ui-touch-badge-face`. React re-keys the
+ * face on every count change, which restarts its one-shot pop keyframes, so
+ * the pop never fights with how the badge is positioned.
+ *
+ * Pop: a fast swell (press ease) to 1.25, then back to 1 on the `bouncy`
+ * spring `linear()` curve (it undershoots a little and settles). A ring in
+ * the badge colour pings outwards once as glow feedback. The first render
+ * never animates (no data-pop yet).
+ */
+
+.ui-touch-badge {
+  --ui-touch-badge-bg: var(--ui-color-danger);
+  --ui-touch-badge-fg: var(--ui-color-on-danger);
+  --ui-touch-badge-size: 18px;
+  --ui-touch-badge-dot-size: 10px;
+  --ui-touch-badge-pop-scale: 1.25;
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  vertical-align: middle;
+}
+
+.ui-touch-badge--accent {
+  --ui-touch-badge-bg: var(--ui-color-accent);
+  --ui-touch-badge-fg: var(--ui-color-on-accent);
+}
+
+.ui-touch-badge--neutral {
+  --ui-touch-badge-bg: var(--ui-color-fill-strong);
+  --ui-touch-badge-fg: var(--ui-color-label);
+}
+
+.ui-touch-badge-face {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--ui-touch-badge-size);
+  height: var(--ui-touch-badge-size);
+  padding: 0 5px;
+  border-radius: var(--ui-radius-pill);
+  background-color: var(--ui-touch-badge-bg);
+  box-shadow: 0 0 0 var(--ui-touch-badge-ring-width, 0) var(--ui-touch-badge-ring-color, transparent);
+  color: var(--ui-touch-badge-fg);
+  font: var(--ui-text-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  white-space: nowrap;
+  transition:
+    background-color var(--ui-duration-short) var(--ui-ease-standard),
+    color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-badge--dot > .ui-touch-badge-face {
+  width: var(--ui-touch-badge-dot-size);
+  min-width: var(--ui-touch-badge-dot-size);
+  height: var(--ui-touch-badge-dot-size);
+  padding: 0;
+}
+
+/* The one-shot ping ring (invisible at rest). */
+.ui-touch-badge-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--ui-touch-badge-bg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * ── Pop: count changed ──
+ * Two animations compose (the `scale` property multiplies with `transform`):
+ *  - swell: for `instant` ms `transform` already holds 1.25 (backwards fill of
+ *    the delayed bump) while `scale` grows 0.8 → 1 on the press ease, so the
+ *    badge visibly swells 1 → 1.25;
+ *  - bump: then `transform` settles 1.25 → 1 on the `bouncy` spring.
+ * The spring token is the animation's own timing function on purpose:
+ * browsers ignore var() as a per-keyframe animation-timing-function
+ * (Chromium silently falls back to `ease`, i.e. no spring at all).
+ */
+.ui-touch-badge-face[data-pop='bump'] {
+  animation:
+    ui-touch-badge-swell var(--ui-duration-instant) var(--ui-ease-press),
+    ui-touch-badge-bump var(--ui-spring-bouncy-duration) var(--ui-spring-bouncy) var(--ui-duration-instant) both;
+}
+
+@keyframes ui-touch-badge-swell {
+  from {
+    scale: calc(1 / var(--ui-touch-badge-pop-scale));
+  }
+
+  to {
+    scale: 1;
+  }
+}
+
+@keyframes ui-touch-badge-bump {
+  from {
+    transform: scale(var(--ui-touch-badge-pop-scale));
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+/* ── Pop: appeared after being hidden ── */
+.ui-touch-badge-face[data-pop='enter'] {
+  animation: ui-touch-badge-enter var(--ui-spring-bouncy-duration) var(--ui-spring-bouncy) both;
+}
+
+@keyframes ui-touch-badge-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ui-touch-badge-face[data-pop]::after {
+  animation: ui-touch-badge-ping var(--ui-duration-long) var(--ui-ease-emphasized) both;
+}
+
+@keyframes ui-touch-badge-ping {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+/* ── Anchor: badge on the top-end corner of its child ── */
+.ui-touch-badge-anchor {
+  --ui-touch-badge-anchor-dir: 1;
+  --ui-touch-badge-anchor-inset: 0%;
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.ui-touch-badge-anchor:dir(rtl) {
+  --ui-touch-badge-anchor-dir: -1;
+}
+
+/* Round child: the corner of its box is empty, so move in onto the rim (1 - 1/√2 ≈ 14.6 %). */
+.ui-touch-badge-anchor--circle {
+  --ui-touch-badge-anchor-inset: 14.6%;
+}
+
+.ui-touch-badge-anchor-slot {
+  --ui-touch-badge-ring-width: 2px;
+  --ui-touch-badge-ring-color: var(--ui-color-surface);
+
+  position: absolute;
+  top: var(--ui-touch-badge-anchor-inset);
+  inset-inline-end: var(--ui-touch-badge-anchor-inset);
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  pointer-events: none;
+  transform: translate(calc(var(--ui-touch-badge-anchor-dir) * 50%), -50%);
+}
+
+/* Reduced motion: no swelling or ping; the new number simply replaces the old one. */
+@keyframes ui-touch-badge-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-badge-face[data-pop='bump'],
+  .ui-touch-badge-face[data-pop]::after {
+    animation: none;
+  }
+
+  .ui-touch-badge-face[data-pop='enter'] {
+    animation: ui-touch-badge-fade-in var(--ui-duration-short) var(--ui-ease-standard) both;
+  }
+}

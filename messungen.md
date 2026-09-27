@@ -4723,3 +4723,60 @@ rollte der Browser die Seite nach.
 
 **Der neue Satz „endet im Fenster"** war auch gegen `43432e1` rot
 (335 … 1084 bei 960) — der Mangel war älter als der Rückfall.
+
+---
+
+## §71 · Die React-Inseln: Grösse, Start, Einzeldatei, Ladezeit (E699, 27. September 2026)
+
+**Die Bündel**, gebaut mit `node bauen-inseln.mts` (Vite 8.3.1, Ziel
+es2022, CSS für Safari 16.4), gzip Stufe 6 wie `test388`:
+
+```txt
+                               roh          gzip
+quell/fremd/react/react.js     222'474 B    69'080 B   React 19.3.0 + React DOM + scheduler
+quell/islands/islands.js        10'637 B     4'162 B   die Inseln + Button, Toggle, Glyph
+quell/islands/islands.css       21'645 B     4'879 B   Kit-Marken, Bauteile, Brücke
+quell/schale/inseln/laden.js    10'960 B     4'137 B   der Lader (Redion-Code, im Start)
+zusammen ohne Lader            254'756 B    78'121 B
+```
+
+Zum Vergleich aus den Vorversuchen (dieselbe Vite-Fassung): das ganze Kit
+über `index.ts` hätte 128 KB CSS gebracht, fünf Bauteile einzeln 33 KB —
+deshalb importieren die Inseln jedes Bauteil aus seiner eigenen Datei.
+Zweimal gebaut, zweimal dieselbe sha256 (`test578` §1).
+
+**Der Start**, gemessen mit `test388` §5 (erster Besuch über das Netz, gzip,
+bis 3,5 s nach `load`):
+
+```txt
+vor E699 (4f6e91f)                     2761 KB   245 Dateien
+mit E699                               2767 KB   246 Dateien   (+ Lader, + Kommentar in index.html)
+Gegenprobe: Vorwärmen auf JEDEM Weg    2843 KB   249 Dateien   ← 7 KB unter der Decke 2850
+```
+
+Die Gegenprobe ist der Grund für die neue Zeile in `test388` §5: die Decke
+allein hätte das Laden von React beim Start NICHT bemerkt.
+
+**Die Einzeldatei:** 11'323'558 → 11'593'758 Bytes (+270'200, +2,4 %). Die
+Bündel stehen darin als `<script type="text/plain">` und werden beim Start
+nicht ausgewertet.
+
+**`Inseln.bereit()`, kalt**, nach dem Laden, ohne Vorwärmen
+(`requestIdleCallback` abgeschaltet), 2,5 s gewartet, fünf Läufe je Zeile,
+Median, Chromium 1194 über `file://`:
+
+```txt
+                              CPU ×1     CPU ×4 (gedrosselt)
+index.html (Ordner)           73 ms      197 ms
+redion-einzeldatei.html       57 ms      213 ms
+```
+
+Zum Vergleich während des Starts (bei DOMContentLoaded gerufen, gegen den
+Start der App): 260 ms / 396 ms (Ordner), 282 ms / 347 ms (Einzeldatei). Das
+ist der Grund fürs Vorwärmen im Leerlauf: die erste Insel (Stufe 1b, ein
+Dialog) soll nicht eine Fünftelsekunde auf React warten.
+
+**Die Typen:** `tsc -p tsconfig.islands.json` 0 Fehler (Schalter des Kits).
+Dieselben Dateien mit Redions Schaltern (§52.6): 73 Fehler, alle in
+`fremd/touch/` — 25 TS2532, 18 TS18048, 8 TS2322, 8 TS2375, 6 TS2379,
+4 TS2345, 2 TS2538, 2 TS7030; in `src/islands/` keiner.

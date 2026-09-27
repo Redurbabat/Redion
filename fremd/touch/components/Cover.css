@@ -1,0 +1,154 @@
+/*
+ * Cover — album art that breathes with playback.
+ *
+ * Paused: scale(0.82), small resting shadow. Playing: full size, deep
+ * floating shadow. The transition is taken from the state being entered:
+ * entering [data-playing] grows on the `gentle` spring, leaving it shrinks
+ * on the `snappy` spring.
+ *
+ * Shadows: ::before = resting shadow, ::after = floating shadow. They
+ * cross-fade by opacity and scale with the cover (they belong to it), so
+ * no box-shadow is ever transitioned. The art is clipped in its own child,
+ * which keeps the pseudo shadows outside the clip.
+ */
+
+.ui-touch-cover {
+  --ui-touch-cover-size: 160px;
+  --ui-touch-cover-radius: var(--ui-radius-md);
+  --ui-touch-cover-paused-scale: 0.82;
+  /* Placeholder: deep in both themes (the dark theme's pastel accents mixed towards black), so the white glyph reads. */
+  --ui-touch-cover-bg: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--ui-color-accent) 72%, black),
+    color-mix(in oklab, var(--ui-color-info) 55%, black)
+  );
+  --ui-touch-cover-shadow-rest: var(--ui-shadow-raised);
+  --ui-touch-cover-shadow-float: var(--ui-shadow-floating);
+  --ui-touch-cover-glyph-color: rgb(255 255 255 / 0.88);
+
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  flex: none;
+  width: var(--ui-touch-cover-size);
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--ui-touch-cover-radius);
+  transform: scale(var(--ui-touch-cover-paused-scale));
+  transition: transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy);
+}
+
+.ui-touch-cover[data-playing] {
+  transform: none;
+  transition: transform var(--ui-spring-gentle-duration) var(--ui-spring-gentle);
+}
+
+.ui-touch-cover::before,
+.ui-touch-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Resting shadow: visible while paused. */
+.ui-touch-cover::before {
+  box-shadow: var(--ui-touch-cover-shadow-rest);
+  transition: opacity var(--ui-spring-snappy-duration) var(--ui-ease-standard);
+}
+
+/* Floating shadow: fades in as the cover lifts. */
+.ui-touch-cover::after {
+  box-shadow: var(--ui-touch-cover-shadow-float);
+  opacity: 0;
+  transition: opacity var(--ui-spring-snappy-duration) var(--ui-ease-standard);
+}
+
+.ui-touch-cover[data-playing]::before {
+  opacity: 0;
+  transition: opacity var(--ui-spring-gentle-duration) var(--ui-ease-standard);
+}
+
+.ui-touch-cover[data-playing]::after {
+  opacity: 1;
+  transition: opacity var(--ui-spring-gentle-duration) var(--ui-ease-standard);
+}
+
+.ui-touch-cover-art {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--ui-touch-cover-bg);
+  color: var(--ui-touch-cover-glyph-color);
+  /* Hairline edge so light artwork does not melt into a light page. */
+  outline: var(--ui-hairline) solid var(--ui-color-highlight);
+  outline-offset: calc(var(--ui-hairline) * -1);
+}
+
+.ui-touch-cover-image {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ui-touch-cover-glyph {
+  width: 38%;
+  height: 38%;
+}
+
+/* ── Sizes ── */
+.ui-touch-cover--small {
+  --ui-touch-cover-size: 64px;
+  --ui-touch-cover-shadow-float: var(--ui-shadow-raised);
+  --ui-touch-cover-shadow-rest: var(--ui-shadow-surface);
+}
+
+.ui-touch-cover--medium {
+  --ui-touch-cover-size: 160px;
+}
+
+.ui-touch-cover--large {
+  --ui-touch-cover-size: 264px;
+  --ui-touch-cover-radius: var(--ui-radius-lg);
+  --ui-touch-cover-shadow-float: var(--ui-shadow-overlay);
+}
+
+.ui-touch-cover--fill {
+  --ui-touch-cover-size: 100%;
+  --ui-touch-cover-radius: var(--ui-radius-lg);
+  --ui-touch-cover-shadow-float: var(--ui-shadow-overlay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Same size in both states; the art dims while paused and the shadows swap by a short fade. */
+  .ui-touch-cover,
+  .ui-touch-cover[data-playing] {
+    transform: none;
+    transition: none;
+  }
+
+  .ui-touch-cover::before,
+  .ui-touch-cover::after,
+  .ui-touch-cover[data-playing]::before,
+  .ui-touch-cover[data-playing]::after {
+    transition: opacity var(--ui-duration-normal) var(--ui-ease-standard);
+  }
+
+  .ui-touch-cover-art {
+    opacity: 0.78;
+    transition: opacity var(--ui-duration-normal) var(--ui-ease-standard);
+  }
+
+  .ui-touch-cover[data-playing] .ui-touch-cover-art {
+    opacity: 1;
+  }
+}

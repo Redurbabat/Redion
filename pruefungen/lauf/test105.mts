@@ -274,5 +274,27 @@ _weg(gegenOrdner, { recursive: true, force: true });
 p('Gegenprobe: ein echter Typfehler wird auch gesehen', gegenprobeSah,
   'sonst sagt der Punkt darüber „grün", ohne etwas zu prüfen');
 
+/* --------------------------------------------------------------------------
+ * 3b · UND DIE INSELN (E699)
+ * --------------------------------------------------------------------------
+ * `npm run typecheck` ruft seit E699 ZWEI Prüfungen: `tsc --noEmit` und
+ * `tsc -p tsconfig.islands.json` (TSX der Inseln und das Touch Kit, mit den
+ * Schaltern des Kits — der Grund steht in der Datei). Dieser Punkt sagt oben
+ * „ruft dasselbe, was `npm run typecheck` ruft" — also ruft er auch das.
+ * Sonst liefe die Hälfte des Typchecks nur, wenn jemand daran denkt, und
+ * der schnelle CI-Lauf, der diese Suite fährt, sähe sie nie.
+ * ------------------------------------------------------------------------*/
+const typRuf = String(JSON.parse(paket).scripts?.typecheck ?? '');
+p('`npm run typecheck` prüft auch die Inseln (tsconfig.islands.json)',
+  /tsc --noEmit && tsc -p tsconfig\.islands\.json/.test(typRuf), typRuf);
+let inselFehler: string | null = null;
+try {
+  _lauf(process.execPath, [TSC, '-p', 'tsconfig.islands.json'], { cwd: WURZEL, stdio: 'pipe' });
+} catch (e: unknown) {
+  const roh = String((e as { stdout?: string }).stdout || (e instanceof Error ? e.message : String(e)));
+  inselFehler = roh.split('\n').filter(z => /error TS\d+/.test(z)).slice(0, 6).join(' | ') || roh.slice(0, 300);
+}
+p('`tsc -p tsconfig.islands.json` läuft ohne Fehler durch', inselFehler === null, String(inselFehler));
+
 console.log(`\n  Suite 70 — Erzeugtes JavaScript: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

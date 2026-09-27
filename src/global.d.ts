@@ -24,6 +24,41 @@ type ID = string;
 type ISODateTime = string;
 
 /**
+ * Die React-Inseln (E699) — die Schnittstelle von `quell/islands/islands.js`.
+ *
+ * Das Bündel ist kein TypeScript unter `src/`, das `tsconfig.bauen.json`
+ * kennt, sondern TSX, das `bauen-inseln.mts` mit Vite baut. Die Schale holt
+ * es über `Inseln.bereit()` (`src/schale/inseln/laden.ts`) und bekommt dann
+ * genau diese vier Dinge — geprüft in `test578` (die Namen) und `test579`
+ * (das Verhalten). Steht hier etwas anderes als in `src/islands/main.tsx`,
+ * wird `test578` rot.
+ *
+ * Nur Ansicht: `props` hinein, Rückrufe hinaus. Keine Insel liest `Store`.
+ */
+interface RedionIslandsApi {
+  /** Stand der Schnittstelle. */
+  readonly version: string;
+  /** Eine Insel an `host` hängen; steht dort schon eine, bekommt sie die neuen Props. */
+  mount(host: Element, name: string, props?: Record<string, unknown>): void;
+  /** Dieselbe Insel, neue Props. Ohne Insel an `host` ein Fehler. */
+  update(host: Element, props?: Record<string, unknown>): void;
+  /** Die Insel wieder weg, restlos. Ohne Insel tut es nichts. */
+  unmount(host: Element): void;
+}
+
+/**
+ * Was die zwei Bündel ans Fenster hängen — erst NACH `Inseln.bereit()`,
+ * beim Start steht beides nicht da (`test579` §1). Deshalb optional: wer es
+ * liest, muss mit `undefined` rechnen.
+ */
+interface Window {
+  /** `quell/fremd/react/react.js`: React, React DOM, createRoot, JSX. */
+  RedionReact?: unknown;
+  /** `quell/islands/islands.js`: die Inseln. */
+  RedionIslands?: RedionIslandsApi;
+}
+
+/**
  * Die Module aus `quell/`, die noch nicht migriert sind.
  *
  * Sie stehen hier als `any`, und das ist die ehrliche Angabe: über sie ist

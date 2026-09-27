@@ -93,6 +93,33 @@ const fremd = new Set<string>(
         .map((e: { pfad: string }) => e.pfad)
     : []);
 
+/* DIE DRITTE SORTE ERZEUGTES JAVASCRIPT: DAS BÜNDEL (E699).
+   `bauen-inseln.mts` baut aus `src/islands/*.tsx` und dem Touch Kit zwei
+   klassische Skripte — React (`quell/fremd/react/react.js`, zugleich fremd)
+   und die Inseln (`quell/islands/islands.js`). Sie sind Ausgabe wie
+   `quell/**.js` aus tsc, nur mit einem anderen Werkzeug gebaut.
+
+   ABER NUR, WENN ES BEWIESEN IST. Ein Eintrag in `buendel-bestand.json`
+   allein entlastet nichts — sonst wäre die Datei ein zweites
+   `js-bestand.json`, das niemand schrumpfen lässt. Ein Bündel zählt nur als
+   erzeugt, wenn (1) seine Quelle daliegt, (2) der Bau daliegt und (3) der
+   Wächter daliegt UND die Datei beim Namen nennt: `test578` baut bei jedem
+   Lauf neu und vergleicht Byte für Byte. Fehlt eines der drei, ist die
+   Datei für diesen Lauf von Hand geschrieben — und rot. */
+const BUENDEL = dazu(WURZEL, 'pruefungen/buendel-bestand.json');
+type BuendelEintrag = { pfad: string; quelle: string };
+type Buendel = { bau?: string; waechter?: string; buendel?: BuendelEintrag[] };
+const bewiesen = (b: Buendel, e: BuendelEintrag, gibt: (rel: string) => boolean,
+                  waechterText: string): boolean =>
+  /\.js$/.test(e.pfad) && gibt(e.quelle) && !!b.bau && gibt(b.bau) &&
+  !!b.waechter && waechterText.includes(e.pfad);
+const buendel: Buendel = da(BUENDEL) ? JSON.parse(lies(BUENDEL, 'utf8')) : {};
+const waechterDatei = dazu(WURZEL, 'pruefungen/lauf', (buendel.waechter ?? '') + '.mts');
+const waechterText = buendel.waechter && da(waechterDatei) ? lies(waechterDatei, 'utf8') : '';
+const gibt = (rel: string): boolean => da(dazu(WURZEL, rel));
+for (const e of buendel.buendel ?? [])
+  if (bewiesen(buendel, e, gibt, waechterText)) erzeugt.add(e.pfad);
+
 const vonHand = alles
   .filter(f => /\.(js|mjs|cjs)$/.test(f))
   .filter(f => !erzeugt.has(f))
@@ -145,6 +172,23 @@ const vorhanden = new Set<string>(vonHand);
 const verwaist = eingetragen.filter(f => !vorhanden.has(f));
 p('Kein Eintrag zeigt ins Leere', verwaist.length === 0,
   verwaist.slice(0, 8).join(', ') + '  →  aus js-bestand.json streichen');
+
+/* ==========================================================================
+ * 1b · DIE BÜNDEL SIND BEWIESEN, NICHT NUR EINGETRAGEN (E699)
+ * ------------------------------------------------------------------------
+ * Die Gegenproben stehen hier, weil die Ausnahme oben sonst eine Behauptung
+ * wäre: ein Eintrag ohne Quelle oder ohne Wächter darf NICHT entlasten.
+ * ========================================================================*/
+console.log('\n1b · Die Bündel aus bauen-inseln.mts zählen nur mit Beweis (E699)');
+const inselBuendel: BuendelEintrag = { pfad: 'quell/islands/islands.js', quelle: 'src/islands/main.tsx' };
+p('Das Inselbündel ist bewiesen erzeugt (Quelle, Bau, test578 nennt es)',
+  bewiesen(buendel, inselBuendel, gibt, waechterText),
+  JSON.stringify({ quelle: gibt(inselBuendel.quelle), bau: buendel.bau, waechter: buendel.waechter }));
+p('Gegenprobe: ohne Quelle wäre es von Hand geschrieben',
+  !bewiesen(buendel, { ...inselBuendel, quelle: 'src/islands/gibt-es-nicht.tsx' }, gibt, waechterText));
+p('Gegenprobe: ohne einen Wächter, der es nennt, auch', !bewiesen(buendel, inselBuendel, gibt, ''));
+p('Gegenprobe: und ein Stilblatt ist kein JavaScript-Bündel',
+  !bewiesen(buendel, { pfad: 'quell/islands/islands.css', quelle: 'src/islands/main.tsx' }, gibt, waechterText));
 
 /* ==========================================================================
  * 2 · DER FORTSCHRITT
@@ -307,9 +351,27 @@ p('@types/node steht bei den Entwicklungsabhängigkeiten',
    Zwischen E78 und E80 stand hier eine Allowlist (react, dexie, zod,
    prosemirror …) — Redur hat den React-Umbau nach Ansicht des Rohbaus
    widerrufen, und mit ihm gingen alle elf Pakete wieder. */
+/* UND SEIT E699 GILT ER IMMER NOCH — obwohl React zurück ist. Redur,
+   27. September 2026: „du kannst react nutzen keien problem". Aber React
+   kommt NICHT als Laufzeitpaket: `dependencies` bleibt leer. Es steht als
+   Werkstoff unter `devDependencies` (festgenagelt, unten), `bauen-inseln.mts`
+   packt es in `quell/fremd/react/react.js`, und DIESE Bytes stehen mit
+   Prüfsumme in `fremd-bestand.json` — wie pdf.js (E103). Ein `npm install`
+   ist für die Nutzung damit so wenig nötig wie vorher (§6). */
 const echte = Object.keys(JSON.parse(paketRoh).dependencies || {});
-p('… und echte Laufzeit-Abhängigkeiten gibt es KEINE (E80)',
+p('… und echte Laufzeit-Abhängigkeiten gibt es KEINE (E80, bestätigt in E699)',
   echte.length === 0, 'gefunden: ' + echte.join(', '));
+
+/* Der Werkstoff ist festgenagelt: ein `^` liesse `npm install` still eine
+   andere React-Fassung holen, und das Bündel sähe danach anders aus als
+   die Prüfsumme in fremd-bestand.json — ohne dass jemand etwas geändert
+   hätte. */
+const entw = JSON.parse(paketRoh).devDependencies || {};
+const genau: Record<string, string> = { react: '19.3.0', 'react-dom': '19.3.0', vite: '8.3.1',
+  '@types/react': '19.3.0', '@types/react-dom': '19.3.0' };
+const lose = Object.entries(genau).filter(([n, v]) => entw[n] !== v).map(([n]) => n + '=' + entw[n]);
+p('React, React DOM und Vite sind als Werkstoff GENAU festgenagelt (E699)', lose.length === 0,
+  lose.join(', '));
 
 console.log(`\n  Suite 73 — Keine neue JavaScript-Datei: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

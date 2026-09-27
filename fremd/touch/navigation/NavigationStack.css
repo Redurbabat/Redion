@@ -1,0 +1,165 @@
+/*
+ * NavigationStack — page positions are written per frame by JS (one spring
+ * + the finger), so pages have no CSS transition on transform. CSS holds
+ * the resting positions (percentages, so a resize needs no JS), the depth
+ * cues (edge shadow, dim) and the reduced-motion cross-fade.
+ * Values: Framework7 iOS pages (-20 % parallax, 16 px shadow, 10 % dim).
+ */
+
+.ui-touch-stack {
+  --ui-touch-stack-dim-color: light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.3));
+  --ui-touch-stack-shadow-color: light-dark(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.55));
+  --ui-touch-stack-shadow-width: 16px;
+
+  position: relative;
+  box-sizing: border-box;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  overflow: clip;
+  background-color: var(--ui-color-bg);
+  color: var(--ui-color-label);
+}
+
+.ui-touch-stack-page {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  background-color: var(--ui-color-bg);
+  color: var(--ui-color-label);
+}
+
+.ui-touch-stack-page[data-slot='top'] {
+  z-index: 2;
+}
+
+/*
+ * At rest the page below waits 20 % to the left, covered and unpainted (a 2D
+ * transform: no compositor layer while nothing moves; JS takes over per frame).
+ */
+.ui-touch-stack-page[data-slot='below'] {
+  z-index: 1;
+  transform: translateX(-20%);
+  visibility: hidden;
+}
+
+.ui-touch-stack[data-moving] > .ui-touch-stack-page[data-slot='below'] {
+  visibility: visible;
+}
+
+.ui-touch-stack[data-moving] > .ui-touch-stack-page {
+  will-change: transform;
+}
+
+/*
+ * Vertical scrolling stays native; horizontal pans reach the swipe-back
+ * handler instead of becoming a browser pan (which would cancel the pointer).
+ * touch-action stops at the nearest scroller, so the scrolling content needs
+ * it too; a screen with its own scroll container should set it there as well.
+ */
+.ui-touch-stack[data-can-swipe] > .ui-touch-stack-page,
+.ui-touch-stack[data-can-swipe] > .ui-touch-stack-page > .ui-touch-stack-content {
+  touch-action: pan-y pinch-zoom;
+}
+
+/* No text selection while a page is dragged. */
+.ui-touch-stack[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Its own stacking context: sticky bars inside stay under the page's dim. */
+.ui-touch-stack-content {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* A 16 px gradient just outside the left edge of the top page. */
+.ui-touch-stack-shadow {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  bottom: 0;
+  box-sizing: border-box;
+  width: var(--ui-touch-stack-shadow-width);
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 10%,
+    rgb(0 0 0 / 0.01) 50%,
+    var(--ui-touch-stack-shadow-color) 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui-touch-stack-page[data-slot='top'] > .ui-touch-stack-shadow {
+  opacity: 1;
+}
+
+/* Dims the page below while it is (partly) covered. */
+.ui-touch-stack-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  background-color: var(--ui-touch-stack-dim-color);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui-touch-stack-page[data-slot='below'] > .ui-touch-stack-dim {
+  opacity: 1;
+}
+
+/* Where focus lands after a push / pop (heading or page). */
+.ui-touch-stack-content:focus,
+[data-ui-stack-focused]:focus {
+  outline: none;
+}
+
+.ui-touch-stack-content:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+[data-ui-stack-focused]:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+  border-radius: var(--ui-radius-xs);
+}
+
+/* ── Reduced motion: no sliding; push fades the new page in, pop fades the old one out ── */
+@keyframes ui-touch-stack-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-touch-stack-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-stack-page[data-fade='in'] {
+    animation: ui-touch-stack-fade-in 200ms var(--ui-ease-standard);
+  }
+
+  .ui-touch-stack-page[data-fade='out'] {
+    animation: ui-touch-stack-fade-out 200ms var(--ui-ease-standard) forwards;
+  }
+
+  .ui-touch-stack[data-moving] > .ui-touch-stack-page {
+    will-change: auto;
+  }
+}

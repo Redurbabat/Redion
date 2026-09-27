@@ -1,0 +1,55 @@
+/*
+ * Touch kit — theming scope and shared helpers.
+ *
+ * `.ui-touch-root` follows the system theme; `data-ui-theme` forces one.
+ * Nothing here styles bare elements, so the kit can live inside any page.
+ */
+
+/* A root follows the system only when no ancestor (or itself) forces a theme. */
+.ui-touch-root:not([data-ui-theme], [data-ui-theme] *),
+[data-ui-theme='system'] {
+  color-scheme: light dark;
+}
+
+[data-ui-theme='light'] {
+  color-scheme: light;
+}
+
+[data-ui-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* light-dark() resolves where it is declared: re-declare the text colour in every themed subtree. */
+[data-ui-theme] {
+  color: var(--ui-color-label);
+}
+
+.ui-touch-root {
+  background-color: var(--ui-color-bg);
+  color: var(--ui-color-label);
+  font: var(--ui-text-body);
+  letter-spacing: var(--ui-tracking-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+}
+
+/* Text that exists for assistive technology only. */
+.ui-touch-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* One focus ring for every control: visible only for keyboard focus. */
+.ui-touch-focus-ring:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}

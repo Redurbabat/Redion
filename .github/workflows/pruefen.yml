@@ -84,6 +84,13 @@ jobs:
       # Sorte Fehler, wenn niemand sie stellt.
       - name: Erzeugtes JavaScript gegen die Quellen prüfen
         run: node pruefungen/lauf/test105.mts
+      # Die React-Inseln (E699): React und das Inselbündel werden neu gebaut
+      # und Byte für Byte mit dem verglichen, was im Verzeichnis liegt —
+      # dieselbe Frage wie darüber, nur für das, was Vite baut. Dazu die
+      # Prüfsummen des Fremdcodes und die Regeln gegen eine zweite
+      # Oberfläche. Kein Browser; rund zehn Sekunden.
+      - name: React-Inseln gegen ihre Quellen prüfen
+        run: node pruefungen/lauf/test578.mts
       # Rechnet SUMME dasselbe wie sum? Braucht keinen Browser.
       - name: Die deutschen Excel-Namen prüfen
         run: node pruefungen/lauf/test106.mts

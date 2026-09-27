@@ -1,0 +1,140 @@
+/* Popover / menu — grows out of its anchor (transform-origin set inline), shrinks back into it. */
+
+.ui-touch-popover-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ui-z-popover);
+}
+
+.ui-touch-popover {
+  position: fixed;
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--ui-radius-lg);
+  background: color-mix(in srgb, var(--ui-color-surface-raised) 88%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--ui-shadow-floating), inset 0 0 0 var(--ui-hairline) var(--ui-color-separator);
+  color: var(--ui-color-label);
+}
+
+.ui-touch-popover[data-placed] {
+  animation: ui-touch-popover-in var(--ui-spring-snappy-duration) var(--ui-spring-snappy) both;
+}
+
+.ui-touch-popover-layer[data-state='closing'] .ui-touch-popover {
+  animation: ui-touch-popover-out 150ms var(--ui-ease-exit) both;
+}
+
+.ui-touch-popover:focus {
+  outline: none;
+}
+
+.ui-touch-menu {
+  display: grid;
+  padding: var(--ui-space-1) 0;
+}
+
+.ui-touch-menu-item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  min-height: var(--ui-hit-min);
+  margin: 0;
+  padding: 0 var(--ui-space-4);
+  border: 0;
+  background: transparent;
+  color: var(--ui-color-label);
+  font: var(--ui-text-body);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 300ms var(--ui-ease-standard);
+}
+
+.ui-touch-menu-item + .ui-touch-menu-item {
+  box-shadow: inset 0 var(--ui-hairline) 0 var(--ui-color-separator);
+}
+
+.ui-touch-menu-item[data-pressed],
+.ui-touch-menu-item:focus-visible {
+  background: var(--ui-color-highlight);
+  transition-duration: 0ms;
+}
+
+.ui-touch-menu-item:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+.ui-touch-menu-item:disabled {
+  color: var(--ui-color-label-tertiary);
+  cursor: default;
+}
+
+.ui-touch-menu-item--destructive {
+  color: var(--ui-color-danger);
+}
+
+/* Context-menu target: lifts towards the finger while held. */
+.ui-touch-context-target {
+  border-radius: var(--ui-radius-lg);
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ui-touch-context-target[data-lifted] {
+  transform: scale(1.04);
+  transition: transform var(--ui-spring-gentle-duration) var(--ui-spring-gentle);
+}
+
+.ui-touch-context-target:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+@keyframes ui-touch-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@keyframes ui-touch-popover-out {
+  to {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes ui-touch-popover-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-touch-popover-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-popover[data-placed] {
+    animation: ui-touch-popover-fade 120ms var(--ui-ease-standard) both;
+  }
+
+  .ui-touch-popover-layer[data-state='closing'] .ui-touch-popover {
+    animation: ui-touch-popover-fade-out 120ms var(--ui-ease-standard) both;
+  }
+
+  .ui-touch-context-target,
+  .ui-touch-context-target[data-lifted] {
+    transform: none;
+    transition: none;
+  }
+}

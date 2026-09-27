@@ -4217,6 +4217,78 @@ ANSICHTEN['willkommen'] = {
   }
 };
 
+/* --- DER LOOK DES TOUCH KITS ALS SCHEMA (E699) ----------------------------
+   Redur: „Also beiden bei der ausehen dort aollte ich die fraben ändern
+   kann". Drei Bilder: die Karten in „Aussehen" (zehn statt acht, die zwei
+   neuen gewählt), die App in diesem Schema, und die Probe-Insel — ein Knopf
+   und ein Schalter aus dem Kit — in Redions eigenen Farben. Das Schema
+   folgt dem Thema des Bildes: dunkel → „Touch Kit dunkel", hell → „hell". */
+ANSICHTEN['touchkitAussehen'] = {
+  titel: '„Aussehen": zehn Schemata, der Look des Touch Kits gewählt (E699)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const hell = document.documentElement.dataset['theme'] === 'light';
+    Aussehen.setzen({ schema: hell ? 'touchkit-hell' : 'touchkit-dunkel', akzent: '' });
+    Aussehen.dialog();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['touchkitApp'] = {
+  titel: 'Die App im Schema „Touch Kit" (E699)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const hell = document.documentElement.dataset['theme'] === 'light';
+    Aussehen.setzen({ schema: hell ? 'touchkit-hell' : 'touchkit-dunkel', akzent: '' });
+    const s = Store.addPage(null, { text: 'Wärmepumpe — Inbetriebnahme', icon: '🔧' });
+    Store.addBlock(s.id, 'h2', { text: 'Was vor dem Einschalten geprüft wird' });
+    Store.addBlock(s.id, 'text', { text: 'Vorlauftemperatur und Spreizung an beiden Fühlern messen, ' +
+      'dann den Volumenstrom gegen das Datenblatt halten.' });
+    Store.addBlock(s.id, 'todo', { text: 'Sicherheitsventil: Ansprechdruck ablesen', checked: true });
+    Store.addBlock(s.id, 'todo', { text: 'Protokoll an den Kunden schicken' });
+    Store.addBlock(s.id, 'callout', { text: 'Nicht schätzen — messen.', icon: '💡', color: 'bg-blue' });
+    App.oeffne(s.id);
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['inselProbe'] = {
+  titel: 'Die Probe-Insel (nur test579): Knopf und Schalter des Kits in Redions Farben (E699)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const hell = document.documentElement.dataset['theme'] === 'light';
+    Aussehen.setzen({ schema: hell ? 'hell' : 'standard', akzent: '' });
+    const s = Store.addPage(null, { text: 'Probe-Insel', icon: '🏝️' });
+    Store.addBlock(s.id, 'text', { text: 'Darunter steht die Probe aus E699 — ein Knopf und ein Schalter ' +
+      'aus dem Touch Kit, eingehängt über Inseln.bereit(). Sie steht an keiner Stelle der App; ' +
+      'dieses Bild zeigt nur, dass die Brücke Redions Farben trägt.' });
+    App.oeffne(s.id);
+    await new Promise(r => setTimeout(r, 700));
+    const api = await Inseln.bereit();
+    const wirt = document.createElement('div');
+    wirt.style.cssText = 'margin:18px 0;padding:16px;border:1px dashed var(--line);border-radius:12px';
+    (document.querySelector('#page') ?? document.body).appendChild(wirt);
+    const zwei = document.createElement('div');
+    wirt.after(zwei);
+    zwei.style.cssText = wirt.style.cssText;
+    api.mount(wirt, 'probe', { label: 'Speichern', toggleLabel: 'Automatisch sichern', checked: false });
+    api.mount(zwei, 'probe', { label: 'Senden', toggleLabel: 'Automatisch sichern', checked: true });
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 ANSICHTEN['staffelei'] = {
   titel: 'Die Staffelei: hell und dunkel als Bild (E462)',
   bauen: async () => {

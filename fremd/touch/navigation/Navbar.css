@@ -1,0 +1,214 @@
+/*
+ * Navbar — large title that collapses into the bar.
+ *
+ * JS writes two custom properties on the header once per animation frame:
+ *   --ui-touch-navbar-collapse  0 (large title fully visible) … 1 (under the bar)
+ *   --ui-touch-navbar-stretch   1 … 1.12 while pulled past the top
+ * Everything else is mapped here, with transform and opacity only. There are
+ * no transitions on the scroll-linked values: they follow the finger.
+ */
+
+/* The header box is dissolved so the bar sticks for the whole scroll container. */
+.ui-touch-navbar {
+  display: contents;
+}
+
+/* ── Sticky bar ── */
+/*
+ * --ui-touch-navbar-inset-top (optional, set by the app): room above the bar
+ * for a status bar; default: the device safe area.
+ */
+.ui-touch-navbar-bar {
+  --ui-touch-navbar-progress: var(--ui-touch-navbar-collapse, 0);
+  --ui-touch-navbar-top: var(--ui-touch-navbar-inset-top, env(safe-area-inset-top, 0px));
+
+  position: sticky;
+  top: 0;
+  z-index: var(--ui-z-bar);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-height: calc(var(--ui-navbar-height) + var(--ui-touch-navbar-top));
+  padding: var(--ui-touch-navbar-top) var(--ui-space-2) 0;
+  color: var(--ui-color-label);
+  isolation: isolate;
+}
+
+/* Material on its own layer: only its opacity changes, the blur itself is static. */
+.ui-touch-navbar-material {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  box-sizing: border-box;
+  background-color: var(--ui-color-bar);
+  opacity: var(--ui-touch-navbar-progress);
+  pointer-events: none;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Hairline: appears only in the last third, when content really runs under the bar. */
+.ui-touch-navbar-material::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background-color: var(--ui-color-separator);
+  opacity: clamp(0, (var(--ui-touch-navbar-progress) - 0.66) * 3, 1);
+  transform: scaleY(0.5);
+  transform-origin: bottom;
+}
+
+.ui-touch-navbar-leading,
+.ui-touch-navbar-trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  min-width: 0;
+}
+
+.ui-touch-navbar-leading {
+  justify-self: start;
+}
+
+.ui-touch-navbar-trailing {
+  justify-self: end;
+}
+
+/* Small centred title: fades in over the last 40 % of the collapse and settles up by 4 px. */
+.ui-touch-navbar-title {
+  --ui-touch-navbar-title-in: clamp(0, (var(--ui-touch-navbar-progress) - 0.6) * 2.5, 1);
+
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ui-color-label);
+  font: var(--ui-text-headline);
+  letter-spacing: var(--ui-tracking-body);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-touch-navbar[data-large] .ui-touch-navbar-title {
+  opacity: var(--ui-touch-navbar-title-in);
+  transform: translateY(calc((1 - var(--ui-touch-navbar-title-in)) * 4px));
+}
+
+/* ── Back button: chevron + label, nudges back while pressed ── */
+.ui-touch-navbar-back {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  max-width: min(40vw, 180px);
+  min-width: var(--ui-hit-min);
+  min-height: var(--ui-hit-min);
+  margin: 0;
+  padding: 0 var(--ui-space-2) 0 0;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: var(--ui-color-accent);
+  font: var(--ui-text-body);
+  letter-spacing: var(--ui-tracking-body);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--ui-duration-normal) var(--ui-ease-standard);
+}
+
+.ui-touch-navbar-back-glyph {
+  flex: none;
+  margin-right: -2px;
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+.ui-touch-navbar-back-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-touch-navbar-back[data-pressed] {
+  opacity: 0.35;
+  transition-duration: 0ms;
+}
+
+.ui-touch-navbar-back[data-pressed] .ui-touch-navbar-back-glyph {
+  transform: translateX(-3px);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-navbar-back:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+/* ── Large title: in the scroll flow, fades by half-way, stretches when pulled ── */
+.ui-touch-navbar-large {
+  box-sizing: border-box;
+  padding: 3px var(--ui-space-4) var(--ui-space-2);
+  /* A stretched long title must not widen the scroll area. */
+  overflow-x: clip;
+}
+
+.ui-touch-navbar-large-title {
+  box-sizing: border-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ui-color-label);
+  font: var(--ui-text-large-title);
+  letter-spacing: var(--ui-tracking-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: clamp(0, 1 - var(--ui-touch-navbar-collapse, 0) * 2, 1);
+  transform: scale(var(--ui-touch-navbar-stretch, 1));
+  transform-origin: left bottom;
+}
+
+.ui-touch-navbar-accessory {
+  box-sizing: border-box;
+  padding: 0 var(--ui-space-4) var(--ui-space-2);
+}
+
+/*
+ * Reduced motion: no stretch; the small title and the material switch at
+ * half-way (data-collapsed) with a short fade instead of following the scroll.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-navbar-large-title {
+    transform: none;
+  }
+
+  .ui-touch-navbar-material,
+  .ui-touch-navbar[data-large] .ui-touch-navbar-title {
+    opacity: 0;
+    transform: none;
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-navbar-material::after {
+    opacity: 1;
+  }
+
+  .ui-touch-navbar[data-collapsed] .ui-touch-navbar-material,
+  .ui-touch-navbar[data-large][data-collapsed] .ui-touch-navbar-title {
+    opacity: 1;
+  }
+
+  .ui-touch-navbar-back-glyph,
+  .ui-touch-navbar-back[data-pressed] .ui-touch-navbar-back-glyph {
+    transform: none;
+    transition: none;
+  }
+}

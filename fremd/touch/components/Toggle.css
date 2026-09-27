@@ -1,0 +1,259 @@
+/*
+ * Toggle — iOS-style switch drawn from a real checkbox.
+ *
+ * All visual state comes from the input (`:checked`, `:disabled`,
+ * `:focus-visible`) through sibling selectors, so an uncontrolled toggle
+ * can never show stale visuals. The press state is `data-pressed` on the
+ * label (usePress), because `:active` is unreliable on iOS Safari.
+ *
+ * Two independent motions share the knob:
+ *   translate — travel between off/on, `snappy` spring
+ *   transform — press stretch, fast in / `press` spring out
+ * The stretch keeps the resting edge fixed by translating half the extra
+ * width, instead of switching transform-origin (an origin flip while
+ * stretched would make the knob jump when it is released and moves).
+ *
+ * Only transitions are used (no keyframes), so a switch never moves on
+ * first paint. Reduced motion swaps the moving knob for two still ones
+ * that cross-fade; forced colours redraw everything in system colours.
+ */
+
+.ui-touch-toggle {
+  --ui-touch-toggle-width: 51px;
+  --ui-touch-toggle-height: 31px;
+  --ui-touch-toggle-knob-size: 27px;
+  --ui-touch-toggle-inset: calc((var(--ui-touch-toggle-height) - var(--ui-touch-toggle-knob-size)) / 2);
+  --ui-touch-toggle-travel: calc(
+    var(--ui-touch-toggle-width) - var(--ui-touch-toggle-knob-size) - 2 * var(--ui-touch-toggle-inset)
+  );
+  --ui-touch-toggle-stretch: 1.18;
+  --ui-touch-toggle-stretch-shift: calc(var(--ui-touch-toggle-knob-size) * (var(--ui-touch-toggle-stretch) - 1) / 2);
+  --ui-touch-toggle-off: var(--ui-color-fill-strong);
+  --ui-touch-toggle-on: var(--ui-color-success);
+  --ui-touch-toggle-off-hover: color-mix(in srgb, var(--ui-color-label) 8%, var(--ui-touch-toggle-off));
+  --ui-touch-toggle-on-hover: color-mix(in srgb, var(--ui-touch-toggle-on) 88%, var(--ui-color-label));
+  --ui-touch-toggle-knob: var(--ui-color-knob);
+  --ui-touch-toggle-knob-shadow: var(--ui-shadow-knob);
+  --ui-touch-toggle-fade: 200ms;
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-width: var(--ui-hit-min);
+  min-height: var(--ui-row-min-height);
+  vertical-align: middle;
+  color: var(--ui-color-label);
+  font: var(--ui-text-body);
+  letter-spacing: var(--ui-tracking-body);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-touch-toggle--block {
+  display: flex;
+  width: 100%;
+}
+
+/* The real control: invisible, but covering the whole label so touch,
+   screen-reader touch exploration and the pointer all land on it. */
+.ui-touch-toggle-input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  appearance: none;
+  cursor: inherit;
+}
+
+.ui-touch-toggle-track {
+  position: relative;
+  box-sizing: border-box;
+  flex: none;
+  width: var(--ui-touch-toggle-width);
+  height: var(--ui-touch-toggle-height);
+  border-radius: var(--ui-radius-pill);
+  background-color: var(--ui-touch-toggle-off);
+  box-shadow: inset 0 1px 2px var(--ui-shadow-ink);
+  transition:
+    background-color var(--ui-touch-toggle-fade) var(--ui-ease-standard),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-toggle-knob {
+  position: absolute;
+  top: var(--ui-touch-toggle-inset);
+  left: var(--ui-touch-toggle-inset);
+  box-sizing: border-box;
+  width: var(--ui-touch-toggle-knob-size);
+  height: var(--ui-touch-toggle-knob-size);
+  border-radius: var(--ui-radius-pill);
+  background-color: var(--ui-touch-toggle-knob);
+  box-shadow: var(--ui-touch-toggle-knob-shadow);
+  translate: 0 0;
+  transition:
+    translate var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+.ui-touch-toggle-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-toggle--label-start > .ui-touch-toggle-text {
+  order: -1;
+}
+
+/* ── On ── */
+.ui-touch-toggle-input:checked + .ui-touch-toggle-track {
+  background-color: var(--ui-touch-toggle-on);
+}
+
+.ui-touch-toggle-input:checked + .ui-touch-toggle-track > .ui-touch-toggle-knob {
+  translate: var(--ui-touch-toggle-travel) 0;
+}
+
+/* ── Hover (pointer devices only) ── */
+@media (hover: hover) {
+  .ui-touch-toggle:hover > .ui-touch-toggle-input:not(:checked, :disabled) + .ui-touch-toggle-track {
+    background-color: var(--ui-touch-toggle-off-hover);
+  }
+
+  .ui-touch-toggle:hover > .ui-touch-toggle-input:checked:not(:disabled) + .ui-touch-toggle-track {
+    background-color: var(--ui-touch-toggle-on-hover);
+  }
+}
+
+/* ── Press: the knob stretches, anchored on the side it rests on ── */
+.ui-touch-toggle[data-pressed] .ui-touch-toggle-knob {
+  transform: translateX(var(--ui-touch-toggle-stretch-shift)) scaleX(var(--ui-touch-toggle-stretch));
+  transition:
+    translate var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    transform var(--ui-duration-instant) var(--ui-ease-press);
+}
+
+.ui-touch-toggle[data-pressed] .ui-touch-toggle-input:checked + .ui-touch-toggle-track > .ui-touch-toggle-knob {
+  transform: translateX(calc(-1 * var(--ui-touch-toggle-stretch-shift))) scaleX(var(--ui-touch-toggle-stretch));
+}
+
+/* ── Focus ── */
+.ui-touch-toggle-input:focus-visible + .ui-touch-toggle-track {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+/* ── Disabled ── */
+.ui-touch-toggle:has(> .ui-touch-toggle-input:disabled) {
+  cursor: default;
+}
+
+.ui-touch-toggle-input:disabled + .ui-touch-toggle-track,
+.ui-touch-toggle-input:disabled ~ .ui-touch-toggle-text {
+  opacity: 0.38;
+}
+
+/* ── Forced colours (Windows contrast themes): backgrounds are dropped, so
+   draw the track outline, knob and on-state with system colours ── */
+@media (forced-colors: active) {
+  .ui-touch-toggle {
+    --ui-touch-toggle-off: Canvas;
+    --ui-touch-toggle-on: Highlight;
+    --ui-touch-toggle-off-hover: Canvas;
+    --ui-touch-toggle-on-hover: Highlight;
+    --ui-touch-toggle-knob: CanvasText;
+    --ui-touch-toggle-knob-shadow: none;
+  }
+
+  .ui-touch-toggle-track {
+    box-shadow: inset 0 0 0 1px CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .ui-touch-toggle-input:checked + .ui-touch-toggle-track {
+    --ui-touch-toggle-knob: HighlightText;
+
+    box-shadow: none;
+  }
+
+  .ui-touch-toggle-input:disabled + .ui-touch-toggle-track {
+    --ui-touch-toggle-on: GrayText;
+    --ui-touch-toggle-knob: GrayText;
+
+    box-shadow: inset 0 0 0 1px GrayText;
+    opacity: 1;
+  }
+
+  .ui-touch-toggle-input:disabled:checked + .ui-touch-toggle-track {
+    --ui-touch-toggle-knob: Canvas;
+  }
+
+  .ui-touch-toggle-input:disabled ~ .ui-touch-toggle-text {
+    color: GrayText;
+    opacity: 1;
+  }
+
+  .ui-touch-toggle-input:focus-visible + .ui-touch-toggle-track {
+    outline-color: Highlight;
+  }
+}
+
+/* ── Reduced motion: no stretch and no travel. The moving knob gives way to
+   two still knobs, one per side, that cross-fade with :checked. Only
+   transitions are used, so nothing plays on first paint. ── */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-toggle-knob,
+  .ui-touch-toggle[data-pressed] .ui-touch-toggle-knob,
+  .ui-touch-toggle[data-pressed] .ui-touch-toggle-input:checked + .ui-touch-toggle-track > .ui-touch-toggle-knob {
+    visibility: hidden;
+    transform: none;
+    transition: none;
+  }
+
+  .ui-touch-toggle-track::before,
+  .ui-touch-toggle-track::after {
+    content: '';
+    position: absolute;
+    top: var(--ui-touch-toggle-inset);
+    left: var(--ui-touch-toggle-inset);
+    box-sizing: border-box;
+    width: var(--ui-touch-toggle-knob-size);
+    height: var(--ui-touch-toggle-knob-size);
+    border-radius: var(--ui-radius-pill);
+    background-color: var(--ui-touch-toggle-knob);
+    box-shadow: var(--ui-touch-toggle-knob-shadow);
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-toggle-track::after {
+    translate: var(--ui-touch-toggle-travel) 0;
+    opacity: 0;
+  }
+
+  .ui-touch-toggle-input:checked + .ui-touch-toggle-track::before {
+    opacity: 0;
+  }
+
+  .ui-touch-toggle-input:checked + .ui-touch-toggle-track::after {
+    opacity: 1;
+  }
+
+  /* Pressed: the visible knob dims instead of stretching. */
+  .ui-touch-toggle[data-pressed] > .ui-touch-toggle-input:not(:checked) + .ui-touch-toggle-track::before,
+  .ui-touch-toggle[data-pressed] > .ui-touch-toggle-input:checked + .ui-touch-toggle-track::after {
+    opacity: 0.7;
+    transition-duration: var(--ui-duration-instant);
+    transition-timing-function: var(--ui-ease-press);
+  }
+}

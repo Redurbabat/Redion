@@ -1,0 +1,311 @@
+/*
+ * Segmented — sliding-thumb segmented control.
+ *
+ * Geometry is CSS only: equal grid columns and one absolutely positioned
+ * thumb whose width and offset come from the segment count and the
+ * selected index (set inline as --ui-touch-segmented-count / -index):
+ *   width     = (100% - 2·pad - gap·(n-1)) / n
+ *   translate = index·100% + index·gap   (% of the thumb's own width)
+ *
+ * Motion on the thumb is split over three properties so they never fight:
+ *   translate — slide to the new segment, `snappy` spring
+ *   scale     — shrink while the selected segment is pressed, press spring
+ *   transform — (inner fill) one-shot stretch keyframe, restarted by React key
+ */
+
+.ui-touch-segmented {
+  --ui-touch-segmented-count: 1;
+  --ui-touch-segmented-index: 0;
+  --ui-touch-segmented-height: var(--ui-control-height-small);
+  --ui-touch-segmented-pad: 2px;
+  --ui-touch-segmented-gap: 4px;
+  --ui-touch-segmented-radius: var(--ui-radius-sm);
+  --ui-touch-segmented-inner-radius: calc(var(--ui-touch-segmented-radius) - var(--ui-touch-segmented-pad));
+  --ui-touch-segmented-segment-height: calc(var(--ui-touch-segmented-height) - 2 * var(--ui-touch-segmented-pad));
+  --ui-touch-segmented-track: var(--ui-color-fill);
+  /* Dark surfaces: surface-raised is darker than the fill, so lift the thumb to stay "on top". */
+  --ui-touch-segmented-thumb-bg: light-dark(
+    var(--ui-color-surface-raised),
+    color-mix(in srgb, var(--ui-color-surface-raised) 76%, #ffffff)
+  );
+  --ui-touch-segmented-thumb-shadow: var(--ui-shadow-raised);
+  --ui-touch-segmented-press-scale: 0.95;
+  --ui-touch-segmented-stretch: 1.06;
+  --ui-touch-segmented-stretch-duration: 380ms;
+  /* Narrowest segment whose hit area (segment + half a gap each side) is still 44 px wide. */
+  --ui-touch-segmented-min-segment: calc(var(--ui-hit-min) - var(--ui-touch-segmented-gap));
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-grid;
+  grid-template-columns: repeat(var(--ui-touch-segmented-count), minmax(0, 1fr));
+  gap: var(--ui-touch-segmented-gap);
+  /* Short labels ("A", "An") would give segments narrower than a finger; the
+     columns are equal, so a minimum width for the whole control fixes all of
+     them. Capped at 100% so a crowded control still never overflows. */
+  min-width: min(
+    100%,
+    calc(
+      var(--ui-touch-segmented-count) * var(--ui-touch-segmented-min-segment) + (var(--ui-touch-segmented-count) - 1) *
+        var(--ui-touch-segmented-gap) + 2 * var(--ui-touch-segmented-pad)
+    )
+  );
+  max-width: 100%;
+  height: var(--ui-touch-segmented-height);
+  padding: var(--ui-touch-segmented-pad);
+  border-radius: var(--ui-touch-segmented-radius);
+  background-color: var(--ui-touch-segmented-track);
+  vertical-align: middle;
+  isolation: isolate;
+}
+
+.ui-touch-segmented--block {
+  display: grid;
+  width: 100%;
+}
+
+/* ── Thumb ── */
+.ui-touch-segmented-thumb {
+  position: absolute;
+  top: var(--ui-touch-segmented-pad);
+  bottom: var(--ui-touch-segmented-pad);
+  left: var(--ui-touch-segmented-pad);
+  box-sizing: border-box;
+  width: calc(
+    (
+        100% - 2 * var(--ui-touch-segmented-pad) - var(--ui-touch-segmented-gap) *
+          (var(--ui-touch-segmented-count) - 1)
+      ) / var(--ui-touch-segmented-count)
+  );
+  translate: calc(
+      var(--ui-touch-segmented-index) * 100% + var(--ui-touch-segmented-index) * var(--ui-touch-segmented-gap)
+    )
+    0;
+  pointer-events: none;
+  transition:
+    translate var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    scale var(--ui-spring-press-duration) var(--ui-spring-press),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-segmented-thumb-fill {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--ui-touch-segmented-inner-radius);
+  background-color: var(--ui-touch-segmented-thumb-bg);
+  box-shadow: var(--ui-touch-segmented-thumb-shadow);
+}
+
+.ui-touch-segmented-thumb-fill[data-stretch] {
+  animation: ui-touch-segmented-stretch var(--ui-touch-segmented-stretch-duration) var(--ui-ease-standard);
+}
+
+@keyframes ui-touch-segmented-stretch {
+  0% {
+    transform: scaleX(1);
+  }
+
+  35% {
+    transform: scaleX(var(--ui-touch-segmented-stretch));
+  }
+
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* Nothing selected (controlled value outside the options): no thumb. */
+.ui-touch-segmented:not(:has(> [aria-checked='true'])) > .ui-touch-segmented-thumb {
+  opacity: 0;
+}
+
+/* Pressing the selected segment presses the thumb itself (iOS). */
+.ui-touch-segmented:has(> [aria-checked='true'][data-pressed]) > .ui-touch-segmented-thumb {
+  scale: var(--ui-touch-segmented-press-scale);
+  transition:
+    translate var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    scale var(--ui-duration-instant) var(--ui-ease-press),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-segmented[aria-disabled='true'] > .ui-touch-segmented-thumb {
+  opacity: 0.6;
+}
+
+/* ── Segments ── */
+.ui-touch-segmented-segment {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: var(--ui-touch-segmented-segment-height);
+  margin: 0;
+  padding: 0 var(--ui-space-2);
+  border: 0;
+  border-radius: var(--ui-touch-segmented-inner-radius);
+  background-color: transparent;
+  color: var(--ui-color-label);
+  font: var(--ui-text-footnote);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-body);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* 32 px control, 44 px finger target: extend each segment up/down and into the gaps. */
+.ui-touch-segmented-segment::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--ui-touch-segmented-segment-height) - var(--ui-hit-min)) / 2)
+    calc(var(--ui-touch-segmented-gap) / -2);
+}
+
+/* Hairline separators between unselected neighbours; they vanish next to the thumb. */
+.ui-touch-segmented-segment::before {
+  content: '';
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  left: calc(var(--ui-touch-segmented-gap) / -2 - 0.5px);
+  width: 1px;
+  border-radius: 1px;
+  background-color: var(--ui-color-separator);
+  pointer-events: none;
+  transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-segmented-segment:first-of-type::before,
+.ui-touch-segmented-segment[aria-checked='true']::before,
+.ui-touch-segmented-segment[aria-checked='true'] + .ui-touch-segmented-segment::before {
+  opacity: 0;
+}
+
+.ui-touch-segmented-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-1);
+  min-width: 0;
+  max-width: 100%;
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* Visible text and an invisible bold copy share one grid cell → constant width. */
+.ui-touch-segmented-label {
+  display: inline-grid;
+  min-width: 0;
+}
+
+.ui-touch-segmented-text,
+.ui-touch-segmented-reserve {
+  grid-area: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-touch-segmented-reserve {
+  font-weight: 600;
+  visibility: hidden;
+}
+
+.ui-touch-segmented-segment[aria-checked='true'] .ui-touch-segmented-text {
+  font-weight: 600;
+}
+
+@media (hover: hover) {
+  .ui-touch-segmented-segment:not([aria-checked='true'], :disabled):hover {
+    background-color: color-mix(in srgb, var(--ui-color-highlight) 60%, transparent);
+  }
+}
+
+.ui-touch-segmented-segment[data-pressed] .ui-touch-segmented-content {
+  transform: scale(var(--ui-touch-segmented-press-scale));
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-segmented-segment[data-pressed]:not([aria-checked='true']) .ui-touch-segmented-content {
+  opacity: 0.6;
+}
+
+.ui-touch-segmented-segment:focus-visible {
+  z-index: 1;
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+.ui-touch-segmented-segment:disabled {
+  cursor: default;
+}
+
+.ui-touch-segmented-segment:disabled .ui-touch-segmented-content {
+  opacity: 0.38;
+}
+
+/* ── Forced colours (Windows contrast themes): the thumb's fill and shadow are
+   dropped, so outline the control and ring the thumb in system colours ── */
+@media (forced-colors: active) {
+  .ui-touch-segmented {
+    outline: 1px solid ButtonText;
+    outline-offset: -1px;
+  }
+
+  .ui-touch-segmented-thumb-fill {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .ui-touch-segmented[aria-disabled='true'] > .ui-touch-segmented-thumb > .ui-touch-segmented-thumb-fill {
+    outline-color: GrayText;
+  }
+
+  .ui-touch-segmented-segment:disabled {
+    color: GrayText;
+  }
+}
+
+/* ── Reduced motion: the thumb jumps and fades in; nothing scales or stretches ── */
+@keyframes ui-touch-segmented-fade {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-segmented-thumb {
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-segmented:has(> [aria-checked='true'][data-pressed]) > .ui-touch-segmented-thumb {
+    scale: none;
+  }
+
+  .ui-touch-segmented-thumb-fill[data-stretch] {
+    animation: ui-touch-segmented-fade var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-segmented-content {
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-segmented-segment[data-pressed] .ui-touch-segmented-content {
+    transform: none;
+    opacity: 0.6;
+  }
+}

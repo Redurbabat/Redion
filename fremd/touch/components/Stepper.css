@@ -1,0 +1,269 @@
+/*
+ * Stepper — minus / value / plus in one capsule.
+ *
+ * Three motions, all transform / opacity:
+ *  1. Buttons: press spring (sink at once, spring back on release).
+ *  2. Capsule: rocks a few degrees towards the pressed side, like a rocker switch.
+ *  3. Value: rolls like a counter drum. The old number turns away (up on
+ *     increment, down on decrement) while the new one turns in from the
+ *     other side, timed by the snappy spring (linear() easing token).
+ */
+
+.ui-touch-stepper {
+  --ui-touch-stepper-height: var(--ui-control-height-small);
+  --ui-touch-stepper-button-width: var(--ui-hit-min);
+  --ui-touch-stepper-bg: var(--ui-color-fill);
+  --ui-touch-stepper-fg: var(--ui-color-accent);
+  --ui-touch-stepper-press-bg: var(--ui-color-fill-strong);
+  --ui-touch-stepper-press-scale: 0.86;
+  /* Rocker: current tilt (set while a side is pressed), its size, and 1 / -1 for LTR / RTL. */
+  --ui-touch-stepper-tilt: 0deg;
+  --ui-touch-stepper-tilt-pressed: 6deg;
+  --ui-touch-stepper-tilt-sign: 1;
+  /* Drum: how far and how much the digits turn while rolling. */
+  --ui-touch-stepper-roll-sign: 1;
+  --ui-touch-stepper-roll-distance: 72%;
+  --ui-touch-stepper-roll-angle: 60deg;
+  --ui-touch-stepper-roll-depth: 90px;
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  height: var(--ui-touch-stepper-height);
+  margin: 0;
+  padding: 0;
+  border-radius: var(--ui-radius-pill);
+  background-color: var(--ui-touch-stepper-bg);
+  color: var(--ui-color-label);
+  vertical-align: middle;
+  /* Flat at rest (no 3D context, exact hit areas); tilted only while a side is pressed. */
+  transform: none;
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* RTL mirrors the row (plus sits on the left), so the rocker dips the other way. */
+.ui-touch-stepper:dir(rtl) {
+  --ui-touch-stepper-tilt-sign: -1;
+}
+
+/* Rocker: the pressed side dips away from the viewer (fast in, spring out to none). */
+.ui-touch-stepper:has(.ui-touch-stepper-button[data-pressed]) {
+  transform: perspective(360px) rotateY(calc(var(--ui-touch-stepper-tilt) * var(--ui-touch-stepper-tilt-sign)));
+}
+
+.ui-touch-stepper:has(.ui-touch-stepper-button--increment[data-pressed]) {
+  --ui-touch-stepper-tilt: var(--ui-touch-stepper-tilt-pressed);
+
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-stepper:has(.ui-touch-stepper-button--decrement[data-pressed]) {
+  --ui-touch-stepper-tilt: calc(-1 * var(--ui-touch-stepper-tilt-pressed));
+
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/* Disabled follows the DOM (also a disabled <fieldset> around it). */
+.ui-touch-stepper[data-disabled],
+.ui-touch-stepper:has(.ui-touch-stepper-button:disabled) {
+  opacity: 0.45;
+}
+
+/* ── Buttons ── */
+.ui-touch-stepper-button {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-touch-stepper-button-width);
+  height: var(--ui-touch-stepper-height);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-pill);
+  background-color: transparent;
+  color: var(--ui-touch-stepper-fg);
+  font: inherit;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    background-color var(--ui-duration-short) var(--ui-ease-standard),
+    color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* 32 px tall visual, 44 px tall target. */
+.ui-touch-stepper-button::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--ui-touch-stepper-height) - var(--ui-hit-min)) / 2) 0;
+}
+
+.ui-touch-stepper-button[data-pressed] {
+  transform: scale(var(--ui-touch-stepper-press-scale));
+  background-color: var(--ui-touch-stepper-press-bg);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-stepper-button:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+/* At a bound: still focusable (aria-disabled), visibly unavailable. */
+.ui-touch-stepper-button[aria-disabled='true'],
+.ui-touch-stepper-button:disabled {
+  color: var(--ui-color-label-tertiary);
+  cursor: default;
+}
+
+/* ── Value window: a clipped drum, softly faded at the top and bottom edge ── */
+.ui-touch-stepper-value {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-width: calc(2ch + 2 * var(--ui-space-1));
+  height: 100%;
+  padding: 0 var(--ui-space-1);
+  overflow: hidden;
+  color: var(--ui-color-label);
+  font: var(--ui-text-headline);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ui-tracking-body);
+  white-space: nowrap;
+  mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+}
+
+.ui-touch-stepper-value[data-direction='down'] {
+  --ui-touch-stepper-roll-sign: -1;
+}
+
+.ui-touch-stepper-digit,
+.ui-touch-stepper-sizer {
+  box-sizing: border-box;
+  display: block;
+  grid-area: 1 / 1;
+  line-height: var(--ui-touch-stepper-height);
+}
+
+/* Invisible copies of the bounds: the window keeps its widest size, the buttons stay put. */
+.ui-touch-stepper-sizer {
+  visibility: hidden;
+}
+
+/* No fill mode: once settled the digit has no transform left (crisp text, no extra layer). */
+.ui-touch-stepper-digit--in {
+  animation:
+    ui-touch-stepper-roll-in var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    ui-touch-stepper-fade-in var(--ui-duration-normal) var(--ui-ease-standard);
+}
+
+.ui-touch-stepper-digit--out {
+  pointer-events: none;
+  animation:
+    ui-touch-stepper-roll-out var(--ui-spring-snappy-duration) var(--ui-spring-snappy) both,
+    ui-touch-stepper-fade-out var(--ui-duration-short) var(--ui-ease-exit) both;
+}
+
+/* Holding: values change every 50–100 ms, so each roll gets short enough to read. */
+.ui-touch-stepper[data-repeating] .ui-touch-stepper-digit {
+  animation-duration: var(--ui-duration-short);
+}
+
+@keyframes ui-touch-stepper-roll-in {
+  from {
+    transform: perspective(var(--ui-touch-stepper-roll-depth))
+      translateY(calc(var(--ui-touch-stepper-roll-sign) * var(--ui-touch-stepper-roll-distance)))
+      rotateX(calc(var(--ui-touch-stepper-roll-sign) * -1 * var(--ui-touch-stepper-roll-angle)));
+  }
+
+  to {
+    transform: perspective(var(--ui-touch-stepper-roll-depth)) translateY(0) rotateX(0deg);
+  }
+}
+
+@keyframes ui-touch-stepper-roll-out {
+  from {
+    transform: perspective(var(--ui-touch-stepper-roll-depth)) translateY(0) rotateX(0deg);
+  }
+
+  to {
+    transform: perspective(var(--ui-touch-stepper-roll-depth))
+      translateY(calc(var(--ui-touch-stepper-roll-sign) * -1 * var(--ui-touch-stepper-roll-distance)))
+      rotateX(calc(var(--ui-touch-stepper-roll-sign) * var(--ui-touch-stepper-roll-angle)));
+  }
+}
+
+@keyframes ui-touch-stepper-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-touch-stepper-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* Forced colours drop the fill: outline the capsule, grey out a button at its bound. */
+@media (forced-colors: active) {
+  .ui-touch-stepper {
+    border: 1px solid ButtonText;
+  }
+
+  .ui-touch-stepper-button[aria-disabled='true'],
+  .ui-touch-stepper-button:disabled {
+    color: GrayText;
+  }
+}
+
+/* Reduced motion: no rocking, no sinking, no rolling — the values cross-fade in place, the pressed button still darkens. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-stepper,
+  .ui-touch-stepper:has(.ui-touch-stepper-button[data-pressed]) {
+    transform: none;
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-stepper-button {
+    transition:
+      background-color var(--ui-duration-short) var(--ui-ease-standard),
+      color var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-stepper-button[data-pressed] {
+    transform: none;
+  }
+
+  .ui-touch-stepper-digit--in,
+  .ui-touch-stepper[data-repeating] .ui-touch-stepper-digit--in {
+    animation: ui-touch-stepper-fade-in var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  /* A quick opacity-only cross-fade; its animationend also removes the old digit. */
+  .ui-touch-stepper-digit--out {
+    animation: ui-touch-stepper-fade-out var(--ui-duration-instant) var(--ui-ease-exit) both;
+  }
+}

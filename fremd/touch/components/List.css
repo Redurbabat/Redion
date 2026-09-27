@@ -1,0 +1,402 @@
+/*
+ * List — grouped rows like a settings screen.
+ *
+ * Rows never move when pressed (iOS rows only highlight): the highlight
+ * appears in 0 ms and fades out over 300 ms on release (Konsta / Framework7
+ * iOS numbers). The asymmetry comes from the pressed state overriding the
+ * transition duration. The row's hairline (and the one of the row above)
+ * hides while pressed, so the highlight reads as one clean slab.
+ * Only the disclosure chevron nudges forward, on the `press` spring.
+ *
+ * Entrance (`appear`): rows rise 12 px on the `smooth` spring and fade in,
+ * staggered by 35 ms per row, capped at 350 ms.
+ */
+
+.ui-touch-list-section {
+  --ui-touch-list-gutter: var(--ui-space-4);
+  --ui-touch-list-radius: var(--ui-radius-lg);
+  --ui-touch-list-row-pad: var(--ui-space-4);
+  --ui-touch-list-highlight-out: 300ms;
+  /* Even fade (Konsta's release curve); the front-loaded standard ease would hide the 300 ms. */
+  --ui-touch-list-highlight-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Stacked sections get the gap of a settings screen; a single list adds no outer margin. */
+.ui-touch-list-section + .ui-touch-list-section {
+  margin-top: var(--ui-space-8);
+}
+
+.ui-touch-list-section--plain {
+  --ui-touch-list-gutter: 0px;
+  --ui-touch-list-radius: 0px;
+}
+
+.ui-touch-list-header,
+.ui-touch-list-footer {
+  box-sizing: border-box;
+  margin: 0;
+  /* Same edge as the card (safe areas included) plus the row padding, so the text lines up with the row titles. */
+  padding-right: calc(max(var(--ui-touch-list-gutter), env(safe-area-inset-right, 0px)) + var(--ui-touch-list-row-pad));
+  padding-left: calc(max(var(--ui-touch-list-gutter), env(safe-area-inset-left, 0px)) + var(--ui-touch-list-row-pad));
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+  letter-spacing: 0;
+}
+
+.ui-touch-list-header {
+  padding-bottom: 7px;
+}
+
+.ui-touch-list-footer {
+  padding-top: 7px;
+}
+
+/* ── The list card ── */
+.ui-touch-list {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background-color: var(--ui-color-surface);
+  color: var(--ui-color-label);
+}
+
+.ui-touch-list--inset {
+  margin-right: max(var(--ui-touch-list-gutter), env(safe-area-inset-right, 0px));
+  margin-left: max(var(--ui-touch-list-gutter), env(safe-area-inset-left, 0px));
+  border-radius: var(--ui-touch-list-radius);
+  box-shadow: var(--ui-shadow-surface);
+  /* Clips row highlights to the rounded corners. */
+  overflow: hidden;
+  overflow: clip;
+}
+
+.ui-touch-list--plain {
+  /* The surface stays full-bleed; the rows keep clear of a landscape notch. */
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  border-block: var(--ui-hairline) solid var(--ui-color-separator);
+}
+
+.ui-touch-list-row {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Row content: the one element a swipe layer may wrap ── */
+.ui-touch-list-row-content {
+  --ui-touch-list-row-min: var(--ui-row-min-height);
+  --ui-touch-list-row-pad-block: 11px;
+
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--ui-touch-list-row-min);
+  margin: 0;
+  padding: 0;
+  padding-inline-start: var(--ui-touch-list-row-pad);
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  font: var(--ui-text-body);
+  letter-spacing: var(--ui-tracking-body);
+  text-align: start;
+  text-decoration: none;
+  transition: background-color var(--ui-touch-list-highlight-out) var(--ui-touch-list-highlight-ease);
+}
+
+.ui-touch-list-row--subtitle .ui-touch-list-row-content {
+  --ui-touch-list-row-min: 52px;
+  --ui-touch-list-row-pad-block: 8px;
+}
+
+/* First / last rows follow the card corners, so the inset focus ring is not cut off. */
+.ui-touch-list--inset > .ui-touch-list-row:first-child .ui-touch-list-row-content {
+  border-top-left-radius: var(--ui-touch-list-radius);
+  border-top-right-radius: var(--ui-touch-list-radius);
+}
+
+.ui-touch-list--inset > .ui-touch-list-row:last-child .ui-touch-list-row-content {
+  border-bottom-right-radius: var(--ui-touch-list-radius);
+  border-bottom-left-radius: var(--ui-touch-list-radius);
+}
+
+.ui-touch-list-row-content--action {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+  .ui-touch-list-row-content--action:not(:disabled, [aria-disabled='true']):hover {
+    background-color: color-mix(in srgb, var(--ui-color-highlight) 50%, transparent);
+    transition-duration: var(--ui-duration-short);
+  }
+}
+
+.ui-touch-list-row-content[data-pressed] {
+  background-color: var(--ui-color-highlight);
+  transition-duration: 0ms;
+}
+
+.ui-touch-list-row-content--action:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+.ui-touch-list-row-content--action:disabled,
+.ui-touch-list-row-content--action[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.4;
+}
+
+/* ── Leading: icon tile or any node ── */
+.ui-touch-list-row-leading {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  margin-inline-end: var(--ui-space-3);
+  /* 30 px tile + 2 × 7 px = the 44 px row; larger nodes (avatars) grow the row. */
+  padding-block: 7px;
+}
+
+.ui-touch-list-tile {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background-color: var(--ui-touch-list-tile-bg, var(--ui-color-accent));
+  /* A soft top light and a hairline rim give the tile a pressed-glass depth. */
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0) 60%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 0 0 var(--ui-hairline) rgb(0 0 0 / 0.08);
+  color: var(--ui-touch-list-tile-ink, #ffffff);
+}
+
+.ui-touch-list-tile--accent {
+  --ui-touch-list-tile-bg: var(--ui-color-accent);
+  --ui-touch-list-tile-ink: var(--ui-color-on-accent);
+}
+
+.ui-touch-list-tile--info {
+  --ui-touch-list-tile-bg: var(--ui-color-info);
+  --ui-touch-list-tile-ink: var(--ui-color-on-accent);
+}
+
+.ui-touch-list-tile--success {
+  --ui-touch-list-tile-bg: var(--ui-color-success);
+  --ui-touch-list-tile-ink: var(--ui-color-on-accent);
+}
+
+.ui-touch-list-tile--warning {
+  --ui-touch-list-tile-bg: var(--ui-color-warning);
+  --ui-touch-list-tile-ink: var(--ui-color-on-accent);
+}
+
+.ui-touch-list-tile--danger {
+  --ui-touch-list-tile-bg: var(--ui-color-danger);
+  --ui-touch-list-tile-ink: var(--ui-color-on-danger);
+}
+
+.ui-touch-list-tile--gray {
+  --ui-touch-list-tile-bg: var(--ui-color-label-tertiary);
+  --ui-touch-list-tile-ink: var(--ui-color-on-accent);
+}
+
+/* ── Body: starts where the text starts, so its hairline is inset like iOS ── */
+.ui-touch-list-row-body {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  align-self: stretch;
+  gap: var(--ui-space-2);
+  min-width: 0;
+  padding-block: var(--ui-touch-list-row-pad-block);
+  padding-inline-end: var(--ui-touch-list-row-pad);
+}
+
+.ui-touch-list-row-body::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-bottom: var(--ui-hairline) solid var(--ui-color-separator);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ui-touch-list-highlight-out) var(--ui-touch-list-highlight-ease);
+}
+
+.ui-touch-list-row--divider .ui-touch-list-row-body::after {
+  opacity: 1;
+}
+
+/* The last row never draws one; a pressed row hides its own at once. */
+.ui-touch-list-row:last-child .ui-touch-list-row-body::after,
+.ui-touch-list-row-content[data-pressed] .ui-touch-list-row-body::after {
+  opacity: 0;
+  transition-duration: 0ms;
+}
+
+/* The hairline above a pressed row goes too (own rule: :has() must not void the list above). */
+.ui-touch-list-row:has(+ .ui-touch-list-row .ui-touch-list-row-content[data-pressed]) .ui-touch-list-row-body::after {
+  opacity: 0;
+  transition-duration: 0ms;
+}
+
+.ui-touch-list-row-text {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ui-touch-list-row-title {
+  box-sizing: border-box;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.ui-touch-list-row--destructive .ui-touch-list-row-title {
+  color: var(--ui-color-danger);
+}
+
+.ui-touch-list-row-subtitle {
+  box-sizing: border-box;
+  display: block;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-subhead);
+  overflow-wrap: anywhere;
+}
+
+.ui-touch-list-row-detail {
+  box-sizing: border-box;
+  flex: 0 1 auto;
+  max-width: 60%;
+  color: var(--ui-color-label-secondary);
+  text-align: end;
+  /* break-word keeps whole words together, so the title column gives way first. */
+  overflow-wrap: break-word;
+}
+
+.ui-touch-list-row-trailing {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+  /* A 44 px control (Toggle) may use the row padding instead of growing the row. */
+  margin-block: calc(-1 * var(--ui-touch-list-row-pad-block));
+}
+
+.ui-touch-list-row-chevron {
+  --ui-touch-list-row-nudge: 2px;
+
+  box-sizing: border-box;
+  flex: none;
+  margin-inline: calc(-1 * var(--ui-space-1)) calc(-1 * var(--ui-space-1));
+  color: var(--ui-color-label-tertiary);
+  stroke-width: 2.6;
+  transition: translate var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+.ui-touch-list-row-chevron:dir(rtl) {
+  --ui-touch-list-row-nudge: -2px;
+
+  scale: -1 1;
+}
+
+.ui-touch-list-row-content[data-pressed] .ui-touch-list-row-chevron {
+  translate: var(--ui-touch-list-row-nudge) 0;
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/*
+ * ── Choice check (selected) ──
+ * Drawn from aria-pressed in the DOM (like the filter chip). The glyph is
+ * always laid out on a choice row, so the text never jumps: unselected it is
+ * scaled to nothing and transparent.
+ */
+.ui-touch-list-row-check {
+  box-sizing: border-box;
+  flex: none;
+  /* The 20 px glyph has ~3 px of air each side: pull its tip to where the chevron's ends. */
+  margin-inline: -1px -2px;
+  color: var(--ui-color-accent);
+  stroke-width: 2.6;
+  opacity: 0;
+  scale: 0;
+  transition:
+    scale var(--ui-spring-bouncy-duration) var(--ui-spring-bouncy),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-list-row-content[aria-pressed='true'] .ui-touch-list-row-check {
+  opacity: 1;
+  scale: 1;
+}
+
+/* ── Entrance ── */
+.ui-touch-list--appear {
+  animation: ui-touch-list-fade var(--ui-duration-short) var(--ui-ease-standard) backwards;
+}
+
+.ui-touch-list--appear > .ui-touch-list-row {
+  animation:
+    ui-touch-list-rise var(--ui-spring-smooth-duration) var(--ui-spring-smooth) backwards,
+    ui-touch-list-fade var(--ui-duration-normal) var(--ui-ease-standard) backwards;
+  animation-delay: min(calc(var(--ui-touch-list-index, 0) * 35ms), 350ms);
+}
+
+@keyframes ui-touch-list-rise {
+  from {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes ui-touch-list-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Rows still arrive, but only fade in — all together, nothing travels. */
+  .ui-touch-list--appear > .ui-touch-list-row {
+    animation: ui-touch-list-fade var(--ui-duration-normal) var(--ui-ease-standard) backwards;
+    animation-delay: 0ms;
+  }
+
+  .ui-touch-list-row-chevron {
+    transition: none;
+  }
+
+  /* The check only fades; it never grows. */
+  .ui-touch-list-row-check {
+    scale: none;
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-list-row-content[data-pressed] .ui-touch-list-row-chevron {
+    translate: none;
+  }
+}

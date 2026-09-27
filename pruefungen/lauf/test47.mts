@@ -23,7 +23,12 @@ const pruef = (n: any, ist: any, soll: any) => {
     kuerzel: Aussehen.KUERZEL.length,
     theme: document.documentElement.dataset.theme
   }));
-  pruef('Acht Farbschemata',     anfang.schemata, 8);
+  /* ZEHN SEIT E699: die acht von Redion und der Look des Touch Kits als
+     Paar — „Touch Kit hell" und „Touch Kit dunkel", weil ein Schema in
+     Redion zu EINEM Grundton gehört. Redur: „Also beiden bei der ausehen
+     dort aollte ich die fraben ändern kann". Die Zahl bleibt eine Zahl:
+     wer ein Schema hinzufügt oder verliert, sieht es hier. */
+  pruef('Zehn Farbschemata (acht + Touch Kit hell/dunkel, E699)', anfang.schemata, 10);
   pruef('Fünf Schriften',        anfang.schriften, 5);
   pruef('22 registrierte Kürzel', anfang.kuerzel, 22);
 
@@ -46,6 +51,23 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
   pruef('Sand setzt den hellen Hintergrund', sand.bg, '#faf6ef');
   pruef('Sand ist hell',                     sand.theme, 'light');
+
+  /* Das Kit als Schema (E699): es setzt mehr Rollen als die anderen, weil
+     sein dunkler Akzent HELL ist — Weiss darauf hätte 2,38 : 1. */
+  const kit = await p.evaluate(() => {
+    Aussehen.setzen({ schema: 'touchkit-dunkel' });
+    const w = getComputedStyle(document.documentElement);
+    const dunkel = { bg: w.getPropertyValue('--bg').trim(), akzent: w.getPropertyValue('--accent').trim(),
+                     auf: w.getPropertyValue('--auf-accent').trim(), theme: document.documentElement.dataset.theme };
+    Aussehen.setzen({ schema: 'touchkit-hell' });
+    const v = getComputedStyle(document.documentElement);
+    const hell = { bg: v.getPropertyValue('--bg').trim(), akzent: v.getPropertyValue('--accent').trim(),
+                   theme: document.documentElement.dataset.theme };
+    return { dunkel, hell };
+  });
+  pruef('Touch Kit dunkel: Grund, Akzent, Schrift darauf, dunkel',
+        kit.dunkel, { bg: '#000000', akzent: '#a39dff', auf: '#0b0a1a', theme: 'dark' });
+  pruef('Touch Kit hell: Grund, Akzent, hell', kit.hell, { bg: '#f3f2f8', akzent: '#5345e0', theme: 'light' });
 
   /* Zurück auf Standard darf keine Reste lassen */
   const zurueck = await p.evaluate(() => {
@@ -186,7 +208,7 @@ const pruef = (n: any, ist: any, soll: any) => {
     akzente: document.querySelectorAll('.au-akzente button[data-akz]').length
   }));
   pruef('Drei Reiter im Dialog', dialog.reiter, 3);
-  pruef('Acht Schemakarten',     dialog.karten, 8);
+  pruef('Zehn Schemakarten (E699: Touch Kit hell/dunkel dazu)', dialog.karten, 10);
   pruef('Akzentfarben zur Wahl', Number(dialog.akzente ?? -1) >= 8, true);
 
   await p.click('.au-reiter button[data-r="tasten"]');

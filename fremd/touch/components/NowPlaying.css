@@ -1,0 +1,404 @@
+/*
+ * NowPlaying — mini player → full-screen player on one path.
+ *
+ * The path is written per frame by JS (spring + finger): the big artwork's
+ * FLIP transform and counter-scaled radius, the panel's slide and fade,
+ * the late texts. So the moving parts have no CSS transition on transform.
+ * CSS handles layout, theme, press feedback and the reduced-motion
+ * cross-fade ([data-fade]).
+ */
+
+/* ── Mini player bar ─────────────────────────────────────────────────── */
+/*
+ * Public height of the mini bar. On :root (not on the bar) so an app can
+ * leave room for the docked bar anywhere, e.g. at the end of its list:
+ * padding-bottom: var(--ui-touch-nowplaying-bar-height). Override it on a
+ * common ancestor to resize the bar and that room together.
+ */
+:root {
+  --ui-touch-nowplaying-bar-height: 64px;
+}
+
+.ui-touch-nowplaying-mini {
+  --ui-touch-nowplaying-mini-height: var(--ui-touch-nowplaying-bar-height);
+  --ui-touch-nowplaying-mini-radius: var(--ui-radius-lg);
+
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  width: 100%;
+  height: var(--ui-touch-nowplaying-mini-height);
+  padding: 0 var(--ui-space-1) 0 var(--ui-space-2);
+  border-radius: var(--ui-touch-nowplaying-mini-radius);
+  background-color: var(--ui-color-bar);
+  box-shadow: inset 0 0 0 var(--ui-hairline) var(--ui-color-separator), var(--ui-shadow-floating);
+  color: var(--ui-color-label);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+/* The whole bar sinks under the finger (the press spring brings it back). */
+.ui-touch-nowplaying-mini[data-pressed] {
+  transform: scale(0.97);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/* Mini artwork: 48 px, radius 8, lies flat on the bar. */
+.ui-touch-nowplaying-mini .ui-touch-nowplaying-mini-art {
+  --ui-touch-cover-radius: 8px;
+  --ui-touch-cover-shadow-rest: var(--ui-shadow-surface);
+  --ui-touch-cover-shadow-float: var(--ui-shadow-surface);
+
+  pointer-events: none;
+}
+
+/* The expand button: its ::before stretches over the whole bar, so a tap anywhere
+   except on the controls expands — without nesting controls inside a button. */
+.ui-touch-nowplaying-open {
+  position: static;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  align-self: stretch;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-touch-nowplaying-open::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--ui-touch-nowplaying-mini-radius);
+  background-color: transparent;
+  transition: background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-nowplaying-open:focus-visible {
+  outline: none;
+}
+
+.ui-touch-nowplaying-open:focus-visible::before {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .ui-touch-nowplaying-open:hover::before {
+    background-color: var(--ui-color-highlight);
+  }
+}
+
+.ui-touch-nowplaying-mini-text {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ui-touch-nowplaying-mini-title,
+.ui-touch-nowplaying-mini-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-touch-nowplaying-mini-title {
+  font: var(--ui-text-subhead);
+  font-weight: 600;
+}
+
+.ui-touch-nowplaying-mini-artist {
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+}
+
+/* Controls sit above the stretched expand area. */
+.ui-touch-nowplaying-mini-controls {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+/* ── Full player layer ───────────────────────────────────────────────── */
+.ui-touch-nowplaying-layer {
+  position: fixed;
+  box-sizing: border-box;
+  inset: 0;
+  z-index: var(--ui-z-sheet);
+  pointer-events: none;
+}
+
+.ui-touch-nowplaying-layer--contained {
+  position: absolute;
+}
+
+.ui-touch-nowplaying-scrim {
+  position: absolute;
+  box-sizing: border-box;
+  inset: 0;
+  background: var(--ui-color-scrim);
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.ui-touch-nowplaying-dialog {
+  --ui-touch-nowplaying-gap: calc(env(safe-area-inset-top, 0px) + 10px);
+  --ui-touch-nowplaying-art-size: min(100%, 320px);
+
+  position: absolute;
+  inset: var(--ui-touch-nowplaying-gap) 0 0;
+  box-sizing: border-box;
+  container-type: size;
+  color: var(--ui-color-label);
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* On the way home the page behind takes taps again (e.g. to re-open). */
+.ui-touch-nowplaying-layer[data-phase='collapsing'] .ui-touch-nowplaying-scrim,
+.ui-touch-nowplaying-layer[data-phase='collapsing'] .ui-touch-nowplaying-dialog {
+  pointer-events: none;
+}
+
+.ui-touch-nowplaying-dialog:focus {
+  outline: none;
+}
+
+/* The dialog box itself is covered by its panel: draw the keyboard ring on the
+   panel, so it follows the rounded top edge and moves with a drag. */
+.ui-touch-nowplaying-dialog:focus-visible {
+  outline: none;
+}
+
+.ui-touch-nowplaying-dialog:focus-visible > .ui-touch-nowplaying-backdrop {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+/* Panel: slides up out of the bar and fades in (JS). Tinted by the artwork. */
+.ui-touch-nowplaying-backdrop {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: var(--ui-radius-sheet) var(--ui-radius-sheet) 0 0;
+  background-color: var(--ui-color-surface-raised);
+  box-shadow: 0 -1px 0 var(--ui-color-separator), var(--ui-shadow-overlay);
+  opacity: 0;
+}
+
+/* Bleed below the bottom edge so an upward rubber band never shows a gap. */
+.ui-touch-nowplaying-backdrop::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background-color: var(--ui-color-surface-raised);
+}
+
+.ui-touch-nowplaying-ambient {
+  position: absolute;
+  box-sizing: border-box;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* A static, heavily blurred copy of the artwork colours: rasterised once, moved as a layer. */
+.ui-touch-nowplaying-ambient::before {
+  content: '';
+  position: absolute;
+  inset: -25% -25% 30%;
+  background: var(--ui-touch-nowplaying-ambient, linear-gradient(145deg, var(--ui-color-accent), var(--ui-color-info)));
+  background-position: center;
+  background-size: cover;
+  filter: blur(64px) saturate(150%);
+  opacity: 0.4;
+}
+
+.ui-touch-nowplaying-body {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ui-space-4);
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  margin: 0 auto;
+  padding: var(--ui-space-2) var(--ui-space-8) calc(var(--ui-space-8) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Grabber (also the close button) ── */
+.ui-touch-nowplaying-grabber {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 64px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+}
+
+/* 44 px target around the 36 × 5 pill. */
+.ui-touch-nowplaying-grabber::after {
+  content: '';
+  position: absolute;
+  inset: -12px 0;
+}
+
+.ui-touch-nowplaying-grabber span {
+  width: 36px;
+  height: 5px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-color-label-tertiary);
+  opacity: 0.55;
+  transition:
+    opacity var(--ui-duration-short) var(--ui-ease-standard),
+    transform var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-nowplaying-grabber:hover span,
+.ui-touch-nowplaying-dialog[data-dragging] .ui-touch-nowplaying-grabber span {
+  opacity: 0.9;
+}
+
+.ui-touch-nowplaying-dialog[data-dragging] .ui-touch-nowplaying-grabber span {
+  transform: scaleX(1.12);
+}
+
+.ui-touch-nowplaying-grabber:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+  border-radius: var(--ui-radius-pill);
+}
+
+/* ── Artwork (the travelling element) ── */
+.ui-touch-nowplaying-stage {
+  box-sizing: border-box;
+  display: grid;
+  flex: 1;
+  place-items: center;
+  width: 100%;
+  min-height: 0;
+}
+
+.ui-touch-nowplaying-art {
+  box-sizing: border-box;
+  width: var(--ui-touch-nowplaying-art-size);
+  aspect-ratio: 1;
+  transform-origin: 50% 50%;
+}
+
+/* Short screens (landscape): the art gives way so controls stay visible. */
+@container (max-height: 640px) {
+  .ui-touch-nowplaying-art {
+    width: min(100%, 320px, 46cqh);
+  }
+}
+
+.ui-touch-nowplaying-art .ui-touch-nowplaying-cover {
+  --ui-touch-cover-radius: var(--ui-radius-md);
+
+  width: 100%;
+}
+
+/* ── Texts and controls (arrive late on the path) ── */
+.ui-touch-nowplaying-meta,
+.ui-touch-nowplaying-position,
+.ui-touch-nowplaying-transport {
+  box-sizing: border-box;
+  width: var(--ui-touch-nowplaying-art-size);
+  flex: none;
+}
+
+.ui-touch-nowplaying-title {
+  box-sizing: border-box;
+  margin: 0;
+  overflow: hidden;
+  font: var(--ui-text-title-2);
+  letter-spacing: var(--ui-tracking-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-touch-nowplaying-artist {
+  box-sizing: border-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-touch-nowplaying-transport {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--ui-space-2);
+}
+
+/* ── Reduced motion: cross-fade between bar and player, no travel ── */
+@keyframes ui-touch-nowplaying-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.ui-touch-nowplaying-layer[data-fade][data-phase='expanding'],
+.ui-touch-nowplaying-layer[data-fade][data-phase='open'] {
+  animation: ui-touch-nowplaying-fade-in 200ms var(--ui-ease-standard);
+}
+
+.ui-touch-nowplaying-layer[data-fade][data-phase='collapsing'] {
+  opacity: 0;
+  transition: opacity 200ms var(--ui-ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The bar dims under the finger instead of sinking. */
+  .ui-touch-nowplaying-mini {
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-nowplaying-mini[data-pressed] {
+    transform: none;
+    opacity: 0.8;
+  }
+
+  .ui-touch-nowplaying-dialog[data-dragging] .ui-touch-nowplaying-grabber span {
+    transform: none;
+  }
+
+  .ui-touch-nowplaying-grabber span {
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+}

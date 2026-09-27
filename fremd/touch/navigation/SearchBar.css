@@ -1,0 +1,258 @@
+/*
+ * SearchBar — the layout never moves.
+ * The input always spans the full width (44 px tall hit area); the visible
+ * 36 px field is a separate background layer that shrinks with scaleX from
+ * its left edge while "Abbrechen" slides in over the freed space. JS measures
+ * the cancel width on mount and on resize and writes (a new geometry is
+ * applied at once; only focusing / leaving the search animates):
+ *   --ui-touch-search-shrink        (width - cancel) / width
+ *   --ui-touch-search-cancel-width  px
+ */
+
+.ui-touch-search {
+  --ui-touch-search-radius: var(--ui-radius-sm);
+  --ui-touch-search-field-height: 36px;
+
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  min-width: 0;
+  min-height: var(--ui-hit-min);
+  margin: 0;
+  color: var(--ui-color-label);
+}
+
+/* ── Input: transparent, full width, above the background layer ── */
+.ui-touch-search-input {
+  --ui-touch-search-end: var(--ui-space-2);
+
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: var(--ui-hit-min);
+  margin: 0;
+  padding: 0 var(--ui-touch-search-end) 0 34px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ui-color-label);
+  font: var(--ui-text-body);
+  letter-spacing: var(--ui-tracking-body);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-touch-search-input::placeholder {
+  color: var(--ui-color-label-secondary);
+  opacity: 1;
+}
+
+/* The kit draws its own clear button. */
+.ui-touch-search-input::-webkit-search-cancel-button,
+.ui-touch-search-input::-webkit-search-decoration {
+  display: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.ui-touch-search[data-filled] .ui-touch-search-input {
+  --ui-touch-search-end: 36px;
+}
+
+/* Instant: the text area ends where the shrunken field ends. */
+.ui-touch-search[data-active] .ui-touch-search-input {
+  padding-right: calc(var(--ui-touch-search-end) + var(--ui-touch-search-cancel-width, 0px));
+}
+
+/* ── Visible field: 36 px, shrinks with transform only ── */
+.ui-touch-search-bg {
+  position: absolute;
+  top: calc((var(--ui-hit-min) - var(--ui-touch-search-field-height)) / 2);
+  left: 0;
+  z-index: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--ui-touch-search-field-height);
+  border-radius: var(--ui-touch-search-radius);
+  background-color: var(--ui-color-fill);
+  pointer-events: none;
+  transform-origin: left center;
+  transition:
+    transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/*
+ * Counter-scaled radius: horizontal radius / shrink, so after scaleX the
+ * rounded ends are round again (no squashed corners at rest).
+ */
+.ui-touch-search[data-active] .ui-touch-search-bg {
+  border-radius: calc(var(--ui-touch-search-radius) / var(--ui-touch-search-shrink, 1)) / var(--ui-touch-search-radius);
+  transform: scaleX(var(--ui-touch-search-shrink, 1));
+}
+
+.ui-touch-search-input:focus-visible ~ .ui-touch-search-bg {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 1px;
+}
+
+.ui-touch-search-icon {
+  position: absolute;
+  top: calc(50% - 8.5px);
+  left: 10px;
+  z-index: 1;
+  color: var(--ui-color-label-secondary);
+  pointer-events: none;
+}
+
+/* ── Clear: 44 px target around a 17 px disc; sits at the end of the shrunken field ── */
+.ui-touch-search-clear {
+  position: absolute;
+  top: 0;
+  right: var(--ui-touch-search-cancel-width, 0px);
+  z-index: 2;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: var(--ui-hit-min);
+  height: var(--ui-hit-min);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ui-color-surface);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-touch-search-clear-disc {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background-color: var(--ui-color-label-tertiary);
+  animation: ui-touch-search-pop-in var(--ui-spring-snappy-duration) var(--ui-spring-snappy);
+  transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-search-clear:active .ui-touch-search-clear-disc {
+  opacity: 0.5;
+  transition-duration: 0ms;
+}
+
+.ui-touch-search-clear:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -8px;
+}
+
+@keyframes ui-touch-search-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+/* ── Cancel: clipped box at the right edge; the button slides in inside it ── */
+.ui-touch-search-cancel-clip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  overflow: clip;
+  pointer-events: none;
+}
+
+.ui-touch-search[data-active] .ui-touch-search-cancel-clip {
+  pointer-events: auto;
+}
+
+.ui-touch-search-cancel {
+  position: relative;
+  box-sizing: border-box;
+  min-width: var(--ui-hit-min);
+  min-height: var(--ui-hit-min);
+  margin: 0;
+  /* The left padding is the gap between the field and the label. */
+  padding: 0 var(--ui-space-1) 0 var(--ui-space-3);
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: var(--ui-color-accent);
+  font: var(--ui-text-body);
+  letter-spacing: var(--ui-tracking-body);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(100%);
+  transition:
+    transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    opacity var(--ui-duration-short) var(--ui-ease-exit),
+    visibility 0s linear var(--ui-spring-snappy-duration);
+}
+
+.ui-touch-search[data-active] .ui-touch-search-cancel {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    opacity var(--ui-duration-normal) var(--ui-ease-standard),
+    visibility 0s;
+}
+
+.ui-touch-search[data-active] .ui-touch-search-cancel[data-pressed] {
+  opacity: 0.35;
+  transition-duration: 0ms;
+}
+
+/* Inside the clip box, so the ring is drawn inwards. */
+.ui-touch-search-cancel:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+/* ── Reduced motion: nothing travels; the field narrows at once, Cancel fades ── */
+@keyframes ui-touch-search-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-search-bg {
+    transition: background-color var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-search-cancel {
+    transform: none;
+    transition:
+      opacity var(--ui-duration-short) var(--ui-ease-standard),
+      visibility 0s linear var(--ui-duration-short);
+  }
+
+  .ui-touch-search[data-active] .ui-touch-search-cancel {
+    transition:
+      opacity var(--ui-duration-short) var(--ui-ease-standard),
+      visibility 0s;
+  }
+
+  .ui-touch-search-clear-disc {
+    animation: ui-touch-search-fade-in var(--ui-duration-short) var(--ui-ease-standard);
+  }
+}

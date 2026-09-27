@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 27. September 2026 · E699 · React-Inseln, Stufe 1a: die Grundlage
+
+**Redur:** „du kannst react nutzen keien problem" — im Fragebogen „Mit React
+(E80 aufheben)", je Stück „React 19.3.0, Touch Kit (dein UI-Kit), Glas-Code
+(ALEXalesha, MIT)", zum Aussehen „Also beiden bei der ausehen dort aollte
+ich die fraben ändern kann", zu den Federn „Wie im UI-Kit überall".
+
+**Gebaut:** E80 aufgehoben, sein Einwand als fünf Regeln (ein Einstieg,
+keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht). React
+19.3.0 eingepackt in `quell/fremd/react/react.js`, die Inseln in
+`quell/islands/`, gebaut mit Vite 8 (`bauen-inseln.mts`, Teil von
+`bauen:ts`); das Touch Kit als Kopie in `fremd/touch/`
+(`skripte/touch-holen.mts`, UI-Kit @c192821). Geladen erst beim Gebrauch
+(`Inseln.bereit()`), vorgewärmt nur, wo es nichts kostet; in der
+Einzeldatei als nicht ausgewertete Behälter; offline über den GRUNDSTOCK.
+Die Brücke legt die Marken des Kits auf Redions; „Aussehen" hat zwei
+Schemata mehr, „Touch Kit hell" und „Touch Kit dunkel".
+
+**Geprüft:** `test578` (Dateien) und `test579` (Browser), beide zuerst rot
+eingecheckt. Erweitert, keiner abgeschwächt: `test109`, `test105`,
+`test388`, `test290`, `test47`, `test510`. Der Start: 2761 → 2767 KB; die
+Gegenprobe mit Vorwärmen auf jedem Weg gab 2843 KB — sieben unter der Decke,
+die es allein nicht gemerkt hätte (messungen.md §71).
+
+**Gefunden:** L223 — im Ordnerbetrieb steht in der Fehlerliste nur „Script
+error.", für jeden unbehandelten Fehler. Und `test362` ist auf `main` rot
+seit dem Zusammenführen von E697 (66 rohe `28px` gegen 65).
+
+---
+
 ## 27. September 2026 · E696 · Rot zuerst: eine Seitenspalte endet im Fenster
 
 **Anlass:** der Nachbarlauf von E695 — `test534` rot, und zwar seit E690,

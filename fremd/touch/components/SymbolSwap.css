@@ -1,0 +1,94 @@
+/*
+ * SymbolSwap — one glyph turns into another.
+ * Old glyph: rotates away to −90°, shrinks to half and fades (snappy spring).
+ * New glyph: rotates in from +90° at half size and settles with a little
+ * overshoot (bouncy spring). Both share one grid cell, so nothing reflows.
+ * Settled glyphs carry no transform (no fill mode on the entrance).
+ */
+
+.ui-touch-symbol {
+  --ui-touch-symbol-turn: 90deg;
+  --ui-touch-symbol-start-scale: 0.5;
+  --ui-touch-symbol-in-duration: var(--ui-spring-bouncy-duration);
+  --ui-touch-symbol-in-easing: var(--ui-spring-bouncy);
+  --ui-touch-symbol-out-duration: var(--ui-spring-snappy-duration);
+  --ui-touch-symbol-out-easing: var(--ui-spring-snappy);
+
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+.ui-touch-symbol-glyph {
+  box-sizing: border-box;
+  grid-area: 1 / 1;
+  transform-origin: 50% 50%;
+}
+
+.ui-touch-symbol-glyph--in {
+  animation: ui-touch-symbol-in var(--ui-touch-symbol-in-duration) var(--ui-touch-symbol-in-easing) backwards;
+}
+
+/* `both` keeps it invisible between animationend and its removal. */
+.ui-touch-symbol-glyph--out {
+  pointer-events: none;
+  animation: ui-touch-symbol-out var(--ui-touch-symbol-out-duration) var(--ui-touch-symbol-out-easing) both;
+}
+
+@keyframes ui-touch-symbol-in {
+  from {
+    opacity: 0;
+    transform: rotate(var(--ui-touch-symbol-turn)) scale(var(--ui-touch-symbol-start-scale));
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes ui-touch-symbol-out {
+  from {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: rotate(calc(-1 * var(--ui-touch-symbol-turn))) scale(var(--ui-touch-symbol-start-scale));
+  }
+}
+
+@keyframes ui-touch-symbol-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-touch-symbol-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: a quick cross-fade in place; the new symbol is still clearly shown. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-symbol-glyph--in {
+    animation: ui-touch-symbol-fade-in var(--ui-duration-short) var(--ui-ease-standard) backwards;
+  }
+
+  .ui-touch-symbol-glyph--out {
+    animation: ui-touch-symbol-fade-out var(--ui-duration-short) var(--ui-ease-exit) both;
+  }
+}

@@ -21,7 +21,8 @@
  *   §2 pdf.js wird beim Start NICHT geholt.
  *   §3 … aber sehr wohl, sobald jemand es braucht.
  *   §4 Die Einzeldatei trägt die Bytes trotzdem in sich (§29).
- *   §5 Eine Decke über das, was der Start überhaupt holt.
+ *   §5 Eine Decke über das, was der Start überhaupt holt — und React (E699)
+ *      gehört nicht dazu.
  *
  *   node pruefungen/lauf/test388.mts
  * ==========================================================================*/
@@ -283,6 +284,20 @@ p('Und die Decke kann überhaupt reissen — pdf.js allein wären 526 KB mehr',
 p('Die Chronik wird beim Start nicht geholt (E613)',
   !beimStart.some(g => /chronik\/daten\.js/.test(g.url)),
   beimStart.filter(g => /chronik/.test(g.url)).map(g => g.url.split('/').pop()).join(', ') || '(nichts)');
+/* UND REACT AUCH NICHT (E699). React und die Touch-Kit-Inseln sind 78 KB
+   über die Leitung — fast die ganze Luft unter der Decke (2761 von 2850 am
+   27. September). Sie kommen beim ersten Gebrauch (`Inseln.bereit()`) und im
+   Leerlauf nur dort, wo es nichts kostet: von der Platte, aus der
+   Einzeldatei oder aus dem Speicher des Dienstes. Dieser Lauf ist ein
+   ERSTER Besuch über das Netz, ohne Dienst — hier darf nichts davon kommen,
+   auch nicht in den dreieinhalb Sekunden nach dem Laden. Gemessen mit
+   dem Lader: 2767 KB, sechs davon der Lader selbst und sein Kommentar in
+   index.html. */
+p('React und die Inseln werden beim Start nicht geholt, auch nicht im Leerlauf (E699)',
+  !beimStart.some(g => /fremd\/react\/|islands\//.test(g.url)),
+  beimStart.filter(g => /react|islands/.test(g.url)).map(g => g.url.split('/').pop()).join(', ') || '(nichts)');
+p('… der Lader dafür aber sehr wohl — sonst gäbe es sie nie',
+  beimStart.some(g => /schale\/inseln\/laden\.js/.test(g.url)));
 
 console.log('');
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' ‖ '));

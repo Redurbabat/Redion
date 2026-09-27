@@ -10,7 +10,8 @@
  * Notion lässt genau zwei Dinge zu: hell oder dunkel, und drei Schriften auf
  * der Seite. Sonst nichts. Hier gibt es:
  *
- *   · acht Farbschemata, hell wie dunkel, dazu eine frei wählbare Akzentfarbe
+ *   · zehn Farbschemata, hell wie dunkel, dazu eine frei wählbare Akzentfarbe
+ *     — zwei davon sind der Look des Touch Kits (E699)
  *   · Schriftart und Schriftgrösse für die ganze App, nicht nur je Seite
  *   · Zeilenabstand und Seitenbreite
  *   · umbelegbare Tastenkürzel — Notions Kürzel sind fest verdrahtet
@@ -76,6 +77,57 @@ const Aussehen = (() => {
                 '--bg': '#1a1418', '--bg-side': '#221a20', '--bg-card': '#2a2027',
                 '--bg-hover': '#33262e', '--bg-input': '#261d23',
                 '--line': '#3d2f37', '--line-soft': '#2f242b', '--text': '#f0e6ec'
+            } },
+        /* DER LOOK DES TOUCH KITS (E699). Redur, 27. September 2026: „Also
+           beiden bei der ausehen dort aollte ich die fraben ändern kann" — die
+           Bauteile des Kits tragen Redions Farben (die Brücke in
+           `src/islands/bridge.css`), UND der Kit-Look steht hier als Schema.
+    
+           ZWEI KARTEN, WIE „Standard" UND „Hell": ein Schema gehört in Redion zu
+           EINEM Grundton, und die Staffelei merkt sich je Grundton das zuletzt
+           gewählte (`studio:schema-light`/`-dark`). Wer einmal beide gewählt
+           hat, wechselt mit der Staffelei zwischen ihnen hin und her.
+    
+           Die Werte sind die Palette aus `fremd/touch/tokens.css` (UI-Kit
+           @c192821), Rolle für Rolle auf Redions Marken gelegt:
+    
+               Kit                     Redion
+               bg                      --bg
+               surface-sunken          --bg-side, --bg-input (dunkel)
+               surface                 --bg-card
+               fill über surface       --bg-hover (hell), --bg-press, --bg-input (hell)
+               surface-raised          --bg-hover (dunkel)
+               separator · fill        --line · --line-soft
+               label · secondary · tertiary   --text · --text-dim · --text-faint
+               accent · pressed · soft · on-accent
+                                       --accent · --accent-hover · --accent-schwach · --auf-accent
+               danger · success · warning · info
+                                       --gefahr · --erfolg · --warnung · --info
+    
+           Wo das Kit keine eigene Farbe hat (gedrückt, Eingabefeld), steht die
+           Füllung des Kits über seiner Fläche ausgerechnet, nicht geschätzt.
+           Mehr Rollen als die anderen Schemata, und zwar mit Absicht: der dunkle
+           Akzent des Kits ist ein HELLES Violett (#a39dff), und Weiss darauf
+           hätte 2,38 : 1 — also bringt das Schema seine Schrift auf dem Akzent
+           mit (#0b0a1a, 8,23 : 1). `test47` hält diese Schrift fest; `test510`
+           misst die Leisten des PDF-Studios in allen zehn. */
+        { id: 'touchkit-hell', name: 'Touch Kit hell', grund: 'light', akzent: '#5345e0', werte: {
+                '--bg': '#f3f2f8', '--bg-side': '#e9e9ef', '--bg-card': '#ffffff',
+                '--bg-hover': '#eeeef1', '--bg-press': '#e3e2e8', '--bg-input': '#eeeef1',
+                '--line': 'rgba(56,52,78,.26)', '--line-soft': 'rgba(116,112,138,.12)',
+                '--text': '#0b0b10', '--text-dim': '#5e5e6b', '--text-faint': '#7a7a86',
+                '--auf-accent': '#ffffff', '--accent-text': '#5345e0', '--accent-hover': '#4336c8',
+                '--accent-schwach': 'rgba(83,69,224,.12)',
+                '--gefahr': '#b81c3c', '--erfolg': '#0f766e', '--warnung': '#b45309', '--info': '#0e7490'
+            } },
+        { id: 'touchkit-dunkel', name: 'Touch Kit dunkel', grund: 'dark', akzent: '#a39dff', werte: {
+                '--bg': '#000000', '--bg-side': '#0e0e11', '--bg-card': '#1c1c21',
+                '--bg-hover': '#2a2a31', '--bg-press': '#3e3c49', '--bg-input': '#0e0e11',
+                '--line': 'rgba(86,84,98,.6)', '--line-soft': 'rgba(122,118,144,.24)',
+                '--text': '#f5f5f8', '--text-dim': '#a2a2ae', '--text-faint': '#84848f',
+                '--auf-accent': '#0b0a1a', '--accent-text': '#a39dff', '--accent-hover': '#b6b1ff',
+                '--accent-schwach': 'rgba(143,136,255,.18)',
+                '--gefahr': '#ff7088', '--erfolg': '#2dd4bf', '--warnung': '#fbbf24', '--info': '#22d3ee'
             } }
     ];
     const SCHRIFTEN = [

@@ -1,0 +1,163 @@
+/* ============================================================================
+ * src/islands/bridge.css — die Brücke vom Touch Kit zu Redions Marken (E699)
+ * ----------------------------------------------------------------------------
+ * Redur, 27. September 2026: „Also beiden bei der ausehen dort aollte ich die
+ * fraben ändern kann". Gemeint: BEIDES. Die Bauteile des Kits tragen Redions
+ * Farben und folgen jedem Schema aus „Aussehen" — und der Kit-Look ist dort
+ * selbst ein Schema („Touch Kit hell" / „Touch Kit dunkel").
+ *
+ * Diese Datei ist der erste Teil. Sie steht im Bündel `quell/islands/
+ * islands.css` HINTER den Marken des Kits und zeigt jede Farbe, jede Schrift,
+ * die Radien und die Ebenen des Kits auf die entsprechende Marke von Redion.
+ *
+ * GLATTE WERTE, KEIN `light-dark()`. Das Kit wählt Hell und Dunkel mit
+ * `light-dark()`; das kennt Safari erst ab 17.5. Redion läuft ab iOS 16.4
+ * (§37). Hier steht deshalb für jede Farbe ein `var(--…)` auf Redions Marke,
+ * und Redions Marke weiss selbst, ob hell oder dunkel gilt (`hell.css`,
+ * `dunkel.css`, das Schema aus „Aussehen" als Inline-Wert auf `<html>`).
+ *
+ * `html:root` UND NICHT `:root`: eine Stufe genauer als die Marken des Kits,
+ * damit die Brücke gewinnt, egal in welcher Folge der Bündler die Blätter
+ * zusammensetzt. `test579` misst, dass sie es tut.
+ *
+ * NUR WIRKSAM, WENN GELADEN. Das Blatt kommt erst mit der ersten Insel (oder
+ * dem Vorwärmen) auf die Seite, und alles hier sind `--ui-*`-Marken, die in
+ * Redion niemand liest, oder Regeln an `[data-ui-theme]`/`.ui-touch-*` — und
+ * die gibt es erst, wenn eine Insel steht.
+ * ==========================================================================*/
+
+html:root {
+  /* --- Farben: Rollen ----------------------------------------------------- */
+  --ui-color-accent: var(--accent);
+  /* Gedrückt: ein Stück zur Schrift hin. `--accent-hover` folgt den Schemata
+     nicht (es steht fest in hell/dunkel.css) — `color-mix` mit `--accent`
+     tut es. */
+  --ui-color-accent-pressed: color-mix(in srgb, var(--accent) 84%, var(--text));
+  --ui-color-on-accent: var(--auf-accent);
+  --ui-color-accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --ui-color-info: var(--info);
+  --ui-color-success: var(--erfolg);
+  --ui-color-warning: var(--warnung);
+  --ui-color-danger: var(--gefahr);
+  --ui-color-danger-soft: color-mix(in srgb, var(--gefahr) 14%, transparent);
+  /* Schrift auf Rot: die Grundfläche. Das Rot ist in beiden Modi ein
+     Mittelton — gerechnet hält die Grundfläche darauf 4,83 (hell, Weiss auf
+     #dc2626) und 4,90 : 1 (dunkel, #141414 auf #ef4444); Weiss auf dem
+     dunklen Rot hätte nur 3,76. */
+  --ui-color-on-danger: var(--bg);
+
+  /* --- Farben: Flächen ---------------------------------------------------- */
+  --ui-color-bg: var(--bg);
+  --ui-color-surface: var(--bg-card);
+  --ui-color-surface-raised: var(--bg-card);
+  --ui-color-surface-sunken: var(--bg-side);
+  /* Füllungen aus der Schrift gemischt statt fest: so passen sie auf jede
+     Fläche jedes Schemas, auch auf „Wald" und „Rosé". */
+  --ui-color-fill: color-mix(in srgb, var(--text) 12%, transparent);
+  --ui-color-fill-strong: color-mix(in srgb, var(--text) 20%, transparent);
+  --ui-color-highlight: color-mix(in srgb, var(--text) 9%, transparent);
+  /* Der Schleier hinter einem Fenster: derselbe wie hinter `.overlay`
+     (aufbau.css), in beiden Modi. */
+  --ui-color-scrim: rgba(0, 0, 0, 0.5);
+  /* Leisten mit Schrift: das dichte Glas aus E695. */
+  --ui-color-bar: var(--bg-schwebend-dicht);
+
+  /* --- Farben: Schrift und Linien ------------------------------------------ */
+  --ui-color-label: var(--text);
+  --ui-color-label-secondary: var(--text-dim);
+  --ui-color-label-tertiary: var(--text-faint);
+  --ui-color-separator: var(--line);
+  /* Der Fokusrahmen ist Redions: `grund.css` zeichnet `:focus-visible` mit
+     `--accent`. Zwei Rahmenfarben in einem Fenster wären zwei Programme. */
+  --ui-color-focus: var(--accent);
+
+  /* --- Schrift -------------------------------------------------------------- */
+  --ui-font-sans: var(--font);
+  --ui-font-display: var(--font);
+  --ui-font-rounded: var(--font);
+  --ui-font-mono: var(--mono);
+
+  /* --- Radien (grund.css: nach Zweck benannt) --------------------------------
+     Kit 6/10/14/20 → Redion 6/8/12/20. `xl` (28) und `device` (48) hat Redion
+     nicht; sie bleiben die des Kits. */
+  --ui-radius-xs: var(--radius-sm);
+  --ui-radius-sm: var(--radius-md);
+  --ui-radius-md: var(--radius-lg);
+  --ui-radius-lg: var(--radius-2xl);
+  --ui-radius-sheet: var(--sheet-radius);
+  --ui-radius-pill: var(--radius-pill);
+
+  /* --- Ebenen: Redions Leiter, nicht die des Kits (10–400) ----------------
+     .overlay 700 (aufbau.css) · Menü 600 · #toast 900 (ki.css). Ein Blatt
+     des Kits liegt über einem Fenster, ein Popover über beidem, eine
+     Meldung über allem — wie in Redion. */
+  --ui-z-bar: 30;
+  --ui-z-overlay: 700;
+  --ui-z-sheet: 760;
+  --ui-z-popover: 800;
+  --ui-z-toast: 900;
+}
+
+/* Schatten sind Farbe (E204) und hängen am Modus — hier als glatte Werte je
+   Modus, wie in hell.css/dunkel.css (`rgba(15,15,15,…)` hell). */
+html[data-ui-theme='dark'] {
+  --ui-shadow-ink: rgba(0, 0, 0, 0.5);
+  --ui-shadow-ink-strong: rgba(0, 0, 0, 0.7);
+}
+html[data-ui-theme='light'] {
+  --ui-shadow-ink: rgba(15, 15, 15, 0.1);
+  --ui-shadow-ink-strong: rgba(15, 15, 15, 0.18);
+}
+
+/* ============================================================================
+ * `data-ui-theme` STEHT AM WURZELELEMENT — ABER NUR ALS ETIKETT
+ * ----------------------------------------------------------------------------
+ * Das Kit setzt an `[data-ui-theme]` zweierlei: `color-scheme` und `color`.
+ * Am Wurzelelement hiesse das: jede Bildlaufleiste, jedes Datumsfeld, jede
+ * Auswahlliste von Redion wechselte ihr Aussehen in dem Moment, in dem die
+ * erste Insel lädt. Das wäre genau die „zweite Oberfläche", die E80 nicht
+ * wollte — nur leiser. Also: am Wurzelelement bleibt beides, wie es war, und
+ * das Farbschema gilt dort, wo die Inseln wirklich sind.
+ * ==========================================================================*/
+html[data-ui-theme] {
+  color-scheme: normal;
+  color: revert;
+}
+html[data-ui-theme='dark'] :is(.ui-touch-root, .ui-touch-portal) {
+  color-scheme: dark;
+}
+html[data-ui-theme='light'] :is(.ui-touch-root, .ui-touch-portal) {
+  color-scheme: light;
+}
+
+/* Die Wurzel einer Insel ist kein Kasten: sie steht an Redions Stelle, mit
+   Redions Mass, und malt keine eigene Fläche (`.ui-touch-root` gäbe ihr
+   sonst den Kit-Grund und 17 px Schrift). */
+[data-insel-wurzel] {
+  display: contents;
+}
+
+/* Wenn eine Insel beim Zeichnen stolpert, steht an ihrer Stelle ein Satz —
+   kein leerer Fleck (§7). */
+[data-insel-fehler] {
+  margin: 0;
+  color: var(--gefahr);
+  font: inherit;
+}
+
+/* Die Probe (nur test579): Knopf und Schalter nebeneinander. */
+[data-insel-probe] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-4);
+}
+
+/* „Ruhige Darstellung" (body[data-bewegung="ruhig"]) hält in Redion schon
+   jede Bewegung an — mit `!important`, also auch im Kit. Nur `::after`
+   fehlt dort (bausteine.css nennt `*` und `*::before`); für die Inseln wird
+   es hier ergänzt. */
+body[data-bewegung='ruhig'] :is(.ui-touch-root, .ui-touch-portal) *::after {
+  animation: none !important;
+  transition: none !important;
+}
