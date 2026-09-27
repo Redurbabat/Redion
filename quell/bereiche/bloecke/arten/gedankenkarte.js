@@ -552,23 +552,19 @@ const Gedankenkarte = (() => {
         w.appendChild(griff);
         /* --- Rückgängig ----------------------------------------------------- */
         const SCHRITTE = 40;
-        const zurueckStapel = [];
-        const vorStapel = [];
+        /* Der Stapel wohnt im Kern (E687, `GfxHistory`) — Zeile für Zeile war er
+           hier derselbe wie im Whiteboard. */
+        const verlauf = GfxHistory.erstelle(SCHRITTE);
         const abbild = () => JSON.stringify(karte);
         const standZeigen = () => {
             const z = w.querySelector('[data-a="zurueck"]');
             const v = w.querySelector('[data-a="vor"]');
             if (z)
-                z.disabled = !zurueckStapel.length;
+                z.disabled = !verlauf.kannZurueck();
             if (v)
-                v.disabled = !vorStapel.length;
+                v.disabled = !verlauf.kannVor();
         };
-        const merken = () => {
-            zurueckStapel.push(abbild());
-            if (zurueckStapel.length > SCHRITTE)
-                zurueckStapel.shift();
-            vorStapel.length = 0;
-        };
+        const merken = () => { verlauf.merken(abbild()); };
         const sichern = () => {
             Store.updateBlock(block.id, { karte: JSON.parse(JSON.stringify(karte)) });
         };
@@ -1322,18 +1318,16 @@ const Gedankenkarte = (() => {
                     vorlagenMenue(b);
                     break;
                 case 'zurueck': {
-                    const roh = zurueckStapel.pop();
-                    if (roh === undefined)
+                    const roh = verlauf.zurueck(abbild());
+                    if (roh === null)
                         return;
-                    vorStapel.push(abbild());
                     einsetzen(roh);
                     break;
                 }
                 case 'vor': {
-                    const roh = vorStapel.pop();
-                    if (roh === undefined)
+                    const roh = verlauf.vor(abbild());
+                    if (roh === null)
                         return;
-                    zurueckStapel.push(abbild());
                     einsetzen(roh);
                     break;
                 }
@@ -1478,10 +1472,9 @@ const Gedankenkarte = (() => {
             if (strg && e.key.toLowerCase() === 'z') {
                 e.preventDefault();
                 e.stopPropagation();
-                const roh = e.shiftKey ? vorStapel.pop() : zurueckStapel.pop();
-                if (roh === undefined)
+                const roh = e.shiftKey ? verlauf.vor(abbild()) : verlauf.zurueck(abbild());
+                if (roh === null)
                     return;
-                (e.shiftKey ? zurueckStapel : vorStapel).push(abbild());
                 einsetzen(roh);
                 return;
             }

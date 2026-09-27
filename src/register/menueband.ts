@@ -419,21 +419,60 @@ Register.menueband = (() => {
     }));
   };
 
-  const WERKZEUGE: Array<[string, string, string, string]> = [
-    ['schreiben', 'Schreiben', '✎',  'Die Zeichenschicht ist durchlässig — Text bleibt anfassbar'],
-    ['stift',     'Stift',     '🖍', 'Freihand mit geglätteter Linie'],
-    ['marker',    'Marker',    '▰',  'Transparenter Marker zum Hervorheben'],
-    ['line',      'Linie',     '╱',  'Gerade Linie'],
-    ['arrow',     'Pfeil',     '→',  'Pfeil'],
-    ['rectangle', 'Rechteck',  '□',  'Rechteck'],
-    ['ellipse',   'Ellipse',   '○',  'Ellipse'],
-    ['abdeck',    'Abdecken',  '▬',  'Abdeckband — Antippen im Schreiben-Modus deckt auf'],
-    ['zettel',    'Haftnotiz', '🗒', 'Einen Zettel aufziehen und beschriften'],
-    ['text',      'Text',      'T',  'Textanmerkung auf der Fläche'],
-    ['zeichen',   'Fachzeichen', '⚡', 'Ein elektrotechnisches Zeichen setzen'],
-    ['select',    'Auswahl',   '⌖',  'Marken auswählen, gemeinsam bewegen oder löschen'],
-    ['radierer',  'Radieren',  '⌫',  'Eine Marke entfernen']
+  /* ══ DIE WERKZEUGE DES BANDES — EINE FOLGE, KEINE LISTE (E212, E694) ═════
+     Hier standen dreizehn Vierertupel `[Kennung, Name, Zeichen, Hinweis]`,
+     und daneben hielt `marken.ts` vierzehn Werkzeuge mit denselben Namen.
+     Dass beide auseinanderlaufen, ist keine Vermutung: als „Abdecken" im
+     Studio einmal still zu „Abdeckband" wurde, sagte das Band weiter
+     „Abdecken" (`test266 §1`). Genau davor warnt §8.
+
+     JETZT STEHT HIER NUR NOCH, WELCHE UND IN WELCHER REIHENFOLGE. Name,
+     Zeichen und Beschreibung kommen aus dem Katalog; `test572 §3` lässt in
+     dieser Datei keinen Namen mehr zu.
+
+     ZWEI QUELLEN, UND DAS IST KEIN WIDERSPRUCH ZU §8. Neun Kennungen sind
+     Werkzeuge des Studios (`Register.werkzeuge`); vier sind FORMEN
+     (`Marken.FORMEN`) — im Studio liegen sie unter dem einen Knopf
+     `formen`, im Band stehen sie einzeln, weil dort kein Untermenü
+     aufgeht. Sie sind verschiedene Dinge, keine zwei Fassungen desselben.
+
+     UND DIE QUELLE MUSS DABEISTEHEN, nicht erraten werden: die Kennung
+     `ellipse` gibt es ZWEIMAL — als Flächenwerkzeug (`◯`) und als
+     Studio-Form (`○`). Ein „erst im Register nachsehen, sonst bei den
+     Formen" hätte hier still das falsche Zeichen gezeigt. Deshalb sagt
+     jede Zeile, wohin sie gehört. */
+  const WERKZEUGE: Array<[string, 'werkzeug' | 'form']> = [
+    ['schreiben', 'werkzeug'],
+    ['stift',     'werkzeug'],
+    ['marker',    'werkzeug'],
+    ['line',      'form'],
+    ['arrow',     'form'],
+    ['rectangle', 'form'],
+    ['ellipse',   'form'],
+    ['abdeck',    'werkzeug'],
+    ['zettel',    'werkzeug'],
+    ['text',      'werkzeug'],
+    ['zeichen',   'werkzeug'],
+    ['select',    'werkzeug'],
+    ['radierer',  'werkzeug']
   ];
+
+  /** Name, Zeichen und Beschreibung einer Kennung — aus dem Katalog, der
+   *  dafür zuständig ist. Findet sie keiner, wird die Zeile AUSGELASSEN und
+   *  gemeldet, nicht mit der Kennung als Namen gezeigt: ein Knopf, der
+   *  `rectangle` heisst, ist schlimmer als einer, den es nicht gibt
+   *  (dieselbe Regel wie in `Register.werkzeuge.auswahl`). */
+  const bandWerkzeug = (id: string, woher: 'werkzeug' | 'form')
+    : { name: string; zeichen: string; hinweis: string } | null => {
+    try {
+      const q = woher === 'form'
+        ? (Marken.FORMEN ?? []).find((f: { id: string }) => f.id === id)
+        : Register.werkzeuge.holen(id);
+      if (!q) { console.warn(`menueband: Werkzeug „${id}" steht in keinem Katalog.`); return null; }
+      return { name: String(q.name), zeichen: String(q.zeichen),
+               hinweis: String(q.titel ?? q.name) };
+    } catch { return null; }
+  };
 
   /* DIE FLÄCHENKNÖPFE SIND NUR GROSS, SOLANGE KEINE FLÄCHE DA IST.
 
@@ -466,9 +505,11 @@ Register.menueband = (() => {
        moeglicherweise `undefined`. Eine Zeile Typ statt einer Stunde
        Suche. */
     /* Die Werkzeuge selbst — nur, wenn eine Flaeche da ist (`zeigen`). */
-    ...WERKZEUGE.map(([id, name, zeichen, hinweis]): BandEintrag => ({
+    ...WERKZEUGE.map(([id, woher]) => ({ id, w: bandWerkzeug(id, woher) }))
+      .filter((x): x is { id: string; w: { name: string; zeichen: string; hinweis: string } } => x.w !== null)
+      .map(({ id, w }): BandEintrag => ({
       reiter: 'zeichnen', gruppe: 'Werkzeug', id: 'wz-' + String(id),
-      name: String(name), zeichen: String(zeichen), hinweis: String(hinweis),
+      name: w.name, zeichen: w.zeichen, hinweis: w.hinweis,
       tun: () => { if (!Zeichenziel.setze(id)) UI.toast('Erst eine Zeichenfläche öffnen'); },
       /* WELCHES WERKZEUG IST AN? Ohne diese Zeile stand im Band nichts
          markiert, und der graue Kasten um den zuletzt geklickten Knopf war

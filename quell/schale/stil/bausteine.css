@@ -1823,14 +1823,23 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        Fläche statt eines Musters. Wo es ihn nicht gibt (ältere Browser),
        bleibt die volle Farbe stehen — deshalb steht sie zuerst da. */
     background:var(--bg-card);
-    background:color-mix(in srgb,var(--bg-card) 88%,transparent);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
-    backdrop-filter:blur(20px) saturate(1.6);
     border:1px solid var(--line);
     /* DER SCHATTEN STEHT IN `studio.css` und nicht hier. Diese Datei lädt
        früher; zwei Schatten für dasselbe Ding wären einer, der gewinnt,
        und einer, den niemand findet. Dort steht auch der Radius — er ist
        die halbe Höhe, siehe den Absatz dort. */
+  }
+  /* DAS GLAS DER LEISTE IST DAS GLAS AUS §16 (E695). Hier stand eine eigene
+     Mischung, `blur(20px) saturate(1.6)` — fast dieselbe, und genau deshalb
+     eine zweite: wer eine ändert, ändert die andere nicht. Die DICHTE bleibt
+     die der Leiste (88 %, `--bg-schwebend-dicht`): der Inhalt läuft ständig
+     dahinter durch, und die Namen unter den Zeichen sind klein. Gemessen:
+     test576 §6, die Beschriftung über einem schwarz-weiss-rot-blauen Muster. */
+  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    #handy-oben{
+      background:var(--bg-schwebend-dicht);
+      -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+    }
   }
   /* JEDER NAME STEHT DA, NICHT NUR DER AKTIVE.
      Oben war Platz für genau einen Namen — fünf nebeneinander hätten die
@@ -3696,7 +3705,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   position:fixed; inset:0; z-index:960;
   display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,var(--sheet-dim, .5));
-  backdrop-filter:blur(3px);
+  /* Der Schleier aus den Marken (E695), und MIT Präfix — ohne ihn gab es auf
+     dem iPhone vor Safari 18 keinen. */
+  -webkit-backdrop-filter:var(--schleier-blur); backdrop-filter:var(--schleier-blur);
   animation:wk-auf var(--motion-normal, .22s) var(--ease-enter, ease-out);
 }
 @keyframes wk-auf{ from{ opacity:0 } to{ opacity:1 } }
@@ -4757,7 +4768,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    hat kein Prüflauf gefunden, sondern das Hinsehen.) */
 .blatt-reihe[data-lage="links"],
 .blatt-reihe[data-lage="rechts"]{
-  position:absolute; top:0; bottom:auto; max-height:min(78vh, 100%);
+  /* Nie über den Fensterrand hinaus (E696): `--reihe-platz` rechnet
+     `marken.ts` aus der Oberkante der Hülle. Ohne sie gilt der alte Wert. */
+  position:absolute; top:0; bottom:auto; max-height:min(78vh, 100%, var(--reihe-platz, 78vh));
   width:64px; flex-direction:column; z-index:6;
   border-radius:10px; border:1px solid var(--line);
   box-shadow:var(--shadow-3); background:var(--bg-card)
@@ -5280,7 +5293,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-popover>header button:hover{ background:var(--bg-hover); color:var(--text) }
 .blatt-popover>header button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
 .blatt-popover-body{ display:flex; flex-direction:column; gap:6px; padding:10px 12px 12px }
-/* E681: Direkte Farbwahl. Papierweisse Vorschau auch im dunklen Thema,
+/* E697: Direkte Farbwahl. Papierweisse Vorschau auch im dunklen Thema,
    damit die transparente Markertinte so aussieht wie auf dem Dokument. */
 .blatt-color-panel{gap:10px}
 .blatt-color-preview{position:relative;isolation:isolate;min-height:64px;display:grid;place-items:center;

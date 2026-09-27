@@ -1,0 +1,276 @@
+/* ============================================================================
+   SEITENANSICHTEN — DER UMSCHALTER UND DIE FLÄCHE (E690)
+   ----------------------------------------------------------------------------
+   Redur, 26. September 2026: „ich will die 2 von affine 1:1 haben auch alles
+   komplett wie es aussehn … und noch eine 3 für die aktuelle Redion".
+
+   Drei Blicke auf EINE Seite:
+
+       seite     Symbol und Titel, sonst nichts — AFFiNEs `page`
+       flaeche   Punktraster, der Text als Kasten darauf — AFFiNEs `edgeless`
+       redion    Cover, Symbol, Titel, Werkzeugzeile — unsere eigene
+
+   WARUM HIER `#main` VOR DEM WÄHLER STEHT. Die Fläche muss die Seitenränder
+   AUFHEBEN, und die stehen am Telefon in `bausteine.css:222-228` als
+   `#page.wide:not(.produkt-welt)` — ein Kennzeichen und zwei Klassen, denn
+   `:not(…)` zählt wie eine. Gleichstand mit `#page.wide.flaeche-page`, und
+   bei Gleichstand entscheidet die Reihenfolge.
+
+   Der erste Anlauf hängte dieses Blatt deshalb HINTER `bausteine.css` — und
+   `test87` wurde zu Recht rot: die Kaskade der Stilblätter (Werte, Gerüst,
+   Bauteile, bausteine, Schale) darf nicht zurückspringen, und ein
+   Bauteil-Blatt am Ende tut genau das. Ein Blatt an die falsche Stufe zu
+   hängen, um eine Zahl zu gewinnen, wäre der Anfang vom Ende dieser Ordnung.
+   Also gewinnt hier die Spezifität statt der Reihenfolge: `#main #page…` ist
+   ein Kennzeichen mehr und schlägt die Telefonregel, wo immer das Blatt
+   hängt.
+
+   TOKENS: nur die, die es gibt (§39). Nachgesehen in `grund.css` und
+   `bausteine.css`: --line, --bg-card, --bg-side, --text, --text-dim,
+   --accent, --touch-min, --radius-lg, --schatten-schwebend, --hunten,
+   --space-5 (16px).
+
+   UND OHNE RÜCKFALLWERTE. `var(--radius-lg, 12px)` sieht vorsichtig aus und
+   ist es nicht: den Token GIBT es, der zweite Wert wirkt also nie — er zählt
+   aber in `pruefungen/marken-decke.json` als rohe Zahl mit (test362 §7) und
+   behauptet nebenbei, der Token sei unsicher. Wo ein Token da ist, steht er
+   allein.
+   ==========================================================================*/
+
+/* ----------------------------------------------------------------------------
+   1 · DER UMSCHALTER
+   Er steht als erstes Element IN der Seite (über dem Cover), weil am Telefon
+   in `#topbar` genau zwei Knöpfe sichtbar bleiben dürfen (test40) — dort wäre
+   für drei kein Platz. Die Knopfmasse kommen aus `.ru-seg-wahl`
+   (`bausteine.css`, min-height: var(--touch-min)); hier steht nur, wo die
+   Gruppe sitzt.
+   --------------------------------------------------------------------------*/
+.pg-ansichten{
+  display:flex; align-items:center;
+  padding:14px 0 10px;
+}
+/* Ein Umschalter, der auf jeder Seite ins Auge sticht, ist auf jeder Seite im
+   Weg. Er wird deutlich, sobald die Maus in der Nähe ist — und ist mit der
+   Tastatur immer voll da (`:focus-within`), sonst wäre er für den, der nicht
+   mit der Maus kommt, unsichtbar. */
+.pg-ansichten .ru-seg{opacity:.62; transition:opacity .15s ease}
+#page:hover .pg-ansichten .ru-seg,
+.pg-ansichten:focus-within .ru-seg{opacity:1}
+
+/* ----------------------------------------------------------------------------
+   2 · DIE SEITE ALS FLÄCHE
+   `#page` wird hier vom Textblatt zur Leinwand: kein Rand, keine Maximalbreite,
+   volle Höhe, und `#scroll` rollt nicht mehr — die Fläche schiebt sich selbst.
+   --------------------------------------------------------------------------*/
+/* ZWEI WÄHLER FÜR DIESELBE REGEL, und der zweite ist kein Schmuck.
+   `bausteine.css:222-228` setzt am Telefon `#page.wide:not(.produkt-welt)`
+   — das sind EIN Kennzeichen und ZWEI Klassen (`:not(…)` zählt wie eine),
+   also mehr als `#page.flaeche-page`. Gemessen war die Folge ein
+   `padding-bottom` von 253 px mitten in der Leinwand und eine Fläche von
+   330 px statt 560. Ein späteres Blatt allein genügt eben nicht: bei
+   ungleicher Spezifität gewinnt die Zahl, nicht die Reihenfolge. */
+#main #page.flaeche-page,
+#main #page.wide.flaeche-page{
+  max-width:none; padding:0;
+  display:flex; flex-direction:column; min-height:0; flex:1 1 auto;
+  /* `margin:0` IST HIER PFLICHT, nicht Kosmetik. `#page` trägt
+     `margin:0 auto` (aufbau.css:142) — und ein Flex-Element mit
+     automatischen Rändern auf der Querachse wird NICHT gedehnt. Gemessen:
+     278 px breit in einem 390 px breiten Fenster, 56 px Luft auf jeder
+     Seite, und die Leinwand endete mitten im Bild. Mit `width:100%` und
+     ohne `auto` füllt sie. */
+  margin:0; width:100%;
+}
+#main #page.flaeche-page .pg-ansichten{padding:10px var(--space-5)}
+/* `#scroll` WIRD ZUR SPALTE, und das ist der Unterschied zwischen einer
+   Leinwand und einem Streifen. Erster Anlauf: `#page{height:100%}`. Am
+   Rechner sah es richtig aus, am Telefon war die Fläche 332 px hoch in einem
+   560 px hohen Feld, und die Werkzeugleiste lag mitten auf dem Kasten —
+   gefunden auf dem BILD, nicht vom Wächter (§55.1). Der Grund: `#scroll` ist
+   `flex:1` und hat damit eine GEBRAUCHTE, aber keine festgelegte Höhe; ein
+   `height:100%` am Kind hat nichts, woran es sich messen könnte, und fiel auf
+   `auto` zurück — übrig blieb die `min-height` der Fläche. Als Spalte braucht
+   es keine Prozentzahl: das Kind wächst. */
+#main:has(> #scroll > #page.flaeche-page) #scroll{
+  overflow:hidden; display:flex; flex-direction:column;
+}
+
+.pg-flaeche{
+  position:relative; flex:1 1 auto; min-height:320px; overflow:hidden;
+  background-color:var(--bg-side);
+  /* DAS PUNKTRASTER — wie AFFiNEs `radial-gradient` (edgeless-root-block).
+     Grösse und Lage setzt JavaScript, damit es mit Zoom und Schub wandert;
+     stünden sie hier, wäre das Raster beim Zoomen stehen geblieben und die
+     Fläche hätte sich unter einem festen Muster bewegt. */
+  background-image:radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
+  background-size:20px 20px;
+  touch-action:none;
+}
+.pg-flaeche[data-wz="hand"]{cursor:grab}
+.pg-flaeche[data-wz="hand"]:active{cursor:grabbing}
+
+/* Die bewegliche Ebene. `transform-origin` MUSS oben links liegen: die ganze
+   Umrechnung in `seitenflaeche.ts` rechnet mit einer Ecke als Nullpunkt, und
+   der Standard wäre die Mitte. */
+.pg-fl-sicht{
+  position:absolute; inset:0;
+  transform-origin:0 0;
+  will-change:transform;
+}
+
+/* ----------------------------------------------------------------------------
+   3 · DER KASTEN MIT DEM SEITENTEXT
+   AFFiNEs Notiz auf der Fläche: eigener Kopf mit Emoji und Titel, weisser
+   Körper, weicher Schatten.
+   --------------------------------------------------------------------------*/
+.pg-fl-notiz{
+  position:absolute;
+  background:var(--bg-card); border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--schatten-schwebend);
+}
+.pg-fl-kopf{
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; border-bottom:1px solid var(--line);
+  /* 34 px, und das ist mit Grund KEIN Fingerziel nach §37: der Kopf ist kein
+     Knopf, sondern die Kante, an der man den Kasten zieht — und die volle
+     Breite des Kastens (760 px) ist als Griff grösser als jeder Knopf. Wer
+     hier 44 px setzte, schöbe den Text um zehn Pixel nach unten, ohne dass
+     irgendetwas leichter zu treffen wäre. */
+  min-height:34px;
+  cursor:grab; user-select:none;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  background:var(--bg-side);
+}
+.pg-fl-kopf:active{cursor:grabbing}
+/* Symbol und Titel sind UMGEZOGEN, nicht nachgebaut (siehe seitenflaeche.ts).
+   Sie tragen deshalb ihre Seitenmasse mit — 70 px Emoji und 40 px Titel, was
+   im Kopf eines Kastens absurd wäre. Hier stehen die Masse des Kastens. */
+.pg-fl-kopf .pg-icon{
+  font-size:18px; line-height:1; margin:0; cursor:pointer;
+}
+.pg-fl-kopf #title,
+.pg-fl-kopf .pg-fl-name{
+  font-size:14.5px; font-weight:650; line-height:1.3; margin:0;
+  flex:1 1 auto; min-width:0;
+  color:var(--text); outline:none;
+}
+.pg-fl-griff{margin-left:auto; color:var(--text-dim); font-size:13px}
+.pg-fl-koerper{padding:14px 20px 26px}
+/* Auf der Fläche gibt es keinen Aussenrand, an dem ein Cover kleben könnte —
+   und der Kasten ist der Rand. Ein Cover mit -96 px Rand ragte sonst über
+   ihn hinaus. */
+.pg-fl-koerper .cover{margin:0; border-radius:8px}
+
+/* ----------------------------------------------------------------------------
+   4 · DIE WERKZEUGLEISTE DER FLÄCHE
+   Das Bauteil ist `core/gfx/toolbar.ts` (E689) und bringt seine Masse mit;
+   hier steht nur, WO es hängt. Am Telefon über der unteren Leiste, sonst
+   stünde es dahinter (L217 gilt für die Flächen-Blöcke, hier ist es gleich
+   richtig gemacht).
+   --------------------------------------------------------------------------*/
+.pg-flaeche .gfx-tb-sockel{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:18px; z-index:6; max-width:calc(100% - 24px);
+}
+.pg-fl-massstab{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:52px; padding:0 6px;
+  font-size:12.5px; font-weight:650; color:var(--text-dim);
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:760px){
+  /* KEIN `--hunten` HIER. `#scroll` trägt am Telefon schon
+     `padding-bottom: calc(var(--hunten) + 24px)` (bausteine.css:2257) — die
+     Fläche endet also bereits über der unteren Leiste. Wer hier noch einmal
+     `--hunten` addiert, schiebt die Werkzeugleiste um eine Leistenhöhe zu
+     hoch, mitten auf den Kasten. Gemessen und auf dem Bild gesehen. */
+  .pg-flaeche .gfx-tb-sockel{bottom:12px}
+  /* Am Telefon ist der Kasten schmaler als die gemerkte Breite — nicht durch
+     eine zweite Zahl in JavaScript, sondern hier: die gespeicherte Breite
+     bleibt, was sie ist, und der Bildschirm zeigt sie kleiner. */
+  #main #page.flaeche-page .pg-ansichten{padding:8px 12px}
+}
+
+/* ----------------------------------------------------------------------------
+   5 · DER VOLLAUSBAU: EIN KASTEN JE BLOCK (E691)
+   Redur, 26. September 2026: „ja mach den vollausbau, jeder block auf die
+   fläche ziehbar." Seither ist der Seitenkasten nur noch einer von vielen.
+   --------------------------------------------------------------------------*/
+/* Ein Blockkasten ist schlanker als der Seitenkasten: sein Kopf sagt die
+   Blockart, nicht den Seitentitel. */
+.pg-fl-notiz[data-fl-block] .pg-fl-koerper{padding:10px 14px 14px}
+.pg-fl-notiz[data-fl-block] .pg-fl-kopf .pg-icon{font-size:14px}
+.pg-fl-notiz[data-fl-block] .pg-fl-name{
+  font-size:12.5px; font-weight:600; color:var(--text-dim);
+  text-transform:none; letter-spacing:.01em;
+}
+/* Auf der Fläche gibt es keine Griffe am Block: der Kasten IST der Griff. */
+.pg-fl-notiz[data-fl-block] .blk > .handles{display:none}
+.pg-fl-notiz[data-fl-block] .blk{padding-left:0}
+
+/* „nicht auf der Seite" — ein WORT, keine Farbe allein (§38). */
+.pg-fl-versteckt{
+  flex:none; padding:2px 7px; border-radius:999px;
+  background:var(--bg-hover); color:var(--text-dim);
+  font-size:11px; font-weight:600; white-space:nowrap;
+}
+
+/* Der Menüknopf im Kopf. Am Telefon ist er der einzige Weg zurück in den
+   Text — deshalb dort die volle Trefferfläche aus §37, am Rechner reicht
+   ein kleiner Knopf neben einem 34 px hohen Kopf. */
+.pg-fl-menue{
+  flex:none; margin-left:auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border:0; border-radius:6px;
+  background:none; color:var(--text-dim);
+  font-size:15px; line-height:1; cursor:pointer;
+}
+.pg-fl-menue:hover{background:var(--bg-hover); color:var(--text)}
+.pg-fl-menue:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+/* Der Griff `⠿` stand bis E691 rechts aussen; jetzt steht dort das Menü,
+   und der ganze Kopf bleibt die Ziehfläche. Zwei Dinge rechts aussen wären
+   am Telefon nebeneinander 88 px in einem 334 px breiten Kasten. */
+.pg-fl-griff{display:none}
+
+/* Der leere Seitenkasten sagt, wofür er noch da ist. */
+.pg-fl-leer{
+  padding:18px 4px; color:var(--text-dim);
+  font-size:13px; line-height:1.5; text-align:center;
+}
+
+/* Ziehen: wohin es geht, sieht man VORHER. */
+.pg-flaeche.pg-fl-nimmt{box-shadow:inset 0 0 0 2px var(--accent)}
+.pg-fl-notiz.pg-fl-ziel{outline:2px solid var(--accent); outline-offset:2px}
+.pg-fl-notiz.pg-fl-zurueck{opacity:.55}
+
+@media(max-width:760px){
+  /* §37: der einzige Weg zurück in den Text braucht die volle Fläche. */
+  .pg-fl-menue{width:var(--touch-min); height:var(--touch-min); font-size:18px}
+  .pg-fl-kopf{min-height:var(--touch-min); padding:4px 6px 4px 12px}
+}
+
+/* ----------------------------------------------------------------------------
+   6 · DIE TINTE (E693, L219)
+   Eine SVG-Lage IN derselben bewegten Ebene wie die Kästen — so teilen sich
+   Tinte und Kasten EINEN `transform`, und es gibt keine zweite Umrechnung.
+   --------------------------------------------------------------------------*/
+.pg-fl-tinte{
+  position:absolute; left:0; top:0;
+  /* 1 × 1 und `overflow:visible`: die Formen liegen in Flächeneinheiten um
+     den Ursprung, und ein winziges SVG zeigt sie trotzdem alle. Ein Kasten
+     von 40 000 Punkten wäre dieselbe Sache mit einer Zahl, die irgendwann
+     jemand für eine Grenze hält. */
+  overflow:visible;
+  /* DIE TINTE FÄNGT KEINEN GRIFF. Wer in den Kasten tippt, trifft den Text;
+     wer daneben tippt, schiebt die Fläche. Der Radierer sucht seine Form
+     deshalb rechnend — ein Strich von 2,5 Punkten ist ohnehin kein
+     Fingerziel (§37). */
+  pointer-events:none;
+  color:var(--text);
+}
+/* Die Malwerkzeuge zeigen ein Kreuz statt des Greifers. */
+.pg-flaeche[data-wz="stift"], .pg-flaeche[data-wz="linie"],
+.pg-flaeche[data-wz="pfeil"], .pg-flaeche[data-wz="rechteck"],
+.pg-flaeche[data-wz="ellipse"]{cursor:crosshair}
+.pg-flaeche[data-wz="radierer"]{cursor:cell}

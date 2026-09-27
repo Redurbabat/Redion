@@ -86,6 +86,8 @@ Register.symbole = (() => {
     inbox:     '<path d="M3.5 13.5h4l1.6 2.6h5.8l1.6-2.6h4"/>' +
                '<path d="M6 4.5h12l3 9v4.2a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.7V13.5z"/>',
     plus:      '<path d="M12 5v14M5 12h14"/>',
+    /* Das Gegenstück zu `plus` — die Zoomgruppe der Flächen braucht beide (E689). */
+    minus:     '<path d="M5 12h14"/>',
     home:      '<path d="m3.5 10.4 8.5-6.6 8.5 6.6"/>' +
                '<path d="M5.8 9.2v9.2a2 2 0 0 0 2 2h8.4a2 2 0 0 0 2-2V9.2"/>' +
                '<path d="M10 20.4v-5.6h4v5.6"/>',
@@ -106,6 +108,15 @@ Register.symbole = (() => {
     pencil:    '<path d="M16.5 3.9a2.1 2.1 0 0 1 3 3L8.9 17.5l-4 1 1-4z"/><path d="M14.6 5.8l3 3"/>',
     inkHand: '<path d="M8 12V5a1.5 1.5 0 0 1 3 0v6-8a1.5 1.5 0 0 1 3 0v8-6a1.5 1.5 0 0 1 3 0v7-3a1.5 1.5 0 0 1 3 0v6c0 4-3 6-6 6h-2c-2 0-3-1-4-3l-4-5a1.5 1.5 0 0 1 2-2l2 1z"/>',
     inkLasso: '<ellipse cx="12" cy="10" rx="9" ry="6" stroke-dasharray="3 3"/><path d="M7 14c-4 7 4 9 6 4"/>',
+    /* ZWEI ZEICHEN FÜR DIE FLÄCHEN (E689). Das Whiteboard trug hier ⭠ und ⇢ —
+       Textpfeile, die neben einem Strichzeichen aus der Reihe fallen und auf
+       jedem System anders sitzen (Kopf dieser Datei). `inkPointer` ist der
+       Zeiger, mit dem man auswählt und schiebt; `inkConnector` sind zwei
+       Punkte mit einem Bogen dazwischen — nicht die Kette von `link`, denn
+       verbunden werden Formen, keine Adressen. */
+    inkPointer: '<path d="M5.6 3.4 18 11.2l-5.4 1.3-2.6 5.1z"/><path d="m12.4 12.6 5.4 6"/>',
+    inkConnector: '<circle cx="5.4" cy="18.6" r="2.3"/><circle cx="18.6" cy="5.4" r="2.3"/>' +
+               '<path d="M7.4 16.6C9 11 11 9 16.6 7.4" stroke-dasharray="3 2.6"/>',
     inkMarker: '<path d="m13 3 7 7-8 8-7-7zM5 11l-2 7 3 3 6-3M3 21h7"/>',
     inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
     /* ══ DAS T OHNE RAHMEN (E577) ══════════════════════════════════════════

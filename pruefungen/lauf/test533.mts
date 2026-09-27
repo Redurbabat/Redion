@@ -205,7 +205,12 @@ console.log('\n§2 Kein Knoten verloren, keiner verschoben');
    stehen hier als Zahl und nicht als Formel: eine Zusicherung, die ihren
    Sollwert aus demselben DOM rechnet, das sie prüft, kann nicht rot werden
    (§55.2 — derselbe Fehler wie in E612 §5). */
-gleich('Dreizehn Werkzeuge, wie im Katalog', a.werkzeuge.length, 13);
+/* VIERZEHN SEIT E670, NICHT DREIZEHN. „Text ändern" (`textfix`) kam am
+   21. September dazu; `test480` wurde damals nachgezogen, dieser Lauf nicht —
+   er stand eine Woche rot, und gefunden hat es der Nachbarlauf von E696. Die
+   Zahl bleibt eine Zahl und keine Formel (siehe oben): wer ein Werkzeug
+   hinzufügt, soll es hier merken. */
+gleich('Vierzehn Werkzeuge, wie im Katalog', a.werkzeuge.length, 14);
 gleich('Sie stehen alle auf EINER Höhe', a.werkzeugZeilen, 1);
 /* BEIM STIFT GEHÖREN GENAU VIER GRUPPEN DAZU (E356, abgelesen aus dem
    Katalog in `bausteine.css`): Spielart, Formen, Farbe, Breite — und der
@@ -261,7 +266,7 @@ await p1.waitForTimeout(200);
 let b2 = await aufnahme(p1);
 p('Eine Bewegung in der Werkzeugreihe kommt an', b2.werkzeuge.join(',') !== vorher,
   `${vorher} → ${b2.werkzeuge.join(',')}`);
-p('… und keines ist dabei verlorengegangen', b2.werkzeuge.length === 13,
+p('… und keines ist dabei verlorengegangen', b2.werkzeuge.length === 14,
   String(b2.werkzeuge.length));
 /* DAS IST DER LEISESTE AUSFALL DES BOGENS: `ordnungAnwenden` steigt bei
    `if (!bruch) return` stumm aus, wenn es den Zeilenbruch nicht findet.
@@ -271,8 +276,8 @@ await p1.evaluate(async () => { App.zeichneSeite(); await new Promise(f => setTi
 await p1.click('.blatt-werk [data-wz="stift"]');
 await p1.waitForTimeout(260);
 const nachNeubau = await aufnahme(p1);
-p('`ordnungAnwenden` läuft durch — nach dem Neubau stehen dreizehn Werkzeuge da',
-  nachNeubau.werkzeuge.length === 13 && nachNeubau.tafel,
+p('`ordnungAnwenden` läuft durch — nach dem Neubau stehen vierzehn Werkzeuge da',
+  nachNeubau.werkzeuge.length === 14 && nachNeubau.tafel,
   JSON.stringify(nachNeubau.werkzeuge));
 
 /* ═══ §5 Das Wort steht unter dem Zeichen (W3) ═════════════════════════════ */
@@ -294,7 +299,7 @@ const w3 = await p1.evaluate(() => {
   }).filter(Boolean) as Array<{ name: string; wortSichtbar: boolean; darunter: boolean; mittig: boolean; richtung: string }>;
   return { mass, anzahl: mass.length };
 });
-gleich('Dreizehn Werkzeuge tragen Zeichen und Wort', w3.anzahl, 13);
+gleich('Vierzehn Werkzeuge tragen Zeichen und Wort', w3.anzahl, 14);
 p('Jedes Wort ist sichtbar', w3.mass.every(m => m.wortSichtbar),
   w3.mass.filter(m => !m.wortSichtbar).map(m => m.name).join(', '));
 p('Jedes Wort steht UNTER seinem Zeichen — gemessen, nicht gezählt',

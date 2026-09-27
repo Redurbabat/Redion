@@ -120,6 +120,20 @@ sind der teuerste Teil und der lehrreichste.
 | P104 | 2026-09-21 | Eine Gegenprobe, die gar nicht lief | 🟠 mittel | — |
 | P105 | 2026-09-21 | Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken | 🟠 mittel | — |
 | P106 | 2026-09-22 | Frage 5 kam vor Frage 4 — 57 Karten in derselben Millisekunde, sortiert nach created | 🟠 mittel | — |
+| P107 | 2026-09-25 | Der Graph der Karte malte „genannt“ als „benutzt“ | 🟡 klein | — |
+| P108 | 2026-09-25 | Strg+Z nahm zweimal zurück — der Block und die ganze Seite | 🟠 mittel | — |
+| P109 | 2026-09-25 | Der Seitenverlauf gab jedem Block neue Kennungen — und löschte die Fassungen der Unterseiten | hoch | — |
+| P110 | 2026-09-25 | Ein Commit ohne seinen Inhalt — das Schreibskript war an einem Anführungszeichen gescheitert | 🟡 klein | — |
+| P111 | 2026-09-25 | Eine Prüfung, die wider Erwarten grün blieb — der Audit hatte die Handformel für falsch erklärt | 🟡 klein | — |
+| P112 | 2026-09-25 | Tiefe 0 wurde zu Tiefe 40 — `Number(x) || 40` hält 0 für „nichts gesagt“ | 🟡 klein | — |
+| P113 | 2026-09-25 | Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn | 🟡 klein | — |
+| P114 | 2026-09-26 | `window.App` gibt es nicht — und der optionale Zugriff schluckt es | 🟠 mittel | — |
+| P115 | 2026-09-26 | Ein Wächter, der eine Absicht misst, die es nicht gibt | 🟠 mittel | — |
+| P116 | 2026-09-26 | Ein Tastenkürzel, das im Menü steht und nie erreichbar war | 🟠 mittel | — |
+| P117 | 2026-09-26 | Eine Kennung, zwei Bedeutungen: `ellipse` | 🟡 klein | — |
+| P118 | 2026-09-27 | Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste | 🟡 klein | — |
+| P119 | 2026-09-27 | Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster | 🟠 mittel | — |
+| P120 | 2026-09-27 | Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal | 🟠 mittel | — |
 
 ---
 
@@ -2315,4 +2329,270 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test565 §3 rot (wortgleich=false); nach dem Umbau — Seitenreihenfolge über Elternblock und Stelle in `content`, Prüfungsfragen zuoberst — 54/54.
 
 **Die Lehre.** Ein Zeitstempel ordnet nichts, was gleichzeitig entsteht. Die Reihenfolge, die zählt, ist die, die der Mensch sieht und ändern kann — die Seite. Und ein Wächter, der nur den ersten Fall prüft, hätte hier „passt schon“ gesagt (§55.2).
+
+
+---
+
+## P107 · Der Graph der Karte malte „genannt“ als „benutzt“
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** In doku/karte/Redion.md zeigte ein Pfeil vom Whiteboard auf SheetSpace und InkGeometry — beides benutzt das Whiteboard NICHT, das war gerade der Befund.
+
+**Die falsche Vermutung.** Wenn ein Befund einen Kern nennt, benutzt das System ihn.
+
+**Wie es gefunden wurde.** Beim Lesen des ersten erzeugten Graphen: der Pfeil widersprach dem Satz daneben („InkGeometry — NICHT genutzt“).
+
+**Die Ursache.** Die Kante wurde aus jedem Vorkommen des Namens im Befund gerechnet, auch aus Sätzen mit „NICHT genutzt“.
+
+**Der Beweis.** Nach der Trennung in „benutzt“ (gemeinsamGenutzt/Schnittstellen ohne Verneinung) und „nur genannt“ zeigt das Whiteboard auf Store, Register, Dateien — und SheetSpace/InkGeometry stehen unter „nur genannt“.
+
+**Die Lehre.** Ein gerechneter Graph ist eine Behauptung wie jede andere; man liest ihn gegen den Text, aus dem er kommt, bevor man ihn zeigt.
+
+
+---
+
+## P108 · Strg+Z nahm zweimal zurück — der Block und die ganze Seite
+
+*2026-09-25 · 🟠 mittel*
+
+**Das Bild.** Im Schaltplan: Teil gesetzt, Strg+Z — drei Teile wie vorher, Meldung „Rückgängig“, Block neu gezeichnet, neue Kennung. Auf dem Blatt: ein Strich weg, der alte Block existiert nicht mehr.
+
+**Die falsche Vermutung.** Wer preventDefault ruft, hat die Taste.
+
+**Wie es gefunden wurde.** Aus dem Lesen (schale.ts hört am Dokument ohne Blick auf defaultPrevented; Planfläche und Marken ohne stopPropagation) eine Sonde gebaut und gefahren — Ausgabe wörtlich im Audit 2.4.
+
+**Die Ursache.** Der Dokument-Horcher der Schale rief bei jedem Strg+Z Verlauf.zurueck(); der Seitenverlauf riss die Seite ab und baute sie neu.
+
+**Der Beweis.** test568 gegen den alten Stand rot 13/25; nach einer Zeile in der Schale 26/26; Gegenprobe (Zeile raus) wieder rot.
+
+**Die Lehre.** Eine Taste hat zwei Enden. Wer die eine Hälfte liest, sieht die Doppelung nicht — messen, mit dem Fokus dort, wo der Mensch ihn hätte.
+
+
+---
+
+## P109 · Der Seitenverlauf gab jedem Block neue Kennungen — und löschte die Fassungen der Unterseiten
+
+*2026-09-25 · hoch*
+
+**Das Bild.** Strg+Z auf der Elternseite: Unterseite a8da9eea… → a7ecec08…, Fassungen 1 → 0, Favorit zeigt auf die alte Kennung. Ein Bild dagegen überlebte (Dateisatz umgehängt).
+
+**Die falsche Vermutung.** Wenn das Bild überlebt, ist der Kennungswechsel eine Schönheitsfrage.
+
+**Wie es gefunden wurde.** Die zweite Sonde — mit einer Unterseite statt eines Bildes — nur gefahren, weil die erste zu beruhigend war.
+
+**Die Ursache.** Verlauf.anwenden = kinderLeeren (purgeBlock je Kind: Grabsteine, purgeAnhaenge löscht versions) + baumEinfuegen („immer mit frischen IDs“). Eine Unterseite ist ein Kind der Seite.
+
+**Der Beweis.** test569 gegen den alten Stand rot 10/20; mit Store.baumAbgleichen 36/36 (später 48/48); Sonde nach dem Bau: Fassungen 1 → 1, Kennung gleich. Vier Gegenproben rot an ihren Stellen.
+
+**Die Lehre.** Ein Zurück, das abreisst und neu baut, ist kein Zurück, sondern ein Ersatz — und alles, was an der Identität hing, hängt dann an nichts. Die richtige Messung ist die mit dem Ding, das am meisten zu verlieren hat (Fassungen), nicht die mit dem, das am meisten Angst macht (Bytes).
+
+
+---
+
+## P110 · Ein Commit ohne seinen Inhalt — das Schreibskript war an einem Anführungszeichen gescheitert
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** Commit 680d19d hiess „L212 Punkt 2 nachgemessen: … Unterseite …“, enthielt aber nur die Bild-Sonde in messungen.md; L212 und der Audit waren unverändert.
+
+**Die falsche Vermutung.** Wenn das Python-Skript und der Commit in derselben Befehlskette stehen, enthält der Commit, was das Skript schreiben sollte.
+
+**Wie es gefunden wurde.** Die Fehlermeldung stand über dem Commit-Erfolg: SyntaxError, unterminated string literal — die Doku benutzt „…" mit einem ASCII-Anführungszeichen als Schlusszeichen, und das schloss meine Zeichenkette.
+
+**Die Ursache.** Ein Parsefehler bricht das ganze Skript ab, bevor die erste Zeile läuft; `&&` hinter einem Heredoc-Python prüft nur den Exit — und den hatte ich nicht geprüft, weil die nächste Zeile ohne && folgte.
+
+**Der Beweis.** Nachtrag f014fa3 mit den drei fehlenden Änderungen; danach test549 6/6.
+
+**Die Lehre.** Zeichenketten mit Redions Anführungszeichen nur in dreifachen Anführungszeichen schreiben — und ein Commit gehört hinter ein `&&`, nicht hinter ein Zeilenende.
+
+
+---
+
+## P111 · Eine Prüfung, die wider Erwarten grün blieb — der Audit hatte die Handformel für falsch erklärt
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** test570 §3 sollte mit scale(0.8) am Elternteil zeigen, dass die Handformel des Whiteboards (sicht.x + (clientX - left) / sicht.z) vom Ergebnis der Matrix abweicht. Sie war grün: beide Rechnungen gaben dieselben Zahlen.
+
+**Die falsche Vermutung.** Drei Formeln für Bildschirm → Raum, eine Matrix — also rechnen die Formeln bei jeder Transformation des Elternteils falsch (Audit D2, R3).
+
+**Wie es gefunden wurde.** Der Wächter lief gegen den ALTEN Stand und blieb an der Stelle grün, an der er rot sein sollte (§50: ein Wächter muss rot gewesen sein). Erst rotate(180deg) trennte Formel und Matrix: „ist 394,168 soll 312,192“.
+
+**Die Ursache.** Der viewBox des SVG wird aus demselben Kasten gerechnet, den getBoundingClientRect liefert; bei achsenparalleler Skalierung kürzt sich der Faktor heraus. Falsch wird die Formel nur bei Drehung oder Scherung.
+
+**Der Beweis.** test570 §3 (scale) grün und §3b (rotate) rot gegen den alten Stand; mit der Matrix beide grün. Audit D2 und E686 berichtigt.
+
+**Die Lehre.** Eine Behauptung im Audit ist eine Vermutung, bis ein Wächter sie rot gezeigt hat. Und ein Wächter, der grün bleibt, wo er rot sein sollte, ist kein zu schwacher Wächter, sondern ein Fund über die Behauptung (§55.2).
+
+
+---
+
+## P112 · Tiefe 0 wurde zu Tiefe 40 — `Number(x) || 40` hält 0 für „nichts gesagt“
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** test571: „Die Tiefe ist mindestens 1“ rot — GfxHistory.erstelle(0).stand().tiefe war 40, nicht 1.
+
+**Die falsche Vermutung.** `Number(tiefe) || 40` sei die Vorgabe für „keine Zahl angegeben“.
+
+**Wie es gefunden wurde.** Der Wächter, im selben Bogen wie der Kern geschrieben; der Kern war vor dem Wächter falsch, und der Lauf hat es beim ersten Mal gedruckt.
+
+**Die Ursache.** `||` behandelt 0 wie undefined. Wer 0 sagt, meint 0 — und bekommt seither die Untergrenze 1; nur was gar keine Zahl ist (Number.isFinite falsch), fällt auf 40 zurück.
+
+**Der Beweis.** test571 24/24 nach der Änderung; die Zusage prüft erstelle(0) → 1, erstelle(-5) → 1, erstelle() → 40.
+
+**Die Lehre.** Vorgaben mit `??` oder Number.isFinite setzen, nie mit `||`, wenn 0 ein gültiger Wert ist.
+
+
+---
+
+## P113 · Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** test388 §5: „Der Start holt 2711 KB (gzip) über 238 Dateien — Decke 2700 KB“. Rot nach Bogen 4 (E687), der 2 KB beiträgt; vor ihm stand die Zahl bei 2709.
+
+**Die falsche Vermutung.** Die Nachbarliste eines Bogens — die Läufe, die dieselben Dateien lesen — findet, was der Bogen kaputt macht. Eine Decke über das GANZE hat aber keine Datei, die man anfasst; sie ist niemandes Nachbar.
+
+**Wie es gefunden wurde.** Nicht wegen der Decke: test388 trägt die Zusage „die Chronik wird beim Start nicht geholt“ (E613) und lief deshalb nach dem Chronik-Nachtrag. Im vollen Lauf vom 19. September war er noch grün; zwischen dem 19. und dem 25. hat niemand ihn gefahren.
+
+**Die Ursache.** 127 KB in neun Tagen — Studio, Trainer, NIN-Quiz, Gedankenkarte, Dock-Welle — und kein voller Lauf seit dem 19. September (§46: main bewegt sich erst nach einem grünen).
+
+**Der Beweis.** Messung gegen bef8c3f in messungen.md §62; danach Decke 2850 und test388 19/19.
+
+**Die Lehre.** Jeder Bogen, der eine Skriptdatei zu index.html hinzufügt, fährt test388. Und die Decke ist ein Grund mehr, den vollen Lauf nicht länger als eine Woche liegen zu lassen — sie kann nur dort reissen, wo sie gefahren wird.
+
+
+---
+
+## P114 · `window.App` gibt es nicht — und der optionale Zugriff schluckt es
+
+*2026-09-26 · 🟠 mittel*
+
+**Das Bild.** Ein Klick schreibt das Feld an den Block, und der Bildschirm bleibt stehen. Keine Meldung, kein Fehler in der Konsole.
+
+**Die falsche Vermutung.** Der Zweig, der die neue Ansicht zeichnet, fehlt — oder der Kasten wird nicht gebaut.
+
+**Wie es gefunden wurde.** Mit einer Sonde im Browser: `typeof (window as any).App` sagte `undefined`, während `typeof App` in derselben Seite `object` sagte.
+
+**Die Ursache.** `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an. Die steht im globalen Geltungsbereich, aber NICHT als Feld von `window` — anders als `var` und anders als eine ausdrückliche Zuweisung. `(window as any).App?.zeichneSeite?.()` ist damit ein optionaler Zugriff auf `undefined`: er tut nichts und meldet nichts.
+
+**Der Beweis.** Sonde vom 26. September: `art() sagt: { art: 'redion', feld: undefined, hatZeichne: 'undefined' }` — und derselbe Aufruf über den baren Namen wirkte sofort.
+
+**Die Lehre.** Ein `?.` auf einen globalen Namen ist kein Schutz, sondern ein Schalldämpfer. Wer prüfen will, ob es etwas gibt, schreibt `typeof X !== 'undefined'`. Und: dieselbe Zeile ist an EINEM Tag zweimal entstanden — ein Fehler, der sich wiederholt, gehört in den Code kommentiert, nicht nur in den Kopf.
+
+
+---
+
+## P115 · Ein Wächter, der eine Absicht misst, die es nicht gibt
+
+*2026-09-26 · 🟠 mittel*
+
+**Das Bild.** `test574 §8` meldete zweimal „am Telefon gibt es keinen Weg auf die Fläche“ — obwohl es ihn gab.
+
+**Die falsche Vermutung.** Der Menüeintrag fehlt, oder der Griff wirkt am Telefon nicht.
+
+**Wie es gefunden wurde.** Beim Nachlesen der Stelle, die der Lauf ansprach: `editor.ts:1955` unterdrückt `contextmenu` unter 760 px ausdrücklich — dort gehört das lange Drücken der Hebe-Geste (E83). Und Fund 2 von E83 sagt, dass der Fänger die Klick-Nachzügler nach einer Berührung 800 ms schluckt; der Lauf tippte nach 400 ms.
+
+**Die Ursache.** Der Wächter hat den Weg des RECHNERS am Telefon gefahren und die vorhandene Geste gar nicht angefasst. Zweimal war er rot, und zweimal lag es an ihm.
+
+**Der Beweis.** Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.
+
+**Die Lehre.** Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206).
+
+
+---
+
+## P116 · Ein Tastenkürzel, das im Menü steht und nie erreichbar war
+
+*2026-09-26 · 🟠 mittel*
+
+**Das Bild.** Strg+Umschalt+↑/↓ verschiebt keinen Block. Nichts bewegt sich, auch nicht in den Daten — und das Blockmenü schreibt das Kürzel daneben.
+
+**Die falsche Vermutung.** Die neue Sprungregel über unsichtbare Nachbarn ist falsch gebaut; oder der Prüflauf schickt die Taste am falschen Element.
+
+**Wie es gefunden wurde.** Eine Sonde zeigte, dass `Register.seitenansichten.zeigtIn` da war, der Fokus im richtigen `.ct` stand, der versteckte Block korrekt als unsichtbar galt — und `content` der Seite trotzdem unverändert blieb. Also lief `verschiebe` gar nicht.
+
+**Die Ursache.** Im selben Tastenbehandler steht zwölf Zeilen höher die Pfeilnavigation zwischen Blöcken: `if (e.key === 'ArrowUp' && amAnfang(ct)) { … return; }` und dasselbe für `ArrowDown` am Ende. Beide prüfen die Modifikatoren NICHT und kehren mit `return` um. In einem einzeiligen Block ist der Cursor fast immer am Anfang UND am Ende — das Verschieben war damit praktisch nie erreichbar.
+
+**Der Beweis.** `test574 §11` in einer Liste ganz ohne versteckte Blöcke: ["X","Y","Z"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: ["Y","X","Z"].
+
+**Die Lehre.** Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte.
+
+
+---
+
+## P117 · Eine Kennung, zwei Bedeutungen: `ellipse`
+
+*2026-09-26 · 🟡 klein*
+
+**Das Bild.** Der neue Wächter über die Namen im Menüband war rot mit genau einer Kennung: `ellipse`. Die zwölf anderen stimmten.
+
+**Die falsche Vermutung.** Das Menüband zeigt einen falschen Namen — der Wächter hat einen echten Anzeigefehler gefunden.
+
+**Wie es gefunden wurde.** `test572 §12` vergleicht jeden Namen im Reiter „Zeichnen" mit dem Katalog. Er suchte mit `reg(id) ?? form(id)` — erst im Werkzeugregister, sonst bei den Studio-Formen.
+
+**Die Ursache.** Die Kennung gibt es ZWEIMAL. `Register.werkzeuge` führt das Flächenwerkzeug `ellipse` (Zeichen `◯`, deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`); `Marken.FORMEN` führt die Studio-Form `ellipse` (Zeichen `○`, englischer Raum neben `line`, `arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht — also antwortete das Register zuerst, mit dem falschen Zeichen.
+
+**Der Beweis.** `reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.
+
+**Die Lehre.** Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet.
+
+
+---
+
+## P118 · Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste
+
+*2026-09-27 · 🟡 klein*
+
+**Das Bild.** Der Glas-Wächter mass die stille Schrift im Menü hell mit 1,43 : 1 und dunkel mit 1,43 : 1, die Hauptschrift hell mit 6,05 — eben noch 7,05.
+
+**Die falsche Vermutung.** Die Messung über das ganze Menü sei zu grob, oder beide Modi hätten zufällig dieselben Werte.
+
+**Wie es gefunden wurde.** Die Gleichheit selbst war der Hinweis: zwei Farbsätze, die Ziffer für Ziffer dasselbe ergeben, sind ein Satz.
+
+**Die Ursache.** Der Lauf setzte `data-theme` von Hand. `Aussehen` setzt das Attribut kurz danach auf das gespeicherte Schema zurück (`aussehen.ts:113`) — gemessen wurde beide Male dunkel. Ob das Rücksetzen vor oder nach der Messung kam, hing am Zeitpunkt; im ersten Lauf war hell noch hell.
+
+**Der Beweis.** Mit `App.theme(t)` statt des Attributs: hell 7,05 / dunkel 6,05 für die Hauptschrift, verschiedene Werte für die stille Schrift. Und der Lauf prüft seither, dass das gewünschte Thema wirklich gilt.
+
+**Die Lehre.** Einen Zustand der App über den Weg der App setzen, nicht über das Attribut, das er am Ende hinterlässt. Und zwei Messungen, die exakt gleich ausfallen, sind ein Befund über die Messung, bevor sie einer über das Produkt sind.
+
+
+---
+
+## P119 · Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster
+
+*2026-09-27 · 🟠 mittel*
+
+**Das Bild.** `test534` war seit einem Tag rot: die Studioleiste stand bei y = −103, liess sich nicht mehr «frei» ziehen und ragte nach dem Verkleinern hinaus.
+
+**Die falsche Vermutung.** Der Glasumbau (E695) hat die Leiste verschoben — er lief ja gerade, und `test534` war sein Nachbar.
+
+**Wie es gefunden wurde.** Gegen die ALTEN Stilblätter dieselben vier Zeilen — also nicht E695. Dann fünf Arbeitsbäume: grün bei 43432e1, rot ab 4d7436d, E690, meinem eigenen Bogen vom Vortag. Und eine Sonde, die beim Klick auf den Griff zeigte, dass die Seite um 465 px rollte (vorher 0).
+
+**Die Ursache.** Die Spalte war `78vh` hoch, egal wo sie beginnt, und ragte schon vor E690 123 px unter den Fensterrand. E690 setzte 74 px Umschalter darüber — damit fiel auch der Griff (64. von 68 Knöpfen, tief in der rollenden Spalte) hinunter, und jeder Klick darauf rollte die Seite. E690s Nachbarliste enthielt nur Läufe, die das Neue kannten, keinen, der etwas UNTER ihm misst.
+
+**Der Beweis.** Mit `--reihe-platz` (Raum unter der Hülle bis 12 px vor dem Rand): Spalte 409 … 949, kein Seitenrollen, 52 von 52. Ohne die Regel: 46 von 52, genau die alten Zeilen.
+
+**Die Lehre.** Wer oben etwas einfügt, verschiebt alles darunter — die Nachbarn eines solchen Bogens sind die Läufe, die UNTER der Einfügung messen, nicht die, die sie kennen. Und ein Wächter, der nur „oben im Fenster" fragt, sieht nicht, dass unten etwas hinausragt; die Regel war „endet im Fenster".
+
+
+---
+
+## P120 · Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal
+
+*2026-09-27 · 🟠 mittel*
+
+**Das Bild.** GitHub sperrte den Pull Request: „This branch has conflicts that must be resolved", neun Dateien. Redur fragte, warum er nicht pushen kann.
+
+**Die falsche Vermutung.** Das Hochladen ist kaputt — oder die Konflikte sind nur die üblichen Versionsstempel in sw.ts und stand.ts.
+
+**Wie es gefunden wurde.** Unter den neun Dateien stand `pruefungen/lauf/test568.mts` als „beide hinzugefügt". Der Codex-Commit 9e306b85 auf `main` (23. September) hatte einen test568 und eine E681 angelegt; der Arbeitszweig hatte am 25. September einen ANDEREN test568 (Strg+Z) und eine ANDERE E681 (Plattform-Audit).
+
+**Die Ursache.** Beide Zweige zählten von demselben Stand aus weiter: `main` lag bei E680/test567, und jeder nahm die nächste freie Nummer — für sich. Eine Nummer ist aber erst vergeben, wenn sie auf `main` steht.
+
+**Der Beweis.** `git show 9e306b85 --stat` gegen `git log` des Zweigs; `git status` zeigte `AA pruefungen/lauf/test568.mts`.
+
+**Die Lehre.** Wer auf zwei Zweigen zugleich zählt, zählt doppelt. Beim Zusammenführen bekommt der NEUANKÖMMLING mit den wenigsten Verweisen die nächste freie Nummer (hier: eine Entscheidung und ein Lauf statt sechzehn und neun), und die alte Nummer steht als Herkunft dabei. Und gepusht war die ganze Zeit alles — gesperrt war das Zusammenführen.
 

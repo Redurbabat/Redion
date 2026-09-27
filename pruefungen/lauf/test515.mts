@@ -245,7 +245,7 @@ console.log('\n§5 Und Redion kann es jetzt selbst — der Knopf in der Zeichenl
     return b ? Math.round(b.getBoundingClientRect().width) : -1;
   });
   gleich('Vor „···" ist er eingeklappt (wie `fett` auch)', vorher, 0);
-  /* E681: Schrift gehört zum Textwerkzeug, nicht zu jeder offenen
+  /* E697: Schrift gehört zum Textwerkzeug, nicht zu jeder offenen
      Zubehörtafel. Erst den Text wählen; der echte Knopf bleibt geprüft. */
   await seite.evaluate(() =>
     document.querySelector<HTMLElement>('[data-document-action="ink-options"]')?.click());

@@ -3107,6 +3107,502 @@ const ChronikDaten = {
      "risiko": "die NIN-Themenaufgaben in Schreibform müssen `pruefung: false` tragen — test567 misst beide Zahlen (20 und 34), damit das nicht wieder auseinanderläuft"
     }
    ]
+  },
+  {
+   "datum": "2026-09-25",
+   "wochentag": "Freitag",
+   "titel": "Der Plattform-Audit — und aus zwei Messungen darin werden drei Bögen, bevor der Audit fertig ist",
+   "wasIchWeiss": "Redur legt AFFiNE und SiYuan als Archive in ein Release und schickt einen Master-Prompt: erst lesen, dann ein kleinster Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System und zwei für die Referenzen — auf vier Kernen laufen zwei gleichzeitig, die Sache dauert Stunden, und Redur fragt zu Recht nach der Zeit. Statt zu warten habe ich selbst gelesen und zwei Dinge im Browser GEMESSEN, die kein Leser hätte behaupten dürfen: Strg+Z im Schaltplan und auf dem Blatt nimmt zweimal zurück (Block und Seitenverlauf), und der Seitenverlauf gibt beim Zurücknehmen jedem Block der Seite eine neue Kennung. Daraus wurden am selben Tag E682 (eine Zeile in der Schale, die Taste fürs Whiteboard, test568) und — nach einer zweiten Sonde, die zeigte, dass eine Unterseite dabei ihre Fassung verliert (1 → 0) — E684/E685 (Store.baumAbgleichen: abgleichen statt abreissen, test569 mit 48 Zusagen, entworfen von drei Entwürfen und zwei Richtern). Dazwischen hat Redur vier Dinge entschieden: die Reihenfolge, raumVersion fürs Whiteboard, die Fremdcode-Regel (E683, FREMDCODE.md, §57) und, mit einem Bild von AFFiNEs Edgeless-Leiste, das Ziel W6 — „integriere alles zusammen“: eine Leiste, ein Verlauf, ein Raum für alle Flächen. Die Karte (doku/karte/, karte.mts) ist auf seinen Wunsch entstanden, damit niemand die 156 000 Zeilen zweimal lesen muss. Der Audit ist in zwei Teilen gelandet; die Gegenprüfer für fünf Systeme und der Vollständigkeitsprüfer scheiterten an der Sitzungsgrenze — das steht so im Audit, und die Vollständigkeitsprüfung habe ich von Hand nachgeholt (29 von 53 Ordnern gelesen). Am Abend, nach der Sitzungsgrenze: E686 (Raumfassung fürs Whiteboard) und E687 (ein Verlauf für drei Flächen — der erste Ordner des GFX-Kerns), dazu Redurs Satz, dass jede sichtbare Änderung fotografiert und GESCHICKT wird (§55.3). Vier Bögen an einem Tag, jeder mit einem Wächter, der rot war.",
+   "nachrichten": [
+    {
+     "zeit": "ca. 15:40",
+     "wortlaut": "github.com/Redurbabat/Lern/releases/tag/redions es ist das die daten legen hier schau mal das an und frage mich wenn du mir etwas fragen kannst",
+     "woher": "wörtlich aus dem Gespräch, danach der lange Master-Prompt „REDION PLATFORM AUDIT“",
+     "gemeint": "Die zwei Referenz-Archive liegen im Release; sieh sie dir an und frag, statt zu raten.",
+     "besser": "Im Release liegen AFFiNE und SiYuan. Lies sie als Referenz, und frag mich, bevor du entscheidest.",
+     "besserePrompt": "Der Master-Prompt selbst war sehr gut — Prioritäten, Verbote, Berichtsform. Was gefehlt hat: dass CLAUDE.md gewinnt, wo beide sich widersprechen (L30). Das musste ich selbst setzen."
+    },
+    {
+     "zeit": "ca. 15:55",
+     "wortlaut": "weiter",
+     "woher": "wörtlich",
+     "gemeint": "Mach den Audit.",
+     "besser": "Passt so.",
+     "besserePrompt": "Passt so."
+    },
+    {
+     "zeit": "ca. 16:16",
+     "wortlaut": "was machts du mit 25 agends hahaha",
+     "woher": "wörtlich",
+     "gemeint": "Warum so viele Agenten — und dauert das nicht ewig?",
+     "besser": "Wozu 25 Agenten? Wie lange dauert das?",
+     "besserePrompt": "Die Frage war richtig. Sie hat mich dazu gebracht, die Gegenprüfung zu kürzen und selbst zu messen, statt zu warten."
+    },
+    {
+     "zeit": "ca. 16:20",
+     "wortlaut": "was denks du wie lange wird das daueren",
+     "woher": "wörtlich",
+     "gemeint": "Eine ehrliche Schätzung, bitte.",
+     "besser": "Wie lange noch?",
+     "besserePrompt": "Passt so — und die Antwort darauf muss eine Zahl mit Rechnung sein, nicht „bald“."
+    },
+    {
+     "zeit": "ca. 16:21",
+     "wortlaut": "erstelle dabei eine obsidein/graphy datei damit du nicht jedes mal alles daten nue lesen musstest verstanden",
+     "woher": "wörtlich",
+     "gemeint": "Halte das Gelesene als verlinkte Notizen fest (Obsidian, Graph), damit die nächste Sitzung nicht wieder alles liest.",
+     "besser": "Leg aus den Befunden einen Obsidian-Ordner mit verlinkten Notizen an, damit du beim nächsten Mal nicht alles neu lesen musst.",
+     "besserePrompt": "Genau das ist doku/karte/ geworden — erzeugt aus karte.json, mit einem Graph, dessen Kanten aus den Befunden gerechnet sind."
+    },
+    {
+     "zeit": "ca. 16:25",
+     "wortlaut": "könntest du alles wirklich alles von affine im redion nehmnen",
+     "woher": "wörtlich",
+     "gemeint": "Kann Redion AFFiNE komplett übernehmen?",
+     "besser": "Könnten wir AFFiNE komplett in Redion übernehmen?",
+     "besserePrompt": "Die ehrliche Antwort war Nein — andere App (Yjs, React/Lit, eigener Server). Die bessere Frage kam eine halbe Stunde später mit dem Bild: WAS genau gefällt dir daran."
+    },
+    {
+     "zeit": "ca. 16:38",
+     "wortlaut": "ja mach so weiter wie du vorschlägst und für die 3. ja whiteboard eine raumversion",
+     "woher": "wörtlich",
+     "gemeint": "Reihenfolge wie vorgeschlagen (Strg+Z, dann Kennungen, dann raumVersion, dann gemeinsamer Verlauf); und ja zur raumVersion.",
+     "besser": "Mach es in deiner Reihenfolge. Und ja: das Whiteboard bekommt eine raumVersion.",
+     "besserePrompt": "Passt so."
+    },
+    {
+     "zeit": "ca. 16:53",
+     "wortlaut": "ich will so was haben wie die affine schau mal es nach",
+     "woher": "wörtlich, mit einem Bild von AFFiNEs Edgeless-Werkzeugleiste",
+     "gemeint": "So eine Werkzeugleiste will ich; sieh nach, wie sie gebaut ist.",
+     "besser": "So eine Leiste will ich für Redion — schau nach, wie AFFiNE sie baut.",
+     "besserePrompt": "Das Bild war der beste Teil der Anfrage: ein Bild sagt, WAS gefällt. Daraus wurde W6."
+    },
+    {
+     "zeit": "ca. 17:02",
+     "wortlaut": "integriere alles zusammen",
+     "woher": "wörtlich",
+     "gemeint": "Nicht eine Leiste fürs Whiteboard, sondern eine für alle Flächen — Whiteboard, Gedankenkarte, Schaltplan, Blatt.",
+     "besser": "Eine Leiste für alle Flächen, nicht nur fürs Whiteboard.",
+     "besserePrompt": "Drei Wörter, die das Ziel des GFX-Kerns von der sichtbaren Seite her benennen. So verstanden und in W6 und Audit 2.5 festgehalten."
+    },
+    {
+     "zeit": "ca. 17:10",
+     "wortlaut": "aktuele status",
+     "woher": "wörtlich",
+     "gemeint": "Wo stehen wir?",
+     "besser": "Status?",
+     "besserePrompt": "Passt so."
+    },
+    {
+     "zeit": "ca. 17:13",
+     "wortlaut": "ja offnen oder was ist die pro und contra",
+     "woher": "wörtlich",
+     "gemeint": "L30 öffnen — aber erst Pro und Contra.",
+     "besser": "Was spricht dafür und dagegen, L30 zu öffnen?",
+     "besserePrompt": "Passt so — die Frage nach Pro und Contra vor der Entscheidung ist genau richtig."
+    },
+    {
+     "zeit": "ca. 17:17",
+     "wortlaut": "also redion kann fremnden code haben wenn es redion verbessert wird, und so nicht das die pdf oder bilder oder geheimnisse daten an die driete anbiter geht , und ausserdem nehem fremde coden es ist keine proble aber bevor du etwas fremnes nimmst frage mich und ausserdem muss fremncode.md erstellen damit ich was was mir gehört und was fremd ist und was wird es im redion verbessser",
+     "woher": "wörtlich",
+     "gemeint": "Vier Sätze: Fremdcode ja, wenn er Redion verbessert; nichts geht an Dritte; vorher fragen; FREMDCODE.md führt, was fremd ist und was es bringt.",
+     "besser": "Fremder Code darf rein, wenn er Redion besser macht und keine PDFs, Bilder oder Geheimnisse an Dritte gehen. Frag mich vorher. Und führe eine FREMDCODE.md: was gehört mir, was ist fremd, was bringt es.",
+     "besserePrompt": "Das ist eine vollständige Regel — sie steht jetzt wörtlich in FREMDCODE.md und als §57. Was offen blieb: ob das auch für Plugins gilt, die ein Nutzer einspielt (Sandbox)."
+    },
+    {
+     "zeit": "ca. 20:30",
+     "wortlaut": "Weiter\nWeiter",
+     "woher": "wörtlich",
+     "gemeint": "Nach der Sitzungsgrenze: mach weiter.",
+     "besser": "Passt so.",
+     "besserePrompt": "Passt so."
+    },
+    {
+     "zeit": "ca. 20:45 (vor 20:49, dem Commit, der den Satz in §55.3 schrieb)",
+     "wortlaut": "Wie sieht die aktuele status ?\nKönntest du mir jon jäder änderung die du im redion machst wenn es etwas im websete ändert mir alles fotografieren und schicken",
+     "woher": "wörtlich",
+     "gemeint": "Zwei Dinge: ein Stand — und eine Regel: jede Änderung, die man auf der Seite sehen kann, wird fotografiert, und die Bilder werden ihm geschickt, nicht nur abgelegt.",
+     "besser": "Status? Und: Jede sichtbare Änderung fotografieren und mir die Bilder schicken.",
+     "besserePrompt": "Die Regel ist vollständig und steht seit 6054089 wörtlich in §55.3. Offen bleibt nur die Frage, die §55.3 schon beantwortet: reine Logik (Kern, Verlauf, ZIP) bekommt eine Messung statt eines Bildes — so auch E687 heute Abend."
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "E681 Teil 1 — Plattform-Audit: GFX-Bestand (fünf Systeme, vier Rückgängig-Stapel, drei Zeigerumrechnungen), zehn belegte Duplikate, zwei Sonden (Strg+Z doppelt; Kennungen wechseln), Fragen an Redur; die Karte (karte.mts, karte.json, doku/karte/) mit drei Lesern; L211, L212; FREMD-Lizenzen geprüft",
+     "vonCommit": "a196b65",
+     "bisCommit": "58af180",
+     "zeitraum": "ca. 15:45 – 16:31",
+     "dauer": "ca. 45 min",
+     "pruefungen": "test549, test225, test550, typecheck; zwei Sonden im Scratchpad (kein Prüflauf)"
+    },
+    {
+     "was": "E682 — Strg+Z gehört der Fläche: test568 (26 Zusagen, rot 13/25 gegen den alten Stand, Gegenprobe rot), eine Zeile in schale.ts (defaultPrevented für z/y), Whiteboard mit Taste, Fokusrahmen; Bild",
+     "vonCommit": "58af180",
+     "bisCommit": "446266f",
+     "zeitraum": "ca. 16:31 – 16:47",
+     "dauer": "ca. 16 min Bau, Nachbarn liefen länger",
+     "pruefungen": "test568 neu; Nachbarn 238 239 240 263 345 209 529 538 87 537 105 109 — 537 mit dem bekannten 518/517 (L207), 105 fand einen Typfehler im Wächter (446266f)"
+    },
+    {
+     "was": "L212 Punkt 2 nachgemessen (Bild überlebt; Unterseite verliert Kennung und Fassung 1 → 0); W6 aus Redurs Bild; test569 rot eingecheckt VOR der Reparatur (§30); E683 Fremdcode-Regel mit FREMDCODE.md, §57 und der Zählung (pdf.js eingepackt, WebLLM vom CDN)",
+     "vonCommit": "446266f",
+     "bisCommit": "c26094a",
+     "zeitraum": "ca. 16:47 – 17:20",
+     "dauer": "ca. 33 min",
+     "pruefungen": "test549, test550, test225; zwei Sonden"
+    },
+    {
+     "was": "E684 — Rückgängig ändert Inhalt, nicht Identität: Entwurfs-Panel (drei Entwürfe, zwei Richter), Store.baumAbgleichen (~170 Zeilen), Verlauf.anwenden mit locked-Wache, tempo.ts; test569 auf 36 Zusagen; vier Gegenproben (21/1/2/3 rot); L212 GESCHLOSSEN, L213–L215; messungen nach dem Bau (Fassungen 1 → 1)",
+     "vonCommit": "c26094a",
+     "bisCommit": "03f0c4a",
+     "zeitraum": "ca. 16:51 – 17:35 (Panel 31 min im Hintergrund)",
+     "dauer": "ca. 45 min",
+     "pruefungen": "test569; Nachbarn 70 188 568 226 229 265 48 89 96 100 105 109 537 550 — dreizehn grün, 537 wie gehabt"
+    },
+    {
+     "was": "E685 — die zwei Fassungs-Wiederherstellungen über baumAbgleichen; test569 §13/§14 (48 Zusagen), Gegenprobe sechs rot; danach E681 Teil 2: §4 CLI/MCP, §5 aus karte.json gerendert, R5–R15, Anhang D (eigene Vollständigkeitsprüfung), L30 um E683 ergänzt; Karte mit allen dreizehn Lesern",
+     "vonCommit": "03f0c4a",
+     "bisCommit": "47fb1c8",
+     "zeitraum": "ca. 17:38 – 17:45 und 20:25 – 20:37 (dazwischen Sitzungsgrenze)",
+     "dauer": "ca. 20 min Arbeit",
+     "pruefungen": "test569; Nachbarn 98 538 548 188 105; test549, test550, test225; node karte.mts --pruefen"
+    },
+    {
+     "was": "E686 — Bogen 3: raumVersion: 1 mit jedem Speichern des Whiteboards, punkt() über SheetSpace.umrechner mit der Handformel als Rückfall, Typen für shapes/sicht/hoehe/raumVersion/karte/plan/marken, Absatz in REDION-FORMAT.md; test570 (12 Zusagen) — und der Fund, dass scale(0.8) die Handformel NICHT rot macht (Audit D2 berichtigt). Danach Redurs Bild-Satz in §55.3.",
+     "vonCommit": "cb3b551",
+     "bisCommit": "6054089",
+     "zeitraum": "ca. 20:40 – 20:49",
+     "dauer": "ca. 10 min am Stück (der Bogen selbst lag davor im Bogen-2-Fenster)",
+     "pruefungen": "test570; Nachbarn 209 206 428 568 105 109 537 550 87"
+    },
+    {
+     "was": "E687 — Bogen 4: src/core/gfx/history.ts (GfxHistory.erstelle), drei Umzüge (Whiteboard 40, Gedankenkarte 40, Planfläche 60), Anmeldung in tsconfig.bauen.json/index.html/GRUNDSTOCK, test571 (24 Zusagen, Kern ohne Browser, Übernahme im gebauten JS), Gegenprobe zwei rot; CLAUDE.md §30 auf 513, Audit D1, Karte mit Kern GfxHistory",
+     "vonCommit": "6054089",
+     "bisCommit": "cc49db2",
+     "zeitraum": "ca. 20:49 – 21:02",
+     "dauer": "ca. 15 min",
+     "pruefungen": "test571; Nachbarn 209 568 529 538 238 239 240 263 105 109 550 225 87 — grün; 537 wie gehabt (518/517, L207)"
+    },
+    {
+     "was": "E688 — die Startdecke, neun Tage später: test388 §5 rot (2711 KB gegen 2700), gemessen gegen bef8c3f (127 KB, neun Posten), Decke auf 2850 mit Begründung im Kopf des Laufs, L216 (Lerninhalte im Startweg, Frage an Redur), messungen.md §62",
+     "vonCommit": "cc49db2",
+     "bisCommit": "c5b2ba4",
+     "zeitraum": "21:02 – 21:09",
+     "dauer": "ca. 20 min, davon die Hälfte Messen",
+     "pruefungen": "test388 19/19; test549, test550, test225"
+    }
+   ],
+   "zahlen": {
+    "commits": 18,
+    "entscheidungen": 8,
+    "neue Prüfläufe": 4,
+    "volle Läufe": 0
+   },
+   "groesstesProblem": "Der Seitenverlauf löschte die Fassungen von Unterseiten. Nicht der Whiteboard-Kern, nicht die Leiste — ein Strg+Z auf der Elternseite, und die geplante Fassung der Unterseite war weg (1 → 0), ihre Kennung neu, der Favorit tot. Das stand seit jeher als Tatsache in test70 („die Blöcke bekommen neue IDs“), und niemand hatte gefragt, was das kostet. Gefunden hat es keine Lesung, sondern die zweite Sonde, die ich nur gefahren habe, weil die erste (Bild überlebt) zu gut aussah, um die Frage zu schliessen. — Daneben, kleiner: die Sitzungsgrenze des Rechners hat zehn Gegenprüfer und den Vollständigkeitsprüfer des Audits stumm scheitern lassen; das steht jetzt im Audit, und die Vollständigkeit habe ich von Hand geprüft.",
+   "interessantesteAnfrage": "„integriere alles zusammen“ — drei Wörter, auf ein Bild hin. Das Bild zeigte AFFiNEs Edgeless-Leiste; ich hatte sie fürs Whiteboard eingeordnet, und Redur meinte: für alle Flächen. Damit war das Ziel des GFX-Kerns von der sichtbaren Seite her benannt, genauer als der Master-Prompt es konnte: eine Leiste, ein Verlauf, ein Raum — und jeder der drei Datenbögen des Tages ist ein Stück davon.",
+   "massnahmen": [
+    {
+     "zeit": "ca. 16:20",
+     "was": "Den Audit-Workflow gestoppt und mit gekürzter Gegenprüfung (zwei je System, niedriger Aufwand) wieder aufgenommen; die drei fertigen Leser aus dem Zwischenspeicher",
+     "warum": "Bei zwei gleichzeitigen Agenten hätte die volle Gegenprüfung (~60 Prüfer) länger gedauert als die Lesung selbst",
+     "risiko": "zwei laufende Leser gingen verloren und liefen neu (~10 min)"
+    },
+    {
+     "zeit": "ca. 16:00",
+     "was": "Selbst gelesen und zwei Sonden im Browser gefahren, statt auf die Leser zu warten",
+     "warum": "§55.2: eine Behauptung über Strg+Z ist keine Messung; und die Zeit war da",
+     "risiko": "keines — Sonden im Scratchpad, kein Produktcode"
+    },
+    {
+     "zeit": "ca. 16:57",
+     "was": "test569 rot eingecheckt, bevor eine Zeile Reparatur stand",
+     "warum": "§30 verlangt die Reihenfolge, und ein Wächter, der nie rot war, ist eine Behauptung (§50); dazu die Ehrlichkeit gegenüber dem Stop-Hook",
+     "risiko": "ein roter Lauf auf dem Zweig für vierzig Minuten; main bewegt sich ohnehin nicht"
+    },
+    {
+     "zeit": "ca. 16:51",
+     "was": "Ein Entwurfs-Panel (drei Blickwinkel, zwei Richter) für die Verlauf-Reparatur statt direkt zu bauen",
+     "warum": "Ablage und Abgleich sind §9/§25 — die Richter fanden Dinge, die ich allein nicht gesehen hätte (Unterseite als Blatt, Felder löschen, kein Stempel ohne Unterschied, locked)",
+     "risiko": "31 Minuten Wartezeit, in denen der Wächter entstand"
+    },
+    {
+     "zeit": "ca. 17:05",
+     "was": "Vier Gegenproben je gebaut und gefahren, nicht nur eine",
+     "warum": "Vier Zusagen, vier Stellen — jede Gegenprobe soll genau ihre Zeile rot machen (21/1/2/3)",
+     "risiko": "~6 min Bauen"
+    },
+    {
+     "zeit": "ca. 16:22",
+     "was": "Die Karte als erzeugte Doku aus karte.json (wie die Chronik), nicht von Hand",
+     "warum": "Redurs Wunsch, und eine Karte, die jemand von Hand pflegt, lügt beim nächsten Mal",
+     "risiko": "die erste Fassung malte „genannt“ als „benutzt“ (P107) — beim Lesen des eigenen Graphen gefunden"
+    },
+    {
+     "zeit": "ca. 17:15",
+     "was": "Bei Redurs Frage „alles von AFFiNE?“ Nein gesagt und die Gegenfrage gestellt, was ihm gefällt",
+     "warum": "§2, §6, §47, §51 — und weil „alles“ meist ein Bild im Kopf ist, kein Plan",
+     "risiko": "keines; das Bild kam eine halbe Stunde später"
+    },
+    {
+     "zeit": "ca. 20:47",
+     "was": "Den Audit an D2 berichtigt, statt den grünen Abschnitt von test570 zu streichen",
+     "warum": "scale(0.8) war mit der Handformel grün — der viewBox kommt aus demselben Kasten, der Faktor kürzt sich; die Behauptung „drei Formeln, eine davon falsch“ war zu scharf, das Duplikat bleibt trotzdem eines (§8)",
+     "risiko": "keines am Produkt; am Vertrauen in den Audit schon — deshalb steht die Berichtigung dort und in E686, nicht nur hier"
+    },
+    {
+     "zeit": "ca. 20:49",
+     "was": "Redurs Bild-Satz als Regel in §55.3 geschrieben, nicht nur befolgt",
+     "warum": "§56: was Redur wörtlich sagt, gehört dorthin, wo beim nächsten Mal gelesen wird — eine Regel im Gedächtnis eines Gesprächs ist nach der nächsten Sitzungsgrenze weg",
+     "risiko": "keines"
+    },
+    {
+     "zeit": "ca. 21:00",
+     "was": "Kein Bild zu E687, sondern die Messung (24 Zusagen, Gegenprobe zwei rot)",
+     "warum": "§55.3, wie Redur ihn am 3. September entschieden hat: ein Bild, wenn man etwas sehen kann — der Verlauf ist reines Rechnen, auf dem Bildschirm hat sich nichts geändert",
+     "risiko": "wenn ein Umzug doch etwas Sichtbares geändert hätte (Knopf-Zustand), sähe es niemand — deshalb prüft test571 kannZurueck/kannVor, und test529/test538/test209 fahren die Knöpfe"
+    },
+    {
+     "zeit": "ca. 21:10",
+     "was": "Die Decke angehoben statt Inhalt nachzuladen — und die Frage nach dem Nachladen an Redur gegeben (L216)",
+     "warum": "19,5 KB Lernstoff brächten die Zahl nur auf 2692, beim nächsten Bogen wäre sie wieder rot; und der Trainer findet seine Kapitel über das Register (E679) — das ist eine Register-Entscheidung, keine Ladeoptimierung",
+     "risiko": "die Zusage ist 150 KB weicher; was sie hält, ist die Bibliotheksgrenze (pdf.js), nicht die Feinheit"
+    }
+   ]
+  },
+  {
+   "datum": "2026-09-26",
+   "wochentag": "Samstag",
+   "titel": "Drei Ansichten für eine Seite, der Vollausbau — und ein Kürzel, das seit Langem nie ankam",
+   "wasIchWeiss": "Der Tag begann mit einem Vorwurf, und er war berechtigt: „Wo sind deine fotos ich habe nicht nichts bekommen.“ Vier Bögen lang hatte ich nichts geschickt — richtig war nur, dass drei davon nichts am Bildschirm änderten; der vierte tat es, und den hatte ich verschwiegen. Danach kam W6 Bogen 5a zu Ende (E689: EIN Katalog der Werkzeuge, EINE Leiste im Kern, das Whiteboard zuerst darauf) — und aus einem Bild von AFFiNEs Kopfzeile wurde der Rest des Tages.\n\nRedur wollte die Ansichten, aber mit einer Bedingung vorneweg: „aber zuerst liess was die ander 2 bereicht machen bi affine“. Das Lesen hat den Bogen verändert: AFFiNE hat GENAU ZWEI Modi, es sind zwei Blicke auf dasselbe Dokument, und ein Cover gibt es dort gar nicht — Redion ist an der Stelle reicher als das Vorbild, und genau deshalb ergab die dritte Ansicht Sinn. E690 hat sie gebaut: der Katalog `Register.seitenansichten`, das Feld `seitenAnsicht` am Block (kein Feld = die Redion-Ansicht), der Umschalter auf dem seit Monaten gebauten und nie benutzten `Segment`, und die Fläche als Leinwand mit dem Seitentext als Kasten. Drei Fehler daran fand nicht der Wächter, sondern das BILD, alle drei am Telefon: die Fläche war 332 px hoch statt 584, dann 278 px breit statt 390, und „ins Bild holen“ rechnete 31 %.\n\nDann die Frage am Ende von E690, und sie gehörte Redur: Vollausbau oder nicht? Seine Antwort: „ja mach den vollausbau, jeder block auf die fläche ziehbar.“ Diesmal habe ich vier Leser gleichzeitig geschickt, bevor eine Zeile entstand — und drei ihrer Funde stehen im Ergebnis: der Feldname (`zeigen` ist in dieser App 41-mal als Register-Rückruf vergeben, also heisst es `sichtbarIn`), eine Regel, die zweimal dastand („ist der Platz lesbar?“), und zwei Leser der Kinderliste, an die niemand gedacht hatte — Gliederungsstreifen und Inhaltsverzeichnis führten Überschriften auf, die auf der Seite gar nicht stehen.\n\nZwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und einmal hat Redur mich mitten im Anlauf angehalten — „was willst du machen“ —, weil ich zu arbeiten begonnen hatte, statt den Plan in fünf Zeilen hinzuschreiben.",
+   "nachrichten": [
+    {
+     "zeit": "ca. 06:00",
+     "wortlaut": "Wo sind deine fotos ich habe nicht nichts bekomemn",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Du hast zugesagt, jede sichtbare Änderung zu fotografieren und zu schicken — und nichts kam.",
+     "besser": "Derselbe Satz. Er war genau richtig: kurz, überprüfbar, und er hat einen echten Verstoss getroffen."
+    },
+    {
+     "zeit": "ca. 07:05",
+     "wortlaut": "bei der affine haben wir das es wechseldie ansichten und ich will dort auch die beide und plus von unsere aktulel stan haben also die mit covar usw also dort 3 bereicht aber zuerst liess was die ander 2 bereicht bereicht machen bi affine",
+     "woher": "wörtlich aus dem Gespräch, mit einem Bild von AFFiNEs Kopfzeile",
+     "gemeint": "Drei umschaltbare Ansichten je Seite: AFFiNEs zwei und unsere eigene mit dem Cover. Aber lies ZUERST, was AFFiNEs zwei tun.",
+     "besser": "Ich will drei Ansichten je Seite: AFFiNEs beide plus unsere mit Cover. Lies zuerst nach, was AFFiNEs zwei genau machen, und sag es mir, bevor du baust."
+    },
+    {
+     "zeit": "ca. 07:35",
+     "wortlaut": "ich will die 2 von affine 1;1 haben auch alles komplet wie es ausehn also wirklich komlet so und noch eien 3 für die aktuele redion damit wir es auch haben verstanden die 3 is von und erfunden t",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "AFFiNEs zwei Ansichten eins zu eins im Aussehen; die dritte ist unsere eigene Erfindung.",
+     "besser": "Bau AFFiNEs zwei so, dass sie aussehen wie dort. Die dritte ist unsere eigene."
+    },
+    {
+     "zeit": "ca. 08:30",
+     "wortlaut": "ja mach den vollausbau, jeder block auf die fläche ziehbar",
+     "woher": "wörtlich aus dem Gespräch, als Antwort auf die Frage am Ende von E690",
+     "gemeint": "Nicht die ganze Seite als ein Kasten, sondern jeder einzelne Block mit eigenem Platz.",
+     "besser": "Derselbe Satz — er beantwortet genau die gestellte Frage und sagt dazu, welche der zwei Möglichkeiten gemeint ist."
+    },
+    {
+     "zeit": "ca. 08:35",
+     "wortlaut": "was willst du machen",
+     "woher": "wörtlich aus dem Gespräch, mitten in meinem Anlauf",
+     "gemeint": "Sag mir den Plan, bevor du anfängst.",
+     "besser": "Derselbe Satz. Er hat mich zu Recht angehalten."
+    },
+    {
+     "zeit": "ca. 08:40",
+     "wortlaut": "ja mach",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Der Plan stimmt, leg los.",
+     "besser": "—"
+    },
+    {
+     "zeit": "ca. 11:10",
+     "wortlaut": "mach L220 auch noch",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Die drei Nebenwirkungen, die du gerade als Lücke aufgeschrieben hast, sollen nicht stehen bleiben.",
+     "besser": "Derselbe Satz. Er ist die beste Art, eine frisch geschriebene Lücke zu behandeln: sofort, solange der Kopf noch drin ist."
+    },
+    {
+     "zeit": "ca. 12:00",
+     "wortlaut": "weiter",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Such dir die nächste Arbeit selbst und mach sie. Kein neues Ziel, sondern das Vertrauen, dass die Liste offener Lücken für sich spricht.",
+     "besser": "Derselbe Satz — wenn eine Lückenliste geführt wird, ist er genau richtig. Wäre keine da, wäre „weiter mit was?\" die ehrlichere Antwort gewesen."
+    },
+    {
+     "zeit": "ca. 14:15",
+     "wortlaut": "Weiter",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Nächste Arbeit selbst wählen und machen — zum zweiten Mal an diesem Tag.",
+     "besser": "Derselbe Satz. Er funktioniert, solange AUFGABEN.md und LUECKEN.md stimmen; der ganze Aufwand, den beide kosten, wird genau in diesem Moment zurückgezahlt."
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "E689 · EINE Werkzeugleiste für alle Flächen (W6, Bogen 5a)",
+     "vonBis": "e0988e6 → f2b0b9a",
+     "zeitraum": "06:24–06:51",
+     "dauer": "ca. 30 min",
+     "pruefungen": "test572 (51 Zusagen, gegen den alten Stand rot mit 20), test209 nachgezogen; zwölf Nachbarn grün"
+    },
+    {
+     "was": "Gelesen: AFFiNEs zwei Ansichten — Karte-Thema und die offene Frage als A1",
+     "vonBis": "f2b0b9a → fd1a778",
+     "zeitraum": "06:51–07:31",
+     "dauer": "ca. 40 min",
+     "pruefungen": "keine — ein Leser und eine Karte-Notiz, jeder Punkt mit Datei:Zeile"
+    },
+    {
+     "was": "E690 · Drei Ansichten einer Seite (A1)",
+     "vonBis": "43432e1 → 4d7436d",
+     "zeitraum": "07:38–08:15",
+     "dauer": "ca. 40 min",
+     "pruefungen": "test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün"
+    },
+    {
+     "was": "E691 · Der Vollausbau der Fläche (A1c)",
+     "vonBis": "e388949 → offen",
+     "zeitraum": "08:25–…",
+     "dauer": "ca. 2 h",
+     "pruefungen": "test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün"
+    },
+    {
+     "was": "E692 · L220 geschlossen — und ein Kürzel, das nie ankam",
+     "vonBis": "637eeb6 → bcd4647",
+     "zeitraum": "11:10–11:55",
+     "dauer": "ca. 45 min",
+     "pruefungen": "test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133"
+    },
+    {
+     "was": "E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte)",
+     "vonBis": "bcd4647 → 387ca8e",
+     "zeitraum": "12:00–14:10",
+     "dauer": "ca. 2 h",
+     "pruefungen": "test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün"
+    },
+    {
+     "was": "E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN)",
+     "vonBis": "387ca8e → fc6e606",
+     "zeitraum": "14:15–16:37",
+     "dauer": "ca. 1 h 15 min",
+     "pruefungen": "test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck\"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe"
+    }
+   ],
+   "zahlen": {
+    "commits": 10,
+    "entscheidungen": 6,
+    "neuePruefläufe": 4
+   },
+   "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
+   "interessantesteAnfrage": "„aber zuerst liess was die ander 2 bereicht machen bi affine“ — eine Arbeitsanweisung mitten in einem Wunsch. Sie hat den Bogen verändert: ohne das Lesen wäre eine dritte Betriebsart entstanden, wo AFFiNE eine Ansicht hat, und der wichtigste Fund wäre unbemerkt geblieben — ein Cover gibt es dort gar nicht.",
+   "massnahmen": [
+    {
+     "zeit": "ca. 06:05",
+     "was": "Dreizehn Bilder aller vier Flächen nachgeschickt und `schaltplan` als fehlendes Bildziel ergänzt",
+     "warum": "Redurs Vorwurf war berechtigt (§55.3)",
+     "risiko": "keines"
+    },
+    {
+     "zeit": "ca. 07:00",
+     "was": "Ein Leser ins AFFiNE-Archiv, bevor gebaut wurde",
+     "warum": "Redur hat es ausdrücklich verlangt",
+     "risiko": "keines — nur gelesen (§57)"
+    },
+    {
+     "zeit": "ca. 08:50",
+     "was": "Vier Leser gleichzeitig statt eines, während der Bau parallel lief",
+     "warum": "drei ihrer Funde hätte der Bau nicht von selbst gemacht",
+     "risiko": "Zeit"
+    },
+    {
+     "zeit": "ca. 13:40",
+     "was": "Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe.",
+     "warum": "Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf.",
+     "risiko": "Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung\"."
+    },
+    {
+     "zeit": "ca. 14:40",
+     "was": "`test572 §12` zweimal aus dem FALSCHEN Grund rot gesehen und beide Gründe als Kommentar in den Lauf geschrieben: `inReiter` gibt Gruppen zurück, keine flache Liste; und der Reiter „Zeichnen\" zeigt ohne offenes Blatt gar keine Werkzeuge.",
+     "warum": "Beide Male stand da „0 Werkzeuge\", und beide Male sah es nach einem Produktfehler aus. Ein Wächter, der eine Form annimmt statt sie nachzusehen, misst etwas anderes als er behauptet (L206).",
+     "risiko": "Keines — es sind Kommentare und ein echtes Blatt statt eines gestellten Ziels (§30: keine Mocks, wo die echte App geprüft werden kann)."
+    }
+   ]
+  },
+  {
+   "datum": "2026-09-27",
+   "wochentag": "Sonntag",
+   "titel": "Ein Glas statt vier — und die Dichte kam aus den Pixeln, nicht aus dem Gefühl",
+   "wasIchWeiss": "Redur schrieb einen Satz, der breiter kaum sein konnte: „Weiter an die animationen übergangen glass efeck usw alles verbessern.“ „Alles verbessern“ ist kein Plan, also habe ich zuerst gezählt. Die Inventur der 23 Stilblätter ergab ein Bewegungssystem, das es gibt und an das sich kaum jemand hält (E259: vier Dauern, eine Kurve — daneben 55 Dauern und 227-mal das nackte `ease`), und ein Glasrezept aus §16, das genau eine Klasse benutzte. Die Laufzeit-Sonde entwarnte bei der Bewegung (im Leerlauf läuft eine einzige Endlos-Animation, mit „weniger Bewegung“ keine) und bestätigte beim Glas: am Rechner war kein einziges Element sichtbar verwischt.\n\nAlso zuerst das Glas, weil Redur es beim Namen genannt hatte und weil man es sieht. Der Wächter `test576` stand rot, bevor eine Zeile Stil geändert war, und fand dabei einen echten Fehler fürs Zielgerät: fünf Stellen ohne `-webkit-backdrop-filter`, also auf jedem iPhone vor Safari 18 ohne Glas. Die eigentliche Lehre des Tages kam danach. Meine erste Dichte für Menüs war eine Schätzung (74 %), die Hauptschrift hielt sie spielend aus — und die stille Schrift, die ich zuerst gar nicht gemessen hatte, fiel auf 1,43 : 1. Die Dichten stehen jetzt da, wo die Messung sie hingelegt hat, mit einer Regel statt einer Liste: Fläche mit Schrift dicht, Fläche mit Zeichen leicht.\n\nUnd ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — seit meinem eigenen Bogen von gestern. Gefunden hat es der Nachbarlauf dieses Bogens; die Nachbarliste von E690 hatte ihn nicht.",
+   "nachrichten": [
+    {
+     "zeit": "ca. 08:00",
+     "wortlaut": "Weiter an die animationen pbergangen galss efeck usw alles verbessern",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Die Oberfläche soll sich hochwertiger anfühlen: Bewegungen, Übergänge und besonders das Glas. Keine bestimmte Stelle, sondern das Ganze.",
+     "besser": "„Mach das Glas sichtbar und einheitlich, dann die Übergänge — und zeig mir vorher, was du findest.“ Der Satz, wie er war, ist aber gut genug, WENN die Antwort mit einer Messung beginnt statt mit einem Umbau."
+    },
+    {
+     "zeit": "ca. 13:10",
+     "wortlaut": "wieso kann ich nicht auf github puschen",
+     "woher": "wörtlich aus dem Gespräch, mit einem Bild der GitHub-Meldung „This branch has conflicts that must be resolved\"",
+     "gemeint": "Der Pull Request lässt sich nicht zusammenführen, und es sah aus, als sei das Hochladen kaputt.",
+     "besser": "„Der PR sagt Konflikte — kannst du main reinholen?\" Aber das Bild war die beste Beschreibung: es zeigte die neun Dateien, und an `test568.mts` war der eigentliche Fund schon abzulesen."
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "Inventur: Bewegung und Glas in 23 Stilblättern gezählt, Laufzeit-Sonde über laufende Animationen und sichtbares Glas",
+     "vonBis": "fc6e606 → (keine Änderung)",
+     "zeitraum": "ca. 08:00–08:30",
+     "dauer": "ca. 30 min",
+     "pruefungen": "keine — reines Messen (messungen.md §69)"
+    },
+    {
+     "was": "E695 · Ein Glas statt vier",
+     "vonBis": "fc6e606 → c0c34cf",
+     "zeitraum": "ca. 08:30–11:30",
+     "dauer": "ca. 3 h",
+     "pruefungen": "test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690"
+    },
+    {
+     "was": "E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen",
+     "vonBis": "c0c34cf → 6ad2650",
+     "zeitraum": "ca. 11:30–13:00",
+     "dauer": "ca. 1 h 30 min",
+     "pruefungen": "test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87"
+    },
+    {
+     "was": "main zusammengeführt: der Codex-Stand „Dokument Stift Freitext\" (PR #114) — E681 und test568 waren doppelt vergeben, das Codex-Stück wurde E697 und test577",
+     "vonBis": "6ad2650 → offen",
+     "zeitraum": "ca. 13:10–…",
+     "dauer": "ca. 45 min",
+     "pruefungen": "test577 (der Codex-Lauf), test568 (meiner), test572, test458, test515, test524, test527, test534, test533, test576, test575, test574, test573, test105, test109, test87, test550, test549"
+    }
+   ],
+   "zahlen": {
+    "commits": 5,
+    "entscheidungen": 3,
+    "neuePruefläufe": 2
+   },
+   "groesstesProblem": "Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.",
+   "interessantesteAnfrage": "„alles verbessern“ — der breiteste Auftrag bisher, und gerade deshalb der, der am dringendsten eine Messung vorneweg brauchte. Ohne sie wäre „besser“ Geschmack gewesen.",
+   "massnahmen": [
+    {
+     "zeit": "ca. 09:40",
+     "was": "Die Glasdichte aus der Kontrastmessung abgeleitet statt geschätzt: hell 92 %, dunkel 88 % für Flächen mit Schrift; auf Glas `--text-faint` → `--text-dim`.",
+     "warum": "Die erste Schätzung (74 %) gab der stillen Schrift 1,43 : 1. Eine Zahl, die nur für die Hauptschrift stimmt, stimmt nicht.",
+     "risiko": "Menüs sind nicht durchsichtiger als vorher, sondern glasiger (20 statt 8 px Unschärfe, gesättigte Farbe). Wer mehr Durchsicht will, muss die stille Schrift mitziehen."
+    },
+    {
+     "zeit": "ca. 10:20",
+     "was": "`test534` über fünf Arbeitsbäume zurückverfolgt: grün bei 43432e1, rot ab 4d7436d (E690).",
+     "warum": "§46: rot zuerst. Und der Fehler war meiner — dann ist er zuerst zu finden, nicht zu erklären.",
+     "risiko": "Keines — Arbeitsbäume im Scratchpad, der Hauptbaum unberührt."
+    }
+   ]
   }
  ],
  "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -4536,6 +5032,174 @@ const ChronikDaten = {
    "ursache": "Die Vorlage legt alle 57 Karten in derselben Millisekunde an; `created` ist für alle gleich, `localeCompare` gibt 0, und die Sortierung fällt auf die Reihenfolge von `Object.values(Store.cache.blocks)` zurück. Dazu war die Seite nach Thema gruppiert: p5 (Gewaltentrennung) stand vor p4 (Parlament).",
    "beweis": "test565 §3 rot (wortgleich=false); nach dem Umbau — Seitenreihenfolge über Elternblock und Stelle in `content`, Prüfungsfragen zuoberst — 54/54.",
    "lehre": "Ein Zeitstempel ordnet nichts, was gleichzeitig entsteht. Die Reihenfolge, die zählt, ist die, die der Mensch sieht und ändern kann — die Seite. Und ein Wächter, der nur den ersten Fall prüft, hätte hier „passt schon“ gesagt (§55.2)."
+  },
+  {
+   "nr": "P107",
+   "datum": "2026-09-25",
+   "titel": "Der Graph der Karte malte „genannt“ als „benutzt“",
+   "schwere": "klein",
+   "symptom": "In doku/karte/Redion.md zeigte ein Pfeil vom Whiteboard auf SheetSpace und InkGeometry — beides benutzt das Whiteboard NICHT, das war gerade der Befund.",
+   "falscheVermutung": "Wenn ein Befund einen Kern nennt, benutzt das System ihn.",
+   "wieGefunden": "Beim Lesen des ersten erzeugten Graphen: der Pfeil widersprach dem Satz daneben („InkGeometry — NICHT genutzt“).",
+   "ursache": "Die Kante wurde aus jedem Vorkommen des Namens im Befund gerechnet, auch aus Sätzen mit „NICHT genutzt“.",
+   "beweis": "Nach der Trennung in „benutzt“ (gemeinsamGenutzt/Schnittstellen ohne Verneinung) und „nur genannt“ zeigt das Whiteboard auf Store, Register, Dateien — und SheetSpace/InkGeometry stehen unter „nur genannt“.",
+   "lehre": "Ein gerechneter Graph ist eine Behauptung wie jede andere; man liest ihn gegen den Text, aus dem er kommt, bevor man ihn zeigt."
+  },
+  {
+   "nr": "P108",
+   "datum": "2026-09-25",
+   "titel": "Strg+Z nahm zweimal zurück — der Block und die ganze Seite",
+   "schwere": "mittel",
+   "symptom": "Im Schaltplan: Teil gesetzt, Strg+Z — drei Teile wie vorher, Meldung „Rückgängig“, Block neu gezeichnet, neue Kennung. Auf dem Blatt: ein Strich weg, der alte Block existiert nicht mehr.",
+   "falscheVermutung": "Wer preventDefault ruft, hat die Taste.",
+   "wieGefunden": "Aus dem Lesen (schale.ts hört am Dokument ohne Blick auf defaultPrevented; Planfläche und Marken ohne stopPropagation) eine Sonde gebaut und gefahren — Ausgabe wörtlich im Audit 2.4.",
+   "ursache": "Der Dokument-Horcher der Schale rief bei jedem Strg+Z Verlauf.zurueck(); der Seitenverlauf riss die Seite ab und baute sie neu.",
+   "beweis": "test568 gegen den alten Stand rot 13/25; nach einer Zeile in der Schale 26/26; Gegenprobe (Zeile raus) wieder rot.",
+   "lehre": "Eine Taste hat zwei Enden. Wer die eine Hälfte liest, sieht die Doppelung nicht — messen, mit dem Fokus dort, wo der Mensch ihn hätte."
+  },
+  {
+   "nr": "P109",
+   "datum": "2026-09-25",
+   "titel": "Der Seitenverlauf gab jedem Block neue Kennungen — und löschte die Fassungen der Unterseiten",
+   "schwere": "hoch",
+   "symptom": "Strg+Z auf der Elternseite: Unterseite a8da9eea… → a7ecec08…, Fassungen 1 → 0, Favorit zeigt auf die alte Kennung. Ein Bild dagegen überlebte (Dateisatz umgehängt).",
+   "falscheVermutung": "Wenn das Bild überlebt, ist der Kennungswechsel eine Schönheitsfrage.",
+   "wieGefunden": "Die zweite Sonde — mit einer Unterseite statt eines Bildes — nur gefahren, weil die erste zu beruhigend war.",
+   "ursache": "Verlauf.anwenden = kinderLeeren (purgeBlock je Kind: Grabsteine, purgeAnhaenge löscht versions) + baumEinfuegen („immer mit frischen IDs“). Eine Unterseite ist ein Kind der Seite.",
+   "beweis": "test569 gegen den alten Stand rot 10/20; mit Store.baumAbgleichen 36/36 (später 48/48); Sonde nach dem Bau: Fassungen 1 → 1, Kennung gleich. Vier Gegenproben rot an ihren Stellen.",
+   "lehre": "Ein Zurück, das abreisst und neu baut, ist kein Zurück, sondern ein Ersatz — und alles, was an der Identität hing, hängt dann an nichts. Die richtige Messung ist die mit dem Ding, das am meisten zu verlieren hat (Fassungen), nicht die mit dem, das am meisten Angst macht (Bytes)."
+  },
+  {
+   "nr": "P110",
+   "datum": "2026-09-25",
+   "titel": "Ein Commit ohne seinen Inhalt — das Schreibskript war an einem Anführungszeichen gescheitert",
+   "schwere": "klein",
+   "symptom": "Commit 680d19d hiess „L212 Punkt 2 nachgemessen: … Unterseite …“, enthielt aber nur die Bild-Sonde in messungen.md; L212 und der Audit waren unverändert.",
+   "falscheVermutung": "Wenn das Python-Skript und der Commit in derselben Befehlskette stehen, enthält der Commit, was das Skript schreiben sollte.",
+   "wieGefunden": "Die Fehlermeldung stand über dem Commit-Erfolg: SyntaxError, unterminated string literal — die Doku benutzt „…\" mit einem ASCII-Anführungszeichen als Schlusszeichen, und das schloss meine Zeichenkette.",
+   "ursache": "Ein Parsefehler bricht das ganze Skript ab, bevor die erste Zeile läuft; `&&` hinter einem Heredoc-Python prüft nur den Exit — und den hatte ich nicht geprüft, weil die nächste Zeile ohne && folgte.",
+   "beweis": "Nachtrag f014fa3 mit den drei fehlenden Änderungen; danach test549 6/6.",
+   "lehre": "Zeichenketten mit Redions Anführungszeichen nur in dreifachen Anführungszeichen schreiben — und ein Commit gehört hinter ein `&&`, nicht hinter ein Zeilenende."
+  },
+  {
+   "nr": "P111",
+   "datum": "2026-09-25",
+   "titel": "Eine Prüfung, die wider Erwarten grün blieb — der Audit hatte die Handformel für falsch erklärt",
+   "schwere": "klein",
+   "symptom": "test570 §3 sollte mit scale(0.8) am Elternteil zeigen, dass die Handformel des Whiteboards (sicht.x + (clientX - left) / sicht.z) vom Ergebnis der Matrix abweicht. Sie war grün: beide Rechnungen gaben dieselben Zahlen.",
+   "falscheVermutung": "Drei Formeln für Bildschirm → Raum, eine Matrix — also rechnen die Formeln bei jeder Transformation des Elternteils falsch (Audit D2, R3).",
+   "wieGefunden": "Der Wächter lief gegen den ALTEN Stand und blieb an der Stelle grün, an der er rot sein sollte (§50: ein Wächter muss rot gewesen sein). Erst rotate(180deg) trennte Formel und Matrix: „ist 394,168 soll 312,192“.",
+   "ursache": "Der viewBox des SVG wird aus demselben Kasten gerechnet, den getBoundingClientRect liefert; bei achsenparalleler Skalierung kürzt sich der Faktor heraus. Falsch wird die Formel nur bei Drehung oder Scherung.",
+   "beweis": "test570 §3 (scale) grün und §3b (rotate) rot gegen den alten Stand; mit der Matrix beide grün. Audit D2 und E686 berichtigt.",
+   "lehre": "Eine Behauptung im Audit ist eine Vermutung, bis ein Wächter sie rot gezeigt hat. Und ein Wächter, der grün bleibt, wo er rot sein sollte, ist kein zu schwacher Wächter, sondern ein Fund über die Behauptung (§55.2)."
+  },
+  {
+   "nr": "P112",
+   "datum": "2026-09-25",
+   "titel": "Tiefe 0 wurde zu Tiefe 40 — `Number(x) || 40` hält 0 für „nichts gesagt“",
+   "schwere": "klein",
+   "symptom": "test571: „Die Tiefe ist mindestens 1“ rot — GfxHistory.erstelle(0).stand().tiefe war 40, nicht 1.",
+   "falscheVermutung": "`Number(tiefe) || 40` sei die Vorgabe für „keine Zahl angegeben“.",
+   "wieGefunden": "Der Wächter, im selben Bogen wie der Kern geschrieben; der Kern war vor dem Wächter falsch, und der Lauf hat es beim ersten Mal gedruckt.",
+   "ursache": "`||` behandelt 0 wie undefined. Wer 0 sagt, meint 0 — und bekommt seither die Untergrenze 1; nur was gar keine Zahl ist (Number.isFinite falsch), fällt auf 40 zurück.",
+   "beweis": "test571 24/24 nach der Änderung; die Zusage prüft erstelle(0) → 1, erstelle(-5) → 1, erstelle() → 40.",
+   "lehre": "Vorgaben mit `??` oder Number.isFinite setzen, nie mit `||`, wenn 0 ein gültiger Wert ist."
+  },
+  {
+   "nr": "P113",
+   "datum": "2026-09-25",
+   "titel": "Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn",
+   "schwere": "klein",
+   "symptom": "test388 §5: „Der Start holt 2711 KB (gzip) über 238 Dateien — Decke 2700 KB“. Rot nach Bogen 4 (E687), der 2 KB beiträgt; vor ihm stand die Zahl bei 2709.",
+   "falscheVermutung": "Die Nachbarliste eines Bogens — die Läufe, die dieselben Dateien lesen — findet, was der Bogen kaputt macht. Eine Decke über das GANZE hat aber keine Datei, die man anfasst; sie ist niemandes Nachbar.",
+   "wieGefunden": "Nicht wegen der Decke: test388 trägt die Zusage „die Chronik wird beim Start nicht geholt“ (E613) und lief deshalb nach dem Chronik-Nachtrag. Im vollen Lauf vom 19. September war er noch grün; zwischen dem 19. und dem 25. hat niemand ihn gefahren.",
+   "ursache": "127 KB in neun Tagen — Studio, Trainer, NIN-Quiz, Gedankenkarte, Dock-Welle — und kein voller Lauf seit dem 19. September (§46: main bewegt sich erst nach einem grünen).",
+   "beweis": "Messung gegen bef8c3f in messungen.md §62; danach Decke 2850 und test388 19/19.",
+   "lehre": "Jeder Bogen, der eine Skriptdatei zu index.html hinzufügt, fährt test388. Und die Decke ist ein Grund mehr, den vollen Lauf nicht länger als eine Woche liegen zu lassen — sie kann nur dort reissen, wo sie gefahren wird."
+  },
+  {
+   "nr": "P114",
+   "datum": "2026-09-26",
+   "titel": "`window.App` gibt es nicht — und der optionale Zugriff schluckt es",
+   "schwere": "mittel",
+   "symptom": "Ein Klick schreibt das Feld an den Block, und der Bildschirm bleibt stehen. Keine Meldung, kein Fehler in der Konsole.",
+   "falscheVermutung": "Der Zweig, der die neue Ansicht zeichnet, fehlt — oder der Kasten wird nicht gebaut.",
+   "wieGefunden": "Mit einer Sonde im Browser: `typeof (window as any).App` sagte `undefined`, während `typeof App` in derselben Seite `object` sagte.",
+   "ursache": "`const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an. Die steht im globalen Geltungsbereich, aber NICHT als Feld von `window` — anders als `var` und anders als eine ausdrückliche Zuweisung. `(window as any).App?.zeichneSeite?.()` ist damit ein optionaler Zugriff auf `undefined`: er tut nichts und meldet nichts.",
+   "beweis": "Sonde vom 26. September: `art() sagt: { art: 'redion', feld: undefined, hatZeichne: 'undefined' }` — und derselbe Aufruf über den baren Namen wirkte sofort.",
+   "lehre": "Ein `?.` auf einen globalen Namen ist kein Schutz, sondern ein Schalldämpfer. Wer prüfen will, ob es etwas gibt, schreibt `typeof X !== 'undefined'`. Und: dieselbe Zeile ist an EINEM Tag zweimal entstanden — ein Fehler, der sich wiederholt, gehört in den Code kommentiert, nicht nur in den Kopf."
+  },
+  {
+   "nr": "P115",
+   "datum": "2026-09-26",
+   "titel": "Ein Wächter, der eine Absicht misst, die es nicht gibt",
+   "schwere": "mittel",
+   "symptom": "`test574 §8` meldete zweimal „am Telefon gibt es keinen Weg auf die Fläche“ — obwohl es ihn gab.",
+   "falscheVermutung": "Der Menüeintrag fehlt, oder der Griff wirkt am Telefon nicht.",
+   "wieGefunden": "Beim Nachlesen der Stelle, die der Lauf ansprach: `editor.ts:1955` unterdrückt `contextmenu` unter 760 px ausdrücklich — dort gehört das lange Drücken der Hebe-Geste (E83). Und Fund 2 von E83 sagt, dass der Fänger die Klick-Nachzügler nach einer Berührung 800 ms schluckt; der Lauf tippte nach 400 ms.",
+   "ursache": "Der Wächter hat den Weg des RECHNERS am Telefon gefahren und die vorhandene Geste gar nicht angefasst. Zweimal war er rot, und zweimal lag es an ihm.",
+   "beweis": "Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.",
+   "lehre": "Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206)."
+  },
+  {
+   "nr": "P116",
+   "datum": "2026-09-26",
+   "titel": "Ein Tastenkürzel, das im Menü steht und nie erreichbar war",
+   "schwere": "mittel",
+   "symptom": "Strg+Umschalt+↑/↓ verschiebt keinen Block. Nichts bewegt sich, auch nicht in den Daten — und das Blockmenü schreibt das Kürzel daneben.",
+   "falscheVermutung": "Die neue Sprungregel über unsichtbare Nachbarn ist falsch gebaut; oder der Prüflauf schickt die Taste am falschen Element.",
+   "wieGefunden": "Eine Sonde zeigte, dass `Register.seitenansichten.zeigtIn` da war, der Fokus im richtigen `.ct` stand, der versteckte Block korrekt als unsichtbar galt — und `content` der Seite trotzdem unverändert blieb. Also lief `verschiebe` gar nicht.",
+   "ursache": "Im selben Tastenbehandler steht zwölf Zeilen höher die Pfeilnavigation zwischen Blöcken: `if (e.key === 'ArrowUp' && amAnfang(ct)) { … return; }` und dasselbe für `ArrowDown` am Ende. Beide prüfen die Modifikatoren NICHT und kehren mit `return` um. In einem einzeiligen Block ist der Cursor fast immer am Anfang UND am Ende — das Verschieben war damit praktisch nie erreichbar.",
+   "beweis": "`test574 §11` in einer Liste ganz ohne versteckte Blöcke: [\"X\",\"Y\",\"Z\"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: [\"Y\",\"X\",\"Z\"].",
+   "lehre": "Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte."
+  },
+  {
+   "nr": "P117",
+   "datum": "2026-09-26",
+   "titel": "Eine Kennung, zwei Bedeutungen: `ellipse`",
+   "schwere": "klein",
+   "symptom": "Der neue Wächter über die Namen im Menüband war rot mit genau einer Kennung: `ellipse`. Die zwölf anderen stimmten.",
+   "falscheVermutung": "Das Menüband zeigt einen falschen Namen — der Wächter hat einen echten Anzeigefehler gefunden.",
+   "wieGefunden": "`test572 §12` vergleicht jeden Namen im Reiter „Zeichnen\" mit dem Katalog. Er suchte mit `reg(id) ?? form(id)` — erst im Werkzeugregister, sonst bei den Studio-Formen.",
+   "ursache": "Die Kennung gibt es ZWEIMAL. `Register.werkzeuge` führt das Flächenwerkzeug `ellipse` (Zeichen `◯`, deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`); `Marken.FORMEN` führt die Studio-Form `ellipse` (Zeichen `○`, englischer Raum neben `line`, `arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht — also antwortete das Register zuerst, mit dem falschen Zeichen.",
+   "beweis": "`reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.",
+   "lehre": "Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet."
+  },
+  {
+   "nr": "P118",
+   "datum": "2026-09-27",
+   "titel": "Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste",
+   "schwere": "klein",
+   "symptom": "Der Glas-Wächter mass die stille Schrift im Menü hell mit 1,43 : 1 und dunkel mit 1,43 : 1, die Hauptschrift hell mit 6,05 — eben noch 7,05.",
+   "falscheVermutung": "Die Messung über das ganze Menü sei zu grob, oder beide Modi hätten zufällig dieselben Werte.",
+   "wieGefunden": "Die Gleichheit selbst war der Hinweis: zwei Farbsätze, die Ziffer für Ziffer dasselbe ergeben, sind ein Satz.",
+   "ursache": "Der Lauf setzte `data-theme` von Hand. `Aussehen` setzt das Attribut kurz danach auf das gespeicherte Schema zurück (`aussehen.ts:113`) — gemessen wurde beide Male dunkel. Ob das Rücksetzen vor oder nach der Messung kam, hing am Zeitpunkt; im ersten Lauf war hell noch hell.",
+   "beweis": "Mit `App.theme(t)` statt des Attributs: hell 7,05 / dunkel 6,05 für die Hauptschrift, verschiedene Werte für die stille Schrift. Und der Lauf prüft seither, dass das gewünschte Thema wirklich gilt.",
+   "lehre": "Einen Zustand der App über den Weg der App setzen, nicht über das Attribut, das er am Ende hinterlässt. Und zwei Messungen, die exakt gleich ausfallen, sind ein Befund über die Messung, bevor sie einer über das Produkt sind."
+  },
+  {
+   "nr": "P119",
+   "datum": "2026-09-27",
+   "titel": "Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster",
+   "schwere": "mittel",
+   "symptom": "`test534` war seit einem Tag rot: die Studioleiste stand bei y = −103, liess sich nicht mehr «frei» ziehen und ragte nach dem Verkleinern hinaus.",
+   "falscheVermutung": "Der Glasumbau (E695) hat die Leiste verschoben — er lief ja gerade, und `test534` war sein Nachbar.",
+   "wieGefunden": "Gegen die ALTEN Stilblätter dieselben vier Zeilen — also nicht E695. Dann fünf Arbeitsbäume: grün bei 43432e1, rot ab 4d7436d, E690, meinem eigenen Bogen vom Vortag. Und eine Sonde, die beim Klick auf den Griff zeigte, dass die Seite um 465 px rollte (vorher 0).",
+   "ursache": "Die Spalte war `78vh` hoch, egal wo sie beginnt, und ragte schon vor E690 123 px unter den Fensterrand. E690 setzte 74 px Umschalter darüber — damit fiel auch der Griff (64. von 68 Knöpfen, tief in der rollenden Spalte) hinunter, und jeder Klick darauf rollte die Seite. E690s Nachbarliste enthielt nur Läufe, die das Neue kannten, keinen, der etwas UNTER ihm misst.",
+   "beweis": "Mit `--reihe-platz` (Raum unter der Hülle bis 12 px vor dem Rand): Spalte 409 … 949, kein Seitenrollen, 52 von 52. Ohne die Regel: 46 von 52, genau die alten Zeilen.",
+   "lehre": "Wer oben etwas einfügt, verschiebt alles darunter — die Nachbarn eines solchen Bogens sind die Läufe, die UNTER der Einfügung messen, nicht die, die sie kennen. Und ein Wächter, der nur „oben im Fenster\" fragt, sieht nicht, dass unten etwas hinausragt; die Regel war „endet im Fenster\"."
+  },
+  {
+   "nr": "P120",
+   "datum": "2026-09-27",
+   "titel": "Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal",
+   "schwere": "mittel",
+   "symptom": "GitHub sperrte den Pull Request: „This branch has conflicts that must be resolved\", neun Dateien. Redur fragte, warum er nicht pushen kann.",
+   "falscheVermutung": "Das Hochladen ist kaputt — oder die Konflikte sind nur die üblichen Versionsstempel in sw.ts und stand.ts.",
+   "wieGefunden": "Unter den neun Dateien stand `pruefungen/lauf/test568.mts` als „beide hinzugefügt\". Der Codex-Commit 9e306b85 auf `main` (23. September) hatte einen test568 und eine E681 angelegt; der Arbeitszweig hatte am 25. September einen ANDEREN test568 (Strg+Z) und eine ANDERE E681 (Plattform-Audit).",
+   "ursache": "Beide Zweige zählten von demselben Stand aus weiter: `main` lag bei E680/test567, und jeder nahm die nächste freie Nummer — für sich. Eine Nummer ist aber erst vergeben, wenn sie auf `main` steht.",
+   "beweis": "`git show 9e306b85 --stat` gegen `git log` des Zweigs; `git status` zeigte `AA pruefungen/lauf/test568.mts`.",
+   "lehre": "Wer auf zwei Zweigen zugleich zählt, zählt doppelt. Beim Zusammenführen bekommt der NEUANKÖMMLING mit den wenigsten Verweisen die nächste freie Nummer (hier: eine Entscheidung und ein Lauf statt sechzehn und neun), und die alte Nummer steht als Herkunft dabei. Und gepusht war die ganze Zeit alles — gesperrt war das Zusammenführen."
   }
  ]
 } as const;

@@ -419,7 +419,16 @@ const Blocks = (() => {
         spiele(zeitmarkenSpieler);
     };
     /** Baut das DOM für einen Block samt Kindern. */
-    const render = (block, tiefe = 0) => {
+    /**
+     * @param nr Die laufende Nummer einer Nummernliste — von dem gezählt, der
+     *        die Liste ZEICHNET, nicht am Block gespeichert (E692, L220).
+     *        Vorher stand sie als `b.nr` im Block im Arbeitsspeicher und
+     *        wanderte über `exportAll` in jede Sicherung; seit E691 zählte sie
+     *        über die gefilterte Liste, und dieselbe Seite konnte je nach
+     *        zuletzt gezeichneter Ansicht eine andere Zahl sichern. Ein
+     *        Anzeigewert gehört nicht in die Daten (§9).
+     */
+    const render = (block, tiefe = 0, nr = 0) => {
         const t = typ(block.type);
         const el = document.createElement('div');
         el.className = 'blk b-' + block.type;
@@ -528,7 +537,11 @@ const Blocks = (() => {
             case 'number': {
                 const mk = document.createElement('div');
                 mk.className = 'mk';
-                mk.textContent = (block.nr || 1) + '.';
+                /* Ohne übergebene Zahl steht „1." da — so war es für verschachtelte
+                   Nummernlisten schon immer, denn gezählt wurde nur auf der
+                   obersten Ebene. Diese Grenze bleibt, wo sie war; sie wandert nur
+                   nicht mehr in die Sicherung. */
+                mk.textContent = (nr || 1) + '.';
                 box.appendChild(mk);
                 box.appendChild(machText());
                 break;
@@ -1502,6 +1515,15 @@ const Blocks = (() => {
             Store.childrenOf(id).forEach((k) => {
                 if (k.type === 'page')
                     return; /* Unterseiten haben ihr eigenes */
+                /* UND WAS NICHT IM TEXT STEHT, STEHT NICHT IM VERZEICHNIS (E691).
+                   Ein Eintrag für eine Überschrift auf „nur Fläche" wäre doppelt
+                   falsch: er verspricht eine Stelle, die auf dieser Seite nicht
+                   gezeichnet ist, und sein Klick sucht `[data-bid=…]`, findet
+                   nichts und tut nichts — ein Knopf, der schweigend nichts bewirkt
+                   (§47, derselbe Fall wie E277). */
+                if (typeof Register !== 'undefined' && Register.seitenansichten &&
+                    !Register.seitenansichten.zeigtIn(k, 'seite'))
+                    return;
                 const stufe2 = TOC_STUFEN[k.type];
                 if (stufe2)
                     gefunden.push({ block: k, stufe: stufe2 });
@@ -1793,10 +1815,16 @@ const Blocks = (() => {
                     const idx = eltern.content.indexOf(b.id);
                     if (idx <= 0)
                         return;
-                    const vorher = Store.getBlock(eltern.content[idx - 1]);
+                    /* Der Vorgänger, den man auch SIEHT (E692, L220). Gibt es keinen,
+                       geschieht nichts — genau wie bei `idx <= 0` eine Zeile höher:
+                       lieber eine Taste, die nichts tut, als ein Block, der weg ist
+                       und ein Cursor, der ins Leere zeigt. */
+                    const vorher = nachbarImText(eltern, idx, -1);
+                    if (!vorher)
+                        return;
                     Store.trashBlock(b.id);
                     Store.purgeBlock(b.id);
-                    App.zeichneSeite(vorher ? vorher.id : null, 'ende');
+                    App.zeichneSeite(vorher.block.id, 'ende');
                     return;
                 }
             }
@@ -1809,8 +1837,21 @@ const Blocks = (() => {
                     einruecken(b);
                 return;
             }
-            /* Pfeil hoch/runter zwischen Blöcken */
-            if (e.key === 'ArrowUp' && amAnfang(ct)) {
+            /* Pfeil hoch/runter zwischen Blöcken.
+             *
+             * OHNE STRG — UND DAS IST EINE REPARATUR, KEIN SCHMUCK (E692).
+             * Diese zwei Zweige standen VOR „Strg+Shift+Pfeil: Block verschieben"
+             * und kehrten mit `return` um. Steht der Cursor am Anfang (für ↑) oder
+             * am Ende (für ↓) — und in einem einzeiligen Block ist er fast immer
+             * beides —, kam das Verschieben nie an. Das Blockmenü schreibt
+             * „Ctrl+Shift+↑" daneben, und die Taste tat nichts: ein falsches
+             * Versprechen (§32) und ein Knopf, der schweigend nichts bewirkt (§47).
+             *
+             * Gefunden hat es `test574 §11`, der eigentlich etwas anderes messen
+             * wollte — dass das Verschieben den unsichtbaren Nachbarn überspringt.
+             * Es bewegte sich gar nichts, und die Daten waren unverändert. */
+            const nurPfeil = !(e.ctrlKey || e.metaKey);
+            if (e.key === 'ArrowUp' && amAnfang(ct) && nurPfeil) {
                 const alle = [...wurzel.querySelectorAll('.ct')];
                 const i = alle.indexOf(ct);
                 if (i > 0) {
@@ -1819,7 +1860,7 @@ const Blocks = (() => {
                 }
                 return;
             }
-            if (e.key === 'ArrowDown' && amEnde(ct)) {
+            if (e.key === 'ArrowDown' && amEnde(ct) && nurPfeil) {
                 const alle = [...wurzel.querySelectorAll('.ct')];
                 const i = alle.indexOf(ct);
                 if (i >= 0 && i < alle.length - 1) {
@@ -2070,6 +2111,16 @@ const Blocks = (() => {
             if (blk) {
                 gezogen = blk.dataset.bid;
                 blk.style.opacity = '.4';
+                /* DIE KENNUNG REIST MIT (E691). Bis hierher wusste nur diese Datei,
+                   was gerade gezogen wird — `gezogen` ist eine Variable in dieser
+                   Schliessung. Die Fläche liegt ausserhalb des Editors und kann sie
+                   nicht sehen; ohne diese zwei Zeilen bräuchte sie ein eigenes
+                   Ziehen, und das wäre der zweite Mechanismus, vor dem §8 warnt.
+                   Der eigene MIME-Name, damit ein Zug aus einem anderen Programm
+                   nicht versehentlich als Block gelesen wird. */
+                e.dataTransfer?.setData('application/x-redion-block', String(blk.dataset.bid ?? ''));
+                if (e.dataTransfer)
+                    e.dataTransfer.effectAllowed = 'move';
             }
         });
         wurzel.addEventListener('dragend', (e) => {
@@ -2265,16 +2316,61 @@ const Blocks = (() => {
         Store.updateBlock(b.id, { parentId: gross.id });
         App.zeichneSeite(b.id, 'ende');
     };
+    /**
+     * Der nächste Geschwisterblock, der auf der SEITE auch wirklich steht.
+     *
+     * WOZU (E692, L220). Seit E691 kann ein Block auf „nur Fläche" stehen und
+     * wird im Text nicht gezeichnet. Zwei Handgriffe rechneten trotzdem mit
+     * `eltern.content[idx ± 1]` — der ungefilterten Liste:
+     *
+     *   Rücktaste am Anfang eines leeren Blocks setzte den Fokus auf einen
+     *   Block, den es auf dieser Seite gar nicht gibt. Der Cursor sprang
+     *   nirgendwohin, und der gelöschte Block war trotzdem weg.
+     *
+     *   Strg+Umschalt+Pfeil tauschte mit dem unsichtbaren Nachbarn: die DATEN
+     *   änderten sich, auf dem Bildschirm bewegte sich nichts, und zweimal
+     *   drücken sprang dann über ihn.
+     *
+     * Beides ist kein Datenverlust — es ist eine Taste, die schweigend nichts
+     * tut (§47), und das ist die heimtückischere Sorte.
+     *
+     * DIE FRAGE „erscheint er?" WIRD NICHT HIER BEANTWORTET, sondern im
+     * Register (§8, `Register.seitenansichten.zeigtIn`). Hier steht nur der
+     * Weg durch die Liste.
+     *
+     * @param schritt −1 für den Vorgänger, +1 für den Nachfolger.
+     * @returns Block und Stelle in `content`, oder `null`.
+     */
+    const nachbarImText = (eltern, idx, schritt) => {
+        const zeigtIn = (typeof Register !== 'undefined' && Register.seitenansichten)
+            ? Register.seitenansichten.zeigtIn
+            : () => true;
+        const liste = eltern?.content || [];
+        for (let i = idx + schritt; i >= 0 && i < liste.length; i += schritt) {
+            const k = Store.getBlock(liste[i]);
+            if (k && k.alive !== false && zeigtIn(k, 'seite'))
+                return { block: k, idx: i };
+        }
+        return null;
+    };
     const verschiebe = (b, richtung) => {
         const eltern = Store.getBlock(b.parentId);
         if (!eltern)
             return;
         const i = eltern.content.indexOf(b.id);
-        const j = i + richtung;
-        if (j < 0 || j >= eltern.content.length)
+        if (i < 0)
             return;
-        [eltern.content[i], eltern.content[j]] = [eltern.content[j], eltern.content[i]];
-        Store.updateBlock(eltern.id, { content: eltern.content });
+        /* ÜBER den unsichtbaren Nachbarn, nicht mit ihm. Und `splice` statt
+           Tausch: bei einem Sprung über mehrere Stellen würde ein Tausch den
+           Block am Ziel rückwärts über dieselben Stellen werfen — die übrigen
+           sollen aber stehen bleiben, wo sie sind. */
+        const ziel = nachbarImText(eltern, i, richtung < 0 ? -1 : 1);
+        if (!ziel)
+            return;
+        const liste = eltern.content.slice();
+        liste.splice(i, 1);
+        liste.splice(ziel.idx, 0, b.id);
+        Store.updateBlock(eltern.id, { content: liste });
         App.zeichneSeite(b.id, 'ende');
     };
     const lege = (quelleId, zielId, danach = false) => {
@@ -3142,6 +3238,20 @@ const Blocks = (() => {
             '<button data-a="up"><span class="mi">↑</span>Nach oben<span class="ms">Ctrl+Shift+↑</span></button>' +
             '<button data-a="down"><span class="mi">↓</span>Nach unten<span class="ms">Ctrl+Shift+↓</span></button>' +
             '<button data-a="moveto"><span class="mi">➦</span>Verschieben nach …</button>' +
+            /* DER WEG AUF DIE FLÄCHE OHNE GRIFF (E691). Am Rechner zieht man den
+               Block am `⋮⋮` auf die Leinwand; am Telefon ist dieser Griff
+               ausgeblendet (`ki.css:182`), und HTML5-Ziehen kennt ohnehin keine
+               Finger. Ohne diesen Eintrag gäbe es den Vollausbau am Telefon
+               nicht — und §37 sagt, das Telefon ist der Normalfall. */
+            /* „VON DER FLÄCHE NEHMEN", nicht „zurück in den Text": dieses Menü geht
+               in der TEXTansicht auf, und dort steht der Block ja bereits im Text
+               (solange er nicht ausgeblendet ist). Die Beschriftung sagt, was
+               wirklich geschieht — sein Platz auf der Fläche fällt weg. Auf der
+               Fläche selbst heisst derselbe Griff „Zurück in den Text", und dort
+               stimmt es. */
+            (b.flaecheOrt
+                ? '<button data-a="flaeche"><span class="mi">▤</span>Von der Fläche nehmen</button>'
+                : '<button data-a="flaeche"><span class="mi">▦</span>Auf die Fläche legen</button>') +
             '<hr>' +
             '<button data-a="copy"><span class="mi">⎘</span>Text kopieren<span class="ms">Ctrl+C</span></button>' +
             '<button data-a="cut"><span class="mi">✂</span>Ausschneiden<span class="ms">Ctrl+X</span></button>' +
@@ -3271,6 +3381,15 @@ const Blocks = (() => {
             }
             if (a === 'moveto') {
                 Blocks.blockVerschiebenNach(b);
+            }
+            if (a === 'flaeche') {
+                const fl = window.Seitenflaeche;
+                if (!fl)
+                    return;
+                if (b.flaecheOrt)
+                    fl.zurueckInText(b);
+                else
+                    fl.aufFlaeche(b);
             }
             if (a === 'ai')
                 KI.blockAktion('ai-edit', b);

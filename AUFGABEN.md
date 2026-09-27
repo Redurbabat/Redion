@@ -1058,7 +1058,78 @@ Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
 
 
-## Die Werkzeugtafel (W1 … W5)
+## Bewegung und Glas (B1 … B3) — B1 ist gelandet (E695)
+
+Redur, 27. September 2026: „Weiter an die animationen übergangen glass
+efeck usw alles verbessern." Die Inventur dazu steht in `messungen.md` §69.
+
+- **B1 · Ein Glas statt vier — GELANDET (E695, `test576`).** Eine
+  Unschärfe, zwei Dichten nach einer Regel, Glas nur unter `@supports` mit
+  Präfix, auf Glas keine blasse Schrift. Offen daraus: **L221** (die
+  leichten Leisten sind gerechnet, nicht gemessen).
+- **B2 · Bewegung aus den Marken.** E259 verspricht „vier Stufen und EINE
+  Kurve", und der Quelltext hält sich kaum daran: in `transition`-Werten
+  stehen 55 verschiedene Dauern (Dauer-Marken: 5-mal benutzt) und 16
+  Kurven, davon 227-mal das nackte `ease` des Browsers. Der Bogen: die
+  Übergänge auf `--ease` und `--motion-*` ziehen, mit einem Bestand im
+  Wächter, der nur schrumpfen darf (wie `bereiche-bestand.json`). Die
+  gestalteten Endlos-Animationen (Drucker, Kartenring, Glühfaden) behalten
+  ihre eigenen Zeiten — sie sind Choreografie, keine Übergänge. Mit Bild,
+  weil sich das Gefühl jeder Bewegung ändert.
+- **B3 · Übergänge ohne Layout.** 14 `transition`s bewegen `width`,
+  `left`, `top` oder `margin` — jede davon rechnet bei jedem Bild das Layout
+  neu, am Telefon sichtbar als Ruckeln. Einzeln ansehen: wo es geht, auf
+  `transform`/`opacity`; wo nicht (ein Fortschrittsbalken darf `width`
+  haben), mit Grund stehen lassen. Erst messen (§36), dann bauen.
+
+---
+
+## Die drei Ansichten einer Seite (A1) — Bogen 1 ist gelandet (E690)
+
+Redur, 26. September 2026, zuerst mit einem Bild von AFFiNEs Kopfzeile und
+der Anweisung „aber zuerst lies, was die anderen 2 Bereiche bei AFFiNE
+machen" — dann, nachdem der Befund vorlag: **„ich will die 2 von affine 1:1
+haben auch alles komplett wie es aussehn also wirklich komplett so und noch
+eine 3 für die aktuelle Redion damit wir es auch haben verstanden die 3 ist
+von uns erfunden."**
+
+**Gelandet ist damit** (E690, `test573`, 30 Zusagen): der Katalog
+`Register.seitenansichten`, das Feld `seitenAnsicht` am Seitenblock (kein
+Feld = die Redion-Ansicht, §9), der Umschalter auf dem vorhandenen
+`Segment` als erstes Element der Seite, die Ansicht „Seite" (AFFiNEs `page`:
+Symbol und Titel, kein Cover, keine Werkzeugzeile) und die Ansicht „Fläche"
+(AFFiNEs `edgeless`: Punktraster, Schieben, Zoomen 10–600 %, „ins Bild
+holen", der Seitentext als verschiebbarer Kasten mit eigener Kopfzeile).
+
+**A1b — zur Hälfte gelandet (E693, `test575`, 40 Zusagen).** Redur am
+26. September: „weiter." Gezeichnet wird jetzt auf der Fläche: acht
+Werkzeuge, Farbmenü, Radierer, Rückgängig — die Tinte liegt IN derselben
+bewegten Ebene wie die Kästen, also teilen sie einen `transform` (die
+Bedingung aus L219, gemessen in `test575 §4b`). Dafür ist `GfxShapes`
+(`src/core/gfx/shapes.ts`) entstanden und das Whiteboard darauf umgezogen —
+EIN Formenzeichner statt zwei (§8).
+
+**Offen daraus bleibt der Rest von L219:** Formen auf der Fläche auswählen,
+verschieben, beschriften und verbinden — rund 600 Zeilen Bedienung, die
+heute nur das Whiteboard hat, plus Mehrfachauswahl. Und eine Seite mit
+Zeichnung taucht in der Flächen-Übersicht der Arbeitswelt nicht auf: die
+listet `whiteboard` und `blatt`, nicht Seiten.
+
+**A1c — gelandet (E691, `test574`, 50 Zusagen).** Redur am 26. September:
+„ja mach den vollausbau, jeder block auf die fläche ziehbar." Jeder Block
+trägt jetzt `flaecheOrt` und `sichtbarIn`; gezogen wird mit dem vorhandenen
+Editor-Ziehen, am Telefon über das Blockmenü. Offen daraus: **L220** (drei
+Nebenwirkungen des Ausblendens, mit E692 GESCHLOSSEN) und **L219**, dessen
+Zeichen-Hälfte E693 erledigt hat.
+
+**A1d — und eine kleinere Frage.** Der „Dokumentmodus" (E126) ist heute ein
+Knopf in der Werkzeugzeile und damit eine VIERTE Ansicht, die nicht im
+Umschalter steht. Soll er als vierter Knopf dazu — sichtbar nur, wenn die
+Seite wirklich ein Blatt oder eine PDF enthält, wie heute?
+
+---
+
+## Die Werkzeugtafel (W1 … W6)
 
 Redur, 14. September 2026, mit fünf Bildern eines fertigen Entwurfs:
 **„Siehe Bildern, so will ich es haben."** Und einen Satz später:
@@ -1237,6 +1308,74 @@ Studio stand der Platz-Knopf da, ohne wirken zu können (L185).
 Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.
 
 ---
+
+- **W6 · Die eine Werkzeugleiste — 5a und 5b sind gelandet (E689, E694).**
+  Gebaut: `Register.werkzeuge` (22 Werkzeuge) und `GfxToolbar`
+  (`src/core/gfx/toolbar.ts`); das Whiteboard zieht darauf um, mit
+  schwebender Kapsel unter der Fläche, Strichzeichen, Untermenüs und 44 px
+  am Telefon. Und seit E694 lesen auch Studio und Menüband daraus — es gibt
+  EINE Liste, nicht drei (`test572`, 59 Zusagen). **Offen bleiben drei
+  Bögen:**
+
+  - **5b · Ein Katalog statt drei — GELANDET (E694, L218 GESCHLOSSEN).**
+    `marken.ts` hält nur noch die Reihenfolge und ruft
+    `Register.werkzeuge.auswahl([…])`; `menueband.ts` hält eine Folge mit
+    Herkunft und holt Name, Zeichen und Hinweis aus dem zuständigen
+    Katalog. Dabei kam heraus, dass es die Kennung `ellipse` ZWEIMAL gibt
+    (Flächenwerkzeug `◯`, Studio-Form `○`) — deshalb steht die Herkunft in
+    jeder Zeile, statt geraten zu werden (P117).
+  - **5c · Die Gedankenkarte** auf `GfxToolbar` — sie ist eine
+    Aktionsleiste ohne aktives Werkzeug, also mit `werkzeuge: []` und ihren
+    fünf Aktionen; `test529 §12` misst dann echte 44-px-Boxen.
+  - **5d · Die Planfläche** — `zeigen/leitung/text/radieren` werden
+    Register-Einträge; `.sp-wz` und `.sp-start` bleiben als Wähler, die
+    Palette bleibt, wo sie ist.
+  - **5e · Kürzel, Ziehen, dichter Modus** — Tasten aus dem Katalog über
+    `Register.tasten` (und davor die eine Zeile in `marken.ts:7248`, die
+    `defaultPrevented` nicht prüft), Werkzeug auf die Fläche ziehen,
+    Blättern mit ‹ ›, und das echte Schweben über der Fläche, sobald
+    `insBild()` den Sockel abzieht.
+
+  Der ursprüngliche Auftrag, zum Nachlesen — Redur,
+  25. September 2026, mit einem Bild von AFFiNEs Edgeless-Werkzeugleiste:
+  „ich will so was haben wie die affine schau mal es nach".
+
+  **Nachgesehen** (`blocksuite/affine/widgets/edgeless-toolbar/`, MIT, nur
+  gelesen — E681): zwei Gruppen in EINER schwebenden Leiste unten. Links
+  die **Quick Tools** (36 px, Abstand 10: Auswahl, Rahmen, Verbinder,
+  Link), rechts die **Senior Tools** (je 96 px breit, blätterbar mit
+  ‹ ›: Notiz-/Text-Karten, Stift, Radierer, Formen), die man **auf die
+  Fläche zieht** (`draggable/`); ein **Slide-Menü** je Werkzeug (Formen,
+  Farbe); **Kürzel-Hinweise** (`^`) im Icon; ein **dichter Modus**
+  (`data-dense-quick/senior`), wenn das Fenster schmal ist; 64 px
+  Sicherheitsabstand zum Rand.
+
+  **Was Redion daraus baut** — den Aufbau, nicht die Bilder und nicht den
+  Code (§2, E681 Punkt 2):
+  1. Die Werkzeuge des Whiteboards werden **Register-Einträge**
+     (`register/`-Katalog, §5 Regel 3: Kennung, Name, Kürzel, Gruppe
+     quick/senior, Zeichnung als SVG im Redion-Stil wie die Fachzeichen) —
+     damit Gedankenkarte und Planfläche dieselbe Leiste bekommen können.
+  2. Eine schwebende Leiste **unten im Kasten**, zwei Gruppen, die rechte
+     blätterbar; Untermenü klappt nach oben; Werkzeug auf die Fläche
+     ziehen legt die Form dort ab.
+  3. Kürzel über `Register.tasten` (V, H, P, E, S …), der Hinweis steht im
+     Icon; Strg+Z bleibt beim Kasten (E682).
+  4. Am Telefon: 44 px (§37), dichter Modus statt Überlauf, Abstand zur
+     unteren Redion-Leiste (E646, `test541`).
+
+  **Redur, 25. September, dazu: „integriere alles zusammen".** Also nicht
+  eine Leiste fürs Whiteboard, sondern EINE für alle Flächen — Whiteboard,
+  Gedankenkarte, Planfläche, Blatt/PDF — aus demselben Register, mit
+  demselben Verlauf (Bogen 4) und demselben Raum (Bogen 3). Die
+  Markenleiste des Studios (E512, E625, E674) ist dabei der Bestand, der
+  am meisten kann; sie wird nicht ersetzt, sondern die anderen holen zu
+  ihr auf, und was sie gemeinsam haben, wandert nach `src/core/gfx/`.
+
+  **Reihenfolge:** nach den drei Datenbögen aus E681 (Kennungen im
+  Verlauf, `raumVersion`, gemeinsamer Verlauf) als Bogen 5. Mit Bildern am
+  Rechner und am Telefon (§55.3), und mit einem Wächter, der die Leiste
+  misst, nicht liest (L206).
 
 ## ~~Rot, und älter als der Zweig — `test402`~~ — ERLEDIGT am 19. September (E627)
 

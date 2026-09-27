@@ -202,8 +202,26 @@ const Kopfleiste = (() => {
    * Gibt `false` zurück, wenn danach Schluss ist — siehe Punkt 2 oben.
    * ----------------------------------------------------------------------*/
   const zeichne = (wrap: HTMLElement, p: any): boolean => {
+    /* WELCHE DER DREI ANSICHTEN GILT (E690). Der Kopf ist die Stelle, an der
+       sich die drei unterscheiden — deshalb steht die Frage hier und nicht
+       dreimal weiter unten:
+
+           redion    Cover, Symbol, Titel, Werkzeugzeile — wie immer
+           seite     Symbol und Titel, sonst nichts (AFFiNEs `page` hat
+                     weder Cover noch Werkzeugzeile; nachgelesen in
+                     `doku/karte/thema-ansichten.md`)
+           flaeche   Symbol und Titel werden gezeichnet und von
+                     `Seitenflaeche` in den Kopf des Kastens UMGEHÄNGT —
+                     nicht nachgebaut (siehe dort)
+
+       Symbol, Titel und der Sperrhinweis laufen in ALLEN drei: an ihnen
+       hängen der Fenstertitel, der Sperrbildschirm und `menueband.ts:121`
+       („ist überhaupt eine Seite offen?"). */
+    const art = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+    const eigen = art === 'redion';
+
     /* Cover */
-    if (p.cover) {
+    if (p.cover && eigen) {
       const c = document.createElement('div');
       c.className = 'cover';
       const textur = texturVon(String(p.cover));
@@ -294,7 +312,7 @@ const Kopfleiste = (() => {
     }
 
     /* Werkzeugzeile */
-    if (!p.ohneTools) {
+    if (!p.ohneTools && eigen) {
       const tools = document.createElement('div');
       tools.className = 'pg-tools';
       tools.innerHTML =

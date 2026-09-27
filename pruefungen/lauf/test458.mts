@@ -267,7 +267,7 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   await s.waitForTimeout(250);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.blatt-werk .blatt-farbe-neu')?.click());
   await s.waitForTimeout(300);
-  /* E681: Der direkte Farbwähler kommt zuerst; die unveränderte Verwaltung
+  /* E697: Der direkte Farbwähler kommt zuerst; die unveränderte Verwaltung
      der Sätze liegt dahinter. Alle bisherigen Speicherzusagen bleiben. */
   await s.locator('[data-color-sets]').click();
   const auf = JSON.parse(await s.evaluate(`(() => {

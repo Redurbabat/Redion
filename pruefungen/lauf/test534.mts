@@ -150,6 +150,7 @@ const kasten = (pg: Page) => pg.evaluate(() => {
   const werk = r.querySelector<HTMLElement>('.blatt-werk');
   return {
     lage: r.dataset.lage ?? '',
+    seite: Math.round(document.querySelector('#scroll')?.scrollTop ?? 0),
     x: Math.round(k.x), y: Math.round(k.y),
     w: Math.round(k.width), h: Math.round(k.height),
     richtung: werk ? getComputedStyle(werk).flexDirection : '',
@@ -223,6 +224,17 @@ if (alleVier) {
     const m = orte[lage]!;
     p(`«${lage}» ist eine Spalte: schmal und hoch`, m.w >= 44 && m.w <= 140 && m.h >= 220, `${m.w} × ${m.h}`);
     p(`… und die Knöpfe stehen untereinander`, m.richtung === 'column', m.richtung);
+    /* EINE SPALTE ENDET IM FENSTER (E696). Sie war `78vh` hoch, egal wo sie
+       beginnt — bei 409 px Abstand von oben endete sie 197 px UNTER dem
+       Fensterrand, und die letzten Knöpfe (darunter der Griff „Platz")
+       waren nur zu erreichen, indem man die ganze Seite rollte. Schon vor
+       E690 ragte sie 123 px hinaus; E690 hat den Umschalter der Ansichten
+       darübergesetzt, und von da an fiel auch der Griff hinunter. Gemessen
+       wird OHNE vorheriges Rollen der Seite — wer rollen muss, um die
+       Leiste zu sehen, hat sie nicht. */
+    p(`«${lage}» endet im Fenster — der letzte Knopf braucht kein Seitenrollen`,
+      m.y + m.h <= m.fenster.h + 2 && m.seite === 0,
+      `Spalte ${m.y} … ${m.y + m.h} bei ${m.fenster.h} px, Seite gerollt um ${m.seite} px`);
   }
   for (const lage of ['oben', 'links', 'rechts', 'unten']) {
     const m = orte[lage]!;

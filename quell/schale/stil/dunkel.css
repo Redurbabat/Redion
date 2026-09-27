@@ -143,8 +143,16 @@
   --shadow-3:      0 8px 28px rgba(0,0,0,.45);
   --shadow-4:      0 12px 40px rgba(0,0,0,.55);
   /* Schwebende Flächen (§16): durchscheinend, aber nie so weit, dass die
-     Schrift darauf um ihren Grund kämpfen muss. */
+     Schrift darauf um ihren Grund kämpfen muss.
+     ZWEI DICHTEN, EINE UNSCHÄRFE (E695). `--bg-schwebend` für Flächen, die
+     ZEICHEN tragen (Werkzeugleisten); `--bg-schwebend-dicht` für Flächen,
+     die SCHRIFT tragen (Menüs, Finder, Auswahlleiste, untere Leiste). Die
+     Dichte ist gerechnet und an Pixeln nachgemessen (test576 §5/§6): damit
+     `--text-dim` über reinem WEISS hinter dem Glas noch 4,5 : 1 hat, muss
+     die Fläche dunkel mindestens 86 % tragen. 74 % — der erste Anlauf —
+     gab der stillen Schrift 1,43 : 1. */
   --bg-schwebend:  rgba(28,28,32,.72);
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 88%, transparent);
 
   /* PAPIER (E260, aus Amdion). Ein Blatt, ein Plan, eine Zeichnung sind
      Papier und keine Fenster: sie bleiben papierfarben, auch wenn die App

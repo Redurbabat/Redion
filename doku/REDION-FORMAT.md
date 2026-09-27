@@ -254,6 +254,85 @@ Gelöschtes.
 Dieselbe Regel gilt für den Abgleich mit dem Server: Abgeleitetes wandert
 nicht hinauf.
 
+**Whiteboard-Formen** (E138, E686): ein `whiteboard`-Block trägt `shapes`
+(eine Liste von Formen: `art` ∈ stift, linie, pfeil, rechteck, ellipse,
+notiz, text, bild, verbindung; Stift mit `pts: [[x, y], …]`, Kästen mit
+`x, y, w, h` — `w`/`h` dürfen negativ sein —, Bilder mit `dateiId`,
+Verbindungen mit `von`/`nach` als Form-Kennungen), `sicht` (`x, y, z` —
+Ausschnitt in Flächenpunkten und Massstab), `hoehe` (CSS-Pixel des
+Kastens) und seit E686 `raumVersion`. Die Zahlen sind **Flächenpunkte**:
+CSS-Pixel bei Massstab 1, Ursprung links oben der ungeschobenen Fläche —
+keine PDF-Punkte wie beim Blatt. `raumVersion: 1` ist diese Deutung; ein
+Block ohne das Feld ist Fassung 1. Wer die Deutung je ändert, hebt die
+Zahl an und wandelt beim Lesen — nie stillschweigend.
+
+**Die Ansicht einer Seite** (E690): ein Seitenblock darf `seitenAnsicht`
+tragen — `'seite'`, `'flaeche'` oder `'redion'`. **Ein Block ohne das Feld
+ist nicht kaputt, sondern von gestern**, und er bekommt die Redion-Ansicht:
+Cover, Symbol, Titel, Werkzeugzeile, also genau das, was jede Seite vor E690
+gezeigt hat. Eine ältere Fassung von Redion liest eine Sicherung mit dem
+Feld ohne Schaden — sie kennt es nicht und zeigt die Seite wie immer.
+
+Dazu kommt `flaecheNotiz` mit `{ x, y, w, raumVersion }`: wo der Kasten mit
+dem Seitentext auf der Fläche liegt und wie breit er ist. Die Zahlen sind
+**Flächenpunkte** wie beim Whiteboard — CSS-Pixel bei Massstab 1, Ursprung
+links oben —, und `raumVersion: 1` ist diese Deutung; fehlt das Feld, gilt
+Fassung 1. Fehlt `flaecheNotiz` ganz, rechnet Redion eine Vorgabe aus der
+Fenstergrösse; gespeichert wird sie erst, wenn jemand den Kasten wirklich
+verschiebt.
+
+**Was NICHT in der Sicherung steht:** der Ausschnitt der Fläche (wohin man
+gerade sieht und wie weit gezoomt ist). Er liegt in `meta` unter
+`flaeche:<Seitenkennung>`, weil er zum Gerät gehört und nicht zum Dokument —
+ein Blick am Telefon darf die Fläche am Rechner nicht verschieben. AFFiNE
+legt ihn aus demselben Grund in den `localStorage`.
+
+**Jeder Block darf auf der Fläche liegen** (E691). Zwei Felder, beide an
+einem gewöhnlichen Block, beide optional:
+
+```txt
+flaecheOrt   { x, y, w, raumVersion }        wo er auf der Fläche liegt
+sichtbarIn   'beides' | 'seite' | 'flaeche'  wo er erscheint
+```
+
+Die Zahlen sind **Flächenpunkte** wie beim Whiteboard (CSS-Pixel bei
+Massstab 1, Ursprung links oben), `raumVersion: 1` ist diese Deutung. Und
+wieder gilt: **kein Feld heisst „wie bisher"** — ohne `flaecheOrt` steht
+der Block im Seitenkasten, ohne `sichtbarIn` steht er überall.
+
+Drei Dinge, die eine ältere Fassung oder ein fremdes Werkzeug wissen sollte:
+
+- **Ein Block mit `sichtbarIn: 'flaeche'` ist NICHT gelöscht.** Er steht in
+  `content` seines Elternteils, ist `alive`, hat seinen Text und reist
+  vollständig mit. Nur gezeichnet wird er in der Textansicht nicht. Wer
+  `sichtbarIn` nicht kennt, zeigt ihn — das ist der richtige Rückfall.
+- **Ein unlesbarer `flaecheOrt` zählt als kein Ort.** Redion lässt den
+  Block dann im Text stehen, statt ihn still in den Ursprung zu setzen
+  (§9). Eine Sicherung mit kaputten Zahlen verliert also keinen Inhalt.
+- **Die Reihenfolge in `content` ändert sich beim Aus- und Einblenden
+  nicht.** Das ist die bewusste Abweichung von AFFiNE, das den Block dabei
+  verschiebt — wer eine Sicherung vergleicht, sieht bei einem reinen
+  Sichtbarkeitswechsel genau ein geändertes Feld.
+
+**Und auf der Fläche einer Seite darf gezeichnet werden** (E693). Ein
+Seitenblock trägt dann `shapes` und `raumVersion` — **dieselben Felder mit
+derselben Bedeutung wie ein `whiteboard`-Block** (oben). Das ist kein
+zweites Format und keine Ähnlichkeit, sondern dieselbe Liste, gelesen und
+gezeichnet von derselben Stelle (`GfxShapes` in `src/core/gfx/shapes.ts`).
+Auf der Seitenfläche entstehen heute fünf der Arten — `stift`, `linie`,
+`pfeil`, `rechteck`, `ellipse` —; die übrigen (`notiz`, `text`, `bild`,
+`verbindung`) liest sie, weil das Whiteboard sie schreibt.
+
+Zwei Dinge dazu:
+
+- **Ein Seitenblock ohne `shapes` hat keine Zeichnung**, nicht eine leere.
+  Das Feld wird gelöscht, wenn die letzte Form verschwindet, statt als `[]`
+  stehen zu bleiben — eine Sicherung soll nicht behaupten, hier sei etwas
+  gewesen.
+- **`raumVersion` gilt für beides**: für `flaecheNotiz`/`flaecheOrt` und für
+  die Formen. Die Zahlen liegen im selben Flächenraum, also gibt es auch nur
+  eine Deutung je Block.
+
 ---
 
 ## Einspielen

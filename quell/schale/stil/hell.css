@@ -64,6 +64,11 @@ html[data-theme="light"]{
   --shadow-3: 0 8px 28px rgba(15,15,15,.12);
   --shadow-4: 0 12px 40px rgba(15,15,15,.16);
   --bg-schwebend: rgba(255,255,255,.74);
+  /* Hell braucht MEHR Dichte als dunkel (92 gegen 88 %, E695): reines
+     Schwarz hinter dem Glas zieht die helle Fläche stärker herunter als
+     Weiss die dunkle hinauf. Bei 88 % hatte die untere Leiste hell
+     4,14 : 1 für ihre Namen — gemessen, test576 §6. */
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 92%, transparent);
   /* Auf hellem Grund ist der Innenrand dunkel, nicht weiss — sonst
      verschwindet er auf der eigenen Fläche. */
   --glas-rand:    inset 0 0 0 1px rgba(15,15,15,.10);

@@ -1,6 +1,512 @@
 # ERLEDIGTE-AUFGABEN.md
 
-## 23. September 2026 · E681 · Farben, Freitext und Stiftzubehör
+## 27. September 2026 · E696 · Rot zuerst: eine Seitenspalte endet im Fenster
+
+**Anlass:** der Nachbarlauf von E695 — `test534` rot, und zwar seit E690,
+meinem eigenen Bogen vom Vortag (über Arbeitsbäume auf `4d7436d`
+zurückverfolgt).
+
+**Der Mangel war älter als der Rückfall.** Die Studioleiste links/rechts ist
+eine Spalte an der Blatthülle mit `78vh` Höhe, egal wo sie beginnt — sie
+ragte schon vor E690 123 px unter den Fensterrand. E690 setzte den
+Umschalter der Ansichten darüber (74 px), und damit fiel auch der Griff
+„Platz" hinunter: wer ihn erreichen wollte, musste die Seite um 465 px
+rollen.
+
+**Gebaut:** `marken.ts` rechnet `--reihe-platz`, den Raum von der Oberkante
+der Hülle bis 12 px vor dem Fensterrand (mindestens 220 px); `max-height`
+nimmt den kleinsten Wert. Ein gedrosselter Hörer rechnet bei neuer
+Fenstergrösse nach.
+
+**Geprüft.** `test534` auf 52 Zusagen; der neue Satz „«links»/«rechts» endet
+im Fenster" war auch gegen den Stand VOR E690 rot. Gegenprobe rot mit sechs
+Zeilen. Und im selben Nachbarlauf ein zweiter Roter, eine Woche alt:
+`test533` zählte 13 Studio-Werkzeuge, seit E670 sind es 14 — nachgezogen.
+
+---
+
+## 27. September 2026 · E695 · Ein Glas statt vier
+
+**Redur:** „Weiter an die animationen übergangen glass efeck usw alles
+verbessern."
+
+**Zuerst gezählt, dann gebaut** (messungen.md §69). §16 hatte ein Glasrezept,
+und es sass auf genau einer Klasse. Menüs trugen 88 % Deckkraft und
+`blur(8px)` — auf dem Bildschirm kaum Glas; die Telefonleiste eine eigene
+Mischung, die PDF-Leiste eine dritte. Am Rechner war im Leerlauf kein
+einziges Element sichtbar verwischt. Und fünf Stellen setzten
+`backdrop-filter` ohne `-webkit-backdrop-filter` — auf jedem iPhone vor
+Safari 18 also ohne Glas.
+
+**Gebaut:** EINE Unschärfe (`--glas-blur`) für Menüs, Finder,
+Auswahlleiste, Telefonleiste, PDF-Leiste und `.rb.glas`; zwei Dichten mit
+einer Regel — Fläche mit Schrift dicht (`--bg-schwebend-dicht`, 92 % hell,
+88 % dunkel), Fläche mit Zeichen leicht (`--bg-schwebend`); Glas nur unter
+`@supports` mit Präfix, vorher deckend; ein Schleier-Token für den Grund
+hinter Fenstern; und auf Glas keine blasse Schrift (`--text-faint` →
+`--text-dim` in gläsernen Flächen). Vier Zierstücke (Linse, Etikett,
+Glaskugel) bleiben, mit Namen und Grund im Wächter.
+
+**Die Dichte war zuerst eine Schätzung, und die Pixel haben sie widerlegt.**
+Mit 74 % hielt die Hauptschrift 6–7 : 1, die stille Schrift (Gruppentitel,
+Kürzel) aber nur **1,43 : 1** — gemessen hatte ich sie zuerst gar nicht.
+Die Dichten sind danach gerechnet und nachgemessen. Das Menü ist damit nicht
+durchsichtiger als vorher, sondern glasiger: 20 statt 8 Pixel Unschärfe und
+die gesättigte Farbe dessen, was darunter liegt.
+
+**Ein alter Mangel nebenbei:** die Telefonleiste hatte hell für ihre Namen
+nur 4,14 : 1, schon vor diesem Bogen. Jetzt 4,59.
+
+**Geprüft.** `test576` neu, 30 Zusagen, rot eingecheckt mit elf Zeilen;
+drei Gegenproben rot (Glas auf 22 % → 1,6 : 1; die Schrift-Regel heraus →
+3,11 / 2,36 : 1). Zweimal war er aus dem falschen Grund rot (`color(srgb …)`
+statt `rgba()`, und ein von Hand gesetztes Thema, das die App zurücksetzte —
+P118). 23 von 24 Nachbarn grün; `test534` ist rot, aber seit E690 und
+nicht durch diesen Bogen (gegen die alten Stilblätter dieselben vier Zeilen).
+
+**Offen:** L221 (die leichten Leisten sind gerechnet, nicht gemessen) und die
+Bewegung — siehe AUFGABEN.md, „Bewegung und Glas".
+
+---
+
+## 26. September 2026 · E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218)
+
+**Redur:** „Weiter."
+
+**Gebaut:** die zwei Abschriften sind weg. `marken.ts` hält nur noch die
+REIHENFOLGE der vierzehn Kennungen und ruft `Register.werkzeuge.auswahl([…])`;
+`menueband.ts` hält eine Folge mit Herkunft (`['abdeck','werkzeug']`,
+`['line','form']`) und holt Name, Zeichen und Hinweis über
+`bandWerkzeug(id, woher)` aus dem zuständigen Katalog. `Marken.WERKZEUGE`
+bleibt als NAME stehen — es ist jetzt eine Sicht auf den Katalog, damit
+`document-mode.ts` (E572), der Inspector und `ordnungAbgleichen` weiter
+dasselbe Feld lesen.
+
+**Warum überhaupt.** Drei Listen für eine Sache ist §8 in Reinform, und in
+diesem Projekt keine Vermutung: als „Abdecken" im Studio einmal still zu
+„Abdeckband" wurde, sagte das Menüband weiter „Abdecken" (`test266 §1`).
+
+**Der Fund, den niemand gesucht hat.** Die Kennung **`ellipse` gibt es
+zweimal** — als Flächenwerkzeug (`◯`, deutscher Kennungsraum neben `linie`,
+`pfeil`, `rechteck`) und als Studio-Form (`○`, englischer Raum neben `line`,
+`arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht. Ein
+naheliegendes „erst im Register nachsehen, sonst bei den Formen" hätte im
+Band still das falsche Zeichen gezeigt, ohne dass etwas kaputtgegangen wäre
+ausser der Anzeige. Deshalb sagt jetzt jede Zeile, aus welchem Katalog sie
+kommt. Gefunden hat es der Wächter, bevor eine Zeile repariert war — und die
+erste Vermutung war, das Band habe unrecht. Es hatte recht (P117).
+
+**Und ein Typ, der zwei Dateien weiter aufgeschlagen wäre.** `Register` ist
+ein `any` (`global.d.ts`), also wäre `WERKZEUGE` zu `any[]` geworden — und
+das fällt nicht in `marken.ts` auf, sondern in `document-mode.ts:2036`, das
+`Marken.WERKZEUGE` liest (E572): fünf implizite `any` in einer fremden Datei.
+Eine Zeile `: GfxWerkzeug[]` statt einer Stunde Suche (§52.7).
+
+**Geprüft.** `test572` von 51 auf 59 Zusagen. §3 misst jetzt das Stärkere als
+vorher — nicht mehr, dass zwei Listen dasselbe sagen, sondern dass die zwei
+Abschriften weg sind; gegen den Stand davor rot mit vier Zeilen. §12 ist neu
+und misst das laufende Programm; seine Gegenprobe (einen Namen von Hand
+zurückschreiben) druckt genau den historischen Fehler: `abdeck`. Nachbarn
+grün: `test266`, `test267`, `test268`, `test272`, `test274`, `test277`,
+`test282`, `test286`, `test289` und die Studio-Läufe.
+
+**Zweimal war der neue Abschnitt aus dem FALSCHEN Grund rot**, und beides
+steht jetzt als Kommentar im Lauf: `inReiter` gibt GRUPPEN zurück, keine
+flache Liste; und der Reiter „Zeichnen" zeigt ohne offenes Blatt gar keine
+Werkzeuge, weil `Zeichenziel.da()` falsch ist. Beide Male stand da „0
+Werkzeuge", und beide Male sah es nach einem Produktfehler aus.
+
+**Die Bilder zeigen nichts Neues, und das ist die Zusage.** Ein Umzug, der
+das Aussehen ändert, ist kein Umzug. Was sich wirklich ändert, sind zwei
+Hinweistexte im Band: sie kommen jetzt aus den Titeln des Katalogs und sind
+dadurch länger.
+
+**L218 ist GESCHLOSSEN** (mit Beleg, nicht gelöscht — §35). Offen bleiben
+Gedankenkarte und Planfläche (5c/5d) und die Tasten der Flächen (5e).
+
+---
+
+## 26. September 2026 · E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b)
+
+**Redur:** „weiter."
+
+**Gebaut:** `src/core/gfx/shapes.ts` — `GfxShapes` mit `zeichne`,
+`rahmenVon`, `zeilenUmbruch`, `pfeilMarke`, `sv` und den acht Farben. Er
+kennt keine Fläche: kein `Store`, kein `Register`, kein `App`, keine
+Dateiablage; was er über die Welt wissen muss, bekommt er als Angabe.
+Darauf ist zuerst das Whiteboard umgezogen (136 Zeilen weniger, 24 dazu),
+und dann hat die Seitenfläche ihre Tintenebene bekommen — acht Werkzeuge,
+Farbmenü, rechnender Radierer, Rückgängig über `GfxHistory`, Strg+Z nach
+E682-Mechanik, gespeichert im bestehenden Feld `shapes`.
+
+**Die Reihenfolge war die Entscheidung.** Den Zeichner des Whiteboards zu
+kopieren wäre der kurze Weg gewesen und genau der Fall, vor dem §8 warnt:
+zwei Fassungen derselben Zeichnung laufen auseinander, und man sieht es
+nicht beim Lesen, sondern irgendwann daran, dass ein Pfeil auf einer Fläche
+eine Spitze hat und auf der anderen nicht. Also erst der Umzug in den Kern,
+dann die neue Fläche darauf — dasselbe Muster wie `GfxHistory` (E687) und
+`GfxToolbar` (E689).
+
+**Die Bedingung aus L219, gemessen statt gelesen.** Die Tinte liegt IN der
+bewegten Ebene, nicht daneben; damit teilen Tinte und Kästen EINEN
+`transform` und es gibt keine zweite Umrechnung — daran ist es zweimal
+schiefgegangen (E623, E686). `test575 §4b` misst das an der Bewegung, nicht
+am Quelltext, und die Gegenprobe druckt die Zeile, um die es geht: „Tinte
+×1.000 · Kasten ×0.800".
+
+**Und zum zweiten Mal in zwei Bögen hat das BILD dieselbe Lücke gezeigt**
+(§55.1): „Ins Bild holen" rechnete in E690 nur mit dem Seitenkasten und
+liess die herausgezogenen Blöcke draussen, dann nur mit den Kästen und liess
+die Formen draussen — auf dem Bild hing eine Ellipse rechts über der Kante,
+während der Knopf „ins Bild" hiess.
+
+**Ein Fund am Rande, der kein Prüfstandsfehler war.** `setPointerCapture`
+wirft, wenn es den Zeiger nicht mehr gibt, und der Wurf brach den ganzen
+Handgriff ab, bevor die erste Form entstand. Das trifft nicht nur den
+Prüflauf: ein schneller Tipp, ein verlorener Stift, ein zweiter Finger
+reichen. Das Fangen ist eine Bequemlichkeit, kein Grund zum Abbruch.
+
+**Und ein Fund beim SCHREIBEN der Doku.** `doku/REDION-FORMAT.md` sollte
+versprechen, dass ein Seitenblock ohne Zeichnung kein `shapes` trägt —
+nachgesehen war es nicht wahr, eine leere Liste blieb stehen und mit ihr
+eine `raumVersion` ohne Formen. Beide werden jetzt mit `Store.feldWeg`
+entfernt, derselbe Griff wie bei `flaecheOrt` (E691). Eine Doku, die man
+ehrlich schreibt, ist auch ein Wächter.
+
+**Geprüft.** `test575` neu mit 40 Zusagen in elf Abschnitten, dreimal rot
+gesehen (die Tinte eine Ebene höher, `GfxShapes` mit einem Flächennamen
+darin, `feldWeg` wieder heraus). Nachbarn grün: `test573`, `test574`,
+`test538`, `test570`, `test571`, `test572`, `test105`, `test109`, `test87`,
+`test550`.
+
+**L219 ist damit zur Hälfte GESCHLOSSEN.** Was bleibt, steht dort:
+auswählen, verschieben, beschriften und verbinden auf der Fläche — rund 600
+Zeilen Bedienung, die heute nur das Whiteboard hat. Und eine Seite mit
+Zeichnung taucht in der Flächen-Übersicht der Arbeitswelt nicht auf: die
+listet `whiteboard` und `blatt`, nicht Seiten.
+
+---
+
+## 26. September 2026 · E692 · L220 geschlossen — und ein Kürzel, das nie ankam
+
+**Redur:** „mach L220 auch noch."
+
+**Gebaut:** `nachbarImText` im Editor — ein Weg durch die Geschwisterliste,
+der bei jedem Schritt `Register.seitenansichten.zeigtIn` fragt (§8: die Regel
+bleibt an einer Stelle). Damit springt die Rücktaste zum SICHTBAREN
+Vorgänger, und Strg+Umschalt+Pfeil springt ÜBER den unsichtbaren Nachbarn —
+mit `splice` statt Tausch, damit die übrigen stehen bleiben. Dazu: die
+laufende Nummer einer Liste wird beim Zeichnen gezählt und an
+`Blocks.render(b, tiefe, nr)` weitergereicht, statt als `b.nr` in den Block
+und damit in jede Sicherung zu wandern.
+
+**Der Fund, der nicht auf der Liste stand.** Der neue Abschnitt wollte messen,
+dass das Verschieben den unsichtbaren Nachbarn überspringt — und es bewegte
+sich GAR NICHTS, auch in den Daten nicht. Zwölf Zeilen höher im selben
+Tastenbehandler steht die Pfeilnavigation zwischen Blöcken, und sie kehrte
+mit `return` um, sobald der Cursor am Anfang (für ↑) oder am Ende (für ↓)
+stand. In einem einzeiligen Block ist er fast immer beides: das Kürzel, das
+das Blockmenü als „Ctrl+Shift+↑" verspricht, war praktisch nie erreichbar.
+Die Reparatur ist eine Bedingung — die Navigation gilt nur ohne Strg/Cmd.
+
+**Geprüft.** `test574` von 50 auf 60 Zusagen; §10–§12 waren gegen den Stand
+vor der Reparatur rot (vier Zeilen), und zwei Gegenproben machen sie wieder
+rot: die Bedingung zurücknehmen und den Nachbarn wieder ungefiltert nehmen.
+
+**L220 ist damit GESCHLOSSEN** (mit Beleg, nicht gelöscht — §35). Was offen
+bleibt, steht dort: verschachtelte Nummernlisten zeigen weiter „1.", und
+alte Blöcke tragen ihr `nr` noch als totes Feld.
+
+---
+
+## 26. September 2026 · E691 · Der Vollausbau der Fläche (A1c)
+
+**Redur:** „ja mach den vollausbau, jeder block auf die fläche ziehbar."
+
+**Zuerst vier Leser, dann eine Zeile Code.** AFFiNEs `displayMode`, Redions
+vorhandenes Block-Ziehen, wer ausser der Inhaltsfläche noch die Kinder einer
+Seite liest, und welche Wächter daran hängen — parallel, jeder mit
+Datei:Zeile. Drei ihrer Funde stehen im Ergebnis, und keinen davon hätte
+der Bau von selbst gemacht.
+
+**Gebaut:** zwei optionale Felder an JEDEM Block — `flaecheOrt`
+({x,y,w,raumVersion}) und `sichtbarIn` ('beides' | 'seite' | 'flaeche') —,
+ein Kasten je Block auf der Fläche, Ziehen aus dem Text mit dem VORHANDENEN
+Editor-Ziehen (§8, die Kennung reist über `dataTransfer`), der Rückweg durch
+Ziehen in den Seitenkasten, „Auf der Seite ausblenden" mit Wort statt Farbe
+(§38), der Weg am Telefon über das Blockmenü und die Hebe-Geste aus E83,
+und `Store.feldWeg` im Kern, damit „kein Feld" wirklich kein Feld ist.
+
+**Drei Entscheidungen gegen das Vorbild**, jede begründet in E691: der BLOCK
+ist die Einheit (AFFiNE kann nur die Notiz); die Reihenfolge in `content`
+bleibt unangetastet (AFFiNE verschiebt); ein unlesbarer Platz zählt als kein
+Platz (AFFiNE macht still `[0,0,0,0]` daraus).
+
+**Was die Leser geändert haben:** der Feldname (`zeigen` ist 41-mal als
+Register-Rückruf vergeben → `sichtbarIn`), eine Regel, die zweimal dastand
+(„ist der Platz lesbar?" — jetzt einmal im Register), und zwei Leser der
+Kinderliste, die niemand auf dem Zettel hatte: Gliederungsstreifen und
+Inhaltsverzeichnis führten Überschriften auf, die auf der Seite gar nicht
+stehen.
+
+**Was das Bild geändert hat** (§55.1): „Ins Bild holen" rechnete nur mit dem
+Seitenkasten — die herausgezogenen Blöcke hingen ausserhalb, während die
+Leiste „100 %" meldete.
+
+**Geprüft.** `test574`, rot eingecheckt vor dem Bau (e388949), danach 50/50.
+Zwei Gegenproben, beide rot: den Sichtbarkeitsfilter heraus (6 Zusagen rot)
+und `ortLesbar` auf „immer wahr" (2 rot). Zweimal war der Lauf selbst aus
+dem falschen Grund rot — `contextmenu` am Telefon (unterdrückt seit E83) und
+ein Tipp 400 ms nach dem Loslassen (der Fänger schluckt 800 ms).
+
+Nachbarn grün: `test573`, `test285`, `test105`, `test109`, `test87`,
+`test294`, `test301`, `test96`, `test100`, `test139`.
+
+**Neue Lücke:** L220 — drei Nebenwirkungen des Ausblendens (Rücktaste,
+Strg+Umschalt+Pfeil, `b.nr` in der Sicherung). Keine verliert Daten, alle
+drei sind „der Bildschirm bewegt sich nicht, und niemand sagt warum".
+
+---
+
+## 26. September 2026 · E690 · Drei Ansichten einer Seite (A1, Bogen 1)
+
+**Redur:** zuerst „bei der affine haben wir das es wechsel die ansichten …
+aber zuerst liess was die ander 2 bereicht machen bi affine" — und danach
+„ich will die 2 von affine 1:1 haben auch alles komplet wie es ausehn …
+und noch eien 3 für die aktuele redion … die 3 is von uns erfunden".
+
+**Zuerst gelesen.** Der Befund steht mit Datei und Zeile in
+`doku/karte/thema-ansichten.md`: AFFiNE hat GENAU ZWEI Modi, es sind zwei
+Blicke auf dasselbe Dokument — und ein Cover gibt es dort gar nicht. Ohne
+das Lesen wäre eine dritte Betriebsart entstanden, wo AFFiNE eine Ansicht
+hat.
+
+**Gebaut:** `Register.seitenansichten` (der Katalog, §5 Regel 3), das Feld
+`seitenAnsicht` am Seitenblock (kein Feld = die Redion-Ansicht, §9), der
+Umschalter auf dem vorhandenen `Segment` (Radiogruppe, seit E441-Umfeld
+gebaut und bis heute nirgends benutzt), die Ansicht „Seite" (Symbol und
+Titel, kein Cover, keine Werkzeugzeile) und die Ansicht „Fläche"
+(Punktraster, Schieben, Zoomen 10–600 %, Kneifen, „ins Bild holen", der
+Seitentext als verschiebbarer Kasten, dessen Kopf Symbol und Titel
+ÜBERNIMMT statt sie nachzubauen).
+
+**Drei Namen bewusst NICHT genommen** (§8): `Ansichten` ist der Dienst der
+Datenbankansichten, `Register.ansichten` deren Katalog, `FORMEN.ansicht` die
+Form eines `views`-Eintrags.
+
+**Gemessen** (`messungen.md` §64): am Telefon Fläche 332 → 584 px hoch,
+278 → 390 px breit, „ins Bild holen" 31 % → 98 %. Alle drei Zahlen kamen vom
+BILD, nicht vom Wächter (§55.1). Und ein vierter Fund, der nichts meldete:
+`(window as any).App` gibt es nicht — `const App` in einem gewöhnlichen
+`<script>` ist eine globale lexikalische Bindung, kein Feld von `window`;
+das Feld wurde geschrieben, der Bildschirm blieb stehen.
+
+**Geprüft.** `test573` (31 Zusagen), eingecheckt rot vor dem Bau, danach
+30/30 — und die Gegenprobe (`?? k.ARTEN[0].id` statt `?? k.VORGABE`) hat ihn
+wieder rot gemacht und dabei eine Lücke IM WÄCHTER gezeigt: er prüfte nur,
+dass nichts geschrieben wurde, nicht, was man dann sieht. Die Zusage „ohne
+Feld sieht man die Redion-Ansicht" kam deshalb dazu (jetzt 31).
+
+Nachbarn grün: `test285`, `test385`, `test391`, `test393`, `test221`,
+`test272`, `test277`, `test40`, `test67`, `test114`, `test37`, `test402`,
+`test332`, `test139`, `test425`, `test427`, `test429`, `test209`, `test70`,
+`test105`, `test109`, `test87`, `test290`, `test315`, `test549`, `test550`.
+
+**Zwei Zahlen nachgezogen, die vor diesem Bogen falsch waren:**
+`marken-decke.json` (28 px: 64 → 65, 46 px: 15 → 14 — beide aus E689, der
+Lauf stand rot) und die Hauptdatei des `pg-`-Namensraums
+(`doku/CSS-NAMENSRAEUME.md`: bausteine.css → seitenansichten.css, 47
+Vorkommen, mit Begründung im Text).
+
+**Neue Lücke:** L219 — auf der Fläche kann man noch nicht zeichnen; die
+Werkzeugleiste zeigt deshalb zwei Werkzeuge und nicht zwölf (§32).
+
+---
+
+## 26. September 2026 · E689 · EINE Werkzeugleiste für alle Flächen (W6, Bogen 5a)
+
+**Redur:** „ich will so was haben wie die affine" · „integriere alles
+zusammen". **Gebaut:** der Katalog `Register.werkzeuge` (22 Werkzeuge, davon
+vier von Fläche und Studio geteilt), das Kernbauteil `GfxToolbar`
+(`src/core/gfx/toolbar.ts`, kennt keine Fläche), drei neue Strichzeichen —
+und das Whiteboard als erste Fläche darauf: schwebende Kapsel unter der
+Fläche, Strichzeichen statt Emoji, Farben und „…" als Untermenü, am Telefon
+44 px und rollend.
+
+**Gemessen** (`messungen.md` §63): am Rechner 3 Zeilen × 67 px → 1 Zeile
+× 54 px; am Telefon 4 Zeilen × 95 px → 1 Zeile × 70 px; Knöpfe 28×26 →
+30×30 (Rechner) und 44×44 (Telefon).
+
+**Geprüft.** `test572` (51 Zusagen), gegen den alten Stand rot mit 20.
+Gegenprobe: den Roller zurück an den Sockel → „man kann wirklich
+hineintippen" rot. **Und das Bild hat gefunden, was kein Wächter hatte:** das
+Farbmenü lag gemessen richtig und war abgeschnitten (§55.1) — seither fragt
+der Lauf mit `elementFromPoint`. `test209` nachgezogen (die Leiste rollt,
+E356-Vorbild). Nachbarn `test568`, `test570`, `test571`, `test290`,
+`test402`, `test105`, `test109`, `test388`, `test266`, `test438`, `test550`,
+`test87` grün; `test537` wie gehabt (L207). Neue Lücken: L217 (untere Leiste
+am Telefon), L218 (drei Werkzeuglisten bis 5b).
+
+---
+
+## 25. September 2026 · E688 · Die Startdecke, neun Tage später
+
+**Der Fund.** `test388 §5` rot als Nachbar von Bogen 4: 2711 KB gegen 2700
+— gerissen schon vor Bogen 4 (2709), der selbst 2 KB bringt. **Gezählt:**
+127 KB seit E613, davon Studio +19, `bausteine.css` +12, NIN-Quiz 12 neu,
+Trainer 9 neu, Gedankenkarte +8, Staatskunde 7 neu (`messungen.md`).
+
+**Entschieden.** Decke auf 2850 mit Begründung im Kopf des Laufs (wie
+E613); die zwei Inhaltsposten (19,5 KB Lernstoff) als L216 mit der Frage an
+Redur, ob Lerninhalte erst beim Öffnen kommen. `test388` 19/19, `test549`,
+`test550`, `test225`.
+
+---
+
+## 25. September 2026 · E687 · Die drei Flächen teilen EINEN Verlauf
+
+**Audit D1, Bogen 4.** Whiteboard, Gedankenkarte und Planfläche hielten je
+ein Paar Stapel aus JSON-Abbildern, dieselben acht Zeilen dreimal.
+**Gebaut:** `src/core/gfx/history.ts` — `GfxHistory.erstelle(tiefe)`,
+ohne DOM und ohne Store; der Kern gibt das Abbild zurück, die Fläche setzt
+es ein. Drei Umzüge (40/40/60 bleiben), 41 Zeilen dazu, 51 weg; der erste
+Ordner des GFX-Kerns. Marken (E378) und Seitenverlauf (E684) bleiben eigen.
+
+**Geprüft.** `test571` (24 Zusagen, Kern ohne Browser, Übernahme im
+gebauten JavaScript): gegen den alten Stand rot mit 8; erster Fund im Kern
+selbst (`Number(0) || 40` → Tiefe 40 statt 1); Gegenprobe „merken leert das
+Wiederholen nicht" → zwei rot. Nachbarn `test209`, `test568`, `test529`,
+`test538`, `test238–240`, `test263`, `test105`, `test109`, `test537`,
+`test550`, `test225`, `test87`. Kein Bild: nichts Sichtbares hat sich
+geändert (§55.3).
+
+---
+
+## 25. September 2026 · E686 · Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix
+
+**Redur:** „für die 3. ja whiteboard eine raumversion". **Gebaut:**
+`raumVersion: 1` mit jedem Speichern (ein Brett ohne Feld ist Fassung 1),
+`punkt()` über `SheetSpace.umrechner` mit der alten Formel als Rückfall,
+Typen für `shapes`/`sicht`/`hoehe`/`raumVersion`/`karte`/`plan`/`marken`,
+ein Absatz in `doku/REDION-FORMAT.md`.
+
+**Geprüft — und dabei etwas gelernt.** `test570` (12 Zusagen) sollte mit
+`scale(0.8)` die Handformel rot zeigen; sie war grün, weil sich der Faktor
+über den `viewBox` herauskürzt. Erst `rotate(180deg)` trennt Formel und
+Matrix. Der Audit war an der Stelle zu scharf — berichtigt in E686 und im
+Audit. Gegenprobe (Formel zurück): Drehung rot. Nachbarn `test209`,
+`test206`, `test428`, `test568`, `test105`, `test109`, `test537`, `test550`,
+`test87`.
+
+---
+
+## 25. September 2026 · E685 · Die zwei Fassungs-Wiederherstellungen gehen denselben Weg
+
+**Der Fund.** `fassungen.ts:327` und `werkzeuge.ts:902` — „Ganze Fassung
+zurückholen" und „Fassung wiederherstellen" — standen Zeile für Zeile so da
+wie der Verlauf vor E684. Beide löschten die Fassungen der Unterseiten.
+
+**Gebaut.** Zwei Aufrufe von `Store.baumAbgleichen`, sonst nichts.
+
+**Geprüft.** `test569` §13/§14 fahren beide Dialoge wirklich (Klick, `confirm`
+ersetzt); 48 Zusagen. Gegenprobe: alter Weg zurück → sechs rot. Nachbarn
+`test98`, `test538`, `test548`, `test188`, `test105` grün.
+
+---
+
+## 25. September 2026 · E684 · Rückgängig ändert Inhalt, nicht Identität
+
+**Der Fund.** Gemessen beim Plattform-Audit: ein Strg+Z auf der Elternseite
+gab einer Unterseite eine neue Kennung, löschte ihre geplante Fassung
+(1 → 0) und liess einen Favoriten ins Leere zeigen. `Verlauf.anwenden` riss
+die Seite ab (`kinderLeeren` = Purge je Kind) und baute sie mit frischen
+Kennungen neu (`baumEinfuegen`). `test70` hielt das seit jeher als Tatsache
+fest.
+
+**Wie entschieden.** Drei unabhängige Entwürfe, zwei Richter (Ablage,
+Abgleich) — beide setzten dasselbe zusammen: eine eigene Funktion
+`Store.baumAbgleichen`, Abgleich über die Kennung, Papierkorb statt Purge,
+Unterseiten und Zeilen als Blätter, kein Stempel ohne Unterschied, keine
+Ansicht wird gelöscht. Nur `Verlauf` zieht um; die Fassungen folgen als
+eigener kleiner Bogen.
+
+**Geprüft.** `test569` — eingecheckt als rot (10 von 20), BEVOR eine Zeile
+Reparatur stand (§30); mit E684 36 Zusagen in zwölf Abschnitten. Vier
+Gegenproben, je gebaut und gefahren: alter Weg zurück → 21 rot; fehlende
+Felder nicht löschen → genau der Haken rot; immer stempeln; Purge statt
+Papierkorb. Nachbarn: `test70`, `test188`, `test568`, `test226`, `test229`,
+`test265`, `test48`, `test89`, `test96`, `test100`, `test105`, `test109`,
+`test537`, `test550` — dreizehn grün, `test537` mit dem bekannten Stand
+518 gegen 517 (L207, vor und nach dem Bogen gleich). Dieselben zwei
+Sonden wie vorher: Fassungen 1 → 1.
+
+**Nebenfunde der Richter** als L213–L215 eingetragen: gelesen, nicht
+gemessen — Sperren rechnet den Dateianspruch nach dem Purge; `baumEinfuegen`
+übernimmt `edited`; `baum` hängt die Sammlung an verknüpfte Ansichten.
+
+---
+
+## 25. September 2026 · E683 · Fremder Code darf in Redion, wenn er Redion verbessert
+
+**Redurs Regel**, wörtlich in `FREMDCODE.md` und als CLAUDE.md §57: fremder
+Code ja, wenn er Redion verbessert; nie PDFs, Bilder oder Geheimnisse an
+Dritte; vorher Redur fragen; jedes Stück in `FREMDCODE.md`. **Die Zählung**,
+damit die Datei mit der Wahrheit beginnt: pdf.js (eingepackt, 6.2.108,
+Apache-2.0, `test177`) und WebLLM (zur Laufzeit vom CDN, ohne Fassung —
+offene Frage), sonst nichts. AFFiNE und SiYuan gelesen, nichts genommen.
+
+---
+
+## 25. September 2026 · E682 · Strg+Z gehört der Fläche, die es genommen hat
+
+**Der Fund.** Strg+Z in Planfläche und auf dem Blatt nahm zweimal zurück:
+der Block seinen Schritt, die Schale den ganzen Seitenverlauf — Meldung
+„Rückgängig", Block neu gezeichnet, neue Kennung. Das Whiteboard hatte gar
+keine Taste. Gemessen mit zwei Sonden, bevor eine Zeile geändert wurde.
+
+**Gebaut.** Eine Zeile in der Schale: eine Taste, die ein Block schon
+genommen hat (`defaultPrevented`), nimmt die Schale nicht noch einmal —
+nur für z und y. Das Whiteboard bekommt seine Taste über dieselben zwei
+Funktionen wie seine Knöpfe, einen fokussierbaren Kasten und einen Fokus,
+den man sieht (§38).
+
+**Geprüft.** `test568`, 26 Zusagen: Schaltplan, Blatt, Whiteboard,
+Gedankenkarte (zwei Schritte für Anlegen und Text — das hat den Wächter
+selbst belehrt) und ein Textblock, an dem die Schale weiterhin zurücknehmen
+MUSS. Gegen den alten Stand rot mit 13 von 25; Gegenprobe (Zeile raus) rot.
+Zwölf Nachbarn grün; `test105` fand einen Typfehler im Wächter selbst.
+Bild: Whiteboard nach Strg+Z → Strg+Umschalt+Z mit Fokusrahmen.
+
+---
+
+## 25. September 2026 · E681 · Der Plattform-Audit — Teil 1 und die Karte
+
+**Der Auftrag.** Redurs Master-Prompt: erst lesen, dann ein kleinster
+Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System, zwei für
+die Referenzen (AFFiNE MIT, SiYuan AGPL — nur gelesen), je zwei Duplikate
+gegengeprüft.
+
+**Was herauskam** (`doku/REDION-PLATTFORM-AUDIT.md`): Redion hat schon
+einen halben GFX-Kern (`SheetSpace`, `InkGeometry`, `InkShapes`,
+`InkStroke`, `Folien`), den nur die PDF-Schicht benutzt; vier eigene
+Rückgängig-Stapel nach demselben Muster; drei eigene Zeigerumrechnungen;
+`esc` 68-mal, 54-mal ohne Apostroph; `test537` sieht `(globalThis as any)`
+nicht (L211). Und zwei Messungen, aus denen E682 und E684 wurden.
+
+**Die Karte** (`doku/karte/`, Redur: „erstelle dabei eine obsidein/graphy
+datei"): `karte.json` als Quelle, `karte.mts` als Schreiber, eine Notiz je
+System und je Kern, ein Graph, dessen Kanten aus den Befunden gerechnet
+sind — benutzt, nicht nur genannt. Die erste Fassung hatte beides gleich
+gemalt; der Fehler steht in E681.
+
+**Offen daraus:** Teil 2 (die Kapitel A–S aus den Lesern), W6 (die
+Werkzeugleiste nach dem Edgeless-Vorbild, für alle Flächen — „integriere
+alles zusammen"), Bogen 3 (`raumVersion` fürs Whiteboard, von Redur
+freigegeben), Bogen 4 (der gemeinsame Verlauf).
+
+---
+
+## 23. September 2026 · E697 (kam als E681) · Farben, Freitext und Stiftzubehör
 
 - GitHub abgeglichen: `main` bei `552b7a23`, zuletzt aktualisierter
   Arbeitsbranch bei `a196b65d`; neuer Branch `codex/dokument-stift-freitext`.
@@ -11,9 +517,10 @@
 - Texteingaben bündeln die Geometriearbeit pro Bild. Die aufgeklappte
   Zubehörleiste zeigt nur Gruppen des aktiven Werkzeugs.
 - L209 Punkt 9 geschlossen; alte Striche, Werkzeugvorlieben, Farbsätze und
-  eigene Leistenordnung bleiben erhalten. Details und Grenzen in E681.
-- Neuer Wächter `test568`: alter Stand rot, umgesetzt 29 Zusagen grün.
+  eigene Leistenordnung bleiben erhalten. Details und Grenzen in E697.
+- Neuer Wächter `test577` (kam als `test568`; beim Zusammenführen am 27. September umnummeriert, weil beide Nummern auf dem Arbeitszweig schon vergeben waren): alter Stand rot, umgesetzt 29 Zusagen grün.
   Screenshots lokal in `bilder/`; kein Push und keine Veröffentlichung.
+
 
 ## 20. September 2026 · E666 · „Erinnerung" führt zu einer Erinnerung
 

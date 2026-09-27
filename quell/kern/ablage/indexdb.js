@@ -462,6 +462,36 @@ const Store = (() => {
         save('blocks', b);
         return b;
     };
+    /**
+     * Ein Feld ganz entfernen — nicht auf `undefined` setzen.
+     *
+     * WARUM ES DAS BRAUCHT (E691). `updateBlock(id, { feld: undefined })` geht
+     * durch `Object.assign` und lässt den SCHLÜSSEL stehen, nur mit dem Wert
+     * `undefined`. Für IndexedDB ist das ein Feld; für `'feld' in block` ist
+     * es eines; nur für `JSON.stringify` ist es keines. Und genau darauf ruht
+     * §9: „kein Feld heisst wie bisher". Ein Block, der ein `flaecheOrt` mit
+     * `undefined` trägt, sagt etwas anderes als einer, der keines hat — und
+     * der Unterschied fällt erst auf, wenn eine Sicherung ihn verliert und
+     * das Neuladen sich anders verhält als das Fenster davor.
+     *
+     * @param felder Namen der Felder. Fehlende werden still übergangen.
+     */
+    const feldWeg = (id, ...felder) => {
+        const b = cache.blocks[id];
+        if (!b)
+            return null;
+        let etwas = false;
+        for (const f of felder)
+            if (f in b) {
+                delete b[f];
+                etwas = true;
+            }
+        if (!etwas)
+            return b;
+        Object.assign(b, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
+        save('blocks', b);
+        return b;
+    };
     /** Verschiebt einen Block in den Papierkorb — wie in Notion erst 'alive: false'. */
     const trashBlock = (id) => {
         const b = cache.blocks[id];
@@ -2589,6 +2619,311 @@ const Store = (() => {
         elternGeaendert(p);
     };
     /* ========================================================================
+     * RÜCKGÄNGIG ÄNDERT INHALT, NICHT IDENTITÄT (E684, L212)
+     * ------------------------------------------------------------------------
+     * `Verlauf.anwenden` stellte eine Seite bis E684 so wieder her:
+     * `kinderLeeren` (das ist `purgeBlock` je Kind — Grabsteine für den
+     * Abgleich, Fassungen weg, Anhänge geprüft) und danach `baumEinfuegen`
+     * („immer mit frischen IDs"). Gemessen am 25. September 2026: ein Strg+Z
+     * auf der Elternseite gab einer Unterseite eine neue Kennung, löschte ihre
+     * geplante Fassung (1 → 0) und liess einen Favoriten ins Leere zeigen.
+     *
+     * Diese Funktion bringt eine Seite auf den Stand eines Schnappschusses
+     * (`baum()`), indem sie ÜBER DIE KENNUNG abgleicht:
+     *
+     *   (a) in beiden      Felder aus dem Schnappschuss, fehlende Felder weg,
+     *                      `alive: true`; gespeichert und gestempelt NUR bei
+     *                      Unterschied — sonst trüge jedes Strg+Z die ganze
+     *                      Seite zum Server, und Gerät B bekäme dreissig
+     *                      „Änderungen" für eine.
+     *   (b) nur auf Seite  `trashBlock` — Papierkorb, kein Purge.
+     *   (c) nur im Bild    aus dem Papierkorb `restoreBlock`; sonst neu mit der
+     *                      ALTEN Kennung (`addBlock` nimmt sie aus dem Patch,
+     *                      E174), Grabstein zurück (E254), `edited` jetzt —
+     *                      sonst trüge `zuSchicken` ihn nie hoch (E250).
+     *
+     * UNTERSEITEN UND ZEILEN SIND BLÄTTER. Eine Unterseite hat ihren eigenen
+     * Verlauf (§15); hier wird nur ihr Dasein und ihr Platz abgeglichen, nie
+     * ihr Inneres — sonst nähme ein Strg+Z auf der Elternseite eine Sperre
+     * ohne Passwort weg (`locked` fehlt im älteren Bild) und überschriebe, was
+     * ein zweites Gerät seither in der Unterseite schrieb. Nur eine Unterseite,
+     * die es gar nicht mehr gibt, wird samt Bild wieder angelegt.
+     *
+     * ANSICHTEN WERDEN NIE GELÖSCHT. Der Abgleich kann ein Löschen von
+     * Ansichten nicht ausdrücken (`geloescht` ist dort hart false); eine später
+     * angelegte Ansicht bleibt hinten in `viewIds`. Der Preis steht in E684.
+     *
+     * REIHENFOLGE IST TEIL DER ZUSAGE: erst alle Sätze setzen, dann die Kanten
+     * (`content` je Behälter), dann weglegen — sonst löst `trashBlock` einen
+     * Block aus einer Liste, die gerade neu geschrieben wird.
+     *
+     * `baumEinfuegen` und `kinderLeeren` bleiben unverändert: ihre Aufrufer
+     * WOLLEN frische Kennungen (duplizieren, einfügen, Vorlagen).
+     * ======================================================================*/
+    /** Was der Abgleich am lebenden Satz nie anfasst. */
+    const ABGLEICH_BLEIBT = new Set(['id', 'content', 'edited', 'geaendertVon', 'wolkeVersion', 'trashedAt', 'folge']);
+    /** Was am Knoten Struktur ist und kein Feld des Blocks. */
+    const knotenFeldAusnahme = (k, feld) => ABGLEICH_BLEIBT.has(feld) || feld === 'kinder' || feld === 'collection' || feld === 'views'
+        /* `rows` HEISST AN ZWEI BLOCKARTEN ETWAS ANDERES (E114): an der Datenbank
+           sind es die Zeilen, die `baum` daneben gesammelt hat; am `table`-Block
+           seine Zellen — und die sind ein Feld wie jedes andere. */
+        || (feld === 'rows' && !!k.collection);
+    const baumAbgleichen = (pageId, daten) => {
+        const seite = cache.blocks[pageId];
+        if (!seite)
+            return null;
+        const wurzelKinder = (Array.isArray(daten) ? daten : (daten && Array.isArray(daten.kinder) ? daten.kinder : []))
+            .filter((k) => k && typeof k === 'object');
+        const zaehler = { gesetzt: 0, zurueck: 0, weggelegt: 0 };
+        const soll = new Set();
+        const istBlatt = (k) => !!k && k.type === 'page';
+        const kopie = (x) => JSON.parse(JSON.stringify(x));
+        /** Ein Satz, wie `addBlock` ihn schreibt — ohne Struktur, ohne Stempel. */
+        const satzAusKnoten = (k) => {
+            const patch = {};
+            for (const [feld, wert] of Object.entries(k)) {
+                if (feld === 'id' || feld === 'edited' || feld === 'geaendertVon' || feld === 'wolkeVersion' || feld === 'trashedAt')
+                    continue;
+                if (feld === 'kinder' || feld === 'collection' || feld === 'views' || feld === 'content')
+                    continue;
+                if (feld === 'rows' && k.collection)
+                    continue;
+                patch[feld] = kopie(wert);
+            }
+            patch.alive = true;
+            return patch;
+        };
+        /** Den lebenden Satz auf den Knoten bringen. Sagt, ob sich etwas geändert hat. */
+        const angleichen = (b, k) => {
+            let anders = false;
+            for (const [feld, wert] of Object.entries(k)) {
+                if (knotenFeldAusnahme(k, feld))
+                    continue;
+                if (JSON.stringify(b[feld]) !== JSON.stringify(wert)) {
+                    b[feld] = kopie(wert);
+                    anders = true;
+                }
+            }
+            for (const feld of Object.keys(b)) {
+                if (knotenFeldAusnahme(k, feld) || feld in k)
+                    continue;
+                delete b[feld];
+                anders = true;
+            }
+            if (b.alive !== true) {
+                b.alive = true;
+                anders = true;
+            }
+            if ('trashedAt' in b) {
+                delete b.trashedAt;
+                anders = true;
+            }
+            return anders;
+        };
+        /** Stempeln und schreiben — nur, wer sich wirklich geändert hat. */
+        const schreiben = (b) => {
+            b.edited = now();
+            b.geaendertVon = getMeta('nutzer', '') || 'Ich';
+            save('blocks', b);
+            zaehler.gesetzt++;
+        };
+        /** Liegt der Block heute in diesem Baum — oder auf einer anderen Seite? */
+        const gehoertHierher = (b) => {
+            let cur = b, tiefe = 0;
+            while (cur && tiefe++ < 40) {
+                if (cur.id === pageId)
+                    return true;
+                if (!cur.parentId || cur.parentTable === 'collection')
+                    return false;
+                cur = cache.blocks[cur.parentId];
+            }
+            return false;
+        };
+        /* --- Datenbank am Block: Sammlung, Ansichten, Zeilen --- */
+        const datenbankAngleichen = (k) => {
+            if (!k.collection || !k.collection.id || k.verknuepft)
+                return; /* Spiegel von purgeTief */
+            const cid = String(k.collection.id);
+            let c = cache.collections[cid];
+            if (!c) {
+                c = kopie(k.collection);
+                c.viewIds = [];
+                c.edited = now();
+                cache.collections[cid] = c;
+                save('collections', c);
+                blockGrabsteinWeg(cid);
+            }
+            else {
+                let anders = false;
+                for (const [feld, wert] of Object.entries(k.collection)) {
+                    if (feld === 'id' || feld === 'viewIds' || feld === 'edited' || feld === 'wolkeVersion')
+                        continue;
+                    if (JSON.stringify(c[feld]) !== JSON.stringify(wert)) {
+                        c[feld] = kopie(wert);
+                        anders = true;
+                    }
+                }
+                if (anders) {
+                    c.edited = now();
+                    save('collections', c);
+                }
+            }
+            /* Ansichten: vorhandene angleichen, fehlende mit alter Kennung anlegen, keine löschen. */
+            const sollViews = [];
+            for (const v of (k.views || [])) {
+                if (!v || !v.id)
+                    continue;
+                sollViews.push(String(v.id));
+                const alt = cache.views[v.id];
+                if (!alt) {
+                    const nv = kopie(v);
+                    nv.collectionId = cid;
+                    nv.edited = now();
+                    cache.views[nv.id] = nv;
+                    save('views', nv);
+                    blockGrabsteinWeg(String(nv.id));
+                }
+                else {
+                    let anders = false;
+                    for (const [feld, wert] of Object.entries(v)) {
+                        if (feld === 'id' || feld === 'collectionId' || feld === 'edited' || feld === 'wolkeVersion')
+                            continue;
+                        if (JSON.stringify(alt[feld]) !== JSON.stringify(wert)) {
+                            alt[feld] = kopie(wert);
+                            anders = true;
+                        }
+                    }
+                    if (anders) {
+                        alt.edited = now();
+                        save('views', alt);
+                    }
+                }
+            }
+            const rest = (c.viewIds || []).filter((id) => !sollViews.includes(String(id)));
+            const neueOrdnung = sollViews.concat(rest);
+            if (JSON.stringify(c.viewIds || []) !== JSON.stringify(neueOrdnung)) {
+                c.viewIds = neueOrdnung;
+                c.edited = now();
+                save('collections', c);
+            }
+            /* Zeilen sind Seiten und damit Blätter: Dasein ja, Inneres nein. */
+            const sollZeilen = new Set();
+            for (const r of (k.rows || [])) {
+                if (!r || !r.id)
+                    continue;
+                sollZeilen.add(String(r.id));
+                const alt = cache.blocks[r.id];
+                if (!alt) {
+                    const nr = kopie(r);
+                    nr.parentId = cid;
+                    nr.parentTable = 'collection';
+                    nr.alive = true;
+                    delete nr.trashedAt;
+                    nr.edited = now();
+                    nr.geaendertVon = getMeta('nutzer', '') || 'Ich';
+                    cache.blocks[nr.id] = nr;
+                    save('blocks', nr);
+                    blockGrabsteinWeg(String(nr.id));
+                    zaehler.zurueck++;
+                }
+                else if (alt.alive === false) {
+                    restoreBlock(String(r.id));
+                    zaehler.zurueck++;
+                }
+            }
+            rowsOf(cid).forEach(r => { if (!sollZeilen.has(String(r.id))) {
+                trashBlock(r.id);
+                zaehler.weggelegt++;
+            } });
+        };
+        /* --- 1. Sätze setzen, von oben nach unten --- */
+        const setze = (k, elternId, idx) => {
+            if (!k.id) {
+                /* Ein Knoten ohne Kennung kann aus `baum` nicht kommen; aus einer alten
+                   Fassung vielleicht. Dann wie bisher: frisch anlegen. */
+                const neu = addBlock(elternId, k.type || 'text', satzAusKnoten(k), idx);
+                zaehler.zurueck++;
+                (k.kinder || []).filter(Boolean).forEach((kind, i) => setze(kind, neu.id, i));
+                return;
+            }
+            const id = String(k.id);
+            soll.add(id);
+            let b = cache.blocks[id];
+            let neuAngelegt = false;
+            if (b && !gehoertHierher(b) && b.alive !== false) {
+                /* Der Block lebt inzwischen auf einer anderen Seite. Ihn von dort
+                   wegzunehmen wäre eine stille Löschung für die, die dort arbeiten;
+                   also wie bisher eine Kopie mit frischer Kennung — als bekannte
+                   Grenze in E684, nicht als Zusage. */
+                baumEinfuegen(k, elternId, idx);
+                zaehler.zurueck++;
+                return;
+            }
+            if (b && b.alive === false) {
+                restoreBlock(id);
+                zaehler.zurueck++;
+            }
+            if (!b) {
+                const patch = satzAusKnoten(k);
+                patch.id = id;
+                b = addBlock(elternId, k.type || 'text', patch, idx);
+                blockGrabsteinWeg(id);
+                zaehler.zurueck++;
+                neuAngelegt = true;
+            }
+            else if (!istBlatt(k)) {
+                if (angleichen(b, k))
+                    schreiben(b);
+            }
+            datenbankAngleichen(k);
+            /* Ein Blatt behält sein Inneres — ausser es wurde eben erst neu angelegt,
+               dann ist das Bild alles, was es davon gibt. */
+            if (!istBlatt(k) || neuAngelegt)
+                (k.kinder || []).filter(Boolean).forEach((kind, i) => setze(kind, id, i));
+        };
+        wurzelKinder.forEach((k, i) => setze(k, pageId, i));
+        /* --- 2. Kanten: `content` je Behälter, dann 3. weglegen, was nur hier stand --- */
+        const kanten = (containerId, kinder) => {
+            const c = cache.blocks[containerId];
+            if (!c)
+                return;
+            const neu = kinder.filter((k) => k && k.id && cache.blocks[k.id] && gehoertHierher(cache.blocks[k.id]))
+                .map((k) => String(k.id));
+            const alt = Array.isArray(c.content) ? c.content.slice() : [];
+            if (JSON.stringify(alt) !== JSON.stringify(neu)) {
+                c.content = neu.slice();
+                elternGeaendert(c);
+            }
+            for (const id of neu) {
+                const b = cache.blocks[id];
+                if (!b || (b.parentId === containerId && b.parentTable === 'block'))
+                    continue;
+                const vorher = cache.blocks[b.parentId];
+                if (vorher && vorher.id !== containerId && Array.isArray(vorher.content) && vorher.content.includes(id)) {
+                    vorher.content = vorher.content.filter((x) => x !== id);
+                    elternGeaendert(vorher);
+                }
+                b.parentId = containerId;
+                b.parentTable = 'block';
+                schreiben(b);
+            }
+            for (const id of alt) {
+                if (neu.includes(id) || soll.has(id))
+                    continue;
+                const b = cache.blocks[id];
+                if (b && b.alive !== false) {
+                    trashBlock(id);
+                    zaehler.weggelegt++;
+                }
+            }
+            kinder.filter(Boolean).forEach((k) => { if (k.id && !istBlatt(k))
+                kanten(String(k.id), k.kinder || []); });
+        };
+        kanten(pageId, wurzelKinder);
+        notify('pages');
+        return zaehler;
+    };
+    /* ========================================================================
      * VERSIONSVERLAUF
      * ------------------------------------------------------------------------
      * Liegt bewusst nicht im Cache: alte Fassungen holt sich der Verlauf
@@ -3079,14 +3414,14 @@ const Store = (() => {
     };
     return {
         load, uid, now, cache, istDemo: () => DEMO,
-        addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
+        addBlock, getBlock, updateBlock, feldWeg, trashBlock, restoreBlock, purgeBlock, childrenOf,
         purgeAnhaenge, dateiAnspruch, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
         addPage, rootPages, trashed, favorites, pathOf,
         addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
         rohSetzen,
         addRow, rowsOf, setProp,
         setMeta, getMeta, metaListeAendern, metaListeAnhaengen, flush, settled,
-        baum, baumEinfuegen, kinderLeeren,
+        baum, baumEinfuegen, kinderLeeren, baumAbgleichen,
         versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
         search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
         /* Für den Wächter aus E332 — was gesichert wird und was nicht. */

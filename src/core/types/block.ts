@@ -69,6 +69,56 @@ export interface RedionBlock {
   dateiId?: string;
   /** Ab wann der Block im Papierkorb sichtbar ist — Grundlage der Schonfrist. */
   papierkorbSichtbarSeit?: ISODateTime;
+
+  /* Die räumlichen Blockarten (E681 hat gezählt, dass keine davon einen Typ
+   * hatte). Feldnamen wie gespeichert; die Formen selbst bleiben `unknown`,
+   * bis ihr Format in doku/REDION-FORMAT.md steht und ein Wächter es hält. */
+  /** Whiteboard: die Formen (art stift|linie|pfeil|rechteck|ellipse|notiz|text|bild|verbindung). */
+  shapes?: unknown[];
+  /** Whiteboard: Ausschnitt in Flächenpunkten und Massstab (E138). */
+  sicht?: { x: number; y: number; z: number };
+  /** Whiteboard, Gedankenkarte: Höhe des Kastens in CSS-Pixeln. */
+  hoehe?: number;
+  /** Deutung der räumlichen Zahlen. Blatt/PDF-Seite: SheetSpace.RAUM_VERSION;
+   *  Whiteboard: 1 = CSS-Pixel bei Massstab 1 (E686). Fehlt = 1. */
+  raumVersion?: number;
+  /** Gedankenkarte (E607): Knoten und Ausschnitt. */
+  karte?: unknown;
+  /** Schaltplan (E?): Plan mit teile/leitungen/texte/ebenen. */
+  plan?: unknown;
+  /** Blatt und PDF-Seite: die Marken der Zeichenschicht (E125). */
+  marken?: unknown[];
+
+  /* Die drei Ansichten einer Seite (E690). Nur an Seitenblöcken.
+   * FEHLT HÄUFIGER, ALS ES DA IST — und genau das ist die Vorgabe: kein Feld
+   * heisst 'redion', also das, was Redion immer gezeigt hat (§9). Wer hier
+   * einen Vorgabewert hinschreibt, behauptet etwas über Millionen Blöcke,
+   * die ihn nicht tragen. */
+  /** Welcher der drei Blicke gilt: 'seite' | 'flaeche' | 'redion'. */
+  seitenAnsicht?: string;
+  /** Wo der Kasten mit dem Seitentext auf der Fläche liegt, in
+   *  Flächeneinheiten bei Massstab 1 (`raumVersion` nach dem Muster aus E686).
+   *  Der AUSSCHNITT gehört nicht hierher — er steht in `meta` unter
+   *  `flaeche:<seite>`, weil ein Blick am Telefon die Fläche am Rechner nicht
+   *  verschieben darf. */
+  flaecheNotiz?: { x: number; y: number; w: number; raumVersion?: number };
+
+  /* Der Vollausbau der Fläche (E691). An JEDEM Block, nicht nur an Seiten —
+   * Redur: „jeder block auf die fläche ziehbar".
+   *
+   * Auch diese zwei fehlen häufiger, als sie da sind, und das ist die
+   * Vorgabe: kein `flaecheOrt` heisst „steht im Seitenkasten", kein
+   * `zeigen` heisst „steht überall" (§9). */
+  /** Wo der Block auf der Fläche liegt, in Flächeneinheiten bei Massstab 1.
+   *  `raumVersion` nach dem Muster aus E686; fehlt sie, gilt Fassung 1. */
+  flaecheOrt?: { x: number; y: number; w?: number; raumVersion?: number };
+  /** Wo er erscheint: 'beides' (Vorgabe) | 'seite' | 'flaeche'.
+   *  Das Gegenstück zu AFFiNEs `displayMode` — Werte deutsch, weil sie so
+   *  gespeichert werden (§53.3). NICHT mit `alive` verwechseln: ein Block,
+   *  der in einer Ansicht nicht erscheint, ist nicht gelöscht.
+   *  Und NICHT `zeigen`: den Namen tragen schon 41 Register-Rückrufe
+   *  (`zeigen: () => boolean`), siehe `register/seitenansichten.ts`. */
+  sichtbarIn?: string;
 }
 
 /**

@@ -279,6 +279,128 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* ── EIN KATALOG STATT DREI (E694, L218) ──────────────────────────────
+     Zwei Bilder für einen Umzug, der NICHTS aussehen soll: der Reiter
+     „Zeichnen" holt Name und Zeichen jetzt aus `Register.werkzeuge` bzw.
+     `Marken.FORMEN`, die Studioleiste aus demselben Katalog. Ein Umzug, der
+     das Aussehen ändert, ist kein Umzug (§55.3: man sieht es, also gibt es
+     ein Bild). */
+  bandZeichnen: {
+    titel: 'Menüband — Reiter „Zeichnen" über einem Blatt (E694)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', false);
+      Store.setMeta('bandZu:welt', false);
+      Store.setMeta('bandReiter', 'zeichnen');
+
+      const s = Store.addPage(null, { text: 'Blatt zum Zeichnen' });
+      Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28,
+                                      blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 900));
+      (window as any).Menueband?.zeichne?.();
+      await new Promise(f => setTimeout(f, 300));
+    }
+  },
+
+  studioLeiste: {
+    titel: 'Die Studioleiste — vierzehn Werkzeuge aus dem Katalog (E694)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+
+      const s = Store.addPage(null, { text: 'Blatt mit Werkzeugen' });
+      Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28,
+                                      blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 1100));
+    }
+  },
+
+  /* ── EIN GLAS STATT VIER (E695) ────────────────────────────────────────
+     Zwei Bilder desselben Menüs. `glasMenue` über einer echten Seite mit
+     farbigen Hinweisen — so sieht man es im Alltag. `glasMuster` über dem
+     Prüfmuster aus test576 (grosse schwarze, weisse, rote, blaue Flächen) —
+     so sieht man, was das Glas WIRKLICH tut, und dass die stille Schrift
+     (Gruppentitel, Kürzel) auch über dem schlimmsten Grund lesbar bleibt. */
+  glasMenue: {
+    titel: 'Glas — ein Menü über einer Seite mit Farbe (E695)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Wärmepumpe — Inbetriebnahme' });
+      Store.addBlock(s.id, 'h2', { text: 'Was vor dem Einschalten geprüft wird' });
+      Store.addBlock(s.id, 'callout', { text: 'Vorlauftemperatur und Spreizung an beiden Fühlern messen.', icon: '🔥', color: 'bg-red' });
+      Store.addBlock(s.id, 'callout', { text: 'Volumenstrom gegen das Datenblatt halten — nicht schätzen.', icon: '💧', color: 'bg-blue' });
+      Store.addBlock(s.id, 'callout', { text: 'Sicherheitsventil: Ansprechdruck ablesen und notieren.', icon: '⚠️', color: 'bg-yellow' });
+      Store.addBlock(s.id, 'callout', { text: 'Protokoll an den Kunden, Kopie in die Anlagenakte.', icon: '✅', color: 'bg-green' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 700));
+      const z = document.querySelector('#page .blk:nth-of-type(3)')?.getBoundingClientRect();
+      UI.menu('<div class="grp">Block</div>' +
+        [['↻', 'Umwandeln in', 'Strg+/'], ['⧉', 'Duplizieren', 'Strg+D'], ['↗', 'Verschieben nach', ''],
+         ['🔗', 'Link kopieren', 'Strg+L'], ['🎨', 'Farbe', ''], ['🗑', 'Löschen', 'Entf']]
+          .map(([i, t, k]) => `<button><span class="mi">${i}</span>${t}${k ? `<span class="ms">${k}</span>` : ''}</button>`).join(''),
+        Math.round((z?.left ?? 300) + 120), Math.round((z?.top ?? 240) - 10), { titel: 'Block' });
+      await new Promise(f => setTimeout(f, 350));
+    }
+  },
+
+  glasMuster: {
+    titel: 'Glas — dasselbe Menü über dem Prüfmuster aus test576 (E695)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Glas' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 500));
+      const muster = document.createElement('div');
+      muster.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;display:grid;' +
+        'grid-template-columns:repeat(4,1fr);grid-auto-rows:120px;';
+      for (let i = 0; i < 64; i++) {
+        const q = document.createElement('div');
+        q.style.background = ['#ffffff', '#000000', '#e02020', '#1f5cff'][(i + Math.floor(i / 4)) % 4]!;
+        muster.appendChild(q);
+      }
+      document.body.appendChild(muster);
+      for (const w of ['#app', '#main', '#scroll', '#page', 'body']) {
+        const el = document.querySelector<HTMLElement>(w);
+        if (el) el.style.background = 'transparent';
+      }
+      UI.menu('<div class="grp">Glas</div>' +
+        ['Umbenennen', 'Verschieben', 'Duplizieren', 'In den Papierkorb', 'Kopieren', 'Teilen']
+          .map((t, i) => `<button><span class="mi">•</span>${t}<span class="ms">Strg+${i + 1}</span></button>`).join(''),
+        Math.round(innerWidth * 0.3), 150, { titel: 'Glas' });
+      await new Promise(f => setTimeout(f, 350));
+    }
+  },
+
+  /* ── EINE SEITENSPALTE ENDET IM FENSTER (E696) ─────────────────────────
+     Die Leiste links an der Blatthülle. Vorher war sie `78vh` hoch, egal wo
+     sie begann, und endete unter dem Fensterrand; jetzt reicht sie bis
+     12 px davor und rollt in sich. */
+  studioSpalte: {
+    titel: 'Die Studioleiste als Spalte links — endet im Fenster (E696)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('zeichnen:leistenlage', 'links');
+      const s = Store.addPage(null, { text: 'Blatt mit Spalte' });
+      Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28,
+                                      blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 1100));
+    }
+  },
+
   schaleMehr: {
     titel: 'Die Schale — die Mehr-Lade des Reiters offen',
     bauen: async () => {
@@ -1767,6 +1889,288 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* Die neue Leiste in ihren Zuständen (E689, W6). Zwei Ziele mehr, weil ein
+     Untermenü nur auf einem Bild zu sehen ist, auf dem es offen ist (§55.3).
+     Sie bauen ihre Fläche selbst: `bauen` läuft im Browser und kennt
+     `ANSICHTEN` nicht — daran ist der erste Anlauf gescheitert. */
+  whiteboardFarben: {
+    titel: 'Die Werkzeugleiste mit offenem Farbmenue (E689)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Projektskizze', icon: '🖍' });
+      Store.addBlock(seite.id, 'whiteboard', {
+        text: 'Whiteboard', hoehe: 460,
+        shapes: [
+          { id: 'k1', art: 'notiz', x: 70, y: 60, w: 190, h: 110, farbe: '#529cca', text: 'Aufnahme im Unterricht' },
+          { id: 'k2', art: 'notiz', x: 380, y: 200, w: 190, h: 110, farbe: '#4dab9a', text: 'Karten daraus erzeugen' },
+          { id: 'v1', art: 'verbindung', von: 'k1', nach: 'k2', farbe: '#9b9a97' },
+          { id: 's1', art: 'stift', farbe: '#ff7369', pts: [[120, 250], [160, 300], [210, 260], [260, 320], [310, 270]] }
+        ]
+      });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    },
+    dann: async () => {
+      document.querySelector<HTMLElement>('.wb-tools [data-menue="farbe"]')?.click();
+      await new Promise(r => setTimeout(r, 280));
+    }
+  },
+  whiteboardMehr: {
+    titel: 'Die Werkzeugleiste mit offenem Mehr-Menue (E689)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Projektskizze', icon: '🖍' });
+      Store.addBlock(seite.id, 'whiteboard', {
+        text: 'Whiteboard', hoehe: 460,
+        shapes: [
+          { id: 'k1', art: 'notiz', x: 70, y: 60, w: 190, h: 110, farbe: '#529cca', text: 'Aufnahme im Unterricht' },
+          { id: 'k2', art: 'notiz', x: 380, y: 200, w: 190, h: 110, farbe: '#4dab9a', text: 'Karten daraus erzeugen' },
+          { id: 'v1', art: 'verbindung', von: 'k1', nach: 'k2', farbe: '#9b9a97' },
+          { id: 's1', art: 'stift', farbe: '#ff7369', pts: [[120, 250], [160, 300], [210, 260], [260, 320], [310, 270]] }
+        ]
+      });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    },
+    dann: async () => {
+      document.querySelector<HTMLElement>('.wb-tools [data-menue="mehr"]')?.click();
+      await new Promise(r => setTimeout(r, 280));
+    }
+  },
+
+  /* ------------------------------------------------------------------------
+     DIE DREI ANSICHTEN EINER SEITE (E690, 26. September 2026)
+     Redur wollte AFFiNEs zwei eins zu eins und dazu unsere eigene. Drei Ziele,
+     weil §55.3 ALLE Zustände verlangt und eine Ansicht ohne Bild eine
+     Behauptung wäre.
+
+     JEDES BAUT DIESELBE SEITE NEU, und das ist kein Versehen: `bauen` wird in
+     die Seite hineingereicht, eine Node-Konstante ist darin nicht erreichbar
+     (siehe die Anmerkung am Katalog oben). Ein gemeinsamer Helfer wäre in
+     Node erreichbar und im Browser undefiniert — genau der Fehler, der beim
+     Whiteboard-Bogen schon einmal passiert ist.
+     ----------------------------------------------------------------------*/
+  ansichtRedion: {
+    titel: 'Ansicht „Redion" — unsere eigene: Cover, Symbol, Titel, Werkzeugzeile',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        cover: 'linear-gradient(160deg,#7fd4d0,#e8c9b0)' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern — dazu die Jahresarbeitszahl aus dem Zählerstand.' });
+      Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.addBlock(seite.id, 'text', { text: 'Der Verdichter läuft laut Protokoll 4,2 Stunden am Tag.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 800));
+    }
+  },
+  ansichtSeite: {
+    titel: 'Ansicht „Seite" — AFFiNEs `page`: Symbol und Titel, kein Cover, keine Werkzeugzeile',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        cover: 'linear-gradient(160deg,#7fd4d0,#e8c9b0)' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern — dazu die Jahresarbeitszahl aus dem Zählerstand.' });
+      Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.addBlock(seite.id, 'text', { text: 'Der Verdichter läuft laut Protokoll 4,2 Stunden am Tag.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 800));
+    },
+    dann: async () => {
+      const knopf = document.querySelector<HTMLElement>('.pg-ansichten [data-seg-wahl="seite"]');
+      knopf?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+  ansichtFlaeche: {
+    titel: 'Ansicht „Fläche" — AFFiNEs `edgeless`: Punktraster, der Text als Kasten darauf',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        cover: 'linear-gradient(160deg,#7fd4d0,#e8c9b0)' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern — dazu die Jahresarbeitszahl aus dem Zählerstand.' });
+      Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.addBlock(seite.id, 'text', { text: 'Der Verdichter läuft laut Protokoll 4,2 Stunden am Tag.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 800));
+    },
+    dann: async () => {
+      const knopf = document.querySelector<HTMLElement>('.pg-ansichten [data-seg-wahl="flaeche"]');
+      knopf?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+  /* ------------------------------------------------------------------------
+     DER VOLLAUSBAU DER FLÄCHE (E691, 26. September 2026)
+     Redur: „ja mach den vollausbau, jeder block auf die fläche ziehbar."
+     Drei Zustände, weil §55.3 ALLE verlangt: Kästen nebeneinander, ein
+     ausgeblendeter Block, und der leere Seitenkasten.
+     ----------------------------------------------------------------------*/
+  flaecheBloecke: {
+    titel: 'Vollausbau — zwei Blöcke liegen als eigene Kästen auf der Fläche',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      const b1 = Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      const b2 = Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      const b4 = Store.addBlock(seite.id, 'text', { text: 'Verdichter: 4,2 Stunden am Tag laut Protokoll.' });
+      void b1; void b2;
+      Store.updateBlock(b3.id, { flaecheOrt: { x: 820, y: 40, w: 340, raumVersion: 1 } });
+      Store.updateBlock(b4.id, { flaecheOrt: { x: 820, y: 210, w: 340, raumVersion: 1 } });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  flaecheVersteckt: {
+    titel: 'Vollausbau — ein Kasten steht NUR auf der Fläche („nicht auf der Seite")',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      const b1 = Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      const b2 = Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      const b4 = Store.addBlock(seite.id, 'text', { text: 'Verdichter: 4,2 Stunden am Tag laut Protokoll.' });
+      void b1; void b2;
+      Store.updateBlock(b3.id, { flaecheOrt: { x: 820, y: 60, w: 340, raumVersion: 1 },
+                                 sichtbarIn: 'flaeche' });
+      void b4;
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  flaecheLeer: {
+    titel: 'Vollausbau — alles liegt draussen, der Seitenkasten sagt, wofür er noch da ist',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      const b1 = Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      const b2 = Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      const b4 = Store.addBlock(seite.id, 'text', { text: 'Verdichter: 4,2 Stunden am Tag laut Protokoll.' });
+      void b1; void b2;
+      [b1, b2, b3, b4].forEach((b, i) => Store.updateBlock(b.id,
+        { flaecheOrt: { x: 780 + (i % 2) * 380, y: 40 + Math.floor(i / 2) * 200, w: 340, raumVersion: 1 } }));
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  /* ------------------------------------------------------------------------
+     AUF DER FLAECHE ZEICHNEN (E693, 26. September 2026)
+     Redur: „weiter" - und in L219 stand, was der Flaeche fehlte. Zwei Bilder:
+     die Formen auf der Leinwand, und die Leiste mit allen acht Werkzeugen.
+     ----------------------------------------------------------------------*/
+  flaecheTinte: {
+    titel: 'Auf der Fläche zeichnen — Stift, Pfeil, Rechteck und Ellipse neben den Kästen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.updateBlock(b3.id, { flaecheOrt: { x: 840, y: 300, w: 320, raumVersion: 1 } });
+      /* Formen wie von Hand gezogen - dasselbe Format wie im Whiteboard. */
+      Store.updateBlock(seite.id, { raumVersion: 1, shapes: [
+        { id: 'f1', art: 'stift', farbe: '#ff7369',
+          pts: [[820, 120], [860, 96], [910, 128], [960, 88], [1010, 120]] },
+        { id: 'f2', art: 'pfeil', x: 700, y: 210, w: 150, h: 96, farbe: '#529cca' },
+        { id: 'f3', art: 'rechteck', x: 820, y: 170, w: 260, h: 96, farbe: '#4dab9a' },
+        { id: 'f4', art: 'ellipse', x: 1120, y: 300, w: 170, h: 110, farbe: '#9a6dd7' }
+      ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  flaecheWerkzeuge: {
+    titel: 'Die Werkzeugleiste der Fläche — acht Werkzeuge, und jedes tut etwas',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Werkzeuge', icon: '✏️', seitenAnsicht: 'flaeche' });
+      Store.addBlock(seite.id, 'text', { text: 'Stift, Linie, Pfeil, Rechteck, Ellipse, Radierer.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    },
+    dann: async () => {
+      document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 200));
+      document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-menue="farbe"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+  schaltplan: {
+    /* Der Stromkreis ist der aus test263 (senkrechte Zweige, keine Leitung
+       überbrückt einen Anschluss). Das Bild zeigt die Planfläche mit ihrer
+       eigenen Werkzeugleiste — das „Vorher" für W6 (25. September 2026). */
+    titel: 'Der Schaltplan: Planfläche mit eigener Werkzeugleiste, ein kleiner Stromkreis',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Schaltplan Übung 3', icon: '⚡' });
+      const b = Store.addBlock(seite.id, 'schaltplan', { text: 'Schaltplan' });
+      const plan: any = Schaltplan.neuerPlan('stromlauf-aufgeloest');
+      plan.teile = []; plan.leitungen = []; plan.texte = [];
+      const teil = (zeichen: string, bmk: string, x: number, y: number) => {
+        const t: any = { id: 't' + plan.teile.length, zeichen, x, y, drehung: 0,
+                         gespiegelt: false, bmk, nummern: {}, gruppe: '', ebene: 'plan' };
+        plan.teile.push(t); return t;
+      };
+      const q = teil('wechselspannung', 'G1', 40, 120);
+      const s = teil('ch-schema0', 'S1', 240, 20);
+      const h = teil('lampe', 'E1', 230, 120);
+      const ort = (t: any, nr: string) => {
+        const a = Schaltplan.anschluesseVon(t).find((x: any) => x.nr === nr);
+        if (!a) throw new Error(`Anschluss ${nr} fehlt an ${t.zeichen}`);
+        return { x: a.x, y: a.y };
+      };
+      const leitung = (punkte: any[], a: any, an: string, b2: any, bn: string) =>
+        plan.leitungen.push({ id: 'l' + plan.leitungen.length, ebene: 'plan',
+          punkte, vonTeil: a.id, vonNr: an, nachTeil: b2.id, nachNr: bn });
+      leitung([ort(q, 'L'), { x: 70, y: 20 }, ort(s, '3')], q, 'L', s, '3');
+      leitung([ort(s, '4'), ort(h, 'X1')], s, '4', h, 'X1');
+      leitung([ort(h, 'X2'), ort(q, 'N')], h, 'X2', q, 'N');
+      Store.updateBlock(b.id, { plan });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
   gedankenkarte: {
     titel: 'Die Gedankenkarte — zentrales Thema, Äste nach beiden Seiten (E607)',
     bauen: async () => {

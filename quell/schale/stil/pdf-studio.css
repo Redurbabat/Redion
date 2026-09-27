@@ -75,10 +75,11 @@
 .document-studio .document-inspector{padding:16px;background:var(--bg-side)}
 .document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:var(--touch-min)}
 .document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
-.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),var(--shadow-1);margin:0 auto 14px;padding:6px;max-width:100%}
+.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--bg-card);box-shadow:var(--studio-highlight),var(--shadow-1);margin:0 auto 14px;padding:6px;max-width:100%}
 .document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
 .document-studio[data-document-tools="closed"] .blatt-papier{cursor:default}
-@supports(backdrop-filter:blur(8px)){.document-studio .blatt-werk{backdrop-filter:blur(8px)}}
+/* DAS GLAS AUS §16 (E695): erst deckend, Glas nur mit Unschärfe, und mit Präfix — vorher fragte @supports nur die unpräfixierte Form, also gab es auf dem iPhone vor Safari 18 keins. */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.document-studio .blatt-werk{background:var(--bg-schwebend);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}}
 @media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
 @media(max-width:760px){
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
@@ -104,7 +105,7 @@
   .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
-@media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);backdrop-filter:none}}
+@media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none}}
 @media(prefers-reduced-motion:reduce){
   .document-studio .document-thumbnails.is-open,.document-studio .document-inspector.is-open,.document-studio[data-document-view="open"] .document-commandbar{animation:none}
   .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:none}
@@ -267,7 +268,7 @@ body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe 
    am Bild, nicht am Code (§55). */
 body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe:is([data-lage="links"],[data-lage="rechts"]) .wort{display:revert}
 body[data-dokument="an"] .document-stage [data-act="lage"]{display:none}
-body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow-3);overflow-x:auto;backdrop-filter:none}
+body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow-3);overflow-x:auto;-webkit-backdrop-filter:none;backdrop-filter:none}
 .document-studio:not([data-ink-options="open"]) .blatt-fest{display:none}
 .document-studio :is(.blatt-reihe,.blatt-werk){container-type:normal}
 .document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:var(--text);box-shadow:none;border:1px solid var(--line);border-radius:var(--radius-xl);padding:8px}
@@ -330,7 +331,7 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
 @media (prefers-reduced-motion:reduce){.folienband-klapp{transition:none}}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
 /* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
-/* E681: Auch aufgeklappt bleibt Zubehör beim gewählten Werkzeug. Die
+/* E697: Auch aufgeklappt bleibt Zubehör beim gewählten Werkzeug. Die
    Grundregeln in bausteine.css bestimmen die Gruppen; Einrichten und
    Verlauf werden oben bereits nur im geschlossenen Zustand ausgeblendet. */
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}

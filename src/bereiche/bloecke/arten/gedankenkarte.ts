@@ -644,20 +644,17 @@ const Gedankenkarte = (() => {
 
     /* --- Rückgängig ----------------------------------------------------- */
     const SCHRITTE = 40;
-    const zurueckStapel: string[] = [];
-    const vorStapel: string[] = [];
+    /* Der Stapel wohnt im Kern (E687, `GfxHistory`) — Zeile für Zeile war er
+       hier derselbe wie im Whiteboard. */
+    const verlauf = GfxHistory.erstelle(SCHRITTE);
     const abbild = (): string => JSON.stringify(karte);
     const standZeigen = (): void => {
       const z = w.querySelector<HTMLButtonElement>('[data-a="zurueck"]');
       const v = w.querySelector<HTMLButtonElement>('[data-a="vor"]');
-      if (z) z.disabled = !zurueckStapel.length;
-      if (v) v.disabled = !vorStapel.length;
+      if (z) z.disabled = !verlauf.kannZurueck();
+      if (v) v.disabled = !verlauf.kannVor();
     };
-    const merken = (): void => {
-      zurueckStapel.push(abbild());
-      if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift();
-      vorStapel.length = 0;
-    };
+    const merken = (): void => { verlauf.merken(abbild()); };
 
     const sichern = (): void => {
       Store.updateBlock(block.id, { karte: JSON.parse(JSON.stringify(karte)) });
@@ -1353,16 +1350,14 @@ const Gedankenkarte = (() => {
         case 'passend':  einpassen(4, true); break;
         case 'vorlage':  vorlagenMenue(b); break;
         case 'zurueck': {
-          const roh = zurueckStapel.pop();
-          if (roh === undefined) return;
-          vorStapel.push(abbild());
+          const roh = verlauf.zurueck(abbild());
+          if (roh === null) return;
           einsetzen(roh);
           break;
         }
         case 'vor': {
-          const roh = vorStapel.pop();
-          if (roh === undefined) return;
-          zurueckStapel.push(abbild());
+          const roh = verlauf.vor(abbild());
+          if (roh === null) return;
           einsetzen(roh);
           break;
         }
@@ -1481,9 +1476,8 @@ const Gedankenkarte = (() => {
       const strg = e.ctrlKey || e.metaKey;
       if (strg && e.key.toLowerCase() === 'z') {
         e.preventDefault(); e.stopPropagation();
-        const roh = e.shiftKey ? vorStapel.pop() : zurueckStapel.pop();
-        if (roh === undefined) return;
-        (e.shiftKey ? zurueckStapel : vorStapel).push(abbild());
+        const roh = e.shiftKey ? verlauf.vor(abbild()) : verlauf.zurueck(abbild());
+        if (roh === null) return;
         einsetzen(roh);
         return;
       }

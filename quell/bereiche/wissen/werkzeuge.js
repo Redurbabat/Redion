@@ -1007,8 +1007,9 @@ const Werkzeuge = (() => {
             if (!confirm('Diese Fassung wiederherstellen? Der jetzige Inhalt wird vorher als Version gesichert.'))
                 return;
             await Store.versionSpeichern(p.id, 'vor Wiederherstellung');
-            Store.kinderLeeren(p.id);
-            (v.daten.kinder || []).forEach((k) => Store.baumEinfuegen(k, p.id));
+            /* Abgleichen statt abreissen (E685, wie E684 im Verlauf) — Kennungen
+               und Fassungen der Unterseiten bleiben. */
+            Store.baumAbgleichen(p.id, v.daten);
             Store.updateBlock(p.id, { text: v.daten.text, icon: v.daten.icon });
             o.remove();
             App.zeichneBaum();

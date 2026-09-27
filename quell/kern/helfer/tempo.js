@@ -354,7 +354,7 @@ const Tempo = (() => {
     const SCHREIBER = ['setProp', 'updateBlock', 'addBlock', 'addRow', 'trashBlock',
         'restoreBlock', 'purgeBlock', 'updateCollection', 'updateView',
         'addDatabase', 'addView', 'removeView', 'baumEinfuegen',
-        'kinderLeeren', 'addPage', 'importAll'];
+        'kinderLeeren', 'baumAbgleichen', 'addPage', 'importAll'];
     const start = () => {
         an = Store.getMeta('tempoCache', true) !== false;
         SCHREIBER.forEach(n => {

@@ -1,9 +1,9 @@
 # MESSUNGEN.md — was wirklich gemessen wurde
 
-## 23. September 2026 · E681 · Farbwahl und Schreibfluss
+## 23. September 2026 · E697 · Farbwahl und Schreibfluss
 
 **Methode:** Playwright/Chromium, eigener lokaler Dateiserver, frisch
-angelegtes Testheft, keine Nutzerdokumente. `node pruefungen/lauf/test568.mts`.
+angelegtes Testheft, keine Nutzerdokumente. `node pruefungen/lauf/test577.mts`.
 Rechner 1440 × 960; schmale Fenster 390 × 844 und 320 × 844 mit reduzierter
 Bewegung. Die schmalen Fenster sind kein Test auf physischer Touch-Hardware.
 
@@ -4201,3 +4201,525 @@ node pruefungen/alle.mts 210 270 290 362 410 437 440 523 537
 
 `test537` bleibt bei **518 gegen 517** — genau dem Stand vor diesen drei
 Bögen. Das ist **L207**, und die Richtung gehört Redur.
+
+## 25. September 2026 — Strg+Z nimmt zweimal zurück (Plattform-Audit, L212)
+
+Zwei Sonden im Scratchpad, Chromium über `file://…/index.html`, Fenster
+1280 × 900, Aufbau wie `test238` (Schaltplan) und `test345` (Blatt). Keine
+Prüfläufe des Bestands; der Wächter daraus heisst test568.
+
+**Schaltplan:** zwei Teile, ein drittes über die Palette gesetzt, 800 ms
+gewartet (Zaun des Seitenverlaufs: 700 ms), Fokus `.sp-wrap`, Strg+Z.
+
+```txt
+                 domTeile  storeTeile  blockId      Element   Toast
+Ausgang               2         2      b04888d1…   alt       —
+Teil gesetzt          3         3      b04888d1…   alt       —
+nach Strg+Z           3         3      eb6edc4f…   NEU       „Rückgängig"
+zweites Teil          4         4      eb6edc4f…   alt2      —
+nach ↶-Knopf          3         3      eb6edc4f…   alt2      kein neuer
+```
+
+**Blatt:** Stift, zwei Striche 800 ms auseinander, Strg+Z auf `.blatt-marken`.
+
+```txt
+                 domMarken  alter Block lebt  blockId      Element   Toast
+zwei Striche          2         ja            ff683223…   alt       —
+nach Strg+Z           1         NEIN          24ba45cf…   NEU       „Rückgängig"
+```
+
+Lesart: der Block nimmt seinen Schritt zurück UND die Schale den
+Seitenverlauf (`schale.ts:3252` → `Verlauf.zurueck()`, kein Blick auf
+`defaultPrevented`); `Verlauf.anwenden` purgt die Kinder und setzt sie mit
+frischen Kennungen wieder ein (`indexdb.ts:2508`). Welcher Stand am Ende
+steht, hängt am 700-ms-Zaun — im Schaltplan blieb das gesetzte Teil, auf dem
+Blatt ging ein Strich. Ausgabe wörtlich in `doku/REDION-PLATTFORM-AUDIT.md`
+2.4.
+
+## 25. September 2026 — Überlebt ein Bild ein Strg+Z auf einer Textseite? (Bogen 2, L212 Punkt 2)
+
+Sonde im Scratchpad, Chromium über `file://`, 1280 × 900. Eine Seite mit
+einem Textblock und einem `image`-Block, dessen Datei (4096 Bytes,
+`probe.png`) über `Dateien.ablegen(blob, { blockId })` in der Ablage liegt;
+zwei Textänderungen 800 ms auseinander, Strg+Z ohne fokussierten Block,
+dann 2,5 s warten, dann neu laden.
+
+```txt
+                       Bild-Block   dateiId gleich  Dateisatz  satz.blockId     Bytes  verwaist
+Ausgang                c884b9db…    —               da         = Bild-Block     4096   nein
+gleich nach Strg+Z     782d93c4…    ja              da         = NEUER Block    4096   nein
+2,5 s später           782d93c4…    ja              da         = NEUER Block    4096   nein
+nach Neuladen          782d93c4…    ja              da         = NEUER Block    4096   nein
+```
+
+Lesart: **das Bild überlebt.** Der Block bekommt eine neue Kennung, aber
+der Dateisatz wird auf den neuen Block umgehängt und die Bytes bleiben —
+der Anspruch (`dateiAnspruch`) greift, bevor der Purge die Datei löst. Was
+bleibt, ist die Kennung selbst (und mit ihr Grabsteine und Neuanlagen für
+den Abgleich, Verweise von aussen) — siehe die zweite Sonde darunter.
+
+## 25. September 2026 — Und eine Unterseite? Kennung weg, Fassungen weg, Favorit tot (Bogen 2, L212 Punkt 2)
+
+Dieselbe Sonde mit einer UNTERSEITE als Kind der Seite: eigener Text, eine
+geplante Fassung (`Store.versionSpeichern(kind.id, 'geplant')`), ein
+Favorit (`meta.favoriten = [kind.id]`). Zwei Textänderungen an der
+Elternseite, Strg+Z, 2,5 s warten.
+
+```txt
+                       Unterseite   alte lebt  Fassungen (alt / neu)  Favorit zeigt auf   Inhalt
+Ausgang                a8da9eea…    ja         1 / —                  die Unterseite      da
+nach Strg+Z (2,5 s)    a7ecec08…    NEIN       0 / 0                  die ALTE Kennung    da
+```
+
+Lesart: der Text der Unterseite überlebt, sonst nichts — **die Fassung ist
+gelöscht** (`purgeAnhaenge` räumt `versions` je gepurgtem Block, und eine
+Unterseite ist ein Kind der Seite), die Kennung ist neu, und jeder Verweis
+von aussen (Favorit, Link, „zuletzt geöffnet", Erwähnung) zeigt auf einen
+Block, den es nicht mehr gibt. Ein Strg+Z auf der Elternseite löscht also
+den Verlauf der Unterseite. Das ist §15 in seiner einfachsten Form
+verletzt, und es ist der Grund, warum Bogen 2 vor `raumVersion` kommt.
+
+### Nachgemessen nach E684 (dieselben zwei Sonden)
+
+```txt
+                       Unterseite   alte lebt  Fassungen (alt / neu)  Favorit zeigt auf   Inhalt
+nach Strg+Z (2,5 s)    1d18fc4d…    JA         1 / 1                  die Unterseite      da
+                       (dieselbe Kennung wie vor dem Strg+Z)
+
+                       Bild-Block   Dateisatz  satz.blockId       Bytes  verwaist
+nach Strg+Z + Neuladen gleich       da         = derselbe Block   4096   nein
+```
+
+Die Zeile, um die es ging — „Fassungen 1 / 0" — heisst jetzt „1 / 1".
+
+---
+
+## §62 · Die Startnutzlast, neun Tage später — woher die 127 KB kamen (E688, 25. September 2026)
+
+`test388 §5` war wieder rot: **2711 KB über 238 Dateien**, Decke 2700.
+Gefunden als Nachbar von Bogen 4 (E687), nicht durch Hinsehen — derselbe
+Fehler wie in §51, nur neun statt zwölf Tage lang. Bogen 4 selbst bringt
+2 KB (`core/gfx/history.js`); vor ihm stand die Zahl bei 2709.
+
+**Am laufenden Programm gemessen** (`node pruefungen/lauf/test388.mts`):
+
+```txt
+16. September   232 Dateien   2585 KB     Decke damals gesetzt: 2700
+25. September   238 Dateien   2711 KB     ← rot, 11 KB drüber
+```
+
+**Die Aufteilung der 127 KB** (gzip Stufe 6 über alle `<script src>` und
+`<link rel=stylesheet>` aus `index.html`, gegen `bef8c3f`, den Commit von
+E613; Werkzeug: `startlast.cjs` im Arbeitsverzeichnis der Sitzung, nicht im
+Repo — es ist eine Rechnung, keine Prüfung):
+
+```txt
+6 NEUE Dateien          ~41 KB
+gewachsene Dateien      ~86 KB
+```
+
+Die neun grössten Posten:
+
+```txt
+gewachsen  quell/bereiche/pdf/marken.js               +18,9 KB   Zeichenstudio (E673–E676)
+gewachsen  quell/schale/stil/bausteine.css            +12,3 KB
+neu        quell/bereiche/wissen/nin-quiz.js           12,2 KB   Lerninhalt (E679)
+neu        quell/bereiche/wissen/trainer.js             8,9 KB   Trainer (E677)
+gewachsen  quell/bereiche/bloecke/arten/gedankenkarte.js +7,7 KB  Griffe, Formen, Vorlagen (E628)
+neu        quell/bereiche/wissen/staatskunde-inhalt.js  7,3 KB   Lerninhalt (E677)
+gewachsen  quell/bereiche/ki/agenten.js                +6,6 KB
+neu        quell/schale/bedienung/selection-flow.js     6,5 KB   Dock-Welle (E646)
+neu        quell/schale/bedienung/linse.js              4,5 KB
+```
+
+Alles Übrige: rund 200 Dateien um je weniger als 4 KB.
+
+**Urteil.** Wieder das Produkt, keine Bibliothek — aber zwei Posten sind
+Inhalt, kein Code: `nin-quiz.js` und `staatskunde-inhalt.js`, zusammen
+19,5 KB, Lernstoff, den nur sieht, wer den Trainer öffnet. Das ist der Fall
+der Chronik aus E613. Sie stehen als **L216** offen; nachladen würde sie
+gerade unter die alte Decke bringen (2711 − 19,5 = 2692) und beim nächsten
+Bogen wäre sie wieder gerissen — deshalb steigt die Decke trotzdem.
+
+**Die Decke steht seit E688 auf 2850**: 139 KB Luft, so viel wie neun Tage
+Arbeit zuletzt gebraucht haben; 387 KB unter dem Punkt, an dem pdf.js
+unbemerkt zurückkäme (2711 + 526 = 3237). Nach der Änderung:
+`test388` 19/19.
+
+---
+
+## §63 · Die Werkzeugleiste des Whiteboards, vorher und nachher (E689, 26. September 2026)
+
+Gemessen im Browser mit Playwright (`.wb` auf einer gewöhnlichen Seite,
+gerenderte Boxen, nicht Stilblatt-Text — L206):
+
+```txt
+                        VORHER (HTML-String)      NACHHER (GfxToolbar)
+Rechner 1300 px
+  Kasten `.wb`          708 px                    708 px
+  Leiste                706 × 67 px, 3 Zeilen     706 × 54 px, 1 Zeile
+  Kapsel                — (keine)                 38 px hoch
+  Knöpfe                27, je 28 × 26 px          19, je 30 × 30 px
+  Farben                8 Tupfer à 17 × 17 px      im Untermenü, 28 px + 8 px Fläche
+  Platzbedarf           —                         698 px bei 706 px (8 px Luft)
+
+Telefon 390 px
+  Kasten `.wb`          334 px                    334 px
+  Leiste                95 px, 4 Zeilen           70 px, 1 Zeile (rollt)
+  Knöpfe                28 × 26 px                44 × 44 px  (§37)
+  Inhalt / Sichtfenster  —                        980 px in 332 px
+```
+
+**Die 44 px sind neu und echt.** Vorher lagen sie in einem `::after`, das
+niemand sieht und `test402` nicht messen kann (L206); der Knopf selbst mass
+26 px. Am Telefon ist jetzt der KNOPF 44 px, am Rechner bleibt er 30 px mit
+44 px Trefffläche darunter — und der Grund steht über der Regel, wie §37 es
+verlangt.
+
+**Startnutzlast nach dem Bogen:** 2780 KB über 241 Dateien (gzip Stufe 6),
+Decke 2850 seit E688. Die zwei neuen Dateien kosten zusammen rund 5 KB.
+
+**Untere Leiste am Telefon:** Leiste 796…866, `#handy-oben` 775…835 — sie
+überdecken sich im Ruhezustand um 39 px (L217).
+
+---
+
+## §64 · Die drei Ansichten einer Seite (E690, 26. September 2026)
+
+Gemessen mit `node bilder.mts ansichtSeite|ansichtFlaeche|ansichtRedion` und
+`playwright` am gerenderten Kasten, nicht im Stilblatt (L206).
+
+**Was in welcher Ansicht steht** (dieselbe Seite, nur der Schalter bewegt):
+
+```txt
+                        Seite      Fläche     Redion
+Cover                   nein       nein       ja
+Symbol + Titel          ja         im Kasten  ja
+Werkzeugzeile .pg-tools nein       nein       ja
+Punktraster             nein       ja         nein
+Text im Speicher        gleich     gleich     gleich   (test573 §7)
+```
+
+**Der Umschalter**, Rechner 1300 × 950 und Telefon 390 × 844:
+
+```txt
+                        Rechner              Telefon
+Knöpfe                  3                    3
+je Knopf                ~96 × 44 px          ~96 × 44 px   (§37 hart)
+ausserhalb des Bildes   0                    0
+gedrückt zugleich       genau 1 (aria-checked)
+```
+
+**Die Fläche, und was das Hinsehen daran gefunden hat.** Drei Zahlen, jede
+vorher/nachher, alle am Telefon 390 × 844:
+
+```txt
+                              ERSTER STAND        NACH DEM BILD
+Höhe der Fläche               332 px              584 px
+Breite der Fläche             278 px (in 390)     390 px
+„ins Bild holen"              31 %                98 %
+Werkzeugleiste                auf dem Kasten      am unteren Rand
+```
+
+- **332 statt 584:** `#page{height:100%}` hat nichts zu messen, solange
+  `#scroll` nur `flex:1` ist — die Prozentzahl fiel auf `auto` zurück, übrig
+  blieb die `min-height` der Fläche. Als Spalte (`display:flex`) wächst das
+  Kind ohne Prozentzahl.
+- **278 statt 390:** `#page` trägt `margin:0 auto`, und ein Flex-Element mit
+  automatischen Rändern auf der Querachse wird NICHT gedehnt. 56 px Luft auf
+  jeder Seite, und die Leinwand endete mitten im Bild.
+- **31 % statt 98 %:** mit fester Kastenbreite 760 ist auf einem 390 px
+  breiten Gerät jede Rechnung richtig und jedes Ergebnis unlesbar. Die
+  VORGABE richtet sich jetzt nach dem Fenster (`min(760, Fenster − 40)`);
+  eine GESPEICHERTE Breite nicht — die gehört dem Dokument.
+
+**Und eine Zahl, die vorher falsch war** (`pruefungen/marken-decke.json`):
+28 px stand auf 64 und ist 65, 46 px stand auf 15 und ist 14. Beide Deltas
+stammen aus E689 (`.gfx-tb-farben button` 28 × 28, `.wb-massstab` 46 → 40) —
+`test362` stand seit dem 26. September früh rot, und gemerkt hat es erst der
+Nachbarlauf dieses Bogens. Eine Decke, die nicht nachgezogen wird, ist eine
+Zahl.
+
+---
+
+## §65 · Der Vollausbau der Fläche (E691, 26. September 2026)
+
+Gemessen mit `test574` (50 Zusagen) und `node bilder.mts flaecheBloecke |
+flaecheVersteckt | flaecheLeer`.
+
+**Was ein Block trägt, und wie oft er es trägt:**
+
+```txt
+                        frisch      auf der Fläche   ausgeblendet
+flaecheOrt              fehlt       {x,y,w,rv:1}     {x,y,w,rv:1}
+sichtbarIn              fehlt       fehlt            'flaeche'
+im Seitenkasten         ja          nein             nein
+in der Textansicht      ja          ja               NEIN
+in `content` der Seite  ja          ja               ja
+alive                   true        true             true
+```
+
+**Das Verschieben rechnet in Flächeneinheiten** — gemessen bei 51 %
+Massstab, nicht bei 100 %: bei 1 sähe ein Umrechnungsfehler genauso aus wie
+keiner (derselbe Grund wie E686).
+
+```txt
+Bildschirm        Fläche (gemessen)     erwartet 1/z
+120 px in x       235                   235,3
+60 px in y        118                   117,6
+```
+
+**„Ins Bild holen", vorher und nachher** (Rechner 1400 × 950, drei Kästen,
+einer davon bei x = 1400):
+
+```txt
+                        ERSTER STAND        NACH DEM BILD
+gerechnet über          nur Seitenkasten    alle Kästen
+Massstab                100 %               90 %
+Kästen im Bild          1 von 3             3 von 3
+```
+
+**Am Telefon (390 × 844):**
+
+```txt
+Griff `⋮⋮` am Block         display:none  (ki.css:182)
+Weg auf die Fläche          Hebe-Geste (E83) → Blockmenü → „Auf die Fläche legen"
+Menüknopf des Kastens       44 × 44 px im Aufbau, 43 × 43 gerendert bei 98 %
+neuer Kasten liegt          unter dem Seitenkasten, nicht rechts daneben
+```
+
+Die zwei Masse sind nicht dasselbe, und das ist kein Mangel: auf einer
+Leinwand hängt ALLES am `transform: scale(z)`. Bei 50 % ist auch der Text
+halb so gross. Gemessen wird deshalb die Layout-Box; die gerenderte steht
+zum Vergleich daneben.
+
+**Und zwei Zahlen aus dem Prüfstand selbst:** zweimal war `test574` aus dem
+falschen Grund rot — einmal, weil er `contextmenu` schickte, das unter
+760 px ausdrücklich unterdrückt wird (E83), und einmal, weil er 400 ms nach
+dem Loslassen tippte, während der Fänger aus E83 die Klick-Nachzügler noch
+800 ms schluckt. Beide Male sah es aus wie ein Fehler im Produkt.
+
+---
+
+## §66 · L220 geschlossen (E692, 26. September 2026)
+
+Gemessen mit `test574 §10–§12`, je gegen den Stand vor der Reparatur.
+
+```txt
+                                    VORHER              NACHHER
+Rücktaste, Vorgänger versteckt
+  Fokus danach                      in keinem Block     im sichtbaren Vorgänger
+  gelöschter Block                  weg                 weg
+  versteckter Nachbar               lebt                lebt
+
+Strg+Umschalt+↓, Nachbar versteckt
+  Bildschirm nach EINEM Druck       A, C  (nichts)      C, A
+  Daten                             unverändert         A hinter C
+  versteckter Block                 bleibt              bleibt
+
+Nummernliste
+  am Block gespeichert              nr = 1, 2, 3        kein Feld
+  auf dem Bild                      1. 2. 3.            1. 2. 3.
+```
+
+**Und die Zahl, die den vierten Fund belegt:** `Strg+Umschalt+↓` in einer
+Liste ganz OHNE versteckte Blöcke bewegte vorher ebenfalls nichts —
+`["X","Y","Z"]` vor und nach dem Druck. Die Pfeilnavigation stand im selben
+Behandler davor und kehrte um, sobald der Cursor am Ende stand. Das Kürzel
+steht seit Langem im Blockmenü.
+
+---
+
+## §67 · Auf der Fläche zeichnen (E693, 26. September 2026)
+
+**Der Umzug in den Kern**, gezählt mit `git diff --stat`:
+
+```txt
+                                        vorher      nachher
+zeichenflaeche.ts (Whiteboard)          —           136 Zeilen weniger
+core/gfx/shapes.ts                      gibt es nicht   ~250 Zeilen
+Fassungen des Formenzeichners           1 (nur Whiteboard)   1 (im Kern, zwei Leser)
+Fassungen der Farbpalette               1               1 (im Kern)
+```
+
+**Die Bedingung aus L219, gemessen** — Tinte und Kasten teilen einen
+`transform`, also schrumpfen sie beim Zoomen gleich:
+
+```txt
+                        RICHTIG (Tinte in der Ebene)   GEGENPROBE (daneben)
+Kasten beim Zoomen      ×0,800                          ×0,800
+Tinte beim Zoomen       ×0,800                          ×1,000
+```
+
+**„Ins Bild holen", zum zweiten Mal in zwei Bögen nachgebessert:**
+
+```txt
+E690   rechnete nur mit dem Seitenkasten   → Blöcke hingen draussen (E691)
+E691   rechnete mit allen Kästen           → Formen hingen draussen (E693)
+E693   rechnet mit Kästen UND Formen       → nichts hängt draussen
+```
+
+**Die Werkzeugleiste der Fläche:**
+
+```txt
+                E690        E693
+Werkzeuge       2           8  (Zeiger, Hand, Radierer, Stift, Linie,
+                               Pfeil, Rechteck, Ellipse)
+Aktionen        3           5  (Farbe, Rückgängig, −, Massstab, +, Ins Bild)
+am Telefon      44 px       44 px  je Knopf
+```
+
+**Und eine Zeile, die nicht nur den Prüfstand betraf:**
+`setPointerCapture` wirft, wenn es den Zeiger nicht mehr gibt, und der Wurf
+brach den Handgriff ab, bevor die erste Form entstand — ein schneller Tipp,
+ein verlorener Stift oder ein zweiter Finger reichen dafür. Gemessen am
+Telefon: ohne `try` entstand bei einem synthetischen Fingerstrich keine
+einzige Form, mit `try` die erwartete.
+
+**Nachtrag: ein leeres Feld, gefunden beim Schreiben der Doku.**
+`doku/REDION-FORMAT.md` sollte versprechen, dass ein Seitenblock ohne
+Zeichnung kein `shapes` trägt. Nachgesehen war es nicht wahr — die leere
+Liste blieb stehen. Gemessen am Telefon, letzte Form wegradiert:
+
+```txt
+                       VORHER                    NACHHER
+Feld `shapes`          [] (vorhanden)            nicht vorhanden
+Feld `raumVersion`     1 (vorhanden)             nicht vorhanden
+test575                37 ok                     40 ok
+```
+
+Die Gegenprobe (die eine Zeile `Store.feldWeg` wieder heraus) druckt
+`{"hatShapes":true,"hatRaum":true}` und macht zwei Zusagen rot.
+
+---
+
+## §68 · Eine Werkzeugliste statt drei (E694, 26. September 2026)
+
+**Der Bestand vorher und nachher**, gezählt im Quelltext:
+
+```txt
+                        VORHER                      NACHHER
+Register.werkzeuge      22 Einträge (Katalog)       22 Einträge (Katalog)
+Marken.WERKZEUGE        14 Objektliterale mit       14 Kennungen als
+                        id, zeichen, sym, name,     Reihenfolge
+                        titel  (≈ 4280 Zeichen)     (≈ 190 Zeichen)
+menueband.WERKZEUGE     13 Vierertupel              13 Paare
+                        [id, Name, Zeichen,         [id, 'werkzeug'|'form']
+                        Hinweis]
+Namen im Programm       an 3 Stellen geschrieben    an 1 Stelle
+```
+
+**Die Kollision, die dabei sichtbar wurde.** Die Kennung `ellipse` steht in
+zwei Kennungsräumen:
+
+```txt
+Register.werkzeuge  'linie'  'pfeil'  'rechteck'  'ellipse'   Zeichen ◯
+Marken.FORMEN       'line'   'arrow'  'rectangle' 'ellipse'   Zeichen ○
+```
+
+Drei Paare sind durch die Sprache getrennt, das vierte nicht. Ein
+`holen(id) ?? form(id)` hätte im Menüband still `◯` statt `○` gezeigt.
+
+**Der Wächter, gemessen:**
+
+```txt
+                    VOR der Reparatur   NACH der Reparatur   Gegenprobe
+test572             55 ok, 4 rot        59 ok, 0 rot         58 ok, 1 rot
+```
+
+Die Gegenprobe ist ein von Hand zurückgeschriebener Name
+(`id === 'abdeck' ? 'Abdeckband' : …`) und druckt genau den historischen
+Fehler aus `test266`: `abdeck`.
+
+**Zwei Messungen, die aus dem falschen Grund null ergaben** (beide jetzt als
+Kommentar im Lauf):
+
+```txt
+inReiter('zeichnen') gefiltert nach e.id           0 Werkzeuge  (gibt GRUPPEN zurück)
+gemessen ohne offenes Blatt                        0 Werkzeuge  (Zeichenziel.da() = false)
+gemessen mit Blatt, Gruppe 'Werkzeug'             13 Werkzeuge  ✓
+```
+
+---
+
+## §69 · Glas und Bewegung, gezählt vor dem Umbau (E695, 27. September 2026)
+
+**Die Inventur aller 23 Stilblätter** (ohne Kommentare, nur `transition`,
+`animation` und `backdrop-filter`):
+
+```txt
+verschiedene Dauern in Übergängen       55     Dauer-Marken benutzt:   5
+verschiedene Kurven                     16     davon nacktes `ease`: 227
+transition auf Layout-Eigenschaften     14     (width, left, top, margin)
+Endlos-Animationen im Quelltext         46
+backdrop-filter                         16 Stellen, 10 verschiedene Werte
+@keyframes                             120     doppelt benannt: 0
+```
+
+**Was davon WIRKLICH läuft** (Laufzeit-Sonde, `document.getAnimations()`
+nach 1,8 s Leerlauf auf der Startseite):
+
+```txt
+                      Rechner    Telefon    Rechner, weniger Bewegung
+Endlos-Animationen       1          1          0
+sichtbar verwischt       0 %        8 %        0 %
+```
+
+Die eine Endlos-Animation ist der Kartenring der leeren Bibliothek (E529).
+„Weniger Bewegung" hält alles an — die Sperre in `grund.css` greift.
+
+**Glas, vorher und nachher:**
+
+```txt
+                          VORHER                        NACHHER (E695)
+Menüs, Finder, Auswahl    88 % + blur(8px)              dicht + saturate(180%) blur(20px)
+Telefonleiste             88 % + blur(20px) sat(1.6)    dicht + saturate(180%) blur(20px)
+PDF-Werkzeugleiste        88 % + blur(8px)              leicht + saturate(180%) blur(20px)
+.rb.glas                  leicht + glas-blur            leicht + glas-blur
+Schleier (Willkommen)     blur(3px), ohne Präfix        --schleier-blur, mit Präfix
+ohne -webkit-Zwilling     5 Stellen                     0
+```
+
+**Kontrast, gemessen an gerenderten Pixeln** über grossen schwarzen,
+weissen, roten und blauen Flächen (schlimmstes Hundertstel, test576):
+
+```txt
+                             74 % (erste Schätzung)   dicht (E695)   ohne Schrift-Regel
+Menü hell, Hauptschrift          7,05                   9,79              —
+Menü dunkel, Hauptschrift        6,05                  10,01              —
+Menü hell, stille Schrift        2,24                   4,67             3,11
+Menü dunkel, stille Schrift      1,43                   4,66             2,36
+Telefonleiste hell               4,14 (alt, 88 %)       4,59              —
+Telefonleiste dunkel             4,66 (alt, 88 %)       4,66              —
+```
+
+Die Telefonleiste hell war schon VOR diesem Bogen unter 4,5 — gegen die
+alten Stilblätter nachgemessen, dieselbe Zahl. Gegenprobe für den
+Kontrastteil: `--bg-schwebend` hell auf 22 % → 1,6 : 1, der Lauf wird rot.
+
+---
+
+## §70 · Die Seitenspalte der Studioleiste (E696, 27. September 2026)
+
+**Wo die Leiste steht**, 1440 × 960, Blatt mit Studio, gemessen in
+`test534 §1` (y und Unterkante in Fensterpixeln):
+
+```txt
+                    vor E690 (43432e1)   nach E690 (4d7436d)   E696
+oben                y = 335              y = 409               y = 409
+links               335 … 1084           409 … 1158            409 … 949
+rechts              335 … 1084           −56 … 693 (gerollt)   409 … 949
+Seite gerollt nach
+Klick auf den Griff 0 px                 465 px                0 px
+```
+
+Der Griff „Platz" ist der 64. von 68 Knöpfen und liegt tief in der rollenden
+Spalte. Rollt die Spalte ans Ende, steht er vier Knöpfe über ihrem unteren
+Rand — vor E690 bei y ≈ 923 (im Bild), nach E690 bei ≈ 997 (darunter), also
+rollte der Browser die Seite nach.
+
+**Zurückverfolgt** über Arbeitsbäume: `fd1a778` grün, `43432e1` grün,
+`4d7436d` rot, `e388949` rot, `637eeb6` rot, `387ca8e` rot, `fc6e606` rot.
+
+**Der neue Satz „endet im Fenster"** war auch gegen `43432e1` rot
+(335 … 1084 bei 960) — der Mangel war älter als der Rückfall.

@@ -269,82 +269,45 @@ const Marken = (() => {
         '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
         '#3aa757': 'Grün', '#e0a419': 'Gelb'
     };
-    /* ══ DIE WERKZEUGE, EINMAL AUFGESCHRIEBEN (E490) ════════════════════════
-       Bis hierher standen Kennung, Zeichen, Wort und Beschreibung jedes
+    /* ══ DIE WERKZEUGE — EINE BESTELLUNG, KEINE LISTE (E490, E694) ══════════
+       Bis E490 standen Kennung, Zeichen, Wort und Beschreibung jedes
        Werkzeugs als Aufruf in der Zeile, die die Leiste baut — nirgends
-       sonst. Wer sie woanders brauchte (die Liste der gesperrten Marken im
-       Inspector braucht genau diese Wörter), hätte sie abgeschrieben, und
-       eine Abschrift läuft weg (§8).
+       sonst. E490 zog sie hierher zusammen, und das war richtig, solange
+       diese Datei die einzige Leserin war.
+  
+       SEIT E689 IST SIE ES NICHT MEHR. `Register.werkzeuge` hält denselben
+       Satz für alle Flächen, und damit standen dieselben vierzehn Werkzeuge
+       an zwei Stellen — genau der Fall, vor dem §8 warnt, und wörtlich der
+       Fehler, den `test266` einmal gefunden hat, als „Abdecken" hier still
+       zu „Abdeckband" wurde und im Menüband nicht.
+  
+       HIER STEHT DESHALB NUR NOCH DIE REIHENFOLGE. Sie gehört dem Studio:
+       `ordnungAbgleichen` (unten) lässt den Nutzer sie umstellen und braucht
+       eine Ausgangsfolge. Ein Name, ein Zeichen oder ein Titel gehört NICHT
+       mehr hierher; wer eines ändern will, ändert `src/register/werkzeuge.ts`.
+       `test572 §3` hält das — er lässt in dieser Datei keine Liste mit
+       `name:` mehr zu.
   
        DIE KENNUNG IST DIE MARKENART. `art: tool` beim Zeichnen macht aus dem
-       Werkzeug `abdeck` die Marke `abdeck` — deshalb steht hier auch das
-       Wort für eine fertige Marke. Was E489 gekostet hat, ist genau der
-       Unterschied zwischen dieser Kennung und der eines Radiermodus.
+       Werkzeug `abdeck` die Marke `abdeck`. Was E489 gekostet hat, ist genau
+       der Unterschied zwischen dieser Kennung und der eines Radiermodus —
+       und es ist der Grund, warum die Kennungen hier deutsch aussehen und es
+       bleiben (§53.3: ein Feldname ist ein Datenwort).
   
        `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375). Er
-       steht in der Reihenfolge mit, damit die Leiste an EINER Liste hängt,
+       steht in der Bestellung mit, damit die Leiste an EINER Folge hängt,
        und wird beim Bauen eigens behandelt; die Formen selbst stehen in
-       `FORMEN`. */
-    const WERKZEUGE = [
-        { id: 'schreiben', zeichen: '✎', sym: 'inkHand', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
-        { id: 'select', zeichen: '⌖', sym: 'inkLasso', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
-        { id: 'stift', zeichen: '🖍', sym: 'inkPen', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
-        { id: 'marker', zeichen: '▰', sym: 'inkMarker', name: 'Marker', titel: 'Transparenter Marker' },
-        { id: 'formen', zeichen: '□', sym: 'inkShapes', name: 'Form', titel: 'Formen — welche, steht darunter' },
-        /* „Abdecken", NICHT „Abdeckband" (Fund des breiten Laufs nach E496).
-           Als die Werkzeugliste hierher zusammengezogen wurde, bekam dieser
-           Knopf im Vorbeigehen einen neuen Namen — und stand danach anders da
-           als im Menüband (`register/menueband.ts`), das weiter „Abdecken"
-           sagte. Ein Werkzeug mit zwei Namen ist genau das, wovor §8 warnt.
-           `test266 §1` hat es gehalten; nur hat den Lauf niemand gefahren. */
-        { id: 'abdeck', zeichen: '▬', sym: 'inkCover', name: 'Abdecken',
-            titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
-        { id: 'zettel', zeichen: '🗒', sym: 'inkNote', name: 'Haftnotiz',
-            titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
-        { id: 'text', zeichen: 'T', sym: 'inkText', name: 'Text', titel: 'Textanmerkung' },
-        /* ══ TEXT ÄNDERN (E670) ════════════════════════════════════════════════
-           Redur, 21. September: „können wir so was machen das wenn ich eine pdf
-           hochlade das ich die pdf selbst direk bearbeiten kann also die text
-           direk".
-    
-           WAS DAS WERKZEUG TUT: auf ein Wort tippen, das Wort steht im Feld, es
-           ändern, fertig. WAS ES NICHT TUT: die PDF umschreiben. Die Änderung
-           ist eine MARKE — sie deckt die alte Stelle zu und schreibt die neue
-           darüber, an derselben Stelle, in derselben Höhe. Das Original bleibt
-           Byte für Byte, wie `leser.ts` es verspricht, und die Änderung ist
-           rückgängig zu machen, versioniert und in der Sicherung.
-    
-           Der Preis steht im Namen: „ändern", nicht „setzen". Ein längeres Wort
-           wird LÄNGER — es schiebt den Rest der Zeile nicht weiter. Ein
-           Textfluss über die Seite hinweg wäre etwas anderes und viel mehr
-           (siehe E670). */
-        { id: 'textfix', zeichen: '✏', sym: 'inkTextFix', name: 'Text ändern',
-            titel: 'Ein Wort der PDF antippen und überschreiben — die alte Stelle wird zugedeckt, '
-                + 'das Original bleibt unberührt' },
-        { id: 'zeichen', zeichen: '⚡', sym: 'inkSymbol', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
-        /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
-           setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
-           aus dem, was der Nutzer selbst gezeichnet und gesichert hat. */
-        { id: 'elemente', zeichen: '⭐', sym: 'inkStamp', name: 'Elemente',
-            titel: 'Ein gesichertes Element setzen — sichern über die Auswahl («Als Element»)' },
-        { id: 'bild', zeichen: '🖼', sym: 'inkImage', name: 'Bild',
-            titel: 'Ein Foto, ein GIF oder eine Seite aus einer PDF auf das Blatt legen — '
-                + 'danach verschieben, ziehen und drehen wie jede Marke' },
-        { id: 'radierer', zeichen: '⌫', sym: 'inkEraser', name: 'Radieren',
-            titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' },
-        /* ══ DER LASERPOINTER (E512) ═══════════════════════════════════════════
-           Redur, 8. September: „alter, wieso habe ich keinen Laserpointer?"
-    
-           Es GAB einen — aber nur im Vollbild-Präsentationsmodus (E493), und
-           dort findet ihn niemand, der gerade an einer Seite steht und etwas
-           zeigen will. Jetzt ist er ein Werkzeug wie jedes andere.
-    
-           ER SCHREIBT NICHTS. Kein Eintrag in `marks`, kein Schritt im
-           Verlauf, nichts in der Sicherung — er ist ein Finger, kein Stift.
-           Das ist die ganze Zusage dieses Werkzeugs, und `test480` hält sie. */
-        { id: 'laser', zeichen: '⦿', sym: 'inkLaser', name: 'Laserpointer',
-            titel: 'Zeigen, nicht schreiben — der Strahl verblasst von selbst und wird nie gespeichert' }
-    ];
+       `FORMEN` — mit eigenen, ENGLISCHEN Kennungen, weil sie so in jeder
+       gespeicherten Marke stehen. */
+    /* DER TYP IST ANGESCHRIEBEN, weil `Register` ein `any` ist (global.d.ts).
+       Ohne diese Zeile wuerde `WERKZEUGE` zu `any[]`, und das faellt nicht
+       hier auf, sondern zwei Dateien weiter: `document-mode.ts:2036` liest
+       `Marken.WERKZEUGE` und bekaeme lauter implizite `any` (E572). Ein
+       verlorener Typ wandert (§52.7). */
+    const WERKZEUGE = Register.werkzeuge.auswahl([
+        'schreiben', 'select', 'stift', 'marker', 'formen', 'abdeck', 'zettel',
+        'text', 'textfix', 'zeichen', 'elemente', 'bild', 'radierer', 'laser'
+    ]);
     /* ZWEI ARTEN, WIE IN GOODNOTES: ein Punkt, der mitgeht, oder eine Linie,
        die hinter ihm herläuft und verblasst. */
     const LASER = [
@@ -571,6 +534,44 @@ const Marken = (() => {
         tools.style.setProperty('--platz', String(i >= 0 ? (i + 1) * 100 : 0));
     };
     const M_LAGE = 'zeichnen:leistenlage';
+    /* ══ EINE SPALTE ENDET IM FENSTER (E696) ═══════════════════════════════
+       Links und rechts steht die Leiste als Spalte an der Blatthülle, und sie
+       war `78vh` hoch — egal wo sie beginnt. Bei 409 px Abstand von oben
+       endete sie 197 px UNTER dem Fensterrand: die letzten Knöpfe, darunter
+       der Griff „Platz", gab es nur, wenn man die ganze Seite rollte. Schon
+       vor E690 ragte sie 123 px hinaus; seit der Umschalter der Ansichten
+       darübersteht, fiel auch der Griff hinunter (test534, gebisected auf
+       4d7436d).
+  
+       CSS weiss nicht, wo die Spalte beginnt — also sagt es ihr diese Stelle:
+       `--reihe-platz` ist der Raum von der Oberkante der Hülle bis 12 px vor
+       dem Fensterrand, und `max-height` nimmt den kleineren von ihm und den
+       alten `78vh`. Mindestens 220 px, damit eine Spalte eine Spalte bleibt;
+       was darin nicht Platz hat, rollt IN der Spalte, wie bisher.
+  
+       Der Hörer ist EINE benannte Funktion auf Modulebene: `addEventListener`
+       mit derselben Funktion zweimal ist ein Hörer, nicht zwei — egal wie oft
+       eine Leiste gebaut wird. */
+    const spaltePlatz = (r) => {
+        if (r.dataset['lage'] !== 'links' && r.dataset['lage'] !== 'rechts') {
+            r.style.removeProperty('--reihe-platz');
+            return;
+        }
+        const h = r.parentElement;
+        if (!h)
+            return;
+        const oben = Math.max(0, h.getBoundingClientRect().top);
+        r.style.setProperty('--reihe-platz', Math.max(220, Math.round(window.innerHeight - oben - 12)) + 'px');
+    };
+    let spalteBild = 0;
+    const spaltenNachFenster = () => {
+        if (spalteBild)
+            return;
+        spalteBild = requestAnimationFrame(() => {
+            spalteBild = 0;
+            document.querySelectorAll('.blatt-reihe').forEach(spaltePlatz);
+        });
+    };
     /* ZWEI ZAHLEN ALS TEXT, durch ein Leerzeichen getrennt: „43.10% 62.80%".
        Prozent, weil ein kleineres Fenster die Leiste sonst hinter den Rand
        schöbe; Text, weil `meta` Text sicher übersteht (§9). */
@@ -3450,7 +3451,7 @@ const Marken = (() => {
         let schreiber = null;
         let writerRange = null;
         let writerFrame = 0;
-        /* E681: Ein Formatwechsel darf weder den Entwurf noch die Einfügestelle
+        /* E697: Ein Formatwechsel darf weder den Entwurf noch die Einfügestelle
            verlieren. Nur ausdrücklich zurückkehren — nie nach einem Aussenklick. */
         const resumeWriting = () => {
             if (!schreiber?.feld.isConnected)
@@ -3760,7 +3761,7 @@ const Marken = (() => {
                 schreiberSchliessen();
             });
             feld.addEventListener('keydown', event => {
-                /* E681: Escape/Enter gehören während einer Texteingabekomposition
+                /* E697: Escape/Enter gehören während einer Texteingabekomposition
                    dem Eingabesystem, nicht dem Abschliessen der ganzen Notiz. */
                 if (event.isComposing) {
                     event.stopPropagation();
@@ -5992,7 +5993,7 @@ const Marken = (() => {
           
                    Der Weg heraus ist der, den GoodNotes ohnehin geht: dort führt EIN
                    Farbknopf in ein Feld, in dem sowohl der Farbwähler als auch die
-                   Paletten stehen. Seit E681 öffnet „+“ direkt die Palette samt
+                   Paletten stehen. Seit E697 öffnet „+“ direkt die Palette samt
                    Hex-Feld; die Verwaltung der Farbsätze liegt darin. Die festen
                    und eigenen Tupfer bleiben ohne zusätzlichen Tipp erreichbar. */
                 '<button class="blatt-farbe-neu" data-act="farbe" data-gruppe="farbe" ' +
@@ -6354,6 +6355,9 @@ const Marken = (() => {
             }
             else if (h.firstElementChild !== r)
                 h.insertBefore(r, h.firstElementChild);
+            /* Die Höhe erst NACH dem Einhängen: vorher hat die Hülle keinen Ort (E696). */
+            spaltePlatz(r);
+            window.addEventListener('resize', spaltenNachFenster, { passive: true });
         };
         const lageAnwenden = (id, merken = true) => {
             const eintrag = LAGEN.find(l => l.id === id) ?? LAGEN[0];
@@ -6528,7 +6532,7 @@ const Marken = (() => {
             if (aktiv)
                 tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.toggle('on', node.dataset.c === aktiv));
         };
-        /* DIE FARBSATZ-VERWALTUNG (E486, seit E681 hinter der direkten Palette).
+        /* DIE FARBSATZ-VERWALTUNG (E486, seit E697 hinter der direkten Palette).
     
            Sein erster Eintrag ist der Farbwähler — der Weg, den E351 gebaut hat
            und der als alternativer Zugang erhalten bleibt. Der häufige Weg
@@ -6574,7 +6578,7 @@ const Marken = (() => {
             feld.addEventListener('cancel', () => feld.remove(), { once: true });
             feld.click();
         };
-        /* E681: Farbe ist ein direkter Griff. Die fünf bisherigen Tupfer und
+        /* E697: Farbe ist ein direkter Griff. Die fünf bisherigen Tupfer und
            gespeicherten Sätze bleiben; die Markerpalette gilt nur für neue
            Entscheidungen, niemals rückwirkend für vorhandene Marken. */
         const openColorPanel = (anchor) => {

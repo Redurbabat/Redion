@@ -55,6 +55,9 @@ umgeschrieben, aber nicht umnummeriert.
 | `doku/ARCHITEKTUR.md` | Wie ist es aufgebaut? |
 | `doku/REDION-FORMAT.md` | Wie sieht eine `.redion`-Sicherung von innen aus? |
 | `doku/TYPESCRIPT-MIGRATION.md` | In welcher Reihenfolge wird migriert? |
+| `doku/REDION-PLATTFORM-AUDIT.md` | Was ist da, was ist doppelt, was ist der kleinste nächste Schritt? (E681) |
+| `doku/karte/` | Wo liegt was, und was hängt woran? Erzeugt aus `karte.json` mit `node karte.mts` |
+| `FREMDCODE.md` | Was gehört Redur, was ist fremd, und was bringt es? (§57, E683) |
 
 ---
 
@@ -144,6 +147,9 @@ zusammengehört.
 
 **Teil XIII — Das Gedächtnis**
 [56](#56-die-chronik--hart) Die Chronik
+
+**Teil XIV — Fremdes**
+[57](#57-fremder-code--hart) Fremder Code
 
 ---
 ---
@@ -888,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 510 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 519 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1202,6 +1208,141 @@ selbst (eine Lücke steht als `{{Lösung}}` im Text, nicht als Frage vor
 „::"), nicht das Produkt. Gezählt am 22. September, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 509.*
 
+*Und 510: `test568` — Strg+Z gehört der Fläche, die es genommen hat
+(E682, L212). Er ist der erste Wächter aus dem Plattform-Audit und war aus
+einer Sonde entstanden, die vor ihm gemessen hatte: im Schaltplan blieb ein
+eben gesetztes Teil stehen, „Rückgängig" stand trotzdem da, und der Block
+hatte eine neue Kennung — Block UND Seitenverlauf hatten zurückgenommen.
+Gegen den alten Stand rot mit 13 von 25; die Gegenprobe (die eine Zeile in
+der Schale wieder raus) macht ihn wieder rot. Sein §4 hat mich selbst
+belehrt: die Gedankenkarte merkt Anlegen und Text als ZWEI Schritte, und der
+erste Anlauf des Wächters erwartete einen. Gezählt am 25. September, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 510.*
+
+*Und 511: `test569` — der Seitenverlauf behält, was ihm nicht gehört
+(E684, L212 Punkt 2). Er stand eingecheckt, bevor die Reparatur stand, und
+zwar mit Absicht: §30 sagt „zuerst ein Prüflauf, dann die Reparatur", und
+er war gegen `446266f` rot mit 10 von 20 — die Unterseite wechselte die
+Kennung, ihre Fassung war weg, drei Purges auf zwei Schritten zurück. Mit
+E684 hält er 36 Zusagen in zwölf Abschnitten, mit E685 48 in vierzehn (die
+zwei Fassungs-Dialoge); fünf Gegenproben haben ihn wieder rot gemacht. Sein §5 zählt die Purges über `Store.on`, weil die
+Merkliste des Abgleichs ohne Wolke leer bleibt und ein leerer Zähler nichts
+beweist (§55.2) — und setzt die Marke, damit sie überhaupt schreiben würde.
+Gezählt am 25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 511.*
+
+*Und 512: `test570` — das Whiteboard trägt seine Raumfassung und rechnet
+über die Matrix (E686). Sein wichtigster Beitrag ist ein Abschnitt, der
+NICHT rot wurde: `scale(0.8)` am Elternteil war mit der alten Handformel
+grün, weil der `viewBox` aus demselben Kasten kommt und sich der Faktor
+kürzt — der Audit hatte das Gegenteil behauptet. Erst `rotate(180deg)`
+trennte Formel und Matrix („ist 394,168 soll 312,192"). Eine Prüfung, die
+wider Erwarten grün bleibt, ist ein Fund über die Behauptung (§55.2).
+Gezählt am 25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 512.*
+
+*Und 513: `test571` — die drei Flächen teilen EINEN Verlauf (E687).
+`GfxHistory` im Kern ersetzt drei Paare von Stapeln, die in Whiteboard,
+Gedankenkarte und Planfläche dieselben acht Zeilen dreimal hielten; der
+Lauf braucht für den Kern keinen Browser (wie `test366`) und liest für
+die Übernahme das GEBAUTE JavaScript, nicht die Quelle. Gegen den alten
+Stand rot mit 8 Zusagen (die Datei gab es nicht, kein Nehmer). Sein erster
+Fund galt dem Kern selbst: `Number(0) || 40` machte aus „Tiefe 0" eine
+Tiefe 40. Gegenprobe rot an zwei Stellen — „merken leert das Wiederholen
+— {zurueck:3, vor:1}". Gezählt am 25. September, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 513.*
+
+*Und 514: `test572` — EINE Werkzeugleiste für alle Flächen (E689). Redurs
+Satz vom 25. September, „integriere alles zusammen": ein Katalog
+(`Register.werkzeuge`, 22 Werkzeuge), ein Bauteil im Kern
+(`core/gfx/toolbar.ts`), und das Whiteboard zieht als erste Fläche darauf um.
+Gegen den alten Stand rot mit 20 von 39 und den Zahlen, um die es geht: am
+Rechner drei Zeilen und 67 px, am Telefon vier Zeilen und 95 px, Köpfe
+28×26 statt der 44 px aus §37. Sein wichtigster Abschnitt kam aber nicht aus
+dem Kopf, sondern aus dem BILD: das Farbmenü lag gemessen genau richtig
+(148×80 px über dem Knopf, im Kasten) und war auf dem Bildschirm nicht da —
+`overflow-x:auto` macht aus `overflow-y:visible` beidseitig `auto`, und der
+Sockel schnitt es ab. Seither fragt §9 mit `elementFromPoint`, was an der
+Stelle WIRKLICH liegt (§55.1). Gezählt am 26. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 514.*
+
+*Und 515: `test573` — drei Ansichten einer Seite, umschaltbar oben (E690).
+Redurs Satz vom 26. September, „ich will die 2 von affine 1:1 haben auch
+alles komplett wie es aussehn … und noch eine 3 für die aktuelle Redion", in
+30 Zusagen. Er ist der erste Wächter dieses Jahres, der DREI Namen des
+Produkts geändert hat, ohne eine Zusage anzufassen — und jeder Grund steht
+in seinem Kopf: `Ansichten` war der Dienst der Datenbankansichten, `ansicht`
+die Form eines `views`-Eintrags, und drei sich ausschliessende Knöpfe sind
+eine Radiogruppe (`aria-checked`), keine drei Schalter. Rot war er zweimal
+aus dem richtigen Grund und einmal aus dem falschen: er suchte den Titel
+unter AFFiNEs Namen `.pg-title`, den es in Redion nicht gibt — eine Prüfung,
+die nach einem Wähler sucht, der nirgends steht, misst nichts (L206). Seine
+beste Zeile stand nicht im Lauf, sondern auf dem BILD: am Telefon war die
+Fläche 332 px hoch in einem 560 px hohen Feld und die Werkzeugleiste lag
+mitten auf dem Kasten (§55.1). Gezählt am 26. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 515.*
+
+*Und 516: `test574` — jeder Block auf die Fläche (E691). Redurs Satz vom
+26. September, „ja mach den vollausbau, jeder block auf die fläche ziehbar",
+in 50 Zusagen über elf Abschnitte. Er ist der erste Lauf dieses Projekts,
+der eine GESTE fährt statt eines Klicks: am Telefon sind die Griffe `⋮⋮`
+ausgeblendet (`ki.css:182`), also schickt er `touchstart`, wartet 750 ms und
+lässt los — die Hebe-Geste aus E83. Zweimal war er dabei aus dem FALSCHEN
+Grund rot: einmal schickte er `contextmenu`, das unter 760 px ausdrücklich
+unterdrückt wird, und einmal tippte er 400 ms nach dem Loslassen, während
+der Fänger aus E83 die Klick-Nachzügler noch 800 ms schluckt. Beide Male
+sah es aus wie ein Fehler im Produkt. Seine zwei besten Zusagen hat nicht
+er gefunden, sondern das BILD und ein LESER: „ins Bild holen" rechnete nur
+mit dem Seitenkasten, und Gliederungsstreifen wie Inhaltsverzeichnis
+führten Überschriften auf, die auf der Seite gar nicht stehen. Gezählt am
+26. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+516.*
+
+*Und 517: `test575` — auf der Fläche zeichnen, mit EINEM Formenzeichner
+(E693). Seine erste Hälfte ist ein Wächter über eine Architektur, nicht über
+eine Funktion: `core/gfx/shapes.ts` darf keine Fläche kennen (kein `wb-`,
+`gk-`, `sp-`, `pg-fl`, kein `Store`, `Register`, `App`, `Dateien`) — geprüft
+über `nurCode`, sonst meldete er den eigenen Kopfkommentar, wie `test572` es
+im ersten Anlauf tat. Seine zwei besten Zusagen hat aber wieder nicht er
+gefunden: das BILD zeigte zum zweiten Mal in zwei Bögen dieselbe Lücke —
+„ins Bild holen" rechnete erst ohne die herausgezogenen Blöcke (E691), dann
+ohne die Formen. Und sein §4b misst, was L219 zur Bedingung gemacht hatte:
+Tinte und Kasten schrumpfen beim Zoomen um denselben Faktor, weil sie EINEN
+`transform` teilen. Die Gegenprobe (die Tinte eine Ebene höher) druckt
+„Tinte ×1.000 · Kasten ×0.800". Und sein §11 ist nachträglich dazugekommen,
+weil das SCHREIBEN der Doku ihn verlangte: `doku/REDION-FORMAT.md` sollte
+versprechen, dass ein Seitenblock ohne Zeichnung kein `shapes` trägt — und
+das war noch nicht wahr, eine leere Liste blieb stehen. Eine Doku, die man
+ehrlich schreibt, ist auch ein Wächter. Gezählt am 26. September, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 517.*
+
+*Und 518: `test576` — ein Glas statt vier (E695). Redurs Satz vom
+27. September, „weiter an die animationen übergangen glass efeck usw alles
+verbessern", in 30 Zusagen. Er liest die Stilblätter mit einem kleinen
+Blockleser statt mit `grep`, weil nur so „derselbe Block" und „unter
+`@supports`" prüfbar sind — und er misst die Lesbarkeit an GERENDERTEN
+Pixeln über grossen schwarzen, weissen, roten und blauen Flächen, weil eine
+Rechnung über `rgba` die Unschärfe nicht kennt (L206). Genau das hat seine
+beste Zeile geliefert: meine erste Dichte (74 %, als Schätzung) gab der
+stillen Schrift im Menü 1,43 : 1 — die Dichte kommt seither aus der
+Messung. Zweimal war er aus dem FALSCHEN Grund rot: `color-mix()` liefert
+`color(srgb … / 0.88)` statt `rgba()`, und ein von Hand gesetztes
+`data-theme` setzte `Aussehen` sofort zurück — hell und dunkel lieferten
+Ziffer für Ziffer dieselben Werte. Gezählt am 27. September, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 518.*
+
+*Und 519: `test577` — Farben direkt wählen und im Freitext weiterschreiben
+(E697). Er kam am 23. September als `test568` über `main`, aus einem
+Codex-Zweig — während auf dem Arbeitszweig `test568` schon „Strg+Z gehört
+der Fläche" hiess und E681 der Plattform-Audit war. Zwei Stände, die
+einander nie gesehen hatten, vergaben dieselben Nummern; gemerkt hat es
+erst das Zusammenführen, als GitHub den Pull Request sperrte. Beide Läufe
+bleiben, dieser bekam die nächste freie Nummer. Die Lehre steht nicht in
+ihm, sondern daneben: eine Nummer ist erst vergeben, wenn sie auf `main`
+steht — wer auf zwei Zweigen zugleich zählt, zählt doppelt. Gezählt am
+27. September, beim Zusammenführen: `ls pruefungen/lauf/test*.mts | wc -l`
+sagt 519.*
+
 ### Die Befehle
 
 ```txt
@@ -1210,7 +1351,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 510 Läufe
+npm run pruefen                      alle 519 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1297,7 +1438,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 510 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 519 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
@@ -1337,6 +1478,9 @@ sucht, wo etwas geprüft wird, sucht im Quelltext, nicht in dieser Liste.
 | `doku/ARCHITEKTUR.md` | wie es aufgebaut ist |
 | `doku/REDION-FORMAT.md` | das `.redion`-Format von innen |
 | `doku/TYPESCRIPT-MIGRATION.md` | die Reihenfolge der Migration |
+| `doku/REDION-PLATTFORM-AUDIT.md` | der Bestand vor dem Plattform-Umbau: Systeme, Duplikate, Messungen (E681) |
+| `doku/karte/` | die Karte des Quelltexts — **erzeugt** aus `doku/karte/karte.json` mit `node karte.mts`; wer sie ändert, ändert das JSON |
+| `FREMDCODE.md` | jedes fremde Stück Code: Herkunft, Fassung, Lizenz, Nutzen, Änderungen, Wächter (§57) |
 
 Regeln:
 
@@ -2670,6 +2814,16 @@ IMMER etwas verlangt, wird nicht mehr gelesen. Zwanzig Bilder von
 unveränderten Seiten machen das eine Bild unsichtbar, auf dem die
 Werkzeugleiste aus dem Bild ragt.
 
+Und Redur hat es am 25. September 2026 noch einmal gesagt, damit es nicht
+zur Auslegungssache wird: „Könntest du mir von jeder Änderung, die du im
+Redion machst, wenn es etwas im Website ändert, mir alles fotografieren und
+schicken." Also: **jede** Änderung, die auf dem Bildschirm etwas ändert,
+bekommt ihre Bilder — alle Zustände, Rechner und Telefon —, und sie werden
+**geschickt**, nicht nur abgelegt. Was nichts am Bildschirm ändert (ein
+Kern, ein Verlauf, eine Umrechnung), bekommt seine Messung. Die Grenze
+zwischen beidem entscheidet nicht die Bequemlichkeit, sondern die Frage:
+sieht man es?
+
 ### 55.4 Die Bilder gehen nie auf GitHub
 
 `bilder/` steht in `.gitignore`. Bildschirmfotos sind Arbeitsmaterial, keine
@@ -2727,6 +2881,39 @@ stammt, oder gar nichts (§35).
 Sätze falsch liest, baut das Falsche; deshalb steht dort gemessen, wie er
 schreibt, woran er Qualität misst und wie er entscheidet. Er hat am
 19. September ausdrücklich darum gebeten, dass dieser Teil genau ist.
+
+---
+---
+
+# Teil XIV — Fremdes
+
+## 57. Fremder Code  **[hart]**
+
+Redur, 25. September 2026 (E683): **Fremder Code darf in Redion, wenn er
+Redion verbessert.** Mit drei Bedingungen, die keine Abwägung kennen:
+
+- **Nichts geht hinaus.** Kein fremdes Stück schickt PDFs, Bilder oder
+  Geheimnisse an Dritte — auch nicht „nur zum Prüfen", auch nicht
+  „anonymisiert". Was das täte, kommt nicht herein, egal wie viel es
+  verbessert (§21, §42).
+- **Vorher fragen.** Bevor etwas Fremdes genommen wird, wird Redur
+  gefragt — jedes Stück, jedes Mal. Kein pauschales Ja.
+- **Vorher eintragen.** Jedes fremde Stück steht in `FREMDCODE.md`:
+  Herkunft, Fassung, Lizenz, was es verbessert, was daran geändert ist,
+  welcher Wächter es hält. Ein fremdes Stück ohne Eintrag ist ein Fehler.
+
+Was bleibt: §6 (kein Framework ohne eigene Entscheidung), §54 (kein
+handgeschriebenes JavaScript — Fremdes kommt eingepackt und geprüft wie
+pdf.js, oder als TypeScript mit Herkunftsvermerk), §19/§20 (kein `eval`,
+kein Fremdcode aus Formeln). Lizenzen: MIT, BSD, Apache-2.0, ISC mit
+Namensnennung; GPL/AGPL nur mit eigener Lizenzentscheidung in
+`ENTSCHEIDUNGEN.md`; ohne Lizenz nie. Fremdes aus dem Netz zur Laufzeit
+nur mit festgenagelter Fassung — WebLLM ist die eine Ausnahme, die vor
+dieser Regel entstand und in `FREMDCODE.md` als offene Frage steht.
+
+Ein **Plugin-System für Dritte** ist damit nicht entschieden (L30): dort
+wählt ein Nutzer den Code, nicht Redur — die Sandbox-Bedingungen aus L30
+gelten dafür weiter.
 
 ---
 ---

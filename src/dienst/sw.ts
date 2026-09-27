@@ -36,11 +36,11 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v1305';
+const VERSION = 'notizen-v1371';
 /** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
  *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
  *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
-const INHALT = 'ffd4def10d85507c';
+const INHALT = 'b427b059b5db9c5d';
 /* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
    Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
    das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und
@@ -79,6 +79,9 @@ const GRUNDSTOCK = [
   './quell/kern/zugang/rollen.js',
   './quell/core/security/sanitize.js',
   './quell/core/sheet/space.js',
+  './quell/core/gfx/history.js',
+  './quell/core/gfx/shapes.js',
+  './quell/core/gfx/toolbar.js',
   './quell/core/ink/geometry.js',
   './quell/core/export/pdfWriter.js',
   './quell/core/ink/shapes.js',
@@ -130,6 +133,8 @@ const GRUNDSTOCK = [
   './quell/register/befehle.js',
   './quell/register/menueband.js',
   './quell/register/tasten.js',
+  './quell/register/werkzeuge.js',
+  './quell/register/seitenansichten.js',
   './quell/register/einstellungen.js',
   './quell/register/formeln.js',
   './quell/register/vorlagen.js',
@@ -285,6 +290,8 @@ const GRUNDSTOCK = [
   './quell/schale/aufbau/ruhig.js',
   './quell/schale/aufbau/seitenleiste.js',
   './quell/schale/aufbau/kopfleiste.js',
+  './quell/schale/aufbau/seitenansicht.js',
+  './quell/schale/aufbau/seitenflaeche.js',
   './quell/schale/aufbau/menueband.js',
   './quell/schale/aufbau/backstage.js',
   './quell/schale/aufbau/context-rail.js',
@@ -314,6 +321,7 @@ const GRUNDSTOCK = [
   './quell/schale/stil/einstellungen.css',
   './quell/schale/stil/tabelle.css',
   './quell/schale/stil/bausteine.css',
+  './quell/schale/stil/seitenansichten.css',
   './quell/schale/stil/motion.css',
   './quell/schale/stil/produktwelten.css',
   './quell/schale/stil/arbeitswelt.css',

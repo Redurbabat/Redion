@@ -980,10 +980,21 @@ const App = (() => {
       return;
     }
 
-    wrap.className = p.wide ? 'wide' : '';
+    /* WELCHE DER DREI ANSICHTEN (E690). Sie steht am Block unter
+       `seitenAnsicht`; kein Feld heisst 'redion' — also genau das, was diese
+       Seite immer gezeigt hat (§9). */
+    const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+    wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
+                     (ansicht === 'flaeche' ? ' flaeche-page' : '');
     document.body.dataset.font = p.font || 'default';
     document.body.dataset.small = p.small ? '1' : '';
     wrap.innerHTML = '';
+
+    /* DER UMSCHALTER STEHT VOR ALLEM ANDEREN. Er gehört keiner der drei
+       Ansichten, sondern der Seite — und muss deshalb auch dann da sein,
+       wenn der Kopf gleich abbricht (verschlüsselte Seite): sonst wäre die
+       Ansicht einer gesperrten Seite nicht mehr wechselbar. */
+    if (typeof Seitenansicht !== 'undefined') Seitenansicht.schalter(wrap, p);
 
     if (!Kopfleiste.zeichne(wrap, p)) { zeichneCrumbs(); return; }
 
@@ -1026,7 +1037,16 @@ const App = (() => {
          liegen, bis der Tab zuging. Jede Seitenzeichnung laeuft hier
          durch — Regal, „Normale Seite", ein anderer Ort. */
       DocumentMode.freigeben?.();
-      Inhaltsflaeche.zeichne(wrap, p);
+      if (ansicht === 'flaeche' && typeof Seitenflaeche !== 'undefined') {
+        /* DIE FLÄCHE IST DER KÖRPER, NICHT EIN KASTEN DARIN (wie E296 beim
+           Dokument). Der Kopf bleibt aber stehen — anders als im
+           Dokumentmodus, der ihn wegräumt: `Seitenflaeche` hängt Symbol und
+           Titel in den Kopf des Kastens um, und der Umschalter muss oben
+           bleiben, damit man wieder herauskommt. */
+        Seitenflaeche.zeichne(wrap, p);
+      } else {
+        Inhaltsflaeche.zeichne(wrap, p);
+      }
     }
 
     zeichneCrumbs();
@@ -3249,6 +3269,13 @@ const App = (() => {
       if (k === '[') { e.preventDefault(); zurueck(); return; }
       if (k === ']') { e.preventDefault(); vorwaerts(); return; }
       if (k === 'f' && !e.shiftKey) { e.preventDefault(); seitenSuche(); return; }
+      /* EINE TASTE, DIE EIN BLOCK SCHON GENOMMEN HAT, NIMMT DIE SCHALE NICHT
+         NOCH EINMAL (E682, L212). Planfläche, Marken, Whiteboard und
+         Gedankenkarte haben eigene Verläufe und nehmen Strg+Z selbst; die
+         Taste läuft trotzdem bis hierher. Gemessen am 25. September: der
+         Block nahm seinen Schritt zurück UND der Seitenverlauf baute die
+         Seite neu — mit frischen Kennungen für jeden Block (test568). */
+      if (e.defaultPrevented && (k === 'z' || k === 'y')) return;
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); Verlauf.zurueck(); return; }
       /* Strg+Y ist Wiederholen — Strg+Umschalt+Y gehört den Favoriten,
          deshalb hier ausdrücklich ohne Umschalt. */

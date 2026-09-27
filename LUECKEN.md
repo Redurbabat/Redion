@@ -1117,6 +1117,21 @@ und sie fällt hier genauso aus. Nicht gebaut, mit Grund, nicht vergessen.
 
 **25. August 2026 — entschieden statt offengelassen (E181).**
 
+**25. September 2026 — die Regel dahinter hat Redur geändert (E683, §57,
+`FREMDCODE.md`):** fremder Code darf in Redion, wenn er Redion verbessert,
+nichts hinausschickt und Redur vorher gefragt wurde. Für Erweiterungen, die
+ein **Nutzer** einspielt, bleibt die Sandbox-Bedingung unten stehen — Redur
+hat diesen Code nicht gesehen. Der Weg, wie er im Plattform-Audit
+vorgeschlagen ist (`doku/REDION-PLATTFORM-AUDIT.md` 3.2, 7): **erst Pakete
+aus Daten** (Vorlagen, Quiz-Kapitel, Fachzeichen, Formeln über die
+vorhandenen Register — kein Code, keine Sandbox nötig), **dann
+Code-Erweiterungen nur in der Sandbox** (eigener Ursprung, Nachrichten
+über `/v1/`, Rechte je Erweiterung, Widerruf), Katalog erst, wenn der
+Server steht. Und vorher: das Erweiterungsfenster, das es heute schon gibt
+(`src/bereiche/einstellungen/erweiterungen.ts`, `new Function` im selben
+Ursprung — Audit R5), in die Register zurückführen. Diese Lücke bleibt
+offen, bis das steht.
+
 Diese Zeile stand als Wunschliste da, ohne einen Satz dazu, ob sie überhaupt
 zu Redion passt. Sie tut es nicht ohne Weiteres:
 
@@ -8175,6 +8190,333 @@ Bogen gehörte oder Redurs Wort braucht (§35, §43).
    Werkzeug lernt die drei Formen. Das erste ist eine Zeile und
    wahrscheinlich das Richtige — Redurs Wort.
 
+## L211 · `test537` sieht `(globalThis as any)` nicht — 25. September 2026
+
+**Gefunden am 25. September 2026**, beim Plattform-Audit
+(`doku/REDION-PLATTFORM-AUDIT.md`, 2.2). Der Bereichswächter aus E626 kennt
+zwei Wege, auf denen ein Bereich einen anderen anfasst: den Namen
+(`Datenbank.oeffne(…)`) und den Umweg über `(window as any).Name`
+(`test537.mts:164, 185`). Es gibt einen dritten, und der ist ihm unsichtbar:
+
+```txt
+(globalThis as any).Dateien.ablegen(…)      zeichenflaeche.ts:257, 271  bloecke → dateien
+(globalThis as any).Kalender…               datenbanken → …             5 Stellen
+(globalThis as any).Bibliothek…             wissen → …                  4 Stellen
+```
+
+Gezählt am 25. September: **32 Stellen** in `src/bereiche/` greifen so in
+einen fremden Bereich (`grep -rno "(globalThis as any)\.[A-Z][a-zA-Z]*"
+src/bereiche`). Keine davon steht in `pruefungen/bereiche-bestand.json`. Das
+ist kein neuer Verstoss — es sind alte —, aber ein Verzeichnis, das „nur
+schrumpfen" darf, zählt zu wenig, wenn ein ganzer Weg fehlt; dieselbe Sorte
+Fund wie L207.
+
+**Was fehlt:** `test537` um `globalThis` erweitern, den Bestand einmal
+nachziehen (er wächst dabei — das ist die Wahrheit, keine Verschlechterung)
+und L191 daneben stehen lassen: der Griff ins fremde Markup bleibt der vierte
+Weg, den niemand prüft.
+
+---
+
+## L212 · ~~Strg+Z nimmt zweimal zurück — und der Seitenverlauf vergibt neue Kennungen~~ — GESCHLOSSEN am 25. September 2026 (Punkt 1 E682/`test568`, Punkt 2 E684/`test569`)
+
+**Gefunden am 25. September 2026**, gemessen mit zwei Sonden im laufenden
+Programm (Ausgabe wörtlich in `doku/REDION-PLATTFORM-AUDIT.md`, 2.4).
+
+**1 · Zweimal zurück.** `Planflaeche` (`planflaeche.ts:1017`) und `Marken`
+(`marken.ts:4325`) nehmen Strg+Z mit `preventDefault()`, aber ohne
+`stopPropagation()`. Der Horcher der Schale hängt am Dokument
+(`schale.ts:3178`) und fragt nicht, ob jemand die Taste schon genommen hat;
+bei `z` ruft er `Verlauf.zurueck()` (Z. 3252). Ergebnis im Schaltplan: ein
+gesetztes Teil, Strg+Z — und es sind wieder drei Teile, Meldung
+„Rückgängig", Block neu gezeichnet. Auf dem Blatt: 2 → 1 Striche, aber der
+alte Block existiert nicht mehr, sein 100er-Verlauf (E378) ist weg. Die
+Gedankenkarte macht es richtig (`stopPropagation`, Z. 1482); das Whiteboard
+hat gar keine Taste.
+
+**2 · Neue Kennungen.** `Verlauf.anwenden` (`verlauf.ts:58-67`) leert die
+Seite mit `Store.kinderLeeren` — das ist `purgeBlock` je Kind — und setzt den
+Baum mit `Store.baumEinfuegen` wieder ein, „immer mit frischen IDs"
+(`indexdb.ts:2508`). Gemessen: `b04888d1…` → `eb6edc4f…`. `test70.mts:351`
+hält das als Tatsache fest; keinen Wächter gibt es für das Gegenteil. Was
+dabei mitläuft, ist gelesen, nicht gemessen: Grabsteine für den Abgleich
+(E254) je Block, Versionen weg, Anhänge über `purgeAnhaenge` mit
+`dateiAnspruch()` — ob ein Bild ein Strg+Z sicher überlebt, hängt an der
+Reihenfolge dieser Kette. E174 hat für den Markdown-Rundlauf entschieden,
+dass Kennungen bleiben; für den Verlauf steht die Entscheidung nicht.
+
+**Punkt 1 ist erledigt — 25. September 2026, E682, `test568`:** die
+Schale lässt eine Taste liegen, die ein Block schon genommen hat
+(`defaultPrevented`), und das Whiteboard hat seine Taste. Die Lücke bleibt
+für Punkt 2 offen.
+
+**Gemessen am 25. September (messungen.md):** ein Bild überlebt — der
+Dateisatz wird auf den neuen Block umgehängt, die Bytes bleiben. Eine
+**Unterseite** überlebt nicht als sie selbst: neue Kennung, ihre geplante
+Fassung ist gelöscht (1 → 0), ein Favorit zeigt auf die alte Kennung.
+Ein Strg+Z auf der Elternseite löscht den Verlauf der Unterseite (§15).
+
+**Punkt 2 ist erledigt — 25. September 2026, E684, `test569` (36 Zusagen):**
+`Store.baumAbgleichen` gleicht über die Kennung ab, Papierkorb statt Purge,
+Unterseiten und Zeilen als Blätter; nach dem Bau: Unterseite Kennung gleich,
+Fassungen 1 → 1, Favorit gültig. **Damit ist die Lücke geschlossen.** Die
+zwei Fassungs-Wiederherstellungen (`fassungen.ts:327`, `werkzeuge.ts:902`)
+gehen seit E685 denselben Weg (`test569` §13/§14). Was davon offen bleibt,
+hat eigene Nummern: L213 bis L215 darunter.
+
+---
+
+## L213 · Sperren rechnet den Dateianspruch NACH dem Purge — gehen die Bytes eines Bildes mit? — 25. September 2026
+
+**Gelesen, nicht gemessen** — von den Richtern des Bogens E684. `sperren`
+(`src/bereiche/wissen/werkzeuge.ts:991`) ruft `Store.kinderLeeren`, also
+`purgeBlock` je Kind. `purgeBlock` (`indexdb.ts`) rechnet `dateiAnspruch()`
+erst NACH `purgeTief` — wenn die Kinder der gesperrten Seite schon aus dem
+Zwischenspeicher sind. Nach dieser Lesart hat dann niemand mehr Anspruch
+auf ein Bild der Seite: `purgeAnhaenge` löst die Stücke und meldet dem
+Server die Datei als weg. Entsperren legt die Blöcke aus dem Chiffrat
+wieder an — mit einer `dateiId`, hinter der keine Bytes mehr liegen.
+
+Wenn das stimmt, ist es §9 und §51 in einem Satz: **Sperren einer Seite
+mit Bild löscht das Bild.** Wenn es nicht stimmt, gehört der Grund daneben.
+Erst messen (eine Sonde wie in messungen.md, 25. September: Seite mit Bild
+sperren, entsperren, Bytes zählen), dann entscheiden — und bis dahin fasst
+kein Bogen `sperren`/`entsperren` an (E684 Punkt 7).
+
+---
+
+## L214 · `baumEinfuegen` übernimmt `edited` und `created` aus dem Knoten — 25. September 2026
+
+**Gelesen, nicht gemessen.** `baumEinfuegen` (`indexdb.ts`) löscht aus dem
+Knoten nur `id`, `kinder`, `collection`, `views`, `content`; `addBlock`
+lässt den Patch gewinnen. Ein dupliziertes, eingefügtes oder aus einer
+Vorlage gesetztes Stück trägt damit den `edited`-Stempel des Originals —
+und `zuSchicken` (`maschine.ts`) fragt nach `edited > wolkeMarkeHoch`. Ist
+das Original älter als die Marke, käme das Duplikat nie zum Server: lokal
+da, drüben nie. Dieselbe Falle wie E250/L73, nur eine Ebene tiefer.
+
+**Was fehlt:** eine Messung mit gesetzter Marke (`Abgleich.zuSchicken()`
+enthält das Duplikat?), dann — wenn es stimmt — `delete patch.edited` an
+der einen Stelle und ein Wächter, der ein Duplikat mit frischem Stempel
+verlangt (`test226` als Nachbar).
+
+---
+
+## L215 · `baum` hängt die Sammlung auch an verknüpfte Ansichten — Duplizieren kopiert die Datenbank — 25. September 2026
+
+**Gelesen, nicht gemessen.** `baum` (`indexdb.ts`) prüft nur
+`x.collectionId`, nicht `verknuepft`; `baumEinfuegen` legt bei
+`k.collection` eine NEUE Sammlung samt Ansichten und Zeilen an. Ein
+dupliziertes verknüpftes Datenbank-Fenster (`verknuepft: true`, E?) müsste
+damit eine Kopie der ganzen Datenbank erzeugen statt eines zweiten
+Fensters auf dieselbe. `purgeTief` kennt die Ausnahme (`!b.verknuepft`),
+`baum`/`baumEinfuegen` nicht.
+
+**Was fehlt:** duplizieren, Sammlungen zählen; wenn es stimmt, in `baum`
+die Sammlung nur an nicht-verknüpfte Blöcke hängen — mit Wächter.
+
+---
+
+## L217 · Am Telefon steht die Werkzeugleiste im Ruhezustand hinter der unteren Leiste — 26. September 2026
+
+**Gemessen, und auf dem Bild zu sehen** (E689, Bogen 5a): bei 390×844 px
+liegt die Leiste des Whiteboards nach dem Öffnen bei 796…866 px, die untere
+Leiste der Schale (`#handy-oben`) bei 775…835 — sie überdecken sich um
+39 px. Man kommt mit einem Wisch heran (`#scroll` hält `--hunten` = 93 px am
+Ende frei), aber im ersten Bild sieht man von der Leiste nur den oberen Rand.
+
+**Warum es kein einfacher Fix war.** Naheliegend wäre `position:sticky;
+bottom:var(--hunten)` am Sockel — aber `.wb` trägt `overflow:hidden` (für
+die runden Ecken und den SVG-Schnitt), und damit ist `.wb` selbst der
+Haltebereich: sticky hätte nichts, woran es kleben könnte. Die andere
+Antwort wäre, die untere Leiste beim Zeichnen auszublenden, wie es der
+Dokumentmodus tut (`bausteine.css:6485`) — das ist eine Entscheidung über
+die Schale, nicht über eine Blockart, und gehört Redur.
+
+**Was fehlt:** die Wahl zwischen (a) so lassen (jede Zeile im Fluss kann
+hinter der Leiste liegen, das ist der Preis einer festen unteren Leiste),
+(b) `.wb` ohne `overflow:hidden` und dann sticky, (c) die untere Leiste
+ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
+
+---
+
+## L221 · Die leichten Glasleisten sind gerechnet, nicht gemessen — 27. September 2026
+
+**Seit E695 gibt es zwei Glasdichten** mit einer Regel: Fläche mit Schrift
+dicht (`--bg-schwebend-dicht`), Fläche mit Zeichen leicht
+(`--bg-schwebend`, 74 % hell / 72 % dunkel). Für die dichten Flächen —
+Menüs und die untere Leiste am Telefon — misst `test576` den Kontrast an
+gerenderten Pixeln über dem schlimmsten Grund (reines Schwarz, Weiss, Rot,
+Blau), hell und dunkel.
+
+**Die leichten nicht.** `.rb.glas` und die PDF-Werkzeugleiste
+(`.document-studio .blatt-werk`) tragen Zeichen, keine Schrift; §38 (und
+WCAG 1.4.11) verlangt dafür 3 : 1. Gerechnet reicht es: `--text-dim` über
+74 % Weiss mit reinem Schwarz dahinter gibt ungefähr 3,05 : 1. Das ist
+knapp, und es ist eine Rechnung über `rgba` — genau die Art, die die
+Unschärfe nicht kennt (L206). Bei den Menüs lag die erste Rechnung neben
+der Messung.
+
+**Was fehlt:** `test576` um einen Abschnitt für die PDF-Werkzeugleiste
+erweitern — ein Dokument öffnen, das Muster darunter, den Kontrast der
+Zeichen an Pixeln messen, Grenze 3 : 1. Wenn es nicht reicht: dieselbe
+Regel wie bei der Schrift (die Zeichen auf Glas eine Stufe kräftiger),
+nicht eine dichtere Fläche.
+
+---
+
+## L220 · Drei Nebenwirkungen des Ausblendens — GESCHLOSSEN am 26. September 2026 (E692)
+
+**Seit E691** kann ein Block auf „nur Fläche" stehen (`sichtbarIn:
+'flaeche'`) und wird dann in der Textansicht nicht gezeichnet. Drei Stellen
+rechneten weiter mit der UNGEFILTERTEN Geschwisterliste. Keine verlor
+Daten; alle drei waren „der Bildschirm bewegt sich nicht, und niemand sagt
+warum". Gefunden hat sie ein Leser beim Nachsehen, nicht ein Mensch beim
+Benutzen.
+
+```txt
+1  Rücktaste am Anfang eines leeren Blocks nahm eltern.content[idx-1] und
+   setzte den Fokus dorthin. Stand der Vorgänger auf „nur Fläche", zeigte
+   der Fokus auf ein [data-bid], das auf dieser Seite nicht gezeichnet ist.
+   GESCHLOSSEN: `nachbarImText` sucht den nächsten SICHTBAREN; gibt es
+   keinen, geschieht nichts (test574 §10).
+
+2  Strg+Umschalt+↑/↓ tauschte zwei Plätze in eltern.content. War der
+   Nachbar ausgeblendet, änderten sich die DATEN und auf dem Bildschirm
+   bewegte sich nichts.
+   GESCHLOSSEN: ein Druck springt ÜBER den unsichtbaren Nachbarn, mit
+   `splice` statt Tausch, damit die übrigen stehen bleiben (test574 §11).
+
+3  `b.nr` (die laufende Nummer einer Nummernliste) wurde beim Zeichnen in
+   den Block im Arbeitsspeicher geschrieben und wanderte über `exportAll`
+   in jede .redion — seit E691 gezählt über die GEFILTERTE Liste.
+   GESCHLOSSEN: gezählt wird beim Zeichnen, weitergereicht an
+   `Blocks.render(b, tiefe, nr)`, und `block.nr` wird nirgends mehr
+   gelesen (test574 §12).
+```
+
+**Und ein vierter Fund, der nicht auf dieser Liste stand.** `test574 §11`
+wollte Punkt 2 messen — und es bewegte sich GAR NICHTS, auch in den Daten
+nicht. Die Pfeilnavigation zwischen Blöcken stand im selben Tastenbehandler
+VOR dem Verschieben und kehrte um, sobald der Cursor am Anfang (für ↑) oder
+am Ende (für ↓) stand. In einem einzeiligen Block ist er fast immer beides:
+das Kürzel, das im Blockmenü als „Ctrl+Shift+↑" steht, war praktisch nie
+erreichbar. Die Reparatur ist eine Bedingung (nur ohne Strg/Cmd), und
+`test574 §11` hält seither auch den Normalfall ohne versteckte Nachbarn.
+
+**Was offen BLEIBT:** verschachtelte Nummernlisten zeigen weiter „1." —
+gezählt wird nur auf der obersten Ebene. Diese Grenze gab es vor E692 auch;
+sie wandert seither nur nicht mehr in die Sicherung. Und alte Blöcke tragen
+ihr `nr` noch als totes Feld: es wird nicht mehr gelesen und nicht mehr
+geschrieben, aber auch nicht nachträglich entfernt (§43).
+
+---
+
+## L219 · Was der Fläche noch fehlt — Zeichnen GESCHLOSSEN am 26. September 2026 (E693)
+
+**Seit E690** gibt es die Ansicht „Fläche", **seit E691** darf jeder Block
+darauf liegen, und **seit E693** kann man darauf zeichnen: Stift, Linie,
+Pfeil, Rechteck, Ellipse, Radierer, Farbmenü und Strg+Z — mit demselben
+Formenzeichner wie das Whiteboard (`core/gfx/shapes.ts`) und demselben Feld
+`shapes` am Block.
+
+```txt
+✅  zeichnen        Stift, Linie, Pfeil, Rechteck, Ellipse (E693)
+✅  radieren        nimmt genau eine Form weg (E693)
+✅  Rückgängig      aus `GfxHistory` im Kern, gehört der Fläche (E682/E693)
+✅  Farben          die acht des Whiteboards, mit Namen für den Vorleser
+✅  mehrere Kästen  jeder Block darf einen haben (E691)
+✗   auswählen       eine gezeichnete Form anfassen, verschieben, löschen
+✗   beschriften     Text auf der Fläche, Haftnotizen
+✗   Verbinder       zwei Formen aneinanderhängen
+✗   Bilder          ein Bild auf die Fläche legen
+```
+
+**Was noch fehlt, kann das Whiteboard längst** — Auswählen, Verschieben,
+Grösse ändern, Text, Haftnotiz, Verbinder, Bild. Der Zeichner dafür steht
+seit E693 im Kern; was fehlt, ist die BEDIENUNG, und die liegt im
+Whiteboard in rund sechshundert Zeilen (Auswahlrahmen, Griffe,
+Verbindungslogik). Sie in den Kern zu holen ist der nächste Schritt dieser
+Reihe — dasselbe Muster wie `GfxHistory`, `GfxToolbar`, `GfxShapes`, und
+der grösste Brocken davon.
+
+**Und eine kleine Folge, die kein Fehler ist, aber auffällt:** eine Seite
+mit Zeichnung taucht in der Flächen-Übersicht der Arbeitswelt nicht auf.
+Die listet Blöcke vom Typ `whiteboard` und `blatt`
+(`wissen/arbeitswelt.ts:738-748`), nicht Seiten mit `shapes`. Wer seine
+Zeichnungen dort sucht, findet die auf Seiten nicht.
+
+---
+
+## L218 · Drei Werkzeuglisten für eine Sache — GESCHLOSSEN (E694, 26. September 2026)
+
+**Der Zustand war:** seit E689 gab es den Katalog (`Register.werkzeuge`, 22
+Einträge), und das Whiteboard las daraus. Das Studio las weiter seine eigene
+Liste (`Marken.WERKZEUGE`, 14 Einträge mit Kennung, Zeichen, Symbol, Name,
+Titel), und das Menüband eine dritte (`register/menueband.ts`, 13 Vierertupel
+`[Kennung, Name, Zeichen, Hinweis]`). Drei Listen für eine Sache — genau das,
+wovor §8 warnt, und in diesem Projekt keine Vermutung: als „Abdecken" im
+Studio einmal still zu „Abdeckband" wurde, sagte das Menüband weiter
+„Abdecken" (`test266 §1`).
+
+**GESCHLOSSEN mit E694.** Das Studio hält nur noch die REIHENFOLGE der
+vierzehn Kennungen und ruft `Register.werkzeuge.auswahl([…])`; die
+Reihenfolge gehört wirklich dorthin, weil `ordnungAbgleichen` den Nutzer sie
+umstellen lässt. Das Menüband hält eine Folge mit Herkunft
+(`['abdeck','werkzeug']`, `['line','form']`) und holt Name, Zeichen und
+Hinweis aus dem zuständigen Katalog. `Marken.WERKZEUGE` bleibt als NAME
+stehen — es ist jetzt eine Sicht auf den Katalog, damit `document-mode.ts`
+(E572), der Inspector und `ordnungAbgleichen` weiter dasselbe Feld lesen.
+
+**Der Beleg:** `test572 §3` prüft jetzt nicht mehr, dass zwei Listen dasselbe
+sagen, sondern dass die zwei Abschriften WEG sind — gemessen am Quelltext, in
+`nurCode`, damit der Kopfkommentar nicht mitzählt. Gegen den Stand davor war
+er rot mit vier Zeilen. `test572 §12` misst dazu das laufende Programm; seine
+Gegenprobe (einen Namen von Hand zurückschreiben) druckt genau den
+historischen Fehler: `abdeck`.
+
+**Was dabei herauskam und vorher niemand wusste:** die Kennung `ellipse` gibt
+es **zweimal** — als Flächenwerkzeug (`◯`, deutscher Kennungsraum neben
+`linie`, `pfeil`, `rechteck`) und als Studio-Form (`○`, englischer
+Kennungsraum, weil sie so in jeder gespeicherten Marke steht, §53.3). Die drei
+anderen kollidieren nicht, weil die Sprachen verschieden sind. Deshalb sagt im
+Menüband jede Zeile, aus welchem Katalog sie kommt, statt „erst hier, sonst
+dort" zu raten.
+
+**Was NICHT dazugehört und offen bleibt:** Gedankenkarte und Planfläche haben
+ihre Werkzeuge weiter im Code (Bogen 5c/5d), und die Tasten der Flächen sind
+in `Register.werkzeuge` noch nicht eingetragen (5e) — ein Hinweis auf eine
+Taste, die nichts tut, wäre ein falsches Versprechen (§32).
+---
+
+## L216 · Lerninhalte im Startweg — 19,5 KB Lernstoff bei jedem Start, für einen Bildschirm, den nicht jeder öffnet — 25. September 2026
+
+**Gemessen, nicht vermutet** (`messungen.md`, E688): `test388 §5` war
+wieder gerissen, 2711 KB gegen 2700. Von den 127 KB seit E613 sind zwei
+Posten Inhalt statt Code — `quell/bereiche/wissen/nin-quiz.js` (12,2 KB
+gzip, die NIN-Kapitel 5–7 aus E679) und
+`quell/bereiche/wissen/staatskunde-inhalt.js` (7,3 KB, E677). Beide werden
+beim Start geladen und geparst, ob jemand den Trainer öffnet oder nicht.
+Genau dafür hat E613 die Chronik aus dem Startweg genommen
+(`chronik/laden.js` holt sie nach, wie pdf.js in `test388 §2/§3`).
+
+**Warum es nicht einfach nachgezogen wurde:** der Trainer findet seine
+Kapitel beim Start über `Register.vorlagen` (`trainer: true`, E679,
+`test567`). Nachladen hiesse: das Register kennt die Kapitel dem Namen
+nach, der Inhalt kommt beim Öffnen — eine Änderung am Register-Eintrag
+(§8), nicht nur am Laden. Und 19,5 KB brächten die Zahl nur auf 2692 —
+die Decke wäre beim nächsten Bogen wieder gerissen. Deshalb steht die
+Decke seit E688 auf 2850, und diese Lücke bleibt offen.
+
+**Die Frage an Redur:** sollen Lerninhalte (und künftige Kapitel — jedes
+NIN-Kapitel sind rund 4 KB gzip) grundsätzlich erst beim Öffnen des
+Trainers kommen? Wenn ja: ein Bogen mit `wissen/lerninhalt-laden.ts` nach
+dem Muster von E613, einem Registereintrag, der nur Name und Umfang trägt,
+und einer Zusage in `test388 §5` („Lerninhalte werden beim Start nicht
+geholt"), die gegen den heutigen Stand rot ist.
+
+---
+
 ## L209 · Der Stift gegen GoodNotes — was nach E673, E674 und E675 offen bleibt
 
 **Gefunden am 21. September 2026**, beim Lesen für Redurs Satz „die stift
@@ -8249,13 +8591,13 @@ anderes sieht, gilt sein Bild.
    Eintrag „Hex eingeben" über `Dialog.frage` (Prüfung `/^#[0-9a-f]{6}$/`
    liegt in `farbenRein`) plus ein festes Gitter aus den zehn
    `LEITER`-Farben zuerst (sie sind der Katalog, §8). `test458` erweitern.
-   **Geschlossen mit E681 am 23. September 2026:** „+“ öffnet direkt ein
+   **Geschlossen mit E697 am 23. September 2026:** „+“ öffnet direkt ein
    benanntes Farbgitter, zuletzt verwendete Farben, geprüftes Hex-Feld und
    Systemfarbwähler. Der Marker erhält sechs eigene Farbvorschläge mit
    Vorschau bei derselben Deckung wie der echte Strich (0,32). Bewusste
    Abweichung vom Vorschlag: keine Aderfarben für Textmarker; die bestehenden
    Leiterfarben bleiben beim Leiterstift. Bestehende Tupfer, Farbsätze und
-   alte Marken bleiben unverändert. `test568` hält Eingabe, Fokus, Cursor,
+   alte Marken bleiben unverändert. `test577` hält Eingabe, Fokus, Cursor,
    echte Strichfarbe, Vorschau, Neuladen und 320/390-px-Fenster; `test458`
    hält weiterhin Speichern, Laden, Zurücksetzen und acht erreichbare Sätze.
 10. **Radiermodus nur im Rundlauf** (fünf Modi über EINEN Knopf, der
@@ -8468,8 +8810,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 22. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 106 Lücken, 55 offene und 51 geschlossene. Der Befehl dazu ist
+**Gemessen am 26. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 117 Lücken, 62 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
