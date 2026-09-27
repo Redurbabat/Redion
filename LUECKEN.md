@@ -8140,6 +8140,14 @@ Bis dahin ist `test537` rot und `main` bewegt sich nicht (§46). Das ist
 Absicht: eine rote Zahl, die auf eine Entscheidung wartet, ist besser als
 eine grüne, die nicht stimmt.
 
+**Redur hat entschieden, am 27. September 2026:** „C jetzt, B später" (E698).
+Weg C ist gebaut: die KI öffnet die Einstellungen über die Schale
+(`App.einstellungen('schluessel')`, `App.einstellungen('mcp')`), das Paar
+`ki → Einstellungen` gibt es nicht mehr, das Verzeichnis steht auf
+124 Paaren und 516 Treffern, `test537` ist grün. **Offen bleibt Weg B** — der
+Filter, der `${…}` in Schablonen mitzählt, und das eine Setzen des
+Verzeichnisses auf die Wahrheit. Diese Lücke bleibt offen, bis B gebaut ist.
+
 ## L210 · Der Trainer nach E677 — was offen bleibt
 
 **Gefunden am 22. September 2026**, beim Bau von E677. Der Trainer wohnt
@@ -8337,6 +8345,121 @@ die Schale, nicht über eine Blockart, und gehört Redur.
 hinter der Leiste liegen, das ist der Preis einer festen unteren Leiste),
 (b) `.wb` ohne `overflow:hidden` und dann sticky, (c) die untere Leiste
 ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
+
+---
+
+## L223 · Im Ordnerbetrieb steht in der Fehlerliste nur „Script error." — 27. September 2026
+
+**Gefunden beim Bau von E699**, nicht gesucht. Die erste Fehlergrenze der
+React-Inseln meldete über `reportError` — also über denselben Weg, den jeder
+unbehandelte Fehler in Redion nimmt: `Pflege` hört auf `window` „error" und
+schreibt die Meldung in die Fehlerliste („Erste Hilfe → Fehler ansehen").
+`test579` §8 fand dort aber keinen Text, sondern:
+
+```txt
+{ text: "Script error.", wo: ":" }
+```
+
+**Nachgemessen, und es betrifft nicht nur die Inseln.** Ein Fehler aus
+Redions eigenem Code (`Sanitize.html` mit einem Wert, der beim Umwandeln
+wirft, aus einem Zeitgeber heraus) landet per Doppelklick (`file://`)
+genauso: „Script error." ohne Datei und ohne Zeile. Unter `file://` ist
+jede Datei ihr eigener Ursprung, und der Browser schwärzt Meldungen aus
+fremdem Ursprung für `window.onerror`. Die Fehlerliste — gebaut, damit ein
+Mensch später sieht, was schiefging (§7, `reporter.ts`) — ist im
+Ordnerbetrieb für unbehandelte Fehler also leer an Inhalt. Über das Netz
+und in der Einzeldatei (alles in einer Datei) gilt es nicht.
+
+**Die Inseln sind schon ausgenommen:** sie melden als Ereignis an ihren
+Lader, und der an `Reporter.error` — dort steht der Text (E699).
+
+**Was fehlt:** ein Weg, auf dem Redions eigene unbehandelte Fehler auch im
+Ordnerbetrieb ihren Text behalten. Denkbar: die Einstiegspunkte (Zeitgeber,
+Zuhörer der Schale) über `Reporter.guarded` laufen lassen, oder
+`crossorigin` prüfen (hilft unter `file://` vermutlich nicht). Zuerst ein
+Prüflauf, der den Fall per Doppelklick zeigt (§30), dann die Reparatur.
+
+---
+
+## L222 · Das Touch Kit in Redion: was upstream in UI-Kit noch fehlt — 27. September 2026
+
+**Seit E699** liegt das Touch Kit als Kopie von UI-Kit @c192821 in
+`fremd/touch/`, und hier wird darin nichts von Hand geändert. Sechs Dinge
+gehören deshalb nach UI-Kit, nicht nach Redion (der sechste kam bei der
+Durchsicht dazu):
+
+```txt
+1  STRENGE TYPEN      Unter Redions Schaltern (§52.6) hat das Kit 73 Fehler:
+                      56 noUncheckedIndexedAccess, 15 exactOptionalProperty-
+                      Types, 2 noImplicitReturns. Bis UI-Kit den Durchgang
+                      macht, prüft tsconfig.islands.json mit den Schaltern
+                      des Kits — eine Abweichung von §52.6. Redions eigener
+                      Inselcode hält die strengen (test578 §8).
+2  RUHIGE DARSTELLUNG Die Federn des Kits in JavaScript (animateSpring,
+                      useReducedMotion) fragen nur das System
+                      (prefers-reduced-motion), nicht body[data-bewegung=
+                      "ruhig"]. Für CSS reicht Redions Regel; für die
+                      JS-Federn (Blatt, Navigation, Tab-Leiste — ab den
+                      Stufen, die sie benutzen) braucht es einen Haken im
+                      Kit, über den Redion „ruhig" melden kann.
+3  GLAS-REIHENFOLGE   Das Kit schreibt backdrop-filter VOR -webkit-backdrop-
+                      filter. lightningcss (im Bau von Vite) fasst diese Folge
+                      zu EINER Zeile mit Präfix zusammen — Chrome hätte kein
+                      Glas. Im Inselblatt ist das heute nur
+                      .ui-touch-button--glass, benannt als Ausnahme in
+                      test578 §9, von keiner Insel benutzt.
+4  LIZENZANHANG       glass/field.ts und glass/filter.ts verweisen für den
+                      MIT-Text auf HERKUNFT.md; dessen Anhang sagt bei
+                      c192821 „keine Code-Übernahme". Redion legt den Text
+                      daneben (glass/LIZENZ-ALEXalesha.txt).
+5  STABILER STAND     c192821 liegt auf dem Zweig claude/apple-ui-kit-react-
+                      i2ew4y, nicht auf main von UI-Kit.
+6  AKZENT ALS SCHRIFT Das Kit hat EINE Akzentmarke für Fläche UND Schrift
+                      (--ui-color-accent: Knopf „plain"/„tinted"/„gray",
+                      Dialog, Aktionsblatt, Liste, Chip, Stepper, Toast,
+                      Navbar, Suchfeld — zwölf Stellen). Redion trennt beides:
+                      --accent füllt, --accent-text schreibt (dunkel.css,
+                      122 Stellen). Die Brücke kann die eine Marke nur auf
+                      EINE legen, und sie liegt auf --accent: im dunklen
+                      „Standard" stünde Akzentschrift mit 3,16 : 1 auf
+                      --bg-card (mit --accent-text wären es 5,67). In
+                      Stufe 1a zeigt keine Insel so eine Schrift (die Probe
+                      hat einen gefüllten Knopf und einen Schalter); die
+                      Dialoge in Stufe 1b schon. Gebraucht wird im Kit eine
+                      eigene Marke für Akzent als Schrift, die die Brücke
+                      auf --accent-text legt.
+```
+
+**Nachgesehen bei der Durchsicht von E699 (27. September, Abend) — UI-Kit
+ist am selben Nachmittag weitergegangen,** auf demselben Zweig, nach dem
+festgenagelten c192821:
+
+```txt
+Punkt 1  erledigt in UI-Kit 0d6222b  „strict-clean kit": die drei Schalter
+                                     an, 109 Fehler behoben
+Punkt 2  erledigt in UI-Kit 13e7844  data-ui-motion="reduce" am
+                                     Wurzelelement beruhigt Federn in JS
+                                     und CSS — die Brücke kann Redions
+                                     „ruhig" dorthin spiegeln
+Punkt 4  erledigt in UI-Kit a82fcb3  der MIT-Text im Anhang von HERKUNFT.md
+                                     (Wort für Wort derselbe wie
+                                     glass/LIZENZ-ALEXalesha.txt)
+Punkt 3, 5, 6                        noch offen (Button.css schreibt die
+                                     Glas-Folge bei a82fcb3 unverändert)
+```
+
+Redion bleibt bei c192821, weil Redur diesen Stand freigegeben hat
+(„React 19.3.0, Touch Kit (dein UI-Kit), Glas-Code (ALEXalesha, MIT)" —
+festgenagelt in E699); ein neuer Stand kommt mit dem nächsten Holen, also
+mit Stufe 1b, und mit ihm fallen die Punkte 1, 2 und 4 hier weg.
+
+**Was fehlt:** Punkt 3, 5 und 6 in UI-Kit; dann `node
+skripte/touch-holen.mts <UI-Kit> <neuer Commit>`, die Prüfsummen in
+`fremd-bestand.json` nachziehen, für Punkt 1 `tsconfig.islands.json` auf
+Redions Schalter stellen und für Punkt 2 die Brücke `data-ui-motion`
+spiegeln lassen. Geschlossen ist die Lücke, wenn `test578` §8 das Kit mit
+Redions Schaltern prüft, die Ausnahme in §9 leer ist und Akzentschrift in
+einer Insel `--accent-text` trägt.
 
 ---
 
@@ -8810,8 +8933,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 26. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 117 Lücken, 62 offene und 55 geschlossene. Der Befehl dazu ist
+**Gemessen am 27. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 119 Lücken, 64 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

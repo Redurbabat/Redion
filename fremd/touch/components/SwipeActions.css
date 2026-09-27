@@ -1,0 +1,126 @@
+/*
+ * Swipe actions — the row content slides (transform only); the action
+ * buttons sit behind it and scale in one after another as uncovered.
+ * In the DOM the actions follow the row (reading / Tab order), so the
+ * stacking is explicit: actions on layer 0, the row on layer 1.
+ */
+
+.ui-touch-swipe {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ui-touch-swipe-content {
+  position: relative;
+  z-index: 1;
+  background: var(--ui-color-surface);
+  touch-action: pan-y;
+  transition: transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy);
+}
+
+.ui-touch-swipe-content[data-dragging] {
+  transition: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ui-touch-swipe-actions {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+}
+
+.ui-touch-swipe-actions--trailing {
+  right: 0;
+  flex-direction: row-reverse;
+}
+
+.ui-touch-swipe-actions--leading {
+  left: 0;
+}
+
+.ui-touch-swipe-action {
+  --ui-touch-swipe-reveal: 0;
+  --ui-touch-swipe-tone: var(--ui-color-label-secondary);
+
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  width: 64px;
+  min-height: var(--ui-hit-min);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ui-touch-swipe-tone);
+  cursor: pointer;
+  transform: scale(var(--ui-touch-swipe-reveal));
+  opacity: calc(var(--ui-touch-swipe-reveal) * 1.5);
+}
+
+.ui-touch-swipe-action--danger {
+  --ui-touch-swipe-tone: var(--ui-color-danger);
+}
+
+.ui-touch-swipe-action--accent {
+  --ui-touch-swipe-tone: var(--ui-color-accent);
+}
+
+.ui-touch-swipe-action--warning {
+  --ui-touch-swipe-tone: var(--ui-color-warning);
+}
+
+.ui-touch-swipe-action-bubble {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 36px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-touch-swipe-tone);
+  color: #fff;
+}
+
+.ui-touch-swipe-action--neutral .ui-touch-swipe-action-bubble {
+  background: var(--ui-color-fill-strong);
+  color: var(--ui-color-label);
+}
+
+.ui-touch-swipe-action-label {
+  font: var(--ui-text-caption-2);
+  white-space: nowrap;
+}
+
+.ui-touch-swipe-action:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+  border-radius: var(--ui-radius-sm);
+}
+
+/* Full swipe: the first action stretches towards the finger (scaleX, origin at the row edge). */
+.ui-touch-swipe-actions[data-full] .ui-touch-swipe-action:first-child .ui-touch-swipe-action-bubble {
+  transform: scaleX(1.6);
+  transition: transform var(--ui-spring-bouncy-duration) var(--ui-spring-bouncy);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-swipe-content {
+    transition: transform 1ms linear;
+  }
+
+  .ui-touch-swipe-action {
+    transform: none;
+  }
+
+  .ui-touch-swipe-actions[data-full] .ui-touch-swipe-action:first-child .ui-touch-swipe-action-bubble {
+    transform: none;
+    transition: none;
+  }
+}

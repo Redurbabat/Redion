@@ -1,0 +1,25 @@
+{
+  "hinweis": "Was `bauen-inseln.mts` erzeugt (E699). Diese Dateien sind Ausgabe, kein Quelltext: test109 zählt sie nicht als neues JavaScript, aber NUR, weil test578 sie bei jedem Lauf neu baut und Byte für Byte vergleicht. Steht hier eine Datei ohne Quelle, ohne Bau oder ohne Wächter, ist sie für test109 wieder von Hand geschrieben — und rot.",
+  "bau": "bauen-inseln.mts",
+  "waechter": "test578",
+  "buendel": [
+    {
+      "pfad": "quell/fremd/react/react.js",
+      "quelle": "src/islands/react-runtime.tsx",
+      "global": "RedionReact"
+    },
+    {
+      "pfad": "quell/islands/islands.js",
+      "quelle": "src/islands/main.tsx",
+      "global": "RedionIslands"
+    },
+    {
+      "pfad": "quell/islands/islands.css",
+      "quelle": "src/islands/main.tsx"
+    },
+    {
+      "pfad": "quell/fremd/react/LIZENZ.txt",
+      "quelle": "node_modules/react/LICENSE"
+    }
+  ]
+}

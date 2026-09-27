@@ -1,0 +1,13 @@
+.ui-touch-glyph {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+/* Parts marked data-fill are solid shapes (play, pause, dots); a filled glyph fills every shape. */
+.ui-touch-glyph [data-fill],
+.ui-touch-glyph[data-filled] path,
+.ui-touch-glyph[data-filled] circle,
+.ui-touch-glyph[data-filled] rect {
+  fill: currentColor;
+}

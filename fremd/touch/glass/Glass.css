@@ -1,0 +1,187 @@
+/*
+ * Liquid glass. Three looks, chosen by the browser and the user:
+ *  1. refracting — Chromium: light blur + saturation + the SVG lens filter
+ *     (data-refracting, --ui-touch-glass-filter set by useGlassRefraction);
+ *  2. frosted — everywhere else: stronger blur, same tint, same highlights;
+ *  3. solid — prefers-reduced-transparency: an opaque raised surface.
+ * Highlights are painted layers (no animation), so glass costs nothing at rest.
+ *
+ * The glass must never become a "backdrop root" (Filter Effects 2) while it
+ * refracts: no filter, mask, clip-path or opacity < 1 on it, and no
+ * mix-blend-mode inside it (a blend mode isolates its parent). Chromium would
+ * then give the optics layer only the glass's own tint as backdrop — the page
+ * behind would show through unbent and unblurred (measured, Chromium 141).
+ */
+
+.ui-touch-glass,
+.ui-touch-glass-button {
+  --ui-touch-glass-tint: light-dark(rgb(255 255 255 / 0.2), rgb(40 40 48 / 0.28));
+  --ui-touch-glass-edge: light-dark(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.28));
+  --ui-touch-glass-edge-low: light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.08));
+  --ui-touch-glass-frost: blur(16px) saturate(170%);
+  /* Faint colour fringe at the edges, like light splitting in thick glass. */
+  --ui-touch-glass-fringe: inset 1px 0 0 rgb(255 90 120 / 0.28), inset -1px 0 0 rgb(80 220 255 / 0.28);
+}
+
+.ui-touch-glass {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-touch-glass-tint);
+  -webkit-backdrop-filter: var(--ui-touch-glass-frost);
+  backdrop-filter: var(--ui-touch-glass-frost);
+  box-shadow:
+    inset 0 1px 0 var(--ui-touch-glass-edge),
+    inset 0 -1px 0 var(--ui-touch-glass-edge-low),
+    inset 0 0 0 var(--ui-hairline) var(--ui-touch-glass-edge-low),
+    var(--ui-touch-glass-fringe),
+    0 10px 30px var(--ui-shadow-ink);
+  color: var(--ui-color-label);
+}
+
+.ui-touch-glass--tinted {
+  --ui-touch-glass-tint: light-dark(rgb(255 255 255 / 0.55), rgb(30 30 36 / 0.62));
+}
+
+/* The glass button keeps the kit Button's press spring; only its material changes. */
+.ui-touch-button.ui-touch-glass-button {
+  --ui-touch-button-shadow:
+    inset 0 1px 0 var(--ui-touch-glass-edge),
+    inset 0 -1px 0 var(--ui-touch-glass-edge-low),
+    inset 0 0 0 var(--ui-hairline) var(--ui-touch-glass-edge-low),
+    var(--ui-touch-glass-fringe),
+    0 6px 18px var(--ui-shadow-ink);
+
+  isolation: isolate;
+}
+
+/*
+ * Refracting: the glass itself stops blurring; its optics layer runs the lens.
+ * The layer is exactly the glass, clipped by its own (inherited) radius — the
+ * SVG filter region reaches beyond it, which is what the rim pulls in. A layer
+ * clipped with clip-path instead shows square corners inside overflow-clipping
+ * ancestors in Chromium.
+ */
+.ui-touch-glass[data-refracting],
+.ui-touch-button.ui-touch-glass-button[data-refracting] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.ui-touch-glass-optics {
+  display: none;
+}
+
+.ui-touch-glass[data-refracting] > .ui-touch-glass-optics,
+.ui-touch-glass-button[data-refracting] > .ui-touch-glass-optics {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block;
+  border-radius: inherit;
+  -webkit-backdrop-filter: blur(1.5px) saturate(170%) var(--ui-touch-glass-filter);
+  backdrop-filter: blur(1.5px) saturate(170%) var(--ui-touch-glass-filter);
+  pointer-events: none;
+}
+
+/*
+ * Specular glare: a soft light that sits where the pointer is (or top-left at
+ * rest). Plain alpha on purpose — a blend mode here would isolate the glass
+ * and switch the lens off (see the note at the top).
+ */
+.ui-touch-glass::before,
+.ui-touch-glass-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--ui-touch-glass-gx, 22%) var(--ui-touch-glass-gy, 0%),
+    rgb(255 255 255 / 0.36),
+    transparent 58%
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.ui-touch-glass-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  width: max-content;
+  max-width: 100%;
+  padding: 6px;
+  border-radius: var(--ui-radius-pill);
+}
+
+.ui-touch-glass-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Squircle-like corners where the browser can draw them; glare and lens follow (the map is baked to match). */
+@supports (corner-shape: squircle) {
+  .ui-touch-glass:not(.ui-touch-glass-bar) {
+    corner-shape: squircle;
+  }
+
+  .ui-touch-glass::before,
+  .ui-touch-glass-optics {
+    corner-shape: inherit;
+  }
+}
+
+/* A refracting glass button must not dim on press: a dimmed element cannot show the lens behind it. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-button.ui-touch-glass-button[data-refracting][data-pressed] {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .ui-touch-glass,
+  .ui-touch-glass[data-refracting] {
+    background: var(--ui-color-surface-raised);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .ui-touch-button.ui-touch-glass-button,
+  .ui-touch-button.ui-touch-glass-button[data-refracting] {
+    --ui-touch-button-bg: var(--ui-color-surface-raised);
+    --ui-touch-button-bg-pressed: color-mix(in srgb, var(--ui-color-surface-raised), var(--ui-color-label) 10%);
+
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .ui-touch-glass::before,
+  .ui-touch-glass-button::before {
+    opacity: 0;
+  }
+
+  .ui-touch-glass[data-refracting] > .ui-touch-glass-optics,
+  .ui-touch-glass-button[data-refracting] > .ui-touch-glass-optics {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .ui-touch-glass {
+    --ui-touch-glass-tint: light-dark(rgb(255 255 255 / 0.88), rgb(24 24 28 / 0.9));
+
+    box-shadow: inset 0 0 0 1px var(--ui-color-label);
+  }
+
+  .ui-touch-button.ui-touch-glass-button,
+  .ui-touch-button.ui-touch-glass-button[data-pressed] {
+    --ui-touch-button-bg: light-dark(rgb(255 255 255 / 0.88), rgb(24 24 28 / 0.9));
+    --ui-touch-button-bg-pressed: light-dark(rgb(236 236 242 / 0.94), rgb(48 48 56 / 0.94));
+
+    box-shadow: inset 0 0 0 1px var(--ui-color-label);
+  }
+}

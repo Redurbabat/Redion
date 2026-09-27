@@ -563,6 +563,20 @@
 <script src="quell/register/context.js" defer></script>
 <script src="quell/register/fachzeichen.js" defer></script>
 <script src="quell/register/elektroformeln.js" defer></script>
+<!-- DIE REACT-INSELN (E699). React und die Touch-Kit-Inseln werden beim
+     Start NICHT geholt — rund 78 KB über die Leitung, und test388 §5 hat
+     unter seiner Decke keinen Platz für eine Bibliothek, die beim Start
+     niemand sieht. `laden.js` holt sie beim ersten Gebrauch
+     (`Inseln.bereit()`) und wärmt sie im Leerlauf nach dem Laden vor, wo das
+     nichts über die Leitung kostet. Kein type="module": das liefe per
+     Doppelklick nicht. -->
+<!-- inseln-daten: quell/fremd/react/react.js, quell/islands/islands.js,
+     quell/islands/islands.css — NICHT hier geladen (E699). `bauen.mts`
+     setzt die Bytes an DIESER Stelle in die Einzeldatei, als Behälter vom
+     Typ text/plain, den der Browser nicht auswertet; erst `Inseln.bereit()`
+     macht Skripte daraus. Fehlt die Marke, bricht der Bau ab. Im GRUNDSTOCK
+     von `sw.ts` stehen alle drei. -->
+<script src="quell/schale/inseln/laden.js" defer></script>
 <script src="quell/schale/ueberlagerung/menue.js" defer></script>
 <script src="quell/schale/ueberlagerung/sheet.js" defer></script>
 <script src="quell/schale/ueberlagerung/hinweis.js" defer></script>

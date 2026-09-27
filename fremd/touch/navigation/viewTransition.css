@@ -1,0 +1,125 @@
+/*
+ * Page transitions for transitionPage(). Scoped by data-ui-vt on <html>, so
+ * other view transitions on the page keep their own animations.
+ *
+ * Whole page: the root snapshot slides. With a scope (data-ui-vt-scope), the
+ * root stands still and only the element named ui-touch-page slides,
+ * clipped to its own box (corner radius handed over by transitionPage()).
+ *
+ * Timing: the `smooth` spring's shape, time-scaled to 480 ms (push) / 420 ms
+ * (pop) — the snapshot layer takes every tap on the page while it runs, so
+ * its long settle tail would feel dead. Other named elements (a shared
+ * picture) travel in step with --ui-touch-vt-duration / --ui-touch-vt-easing,
+ * set on ::view-transition so only the transition layer inherits them.
+ * Under reduced motion nothing slides: the browser's own cross-fade runs,
+ * only shorter.
+ */
+
+:root[data-ui-vt] {
+  view-transition-name: root;
+}
+
+:root[data-ui-vt]::view-transition {
+  --ui-touch-vt-duration: 480ms;
+  --ui-touch-vt-easing: var(--ui-spring-smooth);
+}
+
+:root[data-ui-vt='pop']::view-transition {
+  --ui-touch-vt-duration: 420ms;
+}
+
+:root[data-ui-vt='fade']::view-transition {
+  --ui-touch-vt-duration: 180ms;
+  --ui-touch-vt-easing: var(--ui-ease-standard);
+}
+
+:root[data-ui-vt-scope]::view-transition-old(root),
+:root[data-ui-vt-scope]::view-transition-new(root) {
+  animation: none;
+}
+
+:root[data-ui-vt-scope]::view-transition-group(ui-touch-page) {
+  overflow: clip;
+  border-radius: var(--ui-touch-vt-clip-radius, 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-ui-vt='push']:not([data-ui-vt-scope])::view-transition-old(root),
+  :root[data-ui-vt='push'][data-ui-vt-scope]::view-transition-old(ui-touch-page) {
+    animation: ui-touch-vt-push-out var(--ui-touch-vt-duration) var(--ui-touch-vt-easing) both;
+  }
+
+  :root[data-ui-vt='push']:not([data-ui-vt-scope])::view-transition-new(root),
+  :root[data-ui-vt='push'][data-ui-vt-scope]::view-transition-new(ui-touch-page) {
+    animation: ui-touch-vt-push-in var(--ui-touch-vt-duration) var(--ui-touch-vt-easing) both;
+    box-shadow: -12px 0 24px var(--ui-shadow-ink);
+  }
+
+  /* Pop: the leaving page stays on top and slides away to the right. */
+  :root[data-ui-vt='pop']:not([data-ui-vt-scope])::view-transition-old(root),
+  :root[data-ui-vt='pop'][data-ui-vt-scope]::view-transition-old(ui-touch-page) {
+    z-index: 1;
+    animation: ui-touch-vt-pop-out var(--ui-touch-vt-duration) var(--ui-touch-vt-easing) both;
+    box-shadow: -12px 0 24px var(--ui-shadow-ink);
+  }
+
+  :root[data-ui-vt='pop']:not([data-ui-vt-scope])::view-transition-new(root),
+  :root[data-ui-vt='pop'][data-ui-vt-scope]::view-transition-new(ui-touch-page) {
+    animation: ui-touch-vt-pop-in var(--ui-touch-vt-duration) var(--ui-touch-vt-easing) both;
+  }
+}
+
+/* Cross-fade: the browser's default (old fades out, new fades in), quicker. */
+:root[data-ui-vt='fade']::view-transition-old(root),
+:root[data-ui-vt='fade']::view-transition-new(root),
+:root[data-ui-vt='fade']::view-transition-old(ui-touch-page),
+:root[data-ui-vt='fade']::view-transition-new(ui-touch-page) {
+  animation-duration: var(--ui-touch-vt-duration);
+  animation-timing-function: var(--ui-touch-vt-easing);
+}
+
+@keyframes ui-touch-vt-push-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes ui-touch-vt-push-out {
+  to {
+    transform: translateX(-20%);
+    opacity: 0.85;
+  }
+}
+
+@keyframes ui-touch-vt-pop-in {
+  from {
+    transform: translateX(-20%);
+    opacity: 0.85;
+  }
+}
+
+@keyframes ui-touch-vt-pop-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/*
+ * Reduced motion: the push / pop rules above do not apply, so every
+ * direction (also a 'push' requested before the setting changed) is the
+ * short cross-fade — never a fade-in of the old page, never a slide.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui-vt]::view-transition {
+    --ui-touch-vt-duration: 180ms;
+    --ui-touch-vt-easing: var(--ui-ease-standard);
+  }
+
+  :root[data-ui-vt]::view-transition-old(root),
+  :root[data-ui-vt]::view-transition-new(root),
+  :root[data-ui-vt]::view-transition-old(ui-touch-page),
+  :root[data-ui-vt]::view-transition-new(ui-touch-page) {
+    animation-duration: var(--ui-touch-vt-duration);
+    animation-timing-function: var(--ui-touch-vt-easing);
+  }
+}

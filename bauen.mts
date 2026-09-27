@@ -101,6 +101,46 @@ html = html.replace(CHRONIK_MARKE,
   () => '<script>\n/* ===== quell/bereiche/chronik/daten.js ===== */\n' +
         lies('quell/bereiche/chronik/daten.js') + '\n</script>');
 
+/* DIE REACT-INSELN IN DIE EINZELDATEI (E699) — dasselbe Muster, mit EINEM
+ * Unterschied, und der ist der Punkt.
+ *
+ * pdf.js und die Chronik stehen hier als gewöhnliches `<script>`: ihr
+ * Auswerten legt nur eine Konstante mit Daten an. React auszuwerten ist
+ * Arbeit (rund 220 KB Code), und im Ordnerbetrieb geschieht das erst beim
+ * ersten Gebrauch. Die Einzeldatei soll sich GLEICH verhalten: sie startet
+ * ohne React. Also stehen die Bytes in `<script type="text/plain">` — das
+ * liest der Parser, aber er führt es nicht aus. `Inseln.bereit()`
+ * (`src/schale/inseln/laden.ts`) macht erst dann Skripte daraus, über
+ * Blob-Adressen wie bei pdf.js, und aus dem dritten ein Stilblatt-Link
+ * auf eine Blob-Adresse (kein `<style>` aus TypeScript, test412).
+ *
+ * ROH EINGESETZT — deshalb darf in den Bytes kein `</script` stehen (er
+ * beendete den Behälter) und kein `<!--` (er schaltet den Parser in einen
+ * anderen Zustand). `bauen-inseln.mts` verweigert beides schon beim Bauen;
+ * hier wird es noch einmal geprüft, weil ein Behälter, der zu früh endet,
+ * eine Einzeldatei ergäbe, die startet und beim ersten Dialog zerbricht.
+ *
+ * WENN DIE MARKE FEHLT, BRICHT DER BAU AB — wie bei pdf.js. */
+const INSELN_MARKE = /<!-- inseln-daten:[\s\S]*?-->/;
+if (!INSELN_MARKE.test(html)) {
+  throw new Error('bauen.mts: die Marke „inseln-daten" fehlt in index.html — ' +
+    'ohne sie hätte die Einzeldatei keine React-Inseln.');
+}
+const behaelter = (id: string, datei: string): string => {
+  const text = lies(datei);
+  if (/<\/script|<!--/i.test(text)) {
+    throw new Error('bauen.mts: ' + datei + ' enthält „</script" oder „<!--" — ' +
+      'der Behälter in der Einzeldatei endete dort. `node bauen-inseln.mts` neu laufen lassen.');
+  }
+  return '<script type="text/plain" id="' + id + '">\n/* ===== ' + datei + ' ===== */\n' +
+         text + '\n</script>';
+};
+html = html.replace(INSELN_MARKE, () => [
+  behaelter('inseln-react', 'quell/fremd/react/react.js'),
+  behaelter('inseln-js', 'quell/islands/islands.js'),
+  behaelter('inseln-stil', 'quell/islands/islands.css')
+].join('\n'));
+
 /* Skripte einsetzen — in der Reihenfolge, in der sie im HTML stehen.
  *
  * `defer` WIRD DABEI WEGGELASSEN, und zwar richtig: seit E389 tragen die

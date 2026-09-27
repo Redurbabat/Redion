@@ -1,0 +1,182 @@
+/*
+ * ProgressBar — capsule track with a sliding fill.
+ *
+ * Value changes: the full-width fill is moved with translateX and clipped by
+ * the track (its rounded end never squashes, unlike scaleX). It reaches each
+ * new value on the snappy spring — a quick catch-up with a tiny settle.
+ * Done: when 100 % is reached on screen, a single sheen sweeps over the fill
+ * ("finished"). A bar that mounts at 100 % does not play it.
+ * Indeterminate: a segment sweeps across, stretching in the middle like a
+ * drop of liquid. RTL: the whole track is mirrored.
+ * Reduced motion: the fill jumps to the value, no sheen, and the
+ * indeterminate segment rests in the middle of the track.
+ */
+
+.ui-touch-progress {
+  --ui-touch-progress-height: 6px;
+  --ui-touch-progress-track-bg: var(--ui-color-fill-strong);
+  --ui-touch-progress-fill: var(--ui-color-accent);
+  --ui-touch-progress-sheen: rgb(255 255 255 / 0.55);
+  --ui-touch-progress-segment-width: 40%;
+  --ui-touch-progress-sweep-duration: 1.4s;
+  --ui-touch-progress-sweep-ease: cubic-bezier(0.35, 0, 0.35, 1);
+
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--ui-space-2);
+  width: 100%;
+  min-width: 0;
+  color: var(--ui-color-label);
+}
+
+.ui-touch-progress-caption {
+  box-sizing: border-box;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  min-width: 0;
+}
+
+.ui-touch-progress-label {
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-subhead);
+  letter-spacing: var(--ui-tracking-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-touch-progress-percent {
+  box-sizing: border-box;
+  flex: none;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-touch-progress-track {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: var(--ui-touch-progress-height);
+  overflow: hidden;
+  border-radius: var(--ui-radius-pill);
+  background-color: var(--ui-touch-progress-track-bg);
+  /* Keeps the clip + rounded corners on the GPU layer in WebKit. */
+  isolation: isolate;
+}
+
+.ui-touch-progress-track:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.ui-touch-progress-fill {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: block;
+  overflow: hidden;
+  border-radius: inherit;
+  background-color: var(--ui-touch-progress-fill);
+  transform: translateX(calc((var(--ui-touch-progress-value, 0) - 1) * 100%));
+  transition: transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy);
+}
+
+/* Finished: one sheen passes over the fill once it has arrived. */
+.ui-touch-progress[data-just-completed] .ui-touch-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent 20%, var(--ui-touch-progress-sheen) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: ui-touch-progress-done var(--ui-duration-long) var(--ui-ease-standard) calc(var(--ui-spring-snappy-duration) / 2) both;
+}
+
+.ui-touch-progress-segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: block;
+  width: var(--ui-touch-progress-segment-width);
+  border-radius: inherit;
+  background-color: var(--ui-touch-progress-fill);
+  translate: -80% 0;
+  scale: 0.6 1;
+  animation: ui-touch-progress-sweep var(--ui-touch-progress-sweep-duration) var(--ui-touch-progress-sweep-ease) infinite;
+}
+
+/*
+ * translate only has keyframes at 0 % and 100 %, so the ease covers the whole
+ * pass; scale has three, so it swells and shrinks within the pass. At both
+ * ends the shrunk (0.6) segment touches the track edge from outside, so the
+ * loop is seamless and the track is never empty for long (-100% / 250%
+ * would leave it empty for about a third of every cycle).
+ */
+@keyframes ui-touch-progress-sweep {
+  0% {
+    translate: -80% 0;
+    scale: 0.6 1;
+  }
+
+  50% {
+    scale: 1.2 1;
+  }
+
+  100% {
+    translate: 230% 0;
+    scale: 0.6 1;
+  }
+}
+
+@keyframes ui-touch-progress-done {
+  from {
+    opacity: 1;
+    transform: translateX(-100%);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-progress-fill {
+    transition: none;
+  }
+
+  .ui-touch-progress[data-just-completed] .ui-touch-progress-fill::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  /* A still segment in the middle: "working, amount unknown" without movement. */
+  .ui-touch-progress-segment {
+    animation: none;
+    translate: 75% 0;
+    scale: 1;
+  }
+}
+
+/*
+ * Forced colours (Windows contrast themes) drop background colours, which
+ * would leave an empty track: draw the fill and segment with Highlight and
+ * outline the track.
+ */
+@media (forced-colors: active) {
+  .ui-touch-progress {
+    --ui-touch-progress-fill: Highlight;
+    --ui-touch-progress-track-bg: Canvas;
+  }
+
+  .ui-touch-progress-track {
+    box-shadow: inset 0 0 0 1px CanvasText;
+    forced-color-adjust: none;
+  }
+}

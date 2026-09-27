@@ -1,0 +1,89 @@
+/*
+ * ActivityIndicator — the eight-spoke spinner.
+ *
+ * Arrival: the indicator grows in from 0.6 on the snappy spring and fades in,
+ * so it reads as "work just started" rather than popping.
+ * Spin: the whole glyph rotates in eight hard steps per second; each spoke
+ * keeps its fixed opacity, so the bright head seems to run around.
+ * Reduced motion: no growth, no rotation — static spokes that simply fade in.
+ */
+
+.ui-touch-activity {
+  --ui-touch-activity-size: 20px;
+  --ui-touch-activity-color: var(--ui-color-label-secondary);
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-touch-activity-size);
+  height: var(--ui-touch-activity-size);
+  color: var(--ui-touch-activity-color);
+  vertical-align: middle;
+  /* backwards: once arrived, the element's own transform/opacity apply again. */
+  animation: ui-touch-activity-in var(--ui-spring-snappy-duration) var(--ui-spring-snappy) backwards;
+}
+
+.ui-touch-activity--large {
+  --ui-touch-activity-size: 36px;
+}
+
+.ui-touch-activity-glyph {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  transform-origin: 50% 50%;
+  animation: ui-touch-activity-spin 1s steps(8, end) infinite;
+}
+
+/* Revealing (progress): the spokes are drawn by the caller's progress — no arrival, no spin. */
+.ui-touch-activity--static,
+.ui-touch-activity--static .ui-touch-activity-glyph {
+  animation: none;
+}
+
+@keyframes ui-touch-activity-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ui-touch-activity-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ui-touch-activity-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-activity {
+    animation: ui-touch-activity-fade var(--ui-duration-normal) var(--ui-ease-standard) backwards;
+  }
+
+  .ui-touch-activity-glyph {
+    animation: none;
+  }
+}

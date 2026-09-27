@@ -1,0 +1,175 @@
+/*
+ * FavoriteButton — heart / star toggle on top of .ui-touch-button (press spring,
+ * focus ring, disabled and the small-size hit area come from Button.css).
+ *
+ * State (colour + fill) is drawn from [aria-pressed] in the DOM.
+ * Select:   glyph 1 → 1.35 (fast rise) → 1 on the bouncy spring; the burst
+ *           (ring 0.3 → 1.6 fading, sparks flying outward) plays behind it.
+ * Deselect: glyph dips to 0.85 and springs back on snappy; colour drains.
+ */
+
+.ui-touch-favorite {
+  --ui-touch-favorite-color: var(--ui-color-danger);
+  --ui-touch-favorite-spark: color-mix(in srgb, var(--ui-color-danger) 55%, var(--ui-color-warning));
+  --ui-touch-favorite-idle: var(--ui-color-label-secondary);
+  /* Geometry scales with the glyph size. */
+  --ui-touch-favorite-unit: 22px;
+  --ui-touch-favorite-pop-scale: 1.35;
+  --ui-touch-favorite-dip-scale: 0.85;
+  --ui-touch-favorite-burst-duration: 600ms;
+}
+
+.ui-touch-favorite--star {
+  --ui-touch-favorite-color: var(--ui-color-warning);
+  --ui-touch-favorite-spark: color-mix(in srgb, var(--ui-color-warning) 60%, var(--ui-color-danger));
+}
+
+.ui-touch-favorite--small {
+  --ui-touch-favorite-unit: 18px;
+}
+
+.ui-touch-favorite--large {
+  --ui-touch-favorite-unit: 26px;
+}
+
+/* ── Glyph ── */
+.ui-touch-favorite-icon {
+  position: relative; /* paints above the (absolutely positioned) burst */
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  color: var(--ui-touch-favorite-idle);
+  transition: color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-favorite[aria-pressed='true'] .ui-touch-favorite-icon {
+  color: var(--ui-touch-favorite-color);
+}
+
+.ui-touch-favorite-glyph path {
+  fill: transparent;
+  transition: fill var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-favorite[aria-pressed='true'] .ui-touch-favorite-glyph path {
+  fill: currentColor;
+}
+
+/* Hover (pointer devices only): a hint of the colour it will take. */
+@media (hover: hover) {
+  .ui-touch-favorite:hover:not(:disabled, [aria-pressed='true']) .ui-touch-favorite-icon {
+    color: color-mix(in srgb, var(--ui-touch-favorite-color) 65%, var(--ui-touch-favorite-idle));
+  }
+}
+
+/*
+ * Two animations compose (the `scale` property multiplies with `transform`):
+ *  - lead-in: `scale` covers the quick rise (1 → 1.35) or sink (1 → 0.85) while
+ *    `transform` already holds the peak (backwards fill of the delayed spring);
+ *  - spring: `transform` then settles to 1 on the bouncy / snappy spring.
+ * The spring is the animation's own timing function on purpose: browsers
+ * ignore var() as a per-keyframe animation-timing-function.
+ */
+.ui-touch-favorite-icon[data-anim='select'] {
+  animation:
+    ui-touch-favorite-pop-lead var(--ui-duration-short) var(--ui-ease-standard),
+    ui-touch-favorite-pop var(--ui-spring-bouncy-duration) var(--ui-spring-bouncy) var(--ui-duration-short) both;
+}
+
+.ui-touch-favorite-icon[data-anim='deselect'] {
+  animation:
+    ui-touch-favorite-dip-lead var(--ui-duration-instant) var(--ui-ease-press),
+    ui-touch-favorite-dip var(--ui-spring-snappy-duration) var(--ui-spring-snappy) var(--ui-duration-instant) both;
+}
+
+@keyframes ui-touch-favorite-pop-lead {
+  from {
+    scale: calc(1 / var(--ui-touch-favorite-pop-scale));
+  }
+
+  to {
+    scale: 1;
+  }
+}
+
+@keyframes ui-touch-favorite-pop {
+  from {
+    transform: scale(var(--ui-touch-favorite-pop-scale));
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes ui-touch-favorite-dip-lead {
+  from {
+    scale: calc(1 / var(--ui-touch-favorite-dip-scale));
+  }
+
+  to {
+    scale: 1;
+  }
+}
+
+@keyframes ui-touch-favorite-dip {
+  from {
+    transform: scale(var(--ui-touch-favorite-dip-scale));
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes ui-touch-favorite-burst {
+  from,
+  85% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-touch-favorite-ring {
+  from {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* Angle 0° = straight up; the spark leaves from behind the glyph and shrinks as it fades. */
+@keyframes ui-touch-favorite-fly {
+  from {
+    opacity: 0;
+    transform: rotate(var(--ui-touch-favorite-angle)) translateY(calc(-1 * var(--ui-touch-favorite-start))) scale(1);
+  }
+
+  12%,
+  55% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    transform: rotate(var(--ui-touch-favorite-angle)) translateY(calc(-1 * var(--ui-touch-favorite-reach))) scale(0.3);
+  }
+}
+
+/* Reduced motion: no scaling, no burst — colour and fill still cross-fade, so the state stays obvious. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-favorite-icon[data-anim] {
+    animation: none;
+  }
+
+  .ui-touch-favorite-burst {
+    display: none;
+  }
+}

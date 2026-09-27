@@ -1,0 +1,50 @@
+{
+  "//": [
+    "tsconfig.islands.json — die Typen der React-Inseln und des Touch Kits (E699)",
+    "",
+    "WARUM EINE DRITTE DATEI. `tsconfig.json` prüft Redion streng (§52.6) und",
+    "kennt kein JSX; `tsconfig.bauen.json` baut klassische Skripte mit",
+    "`module: none`. Die Inseln sind beides nicht: sie sind TSX, das der",
+    "Bündler (`bauen-inseln.mts`, Vite) zu klassischen Skripten macht.",
+    "",
+    "WARUM DIE EINSTELLUNGEN DES KITS UND NICHT REDIONS. TypeScript prüft",
+    "jede Datei eines Programms mit denselben Schaltern, und die Inseln",
+    "importieren das Kit. Unter Redions Schaltern hat das Kit bei c192821",
+    "73 Fehler — 56 aus `noUncheckedIndexedAccess`, 15 aus",
+    "`exactOptionalPropertyTypes`, 2 aus `noImplicitReturns`, gemessen. Im",
+    "Kit von Hand ändern ist verboten (fremd/touch/HERKUNFT.txt). Also gelten",
+    "hier die Schalter aus UI-Kits `tsconfig.app.json`, und das ist eine",
+    "Abweichung von §52.6 mit Grund: E699, offen als Lücke in LUECKEN.md, bis",
+    "UI-Kit den strengen Durchgang selbst gemacht hat.",
+    "",
+    "Geprüft wird nur, gebaut nichts (`noEmit`). `npm run typecheck` fährt",
+    "diese Datei nach `tsconfig.json`."
+  ],
+
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": [],
+
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": true,
+    "allowJs": false,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true
+  },
+
+  "include": ["src/islands/**/*.tsx", "fremd/touch/**/*.ts", "fremd/touch/**/*.tsx"]
+}

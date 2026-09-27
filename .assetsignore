@@ -82,6 +82,14 @@ Schul Inhalt
 #  Komponenten aus dem Handoff — Vorlage, kein Programm.
 quell/entwicklung/
 
+#  DAS TOUCH KIT ALS QUELLE (E699). `fremd/touch/` ist die Kopie aus UI-Kit
+#  (TSX, CSS, Markdown) — der Rohstoff, aus dem `bauen-inseln.mts` das
+#  Bündel `quell/islands/islands.js` baut. Geladen wird nur das Bündel; der
+#  Ordner ist Werkstatt. Der Schrägstrich vorne verankert an der Wurzel
+#  (E524): `quell/fremd/` darf NICHT mitgefangen werden, dort liegen pdf.js
+#  und React, die der Browser wirklich holt.
+/fremd/
+
 #  UND DIE MARKE SELBST (E525). `oeffentlich/icons/marke.png` ist die Quelle,
 #  aus der `erzeugen.mts` die siebzehn Symbole und die .ico rechnet. Sie ist
 #  Werkzeugkasten, nicht Auslieferung: keine Seite verweist auf sie, und sie

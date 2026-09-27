@@ -1,0 +1,280 @@
+/*
+ * TabBar — bottom navigation with a moving "material".
+ *
+ * The material (one pill behind the active tab) is positioned by JS: its
+ * transform `translateX(x) scaleX(stretch)` is written per frame by the
+ * spring or the finger, so it has no CSS transition on transform. Its width
+ * is measured once per layout. CSS owns the look, the lifted state while
+ * the material is held, the press spring on the icons, and reduced motion.
+ *
+ * Layout: equal grid columns inside the track, so every tab (and therefore
+ * the material) has the same width. Without JS the material still sits
+ * behind the active tab via --ui-touch-tabbar-count / -index.
+ */
+
+.ui-touch-tabbar {
+  --ui-touch-tabbar-count: 1;
+  --ui-touch-tabbar-height: var(--ui-tabbar-height);
+  --ui-touch-tabbar-pad: 0px;
+  --ui-touch-tabbar-fill-inset: 3px 6px;
+  --ui-touch-tabbar-tab-radius: var(--ui-radius-md);
+  --ui-touch-tabbar-tint: var(--ui-color-accent);
+  --ui-touch-tabbar-ink: var(--ui-color-label-secondary);
+  --ui-touch-tabbar-material-bg: var(--ui-color-fill);
+  --ui-touch-tabbar-material-lifted: light-dark(rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.16));
+  --ui-touch-tabbar-press-scale: 0.9;
+  --ui-touch-tabbar-lift-scale: 1.08;
+
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  color: var(--ui-color-label);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── bar: full-width strip on the bottom edge, above the home indicator ── */
+.ui-touch-tabbar--bar {
+  padding: 0 max(var(--ui-space-2), env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px)
+    max(var(--ui-space-2), env(safe-area-inset-left, 0px));
+  background-color: var(--ui-color-bar);
+  box-shadow: inset 0 var(--ui-hairline) 0 var(--ui-color-separator);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Wide screens: the tabs cluster in the middle instead of spreading over the whole strip. */
+.ui-touch-tabbar--bar > .ui-touch-tabbar-track {
+  max-width: calc(var(--ui-touch-tabbar-count) * 128px);
+  margin-inline: auto;
+}
+
+/* ── floating: glass capsule hovering above the content ── */
+.ui-touch-tabbar--floating {
+  --ui-touch-tabbar-height: 62px;
+  --ui-touch-tabbar-pad: 4px;
+  --ui-touch-tabbar-fill-inset: 0px;
+  --ui-touch-tabbar-tab-radius: var(--ui-radius-pill);
+  --ui-touch-tabbar-lift-scale: 1.12;
+
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--ui-space-4) max(env(safe-area-inset-bottom, 0px), var(--ui-space-3));
+  /* Only the capsule takes touches; the strip around it lets them through to the page. */
+  pointer-events: none;
+}
+
+.ui-touch-tabbar--floating > .ui-touch-tabbar-track {
+  width: min(100%, calc(var(--ui-touch-tabbar-count) * 84px + 2 * var(--ui-touch-tabbar-pad)));
+  border-radius: var(--ui-radius-pill);
+  background-color: light-dark(rgb(255 255 255 / 0.72), rgb(38 38 44 / 0.66));
+  box-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.12)),
+    inset 0 0 0 0.5px var(--ui-color-separator),
+    var(--ui-shadow-floating);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  pointer-events: auto;
+}
+
+/* ── track: the row of tabs and the material behind them ── */
+.ui-touch-tabbar-track {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(var(--ui-touch-tabbar-count), minmax(0, 1fr));
+  height: var(--ui-touch-tabbar-height);
+  margin: 0;
+  padding: var(--ui-touch-tabbar-pad);
+  /* Vertical pans still scroll the page; sideways drags belong to the material. */
+  touch-action: pan-y;
+}
+
+/* ── the material ── */
+.ui-touch-tabbar-material {
+  position: absolute;
+  top: var(--ui-touch-tabbar-pad);
+  bottom: var(--ui-touch-tabbar-pad);
+  left: 0;
+  box-sizing: border-box;
+  width: calc((100% - 2 * var(--ui-touch-tabbar-pad)) / var(--ui-touch-tabbar-count));
+  padding: var(--ui-touch-tabbar-fill-inset);
+  pointer-events: none;
+  transform: translateX(calc(var(--ui-touch-tabbar-pad) + var(--ui-touch-tabbar-index, 0) * 100%));
+  transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* Promoted to its own layer only while a spring or the finger moves it (JS sets data-moving). */
+.ui-touch-tabbar-material[data-moving],
+.ui-touch-tabbar[data-dragging] .ui-touch-tabbar-material {
+  will-change: transform;
+}
+
+.ui-touch-tabbar-material[data-hidden] {
+  opacity: 0;
+}
+
+.ui-touch-tabbar-material-fill {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--ui-radius-pill);
+  background-color: var(--ui-touch-tabbar-material-bg);
+  transition:
+    scale var(--ui-spring-press-duration) var(--ui-spring-press),
+    background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* Glass rim and a faint accent glow: shown only while the material is held (state feedback). */
+.ui-touch-tabbar-material-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.35),
+    0 0 0 1px color-mix(in srgb, var(--ui-touch-tabbar-tint) 32%, transparent),
+    0 6px 18px var(--ui-shadow-ink-strong);
+  opacity: 0;
+  transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* Held: the pill lifts (fast in); letting go settles it on the press spring. */
+.ui-touch-tabbar[data-dragging] .ui-touch-tabbar-material-fill {
+  scale: var(--ui-touch-tabbar-lift-scale);
+  background-color: var(--ui-touch-tabbar-material-lifted);
+  transition:
+    scale var(--ui-duration-short) var(--ui-ease-press),
+    background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-tabbar[data-dragging] .ui-touch-tabbar-material-fill::after {
+  opacity: 1;
+}
+
+/* ── tabs ── */
+.ui-touch-tabbar-tab {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: var(--ui-hit-min);
+  min-height: var(--ui-hit-min);
+  margin: 0;
+  padding: 0 var(--ui-space-1);
+  border: 0;
+  border-radius: var(--ui-touch-tabbar-tab-radius);
+  background-color: transparent;
+  color: var(--ui-touch-tabbar-ink);
+  font: var(--ui-text-caption-2);
+  letter-spacing: 0;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-tabbar-tab[aria-current='page'] {
+  color: var(--ui-touch-tabbar-tint);
+}
+
+@media (hover: hover) {
+  .ui-touch-tabbar-tab:not([aria-current='page'], :disabled):hover {
+    color: var(--ui-color-label);
+  }
+}
+
+.ui-touch-tabbar-tab:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+.ui-touch-tabbar-tab:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+/* While the material is held, the tab under it previews the tint. */
+.ui-touch-tabbar[data-dragging] .ui-touch-tabbar-tab[aria-current='page']:not([data-previewed]) {
+  color: var(--ui-touch-tabbar-ink);
+}
+
+.ui-touch-tabbar[data-dragging] .ui-touch-tabbar-tab[data-previewed] {
+  color: var(--ui-touch-tabbar-tint);
+}
+
+.ui-touch-tabbar-icon {
+  box-sizing: border-box;
+  display: inline-flex;
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+/* An app's own svg without width/height would collapse in the slot: give it the glyph size (any app rule wins). */
+:where(.ui-touch-tabbar-icon > svg:not([width]), .ui-touch-tabbar-icon > .ui-touch-badge-anchor > svg:not([width])) {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+/* Press: the icon sinks at once, the press spring brings it back. */
+.ui-touch-tabbar-tab[data-pressed] .ui-touch-tabbar-icon {
+  transform: scale(var(--ui-touch-tabbar-press-scale));
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/*
+ * Like iOS: the badge hangs a little below the icon's top edge (so it stays inside a 50 px bar), and a
+ * wide one ("Neu", "99+") grows away from the icon instead of covering it: its leading edge sits 10 px
+ * inside the icon's end, whatever its width (the anchor centres it on the corner; 50 % undoes that).
+ */
+.ui-touch-tabbar-badge {
+  --ui-touch-tabbar-badge-dir: 1;
+
+  box-sizing: border-box;
+  display: flex;
+  translate: calc((50% - 10px) * var(--ui-touch-tabbar-badge-dir)) 5px;
+}
+
+.ui-touch-tabbar-badge:dir(rtl) {
+  --ui-touch-tabbar-badge-dir: -1;
+}
+
+.ui-touch-tabbar-label {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* High-contrast mode drops backgrounds: outline the material instead. */
+@media (forced-colors: active) {
+  .ui-touch-tabbar-material-fill {
+    outline: 2px solid Highlight;
+  }
+}
+
+/* ── Reduced motion: the material jumps (JS), nothing scales; colours still change ── */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-tabbar-icon {
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-tabbar-tab[data-pressed] .ui-touch-tabbar-icon {
+    transform: none;
+    opacity: 0.6;
+  }
+
+  .ui-touch-tabbar-material-fill,
+  .ui-touch-tabbar[data-dragging] .ui-touch-tabbar-material-fill {
+    scale: none;
+    transition: background-color var(--ui-duration-short) var(--ui-ease-standard);
+  }
+}

@@ -1,0 +1,151 @@
+/* Action sheet — slides up on the smooth spring, slides back down to leave. */
+
+.ui-touch-action-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ui-z-overlay);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ui-touch-action-sheet-layer--contained {
+  position: absolute;
+}
+
+.ui-touch-action-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--ui-color-scrim);
+  animation: ui-touch-action-sheet-fade-in var(--ui-duration-normal) var(--ui-ease-standard) both;
+}
+
+.ui-touch-action-sheet {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--ui-space-2);
+  width: min(100%, 480px);
+  padding: var(--ui-space-2) var(--ui-space-2) max(var(--ui-space-2), env(safe-area-inset-bottom, 0px));
+  animation: ui-touch-action-sheet-in var(--ui-spring-smooth-duration) var(--ui-spring-smooth) both;
+}
+
+.ui-touch-action-sheet:focus {
+  outline: none;
+}
+
+.ui-touch-action-sheet-layer[data-state='closing'] .ui-touch-action-sheet {
+  animation: ui-touch-action-sheet-out 240ms var(--ui-ease-exit) both;
+}
+
+.ui-touch-action-sheet-layer[data-state='closing'] .ui-touch-action-sheet-scrim {
+  animation: ui-touch-action-sheet-fade-out 240ms var(--ui-ease-exit) both;
+}
+
+.ui-touch-action-sheet-group {
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--ui-radius-lg);
+  background: color-mix(in srgb, var(--ui-color-surface-raised) 90%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--ui-shadow-floating);
+}
+
+.ui-touch-action-sheet-head {
+  padding: var(--ui-space-3) var(--ui-space-4);
+  text-align: center;
+}
+
+.ui-touch-action-sheet-title {
+  margin: 0;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+  font-weight: 600;
+}
+
+.ui-touch-action-sheet-message {
+  margin: 2px 0 0;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+}
+
+.ui-touch-action-sheet-button {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  min-height: 56px;
+  margin: 0;
+  padding: 0 var(--ui-space-4);
+  border: 0;
+  border-top: var(--ui-hairline) solid var(--ui-color-separator);
+  background: transparent;
+  color: var(--ui-color-accent);
+  font: var(--ui-text-body);
+  font-size: 19px;
+  cursor: pointer;
+  transition: background-color 300ms var(--ui-ease-standard);
+}
+
+.ui-touch-action-sheet-group > .ui-touch-action-sheet-button:first-child {
+  border-top: 0;
+}
+
+.ui-touch-action-sheet-button[data-pressed] {
+  background: var(--ui-color-highlight);
+  transition-duration: 0ms;
+}
+
+.ui-touch-action-sheet-button:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+.ui-touch-action-sheet-button:disabled {
+  color: var(--ui-color-label-tertiary);
+  cursor: default;
+}
+
+.ui-touch-action-sheet-button--destructive {
+  color: var(--ui-color-danger);
+}
+
+.ui-touch-action-sheet-button--cancel {
+  font-weight: 600;
+}
+
+@keyframes ui-touch-action-sheet-in {
+  from {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes ui-touch-action-sheet-out {
+  to {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes ui-touch-action-sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-touch-action-sheet-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-action-sheet {
+    animation: ui-touch-action-sheet-fade-in 160ms var(--ui-ease-standard) both;
+  }
+
+  .ui-touch-action-sheet-layer[data-state='closing'] .ui-touch-action-sheet {
+    animation: ui-touch-action-sheet-fade-out 160ms var(--ui-ease-standard) both;
+  }
+}

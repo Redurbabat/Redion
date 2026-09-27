@@ -1,0 +1,219 @@
+/*
+ * Slider — a restyled native <input type="range">.
+ *
+ * The fill follows the finger 1:1 (no transition: it is the value itself).
+ * The thumb is the only thing that moves on its own: it grows the moment it
+ * is grabbed (:active, fast ease) and springs back on release (press spring).
+ * An accent halo (the thumb's outline, cross-faded via outline-color) says
+ * "you are holding it".
+ *
+ * WebKit/Blink and Gecko thumbs/tracks need separate rules: a selector list
+ * mixing their pseudo-elements would be dropped as a whole.
+ */
+
+.ui-touch-slider {
+  --ui-touch-slider-height: var(--ui-hit-min);
+  --ui-touch-slider-track-height: 6px;
+  --ui-touch-slider-thumb-size: 28px;
+  --ui-touch-slider-track-bg: var(--ui-color-fill-strong);
+  --ui-touch-slider-fill: var(--ui-color-accent);
+  --ui-touch-slider-thumb-bg: var(--ui-color-knob);
+  --ui-touch-slider-thumb-shadow: var(--ui-shadow-knob);
+  --ui-touch-slider-halo: color-mix(in srgb, var(--ui-color-accent) 22%, transparent);
+  --ui-touch-slider-halo-width: 6px;
+  --ui-touch-slider-thumb-active-scale: 1.15;
+  --ui-touch-slider-fill-direction: to right;
+
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--ui-space-1);
+  width: 100%;
+  min-width: 0;
+  color: var(--ui-color-label);
+}
+
+.ui-touch-slider-label {
+  box-sizing: border-box;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-subhead);
+  letter-spacing: var(--ui-tracking-body);
+}
+
+.ui-touch-slider-row {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-height: var(--ui-touch-slider-height);
+}
+
+.ui-touch-slider-glyph {
+  color: var(--ui-color-label-secondary);
+}
+
+.ui-touch-slider-input {
+  /* Fill reaches the thumb centre: the thumb travels from r to (width - r). */
+  --ui-touch-slider-fill-stop: calc(
+    var(--ui-touch-slider-thumb-size) / 2 + var(--ui-touch-slider-progress, 0) *
+      (100% - var(--ui-touch-slider-thumb-size))
+  );
+  --ui-touch-slider-track: linear-gradient(
+    var(--ui-touch-slider-fill-direction),
+    var(--ui-touch-slider-fill) 0 var(--ui-touch-slider-fill-stop),
+    var(--ui-touch-slider-track-bg) var(--ui-touch-slider-fill-stop)
+  );
+
+  box-sizing: border-box;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: var(--ui-touch-slider-height);
+  margin: 0;
+  padding: 0;
+  border-radius: var(--ui-radius-pill);
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  /* Vertical swipes still scroll the page; horizontal drags move the thumb. */
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-touch-slider-input:dir(rtl) {
+  --ui-touch-slider-fill-direction: to left;
+}
+
+.ui-touch-slider-input:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+.ui-touch-slider-input:disabled {
+  --ui-touch-slider-fill: var(--ui-color-label-tertiary);
+
+  cursor: default;
+}
+
+/* Disabled follows the DOM (also a disabled <fieldset> around it). */
+.ui-touch-slider:has(.ui-touch-slider-input:disabled) {
+  opacity: 0.5;
+}
+
+/* ── WebKit / Blink ── */
+.ui-touch-slider-input::-webkit-slider-runnable-track {
+  box-sizing: border-box;
+  height: var(--ui-touch-slider-track-height);
+  border: 0;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-touch-slider-track);
+}
+
+.ui-touch-slider-input::-webkit-slider-thumb {
+  box-sizing: border-box;
+  width: var(--ui-touch-slider-thumb-size);
+  height: var(--ui-touch-slider-thumb-size);
+  margin-top: calc((var(--ui-touch-slider-track-height) - var(--ui-touch-slider-thumb-size)) / 2);
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--ui-touch-slider-thumb-bg);
+  box-shadow: var(--ui-touch-slider-thumb-shadow);
+  outline: var(--ui-touch-slider-halo-width) solid transparent;
+  outline-offset: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    outline-color var(--ui-duration-normal) var(--ui-ease-standard);
+}
+
+.ui-touch-slider-input:active:not(:disabled)::-webkit-slider-thumb {
+  transform: scale(var(--ui-touch-slider-thumb-active-scale));
+  outline-color: var(--ui-touch-slider-halo);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/* ── Gecko ── */
+.ui-touch-slider-input::-moz-range-track {
+  box-sizing: border-box;
+  height: var(--ui-touch-slider-track-height);
+  border: 0;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-touch-slider-track);
+}
+
+.ui-touch-slider-input::-moz-range-thumb {
+  box-sizing: border-box;
+  width: var(--ui-touch-slider-thumb-size);
+  height: var(--ui-touch-slider-thumb-size);
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--ui-touch-slider-thumb-bg);
+  box-shadow: var(--ui-touch-slider-thumb-shadow);
+  outline: var(--ui-touch-slider-halo-width) solid transparent;
+  outline-offset: 0;
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    outline-color var(--ui-duration-normal) var(--ui-ease-standard);
+}
+
+.ui-touch-slider-input:active:not(:disabled)::-moz-range-thumb {
+  transform: scale(var(--ui-touch-slider-thumb-active-scale));
+  outline-color: var(--ui-touch-slider-halo);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/*
+ * Forced colours (high contrast) would drop the gradient fill and the thumb
+ * shadow and paint the transparent halo as a solid ring: draw the control
+ * with system colours instead.
+ */
+@media (forced-colors: active) {
+  .ui-touch-slider-input {
+    --ui-touch-slider-fill: Highlight;
+    --ui-touch-slider-track-bg: GrayText;
+    --ui-touch-slider-thumb-bg: ButtonFace;
+
+    forced-color-adjust: none;
+  }
+
+  .ui-touch-slider-input:disabled {
+    --ui-touch-slider-fill: GrayText;
+  }
+
+  .ui-touch-slider-input:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .ui-touch-slider-input::-webkit-slider-thumb {
+    border: 2px solid ButtonText;
+    outline-style: none;
+  }
+
+  .ui-touch-slider-input::-moz-range-thumb {
+    border: 2px solid ButtonText;
+    outline-style: none;
+  }
+}
+
+/* Reduced motion: the thumb does not grow; the halo (a colour fade) alone shows it is held. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-slider-input::-webkit-slider-thumb {
+    transition: outline-color var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-slider-input:active:not(:disabled)::-webkit-slider-thumb {
+    transform: none;
+  }
+
+  .ui-touch-slider-input::-moz-range-thumb {
+    transition: outline-color var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-slider-input:active:not(:disabled)::-moz-range-thumb {
+    transform: none;
+  }
+}

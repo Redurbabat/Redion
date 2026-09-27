@@ -39,6 +39,8 @@
  *   §3 JEDER Verzeichniseintrag wird auch benutzt — keine Karteileichen.
  *   §4 DIE HAUPTDATEI stimmt: ein Bereich, der umzieht, fällt auf.
  *   §5 GEGENPROBE in beide Richtungen.
+ *   §6 DAS INSELBLATT (E699) nimmt keinen Namensraum der Schale, und seine
+ *      Präfixe stehen im Verzeichnis unter „ausserhalb der Zählung".
  *
  * ─── KANN ER ROT WERDEN? (§55.2) ────────────────────────────────────────────
  * §5 ist die Antwort, und er prüft BEIDE Richtungen: ein erfundenes Präfix im
@@ -175,6 +177,31 @@ const knapp = messen(dateien.concat([{
 }]));
 p('Drei Vorkommen sind noch kein Namensraum — Fremdzugriff bleibt erlaubt',
   !knapp.has('uvw'), JSON.stringify(knapp.get('uvw')));
+
+/* ------------------------------------------------------------------------ */
+console.log('\n6 · Das Inselblatt trägt keinen Namensraum der Schale (E699)');
+
+/* `quell/islands/islands.css` liegt nicht unter `quell/schale/stil/` und
+   zählt deshalb oben nicht mit — dieselbe Lage wie `res-` (UI-Reserve). Es
+   ist das CSS des Touch Kits, gebündelt von `bauen-inseln.mts`, und es
+   kommt in DIESELBE Seite wie Redions Stil. Ein Präfix, das beide
+   benutzen, wäre der Fall `bs-`/`bst-` aus L90, nur zwischen zwei
+   Bibliotheken statt zwischen zwei Bereichen. */
+const INSELBLATT = path.join(WURZEL, 'quell/islands/islands.css');
+const inselText = fs.existsSync(INSELBLATT) ? fs.readFileSync(INSELBLATT, 'utf-8') : '';
+const insel = messen([{ name: 'islands.css', text: inselText }]);
+p('Das Inselblatt ist da und hat Präfixe', insel.size >= 1, [...insel.keys()].join(', ') || 'keins');
+const kollision = [...insel.keys()].filter(px => stil.has(px) || liste.has(px));
+p('Kein Präfix des Inselblatts gehört schon der Schale', kollision.length === 0,
+  kollision.join(', '));
+const doku = fs.existsSync(LISTE) ? fs.readFileSync(LISTE, 'utf-8') : '';
+const ausserhalb = /\n## [^\n]*ausserhalb der Zählung[\s\S]*?(?=\n## )/.exec(doku)?.[0] ?? '';
+const unbenannt = [...insel.keys()].filter(px => !ausserhalb.includes('`' + px + '-'));
+p('Jedes Präfix des Inselblatts steht im Verzeichnis unter „ausserhalb der Zählung"',
+  !!ausserhalb && unbenannt.length === 0, unbenannt.join(', ') || (ausserhalb ? '' : 'Abschnitt fehlt'));
+const mitSchale = messen([{ name: 'islands.css', text: inselText + '.bs-a{}.bs-b{}.bs-c{}.bs-d{}' }]);
+p('Gegenprobe: ein Schalen-Präfix im Inselblatt WIRD gemeldet',
+  [...mitSchale.keys()].some(px => stil.has(px)), [...mitSchale.keys()].join(', '));
 
 console.log(`\n${ok}/${ok + weg} bestanden`);
 process.exitCode = weg ? 1 : 0;

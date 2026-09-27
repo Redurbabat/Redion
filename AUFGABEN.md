@@ -1058,6 +1058,46 @@ Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
 
 
+## React-Inseln aus dem Touch Kit (R1a … R1d) — die Grundlage steht (E699)
+
+Redur, 27. September 2026: „du kannst react nutzen keien problem", im
+Fragebogen „Mit React (E80 aufheben)". Die Regeln stehen in E699 und
+CLAUDE.md §6: Inseln an Ort und Stelle, keine zweite Oberfläche.
+
+- **R1a · Die Grundlage — GELANDET (E699, `test578`, `test579`).** React
+  19.3.0 eingepackt, das Touch Kit als Kopie (UI-Kit @c192821), der Bau mit
+  Vite, der Lader ohne Startlast, die Brücke zu Redions Farben, das Schema
+  „Touch Kit hell/dunkel", eine Probe-Insel nur für den Prüflauf. Offen
+  daraus: **L222** (was upstream in UI-Kit fehlt), **L223** (die
+  Fehlerliste schwärzt im Ordnerbetrieb).
+- **R1b · Die Dialoge.** `Dialog.frage`, `Dialog.wahl`,
+  `Dialog.mehrzeilig` und die verbliebenen `confirm()`/`prompt()` (22 und
+  9 Stellen) werden Dialoge und Aktionsblätter des Kits — HINTER der
+  vorhandenen Schnittstelle (`UI.frage` …), mit demselben Versprechen
+  (`null` gegen `''`). Zuerst lösen: das Zusammenspiel mit `Fokus`
+  (fokus.ts setzt alles ausser dem obersten `.overlay` auf `inert`, das Kit
+  auch — zwei Verwalter sperren sich gegenseitig) und mit dem gemeinsamen
+  Escape (E302, schale.ts), der `defaultPrevented` nicht beachtet; und
+  **L222 Punkt 6** — die Knöpfe im Dialog des Kits schreiben in
+  Akzentfarbe, und die Brücke legt die auf `--accent`, nicht auf
+  `--accent-text` (3,16 : 1 im dunklen „Standard"). Dabei das Kit neu
+  holen: UI-Kit hat nach c192821 den strengen Typdurchgang,
+  `data-ui-motion` und Hinweise für Dialogknöpfe schon. Die
+  Prüfhaken der Läufe (`#fq`, `[data-w]`) bleiben oder werden im selben
+  Bogen nachgezogen. Mit Bildern jedes Zustands, Rechner und Telefon.
+  **Fertig wenn** kein Dialog mehr von Hand gebaut wird und `test296`,
+  `test67`, `test155` grün sind.
+- **R1c · Meldungen.** `UI.toast` (769 Aufrufe) auf den Toast des Kits,
+  mit demselben Griff (`textContent` setzen verlängert), `#toast` bleibt
+  die Ansage für Vorleseprogramme.
+- **R1d · Blätter und Menüs.** `sheet.ts` (ein Aufrufer) und `#r-blatt`
+  auf das Blatt des Kits; die Telefonmenüs auf das Aktionsblatt — über eine
+  neue, getypte Schnittstelle neben `UI.menu(html, …)`, nicht durch HTML in
+  React. Braucht vorher L222 Punkt 2 (ruhige Darstellung in den
+  JS-Federn).
+
+---
+
 ## Bewegung und Glas (B1 … B3) — B1 ist gelandet (E695)
 
 Redur, 27. September 2026: „Weiter an die animationen übergangen glass

@@ -108,7 +108,11 @@ const kontrast = (a: string, b: string): number => {
   return Math.round(((Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)) * 100) / 100;
 };
 
-const SCHEMATA = ['standard', 'hell', 'nacht', 'wald', 'sand', 'papier', 'kontrast', 'rose'];
+/* ZEHN SEIT E699: der Look des Touch Kits kam als Schemapaar dazu. Er
+   wird hier mitgemessen — gerade er, weil sein dunkler Akzent ein HELLES
+   Violett ist und eine Leiste, die Weiss darauf setzt, dort durchfiele. */
+const SCHEMATA = ['standard', 'hell', 'nacht', 'wald', 'sand', 'papier', 'kontrast', 'rose',
+                  'touchkit-hell', 'touchkit-dunkel'];
 
 const browser = await chromium.launch();
 const fehler: string[] = [];
@@ -175,10 +179,10 @@ const alle: Record<string, any> = {};
 for (const sch of SCHEMATA) alle[sch] = await ablesen(sch);
 
 /* ══ §1 DIE SCHEMATA KOMMEN ÜBERHAUPT AN ═════════════════════════════════ */
-console.log('\n§1 Die acht Schemata sind wirklich verschieden (sonst misst §2 nichts)');
+console.log('\n§1 Die zehn Schemata sind wirklich verschieden (sonst misst §2 nichts)');
 {
   const gruende = new Set(SCHEMATA.map(s => alle[s].tok.bg));
-  p('Acht Schemata gemessen', SCHEMATA.length === 8);
+  p('Zehn Schemata gemessen (acht + Touch Kit hell/dunkel, E699)', SCHEMATA.length === 10);
   p('… und sie setzen verschiedene Grundfarben', gruende.size >= 6,
     gruende.size + ' verschiedene: ' + [...gruende].join(' '));
   p('… und die Leiste ist sichtbar, sonst wäre alles 0',
@@ -188,7 +192,7 @@ console.log('\n§1 Die acht Schemata sind wirklich verschieden (sonst misst §2 
 }
 
 /* ══ §2 JEDE FLÄCHE FOLGT DEM AUSSEHEN ═══════════════════════════════════ */
-console.log('\n§2 Jede Fläche wechselt mit — mindestens sechs verschiedene von acht');
+console.log('\n§2 Jede Fläche wechselt mit — mindestens sechs verschiedene von zehn');
 {
   const zaehle = (holen: (m: any) => string | undefined): string[] =>
     [...new Set(SCHEMATA.map(s => holen(alle[s]) || '?'))];
@@ -202,22 +206,22 @@ console.log('\n§2 Jede Fläche wechselt mit — mindestens sechs verschiedene v
   ];
   for (const [name, holen] of flaechen) {
     const w = zaehle(holen);
-    p(`${name}: mindestens sechs verschiedene Farben in acht Schemata`,
-      w.length >= 6, w.length + ' von 8 — ' + w.join(' · '));
+    p(`${name}: mindestens sechs verschiedene Farben in zehn Schemata`,
+      w.length >= 6, w.length + ' von ' + SCHEMATA.length + ' — ' + w.join(' · '));
   }
   /* UND DIE SCHRIFT DARAUF AUCH. Eine Fläche, die wechselt, und eine
      Schrift, die feststeht, ist der halbe Weg — und der gefährlichere. */
   const schriften = [...new Set(SCHEMATA.map(s => alle[s].leiste?.fg || '?'))];
   p('Auch die Schrift der Leiste wechselt mit', schriften.length >= 6,
-    schriften.length + ' von 8 — ' + schriften.join(' · '));
+    schriften.length + ' von ' + SCHEMATA.length + ' — ' + schriften.join(' · '));
 }
 
 /* ══ §3 DIE FESTEN NAMEN SIND ABGELEITET, NICHT EINGETIPPT ═══════════════ */
 console.log('\n§3 `--pdf-tools` ist keine feste Zahl mehr');
 {
   const werte = [...new Set(SCHEMATA.map(s => alle[s].tok.pdfTools))];
-  p('`--pdf-tools` hat in acht Schemata mehr als einen Wert', werte.length >= 6,
-    werte.length + ' von 8 — ' + werte.join(' · '));
+  p('`--pdf-tools` hat in zehn Schemata mehr als einen Wert', werte.length >= 6,
+    werte.length + ' von ' + SCHEMATA.length + ' — ' + werte.join(' · '));
   /* Die Quelle mitprüfen: ein `:root` mit rohem Hex für diese Namen wäre
      der Rückfall, und er sieht im Stilblatt harmlos aus. */
   const css = fs.readFileSync(path.join(WURZEL, 'quell/schale/stil/pdf-studio.css'), 'utf8');
@@ -230,7 +234,7 @@ console.log('\n§3 `--pdf-tools` ist keine feste Zahl mehr');
 }
 
 /* ══ §4 UND ES BLEIBT LESBAR — IN ALLEN ACHT ═════════════════════════════ */
-console.log('\n§4 Kontrast: die naheliegende Reparatur wäre hier durchgefallen');
+console.log('\n§4 Kontrast: die naheliegende Reparatur wäre hier durchgefallen — in allen zehn');
 {
   const schlecht: string[] = [];
   const knapp: string[] = [];

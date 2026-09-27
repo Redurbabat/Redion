@@ -88,10 +88,19 @@ wurde aus den Quellen gebaut, jemand änderte die Quellen und zog die
 Einzeldatei nicht nach — und in der weitergegebenen Datei fehlte die
 komplette HTML-Säuberung. Niemandem fiel es auf.
 
-**Vite** ist erlaubt (CLAUDE.md §52.4), aber bis heute nicht eingeführt und
-für die Phasen TS-0 bis TS-2 auch nicht nötig. **React** ist ausdrücklich
-keine Folge dieser Migration (`ENTSCHEIDUNGEN.md` E7): TypeScript ja, React
-nur nach einer eigenen, geschriebenen Entscheidung.
+**Vite** ist erlaubt (CLAUDE.md §52.5) und seit dem 27. September 2026
+eingeführt — aber nicht für diese Migration: sie bleibt beim klassischen
+`tsc -p tsconfig.bauen.json` mit `module: none`. Vite baut allein die
+**React-Inseln** (`bauen-inseln.mts`, `src/islands/*.tsx` →
+`quell/fremd/react/react.js` und `quell/islands/islands.js`). Die eigene,
+geschriebene Entscheidung dafür ist **E699**; React ist also weiterhin keine
+FOLGE dieser Migration (E7), sondern ein eigener Beschluss.
+
+**Ein Hinweis für später, gemessen beim Bau von E699:** TypeScript 6.0 meldet
+`module: none` und `moduleResolution: classic` als veraltet (TS5107), und
+TypeScript 7.0 lehnt beide ab (TS6046, TS5108). Dieses Projekt hängt deshalb
+an TypeScript 5.x (`^5.9.3`). Wer auf 6 oder 7 will, braucht für den
+klassischen Bau einen anderen Weg — der Bündler ist seit E699 da.
 
 ---
 

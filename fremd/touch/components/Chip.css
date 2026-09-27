@@ -1,0 +1,317 @@
+/*
+ * Chip — filter chip (toggle button) and removable chip (token).
+ *
+ * Filter chip layout never changes: the leading slot for the check mark is
+ * always there. While unselected (and without a leading glyph) the whole
+ * content row is shifted back by half a slot, so the label looks centred.
+ * Selecting slides the row home (`snappy`) while the check grows from
+ * scale 0 on the `bouncy` spring — transform only, no width animation.
+ *
+ * Selected state is read from `aria-pressed` in the DOM. Press state is
+ * `data-pressed` (usePress): fast sink, `press` spring back.
+ */
+
+.ui-touch-chip {
+  --ui-touch-chip-height: var(--ui-control-height-small);
+  --ui-touch-chip-pad: var(--ui-space-3);
+  --ui-touch-chip-lead-size: 16px;
+  --ui-touch-chip-gap: 6px;
+  --ui-touch-chip-bg: var(--ui-color-fill);
+  --ui-touch-chip-bg-pressed: var(--ui-color-fill-strong);
+  --ui-touch-chip-fg: var(--ui-color-label);
+  --ui-touch-chip-ring: color-mix(in srgb, var(--ui-color-accent) 32%, transparent);
+  --ui-touch-chip-glow: color-mix(in srgb, var(--ui-color-accent) 55%, transparent);
+  --ui-touch-chip-press-scale: 0.94;
+  --ui-touch-chip-dir: 1;
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  max-width: 100%;
+  height: var(--ui-touch-chip-height);
+  min-width: var(--ui-hit-min);
+  margin: 0;
+  padding: 0 var(--ui-touch-chip-pad);
+  border: 0;
+  border-radius: var(--ui-radius-pill);
+  background-color: var(--ui-touch-chip-bg);
+  color: var(--ui-touch-chip-fg);
+  font: var(--ui-text-subhead);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-body);
+  vertical-align: middle;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    background-color var(--ui-duration-short) var(--ui-ease-standard),
+    color var(--ui-duration-short) var(--ui-ease-standard),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-chip:dir(rtl) {
+  --ui-touch-chip-dir: -1;
+}
+
+/* A 32 px chip still gets a 44 px target for fingers. */
+.ui-touch-chip--filter::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--ui-touch-chip-height) - var(--ui-hit-min)) / 2) 0;
+}
+
+.ui-touch-chip-label {
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-touch-chip-icon {
+  flex: none;
+}
+
+/* ── Filter chip ── */
+.ui-touch-chip--filter {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Selected ring + soft accent glow: its own layer, so it cross-fades by opacity. */
+.ui-touch-chip--filter::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px var(--ui-touch-chip-ring),
+    0 4px 14px -6px var(--ui-touch-chip-glow);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ui-duration-normal) var(--ui-ease-standard);
+}
+
+.ui-touch-chip--filter[aria-pressed='true']::before {
+  opacity: 1;
+}
+
+.ui-touch-chip-content {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-touch-chip-gap);
+  min-width: 0;
+  transition: transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy);
+}
+
+.ui-touch-chip-lead {
+  position: relative;
+  box-sizing: border-box;
+  flex: none;
+  width: var(--ui-touch-chip-lead-size);
+  height: var(--ui-touch-chip-lead-size);
+}
+
+.ui-touch-chip-lead > .ui-touch-glyph {
+  position: absolute;
+  inset: 0;
+}
+
+.ui-touch-chip-lead > .ui-touch-chip-icon {
+  transition:
+    transform var(--ui-spring-snappy-duration) var(--ui-spring-snappy),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-chip-check {
+  opacity: 0;
+  transform: scale(0);
+  transition:
+    transform var(--ui-spring-bouncy-duration) var(--ui-spring-bouncy),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+/* Empty slot while unselected: shift back half a slot so the label sits centred. */
+.ui-touch-chip--filter:not(.ui-touch-chip--with-icon)[aria-pressed='false'] .ui-touch-chip-content {
+  transform: translateX(
+    calc(var(--ui-touch-chip-dir) * (var(--ui-touch-chip-lead-size) + var(--ui-touch-chip-gap)) / -2)
+  );
+}
+
+.ui-touch-chip--filter[aria-pressed='true'] {
+  --ui-touch-chip-bg: var(--ui-color-accent-soft);
+  --ui-touch-chip-bg-pressed: color-mix(in srgb, var(--ui-color-accent) 24%, transparent);
+  --ui-touch-chip-fg: var(--ui-color-accent);
+}
+
+.ui-touch-chip--filter[aria-pressed='true'] .ui-touch-chip-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ui-touch-chip--filter[aria-pressed='true'] .ui-touch-chip-icon {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.ui-touch-chip--filter[data-pressed] {
+  transform: scale(var(--ui-touch-chip-press-scale));
+  background-color: var(--ui-touch-chip-bg-pressed);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-chip--filter:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+.ui-touch-chip--filter:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+@media (hover: hover) {
+  .ui-touch-chip--filter:hover:not(:disabled, [data-pressed]) {
+    background-color: color-mix(in srgb, var(--ui-color-label) 6%, var(--ui-touch-chip-bg));
+  }
+}
+
+/* ── Removable chip ── */
+.ui-touch-chip--removable {
+  gap: var(--ui-space-1);
+  padding-inline-end: 2px;
+  cursor: default;
+}
+
+.ui-touch-chip--removable.ui-touch-chip--with-icon {
+  gap: var(--ui-touch-chip-gap);
+}
+
+/* Sinks a little with its remove button (reads as "this whole chip goes"). */
+.ui-touch-chip--removable:has(> .ui-touch-chip-remove[data-pressed]) {
+  transform: scale(0.97);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-chip--removable:has(> .ui-touch-chip-remove:disabled) {
+  opacity: 0.38;
+}
+
+.ui-touch-chip-remove {
+  --ui-touch-chip-disc: var(--ui-color-fill-strong);
+  --ui-touch-chip-disc-fg: var(--ui-color-label-secondary);
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ui-touch-chip-disc-fg);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 28 px visual → 44 px target. */
+.ui-touch-chip-remove::after {
+  content: '';
+  position: absolute;
+  inset: calc((28px - var(--ui-hit-min)) / 2);
+  border-radius: 50%;
+}
+
+.ui-touch-chip-remove-disc {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--ui-touch-chip-disc);
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    background-color var(--ui-duration-short) var(--ui-ease-standard),
+    color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-chip-remove[data-pressed] > .ui-touch-chip-remove-disc {
+  transform: scale(0.8);
+  background-color: var(--ui-color-danger);
+  color: var(--ui-color-on-danger);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/* Ring drawn inside the 28 px button so it never touches the label. */
+.ui-touch-chip-remove:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+.ui-touch-chip-remove:disabled {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .ui-touch-chip-remove:hover:not(:disabled, [data-pressed]) > .ui-touch-chip-remove-disc {
+    background-color: color-mix(in srgb, var(--ui-color-label) 22%, var(--ui-touch-chip-disc));
+    color: var(--ui-color-label);
+  }
+}
+
+/*
+ * Reduced motion: nothing scales or slides. The check fades in at full size,
+ * the label steps to its place, and a press dims instead of sinking.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-chip {
+    transition:
+      background-color var(--ui-duration-short) var(--ui-ease-standard),
+      color var(--ui-duration-short) var(--ui-ease-standard),
+      opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-chip-content {
+    transition: none;
+  }
+
+  .ui-touch-chip-check,
+  .ui-touch-chip-lead > .ui-touch-chip-icon {
+    transform: none;
+    transition: opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-chip--filter[aria-pressed='true'] .ui-touch-chip-icon {
+    transform: none;
+  }
+
+  .ui-touch-chip--filter[data-pressed],
+  .ui-touch-chip--removable:has(> .ui-touch-chip-remove[data-pressed]) {
+    transform: none;
+    opacity: 0.72;
+  }
+
+  .ui-touch-chip-remove-disc {
+    transition:
+      background-color var(--ui-duration-short) var(--ui-ease-standard),
+      color var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-chip-remove[data-pressed] > .ui-touch-chip-remove-disc {
+    transform: none;
+  }
+}

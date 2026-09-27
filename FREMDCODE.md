@@ -28,7 +28,8 @@ fremdes Stück, das hier nicht steht, ist ein Fehler, kein Stil.
 ## 1. Was Redion gehört
 
 Alles, was nicht unten unter 2 steht. Konkret: `src/`, `quell/` (ausser
-`quell/fremd/`), `server/`, `pruefungen/`, `doku/`, `chronik/`, alle
+`quell/fremd/`; und `quell/islands/` ist Redions Code, aber mit dem Touch Kit
+darin gebündelt, siehe unten), `server/`, `pruefungen/`, `doku/`, `chronik/`, alle
 `.md`, alle Werkzeuge in der Wurzel (`bauen.mts`, `chronik.mts`,
 `karte.mts`, …), `index.html`, `redion-einzeldatei.html`, die Stilblätter,
 die Icons unter `oeffentlich/icons/`, die Fachzeichen, die Formeln.
@@ -38,8 +39,20 @@ Notion", „wie in GoodNotes", „wie AFFiNE edgeless" sind Hinweise auf eine
 Lösung, keine Herkunft (CLAUDE.md §2). Kein Byte davon stammt von dort.
 
 Gebaut wird mit `typescript`, geprüft mit `playwright` und `@types/node` —
-das sind Werkzeuge, die nicht ausgeliefert werden (`package.json`:
-keine Laufzeit-Abhängigkeit, drei Entwicklungs-Abhängigkeiten).
+das sind Werkzeuge, die nicht ausgeliefert werden. Seit E699 kommen `vite`
+(8.3.1) und `react`/`react-dom` (19.3.0) mit ihren Typen dazu, genau
+festgenagelt: `vite` baut die React-Inseln und wird nie ausgeliefert; React
+wird ausgeliefert — aber nicht als Paket, sondern eingepackt in
+`quell/fremd/react/react.js` und deshalb unten in Abschnitt 2
+(`package.json`: keine Laufzeit-Abhängigkeit, acht
+Entwicklungs-Abhängigkeiten).
+
+**Das Touch Kit gehört Redur** — es ist sein eigener Code aus seinem
+Repository `Redurbabat/UI-Kit`. Es steht trotzdem unten in Abschnitt 2, weil
+es aus einem ANDEREN Repository kommt, in einer festgenagelten Fassung, und
+hier nicht bearbeitet werden darf: was anders sein soll, wird dort geändert
+und neu geholt (`skripte/touch-holen.mts`). Und zwei seiner Dateien sind
+wirklich fremd: der Glas-Code aus ALEXalesha/LiquidGlass (MIT).
 
 ---
 
@@ -48,12 +61,21 @@ keine Laufzeit-Abhängigkeit, drei Entwicklungs-Abhängigkeiten).
 | Was | Fassung | Lizenz | Wo | Was es verbessert | Was daran geändert ist | Wächter |
 |---|---|---|---|---|---|---|
 | **pdf.js** (`pdfjs-dist`, Bau `legacy`) | 6.2.108 | Apache-2.0 (`quell/fremd/pdfjs/LIZENZ.txt`) | `quell/fremd/pdfjs/daten.js` — `pdf.min.mjs` (512'483 Bytes' sha256 `9fab0c910bf1…`) · `pdf.worker.min.mjs` (1'312'452 Bytes' sha256 `bc0d1b88ea0b…`); Lader `src/fremd/pdfjs/laden.ts` (Redion-Code) | Ohne sie kann Redion eine PDF-Seite nicht selbst zeichnen; siehe ENTSCHEIDUNGEN.md E103. | **nichts**: die Originaldateien liegen gzip-gepackt als Base64 vor und werden erst beim ersten PDF ausgepackt (E389) | `test177` packt aus und rechnet die Prüfsummen nach; `pruefungen/fremd-bestand.json` ist das Verzeichnis |
+| **React** (`react`, `react-dom` samt `react-dom/client`, `react/jsx-runtime`; darin `scheduler`) | react 19.3.0 · react-dom 19.3.0 · scheduler 0.28.0 — genau festgenagelt in `package.json` | MIT, © Meta Platforms, Inc. and affiliates (`quell/fremd/react/LIZENZ.txt`; der Text steht auch oben in `react.js`, damit er in der Einzeldatei mitreist) | `quell/fremd/react/react.js` (222'474 Bytes, sha256 `daebc437afbc…`), gebaut von `bauen-inseln.mts` aus fünf Produktionsdateien der Pakete, jede mit Prüfsumme in `fremd-bestand.json`; nicht im Startweg — Lader `src/schale/inseln/laden.ts` (Redion-Code) | trägt die Bauteile des Touch Kits als Inseln in der bestehenden Schale; Redur: „du kannst react nutzen keien problem", siehe ENTSCHEIDUNGEN.md E699 | **nichts am Code**: gebündelt zu einem klassischen Skript mit einem globalen Namen `RedionReact`, Produktionsfassung (`NODE_ENV=production`), verkleinert; Kopf mit Herkunft und MIT-Text davor | `test578` baut neu und vergleicht Byte für Byte, rechnet die Prüfsummen nach und prüft, dass `react.js` beim Laden nichts einhängt; `test579` im Browser; `test388` §5: nicht beim Start |
+| **Touch Kit** — eigener Code von Redur aus UI-Kit @c192821 (`Redurbabat/UI-Kit`, Ordner `app/src/touch`, Zweig `claude/apple-ui-kit-react-i2ew4y`) | Commit `c192821f4bfa…` (27. September 2026) | eigener Code von Redur — kein Lizenztext nötig; ausgenommen die Glas-Dateien (nächste Zeile) | `fremd/touch/` — 96 Dateien, 518'395 Bytes, jede mit sha256 in `fremd/touch/HERKUNFT.txt` (deren sha256 `0d03f826944e…` in `fremd-bestand.json`); nicht ausgeliefert (`.assetsignore`), ausgeliefert wird nur, was `bauen-inseln.mts` davon ins Inselbündel `quell/islands/islands.js` + `.css` nimmt (Stufe 1a: Button, Toggle, Glyph, usePress, cx, die Marken) | Redurs Design-System (E639/E640) als echte Bauteile statt Nachbau von Hand; Federn, Glas, 44-px-Trefferflächen, Tastatur und „weniger Bewegung" schon im Kit geprüft | **nichts** — geholt mit `skripte/touch-holen.mts` aus dem Commit, weggelassen nur die Vitest-Läufe (`*.test.*`, `test/`); die Farben kommen über eine Brücke (`src/islands/bridge.css`, Redions Code), nicht über Änderungen im Kit | `test578` §3 rechnet jede Datei gegen `HERKUNFT.txt` nach und meldet jede Datei, die nicht aus dem Commit kommt |
+| **Glas-Code** aus ALEXalesha/LiquidGlass (`index.html`: `corner`, `sdf`, `bakeFields`, `filterPad`, `filterMarkup`) | Stand `34d616f` (laut UI-Kit `HERKUNFT.md`), angepasst in UI-Kit @c192821 | MIT, © 2026 ALEXalesha (`fremd/touch/glass/LIZENZ-ALEXalesha.txt`) | `fremd/touch/glass/field.ts` (3'858 Bytes, sha256 `0bc49574b721…`) · `fremd/touch/glass/filter.ts` (3'052 Bytes, sha256 `18b7dbd0b2d9…`); in Stufe 1a in keinem Bündel | die Lichtbrechung des Glases im Kit (Verschiebungsfeld und SVG-Filter) | in UI-Kit angepasst: getypt, eine Karte statt vier, neutraler Rand für die Linse, Fresnel-Ring im Blaukanal, nur ein Durchgang (so steht es in den Köpfen beider Dateien); in Redion **nichts**. Kommt der Glas-Code in ein Bündel, schreibt `bauen-inseln.mts` den MIT-Text in dessen Kopf | `test578` §3 rechnet beide Dateien und den Lizenztext nach |
 | **WebLLM** (`@mlc-ai/web-llm`) | die, die `esm.run` gerade liefert — **nicht festgenagelt** | Apache-2.0 | nicht im Verzeichnis: `src/bereiche/ki/dienst.ts` lädt sie zur Laufzeit von `https://esm.run/@mlc-ai/web-llm`, nur wenn der Mensch WebLLM wählt | lokale KI im Browser ohne Ollama (§21) | keine; Modellgewichte kommen vom Modellanbieter (`CreateMLCEngine`), beim ersten Mal mit Internet | keiner — siehe offene Frage unten |
 
 Mehr fremden Code gibt es nicht. Nachgezählt am 25. September 2026:
 `find . -iname "LICENSE*"` (ausser `node_modules`) findet nur
 `quell/fremd/pdfjs/LIZENZ.txt`; `grep -rn "esm.run\|unpkg\|jsdelivr\|cdn"
-src index.html` findet nur die WebLLM-Zeile.
+src index.html` findet nur die WebLLM-Zeile. **Seit E699 (27. September)**
+kommen die drei Zeilen darüber dazu, und die Lizenzdateien
+`quell/fremd/react/LIZENZ.txt` und `fremd/touch/glass/LIZENZ-ALEXalesha.txt`;
+nichts davon wird zur Laufzeit aus dem Netz geholt.
+
+**Redurs Ja, je Stück (§57), 27. September 2026, ca. 11:27 UTC:** „React
+19.3.0, Touch Kit (dein UI-Kit), Glas-Code (ALEXalesha, MIT)".
 
 **Offene Frage an Redur (aus dieser Zählung):** WebLLM ist das einzige
 Stück fremder Code, das **zur Laufzeit aus dem Netz** kommt, ohne Fassung

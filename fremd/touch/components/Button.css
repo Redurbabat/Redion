@@ -1,0 +1,181 @@
+/*
+ * Button — press spring.
+ * Press-in: fast ease (finger lands, button sinks at once).
+ * Release: the `press` spring from motion-tokens.css (slight overshoot).
+ * The asymmetry comes from the pressed state overriding the transition.
+ */
+
+.ui-touch-button {
+  --ui-touch-button-bg: var(--ui-color-accent);
+  --ui-touch-button-bg-pressed: var(--ui-color-accent-pressed);
+  --ui-touch-button-fg: var(--ui-color-on-accent);
+  --ui-touch-button-height: var(--ui-control-height);
+  --ui-touch-button-pad: var(--ui-space-5);
+  --ui-touch-button-radius: var(--ui-radius-md);
+  --ui-touch-button-press-scale: 0.96;
+  --ui-touch-button-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 1px 2px var(--ui-shadow-ink);
+
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  min-height: var(--ui-touch-button-height);
+  min-width: var(--ui-touch-button-height);
+  margin: 0;
+  padding: 0 var(--ui-touch-button-pad);
+  border: 0;
+  border-radius: var(--ui-touch-button-radius);
+  background-color: var(--ui-touch-button-bg);
+  box-shadow: var(--ui-touch-button-shadow);
+  color: var(--ui-touch-button-fg);
+  font: var(--ui-text-headline);
+  letter-spacing: var(--ui-tracking-body);
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--ui-spring-press-duration) var(--ui-spring-press),
+    background-color var(--ui-duration-short) var(--ui-ease-standard),
+    opacity var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-button[data-pressed] {
+  transform: scale(var(--ui-touch-button-press-scale));
+  background-color: var(--ui-touch-button-bg-pressed);
+  box-shadow: none;
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-button:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+.ui-touch-button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+/* ── Variants ── */
+.ui-touch-button--tinted {
+  --ui-touch-button-bg: var(--ui-color-accent-soft);
+  --ui-touch-button-bg-pressed: color-mix(in srgb, var(--ui-color-accent) 24%, transparent);
+  --ui-touch-button-fg: var(--ui-color-accent);
+  --ui-touch-button-shadow: none;
+}
+
+.ui-touch-button--gray {
+  --ui-touch-button-bg: var(--ui-color-fill);
+  --ui-touch-button-bg-pressed: var(--ui-color-fill-strong);
+  --ui-touch-button-fg: var(--ui-color-accent);
+  --ui-touch-button-shadow: none;
+}
+
+.ui-touch-button--plain {
+  --ui-touch-button-bg: transparent;
+  --ui-touch-button-bg-pressed: var(--ui-color-highlight);
+  --ui-touch-button-fg: var(--ui-color-accent);
+  --ui-touch-button-shadow: none;
+}
+
+/* Glass: frosted fallback here; the refracting version lives in Glass.css. */
+.ui-touch-button--glass {
+  --ui-touch-button-bg: light-dark(rgb(255 255 255 / 0.55), rgb(40 40 46 / 0.5));
+  --ui-touch-button-bg-pressed: light-dark(rgb(255 255 255 / 0.75), rgb(60 60 68 / 0.6));
+  --ui-touch-button-fg: var(--ui-color-label);
+  --ui-touch-button-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), inset 0 -1px 0 rgb(255 255 255 / 0.08),
+    0 6px 18px var(--ui-shadow-ink);
+
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+}
+
+.ui-touch-button--destructive {
+  --ui-touch-button-bg: var(--ui-color-danger);
+  --ui-touch-button-bg-pressed: color-mix(in srgb, var(--ui-color-danger) 82%, black);
+  --ui-touch-button-fg: var(--ui-color-on-danger);
+}
+
+.ui-touch-button--destructive.ui-touch-button--tinted,
+.ui-touch-button--destructive.ui-touch-button--gray,
+.ui-touch-button--destructive.ui-touch-button--plain {
+  --ui-touch-button-fg: var(--ui-color-danger);
+}
+
+.ui-touch-button--destructive.ui-touch-button--tinted {
+  --ui-touch-button-bg: var(--ui-color-danger-soft);
+  --ui-touch-button-bg-pressed: color-mix(in srgb, var(--ui-color-danger) 22%, transparent);
+}
+
+/* ── Sizes ── */
+.ui-touch-button--large {
+  --ui-touch-button-height: 50px;
+  --ui-touch-button-pad: var(--ui-space-6);
+  --ui-touch-button-radius: var(--ui-radius-md);
+  --ui-touch-button-press-scale: 0.97;
+}
+
+.ui-touch-button--small {
+  --ui-touch-button-height: var(--ui-control-height-small);
+  --ui-touch-button-pad: var(--ui-space-3);
+  --ui-touch-button-radius: var(--ui-radius-sm);
+  --ui-touch-button-press-scale: 0.92;
+
+  font: var(--ui-text-subhead);
+  font-weight: 600;
+}
+
+/* A 32 px button still gets a 44 px target for fingers. */
+.ui-touch-button--small::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--ui-control-height-small) - var(--ui-hit-min)) / 2) 0;
+}
+
+/* ── Shapes ── */
+.ui-touch-button--capsule {
+  --ui-touch-button-radius: var(--ui-radius-pill);
+}
+
+.ui-touch-button--circle {
+  --ui-touch-button-radius: 50%;
+
+  width: var(--ui-touch-button-height);
+  padding: 0;
+}
+
+.ui-touch-button--small.ui-touch-button--circle::after {
+  inset: calc((var(--ui-control-height-small) - var(--ui-hit-min)) / 2);
+}
+
+.ui-touch-button--block {
+  display: flex;
+  width: 100%;
+}
+
+.ui-touch-button[data-selected] {
+  --ui-touch-button-fg: var(--ui-color-accent);
+}
+
+.ui-touch-button--filled[data-selected] {
+  --ui-touch-button-fg: var(--ui-color-on-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-button {
+    transition:
+      background-color var(--ui-duration-short) var(--ui-ease-standard),
+      opacity var(--ui-duration-short) var(--ui-ease-standard);
+  }
+
+  .ui-touch-button[data-pressed] {
+    transform: none;
+    opacity: 0.72;
+  }
+}

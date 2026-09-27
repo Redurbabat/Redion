@@ -1,0 +1,209 @@
+/*
+ * Sheet — positions are written per frame by JS (spring + finger), so the
+ * sheet itself has no CSS transition on transform. CSS only handles the
+ * theme, layout, the reduced-motion fade and the pushed-back page.
+ */
+
+.ui-touch-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ui-z-sheet);
+  pointer-events: none;
+}
+
+.ui-touch-sheet-layer--contained {
+  position: absolute;
+}
+
+.ui-touch-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--ui-color-scrim);
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.ui-touch-sheet {
+  --ui-touch-sheet-radius: var(--ui-radius-sheet);
+  --ui-touch-sheet-keyboard: 0px;
+
+  position: absolute;
+  bottom: var(--ui-touch-sheet-keyboard);
+  left: 50%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 640px);
+  margin-left: max(-50%, -320px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-radius: var(--ui-touch-sheet-radius) var(--ui-touch-sheet-radius) 0 0;
+  background: var(--ui-color-surface-raised);
+  box-shadow: 0 -1px 0 var(--ui-color-separator), var(--ui-shadow-overlay);
+  color: var(--ui-color-label);
+  pointer-events: auto;
+  touch-action: none;
+  transform: translate3d(0, 100vh, 0);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Bleed below the bottom edge so an upward rubber-band never shows a gap. */
+.ui-touch-sheet::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background: inherit;
+}
+
+.ui-touch-sheet:focus {
+  outline: none;
+}
+
+.ui-touch-sheet:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+.ui-touch-sheet-grabber {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 64px;
+  height: 20px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+}
+
+/* 44 px target around the 36 × 5 pill. */
+.ui-touch-sheet-grabber::after {
+  content: '';
+  position: absolute;
+  inset: -12px 0;
+}
+
+.ui-touch-sheet-grabber span {
+  width: 36px;
+  height: 5px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-color-label-tertiary);
+  opacity: 0.55;
+  transition: opacity var(--ui-duration-short) var(--ui-ease-standard), transform var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-sheet-grabber:hover span,
+.ui-touch-sheet[data-dragging] .ui-touch-sheet-grabber span {
+  opacity: 0.9;
+}
+
+.ui-touch-sheet[data-dragging] .ui-touch-sheet-grabber span {
+  transform: scaleX(1.12);
+}
+
+.ui-touch-sheet-grabber:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+  border-radius: var(--ui-radius-pill);
+}
+
+.ui-touch-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-height: var(--ui-navbar-height);
+  padding: 0 var(--ui-space-4) var(--ui-space-2);
+}
+
+.ui-touch-sheet-header--bare {
+  min-height: 0;
+  padding: 0;
+}
+
+.ui-touch-sheet-title {
+  flex: 1;
+  margin: 0;
+  font: var(--ui-text-headline);
+  letter-spacing: var(--ui-tracking-body);
+}
+
+.ui-touch-sheet-actions {
+  display: flex;
+  gap: var(--ui-space-2);
+}
+
+.ui-touch-sheet-description {
+  margin: 0;
+  padding: 0 var(--ui-space-4) var(--ui-space-3);
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-subhead);
+}
+
+.ui-touch-sheet-content {
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--ui-space-4) var(--ui-space-6);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* No text selection while the sheet is being dragged. */
+.ui-touch-sheet[data-dragging] .ui-touch-sheet-content {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* At the largest detent the content scrolls; below it, dragging the content resizes the sheet. */
+.ui-touch-sheet[data-at-largest] .ui-touch-sheet-content {
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+/* ── Page behind the sheet (set data-ui-sheet-background on your page wrapper) ── */
+[data-ui-sheet-background] {
+  transform-origin: 50% 0;
+}
+
+[data-ui-sheet-background][data-ui-sheet-pushed] {
+  overflow: hidden;
+  border-radius: calc(var(--ui-sheet-bg-progress, 0) * 12px);
+  transform: translateY(calc(var(--ui-sheet-bg-progress, 0) * (14px + env(safe-area-inset-top, 0px))))
+    scale(var(--ui-sheet-bg-scale, 1));
+}
+
+/* What shows around the pushed-back page (html and body while pushed): dark, like the depth behind a card. */
+[data-ui-sheet-canvas] {
+  background-color: #000;
+}
+
+/* ── Reduced motion: no travel; open and close are a short fade ── */
+@keyframes ui-touch-sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-sheet-layer[data-reduced][data-phase='opening'],
+  .ui-touch-sheet-layer[data-reduced][data-phase='open'] {
+    animation: ui-touch-sheet-fade-in 200ms var(--ui-ease-standard);
+  }
+
+  .ui-touch-sheet-layer[data-reduced][data-phase='closing'] {
+    opacity: 0;
+    transition: opacity 200ms var(--ui-ease-standard);
+  }
+
+  .ui-touch-sheet[data-dragging] .ui-touch-sheet-grabber span {
+    transform: none;
+  }
+}

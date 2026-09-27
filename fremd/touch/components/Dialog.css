@@ -1,0 +1,153 @@
+/* Dialog (alert) — settles in from scale 1.08 on the snappy spring, fades out. */
+
+.ui-touch-dialog-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ui-z-overlay);
+  display: grid;
+  place-items: center;
+  padding: var(--ui-space-6);
+}
+
+.ui-touch-dialog-layer--contained {
+  position: absolute;
+}
+
+.ui-touch-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--ui-color-scrim);
+  animation: ui-touch-dialog-fade-in var(--ui-duration-normal) var(--ui-ease-standard) both;
+}
+
+.ui-touch-dialog {
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, 300px);
+  overflow: hidden;
+  border-radius: var(--ui-radius-xl);
+  background: color-mix(in srgb, var(--ui-color-surface-raised) 92%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--ui-shadow-overlay);
+  text-align: center;
+  animation: ui-touch-dialog-in var(--ui-spring-snappy-duration) var(--ui-spring-snappy) both;
+}
+
+.ui-touch-dialog:focus {
+  outline: none;
+}
+
+.ui-touch-dialog-layer[data-state='closing'] .ui-touch-dialog,
+.ui-touch-dialog-layer[data-state='closing'] .ui-touch-dialog-scrim {
+  animation: ui-touch-dialog-out 160ms var(--ui-ease-exit) both;
+}
+
+.ui-touch-dialog-body {
+  padding: var(--ui-space-5) var(--ui-space-4) var(--ui-space-4);
+}
+
+.ui-touch-dialog-title {
+  margin: 0;
+  font: var(--ui-text-headline);
+}
+
+.ui-touch-dialog-message {
+  margin: var(--ui-space-1) 0 0;
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+}
+
+.ui-touch-dialog-buttons {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border-top: var(--ui-hairline) solid var(--ui-color-separator);
+}
+
+.ui-touch-dialog-buttons--stacked {
+  grid-auto-flow: row;
+}
+
+.ui-touch-dialog-button {
+  box-sizing: border-box;
+  min-height: var(--ui-hit-min);
+  margin: 0;
+  padding: 0 var(--ui-space-3);
+  border: 0;
+  background: transparent;
+  color: var(--ui-color-accent);
+  font: var(--ui-text-body);
+  cursor: pointer;
+  transition: background-color 300ms var(--ui-ease-standard);
+}
+
+.ui-touch-dialog-buttons > .ui-touch-dialog-button + .ui-touch-dialog-button {
+  border-left: var(--ui-hairline) solid var(--ui-color-separator);
+}
+
+.ui-touch-dialog-buttons--stacked > .ui-touch-dialog-button + .ui-touch-dialog-button {
+  border-left: 0;
+  border-top: var(--ui-hairline) solid var(--ui-color-separator);
+}
+
+/* Highlight on touch-down, fade out on release (iOS list/alert behaviour). */
+.ui-touch-dialog-button[data-pressed] {
+  background: var(--ui-color-highlight);
+  transition-duration: 0ms;
+}
+
+.ui-touch-dialog-button:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: -3px;
+}
+
+.ui-touch-dialog-button:disabled {
+  color: var(--ui-color-label-tertiary);
+  cursor: default;
+}
+
+.ui-touch-dialog-button--cancel {
+  font-weight: 600;
+}
+
+.ui-touch-dialog-button--destructive {
+  color: var(--ui-color-danger);
+}
+
+@keyframes ui-touch-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes ui-touch-dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-touch-dialog-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-dialog {
+    animation: ui-touch-dialog-fade-in 160ms var(--ui-ease-standard) both;
+  }
+
+  .ui-touch-dialog-layer[data-state='closing'] .ui-touch-dialog,
+  .ui-touch-dialog-layer[data-state='closing'] .ui-touch-dialog-scrim {
+    animation: ui-touch-dialog-fade-out 140ms var(--ui-ease-standard) both;
+  }
+}
+
+@keyframes ui-touch-dialog-fade-out {
+  to {
+    opacity: 0;
+  }
+}
