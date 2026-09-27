@@ -443,9 +443,19 @@ gleich('… keine Seite ist ein Modul (type="module" liefe per Doppelklick nicht
 p('… und es gibt keine app.html wie bei E78', !da('app.html') && !da('src/app'));
 
 /* Regel 3 — kein Router, keine eigene Schale. */
-const inselQuellen = fs.existsSync(path.join(WURZEL, 'src/islands'))
-  ? fs.readdirSync(path.join(WURZEL, 'src/islands')).filter(n => /\.(tsx?|css)$/.test(n)).map(n => 'src/islands/' + n)
-  : [];
+/* Auch Unterordner (Durchsicht von E699): ab Stufe 1b bekommt eine Insel
+   vielleicht ihren eigenen Ordner, und eine Regel, die nur die oberste Ebene
+   liest, wäre dort blind. */
+const inselDateien = (ordner: string, raus: string[] = []): string[] => {
+  if (!fs.existsSync(ordner)) return raus;
+  for (const e of fs.readdirSync(ordner, { withFileTypes: true })) {
+    const v = path.join(ordner, e.name);
+    if (e.isDirectory()) inselDateien(v, raus);
+    else if (/\.(tsx?|css)$/.test(e.name)) raus.push(path.relative(WURZEL, v).split(path.sep).join('/'));
+  }
+  return raus;
+};
+const inselQuellen = inselDateien(path.join(WURZEL, 'src/islands')).sort();
 p('Es gibt Inselquellen zu lesen', inselQuellen.length >= 4, inselQuellen.join(', '));
 /* Kommentare weg — sie ERKLÄREN die Regeln und nennen dabei die Namen. */
 const code = (rel: string): string => lies(rel).replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
@@ -458,6 +468,23 @@ const DATEN = /\bStore\b|indexedDB|IDBDatabase|localStorage|sessionStorage|\bfet
 gleich('Regel 4: keine Insel liest oder schreibt Daten — kein Store, keine IndexedDB, kein localStorage, kein innerHTML',
   inselQuellen.filter(q => DATEN.test(code(q))), []);
 p('Gegenprobe: eine Insel mit `Store.addPage` würde gefunden', DATEN.test('const s = Store.addPage(null, {});'));
+
+/* REGEL 3 UND 4 AUCH IM GEBAUTEN BÜNDEL (Durchsicht von E699). Die Zeilen
+   darüber lesen `src/islands/` — ins Bündel kommt aber auch Code des Kits
+   (Stufe 1a: Button, Toggle, Glyph, usePress; ab 1b mehr), und den liest
+   dort niemand. Was die Regeln verbieten, darf deshalb auch in
+   `islands.js` nicht stehen, egal aus welcher Datei es kam. React selbst
+   liegt in `react.js` und ist ausgenommen: es setzt intern `innerHTML`
+   (SVG, `dangerouslySetInnerHTML`) — das ist sein Werkzeug, nicht der
+   Datenweg einer Insel. */
+const IM_BUENDEL = /\b(pushState|replaceState)\s*\(|["'`](popstate|hashchange)["'`]|\blocalStorage\b|\bsessionStorage\b|\bindexedDB\b|\bIDBDatabase\b|\.innerHTML\s*=|dangerouslySetInnerHTML|\bfetch\s*\(|XMLHttpRequest|\beval\s*\(|new\s+Function\s*\(/;
+const inselBuendel = lies(INSELN);
+p('… und auch im gebauten Bündel nicht (islands.js, samt dem Code des Kits darin)',
+  inselBuendel.length > 0 && !IM_BUENDEL.test(inselBuendel),
+  String(IM_BUENDEL.exec(inselBuendel)?.[0] ?? (inselBuendel ? '' : 'islands.js fehlt')));
+p('Gegenprobe: ein Kit-Bauteil mit `history.pushState(…)` im Bündel würde gefunden',
+  IM_BUENDEL.test(inselBuendel + ';history.pushState(null,"",e)') &&
+  IM_BUENDEL.test(inselBuendel + ';window.localStorage.getItem("x")'));
 
 /* Regel 5 — an Ort und Stelle, und in Stufe 1a noch nirgends. */
 const katalog = /const catalog\b[\s\S]*?=\s*\{([\s\S]*?)\n\}/.exec(code('src/islands/main.tsx'))?.[1] ?? '';
