@@ -154,8 +154,11 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   /* Seitenrand nach der Telefon-Vorgabe (E37): 28 px. Vorher 22 — der
      Text stand zu dicht am Glasrand, und am Daumen liest es sich enger,
      als es aussieht. Unter 380 px bleibt es bei 22, sonst wird die Zeile
-     zu schmal. */
-  #page{padding:0 28px 40vh}
+     zu schmal.
+
+     Die 28 ist die Marke `--mobile-gutter` (marken.css), nicht eine Zahl
+     (E700): derselbe Rand wie in bausteine.css, also dieselbe Marke. */
+  #page{padding:0 var(--mobile-gutter) 40vh}
   .cover{margin:0 -22px}
   #ai{position:fixed; right:0; top:0; height:100%; z-index:500}
   .blk > .handles{left:-40px}

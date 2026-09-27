@@ -4723,3 +4723,54 @@ rollte der Browser die Seite nach.
 
 **Der neue Satz „endet im Fenster"** war auch gegen `43432e1` rot
 (335 … 1084 bei 960) — der Mangel war älter als der Rückfall.
+
+## §72 · Ein Farbtupfer dazu, ein Seitenrand zur Marke — die 28-px-Decke (E700, 27. September 2026)
+
+(§71 ist den React-Inseln vergeben, E699 auf `claude/react-inseln-grundlage`.)
+
+`test362` §7 auf `main` 323f13a: `{16:270, 22:85, 28:66, 44:54, 46:14, 56:14}`
+gegen die Decke `{…, 28:65, …}`, 17/18. Gezählt mit dem Muster des Laufs
+(Kommentare entfernt, `(?<![\w-])28px`, alle `.css` unter `quell/schale/stil/`):
+
+```txt
+Stand                          28px roh   Decke   test362
+6ad2650b  (E696)               65         65      18/18
+569a8341  (Codex, PR #114)     65         64      rot
+0f73ba1d  (Merge, E697)        66         65      17/18
+dieser Bogen (E700)            65         65      18/18
+```
+
+**Der Tausch, je eine Zeile, je ein Urteil.** Massstab ist `marken.css`:
+gleiche Zahl heisst nur bei gleicher Aufgabe gleiche Marke.
+
+```txt
+     Datei:Zeile          was es ist                        Marke dieser Zahl   Urteil
++1   bausteine.css:5308   Breite eines Farbtupfers          --mobile-gutter     andere Aufgabe, bleibt roh
+                          (.blatt-color-grid button i,
+                          E697, 9e306b85)
+−1   ki.css:158           Seitenrand von #page am Telefon   --mobile-gutter     dieselbe Aufgabe → Marke
+                          (E37, max-width:820px)
+```
+
+**Ohne den Tupfer stünde die Decke jetzt bei 64.** Die übrigen 62 rohen
+28 px (ohne den Tupfer und die zwei Definitionen `--mobile-gutter` und
+`--tbl-kh`) sind durchgesehen: Knopf- und Zeichenmasse (28 × 28), Schatten (`0 8px 28px`),
+Schriftgrössen, Innenpolster von Karten, Abstände zwischen Blöcken, ein
+Listeneinzug — kein weiterer Seitenrand von `#page`.
+
+**Sichtbar? Nein.** Vorher und nachher mit Playwright aufgenommen
+(`isMobile`, feste Uhr, reduzierte Bewegung, Willkommensblatt weg), die
+Vorher-Reihe zweimal, um das Rauschen zu messen (0 Pixel):
+
+```txt
+Fenster       Ansicht        #page Polster (oben rechts unten links)   Pixel anders
+375 × 812     Start, Seite   0 22 243.6 22                             0, 0
+390 × 844     Start, Seite   0 28 253.2 28                             0, 0
+428 × 926     Start, Seite   0 28 277.8 28                             0, 0
+700 × 1000    Start, Seite   0 28 300 28                               0, 0
+```
+
+Alle acht Nachher-Bilder sind byte-gleich mit den Vorher-Bildern. Die Zeile
+in `ki.css` wird am Telefon ohnehin von `bausteine.css:221-225` überstimmt
+(gleiche Spezifität, spätere Datei); sie trägt jetzt trotzdem die Marke, damit
+die Zahl an einer Stelle steht. Die Bilder bleiben auf dem Rechner (§55.4).
