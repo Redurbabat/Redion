@@ -321,6 +321,66 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* ── EIN GLAS STATT VIER (E695) ────────────────────────────────────────
+     Zwei Bilder desselben Menüs. `glasMenue` über einer echten Seite mit
+     farbigen Hinweisen — so sieht man es im Alltag. `glasMuster` über dem
+     Prüfmuster aus test576 (grosse schwarze, weisse, rote, blaue Flächen) —
+     so sieht man, was das Glas WIRKLICH tut, und dass die stille Schrift
+     (Gruppentitel, Kürzel) auch über dem schlimmsten Grund lesbar bleibt. */
+  glasMenue: {
+    titel: 'Glas — ein Menü über einer Seite mit Farbe (E695)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Wärmepumpe — Inbetriebnahme' });
+      Store.addBlock(s.id, 'h2', { text: 'Was vor dem Einschalten geprüft wird' });
+      Store.addBlock(s.id, 'callout', { text: 'Vorlauftemperatur und Spreizung an beiden Fühlern messen.', icon: '🔥', color: 'bg-red' });
+      Store.addBlock(s.id, 'callout', { text: 'Volumenstrom gegen das Datenblatt halten — nicht schätzen.', icon: '💧', color: 'bg-blue' });
+      Store.addBlock(s.id, 'callout', { text: 'Sicherheitsventil: Ansprechdruck ablesen und notieren.', icon: '⚠️', color: 'bg-yellow' });
+      Store.addBlock(s.id, 'callout', { text: 'Protokoll an den Kunden, Kopie in die Anlagenakte.', icon: '✅', color: 'bg-green' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 700));
+      const z = document.querySelector('#page .blk:nth-of-type(3)')?.getBoundingClientRect();
+      UI.menu('<div class="grp">Block</div>' +
+        [['↻', 'Umwandeln in', 'Strg+/'], ['⧉', 'Duplizieren', 'Strg+D'], ['↗', 'Verschieben nach', ''],
+         ['🔗', 'Link kopieren', 'Strg+L'], ['🎨', 'Farbe', ''], ['🗑', 'Löschen', 'Entf']]
+          .map(([i, t, k]) => `<button><span class="mi">${i}</span>${t}${k ? `<span class="ms">${k}</span>` : ''}</button>`).join(''),
+        Math.round((z?.left ?? 300) + 120), Math.round((z?.top ?? 240) - 10), { titel: 'Block' });
+      await new Promise(f => setTimeout(f, 350));
+    }
+  },
+
+  glasMuster: {
+    titel: 'Glas — dasselbe Menü über dem Prüfmuster aus test576 (E695)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Glas' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 500));
+      const muster = document.createElement('div');
+      muster.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;display:grid;' +
+        'grid-template-columns:repeat(4,1fr);grid-auto-rows:120px;';
+      for (let i = 0; i < 64; i++) {
+        const q = document.createElement('div');
+        q.style.background = ['#ffffff', '#000000', '#e02020', '#1f5cff'][(i + Math.floor(i / 4)) % 4]!;
+        muster.appendChild(q);
+      }
+      document.body.appendChild(muster);
+      for (const w of ['#app', '#main', '#scroll', '#page', 'body']) {
+        const el = document.querySelector<HTMLElement>(w);
+        if (el) el.style.background = 'transparent';
+      }
+      UI.menu('<div class="grp">Glas</div>' +
+        ['Umbenennen', 'Verschieben', 'Duplizieren', 'In den Papierkorb', 'Kopieren', 'Teilen']
+          .map((t, i) => `<button><span class="mi">•</span>${t}<span class="ms">Strg+${i + 1}</span></button>`).join(''),
+        Math.round(innerWidth * 0.3), 150, { titel: 'Glas' });
+      await new Promise(f => setTimeout(f, 350));
+    }
+  },
+
   schaleMehr: {
     titel: 'Die Schale — die Mehr-Lade des Reiters offen',
     bauen: async () => {

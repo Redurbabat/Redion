@@ -3477,8 +3477,8 @@
         },
         {
           "was": "E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN)",
-          "vonBis": "387ca8e → offen",
-          "zeitraum": "14:15–…",
+          "vonBis": "387ca8e → fc6e606",
+          "zeitraum": "14:15–16:37",
           "dauer": "ca. 1 h 15 min",
           "pruefungen": "test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck\"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe"
         }
@@ -3520,6 +3520,58 @@
           "was": "`test572 §12` zweimal aus dem FALSCHEN Grund rot gesehen und beide Gründe als Kommentar in den Lauf geschrieben: `inReiter` gibt Gruppen zurück, keine flache Liste; und der Reiter „Zeichnen\" zeigt ohne offenes Blatt gar keine Werkzeuge.",
           "warum": "Beide Male stand da „0 Werkzeuge\", und beide Male sah es nach einem Produktfehler aus. Ein Wächter, der eine Form annimmt statt sie nachzusehen, misst etwas anderes als er behauptet (L206).",
           "risiko": "Keines — es sind Kommentare und ein echtes Blatt statt eines gestellten Ziels (§30: keine Mocks, wo die echte App geprüft werden kann)."
+        }
+      ]
+    },
+    {
+      "datum": "2026-09-27",
+      "wochentag": "Sonntag",
+      "titel": "Ein Glas statt vier — und die Dichte kam aus den Pixeln, nicht aus dem Gefühl",
+      "wasIchWeiss": "Redur schrieb einen Satz, der breiter kaum sein konnte: „Weiter an die animationen übergangen glass efeck usw alles verbessern.“ „Alles verbessern“ ist kein Plan, also habe ich zuerst gezählt. Die Inventur der 23 Stilblätter ergab ein Bewegungssystem, das es gibt und an das sich kaum jemand hält (E259: vier Dauern, eine Kurve — daneben 55 Dauern und 227-mal das nackte `ease`), und ein Glasrezept aus §16, das genau eine Klasse benutzte. Die Laufzeit-Sonde entwarnte bei der Bewegung (im Leerlauf läuft eine einzige Endlos-Animation, mit „weniger Bewegung“ keine) und bestätigte beim Glas: am Rechner war kein einziges Element sichtbar verwischt.\n\nAlso zuerst das Glas, weil Redur es beim Namen genannt hatte und weil man es sieht. Der Wächter `test576` stand rot, bevor eine Zeile Stil geändert war, und fand dabei einen echten Fehler fürs Zielgerät: fünf Stellen ohne `-webkit-backdrop-filter`, also auf jedem iPhone vor Safari 18 ohne Glas. Die eigentliche Lehre des Tages kam danach. Meine erste Dichte für Menüs war eine Schätzung (74 %), die Hauptschrift hielt sie spielend aus — und die stille Schrift, die ich zuerst gar nicht gemessen hatte, fiel auf 1,43 : 1. Die Dichten stehen jetzt da, wo die Messung sie hingelegt hat, mit einer Regel statt einer Liste: Fläche mit Schrift dicht, Fläche mit Zeichen leicht.\n\nUnd ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — seit meinem eigenen Bogen von gestern. Gefunden hat es der Nachbarlauf dieses Bogens; die Nachbarliste von E690 hatte ihn nicht.",
+      "nachrichten": [
+        {
+          "zeit": "ca. 08:00",
+          "wortlaut": "Weiter an die animationen pbergangen galss efeck usw alles verbessern",
+          "woher": "wörtlich aus dem Gespräch",
+          "gemeint": "Die Oberfläche soll sich hochwertiger anfühlen: Bewegungen, Übergänge und besonders das Glas. Keine bestimmte Stelle, sondern das Ganze.",
+          "besser": "„Mach das Glas sichtbar und einheitlich, dann die Übergänge — und zeig mir vorher, was du findest.“ Der Satz, wie er war, ist aber gut genug, WENN die Antwort mit einer Messung beginnt statt mit einem Umbau."
+        }
+      ],
+      "arbeit": [
+        {
+          "was": "Inventur: Bewegung und Glas in 23 Stilblättern gezählt, Laufzeit-Sonde über laufende Animationen und sichtbares Glas",
+          "vonBis": "fc6e606 → (keine Änderung)",
+          "zeitraum": "ca. 08:00–08:30",
+          "dauer": "ca. 30 min",
+          "pruefungen": "keine — reines Messen (messungen.md §69)"
+        },
+        {
+          "was": "E695 · Ein Glas statt vier",
+          "vonBis": "fc6e606 → offen",
+          "zeitraum": "ca. 08:30–…",
+          "dauer": "ca. 3 h",
+          "pruefungen": "test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690"
+        }
+      ],
+      "zahlen": {
+        "commits": 2,
+        "entscheidungen": 1,
+        "neuePruefläufe": 1
+      },
+      "groesstesProblem": "Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.",
+      "interessantesteAnfrage": "„alles verbessern“ — der breiteste Auftrag bisher, und gerade deshalb der, der am dringendsten eine Messung vorneweg brauchte. Ohne sie wäre „besser“ Geschmack gewesen.",
+      "massnahmen": [
+        {
+          "zeit": "ca. 09:40",
+          "was": "Die Glasdichte aus der Kontrastmessung abgeleitet statt geschätzt: hell 92 %, dunkel 88 % für Flächen mit Schrift; auf Glas `--text-faint` → `--text-dim`.",
+          "warum": "Die erste Schätzung (74 %) gab der stillen Schrift 1,43 : 1. Eine Zahl, die nur für die Hauptschrift stimmt, stimmt nicht.",
+          "risiko": "Menüs sind nicht durchsichtiger als vorher, sondern glasiger (20 statt 8 px Unschärfe, gesättigte Farbe). Wer mehr Durchsicht will, muss die stille Schrift mitziehen."
+        },
+        {
+          "zeit": "ca. 10:20",
+          "was": "`test534` über fünf Arbeitsbäume zurückverfolgt: grün bei 43432e1, rot ab 4d7436d (E690).",
+          "warum": "§46: rot zuerst. Und der Fehler war meiner — dann ist er zuerst zu finden, nicht zu erklären.",
+          "risiko": "Keines — Arbeitsbäume im Scratchpad, der Hauptbaum unberührt."
         }
       ]
     }
@@ -5083,6 +5135,18 @@
       "ursache": "Die Kennung gibt es ZWEIMAL. `Register.werkzeuge` führt das Flächenwerkzeug `ellipse` (Zeichen `◯`, deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`); `Marken.FORMEN` führt die Studio-Form `ellipse` (Zeichen `○`, englischer Raum neben `line`, `arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht — also antwortete das Register zuerst, mit dem falschen Zeichen.",
       "beweis": "`reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.",
       "lehre": "Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet."
+    },
+    {
+      "nr": "P118",
+      "datum": "2026-09-27",
+      "titel": "Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste",
+      "schwere": "klein",
+      "symptom": "Der Glas-Wächter mass die stille Schrift im Menü hell mit 1,43 : 1 und dunkel mit 1,43 : 1, die Hauptschrift hell mit 6,05 — eben noch 7,05.",
+      "falscheVermutung": "Die Messung über das ganze Menü sei zu grob, oder beide Modi hätten zufällig dieselben Werte.",
+      "wieGefunden": "Die Gleichheit selbst war der Hinweis: zwei Farbsätze, die Ziffer für Ziffer dasselbe ergeben, sind ein Satz.",
+      "ursache": "Der Lauf setzte `data-theme` von Hand. `Aussehen` setzt das Attribut kurz danach auf das gespeicherte Schema zurück (`aussehen.ts:113`) — gemessen wurde beide Male dunkel. Ob das Rücksetzen vor oder nach der Messung kam, hing am Zeitpunkt; im ersten Lauf war hell noch hell.",
+      "beweis": "Mit `App.theme(t)` statt des Attributs: hell 7,05 / dunkel 6,05 für die Hauptschrift, verschiedene Werte für die stille Schrift. Und der Lauf prüft seither, dass das gewünschte Thema wirklich gilt.",
+      "lehre": "Einen Zustand der App über den Weg der App setzen, nicht über das Attribut, das er am Ende hinterlässt. Und zwei Messungen, die exakt gleich ausfallen, sind ein Befund über die Messung, bevor sie einer über das Produkt sind."
     }
   ]
 }

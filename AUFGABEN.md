@@ -1058,6 +1058,32 @@ Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
 
 
+## Bewegung und Glas (B1 … B3) — B1 ist gelandet (E695)
+
+Redur, 27. September 2026: „Weiter an die animationen übergangen glass
+efeck usw alles verbessern." Die Inventur dazu steht in `messungen.md` §69.
+
+- **B1 · Ein Glas statt vier — GELANDET (E695, `test576`).** Eine
+  Unschärfe, zwei Dichten nach einer Regel, Glas nur unter `@supports` mit
+  Präfix, auf Glas keine blasse Schrift. Offen daraus: **L221** (die
+  leichten Leisten sind gerechnet, nicht gemessen).
+- **B2 · Bewegung aus den Marken.** E259 verspricht „vier Stufen und EINE
+  Kurve", und der Quelltext hält sich kaum daran: in `transition`-Werten
+  stehen 55 verschiedene Dauern (Dauer-Marken: 5-mal benutzt) und 16
+  Kurven, davon 227-mal das nackte `ease` des Browsers. Der Bogen: die
+  Übergänge auf `--ease` und `--motion-*` ziehen, mit einem Bestand im
+  Wächter, der nur schrumpfen darf (wie `bereiche-bestand.json`). Die
+  gestalteten Endlos-Animationen (Drucker, Kartenring, Glühfaden) behalten
+  ihre eigenen Zeiten — sie sind Choreografie, keine Übergänge. Mit Bild,
+  weil sich das Gefühl jeder Bewegung ändert.
+- **B3 · Übergänge ohne Layout.** 14 `transition`s bewegen `width`,
+  `left`, `top` oder `margin` — jede davon rechnet bei jedem Bild das Layout
+  neu, am Telefon sichtbar als Ruckeln. Einzeln ansehen: wo es geht, auf
+  `transform`/`opacity`; wo nicht (ein Fortschrittsbalken darf `width`
+  haben), mit Grund stehen lassen. Erst messen (§36), dann bauen.
+
+---
+
 ## Die drei Ansichten einer Seite (A1) — Bogen 1 ist gelandet (E690)
 
 Redur, 26. September 2026, zuerst mit einem Bild von AFFiNEs Kopfzeile und

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-674 Entscheidungen, E1 bis E694 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+675 Entscheidungen, E1 bis E695 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -737,6 +737,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E692** — L220 geschlossen: die drei Handgriffe, die mit der ungefilterten Geschwisterliste rechneten — Rücktaste springt zum SICHTBAREN Vorgänger, Strg+Umschalt+Pfeil springt ÜBER den unsichtbaren Nachbarn (`splice` statt Tausch), und die laufende Nummer einer Liste wird gezählt und weitergereicht statt an den Block geschrieben; dabei gefunden: das Verschieben war seit je unerreichbar, weil die Pfeilnavigation davor stand und umkehrte (`test574 §10–§12`)
 * **E693** — Auf der Fläche zeichnen, mit EINEM Formenzeichner: `core/gfx/shapes.ts` bekommt den Zeichner, den Rahmen und die acht Farben, das Whiteboard zieht darauf um (136 Zeilen weniger), und die Seitenfläche bekommt eine Tinten-Lage IN derselben bewegten Ebene wie die Kästen — acht Werkzeuge, Radierer, Farbmenü, Strg+Z aus `GfxHistory`, gespeichert im bestehenden Feld `shapes` (`test575`, Redur: „weiter")
 * **E694** — Eine Werkzeugliste statt drei: `Marken.WERKZEUGE` und `menueband.WERKZEUGE` holen Name, Zeichen und Hinweis aus `Register.werkzeuge` bzw. `Marken.FORMEN`; das Studio hält nur noch die Reihenfolge, das Band eine Folge mit Herkunft — und dabei kam heraus, dass es die Kennung `ellipse` ZWEIMAL gibt (Flächenwerkzeug `◯`, Studio-Form `○`) (`test572`, L218 GESCHLOSSEN)
+* **E695** — Ein Glas statt vier: EINE Unschärfe (`--glas-blur`) für Menüs, Finder, Auswahlleiste, Telefonleiste und PDF-Leiste, zwei Dichten nach einer Regel (Fläche mit Zeichen leicht, mit Schrift dicht), Glas nur unter `@supports` mit Präfix, und auf Glas keine blasse Schrift — die Dichte aus Pixelmessungen, nachdem die erste Schätzung der stillen Schrift 1,43 : 1 gab (`test576`, Redur: „glass efeck … alles verbessern")
 
 ---
 
@@ -56695,3 +56696,108 @@ Das ist die Folge von EINER Quelle und war die Absicht.
 **Nachbarn:** `test572`, `test266`, `test267`, `test268`, `test272`,
 `test274`, `test277`, `test282`, `test286`, `test289`, `test480`, `test505`,
 `test506`, `test508`, `test546`, `test559`, `test105`, `test109`, `test87`.
+
+---
+
+## E695 — Ein Glas statt vier, und die Dichte kommt aus der Messung
+
+**Datum:** 27. September 2026 · **Wächter:** `test576` (30 Zusagen) ·
+Redur: **„Weiter an die animationen übergangen glass efeck usw alles
+verbessern"**.
+
+**Gemessen, bevor etwas gebaut wurde** (messungen.md §69). §16 hat ein Rezept
+für schwebende Flächen — `--bg-schwebend`, `--glas-blur`, `--glas-rand` —,
+und es sass auf genau einer Klasse (`.rb.glas`). Daneben standen drei
+andere:
+
+```txt
+Menüs, Finder, Auswahlleiste   88 % deckend + blur(8px)
+untere Leiste am Telefon       blur(20px) saturate(1.6)
+PDF-Werkzeugleiste             blur(8px), nur unter @supports(unpräfixiert)
+```
+
+Am Rechner war im Leerlauf **kein einziges Element sichtbar verwischt**, und
+ein offenes Menü war auf dem Bildschirm kaum von einer vollen Fläche zu
+unterscheiden. Dazu setzten fünf Stellen `backdrop-filter` ohne den Zwilling
+`-webkit-backdrop-filter` — Safari auf dem iPhone las bis Fassung 18 nur den
+Präfix. Auf dem Zielgerät (§37) gab es dort also gar kein Glas.
+
+**Was entschieden wurde.**
+
+1. **Eine Unschärfe.** `--glas-blur` (`saturate(180%) blur(20px)`) für jede
+   schwebende Fläche. Zwei Gläser nebeneinander mit verschiedener Unschärfe
+   wirken wie zwei Programme — dieselbe Regel, die E259 für die Kurve
+   aufgeschrieben hat.
+
+2. **Zwei Dichten, mit einer Regel statt einer Liste:** eine Fläche mit
+   ZEICHEN ist leicht (`--bg-schwebend`, 74 % hell / 72 % dunkel), eine Fläche
+   mit SCHRIFT ist dicht (`--bg-schwebend-dicht`, 92 % hell / 88 % dunkel).
+   Die Dichten stehen in `hell.css`/`dunkel.css`, weil sie je Modus
+   verschieden sein müssen: reines Schwarz hinter hellem Glas zieht stärker
+   herunter als Weiss hinter dunklem hinauf.
+
+3. **Auf Glas keine blasse Schrift.** `--text-faint` ist für „Beiwerk und
+   Symbole" beschlossen, mit 3,9 : 1 auf der VOLLEN Karte. Auf Glas fällt
+   diese Voraussetzung weg. Jede gläserne Fläche mit Schrift legt deshalb
+   `--text-faint` auf `--text-dim` um — eine Zeile, die alle Nachkommen
+   erreicht, statt einer Liste von Ausnahmen.
+
+4. **Glas nur, wo es Unschärfe gibt.** Jede Stelle setzt zuerst die deckende
+   Fläche und schaltet das Glas unter
+   `@supports ((backdrop-filter:…) or (-webkit-backdrop-filter:…))` ein.
+   72 % Deckkraft ohne Weichzeichner ist kein Glas, sondern ein Muster hinter
+   der Schrift. „Weniger Transparenz" macht beide Flächen voll deckend.
+
+5. **Der Schleier ist etwas anderes** (`--schleier-blur`, `blur(6px)`): er
+   liegt hinter einem Fenster und trägt keine Schrift.
+
+6. **Vier Zierstücke bleiben**, mit Namen und Grund im Wächter: die Linse der
+   unteren Leiste in Ruhe und in Fahrt (E639/E646), das Etikett auf dem
+   Ordnerblatt, die Glaskugel neben „Redion KI". Sie sind gebaute
+   Einzelstücke, kein Glas der Oberfläche — aber auch sie brauchen den
+   Präfix, sonst sind sie auf dem iPhone keine.
+
+**Die Dichte war erst eine Schätzung, und die Pixel haben sie widerlegt.**
+Der erste Umbau gab den Menüs das leichte Glas (74 %). Die Hauptschrift hielt
+das spielend aus (hell 7,05, dunkel 6,05 : 1) — aber die STILLE Schrift, die
+Gruppentitel und Tastenkürzel, fiel auf **1,43 : 1**. Gemessen hatte ich sie
+zuerst gar nicht; erst als der Wächter auch sie las, stand die Zahl da. Die
+Dichten oben sind danach gerechnet: damit `--text-dim` über reinem Weiss
+hinter dunklem Glas noch 4,5 : 1 hat, muss die Fläche mindestens 86 %
+tragen; hell über reinem Schwarz mindestens 92 %.
+
+Damit ist ein Menü nicht durchsichtiger als vorher — sondern **glasiger**:
+dieselbe Dichte, aber 20 statt 8 Pixel Unschärfe und die gesättigte Farbe
+dessen, was darunter liegt. Auf dem Bild sieht man es sofort.
+
+**Ein alter Mangel, den erst die Messung gezeigt hat.** Die untere Leiste
+hatte hell für ihre Namen nur **4,14 : 1** — und zwar schon vor diesem Bogen:
+gegen die alten Stilblätter nachgemessen, dieselbe Zahl. Mit 92 % sind es
+4,59.
+
+**Zweimal war der Wächter aus dem FALSCHEN Grund rot**, und beides steht als
+Kommentar im Lauf: `color-mix()` liefert `color(srgb … / 0.88)`, kein
+`rgba()` — aus einem Menü mit 0,88 las er „Deckkraft 1". Und ein von Hand
+gesetztes `data-theme` stellte `Aussehen` sofort zurück; hell und dunkel
+lieferten Ziffer für Ziffer dieselben Werte, es war beide Male dunkel.
+
+**Die Alternativen.** (a) Die stille Schrift auf Glas bei `--text-faint`
+lassen und nur die Hauptschrift messen — dann wären Tastenkürzel über einer
+hellen Fläche unlesbar, und niemand hätte es gemessen. (b) Die Dichte
+hochsetzen, bis auch `--text-faint` 4,5 schafft — dunkel wären das über
+94 %, und vom Glas bliebe nichts. (c) Jede Stelle ihr eigenes Glas behalten
+lassen — das war der Zustand.
+
+**Preis.** Eine Zeile `:is(.menu,.finder,.auswahlleiste,#handy-oben)
+{--text-faint:var(--text-dim)}` greift in alles, was dort `--text-faint`
+benutzt; Beiwerk in Menüs ist damit eine Stufe kräftiger als ausserhalb. Und
+`--studio-glass` ist fort — es hatte nach dem Umbau keinen Nutzer mehr.
+Offen bleibt, ob die leichten Leisten (nur Zeichen) ihre Zeichen über dem
+schlimmsten Grund mit 3 : 1 halten (§38 für Bedienelemente) — gerechnet ja,
+gemessen noch nicht (L221).
+
+**Nachbarn:** `test576`, `test539`, `test541`, `test536`, `test534`,
+`test566`, `test40`, `test402`, `test551`, `test87`, `test245`, `test401`,
+`test412`, `test303`, `test290`, `test332`, `test361`, `test362`,
+`test388`, `test436`, `test492`, `test572`, `test556`, `test105`,
+`test109`, `test550`.

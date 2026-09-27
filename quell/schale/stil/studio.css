@@ -3,7 +3,7 @@
 :root{
   --studio-nav-width:var(--studio-nav-expanded,184px);
   --studio-bar-height:60px;
-  --studio-glass:color-mix(in srgb,var(--bg-card) 88%,transparent);
+  /* `--studio-glass` ist seit E695 fort: Menüs und PDF-Leiste tragen das Glas aus §16 (`--bg-schwebend` + `--glas-blur`, grund.css). */
   --studio-line:color-mix(in srgb,var(--text) 12%,transparent);
   --studio-highlight:inset 0 1px 0 color-mix(in srgb,white 15%,transparent);
   --studio-elevation:0 12px 36px rgb(0 0 0 / .16),0 1px 3px rgb(0 0 0 / .10);
@@ -150,9 +150,19 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .blk .handle{transition:opacity var(--motion-fast) var(--ease)}
 #reiterleiste{background:var(--bg-side);gap:var(--space-2)}
 #reiterleiste .reiter{border-radius:var(--radius-lg) var(--radius-lg) 0 0;animation:studio-arrive var(--motion-normal) var(--ease-enter) both}
-@supports(backdrop-filter:blur(8px)){
-  :is(.menu,.finder,.auswahlleiste){background:var(--studio-glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* DAS GLAS AUS §16, NICHT EIN EIGENES (E695). Hier stand 88 % Deckkraft und
+   blur(8px) — auf dem Bildschirm kaum von einer vollen Fläche zu
+   unterscheiden, und unter `@supports(backdrop-filter:…)` ohne Präfix, also
+   auf jedem iPhone vor Safari 18 gar nicht. Jetzt dieselbe Fläche und
+   dieselbe Unschärfe wie jede schwebende Leiste; die Lesbarkeit ist
+   gemessen, nicht geschätzt (test576 §5: Schrift über dem schlimmsten
+   Pixel eines schwarz-weiss-rot-blauen Musters, hell und dunkel). */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :is(.menu,.finder,.auswahlleiste){background:var(--bg-schwebend-dicht);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}
 }
+/* Auf Glas keine blasse Schrift (E695, grund.css): die stille Schrift rückt
+   eine Stufe nach oben, weil `--text-faint` nur auf voller Fläche 3,9 : 1 hat. */
+:is(.menu,.finder,.auswahlleiste,#handy-oben){--text-faint:var(--text-dim)}
 @keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes studio-drawer{from{opacity:.3;transform:translateX(-10px)}to{opacity:1;transform:none}}
 @keyframes studio-sheet{from{opacity:.3;transform:translateY(16px)}to{opacity:1;transform:none}}

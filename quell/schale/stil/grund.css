@@ -130,9 +130,39 @@
   --shadow:             var(--shadow-3);
   --schatten-schwebend: var(--shadow-4);
 
-  /* --- Schwebende Flächen (§16). --------------------------------------- */
+  /* --- Schwebende Flächen (§16, E695). ---------------------------------
+   * EIN Glas, und zwar dieses. Bis E695 gab es vier: Menüs mit 88 %
+   * Deckkraft und blur(8px) (auf dem Bildschirm kaum Glas), die untere
+   * Leiste mit blur(20px) saturate(1.6), die PDF-Werkzeugleiste mit
+   * blur(8px) und diesen Satz hier, den genau eine Klasse benutzte.
+   *
+   * DIE UNSCHÄRFE IST ÜBERALL DIESELBE. Was sich unterscheidet, ist nur, wie
+   * viel die Fläche TRÄGT, und dafür gibt es eine Regel statt einer Liste:
+   * eine Fläche mit ZEICHEN ist leicht (`--bg-schwebend`), eine Fläche mit
+   * SCHRIFT ist dicht (`--bg-schwebend-dicht`). Beide stehen in
+   * hell.css/dunkel.css, weil die nötige Dichte je Modus verschieden ist —
+   * gemessen an Pixeln, nicht geschätzt (test576 §5/§6). Zwei Dichten, eine
+   * Unschärfe: sonst sähen zwei Gläser nebeneinander wie zwei Programme aus
+   * (dieselbe Regel wie bei der Kurve, E259).
+   *
+   * UND AUF GLAS GIBT ES KEINE BLASSE SCHRIFT. `--text-faint` ist für
+   * „Beiwerk und Symbole" beschlossen, mit 3,9 : 1 auf der VOLLEN Karte
+   * (dunkel.css). Auf Glas fällt diese Voraussetzung weg — über einer hellen
+   * Fläche hinter dunklem Glas blieben 1,43 : 1. Jede gläserne Fläche mit
+   * Schrift legt `--text-faint` deshalb auf `--text-dim` um: die stille
+   * Schrift rückt eine Stufe nach oben.
+   *
+   * UND GLAS NUR, WO ES UNSCHÄRFE GIBT. Jede Stelle setzt zuerst die
+   * deckende Fläche und schaltet das Glas unter
+   *   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)))
+   * ein. 72 % Deckkraft OHNE Weichzeichner ist kein Glas, sondern ein
+   * Muster hinter der Schrift. `test576 §3` hält das.
+   *
+   * `--schleier-blur` ist etwas anderes: der Schleier HINTER einem Fenster,
+   * der die Seite zurücktreten lässt. Er trägt keine Schrift. */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
+  --schleier-blur: blur(6px);
 
   /* --- Die Hauptknopf-Fläche (E263, aus Amdion). -----------------------
    * EIN Rezept für alle Hauptknöpfe, als Marke wie die Schattennamen
@@ -397,11 +427,20 @@ input,textarea,select{font:inherit; color:inherit}
 }
 
 /* SCHWEBEND (§16). Durchscheinend über dem, was darunter liegt — für
-   Leisten, die auf der Arbeitsfläche liegen, nicht neben ihr. */
+   Leisten, die auf der Arbeitsfläche liegen, nicht neben ihr. Erst deckend,
+   Glas nur mit Unschärfe (E695, siehe die Marken oben). */
 .rb.glas{
-  background:var(--bg-schwebend);
-  backdrop-filter:var(--glas-blur); -webkit-backdrop-filter:var(--glas-blur);
+  background:var(--bg-card);
   box-shadow:var(--glas-rand); border-color:transparent;
+}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .rb.glas{
+    background:var(--bg-schwebend);
+    -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+  }
+}
+@media (prefers-reduced-transparency:reduce){
+  .rb.glas{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
 }
 
 /* ============================================================================

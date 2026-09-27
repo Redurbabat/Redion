@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 517 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 518 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1316,6 +1316,21 @@ das war noch nicht wahr, eine leere Liste blieb stehen. Eine Doku, die man
 ehrlich schreibt, ist auch ein Wächter. Gezählt am 26. September, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 517.*
 
+*Und 518: `test576` — ein Glas statt vier (E695). Redurs Satz vom
+27. September, „weiter an die animationen übergangen glass efeck usw alles
+verbessern", in 30 Zusagen. Er liest die Stilblätter mit einem kleinen
+Blockleser statt mit `grep`, weil nur so „derselbe Block" und „unter
+`@supports`" prüfbar sind — und er misst die Lesbarkeit an GERENDERTEN
+Pixeln über grossen schwarzen, weissen, roten und blauen Flächen, weil eine
+Rechnung über `rgba` die Unschärfe nicht kennt (L206). Genau das hat seine
+beste Zeile geliefert: meine erste Dichte (74 %, als Schätzung) gab der
+stillen Schrift im Menü 1,43 : 1 — die Dichte kommt seither aus der
+Messung. Zweimal war er aus dem FALSCHEN Grund rot: `color-mix()` liefert
+`color(srgb … / 0.88)` statt `rgba()`, und ein von Hand gesetztes
+`data-theme` setzte `Aussehen` sofort zurück — hell und dunkel lieferten
+Ziffer für Ziffer dieselben Werte. Gezählt am 27. September, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 518.*
+
 ### Die Befehle
 
 ```txt
@@ -1324,7 +1339,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 517 Läufe
+npm run pruefen                      alle 518 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1411,7 +1426,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 517 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 518 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

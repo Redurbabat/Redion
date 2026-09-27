@@ -2580,7 +2580,7 @@ Zwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und ei
 | E691 · Der Vollausbau der Fläche (A1c) | `` → `` | 08:25–… | ca. 2 h | test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün |
 | E692 · L220 geschlossen — und ein Kürzel, das nie ankam | `` → `` | 11:10–11:55 | ca. 45 min | test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133 |
 | E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte) | `` → `` | 12:00–14:10 | ca. 2 h | test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün |
-| E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN) | `` → `` | 14:15–… | ca. 1 h 15 min | test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe |
+| E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN) | `` → `` | 14:15–16:37 | ca. 1 h 15 min | test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe |
 
 #### Zahlen des Tages
 
@@ -2606,9 +2606,60 @@ Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — un
 | ca. 13:40 | Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe. | Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf. | Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung". |
 | ca. 14:40 | `test572 §12` zweimal aus dem FALSCHEN Grund rot gesehen und beide Gründe als Kommentar in den Lauf geschrieben: `inReiter` gibt Gruppen zurück, keine flache Liste; und der Reiter „Zeichnen" zeigt ohne offenes Blatt gar keine Werkzeuge. | Beide Male stand da „0 Werkzeuge", und beide Male sah es nach einem Produktfehler aus. Ein Wächter, der eine Form annimmt statt sie nachzusehen, misst etwas anderes als er behauptet (L206). | Keines — es sind Kommentare und ein echtes Blatt statt eines gestellten Ziels (§30: keine Mocks, wo die echte App geprüft werden kann). |
 
+### 2026-09-27 · Sonntag — Ein Glas statt vier — und die Dichte kam aus den Pixeln, nicht aus dem Gefühl
+
+> Redur schrieb einen Satz, der breiter kaum sein konnte: „Weiter an die animationen übergangen glass efeck usw alles verbessern.“ „Alles verbessern“ ist kein Plan, also habe ich zuerst gezählt. Die Inventur der 23 Stilblätter ergab ein Bewegungssystem, das es gibt und an das sich kaum jemand hält (E259: vier Dauern, eine Kurve — daneben 55 Dauern und 227-mal das nackte `ease`), und ein Glasrezept aus §16, das genau eine Klasse benutzte. Die Laufzeit-Sonde entwarnte bei der Bewegung (im Leerlauf läuft eine einzige Endlos-Animation, mit „weniger Bewegung“ keine) und bestätigte beim Glas: am Rechner war kein einziges Element sichtbar verwischt.
+
+Also zuerst das Glas, weil Redur es beim Namen genannt hatte und weil man es sieht. Der Wächter `test576` stand rot, bevor eine Zeile Stil geändert war, und fand dabei einen echten Fehler fürs Zielgerät: fünf Stellen ohne `-webkit-backdrop-filter`, also auf jedem iPhone vor Safari 18 ohne Glas. Die eigentliche Lehre des Tages kam danach. Meine erste Dichte für Menüs war eine Schätzung (74 %), die Hauptschrift hielt sie spielend aus — und die stille Schrift, die ich zuerst gar nicht gemessen hatte, fiel auf 1,43 : 1. Die Dichten stehen jetzt da, wo die Messung sie hingelegt hat, mit einer Regel statt einer Liste: Fläche mit Schrift dicht, Fläche mit Zeichen leicht.
+
+Und ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — seit meinem eigenen Bogen von gestern. Gefunden hat es der Nachbarlauf dieses Bogens; die Nachbarliste von E690 hatte ihn nicht.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 08:00**
+
+> Weiter an die animationen pbergangen galss efeck usw alles verbessern
+
+**Gemeint:** Die Oberfläche soll sich hochwertiger anfühlen: Bewegungen, Übergänge und besonders das Glas. Keine bestimmte Stelle, sondern das Ganze.
+
+**Besser geschrieben:** „Mach das Glas sichtbar und einheitlich, dann die Übergänge — und zeig mir vorher, was du findest.“ Der Satz, wie er war, ist aber gut genug, WENN die Antwort mit einer Messung beginnt statt mit einem Umbau.
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Inventur: Bewegung und Glas in 23 Stilblättern gezählt, Laufzeit-Sonde über laufende Animationen und sichtbares Glas | `` → `` | ca. 08:00–08:30 | ca. 30 min | keine — reines Messen (messungen.md §69) |
+| E695 · Ein Glas statt vier | `` → `` | ca. 08:30–… | ca. 3 h | test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690 |
+
+#### Zahlen des Tages
+
+- **commits:** 2
+- **entscheidungen:** 1
+- **neuePruefläufe:** 1
+
+#### Das grösste Problem
+
+Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.
+
+#### Das Interessanteste, das Redur wollte
+
+„alles verbessern“ — der breiteste Auftrag bisher, und gerade deshalb der, der am dringendsten eine Messung vorneweg brauchte. Ohne sie wäre „besser“ Geschmack gewesen.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| ca. 09:40 | Die Glasdichte aus der Kontrastmessung abgeleitet statt geschätzt: hell 92 %, dunkel 88 % für Flächen mit Schrift; auf Glas `--text-faint` → `--text-dim`. | Die erste Schätzung (74 %) gab der stillen Schrift 1,43 : 1. Eine Zahl, die nur für die Hauptschrift stimmt, stimmt nicht. | Menüs sind nicht durchsichtiger als vorher, sondern glasiger (20 statt 8 px Unschärfe, gesättigte Farbe). Wer mehr Durchsicht will, muss die stille Schrift mitziehen. |
+| ca. 10:20 | `test534` über fünf Arbeitsbäume zurückverfolgt: grün bei 43432e1, rot ab 4d7436d (E690). | §46: rot zuerst. Und der Fehler war meiner — dann ist er zuerst zu finden, nicht zu erklären. | Keines — Arbeitsbäume im Scratchpad, der Hauptbaum unberührt. |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 117 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 118 Einträge.
 

@@ -1,5 +1,49 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 27. September 2026 · E695 · Ein Glas statt vier
+
+**Redur:** „Weiter an die animationen übergangen glass efeck usw alles
+verbessern."
+
+**Zuerst gezählt, dann gebaut** (messungen.md §69). §16 hatte ein Glasrezept,
+und es sass auf genau einer Klasse. Menüs trugen 88 % Deckkraft und
+`blur(8px)` — auf dem Bildschirm kaum Glas; die Telefonleiste eine eigene
+Mischung, die PDF-Leiste eine dritte. Am Rechner war im Leerlauf kein
+einziges Element sichtbar verwischt. Und fünf Stellen setzten
+`backdrop-filter` ohne `-webkit-backdrop-filter` — auf jedem iPhone vor
+Safari 18 also ohne Glas.
+
+**Gebaut:** EINE Unschärfe (`--glas-blur`) für Menüs, Finder,
+Auswahlleiste, Telefonleiste, PDF-Leiste und `.rb.glas`; zwei Dichten mit
+einer Regel — Fläche mit Schrift dicht (`--bg-schwebend-dicht`, 92 % hell,
+88 % dunkel), Fläche mit Zeichen leicht (`--bg-schwebend`); Glas nur unter
+`@supports` mit Präfix, vorher deckend; ein Schleier-Token für den Grund
+hinter Fenstern; und auf Glas keine blasse Schrift (`--text-faint` →
+`--text-dim` in gläsernen Flächen). Vier Zierstücke (Linse, Etikett,
+Glaskugel) bleiben, mit Namen und Grund im Wächter.
+
+**Die Dichte war zuerst eine Schätzung, und die Pixel haben sie widerlegt.**
+Mit 74 % hielt die Hauptschrift 6–7 : 1, die stille Schrift (Gruppentitel,
+Kürzel) aber nur **1,43 : 1** — gemessen hatte ich sie zuerst gar nicht.
+Die Dichten sind danach gerechnet und nachgemessen. Das Menü ist damit nicht
+durchsichtiger als vorher, sondern glasiger: 20 statt 8 Pixel Unschärfe und
+die gesättigte Farbe dessen, was darunter liegt.
+
+**Ein alter Mangel nebenbei:** die Telefonleiste hatte hell für ihre Namen
+nur 4,14 : 1, schon vor diesem Bogen. Jetzt 4,59.
+
+**Geprüft.** `test576` neu, 30 Zusagen, rot eingecheckt mit elf Zeilen;
+drei Gegenproben rot (Glas auf 22 % → 1,6 : 1; die Schrift-Regel heraus →
+3,11 / 2,36 : 1). Zweimal war er aus dem falschen Grund rot (`color(srgb …)`
+statt `rgba()`, und ein von Hand gesetztes Thema, das die App zurücksetzte —
+P118). 23 von 24 Nachbarn grün; `test534` ist rot, aber seit E690 und
+nicht durch diesen Bogen (gegen die alten Stilblätter dieselben vier Zeilen).
+
+**Offen:** L221 (die leichten Leisten sind gerechnet, nicht gemessen) und die
+Bewegung — siehe AUFGABEN.md, „Bewegung und Glas".
+
+---
+
 ## 26. September 2026 · E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218)
 
 **Redur:** „Weiter."

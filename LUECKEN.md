@@ -8340,6 +8340,31 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L221 · Die leichten Glasleisten sind gerechnet, nicht gemessen — 27. September 2026
+
+**Seit E695 gibt es zwei Glasdichten** mit einer Regel: Fläche mit Schrift
+dicht (`--bg-schwebend-dicht`), Fläche mit Zeichen leicht
+(`--bg-schwebend`, 74 % hell / 72 % dunkel). Für die dichten Flächen —
+Menüs und die untere Leiste am Telefon — misst `test576` den Kontrast an
+gerenderten Pixeln über dem schlimmsten Grund (reines Schwarz, Weiss, Rot,
+Blau), hell und dunkel.
+
+**Die leichten nicht.** `.rb.glas` und die PDF-Werkzeugleiste
+(`.document-studio .blatt-werk`) tragen Zeichen, keine Schrift; §38 (und
+WCAG 1.4.11) verlangt dafür 3 : 1. Gerechnet reicht es: `--text-dim` über
+74 % Weiss mit reinem Schwarz dahinter gibt ungefähr 3,05 : 1. Das ist
+knapp, und es ist eine Rechnung über `rgba` — genau die Art, die die
+Unschärfe nicht kennt (L206). Bei den Menüs lag die erste Rechnung neben
+der Messung.
+
+**Was fehlt:** `test576` um einen Abschnitt für die PDF-Werkzeugleiste
+erweitern — ein Dokument öffnen, das Muster darunter, den Kontrast der
+Zeichen an Pixeln messen, Grenze 3 : 1. Wenn es nicht reicht: dieselbe
+Regel wie bei der Schrift (die Zeichen auf Glas eine Stufe kräftiger),
+nicht eine dichtere Fläche.
+
+---
+
 ## L220 · Drei Nebenwirkungen des Ausblendens — GESCHLOSSEN am 26. September 2026 (E692)
 
 **Seit E691** kann ein Block auf „nur Fläche" stehen (`sichtbarIn:
@@ -8777,7 +8802,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 26. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 116 Lücken, 61 offene und 55 geschlossene. Der Befehl dazu ist
+Datei führt 117 Lücken, 62 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

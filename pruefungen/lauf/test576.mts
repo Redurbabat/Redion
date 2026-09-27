@@ -29,10 +29,13 @@
  *       `var(--glas-blur)` steht unter einem `@supports`, das den Präfix
  *       mitfragt. Wo es keine Unschärfe gibt, bleibt die Fläche deckend —
  *       72 % Deckkraft ohne Weichzeichner ist kein Glas, sondern ein Muster.
- *   §4  Ein offenes Menü IST das Glas aus §16: dieselbe Fläche
- *       (`--bg-schwebend`) und dieselbe Unschärfe (`--glas-blur`) wie
- *       `.rb.glas` — im Hell- UND im Dunkelmodus.
- *   §5  Und es bleibt lesbar: der Kontrast der Menüschrift, gemessen an den
+ *   §4  Ein offenes Menü IST das Glas aus §16: dieselbe Unschärfe
+ *       (`--glas-blur`) wie jede schwebende Leiste, und die DICHTE Fläche
+ *       (`--bg-schwebend-dicht`), weil es Schrift trägt — im Hell- UND im
+ *       Dunkelmodus. Die Regel dahinter: Fläche mit Zeichen leicht, Fläche
+ *       mit Schrift dicht; die Dichte ist aus §5 gerechnet, nicht geschätzt.
+ *   §5  Und es bleibt lesbar — AUCH die stille Schrift (Gruppentitel,
+ *       Kürzel): der Kontrast, gemessen an den
  *       GERENDERTEN Pixeln über grossen weissen, schwarzen, roten und blauen
  *       Flächen, liegt überall bei 4,5 oder mehr (§38). Gemessen wird das
  *       Bild, nicht die Farbwerte — eine Rechnung über `rgba` kennt die
@@ -188,7 +191,13 @@ const oeffnen = async (breite: number, hoehe: number, thema: 'light' | 'dark', w
   await pg.evaluate(async (t: string) => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
-    document.documentElement.dataset['theme'] = t;
+    /* DAS THEMA ÜBER DIE APP, NICHT ÜBER DAS ATTRIBUT. Der erste Anlauf
+       setzte `data-theme` von Hand — und `Aussehen` setzte es kurz danach
+       auf das gespeicherte Schema zurück (`aussehen.ts:113`). Hell und
+       dunkel lieferten daraufhin Ziffer für Ziffer dieselben Kontraste: es
+       war beide Male dunkel. `App.theme` setzt Attribut, Schema und Merker
+       zusammen. */
+    App.theme(t);
     const s = Store.addPage(null, { text: 'Glas' });
     await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
     await new Promise(f => setTimeout(f, 700));
@@ -211,6 +220,8 @@ const oeffnen = async (breite: number, hoehe: number, thema: 'light' | 'dark', w
     }
   }, thema);
   await pg.waitForTimeout(200);
+  const gilt = await pg.evaluate(() => document.documentElement.dataset['theme']);
+  if (gilt !== thema) console.log(`    ! Thema gilt nicht: gewünscht ${thema}, ist ${gilt}`);
   return { ctx, pg };
 };
 
@@ -289,9 +300,13 @@ const kontrast = async (pg: Page, wahl: string, textWahl: string) => {
   }, [bild.toString('base64'), kasten.farbe]);
 };
 
+/* Mit Gruppentitel UND Kürzeln: beide tragen die STILLE Schrift
+   (`--text-dim`), und die ist auf Glas der schwache Fall. Der erste Anlauf
+   mass nur die Hauptschrift — und hätte ein Menü für lesbar erklärt, dessen
+   Kürzel man über einer dunklen Fläche nicht mehr erkennt. */
 const MENUE = '<div class="grp">Glas</div>' +
   ['Umbenennen', 'Verschieben', 'Duplizieren', 'In den Papierkorb', 'Kopieren', 'Teilen']
-    .map(t => `<button><span class="mi">•</span>${t}</button>`).join('');
+    .map((t, i) => `<button><span class="mi">•</span>${t}<span class="ms">Strg+${i + 1}</span></button>`).join('');
 
 /* ==========================================================================
  * §4 + §5 · Das Menü IST das Glas aus §16, und es bleibt lesbar
@@ -302,7 +317,7 @@ for (const thema of ['light', 'dark'] as const) {
   const { ctx, pg } = await oeffnen(1280, 900, thema);
   await pg.evaluate((h: string) => { UI.menu(h, 300, 180); }, MENUE);
   await pg.waitForTimeout(400);
-  const soll = { flaeche: await marke(pg, '--bg-schwebend'), blur: await marke(pg, '--glas-blur') };
+  const soll = { flaeche: await marke(pg, '--bg-schwebend-dicht'), blur: await marke(pg, '--glas-blur') };
   const ist = await pg.evaluate(() => {
     const m = document.querySelector('.menu') as HTMLElement | null;
     if (!m) return null;
@@ -310,26 +325,38 @@ for (const thema of ['light', 'dark'] as const) {
     return { flaeche: s.backgroundColor, blur: s.backdropFilter, webkit: (s as any).webkitBackdropFilter ?? '' };
   });
   p('Das Menü ist offen', !!ist);
-  p(`Seine Fläche ist \`--bg-schwebend\` (${wort})`, ist?.flaeche === soll.flaeche,
+  p(`Seine Fläche ist die dichte Glasfläche \`--bg-schwebend-dicht\` (${wort})`, ist?.flaeche === soll.flaeche,
     `ist ${ist?.flaeche} · soll ${soll.flaeche}`);
   p(`Seine Unschärfe ist \`--glas-blur\` (${wort})`, ist?.blur === soll.blur,
     `ist ${ist?.blur} · soll ${soll.blur}`);
   const alpha = ist ? await deckkraft(pg, ist.flaeche) : 1;
-  p(`Und es scheint wirklich durch — Deckkraft unter 0,8 (${wort})`, alpha < 0.8, `Deckkraft ${alpha.toFixed(2)}`);
+  /* NICHT „unter 0,8". So stand es im ersten Anlauf, als Schätzung — und §5
+     hat sie widerlegt: bei 74 % hatte die stille Schrift dunkel 1,43 : 1.
+     Wie dicht das Glas sein muss, entscheidet die Lesbarkeit; hier wird nur
+     gehalten, dass es überhaupt Glas ist. */
+  p(`Und es scheint durch — Deckkraft unter 1 (${wort})`, alpha < 0.995, `Deckkraft ${alpha.toFixed(2)}`);
 
   console.log(`\n5 · Das Menü bleibt lesbar (${wort})`);
   const k = await kontrast(pg, '.menu', '.menu button');
+  if (k) console.log(`    gemessen: schlimmster ${k.schlimmster} : 1 · Mitte ${k.mitte} : 1 · ${k.proben} Proben`);
   p(`Die Schrift erreicht über dem schlimmsten Pixel 4,5 : 1 (${wort}, §38)`,
     !!k && k.schlimmster >= 4.5, k ? `schlimmster ${k.schlimmster} · Mitte ${k.mitte} · ${k.proben} Proben` : 'nicht messbar');
+  for (const [was, wahl] of [['Gruppentitel', '.menu .grp'], ['Kürzel', '.menu .ms']] as const) {
+    const ks = await kontrast(pg, '.menu', wahl);
+    if (ks) console.log(`    ${was}: schlimmster ${ks.schlimmster} : 1 · Mitte ${ks.mitte} : 1`);
+    p(`Auch die stille Schrift (${was}) erreicht 4,5 : 1 (${wort})`, !!ks && ks.schlimmster >= 4.5,
+      ks ? `schlimmster ${ks.schlimmster} · Mitte ${ks.mitte}` : 'nicht messbar');
+  }
   await ctx.close();
 }
 
 /* ==========================================================================
  * §6 · Die untere Leiste am Telefon
  * ======================================================================== */
-console.log('\n6 · Die untere Leiste am Telefon');
-{
-  const { ctx, pg } = await oeffnen(390, 844, 'dark');
+for (const thema of ['light', 'dark'] as const) {
+  const wort = thema === 'light' ? 'hell' : 'dunkel';
+  console.log(`\n6 · Die untere Leiste am Telefon (${wort})`);
+  const { ctx, pg } = await oeffnen(390, 844, thema);
   const blur = await marke(pg, '--glas-blur');
   const ist = await pg.evaluate(() => {
     const n = document.querySelector('#handy-oben') as HTMLElement | null;
@@ -337,11 +364,15 @@ console.log('\n6 · Die untere Leiste am Telefon');
     const s = getComputedStyle(n);
     return { blur: s.backdropFilter, flaeche: s.backgroundColor, sicht: n.getBoundingClientRect().height > 0 };
   });
-  p('Die Leiste ist da', !!ist?.sicht);
-  p('Sie trägt dieselbe Unschärfe wie das Menü (`--glas-blur`)', ist?.blur === blur,
+  p(`Die Leiste ist da (${wort})`, !!ist?.sicht);
+  p(`Sie trägt dieselbe Unschärfe wie das Menü (\`--glas-blur\`, ${wort})`, ist?.blur === blur,
     `ist ${ist?.blur} · soll ${blur}`);
-  const k = await kontrast(pg, '#handy-oben', '#handy-oben .ho-knopf:not(.an), #handy-oben button:not(.an)');
-  p('Ihre Beschriftung erreicht über dem Muster 4,5 : 1', !!k && k.schlimmster >= 4.5,
+  /* Gemessen wird ein NICHT gewählter Knopf: er trägt `--text-dim`, die
+     schwächste Schrift der Leiste. Der gewählte liegt auf der Linse und ist
+     heller — wer ihn misst, misst den leichten Fall. */
+  const k = await kontrast(pg, '#handy-oben', '#handy-oben > button:not(.an):not([aria-current="page"])');
+  if (k) console.log(`    gemessen: schlimmster ${k.schlimmster} : 1 · Mitte ${k.mitte} : 1 · ${k.proben} Proben`);
+  p(`Ihre Beschriftung erreicht über dem Muster 4,5 : 1 (${wort})`, !!k && k.schlimmster >= 4.5,
     k ? `schlimmster ${k.schlimmster} · Mitte ${k.mitte}` : 'nicht messbar');
   await ctx.close();
 }

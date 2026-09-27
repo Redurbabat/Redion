@@ -270,8 +270,16 @@
   --shadow-3:      0 8px 28px rgba(0,0,0,.45);
   --shadow-4:      0 12px 40px rgba(0,0,0,.55);
   /* Schwebende Flächen (§16): durchscheinend, aber nie so weit, dass die
-     Schrift darauf um ihren Grund kämpfen muss. */
+     Schrift darauf um ihren Grund kämpfen muss.
+     ZWEI DICHTEN, EINE UNSCHÄRFE (E695). `--bg-schwebend` für Flächen, die
+     ZEICHEN tragen (Werkzeugleisten); `--bg-schwebend-dicht` für Flächen,
+     die SCHRIFT tragen (Menüs, Finder, Auswahlleiste, untere Leiste). Die
+     Dichte ist gerechnet und an Pixeln nachgemessen (test576 §5/§6): damit
+     `--text-dim` über reinem WEISS hinter dem Glas noch 4,5 : 1 hat, muss
+     die Fläche dunkel mindestens 86 % tragen. 74 % — der erste Anlauf —
+     gab der stillen Schrift 1,43 : 1. */
   --bg-schwebend:  rgba(28,28,32,.72);
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 88%, transparent);
 
   /* PAPIER (E260, aus Amdion). Ein Blatt, ein Plan, eine Zeichnung sind
      Papier und keine Fenster: sie bleiben papierfarben, auch wenn die App
@@ -378,6 +386,11 @@ html[data-theme="light"]{
   --shadow-3: 0 8px 28px rgba(15,15,15,.12);
   --shadow-4: 0 12px 40px rgba(15,15,15,.16);
   --bg-schwebend: rgba(255,255,255,.74);
+  /* Hell braucht MEHR Dichte als dunkel (92 gegen 88 %, E695): reines
+     Schwarz hinter dem Glas zieht die helle Fläche stärker herunter als
+     Weiss die dunkle hinauf. Bei 88 % hatte die untere Leiste hell
+     4,14 : 1 für ihre Namen — gemessen, test576 §6. */
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 92%, transparent);
   /* Auf hellem Grund ist der Innenrand dunkel, nicht weiss — sonst
      verschwindet er auf der eigenen Fläche. */
   --glas-rand:    inset 0 0 0 1px rgba(15,15,15,.10);
@@ -624,9 +637,39 @@ html[data-theme="light"]{
   --shadow:             var(--shadow-3);
   --schatten-schwebend: var(--shadow-4);
 
-  /* --- Schwebende Flächen (§16). --------------------------------------- */
+  /* --- Schwebende Flächen (§16, E695). ---------------------------------
+   * EIN Glas, und zwar dieses. Bis E695 gab es vier: Menüs mit 88 %
+   * Deckkraft und blur(8px) (auf dem Bildschirm kaum Glas), die untere
+   * Leiste mit blur(20px) saturate(1.6), die PDF-Werkzeugleiste mit
+   * blur(8px) und diesen Satz hier, den genau eine Klasse benutzte.
+   *
+   * DIE UNSCHÄRFE IST ÜBERALL DIESELBE. Was sich unterscheidet, ist nur, wie
+   * viel die Fläche TRÄGT, und dafür gibt es eine Regel statt einer Liste:
+   * eine Fläche mit ZEICHEN ist leicht (`--bg-schwebend`), eine Fläche mit
+   * SCHRIFT ist dicht (`--bg-schwebend-dicht`). Beide stehen in
+   * hell.css/dunkel.css, weil die nötige Dichte je Modus verschieden ist —
+   * gemessen an Pixeln, nicht geschätzt (test576 §5/§6). Zwei Dichten, eine
+   * Unschärfe: sonst sähen zwei Gläser nebeneinander wie zwei Programme aus
+   * (dieselbe Regel wie bei der Kurve, E259).
+   *
+   * UND AUF GLAS GIBT ES KEINE BLASSE SCHRIFT. `--text-faint` ist für
+   * „Beiwerk und Symbole" beschlossen, mit 3,9 : 1 auf der VOLLEN Karte
+   * (dunkel.css). Auf Glas fällt diese Voraussetzung weg — über einer hellen
+   * Fläche hinter dunklem Glas blieben 1,43 : 1. Jede gläserne Fläche mit
+   * Schrift legt `--text-faint` deshalb auf `--text-dim` um: die stille
+   * Schrift rückt eine Stufe nach oben.
+   *
+   * UND GLAS NUR, WO ES UNSCHÄRFE GIBT. Jede Stelle setzt zuerst die
+   * deckende Fläche und schaltet das Glas unter
+   *   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)))
+   * ein. 72 % Deckkraft OHNE Weichzeichner ist kein Glas, sondern ein
+   * Muster hinter der Schrift. `test576 §3` hält das.
+   *
+   * `--schleier-blur` ist etwas anderes: der Schleier HINTER einem Fenster,
+   * der die Seite zurücktreten lässt. Er trägt keine Schrift. */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
+  --schleier-blur: blur(6px);
 
   /* --- Die Hauptknopf-Fläche (E263, aus Amdion). -----------------------
    * EIN Rezept für alle Hauptknöpfe, als Marke wie die Schattennamen
@@ -891,11 +934,20 @@ input,textarea,select{font:inherit; color:inherit}
 }
 
 /* SCHWEBEND (§16). Durchscheinend über dem, was darunter liegt — für
-   Leisten, die auf der Arbeitsfläche liegen, nicht neben ihr. */
+   Leisten, die auf der Arbeitsfläche liegen, nicht neben ihr. Erst deckend,
+   Glas nur mit Unschärfe (E695, siehe die Marken oben). */
 .rb.glas{
-  background:var(--bg-schwebend);
-  backdrop-filter:var(--glas-blur); -webkit-backdrop-filter:var(--glas-blur);
+  background:var(--bg-card);
   box-shadow:var(--glas-rand); border-color:transparent;
+}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .rb.glas{
+    background:var(--bg-schwebend);
+    -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+  }
+}
+@media (prefers-reduced-transparency:reduce){
+  .rb.glas{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
 }
 
 /* ============================================================================
@@ -10515,6 +10567,9 @@ body #ai .ai-head .rmo-orb-karte {
   z-index: 0; border-radius: 10px; overflow: hidden; pointer-events: none;
   border: 1px solid #ffffff40;
   background: color-mix(in srgb, var(--bg-card) 30%, transparent);
+  /* Ein Zierstück, kein Glas der Oberfläche (test576 §2) — aber auch ein
+     Zierstück braucht den Präfix, sonst ist es auf dem iPhone keins (E695). */
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   box-shadow: inset 0 0 6px #ffffff50, 0 6px 14px -6px #00000040;
   transition: background .5s linear;
@@ -13939,14 +13994,23 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        Fläche statt eines Musters. Wo es ihn nicht gibt (ältere Browser),
        bleibt die volle Farbe stehen — deshalb steht sie zuerst da. */
     background:var(--bg-card);
-    background:color-mix(in srgb,var(--bg-card) 88%,transparent);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
-    backdrop-filter:blur(20px) saturate(1.6);
     border:1px solid var(--line);
     /* DER SCHATTEN STEHT IN `studio.css` und nicht hier. Diese Datei lädt
        früher; zwei Schatten für dasselbe Ding wären einer, der gewinnt,
        und einer, den niemand findet. Dort steht auch der Radius — er ist
        die halbe Höhe, siehe den Absatz dort. */
+  }
+  /* DAS GLAS DER LEISTE IST DAS GLAS AUS §16 (E695). Hier stand eine eigene
+     Mischung, `blur(20px) saturate(1.6)` — fast dieselbe, und genau deshalb
+     eine zweite: wer eine ändert, ändert die andere nicht. Die DICHTE bleibt
+     die der Leiste (88 %, `--bg-schwebend-dicht`): der Inhalt läuft ständig
+     dahinter durch, und die Namen unter den Zeichen sind klein. Gemessen:
+     test576 §6, die Beschriftung über einem schwarz-weiss-rot-blauen Muster. */
+  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    #handy-oben{
+      background:var(--bg-schwebend-dicht);
+      -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+    }
   }
   /* JEDER NAME STEHT DA, NICHT NUR DER AKTIVE.
      Oben war Platz für genau einen Namen — fünf nebeneinander hätten die
@@ -15812,7 +15876,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   position:fixed; inset:0; z-index:960;
   display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,var(--sheet-dim, .5));
-  backdrop-filter:blur(3px);
+  /* Der Schleier aus den Marken (E695), und MIT Präfix — ohne ihn gab es auf
+     dem iPhone vor Safari 18 keinen. */
+  -webkit-backdrop-filter:var(--schleier-blur); backdrop-filter:var(--schleier-blur);
   animation:wk-auf var(--motion-normal, .22s) var(--ease-enter, ease-out);
 }
 @keyframes wk-auf{ from{ opacity:0 } to{ opacity:1 } }
@@ -22540,7 +22606,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
 :root{
   --studio-nav-width:var(--studio-nav-expanded,184px);
   --studio-bar-height:60px;
-  --studio-glass:color-mix(in srgb,var(--bg-card) 88%,transparent);
+  /* `--studio-glass` ist seit E695 fort: Menüs und PDF-Leiste tragen das Glas aus §16 (`--bg-schwebend` + `--glas-blur`, grund.css). */
   --studio-line:color-mix(in srgb,var(--text) 12%,transparent);
   --studio-highlight:inset 0 1px 0 color-mix(in srgb,white 15%,transparent);
   --studio-elevation:0 12px 36px rgb(0 0 0 / .16),0 1px 3px rgb(0 0 0 / .10);
@@ -22687,9 +22753,19 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .blk .handle{transition:opacity var(--motion-fast) var(--ease)}
 #reiterleiste{background:var(--bg-side);gap:var(--space-2)}
 #reiterleiste .reiter{border-radius:var(--radius-lg) var(--radius-lg) 0 0;animation:studio-arrive var(--motion-normal) var(--ease-enter) both}
-@supports(backdrop-filter:blur(8px)){
-  :is(.menu,.finder,.auswahlleiste){background:var(--studio-glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* DAS GLAS AUS §16, NICHT EIN EIGENES (E695). Hier stand 88 % Deckkraft und
+   blur(8px) — auf dem Bildschirm kaum von einer vollen Fläche zu
+   unterscheiden, und unter `@supports(backdrop-filter:…)` ohne Präfix, also
+   auf jedem iPhone vor Safari 18 gar nicht. Jetzt dieselbe Fläche und
+   dieselbe Unschärfe wie jede schwebende Leiste; die Lesbarkeit ist
+   gemessen, nicht geschätzt (test576 §5: Schrift über dem schlimmsten
+   Pixel eines schwarz-weiss-rot-blauen Musters, hell und dunkel). */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :is(.menu,.finder,.auswahlleiste){background:var(--bg-schwebend-dicht);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}
 }
+/* Auf Glas keine blasse Schrift (E695, grund.css): die stille Schrift rückt
+   eine Stufe nach oben, weil `--text-faint` nur auf voller Fläche 3,9 : 1 hat. */
+:is(.menu,.finder,.auswahlleiste,#handy-oben){--text-faint:var(--text-dim)}
 @keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes studio-drawer{from{opacity:.3;transform:translateX(-10px)}to{opacity:1;transform:none}}
 @keyframes studio-sheet{from{opacity:.3;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -23004,10 +23080,11 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-studio .document-inspector{padding:16px;background:var(--bg-side)}
 .document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:var(--touch-min)}
 .document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
-.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),var(--shadow-1);margin:0 auto 14px;padding:6px;max-width:100%}
+.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--bg-card);box-shadow:var(--studio-highlight),var(--shadow-1);margin:0 auto 14px;padding:6px;max-width:100%}
 .document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
 .document-studio[data-document-tools="closed"] .blatt-papier{cursor:default}
-@supports(backdrop-filter:blur(8px)){.document-studio .blatt-werk{backdrop-filter:blur(8px)}}
+/* DAS GLAS AUS §16 (E695): erst deckend, Glas nur mit Unschärfe, und mit Präfix — vorher fragte @supports nur die unpräfixierte Form, also gab es auf dem iPhone vor Safari 18 keins. */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.document-studio .blatt-werk{background:var(--bg-schwebend);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}}
 @media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
 @media(max-width:760px){
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
@@ -23033,7 +23110,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
-@media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);backdrop-filter:none}}
+@media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none}}
 @media(prefers-reduced-motion:reduce){
   .document-studio .document-thumbnails.is-open,.document-studio .document-inspector.is-open,.document-studio[data-document-view="open"] .document-commandbar{animation:none}
   .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:none}
@@ -23196,7 +23273,7 @@ body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe 
    am Bild, nicht am Code (§55). */
 body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe:is([data-lage="links"],[data-lage="rechts"]) .wort{display:revert}
 body[data-dokument="an"] .document-stage [data-act="lage"]{display:none}
-body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow-3);overflow-x:auto;backdrop-filter:none}
+body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow-3);overflow-x:auto;-webkit-backdrop-filter:none;backdrop-filter:none}
 .document-studio:not([data-ink-options="open"]) .blatt-fest{display:none}
 .document-studio :is(.blatt-reihe,.blatt-werk){container-type:normal}
 .document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:var(--text);box-shadow:none;border:1px solid var(--line);border-radius:var(--radius-xl);padding:8px}
@@ -25733,7 +25810,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1366, inhalt: '823b6a67e41666a8', gebaut: '2026-09-26T16:24:47.383Z' };
+const Stand = { fassung: 1367, inhalt: '71647e68c811c592', gebaut: '2026-09-27T09:55:42.677Z' };
 window.Stand = Stand;
 
 </script>
@@ -86041,8 +86118,8 @@ const ChronikDaten = {
                 },
                 {
                     "was": "E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN)",
-                    "vonBis": "387ca8e → offen",
-                    "zeitraum": "14:15–…",
+                    "vonBis": "387ca8e → fc6e606",
+                    "zeitraum": "14:15–16:37",
                     "dauer": "ca. 1 h 15 min",
                     "pruefungen": "test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck\"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe"
                 }
@@ -86084,6 +86161,58 @@ const ChronikDaten = {
                     "was": "`test572 §12` zweimal aus dem FALSCHEN Grund rot gesehen und beide Gründe als Kommentar in den Lauf geschrieben: `inReiter` gibt Gruppen zurück, keine flache Liste; und der Reiter „Zeichnen\" zeigt ohne offenes Blatt gar keine Werkzeuge.",
                     "warum": "Beide Male stand da „0 Werkzeuge\", und beide Male sah es nach einem Produktfehler aus. Ein Wächter, der eine Form annimmt statt sie nachzusehen, misst etwas anderes als er behauptet (L206).",
                     "risiko": "Keines — es sind Kommentare und ein echtes Blatt statt eines gestellten Ziels (§30: keine Mocks, wo die echte App geprüft werden kann)."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-27",
+            "wochentag": "Sonntag",
+            "titel": "Ein Glas statt vier — und die Dichte kam aus den Pixeln, nicht aus dem Gefühl",
+            "wasIchWeiss": "Redur schrieb einen Satz, der breiter kaum sein konnte: „Weiter an die animationen übergangen glass efeck usw alles verbessern.“ „Alles verbessern“ ist kein Plan, also habe ich zuerst gezählt. Die Inventur der 23 Stilblätter ergab ein Bewegungssystem, das es gibt und an das sich kaum jemand hält (E259: vier Dauern, eine Kurve — daneben 55 Dauern und 227-mal das nackte `ease`), und ein Glasrezept aus §16, das genau eine Klasse benutzte. Die Laufzeit-Sonde entwarnte bei der Bewegung (im Leerlauf läuft eine einzige Endlos-Animation, mit „weniger Bewegung“ keine) und bestätigte beim Glas: am Rechner war kein einziges Element sichtbar verwischt.\n\nAlso zuerst das Glas, weil Redur es beim Namen genannt hatte und weil man es sieht. Der Wächter `test576` stand rot, bevor eine Zeile Stil geändert war, und fand dabei einen echten Fehler fürs Zielgerät: fünf Stellen ohne `-webkit-backdrop-filter`, also auf jedem iPhone vor Safari 18 ohne Glas. Die eigentliche Lehre des Tages kam danach. Meine erste Dichte für Menüs war eine Schätzung (74 %), die Hauptschrift hielt sie spielend aus — und die stille Schrift, die ich zuerst gar nicht gemessen hatte, fiel auf 1,43 : 1. Die Dichten stehen jetzt da, wo die Messung sie hingelegt hat, mit einer Regel statt einer Liste: Fläche mit Schrift dicht, Fläche mit Zeichen leicht.\n\nUnd ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — seit meinem eigenen Bogen von gestern. Gefunden hat es der Nachbarlauf dieses Bogens; die Nachbarliste von E690 hatte ihn nicht.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 08:00",
+                    "wortlaut": "Weiter an die animationen pbergangen galss efeck usw alles verbessern",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Die Oberfläche soll sich hochwertiger anfühlen: Bewegungen, Übergänge und besonders das Glas. Keine bestimmte Stelle, sondern das Ganze.",
+                    "besser": "„Mach das Glas sichtbar und einheitlich, dann die Übergänge — und zeig mir vorher, was du findest.“ Der Satz, wie er war, ist aber gut genug, WENN die Antwort mit einer Messung beginnt statt mit einem Umbau."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Inventur: Bewegung und Glas in 23 Stilblättern gezählt, Laufzeit-Sonde über laufende Animationen und sichtbares Glas",
+                    "vonBis": "fc6e606 → (keine Änderung)",
+                    "zeitraum": "ca. 08:00–08:30",
+                    "dauer": "ca. 30 min",
+                    "pruefungen": "keine — reines Messen (messungen.md §69)"
+                },
+                {
+                    "was": "E695 · Ein Glas statt vier",
+                    "vonBis": "fc6e606 → offen",
+                    "zeitraum": "ca. 08:30–…",
+                    "dauer": "ca. 3 h",
+                    "pruefungen": "test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690"
+                }
+            ],
+            "zahlen": {
+                "commits": 2,
+                "entscheidungen": 1,
+                "neuePruefläufe": 1
+            },
+            "groesstesProblem": "Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.",
+            "interessantesteAnfrage": "„alles verbessern“ — der breiteste Auftrag bisher, und gerade deshalb der, der am dringendsten eine Messung vorneweg brauchte. Ohne sie wäre „besser“ Geschmack gewesen.",
+            "massnahmen": [
+                {
+                    "zeit": "ca. 09:40",
+                    "was": "Die Glasdichte aus der Kontrastmessung abgeleitet statt geschätzt: hell 92 %, dunkel 88 % für Flächen mit Schrift; auf Glas `--text-faint` → `--text-dim`.",
+                    "warum": "Die erste Schätzung (74 %) gab der stillen Schrift 1,43 : 1. Eine Zahl, die nur für die Hauptschrift stimmt, stimmt nicht.",
+                    "risiko": "Menüs sind nicht durchsichtiger als vorher, sondern glasiger (20 statt 8 px Unschärfe, gesättigte Farbe). Wer mehr Durchsicht will, muss die stille Schrift mitziehen."
+                },
+                {
+                    "zeit": "ca. 10:20",
+                    "was": "`test534` über fünf Arbeitsbäume zurückverfolgt: grün bei 43432e1, rot ab 4d7436d (E690).",
+                    "warum": "§46: rot zuerst. Und der Fehler war meiner — dann ist er zuerst zu finden, nicht zu erklären.",
+                    "risiko": "Keines — Arbeitsbäume im Scratchpad, der Hauptbaum unberührt."
                 }
             ]
         }
@@ -87647,6 +87776,18 @@ const ChronikDaten = {
             "ursache": "Die Kennung gibt es ZWEIMAL. `Register.werkzeuge` führt das Flächenwerkzeug `ellipse` (Zeichen `◯`, deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`); `Marken.FORMEN` führt die Studio-Form `ellipse` (Zeichen `○`, englischer Raum neben `line`, `arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht — also antwortete das Register zuerst, mit dem falschen Zeichen.",
             "beweis": "`reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.",
             "lehre": "Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet."
+        },
+        {
+            "nr": "P118",
+            "datum": "2026-09-27",
+            "titel": "Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste",
+            "schwere": "klein",
+            "symptom": "Der Glas-Wächter mass die stille Schrift im Menü hell mit 1,43 : 1 und dunkel mit 1,43 : 1, die Hauptschrift hell mit 6,05 — eben noch 7,05.",
+            "falscheVermutung": "Die Messung über das ganze Menü sei zu grob, oder beide Modi hätten zufällig dieselben Werte.",
+            "wieGefunden": "Die Gleichheit selbst war der Hinweis: zwei Farbsätze, die Ziffer für Ziffer dasselbe ergeben, sind ein Satz.",
+            "ursache": "Der Lauf setzte `data-theme` von Hand. `Aussehen` setzt das Attribut kurz danach auf das gespeicherte Schema zurück (`aussehen.ts:113`) — gemessen wurde beide Male dunkel. Ob das Rücksetzen vor oder nach der Messung kam, hing am Zeitpunkt; im ersten Lauf war hell noch hell.",
+            "beweis": "Mit `App.theme(t)` statt des Attributs: hell 7,05 / dunkel 6,05 für die Hauptschrift, verschiedene Werte für die stille Schrift. Und der Lauf prüft seither, dass das gewünschte Thema wirklich gilt.",
+            "lehre": "Einen Zustand der App über den Weg der App setzen, nicht über das Attribut, das er am Ende hinterlässt. Und zwei Messungen, die exakt gleich ausfallen, sind ein Befund über die Messung, bevor sie einer über das Produkt sind."
         }
     ]
 };

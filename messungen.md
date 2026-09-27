@@ -4608,3 +4608,60 @@ inReiter('zeichnen') gefiltert nach e.id           0 Werkzeuge  (gibt GRUPPEN zu
 gemessen ohne offenes Blatt                        0 Werkzeuge  (Zeichenziel.da() = false)
 gemessen mit Blatt, Gruppe 'Werkzeug'             13 Werkzeuge  ✓
 ```
+
+---
+
+## §69 · Glas und Bewegung, gezählt vor dem Umbau (E695, 27. September 2026)
+
+**Die Inventur aller 23 Stilblätter** (ohne Kommentare, nur `transition`,
+`animation` und `backdrop-filter`):
+
+```txt
+verschiedene Dauern in Übergängen       55     Dauer-Marken benutzt:   5
+verschiedene Kurven                     16     davon nacktes `ease`: 227
+transition auf Layout-Eigenschaften     14     (width, left, top, margin)
+Endlos-Animationen im Quelltext         46
+backdrop-filter                         16 Stellen, 10 verschiedene Werte
+@keyframes                             120     doppelt benannt: 0
+```
+
+**Was davon WIRKLICH läuft** (Laufzeit-Sonde, `document.getAnimations()`
+nach 1,8 s Leerlauf auf der Startseite):
+
+```txt
+                      Rechner    Telefon    Rechner, weniger Bewegung
+Endlos-Animationen       1          1          0
+sichtbar verwischt       0 %        8 %        0 %
+```
+
+Die eine Endlos-Animation ist der Kartenring der leeren Bibliothek (E529).
+„Weniger Bewegung" hält alles an — die Sperre in `grund.css` greift.
+
+**Glas, vorher und nachher:**
+
+```txt
+                          VORHER                        NACHHER (E695)
+Menüs, Finder, Auswahl    88 % + blur(8px)              dicht + saturate(180%) blur(20px)
+Telefonleiste             88 % + blur(20px) sat(1.6)    dicht + saturate(180%) blur(20px)
+PDF-Werkzeugleiste        88 % + blur(8px)              leicht + saturate(180%) blur(20px)
+.rb.glas                  leicht + glas-blur            leicht + glas-blur
+Schleier (Willkommen)     blur(3px), ohne Präfix        --schleier-blur, mit Präfix
+ohne -webkit-Zwilling     5 Stellen                     0
+```
+
+**Kontrast, gemessen an gerenderten Pixeln** über grossen schwarzen,
+weissen, roten und blauen Flächen (schlimmstes Hundertstel, test576):
+
+```txt
+                             74 % (erste Schätzung)   dicht (E695)   ohne Schrift-Regel
+Menü hell, Hauptschrift          7,05                   9,79              —
+Menü dunkel, Hauptschrift        6,05                  10,01              —
+Menü hell, stille Schrift        2,24                   4,67             3,11
+Menü dunkel, stille Schrift      1,43                   4,66             2,36
+Telefonleiste hell               4,14 (alt, 88 %)       4,59              —
+Telefonleiste dunkel             4,66 (alt, 88 %)       4,66              —
+```
+
+Die Telefonleiste hell war schon VOR diesem Bogen unter 4,5 — gegen die
+alten Stilblätter nachgemessen, dieselbe Zahl. Gegenprobe für den
+Kontrastteil: `--bg-schwebend` hell auf 22 % → 1,6 : 1, der Lauf wird rot.

@@ -131,6 +131,7 @@ sind der teuerste Teil und der lehrreichste.
 | P115 | 2026-09-26 | Ein Wächter, der eine Absicht misst, die es nicht gibt | 🟠 mittel | — |
 | P116 | 2026-09-26 | Ein Tastenkürzel, das im Menü steht und nie erreichbar war | 🟠 mittel | — |
 | P117 | 2026-09-26 | Eine Kennung, zwei Bedeutungen: `ellipse` | 🟡 klein | — |
+| P118 | 2026-09-27 | Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste | 🟡 klein | — |
 
 ---
 
@@ -2535,4 +2536,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** `reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.
 
 **Die Lehre.** Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet.
+
+
+---
+
+## P118 · Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste
+
+*2026-09-27 · 🟡 klein*
+
+**Das Bild.** Der Glas-Wächter mass die stille Schrift im Menü hell mit 1,43 : 1 und dunkel mit 1,43 : 1, die Hauptschrift hell mit 6,05 — eben noch 7,05.
+
+**Die falsche Vermutung.** Die Messung über das ganze Menü sei zu grob, oder beide Modi hätten zufällig dieselben Werte.
+
+**Wie es gefunden wurde.** Die Gleichheit selbst war der Hinweis: zwei Farbsätze, die Ziffer für Ziffer dasselbe ergeben, sind ein Satz.
+
+**Die Ursache.** Der Lauf setzte `data-theme` von Hand. `Aussehen` setzt das Attribut kurz danach auf das gespeicherte Schema zurück (`aussehen.ts:113`) — gemessen wurde beide Male dunkel. Ob das Rücksetzen vor oder nach der Messung kam, hing am Zeitpunkt; im ersten Lauf war hell noch hell.
+
+**Der Beweis.** Mit `App.theme(t)` statt des Attributs: hell 7,05 / dunkel 6,05 für die Hauptschrift, verschiedene Werte für die stille Schrift. Und der Lauf prüft seither, dass das gewünschte Thema wirklich gilt.
+
+**Die Lehre.** Einen Zustand der App über den Weg der App setzen, nicht über das Attribut, das er am Ende hinterlässt. Und zwei Messungen, die exakt gleich ausfallen, sind ein Befund über die Messung, bevor sie einer über das Produkt sind.
 
