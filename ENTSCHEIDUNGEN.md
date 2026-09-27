@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-679 Entscheidungen, E1 bis E699 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+680 Entscheidungen, E1 bis E700 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -742,6 +742,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E697** — Direkte Farbwahl und unterbrechungsfreier Freitext: benannte Stift-/Markerpalette, Hex-Feld, echte Deckung in der Vorschau, dieselbe Farbaktion wie im Dock. Textentwurf und Cursor überleben den Farbwähler; Eingabegeometrie höchstens einmal pro Bild, IME-Escape beendet nicht den Text. Auch aufgeklappt bleibt Zubehör werkzeugbezogen. Bestehende Marken, Farbsätze, Werkzeuggedächtnis und eigene Ordnung bleiben. Wächter `test577`, Nachbarn `test458`, `test515`, `test524`, `test527` und Stiftregressionen. *(kam als E681/test568 über `main`; beim Zusammenführen umnummeriert)*
 * **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
 * **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
+* **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
 
 ---
 
@@ -57315,3 +57316,66 @@ Nachbarn `test87`, `test105`, `test109`, `test143`, `test225`, `test270`,
 `test105` §3 (der Typcheck der Inseln), `test388` §5 (React nicht beim
 Start), `test290` (das Inselblatt nimmt keinen Namensraum der Schale),
 `test47` und `test510` (zehn Schemata statt acht).
+## E700 — Rot zuerst: ein Farbtupfer dazu, ein Seitenrand zur Marke
+
+**Datum:** 27. September 2026 · **Wächter:** `test362` §7 (schon da, auf
+`main` 323f13a rot) · Anlass: **rot zuerst** (§46).
+
+**Der Fund.** `test362` §7 zählt die rohen Wiederholungen der Telefonmasse
+in `quell/schale/stil/*.css` und verlangt, dass jede Decke in
+`pruefungen/marken-decke.json` GENAU der heutige Stand ist. Auf `main`
+323f13a: 28 px **66 gegen 65**, 17/18. Grün bei `6ad2650b` (E696), rot ab dem
+Merge `0f73ba1d` (E697, Codex PR #114); auf der Codex-Seite `569a8341` stand
+es schon 65 gegen 64. Der ganze Zuwachs ist eine Zeile:
+
+```txt
+bausteine.css:5308   .blatt-color-grid button i{width:28px;height:20px;…}   Breite eines Farbtupfers (E697, 9e306b85)
+```
+
+**Warum der Tupfer roh bleibt.** Die einzige Marke mit 28 ist
+`--mobile-gutter`, der Seitenrand am Telefon. `marken.css` sagt: *„Gleiche
+Zahl bedeutet nur dann dieselbe Marke, wenn sie dieselbe Aufgabe hat."* E590
+hat es für genau diese Zahl entschieden: ein Polster, das kein Seitenrand
+ist, darf sie nicht tragen. Ein Farbtupfer ist kein Seitenrand. `1.75rem`
+oder ein `aspect-ratio` hätten die Zahl nur vor dem Zähler versteckt.
+
+**Was entschieden wurde.** Die Decke bleibt bei 65, weil eine ECHTE rohe
+Wiederholung verschwindet: `ki.css:158`, im Telefonblock
+(`max-width:820px`) und laut eigenem Kommentar der „Seitenrand nach der
+Telefon-Vorgabe (E37): 28 px", heisst jetzt
+`#page{padding:0 var(--mobile-gutter) 40vh}`. Dieselbe Aufgabe wie
+`bausteine.css:223-224` (`#page` am Telefon,
+`max(var(--mobile-gutter), env(safe-area-inset-left))`), also dieselbe Marke.
+
+```txt
++1   bausteine.css:5308   Farbtupfer, 28 px breit        andere Aufgabe, bleibt roh (E697)
+−1   ki.css:158           Seitenrand von #page, Telefon  → var(--mobile-gutter)
+     28 px roh            66 → 65 = Decke 65, marken-decke.json unverändert
+```
+
+Der Tausch steht hier und in messungen.md §72 mit beiden Zeilen, damit der
+Zuwachs nicht aus dem Blick fällt: **ohne den Tupfer stünde die Decke jetzt
+bei 64.**
+
+**Die Alternativen.** Die Decke auf 66 heben, wie E637 und E690 — ehrlich,
+aber die Decke soll nur schrumpfen, und hier lag eine Wiederholung, die
+ohnehin die Marke tragen muss. Den Tupfer auf `--mobile-gutter` setzen —
+falsch nach E590. Die Zahl umschreiben — Verstecken statt Aufräumen.
+
+**Was es kostet.** Nichts Sichtbares. Die Zeile in `ki.css` wird am Telefon
+ohnehin von `bausteine.css` überstimmt (gleiche Spezifität, spätere Datei).
+Vorher und nachher aufgenommen bei 375, 390, 428 und 700 px, Startseite und
+eine Textseite: acht Bildpaare, **kein Pixel anders**, und `#page` misst
+dieselben Polster (22 px unter 380 px, sonst 28 px). Die Bilder bleiben auf
+dem Rechner (§55.4).
+
+**Nicht in diesem Bogen.** `ki.css:176` setzt unter 380 px
+`padding-left:22px; padding-right:22px` — derselbe Fall für
+`--mobile-gutter-small` (22 px 85 → 84). Eine Änderung, ein Ziel (§43).
+
+**Geprüft:** `test362` 18/18 (vorher 17/18 auf 323f13a); Nachbarn `test87`,
+`test114`, `test221`, `test353`, `test143`, `test105`, `test109`, `test577`
+grün; `test225`, `test549`, `test550` grün. `test401` bleibt rot wie auf
+`main` (`var(--danger, #c73939)` aus E697) — das repariert E698 auf seinem
+Zweig. `npm run typecheck` sauber; `npm run bauen:ts` (Dienststand v1372)
+und `node bauen.mts` neu erzeugt.

@@ -2489,8 +2489,11 @@ body[data-small="1"] .b-text .ct{font-size:14px}
   /* Seitenrand nach der Telefon-Vorgabe (E37): 28 px. Vorher 22 — der
      Text stand zu dicht am Glasrand, und am Daumen liest es sich enger,
      als es aussieht. Unter 380 px bleibt es bei 22, sonst wird die Zeile
-     zu schmal. */
-  #page{padding:0 28px 40vh}
+     zu schmal.
+
+     Die 28 ist die Marke `--mobile-gutter` (marken.css), nicht eine Zahl
+     (E700): derselbe Rand wie in bausteine.css, also dieselbe Marke. */
+  #page{padding:0 var(--mobile-gutter) 40vh}
   .cover{margin:0 -22px}
   #ai{position:fixed; right:0; top:0; height:100%; z-index:500}
   .blk > .handles{left:-40px}
@@ -25840,7 +25843,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1379, inhalt: 'bce699a66c18aaff', gebaut: '2026-09-27T16:09:51.439Z' };
+const Stand = { fassung: 1380, inhalt: '85878ef59828d146', gebaut: '2026-09-27T22:39:33.887Z' };
 window.Stand = Stand;
 
 </script>
