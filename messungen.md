@@ -5394,3 +5394,59 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+## §81 · Suche und Meldungen: Aufgehen, Staffel, gleitende Marke, Stapel, Fächer (E711, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/suche-und-meldungen` gegen den Grundstand
+`b3cf1933` (die erste Welle, E698–E706). Chromium von Playwright,
+1440 × 900 und 390 × 844 (`isMobile`, Berührung über CDP), hell und dunkel;
+Bahnen Bild für Bild über `requestAnimationFrame` (`test588`); Gzip wie
+`test388`.
+
+**Vorher gemessen, auf `b3cf1933`** (`test588` gegen den Grundstand, dazu
+die Vorher-Bilder):
+
+```txt
+Suche aufgehen            eigene Ankunft `glas-ankunft`: translateY(7px) scale(.985) → ruhig,
+                          aus der Mitte, nicht aus der Kapsel
+↓ in der Suche            baut die GANZE Liste neu (`zeichne()`), neue Knöpfe [data-i],
+                          neue Horcher je Zeile; die Wahl springt (0 Zwischenorte)
+Staffel                   keine: alle Treffer stehen im ersten Bild
+Marke                     keine (graue Fläche je Zeile, `.on`)
+drei Meldungen            sichtbar: 1 (die letzte) — die zwei davor nach einem Bild weg
+Glocke                    Klick öffnet den Posteingang; sonst nichts
+Posteingang               Zeilen „Text — Quelle", Zeit rechts, ohne Karte
+```
+
+**Nachher** (`test588`, Lauf unter dem Schloss ausstehend):
+
+```txt
+folgt im Nachtrag zu E711 (Bahn der Marke, Staffel, Stapel, Fächer, Goo — je aus test588)
+```
+
+**Start (test388 §5).** Die Zahl aus test388 §5 folgt im Nachtrag zu E711 (Lauf unter dem geteilten Schloss ausstehend); gemessen ohne Browser: +9,9 KB gzip über zehn Dateien, siehe unten.
+
+**Was die Dateien wachsen** (gzip, gegen `b3cf1933`, Bytes):
+
+```txt
+quell/schale/ueberlagerung/hinweis.js        2'450 →  7'168   +4'718
+quell/schale/bedienung/selection-flow.js    14'573 → 17'057   +2'484
+quell/schale/stil/studio.css                19'790 → 21'163   +1'373
+quell/schale/aufbau/schale.js               77'266 → 77'862     +596
+quell/bereiche/wissen/werkzeuge.js          51'691 → 51'999     +308
+quell/bereiche/datenbanken/ansichten/dienst.js 17'054 → 17'246  +192
+quell/schale/ueberlagerung/menue.js          6'408 →  6'526     +118
+quell/schale/aufbau/studio.js                2'861 →  2'934      +73
+quell/schale/aufbau/menueband.js            22'692 → 22'738      +46
+quell/kern/einstellung/stand.js                439 →    440       +1
+                                                      zusammen +9'909
+```
+
+(gzip -9 je Datei; `test388` misst über alle Startdateien mit Stufe 6.)
+
+**Filmstreifen** (nicht eingecheckt, §55.4; `welle2-bilder/suche/`):
+Aufgehen der Suche aus der Kapsel, das Gleiten der Marke bei ↓, das
+Auffächern an der Glocke und das Zusammenfliessen nach „Alle gelesen" —
+Wiedergabe 1/10 über `Animation.setPlaybackRate`, ein Bild alle 330 ms
+Echtzeit, also alle 33 ms Bewegungszeit; Rechner und Telefon, hell und
+dunkel, je vorher und nachher.

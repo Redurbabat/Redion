@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-686 Entscheidungen, E1 bis E706 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E711 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E714** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -749,6 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E711** — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich (Redur zum Video „Liquid Glass": „Schau mal das auch an ich will das auch haben", Szenen 07 und 08): die Suche geht aus dem Knopf auf, der sie trägt, neue Treffer kommen nacheinander, EINE Marke gleitet mit ↑ ↓ auf der Kit-Feder (Suche, Befehlspalette, Menü mit Suche; `SelectionFlow.highlight`, kein Neubau je Pfeil) und trägt „↵ Enter"; `#toast` wird ein Stapel aus bis zu drei Meldungen (die zwei davor waren verloren), Escape räumt ab, ein Finger wischt weg; die Glocke öffnet WEITER den Posteingang, beim Zeigen oder langen Drücken fächern die letzten drei auf, „Alle gelesen" (gelesen, nicht leeren) fliesst zäh in sie zurück — EIN Goo-Filter, nur während es fliesst; der Posteingang als Glaskarten (`test588`)
 
 ---
 
@@ -58499,3 +58500,208 @@ Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
 statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
 alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 `claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+
+---
+
+## E711 — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich: die Szenen 07 und 08 aus „Liquid Glass"
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video „Liquid
+Glass" 27. September ca. 22:05, Auftrag ca. 22:10) · **ergänzt** E706 (das
+Material gleitet jetzt auch durch Listen) und E116 (der Fortschritt bleibt
+am Leben, jetzt neben einem Stapel) · **Wächter:** `test588` · **Zweig**
+`claude/suche-und-meldungen`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:05 UTC   schickt das Video „LIQUID GLASS" (16 s; darin ein Suchfeld mit
+                Treffern und wandernder Auswahl und ein Stapel von
+                Mitteilungen, der zusammenfliesst) und schreibt:
+                „Schau mal das auch an ich will das auch haben"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Die Suche (`App.suche`, Strg P / Strg K, `#studio-search`,
+`btn-suche-handy`, `mb-suche`) ging als Kasten auf, der sieben Pixel
+heranrutschte. Die Wahl war eine graue Zeile, die sprang — und jeder Druck
+auf ↑ oder ↓ baute die GANZE Trefferliste neu (`zeichne()`), mit neuen
+Horchern für jede Zeile. Dasselbe in der Befehlspalette
+(`Werkzeuge.palette`); im Menü mit Suche (`UI.menuMitSuche`) sprang eine
+graue Fläche. `#toast` zeigte genau eine Meldung: drei hintereinander
+(„Link kopiert", „verschoben", „Gespeichert") liessen nur die letzte stehen,
+die zwei davor waren nach einem Bild weg. Die Glocke öffnete den
+Posteingang und sonst nichts; die Benachrichtigungen dort waren Zeilen mit
+`— Quelle` am Ende.
+
+**Was entschieden wurde.**
+
+1. **Die Kapsel wächst zum Feld.** `SelectionFlow.growFrom` lässt die
+   Scheibe der Suche aus dem Rechteck des sichtbaren Suchknopfs aufgehen
+   (Kapsel am Rechner, Lupe am Telefon, `mb-suche` im Band) — auch bei
+   Strg P und Strg K, weil dort die Suche wohnt. Bewegt wird nur
+   `transform`, auf der Feder `--feder-sanft` aus `grund.css` (E702, ohne
+   Überschwingen); nur der INHALT blendet ein, die Scheibe nicht (E703:
+   Glas kommt als Scheibe, nicht als Nebel).
+2. **Neue Treffer kommen nacheinander.** `SelectionFlow.stagger` gibt NUR
+   den neuen Zeilen `ru-kommt` (8 px von unten, 33 ms Abstand wie im Video);
+   eine Zeile, die schon dastand (Schlüssel: Seite und Stelle), kommt beim
+   nächsten Buchstaben nicht noch einmal — Bewegung ohne Anlass verbietet
+   `test114` §17.
+3. **EINE Marke gleitet.** `SelectionFlow.highlight` hält je Liste eine
+   Marke (`.ru-marke`, `aria-hidden`), die das `innerHTML` der Liste
+   überlebt; `SelectionFlow.glide` fährt sie auf der Kit-Feder `knapp` zur
+   Wahl — `folge` aus E706 in zwei Richtungen und mit Grösse (vier Bahnen:
+   links, oben, Breite, Höhe; Trefferzeilen sind verschieden hoch), mit der
+   Dehnung aus dem Tempo nur zwischen Nachbarn (E641), als Keyframes aus
+   `transform` für den Compositor. Drückt man, bevor sie angekommen ist,
+   wird sie umgelenkt und behält ihr Tempo. ↑ ↓ bauen NICHTS mehr neu: nur
+   `.on` wandert (`waehle`). In der Suche und der Palette ist die Marke der
+   Akzent mit heller Schrift und trägt am Rechner „↵ Enter"; im Menü mit
+   Suche ist sie leise (`--bg-hover`). `#q`, `#cq`, `[data-i]`, `.on`,
+   `.jetzt` bleiben, wie die Läufe sie kennen.
+4. **Der Stapel.** `#toast` bleibt die EINE Live-Region mit der NEUESTEN
+   Meldung (19 Läufe lesen ihn, `test114` misst seine Bahn). Was vorher
+   darin stand und einem ANDEREN Aufruf gehörte, rückt als Karte in
+   `#ru-toast-stapel` (`aria-hidden`: schon angesagt) — höchstens zwei, also
+   drei im Ganzen, mindestens 2,2 s lesbar, höchstens 6 s. Eine
+   Wiederholung stapelt sich nicht; ein Fortschritt (E116), der sich
+   fortschreibt, gehört sich selbst und stapelt sich nicht. Die Karten
+   ziehen auf `--feder-knapp` um. Escape ohne offenes Fenster räumt den
+   Stapel ab — über den EINEN Griff in `schale.ts` (E302), kein zweiter
+   Horcher. Am Telefon wischt ein Finger eine Karte weg; erkannt wird das
+   über die LAGE, die Karten bleiben `pointer-events:none` wie `#toast`
+   (ein Tipp geht durch sie hindurch, `test244` hat genau das gesucht).
+   `#toast` bleibt DECKEND, wie E703 (c) es entschieden hat (Glas druckte
+   beim Einblenden über `opacity` doppelt und läge oft auf anderem Glas);
+   die Karten daneben haben seine Form und dazu die Lichtkante
+   (`--glas-kante`) — keine Unschärfe im Stapel (Liquid-Plan, „Must-fix" 3:
+   das Glasbudget am Telefon).
+5. **Die Glocke fächert auf.** Der Klick auf `#studio-glocke` und
+   `mb-glocke` öffnet WEITER den Posteingang (§43: derselbe Griff am selben
+   Ort). DAZU fächern beim Zeigen (220 ms), beim langen Drücken (480 ms,
+   der Klick danach wird geschluckt) und mit ↓ die letzten drei Meldungen
+   aus der Glocke auf — Quelle, Text, Zeit —, darunter „Alle gelesen" und
+   „Posteingang öffnen" (44 px). „Alle gelesen" ruft
+   `Werkzeuge.meldungenAlleGelesen` (E276: gelesen, NICHT leeren — alle
+   Meldungen bleiben stehen), meldet „N Meldungen als gelesen markiert" wie
+   der Knopf im Posteingang, und die Karten fliessen zäh in die Glocke
+   zurück.
+6. **EIN Goo-Filter.** `SelectionFlow.goo` legt `#ru-goo` einmal im
+   Dokument an (verwischen, dann Alpha ×18 − 7, Quelle darüber) und hängt
+   ihn NUR während des Zusammenfliessens an EINE Ebene; in Ruhe trägt ihn
+   kein Element, er wird nie animiert, bewegt werden die Karten per
+   `transform`. Ruhig: kein Filter, der Fächer geht einfach zu.
+7. **Der Posteingang als Glaskarten.** Die Benachrichtigungen sind Karten:
+   die Quelle als kleine Marke über dem Text, die Zeit rechts, ungelesene
+   halbfett; Lichtkante (`--glas-kante`) statt eigener Unschärfe je Karte.
+   Dieselben Daten, dieselben Griffe (`data-meld`, `data-open`).
+8. **Ruhig und „weniger Bewegung":** kein Aufgehen, keine Staffel, die Marke
+   springt, der Stapel zieht ohne Feder um, der Fächer ohne Flug, kein Goo.
+   Gefragt wird die EINE Frage (`SelectionFlow.ruhig` →
+   `AppEinstellung.wenigBewegung`).
+
+**Warum.** Redur hat das Video geschickt und „das auch haben" geschrieben,
+und dazu „bessere übergagnge besssere efeckten … ohne eine funktione
+löschen". Zwei Stellen des Videos haben in Redion einen echten Ort mit
+echtem Inhalt: die Suche ist Redions Spotlight, und der Stapel behebt einen
+VERLUST — Meldungen, die man nicht lesen konnte. Die Marke ist dasselbe
+Material wie die Pille der unteren Leiste (E706), also keine neue Sprache.
+
+**Was die Alternative war.**
+- Die Suche als React-Insel (Kit `SearchBar` + `List`): verworfen. Strg P
+  ist Start-Chrom, R1 (E699) verbietet React ohne Handlung, und der Kit hat
+  keine gleitende Marke — die hat Redion (E706).
+- Eine Marke je Zeile (Hintergrund je `.on`) mit CSS-Übergang: so sprang
+  sie bisher; ein Übergang zwischen zwei Elementen ist kein Weg.
+- Die Liste bei jedem Pfeil neu bauen und die Marke danach suchen: der
+  Neubau zerschnitt jede Bahn und liess die Staffel bei jedem Pfeil neu
+  laufen.
+- Der Stapel als eigene Live-Region je Karte: vier Läufe lesen „EIN Balken,
+  kein Element je Meldung" (`test411`), und ein Vorleser hörte jede Meldung
+  zweimal.
+- Die Glocke öffnet den Fächer STATT des Posteingangs: das hätte den Griff
+  verändert (§43). Der Liquid-Plan hat es Redur zur Entscheidung gegeben;
+  ohne seine Antwort bleibt der Klick, und der Fächer kommt dazu.
+- Ein Goo-Filter je Karte (wie der Löschen-Knopf im Kit): ein Filter je
+  Zeile, dauernd an — verworfen (Liquid-Plan „Must-fix" 2).
+- Die Meldungen als Glas (so stand es im Auftrag der zweiten Welle):
+  E703 (c) hat Glas für Toast und Lader gemessen verworfen — doppelter
+  Druck beim Einblenden über `opacity`, Glas auf Glas. Ohne eine neue
+  Entscheidung Redurs bleibt `#toast` deckend; die Tiefe kommt aus der
+  Lichtkante (L232 Punkt 7).
+
+**Was es kostet.** Startbytes: +9,9 KB gzip über zehn Dateien (gzip -9 je
+Datei, gegen `b3cf1933`) — `hinweis.js` +4,7 KB (Stapel, Wischen, Fächer),
+`selection-flow.js` +2,5 KB (Marke, Staffel, Aufgehen, Goo), `studio.css`
++1,4 KB, `schale.js` +0,6 KB, der Rest je unter 0,4 KB; das ist die Grenze
+von etwa 10 KB, die jedem Zweig zugeteilt ist. Die Zahl aus `test388` §5
+steht in messungen §81, sobald der Lauf unter dem geteilten Schloss
+gelaufen ist. Zur Laufzeit: je Pfeil EINE Bahn für EINE Marke, einmal
+gerechnet und dem Compositor übergeben; die Staffel nur für neue Zeilen;
+der Goo-Filter nur, solange die Karten in die Glocke fliessen; am Telefon
+drei Horcher (`pointerdown/move/up`) am Fenster, die ohne Meldung sofort
+zurückkehren. Nichts läuft in Ruhe.
+
+**Gemessen, bevor gebaut wurde** (messungen.md §81): die Suche ging mit der eigenen Ankunft auf
+(`translateY(7px) scale(.985)`, aus der Mitte, nicht aus der Kapsel); ↓
+baute die ganze Liste neu, die Wahl sprang (0 Zwischenorte); keine Staffel;
+drei Meldungen hintereinander → EINE sichtbar; die Glocke öffnete nur den
+Posteingang; dort Zeilen „Text — Quelle". Bilder `vorher-*` in
+`welle2-bilder/suche/`.
+
+**Gefunden auf dem Weg.**
+- `glas-ankunft` (E703) verschiebt die Scheibe im ersten Bild um 7 px und
+  verkleinert sie; gemessen werden muss NACH dem Abschalten, sonst ginge die
+  Suche aus einem falschen Rechteck auf.
+- Eine Zeile, die gerade hereinkommt (`ru-kommt`), steht noch 8 px tiefer:
+  die Marke misst deshalb das LAYOUT (`offset…`), nicht das Bild.
+- `.ru-marke-traeger` macht aus der Chronik-Zeile („Red-ur") eine helle
+  Schrift auf Akzent — ohne Marke wäre sie weiss auf durchsichtig gewesen;
+  sie trägt jetzt dieselbe Marke.
+- Der Auftrag nannte „glass toasts". E703 (c) hat genau das mit Gründen
+  verworfen (doppelter Druck beim Einblenden über `opacity`, Glas auf
+  Glas); die erste Fassung dieses Bogens hatte `#toast` trotzdem zu Glas
+  gemacht. Zurückgenommen: `#toast` bleibt deckend, der Stapel trägt seine
+  Form und die Lichtkante (L232 Punkt 7).
+- Die Zeilenregeln der Suche und der Palette gelten nur für DIREKTE
+  Knöpfe (`.finder .res > button`, E348). Die Marke ist deshalb ein `<i>`
+  und kein Knopf: keine Zeilenregel trifft sie, und `[data-i]` zählt sie
+  nicht mit.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen): vorbereitet als fünf Verbiegungen im gebauten
+`quell/` einer Kopie, je eine mit `test588` darüber und zurück: „neubau"
+(↓ ruft wieder `zeichne()`), „springt" (die Marke ohne Bahn), „ohne-stapel"
+(`HOECHSTENS = 0`), „goo-bleibt" (der Filter bleibt nach dem Fliessen an),
+„glocke-schluckt" (der Klick öffnet den Posteingang nicht mehr). Der Lauf
+steht unter dem geteilten Schloss aus; die Ergebnisse folgen im Nachtrag
+zu E711.
+
+**Geprüft:** ohne Browser grün: 87 109 290 298 401 402 410 537 225
+549 550 126 47 400 (14 von 14), nach den letzten Doku-Änderungen noch einmal
+550 549 225 87 410 290 298 401 (8 von 8). `test588` zuletzt 39 von 43
+(28. September, ca. 11:09 UTC, vorige Fassung; offen waren §2 die Staffel,
+§3 das Umlenken mitten im Flug und §7 die 44 px der Karten im Fächer). Der
+Lauf dieser Fassung, die Nachbarn unter dem Schloss (alle Läufe, die `#q`,
+`.such`, `[data-i]`, `#toast`, die Glocke oder den Posteingang lesen, dazu
+143 353 362 388 245 296 105 585 541 576) und die Bilder stehen aus — das
+Schloss war ab ca. 14:03 UTC über eine Stunde von anderen Zweigen belegt.
+Sie folgen im Nachtrag zu E711; bis dahin ist dieser Bogen NICHT als grün
+gemeldet.
+
+**Nicht in diesem Bogen** (L232): Escape leert erst das Feld; Combobox für
+den Vorleser; Enter als Übergabe; Kick und Tropfen; Wischen mit der Maus;
+EIN Goo-Filter für die ganze zweite Welle beim Zusammenführen (E709, E712).

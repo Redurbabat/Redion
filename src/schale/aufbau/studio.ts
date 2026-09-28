@@ -62,6 +62,9 @@ const StudioSchale = (() => {
     an('studio-account', () => App.arbeitsbereich());
     /* Dieselbe Handlung wie `mb-glocke` im Band (menueband.ts). */
     an('studio-glocke', () => { try { Ansichten.posteingang(); } catch { /* ohne Posteingang bleibt der Kopf */ } });
+    /* Der Klick bleibt der Posteingang; beim Zeigen fächern die letzten
+       drei Meldungen auf (E711, hinweis.ts). */
+    Hinweis.faecherBinden(document.getElementById('studio-glocke'));
     /* Die Sterne (E463): sie stehen nur, solange ein Auftrag läuft, und
        öffnen dasselbe Fenster wie der Knopf im Menüband. */
     an('studio-auftraege', () => {

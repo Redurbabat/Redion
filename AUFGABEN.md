@@ -1510,3 +1510,20 @@ Wächter (rot zuerst):
 3. `SelectionFlow.FEDERN` aus den Federmarken in `grund.css` lesen, sobald
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
+
+## Suche und Meldungen: was aus den Szenen 07 und 08 noch fehlt (L232, nach E711)
+
+E711 hat die Suche aus der Kapsel wachsen lassen, die gleitende Marke in
+Suche, Befehlspalette und Menü mit Suche gebracht, `#toast` zum Stapel
+gemacht, der Glocke den Fächer gegeben und den Posteingang als Glaskarten.
+Offen, jeweils mit eigenem Wächter (rot zuerst):
+
+1. Escape in der Suche leert erst das Feld, dann schliesst es — zusammen mit
+   den Läufen, die heute auf „Escape schliesst" bauen.
+2. Suche und Palette als Combobox für den Vorleser (`aria-activedescendant`).
+3. Enter als Übergabe: die Scheibe hebt sich und wird zum Ergebnis.
+4. Kick und Tropfen beim Zusammenfliessen — nur, wenn Redur es will.
+5. Beim Zusammenführen der zweiten Welle: EIN Goo-Filter (`#ru-goo`) für
+   Löschen-Knopf (E709), Tropfen (E712) und Glocke (E711).
+6. Meldungen als Glas nur, wenn Redur E703 (c) dafür aufhebt (L232 Punkt 7).
+

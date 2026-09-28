@@ -23569,6 +23569,83 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
   #topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
 }
 
+/* ══ E711 · Suche wächst, Auswahl gleitet, Meldungen stapeln sich (Szenen 07/08).
+   Die Bahnen rechnet `SelectionFlow` (E706/E702); hier nur die FORM. */
+
+/* Die Scheibe wächst aus der Kapsel: ihre eigene Ankunft weicht der Bahn. */
+:is(.menu,.finder).ru-waechst{animation:none}
+.ru-waechst > *{animation:none}
+
+/* Die eine Marke: unter der Schrift, über den Karten. */
+.ru-marke-traeger{position:relative}
+:where(.ru-marke-traeger) button{position:relative;z-index:1}
+.ru-marke{position:absolute;left:0;top:0;z-index:0;display:block;pointer-events:none;
+  border-radius:var(--radius-md);background:var(--accent);
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .22),0 1px 3px rgb(0 0 0 / .18)}
+.ru-marke[hidden]{display:none}
+.ru-marke-still{background:var(--bg-hover);box-shadow:none}
+.ru-marke-traeger > button.on{background:transparent;color:var(--auf-accent);transition:color var(--motion-fast) var(--ease)}
+.ru-marke-traeger > button.on :is(.pth,.snip){color:inherit;opacity:.82}
+.menu-liste.ru-marke-traeger button.jetzt{background:transparent}
+/* „↵ Enter" reitet auf der Marke — nur am Rechner (am Telefon gibt es die Taste so nicht). */
+.ru-marke-taste{position:absolute;right:10px;top:50%;translate:0 -50%;padding:2px 7px;
+  border-radius:var(--radius-sm);font:600 11px/1.4 var(--font);letter-spacing:.02em;white-space:nowrap;
+  color:var(--auf-accent);background:rgb(255 255 255 / .2)}
+.ru-marke-traeger > button.on > .pth{margin-right:64px}
+@media(max-width:760px){
+  .ru-marke-taste{display:none}
+  .ru-marke-traeger > button.on > .pth{margin-right:0}
+}
+/* Die neuen Treffer kommen nacheinander (33 ms Abstand, wie im Video). */
+.ru-kommt{animation:ru-kommt var(--motion-normal) var(--ease-enter) both;animation-delay:calc(var(--ru-n) * 33ms)}
+@keyframes ru-kommt{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Der Stapel: die älteren Meldungen in der Form von `#toast` — DECKEND wie
+   er (E703 (c): Glas druckte beim Einblenden über `opacity` doppelt und
+   läge oft auf anderem Glas); die Tiefe macht die Lichtkante. */
+#ru-toast-stapel{position:fixed;left:0;top:0;width:0;height:0;z-index:899}
+.ru-toast-alt{position:fixed;left:0;right:0;top:0;margin-inline:auto;width:fit-content;box-sizing:border-box;
+  max-width:min(560px,calc(100vw - 28px));padding:9px 18px;font-size:13.5px;line-height:1.4;
+  border-radius:var(--radius-md);background:var(--bg-side);border:1px solid var(--line);color:var(--text-dim);
+  box-shadow:var(--glas-kante),var(--shadow-1);pointer-events:none}
+@media(max-width:760px){
+  .ru-toast-alt{left:14px;right:14px;width:auto;max-width:none;text-align:center}
+}
+
+/* Der Fächer: Karten ohne eigene Unschärfe — im Goo-Filter sähe sie nichts. */
+#ru-glocken-faecher{position:fixed;z-index:880;display:grid;gap:var(--space-3)}
+#ru-glocken-faecher[hidden]{display:none}
+.ru-faecher-karten{display:grid;gap:var(--space-3)}
+.ru-meldung{display:grid;grid-template-columns:1fr auto;grid-template-areas:"quelle zeit" "text text";gap:2px 10px;
+  min-height:var(--touch-min);padding:10px 14px;text-align:left;border-radius:var(--radius-xl);
+  background:var(--bg-side);color:var(--text);box-shadow:var(--glas-kante),var(--studio-elevation)}
+.ru-meldung:hover{background:var(--bg-hover)}
+.ru-meldung-quelle{grid-area:quelle;font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
+.ru-meldung-text{grid-area:text;font-size:14px;font-weight:600;line-height:1.35}
+.ru-meldung-zeit{grid-area:zeit;font-size:11.5px;color:var(--text-dim)}
+.ru-meldung.neu .ru-meldung-quelle::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;
+  vertical-align:1px;border-radius:50%;background:var(--accent)}
+.ru-faecher-fuss{display:flex;gap:var(--space-3);justify-content:flex-end}
+.ru-faecher-fuss button{min-height:var(--touch-min);padding:0 14px;border-radius:var(--radius-pill);font-weight:600;
+  background:var(--bg-side);color:var(--text);box-shadow:var(--glas-kante),var(--shadow-1)}
+.ru-faecher-fuss button[data-faecher="gelesen"]{color:var(--accent-text)}
+:is(.ru-meldung,.ru-faecher-fuss button):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Nur während des Zusammenfliessens, an einer Ebene (SelectionFlow.goo). */
+.ru-goo-an{filter:url(#ru-goo)}
+#ru-goo-svg{position:absolute;width:0;height:0;overflow:hidden}
+
+/* Posteingang: Glaskarten mit Lichtkante, ohne Unschärfe je Karte. */
+.home-liste.pe-karten{display:grid;gap:var(--space-3);background:none;border:0;box-shadow:none;padding:0}
+.home-liste.pe-karten > .pe-karte{display:flex;align-items:center;gap:12px;width:100%;min-height:var(--touch-min);
+  padding:12px 14px;border:0;border-radius:var(--radius-xl);text-align:left;
+  background:var(--bg-side);box-shadow:var(--glas-kante),var(--shadow-1)}
+.home-liste.pe-karten > .pe-karte:hover{background:var(--bg-hover)}
+.pe-karte-inhalt{flex:1;min-width:0;display:grid;gap:2px}
+.pe-quelle{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
+.pe-karte-text{font-size:14.5px;line-height:1.4;color:var(--text)}
+.pe-karte.neu .pe-karte-text{font-weight:600}
+.pe-karte-zeit{font-size:12px;color:var(--text-dim);white-space:nowrap}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -26728,7 +26805,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1392, inhalt: '64a57bf7d1e4461d', gebaut: '2026-09-28T10:20:39.227Z' };
+const Stand = { fassung: 1398, inhalt: 'd7e6ee89a0070a1f', gebaut: '2026-09-28T14:28:29.184Z' };
 window.Stand = Stand;
 
 </script>
@@ -50765,10 +50842,15 @@ const Menue = (() => {
                 b.parentElement.style.display !== 'none'));
         const markiere = (b) => {
             liste.querySelectorAll('button.jetzt').forEach(x2 => x2.classList.remove('jetzt'));
-            if (!b)
+            /* Die leise Marke gleitet mit (E711) — dasselbe Material wie in der
+               Suche und der Palette, hier als Fläche statt Akzent. */
+            if (!b) {
+                SelectionFlow.highlight(liste, null, { still: true });
                 return;
+            }
             b.classList.add('jetzt');
             b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            SelectionFlow.highlight(liste, b, { still: true });
         };
         /* Der Filter kennt die Form des Menüs nicht: Knöpfe können direkt
            darinliegen oder in einem Gitter stecken. Deshalb wird nach Knöpfen
@@ -51199,6 +51281,166 @@ window.Sheet = Sheet;
  * ==========================================================================*/
 const Hinweis = (() => {
     let toastTimer;
+    let aeltere = [];
+    let zaehler = 0;
+    /** Wem `#toast` gerade gehört (die Nummer des Aufrufs) und bis wann. */
+    let eigner = 0;
+    let toastBis = 0;
+    const HOECHSTENS = 2; /* neben der neuesten: drei im Ganzen */
+    const LUECKE = 8;
+    const ruhig = () => typeof SelectionFlow !== 'undefined' ? SelectionFlow.ruhig()
+        : matchMedia('(prefers-reduced-motion: reduce)').matches;
+    /** Nutzertext nie roh ins HTML (§19). */
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+    const stapel = () => {
+        let s = document.getElementById('ru-toast-stapel');
+        if (!s) {
+            s = document.createElement('div');
+            s.id = 'ru-toast-stapel';
+            s.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(s);
+        }
+        return s;
+    };
+    /** Über (oder unter) `#toast`, aus seinem LAYOUT — er fährt vielleicht noch. */
+    const ordnen = () => {
+        const t = document.getElementById('toast');
+        if (!t)
+            return;
+        const oben = t.offsetTop, hoehe = t.offsetHeight;
+        const nachOben = oben + hoehe / 2 > innerHeight / 2;
+        let rand = nachOben ? oben - LUECKE : oben + hoehe + LUECKE;
+        const feder = typeof RedionSpring !== 'undefined' ? RedionSpring.token('snappy') : null;
+        for (const a of aeltere) {
+            const h = a.el.offsetHeight;
+            const top = nachOben ? rand - h : rand;
+            rand = nachOben ? top - LUECKE : top + h + LUECKE;
+            a.el.style.top = top + 'px';
+            const von = a.oben ?? oben;
+            a.oben = top;
+            if (Math.abs(von - top) > 0.5 && feder && feder.duration > 2 && !ruhig()) {
+                a.el.animate([{ transform: 'translateY(' + (von - top).toFixed(1) + 'px)' }, { transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+            }
+        }
+    };
+    const gehen = (a) => {
+        if (!aeltere.includes(a))
+            return;
+        aeltere = aeltere.filter(x => x !== a);
+        clearTimeout(a.uhr);
+        a.el.classList.add('geht');
+        const weg = () => { a.el.remove(); };
+        if (ruhig())
+            weg();
+        else {
+            const anim = a.el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96)' }], { duration: 180, easing: 'ease-out', fill: 'forwards' });
+            anim.finished.then(weg).catch(weg);
+        }
+        ordnen();
+    };
+    /** Was in `#toast` steht und einem ANDEREN Aufruf gehört, rückt zur Seite;
+     *  ein Fortschritt (E116) stapelt sich nicht selbst. */
+    const uebernehmen = (t, id, neu) => {
+        const alt = t.textContent || '';
+        const altId = eigner;
+        eigner = id;
+        aeltere.filter(a => a.id === id || a.el.textContent === neu).forEach(gehen);
+        if (!t.classList.contains('show') || !alt || altId === id || alt === neu)
+            return;
+        aeltere.filter(a => a.el.textContent === alt).forEach(gehen);
+        const el = document.createElement('div');
+        el.className = 'ru-toast-alt';
+        el.textContent = alt;
+        stapel().prepend(el);
+        const eintrag = { id: altId, el };
+        aeltere.unshift(eintrag);
+        while (aeltere.length > HOECHSTENS) {
+            const letzte = aeltere[aeltere.length - 1];
+            if (letzte)
+                gehen(letzte);
+        }
+        /* 2,2 s lesbar, höchstens 6 s. */
+        const bleibt = Math.min(6000, Math.max(2200, toastBis - Date.now()));
+        eintrag.uhr = setTimeout(() => gehen(eintrag), bleibt);
+        requestAnimationFrame(ordnen);
+        ordnen();
+    };
+    /** Escape ohne Fenster (E302): alles abräumen. */
+    const stapelLeeren = () => {
+        const t = document.getElementById('toast');
+        const da = !!t?.classList.contains('show') || aeltere.length > 0;
+        [...aeltere].forEach(gehen);
+        if (t?.classList.contains('show')) {
+            clearTimeout(toastTimer);
+            t.classList.remove('show');
+        }
+        return da;
+    };
+    /* WISCHEN: ein waagerechter Zug über 12 px, der auf einer Karte begann,
+       gehört ihr (`wischen.ts` hört ihn dann nicht); über 40 % oder schnell: weg. */
+    let zug = null;
+    const trifft = (x, y) => {
+        for (const a of aeltere) {
+            const r = a.el.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)
+                return { el: a.el, wer: a };
+        }
+        const t = document.getElementById('toast');
+        if (t?.classList.contains('show')) {
+            const r = t.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)
+                return { el: t, wer: null };
+        }
+        return null;
+    };
+    addEventListener('pointerdown', (e) => {
+        zug = null;
+        if (e.pointerType !== 'touch')
+            return;
+        const z = trifft(e.clientX, e.clientY);
+        if (z)
+            zug = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, ...z, gefangen: false };
+    }, { capture: true, passive: true });
+    addEventListener('pointermove', (e) => {
+        if (!zug || e.pointerId !== zug.id)
+            return;
+        const dx = e.clientX - zug.x0, dy = e.clientY - zug.y0;
+        if (!zug.gefangen) {
+            if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 12) {
+                if (Math.abs(dy) > 12)
+                    zug = null;
+                return;
+            }
+            zug.gefangen = true;
+        }
+        e.stopPropagation();
+        zug.el.style.translate = dx.toFixed(1) + 'px 0';
+        zug.el.style.opacity = String(Math.max(0.2, 1 - Math.abs(dx) / 260));
+    }, { capture: true, passive: true });
+    const zugEnde = (e) => {
+        if (!zug || e.pointerId !== zug.id)
+            return;
+        const z = zug;
+        zug = null;
+        if (!z.gefangen)
+            return;
+        e.stopPropagation();
+        const dx = e.clientX - z.x0;
+        const schnell = Math.abs(dx) / Math.max(1, e.timeStamp - z.t0) > 0.6;
+        const weit = Math.abs(dx) > z.el.getBoundingClientRect().width * 0.4;
+        z.el.style.removeProperty('translate');
+        z.el.style.removeProperty('opacity');
+        if (!(schnell || weit))
+            return;
+        if (z.wer)
+            gehen(z.wer);
+        else {
+            clearTimeout(toastTimer);
+            document.getElementById('toast')?.classList.remove('show');
+        }
+    };
+    addEventListener('pointerup', zugEnde, { capture: true });
+    addEventListener('pointercancel', zugEnde, { capture: true });
     /* ------------------------------------------------------------------------
      * EIN FUND DES UMZUGS. Hier stand `document.getElementById('toast')` und
      * danach sofort `t.textContent = text` — ohne nachzusehen, ob es das
@@ -51219,9 +51461,12 @@ const Hinweis = (() => {
             console.info('[Hinweis]', String(text));
             return { textContent: String(text ?? ''), remove() { } };
         }
+        const id = ++zaehler;
+        uebernehmen(t, id, String(text ?? ''));
         t.textContent = String(text ?? '');
         t.classList.add('show');
         clearTimeout(toastTimer);
+        toastBis = Date.now() + (dauer || 2600);
         toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
         return {
             /* JEDE MELDUNG HÄLT SICH SELBST AM LEBEN (E116).
@@ -51235,13 +51480,22 @@ const Hinweis = (() => {
                fremde Meldung dazwischen ist damit kurz zu sehen und wird von der
                nächsten Fortschreibung abgelöst, statt sie zu töten. */
             set textContent(v) {
+                uebernehmen(t, id, v);
                 t.textContent = v;
                 t.classList.add('show');
                 clearTimeout(toastTimer);
+                toastBis = Date.now() + (dauer || 2600);
                 toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
             },
             get textContent() { return t.textContent || ''; },
-            remove() { clearTimeout(toastTimer); t.classList.remove('show'); }
+            remove() {
+                /* Nur die eigene Meldung nehmen, eine fremde bleibt stehen. */
+                aeltere.filter(a => a.id === id).forEach(gehen);
+                if (eigner !== id && eigner !== 0)
+                    return;
+                clearTimeout(toastTimer);
+                t.classList.remove('show');
+            }
         };
     };
     /** Die Emoji-Auswahl mit Suchfeld liegt in notion.js. */
@@ -51284,7 +51538,254 @@ const Hinweis = (() => {
             ? `<button class="pe-link"${o.daten ? ' ' + o.daten : ''}>${o.handlung}</button>`
             : '') +
         '</div>';
-    return { toast, banner, leer };
+    /* DER FÄCHER AN DER GLOCKE (E711, Szene 08). Der Klick bleibt der
+       Posteingang (§43); DAZU fächern beim Zeigen, langen Drücken oder ↓ die
+       letzten drei Meldungen auf, mit „Alle gelesen" (E276: gelesen, nicht
+       leeren) und „Posteingang öffnen". */
+    let faecher = null;
+    let faecherGlocke = null;
+    let faecherUhr;
+    let faecherZu;
+    const faecherOffen = () => !!faecher && !faecher.hidden;
+    const faecherSchliessen = (sofort = false) => {
+        clearTimeout(faecherUhr);
+        clearTimeout(faecherZu);
+        const f = faecher;
+        if (!f || f.hidden)
+            return;
+        const fertig = () => { f.hidden = true; f.classList.remove('geht'); };
+        if (sofort || ruhig()) {
+            fertig();
+            return;
+        }
+        f.classList.add('geht');
+        const anim = f.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'ease-out' });
+        anim.finished.then(fertig).catch(fertig);
+    };
+    const zuDenMeldungen = () => {
+        faecherSchliessen(true);
+        try {
+            Ansichten.posteingang();
+        }
+        catch { /* ohne Posteingang bleibt es beim Fächer */ }
+    };
+    /** „Alle gelesen": die Karten fliessen zäh in die Glocke (EIN Goo-Filter, nur jetzt). */
+    const allesGelesen = () => {
+        const f = faecher, g = faecherGlocke;
+        const ziel = g && g.offsetParent !== null ? g.getBoundingClientRect() : null;
+        let wie = 0;
+        try {
+            wie = Werkzeuge.meldungenAlleGelesen() || 0;
+        }
+        catch { /* ohne Werkzeuge bleibt der Stand */ }
+        /* Wie der Knopf im Posteingang — vorgelesen; das Fliessen ist nur Bild. */
+        if (wie)
+            toast(wie === 1 ? '1 Meldung als gelesen markiert' : wie + ' Meldungen als gelesen markiert');
+        if (!f || !ziel || ruhig()) {
+            faecherSchliessen(true);
+            return;
+        }
+        const ebene = f.querySelector('.ru-faecher-karten');
+        const karten = [...f.querySelectorAll('.ru-meldung')];
+        if (!ebene || !karten.length) {
+            faecherSchliessen(true);
+            return;
+        }
+        f.classList.add('fliesst');
+        SelectionFlow.goo(ebene, true);
+        const mx = ziel.left + ziel.width / 2, my = ziel.top + ziel.height / 2;
+        const bahnen = karten.map((k, n) => {
+            const r = k.getBoundingClientRect();
+            const dx = mx - (r.left + r.width / 2), dy = my - (r.top + r.height / 2);
+            const s = Math.max(0.08, Math.min(ziel.width / r.width, 0.5));
+            return k.animate([
+                { transform: 'none' },
+                { transform: 'translate(' + (dx * 0.35).toFixed(1) + 'px,' + (dy * 0.55).toFixed(1) + 'px) scale(.9,.8)', offset: 0.45 },
+                { transform: 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(3) + ')', opacity: 0.4 }
+            ], { duration: 460 + n * 30, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' });
+        });
+        f.querySelector('.ru-faecher-fuss')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' });
+        const ende = () => {
+            SelectionFlow.goo(ebene, false);
+            f.classList.remove('fliesst');
+            bahnen.forEach(b => b.cancel());
+            faecherSchliessen(true);
+            g?.animate([{ transform: 'scale(1.18)' }, { transform: 'none' }], { duration: 320, easing: RedionSpring.token('press').easing });
+        };
+        Promise.all(bahnen.map(b => b.finished)).then(ende).catch(ende);
+    };
+    const faecherBauen = () => {
+        if (faecher)
+            return faecher;
+        const f = document.createElement('div');
+        f.id = 'ru-glocken-faecher';
+        f.setAttribute('role', 'group');
+        f.setAttribute('aria-label', 'Letzte Meldungen');
+        f.hidden = true;
+        f.addEventListener('pointerenter', () => clearTimeout(faecherZu));
+        f.addEventListener('pointerleave', (e) => {
+            if (e.pointerType === 'mouse')
+                faecherZu = setTimeout(() => faecherSchliessen(), 280);
+        });
+        f.addEventListener('click', (e) => {
+            const el = e.target instanceof Element ? e.target : null;
+            const knopf = el?.closest('button');
+            if (!knopf)
+                return;
+            if (knopf.dataset['faecher'] === 'gelesen') {
+                allesGelesen();
+                return;
+            }
+            if (knopf.dataset['faecher'] === 'posteingang') {
+                zuDenMeldungen();
+                return;
+            }
+            const id = knopf.dataset['meld'] || '';
+            const m = Werkzeuge.meldungen().find(x => x.id === id);
+            try {
+                if (id)
+                    Werkzeuge.meldungGelesen(id);
+            }
+            catch { /* bleibt ungelesen */ }
+            faecherSchliessen(true);
+            if (m?.seite)
+                App.oeffne(m.seite);
+            else
+                zuDenMeldungen();
+        });
+        f.addEventListener('keydown', (e) => {
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')
+                return;
+            const alle = [...f.querySelectorAll('button')];
+            const k = alle.indexOf(document.activeElement);
+            const n = alle[(k + (e.key === 'ArrowDown' ? 1 : alle.length - 1)) % alle.length];
+            if (n) {
+                e.preventDefault();
+                n.focus();
+            }
+        });
+        document.body.appendChild(f);
+        faecher = f;
+        return f;
+    };
+    const faecherOeffnen = (glocke, fokus = false) => {
+        clearTimeout(faecherUhr);
+        clearTimeout(faecherZu);
+        if (typeof Werkzeuge === 'undefined' || glocke.hidden || glocke.offsetParent === null)
+            return;
+        const liste = Werkzeuge.meldungen().slice(0, 3);
+        if (!liste.length)
+            return;
+        const f = faecherBauen();
+        faecherGlocke = glocke;
+        const zeit = (w) => { try {
+            return Werkzeuge.zeitKurz(w);
+        }
+        catch {
+            return '';
+        } };
+        f.innerHTML =
+            '<div class="ru-faecher-karten">' +
+                liste.map(m => `<button type="button" class="ru-meldung${m.gelesen ? '' : ' neu'}" data-meld="${esc(m.id)}">` +
+                    (m.quelle ? `<span class="ru-meldung-quelle">${esc(m.quelle)}</span>` : '') +
+                    `<span class="ru-meldung-text">${esc(m.text || 'Meldung')}</span>` +
+                    `<span class="ru-meldung-zeit">${esc(zeit(m.wann))}</span></button>`).join('') +
+                '</div>' +
+                '<div class="ru-faecher-fuss">' +
+                '<button type="button" data-faecher="gelesen">Alle gelesen</button>' +
+                '<button type="button" data-faecher="posteingang">Posteingang öffnen</button>' +
+                '</div>';
+        f.classList.remove('geht', 'fliesst');
+        f.hidden = false;
+        const g = glocke.getBoundingClientRect();
+        const breite = Math.min(340, innerWidth - 16);
+        f.style.width = breite + 'px';
+        f.style.left = Math.max(8, Math.min(g.right - breite, innerWidth - breite - 8)) + 'px';
+        f.style.top = (g.bottom + 8) + 'px';
+        if (!ruhig()) {
+            const feder = RedionSpring.token('snappy');
+            const mx = g.left + g.width / 2, my = g.top + g.height / 2;
+            [...f.querySelectorAll('.ru-meldung')].forEach((k, n) => {
+                const r = k.getBoundingClientRect();
+                k.animate([
+                    { transform: 'translate(' + (mx - r.left - r.width / 2).toFixed(1) + 'px,' +
+                            (my - r.top - r.height / 2).toFixed(1) + 'px) scale(.12)', opacity: 0 },
+                    { transform: 'none', opacity: 1 }
+                ], { duration: feder.duration, easing: feder.easing, delay: n * 40, fill: 'backwards' });
+            });
+            f.querySelector('.ru-faecher-fuss')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, delay: 120, fill: 'backwards' });
+        }
+        if (fokus)
+            f.querySelector('button')?.focus();
+    };
+    /** Eine Glocke bekommt den Fächer — einmal, der Klick bleibt ihrer. */
+    const faecherBinden = (glocke) => {
+        if (!glocke || glocke.dataset['faecher'] === 'an')
+            return;
+        glocke.dataset['faecher'] = 'an';
+        glocke.setAttribute('aria-haspopup', 'true');
+        let lang;
+        let schlucken = false;
+        let x0 = 0, y0 = 0;
+        glocke.addEventListener('pointerenter', (e) => {
+            if (e.pointerType !== 'mouse')
+                return;
+            clearTimeout(faecherZu);
+            faecherUhr = setTimeout(() => faecherOeffnen(glocke), 220);
+        });
+        glocke.addEventListener('pointerleave', (e) => {
+            if (e.pointerType !== 'mouse')
+                return;
+            clearTimeout(faecherUhr);
+            faecherZu = setTimeout(() => faecherSchliessen(), 280);
+        });
+        glocke.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'mouse')
+                return;
+            schlucken = false;
+            x0 = e.clientX;
+            y0 = e.clientY;
+            clearTimeout(lang);
+            lang = setTimeout(() => { schlucken = true; faecherOeffnen(glocke); }, 480);
+        });
+        glocke.addEventListener('pointermove', (e) => {
+            if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) > 10)
+                clearTimeout(lang);
+        });
+        const loslassen = () => clearTimeout(lang);
+        glocke.addEventListener('pointerup', loslassen);
+        glocke.addEventListener('pointercancel', loslassen);
+        glocke.addEventListener('contextmenu', (e) => { if (schlucken || faecherOffen())
+            e.preventDefault(); });
+        /* Nach langem Drücken ist der Klick keiner (sonst öffnete er auch den Posteingang). */
+        glocke.addEventListener('click', (e) => {
+            if (!schlucken) {
+                faecherSchliessen(true);
+                return;
+            }
+            schlucken = false;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }, true);
+        glocke.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                faecherOeffnen(glocke, true);
+            }
+        });
+    };
+    /** Escape ohne Fenster (E302): erst der Fächer, dann der Stapel. */
+    const escape = () => {
+        if (faecherOffen()) {
+            const g = faecherGlocke;
+            faecherSchliessen();
+            if (g && faecher?.contains(document.activeElement))
+                g.focus();
+            return true;
+        }
+        return stapelLeeren();
+    };
+    return { toast, banner, leer, faecherBinden, escape };
 })();
 window.Hinweis = Hinweis;
 
@@ -54317,8 +54818,220 @@ const SelectionFlow = (() => {
         if (/^(Arrow|Home$|End$)/.test(e.key))
             vormerken(e);
     }, true);
+    const gleitLaeufe = new WeakMap();
+    /** Ort und Tempo der vier Grössen jetzt, aus den Bahnen. */
+    const gleitStand = (g) => {
+        const t = g.anim && typeof g.anim.currentTime === 'number' ? g.anim.currentTime : g.dauer;
+        const z = [g.ziel.left, g.ziel.top, g.ziel.width, g.ziel.height];
+        return { werte: g.bahnen.map((b, k) => (z[k] ?? 0) + b(t).x), tempi: g.bahnen.map(b => b(t).v) };
+    };
+    /** Zu `nach` gleiten (Masse des `offsetParent`); umgelenkt mit Tempo. */
+    const glide = (marke, nach, sofort = false) => {
+        const alt = gleitLaeufe.get(marke);
+        /* Schon dort oder schon dorthin unterwegs: nichts (wie `folge`). */
+        if (alt && !sofort && Math.abs(alt.ziel.left - nach.left) < 0.5 && Math.abs(alt.ziel.top - nach.top) < 0.5
+            && Math.abs(alt.ziel.width - nach.width) < 0.5 && Math.abs(alt.ziel.height - nach.height) < 0.5)
+            return;
+        const jetzt = alt ? gleitStand(alt) : null;
+        alt?.anim?.cancel();
+        marke.style.left = nach.left + 'px';
+        marke.style.top = nach.top + 'px';
+        marke.style.width = nach.width + 'px';
+        marke.style.height = nach.height + 'px';
+        marke.style.transformOrigin = '0 0';
+        const ruhe = () => {
+            marke.style.transform = 'none';
+            marke.classList.remove('faehrt');
+            gleitLaeufe.set(marke, { ziel: nach, bahnen: [STILL, STILL, STILL, STILL], dauer: 0 });
+        };
+        if (!jetzt || sofort || ruhig() || !nach.width || !nach.height) {
+            ruhe();
+            return;
+        }
+        const z = [nach.left, nach.top, nach.width, nach.height];
+        const bahnen = z.map((zk, k) => bahnVon(FEDERN.knapp, (jetzt.werte[k] ?? zk) - zk, jetzt.tempi[k] ?? 0));
+        const [bx, by, bw, bh] = bahnen;
+        const weg = Math.max(...bahnen.map(b => Math.abs(b(0).x)), ...bahnen.map(b => Math.abs(b(0).v) * 60));
+        if (weg < 0.5) {
+            ruhe();
+            return;
+        }
+        const dauer = Math.max(...bahnen.map(b => ruheNach(b, 0.5)));
+        /* Dehnen nur zwischen Nachbarn (E641) — und in der Richtung, in der sie fährt. */
+        const senkrecht = Math.abs(by(0).x) >= Math.abs(bx(0).x);
+        const darf = senkrecht ? Math.abs(by(0).x) <= 1.35 * Math.max(nach.height, (jetzt.werte[3] ?? 0))
+            : Math.abs(bx(0).x) <= 1.35 * Math.max(nach.width, (jetzt.werte[2] ?? 0));
+        const bild = (t) => {
+            const w = nach.width + bw(t).x, h = nach.height + bh(t).x;
+            let kx = w / nach.width, ky = h / nach.height;
+            let tx = bx(t).x, ty = by(t).x;
+            if (darf) {
+                const d = dehnungAus(senkrecht ? by(t).v : bx(t).v);
+                if (senkrecht) {
+                    ty -= h * (d - 1) / 2;
+                    ky *= d;
+                }
+                else {
+                    tx -= w * (d - 1) / 2;
+                    kx *= d;
+                }
+            }
+            return { transform: 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px)'
+                    + ' scale(' + kx.toFixed(4) + ',' + ky.toFixed(4) + ')' };
+        };
+        const bilder = [];
+        for (let t = 0; t <= dauer; t += SCHRITT)
+            bilder.push(bild(t));
+        bilder.push({ transform: 'none' });
+        const anim = marke.animate(bilder, { duration: dauer, easing: 'linear', fill: 'forwards' });
+        gleitLaeufe.set(marke, { ziel: nach, bahnen, dauer, anim });
+        marke.classList.add('faehrt');
+        marke.dataset['fluege'] = String(Number(marke.dataset['fluege'] ?? 0) + 1);
+        anim.finished.then(() => {
+            if (gleitLaeufe.get(marke)?.anim !== anim)
+                return; /* schon umgelenkt */
+            ruhe();
+            anim.cancel();
+        }).catch(() => { });
+    };
+    /** Lage im Träger aus dem LAYOUT: eine hereinkommende Zeile steht noch tiefer. */
+    const lageIn = (traeger, el) => {
+        let x = 0, y = 0;
+        let e = el;
+        while (e && e !== traeger) {
+            x += e.offsetLeft;
+            y += e.offsetTop;
+            const p = e.offsetParent;
+            if (p && p !== traeger) {
+                x += p.clientLeft - p.scrollLeft;
+                y += p.clientTop - p.scrollTop;
+            }
+            e = p;
+        }
+        if (e === traeger)
+            return { left: x, top: y, width: el.offsetWidth, height: el.offsetHeight };
+        const t = traeger.getBoundingClientRect(), r = el.getBoundingClientRect();
+        return { left: r.left - t.left - traeger.clientLeft + traeger.scrollLeft,
+            top: r.top - t.top - traeger.clientTop + traeger.scrollTop, width: r.width, height: r.height };
+    };
+    const markenVon = new WeakMap();
+    /** DIE EINE Marke einer Liste auf die Wahl (Suche, Palette, Menü mit Suche);
+     *  sie überlebt ein `innerHTML`. `taste`: Chip („↵ Enter"); `still`: leise. */
+    const highlight = (liste, ziel, o = {}) => {
+        let m = markenVon.get(liste);
+        if (!m) {
+            m = document.createElement('i');
+            m.className = 'ru-marke' + (o.still ? ' ru-marke-still' : '');
+            m.setAttribute('aria-hidden', 'true');
+            if (o.taste) {
+                const t = document.createElement('span');
+                t.className = 'ru-marke-taste';
+                t.textContent = o.taste;
+                m.appendChild(t);
+            }
+            markenVon.set(liste, m);
+        }
+        liste.classList.add('ru-marke-traeger');
+        if (m.parentElement !== liste)
+            liste.prepend(m);
+        if (!ziel || !ziel.isConnected || !ziel.offsetWidth) {
+            m.hidden = true;
+            return m;
+        }
+        const warDa = !m.hidden && gleitLaeufe.has(m);
+        m.hidden = false;
+        glide(m, lageIn(liste, ziel), !warDa);
+        return m;
+    };
+    const gesehen = new WeakMap();
+    /** Nur NEUE Zeilen kommen nacheinander (`--ru-n`); was dastand, bleibt. */
+    const stagger = (liste, zeilen, schluessel) => {
+        const vorher = gesehen.get(liste);
+        const jetzt = new Set();
+        const ruhe = ruhig();
+        let n = 0;
+        zeilen.forEach((z, k) => {
+            const s = schluessel[k] ?? String(k);
+            jetzt.add(s);
+            if (ruhe || vorher?.has(s))
+                return;
+            if (n < 10) {
+                z.classList.add('ru-kommt');
+                z.style.setProperty('--ru-n', String(n));
+            }
+            n++;
+        });
+        gesehen.set(liste, jetzt);
+    };
+    /** Aus dem Knopf aufgehen, auf `--feder-sanft` (E702). Die Scheibe per
+     *  `transform`; nur ihr Inhalt blendet (Glas, E703). */
+    const growFrom = (fenster, anker) => {
+        if (!anker || !anker.width || !anker.height || ruhig())
+            return null;
+        const { easing, duration } = RedionSpring.token('smooth');
+        if (!(duration > 2))
+            return null;
+        /* Erst die eigene Ankunft ab, dann messen (`glas-ankunft` verschöbe es). */
+        fenster.classList.add('ru-waechst');
+        const r = fenster.getBoundingClientRect();
+        if (!r.width || !r.height)
+            return null;
+        fenster.style.transformOrigin = '0 0';
+        const von = 'translate(' + (anker.left - r.left).toFixed(1) + 'px,' + (anker.top - r.top).toFixed(1) + 'px)'
+            + ' scale(' + (anker.width / r.width).toFixed(4) + ',' + (anker.height / r.height).toFixed(4) + ')';
+        const inhalt = Math.min(duration, 460);
+        Array.from(fenster.children).forEach(k => {
+            if (k instanceof HTMLElement)
+                k.animate([{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1 }], { duration: inhalt, easing: 'linear' });
+        });
+        return fenster.animate([{ transform: von }, { transform: 'none' }], { duration, easing });
+    };
+    /* DER EINE GOO-FILTER (E711, Szene 08): verwischen, dann Alpha steil
+       (×18 − 7) — Flächen bekommen Hälse. EIN Filter im Dokument, an EINER
+       Ebene nur, solange sie fliesst; nie animiert; ruhig: keiner. */
+    const SVG = 'http://www.w3.org/2000/svg';
+    const gooFilter = () => {
+        if (document.getElementById('ru-goo'))
+            return;
+        const svg = document.createElementNS(SVG, 'svg');
+        svg.setAttribute('id', 'ru-goo-svg');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.setAttribute('focusable', 'false');
+        const filter = document.createElementNS(SVG, 'filter');
+        filter.setAttribute('id', 'ru-goo');
+        filter.setAttribute('color-interpolation-filters', 'sRGB');
+        const blur = document.createElementNS(SVG, 'feGaussianBlur');
+        blur.setAttribute('in', 'SourceGraphic');
+        blur.setAttribute('stdDeviation', '8');
+        blur.setAttribute('result', 'weich');
+        const matrix = document.createElementNS(SVG, 'feColorMatrix');
+        matrix.setAttribute('in', 'weich');
+        matrix.setAttribute('mode', 'matrix');
+        matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
+        matrix.setAttribute('result', 'goo');
+        const oben = document.createElementNS(SVG, 'feComposite');
+        oben.setAttribute('in', 'SourceGraphic');
+        oben.setAttribute('in2', 'goo');
+        oben.setAttribute('operator', 'atop');
+        filter.append(blur, matrix, oben);
+        svg.appendChild(filter);
+        document.body.appendChild(svg);
+    };
+    /** Die Ebene fliesst (an) oder ruht (aus). Gibt zurück, ob sie fliesst. */
+    const goo = (ebene, an) => {
+        if (!an || ruhig()) {
+            ebene.classList.remove('ru-goo-an');
+            return false;
+        }
+        gooFilter();
+        ebene.classList.add('ru-goo-an');
+        return true;
+    };
     return {
         folge, fliege, setze, stand, ziehbar, ruhig,
+        glide, highlight, stagger, growFrom, goo,
         druecke: { ein: drueckeEin, los: lasseLos },
         FEDERN, DAUER, OMEGA, DEHNUNG_MAX
     };
@@ -117358,9 +118071,30 @@ const Werkzeuge = (() => {
                     ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
                         'tipp einen Namen, um sie zu finden</div>'
                     : '');
+            /* Wie in der Suche (E711): neue Zeilen kommen nacheinander, EINE Marke
+               gleitet zur Wahl — `SelectionFlow`, dasselbe Material (§8). */
+            const zeilen = [...res.querySelectorAll('button[data-i]')];
+            SelectionFlow.stagger(res, zeilen, zeilen.map(b => String(sicht[Number(b.dataset['i'])]?.name ?? '')));
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, res.querySelector('button.on'), { taste: '↵ Enter' });
         };
         zeichne();
+        /* ↑ ↓ OHNE NEUBAU (E711): nur `.on` wandert, die Marke gleitet hin. */
+        const waehle = (k) => {
+            const n = Math.min(treffer.length, GEZEIGT);
+            if (!n)
+                return;
+            i = Math.max(0, Math.min(k, n - 1));
+            res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+            const neu = res.querySelector(`button[data-i="${i}"]`);
+            if (!neu) {
+                zeichne();
+                return;
+            }
+            neu.classList.add('on');
+            neu.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
+        };
         const fuehreAus = (t) => {
             o.remove();
             merkeBefehl(t.name, t.gruppe);
@@ -117408,13 +118142,11 @@ const Werkzeuge = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, Math.min(treffer.length, GEZEIGT) - 1);
-                zeichne();
+                waehle(i + 1);
             }
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                i = Math.max(i - 1, 0);
-                zeichne();
+                waehle(i - 1);
             }
             if (e.key === 'Enter' && treffer[i]) {
                 e.preventDefault();
@@ -123182,12 +123914,18 @@ const Ansichten = (() => {
                     : '') +
                 /* Was Automationen gemeldet haben — Notions „Send notification to" */
                 (meld.length
-                    ? '<h2>Benachrichtigungen</h2><div class="home-liste">' +
-                        meld.slice(0, 30).map((m) => `<button data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
+                    /* ALS GLASKARTEN (E711, Szene 08 aus Redurs Video): die Quelle
+                       als kleine Marke über dem Text, die Zeit rechts. Dieselben
+                       Daten, derselbe Griff (`data-meld`, `data-open`) — nur die
+                       Form. Keine eigene Unschärfe je Karte (die Liste liegt auf
+                       ruhigem Grund; Glas heisst hier Lichtkante und Tiefe). */
+                    ? '<h2>Benachrichtigungen</h2><div class="home-liste pe-karten">' +
+                        meld.slice(0, 30).map((m) => `<button class="pe-karte${m.gelesen ? '' : ' neu'}" data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
                             `<span>${m.gelesen ? '🔕' : '🔔'}</span>` +
-                            `<span style="flex:1">${esc(m.text)}` +
-                            (m.quelle ? `<em style="opacity:.6"> — ${esc(m.quelle)}</em>` : '') + '</span>' +
-                            `<span style="opacity:.5">${Werkzeuge.zeitKurz(m.wann)}</span></button>`).join('') +
+                            `<span class="pe-karte-inhalt">` +
+                            (m.quelle ? `<span class="pe-quelle">${esc(m.quelle)}</span>` : '') +
+                            `<span class="pe-karte-text">${esc(m.text)}</span></span>` +
+                            `<span class="pe-karte-zeit">${Werkzeuge.zeitKurz(m.wann)}</span></button>`).join('') +
                         '</div>'
                     : '') +
                 '<h2>Erinnerungen</h2><div class="home-liste">' +
@@ -178729,6 +179467,8 @@ const Menueband = (() => {
             }
             catch { /* ohne Posteingang bleibt die Leiste */ }
         });
+        /* Derselbe Fächer wie an der Glocke im Studio-Kopf (E711). */
+        Hinweis.faecherBinden(glocke);
         rechts.appendChild(glocke);
         /* ── WAS GERADE LÄUFT (L103 Punkt 3, E322) ──────────────────────────
            Dieselbe Regel wie bei der Glocke daneben: ohne offene Aufträge ist
@@ -180882,6 +181622,9 @@ const StudioSchale = (() => {
             Ansichten.posteingang();
         }
         catch { /* ohne Posteingang bleibt der Kopf */ } });
+        /* Der Klick bleibt der Posteingang; beim Zeigen fächern die letzten
+           drei Meldungen auf (E711, hinweis.ts). */
+        Hinweis.faecherBinden(document.getElementById('studio-glocke'));
         /* Die Sterne (E463): sie stehen nur, solange ein Auftrag läuft, und
            öffnen dasselbe Fenster wie der Knopf im Menüband. */
         an('studio-auftraege', () => {
@@ -183483,6 +184226,14 @@ const App = (() => {
                 '<code>status:offen</code></span></div>' +
                 '</div>';
         document.body.appendChild(o);
+        /* DIE KAPSEL WÄCHST ZUM FELD (E711, Szene 07): aus dem sichtbaren
+           Suchknopf, auch bei Strg P / Strg K; ohne ihn (und ruhig) wie bisher. */
+        const kapsel = ['studio-search', 'btn-suche-handy', 'mb-suche']
+            .map(id => document.getElementById(id))
+            .find(k => !!k && k.offsetParent !== null && k.getBoundingClientRect().width > 0);
+        const scheibe = o.querySelector('.finder.such');
+        if (scheibe && kapsel)
+            SelectionFlow.growFrom(scheibe, kapsel.getBoundingClientRect());
         const inp = o.querySelector('#q');
         const res = o.querySelector('#res');
         if (!inp || !res)
@@ -183568,7 +184319,8 @@ const App = (() => {
                 (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
                 `</span><span class="pth">${t.treffer}</span></button>`).join('');
             verlaufBinden();
-            res.querySelectorAll('button[data-i]').forEach(b => {
+            const zeilen = [...res.querySelectorAll('button[data-i]')];
+            zeilen.forEach(b => {
                 b.addEventListener('click', () => {
                     merkeSuche(inp.value);
                     zumTreffer(treffer[Number(b.dataset.i)]);
@@ -183576,7 +184328,29 @@ const App = (() => {
                 });
                 b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
             });
+            /* Neue Treffer kommen nacheinander (Schlüssel: Seite und Stelle), die Marke gleitet (E711). */
+            SelectionFlow.stagger(res, zeilen, zeilen.map(b => {
+                const t = treffer[Number(b.dataset.i)];
+                return String(t?.page?.id ?? '') + '#' + String(t?.blockId ?? '');
+            }));
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, res.querySelector('button.on'), { taste: '↵ Enter' });
+            zeigeVorschau(i);
+        };
+        /* ↑ ↓ OHNE NEUBAU (E711): hier stand `zeichne()` — jetzt wandert nur `.on`. */
+        const waehle = (k) => {
+            if (!treffer.length)
+                return;
+            i = Math.max(0, Math.min(k, treffer.length - 1));
+            res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+            const neu = res.querySelector(`button[data-i="${i}"]`);
+            if (!neu) {
+                zeichne();
+                return;
+            }
+            neu.classList.add('on');
+            neu.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
             zeigeVorschau(i);
         };
         /* Rechts eine kleine Vorschau der markierten Seite */
@@ -183777,6 +184551,7 @@ const App = (() => {
                     o.remove();
                     void Chronik.oeffnen();
                 });
+                SelectionFlow.highlight(res, res.querySelector('[data-chr-tuer]'), { taste: '↵ Enter' });
                 return;
             }
             const uiFilters = readUiFilters();
@@ -183908,13 +184683,11 @@ const App = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, treffer.length - 1);
-                zeichne();
+                waehle(i + 1);
             }
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                i = Math.max(i - 1, 0);
-                zeichne();
+                waehle(i - 1);
             }
             if (e.key === 'Enter' && treffer[i]) {
                 zumTreffer(treffer[i]);
@@ -185936,6 +186709,9 @@ const App = (() => {
                 m.remove();
             else if (o)
                 o.remove();
+            /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff). */
+            else if (typeof Hinweis !== 'undefined')
+                Hinweis.escape();
         });
     };
     /* ========================================================================

@@ -1,5 +1,26 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E711 · Die Suche wächst aus der Kapsel, die Meldungen stapeln sich
+
+**Redur:** um ca. 22:05 das Video „Liquid Glass" und dazu „Schau mal das
+auch an ich will das auch haben"; um ca. 22:10 „… bessere übergagnge
+besssere efeckten , bessere oberfläsche alles …" — „ohne eine funktione
+löschen".
+
+**Gebaut:** Die Suche geht aus dem Knopf auf, der sie trägt
+(`SelectionFlow.growFrom`, `--feder-sanft`); neue Treffer kommen
+nacheinander (`stagger`, nur die neuen); EINE Marke gleitet mit ↑ ↓ auf der
+Kit-Feder zur Wahl (`highlight`/`glide`, vier Bahnen, umlenkbar) — in der
+Suche, der Befehlspalette und im Menü mit Suche, ohne die Liste je Pfeil
+neu zu bauen; „↵ Enter" auf der Marke. `#toast` wird ein Stapel aus bis zu
+drei Meldungen (`#ru-toast-stapel`), Escape räumt ab, ein Finger wischt
+weg. Die Glocke öffnet weiter den Posteingang und fächert beim Zeigen oder
+langen Drücken die letzten drei Meldungen auf; „Alle gelesen" fliesst zäh
+in sie zurück (EIN Goo-Filter, nur während es fliesst). Der Posteingang
+zeigt Glaskarten.
+
+**Geprüft:** `test588` (rot auf `b3cf1933`), Nachbarn in E711.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

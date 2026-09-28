@@ -337,9 +337,12 @@ const Menue = (() => {
 
     const markiere = (b: HTMLElement | null | undefined): void => {
       liste.querySelectorAll('button.jetzt').forEach(x2 => x2.classList.remove('jetzt'));
-      if (!b) return;
+      /* Die leise Marke gleitet mit (E711) — dasselbe Material wie in der
+         Suche und der Palette, hier als Fläche statt Akzent. */
+      if (!b) { SelectionFlow.highlight(liste, null, { still: true }); return; }
       b.classList.add('jetzt');
       b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      SelectionFlow.highlight(liste, b, { still: true });
     };
 
     /* Der Filter kennt die Form des Menüs nicht: Knöpfe können direkt

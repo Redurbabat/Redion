@@ -200,6 +200,15 @@ Richtung herein — getippt wie gewischt. Die Federn stehen als
 sagt es `data-ui-motion="reduce"` (ihre Federn in JavaScript hören darauf,
 sobald das Kit ab UI-Kit 13e7844 geholt ist, L222).
 
+Seit E711 geht die Suche (Strg P, Strg K, die Lupe) aus dem Knopf auf, der
+sie trägt; neue Treffer kommen nacheinander, und mit ↑ ↓ gleitet EINE Marke
+zur Wahl — in der Suche, in den Befehlen (Strg ⇧ K) und im Menü mit Suche.
+Drei Meldungen hintereinander stehen als Stapel übereinander, statt dass
+nur die letzte bleibt; Escape räumt sie ab, am Telefon wischt ein Finger
+eine weg. Ein Klick auf die Glocke öffnet wie immer den Posteingang; wer
+auf ihr verweilt oder sie lange drückt, sieht die letzten drei Meldungen
+mit „Alle gelesen" (liest, löscht nichts) und „Posteingang öffnen".
+
 
 Schnellstart
 

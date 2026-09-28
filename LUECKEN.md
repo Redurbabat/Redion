@@ -8348,6 +8348,51 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L232 · Suche und Meldungen nach E711 — was aus den Szenen 07 und 08 noch fehlt — 28. September 2026
+
+**Gefunden beim Bau von E711**, als Rest seines Auftrags. Redur hat am
+27. September um ca. 22:05 das Video „Liquid Glass" geschickt: „Schau mal
+das auch an ich will das auch haben". E711 hat daraus gebaut: die Suche
+wächst aus der Kapsel, neue Treffer kommen nacheinander, EINE Marke gleitet
+mit ↑ ↓ (Suche, Befehlspalette, Menü mit Suche) und trägt „↵ Enter";
+`#toast` wird ein Stapel aus bis zu drei Meldungen; die Glocke fächert die
+letzten drei auf und fliesst nach „Alle gelesen" in sich zurück; der
+Posteingang zeigt Glaskarten (`test588`).
+
+**Was fehlt, ausdrücklich:**
+
+1. **Escape in der Suche leert zuerst das Feld** (Szene 07: „Escape clears
+   the text first and, pressed again, closes"). Heute schliesst Escape
+   sofort, wie seit jeher; mehrere Läufe verlassen sich darauf. Braucht
+   einen eigenen Lauf, der beide Wege zeigt.
+2. **Die Liste als Combobox für den Vorleser** (`role="combobox"` am Feld,
+   `listbox`/`option`, `aria-activedescendant`). Die Marke ist nur Bild
+   (`aria-hidden`); gesagt wird die Wahl heute nicht.
+3. **Enter als Übergabe** (Szene 07, 13,40–13,75 s): die Scheibe hebt sich,
+   der Inhalt geht, die Fläche wird zur Meldung. Heute schliesst Enter und
+   öffnet — ohne die Übergabe.
+4. **Der Kick und der Tropfen** (Szene 08, 14,50 s): vor dem
+   Zusammenfliessen ein kurzer Schlag (Skalierung und Drehung), danach ein
+   Glastropfen als „nichts mehr da". Bewusst weggelassen (ruhig, §39);
+   Redur entscheidet, ob er es will.
+5. **Wischen mit der Maus.** Am Rechner greifen die Karten des Stapels nicht
+   nach dem Zeiger (wie `#toast`, sonst verschluckten sie Klicks auf das
+   darunter); weggenommen werden sie dort mit Escape oder von selbst.
+6. **EIN Goo-Filter für alle Zweige.** `SelectionFlow.goo` legt `#ru-goo`
+   einmal an. Die Zweige `claude/loeschen-fluessig` (E709) und
+   `claude/tropfen-und-kacheln` (E712) bauen dieselbe Technik; beim
+   Zusammenführen bleibt EIN Filter.
+
+7. **Meldungen als Glas.** Der Auftrag nannte „glass toasts"; E703 (c) hat
+   Glas für Toast und Lader verworfen (doppelter Druck beim Einblenden über
+   `opacity`, Glas auf Glas). Der Stapel ist deshalb deckend mit
+   Lichtkante. Glas hier nur, wenn Redur E703 (c) dafür aufhebt.
+
+**Was es NICHT ist:** kein Fehler. Jeder Griff geht wie vorher (Klick auf
+die Glocke, Strg P, Strg K, `#q`, `[data-i]`, Enter, Escape).
+
+---
+
 ## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
 
 **Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
@@ -9178,7 +9223,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 125 Lücken, 69 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -1143,6 +1143,14 @@ const App = (() => {
       '</div>';
     document.body.appendChild(o);
 
+    /* DIE KAPSEL WÄCHST ZUM FELD (E711, Szene 07): aus dem sichtbaren
+       Suchknopf, auch bei Strg P / Strg K; ohne ihn (und ruhig) wie bisher. */
+    const kapsel = ['studio-search', 'btn-suche-handy', 'mb-suche']
+      .map(id => document.getElementById(id))
+      .find(k => !!k && k.offsetParent !== null && k.getBoundingClientRect().width > 0);
+    const scheibe = o.querySelector<HTMLElement>('.finder.such');
+    if (scheibe && kapsel) SelectionFlow.growFrom(scheibe, kapsel.getBoundingClientRect());
+
     const inp = o.querySelector<HTMLInputElement>('#q');
     const res = o.querySelector<HTMLElement>('#res');
     if (!inp || !res) return;
@@ -1221,14 +1229,34 @@ const App = (() => {
           (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
       verlaufBinden();
-      res.querySelectorAll<HTMLElement>('button[data-i]').forEach(b => {
+      const zeilen = [...res.querySelectorAll<HTMLElement>('button[data-i]')];
+      zeilen.forEach(b => {
         b.addEventListener('click', () => {
           merkeSuche(inp.value);
           zumTreffer(treffer[Number(b.dataset.i)]); o.remove();
         });
         b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
       });
+      /* Neue Treffer kommen nacheinander (Schlüssel: Seite und Stelle), die Marke gleitet (E711). */
+      SelectionFlow.stagger(res, zeilen, zeilen.map(b => {
+        const t = treffer[Number(b.dataset.i)];
+        return String(t?.page?.id ?? '') + '#' + String(t?.blockId ?? '');
+      }));
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, res.querySelector<HTMLElement>('button.on'), { taste: '↵ Enter' });
+      zeigeVorschau(i);
+    };
+
+    /* ↑ ↓ OHNE NEUBAU (E711): hier stand `zeichne()` — jetzt wandert nur `.on`. */
+    const waehle = (k: number): void => {
+      if (!treffer.length) return;
+      i = Math.max(0, Math.min(k, treffer.length - 1));
+      res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+      const neu = res.querySelector<HTMLElement>(`button[data-i="${i}"]`);
+      if (!neu) { zeichne(); return; }
+      neu.classList.add('on');
+      neu.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
       zeigeVorschau(i);
     };
 
@@ -1418,6 +1446,7 @@ const App = (() => {
           o.remove();
           void Chronik.oeffnen();
         });
+        SelectionFlow.highlight(res, res.querySelector<HTMLElement>('[data-chr-tuer]'), { taste: '↵ Enter' });
         return;
       }
       const uiFilters = readUiFilters();
@@ -1543,8 +1572,8 @@ const App = (() => {
 
     inp.addEventListener('keydown', e => {
       if (e.key === 'Escape') { o.remove(); return; }
-      if (e.key === 'ArrowDown') { e.preventDefault(); i = Math.min(i + 1, treffer.length - 1); zeichne(); }
-      if (e.key === 'ArrowUp')   { e.preventDefault(); i = Math.max(i - 1, 0); zeichne(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); waehle(i + 1); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); waehle(i - 1); }
       if (e.key === 'Enter' && treffer[i]) { zumTreffer(treffer[i]); o.remove(); }
     });
 
@@ -3411,6 +3440,8 @@ const App = (() => {
       const o = letztes('.overlay');
       if (m) m.remove();
       else if (o) o.remove();
+      /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff). */
+      else if (typeof Hinweis !== 'undefined') Hinweis.escape();
     });
   };
 
