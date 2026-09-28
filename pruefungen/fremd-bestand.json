@@ -69,17 +69,17 @@
     {
       "pfad": "fremd/touch",
       "paket": "Touch Kit (Redurbabat/UI-Kit, Ordner app/src/touch)",
-      "fassung": "c192821f4bfa902a1efa1db9120941d51124211b",
+      "fassung": "d21c402118cff538ae204a3ad9ad241059fe2be4",
       "bau": "skripte/touch-holen.mts (aus dem Commit, ohne *.test.* und test/)",
       "herkunft": "https://github.com/Redurbabat/UI-Kit",
       "lizenz": "eigener Code von Redur (UI-Kit) — ausser glass/field.ts und glass/filter.ts, siehe nächster Eintrag",
       "lizenzdatei": "fremd/touch/glass/LIZENZ-ALEXalesha.txt",
-      "begruendung": "Redur, 27. September 2026: „React 19.3.0, Touch Kit (dein UI-Kit), Glas-Code (ALEXalesha, MIT)\". Die Bauteile des Kits werden als Inseln in quell/islands/islands.js gebündelt; siehe ENTSCHEIDUNGEN.md E699.",
+      "begruendung": "Redur, 27. September 2026: „React 19.3.0, Touch Kit (dein UI-Kit), Glas-Code (ALEXalesha, MIT)\". Die Bauteile des Kits werden als Inseln in quell/islands/islands.js gebündelt; siehe ENTSCHEIDUNGEN.md E699. Neu geholt am 28. September 2026 von d21c402 (E710): strenge Typen, data-ui-motion, Hinweis und buttonProps an Dialog und Aktionsblatt — Redurs neuester Stand („was du beim touckit gebaut hast ich will alles so haben mit redion passende inhalten\").",
       "enthaelt": [
         {
           "datei": "HERKUNFT.txt",
-          "bytes": 9161,
-          "sha256": "0d03f826944e8db6f2a49a2003170a3d176d273d1b87d37e2a2d47a61959e058",
+          "bytes": 9794,
+          "sha256": "9315fea73c4a3592f9f2b730cd92cb20a9c5e94ac979ba1ef6d36141232d67d2",
           "zeigt": "jede Datei der Kopie mit ihrer sha256 — test578 rechnet jede nach"
         }
       ],
@@ -97,13 +97,13 @@
       "enthaelt": [
         {
           "datei": "field.ts",
-          "bytes": 3858,
-          "sha256": "0bc49574b721a03f0b82dab4df822e562bd096b1c7c3c9aa18bc5e09b30520d3"
+          "bytes": 4042,
+          "sha256": "ca1069501160642694780ddc4383d8cdf702433048019798a93295b756f29c4b"
         },
         {
           "datei": "filter.ts",
-          "bytes": 3052,
-          "sha256": "18b7dbd0b2d9d87c9a8ad603c0f623699f335edd935b4149dffb73e26fbd493f"
+          "bytes": 3076,
+          "sha256": "2b5df85b018cace35cbdd99981e27ac14187a03788dc0ead44bf839f0ed08355"
         },
         {
           "datei": "LIZENZ-ALEXalesha.txt",

@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react'
+import { useId, useRef, type ComponentPropsWithoutRef, type ReactNode } from 'react'
 import { Glyph, type GlyphName } from '../icons/Glyph'
 import { cx } from '../internal/cx'
 import { usePress } from '../internal/usePress'
@@ -9,49 +9,66 @@ import './ActionSheet.css'
 
 export interface ActionSheetAction {
   label: string
-  icon?: GlyphName
-  destructive?: boolean
-  disabled?: boolean
-  onSelect?: () => void
+  /** Short second line under the label. Screen readers hear it as the button's description, not its name. */
+  hint?: ReactNode | undefined
+  icon?: GlyphName | undefined
+  destructive?: boolean | undefined
+  disabled?: boolean | undefined
+  onSelect?: (() => void) | undefined
+  /** Extra attributes for the button, e.g. an id or data-* hooks. Type, click and disabled stay the sheet's. */
+  buttonProps?: Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'onClick' | 'disabled' | 'children'> | undefined
 }
 
 export interface ActionSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Optional heading; the sheet is always labelled (falls back to the cancel label). */
-  title?: string
-  message?: string
+  title?: string | undefined
+  message?: string | undefined
   actions: ActionSheetAction[]
   /** Label of the separate cancel button. Escape and scrim taps also cancel. */
-  cancelLabel?: string
-  container?: HTMLElement | null
+  cancelLabel?: string | undefined
+  container?: HTMLElement | null | undefined
 }
 
 const EXIT_MS = 240
 
 function ActionButton({
   label,
+  hint,
   icon,
   destructive,
   disabled,
   bold,
+  buttonProps: own,
   onClick,
 }: ActionSheetAction & { bold?: boolean; onClick: () => void }) {
   const { pressProps } = usePress<HTMLButtonElement>({}, disabled)
+  const hintId = useId()
   return (
     <button
+      {...own}
       type="button"
       {...pressProps}
       className={cx(
         'ui-touch-action-sheet-button',
         destructive && 'ui-touch-action-sheet-button--destructive',
         bold && 'ui-touch-action-sheet-button--cancel',
+        own?.className,
       )}
+      aria-describedby={hint ? hintId : own?.['aria-describedby']}
       disabled={disabled}
       onClick={onClick}
     >
       {icon && <Glyph name={icon} size={20} />}
-      {label}
+      <span className="ui-touch-action-sheet-button-text">
+        <span className="ui-touch-action-sheet-button-label">{label}</span>
+        {hint && (
+          <span id={hintId} className="ui-touch-action-sheet-button-hint">
+            {hint}
+          </span>
+        )}
+      </span>
     </button>
   )
 }

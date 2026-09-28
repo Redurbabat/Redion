@@ -8348,6 +8348,47 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L231 · Noch 45 Fenster des Browsers: confirm, prompt und alert — 28. September 2026
+
+**Seit E710** fragen `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig`
+im Fenster des Touch Kits, und für `confirm()` und `alert()` gibt es
+`Dialog.bestaetigen` und `Dialog.melden`. Sechs Stellen sind umgezogen (die
+Gefahrzone der Einstellungen und das Löschen mehrerer Datenbankzeilen).
+**45 stehen noch** in `src/` — grau, anhaltend, ohne roten Knopf; `test587`
+§10 zählt sie und lässt die Zahl nur sinken.
+
+```txt
+schale.ts            8   Papierkorb leeren/löschen (confirm), Sicherung
+                         und Einspielen (alert, fünfmal)
+wissen/werkzeuge.ts 11   Verschlüsseln: Passwort zweimal (prompt), Fehler
+                         (alert) — test265 §7 beantwortet das Passwort über
+                         das Fenster des Browsers; Titel/Notiz (prompt),
+                         Fassung wiederherstellen (confirm)
+datenbanken/         8   Optionen, Ansichten, Datenbank benennen (prompt),
+steuerung.ts             Zeilen, Spalte, Datenbank löschen (confirm)
+verbinden/           6   Abmelden, Wolke, Besprechung (confirm)
+übrige              12   Editor-Knopf, Links, Erwähnung (Datum), KI-Websuche,
+                         Fassungen, Zeichenfläche leeren, Protokoll,
+                         Ordnersicherung, OCR-Adresse, Chronik-Zugang,
+                         Staatskunde
+```
+
+**Warum nicht alle in E710.** Viele liegen an Wegen, die ein Prüflauf über
+das Fenster des Browsers bedient (`page.on('dialog', …)`): der Umzug muss
+dort im selben Bogen den Lauf mitnehmen, sonst wartet er auf ein Fenster,
+das nicht mehr kommt. Und aus einem `confirm()` in einer gewöhnlichen
+Funktion wird ein `await` — jede Stelle braucht einen Blick darauf, ob
+danach etwas stillschweigend vorausgesetzt hat, dass die Antwort sofort da
+ist (E710 hat dafür bei den Datenbankzeilen das Löschen in das `then`
+gezogen).
+
+**Was fehlt:** je Datei umziehen, mit ihrem Lauf (rot zuerst), und den
+Bestand in `test587` §10 senken. Das Passwort des Verschlüsselns gehört
+zuerst dazu: `Dialog.frage(…, 'passwort')` zeigt es nicht im Klartext —
+das Fenster des Browsers schon. Geschlossen ist die Lücke bei 0.
+
+---
+
 ## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
 
 **Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
@@ -8672,6 +8713,20 @@ dieselbe verkehrte Folge an zwei Stellen (`.ru-fach-art` in
 sind umgedreht, und `test582` §11 hält die Folge für jedes Blatt unter
 `quell/schale/stil/` und für `src/islands/bridge.css`. Im Kit bleibt Punkt 3
 offen (UI-Kit schreibt die Folge in `Button.css` weiter verkehrt).
+
+**Nachgesehen am 28. September (E710): neu geholt von d21c402.** Punkt 1
+ist geschlossen: `tsconfig.islands.json` trägt Redions strenge Schalter,
+und das Kit ist darunter sauber (`test578` §8 prüft beides). Punkt 2 ist
+geschlossen: die Brücke spiegelt „ruhig" nach `data-ui-motion="reduce"`
+(`test587` §4). Punkt 4 ist geschlossen (der MIT-Text steht in UI-Kits
+README-Anhang; Redions Kopie daneben bleibt). Punkt 6 ist für die Dialoge
+gelöst — die Brücke legt die Akzentmarke des Kits in Dialog und
+Aktionsblatt auf `--accent-text` (`test587` §5, zehn Schemata ≥ 4,5 : 1);
+eine eigene Marke im Kit fehlt weiter. Punkt 3 gilt auch für Dialog und
+Aktionsblatt (lightningcss fasst dort die Glas-Folge zusammen); die
+Brücke setzt dort Redions Glas neu, und `test578` §9 erkennt das. Punkt 5
+bleibt: d21c402 liegt weiter auf `claude/apple-ui-kit-react-i2ew4y`, nicht
+auf main von UI-Kit.
 
 **Was fehlt:** Punkt 3, 5 und 6 in UI-Kit; dann `node
 skripte/touch-holen.mts <UI-Kit> <neuer Commit>`, die Prüfsummen in
@@ -9178,7 +9233,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 125 Lücken, 69 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

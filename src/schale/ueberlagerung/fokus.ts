@@ -129,6 +129,16 @@ const Fokus = (() => {
     if (d.dataset.fokusFertig) return;
     d.dataset.fokusFertig = 'ja';
 
+    /* EIN FENSTER DES TOUCH KITS (E710) bringt alles selbst mit: seine
+       Rolle (`alertdialog`), seinen Namen, den Fokus beim Öffnen und die
+       Rückkehr beim Schliessen (`useModal` im Kit). Hier dazugelegt hiesse:
+       ein Dialog im Dialog fürs Vorleseprogramm, und zwei Stellen, die den
+       Fokus setzen. Was DIESE Stelle weiter tut, gilt auch für den Träger:
+       er ist die oberste Ebene, und alles andere wird `inert`
+       (`inertAktualisieren`). So gibt es für beide Systeme EINE oberste
+       Ebene — gemessen war vorher: beide Ebenen `inert`, nichts bedienbar. */
+    if (d.hasAttribute('data-insel-traeger')) return;
+
     if (!d.getAttribute('role')) d.setAttribute('role', 'dialog');
     if (!d.hasAttribute('aria-modal')) d.setAttribute('aria-modal', 'true');
 
@@ -178,6 +188,9 @@ const Fokus = (() => {
     if (e.key !== 'Tab') return;
     const d = oberste();
     if (!d || !d.isConnected) return;
+    /* Ein Fenster des Kits hält Tab selbst (`trapTab` in `useModal`) — eine
+       Falle, nicht zwei (E710). */
+    if (d.hasAttribute('data-insel-traeger')) return;
 
     const liste = greifbareIn(d);
     if (!liste.length) { e.preventDefault(); return; }

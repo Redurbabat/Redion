@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-686 Entscheidungen, E1 bis E706 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E710 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E714** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -749,6 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E710** — Die Fragen der Schale im Fenster des Touch Kits (Stufe 1b von E699; Redur: „was du beim touckit gebaut hast ich will alles so haben mit redion passende inhalten"): `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` zeichnen den Dialog des Kits (am Telefon ab drei Antworten das Aktionsblatt) am selben Auslöser mit denselben Antworten und Haken, das bisherige Fenster bleibt als Rückweg; Fokus und der gemeinsame Escape-Griff sehen mit dem Kit EINE oberste Ebene (vorher: beide `inert`), „Ruhige Darstellung" erreicht die Federn des Kits, Akzent als Schrift liest `--accent-text`, das Kit neu geholt von d21c402 und unter Redions strengen Schaltern geprüft, der Zeitmesser schliesst auf Escape; `Dialog.bestaetigen`/`Dialog.melden` für `confirm()`/`alert()`. Wächter `test587`.
 
 ---
 
@@ -17091,6 +17092,11 @@ Wiederholungen hätten das in zwei Minuten geklärt. Steht als L66.
 E223 — Was das Weglassen kaputt gemacht hat
 ================================================================================
 
+> **Ergänzt durch E710 (28. September 2026).** Fokus zählt ein Fenster des
+> Touch Kits (`data-insel-traeger`) als oberste Ebene und legt alles darunter
+> still, überlässt Rolle, Fokus beim Öffnen und die Tab-Falle aber dem Kit
+> (`useModal`) — eine Falle, nicht zwei. `test587` §2.
+
 Der volle Durchlauf nach E219–E222: 6 von 214 rot. Einer davon ist der
 Lastflatterer aus L66. Die anderen fünf gehören zur ruhigen Fassung, und die
 Aufteilung ist die interessante Auskunft:
@@ -23605,6 +23611,13 @@ typecheck grün · sw v63 · Einzeldatei 7706 KB.
 E302 — Die Lücke war falsch: den Escape-Griff gibt es längst
 ================================================================================
 1. September 2026
+
+> **Ergänzt durch E710 (28. September 2026).** Der gemeinsame Griff bleibt
+> der eine: ein Fenster des Touch Kits (`data-insel-traeger`) lässt er
+> stehen — das Kit schliesst es selbst und gibt dem Aufrufer seine Antwort —
+> und nimmt dabei nichts darunter weg; ein loses Feld mit
+> `data-esc-schliesst` (der Zeitmesser) geht zu, wenn kein Menü und kein
+> Fenster davorliegt. `test587` §2 und §7, `test296` unverändert.
 
 L105 Punkt 1 sagte: „Redion hat KEINEN gemeinsamen Escape-Griff für
 `.overlay`. Der Wissensgraph und das Schlagwortregister schliessen bis heute
@@ -57110,6 +57123,12 @@ Stiftpalette, und die Farbe ist dieselbe wie bei jedem anderen Fehler.
 `test578` (Dateien, ohne Browser) und `test579` (im Browser, drei Startwege)
 · **Stufe 1a** — die Grundlage; noch ersetzt keine Insel etwas Sichtbares.
 
+> **Fortgesetzt durch E710 (28. September 2026) — Stufe 1b.** Die erste
+> sichtbare Insel: `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig`
+> zeichnen den Dialog des Kits, das Tor (eine oberste Ebene für Fokus,
+> Escape und `inert`) steht, das Kit ist neu geholt von d21c402. Regel 5
+> gilt weiter: `test578` erlaubt genau die Probe und die Dialoge.
+
 **Redurs Sätze, wörtlich:**
 
 ```txt
@@ -58499,3 +58518,160 @@ Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
 statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
 alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 `claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+---
+
+## E710 — Die Fragen der Schale im Fenster des Touch Kits: in der Mitte, mit Feder und Glas, und eine Ebene für Fokus und Escape
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Auftrag
+27. September ca. 16:45, Touch Kit ca. 21:49, „ohne pause" ca. 22:10) ·
+**Stufe 1b von** E699 (dort Punkt 10: „Dialoge zuerst, nachdem Escape und
+Fokus des Kits mit E302 und Fokus versöhnt sind") · **ergänzt** E302 (ein
+gemeinsamer Escape-Griff) und E223 (Fokus) · **Wächter:** `test587` ·
+**Zweig** `claude/dialoge-im-kit`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` bauten
+einen Kasten (`.overlay > .finder`) mit Inline-Stil, der am Rechner oben im
+Bild stand und am Telefon ebenso — oben angeklebt, die Tastatur darunter.
+Beim Schliessen verschwand er in einem Bild (`o.remove()`). Die Wahl hatte
+keinen sichtbaren Abbruch (nur Escape und daneben tippen — am Telefon gibt
+es kein Escape). Daneben standen 51 Fenster des Browsers (`confirm`,
+`prompt`, `alert`): grau, anhaltend, in jedem System anders, ohne roten
+Knopf für „das löscht etwas". Und die Inseln von E699 hatten drei
+gemessene Fehler, bevor die erste echte Insel stehen durfte (Kit-Karte,
+insel-8): ein Kit-Fenster über einem alten liess BEIDE `inert` zurück
+(nichts mehr bedienbar), der gemeinsame Escape-Griff nahm das alte Fenster
+UNTER dem Kit-Dialog weg, und „Ruhige Darstellung" erreichte die Federn des
+Kits in JavaScript nicht (Liquid-Karte, „must-fix 1").
+
+**Was wurde entschieden.**
+
+1. **Das Kit neu geholt: d21c402** (`node skripte/touch-holen.mts
+   ../UI-Kit d21c402`) — Redurs neuester Stand: strenge Typen,
+   `data-ui-motion`, Hinweis und `buttonProps` an Dialog und Aktionsblatt,
+   Toast-Thema, DeleteButton. 103 Dateien, 583'770 Bytes, HERKUNFT.txt
+   sha256 `9315fea73c4a…`; `fremd-bestand.json` und FREMDCODE §2 nachgezogen,
+   im Kit keine Zeile von Hand. **`tsconfig.islands.json` trägt jetzt
+   Redions Schalter** (`noUncheckedIndexedAccess`,
+   `exactOptionalPropertyTypes`, `useUnknownInCatchVariables`,
+   `noImplicitReturns`, `verbatimModuleSyntax`) — das Kit ist darunter
+   sauber, die Abweichung von §52.6 ist weg (L222 Punkt 1 geschlossen).
+2. **Die drei Fragen zeichnen den Dialog des Kits** (`src/islands/
+   dialog.tsx`, Insel „dialog"): in der Mitte, federt aus 1,08 herein
+   (`--ui-spring-snappy`), blendet beim Schliessen aus. Die Wahl trägt ihre
+   Hinweise unter den Knöpfen (als Beschreibung des Knopfes für
+   Vorleseprogramme) und bekommt ein sichtbares „Abbrechen"; am Telefon
+   kommt eine Wahl ab drei Antworten als Aktionsblatt von unten. **Am
+   selben Auslöser, mit denselben Antworten** (Text / `null` / `''` /
+   Kennung) und denselben Haken (`#fq`, `data-w`, `data-a`) — E699
+   Regel 4. Die Insel ist nur Ansicht (Regel 5): ein Rückruf hinaus.
+3. **Der Träger ist ein `.overlay`** mit `data-insel-traeger`, und das Kit
+   zeichnet seine Ebene DARIN (`container`). So sehen Fokus, der
+   gemeinsame Escape-Griff, `body:has(.overlay)` und jeder Prüflauf, der
+   `.overlay #fq` sucht, ein offenes Fenster — wie immer — und für beide
+   Systeme gibt es EINE oberste Ebene. Fokus legt weiter alles darunter
+   still, überlässt aber Rolle, Fokus und Tab-Falle dem Kit (`useModal`):
+   eine Falle, nicht zwei. Der Escape-Griff lässt einen Träger stehen —
+   das Kit schliesst ihn selbst und gibt dem Aufrufer seine Antwort; er
+   nimmt dabei nichts darunter weg. Beim Antworten ist der Träger sofort
+   kein `.overlay` mehr: die Seite ist bedienbar, während der Dialog
+   ausblendet, und der Fokus geht dorthin zurück, woher die Frage kam.
+4. **Das bisherige Fenster bleibt als Rückweg** (`frageAlt`, `wahlAlt`,
+   `mehrzeiligAlt`, Zeile für Zeile wie vorher): kommen die Inseln nicht
+   (eine Datei fehlt, React lädt nicht, der allererste Besuch über ein
+   langsames Netz braucht länger als 1,5 s), fragt es — nie beides, nie
+   keins. Dazu wärmt der erste Tipp oder Tastendruck die Inseln im
+   Leerlauf vor (beim ersten Besuch über das Netz tat das bisher nichts).
+5. **Eine Ebene über allem, was fragen kann**: der Träger liegt auf
+   `z-index:1100` — über den Einstellungen am Telefon (940), `#r-blatt`
+   (950) und den Vollbild-Werkzeugen (1000). Die Ebenen des Kits für lose
+   Portale bleiben die von E699 (700/760/800/900).
+6. **Ein Glas** (E695): die Scheibe des Kits wird Redions dichte Glasfläche
+   (`--bg-schwebend-dicht`, `--glas-blur`, `--glas-kante`), gelesen am
+   Element — „Starker Kontrast", „Hoher Kontrast" und weniger Transparenz
+   machen sie deckend. **Akzent als Schrift** (L222 Punkt 6): im Dialog
+   und im Aktionsblatt legt die Brücke die Akzentmarke des Kits auf
+   `--accent-text`. **Ruhe**: die Brücke spiegelt `body[data-bewegung=
+   "ruhig"]` nach `html[data-ui-motion="reduce"]` — auch die JS-Federn des
+   Kits stehen still (L222 Punkt 2). **Fokusrahmen**: Redions `4px`-Rundung
+   aus `:focus-visible` gilt nicht mehr in den Inseln (das Kit zeichnet
+   seinen eigenen Rahmen), mit `:where` bei derselben Genauigkeit. **Die
+   Scheibe kommt als Scheibe** (E703): das Kit liess den Dialog auch aus
+   Deckkraft 0 kommen — auf Glas liegt dann die Seite scharf hinter der
+   Schrift; die Brücke lässt die Scheibe nur federn und blendet ihren
+   Inhalt ein (`glas-inhalt`), wie jedes Glas in Redion.
+7. **`Dialog.bestaetigen` und `Dialog.melden`** für `confirm()` und
+   `alert()`, auf `wahl` gebaut (ein roter Knopf mit `gefahr`). Sechs Stellen
+   sind umgezogen (die Gefahrzone der Einstellungen — KI-Buch leeren, alte
+   Fassungen löschen, zweimal „alles löschen" samt Fehlermeldung — und das
+   Löschen mehrerer Datenbankzeilen); 45 stehen noch, und `test587` §10 lässt
+   die Zahl nur sinken. Löscht die eine Antwort etwas (`gefahr`), steht
+   „Abbrechen" links und hat den Fokus — ein Enter aus Versehen löscht
+   nichts; die Antwort ist rot.
+8. **Der Zeitmesser schliesst auf Escape.** Er ist `role="dialog"`, aber
+   kein `.overlay` (er bleibt beim Arbeiten offen) — und hatte keinen
+   Escape. Jetzt trägt er `data-esc-schliesst`, und der EINE gemeinsame
+   Griff nimmt ihn, wenn kein Menü und kein Fenster davorliegt.
+
+**Warum.** Redur will am Morgen „eien komplet besseren webseit … bessere
+übergagnge besssere efeckten , bessere oberfläsche" sehen, „ohne eine
+funktione löschen". Die Fragen sind die Stelle, an der Redion am meisten
+wie eine Webseite von 2010 aussah — und die Stelle, die E699 als erste
+Insel vorgesehen hat. Das Tor (Punkt 3) ist die Bedingung dafür: ohne eine
+gemeinsame oberste Ebene wäre jede weitere Insel (Menüs, Blätter, Toasts)
+ein Würfel mit Fokus und Escape.
+
+**Was war die Alternative.**
+(a) Den alten Kasten nur umstylen (Mitte, Glas, Ausblenden in CSS) — billig,
+aber es bliebe Redions Nachbau statt des Kits, das Redur „alles so haben"
+will, und die Inseln hätten weiter kein Tor. (b) Das Kit-Portal lose an
+`<body>` (wie das Kit es von sich aus tut) und Fokus beibringen, `.ui-touch-
+portal` als Fenster zu zählen — gemessen führt das in den Stillstand oder
+verlangt, dass Fokus und `setInertOutside` einander zählen; und alle 267
+Prüfläufe, die `.overlay` kennen, sähen kein Fenster mehr. (c) Alle 51
+Browserfenster in einem Bogen umziehen — viele liegen an Wegen, die ein
+Prüflauf über das Fenster des Browsers beantwortet (test265: das Passwort
+des Verschlüsselns); sie ziehen je Datei mit ihrem Lauf um, und bis dahin
+hält §10 die Zahl.
+
+**Was kostet es.** Start: +4,8 KB gzip (dialog.js +2,5, schale.js +0,5,
+laden.js +0,4, aufbau.css +0,4, fokus.js +0,3, bausteine.css +0,2,
+seite.js, steuerung.js und zeitmesser.js je +0,1–0,2) — gemessen,
+messungen §80, dort auch die Zahl aus `test388` §5; unter der Decke von
+2850 KB. Die Inseln selbst kommen nicht beim Start: `islands.js` 7,4 KB
+gzip (vorher 4,2), `islands.css` 6,4 KB (vorher 4,9). Die Einzeldatei
+wächst um 35 KB (die Behälter).
+Eine erste Frage vor dem Vorwärmen wartet auf die Inseln (lokal gemessen
+um 100–300 ms); danach 1–2 Bilder. Und zwei Wege für dieselbe Frage — der
+alte bleibt, bis Redur sagt, er darf gehen (§43).
+
+**Gefunden auf dem Weg.** lightningcss fasst im Kit bei Dialog und
+Aktionsblatt `backdrop-filter; -webkit-backdrop-filter` zu EINER Zeile mit
+Präfix zusammen (L222 Punkt 3 gilt nicht nur für den Glasknopf) — die
+Brücke setzt dort Redions Glas neu, `-webkit-` zuerst, und `test578` §9
+erkennt eine solche Überschreibung jetzt ausdrücklich (mit Gegenprobe:
+ohne sie wären genau diese zwei Flächen rot). Und der erste Zähler für §10
+verschluckte eine Stelle: ein `'image/*'` in einer Zeichenkette sah für
+ihn wie der Anfang eines Kommentars aus. Und das Kit liess seinen Dialog aus
+Deckkraft 0 kommen — genau das, was E703 für jedes Glas abgestellt hat
+(„Glas kommt als Scheibe, nicht als Nebel"); `test582` hätte es gesehen,
+sobald er die Frage im Kit sucht, und `test587` §1 misst es jetzt selbst.

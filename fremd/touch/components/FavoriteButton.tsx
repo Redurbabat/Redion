@@ -10,17 +10,17 @@ export type FavoriteSymbol = 'heart' | 'star'
 export interface FavoriteButtonProps
   extends Omit<ButtonProps, 'children' | 'icon' | 'shape' | 'block' | 'destructive' | 'aria-label' | 'aria-pressed' | 'variant'> {
   /** Look of the round button (default `plain`). No `filled`: the red / amber glyph would vanish on the accent fill. */
-  variant?: Exclude<ButtonVariant, 'filled'>
+  variant?: Exclude<ButtonVariant, 'filled'> | undefined
   /** heart = "Gefällt mir" (danger colour), star = "Favorit" (warning colour). */
-  symbol?: FavoriteSymbol
+  symbol?: FavoriteSymbol | undefined
   /** Accessible name — required, because the button shows only a glyph (e.g. "Merken"). */
   label: string
   /** Controlled state. Leave undefined for an uncontrolled button. */
-  selected?: boolean
+  selected?: boolean | undefined
   /** Initial state of an uncontrolled button. */
-  defaultSelected?: boolean
+  defaultSelected?: boolean | undefined
   /** Called with the new state after a click (skipped when `onClick` calls preventDefault()). */
-  onSelectedChange?: (selected: boolean, event: MouseEvent<HTMLButtonElement>) => void
+  onSelectedChange?: ((selected: boolean, event: MouseEvent<HTMLButtonElement>) => void) | undefined
 }
 
 /** Longest a burst may stay mounted if its animationend never arrives (animations forced off). */

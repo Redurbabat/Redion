@@ -10,7 +10,7 @@ export interface SwipeGeometry {
   actionsWidth: number
   rowWidth: number
   /** Allow a long swipe to run the first action directly (e.g. delete). */
-  fullSwipe?: boolean
+  fullSwipe?: boolean | undefined
 }
 
 /** Maps the raw finger distance to the row offset. */
@@ -27,10 +27,9 @@ export function swipeDistance(raw: number, { actionsWidth, rowWidth, fullSwipe =
  * buttons pop in one after another (Framework7 iOS swipeout idea).
  */
 export function revealProgress(distance: number, widths: number[], index: number): number {
-  let start = 0
-  for (let i = 0; i < index; i += 1) start += widths[i]
   const width = widths[index]
-  if (!(width > 0)) return 0
+  if (width === undefined || !(width > 0)) return 0
+  const start = widths.slice(0, index).reduce((sum, w) => sum + w, 0)
   return Math.min(1, Math.max(0, (distance - start) / width))
 }
 

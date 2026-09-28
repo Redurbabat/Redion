@@ -137,7 +137,11 @@
   border-radius: var(--ui-radius-xs);
 }
 
-/* ── Reduced motion: no sliding; push fades the new page in, pop fades the old one out ── */
+/*
+ * ── Reduced motion: no sliding; push fades the new page in, pop fades the old one out ──
+ * JS sets data-fade only when less motion is asked for, by the OS or by the app's
+ * data-ui-motion="reduce" switch, so these rules need no media query of their own.
+ */
 @keyframes ui-touch-stack-fade-in {
   from {
     opacity: 0;
@@ -150,15 +154,15 @@
   }
 }
 
+.ui-touch-stack-page[data-fade='in'] {
+  animation: ui-touch-stack-fade-in 200ms var(--ui-ease-standard);
+}
+
+.ui-touch-stack-page[data-fade='out'] {
+  animation: ui-touch-stack-fade-out 200ms var(--ui-ease-standard) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ui-touch-stack-page[data-fade='in'] {
-    animation: ui-touch-stack-fade-in 200ms var(--ui-ease-standard);
-  }
-
-  .ui-touch-stack-page[data-fade='out'] {
-    animation: ui-touch-stack-fade-out 200ms var(--ui-ease-standard) forwards;
-  }
-
   .ui-touch-stack[data-moving] > .ui-touch-stack-page {
     will-change: auto;
   }

@@ -39,9 +39,9 @@ export interface GlassFieldOptions {
   radius: number
   /** Width of the refracting rim in pixels. */
   bevel: number
-  exponent?: number
+  exponent?: number | undefined
   /** Neutral margin around the shape (the lens region reaches beyond the glass). */
-  inset?: number
+  inset?: number | undefined
 }
 
 /** RGBA pixels (width × height × 4) of the displacement + rim map. */
@@ -67,13 +67,15 @@ export function bakeGlassField({ width, height, radius, bevel, exponent = 2, ins
     }
   }
 
-  const at = (x: number, y: number) => heightField[Math.min(h - 1, Math.max(0, y)) * w + Math.min(w - 1, Math.max(0, x))]
+  // Every index below lies inside the w × h fields; the `?? 0` (flat, outside) only answers the type checker.
+  const at = (x: number, y: number) => heightField[Math.min(h - 1, Math.max(0, y)) * w + Math.min(w - 1, Math.max(0, x))] ?? 0
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
       const i = y * w + x
       const o = i * 4
+      const coverage = inside[i] ?? 0
       out[o + 3] = 255
-      if (inside[i] <= 0 || heightField[i] >= 1) {
+      if (coverage <= 0 || (heightField[i] ?? 0) >= 1) {
         out[o] = 128
         out[o + 1] = 128
         out[o + 2] = 0
@@ -87,7 +89,7 @@ export function bakeGlassField({ width, height, radius, bevel, exponent = 2, ins
       const ny = -gy * NORMAL_STRENGTH
       const nz = 1 / Math.sqrt(nx * nx + ny * ny + 1)
       const fresnel = Math.min(1, (1 - nz) ** 2.6 * 1.7)
-      out[o + 2] = Math.round(fresnel * inside[i] * 255)
+      out[o + 2] = Math.round(fresnel * coverage * 255)
     }
   }
   return out

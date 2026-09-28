@@ -24,15 +24,15 @@ type Pop = 'enter' | 'bump'
 
 export interface BadgeProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
   /** Number to show. 0 hides the badge unless `showZero`. Takes precedence over `children`. */
-  count?: number
+  count?: number | undefined
   /** Highest number shown as is; above it the badge reads "max+". Default 99. */
-  max?: number
+  max?: number | undefined
   /** Show "0" instead of hiding the badge. */
-  showZero?: boolean
+  showZero?: boolean | undefined
   /** A small dot without text ("something new"). Takes precedence over `count` and `children`. */
-  dot?: boolean
+  dot?: boolean | undefined
   /** danger (default, like unread counts), accent or neutral. */
-  tone?: BadgeTone
+  tone?: BadgeTone | undefined
   /**
    * Text for assistive technology, e.g. "3 ungelesene Nachrichten". The
    * visible number is then hidden from it. Without a label a count or dot
@@ -40,9 +40,9 @@ export interface BadgeProps extends Omit<ComponentPropsWithRef<'span'>, 'childre
    * the name of the control it sits on instead. An explicit `aria-hidden`
    * prop always wins.
    */
-  label?: string
+  label?: string | undefined
   /** Short text, e.g. "Neu". */
-  children?: ReactNode
+  children?: ReactNode | undefined
 }
 
 /**
@@ -113,7 +113,7 @@ export interface BadgeAnchorProps extends ComponentPropsWithRef<'span'> {
    * Shape of the child. `circle` pulls the badge in onto the rim of a round
    * child (avatar, round icon button) instead of the empty box corner.
    */
-  overlap?: 'rect' | 'circle'
+  overlap?: 'rect' | 'circle' | undefined
 }
 
 /**

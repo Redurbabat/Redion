@@ -89,6 +89,16 @@
   transition: background-color 300ms var(--ui-ease-standard);
 }
 
+.ui-touch-action-sheet-button-text {
+  display: grid;
+  justify-items: center;
+}
+
+.ui-touch-action-sheet-button-hint {
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+}
+
 .ui-touch-action-sheet-group > .ui-touch-action-sheet-button:first-child {
   border-top: 0;
 }

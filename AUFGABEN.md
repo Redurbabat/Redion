@@ -1510,3 +1510,22 @@ Wächter (rot zuerst):
 3. `SelectionFlow.FEDERN` aus den Federmarken in `grund.css` lesen, sobald
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
+
+## E710 · Die Fragen im Fenster des Touch Kits — was danach kommt
+
+E710 hat `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` in den
+Dialog des Kits gebracht und das Tor für Inseln gebaut (eine oberste Ebene
+für Fokus, Escape und `inert`). Offen, jeweils mit eigenem Wächter (rot
+zuerst):
+
+1. Die übrigen 45 `confirm()`/`prompt()`/`alert()` je Datei auf
+   `Dialog.bestaetigen`, `Dialog.melden` und `Dialog.frage` umziehen, mit
+   ihren Prüfläufen im selben Bogen (L231); `test587` §10 senken. Zuerst das
+   Passwort des Verschlüsselns (`wissen/werkzeuge.ts`, test265 §7).
+2. Die übrigen Fragen ohne `Dialog.*` (eigene `.overlay`-Kästen mit
+   `.fbtns`) auf dieselbe Insel — Stelle für Stelle, am selben Auslöser.
+3. Menüs und Blätter als Inseln (nächste Welle): dasselbe Tor —
+   Träger `.overlay`/`.menu` mit `data-insel-traeger`, das Kit zeichnet darin.
+4. Wenn Redur es sagt: das bisherige Fenster (`frageAlt`, `wahlAlt`,
+   `mehrzeiligAlt`) aus `dialog.ts` nehmen (§43 — bis dahin ist es der
+   Rückweg, wenn die Inseln nicht laden).

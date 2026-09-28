@@ -5394,3 +5394,58 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+---
+
+## §80 · Die Fragen im Fenster des Touch Kits: Startpaket, Inselbündel, Browserfenster (E710, 28. September 2026)
+
+**Gemessen, bevor gebaut wurde** (Kit-Karte insel-8, Stand `0976b5f`, 4×
+gedrosselte CPU, Telefon 390×844, file://, Median aus 15): `Dialog.frage`
+bis zum ersten Bild 78 ms; ein Kit-Dialog als Insel warm 59 ms, kalt
+(Skript einhängen und erstes Zeichnen) 288–510 ms, Median 351 ms. Dazu der
+Stillstand: altes `.overlay` + Kit-Dialog → beide `inert`, Escape nahm das
+alte Fenster darunter weg.
+
+**Startpaket** (gzip Stufe 6 mit `gzip -6`, Stand `b3cf193` → dieser Zweig):
+
+```txt
+quell/schale/ueberlagerung/dialog.js          3'601 →   6'133   +2'532
+quell/schale/aufbau/schale.js                77'671 →  78'183     +512
+quell/schale/inseln/laden.js                  4'433 →   4'849     +416
+quell/schale/stil/aufbau.css                 16'421 →  16'780     +359
+quell/schale/ueberlagerung/fokus.js           4'942 →   5'276     +334
+quell/schale/stil/bausteine.css             167'864 → 168'069     +205
+quell/bereiche/einstellungen/ansicht/seite.js 30'711 → 30'863     +152
+quell/bereiche/datenbanken/steuerung.js     134'754 → 134'904     +150
+quell/bereiche/wissen/zeitmesser.js           4'290 →   4'434     +144
+                                                     zusammen   +4'804
+```
+
+Die Hälfte von `dialog.js` ist Kommentar (die Begründung des Trägers);
+ohne Kommentare wächst der Code um rund 1,1 KB. **`test388` §5** (Lauf
+vom 28. September, ca. 14:30 UTC, Dienststand v1395): „Der Start holt
+2830 KB (gzip) über 248 Dateien — Decke 2850 KB". Keine neue Datei im Startweg.
+
+**Nicht beim Start** — die Inseln (`Inseln.bereit()`, vorgewärmt):
+
+```txt
+quell/islands/islands.js     10'637 → 21'593 Bytes   gzip 4'162 → 7'404
+quell/islands/islands.css    21'645 → 31'799 Bytes   gzip 4'879 → 6'448
+redion-einzeldatei.html      11'783'171 → 11'818'635 Bytes   +35'464
+```
+
+Mit dem Dialog kommen aus dem Kit: Dialog, ActionSheet, Portal, useModal,
+usePresence, focus, inert, scrollLock, pageTheme (Stufe 1a: Button,
+Toggle, Glyph, usePress, cx).
+
+**Browserfenster in `src/`** (`test587` §10, Kommentare ausgenommen):
+51 auf `b3cf193`, 45 nach E710 (−6: Gefahrzone der Einstellungen, Löschen
+mehrerer Datenbankzeilen).
+
+**Kontrast der Antwort-Knöpfe** (`test587` §5, gerenderte Schriftfarbe
+gegen `--bg-card`): in allen zehn Schemata ≥ 4,5 : 1; mit `--accent` als
+Schrift läge „Standard" darunter (L222: 3,16 : 1).
+
+**Das Kit neu geholt:** d21c402, 103 Dateien, 583'770 Bytes (vorher
+c192821: 96 Dateien, 518'395 Bytes). `tsc -p tsconfig.islands.json` mit
+Redions strengen Schaltern: 0 Fehler (bei c192821: 73).

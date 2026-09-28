@@ -27,7 +27,11 @@ export function placePopover(
   anchor: Rect,
   size: { width: number; height: number },
   viewport: { width: number; height: number },
-  { prefer = 'bottom', gap = 8, margin = 12 }: { prefer?: 'top' | 'bottom'; gap?: number; margin?: number } = {},
+  {
+    prefer = 'bottom',
+    gap = 8,
+    margin = 12,
+  }: { prefer?: 'top' | 'bottom' | undefined; gap?: number | undefined; margin?: number | undefined } = {},
 ): Placement {
   const spaceBelow = viewport.height - (anchor.top + anchor.height) - gap - margin
   const spaceAbove = anchor.top - gap - margin

@@ -9,18 +9,18 @@ export interface CoverProps extends Omit<ComponentPropsWithRef<'div'>, 'children
   /** Playing: full size, floating. Paused: shrunk, resting close to the surface. */
   playing: boolean
   /** Artwork image. Without it the cover shows `glyph` on `gradient`. */
-  src?: string
+  src?: string | undefined
   /**
    * Describes the artwork ("Albumcover: Nachtfahrt"). Leave empty when the
    * title is already written next to the cover — the cover is then decorative.
    */
-  alt?: string
+  alt?: string | undefined
   /** CSS background for the placeholder (and behind a loading image). */
-  gradient?: string
+  gradient?: string | undefined
   /** Placeholder glyph (default `note`). */
-  glyph?: GlyphName
+  glyph?: GlyphName | undefined
   /** small 64 px (mini player) · medium 160 px · large 264 px · fill = container width · or a px number. */
-  size?: CoverSize | number
+  size?: CoverSize | number | undefined
 }
 
 /** A usable px size, or undefined for anything that cannot size a box (0, negative, NaN, Infinity). */

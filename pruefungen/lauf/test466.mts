@@ -228,7 +228,7 @@ console.log('\n§4 Die einzige Seite geht nur als Kopie');
   await s.waitForSelector('.overlay [data-w="kopieren"]', { timeout: 5000 });
   const r = JSON.parse(await s.evaluate(`(() => {
     const wege = [...document.querySelectorAll('.overlay [data-w]')].map(k => k.dataset.w);
-    const text = document.querySelector('.overlay .finder').textContent;
+    const text = document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)').textContent;
     return JSON.stringify({ wege, sagtWarum: /einzige Seite/.test(text) });
   })()`) as string);
   p('„Verschieben" steht gar nicht erst da', !r.wege.includes('verschieben'), JSON.stringify(r.wege));

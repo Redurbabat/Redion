@@ -9,26 +9,26 @@ export interface SegmentedOption<V extends string = string> {
   /** Visible text; also the segment's accessible name. */
   label: string
   /** Optional glyph before the text. */
-  icon?: GlyphName
-  disabled?: boolean
+  icon?: GlyphName | undefined
+  disabled?: boolean | undefined
 }
 
 export interface SegmentedProps<V extends string = string>
   extends Omit<ComponentPropsWithRef<'div'>, 'onChange' | 'defaultValue' | 'children' | 'role' | 'aria-label'> {
   options: ReadonlyArray<SegmentedOption<V>>
   /** Controlled selection. Leave undefined for an uncontrolled control. */
-  value?: V
+  value?: V | undefined
   /** Initial selection when uncontrolled (defaults to the first enabled option). */
-  defaultValue?: V
+  defaultValue?: V | undefined
   /** Called with the newly selected value (not when the selection is re-clicked). */
-  onChange?: (value: V) => void
+  onChange?: ((value: V) => void) | undefined
   /** Accessible name of the group, e.g. "Zeitraum". Required: the group has no visible title. */
   label: string
-  disabled?: boolean
+  disabled?: boolean | undefined
   /** Stretch to the container width. */
-  block?: boolean
+  block?: boolean | undefined
   /** Adds a hidden input so the selection is submitted with a form. */
-  name?: string
+  name?: string | undefined
 }
 
 type Direction = 1 | -1
@@ -38,7 +38,8 @@ function stepIndex<V extends string>(options: ReadonlyArray<SegmentedOption<V>>,
   const count = options.length
   for (let offset = 1; offset <= count; offset += 1) {
     const index = (((from + direction * offset) % count) + count) % count
-    if (!options[index].disabled) return index
+    const option = options[index]
+    if (option && !option.disabled) return index
   }
   return -1
 }
@@ -125,7 +126,8 @@ export function Segmented<V extends string = string>({
     select(next)
   }
 
-  const selectable = selectedIndex >= 0 && !options[selectedIndex].disabled
+  const selectedOption = options[selectedIndex]
+  const selectable = selectedOption !== undefined && !selectedOption.disabled
   const tabStop = selectable ? selectedIndex : stepIndex(options, -1, 1)
 
   const cssVars = {
@@ -152,7 +154,7 @@ export function Segmented<V extends string = string>({
           option={option}
           checked={index === selectedIndex}
           tabStop={index === tabStop}
-          disabled={disabled || option.disabled}
+          disabled={Boolean(disabled || option.disabled)}
           onSelect={() => select(index)}
           buttonRef={(node) => {
             segments.current[index] = node

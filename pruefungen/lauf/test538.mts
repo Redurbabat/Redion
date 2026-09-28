@@ -428,7 +428,7 @@ try {
   await page.waitForTimeout(450);
   const ohneFrage = await karteVon();
   gleich('Eine leere Karte wird ohne Rückfrage ersetzt',
-    await page.evaluate(() => document.querySelectorAll('.overlay .wahl').length), 0);
+    await page.evaluate(() => document.querySelectorAll('.overlay :is(.wahl, [data-insel-dialog])').length), 0);
   pr('… und die Vorlage steht wirklich da',
     (ohneFrage.knoten || []).length > 6, JSON.stringify((ohneFrage.knoten || []).length));
   gleich('… mit der Wurzel der Vorlage', ohneFrage.knoten[0]?.text, 'Projekt');
@@ -440,8 +440,8 @@ try {
   await page.locator('.menu button[data-v="woche"]').click();
   await page.waitForTimeout(400);
   gleich('Eine volle Karte fragt zuerst',
-    await page.evaluate(() => document.querySelectorAll('.overlay .wahl').length), 1);
-  await page.locator('.overlay .wahl button[data-w=""]').click();
+    await page.evaluate(() => document.querySelectorAll('.overlay :is(.wahl, [data-insel-dialog])').length), 1);
+  await page.locator('.overlay button[data-w=""]').click();
   await page.waitForTimeout(350);
   const abgebrochen = await karteVon();
   gleich('„Abbrechen" lässt die Karte, wie sie war', (abgebrochen.knoten || []).length, 4);
@@ -451,7 +451,7 @@ try {
   await page.waitForTimeout(250);
   await page.locator('.menu button[data-v="woche"]').click();
   await page.waitForTimeout(400);
-  await page.locator('.overlay .wahl button[data-w="ja"]').click();
+  await page.locator('.overlay button[data-w="ja"]').click();
   await page.waitForTimeout(450);
   const ersetzt = await karteVon();
   gleich('„Ersetzen" setzt die Vorlage ein', ersetzt.knoten[0]?.text, 'Diese Woche');

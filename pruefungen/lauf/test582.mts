@@ -448,7 +448,12 @@ for (const [wo, breite, hoehe] of [['Rechner', 1280, 900], ['Telefon', 390, 844]
   if (wo === 'Rechner') {
     await pg.evaluate(() => { document.querySelectorAll('.menu,.menu-grund').forEach(e => e.remove());
       (window as any).__t582 = Dialog.frage('Name der Seite', 'Physik'); });
-    const f = await ersterAugenblick(pg, '.overlay .finder');
+    /* Seit E710 zeichnet die Frage den Dialog des Kits (eine Insel, einen
+       Augenblick später); die Zusage gilt für ihn genauso. Ohne Inseln
+       bleibt es der Finder. */
+    const FRAGE = '.overlay :is(.finder, .ui-touch-dialog)';
+    await pg.waitForSelector(FRAGE, { timeout: 5000 }).catch(() => {});
+    const f = await ersterAugenblick(pg, FRAGE);
     p('Rechner: der Finder (Frage) kommt ebenso als Scheibe', !!f && f.bf !== 'none' && f.deck === 1 && !f.nebel && f.form !== 'none',
       JSON.stringify(f));
   }

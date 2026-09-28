@@ -62,22 +62,22 @@ export interface CardProps extends Omit<ComponentPropsWithRef<'article'>, 'title
   /** Card title — rendered as the heading (not the HTML tooltip attribute). */
   title: ReactNode
   /** Small uppercase line above the title ("HEUTE", "APP DES TAGES"). */
-  eyebrow?: ReactNode
+  eyebrow?: ReactNode | undefined
   /** One line below the title. */
-  subtitle?: ReactNode
-  media?: CardMedia
+  subtitle?: ReactNode | undefined
+  media?: CardMedia | undefined
   /** `plain` = media on top, text below. `feature` = large media with the title on a scrim at its bottom. */
-  variant?: CardVariant
+  variant?: CardVariant | undefined
   /** Heading level of the title (default 3). */
-  headingLevel?: 2 | 3 | 4 | 5 | 6
+  headingLevel?: 2 | 3 | 4 | 5 | 6 | undefined
   /** Makes the whole card a link. */
-  href?: string
+  href?: string | undefined
   /** Makes the whole card a button (or, together with `href`, a link with a click handler). */
-  onClick?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void
+  onClick?: ((event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void) | undefined
   /** Gentle tilt towards a mouse pointer (never for touch or reduced motion). Default: on for interactive cards. */
-  tilt?: boolean
+  tilt?: boolean | undefined
   /** Body below the title (or below the media for `feature`). Controls in here stay clickable on their own. */
-  children?: ReactNode
+  children?: ReactNode | undefined
 }
 
 /**

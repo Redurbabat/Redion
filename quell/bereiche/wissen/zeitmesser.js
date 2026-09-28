@@ -240,6 +240,10 @@ const Zeitmesser = (() => {
         feld.className = 'zm-feld';
         feld.setAttribute('role', 'dialog');
         feld.setAttribute('aria-label', 'Zeitmesser');
+        /* Escape schliesst es — über den EINEN gemeinsamen Griff der Schale
+           (E302, E710), nicht über einen eigenen. Das Feld ist kein `.overlay`:
+           es bleibt beim Arbeiten offen und legt nichts still. */
+        feld.setAttribute('data-esc-schliesst', '');
         feld.innerHTML = feldHtml();
         feld.addEventListener('click', e => {
             const b = e.target.closest('[data-zm]');

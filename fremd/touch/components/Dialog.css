@@ -82,6 +82,17 @@
   transition: background-color 300ms var(--ui-ease-standard);
 }
 
+.ui-touch-dialog-button-label,
+.ui-touch-dialog-button-hint {
+  display: block;
+}
+
+.ui-touch-dialog-button-hint {
+  padding-bottom: var(--ui-space-1);
+  color: var(--ui-color-label-secondary);
+  font: var(--ui-text-footnote);
+}
+
 .ui-touch-dialog-buttons > .ui-touch-dialog-button + .ui-touch-dialog-button {
   border-left: var(--ui-hairline) solid var(--ui-color-separator);
 }

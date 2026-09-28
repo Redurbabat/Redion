@@ -352,7 +352,7 @@ await seite.click('.overlay [data-w="untereinander"]');
 await seite.waitForSelector('.overlay [data-w="alle"]', { timeout: 30000 });
 
 const frage = await seite.evaluate(() =>
-  (document.querySelector('.overlay .finder')?.textContent || '')
+  (document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)')?.textContent || '')
     .replace(/\s+/g, ' '));
 
 p('Sie nennt die Seitenzahl', /40 Seiten/.test(frage), frage.slice(0, 90));
@@ -369,7 +369,7 @@ p('Gegenprobe: „ungefähr" steht dort nicht mehr', !/ungefähr/.test(frage));
 await seite.setViewportSize({ width: 390, height: 844 });
 await seite.waitForTimeout(300);
 const amTelefon = await seite.evaluate(() => {
-  const f = document.querySelector('.overlay .finder') as HTMLElement;
+  const f = document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)') as HTMLElement;
   const kn = [...f.querySelectorAll('[data-w]')] as HTMLElement[];
   const r = f.getBoundingClientRect();
   return {

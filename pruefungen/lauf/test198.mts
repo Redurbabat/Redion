@@ -188,11 +188,11 @@ const ziel = await seite.evaluate(async () => {
 let input = seite.locator('input[type="file"][accept*="xlsx"]');
 await input.waitFor({ state: 'attached' });
 await input.setInputFiles(fremdPfad);
-const berichtText = await seite.locator('.overlay .finder').innerText();
+const berichtText = await seite.locator('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)').innerText();
 p('Der echte Dialog nennt die Verluste vor der Übernahme',
   /Zellkommentare/.test(berichtText) && /bedingte Formatierungen/.test(berichtText) &&
   /Bilder/.test(berichtText) && /Diagramme/.test(berichtText), berichtText);
-await seite.locator('.overlay .wahl-knoepfe button[data-w=""]').click();
+await seite.locator('.overlay button[data-w=""]').click();
 const nachAbbruch = await seite.evaluate((id: string) => Store.getBlock(id).mappe.blaetter.length, ziel);
 gleich('Abbrechen lässt die Mappe unverändert', nachAbbruch, 1);
 
@@ -206,7 +206,7 @@ await seite.evaluate(() => {
 input = seite.locator('input[type="file"][accept*="xlsx"]');
 await input.waitFor({ state: 'attached' });
 await input.setInputFiles(fremdPfad);
-await seite.locator('.overlay .wahl-knoepfe button[data-w="rein"]').click();
+await seite.locator('.overlay button[data-w="rein"]').click();
 await seite.waitForTimeout(600);
 const drin = await seite.evaluate((id: string) => {
   const m = Store.getBlock(id).mappe;

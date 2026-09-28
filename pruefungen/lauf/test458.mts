@@ -270,8 +270,12 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   /* E697: Der direkte Farbwähler kommt zuerst; die unveränderte Verwaltung
      der Sätze liegt dahinter. Alle bisherigen Speicherzusagen bleiben. */
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits — eine Insel, einen
+     Augenblick später, und sie federt herein: erst warten, dann messen. */
+  await s.waitForSelector('.overlay [data-w]', { timeout: 5000 }).catch(() => {});
+  await s.waitForTimeout(450);
   const auf = JSON.parse(await s.evaluate(`(() => {
-    const o = document.querySelector('.overlay .finder');
+    const o = document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)');
     return JSON.stringify({ da: !!o,
       knoepfe: [...document.querySelectorAll('.overlay [data-w]')].map(b => b.dataset.w) });
   })()`) as string);
@@ -318,6 +322,10 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
      gerufen wurde — ihn im selben `try` wieder wegzunehmen kam zu früh,
      und dann tat der Knopf scheinbar nichts. */
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits — eine Insel, einen
+     Augenblick später, und sie federt herein: erst warten, dann messen. */
+  await s.waitForSelector('.overlay [data-w]', { timeout: 5000 }).catch(() => {});
+  await s.waitForTimeout(450);
   await s.evaluate(`(() => {
     window.__echterKlick = HTMLInputElement.prototype.click;
     HTMLInputElement.prototype.click = function () {
@@ -344,6 +352,10 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.blatt-werk .blatt-farbe-neu')?.click());
   await s.waitForTimeout(300);
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits — eine Insel, einen
+     Augenblick später, und sie federt herein: erst warten, dann messen. */
+  await s.waitForSelector('.overlay [data-w]', { timeout: 5000 }).catch(() => {});
+  await s.waitForTimeout(450);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.overlay [data-w="zuruecksetzen"]')?.click());
   await s.waitForTimeout(300);
   gleich('Zurücksetzen räumt die Tupfer aus der Leiste',
@@ -413,8 +425,12 @@ for (const [wo, breit, hoch] of [['Rechner', 1280, 900], ['Telefon', 390, 844]] 
      letzte Knopf DARF unter der Kante stehen, solange man ihn hinrollen
      kann. Vor E486 konnte man das nicht: `.finder` schnitt ab. */
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits — eine Insel, einen
+     Augenblick später, und sie federt herein: erst warten, dann messen. */
+  await s.waitForSelector('.overlay [data-w]', { timeout: 5000 }).catch(() => {});
+  await s.waitForTimeout(450);
   const m = JSON.parse(await s.evaluate(`(() => {
-    const f = document.querySelector('.overlay .finder');
+    const f = document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)');
     const k = [...document.querySelectorAll('.overlay [data-w]')];
     const letzt = k[k.length - 1];
     const rf = f.getBoundingClientRect();

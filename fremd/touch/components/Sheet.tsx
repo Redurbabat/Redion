@@ -27,29 +27,29 @@ export interface SheetProps {
   onOpenChange: (open: boolean) => void
   /** Accessible name; also shown as the sheet heading unless `hideTitle`. */
   title: string
-  hideTitle?: boolean
-  description?: ReactNode
+  hideTitle?: boolean | undefined
+  description?: ReactNode | undefined
   /** Rest heights, e.g. ['medium', 'large'], 0.3 (fraction), 240 or '240px'. Default ['medium', 'large']. */
-  detents?: Detent[]
+  detents?: Detent[] | undefined
   /** Controlled detent index (into the ascending list of resolved heights). */
-  detent?: number
-  defaultDetent?: number
-  onDetentChange?: (index: number) => void
+  detent?: number | undefined
+  defaultDetent?: number | undefined
+  onDetentChange?: ((index: number) => void) | undefined
   /** Swipe down, scrim tap and Escape close the sheet. Default true. */
-  dismissible?: boolean
+  dismissible?: boolean | undefined
   /** Push the page behind back like a card at the largest detent. Default true. */
-  pushBackground?: boolean
+  pushBackground?: boolean | undefined
   /** Element to push back; default the first `[data-ui-sheet-background]` in the container/document. */
-  backgroundSelector?: string
+  backgroundSelector?: string | undefined
   /** Portal target for contained layouts (e.g. a phone frame). Default document.body. */
-  container?: HTMLElement | null
+  container?: HTMLElement | null | undefined
   /** Buttons in the header, e.g. a "Fertig" button. */
-  headerActions?: ReactNode
+  headerActions?: ReactNode | undefined
   /** Label of the grabber button (keyboard: Enter cycles, arrows resize). */
-  grabberLabel?: string
-  detentNames?: string[]
-  children?: ReactNode
-  className?: string
+  grabberLabel?: string | undefined
+  detentNames?: string[] | undefined
+  children?: ReactNode | undefined
+  className?: string | undefined
 }
 
 const TOP_GAP = 10 // px of the pushed-back page that stays visible above a large sheet
@@ -134,7 +134,10 @@ export function Sheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [container, JSON.stringify(detents), pushBackground])
 
-  const yForIndex = (i: number) => geo.current.max - geo.current.heights[Math.max(0, Math.min(i, geo.current.heights.length - 1))]
+  const yForIndex = (i: number) => {
+    const { heights, max } = geo.current
+    return max - (heights[Math.max(0, Math.min(i, heights.length - 1))] ?? 0)
+  }
   const hiddenY = () => geo.current.max + HIDDEN_EXTRA
 
   // ── painting one frame ───────────────────────────────────────────────
@@ -143,7 +146,8 @@ export function Sheet({
     const { heights, max, width } = geo.current
     const visible = Math.max(0, max - nextY)
     const progress = sheetProgress(visible, heights)
-    const appear = heights.length ? Math.min(1, visible / heights[0]) : 1
+    const lowest = heights[0]
+    const appear = lowest !== undefined ? Math.min(1, visible / lowest) : 1
     if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${nextY}px, 0)`
     if (scrimRef.current) scrimRef.current.style.opacity = String(appear * (0.45 + 0.55 * progress))
     const bg = backgroundRef.current
@@ -225,6 +229,7 @@ export function Sheet({
     // Released downwards: the fly-out animation is already running and finishes the close itself.
     if (anim.current && anim.current.target >= hiddenY() - 1) return
     springTo(hiddenY(), 0, finishClose)
+    return undefined
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
@@ -385,7 +390,7 @@ export function Sheet({
     }
     if (detent === undefined) setActiveIndex(choice)
     latest.current.onDetentChange?.(choice)
-    springTo(points[choice], velocity)
+    springTo(yForIndex(choice), velocity)
     setAnnouncement(detentNames?.[choice] ?? `${choice + 1} / ${count}`)
   }
 

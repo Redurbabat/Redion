@@ -2877,6 +2877,13 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
 :focus-visible{
   outline:2px solid var(--accent);
   outline-offset:2px;
+}
+/* Die Rundung NICHT in den Inseln (E710). Sie stand oben mit im Block und
+   bog so jeden fokussierten Knopf des Kits: ein Knopf im Aktionsblatt hatte
+   ohne Fokus 0 px Rundung, mit Fokus 4 (gemessen, Kit-Karte insel-8). Das
+   Kit zeichnet seinen Fokus selbst, mit seiner Rundung. `:where` hält die
+   Genauigkeit bei (0,1,0) wie vorher. */
+:focus-visible:where(:not(:is(.ui-touch-root, .ui-touch-portal) *)){
   border-radius:4px;
 }
 .blk [contenteditable]:focus-visible{ outline-offset:0; }

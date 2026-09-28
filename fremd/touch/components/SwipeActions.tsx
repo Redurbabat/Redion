@@ -4,77 +4,38 @@ import { resolveSwipeRelease, revealProgress, swipeDistance } from '../gesture/s
 import { createVelocityTracker } from '../gesture/velocity'
 import { Glyph, type GlyphName } from '../icons/Glyph'
 import { cx } from '../internal/cx'
+import { keepFocusInList } from '../internal/keepFocusInList'
 import './SwipeActions.css'
 
 export interface SwipeAction {
   label: string
-  icon?: GlyphName
-  tone?: 'danger' | 'accent' | 'warning' | 'neutral'
+  icon?: GlyphName | undefined
+  tone?: 'danger' | 'accent' | 'warning' | 'neutral' | undefined
   onSelect: () => void
 }
 
 export interface SwipeActionsProps {
   /** Revealed by swiping left (listed from the row edge outwards: the first is outermost). */
-  trailing?: SwipeAction[]
+  trailing?: SwipeAction[] | undefined
   /** Revealed by swiping right. */
-  leading?: SwipeAction[]
+  leading?: SwipeAction[] | undefined
   /** A long swipe runs the first action of that side directly (e.g. delete). */
-  fullSwipe?: boolean
+  fullSwipe?: boolean | undefined
   /**
    * Names the row for assistive technology: every action is then announced
    * as "<label>: <context>" (e.g. "Löschen: Nachtfahrt") while its visible
    * label stays short, so twenty rows do not read as twenty identical
    * "Löschen" buttons. `ListRow` passes a string title automatically.
    */
-  context?: string
+  context?: string | undefined
   children: ReactNode
-  className?: string
+  className?: string | undefined
 }
 
 type Side = 'leading' | 'trailing'
 
 // Only one row is open at a time (opening one closes the previous).
 let closeOpenRow: (() => void) | null = null
-
-const FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-
-function siblings(el: Element, step: 'nextElementSibling' | 'previousElementSibling') {
-  const found: Element[] = []
-  for (let s = el[step]; s; s = s[step]) found.push(s)
-  return found
-}
-
-/**
- * When an action removes its own row (delete), the focused action button
- * disappears and focus would fall back to <body>. Watch the row for a short
- * while: if it leaves the document and nothing else took the focus, move it
- * to the next row that can take it (static rows are skipped), else to the
- * nearest one above. With no such row left, the app decides.
- */
-function keepFocusInList(root: HTMLElement | null) {
-  const row = root?.closest('li') ?? root
-  const parent = row?.parentElement
-  if (!row || !parent || typeof MutationObserver !== 'function') return
-  // Taken now: once the row is gone it has no siblings to ask.
-  const candidates = [...siblings(row, 'nextElementSibling'), ...siblings(row, 'previousElementSibling')]
-  const observer = new MutationObserver(() => {
-    if (row.isConnected) return
-    stop()
-    const active = document.activeElement
-    if (active && active !== document.body && active.isConnected) return // focus already went somewhere on purpose
-    const target = candidates
-      .filter((el) => el.isConnected)
-      .map((el) => el.querySelector<HTMLElement>(FOCUSABLE))
-      .find((el) => el !== null)
-    target?.focus()
-  })
-  const timer = setTimeout(() => stop(), 1000)
-  const stop = () => {
-    observer.disconnect()
-    clearTimeout(timer)
-  }
-  observer.observe(parent, { childList: true })
-}
 
 /**
  * Wraps a list row so it can be swiped aside to reveal actions.

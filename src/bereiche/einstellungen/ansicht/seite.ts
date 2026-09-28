@@ -1332,8 +1332,11 @@ const Einstellungen = (() => {
       /* GEFRAGT WIRD VORHER. Das Buch ist die einzige Auskunft darüber, was
          die Wolke bisher gekostet hat — weg ist weg, und die 70 Tage
          Historie kommen nicht zurück (§46). */
-      if (!confirm('Alle verbuchten KI-Kosten löschen? Die Übersicht beginnt ' +
-                   'danach wieder bei null. Die Grenzen bleiben.')) return;
+      /* Im Fenster des Touch Kits statt im Fenster des Browsers (E710):
+         dieselbe Frage, der Knopf rot, weil er etwas löscht. */
+      if (!(await Dialog.bestaetigen({ titel: 'Alle verbuchten KI-Kosten löschen?',
+             text: 'Die Übersicht beginnt danach wieder bei null. Die Grenzen bleiben.',
+             ja: 'Löschen', gefahr: true }))) return;
       KiBuch.leeren();
       UI.toast('Das KI-Buch ist leer.');
       o.neuZeichnen && o.neuZeichnen();
@@ -1698,9 +1701,10 @@ const Einstellungen = (() => {
           return;
         }
         if (!opfer.length) { UI.toast('Der Verlauf ist schon aufgeräumt — nichts zu tun'); return; }
-        if (!confirm(`${opfer.length} alte Fassungen endgültig löschen? ` +
-                     'Behalten werden die jüngsten, danach eine je Tag und eine je Monat. ' +
-                     'Von Hand gesicherte Fassungen bleiben alle.')) return;
+        if (!(await Dialog.bestaetigen({ titel: `${opfer.length} alte Fassungen endgültig löschen?`,
+               text: 'Behalten werden die jüngsten, danach eine je Tag und eine je Monat. ' +
+                     'Von Hand gesicherte Fassungen bleiben alle.',
+               ja: 'Endgültig löschen', gefahr: true }))) return;
         for (const id of opfer) await Store.versionLoeschen(id);
         UI.toast(opfer.length + ' alte Fassungen entfernt');
       },
@@ -1710,14 +1714,18 @@ const Einstellungen = (() => {
         UI.toast(ok ? 'Der Speicher ist jetzt dauerhaft' : 'Der Browser hat abgelehnt');
       },
       'alles-loeschen': async () => {
-        if (!confirm('Wirklich ALLE Seiten und Datenbanken löschen?')) return;
-        if (!confirm('Ganz sicher? Am besten vorher eine Sicherung speichern.')) return;
+        /* Zweimal gefragt, wie bisher — jetzt im Fenster des Kits (E710). */
+        if (!(await Dialog.bestaetigen({ titel: 'Wirklich ALLE Seiten und Datenbanken löschen?',
+               ja: 'Alles löschen', gefahr: true }))) return;
+        if (!(await Dialog.bestaetigen({ titel: 'Ganz sicher?',
+               text: 'Am besten vorher eine Sicherung speichern.', ja: 'Ja, alles löschen', gefahr: true }))) return;
         /* Kein Neuladen, wenn es nicht ganz geklappt hat: nach dem Neuladen
            sähe der Bildschirm leer aus, und genau das wäre die Lüge — die
            Daten wären noch da. Lieber stehen bleiben und es sagen. */
         try { await Store.wipe(); }
         catch (err) {
-          alert(err instanceof Error ? err.message : 'Es liess sich nicht alles löschen.');
+          await Dialog.melden({ titel: 'Es liess sich nicht alles löschen',
+            text: err instanceof Error ? err.message : 'Es liess sich nicht alles löschen.' });
           return;
         }
         location.reload();

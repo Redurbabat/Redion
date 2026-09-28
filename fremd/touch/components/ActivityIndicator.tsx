@@ -6,15 +6,15 @@ export type ActivityIndicatorSize = 'small' | 'large'
 
 export interface ActivityIndicatorProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
   /** small = 20 px (inline, in buttons and rows), large = 36 px (whole screen or card is loading). */
-  size?: ActivityIndicatorSize
+  size?: ActivityIndicatorSize | undefined
   /** What screen readers announce. Default "Lädt". */
-  label?: string
+  label?: string | undefined
   /**
    * 0…1: instead of spinning, the spokes appear one after another, clockwise
    * from the top, each fading up to its place in the spinning gradient — e.g.
    * while a pull-to-refresh is being pulled. Leave undefined to spin.
    */
-  progress?: number
+  progress?: number | undefined
 }
 
 const PIXELS: Record<ActivityIndicatorSize, number> = { small: 20, large: 36 }
@@ -33,7 +33,7 @@ const spokes = Array.from({ length: SPOKES }, (_, i) => {
   const angle = i * (360 / SPOKES)
   // Spoke i sits i steps clockwise from the head = (8 - i) steps back in the trail.
   const trail = (SPOKES - i) % SPOKES
-  return { angle, opacity: TRAIL_OPACITY[trail] }
+  return { angle, opacity: TRAIL_OPACITY[trail] ?? 0 }
 })
 
 /** Opacity of spoke `index` for a reveal `progress` (0…1): its resting opacity, faded in during its eighth. */

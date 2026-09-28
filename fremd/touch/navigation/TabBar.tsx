@@ -18,6 +18,7 @@ import { rubberbandClamp } from '../gesture/rubberband'
 import { createVelocityTracker, type VelocityTracker } from '../gesture/velocity'
 import { Glyph, type GlyphName } from '../icons/Glyph'
 import { cx } from '../internal/cx'
+import { useMergedRef } from '../internal/useMergedRef'
 import { usePress } from '../internal/usePress'
 import { useReducedMotion } from '../internal/useReducedMotion'
 import { animateSpring, type SpringAnimation } from '../motion/animateSpring'
@@ -34,10 +35,10 @@ export interface TabBarItem<V extends string = string> {
    */
   icon: GlyphName | ReactElement
   /** Small red pill on the icon: a count (0 hides it) or a short word such as "Neu". */
-  badge?: number | string
+  badge?: number | string | undefined
   /** Text for assistive technology instead of the badge, e.g. "3 ungelesene". Default "<n> neue" / the word. */
-  badgeLabel?: string
-  disabled?: boolean
+  badgeLabel?: string | undefined
+  disabled?: boolean | undefined
 }
 
 export type TabBarVariant = 'bar' | 'floating'
@@ -46,17 +47,17 @@ export interface TabBarProps<V extends string = string>
   extends Omit<ComponentPropsWithRef<'nav'>, 'onChange' | 'defaultValue' | 'children' | 'aria-label'> {
   items: ReadonlyArray<TabBarItem<V>>
   /** Controlled selection. Leave undefined for an uncontrolled bar. */
-  value?: V
+  value?: V | undefined
   /** Initial selection when uncontrolled (default: the first enabled item). */
-  defaultValue?: V
+  defaultValue?: V | undefined
   /** Called with the newly chosen value (tap, keyboard or drag) — not when the active tab is tapped again. */
-  onChange?: (value: V) => void
+  onChange?: ((value: V) => void) | undefined
   /** Accessible name of the navigation landmark, e.g. "Hauptbereiche". */
   label: string
   /** bar = full-width strip on the bottom edge; floating = glass capsule hovering above the content. */
-  variant?: TabBarVariant
+  variant?: TabBarVariant | undefined
   /** Text announced after a drag picked a tab. Default "<label> ausgewählt". */
-  formatAnnouncement?: (item: TabBarItem<V>) => string
+  formatAnnouncement?: ((item: TabBarItem<V>) => string) | undefined
 }
 
 /** A flick carries the material about one tab, not across the whole bar (0.998 would be a scroll view). */
@@ -173,14 +174,7 @@ export function TabBar<V extends string = string>({
     latest.current = { reduced }
   })
 
-  const setNavRef = useCallback(
-    (node: HTMLElement | null) => {
-      navRef.current = node
-      if (typeof ref === 'function') ref(node)
-      else if (ref) ref.current = node
-    },
-    [ref],
-  )
+  const setNavRef = useMergedRef(navRef, ref)
 
   const tabButtons = () =>
     Array.from(trackRef.current?.querySelectorAll<HTMLButtonElement>(':scope > .ui-touch-tabbar-tab') ?? [])
@@ -410,9 +404,15 @@ export function TabBar<V extends string = string>({
 
   const nearestEnabled = (centre: number) => {
     let best = -1
+    let bestDistance = 0
     for (const i of enabledIndices()) {
-      const d = Math.abs(geo.current.centres[i] - centre)
-      if (best === -1 || d < Math.abs(geo.current.centres[best] - centre)) best = i
+      const tabCentre = geo.current.centres[i]
+      if (tabCentre === undefined) continue // not measured (yet)
+      const d = Math.abs(tabCentre - centre)
+      if (best === -1 || d < bestDistance) {
+        best = i
+        bestDistance = d
+      }
     }
     return best
   }
@@ -504,23 +504,29 @@ export function TabBar<V extends string = string>({
     if (d.state !== 'dragging') return // a tap: the click selects
     endDragUi(d)
     suppressNextClick()
-    const enabled = enabledIndices()
-    if (enabled.length === 0) return
+    // Where the material may land: the enabled tabs, each with its measured centre.
+    const stops = enabledIndices().flatMap((index) => {
+      const item = items[index]
+      const centre = geo.current.centres[index]
+      return item && centre !== undefined ? [{ index, value: item.value, centre }] : []
+    })
+    if (stops.length === 0) return
     const velocity = d.tracker.velocity(event.timeStamp)
     const pick = selectSnapPoint({
       position: d.target,
       velocity,
-      points: enabled.map((i) => geo.current.centres[i]),
+      points: stops.map((stop) => stop.centre),
       decelerationRate: DECELERATION,
     })
-    const choice = enabled[pick]
-    motion.current.index = choice
+    const stop = stops[pick]
+    if (!stop) return // not reached: selectSnapPoint picks an index of `points`
+    motion.current.index = stop.index
     // Still being pulled over: keep the spring's own velocity; grabbed: take the finger's.
-    springTo(geo.current.centres[choice], motion.current.anim ? undefined : velocity)
-    if (choice !== activeIndex) {
-      select(choice)
+    springTo(stop.centre, motion.current.anim ? undefined : velocity)
+    if (stop.index !== activeIndex) {
+      select(stop.index)
       // A new object re-renders, so the layout effect also catches a controlled parent that rejects the choice.
-      setDragPick({ value: items[choice].value })
+      setDragPick({ value: stop.value })
     }
   }
 
@@ -537,7 +543,8 @@ export function TabBar<V extends string = string>({
     const count = items.length
     for (let offset = 1; offset <= count; offset += 1) {
       const index = (((from + direction * offset) % count) + count) % count
-      if (!items[index].disabled) return index
+      const item = items[index]
+      if (item && !item.disabled) return index
     }
     return -1
   }
@@ -569,7 +576,10 @@ export function TabBar<V extends string = string>({
     if (next !== -1) buttons[next]?.focus()
   }
 
-  const usable = (i: number | null) => i !== null && i >= 0 && i < items.length && !items[i].disabled
+  const usable = (i: number | null) => {
+    const item = i === null ? undefined : items[i]
+    return item !== undefined && !item.disabled
+  }
   const tabStop = usable(focusIndex) ? focusIndex : usable(activeIndex) ? activeIndex : firstEnabled(items)
 
   return (

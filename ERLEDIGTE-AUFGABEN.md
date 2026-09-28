@@ -1,5 +1,33 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E710 · Die Fragen der Schale im Fenster des Touch Kits
+
+**Redur:** um ca. 21:49 „was du beim touckit gebaut hast ich will alles so
+haben mit redion passende inhalten"; um ca. 22:10 „du muss ofne pause an
+redion arbeiten ich will wenn ich am morgen die redion öfnnen eien komplet
+besseren webseit sehen ohne eine funktione löschen bessere ordnungen
+bessere übergagnge besssere efeckten , bessere oberfläsche alles kannst du
+nur an reddion arbeiten".
+
+**Gefunden:** Die Fragen standen als Kasten oben im Bild (am Telefon oben
+angeklebt), verschwanden ohne Übergang, die Wahl hatte keinen sichtbaren
+Abbruch. Ein Kit-Fenster über einem alten legte beide still (gemessen), der
+gemeinsame Escape-Griff nahm das Fenster darunter weg, „Ruhige Darstellung"
+erreichte die Federn des Kits nicht, und der Zeitmesser ging auf Escape
+nicht zu.
+
+**Gebaut:** das Kit neu geholt (d21c402) und unter Redions strengen
+Schaltern geprüft; die Insel „dialog" (`src/islands/dialog.tsx`) für
+`Dialog.frage/wahl/mehrzeilig` — Mitte mit Feder, Glas, Hinweise, sichtbares
+„Abbrechen", am Telefon ab drei Antworten das Aktionsblatt — in einem
+`.overlay`-Träger, den Fokus und der Escape-Griff kennen; das bisherige
+Fenster als Rückweg; Vorwärmen beim ersten Tipp; `Dialog.bestaetigen` und
+`Dialog.melden` (sechs Browserfenster umgezogen); Zeitmesser auf Escape.
+
+**Geprüft:** `test587` (neu, rot zuerst), `test578` (Neuholen, Stufe 1b,
+strenge Schalter, Glas-Überschreibung), die Nachbarn im Commit
+E710.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

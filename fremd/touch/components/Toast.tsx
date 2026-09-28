@@ -1,8 +1,7 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,20 +11,18 @@ import {
 } from 'react'
 import { createVelocityTracker } from '../gesture/velocity'
 import { rubberband } from '../gesture/rubberband'
-import { Glyph, type GlyphName } from '../icons/Glyph'
+import { shouldDismissToast } from '../gesture/toast'
+import { Glyph } from '../icons/Glyph'
 import { cx } from '../internal/cx'
+import { pageTheme } from '../overlay/pageTheme'
 import { openModalCount } from '../overlay/useModal'
+import { ToastContext, type ToastOptions } from './useToast'
 import './Toast.css'
 
-export interface ToastOptions {
-  title: string
-  message?: string
-  icon?: GlyphName
-  tone?: 'neutral' | 'success' | 'danger'
-  action?: { label: string; onSelect: () => void }
-  /** Milliseconds before it leaves on its own; 0 keeps it until dismissed. Default 4000. */
-  duration?: number
-}
+// Only components are exported from here (a dev server hot-reloads the file
+// in place); the hook and context live in useToast.ts, the swipe maths in
+// gesture/toast.ts.
+export type { ToastApi, ToastOptions } from './useToast'
 
 interface ToastEntry {
   id: number
@@ -33,37 +30,16 @@ interface ToastEntry {
   state: 'open' | 'closing'
 }
 
-interface ToastApi {
-  show: (options: ToastOptions) => number
-  dismiss: (id: number) => void
-}
-
-const ToastContext = createContext<ToastApi | null>(null)
-
-export function useToast(): ToastApi {
-  const api = useContext(ToastContext)
-  if (!api) throw new Error('useToast must be used inside <ToastProvider>')
-  return api
-}
-
 const MAX_VISIBLE = 3
 const EXIT_MS = 220
-/** Upward swipe (px) or speed (px/s) that dismisses. */
-export const TOAST_SWIPE_DISTANCE = 32
-export const TOAST_SWIPE_VELOCITY = 300
-
-/** Decides on release whether an upward swipe dismisses the toast. */
-export function shouldDismissToast(offset: number, velocity: number): boolean {
-  return offset <= -TOAST_SWIPE_DISTANCE || velocity <= -TOAST_SWIPE_VELOCITY
-}
 
 export interface ToastProviderProps {
   children: ReactNode
   /** Accessible name of the live region. */
-  label?: string
-  dismissLabel?: string
+  label?: string | undefined
+  dismissLabel?: string | undefined
   /** Contain toasts inside an element (demo phone frame) instead of the viewport. */
-  contained?: boolean
+  contained?: boolean | undefined
 }
 
 /**
@@ -101,6 +77,16 @@ export function ToastProvider({ children, label = 'Benachrichtigungen', dismissL
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [toasts, dismiss])
 
+  // Placed above the kit root (e.g. around the whole app), the region would miss the root's theme:
+  // then it carries the page theme itself, like an overlay layer in <body> (Portal.tsx).
+  const regionRef = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    const region = regionRef.current
+    if (!region) return
+    if (region.parentElement?.closest('.ui-touch-root, [data-ui-theme]')) region.removeAttribute('data-ui-theme')
+    else region.setAttribute('data-ui-theme', pageTheme())
+  })
+
   const api = useMemo(() => ({ show, dismiss }), [show, dismiss])
   const open = toasts.filter((t) => t.state === 'open')
 
@@ -108,6 +94,7 @@ export function ToastProvider({ children, label = 'Benachrichtigungen', dismissL
     <ToastContext.Provider value={api}>
       {children}
       <section
+        ref={regionRef}
         className={cx('ui-touch-toast-region', contained && 'ui-touch-toast-region--contained')}
         aria-label={label}
         aria-live="polite"

@@ -12,17 +12,17 @@ export interface SpringAnimationOptions {
   from: number
   to: number
   /** Initial velocity in units per second, e.g. the finger speed on release. */
-  velocity?: number
+  velocity?: number | undefined
   params: SpringParams
   onUpdate: (value: number, velocity: number) => void
-  onComplete?: () => void
+  onComplete?: (() => void) | undefined
   /** Distance to the target that counts as arrived (caller units). Default 0.01. */
-  restDelta?: number
+  restDelta?: number | undefined
   /** Speed that counts as stopped (caller units per second). Default 0.1. */
-  restSpeed?: number
+  restSpeed?: number | undefined
   /** Skip the motion and land on the target immediately. */
-  reducedMotion?: boolean
-  scheduler?: FrameScheduler
+  reducedMotion?: boolean | undefined
+  scheduler?: FrameScheduler | undefined
 }
 
 export interface SpringAnimation {

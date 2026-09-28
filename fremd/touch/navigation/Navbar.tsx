@@ -13,17 +13,17 @@ export interface NavbarProps {
    * Heading level of the title. Default 1 (the screen is the page). Use 2–4
    * when the screen is embedded in a larger page, so the page keeps one h1.
    */
-  headingLevel?: 1 | 2 | 3 | 4
+  headingLevel?: 1 | 2 | 3 | 4 | undefined
   /** Show the iOS large title that shrinks into the bar on scroll. Default true. */
-  largeTitle?: boolean
+  largeTitle?: boolean | undefined
   /** Left slot (e.g. "Bearbeiten"); shown after the back button if both are given. */
-  leading?: ReactNode
+  leading?: ReactNode | undefined
   /** Right slot (actions). */
-  trailing?: ReactNode
+  trailing?: ReactNode | undefined
   /** Text of the back button (also its accessible name). Default "Zurück". */
-  backLabel?: string
+  backLabel?: string | undefined
   /** Renders a back button (chevron + label) when given. */
-  onBack?: () => void
+  onBack?: (() => void) | undefined
   /**
    * The scroll container the navbar lives in (render the navbar as its first
    * child), or `document.documentElement` when the page itself scrolls. Its
@@ -41,10 +41,10 @@ export interface NavbarProps {
    * Finish a half-way collapse when scrolling stops. Default true. A scroll
    * that keyboard focus caused is left where it is.
    */
-  snap?: boolean
+  snap?: boolean | undefined
   /** Extra row under the large title that scrolls with the page, e.g. a SearchBar. */
-  children?: ReactNode
-  className?: string
+  children?: ReactNode | undefined
+  className?: string | undefined
 }
 
 /** Large-title block height before layout exists (34 px / 41 px type + padding). */

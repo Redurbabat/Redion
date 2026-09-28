@@ -28,6 +28,12 @@ export interface StackNavigation {
   push(screen: StackScreen): void
   /** Go back one screen (no-op on the first screen). */
   pop(): void
+  /**
+   * Go back to the first screen in one step, e.g. after a finished flow: the
+   * top screen slides out as in `pop()` and reveals the first one; screens in
+   * between are dropped without their own motion (no-op on the first screen).
+   */
+  popToRoot(): void
   /** 1-based position of this screen in the stack (1 = first screen). */
   depth: number
   /** True when there is a screen below this one: show a back button. */
@@ -39,7 +45,14 @@ export interface StackScreen {
   id: string
   /** Announced to screen readers when the screen becomes the top one. */
   title: string
-  /** The screen's content. Called as a component, so it may use hooks. */
+  /**
+   * The screen's content. Called as a component, so it may use hooks.
+   *
+   * The stack keeps this closure from push time and memoises the screen: a
+   * re-render of the app does not call it again, so values it captured stay
+   * as they were when it was pushed. Read data that changes (appointments,
+   * settings …) inside the screen through context or hooks — they update it.
+   */
   render: (nav: StackNavigation) => ReactNode
 }
 
@@ -47,10 +60,10 @@ export interface NavigationStackProps {
   /** The first screen. Read once on mount. */
   initial: StackScreen
   /** Accessible name of the stack region (e.g. the app section's name). */
-  label?: string
+  label?: string | undefined
   /** Swipe from the left edge to go back. Default true. */
-  swipeBack?: boolean
-  className?: string
+  swipeBack?: boolean | undefined
+  className?: string | undefined
 }
 
 /** Opt-out marker for controls near the left edge that need horizontal drags themselves. */
@@ -90,6 +103,7 @@ interface StackState {
 type Action =
   | { type: 'push'; screen: StackScreen }
   | { type: 'pop'; velocity?: number; animate?: boolean }
+  | { type: 'popToRoot' }
   | { type: 'settle' }
 
 function reducer(state: StackState, action: Action): StackState {
@@ -109,9 +123,11 @@ function reducer(state: StackState, action: Action): StackState {
       }
     }
     case 'pop': {
-      if (state.entries.length < 2) return state
-      const top = state.entries[state.entries.length - 1]
+      const top = state.entries.at(-1)
       const entries = state.entries.slice(0, -1)
+      const next = entries.at(-1)
+      // The first screen stays: a pop needs a screen to go back to.
+      if (!top || !next) return state
       const animate = action.animate !== false
       return {
         ...state,
@@ -120,7 +136,23 @@ function reducer(state: StackState, action: Action): StackState {
         seq: state.seq + 1,
         motion: !animate ? 'jump' : state.leaving ? 'pop-fresh' : 'pop',
         velocity: action.velocity ?? 0,
-        announcement: entries[entries.length - 1].screen.title,
+        announcement: next.screen.title,
+      }
+    }
+    case 'popToRoot': {
+      const [first, ...above] = state.entries
+      // Already on the first screen (also while a pop to it is still sliding out).
+      if (!first || above.length === 0) return state
+      return {
+        ...state,
+        entries: [first],
+        // A pop still sliding out keeps going from where it is; otherwise the top screen leaves as in a pop.
+        // Either way only the first screen is revealed below it: the screens in between just go.
+        leaving: state.leaving ?? above.at(-1) ?? null,
+        seq: state.seq + 1,
+        motion: 'pop',
+        velocity: 0,
+        announcement: first.screen.title,
       }
     }
     case 'settle':
@@ -140,6 +172,7 @@ export function useStackNavigation(): StackNavigation {
 interface StackApi {
   push(screen: StackScreen): void
   pop(): void
+  popToRoot(): void
 }
 
 const setOpacity = (el: Element | null | undefined, value: string) => {
@@ -164,6 +197,8 @@ const partOf = (page: HTMLElement | null, part: 'shadow' | 'dim') => {
  *   through React state.
  * - Interruptible: a pop during a push (or a push during a pop) reverses
  *   the running spring with its velocity instead of restarting.
+ * - `popToRoot()` is one pop to the first screen: the top page slides out
+ *   over it, the screens in between are dropped without motion.
  * - Swipe back from within 30 px of the left edge: 1:1 tracking, then the
  *   release distance and velocity decide (`resolveSwipeBack`) and the
  *   spring continues with the finger's speed.
@@ -187,6 +222,7 @@ export function NavigationStack({ initial, label, swipeBack = true, className }:
   const [api] = useState<StackApi>(() => ({
     push: (screen) => dispatch({ type: 'push', screen }),
     pop: () => dispatch({ type: 'pop' }),
+    popToRoot: () => dispatch({ type: 'popToRoot' }),
   }))
 
   const rootRef = useRef<HTMLDivElement>(null)
@@ -217,9 +253,10 @@ export function NavigationStack({ initial, label, swipeBack = true, className }:
   const suppressClickUntil = useRef(0)
 
   const { entries, leaving } = state
-  const current = entries[entries.length - 1]
+  // Never empty: the stack starts with `initial` and a pop keeps the first screen.
+  const current = entries.at(-1)
   const topEntry = leaving ?? current
-  const belowEntry = leaving ? current : entries.length > 1 ? entries[entries.length - 2] : null
+  const belowEntry = leaving ? current : entries.at(-2)
 
   // ── painting ─────────────────────────────────────────────────────────
   const width = () => rootRef.current?.clientWidth || rootRef.current?.getBoundingClientRect().width || 0
@@ -353,6 +390,14 @@ export function NavigationStack({ initial, label, swipeBack = true, className }:
     // Headings are not focusable by default: make them programmatically focusable only.
     if (target.tabIndex < 0 && !target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1')
     target.setAttribute('data-ui-stack-focused', '')
+    // A revealed page turns visible with data-moving. Under the app's motion switch every element
+    // in a kit root has a 1 ms transition (base.css), so it would still be hidden this frame and
+    // focus() would do nothing: end those visibility transitions first.
+    if (typeof page.getAnimations === 'function') {
+      for (const animation of page.getAnimations({ subtree: true })) {
+        if ('transitionProperty' in animation && animation.transitionProperty === 'visibility') animation.finish()
+      }
+    }
     target.focus({ preventScroll: true })
   }
 
@@ -567,7 +612,7 @@ export function NavigationStack({ initial, label, swipeBack = true, className }:
 
   const slots: Array<{ entry: Entry; slot: 'top' | 'below' }> = []
   if (belowEntry) slots.push({ entry: belowEntry, slot: 'below' })
-  slots.push({ entry: topEntry, slot: 'top' })
+  if (topEntry) slots.push({ entry: topEntry, slot: 'top' })
 
   return (
     <div
@@ -613,7 +658,7 @@ interface StackPageProps {
 const StackPage = memo(function StackPage({ ref, entry, slot, active, api }: StackPageProps) {
   const { depth, screen } = entry
   const nav = useMemo<StackNavigation>(
-    () => ({ push: api.push, pop: api.pop, depth, canGoBack: depth > 1 }),
+    () => ({ push: api.push, pop: api.pop, popToRoot: api.popToRoot, depth, canGoBack: depth > 1 }),
     [api, depth],
   )
   return (

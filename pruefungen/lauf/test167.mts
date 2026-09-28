@@ -159,7 +159,7 @@ const blk2 = await seite.evaluate(async () => {
 const eingang = seite.locator('input[type="file"][accept*="ods"]');
 await eingang.waitFor({ state: 'attached', timeout: 5000 });
 await eingang.setInputFiles(probeOds);
-const mehrKnopf = seite.locator('.overlay .wahl-knoepfe button[data-w="rein"]');
+const mehrKnopf = seite.locator('.overlay button[data-w="rein"]');
 await mehrKnopf.waitFor({ state: 'visible', timeout: 8000 });
 await mehrKnopf.click();
 await seite.waitForTimeout(900);

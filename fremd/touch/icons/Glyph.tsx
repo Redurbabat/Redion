@@ -131,8 +131,8 @@ const outlineOnly: ReadonlySet<GlyphName> = new Set<GlyphName>([
 export interface GlyphProps extends Omit<SVGProps<SVGSVGElement>, 'children'> {
   name: GlyphName
   /** Filled rendering (heart, star, bookmark …); glyphs with no filled form (arrows, lines, clock) stay outlined. */
-  filled?: boolean
-  size?: number
+  filled?: boolean | undefined
+  size?: number | undefined
 }
 
 /** One glyph of the kit's set, decorative (`aria-hidden`); `glyphNames` lists every name. */

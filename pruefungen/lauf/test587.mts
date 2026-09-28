@@ -258,6 +258,47 @@ await kitOffen(s1);
 await s1.keyboard.press('Escape');
 gleich('Escape bei der Wahl: ""', await antwort(s1), '');
 
+/* JA ODER NEIN, UND ES LÖSCHT (Dialog.bestaetigen mit gefahr): „Abbrechen"
+   links und im Fokus, die Antwort rot — ein Enter aus Versehen löscht nichts.
+   Nach dem roten Commit dazugekommen (gesehen am ersten Bild: „Löschen"
+   links und im Fokus); rot gesehen gegen den ersten Bau dieses Zweigs. */
+await stellen(s1, `Dialog.bestaetigen({ titel: 'Alle verbuchten KI-Kosten löschen?', text: 'Die Übersicht beginnt danach wieder bei null.', ja: 'Löschen', gefahr: true })`);
+p('Dialog.bestaetigen öffnet den Dialog des Kits', await kitOffen(s1));
+const g1 = await s1.evaluate(() => {
+  const d = document.querySelector<HTMLElement>('.overlay .ui-touch-dialog')!;
+  const k = [...d.querySelectorAll<HTMLElement>('button')];
+  return { folge: k.map(b => b.dataset['w'] ?? b.dataset['a'] ?? '?'),
+           fokus: (document.activeElement as HTMLElement)?.dataset?.['a'] ?? null,
+           rot: !!d.querySelector('[data-w="ja"].ui-touch-dialog-button--destructive') };
+});
+gleich('… „Abbrechen" links, die gefährliche Antwort rechts', g1.folge, ['zu', 'ja']);
+gleich('… der Fokus auf „Abbrechen", die Antwort rot', [g1.fokus, g1.rot], ['zu', true]);
+await s1.keyboard.press('Enter');
+gleich('Enter beantwortet sie mit „nein" (false)', await antwort(s1), false);
+await stellen(s1, `Dialog.bestaetigen({ titel: 'Löschen?', ja: 'Löschen', gefahr: true })`);
+await kitOffen(s1);
+await s1.click('.overlay [data-w="ja"]');
+gleich('… und ein Tipp auf „Löschen" mit true', await antwort(s1), true);
+
+/* DIE SCHEIBE KOMMT ALS SCHEIBE (E703, test582): im ersten Augenblick
+   Deckkraft 1, keine opacity im Ankommen — nur der Inhalt blendet ein. */
+await stellen(s1, `UI.frage('Scheibe', '')`);
+await kitOffen(s1, 4000);
+const scheibe = await s1.evaluate(() => {
+  const el = document.querySelector<HTMLElement>('.overlay .ui-touch-dialog')!;
+  const eigene = el.getAnimations();
+  for (const a of [...eigene, ...[...el.children].flatMap(k => k.getAnimations())]) { a.pause(); a.currentTime = 0; }
+  const erstes = el.firstElementChild as HTMLElement | null;
+  return { deck: +getComputedStyle(el).opacity,
+           nebel: eigene.some(a => (a.effect as KeyframeEffect).getKeyframes().some(k => 'opacity' in k && +(k['opacity'] as string) < 1)),
+           inhalt: erstes ? +getComputedStyle(erstes).opacity : 1, glas: getComputedStyle(el).backdropFilter };
+});
+p('Die Glasscheibe des Dialogs ist vom ersten Bild an da; ihr Inhalt blendet ein (E703)',
+  scheibe.deck === 1 && !scheibe.nebel && scheibe.inhalt < 0.5 && scheibe.glas !== 'none', JSON.stringify(scheibe));
+await s1.evaluate(() => document.getAnimations().forEach(a => a.play()));
+await s1.keyboard.press('Escape');
+await antwort(s1);
+
 await stellen(s1, `Dialog.mehrzeilig('Haftnotiz', 'erste Zeile')`);
 p('Dialog.mehrzeilig öffnet den Dialog des Kits', await kitOffen(s1));
 gleich('… mit einem mehrzeiligen #fq', await s1.evaluate(() =>
@@ -405,6 +446,11 @@ await stellen(s1, `UI.frage('Über allem', '')`);
 await kitOffen(s1);
 p('Ein Tipp in die Mitte trifft den Dialog, nicht das Vollbild darunter', await s1.evaluate(() => {
   const panel = document.querySelector<HTMLElement>('.overlay .ui-touch-dialog')!;
+  /* Fokus legt das Vollbild still (`inert`), und was `inert` ist, übergeht
+     die Trefferprüfung — dann träfe der Tipp den Dialog auch, wenn er
+     DARUNTER läge. Die Gegenprobe (Träger auf z-index 1) war darum grün.
+     Also hier ohne `inert`: es zählt nur die Reihenfolge der Ebenen. */
+  document.getElementById('t587-vollbild')?.removeAttribute('inert');
   const r = panel.getBoundingClientRect();
   const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
   return !!t && panel.contains(t);
@@ -452,6 +498,12 @@ const lage = await s3.evaluate(() => {
 });
 p('Die Frage sitzt in der Mitte (Mitte des Fensters zwischen 30 und 70 % der Höhe)',
   lage.mitte > 844 * 0.3 && lage.mitte < 844 * 0.7, JSON.stringify(lage));
+await s3.keyboard.press('Escape');
+await antwort(s3);
+await stellen(s3, `Dialog.mehrzeilig('Haftnotiz', 'Ohmsches Gesetz')`);
+await kitOffen(s3);
+gleich('Am Telefon steht unter „Übernehmen" kein „Strg + Enter" (keine Tastatur)',
+  await s3.evaluate(() => document.querySelector('.overlay [data-a="ok"] .ui-touch-dialog-button-hint')?.textContent ?? null), null);
 await s3.keyboard.press('Escape');
 await antwort(s3);
 await stellen(s3, `Dialog.wahl({ titel: 'Farbsatz', text: 'Welcher Satz?', knoepfe: [

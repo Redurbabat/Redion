@@ -6,15 +6,15 @@ import './Chip.css'
 
 export interface FilterChipProps extends Omit<ComponentPropsWithRef<'button'>, 'aria-pressed'> {
   /** Controlled state. Leave undefined for an uncontrolled chip. */
-  selected?: boolean
+  selected?: boolean | undefined
   /** Initial state of an uncontrolled chip. */
-  defaultSelected?: boolean
+  defaultSelected?: boolean | undefined
   /** Called with the new state after a click (skipped when `onClick` calls preventDefault()). */
-  onSelectedChange?: (selected: boolean, event: MouseEvent<HTMLButtonElement>) => void
+  onSelectedChange?: ((selected: boolean, event: MouseEvent<HTMLButtonElement>) => void) | undefined
   /** Glyph before the label; it hands its slot to the check mark while selected. */
-  icon?: GlyphName
+  icon?: GlyphName | undefined
   /** Visible text — also the accessible name. */
-  children?: ReactNode
+  children?: ReactNode | undefined
 }
 
 /**
@@ -85,13 +85,13 @@ export interface RemovableChipProps extends Omit<ComponentPropsWithRef<'span'>, 
    * when the label is plain text (strings / numbers), otherwise to
    * "Entfernen" — pass a specific name then.
    */
-  removeLabel?: string
+  removeLabel?: string | undefined
   /** Glyph before the label. */
-  icon?: GlyphName
+  icon?: GlyphName | undefined
   /** Disables the remove button and dims the chip. */
-  disabled?: boolean
+  disabled?: boolean | undefined
   /** Visible text of the chip. */
-  children?: ReactNode
+  children?: ReactNode | undefined
 }
 
 const REMOVE_KEYS = new Set(['Backspace', 'Delete'])

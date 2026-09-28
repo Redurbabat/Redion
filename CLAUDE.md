@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 527 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 528 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1469,6 +1469,20 @@ Systems und „Ruhige Darstellung". Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig; beim
 Zusammenführen nach `test580` bis `test584` nachgezählt: 527.*
 
+*Und 528: `test587` — die Fragen der Schale im Fenster des Touch Kits
+(E710, Stufe 1b von E699). Er stellt `Dialog.frage`, `Dialog.wahl` und
+`Dialog.mehrzeilig` wirklich und liest die Antworten zurück (Text, `null`,
+`''`, Kennung), öffnet einen Kit-Dialog über einem alten Fenster und misst,
+dass beide Systeme dieselbe oberste Ebene sehen (vorher: beide `inert`,
+nichts bedienbar), dass Escape genau eines schliesst und Tab im Dialog
+bleibt. Am Telefon misst er die Lage (Mitte, Aktionsblatt unten), in allen
+zehn Schemata den Kontrast der Knöpfe (Akzent als Schrift, L222 Punkt 6),
+dazu „Starker Kontrast ohne Glas", die Scheibe ohne Nebel (E703), die
+gefährliche Ja/Nein-Frage mit „Abbrechen" im Fokus, den Rückweg ohne
+Inseln, den Zeitmesser auf Escape und die Rundung im Tastaturfokus. Gezählt am 28. September, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf
+seinem Zweig; die zweite Welle zählt beim Zusammenführen neu.*
+
 ### Die Befehle
 
 ```txt
@@ -1485,7 +1499,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 527 Läufe
+npm run pruefen                      alle 528 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1575,7 +1589,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 527 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 528 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

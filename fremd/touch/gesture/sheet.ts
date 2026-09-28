@@ -28,9 +28,9 @@ export function resolveDetents(
  * iOS only shows for the full-height sheet.
  */
 export function sheetProgress(height: number, detents: number[]): number {
-  if (detents.length === 0) return 0
-  const top = detents[detents.length - 1]
-  const below = detents.length > 1 ? detents[detents.length - 2] : 0
+  const top = detents.at(-1)
+  if (top === undefined) return 0
+  const below = detents.at(-2) ?? 0
   if (top <= below) return 1
   return Math.min(1, Math.max(0, (height - below) / (top - below)))
 }

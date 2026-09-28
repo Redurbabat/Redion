@@ -16,22 +16,22 @@ import './SearchBar.css'
 
 export interface SearchBarProps {
   /** Accessible name of the field. Default "Suchen". */
-  label?: string
-  placeholder?: string
+  label?: string | undefined
+  placeholder?: string | undefined
   /** Controlled text. */
-  value?: string
+  value?: string | undefined
   /** Initial text when uncontrolled. */
-  defaultValue?: string
-  onChange?: (value: string) => void
+  defaultValue?: string | undefined
+  onChange?: ((value: string) => void) | undefined
   /** Return / the keyboard's search key. */
-  onSubmit?: (value: string) => void
+  onSubmit?: ((value: string) => void) | undefined
   /** The cancel button (or Escape on an empty field) left the search. */
-  onCancel?: () => void
-  cancelLabel?: string
-  clearLabel?: string
+  onCancel?: (() => void) | undefined
+  cancelLabel?: string | undefined
+  clearLabel?: string | undefined
   /** Hide the on-screen keyboard after submitting so results are visible. Default true. */
-  blurOnSubmit?: boolean
-  className?: string
+  blurOnSubmit?: boolean | undefined
+  className?: string | undefined
 }
 
 /** Keeps focus where it is when a button inside the bar is pressed with a mouse or finger. */

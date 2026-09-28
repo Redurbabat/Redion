@@ -1,0 +1,675 @@
+/*
+ * DeleteButton — a circle that flows like a liquid into two pills.
+ *
+ * Layers, bottom → top (the host box stays 44 × 44; everything else is an overlay):
+ *  .ui-touch-delete-goo      the white blob, aria-hidden. Each pill is three pieces that only
+ *                            translate / scale: two 44 px end circles and a middle stretched in X
+ *                            (its radius never distorts). A static SVG goo filter (blur + alpha
+ *                            threshold, then hairline + soft shadow) fuses them. Closed: every piece
+ *                            sits inside the circle. Open: two pills with a gap. On the way the
+ *                            second pill's circles pass close to the first — the filter draws the
+ *                            neck that stretches and snaps.
+ *  .ui-touch-delete-trigger  the round button (transparent: the blob draws it), its glyph.
+ *  .ui-touch-delete-pair     the two real buttons on the open geometry (transparent too).
+ *
+ * Motion: pieces and words move on the bouncy spring when opening, on snappy when closing.
+ * The words sharpen by cross-fading with a statically blurred copy (only opacity animates).
+ * Geometry comes in as --ui-touch-delete-a / -b (measured pill widths); --ui-touch-delete-sign is
+ * 1 when the pair grows to the right, −1 when it grows to the left (expand + writing direction).
+ */
+
+.ui-touch-delete {
+  --ui-touch-delete-size: var(--ui-hit-min);
+  --ui-touch-delete-a: 88px;
+  --ui-touch-delete-b: 88px;
+  --ui-touch-delete-gap: 8px;
+  /* Room around the blob inside the filtered layer: overshoot, hairline and shadow. */
+  --ui-touch-delete-pad: 16px;
+  --ui-touch-delete-sign: 1;
+  --ui-touch-delete-surface: var(--ui-color-surface-raised);
+  /* Hover tint keeps the red word at 4.5 : 1 (light 20 %, dark 12 %); pressed is stronger, for a moment. */
+  --ui-touch-delete-danger-tint: light-dark(
+    color-mix(in srgb, var(--ui-color-danger) 20%, var(--ui-touch-delete-surface)),
+    color-mix(in srgb, var(--ui-color-danger) 12%, var(--ui-touch-delete-surface))
+  );
+  --ui-touch-delete-danger-press: light-dark(
+    color-mix(in srgb, var(--ui-color-danger) 28%, var(--ui-touch-delete-surface)),
+    color-mix(in srgb, var(--ui-color-danger) 20%, var(--ui-touch-delete-surface))
+  );
+  --ui-touch-delete-gray-tint: color-mix(in srgb, var(--ui-color-label) 9%, var(--ui-touch-delete-surface));
+  --ui-touch-delete-gray-press: color-mix(in srgb, var(--ui-color-label) 15%, var(--ui-touch-delete-surface));
+  /* The second pill starts as a small circle hidden inside the first. */
+  --ui-touch-delete-seed: 0.5;
+  --ui-touch-delete-open: var(--ui-spring-bouncy);
+  --ui-touch-delete-open-duration: var(--ui-spring-bouncy-duration);
+  --ui-touch-delete-close: var(--ui-spring-snappy);
+  --ui-touch-delete-close-duration: var(--ui-spring-snappy-duration);
+
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: inline-block;
+  flex: none;
+  width: var(--ui-touch-delete-size);
+  height: var(--ui-touch-delete-size);
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Open (and while flowing back): above neighbours it may overlap. */
+.ui-touch-delete[data-open],
+.ui-touch-delete[data-closing] {
+  z-index: 2;
+}
+
+.ui-touch-delete[data-expand='start'],
+.ui-touch-delete:dir(rtl) {
+  --ui-touch-delete-sign: -1;
+}
+
+.ui-touch-delete[data-expand='start']:dir(rtl) {
+  --ui-touch-delete-sign: 1;
+}
+
+.ui-touch-delete[data-disabled] {
+  opacity: 0.38;
+}
+
+.ui-touch-delete-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ui-touch-delete-edge {
+  flood-color: var(--ui-color-separator);
+}
+
+.ui-touch-delete-shadow {
+  flood-color: var(--ui-shadow-ink-strong);
+}
+
+/* ── Real buttons ── */
+
+.ui-touch-delete-trigger,
+.ui-touch-delete-choice {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  height: var(--ui-touch-delete-size);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-pill);
+  background-color: transparent;
+  font: var(--ui-text-subhead);
+  font-weight: 600;
+  letter-spacing: var(--ui-tracking-body);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+.ui-touch-delete-trigger {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: var(--ui-touch-delete-size);
+  color: var(--ui-color-danger);
+}
+
+.ui-touch-delete-trigger:disabled {
+  cursor: default;
+}
+
+.ui-touch-delete-trigger[data-pressed],
+.ui-touch-delete-choice[data-pressed] {
+  transform: scale(0.94);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-delete-choice[data-pressed] {
+  transform: scale(0.96);
+}
+
+.ui-touch-delete-trigger:focus-visible,
+.ui-touch-delete-choice:focus-visible {
+  outline: 3px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
+/* While the pills still flow into place the ring waits (it would outline empty space). */
+.ui-touch-delete[data-settling]:not([data-reduced]) .ui-touch-delete-choice:focus-visible {
+  outline-color: transparent;
+}
+
+.ui-touch-delete-pair {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: flex;
+  gap: var(--ui-touch-delete-gap);
+  height: var(--ui-touch-delete-size);
+  visibility: hidden;
+  pointer-events: none;
+  /* Stays visible until the words have faded out. */
+  transition: visibility 0s linear 240ms;
+}
+
+.ui-touch-delete[data-expand='start'] .ui-touch-delete-pair {
+  inset-inline: auto 0;
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-pair {
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.ui-touch-delete-choice {
+  flex: none;
+  width: var(--ui-touch-delete-a);
+  color: var(--ui-color-danger);
+}
+
+.ui-touch-delete-choice--cancel {
+  width: var(--ui-touch-delete-b);
+  color: var(--ui-color-label);
+}
+
+/* ── Glyph and words: a sharp layer and a statically blurred copy, cross-faded ── */
+
+/*
+ * Timeline (open, from the click; as in the video):
+ *    0– 120 ms  the glyph hands over to its blurred copy and drifts to the pill's start
+ *   30– 180 ms  "Löschen" shows blurred beside the glyph and rides out with its pill
+ *  110– 190 ms  "Abbrechen" shows blurred, small, in its pill as it bulges out of the first
+ *  190– 260 ms  "Abbrechen" sharpens (blurred copy out, sharp word in)
+ *  180– 320 ms  "Löschen" sharpens (sharp word in by 280 ms, blurred copy out by 320 ms)
+ * Closing: both words blur at once and shrink with their pills; the glyph comes back
+ * big and blurred (60–200 ms, swelling with the drop) and sharpens by 330 ms.
+ */
+
+.ui-touch-delete-icon,
+.ui-touch-delete-face {
+  display: grid;
+  place-items: center;
+  /* The words wait at the circle while closed: they must never catch the pointer there. */
+  pointer-events: none;
+  transition: transform var(--ui-touch-delete-close-duration) var(--ui-touch-delete-close);
+}
+
+.ui-touch-delete-glyph,
+.ui-touch-delete-text,
+.ui-touch-delete-smear {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+/* The sharp layer lies on top: it comes in over the blurred copy, which then fades — no pale moment between. */
+.ui-touch-delete-text,
+.ui-touch-delete-glyph:not(.ui-touch-delete-glyph--smear) {
+  z-index: 1;
+}
+
+.ui-touch-delete-smear {
+  filter: blur(2.5px);
+  opacity: 0;
+}
+
+.ui-touch-delete-glyph--smear {
+  filter: blur(3px);
+  opacity: 0;
+}
+
+/* The glyph swells a little and drifts to the start of the growing pill while it blurs away. */
+.ui-touch-delete[data-open] .ui-touch-delete-icon {
+  transform: translateX(calc(var(--ui-touch-delete-sign) * -3px)) scale(1.2);
+  transition: transform var(--ui-touch-delete-open-duration) var(--ui-touch-delete-open);
+}
+
+.ui-touch-delete-glyph:not(.ui-touch-delete-glyph--smear) {
+  transition: opacity 90ms linear 190ms;
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-glyph:not(.ui-touch-delete-glyph--smear) {
+  opacity: 0;
+  transition: opacity 90ms linear 30ms;
+}
+
+/*
+ * Closed, "Löschen" waits small just beside the glyph (scaled from its start edge).
+ * "Abbrechen" waits tiny at the circle's far edge: riding the same spring as its pill,
+ * it then stays in the part of the pill that has already bulged out of the first one,
+ * so the two words never pile up.
+ */
+.ui-touch-delete-choice--confirm .ui-touch-delete-face {
+  transform-origin: calc(50% - var(--ui-touch-delete-sign) * 50%) 50%;
+  transform: translateX(calc(var(--ui-touch-delete-sign) * 14px)) scale(0.5);
+}
+
+.ui-touch-delete-choice--cancel .ui-touch-delete-face {
+  transform: translateX(
+      calc(
+        var(--ui-touch-delete-sign) *
+          (var(--ui-touch-delete-size) + 4px - var(--ui-touch-delete-a) - var(--ui-touch-delete-gap) - var(--ui-touch-delete-b) / 2)
+      )
+    )
+    scale(0.1);
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-face {
+  transform: none;
+  transition: transform var(--ui-touch-delete-open-duration) var(--ui-touch-delete-open);
+}
+
+/* "Abbrechen" rides with its pill, which leaves the circle a beat later (see the pieces below). */
+.ui-touch-delete[data-open] .ui-touch-delete-choice--cancel .ui-touch-delete-face {
+  transition-delay: 45ms;
+}
+
+.ui-touch-delete-text {
+  opacity: 0;
+  transition: opacity 80ms linear;
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-text {
+  opacity: 1;
+  transition: opacity 100ms linear 180ms;
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-choice--cancel .ui-touch-delete-text {
+  transition-duration: 75ms;
+  transition-delay: 185ms;
+}
+
+/* One-shot blur flashes — only after the first open, never on mount. */
+.ui-touch-delete[data-played] .ui-touch-delete-smear {
+  animation: ui-touch-delete-flash-back 200ms linear;
+}
+
+/* Opening: the blurred word holds, then hands over to the sharp one (see the timeline above). */
+.ui-touch-delete[data-played][data-open] .ui-touch-delete-smear {
+  animation: ui-touch-delete-sharpen 290ms linear 30ms;
+}
+
+.ui-touch-delete[data-played][data-open] .ui-touch-delete-choice--cancel .ui-touch-delete-smear {
+  animation-duration: 150ms;
+  animation-delay: 110ms;
+}
+
+.ui-touch-delete[data-played] .ui-touch-delete-glyph--smear {
+  animation: ui-touch-delete-sharpen 270ms linear 60ms;
+}
+
+/* Closing: the glyph swells with the drop that forms around it (scale composes with its transform). */
+.ui-touch-delete[data-played] .ui-touch-delete-icon {
+  animation: ui-touch-delete-swell-back 520ms var(--ui-ease-standard);
+}
+
+.ui-touch-delete[data-played][data-open] .ui-touch-delete-icon {
+  animation: none;
+}
+
+.ui-touch-delete[data-played][data-open] .ui-touch-delete-glyph--smear {
+  animation: ui-touch-delete-flash 260ms linear;
+}
+
+@keyframes ui-touch-delete-sharpen {
+  0% {
+    opacity: 0;
+  }
+
+  28%,
+  52% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ui-touch-delete-flash {
+  0% {
+    opacity: 0;
+  }
+
+  45% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* A second name, so the flash restarts on every change of direction. */
+@keyframes ui-touch-delete-flash-back {
+  0% {
+    opacity: 0;
+  }
+
+  35% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── The liquid ── */
+
+.ui-touch-delete-goo {
+  --ui-touch-delete-fill-a: var(--ui-touch-delete-surface);
+  --ui-touch-delete-fill-b: var(--ui-touch-delete-surface);
+
+  position: absolute;
+  top: calc(-1 * var(--ui-touch-delete-pad));
+  inset-inline-start: calc(-1 * var(--ui-touch-delete-pad));
+  z-index: 0;
+  width: calc(var(--ui-touch-delete-a) + var(--ui-touch-delete-gap) + var(--ui-touch-delete-b) + 2 * var(--ui-touch-delete-pad));
+  height: calc(var(--ui-touch-delete-size) + 2 * var(--ui-touch-delete-pad));
+  pointer-events: none;
+  filter: var(--ui-touch-delete-filter);
+  /* Pieces are laid out left to right; growing to the left mirrors the layer about its centre. */
+  scale: var(--ui-touch-delete-sign) 1;
+}
+
+.ui-touch-delete[data-expand='start'] .ui-touch-delete-goo {
+  inset-inline: auto calc(-1 * var(--ui-touch-delete-pad));
+}
+
+.ui-touch-delete-press,
+.ui-touch-delete-blob {
+  position: absolute;
+  inset: 0;
+}
+
+.ui-touch-delete-press {
+  transform-origin: calc(var(--ui-touch-delete-pad) + var(--ui-touch-delete-size) / 2) 50%;
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+.ui-touch-delete-blob--a {
+  transform-origin: calc(var(--ui-touch-delete-pad) + var(--ui-touch-delete-a) / 2) 50%;
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+.ui-touch-delete-blob--b {
+  --ui-touch-delete-fill-a: var(--ui-touch-delete-fill-b);
+
+  transform-origin: calc(
+      var(--ui-touch-delete-pad) + var(--ui-touch-delete-a) + var(--ui-touch-delete-gap) + var(--ui-touch-delete-b) / 2
+    )
+    50%;
+  transition: transform var(--ui-spring-press-duration) var(--ui-spring-press);
+}
+
+.ui-touch-delete-piece {
+  position: absolute;
+  top: var(--ui-touch-delete-pad);
+  left: var(--ui-touch-delete-pad);
+  width: var(--ui-touch-delete-size);
+  height: var(--ui-touch-delete-size);
+  border-radius: 50%;
+  background-color: var(--ui-touch-delete-fill-a);
+  transform-origin: 50% 50%;
+  /* Closing: the second pill flows back first, the first follows a beat later. */
+  transition:
+    transform var(--ui-touch-delete-close-duration) var(--ui-touch-delete-close) 40ms,
+    background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-delete-piece--mid {
+  left: calc(var(--ui-touch-delete-pad) + var(--ui-touch-delete-size) / 2);
+  width: calc(var(--ui-touch-delete-a) - var(--ui-touch-delete-size));
+  border-radius: 0;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+/* Same function lists closed and open (translateX, then scale), so they interpolate even from scale 0. */
+.ui-touch-delete-blob--b .ui-touch-delete-piece {
+  transform: translateX(0) scale(var(--ui-touch-delete-seed));
+  transition-delay: 0ms;
+}
+
+.ui-touch-delete-blob--b .ui-touch-delete-piece--mid {
+  width: calc(var(--ui-touch-delete-b) - var(--ui-touch-delete-size));
+  transform: translateX(0) scale(0, var(--ui-touch-delete-seed));
+}
+
+/* The click lets the pink go at once (as in the video); the liquid then flows on the open spring. */
+.ui-touch-delete[data-open] .ui-touch-delete-piece {
+  transition:
+    transform var(--ui-touch-delete-open-duration) var(--ui-touch-delete-open),
+    background-color var(--ui-duration-instant) var(--ui-ease-standard);
+}
+
+/* Opening: the second pill leaves a beat after the first starts to grow — the neck gets time to form. */
+.ui-touch-delete[data-open] .ui-touch-delete-blob--b .ui-touch-delete-piece {
+  transition-delay: 45ms, 0ms;
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-blob--a .ui-touch-delete-piece--mid {
+  transform: scaleX(1);
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-blob--a .ui-touch-delete-piece--end {
+  transform: translateX(calc(var(--ui-touch-delete-a) - var(--ui-touch-delete-size)));
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-blob--b .ui-touch-delete-piece {
+  transform: translateX(calc(var(--ui-touch-delete-a) + var(--ui-touch-delete-gap))) scale(1);
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-blob--b .ui-touch-delete-piece--mid {
+  transform: translateX(calc(var(--ui-touch-delete-a) + var(--ui-touch-delete-gap))) scale(1);
+}
+
+.ui-touch-delete[data-open] .ui-touch-delete-blob--b .ui-touch-delete-piece--end {
+  transform: translateX(
+      calc(var(--ui-touch-delete-a) + var(--ui-touch-delete-gap) + var(--ui-touch-delete-b) - var(--ui-touch-delete-size))
+    )
+    scale(1);
+}
+
+/*
+ * The liquid swells a little while it splits (both pills, the second a beat later) and
+ * while it merges back into the circle, like a drop — then settles on its spring.
+ */
+.ui-touch-delete[data-played] .ui-touch-delete-blob--a {
+  animation: ui-touch-delete-swell-back 520ms var(--ui-ease-standard);
+}
+
+.ui-touch-delete[data-played][data-open] .ui-touch-delete-blob--a {
+  animation: ui-touch-delete-swell 380ms var(--ui-ease-standard);
+}
+
+.ui-touch-delete[data-played][data-open] .ui-touch-delete-blob--b {
+  animation: ui-touch-delete-swell 380ms var(--ui-ease-standard) 45ms;
+}
+
+@keyframes ui-touch-delete-swell {
+  0%,
+  100% {
+    scale: 1;
+  }
+
+  40% {
+    scale: 1.1;
+  }
+}
+
+@keyframes ui-touch-delete-swell-back {
+  0%,
+  100% {
+    scale: 1;
+  }
+
+  35% {
+    scale: 1.18;
+  }
+}
+
+/* ── States: tint the blob under the control that is hovered or pressed ── */
+
+@media (hover: hover) {
+  .ui-touch-delete:not([data-open]) .ui-touch-delete-trigger:enabled:hover ~ .ui-touch-delete-goo {
+    --ui-touch-delete-fill-a: var(--ui-touch-delete-danger-tint);
+    --ui-touch-delete-fill-b: var(--ui-touch-delete-danger-tint);
+  }
+
+  /* Not while settling: the pointer that opened the pair is still over the confirm pill. */
+  .ui-touch-delete[data-open]:not([data-settling]) .ui-touch-delete-pair:has(.ui-touch-delete-choice--confirm:hover) ~ .ui-touch-delete-goo {
+    --ui-touch-delete-fill-a: var(--ui-touch-delete-danger-tint);
+  }
+
+  .ui-touch-delete[data-open] .ui-touch-delete-pair:has(.ui-touch-delete-choice--cancel:hover) ~ .ui-touch-delete-goo {
+    --ui-touch-delete-fill-b: var(--ui-touch-delete-gray-tint);
+  }
+}
+
+.ui-touch-delete:not([data-open]) .ui-touch-delete-trigger[data-pressed] ~ .ui-touch-delete-goo {
+  --ui-touch-delete-fill-a: var(--ui-touch-delete-danger-tint);
+  --ui-touch-delete-fill-b: var(--ui-touch-delete-danger-tint);
+}
+
+.ui-touch-delete-trigger[data-pressed] ~ .ui-touch-delete-goo .ui-touch-delete-press {
+  transform: scale(0.94);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+.ui-touch-delete-pair:has(.ui-touch-delete-choice--confirm[data-pressed]) ~ .ui-touch-delete-goo {
+  --ui-touch-delete-fill-a: var(--ui-touch-delete-danger-press);
+}
+
+.ui-touch-delete-pair:has(.ui-touch-delete-choice--cancel[data-pressed]) ~ .ui-touch-delete-goo {
+  --ui-touch-delete-fill-b: var(--ui-touch-delete-gray-press);
+}
+
+.ui-touch-delete-pair:has(.ui-touch-delete-choice--confirm[data-pressed]) ~ .ui-touch-delete-goo .ui-touch-delete-blob--a,
+.ui-touch-delete-pair:has(.ui-touch-delete-choice--cancel[data-pressed]) ~ .ui-touch-delete-goo .ui-touch-delete-blob--b {
+  transform: scale(0.96);
+  transition-duration: var(--ui-duration-instant);
+  transition-timing-function: var(--ui-ease-press);
+}
+
+/*
+ * Reduced motion (data-reduced comes from useReducedMotion: the system setting or
+ * data-ui-motion="reduce"): no morph. Circle and pills are plain CSS shapes; the pair
+ * fades in over the circle and out again.
+ */
+.ui-touch-delete[data-reduced] .ui-touch-delete-goo {
+  display: none;
+}
+
+.ui-touch-delete[data-reduced] :is(.ui-touch-delete-trigger, .ui-touch-delete-choice) {
+  background-color: var(--ui-touch-delete-surface);
+  box-shadow: 0 0 0 var(--ui-hairline) var(--ui-color-separator), var(--ui-shadow-raised);
+  transition: background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-delete[data-reduced] .ui-touch-delete-trigger {
+  transition:
+    opacity var(--ui-duration-short) var(--ui-ease-standard),
+    background-color var(--ui-duration-short) var(--ui-ease-standard);
+}
+
+.ui-touch-delete[data-reduced][data-open] .ui-touch-delete-trigger {
+  opacity: 0;
+}
+
+.ui-touch-delete[data-reduced] .ui-touch-delete-pair {
+  opacity: 0;
+  transition:
+    opacity var(--ui-duration-short) var(--ui-ease-standard),
+    visibility 0s linear var(--ui-duration-short);
+}
+
+.ui-touch-delete[data-reduced][data-open] .ui-touch-delete-pair {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.ui-touch-delete[data-reduced] :is(.ui-touch-delete-icon, .ui-touch-delete-face) {
+  transform: none;
+  transition: none;
+  animation: none;
+}
+
+.ui-touch-delete[data-reduced] .ui-touch-delete-text,
+.ui-touch-delete[data-reduced] .ui-touch-delete-icon > .ui-touch-delete-glyph {
+  opacity: 1;
+  transition: none;
+}
+
+.ui-touch-delete[data-reduced] :is(.ui-touch-delete-smear, .ui-touch-delete-glyph--smear) {
+  display: none;
+}
+
+/* Pressed: dims instead of sinking (like Button). */
+.ui-touch-delete[data-reduced] :is(.ui-touch-delete-trigger, .ui-touch-delete-choice)[data-pressed] {
+  transform: none;
+  opacity: 0.72;
+}
+
+@media (hover: hover) {
+  .ui-touch-delete[data-reduced]:not([data-open]) .ui-touch-delete-trigger:enabled:hover,
+  .ui-touch-delete[data-reduced] .ui-touch-delete-choice--confirm:hover {
+    background-color: var(--ui-touch-delete-danger-tint);
+  }
+
+  .ui-touch-delete[data-reduced] .ui-touch-delete-choice--cancel:hover {
+    background-color: var(--ui-touch-delete-gray-tint);
+  }
+}
+
+/* Before React has read the setting (first paint): at least no slide, no flash. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-touch-delete:not([data-reduced]) :is(.ui-touch-delete-piece, .ui-touch-delete-icon, .ui-touch-delete-face) {
+    transition-duration: 1ms;
+  }
+
+  .ui-touch-delete:not([data-reduced])
+    :is(.ui-touch-delete-smear, .ui-touch-delete-glyph--smear, .ui-touch-delete-icon, .ui-touch-delete-blob--a, .ui-touch-delete-blob--b) {
+    animation: none;
+  }
+}
+
+/* Forced colours (Windows contrast themes): no filter, no blob — plain outlined buttons. */
+@media (forced-colors: active) {
+  .ui-touch-delete-goo,
+  .ui-touch-delete-smear,
+  .ui-touch-delete-glyph--smear {
+    display: none;
+  }
+
+  .ui-touch-delete-trigger,
+  .ui-touch-delete-choice {
+    border: 1px solid ButtonText;
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+
+  .ui-touch-delete-icon,
+  .ui-touch-delete-face {
+    transform: none;
+    animation: none;
+  }
+
+  .ui-touch-delete-text,
+  .ui-touch-delete-glyph {
+    opacity: 1;
+  }
+}
