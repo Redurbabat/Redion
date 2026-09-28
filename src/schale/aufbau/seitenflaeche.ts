@@ -661,8 +661,18 @@ const Seitenflaeche = (() => {
         const form = formen[i];
         if (form?.art === 'stift') {
           const pts: any[] = Array.isArray(form.pts) ? form.pts : [];
-          if (pts.some((q: any) => Math.hypot(Number(q?.[0]) - fx, Number(q?.[1]) - fy) <= radius))
-            return form;
+          /* AN DER LINIE, NICHT NUR AN DEN PUNKTEN (E704). Seit das Absetzen
+             den Strich vereinfacht (RDP), hat eine gerade Linie nur noch ihre
+             zwei Enden — wer ihre Mitte radierte, traf nichts. Gemessen wird
+             der Abstand zu jedem Stück zwischen zwei Punkten; ein Punkt allein
+             ist ein Stück der Länge null, also trifft alles, was vorher traf. */
+          const nah = (a: any, b: any): boolean => {
+            const ax = Number(a?.[0]), ay = Number(a?.[1]), bx = Number(b?.[0]), by = Number(b?.[1]);
+            const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+            const t = l2 > 0 ? Math.max(0, Math.min(1, ((fx - ax) * dx + (fy - ay) * dy) / l2)) : 0;
+            return Math.hypot(ax + t * dx - fx, ay + t * dy - fy) <= radius;
+          };
+          if (pts.some((q: any, i: number) => nah(q, pts[i + 1] ?? q))) return form;
           continue;
         }
         const r = GfxShapes.rahmenVon(form);
@@ -752,6 +762,21 @@ const Seitenflaeche = (() => {
     const finger = new Map<number, { x: number; y: number }>();
     let kneifen: null | { abstand: number; z: number } = null;
 
+    /* Wie auf der Tafel (E704). */
+    let stiftGlatt: ((q: [number, number], dt: number) => [number, number]) | null = null;
+    let stiftZeit = 0;
+    let stiftBildGeplant = false;
+    const r2 = (v: number): number => Math.round(v * 100) / 100;
+    const stiftNachziehen = (): void => {
+      stiftBildGeplant = false;
+      if (!aktiv || aktiv.art !== 'stift') return;
+      const pfade: SVGPathElement[] = [...(tinte as Element).querySelectorAll('path')]
+        .filter((pfad): pfad is SVGPathElement => (pfad as SVGPathElement).dataset.sid === String(aktiv.id));
+      if (!pfade.length) { malen(); return; }
+      const d = GfxShapes.zeichne({ ...aktiv }).querySelector('path')?.getAttribute('d') || '';
+      pfade.forEach((pfad: SVGPathElement) => pfad.setAttribute('d', d));
+    };
+
     const beginnt = (e: PointerEvent): void => {
       finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (finger.size === 2) {
@@ -785,8 +810,11 @@ const Seitenflaeche = (() => {
           return;
         }
         aktiv = werkzeug === 'stift'
-          ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[punkt.x, punkt.y]], farbe }
+          ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[r2(punkt.x), r2(punkt.y)]], farbe }
           : { id: Store.uid().slice(0, 8), art: werkzeug, x: punkt.x, y: punkt.y, w: 0, h: 0, farbe };
+        stiftGlatt = werkzeug === 'stift' && typeof InkStroke !== 'undefined'
+          ? InkStroke.glaetter([r2(punkt.x), r2(punkt.y)]) as any : null;
+        stiftZeit = Number(e.timeStamp) || 0;
         formen.push(aktiv);
         malen();
         return;
@@ -822,8 +850,22 @@ const Seitenflaeche = (() => {
           if (treffer) { formen = formen.filter(x => x !== treffer); sichern(); }
           return;
         }
-        if (aktiv.art === 'stift') aktiv.pts.push([punkt.x, punkt.y]);
-        else { aktiv.w = punkt.x - aktiv.x; aktiv.h = punkt.y - aktiv.y; }
+        if (aktiv.art === 'stift') {
+          const gesammelt = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
+          for (const ereignis of (gesammelt.length ? gesammelt : [e])) {
+            const roh = inFlaeche(ereignis.clientX, ereignis.clientY);
+            const jetzt = Number(ereignis.timeStamp) || stiftZeit + 16;
+            const dt = Math.max(1, jetzt - stiftZeit);
+            stiftZeit = jetzt;
+            const q: [number, number] = stiftGlatt ? stiftGlatt([roh.x, roh.y], dt) : [roh.x, roh.y];
+            const letzter = aktiv.pts[aktiv.pts.length - 1];
+            if (letzter && Math.hypot(q[0] - letzter[0], q[1] - letzter[1]) < 0.6 / Math.max(0.1, sicht.z)) continue;
+            aktiv.pts.push([r2(q[0]), r2(q[1])]);
+          }
+          if (!stiftBildGeplant) { stiftBildGeplant = true; requestAnimationFrame(stiftNachziehen); }
+          return;
+        }
+        aktiv.w = punkt.x - aktiv.x; aktiv.h = punkt.y - aktiv.y;
         malen();
         return;
       }
@@ -872,6 +914,19 @@ const Seitenflaeche = (() => {
         const fertig = aktiv;
         aktiv = null;
         if (fertig.art === 'radieren') return;
+        if (fertig.art === 'stift' && fertig.pts.length >= 2) {
+          /* Die Spitze endet, wo der Stift sich hob (E704). */
+          if (e.type === 'pointerup') {
+            const roh = inFlaeche(e.clientX, e.clientY);
+            const letzter = fertig.pts[fertig.pts.length - 1];
+            if (Math.hypot(roh.x - letzter[0], roh.y - letzter[1]) >= 0.3) fertig.pts.push([r2(roh.x), r2(roh.y)]);
+          }
+          if (typeof InkGeometry !== 'undefined' && fertig.pts.length > 3) {
+            fertig.pts = InkGeometry.simplify(fertig.pts, 0.5 / Math.max(0.1, sicht.z))
+              .map((q: number[]) => [r2(Number(q[0])), r2(Number(q[1]))]);
+          }
+        }
+        stiftGlatt = null;
         /* EIN TIPP IST KEINE FORM. Ohne diese Zeile bleibt bei jedem Klick
            ein Punkt oder ein Rechteck von null Punkten liegen - unsichtbar,
            aber in der Sicherung. Dieselbe Regel hat das Whiteboard. */

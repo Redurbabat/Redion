@@ -5513,15 +5513,41 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    damit die transparente Markertinte so aussieht wie auf dem Dokument. */
 .blatt-color-panel{gap:10px}
 .blatt-color-preview{position:relative;isolation:isolate;min-height:64px;display:grid;place-items:center;
-  overflow:hidden;border-radius:var(--radius-md);background:#fff;color:#202020;border:1px solid var(--line)}
+  overflow:hidden;border-radius:var(--radius-md);background:var(--probe-papier,#fff);color:#202020;border:1px solid var(--line)}
+/* E704 (farben-12): die Probe liegt auf dem Papier DIESES Blatts. Auf
+   dunklem Papier ist auch die Beispielschrift hell — sonst läse man sie
+   dort so schlecht wie die schwarze Tinte. */
+.blatt-color-preview[data-papier="dunkel"]{color:#f5f5f0}
 .blatt-color-preview span{position:relative;z-index:1;font-size:17px}
-.blatt-color-preview i{position:absolute;width:82%;height:25px;transform:rotate(-2deg);border-radius:4px}
-.blatt-color-panel:not([data-color-tool="marker"]) .blatt-color-preview i{height:4px;top:74%}
+/* E704 (stift-9): im `<i>` steht ein echter Strich aus `zeichneMarke`, kein
+   Balken mehr. Beim Marker liegt er ÜBER der Zeile (multipliziert, wie auf
+   dem Blatt); beim Stift schreibt er unter „Meine Notiz". */
+.blatt-color-preview i{position:absolute;inset:auto 4% auto 4%;height:40px;display:block}
+.blatt-color-preview i svg{display:block;width:100%;height:100%;overflow:visible}
+.blatt-color-panel[data-color-tool="marker"] .blatt-color-preview i{mix-blend-mode:multiply}
+.blatt-color-panel:not([data-color-tool="marker"]) .blatt-color-preview i{top:auto;bottom:2px}
+.blatt-color-panel:not([data-color-tool="marker"]) .blatt-color-preview span{margin-bottom:24px}
 .blatt-color-caption{margin:0;color:var(--text-dim);font-size:.8rem}
+.blatt-color-warnung{margin:0;color:var(--text);font-size:.8rem}
+.blatt-color-warnung:empty{display:none}
+.blatt-color-warnung::before{content:'⚠ '}
+/* Keil | Rund — zwei Wörter, zwei 44-px-Knöpfe, der gewählte zweifach
+   gezeigt: Rand UND Haken (§38). */
+.blatt-color-spitzen{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.blatt-color-spitzen button{min-height:var(--touch-min);border:1px solid var(--line);border-radius:var(--radius-md);
+  background:var(--bg-card);color:var(--text);font:inherit;cursor:pointer}
+.blatt-color-spitzen button[aria-pressed="true"]{border-color:var(--accent)}
+.blatt-color-spitzen button[aria-pressed="true"]::before{content:'✓ ';color:var(--accent)}
+.blatt-color-spitzen button:hover{background:var(--bg-hover)}
 .blatt-color-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+/* „Weitere Farben" und „Zuletzt verwendet": dieselben Knöpfe, nur fünf in
+   einer Reihe — 44 px bleiben (§37), die Reihe wird kürzer. */
+.blatt-color-grid.blatt-color-grid-klein{grid-template-columns:repeat(5,minmax(0,1fr))}
+.blatt-color-grid.blatt-color-grid-klein button{min-height:var(--touch-min);gap:3px;font-size:.68rem}
+.blatt-color-grid.blatt-color-grid-klein button i{width:20px;height:13px}
 .blatt-color-grid button{min-width:var(--touch-min);min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
   border:1px solid var(--line);border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);font:inherit;font-size:.75rem;cursor:pointer}
-.blatt-color-grid button i{width:28px;height:20px;border-radius:6px;box-shadow:inset 0 0 0 1px #0002}
+.blatt-color-grid button i{width:28px;height:20px;border-radius:6px;box-shadow:inset 0 0 0 1px var(--line-stark)}
 .blatt-color-grid button[aria-pressed="true"]{border-color:var(--accent)}
 .blatt-color-grid button[aria-pressed="true"] span::before{content:'✓ ';color:var(--accent-text)}
 .blatt-color-grid button:hover{background:var(--bg-hover)}

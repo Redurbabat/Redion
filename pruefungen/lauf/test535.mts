@@ -213,7 +213,17 @@ p('Füller: voll deckend', fueller === 1, String(fueller));
 await pg.click('.blatt-werk [data-wz="marker"]');
 await pg.waitForTimeout(300);
 const marker = (await probe())[1]?.deckung ?? -1;
-p('Marker: 0,32', marker === 0.32, String(marker));
+/* Seit E704 hat der Marker zwei Spitzen: der Keil (Vorgabe) deckt 0,40,
+   der runde wie bisher 0,32 — und die Kachel sagt, welche gilt. */
+p('Marker mit Keil: 0,40 (E704)', marker === 0.4, String(marker));
+await pg.evaluate(() => { Store.setMeta('zeichnen:markerspitze', 'rund'); });
+await pg.click('.blatt-werk [data-wz="stift"]');
+await pg.waitForTimeout(200);
+await pg.click('.blatt-werk [data-wz="marker"]');
+await pg.waitForTimeout(300);
+const markerRund = (await probe())[1]?.deckung ?? -1;
+p('Marker rund: 0,32', markerRund === 0.32, String(markerRund));
+await pg.evaluate(() => { Store.setMeta('zeichnen:markerspitze', null); });
 /* UND DIE ZAHL AUF DER KACHEL FOLGT DEM WERKZEUG (E616): der Marker zieht
    das Vierfache, also steht dort 3,2 mm und nicht 0,8. */
 const mmMarker = (await probe())[1]?.mm ?? '';

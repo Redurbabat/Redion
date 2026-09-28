@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 526 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 527 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1432,7 +1432,18 @@ Lader neben die Werkzeuge, um zu sehen, ob sich ihre Rechtecke schneiden.
 Gezählt am 28. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagte 522 — auf seinem Zweig; beim Zusammenführen nachgezählt: 524.*
 
-*Und 525: `test584` — bessere Farben (E705). Er misst nicht Zeilen im
+*Und 525: `test583` — bessere Stifteffekte beim Zeichnen (E704). Er misst
+den Strich, nicht den Quelltext: ob jeder Punkt der Mittellinie eines „M"
+in der Tinte liegt, ob ein Keilmarker senkrecht dünn und an den Enden gerade
+ist, ob ein schneller Füllerstrich mit demselben Druck dünner ist als ein
+langsamer, ob acht Tinten auch für ein farbschwaches Auge auseinanderzuhalten
+sind (nachgebildet nach Machado 2009) — und ob ein ALTER Marker Zeichen für
+Zeichen so zeichnet wie vorher. Gegen den Stand davor war er zuerst rot. Auf
+einem Zweig der Bitte vom 27. September gezählt; wer zusammenführt, zählt neu:
+`ls pruefungen/lauf/test*.mts | wc -l` sagte auf diesem Zweig 522; beim
+Zusammenführen nachgezählt: 525.*
+
+*Und 526: `test584` — bessere Farben (E705). Er misst nicht Zeilen im
 Stilblatt, sondern was der Browser rechnet: jede Farbe läuft durch eine
 1×1-Leinwand, damit auch `color-mix(…)` als Zahl ankommt, und seine
 Kontrastformel ist bewusst NICHT die aus `colors.ts` — ein Wächter, der mit
@@ -1443,10 +1454,10 @@ Reihen eines Diagramms, Whiteboard und Gedankenkarte im Hellen — und ohne
 Browser die Stilblätter: keine bunte Farbe von Hand, ausser auf Papier und in
 Bildern, jede mit Grund auf der Liste. Gezählt am 28. September, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig,
-neben `test580`, `test581` und `test582` auf den anderen; beim
-Zusammenführen nachgezählt: 525.*
+neben `test580` bis `test583` auf den anderen; beim Zusammenführen
+nachgezählt: 526.*
 
-*Und 526: `test585` — das Material des Touch Kits überall, wo man wählt
+*Und 527: `test585` — das Material des Touch Kits überall, wo man wählt
 (E706). Er zieht die Pille der unteren Leiste mit einem echten Finger
 (CDP-Berührung) über drei Reiter, hält sie an, lässt sie los und zählt die
 Klicks, die bis zum Dokument durchkommen: GENAU EINER, auf dem Reiter
@@ -1456,8 +1467,7 @@ Bild für Bild bis auf zwei Pixel an ihr Ziel, und prüft dasselbe noch
 einmal mit abgeschalteter Bewegung — auf beiden Wegen, der Einstellung des
 Systems und „Ruhige Darstellung". Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig; beim
-Zusammenführen nach `test580`, `test581`, `test582` und `test584`
-nachgezählt: 526.*
+Zusammenführen nach `test580` bis `test584` nachgezählt: 527.*
 
 ### Die Befehle
 
@@ -1475,7 +1485,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 526 Läufe
+npm run pruefen                      alle 527 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1565,7 +1575,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 526 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 527 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

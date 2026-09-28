@@ -33,7 +33,8 @@
  *   6  NASS: während der Stift noch aufliegt, ist der Anfang schon spitz
  *      und das Ende noch voll (es weiss noch nicht, dass es das Ende ist);
  *      nach dem Abheben sind beide spitz, und der gespeicherte Druck ist
- *      unverändert.
+ *      unverändert. Seit E704 in Schreibtempo; der schnelle Strich von
+ *      vorher kommt dazu (dünner durch das Tempo, aber ohne Spitze nass).
  *
  * `listen(0)` statt einer festen Zahl (L205).
  *
@@ -209,22 +210,29 @@ await s.waitForSelector('.blatt-marken', { timeout: 20000 });
 await s.waitForTimeout(600);
 await s.click('.blatt-werk [data-wz="stift"]');
 await s.waitForTimeout(200);
-const nass = await s.evaluate(`(async () => {
+/* IN SCHREIBTEMPO (E704). Seit E704 macht das Tempo einen Füller mit echtem
+   Sensor bis 35 % dünner (test583 §5/§6). Die alte Hand dieses Laufs (5 pt
+   je 4 ms, rund 1,2 pt/ms) ist ein schneller Schwung — die Zusage hier gilt
+   aber der SPITZE, nicht dem Tempo. Darum schreibt der Hauptlauf in
+   Schreibtempo (5 pt je 30 ms, unter 0,25 pt/ms: nichts wird dünner), und
+   derselbe schnelle Strich wie vorher kommt danach dazu: auch bei ihm ist das
+   nasse Ende so breit, wie das Tempo es sagt — keine Spitze vor dem Abheben. */
+const strichNass = (pause: number, zeile: number) => s.evaluate(`(async () => {
   const svg = document.querySelector('.blatt-marken');
   const ctm = svg.getScreenCTM();
   const zu = (x, y) => { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const c = pt.matrixTransform(ctm); return { clientX: c.x, clientY: c.y }; };
   const ev = (typ, x, y) => new PointerEvent(typ, { ...zu(x, y), pointerType: 'pen', pressure: typ === 'pointerup' ? 0 : 0.5,
     isPrimary: true, button: 0, buttons: typ === 'pointerup' ? 0 : 1, pointerId: 7, bubbles: true, cancelable: true });
-  svg.dispatchEvent(ev('pointerdown', 120, 200));
+  svg.dispatchEvent(ev('pointerdown', 120, ${zeile}));
   for (let i = 1; i <= 40; i++) {
-    svg.dispatchEvent(ev('pointermove', 120 + i * 5, 200));
-    await new Promise(f => setTimeout(f, 4));
+    svg.dispatchEvent(ev('pointermove', 120 + i * 5, ${zeile}));
+    await new Promise(f => setTimeout(f, ${pause}));
   }
   await new Promise(f => requestAnimationFrame(() => setTimeout(f, 40)));
   const nassKnoten = [...svg.querySelectorAll('path[data-ink-stil="fueller"]')].pop();
   const nassD = nassKnoten ? nassKnoten.getAttribute('d') || '' : '';
   const boegen = [...nassD.matchAll(/A([\\d.]+) [\\d.]+ 0 0 1/g)].map(m => Number(m[1]));
-  svg.dispatchEvent(ev('pointerup', 320, 200));
+  svg.dispatchEvent(ev('pointerup', 320, ${zeile}));
   await new Promise(f => setTimeout(f, 200));
   const b = Store.getBlock('${blattId}');
   const m = (b.marken || [])[b.marken.length - 1] || null;
@@ -233,8 +241,10 @@ const nass = await s.evaluate(`(async () => {
   const boegenTrocken = [...trockenD.matchAll(/A([\\d.]+) [\\d.]+ 0 0 1/g)].map(m => Number(m[1]));
   return { nass: { ende: boegen[0], anfang: boegen[1], n: boegen.length },
            trocken: { ende: boegenTrocken[0], anfang: boegenTrocken[1], n: boegenTrocken.length },
-           druck: m ? m.pressure.map(Number) : [], stil: m?.stil, punkte: m ? m.pts.length : 0 };
-})()`) as any;
+           druck: m ? m.pressure.map(Number) : [], stil: m?.stil, punkte: m ? m.pts.length : 0,
+           tempoEnde: m && Array.isArray(m.tempo) && m.tempo.length ? Number(m.tempo[m.tempo.length - 1]) : null };
+})()`) as Promise<any>;
+const nass = await strichNass(30, 160);
 const halbVoll = erwartetMitte / 2;
 console.log(`    nass: Anfang ${nass.nass.anfang} · Ende ${nass.nass.ende} — trocken: Anfang ${nass.trocken.anfang} · Ende ${nass.trocken.ende} — voll wäre ${r2(halbVoll)} · Druck ${JSON.stringify(nass.druck.slice(0, 3))}…`);
 p('Der nasse Strich ist eine Fläche mit zwei Bögen', nass.nass.n === 2 && nass.stil === 'fueller', JSON.stringify(nass.nass));
@@ -247,6 +257,17 @@ p('Nach dem Abheben sind beide Enden spitz',
 p('Der gespeicherte Druck ist unverändert — die Spitze ist ein Aussehen, kein Druckwert (§9)',
   nass.druck.length === nass.punkte && nass.druck.length > 2 && nass.druck.every((d: number) => d > 0.4),
   JSON.stringify(nass.druck));
+/* Und der alte schnelle Strich: dünner durch das Tempo, aber ohne Spitze. */
+const schnell = await strichNass(4, 300);
+const faktorSchnell = schnell.tempoEnde === null ? 1
+  : await s.evaluate(`InkStroke.tempoFaktor(${schnell.tempoEnde}, 0.35)`) as number;
+console.log(`    schnell: Ende nass ${schnell.nass.ende} · Tempo am Ende ${schnell.tempoEnde} pt/ms · Faktor ${r2(faktorSchnell)} — trocken: Ende ${schnell.trocken.ende}`);
+p('Schnell ist das nasse Ende so breit, wie das Tempo es sagt — noch keine Spitze',
+  schnell.nass.n === 2 && schnell.nass.ende > halbVoll * faktorSchnell * 0.9,
+  `Ende ${schnell.nass.ende} gegen ${r2(halbVoll * faktorSchnell)}`);
+p('… und nach dem Abheben ist auch der schnelle Strich an beiden Enden spitz',
+  schnell.trocken.n === 2 && schnell.trocken.anfang < halbVoll * 0.35 && schnell.trocken.ende < halbVoll * 0.35,
+  JSON.stringify(schnell.trocken));
 p('Keine Ausnahme im Browser', fehler.length === 0, fehler.slice(0, 2).join(' · '));
 
 await browser.close();
