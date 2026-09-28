@@ -1424,3 +1424,17 @@ Beide Treffer sind geklärt, und nur einer war ein Fehler an einer Fläche:
 stand nur HINTER der Regel, ausserhalb der acht Zeilen, die `test402` liest.
 `#ai .ki-quellschalter` ist ein echter Nebenweg und hat jetzt seinen
 geschriebenen Grund. `test402` ist 4/4.
+
+## Farben: was nach E705 offen ist (28. September 2026)
+
+- **`chartTyp: 'pie'` ist kein Diagrammtyp.** Ein Block mit `pie` zeichnet
+  eine leere Achse statt eines Kreises (gesehen beim Bau von E705, Bild
+  `06-diagramm-pie-hell.png` im Kartenordner). Entweder `pie` als Ring
+  lesen oder beim Einlesen auf `donut` abbilden — mit Wächter.
+- **Die Schrift auf den Astfarben der Gedankenkarte rechnen** (L228), wie
+  `--auf-accent`.
+- **Die Stift- und Markerfarben** (Karte „farben-4") gehören dem Zweig
+  `claude/stift-effekte`, die Lesbarkeit der unteren Leiste unter der Linse
+  (farben-2) dem Zweig `claude/material-ueberall`, das Glas von „Starker
+  Kontrast" dem Zweig `claude/glas-wo-es-passt`.
+

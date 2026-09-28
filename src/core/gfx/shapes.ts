@@ -67,6 +67,18 @@ const GfxShapes = (() => {
     return el;
   };
 
+  /* TINTE FÜR DEN HELLEN GRUND (E705): `stroke`/`fill` bleibt die
+     gespeicherte Farbe (E414, E693); daneben `--tinte-hell`, derselbe Ton
+     mit 4,6 : 1 auf hellem Grund, den nur das helle Thema nimmt
+     (grund.css). Zettel behalten ihre Füllung. */
+  const tinte = (el: any, rolle: 'strich' | 'schrift', farbe: string): void => {
+    if (typeof Farben === 'undefined' || !Farben.parse(farbe)) return;
+    const hell = Farben.inkOnLight(farbe);
+    if (!hell || hell === Farben.toHex(Farben.parse(farbe) ?? [0, 0, 0])) return;
+    el.setAttribute('data-tinte', rolle);
+    el.style.setProperty('--tinte-hell', hell);
+  };
+
   const zahl = (roh: unknown, ersatz = 0): number => {
     const n = Number(roh);
     return Number.isFinite(n) ? n : ersatz;
@@ -150,6 +162,7 @@ const GfxShapes = (() => {
       });
       if (s.art === 'pfeil' && o.pfeilMarke) p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
       p.dataset.sid = s.id;
+      tinte(p, 'strich', farbe);
       /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
          ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
          breit und durchsichtig: er fängt den Griff, malt aber nichts. */
@@ -183,12 +196,14 @@ const GfxShapes = (() => {
         'pointer-events': 'all'
       });
       r.dataset.sid = s.id;
+      if (s.art === 'rechteck') tinte(r, 'strich', farbe);
       g.appendChild(r);
       if (s.text) {
         const t = sv('text', {
           x: x + 10, y: y + 22,
           fill: s.art === 'notiz' ? '#1c1c1c' : farbe, 'font-size': 14
         });
+        if (s.art !== 'notiz') tinte(t, 'schrift', farbe);
         zeilenUmbruch(String(s.text), Math.abs(zahl(s.w)) - 18).forEach((z, i) => {
           const ts = sv('tspan', { x: x + 10, dy: i ? 18 : 0 });
           ts.textContent = z;
@@ -240,6 +255,7 @@ const GfxShapes = (() => {
         'pointer-events': 'all'   /* wie beim Rechteck, siehe dort */
       });
       e.dataset.sid = s.id;
+      tinte(e, 'strich', farbe);
       return e;
     }
 
@@ -248,6 +264,7 @@ const GfxShapes = (() => {
                              'font-size': 17, 'font-weight': 500 });
       t.textContent = String(s.text || '');
       t.dataset.sid = s.id;
+      tinte(t, 'schrift', farbe);
       return t;
     }
 

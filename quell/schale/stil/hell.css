@@ -159,10 +159,11 @@ html[data-theme="light"]{
   --gold-strong: color-mix(in srgb, var(--gold) 24%, transparent);
   --gold-line:   color-mix(in srgb, var(--gold) 38%, transparent);
   --gold-shadow: 0 6px 20px color-mix(in srgb, var(--gold-deep) 18%, transparent);
-  --gefahr:      #dc2626;
-  --erfolg:      #15803d;
-  --info:        #0369a1;
-  --warnung:     #b45309;
+  /* Tinte ≥ 4,6 auf jeder hellen Fläche, auch Sand-Überfahren (E705). */
+  --gefahr:      #bb2021;
+  --erfolg:      #006e4f;
+  --info:        #056697;
+  --warnung:     #924f00;
 
   /* Papier (E260): im Hellen reinweiss — heller als der helle Grund, damit
      ein Blatt auch hier als Blatt lesbar bleibt. Die Tinte (`--paper-ink`)
@@ -171,11 +172,14 @@ html[data-theme="light"]{
   --paper:     #ffffff;
   --grid:      rgba(34,38,49,.12);
 
-  --c-default:#37352f; --c-gray:#787774; --c-brown:#9f6b53; --c-orange:#d9730d;
-  --c-yellow:#cb912f;  --c-green:#448361; --c-blue:#337ea9;  --c-purple:#9065b0;
-  --c-pink:#c14c8a;    --c-red:#d44c47;
+  /* NOTION-FARBEN IM HELLEN (E705): jede ≥ 4,6 auf allen hellen Flächen
+     (vorher Gelb 2,22 auf Sand) — lesbares Gelb ist Senf, wie `--gold-tinte`
+     (E272). Tönungen L 0,96: sichtbar, aber leise. */
+  --c-default:#37352f; --c-gray:#61605c;  --c-brown:#845539; --c-orange:#934e00;
+  --c-yellow:#755d00;  --c-green:#006f3d; --c-blue:#006697;  --c-purple:#7449b1;
+  --c-pink:#a33371;    --c-red:#b5242a;
 
-  --b-gray:#f1f1ef; --b-brown:#f4eeee; --b-orange:#faebdd; --b-yellow:#fbf3db;
-  --b-green:#edf3ec; --b-blue:#e7f3f8; --b-purple:#f6f3f9; --b-pink:#faf1f5;
-  --b-red:#fdebec;
+  --b-gray:#f2f1ef; --b-brown:#fbeee8; --b-orange:#ffede1; --b-yellow:#fff3cc;
+  --b-green:#ddfae6; --b-blue:#e4f4ff; --b-purple:#f3eeff; --b-pink:#ffebf3;
+  --b-red:#ffecea;
 }

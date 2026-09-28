@@ -8348,6 +8348,31 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L228 · Weiss auf der Astfarbe der Gedankenkarte ist im Dunkeln zu blass — 28. September 2026
+
+**Gefunden beim Bau von E705**, nicht gesucht. Die Gedankenkarte malt drei
+kleine Dinge WEISS auf die Farbe eines Astes: die Zahl an einem
+zugeklappten Ast (`.gk-zahl`), das „+" der vier Griffe (`.gk-griffel`) und
+— über `--ast-zug` — deren Fläche. Die acht Astfarben (`Gedankenkarte.PALETTE`)
+sind mittelhelle Töne; Weiss darauf hat gerechnet:
+
+```txt
+Gelb #c9a227 2,4 · Orange #e08a2e 2,7 · Türkis #3fa3a0 3,0 · Grün #4a9d5f 3,3
+Blau #2f8ab5 3,9 · Rot #d9534f 4,0 · Rosa #c2549b 4,2 · Violett #7a5cc5 5,0
+```
+
+Im Hellen nimmt die Karte seit E705 die dunklere Tinte (`--ast-hell`,
+4,6 : 1 auf hellem Grund), und Weiss darauf wird besser; im Dunkeln bleibt
+die gespeicherte Farbe, und dort ist die Zahl auf Gelb kaum zu lesen. Die
+Astfarben selbst zu ändern hiesse, gespeicherte Karten umzufärben (§9).
+
+**Was fehlt:** die Schrift auf dem Ast gerechnet statt fest — wie
+`--auf-accent` (E705): Weiss, wo es reicht, sonst ein getöntes Dunkel im Ton
+des Astes. Mit einem Punkt in `test584` oder `test529`, der die Zahl an
+einem gelben Ast misst.
+
+---
+
 ## L223 · Im Ordnerbetrieb steht in der Fehlerliste nur „Script error." — 27. September 2026
 
 **Gefunden beim Bau von E699**, nicht gesucht. Die erste Fehlergrenze der
@@ -8933,8 +8958,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 27. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 119 Lücken, 64 offene und 55 geschlossene. Der Befehl dazu ist
+**Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 120 Lücken, 65 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

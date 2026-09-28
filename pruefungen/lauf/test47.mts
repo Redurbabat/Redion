@@ -93,7 +93,11 @@ const pruef = (n: any, ist: any, soll: any) => {
      eigene Akzente haben können — ein Inline-Stil auf `<html>` hätte
      beide überschrieben und war genau der Grund, warum die neue Farbe
      zwar im Blatt stand, aber nie auf dem Bildschirm. */
-  pruef('Standard hat wieder seinen Hintergrund', zurueck.bg, '#141414');
+  /* SEIT E705 KÜHL: #121417 statt #141414 — dieselbe Helligkeit (OKLCH L
+     0,190 gegen 0,191), Farbton 258°, Sättigung 0,007. Redur, 27. September,
+     im Fragebogen: „Leichter kühler Ton im Dunkeln". Geprüft wird weiter,
+     dass nach dem Zurücksetzen der Grund des Stilblatts gilt. */
+  pruef('Standard hat wieder seinen Hintergrund', zurueck.bg, '#121417');
   /* HIER STAND EINE ZAHL — `#f97316`, der Akzent von damals. Sie ging kaputt,
      als der Akzent violett wurde (E199), und zwar ohne dass irgendetwas
      falsch war: die Prüfung wiederholte den Wert des Stilblatts, statt zu

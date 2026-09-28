@@ -31,20 +31,24 @@
    * Weiss verhält sich auf jeder Fläche gleich — heller Grund, hellerer
    * Rand.
    * --------------------------------------------------------------------- */
-  --bg:            #141414;   /* Grundfläche                                */
+  /* EIN LEICHTER KÜHLER TON (E705; Redur: „Leichter kühler Ton im Dunkeln").
+     Dieselbe Helligkeit wie vorher, Farbton 258° wie die Schale, Sättigung
+     0,006. Gedämpft/Beiwerk sind 70/47 % zwischen Grund und Schrift in
+     OKLab — die Anteile von `Farben.ladder`; `test584` §10 misst die Leiter. */
+  --bg:            #121417;   /* Grundfläche                                */
   --bg-tief:       #0f1012;   /* darunter: Blätter, Überlagerungen          */
-  --bg-side:       #1a1a1a;   /* Fläche                                     */
-  --bg-card:       #202020;   /* gehobene Fläche                            */
-  --bg-hover:      #2d2d2d;   /* berührt / überfahren                       */
-  --bg-press:      #343434;   /* gedrückt                                   */
+  --bg-side:       #181a1d;   /* Fläche                                     */
+  --bg-card:       #1e2023;   /* gehobene Fläche                            */
+  --bg-hover:      #2b2d30;   /* berührt / überfahren                       */
+  --bg-press:      #323437;   /* gedrückt                                   */
   --bg-active:     rgba(255,255,255,.06);
-  --bg-input:      #1a1a1a;
+  --bg-input:      #181a1d;
   --line:          rgba(255,255,255,.12);
   --line-soft:     rgba(255,255,255,.08);
   --line-stark:    rgba(255,255,255,.18);
-  --text:          #f2f2f2;   /* gemessen 16.5:1 auf dem Grund             */
-  --text-dim:      #a7a7a7;   /* 7.7:1 — Fliesstext erlaubt                */
-  --text-faint:    #737373;   /* 3.9:1 — nur Beiwerk und Symbole           */
+  --text:          #f1f2f4;   /* gemessen 16,6:1 auf dem Grund             */
+  --text-dim:      #a6a8aa;   /* 7,7:1 Grund, 6,8 Karte, 5,8 Überfahren     */
+  --text-faint:    #717275;   /* 3,8:1 Grund, 3,4 Karte — nur Beiwerk       */
 
   /* DER AKZENT IST VIOLETT (E199). Bis August 2026 war er orange (E44) —
      gewählt, weil die damalige Vorgabe Rot gleichzeitig als Akzent UND als
@@ -129,10 +133,13 @@
   --gold-strong: color-mix(in srgb, var(--gold) 22%, transparent);
   --gold-line:   color-mix(in srgb, var(--gold) 34%, transparent);
   --gold-shadow: 0 6px 20px color-mix(in srgb, #000000 46%, transparent);
-  --gefahr:        #ef4444;
-  --erfolg:        #22c55e;
-  --info:          #38bdf8;
-  --warnung:       #f59e0b;
+  /* STATUSFARBEN SIND TINTE (E705): L 0,70–0,80, Sättigung ≤ 0,17, jede
+     ≥ 4,5 auf Grund, Karte und Überfahren aller dunklen Schemata. Weiss AUF
+     Rot steht auf `--gefahr-flaeche` (grund.css) — eine Farbe, eine Rolle. */
+  --gefahr:        #f66d67;
+  --erfolg:        #40cd9b;
+  --info:          #5abdf2;
+  --warnung:       #f2af48;
   /* Die vier Sprossen der Schattenleiter (E204). Dieselben Namen wie in
      `hell.css`, NICHT dieselben Werte: auf dunklem Grund braucht ein
      Schatten mehr Deckkraft, um überhaupt eine Kante zu setzen. Wer hier
@@ -166,26 +173,28 @@
   --paper:     #f8f8f5;
   --grid:      rgba(255,255,255,.12);
 
-  /* Die zehn Notion-Textfarben */
+  /* NOTION-FARBEN IN OKLCH (E705): Schrift L 0,765 (Gelb 0,83), ≥ 5,9 auf
+     jeder dunklen Fläche; Tönungen L 0,30, klar statt grau-oliv.
+     Gespeichert bleiben die Kennungen (`red`, `bg-red`). */
   --c-default: #e9e9e7;
-  --c-gray:    #9b9a97;
-  --c-brown:   #937264;
-  --c-orange:  #ffa344;
-  --c-yellow:  #ffdc49;
-  --c-green:   #4dab9a;
-  --c-blue:    #529cca;
-  --c-purple:  #9a6dd7;
-  --c-pink:    #e255a1;
-  --c-red:     #ff7369;
+  --c-gray:    #b4b3ae;
+  --c-brown:   #d3a891;
+  --c-orange:  #f09c59;
+  --c-yellow:  #e6c45a;
+  --c-green:   #6fc991;
+  --c-blue:    #6dbcf2;
+  --c-purple:  #bf9ff9;
+  --c-pink:    #f08fbe;
+  --c-red:     #ff8d85;
 
   /* Die zehn Notion-Hintergrundfarben */
-  --b-gray:    #454b4e;
-  --b-brown:   #434040;
-  --b-orange:  #594a3a;
-  --b-yellow:  #59563b;
-  --b-green:   #354c4b;
-  --b-blue:    #364954;
-  --b-purple:  #443f57;
-  --b-pink:    #533b4c;
-  --b-red:     #594141;
+  --b-gray:    #2e2e2c;
+  --b-brown:   #372b24;
+  --b-orange:  #42260f;
+  --b-yellow:  #372d0c;
+  --b-green:   #173523;
+  --b-blue:    #133144;
+  --b-purple:  #322745;
+  --b-pink:    #422232;
+  --b-red:     #462220;
 }

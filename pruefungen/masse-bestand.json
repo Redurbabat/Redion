@@ -43,11 +43,6 @@
   },
   {
    "datei": "bausteine.css",
-   "wahl": ".au-akzente button",
-   "px": 26
-  },
-  {
-   "datei": "bausteine.css",
    "wahl": ".bib-arten button",
    "px": 34
   },

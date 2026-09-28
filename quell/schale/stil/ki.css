@@ -38,7 +38,7 @@
 .model-btn:hover{background:var(--bg-hover); color:var(--text)}
 .model-btn span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .dot{width:7px; height:7px; border-radius:50%; background:var(--text-faint); flex:0 0 7px}
-.dot.ok{background:#4dab9a} .dot.load{background:var(--c-orange)} .dot.err{background:var(--c-red)}
+.dot.ok{background:var(--erfolg)} .dot.load{background:var(--c-orange)} .dot.err{background:var(--c-red)}
 
 #chat{flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:14px}
 .msg{font-size:14px; line-height:1.6}

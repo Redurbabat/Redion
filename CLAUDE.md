@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 521 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 522 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1398,6 +1398,18 @@ Messung „was holte der Start?" war unter `file://` blind, was nur seine
 Gegenprobe zeigte. Gezählt am 27. September, im selben Bogen: der Befehl
 sagt 521.*
 
+*Und 522: `test584` — bessere Farben (E705). Er misst nicht Zeilen im
+Stilblatt, sondern was der Browser rechnet: jede Farbe läuft durch eine
+1×1-Leinwand, damit auch `color-mix(…)` als Zahl ankommt, und seine
+Kontrastformel ist bewusst NICHT die aus `colors.ts` — ein Wächter, der mit
+dem Code rechnet, den er prüft, sagt zu jedem Rechenfehler „passt". 210
+Paare aus zehn Schemata und einundzwanzig Akzenten, die neun Notion-Farben
+auf jeder Fläche, Weiss auf Rot, Kästchen im Grundton, die gezeichneten
+Reihen eines Diagramms, Whiteboard und Gedankenkarte im Hellen — und ohne
+Browser die Stilblätter: keine bunte Farbe von Hand, ausser auf Papier und in
+Bildern, jede mit Grund auf der Liste. Gezählt am 28. September, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 522.*
+
 ### Die Befehle
 
 ```txt
@@ -1414,7 +1426,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 521 Läufe
+npm run pruefen                      alle 522 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1504,7 +1516,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 521 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 522 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

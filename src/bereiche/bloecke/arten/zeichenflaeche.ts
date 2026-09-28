@@ -67,6 +67,35 @@ const Zusatz = (() => {
   const farbeVon = (i: number): string =>
     PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#529cca';
 
+  /* DIE DIAGRAMMFARBEN JE GRUNDTON (E705). Vorher malten Diagramme mit den
+     dunklen Whiteboard-Farben (Gelb auf Weiss 1,35). Jetzt je Grundton acht
+     gestufte Töne, Nachbarn ΔE_OK ≥ 0,19; aufgelöst im `fill` (test409),
+     umgefärbt beim Wechsel des Grundtons. `test584` §8 misst es. */
+  const DIAGRAMM: Readonly<Record<'light' | 'dark', readonly string[]>> = {
+    light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'],
+    dark:  ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'],
+  };
+  const reihenModus = (): 'light' | 'dark' =>
+    document.documentElement.dataset['theme'] === 'light' ? 'light' : 'dark';
+  const reihenFarbe = (i: number, modus: 'light' | 'dark' = reihenModus()): string => {
+    const liste = DIAGRAMM[modus];
+    return liste[((i % liste.length) + liste.length) % liste.length] ?? '#2a78d6';
+  };
+  let reihenWache: MutationObserver | null = null;
+  const reihenWachen = (): void => {
+    if (reihenWache || typeof MutationObserver !== 'function') return;
+    reihenWache = new MutationObserver(() => {
+      const m = reihenModus();
+      document.querySelectorAll<Element>('.chart [data-reihe]').forEach(el => {
+        const c = reihenFarbe(Number(el.getAttribute('data-reihe')) || 0, m);
+        if (el instanceof HTMLElement) el.style.background = c;
+        else if (el.hasAttribute('data-reihe-strich')) el.setAttribute('stroke', c);
+        else el.setAttribute('fill', c);
+      });
+    });
+    reihenWache.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  };
+
   /* ========================================================================
    * 1. WHITEBOARD
    * ======================================================================*/
@@ -858,6 +887,7 @@ const Zusatz = (() => {
 
     const typ = block.chartTyp || 'bar';
     const werte = chartDaten(block);
+    reihenWachen();
 
     w.innerHTML =
       '<div class="chart-head">' +
@@ -882,7 +912,7 @@ const Zusatz = (() => {
       const legende = document.createElement('div');
       legende.className = 'chart-legende';
       legende.innerHTML = werte.map((v: any, i: number) =>
-        `<span><i style="background:${farbeVon(i)}"></i>${esc(v.name)} ` +
+        `<span><i data-reihe="${i}" style="background:${reihenFarbe(i)}"></i>${esc(v.name)} ` +
         `<b>${Formula.anzeige(v.wert)}</b></span>`).join('');
       w.appendChild(legende);
     }
@@ -950,7 +980,7 @@ const Zusatz = (() => {
       s2.appendChild(t2);
       if (werte.length > 1) {
         const t3 = sv('text', { x: B / 2, y: 186, 'text-anchor': 'middle', 'font-size': 16,
-                                fill: diff >= 0 ? '#4dab9a' : '#ff7369' });
+                                style: diff >= 0 ? 'fill:var(--erfolg)' : 'fill:var(--gefahr)' });
         t3.textContent = (diff >= 0 ? '▲ +' : '▼ ') + diff + ' % gegenüber davor';
         s2.appendChild(t3);
       }
@@ -973,7 +1003,7 @@ const Zusatz = (() => {
         const x4 = cx + Math.cos(winkel) * ri, y4 = cy + Math.sin(winkel) * ri;
         const st = sv('path', {
           d: `M${x1} ${y1} A${ra} ${ra} 0 ${gross} 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 ${gross} 0 ${x4} ${y4} Z`,
-          fill: farbeVon(i), class: 'ch-teil'
+          fill: reihenFarbe(i), class: 'ch-teil', 'data-reihe': i
         });
         st.dataset.i = i;
         st.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
@@ -1030,15 +1060,16 @@ const Zusatz = (() => {
         s.appendChild(sv('path', {
           d: `M${punkte[0][0]} ${H - pad} L` + punkte.map((p: any) => p.join(' ')).join(' L') +
              ` L${punkte[n - 1][0]} ${H - pad} Z`,
-          fill: farbeVon(0), opacity: .22
+          fill: reihenFarbe(0), opacity: .22, 'data-reihe': 0
         }));
       }
       s.appendChild(sv('path', {
         d: 'M' + punkte.map((p: any) => p.join(' ')).join(' L'),
-        stroke: farbeVon(0), 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round'
+        stroke: reihenFarbe(0), 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round',
+        'data-reihe': 0, 'data-reihe-strich': ''
       }));
       punkte.forEach((p: any, i: any) => {
-        const c = sv('circle', { cx: p[0], cy: p[1], r: 4, fill: farbeVon(0), class: 'ch-teil' });
+        const c = sv('circle', { cx: p[0], cy: p[1], r: 4, fill: reihenFarbe(0), class: 'ch-teil', 'data-reihe': 0 });
         c.dataset.i = i;
         c.appendChild(sv('title')).textContent = werte[i].name + ': ' + Formula.anzeige(werte[i].wert);
         s.appendChild(c);
@@ -1050,7 +1081,7 @@ const Zusatz = (() => {
           const rc = sv('rect', {
             x: pad + feld * i + feld * 0.16, y: H - pad - h,
             width: feld * 0.68, height: Math.max(1, h),
-            fill: farbeVon(i), rx: 3, class: 'ch-teil'
+            fill: reihenFarbe(i), rx: 3, class: 'ch-teil', 'data-reihe': i
           });
           rc.dataset.i = i;
           rc.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
@@ -1496,7 +1527,7 @@ const Zusatz = (() => {
   };
 
   return { whiteboard, diagramm, tabelle, mathe, formelBlock, chartSvg, chartDaten,
-           einfaerben, SCHLUESSEL, PALETTE, farbeVon };
+           einfaerben, SCHLUESSEL, PALETTE, farbeVon, DIAGRAMM, reihenFarbe };
 })();
 
 (window as any).Zusatz = Zusatz;
