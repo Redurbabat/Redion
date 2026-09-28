@@ -313,12 +313,18 @@ const pruef = (n: any, ist: any, soll: any) => {
     const o = document.querySelector('.overlay');
     if (!o) throw new Error('o ist nicht da — der Lauf misst sonst nichts.');
     const vorher = o.querySelectorAll('.da-zeile').length;
+    /* Der Löschen-Knopf fragt selbst (E709): der erste Druck öffnet
+       „Löschen" / „Abbrechen", erst die rote Pille löscht. */
     o?.querySelector<HTMLElement>('[data-weg]')?.click();
+    await new Promise(r => setTimeout(r, 120));
+    const gefragt = o.querySelectorAll('.da-zeile').length;
+    document.querySelector<HTMLElement>('.ru-loesch-ja')?.click();
     await new Promise(r => setTimeout(r, 500));
     const nachher = o.querySelectorAll('.da-zeile').length;
     document.querySelectorAll<HTMLElement>('.overlay').forEach(y => y.remove());
-    return { vorher, nachher };
+    return { vorher, gefragt, nachher };
   });
+  pruef('Der erste Druck fragt nur (E709)', geloescht.gefragt, geloescht.vorher);
   pruef('Löschen entfernt eine Zeile', geloescht.nachher, Number(geloescht.vorher ?? 0) - 1);
 
   /* --- 11 · In der Befehlspalette ------------------------------------------ */

@@ -1838,7 +1838,7 @@ const App = (() => {
                   `<span class="snip">gelöscht ${esc(Werkzeuge.zeitKurz(p.trashedAt))}</span></span>` +
                   '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
                   '<span class="pk-tat" data-a="restore-wo" title="An anderer Stelle wiederherstellen">↳</span>' +
-                  '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
+                  '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" title="Endgültig löschen">🗑</span>' +
                   '</button>').join('')
               : (bloecke.length ? ''
                  : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`)) +
@@ -1851,7 +1851,7 @@ const App = (() => {
                   `<span class="snip">aus „${esc(blockHer(b))}" · gelöscht ` +
                   `${esc(Werkzeuge.zeitKurz(b.trashedAt))}</span></span>` +
                   '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
-                  '<span class="pk-tat weg" data-a="purge" title="Endgültig löschen">🗑</span>' +
+                  '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" title="Endgültig löschen">🗑</span>' +
                   '</button>').join('')
               : '') +
           '</div>' +
@@ -1960,10 +1960,11 @@ const App = (() => {
       }
       if (s && s.dataset.a === 'restore-wo') { wohin(id, () => { zeichne(); zeichneBaum(); }); return; }
       if (s && s.dataset.a === 'purge') {
-        const w = Store.getBlock(id);
-        if (!confirm((w && w.type !== 'page' ? 'Diesen Block' : 'Das') +
-                     ' endgültig löschen? Mit ihm gehen seine Fassungen und Anhänge. ' +
-                     'Das lässt sich nicht rückgängig machen.')) return;
+        /* DIE FRAGE STELLT DER KNOPF SELBST (E709). Hier stand ein
+           `confirm()`. Der Papierkorb zerfliesst jetzt in „Endgültig löschen"
+           und „Abbrechen" (`RedionDelete`, data-loeschknopf) — bis hierher
+           kommt nur, wer die rote Pille gedrückt hat. „Papierkorb leeren"
+           behält seine Frage: viele Dinge auf einmal. */
         Store.purgeBlock(id); zeichne(); App.zeichneSeite(); UI.toast('Endgültig gelöscht'); return;
       }
       /* Klick auf die Zeile selbst: zurückholen und hingehen. Bei einem

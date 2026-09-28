@@ -1,5 +1,31 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E709 · Der Löschen-Knopf, der zerfliesst — überall, wo gelöscht wird
+
+**Redur:** um ca. 22:02 ein Video (ein runder Knopf mit rotem Papierkorb
+zerfliesst in „Confirm" und „Cancel") und dazu: „Ich will das du löschen
+button so ist überla wo etwas zum löschen eine buton gibt".
+
+**Gebaut:** EIN Helfer in Redions eigenem TypeScript und CSS
+(`src/schale/bedienung/delete.ts` → `RedionDelete`,
+`quell/schale/stil/loeschen.css`), nachgebaut nach DeleteButton aus dem
+Touch Kit, ohne React beim Start. Eine Stelle macht mit, indem ihr Knopf
+`data-loeschknopf` trägt; ein Zuhörer in der Einfangphase öffnet beim ersten
+Druck das Paar, erst die rote Pille lässt den Druck zum alten Griff durch.
+EIN Klebefilter je Dokument, an nur während des Fliessens. 23 Stellen in 16
+Dateien: Papierkorb (Seiten und Blöcke, „Endgültig löschen"), Bereiche,
+Erweiterungen, Farbregeln, Filtergruppen, Auswahl-Optionen, Automationen und
+Prüfsätze der Datenbanken, Notizen und Formeln im Wissen, Regeln der Tabelle,
+Eingänge, Textbausteine und Regeln der Mail, Kalender-Abos, Dateien,
+KI-Server, eigene Agenten und Worker, die Chatliste der KI, die Elemente der
+Zeichenfläche, Konten. Die zwei `confirm()` hinter einem Papierkorbknopf
+(einzeln endgültig löschen, Erweiterung entfernen) sind durch den zweiten
+Schritt ersetzt; „Papierkorb leeren" fragt weiter.
+
+**Geprüft:** `test586` (neu, rot auf `b3cf1933`), dazu die Läufe, die diese
+Knöpfe drücken (`test72`, `test130`, `test144`, `test464` — erweitert: der erste Druck
+fragt nur) und die Nachbarn; Zahlen in E709 und messungen §79. Offen: L230.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

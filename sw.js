@@ -34,11 +34,11 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v1392';
+const VERSION = 'notizen-v1400';
 /** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
  *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
  *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
-const INHALT = '64a57bf7d1e4461d';
+const INHALT = '97ac6f47a3d919cc';
 /* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
    Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
    das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und
@@ -166,6 +166,7 @@ const GRUNDSTOCK = [
     './quell/schale/bedienung/funkel.js',
     './quell/schale/bedienung/motion.js',
     './quell/schale/bedienung/press.js',
+    './quell/schale/bedienung/delete.js',
     './quell/schale/aufbau/studio.js',
     './quell/schale/ueberlagerung/dialog.js',
     './quell/schale/ueberlagerung/fokus.js',
@@ -327,6 +328,7 @@ const GRUNDSTOCK = [
     './quell/schale/stil/tabelle.css',
     './quell/schale/stil/bausteine.css',
     './quell/schale/stil/seitenansichten.css',
+    './quell/schale/stil/loeschen.css',
     './quell/schale/stil/motion.css',
     './quell/schale/stil/produktwelten.css',
     './quell/schale/stil/arbeitswelt.css',

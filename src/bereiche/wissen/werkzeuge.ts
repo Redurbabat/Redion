@@ -629,7 +629,7 @@ const Werkzeuge = (() => {
               `<div class="memo-kopf">${esc(zeitKurz(m.created))}` +
                 `<button data-a="edit" title="Bearbeiten">✎</button>` +
                 `<button data-a="seite2" title="Zu einer Seite machen">↗</button>` +
-                `<button data-a="del" title="Löschen">🗑</button></div>` +
+                `<button data-a="del" data-loeschknopf title="Notiz löschen">🗑</button></div>` +
               `<div class="memo-txt">${Blocks.inline(m.text || '')}</div>` +
             '</div>').join('')
         : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
@@ -2613,7 +2613,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 `<span class="fb-klammer">(</span>` +
                 `<input class="fb-params" value="${esc((f.params || []).join(', '))}" placeholder="a, b">` +
                 `<span class="fb-klammer">) =</span>` +
-                `<button data-weg="${i}" title="Löschen">🗑</button>` +
+                `<button data-weg="${i}" data-loeschknopf title="Formel löschen">🗑</button>` +
               '</div>' +
               `<textarea class="fb-koerper" rows="2" spellcheck="false" ` +
                 `placeholder="Formel — die Parameter stehen als Namen zur Verfügung">${esc(f.koerper || '')}</textarea>` +

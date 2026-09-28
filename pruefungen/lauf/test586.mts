@@ -25,7 +25,8 @@
  *      in Ruhe; Escape schliesst NUR das Paar (der Papierkorb bleibt offen);
  *      ein Doppelklick löscht nicht; die rote Pille löscht genau einmal,
  *      ohne Browser-Frage, und der Fokus bleibt in der Liste.
- *   §4 DIE MASSE (§37): Kreis rund, Pillen mindestens 44 px hoch.
+ *   §4 DIE MASSE (§37): Kreis rund, Pillen mindestens 44 px hoch, und
+ *      jedes Wort passt in seine Pille (Luft ≥ 24 px).
  *   §5 DIE BEREICHE IN DEN EINSTELLUNGEN (Telefon, hell): Druck daneben
  *      schliesst; „Löschen" nimmt den Bereich weg.
  *   §6 WENIGER BEWEGUNG: kein Filter, das Paar blendet nur auf — und die
@@ -246,14 +247,20 @@ console.log('\n§3 · Der Papierkorb (Rechner, dunkel)');
     const kEl = document.querySelector<HTMLElement>('.pk-tat[data-loeschknopf]');
     const jaEl = document.querySelector<HTMLElement>('.ru-loesch-ja');
     const neinEl = document.querySelector<HTMLElement>('.ru-loesch-nein');
-    if (!kEl || !jaEl || !neinEl) return { kb: 0, kh: -1, ja: 0, nein: 0, jaB: 0, rund: '' };
+    if (!kEl || !jaEl || !neinEl) return { kb: 0, kh: -1, ja: 0, nein: 0, jaB: 0, rund: '', luftJa: -1, luftNein: -1 };
     const k = kEl.getBoundingClientRect(), ja = jaEl.getBoundingClientRect(), nein = neinEl.getBoundingClientRect();
+    /* Luft neben dem Wort: Breite der Pille minus Breite des Worts (Layout,
+       ohne Verwandlung) — „Endgültig löschen" darf nicht über die Pille laufen. */
+    const luft = (b: HTMLElement): number =>
+      b.offsetWidth - (b.querySelector<HTMLElement>('.ru-loesch-wort:not(.ru-loesch-schmier)')?.offsetWidth ?? 1e4);
     return { kb: k.width, kh: k.height, ja: ja.height, nein: nein.height, jaB: ja.width,
-             rund: getComputedStyle(kEl).borderRadius };
+             rund: getComputedStyle(kEl).borderRadius, luftJa: luft(jaEl), luftNein: luft(neinEl) };
   });
   console.log('\n§4 · Die Masse (§37)');
   p('Der Kreis ist rund (Breite = Höhe)', Math.abs(mass.kb - mass.kh) < 1 && mass.kb >= 32, JSON.stringify(mass));
   p('„Endgültig löschen" und „Abbrechen" sind mindestens 44 px hoch', mass.ja >= 44 && mass.nein >= 44,
+    JSON.stringify(mass));
+  p('Jedes Wort passt in seine Pille, mit Luft an beiden Seiten', mass.luftJa >= 24 && mass.luftNein >= 24,
     JSON.stringify(mass));
 
   await pc.keyboard.press('Escape');

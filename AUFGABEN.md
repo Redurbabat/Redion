@@ -1510,3 +1510,15 @@ Wächter (rot zuerst):
 3. `SelectionFlow.FEDERN` aus den Federmarken in `grund.css` lesen, sobald
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
+
+## Der Löschen-Knopf nach E709 (L230)
+
+E709 hat alle runden Löschen-Knöpfe auf `RedionDelete` gestellt. Offen,
+jeweils mit eigenem Wächter (rot zuerst):
+
+1. Die Papierkorbzeile umbauen: eine Zeile aus einem Knopf (zurückholen und
+   öffnen) und daneben drei ECHTE Knöpfe (↩ ↳ „Endgültig löschen") — dann
+   erreicht die Tastatur auch das Endgültig-Löschen (`test33`, `test59`).
+2. Redur fragen (mit einem Bild), ob die Wortknöpfe „Löschen" in den
+   Werkzeugleisten (Auswahl im PDF, Seitenblatt des Dokuments) auch
+   zerfliessen sollen — sie legen weg, was Strg Z zurückholt.

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-686 Entscheidungen, E1 bis E706 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E709 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E714** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -749,6 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E709** — Der Löschen-Knopf, der zerfliesst, überall wo gelöscht wird (Redur: „Ich will das du löschen button so ist überla wo etwas zum löschen eine buton gibt"): EIN Helfer in Redions eigenem TypeScript und CSS (`RedionDelete`, nachgebaut nach DeleteButton aus dem Touch Kit, ohne React beim Start); jede Stelle macht mit einem Merkmal `data-loeschknopf` mit, ihr alter Griff bleibt am selben Ort; ein Druck, und der Kreis zerfliesst in „Löschen" und „Abbrechen", EIN Klebefilter je Dokument, an nur während des Fliessens; 23 Stellen in 16 Dateien; die zwei `confirm()` hinter einem Papierkorbknopf entfallen, „Papierkorb leeren" fragt weiter. Wächter `test586`.
 
 ---
 
@@ -58499,3 +58500,176 @@ Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
 statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
 alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 `claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+---
+
+## E709 — Der Löschen-Knopf, der zerfliesst: überall, wo gelöscht wird, ein runder Knopf, der in „Löschen" und „Abbrechen" fliesst
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video und Satz
+27. September ca. 22:02) · **baut auf** E702 (seine Federn) und E706 (das
+Material) auf, ohne sie zu ändern; E699 bleibt (keine Insel beim Start) ·
+**Wächter:** `test586` · **Zweig** `claude/loeschen-fluessig`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC   im Fragebogen, Federn in Redion selbst: „Wie im UI-Kit
+                (Empfohlen)"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:02 UTC   schickt ein Video (ein runder weisser Knopf mit rotem
+                Papierkorb zerfliesst in „Confirm" und „Cancel", „Cancel"
+                fliesst zurück) und schreibt: „Ich will das du löschen button
+                so ist überla wo etwas zum löschen eine buton gibt auch im
+                skills md das einfügen"
+ca. 22:05 UTC   „Schau mal das auch an ich will das auch haben" (das Video
+                „Liquid Glass")
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles
+                kannst du nur an reddion arbeiten"
+```
+
+Gelesen als: überall, wo es in Redion einen KNOPF zum Löschen gibt, diesen
+zweistufigen, flüssigen Knopf — mit Redions Inhalten, am selben Ort, ohne
+eine Funktion zu verlieren. Das Bauteil selbst ist im UI-Kit gebaut
+(DeleteButton, dort auch die Regel in der SKILL.md); hier geht es um Redion.
+
+### Was wurde entschieden?
+
+1. **EIN Helfer, nachgebaut, nicht geladen.** `src/schale/bedienung/delete.ts`
+   (`RedionDelete`) und `quell/schale/stil/loeschen.css`. Die Löschen-Knöpfe
+   stehen in Listen, die beim Start da sind (Papierkorb, Einstellungen,
+   Dateien …); eine React-Insel dort widerspräche E699 („nichts beim Start").
+   Also die Technik des Kits in Redions TypeScript und CSS: je Pille drei
+   Stücke (zwei Kreise, eine in X gestreckte Mitte), die sich nur verschieben
+   und skalieren; ein Klebefilter (Unschärfe, dann Alpha-Schwelle × 18 − 7)
+   zeichnet den zähen Hals; die Wörter werden scharf, indem eine unscharfe
+   Kopie ausblendet (nur Deckkraft). Auf `--feder-lebhaft`, zu auf
+   `--feder-knapp` (E702).
+2. **EIN Filter je Dokument, und nur während des Fliessens.** Das Kit legt
+   je Knopf einen Filter an und lässt ihn in Ruhe an; eine Papierkorbliste
+   trüge so einen Filter je Zeile. Hier: `#ru-loesch-goo`, einmal angelegt,
+   an nur bei `data-fliesst` (700 ms auf, 480 ms zu). In Ruhe ist der Kreis
+   der Knopf selbst und sind die Pillen gewöhnliche CSS-Formen.
+3. **Eine Stelle macht mit einem Merkmal mit.** Ihr Knopf trägt
+   `data-loeschknopf` (Wert: das Wort der roten Pille — „Endgültig löschen"
+   im Papierkorb, „Entfernen", wo die Stelle entfernt sagt). Ein Zuhörer in
+   der Einfangphase fängt den ersten Druck ab und öffnet das Paar; erst die
+   rote Pille lässt einen Druck zum Knopf durch. Der Griff der Stelle läuft
+   unverändert — gleicher Ort, gleicher Auslöser, gleicher Code (§43).
+4. **23 Stellen in 16 Dateien:** der Papierkorb (Seiten und Blöcke), die
+   Bereiche, die Erweiterungen, in den Datenbanken Farbregeln, Filtergruppen,
+   Optionen, Automationen und Prüfsätze, im Wissen Notizen und Formeln, die
+   Regeln der Tabelle, Eingänge, Textbausteine und Mailregeln,
+   Kalender-Abos, die Dateien, KI-Server, eigene Agenten und Worker, die
+   Chatliste der KI (dort ein ✕), die Elemente der Zeichenfläche und die
+   Konten.
+5. **Die Frage stellt der Knopf.** Hinter zwei dieser Knöpfe stand ein
+   `confirm()` (einzeln endgültig löschen im Papierkorb, Erweiterung
+   entfernen); der zweite Schritt ersetzt ihn. „Papierkorb leeren" behält
+   seine Frage (viele Dinge auf einmal), ebenso das Löschen einer Datenbank
+   oder Spalte im Menü. Menüzeilen bleiben Menüzeilen.
+6. **Wie im Kit für Tastatur und Vorleser:** `aria-expanded`/`aria-controls`,
+   der Fokus geht auf „Abbrechen", Escape schliesst NUR das Paar (der
+   gemeinsame Escape-Griff aus E302 sieht die Taste nicht mehr, das Fenster
+   darunter bleibt offen), Fokus hinaus oder ein Druck daneben schliesst,
+   ein Doppelklick löscht nicht (die rote Pille ist erst nach 400 ms scharf),
+   nach dem Löschen bleibt der Fokus in der Liste. Weniger Bewegung (System
+   ODER „Ruhige Darstellung"): kein Fliessen, das Paar blendet auf.
+   Erzwungene Farben: umrandete Knöpfe.
+7. **Masse (§37):** der Kreis hat `--touch-min`; „Löschen" und „Abbrechen"
+   sind Bestätigen und Abbrechen und haben nie unter 44 px. Nur in den zwei
+   dichten Zeilen, die selbst der Hauptweg sind (Papierkorb, Chatliste), ist
+   der Kreis 32 px — mit geschriebenem Grund in `loeschen.css`; der Tropfen
+   schwillt dort beim Aufgehen auf 44 px.
+
+### Warum?
+
+Redur hat das Video geschickt und „überall" gesagt. Löschen ist die eine
+Handlung, die man nicht aus Versehen tun soll — bisher löschten 21 der 23
+Knöpfe beim ersten Druck, ohne Frage; die zwei anderen fragten mit dem
+grauen Fenster des Browsers. Jetzt fragt der Knopf selbst, an der Stelle,
+wo der Daumen schon ist, und „Abbrechen" ist die Wahl, auf der der Fokus
+steht.
+
+### Was war die Alternative?
+
+- **Das Kit als Insel laden** (E699): React beim Start, gegen E699 und
+  `test388`. Nein.
+- **Den Filter je Knopf wie im Kit:** einfacher, aber eine Liste mit 40
+  Zeilen trüge 40 Filter; die Linse (E646) macht es schon richtig — ein
+  Filter, nur in Bewegung.
+- **Jede Stelle einzeln umschreiben** (eigene Pillen je Liste): 16 Dateien
+  mit eigenem Code, eigenen Fehlern. Das Merkmal lässt den Griff der Stelle
+  unberührt.
+- **Nur ein Dialog statt der Pillen:** ruhig, aber genau nicht das Video.
+
+### Was kostet es?
+
+Zwei Dateien mehr im Startpaket: `delete.js` 5'711 B und `loeschen.css`
+4'646 B gzip, zusammen 10,1 KiB (messungen §79); `test388` §5: 2836 KB
+über 250 Dateien, unter der Decke von 2850. Ein Zuhörer in der Einfangphase für Klick, Taste, Zeiger, Fokus
+und Rollen — er tut nichts, solange kein Paar offen ist, ausser beim Klick
+`closest('[data-loeschknopf]')` zu fragen. Vier Läufe, die einen dieser
+Knöpfe drückten (`test72`, `test130`, `test144`, `test464`), drücken jetzt zweimal —
+erweitert, nicht geschwächt: sie prüfen zusätzlich, dass der erste Druck
+nichts löscht.
+
+### Gemessen, bevor gebaut wurde
+
+23 Stellen, an denen ein Knopf mit Papierkorb löscht (Suche nach `🗑` als
+eigenem Knopf im Quelltext, dazu das ✕ der Chatliste); 21 davon ohne jede
+Frage, zwei mit `confirm()`. Kein Löschen-Knopf hatte einen Zustand
+„gedrückt, aber noch nicht gelöscht". Messungen §79.
+
+### Gefunden auf dem Weg
+
+- „Endgültig löschen" im Papierkorb ist mit der Tastatur nicht erreichbar:
+  die Tat-Stellen sind `<span>` in einer Zeile, die selbst ein `<button>` ist
+  (L230). Nach „Abbrechen" geht der Fokus deshalb an die Zeile.
+- Die globale Regel `:focus-visible{border-radius:4px}` (bausteine.css)
+  hätte den runden Knopf beim Tastaturfokus eckig gemacht; der Kreis trägt
+  deshalb seinen Radius auch im Fokus.
+- `.elemente-weg` liegt absolut in der Ecke seiner Kachel; eine erste
+  Fassung setzte `position: relative` und hätte ihn aus der Ecke geholt —
+  der Knopf bestimmt Lage und Sichtbarkeit weiter selbst.
+- Der Löschen-Knopf der Bereiche war 26 × 25 px (unter 44, §37) — gemessen
+  von `test586` §5 auf dem Stand vor E709; jetzt `--touch-min`.
+- Zwei eigene Fehler, in den Bildstreifen gesehen und behoben: die Pillen
+  wurden gemessen, bevor sie im Paar lagen (0 px) — „Endgültig löschen"
+  lief über seine Pille hinaus; `test586` §4 misst jetzt die Luft neben dem
+  Wort. Und bei der Übergabe von der Flüssigkeit an die CSS-Pille blendete
+  deren Fläche ein — ein Bild lang schien „0 Seiten" durch; die Übergabe
+  ist jetzt ohne Übergang.
+
+**Gegenproben** (jede rot gesehen, dann zurück): (1) ein Merkmal weg (`dateien/ablage.ts`) → `test586` §2 rot, 21
+statt 22 Stellen; (2) der Filter auch in Ruhe an → §1 rot; (3) `confirm()`
+zurück im Papierkorb → §2 rot; (4) Escape an den gemeinsamen Griff
+durchgelassen → §3 rot, der Papierkorb ging mit zu (0 Fenster; 39 von 44);
+(5) die rote Pille sofort scharf (400 → 0 ms) → §3 rot, ein Doppelklick
+löschte (2 statt 3; 42 von 44). Jede zurückgenommen, danach 44 von 44.
+
+**Geprüft:** `test586` 44 von 44 (auf `b3cf1933` 8 von 44; der Punkt „Jedes Wort
+passt in seine Pille" kam nach dem Bildstreifen dazu); unter dem Schloss
+33 34 59 72 82 126 130 143 144 222 245 272 303 353 388 412 558 grün;
+`test362` war rot (eine rohe `16px` in `loeschen.css`, 271 statt 270) —
+jetzt `--space-5`, die rohen Masse zählen wieder genau wie auf `b3cf1933`;
+`test464` §1 „Dreizehn Werkzeuge" zählte 14 — E709 ändert keinen
+`[data-wz]`, und sein §6 (der Löschen-Knopf der Elemente, zwei Schritte)
+ist grün; ob §1 schon auf `b3cf1933` rot ist, misst der Gegenlauf.
+Ohne Browser 87 105 109 126 127 225 290 298 400 401 402 410 537 549 550
+grün.
+
+**Nicht in diesem Bogen** (L230): die Papierkorbzeile mit echten Knöpfen;
+die Wortknöpfe „Löschen" in Werkzeugleisten (Auswahl im PDF, Seitenblatt);
+kleine ✕ zum Entfernen in Formularen. Dialoge (Zweig `claude/dialoge-im-kit`),
+Menüs und die Liquid-Szenen gehören anderen Bögen.

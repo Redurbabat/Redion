@@ -8348,6 +8348,41 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L230 · Der Löschen-Knopf nach E709 — was noch nicht zerfliesst, und ein Knopf, den die Tastatur nicht erreicht — 28. September 2026
+
+**Gefunden beim Bau von E709.** Redur, 27. September, ca. 22:02: „Ich will
+das du löschen button so ist überla wo etwas zum löschen eine buton gibt".
+E709 hat alle 23 runden Löschen-Knöpfe (`🗑` als eigener Knopf, dazu das ✕
+der Chatliste) auf `RedionDelete` gestellt. Drei Dinge sind offen:
+
+1. **„Endgültig löschen" im Papierkorb ist mit der Tastatur nicht
+   erreichbar** — älter als E709. Die Tat-Stellen (`.pk-tat`, ↩ ↳ 🗑) sind
+   `<span>` IN einer Zeile, die selbst ein `<button>` ist (zurückholen und
+   öffnen). Ein Knopf in einem Knopf ist kein gültiges HTML; mit der
+   Tastatur kommt man nur an die ganze Zeile. E709 gibt den Fokus nach
+   „Abbrechen" deshalb an die Zeile zurück. Richtig wäre eine Zeile aus
+   einem Knopf und daneben drei echten Knöpfen — ein Umbau des Papierkorbs,
+   den `test33` und `test59` bewachen.
+2. **Löschen, das KEIN runder Knopf ist, fragt weiter auf seine Art.** Die
+   Menüzeilen („In den Papierkorb verschieben", „Datenbank löschen" …)
+   bleiben Menüzeilen (Auftrag: ein Menüeintrag ist kein runder Knopf). Die
+   Wortknöpfe „Löschen" in Werkzeugleisten (Auswahl im PDF, `Entf`) und im
+   Seitenblatt des Dokuments legen weg, was Strg Z oder der Papierkorb
+   zurückholt; ein zweiter Schritt dort bremst das Zeichnen. Ebenso
+   Wortknöpfe ohne Papierkorb: „Löschen" an Kommentar und Antwort
+   (`kommentare/ansicht/faden.ts`), am Datensatz-Blatt einer Datenbank
+   (`datenbanken/steuerung.ts`), „Löschen"/„Entfernen" bei Workern und
+   „Öffnen mit" in den Einstellungen. Ob auch sie zum runden Knopf werden
+   und zerfliessen sollen, entscheidet Redur mit einem Bild.
+3. **Kleine ✕ zum „Entfernen" in Formularen** (eine Filterregel, eine
+   Kachel, eine eigene Farbe) sind Bearbeiten, nicht Löschen von
+   Gespeichertem, und blieben, wie sie sind.
+
+**Was fehlt:** zu 1 der Umbau der Papierkorbzeile mit Wächter; zu 2 und 3
+Redurs Wahl.
+
+---
+
 ## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
 
 **Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
@@ -9178,7 +9213,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 125 Lücken, 69 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

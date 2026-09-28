@@ -5394,3 +5394,58 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+## §79 · Der Löschen-Knopf, der zerfliesst: Stellen, Filter, Startpaket, Bildstreifen (E709, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/loeschen-fluessig` gegen den Stand
+`b3cf1933` (Welle 1: E698–E706). Chromium von Playwright, 1440 × 900 und
+390 × 844 (`isMobile`), hell und dunkel. Gzip Stufe 6 wie `test388`.
+
+**Die Stellen, gezählt vor dem Bau** (Suche nach `🗑` als eigenem Knopf im
+Quelltext, Menüzeilen `<span class="mi">🗑` nicht mitgezählt, dazu das ✕
+der Chatliste):
+
+```txt
+Knöpfe mit Papierkorb, die löschen                        23 in 16 Dateien
+  davon ohne jede Frage (erster Druck löscht)             21
+  davon mit confirm() des Browsers                         2  (Papierkorb einzeln,
+                                                               Erweiterung entfernen)
+nachher mit data-loeschknopf                              23
+confirm() hinter einem runden Löschen-Knopf                0
+„Papierkorb leeren", Datenbank/Spalte im Menü        fragen weiter (viele Dinge / Menü)
+```
+
+**Der Filter.** Das Kit legt je Knopf einen `<filter>` an und lässt ihn in
+Ruhe an. Hier, im Papierkorb mit drei Zeilen gemessen (`test586` §3): EIN
+`filter#ru-loesch-goo` im Dokument; an nur, solange `data-fliesst` steht
+(700 ms beim Öffnen, 480 ms beim Schliessen); in Ruhe `visibility: hidden`
+und kein Filter.
+
+**Startpaket** (neu: ein Skript, ein Blatt):
+
+```txt
+                                          roh        gzip
+quell/schale/bedienung/delete.js       18'258 B    5'711 B
+quell/schale/stil/loeschen.css         17'292 B    4'646 B
+                                                  10'357 B  (10,1 KiB; Richtwert je Zweig ~10 KB)
+Merkmale an 23 Stellen, Start (17 .js) +1'089 B roh
+redion-einzeldatei.html       11'783'171 → 11'820'105 B   (+36'934)
+test388 §5    2836 KB gzip über 250 Dateien, Decke 2850 KB
+              (Nachbarlauf 14:03, vor den zwei Korrekturen danach: +0,2 KB)
+```
+
+**Bildstreifen** (`welle2-bilder/loeschen/`, nicht eingecheckt, §55.4):
+Öffnen und Schliessen an drei echten Stellen (Papierkorb, Bereiche in den
+Einstellungen, Dateien), Rechner und Telefon, hell und dunkel — in Echtzeit
+aufgenommen (CDP-Bildschirmfoto des Ausschnitts, keine verlangsamte
+Wiedergabe, weil die Zeitgeber des Helfers nicht mitverlangsamt würden):
+24 Streifen (3 Orte × Rechner/Telefon × hell/dunkel × auf/zu), je 0,9 s
+ab dem Druck, 13 bis 25 Bilder je Streifen, Abstand im Mittel 35 bis
+66 ms (höchstens 149 ms; das Bildschirmfoto selbst kostet die Zeit, als
+JPEG über CDP schneller als PNG: vorher 38–82 ms im Mittel). Am Bild
+geprüft (Telefon, hell, Bereiche): bei ~75 ms schwillt der Kreis, 150 bis
+290 ms zieht die zweite Pille einen Hals aus der ersten, ab ~340 ms sind
+beide getrennt und die Wörter scharf; bei 700 ms übernimmt die CSS-Pille
+ohne Durchscheinen. Zwei Fehler kamen erst im Streifen heraus (siehe
+E709, „Gefunden auf dem Weg"): „Endgültig löschen" lief über die Pille,
+und bei der Übergabe schien „0 Seiten" ein Bild lang durch.

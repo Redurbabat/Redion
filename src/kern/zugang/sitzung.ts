@@ -400,7 +400,7 @@ const Konten = (() => {
                                   `${x.icon} ${esc(x.name)}</option>`).join('') +
                 '</select>' +
                 (k.id === ich.id ? '' : `<button data-an="${k.id}" title="Als dieses Konto arbeiten">↦</button>`) +
-                `<button data-weg="${k.id}" title="Entfernen">🗑</button>` +
+                `<button data-weg="${k.id}" data-loeschknopf="Entfernen" title="Konto entfernen">🗑</button>` +
               '</div>').join('')
           : '<div style="padding:18px;color:var(--text-faint);font-size:14px">Noch kein Konto angelegt.</div>');
     };

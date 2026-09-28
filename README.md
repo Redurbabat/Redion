@@ -179,6 +179,17 @@ Redion „Hoher Kontrast" einschaltet oder das Schema „Starker Kontrast"
 wählt, bekommt überall volle, deckende Flächen (E703).
 
 
+Löschen
+
+Jeder runde Löschen-Knopf fragt selbst, in zwei Schritten: ein Druck, und
+der Kreis mit dem Papierkorb zerfliesst in „Löschen" und „Abbrechen" (im
+Papierkorb „Endgültig löschen", bei Erweiterungen und Diensten
+„Entfernen"). Erst die rote Pille löscht; „Abbrechen", Escape oder ein
+Tipp daneben schliessen, und nichts ist weg. Mit weniger Bewegung blenden
+die zwei Knöpfe nur auf. „Papierkorb leeren" fragt weiter wie bisher, und
+Löschen in Menüs bleibt ein Menüeintrag (E709).
+
+
 Bewegung
 
 Über der Oberfläche liegt eine eigene Schicht für Bewegung —
@@ -504,7 +515,7 @@ Redion/
 ├─ pruefungen/
 │  ├─ alle.mts
 │  ├─ js-bestand.json
-│  └─ lauf/                    527 Läufe
+│  └─ lauf/                    528 Läufe
 │
 ├─ AUFGABEN.md · ERLEDIGTE-AUFGABEN.md
 ├─ LUECKEN.md · ENTSCHEIDUNGEN.md
@@ -1721,7 +1732,7 @@ keine Secrets im Repo
 
 Tests
 
-Redion nutzt echte Prüfungen gegen die echte App. Es sind 527 Läufe unter
+Redion nutzt echte Prüfungen gegen die echte App. Es sind 528 Läufe unter
 `pruefungen/lauf/` (gezählt am 27. September 2026 mit
 `ls pruefungen/lauf/test*.mts | wc -l`).
 

@@ -398,7 +398,7 @@ const Dateien = (() => {
                         (d.zustand === 'fertig' ? '' : ` · ${anteil}%`) + '</span></div>' +
                         (d.zustand === 'fertig'
                             ? `<button data-lade="${d.id}" title="Herunterladen">⭳</button>` : '') +
-                        `<button data-weg="${d.id}" title="Löschen">🗑</button>` +
+                        `<button data-weg="${d.id}" data-loeschknopf title="Datei löschen">🗑</button>` +
                         '</div>';
                 }).join('')
                 : '<div style="padding:22px; color:var(--text-faint); font-size:14px">' +

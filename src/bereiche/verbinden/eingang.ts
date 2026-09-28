@@ -232,7 +232,7 @@ const Eingang = (() => {
                       '</span></div>' +
                     `<button data-jetzt="${i}" title="Jetzt abholen">▶</button>` +
                     `<button data-bearb="${i}" title="Ändern">✎</button>` +
-                    `<button data-weg="${i}" title="Entfernen">🗑</button>` +
+                    `<button data-weg="${i}" data-loeschknopf="Entfernen" title="Eingang entfernen">🗑</button>` +
                   '</div>';
                 }).join('') + '</div>'
               : '<div class="pf-gut">Noch kein Eingang eingerichtet.</div>') +

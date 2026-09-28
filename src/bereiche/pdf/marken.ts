@@ -5269,6 +5269,7 @@ const Marken = (() => {
         weg.dataset.weg = element.id;
         weg.setAttribute('aria-label', 'Element „' + element.name + '" löschen');
         weg.title = 'Element „' + element.name + '" löschen';
+        weg.dataset.loeschknopf = '';
         weg.textContent = '🗑';
         fach.append(kachel, weg);
         liste.appendChild(fach);

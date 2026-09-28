@@ -302,7 +302,7 @@ const Pruefsatz = (() => {
                 (e.ok ? '' : '<div style="margin-top:6px;color:var(--gefahr)">' +
                   'Herausgekommen ist: <b>' + esc(e.ist) + '</b></div>') +
               '</div>' +
-              '<button class="btn" data-weg="' + esc(e.satz.id) + '">🗑</button>' +
+              '<button class="btn" data-weg="' + esc(e.satz.id) + '" data-loeschknopf aria-label="Prüfsatz löschen">🗑</button>' +
             '</div></div>').join('');
     };
 

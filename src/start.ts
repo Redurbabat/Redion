@@ -32,6 +32,8 @@ window.addEventListener('DOMContentLoaded', () => {
   RedionMotion.start();
   /* die Druckfeder (E702): ein Zuhörer für jeden Knopf */
   RedionPress.start();
+  /* der Löschen-Knopf, der zerfliesst (E709): ein Zuhörer für jeden */
+  RedionDelete.start();
 
   if (typeof Ereignisse !== 'undefined') Ereignisse.melde(ARTEN.appSteht);
 });

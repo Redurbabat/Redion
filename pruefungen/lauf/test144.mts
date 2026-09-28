@@ -386,7 +386,11 @@ const l35 = await seite.evaluate(async (bau) => {
     const button = [...document.querySelectorAll<HTMLElement>('[data-weg]')]
       .find(x => x.dataset.weg === satz.id);
     uiButton = !!button;
+    /* Zwei Schritte (E709): der Knopf öffnet „Löschen" / „Abbrechen",
+       die rote Pille löst den Löschweg aus. */
     button?.click();
+    await new Promise(resolve => setTimeout(resolve, 60));
+    document.querySelector<HTMLElement>('.ru-loesch-ja')?.click();
     await new Promise(resolve => setTimeout(resolve, 250));
     uiToast = document.getElementById('toast')?.textContent || '';
     fileStillDuring = !!(await Store.dateiHolen(satz.id));

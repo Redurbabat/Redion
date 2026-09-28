@@ -448,7 +448,12 @@ console.log('\n§6 Kacheln, Löschen, Escape');
   /* Angekommen heisst: die Einheitsmatrix. `none` steht nur, solange die
      Animation die Eigenschaft gar nicht gesetzt hat. */
   gleich('… gemessen, nachdem das Fenster angekommen ist', wegMass.angekommen, 'matrix(1, 0, 0, 1, 0, 0)');
+  /* Zwei Schritte (E709): der Druck öffnet „Löschen" / „Abbrechen" und
+     löscht noch nichts; die rote Pille ist nach dem Aufgehen scharf. */
   await s.click('.elemente-weg');
+  await s.waitForTimeout(800);
+  gleich('Der erste Druck fragt nur (E709)', Number(await s.evaluate(`document.querySelectorAll('.elemente-kachel').length`)), 3);
+  await s.click('.ru-loesch-ja');
   await s.waitForTimeout(300);
   const nachWeg = Number(await s.evaluate(`document.querySelectorAll('.elemente-kachel').length`));
   gleich('Löschen nimmt eine weg — und lässt den Dialog offen', nachWeg, 2);

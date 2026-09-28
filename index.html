@@ -72,6 +72,9 @@
      trotzdem gegen die Telefonränder aus bausteine.css gewinnt, macht
      nicht die Reihenfolge, sondern die Spezifität; warum, steht im Blatt. -->
 <link rel="stylesheet" href="quell/schale/stil/seitenansichten.css">
+<!-- Der Löschen-Knopf, der zerfliesst (E709): ein Bauteil-Blatt, also vor
+     bausteine.css; gegen die Zeilenregeln gewinnt es über die Spezifität. -->
+<link rel="stylesheet" href="quell/schale/stil/loeschen.css">
 <link rel="stylesheet" href="quell/schale/stil/bausteine.css">
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -598,6 +601,7 @@
 <script src="quell/schale/bedienung/funkel.js" defer></script>
 <script src="quell/schale/bedienung/motion.js" defer></script>
 <script src="quell/schale/bedienung/press.js" defer></script>
+<script src="quell/schale/bedienung/delete.js" defer></script>
 <script src="quell/schale/ueberlagerung/dialog.js" defer></script>
 <script src="quell/schale/ueberlagerung/fokus.js" defer></script>
 <script src="quell/schale/ueberlagerung/ui.js" defer></script>
