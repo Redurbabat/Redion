@@ -414,6 +414,8 @@ Seit August 2026 ist das Telefon die Hauptumgebung, nicht der Nebenschauplatz. R
 
 Unten fünf Wege als Kapsel, dort wo der Daumen ist: Dokumente, Heute, Lernen, Termine und Mehr. Jeder trägt seinen Namen unter dem Zeichen — auf 390 Pixel sind das 78 je Weg, und deshalb sind es fünf und nicht sechs.
 
+Die helle Fläche hinter dem gewählten Weg lässt sich mit dem Daumen greifen (E706): sie hebt sich, folgt dem Finger und rastet beim Loslassen auf dem Weg darunter ein — das wählt ihn, genau wie ein Tipp. Ein Tipp bleibt ein Tipp; Escape bricht das Ziehen ab. In Ruhe ist die Fläche fast klar, damit der Name darunter gut lesbar ist. Auch anderswo, wo man eines von wenigen wählt (Seite/Fläche/Redion, die Reiter von „Heute" und „Aussehen", die Wege im Regal, die Einstellungen, Farben, Breiten und Stifte der Stiftleiste), gleitet die Wahl zum neuen Knopf, statt zu springen. Mit „Ruhige Darstellung" oder weniger Bewegung im System springt sie wie früher.
+
 Zwischen den Bereichen lässt sich auch wischen: waagerecht über den Inhalt, und die Leiste geht einen Weg weiter. Die Geste sucht sich den nächsten Knopf und drückt ihn — damit gilt fürs Wischen alles, was fürs Tippen gilt, statt einer zweiten Logik daneben. Sie greift nicht, wo etwas waagerecht rollt, wo gezeichnet wird, wo zwei Finger zoomen oder wo der Finger ganz am Rand ansetzt; dort meint man den Browser.
 
 Suchen und KI stehen rechts in der Menüleiste, „Neu" ist der grosse Knopf im Regal und im Mehr-Blatt. Die drei schwebenden Knöpfe von früher — Suchen, KI fragen, Neue Seite — gibt es nicht mehr: zwei Leisten am unteren Rand sind eine zu viel.
@@ -489,7 +491,7 @@ Redion/
 ├─ pruefungen/
 │  ├─ alle.mts
 │  ├─ js-bestand.json
-│  └─ lauf/                    521 Läufe
+│  └─ lauf/                    525 Läufe
 │
 ├─ AUFGABEN.md · ERLEDIGTE-AUFGABEN.md
 ├─ LUECKEN.md · ENTSCHEIDUNGEN.md
@@ -1693,7 +1695,7 @@ keine Secrets im Repo
 
 Tests
 
-Redion nutzt echte Prüfungen gegen die echte App. Es sind 521 Läufe unter
+Redion nutzt echte Prüfungen gegen die echte App. Es sind 525 Läufe unter
 `pruefungen/lauf/` (gezählt am 27. September 2026 mit
 `ls pruefungen/lauf/test*.mts | wc -l`).
 

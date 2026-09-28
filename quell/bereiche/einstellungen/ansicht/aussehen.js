@@ -389,7 +389,8 @@ const Aussehen = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(780px,95vw)">' +
                 '<div class="fh">🎨 Aussehen und Tasten<button class="icon-btn" data-a="zu">✕</button></div>' +
-                '<div class="au-reiter">' +
+                /* `data-material` (E706): der Strich unter dem Reiter fliegt hinüber. */
+                '<div class="au-reiter" data-material="aussehen-reiter">' +
                 '<button data-r="farbe" class="an">Farben</button>' +
                 '<button data-r="schrift">Schrift und Layout</button>' +
                 '<button data-r="tasten">Tastenkürzel</button>' +

@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 524 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 525 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1435,6 +1435,18 @@ Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig,
 neben `test580` und `test581` auf den anderen; beim Zusammenführen
 nachgezählt: 524.*
 
+*Und 525: `test585` — das Material des Touch Kits überall, wo man wählt
+(E706). Er zieht die Pille der unteren Leiste mit einem echten Finger
+(CDP-Berührung) über drei Reiter, hält sie an, lässt sie los und zählt die
+Klicks, die bis zum Dokument durchkommen: GENAU EINER, auf dem Reiter
+darunter. Dazu misst er an den Bildpunkten, ob der aktive Name unter der
+Linse in Ruhe 4,5 : 1 schafft, folgt der kurzlebigen Fläche der Umschalter
+Bild für Bild bis auf zwei Pixel an ihr Ziel, und prüft dasselbe noch
+einmal mit abgeschalteter Bewegung — auf beiden Wegen, der Einstellung des
+Systems und „Ruhige Darstellung". Gezählt am 28. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig; beim
+Zusammenführen nach `test580`, `test581` und `test584` nachgezählt: 525.*
+
 ### Die Befehle
 
 ```txt
@@ -1451,7 +1463,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 524 Läufe
+npm run pruefen                      alle 525 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1541,7 +1553,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 524 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 525 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

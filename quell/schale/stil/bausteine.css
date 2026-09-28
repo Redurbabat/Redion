@@ -1955,7 +1955,12 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     /* DIE FLÄCHE BLEIBT DIESELBE MARKE, nur durchsichtiger. Ohne Brechung
        (ältere Browser) sieht man genau das, was vorher hier stand — eine
        ruhige Hervorhebung, nur leichter. Deshalb steht sie zuerst da. */
-    background:color-mix(in srgb,var(--bg-hover) 62%,transparent);
+    /* IN RUHE FAST KLAR (E706, Redurs Wahl „Untere Leiste besser lesbar").
+       Hier stand 62 % `--bg-hover`: der aktive Name darunter kam mit
+       1,83 : 1 (hell) und 2,06 : 1 (dunkel) heraus. Die Aufhellung unten
+       bleibt — sie ist die Linse (E639, `test539` §2) und hebt den Grund
+       mehr als die Schrift. Glas wird sie beim Fahren und Halten (`::after`). */
+    background:color-mix(in srgb,var(--text) 5%,transparent);
     /* ══ EINE KONTUR, NICHT DREI (E646) ═════════════════════════════════
        Hier lagen VIER Innenschatten und zogen einen hellen Ring rund um
        die Fläche. Zusammen mit dem Rand der Leiste selbst und ihrem
@@ -2018,10 +2023,41 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
      kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
      beides in einer Regel, fiele beides weg. */
+  #handy-oben[data-gehalten] #ho-pille,
   #handy-oben #ho-pille.faehrt{
     -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
     backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
   }
+  /* UNTERWEGS UND GEHALTEN WIEDER GLAS (E706): die volle Fläche liegt in
+     `::after` und blendet über ihre Deckkraft — auf der Pille selbst bleibt
+     genau EINE Bewegung (`test541` §3). Gehalten dazu Saum und Akzentring:
+     Glühen als Zustand (Kit-Material). */
+  #handy-oben #ho-pille::after{
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    pointer-events:none; opacity:0;
+    background:color-mix(in srgb,var(--bg-hover) 60%,transparent);
+    transition:opacity var(--motion-normal) var(--ease-standard),
+               box-shadow var(--motion-fast) var(--ease-standard);
+  }
+  #handy-oben #ho-pille.faehrt::after,
+  #handy-oben[data-gehalten] #ho-pille::after{ opacity:1 }
+  #handy-oben[data-gehalten] #ho-pille::after{
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 70%,transparent),
+               0 0 0 1px color-mix(in srgb,var(--accent) 32%,transparent),
+               var(--shadow-2);
+  }
+  /* Der Glanzrand bleibt über der Fläche. */
+  #handy-oben #ho-pille::before{ z-index:1 }
+  /* Der Weg unter dem Finger leuchtet vor; die fette Schrift bleibt beim
+     wirklich gewählten (§38). */
+  #handy-oben[data-gehalten] > button.an:not([data-anvisiert]){
+    color:var(--text-dim); transition-delay:0s
+  }
+  #handy-oben[data-gehalten] > button[data-anvisiert]{
+    color:var(--accent-text,var(--accent)); transition-delay:0s
+  }
+  /* Seitwärts gehört der Finger der Pille, senkrecht rollt die Seite (Kit). */
+  #handy-oben{ touch-action:pan-y }
 
   /* DER GLANZRAND. Oben auf der Kapsel sitzt im Vorbild ein heller Bogen
      mit einem feinen Farbschimmer — die Kante des Glases, die das Licht
@@ -2053,13 +2089,17 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        Ruhezustand gar keinen `url()`-Filter mehr; hier muss deshalb nur
        noch die Fahrt zurückgenommen werden — auf dieselbe Fläche wie im
        Ruhezustand, nicht auf eine schwächere Brechung. */
+    #handy-oben[data-gehalten] #ho-pille,
     #handy-oben #ho-pille.faehrt{
       -webkit-backdrop-filter:saturate(1.5) brightness(1.08);
       backdrop-filter:saturate(1.5) brightness(1.08);
     }
     #handy-oben #ho-pille::before,
     #handy-oben #ho-pille.faehrt::before{ opacity:.32; transition:none }
+    #handy-oben #ho-pille::after{ transition:none }
   }
+  /* „Ruhige Darstellung" fasst `*::after` nicht (E706) — hier ausdrücklich. */
+  body[data-bewegung="ruhig"] #handy-oben #ho-pille::after{ transition:none }
 
   /* OHNE DURCHSICHT GIBT ES KEIN GLAS — und trotzdem eine Auswahl.
      Wer `prefers-reduced-transparency` gesetzt hat, hat einen Grund dafür:
@@ -2072,6 +2112,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   @media (prefers-reduced-transparency:reduce){
     #handy-oben{ background:var(--bg-card);
                  -webkit-backdrop-filter:none; backdrop-filter:none }
+    #handy-oben[data-gehalten] #ho-pille,
     #handy-oben #ho-pille,
     #handy-oben #ho-pille.faehrt{
       background:var(--bg-hover);
@@ -2079,6 +2120,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     }
     #handy-oben #ho-pille::before,
     #handy-oben #ho-pille.faehrt::before{ opacity:0 }
+    /* OHNE GLAS UNTER DIE KNÖPFE (E706). Eine volle Fläche ÜBER dem Knopf
+       (E639: `z-index:2`, gedacht für eine Linse) deckte Zeichen und Namen
+       des aktiven Reiters zu; ohne Durchsicht ist sie keine Linse mehr. */
+    #handy-oben #ho-pille{ z-index:0 }
+    #handy-oben #ho-pille::after{ background:none }
   }
   /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
      beim Öffnen der App von der linken Kante herein, und das sieht aus
@@ -8386,6 +8432,32 @@ body.iblatt-auf .menu{z-index:794}
   .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-name{display:none}
   .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-kurz{display:inline}
 }
+
+/* RU- — DIE WAHL WANDERT (E706, Redur 27.09. ca. 21:47). Reihen mit
+   `data-material` bekommen beim Wechsel eine kurzlebige Fläche im Aussehen
+   der Wahl (`SelectionFlow`), die auf der Kit-Feder vom alten zum neuen
+   Knopf fliegt. Der Zustand bleibt am Knopf (E640). `z-index:-1` in einer
+   Ebene des Trägers, nur solange sie fliegt: über dem Grund, unter der Schrift. */
+.ru-traeger{ isolation:isolate }
+.ru-flug{
+  position:absolute; z-index:-1; margin:0; padding:0; box-sizing:border-box;
+  pointer-events:none; will-change:transform
+}
+/* Solange sie fliegt, leuchtet das Ziel mit einem Fünftel vor, nie leer
+   (E640/test478). `!important`: die Wahlregeln der Reihen sind bis (0,3,1)
+   stark, und diese eine gilt nur für die Dauer der Feder. */
+.ru-wartet{
+  background-color:color-mix(in srgb,var(--ru-grund,transparent) 22%,transparent) !important;
+  background-image:none !important;
+  border-color:transparent !important; box-shadow:none !important
+}
+/* Ein Farbtupfer behält seine Farbe (Inhalt); nur sein Ring fliegt. */
+.ru-wartet-rand{ border-color:transparent !important; box-shadow:none !important }
+/* Landen ohne Überblenden: zwei Bilder lang kein Übergang. */
+.ru-landet{ transition:none !important }
+/* Ohne Bewegung fliegt nichts; `SelectionFlow` fragt beides, dies ist das Netz. */
+@media (prefers-reduced-motion:reduce){ .ru-flug{ display:none } }
+body[data-bewegung="ruhig"] .ru-flug{ display:none }
 
 /* ============================================================================
    RU- — DIE ZUSTANDSPILLE UND DER ZUSTANDSKNOPF (E441)

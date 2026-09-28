@@ -4861,8 +4861,8 @@ die Zahl an einer Stelle steht. Die Bilder bleiben auf dem Rechner (§55.4).
 ## §73 · Ruhiger, und nichts ist weg — laute Flächen, Dauerbewegung, Emoji, Start (E701, 28. September 2026)
 
 (§71 und §72 stehen auf dem Grundstand `claude/ruhig-grundstand` 515451f9;
-§74 und §77 stehen direkt darunter; §75, §76 und §78 sind den anderen
-Zweigen der Bitte vom 27. September vergeben.)
+§74, §77 und §78 stehen darunter; §75 und §76 sind den anderen Zweigen
+der Bitte vom 27. September vergeben.)
 
 **Wie gemessen.** Playwright/Chromium, 1440 × 900 (Zeiger) und 390 × 844
 (`isMobile`, `hasTouch`), hell und dunkel, jede Ansicht mit echtem Inhalt
@@ -5125,3 +5125,68 @@ werkzeuge.css +168 · hell.css +140 · übrige +90             Summe +7 766 B �
 
 Also rund 2775 KB, 75 unter der Decke 2850.
 
+## §78 · Das Material des Touch Kits: Feder, Greifen, Linse, sechs Umschalter (E706, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/material-ueberall` gegen den Grundstand
+`515451f9` (E698 + E699 + E700). Chromium von Playwright, 390 × 844
+(`isMobile`, Berührung über CDP) und 1440 × 900; Kontrast an den Bildpunkten
+(`test585` §2: dunkelster gegen hellsten Bildpunkt im Kasten des aktiven
+Namens, 0,5- und 99,5-Perzentil). Gzip Stufe 6 wie `test388`.
+
+**Die Feder, gerechnet** (`knapp` = Kit „snappy", 0,36 s, Schwung 0,14,
+gegen die alte ζ = 1, ω = 0,026/ms):
+
+```txt
+                                 vorher (ζ = 1)      nachher (knapp, ζ = 0,86)
+Anteil im ersten Bild (16,7 ms)      7,1 %               3,6 %
+Bahn zum Nachbarn (74 px)            292 ms              288 ms
+Bahn über zwei Wege (148 px)         292 ms              448 ms, 0,74 px über
+höchste Dehnung zum Nachbarn         1,175 (test541 §6)  1,105
+Nulldurchgang                        nie                 293 ms
+```
+
+**Die Linse in Ruhe — der aktive Name „Dokumente"** (vorher: Farbkarte vom
+27. September; nachher und Gegenprobe: `test585` §2):
+
+```txt
+                      vorher (515451f9)    nachher (E706)    Gegenprobe (62 %, brightness 1.08)
+hell                  1,83 : 1             4,74 : 1          1,83 : 1
+dunkel                2,06 : 1             5,50 : 1          2,06 : 1
+ohne Aufhellung       —                    4,73 / 5,11 : 1   (erste Fassung, gegen E639 und test539 §2)
+Farbkarte 27.09.      1,83 / 2,09 : 1      —
+Linse unter Knöpfen   —                    —                 5,18 / 5,20 : 1 (Alternative d, verworfen)
+```
+
+**Start (test388 §5).** 2777 KB gzip über 246 Dateien, Decke 2850 KB —
+auf dem Grundstand 2767 KB (E699, §71). +10 KB, genau die Grenze, die jedem
+Zweig dieser Bitte zugeteilt ist; es bleiben 73 KB für alle übrigen.
+
+**Was die Dateien wachsen** (gzip Stufe 6, gegen `515451f9`, Bytes):
+
+```txt
+quell/schale/bedienung/selection-flow.js     6'649 → 14'578   +7'929
+quell/schale/stil/bausteine.css            162'568 → 163'847   +1'279
+quell/schale/aufbau/seitenleiste.js         19'434 →  19'827     +393
+quell/bereiche/pdf/marken.js               128'143 → 128'366     +223
+quell/schale/bedienung/segment.js            2'697 →   2'761      +64
+quell/bereiche/einstellungen/ansicht/aussehen.js  9'991 → 10'045  +54
+quell/bereiche/wissen/bibliothek.js         34'904 →  34'956      +52
+quell/bereiche/wissen/lernwelt.js           47'668 →  47'715      +47
+quell/bereiche/einstellungen/ansicht/seite.js 30'384 → 30'421     +37
+quell/kern/einstellung/stand.js                440 →     440       ±0
+                                                       zusammen +10'077
+```
+
+Der Löwenanteil ist Code: `selection-flow.js` ohne Kommentare 1,3 → 7,3 KB
+(Federformel, Geste, Greifen, Umschalter). Die Kommentare sind gekürzt; die
+Begründungen stehen in E706, nicht im Startpaket.
+
+**Filmstreifen** (Bilder alle ~33 ms bei Wiedergabe ¼, `material-bilder/`,
+nicht eingecheckt, §55.4): untere Leiste — Tipp „Dokumente" → „Heute" und
+Ziehen „Heute" → „Termine" (10 Schritte à 34 ms, gehalten, dann los);
+Werkzeugwechsel Stift → Radierer, Farbe, Stiftart (Rechner und Telefon);
+Seite → Fläche; Aussehen Farben → Schrift und Layout; Regal Meine Ablage →
+Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
+tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
+`Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
+27 ms Bewegungszeit.

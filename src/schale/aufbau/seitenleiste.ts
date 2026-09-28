@@ -290,6 +290,25 @@ const Seitenleiste = (() => {
        so gebaut, dass nur die Brechung wegfällt, nicht die Hervorhebung. */
     if (typeof Linse !== 'undefined') Linse.sicherstellen();
 
+    /* DIE PILLE LÄSST SICH GREIFEN (E706, Redur 27.09. ca. 21:47: „ich will das
+       du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen
+       usw") — das Material der Tab-Leiste des Kits, in `SelectionFlow.ziehbar`.
+       Losgelassen auf einem anderen Weg wird DESSEN Knopf geklickt, genau
+       einmal — derselbe Weg wie beim Tippen. Rollen und `aria-selected` bleiben. */
+    if (typeof SelectionFlow !== 'undefined' && !l.dataset['ziehbar']) {
+      SelectionFlow.ziehbar({
+        reihe: l, flaeche: pille, hub: 1.1,
+        optionen: () => Array.from(l.querySelectorAll<HTMLElement>(':scope > button[role="tab"]')),
+        gewaehlt: () => l.querySelector<HTMLElement>(':scope > button[aria-selected="true"]'),
+        zeichen: k => k.querySelector<HTMLElement>('.ho-z'),
+        waehle: k => k.click(),
+        zurueck: (k, f) => {
+          if (k) SelectionFlow.folge(f, k.offsetLeft, true, false);
+          else handyLeiste();
+        }
+      });
+    }
+
     /* „Mehr" und „Kompass" haben oben keinen Reiter (E42). Dann gehört
        auch keine Pille irgendwohin — sie bleibt, wo sie war, und
        verschwindet. Sie an den Anfang zu schieben wäre eine Aussage, und

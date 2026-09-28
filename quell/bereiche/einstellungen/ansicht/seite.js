@@ -166,7 +166,8 @@ const Einstellungen = (() => {
         o.className = 'overlay';
         o.innerHTML =
             '<div class="einst-fenster" data-blick="liste">' +
-                '<div class="einst-nav">' +
+                /* `data-material` (E706): die gewählte Zeile gleitet zur neuen. */
+                '<div class="einst-nav" data-material="einstellungen">' +
                 `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
                 `<div><b>${esc(V('arbeitsName', 'Redion'))}</b>` +
                 `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +

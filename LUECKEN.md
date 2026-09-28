@@ -8348,6 +8348,44 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
+
+**Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
+27. September um ca. 21:47 die Tab-Leiste seines Touch Kits geschickt: „ich
+will das du auch das ¨berla nutze will wo es nötig ich also beim stift
+übergangen usw". E706 hat das Material an drei Orten gebaut: die Pille der
+unteren Leiste lässt sich mit dem Daumen ziehen (hebt sich, dehnt sich,
+rastet ein), der Werkzeugflug der Stiftleiste fährt auf der Feder des Kits,
+und in sechs Reihen (Seite/Fläche/Redion, Heute, die Wege im Regal, die
+Reiter von „Aussehen", die Liste der Einstellungen, das Zubehör der
+Stiftleiste) fliegt die Wahl, statt zu springen (`test585`).
+
+**Was fehlt, ausdrücklich:**
+
+1. **Schieben über das Zubehör der Stiftleiste.** Die Karte (material-5)
+   schlägt vor, den Finger über Stifte, Farben und Breiten zu ziehen, mit
+   Vorschau unter dem Finger — wie an der unteren Leiste. Der Helfer dafür
+   steht (`SelectionFlow.ziehbar` mit `baue`, einer kurzlebigen Fläche),
+   ist dort aber NICHT gebunden: die Reihe rollt am Telefon waagerecht, und
+   ein Zug muss sich mit dem Rollen der Reihe und mit einem Strich auf dem
+   Blatt einigen. Das braucht einen eigenen Lauf, der beides zeigt.
+2. **Wahl-Listen mit zwei oder drei Möglichkeiten** in den Einstellungen
+   (Hell/Dunkel/System, Klein/Normal/Gross, Normal/Ruhig …) sind weiterhin
+   `<select>`. Die Karte schlägt `Segment` vor; das ändert den Weg, auf dem
+   acht Prüfläufe die Einstellungen setzen, und gehört in einen Bogen mit
+   diesen Läufen zusammen.
+3. **Die Feder als Marke.** `SelectionFlow.FEDERN` führt `knapp` und
+   `druck` mit den Zahlen des Kits (`--ui-spring-snappy`,
+   `--ui-spring-press`). Sobald `grund.css` die Kit-Federn als Marken hat
+   (Zweig `claude/fluessige-bewegung`: `--feder-knapp`, `--feder-druck`),
+   soll die Tafel sie von dort lesen —
+   die Zahlen stünden dann an EINER Stelle (§8).
+
+**Was es NICHT ist:** kein Fehler. Alles, was es vorher gab, geht wie
+vorher (Tipp, Tastatur, Vorleser, ohne Bewegung).
+
+---
+
 ## L228 · Weiss auf der Astfarbe der Gedankenkarte ist im Dunkeln zu blass — 28. September 2026
 
 **Gefunden beim Bau von E705**, nicht gesucht. Die Gedankenkarte malt drei
@@ -9023,7 +9061,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 122 Lücken, 67 offene und 55 geschlossene. Der Befehl dazu ist
+Datei führt 123 Lücken, 68 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
