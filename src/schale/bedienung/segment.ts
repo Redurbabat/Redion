@@ -83,6 +83,8 @@ const Segment = (() => {
     gruppe.className = 'ru-seg';
     gruppe.setAttribute('role', 'radiogroup');
     gruppe.setAttribute('aria-label', auftrag.name);
+    /* E706: die Wahl fliegt vom alten zum neuen Knopf (`SelectionFlow`). */
+    gruppe.dataset['material'] = 'segment';
 
     let jetzt = wahlen.some(w => w.id === auftrag.gewaehlt)
       ? String(auftrag.gewaehlt) : String(wahlen[0]?.id);

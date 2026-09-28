@@ -1424,3 +1424,18 @@ Beide Treffer sind geklärt, und nur einer war ein Fehler an einer Fläche:
 stand nur HINTER der Regel, ausserhalb der acht Zeilen, die `test402` liest.
 `#ai .ki-quellschalter` ist ein echter Nebenweg und hat jetzt seinen
 geschriebenen Grund. `test402` ist 4/4.
+
+## Das Material zum Ziehen auch am Zubehör und in den Einstellungen (L229, nach E706)
+
+E706 hat das Material des Touch Kits an die untere Leiste, den
+Werkzeugflug und sechs Umschalter gebracht. Offen, jeweils mit eigenem
+Wächter (rot zuerst):
+
+1. Schieben über Stifte, Farben und Breiten der Stiftleiste
+   (`SelectionFlow.ziehbar` mit `baue`) — ohne dem Rollen der Reihe oder
+   einem Strich auf dem Blatt in die Quere zu kommen.
+2. Einstellungen mit zwei oder drei Möglichkeiten als `Segment` statt
+   `<select>` — zusammen mit den Läufen, die die Einstellungen setzen.
+3. `SelectionFlow.FEDERN` aus den Federmarken in `grund.css` lesen, sobald
+   es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
+   `--feder-druck`).

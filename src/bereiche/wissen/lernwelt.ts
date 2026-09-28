@@ -1332,7 +1332,8 @@ const Lernwelt = (() => {
            Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
            darüberzusetzen. Fehlt die Marke, bleibt alles wie vorher — die
            Schale fragt nur, sie verlangt nichts. */
-        const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" aria-label="Lernen und Alltag">' + reihe.map(item => {
+        /* `data-material` (E706): die Wahl fliegt, statt zu springen. */
+        const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' + reihe.map(item => {
           const drin = item.id === zustand.ansicht ||
             ((item as any).unter || []).includes(zustand.ansicht);
           return '<button type="button" data-lw-nav="' +
@@ -1348,7 +1349,7 @@ const Lernwelt = (() => {
            dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
            zeigt, ist wieder die alte. */
         if (!hier?.unter) return haupt;
-        return haupt + '<nav class="lw-subnav" aria-label="' + esc(hier.name) + '">' +
+        return haupt + '<nav class="lw-subnav" data-material="heute-unter" aria-label="' + esc(hier.name) + '">' +
           hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
             (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
             esc(ansichtName(id)) + '</button>').join('') + '</nav>';

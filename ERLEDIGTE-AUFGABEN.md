@@ -1,5 +1,32 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
+
+**Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu
+„ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift
+übergangen usw"; im Fragebogen um ca. 21:45 „Wie im UI-Kit (Empfohlen)" und
+„Untere Leiste besser lesbar"; um ca. 22:10 „… bessere übergagnge besssere
+efeckten , bessere oberfläsche alles …".
+
+**Gebaut:** `SelectionFlow` fährt die Feder des Touch Kits (`knapp`/`druck`)
+und kann greifen (`ziehbar`): die Pille der unteren Leiste hebt sich unter
+dem Daumen, folgt ihm, dehnt sich mit dem Tempo, gibt an den Enden nach wie
+ein Gummiband und rastet losgelassen mit Schwung ein — der Reiter darunter
+wird genau einmal geklickt. Ihre Zeichen sinken beim Drücken ein und federn
+zurück. Die Linse ist in Ruhe fast klar (der aktive Name ≥ 4,5 : 1), Glas
+wird sie beim Fahren und Halten. In sechs Reihen fliegt die Wahl über
+`data-material`, statt zu springen: Seite/Fläche/Redion, „Heute", die Wege
+im Regal, die Reiter von „Aussehen", die Liste der Einstellungen, das
+Zubehör der Stiftleiste (je Gruppe). Der Werkzeugflug dehnt sich zwischen
+Nachbarn. „Ruhige Darstellung" hält jetzt auch diese Bewegungen an.
+
+**Geprüft:** `test585` (neu, zuerst rot eingecheckt); die Nachbarn in der
+Commit-Nachricht. Nichts gelöscht, kein Weg verlegt: Tipp, Tastatur und
+Vorleser gehen wie vorher.
+
+**Offen:** L229 — Schieben über das Zubehör, Umschalter statt kurzer
+`<select>`s, die Federn als Marken in `grund.css`.
+
 ## 27. September 2026 · E699 · React-Inseln, Stufe 1a: die Grundlage
 
 **Redur:** „du kannst react nutzen keien problem" — im Fragebogen „Mit React

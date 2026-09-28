@@ -5722,6 +5722,13 @@ const Marken = (() => {
            Tafel statt den Knopf, den der Finger meint. */
         const tafel = document.createElement('div');
         tafel.className = 'blatt-tafel';
+        /* DAS ZUBEHÖR WANDERT (E706, Redur 27.09. ca. 21:47: „… also beim stift
+           übergangen usw"). Mit diesen zwei Merkmalen fliegt die Wahl in jeder
+           Gruppe (`data-gruppe`) vom alten zum neuen Knopf — `SelectionFlow` hört
+           am Dokument zu, dieser Bereich ruft es nicht (§5). Die Werkzeuge tragen
+           kein `data-gruppe` und fliegen selbst (E640); der Zustand bleibt am Knopf. */
+        tafel.dataset['material'] = 'stift-zubehoer';
+        tafel.dataset['materialJe'] = 'gruppe';
         tools.appendChild(tafel);
         tafel.innerHTML =
             button('schreiben') +

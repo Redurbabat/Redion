@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-680 Entscheidungen, E1 bis E700 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+681 Entscheidungen, E1 bis E706 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat; **E701 bis E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -743,6 +743,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
 * **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
 * **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
+* **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
 
 ---
 
@@ -2915,6 +2916,14 @@ mitgezogen.
 > Inselblatt (`quell/islands/islands.css`), nicht in `grund.css`. Für
 > Redions eigene Bewegung gilt dieser Eintrag unverändert, und `test126`
 > prüft ihn weiter.
+>
+> **Ergänzt durch E706 (28. September 2026) — für Redions eigenes
+> Material.** Redur, 21:45: „Wie im UI-Kit (Empfohlen)", 21:47: „ich will das
+> du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen
+> usw". Die wandernde Wahl (Pille der unteren Leiste, Werkzeugflug, die
+> Umschalter) fährt die Kit-Feder `snappy` (Schwung 0,14, 0,5 % Überschwingen),
+> ein losgelassenes Zeichen die Feder `press`; beide in `SelectionFlow.FEDERN`.
+> Die drei Kurven in `grund.css` und `test126` bleiben, wie sie sind.
 
 **Woher das kommt.** Redurs Vorgabe zum Bewegungssystem, und der Satz, der
 sie zusammenfasst: *„Animations must improve clarity, not distract."*
@@ -52964,6 +52973,12 @@ neuen zwei nicht besser halten.
 > (ζ = 1) unten gilt weiter für Redions untere Leiste und die Werkzeugleiste;
 > die Bauteile des Kits in den React-Inseln federn wie im Kit, mit
 > Überschwingen.
+>
+> **Ergänzt durch E706 (28. September 2026).** Die untere Leiste und die
+> Werkzeugleiste fahren jetzt die Kit-Feder `snappy` (ζ = 0,86) statt ζ = 1;
+> die Pille lässt sich mit dem Daumen greifen. Was hier entschieden wurde,
+> bleibt: NUR `transform`, die Bahn einmal gerechnet und dem Compositor
+> übergeben, das Tempo beim Umlenken mitgenommen (`test541` unverändert grün).
 
 Redur hat am 20. September um 10:12 Uhr eine Aufnahme der unteren Leiste
 geschickt und gefragt: *„Denkst du ist das so gut?"* — dazu sieben Punkte
@@ -53133,6 +53148,10 @@ bis 10 Orte bei 25 Bildern je Sekunde Aufnahme.
 ---
 
 ## E647 — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu
+
+> **Ergänzt durch E706 (28. September 2026).** Der Flug fährt die Feder
+> des Touch Kits (`knapp`) und dehnt sich zwischen Nachbarn in
+> Flugrichtung, um seine Mitte (E641s Deckel); der Grund bleibt am Knopf.
 
 E646 hat die untere Leiste vom Hauptfaden geholt. Die Werkzeugleiste des
 Schreibstudios (E640) hatte denselben Fehler — nur hat ihn dort noch niemand
@@ -57379,3 +57398,178 @@ grün; `test225`, `test549`, `test550` grün. `test401` bleibt rot wie auf
 `main` (`var(--danger, #c73939)` aus E697) — das repariert E698 auf seinem
 Zweig. `npm run typecheck` sauber; `npm run bauen:ts` (Dienststand v1372)
 und `node bauen.mts` neu erzeugt.
+
+## E706 — Das Material des Touch Kits überall, wo man wählt: die Pille zum Greifen, die Wahl, die fliegt, die Linse, die in Ruhe klar ist
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Fragebogen
+27. September ca. 21:45, Tab-Leiste ca. 21:47) · **ergänzt** E43, E646 und
+E647 für Redions eigenes Material (E640 und E641 bleiben) · **Wächter:**
+`test585` · **Zweig** `claude/material-ueberall`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC   im Fragebogen, Federn in Redion selbst: „Wie im UI-Kit
+                (Empfohlen)"; Farben: „Untere Leiste besser lesbar"
+                (Beschreibung der Wahl: „Glaslinse über dem aktiven Tab in
+                Ruhe fast klar")
+ca. 21:47 UTC   schickt die Vorschau der Tab-Leiste des UI-Kits und schreibt:
+                „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Redion hatte das Material an EINER Stelle: die Pille der
+unteren Leiste (E639–E648) — eine Fläche, die auf einer kritisch gedämpften
+Feder (ζ = 1) wandert, als Keyframes auf dem Compositor. Greifen konnte man
+sie nicht, sie hob sich nicht, die Zeichen gaben beim Drücken nicht nach, und
+über dem aktiven Namen lag eine milchige Scheibe: an den Bildpunkten
+gemessen **1,83 : 1 hell, 2,09 : 1 dunkel** (Farbkarte vom 27. September).
+Die Werkzeugleiste flog (E640/E647), ihr Zubehör sprang. Alle anderen Stellen,
+an denen man EINES von wenigen wählt, sprangen: Seite/Fläche/Redion, die
+Reiter von „Heute", die Wege im Regal, die Reiter von „Aussehen", die Liste
+der Einstellungen. Und „Ruhige Darstellung" hielt die Pille nicht an — eine
+WAAPI-Bahn hält sich an kein Stilblatt.
+
+**Was entschieden wurde.**
+
+1. **Die Feder des Kits für Redions eigenes Material.** `SelectionFlow`
+   fährt die Feder `snappy` des Kits (0,36 s, Schwung 0,14 — hier `knapp`)
+   statt ζ = 1; das Loslassen eines Zeichens die Feder `press` (0,32 s,
+   0,3 — hier `druck`). Beide stehen EINMAL in `SelectionFlow.FEDERN`, mit
+   den Namen der Kit-Marken (`--ui-spring-snappy`, `--ui-spring-press`),
+   damit sie später aus Redions eigenen Marken gelesen werden können (L229)
+   — der Zweig `claude/fluessige-bewegung` führt sie als `--feder-knapp`
+   und `--feder-druck`, mit denselben Namen wie hier.
+   Was aus E646 bleibt, ist das Wichtigere: NUR `transform`, die Bahn
+   EINMAL gerechnet und dem Compositor übergeben, das Tempo beim Umlenken
+   mitgenommen. Die Dehnung ist die des Kits (`materialStretch`, 0,2 je
+   px/ms) unter E641s Deckel 0,24.
+2. **Die Pille der unteren Leiste lässt sich greifen** (`SelectionFlow.
+   ziehbar`, gebunden in `seitenleiste.ts`): gehalten hebt sie sich
+   (1,1), folgt dem Finger 1:1, dehnt sich mit dem Tempo, der Reiter unter
+   ihr leuchtet vor; über die Enden gibt sie nach wie ein Gummiband;
+   losgelassen rastet sie mit Schwung ein, und der Reiter darunter wird
+   GENAU EINMAL geklickt — derselbe Weg wie beim Tippen (`dockWechsel`).
+   Ein Tipp bleibt ein Tipp (erst nach 10 px seitwärts wird gezogen),
+   Escape bricht ab, `role="tab"` und `aria-selected` bleiben die Auskunft.
+   Die Zeichen sinken beim Drücken auf 0,9 und federn zurück.
+3. **Die Linse ist in Ruhe fast klar** (Redurs Wahl „Untere Leiste besser
+   lesbar"): 5 % Ton statt 62 % Grund; die Aufhellung
+   (`saturate(1.5) brightness(1.08)`) bleibt, sie ist die Linse (E639,
+   `test539` §2) und hebt den Grund mehr als die Schrift. Beim Fahren und
+   Halten wird sie wieder Glas (Brechung und volle Fläche in `::after`, die
+   ein- und ausblendet — auf der Pille selbst läuft weiter genau EINE
+   Bewegung, `test541` §3).
+4. **In sechs Reihen fliegt die Wahl, statt zu springen** — über ein
+   Merkmal, nicht über einen Aufruf (§5): `data-material` an
+   Seite/Fläche/Redion (`Segment`), „Heute" (`.lw-nav`, `.lw-subnav`), den
+   Wegen im Regal, den Reitern von „Aussehen", der Liste der Einstellungen
+   und der Tafel der Stiftleiste (dort `data-material-je="gruppe"`: eine
+   Farbe fliegt zu einer Farbe, nie zu einer Breite). Die Schale hört einmal
+   am Dokument zu, merkt die alte Wahl VOR dem Klick und lässt im nächsten
+   Bild eine kurzlebige Fläche im Aussehen der Wahl vom alten zum neuen Knopf
+   fliegen — auch dann, wenn die Reihe dazwischen neu gezeichnet wurde. **Der
+   Zustand bleibt am Knopf** (E640): Schrift, Gewicht und `aria-*` stehen
+   sofort da, das Ziel leuchtet derweil mit einem Fünftel seines Grundes vor
+   und wird nie leer (die Lehre aus `test478`).
+5. **Der Werkzeugflug der Stiftleiste** (E647) fährt dieselbe Feder und
+   dehnt sich zwischen Nachbarn in Flugrichtung, um seine Mitte.
+6. **Ohne Bewegung heisst aus zwei Quellen:** `prefers-reduced-motion` UND
+   „Ruhige Darstellung" (`body[data-bewegung="ruhig"]`). Dann springt die
+   Pille, nichts hebt oder dehnt sich, nichts fliegt — und die Wahl stimmt.
+
+**Warum so und nicht mit der Tab-Leiste des Kits als Insel.** Die
+Kit-Karte vom 27. September hat es gemessen: die Tab-Leiste als React-Insel
+beim Start kostete +83 KB (die ganze Decke von `test388` §5) und kam rund
+430 ms nach der gemalten Leiste (1178 gegen 720–749 ms); ihre Federn laufen
+auf `requestAnimationFrame`, also auf dem Hauptfaden — genau der Fehler, den
+E646 behoben hat. E699 Punkt 4 verbietet React beim Start ohnehin. Die
+Technik des Kits wurde deshalb in Redions eigenes TypeScript übertragen
+(Federformel, Achse, Tempomesser, Gummiband, Rastpunkt), mit Redions Marken.
+
+**Die Alternativen.** (a) Eine BLEIBENDE Fläche unter jeder Reihe, wie im
+Kit-Segment — verworfen, weil die meisten dieser Reihen bei jeder Wahl neu
+gezeichnet werden und eine gespeicherte Lage veraltet (E640: 55 px neben
+ihrem Werkzeug). (b) CSS-Übergänge auf `left`/`width` — Hauptfaden (E646).
+(c) Die Federn in `grund.css` als `linear()`-Marken — gehört dem Zweig
+`claude/fluessige-bewegung`; hier stehen sie in EINER Tafel mit den Namen
+der Kit-Marken, damit der Zusammenführende sie darauf zeigen lassen kann.
+(d) Die Linse unter die Knöpfe legen — 5,18/5,20 : 1, aber gegen E639 und
+`test539` §1.
+
+**Gemessen, bevor gebaut wurde** (messungen §78): die Linse über
+„Dokumente" 1,83 : 1 hell und 2,09 : 1 dunkel (Farbkarte vom 27. September,
+an den Bildpunkten); die Pille liess sich nicht greifen (im Filmstreifen
+„vorher" bleibt sie beim Ziehen stehen), und von den sechs Reihen flog
+keine.
+
+**Was es kostet.** Startbytes: +10,0 KB gzip (Stufe 6) über zehn Dateien —
+`selection-flow.js` +7,9 KB (ohne Kommentare 1,3 → 7,3 KB: Federformel,
+Geste, Greifen, Umschalter), `bausteine.css` +1,3 KB, `seitenleiste.js`
++0,4 KB, der Rest je unter 0,3 KB; `test388` §5: 2777 KB statt 2767 KB (Decke 2850). Das ist die
+Obergrenze, die jedem Zweig dieser Bitte zugeteilt ist (etwa 10 KB) — mehr
+darf hier nicht dazukommen, ohne dass etwas anderes geht. Zur Laufzeit: je
+Wechsel EIN kurzlebiges Element, dessen Bahn einmal gerechnet und dem
+Compositor übergeben wird; solange es fliegt, liest eine Wache je Bild zwei
+Rechtecke (Reihe und Fläche), damit ein Neuzeichnen es nicht verliert.
+Gehalten liegt über der Pille ein Brechungsfilter mehr (derselbe wie beim
+Fahren, E639). Nichts läuft in Ruhe.
+
+**Gefunden auf dem Weg.**
+
+- „Ruhige Darstellung" hielt die Pille nicht an (die Bewegungskarte hat es
+  gemessen); `SelectionFlow` fragte nur das System. Jetzt beide.
+- Die Abschaltung der App fasst `*` und `*::before`, nicht `*::after`. Das
+  neue `::after` der Pille ist deshalb ausdrücklich still gestellt.
+- Eine Reihe, die bei der Wahl neu gezeichnet wird, kann dabei als GANZE
+  wandern (ein neuer Seitenkopf darüber). Die erste Fassung hielt das für
+  einen Umbruch und flog nicht; jetzt zieht der Start mit der Reihe mit.
+- „Heute" zeichnet seine Reiterreihe nach dem Klick noch einmal. Die
+  Fläche stand zwei Bilder lang am Start und war dann weg (`test585` §5:
+  „2 Bilder, 1 Orte", zuletzt bei 397 px statt 483 px). Jetzt wacht der
+  Flug über seine Reihe: wird sie neu gezeichnet, fliegt er in der neuen
+  weiter, ab dem Ort, an dem er zuletzt stand — höchstens dreimal.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen), in einer Kopie des gebauten
+Stands, `quell/` von Hand verbogen, `test585` darüber — 80 von 91, jede
+Verbiegung genau an ihrer Stelle rot:
+
+- `knapp` mit Schwung 0 (zurück auf ζ = 1): §1 rot („0,00 px über 138 px").
+- Die Linse wieder mit 62 % `--bg-hover`: §2 rot (1,83 : 1 hell, 2,06 : 1
+  dunkel — die Aufhellung allein war es nicht).
+- Der Reiter unter der losgelassenen Pille zweimal geklickt: §3 rot
+  (`{"hl-bespr":2}`).
+- Ohne die Wache über die Reihe: §5 „Heute" rot (2 Bilder, 1 Ort).
+- `ruhig()` fragt nur das System: §7 „Ruhige Darstellung" rot in vier
+  Punkten (die Pille fährt, hebt sich auf 1,1, die Umschalter fliegen).
+
+Dazu die Nachbarn: die erste Fassung nahm der Linse auch die Aufhellung
+(`saturate(1.5)` allein). `test539` §2 („tastet den Hintergrund aber weiter
+ab") und `test576` §2 (Zierstück `#ho-pille`) wurden rot; die Aufhellung ist
+zurück, beide Wächter blieben unverändert.
+
+**Geprüft:** `test585` 91/91 (rot auf `515451f9`: 47/91). Nachbarn
+über `alle.mts`: 114 143 245 303 353 362 388 412 424 428 430 431 432 435
+472 476 477 478 484 500 532 534 535 536 539 541 576 — 25 von 27 grün, rot
+`test539` und `test576` (die Aufhellung, siehe oben); nach dem Zurückholen
+539 (51/51), 541 (25/25), 576 und 585 (91/91) grün. Ohne Browser: 87 290
+298 401 402 410 105 109 537 400 126 127 550 549 225 grün. `test388` §5:
+2777 KB. Kontrast in Ruhe 4,74 : 1 hell und 5,50 : 1 dunkel.
+
+**Nicht in diesem Bogen** (L229): Schieben über das Zubehör der
+Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
+statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
+alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
+`claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.

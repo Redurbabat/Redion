@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 521 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 522 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1398,6 +1398,17 @@ Messung „was holte der Start?" war unter `file://` blind, was nur seine
 Gegenprobe zeigte. Gezählt am 27. September, im selben Bogen: der Befehl
 sagt 521.*
 
+*Und 522: `test585` — das Material des Touch Kits überall, wo man wählt
+(E706). Er zieht die Pille der unteren Leiste mit einem echten Finger
+(CDP-Berührung) über drei Reiter, hält sie an, lässt sie los und zählt die
+Klicks, die bis zum Dokument durchkommen: GENAU EINER, auf dem Reiter
+darunter. Dazu misst er an den Bildpunkten, ob der aktive Name unter der
+Linse in Ruhe 4,5 : 1 schafft, folgt der kurzlebigen Fläche der Umschalter
+Bild für Bild bis auf zwei Pixel an ihr Ziel, und prüft dasselbe noch
+einmal mit abgeschalteter Bewegung — auf beiden Wegen, der Einstellung des
+Systems und „Ruhige Darstellung". Gezählt am 28. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 522.*
+
 ### Die Befehle
 
 ```txt
@@ -1414,7 +1425,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 521 Läufe
+npm run pruefen                      alle 522 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1504,7 +1515,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 521 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 522 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
