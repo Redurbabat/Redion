@@ -8348,6 +8348,38 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L225 · Flüssige Bewegung: was nach E702 noch aussteht — 28. September 2026
+
+**Gefunden beim Bau von E702** (Redur, 27. September, ca. 21:45: „Wie im
+UI-Kit (Empfohlen)"; ca. 22:10: „bessere übergagnge besssere efeckten").
+E702 hat die Federn des Kits in Redions Schale gebracht — Marken, Federkern,
+Druckfeder, Schalter, Blätter von unten, Ankunft, „Ruhig". Gemessen und
+nicht getan, jedes mit seinem Ort (Karte „bewegung", 27. September):
+
+```txt
+Was                                   Wo                                   Warum offen
+Rechner-Menüs und Dialoge: Abgang     menue.ts (Rechner), dialog.ts        kommt mit den Inselstufen (E699
+  und leichtes Nachschwingen          (.finder, studio-arrive)             Punkt 10: Popover, Dialog snappy)
+Material der Leiste, Stiftwahl,       seitenleiste.ts, SelectionFlow       Zweig claude/material-ueberall
+  Umschalter (knappe Feder)                                                (nutzt RedionSpring, E646 ergänzt)
+Blöcke ziehen: Marke springt 2 px     editor.ts:2038-2105                  bewegung-ziehen, kein Wächter
+Balken und Knebel über width/left     bausteine.css:3974/7781/8217/8419,   bewegung-layoutfrei
+                                      ki.css:89, motion.css:976
+157 rohe Dauern, 145 blosse `ease`    quell/schale/stil (ohne motion.css)  bewegung-marken
+Einzeichnen der Lernwelt ruckelt      motion.ts, lernwelt.ts:646-691       bewegung-einzeichnen
+  beim Aufbau
+Blatt der Datensätze bewegt height    sheet.ts:168-172, 244                bewegung-blatt-transform
+`linear()` ohne Rückfall              quell/islands/islands.css            upstream UI-Kit (L222)
+Querformat am Telefon (> 760 px,      menue.ts amTelefon()                 Bewegung gleich, nicht mit
+  grober Zeiger)                                                           Bildern angesehen
+```
+
+**Was fehlt:** jeder Punkt mit einem Wächter, rot zuerst, und Bildern vor
+und nach — am Telefon Bild für Bild (alle 33 ms), wie `test581` es für
+Druck, Schalter, Blatt und Ankunft tut.
+
+---
+
 ## L223 · Im Ordnerbetrieb steht in der Fehlerliste nur „Script error." — 27. September 2026
 
 **Gefunden beim Bau von E699**, nicht gesucht. Die erste Fehlergrenze der
@@ -8933,8 +8965,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 27. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 119 Lücken, 64 offene und 55 geschlossene. Der Befehl dazu ist
+**Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 120 Lücken, 65 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

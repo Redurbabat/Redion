@@ -7678,8 +7678,8 @@ const Marken = (() => {
                 return;
             /* Ohne Bewegung KEIN Flug — der Zustand ist trotzdem sofort richtig,
                weil er am Knopf hängt und nicht am Flug (§38). */
-            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-                return;
+            if (AppEinstellung.wenigBewegung())
+                return; /* System oder „Ruhig" (E702) */
             /* ══ UNTERBRECHEN, NICHT ANSTELLEN ═══════════════════════════════
              * Wer schnell A → B → C tippt, soll EINE Fläche sehen, die ihre
              * Richtung ändert — nicht zwei, die nebeneinander herfliegen. Die

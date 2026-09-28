@@ -207,7 +207,8 @@ const Wischen = (() => {
 
   /** Wer weniger Bewegung will, bekommt weniger Bewegung (§38). */
   const ruhig = (): boolean => {
-    try { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    /* Das System ODER „Ruhige Darstellung" (E702). */
+    try { return AppEinstellung.wenigBewegung(); }
     catch { return false; }
   };
 
@@ -247,8 +248,25 @@ const Wischen = (() => {
     /* Neu zeichnen erzwingen, sonst startet dieselbe Bewegung nicht noch
        einmal, wenn zweimal in dieselbe Richtung gewischt wird. */
     void b.offsetWidth;
-    b.classList.add(nachLinks ? 'wisch-links' : 'wisch-rechts');
-    setTimeout(() => b.classList.remove('wisch-links', 'wisch-rechts'), 400);
+    const klasse = nachLinks ? 'wisch-links' : 'wisch-rechts';
+    b.classList.add(klasse);
+    /* Weg, wenn sie fertig ist — die sanfte Feder braucht 796 ms (E702). */
+    const fertig = (e?: AnimationEvent): void => {
+      if (e && (e.target !== b || !/^wisch-rein/.test(e.animationName))) return;
+      b.removeEventListener('animationend', fertig);
+      b.removeEventListener('animationcancel', fertig);
+      if (b.classList.contains(klasse)) b.classList.remove('wisch-links', 'wisch-rechts');
+    };
+    b.addEventListener('animationend', fertig);
+    b.addEventListener('animationcancel', fertig);
+    setTimeout(() => fertig(), 1200);
+  };
+
+  /** EIN ORTSWECHSEL, EINE ANKUNFT (E702): getippt wie gewischt, aus der
+   *  Richtung des neuen Reiters; derselbe oder keiner → keine. */
+  const ankunft = (vonIndex: number, nachIndex: number): void => {
+    if (vonIndex < 0 || nachIndex < 0 || vonIndex === nachIndex) return;
+    einblenden(nachIndex > vonIndex);
   };
 
   const starten = (): void => {
@@ -303,7 +321,7 @@ const Wischen = (() => {
       const ziel = nachbar(dx < 0 ? 1 : -1);
       if (!ziel) { merke('kein Nachbar'); return; }
       merke('gewechselt');
-      einblenden(dx < 0);
+      /* die Ankunft spielt der Reiterwechsel selbst (`ankunft`, E702) */
       ziel.click();
     };
     addEventListener('pointerup', ende, { passive: true });
@@ -312,7 +330,7 @@ const Wischen = (() => {
 
   /* `reiter`, `nachbar` und `darf` stehen mit im Rückgabewert, damit ein
      Prüflauf sie einzeln befragen kann, ohne einen Finger zu erfinden. */
-  return { starten, reiter, nachbar, darf, jetzt, letzte: () => letzte };
+  return { starten, reiter, nachbar, darf, jetzt, einblenden, ankunft, letzte: () => letzte };
 })();
 
 (window as any).Wischen = Wischen;

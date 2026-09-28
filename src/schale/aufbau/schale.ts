@@ -4268,6 +4268,10 @@ const App = (() => {
      * gewandert. Mit der Angabe fährt sie sofort los, und der Ruf aus
      * `redion:schauplatz` bestätigt sie danach. */
     const dockWechsel = (reiterId: string, knopfId: string, oeffnen: () => void) => {
+      /* woher, wohin — für die Ankunft (E702), vor dem Umschalten gelesen */
+      const vorher = typeof Wischen !== 'undefined' ? Wischen.jetzt() : -1;
+      const nachher = typeof Wischen !== 'undefined'
+        ? Wischen.reiter().findIndex(b => b.id === knopfId) : -1;
       Seitenleiste.reiter(reiterId);
       handyLeiste(knopfId);
       /* ══ ZWEI BILDER, NICHT EINES (E648) ══════════════════════════════
@@ -4289,7 +4293,11 @@ const App = (() => {
        * Aufbau kommt ins zweite. Das kostet eine Bildauffrischung Latenz
        * (rund 16 ms) und gibt dafür den Anfang der Bewegung — den Teil,
        * den das Auge braucht, um ihr folgen zu können. */
-      requestAnimationFrame(() => requestAnimationFrame(() => oeffnen()));
+      /* die Ankunft kommt mit dem neuen Inhalt, im selben Bild (E702) */
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        oeffnen();
+        if (typeof Wischen !== 'undefined') Wischen.ankunft(vorher, nachher);
+      }));
     };
     an('hl-dok', () => { PWA.schubladeZu && PWA.schubladeZu();
                          dockWechsel('dokumente', 'hl-dok', () => { Bibliothek.oeffne(); handyLeiste(); }); });

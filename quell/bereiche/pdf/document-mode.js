@@ -3388,7 +3388,7 @@ const DocumentMode = (() => {
             const stand = staende[nr];
             if (stand) {
                 springtZu = nr;
-                if (weich && !matchMedia('(prefers-reduced-motion: reduce)').matches && typeof center.scrollTo === 'function')
+                if (weich && !AppEinstellung.wenigBewegung() && typeof center.scrollTo === 'function') /* E702 */
                     center.scrollTo({ top: stand.offsetTop, behavior: 'smooth' });
                 else
                     center.scrollTop = stand.offsetTop;

@@ -104,8 +104,8 @@ const Orb = (() => {
       return { zustand: (n) => { art = n; }, stopp: () => {} };
     }
 
-    const ruhe = typeof matchMedia === 'function'
-      && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    /* Das System ODER „Ruhige Darstellung" (E702). */
+    const ruhe = AppEinstellung.wenigBewegung();
 
     const zeichnen = (jetzt: number): void => {
       if (!laeuft) return;

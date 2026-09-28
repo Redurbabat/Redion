@@ -1321,7 +1321,7 @@ const Werkzeuge = (() => {
             const bild = o.querySelector('.folie');
             const ueb = uebergangDerFolie(f);
             if (bild && ueb && ueb.art !== 'keine'
-                && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                && !AppEinstellung.wenigBewegung()) { /* System oder „Ruhig" (E702) */
                 bild.style.setProperty('--ueb-dauer', Math.round(Math.max(150, Math.min(3000, Number(ueb.dauer) || 700))) + 'ms');
                 bild.dataset.uebergang = String(ueb.art);
                 if (ueb.richtung)

@@ -365,7 +365,7 @@ const Seitenleiste = (() => {
        „Mehr" und sieht danach nicht, dass man dort ist. */
     const links = x - l.scrollLeft;
     if (links < 0 || links + b > l.clientWidth) {
-      const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const ruhig = AppEinstellung.wenigBewegung();       /* System oder „Ruhig" (E702) */
       l.scrollTo({ left: Math.max(0, x - 16), behavior: ruhig ? 'auto' : 'smooth' });
     }
   };

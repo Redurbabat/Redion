@@ -64,7 +64,7 @@
    hat ihre eigene Regel (Knopf deckend, nur das Zeichen blass). */
 .document-studio :is(.document-topbar,.document-commandbar,.document-inspector,.document-thumbnails) button:disabled{opacity:.45;cursor:not-allowed}
 .document-studio :is(.document-topbar,.document-commandbar) button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
-.document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:scale(var(--press-scale))}
+/* … button:active: Einsinken per press.ts (E702) */
 .document-studio .document-thumbnails.is-open{animation:studio-drawer var(--motion-normal) var(--ease-enter)}
 .document-studio .document-inspector.is-open{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
 .document-studio .document-center{background:var(--bg);scrollbar-gutter:stable}
@@ -158,7 +158,7 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    Farbe zu erkennen, sondern auch am Rahmen, und `aria-pressed` sagt sie
    ohnehin. */
 .document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:var(--bg-hover);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
-.document-drawingbar button:active:not(:disabled){transform:scale(var(--press-scale))}
+/* .document-drawingbar button:active: Einsinken per press.ts (E702) */
 /* ZURÜCK UND VOR GANZ LINKS (E490). Der Trennstrich wandert mit auf die
    andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
    halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten

@@ -53,7 +53,7 @@
 .studio-action{color:var(--auf-accent);background:var(--haupt-flaeche);box-shadow:var(--haupt-schein);font-weight:600;white-space:nowrap}
 .studio-icon:hover,.studio-shortcuts button:hover,.studio-search:hover{background:var(--bg-hover);border-color:var(--line)}
 .studio-action:hover{background:var(--haupt-flaeche-hover)}
-#studio-bar button:active{transform:scale(var(--press-scale))}
+/* #studio-bar button:active: Einsinken per press.ts (E702) */
 #studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .k-beschriftung{display:none}
 #studio-divider{display:none}
@@ -122,7 +122,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   body[data-schale="premium"] .k-ort.ist-hier{color:var(--accent-text);background:var(--accent-schwach);
     box-shadow:inset 3px 0 0 var(--accent);font-weight:600}
   body[data-schale="premium"] .k-knopf:hover{background:var(--bg-hover);color:var(--text)}
-  body[data-schale="premium"] .k-knopf:active{transform:scale(.98)}
+  /* .k-knopf:active: Einsinken per press.ts (E702) */
   body[data-studio-nav="kompakt"] .k-beschriftung{display:none}
   body[data-studio-nav="kompakt"] .k-knopf{justify-content:center;padding:0}
   body[data-schale="premium"] #kanten-lade{border-radius:0 var(--radius-xl) var(--radius-xl) 0;box-shadow:var(--studio-elevation);background:var(--bg-card)}
@@ -142,7 +142,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .r-sheet{animation:studio-sheet var(--motion-normal) var(--ease-enter)}
 .aw-fenster[open]>.aw-reiter-panel{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
 :is(.icon-btn,.btn,.mb-knopf,.ez-knopf){transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
-:is(.icon-btn,.btn,.mb-knopf,.ez-knopf):active:not(:disabled){transform:scale(var(--press-scale))}
+/* :is(.icon-btn,.btn,…):active: Einsinken per press.ts (E702) */
 .einst-nav{background:var(--bg-side)}
 .einst-inhalt{background:var(--bg)}
 .einst-inhalt :is(.ez-gruppe,.ez-grp){border-radius:var(--radius-xl);background:var(--bg-card);border:1px solid var(--line)}

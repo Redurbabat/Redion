@@ -116,7 +116,9 @@ const SelectionFlow = (() => {
     /** Aus Geschwindigkeit (px/ms) wird Dehnung. 0,2 · 0,88 px/ms ≈ 0,18. */
     const DEHNUNG_JE_TEMPO = 0.24;
     const laeufe = new WeakMap();
-    const ruhig = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    /* das System ODER „Ruhige Darstellung" (E702) */
+    const ruhig = () => typeof AppEinstellung !== 'undefined' ? AppEinstellung.wenigBewegung()
+        : !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     /** Abstand zum Ziel nach `t` Millisekunden. */
     const weg = (l, t) => (l.x0 + (l.v0 + OMEGA * l.x0) * t) * Math.exp(-OMEGA * t);
     /** Geschwindigkeit nach `t` Millisekunden, in px/ms. */

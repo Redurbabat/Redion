@@ -34,11 +34,11 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v1380';
+const VERSION = 'notizen-v1382';
 /** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
  *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
  *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
-const INHALT = '85878ef59828d146';
+const INHALT = '844c2911d2cd0bd2';
 /* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
    Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
    das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und
@@ -158,12 +158,14 @@ const GRUNDSTOCK = [
     './quell/schale/bedienung/merkzeichen.js',
     './quell/schale/bedienung/lader.js',
     './quell/schale/bedienung/linse.js',
+    './quell/schale/bedienung/spring.js',
     './quell/schale/bedienung/selection-flow.js',
     './quell/schale/bedienung/textur.js',
     './quell/schale/bedienung/staffelei.js',
     './quell/schale/bedienung/geste.js',
     './quell/schale/bedienung/funkel.js',
     './quell/schale/bedienung/motion.js',
+    './quell/schale/bedienung/press.js',
     './quell/schale/aufbau/studio.js',
     './quell/schale/ueberlagerung/dialog.js',
     './quell/schale/ueberlagerung/fokus.js',

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-680 Entscheidungen, E1 bis E700 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+681 Entscheidungen, E1 bis E702 (**E701 bis E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -743,6 +743,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
 * **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
 * **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
+* **E702** — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale (Redur: „Wie im UI-Kit (Empfohlen)"): fünf `--feder-*`-Marken in `grund.css` aus `motion-tokens.css` mit `@supports`-Rückfall (ergänzt E43/E646/E699 Punkt 6), der Federkern `RedionSpring` ohne React (übertragen, auf 1953 Punkten gleich dem Kit), EINE Druckfeder statt dreizehn `:active`-Skalierungen (auch der kurze Tipp am iPhone), der Schalter wie im Kit (Griff dehnt sich, keine Endlosdrehung), Blätter vom Rand mit Finger und Abgang, eine Ankunft für jeden Ortswechsel, „Ruhig" hält auch `::after`, JavaScript und die Inseln an (`test581`)
 
 ---
 
@@ -2908,6 +2909,13 @@ mitgezogen.
 ---
 
 ## E43 · Bewegung: drei Dauern, drei Kurven, keine Federn
+
+> **Ergänzt durch E702 (28. September 2026) — für Redions eigene Bewegung.**
+> Redur, 27. September, ca. 21:45: „Wie im UI-Kit (Empfohlen)". Die drei
+> Kurven unten bleiben ohne Überschwingen; daneben stehen in `grund.css`
+> GENAU fünf benannte Federn des Kits (`--feder-druck`, `-knapp`, `-sanft`,
+> `-lebhaft`, `-weich`), jede nur so weit über 1 wie im Kit und mit Rückfall
+> ohne `linear()`. `test126` §7 und `test581` §1/§2 halten sie.
 
 > **Ergänzt durch E699 (27. September 2026) — für die Bauteile des Touch
 > Kits.** Redur: „Wie im UI-Kit überall". In den React-Inseln fahren die
@@ -52959,6 +52967,13 @@ neuen zwei nicht besser halten.
 
 ## E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet
 
+> **Ergänzt durch E702 (28. September 2026).** Redur hat für Redions eigene
+> Teile — ausdrücklich auch die untere Leiste — „Wie im UI-Kit (Empfohlen)"
+> gewählt. Die Pille darf damit auf der knappen Feder des Kits fahren
+> (`--feder-knapp`, 0,5 % über, rund 0,4 px); umgestellt wird sie im Zweig
+> des Materials. Die Technik bleibt diese: vorgerechnete Keyframes auf
+> `transform`, gemalt vom Compositor (`RedionSpring.sample`).
+
 > **Ergänzt durch E699 (27. September 2026) — für die Bauteile des Touch
 > Kits.** Redur: „Wie im UI-Kit überall". Die kritisch gedämpfte Feder
 > (ζ = 1) unten gilt weiter für Redions untere Leiste und die Werkzeugleiste;
@@ -57158,7 +57173,11 @@ unteren Leiste, `selection-flow.ts`) — ein ganzer Bogen für ein Bauteil.
    Bildlaufleisten und Datumsfelder der ganzen App in dem Moment, in dem
    die erste Insel lädt — die leise Fassung einer zweiten Oberfläche.
 
-6. **Federn wie im Kit — für die Bauteile des Kits.** Redur: „Wie im UI-Kit
+6. **Federn wie im Kit — für die Bauteile des Kits.** *(Ergänzt durch E702
+   am 28. September: seit Redurs Antwort von 21:45, „Wie im UI-Kit
+   (Empfohlen)", federn auch Redions eigene Teile — die Kurven stehen
+   dafür als `--feder-*` in `grund.css`, und `data-ui-motion="reduce"`
+   folgt „Ruhig".)* Redur: „Wie im UI-Kit
    überall". Die Bauteile behalten die Federn des Kits samt Überschwingen
    (`press` Bounce 0,3, `snappy` 0,14, `bouncy` 0,36). Das ergänzt E43
    („keine Federn") und E646 (nur ζ = 1) — für die Kit-Bauteile, nicht für
@@ -57379,3 +57398,209 @@ grün; `test225`, `test549`, `test550` grün. `test401` bleibt rot wie auf
 `main` (`var(--danger, #c73939)` aus E697) — das repariert E698 auf seinem
 Zweig. `npm run typecheck` sauber; `npm run bauen:ts` (Dienststand v1372)
 und `node bauen.mts` neu erzeugt.
+
+## E702 — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (27. September,
+ca. 21:45, im Fragebogen) · **ergänzt** E43 (benannte Federn neben den drei
+Kurven), E646 (die Pille darf später knapp federn) und E699 Punkt 6 (die
+Federn gelten jetzt auch für Redions eigene Teile) · **Wächter:** `test581`
+(neu), `test126` §7 (erweitert), `test435` §2/§6 (angepasst, strenger).
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+27.09. ca. 11:26 UTC   zu den Federn: „Wie im UI-Kit überall"
+27.09. ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die
+                       oberfläche bischen ruhige machen ohne etwas lösche also
+                       eine funktionen und ich will das es flüssigere
+                       animationen , glass efeck usw alles haben dann bessere
+                       stift efeckte beim zeichnen bessere farben"
+27.09. ca. 21:45 UTC   im Fragebogen, „Sollen auch Redions eigene Teile
+                       (Knöpfe, Menüs, Blätter von unten, untere Leiste)
+                       federn wie im UI-Kit?": „Wie im UI-Kit (Empfohlen)"
+                       (Beschreibung der Option: Knöpfe sinken beim Drücken
+                       ein und federn zurück, Blätter und Menüs kommen mit
+                       leichtem Nachschwingen. Seitenwechsel gleiten ohne
+                       Nachschwingen (ruhig).)
+27.09. ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig
+                       ich also beim stift übergangen usw"
+27.09. ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so
+                       haben mit redion passende inhalten"
+27.09. ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich
+                       am morgen die redion öfnnen eien komplet besseren webseit
+                       sehen ohne eine funktione löschen bessere ordnungen
+                       bessere übergagnge besssere efeckten , bessere
+                       oberfläsche alles kannst du nur an reddion arbeiten"
+```
+
+**Was entschieden wurde.** Redions eigene Bewegung — nicht nur die Inseln —
+fährt die Federn des Touch Kits. Acht Stücke, jedes an Ort und Stelle, keine
+Funktion weg, kein Auslöser verschoben:
+
+1. **Fünf Federn als Marken in `grund.css`** (E259: Bewegung wohnt dort):
+   `--feder-druck` (Knopf losgelassen, 575 ms, 4,6 % über), `--feder-knapp`
+   (Schalter, 542 ms, 0,5 %), `--feder-sanft` (Blätter, Seitenwechsel, 796 ms,
+   nie über 1), `--feder-lebhaft` (887 ms, 7,3 %) und `--feder-weich`
+   (923 ms, 0,15 %), jede mit `-dauer`. Die Kurven sind Zeichen für Zeichen
+   die `linear()`-Kurven aus `fremd/touch/motion-tokens.css` (UI-Kit
+   @c192821). **Rückfall:** in `:root` steht `var(--ease-enter)`, und nur ein
+   `@supports (transition-timing-function: linear(0, 1))` legt die Feder
+   darüber — Safari vor 17.2 kennt `linear()` nicht, und eine ungültige
+   Kurve in `var()` löscht die ganze Übergangsliste (der Mechanismus, den
+   E259 gemessen hat; `islands.css` hat dieselbe Lücke → L225). Unter
+   „weniger Bewegung" dauern alle fünf 1 ms. Die drei Kurven aus E43 bleiben
+   unverändert ohne Überschwingen.
+2. **Ein Federkern ohne React, beim Start da** (`src/schale/bedienung/spring.ts`
+   → `RedionSpring`, 2,3 KB gzip Code): die Rechnung des Kits (Feder lösen,
+   Kurve abtasten, Tempo aus Fingerproben, Gummiband) als ÜBERTRAGUNG in
+   Redions eigenes TypeScript, dazu `sample()` (Stützpunkte für
+   `element.animate()`, wie SelectionFlow) und `token()` (Kurve und Dauer aus
+   `grund.css`). Offen für den Zweig des Materials (`claude/material-ueberall`).
+3. **Eine Druckfeder für alles** (`src/schale/bedienung/press.ts` →
+   `RedionPress`, gestartet in `start.ts`): EIN passiver Zuhörer in der
+   Einfangphase. Jeder Knopf, Reiter, Eintrag und jede klickbare Karte sinkt
+   beim Aufsetzen sofort ein (`--press-scale` .96, breite Zeilen
+   `--card-press-scale` .985, auf der eigenen Eigenschaft `scale`), bleibt
+   mindestens 80 ms unten — damit sieht man auch den kurzen Tipp, bei dem das
+   iPhone `:active` nie malt — und federt auf `--feder-druck` zurück.
+   Dreizehn verstreute `:active{transform:scale(…)}` in sieben Stilblättern
+   geben ihr Einsinken ab (ihre Farben bleiben); die vier eigenen Druckbilder
+   aus Redurs Vorlagen (E528–E537) und der Glasknopf, der Zeitmesser, der
+   Ordnerdeckel (E601/E604), die Staffelei und der Funkelknopf (E528) bleiben
+   unberührt. Abgeschaltete Knöpfe drücken sich nicht. Ohne Bewegung: kein
+   Einsinken, aber `data-gedrueckt`, und der Knopf wird kurz blasser.
+4. **Der Schalter wie im Kit** (`einstellungen.css`): der Griff dehnt sich
+   unter dem Finger um 18 %, verankert an seiner Seite, wandert losgelassen
+   auf `--feder-knapp` hinüber (über `translate`, das Dehnen über
+   `transform`). Die 7-s-Endlosdrehung des Verlaufs (E462) ist weg — sie lief
+   seit E535 im Betrieb ohnehin nicht mehr, stand aber im Stilblatt; beim
+   Einschalten dreht der Verlauf EINMAL, jetzt um seine Mitte (Fund unten).
+5. **Blätter von unten** (`menue.ts`, rund 99 Aufrufer von `UI.menu`): vom
+   Rand herein auf `--feder-sanft` — wie das Aktionsblatt des Kits —, der
+   Grund blendet auf, das Blatt folgt dem Finger am Griff und am Titel (nach
+   oben nur als Gummiband), und weggewischt (90 px wie bisher, oder schnell
+   geschnippt) oder mit einem Tipp daneben geht es mit einem Abgang von
+   200 ms (`--ease-exit`). **Sofort bleiben:** Escape (E302), die Wahl eines
+   Eintrags und jedes `menu.remove()` eines Aufrufers — darauf verlassen
+   sich rund siebzig Prüfläufe. Unter „Ruhig" geht auch der Tipp daneben
+   sofort.
+6. **Ein Ortswechsel, eine Ankunft** (`wischen.ts`, `schale.ts`): unten auf
+   einen Reiter TIPPEN bringt den Inhalt jetzt ebenso von der Seite wie
+   WISCHEN — aus der Richtung des neuen Reiters, auf `--feder-sanft`, ohne
+   Nachschwingen („Seitenwechsel gleiten ohne Nachschwingen (ruhig)").
+   Derselbe Reiter: keine Ankunft. Und nicht zwei Bewegungen zugleich:
+   gleitet die Bühne, steigt die Ansicht nicht noch 5 px auf und die Karten
+   der Bibliothek fliegen nicht einzeln herein. In den Einstellungen am
+   Telefon schiebt sich ein Bereich von rechts herein und „Zurück" bringt
+   die Liste von links (vorher hartes `display:none`).
+7. **„Ruhige Darstellung" hält wirklich alles an:** die Sperre deckt jetzt
+   auch `::after` (26 Regeln bewegen eines), acht Stellen in JavaScript
+   fragen `AppEinstellung.wenigBewegung()` (System ODER „Ruhig") statt nur
+   das System — die Pille unten, die Ankunft der Bibliothek, der Reiter
+   oben, das Wischen, der Orb, die Werkzeugleiste des Blatts, das Rollen im
+   Dokument, die Folienübergänge — und die Bewegungsschicht (motion.ts)
+   stellt dieselbe Frage statt ihrer eigenen zwei,
+   und `<html data-ui-motion="reduce">` sagt es den Inseln (ihre
+   CSS-Bewegung hält Redions Sperre ohnehin an; die Federn des Kits in
+   JavaScript hören auf das Etikett, sobald Stufe 1b das Kit ab UI-Kit
+   13e7844 holt, L222).
+8. **Kein `transition: all` mehr:** das Loch des Rundgangs (`#rg-loch`)
+   glitt mit allem, auch dem 9999-px-Schatten; jetzt nur Lage und Grösse.
+
+**Warum.** Redur hat es gewählt, und die Wahl ist wörtlich die Beschreibung
+der Option: Knöpfe sinken und federn zurück, Seitenwechsel gleiten ohne
+Nachschwingen. Gemessen vorher (messungen §74): auf sechs Bildschirmen am
+Telefon antwortete die Mehrheit der Knöpfe auf einen Druck GAR NICHT (etwa
+Einstellungen 26 von 33), das Blatt stieg 16 px aus dem Nichts hinter einem
+in einem Bild schwarzen Grund und verschwand in einem Bild, der Tipp auf
+einen Reiter liess den Inhalt einfach dastehen, und „Ruhig" hielt die Pille,
+die Bibliothek und alle `::after` nicht an.
+
+**Blätter: sanft, nicht knapp.** Die Option sagt „Blätter und Menüs kommen
+mit leichtem Nachschwingen" — das Kit selbst, auf das Redur zeigt („Wie im
+UI-Kit"), fährt Aktionsblätter und Blätter auf `smooth` (kein Überschwingen)
+und nur Popover und Dialoge auf `snappy`. Ein Blatt, das am unteren Rand
+hängt und überschwingt, hebt sich vom Rand ab und zeigt einen Spalt. Also
+das Kit: Blätter sanft. Menüs am Rechner und Dialoge bekommen ihr leichtes
+Nachschwingen mit den Inselstufen (E699 Punkt 10: Popover und Dialog des
+Kits, `snappy`) — in L225 vermerkt.
+
+**Übertragen statt drittes Bündel.** Zwei Wege waren offen (kit-map
+„kern-2"): das Kit als drittes Vite-Bündel beim Start (`bauen-inseln.mts`,
+`buendel-bestand.json`, ein dritter Bau im Nachbau von `test578` §1, eine
+Ausnahme im Startweg von `test388`, eine eigene Deklaration für die Schale)
+oder eine Übertragung in Redions TypeScript. Die Schale ist klassisches
+TypeScript mit `module: none`; die Übertragung braucht nichts von alledem
+und kostet 2,3 KB gzip Code. Der Einwand dagegen — zwei Fassungen derselben
+Rechnung laufen auseinander (§8) — ist ein Wächter: `test581` §2 übersetzt
+die Dateien des Kits, rechnet beide auf 1953 Punkten (sieben Federn × drei
+Wege × drei Tempi × 31 Zeitpunkte) nach und verlangt GLEICHE Zahlen, dazu
+dieselben Ruhezeiten, Tempi, Gummibänder und genau die Kurven in
+`grund.css`.
+
+**Die Alternativen.** (a) Nur ζ = 1 und die Bezier-Kurven, ohne neue
+Marken (was ohne Redurs Antwort erlaubt war) — Redur hat „Wie im UI-Kit"
+gewählt. (b) Die Kit-Bauteile als React-Inseln für die Schale — +83 KB beim
+Start, rund 430 ms Aufspringen der Leiste (kit-map „arch-0"), und E699
+Punkt 4 hält React aus dem Start. (c) Die `:active`-Regeln behalten und
+nur umrechnen — dann bliebe der kurze Tipp am iPhone ohne Antwort.
+
+**Was es kostet.**
+- Start: rund 11,9 KB gzip mehr (Code und Kurven rund 8, der Rest
+  Kommentare); `test388` §5 in messungen §74.
+- Ein Knopf federt 575 ms zurück statt 140 ms; die Ankunft braucht 796 ms bis
+  zur Ruhe (sichtbar ist sie nach rund 300 ms fast da). Ein Prüflauf, der
+  gleich nach einem Tipp die Grösse DESSELBEN Knopfes misst, sieht bis zu
+  4 % weniger (Trefferflächen bleiben: das Einsinken verschiebt nichts).
+- Das Blatt verlässt den Baum nach Wischen oder Tipp daneben 200 ms später.
+- Die Druckfeder ist ein Zuhörer auf jedem `pointerdown` (ein `closest()`,
+  auf Zeichenflächen ohne Treffer).
+
+**Gefunden auf dem Weg.**
+- `rmo-orbit` (motion.css) dreht nur `rotate(360deg)` und verlor beim
+  Einschalten eines Schalters das `translate(-50%,-50%)`, das den Verlauf
+  mittig hält: 0,65 s lang glitt er zur Ecke und sprang dann zurück. Der
+  Schalter dreht jetzt mit `ez-schalter-dreh`, das den Versatz behält
+  (`test581` §4 misst den Versatz mitten in der Drehung).
+- Die Übergangsregel `.menu.blatt{transition:transform .22s}` lief am
+  Telefon nie (`blatt-hoch` lag darüber); beim Ziehen wäre sie dem Finger
+  hinterhergelaufen. Sie ist durch die Bewegung in `menue.ts` ersetzt.
+- `Wischen.einblenden` nahm die Klasse nach festen 400 ms weg — mit der
+  sanften Feder hätte das die letzte Strecke abgeschnitten; jetzt beim
+  Ende der Bewegung.
+- „Zurück" (`#btn-back`) ist beim Start abgeschaltet; die erste Fassung
+  von `test581` nahm ihn als Probe und hätte eine Druckfeder verlangt, die
+  §15 verbietet. Die Probe ist jetzt „Mehr", und ein eigener Punkt hält,
+  dass ein abgeschalteter Knopf NICHT einsinkt.
+
+**Nicht in diesem Bogen** (L225): das wandernde Material der unteren Leiste,
+der Stiftwahl und der Umschalter (`claude/material-ueberall` — nutzt
+`RedionSpring` und die Marken); Glas; Farben; Abgänge der Dialoge und
+Rechner-Menüs (Inselstufen); das Ziehen von Blöcken
+(„bewegung-ziehen"), Balken ohne Layout („bewegung-layoutfrei"), die rohen
+Dauern auf die Marken („bewegung-marken"), das Einzeichnen der Lernwelt
+(„bewegung-einzeichnen"), `sheet.ts` auf transform („bewegung-blatt-
+transform"); Querformat am Telefon ist mit Bildern noch nicht angesehen.
+
+**Gemessen, bevor gebaut wurde** (Karte „bewegung", 27. September, und
+`test581` gegen 515451f, messungen §74): das Blatt 16 von 276 px unter der
+Ruhelage im ersten Bild, der Grund sofort 1; kein Knopf der sechs Proben
+sank unter dem Finger ein; unter „Ruhig" liefen nach drei Reiterwechseln,
+Menü, Dialog und Meldung noch 7 Bewegungen; `::after` lief weiter; 17
+`:active`-Skalierungen, 1 `transition: all`; der Verlauf im Schalter stand
+−30 statt −39,6 px. Start `test388` §5: 2767 KB.
+
+**Geprüft.** `test581` 91/91 (rot gegen 515451f: 24 bestanden, 55
+durchgefallen), `test126` 29/29 (rot: 24 ok, 5 offen), `test435` 46/46
+(rot: 44/46). Gegenproben, fünf Brüche zugleich, je in einem anderen
+Abschnitt rot gesehen und byte-gleich zurückgenommen: die Endlosdrehung
+zurück (`test581` §8, `test435` §6), `::after` aus der Ruhig-Sperre
+(`test581` §7), kein Abgang (§5), eine `:active`-Skalierung zurück (§8),
+die Druckfeder mit 1,2 (§1, §2, `test126` §7). Nachbarn grün: 388 (2779 KB,
+248 Dateien), 143, 353, 362, 412, 245, 303, 114, 127, 576, 541, 296, 155,
+484, 534, 536, 539, 492, 424, 428, 430, 399, 403, 427, 431, 432, 476, 478,
+500, 494, 496, 361, 36, 37, 222, 272, 157, 579; ohne Browser 87, 290, 298,
+401, 402, 410, 109, 537, 400, 67, 105, 225, 549, 550. `test464` 62/63 — die
+Zahl der Werkzeuge (14 statt 13) aus `Marken.WERKZEUGE`, die dieser Bogen
+nicht anfasst; siehe den Commit.

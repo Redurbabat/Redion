@@ -1017,12 +1017,7 @@
   .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
 }
 
-.lernwelt :where(.lw-nav button,.lw-actions button,.lw-rating button,.lw-quick button,
-  .lw-study-actions button,.lw-object-list button,.lw-task-list button,.lw-event-list button,
-  .lw-topic-list>button,.lw-path li>button,.lw-continue-card,
-  .lw-subject-grid>button):active{
-  transform:scale(var(--press-scale,.97))
-}
+/* .lernwelt :where(.lw-nav button, …):active: Einsinken per press.ts (E702) */
 
 /* --- Breite Desktops: drei ruhige Dashboard-Spalten -------------------- */
 @container (min-width:1180px){
