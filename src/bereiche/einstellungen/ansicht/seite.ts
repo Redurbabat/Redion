@@ -30,40 +30,57 @@ const Einstellungen = (() => {
 
   /* Wie in Notion in Abschnitte geordnet, nicht als eine lange Liste. */
   /* Die Navigation links: Überschrift und darunter die Bereiche als
-     [Kennung, Symbol, Name]. Ohne diesen Typ liest TypeScript aus dem
-     Literal ein Gemisch aus Text und Listen und kann `liste.map` nicht. */
+     [Kennung, Zeichen, Name]. Ohne diesen Typ liest TypeScript aus dem
+     Literal ein Gemisch aus Text und Listen und kann `liste.map` nicht.
+
+     DAS ZEICHEN IST EIN NAME AUS `Register.symbole`, KEIN EMOJI MEHR (E701).
+     Hier standen neunzehn verschiedene farbige Bildchen untereinander —
+     Person, Zahnrad, Glocke, Funken, Stecker … —, jedes mit eigener Farbe,
+     eigener Strichstärke und eigener Grundlinie, auf jedem System anders.
+     Redur hat am 27. September „Gezeichnete Zeichen" gewählt: „Durch
+     Redions eigene Linien-Symbole ersetzen, wie in der Zeichenleiste. Alles
+     bleibt am selben Ort." Also dieselben neunzehn Zeilen in derselben
+     Folge, dieselben Kennungen und Wörter — nur das Bild ist jetzt ein
+     Strich in `currentColor` (test580 §3). */
   type Eintrag = [string, string, string];
   type Gruppe = [string, Eintrag[]];
 
   const GRUPPEN: Gruppe[] = [
     ['', [
-      ['konto',        '👤', 'Mein Konto'],
-      ['allgemein',    '⚙️', 'Einstellungen'],
-      ['benachricht',  '🔔', 'Benachrichtigungen'],
-      ['daten',        '⭱', 'Importieren']
+      ['konto',        'user',        'Mein Konto'],
+      ['allgemein',    'settings',    'Einstellungen'],
+      ['benachricht',  'bell',        'Benachrichtigungen'],
+      ['daten',        'upload',      'Importieren']
     ]],
     ['Funktionen', [
-      ['ki',           '✨', 'Künstliche Intelligenz'],
-      ['verbindungen', '🔌', 'Verbindungen'],
-      ['mcp',          '🔗', 'MCP'],
-      ['worker',       '⌨️', 'Worker'],
-      ['verifiziert',  '✔️', 'Verifizierte Seiten'],
-      ['oeffentlich',  '🌐', 'Öffentliche Seiten'],
-      ['emoji',        '😀', 'Emoji']
+      ['ki',           'sparkle',     'Künstliche Intelligenz'],
+      ['verbindungen', 'plug',        'Verbindungen'],
+      ['mcp',          'link',        'MCP'],
+      ['worker',       'keyboard',    'Worker'],
+      ['verifiziert',  'checkCircle', 'Verifizierte Seiten'],
+      ['oeffentlich',  'globe',       'Öffentliche Seiten'],
+      ['emoji',        'smile',       'Emoji']
     ]],
     ['Verwaltung', [
-      ['arbeitsplatz', '🏠', 'Arbeitsbereich'],
-      ['analysen',     '📈', 'Analysen'],
-      ['bereiche',     '👥', 'Bereiche'],
-      ['sicherheit',   '🛡', 'Sicherheit'],
-      ['schluessel',   '🔑', 'Schlüssel und APIs']
+      ['arbeitsplatz', 'workspace',   'Arbeitsbereich'],
+      ['analysen',     'chart',       'Analysen'],
+      ['bereiche',     'users',       'Bereiche'],
+      ['sicherheit',   'shield',      'Sicherheit'],
+      ['schluessel',   'key',         'Schlüssel und APIs']
     ]],
     ['Zugriff und Abrechnung', [
-      ['speicher',     '📦', 'Speicher'],
-      ['abrechnung',   '💳', 'Abrechnung'],
-      ['ueber',        'ℹ️', 'Über diese App']
+      ['speicher',     'database',    'Speicher'],
+      ['abrechnung',   'creditCard',  'Abrechnung'],
+      ['ueber',        'info',        'Über diese App']
     ]]
   ];
+
+  /** Ein Zeichen aus dem Register — oder nichts, wenn es fehlt. Eine leere
+      Zelle ist ehrlicher als ein Emoji als Ersatz: das wäre der alte
+      Zustand, nur versteckt (E701). */
+  const zeichen = (name: string): string => {
+    try { return Register.symbole.alsSvg(name, 18); } catch { return ''; }
+  };
 
   const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
 
@@ -176,7 +193,7 @@ const Einstellungen = (() => {
             (titel ? `<div class="einst-grp">${titel}</div>` : '') +
             liste.map(([id, i, n]) =>
               `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
-              `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
+              `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('')).join('') +
         '</div>' +
         /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
            weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`

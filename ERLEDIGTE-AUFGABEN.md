@@ -53,6 +53,31 @@ Ortswechsel (auch in den Einstellungen am Telefon), „Ruhig" überall
 **Geprüft:** `test581` (neu, rot zuerst), `test126` §7, `test435`;
 Nachbarn im Commit. Offen: L225.
 
+## 28. September 2026 · E701 · Ruhiger, und nichts ist weg
+
+**Redur:** „du kannst auch die oberfläche bischen ruhige machen ohne etwas
+lösche also eine funktionen" (27. September, ca. 16:45 UTC) — und im
+Fragebogen „Gezeichnete Zeichen (Empfohlen)": „Alles bleibt am selben Ort."
+
+**Gebaut:** eine Haupthandlung je Bild (auf „Heute" nur „Lernen starten"
+voll; „PDF öffnen" im Kopf getönt bis zum Anfassen; „Dokumente öffnen" als
+Umrissknopf; der Themenknopf im Hellen ein grauer Mond); „Zuletzt
+geöffnet" dreht nur unter Zeiger oder Fokus; gezeichnete Zeichen aus
+`Register.symbole` statt Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt,
+Seitenwerkzeugen und Termine (20 neue Zeichen); AUS-Schalter grau;
+Kennzahlkarten in Ruhe grau; die Bandecke im Grund des Bandes; am Telefon
+blendet die Krume aus, solange der grosse gleichnamige Titel zu sehen ist.
+
+**Geprüft:** `test580`, zuerst rot eingecheckt (42 von 85 gegen 515451f9),
+jetzt 86/86 (eine Probe kam im Bau dazu: neu gezeichnet blitzt die Krume
+nicht auf); jede Zusage mit ihrer Gegenprobe. Die Griffe sind gezählt,
+nicht geschätzt: 19 + 47 + 13 + 12 + 5 + 3, je mit Kennung, Wort und Folge.
+Laute Flächen „Heute" hell 4 → 1, Dauerbewegung im Regal 1 → 0, Emoji in
+den Einstellungen 19 → 0, im ⋯-Menü 37 → 0 (messungen.md §73).
+
+**Gefunden:** L224 — die kleinen Kurven der Kennzahlkarten zeigen in jeder
+Karte dieselben festen Werte.
+
 ## 27. September 2026 · E699 · React-Inseln, Stufe 1a: die Grundlage
 
 **Redur:** „du kannst react nutzen keien problem" — im Fragebogen „Mit React

@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 523 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 524 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1398,7 +1398,18 @@ Messung „was holte der Start?" war unter `file://` blind, was nur seine
 Gegenprobe zeigte. Gezählt am 27. September, im selben Bogen: der Befehl
 sagt 521.*
 
-*Und 522: `test581` — die Federn des Touch Kits in Redions eigener Schale
+*Und 522: `test580` — eine ruhigere Oberfläche, und nichts ist weg (E701).
+Jede seiner sieben Zusagen hat zwei Hälften: was leiser wurde, und dass der
+Griff dahinter noch am selben Ort mit demselben Auslöser steht. Er misst
+Farbe, Bewegung und Deckkraft im Browser und vergleicht die Griffe mit
+einer Liste, die am Stand davor abgelesen ist — 19 Bereiche der
+Einstellungen, 47 Zeilen im ⋯-Menü, 13 Wege in „Mehr", 12 im R-Blatt, fünf
+Seitenwerkzeuge, drei Terminkarten, je mit Kennung, Wort und Folge. Wer
+dort einen Eintrag streicht, hat einen Griff gelöscht. Gegen den Stand
+davor war er rot, 42 von 85. Gezählt am 28. September, im selben Bogen:
+der Befehl sagt 522.*
+
+*Und 523: `test581` — die Federn des Touch Kits in Redions eigener Schale
 (E702). Er rechnet den übertragenen Federkern gegen die Dateien des Kits
 nach (1953 Punkte, Bit für Bit), und er misst, was ein Finger am Telefon
 WIRKLICH sieht: ein Knopf sinkt auch beim kurzen Tipp ein, der Griff eines
@@ -1407,9 +1418,10 @@ Reiterwechsel kommt aus der richtigen Richtung, und unter „Ruhig" läuft
 nichts mehr. Zwei seiner ersten Proben waren falsch und nicht die App: ein
 abgeschalteter Knopf als Probe für das Einsinken, und die Kurve einer
 CSS-Animation an der falschen Stelle gelesen. Gezählt am 28. September, im
-selben Bogen: der Befehl sagt 522.*
+selben Bogen: der Befehl sagte 522 — auf seinem Zweig; beim Zusammenführen
+nachgezählt: 523.*
 
-*Und 523: `test584` — bessere Farben (E705). Er misst nicht Zeilen im
+*Und 524: `test584` — bessere Farben (E705). Er misst nicht Zeilen im
 Stilblatt, sondern was der Browser rechnet: jede Farbe läuft durch eine
 1×1-Leinwand, damit auch `color-mix(…)` als Zahl ankommt, und seine
 Kontrastformel ist bewusst NICHT die aus `colors.ts` — ein Wächter, der mit
@@ -1420,7 +1432,8 @@ Reihen eines Diagramms, Whiteboard und Gedankenkarte im Hellen — und ohne
 Browser die Stilblätter: keine bunte Farbe von Hand, ausser auf Papier und in
 Bildern, jede mit Grund auf der Liste. Gezählt am 28. September, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig,
-neben `test581` auf dem anderen; beim Zusammenführen nachgezählt: 523.*
+neben `test580` und `test581` auf den anderen; beim Zusammenführen
+nachgezählt: 524.*
 
 ### Die Befehle
 
@@ -1438,7 +1451,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 523 Läufe
+npm run pruefen                      alle 524 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1528,7 +1541,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 523 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 524 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

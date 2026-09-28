@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-682 Entscheidungen, E1 bis E705 (**E701, E703, E704, E706 und E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+683 Entscheidungen, E1 bis E705 (**E703, E704, E706 und E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -743,6 +743,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
 * **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
 * **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
+* **E701** — Ruhiger, und nichts ist weg: eine Haupthandlung je Bild („PDF öffnen" im Kopf getönt bis zum Anfassen, auf „Heute" nur „Lernen starten" voll, der Themenknopf im Hellen ein grauer Mond); „Zuletzt geöffnet" dreht nur unter Zeiger oder Fokus; gezeichnete Zeichen statt Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt, Seitenwerkzeugen und Termine (Redur: „Gezeichnete Zeichen", 20 neue im Register); AUS ist grau; Kennzahlkarten ruhen grau; die Bandecke im Grund des Bandes; am Telefon weicht die Krume dem grossen Titel. Jeder Griff am selben Ort, gezählt (`test580`)
 * **E702** — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale (Redur: „Wie im UI-Kit (Empfohlen)"): fünf `--feder-*`-Marken in `grund.css` aus `motion-tokens.css` mit `@supports`-Rückfall (ergänzt E43/E646/E699 Punkt 6), der Federkern `RedionSpring` ohne React (übertragen, auf 1953 Punkten gleich dem Kit), EINE Druckfeder statt dreizehn `:active`-Skalierungen (auch der kurze Tipp am iPhone), der Schalter wie im Kit (Griff dehnt sich, keine Endlosdrehung), Blätter vom Rand mit Finger und Abgang, eine Ankunft für jeden Ortswechsel, „Ruhig" hält auch `::after`, JavaScript und die Inseln an (`test581`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 
@@ -43105,6 +43106,12 @@ still weggelassen.
 E534 — Auf ad4ccbc weiterarbeiten: Herz, Wendekarte und gemessene Restfehler
 --------------------------------------------------------------------------
 
+> **Ergänzt durch E701 (28. September 2026) — nur das Aussehen in Ruhe.**
+> Herz, Ring und kleine Kurve der Kennzahlkarten sind grau, bis man die
+> Karte anfasst, mit der Tastatur erreicht oder sie einmal abspielt; der
+> Herzschlag, das Aufzeichnen des Rings und die Zahlen bleiben, wie sie
+> hier stehen. Die Kurve zeigt feste Werte (L224).
+
 Redur hat ausdrücklich den Commit `ad4ccbc782e2eb50a1e75ef56ed9a74a60451201`
 als Grundlage genannt. Er führt PR #74 zusammen; sein Dateibaum ist identisch
 mit `f1eca227`. Vorhandene Glühfäden, Kartenringe, Barcode, Statistikring und
@@ -43141,6 +43148,14 @@ nicht behauptet.
 
 E535 — Sieben Vorlagenblöcke in einem Zug
 --------------------------------------------------------------------------
+
+> **Ergänzt durch E701 (28. September 2026).** Block 07: der Kartenring
+> in „Zuletzt geöffnet" (`.rmo-recent`) dreht nur noch, solange man
+> hinzeigt oder der Fokus darin steht — die Animation ist dieselbe, nur
+> angehalten; im leeren Regal (`.bib-leer`) bleibt die Dauerrotation, wie
+> sie hier steht. Block 06: der Verlaufsschalter ist AUS grau (Deckkraft
+> .12, entsättigt) und bekommt seinen Schimmer unter Zeiger und Fokus
+> zurück; AN und die einmalige Bewegung beim Umschalten bleiben.
 
 Der Bau, den E533 beschrieb und der beim ersten Anlauf am Sitzungslimit
 starb. Diesmal in kleineren Wellen: ein Agent je Vorlagenblock, jeder auf
@@ -57405,6 +57420,152 @@ grün; `test225`, `test549`, `test550` grün. `test401` bleibt rot wie auf
 `main` (`var(--danger, #c73939)` aus E697) — das repariert E698 auf seinem
 Zweig. `npm run typecheck` sauber; `npm run bauen:ts` (Dienststand v1372)
 und `node bauen.mts` neu erzeugt.
+
+## E701 — Ruhiger, und nichts ist weg: leiser in Ruhe, jeder Griff am selben Ort
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (27. September,
+ca. 16:45 und 21:45 UTC) · **ergänzt** E534 und E535 (nur das Aussehen in
+Ruhe) · **wendet an** grund.css „Genau eine je Bild" (E263), E638, E273/E515,
+E219 · **Wächter:** `test580` (im Browser, ein freier Port) · Messung
+messungen.md §73.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC  „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC  im Fragebogen, zu den farbigen Emoji in Menüs, Einstellungen
+                und „Mehr": „Gezeichnete Zeichen (Empfohlen)" — „Durch
+                Redions eigene Linien-Symbole ersetzen, wie in der
+                Zeichenleiste. Alles bleibt am selben Ort."
+ca. 22:10 UTC  „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit
+                sehen ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles
+                kannst du nur an reddion arbeiten"
+```
+
+Dieser Eintrag ist der Teil „bischen ruhige … ohne etwas lösche". Bewegung,
+Glas, Stift, Farben und das Material sind eigene Zweige derselben Bitte
+(`claude/fluessige-bewegung`, `claude/glas-wo-es-passt`, `claude/stift-effekte`,
+`claude/bessere-farben`, `claude/material-ueberall`).
+
+**Was wurde entschieden.** Ruhiger heisst: weniger, das GLEICHZEITIG ruft —
+nicht weniger, das da ist. Sieben Stellen werden in Ruhe leiser; jede
+bekommt ihre Farbe oder Bewegung zurück, sobald man sie anfasst oder mit
+der Tastatur erreicht (E640, das UI-Kit: Schein ist Zustand, nicht
+Dauerschmuck). Kein Knopf, kein Menüeintrag, kein Weg und keine Animation
+ist gelöscht; jeder Griff steht am selben Ort mit demselben Auslöser.
+
+1. **Eine Haupthandlung je Bild.** grund.css sagt es seit E263: „Genau eine
+   je Bild — mehr macht keine wichtig." Auf „Heute" riefen vier Flächen
+   zugleich (hell): die violette Themenkugel, „PDF öffnen" im Kopf mit
+   Verlauf und Schein, „Dokumente öffnen" voll violett und „Lernen
+   starten". Jetzt ist „Lernen starten" die eine (E638). „PDF öffnen" im
+   Kopf ist in Ruhe eine getönte Pille (`--accent-schwach`, Schrift
+   `--accent-text`, 4,61 : 1 hell, 5,28 : 1 dunkel) und wird unter Zeiger
+   und Tastenfokus der volle Hauptknopf; „Dokumente öffnen" ist ein
+   Umrissknopf mit violettem Zeichen, 44 px, derselbe Griff
+   (`lernwelt.ts`, Klasse `is-primary` → `lw-desk-auf`); die Themenkugel
+   ist im Hellen ein grauer Mond, wie im Dunkeln der helle.
+2. **„Zuletzt geöffnet" ruht.** Der Kartenring im Regal drehte sich endlos
+   — im Leerlauf, am Telefon und hinter jedem Fenster darüber. Jetzt ist
+   nur sein Wiedergabezustand angehalten; unter dem Zeiger oder mit dem
+   Fokus in der Reihe dreht er wie bisher, hinter einem offenen Fenster
+   nie. Die drei Karten liegen in Ruhe flach und fächern unter dem Zeiger.
+   Das leere Regal behält seinen Ring nach E529.
+3. **Gezeichnete Zeichen.** Die Einstellungen trugen neunzehn farbige
+   Emoji untereinander, das ⋯-Menü 37 Emoji und zehn weitere getippte
+   Zeichen, „Mehr" und das R-Blatt ihre eigenen, die Seitenwerkzeuge 🖼 ↔ 🅰
+   🧩 ✨, Termine 📅 🔗 🎙 und an jeder Zeile eine Stecknadel. Jetzt steht
+   überall ein Strich aus `Register.symbole` in der stillen Farbe seiner
+   Zeile; der gewählte Bereich trägt den Akzent, Löschen bleibt rot,
+   „Beta" ist ein grauer Zettel. Zwanzig Zeichen fehlten im Register und
+   sind im selben Raster dazugekommen. E273 gilt dabei: ein Name, ein Bild,
+   eine Bedeutung — „Importieren" hat überall den Pfeil hinauf, „Mehr" im
+   R-Blatt die drei Punkte wie unten in der Leiste (vorher den Kompass),
+   „Verschlüsseln" den Schlüssel, weil das Schloss im selben Menü „Seite
+   sperren" heisst. Was ein Mensch selbst gesetzt hat (das Zeichen einer
+   Besprechungsseite), bleibt sein Emoji.
+4. **AUS ist grau.** Der Verlaufsschalter trug auch AUS den violetten
+   Schimmer (Deckkraft .5); drei Schalter untereinander sahen aus wie drei
+   angeschaltete. AUS ist jetzt .12 und entsättigt; unter Zeiger und Fokus
+   kommt der Schimmer zurück, AN bleibt .68.
+5. **Die Kennzahlkarten ruhen.** Vier gleiche violette Herzen, vier Ringe
+   und vier Kurven standen über dem Falz des Lernzentrums, auch bei null.
+   In Ruhe sind sie grau; angefasst, mit der Tastatur erreicht oder beim
+   einmaligen Abspielen farbig. Die kleine Kurve zeigt in jeder Karte
+   dieselben festen Werte — dafür sind KEINE Daten erfunden worden; die
+   Lücke steht als L224.
+6. **Die Bandecke** mit Suche, KI und Klappe blieb am Rechner
+   `--schale-grund` — im Hellen ein fast schwarzer Block am Ende des hellen
+   Bandes. Sie trägt jetzt den Grund des Bandes (`--bg-side`).
+7. **Ein Titel am Telefon.** Derselbe Name stand zweimal übereinander,
+   klein in der Kopfzeile und gross als Titel. Solange der grosse
+   gleichnamige Titel zu sehen ist, ist die kleine Krume durchsichtig;
+   rollt er unter die Kopfzeile, kehrt sie zurück (`kopfleiste.ts`, ein
+   `IntersectionObserver` je Ansicht, von jedem `pfad()` erneuert — nur
+   wenn Titel oder Name wechseln; nach Stern oder Schloss behält derselbe
+   Titel seinen Beobachter, sonst blitzte die Krume einen Takt lang auf).
+   Sie bleibt im Baum, fokussierbar und klickbar; am Rechner ändert sich
+   nichts.
+
+Der Stil steht in EINEM Block am Ende von `studio.css`, damit man den
+Bogen als Ganzes sieht; nur vorhandene Marken (§39), keine neue Datei.
+
+**Warum.** Redur hat „ruhiger" gesagt und im selben Satz „ohne etwas
+lösche". E218/E219 haben gezeigt, wie das geht: weglassen macht das
+Verbliebene wichtiger — aber nur, was weiterhin erreichbar ist. Deshalb
+misst `test580` jede Stelle zweimal: was leiser wurde, und dass die Griffe
+mit Kennung, Wort und Folge dieselben sind wie auf dem Stand davor.
+
+**Die Alternativen.** (a) Emoji nur entsättigen (`filter:grayscale`) —
+sofort machbar, aber Emoji bleiben Bilder mit eigener Strichstärke und
+Grundlinie; Redur hat „Gezeichnete Zeichen" gewählt. (b) Den Kartenring nur
+noch im leeren Regal zeigen — spart am Telefon Platz, nimmt aber etwas weg.
+(c) Die Krume am Telefon ganz ausblenden — dann fehlt der Name, sobald der
+Titel weggerollt ist. (d) Die Kurven der Kennzahlkarten weglassen — Redurs
+Frage dazu ist offen (L224).
+
+**Was es kostet.** +7,5 KB gzip im Start (messungen.md §73), gut die Hälfte
+davon Begründungen an Ort und Stelle. Wer auf dem Telefon nie zeigt, sieht
+den Ring in „Zuletzt geöffnet" nicht mehr drehen. Die violette Farbe
+unter einer eigenen Akzentfarbe gehört dem Zweig der Farben.
+
+**Gefunden auf dem Weg.** „Mehr" trug für „Importieren" und „Posteingang"
+dasselbe 📥. Das R-Blatt zeigte „Mehr" mit dem Kompass, die untere Leiste
+denselben Weg mit drei Punkten. Die Zeichen in „Dokumente öffnen" und „PDF
+importieren" sassen ohne Abstand und eine halbe Zeile zu hoch vor dem Wort
+(jetzt `inline-flex`, `gap`). Die Kurven der Kennzahlkarten zeigen feste
+Werte (L224).
+
+**Nicht in diesem Bogen.** Farbmarken, die eigene Akzentfarbe und dunkle
+Kontrollkästchen (`claude/bessere-farben`), Federn und Übergänge
+(`claude/fluessige-bewegung`), das Material (`claude/material-ueberall`),
+Glas (`claude/glas-wo-es-passt`). Der Funkelknopf „Lernen starten" ist im Dunkeln eine
+schwarze Pille auf dunklem Grund — die eine Haupthandlung, aber leise;
+seine Farbe gehört zu E638 und dem Zweig der Farben. Das Menü am Griff
+eines Blocks (`editor.ts`) trägt noch seine Emoji — es war nicht unter den
+Orten des Auftrags; es steht in AUFGABEN.
+
+**Geprüft.** `test580` 86/86 — zuerst rot eingecheckt (42 von 85 rot gegen
+515451f9, in jedem Abschnitt); die Probe „neu gezeichnet blitzt die Krume
+nicht auf" kam im Bau dazu. Gegenproben, nach dem letzten Neubau, je rot
+gesehen und zurückgenommen: (1) der ganze Stilblock heraus — 21 rot, in
+§1 bis §7; (2) ein 🧭 zurück in „Mehr", „Seiten-ID kopieren" aus dem
+⋯-Menü gestrichen, die Krume ohne Beobachter, „Dokumente öffnen" wieder
+`is-primary` — 11 rot, jede Änderung an ihrer Stelle (die gestrichene
+Zeile als „dieselben 47 Einträge"); (3) `kopfleiste.js` ohne „derselbe
+Titel, derselbe Beobachter" — genau die neue Probe rot, höchste
+Deckkraft 1; (4) alles zurück — 86/86. Nachbarn unter dem Schloss, 38
+Läufe grün (34 40 47 67 105 114 126 127 128 143 155 217 221 222 242 245
+248 272 303 353 362 384 388 392 412 430 432 436 476 482 494 495 496 531
+532 576 579 580); `test388` §5: der Start holt 2775 KB über 246 Dateien
+(Grundstand 2767, Decke 2850). Ohne Browser: 87 290 298 401 402 410 109
+537 400 550 549 225.
 
 ## E702 — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale
 

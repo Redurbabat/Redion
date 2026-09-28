@@ -25,33 +25,44 @@ const Einstellungen = (() => {
     const S = (k, v) => { Store.setMeta(k, v); anwenden(); };
     const GRUPPEN = [
         ['', [
-                ['konto', '👤', 'Mein Konto'],
-                ['allgemein', '⚙️', 'Einstellungen'],
-                ['benachricht', '🔔', 'Benachrichtigungen'],
-                ['daten', '⭱', 'Importieren']
+                ['konto', 'user', 'Mein Konto'],
+                ['allgemein', 'settings', 'Einstellungen'],
+                ['benachricht', 'bell', 'Benachrichtigungen'],
+                ['daten', 'upload', 'Importieren']
             ]],
         ['Funktionen', [
-                ['ki', '✨', 'Künstliche Intelligenz'],
-                ['verbindungen', '🔌', 'Verbindungen'],
-                ['mcp', '🔗', 'MCP'],
-                ['worker', '⌨️', 'Worker'],
-                ['verifiziert', '✔️', 'Verifizierte Seiten'],
-                ['oeffentlich', '🌐', 'Öffentliche Seiten'],
-                ['emoji', '😀', 'Emoji']
+                ['ki', 'sparkle', 'Künstliche Intelligenz'],
+                ['verbindungen', 'plug', 'Verbindungen'],
+                ['mcp', 'link', 'MCP'],
+                ['worker', 'keyboard', 'Worker'],
+                ['verifiziert', 'checkCircle', 'Verifizierte Seiten'],
+                ['oeffentlich', 'globe', 'Öffentliche Seiten'],
+                ['emoji', 'smile', 'Emoji']
             ]],
         ['Verwaltung', [
-                ['arbeitsplatz', '🏠', 'Arbeitsbereich'],
-                ['analysen', '📈', 'Analysen'],
-                ['bereiche', '👥', 'Bereiche'],
-                ['sicherheit', '🛡', 'Sicherheit'],
-                ['schluessel', '🔑', 'Schlüssel und APIs']
+                ['arbeitsplatz', 'workspace', 'Arbeitsbereich'],
+                ['analysen', 'chart', 'Analysen'],
+                ['bereiche', 'users', 'Bereiche'],
+                ['sicherheit', 'shield', 'Sicherheit'],
+                ['schluessel', 'key', 'Schlüssel und APIs']
             ]],
         ['Zugriff und Abrechnung', [
-                ['speicher', '📦', 'Speicher'],
-                ['abrechnung', '💳', 'Abrechnung'],
-                ['ueber', 'ℹ️', 'Über diese App']
+                ['speicher', 'database', 'Speicher'],
+                ['abrechnung', 'creditCard', 'Abrechnung'],
+                ['ueber', 'info', 'Über diese App']
             ]]
     ];
+    /** Ein Zeichen aus dem Register — oder nichts, wenn es fehlt. Eine leere
+        Zelle ist ehrlicher als ein Emoji als Ersatz: das wäre der alte
+        Zustand, nur versteckt (E701). */
+    const zeichen = (name) => {
+        try {
+            return Register.symbole.alsSvg(name, 18);
+        }
+        catch {
+            return '';
+        }
+    };
     const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
     /* ========================================================================
      * ANWENDEN — Einstellungen wirken sofort
@@ -161,7 +172,7 @@ const Einstellungen = (() => {
                 `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
                 GRUPPEN.map(([titel, liste]) => (titel ? `<div class="einst-grp">${titel}</div>` : '') +
                     liste.map(([id, i, n]) => `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
-                        `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
+                        `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('')).join('') +
                 '</div>' +
                 /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
                    weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`

@@ -291,3 +291,127 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .studio-icon:is(:hover,:focus-visible){transform:none}
   .studio-icon[aria-label]::after{animation:none}
 }
+
+/* ===========================================================================
+   RUHIGER — UND NICHTS IST WEG (E701, test580)
+   ---------------------------------------------------------------------------
+   Redur, 27. September, ca. 16:45 UTC: „du kannst auch die oberfläche
+   bischen ruhige machen ohne etwas lösche also eine funktionen". Ruhiger
+   heisst hier: weniger, das GLEICHZEITIG ruft — nicht weniger, das da ist.
+   Jede Regel unten ändert nur, wie laut etwas in Ruhe ist; jeder Griff
+   bleibt am selben Ort mit demselben Auslöser (§43, E218/E219).
+   Farbe und Schein sind Zustand, nicht Dauerschmuck (E640, das UI-Kit:
+   „glow used as state feedback"): was man anfasst oder mit der Tastatur
+   erreicht, bekommt sie sofort zurück.
+   Alles steht in EINEM Block, damit man sieht, was dieser Bogen tut, und
+   ihn als Ganzes prüfen kann. Nur vorhandene Marken (§39).
+   =========================================================================*/
+
+/* 1 · EINE HAUPTHANDLUNG JE BILD (grund.css: „Genau eine je Bild").
+   „PDF öffnen" im Kopf ist in Ruhe eine getönte Pille — derselbe Knopf,
+   dieselbe Stelle, dasselbe Zeichen —, und wird unter dem Zeiger und unter
+   dem Tastenfokus der volle Hauptknopf mit Verlauf und Schein. Gemessen:
+   Schrift auf der Pille 4,61 : 1 hell, 5,28 : 1 dunkel. */
+#studio-import{background:var(--accent-schwach);color:var(--accent-text);box-shadow:none;
+  transition:transform var(--motion-instant) var(--ease),background var(--motion-fast) var(--ease),
+  color var(--motion-fast) var(--ease),box-shadow var(--motion-fast) var(--ease)}
+#studio-import:is(:hover,:focus-visible){background:var(--haupt-flaeche-hover);color:var(--auf-accent);
+  box-shadow:var(--haupt-schein)}
+/* Der Themenknopf im Hellen: ein grauer Mond wie im Dunkeln der helle —
+   kein zweiter violetter Fleck neben dem Kopfknopf. */
+html[data-theme="light"] .studio-orb{background:var(--text-dim);box-shadow:inset -6px -3px 0 var(--bg-side);
+  transform:rotate(-25deg)}
+/* „Dokumente öffnen" auf Heute ist ein Umrissknopf (die Klasse `is-primary`
+   ist dort weg, lernwelt.ts); das violette Zeichen sagt, wohin er führt. */
+/* Zeichen und Wort in einer Linie: das Zeichen sass bisher ohne Abstand
+   und eine halbe Zeile zu hoch vor dem Wort (auf beiden Bildern gesehen). */
+.lernwelt .lw-desk .lw-actions button{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2)}
+.lernwelt .lw-desk .lw-desk-auf [data-sym]{color:var(--accent-text)}
+.lernwelt .lw-desk .lw-desk-auf:is(:hover,:focus-visible){border-color:var(--accent-text)}
+
+/* 2 · „ZULETZT GEÖFFNET" RUHT. Der Kartenring drehte sich endlos — im
+   Leerlauf, am Telefon und hinter jedem Fenster über dem Regal. Jetzt
+   steht er, bis man hinzeigt oder die Tastatur hineinführt. Nur der
+   Wiedergabezustand wechselt, nie die Animation: sie ist nicht gelöscht,
+   nur angehalten (ergänzt E535 Block 07). Das leere Regal (.bib-leer)
+   dreht weiter wie in E529, und die ruhige Darstellung und „weniger
+   Bewegung" schalten ihn wie bisher ganz aus. */
+.rmo-recent .rmo-ring-trommel{animation-play-state:paused}
+.rmo-recent:focus-within .rmo-ring-trommel{animation-play-state:running}
+@media (hover:hover){.rmo-recent:hover .rmo-ring-trommel{animation-play-state:running}}
+body:has(.overlay,.menu.blatt,#r-blatt) .rmo-recent .rmo-ring-trommel{animation-play-state:paused}
+/* Die drei Karten liegen in Ruhe flach; der Fächer kommt mit dem Zeiger. */
+.rmo-recent .rmo-recent-card:not(:hover,:focus-visible,:active){transform:none}
+@media (hover:hover){
+  .rmo-recent .rmo-recent-track:is(:hover,:focus-within) .rmo-recent-card:not(:hover,:focus-visible,:active){
+    transform:rotateY(calc((var(--rmo-index,1) - 1) * -6deg))}
+}
+
+/* 3 · GEZEICHNETE ZEICHEN (Redur, 21:45 UTC: „Gezeichnete Zeichen"). Die
+   Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt, Seitenwerkzeugen und
+   Termine sind Striche aus `Register.symbole`; hier bekommen sie ihre
+   stille Farbe und ihre Grösse. Grau in Ruhe, `--text` unter Zeiger und
+   Tastenwahl; der gewählte Bereich trägt den Akzent, Löschen bleibt rot. */
+.einst-nav .mi{display:grid;place-items:center;color:var(--text-dim)}
+.einst-nav button:is(:hover,:focus-visible) .mi{color:var(--text)}
+.einst-nav button.on .mi{color:var(--accent-text)}
+.menu button .mi{display:grid;place-items:center;color:var(--text-dim)}
+.menu button:not(.rot):is(:hover,:focus-visible,.jetzt) .mi{color:var(--text)}
+.menu .kenn{background:var(--bg-hover);color:var(--text-dim);box-shadow:inset 0 0 0 1px var(--line)}
+.home-liste .mz{display:grid;place-items:center;color:var(--text-dim)}
+.home-liste button:is(:hover,:focus-visible) .mz{color:var(--text)}
+.home-liste button > span:first-child:has(> svg.sym){display:grid;place-items:center;flex:none;
+  width:26px;color:var(--text-dim)}
+.home-karten .hk b:has(> svg.sym){display:flex;align-items:center;gap:8px}
+.home-karten .hk b > svg.sym{color:var(--text-dim);flex:none}
+.rm-z:has(> svg.sym){display:grid;place-items:center;color:var(--text-dim)}
+.rm-z > svg.sym{width:21px;height:21px}
+.rm-zu > svg.sym{width:18px;height:18px}
+.pg-tools button:has(> svg.sym){display:inline-flex;align-items:center;gap:6px}
+@media(max-width:760px){
+  .einst-nav .mi > svg.sym,.menu.blatt button .mi > svg.sym{width:20px;height:20px}
+  .home-liste .mz > svg.sym,.home-liste button > span:first-child > svg.sym{width:21px;height:21px}
+  .home-liste button > span:first-child:has(> svg.sym){width:30px}
+}
+
+/* 4 · AUS IST GRAU. Der Verlaufsschalter trug auch AUS den violetten
+   Schimmer (Deckkraft .5) — drei Schalter untereinander sahen aus wie drei
+   angeschaltete. Jetzt leuchtet nur AN; beim Überfahren und unter dem
+   Tastenfokus kommt der Schimmer wie bisher zurück, und die einmalige
+   Bewegung beim Umschalten bleibt (ergänzt E535 Block 06). */
+body [data-rmo~="toggle"].mschalter[data-rmo-state="aus"] > .rmo-verlauf{opacity:.12;filter:saturate(0) brightness(1.2)}
+body button:is(:hover,:focus-visible) > [data-rmo~="toggle"].mschalter[data-rmo-state="aus"] > .rmo-verlauf{
+  opacity:.5;filter:saturate(.75) brightness(1.35)}
+
+/* 5 · DIE KENNZAHLKARTEN RUHEN. Vier gleiche violette Herzen, vier Ringe
+   und vier Kurven standen über dem Falz, auch bei null. In Ruhe sind sie
+   grau; angefasst, mit der Tastatur erreicht oder beim einmaligen Abspielen
+   kommt die Farbe zurück. Die Zahlen bleiben, wie sie sind. Die kleine
+   Kurve zeigt feste Werte und keine echten — sie ist deshalb in Ruhe
+   neutral (L224, ergänzt E534/E535). */
+:is(.stat-karte.lw-metrik,.rmo-health-metric) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+  transition:filter var(--motion-fast) var(--ease),opacity var(--motion-fast) var(--ease)}
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+  filter:saturate(0)}
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > .rmo-heart{opacity:.45}
+
+/* 6 · DIE ECKE DES BANDES TRÄGT DEN GRUND DES BANDES. Am Rechner ist das
+   Band seit dem Studio `--bg-side`; die Ecke rechts mit Suche, KI und
+   Klappe blieb `--schale-grund` — im Hellen ein fast schwarzer Block am
+   Ende eines hellen Bandes. Dieselben Knöpfe, dieselben Orte. */
+@media(min-width:761px){
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts,.mb-klapp){background:var(--bg-side)}
+  body[data-schale="premium"] #main > #menueband .mb-klapp{box-shadow:-8px 0 8px -6px var(--bg-side)}
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts-knopf,.mb-klapp){color:var(--text-dim)}
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts-knopf,.mb-klapp):hover{background:var(--bg-hover);color:var(--text)}
+}
+
+/* 7 · EIN TITEL AM TELEFON. Solange der grosse gleichnamige Titel zu sehen
+   ist, ist die kleine Krume durchsichtig; rollt er unter die Kopfzeile,
+   kehrt sie zurück (kopfleiste.ts setzt `data-titel-sichtbar`). Sie bleibt
+   im Baum und klickbar. Unter „weniger Bewegung" wechselt sie ohne Blende
+   (die Marke `--motion-fast` ist dort 1 ms, grund.css). */
+@media(max-width:760px){
+  #crumb > :is(a:last-child,.sep:has(+ a:last-child)){transition:opacity var(--motion-fast) var(--ease)}
+  #topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
+}
