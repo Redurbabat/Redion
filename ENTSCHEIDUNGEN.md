@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-684 Entscheidungen, E1 bis E706 (**E703, E704 und E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+685 Entscheidungen, E1 bis E706 (**E704 und E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -745,6 +745,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
 * **E701** — Ruhiger, und nichts ist weg: eine Haupthandlung je Bild („PDF öffnen" im Kopf getönt bis zum Anfassen, auf „Heute" nur „Lernen starten" voll, der Themenknopf im Hellen ein grauer Mond); „Zuletzt geöffnet" dreht nur unter Zeiger oder Fokus; gezeichnete Zeichen statt Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt, Seitenwerkzeugen und Termine (Redur: „Gezeichnete Zeichen", 20 neue im Register); AUS ist grau; Kennzahlkarten ruhen grau; die Bandecke im Grund des Bandes; am Telefon weicht die Krume dem grossen Titel. Jeder Griff am selben Ort, gezählt (`test580`)
 * **E702** — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale (Redur: „Wie im UI-Kit (Empfohlen)"): fünf `--feder-*`-Marken in `grund.css` aus `motion-tokens.css` mit `@supports`-Rückfall (ergänzt E43/E646/E699 Punkt 6), der Federkern `RedionSpring` ohne React (übertragen, auf 1953 Punkten gleich dem Kit), EINE Druckfeder statt dreizehn `:active`-Skalierungen (auch der kurze Tipp am iPhone), der Schalter wie im Kit (Griff dehnt sich, keine Endlosdrehung), Blätter vom Rand mit Finger und Abgang, eine Ankunft für jeden Ortswechsel, „Ruhig" hält auch `::after`, JavaScript und die Inseln an (`test581`)
+* **E703** — Glas, wo es passt: der Dock im Dokument und die schwebende Zeichenleiste werden dichtes Glas (oben am Blatt bleibt sie deckend), Glas kommt als Scheibe statt als Nebel, EIN Schalter mit fünf Eingängen macht alles Glas deckend, „Starker Kontrast" hat keines (`data-schema`), Toast und Lader stehen über den Werkzeugen (`--melde-boden`), eine Lichtkante (`--glas-kante`), das leichte Glas folgt dem Schema (L221 gemessen, geschlossen), dunkles dichtes Glas 90 %; und die Bilder zeigen endlich echte Unschärfe (SwiftShader). Redur: „glass efeck usw alles haben", „Starker Kontrast ohne Glas" (`test582`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
 
@@ -56784,6 +56785,14 @@ Das ist die Folge von EINER Quelle und war die Absicht.
 
 ## E695 — Ein Glas statt vier, und die Dichte kommt aus der Messung
 
+> **Ergänzt durch E703 (28. September 2026) — Glas, wo es passt.** Die
+> schwebenden Werkzeugleisten sind jetzt auch Glas, das leichte Glas folgt
+> dem Schema (`color-mix` der Karte statt eines festen Werts), das dunkle
+> dichte Glas trägt 90 statt 88 % (gemessen in allen zehn Schemata), und
+> ALLES Glas wird mit einem Schalter deckend — nicht nur bei weniger
+> Transparenz. Die eine Unschärfe, die zwei Dichten nach einer Regel und
+> „auf Glas keine blasse Schrift" gelten unverändert.
+
 **Datum:** 27. September 2026 · **Wächter:** `test576` (30 Zusagen) ·
 Redur: **„Weiter an die animationen übergangen glass efeck usw alles
 verbessern"**.
@@ -57791,6 +57800,197 @@ die Druckfeder mit 1,2 (§1, §2, `test126` §7). Nachbarn grün: 388 (2779 KB,
 401, 402, 410, 109, 537, 400, 67, 105, 225, 549, 550. `test464` 62/63 — die
 Zahl der Werkzeuge (14 statt 13) aus `Marken.WERKZEUGE`, die dieser Bogen
 nicht anfasst; siehe den Commit.
+
+## E703 — Glas, wo es passt: die Docks werden Glas, ein Schalter macht alles deckend, und die Bilder zeigen endlich echte Unschärfe
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Auftrag ca. 16:45
+UTC, Fragebogen ca. 21:45 UTC, 27. September) · **ergänzt** E695 ·
+**Wächter:** `test582` (neu), `test576` (Chromium jetzt mit echter Unschärfe).
+
+Redur, wörtlich, 27. September 2026:
+
+- ca. 16:45 UTC: **„du muss mehr im redion arbeiten du kannst auch die
+  oberfläche bischen ruhige machen ohne etwas lösche also eine funktionen
+  und ich will das es flüssigere animationen , glass efeck usw alles haben
+  dann bessere stift efeckte beim zeichnen bessere farben"**
+- ca. 21:45 UTC, im Fragebogen unter „Farben": **„Starker Kontrast ohne
+  Glas"** (Beschreibung der Wahl: „Starker Kontrast: kein Glas, schwarze
+  Schrift auf Gelb" — die Schrift auf Gelb gehört dem Farbzweig)
+- ca. 21:47 UTC: **„ich will das du auch das ¨berla nutze will wo es nötig
+  ich also beim stift übergangen usw"**
+- ca. 21:49 UTC: **„was du beim touckit gebaut hast ich will alles so haben
+  mit redion passende inhalten"**
+- ca. 22:05 UTC, zum Video „Liquid Glass": **„Schau mal das auch an ich will
+  das auch haben"**
+- ca. 22:10 UTC: **„du muss ofne pause an redion arbeiten ich will wenn ich
+  am morgen die redion öfnnen eien komplet besseren webseit sehen ohne eine
+  funktione löschen bessere ordnungen bessere übergagnge besssere efeckten ,
+  bessere oberfläsche alles kannst du nur an reddion arbeiten"**
+
+**Gemessen, bevor gebaut wurde** (messungen.md §75). E695 hat EIN Glas
+gebaut. Offen blieb, WO es steht — und ob die Bilder es überhaupt zeigen.
+
+1. **Kein Bild hat je Glas gezeigt.** `bilder.mts` und `test576` starten
+   das kopflose Chromium, und das setzt seine Bilder mit dem
+   SoftwareRenderer zusammen. Der lässt jede Filterkette aus, in der `blur`
+   steht: eine harte Schwarz-Weiss-Kante hinter einem Menü blieb hart
+   (Rampe 0 px, 59 → 28 in einem Schritt). Auf jedem Bild, das Redur von
+   Glas gesehen hat, lag die Seite SCHARF hinter der Schrift — genau das
+   „Muster hinter der Schrift", das E695 verbietet. Mit SwiftShader als
+   Grafikkarte ist die Rampe 37 bis 52 px breit, wie auf dem Telefon.
+2. **Glas kam als Nebel.** `studio-arrive` (Menü, Finder) und `blatt-hoch`
+   (Blatt am Telefon) blendeten die GANZE Fläche über `opacity` ein.
+   `opacity` wirkt auf das Ergebnis samt verwischter Rückseite: in den
+   ersten Bildern jedes Menüs stand die Seite scharf durch das Glas
+   („Montage-Elektriker:innen" war durch das Menü zu lesen, zehnfach
+   verlangsamt).
+3. **Was schwebt, war grau.** Der Dock im Dokument (E619) und die
+   schwebende Zeichenleiste (unten, frei, links, rechts) lagen als deckende
+   Platte über dem Papier — die zwei grössten schwebenden Flächen, und ohne
+   Glas.
+4. **Nur ein Eingang machte Glas deckend.** `prefers-reduced-transparency`
+   tat es, an fünf Stellen einzeln. Mehr Kontrast im System, erzwungene
+   Farben, Redions „Hoher Kontrast" und das Schema „Starker Kontrast"
+   liessen Menüs und Leisten bei 88 % mit Unschärfe.
+5. **Was meldet, lag auf dem Werkzeug.** Am Rechner Toast (835–878) UND
+   Lader auf den Knöpfen des Docks (824–886), am Telefon beide auf der
+   Kapsel Zurück/Vor (708–760) — und aufeinander.
+6. **Die Präfix-Folge war an zwei Stellen verkehrt** (`.ru-fach-art`, die
+   Regel für weniger Transparenz in `studio.css`). Roh ist das harmlos;
+   geht ein Blatt durch lightningcss (wie `bridge.css`), fasst es
+   „unpräfixiert, dann `-webkit-`" zu EINER Zeile mit Präfix zusammen, und
+   Chrome hat kein Glas (L222 Punkt 3).
+
+**Was entschieden wurde.**
+
+1. **Echte Unschärfe auf jedem Bild.** `bilder.mts`, `test576` und `test582`
+   starten Chromium mit `--use-angle=swiftshader --enable-unsafe-swiftshader
+   --ignore-gpu-blocklist --enable-gpu-compositing`, mit Grund am Ort.
+   `test582` §1 misst die Rampe über einer harten Kante (≥ 12 px) und hält
+   die vier Schalter in beiden Dateien.
+
+2. **Glas kommt als Scheibe.** Menü und Finder gleiten (`glas-ankunft`:
+   `translateY(7px) scale(.985)` → nichts, dieselbe Kurve, dieselbe Dauer);
+   nur ihr INHALT blendet (`glas-inhalt`). Das Blatt am Telefon steigt
+   dieselben 16 px, ohne `opacity`; seine Einträge blenden. `opacity` an
+   einem Kind ändert die Rückseite des Elternteils nicht. Keine Feder, kein
+   Überschwingen (E699 §6 gilt für Redions eigene Bewegung weiter);
+   `studio-arrive` bleibt für alles, was kein Glas ist. Das Einblenden des
+   Inhalts hat kein Gewicht (`:where`, 0,0,0): acht verschiedene Finder
+   haben Kinder mit eigener Bewegung (der Schimmer im KI-Finder, die Zahlen
+   im Lernfinder) — deren Bewegung gewinnt, die Scheibe bleibt dieselbe.
+
+3. **Die zwei schwebenden Werkzeugleisten sind Glas, dicht** (sie tragen
+   Wörter, E695). Im Dokument trägt der FESTE Rahmen (`.blatt-reihe`) das
+   Glas, der Roller darin wird durchsichtig — seine `local`-Deckel in der
+   Farbe der Leiste wären auf Glas zwei graue Streifen. Wo es zu rollen
+   gibt, läuft der Inhalt an der Kante aus (Maske am Kind, geführt von
+   `data-mehr` aus `rollrand.ts`). Die Zeichenleiste ist Glas in den Lagen
+   unten, frei, links, rechts; **oben, am Blatt angesetzt, bleibt sie
+   deckend** — dort schwebt sie nicht, sie ist Teil des Blattes. Zurück/Vor
+   kleben am Telefon weiter deckend am Rand (E396, `test393` §3).
+
+4. **EIN Schalter macht alles Glas deckend** (`grund.css`), mit fünf
+   Eingängen: weniger Transparenz, mehr Kontrast, erzwungene Farben (je
+   Medienabfrage), `body[data-kontrast="hoch"]` und
+   `html[data-schema="kontrast"]`. Er dreht nicht Stellen um, sondern die
+   Marken (`--bg-schwebend[-dicht]` → `--bg-card`, `--glas-blur` und
+   `--schleier-blur` → `none`, die Lichtkante → eine klare Linie) — also
+   wird auch jede künftige Glasfläche mit deckend. Die Linse und zwei
+   Zierstücke tragen feste Werte und stehen darunter einzeln. Die alten
+   Einzelregeln bleiben (§43).
+
+5. **„Starker Kontrast" hat gar kein Glas** — auch keine Linse, kein
+   Zierstück, keinen verwischten Schleier. Dafür schreibt `aussehen.ts`
+   das Schema als `data-schema` an `<html>`: ob es Glas gibt, ist keine
+   Farbe und gehört nicht in die Farbtabelle. Der gewählte Reiter bleibt
+   markiert (volle Fläche mit Rand, §38). Die schwarze Schrift auf Gelb ist
+   Sache des Farbzweigs (claude/bessere-farben).
+
+6. **Ein Stapel am unteren Rand, auch am Rechner.** `--melde-boden` ist die
+   Oberkante des obersten Werkzeugs (Zeichenleiste unten, Dock, Kapsel),
+   aus Bauteilen gerechnet (`var(--touch-min)` + Polster), nicht
+   abgeschrieben. Toast und Lader stehen darüber; am Telefon gehört der
+   Lader jetzt in den Stapel, und der Toast rückt über ihn. Ist am Telefon
+   ein Blatt offen, geht der Lader darunter (er lag beim Einlesen einer PDF
+   auf den Einträgen „Zu Favoriten" und „Link kopieren"). Neben der
+   Zeichenleiste „unten" geht der Toast nach OBEN: sie klebt nur, solange
+   das Blatt unter den Rand reicht, und steht sonst irgendwo darüber — eine
+   Zahl trifft sie nicht (am Bild gesehen). Dieselbe Antwort wie bei offenen
+   Fenstern (L109, E310). Toast und Lader bleiben DECKEND: sie blenden über
+   `opacity` (`ki.css`: die aria-live-Ansage braucht das), Glas würde beim
+   Einblenden doppelt drucken, und sie liegen oft über anderem Glas.
+
+7. **Grenzen, gemessen und aufgeschrieben** (`grund.css`, messungen §75,
+   `test582` §7): im Ruhen am Telefon höchstens drei Glasflächen und ein
+   Viertel des Bildschirms (gemessen: Zeichenblatt 17,0 %, Dokument 6,7 %),
+   mit offenem Menü höchstens 60 % (50,1 %), NIE eine Unschärfe über 90 %
+   des Telefons — der Schleier hinter dem Willkommen dimmt am Telefon nur
+   noch —, EINE Unschärfe von 20 px, nie animiert. Was steht, bleibt
+   deckend: Seitenleiste, Kopf, Reiter, Einstellungen, ganze Blätter,
+   Toast, Lader, Kapsel.
+
+8. **Eine Lichtkante für alles Glas** (`--glas-kante`, je Modus in
+   `hell.css`/`dunkel.css`): Licht oben, ein Hauch Rückwurf unten, die
+   Haarlinie `--glas-rand` — die Kante aus `glass/Glass.css` des Touch Kits
+   (edge, edge-low, hairline) als Marke, ohne React. Auf Menü, Finder,
+   Auswahlleiste, Telefonleiste und beiden Docks, nur unter `@supports`;
+   ohne Unschärfe bleibt der Rand. Gemalt, nicht gerechnet: kein Preis.
+
+9. **Das leichte Glas folgt dem Schema:** `--bg-schwebend` ist jetzt
+   `color-mix(--bg-card …)` wie das dichte (74 % hell, 72 % dunkel) statt
+   eines festen Weiss oder Graus. Seine Zeichen halten über dem schlimmsten
+   Grund 3 : 1 in allen zehn Schemata — gemessen, L221 ist damit
+   geschlossen.
+
+10. **Dunkles dichtes Glas 90 statt 88 %.** Die 86 % aus E695 galten für die
+    Standard-Karte. In „Wald" und „Rosé" fiel die untere Leiste am Telefon
+    über reinem Weiss auf 4,27 und 4,48 : 1; bei 90 % sind es 4,59 und
+    4,81.
+
+11. **Der Präfix steht zuerst**, in Redions eigenen Blättern überall
+    (`test582` §11).
+
+**Die Alternativen.** (a) Die Brechung des Kits (`useGlassRefraction`) für
+Redions Flächen: nur in Chromium (das iPhone bekäme Frost), braucht eine
+React-Insel im Start, und dauernde Verschiebung widerspricht „ruhiger" —
+nein. (b) Die Dichte in den Filter legen (`brightness`, `contrast`): gleiche
+Lesbarkeit (5,02 / 4,70 gegen 4,66 / 4,68), auf echtem Inhalt kein
+sichtbarer Unterschied — nein, `--glas-blur` bleibt eine Marke. (c) Toast
+und Lader auch als Glas: doppelter Druck beim Einblenden, Glas auf Glas —
+nein. (d) Glas auf alles, auch Seitenleiste und Kopf: mehr Unruhe und mehr
+Rechenarbeit für Flächen, die nicht schweben — nein. (e) Die Kontrast-
+schalter je Stelle nachtragen: das war der Zustand, der vier von fünf
+Eingängen vergessen hat. (f) Sands stille Schrift über eine dichtere
+Fläche retten: dafür bräuchte Sand 97 % — kein Glas mehr. Die Farbe
+gehört dem Farbzweig (L226).
+
+**Was es kostet.** Messbar am Telefon (390 × 844 @3x, GPU-Weg, 2,5 s Rollen,
+messungen §75): kein Bild geht verloren (141–152 von etwa 150, mit und ohne
+Glas), die Grafikzeit steigt von etwa 0,2 auf 1,2–1,6 ms je Bild. Der Start
+(`test388` §5): 2767 → 2774 KB gzip, keine neue Datei — die knapp sieben
+KB sind fast ganz Kommentar. Zwei Prozent
+weniger Durchblick im dunklen dichten Glas. Auf weissem Papier im Hellen
+sieht der Dock fast aus wie vorher — das ist ruhig und gewollt; über einer
+farbigen Seite färbt er sich. Die Rollhinweise im Dock sind jetzt ein
+Auslaufen des Inhalts statt Deckel und Schimmer. Und eine Zahl im
+Stilblatt mehr: `--melde-boden` rechnet mit der Zusammensetzung der
+Leisten; ob die Rechtecke sich wirklich nicht schneiden, misst `test582` §6.
+
+**Gefunden auf dem Weg.** (1) Der Schleier hinter dem Willkommen war die
+teuerste Glasfläche von allen (Vorerhebung: 182–202 von 300 Bildern beim
+Rollen, zehnmal die Grafikarbeit von Leiste, Dock und Linse zusammen) —
+am Telefon dimmt er jetzt nur. (2) In „Sand" hat `--text-dim` schon auf der
+VOLLEN Karte nur 4,72 : 1; auf Glas über Schwarz 3,97. Das ist eine Farbe,
+kein Glas: `test582` nennt Sand in einer Liste, die nur schrumpfen darf
+(L226). (3) Am Telefon lagen Toast und Lader IMMER aufeinander, nicht nur
+über Werkzeugen — der Lader stand ausserhalb des Stapels.
+
+**Nicht in diesem Bogen.** Das Glas der Kit-Bauteile in `bridge.css`
+(Präfix-Folge im gebauten Inselblatt, L222 Punkt 3) — die Kit-Kopie wird
+nicht von Hand geändert, und in Stufe 1a zeigt keine Insel Glas. Die Linse
+der unteren Leiste (E639/E646, Zweig „Material überall"). Farben (claude/bessere-farben).
+Bewegung (claude/fluessige-bewegung).
 
 ## E705 — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit, ein kühler Ton im Dunkeln, neun ruhigere Akzente
 

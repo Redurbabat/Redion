@@ -8411,6 +8411,44 @@ einem gelben Ast misst.
 
 ---
 
+## L226 · Was das Glas nicht selbst lösen kann: Sands stille Schrift, die Kapsel, das Kit-Glas — 28. September 2026
+
+**Seit E703** ist Glas, was schwebt: Menüs, Finder, Auswahlleiste, die
+untere Leiste am Telefon und die zwei schwebenden Werkzeugleisten. `test582`
+misst die Lesbarkeit an Pixeln über dem schlimmsten Grund, in allen zehn
+Schemata. Drei Dinge bleiben offen, und keines gehört der Dichte:
+
+```txt
+1  SAND, STILLE SCHRIFT  `--text-dim` (#66655f, aus hell.css — Sand setzt nur
+                         --text) hat auf der Sand-Karte #efe6d6 schon VOLL
+                         nur 4,72 : 1. Auf Glas über reinem Schwarz: 3,97
+                         (Menü-Gruppentitel, Kürzel, Namen der unteren
+                         Leiste). Damit das Glas 4,5 hält, bräuchte Sand
+                         97 % Dichte — also kein Glas. Die Farbe gehört dem
+                         Farbzweig (claude/bessere-farben). `test582` nennt
+                         Sand in SCHEMAFARBE; die Liste darf nur schrumpfen,
+                         und ein Eintrag, den keine Messung mehr braucht,
+                         macht den Lauf rot.
+2  DIE KAPSEL ZURÜCK/VOR Im Dokument bleibt `.document-ink-history` deckend
+                         (E396, `test393` §3: nichts darf durchblitzen). Mit
+                         echter Unschärfe blitzt nichts mehr scharf durch —
+                         ob sie wie der Dock Glas wird, ist Redurs Wahl.
+3  KIT-GLAS IN DER BRÜCKE Die Glas-Bauteile des Kits (Dialog, Aktionsblatt,
+                         Popover, Toast …) schreiben die Präfix-Folge
+                         verkehrt (L222 Punkt 3) und 24 statt 20 px. Sobald
+                         Stufe 1b sie zeigt, braucht `src/islands/bridge.css`
+                         dieselbe Unschärfe (`--glas-blur`) in der richtigen
+                         Folge — `test582` §11 liest `bridge.css` schon mit.
+```
+
+**Was fehlt:** (1) eine Sand-Farbe für die stille Schrift mit mindestens
+5,4 : 1 auf der Karte, dann Sand aus `SCHEMAFARBE` streichen; (2) Redurs
+Wort zur Kapsel; (3) die Brücke, sobald eine Kit-Insel Glas zeigt.
+Geschlossen ist die Lücke, wenn `SCHEMAFARBE` leer ist, die Kapsel
+entschieden ist und `test582` §11 auch das gebaute Inselblatt liest.
+
+---
+
 ## L225 · Flüssige Bewegung: was nach E702 noch aussteht — 28. September 2026
 
 **Gefunden beim Bau von E702** (Redur, 27. September, ca. 21:45: „Wie im
@@ -8580,6 +8618,13 @@ Redion bleibt bei c192821, weil Redur diesen Stand freigegeben hat
 festgenagelt in E699); ein neuer Stand kommt mit dem nächsten Holen, also
 mit Stufe 1b, und mit ihm fallen die Punkte 1, 2 und 4 hier weg.
 
+**Nachgesehen am 28. September (E703):** in Redions EIGENEN Blättern stand
+dieselbe verkehrte Folge an zwei Stellen (`.ru-fach-art` in
+`bausteine.css`, die Regel für weniger Transparenz in `studio.css`). Beide
+sind umgedreht, und `test582` §11 hält die Folge für jedes Blatt unter
+`quell/schale/stil/` und für `src/islands/bridge.css`. Im Kit bleibt Punkt 3
+offen (UI-Kit schreibt die Folge in `Button.css` weiter verkehrt).
+
 **Was fehlt:** Punkt 3, 5 und 6 in UI-Kit; dann `node
 skripte/touch-holen.mts <UI-Kit> <neuer Commit>`, die Prüfsummen in
 `fremd-bestand.json` nachziehen, für Punkt 1 `tsconfig.islands.json` auf
@@ -8590,7 +8635,7 @@ einer Insel `--accent-text` trägt.
 
 ---
 
-## L221 · Die leichten Glasleisten sind gerechnet, nicht gemessen — 27. September 2026
+## L221 · Die leichten Glasleisten sind gerechnet, nicht gemessen — GESCHLOSSEN am 28. September 2026 (E703)
 
 **Seit E695 gibt es zwei Glasdichten** mit einer Regel: Fläche mit Schrift
 dicht (`--bg-schwebend-dicht`), Fläche mit Zeichen leicht
@@ -8612,6 +8657,15 @@ erweitern — ein Dokument öffnen, das Muster darunter, den Kontrast der
 Zeichen an Pixeln messen, Grenze 3 : 1. Wenn es nicht reicht: dieselbe
 Regel wie bei der Schrift (die Zeichen auf Glas eine Stufe kräftiger),
 nicht eine dichtere Fläche.
+
+**GESCHLOSSEN am 28. September 2026 (E703), gemessen statt gerechnet.**
+`test582` §9 legt ein leichtes Glas (`.rb.glas`, 340 × 120, mit einem
+gezeichneten Zeichen) über das Prüfmuster aus Weiss, Schwarz, Rot und Blau
+und misst die Zeichenfarbe gegen jedes Pixel der Fläche, in allen zehn
+Schemata — seit E703 folgt das leichte Glas dem Schema (`color-mix` der
+Karte). Das schlimmste Prozent liegt überall über 3 : 1 (messungen §75).
+Die Rechnung von 3,05 : 1 war knapp richtig; die Stufe kräftiger war nicht
+nötig.
 
 ---
 
@@ -9061,7 +9115,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 123 Lücken, 68 offene und 55 geschlossene. Der Befehl dazu ist
+Datei führt 124 Lücken, 68 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -3808,6 +3808,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   animation:wk-auf var(--motion-normal, .22s) var(--ease-enter, ease-out);
 }
 @keyframes wk-auf{ from{ opacity:0 } to{ opacity:1 } }
+/* AM TELEFON DIMMT DER SCHLEIER NUR, ER VERWISCHT NICHT (E703). Eine
+   Unschärfe über den ganzen Bildschirm ist das Teuerste, was Glas kann:
+   gemessen auf dem GPU-Weg bei 390 × 844 fielen beim Rollen 98 bis 118 von
+   300 Bildern aus (messungen.md §75) — zehnmal so viel Grafikarbeit wie die
+   Leiste, der Dock und die Linse zusammen. Am Rechner bleibt er, wie er
+   ist: einmal, beim allerersten Öffnen. */
+@media (max-width:760px), (pointer:coarse){
+  #rg-willkommen{ -webkit-backdrop-filter:none; backdrop-filter:none }
+}
 .wk-kasten{
   width:min(460px, 94vw); max-height:90vh; overflow-y:auto;
   background:var(--bg-side); border:1px solid var(--line);
@@ -4136,23 +4145,90 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
  * angelegt und wieder entfernt (`rundgang.ts`, `pwa.ts`), nicht nur
  * versteckt — die Frage hat also eine ehrliche Antwort.
  * ==========================================================================*/
+/* ── DER BODEN DES STAPELS IST DAS OBERSTE WERKZEUG (E703) ──────────────
+   Bis E703 war der Boden immer die untere Leiste (`--hunten`). Aber unten
+   steht nicht nur sie: beim Zeichnen die schwebende Zeichenleiste (Lage
+   „unten"), im Dokument der Dock und am Telefon darüber die Kapsel Zurück/
+   Vor. Gemessen vor E703: am Rechner lagen Toast UND Lader auf den Knöpfen
+   des Docks (Toast 835–878, Dock 824–886), am Telefon auf der Kapsel
+   (Lader 670–762, Kapsel 708–760) — und Toast und Lader aufeinander.
+   Was nur meldet, gehört nicht auf das, womit man arbeitet — dieselbe Regel
+   wie oben, jetzt für alle Werkzeuge. Und nie Glas auf Glas: der Dock ist
+   seit E703 Glas, Toast und Lader bleiben deckend und stehen DARÜBER.
+
+   `--melde-boden` ist die Oberkante des obersten Werkzeugs, von unten
+   gemessen. Die Summen sind die Bauteile, nicht abgeschriebene Höhen:
+   Dock = Knopf + 2 × 8 px Polster + Rand; Kapsel = Knopf + 2 × 3 px + Rand
+   über ihrem Abstand von 84 px (pdf-studio.css); Zeichenleiste am Telefon
+   = zwei Zeilen Knöpfe mit Polster. Ob die Rechtecke sich wirklich nicht
+   schneiden, misst `test582` §6 — nicht diese Zahlen.
+
+   DER TOAST BEIM ZEICHNEN GEHT NACH OBEN. Der Dock steht fest, die
+   Zeichenleiste „unten" nicht: sie klebt (`sticky`) nur, solange das Blatt
+   unter den Rand reicht; sieht man das Ende des Blatts, steht sie direkt
+   darunter — irgendwo. Eine Zahl kann sie dann nicht treffen (am Bild
+   gesehen: über der gerollten Leiste lag der Toast wieder auf ihr). Also
+   dieselbe Antwort wie bei offenen Fenstern (L109, E310): der Toast rückt
+   nicht ein Stück höher, sondern nach OBEN, über den Titel. Der Lader
+   bleibt auf dem Boden über der klebenden Leiste — er erscheint beim
+   Einlesen, kaum beim Zeichnen. */
+@media(min-width:761px){
+  body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]){
+    --melde-boden:calc(10px + var(--touch-min) + 2px) }
+  body[data-dokument="an"]{
+    --melde-boden:calc(var(--visual-bottom, 0px) + 14px + var(--touch-min) + 18px) }
+  body[data-dokument="an"] #toast,
+  body:is([data-dokument="an"], :has(.blatt-reihe[data-lage="unten"])) .ru-lader-schwebt{
+    bottom:calc(var(--melde-boden) + 12px) }
+  body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) #toast{
+    top:12px; bottom:auto; transform:translateX(-50%) translateY(-80px) }
+  body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) #toast.show{
+    transform:translateX(-50%) translateY(0) }
+}
 @media(max-width:760px){
+  body{ --melde-boden:var(--hunten, 59px) }
+  body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]){
+    --melde-boden:calc(var(--hunten, 59px) + 34px + 2 * var(--touch-min) + 21px) }
+  body[data-dokument="an"]{
+    --melde-boden:calc(var(--visual-bottom, 0px) + 84px + var(--touch-min) + 8px) }
   #toast, #offline-streifen, #rg-einladung{
-    bottom:calc(var(--hunten, 59px) + 12px);
+    bottom:calc(var(--melde-boden) + 12px);
   }
   /* Ist ein längerlebiges da, rückt der Toast darüber. */
   body:has(#offline-streifen) #toast,
   body:has(#rg-einladung)     #toast{
-    bottom:calc(var(--hunten, 59px) + 66px);
+    bottom:calc(var(--melde-boden) + 66px);
   }
   /* Sind BEIDE da, nimmt die Einladung den untersten Platz — sie steht am
      längsten —, der Streifen darüber, der Toast ganz oben. */
   body:has(#rg-einladung) #offline-streifen{
-    bottom:calc(var(--hunten, 59px) + 66px);
+    bottom:calc(var(--melde-boden) + 66px);
   }
   body:has(#rg-einladung):has(#offline-streifen) #toast{
-    bottom:calc(var(--hunten, 59px) + 122px);
+    bottom:calc(var(--melde-boden) + 122px);
   }
+  /* DER SCHWEBENDE LADER GEHÖRT IN DEN STAPEL (E703). Er stand für sich,
+     `--mobile-nav-height` über dem Rand — auf derselben Höhe wie der Toast,
+     und fast so breit: beide lagen aufeinander. Jetzt steht er als der
+     länger lebende unten auf dem Boden, und ein Toast rückt über ihn (die
+     Karte ist höchstens zwei Zeilen, 92 px). `body` davor, weil die Regel
+     der Karte weiter unten steht und sonst gewönne. */
+  body .ru-lader-schwebt{ bottom:calc(var(--melde-boden) + 12px) }
+  body:has(.ru-lader-schwebt) #toast{ bottom:calc(var(--melde-boden) + 112px) }
+  /* Beim Zeichnen nach oben (siehe oben), wie bei offenen Fenstern. Die
+     Kennung steht zweimal (`:is(#toast)`): sonst gewönne
+     `body:has(#offline-streifen) #toast` (2,0,1) mit seinem `bottom`, und
+     der Toast wäre oben UND unten angeschlagen — ein Streifen über den
+     halben Bildschirm. */
+  body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) #toast:is(#toast){
+    top:12px; bottom:auto; transform:translateY(-80px) }
+  body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) #toast.show:is(#toast){ transform:translateY(0) }
+  /* UND UNTER EIN OFFENES BLATT (E703). Der Lader liegt auf `z-index:901`,
+     das Blatt „Seite …" auf 600 — beim Einlesen einer PDF stand die Karte
+     „Seite 6 von 30" mitten auf „Zu Favoriten" und „Link kopieren"
+     (gesehen am Bild). Wer ein Blatt öffnet, will es bedienen: der Lader
+     geht für diese Zeit unter den Schleier (590) und läuft dort weiter. */
+  body:has(.menu.blatt) .ru-lader-schwebt{ z-index:585 }
 
   /* ── UND EIN VIERTER, AN DEN NIEMAND GEDACHT HAT (L109, E310) ───────────
      Ein offenes Fenster hat unten seine Knöpfe. Gemessen am 1. September
@@ -4323,10 +4399,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   #r-blatt{ transition: opacity var(--motion-slow) var(--ease-enter),
                         transform var(--motion-slow) var(--ease-enter) }
   /* `.menu.blatt` stieg hier mit `blatt-hoch` 16 px — seit E702 vom Rand (menue.ts). */
+  /* DAS BLATT IST GLAS, ALSO BLENDET SEIN INHALT, NICHT DAS BLATT (E703).
+     Die Scheibe selbst trägt keine `opacity` — sie kommt auf der sanften
+     Feder vom Rand (menue.ts, E702), vom ersten Bild an mit Unschärfe;
+     nur die Einträge blenden (`glas-inhalt`, studio.css). Beim
+     Zusammenführen: E703 hatte hier `blatt-hoch` zurückgeholt — die
+     Bewegung des Blatts gehört E702, E703 behält das Blenden des Inhalts. */
+  :where(.menu.blatt) > *{ animation: glas-inhalt var(--motion-normal) linear both }
 }
 @keyframes blatt-hoch{
-  from{ transform:translateY(16px); opacity:0 }
-  to{ transform:translateY(0); opacity:1 }
+  from{ transform:translateY(16px) }
+  to{ transform:translateY(0) }
 }
 
 /* Zwei Zeilen im Blatt „Neu erstellen": Name und der Satz darunter. Ohne
@@ -5007,6 +5090,44 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-reihe[data-mehr="rechts"] .blatt-fest,
 .blatt-reihe[data-mehr="beides"] .blatt-fest{
   box-shadow:-14px 0 14px -8px rgba(0,0,0,.5)}
+
+/* ══ DIE SCHWEBENDE ZEICHENLEISTE IST GLAS (E703) ═════════════════════════
+   Redur, 27. September: „glass efeck usw alles haben". Was über dem Papier
+   SCHWEBT — unten (E622), frei gezogen (E620), als Spalte links oder
+   rechts —, liegt jetzt auf Glas wie das Menü und die Telefonleiste: die
+   Zeichnung darunter bleibt als Farbe zu ahnen, statt hinter einer grauen
+   Platte zu verschwinden. Oben, am Blatt angesetzt (der Normalfall), bleibt
+   sie deckend: dort schwebt sie nicht, sie ist ein Teil des Blattes.
+
+   DICHT, NICHT LEICHT (E695): die Leiste trägt Wörter („Stift", „Marker",
+   „Text ändern"), also die dichte Fläche und auf Glas keine blasse
+   Schrift. Gemessen über dem schlimmsten Grund: `test582` §3.
+
+   DER ROLLHINWEIS WIRD EINE MASKE. Links lag eine 26 px breite Fläche in
+   `--bg-card`, die ausblendete, was darunter rollt — auf Glas stünde dort
+   ein grauer Streifen. Jetzt läuft der INHALT der Rollfläche an der Kante
+   aus; das Glas selbst bleibt ganz (eine Maske an einem Kind ändert die
+   Rückseite des Elternteils nicht). Zurück/Vor kleben am Telefon weiter
+   deckend am Rand (E396, `test393` §3) — nur für die Zeile, in der sie
+   stehen, läuft rechts nichts aus. */
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .blatt-reihe:is([data-lage="unten"],[data-lage="frei"],[data-lage="links"],[data-lage="rechts"]){
+    background:var(--bg-schwebend-dicht);
+    -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+    border-color:transparent; box-shadow:var(--glas-kante), var(--shadow-4) }
+  .blatt-reihe:is([data-lage="links"],[data-lage="rechts"]){ box-shadow:var(--glas-kante), var(--shadow-3) }
+  .blatt-reihe:is([data-lage="unten"],[data-lage="frei"],[data-lage="links"],[data-lage="rechts"])::before{ display:none }
+  .blatt-reihe:is([data-lage="unten"],[data-lage="frei"])[data-mehr="links"] .blatt-werk{
+    -webkit-mask-image:linear-gradient(to right, transparent 0, #000 32px);
+    mask-image:linear-gradient(to right, transparent 0, #000 32px) }
+  .blatt-reihe:is([data-lage="unten"],[data-lage="frei"])[data-mehr="rechts"]:not(:has([data-act="redo"])) .blatt-werk{
+    -webkit-mask-image:linear-gradient(to left, transparent 0, #000 32px);
+    mask-image:linear-gradient(to left, transparent 0, #000 32px) }
+  .blatt-reihe:is([data-lage="unten"],[data-lage="frei"])[data-mehr="beides"]:not(:has([data-act="redo"])) .blatt-werk{
+    -webkit-mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
+    mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%) }
+}
+.blatt-reihe:is([data-lage="unten"],[data-lage="frei"],[data-lage="links"],[data-lage="rechts"]){ --text-faint:var(--text-dim) }
 
 /* Der Trenner trägt den Abstand ZWISCHEN den Gruppen — innerhalb bleibt
    die Lücke bei 4 px. Ohne diesen Unterschied steht das Zubehör als eine
@@ -9248,7 +9369,9 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
    eine Überblendung ansetzen könnte. Die 0,22 s Verzögerung lassen die
    Blätter zuerst ihren Platz finden. */
 .ru-fach-art{
-  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  /* DER ZWILLING ZUERST (E703): in umgekehrter Folge fasst lightningcss beide
+     zu einer Zeile mit Präfix zusammen, und Chrome hat dann kein Glas (L222). */
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
   box-shadow:0 2px 4px #00000033; pointer-events:none;
   animation:ru-fach-etikett .3s cubic-bezier(.34,1.56,.64,1) .22s both
 }

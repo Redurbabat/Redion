@@ -178,6 +178,12 @@ const Aussehen = (() => {
       .forEach(v => w.style.removeProperty(v));
 
     w.dataset['theme'] = sch.grund;
+    /* WELCHES SCHEMA, steht jetzt auch als Attribut da (E703). Die Werte
+       oben sind Farben; ob es Glas gibt, ist keine Farbe. „Starker
+       Kontrast" hat keines (Redur, Fragebogen: „Starker Kontrast ohne
+       Glas"), und das sagt `grund.css` an genau diesem Attribut — an einer
+       Stelle für alles Glas, statt in der Farbtabelle. */
+    w.dataset['schema'] = sch.id;
     const gesetzt: string[] = [];
     const eigen: Record<string, string> = sch.werte;
     Object.entries<string>(eigen).forEach(([k, v]) => { w.style.setProperty(k, v); gesetzt.push(k); });

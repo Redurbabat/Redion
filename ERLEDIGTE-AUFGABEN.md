@@ -54,6 +54,33 @@ feste Signalfarbe mehr in den Stilblättern.
 zu blass); die Fehlerkarte war in beiden Modi fast schwarz; `chartTyp:
 'pie'` zeichnet eine leere Achse (AUFGABEN).
 
+## 28. September 2026 · E703 · Glas, wo es passt
+
+**Redur:** „du muss mehr im redion arbeiten du kannst auch die oberfläche
+bischen ruhige machen ohne etwas lösche also eine funktionen und ich will
+das es flüssigere animationen , glass efeck usw alles haben dann bessere
+stift efeckte beim zeichnen bessere farben" — im Fragebogen „Starker
+Kontrast ohne Glas".
+
+**Gefunden:** Kein Bild hatte je Glas gezeigt (das kopflose Chromium lässt
+jede Unschärfe weg). Menüs und das Blatt am Telefon kamen als Nebel
+(`opacity` auf der Glasfläche). Die zwei schwebenden Werkzeugleisten waren
+graue Platten. Nur „weniger Transparenz" machte Glas deckend. Toast und
+Lader lagen auf dem Dock und der Kapsel Zurück/Vor.
+
+**Gebaut:** echte Unschärfe in `bilder.mts`, `test576`, `test582`; Glas
+kommt als Scheibe (`glas-ankunft`, `glas-inhalt`); der Dock im Dokument und
+die schwebende Zeichenleiste sind dichtes Glas mit auslaufendem Rand statt
+Deckeln; ein Schalter mit fünf Eingängen dreht die Glasmarken auf deckend;
+„Starker Kontrast" ohne jedes Glas (`data-schema` an `<html>`);
+`--melde-boden` für einen Stapel über den Werkzeugen, der Lader gehört dazu;
+`--glas-kante` als Lichtkante; das leichte Glas folgt dem Schema; dunkles
+dichtes Glas 90 %; der Präfix zuerst; am Telefon verwischt der Schleier
+des Willkommens nicht mehr.
+
+**Geprüft:** `test582` (176 Zusagen, zuerst rot eingecheckt), `test576`
+mit echter Unschärfe; L221 gemessen und geschlossen.
+
 ## 28. September 2026 · E702 · Flüssige Bewegung: die Federn des Touch Kits in Redions Schale
 
 **Redur:** „ich will das es flüssigere animationen … haben" (27.09., ca.

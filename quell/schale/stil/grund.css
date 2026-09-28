@@ -177,7 +177,29 @@
    * Muster hinter der Schrift. `test576 §3` hält das.
    *
    * `--schleier-blur` ist etwas anderes: der Schleier HINTER einem Fenster,
-   * der die Seite zurücktreten lässt. Er trägt keine Schrift. */
+   * der die Seite zurücktreten lässt. Er trägt keine Schrift.
+   *
+   * WO GLAS STEHT, UND WO NICHT (E703). Glas ist für das, was SCHWEBT: die
+   * Menüs, der Finder, die Auswahlleiste, die untere Leiste am Telefon und
+   * seit E703 die zwei schwebenden Werkzeugleisten (der Dock im Dokument,
+   * die Zeichenleiste unten/frei/links/rechts). Was steht, bleibt deckend:
+   * Seitenleiste, Kopf, Reiter, Einstellungen, ganze Blätter — und was nur
+   * MELDET (Toast, schwebender Lader): es blendet über `opacity` und läge
+   * oft auf anderem Glas. Die Grenzen, gemessen auf dem GPU-Weg bei
+   * 390 × 844 (messungen.md §75, `test582` §7):
+   *
+   *   im Ruhen            höchstens 3 Glasflächen, höchstens 25 % des Bilds
+   *   mit offenem Menü    höchstens 60 %
+   *   nie                 Unschärfe über 90 % des Telefonbildschirms — der
+   *                       Vollbild-Schleier kostete 182–202 von 300 Bildern
+   *   die Unschärfe       EINE Marke, 20 px (40 px: ein Viertel mehr Arbeit
+   *                       je Bild, kaum ein Unterschied auf dem Schirm), und
+   *                       nie animiert — Glas kommt als Scheibe (studio.css)
+   *
+   * Die Lichtkante `--glas-kante` (Licht oben, Rückwurf unten, Haarlinie)
+   * steht je Modus in dunkel.css/hell.css — ein Schatten ist Farbe (E204).
+   * Und ALLES Glas wird mit EINEM Schalter deckend: gleich unter diesem
+   * Block. */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
   --schleier-blur: blur(6px);
@@ -226,6 +248,62 @@
     --feder-weich: linear(0, 0.0176, 0.0625, 0.1249, 0.1976, 0.2751, 0.3533, 0.4293, 0.5015, 0.5684, 0.6295, 0.6845, 0.7334, 0.7765, 0.814, 0.8463, 0.8741, 0.8976, 0.9175, 0.9341, 0.9479, 0.9593, 0.9686, 0.9761, 0.9822, 0.987, 0.9908, 0.9938, 0.9961, 0.9978, 0.9991, 1, 1.0006, 1.0011, 1.0013, 1.0015, 1.0015, 1.0015, 1.0014, 1.0014, 1.0012, 1.0011, 1.001, 1.0009, 1.0008, 1.0007, 1.0006, 1);
   }
 }
+
+/* ============================================================================
+ * EIN SCHALTER MACHT ALLES GLAS DECKEND (E703)
+ * ----------------------------------------------------------------------------
+ * Bis E703 machte nur `prefers-reduced-transparency` das Glas deckend, und
+ * zwar an fünf Stellen einzeln. Wer im System „mehr Kontrast" oder
+ * erzwungene Farben eingestellt hatte, wer in Redion „Hoher Kontrast"
+ * einschaltete oder das Schema „Starker Kontrast" wählte, bekam weiter
+ * Menüs und Leisten mit 88 % Deckkraft und Unschärfe — gemessen. Redur,
+ * 27. September, im Fragebogen: „Starker Kontrast ohne Glas".
+ *
+ * Jetzt ist es EIN Schalter mit fünf Eingängen, und er dreht nicht Stellen
+ * um, sondern die Marken: jede Glasfläche liest `--bg-schwebend[-dicht]`
+ * und `--glas-blur`, also wird jede auf einmal deckend — auch eine, die
+ * morgen dazukommt. Er sitzt am `body`, nicht an `:root`: dort schlägt er
+ * `hell.css` (`html[data-theme]`) ohne Genauigkeitskampf, weil alles, was
+ * schwebt, unter dem `body` hängt und die Marke von dort erbt.
+ *
+ * Die Lichtkante wird dabei eine klare Linie — deckende Flächen brauchen
+ * einen Rand, keinen Glanz. Die Stellen mit festen Werten (die Linse der
+ * unteren Leiste, zwei Zierstücke) stehen darunter einzeln, weil sie keine
+ * Marke lesen (test576 §2). Die alten Einzelregeln für weniger Transparenz
+ * bleiben stehen (§43); sie sagen dasselbe.
+ * ==========================================================================*/
+@media (prefers-reduced-transparency:reduce), (prefers-contrast:more), (forced-colors:active){
+  body{ --bg-schwebend:var(--bg-card); --bg-schwebend-dicht:var(--bg-card);
+        --glas-blur:none; --schleier-blur:none;
+        --glas-kante:inset 0 0 0 1px var(--line) }
+  body #handy-oben #ho-pille,
+  body #handy-oben #ho-pille.faehrt{
+    background:var(--bg-hover); -webkit-backdrop-filter:none; backdrop-filter:none;
+    box-shadow:inset 0 0 0 1px var(--text-dim) }
+  body #handy-oben #ho-pille::before,
+  body #handy-oben #ho-pille.faehrt::before{ opacity:0 }
+  body .ru-fach-art{ background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
+  html body #ai .ai-head .rmo-orb-karte{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
+}
+/* Dieselben Zeilen für Redions eigene zwei Schalter: „Hoher Kontrast" in
+   den Einstellungen (`body[data-kontrast]`, seite.ts) und das Schema
+   „Starker Kontrast" (`html[data-schema]`, aussehen.ts). Selektoren lassen
+   sich nicht in eine Medienabfrage schreiben — darum zweimal, Zeile für
+   Zeile gleich. */
+body[data-kontrast="hoch"], html[data-schema="kontrast"] > body{
+  --bg-schwebend:var(--bg-card); --bg-schwebend-dicht:var(--bg-card);
+  --glas-blur:none; --schleier-blur:none;
+  --glas-kante:inset 0 0 0 1px var(--line) }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille,
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille.faehrt{
+  background:var(--bg-hover); -webkit-backdrop-filter:none; backdrop-filter:none;
+  box-shadow:inset 0 0 0 1px var(--text-dim) }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille::before,
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille.faehrt::before{ opacity:0 }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-fach-art{
+  background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ai .ai-head .rmo-orb-karte{
+  background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
 
 /* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder
    einzelnen Stelle, sondern hier einmal: die vier Dauern werden auf nahezu

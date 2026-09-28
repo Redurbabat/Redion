@@ -381,6 +381,90 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* ── GLAS, WO ES PASST (E703) ──────────────────────────────────────────
+     Der Dock im Dokument ist Glas: über einer farbigen Seite (ein
+     Schaltplan in Rosa und Blau) muss man sehen, dass die Seite ihn färbt
+     und dass die Schrift darauf ruhig bleibt. Dazu ein Toast und der
+     schwebende Lader — sie stehen ÜBER dem Dock, nicht darauf (§6). */
+  glasDock: {
+    titel: 'Glas — der Dock im Dokument über einer farbigen Seite, Toast und Lader darüber (E703)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const c = document.createElement('canvas');
+      c.width = 595; c.height = 842;
+      const g = c.getContext('2d');
+      if (!g) throw new Error('Kein Zeichenkontext');
+      g.fillStyle = '#fbe3ea'; g.fillRect(0, 0, c.width, c.height);
+      for (let i = 0; i < 14; i++) {
+        g.fillStyle = ['#e0457b', '#2b6cd4', '#1c1c1c', '#f2b705'][i % 4]!;
+        g.fillRect(40 + (i % 3) * 180, 60 + i * 55, 150, 22);
+      }
+      g.fillStyle = '#1c1c1c'; g.font = '600 26px system-ui, sans-serif';
+      g.fillText('Schaltplan — Montage-Elektriker:innen', 40, 40);
+      const bild = await new Promise<Blob>(f => c.toBlob(b => f(b as Blob), 'image/png'));
+      const seite = Store.addPage(null, { text: 'Schaltpläne lesen' });
+      for (let nr = 1; nr <= 2; nr++) {
+        const block = Store.addBlock(seite.id, 'pdfseite', { text: '', nr, vonSeiten: 2, bw: 595, bh: 842, quelleId: 'glas-1' });
+        const satz = await Dateien.ablegen(new File([bild], 'glas-s' + nr + '.png', { type: 'image/png' }),
+          { blockId: block.id, abgeleitet: true });
+        Store.updateBlock(block.id, { bildDateiId: satz.id });
+      }
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      await Store.flush();
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1400));
+      const mitte = document.querySelector('.document-center');
+      if (mitte) mitte.scrollTop = 520;
+      Lader.schweben({ art: 'presse', text: 'Seite 2 von 2 wird vorbereitet …' });
+      UI.toast('Gespeichert — Markierung auf Seite 1', 60000);
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
+  /* Die schwebende Zeichenleiste (Lage „unten") ist Glas; oben, am Blatt
+     angesetzt, bleibt sie deckend. */
+  glasZeichenleiste: {
+    titel: 'Glas — die schwebende Zeichenleiste unten über farbiger Schrift (E703)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:leistenlage', 'unten');
+      const s = Store.addPage(null, { text: 'Tafelbild Energie' });
+      const b = Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      Store.addBlock(b.id, 'h2', { text: 'Schiefe Ebene — Kräfte' });
+      for (const [t, f] of [['Hangabtrieb F_H', 'bg-red'], ['Normalkraft F_N', 'bg-blue'], ['Gewichtskraft F_G', 'bg-yellow'], ['Reibung F_R', 'bg-green']] as const)
+        Store.addBlock(b.id, 'callout', { text: t + ' — gemessen 2,4 N bei 30°', icon: '•', color: f });
+      await Store.flush();
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 1200));
+      UI.toast('Gespeichert — 6 Striche auf „Tafelbild Energie"', 60000);
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
+  /* „Starker Kontrast" ohne Glas (Redur, Fragebogen): Menü und Leisten voll
+     deckend, die Linse eine Fläche mit Rand. */
+  glasKontrast: {
+    titel: 'Glas — „Starker Kontrast" hat keines: das Menü deckend (E703)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Aussehen.setzen({ schema: 'kontrast' });
+      const s = Store.addPage(null, { text: 'Wärmepumpe — Inbetriebnahme' });
+      Store.addBlock(s.id, 'callout', { text: 'Vorlauftemperatur und Spreizung an beiden Fühlern messen.', icon: '🔥', color: 'bg-red' });
+      Store.addBlock(s.id, 'callout', { text: 'Volumenstrom gegen das Datenblatt halten.', icon: '💧', color: 'bg-blue' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 700));
+      UI.menu('<div class="grp">Block</div>' + ['Umwandeln in', 'Duplizieren', 'Verschieben nach', 'Löschen']
+        .map(t => `<button><span class="mi">•</span>${t}</button>`).join(''), Math.round(innerWidth * 0.3), 160, { titel: 'Block' });
+      await new Promise(f => setTimeout(f, 350));
+    }
+  },
+
   /* ── EINE SEITENSPALTE ENDET IM FENSTER (E696) ─────────────────────────
      Die Leiste links an der Blatthülle. Vorher war sie `78vh` hoch, egal wo
      sie begann, und endete unter dem Fensterrand; jetzt reicht sie bis
@@ -4846,7 +4930,16 @@ const themen = ['dark', 'light'];
 if (!existsSync(ZIEL)) mkdirSync(ZIEL, { recursive: true });
 await new Promise<void>(f => server.listen(PORT, () => f()));
 
-const browser = await chromium.launch();
+/* DER GPU-WEG (E703): echte Unschärfe auf dem Bild. Die kopflose Schale
+   von Chromium setzt ihre Bilder mit dem SoftwareRenderer zusammen, und der
+   LÄSST jede Filterkette aus, in der `blur` steht — gemessen: eine harte
+   Schwarz-Weiss-Kante hinter einem Menü blieb hart (Rampe 0–1 px), und auf
+   jedem Bild lag die Seite SCHARF hinter dem Glas. Mit SwiftShader als
+   Grafikkarte wird sie zur Rampe von 50 px, wie auf dem Telefon.
+   „unsafe" erlaubt nur WebGL auf SwiftShader; für eine Seite auf
+   127.0.0.1 ist das gleichgültig. `test582` §1 hält diese vier Schalter. */
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+  '--ignore-gpu-blocklist', '--enable-gpu-compositing'] });
 const gemacht: string[] = [];
 
 for (const name of ansichten) {

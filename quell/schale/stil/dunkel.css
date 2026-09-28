@@ -157,9 +157,24 @@
      Dichte ist gerechnet und an Pixeln nachgemessen (test576 §5/§6): damit
      `--text-dim` über reinem WEISS hinter dem Glas noch 4,5 : 1 hat, muss
      die Fläche dunkel mindestens 86 % tragen. 74 % — der erste Anlauf —
-     gab der stillen Schrift 1,43 : 1. */
-  --bg-schwebend:  rgba(28,28,32,.72);
-  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 88%, transparent);
+     gab der stillen Schrift 1,43 : 1.
+     DAS LEICHTE GLAS FOLGT DEM SCHEMA (E703). Hier stand ein fester Wert,
+     `rgba(28,28,32,.72)` — ein kühles Grau, auch unter „Wald" und „Rosé".
+     Jetzt dieselbe Machart wie das dichte: die Karte des Schemas, 72 %. Die
+     Zeichen darauf halten 3 : 1 über dem schlimmsten Grund, in allen zehn
+     Schemata gemessen (`test582` §9, L221).
+     90 STATT 88 % DICHT (E703). Die 86 % galten für die Standard-Karte.
+     In „Wald" und „Rosé" ist die Karte heller getönt, und über reinem Weiss
+     fiel die untere Leiste am Telefon auf 4,27 und 4,48 : 1 — gemessen an
+     Pixeln in allen zehn Schemata (`test582` §10). Bei 90 % sind es 4,59
+     und 4,81; das Glas bleibt Glas, zwei Prozent weniger Durchblick. */
+  --bg-schwebend:  color-mix(in srgb, var(--bg-card) 72%, transparent);
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  /* DIE LICHTKANTE (E703), aus dem Touch Kit (`glass/Glass.css`: edge,
+     edge-low, hairline) als Marke, ohne React: Licht von oben, ein Hauch
+     Rückwurf von unten, und die Haarlinie ist `--glas-rand` — dieselbe, die
+     es schon gab. Gemalt, nicht gerechnet: kein Preis in Bildern. */
+  --glas-kante: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(255,255,255,.04), var(--glas-rand);
 
   /* PAPIER (E260, aus Amdion). Ein Blatt, ein Plan, eine Zeichnung sind
      Papier und keine Fenster: sie bleiben papierfarben, auch wenn die App
