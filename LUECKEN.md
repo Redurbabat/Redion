@@ -8492,6 +8492,12 @@ Schemata. Drei Dinge bleiben offen, und keines gehört der Dichte:
 **Was fehlt:** (1) eine Sand-Farbe für die stille Schrift mit mindestens
 5,4 : 1 auf der Karte, dann Sand aus `SCHEMAFARBE` streichen; (2) Redurs
 Wort zur Kapsel; (3) die Brücke, sobald eine Kit-Insel Glas zeigt.
+
+**Punkt 1 erledigt beim Zusammenführen (28. September 2026, E703 × E705):**
+E705 gab Sands stiller Schrift 5,31 : 1 auf der Karte — knapp unter den
+5,4, aber genug: mit dem dichten Glas hell bei 93 % (statt 92) hält sie über
+reinem Schwarz 4,5 (`test582` §9/§10 ohne Ausnahme). Sand ist aus
+`SCHEMAFARBE` gestrichen; die Liste ist leer. Offen bleiben (2) und (3).
 Geschlossen ist die Lücke, wenn `SCHEMAFARBE` leer ist, die Kapsel
 entschieden ist und `test582` §11 auch das gebaute Inselblatt liest.
 

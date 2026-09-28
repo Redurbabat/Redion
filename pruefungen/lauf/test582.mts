@@ -782,7 +782,10 @@ const zweiFarben = (pg: Page, vorne: string, hinten: string) => pg.evaluate(([a,
    nehmen. Die Liste darf nur schrumpfen: ein Eintrag, den keine Messung
    mehr braucht, macht den Lauf rot. */
 const SCHEMAFARBE: Record<string, string> = {
-  sand: 'L226: `--text-dim` #66655f auf der Sand-Karte #efe6d6'
+  /* Hier stand `sand: 'L226: --text-dim #66655f auf der Sand-Karte #efe6d6'`.
+     Seit E705 hat Sands stille Schrift auf der Karte 5,31 : 1; der Eintrag
+     wurde nicht mehr gebraucht und ist gestrichen (beim Zusammenführen von
+     E703 mit E705, L226 Punkt 1). */
 };
 const gebraucht = new Set<string>();
 const lesbar = async (pg: Page, id: string, was: string, k: { schlimmster: number; mitte: number } | null, farbe: string) => {

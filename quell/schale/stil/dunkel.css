@@ -167,9 +167,13 @@
      In „Wald" und „Rosé" ist die Karte heller getönt, und über reinem Weiss
      fiel die untere Leiste am Telefon auf 4,27 und 4,48 : 1 — gemessen an
      Pixeln in allen zehn Schemata (`test582` §10). Bei 90 % sind es 4,59
-     und 4,81; das Glas bleibt Glas, zwei Prozent weniger Durchblick. */
+     und 4,81; das Glas bleibt Glas, zwei Prozent weniger Durchblick.
+     91 STATT 90 % — AUF DEN FERTIGEN FARBEN (E703 × E705, beim
+     Zusammenführen): mit dem kühlen Ton und den neuen Karten aus E705 fiel
+     „Wald" an der unteren Leiste auf 4,45 : 1 über reinem Weiss (`test582`
+     §10). Das Glas misst zuletzt, auf den Farben, die gelten. */
   --bg-schwebend:  color-mix(in srgb, var(--bg-card) 72%, transparent);
-  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 91%, transparent);
   /* DIE LICHTKANTE (E703), aus dem Touch Kit (`glass/Glass.css`: edge,
      edge-low, hairline) als Marke, ohne React: Licht von oben, ein Hauch
      Rückwurf von unten, und die Haarlinie ist `--glas-rand` — dieselbe, die

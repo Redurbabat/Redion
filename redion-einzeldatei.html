@@ -294,9 +294,13 @@
      In „Wald" und „Rosé" ist die Karte heller getönt, und über reinem Weiss
      fiel die untere Leiste am Telefon auf 4,27 und 4,48 : 1 — gemessen an
      Pixeln in allen zehn Schemata (`test582` §10). Bei 90 % sind es 4,59
-     und 4,81; das Glas bleibt Glas, zwei Prozent weniger Durchblick. */
+     und 4,81; das Glas bleibt Glas, zwei Prozent weniger Durchblick.
+     91 STATT 90 % — AUF DEN FERTIGEN FARBEN (E703 × E705, beim
+     Zusammenführen): mit dem kühlen Ton und den neuen Karten aus E705 fiel
+     „Wald" an der unteren Leiste auf 4,45 : 1 über reinem Weiss (`test582`
+     §10). Das Glas misst zuletzt, auf den Farben, die gelten. */
   --bg-schwebend:  color-mix(in srgb, var(--bg-card) 72%, transparent);
-  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 91%, transparent);
   /* DIE LICHTKANTE (E703), aus dem Touch Kit (`glass/Glass.css`: edge,
      edge-low, hairline) als Marke, ohne React: Licht von oben, ein Hauch
      Rückwurf von unten, und die Haarlinie ist `--glas-rand` — dieselbe, die
@@ -414,8 +418,12 @@ html[data-theme="light"]{
   /* Hell braucht MEHR Dichte als dunkel (92 gegen 88 %, E695): reines
      Schwarz hinter dem Glas zieht die helle Fläche stärker herunter als
      Weiss die dunkle hinauf. Bei 88 % hatte die untere Leiste hell
-     4,14 : 1 für ihre Namen — gemessen, test576 §6. */
-  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 92%, transparent);
+     4,14 : 1 für ihre Namen — gemessen, test576 §6.
+     93 STATT 92 % (E703 × E705, beim Zusammenführen): „Sand" braucht keine
+     Ausnahme mehr — seine stille Schrift hat auf der Karte jetzt 5,31 : 1
+     (E705, L226 Punkt 1) —, aber über reinem Schwarz blieben Gruppentitel,
+     Kürzel und die Namen der unteren Leiste bei 4,47 (`test582` §9/§10). */
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 93%, transparent);
   /* Auf hellem Grund ist der Innenrand dunkel, nicht weiss — sonst
      verschwindet er auf der eigenen Fläche. */
   --glas-rand:    inset 0 0 0 1px rgba(15,15,15,.10);
@@ -26728,7 +26736,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1392, inhalt: '64a57bf7d1e4461d', gebaut: '2026-09-28T10:20:39.227Z' };
+const Stand = { fassung: 1393, inhalt: 'b744e27bb66d2738', gebaut: '2026-09-28T10:33:07.848Z' };
 window.Stand = Stand;
 
 </script>

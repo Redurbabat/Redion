@@ -68,8 +68,12 @@ html[data-theme="light"]{
   /* Hell braucht MEHR Dichte als dunkel (92 gegen 88 %, E695): reines
      Schwarz hinter dem Glas zieht die helle Fläche stärker herunter als
      Weiss die dunkle hinauf. Bei 88 % hatte die untere Leiste hell
-     4,14 : 1 für ihre Namen — gemessen, test576 §6. */
-  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 92%, transparent);
+     4,14 : 1 für ihre Namen — gemessen, test576 §6.
+     93 STATT 92 % (E703 × E705, beim Zusammenführen): „Sand" braucht keine
+     Ausnahme mehr — seine stille Schrift hat auf der Karte jetzt 5,31 : 1
+     (E705, L226 Punkt 1) —, aber über reinem Schwarz blieben Gruppentitel,
+     Kürzel und die Namen der unteren Leiste bei 4,47 (`test582` §9/§10). */
+  --bg-schwebend-dicht: color-mix(in srgb, var(--bg-card) 93%, transparent);
   /* Auf hellem Grund ist der Innenrand dunkel, nicht weiss — sonst
      verschwindet er auf der eigenen Fläche. */
   --glas-rand:    inset 0 0 0 1px rgba(15,15,15,.10);
