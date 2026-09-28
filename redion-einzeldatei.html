@@ -827,9 +827,14 @@ html[data-theme="light"]{
   body #handy-oben #ho-pille,
   body #handy-oben #ho-pille.faehrt{
     background:var(--bg-hover); -webkit-backdrop-filter:none; backdrop-filter:none;
-    box-shadow:inset 0 0 0 1px var(--text-dim) }
+    box-shadow:inset 0 0 0 1px var(--text-dim);
+    /* Deckend ist sie keine Linse mehr: UNTER die Knöpfe, wie E706 es für
+       weniger Transparenz tut — sonst deckt sie Zeichen und Namen des
+       aktiven Reiters zu (E703 × E706, beim Zusammenführen am Bild gesehen). */
+    z-index:0 }
   body #handy-oben #ho-pille::before,
   body #handy-oben #ho-pille.faehrt::before{ opacity:0 }
+  body #handy-oben #ho-pille::after{ background:none }
   body .ru-fach-art{ background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
   html body #ai .ai-head .rmo-orb-karte{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
 }
@@ -845,9 +850,10 @@ body[data-kontrast="hoch"], html[data-schema="kontrast"] > body{
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille,
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille.faehrt{
   background:var(--bg-hover); -webkit-backdrop-filter:none; backdrop-filter:none;
-  box-shadow:inset 0 0 0 1px var(--text-dim) }
+  box-shadow:inset 0 0 0 1px var(--text-dim); z-index:0 }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille::before,
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille.faehrt::before{ opacity:0 }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille::after{ background:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-fach-art{
   background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ai .ai-head .rmo-orb-karte{
@@ -26736,7 +26742,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1393, inhalt: 'b744e27bb66d2738', gebaut: '2026-09-28T10:33:07.848Z' };
+const Stand = { fassung: 1394, inhalt: '7c1af04ee9d1f50a', gebaut: '2026-09-28T13:38:02.241Z' };
 window.Stand = Stand;
 
 </script>
