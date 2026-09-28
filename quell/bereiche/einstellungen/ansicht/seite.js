@@ -197,6 +197,9 @@ const Einstellungen = (() => {
                 ziel.innerHTML =
                     '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
                         '‹ Übersicht</button>' + inhalt(offenerBereich);
+            /* Glaskacheln unter „Einstellungen" (E712); die Felder bleiben (§43). */
+            if (ziel && offenerBereich === 'allgemein' && typeof Schnellkacheln !== 'undefined')
+                Schnellkacheln.einsetzen(ziel, { nach: ziel.querySelector(':scope > h2'), rolle: ziel });
             o.querySelectorAll('.einst-nav button').forEach(b => b.classList.toggle('on', b.dataset.b === offenerBereich));
             binde(o);
         };

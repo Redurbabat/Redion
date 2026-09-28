@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-686 Entscheidungen, E1 bis E706 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E712 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E714** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -749,6 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E712** — Tropfen, Linse und Kacheln aus dem Liquid-Glass-Video (Redur: „Schau mal das auch an ich will das auch haben“): das „+“ und das „⋯“ fliessen wie ein Tropfen in ihr Menü, das AM Knopf wächst (das „+“-Menü stand am Rechner oben links in der Ecke), oben drei runde Glasknöpfe als Abkürzungen, jeder Eintrag bleibt darunter; EIN Goo-Filter im Halter der Linse, nur während des Fliessens; die Linse gleitet einmal über „Aufmachen. / Weiterdenken.“ mit der Brechung aus linse.ts; sieben Glaskacheln oben in „Mehr“ und in den Einstellungen, gerollt eine Chipleiste, die alten Felder bleiben (`test589`)
 
 ---
 
@@ -58499,3 +58500,168 @@ Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
 statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
 alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 `claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+---
+
+## E712 — Tropfen, Linse und Kacheln: das „+“ und das „⋯“ fliessen in ihr Menü, die Linse gleitet über „Heute“, Glaskacheln oben in „Mehr“
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video „LIQUID
+GLASS“ ca. 22:05 UTC, Auftrag ca. 22:10 UTC) · **baut auf** E646 (ein
+Filter nur in Bewegung — so auch der Tropfen), E649 (ein Halter für die
+Filter — der Tropfen liegt darin, kein dritter) und E706 (die Feder
+„knapp“), ohne eine davon zu ändern · **Wächter:** `test589` ·
+**Zweig** `claude/tropfen-und-kacheln`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC   im Fragebogen: Federn „Wie im UI-Kit (Empfohlen)"; Farben
+                „Starker Kontrast ohne Glas" („schwarze Schrift auf Gelb")
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:05 UTC   zum Video „LIQUID GLASS" (16 s, Urheber unbekannt):
+                „Schau mal das auch an ich will das auch haben"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Das „+“ im Studio-Kopf (`#studio-create`) öffnete „Neu
+erstellen“ mit `UI.menu(html, 0, 0, …)` — am Rechner also bei (0, 0), oben
+links in der Ecke, während der Knopf oben rechts sitzt (gemessen, `test589` §1
+gegen `b3cf1933`: der Knopf bei x = 1296 bis 1334, die Scheibe bei x = 8 bis
+427, y = 8 bis 548).
+Das „⋯“ der Seite stellte sein Menü neben den Knopf, ohne Bezug. Der Satz
+auf „Heute“ stand still. Die Schalter, die man am häufigsten sucht — Hell
+oder Dunkel, Kontrast, Ruhe, Schriftgrösse, Zeilenabstand — standen als
+Auswahlfelder unten in Einstellungen → Allgemein; „Mehr“ war eine Liste.
+
+**Was entschieden wurde — drei Szenen des Videos, in Redions eigenem
+TypeScript und CSS** (kein React beim Start, E699 R1; die Federn aus E702,
+das Material aus E706 — keine zweite Feder, keine zweite Brechung):
+
+1. **01 MORPH — das Menü wächst aus dem Knopf.** `Menue.menu` kennt einen
+   `anker` und stellt das Menü AN ihn (darunter, rechtsbündig in der
+   rechten Fensterhälfte; passt es nicht, darüber). Die Glasscheibe wächst
+   per `transform` aus dem Knopf (Feder „knapp“), der Inhalt blendet nach.
+   Aus dem Knopf fliesst ein Tropfen und teilt sich in drei runde
+   Glasknöpfe oben im Menü: beim „+“ **PDF einlesen · Neue Seite ·
+   Notizbuch**, beim „⋯“ **Präsentieren · Merkzeichen · Teilen und
+   ausgeben**. Die runden Knöpfe sind ABKÜRZUNGEN: jeder löst genau den
+   Eintrag aus, der darunter unverändert steht (§43, §8 — ein Weg, zwei
+   Griffe); nur das Merkzeichen kippt an Ort und Stelle (dasselbe Band wie
+   in `merkzeichen.ts`, gefüllt oder offen). Zu fliesst es in den Knopf
+   zurück — als Bild (aria-hidden), denn Escape, die Wahl eines Eintrags
+   und jedes `menu.remove()` bleiben SOFORT (E302; rund siebzig Prüfläufe
+   bauen darauf). Am Telefon trägt das Blatt dieselben drei Knöpfe unter
+   seinem Titel; der Tropfen fällt aus dem Knopf hinein, wenn das Blatt
+   steht.
+2. **Der Goo ist EIN Filter.** `Linse.TROPFEN` (`#ru-linse-tropfen`:
+   weichzeichnen, Deckkraft hart schneiden, die scharfe Form obenauf) liegt
+   im Halter der Linse neben `FAHRT` — kein dritter Halter (E649). Keine
+   Fläche trägt ihn in Ruhe: nur die Bühne (`.ru-tropfen-buehne`), und die
+   steht nur, solange es fliesst, und nur so gross wie der Weg.
+3. **03 REFRACT — die Linse über „Heute“.** Beim Ankommen kommen
+   „Aufmachen.“ und „Weiterdenken.“ verwischt herein (eine still
+   weichgezeichnete Abschrift blendet aus, die Zeile steigt — nur Deckkraft
+   und Weg), die Linse fällt herein, gleitet zum Ende der ersten Zeile,
+   dann der zweiten, und liegt still. Unterwegs Milchglas, in Ruhe die
+   Brechung `FAHRT` aus linse.ts. Die Überschrift bleibt echte Schrift; die
+   Linse ist aria-hidden. Keine Dauerbewegung. Zeichnet „Heute“ gleich nach
+   dem Ankommen neu, läuft dieselbe Fahrt weiter statt neu zu beginnen.
+4. **04 CONTROL — Glaskacheln.** Oben in „Mehr“ (unter der Überschrift)
+   und oben in der Übersicht der Einstellungen (unter „Einstellungen“)
+   sieben Griffe: **Dunkel** (derselbe Weg wie der Kreis im Studio-Kopf,
+   jetzt `StudioSchale.themaWechseln`), **Fokus-Modus**
+   (`Werkzeuge.fokus`), **Ruhige Darstellung** (`S('bewegung')`), **Hoher
+   Kontrast** (`S('kontrast')`, gelb mit schwarzer Schrift), **Zeitmesser**
+   (breit, `Zeitmesser.panel`), **Schriftgrösse** und **Zeilenabstand** als
+   Regler mit drei Stufen, die sich von unten füllen (`S('schriftgroesse')`,
+   `S('dichte')`; Tipp, Ziehen, Pfeiltasten, Pos1/Ende). Die Farbe wechselt
+   als Deckkraft einer Schicht, das Einsinken macht `press.ts`. Gerollt
+   werden sie zur Chipleiste, die oben klebt (Höhe 0 — beim Erscheinen
+   springt nichts). Die Auswahlfelder in „Allgemein“ bleiben, wo sie sind,
+   und beide zeigen immer denselben Stand.
+5. **Ruhig und weniger Bewegung:** keine Bühne, kein Wachsen, keine
+   Fahrt — die Knöpfe, die Linse und die Kacheln stehen sofort an ihrem
+   Ort (`AppEinstellung.wenigBewegung()`, beide Quellen).
+
+**Warum.** Redur will die Szenen des Videos „auch haben“ und am Morgen
+„bessere übergagnge besssere efeckten“ sehen — „ohne eine funktione
+löschen“. Der Tropfen erklärt, WOHER ein Menü kommt, und behebt dabei einen
+echten Fehler (das „+“-Menü in der falschen Ecke). Die drei runden Knöpfe
+machen die drei häufigsten Wege einen Tipp kürzer, ohne einen anderen
+länger zu machen. Die Kacheln holen die sieben meistgesuchten Schalter aus
+dem unteren Drittel einer Einstellungsseite nach oben.
+
+**Was die Alternative war.**
+
+- *Die Szenen als React-Inseln mit dem Kit.* Abgelehnt: das „+“, das „⋯“,
+  „Heute“ und „Mehr“ sind Schale beim Start (E699 R1 — keine Insel lädt
+  ohne Zutun), und das Kit hat heute einen Goo-Filter JE Knopf, der auch in
+  Ruhe an ist (Liquid-Karte, „Must-fix“ 2).
+- *Ein zusätzlicher Schritt „⋯ alle Aktionen“ hinter drei Knöpfen*, wie die
+  Karte der Szenen vorschlug. Abgelehnt: das wäre ein Schritt mehr zu jedem
+  der dreissig Einträge (§43, „kein Zwischenschritt“).
+- *Die Linse mit dem Glas des Kits (ALEXalesha).* Abgelehnt: das wäre die
+  dritte Brechung im Dokument; `test589` §8 zählt `feDisplacementMap` und
+  verlangt genau eine.
+- *Backdrop-Filter hinter jeder Kachel.* Abgelehnt (E703, Karte „Must-fix“
+  3): sieben Glasflächen am Telefon; eine halbdurchsichtige Fläche mit
+  Lichtkante sieht auf dem ruhigen Grund fast gleich aus.
+
+**Was es kostet.** Beim Start **+14,3 KB gzip** (Stufe 6, die geänderten
+Startdateien zusammen; `test388` §5 zählt nach, Decke 2850 KB — der Lauf folgt im Nachtrag) — mehr als
+die rund 10 KB, die jedem Zweig dieser Welle zugeteilt sind (L233 Punkt 4;
+die Kommentare sind schon gekürzt, die Begründungen stehen hier). Zwei neue
+Skripte (`tropfen.js`, `kacheln.js`) mit Eintrag in `index.html` und im
+GRUNDSTOCK (§28). Während des Fliessens (≈ 0,4 s) rechnet der Goo-Filter auf
+der Bühne; in Ruhe nichts. Kein React beim Start.
+
+**Gemessen, bevor gebaut wurde** (messungen §82): die Lage des „+“-Menüs
+am Rechner (die Scheibe von x = 8 bis 427, y = 8 bis 548 — der Knopf bei
+x = 1296 bis 1334, y = 6 bis 50), die des „⋯“-Menüs (es deckte den Knopf
+zu), die Zahl der Filter im Dokument (einer, `ru-linse-fahrt`), die
+Einträge beider Menüs (jeder Weg, jede Seitenaktion — vorher wie nachher),
+die Startgrösse.
+
+**Gefunden auf dem Weg.**
+
+- `btn-fav` und der Eintrag „Zu Favoriten“ kippten das Merkzeichen mit zwei
+  Abschriften, und nur eine zeichnete die Krume neu. Jetzt EIN Weg
+  (`favoritKippen`) für ★, den Eintrag und den runden Knopf.
+- Der Kreis „Hell/Dunkel“ im Studio-Kopf war eine namenlose Funktion im
+  Klick-Horcher; die Kachel „Dunkel“ braucht denselben Weg. Jetzt
+  `StudioSchale.themaWechseln` (§8).
+- Strg N legt weiter SOFORT eine neue Seite an (`App.neueSeite`), es öffnet
+  nicht „Neu erstellen“. Die Karte der Szenen nannte Strg N als Auslöser des
+  Menüs; das stimmt nicht und bleibt so (§43, derselbe Auslöser, dieselbe
+  Wirkung).
+
+**Gegenproben** (je eine Verletzung in den erzeugten Dateien, `test589`
+rot gesehen, zurückgenommen):
+
+- **G1** `menue.js`: `amAnker` aus, das Menü wieder bei x/y — `test589` §1 rot (das „+“-Menü bei x 0–419, y 0–540), §5 rot (das „⋯“-Menü bei 0/0).
+- **G2** `tropfen.js`: die Bühne wird nie entfernt — §3 rot („In Ruhe: keine Bühne mehr“, „KEIN Element trägt den Tropfenfilter“), §4 rot („danach ist auch er weg“).
+- **G3** `lernwelt.js`: `gleiten` immer falsch — §8 rot („Beim Ankommen bewegt sie sich“: 0).
+- **G4** `tropfen.js`: `still()` immer falsch — §7 rot, ruhig und reduced-motion je dreimal (Tropfen beim Öffnen und Schliessen, 9 bzw. 6 Bewegungen am Menü).
+- **G5** `kacheln.js`: „Dunkel“ ruft `themaWechseln` nicht — §9 rot („Dunkel schaltet wie #studio-theme“).
+
+Jede Datei danach zurück; `test589` wieder 72 ok, 0 offen.
+
+**Nicht in diesem Bogen** (L233): die übrigen Szenen des Videos (02, 05–08
+gehören anderen Zweigen), das Verschmelzen der Kacheln zur Leiste mit dem
+Goo (die Leiste gleitet herein, sie fliesst nicht), und das Zurückfliessen
+am Telefon nach dem Wegwischen (das Blatt hat dort seinen eigenen Abgang).
+Der Zweig `claude/loeschen-fluessig` baut für den Löschen-Knopf ebenfalls
+einen Goo; beim Zusammenführen muss es EIN Filter bleiben — dieser hier
+(`Linse.TROPFEN`) oder der dortige, nicht beide.

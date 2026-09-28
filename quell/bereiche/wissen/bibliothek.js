@@ -1626,7 +1626,7 @@ const Bibliothek = (() => {
                 App.zeichneSeite();
             });
         }));
-        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt()));
+        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt(b)));
         wrap.querySelectorAll('[data-hoch]').forEach(b => b.addEventListener('click', () => geheHoch()));
         /* Ist der Pfad länger als der Schirm (am Telefon schon ab der dritten
            Ebene), zeigt die Brotkrume von sich aus die WURZEL und schneidet das

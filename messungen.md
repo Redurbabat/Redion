@@ -5394,3 +5394,67 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+---
+
+## §82 · Tropfen, Linse und Kacheln: wo die Menüs stehen, ein Filter, die Startgrösse (E712, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/tropfen-und-kacheln` gegen den Grundstand
+`b3cf1933` (die erste Welle, E698–E706). Chromium von Playwright, 1440 × 900
+und 390 × 844 (`isMobile`, Berührung); Lagen aus `getBoundingClientRect`,
+gerundet; gzip Stufe 6 wie `test388`.
+
+**Wo das Menü steht** (Rechner, dunkel; Kasten links, oben, rechts, unten in px):
+
+```txt
+                      Knopf                    Menü vorher (b3cf1933)
+„+" #studio-create    1296,   6, 1334,  50     8,   8,  427, 548
+„⋯" #btn-page-menu    1394,  74, 1428, 102     1143, 74, 1436, 614
+```
+
+Vorher stand „Neu erstellen" oben links in der Ecke, 869 px vom Knopf; das
+„⋯"-Menü lag über seinem eigenen Knopf. Nachher steht jedes unter seinem
+Knopf, rechtsbündig (`Menue.amAnker`, 6 px Luft): `test589` §1 und §5
+verlangen höchstens 14 px senkrecht und waagrecht überdeckende Kanten —
+grün; die Gegenprobe G1 (ohne `amAnker`) legt beide Menüs wieder auf 0/0.
+
+**Was in den Menüs steht:** jeder Weg des Katalogs in derselben Folge und
+jede bisherige Seitenaktion — vorher und nachher dieselben (`test589` §2 und
+§5 vergleichen sie mit der Liste, die schon gegen `b3cf1933` grün war);
+dazu oben je drei runde Knöpfe von mindestens 44 × 44 px.
+
+**Filter im Dokument:** vorher einer (`ru-linse-fahrt`, die Brechung der
+Linse), nachher zwei im selben Halter (`ru-linse-fahrt`, `ru-linse-tropfen`)
+und weiter genau EIN `feDisplacementMap`. In Ruhe trägt kein Element den
+Tropfenfilter — auch nicht nach dreimal Auf und Zu (`test589` §3, §4).
+
+**Start** (`test388` §5): der Lauf unter der Sperre folgt im Nachtrag, Decke
+2850 KB. Die Dateien selbst, ohne Browser gezählt:
+
+**Was die Dateien wachsen** (gzip Stufe 6, gegen `b3cf1933`, Bytes):
+
+```txt
+quell/schale/bedienung/kacheln.js          (neu)  →  3'981   +3'981
+quell/schale/bedienung/tropfen.js          (neu)  →  2'758   +2'758
+quell/schale/bedienung/linse.js            4'619  →  7'191   +2'572
+quell/schale/ueberlagerung/menue.js        6'406  →  8'402   +1'996
+quell/schale/stil/studio.css              19'788  → 21'432   +1'644
+quell/schale/aufbau/schale.js             77'803  → 78'314     +511
+quell/bereiche/wissen/lernwelt.js         47'965  → 48'210     +245
+quell/register/symbole.js                 16'069  → 16'287     +218
+quell/bereiche/datenbanken/ansichten/dienst.js 17'192 → 17'306 +114
+quell/schale/aufbau/studio.js              2'876  →  2'983     +107
+quell/bereiche/einstellungen/ansicht/seite.js 30'870 → 30'975  +105
+index.html                                13'456  → 13'474      +18
+quell/bereiche/wissen/bibliothek.js       34'906  → 34'907       +1
+                                                    zusammen +14'270
+```
+
+Ohne Kommentare wären die vier grössten Brocken 3'339 + 2'100 B (die neuen
+Dateien) — der Rest ist Code: Federbahnen, Linsenfahrt, Kacheln mit Reglern.
+
+**Bildstreifen** (Bewegung angehalten und Bild für Bild vorgespult,
+`document.getAnimations()` → `currentTime`, genau 33 ms Abstand; nicht
+eingecheckt, §55.4): das „+" auf und zu, das „⋯" auf, die Linse über
+„Heute" (66 ms), das „+"-Blatt am Telefon. Dazu je Ort Bilder vorher und
+nachher, Rechner und Telefon, hell und dunkel.

@@ -1510,3 +1510,12 @@ Wächter (rot zuerst):
 3. `SelectionFlow.FEDERN` aus den Federmarken in `grund.css` lesen, sobald
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
+
+## Der Tropfen: was nach E712 offen ist (L233, 28. September 2026)
+
+1. Die Glaskacheln beim Rollen zäh zur Leiste verschmelzen lassen (mit
+   `Linse.TROPFEN`, eigener Lauf: kein Bild fällt beim Rollen).
+2. Das Zurückfliessen am Telefon auch nach dem Wegwischen des Blatts.
+3. Beim Zusammenführen mit einem anderen Goo (Löschen-Knopf): EIN Filter.
+4. Den Start nach der zweiten Welle nachzählen (`test388` §5); E712 liegt
+   mit +14,3 KB über den zugeteilten rund 10.

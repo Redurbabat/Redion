@@ -8348,6 +8348,39 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L233 · Der Tropfen nach E712 — was aus dem Video noch fehlt — 28. September 2026
+
+**Gefunden beim Bau von E712**, als Rest seines Auftrags. Redur hat am
+27. September um ca. 22:05 das Video „LIQUID GLASS" geschickt: „Schau mal
+das auch an ich will das auch haben". E712 hat drei seiner Szenen gebaut:
+das „+" und das „⋯" fliessen in ihr Menü (01), die Linse gleitet über
+„Heute" (03), die Glaskacheln oben in „Mehr" und in den Einstellungen (04)
+(`test589`).
+
+**Was fehlt, ausdrücklich:**
+
+1. **Die Kacheln verschmelzen nicht zur Leiste.** Im Video fliessen sie beim
+   Rollen zäh zusammen; hier gleitet die Chipleiste herein. Der Goo dafür
+   stünde bereit (`Linse.TROPFEN`), braucht aber eine Bühne über einer
+   rollenden Fläche — mit eigenem Lauf, der zeigt, dass beim Rollen kein
+   Bild fällt.
+2. **Am Telefon fliesst nach dem Wegwischen nichts zurück.** Das Blatt hat
+   dort seinen eigenen Abgang (E302); ein Tropfen danach käme zu spät.
+   Nach Escape, Wahl oder Tipp daneben fliesst er zurück.
+3. **Ein Goo für alle.** Wer als Nächstes einen zähen Übergang baut (der
+   Löschen-Knopf aus dem Video von ca. 22:02), nimmt `Linse.TROPFEN` und
+   eine kurzlebige Bühne — keinen zweiten Filter, keinen Filter je Zeile
+   (Liquid-Karte, „Must-fix" 2).
+4. **Die Startgrösse.** E712 wächst den Start um 14,3 KB gzip, jedem Zweig
+   der zweiten Welle waren rund 10 zugeteilt. Wer zusammenführt, zählt
+   `test388` §5 nach; sparen liesse sich zuerst an den Kommentaren von
+   `linse.ts` und `menue.ts`.
+
+**Was es NICHT ist:** kein Fehler. Jeder Eintrag beider Menüs steht, wo er
+stand, und jede Einstellung hat ihren alten Ort (§43).
+
+---
+
 ## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
 
 **Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
@@ -9178,7 +9211,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 125 Lücken, 69 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

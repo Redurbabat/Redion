@@ -1174,7 +1174,9 @@ const Lernwelt = (() => {
         const importVerfuegbar = typeof Bibliothek !== 'undefined' && !!Bibliothek.pdfImportieren;
         return '<section class="lw-desk" aria-label="Dein Dokumentenstudio">' +
             '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
-            '<h2>Aufmachen.<br>Weiterdenken.</h2>' +
+            /* Zwei Spannen für die Linse (E712); der Text bleibt derselbe. */
+            '<h2><span class="ru-held-zeile" data-zeile="Aufmachen.">Aufmachen.</span><br>' +
+            '<span class="ru-held-zeile" data-zeile="Weiterdenken.">Weiterdenken.</span></h2>' +
             '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
             /* EINE HAUPTHANDLUNG JE BILD (E701, grund.css: „Genau eine je
                Bild — mehr macht keine wichtig"). Dieses Studio steht nur auf
@@ -2445,6 +2447,14 @@ const Lernwelt = (() => {
         else
             timerStoppen();
         reiterRollstand();
+        /* Die Linse (E712, linse.ts) gleitet nur beim Ankommen, sonst liegt sie still. */
+        const satz = root.querySelector('.lw-desk h2');
+        const gleiten = neuAngekommen;
+        neuAngekommen = false;
+        if (satz && typeof Linse !== 'undefined' && Linse.ueberSatz) {
+            requestAnimationFrame(() => { if (satz.isConnected)
+                Linse.ueberSatz(satz, gleiten); });
+        }
         /* Den Trainer in seinen Platz zeichnen — oder abmelden, wenn die Ansicht
            eine andere ist: sein Tastenhorcher hängt am Dokument (E677). */
         if (typeof Trainer !== 'undefined') {
@@ -3032,8 +3042,11 @@ const Lernwelt = (() => {
         document.removeEventListener('keydown', taste);
         zustand.root = null;
     };
+    /** Kam die Ansicht gerade erst an (E712)? Dann gleitet die Linse. */
+    let neuAngekommen = false;
     const render = (ziel, ansicht) => {
         abmelden();
+        neuAngekommen = true;
         zustand.root = ziel;
         const gespeichert = Store.getMeta(metaSchluessel('ansicht'), 'heute');
         zustand.ansicht = ansichtGueltig(ansicht) ? ansicht

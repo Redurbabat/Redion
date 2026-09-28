@@ -1,5 +1,29 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E712 · Tropfen, Linse und Kacheln aus dem Liquid-Glass-Video
+
+**Redur:** um ca. 22:05 zum Video „LIQUID GLASS": „Schau mal das auch an ich
+will das auch haben"; um ca. 22:10 „… ohne eine funktione löschen bessere
+ordnungen bessere übergagnge besssere efeckten , bessere oberfläsche …".
+
+**Gefunden:** Das „+" im Studio-Kopf öffnete „Neu erstellen" am Rechner bei
+(0, 0) — oben links, 869 px vom Knopf. Das „⋯"-Menü lag über seinem Knopf.
+Der Kreis Hell/Dunkel und das Merkzeichen hatten je zwei Abschriften.
+
+**Gebaut:** `Menue.menu` kennt einen `anker` und stellt das Menü an ihn;
+die Scheibe wächst aus dem Knopf, ein Tropfen teilt sich in drei runde
+Glasknöpfe (PDF einlesen · Neue Seite · Notizbuch; Präsentieren ·
+Merkzeichen · Teilen und ausgeben), jeder Eintrag bleibt darunter; zu
+fliesst er zurück (`tropfen.ts`, EIN Goo-Filter `Linse.TROPFEN`, nur
+während des Fliessens). Die Linse gleitet einmal über „Aufmachen. /
+Weiterdenken." (`Linse.ueberSatz`, die Brechung `FAHRT`). Sieben
+Glaskacheln oben in „Mehr" und in Einstellungen → Allgemein
+(`kacheln.ts`), gerollt eine Chipleiste; die Felder bleiben.
+`StudioSchale.themaWechseln` und `App.favoritKippen` sind je EIN Weg.
+
+**Geprüft:** `test589` (72 ok, 0 offen), rot gegen `b3cf1933` (28 ok, 44 offen); fünf
+Gegenproben rot gesehen; die dreizehn Dateiläufe grün; die Browser-Nachbarn folgen im Nachtrag.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

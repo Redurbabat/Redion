@@ -30,6 +30,30 @@ type MenueOptionen = {
   fuss?: string;
   kopf?: string;
   breite?: number | string;
+  /** Der Knopf, aus dem das Menü wächst (E712) — am Rechner steht es dann
+   *  an ihm statt bei `x`/`y`, und zu fliesst es in ihn zurück. */
+  anker?: HTMLElement | null;
+  /** Drei runde Knöpfe oben im Menü (E712), die sich wie ein Tropfen aus
+   *  dem Anker teilen. Jeder ist eine Abkürzung zu einem Eintrag, der
+   *  darunter WEITER steht (§43) — `ziel` ist dessen Selektor. */
+  tropfen?: TropfenKnopf[];
+};
+
+/** Ein runder Knopf oben im Menü (E712). */
+type TropfenKnopf = {
+  id: string;
+  name: string;
+  /** Ein Name aus `Register.symbole`. */
+  zeichen: string;
+  /** Der Eintrag darunter, den der Knopf auslöst — derselbe Weg, kein zweiter. */
+  ziel?: string;
+  /** Steht der Eintrag nicht in diesem Menü: was stattdessen geschieht. */
+  tun?: () => void;
+  /** Ein Umschalter, der im Menü stehen bleibt (das Merkzeichen): gibt den
+   *  neuen Zustand zurück. */
+  kippen?: () => boolean;
+  /** Anfangszustand eines Umschalters. */
+  an?: boolean;
 };
 
 const Menue = (() => {
@@ -92,6 +116,7 @@ const Menue = (() => {
       if (weg || !m.isConnected) return;
       if (ruhig()) { schliessen(); return; }
       weg = true;
+      m.dataset['abgang'] = '1';
       const von = jetzt(), grundVon = deckung();
       halt();
       m.style.transform = '';
@@ -174,6 +199,103 @@ const Menue = (() => {
     return { herein, geht };
   };
 
+  /* DER TROPFEN (E712; Redur, 27.09., ca. 22:05: „Schau mal das auch an ich
+     will das auch haben"): drei runde Knöpfe oben, jeder eine ABKÜRZUNG zu
+     einem Eintrag, der darunter bleibt (§43, §8). Fliessen: tropfen.ts. */
+  const zeichenSvg = (k: TropfenKnopf, an: boolean): string => {
+    if (k.kippen && typeof Merkzeichen !== 'undefined') {
+      /* Das Band aus merkzeichen.ts: gefüllt oder offen (§38). */
+      return '<svg viewBox="0 0 24 24" class="sym" aria-hidden="true" focusable="false">' +
+        `<path d="${Merkzeichen.BAND}" fill="${an ? 'currentColor' : 'none'}" stroke="currentColor" ` +
+        'stroke-width="1.7" stroke-linejoin="round"></path></svg>';
+    }
+    try { return Register.symbole.alsSvg(k.zeichen, 20); } catch { return ''; }
+  };
+  const tropfenKopf = (knoepfe: TropfenKnopf[]): HTMLDivElement => {
+    const kopf = document.createElement('div');
+    kopf.className = 'ru-tropfen-kopf';
+    for (const k of knoepfe) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ru-tropfen-knopf';
+      b.dataset['tropfen'] = k.id;
+      b.setAttribute('aria-label', k.name);
+      b.title = k.name;
+      if (k.kippen) b.setAttribute('aria-pressed', k.an ? 'true' : 'false');
+      const rund = document.createElement('span');
+      rund.className = 'ru-tropfen-rund';
+      rund.setAttribute('aria-hidden', 'true');
+      rund.innerHTML = zeichenSvg(k, !!k.an);     /* nur Zeichen aus dem Register, kein Nutzertext */
+      const name = document.createElement('span');
+      name.className = 'ru-tropfen-name';
+      name.setAttribute('aria-hidden', 'true');
+      name.textContent = k.name;
+      b.append(rund, name);
+      kopf.append(b);
+    }
+    return kopf;
+  };
+  const tropfenBinden = (m: HTMLElement, kopf: HTMLElement, knoepfe: TropfenKnopf[]): void => {
+    kopf.addEventListener('click', ev => {
+      const b = ev.target instanceof Element ? ev.target.closest<HTMLElement>('.ru-tropfen-knopf') : null;
+      const k = b ? knoepfe.find(x => x.id === b.dataset['tropfen']) : undefined;
+      if (!b || !k) return;
+      ev.stopPropagation();
+      if (k.kippen) {
+        const an = k.kippen();
+        b.setAttribute('aria-pressed', an ? 'true' : 'false');
+        const rund = b.querySelector<HTMLElement>('.ru-tropfen-rund');
+        if (rund) {
+          rund.innerHTML = zeichenSvg(k, an);
+          const svg = rund.querySelector('svg');
+          if (an && svg && !(typeof Tropfen !== 'undefined' && Tropfen.still())) {
+            const f = typeof RedionSpring !== 'undefined' ? RedionSpring.token('bouncy') : { easing: 'ease-out', duration: 400 };
+            svg.animate([{ scale: '0.7' }, { scale: '1.25', offset: 0.35 }, { scale: '1' }],
+              { duration: f.duration, easing: 'ease-out' });
+          }
+        }
+        return;
+      }
+      const eintrag = k.ziel ? m.querySelector<HTMLElement>(`.menu-liste ${k.ziel}, :scope > ${k.ziel}`) : null;
+      if (eintrag) { eintrag.click(); return; }
+      if (k.tun) { m.remove(); k.tun(); }
+    });
+  };
+  /** Am Knopf: darunter (rechtsbündig in der rechten Hälfte), sonst darüber. */
+  const amAnker = (m: HTMLElement, anker: HTMLElement): void => {
+    const a = anker.getBoundingClientRect();
+    const r = m.getBoundingClientRect();
+    const LUFT = 6;
+    let left = (a.left + a.width / 2 > innerWidth / 2) ? a.right - r.width : a.left;
+    let top = a.bottom + LUFT;
+    if (top + r.height > innerHeight - 8 && a.top - LUFT - r.height >= 8) top = a.top - LUFT - r.height;
+    left = Math.max(8, Math.min(left, innerWidth - r.width - 8));
+    top = Math.max(8, Math.min(top, innerHeight - r.height - 8));
+    m.style.left = left + 'px';
+    m.style.top = top + 'px';
+  };
+  const rechteck = (el: Element): TropfenRechteck => {
+    const r = el.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  };
+  const tropfenAuf = (m: HTMLElement, kopf: HTMLElement, anker: HTMLElement, blatt: boolean): void => {
+    if (typeof Tropfen === 'undefined' || Tropfen.still() || !anker.isConnected) return;
+    const knoepfe = [...kopf.querySelectorAll<HTMLElement>('.ru-tropfen-rund')];
+    const ziele = knoepfe.map(rechteck);
+    const a = rechteck(anker);
+    if (!blatt) Tropfen.wachsen(m, a);
+    const ankunft = Tropfen.teilen(a, ziele, blatt ? 300 : 40);
+    if (!ankunft) return;
+    const kurve = typeof RedionSpring !== 'undefined' ? RedionSpring.token('press') : { easing: 'ease-out', duration: 320 };
+    [...kopf.querySelectorAll<HTMLElement>('.ru-tropfen-knopf')].forEach((b, i) => {
+      b.animate([{ opacity: 0 }, { opacity: 1 }],
+        { duration: 140, delay: ankunft, easing: 'linear', fill: 'backwards' });
+      const svg = b.querySelector('.ru-tropfen-rund > svg');
+      svg?.animate([{ scale: '0.2' }, { scale: '1' }],
+        { duration: kurve.duration, delay: ankunft + i * 40, easing: kurve.easing, fill: 'backwards' });
+    });
+  };
+
   /**
    * Ein Menü öffnen. `opt.titel` ist die Überschrift des Blattes auf dem
    * Telefon — am Rechner gibt es keine, weil das Menü dort beim Zeiger steht
@@ -184,6 +306,21 @@ const Menue = (() => {
     const m = document.createElement('div');
     m.className = 'menu';
     m.innerHTML = html;
+    const kopf = opt.tropfen?.length ? tropfenKopf(opt.tropfen) : null;
+    if (kopf && opt.tropfen) {
+      m.classList.add('ru-tropfen-menue');
+      m.prepend(kopf);
+      tropfenBinden(m, kopf, opt.tropfen);
+    }
+    const anker = opt.anker && opt.anker.isConnected ? opt.anker : null;
+    /* Was zu in den Knopf zurückfliesst — gemessen in Ruhe. */
+    let zuletzt: { flaeche: TropfenRechteck; kreise: TropfenRechteck[] } | null = null;
+    const messen = (): void => {
+      /* nicht mitten im Wachsen: dort ist die Scheibe noch gestaucht */
+      if (!kopf || !m.isConnected || m.getAnimations().some(a => a.playState === 'running')) return;
+      zuletzt = { flaeche: rechteck(m),
+                  kreise: [...kopf.querySelectorAll('.ru-tropfen-rund')].map(rechteck) };
+    };
 
     let grund: HTMLDivElement | null = null;
     const schliessen = (): void => {
@@ -205,6 +342,13 @@ const Menue = (() => {
       grund?.remove();
       document.removeEventListener('keydown', escape, true);
       waechter.disconnect();
+      /* Zu fliesst es in den Knopf zurück (E712) — nur ein Bild, aria-hidden;
+         das Menü selbst ist schon weg (Escape, Wahl, remove() bleiben sofort).
+         Nach dem eigenen Abgang des Blattes (Wegwischen) fliesst nichts nach. */
+      if (zuletzt && anker && anker.isConnected && typeof Tropfen !== 'undefined' && !m.dataset['abgang']) {
+        const z: { flaeche: TropfenRechteck; kreise: TropfenRechteck[] } = zuletzt;
+        Tropfen.vereinen(z.kreise, rechteck(anker), m.classList.contains('blatt') ? null : z.flaeche);
+      }
     });
 
     if (amTelefon()) {
@@ -231,7 +375,8 @@ const Menue = (() => {
         liste = document.createElement('div');
         liste.className = 'menu-liste menu-liste-ohne-suche';
         [...m.childNodes].filter(n => n !== griff &&
-          (!(n instanceof HTMLElement) || !n.classList.contains('blatt-titel')))
+          (!(n instanceof HTMLElement) ||
+           (!n.classList.contains('blatt-titel') && !n.classList.contains('ru-tropfen-kopf'))))
           .forEach(n => liste!.appendChild(n));
         m.appendChild(liste);
       }
@@ -281,16 +426,30 @@ const Menue = (() => {
       m.querySelectorAll('[data-a="del"], [data-a="purge"]').forEach(x => x.classList.add('rot'));
 
       zug.herein();
+      if (kopf && anker) {
+        tropfenAuf(m, kopf, anker, true);
+        const f = typeof RedionSpring !== 'undefined' ? RedionSpring.token('smooth').duration : 320;
+        setTimeout(messen, f + 40);
+      }
       return m;
     }
 
     document.body.appendChild(m);
     waechter.observe(document.body, { childList: true });
 
-    /* Nicht über den Rand hinausragen lassen */
-    const r = m.getBoundingClientRect();
-    m.style.left = Math.max(8, Math.min(x, innerWidth  - r.width  - 8)) + 'px';
-    m.style.top  = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+    /* Nicht über den Rand — und mit Anker AN ihm (E712; „Neu erstellen"
+       stand bei (0, 0), oben links, weit weg vom „+"). */
+    if (anker) amAnker(m, anker);
+    else {
+      const r = m.getBoundingClientRect();
+      m.style.left = Math.max(8, Math.min(x, innerWidth  - r.width  - 8)) + 'px';
+      m.style.top  = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+    }
+    if (kopf && anker) {
+      messen();
+      tropfenAuf(m, kopf, anker, false);
+      new ResizeObserver(messen).observe(m);
+    }
 
     setTimeout(() => {
       const zu = (e: MouseEvent) => {
@@ -318,7 +477,11 @@ const Menue = (() => {
       'autocomplete="off" spellcheck="false"></div>' +
       '<div class="menu-liste">' + html + '</div>' +
       (opt.fuss ? '<div class="menu-fuss">' + opt.fuss + '</div>' : ''),
-      x, y, opt.titel === undefined ? {} : { titel: opt.titel });
+      x, y, {
+        ...(opt.titel === undefined ? {} : { titel: opt.titel }),
+        ...(opt.anker ? { anker: opt.anker } : {}),
+        ...(opt.tropfen ? { tropfen: opt.tropfen } : {})
+      });
     if (opt.breite && !m.classList.contains('blatt')) m.style.width = String(opt.breite);
 
     const feld = m.querySelector<HTMLInputElement>('.menu-suche input');

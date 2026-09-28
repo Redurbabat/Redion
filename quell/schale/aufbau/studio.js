@@ -45,6 +45,22 @@ const StudioSchale = (() => {
         if (b)
             b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
     };
+    /** Hell ↔ Dunkel, mit dem gemerkten Schema je Grund. EIN Weg für den
+     *  Kreis im Studio-Kopf und die Kachel „Dunkel" (E712, §8). */
+    const themaWechseln = () => {
+        const hell = document.documentElement.dataset.theme === 'light';
+        if (typeof Aussehen !== 'undefined') {
+            const aktuell = Aussehen.einstellung();
+            Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
+            const ziel = hell ? 'dark' : 'light';
+            const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
+            const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
+            Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
+        }
+        else
+            Einstellungen.S('theme', hell ? 'dark' : 'light');
+        themaMarkieren();
+    };
     const einstellen = (kompakt) => {
         document.body.dataset.studioNav = kompakt ? 'kompakt' : 'offen';
         const knopf = document.getElementById('studio-nav');
@@ -66,7 +82,7 @@ const StudioSchale = (() => {
         };
         an('studio-home', () => Bibliothek.oeffne());
         an('studio-search', () => App.suche());
-        an('studio-create', () => App.erstellenBlatt());
+        an('studio-create', () => App.erstellenBlatt(document.getElementById('studio-create')));
         an('studio-import', () => Bibliothek.pdfImportieren());
         an('studio-account', () => App.arbeitsbereich());
         /* Dieselbe Handlung wie `mb-glocke` im Band (menueband.ts). */
@@ -94,20 +110,7 @@ const StudioSchale = (() => {
             Menueband.schliessen();
             document.getElementById('studio-tools')?.focus();
         });
-        an('studio-theme', () => {
-            const hell = document.documentElement.dataset.theme === 'light';
-            if (typeof Aussehen !== 'undefined') {
-                const aktuell = Aussehen.einstellung();
-                Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
-                const ziel = hell ? 'dark' : 'light';
-                const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
-                const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
-                Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
-            }
-            else
-                Einstellungen.S('theme', hell ? 'dark' : 'light');
-            themaMarkieren();
-        });
+        an('studio-theme', themaWechseln);
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
@@ -177,5 +180,5 @@ const StudioSchale = (() => {
             }
         });
     };
-    return { start };
+    return { start, themaWechseln };
 })();

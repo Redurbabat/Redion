@@ -112,6 +112,10 @@ schale/
 │                                     und federt zurück (RedionPress, E702)
 │                   selection-flow.js die wandernde Fläche (E646), motion.js
 │                                     die Bewegungsschicht (E528–E537) …
+│                   tropfen.js        ein Knopf fliesst in sein Menü und
+│                                     zurück, EIN Goo-Filter (E712)
+│                   kacheln.js        die Glaskacheln in „Mehr" und den
+│                                     Einstellungen (Schnellkacheln, E712)
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
 └─ stil/            marken.css        die drei Schriften
                     dunkel.css        die Farben — der Normalfall

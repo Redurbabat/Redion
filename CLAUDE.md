@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 527 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 528 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1469,6 +1469,18 @@ Systems und „Ruhige Darstellung". Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig; beim
 Zusammenführen nach `test580` bis `test584` nachgezählt: 527.*
 
+*Und 528: `test589` — Tropfen, Linse und Kacheln aus dem Liquid-Glass-Video
+(E712). Er öffnet das „+" und das „⋯" am Rechner und misst, dass das Menü AM
+Knopf steht (bis hierher stand das „+"-Menü oben links in der Ecke), dass
+oben drei runde Knöpfe von 44 px stehen und darunter jeder Eintrag von
+vorher, und dass der EINE Tropfenfilter nur während des Fliessens auf einer
+Fläche liegt — in Ruhe auf keiner. Die Linse über „Heute" muss beim
+Ankommen gleiten und danach stillstehen; die sieben Glaskacheln in „Mehr"
+und in den Einstellungen tun dasselbe wie ihre alten Orte, die bleiben.
+Gezählt am 28. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagte 528 — auf seinem Zweig, neben den Läufen der zweiten Welle auf
+den anderen; beim Zusammenführen nachzuzählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1485,7 +1497,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 527 Läufe
+npm run pruefen                      alle 528 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1575,7 +1587,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 527 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 528 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

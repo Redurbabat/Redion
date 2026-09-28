@@ -450,3 +450,111 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
   #crumb > :is(a:last-child,.sep:has(+ a:last-child)){transition:opacity var(--motion-fast) var(--ease)}
   #topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
 }
+
+/* 8 · TROPFEN, LINSE UND KACHELN (E712; Redur, 27.09., ca. 22:05, zum Video
+   „LIQUID GLASS": „Schau mal das auch an ich will das auch haben"). Nur
+   transform/opacity; der Tropfenfilter nur auf der Bühne, solange sie steht. */
+
+/* 8a · Drei runde Knöpfe oben im Menü (der runde Teil: --touch-min, §37). */
+.menu .ru-tropfen-kopf{display:flex;justify-content:center;gap:var(--space-2);
+  padding:var(--space-3) var(--space-2) var(--space-2);margin-bottom:var(--space-1);
+  border-bottom:1px solid var(--line-soft)}
+.menu .ru-tropfen-kopf .ru-tropfen-knopf{flex:1 1 0;width:auto;max-width:112px;display:flex;
+  flex-direction:column;align-items:center;gap:var(--space-2);padding:2px 2px var(--space-1);
+  background:none;border-radius:var(--radius-lg);text-align:center}
+.menu .ru-tropfen-kopf .ru-tropfen-knopf:hover{background:none}
+.ru-tropfen-rund{display:grid;place-items:center;width:var(--touch-min);height:var(--touch-min);
+  border-radius:50%;background:var(--bg-hover);color:var(--text);
+  box-shadow:var(--glas-kante),0 4px 12px rgba(0,0,0,.18);
+  transition:background-color var(--motion-fast) var(--ease)}
+.ru-tropfen-rund > svg{width:20px;height:20px}
+.ru-tropfen-knopf:is(:hover,:focus-visible) .ru-tropfen-rund{background:var(--bg-press)}
+.menu .ru-tropfen-kopf .ru-tropfen-knopf:focus-visible{outline:none}
+.ru-tropfen-knopf:focus-visible .ru-tropfen-rund{outline:2px solid var(--accent-text);outline-offset:2px}
+.ru-tropfen-knopf[aria-pressed="true"] .ru-tropfen-rund{color:var(--accent-text)}
+.ru-tropfen-name{font-size:11.5px;line-height:1.25;color:var(--text-dim);max-width:100%}
+.menu.blatt .ru-tropfen-kopf{flex:none;padding:var(--space-2) var(--space-4) var(--space-3)}
+.menu.blatt .ru-tropfen-kopf .ru-tropfen-knopf{min-height:0;padding:2px;font-size:12px;border-radius:var(--radius-lg)}
+.menu.blatt .ru-tropfen-name{font-size:12px}
+/* Die Scheibe wächst aus dem Knopf (tropfen.ts) — keine zweite Ankunft. */
+.menu.ru-tropfen-menue:not(.blatt),
+.menu.ru-tropfen-menue:not(.blatt) > *{animation:none}
+
+/* 8b · Die Bühne: nur während es fliesst. */
+.ru-tropfen-buehne{position:fixed;z-index:605;pointer-events:none}
+.ru-tropfen-goo{position:absolute;inset:0;
+  filter:url(#ru-linse-tropfen) drop-shadow(0 4px 10px rgba(0,0,0,.22))}
+.ru-tropfen-kreis{position:absolute;left:0;top:0;border-radius:50%;background:var(--bg-hover)}
+.ru-tropfen-geist{position:absolute;border-radius:var(--radius-2xl);transform-origin:0 0;
+  background:var(--bg-schwebend-dicht);box-shadow:var(--glas-kante),var(--studio-elevation)}
+
+/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. */
+.lernwelt .lw-desk-copy{position:relative}
+.ru-held-zeile{display:inline-block;position:relative}
+.ru-held-zeile::before{content:attr(data-zeile);position:absolute;left:0;top:0;white-space:nowrap;
+  filter:blur(5px);opacity:0;pointer-events:none}
+h2.ru-held-kommt .ru-held-zeile{animation:ru-held-zeile-kommt var(--feder-knapp-dauer) var(--feder-knapp) both;
+  animation-delay:var(--ru-held-versatz,0ms)}
+h2.ru-held-kommt .ru-held-zeile::before{animation:ru-held-dunst var(--feder-knapp-dauer) linear both;
+  animation-delay:var(--ru-held-versatz,0ms)}
+h2.ru-held-kommt .ru-held-zeile:nth-of-type(2),
+h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(--ru-held-versatz,0ms) + 320ms)}
+@keyframes ru-held-zeile-kommt{0%{opacity:0;transform:translateY(.42em)}25%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes ru-held-dunst{0%{opacity:1}70%{opacity:0}100%{opacity:0}}
+.ru-held-linse{position:absolute;left:0;top:0;z-index:2;border-radius:50%;overflow:hidden;pointer-events:none;
+  transform-origin:50% 50%;background:color-mix(in srgb,var(--bg-side) 35%,transparent);
+  box-shadow:var(--glas-kante),0 8px 20px rgba(0,0,0,.22)}
+.ru-held-linse-glas,.ru-held-linse-frost{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+.ru-held-linse-glas{filter:url(#ru-linse-fahrt)}
+.ru-held-linse-frost{opacity:0;background:color-mix(in srgb,var(--text) 7%,transparent)}
+.ru-held-linse-bild{position:absolute;left:0;top:0;margin:0;color:var(--text);white-space:nowrap;transform-origin:0 0}
+.ru-held-linse-frost .ru-held-linse-bild{filter:blur(4px)}
+
+/* 8d · Die Glaskacheln: Farbe als Deckkraft einer Schicht; Kontrast gelb, schwarz. */
+.ru-kacheln{margin:var(--space-3) 0 var(--space-5)}
+.ru-kacheln-gitter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3)}
+.ru-kachel{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:space-between;gap:var(--space-2);min-width:var(--touch-min);
+  min-height:92px;padding:var(--space-3);border-radius:var(--radius-2xl);background:var(--bg-schwebend);
+  box-shadow:var(--glas-kante),var(--shadow-1);color:var(--text);text-align:left;
+  transition:color var(--motion-normal) var(--ease)}
+.ru-kachel::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--accent);
+  opacity:0;transition:opacity var(--motion-normal) var(--ease)}
+.ru-kachel[aria-pressed="true"]{color:var(--auf-accent)}
+.ru-kachel[aria-pressed="true"]::before{opacity:1}
+.ru-kachel[data-kachel="kontrast"]::before{background:#ffd60a}
+.ru-kachel[data-kachel="kontrast"][aria-pressed="true"]{color:#161616}
+.ru-kachel-breit{grid-column:span 2}
+.ru-kachel-zeichen{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  background:color-mix(in srgb,currentColor 10%,transparent)}
+.ru-kachel-zeichen > svg{width:18px;height:18px}
+.ru-kachel-name{font-size:13px;font-weight:600;line-height:1.2}
+.ru-kachel-stand{font-size:12px;line-height:1.2;opacity:.75;margin-top:calc(-1 * var(--space-1))}
+.ru-kachel:focus-visible,.ru-kachel-chip:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.ru-kachel-regler{touch-action:none}
+.ru-kachel-fuellung{position:absolute;inset:0;z-index:-1;transform-origin:50% 100%;
+  transform:scaleY(var(--ru-kachel-fuellung,.67));background:color-mix(in srgb,var(--accent) 30%,transparent);
+  transition:transform var(--feder-knapp-dauer) var(--feder-knapp)}
+.ru-kachel-regler[data-haelt]{box-shadow:var(--glas-kante),var(--shadow-2)}
+/* Gerollt: die Leiste (Höhe 0, klebt oben). */
+.ru-kacheln-leiste{position:sticky;top:0;z-index:4;height:0;overflow:visible}
+.ru-kacheln-leiste[hidden]{display:none}
+.ru-kacheln-reihe{display:flex;gap:var(--space-2);overflow-x:auto;scrollbar-width:none;
+  padding:var(--space-2);border-radius:var(--radius-pill);background:var(--bg-schwebend-dicht);
+  box-shadow:var(--glas-kante),var(--shadow-2)}
+.ru-kacheln-reihe::-webkit-scrollbar{display:none}
+.ru-kachel-chip{flex:none;display:inline-flex;align-items:center;gap:var(--space-2);min-height:var(--touch-min);
+  padding:0 var(--space-4) 0 var(--space-3);border-radius:var(--radius-pill);background:var(--bg-hover);
+  color:var(--text);font-size:13px;white-space:nowrap;
+  transition:background-color var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease)}
+.ru-kachel-chip[aria-pressed="true"]{background:var(--accent);color:var(--auf-accent)}
+.ru-kachel-chip[data-kachel="kontrast"][aria-pressed="true"]{background:#ffd60a;color:#161616}
+.ru-kachel-chip .ru-kachel-zeichen{width:auto;height:auto;background:none}
+@media(max-width:760px){
+  .ru-kachel{min-height:84px;padding:var(--space-2) var(--space-3) var(--space-3)}
+  .ru-kachel-name{font-size:12px}
+  .ru-kachel-stand{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  h2.ru-held-kommt .ru-held-zeile,h2.ru-held-kommt .ru-held-zeile::before{animation:none}
+}
