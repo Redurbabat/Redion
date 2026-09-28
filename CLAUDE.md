@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 521 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 522 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1398,6 +1398,17 @@ Messung „was holte der Start?" war unter `file://` blind, was nur seine
 Gegenprobe zeigte. Gezählt am 27. September, im selben Bogen: der Befehl
 sagt 521.*
 
+*Und 522: `test582` — Glas, wo es passt (E703). Er ist der erste Lauf, der
+Glas so sieht, wie es auf dem Telefon aussieht: das kopflose Chromium
+lässt jede Unschärfe weg, und jedes Bild vorher zeigte die Seite scharf
+hinter dem Glas. Er startet es mit SwiftShader und misst zuerst, ob eine
+harte Kante hinter einem Menü wirklich zur Rampe wird. Danach liest er
+Glas an Pixeln — Docks, Menüs, die untere Leiste, das leichte Glas — über
+Weiss, Schwarz, Rot und Blau, in allen zehn Schemata, und legt Toast und
+Lader neben die Werkzeuge, um zu sehen, ob sich ihre Rechtecke schneiden.
+Gezählt am 28. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 522.*
+
 ### Die Befehle
 
 ```txt
@@ -1414,7 +1425,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 521 Läufe
+npm run pruefen                      alle 522 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1504,7 +1515,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 521 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 522 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

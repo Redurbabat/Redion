@@ -166,6 +166,19 @@ Der Anlass war gemessen: 52 anklickbare Dinge auf dem Startbild, 67 mit
 offener Seite.
 
 
+Glas
+
+Was über der Seite schwebt, ist aus Glas: Menüs, der Finder, die
+Auswahlleiste, die untere Leiste am Telefon, der Dock im Dokument und die
+Zeichenleiste, wenn sie unten, frei oder als Spalte schwebt. Eine
+Unschärfe, eine Lichtkante, und die Seite darunter färbt das Glas. Was
+steht — Seitenleiste, Kopf, Einstellungen — bleibt deckend, ebenso
+Meldungen und der Lader; sie stehen über den Werkzeugen, nie darauf.
+Wer im System weniger Transparenz oder mehr Kontrast eingestellt hat, in
+Redion „Hoher Kontrast" einschaltet oder das Schema „Starker Kontrast"
+wählt, bekommt überall volle, deckende Flächen (E703).
+
+
 Bewegung
 
 Über der Oberfläche liegt eine eigene Schicht für Bewegung —
@@ -478,7 +491,7 @@ Redion/
 ├─ pruefungen/
 │  ├─ alle.mts
 │  ├─ js-bestand.json
-│  └─ lauf/                    521 Läufe
+│  └─ lauf/                    522 Läufe
 │
 ├─ AUFGABEN.md · ERLEDIGTE-AUFGABEN.md
 ├─ LUECKEN.md · ENTSCHEIDUNGEN.md
@@ -1682,7 +1695,7 @@ keine Secrets im Repo
 
 Tests
 
-Redion nutzt echte Prüfungen gegen die echte App. Es sind 521 Läufe unter
+Redion nutzt echte Prüfungen gegen die echte App. Es sind 522 Läufe unter
 `pruefungen/lauf/` (gezählt am 27. September 2026 mit
 `ls pruefungen/lauf/test*.mts | wc -l`).
 

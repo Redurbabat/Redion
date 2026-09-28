@@ -63,7 +63,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 declare const App: any, Store: any, UI: any, Aussehen: any, DocumentMode: any,
-  Lader: any, Dialog: any, Rundgang: any;
+  Lader: any, Dialog: any, Rundgang: any, Einstellungen: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const STIL = path.join(WURZEL, 'quell/schale/stil');
@@ -188,7 +188,11 @@ const oeffnen = async (breite: number, hoehe: number, thema: 'light' | 'dark', w
     document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu').forEach(el => el.remove());
     App.theme(t);
     if (schema) Aussehen.setzen({ schema });
-    if (kontrast) document.body.dataset['kontrast'] = 'hoch';
+    /* „Hoher Kontrast" so, wie die Einstellung ihn schaltet (wie test34):
+       das Attribut von Hand zu setzen, hielt nur, bis `Einstellungen.anwenden`
+       das nächste Mal lief — und das schrieb unter Last „normal" zurück
+       (gesehen: der Rechnerteil rot, der Telefonteil grün, im selben Lauf). */
+    if (kontrast) { Store.setMeta('kontrast', true); Einstellungen.anwenden(); }
     const s = Store.addPage(null, { text: 'Glas' });
     for (const x of ['Energie und Arbeit', 'Wer fehlt, holt die Messwerte ab.', 'Tafelbild fotografiert.'])
       Store.addBlock(s.id, 'text', { text: x });
@@ -637,6 +641,28 @@ const stapel = async (pg: Page, szene: string) => {
   const { ctx, pg } = await oeffnen(390, 844, 'light');
   await blattSeite(pg, 'unten');
   await stapel(pg, 'Telefon, Zeichenleiste unten');
+  await ctx.close();
+}
+{
+  /* EIN OFFENES BLATT IST AUCH EIN WERKZEUG. Beim Einlesen einer PDF lag
+     die Karte des Laders auf den Einträgen des Blatts „Seite" (z 901 über
+     600). Der Lader hat `pointer-events:none` — `elementFromPoint` sähe ihn
+     nicht —, also zählt die Schichtung: er muss UNTER dem Blatt liegen. */
+  const { ctx, pg } = await oeffnen(390, 844, 'dark');
+  await pg.evaluate(() => { Lader.schweben({ art: 'presse', text: 'Seite 6 von 30 wird vorbereitet …' }); });
+  await menueAuf(pg, 0, 0);
+  await pg.waitForTimeout(450);
+  const z = await pg.evaluate(() => {
+    const l = document.querySelector<HTMLElement>('.ru-lader-schwebt');
+    const m = document.querySelector<HTMLElement>('.menu.blatt');
+    const zahl = (e: HTMLElement | null) => (e ? +getComputedStyle(e).zIndex || 0 : -1);
+    const r = (e: HTMLElement | null) => e?.getBoundingClientRect();
+    const a = r(l), b = r(m);
+    const schneidet = !!a && !!b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    return { lader: zahl(l), blatt: zahl(m), schneidet };
+  });
+  p('Telefon, Menü-Blatt offen: der Lader liegt nicht AUF dem Blatt (darunter oder daneben)',
+    z.blatt > 0 && (!z.schneidet || z.lader < z.blatt), JSON.stringify(z));
   await ctx.close();
 }
 

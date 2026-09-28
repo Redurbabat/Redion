@@ -159,7 +159,33 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
    Pixel eines schwarz-weiss-rot-blauen Musters, hell und dunkel). */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   :is(.menu,.finder,.auswahlleiste){background:var(--bg-schwebend-dicht);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}
+  /* DIE LICHTKANTE STATT DES RANDES (E703): Licht oben, Rückwurf unten,
+     Haarlinie (`--glas-kante`, hell.css/dunkel.css). So liest sich die
+     Fläche als Glasscheibe und nicht als grauer Kasten; ohne Unschärfe
+     (ausserhalb dieses Blocks) bleibt der Rand, wie er war. */
+  :is(.menu,.finder,.auswahlleiste){box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
 }
+/* ══ GLAS KOMMT ALS SCHEIBE, NICHT ALS NEBEL (E703) ═══════════════════════
+   `studio-arrive` blendet über `opacity` ein. Auf einer Glasfläche heisst
+   das: in den ersten Bildern ist die Scheibe halb durchsichtig, und die
+   Seite dahinter liegt SCHARF hinter der Schrift — `opacity` wirkt auf das
+   ganze Ergebnis, die verwischte Rückseite eingeschlossen. Gemessen mit
+   zehnfach verlangsamter Bewegung über einer PDF: „Montage-Elektriker:innen"
+   war durch das Menü zu lesen.
+   Jetzt gleitet die Scheibe (derselbe Weg, dieselbe Kurve, dieselbe Dauer)
+   und nur ihr INHALT blendet ein. `opacity` an einem Kind ändert die
+   Rückseite des Elternteils nicht. Der Satz aus `recipes/glass-morphing.md`,
+   den schon E646 zitiert: „Blur is supporting material, not the animation
+   itself." Ohne Glas ändert sich nichts Sichtbares; `studio-arrive` bleibt
+   für alles, was kein Glas ist. */
+@keyframes glas-ankunft{from{transform:translateY(7px) scale(.985)}to{transform:none}}
+@keyframes glas-inhalt{from{opacity:0}to{opacity:1}}
+:is(.menu,.finder):not(.blatt){animation-name:glas-ankunft}
+/* Der Inhalt ohne Gewicht (`:where`, 0,0,0): hat ein Kind eine eigene
+   Bewegung — der Schimmer „schreibt" im KI-Finder, die Zahlen im Lernfinder,
+   ein Lader —, gewinnt sie; es kommt dann eben ohne Einblenden. Die Scheibe
+   selbst (oben) bleibt davon unberührt. */
+:where(.menu:not(.blatt),.finder:not(.blatt))>*{animation:glas-inhalt var(--motion-fast) linear both}
 /* Auf Glas keine blasse Schrift (E695, grund.css): die stille Schrift rückt
    eine Stufe nach oben, weil `--text-faint` nur auf voller Fläche 3,9 : 1 hat. */
 :is(.menu,.finder,.auswahlleiste,#handy-oben){--text-faint:var(--text-dim)}
@@ -233,6 +259,10 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
      später lädt und sonst gewinnt. */
   #handy-oben{border-radius:calc(var(--mobile-nav-height) / 2);
                box-shadow:var(--studio-highlight),var(--studio-elevation)}
+  /* Dieselbe Lichtkante wie Menü und Dock (E703) — wo es Glas gibt. */
+  @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    #handy-oben{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
+  }
   :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
   .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}
   .lernwelt .lw-desk h2{font-size:34px;letter-spacing:-1px}
@@ -241,10 +271,15 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .lernwelt .lw-next-step{align-items:flex-start;flex-direction:column;gap:16px}
 }
 @media(prefers-reduced-transparency:reduce){
-  :is(.menu,.finder,.auswahlleiste){background:var(--bg-card);backdrop-filter:none;-webkit-backdrop-filter:none}
+  :is(.menu,.finder,.auswahlleiste){background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 @media(prefers-reduced-motion:reduce){
   :is(.finder,.dlg,.menu,.r-sheet),#kanten-lade:not([hidden]),.aw-fenster[open]>.aw-reiter-panel,#reiterleiste .reiter,.lw-insights-body{animation:none}
+  /* Die Scheibe hat hier mehr Gewicht (0,2,0) als die Zeile darüber und
+     behielte sonst ihren Namen — ohne Dauer zwar, aber ehrlich aus ist aus.
+     Der Inhalt ohne Gewicht wie oben: die eigene Bewegung eines Kindes
+     regelt sein eigenes Blatt. */
+  :is(.menu,.finder):not(.blatt),:where(.menu,.finder)>*{animation:none}
   .studio-monogram,.studio-brand:hover .studio-monogram{transform:none}
   #studio-bar button:active,body[data-schale="premium"] .k-knopf:active{transform:none}
   .lw-paper-sheet,.lw-paper-stack::before,.lw-paper-stack::after{transform:none;transition:none}

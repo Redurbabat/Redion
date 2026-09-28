@@ -1121,6 +1121,12 @@ efeck usw alles verbessern." Die Inventur dazu steht in `messungen.md` §69.
   neu, am Telefon sichtbar als Ruckeln. Einzeln ansehen: wo es geht, auf
   `transform`/`opacity`; wo nicht (ein Fortschrittsbalken darf `width`
   haben), mit Grund stehen lassen. Erst messen (§36), dann bauen.
+- **B4 · Glas, wo es passt — GELANDET auf dem Zweig (E703, `test582`).**
+  Die Docks sind Glas, ein Schalter macht alles deckend, „Starker
+  Kontrast" hat keines, Toast und Lader stehen über den Werkzeugen, die
+  Bilder zeigen echte Unschärfe; L221 geschlossen. Offen daraus: **L226**
+  — Sands stille Schrift (Farbzweig), Redurs Wort zur Kapsel Zurück/Vor,
+  und das Kit-Glas in `bridge.css`, sobald Stufe 1b es zeigt.
 
 ---
 

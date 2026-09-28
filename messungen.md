@@ -4857,3 +4857,145 @@ Alle acht Nachher-Bilder sind byte-gleich mit den Vorher-Bildern. Die Zeile
 in `ki.css` wird am Telefon ohnehin von `bausteine.css:221-225` überstimmt
 (gleiche Spezifität, spätere Datei); sie trägt jetzt trotzdem die Marke, damit
 die Zahl an einer Stelle steht. Die Bilder bleiben auf dem Rechner (§55.4).
+
+## §75 · Glas, wo es passt: echte Unschärfe, Grenzen, Kosten und Lesbarkeit in zehn Schemata (E703, 28. September 2026)
+
+**Fenster und Werkzeug.** Chromium 141 (Playwright 1.56.1) mit dem GPU-Weg
+`--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist
+--enable-gpu-compositing`, Telefon 390 × 844 (`isMobile`, `hasTouch`),
+Rechner 1280 × 900 und 1440 × 900. Gemessen auf dem Zweig
+`claude/glas-wo-es-passt` über dem Grundstand 515451f; „vorher" ist
+515451f selbst.
+
+**1 · Ist die Unschärfe echt?** Eine harte Kante (links Weiss, rechts
+Schwarz) hinter einem offenen Menü, eine Pixelzeile quer über die Kante,
+Breite der Rampe von 90 % auf 10 % (`test582` §1):
+
+```txt
+Chromium wie bisher (SoftwareRenderer)   0 px     59,59,59,59,59,59,59,59,28,28,28,28,28,28,28,28 (alle 10 px, hart)
+mit dem GPU-Weg                          37–52 px (drei Läufe: 50, 52, 37; die Zeile liegt je nach Menülage anders)
+```
+
+Jedes Bild aus `bilder.mts` und jede Messung aus `test576` lief bis heute
+ohne Unschärfe. Die Kontrastzahlen von E695 bleiben trotzdem richtig: die
+Streifen des Prüfmusters sind breiter als die Unschärfe, der schlimmste
+Grund ist mit und ohne derselbe.
+
+**2 · Wie viel Glas steht am Telefon?** Sichtbare Elemente mit
+`backdrop-filter` ≠ `none`, die Linse als Teil der Leiste (`test582` §7):
+
+```txt
+Szene                          Flächen   Anteil am Bild   was
+Textseite, Ruhe                1         6,7 %            untere Leiste 370×60 (+ Linse 70×48)
+Zeichenblatt, Leiste unten     2         17,0 %           untere Leiste, Zeichenleiste 310×109
+Dokument mit Dock              1         6,7 %            Dock 358×62 (die untere Leiste ist im Dokument aus)
+Menü-Blatt offen (Dokument)    2         50,1 %           Dock, Blatt 390×366
+Willkommen                     0 Vollbild-Unschärfe       der Schleier dimmt am Telefon nur
+Grenze                         ≤ 3       ≤ 25 % in Ruhe, ≤ 60 % mit Menü, nie ≥ 90 % in einer Fläche
+```
+
+**3 · Was kostet es?** 390 × 844 @3x, GPU-Weg, 2,5 s Rollen mit 6 px je
+Bild, gezählt `Display::DrawAndSwap` und die Zeit der Grafik (Runde 2 und 3
+von 3; in derselben Seite einmal mit, einmal mit per Stilblatt
+abgeschaltetem Glas):
+
+```txt
+Szene                                   Glas         Runde 2              Runde 3
+Textseite (Leiste + Linse)              ohne         142 Bilder,  26 ms   152 Bilder,   24 ms
+                                        mit          151 Bilder, 180 ms   147 Bilder,  244 ms
+Zeichenblatt, Leiste unten              ohne         152 Bilder,  30 ms   152 Bilder,   30 ms
+  (Leiste + Linse + Glas-Dock 310×109)  mit          152 Bilder, 186 ms   141 Bilder, 1583 ms *
+```
+
+Rund 150 Bilder in 2,5 s sind der Takt der Anzeige (60 je Sekunde): mit
+Glas geht keines verloren, das der Takt nicht auch ohne verliert. Die
+Grafikzeit steigt von etwa 25 auf etwa 180–240 ms je 2,5 s, also von
+0,2 auf 1,2–1,6 ms je Bild. * Der eine Ausreisser fiel in eine Zeit, in der
+vier andere Arbeitsbäume auf derselben Maschine Browser liefen; die zweite
+Runde derselben Szene gab 186 ms. Im Dokument liess sich nichts messen: die
+Probe hatte keinen Rollweg (0 Bilder in beiden Fällen).
+
+Aus der Vorerhebung vom 27. September (dasselbe Verfahren, 0976b5f, mit
+eingesetzten Probeflächen): vier Flächen mit 20 px 302–304 Bilder wie ohne
+Glas; dieselben mit 40 px ebenso, aber etwa ein Viertel mehr Grafikarbeit je
+Bild; ein Vollbild-Schleier mit 6 px dagegen 182–202 von 300 Bildern und
+etwa 2200 ms Grafikzeit gegen etwa 200 ms. Daraus die Grenzen oben: die
+Fläche und der Vollbild-Schleier treiben die Kosten, der Radius kaum.
+
+**4 · Lesbarkeit über dem schlimmsten Grund.** Muster aus Weiss, Schwarz,
+Rot und Blau (breiter als die Unschärfe), alles in der Fläche unsichtbar,
+die Schriftfarbe gegen jedes vierte Pixel; „schlimmster" ist das 1-%-Quantil
+(`test582` §3, §9, §10):
+
+```txt
+Fläche                          Modus/Gerät          schlimmster   Mitte    Grenze
+Dock im Dokument, Beschriftung  dunkel, Rechner      10,79         13,89    4,5
+                                dunkel, Telefon      10,79         13,88
+                                hell, Rechner         9,54          9,97
+                                hell, Telefon         9,54         10,00
+Zeichenleiste unten, Zeichen    dunkel, Rechner      13,56         13,89    4,5
+vorher (deckend, Deckel weg)    Dock dunkel/hell      1,12 / 1,71              (das Muster lag unter dem Roller)
+```
+
+In allen zehn Schemata (Rechner, dunkel, Dokument offen):
+
+```txt
+Schema            Menü Schrift  Gruppentitel   Dock          Telefonleiste   voll (stille Schrift)
+                  nachher       vorher→nachher vorher→nachher vorher→nachher
+standard          13,17         6,05 → 6,13    1,12 → 10,79  4,66 → 5,02     6,77
+hell              9,54          4,55 → 4,55    1,71 → 9,54   4,55 → 4,55     5,45
+nacht             12,29         6,1 → 6,2      1,21 → 10,1   4,71 → 5,09     6,82
+wald              11,34         5,6 → 5,68     1,2 → 9,23    4,27 → 4,62     6,26
+sand              8,57          3,97 → 3,97    1,67 → 8,57   3,97 → 3,97     4,72
+papier            11,97         4,51 → 4,51    1,35 → 11,97  4,51 → 4,51     5,41
+kontrast          18,42         12,49 → 13,96  1 → 18,42     9,85 → 13,96    13,96
+rose              11,7          5,84 → 5,92    1,22 → 9,55   4,48 → 4,84     6,54
+touchkit-hell     16,47         5,36 → 5,36    1,07 → 16,47  5,36 → 5,36     6,38
+touchkit-dunkel   14,2          5,97 → 6,12    1,09 → 11,72  4,62 → 5,05     6,72
+```
+
+„vorher" ist der Grundstand: der Dock deckend, das Muster lag unter dem
+durchsichtigen Rahmen und bei ausgeblendetem Inhalt offen da (deshalb 1,0
+bis 1,71); dunkles dichtes Glas 88 %. „Kontrast" ist nachher deckend (kein
+Glas, E703 Punkt 5) — darum Mitte = schlimmster = voll. **Sand** ist der
+eine Fall unter 4,5: seine stille Schrift hat schon auf der vollen Karte
+nur 4,72 : 1 (L226, Farbzweig); `test582` lässt dem Glas dort höchstens
+0,8 (gemessen 0,75). Das leichte Glas (§9, L221): in allen zehn Schemata
+über 3 : 1 für ein Zeichen in `--text-dim`.
+
+**5 · Die Dichte.** Gerechnet (sRGB-Mischung, WCAG-Leuchtdichte) für
+`--text-dim` #a7a7a7 auf dunklem Glas über reinem Weiss, gegen die Messung:
+
+```txt
+Karte             86 %    88 %    90 %    92 %    gemessen bei 88 %   bei 90 %
+Standard #202020  4,36    4,67    5,00    5,34    4,66                5,02
+Wald     #1e2921  4,01    4,29    4,59    4,90    4,27                4,62
+Rosé     #2a2027  4,20    4,50    4,81    5,14    4,48                4,84
+Mitternacht       4,41    4,72    5,05    5,40    4,71                5,09
+```
+
+Und hell (`--text-dim` #66655f über reinem Schwarz): Sand schon voll
+deckend 4,72 : 1, bei 92 % 3,96 (gemessen 3,97), bei 96 % 4,33 — erst ab
+etwa 97 % hielte Sand 4,5. Deshalb gehört Sand dem Farbzweig (L226).
+
+**6 · Der Start** (`test388` §5, gzip Stufe 6): **2767 → 2774 KB über 246 Dateien**, Decke 2850 KB (Lauf vom 28. September, 08:5x UTC, Dienststand v1385). Die knapp sieben KB (6,8) sind fast ganz Kommentar in sieben Startdateien (bausteine.css +2,7, grund.css +1,4, studio.css +1,0, pdf-studio.css +0,7, dunkel.css +0,5, aussehen.js +0,2, hell.css +0,1 KB gzip); keine neue Datei.
+
+**7 · Der Stapel am unteren Rand** (vorher, `test582` §6 rot):
+
+```txt
+Szene                      Werkzeug                   Toast            Lader
+Rechner, Zeichenleiste     Leiste 844–890             835–878 darauf   786–878 darauf
+Rechner, Dokument          Dock 824–886               835–878 darauf   786–878 darauf
+Telefon, Dokument          Kapsel 708–760, Dock 768–830   720–763 darauf   670–762 darauf, und aufeinander
+Telefon, Zeichenleiste     Leiste 632–741             720–763 darauf   670–762 darauf, und aufeinander
+```
+
+Dazu am Telefon mit offenem Blatt „Seite": der Lader lag mit `z-index:901`
+über dem Blatt (600) auf „Zu Favoriten" und „Link kopieren"; nachher 585,
+unter dem Schleier (590).
+
+Nachher schneidet sich in keiner der vier Szenen ein Rechteck, und der
+Lader liegt unter einem offenen Blatt (`test582` §6 grün). Neben der
+Zeichenleiste „unten" steht der Toast oben (sie klebt nur, solange das Blatt
+unter den Rand reicht; gerollt steht sie höher, und der Toast über dem
+Boden lag im Bild wieder auf ihr).
