@@ -4917,6 +4917,7 @@ seitenflaeche.js +1 014, bausteine.css +484, pdfWriter.js +387, shapes.js
 (ohne Kommentare rund 8,2 KB; der Rest sind die Kommentare, die `tsc`
 mitnimmt, schon auf ein Drittel gekürzt). Das ist mehr als die rund 10 KB,
 die jedem Zweig der Bitte vom 27. September zugedacht sind (L227 Punkt 7).
-`test388` §5: gerechnet 2767 + 14,7 ≈ 2782 KB unter der Decke 2850 — der
-Lauf selbst stand beim Commit noch in der Schlange des gemeinsamen Schlosses.
+`test388` §5, gemessen am 28. September ca. 09:29 UTC (Chromium, gzip wie
+ein echter Server): „Der Start holt 2782 KB (gzip) über 246 Dateien — Decke
+2850 KB" (der Grundstand: 2767 KB).
 Einzeldatei 11 595 462 → 11 645 706 B (+50 244).

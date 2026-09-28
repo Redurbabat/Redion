@@ -141,12 +141,19 @@ const { ktx, pg, blattId } = await kontext();
 await pg.evaluate(() => { Store.setMeta('zeichnen:stift', 'fueller'); App.zeichneSeite(); });
 await pg.waitForTimeout(500);
 await werkzeug(pg, 'stift');
-/* Ein Bogen: leicht → fest → leicht, 13 Punkte mit Stiftdruck. */
+/* Ein Bogen: leicht → fest → leicht, 13 Punkte mit Stiftdruck.
+   IN SCHREIBTEMPO (E704): 150 ms je Schritt von rund 25 pt, unter
+   0,25 pt/ms. Vorher kamen alle 13 Meldungen in derselben Millisekunde —
+   300 pt in 12 ms, rund 8 m/s. Seit E704 macht das Tempo einen Füller mit
+   Sensor bis 35 % dünner (Redur: „schnelle Striche bis ~35 % dünner"), und
+   diese Hand wäre der schnellste Strich überhaupt: der Gipfel läge dann
+   unter der Grundbreite. Die Zusage hier gilt dem DRUCK; das Tempo hält
+   `test583` §5/§6 und `test561` §6. */
 const bogen: Array<[number, number, number]> = Array.from({ length: 13 }, (_v, i) => {
   const t = i / 12;
   return [120 + t * 300, 200 + Math.sin(t * Math.PI) * 60, 0.15 + Math.sin(t * Math.PI) * 0.8];
 });
-await strich(pg, bogen, 'pen');
+await strich(pg, bogen, 'pen', 150);
 let m = await letzteMarke(pg, blattId);
 p('Ein Strich ist da', !!m && m.art === 'stift', JSON.stringify(m));
 gleich('… mit dem Stil „fueller"', m?.stil, 'fueller');

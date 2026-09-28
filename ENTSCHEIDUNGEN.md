@@ -57527,7 +57527,12 @@ beim neuen Marker mit der Zahl 0,4 statt 0,32. `test561` §6 schreibt in
 Schreibtempo (5 pt je 30 ms statt je 4 ms), weil E704 den Füller im Schnellen
 absichtlich dünner macht und die Zusage der SPITZE gilt, nicht dem Tempo; der
 schnelle Strich von vorher läuft danach zusätzlich und muss nass so breit
-sein, wie das Tempo es sagt, und trocken an beiden Enden spitz.
+sein, wie das Tempo es sagt, und trocken an beiden Enden spitz. `test343`
+§1 zog seinen Druckbogen mit 13 Meldungen in derselben Millisekunde (300 pt
+in 12 ms, rund 8 m/s) — der schnellste Strich überhaupt, der seit E704 bis
+35 % dünner wird; er schreibt jetzt in Schreibtempo (150 ms je Schritt), und
+die Zusage „in der Mitte breit, an der leichten Stelle schmal" gilt
+unverändert dem Druck.
 
 **Die Alternativen.** perfect-freehand (MIT) — ein fremdes Stück mit eigener
 Zustimmung (§57), und es ersetzt die eine Rechnung, die Bildschirm und PDF
@@ -57546,7 +57551,8 @@ ein Keilmarker mit 300 Punkten ist ein Pfad von rund 28 KB und kostet nass
 Die Startgrösse wächst um rund 14,7 KB gzip (Code rund 8,2 KB, der Rest die
 Kommentare, die `tsc` mitnimmt — schon auf ein Drittel gekürzt); das ist mehr
 als die rund 10 KB, die jeder Zweig der Bitte vom 27. September haben
-sollte, und steht darum offen da: messungen §76 (test388 §5).
+sollte, und steht darum offen da (L227 Punkt 7). `test388` §5 misst 2782 KB
+über 246 Dateien unter der Decke 2850 (messungen §76).
 
 **Nicht in diesem Bogen.** Die Werkzeugwahl mit dem wandernden Material
 (claude/material-ueberall), Leiste und Sichtbarkeit (claude/ruhige-oberflaeche),
