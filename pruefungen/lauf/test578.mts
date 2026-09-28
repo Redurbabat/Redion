@@ -216,7 +216,9 @@ gleich('HERKUNFT.txt: Prüfsumme wie eingetragen',
   summe(Buffer.from(herkunft, 'utf8')), kit?.enthaelt?.[0]?.sha256);
 const commit = /^Commit:\s+([0-9a-f]{40})$/m.exec(herkunft)?.[1];
 gleich('HERKUNFT.txt nennt den festgenagelten Commit', commit, kit?.fassung);
-p('… und der ist c192821', String(commit).startsWith('c192821'), String(commit));
+/* E710: neu geholt von d21c402 — Redurs neuester Stand mit strengen Typen,
+   `data-ui-motion` und Hinweis/`buttonProps` an Dialog und Aktionsblatt. */
+p('… und der ist d21c402 (E710)', String(commit).startsWith('d21c402'), String(commit));
 const liste = [...herkunft.matchAll(/^([0-9a-f]{64}) {2}(.+)$/gm)].map(m => ({ sha: m[1] ?? '', datei: m[2] ?? '' }));
 const kopfZahl = Number(/^Dateien:\s+(\d+)/m.exec(herkunft)?.[1] ?? -1);
 p('HERKUNFT.txt listet jede Datei (Zahl im Kopf = Zeilen)', liste.length > 50 && liste.length === kopfZahl,
@@ -486,10 +488,14 @@ p('Gegenprobe: ein Kit-Bauteil mit `history.pushState(…)` im Bündel würde ge
   IM_BUENDEL.test(inselBuendel + ';history.pushState(null,"",e)') &&
   IM_BUENDEL.test(inselBuendel + ';window.localStorage.getItem("x")'));
 
-/* Regel 5 — an Ort und Stelle, und in Stufe 1a noch nirgends. */
+/* Regel 5 — an Ort und Stelle. Stufe 1a hatte nur die Probe; Stufe 1b
+   (E710) bringt GENAU die Dialoge dazu, und sie hängen an GENAU EINER
+   Stelle der Schale: `dialog.ts`, dort, wo die Fragen schon immer gestellt
+   wurden. Eine dritte Insel oder eine zweite Stelle macht das hier rot —
+   sie kommt mit ihrem eigenen Bogen und ihrer eigenen Zeile. */
 const katalog = /const catalog\b[\s\S]*?=\s*\{([\s\S]*?)\n\}/.exec(code('src/islands/main.tsx'))?.[1] ?? '';
-gleich('Regel 5: Stufe 1a hat genau eine Insel, die Probe für test579',
-  [...katalog.matchAll(/^\s*([a-z][\w-]*)\s*:/gm)].map(m => m[1]), ['probe']);
+gleich('Regel 5: der Katalog hat genau die Probe (test579) und die Dialoge (E710)',
+  [...katalog.matchAll(/^\s*([a-z][\w-]*)\s*:/gm)].map(m => m[1]), ['probe', 'dialog']);
 const srcDateien = (ordner: string, raus: string[] = []): string[] => {
   for (const e of fs.readdirSync(ordner, { withFileTypes: true })) {
     const v = path.join(ordner, e.name);
@@ -498,8 +504,15 @@ const srcDateien = (ordner: string, raus: string[] = []): string[] => {
   }
   return raus;
 };
-gleich('… und noch keine Stelle der App hängt eine Insel ein (das beginnt mit Stufe 1b)',
-  srcDateien(path.join(WURZEL, 'src')).filter(f => /\.mount\s*\(/.test(code(f)) && /Inseln|RedionIslands/.test(code(f))), []);
+gleich('… und genau eine Stelle der App hängt eine Insel ein: die Fragen in dialog.ts (E710)',
+  srcDateien(path.join(WURZEL, 'src')).filter(f => /\.mount\s*\(/.test(code(f)) && /Inseln|RedionIslands/.test(code(f))),
+  ['src/schale/ueberlagerung/dialog.ts']);
+p('… mit dem Namen „dialog" und an einem Träger, den Fokus und Escape kennen (data-insel-traeger)',
+  /\.mount\(\s*o\s*,\s*'dialog'/.test(code('src/schale/ueberlagerung/dialog.ts')) &&
+  /data-insel-traeger/.test(code('src/schale/ueberlagerung/fokus.ts')) &&
+  /data-insel-traeger/.test(code('src/schale/aufbau/schale.ts')));
+p('… und das bisherige Fenster bleibt als Rückweg da (frageAlt, wahlAlt, mehrzeiligAlt — §43)',
+  ['frageAlt', 'wahlAlt', 'mehrzeiligAlt'].every(n => new RegExp('const ' + n + '\\b').test(code('src/schale/ueberlagerung/dialog.ts'))));
 
 /* ==========================================================================
  * §7 · Die Pakete sind festgenagelt
@@ -560,7 +573,16 @@ p('tsc -p tsconfig.islands.json: sauber', fehlerKit === '',
   const zeilen = aus.split('\n').filter(z => /error TS/.test(z));
   const inInseln = zeilen.filter(z => /src[\\/]islands/.test(z));
   gleich('Mit Redions strengen Schaltern (§52.6): kein Fehler in src/islands', inInseln.slice(0, 3), []);
-  console.log(`    (im Kit unter denselben Schaltern: ${zeilen.length - inInseln.length} Fehler — offen in LUECKEN, upstream in UI-Kit)`);
+  /* SEIT E710 AUCH IM KIT (L222 Punkt 1). UI-Kit hat den strengen Durchgang
+     gemacht (0d6222b), und d21c402 ist unter Redions Schaltern sauber —
+     also steht die Ausnahme von §52.6 nicht mehr in tsconfig.islands.json:
+     die Datei trägt die Schalter selbst, und ein Kit-Stand, der sie bricht,
+     macht `npm run typecheck` rot, nicht nur diese Zeile. */
+  gleich('… und auch im Kit kein einziger (L222 Punkt 1, seit d21c402)', zeilen.slice(0, 3), []);
+  const schalter = liesJson('tsconfig.islands.json')?.compilerOptions ?? {};
+  gleich('tsconfig.islands.json trägt Redions strenge Schalter selbst (§52.6, E710)',
+    ['noUncheckedIndexedAccess', 'exactOptionalPropertyTypes', 'useUnknownInCatchVariables',
+     'noImplicitReturns', 'verbatimModuleSyntax'].filter(k => schalter[k] !== true), []);
   /* Gegenprobe: ein Typfehler unter den Inseln-Schaltern wird gemeldet. */
   fs.writeFileSync(path.join(tmp, 'kaputt.tsx'), 'const x: number = "nein"\nexport const y = <b>{x}</b>\n');
   const gegen = path.join(tmp, 'gegen.json');
@@ -592,9 +614,25 @@ p('Kein `transition: all` (UI-Kit CLAUDE.md, §39)', !/transition\s*:\s*all\b/.t
    schrumpfen, und in Stufe 1a benutzt keine Insel sie. */
 const OHNE_ZWILLING_BEKANNT = ['.ui-touch-button--glass'];
 const bloecke = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: (m[1] ?? '').trim(), rumpf: m[2] ?? '' }));
-const ohneZwilling = bloecke
-  .filter(b => /-webkit-backdrop-filter/.test(b.rumpf) !== /(^|[;{\s])backdrop-filter/.test(b.rumpf))
-  .map(b => b.sel);
+const mitBeiden = (rumpf: string): boolean =>
+  /-webkit-backdrop-filter/.test(rumpf) && /(^|[;{\s])backdrop-filter/.test(rumpf);
+/* ÜBERSCHRIEBEN ZÄHLT (E710). Das Kit schreibt die Glas-Folge beim Dialog
+   und beim Aktionsblatt verkehrt (L222 Punkt 3); lightningcss lässt davon
+   nur die Zeile mit Präfix übrig. Die Brücke setzt für genau diese Flächen
+   Redions EINES Glas neu — beide Schreibweisen, `-webkit-` zuerst. Ein
+   Block ohne Zwilling ist darum nur dann ein Fehler, wenn KEIN späterer
+   Block für denselben Wähler beide setzt: dann hätte Chrome dort wirklich
+   kein Glas. Die Gegenprobe darunter zeigt, dass ohne die Brücke genau
+   diese zwei Flächen rot würden. */
+const ueberschrieben = (i: number, sel: string): boolean =>
+  bloecke.slice(i + 1).some(b => b.sel.split(',').map(x => x.trim()).includes(sel) && mitBeiden(b.rumpf));
+const ohneZwillingRoh = bloecke
+  .map((b, i) => ({ ...b, i }))
+  .filter(b => /-webkit-backdrop-filter/.test(b.rumpf) !== /(^|[;{\s])backdrop-filter/.test(b.rumpf));
+const ohneZwilling = ohneZwillingRoh.filter(b => !ueberschrieben(b.i, b.sel)).map(b => b.sel);
+gleich('Gegenprobe: ohne die Überschreibung der Brücke fehlte Dialog und Aktionsblatt der Zwilling',
+  ohneZwillingRoh.map(b => b.sel).filter(s => /dialog|action-sheet/.test(s)).sort(),
+  ['.ui-touch-action-sheet-group', '.ui-touch-dialog']);
 gleich('Glas: jede Unschärfe mit ihrem Zwilling (E695) — ausser den benannten, die nur schrumpfen dürfen',
   ohneZwilling.filter(s => !OHNE_ZWILLING_BEKANNT.includes(s)), []);
 p('… und die benannte Ausnahme gibt es wirklich noch (sonst ist sie zu streichen)',
