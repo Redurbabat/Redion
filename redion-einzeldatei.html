@@ -22926,6 +22926,130 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .studio-icon[aria-label]::after{animation:none}
 }
 
+/* ===========================================================================
+   RUHIGER — UND NICHTS IST WEG (E701, test580)
+   ---------------------------------------------------------------------------
+   Redur, 27. September, ca. 16:45 UTC: „du kannst auch die oberfläche
+   bischen ruhige machen ohne etwas lösche also eine funktionen". Ruhiger
+   heisst hier: weniger, das GLEICHZEITIG ruft — nicht weniger, das da ist.
+   Jede Regel unten ändert nur, wie laut etwas in Ruhe ist; jeder Griff
+   bleibt am selben Ort mit demselben Auslöser (§43, E218/E219).
+   Farbe und Schein sind Zustand, nicht Dauerschmuck (E640, das UI-Kit:
+   „glow used as state feedback"): was man anfasst oder mit der Tastatur
+   erreicht, bekommt sie sofort zurück.
+   Alles steht in EINEM Block, damit man sieht, was dieser Bogen tut, und
+   ihn als Ganzes prüfen kann. Nur vorhandene Marken (§39).
+   =========================================================================*/
+
+/* 1 · EINE HAUPTHANDLUNG JE BILD (grund.css: „Genau eine je Bild").
+   „PDF öffnen" im Kopf ist in Ruhe eine getönte Pille — derselbe Knopf,
+   dieselbe Stelle, dasselbe Zeichen —, und wird unter dem Zeiger und unter
+   dem Tastenfokus der volle Hauptknopf mit Verlauf und Schein. Gemessen:
+   Schrift auf der Pille 4,61 : 1 hell, 5,28 : 1 dunkel. */
+#studio-import{background:var(--accent-schwach);color:var(--accent-text);box-shadow:none;
+  transition:transform var(--motion-instant) var(--ease),background var(--motion-fast) var(--ease),
+  color var(--motion-fast) var(--ease),box-shadow var(--motion-fast) var(--ease)}
+#studio-import:is(:hover,:focus-visible){background:var(--haupt-flaeche-hover);color:var(--auf-accent);
+  box-shadow:var(--haupt-schein)}
+/* Der Themenknopf im Hellen: ein grauer Mond wie im Dunkeln der helle —
+   kein zweiter violetter Fleck neben dem Kopfknopf. */
+html[data-theme="light"] .studio-orb{background:var(--text-dim);box-shadow:inset -6px -3px 0 var(--bg-side);
+  transform:rotate(-25deg)}
+/* „Dokumente öffnen" auf Heute ist ein Umrissknopf (die Klasse `is-primary`
+   ist dort weg, lernwelt.ts); das violette Zeichen sagt, wohin er führt. */
+/* Zeichen und Wort in einer Linie: das Zeichen sass bisher ohne Abstand
+   und eine halbe Zeile zu hoch vor dem Wort (auf beiden Bildern gesehen). */
+.lernwelt .lw-desk .lw-actions button{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2)}
+.lernwelt .lw-desk .lw-desk-auf [data-sym]{color:var(--accent-text)}
+.lernwelt .lw-desk .lw-desk-auf:is(:hover,:focus-visible){border-color:var(--accent-text)}
+
+/* 2 · „ZULETZT GEÖFFNET" RUHT. Der Kartenring drehte sich endlos — im
+   Leerlauf, am Telefon und hinter jedem Fenster über dem Regal. Jetzt
+   steht er, bis man hinzeigt oder die Tastatur hineinführt. Nur der
+   Wiedergabezustand wechselt, nie die Animation: sie ist nicht gelöscht,
+   nur angehalten (ergänzt E535 Block 07). Das leere Regal (.bib-leer)
+   dreht weiter wie in E529, und die ruhige Darstellung und „weniger
+   Bewegung" schalten ihn wie bisher ganz aus. */
+.rmo-recent .rmo-ring-trommel{animation-play-state:paused}
+.rmo-recent:focus-within .rmo-ring-trommel{animation-play-state:running}
+@media (hover:hover){.rmo-recent:hover .rmo-ring-trommel{animation-play-state:running}}
+body:has(.overlay,.menu.blatt,#r-blatt) .rmo-recent .rmo-ring-trommel{animation-play-state:paused}
+/* Die drei Karten liegen in Ruhe flach; der Fächer kommt mit dem Zeiger. */
+.rmo-recent .rmo-recent-card:not(:hover,:focus-visible,:active){transform:none}
+@media (hover:hover){
+  .rmo-recent .rmo-recent-track:is(:hover,:focus-within) .rmo-recent-card:not(:hover,:focus-visible,:active){
+    transform:rotateY(calc((var(--rmo-index,1) - 1) * -6deg))}
+}
+
+/* 3 · GEZEICHNETE ZEICHEN (Redur, 21:45 UTC: „Gezeichnete Zeichen"). Die
+   Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt, Seitenwerkzeugen und
+   Termine sind Striche aus `Register.symbole`; hier bekommen sie ihre
+   stille Farbe und ihre Grösse. Grau in Ruhe, `--text` unter Zeiger und
+   Tastenwahl; der gewählte Bereich trägt den Akzent, Löschen bleibt rot. */
+.einst-nav .mi{display:grid;place-items:center;color:var(--text-dim)}
+.einst-nav button:is(:hover,:focus-visible) .mi{color:var(--text)}
+.einst-nav button.on .mi{color:var(--accent-text)}
+.menu button .mi{display:grid;place-items:center;color:var(--text-dim)}
+.menu button:not(.rot):is(:hover,:focus-visible,.jetzt) .mi{color:var(--text)}
+.menu .kenn{background:var(--bg-hover);color:var(--text-dim);box-shadow:inset 0 0 0 1px var(--line)}
+.home-liste .mz{display:grid;place-items:center;color:var(--text-dim)}
+.home-liste button:is(:hover,:focus-visible) .mz{color:var(--text)}
+.home-liste button > span:first-child:has(> svg.sym){display:grid;place-items:center;flex:none;
+  width:26px;color:var(--text-dim)}
+.home-karten .hk b:has(> svg.sym){display:flex;align-items:center;gap:8px}
+.home-karten .hk b > svg.sym{color:var(--text-dim);flex:none}
+.rm-z:has(> svg.sym){display:grid;place-items:center;color:var(--text-dim)}
+.rm-z > svg.sym{width:21px;height:21px}
+.rm-zu > svg.sym{width:18px;height:18px}
+.pg-tools button:has(> svg.sym){display:inline-flex;align-items:center;gap:6px}
+@media(max-width:760px){
+  .einst-nav .mi > svg.sym,.menu.blatt button .mi > svg.sym{width:20px;height:20px}
+  .home-liste .mz > svg.sym,.home-liste button > span:first-child > svg.sym{width:21px;height:21px}
+  .home-liste button > span:first-child:has(> svg.sym){width:30px}
+}
+
+/* 4 · AUS IST GRAU. Der Verlaufsschalter trug auch AUS den violetten
+   Schimmer (Deckkraft .5) — drei Schalter untereinander sahen aus wie drei
+   angeschaltete. Jetzt leuchtet nur AN; beim Überfahren und unter dem
+   Tastenfokus kommt der Schimmer wie bisher zurück, und die einmalige
+   Bewegung beim Umschalten bleibt (ergänzt E535 Block 06). */
+body [data-rmo~="toggle"].mschalter[data-rmo-state="aus"] > .rmo-verlauf{opacity:.12;filter:saturate(0) brightness(1.2)}
+body button:is(:hover,:focus-visible) > [data-rmo~="toggle"].mschalter[data-rmo-state="aus"] > .rmo-verlauf{
+  opacity:.5;filter:saturate(.75) brightness(1.35)}
+
+/* 5 · DIE KENNZAHLKARTEN RUHEN. Vier gleiche violette Herzen, vier Ringe
+   und vier Kurven standen über dem Falz, auch bei null. In Ruhe sind sie
+   grau; angefasst, mit der Tastatur erreicht oder beim einmaligen Abspielen
+   kommt die Farbe zurück. Die Zahlen bleiben, wie sie sind. Die kleine
+   Kurve zeigt feste Werte und keine echten — sie ist deshalb in Ruhe
+   neutral (L224, ergänzt E534/E535). */
+:is(.stat-karte.lw-metrik,.rmo-health-metric) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+  transition:filter var(--motion-fast) var(--ease),opacity var(--motion-fast) var(--ease)}
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+  filter:saturate(0)}
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > .rmo-heart{opacity:.45}
+
+/* 6 · DIE ECKE DES BANDES TRÄGT DEN GRUND DES BANDES. Am Rechner ist das
+   Band seit dem Studio `--bg-side`; die Ecke rechts mit Suche, KI und
+   Klappe blieb `--schale-grund` — im Hellen ein fast schwarzer Block am
+   Ende eines hellen Bandes. Dieselben Knöpfe, dieselben Orte. */
+@media(min-width:761px){
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts,.mb-klapp){background:var(--bg-side)}
+  body[data-schale="premium"] #main > #menueband .mb-klapp{box-shadow:-8px 0 8px -6px var(--bg-side)}
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts-knopf,.mb-klapp){color:var(--text-dim)}
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts-knopf,.mb-klapp):hover{background:var(--bg-hover);color:var(--text)}
+}
+
+/* 7 · EIN TITEL AM TELEFON. Solange der grosse gleichnamige Titel zu sehen
+   ist, ist die kleine Krume durchsichtig; rollt er unter die Kopfzeile,
+   kehrt sie zurück (kopfleiste.ts setzt `data-titel-sichtbar`). Sie bleibt
+   im Baum und klickbar. Unter „weniger Bewegung" wechselt sie ohne Blende
+   (die Marke `--motion-fast` ist dort 1 ms, grund.css). */
+@media(max-width:760px){
+  #crumb > :is(a:last-child,.sep:has(+ a:last-child)){transition:opacity var(--motion-fast) var(--ease)}
+  #topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -25843,7 +25967,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1380, inhalt: '85878ef59828d146', gebaut: '2026-09-27T22:39:33.887Z' };
+const Stand = { fassung: 1383, inhalt: 'f17bf1b66d3334b0', gebaut: '2026-09-28T08:30:30.408Z' };
 window.Stand = Stand;
 
 </script>
@@ -38530,7 +38654,75 @@ Register.symbole = (() => {
         maximize: '<path d="M9 3.5H5.5a2 2 0 0 0-2 2V9"/>' +
             '<path d="M15 3.5h3.5a2 2 0 0 1 2 2V9"/>' +
             '<path d="M15 20.5h3.5a2 2 0 0 0 2-2V15"/>' +
-            '<path d="M9 20.5H5.5a2 2 0 0 1-2-2V15"/>'
+            '<path d="M9 20.5H5.5a2 2 0 0 1-2-2V15"/>',
+        /* --- Zwanzig für Menüs, Einstellungen und „Mehr" (E701) --------------
+           Redur, 27. September, im Fragebogen: „Gezeichnete Zeichen" — „Durch
+           Redions eigene Linien-Symbole ersetzen, wie in der Zeichenleiste.
+           Alles bleibt am selben Ort." Die Einstellungen trugen neunzehn
+           verschiedene farbige Emoji untereinander, das ⋯-Menü der Seite
+           dreiunddreissig, „Mehr" und das R-Blatt ihre eigenen. Für die meisten
+           Zeilen gab es hier schon das passende Zeichen; diese zwanzig fehlten.
+    
+           Dasselbe Raster wie alle darüber: 24 × 24, Strich 1,7, runde Enden,
+           `currentColor`, keine Fläche. Und dieselbe Regel wie in E273: EIN
+           Name, EIN Bild, EINE Bedeutung — „Verbindungen" heisst in den
+           Einstellungen und im Seitenmenü `plug`, nicht zweimal etwas anderes.
+           Punkte sind `h.01` wie die Augen in `smile`: ein runder Strichanfang
+           ohne Länge, damit auch ein Punkt keine Fläche ist. */
+        plug: '<path d="M9 3.2v4.4M15 3.2v4.4"/>' +
+            '<path d="M6.4 7.6h11.2v3.6a5.6 5.6 0 0 1-11.2 0z"/><path d="M12 16.8v4"/>',
+        keyboard: '<rect x="2.8" y="5.6" width="18.4" height="12.8" rx="2.4"/>' +
+            '<path d="M6.6 9.6h.01M9.9 9.6h.01M13.2 9.6h.01M16.5 9.6h.01' +
+            'M8.2 12.4h.01M11.5 12.4h.01M14.8 12.4h.01M8.4 15.2h7.2"/>',
+        globe: '<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6"/>' +
+            '<path d="M12 3.2c2.3 2.4 3.5 5.3 3.5 8.8s-1.2 6.4-3.5 8.8' +
+            'c-2.3-2.4-3.5-5.3-3.5-8.8s1.2-6.4 3.5-8.8z"/>',
+        users: '<circle cx="9.2" cy="8.4" r="3.5"/><path d="M2.8 20a6.6 6.6 0 0 1 12.8 0"/>' +
+            '<path d="M15.4 5.1a3.4 3.4 0 0 1 0 6.6"/><path d="M17.8 14.5a6.4 6.4 0 0 1 3.4 5.5"/>',
+        key: '<circle cx="7.6" cy="16.2" r="4.2"/><path d="m10.6 13.2 9.6-9.6"/>' +
+            '<path d="m17.4 6.4 2.6 2.6M14.6 9.2l2 2"/>',
+        creditCard: '<rect x="2.8" y="5.2" width="18.4" height="13.6" rx="2.4"/>' +
+            '<path d="M2.8 9.8h18.4M6.6 14.8h3.8"/>',
+        info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11v5.4M12 7.8h.01"/>',
+        cloud: '<path d="M7 18.6h10.4a4 4 0 0 0 .5-7.97 5.8 5.8 0 0 0-11.1-1.3' +
+            'A4.6 4.6 0 0 0 7 18.6z"/>',
+        archive: '<rect x="3" y="4" width="18" height="4.6" rx="1.2"/>' +
+            '<path d="M4.8 8.6v9.6a1.8 1.8 0 0 0 1.8 1.8h10.8a1.8 1.8 0 0 0 1.8-1.8V8.6"/>' +
+            '<path d="M10 12.4h4"/>',
+        /* Volle und normale Breite: dieselben zwei Ränder, die Pfeile einmal
+           hinaus, einmal hinein. Der Knopf wechselt sein Wort mit dem Zustand
+           (`kopfleiste.ts`), und das Zeichen wechselt mit. */
+        widthWide: '<path d="M3.4 5v14M20.6 5v14M7 12h10"/>' +
+            '<path d="m9.4 9.4-2.6 2.6 2.6 2.6M14.6 9.4l2.6 2.6-2.6 2.6"/>',
+        widthNarrow: '<path d="M3.4 5v14M20.6 5v14M6.2 12h4.4M17.8 12h-4.4"/>' +
+            '<path d="m8.2 9.6 2.4 2.4-2.4 2.4M15.8 9.6l-2.4 2.4 2.4 2.4"/>',
+        /* „Kleiner Text": ein grosses und ein kleines T — die Grösse IST das
+           Thema. „Schrift" dagegen ist die Familie: ein A mit seinem a. */
+        textSize: '<path d="M3.4 6.2h10M8.4 6.2v12.6M14.4 11.6h6.4M17.6 11.6v7.2"/>',
+        typeface: '<path d="m3 19 5-13.6L13 19M4.8 14.4h6.4"/>' +
+            '<circle cx="17.4" cy="15.8" r="3.1"/><path d="M20.5 12.6v6.4"/>',
+        /* Die Pfadnavigation: Stufe › Stufe — so, wie die Krume selbst aussieht.
+           Zwei Kästchen und der Winkel dazwischen; drei Striche mit Winkel
+           sahen auf dem Probeblatt aus wie ein Pfeil (›Weiter‹). */
+        crumbs: '<rect x="2.4" y="9" width="5.6" height="6" rx="1.5"/>' +
+            '<rect x="16" y="9" width="5.6" height="6" rx="1.5"/>' +
+            '<path d="m10.8 9.4 2.6 2.6-2.6 2.6"/>',
+        hash: '<path d="M9.8 3.6 7.8 20.4M16.2 3.6l-2 16.8M4.4 8.8h16M3.6 15.2h16"/>',
+        translate: '<path d="M3.4 5.8h8.4M7.6 3.4v2.4M10 5.8c-.7 3.8-2.8 6.6-6.2 8.4' +
+            'M5.6 8.8c1.2 2.3 3 4 5.2 5"/><path d="m12.4 20.4 3.8-9.2 3.8 9.2M13.6 17.6h5.2"/>',
+        moveTo: '<path d="M3.2 7.2a1.8 1.8 0 0 1 1.8-1.8h4l2 2.2h8a1.8 1.8 0 0 1 1.8 1.8v8.8' +
+            'a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8z"/>' +
+            '<path d="M8.6 13.6h6.6m-2.4-2.4 2.4 2.4-2.4 2.4"/>',
+        /* „Änderungen vorschlagen": zwei Zeilen Text und ein kleiner Stift, der
+           darin schreibt. Nicht `pencil` allein — der heisst im selben Menü
+           „Umbenennen". Das Einfügezeichen der Korrektur (‸) war der erste
+           Entwurf und sah auf dem Probeblatt aus wie ›Hochladen‹. */
+        suggest: '<path d="M3.6 6.4h14M3.6 11h8.4M3.6 15.6h4.4"/>' +
+            '<path d="M17.4 11.4a1.7 1.7 0 0 1 2.4 2.4l-6 6-3.1.8.8-3.1z"/>',
+        alarm: '<circle cx="12" cy="13.4" r="7.2"/><path d="M12 9.8v3.8l2.4 1.6"/>' +
+            '<path d="m3.8 6 3-2.4M20.2 6l-3-2.4"/>',
+        code: '<path d="m8.2 7.2-4.8 4.8 4.8 4.8M15.8 7.2l4.8 4.8-4.8 4.8"/>' +
+            '<path d="m13.6 4.8-3.2 14.4"/>'
     };
     /* ------------------------------------------------------------------------
      * AUSGABE
@@ -116782,22 +116974,37 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     /* ========================================================================
      * ZUSATZEINTRÄGE IM SEITENMENÜ
      * ======================================================================*/
+    /* GEZEICHNETE ZEICHEN STATT EMOJI (E701) — dieselben Zeilen, dieselben
+       Kennungen, dieselben Wörter; nur das Bild kommt aus `Register.symbole`
+       und nimmt die stille Farbe seiner Zeile an. „Verschlüsseln" trägt den
+       Schlüssel und nicht das Schloss: das Schloss heisst im selben Menü
+       schon „Seite sperren" (E273: ein Bild, eine Bedeutung). */
+    const mi = (name) => {
+        let svg = '';
+        try {
+            svg = Register.symbole.alsSvg(name, 16);
+        }
+        catch {
+            svg = '';
+        }
+        return `<span class="mi">${svg}</span>`;
+    };
     const seitenMenueZusatz = (p) => ('<hr>' +
-        '<button data-a="wz-vorlage"><span class="mi">🧩</span>Als Vorlage speichern</button>' +
-        '<button data-a="wz-vorlage-ein"><span class="mi">＋</span>Aus Vorlage einfügen</button>' +
-        '<button data-a="wz-versionen"><span class="mi">🕘</span>Versionsverlauf</button>' +
-        `<button data-a="wz-wiki"><span class="mi">📚</span>${p.wiki ? 'Wiki auflösen' : 'In Wiki umwandeln'}</button>` +
-        '<button data-a="wz-teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
-        '<button data-a="wz-erinnerung"><span class="mi">⏰</span>Erinnerung</button>' +
+        '<button data-a="wz-vorlage">' + mi('puzzle') + 'Als Vorlage speichern</button>' +
+        '<button data-a="wz-vorlage-ein">' + mi('plus') + 'Aus Vorlage einfügen</button>' +
+        '<button data-a="wz-versionen">' + mi('history') + 'Versionsverlauf</button>' +
+        `<button data-a="wz-wiki">${mi('book')}${p.wiki ? 'Wiki auflösen' : 'In Wiki umwandeln'}</button>` +
+        '<button data-a="wz-teilen">' + mi('share') + 'Teilen und ausgeben</button>' +
+        '<button data-a="wz-erinnerung">' + mi('alarm') + 'Erinnerung</button>' +
         '<hr>' +
-        `<button data-a="wz-sperren"><span class="mi">🔒</span>${p.locked ? 'Entschlüsseln' : 'Verschlüsseln'}</button>` +
+        `<button data-a="wz-sperren">${mi('key')}${p.locked ? 'Entschlüsseln' : 'Verschlüsseln'}</button>` +
         '<hr>' +
-        '<button data-a="wz-fokus"><span class="mi">◎</span>Fokus-Modus<span class="ms">Strg Shift F</span></button>' +
-        '<button data-a="wz-quelltext"><span class="mi">⌨</span>Markdown-Quelltext</button>' +
-        '<button data-a="wz-statistik"><span class="mi">📊</span>Statistik</button>' +
+        '<button data-a="wz-fokus">' + mi('maximize') + 'Fokus-Modus<span class="ms">Strg Shift F</span></button>' +
+        '<button data-a="wz-quelltext">' + mi('code') + 'Markdown-Quelltext</button>' +
+        '<button data-a="wz-statistik">' + mi('chart') + 'Statistik</button>' +
         '<hr>' +
-        '<button data-a="wz-html"><span class="mi">⭳</span>Als HTML</button>' +
-        '<button data-a="wz-drucken"><span class="mi">🖨</span>Drucken / PDF</button>');
+        '<button data-a="wz-html">' + mi('download') + 'Als HTML</button>' +
+        '<button data-a="wz-drucken">' + mi('printer') + 'Drucken / PDF</button>');
     const seitenMenueAktion = (a, p) => {
         const karte = {
             'wz-vorlage': () => alsVorlage(p),
@@ -119831,6 +120038,16 @@ window.Mehrfach = Mehrfach;
  * ==========================================================================*/
 const Ansichten = (() => {
     const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    /** Ein gezeichnetes Zeichen aus `Register.symbole` (E273) — oder nichts.
+        Eine leere Stelle ist ehrlicher als ein Emoji als Ersatz (E701). */
+    const zeichen = (name, groesse = 18) => {
+        try {
+            return Register.symbole.alsSvg(name, groesse);
+        }
+        catch {
+            return '';
+        }
+    };
     /**
      * Zwei Handgriffe, die in dieser Datei elfmal gebraucht werden.
      *
@@ -120336,7 +120553,7 @@ const Ansichten = (() => {
                 block('Vorlagen', vorlagen.map((v) => `<button data-vorlage="${esc(v.id || v.name)}"><span>${esc(v.icon || '🧩')}</span>` +
                     `<span class="pt">${esc(v.name || v.titel || 'Vorlage')}</span></button>`).join('')) +
                 '<div class="home-liste" style="margin-top:22px">' +
-                '<button data-a="papierkorb"><span>🗑</span><span class="pt">Papierkorb</span></button>' +
+                '<button data-a="papierkorb"><span>' + zeichen('trash') + '</span><span class="pt">Papierkorb</span></button>' +
                 '</div>' +
                 '</div>';
         wrap.onclick = (e) => {
@@ -120412,15 +120629,20 @@ const Ansichten = (() => {
                    landete bei Google-Client-IDs.
                    Jetzt zuerst der Kalender als Ort, dann das Verbinden als das,
                    was es ist. */
+                /* Gezeichnete Zeichen statt 📅 🔗 🎙 und der Stecknadel an jeder
+                   Zeile (E701): dieselben drei Karten, dieselben Wörter, derselbe
+                   Ort. Was ein Mensch einer Besprechungsseite als Zeichen gegeben
+                   hat, bleibt sein Zeichen — nur wo Redion selbst eines erfand,
+                   steht jetzt ein Strich. */
                 '<div class="home-karten">' +
-                '<button class="hk" data-a="kal-auf"><b>📅 Kalender</b>' +
+                '<button class="hk" data-a="kal-auf"><b>' + zeichen('calendar') + 'Kalender</b>' +
                 '<span>Alle Termine in einer Chronologie</span></button>' +
-                '<button class="hk" data-a="kal"><b>🔗 Kalender verbinden</b>' +
+                '<button class="hk" data-a="kal"><b>' + zeichen('link') + 'Kalender verbinden</b>' +
                 '<span>Google, CalDAV — Termine hereinholen</span></button>' +
-                '<button class="hk" data-a="mtg"><b>🎙 Besprechung</b>' +
+                '<button class="hk" data-a="mtg"><b>' + zeichen('mic') + 'Besprechung</b>' +
                 '<span>Mitreden statt mitschreiben</span></button>' +
                 '</div>' +
-                block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>📌</span>` +
+                block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>${zeichen('calendarDays')}</span>` +
                     `<span class="pt">${esc(t.text)}</span>` +
                     `<span class="pth">${esc(t.wann)}</span></button>`).join('')) +
                 /* Steht nichts an, sagt die Ansicht das — und daneben den einen
@@ -120428,11 +120650,11 @@ const Ansichten = (() => {
                    Sackgasse. */
                 (kommend.length ? '' :
                     '<h2>Bevorstehend</h2><div class="home-liste">' +
-                        '<button data-a="kal"><span>📅</span><span class="pt">Kalender verbinden</span>' +
+                        '<button data-a="kal"><span>' + zeichen('link') + '</span><span class="pt">Kalender verbinden</span>' +
                         '</button>' +
                         '<div class="leer">Dann stehen hier alle Termine der nächsten ' +
                         'dreissig Tage, und zu jedem kannst du eine Notiz anlegen.</div></div>') +
-                block('Aus Besprechungen', notizen.map(p => `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '🎙')}</span>` +
+                block('Aus Besprechungen', notizen.map(p => `<button data-open="${esc(p.id)}"><span>${p.icon ? esc(p.icon) : zeichen('mic')}</span>` +
                     `<span class="pt">${esc(p.text || 'Ohne Titel')}</span></button>`).join('')) +
                 '</div>';
         wrap.onclick = (e) => {
@@ -120463,6 +120685,11 @@ const Ansichten = (() => {
      * Drei Gruppen, und jede Zeile sagt in einem Satz, wofür sie da ist. Das
      * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
      * ======================================================================*/
+    /* `z` IST DER NAME EINES ZEICHENS aus `Register.symbole`, kein Emoji
+       mehr (E701). Hier standen ▤ ⌂ 🧭 ⌘ ⌨ 🧩 💾 📥 📥 ☁ 🗑 ⚙ ℹ — zweimal
+       derselbe Briefkasten für zwei verschiedene Wege. Jetzt hat „Importieren"
+       den Pfeil hinauf wie in den Einstellungen und „Posteingang" den Kasten,
+       wie in der Seitenleiste. */
     const mehrGruppen = () => [
         /* DIE ZWEI WEGE, DIE UNTEN KEINEN PLATZ MEHR HABEN (E236).
            Die Navigation hat seit E236 fünf Wege statt sechs — und aus dem
@@ -120473,30 +120700,30 @@ const Ansichten = (() => {
            §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
            noch über die Adresszeile findet, ist verschwunden. */
         { name: 'Wo du arbeitest', eintraege: [
-                { z: '▤', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
-                { z: '⌂', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
+                { z: 'pages', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
+                { z: 'workspace', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
             ] },
         { name: 'Wichtige Werkzeuge', eintraege: [
-                { z: '🧭', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
-                { z: '⌘', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
-                { z: '⌨', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
-                { z: '🧩', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' }
+                { z: 'compass', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
+                { z: 'command', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
+                { z: 'keyboard', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
+                { z: 'puzzle', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' }
             ] },
         { name: 'Daten und Sicherheit', eintraege: [
-                { z: '💾', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
-                { z: '📥', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
-                { z: '📥', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+                { z: 'download', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
+                { z: 'upload', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
+                { z: 'inbox', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
                 /* DER WEG ZUR WOLKE (E251). Der Dialog konnte längst anmelden und
                    abgleichen — erreichbar war er nur über die Befehlspalette, und
                    ein Weg, den man nur über die Palette findet, ist verschwunden
                    (dieselbe Regel wie zwei Gruppen weiter oben). Hier steht er
                    neben Sicherung und Import, wo Daten-Dinge wohnen. */
-                { z: '☁', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
-                { z: '🗑', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
+                { z: 'cloud', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
+                { z: 'trash', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
             ] },
         { name: 'System', eintraege: [
-                { z: '⚙', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
-                { z: 'ℹ', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
+                { z: 'settings', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
+                { z: 'info', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
             ] }
     ];
     const mehr = () => bildschirm('Mehr', (wrap) => {
@@ -120505,7 +120732,7 @@ const Ansichten = (() => {
             '<div class="home">' +
                 '<h1>Mehr</h1>' +
                 mehrGruppen().map(g => `<h2>${esc(g.name)}</h2><div class="home-liste">` +
-                    g.eintraege.map(e => `<button data-a="${esc(e.a)}"><span class="mz">${esc(e.z)}</span>` +
+                    g.eintraege.map(e => `<button data-a="${esc(e.a)}"><span class="mz">${zeichen(e.z)}</span>` +
                         `<span class="pt">${esc(e.t)}` +
                         `<span class="snip">${esc(e.s)}</span></span>` +
                         '<span class="pth">›</span></button>').join('') +
@@ -120992,33 +121219,44 @@ const Einstellungen = (() => {
     const S = (k, v) => { Store.setMeta(k, v); anwenden(); };
     const GRUPPEN = [
         ['', [
-                ['konto', '👤', 'Mein Konto'],
-                ['allgemein', '⚙️', 'Einstellungen'],
-                ['benachricht', '🔔', 'Benachrichtigungen'],
-                ['daten', '⭱', 'Importieren']
+                ['konto', 'user', 'Mein Konto'],
+                ['allgemein', 'settings', 'Einstellungen'],
+                ['benachricht', 'bell', 'Benachrichtigungen'],
+                ['daten', 'upload', 'Importieren']
             ]],
         ['Funktionen', [
-                ['ki', '✨', 'Künstliche Intelligenz'],
-                ['verbindungen', '🔌', 'Verbindungen'],
-                ['mcp', '🔗', 'MCP'],
-                ['worker', '⌨️', 'Worker'],
-                ['verifiziert', '✔️', 'Verifizierte Seiten'],
-                ['oeffentlich', '🌐', 'Öffentliche Seiten'],
-                ['emoji', '😀', 'Emoji']
+                ['ki', 'sparkle', 'Künstliche Intelligenz'],
+                ['verbindungen', 'plug', 'Verbindungen'],
+                ['mcp', 'link', 'MCP'],
+                ['worker', 'keyboard', 'Worker'],
+                ['verifiziert', 'checkCircle', 'Verifizierte Seiten'],
+                ['oeffentlich', 'globe', 'Öffentliche Seiten'],
+                ['emoji', 'smile', 'Emoji']
             ]],
         ['Verwaltung', [
-                ['arbeitsplatz', '🏠', 'Arbeitsbereich'],
-                ['analysen', '📈', 'Analysen'],
-                ['bereiche', '👥', 'Bereiche'],
-                ['sicherheit', '🛡', 'Sicherheit'],
-                ['schluessel', '🔑', 'Schlüssel und APIs']
+                ['arbeitsplatz', 'workspace', 'Arbeitsbereich'],
+                ['analysen', 'chart', 'Analysen'],
+                ['bereiche', 'users', 'Bereiche'],
+                ['sicherheit', 'shield', 'Sicherheit'],
+                ['schluessel', 'key', 'Schlüssel und APIs']
             ]],
         ['Zugriff und Abrechnung', [
-                ['speicher', '📦', 'Speicher'],
-                ['abrechnung', '💳', 'Abrechnung'],
-                ['ueber', 'ℹ️', 'Über diese App']
+                ['speicher', 'database', 'Speicher'],
+                ['abrechnung', 'creditCard', 'Abrechnung'],
+                ['ueber', 'info', 'Über diese App']
             ]]
     ];
+    /** Ein Zeichen aus dem Register — oder nichts, wenn es fehlt. Eine leere
+        Zelle ist ehrlicher als ein Emoji als Ersatz: das wäre der alte
+        Zustand, nur versteckt (E701). */
+    const zeichen = (name) => {
+        try {
+            return Register.symbole.alsSvg(name, 18);
+        }
+        catch {
+            return '';
+        }
+    };
     const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
     /* ========================================================================
      * ANWENDEN — Einstellungen wirken sofort
@@ -121123,7 +121361,7 @@ const Einstellungen = (() => {
                 `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
                 GRUPPEN.map(([titel, liste]) => (titel ? `<div class="einst-grp">${titel}</div>` : '') +
                     liste.map(([id, i, n]) => `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
-                        `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
+                        `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('')).join('') +
                 '</div>' +
                 /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
                    weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`
@@ -164285,11 +164523,19 @@ const Lernwelt = (() => {
             '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
             '<h2>Aufmachen.<br>Weiterdenken.</h2>' +
             '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
+            /* EINE HAUPTHANDLUNG JE BILD (E701, grund.css: „Genau eine je
+               Bild — mehr macht keine wichtig"). Dieses Studio steht nur auf
+               „Heute", und dort ist „Lernen starten" die eine (E638) — zwei
+               Schritte weiter unten, schwarz und funkelnd. Hier stand daneben
+               ein zweiter voller Violettknopf, und mit dem Kopf („PDF öffnen")
+               riefen drei Flächen zugleich „hier drücken". Der Knopf bleibt
+               derselbe Griff am selben Ort, 44 px hoch — nur als Umrissknopf
+               mit violettem Zeichen, so ruhig wie „PDF importieren" daneben. */
             '<div class="lw-actions">' +
             (pdf
-                ? '<button type="button" class="is-primary" data-lw-open="' + esc(seitenId) + '">' +
+                ? '<button type="button" class="lw-desk-auf" data-lw-open="' + esc(seitenId) + '">' +
                     zeichenSpan('book') + 'PDF öffnen</button>'
-                : '<button type="button" class="is-primary" data-lw-action="library">' +
+                : '<button type="button" class="lw-desk-auf" data-lw-action="library">' +
                     zeichenSpan('library') + 'Dokumente öffnen</button>') +
             '<button type="button" data-lw-action="import"' +
             (darfImportieren && importVerfuegbar ? '' : ' disabled title="' +
@@ -174290,16 +174536,30 @@ const Kopfleiste = (() => {
         if (!p.ohneTools && eigen) {
             const tools = document.createElement('div');
             tools.className = 'pg-tools';
+            /* GEZEICHNETE ZEICHEN STATT 🖼 ↔ ▤ ⚡ 🅰 🧩 ✨ (E701). Die Zeile bleibt
+               am Telefon stehen, wie bausteine.css es begründet („gehören zum
+               Titel") — nur rief sie mit fünf farbigen Bildchen lauter als der
+               Titel, zu dem sie gehört. Dieselben Griffe, dieselben Wörter; das
+               Zeichen nimmt die stille Farbe der Zeile an. */
+            const z = (name) => {
+                try {
+                    return Register.symbole.alsSvg(name, 15);
+                }
+                catch {
+                    return '';
+                }
+            };
             tools.innerHTML =
-                '<button data-a="cover">🖼 Cover</button>' +
-                    '<button data-a="wide">' + (p.wide ? '↹ Normale Breite' : '↔ Volle Breite') + '</button>' +
+                '<button data-a="cover">' + z('image') + 'Cover</button>' +
+                    '<button data-a="wide">' + (p.wide ? z('widthNarrow') + 'Normale Breite'
+                    : z('widthWide') + 'Volle Breite') + '</button>' +
                     (DocumentMode.available(p)
-                        ? '<button data-a="document">▤ ' + (DocumentMode.active(p) ? 'Normale Seite' : 'Dokumentmodus') + '</button>'
+                        ? '<button data-a="document">' + z('page') + (DocumentMode.active(p) ? 'Normale Seite' : 'Dokumentmodus') + '</button>'
                         : '') +
-                    (p.schoolRoot ? '<button data-a="electrical">⚡ Rechner</button>' : '') +
-                    '<button data-a="font">🅰 Schrift</button>' +
-                    '<button data-a="vorlage">🧩 Vorlage</button>' +
-                    '<button data-a="ai">✨ Mit KI</button>';
+                    (p.schoolRoot ? '<button data-a="electrical">' + z('bolt') + 'Rechner</button>' : '') +
+                    '<button data-a="font">' + z('typeface') + 'Schrift</button>' +
+                    '<button data-a="vorlage">' + z('puzzle') + 'Vorlage</button>' +
+                    '<button data-a="ai">' + z('sparkle') + 'Mit KI</button>';
             tools.addEventListener('click', e => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)
@@ -174350,9 +174610,78 @@ const Kopfleiste = (() => {
         return true;
     };
     /* ------------------------------------------------------------------------
+     * EIN TITEL AM TELEFON (E701)
+     * ------------------------------------------------------------------------
+     * Am Telefon stand derselbe Name zweimal übereinander: klein in der
+     * Kopfzeile (y = 58) und gross als Titel direkt darunter (y = 117) — auf
+     * Termine, Mehr, Dokumente und jeder Seite. Zweimal dasselbe übereinander
+     * hat E219 schon einmal abgeschafft („Weglassen macht das Verbliebene
+     * wichtiger").
+     *
+     * NICHTS WIRD ENTFERNT. Die Krume bleibt im Baum, fokussierbar und
+     * klickbar; sie wird nur durchsichtig, SOLANGE der grosse gleichnamige
+     * Titel zu sehen ist, und kehrt zurück, sobald er unter der Kopfzeile
+     * wegrollt — so, wie ein grosser Titel am iPhone in die Leiste wandert.
+     * Nur wenn das LETZTE Stück der Krume wirklich derselbe Name ist wie der
+     * Titel; ein anderer Pfad bleibt ganz stehen. Am Rechner ändert der
+     * Stil nichts (die Regel steht nur in der Telefon-Abfrage).
+     *
+     * Ein Beobachter, nicht ein Scroll-Horcher: er meldet sich nur, wenn der
+     * Titel die Grenze kreuzt, und kostet dazwischen nichts. Jedes `pfad()`
+     * löst den alten und setzt höchstens einen neuen.
+     * ----------------------------------------------------------------------*/
+    let titelWaechter = null;
+    let beobachtet = null;
+    const titelBeobachten = () => {
+        const bar = document.getElementById('topbar');
+        const letzte = document.querySelector('#crumb > a:last-child');
+        const scr = document.getElementById('scroll');
+        const gross = document.querySelector('#page #title') ||
+            document.querySelector('#page h1');
+        const norm = (t) => (t || '').replace(/\s+/g, ' ').trim();
+        const name = gross ? norm(gross.textContent) : '';
+        /* `endsWith`, weil die Krume einer Seite ihr Zeichen vor den Namen
+           setzt („🔥 Wärmepumpe"), der Titel aber nur den Namen trägt. */
+        const passt = !!(bar && letzte && scr && gross && name &&
+            typeof IntersectionObserver !== 'undefined' &&
+            norm(letzte.textContent).endsWith(name));
+        /* DERSELBE TITEL, DERSELBE BEOBACHTER. `pfad()` läuft auch nach dem
+           Stern oder dem Schloss — dann ist nichts anders, und ein neuer
+           Beobachter hiesse: die Krume blitzt einen Takt lang auf, bis er
+           sich meldet. */
+        if (passt && beobachtet && beobachtet.el === gross && beobachtet.name === name)
+            return;
+        titelWaechter?.disconnect();
+        titelWaechter = null;
+        beobachtet = null;
+        if (!passt || !bar || !scr || !gross) {
+            if (bar)
+                delete bar.dataset['titelSichtbar'];
+            return;
+        }
+        beobachtet = { el: gross, name };
+        /* Was die Kopfzeile vom Rollbereich verdeckt, zählt als „weg": der
+           Titel ist erst dann nicht mehr zu sehen, wenn er darunter ist. */
+        const verdeckt = Math.max(0, Math.round(bar.getBoundingClientRect().bottom - scr.getBoundingClientRect().top));
+        titelWaechter = new IntersectionObserver(eintraege => {
+            const e = eintraege[eintraege.length - 1];
+            if (!e)
+                return;
+            if (e.isIntersecting)
+                bar.dataset['titelSichtbar'] = '';
+            else
+                delete bar.dataset['titelSichtbar'];
+        }, { root: scr, rootMargin: `-${verdeckt}px 0px 0px 0px`, threshold: 0 });
+        titelWaechter.observe(gross);
+    };
+    /* ------------------------------------------------------------------------
      * Die Pfadleiste — und die Knöpfe rechts daneben.
      * ----------------------------------------------------------------------*/
     const pfad = () => {
+        pfadZeichnen();
+        titelBeobachten();
+    };
+    const pfadZeichnen = () => {
         const sonder = sonderJetzt();
         const seiteId = aktuelleSeite();
         const c = document.getElementById('crumb');
@@ -179136,9 +179465,33 @@ const App = (() => {
     ];
     /* Notion kennt genau zwei Stufen, nicht drei. */
     const BENACHRICHTIGUNG = { alle: 'Kommentare', erwaehnungen: 'Erwähnungen' };
+    /**
+     * DAS ZEICHEN EINER MENÜZEILE, GEZEICHNET (E701).
+     *
+     * Das ⋯-Menü der Seite trug dreiunddreissig Emoji und Schriftzeichen
+     * durcheinander — Kette, Klemmbrett, Karteischrank, Eimer, Pfeile —, jedes
+     * in seiner eigenen Farbe und auf seiner eigenen Grundlinie. Redur hat am
+     * 27. September „Gezeichnete Zeichen" gewählt: „Alles bleibt am selben
+     * Ort." Jede Zeile behält Kennung, Wort, Kürzel und Platz; nur das Bild
+     * kommt jetzt aus `Register.symbole` (E273, §8: ein Katalog für Zeichen).
+     *
+     * Als fertiges `<svg>` im Text und nicht als `data-sym`, das später
+     * gefüllt wird: `Menue.menu` misst das Menü gleich nach dem Einhängen, um
+     * es am Rand zu halten — ein Zeichen, das erst danach käme, verschöbe die
+     * Messung.
+     */
+    const menueZeichen = (name) => {
+        try {
+            return Register.symbole.alsSvg(name, 16);
+        }
+        catch {
+            return '';
+        }
+    };
+    const mi = (name) => `<span class="mi">${menueZeichen(name)}</span>`;
     /** Eine Menüzeile mit echtem Schalter rechts — so macht es Notion. */
-    const schalterZeile = (a, icon, text, an) => `<button data-a="${a}" class="mit-schalter" role="switch" aria-checked="${an ? 'true' : 'false'}">` +
-        `<span class="mi">${icon}</span>${text}` +
+    const schalterZeile = (a, zeichen, text, an) => `<button data-a="${a}" class="mit-schalter" role="switch" aria-checked="${an ? 'true' : 'false'}">` +
+        `${mi(zeichen)}${text}` +
         `<span class="mschalter${an ? ' an' : ''}"><i></i></span></button>`;
     /**
      * Der Schalter kippt an zwei Stellen, und bis hierher kippte nur die
@@ -179403,25 +179756,25 @@ const App = (() => {
                 `<b class="sk-${id}">${ag}</b><span>${n}</span></button>`).join('') +
             '</div>' +
             /* Seitenaktionen — Reihenfolge wie in Notions Menü */
-            '<button data-a="link"><span class="mi">🔗</span>Link kopieren<span class="ms">Strg Alt L</span></button>' +
-            '<button data-a="inhalt"><span class="mi">📋</span>Seiteninhalte kopieren</button>' +
-            '<button data-a="dup"><span class="mi">⧉</span>Duplizieren<span class="ms">Strg D</span></button>' +
-            '<button data-a="wz-verschieben"><span class="mi">➦</span>Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
-            `<button data-a="archiv"><span class="mi">🗄</span>${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
-            '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
+            '<button data-a="link">' + mi('link') + 'Link kopieren<span class="ms">Strg Alt L</span></button>' +
+            '<button data-a="inhalt">' + mi('clipboard') + 'Seiteninhalte kopieren</button>' +
+            '<button data-a="dup">' + mi('copy') + 'Duplizieren<span class="ms">Strg D</span></button>' +
+            '<button data-a="wz-verschieben">' + mi('moveTo') + 'Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
+            `<button data-a="archiv">${mi('archive')}${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
+            '<button data-a="del">' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
             '<hr>' +
-            '<button data-a="wz-praesi"><span class="mi">▶</span>Präsentieren' +
+            '<button data-a="wz-praesi">' + mi('play') + 'Präsentieren' +
             '<span class="kenn">Beta</span><span class="ms">Strg Alt P</span></button>' +
-            schalterZeile('klein', '↕', 'Kleiner Text', p.small) +
-            schalterZeile('breit', '↔', 'Volle Breite', p.wide) +
-            schalterZeile('pfad', '🗂', 'Pfadnavigation anzeigen', p.pfad !== false) +
-            '<button data-a="anpassen"><span class="mi">⚙</span>Seite anpassen<span class="ms">▸</span></button>' +
+            schalterZeile('klein', 'textSize', 'Kleiner Text', p.small) +
+            schalterZeile('breit', 'widthWide', 'Volle Breite', p.wide) +
+            schalterZeile('pfad', 'crumbs', 'Pfadnavigation anzeigen', p.pfad !== false) +
+            '<button data-a="anpassen">' + mi('settings') + 'Seite anpassen<span class="ms">▸</span></button>' +
             '<hr>' +
-            '<button data-a="offline"><span class="mi">⭳</span>Offline verfügbar' +
+            '<button data-a="offline">' + mi('download') + 'Offline verfügbar' +
             '<span class="ms">immer</span></button>' +
             '<hr>' +
-            schalterZeile('wz-gesperrt', '🔒', 'Seite sperren', p.gesperrt) +
-            '<button data-a="mitki"><span class="mi">✨</span>Mit KI verwenden<span class="ms">▸</span></button>' +
+            schalterZeile('wz-gesperrt', 'lock', 'Seite sperren', p.gesperrt) +
+            '<button data-a="mitki">' + mi('sparkle') + 'Mit KI verwenden<span class="ms">▸</span></button>' +
             '<hr>' +
             /* Auf dem Telefon ist die Kopfzeile schmal wie in Notion: nur ☰, ‹,
                Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar.
@@ -179431,40 +179784,40 @@ const App = (() => {
                Bedingung an genau der Stelle, an der auch das Verstecken hängt —
                wer eines ändert, sieht das andere. */
             ((UI.amTelefon() || (typeof Ruhig !== 'undefined' && Ruhig.an()))
-                ? '<button data-a="teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
-                    '<button data-a="verlauf"><span class="mi">🕘</span>Versionsverlauf</button>' +
-                    '<button data-a="kopf-komm"><span class="mi">💬</span>Kommentare</button>' +
-                    '<button data-a="auto"><span class="mi">⚡</span>Automationen</button><hr>'
+                ? '<button data-a="teilen">' + mi('share') + 'Teilen und ausgeben</button>' +
+                    '<button data-a="verlauf">' + mi('history') + 'Versionsverlauf</button>' +
+                    '<button data-a="kopf-komm">' + mi('comment') + 'Kommentare</button>' +
+                    '<button data-a="auto">' + mi('bolt') + 'Automationen</button><hr>'
                 : '') +
-            `<button data-a="fav"><span class="mi">${p.favorite ? '★' : '☆'}</span>` +
+            `<button data-a="fav">${mi('star')}` +
             `${p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten'}</button>` +
-            `<button data-a="produkt-bereiche"><span class="mi">◎</span>Lebensbereiche` +
+            `<button data-a="produkt-bereiche">${mi('circleDot')}Lebensbereiche` +
             `<span class="ms">${bereichAnzahl || 'Keine'} ▸</span></button>` +
-            '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
-            '<button data-a="icon"><span class="mi">😀</span>Symbol ändern</button>' +
-            '<button data-a="cover"><span class="mi">🖼</span>Cover ändern</button>' +
-            '<button data-a="pid"><span class="mi">#</span>Seiten-ID kopieren</button>' +
-            '<button data-a="komm"><span class="mi">💬</span>Kommentare</button>' +
-            `<button data-a="vorschlag"><span class="mi">✍</span>Änderungen vorschlagen` +
+            '<button data-a="rename">' + mi('pencil') + 'Umbenennen</button>' +
+            '<button data-a="icon">' + mi('smile') + 'Symbol ändern</button>' +
+            '<button data-a="cover">' + mi('image') + 'Cover ändern</button>' +
+            '<button data-a="pid">' + mi('hash') + 'Seiten-ID kopieren</button>' +
+            '<button data-a="komm">' + mi('comment') + 'Kommentare</button>' +
+            `<button data-a="vorschlag">${mi('suggest')}Änderungen vorschlagen` +
             `<span class="ms">${p.vorschlagModus ? 'an' : 'aus'}</span></button>` +
             ((p.vorschlaege || []).length
-                ? `<button data-a="vorschlaege"><span class="mi">📝</span>Vorschläge ansehen` +
+                ? `<button data-a="vorschlaege">${mi('tasks')}Vorschläge ansehen` +
                     `<span class="ms">${p.vorschlaege.length}</span></button>` : '') +
-            '<button data-a="uebersetzen"><span class="mi">🅰</span>Übersetzen<span class="ms">▸</span></button>' +
-            '<button data-a="undo"><span class="mi">↶</span>Rückgängig machen<span class="ms">Strg Z</span></button>' +
+            '<button data-a="uebersetzen">' + mi('translate') + 'Übersetzen<span class="ms">▸</span></button>' +
+            '<button data-a="undo">' + mi('undo') + 'Rückgängig machen<span class="ms">Strg Z</span></button>' +
             '<hr>' +
             /* Daten */
-            '<button data-a="export"><span class="mi">⭳</span>Als Markdown</button>' +
-            '<button data-a="import"><span class="mi">⭱</span>Markdown einlesen</button>' +
+            '<button data-a="export">' + mi('download') + 'Als Markdown</button>' +
+            '<button data-a="import">' + mi('upload') + 'Markdown einlesen</button>' +
             Werkzeuge.seitenMenueZusatz(p) +
             '<hr>' +
-            `<button data-a="stat2"><span class="mi">📈</span>Seitenaufrufe<span class="ms">${p.aufrufe || 0}</span></button>` +
-            '<button data-a="updates"><span class="mi">🕘</span>Updates und Analysen</button>' +
-            `<button data-a="benach"><span class="mi">🔔</span>Benachrichtigungen` +
+            `<button data-a="stat2">${mi('eye')}Seitenaufrufe<span class="ms">${p.aufrufe || 0}</span></button>` +
+            '<button data-a="updates">' + mi('clock') + 'Updates und Analysen</button>' +
+            `<button data-a="benach">${mi('bell')}Benachrichtigungen` +
             `<span class="ms">${BENACHRICHTIGUNG[p.benachrichtigung || 'alle']} ▸</span></button>` +
-            `<button data-a="verbind"><span class="mi">⊞</span>Verbindungen` +
+            `<button data-a="verbind">${mi('plug')}Verbindungen` +
             `<span class="ms">${(p.verbindungen || []).length || 'Keine'} ▸</span></button>` +
-            '<button data-a="papier"><span class="mi">🗑</span>Gelöschte Seiten</button>', r.right + 4, r.top, { platzhalter: 'Suchaktionen …', titel: 'Aktionen',
+            '<button data-a="papier">' + mi('trash') + 'Gelöschte Seiten</button>', r.right + 4, r.top, { platzhalter: 'Suchaktionen …', titel: 'Aktionen',
             fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
                 `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
                 esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
@@ -181039,7 +181392,12 @@ const App = (() => {
      * Rechnung: darunter trifft der Daumen die Nachbarzeile mit.
      * ========================================================================*/
     const rMenue = () => {
-        const zeile = (was, zeichen, name, hinweis = '') => `<button data-r="${was}"><span class="rm-z">${zeichen}</span>` +
+        /* `zeichen` IST EIN NAME AUS `Register.symbole` (E701). Hier standen
+           🔍 ⌘ 🏠 📄 🧭 ✚ ✨ ⭱ ⬇ 🗑 ⌨ ⚙ — und „Mehr" trug den Kompass, obwohl
+           unten in der Leiste derselbe Weg die drei Punkte trägt. Jetzt hat
+           jeder Weg hier dasselbe Zeichen wie überall sonst, in `currentColor`
+           und still; die Wörter, die Kennungen und die Folge bleiben. */
+        const zeile = (was, zeichen, name, hinweis = '') => `<button data-r="${was}"><span class="rm-z">${menueZeichen(zeichen)}</span>` +
             `<span class="rm-n">${name}</span>` +
             (hinweis ? `<span class="rm-h">${hinweis}</span>` : '') + '</button>';
         const o = document.createElement('div');
@@ -181047,32 +181405,32 @@ const App = (() => {
         o.innerHTML =
             '<div class="rm-kopf">' +
                 '<div><b>Redion</b><span>Alles bleibt auf diesem Gerät</span></div>' +
-                '<button class="rm-zu" data-r="zu" aria-label="Schliessen">✕</button>' +
+                '<button class="rm-zu" data-r="zu" aria-label="Schliessen">' + menueZeichen('close') + '</button>' +
                 '</div>' +
                 '<div class="rm-rollen">' +
                 '<div class="rm-gruppe">' +
-                zeile('suche', '🔍', 'Suchen') +
-                zeile('befehle', '⌘', 'Befehle') +
-                zeile('start', '🏠', 'Start') +
-                zeile('seiten', '📄', 'Seiten') +
+                zeile('suche', 'search', 'Suchen') +
+                zeile('befehle', 'command', 'Befehle') +
+                zeile('start', 'home', 'Start') +
+                zeile('seiten', 'pages', 'Seiten') +
                 /* „Mehr" statt „Posteingang" (E42 §16). Der Posteingang ist kein
                    eigener Weg mehr, sondern eine Zeile IN Mehr — er ist meistens
                    leer, und ein Platz in der Hauptnavigation gehört dem, was man
                    oft braucht. Der Kompass steht bewusst NICHT hier: die Vorgabe
                    sagt ausdrücklich, er sei eine Seite in Mehr, kein Reiter. */
-                zeile('mehr', '🧭', 'Mehr') +
-                zeile('neu', '✚', 'Neue Seite') +
+                zeile('mehr', 'dots', 'Mehr') +
+                zeile('neu', 'plus', 'Neue Seite') +
                 /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
                    weg: unten steht „KI fragen", und hier steht der Weg zu allem,
                    was länger dauert als eine Frage. */
-                zeile('ki', '✨', 'KI und Verlauf') +
+                zeile('ki', 'sparkle', 'KI und Verlauf') +
                 '</div>' +
                 '<div class="rm-gruppe">' +
-                zeile('import', '⭱', 'Importieren') +
-                zeile('sichern', '⬇', 'Sichern', 'als Datei auf dieses Gerät') +
-                zeile('papierkorb', '🗑', 'Papierkorb') +
-                zeile('tasten', '⌨', 'Tastenkürzel') +
-                zeile('einstellungen', '⚙', 'Einstellungen') +
+                zeile('import', 'upload', 'Importieren') +
+                zeile('sichern', 'download', 'Sichern', 'als Datei auf dieses Gerät') +
+                zeile('papierkorb', 'trash', 'Papierkorb') +
+                zeile('tasten', 'keyboard', 'Tastenkürzel') +
+                zeile('einstellungen', 'settings', 'Einstellungen') +
                 '</div>' +
                 '</div>';
         document.body.appendChild(o);

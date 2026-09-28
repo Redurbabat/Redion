@@ -4857,3 +4857,92 @@ Alle acht Nachher-Bilder sind byte-gleich mit den Vorher-Bildern. Die Zeile
 in `ki.css` wird am Telefon ohnehin von `bausteine.css:221-225` überstimmt
 (gleiche Spezifität, spätere Datei); sie trägt jetzt trotzdem die Marke, damit
 die Zahl an einer Stelle steht. Die Bilder bleiben auf dem Rechner (§55.4).
+
+## §73 · Ruhiger, und nichts ist weg — laute Flächen, Dauerbewegung, Emoji, Start (E701, 28. September 2026)
+
+(§71 und §72 stehen auf dem Grundstand `claude/ruhig-grundstand` 515451f9;
+§74 bis §78 sind den anderen Zweigen der Bitte vom 27. September vergeben.)
+
+**Wie gemessen.** Playwright/Chromium, 1440 × 900 (Zeiger) und 390 × 844
+(`isMobile`, `hasTouch`), hell und dunkel, jede Ansicht mit echtem Inhalt
+über `Store`/`Produktwelten` aufgebaut, der Zeiger bei (2, 2). Vorher auf
+515451f9, nachher auf diesem Zweig, derselbe Aufbau (Skript im Scratchpad,
+nicht eingecheckt). Gezählt wird in der Seite:
+
+- **laut** — sichtbare Knöpfe ab 250 px², deren Fläche im Farbton des
+  Akzents gefüllt ist (deckend, Sättigung > .35, Ton ± 30°) oder deren
+  Verlauf überwiegend aus solchen Tönen besteht, dazu die Themenkugel.
+  `test580` §1 zählt zusätzlich den dunklen Funkelknopf „Lernen starten"
+  (E638) — der ist die eine Haupthandlung auf „Heute".
+- **endlos** — `document.getAnimations()` mit `playState` „running" und
+  unendlich vielen Durchläufen.
+- **Emoji** — Blätter in `.einst-nav`, `.menu`, `#r-blatt`, `.pg-tools`,
+  `.home-liste`, deren Text ein Emoji ist. Getippte Zeichen wie ⌘ ⌨ ⧉ ↔
+  zählt diese Spalte NICHT; die zählt `test580` §3 (je Zeile genau ein
+  gezeichnetes `<svg class="sym">`, kein getipptes Zeichen daneben).
+
+```txt
+Ansicht (Rechner)        laut hell   laut dunkel   endlos   Emoji
+Heute (+ „Lernen st.")   4 → 1       3 → 1         0 → 0    —
+Dokumente                2 → 1       1 → 1         1 → 0    —
+Textseite                2 → 0       1 → 0         0 → 0    4 → 0  (Seitenwerkzeuge)
+Lernen                   2 → 0       1 → 0         0 → 0    —
+Einstellungen            0 → 0       0 → 0         1 → 0    19 → 0
+⋯-Menü der Seite         2 → 0       1 → 0         0 → 0    37 → 0
+Mehr                     2 → 0       1 → 0         0 → 0    8 → 0
+Termine                  2 → 0       1 → 0         0 → 0    7 → 0
+Band offen               2 → 0       1 → 0         0 → 0    4 → 0
+
+Ansicht (Telefon)        laut hell   laut dunkel   endlos   Emoji
+Heute (+ „Lernen st.")   2 → 1       2 → 1         0 → 0    —
+Dokumente                1 → 1       1 → 1         1 → 0    —
+Einstellungen            0 → 0       0 → 0         1 → 0    19 → 0
+⋯-Menü der Seite         0 → 0       0 → 0         0 → 0    37 → 0
+R-Blatt                  1 → 1*      1 → 1*        1 → 0    11 → 0
+```
+
+\* Die eine laute Fläche unter dem R-Blatt ist „PDF öffnen" im Regal
+dahinter — die Haupthandlung jener Ansicht, nicht des Blattes.
+
+Die zwei „laut" auf „Dokumente" hell waren die violette Themenkugel und
+„PDF öffnen" im Regal; übrig ist „PDF öffnen". Die Dauerbewegung hinter
+Einstellungen und R-Blatt war der Kartenring des Regals darunter.
+
+**Gezeichnete Zeichen statt getippter, je Ort** (Zeilen mit einem getippten
+Zeichen oder Emoji, vorher → nachher; die Griffe selbst: dieselbe Kennung,
+dasselbe Wort, dieselbe Folge, nachgezählt in `test580` §3):
+
+```txt
+Einstellungen, Navigation   19 → 0     19 Bereiche
+⋯-Menü der Seite            47 → 0     47 Zeilen (Rechner in der ruhigen Fassung und Telefon)
+„Mehr"                      13 → 0     13 Wege
+R-Blatt                     12 → 0     12 Wege, dazu „Schliessen" (✕ → Zeichen `close`)
+Seitenwerkzeuge              5 → 0     5 Griffe (Telefon; am Rechner dieselben)
+Termine                      3 + n → 0 3 Karten und jede Zeile „Bevorstehend" (📌)
+```
+
+Neue Zeichen im Register: 20 (`plug`, `keyboard`, `globe`, `users`, `key`,
+`creditCard`, `info`, `cloud`, `archive`, `widthWide`, `widthNarrow`,
+`textSize`, `typeface`, `crumbs`, `hash`, `translate`, `moveTo`, `suggest`,
+`alarm`, `code`) — im Raster der übrigen 24 × 24, Strich 1,7, `currentColor`.
+
+**Start und Einzeldatei.** gzip Stufe 6 (`node:zlib`), nur die Dateien, die sich ändern
+(alle im Start):
+
+```txt
+Datei                                            roh vorher  roh nachher  gzip vorher  gzip nachher  Δ gzip
+quell/bereiche/datenbanken/ansichten/dienst.js        61601        62878      16,3 KB       16,8 KB   +0,48 KB
+quell/bereiche/einstellungen/ansicht/seite.js        103399       103803      29,7 KB       29,8 KB   +0,11 KB
+quell/bereiche/wissen/lernwelt.js                    178234       178882      46,6 KB       46,8 KB   +0,28 KB
+quell/bereiche/wissen/werkzeuge.js                   183225       183731      50,8 KB       51,1 KB   +0,23 KB
+quell/register/symbole.js                             42540        47622      14,2 KB       15,8 KB   +1,58 KB
+quell/schale/aufbau/kopfleiste.js                     25367        29795       8,3 KB        9,7 KB   +1,45 KB
+quell/schale/aufbau/schale.js                        261812       263057      75,3 KB       76,0 KB   +0,66 KB
+quell/schale/stil/studio.css                          33795        42180      15,6 KB       18,3 KB   +2,72 KB
+                                                                                           gesamt   +7,51 KB
+```
+
+Gut die Hälfte davon sind die deutschen Begründungen an Ort und Stelle
+(§39, §53). `test388` §5 misst den ganzen Start: **2767 → 2775 KB** über
+246 Dateien (Decke 2850 KB; der Grundstand 515451f9 hatte 2767 KB, §71).
+Die Einzeldatei: 11 595 462 → 11 617 437 Bytes (+21 975).

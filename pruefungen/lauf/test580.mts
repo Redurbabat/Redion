@@ -42,7 +42,9 @@
  *       Block am Ende eines hellen Bandes.
  *   §7  Ein Titel am Telefon: die kleine Krume blendet aus, solange der
  *       grosse Titel zu sehen ist, und kehrt zurück, wenn er wegrollt. Sie
- *       bleibt im Baum; am Rechner ändert sich nichts.
+ *       bleibt im Baum; am Rechner ändert sich nichts. Zeichnet die
+ *       Kopfzeile neu (Stern, Schloss), blitzt sie nicht auf — diese Probe
+ *       kam mit E701 dazu, nach dem roten Commit.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   Gegen den Stand 515451f9 (vor E701) ist sie rot, in jedem Abschnitt —
@@ -545,6 +547,22 @@ console.log('\n§7 Ein Titel am Telefon — die Krume weicht dem grossen Titel')
   await s.evaluate(() => { const r = document.getElementById('scroll'); if (r) r.scrollTop = 0; }); await warte(s, 500);
   const seiteOben = await krume();
   p('Seite: am Anfang nur der grosse Titel', !!seiteOben && seiteOben.deck === 0, JSON.stringify(seiteOben));
+  /* DERSELBE TITEL, DERSELBE BEOBACHTER. `pfad()` läuft auch nach Stern
+     und Schloss und zeichnet die Krume neu; ein neuer Beobachter meldet
+     sich erst einen Takt später, und so lange stand die Krume wieder da —
+     sie blitzte auf. Zwölf Takte lang je eine Probe. */
+  const blitz = await s.evaluate(() => new Promise<number>(fertig => {
+    let hoechste = 0, takt = 0;
+    (window as any).Kopfleiste.pfad();
+    const probe = (): void => {
+      const a = document.querySelector<HTMLElement>('#crumb > a:last-child');
+      if (a) hoechste = Math.max(hoechste, +getComputedStyle(a).opacity);
+      if (++takt < 12) requestAnimationFrame(probe); else fertig(+hoechste.toFixed(2));
+    };
+    requestAnimationFrame(probe);
+  }));
+  p('Seite: neu gezeichnet (Stern, Schloss) blitzt die Krume nicht auf',
+    blitz <= 0.05, 'höchste Deckkraft ' + blitz);
   await s.evaluate(() => { const r = document.getElementById('scroll'); if (r) r.scrollTop = 900; }); await warte(s, 600);
   const seiteUnten = await krume();
   p('Seite: weggerollt, steht der Name wieder oben', !!seiteUnten && seiteUnten.deck === 1, JSON.stringify(seiteUnten));

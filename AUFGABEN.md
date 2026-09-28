@@ -1424,3 +1424,21 @@ Beide Treffer sind geklärt, und nur einer war ein Fehler an einer Fläche:
 stand nur HINTER der Regel, ausserhalb der acht Zeilen, die `test402` liest.
 `#ai .ki-quellschalter` ist ein echter Nebenweg und hat jetzt seinen
 geschriebenen Grund. `test402` ist 4/4.
+
+## Die Kurven der Kennzahlkarten aus echten Werten (L224, nach E701)
+
+E701 hat sie in Ruhe grau gemacht, damit sie nichts behaupten — gelöscht
+und erfunden wurde nichts. Offen ist Redurs Wahl: echte Tageswerte
+(`reviewVerlauf`, die sieben Tage aus „Letzte 7 Tage") oder dort, wo es
+keine gibt, keine Kurve. Zuerst ein Prüflauf, der die Kurve gegen die Zahl
+darüber hält (§30).
+
+## Das Blockmenü mit gezeichneten Zeichen (nach E701)
+
+E701 hat die Emoji in Einstellungen, ⋯-Menü der Seite, „Mehr", R-Blatt,
+Seitenwerkzeugen und Termine durch Striche aus `Register.symbole` ersetzt
+(Redur: „Gezeichnete Zeichen"). Das Menü am Griff eines Blocks
+(`editor.ts`, „Umwandeln in", „Farbe", … „Löschen", rund zwanzig Zeilen)
+trägt noch 🎨 🔠 ✍ ✨ 💬 🎴 🗑 und getippte Pfeile. Dieselbe Arbeit: jede
+Zeile am selben Ort mit demselben Wort, ein Zeichen je Zeile, Löschen rot;
+zuerst `test580` §3 um das Blockmenü erweitern und rot sehen.

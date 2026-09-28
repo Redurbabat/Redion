@@ -2942,22 +2942,37 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     /* ========================================================================
      * ZUSATZEINTRÄGE IM SEITENMENÜ
      * ======================================================================*/
+    /* GEZEICHNETE ZEICHEN STATT EMOJI (E701) — dieselben Zeilen, dieselben
+       Kennungen, dieselben Wörter; nur das Bild kommt aus `Register.symbole`
+       und nimmt die stille Farbe seiner Zeile an. „Verschlüsseln" trägt den
+       Schlüssel und nicht das Schloss: das Schloss heisst im selben Menü
+       schon „Seite sperren" (E273: ein Bild, eine Bedeutung). */
+    const mi = (name) => {
+        let svg = '';
+        try {
+            svg = Register.symbole.alsSvg(name, 16);
+        }
+        catch {
+            svg = '';
+        }
+        return `<span class="mi">${svg}</span>`;
+    };
     const seitenMenueZusatz = (p) => ('<hr>' +
-        '<button data-a="wz-vorlage"><span class="mi">🧩</span>Als Vorlage speichern</button>' +
-        '<button data-a="wz-vorlage-ein"><span class="mi">＋</span>Aus Vorlage einfügen</button>' +
-        '<button data-a="wz-versionen"><span class="mi">🕘</span>Versionsverlauf</button>' +
-        `<button data-a="wz-wiki"><span class="mi">📚</span>${p.wiki ? 'Wiki auflösen' : 'In Wiki umwandeln'}</button>` +
-        '<button data-a="wz-teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
-        '<button data-a="wz-erinnerung"><span class="mi">⏰</span>Erinnerung</button>' +
+        '<button data-a="wz-vorlage">' + mi('puzzle') + 'Als Vorlage speichern</button>' +
+        '<button data-a="wz-vorlage-ein">' + mi('plus') + 'Aus Vorlage einfügen</button>' +
+        '<button data-a="wz-versionen">' + mi('history') + 'Versionsverlauf</button>' +
+        `<button data-a="wz-wiki">${mi('book')}${p.wiki ? 'Wiki auflösen' : 'In Wiki umwandeln'}</button>` +
+        '<button data-a="wz-teilen">' + mi('share') + 'Teilen und ausgeben</button>' +
+        '<button data-a="wz-erinnerung">' + mi('alarm') + 'Erinnerung</button>' +
         '<hr>' +
-        `<button data-a="wz-sperren"><span class="mi">🔒</span>${p.locked ? 'Entschlüsseln' : 'Verschlüsseln'}</button>` +
+        `<button data-a="wz-sperren">${mi('key')}${p.locked ? 'Entschlüsseln' : 'Verschlüsseln'}</button>` +
         '<hr>' +
-        '<button data-a="wz-fokus"><span class="mi">◎</span>Fokus-Modus<span class="ms">Strg Shift F</span></button>' +
-        '<button data-a="wz-quelltext"><span class="mi">⌨</span>Markdown-Quelltext</button>' +
-        '<button data-a="wz-statistik"><span class="mi">📊</span>Statistik</button>' +
+        '<button data-a="wz-fokus">' + mi('maximize') + 'Fokus-Modus<span class="ms">Strg Shift F</span></button>' +
+        '<button data-a="wz-quelltext">' + mi('code') + 'Markdown-Quelltext</button>' +
+        '<button data-a="wz-statistik">' + mi('chart') + 'Statistik</button>' +
         '<hr>' +
-        '<button data-a="wz-html"><span class="mi">⭳</span>Als HTML</button>' +
-        '<button data-a="wz-drucken"><span class="mi">🖨</span>Drucken / PDF</button>');
+        '<button data-a="wz-html">' + mi('download') + 'Als HTML</button>' +
+        '<button data-a="wz-drucken">' + mi('printer') + 'Drucken / PDF</button>');
     const seitenMenueAktion = (a, p) => {
         const karte = {
             'wz-vorlage': () => alsVorlage(p),

@@ -789,6 +789,118 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* --- RUHIGER, UND NICHTS IST WEG (E701, test580) ------------------------
+     Die Orte, die der Bogen leiser gemacht hat und die bis dahin kein
+     eigenes Bildziel hatten: das ⋯-Menü der Seite, die Navigation der
+     Einstellungen, „Mehr", das R-Blatt, „Termine", das offene Band und die
+     Kennzahlkarten des Lernzentrums. `heute` und `bibliothek` gibt es
+     schon. Jede Ansicht räumt zuerst die Begrüssung weg (wie `heute`). */
+  ruhigmenue: {
+    titel: 'Ruhiger: das ⋯-Menü einer Seite mit gezeichneten Zeichen (E701)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const s = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥' });
+      Store.addBlock(s.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung.' });
+      await Store.flush();
+      w.App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 800));
+      document.getElementById('btn-page-menu')?.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+  ruhigeinstellungen: {
+    titel: 'Ruhiger: die Navigation der Einstellungen (E701)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      w.Einstellungen.oeffne('allgemein');
+      await new Promise(r => setTimeout(r, 700));
+      /* Am Telefon steht zuerst der Bereich; die Liste ist einen Schritt
+         zurück — genau die Liste ist hier gemeint. */
+      const zurueck = [...document.querySelectorAll<HTMLElement>('.overlay button')]
+        .find(b => /Übersicht/.test(b.textContent || '') && b.getBoundingClientRect().width > 0);
+      zurueck?.click();
+      (document.activeElement as HTMLElement | null)?.blur();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+  ruhigmehr: {
+    titel: 'Ruhiger: „Mehr" mit gezeichneten Zeichen (E701)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      w.Ansichten.mehr();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+  ruhigrblatt: {
+    titel: 'Ruhiger: das R-Blatt am Telefon (E701)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      w.App.arbeitsbereich();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+  ruhigtermine: {
+    titel: 'Ruhiger: Termine ohne Stecknadeln, die Krume weicht dem Titel (E701)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      w.Ansichten.termine();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+  ruhigband: {
+    titel: 'Ruhiger: das offene Band, die Ecke im Grund des Bandes (E701)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const s = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥' });
+      Store.addBlock(s.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung.' });
+      await Store.flush();
+      w.App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 800));
+      const t = document.getElementById('studio-tools');
+      if (t && t.getBoundingClientRect().width > 0) t.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+  ruhiglernen: {
+    titel: 'Ruhiger: die Kennzahlkarten des Lernzentrums in Ruhe (E701)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const fach = Store.addPage(null, { text: 'Elektrotechnik' });
+      for (const q of ['Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I', 'Arbeit :: W = P · t'])
+        Store.addBlock(fach.id, 'flashcard', { text: q });
+      w.Produktwelten.lernen('lernen');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  },
+
   auffrischen: {
     titel: 'Lernen → „Zuerst auffrischen" (E325)',
     bauen: async () => {

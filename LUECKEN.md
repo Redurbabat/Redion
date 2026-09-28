@@ -8348,6 +8348,38 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L224 · Die kleinen Kurven in den Kennzahlkarten zeigen feste Werte, keine echten — 28. September 2026
+
+**Gefunden beim Bau von E701**, als die Kennzahlkarten des Lernzentrums in
+Ruhe grau wurden. Jede Karte („fällige Fehler", „fällige Karten", „neue
+Karten", „nächste Wiederholung") trägt unten eine kleine Kurve
+(`.rmo-pfad`). Sie kommt aus `src/schale/bedienung/motion.ts:218-240` und
+zeichnet in JEDER Karte dieselben fünf festen Höhen:
+
+```txt
+[8, 13, 6, 17, 11]
+```
+
+Sie sieht aus wie ein Verlauf der Zahl darüber — und ist keiner. Bei
+„fällige Fehler 0" steigt und fällt dieselbe Kurve wie bei „neue Karten 4".
+Farbig im Akzent las sie sich wie eine Aussage.
+
+**Was E701 getan hat, und was nicht:** die Kurve ist in Ruhe neutral (grau,
+`filter:saturate(0)`), damit sie nichts behauptet; angefasst wird sie
+farbig wie bisher. Sie ist NICHT gelöscht (Redur, 16:45 UTC: „ohne etwas
+lösche") und es sind KEINE Daten dafür erfunden worden. Redurs Frage aus
+dem Fragebogen der Karte — grau lassen, echte Werte zeigen oder weglassen?
+— ist damit nur für die Farbe beantwortet.
+
+**Was fehlt:** echte Werte. Für „fällige Karten" und „fällige Fehler" gibt
+es sie (`reviewVerlauf` je Karte, die sieben Tage aus „Letzte 7 Tage");
+für „nächste Wiederholung" ist eine Kurve vielleicht gar nicht sinnvoll.
+Dann: die Kurve aus den echten Tageswerten zeichnen, oder dort, wo es keine
+gibt, keine zeichnen — mit einem Prüflauf, der die Kurve gegen die Zahlen
+hält (§30), und nach Redurs Wahl.
+
+---
+
 ## L223 · Im Ordnerbetrieb steht in der Fehlerliste nur „Script error." — 27. September 2026
 
 **Gefunden beim Bau von E699**, nicht gesucht. Die erste Fehlergrenze der
@@ -8933,8 +8965,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 27. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 119 Lücken, 64 offene und 55 geschlossene. Der Befehl dazu ist
+**Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 120 Lücken, 65 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

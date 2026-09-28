@@ -12,6 +12,16 @@
  * ==========================================================================*/
 const Ansichten = (() => {
     const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    /** Ein gezeichnetes Zeichen aus `Register.symbole` (E273) — oder nichts.
+        Eine leere Stelle ist ehrlicher als ein Emoji als Ersatz (E701). */
+    const zeichen = (name, groesse = 18) => {
+        try {
+            return Register.symbole.alsSvg(name, groesse);
+        }
+        catch {
+            return '';
+        }
+    };
     /**
      * Zwei Handgriffe, die in dieser Datei elfmal gebraucht werden.
      *
@@ -517,7 +527,7 @@ const Ansichten = (() => {
                 block('Vorlagen', vorlagen.map((v) => `<button data-vorlage="${esc(v.id || v.name)}"><span>${esc(v.icon || '🧩')}</span>` +
                     `<span class="pt">${esc(v.name || v.titel || 'Vorlage')}</span></button>`).join('')) +
                 '<div class="home-liste" style="margin-top:22px">' +
-                '<button data-a="papierkorb"><span>🗑</span><span class="pt">Papierkorb</span></button>' +
+                '<button data-a="papierkorb"><span>' + zeichen('trash') + '</span><span class="pt">Papierkorb</span></button>' +
                 '</div>' +
                 '</div>';
         wrap.onclick = (e) => {
@@ -593,15 +603,20 @@ const Ansichten = (() => {
                    landete bei Google-Client-IDs.
                    Jetzt zuerst der Kalender als Ort, dann das Verbinden als das,
                    was es ist. */
+                /* Gezeichnete Zeichen statt 📅 🔗 🎙 und der Stecknadel an jeder
+                   Zeile (E701): dieselben drei Karten, dieselben Wörter, derselbe
+                   Ort. Was ein Mensch einer Besprechungsseite als Zeichen gegeben
+                   hat, bleibt sein Zeichen — nur wo Redion selbst eines erfand,
+                   steht jetzt ein Strich. */
                 '<div class="home-karten">' +
-                '<button class="hk" data-a="kal-auf"><b>📅 Kalender</b>' +
+                '<button class="hk" data-a="kal-auf"><b>' + zeichen('calendar') + 'Kalender</b>' +
                 '<span>Alle Termine in einer Chronologie</span></button>' +
-                '<button class="hk" data-a="kal"><b>🔗 Kalender verbinden</b>' +
+                '<button class="hk" data-a="kal"><b>' + zeichen('link') + 'Kalender verbinden</b>' +
                 '<span>Google, CalDAV — Termine hereinholen</span></button>' +
-                '<button class="hk" data-a="mtg"><b>🎙 Besprechung</b>' +
+                '<button class="hk" data-a="mtg"><b>' + zeichen('mic') + 'Besprechung</b>' +
                 '<span>Mitreden statt mitschreiben</span></button>' +
                 '</div>' +
-                block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>📌</span>` +
+                block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>${zeichen('calendarDays')}</span>` +
                     `<span class="pt">${esc(t.text)}</span>` +
                     `<span class="pth">${esc(t.wann)}</span></button>`).join('')) +
                 /* Steht nichts an, sagt die Ansicht das — und daneben den einen
@@ -609,11 +624,11 @@ const Ansichten = (() => {
                    Sackgasse. */
                 (kommend.length ? '' :
                     '<h2>Bevorstehend</h2><div class="home-liste">' +
-                        '<button data-a="kal"><span>📅</span><span class="pt">Kalender verbinden</span>' +
+                        '<button data-a="kal"><span>' + zeichen('link') + '</span><span class="pt">Kalender verbinden</span>' +
                         '</button>' +
                         '<div class="leer">Dann stehen hier alle Termine der nächsten ' +
                         'dreissig Tage, und zu jedem kannst du eine Notiz anlegen.</div></div>') +
-                block('Aus Besprechungen', notizen.map(p => `<button data-open="${esc(p.id)}"><span>${esc(p.icon || '🎙')}</span>` +
+                block('Aus Besprechungen', notizen.map(p => `<button data-open="${esc(p.id)}"><span>${p.icon ? esc(p.icon) : zeichen('mic')}</span>` +
                     `<span class="pt">${esc(p.text || 'Ohne Titel')}</span></button>`).join('')) +
                 '</div>';
         wrap.onclick = (e) => {
@@ -644,6 +659,11 @@ const Ansichten = (() => {
      * Drei Gruppen, und jede Zeile sagt in einem Satz, wofür sie da ist. Das
      * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
      * ======================================================================*/
+    /* `z` IST DER NAME EINES ZEICHENS aus `Register.symbole`, kein Emoji
+       mehr (E701). Hier standen ▤ ⌂ 🧭 ⌘ ⌨ 🧩 💾 📥 📥 ☁ 🗑 ⚙ ℹ — zweimal
+       derselbe Briefkasten für zwei verschiedene Wege. Jetzt hat „Importieren"
+       den Pfeil hinauf wie in den Einstellungen und „Posteingang" den Kasten,
+       wie in der Seitenleiste. */
     const mehrGruppen = () => [
         /* DIE ZWEI WEGE, DIE UNTEN KEINEN PLATZ MEHR HABEN (E236).
            Die Navigation hat seit E236 fünf Wege statt sechs — und aus dem
@@ -654,30 +674,30 @@ const Ansichten = (() => {
            §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
            noch über die Adresszeile findet, ist verschwunden. */
         { name: 'Wo du arbeitest', eintraege: [
-                { z: '▤', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
-                { z: '⌂', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
+                { z: 'pages', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
+                { z: 'workspace', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
             ] },
         { name: 'Wichtige Werkzeuge', eintraege: [
-                { z: '🧭', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
-                { z: '⌘', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
-                { z: '⌨', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
-                { z: '🧩', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' }
+                { z: 'compass', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
+                { z: 'command', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
+                { z: 'keyboard', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
+                { z: 'puzzle', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' }
             ] },
         { name: 'Daten und Sicherheit', eintraege: [
-                { z: '💾', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
-                { z: '📥', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
-                { z: '📥', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+                { z: 'download', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
+                { z: 'upload', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
+                { z: 'inbox', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
                 /* DER WEG ZUR WOLKE (E251). Der Dialog konnte längst anmelden und
                    abgleichen — erreichbar war er nur über die Befehlspalette, und
                    ein Weg, den man nur über die Palette findet, ist verschwunden
                    (dieselbe Regel wie zwei Gruppen weiter oben). Hier steht er
                    neben Sicherung und Import, wo Daten-Dinge wohnen. */
-                { z: '☁', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
-                { z: '🗑', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
+                { z: 'cloud', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
+                { z: 'trash', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
             ] },
         { name: 'System', eintraege: [
-                { z: '⚙', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
-                { z: 'ℹ', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
+                { z: 'settings', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
+                { z: 'info', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
             ] }
     ];
     const mehr = () => bildschirm('Mehr', (wrap) => {
@@ -686,7 +706,7 @@ const Ansichten = (() => {
             '<div class="home">' +
                 '<h1>Mehr</h1>' +
                 mehrGruppen().map(g => `<h2>${esc(g.name)}</h2><div class="home-liste">` +
-                    g.eintraege.map(e => `<button data-a="${esc(e.a)}"><span class="mz">${esc(e.z)}</span>` +
+                    g.eintraege.map(e => `<button data-a="${esc(e.a)}"><span class="mz">${zeichen(e.z)}</span>` +
                         `<span class="pt">${esc(e.t)}` +
                         `<span class="snip">${esc(e.s)}</span></span>` +
                         '<span class="pth">›</span></button>').join('') +
