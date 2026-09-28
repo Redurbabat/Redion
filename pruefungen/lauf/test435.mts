@@ -9,7 +9,8 @@
  *      der Knopf im Studio-Kopf (zuletzt benutztes Schema des Grundtons).
  *   §2 DER SCHALTER: das Markup der 18 Aufrufer ist unverändert; der
  *      Verlauf hängt an `::before` und nur an `.an`; die Trefferfläche
- *      bleibt 44 (§37) und liegt VOR dem Verlauf.
+ *      bleibt 44 (§37) und liegt VOR dem Verlauf. Seit E702 steht im
+ *      Stilblatt keine Endlosdrehung mehr (test581 §4, §8).
  *   §3 DIE TEXTUR: der Filter ist genau EINMAL im Dokument, auch nach
  *      dreimal Legen; sie sitzt im Willkommen-Kopf und nirgends sonst.
  *   §4 DIE SYMBOLREIHE: die Blase ist der echte Vorlesename und erscheint
@@ -151,6 +152,13 @@ const schalter = JSON.parse(await s.evaluate(`(async () => {
     anMischung: an ? vor(an, '::before').mixBlendMode : null,
     anDreht: an ? vor(an, '::before').animationName : null,
     ausDreht: aus ? vor(aus, '::before').animationName : null,
+    /* NICHT ENDLOS (E702). Seit E535 legt motion.css beim Einschalten eine
+       kurze Drehung über den Verlauf; der 7-s-Kreisel aus E462 lief damit
+       im Betrieb nicht mehr, stand aber noch im Stilblatt. */
+    endlos: document.getAnimations().filter(a => {
+      const z = a.effect && a.effect.target;
+      return z && z.closest && z.closest('.schalter') && a.effect.getTiming().iterations === Infinity;
+    }).length,
     trefferZ: an ? vor(an, '::after').zIndex : null,
     verlaufZ: an ? vor(an, '::before').zIndex : null,
     hoch: an ? Math.round(an.getBoundingClientRect().height) : 0
@@ -181,7 +189,14 @@ p('Der Verlauf liegt nur am eingeschalteten Schalter — .4, und dafür mit `scr
   Number(schalter.anDeckung) === 0.4 && schalter.anMischung === 'screen' &&
   Number(schalter.ausDeckung) === 0,
   schalter.anDeckung + ' (' + schalter.anMischung + ') / ' + schalter.ausDeckung);
-p('… und dreht sich nur dort', schalter.anDreht !== 'none' && schalter.ausDreht === 'none');
+/* „dreht sich nur dort" — und seit E702 auch: nirgends endlos. Die Drehung
+   beim Einschalten ist die kurze Zustandsbewegung aus motion.css (E535):
+   Bewegung, die einen Zustand sagt, statt Bewegung im Ruhezustand (Redur:
+   „oberfläche bischen ruhige machen"; UI-Kit: „Continuous animations must
+   be limited to components where motion communicates state"). */
+p('… und dreht sich nur dort — beim Einschalten, nicht endlos (E702)',
+  schalter.anDreht !== 'none' && schalter.ausDreht === 'none' && schalter.endlos === 0,
+  schalter.anDreht + ' / ' + schalter.ausDreht + ' / endlos ' + schalter.endlos);
 p('Die Trefferfläche liegt VOR dem Verlauf', Number(schalter.trefferZ) > Number(schalter.verlaufZ),
   schalter.trefferZ + ' / ' + schalter.verlaufZ);
 p('Ein Klick in die Mitte trifft den Schalter, nicht den Verlauf', schalter.trifft === true);
@@ -327,11 +342,15 @@ for (const name of ['textur', 'staffelei']) {
    rot wurde und diese Zeile trotzdem grün blieb. */
 {
   const ez = lies('quell/schale/stil/einstellungen.css');
+  /* Die Regel trägt seit E702 keine Endlosdrehung mehr
+     (`animation:ez-schalter-dreh 7s linear infinite` stand darin, lief seit
+     E535 im Betrieb aber nicht mehr — motion.css legte sich darüber). */
   p('Der Schalter-Verlauf steht in einstellungen.css, nicht in einem neuen Blatt',
-    /\.schalter\.an::before\{opacity:\.85; animation:ez-schalter-dreh/.test(ez));
+    /\.schalter\.an::before\{opacity:\.85\}/.test(ez));
   p('… und die Deckung, die WIRKT, steht im selben Blatt darunter (E537)',
     ez.indexOf('.schalter.an::before{opacity:.4; mix-blend-mode:screen}') >
-    ez.indexOf('.schalter.an::before{opacity:.85; animation:ez-schalter-dreh'));
+    ez.indexOf('.schalter.an::before{opacity:.85}'));
+  p('… und nichts darin dreht endlos (E702)', !/ez-schalter-dreh[^;}]*infinite/.test(ez));
 }
 
 p('Keine Fehler auf den Seiten', fehler.length === 0, fehler.slice(0, 3).join(' | '));

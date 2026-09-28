@@ -17,6 +17,12 @@
  *      sondern Barrierefreiheit (CLAUDE.md §38/§39): für manche Menschen
  *      löst Bewegung Übelkeit aus.
  *
+ *   4. (E702, 27. September 2026) Dazu kommen die Federn des Touch Kits —
+ *      Redur: „Wie im UI-Kit (Empfohlen)". Die drei Kurven oben bleiben
+ *      ohne Überschwingen; fünf GENANNTE Federn dürfen es, jede nur so weit
+ *      wie im Kit, und jede mit Rückfall für Browser ohne `linear()`.
+ *      Abschnitt 7 hält das.
+ *
  * WAS DIESER LAUF NICHT KANN: beurteilen, ob es SCHÖN aussieht. Er prüft,
  * dass die Werte da sind, dass sie greifen und dass die Abschaltung wirkt.
  * Das Aussehen prüft ein Blick auf `bilder.mts`.
@@ -24,6 +30,7 @@
  *   node pruefungen/lauf/test126.mts
  * ==========================================================================*/
 import { chromium } from 'playwright';
+import fs from 'node:fs';
 import path from 'node:path';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
@@ -218,6 +225,48 @@ const groesste = Math.max(0, ...staffel.verz.map(v => parseFloat(v) * (/ms/.test
 p('Die Staffel bleibt unter 200 ms', groesste <= 200, groesste + ' ms');
 p('Und die Bewegung selbst ist kurz',
   parseFloat(staffel.dauer) <= 0.3, staffel.dauer);
+
+console.log('\n7 · Die Federn des Kits (E702): fünf mit Namen, jede mit ihrem Mass');
+
+/* „KEINE FEDERN" GILT WEITER FÜR DIE DREI KURVEN OBEN (Abschnitt 1). Seit
+   E702 gibt es daneben fünf Federn aus Redurs Touch Kit, und sie dürfen
+   überschwingen — aber jede nur so weit wie im Kit: ein Knopf, der beim
+   Loslassen um 18 % statt um 4,6 % zurückprallt, wäre wieder das
+   „nett beim ersten Mal, lästig beim fünfzigsten" aus E43. Die Grenzen
+   stehen hier, die Zahlen im Kit (motion-tokens.css). */
+const DECKEN: Record<string, number> = { druck: 1.05, knapp: 1.006, sanft: 1, lebhaft: 1.08, weich: 1.002 };
+const federn = await handy.evaluate((namen: string[]) => {
+  const w = getComputedStyle(document.documentElement);
+  return namen.map(n => ({ n, kurve: w.getPropertyValue('--feder-' + n).trim(),
+                           dauer: w.getPropertyValue('--feder-' + n + '-dauer').trim() }));
+}, Object.keys(DECKEN));
+/* Die Stützwerte einer `linear()`-Kurve — ohne Prozentangaben, wie das Kit
+   sie schreibt. */
+const stuetzen = (k: string): number[] =>
+  (/^linear\((.*)\)$/.exec(k)?.[1] ?? '').split(',').map(z => parseFloat(z)).filter(z => Number.isFinite(z));
+const zuHoch = (k: string, decke: number): boolean => Math.max(...stuetzen(k)) > decke + 1e-9;
+p('Es gibt fünf Federn, jede als linear()-Kurve', federn.length === 5 && federn.every(f => /^linear\(/.test(f.kurve)),
+  federn.map(f => f.n + ': ' + f.kurve.slice(0, 12)).join(' · '));
+p('Jede beginnt bei 0 und endet bei 1', federn.every(f => { const z = stuetzen(f.kurve); return z[0] === 0 && z[z.length - 1] === 1; }));
+p('Keine schwingt weiter über als im Kit (druck 1,05 · knapp 1,006 · sanft nie · lebhaft 1,08 · weich 1,002)',
+  federn.every(f => !zuHoch(f.kurve, DECKEN[f.n] ?? 1)),
+  federn.map(f => `${f.n} ${Math.max(...stuetzen(f.kurve))}`).join(' · '));
+p('Jede Feder hat eine Dauer unter einer Sekunde', federn.every(f => parseInt(f.dauer) > 0 && parseInt(f.dauer) < 1000),
+  federn.map(f => f.dauer).join(' / '));
+/* Gegenprobe: eine Feder, die um 20 % überschwingt, würde gefunden. */
+p('Gegenprobe: eine Feder mit 1,2 würde gefunden', zuHoch('linear(0, 0.6, 1.2, 0.95, 1)', DECKEN['druck'] ?? 1));
+/* DER RÜCKFALL. Safari vor 17.2 kennt `linear()` nicht; eine ungültige
+   Kurve in `var()` löscht die ganze Übergangsliste (E259). Also steht in
+   :root die alte Einfahrkurve, und nur `@supports` legt die Feder darüber. */
+const grundCss = fs.readFileSync(path.join(WURZEL, 'quell/schale/stil/grund.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+p('Ohne linear() fällt jede Feder auf --ease-enter zurück (@supports, E259)',
+  Object.keys(DECKEN).every(n => new RegExp('--feder-' + n + '\\s*:\\s*var\\(--ease-enter\\)').test(grundCss)) &&
+  /@supports\s*\(\s*transition-timing-function\s*:\s*linear\(0,\s*1\)\s*\)/.test(grundCss));
+const ruhigeFedern = await ruhig.evaluate((namen: string[]) => {
+  const w = getComputedStyle(document.documentElement);
+  return namen.map(n => w.getPropertyValue('--feder-' + n + '-dauer').trim());
+}, Object.keys(DECKEN));
+p('Wer keine Bewegung mag: alle Federn dauern 1 ms', ruhigeFedern.every(d => d === '1ms'), ruhigeFedern.join(' / '));
 
 await browser.close();
 console.log(`\n  Suite 90 — Bewegung: ${ok} ok, ${weg} offen`);
