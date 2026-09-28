@@ -1,5 +1,31 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E702 · Flüssige Bewegung: die Federn des Touch Kits in Redions Schale
+
+**Redur:** „ich will das es flüssigere animationen … haben" (27.09., ca.
+16:45), im Fragebogen „Wie im UI-Kit (Empfohlen)" (ca. 21:45: Knöpfe sinken
+ein und federn zurück, Seitenwechsel gleiten ohne Nachschwingen), „was du
+beim touckit gebaut hast ich will alles so haben mit redion passende
+inhalten" (ca. 21:49), „bessere übergagnge besssere efeckten … ohne eine
+funktione löschen" (ca. 22:10).
+
+**Gefunden:** die Mehrheit der Knöpfe am Telefon antwortete auf Druck gar
+nicht, rund zwanzig `:active`-Regeln mit eigener Zahl, kein Einsinken beim
+kurzen Tipp am iPhone; Blätter stiegen 16 px aus dem Nichts hinter einem in
+einem Bild schwarzen Grund; Tippen auf einen Reiter ohne Ankunft; „Ruhig"
+hielt Pille, Bibliothek und `::after` nicht an; ein Schalter-Verlauf glitt
+beim Einschalten zur Ecke; ein `transition: all`.
+
+**Gebaut:** fünf `--feder-*` in `grund.css` (aus `motion-tokens.css`, mit
+Rückfall), `RedionSpring` (übertragen, 1953 Punkte gleich dem Kit),
+`RedionPress` (eine Druckfeder statt dreizehn Regeln), der Schalter wie im
+Kit, Blätter vom Rand mit Finger und Abgang, eine Ankunft für jeden
+Ortswechsel (auch in den Einstellungen am Telefon), „Ruhig" überall
+(`AppEinstellung.wenigBewegung`, `::after`, `data-ui-motion`).
+
+**Geprüft:** `test581` (neu, rot zuerst), `test126` §7, `test435`;
+Nachbarn im Commit. Offen: L225.
+
 ## 27. September 2026 · E699 · React-Inseln, Stufe 1a: die Grundlage
 
 **Redur:** „du kannst react nutzen keien problem" — im Fragebogen „Mit React

@@ -134,8 +134,10 @@ const SelectionFlow = (() => {
 
   const laeufe = new WeakMap<HTMLElement, Lauf>();
 
+  /* das System ODER „Ruhige Darstellung" (E702) */
   const ruhig = (): boolean =>
-    !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    typeof AppEinstellung !== 'undefined' ? AppEinstellung.wenigBewegung()
+      : !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   /** Abstand zum Ziel nach `t` Millisekunden. */
   const weg = (l: Lauf, t: number): number =>

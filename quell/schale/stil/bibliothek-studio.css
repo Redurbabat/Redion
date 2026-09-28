@@ -25,7 +25,7 @@
 .bib-studio-wege button.on{background:var(--accent-schwach);color:var(--accent-text);font-weight:600}
 .bib-studio-wege button:hover{background:var(--bg-hover)}
 .bib-studio-wege button,.bib-arten button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
-.bib-studio-wege button:active,.bib-arten button:active{transform:scale(var(--press-scale))}
+/* … button:active: Einsinken per press.ts (E702) */
 .bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
 .bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
 .bib-studio-suche input{width:100%;min-width:0;min-height:var(--touch-min);background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}

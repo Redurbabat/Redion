@@ -1424,3 +1424,22 @@ Beide Treffer sind geklärt, und nur einer war ein Fehler an einer Fläche:
 stand nur HINTER der Regel, ausserhalb der acht Zeilen, die `test402` liest.
 `#ai .ki-quellschalter` ist ein echter Nebenweg und hat jetzt seinen
 geschriebenen Grund. `test402` ist 4/4.
+
+## Flüssige Bewegung, der Rest nach E702 (L225)
+
+Redur, 27. September, ca. 22:10: „bessere übergagnge besssere efeckten".
+E702 hat die Federn in die Schale gebracht; offen, je mit Wächter (rot
+zuerst) und Bildstreifen vor und nach:
+
+  1. Abgang und leichtes Nachschwingen für Rechner-Menüs und Dialoge — mit
+     den Inselstufen (E699 Punkt 10), nicht an den alten Klassen.
+  2. Blöcke ziehen ohne 2-px-Sprung, das Verschobene gleitet an seinen Ort
+     („bewegung-ziehen", `editor.ts:2038-2105`).
+  3. Fortschrittsbalken und Knebel über `transform` statt `width`/`left`
+     („bewegung-layoutfrei").
+  4. Die rohen Dauern und blossen `ease` auf die Marken, ausser motion.css
+     („bewegung-marken").
+  5. Das Einzeichnen der Lernwelt erst nach dem Aufbau
+     („bewegung-einzeichnen").
+  6. `sheet.ts` über `transform` statt `height`.
+

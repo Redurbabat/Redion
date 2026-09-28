@@ -63,6 +63,11 @@ const Einstellungen = (() => {
         document.body.classList.toggle('kontrast', !!V('kontrast', false));
         /* Barrierefreiheit: ruhige Darstellung, leichteres Lesen, hoher Kontrast */
         document.body.dataset.bewegung = V('bewegung', 'normal');
+        /* Die Inseln hören mit (E702): das Kit fragt `data-ui-motion` (L222). */
+        if (V('bewegung', 'normal') === 'ruhig')
+            document.documentElement.dataset['uiMotion'] = 'reduce';
+        else
+            delete document.documentElement.dataset['uiMotion'];
         document.body.dataset.lesen = V('lesen', 'normal');
         document.body.dataset.kontrast = V('kontrast', false) ? 'hoch' : 'normal';
         /* Das eigene Farbschema hat das letzte Wort — sonst würde die Zeile
@@ -218,6 +223,31 @@ const Einstellungen = (() => {
             new ResizeObserver(mehrPruefen).observe(navEl);
         }
         mehrPruefen();
+        /* Am Telefon: der Bereich kommt von rechts, die Liste beim Zurück von
+           links — dieselbe Ankunft wie unten beim Reiterwechsel (E702). */
+        const blick = (ziel) => {
+            if (!fenster)
+                return;
+            const vorher = fenster.getAttribute('data-blick');
+            fenster.setAttribute('data-blick', ziel);
+            if (vorher === ziel || !amTelefon() || AppEinstellung.wenigBewegung())
+                return;
+            const teil = fenster.querySelector(ziel === 'bereich' ? '.einst-inhalt' : '.einst-nav');
+            if (!teil)
+                return;
+            const klasse = ziel === 'bereich' ? 'einst-push' : 'einst-pop';
+            teil.classList.remove('einst-push', 'einst-pop');
+            void teil.offsetWidth;
+            teil.classList.add(klasse);
+            const fertig = (ev) => {
+                if (ev && ev.target !== teil)
+                    return;
+                teil.classList.remove(klasse);
+                teil.removeEventListener('animationend', fertig);
+            };
+            teil.addEventListener('animationend', fertig);
+            setTimeout(() => fertig(), 1200);
+        };
         o.addEventListener('click', e => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
                 o.remove();
@@ -226,7 +256,7 @@ const Einstellungen = (() => {
             /* Zurück zur Liste. Am Rechner kommt man hier nie hin — der Knopf
                steht dort auf `display:none`. */
             if (elVon(e)?.closest('[data-a="liste"]')) {
-                fenster?.setAttribute('data-blick', 'liste');
+                blick('liste');
                 return;
             }
             const b = elVon(e)?.closest('.einst-nav button[data-b]');
@@ -236,7 +266,7 @@ const Einstellungen = (() => {
                 /* Am Telefon eine Seite weiter; am Rechner ändert die Angabe
                    nichts, weil dort beide Spalten stehen. */
                 if (amTelefon())
-                    fenster?.setAttribute('data-blick', 'bereich');
+                    blick('bereich');
                 const inh = o.querySelector('#ei');
                 if (inh)
                     inh.scrollTop = 0;
@@ -254,7 +284,7 @@ const Einstellungen = (() => {
                 return;
             if (amTelefon() && fenster?.getAttribute('data-blick') === 'bereich') {
                 e.stopPropagation();
-                fenster.setAttribute('data-blick', 'liste');
+                blick('liste');
                 return;
             }
             document.removeEventListener('keydown', beiTaste, true);

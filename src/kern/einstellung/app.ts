@@ -75,6 +75,16 @@ const AppEinstellung = (() => {
     } catch { return false; }
   };
 
+  /* WENIGER BEWEGUNG — eine Frage, zwei Quellen (E702): das System ODER
+     „Ruhige Darstellung". Acht Stellen in JavaScript fragten nur das System.
+     In kern/, damit jeder Bereich fragen darf (§5); gefragt beim Aufruf. */
+  const wenigBewegung = (): boolean => {
+    try {
+      return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true ||
+             document.body?.dataset['bewegung'] === 'ruhig';
+    } catch { return false; }
+  };
+
   /* ----------------------------------------------------------------------
    * DER SICHTBARE AUSSCHNITT
    * --------------------------------------------------------------------
@@ -178,7 +188,7 @@ const AppEinstellung = (() => {
     } catch { return false; }
   };
 
-  return { NAME, FASSUNG, herkunft, einzeldatei, alsApp, amTelefon,
+  return { NAME, FASSUNG, herkunft, einzeldatei, alsApp, amTelefon, wenigBewegung,
            viewportAktualisieren, viewportStart,
            kann, steckbrief, platz, speicherSichern };
 })();

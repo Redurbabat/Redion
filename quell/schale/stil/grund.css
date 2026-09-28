@@ -119,6 +119,24 @@
   --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
 
+  /* DIE FÜNF FEDERN DES TOUCH KITS (E702; Redur, 27.09., ca. 21:45: „Wie im
+     UI-Kit (Empfohlen)"). Ergänzt E43: die drei Kurven oben bleiben, dazu
+     GENAU diese fünf, hier an dem einen Ort (E259). Hier steht der RÜCKFALL
+     — Safari vor 17.2 kennt `linear()` nicht, und eine ungültige Kurve in
+     `var()` löscht die ganze Übergangsliste (E259). Die Kurven setzt der
+     `@supports`-Block unten, Zeichen für Zeichen aus
+     `fremd/touch/motion-tokens.css` (`test581` §1/§2 rechnet sie nach). */
+  --feder-druck:         var(--ease-enter);  /* Knopf losgelassen: kleiner Rückprall      */
+  --feder-druck-dauer:   575ms;
+  --feder-knapp:         var(--ease-enter);  /* Schalter, Menüs: kaum Überschwingen (0,5 %) */
+  --feder-knapp-dauer:   542ms;
+  --feder-sanft:         var(--ease-enter);  /* Blätter, Seitenwechsel: ohne Überschwingen */
+  --feder-sanft-dauer:   796ms;
+  --feder-lebhaft:       var(--ease-enter);  /* einmalige Freude: Plakette, Stern          */
+  --feder-lebhaft-dauer: 887ms;
+  --feder-weich:         var(--ease-enter);  /* gemeinsame Wege, klein → gross             */
+  --feder-weich-dauer:   923ms;
+
   /* --- Die zwei alten Schattennamen (E204). ----------------------------
    * Die vier Sprossen `--shadow-1` … `--shadow-4` stehen in `hell.css` und
    * `dunkel.css`, denn ein Schatten ist Farbe. Diese beiden hier sind nur
@@ -192,6 +210,19 @@
   --paper-ink: #292d34;
 }
 
+/* DIE KURVEN DER FEDERN (E702), nur wo `linear()` verstanden wird. Die Zahl
+   über 1 IST das Nachschwingen: druck 1,0457 · knapp 1,005 · lebhaft 1,0729
+   · weich 1,0015 · sanft nie. */
+@supports (transition-timing-function: linear(0, 1)){
+  :root{
+    --feder-druck: linear(0, 0.0446, 0.1523, 0.2913, 0.4386, 0.5789, 0.7032, 0.807, 0.8891, 0.9505, 0.9938, 1.0218, 1.0379, 1.0449, 1.0457, 1.0424, 1.0368, 1.0301, 1.0234, 1.0172, 1.0118, 1.0074, 1.004, 1.0015, 0.9997, 0.9987, 0.9981, 0.9979, 0.9979, 0.9981, 0.9984, 0.9987, 0.999, 0.9993, 0.9995, 1);
+    --feder-knapp: linear(0, 0.0349, 0.1183, 0.2261, 0.3418, 0.4549, 0.5591, 0.6511, 0.7298, 0.7953, 0.8484, 0.8907, 0.9235, 0.9485, 0.9671, 0.9806, 0.99, 0.9965, 1.0006, 1.0031, 1.0044, 1.005, 1.005, 1.0046, 1.0042, 1.0036, 1.003, 1.0025, 1.002, 1.0015, 1.0012, 1.0009, 1.0006, 1);
+    --feder-sanft: linear(0, 0.0197, 0.0686, 0.1347, 0.2098, 0.2878, 0.365, 0.4387, 0.5076, 0.5706, 0.6276, 0.6785, 0.7236, 0.7632, 0.7978, 0.8278, 0.8537, 0.8761, 0.8952, 0.9116, 0.9255, 0.9373, 0.9474, 0.9559, 0.9631, 0.9691, 0.9742, 0.9784, 0.982, 0.985, 0.9875, 0.9896, 0.9914, 0.9929, 0.9941, 0.9951, 0.9959, 0.9966, 0.9972, 0.9977, 0.9981, 0.9984, 0.9987, 0.9989, 0.9991, 0.9993, 0.9994, 1);
+    --feder-lebhaft: linear(0, 0.0254, 0.0911, 0.1836, 0.2912, 0.4049, 0.5176, 0.624, 0.7208, 0.8057, 0.8777, 0.9368, 0.9835, 1.0187, 1.0438, 1.0603, 1.0695, 1.0729, 1.0719, 1.0678, 1.0614, 1.0537, 1.0455, 1.0372, 1.0293, 1.022, 1.0156, 1.0101, 1.0056, 1.0019, 0.9992, 0.9972, 0.9958, 0.995, 0.9947, 0.9947, 0.995, 0.9954, 0.9959, 0.9965, 0.9971, 0.9977, 0.9983, 0.9988, 0.9992, 0.9995, 0.9998, 1);
+    --feder-weich: linear(0, 0.0176, 0.0625, 0.1249, 0.1976, 0.2751, 0.3533, 0.4293, 0.5015, 0.5684, 0.6295, 0.6845, 0.7334, 0.7765, 0.814, 0.8463, 0.8741, 0.8976, 0.9175, 0.9341, 0.9479, 0.9593, 0.9686, 0.9761, 0.9822, 0.987, 0.9908, 0.9938, 0.9961, 0.9978, 0.9991, 1, 1.0006, 1.0011, 1.0013, 1.0015, 1.0015, 1.0015, 1.0014, 1.0014, 1.0012, 1.0011, 1.001, 1.0009, 1.0008, 1.0007, 1.0006, 1);
+  }
+}
+
 /* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder
    einzelnen Stelle, sondern hier einmal: die vier Dauern werden auf nahezu
    null gesetzt, und damit hört JEDE Überblendung auf, die sich aus ihnen
@@ -203,6 +234,12 @@
     --motion-fast:    1ms;
     --motion-normal:  1ms;
     --motion-slow:    1ms;
+    /* die Federn auch (E702), auch für `RedionSpring.token` */
+    --feder-druck-dauer:   1ms;
+    --feder-knapp-dauer:   1ms;
+    --feder-sanft-dauer:   1ms;
+    --feder-lebhaft-dauer: 1ms;
+    --feder-weich-dauer:   1ms;
   }
   /* .001ms UND NICHT 1ms (E340). Dieselbe Sperre stand bis eben ZWEIMAL da,
      hier mit 1ms und in `bausteine.css` mit .001ms — und weil bausteine
@@ -361,13 +398,21 @@ input,textarea,select{font:inherit; color:inherit}
  * `:active` und nicht `:hover`: ein Zeiger, der nur darüberfährt, hat noch
  * nichts getan. Am Telefon gibt es kein Überfahren, und dort ist das hier
  * die EINZIGE Rückmeldung, dass der Finger angekommen ist. */
-.rb:active,
-#topbar .top-btn:active,
-#sidebar .side-item:active,
-#sidebar .sr:active,
-#sidebar .ws-btn:active,
-#sidebar .side-chat:active,
-.icon-btn:active{ transform:scale(.976) }
+/* SEIT E702 MACHT DAS DIE DRUCKFEDER (press.ts). Hier stand
+ * `.rb:active, #topbar .top-btn:active, … { transform:scale(.976) }`, dazu
+ * rund zwanzig `:active`-Regeln mit eigener Zahl — gleich schnell hinein wie
+ * hinaus, und beim schnellen Tipp malt das iPhone `:active` oft gar nicht.
+ * Die Druckfeder hält den Knopf mindestens 80 ms unten und lässt ihn auf
+ * `--feder-druck` zurückfedern („Knöpfe sinken beim Drücken ein und federn
+ * zurück"). Die Tiefe bleibt `--press-scale` / `--card-press-scale`. */
+
+/* Ohne Bewegung trotzdem eine Antwort: kein Einsinken, aber kurz blasser
+   (`data-gedrueckt`, wie im Kit). Der Schalter nicht — dort sagt der Griff
+   den Zustand. */
+@media (prefers-reduced-motion: reduce){
+  [data-gedrueckt]:not(.schalter){ opacity:.7 }
+}
+body[data-bewegung="ruhig"] [data-gedrueckt]:not(.schalter){ opacity:.7 }
 
 /* Ein abgeschalteter Knopf drückt sich nicht. Er sähe sonst aus, als hätte
    er reagiert, und die Enttäuschung kommt eine Zehntelsekunde später. */

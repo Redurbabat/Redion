@@ -176,6 +176,17 @@ nichts ändert Daten. Im Leerlauf steht sie still, und wer im System
 „weniger Bewegung" eingestellt hat, sieht sie gar nicht
 (`prefers-reduced-motion`).
 
+Seit E702 federt Redions eigene Oberfläche wie das Touch Kit: jeder Knopf
+sinkt beim Drücken ein und federt zurück (auch beim kurzen Tipp am iPhone),
+der Griff eines Schalters dehnt sich unter dem Finger, Blätter von unten
+kommen vom Rand, folgen dem Finger und gehen weggewischt mit einer
+Bewegung, und ein Reiterwechsel am Telefon gleitet aus der richtigen
+Richtung herein — getippt wie gewischt. Die Federn stehen als
+`--feder-*` in `grund.css`, gerechnet von `src/schale/bedienung/spring.ts`.
+„Ruhige Darstellung" in den Einstellungen hält all das an; den Inseln
+sagt es `data-ui-motion="reduce"` (ihre Federn in JavaScript hören darauf,
+sobald das Kit ab UI-Kit 13e7844 geholt ist, L222).
+
 
 Schnellstart
 

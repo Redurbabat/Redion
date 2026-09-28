@@ -106,6 +106,12 @@ schale/
 │                                     Pfadleiste
 │                   inhaltsflaeche.js Blöcke, Rückverweise, Streifen
 │                   reiter.js         Reiter, geteilte Ansicht
+├─ bedienung/       spring.js         die Federn des Touch Kits, ohne React
+│                                     (RedionSpring, E702)
+│                   press.js          die Druckfeder: jeder Knopf sinkt ein
+│                                     und federt zurück (RedionPress, E702)
+│                   selection-flow.js die wandernde Fläche (E646), motion.js
+│                                     die Bewegungsschicht (E528–E537) …
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name
 └─ stil/            marken.css        die drei Schriften
                     dunkel.css        die Farben — der Normalfall

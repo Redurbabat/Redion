@@ -1063,7 +1063,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
     box-shadow var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease)
 }
 .bib-heft:hover{ border-color:var(--line-stark,var(--line)); box-shadow:var(--shadow-2) }
-.bib-heft:active{ transform:scale(var(--press-scale,.985)) }
+/* .bib-heft:active: Einsinken per press.ts (E702) */
 .bib-heft-marke{
   overflow:hidden; padding:var(--space-3) var(--space-5) 0;
   color:var(--text-dim); font-size:10.5px; font-weight:750;
@@ -1640,14 +1640,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   max-height:min(var(--sheet-max-height), calc(var(--visual-height, 100vh) - env(safe-area-inset-top) - 8px));
   border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;
   border:none; border-top:1px solid var(--line); padding:0 0 env(safe-area-inset-bottom);
-  transform:translateY(100%); transition:transform .22s cubic-bezier(.2,.8,.3,1);
+  transform:translateY(100%);
   overflow:hidden; display:flex; flex-direction:column;
+  /* Die Bewegung macht `menue.ts` (E702). Hier stand `transition:transform
+     .22s` — am Telefon lief sie nie, beim Ziehen liefe sie hinterher. */
+  animation:none;
 }
 .menu.blatt.auf{transform:translateY(0)}
 .blatt-griff{width:38px; height:4px; border-radius:3px; background:var(--line);
   margin:9px auto 4px; flex:none}
 .blatt-titel{text-align:center; font-size:15px; font-weight:600; padding:4px 16px 12px;
   border-bottom:1px solid var(--line-soft); flex:none}
+/* Griff und Titel gehören dem ziehenden Finger (E702). */
+.menu.blatt > :is(.blatt-griff, .blatt-titel){touch-action:none}
 .menu.blatt > .menu-suche{flex:none; padding:10px 14px}
 .menu.blatt .menu-liste{max-height:none; min-height:0; flex:1; overflow-y:auto;
   overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:4px 8px 12px}
@@ -2282,8 +2287,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
    * die Klasse gar nicht erst gesetzt. Die Regel hier steht trotzdem
    * unter dem Schirm, falls sie jemand anders benutzt. */
   @media (prefers-reduced-motion: no-preference){
-    #scroll.wisch-links { animation:wisch-rein-links  .24s var(--ease-standard,ease) }
-    #scroll.wisch-rechts{ animation:wisch-rein-rechts .24s var(--ease-standard,ease) }
+    /* Auf der sanften Feder (E702): „Seitenwechsel gleiten ohne Nachschwingen". Vorher .24s. */
+    #scroll.wisch-links { animation:wisch-rein-links  var(--feder-sanft-dauer) var(--feder-sanft) }
+    #scroll.wisch-rechts{ animation:wisch-rein-rechts var(--feder-sanft-dauer) var(--feder-sanft) }
+    /* eine Bewegung zugleich */
+    #scroll:is(.wisch-links, .wisch-rechts) :is(.ansicht-herein, .lw-insights-body){ animation:none }
   }
   @keyframes wisch-rein-links{
     from{ transform:translateX(34px);  opacity:.35 }
@@ -2829,7 +2837,10 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
 /* 2. Wer keine Bewegung mag, bekommt keine. */
 /* Die Bewegungssperre stand hier ein zweites Mal und steht jetzt nur noch
    in `grund.css`, bei den `--motion-*`-Marken (E340). */
-body[data-bewegung="ruhig"] *, body[data-bewegung="ruhig"] *::before{
+/* `::after` gehört dazu (E702): 26 Regeln bewegen ein `::after`, und die
+   liefen unter „Ruhig" weiter. */
+body[data-bewegung="ruhig"] *, body[data-bewegung="ruhig"] *::before,
+body[data-bewegung="ruhig"] *::after{
   animation:none !important; transition:none !important;
 }
 
@@ -3649,9 +3660,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 
 /* Der erste Rundgang */
 #rg-schleier{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:900}
+/* Kein `transition:all` mehr (E702): nur Lage und Grösse gleiten, nicht der 9999-px-Schatten. */
 #rg-loch{position:fixed; z-index:901; border-radius:10px; pointer-events:none;
          box-shadow:0 0 0 9999px rgba(0,0,0,.55), 0 0 0 2px var(--accent);
-         transition:all .22s ease}
+         transition:left var(--motion-normal) var(--ease), top var(--motion-normal) var(--ease),
+                    width var(--motion-normal) var(--ease), height var(--motion-normal) var(--ease)}
 #rg-kasten{position:fixed; z-index:902; width:min(330px,88vw); background:var(--bg-side);
            border:1px solid var(--line); border-radius:11px; padding:15px 17px;
            box-shadow:0 14px 40px rgba(0,0,0,.4); transition:left .22s ease, top .22s ease}
@@ -3732,7 +3745,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   transition:background var(--motion-fast, .12s) var(--ease-standard, ease);
 }
 .wk-weg:hover{ background:var(--bg-hover) }
-.wk-weg:active{ transform:scale(var(--card-press-scale, .985)) }
+/* .wk-weg:active: Einsinken per press.ts (E702) */
 /* Eine Tönung DER AKZENTFARBE, nicht `--b-blue`. Das war der erste Wurf,
    und auf dem Bild sah man sofort, warum er falsch ist: eine blau getönte
    Karte unter einem orangen Rahmen. `--b-blue` heisst blau, weil es blau
@@ -4215,19 +4228,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   }
   .home-karten .hk:active,
   .home-liste button:active{
-    transform: scale(var(--card-press-scale));
     background: var(--bg-hover);
   }
-  #handy-oben button:active,
-  #r-blatt .rm-gruppe button:active{
-    transform: scale(var(--press-scale));
-  }
+  /* Das Einsinken (scale(var(--card-press-scale)/--press-scale)) macht seit E702 die Druckfeder (press.ts). */
 
   /* Das Blatt von unten darf schwer wirken — langsamer herein als hinaus,
      genau wie die Vorgabe es sagt. */
   #r-blatt{ transition: opacity var(--motion-slow) var(--ease-enter),
                         transform var(--motion-slow) var(--ease-enter) }
-  .menu.blatt{ animation: blatt-hoch var(--motion-slow) var(--ease-enter) }
+  /* `.menu.blatt` stieg hier mit `blatt-hoch` 16 px — seit E702 vom Rand (menue.ts). */
 }
 @keyframes blatt-hoch{
   from{ transform:translateY(16px); opacity:0 }

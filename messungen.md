@@ -4857,3 +4857,80 @@ Alle acht Nachher-Bilder sind byte-gleich mit den Vorher-Bildern. Die Zeile
 in `ki.css` wird am Telefon ohnehin von `bausteine.css:221-225` überstimmt
 (gleiche Spezifität, spätere Datei); sie trägt jetzt trotzdem die Marke, damit
 die Zahl an einer Stelle steht. Die Bilder bleiben auf dem Rechner (§55.4).
+
+## §74 · Flüssige Bewegung: Federn, Druck, Blätter, Ankunft, „Ruhig" (E702, 28. September 2026)
+
+**Womit.** Chromium 1194 (Playwright 1.56.1) über `file://`, 390 × 844 mit
+Berührung (`isMobile`, CDP `Input.dispatchTouchEvent`) und 1440 × 900.
+„Vorher" ist `git archive 515451f` (claude/ruhig-grundstand) mit den neuen
+Läufen hineinkopiert, „nachher" dieser Zweig. Bildstreifen mit CDP
+`Animation.setPlaybackRate 0.1`, ein Bild alle 33 ms Animationszeit.
+
+**Was `test581` vorher und nachher sieht:**
+
+```txt
+                                          vorher (515451f)            nachher
+Blatt (UI.menu) im ersten Bild            16 von 276 px unter Ruhe    ≥ 50 % (vom Rand)
+  Grund im ersten Bild                    1 (in einem Bild schwarz)   < 0,9, blendet auf
+  gezogen 60 px                           0 px (folgt nicht)          60 ± 3 px
+  weggewischt / daneben getippt           im selben Bild weg          200 ms Abgang, dann weg
+  Escape, Wahl eines Eintrags             sofort                      sofort (unverändert)
+Knopfdruck, sechs Proben (CDP-Berührung)  0 von 6 sinken ein          6 von 6, zurück auf linear()
+  kurzer Tipp (ab/auf ohne Pause)         kleinste Breite 1           < 0,995
+Schalter: Griff unter dem Finger          16,0 → 16,0 px              ≥ 110 % (18 %)
+  Weg hinüber                             transform, cubic-bezier     translate, --feder-knapp
+  Verlauf beim Einschalten                −30 statt −39,6 px          um die Mitte (−50 %)
+Reiter getippt (Dokumente → Termine)      keine Ankunft               wisch-rein-links, allein
+  zurück zu Dokumente                     2 Bewegungen (Kopf, Deckel) eine, von links
+Einstellungen am Telefon Liste → Bereich  hartes display:none         schiebt herein / zurück
+„Ruhig": laufende Bewegungen nach Heute,  7 (Pille ×3, .lw-nav,       0
+  Dokumente, Termine, Menü, Dialog, Toast   Kopf, 2 Deckel)
+  ::after unter „Ruhig"                   läuft (0.4s, Animation)     steht
+  <html data-ui-motion>                   fehlt                       "reduce"
+transition: all (quell/schale/stil)       1 (#rg-loch)                0
+:active{transform:scale(…)}               17 Regeln                   4 (eigene Druckbilder)
+JavaScript fragt nur das System           8 Stellen                   0 (AppEinstellung.wenigBewegung)
+```
+
+**Die Federn** (aus `fremd/touch/motion-tokens.css`, nachgerechnet von
+`test581` §2 auf 1953 Punkten, Bit für Bit gleich dem Kit):
+
+```txt
+Marke             Kit        Dauer   höchster Wert   Einsatz in E702
+--feder-druck     press      575 ms  1,0457          Knopf losgelassen, Griff zurück
+--feder-knapp     snappy     542 ms  1,0050          Griff hinüber, Blatt zurück
+--feder-sanft     smooth     796 ms  1 (nie über)    Blatt herein, jede Ankunft
+--feder-lebhaft   bouncy     887 ms  1,0729          (bereit, noch nicht benutzt)
+--feder-weich     gentle     923 ms  1,0015          (bereit, noch nicht benutzt)
+```
+
+**Die Grösse** (gzip Stufe 6, wie `test388`):
+
+```txt
+quell/schale/bedienung/spring.js     9'581 B roh   3'244 B gzip   (Code allein 2'285)
+quell/schale/bedienung/press.js      7'228 B roh   2'642 B gzip   (Code allein 1'844)
+alle geänderten Startdateien zusammen                +11,9 KB gzip  (Code und Kurven rund 8)
+```
+
+**Der Start**, gemessen mit `test388` §5 (erster Besuch über das Netz, gzip,
+bis 3,5 s nach `load`):
+
+```txt
+Grundstand 515451f (E698–E700)     2767 KB   246 Dateien
+mit E702                           2779 KB   248 Dateien   (+ spring.js, + press.js)
+Decke                              2850 KB
+```
+
+**+12 KB — über der Richtzahl von rund 10 KB je Zweig dieser Bitte.** Davon
+sind rund 8 KB Code und Kurven (Federkern 2,3, Druckfeder 1,8, Blattgeste
+1,1, die fünf `linear()`-Kurven rund 1,2, Regeln und Aufrufe rund 1,5), der
+Rest Kommentare an Ort und Stelle (§53: Deutsch für Menschen gehört zur
+Quelle). Die langen Begründungen stehen in E702, nicht im Code — die Köpfe
+von spring.ts und press.ts sind dafür von 50 auf 8 Zeilen gekürzt worden
+(vorher +14,6 KB). Die Summe aller Zweige prüft der Integrator.
+
+**Die Einzeldatei:** 11'595'462 → 11'629'653 Bytes (+34'191).
+
+**Bildstreifen** (nicht eingecheckt, §55.4): Knopfdruck, Schalter, Blatt
+auf, Blatt weggewischt, Ankunft — je vorher und nachher, am Telefon dunkel,
+dazu die Druckkurve (Breite je Bild bei Tempo 1).

@@ -15,7 +15,12 @@ const StudioSchale = (() => {
     /** Nur echte Navigation animieren, nicht jeden Such-/Editor-Rerender.
         Keine Papier-/Canvas-Transformation: Ink-Koordinaten bleiben unverändert. */
     const ankommen = (element, x = 0, y = 6, delay = 0) => {
-        if (!element || ruhig.matches || document.hidden || typeof element.animate !== 'function')
+        /* „Ruhige Darstellung" zählt wie das System (E702) — gefragt beim Aufruf. */
+        const still = ruhig.matches || (typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung());
+        if (!element || still || document.hidden || typeof element.animate !== 'function')
+            return;
+        /* eine Bewegung zugleich: gleitet die Bühne herein, nicht auch die Karten (E702) */
+        if (element.closest('#scroll.wisch-links, #scroll.wisch-rechts'))
             return;
         const tokens = getComputedStyle(document.documentElement);
         const zeit = tokens.getPropertyValue('--motion-normal').trim();
