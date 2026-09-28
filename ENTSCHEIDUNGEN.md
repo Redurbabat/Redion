@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-680 Entscheidungen, E1 bis E700 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+681 Entscheidungen, E1 bis E704 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat; **E701 bis E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -743,6 +743,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
 * **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
 * **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
+* **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 
 ---
 
@@ -36865,6 +36866,12 @@ angesehen: `bilder/dokument-rechner-hell.png`.
 E465 — Zeichnen wie GoodNotes, erster Bogen: Dreieck, rundes Rechteck, Bleistift, freie Stärke, Buchstabentasten
 --------------------------------------------------------------------------
 
+> **Ergänzt durch E704 (28. September 2026) — die Körnung des Bleistifts.**
+> Redur: „Bleistift mit Graphitkorn". Die gestrichelte Kante
+> (`stroke-dasharray 0.9 0.6`) ist einem Graphitmuster als Füllung gewichen,
+> je Farbe und Druckstufe, mit der Tinte als Rückfall — weiter ohne Filter,
+> wie hier entschieden. Deckung und Neigung (E507) unverändert.
+
 REDURS AUFTRAG, 7. September 2026, mit dem GoodNotes-Dossier (32 Seiten,
 dasselbe wie zu E265): „Du musst wirklich ohne Pause arbeiten, bis du
 Redion alles aufgeräumt hast, dass es wie GoodNotes ist — wirklich alles,
@@ -56902,6 +56909,13 @@ dass es jemand sah, ist das Argument für den vollen Lauf, der seit dem
 
 ## E697 — Farbe direkt wählen und im Freitext weiterschreiben
 
+> **Ergänzt durch E704 (28. September 2026) — Tinten zuerst, Leuchtfarben
+> für den Marker.** Redur: „Neue Tintenfarben", „Echter Textmarker". Im Feld
+> stehen jetzt acht Tinten (beim Marker sechs Leuchtfarben) zuerst; die fünf
+> Grundfarben und die sechs Markerfarben von hier stehen darunter unter
+> „Weitere Farben" und bleiben wählbar. Der neue Marker beginnt in
+> Sonnengelb mit Keilspitze (0,40); „niemals rückwirkend" gilt weiter.
+
 *Umnummeriert beim Zusammenführen am 27. September 2026:* dieser Eintrag kam am
 23. September als **E681** über `main` (Codex-Zweig „dokument-stift-freitext",
 PR #114), mit dem Wächter `test577`. Auf dem Arbeitszweig waren E681
@@ -57379,3 +57393,165 @@ grün; `test225`, `test549`, `test550` grün. `test401` bleibt rot wie auf
 `main` (`var(--danger, #c73939)` aus E697) — das repariert E698 auf seinem
 Zweig. `npm run typecheck` sauber; `npm run bauen:ts` (Dienststand v1372)
 und `node bauen.mts` neu erzeugt.
+
+## E704 — Bessere Stifteffekte: Textmarker mit Keil, Füller mit Gelenken und Tempo, Bleistift mit Korn, acht Tinten
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Auftrag ca. 16:45
+UTC, Auswahl im Fragebogen ca. 21:45 UTC am 27. September) · **ergänzt**
+E465 (Körnung), E697 (Markerpalette), E351/E673 (Umriss) · **Wächter:**
+`test583` · Messung: messungen.md §76.
+
+**Redur, wörtlich.** Ca. 16:45 UTC: *„du muss mehr im redion arbeiten du
+kannst auch die oberfläche bischen ruhige machen ohne etwas lösche also eine
+funktionen und ich will das es flüssigere animationen , glass efeck usw alles
+haben dann bessere stift efeckte beim zeichnen bessere farben"*. Ca. 21:45 UTC
+im Fragebogen, alle vier gewählt: *„Echter Textmarker"*, *„Füller wie
+GoodNotes"*, *„Bleistift mit Graphitkorn"*, *„Neue Tintenfarben"* (mit den
+Beschreibungen „Keilspitze, leuchtendes Gelb, keine dunklen Kleckse bei
+Überlappung · schnelle Striche bis ~35 % dünner, Druck dicker, spitze Enden,
+keine Knicke · leichte Körnung · Königsblau, Nachtblau, Karmin, Tannengrün,
+Petrol, Aubergine, Sepia, Graphit. Alte Zeichnungen bleiben unverändert.").
+Ca. 22:10 UTC: *„… ohne eine funktione löschen bessere ordnungen bessere
+übergagnge besssere efeckten , bessere oberfläsche …"*.
+
+**Was entschieden wurde.** Zehn Dinge am Strich, alle in Redions eigenem Code
+(`core/ink/geometry.ts`, `core/ink/stroke.ts`, `bereiche/pdf/marken.ts`), kein
+fremdes Stück (§57: perfect-freehand wäre MIT, aber ein Stück mit eigener
+Zustimmung — es wurde nicht gebraucht):
+
+1. **Gelenke im Umriss (L209 Punkt 3).** An jeder Ecke — dieselbe Frage wie
+   beim Weg (`istEcke`, `ECKE_COS` 0,55, E676) — endet ein Lauf und der
+   nächste beginnt; jeder Lauf ist der alte Umriss mit eigenen Kappen. Ein
+   „M" hat volle Beine (halbe Breite im Median 1,26 statt 0,8 pt) und keine
+   Mittellinie ausserhalb der Tinte (0 statt 23 Punkte). `Feder` rechnet
+   dieselben Läufe mit (`test366 §1` bleibt zeichengleich); ohne Ecke ist es
+   ein Lauf und der alte Umriss.
+2. **Die Kappen zeigen nach aussen.** Gefunden auf dem Weg: `seiten` legte
+   „links" auf die rechte Seite der Fahrtrichtung, und die Bögen `A r r 0 0 1`
+   bogen sich nach INNEN — jeder Flächenstrich endete mit einer Kerbe, beim
+   Bleistift (ohne Spitze) in voller Breite. Jetzt runde Enden, für jeden
+   alten Strich mit (reines Aussehen, keine Daten).
+3. **Der Keil — ein echter Textmarker.** Neue Markerstriche tragen
+   `stil: 'keil'`: die Fläche, die eine schräge Kante (78°, Dicke 0,22 der
+   Höhe) überstreicht, als Vielecke im selben Drehsinn in EINEM Pfad mit
+   `nonzero` — waagrecht volle Höhe, senkrecht dünn, gerade Enden, und wo er
+   sich selbst kreuzt, wird er nicht dunkler. Deckung 0,40, multipliziert.
+   Die Farbe beginnt in Sonnengelb `#ffcf33` (statt `#e0a419`, das auf
+   Papier Beige war). Der **runde Marker bleibt wählbar** („Keil | Rund" im
+   Markerfarbfeld, gemerkt in `zeichnen:markerspitze`), und jeder alte
+   Markerstrich hat kein `stil` und zeichnet Zeichen für Zeichen wie vorher
+   (0,32).
+4. **Das Tempo macht den Füller dünner (L209 Punkt 1).** Nur mit einem
+   echten Drucksensor (Maus und Finger haben das Tempo schon im Ersatzdruck,
+   E351): der Füller bis 35 % dünner, der Pinsel bis 50 %, weich zwischen
+   0,25 und 1,8 pt/ms; die Stärke steht im Register `STIFTE` (`eile`, §8).
+   Gemessen an der Hand (rohe Punkte, 32-ms-Fenster), gespeichert als
+   optionales `tempo[]` je Punkt — nur an neuen Strichen mit Sensor.
+5. **Kugelschreiber und Marker atmen nicht mehr (stift-5).** Ein neuer Strich
+   legt seine Breite am Anfang fest (`breiteFest`, Median der ersten drei
+   Sensorwerte; ohne Sensor die gewählte Breite) — vorher wurde der ganze
+   schon geschriebene Strich dünner, wenn der Druck nachliess (−21 %).
+   `InkGeometry.scale` und „Stärke ändern" tragen das Feld mit.
+6. **Graphitkorn statt Perlenkante (E465 ergänzt).** Der Bleistift füllt mit
+   einem Muster je Farbe und Druckstufe (Kachel 3,2 pt, feste Saat, kein
+   Filter — E465 hat `feTurbulence` zu Recht verworfen) und hat seine Tinte
+   als Rückfall (`url(#redion-graphit-…) #hex`): wo das Muster fehlt
+   (ausgeschnittenes SVG, fremder Leser), malt er flach.
+7. **Der Deckel auch für die Vorhersage des Browsers (stift-4).** Die Punkte
+   aus `getPredictedEvents()` gingen ungedeckelt ins Bild; jetzt dieselben
+   Regeln wie `vorhersage`: keine Kehre, höchstens so weit wie erlaubt, und
+   eine **Bremse** — fällt der Druck dreimal und liegt unter 60 %, rät
+   nichts mehr (der Stift hebt ab); bremst die Hand, schrumpft die
+   Vermutung. Bei 2,5 px/ms und abhebendem Stift: Schwanz 0 statt 60 pt.
+   `InkStroke.vorhersage(rohDrei` bleibt stehen (`test478`).
+8. **Acht Tinten (farben-4).** Königsblau `#2346b5`, Nachtblau `#1b2552`,
+   Karmin `#b12f4f`, Tannengrün `#1d6024`, Petrol `#0c6d7f`, Aubergine
+   `#5f3295`, Sepia `#662f05`, Graphit `#3c3c3c` — gerechnet, nicht gewählt:
+   auf dem Papier (#f8f8f5) mindestens 5,62 : 1, und das engste Paar liegt
+   auch in der Nachbildung für Deuteranopie, Protanopie und Tritanopie
+   (Machado 2009) mindestens ΔE_OK 5,2 auseinander (die alten fünf: Rot und
+   Grün 4,3 für ein deuteranopes Auge). Sie stehen im Farbfeld ZUERST; die
+   fünf alten stehen darunter unter „Weitere Farben" und bleiben als Tupfer
+   in der Leiste — nichts wird umgefärbt. Beim Marker stehen sechs
+   Leuchtfarben zuerst, die Pastelle aus E697 unter „Weitere Farben".
+9. **Das Farbfeld kennt das Papier (farben-12) und die Probe schreibt
+   (stift-9).** Die Probe liegt auf `--paper` der Fläche (eine dunkle
+   eingelesene Folie ist dunkel), unter 3 : 1 steht „Kaum sichtbar auf
+   diesem Papier" in Worten (§38), und auf dunklem Papier steht Weiss
+   (`#f5f5f0`) als erste Tinte. Die Probe ist ein Schwung, gezeichnet von
+   `zeichneMarke` — Spitze, Korn und Keil sind echt. Die Deckung sitzt am
+   `<i>` wie seit E623; die Kachel-Strichprobe folgt beim Marker der Spitze.
+10. **Die Tafel und die Seitenfläche schreiben wie das Blatt (stift-1).**
+    `GfxShapes.zeichne` zieht einen Stiftstrich durch die Mittelpunkte
+    (`InkGeometry.path`, derselbe Weg wie das Blatt, §8) — auch jeden alten.
+    Beim Schreiben: alle gesammelten Ereignisse, `InkStroke.glaetter`,
+    Punkte auf zwei Stellen, und je Bild nur der wachsende Strich statt der
+    ganzen Tafel; beim Absetzen der rohe letzte Punkt und RDP. Das
+    Vorschaubild der Arbeitswelt nimmt denselben Weg.
+
+**PDF.** Ein Strich mit Ecken und ein Keilmarker gehen als mehrere Vielecke
+hinaus, die der Schreiber mit EINER Füllung schliesst (`h … h f`), damit
+`/ca` die Überlappung nicht doppelt deckt; ein Strich ohne Ecke schreibt Byte
+für Byte, was er vorher schrieb (`h f`). `/InkList` bleibt die Mittellinie.
+Das Drehen im Dokumentmodus dreht jede Tiefe.
+
+**Warum.** Redur hat es gewählt, und jeder Punkt war gemessen, bevor er gebaut
+wurde (Stift-Dossier, stift-map): Haarbeine im „M", eine Perlenkante am
+Bleistift, ein beiger runder Marker, 26 pt zurückzuckender Schwanz bei
+schneller Hand, ein atmender Kugelschreiber, Polygon-Schlaufen auf der Tafel.
+
+**Rückwärts verträglich (§9, §53.3).** Nur optionale Felder mit deutschen
+Namen an NEUEN Marken: `stil: 'keil'`, `tempo[]`, `breiteFest`. Kein
+gespeicherter Wert wird angefasst (E673). Alte Striche: gleiche Mittellinie,
+gleiche Breite, gleiche Farbe; sie gewinnen runde Kappen, Gelenke an echten
+Ecken, das Korn und — auf der Tafel — die gebogene Linie. Das Teil-Radieren
+trägt jetzt Neigung (E507) und Tempo in ihrer eigenen Länge mit (gefunden auf
+dem Weg: nach einem Teil-Radieren gehörte `neigung[i]` zu einem anderen
+Punkt, derselbe Fehler, den E507 beim Vereinfachen gefunden hatte).
+
+**Gefunden auf dem Weg: der Radierer der Seitenfläche.** Er traf nur die
+gespeicherten PUNKTE eines Stiftstrichs, nicht die Linie dazwischen. Seit das
+Absetzen auf der Seitenfläche vereinfacht (RDP, wie das Blatt), hat eine
+gerade Linie nur noch ihre zwei Enden — wer ihre Mitte radierte, traf nichts
+(`test575` §5 und §11 waren rot). `formAn` misst jetzt den Abstand zu jedem
+Stück zwischen zwei Punkten; ein Punkt allein ist ein Stück der Länge null,
+also trifft alles, was vorher traf, und dazu die Mitte.
+
+**Die Wächter, die mitgehen (§31, §47: erweitert, keiner schwächer).**
+`test438` §2 verlangte die Perlenkante (`stroke-dasharray`) als „raue Kante";
+seit E704 hält das Korn diese Zusage — der Lauf nimmt das Muster
+`url(#redion-graphit-…)` mit der Tinte als Rückfall an und verlangt weiter
+Fläche, 0,72 und den Stil. `test535` prüfte „Marker: 0,32"; jetzt prüft er
+den Keil (0,40) UND den runden Marker (0,32). `test577` prüft die Vorschau
+beim neuen Marker mit der Zahl 0,4 statt 0,32. `test561` §6 schreibt in
+Schreibtempo (5 pt je 30 ms statt je 4 ms), weil E704 den Füller im Schnellen
+absichtlich dünner macht und die Zusage der SPITZE gilt, nicht dem Tempo; der
+schnelle Strich von vorher läuft danach zusätzlich und muss nass so breit
+sein, wie das Tempo es sagt, und trocken an beiden Enden spitz.
+
+**Die Alternativen.** perfect-freehand (MIT) — ein fremdes Stück mit eigener
+Zustimmung (§57), und es ersetzt die eine Rechnung, die Bildschirm und PDF
+teilen (E506); nicht nötig. Eine Scheibe an jedem Gelenk (erster Entwurf) —
+mit den nach aussen gebogenen Kappen überflüssig. Die fünf alten Farben
+umfärben (farben-4) — Redur: „Alte Zeichnungen bleiben unverändert", und
+viele Wächter halten die fünf; sie bleiben, die Tinten kommen dazu. Die Tafel
+mit dem Füller des Blatts — braucht Druck und `STIFTE` im Kern (§5 Regel 1),
+ein eigener Bogen. Eine Canvas-Ebene für den nassen Strich (L209.5) — der
+Rechner braucht rund 2 ms je Bild, unter der Schwelle von 8 ms; erst am iPad
+messen.
+
+**Was es kostet.** Umrisse mit Ecken sind länger (ein „M": 1065 → 1190 Bytes),
+ein Keilmarker mit 300 Punkten ist ein Pfad von rund 28 KB und kostet nass
+1,35 ms je Bild (der Umriss daneben 0,64 ms). Drei neue optionale Felder.
+Die Startgrösse wächst um rund 14,7 KB gzip (Code rund 8,2 KB, der Rest die
+Kommentare, die `tsc` mitnimmt — schon auf ein Drittel gekürzt); das ist mehr
+als die rund 10 KB, die jeder Zweig der Bitte vom 27. September haben
+sollte, und steht darum offen da: messungen §76 (test388 §5).
+
+**Nicht in diesem Bogen.** Die Werkzeugwahl mit dem wandernden Material
+(claude/material-ueberall), Leiste und Sichtbarkeit (claude/ruhige-oberflaeche),
+die Farben der App (claude/bessere-farben), Glas (claude/glas-wo-es-passt).
+Die Kachel-Strichprobe bleibt ein Balken (18 px — ein Schwung wäre dort
+unlesbar; der Papiergrund aus E623 bleibt). stift-10 (billigeres Absetzen)
+und stift-11 (Messung am iPad) stehen in L227. Die Druckkennlinie und die
+Breite ALTER Kugelschreiberstriche (L209 Punkt 2) bleiben Redurs Frage.

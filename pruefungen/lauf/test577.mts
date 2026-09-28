@@ -107,7 +107,10 @@ try {
   await page.locator('[data-document-tool="marker"]').click();
   await plus.click();
   check('Der Marker hat eine eigene benannte Palette', await page.locator('.blatt-color-panel').getAttribute('data-color-tool') === 'marker');
-  check('Die Vorschau verwendet die echte Marker-Deckung', await page.locator('.blatt-color-preview i').evaluate(node => getComputedStyle(node).opacity === '0.32'));
+  /* Seit E704 zieht ein neuer Marker mit der Keilspitze (0,40, die
+     Vorgabe); die Vorschau trägt dieselbe Zahl wie der Strich — das ist die
+     Zusage. Der runde Marker (0,32) hält test535. */
+  check('Die Vorschau verwendet die echte Marker-Deckung', await page.locator('.blatt-color-preview i').evaluate(node => getComputedStyle(node).opacity === '0.4'));
   await page.locator('[data-ink-color="#ffcf33"]').click();
   check('Auch die Strichprobe trägt die neue Markerfarbe', await page.locator('.blatt-strich i').first().evaluate(node => getComputedStyle(node).backgroundColor === 'rgb(255, 207, 51)'));
   const svg = page.locator('.blatt-marken').first();

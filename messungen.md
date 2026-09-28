@@ -4857,3 +4857,66 @@ Alle acht Nachher-Bilder sind byte-gleich mit den Vorher-Bildern. Die Zeile
 in `ki.css` wird am Telefon ohnehin von `bausteine.css:221-225` überstimmt
 (gleiche Spezifität, spätere Datei); sie trägt jetzt trotzdem die Marke, damit
 die Zahl an einer Stelle steht. Die Bilder bleiben auf dem Rechner (§55.4).
+
+## §76 · Bessere Stifteffekte: Umriss, Keil, Vorhersage, Tinten, Startgrösse (E704, 28. September 2026)
+
+(§73–§75 und §77 sind den anderen Zweigen der Bitte vom 27. September
+vergeben.) Redur: „bessere stift efeckte beim zeichnen" — im Fragebogen
+„Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn",
+„Neue Tintenfarben". Gemessen in Node an `quell/core/ink/*.js` (vorher: der
+Grundstand 515451f9, nachher: dieser Zweig) und in Chromium 1194 mit
+künstlichen Stiftereignissen; Rechner, nicht iPad (L227 Punkt 1).
+
+**Der Umriss am „M"** (gespeicherte Form: zwei, drei Punkte je Bein, halbe
+Breite 1,26 pt, Mittellinie in 0,5-pt-Schritten, `test583` §1):
+
+```txt
+                          vorher      nachher
+Mittellinie ausserhalb    23 Punkte   0
+halbe Breite, Median      0,80 pt     1,26 pt   (soll 1,26)
+Pfad eines Zickzacks      1065 B      1190 B
+Umriss, 300 Punkte        0,88 ms     0,64 ms   (je Aufruf, Node)
+```
+
+**Die Kappen** (gerader Strich, halbe Breite 3): 1,5 pt vor dem Ende
+vorher draussen (Kerbe), nachher drin; 1,5 pt hinter dem Ende nachher drin.
+
+**Der Keilmarker** (300 Punkte, Höhe 10 pt): `keil` + `vieleckPfad` 1,35 ms
+je Bild, Pfad 28 481 B. Über weissem Papier: `#ffcf33` bei 0,40
+multipliziert ≈ rgb(255, 236, 173); vorher `#e0a419` bei 0,32 ≈
+rgb(245, 227, 183) (Beige).
+
+**Der Schwanz der Vorhersage** (drei rohe Punkte im 8-ms-Takt, der Browser
+rät drei weitere; Länge über den letzten rohen Punkt hinaus, pt):
+
+```txt
+Tempo px/ms   ungedeckelt   gedeckelt, stetig   Druck fällt (Bremse)
+0,2           4,8           2,8                 0
+0,45          10,8          6,3                 0
+1             24            14                  0
+2,5           60            26 (VORHER_PX)      0
+```
+
+**Die Tinten** auf dem Papier des Blatts (#f8f8f5), WCAG; kleinster
+Abstand zweier Tinten in ΔE_OK (×100), nachgebildet nach Machado 2009:
+
+```txt
+Königsblau #2346b5 7,55   Nachtblau #1b2552 13,77   Karmin #b12f4f 5,82
+Tannengrün #1d6024 7,17   Petrol    #0c6d7f  5,62   Aubergine #5f3295 8,30
+Sepia      #662f05 10,00  Graphit   #3c3c3c 10,37
+engstes Paar   normal 9,5 · deutan 5,2 · protan 6,2 · tritan 5,7
+die alten fünf normal 20,1 · deutan 4,3 (Rot/Grün) · protan 6,8 · tritan 5,9
+               auf Papier: Grün 2,88, Gelb 2,08, Blau 3,87, Rot 4,11
+```
+
+**Startgrösse und Einzeldatei.** Gezählt am 28. September ca. 08:45 UTC,
+jede geänderte Startdatei gzip -6 gegen 515451f9: marken.js +7 112,
+geometry.js +2 377, stroke.js +1 822, zeichenflaeche.js +1 057,
+seitenflaeche.js +1 014, bausteine.css +484, pdfWriter.js +387, shapes.js
++159, arbeitswelt.js +137, document-mode.js +125 — zusammen **+14 674 B**
+(ohne Kommentare rund 8,2 KB; der Rest sind die Kommentare, die `tsc`
+mitnimmt, schon auf ein Drittel gekürzt). Das ist mehr als die rund 10 KB,
+die jedem Zweig der Bitte vom 27. September zugedacht sind (L227 Punkt 7).
+`test388` §5: gerechnet 2767 + 14,7 ≈ 2782 KB unter der Decke 2850 — der
+Lauf selbst stand beim Commit noch in der Schlange des gemeinsamen Schlosses.
+Einzeldatei 11 595 462 → 11 645 706 B (+50 244).

@@ -478,7 +478,7 @@ Redion/
 ├─ pruefungen/
 │  ├─ alle.mts
 │  ├─ js-bestand.json
-│  └─ lauf/                    521 Läufe
+│  └─ lauf/                    522 Läufe
 │
 ├─ AUFGABEN.md · ERLEDIGTE-AUFGABEN.md
 ├─ LUECKEN.md · ENTSCHEIDUNGEN.md
@@ -1224,10 +1224,23 @@ nichts in der Sicherung. Er ist ein Finger, kein Stift.
 Fünf Farben und drei Strichbreiten stehen vorn; dazu kommen bis zu vier
 eigene Farben und ein Regler von 0,5 bis 12.
 
-Das **+ bei den Farben** öffnet direkt eine Palette: benannte Grundfarben,
-sechs Markerfarben mit transparenter Vorschau auf Papier, zuletzt verwendete
-Farben, Hex-Eingabe und Systemfarbwähler. Unter „Farbsätze &
-Stifteinstellungen“ bleiben deine gesicherten Einstellungen erreichbar.
+Das **+ bei den Farben** öffnet direkt eine Palette: zuerst acht Tinten
+(Königsblau, Nachtblau, Karmin, Tannengrün, Petrol, Aubergine, Sepia,
+Graphit — auf Papier gut lesbar und auch für ein farbschwaches Auge
+auseinanderzuhalten), darunter unter „Weitere Farben“ die fünf Grundfarben;
+beim Marker sechs Leuchtfarben, die Spitze **Keil** (gerade Enden, wie ein
+echter Textmarker) oder **Rund**, und die Pastelle unter „Weitere Farben“.
+Die Probe oben ist ein echter Strich mit dem gewählten Stift, auf dem Papier
+dieses Blatts; ist eine Tinte darauf kaum sichtbar, steht es dort in Worten.
+Dazu zuletzt verwendete Farben, Hex-Eingabe und Systemfarbwähler. Unter
+„Farbsätze & Stifteinstellungen“ bleiben deine gesicherten Einstellungen
+erreichbar. Alte Striche behalten ihre Farbe.
+
+Der **Füller** wird mit einem Stift mit Drucksensor im Schnellen bis zu
+35 % dünner und hat an Ecken volle Beine; der **Bleistift** hat
+Graphitkorn; **Kugelschreiber und Marker** behalten ihre Breite über den
+ganzen Strich. Auf dem **Whiteboard** und der Seitenfläche schreibt der
+Stift so glatt wie auf dem Blatt.
 Einen Farbtupfer auswählen wirkt sofort; eigene Farben aus Hex-Eingabe oder
 Systemfarbwähler erst mit „Farbe übernehmen“.
 
@@ -1682,7 +1695,7 @@ keine Secrets im Repo
 
 Tests
 
-Redion nutzt echte Prüfungen gegen die echte App. Es sind 521 Läufe unter
+Redion nutzt echte Prüfungen gegen die echte App. Es sind 522 Läufe unter
 `pruefungen/lauf/` (gezählt am 27. September 2026 mit
 `ls pruefungen/lauf/test*.mts | wc -l`).
 

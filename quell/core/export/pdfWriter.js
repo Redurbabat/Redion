@@ -179,6 +179,14 @@ const PdfWriter = (() => {
          * Gibt `0` zurück, wenn nichts zu zeichnen ist — dann steht auch keine
          * leere Annotation in der Seite.
          */
+        /** Die Vielecke EINER Kontur (E704): ein einzelnes Vieleck — die Form
+         *  bis E704 — oder eine Liste davon; jedes mit mindestens drei Punkten. */
+        const vielecke = (k) => {
+            if (!Array.isArray(k) || !k.length)
+                return [];
+            const liste = (Array.isArray(k[0]?.[0]) ? k : [k]);
+            return liste.filter(v => Array.isArray(v) && v.length >= 3);
+        };
         const annotation = (marke, hoehe) => {
             const striche = (marke.striche || []).filter(s => Array.isArray(s) && s.length >= 2);
             if (!striche.length)
@@ -201,7 +209,7 @@ const PdfWriter = (() => {
                     y1 = q[1];
             };
             striche.forEach(s => s.forEach(q => merken(hoch(q, hoehe))));
-            (marke.kontur || []).forEach(k => (k || []).forEach(q => merken(hoch(q, hoehe))));
+            (marke.kontur || []).forEach(k => vielecke(k).forEach(v => v.forEach(q => merken(hoch(q, hoehe)))));
             if (!Number.isFinite(x0))
                 return 0;
             const rand = breite / 2 + 1;
@@ -220,15 +228,25 @@ const PdfWriter = (() => {
                 + z(breite) + ' w 1 J 1 j\n';
             let gefuellt = false, gestrichen = false;
             striche.forEach((strich, i) => {
-                const kontur = (marke.kontur || [])[i];
-                const zug = (kontur && kontur.length >= 3) ? kontur : strich;
-                const gefuelltJetzt = !!(kontur && kontur.length >= 3);
-                const punkte = zug.map(q => hoch(q, hoehe));
-                strom += z(punkte[0][0]) + ' ' + z(punkte[0][1]) + ' m\n';
-                for (let k = 1; k < punkte.length; k++)
-                    strom += z(punkte[k][0]) + ' ' + z(punkte[k][1]) + ' l\n';
+                /* EIN STRICH, EIN ODER MEHRERE VIELECKE, EINE FÜLLUNG (E704). Jedes
+                   Vieleck wird ein geschlossener Teilpfad (`h`), und erst nach dem
+                   letzten steht das `f` — die Regel ungleich null füllt dann ihre
+                   Vereinigung, und die Deckung gilt EINMAL für alles. */
+                const teile = vielecke((marke.kontur || [])[i]);
+                const gefuelltJetzt = teile.length > 0;
+                const zuege = gefuelltJetzt ? teile : [strich];
+                for (const zug of zuege) {
+                    const punkte = zug.map(q => hoch(q, hoehe));
+                    strom += z(punkte[0][0]) + ' ' + z(punkte[0][1]) + ' m\n';
+                    for (let k = 1; k < punkte.length; k++)
+                        strom += z(punkte[k][0]) + ' ' + z(punkte[k][1]) + ' l\n';
+                    if (gefuelltJetzt && zuege.length > 1)
+                        strom += 'h\n';
+                }
+                /* Ein einzelnes Vieleck schreibt Byte für Byte, was es bis E704
+                   schrieb: `h f`. */
                 if (gefuelltJetzt) {
-                    strom += 'h f\n';
+                    strom += zuege.length > 1 ? 'f\n' : 'h f\n';
                     gefuellt = true;
                 }
                 else {

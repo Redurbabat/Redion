@@ -334,7 +334,11 @@ const DocumentMode = (() => {
         };
         return {
             striche: (marke.striche || []).map((s) => s.map(dreh)),
-            kontur: (marke.kontur || []).map((k) => k ? k.map(dreh) : null),
+            /* Seit E704 kann eine Kontur auch mehrere Vielecke sein (die Läufe
+               eines Strichs mit Ecken, die Bänder des Keilmarkers) — gedreht wird
+               jeder Punkt, in welcher Tiefe er auch steht. */
+            kontur: (marke.kontur || []).map((k) => !k ? null
+                : Array.isArray(k[0]?.[0]) ? k.map((v) => v.map(dreh)) : k.map(dreh)),
             farbe: marke.farbe, breite: marke.breite,
             deckkraft: marke.deckkraft, name: marke.name
         };

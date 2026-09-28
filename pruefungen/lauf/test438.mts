@@ -173,7 +173,11 @@ console.log('\n§2 Der Bleistift');
   const knoten = JSON.parse(await s.evaluate(`(() => {
     const n = Marken.zeichneMarke({ id: 'b', art: 'stift', stil: 'bleistift', farbe: '#111111', breite: 2.4,
       pts: [[10, 10], [40, 30], [80, 20], [120, 40]], pressure: [0.4, 0.6, 0.5, 0.7] });
-    return JSON.stringify(n ? { tag: n.tagName, deckung: n.getAttribute('opacity'), koernung: n.getAttribute('stroke-dasharray'), stil: n.getAttribute('data-ink-stil'), flaeche: /^M/.test(n.getAttribute('d') || '') && n.getAttribute('fill') === '#111111' } : null);
+    /* SEIT E704 IST DIE KÖRNUNG INNEN: ein Graphitmuster als Füllung, mit
+       der Tinte als Rückfall (\`url(#…) #111111\`) — statt der gestrichelten
+       Perlenkante von E465. Die Zusage „raue Kante" hält jetzt das Korn. */
+    const fill = n ? n.getAttribute('fill') || '' : '';
+    return JSON.stringify(n ? { tag: n.tagName, deckung: n.getAttribute('opacity'), koernung: /^url\\(#redion-graphit-/.test(fill) ? fill : n.getAttribute('stroke-dasharray'), stil: n.getAttribute('data-ink-stil'), flaeche: /^M/.test(n.getAttribute('d') || '') && / ?#111111$/.test(fill) } : null);
   })()`) as string);
   p('Er zeichnet eine Fläche wie der Füller, durchscheinend und mit rauer Kante',
     knoten?.tag === 'path' && knoten.flaeche && knoten.deckung === '0.72' && !!knoten.koernung && knoten.stil === 'bleistift', JSON.stringify(knoten));

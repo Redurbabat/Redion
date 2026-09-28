@@ -1424,3 +1424,20 @@ Beide Treffer sind geklärt, und nur einer war ein Fehler an einer Fläche:
 stand nur HINTER der Regel, ausserhalb der acht Zeilen, die `test402` liest.
 `#ai .ki-quellschalter` ist ein echter Nebenweg und hat jetzt seinen
 geschriebenen Grund. `test402` ist 4/4.
+
+## Der Stift nach E704 (S1 … S3) — Messung am Gerät zuerst (L227)
+
+- **S1 — „Stift messen" am iPad (stift-11).** Ein Schalter unter
+  Einstellungen, der zehn Sekunden lang Bilder, Meldungen und Vorhersagen
+  zählt und die Zahlen zum Kopieren zeigt — lokal, ohne Netz, im Aus
+  kostenlos (ein Wahrheitswert). Redur tippt ihn einmal am iPad und am
+  iPhone; die Zahlen gehen in messungen.md. Erst danach entscheidet sich die
+  Canvas-Ebene (L209 Punkt 5) und ein engerer Deckel (L227 Punkt 6).
+- **S2 — Billig absetzen (stift-10).** `finish` auf einer vollen Seite unter
+  8 ms bei 250 Punkten: Punkte einmal rechnen, Kritzel-Vorprüfung, die
+  Speicherung ein Bild später mit Nachweis über `pagehide` (§51). Wächter
+  zuerst: `test449`/`test510` (Kritzeln) müssen grün bleiben.
+- **S3 — Der Füller auf der Tafel.** `druckFaktor`/`halbeBreiten`/`STIFTE`
+  in den Kern ziehen (§5 Regel 1), dann Druck und Spitze auch auf Whiteboard
+  und Seitenfläche (L227 Punkt 4).
+

@@ -141,8 +141,14 @@ const GfxShapes = (() => {
 
     if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
       const pts: any[] = Array.isArray(s.pts) ? s.pts : [];
+      /* DIESELBE LINIE WIE AUF DEM BLATT (E704): durch die Mittelpunkte
+         gebogen (`InkGeometry.path`, §8) — auch jeder alte Tafelstrich. */
+      const kern = (globalThis as any).InkGeometry;
       const d = s.art === 'stift'
-        ? (pts.length ? 'M' + pts.map((q: any) => zahl(q?.[0]) + ' ' + zahl(q?.[1])).join(' L') : '')
+        ? (!pts.length ? ''
+          : kern && typeof kern.path === 'function' && pts.length >= 3
+            ? String(kern.path(pts.map((q: any) => [zahl(q?.[0]), zahl(q?.[1])])))
+            : 'M' + pts.map((q: any) => zahl(q?.[0]) + ' ' + zahl(q?.[1])).join(' L'))
         : `M${zahl(s.x)} ${zahl(s.y)} L${zahl(s.x) + zahl(s.w)} ${zahl(s.y) + zahl(s.h)}`;
       const p = sv('path', {
         d, stroke: farbe, 'stroke-width': strich, fill: 'none',

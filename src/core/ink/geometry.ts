@@ -96,17 +96,18 @@ const InkGeometry = (() => {
      Stueck fuer ihre eingefrorenen Teile — eine Rechnung, damit
      `test366 §1` (zeichengleich) gilt, ohne dass sie zweimal dasteht. */
   const ECKE_COS = 0.55;
+  /** Kippt die Richtung an `p`? Die EINE Eckenfrage des Hauses (E676) —
+   *  `stueck` fragt sie für den Weg, `gelenke` (E704) für den Umriss. */
+  const istEcke = (prev: InkPoint, p: InkPoint, next: InkPoint): boolean => {
+    const ax = p[0] - prev[0], ay = p[1] - prev[1];
+    const bx = next[0] - p[0], by = next[1] - p[1];
+    const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+    return la > 0.3 && lb > 0.3 && (ax * bx + ay * by) / (la * lb) < ECKE_COS;
+  };
   const stueck = (prev: InkPoint | null | undefined, p: InkPoint, next: InkPoint): string => {
     const mx = Math.round((p[0] + next[0]) * 50) / 100;
     const my = Math.round((p[1] + next[1]) * 50) / 100;
-    if (prev) {
-      const ax = p[0] - prev[0], ay = p[1] - prev[1];
-      const bx = next[0] - p[0], by = next[1] - p[1];
-      const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
-      if (la > 0.3 && lb > 0.3 && (ax * bx + ay * by) / (la * lb) < ECKE_COS) {
-        return ` L${p[0]} ${p[1]} L${mx} ${my}`;
-      }
-    }
+    if (prev && istEcke(prev, p, next)) return ` L${p[0]} ${p[1]} L${mx} ${my}`;
     return ` Q${p[0]} ${p[1]} ${mx} ${my}`;
   };
 
@@ -154,8 +155,11 @@ const InkGeometry = (() => {
       const len = Math.hypot(tx, ty) || 1;
       tx /= len; ty /= len;
       const w = halb(i);
-      links.push([r2(input[i]![0] - ty * w), r2(input[i]![1] + tx * w)]);
-      rechts.push([r2(input[i]![0] + ty * w), r2(input[i]![1] - tx * w)]);
+      /* DIE KAPPEN ZEIGEN NACH AUSSEN (E704). Bis hier lag `links` rechts der
+         Fahrtrichtung, und die Bögen `A r r 0 0 1` bogen sich nach innen —
+         eine Kerbe am Ende jedes Flächenstrichs. */
+      links.push([r2(input[i]![0] + ty * w), r2(input[i]![1] - tx * w)]);
+      rechts.push([r2(input[i]![0] - ty * w), r2(input[i]![1] + tx * w)]);
     }
     return { links, rechts, anfang: halb(0), ende: halb(n - 1) };
   };
@@ -211,7 +215,9 @@ const InkGeometry = (() => {
     return aus.map((h, i) => h * spitzeFaktor(weg[i]!, l, stumpf) * spitzeFaktor(gesamt - weg[i]!, l, stumpf));
   };
 
-  const outline = (raw: unknown, halfWidths: number[]): string => {
+  /** Der Umriss EINES Laufs — die Rechnung von E351, unverändert bis auf
+   *  die Seiten (siehe `seiten`, E704). */
+  const outlineLauf = (raw: unknown, halfWidths: number[]): string => {
     const kanten = seiten(raw, halfWidths);
     if (!kanten) return '';
     const { links, rechts, anfang, ende } = kanten;
@@ -221,6 +227,38 @@ const InkGeometry = (() => {
       ` A${r2(ende)} ${r2(ende)} 0 0 1 ${rueck[0]![0]} ${rueck[0]![1]}` +
       seite(rueck) +
       ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0]![0]} ${links[0]![1]} Z`;
+  };
+
+  /* ══ DIE GELENKE (E704, L209 Punkt 3) ════════════════════════════════════
+     An jeder Ecke (`istEcke`, wie der Weg, E676) endet ein Lauf; jeder Lauf
+     ist der alte Umriss mit eigenen Kappen, also volle Beine statt
+     Haarstrichen im „M". */
+  const gelenke = (raw: unknown): number[] => {
+    const input = points(raw);
+    const aus: number[] = [];
+    for (let i = 1; i < input.length - 1; i++) if (istEcke(input[i - 1]!, input[i]!, input[i + 1]!)) aus.push(i);
+    return aus;
+  };
+  /** Die halben Breiten von `a` bis ausschliesslich `b` — mit derselben
+   *  Regel wie `seiten`: fehlt eine, gilt die letzte. */
+  const halbeVon = (halfWidths: number[], a: number, b: number): number[] =>
+    Array.from({ length: Math.max(0, b - a) }, (_q, k) =>
+      halfWidths[Math.min(a + k, halfWidths.length - 1)] as number);
+  /** Die Läufe eines Strichs als Indexpaare [von, bis] (beide einschliesslich). */
+  const laeufe = (raw: unknown): Array<[number, number]> => {
+    const input = points(raw);
+    if (input.length < 2) return [];
+    const aus: Array<[number, number]> = [];
+    let a = 0;
+    for (const c of [...gelenke(input), input.length - 1]) { aus.push([a, c]); a = c; }
+    return aus;
+  };
+
+  const outline = (raw: unknown, halfWidths: number[]): string => {
+    const input = points(raw);
+    const teile = laeufe(input);
+    if (teile.length <= 1) return outlineLauf(input, halfWidths);
+    return teile.map(([a, c]) => outlineLauf(input.slice(a, c + 1), halbeVon(halfWidths, a, c + 1))).join(' ');
   };
 
   /**
@@ -273,6 +311,104 @@ const InkGeometry = (() => {
        `outline` sie fuer seine Boegen braucht. */
     void anfang; void ende;
   };
+
+  /** DER UMRISS ALS VIELECKE, EINES JE LAUF (E704): für das PDF, was
+   *  `outline` für den Bildschirm ist; der Schreiber füllt sie mit EINEM `f`. */
+  const outlineTeile = (raw: unknown, halfWidths: number[], kappen = 8): InkPoint[][] => {
+    const input = points(raw);
+    return laeufe(input)
+      .map(([a, c]) => outlinePunkte(input.slice(a, c + 1), halbeVon(halfWidths, a, c + 1), kappen))
+      .filter(teil => teil.length >= 3);
+  };
+
+  /* Punkte auf der Kurve von `path` (E704, für den Keil). */
+  const dicht = (raw: unknown, schritt = 1): InkPoint[] => {
+    const input = points(raw);
+    if (input.length < 2) return input.slice();
+    const weite = Math.max(0.25, finite(schritt) || 1);
+    const aus: InkPoint[] = [input[0]!];
+    const gerade = (a: InkPoint, b: InkPoint): void => {
+      const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / weite));
+      for (let k = 1; k <= n; k++) aus.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]);
+    };
+    const bogen = (a: InkPoint, c: InkPoint, b: InkPoint): void => {
+      const l = Math.hypot(c[0] - a[0], c[1] - a[1]) + Math.hypot(b[0] - c[0], b[1] - c[1]);
+      const n = Math.max(1, Math.ceil(l / weite));
+      for (let k = 1; k <= n; k++) {
+        const t = k / n, s = 1 - t;
+        aus.push([s * s * a[0] + 2 * s * t * c[0] + t * t * b[0], s * s * a[1] + 2 * s * t * c[1] + t * t * b[1]]);
+      }
+    };
+    let von: InkPoint = input[0]!;
+    for (let i = 1; i < input.length - 1; i++) {
+      const p = input[i]!, next = input[i + 1]!;
+      const mitte: InkPoint = [Math.round((p[0] + next[0]) * 50) / 100, Math.round((p[1] + next[1]) * 50) / 100];
+      if (istEcke(input[i - 1]!, p, next)) { gerade(von, p); gerade(p, mitte); }
+      else bogen(von, p, mitte);
+      von = mitte;
+    }
+    gerade(von, input[input.length - 1]!);
+    return aus;
+  };
+
+  /** Der Drehsinn eines Vielecks als Fläche mit Vorzeichen (y nach unten:
+   *  positiv heisst im Bild im Uhrzeigersinn). */
+  const flaecheMitSinn = (poly: InkPoint[]): number => {
+    let summe = 0;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
+      summe += poly[j]![0] * poly[i]![1] - poly[i]![0] * poly[j]![1];
+    return summe / 2;
+  };
+
+  /* ══ DER KEIL — EIN ECHTER TEXTMARKER (E704) ═════════════════════════════
+     Gezeichnet wird, was eine schräge Kante (Höhe, Dicke, Winkel)
+     überstreicht: */
+  const keil = (raw: unknown, hoehe: number, dicke: number, winkel = 78): InkPoint[][] => {
+    const weg = dicht(raw, 1);
+    if (!weg.length) return [];
+    const r2 = (v: number): number => Math.round(v * 100) / 100;
+    const band = (vx: number, vy: number): InkPoint[][] => {
+      const aus: InkPoint[][] = [];
+      let lauf: InkPoint[] = [weg[0]!];
+      let sinn = 0;
+      const ablegen = (): void => {
+        if (lauf.length < 2) return;
+        const hin = lauf.map(q => [r2(q[0] + vx), r2(q[1] + vy)] as InkPoint);
+        const zurueck = lauf.map(q => [r2(q[0] - vx), r2(q[1] - vy)] as InkPoint).reverse();
+        let poly = [...hin, ...zurueck];
+        const a = flaecheMitSinn(poly);
+        if (Math.abs(a) < 0.02) return;
+        if (a < 0) poly = poly.reverse();
+        aus.push(poly);
+      };
+      for (let i = 1; i < weg.length; i++) {
+        const dx = weg[i]![0] - weg[i - 1]![0], dy = weg[i]![1] - weg[i - 1]![1];
+        const kreuz = dx * vy - dy * vx;
+        const s = Math.abs(kreuz) < 1e-9 ? sinn : Math.sign(kreuz);
+        if (sinn && s !== sinn) { ablegen(); lauf = [weg[i - 1]!]; }
+        sinn = s;
+        lauf.push(weg[i]!);
+      }
+      ablegen();
+      return aus;
+    };
+    const w = (finite(winkel) * Math.PI) / 180;
+    const h = Math.max(0.5, finite(hoehe)) / 2, t = Math.max(0.2, finite(dicke)) / 2;
+    const ux = Math.cos(w) * h, uy = Math.sin(w) * h, vx = -Math.sin(w) * t, vy = Math.cos(w) * t;
+    const aus = [...band(ux, uy), ...band(vx, vy)];
+    if (aus.length) return aus;
+    /* EIN TIPP IST EIN ABDRUCK DER KANTE — kein Weg, also kein Band: das
+       Rechteck der Spitze selbst, im selben Drehsinn wie die Bänder. */
+    const p = weg[0]!;
+    const ecke = (a: number, b: number): InkPoint => [r2(p[0] + a * ux + b * vx), r2(p[1] + a * uy + b * vy)];
+    const abdruck = [ecke(1, 1), ecke(1, -1), ecke(-1, -1), ecke(-1, 1)];
+    return [flaecheMitSinn(abdruck) < 0 ? abdruck.reverse() : abdruck];
+  };
+
+  /** Vielecke als EIN SVG-Pfad. */
+  const vieleckPfad = (polys: InkPoint[][]): string =>
+    polys.filter(p => p.length >= 3)
+      .map(p => 'M' + p.map(q => q[0] + ' ' + q[1]).join(' L') + ' Z').join(' ');
 
   /** Ein geglaetteter SVG-Pfad; zwei Punkte bleiben absichtlich eine Linie. */
   const path = (raw: unknown): string => {
@@ -880,52 +1016,71 @@ const InkGeometry = (() => {
    * Punkte; ein einzelner Rest faellt weg. Punkte, die der Kreis nicht
    * beruehrt, bleiben exakt, was sie waren.
    */
-  const splitByCircle = (raw: unknown, pressures: unknown, center: InkPoint, radius: number):
-      Array<{ pts: InkPoint[]; pressure: number[] }> => {
+  /* WEITERE KANÄLE (E704): Neigung und Tempo gehen je Punkt mit, wie der
+     Druck — vorher blieb die Neigung in ihrer alten Länge (vgl. E507). */
+  const splitByCircle = (raw: unknown, pressures: unknown, center: InkPoint, radius: number,
+                         kanaele: Record<string, unknown> = {}):
+      Array<{ pts: InkPoint[]; pressure: number[]; kanaele: Record<string, number[]> }> => {
     const input = points(raw);
     const druck = Array.isArray(pressures) ? pressures.map(finite) : [];
     const druckBei = (i: number): number =>
       druck.length ? (druck[Math.min(i, druck.length - 1)] as number) : 0.5;
+    const namen = Object.keys(kanaele).filter(name => Array.isArray(kanaele[name]) && (kanaele[name] as unknown[]).length);
+    const werte: Record<string, number[]> = {};
+    for (const name of namen) werte[name] = (kanaele[name] as unknown[]).map(finite);
+    const kanalBei = (name: string, i: number): number => {
+      const liste = werte[name]!;
+      return liste[Math.min(i, liste.length - 1)] as number;
+    };
     const r2 = (v: number): number => Math.round(v * 100) / 100;
     const inside = (p: InkPoint): boolean => Math.hypot(p[0] - center[0], p[1] - center[1]) <= radius;
     const zwischen = (a: InkPoint, b: InkPoint, t: number): InkPoint =>
       [r2(a[0] + (b[0] - a[0]) * t), r2(a[1] + (b[1] - a[1]) * t)];
-    const stuecke: Array<{ pts: InkPoint[]; pressure: number[] }> = [];
-    let aktuell: { pts: InkPoint[]; pressure: number[] } = { pts: [], pressure: [] };
+    type Stueck = { pts: InkPoint[]; pressure: number[]; kanaele: Record<string, number[]> };
+    const leer = (): Stueck => ({ pts: [], pressure: [],
+      kanaele: Object.fromEntries(namen.map(name => [name, [] as number[]])) });
+    const stuecke: Stueck[] = [];
+    let aktuell: Stueck = leer();
+    /** Einen Punkt anhängen: `i`/`j` sind die Nachbarindizes, `t` der Anteil dazwischen. */
+    const dazu = (p: InkPoint, i: number, j: number, t: number): void => {
+      aktuell.pts.push(p);
+      aktuell.pressure.push(r2(druckBei(i) + (druckBei(j) - druckBei(i)) * t));
+      for (const name of namen) aktuell.kanaele[name]!.push(r2(kanalBei(name, i) + (kanalBei(name, j) - kanalBei(name, i)) * t));
+    };
     const ablegen = (): void => {
       if (aktuell.pts.length >= 2) stuecke.push(aktuell);
-      aktuell = { pts: [], pressure: [] };
+      aktuell = leer();
     };
     if (!input.length) return stuecke;
-    if (!inside(input[0]!)) { aktuell.pts.push(input[0]!); aktuell.pressure.push(r2(druckBei(0))); }
+    if (!inside(input[0]!)) dazu(input[0]!, 0, 0, 0);
     for (let i = 1; i < input.length; i++) {
       const a = input[i - 1]!, b = input[i]!;
       const aDrin = inside(a), bDrin = inside(b);
-      const da = druckBei(i - 1), db = druckBei(i);
       const cuts = circleCuts(a, b, center, radius);
       const klemm = (t: number): number => Math.max(0, Math.min(1, t));
       if (aDrin && bDrin) continue;
       if (!aDrin && bDrin) {
         /* hinein: das Stueck endet am Eintrittspunkt */
         const t = klemm(cuts ? cuts[0] : 0);
-        aktuell.pts.push(zwischen(a, b, t)); aktuell.pressure.push(r2(da + (db - da) * t));
+        dazu(zwischen(a, b, t), i - 1, i, t);
         ablegen();
         continue;
       }
       if (aDrin && !bDrin) {
         /* heraus: ein neues Stueck beginnt am Austrittspunkt */
         const t = klemm(cuts ? cuts[1] : 1);
-        aktuell = { pts: [zwischen(a, b, t)], pressure: [r2(da + (db - da) * t)] };
-        aktuell.pts.push(b); aktuell.pressure.push(r2(db));
+        aktuell = leer();
+        dazu(zwischen(a, b, t), i - 1, i, t);
+        dazu(b, i, i, 0);
         continue;
       }
       /* beide draussen: kreuzt die Strecke den Kreis mittendrin? */
       if (cuts && cuts[0] > 0 && cuts[0] < 1 && cuts[1] > 0 && cuts[1] < 1) {
-        aktuell.pts.push(zwischen(a, b, cuts[0])); aktuell.pressure.push(r2(da + (db - da) * cuts[0]));
+        dazu(zwischen(a, b, cuts[0]), i - 1, i, cuts[0]);
         ablegen();
-        aktuell = { pts: [zwischen(a, b, cuts[1])], pressure: [r2(da + (db - da) * cuts[1])] };
+        dazu(zwischen(a, b, cuts[1]), i - 1, i, cuts[1]);
       }
-      aktuell.pts.push(b); aktuell.pressure.push(r2(db));
+      dazu(b, i, i, 0);
     }
     ablegen();
     return stuecke;
@@ -1047,6 +1202,11 @@ const InkGeometry = (() => {
     const mittel = Math.sqrt(Math.abs(lx * ly)) || 1;
     if (mark.breite !== undefined && Number.isFinite(Number(mark.breite)))
       mark.breite = Math.max(0.3, r2(Number(mark.breite) * mittel));
+    /* Die feste Breite eines Strichs (E704) wächst mit — sonst behielte ein
+       doppelt so gross gezogener Marker seine alte Höhe, denn sie geht der
+       Breite vor. */
+    if (mark.breiteFest !== undefined && Number.isFinite(Number(mark.breiteFest)))
+      mark.breiteFest = Math.max(0.3, r2(Number(mark.breiteFest) * mittel));
     if (mark.fontSize !== undefined && Number.isFinite(Number(mark.fontSize)))
       mark.fontSize = Math.max(6, r2(Number(mark.fontSize) * mittel));
     if (mark.groesse !== undefined && Number.isFinite(Number(mark.groesse)))
@@ -1060,6 +1220,9 @@ const InkGeometry = (() => {
 
   return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, spitzeFaktor, verjuengen,
     stueck, ECKE_COS,
+    /* Seit E704: das Gelenk (die Läufe eines Umrisses), das PDF-Gegenstück
+       dazu, der Keil des Textmarkers und der dicht abgetastete Weg. */
+    istEcke, gelenke, laeufe, outlineLauf, outlineTeile, dicht, keil, vieleckPfad, flaecheMitSinn,
     path, rectangle, bounds, move, intersects,
     distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
     textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,

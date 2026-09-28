@@ -8348,6 +8348,54 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L227 · Der Stift nach E704 — was an Messung und Weg noch offen ist — 28. September 2026
+
+**Gefunden beim Bau von E704** (Redur: „bessere stift efeckte beim
+zeichnen"). Was E704 gebaut hat, steht dort und in `test583`; das hier ist der
+Rest, damit er nicht in einem Commit verschwindet (§35).
+
+1. **Das iPad ist nicht gemessen.** Alle Zahlen zum nassen Strich kommen aus
+   Chromium am Rechner mit künstlichen Stiftereignissen (CDP). Wie oft
+   Safari `getPredictedEvents` und `getCoalescedEvents` liefert, und ob ein
+   Bild dort unter 8 ms bleibt (L209 Punkt 5), weiss niemand. Vorschlag
+   stift-11: ein Schalter „Stift messen" unter Einstellungen, zehn Sekunden
+   schreiben, Zahlen zum Kopieren — lokal, ohne Netz. Erst danach eine
+   Canvas-Ebene, mit eigenem E-Eintrag.
+2. **Das Absetzen ist auf einer vollen Seite nicht billig** (stift-10):
+   6–16 ms bei 60 Punkten, 36–46 ms bei 800 Punkten mit 300 Marken (Dossier).
+   `points()` wird mehrfach gerechnet, Kritzel- und Lassoprüfung laufen
+   ohne Vorprüfung. Zielwert ≤ 8 ms bei 250 Punkten. Die Speicherung um ein
+   Bild zu verschieben braucht den Nachweis, dass `pagehide` sie mitnimmt
+   (§51).
+3. **Ein Keilmarker ist ein grosser Pfad**: 300 Punkte ≈ 28 KB `d`, nass
+   1,35 ms je Bild (messungen §76). Unter der Schwelle, aber das Zehnfache
+   des Umrisses. Wenn es drückt: gröber abtasten (heute 1 pt) oder die
+   Bänder vor dem Ablegen vereinfachen.
+4. **Auf der Tafel gibt es nur den Kugelschreiber.** Seit E704 glättet sie
+   und zeichnet durch die Mittelpunkte, aber ohne Druck, Füller, Spitze und
+   Marker. Dafür müssten `druckFaktor`, `halbeBreiten` und `STIFTE` aus
+   `bereiche/pdf/marken.ts` in den Kern (§5 Regel 1) — ein eigener Bogen.
+5. **Die Kachel-Strichprobe ist ein Balken geblieben** (18 px breit). Die
+   Probe im Farbfeld ist seit E704 ein echter Strich; in der Kachel wäre ein
+   Schwung unlesbar. Sie trägt Farbe und Deckung (E623), beim Marker die der
+   Spitze.
+6. **Die Vorhersage bei gleichmässig schneller Hand**: wer ohne Bremsen und
+   ohne Druckabfall abhebt, sieht bis zu `VORHER_PX` (26 pt) Schwanz
+   verschwinden — die Bremse greift nur, wenn Hand oder Druck es ankündigen.
+   Am Gerät messen (Punkt 1), bevor der Deckel enger wird: zu eng bringt den
+   Rückstand zurück, den E511 weggenommen hat.
+7. **Die Startgrösse wächst um 14,7 KB gzip** (messungen §76) — mehr als
+   die rund 10 KB, die jedem Zweig der Bitte vom 27. September zugedacht
+   sind. Rund 6 KB davon sind Kommentare, die `tsc` in `quell/` mitnimmt.
+   Wer zusammenführt, zählt die Summe aller Zweige gegen die 83 KB Luft unter
+   der Decke von `test388` §5; reicht sie nicht, sind die Kommentare in
+   `marken.ts` der erste Ort (das Warum steht vollständig in E704).
+
+**Wächter:** `test583` hält, was gebaut ist; für 1–7 gibt es noch keinen
+(Punkt 7 zählt `test388` §5 nur als Ganzes).
+
+---
+
 ## L223 · Im Ordnerbetrieb steht in der Fehlerliste nur „Script error." — 27. September 2026
 
 **Gefunden beim Bau von E699**, nicht gesucht. Die erste Fehlergrenze der
@@ -8654,7 +8702,11 @@ anderes sieht, gilt sein Bild.
 
 **Am Strich selbst:**
 
-1. **Das Tempo wirkt beim echten Stift nicht auf die Breite.** Der
+1. **Erledigt am 28. September (E704, `test583` §5/§6):** mit Sensor wird
+   der Füller im Schnellen bis 35 % dünner (Pinsel 50 %), gespeichert als
+   eigenes optionales `tempo[]` statt im Druck — `druckArt` bleibt wahr.
+   Der Befund von damals:
+   **Das Tempo wirkt beim echten Stift nicht auf die Breite.** Der
    Tempo→Breite-Weg ist nur der Druck-ERSATZ für Maus und Finger
    (`druckAus`); ein Stift mit Sensor bekommt reinen Sensordruck, und eine
    schnell gezogene Verbindungslinie ist so dick wie ein langsam gesetzter
@@ -8663,7 +8715,11 @@ anderes sieht, gilt sein Bild.
    neues Feld, §9) — dann sagt `druckArt: 'stift'` nur die halbe Wahrheit;
    besser ein drittes Wort. Wächter: `test343` bleibt grün; neu: gleicher
    Druck, doppeltes Tempo → schmaler.
-2. **Die Druckkennlinie ist eine Gerade, und Kugelschreiber wie Marker
+2. **Zur Hälfte erledigt am 28. September (E704, `test583` §6):** NEUE
+   Kugelschreiber- und Markerstriche legen ihre Breite am Anfang fest
+   (`breiteFest`) und atmen nicht mehr; ALTE bleiben, wie sie sind, und die
+   Kennlinie ist weiter eine Gerade — beides bleibt Redurs Frage.
+   **Die Druckkennlinie ist eine Gerade, und Kugelschreiber wie Marker
    haben EINE Breite je Strich aus dem Mittelwert**, die `nassZeichnen`
    jedes Bild neu setzt — der Anfang eines Kugelschreiberstrichs wird
    nachträglich dicker oder dünner. Ein `d^0,7` oder eine Tabelle mit
@@ -8672,7 +8728,12 @@ anderes sieht, gilt sein Bild.
    Ball pen) oder beim Aufsetzen festgehalten. **Beides ändert, wie ALTE
    Striche in der Mitte aussehen** (`strokeWidth` liest `pressure` des
    Bestands) — das ist eine Entscheidung von Redur, kein Bogen (§9, §34).
-3. **Scharfe Kehren im Umriss haben kein Gelenk** — Vermutung aus
+3. **Erledigt am 28. September (E704, `test583` §1/§2):** Gelenke an
+   jeder Ecke (Läufe mit eigenen Kappen), gemessen am „M": 0 statt 23
+   Punkte der Mittellinie ausserhalb, halbe Breite 1,26 statt 0,8 pt. Dabei
+   gefunden: die Kappen bogen sich nach innen — jetzt nach aussen.
+   Der Befund von damals:
+   **Scharfe Kehren im Umriss haben kein Gelenk** — Vermutung aus
    `seiten`/`versatz`, nicht gemessen. Bei einer Kehre um ~180° ist die
    Normale aus prev→next beliebig, und die Innenkante kreuzt sich selbst.
    Erst messen: `outlinePunkte` auf einen 30°-Zickzack, Selbstschnitte
@@ -8695,7 +8756,9 @@ anderes sieht, gilt sein Bild.
    neu; kein Lauf vergleicht nass gegen trocken NACH der Ausdünnung. Ein
    Lauf mit Hausdorff-Distanz der Konturen, Grenze ~0,3 pt; wenn rot: die
    Druck-Extrema als Pflichtpunkte behalten — RDP kennt nur die Lage.
-7. **Pinsel ist nur ein steilerer Füller; der Marker hat keine Keilspitze.**
+7. **Der Marker hat seit E704 eine Keilspitze** (28. September, `test583`
+   §3/§6; der runde bleibt wählbar). Offen bleibt:
+   **Pinsel ist nur ein steilerer Füller.**
    `azimuthAngle`, `twist`, `tangentialPressure` liest niemand (siehe
    auch L59 Neigung, E507). Nachrangig gegenüber 1–6.
 
@@ -8934,7 +8997,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 27. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 119 Lücken, 64 offene und 55 geschlossene. Der Befehl dazu ist
+Datei führt 120 Lücken, 65 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

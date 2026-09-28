@@ -1,5 +1,32 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E704 · Bessere Stifteffekte beim Zeichnen
+
+**Redur:** „… dann bessere stift efeckte beim zeichnen bessere farben"
+(27. September, ca. 16:45 UTC) — im Fragebogen (ca. 21:45 UTC) „Echter
+Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue
+Tintenfarben".
+
+**Gefunden:** Haarbeine und Kerben im „M" (L209 Punkt 3, gemessen 23 Punkte
+der Mittellinie ausserhalb der Tinte); Kappen, die sich nach innen biegen;
+ein beiger runder Marker; eine Perlenkante am Bleistift; die Vorhersage des
+Browsers ungedeckelt (bis 60 pt Schwanz bei 2,5 px/ms); ein atmender
+Kugelschreiber (−21 %); Polygon-Schlaufen und ein Neuaufbau je Bewegung auf
+der Tafel; nach dem Teil-Radieren eine Neigung am falschen Punkt; auf der
+Seitenfläche ein Radierer, der nur Punkte traf, nicht die Linie.
+
+**Gebaut:** Gelenke und Kappen nach aussen; der Keilmarker in Sonnengelb bei
+0,40, eine Fläche, der runde wählbar; Tempo macht den Füller dünner (nur mit
+Sensor); feste Breite für Kugelschreiber und Marker; Graphitkorn mit Farbe
+als Rückfall; Deckel und Bremse für die Vorhersage; acht Tinten zuerst, die
+fünf alten unter „Weitere Farben"; die Probe auf dem echten Papier, als
+echter Strich, mit Warnung in Worten und Weiss auf dunklem Papier; Tafel und
+Seitenfläche mit Glätter, allen Ereignissen und einem Bild je Bild; das PDF
+mit mehreren Vielecken und einer Füllung.
+
+**Geprüft:** `test583` (neu, zuerst rot), die Nachbarn im Commit E704.
+Offen: L227, AUFGABEN S1–S3.
+
 ## 27. September 2026 · E699 · React-Inseln, Stufe 1a: die Grundlage
 
 **Redur:** „du kannst react nutzen keien problem" — im Fragebogen „Mit React

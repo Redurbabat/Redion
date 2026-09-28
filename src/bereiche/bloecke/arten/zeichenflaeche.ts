@@ -506,6 +506,30 @@ const Zusatz = (() => {
               Math.round(sicht.y + (e.clientY - r.top) / sicht.z)];
     };
 
+    /* DER STIFT DER TAFEL SCHREIBT WIE DER DES BLATTS (E704): alle
+       gesammelten Ereignisse, `InkStroke.glaetter`, zwei Stellen, ein Bild je
+       Bild nur für den wachsenden Strich, beim Absetzen RDP. */
+    const punktFein = (e: any): [number, number] => {
+      const ueberMatrix = (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
+        ? SheetSpace.umrechner(flaeche as SVGSVGElement)(e) : null;
+      const r2 = (v: number): number => Math.round(v * 100) / 100;
+      if (ueberMatrix) return [r2(ueberMatrix[0]), r2(ueberMatrix[1])];
+      const r = flaeche.getBoundingClientRect();
+      return [r2(sicht.x + (e.clientX - r.left) / sicht.z), r2(sicht.y + (e.clientY - r.top) / sicht.z)];
+    };
+    let stiftGlatt: ((p: [number, number], dt: number) => [number, number]) | null = null;
+    let stiftZeit = 0;
+    let stiftBildGeplant = false;
+    /** Nur den wachsenden Strich neu setzen — einmal je Bild. */
+    const stiftNachziehen = (): void => {
+      stiftBildGeplant = false;
+      if (!aktiv || aktiv.art !== 'stift') return;
+      const pfade = flaeche.querySelectorAll<SVGPathElement>(`path[data-sid="${aktiv.id}"]`);
+      if (!pfade.length) { male(); return; }
+      const d = GfxShapes.zeichne({ ...aktiv }).querySelector('path')?.getAttribute('d') || '';
+      pfade.forEach(pfad => pfad.setAttribute('d', d));
+    };
+
     const sichtSichern = () => Store.updateBlock(block.id, {
       sicht: { x: Math.round(sicht.x), y: Math.round(sicht.y),
                z: Math.round(sicht.z * 100) / 100 },
@@ -671,9 +695,15 @@ const Zusatz = (() => {
         return;
       }
       merken();
+      /* Der Aufsetzpunkt geht roh und genau durch (E376) — und von ihm aus
+         glättet der Stift der Tafel wie der des Blatts (E704). */
+      const fein = werkzeug === 'stift' ? punktFein(e) : [x, y];
       aktiv = werkzeug === 'stift'
-        ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[x, y]], farbe }
+        ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [fein], farbe }
         : { id: Store.uid().slice(0, 8), art: werkzeug, x, y, w: 0, h: 0, farbe };
+      stiftGlatt = werkzeug === 'stift' && typeof InkStroke !== 'undefined'
+        ? InkStroke.glaetter(fein as [number, number]) as any : null;
+      stiftZeit = Number(e.timeStamp) || 0;
       daten.push(aktiv);
     });
 
@@ -716,8 +746,24 @@ const Zusatz = (() => {
         return;
       }
       if (!aktiv) return;
-      if (aktiv.art === 'stift') aktiv.pts.push([x, y]);
-      else { aktiv.w = x - aktiv.x; aktiv.h = y - aktiv.y; }
+      if (aktiv.art === 'stift') {
+        /* ALLE gesammelten Ereignisse, nicht nur das letzte (E704). */
+        const gesammelt = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
+        for (const ereignis of (gesammelt.length ? gesammelt : [e])) {
+          const roh = punktFein(ereignis);
+          const jetzt = Number(ereignis.timeStamp) || stiftZeit + 16;
+          const dt = Math.max(1, jetzt - stiftZeit);
+          stiftZeit = jetzt;
+          const q = stiftGlatt ? stiftGlatt(roh, dt) : roh;
+          const letzter = aktiv.pts[aktiv.pts.length - 1];
+          /* Weniger als ein halbes Pixel auf dem Glas ist kein neuer Punkt. */
+          if (letzter && Math.hypot(q[0] - letzter[0], q[1] - letzter[1]) < 0.6 / Math.max(0.1, sicht.z)) continue;
+          aktiv.pts.push([Math.round(q[0] * 100) / 100, Math.round(q[1] * 100) / 100]);
+        }
+        if (!stiftBildGeplant) { stiftBildGeplant = true; requestAnimationFrame(stiftNachziehen); }
+        return;
+      }
+      aktiv.w = x - aktiv.x; aktiv.h = y - aktiv.y;
       male();
     });
 
@@ -727,6 +773,20 @@ const Zusatz = (() => {
       if (schiebt) { schiebt = null; sichtSichern(); }
       if (aktiv) {
         /* Winzige Kritzler wieder entfernen */
+        if (aktiv.art === 'stift' && aktiv.pts.length >= 2) {
+          /* Die Spitze endet, wo der Stift sich hob (E704, wie das Blatt):
+             der Glätter läuft hinterher, der letzte Punkt ist der rohe. */
+          if (e && typeof e.clientX === 'number' && e.type === 'pointerup') {
+            const roh = punktFein(e);
+            const letzter = aktiv.pts[aktiv.pts.length - 1];
+            if (Math.hypot(roh[0] - letzter[0], roh[1] - letzter[1]) >= 0.3) aktiv.pts.push(roh);
+          }
+          if (typeof InkGeometry !== 'undefined' && aktiv.pts.length > 3) {
+            aktiv.pts = InkGeometry.simplify(aktiv.pts, 0.5 / Math.max(0.1, sicht.z))
+              .map((q: number[]) => [Math.round(Number(q[0]) * 100) / 100, Math.round(Number(q[1]) * 100) / 100]);
+          }
+        }
+        stiftGlatt = null;
         const klein = aktiv.art === 'stift' ? aktiv.pts.length < 2 : Math.abs(aktiv.w) < 4 && Math.abs(aktiv.h) < 4;
         if (klein) {
           daten.pop();
