@@ -158,20 +158,24 @@
    * Weiss verhält sich auf jeder Fläche gleich — heller Grund, hellerer
    * Rand.
    * --------------------------------------------------------------------- */
-  --bg:            #141414;   /* Grundfläche                                */
+  /* EIN LEICHTER KÜHLER TON (E705; Redur: „Leichter kühler Ton im Dunkeln").
+     Dieselbe Helligkeit wie vorher, Farbton 258° wie die Schale, Sättigung
+     0,006. Gedämpft/Beiwerk sind 70/47 % zwischen Grund und Schrift in
+     OKLab — die Anteile von `Farben.ladder`; `test584` §10 misst die Leiter. */
+  --bg:            #121417;   /* Grundfläche                                */
   --bg-tief:       #0f1012;   /* darunter: Blätter, Überlagerungen          */
-  --bg-side:       #1a1a1a;   /* Fläche                                     */
-  --bg-card:       #202020;   /* gehobene Fläche                            */
-  --bg-hover:      #2d2d2d;   /* berührt / überfahren                       */
-  --bg-press:      #343434;   /* gedrückt                                   */
+  --bg-side:       #181a1d;   /* Fläche                                     */
+  --bg-card:       #1e2023;   /* gehobene Fläche                            */
+  --bg-hover:      #2b2d30;   /* berührt / überfahren                       */
+  --bg-press:      #323437;   /* gedrückt                                   */
   --bg-active:     rgba(255,255,255,.06);
-  --bg-input:      #1a1a1a;
+  --bg-input:      #181a1d;
   --line:          rgba(255,255,255,.12);
   --line-soft:     rgba(255,255,255,.08);
   --line-stark:    rgba(255,255,255,.18);
-  --text:          #f2f2f2;   /* gemessen 16.5:1 auf dem Grund             */
-  --text-dim:      #a7a7a7;   /* 7.7:1 — Fliesstext erlaubt                */
-  --text-faint:    #737373;   /* 3.9:1 — nur Beiwerk und Symbole           */
+  --text:          #f1f2f4;   /* gemessen 16,6:1 auf dem Grund             */
+  --text-dim:      #a6a8aa;   /* 7,7:1 Grund, 6,8 Karte, 5,8 Überfahren     */
+  --text-faint:    #717275;   /* 3,8:1 Grund, 3,4 Karte — nur Beiwerk       */
 
   /* DER AKZENT IST VIOLETT (E199). Bis August 2026 war er orange (E44) —
      gewählt, weil die damalige Vorgabe Rot gleichzeitig als Akzent UND als
@@ -256,10 +260,13 @@
   --gold-strong: color-mix(in srgb, var(--gold) 22%, transparent);
   --gold-line:   color-mix(in srgb, var(--gold) 34%, transparent);
   --gold-shadow: 0 6px 20px color-mix(in srgb, #000000 46%, transparent);
-  --gefahr:        #ef4444;
-  --erfolg:        #22c55e;
-  --info:          #38bdf8;
-  --warnung:       #f59e0b;
+  /* STATUSFARBEN SIND TINTE (E705): L 0,70–0,80, Sättigung ≤ 0,17, jede
+     ≥ 4,5 auf Grund, Karte und Überfahren aller dunklen Schemata. Weiss AUF
+     Rot steht auf `--gefahr-flaeche` (grund.css) — eine Farbe, eine Rolle. */
+  --gefahr:        #f66d67;
+  --erfolg:        #40cd9b;
+  --info:          #5abdf2;
+  --warnung:       #f2af48;
   /* Die vier Sprossen der Schattenleiter (E204). Dieselben Namen wie in
      `hell.css`, NICHT dieselben Werte: auf dunklem Grund braucht ein
      Schatten mehr Deckkraft, um überhaupt eine Kante zu setzen. Wer hier
@@ -293,28 +300,30 @@
   --paper:     #f8f8f5;
   --grid:      rgba(255,255,255,.12);
 
-  /* Die zehn Notion-Textfarben */
+  /* NOTION-FARBEN IN OKLCH (E705): Schrift L 0,765 (Gelb 0,83), ≥ 5,9 auf
+     jeder dunklen Fläche; Tönungen L 0,30, klar statt grau-oliv.
+     Gespeichert bleiben die Kennungen (`red`, `bg-red`). */
   --c-default: #e9e9e7;
-  --c-gray:    #9b9a97;
-  --c-brown:   #937264;
-  --c-orange:  #ffa344;
-  --c-yellow:  #ffdc49;
-  --c-green:   #4dab9a;
-  --c-blue:    #529cca;
-  --c-purple:  #9a6dd7;
-  --c-pink:    #e255a1;
-  --c-red:     #ff7369;
+  --c-gray:    #b4b3ae;
+  --c-brown:   #d3a891;
+  --c-orange:  #f09c59;
+  --c-yellow:  #e6c45a;
+  --c-green:   #6fc991;
+  --c-blue:    #6dbcf2;
+  --c-purple:  #bf9ff9;
+  --c-pink:    #f08fbe;
+  --c-red:     #ff8d85;
 
   /* Die zehn Notion-Hintergrundfarben */
-  --b-gray:    #454b4e;
-  --b-brown:   #434040;
-  --b-orange:  #594a3a;
-  --b-yellow:  #59563b;
-  --b-green:   #354c4b;
-  --b-blue:    #364954;
-  --b-purple:  #443f57;
-  --b-pink:    #533b4c;
-  --b-red:     #594141;
+  --b-gray:    #2e2e2c;
+  --b-brown:   #372b24;
+  --b-orange:  #42260f;
+  --b-yellow:  #372d0c;
+  --b-green:   #173523;
+  --b-blue:    #133144;
+  --b-purple:  #322745;
+  --b-pink:    #422232;
+  --b-red:     #462220;
 }
 
 </style>
@@ -481,10 +490,11 @@ html[data-theme="light"]{
   --gold-strong: color-mix(in srgb, var(--gold) 24%, transparent);
   --gold-line:   color-mix(in srgb, var(--gold) 38%, transparent);
   --gold-shadow: 0 6px 20px color-mix(in srgb, var(--gold-deep) 18%, transparent);
-  --gefahr:      #dc2626;
-  --erfolg:      #15803d;
-  --info:        #0369a1;
-  --warnung:     #b45309;
+  /* Tinte ≥ 4,6 auf jeder hellen Fläche, auch Sand-Überfahren (E705). */
+  --gefahr:      #bb2021;
+  --erfolg:      #006e4f;
+  --info:        #056697;
+  --warnung:     #924f00;
 
   /* Papier (E260): im Hellen reinweiss — heller als der helle Grund, damit
      ein Blatt auch hier als Blatt lesbar bleibt. Die Tinte (`--paper-ink`)
@@ -493,13 +503,16 @@ html[data-theme="light"]{
   --paper:     #ffffff;
   --grid:      rgba(34,38,49,.12);
 
-  --c-default:#37352f; --c-gray:#787774; --c-brown:#9f6b53; --c-orange:#d9730d;
-  --c-yellow:#cb912f;  --c-green:#448361; --c-blue:#337ea9;  --c-purple:#9065b0;
-  --c-pink:#c14c8a;    --c-red:#d44c47;
+  /* NOTION-FARBEN IM HELLEN (E705): jede ≥ 4,6 auf allen hellen Flächen
+     (vorher Gelb 2,22 auf Sand) — lesbares Gelb ist Senf, wie `--gold-tinte`
+     (E272). Tönungen L 0,96: sichtbar, aber leise. */
+  --c-default:#37352f; --c-gray:#61605c;  --c-brown:#845539; --c-orange:#934e00;
+  --c-yellow:#755d00;  --c-green:#006f3d; --c-blue:#006697;  --c-purple:#7449b1;
+  --c-pink:#a33371;    --c-red:#b5242a;
 
-  --b-gray:#f1f1ef; --b-brown:#f4eeee; --b-orange:#faebdd; --b-yellow:#fbf3db;
-  --b-green:#edf3ec; --b-blue:#e7f3f8; --b-purple:#f6f3f9; --b-pink:#faf1f5;
-  --b-red:#fdebec;
+  --b-gray:#f2f1ef; --b-brown:#fbeee8; --b-orange:#ffede1; --b-yellow:#fff3cc;
+  --b-green:#ddfae6; --b-blue:#e4f4ff; --b-purple:#f3eeff; --b-pink:#ffebf3;
+  --b-red:#ffecea;
 }
 
 </style>
@@ -707,6 +720,10 @@ html[data-theme="light"]{
   --haupt-schein: inset 0 1px 0 rgba(255,255,255,.18),
                   0 6px 16px color-mix(in srgb, var(--accent) 24%, transparent);
 
+  /* Die rote FLÄCHE (E705): Weiss darauf 5,27 in beiden Modi; `--gefahr`
+     bleibt Tinte (dieselbe Trennung wie E199). Modusfrei, darum hier. */
+  --gefahr-flaeche: #ce2a29;
+
   /* --- Die Tinte auf Papier (E260). ------------------------------------
    * `--paper` und `--grid` wechseln mit dem Thema und stehen in
    * dunkel.css/hell.css. Die Tinte nicht: Papier ist in beiden Modi
@@ -776,6 +793,12 @@ html[data-theme="light"]{
 .bg-red{background:var(--b-red)}
 [class*="bg-"]{border-radius:3px; padding:0 2px}
 
+/* TINTE FÜR DEN HELLEN GRUND (E705): Whiteboard und Gedankenkarte setzen
+   `--tinte-hell` neben die gespeicherte Farbe (E414); nur hier greift sie. */
+html[data-theme="light"] [data-tinte="strich"]{ stroke:var(--tinte-hell) }
+html[data-theme="light"] [data-tinte="schrift"]{ fill:var(--tinte-hell) }
+html[data-theme="light"] [data-tinte="rand"]{ border-color:var(--tinte-hell) }
+
 /* DIE KRÄFTIGE REIHE, NICHT DIE TÖNUNG (E421).
    Redion hat zwei Farbreihen. `--b-*` sind Tönungen, die HINTER dunklem
    Text liegen — Etiketten, Zeilenfarben. `--c-*` sind die kräftigen Farben,
@@ -816,7 +839,12 @@ body{
 }
 button{font:inherit; color:inherit; background:none; border:none; cursor:pointer}
 input,textarea,select{font:inherit; color:inherit}
-::selection{background:#2eaadc55}
+/* EINGABEN IM GRUNDTON (E705): Kästchen, Listen, Datumsfelder sind im
+   Dunkeln dunkel. An den Eingaben, nicht an <html> (test579 §4). */
+:root:not([data-theme="light"]) :is(input, select, textarea){ color-scheme:dark }
+html[data-theme="light"] :is(input, select, textarea){ color-scheme:light }
+/* Die Textauswahl im Akzent statt Notions Blau (E705). */
+::selection{background:color-mix(in srgb, var(--accent) 34%, transparent)}
 
 /* Scrollbars dezent wie in Notion */
 ::-webkit-scrollbar{width:10px; height:10px}
@@ -970,7 +998,7 @@ body[data-bewegung="ruhig"] [data-gedrueckt]:not(.schalter){ opacity:.7 }
 /* UNWIDERRUFLICH. Rot, und nur hier. Der Akzent ist violett, damit „Sichern"
    nicht aussieht wie „Löschen" — das war der ganze Grund für E44. */
 .rb.gefahr{ background:transparent; border-color:var(--gefahr); color:var(--gefahr) }
-.rb.gefahr:hover{ background:var(--gefahr); color:#fff; border-color:var(--gefahr) }
+.rb.gefahr:hover{ background:var(--gefahr-flaeche); color:#fff; border-color:var(--gefahr-flaeche) }
 
 /* NUR EIN ZEICHEN. Quadratisch. 34 am Rechner, 44 am Finger (§37, §69). */
 .rb.zeichen{ width:34px; padding:0 }
@@ -1344,7 +1372,8 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .b-toc .lvl2{padding-left:20px}
 .b-toc .lvl3{padding-left:40px}
 
-.blk.sel{background:#2eaadc22; border-radius:3px}
+/* Auswahl im Akzent statt Notions Blau (E705). */
+.blk.sel{background:color-mix(in srgb, var(--accent) 13%, transparent); border-radius:3px}
 
 /* --- Menüs ---------------------------------------------------------------- */
 .menu{
@@ -2418,7 +2447,7 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .model-btn:hover{background:var(--bg-hover); color:var(--text)}
 .model-btn span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .dot{width:7px; height:7px; border-radius:50%; background:var(--text-faint); flex:0 0 7px}
-.dot.ok{background:#4dab9a} .dot.load{background:var(--c-orange)} .dot.err{background:var(--c-red)}
+.dot.ok{background:var(--erfolg)} .dot.load{background:var(--c-orange)} .dot.err{background:var(--c-red)}
 
 #chat{flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:14px}
 .msg{font-size:14px; line-height:1.6}
@@ -2691,8 +2720,8 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 .btn:disabled{opacity:.5; cursor:default}
 .btn.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
 .btn.prim:hover{filter:brightness(1.1)}
-.btn.rot{color:var(--c-red,#e03e3e); border-color:var(--c-red,#e03e3e)}
-.btn.rot.prim{background:var(--c-red,#e03e3e); color:#fff}
+.btn.rot{color:var(--gefahr); border-color:var(--gefahr)}
+.btn.rot.prim{background:var(--gefahr-flaeche); border-color:var(--gefahr-flaeche); color:#fff}
 .btn.klein{padding:4px 9px; min-height:28px; font-size:12.5px}
 /* DIE WEITER-VARIANTE (E441, Auftrag §4.5, Nr. 02 „Apply Now").
    Kein neuer Knopftyp — eine Klasse `weiter` fuer Knoepfe, die irgendwohin
@@ -2824,7 +2853,7 @@ a.bl:hover{color:var(--text)}
   background:var(--bg-card); border-radius:4px; padding:0 5px; font-size:.92em; color:var(--text-dim);
 }
 .blk.blitz{animation:blitz 1.4s ease}
-@keyframes blitz{0%,100%{background:transparent}20%{background:#2eaadc35}}
+@keyframes blitz{0%,100%{background:transparent}20%{background:color-mix(in srgb, var(--accent) 21%, transparent)}}
 
 /* --- Rückverweise unter der Seite ------------------------------------------ */
 .backlinks{margin-top:52px; border-top:1px solid var(--line); padding-top:18px}
@@ -2962,8 +2991,10 @@ a.bl:hover{color:var(--text)}
   padding:12px 16px; border-bottom:1px solid var(--line); overflow-x:auto;
 }
 .heatmap i{width:10px; height:10px; border-radius:2px; background:var(--bg-card); display:block}
-.heatmap .hm1{background:#2eaadc44}.heatmap .hm2{background:#2eaadc77}
-.heatmap .hm3{background:#2eaadcbb}.heatmap .hm4{background:#2eaadc}
+/* Stufen im Akzent statt Notions Blau (E705). */
+.heatmap .hm1{background:color-mix(in srgb, var(--accent) 27%, transparent)}
+.heatmap .hm2{background:color-mix(in srgb, var(--accent) 47%, transparent)}
+.heatmap .hm3{background:color-mix(in srgb, var(--accent) 73%, transparent)}.heatmap .hm4{background:var(--accent)}
 .memo{padding:11px 14px; border-bottom:1px solid var(--line-soft)}
 .memo:hover{background:var(--bg-hover)}
 .memo-kopf{font-size:11.5px; color:var(--text-faint); display:flex; align-items:center; gap:6px; margin-bottom:4px}
@@ -3256,7 +3287,8 @@ a.bl:hover{color:var(--text)}
    muss man lesen können. Gemessen war sie auf Grün bei 40 Prozent
    Deckkraft — hübsch und unlesbar. */
 .home-sich button.fertig{
-  background:var(--erfolg, #16a34a); color:#fff;
+  /* Auf der Erfolgsfarbe steht der Grund, nicht Weiss (E705). */
+  background:var(--erfolg); color:var(--bg);
   opacity:1 !important; cursor:default;
 }
 .hs-kreisel{
@@ -3269,7 +3301,7 @@ a.bl:hover{color:var(--text)}
   .hs-kreisel{ animation:none; border-top-color:currentColor; opacity:.5 }
 }
 
-.home-sich-gut{padding:9px 14px; border-left-color:var(--c-green, #4dab9a)}
+.home-sich-gut{padding:9px 14px; border-left-color:var(--erfolg)}
 .home-sich-gut .hs-zeichen{background:var(--b-green); color:var(--c-green)}
 .home-sich-gut .hs-text{color:var(--text-dim)}
 
@@ -3277,7 +3309,7 @@ a.bl:hover{color:var(--text)}
 .home-sich-erinnern .hs-zeichen{background:var(--b-yellow); color:var(--c-yellow)}
 
 .home-sich-warnen{border-left-color:var(--c-red); background:var(--b-red)}
-.home-sich-warnen .hs-zeichen{background:var(--c-red); color:#fff}
+.home-sich-warnen .hs-zeichen{background:var(--gefahr-flaeche); color:#fff}
 /* Auf der eingefärbten Fläche ist `--text-faint` nicht mehr zu lesen — der Ton
    ist für den normalen Hintergrund gerechnet. Der erklärende Satz ist aber
    genau das, was gelesen werden soll; er wäre sonst nur Dekoration um den
@@ -3914,8 +3946,8 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
   border:1px solid var(--line); color:var(--text-dim);
 }
-.wl-hoch{border-color:#d9534f; color:#c9302c}
-.wl-mittel{border-color:#e0a800; color:#a67c00}
+.wl-hoch{border-color:var(--gefahr); color:var(--gefahr)}
+.wl-mittel{border-color:var(--warnung); color:var(--warnung)}
 .wl-schwach{opacity:.75}
 .wl-tun{font-size:12px; padding:3px 9px; min-height:26px}
 /* Der Haken (E324). Zurückhaltend, weil er nichts löscht — er legt einen
@@ -4089,15 +4121,19 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-kn{ position:absolute; box-sizing:border-box; max-width:230px;
         display:flex; align-items:center; gap:6px;
         padding:6px 11px; border-radius:8px;
-        border:2px solid var(--ast, var(--line));
+        border:2px solid var(--ast-zug, var(--line));
         background:var(--bg-card); color:var(--text);
         font-size:13.5px; line-height:1.35;
         white-space:pre-wrap; overflow-wrap:anywhere; cursor:pointer; }
 .gk-kn:hover{ background:var(--bg-hover); }
+/* `--ast` steht inline (gespeicherte Farbe); gezeichnet wird `--ast-zug`,
+   im Hellen die dunklere Tinte `--ast-hell` (E705; Gelb hatte 2,4 : 1). */
+.gk-kn{ --ast-zug:var(--ast); }
+html[data-theme="light"] .gk-kn{ --ast-zug:var(--ast-hell, var(--ast)); }
 /* Der gewählte Knoten trägt einen Ring in seiner Astfarbe — aber nicht NUR
    den: er bekommt auch eine kräftigere Kante. §38 verlangt, dass keine
    Auskunft allein über die Farbe läuft, und „ausgewählt" ist eine Auskunft. */
-.gk-kn.on{ box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--ast, var(--accent));
+.gk-kn.on{ box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--ast-zug, var(--accent));
            font-weight:600; }
 .gk-kn.gk-wurzel{ font-size:16px; font-weight:600; padding:10px var(--space-5);
                   border-radius:11px; background:var(--bg-input); max-width:260px; }
@@ -4107,7 +4143,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 /* Der Zähler an einem zugeklappten Ast. Die ZAHL steht da, nicht nur ein
    Dreieck — wer drei verborgene Unterthemen hat, soll die Drei sehen. */
 .gk-zahl{ flex:none; min-width:17px; height:17px; padding:0 4px; border-radius:9px;
-          background:var(--ast, var(--text-faint)); color:#fff;
+          background:var(--ast-zug, var(--text-faint)); color:#fff;
           font-size:10.5px; font-weight:700; line-height:17px; text-align:center; }
 
 .gk-griff{ height:9px; cursor:ns-resize; background:var(--bg-card);
@@ -4130,7 +4166,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    ────────────────────────────────────────────────────────────────────── */
 .gk-griffel{ position:absolute; z-index:2; width:16px; height:16px; padding:0;
              border-radius:50%; border:2px solid var(--bg-card);
-             background:var(--ast, var(--accent)); color:#fff;
+             background:var(--ast-zug, var(--accent)); color:#fff;
              display:grid; place-items:center; line-height:1;
              font-size:11px; font-weight:700; cursor:crosshair; }
 .gk-griffel::before{ content:"+"; }
@@ -4190,7 +4226,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-kn[data-form="sechseck"]::before, .gk-kn[data-form="sechseck"]::after{
   content:""; position:absolute; pointer-events:none; }
 .gk-kn[data-form="raute"]::before, .gk-kn[data-form="sechseck"]::before{
-  inset:0; background:var(--ast, var(--line)); }
+  inset:0; background:var(--ast-zug, var(--line)); }
 .gk-kn[data-form="raute"]::after, .gk-kn[data-form="sechseck"]::after{
   inset:3px; background:var(--bg-card); }
 .gk-kn[data-form="raute"]::before, .gk-kn[data-form="raute"]::after{
@@ -4206,7 +4242,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-kn[data-form="raute"].on::after, .gk-kn[data-form="sechseck"].on::after{
   inset:6px; }
 .gk-kn[data-form="raute"].on::before, .gk-kn[data-form="sechseck"].on::before{
-  background:var(--ast, var(--accent)); }
+  background:var(--ast-zug, var(--accent)); }
 
 
 @media (max-width:760px){
@@ -4887,7 +4923,7 @@ td.td-aus input.zeilen-aus{display:none; accent-color:var(--accent-text); cursor
 table.grid tr:hover td.td-aus .zeilen-nr{display:none}
 table.grid tr:hover td.td-aus input.zeilen-aus{display:inline}
 td.td-aus input.zeilen-aus:checked{display:inline}
-table.grid tr:has(input.zeilen-aus:checked) td{background:#2eaadc18}
+table.grid tr:has(input.zeilen-aus:checked) td{background:color-mix(in srgb, var(--accent) 9%, transparent)}
 table.grid th.th-aus input{accent-color:var(--accent-text); cursor:pointer}
 table.grid tr.zieht{opacity:.4}
 table.grid tr.ziel td{border-top:2px solid var(--accent)}
@@ -5075,7 +5111,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .linked-kopf button:hover{background:var(--bg-hover); color:var(--text)}
 
 /* --- Dateien ablegen ----------------------------------------------------------- */
-#scroll.ablegen{outline:2px dashed var(--accent); outline-offset:-14px; background:#2eaadc0a}
+#scroll.ablegen{outline:2px dashed var(--accent); outline-offset:-14px; background:color-mix(in srgb, var(--accent) 4%, transparent)}
 #scroll.ablegen::after{
   content:"Datei hier ablegen — Markdown, CSV, TSV, HTML, Bild oder Anhang";
   position:fixed; left:50%; bottom:60px; transform:translateX(-50%);
@@ -5489,7 +5525,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   display: flex; align-items: center; justify-content: center;
 }
 .tbl-werkzeuge button:hover { background: var(--bg-hover); color: var(--text); }
-.tbl-werkzeuge button.on   { background: var(--bg-hover); color: var(--accent); }
+.tbl-werkzeuge button.on   { background: var(--bg-hover); color: var(--accent-text); }
 .tbl-werkzeuge button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 /* --- Das Rollfeld ---------------------------------------------------------
@@ -8318,7 +8354,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   margin:0;font-size:12.5px;letter-spacing:.02em;color:var(--text-dim)
 }
 .lernwelt .lw-plan-tag h3 em{
-  margin-left:var(--space-1);font-style:normal;color:var(--accent);font-weight:640
+  margin-left:var(--space-1);font-style:normal;color:var(--accent-text);font-weight:640
 }
 .lernwelt .lw-plan-lektion{
   display:flex;flex-direction:column;gap:2px;
@@ -8327,7 +8363,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 }
 .lernwelt .lw-plan-lektion.ist-jetzt{border-color:var(--accent);background:var(--accent-schwach)}
 .lernwelt .lw-plan-lektion time{font-size:11px;color:var(--text-dim);font-variant-numeric:tabular-nums}
-.lernwelt .lw-plan-jetzt{font-style:normal;font-size:11px;color:var(--accent);font-weight:640}
+.lernwelt .lw-plan-jetzt{font-style:normal;font-size:11px;color:var(--accent-text);font-weight:640}
 .lernwelt .lw-plan-lektion strong{font-size:13px}
 .lernwelt .lw-plan-lektion span{font-size:11.5px;color:var(--text-dim)}
 .lernwelt .lw-plan-lektion small{font-size:11px;color:var(--text-dim)}
@@ -8937,12 +8973,13 @@ body.nh-zieht .nh-regal{ touch-action:none }
 #ai .model-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #ai .model-btn .dot { flex: 0 0 5px; width: 5px; height: 5px; }
 #ai #ai-diktat { flex: 0 0 44px; }
-#ai #ai-diktat.an { background: #b62e3d; color: #fff; }
+#ai #ai-diktat.an { background: var(--gefahr-flaeche); color: #fff; }
 #ai #ai-senden {
   flex: 0 0 44px; font-size: 27px; font-weight: 400;
-  background: #2f6ed5; color: #fff; box-shadow: inset 0 1px 0 #ffffff30;
+  /* Haupthandlung → Hauptfläche statt eines eigenen Blaus (E705). */
+  background: var(--haupt-flaeche); color: var(--auf-accent); box-shadow: inset 0 1px 0 #ffffff30;
 }
-#ai #ai-senden:hover { background: #397de8; transform: translateY(-1px); }
+#ai #ai-senden:hover { background: var(--haupt-flaeche-hover); transform: translateY(-1px); }
 #ai #ai-senden:active { transform: scale(.92); }
 #ai :is(.ai-leiste button, .ai-tools summary, .ai-head button):focus-visible {
   outline: 2px solid var(--accent-text); outline-offset: 2px;
@@ -12359,7 +12396,7 @@ body .rmo-liquid::after {
 .ag-grenzstreifen button{flex:0 0 auto; padding:6px 12px; border:1px solid var(--line);
   border-radius:7px; font-size:13px; min-height:34px}
 .ag-grenzstreifen button:hover{background:var(--bg-hover)}
-.ag-grenzstreifen.aus{background:var(--b-red, rgba(239,68,68,.14))}
+.ag-grenzstreifen.aus{background:var(--b-red)}
 .ag-grenzstreifen.aus, .ag-grenzstreifen.aus b{color:var(--text)}
 .ag-grenzstreifen.aus button.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent}
 @media(max-width:760px){
@@ -12803,10 +12840,11 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .dz-ziel{font-size:12px; color:var(--text-dim); font-variant-numeric:tabular-nums}
 .dz-balken{height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden; margin-top:2px}
 .dz-balken i{display:block; height:100%; border-radius:3px; background:var(--text-faint)}
-.dash-karte.kpi-gut{border-color:#3f8f5f}
-.dash-karte.kpi-gut .dz-balken i{background:#3f8f5f}
-.dash-karte.kpi-offen{border-color:#b07a2a}
-.dash-karte.kpi-offen .dz-balken i{background:#b07a2a}
+/* Kennzahlen in den Statusfarben (E705). */
+.dash-karte.kpi-gut{border-color:var(--erfolg)}
+.dash-karte.kpi-gut .dz-balken i{background:var(--erfolg)}
+.dash-karte.kpi-offen{border-color:var(--warnung)}
+.dash-karte.kpi-offen .dz-balken i{background:var(--warnung)}
 .dz-wert{font-size:26px; font-weight:600; line-height:1.1}
 .dz-name{font-size:12px; color:var(--text-faint)}
 .dash-block{border:1px solid var(--line); border-radius:9px; padding:13px 16px; position:relative}
@@ -13131,7 +13169,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-deckel-marke{
   position:absolute; left:0; top:0; z-index:2; padding:3px 6px;
-  border-radius:0 0 6px 0; background:var(--gefahr); color:#fff;
+  border-radius:0 0 6px 0; background:var(--gefahr-flaeche); color:#fff;
   font-size:8.5px; font-weight:800; font-style:normal; letter-spacing:.04em
 }
 .bib-deckel-stern{
@@ -13504,7 +13542,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-werkzeuge button:hover{background:var(--bg-hover); color:var(--text)}
 .bib-werkzeuge .prim{background:var(--accent); color:var(--auf-accent); font-size:13.5px;
   padding:6px 13px; font-weight:500}
-.bib-werkzeuge .prim:hover{filter:brightness(1.08); color:#fff}
+.bib-werkzeuge .prim:hover{filter:brightness(1.08); color:var(--auf-accent)}
 .bib-suchzeile{display:flex; align-items:center; gap:8px; padding:8px 2px; font-size:14px}
 .bib-suchzeile input{flex:1; background:none; border:none; outline:none; color:var(--text);
   font-size:16px; font-family:inherit}
@@ -13529,7 +13567,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-txt{font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .bib-person{display:flex; align-items:center; gap:7px; color:var(--text-dim);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.bib-kreis{width:19px; height:19px; border-radius:50%; background:var(--c-red, #e03e3e);
+.bib-kreis{width:19px; height:19px; border-radius:50%; background:var(--gefahr-flaeche);
   color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center; flex:none}
 .bib-quelle{display:flex; align-items:center; gap:6px; color:var(--text-dim);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500}
@@ -13577,11 +13615,11 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .pk-res{min-height:150px}
 .pk-tat{padding:3px 7px; border-radius:5px; color:var(--text-faint); cursor:pointer; font-size:14px}
 .pk-tat:hover{background:var(--bg-hover); color:var(--text)}
-.pk-tat.weg:hover{color:var(--c-red, #e03e3e)}
+.pk-tat.weg:hover{color:var(--gefahr)}
 .pk-leer{padding:26px 16px; color:var(--text-faint); font-size:14px; text-align:center}
 .pk-hint{display:flex; align-items:center; gap:10px; justify-content:space-between}
-.pk-alle{background:none; color:var(--c-red, #e03e3e); font-size:12px; white-space:nowrap; padding:3px 6px}
-.pk-alle:hover{text-decoration:underline; color:var(--c-red, #e03e3e)}
+.pk-alle{background:none; color:var(--gefahr); font-size:12px; white-space:nowrap; padding:3px 6px}
+.pk-alle:hover{text-decoration:underline; color:var(--gefahr)}
 
 /* Spaltenmenü — Kopf mit Symbol, Namensfeld und ⓘ (wie in Notion) */
 .sp-kopf{display:flex; align-items:center; gap:6px; padding:8px 8px 6px}
@@ -13600,9 +13638,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 /* Vorschläge (Notion: „Änderungen vorschlagen") */
 .vor-eintrag{padding:10px 14px; border-bottom:1px solid var(--line)}
 .vor-wer{font-size:11.5px; color:var(--text-faint); margin-bottom:5px}
-.vor-alt{font-size:13.5px; color:var(--c-red, #e03e3e); text-decoration:line-through;
+.vor-alt{font-size:13.5px; color:var(--gefahr); text-decoration:line-through;
   padding:2px 0; word-break:break-word}
-.vor-neu{font-size:13.5px; color:var(--c-green, #4dab9a); padding:2px 0; word-break:break-word}
+.vor-neu{font-size:13.5px; color:var(--erfolg); padding:2px 0; word-break:break-word}
 .vor-tat{display:flex; gap:7px; margin-top:7px}
 .vor-tat button{font-size:12.5px; padding:4px 11px; border-radius:5px; background:var(--bg-hover)}
 .vor-tat button:first-child{background:var(--accent); color:var(--auf-accent)}
@@ -13643,7 +13681,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
   border-radius:6px; font-size:14px; background:none; color:var(--text); text-align:left}
 .we-liste button:hover{background:var(--bg-hover)}
 .we-liste button .ms{margin-left:auto; color:var(--text-faint); font-size:12px}
-.we-liste button.rot{color:var(--c-red, #e03e3e)}
+.we-liste button.rot{color:var(--gefahr)}
 .we-liste .grp{padding:12px 10px 4px; font-size:11px; color:var(--text-faint);
   text-transform:uppercase; letter-spacing:.05em}
 
@@ -13824,7 +13862,7 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .ai-leiste .ai-luecke{flex:1}
 #ai-modus{font-size:12.5px; color:var(--text-faint)}
 #ai-senden{background:var(--bg-hover)}
-#ai-diktat.an{background:var(--c-red, #e03e3e); color:#fff}
+#ai-diktat.an{background:var(--gefahr-flaeche); color:#fff}
 .msg-tat{display:flex; gap:4px; margin-top:7px}
 .msg-tat button{background:none; color:var(--text-faint); font-size:13px;
   padding:2px 6px; border-radius:5px}
@@ -14491,7 +14529,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben .hl-punkt{
     position:absolute; top:7px; right:calc(50% - 15px);
     width:8px; height:8px; border-radius:50%;
-    background:var(--c-red, #e03e3e);
+    background:var(--gefahr-flaeche);
     border:2px solid var(--bg-card);
   }
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
@@ -14804,8 +14842,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   margin:8px 4px; overflow:hidden}
 .blatt-karte button{border-radius:0; margin:0}
 .blatt-karte button + button{border-top:1px solid var(--line-soft)}
-.blatt-karte button.rot{color:var(--c-red, #e03e3e)}
-.blatt-karte button.rot .mi{color:var(--c-red, #e03e3e)}
+.blatt-karte button.rot{color:var(--gefahr)}
+.blatt-karte button.rot .mi{color:var(--gefahr)}
 .menu.blatt .schrift-kacheln{background:var(--bg-card, var(--bg-hover));
   border-radius:12px; margin:8px 4px; padding:12px 8px}
 
@@ -15034,22 +15072,22 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
              background:var(--bg-input); border:1px solid var(--line); border-radius:6px; }
 .fb-besch{ width:100%; margin-top:6px; font-size:12.5px; }
 .fb-probe{ margin-top:5px; font-size:12px; font-family:var(--mono); min-height:15px; }
-.fb-probe.gut{ color:var(--c-green, #4dab6d); }
-.fb-probe.schlecht{ color:var(--c-red, #e03e3e); }
+.fb-probe.gut{ color:var(--erfolg); }
+.fb-probe.schlecht{ color:var(--gefahr); }
 
 /* Zwischenergebnisse einer Formel */
 .fx-schritt{ display:flex; gap:14px; align-items:baseline; padding:8px 16px;
              border-bottom:1px solid var(--line); font-size:13px; }
 .fx-schritt code{ flex:1; font-family:var(--mono); font-size:12.5px; word-break:break-all; }
 .fx-schritt span{ flex:0 0 34%; text-align:right; font-family:var(--mono); }
-.fx-schritt span.gut{ color:var(--c-green, #4dab6d); }
-.fx-schritt span.schlecht{ color:var(--c-red, #e03e3e); }
+.fx-schritt span.gut{ color:var(--erfolg); }
+.fx-schritt span.schlecht{ color:var(--gefahr); }
 
 /* ==========================================================================
  * PFLEGE — Gesundheit, Dubletten, Erste Hilfe
  * ======================================================================== */
 .pf-karte{ padding:13px 17px; border-bottom:1px solid var(--line); }
-.pf-karte.pf-warnung{ border-left:3px solid var(--c-orange, #d9730d); }
+.pf-karte.pf-warnung{ border-left:3px solid var(--warnung); }
 .pf-karte.pf-hinweis{ border-left:3px solid var(--line); }
 .pf-titel{ font-weight:600; font-size:14px; margin-bottom:3px; }
 .pf-text{ font-size:12.5px; color:var(--text-dim); }
@@ -15139,10 +15177,10 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .sm-kopf span{ font-size:11.5px; color:var(--text-faint); }
 .sm-felder{ padding:6px 0; }
 .sm-feld{ display:flex; align-items:center; gap:7px; padding:3px 12px; font-size:12.5px; }
-.sm-feld.sm-rel{ background:rgba(80,130,255,.08); }
+.sm-feld.sm-rel{ background:color-mix(in srgb, var(--info) 9%, transparent); }
 .sm-typ{ width:16px; text-align:center; opacity:.7; }
 .sm-name{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.sm-regel{ color:var(--c-green, #4dab6d); font-size:11px; }
+.sm-regel{ color:var(--erfolg); font-size:11px; }
 .sm-pfeil{ font-size:11px; color:var(--accent-text); }
 .sm-fuell{ width:44px; height:5px; border-radius:3px; background:var(--line); overflow:hidden; }
 .sm-fuell i{ display:block; height:100%; background:var(--accent); }
@@ -15161,8 +15199,8 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .kz-name button{ opacity:.4; font-size:12px; }
 .kz-name button:hover{ opacity:1; }
 .kz-wert{ font-size:30px; font-weight:650; margin:6px 0 2px; letter-spacing:-.02em; }
-.kz-wert.gut{ color:var(--c-green, #4dab6d); }
-.kz-wert.schlecht{ color:var(--c-orange, #d9730d); }
+.kz-wert.gut{ color:var(--erfolg); }
+.kz-wert.schlecht{ color:var(--warnung); }
 .kz-ziel{ font-size:11.5px; color:var(--text-faint); }
 .kz-bar{ height:5px; border-radius:3px; background:var(--line); margin-top:5px; overflow:hidden; }
 .kz-bar i{ display:block; height:100%; background:var(--accent); }
@@ -15185,7 +15223,7 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
         background:var(--bg-input); border:1px solid var(--line); color:var(--text); }
 #sp-ok{ width:100%; padding:11px; border-radius:9px; background:var(--accent);
         color:var(--auf-accent); font-size:15px; }
-.sp-fehler{ font-size:12.5px; color:var(--c-red, #e03e3e); min-height:16px; }
+.sp-fehler{ font-size:12.5px; color:var(--gefahr); min-height:16px; }
 
 .kr-karte{ border:1px solid var(--line); border-radius:10px; padding:13px 15px;
            display:flex; flex-direction:column; gap:8px; }
@@ -15208,8 +15246,9 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .sterne{ display:inline-flex; gap:1px; cursor:pointer; }
 .sterne i{ font-style:normal; color:var(--line); font-size:15px; line-height:1;
            transition:color .1s ease; }
-.sterne i.an{ color:#f5b301; }
-.sterne:hover i{ color:#f5b30188; }
+.sterne i.an{ color:var(--gold-tinte); }
+/* Vorschau in derselben Goldtinte, halb gedeckt (E705). */
+.sterne:hover i{ color:color-mix(in srgb, var(--gold-tinte) 55%, transparent); }
 .sterne i:hover ~ i{ color:var(--line); }
 /* Fortschritt: Bahn, Balken, Zahl — in dieser Reihenfolge und mit diesen
    drei Flex-Werten. Wer sie ändert, sollte E409 lesen: der Balken sass
@@ -15546,15 +15585,50 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-probe b{position:absolute; right:7px; top:7px; width:13px; height:13px; border-radius:50%}
 .au-probe u{position:absolute; right:7px; bottom:9px; left:38%; height:4px; border-radius:2px; opacity:.7}
 .au-name{font-size:12px; color:var(--text-dim)}
-.au-akzente{display:flex; gap:7px; align-items:center; flex-wrap:wrap}
-.au-akzente button{width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer; position:relative;}
-.au-akzente button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
-.au-akzente button.an{border-color:var(--text)}
-.au-akzente .au-zurueck{width:auto; height:auto; border-radius:6px; padding:4px 10px;
-                        background:transparent; border:1px solid var(--line);
-                        color:var(--text-dim); font-size:12px}
-.au-akzente input[type=color]{width:30px; height:26px; border:1px solid var(--line);
-                              border-radius:6px; background:transparent; cursor:pointer; padding:1px}
+.au-akzente{display:flex; gap:var(--space-2); align-items:flex-start; flex-wrap:wrap}
+/* NEUN FARBEN MIT NAMEN UND „Aa" (E705): „Aa" in der Schrift, die auf der
+   Farbe stehen wird; 44 × 58 Trefffläche (§37); gewählt = Ring, Haken und
+   aria-pressed (§38). */
+.au-akzente .au-akz{position:relative; display:flex; flex-direction:column; align-items:center; gap:var(--space-1);
+  min-width:var(--touch-min); min-height:58px; padding:var(--space-1) 2px; border:0; border-radius:var(--radius-md);
+  background:transparent; color:var(--text-dim); font:inherit; font-size:11px; cursor:pointer;
+  transition:background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease)}
+.au-akzente .au-akz:hover{background:var(--bg-hover); color:var(--text)}
+.au-akzente .au-akz:focus-visible,
+.au-akzente .au-eigen:focus-within{outline:2px solid var(--accent-text); outline-offset:1px}
+.au-akz-probe{display:grid; place-items:center; width:34px; height:34px; border-radius:var(--radius-pill);
+  background:var(--au-akz); color:var(--au-auf); font-size:13px; font-weight:700; letter-spacing:-.01em;
+  box-shadow:inset 0 0 0 1px var(--line-stark);
+  transition:transform var(--motion-instant) var(--ease), box-shadow var(--motion-fast) var(--ease)}
+.au-akzente .au-akz:active .au-akz-probe{transform:scale(.94)}
+.au-akzente .au-akz.an{color:var(--text); font-weight:600}
+.au-akzente .au-akz.an .au-akz-probe{box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--au-akz)}
+.au-akz-haken{position:absolute; top:0; right:0; display:grid; place-items:center; width:15px; height:15px;
+  border-radius:var(--radius-pill); background:var(--text); color:var(--bg); font-size:9px; font-weight:800}
+.au-akz-name{max-width:64px; line-height:1.2; text-align:center; overflow-wrap:anywhere}
+/* Eigene Farbe: der Farbwähler liegt unsichtbar über dem Feld. */
+.au-akzente .au-eigen input[type=color]{position:absolute; inset:0; width:100%; height:100%; opacity:0;
+  border:0; padding:0; cursor:pointer}
+.au-eigen .au-akz-probe{border:1.5px dashed var(--text-faint); box-shadow:none}
+.au-eigen.an .au-akz-probe{border:0}
+.au-akzente .au-zurueck{align-self:center; min-height:var(--touch-min); border-radius:var(--radius-md);
+  padding:0 var(--space-4); background:transparent; border:1px solid var(--line);
+  color:var(--text-dim); font-size:12px; cursor:pointer}
+.au-akzente .au-zurueck.an{border-color:var(--accent-text); color:var(--text)}
+.au-akzente .au-zurueck:hover{background:var(--bg-hover)}
+/* Vorschau: Hauptknopf, Verweis, gewählter Reiter. */
+.au-akz-vorschau{display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-4); margin-top:var(--space-4);
+  padding:var(--space-3) var(--space-4); border:1px solid var(--line-soft); border-radius:var(--radius-lg);
+  background:var(--bg); font-size:13px}
+.au-akz-vorschau .au-vs-titel{color:var(--text-dim); font-size:11.5px}
+.au-akz-vorschau .au-vs-knopf{padding:6px 14px; border-radius:var(--radius-md); background:var(--haupt-flaeche);
+  color:var(--auf-accent); font-weight:600; box-shadow:var(--haupt-schein)}
+.au-akz-vorschau .au-vs-verweis{color:var(--accent-text); text-decoration:underline; text-underline-offset:3px}
+.au-akz-vorschau .au-vs-reiter{padding:4px 10px; border-radius:var(--radius-sm); background:var(--accent-schwach);
+  color:var(--accent-text); font-weight:600}
+@media (prefers-reduced-motion:reduce){
+  .au-akzente .au-akz:active .au-akz-probe{transform:none}
+}
 .au-liste{display:flex; gap:7px; flex-wrap:wrap}
 .au-liste button{border:1px solid var(--line); border-radius:7px; padding:6px 13px;
                  background:transparent; color:var(--text-dim); cursor:pointer; font-size:13px}
@@ -16126,7 +16200,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Klasse, wo der Fehler entsteht — dieselbe Lehre wie L90 und L111. */
 .mb-rechts-knopf[hidden]{ display:none }
 .glocke-zahl{ position:absolute; top:1px; right:0; min-width:15px; height:15px;
-  padding:0 3px; border-radius:8px; background:var(--gefahr); color:#fff;
+  padding:0 3px; border-radius:8px; background:var(--gefahr-flaeche); color:#fff;
   font-size:9.5px; font-weight:700; line-height:15px; text-align:center;
   font-style:normal }
 .wolke-punkt{ position:absolute; top:2px; right:2px; width:8px; height:8px;
@@ -16154,7 +16228,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   padding:9px 14px; font-size:13.5px; background:var(--bg);
   display:inline-flex; align-items:center; gap:7px; min-height:36px }
 .wolke-blatt button:hover{ background:var(--bg-hover) }
-.wolke-blatt button.prim{ background:var(--accent); color:#fff;
+.wolke-blatt button.prim{ background:var(--accent); color:var(--auf-accent);
   border-color:var(--accent); font-weight:600 }
 .wolke-blatt button.prim:hover{ filter:brightness(1.08) }
 /* Die kleinen daneben („ändern", „Server prüfen") bleiben klein — sie
@@ -16361,7 +16435,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 #fehler-karte{
   position:fixed; z-index:950; left:16px; right:16px; top:16px;
   max-width:min(520px, calc(100vw - 32px)); margin:0 auto;
-  background:#2a1a1a; border:1px solid rgba(239,68,68,.45); border-radius:16px;
+  /* Je Modus, nicht #2a1a1a in beiden (E705). */
+  background:color-mix(in srgb, var(--gefahr) 10%, var(--bg-card));
+  border:1px solid color-mix(in srgb, var(--gefahr) 45%, transparent); border-radius:16px;
   padding:14px 16px 12px; box-shadow:var(--shadow);
   user-select:none; -webkit-user-select:none;
   transform:translateY(-16px); opacity:0;
@@ -16373,7 +16449,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .fk-kopf{ display:flex; align-items:center; gap:10px; margin-bottom:6px }
 .fk-zeichen{
   width:24px; height:24px; flex:none; border-radius:50%;
-  background:rgba(239,68,68,.22); color:#ef4444;
+  background:color-mix(in srgb, var(--gefahr) 22%, transparent); color:var(--gefahr);
   display:grid; place-items:center; font-weight:700; font-size:14px;
 }
 .fk-kopf b{ font-size:15px; color:var(--text) }
@@ -17569,7 +17645,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border:1px solid var(--line);border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);font:inherit;font-size:.75rem;cursor:pointer}
 .blatt-color-grid button i{width:28px;height:20px;border-radius:6px;box-shadow:inset 0 0 0 1px #0002}
 .blatt-color-grid button[aria-pressed="true"]{border-color:var(--accent)}
-.blatt-color-grid button[aria-pressed="true"] span::before{content:'✓ ';color:var(--accent)}
+.blatt-color-grid button[aria-pressed="true"] span::before{content:'✓ ';color:var(--accent-text)}
 .blatt-color-grid button:hover{background:var(--bg-hover)}
 .blatt-color-panel :is(button,input):focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .blatt-color-custom{display:grid;grid-template-columns:1fr var(--touch-min);gap:8px;align-items:end}
@@ -17601,7 +17677,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background:color-mix(in srgb, var(--accent) 14%, transparent)
 }
 .blatt-popover-body>button[aria-pressed="true"]::after{
-  content:'✓'; margin-left:auto; color:var(--accent); font-size:1rem
+  content:'✓'; margin-left:auto; color:var(--accent-text); font-size:1rem
 }
 /* Die zwei Laserarten zeigen, was sie tun (E512): ein Punkt ist ein Punkt,
    eine Spur läuft aus. Das `<i>` ist leer — es trägt nur die Zeichnung. */
@@ -20413,9 +20489,9 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .blk[data-herkunft]::before{
   content:""; position:absolute; left:-10px; top:4px; bottom:4px; width:3px;
   border-radius:2px; opacity:.65}
-.blk[data-herkunft="ki"]::before{background:#8b6ce0}
-.blk[data-herkunft="quelle"]::before{background:#4a90d9}
-.blk[data-herkunft="fremd"]::before{background:#d99a4a}
+.blk[data-herkunft="ki"]::before{background:var(--c-purple)}
+.blk[data-herkunft="quelle"]::before{background:var(--c-blue)}
+.blk[data-herkunft="fremd"]::before{background:var(--c-orange)}
 
 /* ============================================================================
  * L108 — drei Griffe, die es auf einem Tastgerät nicht gab
@@ -25777,6 +25853,11 @@ const Farben = (() => {
         '#ff7369': 'Rot', '#8a8a8a': 'Grau',
         '#529cca': 'Blau', '#4dab9a': 'Türkis', '#ffa344': 'Orange',
         '#e255a1': 'Magenta', '#ffdc49': 'Gelb', '#9b9a97': 'Grau',
+        /* Die neun ruhigeren Akzente (E705); die acht alten oben bleiben, wer
+           einen gespeichert hat, behält Farbe und Namen. */
+        '#7552dc': 'Violett', '#4364d6': 'Indigo', '#0071b2': 'Blau',
+        '#00787e': 'Türkis', '#007d46': 'Grün', '#986000': 'Bernstein',
+        '#c04020': 'Koralle', '#ba3c77': 'Rosa', '#686d73': 'Graphit',
     };
     const nachHex = (wert) => HEX[String(wert || '').toLowerCase()] || 'Eigene Farbe';
     /**
@@ -25804,7 +25885,204 @@ const Farben = (() => {
         const k = kennung(wert);
         return k ? ` data-farbe="${k}" style="${variable}:var(--c-${k})"` : '';
     };
-    return { name, alle, nachHex, kennung, marke };
+    /* FARBEN RECHNEN STATT RATEN (E705). Die Begleiter einer Farbe werden in
+       OKLCH abgeleitet (sRGB → OKLab nach Ottosson 2020) und nach WCAG 2
+       nachgemessen — die Regel aus E142/E199/E272. `test584` rechnet mit einer
+       eigenen Formel nach. */
+    /** [r, g, b] 0…255 aus #rgb(a), #rrggbb(aa), rgb()/rgba(); sonst null. */
+    const parse = (wert) => {
+        const t = String(wert ?? '').trim().toLowerCase();
+        let m = /^#([0-9a-f]{3,8})$/.exec(t);
+        if (m && m[1]) {
+            let h = m[1];
+            if (h.length === 3 || h.length === 4)
+                h = h.split('').map(c => c + c).join('');
+            if (h.length !== 6 && h.length !== 8)
+                return null;
+            return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+        }
+        m = /^rgba?\(([^)]+)\)$/.exec(t);
+        if (m && m[1]) {
+            const z = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+            if (z.length < 3 || z.slice(0, 3).some(v => !Number.isFinite(v)))
+                return null;
+            return [z[0] ?? 0, z[1] ?? 0, z[2] ?? 0];
+        }
+        return null;
+    };
+    const toHex = (c) => '#' + [0, 1, 2].map(i => Math.round(Math.max(0, Math.min(255, c[i] ?? 0)))
+        .toString(16).padStart(2, '0')).join('');
+    const lin = (v) => {
+        const x = v / 255;
+        return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    };
+    const unlin = (v) => {
+        const x = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(Math.max(v, 0), 1 / 2.4) - 0.055;
+        return Math.round(Math.max(0, Math.min(1, x)) * 255);
+    };
+    /** Relative Leuchtdichte nach WCAG 2. */
+    const luminance = (c) => 0.2126 * lin(c[0] ?? 0) + 0.7152 * lin(c[1] ?? 0) + 0.0722 * lin(c[2] ?? 0);
+    /** Kontrast nach WCAG 2 zwischen zwei Farben; 1, wenn eine keine ist. */
+    const contrast = (a, b) => {
+        const x = parse(a), y = parse(b);
+        if (!x || !y)
+            return 1;
+        const la = luminance(x), lb = luminance(y);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    };
+    const toOklab = (c) => {
+        const r = lin(c[0] ?? 0), g = lin(c[1] ?? 0), b = lin(c[2] ?? 0);
+        const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+        const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+        const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+        return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+            1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+            0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+    };
+    /** OKLab → lineares sRGB (noch nicht beschnitten). */
+    const fromOklabLinear = (L, a, b) => {
+        const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+        const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+        const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+        return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+            -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+            -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s];
+    };
+    /** [L 0…1, C, h Grad] einer Farbe. */
+    const oklch = (wert) => {
+        const c = parse(wert);
+        if (!c)
+            return null;
+        const [L, a, b] = toOklab(c);
+        let h = Math.atan2(b, a) * 180 / Math.PI;
+        if (h < 0)
+            h += 360;
+        return [L, Math.hypot(a, b), h];
+    };
+    /** OKLCH → #rrggbb; ausserhalb von sRGB weicht die Sättigung, nie die
+     *  Helligkeit (an ihr hängt der Kontrast). */
+    const fromOklch = (L, C, h) => {
+        const ll = Math.max(0, Math.min(1, L));
+        const bei = (c) => fromOklabLinear(ll, c * Math.cos(h * Math.PI / 180), c * Math.sin(h * Math.PI / 180));
+        const drin = (v) => v.every(x => x >= -1e-4 && x <= 1 + 1e-4);
+        let c = Math.max(0, C);
+        if (!drin(bei(c))) {
+            let lo = 0, hi = c;
+            for (let i = 0; i < 28; i++) {
+                const mid = (lo + hi) / 2;
+                if (drin(bei(mid)))
+                    lo = mid;
+                else
+                    hi = mid;
+            }
+            c = lo;
+        }
+        return toHex(bei(c).map(unlin));
+    };
+    /** Zwei Farben in OKLab mischen: `t` Anteil von `a`. */
+    const mix = (a, b, t) => {
+        const x = parse(a), y = parse(b);
+        if (!x || !y)
+            return String(a ?? '');
+        const A = toOklab(x), B = toOklab(y);
+        const m = [0, 1, 2].map(i => (A[i] ?? 0) * t + (B[i] ?? 0) * (1 - t));
+        return toHex(fromOklabLinear(m[0] ?? 0, m[1] ?? 0, m[2] ?? 0).map(unlin));
+    };
+    /** Ton behalten, Helligkeit schrittweise verschieben, bis `reicht`. */
+    const stepUntil = (start, richtung, reicht) => {
+        const lch = oklch(start);
+        if (!lch)
+            return start;
+        const [L, C, h] = lch;
+        let x = start;
+        for (let i = 1; i <= 200 && !reicht(x); i++) {
+            const l = L + richtung * i * 0.005;
+            if (l < 0 || l > 1)
+                break;
+            x = fromOklch(l, C, h);
+        }
+        return x;
+    };
+    /** DIE BEGLEITER EINER AKZENTFARBE (E705): Schrift auf der Fläche (Weiss ab
+     *  4,5, sonst ein getöntes Dunkel im Ton), Tinte (auf Grund UND Karte
+     *  4,6), Überfahren, Tönung. Die gewählte Farbe selbst bleibt. */
+    const accentSet = (accent, ground, bg, card) => {
+        const a = parse(accent);
+        if (!a || !parse(bg) || !parse(card))
+            return null;
+        const A = toHex(a);
+        const lch = oklch(A);
+        if (!lch)
+            return null;
+        const [L, C, h] = lch;
+        const dunkel = ground !== 'light';
+        let onAccent = '#ffffff';
+        if (contrast(onAccent, A) < 4.5) {
+            const fast = fromOklch(0.2, Math.min(C, 0.04), h);
+            onAccent = contrast(fast, A) >= 4.5 ? fast
+                : (contrast('#000000', A) >= contrast('#ffffff', A) ? '#000000' : '#ffffff');
+        }
+        const reicht = (x) => Math.min(contrast(x, bg), contrast(x, card)) >= 4.6;
+        const ink = reicht(A) ? A : stepUntil(A, dunkel ? 1 : -1, reicht);
+        let hover = fromOklch(L + (dunkel ? 0.03 : -0.04), C, h);
+        if (contrast(onAccent, hover) < 4.5)
+            hover = fromOklch(L + (dunkel ? -0.03 : 0.03), C, h);
+        if (contrast(onAccent, hover) < 4.5)
+            hover = A;
+        const soft = `rgba(${a[0]},${a[1]},${a[2]},${dunkel ? '.16' : '.12'})`;
+        return { onAccent, ink, hover, soft };
+    };
+    /** DIE LEITER EINES SCHEMAS (E705): gedämpfte Schrift und Beiwerk aus
+     *  Schrift und Grund gemischt (dunkel 70/47 %, hell 76/58 %, wie Standard),
+     *  bis 4,5 bzw. 3 auf Grund, Karte und Überfahren reichen. */
+    const ladder = (text, bg, card, hover, ground) => {
+        if (!parse(text) || !parse(bg) || !parse(card))
+            return null;
+        const dunkel = ground !== 'light';
+        const flaechen = [bg, card, hover].filter(x => !!parse(x));
+        const genug = (x, grenze) => flaechen.every(f => contrast(x, f) >= grenze);
+        const suche = (anteil, grenze) => {
+            for (let t = anteil; t <= 1.0001; t += 0.01) {
+                const x = mix(text, bg, t);
+                if (genug(x, grenze))
+                    return x;
+            }
+            return toHex(parse(text) ?? [0, 0, 0]);
+        };
+        return {
+            dim: suche(dunkel ? 0.70 : 0.76, 4.5),
+            faint: suche(dunkel ? 0.47 : 0.58, 3.0),
+            press: mix(text, card, dunkel ? 0.11 : 0.09),
+        };
+    };
+    /** TINTE FÜR HELLEN GRUND (E705): gespeicherte Formfarben (E414) bleiben;
+     *  gezeichnet wird im Hellen derselbe Ton, dunkel genug für 4,6 : 1. */
+    /* Flächen zeichnen oft neu — die Rechnung läuft je Farbe einmal. */
+    const tintenSpeicher = new Map();
+    const inkOnLight = (farbe) => {
+        const c = parse(farbe);
+        if (!c)
+            return String(farbe ?? '');
+        const hex = toHex(c);
+        const alt = tintenSpeicher.get(hex);
+        if (alt)
+            return alt;
+        const reicht = (x) => contrast(x, '#f3f2f8') >= 4.6;
+        const tinte = reicht(hex) ? hex : stepUntil(hex, -1, reicht);
+        if (tintenSpeicher.size < 512)
+            tintenSpeicher.set(hex, tinte);
+        return tinte;
+    };
+    /** DIE NEUN RUHIGEREN AKZENTE (E705), gleich hell (Leuchtdichte ≈ 0,15):
+     *  Weiss darauf 5,2, als Fläche hell wie dunkel ≥ 3,5. */
+    const ACCENTS = [
+        ['#7552dc', 'Violett'], ['#4364d6', 'Indigo'], ['#0071b2', 'Blau'],
+        ['#00787e', 'Türkis'], ['#007d46', 'Grün'], ['#986000', 'Bernstein'],
+        ['#c04020', 'Koralle'], ['#ba3c77', 'Rosa'], ['#686d73', 'Graphit'],
+    ];
+    return { name, alle, nachHex, kennung, marke,
+        parse, toHex, contrast, oklch, fromOklch, mix,
+        accentSet, ladder, inkOnLight, ACCENTS };
 })();
 window.Farben = Farben;
 
@@ -25931,7 +26209,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1382, inhalt: '844c2911d2cd0bd2', gebaut: '2026-09-28T03:44:38.833Z' };
+const Stand = { fassung: 1386, inhalt: '7c7db15a7dea9f81', gebaut: '2026-09-28T08:42:09.571Z' };
 window.Stand = Stand;
 
 </script>
@@ -26987,6 +27265,19 @@ const GfxShapes = (() => {
             el.setAttribute(k, String(v));
         return el;
     };
+    /* TINTE FÜR DEN HELLEN GRUND (E705): `stroke`/`fill` bleibt die
+       gespeicherte Farbe (E414, E693); daneben `--tinte-hell`, derselbe Ton
+       mit 4,6 : 1 auf hellem Grund, den nur das helle Thema nimmt
+       (grund.css). Zettel behalten ihre Füllung. */
+    const tinte = (el, rolle, farbe) => {
+        if (typeof Farben === 'undefined' || !Farben.parse(farbe))
+            return;
+        const hell = Farben.inkOnLight(farbe);
+        if (!hell || hell === Farben.toHex(Farben.parse(farbe) ?? [0, 0, 0]))
+            return;
+        el.setAttribute('data-tinte', rolle);
+        el.style.setProperty('--tinte-hell', hell);
+    };
     const zahl = (roh, ersatz = 0) => {
         const n = Number(roh);
         return Number.isFinite(n) ? n : ersatz;
@@ -27074,6 +27365,7 @@ const GfxShapes = (() => {
             if (s.art === 'pfeil' && o.pfeilMarke)
                 p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
             p.dataset.sid = s.id;
+            tinte(p, 'strich', farbe);
             /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
                ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
                breit und durchsichtig: er fängt den Griff, malt aber nichts. */
@@ -27106,12 +27398,16 @@ const GfxShapes = (() => {
                 'pointer-events': 'all'
             });
             r.dataset.sid = s.id;
+            if (s.art === 'rechteck')
+                tinte(r, 'strich', farbe);
             g.appendChild(r);
             if (s.text) {
                 const t = sv('text', {
                     x: x + 10, y: y + 22,
                     fill: s.art === 'notiz' ? '#1c1c1c' : farbe, 'font-size': 14
                 });
+                if (s.art !== 'notiz')
+                    tinte(t, 'schrift', farbe);
                 zeilenUmbruch(String(s.text), Math.abs(zahl(s.w)) - 18).forEach((z, i) => {
                     const ts = sv('tspan', { x: x + 10, dy: i ? 18 : 0 });
                     ts.textContent = z;
@@ -27162,6 +27458,7 @@ const GfxShapes = (() => {
                 'pointer-events': 'all' /* wie beim Rechteck, siehe dort */
             });
             e.dataset.sid = s.id;
+            tinte(e, 'strich', farbe);
             return e;
         }
         if (s.art === 'text') {
@@ -27169,6 +27466,7 @@ const GfxShapes = (() => {
                 'font-size': 17, 'font-weight': 500 });
             t.textContent = String(s.text || '');
             t.dataset.sid = s.id;
+            tinte(t, 'schrift', farbe);
             return t;
         }
         /* Unbekannte Art: nichts zeichnen, nichts werfen (§18). */
@@ -62387,6 +62685,37 @@ const Zusatz = (() => {
      * sechs Stellen: ein Name, den man sucht, findet man wieder.
      * ------------------------------------------------------------------------*/
     const farbeVon = (i) => PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#529cca';
+    /* DIE DIAGRAMMFARBEN JE GRUNDTON (E705). Vorher malten Diagramme mit den
+       dunklen Whiteboard-Farben (Gelb auf Weiss 1,35). Jetzt je Grundton acht
+       gestufte Töne, Nachbarn ΔE_OK ≥ 0,19; aufgelöst im `fill` (test409),
+       umgefärbt beim Wechsel des Grundtons. `test584` §8 misst es. */
+    const DIAGRAMM = {
+        light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'],
+        dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'],
+    };
+    const reihenModus = () => document.documentElement.dataset['theme'] === 'light' ? 'light' : 'dark';
+    const reihenFarbe = (i, modus = reihenModus()) => {
+        const liste = DIAGRAMM[modus];
+        return liste[((i % liste.length) + liste.length) % liste.length] ?? '#2a78d6';
+    };
+    let reihenWache = null;
+    const reihenWachen = () => {
+        if (reihenWache || typeof MutationObserver !== 'function')
+            return;
+        reihenWache = new MutationObserver(() => {
+            const m = reihenModus();
+            document.querySelectorAll('.chart [data-reihe]').forEach(el => {
+                const c = reihenFarbe(Number(el.getAttribute('data-reihe')) || 0, m);
+                if (el instanceof HTMLElement)
+                    el.style.background = c;
+                else if (el.hasAttribute('data-reihe-strich'))
+                    el.setAttribute('stroke', c);
+                else
+                    el.setAttribute('fill', c);
+            });
+        });
+        reihenWache.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    };
     /* ========================================================================
      * 1. WHITEBOARD
      * ======================================================================*/
@@ -63238,6 +63567,7 @@ const Zusatz = (() => {
         w.className = 'chart';
         const typ = block.chartTyp || 'bar';
         const werte = chartDaten(block);
+        reihenWachen();
         w.innerHTML =
             '<div class="chart-head">' +
                 `<input class="chart-titel" value="${esc(block.text || '')}" placeholder="Titel des Diagramms">` +
@@ -63258,7 +63588,7 @@ const Zusatz = (() => {
             flaeche.appendChild(chartSvg(typ, werte));
             const legende = document.createElement('div');
             legende.className = 'chart-legende';
-            legende.innerHTML = werte.map((v, i) => `<span><i style="background:${farbeVon(i)}"></i>${esc(v.name)} ` +
+            legende.innerHTML = werte.map((v, i) => `<span><i data-reihe="${i}" style="background:${reihenFarbe(i)}"></i>${esc(v.name)} ` +
                 `<b>${Formula.anzeige(v.wert)}</b></span>`).join('');
             w.appendChild(legende);
         }
@@ -63326,7 +63656,7 @@ const Zusatz = (() => {
             s2.appendChild(t2);
             if (werte.length > 1) {
                 const t3 = sv('text', { x: B / 2, y: 186, 'text-anchor': 'middle', 'font-size': 16,
-                    fill: diff >= 0 ? '#4dab9a' : '#ff7369' });
+                    style: diff >= 0 ? 'fill:var(--erfolg)' : 'fill:var(--gefahr)' });
                 t3.textContent = (diff >= 0 ? '▲ +' : '▼ ') + diff + ' % gegenüber davor';
                 s2.appendChild(t3);
             }
@@ -63347,7 +63677,7 @@ const Zusatz = (() => {
                 const x4 = cx + Math.cos(winkel) * ri, y4 = cy + Math.sin(winkel) * ri;
                 const st = sv('path', {
                     d: `M${x1} ${y1} A${ra} ${ra} 0 ${gross} 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 ${gross} 0 ${x4} ${y4} Z`,
-                    fill: farbeVon(i), class: 'ch-teil'
+                    fill: reihenFarbe(i), class: 'ch-teil', 'data-reihe': i
                 });
                 st.dataset.i = i;
                 st.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
@@ -63401,15 +63731,16 @@ const Zusatz = (() => {
                 s.appendChild(sv('path', {
                     d: `M${punkte[0][0]} ${H - pad} L` + punkte.map((p) => p.join(' ')).join(' L') +
                         ` L${punkte[n - 1][0]} ${H - pad} Z`,
-                    fill: farbeVon(0), opacity: .22
+                    fill: reihenFarbe(0), opacity: .22, 'data-reihe': 0
                 }));
             }
             s.appendChild(sv('path', {
                 d: 'M' + punkte.map((p) => p.join(' ')).join(' L'),
-                stroke: farbeVon(0), 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round'
+                stroke: reihenFarbe(0), 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round',
+                'data-reihe': 0, 'data-reihe-strich': ''
             }));
             punkte.forEach((p, i) => {
-                const c = sv('circle', { cx: p[0], cy: p[1], r: 4, fill: farbeVon(0), class: 'ch-teil' });
+                const c = sv('circle', { cx: p[0], cy: p[1], r: 4, fill: reihenFarbe(0), class: 'ch-teil', 'data-reihe': 0 });
                 c.dataset.i = i;
                 c.appendChild(sv('title')).textContent = werte[i].name + ': ' + Formula.anzeige(werte[i].wert);
                 s.appendChild(c);
@@ -63422,7 +63753,7 @@ const Zusatz = (() => {
                     const rc = sv('rect', {
                         x: pad + feld * i + feld * 0.16, y: H - pad - h,
                         width: feld * 0.68, height: Math.max(1, h),
-                        fill: farbeVon(i), rx: 3, class: 'ch-teil'
+                        fill: reihenFarbe(i), rx: 3, class: 'ch-teil', 'data-reihe': i
                     });
                     rc.dataset.i = i;
                     rc.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
@@ -63880,7 +64211,7 @@ const Zusatz = (() => {
         return out.replace(/\u0002([\uE000-\uF8FF])\u0002/g, (_, z) => sicher[z.charCodeAt(0) - 0xE000]);
     };
     return { whiteboard, diagramm, tabelle, mathe, formelBlock, chartSvg, chartDaten,
-        einfaerben, SCHLUESSEL, PALETTE, farbeVon };
+        einfaerben, SCHLUESSEL, PALETTE, farbeVon, DIAGRAMM, reihenFarbe };
 })();
 window.Zusatz = Zusatz;
 
@@ -63982,6 +64313,14 @@ const Gedankenkarte = (() => {
         ['sechseck', 'Sechseck'],
     ];
     const farbeVon = (i) => PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#2f8ab5';
+    /* DIE ASTFARBE AUF HELLEM GRUND (E705): gespeichert bleibt sie (§9);
+       daneben derselbe Ton mit 4,6 : 1 für das helle Thema, oder `null`. */
+    const astHell = (farbe) => {
+        if (typeof Farben === 'undefined' || !Farben.parse(farbe))
+            return null;
+        const hell = Farben.inkOnLight(farbe);
+        return hell && hell !== Farben.toHex(Farben.parse(farbe) ?? [0, 0, 0]) ? hell : null;
+    };
     const uid = () => (typeof Ids !== 'undefined' && Ids.short)
         ? 'gk' + Ids.short()
         : 'gk' + Math.floor(performance.now() * 1000).toString(36);
@@ -64579,11 +64918,18 @@ const Gedankenkarte = (() => {
             const cx = rechtsHerum ? zu.x : zu.x + zuM.w;
             const cy = zu.y + zuM.h / 2;
             const dx = (cx - px) / 2;
-            return sv('path', {
+            const ast = sv('path', {
                 d: `M ${px.toFixed(1)} ${py.toFixed(1)} C ${(px + dx).toFixed(1)} ${py.toFixed(1)}, ` +
                     `${(cx - dx).toFixed(1)} ${cy.toFixed(1)}, ${cx.toFixed(1)} ${cy.toFixed(1)}`,
                 fill: 'none', stroke: farbe, 'stroke-width': dick, 'stroke-linecap': 'round',
             });
+            /* Im Hellen dunklere Tinte (E705, grund.css). */
+            const hell = astHell(farbe);
+            if (hell) {
+                ast.setAttribute('data-tinte', 'strich');
+                ast.style.setProperty('--tinte-hell', hell);
+            }
+            return ast;
         };
         /* ══ EINE FREIE VERBINDUNG ZEICHNEN (E628) ═══════════════════════════
            Sie darf NICHT aussehen wie ein Ast. Ein Ast sagt „gehört dazu", eine
@@ -64715,6 +65061,11 @@ const Gedankenkarte = (() => {
                 el.style.left = o.x.toFixed(1) + 'px';
                 el.style.top = o.y.toFixed(1) + 'px';
                 el.style.setProperty('--ast', plan.farben[id] ?? 'var(--text-dim)');
+                const hell = astHell(plan.farben[id] ?? '');
+                if (hell)
+                    el.style.setProperty('--ast-hell', hell);
+                else
+                    el.style.removeProperty('--ast-hell');
             });
             welt.style.width = plan.breite + 'px';
             welt.style.height = plan.hoehe + 'px';
@@ -141537,11 +141888,15 @@ const Aussehen = (() => {
                 '--bg-hover': '#efefee', '--bg-input': '#f8f8f7',
                 '--line': '#e3e3e1', '--line-soft': '#eeeeec', '--text': '#242424'
             } },
+        /* Schwarze Schrift auf Gelb (E705; Redur: „Starker Kontrast ohne Glas").
+           Vorher Weiss darauf, 1,43 : 1; jetzt 14,7 : 1, Überfahren heller. */
         { id: 'kontrast', name: 'Starker Kontrast', grund: 'dark', akzent: '#ffd400', werte: {
                 '--bg': '#000000', '--bg-side': '#0a0a0a', '--bg-card': '#141414',
                 '--bg-hover': '#1f1f1f', '--bg-input': '#111111',
                 '--line': '#7a7a7a', '--line-soft': '#4a4a4a',
-                '--text': '#ffffff', '--text-dim': '#e0e0e0', '--text-faint': '#b5b5b5'
+                '--text': '#ffffff', '--text-dim': '#e0e0e0', '--text-faint': '#b5b5b5',
+                '--auf-accent': '#000000', '--accent-text': '#ffd400', '--accent-hover': '#ffe071',
+                '--accent-schwach': 'rgba(255,212,0,.18)'
             } },
         { id: 'rose', name: 'Rosé', grund: 'dark', akzent: '#e06a94', werte: {
                 '--bg': '#1a1418', '--bg-side': '#221a20', '--bg-card': '#2a2027',
@@ -141589,8 +141944,9 @@ const Aussehen = (() => {
            der Glocke, der Gefahrknopf unter dem Zeiger, die Marke am Buchdeckel.
            Mit dem Rosa waren das 2,65 : 1 statt 3,76 : 1 wie in jedem anderen
            dunklen Schema. Also steht `--gefahr` hier nicht: es gilt Redions
-           #ef4444 aus `dunkel.css`, und die Bauteile des Kits schreiben darauf
-           mit `--bg` (Brücke: 5,6 : 1). `test579` §5 misst es in allen zehn. */
+           Rot aus `dunkel.css`, die Bauteile des Kits schreiben darauf mit
+           `--bg`; Weiss auf Rot steht auf `--gefahr-flaeche` (E705). `test579`
+           §5 misst es in allen zehn. */
         { id: 'touchkit-hell', name: 'Touch Kit hell', grund: 'light', akzent: '#5345e0', werte: {
                 '--bg': '#f3f2f8', '--bg-side': '#e9e9ef', '--bg-card': '#ffffff',
                 '--bg-hover': '#eeeef1', '--bg-press': '#e3e2e8', '--bg-input': '#eeeef1',
@@ -141598,7 +141954,9 @@ const Aussehen = (() => {
                 '--text': '#0b0b10', '--text-dim': '#5e5e6b', '--text-faint': '#7a7a86',
                 '--auf-accent': '#ffffff', '--accent-text': '#5345e0', '--accent-hover': '#4336c8',
                 '--accent-schwach': 'rgba(83,69,224,.12)',
-                '--gefahr': '#b81c3c', '--erfolg': '#0f766e', '--warnung': '#b45309', '--info': '#0e7490'
+                /* Warnung eine Stufe dunkler als im Kit (#b45309: 4,34 auf dem
+                   Überfahren), E705. */
+                '--gefahr': '#b81c3c', '--erfolg': '#0f766e', '--warnung': '#af4f00', '--info': '#0e7490'
             } },
         { id: 'touchkit-dunkel', name: 'Touch Kit dunkel', grund: 'dark', akzent: '#a39dff', werte: {
                 '--bg': '#000000', '--bg-side': '#0e0e11', '--bg-card': '#1c1c21',
@@ -141640,11 +141998,42 @@ const Aussehen = (() => {
             .forEach(v => w.style.removeProperty(v));
         w.dataset['theme'] = sch.grund;
         const gesetzt = [];
-        Object.entries(sch.werte).forEach(([k, v]) => { w.style.setProperty(k, v); gesetzt.push(k); });
+        const eigen = sch.werte;
+        Object.entries(eigen).forEach(([k, v]) => { w.style.setProperty(k, v); gesetzt.push(k); });
         const akz = s.akzent || sch.akzent;
         if (akz) {
             w.style.setProperty('--accent', akz);
             gesetzt.push('--accent');
+        }
+        /* DIE BEGLEITER FOLGEN DER FARBE (E705): Leiter und Akzent-Begleiter
+           werden aus dem Schema abgeleitet, gegen die Flächen, die wirklich
+           gelten. Was ein Schema selbst mitbringt, bleibt; eine EIGENE Farbe
+           bringt immer alle vier Begleiter mit. */
+        const f = typeof Farben !== 'undefined' ? Farben : null;
+        if (f && (akz || eigen['--bg'])) {
+            const cs = getComputedStyle(w);
+            const lies = (n) => eigen[n] || cs.getPropertyValue(n).trim();
+            const setze = (n, v, immer = false) => {
+                if (!v || (!immer && eigen[n]))
+                    return;
+                w.style.setProperty(n, v);
+                if (!gesetzt.includes(n))
+                    gesetzt.push(n);
+            };
+            if (eigen['--bg']) {
+                const l = f.ladder(lies('--text'), lies('--bg'), lies('--bg-card'), lies('--bg-hover'), sch.grund);
+                setze('--text-dim', l?.dim);
+                setze('--text-faint', l?.faint);
+                setze('--bg-press', l?.press);
+            }
+            if (akz) {
+                const a = f.accentSet(akz, sch.grund, lies('--bg'), lies('--bg-card'));
+                const immer = !!s.akzent;
+                setze('--auf-accent', a?.onAccent, immer);
+                setze('--accent-text', a?.ink, immer);
+                setze('--accent-hover', a?.hover, immer);
+                setze('--accent-schwach', a?.soft, immer);
+            }
         }
         const font = (SCHRIFTEN.find(f => f[0] === s.schrift) ?? SCHRIFTEN[0])?.[2];
         if (font) {
@@ -141759,6 +142148,59 @@ const Aussehen = (() => {
             return false;
         return alsText(ev).toLowerCase() === soll.toLowerCase();
     };
+    /* DIE AKZENTWAHL (E705). Die Karten „Standard"/„Hell" brauchen Werte aus
+       dem Stilblatt; `cssRules` ist unter file:// gesperrt, also stehen sie
+       hier, und `test584` §6 vergleicht die Karte mit dem gerechneten Stil. */
+    const STILBLATT = {
+        dark: { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
+        light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
+    };
+    const stilblatt = (grund) => STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};
+    /** Neun Scheiben mit „Aa" in der Schrift, die auf ihnen stehen wird. */
+    const akzentWahl = (s) => {
+        const w = document.documentElement;
+        const cs = getComputedStyle(w);
+        const grund = w.dataset['theme'] === 'light' ? 'light' : 'dark';
+        const bg = cs.getPropertyValue('--bg').trim(), karte = cs.getPropertyValue('--bg-card').trim();
+        const jetzt = String(s['akzent'] || '').toLowerCase();
+        const auf = (c) => Farben.accentSet(c, grund, bg, karte)?.onAccent || '#ffffff';
+        const feld = (c, n) => {
+            const an = jetzt === c;
+            return `<button type="button" data-akz="${c}" class="au-akz${an ? ' an' : ''}" ` +
+                `aria-pressed="${an ? 'true' : 'false'}" aria-label="${esc(n)}" title="${esc(n)}">` +
+                `<span class="au-akz-probe" style="--au-akz:${c};--au-auf:${auf(c)}" aria-hidden="true">Aa</span>` +
+                (an ? '<span class="au-akz-haken" aria-hidden="true">✓</span>' : '') +
+                `<span class="au-akz-name">${esc(n)}</span></button>`;
+        };
+        /* Eine früher gewählte Farbe (auch #2eaadc …) steht als „Eigene" gewählt
+           da — nichts wird umgestellt, ohne dass jemand klickt. */
+        const bekannt = Farben.ACCENTS.some(([c]) => c === jetzt);
+        const eigen = !!jetzt && !bekannt && !!Farben.parse(jetzt);
+        const eigenName = eigen
+            ? (Farben.nachHex(jetzt) === 'Eigene Farbe' ? 'Eigene Farbe' : 'Eigene: ' + Farben.nachHex(jetzt))
+            : 'Eigene …';
+        const eigenWert = eigen ? Farben.toHex(Farben.parse(jetzt) ?? [0, 0, 0]) : '';
+        return '<div class="au-akzente" role="group" aria-label="Akzentfarbe">' +
+            Farben.ACCENTS.map(([c, n]) => feld(c, n)).join('') +
+            `<label class="au-akz au-eigen${eigen ? ' an' : ''}" title="Eigene Farbe wählen">` +
+            `<span class="au-akz-probe" style="--au-akz:${eigen ? eigenWert : 'transparent'};` +
+            `--au-auf:${eigen ? auf(eigenWert) : 'var(--text-dim)'}" aria-hidden="true">${eigen ? 'Aa' : '+'}</span>` +
+            (eigen ? '<span class="au-akz-haken" aria-hidden="true">✓</span>' : '') +
+            `<span class="au-akz-name">${esc(eigenName)}</span>` +
+            `<input type="color" id="au-frei" value="${eigen ? eigenWert : '#7552dc'}" ` +
+            `aria-label="Eigene Farbe wählen${eigen ? ' — gewählt: ' + esc(eigenName) : ''}">` +
+            '</label>' +
+            `<button type="button" data-akz="" class="au-zurueck${jetzt ? '' : ' an'}" ` +
+            `aria-pressed="${jetzt ? 'false' : 'true'}">wie im Schema</button>` +
+            '</div>';
+    };
+    /** Hauptknopf, Verweis, gewählter Reiter — nur zum Ansehen. */
+    const akzentVorschau = () => '<div class="au-akz-vorschau" aria-hidden="true">' +
+        '<span class="au-vs-titel">Vorschau</span>' +
+        '<span class="au-vs-knopf">Speichern</span>' +
+        '<span class="au-vs-verweis">ein Verweis</span>' +
+        '<span class="au-vs-reiter">Gewählter Reiter</span>' +
+        '</div>';
     /* ========================================================================
      * DIALOG
      * ======================================================================*/
@@ -141798,32 +142240,24 @@ const Aussehen = (() => {
                     '<div class="au-staffelei" id="au-staffelei"></div>' +
                         '<div class="au-titel">Farbschema</div>' +
                         '<div class="au-schemata">' + SCHEMATA.map(x => {
-                        const bg = x.werte['--bg'] || (x.grund === 'light' ? '#ffffff' : '#191919');
-                        const side = x.werte['--bg-side'] || (x.grund === 'light' ? '#fbfbfa' : '#202020');
-                        const tx = x.werte['--text'] || (x.grund === 'light' ? '#37352f' : '#e9e9e7');
+                        /* Ehrliche Karten (E705): Standard/Hell lesen das Stilblatt statt
+                           alter Ersatzwerte, und ihr Akzentpunkt ist nicht mehr leer. */
+                        const stil = stilblatt(x.grund);
+                        const w = x.werte;
+                        const bg = w['--bg'] || stil['--bg'] || '';
+                        const side = w['--bg-side'] || stil['--bg-side'] || '';
+                        const tx = w['--text'] || stil['--text'] || '';
+                        const punkt = x.akzent || stil['--accent'] || '';
                         return `<button data-s="${x.id}" class="au-karte${s.schema === x.id ? ' an' : ''}">` +
-                            `<span class="au-probe" style="background:${bg}">` +
-                            `<i style="background:${side}"></i>` +
-                            `<b style="background:${x.akzent}"></b>` +
-                            `<u style="background:${tx}"></u></span>` +
+                            `<span class="au-probe" style="background:${esc(bg)}">` +
+                            `<i style="background:${esc(side)}"></i>` +
+                            `<b style="background:${esc(punkt)}"></b>` +
+                            `<u style="background:${esc(tx)}"></u></span>` +
                             `<span class="au-name">${esc(x.name)}</span></button>`;
                     }).join('') + '</div>' +
                         '<div class="au-titel">Akzentfarbe</div>' +
-                        '<div class="au-akzente">' +
-                        /* ACHT FARBFELDER OHNE EIN EINZIGES WORT. Weder Titel noch
-                           Marke, und welches gewählt war, stand allein in der Umrandung
-                           — bei einem FARBwähler ist das die Regel aus §38 in Reinform.
-                           `nh-farben` machte es längst richtig; hier stand es nicht. */
-                        ['#2eaadc', '#6c8cff', '#5cbf8a', '#e0a33a', '#e06a94', '#9a6dd7', '#ff7369', '#8a8a8a']
-                            .map(c => `<button data-akz="${c}" style="background:${c}" ` +
-                            `title="${Farben.nachHex(c)}" aria-label="${Farben.nachHex(c)}" ` +
-                            `aria-pressed="${(s.akzent || '') === c ? 'true' : 'false'}" ` +
-                            `class="${(s.akzent || '') === c ? 'an' : ''}">` +
-                            `${(s.akzent || '') === c ? '✓' : ''}</button>`).join('') +
-                        '<input type="color" id="au-frei" value="' + (s.akzent || '#2eaadc') + '" ' +
-                        'title="Eigene Farbe wählen">' +
-                        '<button data-akz="" class="au-zurueck">wie im Schema</button>' +
-                        '</div>';
+                        akzentWahl(s) +
+                        akzentVorschau();
                 const platz = inhalt.querySelector('#au-staffelei');
                 if (platz && typeof Staffelei !== 'undefined') {
                     const grund = SCHEMATA.find(x => x.id === s.schema)?.grund || 'dark';
@@ -142026,6 +142460,9 @@ const Aussehen = (() => {
         });
         o.addEventListener('change', e => {
             if (e.target instanceof HTMLInputElement && e.target.id === 'au-gr')
+                zeichne();
+            /* Erst nach dem Farbwähler neu zeichnen, sonst schlösse er sich. */
+            if (e.target instanceof HTMLInputElement && e.target.id === 'au-frei')
                 zeichne();
         });
     };

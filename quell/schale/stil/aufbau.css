@@ -219,7 +219,8 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .b-toc .lvl2{padding-left:20px}
 .b-toc .lvl3{padding-left:40px}
 
-.blk.sel{background:#2eaadc22; border-radius:3px}
+/* Auswahl im Akzent statt Notions Blau (E705). */
+.blk.sel{background:color-mix(in srgb, var(--accent) 13%, transparent); border-radius:3px}
 
 /* --- Menüs ---------------------------------------------------------------- */
 .menu{

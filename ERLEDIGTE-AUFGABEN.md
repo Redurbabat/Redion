@@ -1,5 +1,32 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E705 · Bessere Farben
+
+**Redur:** „… bessere stift efeckte beim zeichnen bessere farben" (27.
+September, ca. 16:45 UTC); im Fragebogen „9 ruhigere Akzentfarben",
+„Leichter kühler Ton im Dunkeln", „Starker Kontrast ohne Glas"; und zum
+Aussehen „Also beiden bei der ausehen dort aollte ich die fraben ändern
+kann".
+
+**Gebaut:** `Farben.accentSet` leitet zu jeder Akzentfarbe Schrift auf der
+Fläche, Tinte, Überfahren und Tönung ab — „Starker Kontrast" schreibt
+Schwarz auf Gelb, eine eigene Farbe lässt keine violetten Reste.
+„Aussehen" hat neun ruhigere Akzente mit Namen und „Aa", ein beschriftetes
+Feld „Eigene …", eine Vorschau und ehrliche Schemakarten. Der dunkle Grund
+ist leicht kühl (#121417 …), die Leiter jedes Schemas leitet sich ab.
+Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für
+Weiss auf Rot, Eingaben im Grundton (`color-scheme` an den Feldern),
+Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im
+Hellen mit dunklerer Tinte, ohne gespeicherte Farben zu ändern, und keine
+feste Signalfarbe mehr in den Stilblättern.
+
+**Geprüft:** `test584`, zuerst rot gegen den Grundstand eingecheckt;
+`test47` zieht den Grund von „Standard" nach. Zahlen in messungen.md §77.
+
+**Gefunden:** L228 (Weiss auf der Astfarbe der Gedankenkarte, im Dunkeln
+zu blass); die Fehlerkarte war in beiden Modi fast schwarz; `chartTyp:
+'pie'` zeichnet eine leere Achse (AUFGABEN).
+
 ## 28. September 2026 · E702 · Flüssige Bewegung: die Federn des Touch Kits in Redions Schale
 
 **Redur:** „ich will das es flüssigere animationen … haben" (27.09., ca.

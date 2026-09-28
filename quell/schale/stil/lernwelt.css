@@ -1413,7 +1413,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   margin:0;font-size:12.5px;letter-spacing:.02em;color:var(--text-dim)
 }
 .lernwelt .lw-plan-tag h3 em{
-  margin-left:var(--space-1);font-style:normal;color:var(--accent);font-weight:640
+  margin-left:var(--space-1);font-style:normal;color:var(--accent-text);font-weight:640
 }
 .lernwelt .lw-plan-lektion{
   display:flex;flex-direction:column;gap:2px;
@@ -1422,7 +1422,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 }
 .lernwelt .lw-plan-lektion.ist-jetzt{border-color:var(--accent);background:var(--accent-schwach)}
 .lernwelt .lw-plan-lektion time{font-size:11px;color:var(--text-dim);font-variant-numeric:tabular-nums}
-.lernwelt .lw-plan-jetzt{font-style:normal;font-size:11px;color:var(--accent);font-weight:640}
+.lernwelt .lw-plan-jetzt{font-style:normal;font-size:11px;color:var(--accent-text);font-weight:640}
 .lernwelt .lw-plan-lektion strong{font-size:13px}
 .lernwelt .lw-plan-lektion span{font-size:11.5px;color:var(--text-dim)}
 .lernwelt .lw-plan-lektion small{font-size:11px;color:var(--text-dim)}

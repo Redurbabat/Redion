@@ -365,7 +365,7 @@ td.td-aus input.zeilen-aus{display:none; accent-color:var(--accent-text); cursor
 table.grid tr:hover td.td-aus .zeilen-nr{display:none}
 table.grid tr:hover td.td-aus input.zeilen-aus{display:inline}
 td.td-aus input.zeilen-aus:checked{display:inline}
-table.grid tr:has(input.zeilen-aus:checked) td{background:#2eaadc18}
+table.grid tr:has(input.zeilen-aus:checked) td{background:color-mix(in srgb, var(--accent) 9%, transparent)}
 table.grid th.th-aus input{accent-color:var(--accent-text); cursor:pointer}
 table.grid tr.zieht{opacity:.4}
 table.grid tr.ziel td{border-top:2px solid var(--accent)}
@@ -553,7 +553,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .linked-kopf button:hover{background:var(--bg-hover); color:var(--text)}
 
 /* --- Dateien ablegen ----------------------------------------------------------- */
-#scroll.ablegen{outline:2px dashed var(--accent); outline-offset:-14px; background:#2eaadc0a}
+#scroll.ablegen{outline:2px dashed var(--accent); outline-offset:-14px; background:color-mix(in srgb, var(--accent) 4%, transparent)}
 #scroll.ablegen::after{
   content:"Datei hier ablegen — Markdown, CSV, TSV, HTML, Bild oder Anhang";
   position:fixed; left:50%; bottom:60px; transform:translateX(-50%);

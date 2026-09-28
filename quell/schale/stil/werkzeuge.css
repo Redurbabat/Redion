@@ -97,8 +97,8 @@
 .btn:disabled{opacity:.5; cursor:default}
 .btn.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
 .btn.prim:hover{filter:brightness(1.1)}
-.btn.rot{color:var(--c-red,#e03e3e); border-color:var(--c-red,#e03e3e)}
-.btn.rot.prim{background:var(--c-red,#e03e3e); color:#fff}
+.btn.rot{color:var(--gefahr); border-color:var(--gefahr)}
+.btn.rot.prim{background:var(--gefahr-flaeche); border-color:var(--gefahr-flaeche); color:#fff}
 .btn.klein{padding:4px 9px; min-height:28px; font-size:12.5px}
 /* DIE WEITER-VARIANTE (E441, Auftrag §4.5, Nr. 02 „Apply Now").
    Kein neuer Knopftyp — eine Klasse `weiter` fuer Knoepfe, die irgendwohin
@@ -230,7 +230,7 @@ a.bl:hover{color:var(--text)}
   background:var(--bg-card); border-radius:4px; padding:0 5px; font-size:.92em; color:var(--text-dim);
 }
 .blk.blitz{animation:blitz 1.4s ease}
-@keyframes blitz{0%,100%{background:transparent}20%{background:#2eaadc35}}
+@keyframes blitz{0%,100%{background:transparent}20%{background:color-mix(in srgb, var(--accent) 21%, transparent)}}
 
 /* --- Rückverweise unter der Seite ------------------------------------------ */
 .backlinks{margin-top:52px; border-top:1px solid var(--line); padding-top:18px}
@@ -368,8 +368,10 @@ a.bl:hover{color:var(--text)}
   padding:12px 16px; border-bottom:1px solid var(--line); overflow-x:auto;
 }
 .heatmap i{width:10px; height:10px; border-radius:2px; background:var(--bg-card); display:block}
-.heatmap .hm1{background:#2eaadc44}.heatmap .hm2{background:#2eaadc77}
-.heatmap .hm3{background:#2eaadcbb}.heatmap .hm4{background:#2eaadc}
+/* Stufen im Akzent statt Notions Blau (E705). */
+.heatmap .hm1{background:color-mix(in srgb, var(--accent) 27%, transparent)}
+.heatmap .hm2{background:color-mix(in srgb, var(--accent) 47%, transparent)}
+.heatmap .hm3{background:color-mix(in srgb, var(--accent) 73%, transparent)}.heatmap .hm4{background:var(--accent)}
 .memo{padding:11px 14px; border-bottom:1px solid var(--line-soft)}
 .memo:hover{background:var(--bg-hover)}
 .memo-kopf{font-size:11.5px; color:var(--text-faint); display:flex; align-items:center; gap:6px; margin-bottom:4px}
@@ -662,7 +664,8 @@ a.bl:hover{color:var(--text)}
    muss man lesen können. Gemessen war sie auf Grün bei 40 Prozent
    Deckkraft — hübsch und unlesbar. */
 .home-sich button.fertig{
-  background:var(--erfolg, #16a34a); color:#fff;
+  /* Auf der Erfolgsfarbe steht der Grund, nicht Weiss (E705). */
+  background:var(--erfolg); color:var(--bg);
   opacity:1 !important; cursor:default;
 }
 .hs-kreisel{
@@ -675,7 +678,7 @@ a.bl:hover{color:var(--text)}
   .hs-kreisel{ animation:none; border-top-color:currentColor; opacity:.5 }
 }
 
-.home-sich-gut{padding:9px 14px; border-left-color:var(--c-green, #4dab9a)}
+.home-sich-gut{padding:9px 14px; border-left-color:var(--erfolg)}
 .home-sich-gut .hs-zeichen{background:var(--b-green); color:var(--c-green)}
 .home-sich-gut .hs-text{color:var(--text-dim)}
 
@@ -683,7 +686,7 @@ a.bl:hover{color:var(--text)}
 .home-sich-erinnern .hs-zeichen{background:var(--b-yellow); color:var(--c-yellow)}
 
 .home-sich-warnen{border-left-color:var(--c-red); background:var(--b-red)}
-.home-sich-warnen .hs-zeichen{background:var(--c-red); color:#fff}
+.home-sich-warnen .hs-zeichen{background:var(--gefahr-flaeche); color:#fff}
 /* Auf der eingefärbten Fläche ist `--text-faint` nicht mehr zu lesen — der Ton
    ist für den normalen Hintergrund gerechnet. Der erklärende Satz ist aber
    genau das, was gelesen werden soll; er wäre sonst nur Dekoration um den
@@ -1320,8 +1323,8 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
   border:1px solid var(--line); color:var(--text-dim);
 }
-.wl-hoch{border-color:#d9534f; color:#c9302c}
-.wl-mittel{border-color:#e0a800; color:#a67c00}
+.wl-hoch{border-color:var(--gefahr); color:var(--gefahr)}
+.wl-mittel{border-color:var(--warnung); color:var(--warnung)}
 .wl-schwach{opacity:.75}
 .wl-tun{font-size:12px; padding:3px 9px; min-height:26px}
 /* Der Haken (E324). Zurückhaltend, weil er nichts löscht — er legt einen
@@ -1495,15 +1498,19 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-kn{ position:absolute; box-sizing:border-box; max-width:230px;
         display:flex; align-items:center; gap:6px;
         padding:6px 11px; border-radius:8px;
-        border:2px solid var(--ast, var(--line));
+        border:2px solid var(--ast-zug, var(--line));
         background:var(--bg-card); color:var(--text);
         font-size:13.5px; line-height:1.35;
         white-space:pre-wrap; overflow-wrap:anywhere; cursor:pointer; }
 .gk-kn:hover{ background:var(--bg-hover); }
+/* `--ast` steht inline (gespeicherte Farbe); gezeichnet wird `--ast-zug`,
+   im Hellen die dunklere Tinte `--ast-hell` (E705; Gelb hatte 2,4 : 1). */
+.gk-kn{ --ast-zug:var(--ast); }
+html[data-theme="light"] .gk-kn{ --ast-zug:var(--ast-hell, var(--ast)); }
 /* Der gewählte Knoten trägt einen Ring in seiner Astfarbe — aber nicht NUR
    den: er bekommt auch eine kräftigere Kante. §38 verlangt, dass keine
    Auskunft allein über die Farbe läuft, und „ausgewählt" ist eine Auskunft. */
-.gk-kn.on{ box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--ast, var(--accent));
+.gk-kn.on{ box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--ast-zug, var(--accent));
            font-weight:600; }
 .gk-kn.gk-wurzel{ font-size:16px; font-weight:600; padding:10px var(--space-5);
                   border-radius:11px; background:var(--bg-input); max-width:260px; }
@@ -1513,7 +1520,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 /* Der Zähler an einem zugeklappten Ast. Die ZAHL steht da, nicht nur ein
    Dreieck — wer drei verborgene Unterthemen hat, soll die Drei sehen. */
 .gk-zahl{ flex:none; min-width:17px; height:17px; padding:0 4px; border-radius:9px;
-          background:var(--ast, var(--text-faint)); color:#fff;
+          background:var(--ast-zug, var(--text-faint)); color:#fff;
           font-size:10.5px; font-weight:700; line-height:17px; text-align:center; }
 
 .gk-griff{ height:9px; cursor:ns-resize; background:var(--bg-card);
@@ -1536,7 +1543,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    ────────────────────────────────────────────────────────────────────── */
 .gk-griffel{ position:absolute; z-index:2; width:16px; height:16px; padding:0;
              border-radius:50%; border:2px solid var(--bg-card);
-             background:var(--ast, var(--accent)); color:#fff;
+             background:var(--ast-zug, var(--accent)); color:#fff;
              display:grid; place-items:center; line-height:1;
              font-size:11px; font-weight:700; cursor:crosshair; }
 .gk-griffel::before{ content:"+"; }
@@ -1596,7 +1603,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-kn[data-form="sechseck"]::before, .gk-kn[data-form="sechseck"]::after{
   content:""; position:absolute; pointer-events:none; }
 .gk-kn[data-form="raute"]::before, .gk-kn[data-form="sechseck"]::before{
-  inset:0; background:var(--ast, var(--line)); }
+  inset:0; background:var(--ast-zug, var(--line)); }
 .gk-kn[data-form="raute"]::after, .gk-kn[data-form="sechseck"]::after{
   inset:3px; background:var(--bg-card); }
 .gk-kn[data-form="raute"]::before, .gk-kn[data-form="raute"]::after{
@@ -1612,7 +1619,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-kn[data-form="raute"].on::after, .gk-kn[data-form="sechseck"].on::after{
   inset:6px; }
 .gk-kn[data-form="raute"].on::before, .gk-kn[data-form="sechseck"].on::before{
-  background:var(--ast, var(--accent)); }
+  background:var(--ast-zug, var(--accent)); }
 
 
 @media (max-width:760px){

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-681 Entscheidungen, E1 bis E702 (**E701 und E703 bis E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+682 Entscheidungen, E1 bis E705 (**E701, E703, E704, E706 und E707** sind den Zweigen der Bitte vom 27. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -744,6 +744,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
 * **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
 * **E702** — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale (Redur: „Wie im UI-Kit (Empfohlen)"): fünf `--feder-*`-Marken in `grund.css` aus `motion-tokens.css` mit `@supports`-Rückfall (ergänzt E43/E646/E699 Punkt 6), der Federkern `RedionSpring` ohne React (übertragen, auf 1953 Punkten gleich dem Kit), EINE Druckfeder statt dreizehn `:active`-Skalierungen (auch der kurze Tipp am iPhone), der Schalter wie im Kit (Griff dehnt sich, keine Endlosdrehung), Blätter vom Rand mit Finger und Abgang, eine Ankunft für jeden Ortswechsel, „Ruhig" hält auch `::after`, JavaScript und die Inseln an (`test581`)
+* **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 
 ---
 
@@ -2991,6 +2992,12 @@ Ladeskelette, die Zustandswechsel der Sicherungskarte. Steht in `L10`.
 ---
 
 ## E44 · Nocturne — Redion bekommt eigene Farben
+
+> **Ergänzt durch E705 (28. September 2026) — ein leichter kühler Ton.**
+> Redur, im Fragebogen: „Leichter kühler Ton im Dunkeln“. Der Grund ist
+> `#121417` statt `#141414`, die ganze dunkle Leiter trägt Farbton 258° bei
+> Sättigung 0,006 und derselben Helligkeit. Ränder aus Licht, Violett als
+> Akzent und alles andere hier gilt unverändert.
 
 **Die grosse Änderung.** Redion trug im Kern Notions Palette: `#191919` und
 ein Himmelblau. Das war ein guter Anfang und die falsche Identität — die
@@ -57604,3 +57611,154 @@ die Druckfeder mit 1,2 (§1, §2, `test126` §7). Nachbarn grün: 388 (2779 KB,
 401, 402, 410, 109, 537, 400, 67, 105, 225, 549, 550. `test464` 62/63 — die
 Zahl der Werkzeuge (14 statt 13) aus `Marken.WERKZEUGE`, die dieser Bogen
 nicht anfasst; siehe den Commit.
+
+## E705 — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit, ein kühler Ton im Dunkeln, neun ruhigere Akzente
+
+**Datum:** 27./28. September 2026 · **Entschieden von** Redur (Auftrag ca.
+16:45 UTC, Auswahl im Fragebogen ca. 21:45 UTC) · **ergänzt** E44 (der
+dunkle Grund) · baut auf E199, E272, E421 und E414/E693 (nur die
+Darstellung) · **Wächter:** `test584` (neu),
+`test47` (Grund von „Standard" nachgezogen) · Zweig `claude/bessere-farben`.
+
+**Redur, wörtlich.** Ca. 16:45 UTC: „du muss mehr im redion arbeiten du
+kannst auch die oberfläche bischen ruhige machen ohne etwas lösche also eine
+funktionen und ich will das es flüssigere animationen , glass efeck usw alles
+haben dann bessere stift efeckte beim zeichnen bessere farben“. Ca. 21:45 UTC
+im Fragebogen, Farben (Mehrfachwahl): „9 ruhigere Akzentfarben“, „Leichter
+kühler Ton im Dunkeln“, „Untere Leiste besser lesbar“, „Starker Kontrast ohne
+Glas“ — mit der Beschreibung „Aussehen: weiterhin alles selbst wählbar; eigene
+Akzentfarbe bringt passende Schrift/Hover mit; … Starker Kontrast: kein Glas,
+schwarze Schrift auf Gelb.“ Ca. 21:47 UTC: „ich will das du auch das ¨berla
+nutze will wo es nötig ich also beim stift übergangen usw“. Ca. 21:49 UTC:
+„was du beim touckit gebaut hast ich will alles so haben mit redion passende
+inhalten“. Ca. 22:10 UTC: „du muss ofne pause an redion arbeiten ich will wenn
+ich am morgen die redion öfnnen eien komplet besseren webseit sehen ohne eine
+funktione löschen bessere ordnungen bessere übergagnge besssere efeckten ,
+bessere oberfläsche alles kannst du nur an reddion arbeiten“. Und schon ca.
+11:27 UTC zum Aussehen: „Also beiden bei der ausehen dort aollte ich die
+fraben ändern kann“.
+
+Dieser Eintrag trägt den FARBEN-Teil davon. „Untere Leiste besser lesbar“
+(die Linse über dem aktiven Reiter) gehört dem Zweig
+`claude/material-ueberall`, das Glas von „Starker Kontrast“ dem Zweig
+`claude/glas-wo-es-passt`, die Stift- und Markerfarben dem Zweig
+`claude/stift-effekte`.
+
+**Was wurde entschieden?** Farben werden GERECHNET, nicht geraten — nach der
+Regel aus E142/E199/E272: nachmessen, nicht annehmen. Im Einzelnen:
+
+1. **Jede Akzentfarbe bringt ihre Begleiter mit** (farben-1, ruhe-akzent).
+   `Farben.accentSet` (src/core/helpers/colors.ts) leitet aus der gewählten
+   Farbe in OKLCH vier Werte ab: die Schrift AUF der Fläche (`--auf-accent`:
+   Weiss, wenn es 4,5 : 1 schafft, sonst ein getöntes Beinahe-Schwarz im Ton
+   des Akzents), die Tinte (`--accent-text`: der Akzent selbst oder derselbe
+   Ton, bis er auf Grund UND Karte 4,6 hat), das Überfahren
+   (`--accent-hover`) und die Tönung (`--accent-schwach`). `Aussehen.anwenden`
+   setzt sie inline und räumt sie mit dem Schema wieder ab (`gesetzt`).
+   Eine EIGENE Farbe bringt immer alle vier; ein Schema-Akzent überschreibt
+   nichts, was das Schema selbst mitbringt (Touch Kit). Die gewählte Farbe
+   bleibt genau die gewählte. Fünf Stellen, die den Akzent als Schrift auf dem
+   Grund benutzten, nehmen jetzt die Tinte (`bausteine.css` ✓ in der
+   Farbwahl, `lernwelt.css` Plan, `tabelle.css` Werkzeug an).
+2. **„Starker Kontrast“: schwarze Schrift auf Gelb.** Das Schema bringt
+   seine Begleiter ausdrücklich mit: `--auf-accent #000000` (14,67 : 1),
+   Tinte `#ffd400`, Überfahren HELLER (`#ffe071`).
+3. **Die neun Notion-Farben neu gestimmt** (farben-3), je Modus auf einer
+   OKLCH-Helligkeit: im Hellen ≥ 4,6 auf jeder hellen Fläche (vorher Gelb
+   2,22 auf der „Sand“-Karte), im Dunkeln ≥ 5,9; die dunklen Tönungen sind
+   tief und klar statt grau-oliv (L 0,30), die hellen sichtbar, aber leise.
+   Gespeichert bleiben die Kennungen (`red`, `bg-red`), nie ein Hexwert.
+4. **Statusfarben als Tinte, Rot als Fläche getrennt** (farben-5). Dunkel
+   `--gefahr #f66d67`, `--erfolg #40cd9b`, `--warnung #f2af48`, `--info
+   #5abdf2` (Sättigung 0,12–0,17 statt bis 0,21); hell `#bb2021`, `#006e4f`,
+   `#924f00`, `#056697`. NEU `--gefahr-flaeche #ce2a29` in grund.css für
+   Weiss AUF Rot (Glocke, Gefahrknopf, Diktat, Buchdeckel-Marke): 5,27 : 1 in
+   allen zehn Schemata. Eine Farbe, eine Rolle — dieselbe Trennung wie E199.
+   „Touch Kit hell“ bekommt als Warnung `#af4f00` statt `#b45309` (4,34 auf
+   seinem Überfahren).
+5. **„Aussehen“: neun ruhigere Akzente mit Namen und „Aa“** (farben-6):
+   Violett, Indigo, Blau, Türkis, Grün, Bernstein, Koralle, Rosa, Graphit —
+   gleich hell (WCAG-Leuchtdichte um 0,15), jede Scheibe zeigt „Aa“ in der
+   Schrift, die auf ihr stehen wird, der Name steht darunter, die gewählte
+   trägt Ring, Haken und `aria-pressed` (§38). Das Feld „Eigene …“ behält den
+   Farbwähler; eine früher gespeicherte Farbe (auch eine der acht alten) gilt
+   weiter und steht dort als gewählt, mit Namen. Dazu eine kleine Vorschau
+   (Hauptknopf, Verweis, gewählter Reiter). Die Schemakarten sind ehrlich:
+   „Standard“ und „Hell“ zeigen ihren Akzentpunkt und die Flächen, die
+   wirklich gelten (vorher feste Ersatzwerte von vor E44 und ein leerer
+   Punkt).
+6. **Eingaben im Grundton** (farben-7, ruhe-8): `color-scheme` steht an
+   `input, select, textarea`, nicht an `<html>` — Kästchen, Datums- und
+   Auswahlfelder sind im Dunkeln dunkel, die Wurzel bleibt `normal`
+   (`test579` §4). Die Textauswahl nimmt den Akzent statt Notions Blau.
+7. **Diagramme mit eigener Reihe je Grundton** (farben-8, `Zusatz.DIAGRAMM`):
+   acht Töne, im Hellen und Dunkeln gestuft, Nachbarn ΔE_OK ≥ 0,19 (vorher
+   0,096), jede bunt (vorher ein Grau, das wie abgeschaltet aussah). Die
+   Farbe steht aufgelöst im `fill` (test409); ein Beobachter färbt beim
+   Wechsel des Grundtons um. `PALETTE` und `farbeVon` bleiben fürs Whiteboard.
+8. **Whiteboard und Gedankenkarte im Hellen lesbar, ohne umzufärben**
+   (farben-9). `stroke`/`fill` bleibt die gespeicherte Farbe; daneben steht
+   `--tinte-hell` (derselbe Ton, 4,6 : 1 auf hellem Grund, `Farben.inkOnLight`)
+   und `data-tinte`, und nur `html[data-theme="light"]` greift danach
+   (grund.css). Die Gedankenkarte zeichnet Rand, Ring, Zähler und Griffe mit
+   `--ast-zug`, das im Hellen `--ast-hell` ist. Zettel behalten ihre Füllung.
+9. **Ein kühler Ton im Dunkeln, und eine Leiter, die sich ableitet**
+   (farben-10). Standard dunkel: `#121417 / #181a1d / #1e2023 / #2b2d30 /
+   #323437`, dieselbe Helligkeit wie vorher, Farbton 258° wie die Schale,
+   Sättigung 0,006 — man liest es als „kühl“, nicht als Blau. Jedes Schema
+   mit eigenem Grund leitet gedämpfte Schrift, Beiwerk und „gedrückt“ aus
+   Schrift und Grund ab (`Farben.ladder`, 70/47 % dunkel, 76/58 % hell, bis
+   4,5 bzw. 3 auf Grund, Karte und Überfahren reichen).
+10. **Keine feste Signalfarbe mehr** (farben-11): die roten, grünen und
+    orangen Hexwerte in den Stilblättern stehen auf den Marken (`--gefahr`,
+    `--gefahr-flaeche`, `--erfolg`, `--warnung`, `--c-*`, `--gold-tinte`,
+    Akzent); der KI-Sendeknopf nimmt die Hauptfläche statt eines eigenen
+    Blaus. Was bunt bleibt, steht auf Papier oder in einem Bild und ist in
+    `test584` §11 mit Grund gelistet.
+
+**Warum?** Weil Redur die Farben in „Aussehen“ selbst wählen will — und eine
+Wahl, nach der der Knopf unlesbar ist, keine Wahl ist. Gemessen vor dem Bau:
+Weiss auf dem Akzent hatte in Mitternacht 3,07, in Wald 2,26, in Sand 3,87,
+in „Starker Kontrast“ 1,43; jede eigene Farbe liess violette Reiter neben
+einem grünen oder gelben Knopf. Die Notion-Farben lagen im Hellen alle unter
+4,5; das dunkle Rot auf der Karte bei 4,33; Weiss auf Rot bei 3,76; Gelb auf
+dem hellen Whiteboard bei 1,35. Kästchen waren im Dunkeln die hellsten Pixel
+des Bildschirms.
+
+**Was war die Alternative?** (a) Für jedes Schema und jede Farbe die
+Begleiter von Hand eintragen — zehn Schemata × neun Farben plus jede eigene
+Farbe; die eigene wäre nie gegangen. (b) Die Stifte, Whiteboard- und
+Gedankenkarten-Farben selbst ändern — verboten, das färbt gespeicherte
+Zeichnungen um (E414, E693, §9). (c) `color-scheme` an `<html>` — bricht
+`test579` §4 und die Inseln. (d) Die alten acht Scheiben behalten — sie sind
+Pastell und tragen keine Schrift; sie bleiben als gespeicherte Werte gültig.
+
+**Was kostet es?** Rund 250 Zeilen Rechnung in `colors.ts` (sRGB ↔ OKLab,
+Kontrast, Schnitt in den Farbraum über die Sättigung), einmal je `setzen`,
+nicht je Bild; die Tinte der Flächen wird zwischengespeichert. Das Aussehen
+ändert sich sichtbar: helles Gelb ist Senf (wie `--gold-tinte`, E272), die
+dunklen Statusfarben sind weniger grell, die neuen Akzente ernster als die
+Pastelle. `STILBLATT` in `aussehen.ts` wiederholt vier Werte aus
+`dunkel.css`/`hell.css` für die Karten, weil `cssRules` unter `file://`
+gesperrt ist (SecurityError, gemessen) — `test584` §6 vergleicht die Karte mit
+dem gerechneten Stil, damit die Wiederholung nicht lügt. Start: siehe
+messungen §77.
+
+**Gemessen, bevor gebaut wurde:** messungen.md §77 (Vorher/Nachher je
+Schema, Notion, Status, Diagramm, Whiteboard, Gedankenkarte, Leiter).
+
+**Gefunden auf dem Weg.** Die Fehlerkarte (`#fehler-karte`) war in BEIDEN
+Modi `#2a1a1a` — im Hellen dunkle Schrift auf fast Schwarz; jetzt ein Hauch
+Rot über der Karte je Modus. Die „Erledigt“-Fläche (`.home-sich
+button.fertig`) schrieb Weiss auf das helle dunkle `--erfolg` (2,0); jetzt
+`--bg`. `.blk.sel`, `#scroll.ablegen`, die Zeilen-aus-Tönung und
+`@keyframes blitz` trugen noch Notions Blau `#2eaadc`; jetzt der Akzent. Die
+weisse Zahl auf der Astfarbe der Gedankenkarte (`.gk-zahl`) ist im Dunkeln
+zu blass (L228, offen). `chartTyp: 'pie'` ist kein gültiger Typ und zeichnet
+eine leere Achse (AUFGABEN).
+
+**Geprüft:** `test584` rot gegen den Grundstand 515451f9 (10/37), grün auf
+dem Zweig (37/37); vier Gegenproben je rot gesehen (§1, §5, §7, §11).
+`test47` zieht den Grund von „Standard“ nach (#121417). Nachbarn und
+Zahlen im Commit „E705“ und in messungen §77. Der Start wächst um rund
+7,6 KB gzip.

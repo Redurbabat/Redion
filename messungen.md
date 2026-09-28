@@ -4934,3 +4934,104 @@ von spring.ts und press.ts sind dafür von 50 auf 8 Zeilen gekürzt worden
 **Bildstreifen** (nicht eingecheckt, §55.4): Knopfdruck, Schalter, Blatt
 auf, Blatt weggewischt, Ankunft — je vorher und nachher, am Telefon dunkel,
 dazu die Druckkurve (Breite je Bild bei Tempo 1).
+
+## §77 · Bessere Farben — Kontrast je Schema, vorher und nachher (E705, 28. September 2026)
+
+(§73, §75 und §76 sind den anderen Zweigen der Bitte vom 27. September vergeben; §74 steht direkt darüber.)
+
+**Wie gemessen.** WCAG-2-Kontrast und OKLCH aus sRGB (Ottosson 2020),
+vorher am Grundstand `515451f9`, nachher auf `claude/bessere-farben`. Im
+Browser mit `test584`: jede Farbe als `var(--…)` an einem Probe-Element,
+gerechnet, durch eine 1×1-Leinwand gelesen (so kommt auch `color-mix(…)` als
+Zahl an), Chromium 1194 über `file://`. Die Einzelwerte darunter zusätzlich
+in Node mit der gebauten `quell/core/helpers/colors.js`.
+
+**1 · Schrift auf dem Akzent (Hauptknopf)** — vorher war es immer Weiss:
+
+```txt
+Schema / Farbe          vorher Weiss   nachher Schrift        Überfahren   Tinte auf Grund / Karte
+Mitternacht #6c8cff     3,07           #0f1528  5,90          6,63         6,14 / 5,34
+Wald #5cbf8a            2,26           #041b0f  7,93          8,85         7,82 / 6,65
+Sand #b1743a            3,87           #231103  4,71          5,31         #93581a 5,34 / 4,64
+Rosé #e06a94            3,15           #240e15  5,80          6,48         5,75 / 4,99
+Starker Kontrast #ffd400 1,43          #000000 14,67          (#ffe071)    #ffd400 auf Schwarz
+Standard + eigen #e0a33a 2,22          #201301  8,20          —            —
+```
+
+`test584` §1: alle 210 Paare (10 Schemata × Schema-Akzent, 9 neue, 8 alte,
+3 eigene) ≥ 4,5 auf Fläche und Überfahren, Tinte ≥ 4,5 auf Grund und Karte,
+im Ton des Akzents (≤ 20°).
+
+**2 · Notion-Farben** — knappste Stelle über alle zehn Schemata, Grund,
+Karte, Überfahren und eigene Tönung: vorher Gelb auf der „Sand"-Karte 2,22
+(im Hellen alle neun unter 4,5; im Dunkeln Braun 3,75, Violett 4,30),
+nachher Blau im Schema „Sand" **4,63**. Schrift auf jeder Tönung ≥ 7.
+
+**3 · Statusfarben und Weiss auf Rot:**
+
+```txt
+                                vorher            nachher
+--gefahr dunkel auf der Karte   #ef4444  4,33     #f66d67  5,68
+--gefahr hell auf Sand-Überfahren #dc2626 3,57    #bb2021  4,64
+--erfolg dunkel auf der Karte   #22c55e  7,15     #40cd9b  8,11   (Sättigung 0,21 → 0,14)
+Weiss auf Rot (.glocke-zahl)    3,76 (Kit dunkel 2,65)   5,27 in allen zehn (--gefahr-flaeche #ce2a29)
+Touch Kit hell --warnung        #b45309  4,34     #af4f00  4,60   (auf #eeeef1)
+```
+
+**4 · Whiteboard (GfxShapes.PALETTE) und Gedankenkarte im Hellen** — die
+gespeicherte Farbe auf Weiss, und die Tinte, die jetzt gezeichnet wird:
+
+```txt
+Whiteboard   Gelb 1,35 → 5,15   Orange 1,99 → 5,19   Rot 2,66 → 5,16   Grün 2,76 → 5,17
+             Blau 3,01 → 5,13   Grau 2,81 → 5,17     Violett 3,79 → 5,18  Rosa 3,47 → 5,23
+Gedankenkarte Gelb 2,42 → 5,13  Orange 2,68 → 5,16   Türkis 3,02 → 5,25  Grün 3,34 → 5,13
+             Blau 3,87 → 5,17   Rot 3,96 → 5,19      Rosa 4,17 → 5,15    Violett 5,04 → 5,17
+```
+
+Im Dunkeln wird unverändert die gespeicherte Farbe gezeichnet; Zettel
+behalten ihre Füllung.
+
+**5 · Diagramme** — die acht gezeichneten Reihen, OKLab-Abstand ΔE_OK:
+vorher (eine Liste für beide Modi) Nachbarn 0,096, ein Grau mit Sättigung
+0,003, Gelb auf Weiss 1,35; nachher je Grundton, Nachbarn 0,196 (hell) /
+0,193 (dunkel), jede Sättigung ≥ 0,10, im Dunkeln jede ≥ 3 : 1 auf dem
+Grund. Das engste Paar überhaupt ist Orange/Rot (0,071) — sie stehen nie
+nebeneinander.
+
+**6 · Die dunkle Leiter** (OKLCH L / C / h):
+
+```txt
+          vorher                          nachher
+--bg      #141414  0,191 / 0 / —          #121417  0,190 / 0,0069 / 258°
+--bg-side #1a1a1a                         #181a1d  0,217 / 0,0066 / 258°
+--bg-card #202020                         #1e2023  0,243 / 0,0064 / 258°
+--bg-hover #2d2d2d                        #2b2d30  0,296 / 0,0061 / 258°
+--bg-press #343434                        #323437  0,324 / 0,0060 / 258°
+--text-dim #a7a7a7 7,7 / 6,8 / 5,7        #a6a8aa  7,73 / 6,84 / 5,79 (Grund / Karte / Überfahren)
+```
+
+Die Schale (`#1b1d20`) und `--bg-tief` (`#0f1012`) lagen schon bei 258°;
+jetzt ist es EINE Temperatur. Abgeleitete gedämpfte Schrift: Wald
+`#9ea6a0`, Sand `#645c52` — jeweils im Ton des Grundes.
+
+**7 · Feste Farben in den Stilblättern** (`test584` §11, bunte Werte mit
+OKLCH-Sättigung ≥ 0,06 in Farbeigenschaften ausserhalb der Markendateien):
+vorher 54 ausserhalb der Liste (716 Farbwerte gelesen), nachher 0 (657); auf der Liste stehen nur Papier-
+und Bildfarben (Laser, Auswahlgriffe, Staffelei, Deckel, Zier der Bewegung,
+Suchtreffer im Text).
+
+**8 · Start (test388 §5).** Grundstand 2767 KB über 246 Dateien (§71).
+Mit der ersten Fassung dieses Zweigs mass `test388` **2780 KB** (+12,6 KB) —
+über der Zuteilung von rund 10 KB je Zweig. 8,1 der 12,9 KB waren
+Kommentare in den Startdateien (die Begründungen stehen jetzt in E705, am
+Ort nur noch der Kern). Danach, Datei für Datei gegen den Grundstand
+gerechnet (gzip Stufe 6 wie `test388`):
+
+```txt
+colors.js +3 346 B · aussehen.js +1 410 · zeichenflaeche.js +673 · bausteine.css +588
+dunkel.css +392 · grund.css +352 · shapes.js +336 · gedankenkarte.js +271
+werkzeuge.css +168 · hell.css +140 · übrige +90             Summe +7 766 B ≈ +7,6 KB
+```
+
+Also rund 2775 KB, 75 unter der Decke 2850.
+
