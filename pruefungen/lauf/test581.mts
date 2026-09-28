@@ -18,7 +18,9 @@
  *      Start da, im Ordner wie in der Einzeldatei, ohne React.
  *   §3 Jeder Knopf sinkt ein und federt zurück — auch beim schnellen
  *      Tippen, bei dem `:active` auf dem iPhone nie gemalt wird; eigene
- *      Druckbilder (Redurs Vorlagen) bleiben unangetastet.
+ *      Druckbilder (Redurs Vorlagen) bleiben unangetastet. An der unteren
+ *      Leiste sinkt, wie in der Tab-Leiste des Kits, nur das Zeichen — der
+ *      Reiter nicht noch einmal (seit dem Zusammenführen mit E706).
  *   §4 Schalter wie im Kit: der Griff dehnt sich unter dem Finger und
  *      federt hinüber; kein Verlauf dreht sich endlos im Ruhezustand.
  *   §5 Blätter von unten: vom Rand herein, der Grund blendet auf, das Blatt
@@ -300,15 +302,25 @@ console.log('\n§3 · Jeder Knopf sinkt ein und federt zurück — auch beim sch
   /* Proben aus dem Dokumente-Bildschirm, der Menüleiste, der unteren Leiste
      und den Einstellungen: vorher antworteten die meisten GAR NICHT. */
   const proben = ['.bib-neu', '.bib-studio-import', '.bib-ort', '#mb-suche', '#hl-bespr', '#hl-mehr'];
-  const ergebnis: Array<{ sel: string; rest: number; gedrueckt: number; danach: number; kurve: string }> = [];
+  /* DIE UNTERE LEISTE IST EINE TAB-LEISTE WIE IM KIT (E706): dort sinkt das
+     ZEICHEN (0,9, `SelectionFlow.druecke`), nicht der ganze Reiter — und
+     nicht beides. Beim Zusammenführen von E702 und E706 sanken beide: der
+     Reiter auf 0,96 und darin das Zeichen auf 0,9. Gemessen wird deshalb an
+     einem Reiter das Zeichen, und der Reiter selbst muss stehen bleiben. */
+  const REITER = ['#hl-bespr', '#hl-mehr'];
+  const was = (sel: string): string => REITER.includes(sel) ? sel + ' .ho-z' : sel;
+  const ergebnis: Array<{ sel: string; rest: number; gedrueckt: number; danach: number;
+    kurve: { easing: string; bilder: number; hoechster: number }; reiter: number }> = [];
   for (const sel of proben) {
     const m = await mitte(s, sel);
-    if (!m) { ergebnis.push({ sel, rest: -1, gedrueckt: -1, danach: -1, kurve: '' }); continue; }
+    if (!m) { ergebnis.push({ sel, rest: -1, gedrueckt: -1, danach: -1, kurve: { easing: '', bilder: 0, hoechster: 0 }, reiter: -1 }); continue; }
     await s.waitForTimeout(150);
-    const rest = await breite(s, sel);
+    const rest = await breite(s, was(sel));
+    const reiterRest = await breite(s, sel);
     await finger.ab(cdp, m.x, m.y);
     await s.waitForTimeout(140);
-    const gedrueckt = await breite(s, sel);
+    const gedrueckt = await breite(s, was(sel));
+    const reiter = (await breite(s, sel)) / reiterRest;
     await finger.auf(cdp);
     await s.waitForTimeout(60);
     /* Gesucht wird die Bewegung auf `scale` — daneben laufen am selben
@@ -316,19 +328,27 @@ console.log('\n§3 · Jeder Knopf sinkt ein und federt zurück — auch beim sch
     const kurve = await s.evaluate((sel: string) => {
       const a = document.querySelector<HTMLElement>(sel)?.getAnimations().find(x => x.playState === 'running' &&
         ((x.effect as KeyframeEffect | null)?.getKeyframes() ?? []).some(k => 'scale' in k));
-      return a ? String(a.effect?.getTiming().easing ?? '') : '';
-    }, sel);
+      const werte = a ? ((a.effect as KeyframeEffect | null)?.getKeyframes() ?? []).map(k => parseFloat(String(k['scale'] ?? '1'))) : [];
+      return { easing: a ? String(a.effect?.getTiming().easing ?? '') : '', bilder: werte.length,
+               hoechster: werte.length ? Math.max(...werte) : 0 };
+    }, was(sel));
     await s.waitForTimeout(800);
-    ergebnis.push({ sel, rest, gedrueckt, danach: await breite(s, sel), kurve });
+    ergebnis.push({ sel, rest, gedrueckt, danach: await breite(s, was(sel)), kurve, reiter });
   }
   const sinkt = ergebnis.filter(e => e.rest > 0 && e.gedrueckt / e.rest <= 0.99);
-  gleich('Alle sechs Proben sinken unter dem Finger ein (≤ 99 % Breite)', sinkt.map(e => e.sel), proben);
-  p('… und keine zu tief (≥ 95 %): ein Einsinken, kein Sprung',
-    ergebnis.every(e => e.rest <= 0 || e.gedrueckt / e.rest >= 0.95),
+  gleich('Alle sechs Proben sinken unter dem Finger ein (≤ 99 % Breite; an einem Reiter das Zeichen)', sinkt.map(e => e.sel), proben);
+  p('… und keine zu tief (≥ 95 %, das Zeichen eines Reiters ≥ 85 % wie im Kit): ein Einsinken, kein Sprung',
+    ergebnis.every(e => e.rest <= 0 || e.gedrueckt / e.rest >= (REITER.includes(e.sel) ? 0.85 : 0.95)),
     ergebnis.map(e => `${e.sel} ${(e.gedrueckt / e.rest).toFixed(3)}`).join(' · '));
+  gleich('An der unteren Leiste sinkt nur das Zeichen — der Reiter nicht noch einmal (≥ 99,5 %)',
+    ergebnis.filter(e => REITER.includes(e.sel) && e.reiter < 0.995).map(e => `${e.sel} ${e.reiter.toFixed(3)}`), []);
   gleich('Sie kommen ganz zurück', ergebnis.filter(e => e.rest > 0 && Math.abs(e.danach - e.rest) > 0.5).map(e => e.sel), []);
-  gleich('Das Loslassen fährt die Druckfeder des Kits (linear(), mit Rückprall)',
-    ergebnis.filter(e => !/^linear\(/.test(e.kurve)).map(e => e.sel), []);
+  /* Die Druckfeder des Kits hat zwei Gestalten: press.ts gibt sie als
+     `linear()`-Kurve, `SelectionFlow` rechnet dieselbe Feder (RedionSpring,
+     E702) Bild für Bild aus. Beide müssen über 1 hinaus zurückfedern. */
+  gleich('Das Loslassen fährt die Druckfeder des Kits (linear() oder ihre Bahn, mit Rückprall)',
+    ergebnis.filter(e => !/^linear\(/.test(e.kurve.easing) && !(e.kurve.bilder >= 20 && e.kurve.hoechster > 1.002))
+      .map(e => e.sel), []);
 
   /* DER SCHNELLE TIPP. Auf dem iPhone wird `:active` bei einem kurzen Tipp
      oft gar nicht gemalt — Finger ab und auf, bevor ein Bild entsteht. Die

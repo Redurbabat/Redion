@@ -77,8 +77,8 @@
  *     ω₀ = 2π / Dauer    ζ = 1 − Schwung    ω_d = ω₀·√(1 − ζ²)
  *     x(t) = e^(−ζω₀t) · ( x₀·cos ω_d t + B·sin ω_d t ),   B = (v₀ + ζω₀x₀)/ω_d
  *
- * Das ist `solveSpring` aus `UI-Kit/app/src/touch/motion/spring.ts`, in
- * Millisekunden. Die Werte stehen EINMAL unten in `FEDERN`.
+ * Das ist `solveSpring` aus `UI-Kit/app/src/touch/motion/spring.ts` —
+ * in Redion EINMAL als `RedionSpring.solve` (E702); `FEDERN` unten liest es.
  *
  * ─── WARUM KEYFRAMES UND KEINE EIGENE SCHLEIFE ──────────────────────────────
  *
@@ -91,31 +91,15 @@
  * Genau dafür wird die laufende Animation hier gemerkt.
  * ==========================================================================*/
 const SelectionFlow = (() => {
-    const FEDERN = {
-        knapp: { dauer: 0.36, schwung: 0.14 },
-        druck: { dauer: 0.32, schwung: 0.3 }
-    };
+    const kitFeder = (name) => ({ dauer: RedionSpring.PRESETS[name].duration, schwung: RedionSpring.PRESETS[name].bounce });
+    const FEDERN = { knapp: kitFeder('snappy'), druck: kitFeder('press') };
     /** Abgetastet wird alle 8 ms — bei 120 Hz knapp ein Wert je Bild. */
     const SCHRITT = 8;
-    /** Die Feder als Formel (`solveSpring` des Kits, in ms). */
+    /** Die Feder als Bahn in Millisekunden und px/ms — gelöst von
+     *  `RedionSpring.solve` (Sekunden, Einheiten je Sekunde; E702). */
     const bahnVon = (f, x0, v0) => {
-        const schwung = Math.min(0.95, Math.max(0, f.schwung));
-        const zeta = 1 - schwung;
-        const w0 = (2 * Math.PI) / (f.dauer * 1000);
-        if (zeta > 1 - 1e-6) {
-            const k = v0 + w0 * x0;
-            return t => {
-                const e = Math.exp(-w0 * t);
-                return { x: e * (x0 + k * t), v: e * (v0 - w0 * k * t) };
-            };
-        }
-        const wd = w0 * Math.sqrt(1 - zeta * zeta);
-        const d = zeta * w0;
-        const b = (v0 + d * x0) / wd;
-        return t => {
-            const e = Math.exp(-d * t), c = Math.cos(wd * t), s = Math.sin(wd * t);
-            return { x: e * (x0 * c + b * s), v: e * ((wd * b - d * x0) * c - (d * b + wd * x0) * s) };
-        };
+        const bei = RedionSpring.solve(RedionSpring.fromPerceptual({ duration: f.dauer, bounce: f.schwung }), x0, 0, v0 * 1000);
+        return t => { const z = bei(t / 1000); return { x: z.value, v: z.velocity / 1000 }; };
     };
     /** Ab wann eine Bahn ruht: nah genug UND langsam genug (beides, sonst
      *  hielte der Nulldurchgang beim Überschwingen für ein Ende). */
@@ -362,7 +346,8 @@ const SelectionFlow = (() => {
         return flaeche.animate(bilder, { duration: dauer, easing: 'linear', fill: 'forwards' });
     };
     const gedrueckt = new WeakMap();
-    const EINSINKEN = 90;
+    const marke = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const einsinken = () => { const v = parseFloat(marke('--motion-instant')); return v > 0 ? v : 80; };
     const kannSkalieren = () => 'scale' in document.documentElement.style;
     const drueckeEin = (el, tiefe = 0.9) => {
         if (!el || ruhig() || !kannSkalieren())
@@ -370,7 +355,7 @@ const SelectionFlow = (() => {
         const alt = gedrueckt.get(el);
         const von = alt ? (parseFloat(getComputedStyle(el).scale) || 1) : 1;
         alt?.anim.cancel();
-        const anim = el.animate([{ scale: String(von) }, { scale: String(tiefe) }], { duration: EINSINKEN, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' });
+        const anim = el.animate([{ scale: String(von) }, { scale: String(tiefe) }], { duration: einsinken(), easing: marke('--ease') || 'ease-out', fill: 'forwards' });
         gedrueckt.set(el, { anim, seit: performance.now() });
     };
     const lasseLos = (el) => {
@@ -379,7 +364,7 @@ const SelectionFlow = (() => {
         const alt = gedrueckt.get(el);
         if (!alt || alt.seit < 0)
             return;
-        const rest = EINSINKEN - (performance.now() - alt.seit);
+        const rest = einsinken() - (performance.now() - alt.seit);
         if (rest > SCHRITT) {
             if (!alt.wartet) {
                 alt.wartet = true;

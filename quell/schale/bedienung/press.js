@@ -23,11 +23,14 @@ const RedionPress = (() => {
     const NEVER = '[data-kein-druck], .ui-touch-root, .ui-touch-portal, input, textarea, select';
     /** Knöpfe mit EIGENEM Druckbild (je eine `:active`-Regel): Glasknopf und
      *  Zeitmesser (translateY), KI-Leiste und Senden (scale .94/.92), Karte,
-     *  Ordnerdeckel (E601/E604), Staffelei, `.hs-tun`, Funkelknopf (E528). */
+     *  Ordnerdeckel (E601/E604), Staffelei, `.hs-tun`, Funkelknopf (E528).
+     *  Und die Reiter der unteren Leiste: dort sinkt, wie in der Tab-Leiste
+     *  des Kits, nur das ZEICHEN (`SelectionFlow.druecke`, E706) — nicht der
+     *  Reiter dazu (E702 × E706, beim Zusammenführen). */
     const OWN_PRESS = [
         '.fbtns button.prim', '[data-rmo~="glass"]', '.rmo-transport button', '#ai .ai-leiste button',
         '#ai-senden', '.rmo-recent-card', '.bib-deckel', '.ru-staff', '.hs-tun', '.ru-funkel',
-        '[data-eigener-druck]'
+        '#handy-oben > button[role="tab"]', '[data-eigener-druck]'
     ].join(',');
     /** Schalter: nur der Zustand (der Griff dehnt sich per CSS). */
     const STATE_ONLY = '.schalter, [role="switch"]';

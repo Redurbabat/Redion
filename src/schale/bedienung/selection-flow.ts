@@ -76,8 +76,8 @@
  *     ω₀ = 2π / Dauer    ζ = 1 − Schwung    ω_d = ω₀·√(1 − ζ²)
  *     x(t) = e^(−ζω₀t) · ( x₀·cos ω_d t + B·sin ω_d t ),   B = (v₀ + ζω₀x₀)/ω_d
  *
- * Das ist `solveSpring` aus `UI-Kit/app/src/touch/motion/spring.ts`, in
- * Millisekunden. Die Werte stehen EINMAL unten in `FEDERN`.
+ * Das ist `solveSpring` aus `UI-Kit/app/src/touch/motion/spring.ts` —
+ * in Redion EINMAL als `RedionSpring.solve` (E702); `FEDERN` unten liest es.
  *
  * ─── WARUM KEYFRAMES UND KEINE EIGENE SCHLEIFE ──────────────────────────────
  *
@@ -93,15 +93,16 @@
 const SelectionFlow = (() => {
 
   /* DIE FEDERN DES TOUCH KITS (E706) — Dauer in s, Schwung wie im Kit.
-     Rechts die Kit-Marken derselben Kurven; hat Redion sie einmal selbst
-     (`grund.css`), liest diese Tafel sie von dort (§8).
-         knapp   Kit „snappy"   --ui-spring-snappy   das wandernde Material
-         druck   Kit „press"    --ui-spring-press    ein Zeichen kommt zurück */
+     EINE Sprache mit E702 (beim Zusammenführen, §8): die Zahlen kommen aus
+     `RedionSpring.PRESETS`, gelöst wird mit `RedionSpring.solve` — derselbe
+     Kern, der die Marken in `grund.css` trägt (`test581` §1/§2 rechnet ihn
+     gegen das Kit nach). Hier stand eine zweite Tafel mit denselben Zahlen.
+         knapp   Kit „snappy"   --feder-knapp   das wandernde Material
+         druck   Kit „press"    --feder-druck   ein Zeichen kommt zurück */
   type Feder = { dauer: number; schwung: number };
-  const FEDERN = {
-    knapp: { dauer: 0.36, schwung: 0.14 },
-    druck: { dauer: 0.32, schwung: 0.3 }
-  } as const;
+  const kitFeder = (name: 'snappy' | 'press'): Feder =>
+    ({ dauer: RedionSpring.PRESETS[name].duration, schwung: RedionSpring.PRESETS[name].bounce });
+  const FEDERN = { knapp: kitFeder('snappy'), druck: kitFeder('press') } as const;
 
   /** Abgetastet wird alle 8 ms — bei 120 Hz knapp ein Wert je Bild. */
   const SCHRITT = 8;
@@ -109,25 +110,11 @@ const SelectionFlow = (() => {
   /** Eine Bahn: Abstand zum Ziel (px) und Tempo (px/ms) nach `t` ms. */
   type Bahn = (t: number) => { x: number; v: number };
 
-  /** Die Feder als Formel (`solveSpring` des Kits, in ms). */
+  /** Die Feder als Bahn in Millisekunden und px/ms — gelöst von
+   *  `RedionSpring.solve` (Sekunden, Einheiten je Sekunde; E702). */
   const bahnVon = (f: Feder, x0: number, v0: number): Bahn => {
-    const schwung = Math.min(0.95, Math.max(0, f.schwung));
-    const zeta = 1 - schwung;
-    const w0 = (2 * Math.PI) / (f.dauer * 1000);
-    if (zeta > 1 - 1e-6) {
-      const k = v0 + w0 * x0;
-      return t => {
-        const e = Math.exp(-w0 * t);
-        return { x: e * (x0 + k * t), v: e * (v0 - w0 * k * t) };
-      };
-    }
-    const wd = w0 * Math.sqrt(1 - zeta * zeta);
-    const d = zeta * w0;
-    const b = (v0 + d * x0) / wd;
-    return t => {
-      const e = Math.exp(-d * t), c = Math.cos(wd * t), s = Math.sin(wd * t);
-      return { x: e * (x0 * c + b * s), v: e * ((wd * b - d * x0) * c - (d * b + wd * x0) * s) };
-    };
+    const bei = RedionSpring.solve(RedionSpring.fromPerceptual({ duration: f.dauer, bounce: f.schwung }), x0, 0, v0 * 1000);
+    return t => { const z = bei(t / 1000); return { x: z.value, v: z.velocity / 1000 }; };
   };
 
   /** Ab wann eine Bahn ruht: nah genug UND langsam genug (beides, sonst
@@ -448,10 +435,14 @@ const SelectionFlow = (() => {
   /* DAS ZEICHEN SINKT EIN UND FEDERT ZURÜCK (E706), wie in der Tab-Leiste
      des Kits: sofort auf 0,9, zurück auf der Druckfeder. Bewegt wird
      `scale`, nicht `transform` — es legt sich über das, was schon da ist.
-     Das Loslassen wartet, bis das Einsinken (90 ms) zu sehen war. */
+     Das Loslassen wartet, bis das Einsinken zu sehen war. Einsinken wie die
+     Druckfeder (press.ts, E702): `--motion-instant` auf `--ease` — dort
+     sinkt der Reiter der unteren Leiste NICHT noch einmal (OWN_PRESS). */
   type Druck = { anim: Animation; seit: number; wartet?: boolean };
   const gedrueckt = new WeakMap<HTMLElement, Druck>();
-  const EINSINKEN = 90;
+  const marke = (name: string): string =>
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const einsinken = (): number => { const v = parseFloat(marke('--motion-instant')); return v > 0 ? v : 80; };
   const kannSkalieren = (): boolean => 'scale' in document.documentElement.style;
 
   const drueckeEin = (el: HTMLElement | null, tiefe = 0.9): void => {
@@ -460,7 +451,7 @@ const SelectionFlow = (() => {
     const von = alt ? (parseFloat(getComputedStyle(el).scale) || 1) : 1;
     alt?.anim.cancel();
     const anim = el.animate([{ scale: String(von) }, { scale: String(tiefe) }],
-      { duration: EINSINKEN, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' });
+      { duration: einsinken(), easing: marke('--ease') || 'ease-out', fill: 'forwards' });
     gedrueckt.set(el, { anim, seit: performance.now() });
   };
 
@@ -468,7 +459,7 @@ const SelectionFlow = (() => {
     if (!el) return;
     const alt = gedrueckt.get(el);
     if (!alt || alt.seit < 0) return;
-    const rest = EINSINKEN - (performance.now() - alt.seit);
+    const rest = einsinken() - (performance.now() - alt.seit);
     if (rest > SCHRITT) {
       if (!alt.wartet) { alt.wartet = true; setTimeout(() => lasseLos(el), rest); }
       return;
