@@ -14,7 +14,10 @@ const RedionPress = (() => {
         'button', '[role="button"]', '[role="tab"]', '[role="menuitem"]', '[role="menuitemradio"]',
         '[role="menuitemcheckbox"]', '[role="option"]', '[role="switch"]', 'summary', 'a.btn',
         '.rb', '.side-item', '.sr', '.ws-btn', '.side-chat', '.hk', '.bib-heft', '.wk-weg',
-        '.lw-continue-card'
+        '.lw-continue-card',
+        /* „Eigene …" in Aussehen ist ein <label> um den Farbwähler (E705) —
+           es sinkt wie seine neun Nachbarn, nicht mit einer eigenen Regel. */
+        '.au-eigen'
     ].join(',');
     /** Wo nie etwas einsinkt. */
     const NEVER = '[data-kein-druck], .ui-touch-root, .ui-touch-portal, input, textarea, select';

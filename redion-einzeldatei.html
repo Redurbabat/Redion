@@ -15599,8 +15599,12 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-akz-probe{display:grid; place-items:center; width:34px; height:34px; border-radius:var(--radius-pill);
   background:var(--au-akz); color:var(--au-auf); font-size:13px; font-weight:700; letter-spacing:-.01em;
   box-shadow:inset 0 0 0 1px var(--line-stark);
-  transition:transform var(--motion-instant) var(--ease), box-shadow var(--motion-fast) var(--ease)}
-.au-akzente .au-akz:active .au-akz-probe{transform:scale(.94)}
+  transition:box-shadow var(--motion-fast) var(--ease)}
+/* EINMAL EINSINKEN, NICHT ZWEIMAL (E702 × E705). Hier stand
+   `.au-akz:active .au-akz-probe{transform:scale(.94)}`: zusammen mit der
+   Druckfeder (press.ts) sank das Feld und darin die Probe — zweimal, auf
+   zwei Kurven (`test581` §8). Jetzt sinkt das ganze Feld auf der Druckfeder,
+   „Eigene …" auch (`.au-eigen` in PRESSABLE); die Ruhig-Sperre gilt dort. */
 .au-akzente .au-akz.an{color:var(--text); font-weight:600}
 .au-akzente .au-akz.an .au-akz-probe{box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--au-akz)}
 .au-akz-haken{position:absolute; top:0; right:0; display:grid; place-items:center; width:15px; height:15px;
@@ -15626,9 +15630,6 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-akz-vorschau .au-vs-verweis{color:var(--accent-text); text-decoration:underline; text-underline-offset:3px}
 .au-akz-vorschau .au-vs-reiter{padding:4px 10px; border-radius:var(--radius-sm); background:var(--accent-schwach);
   color:var(--accent-text); font-weight:600}
-@media (prefers-reduced-motion:reduce){
-  .au-akzente .au-akz:active .au-akz-probe{transform:none}
-}
 .au-liste{display:flex; gap:7px; flex-wrap:wrap}
 .au-liste button{border:1px solid var(--line); border-radius:7px; padding:6px 13px;
                  background:transparent; color:var(--text-dim); cursor:pointer; font-size:13px}
@@ -26209,7 +26210,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1386, inhalt: '7c7db15a7dea9f81', gebaut: '2026-09-28T08:42:09.571Z' };
+const Stand = { fassung: 1387, inhalt: '2ec6e006bb1a830d', gebaut: '2026-09-28T09:06:31.418Z' };
 window.Stand = Stand;
 
 </script>
@@ -53844,7 +53845,10 @@ const RedionPress = (() => {
         'button', '[role="button"]', '[role="tab"]', '[role="menuitem"]', '[role="menuitemradio"]',
         '[role="menuitemcheckbox"]', '[role="option"]', '[role="switch"]', 'summary', 'a.btn',
         '.rb', '.side-item', '.sr', '.ws-btn', '.side-chat', '.hk', '.bib-heft', '.wk-weg',
-        '.lw-continue-card'
+        '.lw-continue-card',
+        /* „Eigene …" in Aussehen ist ein <label> um den Farbwähler (E705) —
+           es sinkt wie seine neun Nachbarn, nicht mit einer eigenen Regel. */
+        '.au-eigen'
     ].join(',');
     /** Wo nie etwas einsinkt. */
     const NEVER = '[data-kein-druck], .ui-touch-root, .ui-touch-portal, input, textarea, select';
