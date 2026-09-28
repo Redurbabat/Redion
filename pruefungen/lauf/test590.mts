@@ -99,9 +99,26 @@ const aufmachen = async (o: { handy?: boolean; weniger?: boolean; ruhig?: boolea
   const pc = await kontext.newPage();
   pc.on('pageerror', e => fehler.push('PAGEERROR: ' + e.message.slice(0, 150)));
   await pc.goto(`http://127.0.0.1:${PORT}/index.html`);
-  await pc.waitForFunction('typeof App !== "undefined" && typeof Store !== "undefined" && typeof Zeitmesser !== "undefined" && !!document.querySelector("#page")');
+  const bereit = 'typeof App !== "undefined" && typeof Store !== "undefined" && typeof Zeitmesser !== "undefined" && !!document.querySelector("#page")';
+  await pc.waitForFunction(bereit);
   await pc.waitForTimeout(1400);
-  await pc.evaluate(`(async () => {
+  /* Lädt der Browser die Seite unter Last einmal neu (gesehen in §6: „Execution
+     context was destroyed"), wird die Einrichtung EINMAL wiederholt — sie ist
+     Vorbereitung, keine Zusage. */
+  for (let versuch = 0; ; versuch++) {
+    try { await einrichten(pc, o); break; } catch (e) {
+      if (versuch > 0 || !/context was destroyed|navigation/i.test(String(e))) throw e;
+      await pc.waitForLoadState('load');
+      await pc.waitForFunction(bereit);
+      await pc.waitForTimeout(1400);
+    }
+  }
+  await pc.waitForTimeout(700);
+  return { pc, zu: () => kontext.close() };
+};
+
+const einrichten = (pc: Page, o: { ruhig?: boolean; dunkel?: boolean }): Promise<unknown> =>
+  pc.evaluate(`(async () => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu').forEach(e => e.remove());
     App.theme(${o.dunkel ? "'dark'" : "'light'"});
@@ -123,9 +140,6 @@ const aufmachen = async (o: { handy?: boolean; weniger?: boolean; ruhig?: boolea
     App.oeffne(s.id);
     window.__seite = s.id;
   })()`);
-  await pc.waitForTimeout(700);
-  return { pc, zu: () => kontext.close() };
-};
 
 type Kasten = { x: number; y: number; b: number; h: number; unten: number; rechts: number } | null;
 const kasten = (pc: Page, wahl: string): Promise<Kasten> => pc.evaluate(`(() => {

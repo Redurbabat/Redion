@@ -434,24 +434,29 @@ const RedionMotion = (() => {
         wanne.append(ornament('rmo-tr-rauschen'), ornament('rmo-tr-glanz'));
       });
       /* „Weiter" ist ein Start, kein Halt — die Taste zeigt dann das
-         Dreieck. Der Zustand steht am Träger (zeitmesser.ts:202). */
-      const angehalten = element.getAttribute('data-zustand') === 'pausiert';
+         Dreieck. Der Zustand steht am Träger (zeitmesser.ts, data-zustand).
+         Seit E713 trägt die Pausentaste BEIDE Figuren; motion.css tauscht
+         sie über `data-zustand` im selben Knopf (Kit: SymbolSwap). */
       element.querySelectorAll<HTMLButtonElement>(':scope > button').forEach(taste => {
         /* `data-rmo-taste` ist der Haken für den Stil; `data-zm` ist der
            Befehl und hier nur die Rückfallebene. */
         const rolle = taste.getAttribute('data-rmo-taste') || taste.getAttribute('data-zm') || '';
-        const figur = rolle === 'stopp' ? ['M9 9h6v6H9z']
-          : rolle === 'pause' && !angehalten ? ['M10 8v8', 'M14 8v8']
-            : ['M9.5 7.5 17 12l-7.5 4.5z'];
+        const figuren: Array<[string, string[]]> = rolle === 'stopp' ? [['', ['M9 9h6v6H9z']]]
+          : rolle === 'pause' ? [['pause', ['M10 8v8', 'M14 8v8']], ['weiter', ['M9.5 7.5 17 12l-7.5 4.5z']]]
+            : [['', ['M9.5 7.5 17 12l-7.5 4.5z']]];
         ensure(taste, 'rmo-tr-kappe', kappe => {
           const zeichen = document.createElementNS(svgNs, 'svg');
           zeichen.setAttribute('class', 'rmo-tr-sym');
           zeichen.setAttribute('viewBox', '0 0 24 24');
           zeichen.setAttribute('aria-hidden', 'true');
-          for (const d of figur) {
-            const linie = document.createElementNS(svgNs, 'path');
-            linie.setAttribute('d', d);
-            zeichen.append(linie);
+          for (const [name, figur] of figuren) {
+            const gruppe = name ? document.createElementNS(svgNs, 'g') : zeichen;
+            if (name) { gruppe.setAttribute('data-figur', name); zeichen.append(gruppe); }
+            for (const d of figur) {
+              const linie = document.createElementNS(svgNs, 'path');
+              linie.setAttribute('d', d);
+              gruppe.append(linie);
+            }
           }
           kappe.append(ornament('rmo-tr-reflex'), ornament('rmo-tr-wisch'),
                        ornament('rmo-tr-fleck'), zeichen, ornament('rmo-led'));

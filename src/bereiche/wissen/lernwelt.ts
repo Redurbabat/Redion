@@ -1512,14 +1512,136 @@ const Lernwelt = (() => {
     });
   };
 
+  /** DER VERLAUF ALS BALKENKARTE (E713; Redurs Video, Szene 06): Balken
+   *  wachsen einmal, die Summe zählt hoch, ein Tag lässt sich wählen (Tipp,
+   *  Pfeile, Pos1/Ende; EIN Tabstopp). Nur echte Zahlen: die Summe genau
+   *  dieser Balken, Höhen als Anteil am grössten Tag. Jeder Tag bleibt ein
+   *  Name „Datum: Zahl". */
   const historie = (logs: any[], tage = 7): string => {
     const werte = verlaufsTage(logs, tage);
     const maximum = Math.max(1, ...werte.map(item => item.anzahl));
-    return '<div class="lw-history" aria-label="Lernhistorie der letzten ' + tage + ' Tage">' +
-      werte.map(item => '<div><span>' + item.anzahl + '</span><progress max="' + maximum + '" value="' +
-        item.anzahl + '" aria-label="' + esc(item.tag.toLocaleDateString('de-CH')) + ': ' + item.anzahl +
-        '"></progress><small>' + esc(item.tag.toLocaleDateString('de-CH', { weekday: 'short' })) +
-        '</small></div>').join('') + '</div>';
+    const summe = werte.reduce((alle, item) => alle + item.anzahl, 0);
+    const wort = (n: number): string => n === 1 ? 'Wiederholung' : 'Wiederholungen';
+    const wochentag = (d: Date): string => d.toLocaleDateString('de-CH', { weekday: 'short' }).replace(/\.$/, '');
+    return '<div class="lw-history lw-verlauf" role="group" aria-label="Lernhistorie der letzten ' + tage + ' Tage"' +
+      ' data-lw-tage="' + tage + '">' +
+      '<div class="lw-verlauf-kopf"><strong class="lw-verlauf-summe" data-lw-ziel="' + summe + '">' + summe + '</strong>' +
+      '<span>' + wort(summe) + ' in ' + tage + ' Tagen</span></div>' +
+      '<div class="lw-verlauf-flaeche">' +
+      '<span class="lw-verlauf-material" aria-hidden="true"></span>' +
+      '<span class="lw-verlauf-tipp" aria-hidden="true" hidden><span></span></span>' +
+      werte.map((item, index) => {
+        const name = wochentag(item.tag);
+        const tipp = (tage > 7 ? name + ' ' + item.tag.getDate() + '.' + (item.tag.getMonth() + 1) + '.' : name) +
+          ' · ' + item.anzahl + ' ' + wort(item.anzahl);
+        return '<button type="button" class="lw-verlauf-tag" data-lw-tag="' + index + '" data-lw-anzahl="' + item.anzahl +
+          '" data-lw-max="' + maximum + '" data-lw-tipp="' + esc(tipp) + '" aria-pressed="false"' +
+          ' tabindex="' + (index === werte.length - 1 ? '0' : '-1') + '"' +
+          ' aria-label="' + esc(item.tag.toLocaleDateString('de-CH')) + ': ' + item.anzahl + ' ' + wort(item.anzahl) + '">' +
+          '<span class="lw-verlauf-zahl" aria-hidden="true">' + item.anzahl + '</span>' +
+          '<span class="lw-verlauf-saeule" aria-hidden="true"><i></i></span>' +
+          '<small aria-hidden="true">' + esc(name) + '</small></button>';
+      }).join('') + '</div></div>';
+  };
+
+  /** Weniger Bewegung — die EINE Frage aus E702 (System ODER ruhig). */
+  const wenigBewegung = (): boolean => typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung
+    ? AppEinstellung.wenigBewegung() : document.body?.dataset['bewegung'] === 'ruhig';
+
+  /** Die Zahl zählt EINMAL hoch — v = N·(1 − e^(−7t)), wie im Video — und
+   *  steht am Ende genau auf N. Ohne Bewegung steht sie sofort dort. */
+  const hochzaehlen = (el: HTMLElement | null): void => {
+    if (!el) return;
+    const ziel = Number(el.dataset['lwZiel']) || 0;
+    if (!ziel || wenigBewegung()) { el.textContent = String(ziel); return; }
+    /* Die Uhr ist die des ersten Bildes, nicht `performance.now()`: der
+       Zeitstempel von `requestAnimationFrame` kann davor liegen (unter
+       gebremster Wiedergabe um Sekunden — die Zahl lief dann als
+       „−3,29e+24" ins Negative). Und `t` bleibt in 0…1. */
+    let beginn = -1;
+    const DAUER = 1000;
+    el.textContent = '0';
+    const schritt = (jetzt: number): void => {
+      if (!el.isConnected) return;
+      if (beginn < 0) beginn = jetzt;
+      const t = Math.max(0, Math.min(1, (jetzt - beginn) / DAUER));
+      el.textContent = String(t >= 1 ? ziel : Math.min(ziel, Math.round(ziel * (1 - Math.exp(-7 * t)))));
+      if (t < 1) requestAnimationFrame(schritt);
+    };
+    requestAnimationFrame(schritt);
+  };
+
+  /** Die Balkenkarten einer frisch gezeichneten Ansicht beleben: Höhen
+   *  setzen, hochzählen, Wahl mit Tipp und Tasten. */
+  const verlaufBeleben = (wurzel: ParentNode): void => {
+    wurzel.querySelectorAll<HTMLElement>('.lw-verlauf').forEach(karte => {
+      if (karte.dataset['lwLebt']) return;
+      karte.dataset['lwLebt'] = '1';
+      const flaeche = karte.querySelector<HTMLElement>('.lw-verlauf-flaeche');
+      const material = karte.querySelector<HTMLElement>('.lw-verlauf-material');
+      const tipp = karte.querySelector<HTMLElement>('.lw-verlauf-tipp');
+      const tippText = tipp?.querySelector<HTMLElement>('span');
+      const tage = Array.from(karte.querySelectorAll<HTMLButtonElement>('button[data-lw-tag]'));
+      if (!flaeche || !material || !tipp || !tippText || !tage.length) return;
+      tage.forEach((knopf, index) => {
+        const anzahl = Number(knopf.dataset['lwAnzahl']) || 0;
+        const hoechst = Number(knopf.dataset['lwMax']) || 1;
+        knopf.style.setProperty('--lw-anteil', String(anzahl / hoechst));
+        knopf.style.setProperty('--lw-index', String(index));
+      });
+      hochzaehlen(karte.querySelector<HTMLElement>('.lw-verlauf-summe'));
+
+      let gewaehlt = -1;
+      const setzeX = (el: HTMLElement, x: number, nachbar: boolean, sofort: boolean): void => {
+        if (typeof SelectionFlow !== 'undefined') SelectionFlow.folge(el, x, nachbar, sofort);
+        else el.style.transform = 'translateX(' + x + 'px)';
+      };
+      const waehle = (index: number, fokus: boolean): void => {
+        const vorher = gewaehlt;
+        gewaehlt = index;
+        tage.forEach((knopf, i) => {
+          knopf.setAttribute('aria-pressed', String(i === index));
+          knopf.tabIndex = (index < 0 ? i === tage.length - 1 : i === index) ? 0 : -1;
+        });
+        if (index < 0) { tipp.hidden = true; material.classList.remove('an'); return; }
+        const knopf = tage[index];
+        if (!knopf) return;
+        if (fokus) knopf.focus({ preventScroll: true });
+        const sofort = vorher < 0;
+        material.style.width = knopf.offsetWidth + 'px';
+        setzeX(material, knopf.offsetLeft, Math.abs(index - vorher) === 1, sofort);
+        material.classList.add('an');
+        tippText.textContent = knopf.dataset['lwTipp'] || '';
+        tipp.hidden = false;
+        const breite = tipp.offsetWidth;
+        const mitte = knopf.offsetLeft + knopf.offsetWidth / 2;
+        setzeX(tipp, Math.max(0, Math.min(flaeche.clientWidth - breite, mitte - breite / 2)), false, sofort);
+        /* Der Hinweis erscheint einmal mit kleinem Aufstieg; danach gleitet
+           er nur noch mit der Wahl. */
+        if (sofort && !wenigBewegung() && typeof RedionSpring !== 'undefined') {
+          const feder = RedionSpring.token('snappy');
+          if (feder.duration > 1) tippText.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
+            { duration: feder.duration, easing: feder.easing });
+        }
+      };
+      karte.addEventListener('click', event => {
+        const knopf = (event.target as Element).closest<HTMLButtonElement>('button[data-lw-tag]');
+        if (!knopf || !karte.contains(knopf)) return;
+        const index = Number(knopf.dataset['lwTag']);
+        waehle(index === gewaehlt ? -1 : index, false);
+      });
+      karte.addEventListener('keydown', event => {
+        const knopf = (event.target as Element).closest<HTMLButtonElement>('button[data-lw-tag]');
+        if (!knopf) return;
+        const jetzt = Number(knopf.dataset['lwTag']);
+        const ziel = event.key === 'ArrowRight' ? Math.min(tage.length - 1, jetzt + 1)
+          : event.key === 'ArrowLeft' ? Math.max(0, jetzt - 1)
+            : event.key === 'Home' ? 0 : event.key === 'End' ? tage.length - 1 : -2;
+        if (ziel === -2) return;
+        event.preventDefault();
+        waehle(ziel, true);
+      });
+    });
   };
 
   const kartenArt = (card: any): string => {
@@ -2763,6 +2885,8 @@ const Lernwelt = (() => {
        Zeichnen neu zerlegt, weil `innerHTML` sie neu schreibt. */
     if (typeof Funkel !== 'undefined')
       Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
+    /* Die Balkenkarten beleben (E713): Höhen, Hochzählen, Wahl. */
+    verlaufBeleben(root);
     if (zustand.simulation && !zustand.simulation.fertig) timerStarten();
     else timerStoppen();
     reiterRollstand();

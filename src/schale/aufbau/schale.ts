@@ -3411,6 +3411,15 @@ const App = (() => {
       const o = letztes('.overlay');
       if (m) m.remove();
       else if (o) o.remove();
+      else {
+        /* SCHWEBENDE FELDER OHNE `.overlay` (E713, der Zeitmesser): ihr
+           Schliessen-Knopf trägt `data-esc-knopf`. Nur mit dem Fokus im
+           Feld oder nirgends — wer im Text Escape drückt, meint den Text. */
+        const knopf = letztes('[data-esc-knopf]') as HTMLElement | null;
+        const feld = knopf?.closest('[role="dialog"]');
+        const fokus = document.activeElement;
+        if (knopf && feld && (!fokus || fokus === document.body || feld.contains(fokus))) knopf.click();
+      }
     });
   };
 

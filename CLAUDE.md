@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 527 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 528 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1469,6 +1469,19 @@ Systems und „Ruhige Darstellung". Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig; beim
 Zusammenführen nach `test580` bis `test584` nachgezählt: 527.*
 
+*Und 528: `test590` — die Zeitpille und die Balkenkarte (E713). Er schliesst
+den Zeitmesser bei laufender Uhr und verlangt eine Pille über der unteren
+Leiste; er tippt sie an und misst im ersten Bild, dass die Karte AUS ihr
+wächst (kleiner, bei der Pille) und danach ruht, dass nur `transform` und
+`opacity` bewegt werden, dass Escape sie zurück in die Pille bringt und der
+Fokus folgt, dass Pause ↔ Weiter im selben Knopf tauscht und das Feld am
+Telefon deckend ist — und dasselbe ohne Fahrt, wenn weniger Bewegung
+gewünscht ist (System und „Ruhige Darstellung"). Im Lernverlauf zählt er
+Knöpfe und Namen, vergleicht die Balkenhöhen mit den echten Zahlen, wählt
+einen Tag mit Tipp und Tasten und liest den Hinweis. Gezählt am
+28. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
+sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1485,7 +1498,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 527 Läufe
+npm run pruefen                      alle 528 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1575,7 +1588,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 527 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 528 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

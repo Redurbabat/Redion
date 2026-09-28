@@ -5394,3 +5394,67 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+## §83 · Die Zeitpille und die Balkenkarte: Fahrt, Feder, Startlast (E713, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/zeitpille-und-balken` gegen den Grundstand
+`b3cf1933` (die erste Welle, E698–E706). Chromium von Playwright, 390 × 844
+(`isMobile`, Berührung) und 1440 × 900, hell und dunkel; `test590` mit
+`listen(0)`. Gzip Stufe 6 wie `test388`. Echte Wiederholungen über sieben
+Tage (3 5 2 6 9 7 4, zusammen 36), keine erfundenen Werte.
+
+**Vorher** (Stand `b3cf1933`, `test590` darüber): nach ✕ steht keine Pille
+da, die Uhr läuft weiter (`Zeitmesser.stand().laeuft` ist `true`); das Feld
+schliesst nicht auf Escape; am Telefon ist sein Boden `--bg-schwebend` ohne
+Unschärfe. Kein einziger Lauf las `lw-history` oder `historie(` (0 Dateien
+unter `pruefungen/lauf/`); `zm-feld` lasen drei (`test268`, `test272`,
+`test356`).
+
+**Die Fahrt, gerechnet** (Feder `snappy` = die des Materials aus E706,
+0,36 s, ζ ≈ 0,86, ω ≈ 17,5 /s — die ω ≈ 17 aus der Vermessung des Videos):
+
+```txt
+Pille (Telefon)                246,8 × 44,0 px, unten rechts, über der Leiste
+Karte (Telefon)                300,0 × 296,8 px
+erstes Bild der Karte          246,8 × 44,0 px — die Fläche der Pille (12 %)
+Weg, in Pixeln gerechnet       252 px; Ruhe bei 0,25 px (restDelta = Weg · 0,001)
+über 0…1 gerechnet (verworfen) Ruhe bei 1 % — knapp 3 px Sprung im letzten Bild
+Überblendung Kopie → scharf    Kopie 12–35 % sichtbar, 35–72 % weg; scharf ab 30 %
+bewegt                         nur transform und opacity (test590 §2)
+```
+
+**Start (test388 §5).** 2835 KB gzip über 248 Dateien, Decke 2850 KB
+(21 bestanden, 0 durchgefallen) — gemessen vor den letzten drei kleinen
+Korrekturen (Uhr des Hochzählens, Schatten als Marke, die Wache in
+`auftraege.ts`), die zusammen 0,3 KB gzip dazulegen. Gegen den Grundstand
+wachsen die acht berührten Dateien um 10'205 Bytes gzip (einzeln gemessen,
+unten) — genau die rund 10 KB, die jedem Zweig zugeteilt sind. **Es bleiben rund 15 KB
+bis zur Decke für alle übrigen Zweige der zweiten Welle** — zu wenig für
+fünf weitere Zweige zu je 10 KB; das muss beim Zusammenführen gezählt
+werden (L216, E688).
+
+**Was die Dateien wachsen** (gzip Stufe 6, gegen `b3cf1933`, Bytes):
+
+```txt
+quell/bereiche/wissen/zeitmesser.js       4'290 →   8'571   +4'281
+quell/bereiche/wissen/lernwelt.js        47'833 →  50'287   +2'454
+quell/schale/stil/lernwelt.css           21'103 →  22'624   +1'521
+quell/schale/stil/bausteine.css         167'864 → 169'008   +1'144
+quell/schale/stil/motion.css             49'578 →  49'877     +299
+quell/schale/aufbau/schale.js            77'671 →  77'876     +205
+quell/schale/ueberlagerung/auftraege.js   4'895 →   5'053     +158
+quell/schale/bedienung/motion.js         10'991 →  11'134     +143
+                                                  zusammen +10'205
+```
+
+Gerade an der Grenze von rund 10 KB je Zweig (10'205 Bytes = 9,97 KiB);
+der grösste Teil sind die Begründungen in `zeitmesser.ts`, die mit
+ausgeliefert werden. Die Einzeldatei wächst von 11'783'171 auf 11'818'312
+Bytes (+35'141, ungepackt).
+
+**Filmstreifen** (Wiedergabe ¼ über `Animation.setPlaybackRate`, ein Bild
+alle 100 ms Echtzeit plus Aufnahmezeit, also rund alle 30–45 ms
+Bewegungszeit; `welle2-bilder/zeit/`, nicht eingecheckt, §55.4): Pille →
+Karte und Karte → Pille (Escape), die Balken wachsen, die Wahl wandert von
+„Mi" zu „Sa" — je Telefon und Rechner, hell und dunkel. Das Hochzählen läuft
+in `requestAnimationFrame` und wird von der Wiedergabe ¼ nicht gebremst.

@@ -173,20 +173,53 @@ const Zeitmesser = (() => {
         seite: lauf?.seitenName || ''
     });
     /* ------------------------------------------------------------------ *
-     * Das schwebende Feld
+     * Das schwebende Feld — und die Pille, in die es sich zurückzieht
+     * ------------------------------------------------------------------ *
+     * DIE UHR LIEF UNSICHTBAR (E713): nach ✕ lief sie weiter, und nichts
+     * sagte es. Jetzt zieht sich das Feld in eine dunkle PILLE zurück
+     * („⏱ 24:13 · Seite"); ein Tipp, und sie geht wieder zur Karte auf —
+     * Redurs Video, Szene 02 „EXPAND". Die Fahrt: EINE Feder (RedionSpring
+     * „snappy" wie SelectionFlow, ω ≈ 17,5), nur `transform`/`opacity` als
+     * einmal gerechnete Keyframes, die Unschärfe steht still (verwischte
+     * Kopie, über `opacity` überblendet). Kein Goo: Pille und Karte sind EIN
+     * Körper. Ohne Bewegung: sofort.
      * ------------------------------------------------------------------ */
+    /** Weniger Bewegung — die EINE Frage aus E702, zwei Quellen. */
+    const ruhig = () => {
+        try {
+            if (typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung)
+                return AppEinstellung.wenigBewegung();
+        }
+        catch { /* dann fragt die Seite selbst */ }
+        return document.body?.dataset['bewegung'] === 'ruhig' ||
+            !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    };
+    const zustandVon = (s) => s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit';
+    const artText = (s) => (s.art === 'timer' ? 'Timer' : 'Stoppuhr') + (s.pausiert ? ' · pausiert' : '') +
+        (s.uebersprungenSek >= 60 ? ' · ' + uhrText(s.uebersprungenSek) + ' Schlaf nicht gezählt' : '');
+    /** Der Fortschritt des Timers — nur mit echtem Soll. Die Stoppuhr hat
+     *  keines, also hat sie keinen Balken (nichts versprechen, §33). */
+    const fortschritt = () => lauf && lauf.art === 'timer' && lauf.sollSek > 0
+        ? { soll: Math.round(lauf.sollSek), vergangen: Math.min(Math.round(lauf.sollSek), Math.round(lauf.vergangenSek)) }
+        : null;
+    const fortschrittText = (f) => Math.floor(f.vergangen / 60) + ' von ' + Math.round(f.soll / 60) + ' Minuten';
     const feldHtml = () => {
         const s = stand();
+        const f = fortschritt();
         const liste = sitzungen().slice(0, 3).map(z => `<li>${esc(uhrText(z.dauerSek))} · ${esc(z.seitenName || 'Ohne Seite')}` +
             `${z.art === 'timer' ? ' <i>(Timer)</i>' : ''}</li>`).join('');
         return `<div class="zm-kopf"><b>Zeitmesser</b>` +
-            `<button class="rb zeichen" data-zm="zu" aria-label="Schliessen">✕</button></div>` +
-            `<div class="zm-uhr" aria-live="off">${uhrText(s.sekunden)}</div>` +
+            /* `data-esc-knopf`: diesen Knopf drückt der gemeinsame Escape-Griff
+               (schale.ts, E302), wenn kein Menü und keine Überlagerung offen ist. */
+            `<button class="rb zeichen" data-zm="zu" data-esc-knopf aria-label="Schliessen">✕</button></div>` +
+            /* DIE SEITE IST DER TITEL (E713). `.zm-wo` bleibt der Träger — test268
+               und test356 lesen dort Seite und „Schlaf nicht gezählt". */
             `<p class="zm-wo">${s.laeuft
-                ? (s.art === 'timer' ? 'Timer' : 'Stoppuhr') + ' · ' + esc(s.seite) +
-                    (s.pausiert ? ' · pausiert' : '') +
-                    (s.uebersprungenSek >= 60 ? ' · ' + esc(uhrText(s.uebersprungenSek)) + ' Schlaf nicht gezählt' : '')
+                ? `<b class="zm-titel">${esc(s.seite)}</b><span class="zm-art">${esc(artText(s))}</span>`
                 : 'Misst die Zeit an der offenen Seite.'}</p>` +
+            `<div class="zm-uhr" aria-live="off">${uhrText(s.sekunden)}</div>` +
+            (f ? `<div class="zm-fortschritt" role="progressbar" aria-label="Fortschritt des Timers" aria-valuemin="0"` +
+                ` aria-valuemax="${f.soll}" aria-valuenow="${f.vergangen}" aria-valuetext="${esc(fortschrittText(f))}"><i></i></div>` : '') +
             `<div class="zm-reihe">` +
             `<button class="rb" data-zm="stoppuhr">Stoppuhr</button>` +
             `<button class="rb" data-zm="t5">5 Min</button>` +
@@ -196,58 +229,263 @@ const Zeitmesser = (() => {
                mechanische Dreierblock braucht je Taste eine Rolle, und `data-zm`
                taugt dafür nicht — dort heisst die Starttaste „stoppuhr" wie der
                Knopf eine Reihe höher. Der Klick liest weiterhin nur `data-zm`. */
-            `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit'}">` +
+            `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${zustandVon(s)}">` +
             `<button class="rb haupt" data-rmo-taste="start" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
-            `<button class="rb" data-rmo-taste="pause" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
+            `<button class="rb" data-rmo-taste="pause" data-zm="pause" ${s.laeuft ? '' : 'disabled'}><span class="zm-wort">${s.pausiert ? 'Weiter' : 'Pause'}</span></button>` +
             `<button class="rb" data-rmo-taste="stopp" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
             `</div>` +
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
+    /** Der Balken zeigt den Anteil über `transform` (translateX in seiner
+     *  Spur) — kein `width` je Tick. */
+    const fortschrittSetzen = (wurzel) => {
+        const f = fortschritt();
+        const fuellung = wurzel.querySelector('.zm-fortschritt i');
+        if (f && fuellung)
+            fuellung.style.setProperty('--zm-anteil', String(f.soll ? f.vergangen / f.soll : 0));
+    };
     const zeichneStand = () => {
+        pilleStand();
         const feld = document.querySelector('.zm-feld');
-        if (!feld)
+        const inhalt = feld?.querySelector('.zm-inhalt');
+        if (!feld || !inhalt)
             return;
-        /* Beim Tick bleiben die Tasten samt Fokus erhalten. Nur ein echter
-           Zustandswechsel zeichnet die Steuerung neu. */
         const next = document.createElement('div');
         next.innerHTML = feldHtml();
-        const currentState = feld.querySelector('.rmo-transport')?.getAttribute('data-zustand');
+        const currentState = inhalt.querySelector('.rmo-transport')?.getAttribute('data-zustand');
         const nextState = next.querySelector('.rmo-transport')?.getAttribute('data-zustand');
-        if (currentState === nextState) {
-            for (const selector of ['.zm-uhr', '.zm-wo']) {
-                const target = feld.querySelector(selector);
+        const laufend = (z) => z === 'laeuft' || z === 'pausiert';
+        /* Beim Tick bleiben die Tasten samt Fokus erhalten, seit E713 auch bei
+           Pause ↔ Weiter (derselbe Knopf tauscht Wort und Zeichen). Nur ein
+           Wechsel der Gestalt zeichnet die Steuerung neu. */
+        const gleicheGestalt = (currentState === nextState || (laufend(currentState) && laufend(nextState))) &&
+            !!inhalt.querySelector('.zm-fortschritt') === !!next.querySelector('.zm-fortschritt') &&
+            !!inhalt.querySelector('.zm-titel') === !!next.querySelector('.zm-titel');
+        if (gleicheGestalt) {
+            const texte = next.querySelector('.zm-titel') ? ['.zm-uhr', '.zm-titel', '.zm-art', '.zm-wort'] : ['.zm-uhr', '.zm-wo', '.zm-wort'];
+            for (const selector of texte) {
+                const target = inhalt.querySelector(selector);
                 const text = next.querySelector(selector)?.textContent || '';
                 if (target && target.textContent !== text)
                     target.textContent = text;
             }
+            const leiste = inhalt.querySelector('.zm-fortschritt');
+            const neueLeiste = next.querySelector('.zm-fortschritt');
+            if (leiste && neueLeiste)
+                for (const name of ['aria-valuenow', 'aria-valuetext', 'aria-valuemax']) {
+                    const wert = neueLeiste.getAttribute(name) || '';
+                    if (leiste.getAttribute(name) !== wert)
+                        leiste.setAttribute(name, wert);
+                }
+            fortschrittSetzen(inhalt);
+            const transport = inhalt.querySelector('.rmo-transport');
+            if (transport && nextState && transport.getAttribute('data-zustand') !== nextState)
+                transport.setAttribute('data-zustand', nextState);
             return;
         }
         const focused = feld.contains(document.activeElement)
             ? document.activeElement.dataset.zm : undefined;
-        feld.replaceChildren(...Array.from(next.childNodes));
+        inhalt.replaceChildren(...Array.from(next.childNodes));
+        fortschrittSetzen(inhalt);
         if (focused)
-            feld.querySelector(`.rmo-transport [data-zm="${focused}"]:not(:disabled)`)?.focus();
+            inhalt.querySelector(`[data-zm="${focused}"]:not(:disabled)`)?.focus();
     };
-    /** Das Feld öffnen oder schliessen. Die Uhr läuft unabhängig davon
-     *  weiter — schliessen heisst „aus dem Blick", nicht „aus". */
-    const panel = () => {
-        const offen = document.querySelector('.zm-feld');
-        if (offen) {
-            offen.remove();
+    /* ── Die Pille ─────────────────────────────────────────────────────── */
+    /** Solange eine Fahrt läuft, schaltet der Tick die Pille nicht um. */
+    let fahrt = null;
+    const pilleBauen = () => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.id = 'zm-pille';
+        b.className = 'zm-pille';
+        b.innerHTML = '<span class="zm-pille-lampe" aria-hidden="true"></span>' +
+            '<span class="zm-pille-zeichen" data-sym="clock" data-sym-groesse="16" aria-hidden="true">⏱</span>' +
+            '<b class="zm-pille-uhr"></b><span class="zm-pille-trenner" aria-hidden="true">·</span>' +
+            '<span class="zm-pille-seite"></span>';
+        try {
+            globalThis.Register?.symbole?.fuelle?.(b);
+        }
+        catch { /* dann bleibt ⏱ stehen */ }
+        b.addEventListener('click', () => oeffnen(true));
+        return b;
+    };
+    /** Pille zeigen, wenn die Uhr läuft und das Feld zu ist — sonst nicht. */
+    const pilleStand = () => {
+        let pille = document.getElementById('zm-pille');
+        if (!lauf) {
+            if (pille && !fahrt)
+                pille.remove();
             return;
         }
+        const feld = document.querySelector('.zm-feld');
+        let neu = false;
+        if (!pille) {
+            if (feld)
+                return;
+            pille = pilleBauen();
+            document.body.appendChild(pille);
+            neu = true;
+        }
+        if (!fahrt)
+            pille.hidden = !!feld;
+        const s = stand();
+        const uhr = uhrText(s.sekunden);
+        const setze = (wahl, text) => {
+            const e = pille.querySelector(wahl);
+            if (e && e.textContent !== text)
+                e.textContent = text;
+        };
+        setze('.zm-pille-uhr', uhr);
+        setze('.zm-pille-seite', s.seite);
+        const zustand = zustandVon(s);
+        if (pille.dataset['zustand'] !== zustand)
+            pille.dataset['zustand'] = zustand;
+        const name = 'Zeitmesser: ' + uhr + (s.art === 'timer' ? ' übrig' : ' gemessen') + ' an „' + s.seite + '"' +
+            (s.pausiert ? ', pausiert' : '') + ' — öffnen';
+        if (pille.getAttribute('aria-label') !== name)
+            pille.setAttribute('aria-label', name);
+        /* Eine neue Pille (etwa nach dem Neuladen) kommt sanft herein. */
+        if (neu && !pille.hidden && !ruhig()) {
+            const feder = typeof RedionSpring !== 'undefined' ? RedionSpring.token('smooth') : null;
+            if (feder && feder.duration > 1)
+                pille.animate([{ opacity: 0, transform: 'translateY(8px) scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+        }
+    };
+    const kasten = (e) => {
+        const r = e.getBoundingClientRect();
+        return { left: r.left, top: r.top, width: r.width, height: r.height };
+    };
+    /** Die Bahn eines Körpers mit Layout-Kasten `box` von `von` nach `nach`
+     *  als `transform`-Keyframes, auf der Feder des Materials („snappy"). */
+    const bahn = (box, von, nach) => {
+        const feder = RedionSpring.preset('snappy');
+        /* In Pixeln gerechnet: über 0…1 ruhte sie bei 1 % (Sprung am Ende). */
+        const weit = Math.max(1, Math.abs(nach.left - von.left), Math.abs(nach.top - von.top), Math.abs(nach.width - von.width), Math.abs(nach.height - von.height));
+        const roh = RedionSpring.sample(feder, 0, weit, 0, 8);
+        const lauf01 = { values: roh.values.map(v => v / weit), duration: roh.duration };
+        const bilder = lauf01.values.map(p => {
+            const l = von.left + (nach.left - von.left) * p;
+            const t = von.top + (nach.top - von.top) * p;
+            const b = von.width + (nach.width - von.width) * p;
+            const h = von.height + (nach.height - von.height) * p;
+            return { transform: 'translate(' + (l - box.left).toFixed(2) + 'px,' + (t - box.top).toFixed(2) + 'px) scale(' +
+                    (b / box.width).toFixed(4) + ',' + (h / box.height).toFixed(4) + ')' };
+        });
+        return { bilder, dauer: lauf01.duration };
+    };
+    /** Eine Überblendung über Stützpunkte [Anteil, Deckkraft]. */
+    const blende = (e, punkte, dauer) => e.animate(punkte.map(([offset, opacity]) => ({ offset, opacity })), { duration: dauer, easing: 'linear', fill: 'both' });
+    /** Eine laufende Fahrt sofort zu Ende bringen (neuer Tipp mitten drin). */
+    const fahrtBeenden = () => { const f = fahrt; fahrt = null; f?.ende(); };
+    /** Aufräumen, wenn alle Bahnen am Ziel sind (nach ihrer eigenen Uhr). */
+    const nachDerFahrt = (laeufe, ende) => {
+        Promise.all(laeufe.map(a => a.finished))
+            .then(() => { if (fahrt?.ende === ende)
+            fahrtBeenden(); })
+            .catch(() => { });
+    };
+    const aufgehen = (feld, pille, von) => {
+        const inhalt = feld.querySelector('.zm-inhalt');
+        const nach = kasten(feld);
+        if (!inhalt || !nach.width || !von.width) {
+            pille.hidden = true;
+            return;
+        }
+        const karte = bahn(nach, von, nach);
+        const tropfen = bahn(von, von, nach);
+        const d = karte.dauer;
+        /* Die verwischte Kopie: statisch unscharf, ohne Knöpfe und Namen. */
+        const geist = inhalt.cloneNode(true);
+        geist.className = 'zm-inhalt zm-geist';
+        geist.setAttribute('aria-hidden', 'true');
+        geist.inert = true;
+        geist.querySelectorAll('[data-zm], [role], [data-rmo-taste]').forEach(x => {
+            x.removeAttribute('data-zm');
+            x.removeAttribute('role');
+            x.removeAttribute('data-rmo-taste');
+        });
+        geist.querySelectorAll('.rmo-transport').forEach(x => x.classList.remove('rmo-transport'));
+        feld.appendChild(geist);
+        feld.style.transformOrigin = '0 0';
+        pille.style.transformOrigin = '0 0';
+        pille.classList.add('zm-fliegt');
+        const laeufe = [
+            feld.animate(karte.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(feld, [[0, 0], [0.08, 0], [0.4, 1], [1, 1]], d),
+            blende(inhalt, [[0, 0], [0.3, 0], [0.72, 1], [1, 1]], d),
+            blende(geist, [[0, 0], [0.12, 0], [0.35, 1], [0.72, 0], [1, 0]], d),
+            pille.animate(tropfen.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(pille, [[0, 1], [0.15, 1], [0.5, 0], [1, 0]], d)
+        ];
+        const ende = () => {
+            laeufe.forEach(a => a.cancel());
+            geist.remove();
+            feld.style.removeProperty('transform-origin');
+            pille.style.removeProperty('transform-origin');
+            pille.classList.remove('zm-fliegt');
+            pille.hidden = true;
+            if (fahrt?.ende === ende)
+                fahrt = null;
+        };
+        fahrt = { ende };
+        nachDerFahrt(laeufe, ende);
+    };
+    const zusammenziehen = (feld, pille) => {
+        const von = kasten(feld);
+        pille.hidden = false;
+        const nach = kasten(pille);
+        const inhalt = feld.querySelector('.zm-inhalt');
+        if (!nach.width || !von.width) {
+            feld.remove();
+            return;
+        }
+        const karte = bahn(von, von, nach);
+        const tropfen = bahn(nach, von, nach);
+        const d = karte.dauer;
+        feld.style.transformOrigin = '0 0';
+        pille.style.transformOrigin = '0 0';
+        pille.classList.add('zm-fliegt');
+        const laeufe = [
+            feld.animate(karte.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(feld, [[0, 1], [0.18, 1], [0.5, 0], [1, 0]], d),
+            pille.animate(tropfen.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(pille, [[0, 0], [0.12, 0], [0.45, 1], [1, 1]], d)
+        ];
+        if (inhalt)
+            laeufe.push(blende(inhalt, [[0, 1], [0.2, 0], [1, 0]], d));
+        /* Die Schrift der Pille kommt zurück, sobald sie fast ihre Grösse hat. */
+        for (const kind of Array.from(pille.children))
+            laeufe.push(blende(kind, [[0, 0], [0.55, 0], [0.85, 1], [1, 1]], d));
+        const ende = () => {
+            laeufe.forEach(a => a.cancel());
+            feld.remove();
+            pille.style.removeProperty('transform-origin');
+            pille.classList.remove('zm-fliegt');
+            if (fahrt?.ende === ende)
+                fahrt = null;
+            pilleStand();
+        };
+        fahrt = { ende };
+        nachDerFahrt(laeufe, ende);
+    };
+    /* ── Öffnen und schliessen ─────────────────────────────────────────── */
+    let vorherFokus = null;
+    const feldBauen = () => {
         const feld = document.createElement('div');
-        feld.className = 'zm-feld';
+        feld.className = 'zm-feld zm-karte';
         feld.setAttribute('role', 'dialog');
         feld.setAttribute('aria-label', 'Zeitmesser');
-        feld.innerHTML = feldHtml();
+        const inhalt = document.createElement('div');
+        inhalt.className = 'zm-inhalt';
+        inhalt.innerHTML = feldHtml();
+        feld.appendChild(inhalt);
         feld.addEventListener('click', e => {
             const b = e.target.closest('[data-zm]');
-            if (!b)
+            if (!b || !inhalt.contains(b))
                 return;
             const was = b.dataset['zm'];
             if (was === 'zu') {
-                feld.remove();
+                schliessen();
                 return;
             }
             if (was === 'stoppuhr')
@@ -262,6 +500,83 @@ const Zeitmesser = (() => {
                 return stopp();
         });
         document.body.appendChild(feld);
+        fortschrittSetzen(inhalt);
+        return feld;
+    };
+    /** Das Feld aufmachen — aus der Pille heraus, wenn es eine gibt. */
+    const oeffnen = (ausPille) => {
+        fahrtBeenden();
+        document.querySelectorAll('.zm-karte.zm-geht').forEach(x => x.remove());
+        if (document.querySelector('.zm-feld'))
+            return;
+        const aktiv = document.activeElement;
+        vorherFokus = aktiv instanceof HTMLElement && aktiv !== document.body && aktiv.id !== 'zm-pille' ? aktiv : null;
+        const pille = document.getElementById('zm-pille');
+        const von = pille && !pille.hidden ? kasten(pille) : null;
+        const feld = feldBauen();
+        if (pille && von && !ruhig() && typeof RedionSpring !== 'undefined')
+            aufgehen(feld, pille, von);
+        else {
+            if (pille)
+                pille.hidden = true;
+            /* Ohne Pille (aus dem Menü): die Karte steigt kurz auf. */
+            if (!pille && !ruhig() && typeof RedionSpring !== 'undefined') {
+                const feder = RedionSpring.token('snappy');
+                if (feder.duration > 1)
+                    feld.animate([{ opacity: 0, transform: 'translateY(10px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+            }
+        }
+        /* Aus der Pille geht der Fokus hinein. */
+        if (ausPille) {
+            const ziel = feld.querySelector('[data-zm="pause"]:not(:disabled)') ||
+                feld.querySelector('[data-zm="zu"]');
+            ziel?.focus({ preventScroll: true });
+        }
+    };
+    /** Das Feld schliessen. Läuft die Uhr, zieht es sich in die Pille
+     *  zurück, und der Fokus geht dorthin; sonst ist es einfach fort. */
+    const schliessen = () => {
+        fahrtBeenden();
+        const feld = document.querySelector('.zm-feld');
+        if (!feld)
+            return;
+        const fokusDrin = feld.contains(document.activeElement) || document.activeElement === document.body;
+        /* Sofort nicht mehr „das Feld" — die Karte ist nur noch ihr Abgang. */
+        feld.classList.remove('zm-feld');
+        feld.classList.add('zm-geht');
+        feld.removeAttribute('role');
+        feld.setAttribute('aria-hidden', 'true');
+        feld.inert = true;
+        if (!lauf) {
+            feld.remove();
+            pilleStand();
+            if (fokusDrin && vorherFokus?.isConnected)
+                vorherFokus.focus({ preventScroll: true });
+            return;
+        }
+        pilleStand();
+        const pille = document.getElementById('zm-pille');
+        if (!pille) {
+            feld.remove();
+            return;
+        }
+        if (ruhig() || typeof RedionSpring === 'undefined') {
+            feld.remove();
+            pille.hidden = false;
+        }
+        else
+            zusammenziehen(feld, pille);
+        if (fokusDrin)
+            pille.focus({ preventScroll: true });
+    };
+    /** Das Feld öffnen oder schliessen. Die Uhr läuft unabhängig davon
+     *  weiter — schliessen heisst „aus dem Blick", nicht „aus". */
+    const panel = () => {
+        if (document.querySelector('.zm-feld')) {
+            schliessen();
+            return;
+        }
+        oeffnen(false);
     };
     return { panel, start, pause, stopp, stand, wiederaufnehmen };
 })();

@@ -1,5 +1,32 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September 2026 · E713 · Die Zeitpille und die Balkenkarte
+
+**Redur:** um ca. 22:05 das Video „LIQUID GLASS" und dazu „Schau mal das
+auch an ich will das auch haben"; um ca. 22:10 „… bessere übergagnge
+besssere efeckten , bessere oberfläsche alles …".
+
+**Gefunden:** Nach ✕ lief der Zeitmesser unsichtbar weiter
+(`Zeitmesser.stand()` sagte `laeuft:true`, der Schirm nichts); das Feld
+schloss nicht auf Escape und liess am Telefon den Seitentext durchscheinen.
+Der Lernverlauf („Letzte 7 Tage", „Wochenverlauf", „Monatsverlauf") war
+eine Reihe stummer `<progress>`, und kein Lauf las ihn.
+
+**Gebaut:** eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste,
+solange die Uhr läuft und das Feld zu ist; ein Tipp lässt die Karte aus ihr
+wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als
+stille Kopie), ✕ und Escape ziehen sie zurück, der Fokus folgt. Die Karte
+hat die Seite als Titel, beim Timer einen echten Fortschritt, Pause ↔
+Weiter tauscht im selben Knopf (Zeichen-Tausch wie im Kit); am Telefon
+deckend, am Rechner Glas. Der eine Escape-Griff kennt schwebende Felder
+(`data-esc-knopf`). Der Lernverlauf ist eine Karte: die Summe zählt hoch,
+die Balken wachsen einmal, ein Tag lässt sich mit Tipp und Tasten wählen —
+das Material aus E706 gleitet dahinter, ein Hinweis nennt „Fr · 9
+Wiederholungen". Ohne Bewegung steht alles sofort.
+
+**Geprüft:** `test590` (neu, rot zuerst), die Gegenproben und die Nachbarn
+stehen in E713.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

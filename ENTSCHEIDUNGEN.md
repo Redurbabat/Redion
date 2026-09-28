@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-686 Entscheidungen, E1 bis E706 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E713 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E714** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -749,6 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E713** — Die Zeitpille und die Balkenkarte (Redur: „Schau mal das auch an ich will das auch haben", Video „LIQUID GLASS", Szenen 02 und 06): läuft der Zeitmesser bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste; ein Tipp lässt die Karte aus ihr wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als stille Kopie), Escape und ✕ ziehen sie zurück; die Seite ist der Titel, der Timer hat einen echten Fortschritt, Pause ↔ Weiter tauscht im selben Knopf; am Telefon deckend. Der Lernverlauf wird eine Karte: Balken wachsen einmal, die Summe zählt hoch, ein Tag lässt sich wählen (Material aus E706, Hinweis, Pfeile) — `test590`
 
 ---
 
@@ -19907,6 +19908,13 @@ stehen → §3, riss erwartbar die Folgeschritte mit; Tinte immer dunkel
 E268 — Der Zeitmesser: Lernzeit messen statt schätzen
 ================================================================================
 
+> **Ergänzt durch E713 (28. September 2026).** Schliessen heisst weiter
+> „aus dem Blick, nicht aus" — aber nicht mehr unsichtbar: läuft die Uhr
+> bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über
+> der unteren Leiste, und ein Tipp lässt das Feld aus ihr wieder aufgehen.
+> Die Seite ist der Titel, der Timer hat einen Fortschritt, Pause ↔ Weiter
+> tauscht im selben Knopf; Escape schliesst das Feld (`test590`).
+
 Der »Time Keeper« aus Redurs GoodNotes-Dossier — und zugleich die
 Einlösung eines alten Punktes aus AUFGABEN.md: „Pomodoro/Lernzeit echt
 messen statt schätzen". Bis hierher gab es zwei Uhren, beide fest an
@@ -23604,6 +23612,13 @@ typecheck grün · sw v63 · Einzeldatei 7706 KB.
 
 E302 — Die Lücke war falsch: den Escape-Griff gibt es längst
 ================================================================================
+
+> **Ergänzt durch E713 (28. September 2026).** Der eine Griff kennt jetzt
+> auch schwebende Felder, die keine `.overlay` sind: ihr Schliessen-Knopf
+> trägt `data-esc-knopf`, und der Griff drückt ihn — nur, wenn kein Menü
+> und keine Überlagerung offen ist UND der Fokus im Feld steht oder
+> nirgends. Weiterhin EIN Griff (`test296` §2, `test590`).
+
 1. September 2026
 
 L105 Punkt 1 sagte: „Redion hat KEINEN gemeinsamen Escape-Griff für
@@ -43173,6 +43188,11 @@ E535 — Sieben Vorlagenblöcke in einem Zug
 > sie hier steht. Block 06: der Verlaufsschalter ist AUS grau (Deckkraft
 > .12, entsättigt) und bekommt seinen Schimmer unter Zeiger und Fokus
 > zurück; AN und die einmalige Bewegung beim Umschalten bleiben.
+>
+> **Ergänzt durch E713 (28. September 2026).** Block 13, der Dreierblock
+> des Zeitmessers: die Pausentaste trägt beide Figuren (Pause und Weiter)
+> und tauscht sie über `data-zustand` im selben Knopf, statt neu gezeichnet
+> zu werden — Fokus und Knoten bleiben (`test590`).
 
 Der Bau, den E533 beschrieb und der beim ersten Anlauf am Sitzungslimit
 starb. Diesmal in kleineren Wellen: ein Agent je Vorlagenblock, jeder auf
@@ -58499,3 +58519,222 @@ Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
 statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
 alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 `claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+## E713 — Die Zeitpille und die Balkenkarte: der Zeitmesser zieht sich in eine Pille zurück und geht aus ihr wieder auf, der Lernverlauf wird eine Karte zum Wählen
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video „LIQUID
+GLASS" am 27. September ca. 22:05; Auftrag ca. 16:45, Fragebogen ca. 21:45,
+ca. 21:47, ca. 21:49, ca. 22:10) · **ergänzt** E268 (Zeitmesser), E535
+(Dreierblock) und E302 (der eine Escape-Griff) · **Wächter:** `test590` ·
+**Zweig** `claude/zeitpille-und-balken`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC   im Fragebogen, Federn in Redion selbst: „Wie im UI-Kit
+                (Empfohlen)"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:05 UTC   schickt das Video „LIQUID GLASS" (16 s) und schreibt:
+                „Schau mal das auch an ich will das auch haben"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Zwei Szenen des Videos haben in Redion einen echten Ort, und an
+beiden fehlte genau das, was das Video zeigt:
+
+- **Szene 02 „EXPAND"** — eine dunkle Pille „läuft gerade", die zur Karte
+  aufgeht. Redion hat keinen Vorleser, aber den ZEITMESSER (E268). Nach ✕
+  lief seine Uhr weiter, und nichts auf dem Schirm sagte es: gemessen
+  meldete `Zeitmesser.stand()` `laeuft:true` mit 1498 s Rest bei leerem
+  Bildschirm. Das Feld war `role=dialog`, aber Escape liess es stehen
+  (§38) — der gemeinsame Griff (E302) kennt nur `.menu` und `.overlay`.
+  Und am Telefon schien der Seitentext durch seine Fläche: `--bg-schwebend`
+  (72 %) ohne Weichzeichner, das Muster, das E695 verbietet.
+- **Szene 06 „MEASURE"** — eine Karte mit Balken, die einmal wachsen, einer
+  Zahl, die hochzählt, und einem gewählten Tag mit Hinweis. In Redion ist
+  das der Verlauf der Lernwelt (`historie()`: „Letzte 7 Tage" im
+  Lernzentrum, „Wochenverlauf" und „Monatsverlauf" im Fortschritt). Dort
+  standen sieben (dreissig) hochkant gestellte `<progress>` — nichts
+  bewegte sich, nichts liess sich wählen, keine Summe. Kein einziger Lauf
+  las `lw-history`.
+
+**Was entschieden wurde.**
+
+1. **Die Pille.** Läuft die Uhr und ist das Feld zu, steht unten rechts
+   eine dunkle Pille „⏱ 24:13 · Seite" — über der unteren Leiste, nicht auf
+   ihr (`--hunten`), 44 px hoch (§37), ein Knopf mit Namen („Zeitmesser:
+   24:13 übrig an „Seite" — öffnen"). Dunkel in beiden Modi wie im Video;
+   sie RUHT, also ist sie deckend und kein Glas (E703: im Ruhen höchstens
+   drei Glasflächen). Die Lampe darin atmet nur, solange die Uhr läuft —
+   dieselbe Lampe und derselbe 4-s-Atem wie am Dreierblock (E535);
+   angehalten steht sie still und wird bernsteinfarben. Ohne laufende Uhr
+   gibt es keine Pille. Nach dem Neuladen (E364) kommt sie mit der Uhr
+   zurück.
+2. **Der Tropfen wird Karte.** Ein Tipp auf die Pille öffnet das Feld AUS
+   ihr: die Karte wächst aus der Pille, die Pille wächst mit ihr und
+   verblasst — EIN Körper, darum kein Goo-Filter (es trennt sich nichts,
+   es fliesst nichts zusammen). Die Feder ist die des wandernden Materials
+   (Kit „snappy", `RedionSpring` wie `SelectionFlow`, E702/E706): ω =
+   2π/0,36 s ≈ 17,5 — genau die ω≈17 aus der Vermessung des Videos. Nur
+   `transform` und `opacity`, die Bahn einmal gerechnet und als Keyframes
+   übergeben (die Lehre aus E646). Die Unschärfe des Videos („unscharf,
+   dann scharf") wird NICHT animiert: eine statisch verwischte Kopie des
+   Inhalts blendet über `opacity` in den scharfen über. Schliessen (✕ oder
+   Escape) fährt denselben Weg zurück in die Pille, und der Fokus geht
+   dorthin. Aus dem Menü (Werkzeuge → Zeitmesser, `Register.module`) steigt
+   die Karte ohne Pille kurz auf.
+3. **Die Karte.** Die Seite ist der Titel. Der Timer hat einen Fortschritt
+   (`role=progressbar`, Sekunden von Soll, „3 von 25 Minuten"), die
+   Stoppuhr keinen — sie hat kein Soll, und ein Balken ohne Soll wäre eine
+   Behauptung (§33). Pause ↔ Weiter wechselt AN ORT UND STELLE: derselbe
+   Knopf behält Fokus und Knoten, das Wort tauscht, und die Figur tauscht
+   wie das SymbolSwap des Kits (die Pausentaste trägt seit E713 beide
+   Figuren, `motion.css` blendet über `data-zustand`). Beenden nimmt die
+   Pille mit. Am Telefon ist die Karte deckend (`--bg-card`), am Rechner
+   dichtes Glas mit Unschärfe unter `@supports` (E695).
+4. **Escape im EINEN Griff.** Der gemeinsame Escape-Griff (schale.ts,
+   E302) kennt jetzt schwebende Felder, die keine Überlagerung sind: ihr
+   Schliessen-Knopf trägt `data-esc-knopf`, und der Griff drückt ihn — nur,
+   wenn kein Menü und keine Überlagerung offen ist UND der Fokus im Feld
+   steht oder nirgends. Wer im Text Escape drückt, meint den Text. Kein
+   zweiter Griff (`test296` §2).
+5. **Die Balkenkarte.** Der Verlauf ist eine Gruppe mit Namen; jeder Tag
+   ist ein Knopf und behält seinen Namen „Datum: Zahl" (jetzt mit dem Wort
+   „Wiederholungen"). In Ruhe tragen die Balken den Akzent leise (38 %),
+   der gewählte trägt ihn voll — der Akzent sagt „gewählt", nicht mehr. Die Balken wachsen EINMAL beim Ankommen — nicht über
+   `height` und nicht über `scaleY` (das stauchte die runden Ecken), sondern
+   mit `translateY` aus einer Säule, die sie abschneidet; 35 ms versetzt,
+   auf `--feder-sanft` (ohne Überschwingen, ein Balken darf nicht vom Boden
+   abheben). Ein Tipp wählt einen Tag: der Balken wird Akzent (eine zweite
+   Schicht über `opacity`), das Material aus E706 gleitet dahinter
+   (`SelectionFlow.folge`, gedehnt zwischen Nachbarn), und ein Hinweis
+   „Fr · 9 Wiederholungen" gleitet mit, fest in der Höhe und in der Karte
+   geklemmt. Pfeile, Pos1 und Ende wandern; die Reihe hat EINEN Tabstopp
+   (wie `Segment`, E425). Die Karte STEHT, darum Lichtkante und ein
+   einmaliger Glanz, aber keine Unschärfe (E703); Glas trägt nur der
+   schwebende Hinweis.
+6. **Die Zahl zählt hoch.** Über dem Verlauf steht die Summe genau dieser
+   Balken („36 Wiederholungen in 7 Tagen") und zählt einmal hoch, v =
+   N·(1 − e^(−7t)) wie im Video, und steht am Ende genau auf N. Die
+   Kennzahlen darüber (Lernzeit, Streak, „Wiederholungen diese Woche")
+   rollen ihre Ziffern seit E531 schon wie ein Zählwerk (`rmo-digit-roll`)
+   — ein zweites Hochzählen daneben wäre dieselbe Bewegung zweimal (§8).
+7. **Ohne Bewegung** (System ODER „Ruhige Darstellung", die EINE Frage aus
+   E702): die Karte ist sofort da, keine Fahrt; die Balken stehen, die
+   Summe steht, kein Glanz. Der Glanz ist ein `::after` — die ruhige Sperre
+   in `bausteine.css` erfasst `::after` nicht, darum steht
+   `body:not([data-bewegung="ruhig"])` an der Regel selbst.
+
+**Warum.** Redur hat das Video geschickt, und an beiden Orten fehlte etwas
+Echtes: eine Uhr, die man vergisst, weil man sie nicht sieht, und ein
+Verlauf, den man nicht befragen kann. Die Bewegung ist hier Auskunft, nicht
+Zierde: die Pille SAGT, dass die Uhr läuft; die Fahrt zeigt, wohin das Feld
+geht und woher es kommt; der gewählte Balken nennt seine Zahl.
+
+**Was war die Alternative?**
+- *Als Insel (React, E699).* Nein: die Pille erscheint nach dem Neuladen
+  ohne Zutun — R1 aus E699 sagt, beim Start lädt nichts React. Dieselbe
+  Technik in Redions eigenem TypeScript kostet 10 KB statt 68 KB.
+- *`SelectionFlow.fliege` für die Fahrt.* Es setzt Breite und Höhe des
+  fliegenden Elements auf das ZIEL — für die Pille hiesse das: ihre Schrift
+  bricht in Kartenbreite um und springt im ersten Bild. Die Bahn wird darum
+  hier aus derselben Feder gerechnet, der Kasten bleibt, wo er ist.
+- *Ein Goo-Filter wie beim flüssigen Löschen.* Nicht nötig: hier trennt
+  sich nichts. Ein Filter, der nichts verschmilzt, wäre nur Kosten.
+- *Glas mit Unschärfe auch auf der Balkenkarte.* E703 zieht die Grenze:
+  was steht, bleibt deckend. Sie bekommt das Gesicht von Glas (Kante,
+  Glanz), die Unschärfe bekommt nur, was schwebt.
+- *Der Tondialog der Zeitmarken (`audioRefSpielen`) in derselben Pille.*
+  Er gehört zum Editor, die Pille zum Zeitmesser — zwei Bereiche, die sich
+  nicht kennen dürfen (§5 Regel 1). Das braucht eine gemeinsame „läuft"-
+  Pille in der Schale; offen in L234.
+
+**Was kostet es?** Beim Start 10,0 KB gzip mehr (`test388` §5: 2835 KB über
+248 Dateien, Decke 2850 KB — messungen §83), die Einzeldatei 35 KB mehr
+(11'818'312 Bytes). Solange eine Uhr läuft, steht unten rechts ein Knopf mehr — das
+ist der Zweck. Die Pausentaste wird nicht mehr neu gebaut; die Wischmaske
+der Starttaste läuft darum auch bei „Weiter" einmal (ein echter
+Zustandswechsel, keine Schleife im Leerlauf, E528).
+
+**Gemessen, bevor gebaut wurde** (messungen.md §83): die Bilder des
+Szenenplans (Zeitmesser offen und nach ✕; der Wochenverlauf, am Telefon und
+am Rechner), `Zeitmesser.stand()` nach ✕, die Zahl der Läufe, die
+`lw-history` lesen (0), und die Startlast der sieben berührten Dateien.
+
+**Gefunden auf dem Weg.**
+
+- `RedionSpring.sample` ruht bei einem Hundertstel des Weges
+  (`restDelta = max(0,01, Weg·0,001)`). Über 0…1 gerechnet heisst das: die
+  letzten 1 % springen — bei 280 px Grössenwechsel knapp 3 px im letzten
+  Bild. `SelectionFlow` rechnet in Pixeln und hat das Problem nicht; die
+  Fahrt hier jetzt auch (Weg in px, dann geteilt: letzter Schritt 0,03 px).
+- Die erste Fassung liess die Füllung des Fortschritts jede Sekunde 500 ms
+  lang fahren (`transition` auf `transform`) — bei 25 Minuten ein Schritt
+  von 0,2 px, aber jede Sekunde eine laufende Animation: `test590` §2
+  („nach der Fahrt steht sie ruhig") war rot. Der Übergang ist fort; die
+  Füllung steht über `transform`, ohne Fahrt.
+- Im Filmstreifen stand im Monatsverlauf „−3,29e+24" statt einer Zahl:
+  das Hochzählen nahm `performance.now()` als Beginn, der Zeitstempel von
+  `requestAnimationFrame` lag unter gebremster Wiedergabe Sekunden davor,
+  und e^(−7t) wuchs bei negativem `t` ins Riesige. Jetzt ist der Beginn
+  das erste Bild, und `t` bleibt in 0…1.
+- `test436` §2 wurde auf dem Zweig rot („Cannot read properties of null
+  (reading 'querySelector')"), auf dem Grundstand nie: `auffrischen()` in
+  `auftraege.ts` prüfte das Fenster VOR dem `await Auftraege.offen()` und
+  griff danach blind zu — schliesst jemand das Fenster in dieser Lücke, gibt
+  es einen Fehler. Ein Wettlauf, den der Zweig nur öfter trifft; die Wache
+  steht jetzt nach dem `await` (`fenster?.`).
+- `test362` (die Decke der rohen Masse) war rot: der Schatten des
+  Hinweises trug ein rohes `16px` (271 statt 270). Er nimmt jetzt
+  `--shadow-2` — dieselbe Tiefe je Modus, keine neue rohe Zahl.
+- Der alte Text am Dreierblock (`motion.css`, „das Feld wird bei jedem
+  echten Zustandswechsel neu gezeichnet") stimmt seit E713 nur noch für
+  bereit ↔ läuft; der Satz ist ergänzt.
+
+**Gegenproben** — jede Verbiegung in `quell/`, `test590` darüber, dann
+zurückgeholt:
+
+- G1 der Escape-Zweig im gemeinsamen Griff entfernt: §3 rot (36/39 — das
+  Feld bleibt offen, keine Pille, kein Fokus).
+- G2 die Karte am Telefon wieder `--bg-schwebend`: §5 rot (38/39).
+- G3 Pause ↔ Weiter zeichnet die Reihe wieder neu: §4 rot („gleich":
+  false — ein neuer Knopf).
+- G4 ohne Bewegung wird trotzdem gefahren: §6 rot in beiden Fällen (2
+  laufende Animationen, die Karte bei 0,82 × 0,16 im ersten Bild).
+- G5 keine Pille: §1 rot (16/24, fünf Zusagen, dann bricht §2 ab).
+- G6 die Summe zählt nicht hoch: §9 rot („36" schon im ersten Blick).
+- G7 die Balken wachsen nicht: §7 rot (0 Animationen).
+- G8 der Hinweis wird nicht in der Karte geklemmt: §8 rot („drin": false).
+- G9 die Füllung des Fortschritts fährt wieder jede Sekunde: §2 rot („nach
+  der Fahrt steht sie ruhig").
+Alle neun zurückgeholt; `test590` danach 39/39 (zweimal, zuletzt nach dem
+Neubau von 15:04).
+
+**Geprüft:** `test590` 39/39 (rot auf `b3cf1933`: 4 von 17 —
+die Pille fehlt, §2–§5 und §8–§9 brechen ab). Nachbarn über `alle.mts`
+unter der Sperre: 67 126 143 170 202 206 208 211 217 218 220 222 223 224
+245 247 259 262 268 272 296 305 318 341 353 356 362 387 390 412 424 436
+494 547 565 567 — 33 von 36 grün; rot `test247` (zwei Zusagen zum
+gezogenen Strich, auf `b3cf1933` genauso rot: fremd, aus E704), `test362`
+(ein rohes `16px`, siehe oben — danach 18/18) und `test436` (die Auffrischung
+im Auftragsfenster, siehe oben — auf dem Zweig drei von vier Läufen rot, auf
+dem Grundstand vier von vier grün; nach der Wache 71/71, mit 202 und 208
+nachgelaufen). `test388` 21/21 (2835 KB). Ohne Browser: 87 105 109 225 290
+298 401 402 410 537 549 550 grün.
+
+**Nicht in diesem Bogen** (L234): der Ton der Zeitmarken und die laufende
+Besprechung in derselben Pille (eine gemeinsame „läuft"-Pille in der
+Schale); ein Toast, der am Telefon über die Pille rückt, statt neben ihr zu
+stehen; Wischen über die Balken (heute Tipp und Tasten).

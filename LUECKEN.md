@@ -8348,6 +8348,42 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L234 · Die „läuft"-Pille gibt es nur für den Zeitmesser — der Ton der Zeitmarken läuft weiter unsichtbar — 28. September 2026
+
+**Gefunden beim Bau von E713.** Redurs Video „LIQUID GLASS" (27. September,
+ca. 22:05: „Schau mal das auch an ich will das auch haben") zeigt eine
+dunkle Pille, die sagt, dass etwas läuft, und zur Karte aufgeht. E713 hat
+sie für den Zeitmesser gebaut. Dieselbe Lücke hat ein zweiter Ort: ein
+Zeitmarken-Knopf „▶ mm:ss" (`editor.ts`, `audioRefSpielen`) spielt den Ton
+über ein losgelöstes `new Audio()`, wenn der Audio-Block nicht auf der Seite
+steht — dann gibt es KEIN Bedienelement: kein Anhalten, kein Springen.
+
+**Warum nicht gleich mit:** der Editor und der Zeitmesser sind zwei Bereiche
+(`bereiche/editor`, `bereiche/wissen`), und §5 Regel 1 verbietet, dass einer
+den anderen ruft (`test537`). Die Pille muss dafür in die Schale, als EIN
+Baustein für beide („läuft": Zeichen, Zeit, Titel, Aufgehen zur Karte,
+Escape) — mit eigener Datei, `index.html`, GRUNDSTOCK und Startlast
+(`test388`).
+
+**Dazu offen:**
+- Die laufende Besprechung (`Meeting.panel`, besprechung.ts) und die
+  Aufträge könnten dieselbe Pille nutzen.
+- Am Telefon rückt ein Toast nicht über die Pille (der Stapel in
+  `bausteine.css` kennt `#offline-streifen`, `#rg-einladung` und den
+  schwebenden Lader, nicht `#zm-pille`); ein Toast steht mittig, die Pille
+  rechts — sie können sich bei langem Text überdecken.
+- `RedionSpring.sample` ruht bei einem Hundertstel des Weges; wer über 0…1
+  rechnet, bekommt am Ende einen Sprung. E713 rechnet in Pixeln; eine
+  Warnung am Helfer selbst fehlt.
+- Wischen über die Balken des Verlaufs (heute Tipp, Pfeile, Pos1/Ende). Im
+  Monatsverlauf am Telefon ist eine Säule 9 px breit — ein Nebenweg mit
+  Grund an Ort und Stelle (§37), aber Wischen wäre der bessere Weg.
+
+**Was fehlt:** die gemeinsame Pille in `schale/`, mit Wächter (rot zuerst),
+und der Zeitmarken-Ton als ihr zweiter Nutzer.
+
+---
+
 ## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
 
 **Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
@@ -9178,7 +9214,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 125 Lücken, 69 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
