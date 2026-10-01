@@ -240,17 +240,9 @@ import { chromium } from 'playwright';
     platzhalter: document.querySelector<HTMLTextAreaElement>('#ai-input')?.placeholder
   }));
   console.log('   KI-Leiste:', JSON.stringify(leiste));
-  /* ══ FÜNF, NICHT SECHS — UND ZWAR DIESE FÜNF (E590) ════════════════════
-     Hier stand `knoepfe.length === 6`. Gemessen sind es fünf:
-
-         ai-plus · ai-modus · (Modellknopf ohne Kennung) · ai-diktat · ai-senden
-
-     Zwei sind nicht verschwunden, sondern umgezogen: `dienst.ts` hängt
-     `ai-quellen` und `ai-faehig` in die Schublade „Werkzeuge & Kontext"
-     (weiter unten geprüft). Eine blosse Zahl hätte das nicht gesagt — sie
-     wäre auch dann grün, wenn zwei ganz andere Knöpfe dastünden. Deshalb
-     stehen die Kennungen jetzt da. */
-  ok('Unter dem Feld stehen fünf Knöpfe, und zwar diese',
+  /* Quellen und Fähigkeiten stehen am sichtbaren Kontext unmittelbar über
+     der Eingabe; seltene KI-Aktionen liegen separat unter „Mehr“. */
+  ok('Unter dem Feld stehen die fünf erwarteten Knöpfe',
      JSON.stringify(leiste.knoepfe) ===
      JSON.stringify(['ai-plus', 'ai-modus', '', 'ai-diktat', 'ai-senden']));
   ok('Modus steht auf Standard', leiste.modus === 'Standard');
@@ -370,33 +362,8 @@ import { chromium } from 'playwright';
      plusMenu.length === 3 && /Fotos und Dateien/.test(plusMenu[0] ?? '') &&
      /erwähnen/.test(plusMenu[1] ?? '') && /Bild erstellen/.test(plusMenu[2] ?? ''));
 
-  /* ══ FÄHIGKEITEN — ERST DIE SCHUBLADE (E590) ═══════════════════════════
-     Hier stand `await p.click('#ai-faehig')` ohne Weiteres, und der Lauf
-     lief seit einiger Zeit in seine Zeitgrenze: „element is not visible".
-
-     GEMESSEN am 15. September 2026: der Knopf liegt nicht mehr in der
-     Eingabezeile, sondern in der Schublade „Werkzeuge & Kontext"
-     (`#ai-tools`), und die ist zu. `dienst.ts` hängt ihn dort ausdrücklich
-     hin — zusammen mit „Quellen & Modus" — und gibt ihm dabei sein Wort:
-
-         settingsActions = [['ai-quellen','Quellen & Modus'],
-                            ['ai-faehig','Fähigkeiten']]
-
-     Bei geschlossener Schublade behält er einen Kasten (1 Rechteck,
-     104 × 33) und liegt bei 1280 × 900 auf y = 884 — unter dem Rand.
-     Geöffnet und nachgerollt steht er bei 679–712, mitten im Bild.
-
-     Der Knopf ist also erreichbar, nur einen Griff tiefer. Die Zusicherung
-     darunter hält fest, WO er liegt: zöge ihn jemand wieder heraus oder
-     woandershin, wäre das eine Änderung, die man sehen soll. */
-  ok('„Fähigkeiten" liegt in der Schublade „Werkzeuge & Kontext"',
-     await p.evaluate(() => !!document.querySelector('#ai-tools #ai-faehig')));
-  await p.evaluate(() => {
-    const d = document.querySelector<HTMLDetailsElement>('#ai-tools');
-    if (d) d.open = true;
-    document.getElementById('ai-faehig')?.scrollIntoView({ block: 'center' });
-  });
-  await p.waitForTimeout(400);
+  ok('„Fähigkeiten" liegt sichtbar am KI-Kontext',
+     await p.evaluate(() => !!document.querySelector('.ai-context-head #ai-faehig')));
   await p.click('#ai-faehig');
   await p.waitForTimeout(500);
   const faehig = await p.evaluate(() => {

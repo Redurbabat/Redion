@@ -293,22 +293,17 @@ const reiter = await seite.evaluate(() => {
       drin: r.left >= kasten.left - 1 && r.right <= kasten.right + 1,
     };
   });
-  return { anzahl: knoepfe.length, draussen: knoepfe.filter(k => !k.drin).map(k => k.text) };
+  return { anzahl: knoepfe.length, draussen: knoepfe.filter(k => !k.drin).map(k => k.text),
+    unterziele: [...document.querySelectorAll<HTMLElement>('.lw-subnav [data-lw-nav]')]
+      .map(k => k.dataset.lwNav) };
 });
 
 p('Die Reiterleiste ist da', !!reiter, 'keine .lw-nav gefunden');
 if (reiter) {
-  /* VIER UND NICHT NEUN. Seit die Leiste gruppiert ist (E164 — „Lernen"
-     fasst Lernen, Lernweg, Fehler und Fortschritt zusammen, „Wo du lernst"
-     fasst Schule, Uni und Arbeit zusammen), sind es vier Reiter mit einer
-     zweiten Reihe darunter. Die Neun stammt aus der Zeit davor, und der
-     Punkt war seither rot: er steckt in keiner der Suiten, die man nach
-     einer Änderung einzeln startet, und fiel erst beim vollen Durchlauf
-     auf. Nachgemessen ist er auch auf dem Stand vor dem Menüband rot.
-
-     Die Zahl bleibt ausgeschrieben und wird nicht aus `REITER` gelesen:
-     dieser Punkt soll ja gerade merken, wenn ein Reiter verschwindet. */
-  gleich('Sie hat vier Reiter mit zweiter Reihe darunter', reiter.anzahl, 4);
+  /* Heute und Übersicht sind zwei echte Disclosure-Gruppen. Die zwölf
+     Unterziele bleiben im DOM und damit über die Gruppen erreichbar. */
+  gleich('Sie hat zwei Reiter mit zweiter Reihe darunter', reiter.anzahl, 2);
+  gleich('Alle zwölf Unterziele bleiben erreichbar', new Set(reiter.unterziele).size, 12);
   gleich('Und keiner steht ausserhalb', reiter.draussen, []);
 }
 

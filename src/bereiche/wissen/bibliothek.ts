@@ -831,7 +831,8 @@ const Bibliothek = (() => {
       { id: 'favoriten', name: 'Favoriten' },
       { id: 'pdf', name: 'Alle PDFs' }
     ];
-    const aktiv = wege.find(weg => weg.id === (pdfAn ? 'pdf' : zustand.reiter)) || wege[0];
+    const aktiv = wege.find(weg => weg.id === (pdfAn ? 'pdf' : zustand.reiter)) ||
+      { id: 'ablage', name: 'Meine Ablage' };
     return '<div class="bib-studio-navigation">' +
       '<nav class="bib-studio-wege" data-material="dokumente-wege" aria-label="Dokumente finden">' +
       '<button type="button" data-studio-wege aria-haspopup="menu" aria-label="Dokumentansicht wählen">' +
@@ -1384,7 +1385,7 @@ const Bibliothek = (() => {
     });
 
     stelle.replaceChildren(griff.element);
-    griff.element.querySelectorAll<HTMLElement>('[data-baum-id]').forEach(zeile => {
+    stelle.querySelectorAll<HTMLElement>('[data-baum-id]').forEach(zeile => {
       const id = zeile.dataset.baumId || '';
       const p = Store.getBlock(id);
       if (!p || p.alive === false) return; // Die künstliche Wurzel hat kein Objektmenü.
@@ -1413,7 +1414,7 @@ const Bibliothek = (() => {
     const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
                                          a.id === zustand.art);
     if (arten.length <= 2 && zustand.art === 'alle') return '';
-    const aktiv = arten.find(a => a.id === zustand.art) || arten[0];
+    const aktiv = arten.find(a => a.id === zustand.art) || { id: 'alle', name: 'Alle' };
     return '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
       '<button type="button" data-art-menue aria-haspopup="menu" aria-label="Dokumentart wählen">' +
         'Art: ' + esc(aktiv.name) + '<span aria-hidden="true"> ▾</span></button>' +
@@ -1615,25 +1616,42 @@ const Bibliothek = (() => {
     }
     if (aktion !== 'papierkorb') return;
     const kinder = Store.childrenOf(id).filter((kind: any) => kind.alive !== false);
-    if (ordner && kinder.length) {
-      const antwort = await Dialog.wahl({
-        titel: 'Ordner in den Papierkorb legen?',
-        text: '„' + (p.text || 'Ohne Titel') + '“ enthält ' + kinder.length +
-          (kinder.length === 1 ? ' Element. ' : ' Elemente. ') +
-          'Sie bleiben im Ordner erhalten und werden mit ihm wiederhergestellt.',
-        knoepfe: [{ id: 'abbruch', text: 'Abbrechen' },
-                   { id: 'papierkorb', text: 'In den Papierkorb' }]
-      });
-      if (antwort !== 'papierkorb') return;
-    }
+    const antwort = await Dialog.wahl({
+      titel: ordner ? 'Ordner in den Papierkorb legen?' : 'Seite in den Papierkorb legen?',
+      text: '„' + (p.text || 'Ohne Titel') + '“' +
+        (ordner && kinder.length ? ' enthält ' + kinder.length +
+          (kinder.length === 1 ? ' direktes Element. ' : ' direkte Elemente. ') : '. ') +
+        'Alle enthaltenen Inhalte bleiben erhalten und kommen bei Wiederherstellung mit zurück.',
+      knoepfe: [{ id: 'abbruch', text: 'Abbrechen' },
+                 { id: 'papierkorb', text: 'In den Papierkorb' }]
+    });
+    if (antwort !== 'papierkorb') return;
     const warImPfad = ordnerWeg().some(teil => teil.id === id);
     Store.trashBlock(id);
     if (warImPfad) {
       zustand.ordner = p.parentId || null;
       Store.setMeta(ORDNER_SCHLUESSEL, zustand.ordner || '');
     }
-    UI.toast('„' + (p.text || 'Ohne Titel') + '“ liegt im Papierkorb und kann wiederhergestellt werden.');
     App.zeichneSeite();
+    document.getElementById('bib-undo')?.remove();
+    const hinweis = document.createElement('div');
+    hinweis.id = 'bib-undo';
+    hinweis.className = 'bib-undo';
+    hinweis.setAttribute('role', 'status');
+    const meldung = document.createElement('span');
+    meldung.textContent = '„' + (p.text || 'Ohne Titel') + '“ liegt im Papierkorb.';
+    const rueck = document.createElement('button');
+    rueck.type = 'button';
+    rueck.textContent = 'Rückgängig';
+    rueck.addEventListener('click', () => {
+      Store.restoreBlock(id);
+      hinweis.remove();
+      App.zeichneSeite();
+      UI.toast('Wiederhergestellt');
+    });
+    hinweis.append(meldung, rueck);
+    document.body.append(hinweis);
+    setTimeout(() => hinweis.remove(), 10000);
   };
 
   const objektMenue = (id: string, anker: HTMLElement, x: number, y: number): void => {
@@ -1770,7 +1788,7 @@ const Bibliothek = (() => {
     wrap.querySelector<HTMLElement>('.bib-arten [data-art-menue]')?.addEventListener('click', event => {
       const anker = event.currentTarget as HTMLElement;
       const r = anker.getBoundingClientRect();
-      const vorhanden = new Set(auswahl().liste.map(p => artVon(p).id));
+      const vorhanden = new Set<string>(auswahl().liste.map(p => artVon(p).id));
       const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
                                            a.id === zustand.art);
       const m = UI.menu(arten.map(a => '<button data-art="' + esc(a.id) + '">' +

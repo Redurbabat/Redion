@@ -1287,6 +1287,7 @@ const DocumentMode = (() => {
         };
         panel.addEventListener('scroll', schedule, { passive: true });
         schedule();
+        return schedule;
     };
     /* DIE ORIGINALDATEI IST EINE ANGABE, KEIN BAND UEBER DEM PAPIER (E384).
        Sie stand als volle Zeile zwischen Werkzeugleiste und erstem Blatt und
@@ -2167,9 +2168,43 @@ const DocumentMode = (() => {
         const thumbTitle = document.createElement('strong');
         thumbTitle.textContent = wortViele(page);
         const thumbClose = topButton('thumbnails-close', '✕', wortViele(page) + 'übersicht schließen');
-        thumbHeader.append(thumbTitle, thumbClose);
+        const thumbProgress = document.createElement('span');
+        thumbProgress.className = 'document-thumb-progress';
+        thumbProgress.setAttribute('role', 'status');
+        thumbProgress.hidden = true;
+        thumbHeader.append(thumbTitle, thumbProgress, thumbClose);
         thumbnails.appendChild(thumbHeader);
-        documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
+        const bilderNachziehen = activateVisibleThumbnails(thumbnails);
+        let miniaturenGebaut = 0;
+        let miniaturenGeplant = false;
+        const miniaturenBauen = () => {
+            miniaturenGeplant = false;
+            if (!thumbnails.isConnected || !state.thumbnailsOpen)
+                return;
+            const bis = Math.min(documents.length, miniaturenGebaut + 16);
+            const stueck = document.createDocumentFragment();
+            for (let i = miniaturenGebaut; i < bis; i++)
+                stueck.appendChild(thumbnail(documents[i], i, i === state.index));
+            thumbnails.appendChild(stueck);
+            miniaturenGebaut = bis;
+            bilderNachziehen();
+            if (bis < documents.length) {
+                thumbProgress.hidden = false;
+                thumbProgress.textContent = bis + ' / ' + documents.length;
+                miniaturenStarten();
+            }
+            else {
+                thumbProgress.hidden = true;
+                thumbnails.querySelector('.document-thumbnail.is-selected')
+                    ?.scrollIntoView({ block: 'nearest' });
+            }
+        };
+        const miniaturenStarten = () => {
+            if (!state.thumbnailsOpen || miniaturenGebaut >= documents.length || miniaturenGeplant)
+                return;
+            miniaturenGeplant = true;
+            requestAnimationFrame(miniaturenBauen);
+        };
         const center = document.createElement('main');
         center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
         center.setAttribute('aria-label', 'Papierfläche');
@@ -3201,9 +3236,9 @@ const DocumentMode = (() => {
             /* AB HIER DARF BEOBACHTET WERDEN — und keine Zeile früher (E644). */
             standGesetzt = true;
             nachziehen();
-            thumbnails.querySelector('.document-thumbnail.is-selected')
-                ?.scrollIntoView({ block: 'nearest' });
-            activateVisibleThumbnails(thumbnails);
+            if (state.thumbnailsOpen)
+                miniaturenStarten();
+            bilderNachziehen();
         });
         /* Zu einer Seite springen — zeichnen, hinrollen, Stand merken. Kein
            Neuaufbau: ein Sprung, der die ganze Seite neu zeichnet, verlöre
@@ -4368,8 +4403,10 @@ const DocumentMode = (() => {
             inspectorButton.setAttribute('aria-expanded', String(state.inspectorOpen));
             if (state.inspectorOpen)
                 renderInspector(inspector, page, jetzt());
-            if (state.thumbnailsOpen)
-                activateVisibleThumbnails(thumbnails);
+            if (state.thumbnailsOpen) {
+                miniaturenStarten();
+                bilderNachziehen();
+            }
             passen();
         };
         /* EIN BILD AUS DER ZWISCHENABLAGE WIRD EINE SEITE (E471). Wer einen

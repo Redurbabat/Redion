@@ -919,6 +919,25 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-zeile-mehr:hover,.bib-zeile-mehr:focus-visible{background:var(--bg-hover);color:var(--text)}
 .bib-zeile[data-id]:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
 .bib-menue-gefahr{color:var(--gefahr)!important}
+.bib-undo{
+  position:fixed;z-index:10060;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%);display:flex;align-items:center;gap:14px;
+  max-width:min(94vw,540px);padding:8px 10px 8px 16px;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--bg-card);color:var(--text);box-shadow:0 12px 36px rgba(0,0,0,.2);
+  font-size:13px;line-height:1.35
+}
+.bib-undo button{
+  flex:none;min-height:var(--touch-min);padding:0 12px;
+  border:0;border-radius:8px;background:var(--accent);color:#fff;
+  font:inherit;font-weight:650;cursor:pointer
+}
+.bib-undo button:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.such-kontext{display:flex;align-items:center;gap:10px;padding:8px 16px 12px;
+  color:var(--text-dim);font-size:12px}
+.such-kontext select{min-height:var(--touch-min);padding:6px 12px;border:1px solid var(--line);
+  border-radius:var(--radius-md);background:var(--bg-input);color:var(--text);font:inherit}
+.such-kontext select:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
 .bib-deckel small{
   display:block; overflow:hidden; margin-top:2px;
   font-size:11px; white-space:nowrap; text-overflow:ellipsis

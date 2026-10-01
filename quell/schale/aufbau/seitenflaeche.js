@@ -720,6 +720,56 @@ const Seitenflaeche = (() => {
         flaeche.dataset['wz'] = werkzeug;
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(leiste.element);
+        /* Ein Whiteboard im Flächenkasten bringt seine vollständige eigene
+           Werkzeugleiste mit. Auf der Fläche wäre sie zusätzlich zur unteren
+           Seitenleiste sichtbar und durch den bewegten Kasten sogar skaliert.
+           Die vorhandene Leiste (mit ihren eigenen Zuhörern) zieht deshalb an
+           denselben festen unteren Ort; der aktive Zeichenkontext wählt eine
+           der Leisten, ohne Werkzeuge zu kopieren oder abzuschalten. */
+        const brettLeisten = new Map();
+        flaeche.querySelectorAll('.pg-fl-notiz .wb > .wb-tools').forEach(brettLeiste => {
+            const brett = brettLeiste.closest('.wb');
+            if (!brett)
+                return;
+            brettLeisten.set(brett, brettLeiste);
+            brettLeiste.hidden = true;
+            flaeche.appendChild(brettLeiste);
+        });
+        let aktivesBrett = null;
+        const kontextSetzen = (brett) => {
+            if (aktivesBrett === brett)
+                return;
+            aktivesBrett?.closest('.pg-fl-notiz')?.removeAttribute('data-fl-aktiv');
+            aktivesBrett = brett;
+            aktivesBrett?.closest('.pg-fl-notiz')?.setAttribute('data-fl-aktiv', '');
+            leiste.element.hidden = !!brett;
+            brettLeisten.forEach((werkleiste, quelle) => { werkleiste.hidden = quelle !== brett; });
+            flaeche.dataset['flKontext'] = brett ? 'whiteboard' : 'seite';
+        };
+        const brettVon = (target) => {
+            if (!(target instanceof Element) || target.closest('.gfx-tb-sockel'))
+                return null;
+            const brett = target.closest('.pg-fl-notiz .wb');
+            return brett && brettLeisten.has(brett) ? brett : null;
+        };
+        if (brettLeisten.size) {
+            flaeche.addEventListener('pointerdown', event => {
+                if (event.target instanceof Element && event.target.closest('.gfx-tb-sockel'))
+                    return;
+                kontextSetzen(brettVon(event.target));
+            }, true);
+            flaeche.addEventListener('focusin', event => {
+                if (event.target instanceof Element && event.target.closest('.gfx-tb-sockel'))
+                    return;
+                kontextSetzen(brettVon(event.target));
+            });
+            flaeche.addEventListener('keydown', event => {
+                if (event.key !== 'Escape' || !aktivesBrett)
+                    return;
+                kontextSetzen(null);
+                leiste.element.querySelector('button')?.focus();
+            });
+        }
         /* ======================================================================
          * Schieben, Ziehen, Zoomen
          * ====================================================================*/

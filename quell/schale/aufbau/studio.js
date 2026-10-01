@@ -41,9 +41,11 @@ const StudioSchale = (() => {
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
         const b = document.getElementById('studio-theme');
-        b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
+        const naechstes = hell ? 'dunklen' : 'hellen';
+        const name = 'Zum ' + naechstes + ' Farbschema wechseln';
+        b?.setAttribute('aria-label', name);
         if (b)
-            b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+            b.title = name;
     };
     const einstellen = (kompakt) => {
         document.body.dataset.studioNav = kompakt ? 'kompakt' : 'offen';
@@ -165,7 +167,7 @@ const StudioSchale = (() => {
                 bewegt.forEach(a => a.cancel());
                 bewegt.clear();
                 ankommen(document.querySelector('#page .bib-dkopf,#page .bib-titel,#page .aw-kopf'));
-                document.querySelectorAll('#page .bib-gitter>.bib-deckel:nth-child(-n+6)')
+                document.querySelectorAll('#page .bib-gitter>.bib-zelle:nth-child(-n+6) .bib-deckel')
                     .forEach((karte, i) => ankommen(karte, 0, 8, i * 24));
             });
         };

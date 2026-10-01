@@ -137,7 +137,7 @@ const StudioSchale = (() => {
         letzterOrt = location.hash;
         bewegt.forEach(a => a.cancel()); bewegt.clear();
         ankommen(document.querySelector('#page .bib-dkopf,#page .bib-titel,#page .aw-kopf'));
-        document.querySelectorAll('#page .bib-gitter>.bib-deckel:nth-child(-n+6)')
+        document.querySelectorAll('#page .bib-gitter>.bib-zelle:nth-child(-n+6) .bib-deckel')
           .forEach((karte, i) => ankommen(karte, 0, 8, i * 24));
       });
     };

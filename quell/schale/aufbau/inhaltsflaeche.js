@@ -53,6 +53,12 @@ const Inhaltsflaeche = (() => {
         gebunden = Object.assign({}, gebunden, teile || {});
     };
     const aktuelleSeite = braucht('aktuelleSeite');
+    /* Nur grosse PDF-Stapel im normalen Seiteneditor werden nach Sichtbarkeit
+       gezeichnet. Beim Neuaufbau wird der alte Wächter gelöst; Drucken braucht
+       dagegen alle Seiten und zieht sie vor der Druckansicht vollständig nach. */
+    let pdfWaechter = null;
+    let pdfFuerDruck = null;
+    window.addEventListener('beforeprint', () => pdfFuerDruck?.());
     /* ------------------------------------------------------------------------
      * INHALTS-STREIFEN AM RECHTEN RAND
      * ------------------------------------------------------------------------
@@ -141,6 +147,9 @@ const Inhaltsflaeche = (() => {
      *        Kasten hat — im Kasten gar nicht mehr.
      */
     const zeichne = (wrap, p, wo = 'seite') => {
+        pdfWaechter?.disconnect();
+        pdfWaechter = null;
+        pdfFuerDruck = null;
         /* Wiki-Verzeichnis */
         if (p.wiki)
             Werkzeuge.wikiIndex(p, wrap);
@@ -172,6 +181,9 @@ const Inhaltsflaeche = (() => {
             ? Register.seitenansichten.ortLesbar
             : (o) => !!o;
         const sichtbar = kinder.filter((b) => zeigtIn(b, wo) && !(wo === 'flaeche' && ortLesbar(b.flaecheOrt)));
+        const pdfSpaeter = wo === 'seite' &&
+            sichtbar.filter((b) => b.type === 'pdfseite').length >= 6;
+        const pdfWartend = new Map();
         /* DIE NUMMER WIRD GEZÄHLT UND WEITERGEREICHT, NICHT GESPEICHERT
            (E692, L220). Hier stand `b.nr = nr` — das schrieb einen reinen
            Anzeigewert in den Block im Arbeitsspeicher, und `exportAll`
@@ -185,8 +197,61 @@ const Inhaltsflaeche = (() => {
                 nr++;
             else
                 nr = 0;
-            wrap.appendChild(Blocks.render(b, 0, nr));
+            const block = Blocks.render(b, 0, nr, pdfSpaeter && b.type === 'pdfseite');
+            wrap.appendChild(block);
+            if (pdfSpaeter && b.type === 'pdfseite') {
+                const platz = block.querySelector('.pdfs-lazy');
+                if (platz)
+                    pdfWartend.set(platz, b);
+            }
         });
+        if (pdfWartend.size) {
+            const reihe = [];
+            let geplant = false;
+            const nachziehen = (platz) => {
+                const block = pdfWartend.get(platz);
+                if (!block || !platz.isConnected)
+                    return;
+                pdfWaechter?.unobserve(platz);
+                pdfWartend.delete(platz);
+                platz.replaceWith(PdfSeite.zeichne(block));
+            };
+            const naechstes = () => {
+                geplant = false;
+                if (pdfWaechter !== waechter)
+                    return;
+                const platz = reihe.shift();
+                if (platz)
+                    nachziehen(platz);
+                if (reihe.length)
+                    planen();
+            };
+            const planen = () => {
+                if (geplant)
+                    return;
+                geplant = true;
+                requestAnimationFrame(naechstes);
+            };
+            const waechter = new IntersectionObserver(eintraege => {
+                for (const eintrag of eintraege) {
+                    if (!eintrag.isIntersecting)
+                        continue;
+                    const platz = eintrag.target;
+                    if (!pdfWartend.has(platz) || reihe.includes(platz))
+                        continue;
+                    reihe.push(platz);
+                }
+                if (reihe.length)
+                    planen();
+            }, { rootMargin: '500px 0px' });
+            pdfWaechter = waechter;
+            pdfWartend.forEach((_block, platz) => waechter.observe(platz));
+            pdfFuerDruck = () => {
+                waechter.disconnect();
+                pdfWartend.forEach((_block, platz) => nachziehen(platz));
+                reihe.length = 0;
+            };
+        }
         /* Rückverweise unter der Seite — aber nicht im Kasten auf der Leinwand.
            Dort sind sie kein Fuss der Seite, sondern eine Liste mitten im Bild,
            und sie machen den Kasten um ihre Höhe länger, ohne etwas zu zeigen,

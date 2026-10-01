@@ -122,14 +122,17 @@ try {
   check('Escape closes panel and restores focus', await page.locator('[data-document-action="thumbnails"]').evaluate(e => e === document.activeElement));
   check('UI changes do not duplicate content', await page.evaluate('Object.keys(Store.cache.blocks).length') === countBefore);
   await page.locator('[data-document-action="regal"]').click();
-  await page.locator('[data-studio-weg="pdf"]').click();
+  await page.locator('[data-studio-wege]').click();
+  await page.locator('.menu [data-studio-weg="pdf"]').click();
   check('All PDFs filter finds actual imported file', await page.locator('.bib-deckel[data-art="pdf"]').count() === 1);
-  await page.locator('#bib-studio-suche').fill('no such document');
-  check('Search filters the real library', await page.locator('.bib-deckel').count() === 0);
-  await page.locator('#bib-studio-suche').fill('Elektro');
-  check('Search retains focus after rerender', await page.locator('#bib-studio-suche').evaluate(e => e === document.activeElement));
-  check('Matching search restores result', await page.locator('.bib-deckel').count() === 1);
-  await page.locator('#bib-studio-suche').fill('');
+  await page.locator('#studio-search').click();
+  check('One global search defaults to library scope', await page.locator('#such-bereich').inputValue() === 'bibliothek');
+  await page.locator('#q').fill('no such document');
+  check('Global search filters the real library', await page.locator('#res button[data-i]').count() === 0);
+  await page.locator('#q').fill('Elektro');
+  check('Search keeps keyboard focus', await page.locator('#q').evaluate(e => e === document.activeElement));
+  check('Matching search finds imported document', await page.locator('#res button[data-i]').count() === 1);
+  await page.keyboard.press('Escape');
   await page.waitForTimeout(3500); // Importmeldung darf die Abnahmebilder nicht verdecken.
 
   const sizes = [[1920,1080],[1600,900],[1440,900],[1366,768],[1280,800],[1024,768],[820,1180],[768,1024],[430,932],[390,844]] as const;

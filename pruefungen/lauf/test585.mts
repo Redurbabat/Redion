@@ -456,15 +456,21 @@ console.log('\n5 · Die Umschalter: die Wahl fliegt, statt zu springen');
     await a.zu();
   }
 
-  /* Die Wege im Regal. */
+  /* Die Bibliothek zeigt seit der konsolidierten Suche nur den aktiven Weg.
+     Die übrigen Wege bleiben über denselben Menüknopf erreichbar; hier
+     zählt die echte Zustandsänderung statt eines Flugs zwischen Knöpfen,
+     die es auf der Hauptfläche nicht mehr gibt. */
   {
     const a = await aufmachen();
     await a.pc.evaluate(`Bibliothek.oeffne()`);
-    await a.pc.waitForSelector('.bib-studio-wege [data-studio-weg="kuerzlich"]', { timeout: 15000 });
-    await a.pc.waitForTimeout(600);
-    const beob = a.pc.evaluate(flugBeobachten('.bib-studio-wege button.on'));
-    await a.pc.evaluate(`document.querySelector('.bib-studio-wege [data-studio-weg="kuerzlich"]').click()`);
-    flugPruefen('Dokumente, Meine Ablage → Zuletzt geöffnet', await beob as Flug);
+    await a.pc.waitForSelector('.bib-studio-wege [data-studio-wege]', { timeout: 15000 });
+    const vorher = await a.pc.locator('.bib-studio-wege button').count();
+    await a.pc.locator('[data-studio-wege]').click();
+    await a.pc.locator('.menu [data-studio-weg="kuerzlich"]').click();
+    const nachher = await a.pc.locator('[data-studio-wege]').textContent();
+    p('Dokumente: nur ein aktiver Weg steht in der Hauptfläche', vorher === 1, String(vorher));
+    p('Dokumente: Zuletzt geöffnet ist im Menü erreichbar und wird aktiv',
+      !!nachher && /Zuletzt geöffnet/.test(nachher), String(nachher));
     await a.zu();
   }
 
@@ -486,7 +492,7 @@ console.log('\n5 · Die Umschalter: die Wahl fliegt, statt zu springen');
     await a.pc.evaluate(`Produktwelten.lernen('heute')`);
     await a.pc.waitForSelector('.lw-nav > button', { timeout: 15000 });
     await a.pc.waitForTimeout(900);
-    const beob = a.pc.evaluate(flugBeobachten('.lw-nav > button[aria-current="page"]', 1000));
+    const beob = a.pc.evaluate(flugBeobachten('.lw-nav > button.is-active', 1000));
     await a.pc.evaluate(`document.querySelectorAll('.lw-nav > button')[1].click()`);
     flugPruefen('Heute, erster → zweiter Reiter', await beob as Flug);
     await a.zu();

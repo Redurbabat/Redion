@@ -1,4 +1,4 @@
-/* Suite 492 — KI-Eingabe, Werkzeuggruppen und ruhige Animationen.
+/* Suite 492 — KI-Eingabe, kontextnahe Aktionen und ruhige Animationen.
  * Rotprobe: vor dem Bauen fehlen motion.css/motion.js und die zwölf
  * einheitlichen Aktionsknöpfe. Kein Modell wird geladen oder angesprochen.
  * Die Browser-Kontexte haben eigene, flüchtige Datenbanken.
@@ -60,8 +60,10 @@ try {
     });
     await page.waitForSelector('#ai.open');
     await page.waitForTimeout(800);
-    const summary = page.locator('#ai-tools summary');
-    check(`${width}: Werkzeuge zunächst geschlossen`, !await page.locator('#ai-tools').evaluate((el: HTMLDetailsElement) => el.open));
+    const more = page.locator('#ai-mehr');
+    check(`${width}: Kontext und Seitenaktionen ohne Sammelschublade`,
+      await page.locator('#ai-tools').count() === 0 && await page.locator('.ai-context-group [data-qs]').count() === 5 &&
+      await page.locator('.ai-page-commands button').count() === 5);
     check(`${width}: Modellwahl in der Eingabe`, await page.locator('.ai-compose .model-btn').count() === 1);
     const geometry = await page.evaluate(() => {
       const input = document.querySelector('#ai-input')!.getBoundingClientRect();
@@ -77,16 +79,18 @@ try {
     });
     check(`${width}: Große runde Eingabe mit unterer Bedienleiste`, geometry.rounded >= 20 && geometry.below, geometry);
     check(`${width}: Hauptwege mindestens 44 px, ohne Überstand`, geometry.touch && geometry.fits, geometry);
-    await summary.click();
-    check(`${width}: Vier Gruppen, zwölf unverändert erreichbare Aktionen`,
-      await page.locator('.ai-action-group').count() === 4 && await page.locator('.ai-quick button.ru-funkel').count() === 12);
+    await more.click();
+    check(`${width}: Zwölf unverändert erreichbare Aktionen`,
+      await page.locator('.menu .ai-action-bank-button').count() === 7 &&
+      await page.locator('.ai-page-commands button.ru-funkel, .menu .ai-action-bank-button.ru-funkel').count() === 12);
     const protectedButton = await page.locator('#ai-db').evaluate(el => ({
       text: el.textContent!.replace(/\s+/g, ' ').trim(), letters: el.querySelectorAll('.ru-funkel-b').length,
       color: getComputedStyle(el).backgroundColor, icon: !!el.querySelector('svg')
     }));
     check(`${width}: Datenbank-Knopf behält Originaleffekt`, protectedButton.text === 'Datenbank bauen' &&
       protectedButton.letters === 14 && protectedButton.color === 'rgb(16, 16, 16)' && protectedButton.icon, protectedButton);
-    const source = page.locator('[data-qs="aktuelleSeite"]');
+    await page.keyboard.press('Escape');
+    const source = page.locator('.ai-context-group [data-qs="aktuelleSeite"]');
     const sourceWasOn = await source.getAttribute('aria-pressed');
     await source.click();
     check(`${width}: Quellenzustand bleibt schaltbar und vorlesbar`, await source.getAttribute('aria-pressed') !== sourceWasOn);
@@ -98,12 +102,13 @@ try {
     await page.locator('[data-qs="web"]').click();
     check(`${width}: Web bleibt nach abgelehnter Datenschutzfrage aus`, privacyWarning &&
       await page.locator('[data-qs="web"]').getAttribute('aria-pressed') === 'false');
-    await page.locator('#ai-db').click();
+    await more.click();
+    await page.locator('.menu #ai-db').click();
     check(`${width}: Bau-Knopf öffnet weiterhin seine Rückfrage`, await page.locator('.overlay').count() > 0);
     await page.keyboard.press('Escape');
-    await summary.focus(); await page.keyboard.press('Escape');
-    check(`${width}: Escape schließt Werkzeuge und behält Tastaturfokus`, await summary.evaluate(el =>
-      document.activeElement === el && !(el.parentElement as HTMLDetailsElement).open));
+    await more.click(); await page.keyboard.press('Escape');
+    check(`${width}: Escape schließt weitere Aktionen und erhält Originale`,
+      await page.locator('.menu').count() === 0 && await page.locator('.ai-action-bank #ai-db').count() === 1);
     await page.locator('#ai-input').fill('Erste Zeile');
     await page.locator('#ai-input').press('Shift+Enter');
     check(`${width}: Mehrzeilige Eingabe bleibt erhalten`, (await page.locator('#ai-input').inputValue()).includes('\n'));
@@ -125,7 +130,7 @@ try {
     fs.mkdirSync(path.join(root, 'bilder'), { recursive: true });
     await page.screenshot({ path: path.join(root, `bilder/ai-composer-${width}-dunkel.png`) });
     if (width === 1280) {
-      await summary.click();
+      await more.click();
       await page.screenshot({ path: path.join(root, 'bilder/ai-tools-desktop.png') });
       await page.locator('#ai').screenshot({ path: path.join(root, 'bilder/ai-panel-detail.png') });
       await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
@@ -134,7 +139,7 @@ try {
         getComputedStyle(el).animationName === 'none'));
     }
     if (width === 390) {
-      await summary.click();
+      await more.click();
       await page.screenshot({ path: path.join(root, 'bilder/ai-tools-mobile.png') });
       await page.setViewportSize({ width, height: 480 });
       check('Kleine Höhe: Senden und Eingabe bleiben sichtbar', await page.evaluate(() => {

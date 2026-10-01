@@ -15,7 +15,7 @@ const RedionMotion = (() => {
     { id: 'toggle', place: 'Einstellungen und Automationen', selector: '.schalter, .mschalter' },
     { id: 'carousel', place: 'Zuletzt geöffnete Dokumente, leeres Regal', selector: '.rmo-recent, .bib-leer' },
     { id: 'glass', place: 'Primäre Dialogaktionen', selector: '.fbtns button.prim' },
-    { id: 'metric', place: 'Lernfortschritt und Bestandsgesundheit: Zahl, Ring und Herz', selector: metricSelector + ', .stat-karte.lw-metrik, .rmo-health-metric' },
+    { id: 'metric', place: 'Lernfortschritt und Bestandsgesundheit: Zahl, Ring und Aktivitätskurve', selector: metricSelector + ', .stat-karte.lw-metrik, .rmo-health-metric' },
     { id: 'status', place: 'Synchronisierung, Sicherung, KI, Automationen', selector: '.ru-zustand, .ru-lader, .ki-aktivitaet, .ag-motion-status, .rmo-product-status' },
     { id: 'ticket', place: 'PDF-Druck und Export', selector: '.ru-drucker' },
     { id: 'orb', place: 'KI-Schaltfläche und Kopfzeile', selector: '#btn-ai, #ai .ai-head' },
@@ -144,7 +144,6 @@ const RedionMotion = (() => {
        die ECHTE Zahl und misst nichts — siehe den Grund in motion.css. */
     if (ids.includes('metric') && !element.matches(metricSelector)) {
       ensure(element, 'rmo-ring');
-      ensure(element, 'rmo-heart');
     }
     /* ==================================================================
        Der Glaskörper aus Vorlagenblock 8. Er hat nicht gefehlt, er war

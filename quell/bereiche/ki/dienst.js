@@ -2377,52 +2377,58 @@ const KI = (() => {
     const bindePanel = () => {
         const ta = document.getElementById('ai-input');
         const chat = document.getElementById('chat');
-        /* Werkzeuge bleiben erreichbar, ohne die Eingabe zu verdrängen.
-           Nur bestehende Knoten verschieben: Kennungen und Klicks bleiben. */
-        const actions = document.querySelector('.ai-quick');
-        if (actions && !actions.querySelector('.ai-action-group')) {
-            const prompts = Array.from(actions.querySelectorAll('button[data-p]'));
-            const groups = [
-                { name: 'Erstellen', ids: ['ai-db', 'ai-seite'], prompts: [] },
-                { name: 'Text bearbeiten', ids: ['ai-schreiben'], prompts: [0, 2, 3] },
-                { name: 'Lernen & planen', ids: ['ai-wiki'], prompts: [1, 4] },
-                { name: 'Assistenten & Verlauf', ids: ['ai-agent', 'ai-meeting', 'ai-log'], prompts: [] }
-            ];
-            for (const group of groups) {
-                const section = document.createElement('section');
-                section.className = 'ai-action-group';
-                const heading = document.createElement('h3');
-                heading.textContent = group.name;
-                section.append(heading);
-                for (const id of group.ids) {
-                    const button = document.getElementById(id);
-                    if (button)
-                        section.append(button);
-                }
-                for (const index of group.prompts) {
-                    const button = prompts[index];
-                    if (button)
-                        section.append(button);
-                }
-                actions.append(section);
-            }
-            const settings = document.querySelector('.ai-tools-settings');
-            const settingsActions = [['ai-quellen', 'Quellen & Modus'], ['ai-faehig', 'Fähigkeiten']];
-            for (const [id, label] of settingsActions) {
+        /* Die fünf Seitenbefehle liegen direkt bei der Eingabe. Seltenere
+           Aktionen wandern als ORIGINALKNOTEN in ein kleines Menü: dieselben
+           Listener, Kennungen und Funkel-Effekte, kein zweiter Aktionskatalog. */
+        const bank = document.querySelector('.ai-action-bank');
+        const mehr = document.querySelector('#ai-mehr');
+        const actionIds = ['ai-schreiben', 'ai-agent', 'ai-meeting', 'ai-wiki',
+            'ai-db', 'ai-seite', 'ai-log'];
+        mehr?.addEventListener('click', () => {
+            if (!bank)
+                return;
+            for (const id of actionIds) {
                 const button = document.getElementById(id);
-                if (button && settings) {
-                    button.append(' ' + label);
-                    settings.append(button);
+                if (button && !bank.contains(button))
+                    bank.append(button);
+            }
+            const r = mehr.getBoundingClientRect();
+            const slots = actionIds.map(id => {
+                const button = document.getElementById(id);
+                return `<button data-ai-slot="${id}">${esc(button?.textContent?.trim() || id)}</button>`;
+            }).join('');
+            const menu = UI.menu('<div class="grp">Weitere KI-Aktionen</div>' + slots, r.left, r.top - 320, { titel: 'Weitere KI-Aktionen' });
+            menu.id = 'ai-aktionen-menue';
+            for (const id of actionIds) {
+                const slot = menu.querySelector(`[data-ai-slot="${id}"]`);
+                const button = document.getElementById(id);
+                if (slot && button) {
+                    button.classList.add('ai-action-bank-button');
+                    slot.replaceWith(button);
                 }
             }
-        }
-        const tools = document.querySelector('#ai-tools');
-        tools?.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && tools.open && !document.querySelector('.menu')) {
-                event.stopPropagation();
-                tools.open = false;
-                tools.querySelector('summary')?.focus();
-            }
+            mehr.setAttribute('aria-expanded', 'true');
+            menu.querySelector('button')?.focus();
+            menu.addEventListener('click', event => {
+                if (elVon(event)?.closest('.ai-action-bank-button'))
+                    menu.remove();
+            });
+            menu.addEventListener('keydown', event => {
+                if (event.key === 'Escape')
+                    queueMicrotask(() => mehr.focus());
+            });
+            const waechter = new MutationObserver(() => {
+                if (menu.isConnected)
+                    return;
+                for (const id of actionIds) {
+                    const button = menu.querySelector('#' + id);
+                    if (button)
+                        bank.append(button);
+                }
+                mehr.setAttribute('aria-expanded', 'false');
+                waechter.disconnect();
+            });
+            waechter.observe(document.body, { childList: true });
         });
         const fuss = document.querySelector('.ai-context-group');
         if (fuss && !fuss.querySelector('.ki-quellschalter')) {
@@ -2599,7 +2605,7 @@ const KI = (() => {
         /* Redur, 9. September: die beiden Bau-Knöpfe unverändert behalten;
            alle übrigen Aktionen erhalten genau denselben bestehenden Effekt. */
         if (typeof Funkel !== 'undefined')
-            Funkel.alle(document, '.ai-quick button, .ai-tools-settings button');
+            Funkel.alle(document, '.ai-page-commands button, .ai-action-bank button');
         document.getElementById('ai-db')?.addEventListener('click', async () => {
             const auftrag = await UI.frage('Was soll die Datenbank können?', 'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');
             if (auftrag)

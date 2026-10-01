@@ -60,6 +60,13 @@ const Inhaltsflaeche = (() => {
 
   const aktuelleSeite = braucht('aktuelleSeite');
 
+  /* Nur grosse PDF-Stapel im normalen Seiteneditor werden nach Sichtbarkeit
+     gezeichnet. Beim Neuaufbau wird der alte Wächter gelöst; Drucken braucht
+     dagegen alle Seiten und zieht sie vor der Druckansicht vollständig nach. */
+  let pdfWaechter: IntersectionObserver | null = null;
+  let pdfFuerDruck: (() => void) | null = null;
+  window.addEventListener('beforeprint', () => pdfFuerDruck?.());
+
   /* ------------------------------------------------------------------------
    * INHALTS-STREIFEN AM RECHTEN RAND
    * ------------------------------------------------------------------------
@@ -149,6 +156,9 @@ const Inhaltsflaeche = (() => {
    *        Kasten hat — im Kasten gar nicht mehr.
    */
   const zeichne = (wrap: HTMLElement, p: any, wo: 'seite' | 'flaeche' = 'seite'): void => {
+    pdfWaechter?.disconnect();
+    pdfWaechter = null;
+    pdfFuerDruck = null;
     /* Wiki-Verzeichnis */
     if (p.wiki) Werkzeuge.wikiIndex(p, wrap);
 
@@ -181,6 +191,9 @@ const Inhaltsflaeche = (() => {
       : (o: unknown) => !!o;
     const sichtbar = kinder.filter((b: any) =>
       zeigtIn(b, wo) && !(wo === 'flaeche' && ortLesbar(b.flaecheOrt)));
+    const pdfSpaeter = wo === 'seite' &&
+      sichtbar.filter((b: any) => b.type === 'pdfseite').length >= 6;
+    const pdfWartend = new Map<HTMLElement, any>();
 
     /* DIE NUMMER WIRD GEZÄHLT UND WEITERGEREICHT, NICHT GESPEICHERT
        (E692, L220). Hier stand `b.nr = nr` — das schrieb einen reinen
@@ -192,8 +205,53 @@ const Inhaltsflaeche = (() => {
     let nr = 0;
     sichtbar.forEach((b: any) => {
       if (b.type === 'number') nr++; else nr = 0;
-      wrap.appendChild(Blocks.render(b, 0, nr));
+      const block = Blocks.render(b, 0, nr, pdfSpaeter && b.type === 'pdfseite');
+      wrap.appendChild(block);
+      if (pdfSpaeter && b.type === 'pdfseite') {
+        const platz = block.querySelector<HTMLElement>('.pdfs-lazy');
+        if (platz) pdfWartend.set(platz, b);
+      }
     });
+
+    if (pdfWartend.size) {
+      const reihe: HTMLElement[] = [];
+      let geplant = false;
+      const nachziehen = (platz: HTMLElement): void => {
+        const block = pdfWartend.get(platz);
+        if (!block || !platz.isConnected) return;
+        pdfWaechter?.unobserve(platz);
+        pdfWartend.delete(platz);
+        platz.replaceWith(PdfSeite.zeichne(block));
+      };
+      const naechstes = (): void => {
+        geplant = false;
+        if (pdfWaechter !== waechter) return;
+        const platz = reihe.shift();
+        if (platz) nachziehen(platz);
+        if (reihe.length) planen();
+      };
+      const planen = (): void => {
+        if (geplant) return;
+        geplant = true;
+        requestAnimationFrame(naechstes);
+      };
+      const waechter = new IntersectionObserver(eintraege => {
+        for (const eintrag of eintraege) {
+          if (!eintrag.isIntersecting) continue;
+          const platz = eintrag.target as HTMLElement;
+          if (!pdfWartend.has(platz) || reihe.includes(platz)) continue;
+          reihe.push(platz);
+        }
+        if (reihe.length) planen();
+      }, { rootMargin: '500px 0px' });
+      pdfWaechter = waechter;
+      pdfWartend.forEach((_block, platz) => waechter.observe(platz));
+      pdfFuerDruck = () => {
+        waechter.disconnect();
+        pdfWartend.forEach((_block, platz) => nachziehen(platz));
+        reihe.length = 0;
+      };
+    }
 
     /* Rückverweise unter der Seite — aber nicht im Kasten auf der Leinwand.
        Dort sind sie kein Fuss der Seite, sondern eine Liste mitten im Bild,

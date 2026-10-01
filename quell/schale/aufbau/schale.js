@@ -1186,6 +1186,10 @@ const App = (() => {
      *        Ohne Angabe geht sie leer auf, wie bisher.
      */
     const suche = (vorgabe) => {
+        const aktuellesDokument = seiteId ? Store.getBlock(seiteId) : null;
+        const inBibliothek = !!sonder && ['Dokumente', 'Alle Seiten'].includes(sonder.titel);
+        let suchBereich = inBibliothek ? 'bibliothek'
+            : aktuellesDokument?.dokumentModus ? 'dokument' : 'global';
         /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
            Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
            Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
@@ -1200,6 +1204,13 @@ const App = (() => {
                 '<input id="q" placeholder="' + (eng ? 'Seiten, Zeilen und Inhalte suchen'
                 : 'Suchen — z. B. titel:&quot;Projekt&quot;, tag:arbeit, geändert:heute, status:offen') +
                 '" autocomplete="off">' +
+                '<label class="such-kontext">Suchbereich <select id="such-bereich" aria-label="Suchbereich">' +
+                '<option value="dokument"' + (!aktuellesDokument ? ' disabled' : '') +
+                (suchBereich === 'dokument' ? ' selected' : '') + '>Aktuelles Dokument</option>' +
+                '<option value="bibliothek"' + (suchBereich === 'bibliothek' ? ' selected' : '') +
+                '>Bibliothek</option>' +
+                '<option value="global"' + (suchBereich === 'global' ? ' selected' : '') +
+                '>Global</option></select></label>' +
                 '<div class="such-filter">' +
                 '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
                 '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -1233,6 +1244,18 @@ const App = (() => {
         const res = o.querySelector('#res');
         if (!inp || !res)
             return;
+        const bereichWahl = o.querySelector('#such-bereich');
+        let bibliothekIds = null;
+        const imBereich = (id) => {
+            if (suchBereich === 'global')
+                return true;
+            if (suchBereich === 'dokument')
+                return id === aktuellesDokument?.id;
+            if (!bibliothekIds)
+                bibliothekIds = new Set(typeof Bibliothek !== 'undefined' && Bibliothek.alleSeiten
+                    ? Bibliothek.alleSeiten().map((p) => String(p.id)) : []);
+            return bibliothekIds.has(id);
+        };
         let treffer = [];
         let i = 0;
         let queryError = '';
@@ -1390,7 +1413,8 @@ const App = (() => {
         const zuletzt = () => {
             queryError = '';
             treffer = Object.values(Store.cache.blocks)
-                .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
+                .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' &&
+                imBereich(b.id))
                 .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
                 .slice(0, 8)
                 .map(p => ({ page: p, treffer: 'Zuletzt', snippet: '' }));
@@ -1511,7 +1535,7 @@ const App = (() => {
                DER TEXT MUSS GENAU PASSEN. Ein Treffer, der bei jedem „red"
                aufspringt, wäre eine Überraschung statt einer Tür — deshalb prüft
                `Chronik.trifft` auf das ganze Wort, mit oder ohne Bindestrich. */
-            if (typeof Chronik !== 'undefined' && Chronik.trifft(roh)) {
+            if (suchBereich === 'global' && typeof Chronik !== 'undefined' && Chronik.trifft(roh)) {
                 queryError = '';
                 treffer = [];
                 res.innerHTML =
@@ -1555,7 +1579,8 @@ const App = (() => {
             const alsKennung = roh.trim().replace(/^.*#block=/, '');
             if (/^[0-9a-f]{8}-?[0-9a-f]{4}/i.test(alsKennung)) {
                 const gefunden = Store.search(alsKennung);
-                if (gefunden.length && gefunden[0].treffer === 'Seiten-ID') {
+                if (gefunden.length && gefunden[0].treffer === 'Seiten-ID' &&
+                    imBereich(String(gefunden[0].page?.id || ''))) {
                     queryError = '';
                     treffer = gefunden;
                     i = 0;
@@ -1573,7 +1598,7 @@ const App = (() => {
             }
             queryError = '';
             const query = QueryLanguage.applyUiFilters(parsed.query, uiFilters);
-            treffer = QueryLanguage.run(queryDocuments(), query).map(match => ({
+            treffer = QueryLanguage.run(queryDocuments().filter(d => imBereich(d.id)), query).map(match => ({
                 page: Store.getBlock(match.document.id),
                 treffer: match.reason,
                 snippet: match.snippet,
@@ -1630,6 +1655,8 @@ const App = (() => {
                     const schon = new Set(treffer.map(h => String(h.page?.id || '')));
                     const gefunden = dok.stellenSuchen(freieWorte);
                     for (const stelle of (gefunden?.liste || [])) {
+                        if (!imBereich(stelle.seiteId))
+                            continue;
                         if (schon.has(stelle.seiteId))
                             continue;
                         const seite = Store.getBlock(stelle.seiteId);
@@ -1646,6 +1673,13 @@ const App = (() => {
             zeichne();
         };
         inp.addEventListener('input', suchen);
+        bereichWahl?.addEventListener('change', () => {
+            const wahl = bereichWahl.value;
+            suchBereich = wahl === 'dokument' && aktuellesDokument ? 'dokument'
+                : wahl === 'bibliothek' ? 'bibliothek' : 'global';
+            suchen();
+            inp.focus();
+        });
         o.querySelectorAll('.such-filter select').forEach(s2 => s2.addEventListener('change', suchen));
         inp.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
@@ -1692,7 +1726,7 @@ const App = (() => {
            nicht kennt. */
         if (vorgabe)
             inp.value = String(vorgabe);
-        zeichne();
+        suchen();
         inp.focus();
         /* Und den Anschlag ans Ende, nicht an den Anfang: wer aus dem Regal
            kommt, will weitertippen und nicht vor sein eigenes Wort geraten. */

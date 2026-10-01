@@ -134,7 +134,7 @@ const DECKEL = (id: string) => `(() => {
 /** Das ⌄-Menü eines Deckels öffnen und den Eintrag „Farbe" drücken. */
 const farbMenueAuf = async (s: Page, id: string): Promise<{ eintrag: boolean; felder: any[] }> => {
   await s.evaluate(`document.querySelectorAll('.menu, .ui-menu, .menue').forEach(m => m.remove())`);
-  await s.evaluate(`document.querySelector('.bib-deckel[data-id="${id}"] .bib-deckel-mehr')?.click()`);
+  await s.evaluate(`document.querySelector('.bib-deckel[data-id="${id}"]')?.parentElement?.querySelector('.bib-deckel-mehr')?.click()`);
   await s.waitForTimeout(250);
   const eintrag = await s.evaluate(`(() => {
     const b = [...document.querySelectorAll('button[data-a]')].find(x => /Farbe/.test(x.textContent || ''));

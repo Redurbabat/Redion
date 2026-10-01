@@ -163,38 +163,28 @@ p('Die nackte Sechzig steht nirgends als Zahl, die das Gerät nicht kennt',
 /* ========================================================================== */
 console.log('\n4 · Gesucht wird über alle kürzlich verwendeten');
 
-/* Die Suchzeile gibt es in der LISTENFORM — dort steht sie hinter dem
-   Lupenknopf. „Skript 7" ist absichtlich eine Seite, die weit ausserhalb
-   der sechzig neuesten liegt: vor E367 schnitt die Decke VOR der Suche,
-   und man bekam „nichts gefunden" für etwas, das da ist. */
+/* Die Bibliothek hat seit dem Suchmodus keine eigene Suchzeile mehr.
+   „Skript 7" liegt ausserhalb der sechzig neuesten Seiten; die globale
+   Suche im Bibliothek-Modus muss es trotzdem im ganzen Bestand finden. */
 const suchTreffer = await seite.evaluate(async () => {
   Store.setMeta('bibForm', 'liste');
   Bibliothek.oeffne();
   await new Promise(f => setTimeout(f, 300));
-  document.querySelector<HTMLElement>('[data-a="suche"]')?.click();
+  App.suche('Skript 7');
   await new Promise(f => setTimeout(f, 300));
-  const feld = document.getElementById('bib-suche') as HTMLInputElement | null;
-  if (!feld) return { feldDa: false, treffer: 0, satz: '' };
-  feld.value = 'Skript 7';
-  feld.dispatchEvent(new Event('input', { bubbles: true }));
-  await new Promise(f => setTimeout(f, 500));
-  return { feldDa: true,
-           treffer: document.querySelectorAll('.bib-zeile:not(.bib-kopfzeile)').length,
-           satz: (document.querySelector('.bib-dkopf .bib-ort')?.textContent || '')
-             .replace(/\s+/g, ' ').trim() };
+  const feld = document.getElementById('q') as HTMLInputElement | null;
+  return { feldDa: !!feld,
+           modus: (document.getElementById('such-bereich') as HTMLSelectElement | null)?.value,
+           treffer: [...document.querySelectorAll<HTMLElement>('#res button[data-i]')]
+             .map(zeile => (zeile.textContent || '').replace(/\s+/g, ' ').trim()),
+           doppelt: !!document.getElementById('bib-suche') || !!document.getElementById('bib-studio-suche') };
 });
-p('Es gibt ein Suchfeld', suchTreffer.feldDa);
-p('„Skript 7" findet mehr als nichts — obwohl Skript 7 nicht unter den ' +
-  'sechzig neuesten ist', suchTreffer.treffer > 0,
-  'Treffer: ' + suchTreffer.treffer + ', Kopf: ' + suchTreffer.satz);
-p('Gefunden werden auch Skript 70 bis 79 — elf Treffer',
-  suchTreffer.treffer >= 11, 'Treffer: ' + suchTreffer.treffer);
-p('Und der Kopf deckelt diese elf NICHT — die Decke greift erst darüber',
-  !/ von /.test(suchTreffer.satz), suchTreffer.satz);
-await seite.evaluate(async () => {
-  document.querySelector<HTMLElement>('[data-a="suchzu"]')?.click();
-  await new Promise(f => setTimeout(f, 300));
-});
+p('Die eine globale Suche steht im Bibliothek-Modus',
+  suchTreffer.feldDa && suchTreffer.modus === 'bibliothek', JSON.stringify(suchTreffer));
+p('„Skript 7" wird auch jenseits der sechzig zuletzt geöffneten gefunden',
+  suchTreffer.treffer.some(text => text.includes('Skript 7')), JSON.stringify(suchTreffer.treffer));
+p('Kein doppeltes Bibliothek-Suchfeld steht daneben', !suchTreffer.doppelt);
+await seite.evaluate(() => document.querySelector('.overlay')?.remove());
 
 /* ========================================================================== */
 console.log('\n5 · Umsortieren nimmt weiter die sechzig NEUESTEN');

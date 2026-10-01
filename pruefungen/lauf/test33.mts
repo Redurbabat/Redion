@@ -451,7 +451,7 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
      die Namen von Notion stehen im Ort-Menü, nicht in einer Reiterzeile. */
   const bib = await p.evaluate(() => ({
     titel: (document.querySelector('.bib-dkopf h1')?.textContent ?? '').trim(),
-    wege: [...document.querySelectorAll<HTMLElement>('[data-studio-weg]')].map(x => (x.textContent ?? '').trim()),
+    wege: [...document.querySelectorAll<HTMLElement>('[data-studio-wege]')].map(x => (x.textContent ?? '').trim()),
     spalten: [...document.querySelectorAll<HTMLElement>('.bib-kopfzeile [data-s]')].map(x => (x.textContent ?? '').replace(/[↑↓]/g, '').trim()),
     zeilen: document.querySelectorAll('.bib-zeile[data-id]').length,
     krume: document.getElementById('crumb')?.textContent,
@@ -461,8 +461,14 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
   }));
   console.log('   Bibliothek:', JSON.stringify(bib));
   ok('Die Dokumente tragen ihren Titel', bib.titel === 'Dokumente');
-  ok('Vier Schnellwege', bib.wege.length === 4);
+  ok('Nur der aktive Schnellweg steht im Kopf', bib.wege.length === 1);
   ok('Die Ablage steht vorne (E380)', (bib.wege[0] ?? '').includes('Ablage'));
+  await p.click('[data-studio-wege]');
+  const wegeMenue = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.menu [data-studio-weg]')].map(x => (x.textContent ?? '').trim()));
+  ok('Alle vier Schnellwege bleiben über das Menü erreichbar',
+     wegeMenue.length === 4 && wegeMenue.some(x => x.includes('Favoriten')));
+  await p.evaluate(() => { document.querySelectorAll('.menu').forEach(m => m.remove()); });
   /* Die Notion-Namen stehen im Ort-Menü — alle Reiter, auch „Privat". */
   await p.click('.bib-dkopf [data-orte]');
   await p.waitForTimeout(300);
@@ -490,7 +496,8 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
   ok('Fusszeile zählt', /Seiten?/.test(bib.fuss || ''));
 
   /* Schnellweg Favoriten */
-  await p.click('[data-studio-weg="favoriten"]');
+  await p.click('[data-studio-wege]');
+  await p.click('.menu [data-studio-weg="favoriten"]');
   await p.waitForTimeout(400);
   const favs = await p.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('.bib-zeile[data-id] .bib-txt')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));

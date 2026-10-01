@@ -18,8 +18,8 @@
  *       Bild"). Auf „Heute" ist „Lernen starten" die eine (E638); „Dokumente
  *       öffnen" steht daneben als Umrissknopf; „PDF öffnen" im Kopf ist in
  *       Ruhe eine getönte Pille und wird erst unter Zeiger und Tastenfokus
- *       voll violett mit Schein; der Themenknopf ist im Hellen ein grauer
- *       Mond statt eines zweiten violetten Flecks. Die Schrift der getönten
+ *       voll violett mit Schein; der Themenknopf zeigt im Hellen einen Mond
+ *       als nächsten Wechsel. Die Schrift der getönten
  *       Pille liest sich mit 4,5 : 1 oder mehr.
  *   §2  „Zuletzt geöffnet" ruht: der Kartenring dreht nur, solange man
  *       hinzeigt oder der Fokus darin steht — im Leerlauf, am Telefon und
@@ -36,8 +36,9 @@
  *       Akzent, Löschen bleibt rot, „Beta" ist ein grauer Zettel.
  *   §4  Aus ist grau: der Verlaufsschalter im Menü leuchtet nur, wenn er an
  *       ist; beim Überfahren kommt der Schimmer zurück.
- *   §5  Die Kennzahlkarten im Lernzentrum ruhen: Herz, Ring und Streifen
- *       sind grau, bis man die Karte anfasst. Die Zahlen bleiben.
+ *   §5  Die Kennzahlkarten im Lernzentrum ruhen: Ring und Streifen
+ *       sind grau, bis man die Karte anfasst. Die Zahlen bleiben. Nur das
+ *       echte Anheften des Fehlertrainings trägt ein bedienbares Herz.
  *   §6  Die Ecke des Menübands trägt den Grund des Bandes — kein schwarzer
  *       Block am Ende eines hellen Bandes.
  *   §7  Ein Titel am Telefon: die kleine Krume blendet aus, solange der
@@ -258,7 +259,7 @@ for (const thema of ['light', 'dark'] as const) {
     const leiste = document.getElementById('studio-bar');
     const grund = w.__rgb(getComputedStyle(leiste || document.body).backgroundColor);
     const pille = kcs ? w.__ueber(w.__rgb(kcs.backgroundColor), grund) : null;
-    const orb = document.querySelector('.studio-orb');
+    const mond = document.querySelector<HTMLElement>('#studio-theme .studio-theme-moon');
     return {
       laut: w.__laut() as string[],
       dok: dok ? { da: w.__sichtbar(dok), primaer: dok.classList.contains('is-primary'),
@@ -269,7 +270,7 @@ for (const thema of ['light', 'dark'] as const) {
       lern: lern ? { da: w.__sichtbar(lern), text: (lern.textContent || '').trim() } : null,
       kopf: kcs ? { verlauf: kcs.backgroundImage.includes('gradient'), schein: kcs.boxShadow !== 'none',
                     kontrast: pille ? +w.__kontrast(w.__rgb(kcs.color), pille).toFixed(2) : 0 } : null,
-      orbGrau: orb ? w.__hsl(w.__rgb(getComputedStyle(orb).backgroundColor)).s < 0.25 : null
+      orbMond: mond ? getComputedStyle(mond).display !== 'none' : false
     };
   });
   const t = thema === 'light' ? 'hell' : 'dunkel';
@@ -283,7 +284,7 @@ for (const thema of ['light', 'dark'] as const) {
   p(`${t}: „PDF öffnen" im Kopf ist in Ruhe getönt — kein Verlauf, kein Schein`,
     !!m.kopf && !m.kopf.verlauf && !m.kopf.schein, JSON.stringify(m.kopf));
   p(`${t}: … und seine Schrift liest sich (≥ 4,5 : 1)`, (m.kopf?.kontrast ?? 0) >= 4.5, String(m.kopf?.kontrast));
-  if (thema === 'light') p('hell: der Themenknopf ist ein grauer Mond, kein zweiter violetter Fleck', m.orbGrau === true);
+  if (thema === 'light') p('hell: der Themenknopf zeigt den Mond für den nächsten Wechsel', m.orbMond === true);
 
   /* Unter dem Zeiger und unter dem Tastenfokus wird der Kopfknopf der volle
      Hauptknopf — die Farbe ist Zustand, nicht Dauerschmuck. */
@@ -474,8 +475,8 @@ console.log('\n§4 Aus ist grau — nur der Schalter, der an ist, leuchtet');
   await ctx.close();
 }
 
-/* ══ §5 Die Kennzahlkarten ruhen ═════════════════════════════════════════ */
-console.log('\n§5 Die Kennzahlkarten im Lernzentrum ruhen');
+/* ══ §5 Die Kennzahlkarten ruhen; nur eine echte Aktion trägt ein Herz ═══ */
+console.log('\n§5 Kennzahlen ruhen, Fehlertraining lässt sich anheften');
 {
   const { ctx, s } = await oeffnen(false, 'light');
   await werkzeug(s);
@@ -488,13 +489,18 @@ console.log('\n§5 Die Kennzahlkarten im Lernzentrum ruhen');
   await s.mouse.move(2, 2); await warte(s, 400);
   const lies = () => s.evaluate(() => [...document.querySelectorAll<HTMLElement>('.stat-karte.lw-metrik')].map(k => ({
     zahl: (k.querySelector('strong')?.textContent || '').trim(),
-    teile: [':scope > .rmo-heart', ':scope > .rmo-ring', ':scope > .rmo-pfad'].map(sel => {
+    herzAttrappe: !!k.querySelector(':scope > .rmo-heart'),
+    anheften: k.querySelector<HTMLButtonElement>(':scope > [data-lw-pin-errors]')?.getAttribute('aria-label') || '',
+    teile: [':scope > .rmo-ring', ':scope > .rmo-pfad'].map(sel => {
       const el = k.querySelector<HTMLElement>(sel); return el ? getComputedStyle(el).filter : 'fehlt'; })
   })));
   const ruhe = await lies();
-  p('Es gibt Kennzahlkarten mit Herz, Ring und Streifen',
+  p('Es gibt Kennzahlkarten mit Ring und echten Aktivitätslinien',
     ruhe.length >= 4 && ruhe.every(k => k.teile.every(f => f !== 'fehlt')), JSON.stringify(ruhe.slice(0, 2)));
-  p('In Ruhe sind Herz, Ring und Streifen grau (entsättigt)',
+  p('Dekorative Herzen täuschen an keiner Kennzahl eine Aktion vor',
+    ruhe.every(k => !k.herzAttrappe) && ruhe.filter(k => k.anheften).length === 1 &&
+      ruhe.some(k => k.anheften === 'Fehlertraining anheften'), JSON.stringify(ruhe));
+  p('In Ruhe sind Ring und Streifen grau (entsättigt)',
     ruhe.every(k => k.teile.every(f => /saturate\(0\)/.test(f))), JSON.stringify(ruhe.map(k => k.teile)));
   p('Die Zahlen bleiben', ruhe.every(k => k.zahl.length > 0), JSON.stringify(ruhe.map(k => k.zahl)));
   await s.hover('.stat-karte.lw-metrik'); await warte(s, 400);

@@ -63,7 +63,7 @@ try {
     await page.locator('[data-rmo-open="' + ids.note + '"]').click();
     check('Dokumentkarte öffnet das zugehörige Dokument', await page.evaluate(() => App.aktuelleSeite()) === ids.note);
     await page.evaluate(() => App.kiPanel(true));
-    await page.locator('#ai-tools summary').click();
+    await page.locator('#ai-mehr').click();
     await capture('KI');
     await page.waitForTimeout(1600);
     check('KI-Werkzeuge ohne Endlosschleifen im Leerlauf', await page.evaluate(() =>
@@ -76,6 +76,7 @@ try {
       await page.evaluate(value => document.documentElement.setAttribute('data-theme', value), theme);
       await capture('KI ' + theme);
     }
+    await page.keyboard.press('Escape');
     await page.evaluate(() => { App.kiPanel(false); Produktwelten.lernen('lernen'); });
     await page.locator('.lw-metrik strong').first().waitFor();
     await capture('Lernen');

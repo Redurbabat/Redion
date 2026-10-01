@@ -380,9 +380,9 @@ const Zusatz = (() => {
                     }));
                 }
             }
-            const anzeige = w.querySelector('.wb-massstab');
-            if (anzeige)
-                anzeige.textContent = Math.round(sicht.z * 100) + ' %';
+            /* Auf der Seitenfläche hängt die vorhandene Leiste ausserhalb des
+               skalierten Brettes. Die Anzeige bleibt dieselbe DOM-Referenz. */
+            massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
         };
         /* `undefined` heisst „noch nicht gefragt", `null` heisst „gibt es nicht
            mehr", eine Zeichenkette ist die Adresse. Drei Zustände, weil zwei zu

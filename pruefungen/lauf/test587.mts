@@ -13,6 +13,8 @@ import path from 'node:path';
 
 declare const App: any;
 declare const Store: any;
+declare const PdfEinlesen: any;
+declare const PdfSeite: any;
 
 const root = path.resolve(import.meta.dirname, '../..');
 const mime: Record<string, string> = {
@@ -63,7 +65,7 @@ try {
     blocks: [...document.querySelectorAll<HTMLElement>('.pg-flaeche .blk')]
       .map(element => element.getAttribute('data-bid'))
   }))));
-  await page.waitForSelector('.pg-flaeche .wb-tools');
+  await page.waitForSelector('.pg-flaeche .wb-tools', { state: 'attached' });
 
   console.log('\n6 · Datenbank bleibt im Flächenkasten lesbar');
   const surface = await page.evaluate(() => {
@@ -78,6 +80,21 @@ try {
     JSON.stringify(surface));
   check('Datenbank ragt rechts nicht aus dem Kasten', surface.dbRight <= surface.bodyRight + 2,
     JSON.stringify(surface));
+  const contrast = (foreground: string, background: string): number => {
+    const light = (value: string): number => {
+      const parts = (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+      const channels = parts.map(part => {
+        const c = part / 255;
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return (channels[0] || 0) * 0.2126 + (channels[1] || 0) * 0.7152 + (channels[2] || 0) * 0.0722;
+    };
+    const a = light(foreground), b = light(background);
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  };
+  check('Datenbanktext hat im dunklen Kasten lesbaren Kontrast',
+    contrast(surface.dbColor, surface.bodyBg) >= 4.5,
+    String(contrast(surface.dbColor, surface.bodyBg).toFixed(2)) + ':1');
 
   console.log('\n7 · Genau eine kontextbezogene Zeichenleiste');
   const visibleToolbars = () => page.evaluate(() =>
@@ -96,6 +113,17 @@ try {
   await page.locator('.pg-flaeche').click({ position: { x: 35, y: 75 } });
   check('Außerhalb des Blocks kehrt die Seitenleiste zurück',
     JSON.stringify(await visibleToolbars()) === '["page"]', JSON.stringify(await visibleToolbars()));
+  for (const width of [360, 390, 428]) {
+    await page.setViewportSize({ width, height: 800 });
+    const toolbar = await page.evaluate(() => {
+      const element = document.querySelector<HTMLElement>('.pg-flaeche .pg-fl-tools')!;
+      const rect = element.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, width: innerWidth };
+    });
+    check('Flächenleiste bleibt bei ' + width + ' px im Bild',
+      toolbar.left >= -1 && toolbar.right <= toolbar.width + 1, JSON.stringify(toolbar));
+  }
+  await page.setViewportSize({ width: 1280, height: 850 });
 
   console.log('\n8 · Große Dokumente öffnen ohne synchrone Miniaturenwelle');
   const load = await page.evaluate(async () => {
@@ -122,6 +150,76 @@ try {
     null, { timeout: 20000 });
   check('Beim Öffnen der Übersicht werden alle 300 Seiten erreichbar',
     await page.locator('.document-thumbnail').count() === 300);
+
+  /* Optionale Lastprobe mit einer lokalen, echten PDF. Die Datei wird nie
+     kopiert, ins Repository geschrieben oder als Testfixture eingecheckt. */
+  if (process.env.REDION_REAL_PDF) {
+    const realPath = path.resolve(process.env.REDION_REAL_PDF);
+    if (!fs.existsSync(realPath)) throw new Error('Lastprobe fehlt: ' + realPath);
+    await page.evaluate(() => {
+      const input = document.createElement('input');
+      input.type = 'file'; input.id = 'test587-real-pdf';
+      document.body.appendChild(input);
+    });
+    await page.locator('#test587-real-pdf').setInputFiles(realPath);
+    console.log('\n8b · Reale PDF-Lastprobe (' + Math.round(fs.statSync(realPath).size / 1048576) + ' MiB)');
+    const importReport = await page.evaluate(async () => {
+      const file = document.querySelector<HTMLInputElement>('#test587-real-pdf')!.files![0]!;
+      const item = Store.addPage(null, { text: 'PDF-Lastprobe' });
+      await Store.flush();
+      App.oeffne(item.id);
+      const delays: number[] = [], longTasks: number[] = [];
+      let expected = performance.now() + 50;
+      const timer = window.setInterval(() => {
+        const now = performance.now(); delays.push(Math.max(0, now - expected)); expected = now + 50;
+      }, 50);
+      const observer = new PerformanceObserver(list =>
+        list.getEntries().forEach(entry => longTasks.push(entry.duration)));
+      observer.observe({ entryTypes: ['longtask'] });
+      const start = performance.now();
+      const result = await PdfEinlesen.alsSeiten(file, item.id, { anordnung: 'untereinander' });
+      await new Promise(resolve => setTimeout(resolve, 80));
+      window.clearInterval(timer); observer.disconnect();
+      return { id: item.id, pages: result.seiten, elapsed: Math.round(performance.now() - start),
+        worstDelay: Math.round(Math.max(0, ...delays)),
+        worstLongTask: Math.round(Math.max(0, ...longTasks)),
+        longTasksOver50: longTasks.filter(value => value >= 50).length };
+    });
+    console.log('  Import: ' + JSON.stringify(importReport));
+    check('Reale PDF wurde als Seiten eingelesen', importReport.pages > 0);
+    const exitReport = await page.evaluate(async () => {
+      const delays: number[] = [], longTasks: number[] = [];
+      const originalDraw = PdfSeite.zeichne;
+      let pdfDraw = 0, pdfCount = 0;
+      PdfSeite.zeichne = (...args: any[]) => {
+        const begin = performance.now();
+        try { return originalDraw(...args); }
+        finally { pdfDraw += performance.now() - begin; pdfCount++; }
+      };
+      let expected = performance.now() + 50;
+      const timer = window.setInterval(() => {
+        const now = performance.now(); delays.push(Math.max(0, now - expected)); expected = now + 50;
+      }, 50);
+      const observer = new PerformanceObserver(list =>
+        list.getEntries().forEach(entry => longTasks.push(entry.duration)));
+      observer.observe({ entryTypes: ['longtask'] });
+      const start = performance.now();
+      document.querySelector<HTMLElement>('[data-document-action="exit"]')!.click();
+      const render = performance.now() - start;
+      PdfSeite.zeichne = originalDraw;
+      await new Promise(resolve => setTimeout(resolve, 100));
+      window.clearInterval(timer); observer.disconnect();
+      return { render: Math.round(render), worstDelay: Math.round(Math.max(0, ...delays)),
+        worstLongTask: Math.round(Math.max(0, ...longTasks)),
+        longTasksOver50: longTasks.filter(value => value >= 50).length,
+        pdfDraw: Math.round(pdfDraw), pdfCount,
+        blocks: document.querySelectorAll('.blk').length };
+    });
+    console.log('  Dokument → Seiteneditor: ' + JSON.stringify(exitReport));
+    check('Seiteneditor bleibt nach Wechsel erreichbar', exitReport.blocks >= importReport.pages);
+    check('Seiteneditor malt beim Wechsel nicht alle PDF-Seiten synchron',
+      exitReport.pdfCount < importReport.pages / 2, JSON.stringify(exitReport));
+  }
   check('Keine unbehandelten Browserfehler', errors.length === 0, errors.join(' | '));
   // Die Testseiten wohnen nur im isolierten Browserkontext dieses Laufs.
   void canvasId;

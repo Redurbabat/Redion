@@ -1189,7 +1189,7 @@ const DocumentMode = (() => {
   /** Nur die sichtbare Handvoll Vorschaubilder aus IndexedDB holen. Ein
       geschlossenes mobiles Panel hat keinen sichtbaren Schnitt und loest
       deshalb auch bei Dokumenten mit hunderten Seiten keine Lesewelle aus. */
-  const activateVisibleThumbnails = (panel: HTMLElement): void => {
+  const activateVisibleThumbnails = (panel: HTMLElement): (() => void) => {
     let scheduled = false;
     const loadVisible = (): void => {
       scheduled = false;
@@ -1222,6 +1222,7 @@ const DocumentMode = (() => {
     };
     panel.addEventListener('scroll', schedule, { passive: true });
     schedule();
+    return schedule;
   };
 
   /* DIE ORIGINALDATEI IST EINE ANGABE, KEIN BAND UEBER DEM PAPIER (E384).
@@ -2087,8 +2088,39 @@ const DocumentMode = (() => {
     thumbHeader.className = 'document-panel-header';
     const thumbTitle = document.createElement('strong'); thumbTitle.textContent = wortViele(page);
     const thumbClose = topButton('thumbnails-close', '✕', wortViele(page) + 'übersicht schließen');
-    thumbHeader.append(thumbTitle, thumbClose); thumbnails.appendChild(thumbHeader);
-    documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
+    const thumbProgress = document.createElement('span');
+    thumbProgress.className = 'document-thumb-progress';
+    thumbProgress.setAttribute('role', 'status');
+    thumbProgress.hidden = true;
+    thumbHeader.append(thumbTitle, thumbProgress, thumbClose); thumbnails.appendChild(thumbHeader);
+    const bilderNachziehen = activateVisibleThumbnails(thumbnails);
+    let miniaturenGebaut = 0;
+    let miniaturenGeplant = false;
+    const miniaturenBauen = (): void => {
+      miniaturenGeplant = false;
+      if (!thumbnails.isConnected || !state.thumbnailsOpen) return;
+      const bis = Math.min(documents.length, miniaturenGebaut + 16);
+      const stueck = document.createDocumentFragment();
+      for (let i = miniaturenGebaut; i < bis; i++)
+        stueck.appendChild(thumbnail(documents[i], i, i === state.index));
+      thumbnails.appendChild(stueck);
+      miniaturenGebaut = bis;
+      bilderNachziehen();
+      if (bis < documents.length) {
+        thumbProgress.hidden = false;
+        thumbProgress.textContent = bis + ' / ' + documents.length;
+        miniaturenStarten();
+      } else {
+        thumbProgress.hidden = true;
+        thumbnails.querySelector<HTMLElement>('.document-thumbnail.is-selected')
+          ?.scrollIntoView({ block: 'nearest' });
+      }
+    };
+    const miniaturenStarten = (): void => {
+      if (!state.thumbnailsOpen || miniaturenGebaut >= documents.length || miniaturenGeplant) return;
+      miniaturenGeplant = true;
+      requestAnimationFrame(miniaturenBauen);
+    };
 
     const center = document.createElement('main');
     center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
@@ -3058,9 +3090,8 @@ const DocumentMode = (() => {
       /* AB HIER DARF BEOBACHTET WERDEN — und keine Zeile früher (E644). */
       standGesetzt = true;
       nachziehen();
-      thumbnails.querySelector<HTMLElement>('.document-thumbnail.is-selected')
-        ?.scrollIntoView({ block: 'nearest' });
-      activateVisibleThumbnails(thumbnails);
+      if (state.thumbnailsOpen) miniaturenStarten();
+      bilderNachziehen();
     });
 
     /* Zu einer Seite springen — zeichnen, hinrollen, Stand merken. Kein
@@ -4103,7 +4134,7 @@ const DocumentMode = (() => {
       thumbnailButton.setAttribute('aria-expanded', String(state.thumbnailsOpen));
       inspectorButton.setAttribute('aria-expanded', String(state.inspectorOpen));
       if (state.inspectorOpen) renderInspector(inspector, page, jetzt());
-      if (state.thumbnailsOpen) activateVisibleThumbnails(thumbnails);
+      if (state.thumbnailsOpen) { miniaturenStarten(); bilderNachziehen(); }
       passen();
     };
     /* EIN BILD AUS DER ZWISCHENABLAGE WIRD EINE SEITE (E471). Wer einen

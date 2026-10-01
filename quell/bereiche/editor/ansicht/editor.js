@@ -428,7 +428,7 @@ const Blocks = (() => {
      *        zuletzt gezeichneter Ansicht eine andere Zahl sichern. Ein
      *        Anzeigewert gehört nicht in die Daten (§9).
      */
-    const render = (block, tiefe = 0, nr = 0) => {
+    const render = (block, tiefe = 0, nr = 0, pdfSpaeter = false) => {
         const t = typ(block.type);
         const el = document.createElement('div');
         el.className = 'blk b-' + block.type;
@@ -900,9 +900,30 @@ const Blocks = (() => {
                 box.appendChild(Blatt.zeichne(block));
                 break;
             /* Eine PDF-Seite: Bild unten, Zeichenschicht darüber (E103). */
-            case 'pdfseite':
-                box.appendChild(PdfSeite.zeichne(block));
+            case 'pdfseite': {
+                if (!pdfSpaeter) {
+                    box.appendChild(PdfSeite.zeichne(block));
+                    break;
+                }
+                /* Nur der grosse Stapel im Seiteneditor nutzt diesen Platzhalter.
+                   Die Blockhülle mit Griff und Kennung ist schon vollständig da:
+                   Sortieren, Kontextmenü und Sprungziel funktionieren sofort.
+                   Inhaltsflaeche ersetzt nur den Papierinhalt, sobald er nahe ist. */
+                const mass = SheetSpace.masseVon(block);
+                const warte = document.createElement('div');
+                warte.className = 'blatt-huelle pdfs-lazy';
+                warte.dataset.pdfLazy = String(block.id);
+                const titel = document.createElement('div');
+                titel.className = 'pdfs-lazy-titel';
+                titel.textContent = 'Seite ' + (Number(block.nr) || 1) +
+                    (Number(block.vonSeiten) ? ' von ' + Number(block.vonSeiten) : '') + ' · wird geladen …';
+                const papier = document.createElement('div');
+                papier.className = 'pdfs-lazy-papier';
+                papier.style.aspectRatio = Math.max(1, mass.bw) + ' / ' + Math.max(1, mass.bh);
+                warte.append(titel, papier);
+                box.appendChild(warte);
                 break;
+            }
             case 'whiteboard':
                 box.appendChild(Zusatz.whiteboard(block));
                 break;

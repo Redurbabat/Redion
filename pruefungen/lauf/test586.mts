@@ -71,6 +71,53 @@ try {
     await page.locator('.lernwelt .lw-nav [data-lw-group="lernen"]').getAttribute('aria-expanded'), 'true');
   check('Trainer und Lernpfad bleiben unter Übersicht erreichbar',
     await page.locator('.lernwelt .lw-subnav:not([hidden]) [data-lw-nav="trainer"], .lernwelt .lw-subnav:not([hidden]) [data-lw-nav="lernweg"]').count(), 2);
+  check('Alle zwölf bisherigen Ansichten bleiben als Unterziele erhalten',
+    await page.locator('.lernwelt .lw-subnav [data-lw-nav]').evaluateAll(buttons =>
+      new Set(buttons.map(button => (button as HTMLElement).dataset.lwNav)).size), 12);
+  check('Nur ein sichtbares Unterziel meldet die aktuelle Seite',
+    await page.locator('.lernwelt .lw-subnav:not([hidden]) [aria-current="page"]').count(), 1);
+  await page.evaluate(() => {
+    const mathe = Store.addPage(null, { text: 'Testfach 586 A' });
+    const physik = Store.addPage(null, { text: 'Testfach 586 B' });
+    Store.addBlock(mathe.id, 'flashcard', { text: 'A? :: A!', quiz: { subject: 'Testfach 586 A' } });
+    Store.addBlock(physik.id, 'flashcard', { text: 'B? :: B!', quiz: { subject: 'Testfach 586 B' } });
+    Lernwelt.aktualisieren();
+  });
+  const subject = page.locator('.lernwelt [data-lw-fach]');
+  check('Fächer enthalten nur gespeicherte Lernkartenfächer',
+    (await subject.locator('option').allTextContents()).join('|'),
+    'Alle Fächer|Testfach 586 A|Testfach 586 B');
+  await subject.selectOption('Testfach 586 A');
+  check('Fachwahl filtert echte Karten',
+    await page.evaluate(() => Lernwelt.modelle.statistik().total), 1);
+  check('Fachwahl ist in der Lernübersicht sichtbar', await subject.inputValue(), 'Testfach 586 A');
+  await page.locator('.lernwelt .lw-subnav:not([hidden]) [data-lw-nav="schule"]').click();
+  check('Generische Schulübersicht trägt keinen irreführenden Fachfilter',
+    await page.locator('.lernwelt [data-lw-fach]').inputValue(), '');
+  await page.locator('.lernwelt .lw-subnav:not([hidden]) [data-lw-nav="lernen"]').click();
+  const pin = page.locator('.lernwelt [data-lw-pin-errors]');
+  check('Nur Fehlertraining hat ein bedienbares Anheft-Herz', await pin.count(), 1);
+  check('Das Herz benennt die echte Handlung', await pin.getAttribute('aria-label'), 'Fehlertraining anheften');
+  check('Kennzahlen bekommen keine Attrappen-Herzen', await page.locator('.lernwelt .rmo-heart').count(), 0);
+  check('Ungeheftet steht die Tagesrunde zuerst',
+    await page.locator('.lernwelt .lw-study-actions article').first().locator('h3').textContent(), 'Tagesrunde');
+  await pin.focus();
+  await page.keyboard.press('Space');
+  check('Tastatur heftet Fehlertraining an', await pin.getAttribute('aria-pressed'), 'true');
+  check('Angeheftetes Fehlertraining steht sichtbar und im DOM zuerst',
+    (await page.locator('.lernwelt .lw-study-actions article').first().locator('h3').textContent())?.trim(),
+    'Fehlertraining Angeheftet');
+  check('Anheftung bietet eine verständliche Gegenaktion', await pin.getAttribute('aria-label'),
+    'Anheftung des Fehlertrainings lösen');
+  await page.evaluate(() => Store.flush());
+  await page.reload();
+  await page.waitForFunction(() => typeof Store !== 'undefined' && !!document.body.dataset.studioNav);
+  await page.evaluate(() => Lernwelt.oeffnen('lernen'));
+  check('Anheftung überlebt Neuladen', await pin.getAttribute('aria-pressed'), 'true');
+  await pin.click();
+  check('Maus löst die Anheftung', await pin.getAttribute('aria-pressed'), 'false');
+  check('Nach dem Lösen steht die Tagesrunde wieder zuerst',
+    await page.locator('.lernwelt .lw-study-actions article').first().locator('h3').textContent(), 'Tagesrunde');
   const study = page.locator('.lernwelt .lw-study-actions article:not(.lw-trainer-kachel) > button');
   check('Vier Lernaktionen sind vorhanden', await study.count(), 4);
   check('Alle vier Lernaktionen haben denselben Buchstaben-Effekt',
@@ -103,6 +150,24 @@ try {
   await page.waitForFunction(() => typeof Store !== 'undefined' && !!document.body.dataset.studioNav);
   check('Die Breite überlebt Neuladen', await visibleWidth(), 194);
   await page.close();
+  const touch = await browser.newPage({ viewport: { width: 390, height: 844 },
+    hasTouch: true, isMobile: true, serviceWorkers: 'block' });
+  await touch.goto(`http://127.0.0.1:${port}/index.html`);
+  await touch.waitForFunction(() => typeof Store !== 'undefined' && !!document.body.dataset.studioNav);
+  await touch.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu').forEach(el => el.remove());
+    Lernwelt.oeffnen('heute');
+  });
+  const touchGroup = touch.locator('.lernwelt [data-lw-group="heute"]');
+  await touchGroup.tap();
+  check('Touch klappt Heute zu', await touchGroup.getAttribute('aria-expanded'), 'false');
+  await touch.locator('.lernwelt [data-lw-group="lernen"]').tap();
+  check('Touch öffnet Übersicht',
+    await touch.locator('.lernwelt [data-lw-group="lernen"]').getAttribute('aria-expanded'), 'true');
+  check('Telefonbreite bleibt ohne horizontalen Seitenüberlauf',
+    await touch.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
+  await touch.close();
 } finally {
   await browser.close();
   await new Promise<void>(resolve => server.close(() => resolve()));

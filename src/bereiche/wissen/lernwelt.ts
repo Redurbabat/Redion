@@ -154,7 +154,10 @@ type LernweltExterneDaten = {
 type LernweltZustand = {
   root: HTMLElement | null;
   ansicht: LernweltAnsicht;
+  offeneGruppe: LernweltAnsicht | null;
   bereichId: string;
+  fachFilter: string;
+  fehlertrainingAngeheftet: boolean;
   fachId: string;
   themaId: string;
   training: LernweltTraining | null;
@@ -189,40 +192,13 @@ const Lernwelt = (() => {
     { id: 'trainer', icon: 'checkCircle', name: 'Trainer' }
   ];
 
-  /**
-   * NEUN REITER WAREN ZU VIELE (E206).
-   *
-   * Redur am 26. August: „es sollte nicht so viele Bereiche haben, z. B. wie
-   * Uni / Schule Ausbildung usw." Gemessen stimmt das auch ohne Auge: neun
-   * Reiter brauchen 1016 px, am Rechner umbrachen sie auf ZWEI Reihen und
-   * kosteten damit 106 px über der Falz — mehr als jede Karte darunter, und
-   * darauf stehen zehn Wörter.
-   *
-   * Vier Gruppen, und keine Ansicht geht verloren: was zusammengehört, steht
-   * unter einem Namen und klappt als zweite, kurze Reihe auf, sobald man
-   * darin ist. `ANSICHTEN` bleibt unverändert die Wahrheit über die neun —
-   * `Lernwelt.ansichten` gibt weiterhin alle neun heraus, Routen wie
-   * `#welt-lernen-uni` funktionieren weiter, und wer eine zehnte Ansicht
-   * anlegt und hier nicht einträgt, bekommt sie als eigenen Reiter statt
-   * gar nicht.
-   *
-   * `unter[0]` ist das, was der Gruppenkopf selbst öffnet.
-   */
+  /** Zwei aufklappbare Orte; alle alten Ansichten bleiben über Unterziele erreichbar. */
   const REITER: Array<{ id: LernweltAnsicht; icon: string; name: string;
                         unter?: LernweltAnsicht[] }> = [
-    { id: 'heute',      icon: 'today',     name: 'Heute' },
-    { id: 'lernen',     icon: 'cards',     name: 'Lernen',
-      unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] },
-    /* NOTEN GEHÖREN NEBEN DIE PRÜFUNGEN (E241). Redur: „es sollte meine
-       Schule alles begleiten, Noten, Lernen, Lernziele". Die Schulvorlage
-       legte das Notenheft seit E139 an — gerechnet hat damit niemand. */
-    { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
-      unter: ['pruefungen', 'noten'] },
-    /* Der Stundenplan steht bei „Wo du lernst": er sagt, WANN man WO ist
-       (E243/L70) — hinter dem gleichnamigen Knopf des Schul-Dashboards
-       stand vorher nur die Ausbildungsseite. */
-    { id: 'schule',     icon: 'learn',     name: 'Wo du lernst',
-      unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+    { id: 'heute', icon: 'today', name: 'Heute',
+      unter: ['heute', 'pruefungen', 'noten', 'stundenplan'] },
+    { id: 'lernen', icon: 'cards', name: 'Übersicht',
+      unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt', 'schule', 'uni', 'arbeit'] }
   ];
 
   /**
@@ -237,7 +213,7 @@ const Lernwelt = (() => {
    * „Lernen", und `Lernwelt.ansichten` gibt das auch so heraus. Umbenannt
    * wird die Beschriftung, nicht die Ansicht.
    */
-  const KURZ: Record<string, string> = { lernen: 'Übersicht' };
+  const KURZ: Record<string, string> = { heute: 'Start' };
 
   const ansichtName = (id: string): string =>
     KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
@@ -246,10 +222,17 @@ const Lernwelt = (() => {
   const gruppeVon = (ansicht: string) =>
     REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht as LernweltAnsicht)) || null;
 
+  /* Ein Fach filtert nur Sichten, deren Inhalt wirklich aus Lernkarten
+     entsteht. Schule, Prüfungskalender und Alltag sind keine Fachansichten. */
+  const FACHANSICHTEN = new Set<LernweltAnsicht>(['lernen', 'lernweg', 'fehler', 'fortschritt']);
+
   const zustand: LernweltZustand = {
     root: null,
     ansicht: 'heute',
+    offeneGruppe: 'heute',
     bereichId: 'alle',
+    fachFilter: '',
+    fehlertrainingAngeheftet: false,
     fachId: '',
     themaId: '',
     training: null,
@@ -458,7 +441,9 @@ const Lernwelt = (() => {
 
   const lernkartenRoh = (): any[] => {
     const ausLearning = typeof Learning !== 'undefined' && Learning.cards ? liste(Learning.cards()) : [];
-    return ausLearning.filter(card => imBereich(card));
+    return ausLearning.filter(card => imBereich(card) &&
+      (!FACHANSICHTEN.has(zustand.ansicht) || !zustand.fachFilter ||
+        fachDirekt(card).toLocaleLowerCase('de') === zustand.fachFilter.toLocaleLowerCase('de')));
   };
 
   /** Nur der referenzielle Store-Vertrag darf eine Nur-Lese-Karte bewerten. */
@@ -555,10 +540,23 @@ const Lernwelt = (() => {
     return String(seite?.text || quelle?.label || 'Ohne Thema').trim() || 'Ohne Thema';
   };
 
-  const fachVon = (card: any): string => {
+  const fachDirekt = (card: any): string => {
     const direkt = card?.quiz?.subject ?? card?.lernFach ?? card?.fach ?? card?.subject;
-    if (String(direkt || '').trim()) return String(direkt).trim();
-    return themaVon(card);
+    return String(direkt || '').trim();
+  };
+
+  const fachVon = (card: any): string => fachDirekt(card) || themaVon(card);
+
+  /* Nur tatsächlich an Karten gespeicherte Fächer. Ein Seitentitel oder
+     Thema wird nicht stillschweigend zu einem Fach umgedeutet. */
+  const fachOptionen = (): string[] => {
+    const karten = typeof Learning !== 'undefined' && Learning.cards ? liste(Learning.cards()) : [];
+    const namen = new Map<string, string>();
+    karten.filter(card => imBereich(card)).forEach(card => {
+      const fach = fachDirekt(card);
+      if (fach) namen.set(fach.toLocaleLowerCase('de'), fach);
+    });
+    return [...namen.values()].sort((a, b) => a.localeCompare(b, 'de'));
   };
 
   const kartenTeile = (card: any): [string, string] => {
@@ -1167,9 +1165,20 @@ const Lernwelt = (() => {
   /* Die Anatomie (Etikett oben, Zahl, Bedeutung am Boden) kommt aus der
      Schale: .stat-karte in anatomie.css (E260). .lw-metrik behält nur die
      Lernwelt-Abweichungen. */
-  const kennzahl = (wert: string, name: string, zusatz = ''): string =>
+  const kennzahl = (wert: string, name: string, zusatz = '', aktion = ''): string =>
     '<article class="stat-karte lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
-      (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
+      (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + aktion + '</article>';
+
+  /* Das Herz gehört nicht einer Kennzahl. Es heftet die echte Übungsaktion
+     „Fehlertraining" an. Diese Präferenz ändert unten die DOM-Reihenfolge
+     der Trainingskarten und wird pro Lernendem in Store.meta gespeichert. */
+  const fehlertrainingMerken = (): string => {
+    const an = zustand.fehlertrainingAngeheftet;
+    const label = an ? 'Anheftung des Fehlertrainings lösen' : 'Fehlertraining anheften';
+    return '<button type="button" class="lw-training-pin" data-lw-pin-errors ' +
+      'aria-pressed="' + an + '" aria-label="' + label + '" title="' + label + '">' +
+      '<span aria-hidden="true">' + (an ? '♥' : '♡') + '</span></button>';
+  };
 
   const fortschritt = (wert: number, label: string): string =>
     '<div class="lw-progress"><div><span>' + esc(label) + '</span><strong>' + prozent(wert) +
@@ -1300,21 +1309,25 @@ const Lernwelt = (() => {
   const kopf = (): string => {
     const optionen = bereiche();
     const aktiv = aktiverBereich();
+    const faecher = fachOptionen();
     return '<header class="lw-head">' +
       '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
         '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-      /* `data-alle` sagt der CSS, ob der Filter gerade etwas TUT (E235).
-         Am Telefon zieht er in die Reiterzeile, und dort ist Platz knapp:
-         „◎ Alle Bereiche" braucht bei 16 px — der Pflichtgrösse, damit iOS
-         beim Tippen nicht hineinzoomt — rund 160 px von 368. Das ist fast
-         die halbe Zeile für die Aussage „ich filtere nicht".
-         Steht der Filter auf „alle", bleibt darum nur das Zeichen ◎ übrig;
-         sobald ein Bereich gewählt ist, steht sein Name da. */
-      '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
-        '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
-        optionen.map(item => '<option value="' + esc(item.id) + '"' +
-          (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
-        '</select></label></header>' +
+      '<div class="lw-filters"><label class="lw-fach"><span>Fächer</span>' +
+        '<select data-lw-fach aria-label="Fach für Lernkarten auswählen"' +
+        (faecher.length ? '' : ' disabled title="Noch keine Lernkarten mit Fach vorhanden"') + '>' +
+        '<option value="">Alle Fächer</option>' + faecher.map(fach =>
+          '<option value="' + esc(fach) + '"' + (fach === zustand.fachFilter ? ' selected' : '') +
+          '>' + esc(fach) + '</option>').join('') + '</select></label>' +
+      /* Die alten Lebensbereiche bleiben erhalten, aber sind ein zweiter
+         Filter. Ein Lebensbereich ist nicht automatisch ein Schulfach. */
+      '<details class="lw-area-more"><summary>' +
+        esc(aktiv.id === 'alle' ? 'Lebensbereich' : 'Bereich: ' + aktiv.name) + '</summary>' +
+        '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
+          '"><span>Lebensbereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
+          optionen.map(item => '<option value="' + esc(item.id) + '"' +
+            (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
+          '</select></label></details></div></header>' +
       /* Die Zeichen werden nach dem Einsetzen gefüllt — siehe `fuelleZeichen`
          unten. Hier steht nur die Stelle. */
       /* Eine Ansicht, die in KEINER Gruppe steht, bekommt ihren eigenen
@@ -1325,8 +1338,6 @@ const Lernwelt = (() => {
         const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
           .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
         const reihe = [...REITER, ...zusatz];
-        const hier = gruppeVon(zustand.ansicht);
-
         /* `data-kopfzeile="eigene"` ist ein Vertrag mit der Schale, kein
            Aufruf in sie hinein (§5): am Telefon verschmilzt sie ihre eigene
            Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
@@ -1336,23 +1347,28 @@ const Lernwelt = (() => {
         const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' + reihe.map(item => {
           const drin = item.id === zustand.ansicht ||
             ((item as any).unter || []).includes(zustand.ansicht);
+          const gruppe = !!(item as any).unter;
+          const offen = gruppe && zustand.offeneGruppe === item.id;
           return '<button type="button" data-lw-nav="' +
-            ((item as any).unter ? (item as any).unter[0] : item.id) + '"' +
-            (drin ? ' aria-current="page" class="is-active"' : '') + '>' +
+            (gruppe ? (item as any).unter[0] : item.id) + '"' +
+            (gruppe ? ' data-lw-group="' + esc(item.id) + '" aria-expanded="' + offen +
+              '" aria-controls="lw-subnav-' + esc(item.id) + '"' : '') +
+            (drin && !offen ? ' aria-current="page"' : '') +
+            (drin ? ' class="is-active"' : '') + '>' +
             '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) + '</span>' +
-            ((item as any).unter
+            (gruppe
               ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
             '</button>';
         }).join('') + '</nav>';
 
-        /* Die zweite Reihe steht nur da, wenn man in einer Gruppe IST — und
-           dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
-           zeigt, ist wieder die alte. */
-        if (!hier?.unter) return haupt;
-        return haupt + '<nav class="lw-subnav" data-material="heute-unter" aria-label="' + esc(hier.name) + '">' +
-          hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
+        /* Beide Ziele existieren für aria-controls, aber nur die geöffnete
+           Gruppe ist sichtbar und in der Fokusreihenfolge. */
+        return haupt + REITER.map(gruppe => '<nav class="lw-subnav" id="lw-subnav-' +
+          esc(gruppe.id) + '" data-material="heute-unter" aria-label="' + esc(gruppe.name) +
+          '"' + (zustand.offeneGruppe === gruppe.id ? '' : ' hidden') + '>' +
+          (gruppe.unter || []).map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
             (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
-            esc(ansichtName(id)) + '</button>').join('') + '</nav>';
+            esc(ansichtName(id)) + '</button>').join('') + '</nav>').join('');
       })();
   };
 
@@ -1544,19 +1560,27 @@ const Lernwelt = (() => {
         (fokus ? esc(fokus.label) : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
         '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
       '<section class="lw-metrics">' +
-        kennzahl(String(queue.errors.length), 'fällige Fehler') +
+        kennzahl(String(queue.errors.length), 'fällige Fehler', '', fehlertrainingMerken()) +
         kennzahl(String(queue.due.length), 'fällige Karten') +
         kennzahl(String(queue.newCards.length), 'neue Karten') +
         kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächste Wiederholung') +
       '</section>' +
       '<div class="lw-study-actions">' +
-        '<article>' + zeichenSpan('sun') + '<h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
+        (() => {
+          const tagesrunde = '<article>' + zeichenSpan('sun') + '<h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
           '<button type="button" class="is-primary" data-lw-train="today"' +
-          (queue.all.length ? '' : ' disabled') + '>Starten · ' + queue.all.length + '</button></article>' +
-        '<article>' + zeichenSpan('puzzle') + '<h3>Fehlertraining</h3><p>Alle instabilen Fehler gezielt festigen.</p>' +
+          (queue.all.length ? '' : ' disabled') + '>Starten · ' + queue.all.length + '</button></article>';
+          const fehlertraining = '<article class="lw-fehlertraining" data-angeheftet="' +
+            zustand.fehlertrainingAngeheftet + '">' + zeichenSpan('puzzle') +
+            '<h3>Fehlertraining' + (zustand.fehlertrainingAngeheftet
+              ? ' <small class="lw-pin-label">Angeheftet</small>' : '') +
+            '</h3><p>Alle instabilen Fehler gezielt festigen.</p>' +
           '<button type="button" data-lw-train="errors"' +
           (fehlerListe().some(item => !item.stabil) ? '' : ' disabled') + '>Trainieren · ' +
-          fehlerListe().filter(item => !item.stabil).length + '</button></article>' +
+          fehlerListe().filter(item => !item.stabil).length + '</button></article>';
+          return zustand.fehlertrainingAngeheftet
+            ? fehlertraining + tagesrunde : tagesrunde + fehlertraining;
+        })() +
         '<article>' + zeichenSpan('sparkle') + '<h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
           '<button type="button" data-lw-train="new"' +
           (queue.newCards.length ? '' : ' disabled') + '>Lernen · ' + queue.newCards.length + '</button></article>' +
@@ -2804,7 +2828,7 @@ const Lernwelt = (() => {
        tippt darauf, er wird hell, und dann ist er weg. Solange die Leiste
        322 px breit war, passte alles; seit sie sich am Telefon die Zeile
        mit der Krume teilt (E235), sind es 234. */
-    Rollrand.zeige(leiste, leiste?.querySelector<HTMLElement>('[aria-current="page"]') || null);
+    Rollrand.zeige(leiste, leiste?.querySelector<HTMLElement>('.is-active') || null);
   };
 
   const ansichtGueltig = (wert: unknown): wert is LernweltAnsicht =>
@@ -2812,6 +2836,11 @@ const Lernwelt = (() => {
 
   const wechseln = (ansicht: LernweltAnsicht): void => {
     zustand.ansicht = ansicht;
+    zustand.offeneGruppe = gruppeVon(ansicht)?.id || null;
+    if (!FACHANSICHTEN.has(ansicht) && zustand.fachFilter) {
+      zustand.fachFilter = '';
+      Store.setMeta(metaSchluessel('fachFilter'), '');
+    }
     zustand.training = null;
     zustand.simulation = null;
     zustand.fachId = ansicht === 'schule' ? zustand.fachId : '';
@@ -3070,6 +3099,26 @@ const Lernwelt = (() => {
   const klick = (event: Event): void => {
     const element = event.target instanceof Element ? event.target : null;
     if (!element) return;
+    if (element.closest('[data-lw-pin-errors]')) {
+      zustand.fehlertrainingAngeheftet = !zustand.fehlertrainingAngeheftet;
+      Store.setMeta(metaSchluessel('fehlertrainingAngeheftet'), zustand.fehlertrainingAngeheftet);
+      zeichnen();
+      zustand.root?.querySelector<HTMLElement>('[data-lw-pin-errors]')?.focus();
+      return;
+    }
+    const gruppenKnopf = element.closest<HTMLElement>('[data-lw-group]');
+    if (gruppenKnopf) {
+      const id = gruppenKnopf.dataset.lwGroup;
+      if (!ansichtGueltig(id)) return;
+      if (gruppeVon(zustand.ansicht)?.id !== id) {
+        wechseln(id);
+      } else {
+        zustand.offeneGruppe = zustand.offeneGruppe === id ? null : id;
+        zeichnen();
+        zustand.root?.querySelector<HTMLElement>('[data-lw-group="' + id + '"]')?.focus();
+      }
+      return;
+    }
     const nav = element.closest<HTMLElement>('[data-lw-nav]');
     const navId = nav?.dataset.lwNav;
     if (ansichtGueltig(navId)) { wechseln(navId); return; }
@@ -3180,6 +3229,16 @@ const Lernwelt = (() => {
   };
 
   const aenderung = (event: Event): void => {
+    const fach = event.target instanceof HTMLSelectElement && event.target.matches('[data-lw-fach]')
+      ? event.target : null;
+    if (fach) {
+      zustand.fachFilter = fachOptionen().includes(fach.value) ? fach.value : '';
+      Store.setMeta(metaSchluessel('fachFilter'), zustand.fachFilter);
+      if (!FACHANSICHTEN.has(zustand.ansicht)) wechseln('lernen');
+      else zeichnen();
+      zustand.root?.querySelector<HTMLElement>('[data-lw-fach]')?.focus();
+      return;
+    }
     const select = event.target instanceof HTMLSelectElement && event.target.matches('[data-lw-area]')
       ? event.target
       : null;
@@ -3191,6 +3250,10 @@ const Lernwelt = (() => {
     zustand.fachId = '';
     zustand.themaId = '';
     Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
+    if (zustand.fachFilter && !fachOptionen().includes(zustand.fachFilter)) {
+      zustand.fachFilter = '';
+      Store.setMeta(metaSchluessel('fachFilter'), '');
+    }
     zeichnen();
   };
 
@@ -3267,8 +3330,13 @@ const Lernwelt = (() => {
     const gespeichert = Store.getMeta(metaSchluessel('ansicht'), 'heute');
     zustand.ansicht = ansichtGueltig(ansicht) ? ansicht
       : ansichtGueltig(gespeichert) ? gespeichert : 'heute';
+    zustand.offeneGruppe = gruppeVon(zustand.ansicht)?.id || null;
     const bereichGespeichert = String(Store.getMeta(metaSchluessel('bereich'), 'alle'));
     zustand.bereichId = bereiche().some(item => item.id === bereichGespeichert) ? bereichGespeichert : 'alle';
+    const fachGespeichert = String(Store.getMeta(metaSchluessel('fachFilter'), ''));
+    zustand.fachFilter = FACHANSICHTEN.has(zustand.ansicht) &&
+      fachOptionen().includes(fachGespeichert) ? fachGespeichert : '';
+    zustand.fehlertrainingAngeheftet = Store.getMeta(metaSchluessel('fehlertrainingAngeheftet'), false) === true;
     zustand.training = null;
     zustand.simulation = null;
     zustand.extern = null;

@@ -61,30 +61,26 @@
 }
 #ai #ai-senden:hover { background: var(--haupt-flaeche-hover); transform: translateY(-1px); }
 #ai #ai-senden:active { transform: scale(.92); }
-#ai :is(.ai-leiste button, .ai-tools summary, .ai-head button):focus-visible {
+#ai :is(.ai-leiste button, .ai-quick button, .ki-quellschalter button, .ai-context-actions button, .ai-head button):focus-visible {
   outline: 2px solid var(--accent-text); outline-offset: 2px;
 }
-#ai .ai-tools { margin: 0 0 8px; border-radius: 16px; }
-#ai .ai-tools > summary {
-  display: flex; align-items: center; justify-content: space-between;
-  min-height:var(--touch-min); padding: 0 10px; border-radius: 12px;
-  list-style: none; cursor: pointer; color: var(--text-dim); font-size: 12px;
-}
-#ai .ai-tools > summary::-webkit-details-marker { display: none; }
-#ai .ai-tools > summary:hover { color: var(--text); background: var(--bg-hover); }
-#ai .ai-tools > summary > span { transition: transform .22s; transform: rotate(180deg); }
-#ai .ai-tools[open] > summary > span { transform: none; }
-#ai .ai-tools-body {
-  max-height: min(36dvh, 330px); overflow: auto; overscroll-behavior: contain;
-  padding: 4px 8px 12px; scrollbar-width: thin;
-}
-#ai .ai-tools[open] .ai-tools-body { animation: rmo-reveal .24s var(--rmo-ease); }
-#ai .ai-tools h3 {
-  width: 100%; margin: 0 0 10px; color: var(--text-faint);
+#ai .ai-context-group { min-width: 0; margin: 0 0 7px; }
+#ai .ai-context-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#ai .ai-context-group h3 {
+  margin: 0 0 0 2px; color: var(--text-faint);
   font-size: 11px; font-weight: 600; letter-spacing: .04em;
 }
-#ai .ai-context-group { margin-bottom: 18px; }
-#ai .ki-quellschalter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+#ai .ai-context-actions { display: flex; gap: 2px; }
+#ai .ai-context-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: var(--touch-min); min-height: var(--touch-min); border: 0;
+  border-radius: 12px; color: var(--text-dim); background: transparent;
+}
+#ai .ai-context-actions button:is(:hover, :focus-visible) { color: var(--text); background: var(--bg-hover); }
+#ai .ki-quellschalter {
+  display: flex; flex-wrap: nowrap; gap: 6px; margin: 0; padding: 0 0 2px;
+  overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin;
+}
 /* 32 px, und das ist ein NEBENWEG (§37, E627). Die Quellschalter sagen, worin
    die KI suchen darf — man stellt sie einmal ein und fasst sie danach selten
    wieder an; der tägliche Weg ist das Eingabefeld darunter. Sie stehen in
@@ -92,14 +88,18 @@
    statt zwei: die Schalter schöben genau das Feld aus dem Bild, das sie
    begleiten. Der geschriebene Grund steht damit hier, wie §37 ihn verlangt —
    nicht stillschweigend. */
-#ai .ki-quellschalter button { min-height: 32px; border-radius: 10px; padding: 6px 9px; }
-#ai .ai-quick { display: grid; gap: 18px; overflow: visible; margin: 0; }
-#ai .ai-action-group { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 7px; padding: 4px; }
-#ai .ai-action-group h3 { margin-bottom: 0; }
-/* Nur die Umgebung neu ordnen: Originalmaße, Schatten und Glimmen der
- * beiden Bau-Knöpfe nicht überschreiben. 32 px Nebenweg, weil aufklappbar. */
-#ai .ai-tools-settings { display: flex; flex-wrap: wrap; gap: 10px; padding: 18px 4px 2px; }
-#ai .ai-tools-settings button { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+#ai .ki-quellschalter button { flex: 0 0 auto; min-height: 32px; border-radius: 10px; padding: 6px 9px; }
+#ai .ai-quick { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 7px; }
+#ai .ai-page-commands {
+  display: flex; flex: 1 1 auto; gap: 6px; min-width: 0; overflow-x: auto;
+  overscroll-behavior-inline: contain; scrollbar-width: thin;
+}
+#ai .ai-quick button { flex: 0 0 auto; min-height: 32px; white-space: nowrap; }
+#ai #ai-mehr { background: var(--bg-hover); color: var(--text); }
+#ai #ai-mehr:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  border-color: var(--accent-text); color: var(--accent-text);
+}
+#ai .ai-action-bank[hidden] { display: none; }
 
 /* Kleine, abgeschlossene Bewegungen an vorhandenen Oberflächen. */
 @keyframes rmo-panel-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
@@ -520,13 +520,11 @@ body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
   #ai .ai-foot { padding: 0 10px max(10px, env(safe-area-inset-bottom)); }
   #ai .ai-head { padding-inline: 14px; }
   #ai .ai-compose textarea { font-size: 16px; min-height: 86px; }
-  #ai .ai-tools-body { max-height: min(32dvh, 260px); }
   #ai .ai-leiste .model-btn { flex-basis: 130px; }
   #ai #ai-modus { font-size: 11px; padding-inline: 3px; }
 }
 @media (max-height: 600px) {
   #ai .ai-compose textarea { min-height: 54px; max-height: 100px; }
-  #ai .ai-tools-body { max-height: 22dvh; }
   #ai #chat { min-height: 32px; padding-block: 10px; }
 }
 @media (hover: none) {
@@ -534,11 +532,11 @@ body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
   body .bib-deckel[data-art="ordner"]:hover:not(:focus-visible) .bib-deckel-blatt::before { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  #ai.open, #ai .ai-tools-body, #ai .ai-compose::before,
+  #ai.open, #ai .ai-compose::before,
   .rmo-orb::after, .rmo-liquid::before, .rmo-liquid::after, .ru-drucker-blatt,
   .rmo-digit::before,
   .els-kachel::after, .stat-karte.lw-metrik::after, .stat-karte.lw-metrik strong { animation: none !important; }
-  #ai .ai-compose, #ai .ai-leiste button, #ai .ai-tools > summary > span,
+  #ai .ai-compose, #ai .ai-leiste button,
   #ai .ai-compose::before, .rmo-folder-sheet, .rmo-carousel i, .rmo-sliders i::after,
   .els-kachel, .stat-karte.lw-metrik, .schalter > i, .sp-start,
   .fbtns button.prim { transition: none !important; }
@@ -745,17 +743,8 @@ body [data-rmo~="glass"]:active:not(:disabled) > :not(.rmo-glass) { opacity:.82;
 .rmo-transport button:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 4px #0003; }
 .rmo-transport button:disabled { opacity:.45; cursor:default; }
 
-/* E534: Herz und Wendekarte ergänzen bestehende Statistik-/Ticketfamilien.
-   Keine neuen Kennzahlen, keine zweite Live-Region und keine Leerlaufschleife. */
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > strong { padding-inline-end:32px; }
-/* Lernkarten ordnen ihr Etikett per order:-1 oben ein. Dafür bleibt unter
-   dem Herz eine eigene Zeile frei; Gesundheitskarten haben das Etikett unten. */
-body .stat-karte.lw-metrik:has(> .rmo-heart) { padding-top:var(--touch-min,44px); }
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > .rmo-ring { top:8px; right:8px; bottom:auto; }
-body .rmo-heart { position:absolute; inset:13px 13px auto auto; width:20px; height:20px;
-  color:var(--accent-text); pointer-events:none; font-size:20px; line-height:1;
-  text-align:center; transform-origin:center; opacity:.8; }
-.rmo-heart::before { content:'♥'; }
+/* Das Herz ist nur noch eine echte Aktion im Lernzentrum: Fehlertraining
+   anheften. Kennzahlen ohne Handlung tragen keinen Herz-Schmuck. */
 @keyframes rmo-heart-beat {
   0%,100% { transform:perspective(300px) scale(1) translateZ(0); }
   5% { transform:perspective(300px) scale(.8) translateZ(0); }
@@ -763,9 +752,6 @@ body .rmo-heart { position:absolute; inset:13px 13px auto auto; width:20px; heig
   40% { transform:perspective(300px) scale(1) translateZ(20px); }
   50% { transform:perspective(300px) scale(1.2) translateZ(30px); }
   70% { transform:perspective(300px) scale(.8) translateZ(20px); }
-}
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .rmo-heart {
-  animation:rmo-heart-beat .8s ease-out 1;
 }
 [data-rmo-play="metric"] { animation:none; }
 body .rmo-ticket { perspective:800px; }
