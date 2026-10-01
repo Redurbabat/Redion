@@ -59,8 +59,9 @@ const StudioSchale = (() => {
             return;
         gestartet = true;
         einstellen(Store.getMeta(META, false) === true);
-        const gespeichert = Number(Store.getMeta(BREITE, 184));
-        breiteSetzen(Number.isFinite(gespeichert) ? gespeichert : 184);
+        const vorgabe = window.innerWidth <= 1100 ? 156 : 184;
+        const gespeichert = Number(Store.getMeta(BREITE, vorgabe));
+        breiteSetzen(Number.isFinite(gespeichert) ? gespeichert : vorgabe);
         const an = (id, tun) => {
             document.getElementById(id)?.addEventListener('click', tun);
         };

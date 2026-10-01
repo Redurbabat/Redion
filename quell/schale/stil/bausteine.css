@@ -902,11 +902,23 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   font-weight:580; letter-spacing:-.005em
 }
 .bib-deckel-mehr{
-  margin-left:auto; flex:none; width:20px; height:20px; display:grid;
-  place-items:center; border-radius:6px; color:var(--text-faint);
-  font-style:normal; font-size:13px
+  position:absolute;right:0;bottom:17px;z-index:3;
+  width:var(--touch-min);height:var(--touch-min);display:grid;
+  place-items:center;border-radius:var(--radius-md);color:var(--text-dim);
+  background:var(--bg-card);border:1px solid var(--line);
+  font-size:20px;cursor:pointer
 }
-.bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-deckel-mehr:hover,.bib-deckel-mehr:focus-visible{ background:var(--bg-hover); color:var(--text) }
+.bib-deckel-mehr:focus-visible,.bib-zeile-mehr:focus-visible,.bib-baum-mehr:focus-visible{
+  outline:2px solid var(--accent-text);outline-offset:2px
+}
+.bib-zelle .bib-deckel-name{padding-right:var(--touch-min)}
+.bib-zeile-mehr{margin-left:auto;flex:none;width:var(--touch-min);height:var(--touch-min);
+  display:grid;place-items:center;border-radius:var(--radius-md);color:var(--text-dim);
+  font-size:20px;cursor:pointer}
+.bib-zeile-mehr:hover,.bib-zeile-mehr:focus-visible{background:var(--bg-hover);color:var(--text)}
+.bib-zeile[data-id]:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+.bib-menue-gefahr{color:var(--gefahr)!important}
 .bib-deckel small{
   display:block; overflow:hidden; margin-top:2px;
   font-size:11px; white-space:nowrap; text-overflow:ellipsis

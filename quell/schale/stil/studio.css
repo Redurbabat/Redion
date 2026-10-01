@@ -1,7 +1,6 @@
 /* Shared Studio surfaces. Existing commands and content controllers remain the
    only source of behavior. Glass belongs to controls, paper remains opaque. */
 :root{
-  --studio-nav-width:var(--studio-nav-expanded,184px);
   --studio-bar-height:60px;
   /* `--studio-glass` ist seit E695 fort: Menüs und PDF-Leiste tragen das Glas aus §16 (`--bg-schwebend` + `--glas-blur`, grund.css). */
   --studio-line:color-mix(in srgb,var(--text) 12%,transparent);
@@ -10,6 +9,10 @@
   --studio-paper-shadow:0 2px 3px rgb(0 0 0 / .12),0 20px 45px rgb(0 0 0 / .16);
   --studio-perspective:1100px;
 }
+/* `studio.ts` setzt --studio-nav-expanded am body. Die abgeleitete Marke muss
+   DORT berechnet werden: an :root sah sie den Wert ihres Kindes nie, und der
+   Griff änderte nur aria-valuenow, nicht die Rasterspalte. */
+body{--studio-nav-width:var(--studio-nav-expanded,184px)}
 #studio-bar{
   display:flex;align-items:center;gap:var(--space-3);min-width:0;
   min-height:var(--studio-bar-height);padding:var(--space-3) var(--space-5);
@@ -47,9 +50,32 @@
 .studio-shortcuts{display:flex;align-items:center;gap:2px}
 .studio-shortcuts button{color:var(--text-dim);white-space:nowrap}
 .studio-shortcuts button[aria-current]{background:var(--bg-card);color:var(--text);box-shadow:var(--studio-highlight);border-color:var(--line);font-weight:600}
-.studio-search{margin-left:auto;width:clamp(160px,22vw,340px);justify-content:flex-start;
+.studio-search{margin-left:0;margin-right:auto;width:clamp(160px,22vw,340px);justify-content:flex-start;
   color:var(--text-dim);background:var(--bg-input);border-color:var(--line)}
 .studio-search kbd{margin-left:auto;font:10px var(--font);opacity:.7;white-space:nowrap}
+.studio-search svg{transform-origin:center}
+.studio-search:is(:hover,:focus-visible,:active) svg{
+  color:var(--accent-text);will-change:transform;
+  animation:studio-search-motor 560ms var(--ease-enter) 1 both}
+@keyframes studio-search-motor{
+  0%{transform:rotate(-18deg) scale(.94)}
+  46%{transform:rotate(32deg) scale(1.05)}
+  100%{transform:rotate(0) scale(1)}
+}
+/* Dasselbe Glas wie an Redions Menüs. Der volle Grund bleibt der Fallback,
+   und die Suche bekommt keine zusätzliche Leiste oder zweite Aktion. */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .studio-search:is(:hover,:focus-visible,:active){
+    background:var(--bg-schwebend-dicht);border-color:var(--line);
+    -webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur);
+    box-shadow:var(--glas-kante)
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .studio-search:is(:hover,:focus-visible,:active) svg{animation:none;will-change:auto}
+}
+body[data-bewegung="ruhig"] .studio-search:is(:hover,:focus-visible,:active) svg{
+  animation:none;will-change:auto}
 .studio-action{color:var(--auf-accent);background:var(--haupt-flaeche);box-shadow:var(--haupt-schein);font-weight:600;white-space:nowrap}
 .studio-icon:hover,.studio-shortcuts button:hover,.studio-search:hover{background:var(--bg-hover);border-color:var(--line)}
 .studio-action:hover{background:var(--haupt-flaeche-hover)}
@@ -88,8 +114,20 @@ body:has(#page .bib-studio-import) #studio-import{display:none}
 body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--motion-fast) var(--ease-enter)}
 @keyframes studio-tools-enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){body[data-studio-tools="offen"] #menueband{animation:none}}
-.studio-orb{display:block;width:19px;height:19px;border-radius:50%;background:#e5defd;box-shadow:inset -6px -3px 0 #656079;transform:rotate(-25deg);transition:transform var(--motion-slow) var(--ease),box-shadow var(--motion-slow) var(--ease)}
-html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #8165df22,inset 0 1px 2px #ffffff70;transform:rotate(0)}
+/* Der bisherige leuchtende Kreis sagte nicht, WAS er tut. Das bestehende
+   Farbschema-Kommando bleibt; Sonne und Mond zeigen nun das nächste Ziel,
+   und der Knopf hat auch bei Touch das volle 44-px-Ziel. */
+.studio-theme{min-width:var(--touch-min);padding:0}
+.studio-orb{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));
+  color:var(--accent-text);background:color-mix(in srgb,var(--accent) 13%,var(--bg-card));
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg) 65%,transparent),0 2px 8px color-mix(in srgb,var(--accent) 18%,transparent);
+  transition:transform var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease)}
+.studio-orb svg{grid-area:1/1;width:18px;height:18px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.studio-theme-moon,html[data-theme="light"] .studio-theme-sun{display:none}
+html[data-theme="light"] .studio-theme-moon{display:block}
+@media(hover:hover){.studio-theme:hover .studio-orb{transform:rotate(12deg);border-color:var(--accent)}}
+@media(prefers-reduced-motion:reduce){.studio-orb{transition:none}.studio-theme:hover .studio-orb{transform:none}}
 
 @media(min-width:761px){
   body[data-schale="premium"]{--kante-b:var(--studio-nav-width)}
@@ -241,7 +279,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-mode-switch,.bib-studio-wege{isolation:isolate}
 .menu button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-3px}
 @media(max-width:1100px) and (min-width:761px){
-  :root{--studio-nav-width:var(--studio-nav-expanded,156px)}
+  body{--studio-nav-width:var(--studio-nav-expanded,156px)}
   .studio-shortcuts button{padding:0 8px;font-size:12px}
   .studio-search{width:160px}
   .studio-search kbd{display:none}

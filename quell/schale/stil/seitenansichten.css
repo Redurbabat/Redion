@@ -157,6 +157,11 @@
 }
 .pg-fl-griff{margin-left:auto; color:var(--text-dim); font-size:13px}
 .pg-fl-koerper{padding:14px 20px 26px}
+/* Die breite Datenbank der Textseite darf den frei positionierten Kasten
+   nicht verlassen. Die Tabelle selbst bleibt innen horizontal rollbar. */
+.pg-fl-koerper .db{
+  width:100%; max-width:100%; min-width:0; margin-left:0; flex:1 1 auto;
+}
 /* Auf der Fläche gibt es keinen Aussenrand, an dem ein Cover kleben könnte —
    und der Kasten ist der Rand. Ein Cover mit -96 px Rand ragte sonst über
    ihn hinaus. */
@@ -173,6 +178,9 @@
   position:absolute; left:50%; transform:translateX(-50%);
   bottom:18px; z-index:6; max-width:calc(100% - 24px);
 }
+/* Die Whiteboard-Leiste wird auf der Fläche an denselben unteren Platz
+   gehängt wie die Seitenleiste. Nur der aktive Kontext darf bedienbar sein. */
+.pg-flaeche .gfx-tb-sockel[hidden]{display:none}
 .pg-fl-massstab{
   display:inline-flex; align-items:center; justify-content:center;
   min-width:52px; padding:0 6px;

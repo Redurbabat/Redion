@@ -45,9 +45,25 @@ const Bibliothek = (() => {
     /* ------------------------------------------------------------------ *
      * Hilfen
      * ------------------------------------------------------------------ */
-    /** Alle echten Seiten — ohne Systemseiten, ohne Papierkorb. */
+    /** Ein Kind eines weggelegten Ordners darf nicht als Waisenkarte auftauchen.
+     * Die Kindblöcke bleiben unverändert und kommen bei Wiederherstellung des
+     * Ordners an ihrem alten Platz zurück. */
+    const ahnenLebendig = (p) => {
+        let id = p.parentTable === 'collection' ? null : p.parentId;
+        const gesehen = new Set();
+        while (id && !gesehen.has(id)) {
+            gesehen.add(id);
+            const eltern = Store.getBlock(id);
+            if (eltern?.alive === false)
+                return false;
+            id = eltern && eltern.parentTable !== 'collection' ? eltern.parentId : null;
+        }
+        return true;
+    };
+    /** Alle echten Seiten — ohne Systemseiten, Papierkorb und verdeckte Kinder. */
     const alleSeiten = () => Object.values(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
+        ahnenLebendig(b) &&
         (b.parentTable === 'collection'
             ? collectionPermitted('lesen', b.parentId)
             : permitted('lesen', b.id)));
@@ -174,7 +190,7 @@ const Bibliothek = (() => {
     };
     let zustand = { reiter: 'ablage', ordner: null,
         sortier: 'wann', richtung: 'ab',
-        suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
+        spalten: SPALTEN.map(s => s.id),
         /* Der Artfilter der Deckelansicht (E236). Er steht NEBEN
            `reiter`, nicht darin: der Reiter fragt „wo liegt es",
            die Art fragt „was ist es". Zwei Fragen, zwei Filter. */
@@ -362,10 +378,6 @@ const Bibliothek = (() => {
             liste = alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
         if (zustand.reiter === 'datenbank')
             liste = alle.filter(p => p.parentTable === 'collection');
-        if (zustand.suche) {
-            const s = zustand.suche.toLowerCase();
-            liste = liste.filter(p => (p.text || '').toLowerCase().includes(s));
-        }
         const gesamt = liste.length;
         if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
             liste = liste.slice(0, DECKE_KUERZLICH);
@@ -823,27 +835,20 @@ const Bibliothek = (() => {
             { id: 'favoriten', name: 'Favoriten' },
             { id: 'pdf', name: 'Alle PDFs' }
         ];
+        const aktiv = wege.find(weg => weg.id === (pdfAn ? 'pdf' : zustand.reiter)) || wege[0];
         return '<div class="bib-studio-navigation">' +
-            /* `data-material` (E706): die Wahl fliegt zum neuen Weg. */
             '<nav class="bib-studio-wege" data-material="dokumente-wege" aria-label="Dokumente finden">' +
-            wege.map(weg => {
-                const an = weg.id === 'pdf' ? pdfAn : !pdfAn && zustand.reiter === weg.id;
-                return '<button type="button" data-studio-weg="' + weg.id + '"' +
-                    (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
-            }).join('') + '</nav>' +
+            '<button type="button" data-studio-wege aria-haspopup="menu" aria-label="Dokumentansicht wählen">' +
+            esc(aktiv.name) + '<span aria-hidden="true"> ▾</span></button></nav>' +
             '<details class="bib-studio-optionen"><summary>Sammlungen</summary>' +
             '<select class="bib-studio-sammlungen" aria-label="Weitere Bibliothek-Inhalte öffnen">' +
             '<option value="">Dateien & Wissen …</option>' +
             (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select></details>' +
-            '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
-            '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
-            '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
-            ' value="' + esc(zustand.suche) + '"></label>' +
             '</div>';
     };
     /** Bis zu drei wirklich geöffnete Dokumente, keine dekorativen Dateiatrappen. */
     const recentCarousel = () => {
-        if (zustand.ordner || zustand.suche || zustand.art !== 'alle' ||
+        if (zustand.ordner || zustand.art !== 'alle' ||
             !['ablage', 'kuerzlich'].includes(zustand.reiter))
             return '';
         const recent = alleSeiten().filter(p => p.zuletztGeoeffnet)
@@ -859,7 +864,7 @@ const Bibliothek = (() => {
     };
     /** Nur ein wirklich geöffnetes PDF anbieten; Importzeit ist kein Lesefortschritt. */
     const studioWeiter = () => {
-        if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle')
+        if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.art !== 'alle')
             return '';
         const letzte = alleSeiten().filter(p => p.zuletztGeoeffnet && artVon(p).id === 'pdf')
             .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet))[0];
@@ -1022,12 +1027,13 @@ const Bibliothek = (() => {
             `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
             (p.favorite ? '\u2605' : '\u2606') + '</i>' +
             '</span>' +
-            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
-            '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
-            '</button>';
+            '</button>' +
+            '<button type="button" class="bib-deckel-mehr" data-bib-mehr="' + esc(p.id) + '"' +
+            ' aria-label="Aktionen für ' + esc(p.text || 'Ohne Titel') + '" title="Weitere Aktionen">⋯</button>';
         if (art.id !== 'ordner')
-            return deckel;
+            return '<span class="bib-zelle">' + deckel + '</span>';
         /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
            ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
            Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
@@ -1368,10 +1374,10 @@ const Bibliothek = (() => {
             a.id === zustand.art);
         if (arten.length <= 2 && zustand.art === 'alle')
             return '';
+        const aktiv = arten.find(a => a.id === zustand.art) || arten[0];
         return '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
-            arten.map(a => `<button data-art="${esc(a.id)}"` +
-                (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
-                `>${esc(a.name)}</button>`).join('') +
+            '<button type="button" data-art-menue aria-haspopup="menu" aria-label="Dokumentart wählen">' +
+            'Art: ' + esc(aktiv.name) + '<span aria-hidden="true"> ▾</span></button>' +
             '</div>';
     };
     /* ---------------------------------------------------------------- *
@@ -1523,32 +1529,32 @@ const Bibliothek = (() => {
             if (ziel && typeof Arbeitswelt !== 'undefined')
                 Arbeitswelt.oeffnen(ziel);
         });
-        wrap.querySelectorAll('[data-studio-weg]').forEach(button => button.addEventListener('click', () => {
-            const weg = button.dataset.studioWeg || 'ablage';
-            zustand.reiter = weg === 'pdf' ? 'alle' : weg;
-            zustand.art = weg === 'pdf' ? 'pdf' : 'alle';
-            zustand.ordner = null;
-            App.zeichneSeite();
-        }));
+        wrap.querySelector('[data-studio-wege]')?.addEventListener('click', event => {
+            const anker = event.currentTarget;
+            const r = anker.getBoundingClientRect();
+            const wege = [
+                { id: 'ablage', name: 'Meine Ablage' }, { id: 'kuerzlich', name: 'Zuletzt geöffnet' },
+                { id: 'favoriten', name: 'Favoriten' }, { id: 'pdf', name: 'Alle PDFs' }
+            ];
+            const m = UI.menu(wege.map(weg => '<button data-studio-weg="' + weg.id + '">' +
+                esc(weg.name) + '</button>').join(''), r.left, r.bottom + 4);
+            m.addEventListener('click', ev => {
+                const ziel = elVon(ev)?.closest('[data-studio-weg]');
+                if (!ziel)
+                    return;
+                const weg = ziel.dataset.studioWeg || 'ablage';
+                m.remove();
+                zustand.reiter = weg === 'pdf' ? 'alle' : weg;
+                zustand.art = weg === 'pdf' ? 'pdf' : 'alle';
+                zustand.ordner = null;
+                App.zeichneSeite();
+            });
+        });
         wrap.querySelector('[data-studio-import]')?.addEventListener('click', pdfImportieren);
         wrap.querySelector('[data-studio-weiter]')?.addEventListener('click', event => {
             const id = event.currentTarget.dataset.studioWeiter;
             if (id && permitted('lesen', id))
                 App.oeffne(id);
-        });
-        wrap.querySelector('#bib-studio-suche')?.addEventListener('input', event => {
-            const input = event.currentTarget;
-            zustand.suche = input.value;
-            const cursor = input.selectionStart;
-            App.zeichneSeite();
-            const neu = wrap.querySelector('#bib-studio-suche');
-            neu?.focus();
-            if (neu && cursor !== null) {
-                try {
-                    neu.setSelectionRange(cursor, cursor);
-                }
-                catch { /* search inputs */ }
-            }
         });
         wrap.querySelectorAll('.bib-reiter [data-r]').forEach(b => b.addEventListener('click', () => {
             if (b.dataset['r'] === 'mehr') {
@@ -1589,10 +1595,24 @@ const Bibliothek = (() => {
                 App.oeffne(id);
         }));
         /* --- Die Deckelansicht (E236) ---------------------------------- */
-        wrap.querySelectorAll('.bib-arten [data-art]').forEach(b => b.addEventListener('click', () => {
-            zustand.art = b.dataset['art'] ?? 'alle';
-            App.zeichneSeite();
-        }));
+        wrap.querySelector('.bib-arten [data-art-menue]')?.addEventListener('click', event => {
+            const anker = event.currentTarget;
+            const r = anker.getBoundingClientRect();
+            const vorhanden = new Set(auswahl().liste.map(p => artVon(p).id));
+            const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
+                a.id === zustand.art);
+            const m = UI.menu(arten.map(a => '<button data-art="' + esc(a.id) + '">' +
+                esc(a.name) + (a.id === zustand.art ? '<span class="ms">✓</span>' : '') +
+                '</button>').join(''), r.left, r.bottom + 4);
+            m.addEventListener('click', ev => {
+                const ziel = elVon(ev)?.closest('[data-art]');
+                if (!ziel)
+                    return;
+                zustand.art = ziel.dataset.art || 'alle';
+                m.remove();
+                App.zeichneSeite();
+            });
+        });
         wrap.querySelectorAll('[data-orte]').forEach(b => b.addEventListener('click', () => {
             const r = b.getBoundingClientRect();
             /* Die Reiter als Menü hinter dem Titel — dieselbe Liste wie in der
@@ -1745,14 +1765,10 @@ const Bibliothek = (() => {
                 '<div class="bib-kopf bib-kopf-liste">' +
                 '<div class="bib-werkzeuge">' +
                 '<button data-a="filter" title="Filtern">⚟</button>' +
-                '<button data-a="suche" title="Suchen">🔍</button>' +
                 '<button data-a="spalten" title="Eigenschaften">⚙</button>' +
                 '<button data-a="neu" class="prim">Neue Seite</button>' +
                 '</div>' +
                 '</div>' +
-                (zustand.sucheOffen
-                    ? `<div class="bib-suchzeile">🔍 <input id="bib-suche" value="${esc(zustand.suche)}" ` +
-                        'placeholder="Seiten durchsuchen …"><button data-a="suchzu">✕</button></div>' : '') +
                 `<div class="bib-tab" style="--bib-raster:${raster}">` +
                 '<div class="bib-zeile bib-kopfzeile">' +
                 spalten.map(s => `<div data-s="${s.id}"><span>${s.icon}</span>${esc(s.name)}` +
@@ -1813,7 +1829,7 @@ const Bibliothek = (() => {
             App.oeffne(z.dataset.id);
         }));
         /* Werkzeuge */
-        wrap.querySelectorAll('.bib-werkzeuge button, [data-a="suchzu"]').forEach((b) => b.addEventListener('click', () => {
+        wrap.querySelectorAll('.bib-werkzeuge button').forEach((b) => b.addEventListener('click', () => {
             const a = b.dataset.a;
             if (a === 'neu') {
                 if (!permitted('bearbeiten')) {
@@ -1823,16 +1839,6 @@ const Bibliothek = (() => {
                 const p = Store.addPage(null, { text: '' });
                 App.oeffne(p.id);
                 setTimeout(() => document.getElementById('title')?.focus(), 60);
-            }
-            if (a === 'suche') {
-                zustand.sucheOffen = true;
-                App.zeichneSeite();
-                document.getElementById('bib-suche')?.focus();
-            }
-            if (a === 'suchzu') {
-                zustand.suche = '';
-                zustand.sucheOffen = false;
-                App.zeichneSeite();
             }
             if (a === 'filter') {
                 const r = b.getBoundingClientRect();
@@ -1868,19 +1874,6 @@ const Bibliothek = (() => {
                 });
             }
         }));
-        const si = document.getElementById('bib-suche');
-        if (si) {
-            si.addEventListener('input', () => {
-                zustand.suche = si.value;
-                const stelle = si.selectionStart;
-                App.zeichneSeite();
-                const neu = document.getElementById('bib-suche');
-                if (neu) {
-                    neu.focus();
-                    neu.setSelectionRange(stelle, stelle);
-                }
-            });
-        }
     };
     /**
      * Das Regal öffnen.

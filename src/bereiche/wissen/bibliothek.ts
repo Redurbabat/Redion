@@ -54,9 +54,25 @@ const Bibliothek = (() => {
    * Hilfen
    * ------------------------------------------------------------------ */
 
-  /** Alle echten Seiten — ohne Systemseiten, ohne Papierkorb. */
+  /** Ein Kind eines weggelegten Ordners darf nicht als Waisenkarte auftauchen.
+   * Die Kindblöcke bleiben unverändert und kommen bei Wiederherstellung des
+   * Ordners an ihrem alten Platz zurück. */
+  const ahnenLebendig = (p: any): boolean => {
+    let id = p.parentTable === 'collection' ? null : p.parentId;
+    const gesehen = new Set<string>();
+    while (id && !gesehen.has(id)) {
+      gesehen.add(id);
+      const eltern = Store.getBlock(id);
+      if (eltern?.alive === false) return false;
+      id = eltern && eltern.parentTable !== 'collection' ? eltern.parentId : null;
+    }
+    return true;
+  };
+
+  /** Alle echten Seiten — ohne Systemseiten, Papierkorb und verdeckte Kinder. */
   const alleSeiten = (): any[] => Object.values<any>(Store.cache.blocks)
     .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
+      ahnenLebendig(b) &&
       (b.parentTable === 'collection'
         ? collectionPermitted('lesen', b.parentId)
         : permitted('lesen', b.id)));
@@ -182,11 +198,11 @@ const Bibliothek = (() => {
 
   type Regalzustand = {
     reiter: string; ordner: string | null; sortier: string; richtung: string;
-    suche: string; sucheOffen: boolean; spalten: string[]; art: string;
+    spalten: string[]; art: string;
   };
   let zustand: Regalzustand = { reiter: 'ablage', ordner: null,
                   sortier: 'wann', richtung: 'ab',
-                  suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
+                  spalten: SPALTEN.map(s => s.id),
                   /* Der Artfilter der Deckelansicht (E236). Er steht NEBEN
                      `reiter`, nicht darin: der Reiter fragt „wo liegt es",
                      die Art fragt „was ist es". Zwei Fragen, zwei Filter. */
@@ -374,11 +390,6 @@ const Bibliothek = (() => {
     if (zustand.reiter === 'geteilt')   liste = alle.filter(p => freigaben(p) || p.oeffentlich);
     if (zustand.reiter === 'privat')    liste = alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
     if (zustand.reiter === 'datenbank') liste = alle.filter(p => p.parentTable === 'collection');
-
-    if (zustand.suche) {
-      const s = zustand.suche.toLowerCase();
-      liste = liste.filter(p => (p.text || '').toLowerCase().includes(s));
-    }
 
     const gesamt = liste.length;
     if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
@@ -820,29 +831,22 @@ const Bibliothek = (() => {
       { id: 'favoriten', name: 'Favoriten' },
       { id: 'pdf', name: 'Alle PDFs' }
     ];
+    const aktiv = wege.find(weg => weg.id === (pdfAn ? 'pdf' : zustand.reiter)) || wege[0];
     return '<div class="bib-studio-navigation">' +
-      /* `data-material` (E706): die Wahl fliegt zum neuen Weg. */
       '<nav class="bib-studio-wege" data-material="dokumente-wege" aria-label="Dokumente finden">' +
-      wege.map(weg => {
-        const an = weg.id === 'pdf' ? pdfAn : !pdfAn && zustand.reiter === weg.id;
-        return '<button type="button" data-studio-weg="' + weg.id + '"' +
-          (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
-      }).join('') + '</nav>' +
+      '<button type="button" data-studio-wege aria-haspopup="menu" aria-label="Dokumentansicht wählen">' +
+        esc(aktiv.name) + '<span aria-hidden="true"> ▾</span></button></nav>' +
       '<details class="bib-studio-optionen"><summary>Sammlungen</summary>' +
       '<select class="bib-studio-sammlungen" aria-label="Weitere Bibliothek-Inhalte öffnen">' +
         '<option value="">Dateien & Wissen …</option>' +
         (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a =>
           '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select></details>' +
-      '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
-        '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
-        '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
-        ' value="' + esc(zustand.suche) + '"></label>' +
       '</div>';
   };
 
   /** Bis zu drei wirklich geöffnete Dokumente, keine dekorativen Dateiatrappen. */
   const recentCarousel = (): string => {
-    if (zustand.ordner || zustand.suche || zustand.art !== 'alle' ||
+    if (zustand.ordner || zustand.art !== 'alle' ||
       !['ablage', 'kuerzlich'].includes(zustand.reiter)) return '';
     const recent = alleSeiten().filter(p => p.zuletztGeoeffnet)
       .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet)).slice(0, 3);
@@ -859,7 +863,7 @@ const Bibliothek = (() => {
 
   /** Nur ein wirklich geöffnetes PDF anbieten; Importzeit ist kein Lesefortschritt. */
   const studioWeiter = (): string => {
-    if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle') return '';
+    if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.art !== 'alle') return '';
     const letzte = alleSeiten().filter(p => p.zuletztGeoeffnet && artVon(p).id === 'pdf')
       .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet))[0];
     if (!letzte) return '';
@@ -1008,11 +1012,12 @@ const Bibliothek = (() => {
         `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
           (p.favorite ? '\u2605' : '\u2606') + '</i>' +
       '</span>' +
-      '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
-        '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+      '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b></span>' +
       '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
-      '</button>';
-    if (art.id !== 'ordner') return deckel;
+      '</button>' +
+      '<button type="button" class="bib-deckel-mehr" data-bib-mehr="' + esc(p.id) + '"' +
+        ' aria-label="Aktionen für ' + esc(p.text || 'Ohne Titel') + '" title="Weitere Aktionen">⋯</button>';
+    if (art.id !== 'ordner') return '<span class="bib-zelle">' + deckel + '</span>';
     /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
        ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
        Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
@@ -1379,6 +1384,20 @@ const Bibliothek = (() => {
     });
 
     stelle.replaceChildren(griff.element);
+    griff.element.querySelectorAll<HTMLElement>('[data-baum-id]').forEach(zeile => {
+      const id = zeile.dataset.baumId || '';
+      const p = Store.getBlock(id);
+      if (!p || p.alive === false) return; // Die künstliche Wurzel hat kein Objektmenü.
+      const mehr = document.createElement('button');
+      mehr.type = 'button';
+      mehr.className = 'bib-baum-mehr';
+      mehr.dataset.bibMehr = id;
+      mehr.setAttribute('aria-label', 'Aktionen für ' + (p.text || 'Ohne Titel'));
+      mehr.title = 'Weitere Aktionen';
+      mehr.textContent = '⋯';
+      zeile.append(mehr);
+    });
+    mehrBinden(griff.element);
   };
   /**
    * DIE FILTERZEILE NACH ART — und wann sie WEGBLEIBT (6. September).
@@ -1394,10 +1413,10 @@ const Bibliothek = (() => {
     const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
                                          a.id === zustand.art);
     if (arten.length <= 2 && zustand.art === 'alle') return '';
+    const aktiv = arten.find(a => a.id === zustand.art) || arten[0];
     return '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
-      arten.map(a => `<button data-art="${esc(a.id)}"` +
-        (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
-        `>${esc(a.name)}</button>`).join('') +
+      '<button type="button" data-art-menue aria-haspopup="menu" aria-label="Dokumentart wählen">' +
+        'Art: ' + esc(aktiv.name) + '<span aria-hidden="true"> ▾</span></button>' +
       '</div>';
   };
 
@@ -1540,8 +1559,135 @@ const Bibliothek = (() => {
     platzNachtragen(wrap);
   };
 
+  type ObjektAktion = 'oeffnen' | 'blick' | 'stern' | 'umbenennen' | 'farbe' | 'papierkorb';
+  const objektAktionen = (p: any): { id: ObjektAktion; name: string; icon: string }[] => {
+    const ordner = artVon(p).id === 'ordner';
+    const aktionen: { id: ObjektAktion; name: string; icon: string }[] = [
+      { id: 'oeffnen', name: 'Öffnen', icon: '↗' }
+    ];
+    if (ordner) aktionen.push({ id: 'blick', name: 'Blick hinein', icon: '⌕' });
+    if (!permitted('bearbeiten', p.id)) return aktionen;
+    aktionen.push(
+      { id: 'stern', name: p.favorite ? 'Aus Favoriten' : 'Zu Favoriten', icon: p.favorite ? '★' : '☆' },
+      { id: 'umbenennen', name: 'Umbenennen', icon: '✎' }
+    );
+    if (typeof Notebook !== 'undefined' && typeof Notebook.farbMenue === 'function')
+      aktionen.push({ id: 'farbe', name: 'Farbe …', icon: '●' });
+    aktionen.push({ id: 'papierkorb', name: 'In den Papierkorb', icon: '⌫' });
+    return aktionen;
+  };
+
+  const ordnerUmbenennen = async (p: any): Promise<void> => {
+    const antwort = await UI.frage('Ordner umbenennen', String(p.text || ''));
+    if (antwort === null) return;
+    const name = antwort.trim();
+    if (!name || name === '.' || name === '..' || /[\/\\\x00-\x1f\x7f]/.test(name)) {
+      UI.toast('Bitte einen Ordnernamen ohne Schrägstriche oder Steuerzeichen eingeben.');
+      return;
+    }
+    if (name === p.text) return;
+    const doppelt = Object.values<any>(Store.cache.blocks).some(other =>
+      other.id !== p.id && other.type === 'page' && other.alive !== false &&
+      other.parentId === p.parentId && other.parentTable === p.parentTable &&
+      String(other.text || '').trim().toLocaleLowerCase('de') === name.toLocaleLowerCase('de'));
+    if (doppelt) { UI.toast('An diesem Ort gibt es bereits eine Seite oder einen Ordner mit diesem Namen.'); return; }
+    Store.updateBlock(p.id, { text: name });
+    App.zeichneSeite();
+  };
+
+  const objektAktionAusfuehren = async (id: string, aktion: ObjektAktion,
+                                     anker: HTMLElement): Promise<void> => {
+    const p = Store.getBlock(id);
+    if (!p || p.alive === false || !permitted('lesen', id)) return;
+    const ordner = artVon(p).id === 'ordner';
+    if (aktion === 'oeffnen') { if (ordner) geheIn(id); else App.oeffne(id); return; }
+    if (aktion === 'blick' && ordner) { blickHinein(p, anker.getBoundingClientRect()); return; }
+    if (!permitted('bearbeiten', id)) return;
+    if (aktion === 'stern') { Store.updateBlock(id, { favorite: !p.favorite }); App.zeichneSeite(); return; }
+    if (aktion === 'farbe' && typeof Notebook !== 'undefined' && Notebook.farbMenue) {
+      Notebook.farbMenue(anker, id, () => App.zeichneSeite()); return;
+    }
+    if (aktion === 'umbenennen') {
+      if (ordner) { await ordnerUmbenennen(p); return; }
+      App.oeffne(id);
+      setTimeout(() => document.getElementById('title')?.focus(), 80);
+      return;
+    }
+    if (aktion !== 'papierkorb') return;
+    const kinder = Store.childrenOf(id).filter((kind: any) => kind.alive !== false);
+    if (ordner && kinder.length) {
+      const antwort = await Dialog.wahl({
+        titel: 'Ordner in den Papierkorb legen?',
+        text: '„' + (p.text || 'Ohne Titel') + '“ enthält ' + kinder.length +
+          (kinder.length === 1 ? ' Element. ' : ' Elemente. ') +
+          'Sie bleiben im Ordner erhalten und werden mit ihm wiederhergestellt.',
+        knoepfe: [{ id: 'abbruch', text: 'Abbrechen' },
+                   { id: 'papierkorb', text: 'In den Papierkorb' }]
+      });
+      if (antwort !== 'papierkorb') return;
+    }
+    const warImPfad = ordnerWeg().some(teil => teil.id === id);
+    Store.trashBlock(id);
+    if (warImPfad) {
+      zustand.ordner = p.parentId || null;
+      Store.setMeta(ORDNER_SCHLUESSEL, zustand.ordner || '');
+    }
+    UI.toast('„' + (p.text || 'Ohne Titel') + '“ liegt im Papierkorb und kann wiederhergestellt werden.');
+    App.zeichneSeite();
+  };
+
+  const objektMenue = (id: string, anker: HTMLElement, x: number, y: number): void => {
+    const p = Store.getBlock(id);
+    if (!p || p.alive === false || !permitted('lesen', id)) return;
+    const aktionen = objektAktionen(p);
+    const m = UI.menu(aktionen.map(aktion =>
+      (aktion.id === 'papierkorb' ? '<div class="sep"></div>' : '') +
+      '<button type="button" data-a="' + aktion.id + '"' +
+        (aktion.id === 'papierkorb' ? ' class="bib-menue-gefahr"' : '') +
+        '><span class="mi">' + aktion.icon + '</span>' + esc(aktion.name) + '</button>'
+    ).join(''), x, y);
+    m.addEventListener('click', event => {
+      const button = elVon(event)?.closest<HTMLElement>('[data-a]');
+      if (!button) return;
+      const aktion = aktionen.find(item => item.id === button.dataset.a);
+      m.remove();
+      if (aktion) void objektAktionAusfuehren(id, aktion.id, anker);
+    });
+  };
+
+  const objektZiel = (event: Event): HTMLElement | null =>
+    elVon(event)?.closest<HTMLElement>('[data-bib-mehr], .bib-deckel[data-id], .bib-zeile[data-id], .ru-baum [data-baum-id]') || null;
+  const objektId = (ziel: HTMLElement): string =>
+    ziel.dataset.bibMehr || ziel.dataset.id || ziel.dataset.baumId || '';
+  const mehrBinden = (wurzel: ParentNode): void => {
+    wurzel.querySelectorAll<HTMLElement>('[data-bib-mehr]').forEach(button =>
+      button.addEventListener('click', event => {
+        event.stopPropagation();
+        const id = button.dataset.bibMehr || '';
+        const r = button.getBoundingClientRect();
+        objektMenue(id, button, r.left, r.bottom + 4);
+      }));
+  };
+
   /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
   const binde = (wrap: HTMLElement): void => {
+    mehrBinden(wrap);
+    wrap.addEventListener('contextmenu', event => {
+      const ziel = objektZiel(event);
+      if (!ziel) return;
+      const id = objektId(ziel);
+      if (!Store.getBlock(id)) return;
+      event.preventDefault();
+      objektMenue(id, ziel, event.clientX, event.clientY);
+    });
+    wrap.addEventListener('keydown', event => {
+      const ziel = objektZiel(event);
+      if (!ziel) return;
+      if (event.key !== 'ContextMenu' && !(event.key === 'F10' && event.shiftKey)) return;
+      event.preventDefault();
+      const r = ziel.getBoundingClientRect();
+      objektMenue(objektId(ziel), ziel, r.left, r.bottom + 4);
+    });
     wrap.querySelectorAll<HTMLElement>('[data-rmo-open]').forEach(button =>
       button.addEventListener('click', () => {
         const id = button.dataset.rmoOpen;
@@ -1557,27 +1703,30 @@ const Bibliothek = (() => {
       const ziel = (event.currentTarget as HTMLSelectElement).value;
       if (ziel && typeof Arbeitswelt !== 'undefined') Arbeitswelt.oeffnen(ziel);
     });
-    wrap.querySelectorAll<HTMLElement>('[data-studio-weg]').forEach(button =>
-      button.addEventListener('click', () => {
-        const weg = button.dataset.studioWeg || 'ablage';
+    wrap.querySelector<HTMLElement>('[data-studio-wege]')?.addEventListener('click', event => {
+      const anker = event.currentTarget as HTMLElement;
+      const r = anker.getBoundingClientRect();
+      const wege = [
+        { id: 'ablage', name: 'Meine Ablage' }, { id: 'kuerzlich', name: 'Zuletzt geöffnet' },
+        { id: 'favoriten', name: 'Favoriten' }, { id: 'pdf', name: 'Alle PDFs' }
+      ];
+      const m = UI.menu(wege.map(weg => '<button data-studio-weg="' + weg.id + '">' +
+        esc(weg.name) + '</button>').join(''), r.left, r.bottom + 4);
+      m.addEventListener('click', ev => {
+        const ziel = elVon(ev)?.closest<HTMLElement>('[data-studio-weg]');
+        if (!ziel) return;
+        const weg = ziel.dataset.studioWeg || 'ablage';
+        m.remove();
         zustand.reiter = weg === 'pdf' ? 'alle' : weg;
         zustand.art = weg === 'pdf' ? 'pdf' : 'alle';
         zustand.ordner = null;
         App.zeichneSeite();
-      }));
+      });
+    });
     wrap.querySelector('[data-studio-import]')?.addEventListener('click', pdfImportieren);
     wrap.querySelector<HTMLElement>('[data-studio-weiter]')?.addEventListener('click', event => {
       const id = (event.currentTarget as HTMLElement).dataset.studioWeiter;
       if (id && permitted('lesen', id)) App.oeffne(id);
-    });
-    wrap.querySelector<HTMLInputElement>('#bib-studio-suche')?.addEventListener('input', event => {
-      const input = event.currentTarget as HTMLInputElement;
-      zustand.suche = input.value;
-      const cursor = input.selectionStart;
-      App.zeichneSeite();
-      const neu = wrap.querySelector<HTMLInputElement>('#bib-studio-suche');
-      neu?.focus();
-      if (neu && cursor !== null) { try { neu.setSelectionRange(cursor, cursor); } catch { /* search inputs */ } }
     });
     wrap.querySelectorAll<HTMLElement>('.bib-reiter [data-r]').forEach(b =>
       b.addEventListener('click', () => {
@@ -1618,11 +1767,22 @@ const Bibliothek = (() => {
       }));
 
     /* --- Die Deckelansicht (E236) ---------------------------------- */
-    wrap.querySelectorAll<HTMLElement>('.bib-arten [data-art]').forEach(b =>
-      b.addEventListener('click', () => {
-        zustand.art = b.dataset['art'] ?? 'alle';
-        App.zeichneSeite();
-      }));
+    wrap.querySelector<HTMLElement>('.bib-arten [data-art-menue]')?.addEventListener('click', event => {
+      const anker = event.currentTarget as HTMLElement;
+      const r = anker.getBoundingClientRect();
+      const vorhanden = new Set(auswahl().liste.map(p => artVon(p).id));
+      const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
+                                           a.id === zustand.art);
+      const m = UI.menu(arten.map(a => '<button data-art="' + esc(a.id) + '">' +
+        esc(a.name) + (a.id === zustand.art ? '<span class="ms">✓</span>' : '') +
+        '</button>').join(''), r.left, r.bottom + 4);
+      m.addEventListener('click', ev => {
+        const ziel = elVon(ev)?.closest<HTMLElement>('[data-art]');
+        if (!ziel) return;
+        zustand.art = ziel.dataset.art || 'alle';
+        m.remove(); App.zeichneSeite();
+      });
+    });
     wrap.querySelectorAll<HTMLElement>('[data-orte]').forEach(b =>
       b.addEventListener('click', () => {
         const r = b.getBoundingClientRect();
@@ -1665,10 +1825,7 @@ const Bibliothek = (() => {
       b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
     blickAnbringen(wrap);
     wrap.querySelectorAll<HTMLElement>('.bib-deckel[data-id]').forEach(k => {
-      k.addEventListener('click', ereignis => {
-        /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
-        if (ereignis.target instanceof Element &&
-            ereignis.target.closest('.bib-deckel-mehr')) return;
+      k.addEventListener('click', () => {
         const id = k.dataset['id'];
         if (!id) return;
         /* EIN ORDNER IST EIN ORT, KEIN DOKUMENT (E380). Bis hierher ging
@@ -1678,53 +1835,6 @@ const Bibliothek = (() => {
            Baum. */
         if (zustand.reiter === 'ablage' && k.dataset['art'] === 'ordner') { geheIn(id); return; }
         App.oeffne(id);
-      });
-      k.querySelector<HTMLElement>('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
-        ereignis.stopPropagation();
-        const id = k.dataset['id'];
-        const p = id ? Store.getBlock(id) : null;
-        if (!p) return;
-        const r = k.getBoundingClientRect();
-        const m = UI.menu(
-          `<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
-          /* NUR BEI ORDNERN. Ein Blick in eine PDF wäre die PDF — dafür
-             gibt es „Öffnen". */
-          (k.dataset['art'] === 'ordner'
-            ? `<button data-a="blick"><span class="mi">\u2315</span>Blick hinein</button>` : '') +
-          `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
-            (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
-          '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
-          /* „FARBE …" (E672): derselbe Wähler wie in den Notizheften, nur mit
-             einem anderen `danach` — hier wird die Bibliothek neu gezeichnet. */
-          (typeof Notebook !== 'undefined' && typeof Notebook.farbMenue === 'function'
-            ? '<button data-a="farbe"><span class="mi">\u25cf</span>Farbe \u2026</button>' : '') +
-          '<div class="sep"></div>' +
-          '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>',
-          Math.min(r.left, innerWidth - 230), r.bottom + 4);
-        m.addEventListener('click', ev => {
-          const b = elVon(ev)?.closest<HTMLElement>('[data-a]');
-          if (!b) return;
-          const a = b.dataset['a'];
-          m.remove();
-          if (a === 'oeffnen') { App.oeffne(p.id); return; }
-          if (a === 'blick')   { blickHinein(p, r); return; }
-          if (a === 'stern')   { Store.updateBlock(p.id, { favorite: !p.favorite }); }
-          if (a === 'farbe')   { Notebook.farbMenue(k, p.id, () => App.zeichneSeite()); return; }
-          if (a === 'umbenennen') {
-            /* Umbenannt wird auf der Seite selbst — ein zweites Eingabefeld
-               für denselben Titel wäre eine zweite Wahrheit (§8). */
-            App.oeffne(p.id);
-            setTimeout(() => document.getElementById('title')?.focus(), 80);
-            return;
-          }
-          if (a === 'papierkorb') {
-            /* NICHT LÖSCHEN, SONDERN IN DEN PAPIERKORB. `alive: false` ist
-               umkehrbar; `Store.removeBlock` wäre es nicht (§46). */
-            Store.updateBlock(p.id, { alive: false });
-            UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
-          }
-          App.zeichneSeite();
-        });
       });
     });
   };
@@ -1748,14 +1858,10 @@ const Bibliothek = (() => {
         '<div class="bib-kopf bib-kopf-liste">' +
           '<div class="bib-werkzeuge">' +
             '<button data-a="filter" title="Filtern">⚟</button>' +
-            '<button data-a="suche" title="Suchen">🔍</button>' +
             '<button data-a="spalten" title="Eigenschaften">⚙</button>' +
             '<button data-a="neu" class="prim">Neue Seite</button>' +
           '</div>' +
         '</div>' +
-        (zustand.sucheOffen
-          ? `<div class="bib-suchzeile">🔍 <input id="bib-suche" value="${esc(zustand.suche)}" ` +
-            'placeholder="Seiten durchsuchen …"><button data-a="suchzu">✕</button></div>' : '') +
         `<div class="bib-tab" style="--bib-raster:${raster}">` +
           '<div class="bib-zeile bib-kopfzeile">' +
             spalten.map(s =>
@@ -1774,14 +1880,17 @@ const Bibliothek = (() => {
                 const zellen: Record<string, string> = {
                   name: `<div class="bib-name">${kinder ? '<b class="bib-pfeil">▸</b>' : '<b class="bib-pfeil leer"></b>'}` +
                         `<span class="bib-ico">${p.icon || (p.parentTable === 'collection' ? '▦' : '📄')}</span>` +
-                        `<span class="bib-txt">${esc(p.text || 'Ohne Titel')}</span></div>`,
+                        `<span class="bib-txt">${esc(p.text || 'Ohne Titel')}</span>` +
+                        `<button type="button" class="bib-zeile-mehr" data-bib-mehr="${esc(p.id)}"` +
+                          ` aria-label="Aktionen für ${esc(p.text || 'Ohne Titel')}" title="Weitere Aktionen">⋯</button></div>`,
                   von:  `<div class="bib-person"><span class="bib-kreis">` +
                         `${esc((p.erstelltVon || 'Ich').slice(0, 1).toUpperCase())}</span>` +
                         `${esc(p.erstelltVon || 'Ich')}</div>`,
                   quelle: `<div class="bib-quelle"><span>${q.icon}</span>${esc(q.text)}</div>`,
                   wann: `<div class="bib-wann">${esc(wannText(p.edited || p.created))}</div>`
                 };
-                return `<div class="bib-zeile" data-id="${p.id}" data-art="${artVon(p).id}">` +
+                return `<div class="bib-zeile" data-id="${p.id}" data-art="${artVon(p).id}"` +
+                  ' role="button" tabindex="0">' +
                        spalten.map(s => zellen[s.id]).join('') + '</div>';
               }).join('')
             : '<div class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</div>') +
@@ -1807,8 +1916,8 @@ const Bibliothek = (() => {
       }));
 
     /* Zeile öffnen */
-    wrap.querySelectorAll('.bib-zeile[data-id]').forEach((z: any) =>
-      z.addEventListener('click', () => {
+    wrap.querySelectorAll('.bib-zeile[data-id]').forEach((z: any) => {
+      const oeffnen = () => {
         /* Auch in der Liste ist ein Ordner ein Ort, kein Dokument
            (E380/E382). Die Deckelansicht ging schon hinein; hier stand noch
            die alte Öffnung — ein Fach wäre als leere Seite aufgegangen statt
@@ -1817,10 +1926,19 @@ const Bibliothek = (() => {
           geheIn(z.dataset.id); return;
         }
         App.oeffne(z.dataset.id);
-      }));
+      };
+      z.addEventListener('click', (event: Event) => {
+        if (elVon(event)?.closest('[data-bib-mehr]')) return;
+        oeffnen();
+      });
+      z.addEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.target !== z || !['Enter', ' '].includes(event.key)) return;
+        event.preventDefault(); oeffnen();
+      });
+    });
 
     /* Werkzeuge */
-    wrap.querySelectorAll('.bib-werkzeuge button, [data-a="suchzu"]').forEach((b: any) =>
+    wrap.querySelectorAll('.bib-werkzeuge button').forEach((b: any) =>
       b.addEventListener('click', () => {
         const a = b.dataset.a;
         if (a === 'neu') {
@@ -1832,9 +1950,6 @@ const Bibliothek = (() => {
           App.oeffne(p.id);
           setTimeout(() => document.getElementById('title')?.focus(), 60);
         }
-        if (a === 'suche')  { zustand.sucheOffen = true; App.zeichneSeite();
-                              document.getElementById('bib-suche')?.focus(); }
-        if (a === 'suchzu') { zustand.suche = ''; zustand.sucheOffen = false; App.zeichneSeite(); }
         if (a === 'filter') {
           const r = b.getBoundingClientRect();
           const m = UI.menu('<div class="grp">Nur zeigen</div>' +
@@ -1866,16 +1981,6 @@ const Bibliothek = (() => {
         }
       }));
 
-    const si = document.getElementById('bib-suche') as HTMLInputElement | null;
-    if (si) {
-      si.addEventListener('input', () => {
-        zustand.suche = si.value;
-        const stelle = si.selectionStart;
-        App.zeichneSeite();
-        const neu = document.getElementById('bib-suche') as HTMLInputElement | null;
-        if (neu) { neu.focus(); neu.setSelectionRange(stelle, stelle); }
-      });
-    }
   };
 
   /**

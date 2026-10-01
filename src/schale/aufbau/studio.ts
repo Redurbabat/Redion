@@ -35,8 +35,10 @@ const StudioSchale = (() => {
   const themaMarkieren = (): void => {
     const hell = document.documentElement.dataset.theme === 'light';
     const b = document.getElementById('studio-theme');
-    b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
-    if (b) b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+    const naechstes = hell ? 'dunklen' : 'hellen';
+    const name = 'Zum ' + naechstes + ' Farbschema wechseln';
+    b?.setAttribute('aria-label', name);
+    if (b) b.title = name;
   };
   const einstellen = (kompakt: boolean): void => {
     document.body.dataset.studioNav = kompakt ? 'kompakt' : 'offen';
@@ -50,8 +52,9 @@ const StudioSchale = (() => {
     if (gestartet) return;
     gestartet = true;
     einstellen(Store.getMeta(META, false) === true);
-    const gespeichert = Number(Store.getMeta(BREITE, 184));
-    breiteSetzen(Number.isFinite(gespeichert) ? gespeichert : 184);
+    const vorgabe = window.innerWidth <= 1100 ? 156 : 184;
+    const gespeichert = Number(Store.getMeta(BREITE, vorgabe));
+    breiteSetzen(Number.isFinite(gespeichert) ? gespeichert : vorgabe);
     const an = (id: string, tun: () => void): void => {
       document.getElementById(id)?.addEventListener('click', tun);
     };
