@@ -58755,8 +58755,11 @@ grün (36/36). Sie zählt nicht; G1 dreht beide Zeilen.
 `test575`, `test577`, `test583` grün; `test563` in diesem Lauf 12/13 — §1
 „kein Buckel" ×1,07 gegen < 1,05: die Breite folgt seit E704 dem Tempo der
 Meldungen, und dieser Bogen ändert weder Breite noch Druck noch Tempo; am
-28. September auf demselben Zeichenweg 13/13; die Wiederholung auf Zweig
-und Grundstand unter der Sperre stand beim Commit noch aus; `test388` 21/21. Ohne
+28. September auf demselben Zeichenweg 13/13. Wiederholt unter der Sperre,
+je dreimal abwechselnd auf diesem Zweig und auf dem Grundstand `b3cf1933`:
+Zweig 13, 12, 12 von 13 (×1,04, ×1,15, ×1,07), Grundstand 12, 12, 13 von 13
+(×1,11, ×1,18, ×1,00) — derselbe Wackler auf beiden Seiten, also nicht
+von hier (messungen §85); `test388` 21/21. Ohne
 Sperre: `test367`, `test87`, `test105` (152), `test109`, `test225`,
 `test549`, `test550` grün. `npm run typecheck` sauber; `npm run bauen:ts`
 (Dienststand v1397), `npm run stand` und `node bauen.mts` neu.

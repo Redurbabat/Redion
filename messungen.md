@@ -5545,3 +5545,19 @@ G5 change ohne Wertprüfung → test343          30/32  ✗ auf und zu übernimm
                                                      ✗ Tupfer nach Neuzeichnen
                                                      ["#8e44ad","#ffcf33"]
 ```
+
+**`test563` §1 „kein Buckel", wiederholt** (3. Oktober, 21:04 UTC, unter
+der Sperre, abwechselnd; im Nachbarlauf um 20:24 einmal rot mit ×1,07):
+
+```txt
+Lauf   Zweig (E708)                Grundstand b3cf1933
+1      13/13  innen 1,10 … 1,14 ×1,04   12/13  innen 1,12 … 1,24 ×1,11
+2      12/13  innen 1,10 … 1,26 ×1,15   12/13  innen 1,10 … 1,30 ×1,18
+3      12/13  innen 1,10 … 1,18 ×1,07   13/13  innen 1,10 … 1,10 ×1,00
+verlangt: < 1,05
+```
+
+Derselbe Wackler auf beiden Seiten; die Breite des Füllers folgt seit E704
+dem Tempo der Meldungen, und unter der Last von vier Bauern schwankt das
+Tempo. E708 ändert weder Breite noch Druck noch Tempo. Nicht von hier;
+gemeldet, nicht „repariert" (§31).
