@@ -1026,7 +1026,20 @@ p('Farbe und Stärke aus dem Band kommen an der Leiste an',
    eine Variable, die niemand von aussen sehen kann. Die einzige ehrliche
    Frage ist deshalb die, auf die es ankommt — MALT der Stift blau? Also
    wird ein Strich gezogen und nachgesehen, was dabei herauskommt. */
-const ziehe = async (): Promise<{ stroke: string; breite: number; anzahl: number } | null> => {
+/* SEIT E704 IST EIN NEUER MARKERSTRICH EINE FLÄCHE (E714). Redur wählte am
+   27. September „Echter Textmarker" (Keilspitze): ein neuer Markerstrich
+   trägt `data-ink-stil="keil"` und ist die Fläche, die eine schräge Kante
+   überstreicht — `fill` in der Tinte, `stroke="none"`, kein `stroke-width`.
+   Gelesen wurde hier nur der Strich; seit E704 standen deshalb „none" und 0
+   da, obwohl die Fläche blau und breit genug war. Jetzt wird die Tinte dort
+   gelesen, wo sie steht: beim Keil `fill`, sonst `stroke`. Und die Breite:
+   beim Keil die Länge seiner Kante — der Abstand zwischen der ersten und
+   der letzten Ecke des ersten Vielecks (`InkGeometry.keil`: der Lauf um
+   +Kante hin, um −Kante zurück), dieselbe Zahl, die sonst `stroke-width`
+   trüge. Der Keil muss es auch WIRKLICH sein (die Vorgabe aus E704), sonst
+   zählt seine Fläche nicht. */
+const ziehe = async (): Promise<{ stroke: string; breite: number; anzahl: number;
+                                  stil: string; fill: string } | null> => {
   const flaeche = await seite.$('svg[data-tool]');
   if (!flaeche) return null;
   const box = await flaeche.boundingBox();
@@ -1042,8 +1055,17 @@ const ziehe = async (): Promise<{ stroke: string; breite: number; anzahl: number
     if (!f) return null;
     const wege = [...f.querySelectorAll('path, polyline')];
     const letzt = wege[wege.length - 1] as SVGElement | undefined;
+    const stil = letzt?.getAttribute('data-ink-stil') || '';
+    const fill = letzt?.getAttribute('fill') || '';
+    if (stil === 'keil') {
+      const erstes = (letzt?.getAttribute('d') || '').split('Z')[0] ?? '';
+      const ecken = [...erstes.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map(m => [Number(m[1]), Number(m[2])]);
+      const a = ecken[0], z = ecken[ecken.length - 1];
+      const kante = a && z && ecken.length >= 4 ? Math.hypot(a[0]! - z[0]!, a[1]! - z[1]!) : 0;
+      return { anzahl: wege.length, stroke: fill, breite: +kante.toFixed(2), stil, fill };
+    }
     return { anzahl: wege.length, stroke: letzt?.getAttribute('stroke') || '',
-             breite: Number(letzt?.getAttribute('stroke-width') || 0) };
+             breite: Number(letzt?.getAttribute('stroke-width') || 0), stil, fill };
   });
 };
 const dick = await ziehe();
@@ -1053,6 +1075,14 @@ const duenn = await ziehe();
 
 p('Der gezogene Strich ist wirklich blau',
   dick !== null && dick.anzahl > 0 && dick.stroke === '#2f7ed8',
+  dick === null ? 'kein Strich zustande gekommen — so kann der Punkt nie rot werden'
+                : JSON.stringify(dick));
+/* Der Strich oben ist ein Markerstrich (die Leiste stand auf „marker"):
+   seit E704 der Keil, mit beiden Stärken. Steht hier etwas anderes, misst
+   der Punkt darüber die Tinte an der falschen Stelle. */
+p('… und ein neuer Markerstrich ist der Keil (E704), dick wie dünn',
+  dick !== null && duenn !== null && dick.stil === 'keil' && duenn.stil === 'keil'
+    && duenn.stroke === '#2f7ed8',
   dick === null ? 'kein Strich zustande gekommen — so kann der Punkt nie rot werden'
                 : JSON.stringify(dick));
 

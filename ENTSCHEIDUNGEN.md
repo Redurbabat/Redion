@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-686 Entscheidungen, E1 bis E706 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E714 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -749,6 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 
 ---
 
@@ -58499,3 +58500,119 @@ Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
 statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
 alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 `claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+## E714 — Rot zuerst, vier Inseln: ein Stilblatt ohne `<link>`, ein Wettlauf mit SwiftShader, der Keil als Fläche, vierzehn Werkzeuge
+
+**Datum:** 3. Oktober 2026 · **Anlass:** **rot zuerst** (§46) auf
+`claude/morgen-besser` (4d9a9a3f) · **Wächter:** `test492`, `test582`,
+`test247`, `test464` (alle vier schon da) · Messung: messungen.md §84.
+
+**Redur, wörtlich.** Ca. 22:10 UTC am 27. September: *„… ohne eine funktione
+löschen bessere ordnungen bessere übergagnge besssere efeckten , bessere
+oberfläsche …"*. Am 3. Oktober: *„Weiter ohne pause"*. Kein Punkt hier
+nimmt eine Funktion weg.
+
+**Der Fund.** Vier Läufe waren auf dem Grundstand der zweiten Welle rot oder
+wackelten. Jeder ist bis zu seinem Commit halbiert:
+
+```txt
+test492  „Einzeldatei … ohne Nachladen"     wackelt seit E699 (434402a3)      Code: laden.ts
+test582  §6 „Rechner, Zeichenleiste unten:  wackelt seit E703 (6b420f32)      Prüfung wartete auf die Wandzeit
+         Toast und Lader sind da — []"
+test247  „Der gezogene Strich ist wirklich  rot seit E704 (c64f1c76)          Prüfung las den Strich, nicht die Fläche
+         blau" / „… viermal so breit"
+test464  §1 „Dreizehn Werkzeuge"            rot seit E671 (af2706c1)          Prüfung zählte vor „Text ändern"
+```
+
+**1 · Das Stilblatt der Inseln in der Einzeldatei (Code).** `test492` hält:
+in der Einzeldatei steht KEIN `link[rel="stylesheet"]` — jedes Blatt ist
+beim Bauen eingesetzt. Seit E699 hängt `Inseln.bereit()` dort beim
+Vorwärmen im Leerlauf ein `<link>` auf eine Blob-Adresse mit den Bytes aus
+`inseln-stil` ein. Ob der Leerlauf vor der Frage kam, war Zufall: am
+28. September auf 4d9a9a3f dreimal gleich nach dem Laden ein
+`blob:null/… stil`, und derselbe Lauf `test492` einmal grün, einmal rot.
+Halbiert: E698 (4f6e91f3) ohne `<link>` (dort gibt es keine Inseln), E699
+(434402a3) mit `<link>` nach 49 ms. **Jetzt** nimmt die Einzeldatei die
+Bytes als **angenommenes Blatt** (`new CSSStyleSheet()`, `replaceSync`,
+`document.adoptedStyleSheets`) — kein Element, kein Nachladen, und kein
+`<style>` aus TypeScript (`test412`, E418). Die Kaskade bleibt: das Blatt
+steht hinter allen Blättern der Seite, wo vorher das `<link>` am Ende von
+`<head>` stand. Im **Ordner** bleibt das `<link>` auf
+`quell/islands/islands.css` (Doppelklick, Dienst, `test579` §2 und §11
+unverändert). Ein Browser **ohne** angenommene Blätter (vor Chrome 73,
+Firefox 101, Safari 16.4) bekommt in der Einzeldatei den Weg von vorher —
+die Inseln laufen dort weiter (§43). `bauen.mts` ändert nur seinen
+Kommentar.
+
+`test492` ist **erweitert**: dieselbe Frage steht ein zweites Mal, NACHDEM
+`Inseln.bereit()` fertig ist (rot eingecheckt; auf 4d9a9a3f rot mit
+`blob:null/…`). Die alte Zeile bleibt, wie sie war.
+
+**2 · Toast und Lader über dem Zeichenblatt (Prüfung).** Die Zeile fragte
+nach 700 ms Wandzeit, ob beide zu sehen sind (`opacity > 0`). Die Probe vom
+28. September (`probe582`, je fünf bis sechs Runden auf 4d9a9a3f, E703
+6b420f32 und E704 b3cf1933) zeigt: im ERSTEN Kontext mit Zeichenblatt setzt
+SwiftShader (der GPU-Weg aus E703) in 700 ms nur 3 bis 4 Bilder zusammen,
+ohne eine einzige lange Aufgabe; Toast-Übergang und `ru-lader-herein`
+beginnen erst 234 bis 507 ms nach dem Auslösen und stehen bei Deckkraft
+0,04 bis 0,19 — einmal 0, dann ist `melder` leer. Ab der zweiten Runde
+43 Bilder und Deckkraft 1. Auf E703 genauso wie auf E704: der Stift ist
+nicht die Ursache, nur die volle Seite unter dem Glas. **Kein Fehler im
+Produkt** — mit echter Grafikkarte gibt es diese halbe Sekunde nicht, und
+Toast und Lader sind ab dem ersten Bild an ihrem Ort. **Jetzt** wartet
+`stapel()` nach den 700 ms, bis die endlichen Animationen von Toast und
+Lader fertig sind (die Klumpen im Lader kreisen ohne Ende und zählen
+nicht; höchstens 8 s), und **neu** steht die Zusage „in 700 ms da" auf der
+Uhr der Animation selbst: jede, die nach 700 ms noch läuft, endet samt
+Verzögerung bei höchstens 700 ms. Die Frage nach `melder`, der Schichtung
+und dem Glas bleibt Wort für Wort.
+
+**3 · Der Keil ist eine Fläche (Prüfung, Folge von E704).** `test247` zieht
+mit der Leiste auf „marker" einen Strich und las `stroke` und
+`stroke-width`. Seit E704 Punkt 3 (Redur im Fragebogen: *„Echter
+Textmarker"*) ist ein neuer Markerstrich der **Keil**: `data-ink-stil="keil"`,
+die Tinte in `fill`, `stroke="none"`, die Stärke in der Länge der Kante
+(`keilVielecke`: Kante = `strokeWidth(mark)`). Halbiert: grün auf
+be86ff72 (`test583 (rot)`, Code noch vor E704), rot ab c64f1c76 (E704).
+Der Code tut, was entschieden ist — blau und viermal so breit stimmt am
+Bildschirm. **Jetzt** liest die Prüfung die Tinte dort, wo sie steht (beim
+Keil `fill`, sonst `stroke`) und die Breite beim Keil als Länge seiner
+Kante (erste gegen letzte Ecke des ersten Vielecks, `InkGeometry.keil`);
+**neu** verlangt sie, dass beide Striche wirklich der Keil sind. Der runde
+Marker bleibt wählbar (Keil | Rund) und wird hier nicht gezogen — wie vorher
+nur ein Marker.
+
+**4 · Vierzehn Werkzeuge (Prüfung, Folge von E671).** `test464` §1 zählte
+13. Seit E671 (21. September) steht „Text ändern" (`textfix`, E670) auch auf
+dem Blatt — `test523` verlangt es („13 statt 14, textfix fehlt"). Halbiert:
+grün auf 09ac7f81, rot ab af2706c1. Nicht E704. **Jetzt** stehen die
+vierzehn NAMEN in ihrer Reihenfolge da, nicht nur die Zahl, und weiter alle
+auf EINER Höhe.
+
+**Die Alternativen.** Für 1: die Bytes beim Bauen als gewöhnliches Blatt
+einsetzen — dann käme das Kit-Stilblatt beim Start, und `test388` hält den
+Start ohne Inseln; ein `<style>` aus TypeScript — verbietet `test412`; die
+Prüfung auf Blob-Adressen ausnehmen — eine Lockerung (§31, §47). Für 2: die
+Wartezeit auf 2 s heben — wartet auf die Wandzeit wie vorher, nur länger,
+und lässt die Zusage „700 ms" fallen; die Bildrate messen und Läufe
+überspringen — eine Prüfung, die sich selbst abschaltet. Für 3: den Keil
+zurücknehmen — gegen Redurs Wahl; die Prüfung auf den runden Marker
+umstellen — sie prüfte dann nicht mehr, was jeder neue Strich ist. Für 4:
+`textfix` aus der Leiste nehmen — eine Funktion weniger, und `test523` rot.
+
+**Was es kostet.** Im Produkt eine Verzweigung in `laden.ts` (rund 0,1 KB
+gzip, `test388` §5 in messungen.md §84). Sichtbar: nichts — dieselben Bytes,
+dieselbe Kaskade. In den Prüfungen: `test582` §6 wartet in einem langsamen
+Lauf bis zu einer halben Sekunde länger.
+
+**Nicht in diesem Bogen.** Die halbe Sekunde ohne Bild unter SwiftShader
+selbst (ein Messbefund der Prüfumgebung, kein Fehler am Gerät; am iPad zu
+messen wie L227 stift-11). `test201`, `test461` und `test343` §6 gehören
+E708.
+
+**Geprüft** (3. Oktober). Ohne Schloss: `test578` 110/110, `test109` 25/25,
+`test87` 177/177, `test105` 152 ok, `test225`, `test549`, `test550` grün;
+`npm run typecheck` sauber; `bauen:ts` (Dienststand v1395), `npm run stand`
+und `bauen.mts` neu. Unter dem gemeinsamen Schloss (fünf Arbeitsbäume
+teilen es): 492 582 247 464 579 388 412 143 353, die Halbierung von 247 und
+464 und die Gegenproben — das Ergebnis steht im Nachtrag zu diesem Eintrag.
