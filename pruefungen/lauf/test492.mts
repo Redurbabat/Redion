@@ -2,6 +2,9 @@
  * Rotprobe: vor dem Bauen fehlen motion.css/motion.js und die zwölf
  * einheitlichen Aktionsknöpfe. Kein Modell wird geladen oder angesprochen.
  * Die Browser-Kontexte haben eigene, flüchtige Datenbanken.
+ * E714: die Frage „kein Stilblatt nachgeladen" an die Einzeldatei steht ein
+ * zweites Mal, NACHDEM `Inseln.bereit()` fertig ist — gleich nach dem Laden
+ * gefragt, hing ihr Ergebnis am Leerlauf (rot eingecheckt).
  */
 import { chromium } from 'playwright';
 import http from 'node:http';
@@ -13,6 +16,7 @@ declare const App: any;
 declare const Bibliothek: any;
 declare const Elektrostart: any;
 declare const RedionMotion: any;
+declare const Inseln: any;
 
 const root = path.resolve(import.meta.dirname, '../..');
 const mime: Record<string, string> = {
@@ -181,6 +185,16 @@ try {
   await local.waitForFunction('typeof RedionMotion !== "undefined"');
   check('Einzeldatei enthält Eingabe und Bewegungsstil ohne Nachladen', await local.locator('.ai-compose').count() === 1 &&
     await local.evaluate(() => !document.querySelector('link[rel="stylesheet"]')));
+  /* DIESELBE FRAGE, NACHDEM DIE INSELN DA SIND (E714). Die Zeile darüber
+     fragt gleich nach dem Laden — und die Inseln (E699) kommen im Leerlauf
+     DANACH. Ob sie ihr Stilblatt schon eingehängt hatten, war Zufall: auf
+     demselben Stand einmal rot, einmal grün. Hier wird gewartet, bis
+     `Inseln.bereit()` fertig ist, und dann gefragt. */
+  const inselnDa = await local.evaluate(() => Inseln.bereit().then(() => 'ja', (e: unknown) => String(e)));
+  const nachgeladen = await local.evaluate(() => [...document.querySelectorAll('link[rel="stylesheet"]')]
+    .map(l => (l.getAttribute('href') ?? '').slice(0, 24)));
+  check('Einzeldatei: auch mit geholten Inseln kein Stilblatt nachgeladen', inselnDa === 'ja' &&
+    nachgeladen.length === 0, { inselnDa, nachgeladen });
   await local.close();
 } catch (error) { failed++; console.error(error); }
 finally { await browser.close(); await new Promise<void>(resolve => server.close(() => resolve())); }
