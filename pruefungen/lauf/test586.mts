@@ -23,7 +23,11 @@
  *      löschen" / „Abbrechen", der Fokus steht auf „Abbrechen", gelöscht
  *      ist nichts; EIN Filter im Dokument, an während des Fliessens, aus
  *      in Ruhe; Escape schliesst NUR das Paar (der Papierkorb bleibt offen);
- *      ein Doppelklick löscht nicht; die rote Pille löscht genau einmal,
+ *      zurück fliesst die Flüssigkeit in die Grösse des Knopfs (32 px in
+ *      der dichten Zeile), und im ersten Bild ohne sie steht der Knopf ganz
+ *      da — kein Sprung, kein Blinken (Nachtrag 3. Oktober, im Bildstreifen
+ *      gesehen); „Abbrechen" und gleich wieder gedrückt lässt das neue Paar
+ *      offen; ein Doppelklick löscht nicht; die rote Pille löscht genau einmal,
  *      ohne Browser-Frage, und der Fokus bleibt in der Liste.
  *   §4 DIE MASSE (§37): Kreis rund, Pillen mindestens 44 px hoch, und
  *      jedes Wort passt in seine Pille (Luft ≥ 24 px).
@@ -263,12 +267,64 @@ console.log('\n§3 · Der Papierkorb (Rechner, dunkel)');
   p('Jedes Wort passt in seine Pille, mit Luft an beiden Seiten', mass.luftJa >= 24 && mass.luftNein >= 24,
     JSON.stringify(mass));
 
+  /* Das Zurückfliessen Bild für Bild (Nachtrag 3. Oktober): im Bildstreifen
+     schloss die Flüssigkeit als 44-px-Kreis über dem 32-px-Knopf und sprang
+     dann, und im ersten Bild danach stand der Knopf blass da (sein Zeichen
+     und seine Fläche blendeten über die Übergänge fürs Überfahren ein). Die
+     Maus geht vorher weg, damit kein Überfahren mitmisst. */
+  await pc.mouse.move(4, 4);
+  await pc.evaluate(() => {
+    const w = window as unknown as { __loeschBilder: unknown[] };
+    w.__loeschBilder = [];
+    const t = document.querySelector<HTMLElement>('[data-loesch-offen]');
+    const los = performance.now();
+    const bild = (): void => {
+      const l = document.querySelector('.ru-loesch');
+      const kreis = l?.querySelector<HTMLElement>('.ru-loesch-blob-a .ru-loesch-stueck:not(.ru-loesch-mitte):not(.ru-loesch-ende)');
+      w.__loeschBilder.push({
+        ms: Math.round(performance.now() - los),
+        schicht: !!l,
+        kreis: kreis ? Math.round(kreis.getBoundingClientRect().width * 10) / 10 : 0,
+        zeichen: t ? getComputedStyle(t, '::before').opacity : '',
+        flaeche: t ? getComputedStyle(t).backgroundColor : ''
+      });
+      if (performance.now() - los < 1000) requestAnimationFrame(bild);
+    };
+    requestAnimationFrame(bild);
+  });
   await pc.keyboard.press('Escape');
   await pc.waitForTimeout(600);
   const z3 = await zustand(pc);
   p('Escape schliesst das Paar …', !z3.offen && await pc.locator('.ru-loesch').count() === 0);
   p('… und NUR das Paar: der Papierkorb bleibt offen', z3.overlays === 1, String(z3.overlays));
   p('Der Fokus ist zurück am runden Knopf (an seiner Zeile)', z3.fokusKnopf);
+  await pc.waitForTimeout(500);
+  type Bild = { ms: number; schicht: boolean; kreis: number; zeichen: string; flaeche: string };
+  const bilder = await pc.evaluate(() => (window as unknown as { __loeschBilder: Bild[] }).__loeschBilder);
+  const letzteMit = [...bilder].reverse().find(b => b.schicht);
+  const ersteOhne = bilder.find((b, i) => i > 0 && !b.schicht && !!bilder[i - 1]?.schicht);
+  const ruhe = bilder[bilder.length - 1];
+  p('Zurück fliesst die Flüssigkeit in die Grösse des Knopfs (dichte Zeile, 32 px)',
+    !!letzteMit && letzteMit.kreis > 0 && Math.abs(letzteMit.kreis - mass.kb) <= 3,
+    `zuletzt ${letzteMit?.kreis} px bei ${letzteMit?.ms} ms, der Knopf ${mass.kb} px, ${bilder.length} Bilder`);
+  p('Die Übergabe blinkt nicht: im ersten Bild danach steht der Knopf ganz da',
+    !!ersteOhne && !!ruhe && parseFloat(ersteOhne.zeichen) >= 0.99 && ersteOhne.flaeche === ruhe.flaeche,
+    JSON.stringify({ ersteOhne, ruhe }));
+
+  /* „Abbrechen", und noch während es zurückfliesst (480 ms) wieder gedrückt:
+     der alte Abschluss nahm dem Knopf sonst `data-loesch-offen` und
+     `aria-expanded` weg, während das neue Paar offen war. */
+  await druecke(pc, '.pk-tat[data-a="purge"]');
+  await pc.waitForTimeout(500);
+  await druecke(pc, '.ru-loesch-nein');
+  await pc.waitForTimeout(100);
+  await druecke(pc, '.pk-tat[data-a="purge"]');
+  await pc.waitForTimeout(700);
+  const z4 = await zustand(pc);
+  p('Abbrechen und gleich wieder gedrückt: das neue Paar bleibt offen, der Knopf gehört ihm',
+    z4.offen && z4.expanded === 'true', JSON.stringify(z4));
+  await pc.keyboard.press('Escape');
+  await pc.waitForTimeout(600);
 
   await druecke(pc, '.pk-tat[data-a="purge"]', true);
   await pc.waitForTimeout(150);
