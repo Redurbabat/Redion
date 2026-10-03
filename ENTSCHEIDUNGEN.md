@@ -58703,3 +58703,24 @@ der 🗑 der Gedankenkarten-Leiste („Ast löschen", aus einer Tabelle gebaut)
 und das ✕ der Auswahlleiste der Planfläche — beides eckige Leistenknöpfe
 über einer Auswahl, mit `Entf` als einem Schritt, wie die Auswahl im PDF.
 Umgestellt ist keiner; die Wahl ist Redurs (L230 Punkt 4).
+
+**Und am Bild gesehen (3. Oktober): das Zurückfliessen.** In den Streifen
+vom 28. September schloss die Flüssigkeit im Papierkorb als 44-px-Kreis
+über dem 32-px-Knopf und sprang dann; und bei ~517–549 ms stand der Knopf
+an allen drei Orten blass da — sein Zeichen und seine Fläche blendeten
+über die Übergänge fürs Überfahren ein, nachdem die Schicht weg war. Beim
+Lesen dazu: „Abbrechen" und noch während es zurückfliesst wieder gedrückt —
+der alte Abschluss nahm dem Knopf `data-loesch-offen` und `aria-expanded`,
+während das neue Paar offen war. Behoben in `delete.ts`/`loeschen.css`:
+`--loesch-k` (Knopf ÷ Kreis, gemessen) — in Ruhe hat der Kreis der
+Flüssigkeit die Grösse des Knopfs, offen die der Pillen (≥ 44 px, §37);
+`data-loesch-landet` zwei Bilder lang ohne Übergang; `reopened()` lässt
+einem neuen Paar seinen Knopf. `test586` §3 hält es (drei Punkte mehr,
+rot gesehen: 45 von 48; danach 48 von 48). Alternative: die Übergänge
+fürs Überfahren ganz weg — dann flackerte das Überfahren selbst; oder der
+Kreis auch in den dichten Zeilen 44 px — dann stünde in jeder
+Papierkorbzeile ein grösserer roter Kreis. Kosten: ein Attribut, eine
+Variable, +2'009 B roh (meist Kommentar), +613 B gzip — `delete.js` und
+`loeschen.css` zusammen jetzt 10'970 B gzip (messungen §79). Noch offen, im neuen Streifen gesehen
+(AUFGABEN, L230): am Rechner blendet beim Öffnen die rote Pille unter dem
+ruhenden Zeiger ein Bild lang aus dem Durchsichtigen ein.

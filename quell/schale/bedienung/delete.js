@@ -161,6 +161,10 @@ const RedionDelete = (() => {
         s.setProperty('--loesch-a', a + 'px');
         s.setProperty('--loesch-b', b + 'px');
         s.setProperty('--loesch-gap', GAP + 'px');
+        /* Der Kreis der Flüssigkeit ruht in der Grösse des Knopfs: in den dichten
+           Zeilen (32 px) schloss er sonst als 44-px-Kreis und sprang dann
+           (Bildstreifen, 3. Oktober). Die Pillen bleiben ≥ 44 px (§37). */
+        s.setProperty('--loesch-k', String(Math.min(1, Math.round(Math.min(r.width, r.height)) / size)));
         s.left = '0px';
         s.top = '0px';
         const zero = o.layer.getBoundingClientRect();
@@ -200,15 +204,27 @@ const RedionDelete = (() => {
         o.under = [];
     };
     const alive = (o) => !!o && o.layer.isConnected;
+    /** Schon wieder offen: „Abbrechen", und noch während es zurückfliesst ein
+     *  neuer Druck auf denselben Knopf — er gehört dann dem neuen Paar. */
+    const reopened = (o) => !!current && current !== o && current.trigger === o.trigger;
     const finish = (o) => {
         window.clearTimeout(o.timer);
         window.clearInterval(o.watch);
         o.layer.remove();
         showUnder(o);
+        if (reopened(o))
+            return;
         o.trigger.removeAttribute('data-loesch-offen');
         o.trigger.setAttribute('aria-expanded', 'false');
         if (current === o)
             current = null;
+    };
+    /** Die Flüssigkeit übergibt an den Knopf OHNE Übergang: sein Zeichen und
+     *  seine Fläche blendeten sonst über die Übergänge fürs Überfahren ein, und
+     *  der Knopf stand zwei Bilder lang blass da (Bildstreifen, 3. Oktober). */
+    const land = (trigger) => {
+        trigger.setAttribute('data-loesch-landet', '');
+        requestAnimationFrame(() => requestAnimationFrame(() => trigger.removeAttribute('data-loesch-landet')));
     };
     /** Fokus zurück an den Knopf, sonst an seine Zeile (Papierkorb: `<span>`). */
     const focusBack = (trigger) => {
@@ -244,7 +260,8 @@ const RedionDelete = (() => {
         /* Ein Bild mit Filter an, DANN zurück — sonst springt der Übergang. */
         void o.layer.offsetWidth;
         delete o.layer.dataset['auf'];
-        o.timer = window.setTimeout(() => finish(o), FLOW_OUT);
+        o.timer = window.setTimeout(() => { if (!reopened(o))
+            land(o.trigger); finish(o); }, FLOW_OUT);
     };
     /** Nach dem Löschen bleibt der Fokus in der Liste (nächste Zeile, sonst die davor). */
     const keepFocus = (trigger) => {

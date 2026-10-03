@@ -1476,7 +1476,9 @@ echten Papierkorb, in den Bereichen der Einstellungen und mit abgeschalteter
 Bewegung: der erste Druck löscht nichts und fragt den Browser nicht, der
 Fokus steht auf „Abbrechen", EIN Filter im Dokument, an nur während des
 Fliessens, Escape schliesst nur das Paar, ein Doppelklick löscht nicht, die
-rote Pille löscht genau eines. Gezählt am 28. September, im selben Bogen:
+rote Pille löscht genau eines; zurück fliesst es in die Grösse des Knopfs,
+ohne Sprung und ohne Blinken, und ein schneller zweiter Druck lässt das neue
+Paar offen (Nachtrag 3. Oktober). Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf seinem Zweig (die
 zweite Welle zählt der Zusammenführer nach).*
 

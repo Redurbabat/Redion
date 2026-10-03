@@ -13,6 +13,13 @@ in §1 „Dreizehn Werkzeuge" — auf `b3cf1933` genauso (fremd). Bilder neu.
 nicht sieht (Gedankenkarte 🗑, Planfläche ✕) — nicht umgestellt, Redurs
 Wahl (L230 Punkt 4, AUFGABEN).
 
+**Am Bild gesehen und behoben:** beim Zurückfliessen sprang der Kreis im
+Papierkorb von 44 auf 32 px, und der Knopf stand ein, zwei Bilder lang
+blass da; ein schneller zweiter Druck nach „Abbrechen" verlor
+`aria-expanded`. Jetzt fliesst die Flüssigkeit in die Grösse des Knopfs
+zurück und übergibt ohne Übergang (`test586` 48 von 48, rot gesehen 45 von
+48; Nachbarn 72 126 130 143 144 353 362 388 412 grün, 464 nur §1 fremd).
+
 ## 28. September 2026 · E709 · Der Löschen-Knopf, der zerfliesst — überall, wo gelöscht wird
 
 **Redur:** um ca. 22:02 ein Video (ein runder Knopf mit rotem Papierkorb

@@ -87,6 +87,11 @@ html body [data-loeschknopf][data-loeschknopf][data-loesch-offen]{
   transition: none;
 }
 html body [data-loeschknopf][data-loeschknopf][data-loesch-offen]::before{ opacity: 0; transition: none; }
+/* Zurück: die Flüssigkeit übergibt an den Knopf OHNE Übergang (`data-loesch-landet`,
+   zwei Bilder lang) — mit den Übergängen fürs Überfahren stand er im Bildstreifen
+   vom 3. Oktober bei 517–549 ms blass da. */
+html body [data-loeschknopf][data-loeschknopf][data-loesch-landet],
+html body [data-loeschknopf][data-loeschknopf][data-loesch-landet]::before{ transition: none; }
 
 /* Was in der Zeile unter den Pillen liegt (↩ ↳, „0 Seiten"), tritt zurück,
    solange das Paar offen ist — die Lücke zwischen den Pillen bleibt leer. */
@@ -107,6 +112,9 @@ html[data-theme="light"] .ru-loesch-schatten{ flood-color: color-mix(in srgb, va
   --loesch-pad: var(--space-5);  /* Raum für Unschärfe und Schwellen */
   --loesch-seite: 1;
   --loesch-saat: .5;
+  /* Knopf ÷ Kreis: in Ruhe hat der Kreis der Flüssigkeit die Grösse des
+     Knopfs (32 px in den dichten Zeilen), offen die der Pillen (setzt delete.ts). */
+  --loesch-k: 1;
   --loesch-auf: var(--feder-lebhaft);
   --loesch-auf-dauer: var(--feder-lebhaft-dauer);
   --loesch-zu: var(--feder-knapp);
@@ -308,6 +316,8 @@ body > .ru-loesch{ z-index: 580; }
   transform-origin: 0 50%;
 }
 /* Dieselben Funktionslisten zu und offen (translateX, dann scale) — so gehen sie ineinander über. */
+.ru-loesch-blob-a .ru-loesch-stueck:not(.ru-loesch-mitte){ transform: translateX(0) scale(var(--loesch-k)); }
+.ru-loesch-blob-a .ru-loesch-mitte{ transform: scale(0, var(--loesch-k)); }
 .ru-loesch-blob-b .ru-loesch-stueck{ transform: translateX(0) scale(var(--loesch-saat)); transition-delay: 0ms; }
 .ru-loesch-blob-b .ru-loesch-mitte{
   inline-size: calc(var(--loesch-b) - var(--loesch-s));
@@ -317,8 +327,9 @@ body > .ru-loesch{ z-index: 580; }
 .ru-loesch[data-auf] .ru-loesch-stueck{ transition: transform var(--loesch-auf-dauer) var(--loesch-auf); }
 /* Auf: die zweite Pille löst sich einen Schlag nach der ersten — der Hals bekommt Zeit. */
 .ru-loesch[data-auf] .ru-loesch-blob-b .ru-loesch-stueck{ transition-delay: 45ms; }
-.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-mitte{ transform: scaleX(1); }
-.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-ende{ transform: translateX(calc(var(--loesch-a) - var(--loesch-s))); }
+.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-stueck{ transform: translateX(0) scale(1); }
+.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-mitte{ transform: scale(1); }
+.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-ende{ transform: translateX(calc(var(--loesch-a) - var(--loesch-s))) scale(1); }
 .ru-loesch[data-auf] .ru-loesch-blob-b .ru-loesch-stueck,
 .ru-loesch[data-auf] .ru-loesch-blob-b .ru-loesch-mitte{
   transform: translateX(calc(var(--loesch-a) + var(--loesch-gap))) scale(1);

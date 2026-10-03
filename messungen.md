@@ -5469,3 +5469,26 @@ test388 §5 (b3cf1933)                 2825 KB gzip über 248 Dateien, Decke 285
 Streifen neu (15:56 UTC)              24, je 13–25 Bilder, im Mittel 35–67 ms
                                       Abstand (höchstens 116 ms)
 ```
+
+**Und das Zurückfliessen (3. Oktober, unter dem Schloss ca. 20:27–20:31
+UTC, `loeschen-lauf4.sh`).** `test586` §3 zeichnet jedes Bild ab Escape auf
+(requestAnimationFrame, 1 s, rund 50 Bilder):
+
+```txt
+                                     E709 (426270594)        nach dem Nachtrag
+letzter Kreis der Flüssigkeit        44 px bei 480 ms        ≈ 32 px (± 3)
+  (Knopf in der dichten Zeile 32 px)
+erstes Bild ohne Schicht (~510 ms)   Zeichen 0, Fläche       Zeichen 1, Fläche
+                                     rgba(0,0,0,0)           wie in Ruhe
+Abbrechen, nach 100 ms wieder        aria-expanded fehlt     "true", Paar offen
+test586                              45 von 48               48 von 48
+Gegenproben je Teil (G7 Landung,     —                       je 47 von 48, rot
+  G8 k = 1, G9 ohne reopened())                              genau am eigenen Punkt
+test388 §5 (Zweig)                   —                       2836 KB gzip über 250
+                                                             Dateien (Grundstand
+                                                             b3cf1933: 2825 / 248)
+delete.js                            18'258 / 5'711 B        19'408 / 6'107 B (roh/gzip)
+loeschen.css                         17'292 / 4'646 B        18'151 / 4'863 B
+  zusammen gzip                      10'357 B                10'970 B (+613)
+redion-einzeldatei.html              11'820'105 B            11'822'114 B (+2'009)
+```
