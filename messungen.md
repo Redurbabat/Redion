@@ -5394,3 +5394,154 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+## §85 · Rot zuerst am Stift: Halten, Farbwähler, eine Probe — zurückverfolgt und nachgerechnet (E708, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/rot-zuerst-stift` gegen den Grundstand
+`b3cf1933` (erste Welle, E698–E706). Die Wächter von HEUTE (`test201`,
+`test461`, `test343` aus `b3cf1933`) liefen in eigenen Arbeitsbäumen gegen
+den Code von damals: `e123eb10` (vor E676), `04b8c4d5` (E676), `a196b65d`
+(vor E697, Codex-Basis) und `9e306b85` (E697). Chromium von Playwright,
+unter der gemeinsamen Sperre. Die Glätter-Zahlen ohne Browser: der gebaute
+`quell/core/ink/stroke.js` des jeweiligen Stands in einem `vm`-Kontext, mit
+demselben Zug wie `test461` (40 Punkte in 4-ms-Schritten, dann Halten mit
+Zittern alle 25 ms, 900 ms lang) und derselben Logik wie `addSample`
+(Punktschwelle 0,6, `RUHE_RADIUS` 3). Gzip Stufe 6 wie `test388`.
+
+**Die Wächter, zurückverfolgt** (✗ = durchgefallene Zusagen):
+
+```txt
+Wächter  Stand                          Ergebnis
+test201  e123eb10 (vor E676)            32 ok, 0 offen
+         04b8c4d5 (E676)                31 ok, 1 offen  ✗ „Freihand … geglaettet" — M0 0 L10 20 L20 15 L30 10
+         b3cf1933 (Grundstand)          31 ok, 1 offen  (dasselbe)
+test461  e123eb10 (vor E676)            36/36
+         04b8c4d5 (E676)                33/36  ✗ §1 Linie (ist ["stift"]) ✗ … zwei Punkte ✗ §4 Linie
+         b3cf1933 (Grundstand)          33/36  (dieselben drei)
+test343  a196b65d (vor E697)            31/31
+         9e306b85 (E697)                27/31  ✗ Tupfer undefined ✗ gemerkt (meta null)
+                                               ✗ nächster Strich #111111 ✗ Tupfer nach Neuzeichnen []
+         b3cf1933 (Grundstand)          22 ✓ 2 ✗ (§6), dann page.click 30 s: die offene Palette
+                                               „Markerfarben" fängt den Tipp ab → Abbruch, §7/§8 ungelaufen
+```
+
+Jeder rote Commit hat den grünen als unmittelbaren Eltern (`git log -1
+--format=%P`): `04b8c4d5` → `e123eb10`, `9e306b85` → `a196b65d`.
+
+**Das Halten, nachgerechnet:**
+
+```txt
+±2 Zittern, 900 ms     längste Ruhe   Ruhe am Ende   Ruhekreis verlassen   Ergebnis
+vor E676 (e123eb10)    875 ms         875 ms         1× (Ankunft)          Linie
+seit E676 (b3cf1933)   175 ms          25 ms         15×                   Strich
+E708 (die Hand)        875 ms         875 ms         1× (Ankunft)          Linie
+±10, weitergefahren    ≤ 50 ms in allen drei Ständen                       Strich (richtig)
+gehalten heisst        ≥ 450 ms (HALTEN_MS)
+```
+
+Mit Zeitrauschen (400 Läufe je Zittern, Anfahrt 4–6 ms, Halten 25–32 ms je
+Meldung, Glätter des gebauten Stands): die Uhr an der Tinte sagt bei ±2 und
+bei ±3 **0-mal** „gehalten", die Uhr an der Hand **400-mal**, und jedes Mal
+wird mit 1b eine Linie daraus.
+
+**Die Erkennung des gehaltenen Strichs, nachgerechnet** (Glätter und
+`InkShapes` des gebauten Stands im `vm`-Kontext, derselbe Zug; „bis zur
+Ruhe" ist die Stelle in `running.pts`, an der die Hand zuletzt in ihren
+Ruhekreis kam):
+
+```txt
+Zug                  Punkte  bis zur Ruhe  ganzer Strich  bis zur Ruhe + Abhebepunkt     Ergebnis
+±2, 900 ms gehalten    74       42          keine Form     Linie → (478 | 300,87)         Linie
+±3, 900 ms gehalten    72       42          keine Form     Linie → (477,01 | 301,31)      Linie
+±10, weitergefahren    73       73          keine Form     keine Form                     Strich
+±2, nur 120 ms         45       42          Linie          Linie                          Strich (nicht gehalten)
+```
+
+Die Uhr allein reichte nicht: mit ihr lief `test461` im Browser weiter mit
+33 von 36 (dieselben drei Zusagen), weil die Sehne keine 90 % des Wegs mehr
+war.
+
+**Formen mit Ecken, gehalten** (3. Oktober, am neuen Bau; dieselbe
+Rechnung, langsam gezogen mit 1 px je 8-ms-Meldung wie `test564`, dann
+900 ms oder 120 ms gehalten; „Grundstand" ist die Uhr an der Tinte und die
+Erkennung auf der ganzen Tinte, „E708" die Uhr an der Hand und die
+Erkennung bis zur Ruhe):
+
+```txt
+Zug          Zittern  Grundstand (b3cf1933)        E708
+Linie        ±0       gehalten → Linie             gehalten → Linie
+             ±2, ±3   nicht gehalten → Strich      gehalten → Linie
+Dreieck      ±0       gehalten → Dreieck           gehalten → Dreieck
+             ±2, ±3   nicht gehalten → Strich      gehalten → Dreieck
+Rechteck     ±0       gehalten → Rechteck          gehalten → Rechteck
+             ±2, ±3   nicht gehalten → Strich      gehalten → Rechteck
+„M"          ±0, ±2   gehalten → keine Form        gehalten → keine Form
+             ±3       nicht gehalten → keine Form  gehalten → keine Form
+„N"          ±0       gehalten → keine Form        gehalten → keine Form
+             ±2, ±3   nicht gehalten → keine Form  gehalten → keine Form
+Zickzack     ±0       gehalten → keine Form        gehalten → keine Form
+             ±2, ±3   nicht gehalten → keine Form  gehalten → keine Form
+jeder Zug, nur 120 ms gehalten: in beiden Ständen nicht gehalten, keine Form
+```
+
+Wo der Grundstand „gehalten" sagte, sagt E708 dasselbe und erkennt dasselbe.
+Ein „M", ein „N" und ein Zickzack bleiben Striche — und weil nur die Frage an
+`InkShapes` die gekürzten Punkte bekommt, bleibt ihre Tinte Punkt für Punkt,
+wie sie war, mit allen Ecken (der Glätter mit Ecken ist der heutige, siehe
+unten).
+
+**Der Glätter ohne Ecken ist der alte, der mit Ecken der heutige.** 2000
+zufällige Meldungen (Zittern ±3, Drift, `dt` 4–34 ms): `glaetter(start,
+false)` gleich dem Glätter von `e123eb10` in jeder Zahl, `glaetter(start)`
+gleich dem von `b3cf1933` in jeder Zahl. Der Vergleich trennt: an 1925 der
+2000 Meldungen unterscheiden sich die Glätter von `e123eb10` und `b3cf1933`.
+
+**Die Tinte beim Halten** (Spanne der geglätteten Punkte ab dem fünften,
+36 Meldungen à 25 ms) — offen in L235 Punkt 2, nicht in diesem Bogen:
+
+```txt
+Zittern   roh     vor E676   seit E676
+±0,4      1,03    0,30       0,30        (test366 §3 misst hier)
+±1        2,57    0,79       0,79
+±1,5      3,86    1,26       1,26
+±2        5,14    1,78       5,07
+±3        7,71    2,96       7,60
+```
+
+**Start (test388 §5).** Am 3. Oktober am fertigen Bau: „Der Start holt
+2827 KB (gzip) über 248 Dateien — Decke 2850 KB", 21 bestanden. Was die
+Dateien wachsen (gzip Stufe 6,
+gegen `b3cf1933`, Bytes):
+
+```txt
+quell/bereiche/pdf/marken.js        135'496 → 136'961 +1'465
+quell/core/ink/stroke.js              9'591 →   9'801   +210
+quell/kern/einstellung/stand.js         440 →     438     −2
+                                              zusammen +1'673
+(sw.js, nicht beim Start: 10'226 → 10'225, −1 — der neue Stempel)
+```
+
+Gemessen am 3. Oktober am neuen Bau (Dienststand v1397), Node-`zlib`
+Stufe 6. Fast nur Kommentar: der Code selbst sind ein Parameter, eine
+Bedingung, ein Filter mehr je Meldung, zwei Werte, eine Auswahl der Punkte
+beim Absetzen, zwei Hörer und ein gemerkter Wert.
+
+**Nachgefahren am 3. Oktober** (der Bogen lag eine Woche still; am
+fertigen Bau mit der Prüfung „nur ein neuer Wert", Dienststand v1397,
+unter der gemeinsamen Sperre, Läufe zwischen 20:12 und 20:26 UTC):
+
+```txt
+Lauf                                          Ergebnis
+test461                                       36/36
+test343 (mit der neuen Zusage in §6)          32/32
+test347                                       31/31
+test201                                       31/32  ✗ §1 (die Probe, L235 Punkt 1)
+G1 Uhr an der Tinte → test461                 33/36
+G3 keepCorners wirkungslos → test461          33/36
+G4 Erkennung auf der ganzen Tinte → test461   33/36
+G2 kein change-Hörer → test343                2 ✗, dann page.click 30 s → Abbruch
+G5 change ohne Wertprüfung → test343          30/32  ✗ auf und zu übernimmt nichts
+                                                     (Palette zu, ["#ffcf33"] gemerkt)
+                                                     ✗ Tupfer nach Neuzeichnen
+                                                     ["#8e44ad","#ffcf33"]
+```

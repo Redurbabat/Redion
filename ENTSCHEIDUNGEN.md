@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-686 Entscheidungen, E1 bis E706 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E708 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E714** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -749,6 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E708** — Rot zuerst am Stift: drei Wächter des Zeichnens, jeder bis zum Commit zurückverfolgt. Das Halten fragt wieder die Hand — derselbe Glätter ohne den Eckensprung aus E676, die Tinte behält ihre Ecken; bei ±2 Zittern 875 ms Ruhe statt 175 —, und die Formerkennung sieht das Knäuel des Haltens nicht mehr, nur den Strich bis zur Ruhe und den Punkt, an dem die Hand abhob: der gehaltene Strich wird wieder gerade (`test461`, rot seit E676). Der Systemfarbwähler der Palette übernimmt beim Schliessen und wird ein Tupfer wie seit E351 (`test343` §6, rot seit E697, auf dem Grundstand brach er danach ab, §7/§8 liefen nicht). `test201` §1 fragt einen rechten Winkel nach einer Kurve — seit E676 mit Absicht eine Ecke; nicht angefasst, Entscheid bei Redur (L235)
 
 ---
 
@@ -39265,6 +39266,15 @@ test87, test105, test109, test344.
 E490 — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
 --------------------------------------------------------------------------
 
+> **Ergänzt durch E708 (28. September 2026) — die Hand bekommt ihren eigenen
+> Punkt.** Seit E676 springt der Glätter an jeder Kehre auf einen rohen Punkt,
+> und eine zitternde Hand kippt ständig: das Halten wurde nicht mehr erkannt
+> (`test461`, rot seit E676). Der Ruhekreis misst jetzt an demselben Glätter
+> ohne Eckensprung — Zahl für Zahl der Glätter, an dem hier gemessen wurde.
+> Und die Formerkennung sieht den gehaltenen Strich nur bis dahin, wo die
+> Hand zur Ruhe kam, dazu den Punkt, an dem sie abhob: ein Zittern an derselben Stelle
+> ist keine Bewegung, auch nicht für die Form.
+
 Redur am 7. September, drei Sätze und ein Bild:
 
 > „Könntest du den Stift verbessern — wenn ich eine Linie zeichne und mehr
@@ -55334,6 +55344,16 @@ Zusagen des Buckels wieder rot.
 
 ## E676 — Der Glätter hält die Ecke
 
+> **Ergänzt durch E708 (28. September 2026).** Der Eckensprung gilt der
+> TINTE; das Halten (E490) fragt die HAND und misst deshalb an demselben
+> Glätter ohne ihn (`InkStroke.glaetter(start, false)`), und die
+> Formerkennung eines gehaltenen Strichs lässt das Knäuel weg, das der
+> Eckensprung beim Halten in die Tinte legt. Zwei Fragen an die Ecke stehen
+> offen in L235: die Probe von `test201` §1 ist ein rechter Winkel und seit
+> hier eine Ecke; und die Tinte einer zitternden, haltenden Hand bekommt ab
+> ±2 die Ecken mit (Spanne 5,07 statt 1,78) — sichtbar bleibt das dort, wo
+> keine Form erkannt wird.
+
 **Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
 heichenb verbessern, und gleich wie goodnotes machen".
 
@@ -56974,6 +56994,12 @@ dass es jemand sah, ist das Argument für den vollen Lauf, der seit dem
 
 ## E697 — Farbe direkt wählen und im Freitext weiterschreiben
 
+> **Ergänzt durch E708 (28. September 2026) — der Systemfarbwähler übernimmt
+> beim Schliessen.** Er hörte nur auf `input` und füllte das Hex-Feld; wer
+> ihn mit einer Farbe schloss, bekam keinen Tupfer, und die Palette blieb
+> offen (`test343` §6, rot seit hier). Jetzt übernimmt `change` über denselben
+> Weg wie jeder Tupfer der Palette, wie seit E351.
+
 > **Ergänzt durch E704 (28. September 2026) — Tinten zuerst, Leuchtfarben
 > für den Marker.** Redur: „Neue Tintenfarben", „Echter Textmarker". Im Feld
 > stehen jetzt acht Tinten (beim Marker sechs Leuchtfarben) zuerst; die fünf
@@ -58499,3 +58525,262 @@ Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
 statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
 alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 `claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+## E708 — Rot zuerst am Stift: das Halten fragt wieder die Hand, der Systemfarbwähler übernimmt, und eine Probe fragt eine Ecke nach einer Kurve
+
+**Datum:** 28. September 2026, fertig am 3. Oktober 2026 (eine Woche lag
+der Bogen ungebaut, weil das Wochenkontingent alle Arbeit anhielt) ·
+**Wächter:** `test461` §1/§4 und `test343` §6 (beide schon da, beide auf
+`main` 323f13a und auf dem Grundstand `b3cf1933` rot; `test343` §6 um eine
+Zusage erweitert, siehe 2), `test201` §1 (ebenso rot — **bleibt rot, der Entscheid gehört Redur**,
+L235 Punkt 1) · **ergänzt** E490, E676 und E697 (ohne eine ihrer Zahlen zu
+verschieben) · **Zweig** `claude/rot-zuerst-stift` · Anlass: **rot zuerst**
+(§46); gefunden vom Bau von E704, der alle drei auf dem Grundstand und auf
+`main` gleich rot sah.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+27. Sept., ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                           bischen ruhige machen ohne etwas lösche also eine funktionen
+                           und ich will das es flüssigere animationen , glass efeck usw
+                           alles haben dann bessere stift efeckte beim zeichnen bessere
+                           farben"
+27. Sept., ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                           morgen die redion öfnnen eien komplet besseren webseit sehen
+                           ohne eine funktione löschen bessere ordnungen bessere
+                           übergagnge besssere efeckten , bessere oberfläsche alles
+                           kannst du nur an reddion arbeiten"
+3. Okt. (Uhrzeit nicht     „Weiter ohne pause,"
+gemessen)
+```
+
+Und was hier wieder gilt, Redur am 7. September (E490, im Kopf von
+`test461`): „wenn ich eine Linie zeichne und mehr als drei Sekunden gedrückt
+halte, sollte sie gerade werden."
+
+**Der Fund.** Drei Wächter, die das Zeichnen halten, waren rot — keiner
+durch die erste Welle. Jeder bis zum Commit zurückverfolgt, der ihn rot
+gemacht hat, und zwar mit dem Wächter von HEUTE gegen den Code von damals:
+
+```txt
+test461 §1 §4   ["stift"] statt ["line"], 33/36   rot seit E676 (04b8c4d5, 21. Sept.);
+                                                 auf main mit PR #112 (3abab126)
+test343 §6      Tupfer undefined, meta null,      rot seit E697 (9e306b85, 23. Sept.);
+                dann page.click 30 s → Abbruch   auf main mit PR #114 (569a8341)
+test201 §1      "M0 0 L10 20 L20 15 L30 10"        rot seit E676 (04b8c4d5);
+                statt einer Q-Kurve, 31/32       auf main mit PR #112 (3abab126)
+```
+
+Weder E676 noch E697 hatten den Lauf, den sie rot machten, in ihrer
+Nachbarliste: E676 nannte zwanzig Nachbarn, darunter `test343` (der erst mit
+E697 rot wurde), aber weder `test461` noch `test201`, und schrieb „Lauf zum
+Zeitpunkt des Commits bei 5/21"; E697 kam als „Dokument Stift Freitext" ohne
+eine Zeile darunter.
+
+**1 · Das Halten gilt wieder (`test461`) — an zwei Stellen.**
+
+*1a · Die Uhr fragt die Hand.* E490 hat zwei Fragen
+getrennt, die vorher eine waren: „Kommt ein neuer PUNKT in den Strich?" und
+„Hat die HAND sich bewegt?" — die zweite mit dem Ruhekreis `RUHE_RADIUS` = 3
+um den geglätteten Punkt. E676 hat dem Glätter die Ecke beigebracht: kippt
+die Richtung über 2,5 Einheiten, springt er auf den rohen Punkt, der am
+weitesten in der alten Richtung lag. Für das „M" ist das richtig. Eine Hand,
+die hält und zittert, kippt ihre Richtung aber ständig — und der Glätter
+lieferte bei jedem Kippen einen rohen Randpunkt des Zitterns. Nachgerechnet
+mit dem Glätter von damals und von heute, derselbe Zug wie in `test461`
+(±2 Einheiten Zittern, alle 25 ms, 900 ms lang):
+
+```txt
+±2 Zittern, 900 ms   längste Ruhe   Ruhe am Ende   Ruhekreis verlassen   die Uhr sagt
+vor E676 (e123eb10)  875 ms         875 ms         einmal (Ankunft)      gehalten (≥ 450 ms)
+seit E676 (b3cf1933) 175 ms         25 ms          15-mal                nicht gehalten
+E708, die Hand       875 ms         875 ms         einmal (Ankunft)      gehalten
+±10, weitergefahren  höchstens 50 ms, in allen drei Ständen              nicht gehalten (richtig)
+```
+
+Entschieden: die Hand bekommt ihren eigenen Punkt — **derselbe Glätter ohne
+Eckensprung** (`InkStroke.glaetter(start, false)`, `keepCorners`). Die Tinte
+behält ihre Ecken, denn ohne den zweiten Wert ist alles wie zuvor. Nachgeprüft
+auf 2000 zufälligen Meldungen: ohne Ecken Zahl für Zahl gleich dem Glätter vor
+E676, mit Ecken Zahl für Zahl gleich dem Grundstand. Und mit Zeitrauschen
+(400 Läufe, Meldungen alle 25–32 ms): die Uhr an der Tinte sagt 0-mal
+„gehalten", die an der Hand 400-mal. `marken.ts` füttert die
+Hand mit jeder Meldung (wie `glatt`, auch unter der Punktschwelle) und misst
+den Ruhekreis an ihr.
+
+*1b · Die Erkennung sieht das Halten nicht.* Der erste Stand dieses Bogens
+hatte nur die Uhr repariert — nachgerechnet ohne Browser, und im Browser
+blieb `test461` rot mit 33 von 36, dieselben drei Zusagen. Die Uhr sagte jetzt
+„gehalten", aber `InkShapes.recognize` bekam die TINTE, und die endet seit
+E676 in einem Knäuel: bei ±2 kamen während des Haltens gut dreissig
+Punkte dazu, fast alle rohe Randpunkte des Zitterns, und der Weg wurde so
+lang, dass die Sehne keine 90 % mehr davon war — die Bedingung einer Linie.
+Vor E676 lag dasselbe Halten als 1,8 Einheiten kleiner, glatter Schwanz am
+Ende und störte nicht. Nachgerechnet mit den Glättern des Grundstands und
+der Erkennung, derselbe Zug wie im Wächter:
+
+```txt
+Zug                 Punkte   bis zur Ruhe   ganzer Strich   bis zur Ruhe + Abhebepunkt  Ergebnis
+±2, 900 ms gehalten   74        42            keine Form      Linie (80|300 → 478|300,87)     Linie
+±3, 900 ms gehalten   72        42            keine Form      Linie (80|300 → 477,01|301,31)  Linie
+±10, weitergefahren   73        73            keine Form      keine Form                      Strich
+±2, nur 120 ms        45        42            Linie           Linie                           Strich (nicht gehalten)
+```
+
+Entschieden: **was nach dem Ankommen der Hand kommt, ist Halten, nicht
+Zeichnen**, und die Erkennung bekommt es nicht zu sehen — sie sieht den
+Strich bis zu der Stelle, an der die Hand zuletzt in ihren Ruhekreis kam,
+und dazu den rohen Punkt, an dem sie abhob — dort endet seit E376 jeder
+Strich („Der Strich endet, wo die Hand abhob"), also auch die Form. Das ist
+E490s eigener Satz („ein Zittern an derselben Stelle ist keine Bewegung"),
+jetzt auch für die Form. Es gilt nur, wo die Uhr „gehalten" sagt — sonst
+wird ohnehin nichts erkannt —, und die Tinte bleibt, wie sie ist.
+`marken.ts`: `handRestFrom` (die Stelle in `running.pts`), nur solange der
+Strich läuft, wie `glatt`; nichts davon wird gespeichert, die Marke bekommt
+kein neues Feld.
+
+*Und die Ecken?* Nur die Frage an `InkShapes` bekommt die gekürzten Punkte.
+Wird keine Form erkannt, bleibt der Strich Punkt für Punkt, wie er war —
+ein gehaltenes „M", „N" oder Zickzack behält jede Ecke, die E676 ihm gibt.
+Nachgerechnet am 3. Oktober (messungen §85), langsam gezogen wie in
+`test564` und 900 ms gehalten: Dreieck und Rechteck werden bei ±0 in beiden
+Ständen erkannt und mit E708 jetzt auch bei ±2 und ±3; „M", „N" und
+Zickzack bleiben in beiden Ständen Striche. Wo der Grundstand „gehalten"
+sagte, sagt E708 dasselbe und erkennt dasselbe.
+
+*Und dabei gefunden, von `test347` §3.* Der erste Stand von 1b nahm als
+letzten Punkt den geglätteten Punkt der Hand. Mit zitternder Hand ist der
+gut; wer aber eine Linie zieht und ohne eine weitere Meldung hält, dessen
+Hand-Glätter hinkt der letzten schnellen Bewegung hinterher — die Linie
+von (100|300) nach (300|380) endete bei x = 285 (`test347` §3: „Die Linie
+geht von Anfang zu Ende des Zugs", verlangt ± 3). Der Abhebepunkt ist in
+beiden Fällen richtig; mit ihm endet dieselbe Linie bei (300|380), in der
+Rechnung genau dort (die ganze Tinte, wie bis hierher, gab 290,7).
+
+*Die Alternativen.* (a) `RUHE_RADIUS` grösser machen — das hätte die Zahl
+verschoben, die E490 gemessen hat („mehr als ein Zittern, weniger als eine
+Absicht"), und bei ±2 liegt die Spanne der rohen Punkte schon bei 5,1. (b)
+Den rohen Punkt fragen — genau diese 5,1 verlassen jeden Kreis von 3. (c)
+Den Eckensprung bei kleinem Weg abschalten — das ändert die Tinte jedes
+Strichs, also E676 selbst, mit seinen gemessenen Zahlen (`test564`); ein
+eigener Bogen, siehe L235 Punkt 2. Das hätte Uhr und Erkennung zugleich
+geheilt, aber jede Ecke jedes Strichs neu vermessen lassen. (d) Für die
+Erkennung die Punkte der Hand mitschreiben, einen zweiten Weg neben
+`running.pts` — ein Feld je Meldung für eine Frage, die nur am Ende gestellt
+wird; die Stelle reicht. *Was es kostet:* je Meldung eine Filterrechnung
+mehr (zwei Multiplikationen, eine Wurzel), eine Zahl, die beim Absetzen wie
+`ruhePunkt` wieder geht, und beim Absetzen eines gehaltenen Strichs eine
+Kopie seiner Punkte. Nichts wird gespeichert.
+
+**2 · Der Systemfarbwähler übernimmt beim Schliessen (`test343` §6).** E697
+hat den Farbwähler des Systems in die Palette gelegt, aber nur auf `input`
+gehört: das füllt, während die Hand im Wähler noch sucht, das Hex-Feld und
+die Probe. `change` — der Wähler geht mit einer Farbe zu — tat nichts. Die
+Palette blieb offen, die Farbe wurde kein Tupfer, und wer die Palette dann
+schloss, hatte sie verloren. Bei E697 selbst lief der Wächter noch zu Ende
+(27 von 31, vier Zusagen in §6 rot). Auf dem Grundstand tippt er danach auf
+den Stift, die offene Palette „Markerfarben" fängt den Tipp ab, er wartet
+30 s und **bricht ab** — §7 (der Druckweg) und §8 (Fingerknöpfe am Telefon)
+laufen dort gar nicht mehr. Entschieden: `change` übernimmt über `apply`,
+denselben Weg wie jeder Tupfer der Palette (E697: „Die Palette löst
+dieselbe Tupferaktion aus wie die Leiste") — also gemerkt, markiert, die
+Leiste trägt ihn, die Palette geht zu, der Freitext kommt zurück. So hielt
+es der Wähler seit E351 („Die Wahl wird sofort zur Farbe und als Tupfer
+gemerkt").
+
+*Und nur ein neuer Wert übernimmt.* Ob ein Browser beim blossen Auf- und
+Zumachen des Wählers `change` meldet, soll nicht darüber entscheiden, ob
+eine Farbe gemerkt wird und die Palette zugeht. Der Wert, mit dem der Wähler
+aufging, wird gemerkt (`click` öffnet ihn, auch über die Tastatur; zu Beginn
+der Wert der Palette), und ein `change` mit genau diesem Wert tut nichts.
+Dafür hat `test343` §6 eine Zusage mehr, VOR der Wahl: ein `change` ohne
+neuen Wert lässt die Tupfer, das Gemerkte und die offene Palette, wie sie
+waren. Sie ist eine Erweiterung, keine Lockerung — die vier Zusagen
+dahinter stehen unverändert —, und rot gesehen hat sie die Gegenprobe G5
+(der Hörer ohne diese Prüfung, also der erste Stand dieses Bogens): dort
+merkte das blosse Zumachen die alte Farbe als Tupfer und schloss die
+Palette.
+
+*Die Alternativen.* (a) Den Wächter auf „Farbe übernehmen" drücken lassen —
+das hiesse, den Verlust der gewählten Farbe als richtig zu erklären, und den
+Wächter zu ändern, statt den Code. (b) Den Wähler wieder direkt am „+"
+öffnen wie vor E697 — gegen E697. (c) Nur `input` hören und bei jedem Schritt
+übernehmen — dann schlösse die Palette beim ersten Zug im Wähler, und jede
+Zwischenfarbe würde ein Tupfer. *Was es kostet:* zwei Hörer und ein
+gemerkter Wert, nichts gespeichert.
+
+**3 · Eine Probe, die eine Ecke nach einer Kurve fragt (`test201` §1) — nicht
+angefasst.** Die Probe ist `InkGeometry.path([[0, 0], [10, 20], [30, 10]])`
+und verlangt ein ` Q`. Das ist ein rechter Winkel: cos 0 gegen die Schwelle
+`ECKE_COS` = 0,55. Seit E676 ist das **mit Absicht** eine Ecke, und E676
+hat die Regel ausdrücklich auch in `path` gelegt (Punkt 5 oben:
+`InkGeometry.stueck` „geht dort als Gerade durch den Punkt"; der Commit
+`04b8c4d5`: „in seite, path und der Feder dieselbe Rechnung", `test366` §1
+zeichengleich). Grün würde der Lauf
+nur, wenn der Kugelschreiber seine Ecke wieder verlöre oder die Schwelle
+für eine Probe verschoben würde. Das wäre kein Reparieren, sondern E676
+zurücknehmen. Die Zusage des Wächters („Freihand wird geglättet") gilt
+weiter — nur seine Probe ist von E676 überholt. Einen Wächter ändern darf
+dieser Bogen nicht (§31, §47); der Vorschlag steht in L235 Punkt 1.
+
+**Gegenproben** (am 3. Oktober am fertigen Bau, Dienststand v1397; jede im
+Bau `quell/` gedreht, rot gesehen und zurückgenommen; `marken.js` und
+`stroke.js` danach bytegleich dem Bau):
+
+```txt
+G1  die Uhr wieder an der Tinte (Bedingung UND gemerkter Punkt → point)   test461 33/36  ✗ §1 Linie ✗ … zwei Punkte ✗ §4 Linie
+G3  keepCorners wirkungslos: die Hand bekommt den Eckensprung wieder      test461 33/36  dieselben drei
+G4  die Erkennung wieder auf der ganzen Tinte (mark.pts)                  test461 33/36  dieselben drei
+G2  der `change`-Hörer abgehängt                                          test343 §6: ✗ Tupfer undefined ✗ gemerkt null,
+                                                                          dann page.click 30 s → Abbruch (wie auf dem Grundstand)
+G5  der `change`-Hörer ohne die Prüfung „nur ein neuer Wert"              test343 30/32  ✗ „ohne neue Farbe … übernimmt nichts"
+    (der erste Stand dieses Bogens)                                       (Palette zu, Tupfer und Gemerktes ["#ffcf33"] — die alte
+                                                                          Farbe) ✗ „Der Tupfer überlebt …" ["#8e44ad","#ffcf33"]
+1b mit dem geglätteten Punkt der Hand statt dem Abhebepunkt (erster Stand, test347 §3 ✗ [[100,301],[285,375]]
+    28. September)
+```
+
+Eine erste Fassung von G1 drehte nur die Bedingung zurück und liess den
+gemerkten Punkt an der Hand — sie verglich also Tinte mit Hand und blieb
+grün (36/36). Sie zählt nicht; G1 dreht beide Zeilen.
+
+**Geprüft** (3. Oktober, am fertigen Bau, unter der gemeinsamen Sperre):
+`test461` 36/36, `test343` 32/32 (31 und die neue Zusage), `test347` 31/31,
+`test201` 31/32 (§1, siehe 3). Nachbarn: `test174`, `test344`, `test345`,
+`test346`, `test350`, `test364`, `test366`, `test437`, `test438`,
+`test439`, `test445`, `test447`, `test449`, `test451`, `test455`,
+`test456`, `test472`, `test474`, `test475`, `test477`, `test478`,
+`test480`, `test532`, `test535`, `test561`, `test562`, `test564`,
+`test575`, `test577`, `test583` grün; `test563` in diesem Lauf 12/13 — §1
+„kein Buckel" ×1,07 gegen < 1,05: die Breite folgt seit E704 dem Tempo der
+Meldungen, und dieser Bogen ändert weder Breite noch Druck noch Tempo; am
+28. September auf demselben Zeichenweg 13/13; die Wiederholung auf Zweig
+und Grundstand unter der Sperre stand beim Commit noch aus; `test388` 21/21. Ohne
+Sperre: `test367`, `test87`, `test105` (152), `test109`, `test225`,
+`test549`, `test550` grün. `npm run typecheck` sauber; `npm run bauen:ts`
+(Dienststand v1397), `npm run stand` und `node bauen.mts` neu.
+
+**Gemessen** (messungen §85): Startgrösse +1'673 Bytes gzip (`marken.js`
++1'465, `stroke.js` +210, `stand.js` −2; fast nur Kommentar); `test388` §5:
+der Start holt 2827 KB über 248 Dateien, Decke 2850 KB.
+
+**Gefunden auf dem Weg** (L235 Punkt 2): **die Tinte zittert beim Halten.**
+Derselbe Eckensprung lässt das Zittern einer haltenden Hand ungeglättet
+aufs Papier — Spanne der Tinte während des Haltens, nachgerechnet:
+
+```txt
+Zittern   roh    Tinte vor E676   Tinte seit E676
+±1,5      3,86   1,26             1,26
+±2        5,14   1,78             5,07
+±3        7,71   2,96             7,60
+```
+
+Bis ±1,5 ändert sich nichts; `test366` §3 misst bei ±0,4 und sieht es
+deshalb nicht. Im roten Lauf von `test461` auf dem Grundstand liegen die
+Punkte des gehaltenen Strichs genau so: 28 Stück in einem Knäuel um
+(480, 300), die meisten roh. Für die Form ist das seit 1b gleich (die
+Erkennung sieht das Knäuel nicht); sichtbar bleibt es an einem gehaltenen
+Strich, aus dem keine Form wird. Nicht in diesem Bogen (§43: eine Änderung,
+ein Ziel) — es ist die Tinte, also E676, und braucht eigene Messung und
+Wächter.

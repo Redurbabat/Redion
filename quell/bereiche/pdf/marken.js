@@ -2026,6 +2026,22 @@ const Marken = (() => {
          * -------------------------------------------------------------------- */
         let feder = null;
         let glatt = null;
+        /* DIE HAND, NICHT DIE TINTE (E708). Das Halten (E490) fragt, ob die
+           HAND sich bewegt hat. Seit E676 springt `glatt` an jeder Kehre auf
+           einen rohen Punkt — richtig für die Ecke eines „M", aber eine Hand,
+           die hält und zittert, kippt ihre Richtung ständig: bei ±2 Einheiten
+           Zittern verliess der Punkt den Ruhekreis fünfzehnmal in 900 ms, die
+           längste Ruhe dauerte 175 ms statt der nötigen 450, und kein
+           gehaltener Strich wurde mehr gerade (`test461` §1/§4, rot seit E676).
+           Derselbe Glätter ohne Eckensprung beantwortet die Frage wieder so wie
+           zu E490: 875 ms Ruhe, eine Linie. */
+        let handSmoother = null;
+        /* WO DIE HAND ZUR RUHE KAM (E708): die Stelle in `running.pts`, an der
+           sie zuletzt in ihren Ruhekreis kam. Was danach an Tinte kommt, ist
+           Halten, nicht Zeichnen — die Formerkennung bekommt es nicht zu sehen
+           (siehe `finish`). Lebt nur, solange der Strich läuft, wie `glatt`,
+           und wird nie gespeichert. */
+        let handRestFrom = 0;
         let druckGlatt = null;
         let letzteZeit = 0;
         /* Der gemessene Abstand der letzten zwei Meldungen. Der nasse Schwanz
@@ -2803,6 +2819,8 @@ const Marken = (() => {
             }
             feder = null;
             glatt = null;
+            handSmoother = null;
+            handRestFrom = 0;
             druckGlatt = null;
             letzteZeit = 0;
             nassFlaeche = false;
@@ -2887,6 +2905,9 @@ const Marken = (() => {
                auch dann weiter, wenn der Punkt unter der Schwelle bleibt — sonst
                bliebe er bei langsamer Hand fuer immer hinter ihr zurueck. */
             const point = glatt ? glatt(roh, dt) : roh;
+            /* Die Hand (E708) sieht jede Meldung, wie `glatt` — auch die, die
+               unter der Punktschwelle bleibt, sonst hinge sie hinterher. */
+            const hand = handSmoother ? handSmoother(roh, dt) : point;
             rohLetzter = roh;
             rohDrei.push(roh);
             if (rohDrei.length > 3)
@@ -2919,11 +2940,13 @@ const Marken = (() => {
                 running.tempo.push(tempoJetzt);
             breiteFestlegen(jetzt);
             /* Die Uhr läuft erst weiter, wenn die Hand ihren Ruhepunkt VERLÄSST
-               (E490) — ein Zittern an derselben Stelle ist keine Bewegung. */
+               (E490) — ein Zittern an derselben Stelle ist keine Bewegung. Gefragt
+               wird die HAND, nicht der Tintenpunkt mit seinem Eckensprung (E708). */
             const ruhe = running.ruhePunkt;
-            if (!ruhe || Math.hypot(point[0] - ruhe[0], point[1] - ruhe[1]) > RUHE_RADIUS) {
-                running.ruhePunkt = [point[0], point[1]];
+            if (!ruhe || Math.hypot(hand[0] - ruhe[0], hand[1] - ruhe[1]) > RUHE_RADIUS) {
+                running.ruhePunkt = [hand[0], hand[1]];
                 running.bewegtUm = Date.now();
+                handRestFrom = running.pts.length;
             }
             feder?.punkt(point, halbeBreite(running, druck) * nassSpitze());
         };
@@ -3442,8 +3465,11 @@ const Marken = (() => {
             /* Ein bestelltes Bild waere jetzt ein Bild ohne Strich (E376). */
             bildAbsagen();
             const letzterRoh = rohLetzter;
+            const restFrom = handRestFrom;
             feder = null;
             glatt = null;
+            handSmoother = null;
+            handRestFrom = 0;
             druckGlatt = null;
             letzteZeit = 0;
             nassFlaeche = false;
@@ -3537,7 +3563,19 @@ const Marken = (() => {
                und Stil hat eine Form nicht. Der Marker bleibt Marker: wer
                hervorhebt, will keine Geometrie. */
             if (mark.art === 'stift' && formen && gehalten && typeof InkShapes !== 'undefined') {
-                const form = InkShapes.recognize(mark.pts);
+                /* DAS HALTEN IST NICHT TEIL DER FORM (E708). Seit E676 springt die
+                   Tinte einer haltenden, zitternden Hand auf rohe Randpunkte: bei
+                   ±2 Einheiten kamen in 900 ms zwei Dutzend Punkte in einem Knäuel
+                   dazu, der Weg wurde um ein Viertel länger als die Sehne erlaubt,
+                   und die Linie wurde nicht mehr erkannt, obwohl das Halten es
+                   war (`test461` §1/§4). E490 sagt es schon für die Uhr: ein
+                   Zittern an derselben Stelle ist keine Bewegung. Die Erkennung
+                   sieht den Strich darum bis dahin, wo die Hand zur Ruhe kam, und
+                   dazu den Punkt, an dem sie abhob — dort endet jeder Strich (E376,
+                   unten), also auch die Form. Die Tinte bleibt, wie sie ist. */
+                const shapePts = letzterRoh && restFrom > 0 && restFrom <= mark.pts.length
+                    ? [...mark.pts.slice(0, restFrom), letzterRoh] : mark.pts;
+                const form = InkShapes.recognize(shapePts);
                 if (form) {
                     mark.art = form.art;
                     mark.pts = form.pts;
@@ -4728,6 +4766,8 @@ const Marken = (() => {
                    nicht dort beginnt, wo der Stift das Papier beruehrt hat, ist
                    falsch — und kein Filter kann das spaeter zurueckholen. */
                 glatt = InkStroke.glaetter(point);
+                handSmoother = InkStroke.glaetter(point, false);
+                handRestFrom = 0;
                 rohLetzter = null;
                 rohDrei = [point];
                 druckGlatt = InkStroke.druckGlaetter(p0);
@@ -7103,6 +7143,29 @@ const Marken = (() => {
                 };
                 hex.addEventListener('input', update);
                 picker.addEventListener('input', () => { hex.value = picker.value; update(); });
+                /* DER SYSTEMFARBWÄHLER ÜBERNIMMT BEIM SCHLIESSEN (E708), wie seit
+                   E351: `input` kommt, während die Hand im Wähler des Systems noch
+                   sucht — das zeigt die Probe; `change` kommt, wenn sie ihn mit
+                   einer Farbe schliesst. Das ist die Wahl, und sie wird ein Tupfer
+                   über denselben Weg wie jede Farbe hier. Bis hierher füllte sie nur
+                   das Hex-Feld, und die gewählte Farbe verschwand, sobald das Feld
+                   zuging (`test343` §6, rot seit E697).
+                   NUR EIN NEUER WERT ÜBERNIMMT. Ob ein Browser beim blossen Auf- und
+                   Zumachen des Wählers `change` meldet, soll hier nicht zählen: der
+                   Wert, mit dem der Wähler aufging (`click` öffnet ihn, auch über
+                   die Tastatur), wird gemerkt, und ein `change` mit genau diesem
+                   Wert tut nichts — kein Tupfer, die Palette bleibt offen
+                   (`test343` §6 prüft beides). */
+                let pickerOpenedWith = picker.value;
+                picker.addEventListener('click', () => { pickerOpenedWith = picker.value; });
+                picker.addEventListener('change', () => {
+                    if (picker.value.toLowerCase() === pickerOpenedWith.toLowerCase())
+                        return;
+                    hex.value = picker.value;
+                    update();
+                    if (!submit.disabled)
+                        apply(selected);
+                });
                 form.addEventListener('submit', event => { event.preventDefault(); if (!submit.disabled)
                     apply(selected); });
                 form.append(label, picker, error, submit);

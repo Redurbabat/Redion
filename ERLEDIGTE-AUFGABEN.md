@@ -1,5 +1,41 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 28. September bis 3. Oktober 2026 · E708 · Rot zuerst am Stift: Halten und Farbwähler wieder grün, eine Probe beim Entscheid
+
+**Redur:** um ca. 16:45 „… dann bessere stift efeckte beim zeichnen …" und
+um ca. 22:10 „… ich will wenn ich am morgen die redion öfnnen eien komplet
+besseren webseit sehen ohne eine funktione löschen …" (27. September);
+am 3. Oktober „Weiter ohne pause,".
+
+**Gefunden:** drei Wächter des Zeichnens waren auf `main` und auf dem
+Grundstand `b3cf1933` rot, gesehen vom Bau von E704. Jeder mit dem Wächter
+von heute gegen den Code von damals zurückverfolgt: `test461` §1/§4 und
+`test201` §1 rot seit E676 (`04b8c4d5`, auf `main` mit PR #112),
+`test343` §6 rot seit E697 (`9e306b85`, auf `main` mit PR #114).
+
+**Gebaut:**
+- Das Halten (E490) misst wieder die Hand: `InkStroke.glaetter(start,
+  false)` ist derselbe Glätter ohne den Eckensprung aus E676 (Zahl für Zahl
+  der alte), `marken.ts` füttert ihn mit jeder Meldung und misst den
+  Ruhekreis an ihm. Die Tinte behält ihre Ecken. Bei ±2 Zittern 875 ms Ruhe
+  statt 175 ms.
+- Die Formerkennung eines gehaltenen Strichs sieht ihn nur bis dahin, wo
+  die Hand zur Ruhe kam, und dazu den Punkt, an dem sie abhob (E376) — das Knäuel, das der
+  Eckensprung beim Halten in die Tinte legt, machte sie blind. Die Uhr allein
+  reichte nicht: der erste Stand war im Browser weiter rot (33/36). Jetzt
+  wird der gehaltene Strich wieder eine Linie, auch der Schutzleiter.
+- Der Systemfarbwähler der Palette (E697) übernimmt beim Schliessen
+  (`change`) über denselben Weg wie jeder Tupfer — gemerkt, markiert, die
+  Palette geht zu. Vorher füllte er nur das Hex-Feld; auf dem Grundstand
+  brach `test343` danach ab, und §7/§8 liefen nicht mehr. Nur ein NEUER
+  Wert übernimmt: ein `change` mit dem Wert, mit dem der Wähler aufging,
+  tut nichts (`test343` §6 um diese Zusage erweitert, rot gesehen in der
+  Gegenprobe ohne die Prüfung).
+- `test201` §1 nicht angefasst: seine Probe ist ein rechter Winkel, seit
+  E676 mit Absicht eine Ecke. Der Vorschlag steht in L235 Punkt 1.
+
+**Geprüft:** siehe E708 (Gegenproben, Nachbarn) und messungen §85.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

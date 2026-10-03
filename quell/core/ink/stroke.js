@@ -285,8 +285,15 @@ const InkStroke = (() => {
     /**
      * Ein Glaetter mit Gedaechtnis. Der erste Punkt geht unveraendert durch —
      * ein Strich, der nicht dort beginnt, wo der Stift aufsetzte, ist falsch.
+     *
+     * `keepCorners` (E708): ohne Eckensprung ist es derselbe Filter wie vor
+     * E676, Zahl fuer Zahl. Den braucht, wer nicht die TINTE fragt, sondern
+     * die HAND — das Halten (E490, `marken.ts`). Eine zitternde Hand kippt
+     * ihre Richtung alle paar Millisekunden; mit Eckensprung liefert der
+     * Filter dann jedes Mal einen rohen Randpunkt des Zitterns, und die Hand
+     * sieht aus, als liefe sie weg. Die Tinte behaelt ihre Ecken (Vorgabe).
      */
-    const glaetter = (start) => {
+    const glaetter = (start, keepCorners = true) => {
         let x = endlich(start[0]);
         let y = endlich(start[1]);
         /* DAS TEMPO IST DAS DER HAND, nicht das des Rueckstands (E504).
@@ -314,7 +321,7 @@ const InkStroke = (() => {
                 seitAnker.shift();
             const sx = px - ax, sy = py - ay;
             const sl = Math.hypot(sx, sy);
-            if (sl >= ECKE_SCHRITT) {
+            if (keepCorners && sl >= ECKE_SCHRITT) {
                 const nx = sx / sl, ny = sy / sl;
                 if ((rx !== 0 || ry !== 0) && nx * rx + ny * ry < KEHRE) {
                     let ecke = seitAnker[0], weit = -Infinity;
