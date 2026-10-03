@@ -8377,9 +8377,28 @@ der Chatliste) auf `RedionDelete` gestellt. Drei Dinge sind offen:
 3. **Kleine ✕ zum „Entfernen" in Formularen** (eine Filterregel, eine
    Kachel, eine eigene Farbe) sind Bearbeiten, nicht Löschen von
    Gespeichertem, und blieben, wie sie sind.
+4. **Nachgesehen am 3. Oktober (Durchsicht E709): zwei Zeichen-Knöpfe, die
+   die Suche von `test586` §2 nicht sieht.** Sie liest `<button …>🗑</button>`
+   wörtlich und `x.textContent = '🗑'` — nicht einen Knopf, der aus einer
+   Tabelle gebaut wird:
+   - die Leiste der Gedankenkarte, `['weg', '🗑', 'Ast löschen (Entf)']`
+     (`bloecke/arten/gedankenkarte.ts`, gebaut über `${ico}`): ein eckiger
+     Leistenknopf (28 × 26 px, Radius 5) neben ＋ ⏎ T ⊟, er nimmt den
+     gewählten Ast mit allen Unterthemen, `Entf` tut dasselbe in einem
+     Schritt;
+   - die Auswahlleiste der Planfläche, `✕` „Löschen (Entf)"
+     (`bloecke/arten/planflaeche.ts`) neben ↻ ⇄ ⧉ ⬚.
+   Beides sind Werkzeugleisten über einer Auswahl wie die Auswahl im PDF
+   (Punkt 2), keine runden Knöpfe — umgestellt ist keiner. Dazu, ebenfalls
+   unverändert: „🗑 Löschen" im Seitenblatt des Dokuments
+   (`pdf/document-mode.ts`, Wort mit Zeichen, Punkt 2) und die Liste „Eine
+   Vorlage löschen" (`datenbanken/steuerung.ts`, `🗑 <Name>` je Vorlage, ein
+   Untermenü).
 
-**Was fehlt:** zu 1 der Umbau der Papierkorbzeile mit Wächter; zu 2 und 3
-Redurs Wahl.
+**Was fehlt:** zu 1 der Umbau der Papierkorbzeile mit Wächter; zu 2, 3
+und 4 Redurs Wahl (mit einem Bild der Leiste); zu 4 ausserdem, dass
+`test586` §2 auch aus Tabellen gebaute Knöpfe liest — erst, wenn Redur
+gewählt hat, sonst würde der Wächter eine offene Wahl als Fehler melden.
 
 ---
 

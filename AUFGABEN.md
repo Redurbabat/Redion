@@ -1522,3 +1522,8 @@ jeweils mit eigenem Wächter (rot zuerst):
 2. Redur fragen (mit einem Bild), ob die Wortknöpfe „Löschen" in den
    Werkzeugleisten (Auswahl im PDF, Seitenblatt des Dokuments) auch
    zerfliessen sollen — sie legen weg, was Strg Z zurückholt.
+3. In dieselbe Frage (Durchsicht 3. Oktober, L230 Punkt 4): der 🗑 der
+   Gedankenkarten-Leiste („Ast löschen", aus einer Tabelle gebaut) und das ✕
+   der Auswahlleiste der Planfläche — beides Leistenknöpfe über einer Auswahl,
+   die `test586` §2 nicht sieht. Nach Redurs Wahl liest §2 auch aus Tabellen
+   gebaute Knöpfe (rot zuerst).

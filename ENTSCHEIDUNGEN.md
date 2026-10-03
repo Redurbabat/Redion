@@ -58673,3 +58673,33 @@ grün.
 die Wortknöpfe „Löschen" in Werkzeugleisten (Auswahl im PDF, Seitenblatt);
 kleine ✕ zum Entfernen in Formularen. Dialoge (Zweig `claude/dialoge-im-kit`),
 Menüs und die Liquid-Szenen gehören anderen Bögen.
+
+### Nachtrag, 3. Oktober 2026 — was die Läufe nach den zwei Korrekturen zeigten, und eine Durchsicht
+
+Redur, 3. Oktober: „Weiter ohne pause". Die Läufe, die am 28. September auf
+das Schloss warteten, liefen am selben Tag um ca. 15:54 UTC — gegen genau
+den Stand dieses Eintrags (`delete.js` byte-gleich, Arbeitsbaum sauber):
+
+- `test586` **45 von 45**, mit dem Punkt „Jedes Wort passt in seine Pille".
+- **Gegenprobe (6):** `delete.js` vor der Behebung (die Pillen gemessen,
+  bevor sie im Paar liegen) → §4 rot, „Jedes Wort passt in seine Pille",
+  Luft neben „Endgültig löschen" −36 px; 44 von 45. Zurück, `cmp` gleich.
+- `test362` **18 von 18**: die rohe `16px` ist weg.
+- `test464` 63 von 64 — rot nur §1 „Dreizehn Werkzeuge, alle auf EINER
+  Höhe" (ist [14,1], soll [13,1]). Auf `b3cf1933` im eigenen Arbeitsbaum,
+  im selben Lauf: 62 von 63, **derselbe Punkt genauso rot** — fremd, älter
+  als E709. §6 (der Löschen-Knopf der Elemente, zwei Schritte) ist grün.
+- `test388` §5 auf `b3cf1933`: 2825 KB gzip über 248 Dateien (messungen §79).
+- Die Bilder danach (Rechner und Telefon, hell und dunkel, Papierkorb,
+  Bereiche, Dateien, offen und zu): „Endgültig löschen" liegt jetzt in
+  seiner Pille, mit Luft an beiden Seiten.
+
+**Durchsicht, 3. Oktober.** Jede der 23 Stellen trägt `data-loeschknopf`,
+ihr alter Griff ist unverändert. Escape und „Abbrechen" schliessen immer
+nur das Paar; der Fokus geht an den Knopf zurück (im Papierkorb an seine
+Zeile, L230 Punkt 1); der Klebefilter hängt nur an `data-fliesst`. Neu
+gesucht nach Löschen-Knöpfen, die die Suche von `test586` §2 nicht sieht:
+der 🗑 der Gedankenkarten-Leiste („Ast löschen", aus einer Tabelle gebaut)
+und das ✕ der Auswahlleiste der Planfläche — beides eckige Leistenknöpfe
+über einer Auswahl, mit `Entf` als einem Schritt, wie die Auswahl im PDF.
+Umgestellt ist keiner; die Wahl ist Redurs (L230 Punkt 4).

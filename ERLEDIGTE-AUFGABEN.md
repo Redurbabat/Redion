@@ -1,5 +1,18 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 3. Oktober 2026 · E709 Nachtrag · Die Läufe nach den zwei Korrekturen, und eine Durchsicht
+
+**Redur:** „Weiter ohne pause".
+
+**Nachgelesen:** Die Läufe vom 28. September (ca. 15:54 UTC, Stand von E709)
+sind durchgelaufen: `test586` 45 von 45, die Gegenprobe zur Pillenbreite
+rot gesehen (44 von 45) und zurück, `test362` 18 von 18, `test464` rot nur
+in §1 „Dreizehn Werkzeuge" — auf `b3cf1933` genauso (fremd). Bilder neu.
+
+**Durchsicht:** zwei Leistenknöpfe über einer Auswahl, die `test586` §2
+nicht sieht (Gedankenkarte 🗑, Planfläche ✕) — nicht umgestellt, Redurs
+Wahl (L230 Punkt 4, AUFGABEN).
+
 ## 28. September 2026 · E709 · Der Löschen-Knopf, der zerfliesst — überall, wo gelöscht wird
 
 **Redur:** um ca. 22:02 ein Video (ein runder Knopf mit rotem Papierkorb

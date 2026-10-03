@@ -5449,3 +5449,23 @@ beide getrennt und die Wörter scharf; bei 700 ms übernimmt die CSS-Pille
 ohne Durchscheinen. Zwei Fehler kamen erst im Streifen heraus (siehe
 E709, „Gefunden auf dem Weg"): „Endgültig löschen" lief über die Pille,
 und bei der Übergabe schien „0 Seiten" ein Bild lang durch.
+
+**Nachtrag, 3. Oktober — die Läufe nach den zwei Korrekturen.** Sie liefen
+am 28. September um ca. 15:54 UTC unter dem Schloss (`loeschen-lauf2.sh`)
+gegen genau den Stand von E709 (`delete.js` byte-gleich, Arbeitsbaum
+sauber); nachgelesen am 3. Oktober:
+
+```txt
+test586 (Zweig)                       45 von 45
+  Gegenprobe: delete.js vor der Behebung (Pillen gemessen, bevor sie im
+  Paar liegen) → §4 rot, „Jedes Wort passt in seine Pille":
+  luftJa −36 px, luftNein 14 px — 44 von 45; zurück, cmp gleich
+test362 (Zweig)                       18 von 18 (die rohe 16px ist weg)
+test464 (Zweig)                       63 von 64 — nur §1 „Dreizehn Werkzeuge,
+                                      alle auf EINER Höhe": ist [14,1], soll [13,1]
+test464 (b3cf1933, eigener Baum)      62 von 63 — derselbe Punkt, gleich rot:
+                                      fremd, älter als E709
+test388 §5 (b3cf1933)                 2825 KB gzip über 248 Dateien, Decke 2850
+Streifen neu (15:56 UTC)              24, je 13–25 Bilder, im Mittel 35–67 ms
+                                      Abstand (höchstens 116 ms)
+```
