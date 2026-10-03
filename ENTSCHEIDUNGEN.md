@@ -58613,6 +58613,20 @@ E708.
 **Geprüft** (3. Oktober). Ohne Schloss: `test578` 110/110, `test109` 25/25,
 `test87` 177/177, `test105` 152 ok, `test225`, `test549`, `test550` grün;
 `npm run typecheck` sauber; `bauen:ts` (Dienststand v1395), `npm run stand`
-und `bauen.mts` neu. Unter dem gemeinsamen Schloss (fünf Arbeitsbäume
-teilen es): 492 582 247 464 579 388 412 143 353, die Halbierung von 247 und
-464 und die Gegenproben — das Ergebnis steht im Nachtrag zu diesem Eintrag.
+und `bauen.mts` neu. Unter dem gemeinsamen Schloss (20:44–21:04 UTC):
+`test492` 55/55, `test582` 180/180, `test247` 107/107, `test464` 63/63,
+`test579` 76/76, `test388` 21/21 (§5: **2826 KB** über 248 Dateien, Decke
+2850), `test412` 27/27, `test143` 23/23, `test353` 105/105.
+
+**Halbierung, gelaufen:** `test247` grün auf be86ff72 (106/106), rot auf
+c64f1c76 (`{"stroke":"none","breite":0}`, „dick 0 : dünn 0"); `test464`
+grün auf 09ac7f81 (63/63), rot auf af2706c1 („ist [14,1], soll [13,1]").
+
+**Gegenproben, je rot gesehen und zurückgenommen** (im Grundstand
+4d9a9a3f mit den neuen Wächtern): `test492` ohne die Reparatur rot — die
+neue Zeile (`blob:null/52f9…`) und diesmal auch die alte; `test464` ohne
+`button('textfix')` rot („ist [13,1,[…ohne textfix…]]"); `test247` mit
+fester Keilhöhe statt `strokeWidth(mark)` rot („dick 5.99 : dünn 5.99 =
+1.00"), die Farbzeile dabei richtig grün; `test582` mit `ru-lader-herein`
+1,2 s statt 0,3 s in allen vier Szenen rot (`"laengste":1200`) — die alte
+Zeile wäre dort grün geblieben.

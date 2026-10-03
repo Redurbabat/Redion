@@ -5436,6 +5436,16 @@ E704 `fill="#2f7ed8"`, `stroke="none"`, kein `stroke-width`, die Kante
 **`test464`, die Leiste am Blatt:** 13 `[data-wz]` bis 09ac7f81, 14 ab
 af2706c1 (`textfix`, E671), eine Zeile.
 
-**Startgrösse (`test388` §5):** DECKE 2850 KB gzip; `claude/morgen-besser`
-stand bei 2826 KB. E714 ändert nur `laden.js` (rund 0,1 KB gzip); der Lauf
-unter dem Schloss steht im Nachtrag zu E714.
+**Startgrösse (`test388` §5, 3. Oktober, 20:44 UTC):** **2826 KB** gzip über
+248 Dateien, DECKE 2850 KB — wie `claude/morgen-besser` (2826); `laden.js`
+wächst um weniger als ein halbes KB und rundet nicht um.
+
+**Gegenproben (Grundstand 4d9a9a3f, neue Wächter):**
+
+```txt
+Lauf     Eingriff                                   rot mit
+test492  keiner (Stand vor E714)                    nachgeladen: ['blob:null/52f9f81b-4ee3-'], alte Zeile auch
+test464  button('textfix') aus der Leiste           ist [13,1,[…ohne textfix…]], soll [14,1,[…]]
+test247  Keilhöhe fest 6 statt strokeWidth(mark)    dick 5.99 : dünn 5.99 = 1.00 (erwartet 4.17)
+test582  ru-lader-herein 1,2 s statt 0,3 s          {"elemente":2,"laengste":1200,"offen":0}, alle vier Szenen
+```
