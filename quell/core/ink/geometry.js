@@ -1,16 +1,5 @@
 "use strict";
-/* ============================================================================
- * core/ink/geometry.ts — neutrale Geometrie fuer Freihand und Formen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/ink/geometry.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/core/ink/geometry.js`.
- * ----------------------------------------------------------------------------
- * Diese Datei kennt weder PDF noch Whiteboard noch Store. Sie rechnet nur mit
- * Punkten im jeweiligen Dokumentraum. Dadurch koennen Blatt, PDF-Seite und ein
- * spaeteres Whiteboard dieselben Regeln verwenden, ohne Daten zu importieren
- * oder eine zweite Zeichenmaschine aufzubauen (E125).
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ink/geometry.ts (npm run bauen:ts). */
 const InkGeometry = (() => {
     const finite = (value) => {
         const number = Number(value);
@@ -27,7 +16,6 @@ const InkGeometry = (() => {
         const amount = Math.max(0, Math.min(1, ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / (dx * dx + dy * dy)));
         return Math.hypot(point[0] - (start[0] + amount * dx), point[1] - (start[1] + amount * dy));
     };
-    /** Ramer-Douglas-Peucker: weniger Punkte, gleiche sichtbare Linie. */
     const simplify = (raw, tolerance = 0.8) => {
         const input = points(raw);
         if (input.length <= 2)
@@ -54,9 +42,6 @@ const InkGeometry = (() => {
         }
         return input.filter((_point, index) => !!keep[index]);
     };
-    /** Wie `simplify`, aber als Liste der INDIZES, die bleiben — damit ein
-        zweiter Kanal (der Druck je Punkt) mitwandern kann, statt zum
-        Durchschnitt zu werden (E351). */
     const simplifyIndices = (raw, tolerance = 0.8) => {
         const input = points(raw);
         if (input.length <= 2)
@@ -87,20 +72,7 @@ const InkGeometry = (() => {
                 out.push(i);
         return out;
     };
-    /* ══ EIN BOGENSTUECK, DAS EINE ECKE KENNT (E676) ═════════════════════════
-       Der Weg von Stuetzpunkt zu Stuetzpunkt ist eine Q-Kurve ueber die
-       Mittelpunkte: der Punkt ist Kontrollpunkt, der Mittelpunkt zum naechsten
-       das Ende. Das rundet — auch eine ECKE, die der Glaetter gerade erst
-       gehalten hat (E676): bei 24 px Abstand der Nachbarn laeuft die Kurve
-       fuenf Pixel neben der Spitze eines „M" vorbei. Kippt die Richtung an
-       einem Punkt (cos < ECKE_COS, dieselbe Schwelle wie `KEHRE` in
-       stroke.ts), geht der Weg deshalb als Gerade DURCH den Punkt und als
-       Gerade weiter zum Mittelpunkt. Die Feder (stroke.ts) ruft dieses
-       Stueck fuer ihre eingefrorenen Teile — eine Rechnung, damit
-       `test366 §1` (zeichengleich) gilt, ohne dass sie zweimal dasteht. */
     const ECKE_COS = 0.55;
-    /** Kippt die Richtung an `p`? Die EINE Eckenfrage des Hauses (E676) —
-     *  `stueck` fragt sie für den Weg, `gelenke` (E704) für den Umriss. */
     const istEcke = (prev, p, next) => {
         const ax = p[0] - prev[0], ay = p[1] - prev[1];
         const bx = next[0] - p[0], by = next[1] - p[1];
@@ -114,7 +86,6 @@ const InkGeometry = (() => {
             return ` L${p[0]} ${p[1]} L${mx} ${my}`;
         return ` Q${p[0]} ${p[1]} ${mx} ${my}`;
     };
-    /** Eine Seite des Umrisses als geglaettete Kurve (ohne das fuehrende M). */
     const seite = (input) => {
         if (input.length < 2)
             return '';
@@ -126,20 +97,6 @@ const InkGeometry = (() => {
         const last = input[input.length - 1];
         return output + ` L${last[0]} ${last[1]}`;
     };
-    /**
-     * DER UMRISS EINES STRICHS MIT VERAENDERLICHER BREITE (E351).
-     * Je Punkt eine halbe Breite; links und rechts der Mittellinie entsteht
-     * eine Kontur, vorn und hinten eine runde Kappe. Das Ergebnis ist eine
-     * FLAECHE (fill), kein Strich (stroke) — so kann ein Fueller anschwellen
-     * und auslaufen, wie es der Druck sagt. Die Punkte bleiben, was sie sind:
-     * die Mittellinie, die auch der alte Zeichner kennt.
-     */
-    /**
-     * DIE ZWEI KANTEN EINES STRICHS — die Rechnung, die `outline` und
-     * `outlinePunkte` teilen (E506). Sie stand vorher im Rumpf von
-     * `outline`; mit dem zweiten Nutzer waere sie zur Abschrift geworden,
-     * und dann zeichnete der Bildschirm eine andere Kontur als das PDF (§8).
-     */
     const seiten = (raw, halfWidths) => {
         const input = points(raw);
         const n = input.length;
@@ -161,32 +118,11 @@ const InkGeometry = (() => {
             tx /= len;
             ty /= len;
             const w = halb(i);
-            /* DIE KAPPEN ZEIGEN NACH AUSSEN (E704). Bis hier lag `links` rechts der
-               Fahrtrichtung, und die Bögen `A r r 0 0 1` bogen sich nach innen —
-               eine Kerbe am Ende jedes Flächenstrichs. */
             links.push([r2(input[i][0] + ty * w), r2(input[i][1] - tx * w)]);
             rechts.push([r2(input[i][0] - ty * w), r2(input[i][1] + tx * w)]);
         }
         return { links, rechts, anfang: halb(0), ende: halb(n - 1) };
     };
-    /* ══ DIE SPITZE (E673) ═══════════════════════════════════════════════════
-       Ein Füller setzt nicht mit voller Breite auf und hört nicht mit voller
-       Breite auf: die Feder berührt das Papier mit der Spitze, die Tinte
-       läuft an, und beim Abheben läuft sie aus. Bis E673 waren beide Kappen
-       Halbkreise in VOLLER Breite — `outline` und `Feder.d()` ziehen den
-       Bogen mit dem Radius der ersten und der letzten halben Breite. Jeder
-       Buchstabe endete mit einem runden Klecks, und das war der Unterschied
-       zu GoodNotes, den man beim ersten „e" sieht, ohne zu messen.
-  
-       `spitzeFaktor` ist EINE Kurve für den nassen und den trockenen Strich:
-       von `min` bei Weglänge 0 auf 1 bei Weglänge `laenge`, quadratisch
-       auslaufend — schnell dicker, dann sanft. Gemessen wird WEGLÄNGE, nicht
-       Punktzahl: sonst hinge die Spitze an der Abtastrate des Stifts (E504).
-       Der nasse Strich kennt nur seinen Anfang und nimmt die Kurve dort;
-       `verjuengen` legt sie an BEIDE Enden eines fertigen Strichs — und
-       kürzt sie bei kurzen Strichen, damit ein Punkt ein Punkt bleibt und
-       kein Splitter wird. Die halben Breiten sind ein AUSSEHEN; was der
-       Sensor an Druck gemeldet hat, bleibt in der Marke unverändert (§9). */
     const spitzeFaktor = (weg, laenge, min) => {
         if (!(laenge > 0) || !(min < 1) || !(weg < laenge))
             return 1;
@@ -208,21 +144,11 @@ const InkGeometry = (() => {
             weg.push(weg[i - 1] + Math.hypot(input[i][0] - input[i - 1][0], input[i][1] - input[i - 1][1]));
         }
         const gesamt = weg[n - 1];
-        /* Ein kurzer Strich bekommt eine kurze UND eine stumpfere Spitze. Der
-           Weg je Ende ist höchstens 40 % der Strichlänge, damit ein Fünftel in
-           der Mitte voll bleibt — und die Spitze selbst wird umso stumpfer, je
-           weniger von zwei ganzen Federn in den Strich passt: ein Strich, der
-           kürzer ist als seine Feder, ist ein Klecks, keine Feder. Das Bild
-           hat es gezeigt (§55.1): mit dem 5-pt-Füller war ein 2-pt-Punkt ein
-           senkrechter Splitter, weil die Spitze zwar kurz, aber immer noch
-           auf ein Viertel spitz war. */
         const anteil = Math.min(1, gesamt / (2 * laenge));
         const stumpf = 1 - (1 - min) * anteil;
         const l = Math.min(laenge, gesamt * 0.4);
         return aus.map((h, i) => h * spitzeFaktor(weg[i], l, stumpf) * spitzeFaktor(gesamt - weg[i], l, stumpf));
     };
-    /** Der Umriss EINES Laufs — die Rechnung von E351, unverändert bis auf
-     *  die Seiten (siehe `seiten`, E704). */
     const outlineLauf = (raw, halfWidths) => {
         const kanten = seiten(raw, halfWidths);
         if (!kanten)
@@ -235,10 +161,6 @@ const InkGeometry = (() => {
             seite(rueck) +
             ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0][0]} ${links[0][1]} Z`;
     };
-    /* ══ DIE GELENKE (E704, L209 Punkt 3) ════════════════════════════════════
-       An jeder Ecke (`istEcke`, wie der Weg, E676) endet ein Lauf; jeder Lauf
-       ist der alte Umriss mit eigenen Kappen, also volle Beine statt
-       Haarstrichen im „M". */
     const gelenke = (raw) => {
         const input = points(raw);
         const aus = [];
@@ -247,10 +169,7 @@ const InkGeometry = (() => {
                 aus.push(i);
         return aus;
     };
-    /** Die halben Breiten von `a` bis ausschliesslich `b` — mit derselben
-     *  Regel wie `seiten`: fehlt eine, gilt die letzte. */
     const halbeVon = (halfWidths, a, b) => Array.from({ length: Math.max(0, b - a) }, (_q, k) => halfWidths[Math.min(a + k, halfWidths.length - 1)]);
-    /** Die Läufe eines Strichs als Indexpaare [von, bis] (beide einschliesslich). */
     const laeufe = (raw) => {
         const input = points(raw);
         if (input.length < 2)
@@ -270,31 +189,12 @@ const InkGeometry = (() => {
             return outlineLauf(input, halfWidths);
         return teile.map(([a, c]) => outlineLauf(input.slice(a, c + 1), halbeVon(halfWidths, a, c + 1))).join(' ');
     };
-    /**
-     * DERSELBE UMRISS ALS PUNKTZUG (E506).
-     *
-     * `outline` oben schreibt einen SVG-Pfad mit `Q`-Kurven und zwei
-     * `A`-Boegen fuer die Kappen. PDF kennt weder das eine noch das andere:
-     * es hat `m`, `l` und `c` und sonst nichts. Fuer den PDF-Export braucht
-     * es deshalb dieselbe Kontur als reine Punktfolge — ein geschlossenes
-     * Vieleck, das ein Schreiber Zeile fuer Zeile ausgeben kann.
-     *
-     * DIE RECHNUNG IST DIESELBE und steht bewusst nur einmal da: `seiten`
-     * liefert die linke und die rechte Kante, und `outline` wie
-     * `outlinePunkte` bauen daraus ihre Form. Was sich unterscheidet, ist
-     * allein die Kappe — dort setzt das Vieleck `kappen` Punkte auf den
-     * Halbkreis, wo der SVG-Pfad einen Bogen zieht. Bei einer halben Breite
-     * von anderthalb Punkten liegen acht Punkte weniger als ein Zehntel
-     * Millimeter neben dem echten Bogen; auf Papier ist das nichts.
-     */
     const outlinePunkte = (raw, halfWidths, kappen = 8) => {
         const kanten = seiten(raw, halfWidths);
         if (!kanten)
             return [];
         const { links, rechts, anfang, ende } = kanten;
         const r2 = (v) => Math.round(v * 100) / 100;
-        /* Ein Halbkreis von `von` nach `nach` um `mitte`, gegen den Uhrzeigersinn
-           — genau die Drehrichtung, die der `A`-Bogen mit `sweep 1` nimmt. */
         const kappe = (mitte, von, nach) => {
             const a0 = Math.atan2(von[1] - mitte[1], von[0] - mitte[0]);
             const a1 = Math.atan2(nach[1] - mitte[1], nach[0] - mitte[0]);
@@ -316,22 +216,15 @@ const InkGeometry = (() => {
             ...rueck,
             ...kappe(mitte[0], rueck[rueck.length - 1], links[0])]
             .filter(q => Number.isFinite(q[0]) && Number.isFinite(q[1]));
-        /* `anfang` und `ende` werden hier nicht gebraucht — die Kappe rechnet
-           ihren Radius aus dem Abstand zur Mittellinie und kommt damit auf
-           dieselbe Zahl. Sie stehen im Rueckgabewert von `seiten`, weil
-           `outline` sie fuer seine Boegen braucht. */
         void anfang;
         void ende;
     };
-    /** DER UMRISS ALS VIELECKE, EINES JE LAUF (E704): für das PDF, was
-     *  `outline` für den Bildschirm ist; der Schreiber füllt sie mit EINEM `f`. */
     const outlineTeile = (raw, halfWidths, kappen = 8) => {
         const input = points(raw);
         return laeufe(input)
             .map(([a, c]) => outlinePunkte(input.slice(a, c + 1), halbeVon(halfWidths, a, c + 1), kappen))
             .filter(teil => teil.length >= 3);
     };
-    /* Punkte auf der Kurve von `path` (E704, für den Keil). */
     const dicht = (raw, schritt = 1) => {
         const input = points(raw);
         if (input.length < 2)
@@ -366,17 +259,12 @@ const InkGeometry = (() => {
         gerade(von, input[input.length - 1]);
         return aus;
     };
-    /** Der Drehsinn eines Vielecks als Fläche mit Vorzeichen (y nach unten:
-     *  positiv heisst im Bild im Uhrzeigersinn). */
     const flaecheMitSinn = (poly) => {
         let summe = 0;
         for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
             summe += poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1];
         return summe / 2;
     };
-    /* ══ DER KEIL — EIN ECHTER TEXTMARKER (E704) ═════════════════════════════
-       Gezeichnet wird, was eine schräge Kante (Höhe, Dicke, Winkel)
-       überstreicht: */
     const keil = (raw, hoehe, dicke, winkel = 78) => {
         const weg = dicht(raw, 1);
         if (!weg.length)
@@ -419,17 +307,13 @@ const InkGeometry = (() => {
         const aus = [...band(ux, uy), ...band(vx, vy)];
         if (aus.length)
             return aus;
-        /* EIN TIPP IST EIN ABDRUCK DER KANTE — kein Weg, also kein Band: das
-           Rechteck der Spitze selbst, im selben Drehsinn wie die Bänder. */
         const p = weg[0];
         const ecke = (a, b) => [r2(p[0] + a * ux + b * vx), r2(p[1] + a * uy + b * vy)];
         const abdruck = [ecke(1, 1), ecke(1, -1), ecke(-1, -1), ecke(-1, 1)];
         return [flaecheMitSinn(abdruck) < 0 ? abdruck.reverse() : abdruck];
     };
-    /** Vielecke als EIN SVG-Pfad. */
     const vieleckPfad = (polys) => polys.filter(p => p.length >= 3)
         .map(p => 'M' + p.map(q => q[0] + ' ' + q[1]).join(' L') + ' Z').join(' ');
-    /** Ein geglaetteter SVG-Pfad; zwei Punkte bleiben absichtlich eine Linie. */
     const path = (raw) => {
         const input = points(raw);
         if (!input.length)
@@ -439,7 +323,6 @@ const InkGeometry = (() => {
         if (input.length === 2)
             return `M${input[0][0]} ${input[0][1]} L${input[1][0]} ${input[1][1]}`;
         let output = `M${input[0][0]} ${input[0][1]}`;
-        /* Auch die Linie kennt die Ecke (E676) — dasselbe Stueck wie der Umriss. */
         for (let i = 1; i < input.length - 1; i++)
             output += stueck(input[i - 1], input[i], input[i + 1]);
         const last = input[input.length - 1];
@@ -449,25 +332,6 @@ const InkGeometry = (() => {
         x: Math.min(start[0], end[0]), y: Math.min(start[1], end[1]),
         width: Math.abs(end[0] - start[0]), height: Math.abs(end[1] - start[1])
     });
-    /* DER TEXTKASTEN (E360, L115 Punkt 6): ein Text mit `breiteBox` bricht
-     * an dieser Breite um. Die Zeilen werden HIER gerechnet — deterministisch,
-     * ohne DOM und ohne Schriftmessung: dieselbe Rechnung fuer Bildschirm,
-     * Druck, Auswahlkasten und Treffer. Die Breite eines Zeichens ist eine
-     * Schaetzung je Schriftart (in em); sie muss nicht stimmen, sie muss
-     * ueberall dieselbe sein. Gebrochen wird an Leerzeichen, ein zu langes
-     * Wort an der Breite. */
-    /* ══════════════════════════════════════════════════════════════════════
-     * DIE SCHRIFTEN STEHEN HIER, NICHT IM ZEICHNER (E562)
-     * ────────────────────────────────────────────────────────────────────────
-     * Bis hierher lag die Liste in `marken.ts` und die Breitentabelle hier —
-     * zwei Orte für dieselbe Sache. Wer exakt messen will, braucht beide:
-     * `canvas.measureText` will den Schriftstapel, und der stand da drüben.
-     *
-     * Ein zweiter Katalog wäre der Fehler gewesen, vor dem §8 warnt: er läuft
-     * mit dem ersten auseinander, und niemand sieht, welcher gilt. Also zieht
-     * die Liste hierher — an den Ort, der die Masse kennt —, und `marken.ts`
-     * nimmt sie von hier.
-     * ==================================================================== */
     const SCHRIFTEN = [
         { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
         { id: 'serif', name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
@@ -489,54 +353,8 @@ const InkGeometry = (() => {
             else if ((ch >= 'A' && ch <= 'Z') || 'ÄÖÜ'.includes(ch))
                 f = 1.25;
         }
-        /* DIESE SCHÄTZUNG IST NACHWEISLICH ZU NIEDRIG — siehe L155.
-           Am 13. September 2026 mit `canvas.measureText` gegen denselben
-           Schriftstapel nachgemessen, in em:
-    
-               „Ein Satz mit "                 echt 6,31   geschätzt 6,00   1,05
-               „einem hervorgehobenen Wort" f  echt 16,88  geschätzt 14,89  1,13
-               „ mittendrin, der über mehrere" echt 15,02  geschätzt 13,09  1,15
-               „GROSS" fett                    echt 3,84   geschätzt 3,88   0,99
-    
-           Es ist also NICHT nur der Fett-Faktor, sondern das ganze Modell, und
-           die Abweichung schwankt zwischen 0,99 und 1,15. Eine Zeile, die den
-           Kasten füllt, läuft dadurch um rund ein Achtel darüber hinaus.
-    
-           HIER WIRD NICHTS GEÄNDERT, und das ist Absicht: die Zahl steuert den
-           Umbruch JEDER Textmarke, auch jeder alten Notiz. Sie zu verschieben
-           ist eine eigene Arbeit mit eigener Prüfung (L155), kein Nebenschritt
-           in einem Bogen über PowerPoint-Läufe. */
         return base * f * (bold ? 1.06 : 1);
     };
-    /* ══════════════════════════════════════════════════════════════════════
-     * EXAKT MESSEN, WO ES GEHT — SCHÄTZEN, WO ES MUSS (E562, L155)
-     * ────────────────────────────────────────────────────────────────────────
-     * Die Tabelle oben ist nachweislich zu niedrig. Am 13. September gemessen:
-     *
-     *     „ mittendrin, der über mehrere"   echt 15,02 em   geschätzt 13,09
-     *     ganze Zeile bei 18 pt             echt 688 pt     geschätzt 611 pt
-     *                                       Kasten: 636 pt
-     *
-     * Eine Zeile, die den Kasten füllt, läuft dadurch um rund ein Achtel
-     * darüber hinaus — sichtbar, und keine Prüfung hatte es je bemerkt.
-     *
-     * EINE BESSERE KONSTANTE WÄRE DIE FALSCHE ANTWORT. Die Abweichung
-     * schwankt zwischen 0,99 und 1,15 je nach Text; ein einziger Faktor
-     * verschöbe den Fehler nur. Der Browser weiss es genau — `measureText`
-     * fragt dieselbe Schrift, die nachher zeichnet.
-     *
-     * IN NODE GIBT ES KEIN CANVAS, und die Prüfläufe für Geometrie sollen
-     * dort weiter rechnen können. Also bleibt die Tabelle als Rückfall, und
-     * `gemessenAn()` sagt, welcher Weg gerade gilt.
-     *
-     * GEMESSEN WIRD BEI 100 px UND GETEILT. Ein Cache-Eintrag bedient damit
-     * jede Schriftgrösse statt einer.
-     *
-     * UND DER CACHE WIRD EINMAL GELEERT, wenn die Schriften fertig geladen
-     * sind: die ersten Messungen treffen sonst die Rückfallschrift des
-     * Browsers, und eine falsche Zahl, die gemerkt wird, ist schlimmer als
-     * eine, die jedes Mal neu danebenliegt.
-     * ==================================================================== */
     let messBrett;
     const messCache = new Map();
     const CACHE_GRENZE = 20000;
@@ -556,7 +374,6 @@ const InkGeometry = (() => {
         }
         return messBrett;
     };
-    /** Die Breite in em, exakt gemessen — oder `null`, wenn hier nicht messbar. */
     const emGemessen = (text, family, bold) => {
         if (!text)
             return 0;
@@ -581,7 +398,6 @@ const InkGeometry = (() => {
             return null;
         }
     };
-    /** `'gemessen'` oder `'geschaetzt'` — damit ein Prüflauf weiss, was gilt. */
     const gemessenAn = () => brett() ? 'gemessen' : 'geschaetzt';
     const textWidth = (text, fontSize, family = 'standard', bold = false) => {
         const roh = String(text ?? '');
@@ -609,7 +425,6 @@ const InkGeometry = (() => {
                     lines.push(line);
                     line = '';
                 }
-                /* Ein Wort, das allein nicht passt, bricht an der Breite. */
                 let part = '';
                 for (const ch of word) {
                     if (part && !passt(part + ch)) {
@@ -624,29 +439,6 @@ const InkGeometry = (() => {
         }
         return lines;
     };
-    /**
-     * DER SATZ EINES ABSATZES MIT MEHREREN FORMATEN (E561).
-     *
-     * Bis hierher hatte eine Textmarke GENAU EIN Format. „klein GROSS" kam
-     * darum vollständig im Format des ersten Laufs an — der Grad des zweiten
-     * war weg, und zwar lautlos.
-     *
-     * ─── DER ALTE WEG BLEIBT UNBERÜHRT ─────────────────────────────────────
-     * Diese Rechnung läuft NUR, wenn die Marke `laeufe` trägt. Jede Marke
-     * ohne das Feld — also jede, die je geschrieben wurde — geht weiter durch
-     * `textLines` wie zuvor. Das ist keine Vorsicht, das ist die einzige Art,
-     * eine Satzänderung ohne Rückwärtsrisiko einzuführen (§9).
-     *
-     * ─── DIE WÖRTER SIND DIE EINHEIT, NICHT DIE LÄUFE ──────────────────────
-     * Umgebrochen wird zwischen Wörtern, quer über Laufgrenzen hinweg: in
-     * „klein GROSS" darf der Umbruch vor „GROSS" liegen, aber „GROSS" selbst
-     * bleibt zusammen. Deshalb wird zuerst in Wörter und Zwischenräume
-     * zerlegt, mit dem Format am Stück — und erst danach gepackt.
-     *
-     * ─── DIE ZEILENHÖHE IST DIE DES GRÖSSTEN STÜCKS ────────────────────────
-     * Eine Zeile mit 12 pt und 36 pt ist 36 pt hoch, nicht 12. Sonst liefe
-     * die nächste Zeile in die grosse Schrift hinein.
-     */
     const laufSatz = (laeufe, max, family, grundGrad, grundFett) => {
         const teile = [];
         for (const lauf of laeufe) {
@@ -656,7 +448,6 @@ const InkGeometry = (() => {
             for (const stueck of String(lauf?.text ?? '').split(/(\s+)/)) {
                 if (!stueck)
                     continue;
-                /* Ein Zeilenumbruch im Text ist ein eigener Teil — er bricht hart. */
                 if (/\n/.test(stueck)) {
                     const vor = stueck.split('\n');
                     vor.forEach((rest, i) => {
@@ -673,16 +464,12 @@ const InkGeometry = (() => {
         const zeilen = [];
         let lauf = [];
         const abschliessen = () => {
-            /* Zwischenräume am Zeilenende zählen nicht mit — sonst steht eine
-               zentrierte Zeile um ein Leerzeichen zu weit links. */
             while (lauf.length && lauf[lauf.length - 1].leer)
                 lauf.pop();
             const stuecke = [];
             let hoehe = 0;
             for (const t of lauf) {
                 const letztes = stuecke[stuecke.length - 1];
-                /* Gleiches Format nebeneinander wird EIN Stück — weniger `tspan`,
-                   und das Kerning stimmt innerhalb eines Wortes wieder. */
                 if (letztes && letztes.fontSize === t.fontSize && letztes.bold === t.bold
                     && letztes.farbe === t.farbe)
                     letztes.text += t.text;
@@ -705,7 +492,6 @@ const InkGeometry = (() => {
                 continue;
             }
             const breite = textWidth(t.text, t.fontSize, family, t.bold);
-            /* Ein Zwischenraum am Zeilenanfang wird geschluckt, nicht umgebrochen. */
             if (t.leer && !lauf.length)
                 continue;
             if (lauf.length && breiteJetzt + breite > max && !t.leer) {
@@ -718,7 +504,6 @@ const InkGeometry = (() => {
         abschliessen();
         return zeilen;
     };
-    /** Kasten, Zeilen und Masse eines Textkastens — oder null fuer eine alte, einzeilige Textmarke. */
     const textLayout = (mark) => {
         const width = finite(mark?.breiteBox);
         if (!(width > 0))
@@ -729,22 +514,13 @@ const InkGeometry = (() => {
         const family = String(mark.schrift || 'standard');
         const bold = !!mark.fett;
         const max = width - pad * 2;
-        /* MEHRERE FORMATE IN EINEM ABSATZ (E561) — nur wenn die Marke sie hat.
-           Ohne `laeufe` läuft alles darunter wie seit E360. */
         const laeufe = Array.isArray(mark.laeufe) ? mark.laeufe : null;
         const zeilen = laeufe && laeufe.length ? laufSatz(laeufe, max, family, fontSize, bold) : null;
         const lines = zeilen
             ? zeilen.map(z => z.stuecke.map(st => st.text).join(''))
             : textLines(String(mark.text || ''), max, fontSize, family, bold);
-        /* DIE AUSRICHTUNG GEHOERT ZUM KASTEN, NICHT ZUM ZEICHNER (E560).
-           Sie steht hier, weil sie die Zeilen und die Breite braucht — und weil
-           der Auswahlkasten dieselbe Rechnung sehen muss wie das SVG. Die drei
-           Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
         const roh = String(mark.ausricht || 'links');
         const ausricht = (roh === 'mitte' || roh === 'rechts') ? roh : 'links';
-        /* Die Höhe ist die Summe der Zeilenhöhen, sobald die Zeilen verschieden
-           hoch sein können — sonst läuft der Kasten unter einer 36-pt-Zeile zu
-           kurz aus, und die Marke darunter liegt darin. */
         const hoehe = zeilen
             ? pad * 2 + zeilen.reduce((summe, z) => summe + z.hoehe, 0)
             : pad * 2 + lines.length * fontSize * TEXT_ZEILE;
@@ -752,14 +528,7 @@ const InkGeometry = (() => {
             pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines, ausricht,
             ...(zeilen ? { zeilen } : {}) };
     };
-    /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
     const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);
-    /**
-     * Punkte um einen Anker drehen — `grad` im Uhrzeigersinn, wie SVGs
-     * `rotate` (E466). Die eine Drehformel des Hauses: `ecken`, `bounds`,
-     * `rotate`, `touchesCircle` und `scale` rechnen alle mit ihr, statt sie
-     * je einmal hinzuschreiben (E474).
-     */
     const drehePunkte = (pts, anker, grad) => {
         const rad = (grad * Math.PI) / 180;
         const cos = Math.cos(rad), sin = Math.sin(rad);
@@ -773,20 +542,7 @@ const InkGeometry = (() => {
         const x0 = Math.min(...xs), y0 = Math.min(...ys);
         return { x: x0, y: y0, width: Math.max(...xs) - x0, height: Math.max(...ys) - y0 };
     };
-    /** Der Winkel, um den eine Marke schief steht — Linienzuege stehen nie
-     *  schief, sie drehen ihre Punkte (E466). */
     const drehung = (mark) => LINIEN.has(String(mark?.art || '')) ? 0 : finite(mark?.dreh);
-    /**
-     * DIE VIER ECKEN EINER MARKE (E474) — im Blattraum, im Umlauf
-     * nw, ne, se, sw, also als Weg um ihre Flaeche herum. Bei `dreh` sind
-     * es die WIRKLICH gedrehten Ecken: dieselben vier Punkte, die man auf
-     * dem Blatt sieht.
-     *
-     * Das ist der Unterschied zu `bounds`: `bounds` gibt den aufrechten
-     * Kasten UM diese Ecken. Der ist bei 45° fast doppelt so gross wie die
-     * Marke selbst — richtig, um zu fragen „koennte es hier ueberhaupt
-     * sein", falsch, um zu fragen „ist es hier".
-     */
     const ecken = (mark) => {
         const b = boundsRoh(mark);
         const roh = [[b.x, b.y], [b.x + b.width, b.y],
@@ -838,16 +594,6 @@ const InkGeometry = (() => {
         }
         return mark;
     };
-    /**
-     * Um `pivot` drehen — `degrees` im Uhrzeigersinn, wie SVGs `rotate` (E466).
-     *
-     * Linienzuege drehen ihre PUNKTE: verlustfrei, kein neues Feld. Alles
-     * mit Kasten (Formen, Band, Zettel, Bild, Text, Zeichen) dreht seine
-     * Mitte um den Anker und merkt sich den Winkel in `dreh` — zwei
-     * Eckpunkte koennen keinen schiefen Kasten beschreiben, und die Ecken
-     * zu drehen hiesse, die Marke zu verzerren. Alte Marken ohne `dreh`
-     * bleiben, was sie sind (§53.3). Aendert die Marke selbst, wie `move`.
-     */
     const rotate = (mark, pivot, degrees) => {
         if (!mark || typeof mark !== 'object')
             return mark;
@@ -878,17 +624,6 @@ const InkGeometry = (() => {
             mark.dreh = r2(d);
         return mark;
     };
-    /**
-     * ÜBERLAPPEN ZWEI KONVEXE VIELECKE? Trennachsen-Test (E474): gibt es
-     * eine Gerade, auf der die Schatten der beiden auseinanderfallen, dann
-     * beruehren sie sich nicht. Als Achsen genuegen die Normalen der Kanten
-     * — bei zwei Vierecken also acht Proben.
-     *
-     * Gebraucht fuer den Kastenzug ueber eine GEDREHTE Marke: `intersects`
-     * vergleicht zwei aufrechte Kaesten und sagt bei 45° ja, wo die Marke
-     * gar nicht steht. `intersects` bleibt der billige Vorfilter, das hier
-     * die Antwort.
-     */
     const overlapConvex = (a, b) => {
         for (const poly of [a, b]) {
             for (let i = 0; i < poly.length; i++) {
@@ -917,11 +652,9 @@ const InkGeometry = (() => {
         }
         return true;
     };
-    /** Die vier Ecken eines aufrechten Kastens, im Umlauf. */
     const kastenEcken = (b) => [[b.x, b.y], [b.x + b.width, b.y], [b.x + b.width, b.y + b.height], [b.x, b.y + b.height]];
     const intersects = (left, right) => left.x <= right.x + right.width && left.x + left.width >= right.x &&
         left.y <= right.y + right.height && left.y + left.height >= right.y;
-    /** Der kleinste Abstand eines Punktes zu einem Linienzug (ein Punkt: zu ihm). */
     const distanceToPolyline = (raw, point) => {
         const input = points(raw);
         if (!input.length)
@@ -933,29 +666,6 @@ const InkGeometry = (() => {
             best = Math.min(best, distanceToSegment(point, input[i - 1], input[i]));
         return best;
     };
-    /**
-     * EINE LINIE DICHTER ABTASTEN (E510).
-     *
-     * DER FUND. Zwei Marken mit demselben Weg werden verschieden gemessen,
-     * je nachdem, wie viele Punkte zufällig darin stehen. Ein Stift-Strich
-     * über 200 px hat dreihundert Punkte; eine gerade `line` über dieselben
-     * 200 px hat ZWEI — ihre Enden. Jede Regel der Form „mindestens die
-     * Hälfte ihrer Punkte liegt nah am Zug" fragt beim Strich nach seiner
-     * LÄNGE und bei der Linie nur nach ihren ENDEN. Das ist nicht dieselbe
-     * Frage, und beim Kritzel-Löschen war es der Unterschied zwischen
-     * „gelöscht" und „passiert nichts": ein Gekritzel quer über die Mitte
-     * einer Linie berührte keines ihrer beiden Enden.
-     *
-     * Hier kommen Zwischenpunkte im Abstand `schritt` dazu — nicht als neue
-     * Daten, sondern als Messpunkte für genau solche Fragen. Die Ecken
-     * bleiben alle erhalten; es wird nur zwischen ihnen aufgefüllt.
-     *
-     * DIE OBERGRENZE IST KEIN SCHMUCK. Ein Zug über eine ganze Seite mit
-     * Schritt 1 wären Zehntausende Punkte, und `distanceToPolyline` läuft
-     * für jeden davon über den ganzen Gegenzug. `GRENZE` hält die Rechnung
-     * bei ein paar Tausend; wer mehr Punkte bräuchte, misst ohnehin etwas,
-     * das mit ein paar Tausend genauso beantwortet ist.
-     */
     const DICHTER_GRENZE = 4000;
     const densify = (raw, schritt = 6) => {
         const input = points(raw);
@@ -975,31 +685,6 @@ const InkGeometry = (() => {
         }
         return out;
     };
-    /**
-     * TRIFFT DER RADIERER DIESE MARKE? (E352)
-     * Linienzuege (Stift, Marker, Linie, Pfeil) werden am Weg gemessen, die
-     * halbe Strichbreite als Zugabe; alles andere (Rechteck, Ellipse, Band,
-     * Zettel, Text, Zeichen) am Kasten, den `bounds` kennt.
-     */
-    /**
-     * ERST DER KASTEN, DANN DER WEG (E377).
-     *
-     * Bis hierher ging ein Strich SOFORT in `distanceToPolyline` — jeder Punkt,
-     * jede Wurzel, und dazu eine frisch gebaute Punktliste. Auch ein Strich am
-     * anderen Ende der Seite. Gemessen bei 400 Strichen und einem schnellen
-     * Radierzug (120 px zwischen zwei Ereignissen, 30 Teilschritte): 8,27 ms
-     * je Zeigerereignis — ein ganzes Bild bei 120 Hz.
-     *
-     * Ein Kreis kann eine Linie nur beruehren, wenn er ihren KASTEN beruehrt.
-     * Der Kasten wird hier in EINEM Durchlauf gerechnet, ohne eine Liste zu
-     * bauen — anders als `bounds()`, das sieben Durchlaeufe und drei Listen
-     * braucht und darum als Vorfilter nichts einbraechte.
-     *
-     * Der Kasten ist eine sichere Schranke, keine Naeherung: er wird um
-     * `radius + halfWidth` geweitet, also kann kein Treffer durch ihn
-     * verlorengehen. test367 prueft das gegen den alten Weg an zehntausend
-     * zufaelligen Faellen.
-     */
     const touchesCircle = (mark, center, radius, halfWidth = 0) => {
         const reichweite = radius + Math.max(0, finite(halfWidth));
         const art = String(mark?.art || '');
@@ -1030,22 +715,8 @@ const InkGeometry = (() => {
             return distanceToPolyline(mark.pts, center) <= reichweite;
         }
         const box = boundsRoh(mark);
-        /* EINE MARKE OHNE PUNKTE HAT KEINEN ORT (E377, von test367 §2 gefunden).
-           `bounds()` gibt ihr ersatzweise einen Kasten der Groesse null bei
-           (0,0) — das ist eine Notloesung, kein Ort. Ohne diese Zeile
-           „beruehrt" ein Radierer am linken oberen Rand der Seite JEDE leere
-           Marke. Der Nullkasten laesst sich sicher erkennen: eine echte Marke
-           bekommt in `bounds()` immer mindestens den Rand von zwei Pixeln
-           (bei Text die Zeilenhoehe), also nie Breite UND Hoehe null. */
         if (!box.x && !box.y && !box.width && !box.height)
             return false;
-        /* DER RADIERER AUF EINER GEDREHTEN MARKE (E474). Bis hierher wurde der
-           AUFRECHTE Kasten um die gedrehte Marke gemessen. Der ist bei 45°
-           fast doppelt so gross wie sie: der Radierer nahm sie neben ihrer
-           Kante mit, wo nichts steht, und verfehlte sie an der langen Ecke.
-           Ein Kreis bleibt beim Drehen ein Kreis — also wird nicht die Marke
-           aufgerichtet, sondern der MITTELPUNKT in ihren Rahmen gedreht.
-           Danach ist es Zeile fuer Zeile dieselbe genaue Rechnung wie zuvor. */
         const grad = drehung(mark);
         const mitte = grad
             ? drehePunkte([center], [box.x + box.width / 2, box.y + box.height / 2], -grad)[0]
@@ -1054,8 +725,6 @@ const InkGeometry = (() => {
         const dy = Math.max(box.y - mitte[1], 0, mitte[1] - (box.y + box.height));
         return dx * dx + dy * dy <= radius * radius;
     };
-    /** Die Parameter t (aufsteigend), an denen die Strecke a→b den Kreis
-        schneidet — oder null, wenn ihre Gerade den Kreis verfehlt. */
     const circleCuts = (a, b, center, radius) => {
         const dx = b[0] - a[0], dy = b[1] - a[1];
         const fx = a[0] - center[0], fy = a[1] - center[1];
@@ -1070,15 +739,6 @@ const InkGeometry = (() => {
         const wurzel = Math.sqrt(disc);
         return [(-qb - wurzel) / (2 * qa), (-qb + wurzel) / (2 * qa)];
     };
-    /**
-     * TEIL-RADIEREN (E352): ein Linienzug minus ein Kreis. Uebrig bleiben
-     * null, ein oder mehrere Stuecke — jedes mit seinen Druckwerten, an den
-     * Schnittpunkten linear dazwischen gerechnet. Ein Stueck braucht zwei
-     * Punkte; ein einzelner Rest faellt weg. Punkte, die der Kreis nicht
-     * beruehrt, bleiben exakt, was sie waren.
-     */
-    /* WEITERE KANÄLE (E704): Neigung und Tempo gehen je Punkt mit, wie der
-       Druck — vorher blieb die Neigung in ihrer alten Länge (vgl. E507). */
     const splitByCircle = (raw, pressures, center, radius, kanaele = {}) => {
         const input = points(raw);
         const druck = Array.isArray(pressures) ? pressures.map(finite) : [];
@@ -1098,7 +758,6 @@ const InkGeometry = (() => {
             kanaele: Object.fromEntries(namen.map(name => [name, []])) });
         const stuecke = [];
         let aktuell = leer();
-        /** Einen Punkt anhängen: `i`/`j` sind die Nachbarindizes, `t` der Anteil dazwischen. */
         const dazu = (p, i, j, t) => {
             aktuell.pts.push(p);
             aktuell.pressure.push(r2(druckBei(i) + (druckBei(j) - druckBei(i)) * t));
@@ -1122,21 +781,18 @@ const InkGeometry = (() => {
             if (aDrin && bDrin)
                 continue;
             if (!aDrin && bDrin) {
-                /* hinein: das Stueck endet am Eintrittspunkt */
                 const t = klemm(cuts ? cuts[0] : 0);
                 dazu(zwischen(a, b, t), i - 1, i, t);
                 ablegen();
                 continue;
             }
             if (aDrin && !bDrin) {
-                /* heraus: ein neues Stueck beginnt am Austrittspunkt */
                 const t = klemm(cuts ? cuts[1] : 1);
                 aktuell = leer();
                 dazu(zwischen(a, b, t), i - 1, i, t);
                 dazu(b, i, i, 0);
                 continue;
             }
-            /* beide draussen: kreuzt die Strecke den Kreis mittendrin? */
             if (cuts && cuts[0] > 0 && cuts[0] < 1 && cuts[1] > 0 && cuts[1] < 1) {
                 dazu(zwischen(a, b, cuts[0]), i - 1, i, cuts[0]);
                 ablegen();
@@ -1147,8 +803,6 @@ const InkGeometry = (() => {
         ablegen();
         return stuecke;
     };
-    /** Liegt der Punkt in dem geschlossenen Linienzug? Strahl nach rechts,
-        Kanten gezaehlt (E353, das Lasso). */
     const insidePolygon = (point, polygon) => {
         const poly = points(polygon);
         const n = poly.length;
@@ -1165,7 +819,6 @@ const InkGeometry = (() => {
         }
         return inside;
     };
-    /** Die Flaeche eines geschlossenen Linienzugs (Schnuerband-Formel, ohne Vorzeichen). */
     const polygonArea = (polygon) => {
         const poly = points(polygon);
         if (poly.length < 3)
@@ -1175,7 +828,6 @@ const InkGeometry = (() => {
             summe += poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1];
         return Math.abs(summe) / 2;
     };
-    /** Der gemeinsame Kasten mehrerer Kaesten; ohne Kaesten ein leerer. */
     const union = (boxes) => {
         if (!boxes.length)
             return { x: 0, y: 0, width: 0, height: 0 };
@@ -1185,53 +837,6 @@ const InkGeometry = (() => {
         const y1 = Math.max(...boxes.map(b => b.y + b.height));
         return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
     };
-    /**
-     * SKALIEREN UM EINEN ANKER (E353): Punkte und Textpunkt wandern vom
-     * Anker weg oder zu ihm hin; Strichbreite und Schriftgroesse folgen mit
-     * dem geometrischen Mittel beider Faktoren, damit ein dreimal so grosser
-     * Schriftzug nicht mit haarduennem Strich dasteht. Aendert die Marke
-     * selbst und gibt sie zurueck, wie `move`.
-     */
-    /**
-     * GROESSE AENDERN — und zwar so, dass eine GEDREHTE Marke dabei nicht
-     * verzerrt (E474).
-     *
-     * `sx` und `sy` gelten in den Achsen von `achse` (Grad, 0 = die Achsen
-     * des Blattes). Eine Marke mit `dreh` steht darin schief: ihre zwei
-     * Eckpunkte beschreiben einen aufrechten Kasten, den `dreh` erst dreht.
-     * Wer die Faktoren dann einfach auf die Punkte legt — so war es bis
-     * hierher —, streckt den KASTEN in seinen eigenen Achsen und dreht das
-     * Ergebnis: die Marke waechst in eine andere Richtung, als der Mensch
-     * zieht, und ihre Ecke laeuft unter dem Griff weg.
-     *
-     * Ganz richtig waere eine Scherung, und die kann dieses Datenmodell
-     * nicht: zwei Punkte und ein Winkel beschreiben keinen schiefen Kasten
-     * (E466). Ein drittes Feld dafuer waere eine Datenaenderung an jeder
-     * vorhandenen Marke (§53.3). Also wird das getan, was ohne neues Feld
-     * genau bleibt, wo es genau sein kann:
-     *
-     *   · Die MITTE geht dorthin, wo die Streckung sie hinlegt. Immer
-     *     genau, auch schief — das ist die Lage in der Gruppe.
-     *   · Die GROESSE waechst in den Achsen der MARKE, mit den Faktoren,
-     *     die dort ankommen:
-     *
-     *         d   = dreh − achse
-     *         sxL = sx·cos²d + sy·sin²d
-     *         syL = sx·sin²d + sy·cos²d
-     *
-     *     Das ist die Hauptdiagonale der gedrehten Streckung; die Scherung
-     *     daneben faellt weg. GENAU ist das, wenn d ein Vielfaches von 90°
-     *     ist — dann tauschen die beiden Faktoren, wie es sein muss — oder
-     *     wenn sx = sy ist, denn eine gleichmaessige Streckung ist in jeder
-     *     Lage dieselbe. Am schiefsten steht es bei 45°: dort werden beide
-     *     Faktoren gleich, und die Marke waechst in der Mitte zwischen den
-     *     zwei Richtungen, statt sich zu scheren.
-     *
-     * Steht die Auswahl auf EINER gedrehten Marke, gibt `marken.ts` ihren
-     * eigenen Winkel als `achse` mit. Dann ist d = 0, und die Rechnung ist
-     * nicht genaehert, sondern exakt: der Griff, den man haelt, bleibt auf
-     * den Punkt stehen, an dem er war.
-     */
     const scale = (mark, anchor, sx, sy, achse = 0) => {
         if (!mark || typeof mark !== 'object')
             return mark;
@@ -1249,7 +854,6 @@ const InkGeometry = (() => {
             ly = fx * s2 + fy * c2;
             const roh = boundsRoh(mark);
             const mitte = [roh.x + roh.width / 2, roh.y + roh.height / 2];
-            /* Die Mitte in die Achsen der Streckung drehen, dort strecken, zurueck. */
             const inAchse = ax ? drehePunkte([mitte], anchor, -ax)[0] : mitte;
             const gestreckt = [anchor[0] + (inAchse[0] - anchor[0]) * fx,
                 anchor[1] + (inAchse[1] - anchor[1]) * fy];
@@ -1267,31 +871,22 @@ const InkGeometry = (() => {
         const mittel = Math.sqrt(Math.abs(lx * ly)) || 1;
         if (mark.breite !== undefined && Number.isFinite(Number(mark.breite)))
             mark.breite = Math.max(0.3, r2(Number(mark.breite) * mittel));
-        /* Die feste Breite eines Strichs (E704) wächst mit — sonst behielte ein
-           doppelt so gross gezogener Marker seine alte Höhe, denn sie geht der
-           Breite vor. */
         if (mark.breiteFest !== undefined && Number.isFinite(Number(mark.breiteFest)))
             mark.breiteFest = Math.max(0.3, r2(Number(mark.breiteFest) * mittel));
         if (mark.fontSize !== undefined && Number.isFinite(Number(mark.fontSize)))
             mark.fontSize = Math.max(6, r2(Number(mark.fontSize) * mittel));
         if (mark.groesse !== undefined && Number.isFinite(Number(mark.groesse)))
             mark.groesse = Math.max(12, r2(Number(mark.groesse) * mittel));
-        /* Der Textkasten (E360) waechst in der Breite mit — die Schrift mit dem
-           Mittel. `lx` und nicht `fx`: die Breite ist die Breite der MARKE. */
         if (mark.breiteBox !== undefined && Number.isFinite(Number(mark.breiteBox)))
             mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(lx)));
         return mark;
     };
     return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, spitzeFaktor, verjuengen,
         stueck, ECKE_COS,
-        /* Seit E704: das Gelenk (die Läufe eines Umrisses), das PDF-Gegenstück
-           dazu, der Keil des Textmarkers und der dicht abgetastete Weg. */
         istEcke, gelenke, laeufe, outlineLauf, outlineTeile, dicht, keil, vieleckPfad, flaecheMitSinn,
         path, rectangle, bounds, move, intersects,
         distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
         textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,
-        /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre
-           vier wirklichen Ecken, ihr Winkel und die eine Drehformel. */
         boundsLokal: boundsRoh, ecken, drehung, drehePunkte, overlapConvex, kastenEcken };
 })();
 window.InkGeometry = InkGeometry;

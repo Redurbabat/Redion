@@ -1,31 +1,7 @@
 "use strict";
-/* ============================================================================
- * kern/einstellung/schalter.js — Funktionen ein- und ausschalten
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/einstellung/schalter.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/einstellung/schalter.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Ein Schalter ist kein Ersatz für eine Einstellung. Der Unterschied:
- *
- *   Eine **Einstellung** gehört dem Menschen. Er entscheidet, ob die
- *   Seitenleiste offen ist, und die Antwort ist beides Mal richtig.
- *
- *   Ein **Schalter** gehört der Entwicklung. Er beantwortet die Frage
- *   „ist dieser Teil fertig genug, um ihn allen zu zeigen?" — und die
- *   richtige Antwort ändert sich mit der Zeit.
- *
- * Wozu das gut ist: eine halbfertige Funktion kann im Bestand liegen, ohne
- * jemanden zu stören. Man muss sie nicht in einem Zweig verstecken, wo sie
- * beim nächsten Umbau still kaputtgeht.
- *
- * Jeder Schalter hier hat einen **Grund** und ein **Ziel**. Ein Schalter
- * ohne Ablaufdatum bleibt ewig, und dann hat man zwei Programme in einem.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/schalter.ts (npm run bauen:ts). */
 const Schalter = (() => {
     const VORGABE = {
-        /* --- an, weil fertig und geprüft ------------------------------------ */
         abgleich: {
             an: true,
             was: 'Abgleich über einen eigenen Server',
@@ -52,7 +28,6 @@ const Schalter = (() => {
             was: 'Probelauf vor grossen Änderungen',
             grund: 'Fertig.'
         },
-        /* --- aus, mit Ziel --------------------------------------------------- */
         ereignisbus: {
             an: false,
             was: 'Module reden nur noch über den Ereignisbus',
@@ -69,13 +44,8 @@ const Schalter = (() => {
         }
     };
     const SCHLUESSEL = 'schalter';
-    /** Was der Mensch von Hand umgestellt hat — überschreibt die Vorgabe. */
     const eigene = () => (typeof Store !== 'undefined')
         ? (Store.getMeta(SCHLUESSEL, {}) || {}) : {};
-    /**
-     * Ist dieser Teil an?
-     * Unbekannter Name → false. Ein Tippfehler soll nichts einschalten.
-     */
     const an = (name) => {
         const e = eigene();
         if (name in e)
@@ -102,15 +72,9 @@ const Schalter = (() => {
         if (typeof Store !== 'undefined')
             Store.setMeta(SCHLUESSEL, e);
     };
-    /** Alle Schalter mit ihrem jetzigen Stand — für die Einstellungen. */
     const alle = () => Object.entries(VORGABE).map(([name, s]) => ({
         name, ...s, jetzt: an(name), eigen: name in eigene()
     }));
-    /**
-     * Nur ausführen, wenn der Schalter an ist.
-     * Spart das `if` an jeder Aufrufstelle und macht in der Datei sichtbar,
-     * woran ein Teil hängt.
-     */
     const wenn = (name, fn, sonst) => an(name) ? fn() : (sonst ? sonst() : undefined);
     return { VORGABE, an, setze, zuruecksetzen, alle, wenn };
 })();

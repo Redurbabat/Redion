@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/werkzeuge.ts (npm run bauen:ts). */
 /* ============================================================================
  * mcp.js — MCP in beide Richtungen
  * ----------------------------------------------------------------------------

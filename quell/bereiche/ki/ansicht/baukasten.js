@@ -1,44 +1,9 @@
 "use strict";
-/* ============================================================================
- * kibau.js — Die KI baut, der Mensch entscheidet
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/ki/ansicht/baukasten.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/ki/ansicht/baukasten.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Drei Dinge, die Notions KI nicht tut:
- *
- *   1. FORMEL SCHREIBEN — man sagt in einem Satz, was gerechnet werden soll.
- *      Die KI bekommt die Spaltennamen und die Liste aller Funktionen, die
- *      es hier wirklich gibt. Ihre Antwort wird nicht einfach übernommen,
- *      sondern zuerst an einer echten Zeile durchgerechnet. Erst wenn das
- *      Ergebnis stimmt, sieht man den Vergleich alt/neu und kann übernehmen.
- *
- *   2. AUTOMATION BAUEN — dasselbe für „wenn … dann …". Die Antwort muss
- *      zu den Auslösern und Aktionen passen, die es hier gibt; alles andere
- *      wird abgelehnt, statt still etwas Falsches anzulegen.
- *
- *   3. FILTER BAUEN — aus einem Satz werden Filterregeln, gegen die
- *      Bedingungen des jeweiligen Spaltentyps geprüft.
- *
- * Der gemeinsame Kern ist der Vorschlagsdialog: Vergleich, Probe, Übernehmen
- * oder Verwerfen. Nichts wird ohne diesen Schritt geschrieben.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/ansicht/baukasten.ts (npm run bauen:ts). */
 const KiBau = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * ANTWORT AUSPACKEN
-     * ------------------------------------------------------------------------
-     * Modelle setzen gern ```-Zäune und einen Satz davor. Beides muss weg,
-     * bevor irgendetwas geprüft werden kann.
-     * ======================================================================*/
     const ohneZaun = (t) => {
         let s = String(t || '').trim();
         const z = s.match(/```(?:[a-z]*)\n?([\s\S]*?)```/i);
@@ -52,7 +17,6 @@ const KiBau = (() => {
             return JSON.parse(s);
         }
         catch { }
-        /* Notfalls das erste vollständige { … } oder [ … ] herausschneiden */
         const start = s.search(/[{[]/);
         if (start < 0)
             return null;
@@ -90,21 +54,11 @@ const KiBau = (() => {
         }
         return null;
     };
-    /* ========================================================================
-     * DER VORSCHLAGSDIALOG
-     * ------------------------------------------------------------------------
-     * alt / neu als Text, Zeile für Zeile verglichen. Dazu eine Probe: was
-     * käme heraus? Erst „Übernehmen" schreibt.
-     * ======================================================================*/
     const zeilenDiff = (alt, neu) => {
         const a = String(alt || '').split('\n');
         const b = String(neu || '').split('\n');
-        /* Kleinster gemeinsamer Nenner: längste gemeinsame Teilfolge */
         const n = a.length, m = b.length;
         const t = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
-        /* Lesen und Schreiben laufen über diese zwei Helfer: eine Zeile der
-           Tabelle kann es laut Typ nicht geben, obwohl die Schleifen nur
-           gültige Felder ansteuern. */
         const tab = (i, j) => t[i]?.[j] ?? 0;
         const setzeTab = (i, j, w) => { const z = t[i]; if (z)
             z[j] = w; };
@@ -137,15 +91,6 @@ const KiBau = (() => {
     const diffHtml = (alt, neu) => '<div class="kb-diff">' + zeilenDiff(alt, neu).map(([art, zeile]) => `<div class="kb-z kb-${art}">` +
         `<span class="kb-zeichen">${art === 'weg' ? '−' : art === 'neu' ? '+' : ' '}</span>` +
         `<code>${esc(zeile) || '&nbsp;'}</code></div>`).join('') + '</div>';
-    /**
-     * @param titel      Überschrift des Fensters
-     * @param alt        bisheriger Text (leer bei etwas Neuem)
-     * @param neu        Vorschlag der KI
-     * @param probe      HTML mit dem Ergebnis der Probe — oder eine Fehlermeldung
-     * @param inOrdnung  false = nur ansehen, Übernehmen bleibt gesperrt
-     * @param uebernehmen Rückruf beim Übernehmen
-     * @param nochmal    Rückruf für „Neuen Versuch" (optional)
-     */
     const vorschlag = ({ titel, alt, neu, probe, inOrdnung, uebernehmen, nochmal, erklaerung }) => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -183,9 +128,6 @@ const KiBau = (() => {
         });
         return o;
     };
-    /* ========================================================================
-     * GEMEINSAMES: gibt es überhaupt eine KI?
-     * ======================================================================*/
     const kiDa = () => {
         if (typeof KI === 'undefined' || !KI.frageKurz)
             return false;
@@ -199,9 +141,6 @@ const KiBau = (() => {
         document.body.appendChild(o);
         return o;
     };
-    /* ========================================================================
-     * 1 · FORMEL SCHREIBEN LASSEN
-     * ======================================================================*/
     const FORMEL_SYSTEM = () => 'Du schreibst Formeln für Redion. Die Sprache ähnelt Notion 2.0.\n' +
         'Antworte NUR mit der Formel — kein Text davor, kein Text danach, keine ```-Zäune.\n' +
         'Auf Spalten greifst du mit prop("Spaltenname") zu.\n' +
@@ -211,7 +150,6 @@ const KiBau = (() => {
             : 'if, ifs, and, or, not, empty, length, substring, contains, replace, format') +
         '\nDazu die Sonderformen: prop, let, lets, map, filter, find, findIndex, some, every, ' +
         'reduce, sortBy, groupBy, rowNumber, runningSum, rank, previous, next, total, average.';
-    /** Eine echte Zeile zum Probieren — sonst eine erfundene. */
     const probeZeile = (coll) => {
         const zeilen = Store.rowsOf(coll.id).filter((r) => !r.archiviert);
         return zeilen[0] || null;
@@ -247,11 +185,9 @@ const KiBau = (() => {
             UI.toast('Die KI hat nichts geliefert');
             return;
         }
-        /* Probe an einer echten Zeile — das ist der eigentliche Unterschied. */
         const zeile = probeZeile(coll);
         let probeHtml, gut = false;
         if (!zeile) {
-            /* Ohne Daten prüfen wir wenigstens, ob sie sich überhaupt lesen lässt. */
             const r = Formula.check(formel);
             gut = r.ok !== false;
             probeHtml = gut
@@ -283,9 +219,6 @@ const KiBau = (() => {
             uebernehmen: () => uebernehmen(formel)
         });
     };
-    /* ========================================================================
-     * 2 · AUTOMATION BAUEN LASSEN
-     * ======================================================================*/
     const automationSchreiben = async (coll) => {
         if (!kiDa()) {
             UI.toast('Dafür muss oben rechts eine KI eingerichtet sein');
@@ -305,8 +238,6 @@ const KiBau = (() => {
             '"dann": [{"art": "...", "key": "...", "wert": "...", "text": "..."}]}\n' +
             'Erlaubte Auslöser (art): ' + Datenbank.AUSLOESER.map((a) => `${a[0]} (${a[1]})`).join('; ') + '\n' +
             'Erlaubte Aktionen (art): ' + Datenbank.AKTIONEN.map((a) => `${a[0]} (${a[1]})`).join('; ') + '\n' +
-            /* Der Katalog gehört in den Auftrag: sonst erfindet die KI Bedingungen,
-               die es nicht gibt, oder baut umständliche Filterregeln nach. */
             'Benannte Bedingungen — statt {"key","op","wert"} auch {"art": "…", "key": "…", "wert": "…"}: ' +
             Datenbank.BEDINGUNGEN.map((b) => `${b[0]} (${b[1]})`).join('; ') + '\n' +
             'key ist immer der Schlüssel einer Spalte, nie der Anzeigename.\n' +
@@ -341,7 +272,7 @@ const KiBau = (() => {
                 coll.automationen.push({
                     id: Store.uid().slice(0, 6),
                     name: plan.name || 'Von der KI gebaut',
-                    an: false, /* bewusst aus — erst ansehen */
+                    an: false,
                     wenn: plan.wenn,
                     bedingungen: plan.bedingungen || [],
                     dann: plan.dann
@@ -398,9 +329,6 @@ const KiBau = (() => {
             (d.text ? ' „' + d.text + '"' : '')));
         return zeilen.join('\n');
     };
-    /* ========================================================================
-     * 3 · FILTER BAUEN LASSEN
-     * ======================================================================*/
     const filterSchreiben = async (coll, view) => {
         if (!kiDa()) {
             UI.toast('Dafür muss oben rechts eine KI eingerichtet sein');
@@ -497,9 +425,6 @@ const KiBau = (() => {
                 (r.wert !== undefined && r.wert !== '' ? ' ' + r.wert : '');
         }).join('\n');
     };
-    /* ========================================================================
-     * 4 · FORMEL ERKLÄREN LASSEN
-     * ======================================================================*/
     const formelErklaeren = async (coll, formel) => {
         if (!kiDa()) {
             UI.toast('Dafür muss oben rechts eine KI eingerichtet sein');

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/trainer.ts (npm run bauen:ts). */
 /* ══ DER TRAINER — Boxen, Auswahl-, Schreib- und Lückenaufgaben (E677) ═══
    Redur, 21. September 2026: „jetzt will ich eine flüssige lern app im
    redion bauen nicht die karten sollte im bereichen sein sondern direkt

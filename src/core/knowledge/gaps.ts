@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/knowledge/gaps.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/knowledge/gaps.ts — was FEHLT, nicht was da ist
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/toolbar.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/gfx/toolbar.ts — EINE Werkzeugleiste für alle Flächen
  * ----------------------------------------------------------------------------

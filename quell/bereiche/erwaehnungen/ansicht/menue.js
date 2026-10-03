@@ -1,20 +1,6 @@
 "use strict";
-/* ============================================================================
- * apps/kontakte/erwaehnungen/ansicht.js — aus notion.js herausgelöst
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/erwaehnungen/ansicht/menue.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/erwaehnungen/ansicht/menue.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Stammt aus der früheren Sammeldatei notion.js. Der Inhalt ist unverändert;
- * nur der Ort ist jetzt der, an dem man ihn sucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/erwaehnungen/ansicht/menue.ts (npm run bauen:ts). */
 const Erwaehnung = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const EMOJIS = [
         ['😀', 'lachen freude'], ['😃', 'lachen'], ['😄', 'lachen'], ['😁', 'grinsen'], ['😅', 'schwitzen lachen'],
@@ -56,9 +42,6 @@ const Erwaehnung = (() => {
         menue = null;
     } };
     const textVor = (ct) => {
-        /* `getSelection()` gibt `Selection | null` — in einem abgetrennten
-           Dokument gibt es keine. Ohne Auswahl gibt es auch keinen Text davor,
-           und die leere Zeichenkette ist die richtige Antwort darauf. */
         const s = getSelection();
         if (!s || !s.rangeCount)
             return '';
@@ -76,7 +59,6 @@ const Erwaehnung = (() => {
         zu();
         App.zeichneSeite(b.id, 'ende');
     };
-    /* --- @ : Seite, Datum, Person ---------------------------------------- */
     const erwaehnungsMenue = (ct, suche) => {
         zu();
         const q = suche.toLowerCase();
@@ -128,7 +110,6 @@ const Erwaehnung = (() => {
         if (erste)
             erste.classList.add('on');
     };
-    /* --- : Emoji ---------------------------------------------------------- */
     const emojiMenue = (ct, suche) => {
         zu();
         const q = suche.toLowerCase();
@@ -147,7 +128,6 @@ const Erwaehnung = (() => {
                 ersetze(ct, /:[^:\s]*$/, zeichen);
         });
     };
-    /** Die grosse Emoji-Auswahl mit Suchfeld — für Seitensymbole. */
     const emojiWaehler = (anker, beiWahl) => {
         const r = anker.getBoundingClientRect();
         const m = UI.menu('<input class="emoji-suche" placeholder="Emoji suchen …" autocomplete="off">' +
@@ -155,8 +135,6 @@ const Erwaehnung = (() => {
             '<hr><button data-e="">Symbol entfernen</button>', r.left, r.bottom + 6);
         const gitter = m.querySelector('#eg');
         const inp = m.querySelector('.emoji-suche');
-        /* Beides steht in der Zeichenkette oben — aber `querySelector` weiss das
-           nicht, und eine Auswahl ohne Gitter wäre keine. */
         if (!gitter || !inp)
             return;
         const zeichne = (q = '') => {
@@ -172,8 +150,6 @@ const Erwaehnung = (() => {
             const b = elVon(e)?.closest('button[data-e]');
             if (!b)
                 return;
-            /* Der Knopf „Symbol entfernen" hat `data-e=""` — leer ist hier eine
-               Antwort und keine fehlende. Deshalb `?? ''` und nicht `if (!x)`. */
             beiWahl(b.dataset['e'] ?? '');
             m.remove();
         });
@@ -182,9 +158,6 @@ const Erwaehnung = (() => {
     const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const start = () => {
-        /* Ohne `#page` gibt es nichts zu tippen und also nichts zu ergänzen —
-           derselbe Fund wie in `hinweis.ts`, an einer Stelle, die beim Start
-           läuft und alles danach mitrisse. */
         document.getElementById('page')?.addEventListener('input', e => {
             const ct = elVon(e)?.closest('.ct');
             if (!ct) {
@@ -201,28 +174,11 @@ const Erwaehnung = (() => {
             else
                 zu();
         });
-        /* DIE EMOJI-AUSWAHL AUF ZURUF (E215/L63).
-    
-           Das Menüband kann nicht tippen. „:" allein öffnet hier nichts —
-           `emojiMenue` verlangt zwei Buchstaben danach, damit ein gewöhnlicher
-           Doppelpunkt im Satz kein Menü aufklappt.
-    
-           Der Editor meldet deshalb ein Ereignis, statt uns aufzurufen: ein
-           Bereich darf keinen anderen aufrufen (CLAUDE.md §5, Regel 1). Wer
-           zuhört, ist der Bereich, dem die Emojis gehören — also dieser.
-    
-           Eingesetzt wird über `Store`, nicht über das Feld: der Block ist
-           gerade erst entstanden, und sein `.ct` kann beim Zeichnen ein anderes
-           Element geworden sein. Der Speicher ist in beiden Fällen richtig. */
         if (typeof Ereignisse !== 'undefined') {
             Ereignisse.horche('emojiWaehlen', (daten) => {
                 const id = daten && daten.blockId;
                 if (!id)
                     return;
-                /* Einen Wimpernschlag warten. Der Rufer zeichnet die Seite neu,
-                   bevor er meldet — aber ob der Block dann schon im Baum hängt,
-                   hängt daran, wie gezeichnet wird. Dieselben 30 ms wie überall,
-                   wo im Editor auf ein frisches Feld gewartet wird. */
                 setTimeout(() => oeffneAuswahl(id), 30);
             });
         }
@@ -279,6 +235,3 @@ const Erwaehnung = (() => {
     return { start, emojiWaehler, EMOJIS };
 })();
 window.Erwaehnung = Erwaehnung;
-/* ==========================================================================
- * 4. KOMMENTARE
- * ========================================================================*/

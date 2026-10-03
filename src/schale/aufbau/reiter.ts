@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/reiter.ts (npm run bauen:ts). */
 /* ============================================================================
  * fenster.js — Reiter, geteilte Ansicht und Linkvorschau
  * ----------------------------------------------------------------------------

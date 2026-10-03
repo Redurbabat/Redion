@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/hilfe/stand.ts (npm run bauen:ts). */
 /* ============================================================================
  * status.js — Der Umsetzungsstand
  * ----------------------------------------------------------------------------

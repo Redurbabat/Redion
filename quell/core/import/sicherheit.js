@@ -1,100 +1,11 @@
 "use strict";
-/* ============================================================================
- * core/import/sicherheit.ts — fremde Sicherungen entschärfen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/import/sicherheit.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/core/import/sicherheit.js`. Wer das .js bearbeitet, verliert
- * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
- * vorher.
- * ----------------------------------------------------------------------------
- * WAS HIER SCHIEFGING, BEVOR ES DIESE DATEI GAB (E284).
- *
- * `importAll` las eine fremde Sicherung mit einem blanken `JSON.parse` und
- * legte das Ergebnis unbesehen in den Zwischenspeicher:
- *
- *     const d = JSON.parse(json);
- *     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung …');
- *     …
- *     Object.assign(cache.meta, neu.meta);      // zusammenfuehren
- *     cache.meta = neu.meta;                    // ersetzen
- *
- * Das sind zwei verschiedene Löcher, und das erste ist das gemeinere.
- *
- * ─── LOCH 1: `Object.assign` ruft Setzer auf ────────────────────────────────
- *
- * `JSON.parse('{"__proto__":{"a":1}}')` erzeugt ein Objekt mit einer EIGENEN
- * Eigenschaft namens `__proto__`. Das ist harmlos, solange niemand sie
- * weiterreicht. `Object.assign` reicht sie weiter — und zwar über `[[Set]]`,
- * also über den geerbten `__proto__`-SETZER. Damit bekommt `cache.meta`
- * einen fremden Prototyp.
- *
- * Danach gibt `getMeta('irgendwas')` nicht mehr `undefined` zurück, sondern
- * das, was der Angreifer hineingelegt hat. `wolkeAbgleich`, `wolkeToken`,
- * `theme`, `agent:notaus` — alles, was über `cache.meta[k]` gelesen wird und
- * heute nicht gesetzt ist. Dasselbe für `cache.blocks[id]`: eine Kennung,
- * die es nicht gibt, liefert plötzlich einen Block.
- *
- * ─── LOCH 2: das geparste Objekt WIRD der Zwischenspeicher ──────────────────
- *
- * Beim „ersetzen" wird gar nicht kopiert — `cache.meta = neu.meta` macht das
- * geparste Objekt selbst zum Verzeichnis. Ein Schlüssel `constructor` oder
- * `prototype` steht dann als gewöhnlicher Eintrag darin und bringt jeden
- * Code durcheinander, der `if (verzeichnis[k])` schreibt: `{}.constructor`
- * ist wahr, auch wenn nichts gesetzt wurde.
- *
- * ─── DIE ANTWORT: PROTOTYPLOSE VERZEICHNISSE ────────────────────────────────
- *
- * Ein Verzeichnis, das aus `Object.create(null)` kommt, hat keinen
- * `__proto__`-Setzer, den man auslösen könnte, und `verzeichnis['constructor']`
- * ist ehrlich `undefined`. Das ist keine Filterung, die man vergessen kann —
- * es ist eine Form, die das Problem nicht hat.
- *
- * Zusätzlich fliegen die drei Namen beim Kopieren raus. Zwei Wälle statt
- * einem, weil der erste an einer Stelle vergessen werden kann, an die heute
- * niemand denkt.
- *
- * ─── WARUM NICHT EIN `reviver` BEI `JSON.parse` ─────────────────────────────
- *
- * Ein `reviver`, der `__proto__` verwirft, ist der übliche Rat und er wäre
- * hier zu wenig: er säubert die WERTE, aber er ändert nichts daran, dass
- * `cache.meta` ein gewöhnliches `{}` mit `Object.prototype` bleibt. Der
- * nächste `Object.assign` aus einer anderen Quelle stünde wieder offen.
- *
- * ─── WAS DIESE DATEI NICHT TUT ──────────────────────────────────────────────
- *
- * Sie prüft nicht, ob die Sicherung inhaltlich stimmt — das ist
- * `validierung.ts`. Sie sagt nicht, was sich ändern wird — das ist die
- * Vorschau. Hier geht es einzig darum, dass fremde Schlüssel nichts
- * übernehmen können.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/import/sicherheit.ts (npm run bauen:ts). */
 const ImportSicherheit = (() => {
-    /* Die drei Namen, über die ein fremdes Objekt Einfluss auf Code nimmt, den
-       es nie gesehen hat. `__proto__` ist der Setzer, `constructor` und
-       `prototype` sind die Wege dorthin über Umwege. */
     const GEFAEHRLICH = ['__proto__', 'constructor', 'prototype'];
-    /** Ist dieser Schlüssel einer der drei? */
     const istGefaehrlich = (schluessel) => GEFAEHRLICH.indexOf(schluessel) !== -1;
     const leererFund = () => ({ entfernt: 0, wege: [], zuTief: false });
-    /* Eine Sicherung darf verschachtelt sein, aber nicht beliebig. Hundert
-       Ebenen sind mehr, als jedes echte Redion-Objekt braucht (der tiefste
-       Fall ist ein Block mit `props` mit einer Liste mit Objekten — vier).
-       Ohne Grenze wäre eine böswillig tiefe Datei ein Weg, den Stapel zu
-       sprengen, bevor irgendeine Prüfung greift. */
     const MAX_TIEFE = 100;
-    /* Wie viele Wege im Bericht stehen. Mehr hilft niemandem beim Lesen. */
     const MAX_WEGE = 20;
-    /**
-     * Ein Wert, aus dem alle gefährlichen Schlüssel entfernt sind — und in dem
-     * jedes Verzeichnis prototyplos ist.
-     *
-     * Arbeitet mit einem eigenen Stapel statt mit Rekursion: die Tiefe ist
-     * begrenzt, aber die BREITE ist es nicht, und eine Sicherung mit
-     * zweihunderttausend Blöcken soll den Stapel nicht anfassen.
-     *
-     * @param roh   frisch aus `JSON.parse`
-     * @param fund  wird mitgeschrieben; `leererFund()` übergeben
-     */
     const entgiften = (roh, fund) => {
         let ergebnis = undefined;
         const stapel = [
@@ -103,15 +14,11 @@ const ImportSicherheit = (() => {
         while (stapel.length) {
             const a = stapel.pop();
             const q = a.quelle;
-            /* Alles, was kein Objekt ist, kann keinen Prototyp tragen. */
             if (q === null || typeof q !== 'object') {
                 a.setzen(q);
                 continue;
             }
             if (a.tiefe >= MAX_TIEFE) {
-                /* Nicht weiterlaufen und auch nicht durchreichen: ab hier ist
-                   nichts geprüft, und ungeprüft durchreichen wäre genau das Loch.
-                   `null` ist ehrlicher als ein halb geprüfter Ast. */
                 fund.zuTief = true;
                 a.setzen(null);
                 continue;
@@ -129,12 +36,8 @@ const ImportSicherheit = (() => {
                 }
                 continue;
             }
-            /* PROTOTYPLOS. Das ist der eigentliche Schutz — nicht die Liste
-               unten, sondern diese Zeile. */
             const neu = Object.create(null);
             a.setzen(neu);
-            /* `Object.keys` liefert nur EIGENE, aufzählbare Schlüssel. Ein
-               geerbtes `toString` steht also gar nicht zur Debatte. */
             for (const k of Object.keys(q)) {
                 if (istGefaehrlich(k)) {
                     fund.entfernt++;
@@ -153,14 +56,6 @@ const ImportSicherheit = (() => {
         }
         return ergebnis;
     };
-    /**
-     * Ein Verzeichnis aus fremden Daten — prototyplos, ohne die drei Namen.
-     *
-     * Für die Stellen, die schon ein Objekt haben und nur ein sicheres
-     * Verzeichnis daraus brauchen (`neu.blocks`, `neu.meta` …). Der Inhalt
-     * wird dabei MIT entgiftet: ein Block, dessen `props` einen `__proto__`
-     * trägt, ist genauso ein Problem wie das Verzeichnis selbst.
-     */
     const verzeichnis = (roh, fund) => {
         const f = fund || leererFund();
         const sauber = entgiften(roh, f);
@@ -169,15 +64,6 @@ const ImportSicherheit = (() => {
         }
         return sauber;
     };
-    /**
-     * `JSON.parse` mit Wächter.
-     *
-     * Gibt Wert UND Fund zurück, nie nur den Wert: wer den Fund nicht
-     * anschaut, soll ihn wenigstens in der Hand halten.
-     *
-     * @throws wenn der Text kein JSON ist — mit einem Satz, den ein Mensch
-     *         lesen kann statt „Unexpected token < in JSON at position 0".
-     */
     const lesen = (text) => {
         let roh;
         try {
@@ -192,14 +78,6 @@ const ImportSicherheit = (() => {
         const wert = entgiften(roh, fund);
         return { wert, fund };
     };
-    /**
-     * Ein Satz für den Menschen, wenn etwas entfernt wurde — sonst leer.
-     *
-     * Bewusst kein Abbruch: eine Sicherung mit einem `__proto__` darin ist
-     * nicht zwingend ein Angriff. Sie kann aus einem Werkzeug stammen, das
-     * Objekte falsch serialisiert. Weggenommen wird es trotzdem, und gesagt
-     * wird es auch.
-     */
     const satz = (fund) => {
         if (!fund.entfernt && !fund.zuTief)
             return '';

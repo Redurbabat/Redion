@@ -1,51 +1,19 @@
 "use strict";
-/* ============================================================================
- * pflege.js — Bestand pflegen: Gesundheit, Dubletten, Papierkorb, Fehler
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/einstellungen/pflege.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/einstellungen/pflege.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Fünf Dinge, die Notion nicht hat und die in der Lückenliste stehen:
- *
- *   1. GESUNDHEITSBERICHT  — verwaiste Seiten, kaputte Verknüpfungen,
- *      ungenutzte Eigenschaften, leere Datenbanken, teure Formeln.
- *      (Idee 7 der 10000×-Liste: „Workspace-Wartungs-KI")
- *   2. DUBLETTEN finden und zusammenführen. (Idee 13/17)
- *   3. PAPIERKORB räumt nach der eingestellten Frist selbst auf.
- *   4. FEHLERLISTE — jeder JavaScript-Fehler wird gesammelt statt still
- *      verschluckt, mit Zeitpunkt und Stelle.
- *   5. ERSTE HILFE — prüfen, reparieren, sichern, an einem Ort.
- *
- * Alles rechnet lokal und ändert nichts ohne Bestätigung.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/pflege.ts (npm run bauen:ts). */
 const Pflege = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * 1. GESUNDHEITSBERICHT
-     * ======================================================================*/
     const befund = () => {
         const b = [];
         const seiten = Object.values(Store.cache.blocks)
             .filter(x => x.type === 'page' && x.alive && x.parentTable !== 'collection');
         const sammlungen = Object.values(Store.cache.collections);
         const ansichten = Object.values(Store.cache.views);
-        /* --- Verwaiste Seiten: keine Eltern, kein Verweis, kein Inhalt ------- */
         const verwaist = seiten.filter(p => {
             if (p.parentId && Store.getBlock(p.parentId))
                 return false;
             const leer = !(p.content || []).length;
-            /* Hier stand `Links.rueckverweise` — die Funktion heisst `verweiseAuf`
-               und hat nie existiert. Weil der Aufruf hinter `Links.rueckverweise ?`
-               stand, zählte er immer 0: JEDE leere Seite galt als verwaist, auch
-               wenn zehn andere auf sie zeigten. */
             const verlinkt = Links.verweiseAuf(p.id).length;
             return leer && !verlinkt && !p.favorite;
         });
@@ -59,7 +27,6 @@ const Pflege = (() => {
                     return verwaist.length + ' Seiten in den Papierkorb gelegt';
                 }
             });
-        /* --- Verknüpfungen, die ins Leere zeigen ---------------------------- */
         const kaputt = [];
         sammlungen.forEach(c => {
             Object.entries(c.schema).forEach(([k, def]) => {
@@ -109,7 +76,6 @@ const Pflege = (() => {
                     return n + ' Zeilen bereinigt';
                 }
             });
-        /* --- Eigenschaften, in denen nie etwas steht ------------------------ */
         const ungenutzt = [];
         sammlungen.forEach(c => {
             const zeilen = Store.rowsOf(c.id);
@@ -133,10 +99,6 @@ const Pflege = (() => {
                 text: 'Sie stehen in der Tabelle, wurden aber nie ausgefüllt.',
                 liste: ungenutzt.slice(0, 12)
             });
-        /* --- Prüfsätze, die nicht mehr stimmen -------------------------------
-           Das ist der einzige Befund hier, den der Mensch selbst gesetzt hat.
-           Deshalb steht er weit oben: er weiss besser als jede Heuristik, was
-           richtig sein soll. */
         if (typeof Pruefsatz !== 'undefined') {
             const ps = Pruefsatz.ueberall();
             if (ps.schlecht) {
@@ -160,10 +122,6 @@ const Pflege = (() => {
                 });
             }
         }
-        /* --- Vorlagen mit einer neueren Fassung -------------------------------
-           Das ist kein Fehler, sondern eine verpasste Verbesserung. Notion kann
-           so etwas gar nicht melden, weil eine eingesetzte Vorlage dort nur eine
-           Fotokopie ist und nicht weiss, woher sie kommt. */
         if (typeof Fassung !== 'undefined') {
             const alt2 = Fassung.veraltet();
             if (alt2.length)
@@ -177,7 +135,6 @@ const Pflege = (() => {
                     wirkung: () => { alt2.forEach(x => Fassung.anwenden(x.seite.id)); }
                 });
         }
-        /* --- Datenbanken ohne Zeilen ---------------------------------------- */
         const leer = sammlungen.filter(c => !Store.rowsOf(c.id).length);
         if (leer.length)
             b.push({
@@ -185,7 +142,6 @@ const Pflege = (() => {
                 text: 'Angelegt, aber nie gefüllt.',
                 liste: leer.slice(0, 12).map(c => ({ id: c.id, text: c.name || 'Ohne Namen' }))
             });
-        /* --- Teure Formeln: Notion warnt nur allgemein, wir messen ---------- */
         const teuer = [];
         sammlungen.forEach(c => {
             const zeilen = Store.rowsOf(c.id).slice(0, 40);
@@ -212,7 +168,6 @@ const Pflege = (() => {
                 text: 'Sie machen grosse Ansichten langsam. Notion sagt nur, dass es langsam werden kann — hier steht, wo.',
                 liste: teuer.slice(0, 12)
             });
-        /* --- Ansichten, deren Filter alles wegfiltern ----------------------- */
         const blind = ansichten.filter(v => {
             const c = Store.getCollection(v.collectionId);
             if (!c || !v.filters || !(v.filters.rules || []).length)
@@ -229,7 +184,6 @@ const Pflege = (() => {
                 liste: blind.slice(0, 12).map(v => ({ id: v.collectionId,
                     text: (Store.getCollection(v.collectionId) || {}).name + ' → ' + (v.name || 'Ansicht') }))
             });
-        /* --- Zeilen, die gegen ihre eigenen Prüfregeln verstossen ----------- */
         const regelbruch = [];
         sammlungen.forEach(c => {
             const hat = Object.values(c.schema).some(d => Datenbank.hatRegeln(d));
@@ -247,7 +201,6 @@ const Pflege = (() => {
                 text: 'Meist Zeilen, die es schon vor der Regel gab.',
                 liste: regelbruch.slice(0, 12)
             });
-        /* --- Papierkorb --------------------------------------------------- */
         const muell = Object.values(Store.cache.blocks).filter(x => !x.alive);
         if (muell.length > 50)
             b.push({
@@ -260,7 +213,6 @@ const Pflege = (() => {
             });
         return b;
     };
-    /** Ein Rollup ohne gültige Verknüpfung — kleine Hilfe für den Befund. */
     const def_rollupKaputt = (c) => Object.values(c.schema).some(d => d.type === 'rollup' && (!d.relation || !c.schema[d.relation] ||
         c.schema[d.relation].type !== 'relation'));
     const gesundheit = () => {
@@ -268,8 +220,6 @@ const Pflege = (() => {
         const pages = Object.values(Store.cache.blocks).filter(p => p.alive && p.type === 'page');
         const metrics = [[pages.length, 'Seiten'], [liste.filter(x => x.art === 'warnung').length, 'Warnungen'],
             [liste.filter(x => x.art !== 'warnung').length, 'Hinweise']];
-        /* Letzte Bearbeitungszeit ist kein vollständiges Ereignisprotokoll.
-           Genau das steht deshalb auch an der Kurve. */
         const days = Array.from({ length: 7 }, (_, index) => {
             const day = new Date();
             day.setHours(0, 0, 0, 0);
@@ -343,9 +293,6 @@ const Pflege = (() => {
             }
         });
     };
-    /* ========================================================================
-     * 2. DUBLETTEN
-     * ======================================================================*/
     const dubletten = (coll, key) => {
         const schluessel = key || Object.keys(coll.schema).find(k => coll.schema[k].type === 'title');
         const gruppen = new Map();
@@ -379,9 +326,6 @@ const Pflege = (() => {
                 '<button data-a="zu">Schliessen</button></div>' +
                 '</div>';
         document.body.appendChild(o);
-        /* Die gefundenen Gruppen lagen vorher als `o.__gruppen` am DOM-Knoten —
-           ein Feld, das es an einem `div` gar nicht gibt. Hier tut es eine
-           gewöhnliche Variable im selben Verschluss. */
         let gruppen = [];
         const zeichne = () => {
             const g = dubletten(coll, schluessel);
@@ -398,8 +342,6 @@ const Pflege = (() => {
             gruppen = g;
         };
         zeichne();
-        /* Zusammenführen: leere Felder der ersten Zeile aus den anderen füllen,
-           dann die anderen archivieren. Nichts geht verloren. */
         const fuehreZusammen = (gruppe) => {
             const [erste, ...rest] = gruppe.zeilen;
             rest.forEach((r) => {
@@ -450,24 +392,6 @@ const Pflege = (() => {
             }
         });
     };
-    /* ========================================================================
-     * 3. PAPIERKORB RÄUMT SELBST AUF
-     * ------------------------------------------------------------------------
-     * Hier stand einmal eine eigene Fassung davon. Sie las `geloeschtAm` und
-     * `papierkorbFrist` — zwei Namen, die im ganzen Quelltext niemand schreibt;
-     * das Feld heisst `trashedAt`, die Einstellung `papierkorbTage`. Sie lief
-     * beim Start und danach täglich und fand jedes Mal nichts. Ihr Knopf
-     * „Papierkorb jetzt leeren" antwortete seit jeher „Nichts ist alt genug".
-     *
-     * Aufgefallen ist es nie, weil daneben eine zweite Fassung in
-     * `bereiche/wissen/werkzeuge.js` lief, die es richtig machte. Zwei
-     * Fassungen derselben Sache sind nicht doppelt sicher, sondern eine
-     * richtige und eine, die niemand prüft.
-     *
-     * Jetzt steht die Frist in `kern/ablage` — sie handelt von der Ablage,
-     * nicht von einem Bereich. Was hier bleibt, ist die Meldung an den
-     * Menschen; die gehört an die Oberfläche und nicht in den Kern.
-     * ======================================================================*/
     const papierkorbAufraeumen = async ({ still = true } = {}) => {
         const anzahl = await Store.papierkorbAufraeumen();
         if (anzahl && !still)
@@ -476,14 +400,7 @@ const Pflege = (() => {
                 ' endgültig gelöscht');
         return anzahl;
     };
-    /** Was verschwindet demnächst? Für den Hinweis im Papierkorb. */
     const baldWeg = () => Store.papierkorbBaldWeg();
-    /* ========================================================================
-     * 4. FEHLERLISTE
-     * ======================================================================*/
-    /* Nimmt alles entgegen, was irgendwo geworfen wurde: einen Fehler, einen
-       Text, ein fremdes Objekt. Aufrufer sollen nicht erst umwandeln müssen —
-       sonst notieren sie im Zweifel gar nichts. */
     const fehlerMerken = (fehler, wo) => {
         const text = fehler instanceof Error ? fehler.message : String(fehler);
         const liste = Store.getMeta('fehlerliste', []) || [];
@@ -529,12 +446,8 @@ const Pflege = (() => {
             }
         });
     };
-    /* ========================================================================
-     * 5. BESTAND PRÜFEN UND REPARIEREN
-     * ======================================================================*/
     const bestandPruefen = () => {
         const gefunden = { verwaisteBloecke: 0, toteKinder: 0, zeilenOhneDb: 0, ansichtenOhneDb: 0 };
-        /* Kinder, die es nicht mehr gibt, aus den Inhaltslisten werfen */
         Object.values(Store.cache.blocks).forEach(b => {
             if (!Array.isArray(b.content) || !b.content.length)
                 return;
@@ -544,7 +457,6 @@ const Pflege = (() => {
                 Store.updateBlock(b.id, { content: sauber });
             }
         });
-        /* Blöcke, deren Eltern verschwunden sind */
         Object.values(Store.cache.blocks).forEach(b => {
             if (!b.alive || !b.parentId)
                 return;
@@ -559,7 +471,6 @@ const Pflege = (() => {
                 Store.updateBlock(b.id, { parentId: null });
             }
         });
-        /* Ansichten ohne Datenbank */
         Object.values(Store.cache.views).forEach(v => {
             if (!Store.getCollection(v.collectionId)) {
                 gefunden.ansichtenOhneDb++;
@@ -613,17 +524,11 @@ const Pflege = (() => {
                 o.remove();
                 fehlerListe();
             }
-            /* Hier stand `Einstellungen.sicherungSchreiben` — die Funktion gibt es
-               nicht, die Sicherung schreibt `App.sicherungSpeichern`. Der Zweig
-               war tot, es lief immer der Notweg über die Einzeldatei. */
             if (a === 'sichern') {
                 o.remove();
                 App.sicherungSpeichern();
             }
             if (a === 'papier') {
-                /* Das `await` ist nicht Zierde: ohne es stand hier eine Zusage über
-                   ein Versprechen statt über eine Zahl, und die Meldung hätte
-                   „[object Promise] endgültig gelöscht" gelautet. */
                 const n = await papierkorbAufraeumen({ still: false });
                 if (!n)
                     UI.toast('Nichts ist alt genug — nichts gelöscht');
@@ -640,11 +545,7 @@ const Pflege = (() => {
             }
         });
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
     const start = () => {
-        /* Fehler sammeln statt still verschlucken */
         addEventListener('error', (e) => {
             try {
                 fehlerMerken(e.message || String(e.error), (e.filename || '').split('/').pop() + ':' + (e.lineno || ''));
@@ -657,10 +558,6 @@ const Pflege = (() => {
             }
             catch { }
         });
-        /* Papierkorb einmal nach dem Start und danach täglich.
-           `still: false` ist kein Detail: was hier endgültig gelöscht wird, ist
-           endgültig gelöscht. Das darf der Mensch erfahren, auch wenn er es
-           eingestellt hat — sonst verschwindet etwas, und niemand hat es gesagt. */
         setTimeout(() => papierkorbAufraeumen({ still: false }), 8000);
         setInterval(() => papierkorbAufraeumen({ still: false }), 86400000);
     };

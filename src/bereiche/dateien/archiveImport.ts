@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/archiveImport.ts (npm run bauen:ts). */
 /* ==========================================================================
  * ArchivImport — eine ZIP so ins Regal holen, wie sie ist (E350)
  * --------------------------------------------------------------------------

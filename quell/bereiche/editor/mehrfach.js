@@ -1,29 +1,7 @@
 "use strict";
-/* ============================================================================
- * apps/schreiben/mehrfach/ansicht.js — aus notion.js herausgelöst
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/editor/mehrfach.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/editor/mehrfach.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Stammt aus der früheren Sammeldatei notion.js. Der Inhalt ist unverändert;
- * nur der Ort ist jetzt der, an dem man ihn sucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/mehrfach.ts (npm run bauen:ts). */
 const Mehrfach = (() => {
     let gewaehlt = new Set();
-    /**
-     * Die Kennungen aller Blöcke der Seite, in der Reihenfolge, in der sie
-     * dastehen.
-     *
-     * EIN FUND DES UMZUGS. Vorher stand hier zweimal
-     * `[...document.querySelectorAll('.blk')].map(e => e.dataset.bid)` — und
-     * `dataset.bid` ist `string | undefined`. Ein `.blk` ohne `data-bid` (den
-     * gibt es beim Zeichnen für den Bruchteil einer Sekunde) schob ein
-     * `undefined` in die Liste, und `alle.indexOf(jetzt)` zählte ab da eins
-     * daneben: Pfeiltaste runter sprang einen Block zu weit. Jetzt fallen
-     * solche Einträge heraus.
-     */
     const alleKennungen = () => [...document.querySelectorAll('.blk')]
         .map(e => e.dataset['bid'])
         .filter((x) => !!x);
@@ -33,11 +11,6 @@ const Mehrfach = (() => {
     const leeren = () => { gewaehlt.clear(); zeichne(); };
     const hat = () => gewaehlt.size > 0;
     const ids = () => [...gewaehlt];
-    /* Auf schmalen Bildschirmen gibt es in Notion keine Mehrfachauswahl —
-       dort ist Ziehen zum Markieren dem Scrollen im Weg.
-       760 und nicht 700: „schmal" soll überall dasselbe heissen. Die 700
-       stand hier als letzte von sieben Stellen, und ein Bildschirm von
-       730 px hätte Telefonleisten gezeigt und trotzdem Ziehen erlaubt. */
     const schmal = () => window.matchMedia('(max-width:' +
         ((typeof KONSTANTEN !== 'undefined' && KONSTANTEN.TELEFON_BREITE) || 760) +
         'px)').matches;
@@ -66,7 +39,6 @@ const Mehrfach = (() => {
         document.addEventListener('keydown', e => {
             const imFokus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
             const imText = !!imFokus?.classList.contains('ct');
-            /* Esc wählt den Block unter dem Cursor aus */
             if (e.key === 'Escape' && imFokus && imText && !document.querySelector('.menu, .overlay')) {
                 const blk = imFokus.closest('.blk');
                 if (blk) {
@@ -109,13 +81,7 @@ const Mehrfach = (() => {
                 const p = Store.getBlock(App.aktuelleSeite());
                 if (!p)
                     return;
-                /* Erst der eigene Block, dann die Geschwister, dann die ganze Seite —
-                   genau die Stufen, die Notion durchläuft. */
                 const alle = new Set(p.content || []);
-                /* EIN FUND DES UMZUGS. Hier stand `new Set([p.content[0]])`. Auf
-                   einer leeren Seite ist `p.content[0]` `undefined` — die Auswahl
-                   enthielt dann ein Nichts, `hat()` sagte trotzdem „ja", und die
-                   nächste Löschtaste rief `Store.trashBlock(undefined)`. */
                 const erster = (p.content || [])[0];
                 if (gewaehlt.size === 0) {
                     if (!erster)
@@ -156,9 +122,6 @@ const Mehrfach = (() => {
                 return;
             }
         });
-        /* Ohne `#page` gibt es keine Blöcke zum Auswählen — dann tut dieses
-           Modul nichts, statt beim Start zu werfen und alles danach mitzureissen
-           (derselbe Fund wie in `hinweis.ts`). */
         document.getElementById('page')?.addEventListener('click', e => {
             const ziel = e.target instanceof Element ? e.target : null;
             if (!ziel)
@@ -180,6 +143,3 @@ const Mehrfach = (() => {
     return { start, waehle, leeren, hat, ids, bereich, schmal };
 })();
 window.Mehrfach = Mehrfach;
-/* ==========================================================================
- * 6. STARTSEITE UND POSTEINGANG
- * ========================================================================*/

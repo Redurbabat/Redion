@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/planen/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * plan.js — Später erinnern, Woche zurückblicken, Tag planen
  * ----------------------------------------------------------------------------

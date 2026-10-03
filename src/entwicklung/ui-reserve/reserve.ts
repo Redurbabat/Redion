@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/entwicklung/ui-reserve/reserve.ts (npm run bauen:ts). */
 /* ============================================================================
  * entwicklung/ui-reserve/reserve.ts — die Galerie der UI-Reserve
  * ----------------------------------------------------------------------------

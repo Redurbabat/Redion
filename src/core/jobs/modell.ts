@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/jobs/modell.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/jobs/modell.ts — was ein Auftrag ist und wann er was darf
  * ----------------------------------------------------------------------------

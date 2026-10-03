@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/ausgeben.ts (npm run bauen:ts). */
 /* ============================================================================
  * austausch.js — Word, Excel und fremde Werkzeuge
  * ----------------------------------------------------------------------------

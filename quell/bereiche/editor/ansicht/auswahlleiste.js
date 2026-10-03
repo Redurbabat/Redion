@@ -1,15 +1,5 @@
 "use strict";
-/* ============================================================================
- * apps/schreiben/auswahlleiste/ansicht.js — aus notion.js herausgelöst
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/editor/ansicht/auswahlleiste.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/editor/ansicht/auswahlleiste.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Stammt aus der früheren Sammeldatei notion.js. Der Inhalt ist unverändert;
- * nur der Ort ist jetzt der, an dem man ihn sucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/ansicht/auswahlleiste.ts (npm run bauen:ts). */
 const Auswahl = (() => {
     let leiste = null;
     let letzteFarbe = 'yellow';
@@ -17,12 +7,6 @@ const Auswahl = (() => {
         leiste.remove();
         leiste = null;
     } };
-    /* ------------------------------------------------------------------------
-     * `getSelection()` gibt `Selection | null` — in einem abgetrennten Dokument
-     * gibt es keine. Vorher stand hier siebenmal `s.rangeCount` ohne Nachsehen.
-     * Das ist nicht theoretisch: die Auswahlleiste läuft auch, während eine
-     * Seite neu gezeichnet wird.
-     * ----------------------------------------------------------------------*/
     const auswahl = () => {
         const s = getSelection();
         return s && s.rangeCount ? s : null;
@@ -38,9 +22,6 @@ const Auswahl = (() => {
         const blk = n?.closest('.blk');
         return blk ? Store.getBlock(blk.dataset['bid']) : null;
     };
-    /** Textposition innerhalb des sichtbaren Blockinhalts. Bei schlichtem Text
-        ist sie auch die gespeicherte Position; bei gerendertem Markdown faellt
-        der Lernweg bewusst auf die bisherige Textsuche zurueck. */
     const auswahlOffset = () => {
         const selection = auswahl();
         if (!selection)
@@ -61,7 +42,6 @@ const Auswahl = (() => {
             return -1;
         }
     };
-    /** Der sichtbare Text des Blocks, in dem die Auswahl steht. */
     const sichtbarerText = () => {
         const selection = auswahl();
         if (!selection)
@@ -71,14 +51,12 @@ const Auswahl = (() => {
             ? range.startContainer.parentElement : range.startContainer;
         return node?.closest('.ct')?.textContent ?? '';
     };
-    /** Wie oft `was` in `wo` vor der Stelle `bis` beginnt. */
     const davor = (wo, was, bis) => {
         let n = 0, i = -1;
         while ((i = wo.indexOf(was, i + 1)) !== -1 && i < bis)
             n++;
         return n;
     };
-    /** Der Anfang des `n`-ten Vorkommens, von null gezählt; -1 wenn es fehlt. */
     const nteStelle = (wo, was, n) => {
         let i = -1;
         for (let k = 0; k <= n; k++) {
@@ -88,36 +66,6 @@ const Auswahl = (() => {
         }
         return i;
     };
-    /* ══ WELCHE STELLE GEMEINT IST (E650) ═══════════════════════════════════
-     * Hier stand `(b.text || '').replace(txt, …)`, und zwar zweimal —
-     * in `umschliesse` und in `linkSetzen`.
-     *
-     * `String.replace` mit einem STRING als Muster ersetzt das ERSTE
-     * Vorkommen. Nicht das markierte. Wer in „Test und Test" das zweite Wort
-     * markiert und auf Fett drückt, bekommt das erste fett, und an der Stelle,
-     * die er angefasst hat, passiert nichts. Gemessen in `test542`:
-     * `**Test** und Test` statt `Test und **Test**`.
-     *
-     * Das ist kein Absturz und keine Fehlermeldung — der Text ändert sich, nur
-     * an der falschen Stelle. In einem langen Absatz merkt man es erst beim
-     * Lesen, und dann steht schon nicht mehr da, was man geschrieben hat.
-     *
-     * DREI WEGE, IN DIESER REIHENFOLGE:
-     *
-     *   1  Der Normalfall. `auswahlOffset()` gibt die Zeichenzahl im
-     *      SICHTBAREN Text; bei schlichtem Text ist das auch die gespeicherte
-     *      Stelle. Wir prüfen das nach, statt es zu glauben: steht dort
-     *      wirklich das gewählte Wort, ist die Sache entschieden.
-     *
-     *   2  Gerendertes Markdown. Ein `**fett**` davor verschiebt die
-     *      Zeichenzahlen — die REIHENFOLGE aber nicht. Kommt das Wort im
-     *      Sichtbaren genauso oft vor wie im Gespeicherten, dann ist das
-     *      n-te hier auch das n-te dort.
-     *
-     *   3  Alles andere. Dann bleibt es beim alten Weg, und der Fehler
-     *      bleibt in genau diesem Restfall bestehen. Das ist bewusst: ein
-     *      Ratespiel an Nutzertext wäre schlimmer als ein bekannter Rest.
-     * ====================================================================== */
     const stelleImText = (text, gewaehlt) => {
         const off = auswahlOffset();
         if (off < 0 || !gewaehlt)
@@ -133,26 +81,12 @@ const Auswahl = (() => {
             return text.indexOf(gewaehlt);
         return nteStelle(text, gewaehlt, davor(sicht, gewaehlt, off));
     };
-    /** `gewaehlt` an der gemeinten Stelle durch `ersatz` tauschen. */
     const tauscheDort = (text, gewaehlt, ersatz) => {
         const i = stelleImText(text, gewaehlt);
         if (i < 0)
             return text;
         return text.slice(0, i) + ersatz + text.slice(i + gewaehlt.length);
     };
-    /* ══ LIEGT DIE MARKE SCHON DRUM HERUM? (E668) ═══════════════════════════
-     * Fett war ein Stempel und kein Schalter: wer ein fettes Wort markierte
-     * und noch einmal auf Fett drückte, bekam `****Wort****`. Gezeichnet wird
-     * daraus `**Wort**` als sichtbarer Text — die Marke steht dann IM Absatz.
-     *
-     * Geprüft wird an der gefundenen Stelle, nicht mit einer Suche: steht
-     * unmittelbar davor und dahinter die Marke, ist sie schon da.
-     *
-     * DER FALL, DER EINEN SORGFÄLTIG MACHT: `*` ist die halbe `**`. In
-     * `Ein **fetter** Satz` steht vor „fetter" ein `*` und dahinter auch —
-     * wer das für Kursiv hielte, würde beim Abschalten `*fetter*` daraus
-     * machen und das FETT löschen. Deshalb die zwei Zeilen darunter: eine
-     * einzelne `*` gilt nur, wenn daneben keine zweite steht. */
     const istUmschlossen = (text, i, laenge, marke) => {
         if (i < marke.length)
             return false;
@@ -164,8 +98,6 @@ const Auswahl = (() => {
             return false;
         return true;
     };
-    /** Legt Marken um die Auswahl — oder nimmt sie weg, wenn sie schon da
-     *  sind. Ein Schalter, wie in jedem Textprogramm (E668). */
     const umschliesse = (marke) => {
         const txt = getSelection()?.toString() ?? '';
         if (!txt)
@@ -182,13 +114,6 @@ const Auswahl = (() => {
         App.zeichneSeite(b.id, 'ende');
         weg();
     };
-    /**
-     * Legt die markierte Stelle als Markdown-Link ab.
-     *
-     * Ein gemeinsamer Weg für die Auswahlleiste, Strg/Cmd+K und das Einfügen
-     * einer Adresse. Vorher versprach die Kürzelliste Strg+K, tatsächlich
-     * öffnete aber der globale Griff die Suche.
-     */
     const linkSetzen = (adresse) => {
         const text = getSelection()?.toString() ?? '';
         if (!text)
@@ -239,31 +164,6 @@ const Auswahl = (() => {
                 '<button data-a="farbe" title="Farbe">🎨 ▾</button>';
         document.body.appendChild(leiste);
         const mass = leiste.getBoundingClientRect();
-        /* WOHIN DIE LEISTE GEHÖRT — EINE IDEE, DIE AM MASSBAND GESCHEITERT IST.
-         *
-         * Sie steht ÜBER der Auswahl und liegt damit auf der Zeile davor. Beim
-         * Zeichnen des Entwurfs zu E218 war das der auffälligste Fehler im Bild:
-         * man wählt einen Satz und verliert dafür den davor. Notion und Linear
-         * machen es genauso, also schien der freie Rand rechts der bessere Ort —
-         * im Entwurf waren dort 424 px Platz.
-         *
-         * NACHGEMESSEN AN DER LAUFENDEN APP bei 1440 px:
-         *
-         *     #scroll   240 … 1440    die Fläche
-         *     #page     390 … 1290    die Textspalte, 900 px breit
-         *     frei rechts   150 px
-         *     die Leiste    552 px    (vierzehn Knöpfe, drei davon mit Wort)
-         *
-         * Es passt nicht, und zwar nicht knapp. Der Entwurf hatte eine schmalere
-         * Spalte gezeichnet, als Redion sie hat — die Zahl 424 stammte aus dem
-         * Bild, nicht aus der App.
-         *
-         * Der Umbau lag hier schon fertig, mit sauberem Rückfall auf den alten
-         * Weg. Er wäre auf jedem Fenster in diesen Rückfall gelaufen, also
-         * niemals sichtbar geworden: dreissig Zeilen, die nichts tun. Deshalb
-         * steht hier wieder die eine Zeile und darüber, warum es bei ihr bleibt.
-         * Wer es doch will, braucht zuerst eine schmalere Leiste — nicht eine
-         * andere Position. */
         leiste.style.left = Math.max(8, Math.min(r.left, innerWidth - mass.width - 10)) + 'px';
         leiste.style.top = Math.max(8, r.top - mass.height - 8) + 'px';
         leiste.addEventListener('mousedown', e => e.preventDefault());
@@ -322,10 +222,6 @@ const Auswahl = (() => {
             }
             if (a === 'farbe') {
                 const rr = b.getBoundingClientRect();
-                /* Die Namen kommen aus `core/helpers/colors.ts` (E406). Hier standen
-                   sie als eigene Liste — und sagten „Lila" und „Pink", wo das
-                   Notizheft „Violett" und „Rosa" sagt. Zwei Namen für eine Farbe in
-                   derselben App sind kein Stil, sondern ein Fehler. */
                 const FARBEN = Farben.alle().map(id => [id, Farben.name(id)]);
                 const m = UI.menu('<div class="grp">Textfarbe</div><div class="swatches">' +
                     FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" aria-label="Textfarbe ${n}" ` +
@@ -357,7 +253,6 @@ const Auswahl = (() => {
         Store.updateBlock(b.id, { color: letzteFarbe });
         App.zeichneSeite();
     };
-    /** Das Element, auf das geklickt wurde — oder nichts. */
     const elementVon = (e) => e.target instanceof Element ? e.target : null;
     const start = () => {
         document.addEventListener('mouseup', e => {
@@ -379,8 +274,3 @@ const Auswahl = (() => {
     return { start, zeigen, weg, umschliesse, linkSetzen, letzteFarbeAnwenden };
 })();
 window.Auswahl = Auswahl;
-/* ==========================================================================
- * 3. ERWÄHNUNGEN UND EMOJIS
- * --------------------------------------------------------------------------
- * @ für Seite, Datum oder Person · : für Emoji — beides mitten im Text.
- * ========================================================================*/

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ablage/indexdb.ts (npm run bauen:ts). */
 /* ============================================================================
  * store.js — Die lokale Datenbank
  * ----------------------------------------------------------------------------

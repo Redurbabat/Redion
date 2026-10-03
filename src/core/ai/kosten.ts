@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ai/kosten.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/ai/kosten.ts — was ein KI-Aufruf kostet, BEVOR er läuft
  * ----------------------------------------------------------------------------

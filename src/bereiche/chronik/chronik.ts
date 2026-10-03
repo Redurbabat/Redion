@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/chronik/chronik.ts (npm run bauen:ts). */
 /* ============================================================================
  * chronik/chronik.js — das zweite Gehirn, in Redion sichtbar
  * ----------------------------------------------------------------------------

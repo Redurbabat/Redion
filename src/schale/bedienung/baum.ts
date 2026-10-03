@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/baum.ts (npm run bauen:ts). */
 /* schale/bedienung/baum.ts — gemeinsame Baumansicht
    Quelle: Redion-Adaption der Uiverse-Baumidee von ashif_6672.
    Kein eigenes Datenmodell; Bereiche liefern nur Knoten und Zustand. */

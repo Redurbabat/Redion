@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/ansicht/auswahlleiste.ts (npm run bauen:ts). */
 /* ============================================================================
  * apps/schreiben/auswahlleiste/ansicht.js — aus notion.js herausgelöst
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/bloecke.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/bloecke.js — alle Blockarten an einer Stelle
  * ----------------------------------------------------------------------------

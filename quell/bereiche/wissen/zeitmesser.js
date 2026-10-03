@@ -1,39 +1,10 @@
 "use strict";
-/* ============================================================================
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/wissen/zeitmesser.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/wissen/zeitmesser.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * ==========================================================================*/
-/* ==========================================================================
- * zeitmesser.js — Stoppuhr und Timer mit Dokumentbezug (E268)
- *
- * Aus Redurs GoodNotes-Dossier (»Time Keeper«): eine kleine Uhr, die beim
- * Lernen mitläuft — Stoppuhr fürs Messen, Timer fürs Begrenzen — und die
- * sich MERKT, woran gearbeitet wurde. AUFGABEN.md verlangt seit Langem
- * »Pomodoro/Lernzeit echt messen statt schätzen«; hier ist der Anfang:
- * jede beendete Sitzung landet mit Dauer und Seite in `zeit:sitzungen`.
- *
- * Bewusst KEIN eigener Bereich, kein Blatt, kein Blocktyp: ein schwebendes
- * Feld über allem, das weiterläuft, wenn man es schliesst. Die Uhr gehört
- * zur Arbeit, nicht zu einer Seite — der DOKUMENTBEZUG entsteht beim
- * Start (welche Seite ist offen?), nicht durch einen Ort im Baum.
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/zeitmesser.ts (npm run bauen:ts). */
 const Zeitmesser = (() => {
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
-    /* Höchstens so viele Sitzungen bleiben liegen — eine Lernwoche, kein
-       unbegrenzt wachsender Verlauf (§15 gilt auch für Kleinkram). */
     const MERKGRENZE = 50;
     let lauf = null;
     let ticker = null;
-    /* WACHE ZEIT, NICHT WANDUHR (E364, L81 Punkt 2). Der Tick kommt alle
-       500 ms; kommt er nach mehr als dreissig Sekunden, hat der Rechner
-       geschlafen oder der Browser die Registerkarte eingeschläfert — die
-       Spanne wird gesehen, aber nicht gezählt. Eine verborgene Registerkarte
-       zählt auch nicht: gezählt wird, was man vor sich hat. Und alle fünf
-       Sekunden geht der Stand in die Ablage, damit die Uhr ein Neuladen
-       überlebt (Punkt 4). */
     const SCHLAF_GRENZE_MS = 30 * 1000;
     const SICHERN_ALLE_MS = 5 * 1000;
     const LAUFEND = 'zeit:laufend';
@@ -64,8 +35,6 @@ const Zeitmesser = (() => {
         const p = id ? Store.getBlock(id) : null;
         return { id: String(id || ''), name: String(p?.text || '').trim() || 'Ohne Seite' };
     };
-    /** Eine beendete Sitzung festhalten — nur echte (ab 5 Sekunden), sonst
-     *  füllte jedes Antippen den Verlauf. */
     const merken = () => {
         if (!lauf || lauf.vergangenSek < 5)
             return;
@@ -86,7 +55,6 @@ const Zeitmesser = (() => {
         lauf.zuletzt = jetzt;
         const sichtbar = typeof document === 'undefined' || document.visibilityState !== 'hidden';
         if (!lauf.pausiert) {
-            /* Eine rückwärts gestellte Uhr (delta < 0) zählt weder vor noch zurück. */
             if (delta > 0 && delta <= SCHLAF_GRENZE_MS && sichtbar)
                 lauf.vergangenSek += delta / 1000;
             else if (delta > 0)
@@ -140,11 +108,6 @@ const Zeitmesser = (() => {
         }
         zeichneStand();
     };
-    /** DIE UHR ÜBERLEBT DAS NEULADEN (E364, L81 Punkt 4): der zuletzt
-     *  gesicherte Stand wird wieder aufgenommen — die Spanne seit dem
-     *  Sichern zählt nicht (sie war Schlaf oder Neuladen), die Uhr läuft von
-     *  dort weiter. Angestossen, sobald die Ablage da ist; war sie beim
-     *  Anmelden längst geladen, reicht der Bus die Meldung nach (E362). */
     const wiederaufnehmen = () => {
         if (lauf || typeof Store === 'undefined')
             return;
@@ -164,7 +127,7 @@ const Zeitmesser = (() => {
         try {
             Ereignisse.horche(ARTEN.ablageGeladen, wiederaufnehmen, { nachreichen: true });
         }
-        catch { /* dann eben nur in dieser Sitzung */ }
+        catch { }
     }
     const stand = () => ({
         laeuft: !!lauf, pausiert: !!lauf?.pausiert,
@@ -172,9 +135,6 @@ const Zeitmesser = (() => {
         uebersprungenSek: lauf ? Math.round(lauf.uebersprungenSek) : 0,
         seite: lauf?.seitenName || ''
     });
-    /* ------------------------------------------------------------------ *
-     * Das schwebende Feld
-     * ------------------------------------------------------------------ */
     const feldHtml = () => {
         const s = stand();
         const liste = sitzungen().slice(0, 3).map(z => `<li>${esc(uhrText(z.dauerSek))} · ${esc(z.seitenName || 'Ohne Seite')}` +
@@ -192,10 +152,6 @@ const Zeitmesser = (() => {
             `<button class="rb" data-zm="t5">5 Min</button>` +
             `<button class="rb" data-zm="t25">25 Min</button>` +
             `</div>` +
-            /* `data-rmo-taste` ist rein für die Darstellung da (E535): der
-               mechanische Dreierblock braucht je Taste eine Rolle, und `data-zm`
-               taugt dafür nicht — dort heisst die Starttaste „stoppuhr" wie der
-               Knopf eine Reihe höher. Der Klick liest weiterhin nur `data-zm`. */
             `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit'}">` +
             `<button class="rb haupt" data-rmo-taste="start" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
             `<button class="rb" data-rmo-taste="pause" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
@@ -207,8 +163,6 @@ const Zeitmesser = (() => {
         const feld = document.querySelector('.zm-feld');
         if (!feld)
             return;
-        /* Beim Tick bleiben die Tasten samt Fokus erhalten. Nur ein echter
-           Zustandswechsel zeichnet die Steuerung neu. */
         const next = document.createElement('div');
         next.innerHTML = feldHtml();
         const currentState = feld.querySelector('.rmo-transport')?.getAttribute('data-zustand');
@@ -228,8 +182,6 @@ const Zeitmesser = (() => {
         if (focused)
             feld.querySelector(`.rmo-transport [data-zm="${focused}"]:not(:disabled)`)?.focus();
     };
-    /** Das Feld öffnen oder schliessen. Die Uhr läuft unabhängig davon
-     *  weiter — schliessen heisst „aus dem Blick", nicht „aus". */
     const panel = () => {
         const offen = document.querySelector('.zm-feld');
         if (offen) {

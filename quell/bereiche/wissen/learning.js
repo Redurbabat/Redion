@@ -1,18 +1,7 @@
 "use strict";
-/* ============================================================================
- * bereiche/wissen/learning.ts — Lernen aus normalen Redion-Inhalten
- * ----------------------------------------------------------------------------
- * Lernkarten, Notizen und Aufgaben bleiben gewöhnliche Blöcke. Dieses Modul
- * ergänzt nur einen kleinen, versionsfesten Quellverweis und baut daraus die
- * Tageswarteschlange, Fehlertraining und Statistik. Es gibt weder einen
- * zweiten Speicher noch eine heimliche Umstellung des Lernverfahrens:
- * `WissenDienst.planen` bleibt SM-2.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/learning.ts (npm run bauen:ts). */
 const Learning = (() => {
     const elementFrom = (event) => event.target instanceof Element ? event.target : null;
-    /* Ohne Kontenmodul gehört der lokale Bestand weiterhin dem Gerät. Sobald
-       Konten geladen ist, entscheidet ausschliesslich dessen bestehende
-       `darf`-Semantik — hier entsteht keine zweite Rollenlogik. */
     const rightsActive = () => typeof Konten !== 'undefined' && typeof Konten.darf === 'function';
     const permitted = (action, pageId) => !rightsActive() || (pageId ? Konten.darf(action, pageId) : Konten.darf(action));
     const ownerPageId = (block) => {
@@ -20,7 +9,6 @@ const Learning = (() => {
             return '';
         return String(Links.seiteVon(block.id)?.id || '');
     };
-    /** Die echte Datenbankseite; verknüpfte Ansichten erteilen keine Rechte. */
     const collectionPageId = (collectionId) => {
         const views = Object.values(Store.cache.blocks)
             .filter(block => block?.alive !== false && block.type === 'database' &&
@@ -46,7 +34,6 @@ const Learning = (() => {
         return !!pageId && !!ownerId && !!Store.getBlock(pageId) && !!Store.getBlock(ownerId) &&
             permitted('lesen', pageId) && permitted('lesen', ownerId);
     };
-    /** Bewertet wird der Kartenblock, deshalb zählt die Seite, die ihn trägt. */
     const canEditCard = (card) => {
         if (!rightsActive())
             return true;
@@ -86,8 +73,6 @@ const Learning = (() => {
         return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
             String(date.getDate()).padStart(2, '0')].join('-');
     };
-    /** Datumsspalten sind Kalendertage. Diese Auswertung bleibt auch an einem
-        Wechsel zwischen Sommer- und Winterzeit bei exakt einem Tag pro Datum. */
     const calendarDayNumber = (date) => Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
     const dateFrom = (value) => {
         if (value instanceof Date) {
@@ -125,37 +110,6 @@ const Learning = (() => {
         const owner = Store.getBlock(ownerPageId(card));
         return String(owner?.text || 'Ohne Thema').trim().slice(0, 120) || 'Ohne Thema';
     };
-    /**
-     * Fortschritt benutzt ausschliesslich den vorhandenen SM-2-Stand:
-     * noch keine erfolgreiche Wiederholung = 0 %, eine = 50 %, zwei oder mehr
-     * konsekutive Wiederholungen = 100 %. Ein Fehler setzt `wdh` wie bisher
-     * zurück und wird dadurch sofort sichtbar, ohne eine zweite Fortschrittszahl.
-     */
-    /**
-     * Die Kompetenz je Thema, aus `core/learning/kompetenz.ts`.
-     *
-     * Der Schlüssel ist derselbe wie in `topicProgress` — `topicLabel(card)`
-     * kleingeschrieben —, damit sich beide ohne zweite Zuordnung treffen.
-     * Fehlt das Modul, kommt eine leere Karte zurück und die Anzeige lässt
-     * die Zahl weg, statt eine zu erfinden.
-     */
-    /**
-     * Die anderen Belege für Können (L106 Punkt 1, E339).
-     *
-     * Bis E339 waren die Karteikarten die einzige Quelle. Eine
-     * Prüfungssimulation ist aber der HÄRTERE Beleg: eine Karteikarte wird
-     * selbst bewertet, eine Simulation zählt richtig und falsch. Sie nicht
-     * mitzuzählen hiess, die härtere Auskunft wegzuwerfen.
-     *
-     * DIE THEMEN MÜSSEN SICH TREFFEN, und das ist die einzige Stelle, an der
-     * es schiefgehen kann: `learning.ts` nennt ein Thema über `topicLabel`,
-     * `lernwelt.ts` über `themaVon`. Beide bevorzugen dasselbe (`quiz.topic`,
-     * `lernThema`, `topic`) und fallen auf denselben Seitentitel zurück; sie
-     * unterscheiden sich nur darin, dass `topicLabel` auf 120 Zeichen kürzt.
-     * `Belege.themaAus` kürzt genauso — damit treffen sie sich, ausser bei
-     * einem Seitentitel über 120 Zeichen, dessen erste 120 nicht eindeutig
-     * sind. Steht als bekannte Grenze in L106.
-     */
     const andereBelege = () => {
         const B = window.Belege;
         const LW = window.Lernwelt;
@@ -193,9 +147,6 @@ const Learning = (() => {
         allCards.forEach(card => {
             const label = topicLabel(card);
             const id = label.toLocaleLowerCase('de-CH');
-            /* Die vier E289-Felder stehen hier mit, weil der Sammelbehälter denselben
-               Typ trägt wie das Ergebnis. Gefüllt werden sie erst unten aus der
-               Kompetenzrechnung — hier sind es nur Platzhalter. */
             const group = groups.get(id) || {
                 id, label, total: 0, learned: 0, stable: 0, due: 0, errors: 0, progress: 0,
                 belege: 0, sicherheit: 0, stufe: '', kompetenzSatz: '', points: 0
@@ -225,8 +176,6 @@ const Learning = (() => {
                 errors: group.errors,
                 progress: group.total ? Math.round(group.points / (group.total * 2) * 100) : 0,
                 belege: k ? k.belege : 0,
-                /* Nur wenn genug Belege da sind. Sonst 0 UND leere Stufe — eine
-                   Zahl ohne Grundlage ist schlimmer als keine. */
                 sicherheit: k && k.genug ? Math.round(k.sicherheit * 100) : 0,
                 stufe: k ? k.stufe : '',
                 kompetenzSatz: k ? k.satz : ''
@@ -273,10 +222,6 @@ const Learning = (() => {
             left.title.localeCompare(right.title, 'de-CH') || left.rowId.localeCompare(right.rowId));
         return upcoming[0] || null;
     };
-    /**
-     * Die Tageswarteschlange ist nur eine Sicht auf vorhandene Karten.
-     * Neue Karten werden pro Öffnen auf zwanzig begrenzt, fällige nie.
-     */
     const dailyQueue = (newLimit = 20, nowValue = new Date()) => {
         const nowDate = dateFrom(nowValue) || new Date();
         const now = nowDate.getTime();
@@ -302,7 +247,6 @@ const Learning = (() => {
     const due = () => dailyQueue(Number.MAX_SAFE_INTEGER).all;
     const statistics = (queue = dailyQueue()) => {
         const allCards = cards();
-        /* E289: dieselbe Rechnung wie je Thema, nur über alles. */
         const K = window.Kompetenz;
         const gesamtKompetenz = K && typeof K.gesamt === 'function'
             ? K.gesamt(allCards.map((card) => ({
@@ -352,7 +296,6 @@ const Learning = (() => {
             return null;
         return [front, answers.join(' · ')];
     };
-    /** Standardkarten benutzen `Frage :: Antwort`, Lückenkarten `{{Antwort}}`. */
     const splitCard = (card) => {
         const text = String(card?.text || '');
         const cloze = clozeParts(text);
@@ -402,7 +345,6 @@ const Learning = (() => {
         }
         return ref;
     };
-    /** Öffnet immer den echten Quellblock; ein Seitentitel reicht dafür nicht. */
     const jumpToSource = (value) => {
         const source = sourceOf(value);
         if (!source) {
@@ -486,9 +428,6 @@ const Learning = (() => {
             return null;
         }
         const sourceRef = makeSourceRef(page, sourceBlock, region);
-        /* `sourceRef` ist der kanonische Name. `lernquelle` hält denselben kleinen
-           Vertrag für ältere/äussere Leser sichtbar; beides liegt am normalen
-           Block und reist automatisch durch Sicherung und Synchronisation. */
         return Store.addBlock(page.id, type, { ...fields, sourceRef, lernquelle: sourceRef });
     };
     const loadImage = (url) => new Promise((resolve, reject) => {
@@ -500,7 +439,6 @@ const Learning = (() => {
     const canvasBlob = (canvas) => new Promise((resolve, reject) => {
         canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Der Ausschnitt blieb leer.')), 'image/webp', 0.9);
     });
-    /** Legt nur den gewählten Ausschnitt ab, niemals eine zweite volle PDF. */
     const createCrop = async (page, sourceBlock, region) => {
         if (!permitted('bearbeiten', page?.id)) {
             UI.toast('Du darfst auf dieser Seite keinen Ausschnitt anlegen.');
@@ -543,8 +481,6 @@ const Learning = (() => {
             if (!created)
                 return null;
             const file = new File([blob], 'ausschnitt-seite-' + (Number(sourceBlock.nr) || 1) + '.webp', { type: 'image/webp' });
-            /* Der kleine Ausschnitt ist Lerninhalt und nicht bloss ein jederzeit
-               rekonstruierbarer Cache: er reist deshalb durch Backup und Sync. */
             stored = await Dateien.ablegen(file, { blockId: created.id });
             Store.updateBlock(created.id, { dateiId: stored.id });
             App.zeichneSeite();
@@ -604,7 +540,6 @@ const Learning = (() => {
                 kind === 'task' ? 'Aufgabe angelegt.' : 'Notiz angelegt.');
         });
     };
-    /** Kontextaktionen des Dokumentmodus: alles entsteht als gewöhnlicher Block. */
     const sourceMenu = (page, sourceBlock, region) => {
         if (!page?.id || !sourceBlock?.id) {
             UI.toast('Die Quelle ist nicht vollständig.');
@@ -661,7 +596,6 @@ const Learning = (() => {
             }
         });
     };
-    /** Aus markiertem Text entsteht eine Lückenkarte mit exaktem Blockverweis. */
     const clozeFromSelection = (block, selectedText, selectedOffset = -1) => {
         const selected = String(selectedText || '').trim();
         const original = String(block?.text || '');
@@ -724,19 +658,6 @@ const Learning = (() => {
             return 'morgen';
         return 'in ' + exam.days + ' Tagen';
     };
-    /**
-     * ZUERST AUFFRISCHEN (L106 Punkt 2, E325).
-     *
-     * Die Haltbarkeit wird seit E289 gerechnet und in jedem Themensatz
-     * genannt — „davon dürfte heute noch 62 % sitzen". Damit liess sich
-     * nichts anfangen: keine Reihenfolge, keine Liste, kein Weg von der Zahl
-     * zur Handlung. L106 sagt es selbst: „Genau das wäre der Nutzen."
-     *
-     * ER STEHT NUR DA, WENN ES ETWAS ZU TUN GIBT. Wer nichts vergessen hat,
-     * bekommt keine leere Überschrift „Zuerst auffrischen" — eine Liste, die
-     * immer da ist, wird nicht gelesen, und beim Lernen ist sie zusätzlich
-     * eine Ermahnung ohne Anlass.
-     */
     const auffrischSection = (allCards = cards(), now = Date.now()) => {
         const K = window.Kompetenz;
         if (!K || typeof K.auffrischen !== 'function')
@@ -752,9 +673,6 @@ const Learning = (() => {
         title.style.marginBottom = '4px';
         const unter = document.createElement('p');
         unter.style.cssText = 'margin:0 0 10px; font-size:12.5px; color:var(--text-faint)';
-        /* Die Reihenfolge sagt, wonach sie geordnet ist. Eine sortierte Liste
-           ohne genanntes Mass ist eine Behauptung (§38 sinngemäss: nicht nur
-           über die Stelle in der Liste). */
         unter.textContent = 'Nach dem, was rechnerisch am meisten verblasst ist. ' +
             'Fälliges zählt doppelt, weil es sich sofort zurückholen lässt — und ' +
             'nur Themen, bei denen mindestens eine ganze Karte verblasst ist.';
@@ -773,8 +691,6 @@ const Learning = (() => {
             satz.style.cssText = 'display:block; margin-top:2px; color:var(--text-dim)';
             satz.textContent = e.satz;
             links.append(name, satz);
-            /* Die Zahl rechts ist der Anteil, der noch sitzt — nicht nur Farbe
-               oder Reihenfolge (§38). */
             const rechts = document.createElement('span');
             rechts.style.cssText = 'white-space:nowrap; font-variant-numeric:tabular-nums; ' +
                 'color:var(--text-faint); font-size:13px';
@@ -786,20 +702,6 @@ const Learning = (() => {
         section.appendChild(list);
         return section;
     };
-    /**
-     * GEHT ES AUFWÄRTS? (L106 Punkt 3 und 4, E328)
-     *
-     * Der Themenfortschritt sagt, wo man STEHT. Er sagt nicht, wohin es
-     * geht — und das ist die Frage, die man sich nach drei Monaten Lernen
-     * wirklich stellt.
-     *
-     * WANN DIESER ABSCHNITT SCHWEIGT, und das ist der wichtigere Teil:
-     * `Kompetenz.verlauf` gibt nur Themen zurück, die in BEIDEN Zeiträumen
-     * genug Belege haben. Wer erst seit vier Wochen lernt, bekommt hier
-     * nichts — nicht „0 % Veränderung", sondern gar keinen Abschnitt. Eine
-     * Überschrift „Geht es aufwärts?" über einer leeren Antwort ist eine
-     * Frage, die sich selbst nicht beantworten kann.
-     */
     const verlaufSection = (allCards = cards(), now = Date.now()) => {
         const K = window.Kompetenz;
         if (!K || typeof K.verlauf !== 'function')
@@ -837,9 +739,6 @@ const Learning = (() => {
             satz.style.cssText = 'display:block; margin-top:2px; color:var(--text-dim)';
             satz.textContent = e.satz;
             links.append(name, satz);
-            /* §38: nicht nur Farbe. Das Zeichen sagt die Richtung, die Zahl sagt
-               wieviel, und beide stehen auch ohne Farbe da. Vorzeichen inklusive
-               — „5 Punkte" ohne Vorzeichen ist keine Richtung. */
             const rechts = document.createElement('span');
             const punkte = Math.round(e.unterschied * 100);
             const zeichen = e.richtung === 'auf' ? '▲' : e.richtung === 'ab' ? '▼' : '=';
@@ -888,7 +787,6 @@ const Learning = (() => {
             const percent = document.createElement('span');
             percent.textContent = topic.progress + ' %';
             percent.style.whiteSpace = 'nowrap';
-            /* Die Zahl sagt nicht, was sie misst — der Titel schon (E289). */
             percent.title = 'Abdeckung: wie viele Karten mindestens zweimal sassen. ' +
                 'Keine Aussage darüber, wie sicher der Stoff sitzt.';
             heading.append(label, percent);
@@ -909,9 +807,6 @@ const Learning = (() => {
                 parts.push(topic.errors + ' Fehler');
             detail.textContent = parts.join(' · ');
             row.append(heading, progress, detail);
-            /* E289: darunter die Aussage über das KÖNNEN, mit ihrer Grundlage.
-               Sie steht nur da, wenn es sie gibt — ein leerer Satz wäre eine
-               Zeile, die nichts sagt. */
             if (topic.kompetenzSatz) {
                 const koennen = document.createElement('small');
                 koennen.style.display = 'block';
@@ -974,10 +869,6 @@ const Learning = (() => {
             next.textContent = stats.nextAt
                 ? 'Nächster geplanter Termin: ' + new Date(String(stats.nextAt)).toLocaleString('de-DE')
                 : 'Noch kein weiterer Termin geplant.';
-            /* DER SATZ WIRD ZUR WAHL (E303). Hier stand: „SM-2 bleibt der Standard.
-               Es findet keine automatische FSRS-Migration statt." Beides gilt
-               weiter — nur gibt es das zweite Verfahren jetzt wirklich, und dann
-               ist eine Auskunft ohne Griff eine Anzeige ohne Knopf (§47). */
             const algorithm = document.createElement('div');
             algorithm.className = 'lern-verfahren';
             const jetzt = String(Store.getMeta('lernVerfahren', 'sm2'));
@@ -1028,10 +919,6 @@ const Learning = (() => {
             algorithm.append(titel, reihe, satz);
             const auffrisch = auffrischSection();
             const richtung = verlaufSection();
-            /* REIHENFOLGE: erst was zu TUN ist (auffrischen), dann wo man STEHT
-               (Themenfortschritt), dann wohin es GEHT (Verlauf). Die Richtung
-               steht bewusst hinter dem Stand: sie beantwortet eine Frage, die
-               man erst stellt, wenn man den Stand gesehen hat. */
             view.body.append(grid, exam, explanation, actions, details, ...(auffrisch ? [auffrisch] : []), topicSection(stats.topics), ...(richtung ? [richtung] : []), next, algorithm);
         };
         const renderSession = () => {

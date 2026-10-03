@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/staatskunde-trainer.ts (npm run bauen:ts). */
 /* ══ DER STAATSKUNDE-TRAINER (E677, vorläufiger Stand) ═══════════════════
    Redur, 21. September 2026: „ich brauche eine provisorische momentan …
    etwas das ich gut lernen kann". Das hier ist die Lernmaschine ohne die

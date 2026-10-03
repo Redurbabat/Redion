@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/elektroformeln.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/elektroformeln.js — die Formelsammlung, rechenbar
  * ----------------------------------------------------------------------------

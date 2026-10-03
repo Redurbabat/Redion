@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/slides/folien.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/slides/folien.ts — wo eine Folie anfängt und was darauf steht
  * ----------------------------------------------------------------------------

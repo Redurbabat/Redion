@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/hilfe/rundgang.ts (npm run bauen:ts). */
 /* ============================================================================
  * rundgang.js — Der erste Rundgang
  * ----------------------------------------------------------------------------

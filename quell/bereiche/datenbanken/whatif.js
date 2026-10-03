@@ -1,38 +1,7 @@
 "use strict";
-/* ============================================================================
- * whatif.ts — Was wäre, wenn (L28)
- * ----------------------------------------------------------------------------
- * Drei Fragen, die eine Tabelle beantworten können muss, sobald sie rechnet:
- *
- *   Zielwertsuche   „Der Gewinn soll 10 000 sein. Wie hoch muss der Preis?"
- *   Szenarien       „Zeig mir dasselbe für schlecht, normal und gut."
- *   Optimierung     „Bei welchem Preis ist der Gewinn am grössten?"
- *
- * Alle drei laufen über dieselbe kleine Maschine: eine Stellschraube (eine
- * schreibbare Zahlenspalte) und ein Ziel (eine gerechnete Spalte), beide in
- * DERSELBEN ZEILE.
- *
- * DIE WICHTIGSTE REGEL DIESER DATEI: sie schreibt beim Suchen NICHTS.
- *
- * Der naheliegende Weg wäre, den Probewert in die Zelle zu schreiben, die
- * Formel lesen zu lassen und weiterzuprobieren. Damit stünden bei dreissig
- * Schritten neunundzwanzig falsche Werte in den Daten, jeder davon einen
- * Wimpernschlag lang sichtbar, jeder in einer Fassung, jeder im Abgleich —
- * und bricht es in der Mitte ab, bleibt der letzte stehen. Bei einer Suche,
- * die auch scheitern darf, ist das die gefährliche Richtung (§46).
- *
- * Gerechnet wird deshalb auf einer KOPIE der Zeile. `Datenbank.wert` liest
- * `row.props` aus dem übergebenen Satz; ein Satz, den es im Bestand nicht
- * gibt, rechnet genauso. Dasselbe Muster benutzt `dienst.ts` seit Langem für
- * die Regelprüfung („die Zeile MIT dem neuen Wert"). Geschrieben wird erst,
- * wenn ein Mensch das Ergebnis übernimmt.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/whatif.ts (npm run bauen:ts). */
 const WhatIf = (() => {
-    /** Wie nah am Ziel „getroffen" heisst — relativ, damit es bei 10 000 000
-        genauso stimmt wie bei 0,5. */
     const GENAU = 1e-7;
-    /** Wie oft höchstens geprobt wird. Dreissig Halbierungen verkleinern ein
-        Suchfenster um den Faktor 10^9 — mehr ist bei `double` nicht drin. */
     const SCHRITTE = 60;
     const zahl = (x) => {
         if (typeof x === 'number')
@@ -40,44 +9,18 @@ const WhatIf = (() => {
         const n = Number(String(x ?? '').replace(',', '.'));
         return Number.isFinite(n) ? n : NaN;
     };
-    /**
-     * Was die Zielspalte sagen würde, wenn die Stellschraube diesen Wert hätte.
-     * Ohne zu schreiben — siehe Kopf.
-     */
     const probiere = (coll, row, stellKey, zielKey, wert) => {
         const probe = { ...row, props: { ...(row.props || {}), [stellKey]: wert } };
-        /* `wertFrisch`, nicht `wert`: die Zwischenspeicher merken sich das
-           Ergebnis unter der Zeilenkennung, und die Probezeile trägt dieselbe.
-           Mit `wert` kam bei jedem Probewert derselbe Wert zurück — die Suche
-           sah eine Gerade, wo eine Kurve ist, und fand nichts (E176). */
         return zahl(Datenbank.wertFrisch(probe, zielKey, coll));
     };
-    /** Taugt diese Spalte als Stellschraube? */
     const stellbar = (coll, key) => {
         const def = coll && coll.schema ? coll.schema[key] : null;
         return !!def && (def.type === 'number' || def.type === 'prozent');
     };
-    /** Und diese als Ziel? Gerechnet muss sie sein — sonst gäbe es nichts zu suchen. */
     const zielbar = (coll, key) => {
         const def = coll && coll.schema ? coll.schema[key] : null;
         return !!def && (def.type === 'formula' || def.type === 'rollup');
     };
-    /* ========================================================================
-     * 1 · ZIELWERTSUCHE
-     * ------------------------------------------------------------------------
-     * Gesucht wird die Nullstelle von f(x) = Ziel(x) − Wunsch.
-     *
-     * ZUERST EIN FENSTER, DANN HALBIEREN. Excel nimmt Newton und scheitert
-     * daran regelmässig: eine Formel mit `WENN` hat Sprungstellen, und die
-     * Ableitung zeigt dort in die falsche Richtung. Halbieren braucht keine
-     * Ableitung — es braucht nur zwei Stellen mit verschiedenem Vorzeichen,
-     * und die sucht der erste Teil, indem er das Fenster verdoppelt.
-     *
-     * WARUM NICHT EINFACH VON 0 BIS 1000: weil niemand weiss, wo die Antwort
-     * liegt. Ausgegangen wird vom Wert, der HEUTE in der Zelle steht — der ist
-     * die beste Vermutung, die es gibt —, und von dort aus wird das Fenster
-     * geöffnet, bis das Vorzeichen kippt oder es zu gross wird.
-     * ======================================================================*/
     const zielwert = (coll, row, stellKey, zielKey, wunsch) => {
         const ziel = zahl(wunsch);
         if (!Number.isFinite(ziel))
@@ -100,9 +43,6 @@ const WhatIf = (() => {
                     'sie gibt keine Zahl zurück.', schritte };
         if (Math.abs(f0) <= Math.max(GENAU, Math.abs(ziel) * GENAU))
             return { ok: true, wert: x0, erreicht: f0 + ziel, schritte };
-        /* Das Fenster öffnen. Die Schrittweite wächst, weil die Antwort auch
-           Millionen entfernt liegen kann; sie beginnt aber klein, damit eine
-           Antwort nebenan nicht übersprungen wird. */
         let weite = Math.max(1, Math.abs(x0)) / 2;
         let a = x0, fa = f0, b = x0;
         let gefunden = false;
@@ -131,17 +71,6 @@ const WhatIf = (() => {
         if (!gefunden)
             return { ok: false, grund: 'Kein Wert der Stellschraube führt zu diesem Ziel — ' +
                     'auch nicht sehr grosse oder sehr kleine.', schritte };
-        /* Und jetzt halbieren — BIS DAS FENSTER ZU IST, nicht bis der Rest klein
-           genug ist.
-    
-           Der erste Anlauf hörte auf, sobald `|f|` unter der Toleranz lag. Die
-           ist relativ zum Ziel: bei 2000 sind das 2·10⁻⁴, und heraus kam
-           „Preis = 15.999999", wo 16 richtig ist. Rechnerisch einwandfrei und
-           für einen Menschen falsch — wer einen Preis sucht, will 16 lesen.
-    
-           Halbieren kostet nichts: sechzig Schritte verkleinern das Fenster um
-           den Faktor 10¹⁸, mehr als `double` überhaupt unterscheidet. Also
-           laufen sie. */
         for (let i = 0; i < SCHRITTE; i++) {
             const m = (a + b) / 2;
             const fm = f(m);
@@ -161,18 +90,6 @@ const WhatIf = (() => {
         const m = (a + b) / 2;
         return { ok: true, wert: m, erreicht: probiere(coll, row, stellKey, zielKey, m), schritte };
     };
-    /* ========================================================================
-     * 2 · EINFACHE OPTIMIERUNG
-     * ------------------------------------------------------------------------
-     * „Bei welchem Preis ist der Gewinn am grössten?" — dieselbe Maschine, nur
-     * ohne Vorzeichenwechsel: gesucht wird der Hochpunkt zwischen zwei
-     * Grenzen, mit dem Goldenen Schnitt.
-     *
-     * ER BRAUCHT KEINE ABLEITUNG UND KEINE GLATTE KURVE, nur eine, die im
-     * Fenster genau einen Gipfel hat. Steht das nicht fest, ist das Ergebnis
-     * trotzdem ein Wert, an dem es besser ist als an den Rändern — und mehr
-     * verspricht die Oberfläche auch nicht.
-     * ======================================================================*/
     const GOLD = (Math.sqrt(5) - 1) / 2;
     const optimum = (coll, row, stellKey, zielKey, richtung, von, bis) => {
         const u = zahl(von), o = zahl(bis);
@@ -228,7 +145,6 @@ const WhatIf = (() => {
         Store.updateCollection(coll.id, { szenarien: liste });
         return liste;
     };
-    /** Was die gerechneten Spalten sagen WÜRDEN. Schreibt nichts. */
     const zeige = (coll, row, name) => {
         const s = szenarien(coll).find(x => x.name === name);
         if (!s || !row)
@@ -241,7 +157,6 @@ const WhatIf = (() => {
         });
         return aus;
     };
-    /** Und jetzt wirklich hineinschreiben. */
     const uebernimm = (coll, row, name) => {
         const s = szenarien(coll).find(x => x.name === name);
         if (!s || !row)

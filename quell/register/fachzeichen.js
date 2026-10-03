@@ -1,44 +1,9 @@
 "use strict";
-/* ============================================================================
- * register/fachzeichen.js — die elektrotechnischen Symbole an einer Stelle
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/fachzeichen.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/register/fachzeichen.js`. Wer das .js bearbeitet, verliert die
- * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
- * ----------------------------------------------------------------------------
- * WAS HIER STEHT UND WAS NICHT
- *
- * Hier stehen die Fachzeichen: Form, Name, Gruppe, Anschlüsse. Ein Register
- * beschreibt, es rechnet nicht — der Schaltplan-Editor zeichnet damit, die
- * Lernmodi fragen damit ab, die Aufgaben bauen damit. Keiner von ihnen hat
- * eine eigene Symbolliste, und genau das ist der Zweck (L34: ein Wert an
- * zwei Stellen ist einer zu viel).
- *
- * EHRLICH ZUR NORM. Diese Zeichen sind an IEC 60617 / EN 60617 angelehnt und
- * für die AUSBILDUNG gedacht. Sie sind keine geprüfte Normbibliothek, und
- * Redion trifft keine normativen Entscheidungen (E128). Was die Bibliothek
- * zusagt, ist etwas Kleineres und Nachprüfbares: INNERHALB dieser Bibliothek
- * sind die Grössen einheitlich — jedes Zeichen sitzt im selben Raster, und
- * gleiche Bauteilfamilien haben gleiche Kästen. Ein Plan sieht dadurch
- * ruhig aus, ohne dass jemand etwas verspricht, das er nicht halten kann.
- *
- * DAS RASTER. Alles rechnet in Vielfachen von `RASTER` (10). Ein Zeichen hat
- * eine Breite und Höhe in Pixeln, und jeder Anschluss liegt auf einem
- * Rasterpunkt am Rand. Nur dadurch können Leitungen später magnetisch
- * einrasten, ohne dass jemand Koordinaten von Hand nachmisst.
- *
- * DIE ANSCHLUSSNUMMERN sind die üblichen aus der Ausbildung: 1/2 am Öffner,
- * 3/4 am Schliesser, A1/A2 an der Spule, L/N am Netz. Sie sind ein VORSCHLAG
- * je Zeichen; im Plan lassen sie sich überschreiben (Punkt 18), denn ein
- * Klemmenplan kennt andere Nummern als eine Übung.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/fachzeichen.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.fachzeichen = (() => {
-    /** Feinraster in Pixeln. Alle Zeichen und Anschlüsse liegen darauf. */
     const RASTER = 10;
     const GRUPPEN = [
-        /* Kennung        Name                 Zeichen */
         ['schalter', 'Schalter', '⎔'],
         ['kontakte', 'Kontakte', '⌇'],
         ['relais', 'Relais und Schütze', '▭'],
@@ -52,19 +17,12 @@ Register.fachzeichen = (() => {
         ['melder', 'Lampen und Melder', '⊗'],
         ['stecker', 'Steckvorrichtungen', '⊃'],
         ['leitungen', 'Leitungen', '┼'],
-        /* Die Schweizer Schalterschemas und Bauplansymbole. Sie sind eine eigene
-           Gruppe und nicht unter „Schalter" gemischt, weil sie eine andere
-           DARSTELLUNG derselben Sache sind: im Bauplan zeichnet man den Schalter
-           als Kreis am Ort, im Stromlaufschema als Kontakt im Kreis. Wer beides
-           durcheinanderwirft, zeichnet einen Plan, den niemand liest. */
         ['ch-schema', 'Schalterschemas CH', '⓪'],
         ['ch-bauplan', 'Bauplan CH', '⌂']
     ];
-    /* Kurzschreibweisen, damit die Liste unten lesbar bleibt. */
     const senkrecht = (x, von, bis) => `M${x},${von} V${bis}`;
     const waagrecht = (y, von, bis) => `M${von},${y} H${bis}`;
     const EINGEBAUT = [
-        /* ---- Schalter -------------------------------------------------------- */
         {
             id: 'schliesser', name: 'Schliesser', gruppe: 'kontakte', kennbuchstabe: 'S',
             w: 40, h: 60,
@@ -174,7 +132,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: '3', x: 20, y: 0 }, { nr: '4', x: 20, y: 60 }],
             erklaerung: 'Wird von einem Maschinenteil betätigt, das eine Endlage erreicht.'
         },
-        /* ---- Relais und Schütze ---------------------------------------------- */
         {
             id: 'spule', name: 'Relaisspule', gruppe: 'relais', kennbuchstabe: 'K',
             w: 40, h: 60,
@@ -223,7 +180,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: '21', x: 20, y: 0 }, { nr: '22', x: 20, y: 60 }],
             erklaerung: 'Öffnet, wenn das Schütz anzieht — für die gegenseitige Verriegelung.'
         },
-        /* ---- Schutzgeräte ---------------------------------------------------- */
         {
             id: 'sicherung', name: 'Sicherung', gruppe: 'schutz', kennbuchstabe: 'F',
             w: 40, h: 60,
@@ -282,7 +238,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: 'PE', x: 20, y: 60 }],
             erklaerung: 'Leitet Überspannungen aus Blitz oder Schalthandlungen zur Erde ab.'
         },
-        /* ---- Motoren --------------------------------------------------------- */
         {
             id: 'motor-drehstrom', name: 'Drehstrommotor', gruppe: 'motoren', kennbuchstabe: 'M',
             w: 60, h: 70,
@@ -319,7 +274,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 40, y: 0 }],
             erklaerung: 'Wandelt mechanische Energie in elektrische — der Motor rückwärts.'
         },
-        /* ---- Messgeräte ------------------------------------------------------ */
         {
             id: 'voltmeter', name: 'Voltmeter', gruppe: 'messen', kennbuchstabe: 'P',
             w: 60, h: 60,
@@ -373,7 +327,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: '1', x: 0, y: 30 }, { nr: '2', x: 60, y: 30 }],
             erklaerung: 'Misst, wie oft die Wechselspannung je Sekunde die Richtung wechselt.'
         },
-        /* ---- Sensoren -------------------------------------------------------- */
         {
             id: 'naeherungsschalter', name: 'Näherungsschalter', gruppe: 'sensoren', kennbuchstabe: 'B',
             w: 60, h: 60,
@@ -417,7 +370,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: 'L', x: 30, y: 0 }, { nr: 'L′', x: 30, y: 60 }],
             erklaerung: 'Erkennt Wärmebewegung und schaltet für eine eingestellte Zeit ein.'
         },
-        /* ---- Quellen und Erde ------------------------------------------------ */
         {
             id: 'batterie', name: 'Batterie', gruppe: 'quellen', kennbuchstabe: 'G',
             w: 40, h: 60,
@@ -468,7 +420,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: 'M', x: 20, y: 0 }],
             erklaerung: 'Gemeinsamer Bezugspunkt einer Schaltung, nicht zwingend geerdet.'
         },
-        /* ---- Passive Bauteile ------------------------------------------------ */
         {
             id: 'widerstand', name: 'Widerstand', gruppe: 'passiv', kennbuchstabe: 'R',
             w: 40, h: 60,
@@ -521,7 +472,6 @@ Register.fachzeichen = (() => {
                 { nr: '2U', x: 50, y: 0 }, { nr: '2V', x: 50, y: 70 }],
             erklaerung: 'Wandelt Wechselspannung hoch oder herunter — über das Windungsverhältnis.'
         },
-        /* ---- Halbleiter ------------------------------------------------------ */
         {
             id: 'diode', name: 'Diode', gruppe: 'halbleiter', kennbuchstabe: 'V',
             w: 40, h: 60,
@@ -551,8 +501,6 @@ Register.fachzeichen = (() => {
             id: 'ptc', name: 'PTC / Kaltleiter', gruppe: 'halbleiter', kennbuchstabe: 'R',
             w: 40, h: 60,
             pfad: [senkrecht(20, 0, 15), senkrecht(20, 45, 60), 'M8,15 H32 V45 H8 Z',
-                /* Der schräge Strich mit dem ϑ und den beiden Pfeilen nach oben:
-                   Temperatur hinauf, Widerstand hinauf. */
                 'M4,48 L36,12', 'M28,12 H36 V20'],
             anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 60 }],
             erklaerung: 'Wird er warm, wird er hochohmig. Begrenzt Einschaltströme und schützt Motoren.'
@@ -561,10 +509,6 @@ Register.fachzeichen = (() => {
             id: 'ntc', name: 'NTC / Heissleiter', gruppe: 'halbleiter', kennbuchstabe: 'R',
             w: 40, h: 60,
             pfad: [senkrecht(20, 0, 15), senkrecht(20, 45, 60), 'M8,15 H32 V45 H8 Z',
-                /* Derselbe Strich, aber der Haken sitzt am UNTEREN Ende und
-                   zeigt nach unten: Temperatur hinauf, Widerstand hinunter.
-                   Beim PTC sitzt er oben. Das ist der ganze Unterschied im
-                   Zeichen — und im Bauteil auch. */
                 'M4,48 L36,12', 'M4,40 V48 H12'],
             anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 60 }],
             erklaerung: 'Wird er warm, wird er niederohmig. Als Temperaturfühler und zur Strombegrenzung.'
@@ -581,8 +525,6 @@ Register.fachzeichen = (() => {
             id: 'ldr', name: 'LDR / Fotowiderstand', gruppe: 'halbleiter', kennbuchstabe: 'R',
             w: 50, h: 60,
             pfad: [senkrecht(20, 0, 15), senkrecht(20, 45, 60), 'M8,15 H32 V45 H8 Z',
-                /* Zwei Pfeile, die auf das Bauteil ZEIGEN — Licht fällt ein.
-                   Bei der Leuchtdiode zeigen sie hinaus. */
                 'M48,18 L36,26', 'M36,26 L42,26 M36,26 L36,20',
                 'M48,30 L36,38', 'M36,38 L42,38 M36,38 L36,32'],
             anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 60 }],
@@ -592,8 +534,6 @@ Register.fachzeichen = (() => {
             id: 'optokoppler', name: 'Optokoppler', gruppe: 'halbleiter', kennbuchstabe: 'V',
             w: 80, h: 70,
             pfad: ['M4,4 H76 V66 H4 Z',
-                /* Links die Leuchtdiode, rechts der Fototransistor, dazwischen
-                   zwei Lichtpfeile — und keine elektrische Verbindung. */
                 senkrecht(20, 0, 14), senkrecht(20, 56, 70),
                 'M12,26 H28 L20,42 Z', 'M12,42 H28',
                 'M40,30 L48,30 M40,40 L48,40',
@@ -607,8 +547,6 @@ Register.fachzeichen = (() => {
             id: 'triac', name: 'Triac', gruppe: 'halbleiter', kennbuchstabe: 'V',
             w: 60, h: 60,
             pfad: [senkrecht(20, 0, 18), senkrecht(20, 42, 60),
-                /* Zwei gegeneinander geschaltete Thyristoren in einem Gehäuse:
-                   zwei Dreiecke, die in verschiedene Richtungen zeigen. */
                 'M8,18 H32 L20,34 Z', 'M8,42 H32 L20,26 Z',
                 waagrecht(18, 8, 32), waagrecht(42, 8, 32),
                 'M32,42 H60 V30'],
@@ -647,7 +585,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: 'A', x: 20, y: 0 }, { nr: 'K', x: 20, y: 60 }, { nr: 'G', x: 60, y: 30 }],
             erklaerung: 'Diode mit Zündeingang: leitet erst nach einem Impuls am Gate.'
         },
-        /* ---- Lampen und Melder ----------------------------------------------- */
         {
             id: 'lampe', name: 'Lampe', gruppe: 'melder', kennbuchstabe: 'E',
             w: 60, h: 60,
@@ -682,7 +619,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: 'X1', x: 30, y: 0 }, { nr: 'X2', x: 30, y: 60 }],
             erklaerung: 'Türklingel, im Installationsplan sehr häufig.'
         },
-        /* ---- Steckvorrichtungen ---------------------------------------------- */
         {
             id: 'steckdose', name: 'Steckdose', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 60, h: 40,
@@ -731,7 +667,6 @@ Register.fachzeichen = (() => {
                 { nr: '3', x: 0, y: 30 }, { nr: '4', x: 60, y: 30 }],
             erklaerung: 'Hier werden Leitungen verbunden und abgezweigt.'
         },
-        /* ---- Leitungen ------------------------------------------------------- */
         {
             id: 'verbindungspunkt', name: 'Verbindungspunkt', gruppe: 'leitungen', kennbuchstabe: '',
             w: 40, h: 40,
@@ -773,16 +708,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: 'PE', x: 0, y: 20 }, { nr: 'PE', x: 60, y: 20 }],
             erklaerung: 'Grün-gelb. Berührt nie den Betriebsstrom, nur den Fehlerfall.'
         },
-        /* ---- Schweizer Schalterschemas (Stromlaufschema) --------------------
-         * In der Schweiz heissen die Lampenschaltungen nach ihrem SCHEMA, nicht
-         * nach der Bauform: Schema 0 ist der Ausschalter, Schema 3 der
-         * Wechselschalter. Die Bauform (Druck, Dreh, Kipp, Zug, Schlüssel) ist
-         * davon unabhängig und steht als Betätigungsart daneben.
-         *
-         * Die Anschlussnummern 3 und 4 sind die üblichen am Schalter, X1 und X2
-         * die an der Leuchte — so, wie sie im Lehrmittel und auf dem Gerät
-         * stehen.
-         * ------------------------------------------------------------------- */
         {
             id: 'ch-schema0', name: 'Ausschalter Schema 0', gruppe: 'ch-schema', kennbuchstabe: 'Q',
             w: 40, h: 60,
@@ -855,11 +780,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: 'X1', x: 30, y: 0 }, { nr: 'X2', x: 30, y: 60 }],
             erklaerung: 'Brennt, wenn AUS ist — sie zeigt, WO der Schalter sitzt. Immer eine Glimmlampe.'
         },
-        /* ---- Betätigungsarten ------------------------------------------------
-         * Sie stehen am Schaltersymbol und sagen, WIE betätigt wird. Dieselbe
-         * Schaltung kann als Druck-, Dreh-, Kipp-, Zug- oder Schlüsselschalter
-         * gebaut sein — das Schema bleibt dasselbe.
-         * ------------------------------------------------------------------- */
         {
             id: 'ch-druck', name: 'Betätigung: Drücken', gruppe: 'ch-schema', kennbuchstabe: '',
             w: 40, h: 30,
@@ -896,11 +816,6 @@ Register.fachzeichen = (() => {
             anschluesse: [{ nr: '', x: 20, y: 30 }],
             erklaerung: 'Schlüsselschalter — wo nicht jeder schalten soll.'
         },
-        /* ---- Bauplan (Installationsplan) -------------------------------------
-         * Im Bauplan wird gezeichnet, WO im Raum etwas sitzt. Die Symbole sind
-         * andere als im Stromlaufschema: ein Schalter ist hier ein Punkt an der
-         * Wand mit Strichen, die das Schema angeben.
-         * ------------------------------------------------------------------- */
         {
             id: 'bp-schalter0', name: 'Bauplan: Schalter Schema 0', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
             w: 40, h: 40,
@@ -1030,20 +945,13 @@ Register.fachzeichen = (() => {
             erklaerung: 'Der Klingelknopf an der Tür.'
         }
     ];
-    /* ------------------------------------------------------------------------
-     * DIE LISTE, UND IMMER DIESELBE — wie in register/bloecke.js. Eigene
-     * Sammlungen (Punkt 7) tragen sich hier ein, statt eine zweite Liste
-     * daneben zu stellen.
-     * ----------------------------------------------------------------------*/
     const LISTE = EINGEBAUT.slice();
-    /** Ein eigenes Fachzeichen anmelden. Gibt `false` bei doppelter Kennung. */
     const melde = (z) => {
         if (!z || !z.id || LISTE.some(x => x.id === z.id))
             return false;
         LISTE.push(z);
         return true;
     };
-    /** Ein eigenes Zeichen wieder abmelden — nur, was nicht eingebaut ist. */
     const vergiss = (id) => {
         if (EINGEBAUT.some(x => x.id === id))
             return false;
@@ -1058,22 +966,10 @@ Register.fachzeichen = (() => {
     const inGruppe = (gruppe) => LISTE.filter(x => x.gruppe === gruppe);
     const gruppen = () => GRUPPEN.slice();
     const gruppenName = (id) => (GRUPPEN.find(g => g[0] === id) || [id, id, ''])[1];
-    /**
-     * Das Zeichen als SVG — die EINE Stelle, an der aus Daten ein Bild wird.
-     *
-     * `beschriftung` gehorcht dabei `zeigeText`: der Lernmodus (Punkt 9) blendet
-     * die Beschriftung aus, damit man das Zeichen an der Form erkennen muss,
-     * nicht am darin stehenden Buchstaben.
-     */
     const alsSvg = (id, opt = {}) => {
         const z = holen(id);
         if (!z)
             return '';
-        /* DIE FARBE WIRD HIER GETEXTET, nicht gesetzt — also muss sie geprüft
-           werden (E473, §19). Sie kommt bei Fachzeichen-Marken aus dem Block
-           und damit möglicherweise aus einer fremden `.redion`; ein Wert wie
-           `#000" onload="…` schlösse das Attribut und hinge ein Ereignis an,
-           das beim `innerHTML` des Aufrufers feuert. */
         const farbe = (typeof Sanitize !== 'undefined' ? Sanitize.farbe(opt.farbe) : String(opt.farbe || '')) || 'currentColor';
         const strich = opt.strich || 2;
         const text = opt.zeigeText !== false;
@@ -1083,11 +979,6 @@ Register.fachzeichen = (() => {
             dreh ? `rotate(${dreh} ${mitte})` : '',
             opt.gespiegelt ? `translate(${z.w} 0) scale(-1 1)` : ''
         ].filter(Boolean).join(' ');
-        /* JEDER EINGESETZTE WERT WIRD GETEXTET, ALSO GEESCAPT (E473, §19).
-           Der Aufrufer setzt das Ergebnis mit `innerHTML` ein; ein Wert mit
-           einem Anführungszeichen schlösse das Attribut. Die Zeichen kommen
-           zwar aus dem eigenen Register, aber die Farbe kommt aus einer Marke
-           — und die aus einer fremden `.redion`. */
         const att = (w) => typeof Sanitize !== 'undefined'
             ? Sanitize.escapeAttribute(w) : String(w ?? '').replace(/[<>"'&]/g, '');
         const teile = [];
@@ -1104,14 +995,6 @@ Register.fachzeichen = (() => {
             (wandlung ? `<g transform="${wandlung}">` : '') + teile.join('') +
             (wandlung ? '</g>' : '') + '</svg>';
     };
-    /**
-     * Wo liegt ein Anschluss, nachdem das Zeichen gedreht und gespiegelt wurde?
-     *
-     * Das braucht der Editor, damit eine Leitung auch an einem gedrehten Symbol
-     * an der richtigen Stelle einrastet. Ohne diese Funktion müsste jede
-     * Aufrufstelle dieselbe Drehmatrix noch einmal schreiben — und eine davon
-     * würde sie falsch schreiben.
-     */
     const anschlussLage = (id, nr, drehung = 0, gespiegelt = false) => {
         const z = holen(id);
         if (!z)
@@ -1131,7 +1014,6 @@ Register.fachzeichen = (() => {
             y: Math.round(cy + dx * Math.sin(bogen) + dy * Math.cos(bogen))
         };
     };
-    /** Die Aussenmasse nach einer Drehung — 90° tauscht Breite und Höhe. */
     const masse = (id, drehung = 0) => {
         const z = holen(id);
         if (!z)

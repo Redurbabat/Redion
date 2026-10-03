@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/fremd/pdfjs/laden.ts (npm run bauen:ts). */
 /* ============================================================================
  * fremd/pdfjs/laden.ts — die Bibliothek auspacken und bereitstellen
  * ----------------------------------------------------------------------------

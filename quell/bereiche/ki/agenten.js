@@ -1,46 +1,9 @@
 "use strict";
-/* ============================================================================
- * agent.js — Der Agent
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/ki/agenten.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/ki/agenten.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Ein Chat beantwortet eine Frage. Ein Agent arbeitet mehrstufig:
- *
- *     Ziel verstehen  →  Plan machen  →  suchen  →  handeln  →  Ergebnis
- *
- * Der Unterschied ist nicht das Modell, sondern die Schleife: der Agent darf
- * Werkzeuge benutzen, sieht deren Ergebnis und entscheidet dann weiter. Jeder
- * Schritt steht im Protokoll und lässt sich einzeln zurücknehmen.
- *
- * VIER AGENTENTYPEN — wie in der Doku
- *   🧭 Persönlicher Assistent   sucht, fasst zusammen, legt an
- *   🔍 Rechercheur              sammelt und vergleicht, schreibt mit Quellen
- *   ✍️ Redakteur                überarbeitet Texte, ohne den Sinn zu ändern
- *   🗂 Datenbank-Baumeister     entwirft Datenbanken und füllt sie
- *
- * Dazu kommen eigene Agenten: eigener Name, eigene Anweisungen, eigene
- * Werkzeugrechte, eigene Wissensquellen, eigene Auslöser, eigenes Guthaben.
- *
- * GUTHABEN
- *   Ein Agent, der sich verrennt, soll nicht ewig weiterlaufen. Jeder Agent
- *   hat ein Guthaben in Schritten. Ist es aufgebraucht, hört er auf und
- *   sagt es. Das ist die ehrliche Version eines Kostenlimits — hier zählt
- *   es Schritte statt Geld, weil die lokale KI nichts kostet.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/agenten.ts (npm run bauen:ts). */
 const Agent = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* Harte Grenzen: darüber wird nichts geschrieben und nichts „in kleine
-       Stücke" zerlegt. Die kleinere Schwelle ist kein Verbot, sondern erzwingt
-       eine ausdrückliche Vorschau-Bestätigung — auch bei „gar nicht fragen". */
     const AKTION_OBJEKTE_MAX = 500;
     const AKTION_BYTES_MAX = 4 * 1024 * 1024;
     const LAUF_OBJEKTE_MAX = 1000;
@@ -68,10 +31,6 @@ const Agent = (() => {
     const aktiveLaeufe = new Map();
     const sicherheitsFehler = (code, text, name = 'Error') => {
         const e = name === 'AbortError' ? new DOMException(text, name) : new Error(text);
-        /* `DOMException.code` ist im Browser eine schreibgeschützte Zahl. Eine
-           Zuweisung darauf wirft im strikten Modus selbst einen TypeError — genau
-           im Moment des Abbruchs. Darum hat nur der normale Fehler `code`; beim
-           Abort reichen sein standardisierter Name und der eigene Schlüssel. */
         if (name === 'AbortError')
             Object.defineProperty(e, 'redionCode', { value: code, enumerable: true });
         else
@@ -93,7 +52,6 @@ const Agent = (() => {
             nein(e);
         });
     });
-    /** Nur harmlose Auskunft nach aussen — Controller und Worker bleiben intern. */
     const aktive = () => [...aktiveLaeufe.values()].map(l => ({
         id: l.id, agentId: l.agentId, agent: l.protokoll.agent,
         auftrag: l.protokoll.auftrag, status: l.protokoll.status,
@@ -110,23 +68,14 @@ const Agent = (() => {
         lauf.worker.forEach(w => { try {
             w.terminate();
         }
-        catch { /* schon beendet */ } });
+        catch { } });
         lauf.worker.clear();
         try {
             UI.toast('⏹ Agentenlauf abgebrochen');
         }
-        catch { /* Schale noch nicht da */ }
+        catch { }
         return true;
     };
-    /* ========================================================================
-     * DIE WERKZEUGE
-     * ------------------------------------------------------------------------
-     * Jedes Werkzeug ist eine Funktion mit einer Beschreibung, die das Modell
-     * lesen kann. Was ein Agent nicht darf, steht ihm gar nicht erst zur
-     * Verfügung — die Rechte werden hier gefiltert, nicht im Text erbeten.
-     * ======================================================================*/
-    /** Eine lebende Seite zum Titel — dieselbe Suche wie in `seiteLesen`,
-     *  einmal benannt statt zweimal geschrieben (§8). */
     const seiteNachTitel = (titel) => Object.values(Store.cache.blocks).find(b => b.alive && b.type === 'page' && b.parentTable !== 'collection' &&
         (b.text || '').toLowerCase().includes(String(titel ?? '').toLowerCase()));
     const WERKZEUGE = {
@@ -159,11 +108,6 @@ const Agent = (() => {
             beschreibung: 'Legt eine Seite an. Argument: ' +
                 '{"titel":"…","icon":"📄","bloecke":[{"typ":"h1|h2|text|bullet|todo|quote|callout","text":"…"}]}',
             lauf: async (a, protokoll) => {
-                /* DIE VERBINDLICHE PRÜFUNG, gegen den Ort, an dem wirklich
-                   geschrieben wird (E331). Eine neue Seite entsteht UNTER der
-                   gerade offenen; wer dort nur lesen darf, darf dort auch nichts
-                   anlegen. Ohne offene Seite entsteht sie oben — dann ist es eine
-                   Frage der Rolle, und genau die beantwortet `darf` seit E331. */
                 const unterId = App.aktuelleSeite();
                 if (!Konten.darf('bearbeiten', unterId))
                     return 'Hier darfst du nichts anlegen.';
@@ -179,28 +123,6 @@ const Agent = (() => {
                     (a.bloecke || []).length + ' Blöcken.';
             }
         },
-        /* ── DAS ERSTE WERKZEUG, DAS BESTEHENDEN TEXT ANFASST (E656) ──────────
-           Anlegen kostet nichts: was neu ist, war vorher nicht da. Ändern
-           kostet den alten Stand, und §51 sagt, was davon wichtiger ist.
-           Deshalb zwei Vorkehrungen, und beide sind der ganze Unterschied
-           zwischen diesem Werkzeug und einem `String.replace`:
-    
-           1 · VOR DEM SCHREIBEN EINE FASSUNG. `Store.updateBlock` sichert
-               keine; die automatische Sicherung hat eine Vier-Minuten-Sperre
-               UND einen Schalter (`autoVersionen`, E417). Wer ihn ausmacht,
-               hätte nach einer KI-Änderung gar nichts mehr. Also sichert das
-               Werkzeug selbst — wie „vor Wiederherstellung" und „vor
-               Quelltext-Änderung" es längst tun. Der Satz dazu steht wörtlich
-               in `werkzeuge.ts:924`: ein Schalter darf keinen Schutz
-               abschalten, um den gebeten wurde.
-    
-           2 · GENAU EINMAL ODER GAR NICHT. Das ist die Lehre aus E650, zwei
-               Bögen alt: `String.replace` trifft das ERSTE Vorkommen, nicht
-               das gemeinte. Ein Modell, das „ändere ‚das Kabel' in ‚die
-               Leitung'" sagt, weiss nicht, dass „das Kabel" dreimal dasteht.
-               Kommt die Stelle nicht genau einmal vor, wird nichts geändert
-               und die Zahl genannt. Eine Absage ist billig; eine falsch
-               ersetzte Stelle merkt niemand. */
         textBearbeiten: {
             recht: 'bearbeiten',
             beschreibung: 'Ersetzt eine EINDEUTIGE Textstelle auf einer Seite. Die Stelle muss ' +
@@ -217,9 +139,6 @@ const Agent = (() => {
                     return 'Keine Seite gefunden, die „' + (a && a.titel) + '" heisst.';
                 if (!Konten.darf('bearbeiten', seite.id))
                     return 'Diese Seite darfst du nicht ändern.';
-                /* WIE VIELE BLÖCKE ENTHALTEN DIE STELLE, und wie oft je Block?
-                   Beide Zahlen werden gebraucht: zwei Treffer in einem Block sind
-                   genauso mehrdeutig wie je einer in zwei Blöcken. */
                 const zaehle = (heu, nadel) => {
                     let n = 0, i = heu.indexOf(nadel);
                     while (i >= 0) {
@@ -242,8 +161,6 @@ const Agent = (() => {
                         'Nimm mehr Text drumherum, bis die Stelle eindeutig ist.';
                 const ziel = treffer[0].b;
                 const vorher = String(ziel.text);
-                /* DIE FASSUNG KOMMT VOR DEM SCHREIBEN, nicht danach — sonst hielte
-                   sie den neuen Stand fest, und das Alte wäre weg. */
                 try {
                     await Store.versionSpeichern(seite.id, 'vor KI-Änderung');
                 }
@@ -252,11 +169,6 @@ const Agent = (() => {
                         'geändert: ' + (e instanceof Error ? e.message : String(e));
                 }
                 const nachher = vorher.replace(alt, neuerText);
-                /* `herkunft: 'ki'` AUCH AN EINEM BLOCK, DEN EIN MENSCH GESCHRIEBEN
-                   HAT. Zwei Fehler sind möglich, und dieser ist der kleinere: der
-                   Streifen sagt „hier war die KI", nicht „das ist ganz von ihr".
-                   Nicht zu markieren hiesse, eine KI-Änderung unsichtbar zu machen —
-                   und genau dafür gibt es E307. */
                 Store.updateBlock(ziel.id, { text: nachher, herkunft: 'ki' });
                 protokoll.ids.push(ziel.id);
                 App.zeichneSeite();
@@ -266,17 +178,6 @@ const Agent = (() => {
                     'Der alte Stand liegt als Fassung „vor KI-Änderung" im Verlauf der Seite.';
             }
         },
-        /* ── DIE DREI, DIE REDUR GENANNT HAT (E655) ───────────────────────────
-           „lernkarten erstellen pdf elssen, tabelas usw". Alle drei legen nur an
-           oder lesen — keines fällt unter das Tor aus E654, und genau deshalb
-           durften sie im selben Zug kommen.
-    
-           WARUM NICHT DER SCHNELLBEFEHL. „Mache aus dieser Seite Karteikarten"
-           gibt es seit langem. Er schreibt TEXT ins Chatfenster, und was dort
-           steht, lernt niemand: die Lernwelt zählt `flashcard`-Blöcke, nicht
-           Absätze. Der Unterschied zwischen „sieht aus wie Karteikarten" und
-           „ist eine Karteikarte" ist genau der, den `test547` misst —
-           `Learning.cards()` vorher und nachher. */
         karteikartenAnlegen: {
             recht: 'bearbeiten',
             beschreibung: 'Legt echte Lernkarten an, die im Lernzentrum auftauchen. Argument: ' +
@@ -295,10 +196,6 @@ const Agent = (() => {
                     const antwort = String((k && k.antwort) || '').trim();
                     if (!frage)
                         return;
-                    /* `Frage :: Antwort` ist KEINE Formatierung, sondern das Format:
-                       `Learning.splitCard` trennt an `::`, und ohne die zwei Punkte
-                       steht dort „(noch keine Antwort)". Eine Karte ohne Antwort ist
-                       keine Karte. */
                     Store.addBlock(seite.id, 'flashcard', { text: frage + ' :: ' + (antwort || '…'), herkunft: 'ki' });
                     gezaehlt++;
                 });
@@ -308,15 +205,6 @@ const Agent = (() => {
                     '" angelegt. Sie stehen ab sofort im Lernzentrum zur Wiederholung bereit.';
             }
         },
-        /* PDF LESEN, UND ZWAR GEZIELT. Der Wortlaut einer eingelesenen Seite
-           steht seit E107 in `suchtext` (nicht in `text` — `text` ist, was ein
-           Mensch geschrieben hat). Über `suchen` war er zufällig erreichbar:
-           wer nach einem Stichwort fragte, bekam einen Ausschnitt. „Lies mir
-           Seite 4 bis 6 des Skripts" ging nicht.
-    
-           KEINE EIGENE RECHTEPRÜFUNG NÖTIG? Doch — `seiteLesen` prüft sie auch,
-           und aus demselben Grund (E331): gelesen wird eine bestimmte Seite,
-           also entscheidet deren Freigabe, nicht die Rolle im Allgemeinen. */
         pdfLesen: {
             recht: 'lesen',
             beschreibung: 'Liest den Text eines eingelesenen PDF-Dokuments, wahlweise nur ' +
@@ -341,10 +229,6 @@ const Agent = (() => {
                 if (!gewaehlt.length)
                     return 'Das Dokument hat ' + seiten.length + ' Seiten — ' + von + ' bis ' +
                         (bis === Number.MAX_SAFE_INTEGER ? 'Ende' : bis) + ' ist nicht darunter.';
-                /* GEKÜRZT WIRD AM ENDE UND MIT ANSAGE. Ein Skript kann hundert
-                   Seiten haben; was nicht mehr hineinpasst, wird genannt und nicht
-                   stillschweigend abgeschnitten — sonst hält das Modell die halbe
-                   Seite für die ganze. */
                 const GRENZE = 6000;
                 let raus = '';
                 let bisSeite = 0;
@@ -362,14 +246,6 @@ const Agent = (() => {
                         'Frag gezielt nach ab Seite ' + (bisSeite + 1) + '.]' : '');
             }
         },
-        /* EINE EINFACHE TABELLE IM TEXT — nicht dasselbe wie `datenbankAnlegen`.
-           Eine Datenbank hat ein Schema, Ansichten und Zeilen, die eigene Seiten
-           sind; eine Tabelle sind drei mal vier Zellen mitten im Absatz. Redurs
-           „tabelas" meint beides, und das zweite fehlte ganz.
-    
-           `type:'table'` mit `rows: string[][]`, wie der Zeichner es liest
-           (`zeichenflaeche.ts:1179`): die Kopfzeile ist die erste Zeile, nicht
-           ein eigenes Feld. */
         tabelleAnlegen: {
             recht: 'bearbeiten',
             beschreibung: 'Legt eine einfache Tabelle auf der offenen Seite an. Argument: ' +
@@ -382,9 +258,6 @@ const Agent = (() => {
                 const unterId = App.aktuelleSeite();
                 if (!Konten.darf('bearbeiten', unterId))
                     return 'Hier darfst du nichts anlegen.';
-                /* ALLE ZEILEN GLEICH BREIT. Eine kurze Zeile zeichnete sonst eine
-                   Tabelle mit Löchern, und wer dann hineintippt, schreibt in eine
-                   Zelle, die es im Bestand nicht gibt. */
                 const breite = Math.max(kopf.length, ...zeilen.map((z) => (Array.isArray(z) ? z.length : 0)), 1);
                 const fuellen = (z) => {
                     const r = (Array.isArray(z) ? z : []).map((x) => String(x ?? ''));
@@ -403,31 +276,10 @@ const Agent = (() => {
                     ' Spalten auf der offenen Seite angelegt.';
             }
         },
-        /* ── DAS EINZIGE WERKZEUG, DAS ETWAS WEGNIMMT (E654) ──────────────────
-           Redur am 20. September 2026: „die ai teil darf mehr machen … alles
-           machen kann ausser ohne meine bestetigung etwas löschen."
-    
-           Beide Hälften stehen hier. Die KI DARF löschen — vorher konnte sie es
-           gar nicht, und eine Regel, die nur gilt, weil es die Handlung nicht
-           gibt, ist keine Regel, sondern eine Lücke im Können.
-    
-           DAS TOR SITZT NICHT IN DIESER FUNKTION, sondern in der Schleife
-           (`recht === 'loeschen'`, weiter unten). Ein Werkzeug, das selbst
-           fragen müsste, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal
-           vergessen wird. So gilt die Grenze für JEDES künftige Löschwerkzeug,
-           ohne dass jemand daran denken muss.
-    
-           UND ES LÖSCHT NICHT — es legt in den Papierkorb. `Store.trashBlock`
-           setzt `alive:false` und `trashedAt`; wiederherstellbar, wie jede
-           Löschung in Redion. §43 („nichts löschen ohne Rückfrage") und §51
-           gelten für die KI wie für jede Hand: ein Ja ist die Erlaubnis zum
-           Wegräumen, nicht zum Vernichten. */
         seiteLoeschen: {
             recht: 'loeschen',
             beschreibung: 'Legt eine Seite in den Papierkorb. Sie bleibt wiederherstellbar. ' +
                 'Der Mensch wird vorher jedes Mal gefragt. Argument: {"titel":"Name der Seite"}',
-            /* Was im Tor stehen soll, bevor jemand Ja sagt. Kein Text aus dem
-               Modell — was gelöscht wird, sagt der Bestand, nicht die KI. */
             vorschau: (a) => {
                 const p2 = seiteNachTitel(a && a.titel);
                 if (!p2)
@@ -449,8 +301,6 @@ const Agent = (() => {
                     return 'Diese Seite darfst du nicht löschen.';
                 const name = p2.text || 'Ohne Titel';
                 Store.trashBlock(p2.id);
-                /* Damit „Zurücknehmen" den Schritt findet — dieselbe Liste, die auch
-                   angelegte Seiten führt. */
                 if (protokoll && protokoll.ids)
                     protokoll.ids.push(p2.id);
                 App.zeichneBaum();
@@ -464,8 +314,6 @@ const Agent = (() => {
                 '{"name":"…","spalten":[{"name":"…","typ":"Text|Zahl|Auswahl|Datum|Kontrollkästchen|Formel",' +
                 '"optionen":["…"],"formel":"…"}],"zeilen":[{"Titel":"…","Spalte":"Wert"}]}',
             lauf: async (a, protokoll) => {
-                /* Wie bei `seiteAnlegen`: die Datenbank entsteht auf der offenen
-                   Seite, also entscheidet deren Freigabe (E331). */
                 const unterId = App.aktuelleSeite();
                 if (!Konten.darf('bearbeiten', unterId))
                     return 'Hier darfst du nichts anlegen.';
@@ -485,8 +333,6 @@ const Agent = (() => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase() === String(a.datenbank || '').toLowerCase());
                 if (!c)
                     return 'Keine Datenbank namens „' + a.datenbank + '".';
-                /* Erst hier steht fest, WOHIN geschrieben wird — also erst hier lässt
-                   sich das Recht dazu prüfen (E291). */
                 const darfHier = Konten.darfAnSammlung('bearbeiten', c.id);
                 if (darfHier === false)
                     return 'In „' + c.name + '" darfst du nichts anlegen.';
@@ -506,8 +352,6 @@ const Agent = (() => {
                 });
                 const r = Store.addRow(c.id, props);
                 Store.updateBlock(r.id, { text: titel || 'Ohne Titel' });
-                /* Ohne diesen Eintrag konnte „Zurücknehmen" die Zeile nicht finden —
-                   der Knopf meldete Erfolg, die Zeile blieb. */
                 if (protokoll && protokoll.ids)
                     protokoll.ids.push(r.id);
                 App.zeichneSeite();
@@ -521,10 +365,6 @@ const Agent = (() => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase().includes(String(a.name || '').toLowerCase()));
                 if (!c)
                     return 'Keine Datenbank gefunden zu „' + a.name + '".';
-                /* AUCH LESEN BRAUCHT EIN RECHT (E331). `zeileAnlegen` und
-                   `feldFuellen` prüfen seit E291 gegen die Datenbank, die sie
-                   wirklich meinen — hier fehlte der Zwilling dazu, und eine
-                   Datenbank, die man nicht sehen darf, kam als Tabelle zurück. */
                 if (!Konten.darfAnSammlung('lesen', c.id))
                     return 'Diese Datenbank darfst du nicht lesen.';
                 const keys = Object.keys(c.schema);
@@ -544,10 +384,6 @@ const Agent = (() => {
                 const k = Object.keys(c.schema).find(x => c.schema[x].name.toLowerCase() === String(a.spalte || '').toLowerCase());
                 if (!k)
                     return 'Keine Spalte namens „' + a.spalte + '".';
-                /* Wie bei `zeileAnlegen`: geprüft wird die Datenbank, die wirklich
-                   gemeint ist — und BEVOR der Auftrag ins Schema geschrieben wird
-                   (E291). Andersherum bliebe die Spaltenanweisung stehen, obwohl
-                   nichts gefüllt werden durfte. */
                 const darfFuellen = Konten.darfAnSammlung('bearbeiten', c.id);
                 if (darfFuellen === false)
                     return 'In „' + c.name + '" darfst du nichts ändern.';
@@ -557,14 +393,8 @@ const Agent = (() => {
                 c.schema[k].auftrag = a.auftrag || c.schema[k].auftrag;
                 Store.updateCollection(c.id, { schema: c.schema });
                 const zeilen = Store.rowsOf(c.id).slice(0, 15);
-                /* Gezählt wird, was WIRKLICH gefüllt wurde — nicht, was angefasst
-                   wurde. „15 Einträge gefüllt" stand hier auch dann, wenn jede
-                   Zeile am Spaltenrecht abprallte oder die KI nichts gab. */
                 let gefuellt = 0, kaputt = 0;
                 for (const r of zeilen) {
-                    /* Der alte Wert wandert VOR dem Überschreiben ins Protokoll —
-                       erst damit ist „Zurücknehmen" hier ein Wiederherstellen und
-                       keine leere Behauptung. */
                     if (protokoll && protokoll.felder)
                         protokoll.felder.push({ id: r.id, key: k,
                             alt: (Store.getBlock(r.id)?.props || {})[k] });
@@ -634,20 +464,12 @@ const Agent = (() => {
             recht: 'bearbeiten',
             beschreibung: 'Führt einen gespeicherten Worker aus. Argument: {"name":"…","eingabe":{}}',
             lauf: async (a, protokoll, lauf) => {
-                /* EIN WORKER HAT KEINEN ORT — sein Code ist fremd, und was er
-                   anfasst, weiss vorher niemand. Also bleibt die Rolle, und die
-                   wird hier ausdrücklich gefragt statt auf die Vorauswahl zu
-                   vertrauen: sie hing bis E331 an der zufällig offenen Seite und
-                   antwortete ohne eine solche mit Ja. */
                 if (!Konten.darfUeberhaupt('bearbeiten'))
                     return 'Deine Rolle erlaubt kein Ausführen von Workern.';
                 const w = worker().find((x) => x.name === a.name);
                 if (!w)
                     return 'Keinen Worker namens „' + a.name + '“ gefunden. Vorhanden: ' +
                         (worker().map((x) => x.name).join(', ') || 'keiner');
-                /* Was ein Worker verändert, weiss niemand — sein Code ist fremd.
-                   Zurücknehmen kann das nicht; also steht es im Protokoll, und der
-                   Knopf sagt es, statt so zu tun, als ginge es. */
                 if (protokoll && protokoll.bleibt && !protokoll.bleibt.includes('worker'))
                     protokoll.bleibt.push('worker');
                 if (protokoll && (protokoll.workerAufrufe || 0) >= WORKER_AUFRUFE_MAX)
@@ -670,12 +492,6 @@ const Agent = (() => {
             lauf: async (a) => a.antwort || 'Fertig.'
         }
     };
-    /**
-     * Die Wirkung wird VOR dem Werkzeug aus den echten Argumenten und dem
-     * aktuellen Bestand berechnet. Das ist bewusst eine Obergrenze: lieber
-     * „höchstens 16 Werte" bestätigen als nachher entdecken, dass eine
-     * scheinbar kleine Handlung doch die ganze Datenbank meinte.
-     */
     const wirkungPlanen = (werkzeug, a) => {
         const bytes = bytesVon(a || {});
         let objekte = 0;
@@ -686,7 +502,7 @@ const Agent = (() => {
         }
         else if (werkzeug === 'datenbankAnlegen') {
             const zeilen = Math.min(30, Array.isArray(a?.zeilen) ? a.zeilen.length : 0);
-            objekte = 2 + zeilen; /* Datenbankblock, Sammlung, Zeilen */
+            objekte = 2 + zeilen;
             text = 'eine Datenbank mit höchstens ' + zeilen + ' Zeile(n)';
         }
         else if (werkzeug === 'zeileAnlegen') {
@@ -699,10 +515,6 @@ const Agent = (() => {
             text = 'höchstens ' + Math.max(0, objekte - 1) + ' Feldwert(e) und die Spalteneinstellung';
         }
         else if (werkzeug === 'textBearbeiten') {
-            /* EIN BLOCK, UND DAS TOR SOLL DEN WORTLAUT ZEIGEN. „Höchstens ein
-               gespeichertes Objekt" stimmt zwar, sagt aber nicht, WAS sich
-               ändert — und genau das ist die Frage, die der Mensch am Tor
-               beantworten muss. */
             objekte = 1;
             text = 'eine Textstelle auf „' + String(a?.titel || '?') + '": ' +
                 '„' + String(a?.alt || '').slice(0, 80) + '" → ' +
@@ -712,8 +524,6 @@ const Agent = (() => {
             text = 'Worker-Eingabe und -Ergebnis, keine direkten Arbeitsbereichsdaten';
         }
         else if (WERKZEUGE[werkzeug]?.recht === 'bearbeiten') {
-            /* Neue Schreibwerkzeuge bekommen automatisch wenigstens die kleine
-               Ein-Objekt-Grenze, bis sie eine genauere Planung mitbringen. */
             objekte = 1;
             text = 'höchstens ein gespeichertes Objekt';
         }
@@ -742,9 +552,6 @@ const Agent = (() => {
         lauf.reserviert.bytes += w.bytes;
         lauf.protokoll.wirkung = { ...lauf.reserviert };
     };
-    /* ========================================================================
-     * DIE VIER TYPEN
-     * ======================================================================*/
     const TYPEN = [
         { id: 'assistent', icon: '🧭', name: 'Persönlicher Assistent',
             text: 'Sucht im Arbeitsbereich, fasst zusammen, legt Seiten und Einträge an.',
@@ -776,9 +583,6 @@ const Agent = (() => {
             anweisung: 'Du baust Datenbanken. Denk zuerst über die Spalten nach: welcher Typ, ' +
                 'welche Optionen, welche Formel. Lege lieber wenige gute Spalten an als viele halbe.' }
     ];
-    /* ========================================================================
-     * EIGENE AGENTEN
-     * ======================================================================*/
     const eigene = () => Store.getMeta('agent:eigene', []) || [];
     const eigeneSpeichern = (l) => Store.setMeta('agent:eigene', l);
     const alle = () => [
@@ -786,14 +590,6 @@ const Agent = (() => {
         ...eigene()
     ];
     const holen = (id) => alle().find(a => a.id === id) || TYPEN[0];
-    /* ========================================================================
-     * WORKERS — eigener Code als Werkzeug
-     * ------------------------------------------------------------------------
-     * Der Code läuft in einem Web Worker: eigener Faden, kein Zugriff auf die
-     * Seite, kein Zugriff auf die Daten. Was hineingeht und was herauskommt,
-     * bestimmt allein die Nachricht. Damit kann ein Worker rechnen und Text
-     * verarbeiten, aber nichts kaputtmachen.
-     * ======================================================================*/
     const WORKER_BEISPIEL = '/* Eingabe steht in "eingabe", das Ergebnis kommt aus return. */\n' +
         'const zahlen = (eingabe.werte || []).map(Number).filter(n => !isNaN(n));\n' +
         'const summe = zahlen.reduce((a, b) => a + b, 0);\n' +
@@ -801,9 +597,6 @@ const Agent = (() => {
     const worker = () => Store.getMeta('agent:worker', []) || [];
     const workerSpeichern = (l) => Store.setMeta('agent:worker', l);
     const workerLaufen = (w, eingabe, optionen = {}) => new Promise((ok, fehler) => {
-        /* Worker erhalten nur eine echte JSON-Kopie. Sonst würde etwa ein
-           riesiger ArrayBuffer als `{}` gemessen und danach doch vollständig
-           per Structured Clone übertragen — die Bytegrenze wäre nur Dekoration. */
         let workerEingabe;
         try {
             const text = JSON.stringify(eingabe ?? {});
@@ -826,9 +619,6 @@ const Agent = (() => {
             fehler(sicherheitsFehler('LAUF_ABGEBROCHEN', 'Der Lauf wurde abgebrochen.', 'AbortError'));
             return;
         }
-        /* Die Ergebnisgröße wird IM Worker geprüft. Würde erst der Hauptfaden
-           nachsehen, wäre ein 500-MB-Objekt bereits vollständig geklont und
-           der eigentliche Schutz käme zu spät. */
         const quelle = 'self.onmessage = async (e) => {\n' +
             '  const eingabe = e.data;\n' +
             '  try {\n' +
@@ -866,7 +656,7 @@ const Agent = (() => {
             try {
                 wk.terminate();
             }
-            catch { /* schon beendet */ }
+            catch { }
             URL.revokeObjectURL(u);
             return true;
         };
@@ -890,7 +680,6 @@ const Agent = (() => {
                 fehler(sicherheitsFehler(e.data?.code || 'WORKER_FEHLER', e.data?.fehler || 'Fehler im Worker'));
                 return;
             }
-            /* Zweites Netz gegen einen veränderten oder alten Worker-Rumpf. */
             const ausgabeBytes = Number(e.data.bytes) || bytesVon(e.data.wert);
             if (ausgabeBytes > WORKER_AUSGABE_MAX_BYTES) {
                 fehler(sicherheitsFehler('WORKER_AUSGABE_ZU_GROSS', 'Das Worker-Ergebnis ist ' + groesseText(ausgabeBytes) + ' groß.'));
@@ -913,9 +702,6 @@ const Agent = (() => {
                 (e instanceof Error ? e.message : String(e))));
         }
     });
-    /* ========================================================================
-     * DIE SCHLEIFE
-     * ======================================================================*/
     const laeufe = () => Store.getMeta('agent:laeufe', []) || [];
     const werkzeugText = (namen) => namen
         .filter((n) => WERKZEUGE[n])
@@ -957,36 +743,6 @@ const Agent = (() => {
         }
         return null;
     };
-    /* ========================================================================
-     * GRENZEN — was ein Agent NICHT darf (L11)
-     * ------------------------------------------------------------------------
-     * `LUECKEN.md` L11 stand auf „✗ es gibt keine Grenzen" und nannte fünf
-     * Dinge. Zwei davon gab es längst und standen nur nicht in der Liste:
-     * Rechte je Agent (jedes Werkzeug trägt `recht`, gefiltert über
-     * `Konten.darf`) und ein Protokoll (`agent:laeufe`, die letzten 30 samt
-     * Rücknahme). Drei fehlten wirklich:
-     *
-     *   NOTAUSSCHALTER  Ein Agent, der Unsinn baut, liess sich nur dadurch
-     *                   anhalten, dass man das Fenster schloss. Die Auslöser
-     *                   liefen weiter — auch beim nächsten Öffnen.
-     *
-     *   TAGESLIMIT      Das Guthaben gilt JE LAUF. Ein täglicher Auslöser
-     *                   ist damit unbegrenzt: acht Schritte, jeden Tag, ohne
-     *                   Ende. Und wer den Auslöser vergessen hat, merkt es
-     *                   nie, weil niemand danebensteht.
-     *
-     *   BESTÄTIGUNG    Ein Agent legte Seiten an, schrieb in Datenbanken und
-     *                   änderte Blöcke, ohne dass jemand zustimmte.
-     *                   Zurücknehmen ging — aber erst hinterher, und nur für
-     *                   Angelegtes, nicht für Geändertes.
-     *
-     * DER GEFÄHRLICHE FALL IST DER UNBEAUFSICHTIGTE. Wer auf „Loslegen"
-     * drückt, sieht zu und kann eingreifen. Ein Auslöser um acht Uhr früh
-     * läuft, während niemand hinsieht — dort ist eine Rückfrage kein Schutz,
-     * sondern eine Sperre, die nie beantwortet wird. Also gilt dort die
-     * strengere Regel: ohne ausdrückliche Erlaubnis nur lesen.
-     * ======================================================================*/
-    /** Der Notausschalter. Steht er, läuft gar nichts. */
     const notaus = () => !!Store.getMeta('agent:notaus', false);
     const notausSetzen = (an) => {
         Store.setMeta('agent:notaus', !!an);
@@ -996,14 +752,10 @@ const Agent = (() => {
             UI.toast(an ? '⛔ Agenten angehalten — auch die Auslöser'
                 : '▶️ Agenten dürfen wieder');
         }
-        catch { /* vor dem Aufbau der Schale gibt es keinen Toast */ }
+        catch { }
     };
-    /** Wie viele Schritte ALLE Agenten zusammen an einem Tag tun dürfen. */
     const TAGESGRENZE_VORGABE = 120;
     const tagesgrenze = () => Math.max(0, Number(Store.getMeta('agent:tagesgrenze', TAGESGRENZE_VORGABE)) || 0);
-    /* Der Tag wechselt um Mitternacht ORTSZEIT, nicht UTC. Wer in Berlin um
-       halb eins nachts arbeitet, hat sonst schon den nächsten Tag verbraucht
-       — dieselbe Falle wie bei den Erinnerungen (E31). */
     const heuteAls = () => {
         const d = new Date();
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
@@ -1020,24 +772,10 @@ const Agent = (() => {
         const s = tagesstand();
         Store.setMeta('agent:tagesstand', { tag: s.tag, schritte: s.schritte + 1 });
     };
-    /**
-     * Wird vor einer ändernden Handlung gefragt? `einmal` ist die Vorgabe:
-     * einmal je Lauf, danach gilt die Zusage für diesen Lauf.
-     *
-     * `immer` ist die sicherste und die lästigste Einstellung — bei acht
-     * Schritten acht Fragen. Wer sie wählt, weiss warum.
-     */
     const fragenModus = () => {
         const m = String(Store.getMeta('agent:fragen', 'einmal'));
         return m === 'immer' || m === 'nie' ? m : 'einmal';
     };
-    /**
-     * Lässt einen Agenten arbeiten.
-     * @param agentId   welcher Agent
-     * @param auftrag   was er tun soll
-     * @param beiSchritt Rückmeldung nach jedem Schritt
-     * @param optionen  `unbeaufsichtigt` für Läufe, bei denen niemand zusieht
-     */
     const laufen = async (agentId, auftrag, beiSchritt, optionen) => {
         const a = holen(agentId);
         const guthaben = Math.max(1, Math.min(30, Number(a.guthaben) || 8));
@@ -1054,15 +792,6 @@ const Agent = (() => {
             id, agentId: protokoll.agentId, controller: new AbortController(),
             worker: new Set(), protokoll, reserviert: { objekte: 0, bytes: 0 }
         };
-        /* DIE LAUFGRENZE BEGINNT HIER (E295, L104 Punkt 2).
-           `KiBuch` führt vier Grenzen: je Aufruf, je Lauf, je Tag, je Monat.
-           Die zweite war die einzige, die im Alltag nie anschlug — `laufStand`
-           begann beim Laden der Seite bei null und lief dann durch, weil
-           niemand `laufBeginnen()` rief. Sie FUNKTIONIERTE (test281 §3 misst
-           es), sie wurde nur nie zurückgesetzt.
-    
-           Ein Agentenlauf ist genau das, wofür sie gedacht ist: viele Aufrufe
-           hintereinander, jeder für sich harmlos. */
         if (typeof KiBuch !== 'undefined' && KiBuch.laufBeginnen)
             KiBuch.laufBeginnen();
         let gespeichert = false;
@@ -1080,8 +809,6 @@ const Agent = (() => {
             if (beiSchritt)
                 beiSchritt(s, protokoll);
         };
-        /* Ein vor dem Start abgelehnter Lauf bleibt nachvollziehbar, ist aber
-           nicht „abgebrochen": es lief noch nichts. */
         const vorStartAblehnen = (grund) => {
             protokoll.status = 'abgelehnt';
             protokoll.beendet = Store.now();
@@ -1097,32 +824,6 @@ const Agent = (() => {
         if (tagesgrenze() > 0 && tagesRest() <= 0)
             return vorStartAblehnen('Das Tageslimit von ' + tagesgrenze() + ' Schritten ist aufgebraucht. ' +
                 'Morgen geht es weiter, oder du hebst die Grenze unter 🤖 Agent → Grenzen an.');
-        /* Berechtigungsschicht: kein Werkzeug, das der angemeldete Mensch selbst
-           nicht dürfte. Der Agent kann nicht mehr als du.
-    
-           DIESE ZEILE IST EINE GROBE VORAUSWAHL UND VERSPRICHT NICHTS (E291).
-           `Konten.darf` ohne Seitenkennung fragt die gerade OFFENE Seite; ist
-           keine offen, fragt sie seit E331 die ROLLE — vorher antwortete sie
-           dort schlicht `true`, und seit E132 (Startansicht ist das
-           Heute-Dashboard) war das der Normalfall beim Start.
-    
-           Grob bleibt sie trotzdem, und das ist richtig so: WELCHE Seite ein
-           Werkzeug anfassen wird, steht erst fest, wenn seine Argumente da
-           sind. Die verbindliche Prüfung sitzt deshalb IM Werkzeug, gegen das
-           Ziel, das es wirklich meint — und seit E331 in ALLEN, die eines
-           haben:
-    
-             seiteLesen        seit jeher   darf('lesen', p.id)
-             zeileAnlegen      E291         darfAnSammlung('bearbeiten', c.id)
-             feldFuellen       E291         darfAnSammlung('bearbeiten', c.id)
-             seiteAnlegen      E331         darf('bearbeiten', offene Seite)
-             datenbankAnlegen  E331         darf('bearbeiten', offene Seite)
-             datenbankLesen    E331         darfAnSammlung('lesen', c.id)
-             worker            E331         darfUeberhaupt('bearbeiten')
-    
-           `suchen` braucht keine: `Kontext.finden` wirft seit jeher heraus,
-           was nicht gelesen werden darf (`kontext.ts:432`). Nachgesehen, nicht
-           angenommen. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
         if (ohneAufsicht && !a.darfAllein) {
@@ -1130,12 +831,6 @@ const Agent = (() => {
             gesperrt = gesperrt.concat(nutzbar.filter((n) => !nurLesen.includes(n)));
             nutzbar = nurLesen;
         }
-        /* UND LÖSCHEN GEHT OHNE ZUSCHAUER NIE (E654) — auch nicht mit
-           `darfAllein`. Die Erlaubnis, allein zu arbeiten, ist die Erlaubnis zu
-           schreiben, nicht die, etwas wegzunehmen: ein Ja kann nur geben, wer
-           da ist. Das Tor in der Schleife lehnt denselben Fall noch einmal ab —
-           hier wird das Werkzeug gar nicht erst angeboten, damit das Modell
-           nicht gegen eine Wand plant. */
         if (ohneAufsicht) {
             const loeschend = nutzbar.filter((n) => WERKZEUGE[n].recht === 'loeschen');
             if (loeschend.length) {
@@ -1209,34 +904,12 @@ const Agent = (() => {
                 }
                 else {
                     let darfAusfuehren = true;
-                    /* ══ DAS TOR VOR DEM LÖSCHEN (E654) ═══════════════════════════════
-                     * Redurs Satz vom 20. September ist eine eigene Klasse, nicht eine
-                     * strengere Stufe von `bearbeiten`: „alles machen kann ausser ohne
-                     * meine bestetigung etwas löschen".
-                     *
-                     * Deshalb steht dieser Zweig VOR dem Bearbeiten-Zweig und teilt
-                     * sich keine Zeile mit ihm. Drei Dinge, die dort richtig sind,
-                     * wären hier falsch — jedes einzeln gemessen in `test546`:
-                     *
-                     *   `fragenModus() === 'nie'`   hiesse: nie fragen.  Gilt hier nicht.
-                     *   „Für diesen Lauf erlauben"  hiesse: einmal reicht. Gibt es hier nicht.
-                     *   `darfAllein` unbeaufsichtigt hiesse: löschen, während niemand
-                     *                               zusieht. Wird hier abgelehnt.
-                     *
-                     * Ein Ja gilt für GENAU DIESEN Schritt. Zwei Löschungen sind zwei
-                     * Fragen, und das ist keine Unbequemlichkeit, sondern der ganze
-                     * Sinn: was hier verloren geht, holt niemand zurück (§51).
-                     * ===============================================================*/
                     if (wz.recht === 'loeschen') {
                         const v = typeof wz.vorschau === 'function'
                             ? wz.vorschau(plan.argument || {})
                             : { text: 'Etwas wird entfernt.', objekte: 1 };
                         schritt.wirkung = { text: v.text, objekte: v.objekte || 1, bytes: 0, gross: false };
                         if (ohneAufsicht) {
-                            /* NIEMAND KANN JA SAGEN, ALSO IST DIE ANTWORT NEIN. Einen
-                               Dialog zu öffnen, den keiner sieht, wäre schlimmer: der Lauf
-                               stünde bis zum Abbruch, und der nächste Bogen baute ihm eine
-                               Abkürzung. */
                             schritt.ergebnis = 'Nicht gelöscht: ' + v.text + ' Löschen braucht eine ' +
                                 'ausdrückliche Bestätigung, und dieser Lauf hat keinen Zuschauer. ' +
                                 'Schreib es als Vorschlag in deine Antwort.';
@@ -1369,7 +1042,7 @@ const Agent = (() => {
             lauf.worker.forEach(w => { try {
                 w.terminate();
             }
-            catch { /* schon beendet */ } });
+            catch { } });
             lauf.worker.clear();
             aktiveLaeufe.delete(id);
             protokoll.beendet = Store.now();
@@ -1377,20 +1050,8 @@ const Agent = (() => {
         }
         return protokoll;
     };
-    /**
-     * Alles zurücknehmen, was ein Lauf getan hat — und ehrlich sagen, was
-     * sich nicht zurücknehmen lässt.
-     *
-     * Angelegte Seiten werden gelöscht, überschriebene Feldwerte
-     * WIEDERHERGESTELLT (der alte Wert steht im Protokoll). Der Rückgabetext
-     * gehört in den Toast: „Zurückgenommen" allein war eine Lüge, wenn der
-     * Lauf per `feldFuellen` fünfzehn Notizen überschrieben hatte und keine
-     * davon zurückkam.
-     */
     const zuruecknehmen = (protokoll) => {
         (protokoll.ids || []).forEach((id) => { Store.trashBlock(id); Store.purgeBlock(id); });
-        /* Rückwärts: hat der Lauf dieselbe Zelle zweimal überschrieben, gewinnt
-           der älteste Stand — der von VOR dem Lauf. */
         [...(protokoll.felder || [])].reverse().forEach((f) => {
             if (Store.getBlock(f.id))
                 Store.setProp(f.id, f.key, f.alt);
@@ -1407,13 +1068,7 @@ const Agent = (() => {
             text += ' — was „' + protokoll.bleibt.join('", „') + '" verändert hat, bleibt';
         return text;
     };
-    /* ========================================================================
-     * AUSLÖSER — der Agent läuft von selbst
-     * ======================================================================*/
     const ausloeserPruefen = async () => {
-        /* DER NOTAUS GILT ZUERST HIER. Ein Auslöser läuft von selbst; ihn
-           anzuhalten ist der eigentliche Zweck des Schalters. Ohne diese Zeile
-           stünde er zwar, und um acht Uhr früh liefe der Agent trotzdem. */
         if (notaus())
             return;
         if (tagesgrenze() > 0 && tagesRest() <= 0)
@@ -1434,10 +1089,6 @@ const Agent = (() => {
                 t.zuletzt = tag;
                 geaendert = true;
                 UI.toast('🤖 ' + a.name + ' läuft …');
-                /* `unbeaufsichtigt`: hier sitzt niemand davor. Ohne die Angabe
-                   bekäme der Agent seine ändernden Werkzeuge und eine Rückfrage,
-                   die kein Mensch beantwortet — der Lauf hinge dann bis zum
-                   nächsten Klick irgendwo in der App. */
                 try {
                     await laufen(a.id, t.auftrag || a.anweisung || 'Mach deine tägliche Runde.', undefined, { unbeaufsichtigt: true });
                 }
@@ -1454,16 +1105,11 @@ const Agent = (() => {
         setTimeout(ausloeserPruefen, 9000);
         setInterval(ausloeserPruefen, 1800000);
     };
-    /* ========================================================================
-     * OBERFLÄCHE
-     * ======================================================================*/
     const panel = (vorgabe = '') => {
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML = '<div class="finder" style="width:min(760px,95vw)">' +
             '<div class="fh">🤖 Agent<button class="icon-btn" data-a="zu">✕</button></div>' +
-            /* DER NOTAUS STEHT GANZ OBEN UND NICHT IN EINEM UNTERMENÜ. Wer ihn
-               sucht, sucht ihn, weil gerade etwas schiefläuft. */
             '<div id="ag-notaus"></div>' +
             '<div style="padding:12px 18px 4px">' +
             '<div class="agent-typen" id="at"></div>' +
@@ -1480,8 +1126,6 @@ const Agent = (() => {
             '<button data-a="grenzen">Grenzen</button>' +
             '<button data-a="zu">Schliessen</button></div></div>';
         document.body.appendChild(o);
-        /* Der Streifen ganz oben: Schalter, Tagesstand, und wenn der Notaus
-           steht, sagt er es in ganzen Worten statt mit einer roten Farbe. */
         const zeichneNotaus = () => {
             const k = o.querySelector('#ag-notaus');
             if (!k)
@@ -1514,15 +1158,6 @@ const Agent = (() => {
                 '</button>').join('');
         };
         zeichneTypen();
-        /* ------------------------------------------------------------------
-         * WAS DER AGENT GERADE TUT — nicht nur DASS er etwas tut.
-         *
-         * Hier stand vier Bögen lang eine Zeile Text: „Der Agent denkt nach …".
-         * Sie ist richtig, aber sie sagt bei einem Lauf über zwölf Werkzeuge
-         * dasselbe wie nach zwei Sekunden. Die Denkkugel (E403) nimmt für jedes
-         * Werkzeug eine andere Gestalt an — der Text bleibt trotzdem stehen,
-         * weil §38 sagt: keine Information allein über das Bild.
-         * ----------------------------------------------------------------- */
         const ORB_ZU_WERKZEUG = {
             suchen: 'searching', nachschlagen: 'searching', seiteLesen: 'searching',
             datenbankLesen: 'searching', kalenderLesen: 'searching', mailLesen: 'searching',
@@ -1618,9 +1253,6 @@ const Agent = (() => {
                     stopp.hidden = false;
                 try {
                     const p = await laufen(gewaehlt, auftrag, (s) => {
-                        /* Die Kugel WANDERT jetzt mit, statt beim ersten Schritt zu
-                           verschwinden. Sie sass vorher über der leeren Liste und war
-                           genau dann weg, wenn endlich etwas passierte. */
                         kugel?.zustand(ORB_ZU_WERKZEUG[String(s.werkzeug)] || 'working');
                         wort.textContent = 'Schritt ' + s.nr + ' · ' + String(s.werkzeug || '');
                         zeigeSchritt(s);
@@ -1642,9 +1274,6 @@ const Agent = (() => {
                     liste.innerHTML = '<div class="agent-fehler">' +
                         esc(err instanceof Error ? err.message : String(err)) + '</div>';
                 }
-                /* Anhalten gehört hierher und nicht in den Erfolgszweig: bei einem
-                   Fehler bliebe die Kugel sonst für immer rechnen, unsichtbar unter
-                   der Fehlermeldung. */
                 kugel?.stopp();
                 laeuftEl.remove();
                 laufImFenster = '';
@@ -1654,13 +1283,6 @@ const Agent = (() => {
             }
         });
     };
-    /**
-     * DIE GRENZEN — ein Fenster, in dem steht, was ein Agent nicht darf.
-     *
-     * Es ist bewusst kurz. Drei Einstellungen, jede mit einem Satz dazu, was
-     * sie im schlimmsten Fall verhindert. Wer Grenzen setzt, will nicht
-     * lesen, sondern entscheiden.
-     */
     const grenzenDialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -1785,8 +1407,6 @@ const Agent = (() => {
                 '<label id="eta">Was soll er dann tun?<br>' +
                 `<input id="eauf" value="${esc(a.ausloeser?.auftrag || '')}" ` +
                 'placeholder="z. B. Fasse zusammen, was gestern dazugekommen ist."></label>' +
-                /* Die gefährlichste Einstellung des Fensters, und deshalb steht
-                   daneben, was sie bedeutet — nicht nur, was sie heisst. */
                 '<label id="etd" class="wz-w"><input id="ed" type="checkbox"' +
                 (a.darfAllein ? ' checked' : '') + '> Darf auch ohne Aufsicht ändern' +
                 '<span class="fl-hinweis">Ohne das darf ein Agent, der von selbst ' +
@@ -1816,9 +1436,6 @@ const Agent = (() => {
                 }
                 if (!ziel?.closest('[data-a="ok"]'))
                     return;
-                /* Alle Felder auf einmal holen. Fehlt eines, ist das Fenster nicht
-                   das, wofür wir es halten — dann lieber nichts sichern als einen
-                   halben Agenten. */
                 const feld = (id) => o2.querySelector(id);
                 const en = feld('#en'), ei = feld('#ei'), ea = feld('#ea'), eg = feld('#eg');
                 const ew = o2.querySelector('#ew');
@@ -2033,8 +1650,6 @@ const Agent = (() => {
     return { WERKZEUGE, TYPEN, alle, holen, eigene, laufen, zuruecknehmen, laeufe,
         worker, workerLaufen, WORKER_BEISPIEL, panel, eigenerDialog, workerDialog,
         verlaufDialog, grenzenDialog, start, ausloeserPruefen, JSON_HOLEN,
-        /* Die Grenzen — auch von aussen sichtbar, damit Einstellungen und
-           Prüfläufe sie lesen können, ohne im Speicher zu graben. */
         notaus, notausSetzen, tagesgrenze, tagesstand, tagesRest, fragenModus,
         aktive, laufAbbrechen, wirkungPlanen,
         AKTION_OBJEKTE_MAX, AKTION_BYTES_MAX, LAUF_OBJEKTE_MAX, LAUF_BYTES_MAX,

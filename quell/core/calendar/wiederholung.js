@@ -1,73 +1,12 @@
 "use strict";
-/* ============================================================================
- * core/calendar/wiederholung.ts — Wiederholungsregeln, die wirklich gelesen
- *                                 werden
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/calendar/wiederholung.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/core/calendar/wiederholung.js`.
- * ----------------------------------------------------------------------------
- * DER ANLASS IST EIN FALSCHES DATUM, NICHT EIN FEHLENDES.
- *
- * `verbinden/kalender.ts:145` liest aus einer Wiederholungsregel vier Teile:
- * FREQ, INTERVAL, UNTIL, COUNT. Alles andere fällt STILL weg. Für den
- * häufigsten Stundenplan der Welt —
- *
- *     RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR
- *
- * — heisst das: aus drei Terminen je Woche wird EINER, am Wochentag des
- * Starts. Und niemand erfährt es. Ein fehlender Termin ist ärgerlich; ein
- * Kalender, der die falschen Tage anzeigt, ist schlimmer, weil man ihm
- * glaubt.
- *
- * Genauso still verschwinden EXDATE (eine abgesagte Stunde kommt zurück),
- * BYMONTHDAY („jeden 15."), BYSETPOS („letzter Freitag im Monat") und WKST.
- *
- * ─── DIE REGEL, DIE DARAUS FOLGT ────────────────────────────────────────────
- *
- * Was diese Datei nicht kann, SAGT sie. `nichtVerstanden` führt jeden Teil
- * der Regel auf, den sie nicht auswerten konnte, und der Aufrufer zeigt das
- * an. Stillschweigen ist bei Terminen die gefährlichste Antwort — dieselbe
- * Lehre wie beim Sicherungs-Manifest (§52.10) und beim Import (E284).
- *
- * ─── WAS SIE KANN ───────────────────────────────────────────────────────────
- *
- *     FREQ        DAILY, WEEKLY, MONTHLY, YEARLY
- *     INTERVAL    jedes n-te
- *     COUNT       so viele Termine — gezählt werden ERZEUGTE, nicht Runden
- *     UNTIL       bis einschliesslich
- *     BYDAY       MO,TU,… und mit Ordnungszahl: 2TU, -1FR
- *     BYMONTHDAY  1..31 und -1..-31 (vom Monatsende her)
- *     BYMONTH     1..12
- *     BYSETPOS    der wievielte aus dem Satz einer Runde, auch negativ
- *     WKST        wo die Woche beginnt (wichtig nur bei INTERVAL > 1)
- *     EXDATE      streicht Termine
- *     RDATE       legt Termine dazu
- *
- * ─── UND WAS SIE ABSICHTLICH NICHT TUT ──────────────────────────────────────
- *
- * Keine Zeitzonen. TZID wird gelesen und WEITERGEREICHT, nicht umgerechnet.
- * Eine halbe Zeitzonenrechnung ist schlimmer als gar keine: sie verschiebt
- * Termine um Stunden, und man sieht es erst im Sommer.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/calendar/wiederholung.ts (npm run bauen:ts). */
 const Wiederholung = (() => {
-    /** Die Wochentage, wie das Format sie schreibt. Index = getDay(). */
     const TAGE = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-    /** Was diese Datei auswertet. Alles andere kommt in `nichtVerstanden`. */
     const BEKANNT = ['FREQ', 'INTERVAL', 'COUNT', 'UNTIL', 'BYDAY', 'BYMONTHDAY',
         'BYMONTH', 'BYSETPOS', 'WKST'];
     const p2 = (n) => String(n).padStart(2, '0');
-    /** Ein Datum als `JJJJ-MM-TT`, in der Zeit des Geräts. */
     const tagText = (d) => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
-    /** Ein Datum mit Uhrzeit, wie Redion es speichert. */
     const zeitText = (d) => tagText(d) + 'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
-    /**
-     * Eine Regel lesen.
-     *
-     * Sie wirft nichts. Eine kaputte Regel ergibt `freq: ''`, und der Aufrufer
-     * bekommt den Termin unverändert zurück — ein einzelner Termin ist die
-     * sichere Auslegung von „ich verstehe die Wiederholung nicht".
-     */
     const lesen = (rrule) => {
         const r = {
             freq: '', interval: 1, count: 0, until: '',
@@ -121,7 +60,6 @@ const Wiederholung = (() => {
                     break;
                 case 'BYDAY': {
                     for (const roh of wert.split(',')) {
-                        /* `2TU` = der zweite Dienstag, `-1FR` = der letzte Freitag. */
                         const treffer = roh.trim().toUpperCase().match(/^([+-]?\d+)?([A-Z]{2})$/);
                         if (!treffer) {
                             r.nichtVerstanden.push('BYDAY:' + roh);
@@ -138,11 +76,9 @@ const Wiederholung = (() => {
                 }
             }
         }
-        /* Doppelt genannte unbekannte Teile nur einmal melden. */
         r.nichtVerstanden = [...new Set(r.nichtVerstanden)];
         return r;
     };
-    /** Ein Datum aus einer ICS-Zeichenkette (`20260831` oder `20260831T090000Z`). */
     const ausIcs = (s) => {
         const t = String(s || '').trim();
         const m = t.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?$/);
@@ -157,7 +93,6 @@ const Wiederholung = (() => {
             return new Date(Date.UTC(Number(jahr), Number(monat) - 1, Number(tag), Number(std), Number(min), Number(sek || 0)));
         return new Date(Number(jahr), Number(monat) - 1, Number(tag), Number(std), Number(min), Number(sek || 0));
     };
-    /** Der Tag im Monat, auch von hinten gezählt: -1 ist der letzte. */
     const monatstagPasst = (d, liste) => {
         if (!liste.length)
             return true;
@@ -165,13 +100,6 @@ const Wiederholung = (() => {
         const letzter = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
         return liste.some(n => n > 0 ? n === tag : letzter + n + 1 === tag);
     };
-    /**
-     * Alle Tage EINER Runde, die zu BYDAY passen.
-     *
-     * Die Runde ist je nach FREQ eine Woche, ein Monat oder ein Jahr. Bei
-     * WEEKLY gibt es keine Ordnungszahl (`2TU` in einer Woche ist sinnlos),
-     * bei MONTHLY und YEARLY schon.
-     */
     const tageDerRunde = (anfang, freq, r) => {
         const raus = [];
         if (freq === 'WEEKLY') {
@@ -183,7 +111,6 @@ const Wiederholung = (() => {
             }
             return raus;
         }
-        /* MONTHLY und YEARLY: über den ganzen Zeitraum gehen. */
         const bis = new Date(anfang);
         if (freq === 'MONTHLY')
             bis.setMonth(bis.getMonth() + 1);
@@ -209,14 +136,6 @@ const Wiederholung = (() => {
         }
         return raus;
     };
-    /**
-     * Eine Regel ausrollen.
-     *
-     * DER START IST IMMER DABEI. Das Format sagt, die Wiederholungsmenge
-     * enthalte den Start; wenn der Start nicht zur Regel passt (Dienstag bei
-     * `BYDAY=MO,WE,FR`), ist ein Termin zu viel weniger schlimm als der
-     * fehlende erste.
-     */
     const ausrollen = (start, rrule, opt = {}) => {
         const r = lesen(rrule);
         const bisTage = typeof opt.bisTage === 'number' ? opt.bisTage : 400;
@@ -239,9 +158,6 @@ const Wiederholung = (() => {
         grenze.setDate(grenze.getDate() + bisTage);
         const bis = r.until ? (ausIcs(r.until) || grenze) : grenze;
         const schluss = bis < grenze ? bis : grenze;
-        /* Gestrichene Termine als Tagesschlüssel — EXDATE trägt oft eine Uhrzeit,
-           die nicht auf die Sekunde zum erzeugten Termin passt. Verglichen wird
-           deshalb der TAG; eine Absage gilt für den Tag. */
         const gestrichen = new Set();
         for (const x of (opt.exdate || [])) {
             const d = ausIcs(x);
@@ -251,13 +167,6 @@ const Wiederholung = (() => {
         const raus = [];
         const gesehen = new Set();
         let abgeschnitten = false;
-        /* GEZÄHLT WIRD, WAS DIE REGEL ERZEUGT — NICHT, WAS ÜBRIG BLEIBT.
-           Das Format ist da eindeutig: die Regel erzeugt eine Menge, und EXDATE
-           streicht DANACH daraus. `COUNT=4` mit einer Absage ergibt also drei
-           Termine, nicht vier.
-           Mein erster Entwurf strich vor dem Zählen und lieferte vier — der
-           Prüflauf hat es gefunden. Der Unterschied fällt nur auf, wenn beides
-           zusammenkommt, und dann verschiebt er jeden folgenden Termin. */
         let erzeugt = 0;
         const nimm = (d) => {
             if (d > schluss)
@@ -281,11 +190,7 @@ const Wiederholung = (() => {
             }
             return true;
         };
-        /* Der Start gehört dazu. */
         let weiter = nimm(new Date(anfang));
-        /* Der Anfang der ersten Runde. Bei WEEKLY ist das der WKST-Tag der Woche,
-           in der der Start liegt — sonst zählt INTERVAL=2 („jede zweite Woche")
-           ab einem willkürlichen Wochentag. */
         const rundenAnfang = new Date(anfang);
         if (r.freq === 'WEEKLY') {
             const versatz = (rundenAnfang.getDay() - r.wkst + 7) % 7;
@@ -321,17 +226,12 @@ const Wiederholung = (() => {
                 satz = tageDerRunde(anfangDieserRunde, r.freq, r);
             }
             else if (r.freq === 'WEEKLY') {
-                /* Ohne BYDAY wiederholt WEEKLY den Wochentag des Starts. */
                 const d = new Date(anfangDieserRunde);
                 d.setDate(d.getDate() + ((anfang.getDay() - r.wkst + 7) % 7));
                 satz = [d];
             }
             else if (r.freq === 'MONTHLY') {
                 const d = new Date(anfangDieserRunde);
-                /* Ohne BYMONTHDAY der Tag des Starts. Gibt es ihn im Monat nicht
-                   (31. Februar), fällt der Termin AUS — er wird nicht auf den 1. März
-                   verschoben. Das ist die Regel des Formats, und sie ist die
-                   weniger überraschende. */
                 const zielTag = r.bymonthday.length ? 1 : anfang.getDate();
                 const letzter = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
                 if (!r.bymonthday.length && zielTag > letzter) {
@@ -355,14 +255,12 @@ const Wiederholung = (() => {
                 d.setMonth(anfang.getMonth(), anfang.getDate());
                 satz = [d];
             }
-            /* Uhrzeit vom Start übernehmen. */
             satz = satz.map(d => {
                 const mit = new Date(d);
                 mit.setHours(anfang.getHours(), anfang.getMinutes(), 0, 0);
                 return mit;
             }).filter(d => d >= anfang)
                 .sort((a, b) => a.getTime() - b.getTime());
-            /* BYSETPOS wählt aus dem Satz DIESER Runde. */
             if (r.bysetpos.length && satz.length) {
                 const gewaehlt = [];
                 for (const pos of r.bysetpos) {
@@ -382,7 +280,6 @@ const Wiederholung = (() => {
             if (satz.length && satz[satz.length - 1] > schluss)
                 break;
         }
-        /* RDATE zum Schluss — sie stehen ausserhalb der Regel. */
         for (const x of (opt.rdate || [])) {
             const d = ausIcs(x);
             if (!d)
@@ -401,12 +298,6 @@ const Wiederholung = (() => {
             satz: satzZu(r.nichtVerstanden, abgeschnitten)
         };
     };
-    /**
-     * Der Satz für den Menschen.
-     *
-     * Er entsteht NUR, wenn wirklich etwas fehlt. Ein Hinweis, der bei jeder
-     * gewöhnlichen Regel erscheint, wird nach dem dritten Mal überlesen.
-     */
     const satzZu = (nichtVerstanden, abgeschnitten) => {
         const teile = [];
         if (nichtVerstanden.length)

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/spreadsheet/engine.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/spreadsheet/engine.ts — der Tabellenkern, ohne Oberfläche
  * ----------------------------------------------------------------------------

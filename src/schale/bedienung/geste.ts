@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/geste.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/geste.ts — die Hand, die zeigt, wo man hintippt
  * ----------------------------------------------------------------------------

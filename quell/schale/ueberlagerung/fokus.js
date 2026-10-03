@@ -1,92 +1,21 @@
 "use strict";
-/* ============================================================================
- * schale/ueberlagerung/fokus.js — Dialoge für die Tastatur und fürs Zuhören
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/schale/ueberlagerung/fokus.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/schale/ueberlagerung/fokus.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
- * ----------------------------------------------------------------------------
- * WARUM ES DIESE DATEI GIBT.
- *
- * Redion baut seine Überlagerungen an 106 Stellen — jedes Mal ein `<div
- * class="overlay">` mit `document.body.appendChild`. Gemessen am 7. August
- * fehlte allen dasselbe, und keine dieser 106 Stellen war schuld:
- *
- *   · KEINE ROLLE. Für ein Vorleseprogramm ist ein `<div>` über der Seite
- *     kein Dialog, sondern Text am Ende des Dokuments. Es sagt nicht, dass
- *     etwas aufgegangen ist, und nicht, was.
- *
- *   · DER FOKUS BLIEB DRAUSSEN. Die Einstellungen gingen auf, und die
- *     Tastatur stand weiter auf dem Knopf dahinter. Wer nur die Tastatur
- *     hat, musste sich durch die ganze Seite tabben, um in den Dialog zu
- *     kommen, der schon vor ihm stand.
- *
- *   · TAB LIEF HINAUS. Nach zehn Tabs stand der Fokus in der Seitenleiste
- *     HINTER dem Dialog — sichtbar war er dort nirgends, denn darüber lag
- *     die Überlagerung. Man tippte ins Nichts.
- *
- *   · UND ER KAM NICHT ZURÜCK. Nach dem Schliessen stand der Fokus auf
- *     `<body>`. Das nächste Tab fing wieder ganz oben an — bei jedem
- *     Schliessen eines Menüs.
- *
- * EINE STELLE STATT 106. Ein Beobachter sieht zu, was an `<body>` gehängt
- * wird, und legt das Fehlende auf. Das ist nicht nur weniger Arbeit: die
- * 107. Überlagerung bekommt es dann auch, ohne dass jemand daran denkt.
- *
- * WAS ER NICHT TUT: er nimmt niemandem den Fokus weg, der schon gesetzt
- * wurde. Die Suche setzt ihn auf ihr Feld, der Papierkorb auf seins — wer
- * das überschreibt, macht drei richtige Dialoge kaputt, um einen falschen
- * zu heilen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/fokus.ts (npm run bauen:ts). */
 const Fokus = (() => {
-    /** Was die Tastatur erreichen kann. */
     const GREIFBAR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
         'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
-    /**
-     * Die Überlagerungen, um die es geht.
-     *
-     * Der dunkle `.menu-grund` ist nur der Hintergrund eines mobilen Blatts.
-     * Ihn zum Dialog zu erklären stellte den Fokus auf eine leere Fläche und
-     * liess das eigentliche Blatt für Vorleseprogramme namenlos. Dialog ist das
-     * Blatt selbst. Ein mobiler Peek darf dieselbe zentrale Behandlung nutzen.
-     */
     const DIALOGE = '.overlay, .menu.blatt, .peek.peek-mobil';
-    /** Woher man kam — je offener Überlagerung eine Erinnerung. */
     const herkunft = new WeakMap();
-    /**
-     * Das zuletzt berührte Element AUSSERHALB jeder Überlagerung.
-     *
-     * Nötig wegen der Reihenfolge: ein Beobachter meldet sich erst nach dem
-     * laufenden Durchgang, und die meisten Dialoge setzen ihren Fokus noch
-     * darin — direkt nach dem `appendChild`. Wer beim Anmelden nach dem
-     * aktiven Element fragt, bekommt deshalb meistens ein Feld IM Dialog,
-     * merkt sich das als Herkunft, und beim Schliessen ist es längst weg.
-     *
-     * Genau das war der Fehler: von vier Dialogen kehrte nur einer zurück —
-     * ausgerechnet der, der seinen Fokus gar nicht setzte.
-     */
     let letzterAussen = null;
-    /** Nur Elemente, die DIESE Stelle stillgelegt hat, werden zurückgestellt. */
     const stillgelegt = new Set();
     const sichtbar = (el) => {
         const r = el.getBoundingClientRect();
         return !!(r.width || r.height);
     };
     const greifbareIn = (d) => [...d.querySelectorAll(GREIFBAR)].filter(sichtbar);
-    /** Die oberste offene Überlagerung — die letzte im Dokument. */
     const oberste = () => {
         const alle = [...document.querySelectorAll(DIALOGE)];
         return alle.length ? alle[alle.length - 1] : null;
     };
-    /**
-     * Nicht nur `aria-modal`, sondern echtes `inert`.
-     *
-     * Der direkte Körper-Kindknoten, in dem der oberste Dialog liegt, bleibt
-     * bedienbar. Alles andere wird für Tastatur, Zeiger und Vorleseprogramm
-     * stillgelegt. Der dunkle Blattgrund bleibt absichtlich anklickbar: er ist
-     * die Schliessfläche, aber niemals selbst der Dialog.
-     */
     const inertAktualisieren = () => {
         stillgelegt.forEach(el => { if (el.isConnected)
             el.inert = false; });
@@ -103,19 +32,11 @@ const Fokus = (() => {
             if (kind === traeger || kind.matches('.menu-grund'))
                 return;
             if (kind.inert)
-                return; /* fremden Zustand bewahren */
+                return;
             kind.inert = true;
             stillgelegt.add(kind);
         });
     };
-    /**
-     * Einer neu erschienenen Überlagerung geben, was ihr fehlt.
-     *
-     * `aria-modal` ist die halbe Miete: damit behandelt ein Vorleseprogramm
-     * alles ausserhalb als nicht vorhanden, solange der Dialog steht. Ohne
-     * das liest es weiter durch die Seite dahinter, die niemand mehr
-     * bedienen kann.
-     */
     const anmelden = (d) => {
         if (d.dataset.fokusFertig)
             return;
@@ -124,28 +45,17 @@ const Fokus = (() => {
             d.setAttribute('role', 'dialog');
         if (!d.hasAttribute('aria-modal'))
             d.setAttribute('aria-modal', 'true');
-        /* Ein Name, wenn einer dasteht. `.fh` ist Redions Dialogkopf; sonst die
-           erste Überschrift. Ein Dialog ohne Namen heisst beim Vorlesen nur
-           „Dialog" — richtig, aber nutzlos. */
         if (!d.getAttribute('aria-label') && !d.getAttribute('aria-labelledby')) {
             const kopf = d.querySelector('.fh, .mt-titel, .blatt-titel, .peek-pfad, h2, h3');
-            /* Kein Kopf? Dann der Platzhalter des ersten Feldes. „Seiten und
-               Inhalte suchen" ist ein besserer Dialogname als „Dialog". */
             const name = (kopf?.textContent || '').trim() ||
                 (d.querySelector('input[placeholder]')?.placeholder || '').trim();
             if (name)
                 d.setAttribute('aria-label', name.slice(0, 80));
         }
-        /* Woher wir kamen — für die Rückkehr beim Schliessen. Das aktive
-           Element nur dann, wenn es NICHT schon im Dialog steht; sonst die
-           letzte Stelle draussen. */
         const jetzt = document.activeElement;
         const vorher = (jetzt && !d.contains(jetzt)) ? jetzt : letzterAussen;
         if (vorher && vorher !== document.body && document.contains(vorher))
             herkunft.set(d, vorher);
-        /* DEN FOKUS NUR HOLEN, WENN IHN NIEMAND GESETZT HAT. Ein Takt warten:
-           die meisten Dialoge setzen ihn im selben Durchlauf, direkt nach dem
-           `appendChild`. Wer hier sofort zugreift, kommt ihnen zuvor. */
         setTimeout(() => {
             if (!d.isConnected)
                 return;
@@ -156,19 +66,10 @@ const Fokus = (() => {
                 erstes.focus();
                 return;
             }
-            /* Nichts zu greifen — dann wenigstens der Kasten selbst, damit ein
-               Vorleseprogramm überhaupt hineinspringt. */
             d.tabIndex = -1;
             d.focus();
         }, 0);
     };
-    /**
-     * Tab hält im obersten Dialog.
-     *
-     * Der Browser kennt nur eine Reihenfolge, und die geht durch das ganze
-     * Dokument. Solange eine Überlagerung davorliegt, ist alles dahinter
-     * nicht bedienbar — der Fokus muss also am Ende wieder an den Anfang.
-     */
     const tasten = (e) => {
         if (e.key !== 'Tab')
             return;
@@ -183,8 +84,6 @@ const Fokus = (() => {
         const erstes = liste[0];
         const letztes = liste[liste.length - 1];
         const a = document.activeElement;
-        /* Steht der Fokus gar nicht im Dialog — etwa weil er hinter ihm hängen
-           geblieben ist —, holt ihn der nächste Tab hinein. */
         if (!d.contains(a)) {
             e.preventDefault();
             (e.shiftKey ? letztes : erstes).focus();
@@ -199,13 +98,6 @@ const Fokus = (() => {
             letztes.focus();
         }
     };
-    /**
-     * Beim Schliessen dorthin zurück, wo man war.
-     *
-     * Ohne das steht der Fokus auf `<body>`, und das nächste Tab fängt oben
-     * an. Bei einem Menü, das man zehnmal am Tag öffnet, ist das zehnmal die
-     * ganze Seitenleiste.
-     */
     const gegangen = (weg) => {
         const dialoge = [];
         for (const n of weg) {
@@ -218,33 +110,13 @@ const Fokus = (() => {
         for (const n of dialoge) {
             const ziel = herkunft.get(n);
             herkunft.delete(n);
-            /* Nur, wenn der Fokus wirklich verwaist ist. Hat inzwischen etwas
-               anderes ihn übernommen — ein zweiter Dialog, ein Textfeld —, wäre
-               das Zurückholen ein Diebstahl. */
             const a = document.activeElement;
             if (a && a !== document.body && a !== document.documentElement)
                 continue;
             if (document.querySelector(DIALOGE))
-                continue; /* noch etwas offen */
+                continue;
             if (ziel && document.contains(ziel))
                 ziel.focus?.();
-            /* UND NACHSEHEN, OB ES GEKLAPPT HAT (E223).
-             *
-             * Zwei Fälle lassen den Fokus sonst auf `<body>` liegen, und von dort
-             * fängt das nächste Tab wieder ganz oben an — genau der Fehler, gegen
-             * den dieser ganze Abschnitt geschrieben wurde.
-             *
-             *   · Es gab kein Ziel. Strg+P öffnet die Suche auch dann, wenn gar
-             *     nichts fokussiert war.
-             *   · Das Ziel ist inzwischen unsichtbar. Seit E219 steht „Suchen"
-             *     hinter „Mehr", und ein Element mit `display:none` nimmt den
-             *     Fokus nicht an — `focus()` tut schlicht nichts, ohne Fehler.
-             *
-             * Dann übernimmt der Inhalt. Das ist nicht bloss irgendein Ersatz:
-             * dort hat man gearbeitet, bevor der Dialog kam, und von dort läuft
-             * Tab weiter, statt neu anzufangen. `#page` trägt in `index.html`
-             * schon `tabindex="-1"` — es ist als Fokusziel vorgesehen.
-             */
             const jetztA = document.activeElement;
             if (!jetztA || jetztA === document.body || jetztA === document.documentElement) {
                 const inhalt = document.getElementById('page') || document.getElementById('main');
@@ -273,17 +145,11 @@ const Fokus = (() => {
                 if (a.removedNodes.length)
                     entfernt.push(...a.removedNodes);
             }
-            /* Erst den Hintergrund wieder freigeben, dann den Fokus dorthin
-               zurückbringen. Ein `focus()` auf einem noch inerten Knopf tut nichts. */
             inertAktualisieren();
             if (entfernt.length)
                 gegangen(entfernt);
         }).observe(document.body, { childList: true, subtree: true });
-        /* In der Aufnahmephase, damit die Falle vor den Feldern im Dialog
-           greift — sonst schiebt der Browser den Fokus schon hinaus, bevor
-           wir ihn halten können. */
         document.addEventListener('keydown', tasten, true);
-        /* Mitschreiben, wo der Fokus draussen zuletzt stand. */
         document.addEventListener('focusin', e => {
             const z = e.target;
             if (!(z instanceof HTMLElement))

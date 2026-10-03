@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/arbeitswelt.ts (npm run bauen:ts). */
 /* ============================================================================
  * arbeitswelt.ts — Sammlungen in Bibliothek, Aufgaben und Kalender
  * ----------------------------------------------------------------------------

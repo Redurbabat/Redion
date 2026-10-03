@@ -1,49 +1,8 @@
 "use strict";
-/* ============================================================================
- * blocks.js — Der Block-Editor
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/editor/ansicht/editor.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/editor/ansicht/editor.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Alles ist ein Block. Ein Absatz ist ein Block, eine Überschrift ist ein
- * Block, eine Unterseite ist ein Block, eine Datenbank ist ein Block.
- * Genau wie bei Notion.
- *
- * Dieser Datei gehört:
- *   - der Katalog aller Blocktypen (mit Slash-Befehl und Tastenkürzel)
- *   - das Rendern eines Blocks ins DOM
- *   - die Tastatursteuerung im Editor
- *   - das Slash-Menü
- *   - die Markdown-Kürzel beim Tippen
- *   - das Block-Handle-Menü
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/ansicht/editor.ts (npm run bauen:ts). */
 const Blocks = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    /* ========================================================================
-     * DER KATALOG
-     * ------------------------------------------------------------------------
-     * gruppe   – Überschrift im Slash-Menü
-     * cmd      – die Wörter, auf die der Slash-Befehl reagiert
-     * kurz     – Tastenkürzel, das den Blocktyp setzt
-     * md       – Markdown-Kürzel, das beim Tippen sofort umwandelt
-     * ======================================================================*/
-    /* Die Liste steht in register/bloecke.js — dort wird eine neue Blockart
-       angelegt, und sie ist danach überall da. */
     const TYPEN = Register.bloecke.alle();
-    /* ========================================================================
-     * EINBETTUNGEN
-     * ------------------------------------------------------------------------
-     * In Notion hat jeder Dienst einen eigenen Eintrag im Slash-Menü, obwohl
-     * darunter immer derselbe Einbettungsblock steckt. Genauso hier: der Dienst
-     * merkt sich nur, wie die normale Adresse in eine Einbettungsadresse
-     * umgeschrieben wird. Alles ohne Schlüssel und ohne fremden Dienst.
-     * ======================================================================*/
     const DIENSTE = [
         { id: 'youtube', name: 'YouTube', icon: '▶', hinweis: 'youtube.com/watch?v=…',
             um: (u) => {
@@ -95,7 +54,6 @@ const Blocks = (() => {
         cmd: [d.id, d.name.toLowerCase(), 'einbetten ' + d.id]
     }));
     const dienst = (id) => DIENSTE.find(d => d.id === id);
-    /** Aus einer normalen Adresse die Adresse machen, die im Rahmen läuft. */
     const einbettungsAdresse = (dienstId, url) => {
         const d = dienst(dienstId);
         const u = String(url || '').trim();
@@ -109,25 +67,16 @@ const Blocks = (() => {
         }
     };
     const typ = (id) => TYPEN.find((t) => t.id === id) || TYPEN[0];
-    /* Ziffer → Blockart, aus dem Register. Hier standen dieselben zehn Paare
-       DREIMAL als Literal: für Strg+Umschalt, für die Mac-Belegung Strg+Alt
-       und für die Mehrfachauswahl. Zusammen mit dem `kurz`-Feld im Register
-       waren es vier Kopien einer Zuordnung. */
     const ZIFFER_TYP = () => (typeof Register !== 'undefined' && Register.bloecke?.zifferZuTyp)
         ? Register.bloecke.zifferZuTyp()
         : { '0': 'text', '1': 'h1', '2': 'h2', '3': 'h3', '4': 'todo', '5': 'bullet',
             '6': 'number', '7': 'toggle', '8': 'code', '9': 'page' };
-    /* Die Blocktypen, in die man einen bestehenden Block umwandeln kann. */
     const UMWANDELBAR = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number', 'toggle', 'quote', 'callout',
         'code', 'equation', 'flashcard', 'page'];
-    /* Die Sprachen des Codeblocks. Stand hier früher mitten im Zeichnen — jetzt
-       oben, weil auch das Markdown-Kürzel ```js sie braucht. */
     const SPRACHEN = ['Plain Text', 'JavaScript', 'TypeScript', 'JSX', 'Python', 'HTML', 'XML', 'CSS', 'SCSS', 'Less', 'JSON', 'YAML', 'TOML',
         'SQL', 'GraphQL', 'Bash', 'Shell', 'PowerShell', 'Java', 'C', 'C++', 'C#', 'Go', 'Rust', 'Swift', 'Kotlin', 'Dart',
         'PHP', 'Ruby', 'Perl', 'Lua', 'R', 'Julia', 'MATLAB', 'Haskell', 'Elixir', 'Erlang', 'Clojure', 'Scala', 'Objective-C',
         'Assembly', 'Docker', 'Makefile', 'Nginx', 'Diff', 'LaTeX', 'Markdown'];
-    /* Wer ```js tippt, meint JavaScript. Nur die Kurzformen, die sich nicht
-       von selbst ergeben — „python" findet SPRACHEN schon ohne Hilfe. */
     const SPRACH_KURZ = {
         js: 'JavaScript', ts: 'TypeScript', tsx: 'JSX', py: 'Python',
         sh: 'Bash', zsh: 'Bash', console: 'Shell', ps1: 'PowerShell',
@@ -136,25 +85,19 @@ const Blocks = (() => {
         yml: 'YAML', md: 'Markdown', tex: 'LaTeX', dockerfile: 'Docker',
         text: 'Plain Text', plain: 'Plain Text', txt: 'Plain Text'
     };
-    /** „js" → „JavaScript". Unbekanntes bleibt Plain Text, statt zu verschwinden. */
     const sprachName = (roh) => {
         const k = String(roh ?? '').toLowerCase();
         if (SPRACH_KURZ[k])
             return SPRACH_KURZ[k];
         return SPRACHEN.find(s => s.toLowerCase() === k) || 'Plain Text';
     };
-    /** Wie viele Stufen ist die Zeile eingerückt? Vier Leerzeichen = ein Tab. */
     const mdTiefe = (roh) => {
         const vorn = /^[\t ]*/.exec(roh)?.[0] ?? '';
         let n = 0;
         for (const z of vorn)
             n += z === '\t' ? 4 : 1;
-        return Math.floor(n / 4); /* 0-3 Zeichen → 0, 4-7 → 1, 8-11 → 2 */
+        return Math.floor(n / 4);
     };
-    /**
-     * Markdown-Text in Blöcke lesen. Gibt eine flache Liste mit Tiefenangabe
-     * zurück — wer daraus einen Baum bauen will, tut es beim Einfügen.
-     */
     const mdLesen = (roh) => {
         const zeilen = String(roh ?? '').replace(/\r\n?/g, '\n').split('\n');
         const raus = [];
@@ -162,8 +105,6 @@ const Blocks = (() => {
             const zeile = zeilen[i] ?? '';
             const tiefe = mdTiefe(zeile);
             const t = zeile.trim();
-            /* Codezaun: alles bis zum schliessenden Zaun bleibt, wie es ist —
-               auch die leeren Zeilen, auch die Rautezeichen darin. */
             const auf = /^```([a-zA-Z0-9+#.-]{0,20})\s*$/.exec(t);
             if (auf) {
                 const inhalt = [];
@@ -175,19 +116,13 @@ const Blocks = (() => {
                     }
                     inhalt.push(zeilen[i] ?? '');
                 }
-                /* Ein Zaun ohne Ende ist kaputtes Markdown, aber der Text darin ist
-                   echt — er wird zum Codeblock, statt verloren zu gehen. */
                 void zu;
                 raus.push({ typ: 'code', text: inhalt.join('\n'), tiefe,
                     lang: sprachName(auf[1] ?? '') });
                 continue;
             }
             if (!t)
-                continue; /* Leerzeilen weg */
-            /* Verschachtelte Zitate tragen ihre Tiefe in den `>`-Marken, nicht
-               zwingend in Leerzeichen: `> > Innen` ist eine Stufe unter
-               `> Aussen`. Vorher wurde nur die erste Marke entfernt; die zweite
-               blieb sichtbar im Text und beide Zitate lagen nebeneinander. */
+                continue;
             if (t.startsWith('>')) {
                 let rest = t;
                 let zitatStufen = 0;
@@ -202,16 +137,12 @@ const Blocks = (() => {
                     raus.push({ typ: 'quote', text: rest, tiefe: zitatTiefe });
                 continue;
             }
-            /* Markdown-Tabelle (L20): eine |-Zeile, unmittelbar gefolgt von der
-               Trennzeile (|---|---|). Alle |-Zeilen danach gehören dazu. Ohne
-               Trennzeile ist es keine Tabelle — dann bleibt die Zeile Text,
-               denn „| a | b |" kann auch einfach so gemeint sein. */
             if (/^\|.*\|$/.test(t)) {
                 const naechste = (zeilen[i + 1] ?? '').trim();
                 if (/^\|?[\s:|-]+\|?$/.test(naechste) && naechste.includes('-')) {
                     const spaltenVon = (z) => z.replace(/^\|/, '').replace(/\|$/, '').split('|').map(x => x.trim());
                     const daten = [spaltenVon(t)];
-                    i++; /* die Trennzeile überspringen */
+                    i++;
                     while (i + 1 < zeilen.length && /^\|.*\|$/.test((zeilen[i + 1] ?? '').trim()))
                         daten.push(spaltenVon((zeilen[++i] ?? '').trim()));
                     raus.push({ typ: 'tabelle', text: '', tiefe, zellen: daten });
@@ -227,8 +158,6 @@ const Blocks = (() => {
                 raus.push({ typ: 'h' + (m[1] ?? '#').length, text: m[2] ?? '', tiefe });
                 continue;
             }
-            /* Aufgabe vor Aufzählung prüfen: „- [ ] x" ist beides, und das
-               Kästchen ist die genauere Auskunft. */
             if ((m = /^[-*+]\s+\[([ xX])\]\s*(.*)$/.exec(t))) {
                 raus.push({ typ: 'todo', text: m[2] ?? '', tiefe, checked: (m[1] ?? ' ') !== ' ' });
                 continue;
@@ -249,19 +178,11 @@ const Blocks = (() => {
         }
         return raus;
     };
-    /** Steckt Markdown genug Gliederung, dass daraus mehr als ein Block wird? */
     const mdIstStruktur = (roh) => {
         const teile = mdLesen(roh);
         return teile.length > 1 || (teile.length === 1 && teile[0].typ !== 'text');
     };
-    /**
-     * Gelesene Blöcke unter `elternId` ab `idx` einsetzen. Die Tiefe wird zu
-     * echter Verschachtelung: ein eingerückter Punkt landet im Block darüber.
-     * Gibt die Kennung des letzten eingesetzten Blocks zurück.
-     */
     const mdEinsetzen = (teile, elternId, idx) => {
-        /* Je Tiefe der zuletzt gesetzte Block — sein Kind kommt eine Stufe tiefer.
-           Stufe 0 ist der Eltern-Block selbst, dort zählt der Einfügeplatz. */
         const stapel = [null];
         const gesetzt = [];
         teile.forEach(teil => {
@@ -269,9 +190,6 @@ const Blocks = (() => {
             const ziel = tiefe === 0 ? elternId : stapel[tiefe];
             if (!ziel)
                 return;
-            /* Eine Markdown-Tabelle wird ein Tabellenblock (E88). Die Zellen
-               gehen durch Spreadsheet.setze, damit aus „12" eine Zahl wird und
-               aus „=A1+B1" eine Formel — genau wie beim Tippen. */
             if (teil.typ === 'tabelle' && teil.zellen &&
                 typeof Spreadsheet !== 'undefined' && typeof CellRefs !== 'undefined') {
                 const neuT = tiefe === 0
@@ -285,12 +203,10 @@ const Blocks = (() => {
                     if (wert !== '')
                         Spreadsheet.setze(blatt, CellRefs.schreibe(z, s), wert);
                 }));
-                /* Einmal durchrechnen: eingefügte =Formeln sollen ihren Wert
-                   tragen, auch wenn das Raster nie geöffnet wird. */
                 try {
                     Spreadsheet.rechneMappe(mappe);
                 }
-                catch { /* Zirkel zeigt die Zelle */ }
+                catch { }
                 Store.updateBlock(neuT.id, { mappe });
                 stapel.length = tiefe + 1;
                 stapel.push(neuT.id);
@@ -311,33 +227,22 @@ const Blocks = (() => {
         });
         return gesetzt.length ? gesetzt[gesetzt.length - 1] : null;
     };
-    /* ========================================================================
-     * HILFEN
-     * ======================================================================*/
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /** Wandelt gespeicherten Text in Anzeige-HTML um (Fett, Kursiv, Code, Links). */
     const inline = (s) => {
         let h = esc(s)
             .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
             .replace(/(^|\W)\*(.+?)\*(\W|$)/g, '$1<i>$2</i>$3')
             .replace(/__(.+?)__/g, '<u>$1</u>')
             .replace(/~~(.+?)~~/g, '<s>$1</s>')
-            /* Notion streicht auch mit einer einzelnen Tilde durch. Erst danach,
-               damit ~~doppelt~~ nicht zu <s>~doppelt~</s> zerfällt — und nur, wenn
-               kein Leerzeichen anschliesst, sonst trifft es „ca. 3~5 Grad". */
             .replace(/(^|[^~\w])~([^~\s](?:[^~]*[^~\s])?)~(?![~\w])/g, '$1<s>$2</s>')
             .replace(/`([^`]+?)`/g, '<code>$1</code>')
             .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        /* Inline-Formel $a^2$ — der kleine Mathe-Satz aus canvas.js */
         if (typeof Zusatz !== 'undefined')
             h = h.replace(/\$([^$\n]{1,120})\$/g, (_, f) => Zusatz.mathe(f));
-        /* Datumserwähnung @2026-08-02 */
         h = h.replace(/(^|[\s(])@(\d{4}-\d{2}-\d{2})/g, (_, vor, d) => `${vor}<span class="datum" title="${d}">📅 ${new Date(d + 'T12:00:00').toLocaleDateString('de-DE')}</span>`);
-        /* Seitenlinks [[…]], Schlagwörter #… und Blockverweise ((…)) */
         return typeof Links !== 'undefined' ? Links.inline(h) : h;
     };
-    /* Cursor ans Ende eines Elements setzen */
     const cursorAnsEnde = (el) => {
         el.focus();
         const r = document.createRange();
@@ -349,7 +254,6 @@ const Blocks = (() => {
         s.removeAllRanges();
         s.addRange(r);
     };
-    /* Steht der Cursor ganz am Anfang des Blocks? */
     const amAnfang = (el) => {
         const s = getSelection();
         if (!s || !s.rangeCount)
@@ -368,14 +272,7 @@ const Blocks = (() => {
         r.setStart(s.getRangeAt(0).endContainer, s.getRangeAt(0).endOffset);
         return r.toString().length === 0;
     };
-    /* ========================================================================
-     * RENDERN
-     * ======================================================================*/
     let zeitmarkenSpieler = null;
-    /** Springt zu einer Tonstelle. Zuerst wird der sichtbare Audio-Block
-        benutzt; bei einem Verweis von einer anderen Seite reicht auch die
-        stabile Datei-Kennung. Alte Audio-Blöcke mit `src` bleiben davon
-        unberührt und funktionieren weiterhin im normalen Player. */
     const audioRefSpielen = async (ref) => {
         const sek = Math.max(0, Number(ref?.sek) || 0);
         const blockId = String(ref?.blockId || '');
@@ -387,7 +284,7 @@ const Blocks = (() => {
                 try {
                     audio.currentTime = sek;
                 }
-                catch { /* Metadaten kommen gleich; `loadedmetadata` versucht erneut. */ }
+                catch { }
                 audio.play().catch(err => UI.toast('Ton konnte nicht starten: ' +
                     (err instanceof Error ? err.message : String(err))));
             };
@@ -418,35 +315,12 @@ const Blocks = (() => {
         zeitmarkenSpieler = new Audio(adresse);
         spiele(zeitmarkenSpieler);
     };
-    /** Baut das DOM für einen Block samt Kindern. */
-    /**
-     * @param nr Die laufende Nummer einer Nummernliste — von dem gezählt, der
-     *        die Liste ZEICHNET, nicht am Block gespeichert (E692, L220).
-     *        Vorher stand sie als `b.nr` im Block im Arbeitsspeicher und
-     *        wanderte über `exportAll` in jede Sicherung; seit E691 zählte sie
-     *        über die gefilterte Liste, und dieselbe Seite konnte je nach
-     *        zuletzt gezeichneter Ansicht eine andere Zahl sichern. Ein
-     *        Anzeigewert gehört nicht in die Daten (§9).
-     */
     const render = (block, tiefe = 0, nr = 0) => {
         const t = typ(block.type);
         const el = document.createElement('div');
         el.className = 'blk b-' + block.type;
         el.dataset.id = block.type;
         el.dataset.bid = block.id;
-        /* WOHER DIESE ZEILE KOMMT (E307, Redurs Punkt 9).
-         *
-         * `erstelltVon` steht seit jeher an jedem Block — aber es hält den
-         * NAMEN eines Menschen (`Store.getMeta('nutzer')`), nicht die Art der
-         * Herkunft. Was die KI geschrieben hat, steht dort ebenfalls als „Ich",
-         * weil sie unter dem angemeldeten Namen anlegt. Genau die Unterscheidung
-         * fehlte: eine Aussage, die ein Modell erzeugt hat, sah aus wie eine aus
-         * dem Skript.
-         *
-         * `herkunft` fehlt bei allem Selbstgeschriebenen — und das ist Absicht.
-         * Der Normalfall bekommt kein Feld, keine Marke und keinen Platz; eine
-         * Marke an jeder Zeile wäre nach zwei Minuten unsichtbar. Sichtbar ist
-         * nur, was NICHT von einem selbst stammt. */
         if (block.herkunft) {
             el.dataset.herkunft = String(block.herkunft);
             el.title = { ki: 'Von der KI geschrieben',
@@ -454,21 +328,16 @@ const Blocks = (() => {
                 fremd: 'Aus einem verbundenen Dienst'
             }[String(block.herkunft)] || '';
         }
-        /* Die Stufe für `h1`/`h2`/`h3` — gesetzt wird sie weiter unten auf dem
-           TEXTFELD, nicht auf diesem Kasten. Siehe `machText`. */
         const stufe = { h1: '2', h2: '3', h3: '4' }[block.type];
-        /* Der Griff links: Plus und Sechs-Punkte */
         const griffe = document.createElement('div');
         griffe.className = 'handles';
         griffe.innerHTML =
             '<button data-act="add" title="Block darunter einfügen">+</button>' +
                 '<button data-act="menu" title="Ziehen zum Verschieben, Klick für Optionen">⋮⋮</button>';
         el.appendChild(griffe);
-        /* Der Inhalt — je nach Typ verschieden */
         const box = document.createElement('div');
         box.style.cssText = 'flex:1; min-width:0; display:flex; align-items:flex-start';
         el.appendChild(box);
-        /* Ist die Seite gegen Bearbeiten gesperrt? Dann nur lesen. */
         const seite = App.aktuelleSeite ? Store.getBlock(App.aktuelleSeite()) : null;
         const nurLesen = !!(seite && seite.gesperrt);
         const machText = (ph) => {
@@ -480,25 +349,7 @@ const Blocks = (() => {
             ct.innerHTML = inline(block.text || '');
             if (block.color)
                 ct.classList.add(block.color.startsWith('bg-') ? block.color : 't-' + block.color);
-            /* Grösse und Schriftart als KLASSEN aus dem Katalog (E101). Was dort
-               nicht steht, ergibt keine Klasse — aus den Daten kann damit kein
-               fremdes CSS kommen (§19). */
             Textstile.klassen(block.stil).forEach((k) => ct.classList.add(k));
-            /* ÜBERSCHRIFTEN MÜSSEN AUCH ÜBERSCHRIFTEN SEIN.
-               Jeder Block ist ein `<div>`, auch `h1`, `h2` und `h3` — sichtbar
-               sind sie durch ihre Grösse, hörbar durch gar nichts. Wer nicht
-               sieht, springt von Überschrift zu Überschrift; gemessen am
-               7. August fand eine Seite mit Titel und Überschrift genau null.
-      
-               AUF DEM TEXTFELD, NICHT AUF DEM BLOCKKASTEN. Der Kasten enthält
-               auch die Griffe ✚ und ⋮⋮; die Überschrift hiesse dann
-               „+ ⋮⋮ Eine Überschrift".
-      
-               UND EINE STUFE TIEFER, als der Blockname sagt: die Stufe 1 gehört
-               dem Seitentitel. Ein `h1`-Block ist die erste Gliederungsebene
-               DARIN, also Stufe 2. Zwei Überschriften der Stufe 1 auf einer
-               Seite heissen für ein Vorleseprogramm: hier fangen zwei Dokumente
-               an. */
             if (stufe) {
                 ct.setAttribute('role', 'heading');
                 ct.setAttribute('aria-level', stufe);
@@ -537,10 +388,6 @@ const Blocks = (() => {
             case 'number': {
                 const mk = document.createElement('div');
                 mk.className = 'mk';
-                /* Ohne übergebene Zahl steht „1." da — so war es für verschachtelte
-                   Nummernlisten schon immer, denn gezählt wurde nur auf der
-                   obersten Ebene. Diese Grenze bleibt, wo sie war; sie wandert nur
-                   nicht mehr in die Sicherung. */
                 mk.textContent = (nr || 1) + '.';
                 box.appendChild(mk);
                 box.appendChild(machText());
@@ -598,11 +445,9 @@ const Blocks = (() => {
                 });
                 sprache.addEventListener('change', () => Store.updateBlock(block.id, { lang: sprache.value }));
                 const ct = machText('Code …');
-                ct.textContent = block.text || ''; /* im Codeblock kein Inline-HTML */
+                ct.textContent = block.text || '';
                 if (block.zeilenUm)
                     ct.classList.add('umbruch');
-                /* Zeilennummern — Notion hat sie nicht, ab zwanzig Zeilen Code
-                   sucht man sich ohne sie die Stelle mühsam zusammen. */
                 const nummern = document.createElement('div');
                 nummern.className = 'code-nr';
                 const zaehleNummern = () => {
@@ -613,7 +458,6 @@ const Blocks = (() => {
                 const nrAn = block.zeilennr !== false;
                 if (nrAn)
                     wrap.classList.add('mit-nr');
-                /* Eingefärbt anzeigen, solange niemand darin schreibt. */
                 const faerbe = () => {
                     zaehleNummern();
                     if (document.activeElement === ct)
@@ -626,7 +470,6 @@ const Blocks = (() => {
                 ct.addEventListener('input', zaehleNummern);
                 sprache.addEventListener('change', () => setTimeout(faerbe, 0));
                 setTimeout(faerbe, 0);
-                /* Werkzeuge oben rechts: kopieren, Nummern, Umbruch */
                 const werk = document.createElement('div');
                 werk.className = 'code-werk';
                 werk.innerHTML =
@@ -660,7 +503,6 @@ const Blocks = (() => {
                 break;
             }
             case 'equation':
-                /* Zeigt die gesetzte Formel; ein Klick öffnet die Quelle. */
                 box.appendChild(Zusatz.formelBlock(block));
                 break;
             case 'image':
@@ -698,8 +540,6 @@ const Blocks = (() => {
             case 'database':
                 box.appendChild(Datenbank.render(block));
                 break;
-            /* Verknüpfte Ansicht: zeigt eine Datenbank, die woanders lebt.
-               Eigene Filter und Sortierung, dieselben Daten — wie in Notion. */
             case 'linkeddb': {
                 const w = document.createElement('div');
                 w.style.width = '100%';
@@ -730,29 +570,17 @@ const Blocks = (() => {
             case 'columns3': {
                 const w = document.createElement('div');
                 const n = block.type === 'columns3' ? 3 : (block.spalten || 2);
-                /* Die Spaltenzahl steht als Variable da, damit sie auf schmalen
-                   Bildschirmen per CSS auf eine Spalte fallen kann — wie in Notion. */
                 w.className = 'spalten-block';
                 w.style.setProperty('--sp', n);
                 Store.childrenOf(block.id).forEach((k) => w.appendChild(render(k, tiefe)));
                 box.appendChild(w);
                 break;
             }
-            /* Eine SPALTE ist ein Behälter, kein Inhalt (E102). Vorher waren die
-               Kinder eines Spaltenblocks selbst die Spalten — je Spalte genau ein
-               Block. Wer rechts eine zweite Zeile anfing und Enter drückte, legte
-               ein Geschwister an, und daraus wurde eine DRITTE SPALTE: gemessen
-               wurden aus zwei drei und aus drei vier, die Seite zerfiel beim
-               normalen Schreiben.
-               Jetzt liegt die Spalte dazwischen — der Elternteil des Inhalts ist
-               sie, ein Geschwister bleibt also IN ihr. */
             case 'spalte': {
                 const w = document.createElement('div');
                 w.className = 'spalte';
                 const kinder = Store.childrenOf(block.id);
                 if (!kinder.length) {
-                    /* Eine leere Spalte wäre eine unsichtbare Fläche, in die man nicht
-                       hineinkommt. Also immer eine Zeile zum Hineinschreiben. */
                     const leer = Store.addBlock(block.id, 'text', { text: '' });
                     w.appendChild(render(leer, tiefe));
                 }
@@ -762,7 +590,6 @@ const Blocks = (() => {
                 box.appendChild(w);
                 break;
             }
-            /* --- Verweis auf eine andere Seite (Notion „Link to page", Trilium-Klon) */
             case 'pageref': {
                 const ziel = block.ziel ? Store.getBlock(block.ziel) : null;
                 const a = document.createElement('div');
@@ -781,7 +608,6 @@ const Blocks = (() => {
                 box.appendChild(a);
                 break;
             }
-            /* --- Synchronisierter Block: zeigt den Inhalt einer anderen Stelle --- */
             case 'synced': {
                 const quelle = block.quelle ? Store.getBlock(block.quelle) : null;
                 const w = document.createElement('div');
@@ -795,7 +621,6 @@ const Blocks = (() => {
                     w.appendChild(b);
                 }
                 else if (block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
-                    /* Ein Spiegel, der sich selbst enthält, würde endlos zeichnen. */
                     w.innerHTML = '<div class="sy-kopf sy-warn">⇄ Diese Quelle enthält den Spiegel selbst — ' +
                         'das würde sich endlos wiederholen.</div>';
                     const b = document.createElement('button');
@@ -828,7 +653,6 @@ const Blocks = (() => {
                             return;
                         }
                         if (b2.dataset.a === 'sy-los') {
-                            /* Inhalt echt kopieren, danach ist es ein normaler Absatzblock. */
                             const eltern = block.parentId;
                             const nach = Store.childrenOf(eltern).findIndex((x) => x.id === block.id);
                             Store.childrenOf(quelle.id).forEach((k, i) => Store.baumEinfuegen(Store.baum(k.id), eltern, nach + 1 + i));
@@ -841,7 +665,6 @@ const Blocks = (() => {
                 box.appendChild(w);
                 break;
             }
-            /* --- Knopf: legt Blöcke oder Datenbankzeilen an (Notions Button) ----- */
             case 'button': {
                 const w = document.createElement('div');
                 w.className = 'knopf-blk';
@@ -871,47 +694,26 @@ const Blocks = (() => {
                 box.appendChild(w);
                 break;
             }
-            /* `tabelle` IST EINE ALTE SCHREIBWEISE, kein zweiter Block.
-               „+ Neu → Neue Tabelle" legte seit E45 einen Block dieser Art an,
-               und gezeichnet hat ihn nie jemand — gemessen 24 px, Inhalt „+⋮⋮".
-               Der Weg legt jetzt eine Kalkulationstabelle an; wer aber schon
-               einmal darauf getippt hat, hat so einen Block im Bestand.
-      
-               Er ist immer LEER, denn ohne Zeichnung konnte niemand etwas
-               hineinschreiben — deshalb genügt es, ihn wie eine einfache Tabelle
-               zu zeichnen. Nichts geht verloren (§46), und niemand muss Daten
-               wandern lassen (§9). Die Zeile hier ist billiger als jede
-               Migration und sagt dasselbe. */
             case 'tabelle':
             case 'table':
                 box.appendChild(Zusatz.tabelle(block));
                 break;
-            /* Die Kalkulationstabelle. Sie zeichnet sich selbst und rechnet mit
-               `core/spreadsheet` — der Editor weiss davon nichts weiter, als dass
-               er sie einhaengt. */
             case 'spreadsheet':
                 if (typeof SpreadsheetView !== 'undefined')
                     box.appendChild(SpreadsheetView.zeichne(block));
                 break;
-            /* Das A4-Blatt bringt seinen Text als eigene Kinder mit und zeichnet
-               sie selbst — deshalb steht es hier und nicht in der Kinderliste
-               weiter unten (E100). */
             case 'blatt':
                 box.appendChild(Blatt.zeichne(block));
                 break;
-            /* Eine PDF-Seite: Bild unten, Zeichenschicht darüber (E103). */
             case 'pdfseite':
                 box.appendChild(PdfSeite.zeichne(block));
                 break;
             case 'whiteboard':
                 box.appendChild(Zusatz.whiteboard(block));
                 break;
-            /* Die Gedankenkarte: Knoten als HTML, Linien als SVG — sie misst ihren
-               Text beim Browser, statt ihn zu schätzen (E607). */
             case 'mindmap':
                 box.appendChild(Gedankenkarte.zeichne(block));
                 break;
-            /* Ein Schaltplan: Symbolpalette links, Zeichenfläche rechts (Punkt 11). */
             case 'schaltplan':
                 box.appendChild(Planflaeche.zeichne(block));
                 break;
@@ -930,11 +732,6 @@ const Blocks = (() => {
                 w.appendChild(ct);
                 const vor = document.createElement('div');
                 vor.className = 'fk-vor';
-                /* Eine Karte kann ein BILD auf der Vorderseite tragen — so entsteht sie
-                   aus einem Ausschnitt einer PDF-Seite (Punkt 43). `inline()` kann
-                   keine Bilder (nachgesehen, nicht vermutet), also steht das Bild
-                   ausdrücklich hier und nicht im Text. Es liegt als gewöhnlicher
-                   Anhang und kommt damit in `.redion` mit. */
                 if (block.bildId && typeof Dateien !== 'undefined') {
                     const bild = document.createElement('img');
                     bild.className = 'fk-bild';
@@ -993,8 +790,6 @@ const Blocks = (() => {
             default:
                 box.appendChild(machText());
         }
-        /* Eine normale Notiz kann auf eine Sekunde in einem Audio-Block zeigen.
-           Der Text bleibt editierbar; der kleine Knopf ist nur die Navigation. */
         if (block.audioRef && Number.isFinite(Number(block.audioRef.sek))) {
             const marke = document.createElement('button');
             marke.className = 'audio-ref-marke';
@@ -1012,20 +807,6 @@ const Blocks = (() => {
             });
             el.appendChild(marke);
         }
-        /* --- Zurück zur Quelle (§44) ------------------------------------------
-           Eine Lernkarte, eine Notiz, eine erkannte Zeile: alles, was aus etwas
-           anderem entstanden ist, trägt seit E130/E129 einen `sourceRef` — mit
-           Seite, Block, Seitenzahl und sogar dem Ausschnitt. Bis zum 25. August
-           las das nur der Dokumentmodus, und zwar in die andere Richtung: „welche
-           Karten gehören zu dieser PDF-Seite".
-    
-           Der Weg zurück fehlte. Wer eine Karte vor sich hatte, kam nicht zu der
-           Stelle, aus der sie stammt — obwohl die Angabe im Block stand und
-           `App.zeigeBlock` sie hätte anspringen können.
-    
-           Der Knopf sagt, wohin er führt: „PDF · Seite 14" statt „Quelle". Ein
-           Ziel, das es nicht mehr gibt, wird gar nicht erst angeboten — ein
-           Knopf, der nichts tut, ist schlimmer als keiner. */
         const quelle = block.sourceRef || block.lernquelle;
         if (quelle && (quelle.blockId || quelle.pageId)) {
             const zielId = String(quelle.blockId || quelle.pageId || '');
@@ -1037,10 +818,6 @@ const Blocks = (() => {
                     ? 'PDF · Seite ' + nr
                     : quelle.kind === 'blatt' ? 'A4-Blatt'
                         : String(seite?.text || quelle.label || 'Quelle');
-                /* Und die Sekunde, wenn es eine gibt (§44, E161). `zeit` ist fertig
-                   formatiert, weil der Editor `bereiche/verbinden` nicht kennen darf
-                   (CLAUDE.md §5 Regel 1) — die Zahl daneben (`sek`) bleibt die
-                   Wahrheit, der Text ist nur die Beschriftung. */
                 const zeit = String(quelle.zeit || '').trim();
                 const knopf = document.createElement('button');
                 knopf.className = 'quell-marke';
@@ -1057,7 +834,6 @@ const Blocks = (() => {
                 el.appendChild(knopf);
             }
         }
-        /* Kommentarmarke */
         if ((block.kommentare || []).length) {
             const k = document.createElement('button');
             k.className = 'komm-marke';
@@ -1067,7 +843,6 @@ const Blocks = (() => {
             k.addEventListener('click', () => Kommentare.panel(App.aktuelleSeite()));
             el.appendChild(k);
         }
-        /* Kindblöcke einer Toggle-Überschrift */
         if (block.toggleKopf && ['h1', 'h2', 'h3'].includes(block.type)) {
             const kids = document.createElement('div');
             kids.className = 'toggle-kids';
@@ -1080,7 +855,6 @@ const Blocks = (() => {
             huelle.appendChild(kids);
             return huelle;
         }
-        /* Kindblöcke — bei Toggle in einen eigenen Container */
         if (['bullet', 'number', 'todo', 'quote', 'callout'].includes(block.type) && (block.content || []).length) {
             const kids = document.createElement('div');
             kids.style.marginLeft = '24px';
@@ -1104,8 +878,6 @@ const Blocks = (() => {
         }
         return el;
     };
-    /* --- Medienblöcke ------------------------------------------------------- */
-    /** Steckt der Spiegelblock selbst irgendwo in der Quelle? Dann bricht es. */
     const quelleImInneren = (quelleId, blockId, tiefe = 0) => {
         if (tiefe > 8)
             return true;
@@ -1113,7 +885,6 @@ const Blocks = (() => {
             (k.type === 'synced' && k.quelle === blockId) ||
             quelleImInneren(k.id, blockId, tiefe + 1));
     };
-    /** Ein Bild gross ansehen — Klick schliesst wieder. */
     const bildGross = (src, text) => {
         const o = document.createElement('div');
         o.className = 'overlay bild-voll';
@@ -1131,20 +902,6 @@ const Blocks = (() => {
     const medienBlock = (block) => {
         const w = document.createElement('div');
         w.style.width = '100%';
-        /* ======================================================================
-         * WOHER DIE ADRESSE KOMMT (E98)
-         * ----------------------------------------------------------------------
-         * Eine in Stücken abgelegte Datei liegt in `dateien`/`stuecke`. Ihre
-         * `blob:`-Adresse gehört dem Dokument, das sie erzeugt hat — Browser zu,
-         * Adresse tot. Sie wurde trotzdem IN DEN BLOCK geschrieben, und niemand
-         * las `dateiId` je zurück: gemessen lagen nach einem Neustart alle fünf
-         * Stücke unversehrt da, und das Bild hatte Breite 0.
-         *
-         * Also: die Adresse wird beim ZEICHNEN geholt, nie gespeichert. Ist sie
-         * schon gebaut, kommt sie synchron; sonst wird sie nachgereicht. Eine
-         * gespeicherte tote `blob:`-Adresse wird übergangen — sie ist schlechter
-         * als gar keine, weil der Browser sonst ein kaputtes Bild zeigt.
-         * ====================================================================*/
         const nachtragen = [];
         const ausAblage = () => {
             const gespeichert = String(block.src || '');
@@ -1160,10 +917,7 @@ const Blocks = (() => {
             return gespeichert.startsWith('blob:') ? '' : gespeichert;
         };
         const quelle = ausAblage();
-        /* Ohne Quelle UND ohne Kennung gibt es nichts zu zeigen. Die Kennung
-           allein genügt: die Adresse kommt gleich nach. */
         if (!block.src && !block.dateiId) {
-            /* Noch keine Quelle: Eingabefeld anzeigen */
             const feld = document.createElement('div');
             feld.style.cssText = 'display:flex; gap:8px; padding:12px 14px; background:var(--bg-card); ' +
                 'border-radius:6px; align-items:center';
@@ -1197,8 +951,6 @@ const Blocks = (() => {
             return w;
         }
         if (block.type === 'image') {
-            /* Grösse und Ausrichtung — Notion kann nur ziehen, hier gibt es
-               zusätzlich feste Stufen und eine Ausrichtung je Bild. */
             const rahmen = document.createElement('div');
             rahmen.className = 'bild-rahmen aus-' + (block.ausricht || 'links');
             const i = document.createElement('img');
@@ -1239,7 +991,6 @@ const Blocks = (() => {
                 }
             });
             rahmen.appendChild(werk);
-            /* Rechter Rand zum Ziehen */
             const griff = document.createElement('span');
             griff.className = 'bild-griff';
             griff.addEventListener('pointerdown', ev => {
@@ -1287,14 +1038,6 @@ const Blocks = (() => {
             }
         }
         else if (block.type === 'file') {
-            /* `istPdf` schaut nur auf die Endung — die entscheidet, ob eine Vorschau
-               angeboten wird. Das genügt für die Frage „welches Symbol zeige ich",
-               aber nicht als Erlaubnis, die Adresse in einen Rahmen zu setzen:
-               `javascript:…//.pdf` besteht diese Prüfung. Deshalb geht jede Adresse
-               hier durch Saeubern, und zwar durch die zum Ort passende. */
-            /* Der NAME entscheidet mit: eine in Stücken abgelegte Datei hat ihre
-               Adresse erst, wenn sie nachgereicht wurde — bis dahin steht dort
-               nichts, wonach man die Endung fragen könnte (E98). */
             const dateiName = String(block.text || block.caption || '');
             const istPdf = /\.pdf(\?|$)/i.test(quelle) || /^data:application\/pdf/i.test(quelle)
                 || /\.pdf$/i.test(dateiName)
@@ -1307,10 +1050,6 @@ const Blocks = (() => {
                 `<span>${istPdf ? '📕' : '📎'}</span>` +
                     (zielAdresse
                         ? `<a href="${esc(zielAdresse)}" target="_blank" rel="noopener" download>${esc(block.text || block.caption || (istPdf ? 'PDF' : 'Datei'))}</a>`
-                        /* Kein stiller Fehlschlag: der Name bleibt stehen und sagt, warum
-                           er nicht anklickbar ist. Wegwerfen tun wir hier nichts. */
-                        /* Solange die Adresse noch kommt, ist der Name KEIN Fehler — nur
-                           noch nicht anklickbar. Ein Warnzeichen hier wäre eine Lüge. */
                         : (block.dateiId
                             ? `<span class="datei-wartet">${esc(block.text || block.caption || 'Datei')}</span>`
                             : `<span class="datei-gesperrt" title="Diese Adresse öffnet Redion nicht — sie führt keinen Verweis aus, sondern Code.">${esc(block.text || block.caption || 'Datei')} ⚠</span>`)) +
@@ -1322,8 +1061,6 @@ const Blocks = (() => {
                 App.zeichneSeite();
             });
             w.appendChild(zeile);
-            /* Kommt die Adresse nach, wird der Verweis nachgezogen — statt die
-               ganze Seite neu zu zeichnen und dabei den Schreibzeiger zu verlieren. */
             nachtragen.push(u => {
                 const sicher = Sanitize.attachmentUrl(u);
                 if (!sicher)
@@ -1348,7 +1085,6 @@ const Blocks = (() => {
                 if (rahmen2 && frameU)
                     rahmen2.src = frameU;
             });
-            /* PDF gleich hier ansehen — Notion zeigt nur einen Anhang zum Laden. */
             if (istPdf && rahmenSrc && block.pdfAuf) {
                 const rahmen = document.createElement('div');
                 rahmen.className = 'pdf-rahmen';
@@ -1373,9 +1109,6 @@ const Blocks = (() => {
             }
         }
         else if (block.type === 'bookmark') {
-            /* Ein Lesezeichen wird angeklickt — also die Anhang-Regel. Die Adresse
-               BLEIBT unter dem Titel lesbar, auch wenn sie gesperrt ist: sonst wäre
-               der Block leer und niemand wüsste, was dort einmal stand. */
             const ziel = Sanitize.attachmentUrl(block.src);
             const a = document.createElement(ziel ? 'a' : 'div');
             if (ziel) {
@@ -1397,8 +1130,6 @@ const Blocks = (() => {
             w.appendChild(a);
         }
         else if (block.type === 'embed') {
-            /* Der Rahmen läuft im Ursprung dieser Seite. Hier gilt die strenge
-               Regel: http(s), blob: oder ein PDF — sonst gar kein Rahmen. */
             const rahmenSrc = Sanitize.frameUrl(block.src);
             if (rahmenSrc) {
                 const f = document.createElement('iframe');
@@ -1416,7 +1147,6 @@ const Blocks = (() => {
                     'Web-Adressen hinein.';
                 w.appendChild(hinweis);
             }
-            /* Manche Seiten verbieten den Rahmen. Dann hilft der Weg zum Original. */
             const q = Sanitize.attachmentUrl(block.quelle || block.src);
             const zeile = document.createElement('div');
             zeile.style.cssText = 'font-size:12px; color:var(--text-dim); padding:3px 2px';
@@ -1426,7 +1156,6 @@ const Blocks = (() => {
                     : '<span>kein Verweis zum Original</span>');
             w.appendChild(zeile);
         }
-        /* Beschriftung */
         const cap = document.createElement('div');
         cap.className = 'ct';
         cap.contentEditable = 'true';
@@ -1437,7 +1166,6 @@ const Blocks = (() => {
         w.appendChild(cap);
         return w;
     };
-    /** Datei einlesen und als Data-URL speichern — bleibt damit lokal. */
     const hochladen = (block) => {
         const inp = document.createElement('input');
         inp.type = 'file';
@@ -1446,12 +1174,6 @@ const Blocks = (() => {
             const f = inp.files?.[0];
             if (!f)
                 return;
-            /* --- Grosse Dateien gehen in Stücken --------------------------------
-             * Bis 12 MB war früher Schluss, weil eine Data-URL vollständig im
-             * Arbeitsspeicher liegt und beim Kodieren um ein Drittel wächst. In
-             * Stücken abgelegt geht es bis 500 MB — und der Block trägt dann nur
-             * noch die Kennung, nicht die Datei selbst.
-             * ------------------------------------------------------------------ */
             if (typeof Dateien !== 'undefined' && Dateien.lohntSich(f.size)) {
                 if (f.size > Dateien.GRENZE) {
                     UI.toast('Die Datei ist grösser als ' +
@@ -1465,10 +1187,7 @@ const Blocks = (() => {
                             if (melder && melder.textContent !== undefined)
                                 melder.textContent = 'Wird abgelegt … ' + Math.round(anteil * 100) + ' %';
                         } });
-                    /* NUR die Kennung. Die blob-Adresse gilt nur für diese Sitzung und
-                       hat in den Daten nichts verloren (E98) — gespeichert war sie der
-                       Grund, warum jede grosse Datei nach dem Neustart unerreichbar war. */
-                    await Dateien.adresse(satz.id); /* baut sie für JETZT auf */
+                    await Dateien.adresse(satz.id);
                     Store.updateBlock(block.id, { dateiId: satz.id, text: f.name, typ: f.type });
                     if (melder && melder.remove)
                         melder.remove();
@@ -1483,8 +1202,6 @@ const Blocks = (() => {
                 }
                 return;
             }
-            /* Kleine Dateien gehen weiter den kurzen Weg — für ein Bild von 40 KB
-               wäre der Apparat oben Unfug. */
             const r = new FileReader();
             r.onload = () => {
                 Store.updateBlock(block.id, { src: r.result, text: f.name });
@@ -1495,15 +1212,6 @@ const Blocks = (() => {
         });
         inp.click();
     };
-    /* --- Inhaltsverzeichnis ------------------------------------------------- */
-    /* Inhaltsverzeichnis — Redion sucht die Überschriften auf der ganzen Seite,
-       also auch in Toggles, Spalten und Callouts, nimmt Toggle-Überschriften mit,
-       kann durchnummerieren und hebt hervor, wo man gerade steht. Notions
-       Verzeichnis kennt nur die oberste Ebene. */
-    /* Aus dem Register, nicht abgeschrieben. Hier stand dieselbe Liste, die
-       `schale/aufbau/inhaltsflaeche.ts` ein zweites Mal führte — dort ohne
-       die Toggle-Überschriften. Eine Seite aus Toggle-Überschriften bekam
-       deshalb hier Einträge und im Gliederungsstreifen keine. */
     const TOC_STUFEN = (typeof Register !== 'undefined' && Register.bloecke?.ueberschriften)
         ? Register.bloecke.ueberschriften()
         : { h1: 1, h2: 2, h3: 3, 'toggle-h1': 1, 'toggle-h2': 2, 'toggle-h3': 3 };
@@ -1514,13 +1222,7 @@ const Blocks = (() => {
                 return;
             Store.childrenOf(id).forEach((k) => {
                 if (k.type === 'page')
-                    return; /* Unterseiten haben ihr eigenes */
-                /* UND WAS NICHT IM TEXT STEHT, STEHT NICHT IM VERZEICHNIS (E691).
-                   Ein Eintrag für eine Überschrift auf „nur Fläche" wäre doppelt
-                   falsch: er verspricht eine Stelle, die auf dieser Seite nicht
-                   gezeichnet ist, und sein Klick sucht `[data-bid=…]`, findet
-                   nichts und tut nichts — ein Knopf, der schweigend nichts bewirkt
-                   (§47, derselbe Fall wie E277). */
+                    return;
                 if (typeof Register !== 'undefined' && Register.seitenansichten &&
                     !Register.seitenansichten.zeigtIn(k, 'seite'))
                     return;
@@ -1580,7 +1282,6 @@ const Blocks = (() => {
             App.zeichneSeite();
         });
         d.appendChild(zeile);
-        /* Mitlaufende Markierung: welche Überschrift steht gerade oben? */
         setTimeout(() => {
             const scroller = d.closest('#main') || document.querySelector('#main') || window;
             const merken = () => {
@@ -1601,13 +1302,7 @@ const Blocks = (() => {
         }, 0);
         return d;
     };
-    /* ========================================================================
-     * TASTATUR
-     * ------------------------------------------------------------------------
-     * Hier steckt das Verhalten, das den Editor ausmacht.
-     * ======================================================================*/
     const bindeEditor = (wurzel) => {
-        /* --- Tippen: Text sichern und Markdown-Kürzel prüfen ----------------- */
         wurzel.addEventListener('input', (e) => {
             const ct = elVon(e)?.closest('.ct');
             if (!ct)
@@ -1619,7 +1314,6 @@ const Blocks = (() => {
             if (!b)
                 return;
             const roh = ct.textContent;
-            /* Markdown-Kürzel: nur am Zeilenanfang, nur einmal */
             if (b.type === 'text' && /\s$/.test(roh)) {
                 const wort = roh.trim();
                 const treffer = TYPEN.find((t) => {
@@ -1629,25 +1323,15 @@ const Blocks = (() => {
                     return liste.includes(wort);
                 });
                 if (treffer) {
-                    /* Auch im Block löschen, nicht nur im Feld. Der vorige Tastendruck
-                       hat „#" längst gespeichert; `umwandeln` zeichnet gleich neu und
-                       holt es zurück. Genau das ist jahrelang passiert: aus „# Titel"
-                       wurde eine Überschrift, die „#Titel" hiess. Kein Prüflauf sah es,
-                       weil alle nur den TYP verglichen haben. */
                     ct.textContent = '';
                     Store.updateBlock(b.id, { text: '' });
                     umwandeln(b.id, treffer.id);
-                    /* Zwei Kürzel sagen mehr als nur den Typ: „[x] " hakt gleich ab.
-                       Nach umwandeln() ist die Seite neu gezeichnet, der Block aber
-                       derselbe — deshalb reicht ein zweiter, kleiner Schreibvorgang. */
                     if (treffer.id === 'todo' && /^\[[xX]\]$/.test(wort)) {
                         Store.updateBlock(b.id, { checked: true });
                         App.zeichneSeite(b.id, 'ende');
                     }
                     return;
                 }
-                /* ```sprache — der Codeblock nimmt die Sprache gleich mit.
-                   Das geht über keine Liste im Register: die Sprache ist frei. */
                 const zaun = /^```([a-zA-Z0-9+#.-]{1,20})$/.exec(wort);
                 if (zaun) {
                     ct.textContent = '';
@@ -1662,12 +1346,9 @@ const Blocks = (() => {
             if (b.type === 'toc')
                 return;
         });
-        /* --- Einfügen: Markdown wird wieder zu Blöcken ------------------------
-           Strg C schreibt die Auswahl als Markdown. Zurück ging es nicht — der
-           ganze Text landete in einem einzigen Block, samt Rautezeichen. */
         wurzel.addEventListener('paste', (e) => {
             if (e.defaultPrevented)
-                return; /* Tabelle und Kalkulation zuerst */
+                return;
             const ct = elVon(e)?.closest('.ct');
             if (!ct)
                 return;
@@ -1680,11 +1361,6 @@ const Blocks = (() => {
             const text = e.clipboardData?.getData('text/plain');
             if (!text)
                 return;
-            /* Eine Webadresse über markiertem Text legt den Link DARÜBER,
-               statt den lesbaren Text durch die Adresse zu ersetzen. Die
-               Kürzelreferenz versprach diesen Notion-Weg bereits, der allgemeine
-               Paste-Griff kannte ihn aber nicht. In Rohtextblöcken bleibt eine
-               Adresse wörtlicher Inhalt. */
             const ROHTEXT = ['code', 'equation', 'html', 'flashcard'];
             const markiert = getSelection()?.toString() ?? '';
             let webAdresse = false;
@@ -1692,22 +1368,14 @@ const Blocks = (() => {
                 const u = new URL(text.trim());
                 webAdresse = u.protocol === 'http:' || u.protocol === 'https:';
             }
-            catch { /* Gewöhnlicher Text, kein Link. */ }
+            catch { }
             if (markiert && webAdresse && !ROHTEXT.includes(b.type) &&
                 typeof Auswahl !== 'undefined' && Auswahl.linkSetzen) {
                 e.preventDefault();
                 if (Auswahl.linkSetzen(text.trim()))
                     return;
             }
-            /* Wo roher Text der Inhalt IST, wird kein Markdown gelesen. In einem
-               Codeblock ist „# hallo" eine Kommentarzeile, in einer Formel steht
-               TeX, und im HTML-Block steht HTML. Alles andere darf gliedern —
-               auch ein Listenpunkt: wer eine Liste in eine Liste einfügt, will
-               Punkte und keinen Absatz mit Bindestrichen darin. */
             const strukturiert = !ROHTEXT.includes(b.type) && mdIstStruktur(text);
-            /* Immer selbst einsetzen: sonst legt der Browser das mitkopierte HTML
-               mit all seinen Stilen in den Block, und beim nächsten Zeichnen ist
-               es wieder weg — Text, der vor den Augen des Nutzers verschwindet. */
             e.preventDefault();
             if (!strukturiert) {
                 document.execCommand('insertText', false, text);
@@ -1720,8 +1388,6 @@ const Blocks = (() => {
             }
             const teile = mdLesen(text);
             const letzte = mdEinsetzen(teile, b.parentId, eltern.content.indexOf(b.id) + 1);
-            /* Der leere Block, in dem eingefügt wurde, hat seinen Zweck erfüllt —
-               ob er ein Absatz war oder ein leerer Listenpunkt. */
             if (!ct.textContent.trim()) {
                 Store.trashBlock(b.id);
                 Store.purgeBlock(b.id);
@@ -1730,10 +1396,6 @@ const Blocks = (() => {
             if (teile.length > 1)
                 UI.toast(teile.length + ' Blöcke eingefügt');
         });
-        /* --- Vorschlagsmodus -------------------------------------------------
-           Ist er für die Seite an, wird beim Verlassen eines Blocks festgehalten,
-           was vorher darinstand — daraus wird ein Vorschlag zum Annehmen oder
-           Verwerfen. Ohne den Modus kostet das nichts: zwei Zeilen Vergleich. */
         wurzel.addEventListener('focusin', (e) => {
             const ct = elVon(e)?.closest('.ct');
             if (ct)
@@ -1755,7 +1417,6 @@ const Blocks = (() => {
             if (!bid)
                 return;
             const liste = [...(seite.vorschlaege || [])];
-            /* Mehrfaches Tippen im selben Block bleibt ein Vorschlag */
             const schon = liste.findIndex(v => v.bid === bid);
             if (schon >= 0)
                 liste[schon] = { ...liste[schon], neu, wann: Store.now() };
@@ -1763,7 +1424,6 @@ const Blocks = (() => {
                 liste.push({ bid, alt, neu, von: (Konten.aktiv() || {}).name || 'Ich', wann: Store.now() });
             Store.updateBlock(seite.id, { vorschlaege: liste });
         });
-        /* --- Tasten ---------------------------------------------------------- */
         wurzel.addEventListener('keydown', (e) => {
             const ct = elVon(e)?.closest('.ct');
             if (!ct)
@@ -1774,23 +1434,18 @@ const Blocks = (() => {
             const b = Store.getBlock(blk.dataset.bid);
             if (!b)
                 return;
-            /* Slash-Menü öffnen */
             if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
                 setTimeout(() => slashMenue(ct, b), 0);
                 return;
             }
-            /* Enter — Strg + Enter hat eine eigene Bedeutung, siehe weiter unten */
             if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-                /* Im Codeblock erzeugt Enter einen Zeilenumbruch */
                 if (b.type === 'code')
                     return;
                 e.preventDefault();
-                /* Leerer Listenpunkt: zurück zu normalem Text */
                 if (['bullet', 'number', 'todo', 'toggle', 'quote'].includes(b.type) && !ct.textContent.trim()) {
                     umwandeln(b.id, 'text');
                     return;
                 }
-                /* Neuen Block gleichen Typs darunter */
                 const folge = ['bullet', 'number', 'todo'].includes(b.type) ? b.type : 'text';
                 const eltern = Store.getBlock(b.parentId);
                 const idx = eltern ? eltern.content.indexOf(b.id) + 1 : -1;
@@ -1798,15 +1453,12 @@ const Blocks = (() => {
                 App.zeichneSeite(neu.id);
                 return;
             }
-            /* Backspace am Anfang */
             if (e.key === 'Backspace' && amAnfang(ct)) {
                 if (b.type !== 'text') {
-                    /* Erst den Typ zurücksetzen, wie in Notion */
                     e.preventDefault();
                     umwandeln(b.id, 'text');
                     return;
                 }
-                /* Leerer Textblock: löschen und zum vorherigen springen */
                 if (!ct.textContent) {
                     e.preventDefault();
                     const eltern = Store.getBlock(b.parentId);
@@ -1815,10 +1467,6 @@ const Blocks = (() => {
                     const idx = eltern.content.indexOf(b.id);
                     if (idx <= 0)
                         return;
-                    /* Der Vorgänger, den man auch SIEHT (E692, L220). Gibt es keinen,
-                       geschieht nichts — genau wie bei `idx <= 0` eine Zeile höher:
-                       lieber eine Taste, die nichts tut, als ein Block, der weg ist
-                       und ein Cursor, der ins Leere zeigt. */
                     const vorher = nachbarImText(eltern, idx, -1);
                     if (!vorher)
                         return;
@@ -1828,7 +1476,6 @@ const Blocks = (() => {
                     return;
                 }
             }
-            /* Tab: einrücken */
             if (e.key === 'Tab') {
                 e.preventDefault();
                 if (e.shiftKey)
@@ -1837,19 +1484,6 @@ const Blocks = (() => {
                     einruecken(b);
                 return;
             }
-            /* Pfeil hoch/runter zwischen Blöcken.
-             *
-             * OHNE STRG — UND DAS IST EINE REPARATUR, KEIN SCHMUCK (E692).
-             * Diese zwei Zweige standen VOR „Strg+Shift+Pfeil: Block verschieben"
-             * und kehrten mit `return` um. Steht der Cursor am Anfang (für ↑) oder
-             * am Ende (für ↓) — und in einem einzeiligen Block ist er fast immer
-             * beides —, kam das Verschieben nie an. Das Blockmenü schreibt
-             * „Ctrl+Shift+↑" daneben, und die Taste tat nichts: ein falsches
-             * Versprechen (§32) und ein Knopf, der schweigend nichts bewirkt (§47).
-             *
-             * Gefunden hat es `test574 §11`, der eigentlich etwas anderes messen
-             * wollte — dass das Verschieben den unsichtbaren Nachbarn überspringt.
-             * Es bewegte sich gar nichts, und die Daten waren unverändert. */
             const nurPfeil = !(e.ctrlKey || e.metaKey);
             if (e.key === 'ArrowUp' && amAnfang(ct) && nurPfeil) {
                 const alle = [...wurzel.querySelectorAll('.ct')];
@@ -1869,17 +1503,11 @@ const Blocks = (() => {
                 }
                 return;
             }
-            /* Strg+Shift+Pfeil: Block verschieben */
             if (e.ctrlKey && e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
                 e.preventDefault();
                 verschiebe(b, e.key === 'ArrowUp' ? -1 : 1);
                 return;
             }
-            /* Blocktyp wechseln.
-               Notion belegt das auf Windows mit Strg+Umschalt+Ziffer und auf dem
-               Mac mit Cmd+Wahl+Ziffer. Hier gehen beide — und weil Umschalt+Ziffer
-               auf deutschen Tastaturen ein Sonderzeichen liefert (Umschalt+1 = !),
-               wird auch e.code ausgewertet. */
             const zifferAus = (ev) => {
                 if (/^[0-9]$/.test(ev.key))
                     return ev.key;
@@ -1899,19 +1527,16 @@ const Blocks = (() => {
                     umwandeln(b.id, ziel);
                 return;
             }
-            /* Strg+Umschalt+E: Formelblock — wie in Notion */
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
                 e.preventDefault();
                 umwandeln(b.id, 'equation');
                 return;
             }
-            /* Strg+Alt+T: alle Toggles auf dieser Seite auf- oder zuklappen */
             if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 't') {
                 e.preventDefault();
                 alleToggles();
                 return;
             }
-            /* Strg+/: den Blocktyp dieses Blocks ändern — Notions „Blöcke bearbeiten" */
             if ((e.ctrlKey || e.metaKey) && e.key === '/') {
                 e.preventDefault();
                 const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
@@ -1921,7 +1546,6 @@ const Blocks = (() => {
                 }
                 return;
             }
-            /* Strg+Alt+Ziffer: Blocktyp wechseln (Mac-Belegung) */
             if ((e.ctrlKey || e.metaKey) && e.altKey && /^[0-9]$/.test(e.key)) {
                 e.preventDefault();
                 const ziel = ZIFFER_TYP()[e.key];
@@ -1935,7 +1559,6 @@ const Blocks = (() => {
                     umwandeln(b.id, ziel);
                 return;
             }
-            /* Strg + Enter: abhaken, auf- und zuklappen, Seite öffnen */
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 if (b.type === 'todo') {
@@ -1952,17 +1575,11 @@ const Blocks = (() => {
                     App.oeffne(b.ziel);
                 return;
             }
-            /* Strg + Shift + M: Kommentar am Block */
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
                 e.preventDefault();
                 Kommentare.neu(b, getSelection()?.toString() ?? '');
                 return;
             }
-            /* --- Zum ersten und zum letzten Block der Seite --------------------
-             * Notion springt mit Strg+Pos1 an den Anfang des Dokuments. Ohne das
-             * scrollt man bei einer langen Seite mit dem Rad, obwohl die Hand
-             * schon auf der Tastatur liegt.
-             * ------------------------------------------------------------------ */
             if ((e.ctrlKey || e.metaKey) && (e.key === 'Home' || e.key === 'End')) {
                 const alle = [...wurzel.querySelectorAll('.ct')];
                 if (!alle.length)
@@ -1971,14 +1588,12 @@ const Blocks = (() => {
                 cursorAnsEnde(e.key === 'Home' ? alle[0] : alle[alle.length - 1]);
                 return;
             }
-            /* Strg + Umschalt + C: Link auf genau diesen Block */
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
                 e.preventDefault();
                 const adr = location.href.split('#')[0] + '#block=' + b.id;
                 Ablage.kopiereJetzt(adr, 'Link auf diesen Block kopiert');
                 return;
             }
-            /* Strg + Umschalt + Rücktaste: den ganzen Block weg, ohne Rückfrage */
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Backspace') {
                 e.preventDefault();
                 const eltern = Store.getBlock(b.parentId);
@@ -1989,7 +1604,6 @@ const Blocks = (() => {
                 UI.toast('Block in den Papierkorb');
                 return;
             }
-            /* Strg + Umschalt + Enter: eine Seite rechts daneben öffnen */
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
                 const ziel = b.type === 'page' ? b.id : (b.type === 'pageref' ? b.ziel : null);
                 if (ziel && typeof Fenster !== 'undefined') {
@@ -1998,11 +1612,8 @@ const Blocks = (() => {
                     return;
                 }
             }
-            /* Inline-Formatierung */
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 const k = e.key.toLowerCase();
-                /* Im Editor bedeutet Strg/Cmd+K bei einer Textauswahl „Link". Ohne
-                   Auswahl darf das Ereignis weiter zur globalen Suche blubbern. */
                 if (k === 'k' && String(getSelection() || '')) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -2042,29 +1653,20 @@ const Blocks = (() => {
                 }
             }
         });
-        /* --- Rechtsklick öffnet dasselbe Menü wie der Griff -------------------
-         * Notion hat auf dem Desktop ein Kontextmenü; bei uns kam man bisher nur
-         * über den Griff dorthin. Innerhalb von Text lassen wir das Menü des
-         * Browsers stehen — dort will man Rechtschreibung und Einfügen.
-         * -------------------------------------------------------------------- */
         wurzel.addEventListener('contextmenu', (e) => {
-            /* Am Telefon gehört das lange Drücken der Hebe-Geste (E83). Android
-               feuert trotzdem contextmenu — das öffnete das Rechner-Menü mitten
-               ins Tragen hinein. Hier unterdrücken, die Geste liefert das Menü
-               selbst beim Loslassen. */
             if (window.matchMedia('(max-width: 760px)').matches) {
                 e.preventDefault();
                 return;
             }
             if (e.shiftKey)
-                return; /* Umschalt = Browsermenü */
+                return;
             const blk = elVon(e)?.closest('.blk');
             if (!blk)
                 return;
             const imText = elVon(e)?.closest('[contenteditable]');
             const auswahl = String(getSelection() || '');
             if (imText && auswahl)
-                return; /* Text markiert: Browsermenü */
+                return;
             const b = Store.getBlock(blk.dataset.bid);
             if (!b)
                 return;
@@ -2075,7 +1677,6 @@ const Blocks = (() => {
                 }) };
             blockMenue(anker, b);
         });
-        /* --- Klick auf die Griffe -------------------------------------------- */
         wurzel.addEventListener('click', (e) => {
             const btn = elVon(e)?.closest('.handles button');
             if (!btn)
@@ -2094,7 +1695,6 @@ const Blocks = (() => {
                 blockMenue(btn, b);
             }
         });
-        /* --- Ziehen und Ablegen ---------------------------------------------- */
         let gezogen = null;
         wurzel.addEventListener('mousedown', (e) => {
             const griff = elVon(e)?.closest('.handles button[data-act="menu"]');
@@ -2111,13 +1711,6 @@ const Blocks = (() => {
             if (blk) {
                 gezogen = blk.dataset.bid;
                 blk.style.opacity = '.4';
-                /* DIE KENNUNG REIST MIT (E691). Bis hierher wusste nur diese Datei,
-                   was gerade gezogen wird — `gezogen` ist eine Variable in dieser
-                   Schliessung. Die Fläche liegt ausserhalb des Editors und kann sie
-                   nicht sehen; ohne diese zwei Zeilen bräuchte sie ein eigenes
-                   Ziehen, und das wäre der zweite Mechanismus, vor dem §8 warnt.
-                   Der eigene MIME-Name, damit ein Zug aus einem anderen Programm
-                   nicht versehentlich als Block gelesen wird. */
                 e.dataTransfer?.setData('application/x-redion-block', String(blk.dataset.bid ?? ''));
                 if (e.dataTransfer)
                     e.dataTransfer.effectAllowed = 'move';
@@ -2130,7 +1723,6 @@ const Blocks = (() => {
                 blk.draggable = false;
             }
         });
-        /* Die Hilfslinie zeigt, wo der Block landet: oberhalb oder unterhalb. */
         let untenAblegen = false;
         wurzel.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -2157,7 +1749,6 @@ const Blocks = (() => {
             const ziel = elVon(e)?.closest('.blk');
             if (!ziel || !gezogen || ziel.dataset.bid === gezogen)
                 return;
-            /* Mit gedrückter Alt-Taste wird kopiert statt verschoben — wie in Notion. */
             if (e.altKey) {
                 const z = Store.getBlock(ziel.dataset.bid);
                 const daten = Store.baum(gezogen);
@@ -2173,40 +1764,15 @@ const Blocks = (() => {
             gezogen = null;
         });
     };
-    /* --- Textauszeichnung um die Auswahl legen ------------------------------
-     * EIN KATALOG, NICHT ZWEI (§8, E668). Hier stand eine eigene Fassung von
-     * `umschliesse`, und sie machte etwas anderes als die der Auswahlleiste:
-     *
-     *     r.insertNode(document.createTextNode(marke + txt + marke));
-     *     Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
-     *
-     * `ct.textContent` ist der GEZEICHNETE Text. In einem Block
-     * `Ein **fetter** Satz` steht dort `Ein fetter Satz` — ohne Sterne. Wer
-     * irgendwo in diesem Block Strg+B drückte, speicherte den gezeichneten
-     * Text zurück und löschte damit jede Auszeichnung, die der Block vorher
-     * hatte. Gemessen in `test557`: aus `Ein **fetter** Satz` wurde
-     * `Ein fetter **Satz**`.
-     *
-     * Und weil es zwei Fassungen waren, hat E650s Reparatur (die richtige
-     * Stelle treffen) nur eine von beiden erreicht — genau das, wovor §8
-     * warnt: „läuft mit dem ersten auseinander, und niemand merkt, welcher
-     * gilt."
-     *
-     * Der Knopf der Auswahlleiste und die Taste gehen deshalb jetzt
-     * denselben Weg. */
     const umschliesse = (marke) => {
         if (typeof Auswahl === 'undefined' || typeof Auswahl.umschliesse !== 'function')
             return;
         Auswahl.umschliesse(marke);
     };
-    /* ========================================================================
-     * BLOCK-OPERATIONEN
-     * ======================================================================*/
     const umwandeln = (id, neuerTyp) => {
         const b = Store.getBlock(id);
         if (!b)
             return;
-        /* Datenbank-Blöcke sind eigene Sache */
         if (neuerTyp.startsWith('db-')) {
             const layout = neuerTyp.slice(3);
             const eltern = Store.getBlock(b.parentId);
@@ -2222,13 +1788,11 @@ const Blocks = (() => {
             App.zeichneSeite();
             return;
         }
-        /* Einbettungen sind alle derselbe Block, nur mit gemerktem Dienst */
         if (neuerTyp.startsWith('embed-')) {
             Store.updateBlock(id, { type: 'embed', dienst: neuerTyp.slice(6), text: '', src: null });
             App.zeichneSeite();
             return;
         }
-        /* KI-Blöcke lösen eine Aktion aus, statt einen Typ zu setzen */
         if (neuerTyp.startsWith('ai-')) {
             KI.blockAktion(neuerTyp, b);
             return;
@@ -2240,18 +1804,14 @@ const Blocks = (() => {
             App.oeffne(p.id);
             return;
         }
-        /* Toggle-Überschrift: normale Überschrift mit Klapp-Merkmal */
         if (neuerTyp.startsWith('toggle-h')) {
             Store.updateBlock(id, { type: neuerTyp.slice(7), toggleKopf: true, open: true });
             App.zeichneSeite(id, 'ende');
             return;
         }
-        /* Spalten brauchen Kinder, sonst bleiben sie leer */
         if (neuerTyp === 'columns' || neuerTyp === 'columns3') {
             Store.updateBlock(id, { type: neuerTyp, text: '' });
             const n = neuerTyp === 'columns3' ? 3 : 2;
-            /* Je Spalte ein `spalte`-Behälter mit einer leeren Zeile darin —
-               nicht der Inhalt direkt (E102). */
             for (let i = Store.childrenOf(id).length; i < n; i++) {
                 const sp = Store.addBlock(id, 'spalte', { text: '' });
                 Store.addBlock(sp.id, 'text', { text: '' });
@@ -2260,7 +1820,6 @@ const Blocks = (() => {
             return;
         }
         Store.updateBlock(id, { type: neuerTyp });
-        /* Zwei Typen fragen direkt nach ihrem Ziel */
         if (neuerTyp === 'pageref') {
             App.zeichneSeite();
             seiteWaehlen(Store.getBlock(id));
@@ -2316,31 +1875,6 @@ const Blocks = (() => {
         Store.updateBlock(b.id, { parentId: gross.id });
         App.zeichneSeite(b.id, 'ende');
     };
-    /**
-     * Der nächste Geschwisterblock, der auf der SEITE auch wirklich steht.
-     *
-     * WOZU (E692, L220). Seit E691 kann ein Block auf „nur Fläche" stehen und
-     * wird im Text nicht gezeichnet. Zwei Handgriffe rechneten trotzdem mit
-     * `eltern.content[idx ± 1]` — der ungefilterten Liste:
-     *
-     *   Rücktaste am Anfang eines leeren Blocks setzte den Fokus auf einen
-     *   Block, den es auf dieser Seite gar nicht gibt. Der Cursor sprang
-     *   nirgendwohin, und der gelöschte Block war trotzdem weg.
-     *
-     *   Strg+Umschalt+Pfeil tauschte mit dem unsichtbaren Nachbarn: die DATEN
-     *   änderten sich, auf dem Bildschirm bewegte sich nichts, und zweimal
-     *   drücken sprang dann über ihn.
-     *
-     * Beides ist kein Datenverlust — es ist eine Taste, die schweigend nichts
-     * tut (§47), und das ist die heimtückischere Sorte.
-     *
-     * DIE FRAGE „erscheint er?" WIRD NICHT HIER BEANTWORTET, sondern im
-     * Register (§8, `Register.seitenansichten.zeigtIn`). Hier steht nur der
-     * Weg durch die Liste.
-     *
-     * @param schritt −1 für den Vorgänger, +1 für den Nachfolger.
-     * @returns Block und Stelle in `content`, oder `null`.
-     */
     const nachbarImText = (eltern, idx, schritt) => {
         const zeigtIn = (typeof Register !== 'undefined' && Register.seitenansichten)
             ? Register.seitenansichten.zeigtIn
@@ -2360,10 +1894,6 @@ const Blocks = (() => {
         const i = eltern.content.indexOf(b.id);
         if (i < 0)
             return;
-        /* ÜBER den unsichtbaren Nachbarn, nicht mit ihm. Und `splice` statt
-           Tausch: bei einem Sprung über mehrere Stellen würde ein Tausch den
-           Block am Ziel rückwärts über dieselben Stellen werfen — die übrigen
-           sollen aber stehen bleiben, wo sie sind. */
         const ziel = nachbarImText(eltern, i, richtung < 0 ? -1 : 1);
         if (!ziel)
             return;
@@ -2377,15 +1907,6 @@ const Blocks = (() => {
         const q = Store.getBlock(quelleId), z = Store.getBlock(zielId);
         if (!q || !z)
             return;
-        /* Ein Block darf nicht in sein eigenes Inneres fallen. Landet er neben
-           einem seiner NACHKOMMEN, zeigt seine neue Elternkette auf ihn selbst
-           zurück — der ganze Teilbaum hängt im Kreis und verschwindet von der
-           Seite, ohne gelöscht zu sein. Das Loch war so alt wie das Ziehen am
-           Rechner; gefunden hat es erst der Review der Telefon-Geste (E83).
-    
-           Mit Schranke, wie bei seiteVon: wäre der Bestand schon zyklisch
-           kaputt (ein Elternkreis OHNE die Quelle), liefe die Kette sonst
-           endlos — die Sicherung gegen den Kreis darf selbst keiner werden. */
         for (let el = z, tiefe = 0; el && tiefe < 100; el = Store.getBlock(el.parentId), tiefe++) {
             if (el.id === quelleId) {
                 UI.toast('Ein Block lässt sich nicht in sein eigenes Inneres verschieben.');
@@ -2410,7 +1931,6 @@ const Blocks = (() => {
         const neu = Store.baumEinfuegen(daten, b.parentId, idx);
         App.zeichneSeite(neu ? neu.id : null);
     };
-    /** Fügt einen Block dieses Typs am Ende der offenen Seite ein. */
     const einfuegenAmEnde = (typId) => {
         const seite = App.aktuelleSeite();
         if (!seite) {
@@ -2420,7 +1940,6 @@ const Blocks = (() => {
         const b = Store.addBlock(seite, 'text');
         umwandeln(b.id, typId);
     };
-    /** Das „Umwandeln in"-Menü, auch aus der Auswahlleiste heraus. */
     const umwandelnMenue = (rect, b) => {
         const m = UI.menu('<div class="grp">Umwandeln in</div>' +
             UMWANDELBAR.map(id => {
@@ -2436,7 +1955,6 @@ const Blocks = (() => {
             }
         });
     };
-    /* --- Auswahlhilfen für Verweis- und Sync-Blöcke ------------------------- */
     const seitenPicker = (titel, beiWahl) => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -2468,7 +1986,6 @@ const Blocks = (() => {
         });
         inp.focus();
     };
-    /** Welche vorhandene Datenbank soll die verknüpfte Ansicht zeigen? */
     const datenbankWaehlen = (block) => {
         const alle = Object.values(Store.cache.collections);
         if (!alle.length) {
@@ -2483,7 +2000,6 @@ const Blocks = (() => {
             if (!b)
                 return;
             m.remove();
-            /* Eine eigene Ansicht anlegen, damit Filter hier unabhängig bleiben */
             const v = Store.addView(b.dataset.c, 'table', 'Verknüpft');
             if (!v)
                 return;
@@ -2499,17 +2015,14 @@ const Blocks = (() => {
         Store.updateBlock(block.id, { quelle: id });
         App.zeichneSeite();
     });
-    /* --- Knopf-Block (Notions Button) -------------------------------------- */
     const AKTIONS_NAMEN = {
         block: 'Block einfügen', zeile: 'Datenbankeintrag anlegen',
         seite: 'Unterseite anlegen', meldung: 'Meldung zeigen', timer: 'Timer',
         aendern: 'Einträge ändern', oeffnen: 'Seite öffnen',
-        /* Die vier, die Notions Knöpfe haben und unsere noch nicht hatten */
         webhook: 'An eine Webadresse schicken', mail: 'E-Mail senden',
         benachricht: 'Benachrichtigung senden', variablen: 'Variablen festlegen'
     };
     const knopfAusfuehren = async (block) => {
-        /* Mehrere Aktionen laufen der Reihe nach — Notions Button kann das auch. */
         const liste = block.aktionen && block.aktionen.length
             ? block.aktionen
             : (block.aktion ? [block.aktion] : []);
@@ -2527,8 +2040,6 @@ const Blocks = (() => {
         App.zeichneSeite();
         UI.toast(liste.length === 1 ? 'Ausgeführt' : liste.length + ' Aktionen ausgeführt');
     };
-    /* Variablen, die ein Knopf setzt, gelten für alle folgenden Aktionen
-       desselben Klicks — als {{name}}. Wie in Notion. */
     let knopfVars = {};
     const mitKnopfVars = (v) => typeof v === 'string'
         ? v.replace(/\{\{\s*([A-Za-zÄÖÜäöüß0-9_]+)\s*\}\}/g, (_, n) => (n in knopfVars ? String(knopfVars[n]) : ''))
@@ -2552,7 +2063,6 @@ const Blocks = (() => {
             }
             return v;
         };
-        /* --- Variablen festlegen ------------------------------------------ */
         if (a.art === 'variablen') {
             (a.vars || []).forEach((v) => {
                 if (!v || !v.name)
@@ -2562,7 +2072,6 @@ const Blocks = (() => {
             });
             return;
         }
-        /* --- An eine Webadresse schicken ----------------------------------- */
         if (a.art === 'webhook') {
             const url = mitKnopfVars(a.text || '') || Store.getMeta('webhookUrl', '');
             if (!url) {
@@ -2573,10 +2082,6 @@ const Blocks = (() => {
                 body: JSON.stringify({ quelle: 'Redion', knopf: block.text || '',
                     seite: App.aktuelleSeite(), wann: new Date().toISOString(),
                     variablen: knopfVars }) })
-                /* `KI.holen` wirft bei 401/403/404 nicht, sondern gibt die Antwort
-                   zurück — sechs andere Aufrufer verlassen sich darauf. Wer hier
-                   nur `.then(… geschickt)` schreibt, meldet also auch bei
-                   „401 Unauthorized" Erfolg. */
                 .then(r => r.ok
                 ? UI.toast('An den Webhook geschickt')
                 : UI.banner('Webhook antwortet mit ' + r.status +
@@ -2584,7 +2089,6 @@ const Blocks = (() => {
                 .catch(err => UI.banner('Webhook nicht erreicht: ' + err.message, 'warn'));
             return;
         }
-        /* --- Benachrichtigung ---------------------------------------------- */
         if (a.art === 'benachricht') {
             Werkzeuge.posteingangMelden({
                 text: mitKnopfVars(a.text || '') || (block.text || 'Knopf gedrückt'),
@@ -2592,15 +2096,10 @@ const Blocks = (() => {
             });
             return;
         }
-        /* --- E-Mail --------------------------------------------------------- */
         if (a.art === 'mail') {
             const betreff = mitKnopfVars(a.betreff || '') || (block.text || 'Redion');
             const koerper = mitKnopfVars(a.text || '');
             const an = mitKnopfVars(a.an || '');
-            /* Hier stand `Mail.senden(…)` — die Funktion gibt es nicht. Das Mail-Modul
-               kann lesen und antworten, aber nicht von sich aus verschicken. Weil
-               `Mail.senden &&` davorstand, lief immer der `mailto:`-Weg; der bleibt
-               jetzt der einzige und ehrliche. */
             location.href = 'mailto:' + encodeURIComponent(an) +
                 '?subject=' + encodeURIComponent(betreff) + '&body=' + encodeURIComponent(koerper);
             return;
@@ -2620,7 +2119,6 @@ const Blocks = (() => {
             }
             const titelKey = Object.keys(c.schema).find(k => c.schema[k].type === 'title') || 'title';
             const props = {};
-            /* Vorbelegte Felder aus der Einstellung übernehmen */
             Object.entries(a.felder || {}).forEach(([k, v]) => { props[k] = datum(v); });
             const r = Store.addRow(c.id, Object.assign(props, { [titelKey]: datum(a.zeilenText) || 'Neuer Eintrag' }));
             Store.updateBlock(r.id, { text: datum(a.zeilenText) || 'Neuer Eintrag' });
@@ -2635,7 +2133,6 @@ const Blocks = (() => {
             UI.toast(a.text || 'Fertig');
             return;
         }
-        /* Notions „Edit pages in": alle Einträge, die zum Filter passen, ändern. */
         if (a.art === 'aendern') {
             const n = Datenbank.fremdSetzen({
                 ziel: a.collectionId, zielKey: a.zielKey, wert: datum(a.wert),
@@ -2644,7 +2141,6 @@ const Blocks = (() => {
             UI.toast(n + (n === 1 ? ' Eintrag geändert' : ' Einträge geändert'));
             return;
         }
-        /* Zu einer Seite springen — Notions „Open page". */
         if (a.art === 'oeffnen') {
             if (a.seiteId && Store.getBlock(a.seiteId))
                 App.oeffne(a.seiteId);
@@ -2652,7 +2148,6 @@ const Blocks = (() => {
                 UI.toast('Die Seite gibt es nicht mehr');
             return;
         }
-        /* Timer: erster Klick setzt den Start, der zweite das Ende. */
         if (a.art === 'timer') {
             const jetzt = new Date().toISOString().slice(0, 16);
             if (!block.timerStart) {
@@ -2881,16 +2376,9 @@ const Blocks = (() => {
             App.zeichneSeite();
         });
     };
-    /* ========================================================================
-     * SLASH-MENÜ
-     * ======================================================================*/
     const slashMenue = (ct, block) => {
         const rect = ct.getBoundingClientRect();
-        /* Der Filter kommt aus dem tatsächlichen Text — nicht aus mitgezählten
-           Tastendrücken. Sonst gehen schnell getippte Zeichen verloren. */
         const filterLesen = () => {
-            /* Nur bis zum Schreibzeiger lesen. Wer mitten in einer Zeile / tippt,
-               soll nicht den Rest des Satzes als Suchwort bekommen. */
             let bis = ct.textContent || '';
             const sel = window.getSelection();
             if (sel && sel.rangeCount && ct.contains(sel.anchorNode)) {
@@ -2903,8 +2391,6 @@ const Blocks = (() => {
             return m ? m[1] : '';
         };
         let filter = filterLesen();
-        /* Was zuletzt benutzt wurde, steht oben unter „Empfohlen" — so wie in
-           Notion. Nach ein paar Tagen trifft das meistens zu, was man sucht. */
         const zuletzt = () => (Store.getMeta('slash:zuletzt', []) || [])
             .map((id) => TYPEN.find((t) => t.id === id)).filter(Boolean).slice(0, 4);
         const merken = (id) => {
@@ -2923,7 +2409,6 @@ const Blocks = (() => {
             if (!treffer.length)
                 return '<div class="grp">Kein Treffer für „' + esc(q) + '"</div>';
             let html = '';
-            /* Empfohlen nur, solange nichts getippt wurde */
             if (!q) {
                 const empf = zuletzt();
                 if (empf.length) {
@@ -2948,7 +2433,6 @@ const Blocks = (() => {
             merken(b.dataset.t ?? '');
             schliessen();
             const t = TYPEN.find((x) => x.id === b.dataset.t);
-            /* Aktionen legen keinen Block an — sie tun etwas mit diesem hier. */
             if (t && t.aktion) {
                 slashAktion(ct, block, t.aktion);
                 return;
@@ -2960,11 +2444,9 @@ const Blocks = (() => {
             document.removeEventListener('keydown', tasten, true);
             ct.removeEventListener('input', beiEingabe);
         };
-        /* Nach jedem Tastendruck den Filter aus dem Text neu lesen */
         const beiEingabe = () => {
             const vorher = filter;
             filter = filterLesen();
-            /* Slash gelöscht? Dann ist das Menü fertig. */
             if (!/\/[^\/]*$/.test(ct.textContent || '')) {
                 schliessen();
                 return;
@@ -2979,7 +2461,6 @@ const Blocks = (() => {
                 erste.classList.add('on');
         };
         ct.addEventListener('input', beiEingabe);
-        /* Pfeile wählen aus, Enter übernimmt */
         const tasten = (e) => {
             if (!document.body.contains(menu)) {
                 schliessen();
@@ -3026,30 +2507,15 @@ const Blocks = (() => {
             erste.classList.add('on');
         document.addEventListener('keydown', tasten, true);
     };
-    /** Entfernt den eingetippten Slash-Befehl und wandelt den Block um. */
     const umwandelnNachSlash = (ct, block, typId) => {
         ct.textContent = (ct.textContent || '').replace(/\/[^\/]*$/, '');
         Store.updateBlock(block.id, { text: ct.textContent });
         umwandeln(block.id, typId);
     };
-    /**
-     * Die Aktionen aus dem Slash-Menü: /turn, /color, /duplicate, /moveto,
-     * /delete, /mention, /date, /reminder, /emoji, /comment.
-     * Notion hat sie alle; sie legen keinen Block an, sondern greifen zu.
-     */
     const slashAktion = (ct, block, was) => {
-        /* Den getippten Befehl aus dem Text nehmen, bevor irgendetwas passiert */
         ct.textContent = (ct.textContent || '').replace(/\/[^\/]*$/, '');
         Store.updateBlock(block.id, { text: ct.textContent });
         const b = Store.getBlock(block.id) || block;
-        /* TRÄGT DER REGISTEREINTRAG SELBST EINE HANDLUNG? (E666)
-           Dann gilt sie, und der Editor muss nichts über sie wissen. §5 nennt
-           das den dritten Weg — „über `register/` bekannt machen" —, und er ist
-           hier der einzige, der keinen neuen Querverweis schafft: `Register` ist
-           kein Bereich, `Werkzeuge` wäre einer.
-    
-           Der Reihenfolge nach VOR allem anderen, damit ein Eintrag, der es
-           besser weiss, nicht erst durch die Sonderfälle unten muss. */
         const eintrag = (Register?.bloecke?.alle?.() || [])
             .find((x) => x && x.aktion === was && typeof x.tun === 'function');
         if (eintrag) {
@@ -3059,8 +2525,6 @@ const Blocks = (() => {
         }
         const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
         if (was === 'turn' || was === 'color') {
-            /* Beide öffnen dasselbe Untermenü wie am Blockgriff — kein zweiter Weg,
-               der auseinanderlaufen könnte. */
             if (!griff) {
                 UI.toast('Der Block ist gerade nicht sichtbar');
                 return;
@@ -3097,27 +2561,8 @@ const Blocks = (() => {
             Kommentare.neu(b);
             return;
         }
-        /* Erwähnung, Datum, Erinnerung und Emoji schreiben ihr Zeichen und
-           lassen dann das Menü aufgehen, das ohnehin daran hängt. */
         zeichenAusloesen(b.id, was);
     };
-    /* ------------------------------------------------------------------------
-     * DAS AUSLÖSEZEICHEN SCHREIBEN — EINMAL, FÜR ZWEI WEGE
-     *
-     * „@" öffnet die Erwähnung, „:" das Emoji-Menü. Beide hängen ohnehin am
-     * Tippen; die Aktion tut nichts weiter, als das Zeichen zu setzen und so
-     * zu tun, als sei es getippt worden.
-     *
-     * Das stand als Schwanz in `slashAktion` und wird seit E215 auch vom
-     * Menüband gebraucht (L63). Zwei Kopien desselben Schwanzes wären zwei
-     * Stellen, an denen jemand später ein Zeichen ändert — und eine, an der
-     * er es vergisst.
-     *
-     * GELESEN WIRD AUS DEM SPEICHER, NICHT AUS DEM DOM. `slashAktion` hatte
-     * `ct.textContent`; an der Stelle des Aufrufs ist beides gleich, aber der
-     * Speicher gilt auch dann, wenn kein Feld im Bild steht — und genau das
-     * ist beim Weg über das Menüband der Normalfall.
-     * ----------------------------------------------------------------------*/
     const AUSLOESER = { mention: '@', date: '@', remind: '@remind ', emoji: ':' };
     const zeichenAusloesen = (blockId, was) => {
         const zeichen = AUSLOESER[was];
@@ -3138,30 +2583,6 @@ const Blocks = (() => {
         }, 30);
         return true;
     };
-    /**
-     * DIESELBE AKTION, ABER OHNE SCHREIBZEIGER (L63).
-     *
-     * `slashAktion` braucht das Feld, in dem gerade getippt wird, und den
-     * Block darunter. Ein Knopf im Menüband hat weder das eine noch das
-     * andere — deshalb standen „Erwähnung", „Datum" und „Emoji" bisher nur im
-     * Slash-Menü, obwohl sie inhaltlich unter „Einfügen" gehören.
-     *
-     * Hier wird stattdessen ein leerer Textblock ans Ende der Seite gehängt
-     * und das Auslösezeichen dort geschrieben. Ab da ist es derselbe Weg wie
-     * beim Tippen — dasselbe `zeichenAusloesen`, dasselbe Menü.
-     *
-     * NUR DIESE DREI. Die anderen acht Aktionen (Umwandeln, Farbe,
-     * Duplizieren, Verschieben, Löschen, Kommentar …) handeln von EINEM
-     * bestimmten Block. Ohne Schreibzeiger gibt es keinen, und einer, der
-     * sich den letzten Block greift, würde irgendwann den falschen erwischen.
-     * Ein Knopf, der manchmal das Richtige trifft, ist schlimmer als keiner.
-     */
-    /* ZWEI UND NICHT DREI — „Datum" IST DASSELBE MENÜ.
-       Nachgemessen: `mention` und `date` schreiben beide „@" und öffnen damit
-       dasselbe Menü. Das ist kein Fehler — dieses Menü führt Seiten, Personen
-       UND Datumsangaben („heute", „morgen", „Datum wählen …"). Aber ein Knopf
-       „Datum", der ein Menü mit der Überschrift „Seiten" aufmacht, führt in
-       die Irre. Ein Einstieg, dessen Hinweis alle drei nennt, tut das nicht. */
     const AM_ENDE = ['mention', 'emoji'];
     const aktionAmEnde = (was) => {
         if (!AM_ENDE.includes(was))
@@ -3174,47 +2595,19 @@ const Blocks = (() => {
         const b = Store.addBlock(seite, 'text');
         if (!b)
             return false;
-        /* EMOJI GEHT NICHT ÜBER DAS AUSLÖSEZEICHEN.
-    
-           Gemessen: „:" allein öffnet nichts. Das Emoji-Menü hängt an
-           `/(?:^|\s):([a-zäöü]{2,})$/` — es braucht MINDESTENS ZWEI
-           Buchstaben nach dem Doppelpunkt, damit ein gewöhnlicher Doppelpunkt
-           im Satz kein Menü aufklappt. Das ist beim Tippen richtig und beim
-           Knopfdruck falsch: dort steht am Ende nur ein Doppelpunkt und sonst
-           nichts. (Derselbe Weg über `slashAktion` hat dasselbe Problem.)
-    
-           Die volle Auswahl mit Suchfeld gibt es — `Erwaehnungen.emojiWaehler`.
-           Sie liegt aber in einem ANDEREN Bereich, und ein Bereich darf keinen
-           anderen aufrufen (CLAUDE.md §5, Regel 1). Der vorgesehene Weg dafür
-           ist der Ereignisbus, und genau der wird hier benutzt.
-    
-           Hört niemand zu, bleibt es beim Doppelpunkt — dann ist es so gut wie
-           vorher und nicht schlechter. */
         if (was === 'emoji' && typeof Ereignisse !== 'undefined') {
             try {
-                /* ERST ZEICHNEN, DANN RUFEN. Der Block ist gerade erst im Speicher
-                   entstanden; auf der Seite steht er noch nicht. Wer daran ein Menü
-                   aufhängen will, findet nichts — gemessen kam beim ersten Versuch
-                   kein einziges Menü, obwohl der Zuhörer lief. */
                 App.zeichneSeite(b.id, 'ende');
                 if (Ereignisse.melde('emojiWaehlen', { blockId: b.id }) > 0)
                     return true;
             }
-            catch { /* dann eben das Zeichen */ }
+            catch { }
         }
         return zeichenAusloesen(b.id, was);
     };
-    /* ========================================================================
-     * BLOCK-HANDLE-MENÜ
-     * ======================================================================*/
     const blockMenue = (anker, b) => {
         const r = anker.getBoundingClientRect();
-        /* Vierte Kopie derselben Liste, und die dritte, die „Lila"/„Pink" statt
-           „Violett"/„Rosa" sagte. Seit E406 stehen die Namen an einer Stelle. */
         const FARBEN = Farben.alle().map(id => [id, Farben.name(id)]);
-        /* WOHER DIESE ZEILE KOMMT (E307) — in Worten, nicht nur als Farbe (§38).
-           Nur wenn es etwas zu sagen gibt: bei Selbstgeschriebenem steht hier
-           nichts, und das ist der Normalfall. */
         const HERKUNFT = {
             ki: 'Von der KI geschrieben',
             quelle: 'Aus einem eingelesenen Dokument',
@@ -3238,17 +2631,6 @@ const Blocks = (() => {
             '<button data-a="up"><span class="mi">↑</span>Nach oben<span class="ms">Ctrl+Shift+↑</span></button>' +
             '<button data-a="down"><span class="mi">↓</span>Nach unten<span class="ms">Ctrl+Shift+↓</span></button>' +
             '<button data-a="moveto"><span class="mi">➦</span>Verschieben nach …</button>' +
-            /* DER WEG AUF DIE FLÄCHE OHNE GRIFF (E691). Am Rechner zieht man den
-               Block am `⋮⋮` auf die Leinwand; am Telefon ist dieser Griff
-               ausgeblendet (`ki.css:182`), und HTML5-Ziehen kennt ohnehin keine
-               Finger. Ohne diesen Eintrag gäbe es den Vollausbau am Telefon
-               nicht — und §37 sagt, das Telefon ist der Normalfall. */
-            /* „VON DER FLÄCHE NEHMEN", nicht „zurück in den Text": dieses Menü geht
-               in der TEXTansicht auf, und dort steht der Block ja bereits im Text
-               (solange er nicht ausgeblendet ist). Die Beschriftung sagt, was
-               wirklich geschieht — sein Platz auf der Fläche fällt weg. Auf der
-               Fläche selbst heisst derselbe Griff „Zurück in den Text", und dort
-               stimmt es. */
             (b.flaecheOrt
                 ? '<button data-a="flaeche"><span class="mi">▤</span>Von der Fläche nehmen</button>'
                 : '<button data-a="flaeche"><span class="mi">▦</span>Auf die Fläche legen</button>') +
@@ -3281,9 +2663,6 @@ const Blocks = (() => {
                 });
                 return;
             }
-            /* Grösse und Schriftart teilen sich einen Bauplan — zwei fast gleiche
-               Menüs von Hand wären zwei Stellen zum Vergessen. Die Einträge zeigen
-               sich selbst: „Gross" steht gross da. */
             if (a === 'groesse' || a === 'schrift') {
                 const istGroesse = a === 'groesse';
                 const liste = istGroesse ? Textstile.GROESSEN : Textstile.SCHRIFTEN;
@@ -3327,9 +2706,6 @@ const Blocks = (() => {
                 return;
             }
             menu.remove();
-            /* Der Einstieg in die Mehrfachauswahl — am Telefon der EINZIGE
-               (E84): dort gibt es weder Esc noch Umschalt-Klick. Danach
-               schaltet ein Tipp weitere Blöcke dazu, siehe auswahlEinklinken. */
             if (a === 'auswahl') {
                 ankerId = b.id;
                 auswahlSetzen([b.id]);
@@ -3350,11 +2726,6 @@ const Blocks = (() => {
                 Ablage.kopiereJetzt(b.text || '', 'Text kopiert');
             }
             if (a === 'cut') {
-                /* ERST kopieren, DANN löschen — und nur dann. `purgeBlock` räumt
-                   endgültig weg; wenn die Zwischenablage den Text nicht genommen
-                   hat, gäbe es ihn danach nirgends mehr. Vorher stand das Löschen
-                   gleichberechtigt daneben und lief auch, wenn das Kopieren
-                   abgewiesen wurde. */
                 Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
                     if (!ging)
                         return;
@@ -3365,7 +2736,6 @@ const Blocks = (() => {
             }
             if (a === 'komm')
                 Kommentare.neu(b);
-            /* Callout: eigenes Symbol wählen — Notion kann das, wir bisher nicht */
             if (a === 'ruficon') {
                 UI.emojiWaehlen(anker, (sym) => {
                     Store.updateBlock(b.id, { icon: sym });
@@ -3400,12 +2770,6 @@ const Blocks = (() => {
             }
         });
     };
-    /** Einen Block auf eine andere Seite verschieben. */
-    /**
-     * Alle Toggles der Seite auf einmal auf- oder zuklappen (Strg+Alt+T).
-     * Ist mindestens eines zu, gehen alle auf; sind alle offen, gehen alle zu —
-     * genauso verhält sich Notion.
-     */
     const alleToggles = () => {
         const seite = Store.getBlock(App.aktuelleSeite());
         if (!seite)
@@ -3439,25 +2803,9 @@ const Blocks = (() => {
             UI.toast('Block verschoben');
         });
     };
-    /* ========================================================================
-     * MEHRERE BLÖCKE AUF EINMAL
-     * ------------------------------------------------------------------------
-     * In Notion drückt man Esc und hat den Block ausgewählt; mit Umschalt und
-     * den Pfeilen wächst die Auswahl, und dann gilt alles für alle: löschen,
-     * duplizieren, umwandeln, einrücken, verschieben, kopieren.
-     *
-     * Bisher galt hier jede Taste immer nur für den Block unter dem Cursor.
-     * Wer zehn Absätze in Listenpunkte verwandeln wollte, musste zehnmal
-     * dasselbe tun. Das holt es nach — und bringt gleich fünfzehn Kürzel mit,
-     * die sonst ins Leere gingen.
-     *
-     * Die Auswahl lebt nur im Fenster, nicht in der Datenbank: sie ist ein
-     * Zustand der Bedienung, kein Inhalt.
-     * ---------------------------------------------------------------------- */
-    let ausgewaehlt = []; /* Block-IDs in Reihenfolge der Seite */
-    let ankerId = null; /* von hier aus wächst die Auswahl */
-    let ablage = null; /* ausgeschnittene oder kopierte Blöcke */
-    /** Alle sichtbaren Blöcke der Seite, von oben nach unten. */
+    let ausgewaehlt = [];
+    let ankerId = null;
+    let ablage = null;
     const sichtbareBloecke = () => [...document.querySelectorAll('#page .blk[data-bid]')].map(el => el.dataset.bid);
     const auswahlZeigen = () => {
         document.querySelectorAll('#page .blk.gewaehlt')
@@ -3468,10 +2816,6 @@ const Blocks = (() => {
                 el.classList.add('gewaehlt');
         });
         let leiste = document.getElementById('auswahl-leiste');
-        /* Am Rechner erscheint die Leiste ab zwei Blöcken — EIN gewählter
-           Block hat dort seine Griffe und das Kontextmenü. Am Telefon ist
-           sie ab dem ersten da: sie ist dort der einzige Beleg, dass man
-           im Auswahl-Zustand ist, und der einzige Weg zu den Aktionen. */
         const mindest = window.matchMedia('(max-width: 760px)').matches ? 1 : 2;
         if (ausgewaehlt.length < mindest) {
             if (leiste)
@@ -3512,7 +2856,6 @@ const Blocks = (() => {
         auswahlZeigen();
     };
     const auswahlLeeren = () => { ausgewaehlt = []; ankerId = null; auswahlZeigen(); };
-    /** Vom Anker bis hierhin — wie Umschalt+Klick in einer Dateiliste. */
     const auswahlBis = (id) => {
         const reihe = sichtbareBloecke();
         const a = reihe.indexOf(ankerId), b2 = reihe.indexOf(id);
@@ -3525,7 +2868,6 @@ const Blocks = (() => {
         const n = ausgewaehlt.length;
         if (!n)
             return;
-        /* Über die Seite zurückholbar: erst in den Papierkorb, nicht endgültig */
         ausgewaehlt.forEach(id => Store.trashBlock(id));
         auswahlLeeren();
         App.zeichneSeite();
@@ -3541,7 +2883,6 @@ const Blocks = (() => {
         App.zeichneSeite();
         UI.toast(n + (n === 1 ? ' Block dupliziert' : ' Blöcke dupliziert'));
     };
-    /** Die Auswahl als Markdown — so lässt sie sich überall einfügen. */
     const auswahlAlsText = () => auswahlBloecke().map(b => {
         const marke = { h1: '# ', h2: '## ', h3: '### ', bullet: '- ', number: '1. ',
             todo: b.checked ? '- [x] ' : '- [ ] ', quote: '> ', toggle: '> ',
@@ -3550,9 +2891,6 @@ const Blocks = (() => {
             return '---';
         if (b.type === 'code')
             return '```' + (b.lang || '') + '\n' + (b.text || '') + '\n```';
-        /* Der Tabellenblock geht als Markdown-Tabelle hinaus (E88) — die
-           Gegenrichtung zum Einfügen. Was er sonst schriebe, wäre sein leerer
-           `text`: die Tabelle wäre beim Kopieren einfach verschwunden. */
         if (b.type === 'spreadsheet' && b.mappe && b.mappe.blaetter &&
             typeof Spreadsheet !== 'undefined' && typeof CellRefs !== 'undefined') {
             const blatt = b.mappe.blaetter.find((x) => x.id === b.mappe.aktiv)
@@ -3581,11 +2919,6 @@ const Blocks = (() => {
         const t = auswahlAlsText();
         ablage = auswahlBloecke().map(b => Store.baum(b.id));
         const n = ausgewaehlt.length;
-        /* Ohne Meldung, weil hier mehr zu sagen ist als „ging" oder „ging
-           nicht": die INTERNE Ablage steht in jedem Fall, innerhalb von Redion
-           lässt sich also einfügen, auch wenn der Browser die Zwischenablage
-           verweigert. Ein blosses „kopiert" verschwiege das, ein blosses
-           „ging nicht" wäre zu düster. */
         const ging = await Ablage.kopiere(t);
         UI.toast(ging
             ? n + (n === 1 ? ' Block kopiert' : ' Blöcke kopiert')
@@ -3608,9 +2941,6 @@ const Blocks = (() => {
         UI.toast(ablage.length + ' Blöcke eingefügt');
         return true;
     };
-    /* Bei mehreren Blöcken wird der Typ direkt gesetzt statt über umwandeln():
-       das würde für jeden Block die Seite neu zeichnen und den Cursor
-       hineinsetzen — bei zwanzig Blöcken zwanzigmal. */
     const EINFACHE_TYPEN = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number',
         'toggle', 'quote', 'callout', 'code'];
     const auswahlUmwandeln = (typId) => {
@@ -3618,7 +2948,6 @@ const Blocks = (() => {
         if (!n)
             return;
         if (!EINFACHE_TYPEN.includes(typId)) {
-            /* Alles andere braucht die volle Behandlung — dann eben einzeln */
             ausgewaehlt.forEach(id => umwandeln(id, typId));
             auswahlLeeren();
             return;
@@ -3630,15 +2959,6 @@ const Blocks = (() => {
     };
     const auswahlTypMenue = (anker) => {
         const r = anker.getBoundingClientRect();
-        /* Über `Menue.menu` statt von Hand: von Hand wurde dieses Menü am
-           Telefon nie zum Blatt. Am Rechner stand es ÜBER dem Anker (die
-           Auswahl-Leiste sitzt unten) — das Modul klemmt die Lage selbst ins
-           Bild, also reicht ein Wunschpunkt oberhalb. */
-        /* `EINFACHE_TYPEN`, nicht dieselbe Liste zum zweiten Mal. Sie stand
-           dreiundzwanzig Zeilen weiter oben wörtlich genauso — und dieses Menü
-           darf genau die Typen anbieten, die `auswahlUmwandeln` auch direkt
-           setzen kann. Zwei Listen hiessen: ein Knopf, der nichts tut, oder ein
-           Typ, den man nicht auswählen kann. */
         const m = Menue.menu(TYPEN.filter((t) => EINFACHE_TYPEN.includes(t.id))
             .map((t) => `<button data-t="${t.id}"><span class="mi">${t.icon}</span>${esc(t.name)}</button>`).join(''), Math.max(8, r.left), Math.max(8, r.top - 8 - 44 * EINFACHE_TYPEN.length), { titel: 'Umwandeln in' });
         m.addEventListener('click', e => {
@@ -3657,13 +2977,10 @@ const Blocks = (() => {
         const liste = auswahlBloecke();
         if (!liste.length)
             return;
-        /* Nach oben von oben her, nach unten von unten her — sonst überholen
-           sich die Blöcke gegenseitig. */
         (richtung < 0 ? liste : liste.slice().reverse()).forEach(b => verschiebe(b, richtung));
         App.zeichneSeite();
         setTimeout(auswahlZeigen, 0);
     };
-    /* --- Die Tasten, die nur bei aktiver Auswahl gelten -------------------- */
     const auswahlTaste = (e) => {
         if (!ausgewaehlt.length)
             return false;
@@ -3740,8 +3057,6 @@ const Blocks = (() => {
                 cursorAnsEnde(erste);
             return true;
         }
-        /* Leertaste öffnet — bei einer Seite die Seite, bei einem Toggle
-           das Toggle. Notion macht es genauso. */
         if (k === ' ' || k === 'Spacebar') {
             e.preventDefault();
             const b2 = Store.getBlock(ausgewaehlt[0]);
@@ -3775,7 +3090,6 @@ const Blocks = (() => {
             }
             return true;
         }
-        /* Strg + Umschalt + Enter: die erste ausgewählte Seite rechts öffnen */
         if (strg && e.shiftKey && k === 'Enter') {
             const b2 = Store.getBlock(ausgewaehlt[0]);
             const ziel = b2 && (b2.type === 'page' ? b2.id : (b2.type === 'pageref' ? b2.ziel : null));
@@ -3786,12 +3100,9 @@ const Blocks = (() => {
             }
             return true;
         }
-        /* Blocktyp für alle auf einmal — dieselben Ziffern wie im Einzelfall */
         const ziffer = /^[0-9]$/.test(k) ? k : (/^Digit([0-9])$/.exec(e.code || '') || [])[1];
         if (strg && (e.shiftKey || e.altKey) && ziffer) {
             e.preventDefault();
-            /* Ohne die 9: eine Mehrfachauswahl lässt sich nicht in EINE Seite
-               verwandeln — dafür gibt es „Verschieben nach". */
             const ohneSeite = { ...ZIFFER_TYP(), '9': '' };
             const ziel = ohneSeite[ziffer ?? ''];
             if (ziel)
@@ -3800,9 +3111,6 @@ const Blocks = (() => {
         }
         return false;
     };
-    /**
-     * Einklinken. Wird von App einmal aufgerufen; ein zweiter Aufruf tut nichts.
-     */
     let auswahlBereit = false;
     const auswahlEinklinken = () => {
         if (auswahlBereit)
@@ -3811,7 +3119,6 @@ const Blocks = (() => {
         document.addEventListener('keydown', (e) => {
             if (auswahlTaste(e))
                 return;
-            /* Esc im Text wählt den Block aus — Notions Einstieg in die Auswahl */
             if (e.key === 'Escape' && !ausgewaehlt.length) {
                 const aktiv2 = document.activeElement;
                 const ct = aktiv2 instanceof HTMLElement ? aktiv2.closest('.ct') : null;
@@ -3823,7 +3130,6 @@ const Blocks = (() => {
                 }
             }
         }, true);
-        /* Umschalt- und Strg-Klick auf einen Block */
         document.addEventListener('click', (e) => {
             const blk = elVon(e)?.closest('#page .blk[data-bid]');
             if (!blk) {
@@ -3831,8 +3137,6 @@ const Blocks = (() => {
                     auswahlLeeren();
                 return;
             }
-            /* Ohne Alt: mit Alt+Umschalt gehört der Klick dem Einzel-Umschalter
-               weiter unten — sonst fräse „bis hierher" jeden zweiten Alt-Klick. */
             if (e.shiftKey && !e.altKey && ankerId && blk.dataset.bid) {
                 e.preventDefault();
                 auswahlBis(blk.dataset.bid);
@@ -3845,10 +3149,6 @@ const Blocks = (() => {
                     ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
                 return;
             }
-            /* Alt+Umschalt+Klick wählt den Block — auch als ERSTEN (Notions
-               Griff, letzter L20-Rest). Strg+Klick kann nur erweitern, weil
-               der blosse Klick dem Schreibzeiger gehört; diese Kombination
-               darf die Auswahl auch beginnen. */
             if (e.altKey && e.shiftKey && blk.dataset.bid) {
                 e.preventDefault();
                 const id = blk.dataset.bid;
@@ -3857,9 +3157,6 @@ const Blocks = (() => {
                     ? ausgewaehlt.filter(x => x !== id) : [...ausgewaehlt, id]);
                 return;
             }
-            /* Am Telefon gibt es keine Strg-Taste: solange die Auswahl steht,
-               schaltet ein Tipp den Block dazu oder wieder weg (E84). Der
-               letzte weggetippte Block beendet die Auswahl von selbst. */
             if (window.matchMedia('(max-width: 760px)').matches &&
                 ausgewaehlt.length && blk.dataset.bid) {
                 e.preventDefault();
@@ -3873,10 +3170,6 @@ const Blocks = (() => {
             if (ausgewaehlt.length)
                 auswahlLeeren();
         }, true);
-        /* Der Tipp, der einen Block dazuschaltet, darf nicht nebenbei das
-           Schreibfeld öffnen — der Fokus fällt beim mousedown, nicht beim
-           click. Bei stehender Auswahl wird er am Telefon deshalb hier
-           abgefangen; die Tastatur bleibt unten. */
         document.addEventListener('mousedown', (e) => {
             if (!window.matchMedia('(max-width: 760px)').matches || !ausgewaehlt.length)
                 return;
@@ -3890,12 +3183,10 @@ const Blocks = (() => {
         blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
         knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
         DIENSTE, einbettungsAdresse,
-        /* Mehrfachauswahl */
         auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
         auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
         auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,
         auswahlAlsText, auswahlTaste, sichtbareBloecke, auswahlTypMenue,
-        /* Markdown in beide Richtungen */
         mdLesen, mdEinsetzen, mdIstStruktur, sprachName,
         auswahl: () => ausgewaehlt.slice()
     };

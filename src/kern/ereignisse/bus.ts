@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ereignisse/bus.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/ereignisse.js — der Bus statt der Direktaufrufe
  * ----------------------------------------------------------------------------

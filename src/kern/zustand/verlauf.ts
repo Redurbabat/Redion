@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zustand/verlauf.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/zustand/verlauf.js — Rückgängig und Wiederholen
  * ----------------------------------------------------------------------------

@@ -1,66 +1,11 @@
 "use strict";
-/* ============================================================================
- * core/helpers/reporter.ts — was schiefgeht, soll auffindbar sein
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/helpers/reporter.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/core/helpers/reporter.js`. Wer das .js bearbeitet, verliert
- * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
- * vorher.
- * ----------------------------------------------------------------------------
- * `console.log` ist bequem und genau einmal falsch: es ist weg, sobald das
- * Fenster zu ist. Wenn jemand sagt „gestern ging etwas nicht", steht nichts
- * mehr da.
- *
- * Deshalb sammelt der Melder alles im Speicher — und schreibt es nur dann in
- * die Konsole, wenn es wirklich zählt. Bei Bedarf lässt sich der Verlauf als
- * Datei ausgeben und einer Meldung beilegen.
- *
- * Vier Stufen. Der Unterschied ist nicht die Lautstärke, sondern die Frage,
- * ob jemand etwas tun muss:
- *
- *   spur     nur für die Fehlersuche, im Betrieb aus
- *   info     ist geschehen, niemand muss handeln
- *   warnung  ist schiefgegangen, die App hat sich selbst geholfen
- *   fehler   ist schiefgegangen, jemand muss hinsehen
- *
- * Bewusst kein Versand nach draussen. Ein Melder, der still Daten
- * verschickt, ist kein Melder, sondern eine Wanze.
- *
- * ─── SPRACHE ────────────────────────────────────────────────────────────────
- *
- * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27. Aus
- * `Melder` wurde `Reporter`. Gemessen siebzehn Aufrufe in zehn Dateien und
- * sechs in `test85.mjs` — mehr als bei `Kennungen` (fünfzehn), aber
- * derselben Grössenordnung und damit derselbe erlaubte Fall.
- *
- *   spur → trace        info → info          warnung → warn
- *   fehler → error      behuetet → guarded   misst → measure
- *   alles → all         zahlen → counts      alsText → toText
- *   leeren → clear      stufeSetzen → setLevel
- *   konsoleSetzen → setConsoleLevel
- *   stufe() → level()   konsole() → consoleLevel()
- *   STUFEN → LEVELS
- *
- * ─── ZWEI DINGE, DIE ABSICHTLICH DEUTSCH BLEIBEN ────────────────────────────
- *
- * **1 · Die Stufennamen selbst.** `'spur'`, `'info'`, `'warnung'`, `'fehler'`
- * sind keine Bezeichner, sondern Werte — `toText()` druckt sie, und was dort
- * herauskommt, liest ein Mensch. E27 stellt Namen um, nie Inhalte.
- *
- * **2 · Die Felder eines Eintrags** heissen weiter `stufe`, `wo`, `text`,
- * `daten`, `wann`. Sie sind die Form eines Datensatzes, den `all()` nach
- * aussen gibt; sie umzubenennen wäre eine Verhaltensänderung und keine
- * Namensfrage — genau die Grenze, die E27 als die wichtigere bezeichnet.
- * Wer den Verlauf später wirklich speichert, wird froh sein, dass die Form
- * beim Umzug nicht heimlich gewechselt hat.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/reporter.ts (npm run bauen:ts). */
 const Reporter = (() => {
     const LEVELS = ['spur', 'info', 'warnung', 'fehler'];
     const MAX = 500;
     const history = [];
-    let level = 'info'; /* alles ab hier wird gesammelt */
-    let consoleLevel = 'warnung'; /* alles ab hier steht auch in der Konsole */
+    let level = 'info';
+    let consoleLevel = 'warnung';
     const rank = (s) => LEVELS.indexOf(s);
     const stamp = () => new Date().toISOString();
     const write = (s, where, text, data) => {
@@ -80,8 +25,6 @@ const Reporter = (() => {
             else
                 console.log(line, data !== undefined ? data : '');
         }
-        /* Fehler wandern zusätzlich in die Fehlerliste der Bestandspflege —
-           dort sucht ein Mensch, nicht in der Konsole. */
         if (s === 'fehler' && typeof Pflege !== 'undefined' && Pflege.fehlerMerken) {
             try {
                 Pflege.fehlerMerken(new Error(String(text || '')), String(where || ''));
@@ -94,10 +37,6 @@ const Reporter = (() => {
     const info = (where, text, data) => write('info', where, text, data);
     const warn = (where, text, data) => write('warnung', where, text, data);
     const error = (where, text, data) => write('fehler', where, text, data);
-    /**
-     * Eine Funktion einpacken: läuft sie auf einen Fehler, wird er gemeldet
-     * statt geschluckt — und die App läuft weiter.
-     */
     const guarded = (where, fn, fallback = undefined) => (...a) => {
         try {
             return fn(...a);
@@ -108,7 +47,6 @@ const Reporter = (() => {
             return fallback;
         }
     };
-    /** Wie lange hat das gedauert? Wird als Spur gemeldet, nicht als Lärm. */
     const measure = (where, fn) => {
         const t0 = performance.now();
         try {

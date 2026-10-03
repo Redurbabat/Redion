@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/learning/belege.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/learning/belege.ts — andere Belege für Können als Karteikarten
  * ----------------------------------------------------------------------------

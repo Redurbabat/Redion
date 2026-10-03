@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/konstanten.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/einstellung/konstanten.js — Zahlen, die an mehr als einer Stelle gelten
  * ----------------------------------------------------------------------------

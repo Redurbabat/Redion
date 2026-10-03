@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/drucker.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/drucker.ts — die Drucker-Karte: was der Druckauftrag tut
  * ----------------------------------------------------------------------------

@@ -1,53 +1,14 @@
 "use strict";
-/* ============================================================================
- * bereiche/vorlagen/folien.ts — fertige Folienlayouts
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/vorlagen/folien.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/bereiche/vorlagen/folien.js`.
- * ----------------------------------------------------------------------------
- * Redur, 13. September 2026: „füge dort auch fertige Vorlagen."
- *
- * Ein Layout ist hier KEIN Bild und keine zweite Dokumentform, sondern eine
- * Liste von Marken auf einer 16:9-Folie — dieselben Marken, die der
- * `.pptx`-Einleser anlegt (E540) und die die Zeichenschicht seit E100
- * bearbeitet. Wer eine Vorlage nimmt, bekommt also nichts Besonderes,
- * sondern eine gewöhnliche Folie, auf der schon etwas steht: Titel
- * anklicken, Text ersetzen, fertig.
- *
- * WARUM NICHT IN `Register.vorlagen`. Dort stehen Vorlagen, die ganze
- * ARBEITSBEREICHE bauen — „Fitness-OS", „Redaktionsplan", zehn Datenbanken
- * mit Ansichten und Beispielzeilen. Ein Folienlayout ist etwas anderes: es
- * legt keine Seite an, es füllt eine. Beides in eine Liste zu werfen hiesse,
- * in der Galerie „Titelfolie" neben „Fitness-OS" zu zeigen — zwei Dinge
- * unter einem Namen, und §8 verbietet genau das aus dem umgekehrten Grund
- * (keine zwei Kataloge für DASSELBE; dies sind zwei Kataloge für ZWEIERLEI).
- * Der BEFEHL „Neue Folie" steht dagegen im Befehlsregister, wo er hingehört.
- *
- * DIE MASSE SIND FOLIENPUNKTE, KEINE BILDSCHIRMPUNKTE. Dieselbe Regel wie
- * E100: eine Folie folgt der Fensterbreite, und eine Marke bei x = 60 liegt
- * auf jedem Schirm an derselben Stelle des Papiers. Gerechnet wird gegen die
- * ÜBERGEBENE Foliengrösse, nicht gegen 960 × 540 — sonst läge bei einer
- * 4:3-Folie alles im linken Drittel.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/vorlagen/folien.ts (npm run bauen:ts). */
 const Folienvorlagen = (() => {
-    /** PowerPoints Standardmass für 16:9, in Punkten (9144000 × 5143500 EMU). */
     const BREITE = 960;
     const HOEHE = 540;
-    /* Eigen, nicht geliehen: jede Datei hat ihr `esc` (CLAUDE.md §19, und so
-       steht es auch in `vorlagen/daten.ts`). Es ersetzt wirklich — der Fehler
-       aus §19, der beim Lesen richtig aussieht, ist hier keiner. */
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    /* Kennungen müssen je Folie eindeutig sein; zwei Marken mit derselben
-       Kennung wären für `redraw` dieselbe (marken.ts). Ein Zähler reicht —
-       er läuft nur innerhalb dieses Fensters und landet nie in einer Datei,
-       in der eine fremde Kennung stünde. */
     let zaehler = 0;
     const kennung = () => 'fv' + (++zaehler).toString(36) +
         Math.random().toString(36).slice(2, 8);
-    /** Ein Textkasten in Anteilen der Folie — so stimmt jedes Seitenmass. */
     const text = (b, h, opt) => ({
         id: kennung(), art: 'text',
         point: [Math.round(opt.x * b), Math.round(opt.y * h)],
@@ -57,26 +18,6 @@ const Folienvorlagen = (() => {
         fett: !!opt.fett,
         ...(opt.farbe ? { farbe: opt.farbe } : {}),
     });
-    /**
-     * Eine waagrechte Linie — als LINIE, nicht als Abdeckmarke (E553).
-     *
-     * HIER STAND `art: 'abdeck'`, „als flache Abdeckmarke in Akzentfarbe", und
-     * das war mein Kurzschluss aus E548: eine Abdeckmarke ist gefüllt, eine
-     * `rectangle` nicht, also nahm ich die gefüllte. Die Folge habe ich nicht
-     * zu Ende gedacht.
-     *
-     * `abdeck` heisst nicht „gefüllter Kasten". Es heisst **eine zugedeckte
-     * Antwort** (E266), und im Vortrag ist das ein Versprechen: anklickbar,
-     * `cursor:pointer`, und beim Tipp verschwindet die Füllung. Der blaue
-     * Zierstrich unter jeder Überschrift war damit eine Antwort, die es nie
-     * gab — gemessen: er steht als ERSTER Deckel im Baum, also war er der,
-     * den jede Suche zuerst fand, und ein Klick darauf löschte ihn einfach.
-     *
-     * Eine `line` mit Strichstärke tut dasselbe fürs Auge und behauptet
-     * nichts. Die Dicke geht als `breite` an die Marke — so heisst das Feld
-     * (nachgesehen in `marken.ts`, `strokeWidth`), und die Punkte sind Anfang
-     * und Ende der MITTELLINIE, nicht zwei Ecken eines Kastens.
-     */
     const linie = (b, h, opt) => {
         const dick = Math.max(1, Math.round((opt.dicke ?? 0.012) * h));
         const y = Math.round((opt.y + (opt.dicke ?? 0.012) / 2) * h);
@@ -86,12 +27,6 @@ const Folienvorlagen = (() => {
                 [Math.round((opt.x + opt.breite) * b), y]],
         };
     };
-    /* ==========================================================================
-     * DIE LAYOUTS
-     * --------------------------------------------------------------------------
-     * Es sind die, die PowerPoint selbst anbietet, in derselben Reihenfolge und
-     * mit denselben deutschen Namen. Wer von dort kommt, sucht nicht.
-     * ========================================================================*/
     const LISTE = [
         {
             id: 'titel', name: 'Titelfolie', zeichen: '🎬',
@@ -161,8 +96,6 @@ const Folienvorlagen = (() => {
             text: 'Platz fürs Bild links, Erklärung rechts',
             bauen: (b, h) => [
                 text(b, h, { x: .07, y: .07, breite: .86, inhalt: 'Überschrift', grad: .058, fett: true }),
-                /* Der Platzhalter ist ein RAHMEN, keine Fläche: er soll sagen „hier
-                   kommt ein Bild hin" und nicht selbst wie eines aussehen. */
                 { id: kennung(), art: 'text', rahmen: true,
                     point: [Math.round(.07 * b), Math.round(.26 * h)],
                     breiteBox: Math.round(.44 * b),
@@ -179,7 +112,6 @@ const Folienvorlagen = (() => {
     ];
     const alle = () => LISTE.map(v => ({ ...v }));
     const eines = (id) => LISTE.find(v => v.id === id) || null;
-    /** Die Marken eines Layouts für eine Folie dieser Grösse. */
     const marken = (id, breite = BREITE, hoehe = HOEHE) => {
         const v = eines(id);
         if (!v)
@@ -191,10 +123,6 @@ const Folienvorlagen = (() => {
             return [];
         }
     };
-    /* ==========================================================================
-     * DIE WEGE
-     * ========================================================================*/
-    /** Eine Folie an einen Foliensatz anhängen. */
     const neueFolie = (seiteId, layoutId = 'titelInhalt', breite = BREITE, hoehe = HOEHE) => {
         if (!seiteId)
             return null;
@@ -207,27 +135,12 @@ const Folienvorlagen = (() => {
             Store.updateBlock(block.id, { marken: liste });
         return Store.getBlock(block.id);
     };
-    /**
-     * Eine neue Präsentation — Seite, erste Folie, Dokumentmodus.
-     *
-     * `dokumentModus` ist dieselbe Flagge wie beim `.pptx`-Einleser (E546):
-     * ohne sie stünde die Folie als Blatt in einem Texteditor, und der Weg
-     * hätte das Ding angelegt, aber nicht geöffnet (E397).
-     */
     const neuePraesentation = (layoutId = 'titel', titel = '') => {
         const seite = Store.addPage(null, { text: titel || 'Neue Präsentation', icon: '📽️' });
         neueFolie(seite.id, layoutId);
         Store.updateBlock(seite.id, { dokumentModus: true });
         return Store.getBlock(seite.id);
     };
-    /* ==========================================================================
-     * DER WÄHLER
-     * --------------------------------------------------------------------------
-     * Eine Karte je Layout, mit einer echten kleinen Vorschau statt eines
-     * Zeichens: gezeichnet wird sie von `Marken.zeichneMarke` — derselben
-     * Stelle wie Folie, Miniatur, Vortrag und Druck (§8, E547). Ein Layout,
-     * das man nicht sieht, wählt niemand zweimal.
-     * ========================================================================*/
     const vorschau = (layoutId) => {
         const liste = marken(layoutId, BREITE, HOEHE);
         if (!liste.length || typeof Marken === 'undefined')
@@ -251,13 +164,6 @@ const Folienvorlagen = (() => {
                 `aria-hidden="true">${innen}</svg>`
             : '';
     };
-    /**
-     * Den Wähler zeigen und das gewählte Layout zurückgeben.
-     *
-     * Aufgelöst wird mit `null`, wenn jemand abbricht — dann entsteht auch
-     * keine Seite. Ein abgebrochener Wähler, der trotzdem etwas anlegt, ist
-     * der Fehler, gegen den §47 „kein Weg, der ins Leere führt" steht.
-     */
     const waehle = (kopf = 'Layout wählen') => new Promise(fertig => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -292,8 +198,6 @@ const Folienvorlagen = (() => {
             if (karte)
                 schliesse(karte.dataset['v'] || null);
         });
-        /* Escape schliesst — der gemeinsame Griff aus E302 nimmt `.overlay`
-           von selbst; hier steht nur, was DANN geschehen soll (§38). */
         const taste = (e) => {
             if (e.key !== 'Escape')
                 return;
@@ -303,7 +207,6 @@ const Folienvorlagen = (() => {
         document.addEventListener('keydown', taste, true);
         o.querySelector('.fv-karte')?.focus();
     });
-    /** „Neue Präsentation" mit Wähler — der Weg aus dem Anlegen-Menü. */
     const anlegenMitWahl = async () => {
         const wahl = await waehle('Womit soll die erste Folie anfangen?');
         if (!wahl)
@@ -315,7 +218,6 @@ const Folienvorlagen = (() => {
         }
         return seite;
     };
-    /** „Neue Folie" mit Wähler — der Befehl aus der Palette. */
     const folieMitWahl = async (seiteId) => {
         const ziel = seiteId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
         if (!ziel) {
@@ -325,28 +227,12 @@ const Folienvorlagen = (() => {
         const wahl = await waehle('Layout der neuen Folie');
         if (!wahl)
             return null;
-        /* Die neue Folie bekommt die Masse der VORHANDENEN — eine 4:3-Folie
-           mitten in einem 16:9-Satz wäre ein Sprung im Vortrag. */
         const vorhanden = (Store.childrenOf(ziel) || []).find((b) => b.type === 'blatt');
         const folie = neueFolie(ziel, wahl, Number(vorhanden?.blattBreite) || BREITE, Number(vorhanden?.blattHoehe) || HOEHE);
         if (typeof App !== 'undefined')
             App.zeichneSeite?.();
         return folie;
     };
-    /**
-     * Ist DIESE Seite ein Foliensatz? Für `zeigen()` am Befehl und am Band.
-     *
-     * QUER, NICHT NUR „Blatt im Dokumentmodus" (E549). Ein Notizheft ist
-     * dasselbe von aussen — Dokumentmodus, Blatt-Blöcke — und es ist keine
-     * Präsentation. Der Unterschied, den man messen kann, ist das Papier:
-     * eine Folie ist breiter als hoch, ein Heft hochkant. PowerPoints Vorgabe
-     * ist 16:9, Redions eingelesene Folien auch (E540); ein A4-Heft ist 595
-     * auf 842.
-     *
-     * Was das NICHT trifft: eine hochkant gebaute Präsentation. Die gibt es in
-     * PowerPoint, sie ist aber selten, und die Verwechslung in die andere
-     * Richtung wäre teurer — ein Menüband über jedem Notizheft.
-     */
     const istFoliensatz = (seiteId) => {
         const seite = seiteId ? Store.getBlock(seiteId) : null;
         if (!seite || !seite.dokumentModus)
@@ -354,26 +240,10 @@ const Folienvorlagen = (() => {
         return (Store.childrenOf(seiteId) || []).some((b) => b && b.type === 'blatt' &&
             Number(b.blattBreite) > Number(b.blattHoehe));
     };
-    /** Der offene Foliensatz, oder ''. */
     const offenerSatz = () => {
         const id = typeof App !== 'undefined' ? String(App.aktuelleSeite() || '') : '';
         return id && istFoliensatz(id) ? id : '';
     };
-    /* ==========================================================================
-     * DER REITER IM MENÜBAND (E549)
-     * --------------------------------------------------------------------------
-     * Redur: „oben mit Menü". Das Band gibt es seit langem — was fehlte, war
-     * ein Reiter für Folien.
-     *
-     * KEIN EINZIGER KNOPF TUT HIER ETWAS NEUES. Das ist die wichtigste Regel
-     * des Menübands (`register/menueband.ts`, ganz oben): ein Band ist eine
-     * ZWEITE ANSICHT auf das, was Redion kann, keine zweite Fassung davon. Wo
-     * hier eine eigene Rechnung stünde, liefe sie irgendwann von der ersten
-     * weg, und zwar still.
-     *
-     * `zeigen()` an jedem Eintrag hält den ganzen Reiter aus dem Band heraus,
-     * wenn kein Foliensatz offen ist — `reiter()` zeigt nur, was belegt ist.
-     * ========================================================================*/
     const bandEintraege = () => {
         const satz = offenerSatz();
         if (!satz)
@@ -396,8 +266,6 @@ const Folienvorlagen = (() => {
                 hinweis: 'Die Folien links zeigen oder verbergen',
                 wenn: () => typeof DocumentMode !== 'undefined',
                 tun: () => {
-                    /* Derselbe Knopf, den die Dokumentleiste trägt — gedrückt, nicht
-                       nachgebaut (§8). Ohne ihn gäbe es zwei Wege zu einer Liste. */
                     const knopf = [...document.querySelectorAll('button, a')]
                         .find(b => /^▤\s*Seiten$/.test((b.textContent || '').trim()));
                     if (knopf)
@@ -425,10 +293,6 @@ const Folienvorlagen = (() => {
     };
     if (typeof Register !== 'undefined' && Register.menueband?.meldeLieferant)
         Register.menueband.meldeLieferant(bandEintraege);
-    /* Der Befehl gehört ins Befehlsregister, nicht in eine Liste hier (§8
-       Regel 3). `zeigen()` hält ihn aus der Palette heraus, wo er nichts
-       täte — ein Befehl, der dasteht und dann sagt, dass er hier nicht geht,
-       ist die häufigste Enttäuschung überhaupt (register/befehle.ts). */
     if (typeof Register !== 'undefined' && Register.befehle) {
         Register.befehle.melde({
             titel: 'Neue Folie', gruppe: 'Anlegen',

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/app.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/einstellung/app.js — was diese Fassung ist und wo sie läuft
  * ----------------------------------------------------------------------------

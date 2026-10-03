@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/sheet.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/ueberlagerung/sheet.js — das Blatt von unten, das Inhalt trägt
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/history.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/gfx/history.ts — der Abbild-Verlauf einer Fläche
  * ----------------------------------------------------------------------------

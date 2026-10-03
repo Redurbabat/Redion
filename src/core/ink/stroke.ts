@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ink/stroke.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/ink/stroke.js — der nasse Strich: waechst, glaettet, sagt voraus
  * ----------------------------------------------------------------------------

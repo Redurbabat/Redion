@@ -1,51 +1,17 @@
 "use strict";
-/* ============================================================================
- * bereiche/ki/buch.ts — das Kassenbuch der KI
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/ki/buch.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/ki/buch.js`.
- * ----------------------------------------------------------------------------
- * `core/ai/kosten.ts` RECHNET. Diese Datei WEISS — sie liest die Grenzen aus
- * den Einstellungen, führt das Buch in `meta` und sagt Ja oder Nein.
- *
- * ─── WAS SIE ABSICHTLICH NICHT TUT ──────────────────────────────────────────
- *
- * Sie fasst LOKALE Modelle nicht an. Ollama und WebLLM kosten nichts, und
- * eine Kostenprüfung davor wäre Reibung ohne Gegenwert — der häufigste Weg,
- * eine Sicherung unbeliebt zu machen, ist, sie dort einzubauen, wo sie
- * nichts schützt.
- *
- * Sie hält auch nichts auf, was der Mensch gerade ausdrücklich angestossen
- * hat und dessen Kosten er gesehen hat. Die Grenze ist eine Bremse gegen
- * Unfälle — vor allem gegen Agenten in Schleifen —, kein Vormund.
- *
- * ─── DIE GRENZEN GEHÖREN DEM MENSCHEN ───────────────────────────────────────
- *
- * Alle vier sind abschaltbar (0 = keine Grenze), und die Vorgaben sind
- * bewusst niedrig genug, dass ein Unfall auffällt, und hoch genug, dass
- * gewöhnliche Arbeit nicht anschlägt. Wer sie ändern will, findet sie unter
- * Einstellungen → KI.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/buch.ts (npm run bauen:ts). */
 const KiBuch = (() => {
-    /* Die Meta-Schlüssel. Sie stehen hier oben zusammen, damit man sie
-       findet — verstreute `getMeta('irgendwas')` sind die Sorte Wissen, die
-       nur im Kopf des Autors existiert. */
     const SCHL_GRENZEN = 'ki:grenzen';
     const SCHL_BUCH = 'ki:buch';
-    /** Wie lange Buchungen aufgehoben werden. Länger als der Monatsstand. */
     const BEHALTEN_TAGE = 70;
     const tagVon = (d) => d.toISOString().slice(0, 10);
     const monatVon = (d) => d.toISOString().slice(0, 7);
     const heute = () => tagVon(new Date());
     const monat = () => monatVon(new Date());
-    /** Die Grenzen, wie sie gerade gelten. */
     const grenzen = () => {
         const g = Store.getMeta(SCHL_GRENZEN, null);
         if (!g || typeof g !== 'object')
             return { ...KiKosten.VORGABE_GRENZEN };
-        /* Feld für Feld, nicht `Object.assign`: ein fremder Schlüssel in `meta`
-           soll keine neue Grenze erfinden. */
         const v = KiKosten.VORGABE_GRENZEN;
         const zahl = (w, vorgabe) => (typeof w === 'number' && Number.isFinite(w) && w >= 0) ? w : vorgabe;
         return {
@@ -71,22 +37,10 @@ const KiBuch = (() => {
         const b = Store.getMeta(SCHL_BUCH, []);
         return Array.isArray(b) ? b : [];
     };
-    /** Was in diesem Agentenlauf schon ausgegeben wurde — nur im Speicher. */
     let laufStand = 0;
     const laufBeginnen = () => { laufStand = 0; };
     const laufAusgabe = () => laufStand;
-    /** Der Stand: heute, diesen Monat, in diesem Lauf. */
     const stand = () => KiKosten.standAus(buchungen(), heute(), monat(), laufStand);
-    /**
-     * Darf dieser Aufruf laufen?
-     *
-     * @param modell      wie der Anbieter ihn schreibt
-     * @param nachrichten die Nachrichtenliste — daraus wird geschätzt
-     * @param opt.aus     erwartete Ausgabe-Token. Ohne Angabe 2000 — das ist
-     *                    Redions Deckelung bei Anthropic und eine
-     *                    vernünftige Annahme dort, wo es keine gibt.
-     * @param opt.lokal   true = Ollama/WebLLM, kostet nichts, wird durchgelassen
-     */
     const pruefen = (modell, nachrichten, opt = {}) => {
         if (opt.lokal) {
             return { erlaubt: true, grenze: '', satz: '',
@@ -99,24 +53,11 @@ const KiBuch = (() => {
         const s = KiKosten.schaetzen(modell, ein, aus);
         return KiKosten.pruefen(s, grenzen(), stand());
     };
-    /**
-     * Eine Ausgabe verbuchen.
-     *
-     * @param gezaehlt true = die Tokenzahl kam vom Anbieter. Das ist der
-     *                 Unterschied zwischen „so viel war es" und „so viel war
-     *                 es vermutlich", und er gehört ins Buch, damit man ihn
-     *                 später noch weiss.
-     */
     const buchen = (modell, anbieter, tokenEin, tokenAus, gezaehlt = false) => {
         const s = KiKosten.schaetzen(modell, tokenEin, tokenAus);
         const betrag = s.bekannt ? s.betrag : 0;
         laufStand += betrag;
         const eintrag = {
-            /* SEIT E319 EINE KENNUNG. Ohne sie liesse sich eine Schätzung später
-               nicht wiederfinden, um sie durch die gezählte Zahl zu ersetzen —
-               und „die letzte Buchung dieses Modells" wäre bei zwei gleichzeitig
-               laufenden Anfragen die falsche. Ältere Buchungen haben keine; sie
-               werden schlicht nie berichtigt, und das braucht keine Migration. */
             id: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
             tag: heute(), modell, anbieter,
             tokenEin, tokenAus, betrag, gezaehlt
@@ -126,25 +67,6 @@ const KiBuch = (() => {
         Store.setMeta(SCHL_BUCH, liste);
         return eintrag;
     };
-    /**
-     * Eine geschätzte Buchung durch die GEZÄHLTE Zahl ersetzen (L104, E319).
-     *
-     * Der Anbieter schickt die wirkliche Tokenzahl erst am Ende des Stroms —
-     * da ist längst gebucht, denn eine Grenze, die nach dem Aufruf prüft, ist
-     * keine Grenze. Also wird zuerst geschätzt und danach berichtigt.
-     *
-     * ERSETZT, NICHT ADDIERT: `laufStand` wird um die DIFFERENZ verschoben,
-     * und die Buchung bekommt `gezaehlt: true`. Wer später fragt, was der
-     * Monat gekostet hat, bekommt eine Zahl aus Messungen, wo es Messungen
-     * gab, und aus Schätzungen, wo es keine gab — und kann beides
-     * auseinanderhalten.
-     *
-     * Gibt die berichtigte Buchung zurück, oder `null`, wenn es nichts zu
-     * berichtigen gab: keine Kennung, Buchung nicht mehr da (die 70 Tage sind
-     * um), oder die Zahlen sind keine Zahlen. Alle drei sind stumm — ein
-     * Fehler wäre hier ein Fehler ÜBER die Buchhaltung, mitten in einer
-     * Antwort, die der Mensch gerade liest.
-     */
     const berichtigen = (id, tokenEin, tokenAus) => {
         if (typeof id !== 'string' || !id)
             return null;
@@ -166,22 +88,13 @@ const KiBuch = (() => {
         Store.setMeta(SCHL_BUCH, liste);
         return nachher;
     };
-    /**
-     * Was ein Stapel Aufrufe zusammen kosten dürfte.
-     *
-     * Für `embeddingsBauen` und alles, was in einer Schleife ruft: die
-     * einzelne Anfrage ist harmlos, zweitausend davon sind es nicht. Wer
-     * einen Stapel anstösst, soll die SUMME sehen und nicht den Einzelpreis.
-     */
     const stapelSchaetzen = (modell, texte, jeAus = 0) => {
         let ein = 0;
         for (const t of texte || [])
             ein += KiKosten.tokenSchaetzen(t);
         return KiKosten.schaetzen(modell, ein, jeAus * (texte || []).length);
     };
-    /** Für die Anzeige: was je Anbieter diesen Monat zusammenkam. */
     const monatJeAnbieter = () => KiKosten.jeAnbieter(buchungen(), monat());
-    /** Alles vergessen — für den Menschen, der das Buch nicht führen will. */
     const leeren = () => { Store.setMeta(SCHL_BUCH, []); laufStand = 0; };
     return {
         grenzen, grenzenSetzen, stand, pruefen, buchen, berichtigen, stapelSchaetzen,

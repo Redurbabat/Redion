@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/orb.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/ueberlagerung/orb.js — die Denkkugel auf einem Canvas
  * ----------------------------------------------------------------------------

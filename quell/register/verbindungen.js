@@ -1,31 +1,5 @@
 "use strict";
-/* ============================================================================
- * register/verbindungen.js — was nach draussen geht
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/verbindungen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/register/verbindungen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Jede Verbindung ist eine Tür. Deshalb steht hier zu jeder nicht nur, wie
- * sie heisst, sondern **was hinausgeht und was hereinkommt** — und zwar in
- * einem Satz, den man vor dem Verbinden liest, nicht danach.
- *
- * Das ist der eigentliche Zweck dieser Datei. Eine Liste von Diensten baut
- * man in zehn Minuten. Eine Liste, die ehrlich sagt, welche Daten wohin
- * gehen, muss jemand pflegen — und sie muss an einer Stelle stehen, sonst
- * pflegt sie niemand.
- *
- * Ein Eintrag:
- *
- *     id        eindeutig
- *     name      der Dienst
- *     art       'kalender' | 'mail' | 'ablage' | 'ki' | 'nachricht' | 'code'
- *     hinaus    was diesen Rechner verlässt
- *     herein    was hereinkommt
- *     schluessel wo der Schlüssel herkommt — nie im Code, immer vom Menschen
- *     bereit()  ist sie eingerichtet?
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/verbindungen.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.verbindungen = (() => {
     const meta = (k) => {
@@ -102,7 +76,6 @@ Register.verbindungen = (() => {
     const eines = (id) => LISTE.find(x => x.id === id) || null;
     const arten = () => [...new Set(LISTE.map(x => x.art))];
     const inArt = (a) => LISTE.filter(x => x.art === a);
-    /** Welche sind eingerichtet? Für die Übersicht in den Einstellungen. */
     const eingerichtet = () => LISTE.filter(x => {
         try {
             return !!x.bereit();
@@ -111,11 +84,6 @@ Register.verbindungen = (() => {
             return false;
         }
     });
-    /**
-     * Was verlässt dieses Gerät überhaupt?
-     * Ein Satz je eingerichteter Verbindung — die Antwort auf die einzige
-     * Frage, die bei so einer Liste wirklich zählt.
-     */
     const wasHinausgeht = () => eingerichtet().map(v => v.name + ': ' + v.hinaus);
     return { alle, eines, arten, inArt, eingerichtet, wasHinausgeht, melde,
         anzahl: () => LISTE.length };

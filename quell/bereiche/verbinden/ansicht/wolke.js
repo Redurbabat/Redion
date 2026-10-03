@@ -1,37 +1,11 @@
 "use strict";
-/* ==========================================================================
- * WOLKE-FENSTER — die Oberfläche zum Server
- * --------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/verbinden/ansicht/wolke.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/verbinden/ansicht/wolke.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Alles, was der Mensch von der Wolke sieht: anmelden, abgleichen, teilen,
- * veröffentlichen, Marken verwalten.
- *
- * Eine Regel für jedes Fenster hier: es sagt, was mit den Daten geschieht,
- * bevor es geschieht. „Diese Seite geht im Klartext auf den Server" steht
- * über dem Knopf, nicht in einer Fussnote.
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/ansicht/wolke.ts (npm run bauen:ts). */
 const WolkeFenster = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
-    /* `zu()` stand hier und wurde nirgends gerufen — jedes Fenster nimmt sich
-       selbst wieder weg. `noUnusedLocals` hat es gefunden. */
-    /* ========================================================================
-     * 1 · DAS HAUPTFENSTER
-     * ======================================================================*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
-        /* `wolke-blatt`: nur damit die Knöpfe hier wie Knöpfe aussehen.
-           `grund.css` nimmt jedem Knopf Rahmen und Hintergrund, und dieses
-           Fenster hatte nie eine Klasse, die sie zurückgibt (E270). */
         o.innerHTML = '<div class="finder wolke-blatt" style="width:min(640px,95vw)">' +
             '<div class="fh">☁ Wolke<button class="icon-btn" data-a="zu">✕</button></div>' +
             '<div class="res" id="wo-inhalt" style="padding:18px"></div></div>';
@@ -44,16 +18,11 @@ const WolkeFenster = (() => {
             if (Wolke.angemeldet())
                 await zahlenNachtragen(ziel);
         };
-        /* Der Takt: EIN Zuhörer am Fenster, nicht am Feld — `zeichne()`
-           ersetzt das Innere bei jedem Durchgang, ein Zuhörer am Feld wäre
-           danach weg (dasselbe Muster wie #wo-offen weiter unten). */
         o.addEventListener('change', (e) => {
             const feld = e.target;
             if (!feld || feld.id !== 'wo-takt')
                 return;
             const ms = Wolke.taktSetzen(feld.value);
-            /* `-1` heisst: nicht genommen. Dann darf hier nicht „jetzt alle X
-               Minuten" stehen — das wäre ein Erfolg, den es nicht gab. */
             UI.toast(ms < 0 ? 'Diesen Takt gibt es nicht — es bleibt beim bisherigen.'
                 : ms ? 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.'
                     : 'Abgleich nur noch beim Öffnen und von Hand.');
@@ -95,8 +64,6 @@ const WolkeFenster = (() => {
                     await abgleichFragen();
                     await zeichne();
                 }
-                /* Die beiden Antworten aus L76. Sie stehen NEBENEINANDER und nicht
-                   übereinander: keine ist die Vorgabe, keine der Abbruch. */
                 if (was === 'neu-lokal') {
                     await Wolke.neuAbgleichAntwort('lokal');
                     UI.toast('Nur lokal: der eingespielte Bestand bleibt auf diesem Gerät. ' +
@@ -110,7 +77,7 @@ const WolkeFenster = (() => {
                     try {
                         await Wolke.neuAbgleichAntwort('wolke');
                     }
-                    catch { /* der Fehler steht danach im Fenster */ }
+                    catch { }
                     await zeichne();
                 }
                 if (was === 'nurlokal') {
@@ -127,9 +94,6 @@ const WolkeFenster = (() => {
                         UI.toast('Der Abgleich ist für dieses Gerät ausgeschaltet — erst einschalten.');
                         return;
                     }
-                    /* DER ABGLEICH KENNT KEINEN ANTEIL (nur `zustand.laeuft`), also
-                       bekommt er das Bild, das keinen zeigt: die Buchstaben gehen
-                       der Reihe nach an (E461). Ein Balken hier wäre erfunden. */
                     a.disabled = true;
                     if (typeof Lader !== 'undefined') {
                         a.textContent = '';
@@ -184,21 +148,6 @@ const WolkeFenster = (() => {
         });
         zeichne();
     };
-    /* ------------------------------------------------------------------
-     * „SERVER PRÜFEN" — die Frage, die man sonst raten muss (E270)
-     * ------------------------------------------------------------------
-     * `/api/stand` weiss seit E270 beides: ob eine Datenbank gebunden ist
-     * (`ablage`) und ob es einen Dateispeicher gibt (`dateien`). Vorher sah
-     * man nur die halbe Wahrheit — wer D1 eingerichtet hatte, aber kein R2,
-     * las „ablage: d1", hielt alles für fertig, und die Anhänge blieben
-     * trotzdem liegen. Der erste Hinweis darauf war ein 503 tief im
-     * Abgleich.
-     *
-     * Der Weg ist lesend und braucht kein Token (kern.ts: das Lebenszeichen
-     * steht vor dem Tor). Jedes Ergebnis trägt ein WORT, nicht nur eine
-     * Farbe (§38), und wo etwas fehlt, steht der Befehl dabei — raten
-     * müssen ist die Sorte Sackgasse, gegen die §47 geschrieben ist.
-     * ------------------------------------------------------------------ */
     const kasten = (art, inhalt) => '<div style="padding:11px 12px; border-radius:8px; font-size:12.5px; ' +
         'line-height:1.6; border:1px solid ' +
         (art === 'gut' ? 'var(--line)' : art === 'fehlt' ? 'var(--warnung)' : 'var(--gefahr)') +
@@ -248,25 +197,11 @@ const WolkeFenster = (() => {
             'Dateispeicher: <code>' + esc(dateien) + '</code>. ' +
             'Sätze und Anhänge können abgleichen.');
     };
-    /**
-     * DIE ANTWORT MUSS MAN AUCH SEHEN.
-     *
-     * `#wo-pruef` steht unten im Blatt, unter den Anmeldeknöpfen und dem
-     * Trennstrich. Beim Hinsehen fiel auf: nach dem Druck auf „Server
-     * prüfen" steht die Auskunft da — halb unter dem Fensterrand, und die
-     * vier Befehle darunter gar nicht (§55.1). Kein Prüflauf hätte das
-     * gemerkt; `textContent` stimmte ja.
-     */
     const pruefenUndZeigen = async (ziel) => {
         await serverPruefen(ziel);
-        /* `block: 'end'` und nicht `'nearest'`: der Kasten fängt sichtbar an
-           und hört unsichtbar auf — `'nearest'` hielt ihn deshalb für schon
-           gesehen und rührte sich nicht. Es geht aber um die vier Befehle
-           darunter, und die sind der ganze Zweck. */
         if (ziel && ziel.scrollIntoView)
             ziel.scrollIntoView({ block: 'end', behavior: 'smooth' });
     };
-    /* ------------------------------------------------------------------ */
     const abgemeldetHtml = () => {
         const wurzel = Wolke.adresse();
         return ('<div style="font-size:13px; color:var(--text-dim); line-height:1.65; margin-bottom:18px">' +
@@ -314,21 +249,6 @@ const WolkeFenster = (() => {
             '<div style="font-size:12px;color:var(--text-faint)">' + esc(k.mail || '') + '</div></div>' +
             '<button data-a="abmelden" style="font-size:12.5px">Abmelden</button>' +
             '</div>' +
-            /* Der Modus zuerst — er ist die Antwort auf die wichtigste Frage:
-               verlässt etwas dieses Gerät oder nicht?
-      
-               DREI ZUSTÄNDE, und der erste geht vor (L76 / E279). Nach einem
-               eingespielten „Ersetzen" ist weder „Lokal + Abgleich" noch „Nur
-               lokal" wahr: der Abgleich steht, weil niemand entschieden hat.
-               Stünde hier „Nur lokal", hätte der Bildschirm die Entscheidung
-               schon getroffen — und zwar für den Menschen.
-      
-               Zwei Knöpfe, KEINER mit `prim`. Das ist kein Versehen: `confirm()`
-               und `Dialog.wahl` heben beide eine Antwort hervor (dort bekommt
-               der erste Knopf `class="prim"`), und Escape wählt bei beiden. Wenn
-               beide Antworten richtig sein können und die falsche Arbeit kostet,
-               darf keine die Vorgabe sein. Wegklicken beantwortet hier nichts —
-               die Frage steht dann eben weiter. */
             (frage
                 ? '<div id="wo-frage" style="padding:13px; border:1px solid var(--warnung); ' +
                     'border-radius:8px; font-size:12.5px; line-height:1.6; margin-bottom:16px">' +
@@ -339,15 +259,6 @@ const WolkeFenster = (() => {
                     'Stand von vorher. Es geht gerade nichts hinaus und nichts herein — ' +
                     'Redion entscheidet das nicht von selbst, weil beide Wege Arbeit ' +
                     'kosten können.</div></div>' +
-                    /* EIN Kind je Knopf, nicht drei. Beim Hinsehen (§55.1) stand
-                       „Nur lokal verwenden" links und die Erklärung RECHTS DANEBEN
-                       in zwei Spalten, und das `<br>` dazwischen tat nichts:
-                       Knöpfe in diesem Fenster sind Flex-Behälter, also wurden
-                       `<b>`, `<br>` und `<span>` zu drei Flex-Elementen in einer
-                       Reihe. Gemessen: B 63 px, BR 0 px, SPAN 176 px nebeneinander.
-                       Mit einem einzigen Kind, das den Knopf füllt, fliesst der Text
-                       darin wieder normal — unabhängig davon, welche Regel den
-                       Knopf gerade auf `flex` stellt. */
                     '<div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:11px">' +
                     '<button data-a="neu-lokal" class="wo-wahl">' +
                     '<span><b>Nur lokal verwenden</b><br>' +
@@ -374,10 +285,6 @@ const WolkeFenster = (() => {
                         '<button data-a="abgleich-an" class="prim" style="font-size:12px; flex:none; ' +
                         'width:auto; white-space:nowrap">Abgleich einschalten</button></div>') +
             '<div id="wo-zahlen" style="display:flex; gap:9px; margin-bottom:16px; flex-wrap:wrap"></div>' +
-            /* Solange die Frage steht, kann „Jetzt abgleichen" nichts tun —
-               `abgleichen()` gibt dann `null` zurück. Ein Knopf, der still nichts
-               tut, ist §47; also steht der Grund am Knopf statt in einem Toast,
-               den man erst nach dem Drücken sieht. */
             '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">' +
             '<button data-a="jetzt"' + (frage
             ? ' disabled title="Erst oben entscheiden, wie es nach dem ' +
@@ -408,9 +315,6 @@ const WolkeFenster = (() => {
             '<button data-a="pruefen" style="font-size:11.5px; padding:2px 8px">Server prüfen</button>' +
             '<div id="wo-pruef" style="margin-top:9px"></div>' +
             '</div>' +
-            /* Der Takt — die Einstellung gab es seit Langem und niemand las sie
-               (E270). Jetzt steht sie da, wo man sie sucht: neben dem Abgleich,
-               den sie steuert. */
             '<div style="margin-top:14px; font-size:12px; color:var(--text-faint); ' +
             'display:flex; gap:9px; align-items:center; flex-wrap:wrap">' +
             '<label for="wo-takt">Von selbst abgleichen:</label>' +
@@ -429,16 +333,9 @@ const WolkeFenster = (() => {
             'Konto löschen …</button>' +
             '</div>');
     };
-    /* ------------------------------------------------------------------
-     * Die Frage nach dem Abgleich — sie fällt EINMAL und ausdrücklich.
-     * Anmelden allein lädt nichts hoch (E1); erst dieses Ja tut es. */
     const abgleichFragen = async () => {
         if (!Wolke.angemeldet() || Wolke.abgleichErlaubt())
             return;
-        /* Steht die Frage aus L76, ist sie die grössere: sie kennt beide
-           Richtungen, dieses `confirm()` nur ein Ja und ein Nein. Zwei Fragen
-           übereinander wären eine Falle — wer hier „Abbrechen" drückt, hätte
-           ohne es zu merken „nur lokal" gewählt. */
         if (Wolke.neuAbgleichOffen()) {
             UI.toast('Nach dem Einspielen steht oben eine Entscheidung — sie ' +
                 'ersetzt diese Frage.');
@@ -455,16 +352,12 @@ const WolkeFenster = (() => {
             try {
                 await Wolke.abgleichen();
             }
-            catch { /* steht danach im Fenster */ }
+            catch { }
         }
         else {
             UI.toast('Nur lokal: nichts verlässt dieses Gerät.');
         }
     };
-    /* ------------------------------------------------------------------
-     * Konto löschen — mit Aufzählung, Sicherungs-Knopf und Tippbestätigung.
-     * Die Mail-Adresse abzutippen ist bewusst mühsam: ein Klick zu viel darf
-     * hier nichts kosten. */
     const loeschenFenster = () => {
         const k = Wolke.zustand.konto || {};
         const o = document.createElement('div');
@@ -484,8 +377,6 @@ const WolkeFenster = (() => {
             '</div>' +
             '<div style="margin-bottom:14px">Die Notizen <b>auf diesem Gerät bleiben</b>. ' +
             'Sichere sie trotzdem vorher — eine Sicherung zu viel hat noch nie geschadet:</div>' +
-            // `btn`/`fn-feld` statt Inline-Stil, seit die Paletten-Zeile nur noch
-            // direkte Kinder von `.res` trifft (E348, L111).
             '<button data-a="sichern" class="btn" style="margin-bottom:16px">⬇ Alles als .redion sichern</button>' +
             '<div style="margin-bottom:8px">Zum Bestätigen die Mail-Adresse des Kontos eintippen:</div>' +
             '<div class="fn-reihe">' +
@@ -544,9 +435,6 @@ const WolkeFenster = (() => {
             kachel(Wolke.zustand.hoch, 'geschickt') +
             kachel(Wolke.zustand.runter, 'geholt');
     };
-    /* ========================================================================
-     * 2 · DER SCHLÜSSEL
-     * ======================================================================*/
     const schluesselFragen = async () => {
         const satz = await UI.frage('Ein Satz, den nur du kennst — daraus entsteht der Schlüssel', '');
         if (!satz)
@@ -560,9 +448,6 @@ const WolkeFenster = (() => {
             : 'Das passt nicht zu dem, was schon verschlüsselt ist. Tippfehler?');
         return ok;
     };
-    /* ========================================================================
-     * 3 · ANMELDEN MIT CODE
-     * ======================================================================*/
     const codeFenster = async () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -615,9 +500,6 @@ const WolkeFenster = (() => {
             UI.toast(e instanceof Error ? e.message : String(e));
         }
     };
-    /* ========================================================================
-     * 4 · TEILEN — je Seite
-     * ======================================================================*/
     const teilenFenster = async (seiteId) => {
         const seite = Store.getBlock(seiteId);
         if (!seite)
@@ -771,22 +653,6 @@ const WolkeFenster = (() => {
         });
         await zeichne();
     };
-    /* ========================================================================
-     * 5 · MARKEN
-     * ======================================================================*/
-    /* ══ DIE ANGEMELDETEN GERÄTE (E669) ══════════════════════════════════════
-     * In den Einstellungen stand unter „Angemeldete Geräte" der Satz „Die
-     * Liste und der Freigabe-Code stehen im Wolke-Fenster". Den Code gab es.
-     * Die Liste nicht — dieses Fenster zeigte eine einzige Zeile, „Gerät:
-     * <dieses hier>", und das ist ein Spiegel, kein Verzeichnis.
-     *
-     * Der Server wusste es die ganze Zeit: `sitzungen` hält `geraet`,
-     * `angelegt` und `bis`, seit es die Tabelle gibt. Drei Spalten, die
-     * geschrieben und nie gelesen wurden.
-     *
-     * Das EIGENE Gerät steht oben und trägt eine Marke — es abzumelden ist
-     * erlaubt, aber es ist dasselbe wie Abmelden, und das soll man sehen,
-     * bevor man drückt. */
     const geraeteFenster = async () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -844,8 +710,6 @@ const WolkeFenster = (() => {
             const weg = elVon(e)?.closest('[data-weg]');
             if (!weg)
                 return;
-            /* Das eigene Gerät zurückzuziehen heisst abmelden. Wer das aus einer
-               Liste heraus tut, meint meistens ein anderes — also einmal fragen. */
             if (weg.dataset.selbst && !confirm('Das ist dieses Gerät. Zurückziehen heisst abmelden.\n\n' +
                 'Deine Notizen bleiben hier — nur der Abgleich hört auf. Fortfahren?'))
                 return;
@@ -906,10 +770,6 @@ const WolkeFenster = (() => {
                                 : ' · nie benutzt') +
                             (x.bis ? ' · bis ' + esc(new Date(x.bis).toLocaleDateString('de-CH')) : '') +
                             '</div></div>' +
-                            /* DIE NACHBARSTELLE (§45, E669). Derselbe Knopf, dasselbe Mass:
-                               er stand hier mit `font-size:12px` und sonst nichts, also
-                               18 px hoch. Eine Marke zurückzuziehen ist so endgültig wie
-                               ein Gerät abzumelden. */
                             '<button class="wo-zeilenknopf" data-weg="' + esc(x.kennung) + '">Zurückziehen</button>' +
                             '</div>').join('')
                         : '<div style="font-size:12.5px;color:var(--text-faint)">Noch keine Marke.</div>');
@@ -950,10 +810,6 @@ const WolkeFenster = (() => {
         });
         await zeichne();
     };
-    /* `serverPruefen` steht mit im Rückgabeobjekt, damit `test270.mts` es gegen
-       eine Attrappe laufen lassen kann. Vier Ausgänge, die ein Mensch nur zu
-       sehen bekommt, wenn sein Server gerade halb eingerichtet ist — genau die
-       Sorte Weg, die ohne Prüflauf jahrelang falsch bleibt. */
     return { dialog, teilenFenster, markenFenster, geraeteFenster, codeFenster, schluesselFragen,
         serverPruefen };
 })();

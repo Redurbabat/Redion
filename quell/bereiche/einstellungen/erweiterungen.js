@@ -1,42 +1,9 @@
 "use strict";
-/* ============================================================================
- * erweiterung.js — Eigene Erweiterungen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/einstellungen/erweiterungen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/einstellungen/erweiterungen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion hat keine Erweiterungen. Was es nicht kann, kann man dort nicht
- * nachrüsten — man wartet.
- *
- * Hier gibt es eine kleine, überschaubare Schnittstelle:
- *
- *   Redion.formel(name, fn)        eine eigene Formelfunktion
- *   Redion.befehl(name, text, fn)  ein Eintrag im Slash-Menü und in der Palette
- *   Redion.knopf(name, icon, fn)   ein Knopf in der Seitenleiste
- *   Redion.beimStart(fn)           läuft einmal beim Öffnen der App
- *   Redion.beiAenderung(fn)        läuft, wenn sich etwas an den Daten ändert
- *
- * Dazu ein Lesezugriff auf die Daten (`Redion.daten`) und die kleinen Helfer
- * `Redion.melde`, `Redion.frage`, `Redion.oeffne`.
- *
- * Eine Erweiterung ist einfach Text. Sie läuft in einer eigenen Funktion und
- * bekommt nur dieses eine Objekt — nicht `window`, nicht `Store`. Vor dem
- * ersten Lauf sieht man den Code und muss zustimmen. Wer eine Erweiterung
- * abschaltet, ist sie sofort los.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/erweiterungen.ts (npm run bauen:ts). */
 const Erweiterung = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * SPEICHER
-     * ======================================================================*/
     const liste = () => Store.getMeta('erweiterungen', []) || [];
     const sichern = (l) => Store.setMeta('erweiterungen', l);
     const angemeldet = { formeln: {}, befehle: [], knoepfe: [], aenderung: [] };
@@ -46,15 +13,8 @@ const Erweiterung = (() => {
         angemeldet.knoepfe.length = 0;
         angemeldet.aenderung.length = 0;
     };
-    /* ========================================================================
-     * DIE SCHNITTSTELLE
-     * ------------------------------------------------------------------------
-     * Alles, was eine Erweiterung sehen darf. Bewusst klein: lesen überall,
-     * schreiben nur dort, wo es auch ohne Erweiterung ginge.
-     * ======================================================================*/
     const schnittstelle = (name) => ({
         name,
-        /* --- Anmelden ------------------------------------------------------ */
         formel: (fname, fn) => {
             if (typeof fname !== 'string' || typeof fn !== 'function')
                 return;
@@ -79,7 +39,6 @@ const Erweiterung = (() => {
             } },
         beiAenderung: (fn) => { if (typeof fn === 'function')
             angemeldet.aenderung.push({ fn, von: name }); },
-        /* --- Lesen --------------------------------------------------------- */
         daten: {
             seiten: () => Object.values(Store.cache.blocks)
                 .filter(b => b.alive !== false && b.type === 'page')
@@ -102,7 +61,6 @@ const Erweiterung = (() => {
             },
             aktuelleSeite: () => App.aktuelleSeite()
         },
-        /* --- Schreiben, so weit es unbedenklich ist ------------------------ */
         schreibe: {
             block: (seitenId, typ, text) => {
                 if (!Store.getBlock(seitenId))
@@ -124,7 +82,6 @@ const Erweiterung = (() => {
                 return Store.addRow(c.id, props).id;
             }
         },
-        /* --- Kleinigkeiten -------------------------------------------------- */
         melde: (t) => UI.toast(String(t).slice(0, 200)),
         frage: (t, vorgabe) => UI.frage(String(t), vorgabe || ''),
         oeffne: (id) => App.oeffne(id),
@@ -135,26 +92,15 @@ const Erweiterung = (() => {
         if (typeof Pflege !== 'undefined' && Pflege.fehlerMerken)
             Pflege.fehlerMerken('Erweiterung ' + name, e);
     };
-    /* ========================================================================
-     * LAUFEN LASSEN
-     * ======================================================================*/
-    /* Diese Namen werden der Erweiterung als leere Parameter untergeschoben.
-       Damit sind sie im Code der Erweiterung „undefined" — sie kommt nicht
-       versehentlich an den Speicher, ans Netz oder ans Fenster. Ein Zaun, kein
-       Tresor: wer will, findet über Umwege doch einen Weg. Deshalb steht im
-       Fenster auch: nur einbauen, was man versteht. */
     const ABGESCHIRMT = ['Store', 'App', 'Datenbank', 'Blocks', 'KI', 'Krypto', 'Erweiterung',
         'window', 'globalThis', 'self', 'document', 'localStorage',
         'sessionStorage', 'indexedDB', 'fetch', 'XMLHttpRequest',
         'Function', 'importScripts', 'WebSocket', 'navigator', 'parent', 'top',
         'open', 'postMessage', 'Worker'];
-    /* „eval" fehlt mit Absicht: im strikten Modus darf kein Parameter so heissen.
-       Das ist der beste Beleg dafür, dass dies ein Zaun ist und kein Tresor. */
     const einzeln = (e) => {
         if (e.an === false)
             return { ok: true, aus: true };
         try {
-            /* Eigene Funktion, eigener Bereich: die Erweiterung sieht nur „Redion". */
             const fn = new Function('Redion', ...ABGESCHIRMT, '"use strict";\n' + e.code);
             fn(schnittstelle(e.name));
             return { ok: true };
@@ -167,7 +113,6 @@ const Erweiterung = (() => {
     const alleLaufen = () => {
         zuruecksetzen();
         const raus = liste().map((e) => ({ e, r: einzeln(e) }));
-        /* Angemeldete Formeln in die Formelmaschine hängen */
         if (typeof Formula !== 'undefined' && Formula.F) {
             Object.entries(angemeldet.formeln).forEach(([n, x]) => {
                 Formula.F[n] = (args) => x.fn(...args);
@@ -176,7 +121,6 @@ const Erweiterung = (() => {
         setTimeout(knoepfeZeigen, 0);
         return raus;
     };
-    /** Die Knöpfe der Erweiterungen unten in der Seitenleiste. */
     const knoepfeZeigen = () => {
         document.getElementById('erw-knoepfe')?.remove();
         if (!angemeldet.knoepfe.length)
@@ -208,7 +152,6 @@ const Erweiterung = (() => {
         });
         baum.appendChild(d);
     };
-    /** Wird von der App gerufen, wenn sich Daten geändert haben. */
     const gemeldet = (was) => {
         angemeldet.aenderung.forEach(x => {
             try {
@@ -219,9 +162,6 @@ const Erweiterung = (() => {
             }
         });
     };
-    /* ========================================================================
-     * BEISPIELE — damit man sieht, wie es geht
-     * ======================================================================*/
     const BEISPIELE = [
         { name: 'Wörter zählen',
             kurz: 'Ein Knopf, der die Wörter der offenen Seite zählt',
@@ -262,9 +202,6 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
   if (leer.length > 2) Redion.melde(leer.length + ' Seiten sind noch leer');
 });` }
     ];
-    /* ========================================================================
-     * DAS FENSTER
-     * ======================================================================*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -372,7 +309,6 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
             }
         });
     };
-    /** Code ansehen, ändern, prüfen und einbauen. */
     const codeFenster = (e, index, fertig) => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -406,7 +342,6 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
                 const p = o.querySelector('#ew-p');
                 if (!p)
                     return;
-                /* Erst lesen, dann laufen — ein Tippfehler soll nichts anrichten. */
                 try {
                     new Function('Redion', '"use strict";\n' + probe.code);
                 }
@@ -452,9 +387,6 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
             }
         });
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
     const start = () => {
         if (!liste().length)
             return;

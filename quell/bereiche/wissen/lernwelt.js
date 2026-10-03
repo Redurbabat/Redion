@@ -1,21 +1,7 @@
 "use strict";
-/* ============================================================================
- * bereiche/wissen/lernwelt.ts — die Hauptwelt „Lernen & Alltag"
- * ----------------------------------------------------------------------------
- * Diese Datei ist absichtlich eine Sicht auf den bestehenden Redion-Bestand:
- * Seiten, Datenbankzeilen, PDFs, Aufgaben und Lernkarten bleiben ihre
- * kanonischen Objekte. Auch das Heute-Dashboard legt beim Zeichnen nichts an.
- *
- * `Lebensbereiche` wird nur über einen defensiven Adapter angesprochen. So
- * kann dieser Baustein vor oder nach dem Bereichsmodul geladen werden und
- * bleibt mit Beständen kompatibel, die noch keine Zuordnungen besitzen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/lernwelt.ts (npm run bauen:ts). */
 const Lernwelt = (() => {
     const ANSICHTEN = [
-        /* `icon` trägt seit E200 den NAMEN eines Zeichens aus `Register.symbole`,
-           nicht mehr ein Emoji. Der Feldname bleibt, weil daran Aufrufer hängen
-           (`Lernwelt.ansichten`) — und weil er weiterhin dasselbe bedeutet:
-           das Zeichen dieser Ansicht. */
         { id: 'heute', icon: 'today', name: 'Heute' },
         { id: 'lernen', icon: 'cards', name: 'Lernen' },
         { id: 'lernweg', icon: 'compass', name: 'Lernpfad' },
@@ -27,60 +13,19 @@ const Lernwelt = (() => {
         { id: 'uni', icon: 'building', name: 'Uni' },
         { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
         { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' },
-        /* DER TRAINER (E677): Boxen, Multiple Choice, Schreiben und Lücken über
-           Lernkarten mit `quiz`. Er zeichnet sich selbst (`Trainer.render`) in
-           den Platz, den `trainerAnsicht` freihält. */
         { id: 'trainer', icon: 'checkCircle', name: 'Trainer' }
     ];
-    /**
-     * NEUN REITER WAREN ZU VIELE (E206).
-     *
-     * Redur am 26. August: „es sollte nicht so viele Bereiche haben, z. B. wie
-     * Uni / Schule Ausbildung usw." Gemessen stimmt das auch ohne Auge: neun
-     * Reiter brauchen 1016 px, am Rechner umbrachen sie auf ZWEI Reihen und
-     * kosteten damit 106 px über der Falz — mehr als jede Karte darunter, und
-     * darauf stehen zehn Wörter.
-     *
-     * Vier Gruppen, und keine Ansicht geht verloren: was zusammengehört, steht
-     * unter einem Namen und klappt als zweite, kurze Reihe auf, sobald man
-     * darin ist. `ANSICHTEN` bleibt unverändert die Wahrheit über die neun —
-     * `Lernwelt.ansichten` gibt weiterhin alle neun heraus, Routen wie
-     * `#welt-lernen-uni` funktionieren weiter, und wer eine zehnte Ansicht
-     * anlegt und hier nicht einträgt, bekommt sie als eigenen Reiter statt
-     * gar nicht.
-     *
-     * `unter[0]` ist das, was der Gruppenkopf selbst öffnet.
-     */
     const REITER = [
         { id: 'heute', icon: 'today', name: 'Heute' },
         { id: 'lernen', icon: 'cards', name: 'Lernen',
             unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] },
-        /* NOTEN GEHÖREN NEBEN DIE PRÜFUNGEN (E241). Redur: „es sollte meine
-           Schule alles begleiten, Noten, Lernen, Lernziele". Die Schulvorlage
-           legte das Notenheft seit E139 an — gerechnet hat damit niemand. */
         { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
             unter: ['pruefungen', 'noten'] },
-        /* Der Stundenplan steht bei „Wo du lernst": er sagt, WANN man WO ist
-           (E243/L70) — hinter dem gleichnamigen Knopf des Schul-Dashboards
-           stand vorher nur die Ausbildungsseite. */
         { id: 'schule', icon: 'learn', name: 'Wo du lernst',
             unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
     ];
-    /**
-     * Wie eine Ansicht in der ZWEITEN Reihe heisst.
-     *
-     * Auf dem Bild vom 26. August stand „Lernen › Lernen": die Gruppe heisst
-     * wie ihr erster Eintrag, und untereinander gelesen sieht das aus wie ein
-     * Fehler. In der Gruppe ist der Name aber ohnehin schon gesagt — was der
-     * Unterreiter braucht, ist nur noch, WELCHER Teil davon.
-     *
-     * `ANSICHTEN` bleibt unangetastet: dort heisst die Ansicht weiterhin
-     * „Lernen", und `Lernwelt.ansichten` gibt das auch so heraus. Umbenannt
-     * wird die Beschriftung, nicht die Ansicht.
-     */
     const KURZ = { lernen: 'Übersicht' };
     const ansichtName = (id) => KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
-    /** Zu welcher Gruppe gehört die Ansicht, in der wir gerade sind? */
     const gruppeVon = (ansicht) => REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht)) || null;
     const zustand = {
         root: null,
@@ -94,28 +39,17 @@ const Lernwelt = (() => {
         ladeSchluessel: '',
         generation: 0,
         timer: null,
-        /* Vorgabe „aktuelles Semester", damit die Kopfzeile der Noten-Ansicht
-           eine Zahl zeigt, die auf einem echten Zeugnis stehen KANN (L71).
-           Ein Allzeit-Mittel steht auf keinem. */
         notenZeitraum: 'aktuell'
     };
     const esc = (wert) => String(wert ?? '')
         .replace(/[&<>\"]/g, zeichen => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[zeichen] ?? zeichen));
-    /* KARTENTEXT WIE IM TRAINER (E252). Der Karteikasten zeichnet Vorder-
-       und Rückseite mit `Blocks.inline` — **fett** wird fett, `Code` wird
-       Code. Dieselbe Karte stand hier in Simulation, Training und
-       Fehlerliste mit nackten Sternchen da: zwei Anzeigen desselben
-       Textes, eine davon falsch. `Blocks.inline` maskiert zuerst (§19)
-       und verziert dann; ohne Editor-Modul bleibt es beim Maskieren.
-       Nur für VERFASSTEN Kartentext — was jemand in ein Antwortfeld
-       GETIPPT hat, bleibt wörtlich (esc), Sternchen und alles. */
     const kartenText = (wert) => {
         try {
             if (typeof Blocks !== 'undefined' && typeof Blocks.inline === 'function') {
                 return Blocks.inline(String(wert ?? ''));
             }
         }
-        catch { /* dann eben unverziert */ }
+        catch { }
         return esc(wert);
     };
     const zahl = (wert, rueckfall = 0) => {
@@ -139,23 +73,6 @@ const Lernwelt = (() => {
         return text.split(/[,;|\n]/).map(teil => teil.trim()).filter(Boolean);
     };
     const datum = (wert) => {
-        /* EIN `Date` IST SCHON EIN DATUM (E135).
-           Hier stand nur der Hüllen-Zweig: „ist es ein Objekt, dann lies `.start`,
-           `.date` oder `.from`". Ein `Date` IST ein Objekt und hat keines dieser
-           drei Felder — also war `roh` undefined und die Funktion gab `null`
-           zurück. Jeder Aufruf mit einem echten Datum lief ins Leere, und weil
-           `tag()`, `datumText()` und `tageBis()` alle darüber gehen, nahm das
-           halbe Dashboard es mit:
-    
-               tag(new Date())        ''      → „heute" traf nie zu
-               Lernziel heute         0 / 20  → bewegte sich nie
-               Streak                 0       → auch nach dem Lernen
-               Verlaufsbalken         leer    → 7 und 30 Tage
-               Prüfungs-Countdown     null    → auf dem Schirm stand „null Tage"
-    
-           Eine Zeile, fünf falsche Zahlen — und keine davon sah nach einem
-           Fehler aus, weil 0 und „leer" plausible Werte für einen frischen
-           Bestand sind. Genau diese Sorte findet kein Prüflauf von selbst. */
         if (wert instanceof Date)
             return Number.isFinite(wert.getTime()) ? wert : null;
         const roh = wert && typeof wert === 'object'
@@ -255,7 +172,7 @@ const Lernwelt = (() => {
             if (api && typeof api.direkteBereichIds === 'function')
                 return textListe(api.direkteBereichIds(record));
         }
-        catch { /* die lokalen Felder darunter bleiben der Rückfall */ }
+        catch { }
         const direkt = record.bereichIds ?? record.lebensbereiche ?? record.bereiche ?? record.bereich;
         return textListe(direkt);
     };
@@ -302,7 +219,6 @@ const Lernwelt = (() => {
         const ausLearning = typeof Learning !== 'undefined' && Learning.cards ? liste(Learning.cards()) : [];
         return ausLearning.filter(card => imBereich(card));
     };
-    /** Nur der referenzielle Store-Vertrag darf eine Nur-Lese-Karte bewerten. */
     const hatExternenLernvertrag = (api) => {
         const lernzustand = api?.lernzustand, vertrag = lernzustand?.VERTRAG;
         return typeof lernzustand?.lesen === 'function' &&
@@ -317,7 +233,7 @@ const Lernwelt = (() => {
             if (api?.lernzustand && typeof api.lernzustand.lesen === 'function')
                 return api.lernzustand.lesen(card, aktor().id);
         }
-        catch { /* der alte Kartenstand bleibt lesbar */ }
+        catch { }
         return {
             version: 1,
             cardId: String(card?.id || ''),
@@ -329,26 +245,6 @@ const Lernwelt = (() => {
             updatedAt: String(card?.edited || '')
         };
     };
-    /**
-     * Ein leerer Lernstand IST KEIN LERNSTAND (E135).
-     *
-     * `leererLernzustand` in `lebensbereiche.ts` gibt `sr: {}` zurück — ein
-     * leeres Objekt, und ein leeres Objekt ist wahr. `stand?.sr || null` liess
-     * es deshalb stehen, und danach galt in `warteschlange`:
-     *
-     *     neu     = alle.filter(card => !card.sr)          → nie eine Karte
-     *     fällig  = alle.filter(card => card.sr && …)      → immer alle
-     *
-     * Gemessen mit vier fabrikneuen Karten: „0 neu, 5 fällig". Die Kachel
-     * „neue Karten" konnte gar nichts anderes anzeigen als null, und der
-     * Lernplan legte Karten, die noch niemand gesehen hat, unter „gelernt und
-     * jetzt wieder dran".
-     *
-     * Geändert wird hier und nicht in `leererLernzustand`: dessen Form ist ein
-     * Vertrag, an dem andere Leser hängen (`sm2(zustand.sr)` erwartet ein
-     * Objekt). Was fehlt, ist die Unterscheidung — und die gehört an die
-     * Stelle, die sie braucht.
-     */
     const hatLernstand = (sr) => !!sr && typeof sr === 'object' && Object.keys(sr).length > 0;
     const karteMitStand = (card) => {
         const stand = persoenlicherStand(card);
@@ -467,7 +363,7 @@ const Lernwelt = (() => {
             try {
                 return Datenbank.wert(row, key, collection);
             }
-            catch { /* Rohwert folgt */ }
+            catch { }
         }
         return row?.props?.[key];
     };
@@ -621,14 +517,6 @@ const Lernwelt = (() => {
         bereichIds: direkteBereichIds(page)
     }));
     const externeId = (item) => String(item?.id || item?.ref?.id || item?.pageId || '');
-    /* DIE SEITE GEWINNT IMMER (E205).
-       Bisher entschied ein Zusatzwert `seiteBevorzugen`, den nur die PDF-Liste
-       setzte. Für „Zuletzt geöffnet" und „Laufende Projekte" stand er auf nein
-       — und dort steht `id` bei einem DATEI-Eintrag auf einer Dateikennung.
-       `App.oeffne` bekam sie, fand keinen Block und tat nichts: ein Knopf, der
-       sich drücken lässt und nichts macht. Wenn eine Seite bekannt ist, ist sie
-       das Ziel; wenn nicht, ändert sich nichts. Damit braucht es den Zusatzwert
-       nicht mehr. */
     const externeEintraege = (items, icon, untertitel) => items.map(item => {
         const seite = String(item?.pageId || item?.ref?.pageId || '');
         return {
@@ -645,8 +533,6 @@ const Lernwelt = (() => {
         ? { limit: 24 }
         : { bereichIds: [zustand.bereichId], limit: 24 };
     const ladeBereichsdaten = () => {
-        /* Der Trainer braucht keine Bereichsdaten — und ein zweites `zeichnen`
-           nach dem Laden würde ihn mitten in der Runde neu aufsetzen (E677). */
         if (zustand.ansicht === 'trainer')
             return;
         const api = lebensbereiche();
@@ -718,27 +604,6 @@ const Lernwelt = (() => {
             if (t > 0)
                 zeiten.push(t);
         });
-        /* DIE LERNZEIT WIRD GEMESSEN, NICHT GERATEN (L110, E311).
-         *
-         * Hier stand:
-         *
-         *     const ms  = zahl(eintrag.durationMs ?? eintrag.dauerMs, 0);
-         *     const sek = zahl(eintrag.durationSeconds ?? eintrag.dauerSekunden, 0);
-         *     minuten += ms > 0 ? ms / 60000 : sek > 0 ? sek / 60 : 1;
-         *
-         * Alle vier Feldnamen kamen im ganzen Bestand genau an dieser Stelle
-         * vor. Niemand schreibt sie. Die Rechnung landete also IMMER im dritten
-         * Zweig — eine Minute je Wiederholung —, und sie sah dabei aus, als
-         * benutzte sie eine Messung. Das ist die gefährliche Sorte: nicht
-         * falsch genug, um aufzufallen, und zu genau aussehend, um geprüft zu
-         * werden.
-         *
-         * Der Zeitpunkt `at` steht dagegen wirklich an jeder Antwort
-         * (`wissen/dienst.ts:183`), und der Abstand zwischen zwei Antworten
-         * derselben Sitzung IST die Dauer der zweiten. `Lerntempo` nimmt den
-         * Median davon und sagt dazu, worauf die Zahl steht. Solange es zu
-         * wenige Abstände gibt, bleibt es bei der bisherigen Minute — dann
-         * ändert sich nichts ausser der Ehrlichkeit des Untertitels. */
         const tempo = Lerntempo.jeKarte(zeiten, 60);
         const minuten = (logs.length * tempo.sekunden) / 60;
         const heute = tagesStart();
@@ -763,8 +628,6 @@ const Lernwelt = (() => {
             woche,
             monat,
             minuten: Math.round(minuten),
-            /* Die Grundlage reist mit — sonst steht auf der Karte eine Zahl und
-               darunter ein Wort, das nichts über sie sagt (E289). */
             tempoSekunden: tempo.sekunden,
             tempoSatz: Lerntempo.satz(tempo),
             streak,
@@ -805,7 +668,6 @@ const Lernwelt = (() => {
             id: externeId(item),
             titel: String(item?.titel || item?.text || 'Termin'),
             datum: datum(item?.datum || item?.zeit || item?.start) || new Date(),
-            /* Fremdquellen sagen es selten. Zehn Zeichen sind ein Tag. */
             ganztags: item?.ganztags === true ||
                 /^\d{4}-\d{2}-\d{2}$/.test(String(item?.datum || item?.zeit || item?.start || '').trim()),
             quelle: String(item?.quelle || 'Kalender'),
@@ -887,8 +749,6 @@ const Lernwelt = (() => {
             await api.lernzustand.schreiben({ art: 'block', id: String(original.id) }, aktor().id, { sr: neu.sr, reviewVerlauf: neu.reviewVerlauf, algorithm: 'sm2' });
             return;
         }
-        /* Ohne den getrennten Store-Vertrag bleibt das bisherige Verhalten: Der
-           Legacy-Dienst schreibt in die Karte und braucht deshalb Bearbeitungsrecht. */
         if (typeof Learning !== 'undefined' && Learning.canEditCard && !Learning.canEditCard(original))
             throw new Error('Diese Lernkarte ist nur lesbar.');
         WissenDienst.planen(original, note);
@@ -908,20 +768,6 @@ const Lernwelt = (() => {
             card,
             frage,
             antwort,
-            /* WAS HIER STAND, WAR EINE FRAGE AN DIE FALSCHE STELLE (E333, L102
-               Punkt 6). Vier Feldnamen wurden abgeklopft — `answer`, `antwort`,
-               `input`, `eingabe` —, und keinen davon schreibt irgendwer. Der
-               Verlaufseintrag trägt `at`, `rating`, `algorithm`, `lapse`,
-               `before`, `after` (`wissen/dienst.ts:180-196`) und sonst nichts.
-      
-               Der Grund ist nicht Vergesslichkeit, sondern das Modell: eine
-               Karteikarte in Redion wird nicht getippt, sondern SELBST BEWERTET.
-               Es GIBT keine falsche Antwort, die man aufheben könnte — es gibt
-               eine Note, die man sich gegeben hat.
-      
-               Also weg mit den vier toten Namen, und die Überschrift sagt, was
-               die Zahl ist. Dieselbe Sorte wie E311, zwei Bildschirme weiter
-               oben in derselben Datei: dort war es `durationMs`. */
             letzteNote: (() => {
                 const n = bewertung(letzter);
                 return n === null ? 'nicht bewertet'
@@ -939,25 +785,6 @@ const Lernwelt = (() => {
     }).filter((item) => !!item)
         .sort((a, b) => Number(a.stabil) - Number(b.stabil) ||
         String(b.zuletzt).localeCompare(String(a.zuletzt)));
-    /**
-     * Die Karten, die WIRKLICH zur Prüfung passen. Kein Rückfall auf alle.
-     *
-     * E136 hat diese Fassung neben `passendeKarten` gestellt, weil dort der
-     * Rückfall stand: bei null Treffern der ganze Bestand. Für die Kachel
-     * „Prüfungsfokus" wäre das eine Unwahrheit, hiess es damals — sie
-     * verspricht „passend zur nächsten Prüfung", und wer dann alles bekommt,
-     * merkt es nicht.
-     *
-     * DERSELBE SATZ GALT AN DREI WEITEREN STELLEN, und dort stand er nicht
-     * (E162). Die Prüfungsliste zeigte „Karten: 47" für eine Prüfung, zu der
-     * keine einzige Karte passt — es war der ganze Bestand. Der Balken
-     * „Fachlicher Lernstand" rechnete daneben denselben Bestand aus. Und die
-     * Simulation zog stillschweigend aus allem.
-     *
-     * Also gibt es jetzt nur noch diese eine Funktion. Wo der Rückfall
-     * gewollt ist — bei der Simulation, denn eine Übungsklausur aus allem ist
-     * besser als keine —, steht er an der Aufrufstelle und SAGT es.
-     */
     const nurPassendeKarten = (pruefung) => {
         const woerter = (pruefung.titel + ' ' + pruefung.fach + ' ' + pruefung.lernstoff)
             .toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(wort => wort.length >= 3);
@@ -973,20 +800,6 @@ const Lernwelt = (() => {
         || bereiche()[0]
         || { id: 'alle', name: 'Alle Bereiche', icon: '◎', art: 'alle' };
     const prozent = (wert) => Math.max(0, Math.min(100, Math.round(zahl(wert))));
-    /**
-     * Ein Zeichen — oder eben ein Text.
-     *
-     * Redions eigene Oberfläche trägt Strichzeichen aus `Register.symbole`
-     * (E200 für die Schale, E202 hier für die Lernwelt). Emoji sehen auf jedem
-     * System anders aus, tragen ihre eigene Farbe und lassen sich nicht auf
-     * `currentColor` stellen — in einer Fläche, die hell und dunkel kann, ist
-     * das ein Fleck, der bei jedem Wechsel gleich bleibt.
-     *
-     * Was der NUTZER gesetzt hat, bleibt aber, wie er es gesetzt hat: wer
-     * seiner Seite ein 🚀 gibt, soll ein 🚀 sehen. Deshalb entscheidet der
-     * NAME und nicht der Ort — ist er ein bekanntes Zeichen, wird gezeichnet,
-     * sonst steht da, was dasteht.
-     */
     const zeichenSpan = (icon, klasse = '') => {
         const reg = globalThis.Register;
         const k = klasse ? ' class="' + klasse + '"' : '';
@@ -994,9 +807,6 @@ const Lernwelt = (() => {
             ? '<span' + k + ' data-sym="' + esc(icon) + '" aria-hidden="true"></span>'
             : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
     };
-    /* Die Anatomie (Etikett oben, Zahl, Bedeutung am Boden) kommt aus der
-       Schale: .stat-karte in anatomie.css (E260). .lw-metrik behält nur die
-       Lernwelt-Abweichungen. */
     const kennzahl = (wert, name, zusatz = '') => '<article class="stat-karte lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
         (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
     const fortschritt = (wert, label) => '<div class="lw-progress"><div><span>' + esc(label) + '</span><strong>' + prozent(wert) +
@@ -1006,48 +816,11 @@ const Lernwelt = (() => {
         '<h3>' + esc(titel) + '</h3><p>' + esc(text) + '</p>' +
         (aktion && label ? '<button type="button" data-lw-action="' + esc(aktion) + '">' + esc(label) + '</button>' : '') +
         '</div>';
-    /* Ein Untertitel soll sagen, was die Liste NICHT zeigt.
-       „Aufgaben heute" trug „1 heute", „Überfällig" trug „alles im Plan" — und
-       darunter stand „Keine überfällige Aufgabe." Zweimal dasselbe ist einmal
-       zu viel. Interessant ist allein, was die Liste WEGLÄSST, denn sie ist
-       abgeschnitten und sagt es sonst nirgends. */
     const mehrAls = (gesamt, gezeigt) => gesamt > gezeigt ? gezeigt + ' von ' + gesamt : '';
     const sektion = (titel, inhalt, zusatz = '') => '<section class="lw-section"><header><div><h2>' + esc(titel) + '</h2>' +
         (zusatz ? '<p>' + esc(zusatz) + '</p>' : '') + '</div></header>' + inhalt + '</section>';
-    /**
-     * Der Anfang einer Seite als EINE Zeile.
-     *
-     * Auf dem Heute-Bild vom 26. August standen neun Zeilen untereinander, und
-     * jede sagte „Zuletzt geöffnet · gerade eben". Der Untertitel wiederholte
-     * die Überschrift der Sektion, und die Zeit war überall dieselbe, weil
-     * dieselbe Sitzung alle neun geöffnet hatte. Neun Zeilen, kein Unterschied
-     * — und genau das Eine fehlte, woran man eine Seite wiedererkennt: was
-     * draufsteht.
-     *
-     * `Store.childrenOf` ist gleichläufig und liest den Spiegel im Arbeits-
-     * speicher: kein Warten, kein zweiter Speicherweg, kein Ladezustand. Drei
-     * Ebenen tief wie `Kontext.textVonSeite` wäre genauer und für eine Zeile
-     * zu teuer — die erste Ebene ist der Anfang der Seite, und mehr wird
-     * ohnehin nicht angezeigt.
-     */
-    /* DIESE DREI STANDEN HIER UND STEHEN JETZT IM KERN (E207).
-       `klartext`, `vorschau` und `miniatur` kamen mit E205 hierher, und mit
-       der Bibliothek brauchte sie ein ZWEITER Bereich. CLAUDE.md §5, Regel 1
-       ist da eindeutig: ein Bereich importiert nicht aus einem anderen, und
-       was beide brauchen, gehört nach `kern/`.
-  
-       Der bequeme Weg wäre gewesen, die dreissig Zeilen dort noch einmal
-       hinzuschreiben. Dann gäbe es zwei Anrisse, die sich das erste Mal
-       unterscheiden, sobald jemand eine Auszeichnung ergänzt — und gemerkt
-       hätte man es an der Stelle, die man gerade nicht ansieht.
-  
-       Die Namen bleiben hier stehen, damit die Aufrufer unten unverändert
-       lesbar sind; sie zeigen nur woandershin. */
     const vorschau = (seiteId, titel = '', laenge = 90) => Vorschau.anriss(seiteId, titel, laenge);
     const miniatur = (seiteId, zeilen = 5) => Vorschau.miniatur(seiteId, zeilen);
-    /* Eine Karte für „Weiter wo du warst". Der Knopf öffnet weiterhin
-       `item.id` — die Miniatur liest von `pageId`, falls der Eintrag selbst
-       eine Datei ist und auf einer Seite liegt (E205). */
     const weiterKarte = (item) => {
         const bild = miniatur(item.pageId || item.id);
         return '<button type="button" class="lw-continue-card hebt" data-lw-open="' + esc(item.id) + '">' +
@@ -1058,9 +831,6 @@ const Lernwelt = (() => {
             (item.zeit ? ' · ' + esc(relativText(item.zeit)) : '') + '</small></span></span>' +
             '</button>';
     };
-    /* Die Zeit steht in einer eigenen Spalte, damit der Anriss die ganze
-       Zeile hat. Vorher stand dort ein „›" — ein Zeichen, das dem Auge
-       mitteilt, dass ein Knopf ein Knopf ist. Das weiss es schon. */
     const eintragListe = (werte, leerText) => werte.length
         ? '<ul class="lw-object-list">' + werte.map(item => {
             const seite = item.pageId || item.id;
@@ -1082,14 +852,7 @@ const Lernwelt = (() => {
             '</small></span></button></li>').join('') + '</ul>'
         : '<p class="lw-none">' + esc(leerText) + '</p>';
     const terminListe = (werte, leerText) => werte.length
-        ? '<ul class="lw-event-list">' + werte.map(item => 
-        /* KEINE ERFUNDENE UHRZEIT (E229). Ein Ganztagstermin bekam hier
-           `00:00` — und das war noch der harmlose Fall: in Zürich stand
-           `02:00`, in Auckland `12:00`. Eine Uhrzeit, die niemand eingegeben
-           hat, sieht aus wie eine, die jemand eingegeben hat.
-           Statt ihrer steht der Wochentag: dieselbe Spalte, dieselbe Breite,
-           und er ist wahr. */
-        '<li><button type="button" data-lw-open="' + esc(item.id) + '"><time datetime="' +
+        ? '<ul class="lw-event-list">' + werte.map(item => '<li><button type="button" data-lw-open="' + esc(item.id) + '"><time datetime="' +
             esc(item.ganztags ? item.datum.toISOString().slice(0, 10) : item.datum.toISOString()) +
             '"' + (item.ganztags ? ' class="lw-ganztags"' : '') + '>' +
             esc(item.ganztags
@@ -1112,35 +875,17 @@ const Lernwelt = (() => {
         return '<header class="lw-head">' +
             '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
             '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-            /* `data-alle` sagt der CSS, ob der Filter gerade etwas TUT (E235).
-               Am Telefon zieht er in die Reiterzeile, und dort ist Platz knapp:
-               „◎ Alle Bereiche" braucht bei 16 px — der Pflichtgrösse, damit iOS
-               beim Tippen nicht hineinzoomt — rund 160 px von 368. Das ist fast
-               die halbe Zeile für die Aussage „ich filtere nicht".
-               Steht der Filter auf „alle", bleibt darum nur das Zeichen ◎ übrig;
-               sobald ein Bereich gewählt ist, steht sein Name da. */
             '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
             '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
             optionen.map(item => '<option value="' + esc(item.id) + '"' +
                 (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
             '</select></label></header>' +
-            /* Die Zeichen werden nach dem Einsetzen gefüllt — siehe `fuelleZeichen`
-               unten. Hier steht nur die Stelle. */
-            /* Eine Ansicht, die in KEINER Gruppe steht, bekommt ihren eigenen
-               Reiter angehängt. So verschwindet nichts, wenn jemand `ANSICHTEN`
-               erweitert und `REITER` vergisst. */
             (() => {
                 const bekannt = new Set(REITER.flatMap(r => [r.id, ...(r.unter || [])]));
                 const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
                     .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
                 const reihe = [...REITER, ...zusatz];
                 const hier = gruppeVon(zustand.ansicht);
-                /* `data-kopfzeile="eigene"` ist ein Vertrag mit der Schale, kein
-                   Aufruf in sie hinein (§5): am Telefon verschmilzt sie ihre eigene
-                   Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
-                   darüberzusetzen. Fehlt die Marke, bleibt alles wie vorher — die
-                   Schale fragt nur, sie verlangt nichts. */
-                /* `data-material` (E706): die Wahl fliegt, statt zu springen. */
                 const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' + reihe.map(item => {
                     const drin = item.id === zustand.ansicht ||
                         (item.unter || []).includes(zustand.ansicht);
@@ -1152,9 +897,6 @@ const Lernwelt = (() => {
                             ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
                         '</button>';
                 }).join('') + '</nav>';
-                /* Die zweite Reihe steht nur da, wenn man in einer Gruppe IST — und
-                   dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
-                   zeigt, ist wieder die alte. */
                 if (!hier?.unter)
                     return haupt;
                 return haupt + '<nav class="lw-subnav" data-material="heute-unter" aria-label="' + esc(hier.name) + '">' +
@@ -1163,8 +905,6 @@ const Lernwelt = (() => {
                         esc(ansichtName(id)) + '</button>').join('') + '</nav>';
             })();
     };
-    /** Der Einstieg bleibt eine Sicht auf echte Seiten. Das Papier zeigt einen
-        Textausschnitt, keine erfundene PDF-Vorschau und keine Inhaltskopie. */
     const dokumentEinstieg = () => {
         const pdf = sichtbarePdfs()[0];
         const zuletzt = pdf || sichtbareZuletzt()[0];
@@ -1176,14 +916,6 @@ const Lernwelt = (() => {
             '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
             '<h2>Aufmachen.<br>Weiterdenken.</h2>' +
             '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
-            /* EINE HAUPTHANDLUNG JE BILD (E701, grund.css: „Genau eine je
-               Bild — mehr macht keine wichtig"). Dieses Studio steht nur auf
-               „Heute", und dort ist „Lernen starten" die eine (E638) — zwei
-               Schritte weiter unten, schwarz und funkelnd. Hier stand daneben
-               ein zweiter voller Violettknopf, und mit dem Kopf („PDF öffnen")
-               riefen drei Flächen zugleich „hier drücken". Der Knopf bleibt
-               derselbe Griff am selben Ort, 44 px hoch — nur als Umrissknopf
-               mit violettem Zeichen, so ruhig wie „PDF importieren" daneben. */
             '<div class="lw-actions">' +
             (pdf
                 ? '<button type="button" class="lw-desk-auf" data-lw-open="' + esc(seitenId) + '">' +
@@ -1236,8 +968,6 @@ const Lernwelt = (() => {
                 : naechstePruefung.tage === 1 ? 'morgen'
                     : naechstePruefung.tage + ' Tage'
             : 'keine geplant';
-        /* Eine klare Startfolge: Dokument öffnen, Lernrunde, dann der Tagesplan.
-           Auswertungen bleiben vollständig über native Details erreichbar. */
         return '<div class="lw-today">' +
             '<section class="lw-hero lw-hero-compact"><div><p>' +
             esc(new Date().toLocaleDateString('de-CH', { weekday: 'long', day: 'numeric', month: 'long' })) +
@@ -1363,11 +1093,6 @@ const Lernwelt = (() => {
             '<article>' + zeichenSpan('sparkle') + '<h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
             '<button type="button" data-lw-train="new"' +
             (queue.newCards.length ? '' : ' disabled') + '>Lernen · ' + queue.newCards.length + '</button></article>' +
-            /* DIE KACHEL TUT JETZT, WAS AUF IHR STEHT (E136). Sie versprach
-               „Karten passend zur nächsten Prüfung mischen" und trug einen Knopf,
-               der nur den Reiter wechselte. Gibt es keine passenden Karten, sagt
-               sie das — statt einen Knopf anzubieten, hinter dem der ganze
-               Bestand käme. */
             (() => {
                 const naechste = pruefungen().find(item => item.tage !== null && item.tage >= 0)
                     || pruefungen().find(item => item.tage === null) || null;
@@ -1382,9 +1107,6 @@ const Lernwelt = (() => {
                         : '<button type="button" data-lw-nav="pruefungen">Prüfungen öffnen</button>') +
                     '</article>';
             })() +
-            /* DER TRAINER ALS FÜNFTE KACHEL (E677) — quer über die Reihe, weil er
-               anders ist als die vier: keine Runde aus dem Bestand, sondern ein
-               Kapitel mit Boxen. Ohne Karten sagt der Knopf, was er tut. */
             (() => {
                 const anzahl = typeof Trainer !== 'undefined' ? Trainer.karten().length : 0;
                 return '<article class="lw-trainer-kachel">' + zeichenSpan('checkCircle') + '<h3>Trainer</h3>' +
@@ -1394,10 +1116,6 @@ const Lernwelt = (() => {
             '</div>' +
             '<div class="lw-dashboard-grid">' +
             sektion('Warum diese Reihenfolge?', '<ol class="lw-explanation"><li><strong>Fehler zuerst</strong><span>Unsichere Inhalte bekommen unmittelbar Aufmerksamkeit.</span></li>' +
-                /* NICHT MEHR „SM-2-Termin" (E303). Seit es zwei Verfahren gibt,
-                   wäre das die halbe Wahrheit — und zwar genau für den, der
-                   umgestellt hat und sich fragt, warum die Erklärung nicht zu
-                   seinen Terminen passt. Der Satz nennt jetzt, was gilt. */
                 '<li><strong>Fälligkeit danach</strong><span>Der gespeicherte Termin ' +
                 'bestimmt den Zeitpunkt — gerechnet nach ' +
                 (String(Store.getMeta('lernVerfahren', 'sm2')) === 'fsrs'
@@ -1408,23 +1126,6 @@ const Lernwelt = (() => {
             sektion('Themen & Fächer', themenListe(liste(stats.topics), 12), 'Fortschritt aus Wiederholungen, nicht aus XP') +
             '</div></div>';
     };
-    /**
-     * Die Reihenfolge des Lernpfads.
-     *
-     * Elf Stichwörter, und sie sind keine Erfindung: §9 des Auftrags gibt
-     * diese Folge für die Elektro-Grundlagen vor, und test215 §2 hält sie
-     * fest. Sie zu ändern hiesse, eine Vorgabe zu brechen.
-     *
-     * WAS SIE NICHT KANN, ist alles andere. Wer Biologie lernt, bekommt für
-     * jedes Thema denselben Rang, und der Pfad fällt auf die alphabetische
-     * Sortierung zurück. Das ist vertretbar — irgendeine Ordnung braucht es —,
-     * aber die Seite behauptete daneben „Der Pfad ordnet den Stoff", und das
-     * stimmte dann nicht (L49, E164).
-     *
-     * Redion errät keine Abhängigkeiten zwischen Themen. Es gibt keine Daten
-     * dafür, und eine geratene Reihenfolge wäre schlimmer als eine
-     * offensichtlich alphabetische: sie sähe aus wie Didaktik.
-     */
     const PFAD_REIHENFOLGE = ['grundlagen', 'spannung', 'strom', 'widerstand', 'ohm', 'reihe',
         'parallel', 'leistung', 'energie', 'lampe', 'prüfung'];
     const lernpfadAnsicht = () => {
@@ -1434,15 +1135,10 @@ const Lernwelt = (() => {
             const index = PFAD_REIHENFOLGE.findIndex(wort => text.includes(wort));
             return index < 0 ? PFAD_REIHENFOLGE.length : index;
         };
-        /* Trifft die Vorgabe überhaupt etwas? Davon hängt ab, was unten steht. */
         const nachVorgabe = themen.filter(thema => rang(thema) < PFAD_REIHENFOLGE.length).length;
         const sortiert = [...themen].sort((a, b) => rang(a) - rang(b) ||
             String(a.label).localeCompare(String(b.label), 'de-CH'));
         return '<div class="lw-path-page"><header class="lw-page-head"><div><p>Lernpfad</p>' +
-            /* „Der Pfad ordnet den Stoff" stand hier auch dann, wenn er es
-               nachweislich nicht konnte — direkt über dem Kasten, der genau das
-               verneint. Was in beiden Fällen stimmt, ist die Stufenform und die
-               fehlende Sperre; WAS geordnet hat, sagt der Kasten (E164). */
             '<h2>Jedes Thema ist erreichbar</h2><span>Der Pfad zeigt den Stoff als Stufen. ' +
             'Er sperrt nichts künstlich.</span></div>' +
             '<button type="button" data-lw-nav="fortschritt">Fortschritt erklären</button></header>' +
@@ -1459,11 +1155,6 @@ const Lernwelt = (() => {
                         ' Prozent"></progress></span><span class="lw-path-open">Lernen</span></button></li>';
                 }).join('') + '</ol>'
                 : leer('compass', 'Dein Lernpfad ist noch leer', 'Sobald Lernkarten Themen tragen, erscheinen sie hier als frei erreichbare Stufen.', 'capture', 'Erste Karte erstellen')) +
-            /* WAS DIESEN PFAD GEORDNET HAT — und wo die Ordnung aufhört.
-               Die Lernzentrale hat für ihre Warteschlange längst einen Kasten
-               „Warum diese Reihenfolge?". Der Pfad hatte keinen und behauptete
-               trotzdem, er ordne den Stoff. Bei Themen ausserhalb der Vorgabe
-               war das eine Zuschreibung, die niemand geprüft hat (E164). */
             (sortiert.length
                 ? '<aside class="lw-note lw-path-why"><strong>' +
                     (nachVorgabe
@@ -1513,24 +1204,11 @@ const Lernwelt = (() => {
                 : leer('party', 'Noch keine Fehler', 'Bewertete Fehler erscheinen hier mit Antwort, Thema und Quelle.', 'nav-lernen', 'Lernen starten')) + '</div>';
     };
     const pruefungsFortschritt = (pruefung) => {
-        /* Mit `passendeKarten` rechnete dieser Balken bei einer Prüfung ohne
-           eigenen Stoff den GANZEN Bestand durch und zeigte dessen Stand als
-           „Fachlicher Lernstand" dieser Prüfung an (E162). */
         const karten = nurPassendeKarten(pruefung);
         if (!karten.length)
             return 0;
         return Math.round(karten.reduce((summe, card) => summe + Math.min(2, Math.max(0, zahl(card?.sr?.wdh))), 0) / (karten.length * 2) * 100);
     };
-    /**
-     * Was von den letzten Simulationen übrig ist.
-     *
-     * Ohne diesen Abschnitt wäre das Gedächtnis aus `simulationAbschliessen`
-     * ein Datensatz, den niemand sieht — und ein Wert, den man nicht ansehen
-     * kann, ist so gut wie keiner (E118).
-     *
-     * Gezeigt werden fünf; alles Weitere steckt in der Aufklappzeile. Zwanzig
-     * Zeilen unter einer Prüfungsliste wären mehr Verlauf als Zentrale.
-     */
     const simulationsVerlauf = () => {
         const alle = simulationen();
         if (!alle.length)
@@ -1559,9 +1237,6 @@ const Lernwelt = (() => {
             const schema = collection.schema || {};
             const spalte = (muster, typ = 'number') => Object.keys(schema).find(key => schema[key]?.type === typ &&
                 muster.test(String(schema[key]?.name || key).toLowerCase())) || '';
-            /* „Rückmeldung" heisst im Vorlagen-Schema `note` — der SCHLÜSSEL, nicht
-               der Name. Gesucht wird deshalb über den NAMEN und den Typ: eine
-               Textspalte kann keine Note sein. */
             const noteKey = spalte(/note|zensur/) || '';
             const punkteKey = spalte(/punkte|points|erreicht/);
             const maxKey = spalte(/max/);
@@ -1569,12 +1244,6 @@ const Lernwelt = (() => {
             const fachKey = schemaSchluessel(collection, 'relation', ['fach', 'subject', 'modul']) ||
                 Object.keys(schema).find(key => /fach|subject|modul/.test(String(schema[key]?.name || key).toLowerCase())) || '';
             const datumKey = schemaSchluessel(collection, 'date');
-            /* NICHT `zahl(wert, NaN)`: `Number(null)` ist 0, nicht NaN — ein
-               LEERES Notenfeld würde damit zur Note 0 und fiele still durch den
-               1–6-Filter. Genau der Vorlagen-Fall „Punkte eingetragen, Note
-               leer" verlor so seine Leistung: gemessen stand Elektrotechnik mit
-               „2 Noten" da, die dritte (21 von 30 Punkten) war weg. Leer muss
-               leer bleiben, damit der Punkteweg drankommt. */
             const feldZahl = (wert) => {
                 if (wert === null || wert === undefined || wert === '')
                     return NaN;
@@ -1592,8 +1261,6 @@ const Lernwelt = (() => {
                 }
                 if (!Number.isFinite(note))
                     return;
-                /* Tippfehler fangen, nicht verstecken: eine „45" ist keine Note.
-                   Sie fällt heraus, statt den Schnitt auf 12 zu heben. */
                 if (note < 1 || note > 6)
                     return;
                 const fachWert = zeilenWert(row, collection, fachKey);
@@ -1621,15 +1288,6 @@ const Lernwelt = (() => {
             name: 'Feb – Jul ' + jahr };
     };
     const semesterDavor = (semester) => semesterVon(new Date(semester.start.getTime() - 24 * 3600 * 1000));
-    /* DIE DREI ZAHLEN JE FACH, und warum sie so gerechnet sind:
-       · `schnitt`  gewichtetes Mittel, ungerundet — die Wahrheit.
-       · `zeugnis`  auf halbe Noten gerundet (mathematisch, 4.25 → 4.5), wie
-         ein Schweizer Zeugnis rundet.
-       · `noetig`   was die NÄCHSTE Prüfung (Gewicht 1) bringen muss, damit
-         der Schnitt auf 4.0 kommt: aus Z·(G+1) = S + n folgt
-         n = 4·(G+1) − S, mit S = Summe(Note·Gewicht), G = Summe(Gewicht).
-         Unter 1 heisst „schon sicher", über 6 „mit einer Prüfung nicht mehr
-         zu schaffen" — beides sagt der Text, nicht nur die Zahl. */
     const notenBilanz = (eintraege) => {
         const je = new Map();
         eintraege.forEach(e => {
@@ -1650,20 +1308,12 @@ const Lernwelt = (() => {
         const alleEintraege = notenEintraege();
         const heftDa = notenSammlungen().length > 0;
         if (!alleEintraege.length) {
-            /* Zwei verschiedene Leerfälle, zwei verschiedene Sätze (§47): ohne
-               Heft führt der Knopf zur Schulvorlage, die es anlegt; mit leerem
-               Heft dorthin, wo man einträgt. */
             if (!heftDa)
                 return '<div class="lw-grades">' +
                     leer('medal', 'Noch kein Notenheft', 'Die Schulvorlage legt ein Notenheft mit Fächern, Gewichtung und Punkten an — zusätzlich, sie ersetzt nichts.', 'school-install', 'Ausbildung einrichten') + '</div>';
             return '<div class="lw-grades">' +
                 leer('medal', 'Noch keine Noten eingetragen', 'Trage die erste Note im Notenheft ein — mit Fach, Gewicht und Datum rechnet Redion Schnitt und Zeugnisnote.', 'grades-open', 'Notenheft öffnen') + '</div>';
         }
-        /* DER ZEITRAUM (L71/E242). Ein Zeugnis gilt für EIN Semester; die
-           Kopfzeile darf deshalb nicht alle Schuljahre in einen Topf mitteln.
-           Eine Note OHNE Datum zählt zum aktuellen Semester — frisch
-           eingetragen ohne Datum heisst „jetzt", und verstecken wäre
-           schlimmer als grob einordnen. Bei „Alle" zählt ohnehin alles. */
         const jetzt = semesterVon(new Date());
         const davor = semesterDavor(jetzt);
         const imSemester = (e, s) => e.datum !== null && e.datum >= s.start && e.datum < s.ende;
@@ -1686,10 +1336,6 @@ const Lernwelt = (() => {
         const zeitraumName = wahl === 'aktuell' ? jetzt.name
             : wahl === 'vorher' ? davor.name : 'alle Semester';
         if (!eintraege.length) {
-            /* Im gewählten Zeitraum ist nichts — aber woanders schon. Nicht
-               still auf „Alle" springen (das wäre wieder eine Behauptung statt
-               einer Frage), sondern sagen, wo die Noten liegen: die Zähler in
-               den Chips zeigen es. */
             return '<div class="lw-grades"><header class="lw-page-head"><div><p>Notenübersicht</p>' +
                 '<h2>Keine Noten in diesem Zeitraum</h2>' +
                 '<span>' + esc(zeitraumName) + ' ist leer — insgesamt ' + alleEintraege.length +
@@ -1700,8 +1346,6 @@ const Lernwelt = (() => {
         const bilanz = notenBilanz(eintraege);
         const gesamtRoh = eintraege.reduce((summe, e) => summe + e.note * e.gewicht, 0) /
             eintraege.reduce((summe, e) => summe + e.gewicht, 0);
-        /* Das Zeugnis mittelt ZEUGNISNOTEN, nicht Rohwerte — so entsteht die
-           Zahl, die am Semesterende wirklich dasteht. */
         const gesamtZeugnis = bilanz.reduce((summe, f) => summe + f.zeugnis, 0) / bilanz.length;
         const unter4 = bilanz.filter(f => f.zeugnis < 4);
         const balken = (liste2) => '<span class="lw-grade-balken" aria-hidden="true">' +
@@ -1742,9 +1386,6 @@ const Lernwelt = (() => {
         const name = String(collection?.name || '').toLowerCase();
         return collection?.schoolKind === 'timetable' || /stundenplan/.test(name);
     });
-    /* „08:15", „8.15", „ 8:15 " — alles 495. Was keine Uhrzeit ist, ist NaN,
-       nicht 0: eine Lektion ohne Zeit gehört ans Ende des Tages, nicht vor
-       die erste Morgenstunde. */
     const uhrMin = (wert) => {
         const teil = /(\d{1,2})\s*[:.]\s*(\d{2})/.exec(String(wert ?? ''));
         if (!teil)
@@ -1754,9 +1395,6 @@ const Lernwelt = (() => {
             return NaN;
         return h * 60 + min;
     };
-    /* „Mo", „montag", „Mittwoch" — die ersten zwei Buchstaben sind unter
-       Mo/Di/Mi/Do/Fr/Sa eindeutig. Was keinem Tag entspricht, fällt heraus
-       statt still auf Montag zu rutschen. */
     const tagIndex = (wert) => {
         const t = String(wert ?? '').trim().toLowerCase().slice(0, 2);
         if (t.length < 2)
@@ -1803,7 +1441,6 @@ const Lernwelt = (() => {
         const alle = lektionen();
         const planDa = stundenplanSammlungen().length > 0;
         if (!alle.length) {
-            /* Zwei Leerfälle, zwei Wege (§47) — wie bei den Noten. */
             if (!planDa)
                 return '<div class="lw-plan">' +
                     leer('calendar', 'Noch kein Stundenplan', 'Die Schulvorlage legt eine Stundenplan-Datenbank mit Tag, Zeit, Fach und Raum an — auch bei eingerichteter Ausbildung ergänzt sie nur, was fehlt.', 'school-install', 'Stundenplan anlegen') + '</div>';
@@ -1858,9 +1495,6 @@ const Lernwelt = (() => {
             '>Wochenprüfung simulieren</button></header>' +
             (kommende.length
                 ? '<div class="lw-exam-list">' + kommende.map(item => {
-                    /* Nur der eigene Stoff. Vorher stand hier `passendeKarten`, und
-                       eine Prüfung ohne passende Karte zeigte die Zahl des ganzen
-                       Bestands — mitsamt seinen Fehlern (E162). */
                     const karten = nurPassendeKarten(item);
                     const fehler = karten.filter(card => verlauf(card).some(istFehler)).length;
                     const passendeAufgaben = sichtbareAufgaben().filter(aufgabe => (aufgabe.titel + ' ' + aufgabe.quelle).toLowerCase().includes(item.titel.toLowerCase())).length;
@@ -1875,10 +1509,6 @@ const Lernwelt = (() => {
                         fehler + '</dd></div><div><dt>Aufgaben</dt><dd>' + passendeAufgaben +
                         '</dd></div><div><dt>Zeitlimit</dt><dd>' + item.dauer + ' Min.</dd></div></dl><footer>' +
                         '<button type="button" data-lw-open="' + esc(item.id) + '">Prüfung öffnen</button>' +
-                        /* Der Knopf bleibt bedienbar, solange es überhaupt Karten
-                           gibt: eine Übungsklausur aus allem ist besser als keine.
-                           Er sagt aber, dass es eine aus allem wird — vorher hiess er
-                           in beiden Fällen gleich, und die Zahl daneben log dazu. */
                         '<button type="button" class="is-primary" data-lw-simulate="' + esc(item.id) + '"' +
                         (lernkarten().length ? '' : ' disabled') + '>' +
                         (karten.length ? 'Simulation starten' : 'Simulation aus allen Karten') +
@@ -1895,9 +1525,6 @@ const Lernwelt = (() => {
         const simulation = zustand.simulation;
         if (!simulation)
             return '';
-        /* Auch dieser Weg endet die Simulation — beim Neuzeichnen einer, deren
-           Karten aufgebraucht sind. Ohne die Sicherung hier bliebe genau der
-           Fall unbewahrt, in dem der letzte Klick woanders ausgelöst wurde. */
         if (simulation.fertig || simulation.index >= simulation.karten.length) {
             simulationAbschliessen(simulation);
             const richtig = simulation.antworten.filter(item => item.richtig).length;
@@ -2040,14 +1667,11 @@ const Lernwelt = (() => {
                     id: String(row.id),
                     titel: zeilenTitel(row, collection),
                     faellig: String(zeilenWert(row, collection, dueKey) ?? '').slice(0, 10),
-                    /* Roh aus props, nicht über die Anzeige-Formatierung: ein
-                       Haken ist wahr oder falsch, nicht „Ja". */
                     erledigt: !!(doneKey && row?.props?.[doneKey]),
                     doneKey, row, collection
                 });
             });
         });
-        /* Offene zuerst, darin die Fälligsten oben; Erledigtes ans Ende. */
         return raus.sort((a, b) => a.erledigt !== b.erledigt
             ? (a.erledigt ? 1 : -1)
             : String(a.faellig || '9999').localeCompare(String(b.faellig || '9999')));
@@ -2070,7 +1694,6 @@ const Lernwelt = (() => {
                 });
             });
         });
-        /* „Sicher" ans Ende — was sitzt, muss nicht oben stehen. */
         return raus.sort((a, b) => (a.stand === 'Sicher' ? 1 : 0) - (b.stand === 'Sicher' ? 1 : 0));
     };
     const hausaufgabenListe = (items, leerText) => {
@@ -2096,7 +1719,6 @@ const Lernwelt = (() => {
             return '<p class="lw-none">' + esc(leerText) + '</p>';
         const slug = (stand) => stand === 'Sicher' ? 'sicher' : /arbeit/i.test(stand) ? 'arbeit' : 'offen';
         return '<ul class="lw-goal-list">' + items.map(z => '<li><button type="button" data-lw-open="' + esc(z.id) + '">' +
-            /* Das Wort trägt die Aussage, die Farbe unterstreicht nur (§38). */
             '<span class="lw-goal-stand ist-' + slug(z.stand) + '">' + esc(z.stand) + '</span>' +
             '<strong>' + esc(z.titel) + '</strong>' +
             '<small>' + (z.bis ? 'bis ' + esc(datumText(z.bis)) : 'ohne Termin') + '</small>' +
@@ -2119,9 +1741,6 @@ const Lernwelt = (() => {
                 item.titel.toLowerCase().includes(fach.titel.toLowerCase());
         });
         const fachNotizen = dokumente().filter(item => item.titel.toLowerCase().includes(fach.titel.toLowerCase()));
-        /* Hausaufgaben und Lernziele DIESES Fachs (E256) — über die
-           Fach-Relation (die Kennung steht in den props) oder den Titel,
-           derselbe Weg wie bei Karten und Prüfungen. */
         const fachHw = hausaufgaben().filter(item => beziehtSichAuf(item.row, fach.row.id, fach.titel));
         const fachZiele = lernziele().filter(item => beziehtSichAuf(item.row, fach.row.id, fach.titel));
         const fort = karten.length
@@ -2155,25 +1774,6 @@ const Lernwelt = (() => {
     };
     const schuleAnsicht = () => {
         const root = schoolRoot();
-        /* DIE LEERE WAND STAND AUCH VOR VOLLEN REGALEN (E143).
-           `schoolRoot()` sucht eine Seite mit der Marke `schoolRoot` — die setzt
-           nur die Einrichtung. Wer seine Fächer, Noten und Karteikarten von Hand
-           angelegt hat, bekam „Ausbildung noch nicht eingerichtet" und sonst
-           nichts. Sein Bestand war da; die Ansicht schaute nur an einer einzigen
-           Stelle nach und gab auf.
-    
-           Das widerspricht §51 des Auftrags („ein Objekt, viele Ansichten"):
-           eine Ansicht ist ein BLICK auf vorhandene Objekte, keine Belohnung
-           fürs Drücken eines Knopfes.
-    
-           Die Wand bleibt — aber nur, wenn wirklich nichts da ist. */
-        /* `schulSammlungen()` OHNE ARGUMENT LIEFERT ALLE SAMMLUNGEN. Die zwei
-           Bedingungen darin greifen nur, wenn `kind` gesetzt ist — ohne
-           Argument fällt jede lesbare Sammlung durch. Meine erste Fassung
-           zählte deshalb „Meine Aufgaben" aus dem Beispielinhalt als
-           schulischen Bestand, und die Einladung war nie zu sehen.
-           Zweimal geraten, zweimal daneben; erst das Messen der vier Werte
-           einzeln hat es gezeigt. */
         const schonDa = !root && (schulSammlungen().some(sammlung => sammlung?.schoolKind) ||
             pruefungen().length > 0 || lernkarten().length > 0 || fachZeilen().length > 0);
         if (!root && !schonDa)
@@ -2191,8 +1791,6 @@ const Lernwelt = (() => {
         const gradeEntries = sammlungsEintraege('grades', 'medal', 6);
         const reportEntries = sammlungsEintraege('reports', 'clipboard', 6);
         const materialEntries = sammlungsEintraege('materials', 'library', 8);
-        /* Ohne Ausbildungsseite gibt es nichts zu öffnen — dort steht statt des
-           Knopfes das Angebot, die Vorlage nachzuziehen. */
         return '<div class="lw-school"><header class="lw-page-head"><div><p>Schule / Ausbildung</p><h2>' +
             esc(root?.text || 'Ausbildung') + '</h2><span>Fächer, Unterricht, Material und Lernen in einer gemeinsamen Sicht.</span></div>' +
             '<div class="lw-actions"><button type="button" data-lw-action="capture">Material erfassen</button>' +
@@ -2203,15 +1801,6 @@ const Lernwelt = (() => {
             (root ? '' : '<aside class="lw-note"><strong>Das hier kommt aus deinem vorhandenen Bestand.</strong>' +
                 '<p>Eine Ausbildungsseite gibt es noch nicht. Die Vorlage legt sie zusätzlich an — ' +
                 'sie ersetzt nichts und löscht nichts.</p></aside>') +
-            /* OHNE FÄCHERDATENBANK GAR KEIN FÄCHERKASTEN. `fachZeilen()` liest die
-               Sammlung `subjects` aus der Vorlage. Fehlt sie, stand „Noch keine
-               Fächer angelegt" — direkt über „Aktuelle Themen", wo Betriebskunde,
-               Deutsch und Elektrotechnik untereinander aufgelistet waren.
-      
-               Zwei Sätze auf einem Bildschirm, die einander widersprechen, sind
-               schlimmer als ein fehlender: der eine sagt, es gebe nichts, der
-               andere zeigt es. Ohne Ausbildungsseite übernimmt der Themenkasten
-               die Aufgabe, und der leere Kasten entfällt. */
             (faecher.length || root ? '<section class="lw-subject-grid" aria-label="Fächer">' +
                 (faecher.length ? faecher.map(item => {
                     const cards = lernkarten().filter(card => fachVon(card).toLowerCase().includes(item.titel.toLowerCase()));
@@ -2227,8 +1816,6 @@ const Lernwelt = (() => {
                     '<button type="button" data-lw-open="' + esc(root?.id || '') + '">Fächer hinzufügen</button>' +
                     '</div>') + '</section>' : '') +
             '<div class="lw-dashboard-grid">' +
-            /* Hausaufgaben und Lernziele (E256) zuerst — das sind die zwei
-               Fragen des Schulalltags: was ist zu tun, und wohin soll es. */
             sektion('Hausaufgaben', hausaufgabenListe(hw.slice(0, 8), 'Keine Hausaufgabe eingetragen.') +
                 (hausaufgabenSammlungen().length
                     ? '<button type="button" class="lw-alle" data-lw-action="homework-open">Alle Hausaufgaben</button>' : ''), offeneHw.length ? offeneHw.length + ' offen' : '') +
@@ -2246,8 +1833,6 @@ const Lernwelt = (() => {
             sektion('Noten', eintragListe(gradeEntries, 'Noch keine Note eingetragen.')) +
             sektion('Berichtsheft', eintragListe(reportEntries, 'Noch kein Berichtsheft-Eintrag.')) +
             '</div><div class="lw-quick">' +
-            /* Seit E243 führt der Knopf zum STUNDENPLAN, nicht mehr zur
-               Ausbildungsseite — er hielt nicht, was er versprach (L70). */
             '<button type="button" data-lw-nav="stundenplan">' + zeichenSpan('calendar') + 'Stundenplan</button>' +
             '<button type="button" data-lw-nav="lernen">' + zeichenSpan('cards') + 'Lernkarten</button>' +
             '<button type="button" data-lw-nav="fortschritt">' + zeichenSpan('chart') + 'Lernfortschritt</button></div></div>';
@@ -2361,10 +1946,6 @@ const Lernwelt = (() => {
             sektion('Monatsverlauf', historie(liste(stats.logs), 30), spiel.monat + ' Wiederholungen im Monat') +
             '</div><aside class="lw-note"><strong>So wird gerechnet</strong><p>Eine begonnene Karte zählt halb, ab zwei erfolgreichen Wiederholungen stabil. Ein Fehler setzt die Wiederholungsstufe wie im bestehenden SM-2-Verfahren zurück. Aktivitäts-XP verändert diese Zahl nie.</p></aside></div>';
     };
-    /* DER TRAINER ZEICHNET SICH SELBST (E677). Die Lernwelt gibt ihm nur den
-       Platz; nach `zeichnen` ruft sie `Trainer.render` hinein. So bleibt der
-       Trainer eine eigene Datei mit eigenem Zustand (eine laufende Runde), und
-       die Lernwelt muss nichts davon wissen — sie hält nur die Ansicht. */
     const trainerAnsicht = () => typeof Trainer !== 'undefined'
         ? '<div class="lw-trainer" id="lw-trainer"></div>'
         : '<section class="lw-empty"><h2>Der Trainer ist nicht geladen</h2><p>quell/bereiche/wissen/trainer.js fehlt.</p></section>';
@@ -2429,15 +2010,9 @@ const Lernwelt = (() => {
         root.dataset.lwView = zustand.ansicht;
         root.innerHTML = kopf() + '<main class="lw-main ansicht-herein" id="lernwelt-inhalt" tabindex="-1">' +
             ansichtsInhalt() + '</main>';
-        /* Die Zeichen der Reiter füllen (E200). Ohne das bleiben die Stellen
-           leer, und das sieht aus wie ein Ladefehler — die Namen stehen ja
-           daneben. Nur `root`, nicht das ganze Dokument (§73). */
         if (typeof Register !== 'undefined' && Register.symbole) {
             Register.symbole.fuelle(root);
         }
-        /* „Lernen starten" glimmt (E463) — der eine Knopf je Ansicht, der
-           etwas ANFÄNGT, nicht nur wechselt. Die Zeichen werden bei jedem
-           Zeichnen neu zerlegt, weil `innerHTML` sie neu schreibt. */
         if (typeof Funkel !== 'undefined')
             Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
         if (zustand.simulation && !zustand.simulation.fertig)
@@ -2445,8 +2020,6 @@ const Lernwelt = (() => {
         else
             timerStoppen();
         reiterRollstand();
-        /* Den Trainer in seinen Platz zeichnen — oder abmelden, wenn die Ansicht
-           eine andere ist: sein Tastenhorcher hängt am Dokument (E677). */
         if (typeof Trainer !== 'undefined') {
             const platz = zustand.ansicht === 'trainer' ? root.querySelector('#lw-trainer') : null;
             if (platz)
@@ -2456,34 +2029,9 @@ const Lernwelt = (() => {
         }
         ladeBereichsdaten();
     };
-    /**
-     * Die Reiterleiste sagt, dass es weitergeht.
-     *
-     * Am Telefon passen von neun Reitern drei; die Leiste rollt seitwärts, aber
-     * NICHTS zeigte das an — gemessen am 25. August auf 390 px: 883 px Inhalt
-     * in 364 px Breite, und „Meine Fehler" endete mitten im Wort am Bildrand.
-     * Ein abgeschnittenes Wort sieht aus wie ein Fehler, nicht wie eine
-     * Einladung zum Wischen.
-     *
-     * Dieselbe Lösung wie bei der Markierungsleiste im PDF (E141): ein
-     * Datenmerkmal, aus dem die CSS einen Schatten an der jeweiligen Kante
-     * macht. Kein Knopf, kein Pfeil, nichts zum Danebentippen.
-     *
-     * Die Rechnung stand hier einmal ausgeschrieben — dieselben drei Zeilen
-     * wie in `pdf/marken.ts`, und beim dritten Mal (der Werkzeugzeile über dem
-     * Seitentitel) wäre es eine Abschrift zu viel gewesen. Sie liegt jetzt in
-     * `kern/helfer/rollrand.ts`; `art: 'mehr'` wählt die Schattenfassung, und
-     * `data-mehr` steht danach genau wie vorher (E159).
-     */
     const reiterRollstand = () => {
         const leiste = zustand.root?.querySelector('.lw-nav') || null;
         Rollrand.binde(leiste, { art: 'mehr' });
-        /* UND DER GEWÄHLTE REITER MUSS AUCH ZU SEHEN SEIN.
-           Gefunden im Bild, nicht in einer Prüfung (§55): in der Prüfungssicht
-           stand der aktive Reiter „Prüfungen" halb ausserhalb der Karte — man
-           tippt darauf, er wird hell, und dann ist er weg. Solange die Leiste
-           322 px breit war, passte alles; seit sie sich am Telefon die Zeile
-           mit der Krume teilt (E235), sind es 234. */
         Rollrand.zeige(leiste, leiste?.querySelector('[aria-current="page"]') || null);
     };
     const ansichtGueltig = (wert) => ANSICHTEN.some(item => item.id === wert);
@@ -2556,23 +2104,6 @@ const Lernwelt = (() => {
         };
         zeichnen();
     };
-    /* ------------------------------------------------------------------------
-     * DAS GEDÄCHTNIS DER PRÜFUNGSZENTRALE (L49, E163)
-     * ------------------------------------------------------------------------
-     * Bis hierher lag ein Simulationsergebnis nur in `zustand.simulation`.
-     * Ein Reiterwechsel setzte es auf null, und die Bewertung von zwanzig
-     * Aufgaben war weg — ohne Warnung, ohne Wiederkehr. Wer wissen wollte,
-     * ob er sich verbessert, konnte es nicht.
-     *
-     * Abgelegt wird in `Store.setMeta`, wie schon `tagesziel` und `ansicht`
-     * derselben Welt. Das ist der richtige Ort und nicht bloss der bequeme:
-     * `meta` gehört zum Sicherungsformat (§52.10), das Ergebnis überlebt
-     * also Export und Import.
-     *
-     * BEGRENZT AUF ZWANZIG. Ein Verlauf, der still unbegrenzt wächst, ist
-     * genau das, was §15 verbietet. Zwanzig Simulationen sind mehr, als ein
-     * Mensch je vergleicht, und kosten ein paar Kilobyte.
-     * ----------------------------------------------------------------------*/
     const SIM_MAX = 20;
     const simulationen = () => {
         const roh = Store.getMeta(metaSchluessel('simulationen'), []);
@@ -2580,21 +2111,6 @@ const Lernwelt = (() => {
             ? roh.filter((x) => x && typeof x === 'object' && Number(x.gesamt) > 0)
             : [];
     };
-    /**
-     * Eine Simulation beenden und festhalten.
-     *
-     * DIESE FUNKTION LÄUFT MEHRFACH, und das ist Absicht: `fertig` wird an
-     * drei Stellen erreicht (letzte Antwort, abgelaufene Zeit, Neuzeichnen
-     * einer aufgebrauchten Simulation), und jedes weitere Zeichnen kommt
-     * wieder hier vorbei.
-     *
-     * Was Doppelte verhindert, ist die KENNUNG: `sim-<gestartet>` ist für
-     * einen Durchgang immer dieselbe, und der Eintrag ersetzt seinen
-     * Vorgänger, statt sich danebenzustellen. Eine Sperrvariable stand hier
-     * einmal daneben — sie war nicht zu prüfen, weil die Kennung ohnehin
-     * schon reichte, und ein zweites Schloss an derselben Tür führt den
-     * nächsten Leser in die Irre (E163).
-     */
     const simulationAbschliessen = (simulation) => {
         simulation.fertig = true;
         if (!simulation.antworten.length)
@@ -2622,10 +2138,6 @@ const Lernwelt = (() => {
     };
     const simulationStarten = (id) => {
         const pruefung = pruefungen().find(item => item.id === id) || null;
-        /* DER RÜCKFALL STEHT JETZT HIER, UND ER SAGT SICH AN. Vorher lag er in
-           `passendeKarten` und war von aussen nicht zu sehen: wer „Simulation
-           starten" bei einer Prüfung ohne eigenen Stoff drückte, bekam eine
-           Klausur aus dem gesamten Bestand und hielt sie für die passende. */
         const eigene = pruefung ? nurPassendeKarten(pruefung) : [];
         const karten = eigene.length ? eigene : lernkarten();
         const anzahl = Math.min(pruefung ? 30 : 15, karten.length);
@@ -2774,9 +2286,6 @@ const Lernwelt = (() => {
             }
             return;
         }
-        /* Eine Sammlung öffnen heisst: die SEITE öffnen, auf der ihr
-           Datenbank-Block liegt. Dort trägt man ein; die Ansichten hier
-           rechnen nur (E241/E243). */
         const sammlungSeiteOeffnen = (sammlung) => {
             if (!sammlung)
                 return;
@@ -2819,10 +2328,6 @@ const Lernwelt = (() => {
             wechseln(navId);
             return;
         }
-        /* Der Haken an der Hausaufgabe (E256): umschalten, nicht öffnen —
-           deshalb VOR data-lw-open, der Knopf steht neben einem Öffnen-Knopf.
-           Geschrieben wird die Checkbox-Spalte der Zeile selbst (setProp);
-           die Ansicht zeichnet danach aus den Daten neu. */
         const hwKnopf = element.closest('[data-lw-hw-done]');
         if (hwKnopf?.dataset.lwHwDone) {
             const rowId = hwKnopf.dataset.lwHwDone;
@@ -2843,8 +2348,6 @@ const Lernwelt = (() => {
             void aktionAusfuehren(action.dataset.lwAction);
             return;
         }
-        /* Zeitraum der Noten-Ansicht (E242): flüchtiger Ansichtszustand wie
-           das Menüband am Telefon — kein Merker, der Ansichten überlebt. */
         const zeitraum = element.closest('[data-lw-zeitraum]');
         const zeitraumWert = zeitraum?.dataset.lwZeitraum;
         if (zeitraumWert === 'aktuell' || zeitraumWert === 'vorher' || zeitraumWert === 'alle') {
@@ -2964,35 +2467,7 @@ const Lernwelt = (() => {
         Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
         zeichnen();
     };
-    /**
-     * Tastenkürzel in der Lernrunde: Leertaste deckt auf, 1 bis 4 bewerten.
-     *
-     * DER HORCHER HÄNGT AM DOKUMENT, NICHT AN DER WURZEL (E136).
-     *
-     * Vorher stand er auf `zustand.root`. Ereignisse steigen aber AUFWÄRTS,
-     * nicht abwärts: gemessen liegt der Fokus nach dem Öffnen auf `BODY`, und
-     * body ist der Vorfahr der Wurzel, nicht ihr Nachfahr. Der Tastendruck kam
-     * nie an. Bildschirmweise gemessen:
-     *
-     *     nach Start        Fokus BODY, Karte 1 von 4
-     *     Leertaste         nichts — nicht aufgedeckt
-     *     Maus aufgedeckt   ja
-     *     Taste 3           nichts — immer noch Karte 1 von 4
-     *
-     * Am Dokument kommt er an. Damit er nicht in fremden Ansichten mitredet,
-     * fragt er zuerst, ob die Lernwelt überhaupt noch im Dokument hängt;
-     * `abmelden()` nimmt ihn ausserdem wieder ab.
-     */
     const taste = (event) => {
-        /* IST DIE LERNWELT ÜBERHAUPT NOCH DIE SICHTBARE ANSICHT?
-           `isConnected` allein genügt NICHT, und das wäre beinahe schiefgegangen:
-           `zustand.root` ist der wiederverwendete Inhaltsbereich der Schale, und
-           der hängt auch dann noch im Dokument, wenn längst eine gewöhnliche
-           Seite darin steht. Gemessen: Runde starten, `App.oeffne(seite)`, dann
-           im Editor die Leertaste — und die Lernwelt sprang zurück über die
-           Seite, in der gerade geschrieben wurde.
-           Gefragt wird deshalb nach dem eigenen Markup: steht die Lernwelt noch
-           in ihrer Wurzel, gehört die Taste ihr. Sonst nicht. */
         if (!zustand.root?.isConnected)
             return;
         if (!zustand.root.classList.contains('lernwelt') &&
@@ -3003,10 +2478,6 @@ const Lernwelt = (() => {
             return;
         if (!zustand.training)
             return;
-        /* Leertaste und Enter BETÄTIGEN einen Knopf, der den Fokus hat. Läge
-           hier kein Vorbehalt, deckte ein Druck auf „Antwort zeigen" die Karte
-           zweimal auf — einmal über den Knopf, einmal über das Kürzel. Die
-           Ziffern 1 bis 4 betätigen nichts und dürfen deshalb immer. */
         const aufKnopf = !!ziel?.closest('button, a');
         if (!zustand.training.aufgedeckt && !aufKnopf &&
             (event.key === ' ' || event.key === 'Enter')) {
@@ -3046,36 +2517,9 @@ const Lernwelt = (() => {
         zustand.ladeSchluessel = '';
         ziel.addEventListener('click', klick);
         ziel.addEventListener('change', aenderung);
-        /* Am Dokument, nicht am Ziel — siehe `taste`. */
         document.addEventListener('keydown', taste);
         zeichnen();
     };
-    /**
-     * DER TITEL SAGT, WO MAN IST — und das ist keine Zierde (E526).
-     *
-     * Hier stand für ALLE elf Ansichten derselbe Titel „Lernen & Alltag".
-     * Die Schale rechnet den Schauplatz aus genau diesem Titel aus
-     * (`SCHAUPLATZ_NAMEN` in `schale.ts`), und „Lernen & Alltag" bedeutet
-     * dort `heute`. Also meldete das Lernzentrum sich als „Heute", und die
-     * untere Leiste markierte „Heute", obwohl man auf „Lernen" getippt
-     * hatte.
-     *
-     * GEMESSEN, nicht vermutet: ein Klick auf `#hl-lernen` liess `#hl-start`
-     * markiert — vor dem Wischen, mit der Maus, in der Bibliothek genauso.
-     * Der Fehler war älter als die Geste; das Wischen hat ihn nur sichtbar
-     * gemacht, weil man dabei zusieht, wohin man geht.
-     *
-     * Zwei Titel, beide in `SCHAUPLATZ_NAMEN` bereits eingetragen: „Heute"
-     * für die Tagesansicht, „Lernzentrum" für alle übrigen. Die zehn
-     * anderen Ansichten gehören unten alle unter „Lernen".
-     *
-     * WAS DAMIT NOCH NICHT GELÖST IST: `wechseln()` schaltet die Ansicht
-     * INNERHALB der Welt um, ohne `zeigeSonder` noch einmal zu rufen — der
-     * Titel bleibt dann der vom Öffnen. Wer über „Heute" hereinkommt und
-     * drinnen auf „Lernweg" wechselt, sieht unten weiter „Heute". Das steht
-     * als L147 und nicht hier: es zu beheben heisst, den Schauplatz beim
-     * Umschalten neu zu melden, und das ist ein eigener Bogen.
-     */
     const oeffnen = (ansicht = 'heute') => {
         const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
         const titel = start === 'heute' ? 'Heute' : 'Lernzentrum';
@@ -3099,11 +2543,6 @@ const Lernwelt = (() => {
             bereiche,
             warteschlange,
             statistik,
-            /* SEIT E339 FRAGT `learning.ts` DANACH. Die Ergebnisse liegen unter
-               einem Schlüssel, der den Lernenden enthält (`metaSchluessel`) —
-               wer sie von aussen lesen will, muss ihn entweder nachbauen oder
-               hier danach fragen. Nachbauen wäre dieselbe Wahrheit an zwei
-               Stellen, und die zweite geht irgendwann auseinander. */
             simulationen,
             fehler: fehlerListe,
             pruefungen,

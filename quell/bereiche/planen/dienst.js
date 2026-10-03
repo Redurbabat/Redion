@@ -1,29 +1,6 @@
 "use strict";
-/* ============================================================================
- * plan.js — Später erinnern, Woche zurückblicken, Tag planen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/planen/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/planen/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Drei Dinge, die man in Notion von Hand nachbauen muss:
- *
- *   ZURÜCKSTELLEN — eine Seite oder Zeile für eine Weile aus dem Weg legen
- *     und zur richtigen Zeit wieder hochkommen lassen. Notion kennt nur
- *     Erinnerungen an einem Datum, kein „in drei Tagen wieder zeigen".
- *
- *   WOCHENRÜCKBLICK — was wurde erledigt, was ist liegengeblieben, was
- *     kommt. Notion hat dafür nur leere Vorlagen.
- *
- *   TAGESPLAN — die Aufgaben von heute, nach Zeit sortiert, mit einer
- *     ehrlichen Rechnung: passt das in den Tag?
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/planen/dienst.ts (npm run bauen:ts). */
 const Plan = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -34,9 +11,6 @@ const Plan = (() => {
         return x.getFullYear() + '-' + p(x.getMonth() + 1) + '-' + p(x.getDate());
     };
     const heute = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
-    /* ========================================================================
-     * 1. ZURÜCKSTELLEN
-     * ======================================================================*/
     const FRISTEN = [
         ['spaeter', 'Später heute', () => { const d = new Date(); d.setHours(d.getHours() + 3); return d; }],
         ['morgen', 'Morgen früh', () => { const d = heute(); d.setDate(d.getDate() + 1); d.setHours(9); return d; }],
@@ -60,7 +34,6 @@ const Plan = (() => {
         Store.updateBlock(blockId, { zurueckBis: null });
         App.zeichneBaum();
     };
-    /** Was ist jetzt wieder fällig? Wird beim Start und stündlich geprüft. */
     const faellige = () => {
         const jetzt = Date.now();
         return liste().filter((x) => new Date(x.bis).getTime() <= jetzt && Store.getBlock(x.id));
@@ -72,10 +45,6 @@ const Plan = (() => {
         f.forEach((x) => {
             Store.updateBlock(x.id, { zurueckBis: null });
             const b = Store.getBlock(x.id);
-            /* `posteingangMelden` nimmt EIN Objekt, keine zwei Werte. Vorher stand
-               hier ein Text und daneben die Kennung — `m.text` war damit
-               `undefined`, und im Posteingang erschien eine leere Zeile ohne
-               Hinweis darauf, welche Seite zurückkam. */
             if (typeof Werkzeuge !== 'undefined' && Werkzeuge.posteingangMelden)
                 Werkzeuge.posteingangMelden({
                     text: '⏰ Wieder da: ' + ((b && b.text) || 'Ohne Titel'),
@@ -83,15 +52,6 @@ const Plan = (() => {
                 });
         });
         Store.setMeta('zurueckgestellt', liste().filter((x) => !f.some((y) => y.id === x.id)));
-        /* DER SCHALTER WIRD GELESEN, UND ZWAR NUR FÜR DEN STREIFEN (E417).
-           „Erinnerungen in der App" stand in den Einstellungen und wurde von
-           niemandem gelesen: wer ihn ausmachte, bekam den Balken weiter. Das
-           ist derselbe Fall wie der Karteikarten-Streifen aus E409, nur eine
-           Stufe schlimmer — dort war die Vorgabe falsch, hier wirkte der
-           Schalter überhaupt nicht.
-           Er hält den BALKEN auf, nicht das Zurückholen: die Seiten oben sind
-           schon zurückgeholt und im Posteingang gemeldet. Wer keinen Streifen
-           will, will nicht seine Seiten verlieren (§51). */
         if (Store.getMeta('erinnernInApp', true) !== false)
             UI.toast(f.length + (f.length === 1 ? ' zurückgestellte Seite ist wieder da'
                 : ' zurückgestellte Seiten sind wieder da'));
@@ -177,15 +137,8 @@ const Plan = (() => {
             }
         });
     };
-    /* ========================================================================
-     * 2. AUFGABEN EINSAMMELN
-     * ------------------------------------------------------------------------
-     * Alles, was nach einer Aufgabe aussieht: Kontrollkästchen-Blöcke und
-     * Datenbankzeilen mit einer Status- oder Kontrollkästchen-Spalte.
-     * ======================================================================*/
     const aufgaben = () => {
         const raus = [];
-        /* Aufgabenblöcke auf Seiten */
         Object.values(Store.cache.blocks).forEach(b => {
             if (b.alive === false || b.type !== 'todo')
                 return;
@@ -195,16 +148,8 @@ const Plan = (() => {
             raus.push({ id: b.id, text: b.text, fertig: !!b.checked,
                 wo: seite ? (seite.text || 'Ohne Titel') : '', datum: null,
                 minuten: null,
-                /* DERSELBE RÜCKFALL WIE BEI DEN ZEILEN (E663, §8). Zwanzig
-                   Zeilen tiefer steht `r.erledigtAm || r.edited` — für
-                   Datenbankzeilen gab es ihn längst, für Blöcke nicht.
-                   Ohne ihn wäre jede VOR E663 abgehakte Aufgabe für immer
-                   unsichtbar: sie hat `checked`, aber kein Datum. `edited`
-                   ist nicht genau, aber es ist das, was der Bestand hat —
-                   und eine ungefähre Woche ist mehr wert als eine leere. */
                 art: 'block', erledigtAm: b.erledigtAm || b.edited || null });
         });
-        /* Datenbankzeilen */
         Object.values(Store.cache.collections).forEach(c => {
             const keys = Object.keys(c.schema);
             const statusKey = keys.find(k => c.schema[k].type === 'status') ||
@@ -212,9 +157,6 @@ const Plan = (() => {
                     (c.schema[k].options || []).some((o) => /erledigt|fertig|done/i.test(o.name)));
             const hakenKey = keys.find(k => c.schema[k].type === 'checkbox');
             const datumKey = keys.find(k => c.schema[k].type === 'date');
-            /* Eine Zahlenspalte, die nach Aufwand klingt, ist die einzige
-               Schätzung, die nicht geraten ist: sie steht dort, weil jemand sie
-               hingeschrieben hat. Ohne sie gilt die Vorgabe aus `planDauer`. */
             const dauerKey = keys.find(k => c.schema[k].type === 'number' &&
                 /dauer|minute|aufwand|zeitbedarf/i.test(String(c.schema[k].name || k)));
             if (!statusKey && !hakenKey)
@@ -234,9 +176,6 @@ const Plan = (() => {
         });
         return raus;
     };
-    /* ========================================================================
-     * 3. WOCHENRÜCKBLICK
-     * ======================================================================*/
     const wochenDaten = (versatz = 0) => {
         const start = heute();
         start.setDate(start.getDate() - ((start.getDay() + 6) % 7) + versatz * 7);
@@ -248,10 +187,8 @@ const Plan = (() => {
         const offen = alle.filter(a => !a.fertig);
         const ueberfaellig = offen.filter(a => a.datum && new Date(a.datum) < heute());
         const dieseWoche = offen.filter(a => a.datum && inWoche(a.datum));
-        /* Was wurde geschrieben? */
         const geaendert = Object.values(Store.cache.blocks).filter(b => b.alive !== false && b.type === 'page' && b.edited && inWoche(b.edited));
         const neu = Object.values(Store.cache.blocks).filter(b => b.alive !== false && b.type === 'page' && b.created && inWoche(b.created));
-        /* Je Tag: wie viel wurde erledigt? */
         const proTag = Array.from({ length: 7 }, (_, i) => {
             const t = new Date(start);
             t.setDate(start.getDate() + i);
@@ -343,10 +280,6 @@ const Plan = (() => {
             }
         });
     };
-    /* ========================================================================
-     * 4. TAGESPLAN
-     * ======================================================================*/
-    /** Tage von heute bis zu einem Datum. Der Planer rechnet nur mit Zahlen. */
     const tageBis = (d) => {
         const x = new Date(d);
         if (isNaN(x.getTime()))
@@ -354,11 +287,6 @@ const Plan = (() => {
         x.setHours(0, 0, 0, 0);
         return Math.round((x.getTime() - heute().getTime()) / 86400000);
     };
-    /**
-     * Wie lange eine Karteikarte dauert — gemessen, solange es genug Belege
-     * gibt. Die Zeitpunkte stehen im Antwortprotokoll (`at`), der Abstand
-     * zwischen zwei Antworten ist die Dauer der zweiten.
-     */
     const kartentempo = () => {
         const vorgabe = Number(Store.getMeta('kartenSekunden', 30)) || 30;
         try {
@@ -378,13 +306,6 @@ const Plan = (() => {
             return Lerntempo.jeKarte([], vorgabe);
         }
     };
-    /**
-     * Alles, was heute Zeit kostet, als Posten für `core/planning/budget.ts`.
-     *
-     * Fällige Karten sind EIN Posten und nicht dreissig Zeilen: sie werden am
-     * Stück gelernt, und dreissig Einzeiler wären keine Liste mehr, sondern
-     * eine Wand.
-     */
     const posten = () => {
         const vorgabe = Math.max(1, Number(Store.getMeta('planDauer', 30)) || 30);
         const raus = aufgaben().filter(a => !a.fertig).map(a => ({
@@ -404,22 +325,9 @@ const Plan = (() => {
                     });
             }
         }
-        catch { /* Ohne den Lernbereich plant der Tag trotzdem. */ }
+        catch { }
         return raus;
     };
-    /* ------------------------------------------------------------------------
-     * DER TAGESPLAN
-     *
-     * Vorher stand hier `(heute.length + spaet.length) * geschaetzt` und eine
-     * Warnung ab acht Stunden. Beides ist die stille Fassung von „ich weiss es
-     * nicht": sieben Aufgaben ergaben immer 3 h 30 min, und die Schranke sprang
-     * erst bei sechzehn an — also nie.
-     *
-     * Jetzt kommt die Zeit vom Nutzer („Ich habe heute 90 Minuten"), die Dauer
-     * je Posten aus einer Spalte oder der Vorgabe, und der Kern rechnet zwei
-     * Dinge getrennt: was HEUTE hineinpasst, und ob sich die Fristen der
-     * nächsten Tage überhaupt ausgehen. Nur das zweite ist eine Nachricht.
-     * ----------------------------------------------------------------------*/
     const tagesplan = () => {
         const budget = Math.max(0, Math.round(Number(Store.getMeta('zeitbudget', 90)) || 0));
         const geschaetzt = Store.getMeta('planDauer', 30);
@@ -445,8 +353,6 @@ const Plan = (() => {
                 '<span>überfällig</span></div>' +
                 `<div class="wr-k"><b>${tag.draussen.length}</b><span>passt nicht mehr</span></div>` +
                 '</div>' +
-                /* HIER STEHT IM NORMALFALL NICHTS. Dass heute nicht alles
-                   hineinpasst, ist kein Ereignis; dass eine FRIST reisst, schon. */
                 (warnung ? `<div class="pl-warnung">⚠ ${esc(warnung)}</div>` : '') +
                 (tag.ueberzogen
                     ? '<div class="pl-warnung">Feste Termine belegen heute schon ' +
@@ -519,7 +425,6 @@ const Plan = (() => {
             }
         });
     };
-    /** Eine Zeile des Plans: was, wo, wie lange — und warum so lange. */
     const planZeileHtml = (z) => {
         const p = z.posten;
         const zeichen = z.grund === 'überfällig' ? '⚠' : z.grund === 'fest' ? '🔒' : '☐';
@@ -538,9 +443,6 @@ const Plan = (() => {
                 : `<button class="wr-spaeter" data-spaeter="${esc(p.id)}" title="Zurückstellen">⏰</button>`) +
             '</div>';
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
     const start = () => {
         setTimeout(pruefen, 2500);
         setInterval(pruefen, 60 * 60 * 1000);
@@ -550,8 +452,6 @@ const Plan = (() => {
         posten, tageBis, kartentempo };
 })();
 window.Plan = Plan;
-/* Die Aufgaben melden ihre Kontextkante an (E272 Phase F).
-   Alle vier Griffe stehen schon im Modul; hier steht nur, wo sie hingehören. */
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
     K.melde({ bereich: 'aufgaben', id: 'uebersicht', name: 'Übersicht',
@@ -560,8 +460,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         zeichen: 'today', rang: 20, tun: () => Plan.tagesplan() });
     K.melde({ bereich: 'aufgaben', id: 'woche', name: 'Wochenrückblick',
         zeichen: 'calendar', rang: 30, tun: () => Plan.wochenrueckblick() });
-    /* FÄLLIG ist eine Lade: die Liste ändert sich mit jedem Tag und mit
-       jedem Haken, und eine Zahl im Knopf wäre nach fünf Minuten falsch. */
     K.melde({ bereich: 'aufgaben', id: 'faellig', name: 'Fällig',
         zeichen: 'clock', rang: 40,
         liefern: () => {
@@ -581,7 +479,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                 tun: () => { try {
                     App.zeigeBlock(b.id);
                 }
-                catch { /* … */ } }
+                catch { } }
             }));
         }
     });

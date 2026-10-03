@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/fachzeichen.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/fachzeichen.js — die elektrotechnischen Symbole an einer Stelle
  * ----------------------------------------------------------------------------

@@ -1,95 +1,16 @@
 "use strict";
-/* ============================================================================
- * bereiche/bloecke/arten/schaltplan.ts — Schaltpläne zeichnen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/bloecke/arten/schaltplan.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/bereiche/bloecke/arten/schaltplan.js`.
- * ----------------------------------------------------------------------------
- * EIN SCHALTPLAN IST EIN NORMALER BLOCK
- *
- * Kein zweites Dokumentmodell, keine eigene Datei, kein eigener Speicher: der
- * Plan liegt in `block.plan` und läuft damit durch Papierkorb, Sicherung,
- * Wiederherstellung, Versionen und den optionalen Abgleich wie jeder andere
- * Block. Das ist dieselbe Entscheidung wie beim Whiteboard (E138) und der
- * Grund, warum ein Schaltplan in einer `.redion`-Sicherung einfach mitkommt,
- * ohne dass jemand daran gedacht haben muss.
- *
- * DIE SYMBOLE STEHEN NICHT HIER. Sie stehen in `register/fachzeichen.js`, und
- * dieser Editor kennt nur deren Kennungen. Eine zweite Symbolliste neben dem
- * Register wäre L34 in gross: sie würde auseinanderlaufen, und niemand
- * bemerkte es, bis ein Plan ein Symbol zeigt, das der Lernmodus nicht kennt.
- *
- * WAS IM PLAN STEHT
- *
- *   art        welcher Plantyp — Stromlauf, Installation, Klemmen, …
- *   teile      die gesetzten Symbole: Kennung, Ort, Drehung, Betriebsmittel
- *   leitungen  die Verbindungen, als Liste von Rasterpunkten
- *   texte      freie Beschriftungen
- *   ebenen     Aufgabe und Lösung getrennt ein- und ausblendbar
- *
- * ALLES RASTET EIN. Symbole und Leitungspunkte liegen auf Vielfachen von
- * `Register.fachzeichen.RASTER`. Das ist keine Bequemlichkeit, sondern die
- * Bedingung dafür, dass eine Leitung einen Anschluss überhaupt TRIFFT — ohne
- * Raster müsste man auf den Pixel genau zielen, und ein Plan mit Leitungen,
- * die fast am Anschluss enden, sieht richtig aus und ist es nicht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/schaltplan.ts (npm run bauen:ts). */
 const Schaltplan = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    /**
-     * `U_L` wird zu U mit tiefgestelltem L.
-     *
-     * Eine Beschriftung im Plan ist eine Zeichenkette, und eine Zeichenkette
-     * hat keine Tiefstellung — der Unterstrich steht seit jeher dafür. Im Bild
-     * soll er aber nicht dastehen: `X_L − X_C` liest sich als vier Zeichen mit
-     * Strichen dazwischen, `X` mit tiefem `L` minus `X` mit tiefem `C` als
-     * eine Differenz zweier Grössen.
-     *
-     * ERST ESCAPEN, DANN AUSZEICHNEN — in dieser Reihenfolge liegt die ganze
-     * Sicherheit (§19). Das `<tspan>` kommt NACH dem Escapen hinein, also kann
-     * aus einer Beschriftung kein Element werden. Umgekehrt wäre es ein Loch,
-     * durch das jeder Plantext beliebiges SVG einschleusen könnte.
-     */
-    /* WELCHE ZEICHEN TIEFGESTELLT WERDEN, und warum die alte Liste zu kurz war.
-     *
-     * Hier stand `[A-Za-zÄÖÜäöüß0-9]`. Das ist die deutsche Tastatur, nicht die
-     * Physik. Im Heft steht `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ`
-     * (Scheinleistung in Dreieckschaltung) und `AF_%` (relativer Anzeigefehler)
-     * — 42 Stellen, an denen der Unterstrich als Unterstrich stehen blieb.
-     *
-     * Ein sichtbarer Unterstrich in einer Formel ist kein Schönheitsfehler: er
-     * sieht aus wie ein Zeichen der Formel. `R_ϑ` liest sich als „R Unterstrich
-     * Theta", und es gibt keine solche Grösse.
-     *
-     * `\p{L}` nimmt jeden Buchstaben JEDER Schrift, `\p{N}` jede Ziffer, und
-     * `%` steht ausdrücklich dabei, weil es keins von beidem ist. Was nicht
-     * dazugehört — Leerzeichen, Klammern, Rechenzeichen — beendet die
-     * Tiefstellung weiterhin. Und weil `esc` VORHER läuft, kann durch die
-     * Erweiterung kein Zeichen hereinkommen, das vorher draussen war.
-     *
-     * Dieselbe Zeile steht in `schaltplan.ts`, `skizzen.ts` und
-     * `formelheft.ts`. test244 vergleicht die drei — auseinanderlaufen ist
-     * genau der Weg, auf dem dieser Fehler entstanden ist.
-     */
     const tief = (wert) => esc(wert).replace(/_([\p{L}\p{N}%]+)/gu, '<tspan baseline-shift="sub" font-size="0.72em">$1</tspan>');
     const R = () => (typeof Register !== 'undefined' && Register.fachzeichen)
         ? Register.fachzeichen.RASTER : 10;
-    /** Auf das Raster runden — die eine Stelle, an der das passiert. */
     const rasten = (v) => Math.round(v / R()) * R();
-    /** Zahl mit Vorsatz. Die Regel steht in `Stromfluss`; hier nur der Zugang. */
     const zeigeZahl = (wert, einheit) => (typeof Stromfluss !== 'undefined' && Stromfluss.zeige)
         ? Stromfluss.zeige(wert, einheit)
         : `${wert} ${einheit}`;
-    /* ------------------------------------------------------------------------
-     * DIE PLANARTEN (Punkte 31–40)
-     * ------------------------------------------------------------------------
-     * Sie unterscheiden sich nicht im Speicherformat — ein Plan ist ein Plan —,
-     * sondern in dem, was sie VORSCHLAGEN: welche Symbolgruppen oben stehen,
-     * ob Stromschienen vorgezeichnet werden, wie das Blatt liegt. Eine eigene
-     * Datenform je Art hätte zehn Formate ergeben, die alle dasselbe können.
-     * ----------------------------------------------------------------------*/
     const ARTEN = [
         { id: 'stromlauf-aufgeloest', name: 'Stromlaufplan, aufgelöst',
             erklaerung: 'Jeder Stromkreis für sich, von oben nach unten. Kontakte stehen dort, wo sie wirken — nicht beim Gerät.',
@@ -126,24 +47,14 @@ const Schaltplan = (() => {
             gruppen: ['schutz', 'relais', 'stecker'], schienen: 'keine', quer: true }
     ];
     const artVon = (id) => ARTEN.find(a => a.id === id) || ARTEN[0];
-    /* ------------------------------------------------------------------------
-     * EBENEN (Punkte 48, 49)
-     * ------------------------------------------------------------------------
-     * Zwei genügen und sind der ganze Zweck: was die Aufgabe stellt, und was
-     * man selbst gelöst hat. Wer die Lösung ausblendet, sieht wieder die reine
-     * Aufgabe — ohne dass etwas gelöscht wurde und ohne zweite Datei.
-     * ----------------------------------------------------------------------*/
     const EBENEN_VORGABE = [
         { id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true },
         { id: 'aufgabe', name: 'Aufgabe', farbe: '#c2410c', sichtbar: true },
         { id: 'loesung', name: 'Lösung', farbe: '#15803d', sichtbar: true }
     ];
-    /* Kennungen kommen aus `core/helpers/ids.js` — dieselben wie überall sonst,
-       damit ein Planteil in einer Sicherung nicht anders aussieht als ein Block. */
     const uid = () => (typeof Ids !== 'undefined' && Ids.short)
         ? 'sp' + Ids.short()
         : 'sp' + Math.floor(performance.now() * 1000).toString(36);
-    /** Ein leerer Plan der gewünschten Art. */
     const neuerPlan = (art = 'stromlauf-aufgeloest') => {
         const a = artVon(art);
         return {
@@ -154,15 +65,6 @@ const Schaltplan = (() => {
             ebenen: EBENEN_VORGABE.map(e => ({ ...e }))
         };
     };
-    /**
-     * Den Plan aus einem Block lesen — und dabei heilen.
-     *
-     * Ein Block kann aus einer alten Sicherung kommen, aus einem Import oder
-     * aus einer Fassung, die es noch nicht gab. Statt bei fehlenden Feldern zu
-     * werfen, werden sie ergänzt: ein Plan ohne Ebenen bekommt die Vorgabe, ein
-     * Teil ohne Drehung steht auf null. Ein Editor, der an einem alten Plan
-     * abstürzt, ist schlimmer als einer, der ihn ergänzt.
-     */
     const lesen = (block) => {
         const roh = (block && block.plan) || {};
         const a = artVon(String(roh.art || ''));
@@ -204,14 +106,6 @@ const Schaltplan = (() => {
                 : EBENEN_VORGABE.map(e => ({ ...e })))
         };
     };
-    /* ------------------------------------------------------------------------
-     * DIE FORTLAUFENDE NUMMERIERUNG (Punkt 20)
-     * ------------------------------------------------------------------------
-     * Ein neues Schütz heisst K1, das nächste K2. Der Buchstabe kommt aus dem
-     * Register (`kennbuchstabe`), die Zahl aus dem Plan: die kleinste, die noch
-     * frei ist. NICHT „Anzahl plus eins" — wer K2 löscht und ein neues Schütz
-     * setzt, bekäme sonst noch einmal K3, und im Plan fehlte K2 für immer.
-     * ----------------------------------------------------------------------*/
     const naechstesBmk = (plan, zeichenId) => {
         const z = (typeof Register !== 'undefined' && Register.fachzeichen)
             ? Register.fachzeichen.holen(zeichenId) : null;
@@ -229,12 +123,6 @@ const Schaltplan = (() => {
             n++;
         return buchstabe + n;
     };
-    /* ------------------------------------------------------------------------
-     * WO LIEGT EIN ANSCHLUSS AUF DER FLÄCHE
-     * ------------------------------------------------------------------------
-     * Die Drehung rechnet das Register (`anschlussLage`); hier kommt nur die
-     * Lage des Teils dazu. Zwei Stellen, eine Rechnung.
-     * ----------------------------------------------------------------------*/
     const anschlussOrt = (t, nr) => {
         if (typeof Register === 'undefined' || !Register.fachzeichen)
             return null;
@@ -243,7 +131,6 @@ const Schaltplan = (() => {
             return null;
         return { x: t.x + lage.x, y: t.y + lage.y };
     };
-    /** Alle Anschlüsse eines Teils mit ihrer Lage — für Einrasten und Anzeige. */
     const anschluesseVon = (t) => {
         if (typeof Register === 'undefined' || !Register.fachzeichen)
             return [];
@@ -255,14 +142,6 @@ const Schaltplan = (() => {
             return { nr: a.nr, anzeige: t.nummern[a.nr] ?? a.nr, x: o ? o.x : t.x, y: o ? o.y : t.y };
         });
     };
-    /**
-     * Der nächste Anschluss zu einem Punkt, wenn er nahe genug ist (Punkt 23).
-     *
-     * `FANG` ist bewusst gross: eine Maus trifft einen 10-px-Punkt nicht
-     * zuverlässig, und ein Finger schon gar nicht. Lieber ein Anschluss zu
-     * viel gefangen als eine Leitung, die daneben endet und im Bild aussieht,
-     * als wäre sie angeschlossen.
-     */
     const FANG = 14;
     const fangeAnschluss = (plan, p) => {
         let beste = null;
@@ -276,15 +155,6 @@ const Schaltplan = (() => {
         }));
         return beste;
     };
-    /* ------------------------------------------------------------------------
-     * RECHTWINKLIG FÜHREN (Punkt 14)
-     * ------------------------------------------------------------------------
-     * Zwischen zwei Punkten gibt es zwei rechtwinklige Wege: erst waagrecht,
-     * dann senkrecht — oder umgekehrt. Genommen wird der, der zuerst in die
-     * LÄNGERE Richtung läuft. Das trifft, was man beim Zeichnen erwartet: ein
-     * weit rechts liegender Anschluss wird waagrecht angefahren, ein weit
-     * unten liegender senkrecht.
-     * ----------------------------------------------------------------------*/
     const rechtwinklig = (a, b) => {
         if (a.x === b.x || a.y === b.y)
             return [a, b];
@@ -292,19 +162,6 @@ const Schaltplan = (() => {
         const ecke = waagrechtZuerst ? { x: b.x, y: a.y } : { x: a.x, y: b.y };
         return [a, ecke, b];
     };
-    /* ------------------------------------------------------------------------
-     * VERBINDUNGSPUNKTE UND KREUZUNGEN (Punkte 15, 16)
-     * ------------------------------------------------------------------------
-     * Der Unterschied ist der wichtigste im ganzen Plan: mit Punkt sind die
-     * Leitungen verbunden, ohne kreuzen sie sich nur. Wer ihn nicht sieht,
-     * liest die Schaltung falsch.
-     *
-     * Ein Punkt wird gezeichnet, wo ein Leitungsende oder ein Knick auf einer
-     * ANDEREN Leitung liegt — dort ist die Verbindung gewollt. Wo sich zwei
-     * Strecken bloss überschneiden, ohne dass eine dort endet oder knickt,
-     * entsteht KEIN Punkt: das ist eine Kreuzung, und sie bekommt stattdessen
-     * eine Lücke in der waagrechten Leitung.
-     * ----------------------------------------------------------------------*/
     const aufStrecke = (p, a, b) => {
         if (a.x === b.x)
             return p.x === a.x && p.y > Math.min(a.y, b.y) && p.y < Math.max(a.y, b.y);
@@ -324,8 +181,6 @@ const Schaltplan = (() => {
         };
         plan.leitungen.forEach(l => {
             l.punkte.forEach((p, i) => {
-                /* Nur Enden und Knicke zählen — ein Punkt mitten in der eigenen
-                   geraden Strecke ist kein Anschluss, sondern ein Zwischenpunkt. */
                 const istEnde = i === 0 || i === l.punkte.length - 1;
                 const istKnick = !istEnde;
                 if (!istEnde && !istKnick)
@@ -342,7 +197,6 @@ const Schaltplan = (() => {
                 });
             });
         });
-        /* Und wo drei oder mehr Leitungen denselben Endpunkt teilen. */
         const zaehler = new Map();
         plan.leitungen.forEach(l => [l.punkte[0], l.punkte[l.punkte.length - 1]].forEach(p => {
             if (!p)
@@ -358,14 +212,6 @@ const Schaltplan = (() => {
         });
         return raus;
     };
-    /**
-     * Wo kreuzen sich zwei Leitungen, OHNE verbunden zu sein (Punkt 16)?
-     *
-     * Genau dort, wo eine waagrechte und eine senkrechte Strecke sich schneiden
-     * und an dieser Stelle kein Verbindungspunkt liegt. Gezeichnet wird die
-     * Lücke in der waagrechten — so herum ist es üblich, und wichtiger: immer
-     * gleich, damit ein Plan nicht mal so und mal so aussieht.
-     */
     const kreuzungen = (plan) => {
         const punkte = new Set(verbindungspunkte(plan).map(p => p.x + ':' + p.y));
         const raus = [];
@@ -376,10 +222,10 @@ const Schaltplan = (() => {
         });
         strecken.forEach(s1 => {
             if (s1.a.y !== s1.b.y)
-                return; /* nur waagrechte */
+                return;
             strecken.forEach(s2 => {
                 if (s2.id === s1.id || s2.a.x !== s2.b.x)
-                    return; /* nur senkrechte */
+                    return;
                 const x = s2.a.x, y = s1.a.y;
                 const imX = x > Math.min(s1.a.x, s1.b.x) && x < Math.max(s1.a.x, s1.b.x);
                 const imY = y > Math.min(s2.a.y, s2.b.y) && y < Math.max(s2.a.y, s2.b.y);
@@ -389,10 +235,6 @@ const Schaltplan = (() => {
         });
         return raus;
     };
-    /* ------------------------------------------------------------------------
-     * DAS BILD
-     * ----------------------------------------------------------------------*/
-    /** Die Leitung als Pfad — mit Lücken an jeder Kreuzung ohne Verbindung. */
     const leitungPfad = (l, luecken) => {
         const teile = [];
         for (let i = 0; i + 1 < l.punkte.length; i++) {
@@ -401,7 +243,6 @@ const Schaltplan = (() => {
                 teile.push(`M${a.x},${a.y} L${b.x},${b.y}`);
                 continue;
             }
-            /* Waagrechte Strecke: die Lücken der Reihe nach aussparen. */
             const drin = luecken.filter(p => p.y === a.y &&
                 p.x > Math.min(a.x, b.x) && p.x < Math.max(a.x, b.x))
                 .map(p => p.x).sort((x, y) => (a.x < b.x ? x - y : y - x));
@@ -424,16 +265,11 @@ const Schaltplan = (() => {
         };
         const farbeVon = (ebene) => (plan.ebenen.find(x => x.id === ebene) || { farbe: 'var(--text)' }).farbe;
         const teile = [];
-        /* Raster (Punkt 21) — als Muster, damit auch ein grosser Plan schnell
-           zeichnet. Ein Punkt je Rasterzelle statt tausend einzelner Kreise. */
         if (opt.raster !== false) {
             teile.push(`<defs><pattern id="sp-raster" width="${R()}" height="${R()}" patternUnits="userSpaceOnUse">` +
                 `<circle cx="0.5" cy="0.5" r="0.7" fill="currentColor" opacity=".22"/></pattern></defs>` +
                 `<rect width="${plan.breite}" height="${plan.hoehe}" fill="url(#sp-raster)"/>`);
         }
-        /* Der Lichtschein einer leuchtenden Lampe. Einmal erklärt, überall
-           benutzt — hundert einzelne Verläufe wären hundertmal dieselbe
-           Rechenarbeit für den Browser. */
         if (opt.strom)
             teile.push(`<defs><radialGradient id="sp-schein">` +
                 `<stop offset="0%" stop-color="var(--sp-schein, #ffd54a)" stop-opacity=".85"/>` +
@@ -441,17 +277,12 @@ const Schaltplan = (() => {
                 `<stop offset="100%" stop-color="var(--sp-schein, #ffd54a)" stop-opacity="0"/>` +
                 `</radialGradient></defs>`);
         const luecken = kreuzungen(plan);
-        /* Wie schnell die Striche laufen sollen. Der Strom spannt viele
-           Grössenordnungen — von der Meldeleuchte mit 10 mA bis zum Motor mit
-           10 A —, deshalb geht die Geschwindigkeit über den Logarithmus. Linear
-           stünde die Meldeleuchte still, während der Motor flimmert. */
         const tempo = (strom, max) => {
             if (!(strom > 0) || !(max > 0))
                 return 0;
             const anteil = Math.log10(1 + strom * 1000) / Math.log10(1 + max * 1000);
-            return 1.6 - 1.25 * Math.max(0, Math.min(1, anteil)); /* Sekunden je Runde */
+            return 1.6 - 1.25 * Math.max(0, Math.min(1, anteil));
         };
-        /* Leitungen zuerst — Symbole liegen darüber und decken die Enden sauber ab. */
         plan.leitungen.forEach(l => {
             if (!sichtbar(l.ebene))
                 return;
@@ -462,11 +293,6 @@ const Schaltplan = (() => {
             teile.push(`<path class="sp-leitung${gewaehlt ? ' sp-gewaehlt' : ''}" data-id="${esc(l.id)}" ` +
                 `d="${d}" fill="none" stroke="${farbeVon(l.ebene)}" stroke-width="2" ` +
                 `stroke-linecap="round"/>`);
-            /* Und darüber, wenn die Simulation läuft, der fliessende Strich.
-               Er ersetzt die Leitung nicht, sondern legt sich darauf: bleibt die
-               Bewegung aus (Systemeinstellung „weniger Bewegung"), ist die Leitung
-               immer noch als stromführend zu erkennen — an der Strichelung, nicht
-               nur an der Farbe. §38 verlangt genau das. */
             if (!opt.strom)
                 return;
             const netz = opt.strom.leitungNetz[l.id];
@@ -480,20 +306,7 @@ const Schaltplan = (() => {
                 `stroke-width="3" stroke-linecap="butt" ` +
                 `style="animation-duration:${s.toFixed(2)}s"><title>${zeigeZahl(i, 'A')}</title></path>`);
         });
-        /* Verbindungspunkte (Punkt 15) */
         verbindungspunkte(plan).forEach(p => teile.push(`<circle class="sp-knoten" cx="${p.x}" cy="${p.y}" r="4" fill="currentColor"/>`));
-        /* Griffe zum Antippen (Punkt 59) — je Leitung EIN Punkt auf ihrer Mitte,
-           nicht ein breiter Strich über ihrer ganzen Länge.
-           ------------------------------------------------------------------
-           Der Strich war der erste Versuch, und er kann nicht funktionieren:
-           zwei Leitungsbahnen liegen 16 Einheiten auseinander, am Bildschirm
-           sind das gemessene 7 px. Ein Fangstrich, der §37 mit seinen 44 px
-           genügt, würde sechs Nachbarn mitfangen — und dann tippt man auf eine
-           Leitung und markiert eine andere. Das ist schlimmer als ein zu
-           kleines Ziel, denn es sieht nicht nach einem Fehler aus.
-           Die Punkte stehen dagegen weit auseinander, sie sind SICHTBAR (man
-           weiss also, wohin zu tippen ist), und ihre Grösse hängt über
-           `vector-effect` nicht am Massstab des Plans. */
         if (opt.tippbar) {
             const gesetzt = [];
             plan.leitungen.forEach(l => {
@@ -502,9 +315,6 @@ const Schaltplan = (() => {
                 const pkte = l.punkte || [];
                 if (pkte.length < 2)
                     return;
-                /* Die LÄNGSTE Teilstrecke — nicht der Mittelpunkt der Punktliste.
-                   Bei einer Leitung, die kurz absteigt und dann weit quer läuft,
-                   sässe der Griff sonst in der Ecke. */
                 let best = 0, laenge = -1;
                 for (let i = 0; i + 1 < pkte.length; i++) {
                     const a = pkte[i], b = pkte[i + 1];
@@ -515,17 +325,9 @@ const Schaltplan = (() => {
                     }
                 }
                 const a = pkte[best], b = pkte[best + 1];
-                /* Und jetzt eine Stelle AUF dieser Strecke suchen, die weit genug
-                   von allen bisherigen Griffen weg ist. Zuerst sass jeder auf der
-                   Mitte, und nachgemessen lagen dann drei Griffe auf 7 px beisammen
-                   — man tippt auf den einen und trifft den anderen. Das ist
-                   schlimmer als ein zu kleines Ziel, weil es nicht nach einem Fehler
-                   aussieht.
-                   Probiert werden elf Stellen von einem Ende zum anderen, und
-                   genommen wird die mit dem grössten Abstand zum nächsten Nachbarn. */
                 let wahlX = (a.x + b.x) / 2, wahlY = (a.y + b.y) / 2, weiteste = -1;
                 for (let k = 0; k <= 10; k++) {
-                    const t = 0.12 + k * 0.076; /* 0,12 bis 0,88 — nie ganz am Ende */
+                    const t = 0.12 + k * 0.076;
                     const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t;
                     let naechster = Infinity;
                     gesetzt.forEach(g => {
@@ -546,7 +348,6 @@ const Schaltplan = (() => {
                     `r="9"><title>Leitung antippen</title></circle>`);
             });
         }
-        /* Symbole */
         plan.teile.forEach(t => {
             if (!sichtbar(t.ebene))
                 return;
@@ -561,14 +362,9 @@ const Schaltplan = (() => {
             const innen = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
             const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
             const mass = Register.fachzeichen.masse(t.zeichen, 0);
-            /* Was die Simulation über dieses Bauteil weiss. */
             const w = opt.strom ? opt.strom.werte[t.id] : undefined;
             const vh = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
                 ? Stromfluss.verhalten(t.zeichen) : null;
-            /* Leuchtet es? Der Schein sitzt UNTER dem Symbol, damit die Linien
-               darüber lesbar bleiben. Die Stärke folgt der Leistung, nicht dem
-               Strom — eine Lampe an halber Spannung ist ein Viertel so hell, und
-               genau das soll man an der Reihenschaltung sehen können. */
             let schein = '';
             if (w && typeof w.helligkeit === 'number' && w.helligkeit > 0.01) {
                 const h = Math.min(1, w.helligkeit);
@@ -576,9 +372,6 @@ const Schaltplan = (() => {
                     `r="${Math.max(mass.w, mass.h) * 0.75}" fill="url(#sp-schein)" ` +
                     `stroke="none" opacity="${(0.25 + 0.65 * h).toFixed(2)}"/>`;
             }
-            /* Messwerte anschreiben. Beim Messgerät steht der Wert, den es misst;
-               bei allem anderen Spannung und Strom, weil das die zwei Zahlen sind,
-               nach denen in jeder Aufgabe gefragt wird. */
             let anzeige = '';
             if (w && opt.messwerte !== false && opt.strom) {
                 const art = vh ? vh.art : '';
@@ -597,9 +390,6 @@ const Schaltplan = (() => {
                 `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
                 `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
-                /* Eine unsichtbare Fläche, damit auch die Lücken im Symbol greifbar
-                   sind — ein Kontakt besteht fast nur aus Linien, und Linien trifft
-                   man mit dem Finger nicht. */
                 `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
                 `fill="transparent" stroke="none"/>` + schein + innen + anzeige +
                 (opt.anschluesse ? anschluesseVon(t).map(a => `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
@@ -611,7 +401,6 @@ const Schaltplan = (() => {
                         `font-weight="600">${esc(t.bmk)}</text>` : '') +
                 `</g>`);
         });
-        /* Freie Beschriftungen (Punkt 47) */
         plan.texte.forEach(x => {
             if (!sichtbar(x.ebene))
                 return;
@@ -621,12 +410,6 @@ const Schaltplan = (() => {
         return `<svg class="sp-flaeche" viewBox="0 0 ${plan.breite} ${plan.hoehe}" ` +
             `width="${plan.breite}" height="${plan.hoehe}">` + teile.join('') + '</svg>';
     };
-    /* ------------------------------------------------------------------------
-     * DIE STROMSCHIENEN
-     * ------------------------------------------------------------------------
-     * Ein Stromlaufplan beginnt immer gleich: oben L, unten N. Wer das jedes
-     * Mal von Hand zieht, verliert Zeit an etwas, das nie anders ist.
-     * ----------------------------------------------------------------------*/
     const schienenBauen = (plan) => {
         const a = artVon(plan.art);
         if (!a.schienen || a.schienen === 'keine')
@@ -650,21 +433,6 @@ const Schaltplan = (() => {
             mach(plan.hoehe - 40, 'PE');
         }
     };
-    /* --- Das Netz und die Beispielschaltungen (E262) --------------------------
-     * Redur: „füge dort alle Leitungen wie L1 und N ein, damit ich direkt
-     * testen kann — oder für eine Türklingel; es sollte direkt dort sein,
-     * also im Code."
-     *
-     * `schienenBauen` (oben) zeichnet nur Striche — zum ZEICHNEN. Hier
-     * entsteht das NETZ ZUM RECHNEN: dieselben Schienen, aber an eine echte
-     * Quelle gebunden, damit die Simulation sofort etwas zu rechnen hat.
-     * Ein Zweig, dessen Leitung auf einer Schiene ENDET, ist verbunden — die
-     * Simulation zapft Sammelschienen ausdrücklich an (simulation.ts,
-     * netzInfo). Und darauf bauen die Beispielschaltungen aus dem Lehrmittel:
-     * fertig verdrahtet, ein Klick, Strom drücken, schalten.
-     * ------------------------------------------------------------------------*/
-    /** L1 oben, N unten, links die Quelle dazwischen. Gibt die Geometrie
-     *  zurück, damit ein Beispiel seine Zweige daran hängen kann. */
     const netzBauen = (plan, ebene = 'plan', volt) => {
         const oben = rasten(40);
         const unten = rasten(plan.hoehe - 40);
@@ -686,8 +454,6 @@ const Schaltplan = (() => {
         plan.texte.push({ id: uid(), x: kx + 14, y: oben - 8, t: 'L1', ebene }, { id: uid(), x: kx + 14, y: unten - 8, t: 'N', ebene });
         return { oben, unten, quelle };
     };
-    /** Die eingebauten Beispiele. Namen erscheinen im Menü, der Hinweis im
-     *  Toast nach dem Einfügen — er sagt, WOMIT man jetzt spielen kann. */
     const BEISPIELE = [
         { id: 'ausschaltung', name: 'Ausschaltung — eine Lampe, ein Schalter',
             hinweis: 'Strom drücken, dann auf S1 tippen: E1 leuchtet.' },
@@ -718,8 +484,8 @@ const Schaltplan = (() => {
         };
         if (id === 'ausschaltung') {
             const n = netzBauen(plan, ebene);
-            const s = teil('ch-schema0', 380, 140); /* 3 oben (400,140), 4 unten (400,200) */
-            const h = teil('lampe', 370, 320); /* X1 (400,320), X2 (400,380) */
+            const s = teil('ch-schema0', 380, 140);
+            const h = teil('lampe', 370, 320);
             draht([{ x: 400, y: n.oben }, { x: 400, y: 140 }], undefined, undefined, s, '3');
             draht([{ x: 400, y: 200 }, { x: 400, y: 320 }], s, '4', h, 'X1');
             draht([{ x: 400, y: 380 }, { x: 400, y: n.unten }], h, 'X2');
@@ -727,13 +493,9 @@ const Schaltplan = (() => {
         }
         if (id === 'wechselschaltung') {
             const n = netzBauen(plan, ebene);
-            /* S1 steht auf dem Kopf (180°): sein 3 zeigt zur L1-Schiene, seine
-               korrespondierenden 1/2 nach unten zu S2. So laufen beide
-               Korrespondierenden als gerade Strecken — keine Leitung kreuzt
-               einen Anschluss (die test239-Lehre). */
-            const s1 = teil('ch-schema3', 350, 120, 180); /* 3 (380,120) · 1 (400,180) · 2 (360,180) */
-            const s2 = teil('ch-schema3', 350, 300); /* 1 (360,300) · 2 (400,300) · 3 (380,360) */
-            const h = teil('lampe', 350, 440); /* X1 (380,440), X2 (380,500) */
+            const s1 = teil('ch-schema3', 350, 120, 180);
+            const s2 = teil('ch-schema3', 350, 300);
+            const h = teil('lampe', 350, 440);
             draht([{ x: 380, y: n.oben }, { x: 380, y: 120 }], undefined, undefined, s1, '3');
             draht([{ x: 400, y: 180 }, { x: 400, y: 300 }], s1, '1', s2, '2');
             draht([{ x: 360, y: 180 }, { x: 360, y: 300 }], s1, '2', s2, '1');
@@ -742,10 +504,9 @@ const Schaltplan = (() => {
             return true;
         }
         if (id === 'tuerklingel') {
-            /* 12 V wie am Klingeltrafo — die Quelle trägt den Wert selbst. */
             const n = netzBauen(plan, ebene, 12);
-            const s = teil('taster-schliesser', 380, 140); /* 3 (400,140), 4 (400,200) */
-            const p = teil('klingel', 370, 320); /* X1 (400,320), X2 (400,380) */
+            const s = teil('taster-schliesser', 380, 140);
+            const p = teil('klingel', 370, 320);
             draht([{ x: 400, y: n.oben }, { x: 400, y: 140 }], undefined, undefined, s, '3');
             draht([{ x: 400, y: 200 }, { x: 400, y: 320 }], s, '4', p, 'X1');
             draht([{ x: 400, y: 380 }, { x: 400, y: n.unten }], p, 'X2');

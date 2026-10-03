@@ -1,68 +1,25 @@
 "use strict";
-/* ============================================================================
- * core/ink/stroke.js — der nasse Strich: waechst, glaettet, sagt voraus
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/ink/stroke.ts`. `npm run bauen:ts` schreibt
- * daraus diese Datei.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ink/stroke.ts (npm run bauen:ts). */
 const InkStroke = (() => {
-    /* --------------------------------------------------------------------- *
-     * Rundung und Zahlen — WOERTLICH wie in `InkGeometry`.
-     * Eine eigene Rundung waere der sichere Weg zu einem Umriss, der um ein
-     * Hundertstel abweicht und beim Absetzen sichtbar springt.
-     * --------------------------------------------------------------------- */
     const r2 = (v) => Math.round(v * 100) / 100;
     const endlich = (v) => {
         const n = Number(v);
         return Number.isFinite(n) ? n : 0;
     };
-    /* Der Mittelpunkt zweier Punkte, gerundet wie in `seite()`. */
-    /* Seit E676 kennt das Stueck die Ecke — und es steht in `InkGeometry`,
-       damit Feder und `outline` dieselbe Rechnung nehmen (test366 §1).
-       `vorher` ist der Punkt davor; ohne ihn (am Anfang) ist es die Q-Kurve. */
     const qStueck = (vorher, a, b) => globalThis.InkGeometry.stueck(vorher ?? null, a, b);
-    /* ===================================================================== *
-     * 1 · DIE FEDER — ein Umriss, der waechst
-     * ===================================================================== *
-     *
-     * `InkGeometry.outline` rechnet den Versatz eines Punktes i aus seinen
-     * NACHBARN i-1 und i+1. Damit steht der Versatz von Punkt i erst fest,
-     * wenn Punkt i+1 da ist — und das Bogenstueck zwischen i und i+1 erst,
-     * wenn i+2 da ist. Die Feder haelt genau diese zwei Punkte Rueckstand
-     * offen und friert alles davor ein.
-     *
-     * Was je Punkt anfaellt: zwei Wurzeln, zwei Zeichenketten, zwei Anhaenge.
-     * Was NICHT mehr anfaellt: der ganze Strich.
-     * --------------------------------------------------------------------- */
     class Lauf {
-        /* Die Mittellinie — dieselben Punkte, die auch gespeichert werden. */
         pts = [];
         halb = [];
-        /* Die beiden Konturen. `links`/`rechts` werden nur fuer die letzten
-           zwei Punkte noch angefasst; alles davor steht fest. */
         links = [];
         rechts = [];
-        /* Die eingefrorenen Bogenstuecke. `linksFest[i]` ist das Stueck, das
-           `seite(links)` fuer den Index i erzeugt; `rechtsFest[j]` das Stueck,
-           das `seite(rueck)` fuer den Ruecklauf bei `rechts[j]` erzeugt. */
         linksFest = [];
         rechtsFest = [];
-        /* Bis wohin ist eingefroren (ausschliesslich). */
         fest = 0;
-        /* Der nasse Schwanz: gezeichnet, nie gespeichert. */
         nassPts = [];
         nassHalb = [];
-        /** Wie viele echte Punkte im Strich stehen. */
         laenge() { return this.pts.length; }
-        /** Die Mittellinie, wie sie gespeichert wird — ohne den nassen Schwanz. */
         punkte() { return this.pts.map(p => [p[0], p[1]]); }
-        /** Die halben Breiten, in derselben Reihenfolge. */
         breiten() { return this.halb.slice(); }
-        /**
-         * Ein echter Punkt. `halb` ist die halbe Strichbreite an dieser Stelle —
-         * dieselbe Zahl, die `zeichneMarke` fuer den trockenen Strich rechnet.
-         */
         punkt(p, halb) {
             this.pts.push([endlich(p[0]), endlich(p[1])]);
             this.halb.push(Math.max(0.15, Number.isFinite(halb) ? halb : 1));
@@ -70,27 +27,16 @@ const InkStroke = (() => {
             this.nassHalb.length = 0;
             this.nachziehen();
         }
-        /**
-         * Der nasse Schwanz — die Vorhersage. Ersetzt bei jedem Aufruf den
-         * vorigen und geht NIE in `punkte()` ein.
-         */
         nass(pts, halb) {
             this.nassPts = pts.map(p => [endlich(p[0]), endlich(p[1])]);
             this.nassHalb = this.nassPts.map((_p, i) => Math.max(0.15, Number.isFinite(halb[i]) ? Number(halb[i]) : (this.halb[this.halb.length - 1] ?? 1)));
         }
-        /**
-         * Der SVG-Pfad des Umrisses. Zeichengleich mit
-         * `InkGeometry.outline(punkte(), breiten())`, solange kein nasser
-         * Schwanz gesetzt ist.
-         */
         d() {
             const pts = this.nassPts.length ? this.pts.concat(this.nassPts) : this.pts;
             const halb = this.nassHalb.length ? this.halb.concat(this.nassHalb) : this.halb;
             const n = pts.length;
             if (n < 2)
                 return '';
-            /* Die Kontur der Punkte, die noch nicht feststehen (hoechstens ein
-               paar), wird hier frisch gerechnet — der Rest steht schon. */
             const links = this.links.slice(0, Math.max(0, n - 2));
             const rechts = this.rechts.slice(0, Math.max(0, n - 2));
             for (let i = links.length; i < n; i++) {
@@ -98,9 +44,6 @@ const InkStroke = (() => {
                 links.push(paar[0]);
                 rechts.push(paar[1]);
             }
-            /* Die eingefrorenen Stuecke gelten nur, solange kein nasser Schwanz
-               die letzten Punkte verschiebt — und er verschiebt hoechstens die
-               letzten zwei, weshalb `fest` nie weiter reicht als n-2. */
             const grenze = Math.min(this.fest, Math.max(0, n - 2));
             let linksTeil = this.linksFest.slice(0, grenze).join('');
             for (let i = Math.max(1, grenze); i <= n - 2; i++)
@@ -109,8 +52,6 @@ const InkStroke = (() => {
                 linksTeil = ` L${links[1][0]} ${links[1][1]}`;
             else
                 linksTeil += ` L${links[n - 1][0]} ${links[n - 1][1]}`;
-            /* Der Ruecklauf laeuft von hinten nach vorn: das Stueck bei `rechts[j]`
-               zeigt auf `rechts[j-1]`, und die Reihenfolge ist absteigend. */
             let rechtsTeil = '';
             if (n === 2) {
                 rechtsTeil = ` L${rechts[0][0]} ${rechts[0][1]}`;
@@ -129,17 +70,13 @@ const InkStroke = (() => {
                 rechtsTeil +
                 ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0][0]} ${links[0][1]} Z`;
         }
-        /* Alles einfrieren, was durch den neuen Punkt endgueltig geworden ist. */
         nachziehen() {
             const n = this.pts.length;
-            /* Die Kontur von Punkt i braucht i-1 und i+1; sie steht fest, sobald
-               i+1 existiert — also fuer alle i <= n-2. */
             for (let i = this.links.length; i <= n - 2; i++) {
                 const paar = versatz(this.pts, this.halb, i, n);
                 this.links[i] = paar[0];
                 this.rechts[i] = paar[1];
             }
-            /* Ein Bogenstueck bei i braucht die Kontur von i und i+1. */
             for (let i = Math.max(1, this.fest); i <= n - 3; i++) {
                 this.linksFest[i] = qStueck(this.links[i - 1], this.links[i], this.links[i + 1]);
                 this.rechtsFest[i] = qStueck(this.rechts[i + 1], this.rechts[i], this.rechts[i - 1]);
@@ -151,7 +88,6 @@ const InkStroke = (() => {
         const w = Number(halb[Math.min(i, halb.length - 1)]);
         return Math.max(0.15, Number.isFinite(w) ? w : 1);
     };
-    /** Die zwei Konturpunkte zu einem Mittellinienpunkt — Rechnung wie `outline`. */
     const versatz = (pts, halb, i, n) => {
         const prev = pts[Math.max(0, i - 1)];
         const next = pts[Math.min(n - 1, i + 1)];
@@ -161,22 +97,14 @@ const InkStroke = (() => {
         tx /= len;
         ty /= len;
         const w = halbAn(halb, i);
-        /* Links ist links (E704) — dieselbe Seite wie in `InkGeometry.seiten`,
-           sonst zeigten die Kappen der Feder nach innen und die des
-           trockenen Strichs nach aussen. */
         return [
             [r2(pts[i][0] + ty * w), r2(pts[i][1] - tx * w)],
             [r2(pts[i][0] - ty * w), r2(pts[i][1] + tx * w)]
         ];
     };
-    /* DIE FEDER KENNT GELENKE (E704): ob ein Punkt eine Ecke ist, steht mit
-     * seinem Nachfolger fest; dann ist der Lauf fertig und wird einmal
-     * gerechnet. So bleibt `test366 §1` zeichengleich. */
     class Feder {
         pts = [];
         halb = [];
-        /* Die fertigen Läufe, schon aneinandergehängt (jeder mit einem
-           Leerzeichen dahinter, wie `outline` sie verbindet). */
         fertig = '';
         lauf = new Lauf();
         nassPts = [];
@@ -184,10 +112,7 @@ const InkStroke = (() => {
         laenge() { return this.pts.length; }
         punkte() { return this.pts.map(p => [p[0], p[1]]); }
         breiten() { return this.halb.slice(); }
-        /** Die Punkte, wie sie GERADE zu sehen sind — mit dem nassen Schwanz.
-           (E704) */
         punkteMitNass() { return this.pts.concat(this.nassPts).map(p => [p[0], p[1]]); }
-        /** Wie viele Läufe der Umriss gerade hat — für den Prüflauf. */
         laeufe() { return (this.fertig.match(/ Z /g) || []).length + (this.pts.length >= 2 ? 1 : 0); }
         punkt(p, halb) {
             const q = [endlich(p[0]), endlich(p[1])];
@@ -209,17 +134,7 @@ const InkStroke = (() => {
             this.lauf.nass(pts, halb);
             this.nassPts = pts.map(p => [endlich(p[0]), endlich(p[1])]);
         }
-        /**
-         * Der SVG-Pfad des Umrisses. Zeichengleich mit
-         * `InkGeometry.outline(punkte(), breiten())`, solange kein nasser
-         * Schwanz gesetzt ist.
-         */
         d() { return this.fertig + this.lauf.d(); }
-        /**
-         * Der geglaettete Mittellinien-Pfad — fuer Kugelschreiber und Marker,
-         * die als Strich (`stroke`) und nicht als Flaeche gezeichnet werden.
-         * Zeichengleich mit `InkGeometry.path(punkte())`.
-         */
         linie() {
             const pts = this.nassPts.length ? this.pts.concat(this.nassPts) : this.pts;
             const n = pts.length;
@@ -244,62 +159,16 @@ const InkStroke = (() => {
                 this.linieFest.length = Math.max(0, n - 2);
         }
     }
-    /* ===================================================================== *
-     * 2 · DER GLAETTER — stark, wo die Hand zittert; schwach, wo sie eilt
-     * ===================================================================== *
-     *
-     * Ein fester Filter kann nur eines von beidem: entweder er nimmt das
-     * Zittern weg und der Strich haengt hinter dem Stift, oder er bleibt am
-     * Stift und jedes Zittern steht im Papier. Deshalb haengt die Staerke an
-     * der Geschwindigkeit.
-     *
-     * Die drei Zahlen sind gemessen, nicht geraten — `test366` faehrt ein
-     * Zittersignal (0,4 px bei 60 Hz) und einen schnellen Zug hindurch und
-     * haelt beides fest: das Zittern muss deutlich kleiner werden, der
-     * Rueckstand beim schnellen Zug klein bleiben.
-     * --------------------------------------------------------------------- */
-    const ALPHA_LANGSAM = 0.28; /* bei stehender Hand: viel mitteln */
-    const ALPHA_SCHNELL = 0.92; /* im Zug: fast unveraendert durchlassen */
-    const TEMPO_VOLL = 1.1; /* px je ms, ab hier gilt ALPHA_SCHNELL */
-    /* WORAN DIE DREI ZAHLEN GEMESSEN WURDEN (E504): an 60 Hz, also 16 ms je
-       Punkt. Sie stehen unveraendert da — diese Zahl sagt nur, WOBEI sie
-       galten, und macht sie damit auf jede andere Rate uebertragbar. */
+    const ALPHA_LANGSAM = 0.28;
+    const ALPHA_SCHNELL = 0.92;
+    const TEMPO_VOLL = 1.1;
     const MESS_MS = 16;
-    /* ── DIE ECKE (E676) ────────────────────────────────────────────────────
-     * Ein Filter, der mittelt, kennt keine Ecke: an der Spitze eines „M"
-     * laeuft er weiter in die alte Richtung, waehrend die Hand schon
-     * zurueckkommt, und rundet ab, was spitz gemeint war. Die Vorhersage
-     * erkennt die Kehre seit E376 (`KEHRE`), der Glaetter nicht — gemessen
-     * in `test564`: 2,62 px neben der Spitze eines langsam gezogenen „M".
-     *
-     * Jetzt merkt er sich die RICHTUNG der Hand — gemessen ueber eine feste
-     * STRECKE, nicht ueber Punkte: bei 240 Hz liegen die Meldungen viermal
-     * dichter, und ein Zittern von 0,4 px darf keine Richtung sein (E504,
-     * dieselbe Lehre). Kippt die Richtung (cos < KEHRE), ist die Ecke der
-     * rohe Punkt seit dem letzten Anker, der am weitesten in der ALTEN
-     * Richtung lag; dorthin springt der Filter, bevor er weitermittelt.
-     * Ein sanfter Bogen kippt nie um mehr als ein paar Grad je Strecke und
-     * bleibt, was er war.
-     * ---------------------------------------------------------------------- */
-    const ECKE_SCHRITT = 2.5; /* px — ab dieser Strecke gilt eine Richtung als gemessen */
-    /**
-     * Ein Glaetter mit Gedaechtnis. Der erste Punkt geht unveraendert durch —
-     * ein Strich, der nicht dort beginnt, wo der Stift aufsetzte, ist falsch.
-     */
+    const ECKE_SCHRITT = 2.5;
     const glaetter = (start) => {
         let x = endlich(start[0]);
         let y = endlich(start[1]);
-        /* DAS TEMPO IST DAS DER HAND, nicht das des Rueckstands (E504).
-           Hier stand `|p − x| / ms` — der Abstand zum GEGLAETTETEN Punkt. Der
-           ist selbst ein Ergebnis des Filters, und damit hing die Filterstaerke
-           wieder an der Abtastrate: bei 240 Hz meldete derselbe Zug ein
-           doppelt so hohes „Tempo" wie bei 60 Hz, weil der Rueckstand kleiner
-           war, das `dt` aber viermal kleiner. Gemessen von Punkt zu Punkt der
-           EINGABE ist es die Geschwindigkeit, die die Hand wirklich hat. */
         let vx = endlich(start[0]);
         let vy = endlich(start[1]);
-        /* Die Ecke (E676): der Anker der letzten Richtungsmessung, die
-           gemessene Richtung (0/0 = noch keine) und die rohen Punkte seither. */
         let ax = vx, ay = vy;
         let rx = 0, ry = 0;
         let seitAnker = [];
@@ -332,10 +201,6 @@ const InkStroke = (() => {
                     ax = px;
                     ay = py;
                     seitAnker = [[px, py]];
-                    /* Die Ecke SELBST ist der Punkt dieser Meldung — kein Mittel aus
-                       Ecke und Hand. Gemittelt laege sie bei 60 Hz 1,4 px und bei
-                       240 Hz 0,3 px neben der Spitze (gemessen), also wieder an der
-                       Abtastrate; so liegt sie im Strich, bei jeder Rate gleich. */
                     return [x, y];
                 }
                 rx = nx;
@@ -346,28 +211,6 @@ const InkStroke = (() => {
             }
             const teil = Math.min(1, tempo / TEMPO_VOLL);
             const gemessen = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
-            /* ── ZEIT, NICHT MESSUNGEN (E504) ────────────────────────────────────
-             * Bis hierher wurde `gemessen` unmittelbar angewandt — ein fester
-             * Anteil JE PUNKT. Das Tempo war schon zeitnormiert, die Wirkung
-             * nicht, und das ist genau der Fehler, den das Stift-Dossier auf
-             * Seite 8 beschreibt: „Muss pro Geraet und Samplingrate abgestimmt
-             * werden; falsche Parameter verzerren Schrift."
-             *
-             * Die Zeitkonstante eines solchen Filters ist tau = dt·(1−a)/a. Bei
-             * festem `a` SCHRUMPFT sie mit der Abtastrate: derselbe Filter ist
-             * auf einem 240-Hz-Stift viermal schwaecher als auf dem 60-Hz-Geraet,
-             * an dem die drei Zahlen oben gemessen wurden. Nachgemessen in
-             * `test472` §1, VOR der Reparatur: derselbe Zug verzoegerte bei
-             * 60 Hz um 3,467 px, bei 120 Hz um 1,734 und bei 240 Hz um 0,867 —
-             * halbiert und geviertelt, genau mit der Rate. Und das Restzittern
-             * je Millisekunde war bei 240 Hz FUENFMAL groesser.
-             *
-             * Jetzt wird aus dem gemessenen Anteil erst eine Zeitkonstante und
-             * daraus der Anteil fuer DIESES `dt` — die Form des 1-Euro-Filters,
-             * a = 1/(1 + tau/dt). Bei 16 ms kommt Zeichen fuer Zeichen dasselbe
-             * heraus wie vorher (a = a_gemessen), also aendert sich am Geraet,
-             * an dem gemessen wurde, nichts. `test366` haelt genau das fest.
-             * ------------------------------------------------------------------ */
             const tau = MESS_MS * (1 - gemessen) / gemessen;
             const alpha = ms / (ms + tau);
             x += (px - x) * alpha;
@@ -375,24 +218,6 @@ const InkStroke = (() => {
             return [x, y];
         };
     };
-    /**
-     * DER DRUCK BRAUCHT EIN ANDERES WERKZEUG ALS DER ORT — und das war der
-     * teuerste Irrtum dieses Bogens.
-     *
-     * Zuerst stand hier derselbe Filter wie fuer den Ort: ein fester Anteil
-     * (0,35) je Punkt. `test343` wurde davon rot, und zu Recht: ein Bogen von
-     * 13 Punkten, der von 0,15 auf 0,95 steigt und zurueckfaellt, kam
-     * abgeflacht heraus. Der Fueller schwoll nicht mehr an — genau das, was
-     * E351 gebaut hatte, war weg.
-     *
-     * Was hier gebraucht wird, ist kein Mittel, sondern ein MITTLERER WERT:
-     * der Median von drei aufeinanderfolgenden Messungen. Er wirft einen
-     * einzelnen Ausreisser weg (das ist, was ein zappelnder Sensor liefert)
-     * und laesst eine steigende Reihe UNVERAENDERT durch (das ist, was eine
-     * druckende Hand liefert). Beides ist geprueft, nicht behauptet.
-     *
-     * Der Preis ist ein Punkt Verzoegerung. Der ist die Sache wert.
-     */
     const druckGlaetter = (start) => {
         const drei = [Number.isFinite(start) ? start : 0.5];
         return (p) => {
@@ -405,64 +230,9 @@ const InkStroke = (() => {
             return Math.round(sortiert[1] * 1000) / 1000;
         };
     };
-    /* ===================================================================== *
-     * 3 · DIE VORHERSAGE — der nasse Schwanz bis zur Spitze
-     * ===================================================================== *
-     *
-     * Zwischen der Bewegung der Hand und dem Bild auf dem Glas liegen immer
-     * ein paar Millisekunden. GoodNotes fuellt sie, indem es ein Stueck
-     * weiterzeichnet, als ginge es so weiter. Das ist eine Vermutung, und
-     * Vermutungen gehoeren gedeckelt:
-     *
-     *   · hoechstens `VORHER_MS` weit,
-     *   · hoechstens `VORHER_PX` lang,
-     *   · und bei einer Richtungsaenderung gar nicht — beim Kehren wuerde
-     *     der Schwanz nach aussen schiessen und ein Haekchen malen, das
-     *     niemand gezogen hat.
-     * --------------------------------------------------------------------- */
-    const VORHER_MS = 14; /* etwa ein Bild bei 72 Hz */
+    const VORHER_MS = 14;
     const VORHER_PX = 26;
-    const KEHRE = 0.55; /* cos der groessten erlaubten Richtungsaenderung */
-    /**
-     * Ein bis zwei Punkte, die den Strich zur Stiftspitze verlaengern.
-     * Leer, wenn zu wenig bekannt ist oder die Richtung gerade kippt.
-     *
-     * `abstand` ist die gemessene Zeit zwischen den letzten zwei Punkten. Sie
-     * MUSS herein: ohne sie waere die Vorhersage in Punkten gerechnet statt in
-     * Millisekunden, und derselbe Vorlauf waere bei 60 Hz doppelt so lang wie
-     * bei 120 Hz — gemessen 17,5 px statt 8,8 px bei gleichem Zug.
-     *
-     * ══ HIER GEHEN ROHE PUNKTE HEREIN, KEINE GEGLAETTETEN (E511) ═══════════
-     * Bis hierher bekam diese Funktion `running.pts` — die GEGLAETTETEN
-     * Punkte. Sie verlaengerte damit einen Strich, der selbst schon hinter
-     * der Hand herlief, und der Vorlauf ging fuer den Nachlauf drauf.
-     *
-     * GEMESSEN (§36), Abstand der gezeichneten Spitze von der Stelle, an der
-     * der Stift beim Erscheinen des Bildes WIRKLICH ist (ein Bild = 16,7 ms):
-     *
-     *     Tempo        alt        neu
-     *     0,1 px/ms    3,40 px    0,00 px
-     *     0,4 px/ms    7,16 px    0,00 px      <- das Tempo der Handschrift
-     *     1,2 px/ms    4,91 px    0,00 px
-     *     2,5 px/ms   19,23 px   15,75 px      <- die 26-px-Grenze bremst
-     *
-     * Der Fehler war am groessten genau dort, wo ein Mensch schreibt, und er
-     * wechselte das Vorzeichen: langsam blieb die Tinte zurueck, schnell
-     * schoss sie voraus. Beides fuehlt sich an wie ein Stift, der nicht am
-     * Papier klebt.
-     *
-     * DIE GLAETTUNG BLEIBT, WIE SIE IST. Sie nimmt das Zittern, und dafuer
-     * ist ihr Nachlauf der Preis. Bezahlt wird er jetzt dort, wo er nichts
-     * kostet: im nassen Schwanz, der gezeichnet und NIE gespeichert wird.
-     *
-     * Und der Deckel `min(3, ms/abstand)` ist weg. Er begrenzte den Vorlauf
-     * auf das Dreifache des letzten Schrittes und war damit wieder von der
-     * Abtastrate abhaengig — bei 240 Hz griff er, bei 60 Hz nie. Genau die
-     * Sorte Abhaengigkeit, die E504 aus dem Glaetter genommen hat. Was
-     * bleibt, ist die Grenze in PIXELN, und die ist ehrlich: sie sagt, wie
-     * weit eine Vermutung reichen darf, unabhaengig davon, wie oft ein
-     * Geraet sich meldet.
-     */
+    const KEHRE = 0.55;
     const vorhersage = (pts, ms = VORHER_MS, abstand = 8, bremse = 1) => {
         const n = Array.isArray(pts) ? pts.length : 0;
         if (n < 3)
@@ -473,26 +243,19 @@ const InkStroke = (() => {
         const l1 = Math.hypot(v1x, v1y), l2 = Math.hypot(v2x, v2y);
         if (l2 < 0.3)
             return [];
-        /* Kippt die Richtung, wird nicht geraten. */
         if (l1 > 0.3 && (v1x * v2x + v1y * v2y) / (l1 * l2) < KEHRE)
             return [];
         const dt = Math.max(1, Number.isFinite(abstand) ? abstand : 8);
-        /* Die Bremse (E704): 1 heisst wie bisher. */
         const weit = Math.min(VORHER_PX, l2 / dt * Math.max(0, ms))
             * Math.max(0, Math.min(1, Number.isFinite(bremse) ? bremse : 1));
         if (weit < 0.4)
             return [];
         const ux = v2x / l2, uy = v2y / l2;
-        /* Zwei Punkte, der zweite gedaempft — so laeuft der Schwanz aus,
-           statt in einer Spitze zu enden. */
         return [
             [r2(c[0] + ux * weit * 0.6), r2(c[1] + uy * weit * 0.6)],
             [r2(c[0] + ux * weit), r2(c[1] + uy * weit)]
         ];
     };
-    /* 4 · DER DECKEL AUCH FÜR DEN BROWSER (E704): die Punkte aus
-     * `getPredictedEvents()` unter dieselben Regeln wie `vorhersage` —
-     * keine Kehre, höchstens so weit wie erlaubt, mal der Bremse. */
     const deckeln = (roh, vorher, abstand = 8, bremse = 1) => {
         const n = Array.isArray(roh) ? roh.length : 0;
         if (n < 2 || !Array.isArray(vorher) || !vorher.length)
@@ -529,9 +292,6 @@ const InkStroke = (() => {
         }
         return aus;
     };
-    /** DIE BREMSE (E704): fällt der Druck dreimal und liegt unter 60 % des
-     *  Höchsten der letzten acht, hebt der Stift ab — 0. Bremst die Hand
-     *  unter 70 % des vorigen Tempos, im selben Verhältnis. Sonst 1. */
     const bremse = (roh, zeiten, drucke = []) => {
         const d = Array.isArray(drucke) ? drucke.filter(v => Number.isFinite(v)) : [];
         if (d.length >= 3) {
@@ -552,19 +312,15 @@ const InkStroke = (() => {
         const verhaeltnis = v2 / v1;
         return verhaeltnis < 0.7 ? Math.max(0, verhaeltnis) : 1;
     };
-    /* 5 · DAS TEMPO MACHT DEN FÜLLER DÜNNER (E704, L209 Punkt 1): gemessen an
-       den ROHEN Punkten über 32 ms, in pt/ms; bis TEMPO_AB nichts, ab TEMPO_BIS
-       die volle Stärke `eile` aus dem Register `STIFTE`. */
-    const TEMPO_AB = 0.25; /* pt/ms — darunter schreibt die Hand, nichts wird dünner */
-    const TEMPO_BIS = 1.8; /* pt/ms — ab hier die volle Stärke */
-    const TEMPO_FENSTER = 32; /* ms */
+    const TEMPO_AB = 0.25;
+    const TEMPO_BIS = 1.8;
+    const TEMPO_FENSTER = 32;
     const tempoFaktor = (v, staerke) => {
         if (!(staerke > 0) || !Number.isFinite(v))
             return 1;
         const t = Math.max(0, Math.min(1, (v - TEMPO_AB) / (TEMPO_BIS - TEMPO_AB)));
         return 1 - Math.min(0.9, staerke) * t * t * (3 - 2 * t);
     };
-    /** Ein Tempomesser mit Gedächtnis: roher Punkt und `dt` herein, pt/ms heraus. */
     const tempoMesser = () => {
         const stuecke = [];
         let letzter = null;

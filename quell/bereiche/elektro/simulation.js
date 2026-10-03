@@ -1,74 +1,6 @@
 "use strict";
-/* ============================================================================
- * bereiche/elektro/simulation.ts — der Strom fliesst wirklich
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/elektro/simulation.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/bereiche/elektro/simulation.js`.
- * ----------------------------------------------------------------------------
- * WARUM RECHNEN UND NICHT NUR ANIMIEREN
- *
- * Die bequeme Lösung wäre gewesen: schauen, ob es einen Weg von L nach N gibt,
- * und auf diesem Weg gestrichelte Linien laufen lassen. Das sieht in einer
- * Vorführung gut aus und ist im Unterricht wertlos — es beantwortet keine
- * einzige Frage, die eine Lernende stellt. Was fällt an der Lampe ab, wenn ich
- * zwei in Reihe schalte? Warum wird der Vorwiderstand warm? Was misst das
- * Amperemeter, wenn ich es an die falsche Stelle hänge?
- *
- * Deshalb steht hier eine echte Knotenpotentialanalyse (MNA). Sie löst ein
- * lineares Gleichungssystem über alle Netze und liefert für JEDES Bauteil
- * Spannung, Strom und Leistung — für Reihe, Parallel, gemischt und auch für
- * die Brücke, an der die Reihe-Parallel-Faustregel scheitert.
- *
- * DER GESCHLOSSENE KONTAKT HAT EINEN WIDERSTAND
- *
- * Zuerst stand hier der Lehrbuchweg: eine ideale Leitung als Spannungsquelle
- * mit 0 V, damit 1/0 die Matrix nicht sprengt. Exakt, elegant — und an der
- * Selbsthaltung gescheitert, dem meistgezeichneten Steuerstromkreis überhaupt.
- * Sobald der Haltekontakt zumacht, liegen zwei ideale Kurzschlüsse parallel,
- * und dann ist nicht mehr bestimmt, wie sich der Strom auf sie verteilt: zwei
- * Zeilen der Matrix sind identisch, das System ist singulär. Das ist kein
- * Rechenfehler, sondern eine ehrliche Auskunft über ein zu ideales Modell.
- *
- * Deshalb bekommt ein geschlossener Kontakt jetzt 1 mΩ. Das ist keine
- * Notlösung, sondern die Wirklichkeit: ein Relaiskontakt liegt bei etwa 5 mΩ,
- * ein Schalter bei 10, ein Meter Draht mit 1,5 mm² bei 12. Damit teilt sich
- * der Strom auf zwei parallele Kontakte so auf, wie er es in der Schaltung
- * auch tut — nämlich hälftig —, und der Spannungsabfall bleibt bei 0,2 A
- * unter einem Zehntel Millivolt, also unter jeder angezeigten Stelle.
- *
- * Das Amperemeter bleibt die 0-V-Quelle. Der Strom durch eine Spannungsquelle
- * ist eine Unbekannte des Gleichungssystems, und ihr Wert IST damit der
- * Messwert — nichts muss nachträglich geschätzt werden.
- *
- * DIE SCHLEIFE FÜR STEUERUNGEN
- *
- * Ein Schütz, das anzieht, schliesst seine Hilfskontakte, und die verändern
- * die Schaltung, die gerade gerechnet wurde. Also wird gerechnet, geschaut
- * welche Spulen Strom führen, die Kontakte nachgeführt und wieder gerechnet —
- * bis sich nichts mehr ändert. Selbsthaltung entsteht dabei von selbst, und
- * ein Blinkrelais auch: das ist der Fall, in dem sich nie etwas beruhigt, und
- * er wird als „schwingt" gemeldet statt endlos gerechnet.
- *
- * WAS DIESE SIMULATION NICHT IST
- *
- * Gleichstrom, eingeschwungen, linear. Keine Zeit, keine Kondensatorladung,
- * keine Induktivität, kein Wechselstromzeiger. Ein Kondensator ist hier eine
- * Unterbrechung, eine Spule eine Verbindung — was für die Frage „leuchtet die
- * Lampe" richtig ist und für „wie schnell lädt sie" falsch. Wo eine Annahme
- * getroffen wird, sagt die Simulation es (`annahmen`), statt eine Zahl
- * hinzustellen, die niemand nachprüfen kann.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/simulation.ts (npm run bauen:ts). */
 const Stromfluss = (() => {
-    /* ------------------------------------------------------------------------
-     * 1. WAS EIN SYMBOL ELEKTRISCH IST
-     * ------------------------------------------------------------------------
-     * Das Register `fachzeichen` weiss, wie ein Bauteil AUSSIEHT. Hier steht,
-     * was es TUT. Zwei getrennte Fragen, zwei getrennte Listen — ein Symbol
-     * ohne Verhalten ist zeichenbar und wird beim Rechnen als Unterbrechung
-     * behandelt, statt die ganze Rechnung scheitern zu lassen.
-     * ----------------------------------------------------------------------*/
-    /* Die beiden Stellungslisten, die fast überall gebraucht werden. */
     const AUF_ZU = (a, b) => [
         { name: 'offen', zu: [] },
         { name: 'geschlossen', zu: [[a, b]] }
@@ -78,7 +10,6 @@ const Stromfluss = (() => {
         { name: 'offen', zu: [] }
     ];
     const VERHALTEN = {
-        /* ---- Quellen ---- */
         batterie: { art: 'quelle', von: '+', nach: '−', wert: 12, einheit: 'V' },
         gleichspannung: { art: 'quelle', von: '+', nach: '−', wert: 24, einheit: 'V' },
         wechselspannung: { art: 'quelle', von: 'L', nach: 'N', wert: 230, einheit: 'V',
@@ -87,7 +18,6 @@ const Stromfluss = (() => {
         erde: { art: 'bezug', von: 'E' },
         masse: { art: 'bezug', von: 'M' },
         schutzleiter: { art: 'bezug', von: 'PE' },
-        /* ---- Schalter: alles, was von Hand bewegt wird ---- */
         ausschalter: { art: 'schalter', stellungen: AUF_ZU('1', '2') },
         'taster-schliesser': { art: 'schalter', stellungen: AUF_ZU('3', '4') },
         'taster-oeffner': { art: 'schalter', stellungen: ZU_AUF('1', '2') },
@@ -111,10 +41,6 @@ const Stromfluss = (() => {
                 { name: 'gerade', zu: [['1', '2'], ['3', '4']] },
                 { name: 'gekreuzt', zu: [['1', '4'], ['3', '2']] }
             ] },
-        /* ---- Die Schweizer Schemas: dieselbe Mechanik, eigene Namen ----
-           Schema 1 und 2 sehen im Ergebnis ähnlich aus und sind es nicht: der
-           Serienschalter schaltet zwei Gruppen UNABHÄNGIG, der Gruppenschalter
-           durchläuft eine feste Reihenfolge und kennt die Stellung „beide". */
         'ch-schema0': { art: 'schalter', stellungen: AUF_ZU('3', '4') },
         'ch-schema1': { art: 'schalter', stellungen: [
                 { name: 'aus', zu: [] },
@@ -136,19 +62,16 @@ const Stromfluss = (() => {
                 { name: 'gerade', zu: [['1', '2'], ['3', '4']] },
                 { name: 'gekreuzt', zu: [['1', '4'], ['3', '2']] }
             ] },
-        /* ---- Kontakte: die schaltet nicht die Hand, sondern eine Spule ---- */
         schliesser: { art: 'schalter', stellungen: AUF_ZU('3', '4'), folgtSpule: 'schliesser' },
         oeffner: { art: 'schalter', stellungen: ZU_AUF('1', '2'), folgtSpule: 'oeffner' },
         'schuetz-schliesser': { art: 'schalter', stellungen: AUF_ZU('13', '14'), folgtSpule: 'schliesser' },
         'schuetz-oeffner': { art: 'schalter', stellungen: ZU_AUF('21', '22'), folgtSpule: 'oeffner' },
         'schuetz-hauptkontakt': { art: 'schalter', stellungen: AUF_ZU('1', '2'), folgtSpule: 'schliesser' },
-        /* ---- Spulen: Verbraucher UND Auslöser zugleich ---- */
         spule: { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω' },
         'spule-anzugsverzoegert': { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω',
             annahme: 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.' },
         'spule-abfallverzoegert': { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω',
             annahme: 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.' },
-        /* ---- Verbraucher ---- */
         lampe: { art: 'widerstand', von: 'X1', nach: 'X2', wert: 529, einheit: 'Ω',
             annahme: 'Eine 100-W-Lampe an 230 V. Der Kaltwiderstand einer Glühlampe ist deutlich kleiner; hier wird der Betriebswert gerechnet.' },
         signalleuchte: { art: 'widerstand', von: 'X1', nach: 'X2', wert: 23000, einheit: 'Ω' },
@@ -167,7 +90,6 @@ const Stromfluss = (() => {
             annahme: 'Ohne Gegenspannung gerechnet — der Wert gilt für den Stillstand, nicht für den Lauf.' },
         'spule-induktivitaet': { art: 'leiter', von: '1', nach: '2',
             annahme: 'Bei Gleichstrom ist eine Spule eine Verbindung. Ihre Wirkung zeigt sich erst im Wechselstrom.' },
-        /* ---- Was den Strom durchlässt ---- */
         sicherung: { art: 'schalter', stellungen: ZU_AUF('1', '2') },
         leitungsschutzschalter: { art: 'schalter', stellungen: ZU_AUF('1', '2') },
         klemme: { art: 'leiter', von: '1', nach: '2' },
@@ -176,19 +98,16 @@ const Stromfluss = (() => {
         'leiter-n': { art: 'leiter', von: 'N', nach: 'N' },
         'leiter-pe': { art: 'leiter', von: 'PE', nach: 'PE' },
         'bp-minuterie': { art: 'schalter', stellungen: AUF_ZU('1', '2') },
-        /* ---- Was ihn sperrt ---- */
         kondensator: { art: 'offen', von: '1', nach: '2',
             annahme: 'Bei Gleichstrom sperrt ein geladener Kondensator. Der Ladevorgang wird nicht gerechnet.' },
         elko: { art: 'offen', von: '+', nach: '−',
             annahme: 'Bei Gleichstrom sperrt ein geladener Kondensator. Der Ladevorgang wird nicht gerechnet.' },
-        /* ---- Halbleiter ---- */
         diode: { art: 'diode', von: 'A', nach: 'K', wert: 0.7, einheit: 'V',
             annahme: 'Ideale Diode mit 0,7 V Durchlassspannung. Sperrstrom und Kennlinie fehlen.' },
         led: { art: 'diode', von: 'A', nach: 'K', wert: 2, einheit: 'V',
             annahme: 'Ideale Diode mit 2 V Durchlassspannung.' },
         zenerdiode: { art: 'diode', von: 'A', nach: 'K', wert: 0.7, einheit: 'V',
             annahme: 'Nur die Durchlassrichtung wird gerechnet — die Z-Wirkung in Sperrrichtung fehlt.' },
-        /* ---- Messgeräte ---- */
         voltmeter: { art: 'volt', von: '+', nach: '−',
             annahme: 'Innenwiderstand 10 MΩ, wie ein gutes Digitalmessgerät.' },
         amperemeter: { art: 'ampere', von: '+', nach: '−',
@@ -197,7 +116,6 @@ const Stromfluss = (() => {
         zaehler: { art: 'ampere', von: '1', nach: '2' },
         ohmmeter: { art: 'volt', von: '1', nach: '2',
             annahme: 'Ein Ohmmeter misst nur im spannungsfreien Kreis. Hier wird es als hochohmig gerechnet.' },
-        /* ---- Sensoren: von Hand schaltbar, weil die Simulation keine Welt hat ---- */
         naeherungsschalter: { art: 'schalter', stellungen: AUF_ZU('1', '4') },
         temperaturfuehler: { art: 'schalter', stellungen: AUF_ZU('1', '2') },
         drucksensor: { art: 'schalter', stellungen: AUF_ZU('1', '2') },
@@ -205,22 +123,11 @@ const Stromfluss = (() => {
         bewegungsmelder: { art: 'schalter', stellungen: AUF_ZU('L', 'L′') },
         'bp-daemmerung': { art: 'schalter', stellungen: AUF_ZU('L', 'L′') }
     };
-    /** Was ein Symbol elektrisch ist — `null`, wenn es nur gezeichnet wird. */
     const verhalten = (zeichenId) => VERHALTEN[zeichenId] || null;
-    /** Wie viele Stellungen ein Bauteil hat (1 = nicht schaltbar). */
     const stellungenVon = (zeichenId) => {
         const v = VERHALTEN[zeichenId];
         return (v && v.stellungen) ? v.stellungen : [];
     };
-    /* ------------------------------------------------------------------------
-     * 2. WELCHE ANSCHLÜSSE HÄNGEN ZUSAMMEN (die Netzliste)
-     * ------------------------------------------------------------------------
-     * Zwei Klemmen sind dasselbe Netz, wenn eine Leitung sie verbindet, oder
-     * wenn zwei Leitungen sich an einem Verbindungspunkt berühren. Das steht
-     * nirgends gespeichert — es ergibt sich aus der Zeichnung, und genau das
-     * ist der Grund, warum man den Plan malen und nicht tippen muss.
-     * ----------------------------------------------------------------------*/
-    /** Verbandsuche über Zeichenketten. Klein, aber sie trägt die ganze Netzliste. */
     const verband = () => {
         const vater = new Map();
         const finde = (a) => {
@@ -231,7 +138,6 @@ const Stromfluss = (() => {
             let w = a;
             while (vater.get(w) !== w)
                 w = vater.get(w);
-            /* Pfad kürzen, sonst wird eine lange Kette von Klemmen quadratisch. */
             let z = a;
             while (vater.get(z) !== w) {
                 const n = vater.get(z);
@@ -249,7 +155,6 @@ const Stromfluss = (() => {
     };
     const NAH = 6;
     const nahBei = (ax, ay, bx, by) => Math.abs(ax - bx) <= NAH && Math.abs(ay - by) <= NAH;
-    /** Liegt `p` auf der Strecke a–b? Nur waagrecht und senkrecht, mehr gibt es nicht. */
     const aufStrecke = (px, py, ax, ay, bx, by) => {
         if (Math.abs(ay - by) <= 1 && Math.abs(py - ay) <= NAH)
             return px >= Math.min(ax, bx) - NAH && px <= Math.max(ax, bx) + NAH;
@@ -257,11 +162,6 @@ const Stromfluss = (() => {
             return py >= Math.min(ay, by) - NAH && py <= Math.max(ay, by) + NAH;
         return false;
     };
-    /**
-     * Alle Klemmen des Plans mit ihrem Ort. Kommt aus `Schaltplan`, damit
-     * Drehung und Spiegelung genau so gerechnet werden wie beim Zeichnen —
-     * eine zweite Rechnung daneben liefe irgendwann auseinander.
-     */
     const klemmen = (plan) => {
         const raus = [];
         (plan.teile || []).forEach((t) => {
@@ -273,20 +173,12 @@ const Stromfluss = (() => {
         });
         return raus;
     };
-    /**
-     * Die Netzliste: jede Klemme bekommt eine Netznummer. Klemmen ohne
-     * Verbindung bekommen ihre eigene — eine offene Klemme ist ein Netz mit
-     * einem Mitglied, nicht ein Fehler.
-     */
     const netze = (plan) => {
         const v = verband();
         const ks = klemmen(plan);
         ks.forEach(k => v.finde(k.schluessel));
         const ls = (plan.leitungen || []);
         ls.forEach(l => v.finde(`l:${l.id}`));
-        /* Leitung an Klemme — erst über die gespeicherte Bindung, dann über den
-           Ort. Die Bindung ist verlässlicher; der Ort fängt die Fälle, in denen
-           jemand eine Leitung von Hand an eine Klemme geschoben hat. */
         ls.forEach(l => {
             const pk = `l:${l.id}`;
             if (l.vonTeil && l.vonNr)
@@ -298,18 +190,12 @@ const Stromfluss = (() => {
                 if (nahBei(p.x, p.y, k.x, k.y))
                     v.eins(pk, k.schluessel);
             }));
-            /* Auch eine Klemme MITTEN auf einer Leitung zählt — so wird eine
-               Sammelschiene angezapft, ohne sie zu zerschneiden. */
             for (let i = 0; i + 1 < punkte.length; i++) {
                 const a = punkte[i], b = punkte[i + 1];
                 ks.forEach(k => { if (aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y))
                     v.eins(pk, k.schluessel); });
             }
         });
-        /* Leitung an Leitung: berühren sich zwei Leitungen an einem Punkt, der
-           ein Ende oder ein Knick ist, sind sie verbunden. Eine reine Kreuzung
-           zweier durchlaufender Leitungen ist es NICHT — sonst wäre jeder
-           gekreuzte Plan ein einziger Kurzschluss. */
         for (let i = 0; i < ls.length; i++) {
             for (let j = i + 1; j < ls.length; j++) {
                 const a = ls[i], b = ls[j];
@@ -340,8 +226,6 @@ const Stromfluss = (() => {
                     v.eins(`l:${a.id}`, `l:${b.id}`);
             }
         }
-        /* Ein Verbindungspunkt-Symbol und eine Abzweigdose verbinden ihre eigenen
-           Klemmen untereinander — sie sind gezeichnete Knoten. */
         (plan.teile || []).forEach((t) => {
             if (t.zeichen !== 'verbindungspunkt' && t.zeichen !== 'abzweigdose'
                 && t.zeichen !== 'bp-abzweigdose')
@@ -358,9 +242,6 @@ const Stromfluss = (() => {
                 nummer.set(w, nummer.size);
             netzVon.set(k.schluessel, nummer.get(w));
         });
-        /* Die Leitungen bekommen ihre Netznummer NACH den Klemmen. Eine Leitung,
-           die an keinem Bauteil hängt, kriegt eine eigene — sie ist dann ein
-           Netz für sich, und das ist keine Störung, sondern das, was sie ist. */
         const leitungNetz = {};
         ls.forEach(l => {
             const w = v.finde(`l:${l.id}`);
@@ -370,19 +251,10 @@ const Stromfluss = (() => {
         });
         return { netzVon, anzahl: nummer.size, klemmen: ks, leitungNetz };
     };
-    /* ------------------------------------------------------------------------
-     * 3. DAS GLEICHUNGSSYSTEM LÖSEN
-     * ------------------------------------------------------------------------
-     * Gauss mit Spaltenpivot. Kein Zauber, aber es muss den singulären Fall
-     * ERKENNEN statt NaN zurückzugeben: eine Schaltung mit einem freischwebenden
-     * Teil hat keine eindeutige Lösung, und das ist eine Aussage über die
-     * Zeichnung, die die Lernende hören will.
-     * ----------------------------------------------------------------------*/
     const loese = (A, z) => {
         const n = z.length;
         if (!n)
             return [];
-        /* Eigene Kopie — die Aufrufer geben ihre Matrix nicht zum Zerstören her. */
         const M = A.map((r, i) => r.slice().concat([z[i]]));
         for (let s = 0; s < n; s++) {
             let best = s, betrag = Math.abs(M[s][s]);
@@ -422,21 +294,8 @@ const Stromfluss = (() => {
         ok: false, fehler, spannung: [], werte: {}, stromNetze: [], netzStrom: [],
         spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0
     });
-    /**
-     * Übergangswiderstand eines geschlossenen Kontakts in Ohm.
-     * Siehe Kopf der Datei — 1 mΩ ist der gemessene Bereich echter Kontakte und
-     * zugleich der Wert, der die Selbsthaltung überhaupt erst rechenbar macht.
-     */
     const KONTAKT = 1e-3;
-    /**
-     * Unterhalb dieser Schwelle ist ein Strom keine Messung mehr, sondern
-     * Rechenrauschen — der Leckstrom über GMIN, der jedes Netz bestimmbar
-     * macht. Er lag beim ersten Bild als „grösster Strom 4.71e-10 A" im Fuss
-     * und behauptete damit, es fliesse etwas, während die Lampe aus war.
-     * Ein Nanoampere ist auch für ein gutes Messgerät die untere Grenze.
-     */
     const SCHWELLE = 1e-9;
-    /** Der Widerstand eines Bauteils — eigener Wert schlägt Vorgabe. */
     const widerstandVon = (t, v) => {
         const eigen = t && t.werte && typeof t.werte.R === 'number' ? t.werte.R : NaN;
         if (Number.isFinite(eigen) && eigen > 0)
@@ -449,7 +308,6 @@ const Stromfluss = (() => {
             return eigen;
         return typeof v.wert === 'number' ? v.wert : 230;
     };
-    /** Ein Durchgang: Matrix bauen, lösen, Messwerte ableiten. */
     const einDurchgang = (plan, stellung, netzInfo) => {
         const { netzVon, anzahl } = netzInfo;
         if (!anzahl)
@@ -458,9 +316,6 @@ const Stromfluss = (() => {
             const n = netzVon.get(`k:${teilId}:${nr}`);
             return typeof n === 'number' ? n : -1;
         };
-        /* Bezugsnetz (Masse) suchen: erst ein Erd-/Masse-Symbol, sonst der
-           Minuspol der ersten Quelle. Ohne Bezug ist jede Lösung um eine
-           beliebige Konstante verschoben — die Matrix wäre singulär. */
         let masse = -1;
         const teile = (plan.teile || []);
         teile.forEach(t => {
@@ -487,7 +342,6 @@ const Stromfluss = (() => {
         }
         if (masse < 0)
             return leer('Der Plan hat keine Spannungsquelle. Ohne Quelle fliesst kein Strom.');
-        /* Netznummer → Zeile. Das Massenetz bekommt keine, sein Potential ist 0. */
         const zeile = [];
         let n = 0;
         for (let i = 0; i < anzahl; i++)
@@ -507,11 +361,6 @@ const Stromfluss = (() => {
                 if (a < 0 || b < 0)
                     return;
                 if (a === b) {
-                    /* Beide Anschlüsse am selben Netz. Bei einer Quelle ist das ein
-                       Kurzschluss über sie — der einzige Fall, in dem weiterrechnen
-                       schlimmer wäre als abbrechen, weil das Ergebnis ein erfundener
-                       Strom von einigen Kiloampere wäre. Bei allem anderen ist es nur
-                       eine Schleife, die nichts tut. */
                     if (art === 'U' && wert !== 0)
                         kurzschluss.push(`${t.bmk || t.zeichen}: beide Anschlüsse hängen am selben Netz — die Quelle ist kurzgeschlossen.`);
                     return;
@@ -537,10 +386,6 @@ const Stromfluss = (() => {
                     paar(v.von, v.nach, 'R', 1e7);
                     break;
                 case 'diode': {
-                    /* Ohne Zeitverlauf lässt sich eine Diode nur schätzen: sie wird als
-                       Widerstand in Durchlassrichtung gerechnet und in Sperrrichtung
-                       als Unterbrechung. Welche Richtung gilt, entscheidet der
-                       vorherige Durchgang — beim ersten wird Durchlass angenommen. */
                     const sperrt = stellung[`d:${t.id}`] === 1;
                     paar(v.von, v.nach, 'R', sperrt ? 1e9 : 1);
                     break;
@@ -558,7 +403,6 @@ const Stromfluss = (() => {
         });
         if (kurzschluss.length)
             return leer(kurzschluss[0], kurzschluss);
-        /* Spannungsquellen durchnummerieren — jede bekommt eine Unbekannte. */
         let m = 0;
         eintraege.forEach(e => { if (e.art === 'U')
             e.quelleNr = m++; });
@@ -569,16 +413,6 @@ const Stromfluss = (() => {
         for (let i = 0; i < gr; i++)
             A.push(new Array(gr).fill(0));
         const z = new Array(gr).fill(0);
-        /* Ein winziger Leitwert von jedem Netz nach Masse — 1 TΩ, also nichts.
-           Ohne ihn ist jede Schaltung mit einem freischwebenden Netz unlösbar,
-           und freischwebende Netze sind nicht die Ausnahme, sondern der Normalfall:
-           bei einer Wechselschaltung führt IMMER eine der beiden Korrespondierenden
-           ins Leere. Ein echter Rechner müsste dort „Potential unbestimmt" sagen;
-           für den Unterricht ist „liegt auf 0 V" die brauchbarere Antwort, und sie
-           ist nicht falsch, sondern nur eine Festlegung. Am Ergebnis einer
-           angeschlossenen Schaltung ändert der Wert nichts — er ist zwölf
-           Grössenordnungen kleiner als der kleinste Verbraucher.
-           (Denselben Weg geht SPICE, und aus demselben Grund.) */
         for (let r = 0; r < n; r++)
             A[r][r] = A[r][r] + 1e-12;
         eintraege.forEach(e => {
@@ -626,9 +460,6 @@ const Stromfluss = (() => {
             const i = e.art === 'R' ? u / e.wert : x[n + e.quelleNr];
             const alt = werte[e.t.id];
             const strom = Math.abs(i);
-            /* Ein Bauteil kann mehrere Pfade haben (Hauptschalter, Serienschalter).
-               Gezeigt wird der grösste Strom — das ist der, der die Sicherung
-               auslöst und nach dem gefragt wird. */
             if (!alt || strom > Math.abs(alt.I)) {
                 werte[e.t.id] = {
                     teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
@@ -641,10 +472,6 @@ const Stromfluss = (() => {
             netzStrom[e.a] = Math.max(netzStrom[e.a], strom);
             netzStrom[e.b] = Math.max(netzStrom[e.b], strom);
         });
-        /* Helligkeit für Leuchten: das Verhältnis zur Nennleistung, gedeckelt.
-           Eine Lampe an halber Spannung leuchtet ein Viertel so hell — das ist
-           der quadratische Zusammenhang, und er ist genau das, was man an einer
-           Reihenschaltung zeigen will. */
         teile.forEach(t => {
             const w = werte[t.id];
             if (!w)
@@ -660,9 +487,6 @@ const Stromfluss = (() => {
         const stromNetze = [];
         netzStrom.forEach((s, i) => { if (s > SCHWELLE)
             stromNetze.push(i); });
-        /* Welche Spulen haben angezogen? Die Schwelle ist bewusst grob: eine
-           Spule zieht an, wenn mindestens die halbe Nennspannung anliegt. Genauer
-           wäre erfunden — der Anzugswert steht auf keinem Symbol. */
         const spulen = {};
         teile.forEach(t => {
             const v = verhalten(t.zeichen);
@@ -687,36 +511,15 @@ const Stromfluss = (() => {
             leitungNetz: netzInfo.leitungNetz, maxStrom
         };
     };
-    /**
-     * Die ganze Rechnung, samt Nachführen der Kontakte.
-     *
-     * `stellung` ist, was der Mensch eingestellt hat: Teil-Kennung → Nummer der
-     * Stellung. Kontakte, die einer Spule folgen, stehen NICHT darin — die
-     * setzt die Schleife selbst, und sie überschreibt eine Handstellung dabei
-     * bewusst: ein Schützkontakt, den man von Hand zuhält, ist kein Lehrmittel,
-     * sondern ein Unfall.
-     */
     const rechne = (plan, stellung = {}, vorher) => {
         if (!plan || !Array.isArray(plan.teile))
             return leer('Kein Plan.');
         const netzInfo = netze(plan);
         const teile = plan.teile;
-        /* Welcher Kontakt folgt welcher Spule? Über das BMK: K1 an der Spule und
-           K1 am Kontakt gehören zusammen. Das ist genau die Regel, die auf dem
-           Papier gilt, und deshalb muss sie niemand extra lernen. */
         const folger = teile.filter(t => {
             const v = verhalten(t.zeichen);
             return !!(v && v.folgtSpule);
         });
-        /* Die Kontakte starten dort, wo sie beim letzten Mal standen. Ohne das
-           gäbe es keine Selbsthaltung: der Startknopf zieht das Schütz an, und
-           sobald man loslässt, rechnet die Simulation wieder von der Ruhelage
-           aus — der Haltekontakt wäre offen und das Schütz fiele ab. Genau der
-           Kreis, den jeder Lernende als Erstes zeichnet, würde nicht gehen.
-           `vorher` ist deshalb nicht Bequemlichkeit, sondern das Gedächtnis der
-           Schaltung. Wer sie ohne rechnet, bekommt die Ruhelage — das ist der
-           Fall „Spannung war weg und ist wiedergekommen", und auch der ist
-           richtig, nur eben eine andere Frage. */
         let stand = Object.assign({}, stellung);
         if (vorher)
             folger.forEach(t => {
@@ -734,14 +537,10 @@ const Stromfluss = (() => {
             folger.forEach(t => {
                 const v = verhalten(t.zeichen);
                 const an = t.bmk ? !!erg.spulen[t.bmk] : false;
-                /* Schliesser: 0 = offen, 1 = geschlossen. Öffner andersherum —
-                   die Stellungsliste ist deshalb schon in der richtigen Reihenfolge
-                   angelegt, und hier steht nur noch „an" oder „aus". */
                 naechster[t.id] = an ? 1 : 0;
                 if (v.folgtSpule === 'oeffner')
                     naechster[t.id] = an ? 1 : 0;
             });
-            /* Dioden nachführen: sperrt, wenn der Strom rückwärts liefe. */
             teile.forEach(t => {
                 const v = verhalten(t.zeichen);
                 if (!v || v.art !== 'diode')
@@ -766,20 +565,6 @@ const Stromfluss = (() => {
             runde++;
         }
         erg.durchgaenge = runde;
-        /* Überbrückte Bauteile melden.
-           -----------------------------------------------------------------
-           Liegen zwei Anschlüsse DESSELBEN Bauteils im selben Netz, ist es
-           kurzgeschlossen: der Schalter schaltet nichts, die Lampe leuchtet
-           nie, der Widerstand begrenzt nichts.
-    
-           Das passiert fast immer aus einem Grund, und der ist rein zeichne-
-           risch: zwei Leitungen laufen auf derselben Höhe und ÜBERLAPPEN sich.
-           Im Bild sieht das aus wie zwei getrennte Leitungen nebeneinander, in
-           Wahrheit ist es eine. Diese Prüfung wurde geschrieben, weil genau
-           das beim ersten Bildschirmfoto der Wechselschaltung passiert ist —
-           drei Leitungen auf y=130, und die Lampe leuchtete aus dem falschen
-           Grund. Ohne Hinsehen wäre es niemandem aufgefallen, und ohne diese
-           Meldung fällt es der Lernenden auch nicht auf. */
         const gemeldet = new Set();
         teile.forEach(t => {
             const v = verhalten(t.zeichen);
@@ -787,13 +572,13 @@ const Stromfluss = (() => {
                 return;
             if (t.zeichen === 'verbindungspunkt' || t.zeichen === 'abzweigdose'
                 || t.zeichen === 'bp-abzweigdose')
-                return; /* die SOLLEN das */
+                return;
             const eigene = netzInfo.klemmen.filter(k => k.teil === t.id);
             for (let i = 0; i < eigene.length; i++) {
                 for (let j = i + 1; j < eigene.length; j++) {
                     const a = eigene[i], b = eigene[j];
                     if (a.nr === b.nr)
-                        continue; /* Durchgangsklemmen wie L1–L1 */
+                        continue;
                     if (netzInfo.netzVon.get(a.schluessel) !== netzInfo.netzVon.get(b.schluessel))
                         continue;
                     const schluessel = `${t.id}:${a.nr}:${b.nr}`;
@@ -806,9 +591,6 @@ const Stromfluss = (() => {
                 }
             }
         });
-        /* Offene Klemmen melden — nicht als Fehler, aber als Hinweis. Der
-           häufigste Anfängerfehler ist eine Leitung, die zwei Pixel neben dem
-           Anschluss endet, und der Plan sieht dabei völlig richtig aus. */
         const belegt = new Set();
         (plan.leitungen || []).forEach(() => { });
         netzInfo.klemmen.forEach(k => {
@@ -824,16 +606,10 @@ const Stromfluss = (() => {
         });
         return erg;
     };
-    /* ------------------------------------------------------------------------
-     * 5. ZAHLEN, DIE MAN LESEN KANN
-     * ----------------------------------------------------------------------*/
-    /** Eine Grösse mit Vorsatz — 0,0031 A wird zu „3.1 mA". */
     const zeige = (wert, einheit, stellen = 2) => {
         if (!Number.isFinite(wert))
             return '—';
         const b = Math.abs(wert);
-        /* Unter der Schwelle ist es eine Null. „4.71e-10 A" ist keine Auskunft,
-           sondern eine Behauptung, die der Lernende nicht widerlegen kann. */
         if (b <= SCHWELLE)
             return `0 ${einheit}`;
         const stufen = [
@@ -844,12 +620,6 @@ const Stromfluss = (() => {
             if (b >= f) {
                 const z = wert / f;
                 let text = z.toFixed(Math.abs(z) >= 100 ? 0 : stellen);
-                /* Nullen NUR hinter dem Komma wegkürzen. Die naheliegende Fassung
-                   `.replace(/\.?0+$/, '')` macht aus „230" eine „23" — aus einer Zahl
-                   eine ANDERE Zahl, und beide sehen richtig aus. Genau dieser Fehler
-                   steht in CLAUDE.md §55.1 als der, den keine Prüfung von selbst
-                   findet. Er wurde hier von der eigenen Sonde gefunden, weil sie den
-                   erwarteten Text und nicht nur „irgendeine Zahl" verlangt hat. */
                 if (text.indexOf('.') >= 0)
                     text = text.replace(/0+$/, '').replace(/\.$/, '');
                 return `${text} ${v}${einheit}`;
@@ -859,7 +629,7 @@ const Stromfluss = (() => {
     };
     return {
         VERHALTEN, verhalten, stellungenVon, netze, rechne, zeige, loese,
-        /* für Prüfungen sichtbar gemacht */ klemmen, aufStrecke
+        klemmen, aufStrecke
     };
 })();
 window.Stromfluss = Stromfluss;

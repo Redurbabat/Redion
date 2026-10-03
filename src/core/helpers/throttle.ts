@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/throttle.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/throttle.ts — nicht bei jedem Tastendruck alles neu machen
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/chronik/laden.ts (npm run bauen:ts). */
 /* ============================================================================
  * chronik/laden.ts — die Chronik erst holen, wenn jemand sie öffnet
  * ----------------------------------------------------------------------------

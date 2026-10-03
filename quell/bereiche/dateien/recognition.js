@@ -1,12 +1,5 @@
 "use strict";
-/* ============================================================================
- * bereiche/dateien/recognition.ts — Erfassen und optionale lokale Erkennung
- * ----------------------------------------------------------------------------
- * Kamera, Dateiablage und OCR benutzen vorhandene Seiten, Bloecke und den
- * Redion-Dateispeicher. Eine Erkennung ist nie Voraussetzung: Ohne bewusst
- * eingerichteten localhost-Dienst bleiben Original, PDF-Text und Ink komplett
- * benutzbar. Erkanntes steht mit Provenienz daneben und ersetzt nichts (E127).
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/recognition.ts (npm run bauen:ts). */
 const Recognition = (() => {
     const MAX_CAPTURE = 80 * 1024 * 1024;
     const MAX_OCR_SOURCE = 50 * 1024 * 1024;
@@ -16,9 +9,6 @@ const Recognition = (() => {
     const MAX_INK_MARKS = 5000;
     const MAX_INK_POINTS_PER_MARK = 12000;
     const MAX_INK_POINTS = 160000;
-    /** Rechte kommen aus dem lokalen Konten-/Seitenzustand. Fehlt das
-        Kontenmodul beim reinen Offline-Start noch, bleibt der lokale
-        Einzelplatzbetrieb benutzbar; es wird nie auf einen Server gewartet. */
     const pageIdOf = (subject) => {
         let current = typeof subject === 'string' ? Store.getBlock(subject) : subject;
         for (let depth = 0; current && depth < 60; depth++) {
@@ -32,15 +22,9 @@ const Recognition = (() => {
         if (typeof Konten === 'undefined' || typeof Konten.darf !== 'function')
             return true;
         const pageId = pageIdOf(subject);
-        /* Ein unbekannter Quellenblock darf nicht über die aktuelle Seite
-           Rechte erben. Nur ein absichtlich leeres Ziel (Arbeitsbereichswurzel)
-           fällt auf die gerade offene Seite zurück. */
         if (!pageId) {
             if (subject)
                 return false;
-            /* Der Name sagt, was es ist: eine KENNUNG. `darf` schlaegt damit in
-               `Store.getBlock` nach — ein Objekt faende dort nichts und liesse
-               alles durch (E471, L102). Der Waechter in test444 haelt es fest. */
             const aktuelleSeitenId = typeof App !== 'undefined' && App.aktuelleSeite
                 ? App.aktuelleSeite() : null;
             return aktuelleSeitenId ? Konten.darf(action, aktuelleSeitenId) : true;
@@ -67,8 +51,6 @@ const Recognition = (() => {
         }
     };
     const configuredEndpoint = () => String(Store.getMeta('ocr:localEndpoint', '') || '');
-    /** Nur lokale Ziele sind erlaubt; Cloud-Ziele gehoeren in einen eigenen,
-        sichtbaren Integrationsvertrag und nicht in einen scheinbar lokalen Knopf. */
     const configure = async () => {
         const currentPage = typeof App !== 'undefined' && App.aktuelleSeite
             ? Store.getBlock(App.aktuelleSeite()) : null;
@@ -77,13 +59,6 @@ const Recognition = (() => {
             return null;
         }
         const current = configuredEndpoint() || 'http://127.0.0.1:8765/ocr';
-        /* ERST SAGEN, WAS ZU TUN IST, DANN FRAGEN.
-           Bis zum 25. August stand hier nur das Eingabefeld. Wer es zum ersten
-           Mal sah, bekam die Frage nach einer Adresse — und keinen Hinweis
-           darauf, dass dahinter ein Programm laufen muss, geschweige denn
-           welches. Der Knopf war damit eine Sackgasse (L53), obwohl der Code
-           dahinter vollständig war. Seit E150 liegt der Dienst bei; dieser
-           Absatz ist der Weg dorthin. */
         if (typeof Dialog !== 'undefined' && Dialog.wahl && !configuredEndpoint()) {
             const weiter = await Dialog.wahl({
                 titel: 'Lokale Erkennung einrichten',
@@ -157,9 +132,6 @@ const Recognition = (() => {
             return block;
         }
         catch (error) {
-            /* Nur den von diesem Lauf angelegten Platzhalter aufräumen, und auch
-               das nur solange das Bearbeitungsrecht noch gilt. Das ausgewählte
-               Original auf dem Gerät wird in keinem Fehlerpfad gelöscht. */
             if (may('bearbeiten', page)) {
                 Store.trashBlock(block.id);
                 Store.purgeBlock(block.id);
@@ -167,8 +139,6 @@ const Recognition = (() => {
             throw error;
         }
     };
-    /** Mobile Stufe 1: echte Kamera-/Dateiauswahl. Perspektivkorrektur ist
-        absichtlich kein stiller Bildumbau; das Original bleibt der Vertrag. */
     const scan = () => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -273,14 +243,7 @@ const Recognition = (() => {
             source.close();
         }
     };
-    /** Handschrift wird aus den vorhandenen Ink-Marken gerastert. Die Marken
-        selbst bleiben unverändert; die Bitmap lebt nur für diesen OCR-Aufruf. */
     const inkCrop = async (block, region) => {
-        /* Diese Prüfung liegt absichtlich VOR dem ersten SVG-/DOM-Knoten.
-           `bounds()` und der Markenzeichner bauen aus jedem Punkt Pfadtext; ein
-           manipuliertes Blatt darf darüber weder Call-Stack noch Speicher
-           erschöpfen. Druckwerte zählen mit, weil auch sie vollständig durch den
-           Zeichner laufen. Das Original wird nur gelesen und nie gekürzt. */
         const marks = Array.isArray(block.marken) ? block.marken : [];
         if (marks.length > MAX_INK_MARKS)
             throw new Error('Diese Handschrift enthält mehr als ' + MAX_INK_MARKS +
@@ -311,8 +274,6 @@ const Recognition = (() => {
         background.setAttribute('height', String(region.height));
         background.setAttribute('fill', '#fff');
         svg.appendChild(background);
-        /* Auch hier die Verlauf-Vorlagen (E545): ein Abdeckband MUSS im
-           Ausschnitt decken, sonst läse die Erkennung die Antwort mit. */
         const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(marks) : null;
         if (defs)
             svg.appendChild(defs);
@@ -351,18 +312,12 @@ const Recognition = (() => {
             source.close();
         }
     };
-    /** Prüft den vorhandenen OCR-Bestand ohne ihn zu kopieren oder zu ändern.
-        Diese Vorprüfung läuft vor dem Senden; nach der Antwort wird sie mit dem
-        konkreten neuen Text wiederholt, falls sich der lokale Stand inzwischen
-        geändert hat. */
     const ocrRegionState = (source, newText = '') => {
         const raw = source.ocrRegions;
         if (raw !== undefined && raw !== null &&
             (typeof raw !== 'object' || Array.isArray(raw)))
             throw new Error('Die vorhandenen OCR-Regionen sind ungültig. Die Quelle wurde nicht verändert.');
         const entries = [];
-        /* Nicht erst `Object.entries` über einen beliebig grossen Import bauen:
-           die Schleife hält selbst ihre Zwischenliste an der Regionsgrenze. */
         for (const key in (raw || {})) {
             if (!Object.prototype.hasOwnProperty.call(raw, key))
                 continue;
@@ -415,7 +370,6 @@ const Recognition = (() => {
         }) : 'text';
         if (!choice)
             return;
-        /* Zwischen Dialog und Klick können lokale Rollen geändert worden sein. */
         requireAccess('bearbeiten', page, 'Die Zielseite darfst du nicht mehr bearbeiten.');
         Store.addBlock(page.id, choice === 'equation' ? 'equation' : 'text', {
             text,
@@ -463,9 +417,6 @@ const Recognition = (() => {
             const image = await prepare();
             if (!(image instanceof Blob) || image.size <= 0)
                 throw new Error('Der vorbereitete OCR-Ausschnitt ist leer oder ungültig. Das Original bleibt unverändert.');
-            /* `prepare()` kann ein kleines Original in ein grosses SVG verwandeln.
-               Darum gilt die Quellenbegrenzung ein zweites Mal für genau den Blob,
-               der den Browser verlassen würde. */
             if (image.size > MAX_OCR_SOURCE)
                 throw new Error('Der vorbereitete OCR-Ausschnitt ist grösser als ' +
                     Math.round(MAX_OCR_SOURCE / 1048576) +

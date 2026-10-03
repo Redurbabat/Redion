@@ -1,69 +1,10 @@
 "use strict";
-/* ============================================================================
- * rundgang.js — Der erste Rundgang
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/hilfe/rundgang.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/hilfe/rundgang.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Redion kann inzwischen sehr viel. Das ist nur dann etwas wert, wenn man es
- * auch findet. Notions Einführung ist eine Beispielseite; hier gibt es eine
- * Führung, die auf die echten Knöpfe zeigt, und eine Seite „Was Redion kann",
- * die nach Themen geordnet ist und aus der App heraus geöffnet werden kann.
- *
- * Die Führung läuft einmal beim ersten Öffnen und danach nur noch, wenn man
- * sie selbst aufruft. Jeder Schritt lässt sich überspringen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/hilfe/rundgang.ts (npm run bauen:ts). */
 const Rundgang = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * DIE SCHRITTE
-     * ------------------------------------------------------------------------
-     * ziel: ein Auswahlausdruck. Fehlt das Element, wird der Schritt in der
-     * Mitte gezeigt statt übersprungen — so bricht nichts, wenn sich die
-     * Oberfläche ändert.
-     * ======================================================================*/
-    /* DIE ANKER ZEIGEN AUF DIE NEUE SCHALE (E272 Phase F).
-       Sie zeigten auf `#sidebar .ws-btn`, `#btn-search`, `#btn-new`, `#tree`,
-       `#btn-settings` und drei `[data-app=…]` — alle in der Seitenleiste,
-       und die ist am Rechner seit Phase F weg. Der Rundgang lief trotzdem
-       durch (`stellen()` versteckt das Loch, wenn das Ziel fehlt), und genau
-       das ist die stille Sorte Fehler: neun Schritte ohne Loch sehen aus wie
-       eine Führung, zeigen aber auf nichts.
-  
-       Die neuen Anker sind die Stellen, an denen dieselben Dinge JETZT
-       stehen — Reiter „Gehen" statt Seitenleiste, die Kante statt „+ Neu",
-       „Datei" statt `#btn-settings`. test61 misst, dass das Loch auf dem
-       ersten Ziel wirklich liegt.
-  
-       UND DAS HAT NICHT GEREICHT (E390). Am 4. September nachgemessen zeigten
-       im Grundzustand FÜNF der neun Schritte am Rechner auf nichts und ACHT
-       am Telefon: drei Ziele waren Reiter des Bandes (seit E383 nur sichtbar,
-       wenn man aufklappt), drei waren Kantenknöpfe (am Telefon gibt es die
-       Kante nicht). `test61` hielt nur den ERSTEN Schritt — der Rest war
-       genau die stille Sorte Fehler, vor der der Absatz darüber warnt.
-  
-       Seither trägt jedes Ziel MEHRERE Kandidaten, durch Komma getrennt, und
-       `zielFinden()` nimmt den ersten, den man wirklich sieht. `test61` misst
-       jetzt alle neun, an beiden Grössen. */
     const SCHRITTE = [
-        /* E270: ohne Konto stimmt der Satz weiterhin — er darf nur nicht mehr
-           behaupten, es GÄBE keinen Server. Er ist da und freiwillig. */
-        /* DIE ANKER ZEIGEN AUF DEN STUDIO-KOPF (6. September). Im ruhigen Modus
-           ist das Band am Rechner eine Lade hinter `#studio-tools`, und die
-           Kante trägt unten nur noch „Einstellungen" — `#mb-suche`, `#mb-ki`,
-           `[data-k="neu"]` und `[data-k="ki"]` waren damit null Pixel breit.
-           test61 fand sechs von neun Schritten ohne Loch. Der Studio-Kopf hat
-           für jedes davon einen Knopf; die alten Kandidaten bleiben dahinter
-           stehen — am Telefon und ohne ruhigen Modus sind sie weiter die
-           richtigen. */
         { ziel: '#kante .k-orte, #handy-oben', titel: 'Alles liegt hier',
             text: 'Hier stehen deine Orte — Bibliothek, Notizhefte, Lernzentrum. ' +
                 'Hinter <b>Mehr Orte</b> liegen Heute, Elektrotechnik, Aufgaben ' +
@@ -111,38 +52,6 @@ const Rundgang = (() => {
         if (typeof Geste !== 'undefined')
             Geste.weg();
     };
-    /**
-     * DEN ERSTEN KANDIDATEN NEHMEN, DEN MAN WIRKLICH SIEHT (E390).
-     *
-     * `ziel` darf mehrere Auswahlausdrücke mit Komma tragen. Gewonnen hat
-     * NICHT der erste im Dokument — das täte `querySelector` —, sondern der
-     * erste, der eine Breite hat.
-     *
-     * WARUM DAS NÖTIG IST. Am 4. September nachgemessen, im Grundzustand:
-     * am Rechner zeigten FÜNF der neun Schritte auf nichts, am Telefon ACHT.
-     * Drei Ziele waren Reiter des Menübandes, und die stehen seit dem ruhigen
-     * Band (E383) nur da, wenn jemand es aufklappt; drei weitere waren Knöpfe
-     * der Kante, und die gibt es am Telefon gar nicht.
-     *
-     * `stellen()` versteckte das Loch dann stillschweigend. Genau davor warnt
-     * der Kopf dieser Datei seit E272 — „neun Schritte ohne Loch sehen aus
-     * wie eine Führung, zeigen aber auf nichts" —, und genau das war
-     * eingetreten, ohne dass ein Prüflauf es hielt. `test61` fing nur den
-     * ERSTEN Schritt.
-     *
-     * Ein Ziel je Gerät wäre die Alternative gewesen. Eine Liste ist besser:
-     * sie sagt „hier, sonst dort" statt „wenn Telefon, dann", und sie hält,
-     * wenn sich eine Breite verschiebt, statt an einer Zahl zu hängen.
-     *
-     * DAS GENAUE ZIEL STEHT VORNE, wo es eines gibt. Schritt 7 nennt zuerst
-     * den Reiter „Überprüfen" und Schritt 9 zuerst „Datei" — beide stehen im
-     * DOM, sind bei zugeklapptem Band aber null Pixel breit. Wer das Band
-     * aufklappt, bekommt also das richtige Loch; wer nicht, bekommt den
-     * Knopf, der dorthin führt. Und beiläufig macht genau das die Zeile
-     * unten prüfbar: ohne einen Kandidaten, der DA, ABER UNSICHTBAR ist,
-     * könnte `test61` gar nicht merken, wenn hier wieder nur nach
-     * Vorhandensein gefragt würde (§55.2).
-     */
     const zielFinden = (ziel) => {
         if (!ziel)
             return null;
@@ -163,10 +72,6 @@ const Rundgang = (() => {
         return null;
     };
     const stellen = () => {
-        /* Kasten UND Loch — sie werden in `zeichne` zusammen angelegt und in
-           `aufraeumen` zusammen weggenommen. Vorher stand nur die Frage nach dem
-           Kasten da, und `loch.style` eine Zeile weiter unten war der Zugriff,
-           der beim Grösserziehen des Fensters nach dem Aufräumen warf. */
         if (!kasten || !loch)
             return;
         const s = SCHRITTE[nr];
@@ -191,10 +96,6 @@ const Rundgang = (() => {
                 oben = Math.max(12, innerHeight - kb.height - 12);
             kasten.style.left = links + 'px';
             kasten.style.top = oben + 'px';
-            /* DIE HAND TIPPT AUF DAS ZIEL (E463). Loch und Kasten sagen wo und
-               was; die Hand sagt, dass man da hintippen kann. Sie hängt am
-               echten Ziel, nicht an einer Stelle — beim Grösserziehen des
-               Fensters wandert sie mit, weil `stellen` sie neu stellt. */
             if (typeof Geste !== 'undefined')
                 Geste.zeigen(el);
         }
@@ -234,7 +135,6 @@ const Rundgang = (() => {
                 '<div class="rg-knoepfe">' +
                 '<button data-a="weg">Überspringen</button>' +
                 (nr > 0 ? '<button data-a="zurueck">Zurück</button>' : '') +
-                /* `weiter` (E441): der Pfeil gleitet — nur solange es weitergeht. */
                 `<button data-a="weiter" class="prim${nr === SCHRITTE.length - 1 ? '' : ' weiter'}">` +
                 `${nr === SCHRITTE.length - 1 ? 'Fertig' : 'Weiter'}</button>` +
                 '</div>';
@@ -244,13 +144,6 @@ const Rundgang = (() => {
     const fertig = () => {
         aufraeumen();
         document.getElementById('rg-einladung')?.remove();
-        /* ZWEI VERSCHIEDENE TATSACHEN, ZWEI MARKEN. `rundgangGesehen` heisst
-           „ist begrüsst worden" und wird gesetzt, sobald die Einladung dasteht.
-           `rundgangFertig` heisst „hat die Führung wirklich durchlaufen" und
-           wird nur hier gesetzt, am Ende.
-    
-           Vorher war es eine Marke für beides, und daran hing der Fehler: um
-           die Begrüssung loszuwerden, hätte man die Führung beenden müssen. */
         Store.setMeta('rundgangGesehen', true);
         Store.setMeta('rundgangFertig', true);
         UI.toast('Der Rundgang steht jederzeit unter „Was Redion kann"');
@@ -260,7 +153,6 @@ const Rundgang = (() => {
             nr = 0;
         zeichne();
     };
-    /* Klicks überall abfangen, solange die Führung läuft */
     document.addEventListener('click', (e) => {
         if (!kasten)
             return;
@@ -305,9 +197,6 @@ const Rundgang = (() => {
             zeichne();
         }
     }, true);
-    /* ========================================================================
-     * „WAS REDION KANN" — eine Seite zum Blättern
-     * ======================================================================*/
     const THEMEN = [
         ['🗂 Datenbanken', [
                 'Zwölf Ansichten auf dieselben Daten, jede mit eigenem Filter',
@@ -435,48 +324,9 @@ const Rundgang = (() => {
                 'steht als eigener Block bereit.' }
     ];
     const neuestes = () => NEUERUNGEN.reduce((h, n) => Math.max(h, n.nr), 0);
-    /**
-     * Zeigt, was seit dem letzten Öffnen dazugekommen ist — und nichts, wenn
-     * nichts dazugekommen ist.
-     */
-    /**
-     * Beim ersten Öffnen wird die Führung nicht aufgedrängt. Es erscheint nur
-     * eine kleine Einladung unten links — wer sie nicht will, klickt sie weg
-     * und sieht sie nie wieder. Ein Fenster, das den Bildschirm nimmt, bevor
-     * man überhaupt etwas getan hat, ist zudringlich.
-     */
-    /* ==========================================================================
-     * DER WILLKOMMENSBILDSCHIRM (Vorgabe §11, E55)
-     * --------------------------------------------------------------------------
-     * WAS VORHER DASTAND, und warum es zu wenig war: eine kleine Einladung
-     * unten, „Neu hier? — Führung". Der Gedanke dahinter war richtig — ein
-     * Fenster, das den Bildschirm nimmt, bevor man etwas getan hat, ist
-     * zudringlich. Aber sie beantwortete die eine Frage nicht, die der
-     * allererste Blick stellt: **was ist das hier, und wohin gehören meine
-     * Daten?**
-     *
-     * Redion ist local-first. Das ist keine Kleinigkeit am Rand, sondern der
-     * Grund, warum es die App gibt — und ausgerechnet das erfuhr niemand,
-     * bevor er anfing. Es stand in der README, die kein Mensch öffnet.
-     *
-     * DREI WEGE, UND DER ZWEITE IST DER, DEN MAN VERGISST. Wer gerade das
-     * Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. Ein
-     * Willkommen, das nur „Loslegen" anbietet, schickt ihn in einen leeren
-     * Arbeitsbereich und lässt ihn die Sicherung in den Einstellungen suchen.
-     *
-     * EINMAL. Gezeigt ist gesehen — dieselbe Regel wie bei der Einladung, und
-     * aus demselben Grund: eine Begrüssung, die bei jedem Öffnen kommt, ist
-     * eine Ermahnung.
-     * ========================================================================*/
     const willkommen = (erzwingen) => {
         if (document.getElementById('rg-willkommen'))
             return;
-        /* NOCHMAL NACHSEHEN, KURZ BEVOR ES ERSCHEINT. Zwischen dem Beschluss
-           „nach 1,4 Sekunden" und dem Erscheinen liegt eine Ewigkeit: in einem
-           zweiten Tab kann die Begrüssung inzwischen gelaufen sein, oder der
-           Mensch hat die Führung längst von Hand gestartet. Ein Blatt über dem
-           ganzen Bildschirm, das auf einem Beschluss von vorhin beruht, ist
-           genau die Sorte Ärgernis, gegen die die Marke da ist. */
         if (!erzwingen && Store.getMeta('rundgangGesehen', false))
             return;
         const d = document.createElement('div');
@@ -486,8 +336,6 @@ const Rundgang = (() => {
         d.setAttribute('aria-label', 'Willkommen bei Redion');
         d.innerHTML =
             '<div class="wk-kasten">' +
-                /* Hier stand ein „R" im Farbkasten (bis E456). Redur will genau
-                   eine Marke — die des Studios in der Kopfzeile. */
                 '<div class="wk-kopf">' +
                 '<h2>Willkommen bei Redion</h2>' +
                 '<p>Notizen, Seiten und Datenbanken — <b>auf deinem Gerät</b>. ' +
@@ -510,10 +358,6 @@ const Rundgang = (() => {
                 '<p class="wk-fuss">Deine Daten liegen im Speicher dieses Browsers. ' +
                 'Sichere sie ab und zu — unter „Mehr" steht, wie.</p>' +
                 '</div>';
-        /* DIE TEXTUR IN DEN KOPF (E462). Sie ist Schmuck, und der Kopf ist die
-           eine Fläche in Redion, die keine Auskunft trägt — seit E456 steht
-           dort nicht einmal mehr eine Marke. Fehlt das Bauteil, fehlt nur der
-           Schmuck. */
         const wkKopf = d.querySelector('.wk-kopf');
         if (wkKopf && typeof Textur !== 'undefined')
             Textur.legen(wkKopf);
@@ -523,13 +367,8 @@ const Rundgang = (() => {
                 return;
             const was = b.dataset['a'];
             d.remove();
-            /* Erst schliessen, dann handeln: ein Dialog unter dem Willkommen wäre
-               von aussen nicht erreichbar — derselbe Grund wie im R-Blatt. */
             setTimeout(() => {
                 if (was === 'import') {
-                    /* Denselben Weg nehmen wie der Knopf in der Seitenleiste — nicht
-                       einen zweiten bauen. Sonst gibt es zwei Importe, von denen
-                       einer irgendwann stehenbleibt. */
                     const knopf = document.getElementById('btn-import');
                     if (knopf)
                         knopf.click();
@@ -542,10 +381,7 @@ const Rundgang = (() => {
             }, 40);
         });
         document.body.appendChild(d);
-        /* Der Fokus gehört in den Dialog — sonst tabbt man durch die Seite
-           dahinter, die man ohnehin noch nicht kennt (E51). */
         setTimeout(() => d.querySelector('[data-a="los"]')?.focus(), 30);
-        /* Escape ist „später": nichts davon ist Pflicht. */
         const beiTaste = (e) => {
             if (e.key !== 'Escape')
                 return;
@@ -553,7 +389,6 @@ const Rundgang = (() => {
             document.removeEventListener('keydown', beiTaste);
         };
         document.addEventListener('keydown', beiTaste);
-        /* GEZEIGT IST GESEHEN. Dieselbe Regel wie bei der Einladung darunter. */
         Store.setMeta('rundgangGesehen', true);
         if (!Number(Store.getMeta('neuerungenGesehen', 0)))
             Store.setMeta('neuerungenGesehen', neuestes());
@@ -580,21 +415,7 @@ const Rundgang = (() => {
             }
         });
         document.body.appendChild(d);
-        /* GEZEIGT IST GESEHEN — und das war der Fehler. Bisher wurde die Marke
-           nur beim Klick auf das ✕ gesetzt. Wer den Hinweis einfach stehen
-           liess und die Seite neu lud, bekam ihn wieder. Und wieder. Er war
-           nicht als Einladung gemeint, sondern als Begrüssung, und eine
-           Begrüssung, die bei jedem Öffnen kommt, ist eine Ermahnung.
-    
-           Jetzt zählt das Zeigen selbst. Wer die Führung später will, findet
-           sie unter „Was Redion kann" — genau das sagt auch die Meldung beim
-           Wegklicken. */
         Store.setMeta('rundgangGesehen', true);
-        /* UND WER GERADE ERST ANFÄNGT, HAT NICHTS VERPASST. Ohne diese Zeile
-           bekäme er beim zweiten Öffnen den Kasten „Neu in Redion" mit allem,
-           was je dazukam — für ihn ist das keine Neuigkeit, sondern die App.
-           Also gilt für ihn alles als gesehen; gezeigt wird erst, was NACH
-           seinem ersten Mal dazukommt. */
         if (!Number(Store.getMeta('neuerungenGesehen', 0)))
             Store.setMeta('neuerungenGesehen', neuestes());
     };
@@ -605,9 +426,6 @@ const Rundgang = (() => {
         const offen = NEUERUNGEN.filter(n => n.nr > gesehen).sort((a, b) => b.nr - a.nr);
         if (!offen.length && !erzwingen)
             return;
-        /* BEIM ALLERERSTEN MAL NICHT. Wer Redion gerade zum ersten Mal öffnet,
-           hat nichts verpasst — für den ist alles neu, und eine Liste mit
-           „das ist neu" wäre sinnlos. Er bekommt die Begrüssung. */
         if (!gesehen && !Store.getMeta('rundgangGesehen', false) && !erzwingen) {
             Store.setMeta('neuerungenGesehen', neuestes());
             return;
@@ -631,24 +449,16 @@ const Rundgang = (() => {
         Store.setMeta('neuerungenGesehen', neuestes());
     };
     const vielleichtStarten = () => {
-        /* Erst nachsehen, ob es etwas Neues gibt — das gilt auch für den, der
-           die Begrüssung längst hinter sich hat. */
         if (Store.getMeta('rundgangGesehen', false)) {
             setTimeout(() => neuerungen(), 1800);
             return;
         }
-        /* Nur, wenn wirklich noch nichts passiert ist — sonst stört es. */
         const seiten = Object.values(Store.cache.blocks)
             .filter(b => b.alive !== false && b.type === 'page').length;
         if (seiten > 24) {
             Store.setMeta('rundgangGesehen', true);
             return;
         }
-        /* DER WILLKOMMENSBILDSCHIRM STATT DER KLEINEN EINLADUNG (§11, E55).
-           Die Einladung bleibt als Baustein stehen — sie ist die richtige Form
-           für „später nochmal", etwa nach einem Import. Beim allerersten
-           Öffnen zählt aber die Frage, die sie nicht beantwortete: was ist das
-           hier, und wohin gehören meine Daten? */
         setTimeout(willkommen, 1400);
     };
     return { start, uebersicht, vielleichtStarten, willkommen, einladung,

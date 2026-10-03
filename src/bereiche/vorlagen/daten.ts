@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/vorlagen/daten.ts (npm run bauen:ts). */
 /* ============================================================================
  * vorlagen.js — Die Vorlagengalerie
  * ----------------------------------------------------------------------------

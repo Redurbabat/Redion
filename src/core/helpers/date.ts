@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/date.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/date.ts — Zeit, ohne Bibliothek
  * ----------------------------------------------------------------------------

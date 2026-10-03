@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/werkzeuge.ts (npm run bauen:ts). */
 /* ============================================================================
  * tools.js — Die Werkzeuge
  * ----------------------------------------------------------------------------

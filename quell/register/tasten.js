@@ -1,24 +1,5 @@
 "use strict";
-/* ============================================================================
- * register/tasten.js — alle Tastenkürzel an einer Stelle
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/tasten.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/register/tasten.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Ein Tastenkürzel lebt bisher an zwei Orten: dort, wo es ausgeführt wird,
- * und dort, wo es in der Übersicht steht. Das läuft auseinander — und zwar
- * unsichtbar: die Übersicht zeigt ein Kürzel, das es nicht mehr gibt, und
- * niemand merkt es, weil beides für sich richtig aussieht.
- *
- * Hier steht die Liste. Die Übersicht liest sie, und ein Prüflauf kann
- * vergleichen, ob es zu jedem Eintrag auch einen Griff im Code gibt.
- *
- * Die Form ist ein Paar: ['Strg N', 'Neue Seite'], gruppiert nach Bereich.
- * Absichtlich so knapp — eine Tabelle mit acht Spalten schreibt niemand
- * nach, und eine Liste, die niemand nachschreibt, ist falsch.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/tasten.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.tasten = (() => {
     const EINGEBAUT = [
@@ -44,9 +25,6 @@ Register.tasten = (() => {
                 ['Strg Alt T', 'Alle Toggles auf/zu'], ['Strg Enter', 'Abhaken oder öffnen'],
                 ['Shift Enter', 'Zeilenumbruch im Block'], ['Esc', 'Block auswählen']
             ]],
-        /* AUF BLATT UND PDF-SEITE, wie in GoodNotes (E465): ein Buchstabe
-           wechselt das Werkzeug — nur, solange niemand tippt. Die Griffe
-           stehen in `marken.ts` (TASTEN); test438 haelt beide Listen zusammen. */
         ['Blatt und PDF', [
                 ['P', 'Stift'], ['2', 'Bleistift'], ['H', 'Marker'], ['E', 'Radierer'],
                 ['S', 'Form'], ['V', 'Auswahl'], ['T', 'Text'], ['A', 'Abdecken'],
@@ -59,9 +37,6 @@ Register.tasten = (() => {
                 ['Strg Shift S', 'Durchgestrichen'], ['Strg E', 'Code'], ['Strg Shift H', 'Letzte Farbe'],
                 ['Strg K', 'Link setzen (bei Auswahl)']
             ]],
-        /* Diese Kürzel wandeln beim Tippen um, sobald das Leerzeichen kommt —
-           genau wie Notions „Markdown style". Sie stehen im Blockkatalog als
-           md-Feld und sind deshalb hier keine Behauptung, sondern eine Liste. */
         ['Markdown beim Tippen', [
                 ['# ␣', 'Überschrift 1'], ['## ␣', 'Überschrift 2'], ['### ␣', 'Überschrift 3'],
                 ['- ␣ · * ␣ · + ␣', 'Aufzählung'],
@@ -75,9 +50,6 @@ Register.tasten = (() => {
                 ['~Text~ · ~~Text~~', 'Durchgestrichen'], ['__Text__', 'Unterstrichen'],
                 ['[Text](Adresse)', 'Link'], ['$a^2$', 'Formel im Text']
             ]],
-        /* Einfügen ist die Gegenrichtung zu „Als Markdown kopieren". Wer eine
-           Gliederung einfügt, bekommt sie wieder als Blöcke — nicht als einen
-           Block voller Rautezeichen. */
         ['Markdown einfügen', [
                 ['# Text', 'Eingefügt wird daraus eine Überschrift'],
                 ['- [x] Text', 'Eine schon abgehakte Aufgabe'],
@@ -155,9 +127,7 @@ Register.tasten = (() => {
                 ['Leiste über der Tastatur', 'Formatieren ohne Menü']
             ]]
     ];
-    /* Eine Liste, und immer dieselbe — siehe register/bloecke.js. */
     const LISTE = EINGEBAUT.slice();
-    /** Ein Kürzel nachtragen. Gruppe gibt es noch nicht? Dann entsteht sie. */
     const melde = (gruppe, taste, was) => {
         if (!taste || !was)
             return false;
@@ -174,18 +144,8 @@ Register.tasten = (() => {
     const alle = () => LISTE;
     const gruppen = () => LISTE.map(x => x[0]);
     const inGruppe = (g) => LISTE.find(x => x[0] === g)?.[1] ?? [];
-    /** Alle Kürzel flach, mit Gruppe — für Suche und Prüfläufe. */
     const flach = () => LISTE.flatMap(([g, liste]) => liste.map(([taste, was]) => ({ gruppe: g, taste, was })));
     const anzahl = () => flach().length;
-    /**
-     * Zweimal dieselbe Taste — aber nur innerhalb einer Gruppe ein Fehler.
-     *
-     * Über Gruppen hinweg ist eine Doppelbelegung Absicht und richtig: Esc
-     * schliesst ein Menü, und wenn keines offen ist, wählt es den Block aus.
-     * Strg K sucht, und bei markiertem Text setzt es einen Link. Wer solche
-     * Fälle meldet, bekommt eine Liste, die nie leer wird — und dann sieht
-     * niemand mehr hin, wenn wirklich zwei Griffe kollidieren.
-     */
     const doppelte = () => {
         const raus = [];
         LISTE.forEach(([gruppe, liste]) => {
@@ -200,7 +160,6 @@ Register.tasten = (() => {
         });
         return raus;
     };
-    /** Dieselbe Taste in mehreren Gruppen — kein Fehler, aber gut zu wissen. */
     const mehrfach = () => {
         const wo = new Map();
         flach().forEach(k => {

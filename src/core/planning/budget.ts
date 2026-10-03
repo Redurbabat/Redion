@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/planning/budget.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/planning/budget.ts — „Ich habe heute 45 Minuten. Was mache ich?"
  * ----------------------------------------------------------------------------

@@ -1,13 +1,5 @@
 "use strict";
-/* ============================================================================
- * bereiche/wissen/produktwelten.ts — Navigation und alte Routen, ein Datenbestand
- * ----------------------------------------------------------------------------
- * Dieser kleine Lotse besitzt bewusst keine Seiten, Karten oder Aufgaben.
- * Er merkt nur, in welcher Produktwelt man arbeitet, markiert die gemeinsame
- * Navigation und reicht den Aufruf an Lernwelt, Arbeitswelt oder die bereits
- * vorhandenen Ansichten weiter. So kann dasselbe Objekt in mehreren Sichten
- * auftauchen, ohne kopiert zu werden.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/produktwelten.ts (npm run bauen:ts). */
 const Produktwelten = (() => {
     const WELT_META = 'produkt:welt';
     const LERN_META = 'produkt:lernansicht';
@@ -33,13 +25,6 @@ const Produktwelten = (() => {
         });
     };
     const weltSetzen = (welt) => {
-        /* DEN GLIEDERUNGSSTREIFEN WEGNEHMEN. Er gehört zur zuletzt geöffneten
-           Seite und hängt an `#main`; eine Produktwelt legt sich darüber, ohne
-           ihn anzufassen. Gemessen am 25. August in der Bibliothek: vier Striche
-           am rechten Rand, die zu „Willkommen in Redion" gehörten. Ein Klick
-           darauf sprang zu einem Block, der gar nicht gezeichnet war — also
-           nichts. `streifenZeichnen` baut ihn beim nächsten Seitenaufruf neu
-           (`inhaltsflaeche.ts`), hier reicht das Wegnehmen. */
         document.getElementById('rand-toc')?.remove();
         Store.setMeta(WELT_META, welt);
         markieren(welt);
@@ -53,7 +38,7 @@ const Produktwelten = (() => {
                 Seitenleiste.handyLeiste?.();
             }
         }
-        catch { /* Die Ansicht funktioniert auch ohne die Navigationsschale. */ }
+        catch { }
     };
     const lernmodul = () => globalThis.Lernwelt;
     const arbeitsmodul = () => globalThis.Arbeitswelt;
@@ -94,7 +79,6 @@ const Produktwelten = (() => {
             routeSchreiben('lernen', ziel);
             return;
         }
-        /* Rückfall für alte Einzeldateien, in denen das neue Modul noch fehlt. */
         if (ansicht === 'heute' && typeof Ansichten !== 'undefined')
             Ansichten.start();
         else if (typeof Learning !== 'undefined')
@@ -102,9 +86,6 @@ const Produktwelten = (() => {
         routeSchreiben('lernen', ziel);
     };
     const workspace = (ansicht = 'start') => {
-        /* Nur noch ein Kompatibilitätsweg für gespeicherte Links und Aufrufer.
-           Die Ansichten wohnen jetzt in Bibliothek, Aufgaben und Kalender;
-           keine neue Workspace-Schale und keine Migration von Inhaltsdaten. */
         const ziel = ansicht === 'start' || ansicht === 'seiten' || ansicht === 'projekte'
             ? 'uebersicht' : ansicht === 'dateien' ? 'bibliothek' : ansicht;
         weltSetzen('workspace');
@@ -133,22 +114,10 @@ const Produktwelten = (() => {
             Bibliothek.oeffne();
     };
     const aufgaben = () => workspace('aufgaben');
-    /* DER KALENDER IST EIN EIGENER ORT (E430, E431). Die Ansicht gab es die
-       ganze Zeit — die Arbeitswelt zeichnet die Chronologie aller Datumsfelder.
-       Es fehlte nur die Tür: der Navigationseintrag „Kalender" rief
-       `Kalender.dialog()`, und das ist der Verbindungsdialog für Google und
-       CalDAV.
-       E431 hat die Tür dann noch einmal verlegt. Redur wollte den Kalender
-       nicht als Abschnitt des Arbeitsbereichs, sondern als eigenen Ort — wie
-       die Elektrotechnik, die auch nicht im Workspace wohnt. Also `zeigeSonder`
-       statt `workspace('kalender')`: eigene Krume „📅 Kalender", eigene Adresse
-       `#kalender`, keine Workspace-Seitenleiste. Gezeichnet wird trotzdem von
-       der Arbeitswelt (§8: kein zweiter Katalog). */
     const kalender = () => {
         const modul = arbeitsmodul();
         if (modul?.kalenderOeffnen && modul.kalenderOeffnen())
             return;
-        /* Rückfall für alte Einzeldateien, in denen der eigene Ort noch fehlt. */
         workspace('kalender');
     };
     const whiteboards = () => workspace('whiteboards');
@@ -158,15 +127,8 @@ const Produktwelten = (() => {
         if (typeof Ansichten !== 'undefined')
             Ansichten.termine();
     };
-    /** Mehrfachzuordnung für bestehende Objekte. Der Dialog schreibt nur die
-        kleinen Bereichskennungen; Inhalt und Objektkennung bleiben dieselben. */
     const bereicheDialog = async (objekt) => {
         const api = globalThis.Lebensbereiche;
-        /* ZWEI GRÜNDE, ZWEI SÄTZE (E434). Hier stand ein Satz für beide Fälle:
-           „Die Lebensbereiche sind in dieser Fassung noch nicht geladen."
-           Beim häufigeren Fall — kein Objekt zum Zuordnen — war er schlicht
-           falsch und schickte den Nutzer auf die Suche nach einem Ladefehler,
-           den es nicht gab. */
         if (!api) {
             UI.toast('Die Lebensbereiche sind in dieser Fassung noch nicht geladen.');
             return;
@@ -205,9 +167,6 @@ const Produktwelten = (() => {
         neu.type = 'button';
         neu.dataset.aktion = 'neu';
         neu.textContent = '＋ Bereich anlegen';
-        /* HIER STAND „Einrichtung öffnen" (weg mit E434). Der Knopf führte in
-           die Begrüssungsfläche, und die gibt es nicht mehr. Anlegen und
-           Zuordnen kann dieser Dialog selbst — dafür ist er da. */
         fuss.append(neu);
         dialog.append(kopf, erklaerung, liste, fuss);
         overlay.appendChild(dialog);
@@ -303,37 +262,12 @@ const Produktwelten = (() => {
             if (name)
                 name.textContent = 'Heute';
         }
-        /* DER DRITTE WERT IST DIE KURZFORM AM TELEFON, und „Workspace" ist keine
-           (E137). Gemessen bei 390 px: vier von fünf Pillen liefen über den Rand
-           — „Workspace" um 78 px, „Heute" um 41. §30 des Auftrags verlangt
-           ausdrücklich, dass am iPhone nichts überläuft, und test114 misst es
-           Breite für Breite.
-           Der lange Name bleibt als Titel stehen; auf der Pille steht das kurze
-           Wort, das Redion schon vorher benutzt hat. */
         mobileBeschriftung('hl-start', 'Heute', 'Heute');
         mobileBeschriftung('hl-lernen', 'Lernen & Alltag', 'Lernen');
-        /* SEIT E236 GIBT ES `hl-seiten` NICHT MEHR — der Workspace steht im
-           Mehr-Blatt unter „Wo du arbeitest". Die Zeile hier wäre eine Anweisung
-           an einen Knopf, den niemand mehr baut.
-           Und aus „Plan" wurde wieder „Termine": die Kurzform stammt aus der
-           Zeit der waagerechten Pillen, wo Zeichen und Wort NEBENEINANDER
-           standen und vier von fünf Namen überliefen (E137). Unten stehen sie
-           übereinander, jeder Weg hat 78 px — „Termine" braucht bei 10.5 px
-           rund 48. Der kurze Name kostete Deutlichkeit, die es nicht mehr zu
-           sparen gibt. */
         mobileBeschriftung('hl-bespr', 'Planung und Termine', 'Termine');
         if (gestartet)
             return;
         gestartet = true;
-        /* HIER STAND DER ZUHÖRER AM `weltwechsel` — bis E280 (L86).
-           Den Umschalter gibt es seit E206 nicht mehr: `index.html` erklärt in
-           einem eigenen Absatz, warum er wegfiel („ein dritter Weg zu zwei
-           Orten, ganz oben, in der auffälligsten Zeile"). Der Zuhörer blieb
-           und hing an nichts — `element('weltwechsel')` gab seither `null`,
-           und `?.` schluckte es still.
-           `Produktwelten.markieren()` läuft weiter über `[data-welt]`; findet
-           es keins, geht `forEach` über eine leere Liste. Das war schon in
-           E206 die ganze Rechnung. */
     };
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,

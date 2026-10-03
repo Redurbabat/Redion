@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/spreadsheet/ansicht.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/spreadsheet/ansicht.ts — der Tabellenblock, wie man ihn sieht
  * ----------------------------------------------------------------------------

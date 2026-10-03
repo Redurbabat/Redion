@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/datenbanken/dienst.js — was eine Datenbank rechnet, ohne sie zu zeigen
  * ----------------------------------------------------------------------------

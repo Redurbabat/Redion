@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/kontext.ts (npm run bauen:ts). */
 /* ============================================================================
  * ki-kontext.js — Kontext, Berechtigung und Suche für die KI
  * ----------------------------------------------------------------------------

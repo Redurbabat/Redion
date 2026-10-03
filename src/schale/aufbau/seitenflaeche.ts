@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/seitenflaeche.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/aufbau/seitenflaeche.ts — die Seite als Leinwand (AFFiNEs `edgeless`)
  * ----------------------------------------------------------------------------

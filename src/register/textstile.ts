@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/textstile.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/textstile.ts — Schriftgrössen und Schriftarten
  * ----------------------------------------------------------------------------

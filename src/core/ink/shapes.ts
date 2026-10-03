@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ink/shapes.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/ink/shapes.ts — Formerkennung fuer Freihandstriche (E355)
  * ----------------------------------------------------------------------------

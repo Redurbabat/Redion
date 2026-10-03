@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/menueband.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/aufbau/menueband.js — das Menüband zeichnen
  * ----------------------------------------------------------------------------

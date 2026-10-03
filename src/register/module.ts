@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/module.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/module.js — welche Bereiche es gibt
  * ----------------------------------------------------------------------------

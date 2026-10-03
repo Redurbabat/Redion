@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/ansicht/baukasten.ts (npm run bauen:ts). */
 /* ============================================================================
  * kibau.js — Die KI baut, der Mensch entscheidet
  * ----------------------------------------------------------------------------

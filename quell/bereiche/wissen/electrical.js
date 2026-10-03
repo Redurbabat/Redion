@@ -1,11 +1,5 @@
 "use strict";
-/* ============================================================================
- * bereiche/wissen/electrical.ts — Ausbildung auf normalen Redion-Bausteinen
- * ----------------------------------------------------------------------------
- * Rechnergebnisse sind Formel-/Textbloecke; Fragen sind normale Flashcards.
- * Das Paketformat ist versioniert und validiert. Es gibt weder ein zweites
- * Ausbildungsmodell noch versteckte normative Entscheidungen (E128).
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/electrical.ts (npm run bauen:ts). */
 const Electrical = (() => {
     const PACKAGE_SCHEMA = 'redion.learning-package/v1';
     const BABAT_PACKAGE_ELEMENT = 'redion-learning-package-babat';
@@ -274,14 +268,6 @@ const Electrical = (() => {
         cost: { label: 'Energiekosten', fields: [['e', 'Energie', 'kWh'], ['price', 'Preis je kWh', 'Geldeinheit']], run: v => ElectricalCalculations.cost(v.e, v.price) },
         series: { label: 'Widerstände in Reihe', fields: [['list', 'Widerstände, mit Komma', 'Ω']], run: v => ElectricalCalculations.series(v.list) },
         parallel: { label: 'Widerstände parallel', fields: [['list', 'Widerstände, mit Komma', 'Ω']], run: v => ElectricalCalculations.parallel(v.list) },
-        /* DER SPANNUNGSFALL IST DIE ERSTE MEHRSCHRITTIGE RECHNUNG (E209).
-           Die neun darüber sind je eine Formel; hier sind es vier Schritte und
-           eine Gegenprobe. Genau dafür gibt es den Rechenweg: bei einer Formel
-           kann man das Ergebnis noch im Kopf prüfen, bei vier nicht mehr.
-    
-           Die Rechnung selbst steht im Kern (`Rechenweg.spannungsfall`) und
-           nicht hier — sie wird von `test246` ohne Browser geprüft, und was
-           geprüft ist, soll nicht in zwei Fassungen existieren. */
         drop: {
             label: 'Spannungsfall einer Leitung',
             fields: [['p', 'Leistung', 'W'], ['u', 'Spannung', 'V'], ['cos', 'cos φ', ''],
@@ -291,15 +277,9 @@ const Electrical = (() => {
                     const n = Number(String(t).replace(',', '.'));
                     return Number.isFinite(n) && n > 0 ? n : (fehlt.push(name), null);
                 };
-                /* `Record<string,string>` ist mit `noUncheckedIndexedAccess` überall
-                   `string | undefined` — ein leeres Feld gibt es wirklich, und der
-                   Typ sagt es. `?? ''` ist hier kein Kniff, sondern die Wahrheit. */
                 const fehlt = [];
                 const p2 = zahl(v.p ?? '', 'Leistung'), u = zahl(v.u ?? '', 'Spannung');
                 const l = zahl(v.l ?? '', 'Leitungslänge'), a = zahl(v.a ?? '', 'Querschnitt');
-                /* cos φ darf fehlen — dann ist die Last rein ohmsch, und genau das
-                   steht dann auch in den Annahmen. Es darf aber nicht grösser als
-                   eins sein: ein Kosinus, der das ist, ist ein Tippfehler. */
                 const cosRoh = String(v.cos ?? '').trim();
                 const cos = cosRoh === '' ? 1 : Number(cosRoh.replace(',', '.'));
                 if (fehlt.length)
@@ -317,27 +297,12 @@ const Electrical = (() => {
                         warnings: urteil.haelt ? [] : [urteil.satz], weg };
                 }
                 catch (fehler) {
-                    /* Der Rechenweg wirft, wenn die gezeigte Zeile ihr Ergebnis nicht
-                       trägt (E209). Das ist ein Fehler IM PROGRAMM und keiner in der
-                       Eingabe — er gehört gemeldet und nicht verschluckt. */
                     return { ok: false, error: fehler instanceof Error ? fehler.message : String(fehler) };
                 }
             }
         }
     };
     const format = (value) => new Intl.NumberFormat('de-CH', { maximumSignificantDigits: 8 }).format(value);
-    /**
-     * Die Zahl im Kopf — und im Seitenblock — so, wie der Weg sie schreibt.
-     *
-     * `format` zeigt acht geltende Ziffern. Bei den neun Rechnungen ohne Weg
-     * ist das die einzige Zahl auf dem Schirm und stört niemanden. Steht aber
-     * ein Weg darunter, dann stand oben „0.71194616 %" und in der letzten
-     * Zeile „0.7119 %" — zweimal dieselbe Zahl in zwei Schreibweisen, und wer
-     * das liest, muss raten, welche davon die Antwort ist. Genau die Sorte
-     * Fehler, die §55.1 meint: keine Prüfung schlug an, sichtbar war es sofort.
-     *
-     * Wo ein Weg da ist, gilt deshalb dessen Schreibweise.
-     */
     const kopfZahl = (r) => r.weg ? Rechenweg.zahl(r.value) : format(r.value);
     const open = (targetPage) => {
         const overlay = document.createElement('div');
@@ -375,22 +340,8 @@ const Electrical = (() => {
             b.textContent = label;
             return b;
         };
-        /* „Rechnen" ist die Hauptsache und sah aus wie „BABAT-Paket exportieren"
-           — sieben gleichrangige Knöpfe nebeneinander sagen nicht, womit man
-           anfängt. Mit Augen gesehen (§55). */
         const haupt = button('calculate', 'Rechnen');
         haupt.className = 'is-primary';
-        /* ZWEI KNÖPFE UNTEN, FÜNF WEITER OBEN — UND KEINER WENIGER (E209).
-    
-           Alle sieben standen in einer Reihe. Seit der Fuss festliegt, kostet
-           die Reihe 130 px in drei Zeilen, und der Lösungsweg zeigte darüber
-           zwei von fünf Schritten. Fünf der sieben handeln aber gar nicht vom
-           Rechnen, sondern vom Ein- und Auspacken von Lernpaketen — sie waren
-           im Weg für etwas, das sie nicht tun.
-    
-           Sie sind NICHT verschwunden. Sie stehen unter dem Ergebnis, mit einer
-           Überschrift, die sagt, was sie sind. Unten bleibt, was zur Rechnung
-           gehört. */
         actions.append(haupt, button('insert', 'Ergebnis in Seite'));
         const pakete = document.createElement('div');
         pakete.className = 'electrical-pakete';
@@ -400,17 +351,6 @@ const Electrical = (() => {
         pReihe.className = 'electrical-actions';
         pReihe.append(button('install', 'Grundlagenkarten installieren'), button('import', 'Lernpaket importieren'), button('export', 'Beispielpaket exportieren'), button('babat-install', 'BABAT-Paket installieren'), button('babat-export', 'BABAT-Paket exportieren'));
         pakete.append(pKopf, pReihe);
-        /* KOPF FEST, BAUCH ROLLT, KNOPFREIHE FEST (E209).
-    
-           Vor dem Lösungsweg passte der Rechner ins Fenster: Kopf, Hinweis,
-           Auswahl, fünf Felder, ein Ergebnis, die Knöpfe. Mit dem Weg wird er
-           1177 px hoch, und in einem 980 px hohen Fenster stand „Ergebnis in
-           Seite" danach 185 px unter dem Rand — am Telefon 310 px. Gerollt
-           werden konnte, aber niemand rollt nach einem Knopf, den er eine
-           Sekunde vorher noch gesehen hat.
-    
-           Deshalb wandert alles Wachsende in einen eigenen Kasten. Der Weg darf
-           dann so lang werden, wie die Rechnung ihn braucht. */
         const bauch = document.createElement('div');
         bauch.className = 'electrical-bauch';
         bauch.append(notice, select, fields, output, pakete);
@@ -450,15 +390,6 @@ const Electrical = (() => {
                 const formula = document.createElement('span');
                 formula.textContent = latest.formula || '';
                 output.appendChild(formula);
-                /* DER LÖSUNGSWEG (E209).
-                   Bis hierher stand nur „1,64 V" und darüber „ΔU = I · R · cosφ".
-                   Wer das liest, kann nicht nachprüfen, ob er dasselbe gerechnet
-                   hätte. Jetzt steht jeder Schritt da, mit der Formel und mit den
-                   eingesetzten Zahlen — und die eingesetzte Zeile kommt aus
-                   denselben Werten wie die Rechnung, kann also nicht abweichen.
-        
-                   `textContent` und nicht `innerHTML`: hier kommen Zahlen aus einem
-                   Eingabefeld an (§19). */
                 const weg = latest.weg;
                 if (weg && Array.isArray(weg.schritte)) {
                     const liste = document.createElement('ol');
@@ -485,8 +416,6 @@ const Electrical = (() => {
                     }
                     output.appendChild(liste);
                 }
-                /* Ein Urteil, wenn die Rechnung eines hat — und im SATZ, nicht nur
-                   als Farbe (§38). */
                 (latest.warnings || []).forEach(text => {
                     const w = document.createElement('strong');
                     w.className = 'el-warnung';
@@ -502,10 +431,6 @@ const Electrical = (() => {
         close.addEventListener('click', () => overlay.remove());
         overlay.addEventListener('mousedown', event => { if (event.target === overlay)
             overlay.remove(); });
-        /* Der Lauscher hängt am DIALOG und nicht mehr an der Knopfreihe.
-           Die fünf Paketknöpfe stehen jetzt oben im Bauch — an `actions` hätte
-           sie niemand mehr gehört, und ein Knopf, der nichts tut, ist schlimmer
-           als einer, den es nicht gibt. */
         dialog.addEventListener('click', async (event) => {
             const action = (event.target instanceof Element ? event.target.closest('[data-action]') : null)?.dataset.action;
             if (action === 'calculate')
@@ -526,14 +451,6 @@ const Electrical = (() => {
                 Store.addBlock(pageId, 'equation', { text: `${result.formula} = ${kopfZahl(result)} ${result.unit}`,
                     electricalCalculation: { fassung: 1, formula: result.formula, value: result.value, unit: result.unit,
                         assumptions: result.assumptions || [], created: Store.now() } });
-                /* DER WEG KOMMT MIT AUF DIE SEITE (E209).
-                   „Ergebnis in Seite" schrieb bisher nur das Ergebnis. In einer
-                   Prüfung wird der Weg bewertet und nicht die Zahl — wer ihn auf dem
-                   Bildschirm sieht und auf dem Blatt nicht, hat nichts gewonnen.
-        
-                   Je Schritt ein Block, nicht ein Textklumpen: so lässt sich eine
-                   Zeile einzeln anfassen, verschieben und kommentieren. Das ist
-                   Redions Vokabular. */
                 const wegD = result.weg;
                 if (wegD && Array.isArray(wegD.schritte)) {
                     wegD.schritte.forEach((s2, i) => {

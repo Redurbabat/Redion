@@ -1,43 +1,8 @@
 "use strict";
-/* ============================================================================
- * tools.js — Die Werkzeuge
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/wissen/werkzeuge.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/wissen/werkzeuge.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Hier steckt alles, was die anderen Notiz-Programme gross gemacht hat —
- * an einem Ort, in einer Oberfläche:
- *
- *   Befehlspalette      SilverBullet      Strg + Shift + K
- *   Tagesjournal        Logseq, Foam      Seitenleiste → Journal
- *   Schnellnotizen      Memos, Blinko     Seitenleiste → Schnellnotizen
- *   Vorlagen            Outline, Trilium  Seitenleiste → Vorlagen
- *   Karteikarten        SiYuan            Seitenleiste → Lernen
- *   Versionsverlauf     Standard Notes    Seitenmenü → Versionen
- *   Seite sperren       Notesnook         Seitenmenü → Sperren
- *   Fokus-Modus         MarkText, Zettlr  Seitenmenü → Fokus
- *   Präsentation        HedgeDoc          Seitenmenü → Präsentation
- *   Quelltext-Modus     MarkText, TUI     Seitenmenü → Markdown
- *   Schreibstatistik    Zettlr            Seitenmenü → Statistik
- *   Erinnerungen        Notesnook         Seitenmenü → Erinnerung
- *   Ordner-Abgleich     Joplin, Zettlr    Einstellungen → Ordner
- *   Eine HTML-Datei     TiddlyWiki        Einstellungen → Als eine Datei
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/werkzeuge.ts (npm run bauen:ts). */
 const Werkzeuge = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    /* SEIT A4: was hier gerechnet wird, steht nebenan in dienst.js — die
-       unscharfe Suche, das Wiederholungsverfahren, Markdown hin und zurück,
-       die Zahlen der Statistik. Die Namen werden hereingeholt statt
-       umgeschrieben, damit keine der Aufrufstellen darunter angefasst werden
-       muss. Dieselbe Entscheidung wie bei `Datenbank` und bei `UI`. */
     const { esc, heute, WOCHENTAG, datumLang, unscharf, zeitKurz, planen, alsMarkdown, ausMarkdown, statistikZahlen, sauber, istUnter } = WissenDienst;
-    /** Legt eine Systemseite an oder findet sie wieder (Journal, Vorlagen …). */
     const systemSeite = (schluessel, titel, icon) => {
         const id = Store.getMeta('sys:' + schluessel);
         const da = id && Store.getBlock(id);
@@ -113,11 +78,6 @@ const Werkzeuge = (() => {
                 (error instanceof Error ? error.message : String(error)), 'fehler');
         }
     };
-    /* ========================================================================
-     * 1. BEFEHLSPALETTE   (SilverBullet)
-     * ------------------------------------------------------------------------
-     * Ein Fenster, das jeden Befehl der App kennt. Strg + Shift + K.
-     * ======================================================================*/
     const befehle = () => {
         const s = App.aktuelleSeite();
         const p = s ? Store.getBlock(s) : null;
@@ -134,22 +94,11 @@ const Werkzeuge = (() => {
         c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
         c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
         c('Navigation', 'Whiteboards', '', () => Produktwelten.whiteboards());
-        /* DIE DREI DOMÄNEN FEHLTEN (Auftrag §29). Die Palette kannte „Lernpfad"
-           und „Prüfungszentrum", aber nicht „Schule öffnen" — obwohl §29 genau
-           diesen Satz als Beispiel nennt. Über die Reiter kommt man hin; wer
-           Strg+Umschalt+P benutzt, sucht aber nicht erst die Reiterleiste. */
         c('Navigation', 'Schule und Ausbildung öffnen', '', () => Produktwelten.lernen('schule'));
         c('Navigation', 'Uni öffnen', '', () => Produktwelten.lernen('uni'));
         c('Navigation', 'Arbeit öffnen', '', () => Produktwelten.lernen('arbeit'));
         c('Navigation', 'Lernfortschritt', '', () => Produktwelten.lernen('fortschritt'));
         c('Navigation', 'Planung und Termine', '', () => Produktwelten.planung());
-        /* HIER STAND „Hauptwelten und Lebensbereiche einrichten" (weg mit E434).
-           Die Einrichtung gibt es nicht mehr; zuordnen und anlegen kann der
-           Bereichsdialog seit jeher selbst.
-           ER BRAUCHT ABER EIN OBJEKT. `bereicheDialog(null)` kehrt sofort um und
-           wirft einen Hinweis — ein Knopf ohne Draht, und zwar genau die Sorte,
-           die E410 und E417 gekostet haben. Also die offene Seite mitgeben und
-           ehrlich sagen, wenn keine offen ist. */
         c('Navigation', 'Lebensbereiche dieser Seite', '', () => {
             const id = App.aktuelleSeite?.();
             const seite = id ? Store.getBlock(id) : null;
@@ -168,10 +117,6 @@ const Werkzeuge = (() => {
         c('Navigation', 'Vorlagengalerie', '', () => Galerie.oeffne());
         c('Navigation', 'Karteikarten lernen', '', () => lernen());
         c('Navigation', 'Papierkorb', '', () => App.papierkorb());
-        /* ANLEGEN, NICHT NUR HINGEHEN (Auftrag §29 und §46). Bis hierher konnte
-           die Palette eine Ansicht öffnen, aber nichts Neues erzeugen ausser
-           einer Seite. Die fünf Wege dahinter gibt es alle — sie standen nur
-           nicht in der Liste, in der man sie sucht. */
         c('Anlegen', 'Neue Seite anlegen', 'Strg N', () => App.neueSeite());
         c('Anlegen', 'Neue Aufgabe', '', () => {
             const seite = App.neueSeite();
@@ -238,12 +183,6 @@ const Werkzeuge = (() => {
             c('Seite', 'Auf später zurückstellen', '', () => Plan.menue(document.getElementById('btn-page-menu') || document.body, p.id));
             c('Seite', 'Als Markdown speichern', '', () => App.markdownExport(p));
             c('Seite', 'Als HTML speichern', '', () => htmlExport(p));
-            /* KEIN „Strg P" hier. Der globale Tastengriff fängt Strg/Cmd + P ab
-               und öffnet die Suche (schale.ts, und so steht es auch in
-               `register/tasten.ts`). Die Beschriftung versprach also ein Kürzel,
-               das etwas anderes tut — wer es drückte, bekam die Suche und hielt
-               das Drucken für kaputt. Ohne Kürzel ist ehrlicher als mit einem
-               falschen; der Weg über diesen Eintrag bleibt derselbe. */
             c('Seite', 'Drucken / als PDF', '', () => drucken(p));
             c('Seite', 'Link kopieren', '', () => { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); });
             c('Seite', 'In den Papierkorb', '', () => { Store.trashBlock(p.id); App.zeichneBaum(); App.oeffne((Store.rootPages()[0] || {}).id); UI.toast('In den Papierkorb'); });
@@ -284,20 +223,12 @@ const Werkzeuge = (() => {
                     .catch((e) => UI.toast('Die Word-Datei kam nicht zustande: ' +
                     (e instanceof Error ? e.message : String(e))));
             });
-        c('Daten', 'Alle Datenbanken als Excel-Mappe (.xlsx)', '', () => 
-        /* `allesAlsExcel` gibt `null` zurück, wenn es keine Datenbank gibt —
-           dann gibt es auch nichts abzufangen. */
-        Austausch.allesAlsExcel()?.catch((e) => UI.toast('Die Excel-Mappe kam nicht zustande: ' +
+        c('Daten', 'Alle Datenbanken als Excel-Mappe (.xlsx)', '', () => Austausch.allesAlsExcel()?.catch((e) => UI.toast('Die Excel-Mappe kam nicht zustande: ' +
             (e instanceof Error ? e.message : String(e)))));
         if (p)
             c('Seite', 'Fassungen vergleichen', '', () => Vergleich.dialog(p));
         c('Ansicht', 'Aussehen: Farben, Schrift, Tastenkürzel', '', () => Aussehen.dialog());
         c('Ansicht', 'Tempo messen', '', () => Tempo.dialog());
-        /* Strg T und Strg W standen hier bis E300 — beide gehören dem Browser
-           und werden von Redion gar nicht gebunden (die Begründung steht in
-           `reiter.ts` bei `tasten`). Wer sie hier las und drückte, schloss sein
-           Browserfenster; das ist ein Kürzel, das etwas anderes tut als
-           angeschrieben. */
         c('Ansicht', 'Neuer Reiter', 'Strg Alt N', () => Fenster.neuerReiter());
         c('Ansicht', 'Reiter schliessen', 'Strg Alt W', () => Fenster.schliessen(Fenster.aktiv()));
         c('Ansicht', 'Geteilte Ansicht ein oder aus', 'Strg Alt S', () => Fenster.geteilt() ? Fenster.teilenAus() : Fenster.teilen());
@@ -330,7 +261,6 @@ const Werkzeuge = (() => {
         c('Navigation', 'Führung starten', '', () => Rundgang.start());
         c('Daten', 'Erweiterungen', '', () => Erweiterung.dialog());
         c('Daten', 'Was hereinkommt — Eingänge von aussen', '', () => Eingang.dialog());
-        /* Was Erweiterungen selbst angemeldet haben */
         (Erweiterung.angemeldet.befehle || []).forEach(x => c('Erweiterungen', x.titel, '', () => {
             try {
                 x.fn();
@@ -341,31 +271,8 @@ const Werkzeuge = (() => {
         }));
         return b;
     };
-    /* ------------------------------------------------------------------------
-     * BEFEHLSPALETTE — unscharfe Suche und Gedächtnis
-     * ------------------------------------------------------------------------
-     * Notions Palette sucht wörtlich: „umb" findet „Umbenennen" nicht. Hier
-     * zählen die Buchstaben in der richtigen Reihenfolge, und was man oft
-     * benutzt, steht oben.
-     * ---------------------------------------------------------------------- */
-    /* ══ DREI GEDÄCHTNISSE, UND SIE BEANTWORTEN DREI FRAGEN (E401) ═════════
-       `paletteOft`      wie oft?      — gab es schon
-       `paletteZuletzt`  wann zuletzt? — F09, fehlte
-       `paletteFest`     was WILL ich? — F09, fehlte
-  
-       Der Unterschied zwischen den ersten beiden ist der ganze Punkt des
-       Befundes: ein Zähler weiss nicht, was man gerade eben getan hat. Die
-       SUCHE hatte das Gegenstück längst („Zuletzt gesucht", schale.ts:1082);
-       die Palette nicht.
-  
-       Und das dritte ist keins von beiden: was oft benutzt wird, ist nicht
-       dasselbe wie das, was man oben haben WILL. */
     const ZULETZT_ZAHL = 8;
     const FEST_ZAHL = 8;
-    /* Jeder andere Verlauf im Haus hat einen Deckel (8 / 12 / 60 / 100 /
-       2000); `paletteOft` hatte als einziger keinen und wandert über
-       `indexdb.ts` in jede Sicherung. 50 Namen sind mehr, als ein Mensch je
-       bewusst benutzt, und beschränken das Wachstum auf einmal. */
     const OFT_ZAHL = 50;
     const oftBenutzt = () => Store.getMeta('paletteOft', {}) || {};
     const zuletztBenutzt = () => {
@@ -386,23 +293,12 @@ const Werkzeuge = (() => {
         Store.setMeta('paletteFest', l.slice(0, FEST_ZAHL));
     };
     const merkeBefehl = (name, gruppe = '') => {
-        /* SEITEN SIND KEINE BEFEHLE. Die Palette zeigt bei einer Eingabe auch
-           bis zu sechs Seiten an; deren Titel landeten bisher ungefiltert im
-           Zähler — „📄 Projekt" stand dann zwischen „Papierkorb" und
-           „Exportieren". In einer Liste „Zuletzt" wäre das noch sichtbarer. */
         if (gruppe === 'Seiten')
             return;
         const m = oftBenutzt();
         m[name] = (m[name] || 0) + 1;
-        /* Beim Deckel gewinnt, wer öfter benutzt wurde — nicht, wer zufällig
-           zuerst dastand. */
         const namen = Object.keys(m);
         if (namen.length > OFT_ZAHL) {
-            /* DER GERADE BENUTZTE BLEIBT IN JEDEM FALL. Ohne diese Zeile fiel er
-               beim ersten Mal sofort wieder heraus: er steht mit Zähler 1 ganz
-               unten, und beim Deckeln gewinnt die Häufigkeit. Man hätte einen
-               Befehl ausgeführt und ihn danach nicht in „Zuletzt" wiedergefunden.
-               `test397 §6` hat das gefunden. */
             const behalten = namen.filter(n => n !== name)
                 .sort((a, b) => (m[b] || 0) - (m[a] || 0)).slice(0, OFT_ZAHL - 1);
             behalten.push(name);
@@ -417,13 +313,7 @@ const Werkzeuge = (() => {
         jung.unshift(name);
         Store.setMeta('paletteZuletzt', jung.slice(0, ZULETZT_ZAHL));
     };
-    /* `vorgabe` füllt das Suchfeld vor. `register/module.js` ruft seit jeher
-       `Werkzeuge.palette('datenbank')`, und der Wert fiel bisher stumm auf den
-       Boden: die Palette ging auf, aber ungefiltert. */
     const palette = (vorgabe = '') => {
-        /* Die eigenen Befehle stehen unten in befehle(); alles Weitere kommt
-           aus register/befehle.js — dort meldet jeder Bereich seine eigenen an,
-           ohne dass diese Datei davon wissen muss. */
         const liste = (typeof Register !== 'undefined' && Register.befehle)
             ? [...befehle(), ...Register.befehle.alle().map((x) => ({
                     gruppe: x.gruppe || 'Weiteres', name: x.titel, kurz: x.kurz || '', fn: x.tun
@@ -441,21 +331,11 @@ const Werkzeuge = (() => {
         document.body.appendChild(o);
         const inp = o.querySelector('#cq');
         const res = o.querySelector('#cr');
-        /* Ohne Eingabefeld und Trefferliste ist die Palette nicht die Palette. */
         if (!inp || !res)
             return;
         const oft = oftBenutzt();
         const fest = angeheftet();
         const jung = zuletztBenutzt();
-        /* ══ OHNE EINGABE: ANGEHEFTET, ZULETZT, DANN DER REST (E401) ══════════
-           Die zwei Gruppen stehen NUR da, wenn sie etwas enthalten. Bei einem
-           frischen Redion sieht die Palette deshalb genau aus wie vorher — und
-           das ist die Regel dieses Projekts: eine Überschrift, die immer
-           dasteht, wird nicht gelesen.
-    
-           Die Gruppe wird am KOPIERTEN Eintrag gesetzt, nicht am Original: ein
-           Befehl behält seine echte Gruppe für die Suche, steht oben aber unter
-           „Angeheftet". */
         const nachName = new Map(liste.map((t) => [t.name, t]));
         const kopf = [];
         fest.forEach(n => {
@@ -474,47 +354,14 @@ const Werkzeuge = (() => {
         const anfang = [...kopf, ...[...liste].filter((t) => !schonOben.has(t.name))
                 .sort((a, b) => (oft[b.name] || 0) - (oft[a.name] || 0))];
         let treffer = anfang, i = 0;
-        /* ══ SO VIELE ZEILEN WERDEN GEZEICHNET — UND NUR SO WEIT GEHT DER PFEIL
-           ══ (E400)
-           Hier stand `treffer.slice(0, 60)` beim Zeichnen und
-           `Math.min(i + 1, treffer.length - 1)` beim Pfeil. Ohne Eingabe ist
-           `treffer` die ganze Liste — und die ist laenger, als das Lesen des
-           Quelltextes vermuten laesst: 163 Eintraege. (Von den 105 `c(`-Aufrufen
-           sind zwei SCHLEIFEN — eine erzeugt 66 Befehle aus `Register.bloecke`,
-           eine 0..n aus den Erweiterungen. Auf dem Bildschirm abgelesen: „103
-           weitere" unter 60 gezeichneten Zeilen.)
-    
-           Ab dem 61. Druck auf ↓ zeigte also KEIN gezeichneter Knopf mehr `.on`,
-           `scrollIntoView` fiel still durch das `?.`, auf dem Bildschirm bewegte
-           sich nichts — und Enter fuehrte einen Befehl aus, den der Nutzer nie
-           gesehen hatte. 103 Befehle waren so erreichbar, ohne sichtbar zu sein.
-    
-           Eine Zahl, nicht zwei: `GEZEIGT` steht jetzt an beiden Stellen. Kein
-           Prüflauf fiel darüber, weil test51 immer erst etwas eintippt und damit
-           unter 46 Treffern bleibt (40 bewertete + 6 Seiten). */
         const GEZEIGT = 60;
         const zeichne = () => {
             let g = '';
-            /* Frisch lesen: das Anheften schreibt zwischen zwei Durchläufen. */
             const feste = new Set(angeheftet());
             const sicht = treffer.slice(0, GEZEIGT);
             res.innerHTML = sicht.map((t, k) => {
                 const kopf = t.gruppe !== g ? `<div class="grp">${esc(t.gruppe)}</div>` : '';
                 g = t.gruppe;
-                /* DER STERN STEHT IM KNOPF, NICHT DANEBEN. Ein zweiter <button>
-                   IM Knopf wäre ungültiges HTML, und ein Umschlag um beide würde
-                   `:where(.finder .res) > button` brechen — die Zeilenregel gilt nur
-                   für DIREKTE Kinder (E348). Ein <span> mit `data-fest` ist deshalb
-                   das Richtige: der Griff auf `.res` prüft ihn VOR dem Knopf, und
-                   für die Tastatur gibt es Strg+Enter. Der Zustand steht am Knopf
-                   im `aria-label`, damit ein Vorleseprogramm ihn hört (§38).
-        
-                   DAS ZEICHEN SELBST STEHT IM CSS, NICHT HIER. Als Textknoten
-                   landete es in `textContent` — und damit in jeder Prüfung und in
-                   jedem Stück Code, das den Namen einer Zeile abliest. test206 fiel
-                   daran mit acht Punkten auf einmal („Neue Seite" fand
-                   „☆Neue Seite"). `aria-hidden` allein reicht nicht: es verbirgt
-                   vor dem Vorleser, nicht vor dem Text. */
                 const istFest = feste.has(t.name);
                 return kopf + `<button data-i="${k}"${k === i ? ' class="on"' : ''}` +
                     (istFest ? ' data-ist-fest' : '') +
@@ -524,10 +371,6 @@ const Werkzeuge = (() => {
                     `<span style="flex:1">${esc(t.name)}</span>` +
                     (t.kurz ? `<span class="pth">${esc(t.kurz)}</span>` : '') + '</button>';
             }).join('') +
-                /* UND WAS NICHT DASTEHT, WIRD GESAGT. Eine abgeschnittene Liste, die
-                   so tut, als wäre sie vollständig, ist dieselbe Lüge in klein. Der
-                   Satz erscheint nur, wenn wirklich etwas fehlt — sonst wäre er ein
-                   Hinweis, den niemand mehr liest. */
                 (treffer.length > GEZEIGT
                     ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
                         'tipp einen Namen, um sie zu finden</div>'
@@ -540,10 +383,6 @@ const Werkzeuge = (() => {
             merkeBefehl(t.name, t.gruppe);
             setTimeout(() => t.fn(), 10);
         };
-        /* Anheften schliesst das Fenster NICHT: man heftet mehrere hintereinander
-           an, und wer danach doch ausführen will, drückt Enter. Neu gezeichnet
-           wird nur die Liste, nicht die Reihenfolge — sonst spränge die Zeile
-           unter dem Finger weg. */
         const festSchalten = (name) => { festUmschalten(name); zeichne(); };
         inp.addEventListener('input', () => {
             const q = inp.value.trim();
@@ -553,18 +392,13 @@ const Werkzeuge = (() => {
                 zeichne();
                 return;
             }
-            /* Befehle unscharf bewerten */
             const bewertet = liste.map(t => {
                 const p1 = unscharf(t.name, q);
                 const p2 = unscharf(t.gruppe + ' ' + t.name, q);
                 const punkte = Math.max(p1, p2 - 40);
-                /* Angeheftetes führt auch die gefilterte Liste an — sonst wäre das
-                   Anheften nur eine Kosmetik für den ungefilterten Erstzustand. 100
-                   Punkte schlagen die 60 aus dem Häufigkeitsbonus sicher. */
                 const bonus = Math.min(60, (oft[t.name] || 0) * 12) + (fest.indexOf(t.name) >= 0 ? 100 : 0);
                 return punkte < 0 ? null : { t, punkte: punkte + bonus };
             }).filter(Boolean).sort((a, b) => b.punkte - a.punkte).map((x) => x.t);
-            /* Und die Seiten, die so heissen — wie in Notions Schnellsuche */
             const seiten = q.length < 2 ? [] : Object.values(Store.cache.blocks)
                 .filter(x => x.alive !== false && x.type === 'page' && unscharf(x.text || '', q) > 0)
                 .sort((a, b) => unscharf(b.text || '', q) - unscharf(a.text || '', q))
@@ -599,8 +433,6 @@ const Werkzeuge = (() => {
             }
         });
         res.addEventListener('click', e => {
-            /* Der Stern ZUERST — sonst führt ein Druck darauf den Befehl aus,
-               statt ihn anzuheften. */
             const stern = elVon(e)?.closest('[data-fest]');
             if (stern?.dataset.fest) {
                 festSchalten(stern.dataset.fest);
@@ -618,9 +450,6 @@ const Werkzeuge = (() => {
             inp.dispatchEvent(new Event('input'));
         }
     };
-    /* ========================================================================
-     * 2. TAGESJOURNAL   (Logseq, Foam, SiYuan)
-     * ======================================================================*/
     const journalSeite = (iso = heute()) => {
         const eltern = systemSeite('journal', 'Journal', '📅');
         const titel = iso + ' · ' + WOCHENTAG[new Date(iso + 'T12:00:00').getDay()];
@@ -638,12 +467,6 @@ const Werkzeuge = (() => {
         App.zeichneBaum();
         App.oeffne(p.id);
     };
-    /* ========================================================================
-     * 3. SCHNELLNOTIZEN   (Memos, Blinko)
-     * ------------------------------------------------------------------------
-     * Zeitleiste kurzer Notizen mit Schlagwörtern und einer Heatmap der
-     * letzten zwölf Wochen.
-     * ======================================================================*/
     const schnellnotizen = () => {
         const eltern = systemSeite('memos', 'Schnellnotizen', '⚡');
         const o = document.createElement('div');
@@ -680,7 +503,6 @@ const Werkzeuge = (() => {
                     '</div>').join('')
                 : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
                     'Noch nichts festgehalten. Oben eintippen und speichern.</div>';
-            /* Heatmap der letzten zwölf Wochen */
             const zaehler = {};
             alle.forEach((m) => { const t = (m.created || '').slice(0, 10); zaehler[t] = (zaehler[t] || 0) + 1; });
             const zellen = [];
@@ -756,9 +578,6 @@ const Werkzeuge = (() => {
             }
         });
     };
-    /* ========================================================================
-     * 4. VORLAGEN   (Outline, Trilium, Anytype)
-     * ======================================================================*/
     const alsVorlage = (p) => {
         const ordner = systemSeite('vorlagen', 'Vorlagen', '🧩');
         const daten = Store.baum(p.id);
@@ -792,7 +611,6 @@ const Werkzeuge = (() => {
             if (!b.dataset.v)
                 return;
             const daten = Store.baum(b.dataset.v);
-            /* Nur den Inhalt übernehmen, nicht die Vorlagenseite selbst */
             (daten.kinder || []).forEach((k) => Store.baumEinfuegen(k, ziel.id));
             App.zeichneSeite();
             UI.toast('Vorlage eingefügt');
@@ -806,9 +624,6 @@ const Werkzeuge = (() => {
         App.zeichneBaum();
         App.oeffne(ordner.id);
     };
-    /* ========================================================================
-     * 5. KARTEIKARTEN   (SiYuan, Anki-Verfahren SM-2)
-     * ======================================================================*/
     const lernModul = () => typeof window !== 'undefined'
         ? window.Learning : null;
     const karten = () => lernModul()?.cards?.() || Object.values(Store.cache.blocks)
@@ -821,9 +636,6 @@ const Werkzeuge = (() => {
         return karten().filter((k) => !k.sr || !k.sr.faellig || new Date(k.sr.faellig).getTime() <= jetzt);
     };
     const lernen = () => {
-        /* Learning V2 zeichnet Tagesqueue, Fehlertraining und Statistik. Der
-           alte Dialog bleibt als belastbarer Rückfall erhalten, falls das neue
-           Modul in einer eingebetteten Ein-Datei-Ausgabe noch nicht geladen ist. */
         const neu = lernModul();
         if (neu?.open) {
             neu.open();
@@ -935,13 +747,7 @@ const Werkzeuge = (() => {
         const i = t.indexOf('::');
         return i >= 0 ? [t.slice(0, i).trim(), t.slice(i + 2).trim()] : [t, '(noch keine Antwort — mit :: trennen)'];
     };
-    /* ========================================================================
-     * 6. VERSIONSVERLAUF   (Standard Notes, Trilium, Joplin)
-     * ======================================================================*/
     const versionen = async (p) => {
-        /* „Keine Fassungen" und „nicht nachsehen können" sahen im Verlauf gleich
-           aus — beides eine leere Liste. Der Unterschied entscheidet, ob man
-           die Seite beruhigt überschreibt oder besser nicht. */
         let liste;
         try {
             liste = await Store.versionen(p.id);
@@ -1007,8 +813,6 @@ const Werkzeuge = (() => {
             if (!confirm('Diese Fassung wiederherstellen? Der jetzige Inhalt wird vorher als Version gesichert.'))
                 return;
             await Store.versionSpeichern(p.id, 'vor Wiederherstellung');
-            /* Abgleichen statt abreissen (E685, wie E684 im Verlauf) — Kennungen
-               und Fassungen der Unterseiten bleiben. */
             Store.baumAbgleichen(p.id, v.daten);
             Store.updateBlock(p.id, { text: v.daten.text, icon: v.daten.icon });
             o.remove();
@@ -1017,22 +821,10 @@ const Werkzeuge = (() => {
             UI.toast('Fassung wiederhergestellt');
         });
     };
-    /* Alle paar Minuten beim Seitenwechsel automatisch eine Fassung sichern. */
     let letzteSicherung = {};
     const versionAutomatisch = async (pageId) => {
         if (!pageId)
             return;
-        /* „FASSUNGEN AUTOMATISCH MERKEN" WIRD GELESEN (E417). Der Schalter stand
-           in den Einstellungen und im Register, und niemand fragte ihn. Wer ihn
-           ausmachte, bekam weiter alle vier Minuten eine Fassung.
-           Von den sechs toten Schaltern war das der einzige, dessen Fehler in
-           die SICHERE Richtung ging — es wurde mehr gesichert als bestellt. Ein
-           Schalter, der lügt, bleibt trotzdem einer, und dieser kostet Platz,
-           den der Nutzer ausdrücklich nicht ausgeben wollte (§15).
-           Nur das AUTOMATISCHE hängt daran: `versionSpeichern` von Hand, vor
-           einer Wiederherstellung und vor einer Quelltext-Änderung läuft
-           weiter. Ein Schalter darf keinen Schutz abschalten, um den gebeten
-           wurde. */
         if (Store.getMeta('autoVersionen', true) === false)
             return;
         const p = Store.getBlock(pageId);
@@ -1044,22 +836,12 @@ const Werkzeuge = (() => {
         letzteSicherung[pageId] = jetzt;
         await Store.versionSpeichern(pageId, 'automatisch');
     };
-    /* ========================================================================
-     * 7. SEITE VERSCHLÜSSELN   (Standard Notes, Notesnook, Trilium)
-     * ------------------------------------------------------------------------
-     * AES-GCM mit einem Schlüssel aus PBKDF2. Das Passwort wird nirgends
-     * gespeichert — vergessen heisst wirklich weg.
-     * ======================================================================*/
     const schluesselCache = new Map();
     const schluessel = async (pass, salzB64) => {
         const salz = Uint8Array.from(atob(salzB64), c => c.charCodeAt(0));
         const roh = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
         return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salz, iterations: 250000, hash: 'SHA-256' }, roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
     };
-    /* Aus `core/helpers/bytes.ts`. Vorher stand hier die Fassung mit dem Spread:
-       ab etwa 128 000 Bytes sprengt sie den Aufrufstapel — und das ist die
-       Grösse einer längeren Seite, also genau der Fall, für den das Sperren
-       gedacht ist. */
     const b64 = (buf) => Bytes.toBase64(buf);
     const vonB64 = (s) => Bytes.fromBase64(s);
     const sperren = async (p) => {
@@ -1080,7 +862,6 @@ const Werkzeuge = (() => {
         const k = await schluessel(pass, salz);
         const klartext = JSON.stringify(Store.baum(p.id).kinder || []);
         const chiffre = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(klartext));
-        /* Vor dem Löschen prüfen, ob sich das Paket auch wirklich wieder öffnen lässt */
         try {
             const probe = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, k, chiffre);
             if (new TextDecoder().decode(probe) !== klartext)
@@ -1090,13 +871,6 @@ const Werkzeuge = (() => {
             alert('Verschlüsselung fehlgeschlagen — es wurde nichts verändert.');
             return;
         }
-        /* WAS ANDERE ÜBER DIESE SEITE WISSEN, BEVOR SIE ZU IST (E364, L78 Punkt 4):
-           gesperrt sind ihre Kinder Chiffretext — wer sie DANACH einordnen
-           will (das Regal: „ist das ein Heft?"), kann es nicht mehr. Also wird
-           vorher gefragt, über den Bus, und was die Antworten sagen, wandert
-           mit ins Sperren. Diese Datei kennt die Heft-Regel damit nicht; sie
-           trägt nur, was ihr gesagt wird. Das Schloss selbst darf keine
-           Antwort umschreiben. */
         const mitgabe = {};
         if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
             try {
@@ -1104,7 +878,7 @@ const Werkzeuge = (() => {
                     if (a && typeof a === 'object')
                         Object.assign(mitgabe, a);
             }
-            catch { /* dann eben ohne Mitgabe */ }
+            catch { }
         }
         delete mitgabe['locked'];
         delete mitgabe['id'];
@@ -1139,7 +913,6 @@ const Werkzeuge = (() => {
             return false;
         }
     };
-    /** Der Sperrbildschirm statt des Seiteninhalts. */
     const sperrAnsicht = (p, wrap) => {
         const d = document.createElement('div');
         d.className = 'gesperrt';
@@ -1160,9 +933,6 @@ const Werkzeuge = (() => {
             los(); });
         setTimeout(() => inp.focus(), 50);
     };
-    /* ========================================================================
-     * 8. FOKUS-MODUS   (MarkText, Zettlr, iA Writer)
-     * ======================================================================*/
     const fokus = (an) => {
         const jetzt = an === undefined ? !document.body.classList.contains('fokus') : an;
         document.body.classList.toggle('fokus', jetzt);
@@ -1177,27 +947,8 @@ const Werkzeuge = (() => {
             document.addEventListener('keydown', raus);
         }
     };
-    /* ========================================================================
-     * 9. PRÄSENTATION   (HedgeDoc, Marp)
-     * ------------------------------------------------------------------------
-     * Jede Überschrift 1 oder jede Trennlinie beginnt eine neue Folie.
-     * ======================================================================*/
     const praesentation = async (p) => {
-        /* Die Seitenbilder vorher holen — `folieBlock` zeichnet synchron. Für
-           den Bildschirm genügen blob-Adressen (E109). */
         const bilder = (await bilderSammeln(p, false)).adressen;
-        /* WO EINE FOLIE ANFÄNGT, STEHT IM KERN (E297).
-           Die Regel — eine neue Folie bei jeder Trennlinie und jeder Überschrift
-           1 oder 2, wie in HedgeDoc und Marp — stand bis hierher NUR an dieser
-           Stelle. Der .pptx-Weg hätte sie abschreiben müssen, und zwei
-           Teilungen, die auseinanderlaufen, sind schlimmer als eine: der Vortrag
-           zeigte dann etwas anderes als die abgegebene Datei, und gemerkt hätte
-           man es in der Schule.
-    
-           Was der Kern mitbringt und hier vorher stand: SPALTEN BLEIBEN SPALTEN
-           (vorher stieg die Sammlung gar nicht hinab, und eine Schulaufgabe war
-           als Vortrag vollständig leer), und die drei Blockarten, die ihren
-           Inhalt selbst zeichnen, werden nicht ein zweites Mal aufgeklappt. */
         const folien = Folien.teilen(p, (id) => Store.childrenOf(id))
             .map((f) => ({ titel: f.titel,
             bloecke: f.eintraege.map((e) => ({ b: e.block, tiefe: e.tiefe })) }));
@@ -1205,19 +956,7 @@ const Werkzeuge = (() => {
         o.className = 'praesi';
         document.body.appendChild(o);
         let i = 0;
-        /* ---- DER SCHRITTZÄHLER (E544, L153) ---------------------------------
-         * PowerPoint blättert nicht bei jedem Klick weiter. Zuerst gehen die
-         * SCHRITTE der Folie durch — jede Abdeckung trägt die Nummer des Klicks,
-         * bei dem sie weichen soll (`schritt`, gelesen aus `p:timing`, E542) —
-         * und erst wenn keiner mehr aussteht, kommt die nächste Folie.
-         *
-         * NUR LAUFZEIT. Der Stand wird nie gespeichert: nach dem Beenden ist
-         * wieder alles zu. Das ist dieselbe Regel wie beim Abdeckband selbst
-         * („Lernen darf den Speicher nicht anfassen", E266), und sie ist hier
-         * dieselbe Antwort auf dieselbe Frage — nicht eine zweite Meinung.
-         */
         let schritt = 0;
-        /** Alle Abdeckungen dieser Folie — auch die in Spalten. */
         const deckelDerFolie = (f) => {
             const raus = [];
             const nimm = (b, tiefe) => {
@@ -1235,15 +974,6 @@ const Werkzeuge = (() => {
                 nimm(e.b, 0);
             return raus;
         };
-        /**
-         * DER ÜBERGANG DIESER FOLIE (E600).
-         *
-         * Er steht am `blatt`-Block, den der `.pptx`-Weg angelegt hat — der
-         * erste Block der Folie, der einen nennt, gilt. Eine Folie, die aus
-         * mehreren Blöcken besteht (eine geteilte Textseite), hat keinen; dann
-         * bleibt es beim harten Schnitt, und das ist richtig: ein Übergang, den
-         * niemand bestellt hat, ist Bewegung ohne Grund (§39).
-         */
         const uebergangDerFolie = (f) => {
             for (const e of f?.bloecke || []) {
                 const u = e?.b?.uebergang;
@@ -1252,12 +982,8 @@ const Werkzeuge = (() => {
             }
             return null;
         };
-        /** Wie viele Klicks diese Folie hat, bevor die nächste kommt. */
         const schritteDerFolie = (f) => deckelDerFolie(f)
             .reduce((m, d) => Math.max(m, Number(d.schritt) || 0), 0);
-        /* Angewandt wird am KNOTEN, nicht durch Neuzeichnen: ein Schritt soll
-           die Folie nicht neu aufbauen — sonst flackert jedes Bild, und eine von
-           Hand aufgedeckte Abdeckung fiele wieder zu. */
         const deckelAnwenden = () => {
             o.querySelectorAll('[data-ink-art="abdeck"][data-schritt]')
                 .forEach(knoten => {
@@ -1268,8 +994,6 @@ const Werkzeuge = (() => {
                     knoten.removeAttribute('data-auf');
             });
         };
-        /* Der Stand gehört in die Leiste, nicht nur in den Kopf des Vortragenden:
-           wer nicht sieht, dass noch zwei Schritte kommen, blättert zu früh. */
         const zaehlerText = () => {
             const max = schritteDerFolie(folien[i]);
             return `${i + 1} / ${folien.length}` + (max ? ` · Schritt ${schritt}/${max}` : '');
@@ -1281,10 +1005,6 @@ const Werkzeuge = (() => {
         };
         const zeichne = () => {
             const f = folien[i];
-            /* Eine Seite ohne einen einzigen Block ergibt keine Folie. Vorher wäre
-               hier `f.titel` an `undefined` gelaufen und der Vortrag mit einem
-               leeren schwarzen Bild stehen geblieben — mitten in der Klasse die
-               unangenehmste Sorte Fehler (§47: kein Weg, der ins Leere führt). */
             if (!f) {
                 o.innerHTML = '<div class="folie"><h1>Nichts zu zeigen</h1>' +
                     '<p>Auf dieser Seite steht noch kein Inhalt.</p></div>' +
@@ -1297,31 +1017,15 @@ const Werkzeuge = (() => {
                     f.bloecke.map(({ b, tiefe }) => folieBlock(b, tiefe)).join('') +
                     '</div>' +
                     `<div class="praesi-leiste">` +
-                    /* Die beiden Marken heissen seit jeher `vor` und `zurueck`, und sie
-                       heissen verkehrt herum: `vor` trägt „‹" und geht zurück. Die
-                       WIRKUNG stimmt — umbenannt wird hier trotzdem nicht, weil die
-                       Namen in Prüfläufen stehen und ein Namenstausch mitten in einem
-                       anderen Bogen genau die Sorte stiller Änderung ist, die später
-                       niemand mehr zuordnet. */
                     `<button data-a="vor">‹</button>` +
                     `<span>${zaehlerText()}</span>` +
                     `<button data-a="zurueck">›</button>` +
                     `<button data-a="zu">Beenden (Esc)</button>` +
                     `</div>`;
-            /* ══ UND JETZT DER ÜBERGANG (E600) ══════════════════════════════════
-               `zeichne` baut die Folie jedes Mal neu — der Knoten ist also frisch,
-               und die Animation startet von selbst. Genau deshalb steht sie hier
-               und nicht an `weiter()`: ein Schritt INNERHALB der Folie zeichnet
-               nicht neu (`deckelAnwenden`), und er soll auch keinen Übergang
-               auslösen. Das ist dieselbe Trennung, die PowerPoint macht.
-      
-               `prefers-reduced-motion` wird geachtet (§39): wer Bewegung
-               abbestellt hat, bekommt den harten Schnitt — und sieht dieselben
-               Folien, nur ohne Weg dazwischen. */
             const bild = o.querySelector('.folie');
             const ueb = uebergangDerFolie(f);
             if (bild && ueb && ueb.art !== 'keine'
-                && !AppEinstellung.wenigBewegung()) { /* System oder „Ruhig" (E702) */
+                && !AppEinstellung.wenigBewegung()) {
                 bild.style.setProperty('--ueb-dauer', Math.round(Math.max(150, Math.min(3000, Number(ueb.dauer) || 700))) + 'ms');
                 bild.dataset.uebergang = String(ueb.art);
                 if (ueb.richtung)
@@ -1353,27 +1057,11 @@ const Werkzeuge = (() => {
                 return `<div class="eqp">${Zusatz.mathe(b.text || '')}</div>`;
             if (b.type === 'divider')
                 return '<hr>';
-            /* WAS SEIT DAMALS DAZUKAM. Diese Kette ist die zweite in dieser Datei,
-               und das ist in Ordnung — Folien sind ein anderes Medium als
-               Fliesstext. Nicht in Ordnung war, dass sie beim Stand von damals
-               stehen blieb: Tabelle, Datenbank, PDF-Seite und A4-Blatt gab es
-               hier nicht, und jede Folie mit so etwas darauf war leer. Der
-               wiederkehrende Befund dieses Projekts: nicht „vergessen", sondern
-               „an einer Stelle getan und an der Nachbarstelle nicht" (L38). */
             if (b.type === 'table')
                 return tabelleHtml(b);
             if (b.type === 'database')
                 return datenbankHtml(b);
             if (b.type === 'columns' || b.type === 'columns3') {
-                /* ZWEI BAUFORMEN, und beide gibt es wirklich (E118).
-                   Seit E102 liegt zwischen dem Spaltenblock und seinem Inhalt eine
-                   `spalte`-Hülle. Der Bestand von davor hat sie nicht — dort IST das
-                   Kind die Spalte, und der Editor zeichnet ihn deshalb weiter
-                   (editor.ts, `case 'columns'`: `childrenOf(block.id)` direkt).
-                   Hier stand nur die neue Form. Ein alter Spaltenblock fiel auf der
-                   Folie ersatzlos weg — nicht gemeldet, nur leer. Genau die Klasse
-                   Fehler, gegen die der Kommentar zwei Zeilen weiter oben geschrieben
-                   wurde: „an einer Stelle getan und an der Nachbarstelle nicht". */
                 const spalten = Store.childrenOf(b.id)
                     .map((sp) => '<div class="folie-spalte">' +
                     (sp.type === 'spalte'
@@ -1385,17 +1073,6 @@ const Werkzeuge = (() => {
             if (b.type === 'pdfseite') {
                 const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
                 const adr = bilder[b.id] || '';
-                /* Das Seitenverhältnis steht am KASTEN, nicht am Bild — genau wie
-                   beim Blatt daneben. Sonst regiert `.praesi img{max-height:52vh}`
-                   die Höhe, und zwei gleich grosse A4-Seiten stehen unterschiedlich
-                   hoch nebeneinander (gemessen: 442 gegen 541 px, §55). */
-                /* `--seitenmass` trägt DIESELBEN zwei Zahlen noch einmal, als Bruch
-                   zum Weiterrechnen. `aspect-ratio` allein reicht nicht: wer im
-                   Vortrag die Breite auf `100%` setzt, bekommt die Höhe an
-                   `max-height` gekappt, OHNE dass die Breite mitgeht — gemessen bei
-                   1920 × 1080: Verhältnis 1,965 statt 1,778. Mit dem Bruch rechnet
-                   `werkzeuge.css` die Breite aus der erlaubten Höhe aus, und dann
-                   stimmt es in beide Richtungen. */
                 return '<figure class="folie-blatt" ' +
                     `style="aspect-ratio:${bw} / ${bh}; --seitenmass:${bw} / ${bh}">` +
                     (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
@@ -1413,10 +1090,6 @@ const Werkzeuge = (() => {
             }
             return b.text ? `<p${ein}>${Blocks.inline(b.text)}</p>` : '';
         };
-        /* Auf eine bestimmte Folie springen. `aufVoll` heisst: dort ist schon
-           alles aufgedeckt — so kommt man von hinten zurück, wie in PowerPoint.
-           Wer zurückgeht, will sehen, was er gerade gezeigt hat, und nicht
-           dieselben drei Klicks noch einmal machen. */
         const springe = (n, aufVoll = false) => {
             i = Math.max(0, Math.min(folien.length - 1, n));
             schritt = aufVoll ? schritteDerFolie(folien[i]) : 0;
@@ -1450,9 +1123,6 @@ const Werkzeuge = (() => {
                 e.preventDefault();
                 weiter(-1);
             }
-            /* Home und End springen über ALLES hinweg — sie dürfen nicht in den
-               Schritten hängen bleiben, sonst kommt man aus einer Folie mit zehn
-               Abdeckungen nicht mehr heraus. */
             if (e.key === 'Home')
                 springe(0);
             if (e.key === 'End')
@@ -1471,33 +1141,19 @@ const Werkzeuge = (() => {
                 return weiter(-1);
             if (elVon(e)?.closest('[data-a="zurueck"]'))
                 return weiter(1);
-            /* Die Leiste ist Bedienung, keine Folie — ein Klick daneben darf nicht
-               weiterschalten, sonst springt man beim Zielen auf „Beenden". */
             if (elVon(e)?.closest('.praesi-leiste'))
                 return;
-            /* EIN TIPP AUF DIE ABDECKUNG DECKT GENAU DIESE AUF (E266), statt
-               weiterzuschalten. Das ist der Weg für eine von Hand gesetzte
-               Abdeckung ohne Schrittnummer — und für den Vortragenden, der eine
-               Antwort ausser der Reihe zeigen will. Aufdecken ist hier
-               einseitig: auf der Leinwand wieder zuzudecken hilft niemandem. */
             const deckel = elVon(e)?.closest?.('[data-ink-art="abdeck"]');
             if (deckel) {
                 deckel.setAttribute('data-auf', '1');
                 return;
             }
-            /* Und sonst: Redurs Satz — „wenn ich klicke, die Antwort zeigen". */
             weiter(1);
         });
         document.addEventListener('keydown', tasten);
         zeichne();
         o.requestFullscreen?.().catch(() => { });
     };
-    /* ========================================================================
-     * 10. MARKDOWN-QUELLTEXT   (MarkText, TUI Editor, Zettlr)
-     * ------------------------------------------------------------------------
-     * Die Seite als reiner Text — und zurück. Datenbanken bleiben dabei
-     * unangetastet, sie stehen als Platzhalter drin.
-     * ======================================================================*/
     const quelltext = (p) => {
         const md = alsMarkdown(p);
         const o = document.createElement('div');
@@ -1507,12 +1163,6 @@ const Werkzeuge = (() => {
                 '<div class="fh">Markdown-Quelltext <em>' + esc(p.text || 'Ohne Titel') + '</em>' +
                 '<button class="icon-btn" data-a="zu">✕</button></div>' +
                 '<textarea id="mdq" spellcheck="false"></textarea>' +
-                /* Was „Übernehmen" wirklich tut, steht daneben — nicht erst im
-                   Nachhinein im Versionsverlauf. Markdown trägt keine Farben und
-                   keine Schriftgrössen (E101), und verschachtelte Listen kommen
-                   eine Ebene flach zurück. Alles, was Markdown gar nicht abbilden
-                   kann, steht seit E113 als Platzhalter im Text und bleibt
-                   unangetastet — man darf die Zeile nur nicht löschen. */
                 '<div class="hint" style="padding:0 14px 10px; line-height:1.5">' +
                 'Die Zeilen wie <code>&lt;!--blk:…--&gt;</code> sind PDF-Seiten, ' +
                 'Blätter, Tabellen und Spalten. Sie bleiben unverändert, solange ' +
@@ -1554,9 +1204,6 @@ const Werkzeuge = (() => {
             }
         });
     };
-    /* ========================================================================
-     * 11. SCHREIBSTATISTIK   (Zettlr)
-     * ======================================================================*/
     const statistik = (p) => {
         const { woerter, zeichen, saetze, blockAnzahl, lesezeit, sprechzeit, top, alleW } = statistikZahlen(p);
         const o = document.createElement('div');
@@ -1584,56 +1231,12 @@ const Werkzeuge = (() => {
         });
     };
     const kachel = (wert, name) => `<div class="stat-k"><b>${typeof wert === 'number' ? wert.toLocaleString('de-DE') : wert}</b><span>${name}</span></div>`;
-    /* ========================================================================
-     * 12. ERINNERUNGEN   (Notesnook, Notion @remind)
-     * ======================================================================*/
     const erinnerungen = () => Store.getMeta('erinnerungen', []) || [];
-    /* ------------------------------------------------------------------------
-     * BENACHRICHTIGUNGEN
-     * ------------------------------------------------------------------------
-     * Notions Automationen können eine Benachrichtigung an bis zu 20 Personen
-     * schicken. Hier gibt es einen Menschen — also landet sie im Posteingang,
-     * dort wo auch Erinnerungen und Kommentare stehen.
-     * --------------------------------------------------------------------- */
     const meldungen = () => Store.getMeta('meldungen', []) || [];
-    /* ==========================================================================
-     * EINE MELDUNG DES GERÄTS ZEIGEN — über das Dienst-Skript, nicht über
-     * `new Notification()`
-     * --------------------------------------------------------------------------
-     * DER FEHLER, GEGEN DEN DAS STEHT (7. August 2026). Hier stand zweimal
-     *
-     *     try { new Notification(text, { … }); } catch {}
-     *
-     * und auf einem iPhone ist das eine Zeile, die nichts tut. Eine
-     * installierte Web-App kennt den Konstruktor `Notification` dort gar
-     * nicht — Apple unterstützt ausschliesslich
-     * `ServiceWorkerRegistration.showNotification()`. Der Aufruf wirft
-     * `Illegal constructor`, das `catch` verschluckte es, und übrig blieb der
-     * Hinweis in der App. Wer Redion geschlossen hatte, bekam nichts; wer sie
-     * offen hatte, bekam den Toast und hielt das für alles, was es gibt.
-     *
-     * Das ist genau die Funktion, um die Redur gebeten hatte („wenn ich beim
-     * Kalender sage morgen um 08:00 Uhr aufstehen, sollte mir in dieser
-     * Uhrzeit erinnern") — und sie scheiterte auf seinem Gerät lautlos.
-     *
-     * Deshalb zuerst der Weg über die Registrierung. Er ist nicht nur der
-     * einzige, den iOS kann, er ist auch der bessere: eine so gezeigte
-     * Meldung überlebt das Schliessen des Fensters, und der Tipp darauf
-     * landet im Dienst-Skript, das die Seite öffnen kann.
-     *
-     * `new Notification` bleibt als Rückfall für Browser ohne Dienst-Skript
-     * — etwa beim Öffnen per Doppelklick aus dem Dateisystem, wo sich keines
-     * registrieren lässt (§6: die App muss auch so laufen).
-     * ========================================================================*/
     const geraeteMeldung = async (titel, text, kennung, seite = '') => {
         if (!('Notification' in window) || Notification.permission !== 'granted')
             return 'nein';
         try {
-            /* `serviceWorker.ready` WARTET EWIG, WENN NIE EINES KOMMT — es wird
-               nie abgelehnt, es bleibt einfach offen. Ohne die Frist hätte
-               dieser Zweig die Erinnerung ganz verschluckt statt sie über den
-               Rückfall zu zeigen: schlimmer als der Fehler, den er behebt.
-               Gefunden hat das der eigene Prüflauf, der daran hängenblieb. */
             const reg = navigator.serviceWorker && await Promise.race([
                 navigator.serviceWorker.ready,
                 new Promise(fertig => setTimeout(() => fertig(null), 1500))
@@ -1645,7 +1248,7 @@ const Werkzeuge = (() => {
                 return 'dienst';
             }
         }
-        catch { /* dann der Rückfall darunter */ }
+        catch { }
         try {
             const n = new Notification(titel, { body: text, tag: kennung });
             n.onclick = () => { window.focus(); if (seite)
@@ -1665,19 +1268,11 @@ const Werkzeuge = (() => {
         });
         Store.setMeta('meldungen', liste.slice(0, 200));
         meldungenGeaendert();
-        /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt —
-           ausser der Nutzer hat genau diesen Streifen abbestellt (E417).
-           `erinnernInApp` heisst in den Einstellungen „Der Streifen unten am
-           Bildschirm", und DAS hier ist der Streifen. Der Eintrag im Posteingang
-           oben bleibt, die Systemmeldung unten bleibt: abbestellt wird die
-           Einblendung, nicht die Nachricht. Wer den Streifen wegschaltet, will
-           nicht die Meldung verlieren (§51). */
         if (Store.getMeta('erinnernInApp', true) !== false)
             try {
                 UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung'));
             }
             catch { }
-        /* Und, falls erlaubt, als echte Benachrichtigung des Geräts */
         void geraeteMeldung(m.text || 'Redion', m.quelle || '', 'redion', m.seite || '');
         return liste[0];
     };
@@ -1687,23 +1282,6 @@ const Werkzeuge = (() => {
         meldungenGeaendert();
     };
     const meldungenLeeren = () => { Store.setMeta('meldungen', []); meldungenGeaendert(); };
-    /**
-     * Alle Meldungen als gelesen markieren — der HARMLOSE Zwilling zu
-     * `meldungenLeeren` (E276, L96).
-     *
-     * Beide räumen den Punkt an der Glocke weg, und genau deshalb sehen sie
-     * aus wie dasselbe. Sie sind es nicht: `meldungenLeeren` WIRFT WEG. Was
-     * dort stand, ist danach nicht mehr da — auch die Zeile, die auf eine
-     * Seite zeigte, die man noch hätte ansehen wollen.
-     *
-     * An einen Knopf, den ein Klick ohne Rückfrage auslöst, gehört deshalb
-     * dieser hier und nicht jener. Er tut, was `meldungGelesen(id)` tut, nur
-     * über alle: er ändert ein Feld, er nimmt nichts.
-     *
-     * Gibt zurück, WIE VIELE ungelesen waren. Wer den Knopf zeigt, will das
-     * wissen — ohne offene Meldung hat er nichts zu tun und gehört nicht hin
-     * (§47).
-     */
     const meldungenAlleGelesen = () => {
         const liste = meldungen();
         const offen = liste.filter((x) => !x.gelesen).length;
@@ -1713,41 +1291,20 @@ const Werkzeuge = (() => {
         meldungenGeaendert();
         return offen;
     };
-    /* Wer den Zähler zeigt (die Glocke in der Kopfzeile, E251), erfährt es
-       hier — als DOM-Ereignis, nicht als Direktaufruf: der Bereich kennt
-       die Schale nicht (Regel 1). */
     const meldungenGeaendert = () => {
         try {
             document.dispatchEvent(new CustomEvent('redion:meldungen'));
         }
         catch { }
     };
-    /** Ein Datum, wie es ein `datetime-local`-Feld erwartet: ORTSZEIT.
-     *
-     *  Hier stand `toISOString().slice(0, 16)`, und das ist Weltzeit. In der
-     *  Schweiz schlug der Dialog im Sommer zwei Stunden zu früh vor — „in
-     *  einer Stunde" wurde zu „vor einer Stunde", und wer den Vorschlag
-     *  übernahm, setzte eine Erinnerung in die Vergangenheit: sie meldete
-     *  sich sofort. Der Fehler ist in London unsichtbar und in Zürich täglich. */
     const alsOrtszeit = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    /** Steht auf dieser Seite schon ein Datum? Dann ist es gemeint.
-     *
-     *  Ein Kalendereintrag IST eine Seite mit einer Datumsspalte. Wer dort
-     *  „morgen 08:00" einträgt und danach eine Erinnerung setzt, meint diese
-     *  Zeit und keine andere — sie am Telefon abzutippen wäre eine Zumutung. */
     const datumDerSeite = (p) => {
         try {
-            /* Nur Datenbankzeilen haben Spalten. `addRow` setzt `parentTable` auf
-               'collection'; ein gewöhnlicher Block bleibt auf 'block'. */
             if (!p || p.parentTable !== 'collection')
                 return null;
             const coll = Store.getCollection(p.parentId);
             if (!coll || !coll.schema)
                 return null;
-            /* Der Wert einer Datumsspalte ist eine ZEICHENKETTE, kein Objekt —
-               nachgesehen in `datenbanken/dienst.ts:540`, `raster.ts:113` und
-               `steuerung.ts:1569`, die alle `new Date(v)` darauf anwenden. Das
-               `{von, bis}`-Paar gibt es nur bei `daterange()` in einer Formel. */
             for (const [feld, spalte] of Object.entries(coll.schema)) {
                 if (!spalte || spalte.type !== 'date')
                     continue;
@@ -1757,17 +1314,12 @@ const Werkzeuge = (() => {
                 const d = new Date(wert);
                 if (isNaN(d.getTime()))
                     continue;
-                /* Ein Datum ohne Uhrzeit meint den Morgen, nicht Mitternacht —
-                   um 0:00 erinnert zu werden hat noch niemand gewollt. */
                 if (d.getHours() === 0 && d.getMinutes() === 0)
                     d.setHours(8, 0, 0, 0);
                 return alsOrtszeit(d);
             }
         }
-        catch { /* keine Datumsspalte gefunden ist kein Fehler */ }
-        /* Genommen wird die ERSTE Datumsspalte. Eine Kalenderansicht kann über
-           `view.dateKey` eine andere führen (`steuerung.ts:1812`) — welche das
-           war, weiss die Seite allein nicht, sie kennt ihre Ansicht nicht. */
+        catch { }
         return null;
     };
     const erinnerungSetzen = (p) => {
@@ -1822,35 +1374,12 @@ const Werkzeuge = (() => {
                 }
                 catch { }
             }
-            /* Und, wenn ein Server da ist, den Weckruf legen — dann klingelt es
-               auch, wenn Redion zu dieser Zeit geschlossen ist (E54). Kein
-               Grund, darauf zu warten: die Erinnerung steht lokal schon, und
-               wenn der Server nicht mag, ist das kein Fehler dieses Dialogs. */
             void weckrufLegen();
             o.remove();
             UI.toast('Erinnerung gesetzt für ' + new Date(zeit).toLocaleString('de-DE'));
             App.zeichneSeite();
         });
     };
-    /* ==========================================================================
-     * DER WECKRUF — damit es auch klingelt, wenn Redion zu ist (L33, E54)
-     * --------------------------------------------------------------------------
-     * Bis hierher meldete sich eine Erinnerung nur, solange Redion offen war.
-     * Ist die App um acht Uhr geschlossen, passiert um acht Uhr nichts; sie
-     * wartet bis zum nächsten Öffnen und sagt dann „Verpasst um 08:00".
-     *
-     * Ein Telefon zu wecken, ohne dass die Seite läuft, geht nur mit Web Push.
-     * Was dabei an den Server geht, ist ein **Zeitpunkt** — nicht der Text,
-     * nicht die Seite, nicht der Grund. Der Stoss sagt später nur „wach auf";
-     * was fällig ist, liest das Dienst-Skript aus der lokalen Ablage.
-     *
-     * ALLES DARAN IST FREIWILLIG UND DARF FEHLSCHLAGEN. Kein Server, kein
-     * Dienst-Skript, keine Erlaubnis, kein Push im Browser — jedes Mal wird
-     * still aufgehört. Die Erinnerung steht dann trotzdem, sie meldet sich
-     * eben nur beim nächsten Öffnen. Eine Zugabe, die den Grundfall kaputt
-     * macht, wäre keine (CLAUDE.md §22).
-     * ========================================================================*/
-    /** Der nächste noch offene Zeitpunkt — oder leer, wenn keiner ansteht. */
     const naechsteErinnerung = () => {
         const jetzt = Date.now();
         const offen = erinnerungen()
@@ -1894,10 +1423,6 @@ const Werkzeuge = (() => {
             ]);
             if (!reg || !reg.pushManager)
                 return 'nein';
-            /* Eine vorhandene Anmeldung weiterverwenden. Zwei Anmeldungen
-               desselben Geräts wären zwei Stösse für einen Wecker — und der
-               Browser gibt beim zweiten `subscribe` ohnehin dieselbe zurück,
-               solange der Schlüssel derselbe ist. */
             let ab = await reg.pushManager.getSubscription();
             if (!ab)
                 ab = await reg.pushManager.subscribe({
@@ -1912,8 +1437,6 @@ const Werkzeuge = (() => {
                     p256dh: bytesZuB64u(ab.getKey ? ab.getKey('p256dh') : null),
                     auth: bytesZuB64u(ab.getKey ? ab.getKey('auth') : null)
                 } });
-            /* UND HIER GEHT DIE EINZIGE ANGABE HINAUS, die etwas über den
-               Menschen sagt: WANN. Nicht was, nicht wo, nicht warum. */
             await Wolke.ruf('/push/wecken', { m: 'POST',
                 k: { geraet, wann: naechsteErinnerung() } });
             return 'gelegt';
@@ -1933,10 +1456,6 @@ const Werkzeuge = (() => {
                 return;
             e.erledigt = true;
             geaendert = true;
-            /* Wie spät ist es geworden? Eine Erinnerung, die um acht Uhr gemeint
-               war und um halb elf erscheint, darf nicht so tun, als sei jetzt
-               acht — am Telefon ist das der Normalfall, weil die App nicht die
-               ganze Nacht offen war. Ab zwei Minuten steht die gemeinte Zeit dabei. */
             const gemeint = new Date(e.zeit);
             const spaet = jetzt - gemeint.getTime() > 120000;
             const wann = gemeint.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
@@ -1945,18 +1464,11 @@ const Werkzeuge = (() => {
         });
         if (geaendert) {
             Store.setMeta('erinnerungen', liste);
-            /* Eine erledigte Erinnerung verschiebt den nächsten Weckruf. Ohne
-               das stünde am Server weiter die Zeit von gestern, und der Stoss
-               käme zu einer Erinnerung, die es nicht mehr gibt. */
             void weckrufLegen();
         }
     };
-    /* ========================================================================
-     * 13. ORDNER-ABGLEICH   (Joplin, Zettlr, SilverBullet)
-     * ======================================================================*/
     const ordnerSchreiben = async () => {
         if (!window.showDirectoryPicker) {
-            /* Fallback: alles in eine Markdown-Datei */
             const alles = Links.seiten().map(p => '# ' + (p.text || 'Ohne Titel') + '\n\n' + alsMarkdown(p)).join('\n\n---\n\n');
             lade(new Blob([alles], { type: 'text/markdown' }), 'notizen-alle-seiten.md');
             UI.toast('Dieser Browser kann keine Ordner öffnen — alles in eine Datei gespeichert');
@@ -1988,14 +1500,9 @@ const Werkzeuge = (() => {
                 UI.toast('Ordner konnte nicht beschrieben werden');
         }
     };
-    /** Einzelne Dateien einlesen — jedes Format, das die App kennt. */
     const dateienLesen = () => {
         const inp = document.createElement('input');
         inp.type = 'file';
-        /* DER WÄHLER MUSS ANBIETEN, WAS DER ZWEIG DARUNTER LIEST (E543). Die
-           vier PowerPoint-Endungen kamen mit E538 in den Einleser, nicht aber
-           hierher: im Dateifenster stand eine .ppsx grau, und der gebaute Weg
-           lief nie an. Wer eine Endung unten aufnimmt, nimmt sie hier mit auf. */
         inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,' +
             '.docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*';
         inp.multiple = true;
@@ -2010,8 +1517,6 @@ const Werkzeuge = (() => {
                         n++;
                         continue;
                     }
-                    /* PDF UND ALLES BINÄRE WERDEN DOKUMENTE (E350) — vorher wurde eine
-                       über „Alle Dateien" gewählte PDF zur Textseite mit Binärsalat. */
                     const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
                     if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
                         await ArchivImport.dateiAlsDokument(f, null);
@@ -2101,12 +1606,6 @@ const Werkzeuge = (() => {
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     };
-    /* ========================================================================
-     * 14. ALLES ALS EINE HTML-DATEI   (TiddlyWiki)
-     * ------------------------------------------------------------------------
-     * Eine Datei, die alle Seiten enthält und ohne Server läuft. Zum Weitergeben,
-     * Archivieren oder einfach als Sicherung, die man auch ohne diese App lesen kann.
-     * ======================================================================*/
     const einzelDatei = () => {
         const seiten = Links.seiten();
         const daten = seiten.map(p => ({
@@ -2171,24 +1670,11 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         const blob = new Blob([doc], { type: 'text/html' });
         lade(blob, 'notizen-archiv-' + heute() + '.html');
         UI.toast(seiten.length + ' Seiten in eine HTML-Datei gepackt');
-        /* Der Blob geht zurück, damit der Zustandsknopf in den Einstellungen
-           ihn nach dem Herunterladen ÖFFNEN kann (E441) — eine HTML-Datei kann
-           der Browser zeigen, anders als eine .redion. */
         return blob;
     };
-    /**
-     * Eine Seite als HTML — für Archiv, Einzelexport und Drucken.
-     *
-     * `sonderfall` darf einzelne Blockarten selbst bauen. Gibt er etwas
-     * zurück, gilt das statt der Kette unten UND statt des Absteigens in die
-     * Kinder — der Sonderfall entscheidet dann selbst, ob er hinabsteigt.
-     * Damit kann der Druckweg PDF-Seiten und Blätter mit ihren Bildern und
-     * Strichen setzen, ohne dass es eine zweite Baumwanderung gäbe (E108).
-     */
     const seiteAlsHtml = (p, sonderfall) => {
         const raus = (id, tiefe) => {
             let h = '';
-            /* Welche Liste gerade offen ist — siehe `listeHalten` unten. */
             let offen = '';
             const listeHalten = (art) => {
                 if (art === offen)
@@ -2242,25 +1728,11 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     h += datenbankHtml(b);
                 else if (b.type === 'page')
                     h += `<p>📄 <b>${esc(t || 'Ohne Titel')}</b></p>`;
-                /* Eine PDF-Seite hat keinen `text`, fiel also aus der Kette heraus und
-                   kam gar nicht vor. Im Export und in der Veröffentlichung steht
-                   jetzt wenigstens, DASS sie da ist — das Bild selbst gehört nicht
-                   hinein: es ist eine blob-Adresse, die nach der Sitzung tot wäre
-                   (E98), und in einer öffentlichen Seite hat ein Schulskript ohnehin
-                   nichts verloren. Zum DRUCKEN gibt es den Sonderfall (E108). */
                 else if (b.type === 'pdfseite')
                     h += `<p>📄 Seite ${esc(b.nr || '?')}` +
                         (b.vonSeiten ? ' von ' + esc(b.vonSeiten) : '') + '</p>';
                 else if (t)
                     h += `<p>${Blocks.inline(t)}</p>`;
-                /* NICHT in Unterseiten hineingehen. Eine Unterseite steht hier mit
-                   ihrem Titel da — und genau das hat der Mensch gesehen, als er auf
-                   „Veröffentlichen" drückte. Vorher lief diese Zeile auch über
-                   `page`, und der ganze Inhalt jeder Unterseite hing rekursiv mit
-                   im veröffentlichten HTML: wer „Projekt X" freigab, gab die
-                   Unterseite „Gehälter" gleich mit frei, ohne dass irgendwo etwas
-                   davon stand. Eine eigene Seite wird eigens veröffentlicht.
-                   `toggle` steht schon hier, weil es seine Kinder selbst einfügt. */
                 if (b.type !== 'toggle' && b.type !== 'page')
                     h += raus(b.id, tiefe + 1);
             });
@@ -2294,20 +1766,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         lade(new Blob([doc], { type: 'text/html' }), sauber(p.text) + '.html');
         UI.toast('Als HTML gespeichert');
     };
-    /* ========================================================================
-     * DRUCKEN: EINE BESCHRIEBENE SEITE ZUM WEITERGEBEN
-     * ------------------------------------------------------------------------
-     * Vorher kam beim Drucken einer Schulaufgabe die Notizzeile heraus und
-     * sonst nichts — kein Seitenbild, kein einziger Strich. Nicht hässlich,
-     * sondern LEER, und genau in dem Fall, für den Redur das alles wollte:
-     * lösen und abgeben.
-     *
-     * DIE STRICHE KOMMEN AUS `Marken.zeichneMarke`, derselben Stelle, die sie
-     * auch auf dem Bildschirm zeichnet. Ein zweiter Pfad-Bauer wäre eine
-     * zweite Wahrheit über dieselbe Linie (§34) — und als SVG bleiben sie beim
-     * Drucken scharf, egal wie fein der Drucker ist.
-     * ======================================================================*/
-    /** Eine abgelegte Datei als Daten-Adresse — der Druckrahmen braucht das. */
     const alsDatenAdresse = async (dateiId) => {
         try {
             const blob = await Dateien.alsBlob(dateiId);
@@ -2324,27 +1782,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             return '';
         }
     };
-    /**
-     * Alle Seitenbilder einer Seite einsammeln, bevor gezeichnet wird.
-     *
-     * `alsDaten` entscheidet, WELCHE Adresse. Zum Drucken muss es eine
-     * Daten-Adresse sein: der Druckrahmen ist ein eigenes Dokument, und eine
-     * blob-Adresse wäre dort — und erst recht in einer gespeicherten Datei —
-     * nach der Sitzung tot (E98). Für die Präsentation, die im selben
-     * Dokument läuft, genügt die blob-Adresse: sie kostet nichts und lädt
-     * sofort (E109).
-     */
-    /* EINE OBERGRENZE FÜR DEN DRUCK (E117).
-       Eine Daten-Adresse ist eine Zeichenkette im Arbeitsspeicher, und beim
-       Drucken werden ALLE zugleich gehalten: einmal in der Karte, einmal im
-       zusammengebauten HTML des Druckrahmens. Bei 200 KB je Seitenbild sind
-       das schon bei achtzig Seiten rund 43 MB — doppelt, plus Base64-Aufschlag
-       ein Drittel obendrauf. Ein Skript mit fünfhundert Seiten sprengt jedes
-       Telefon (§36: „Große Dateien nicht vollständig in RAM laden").
-       Also eine Grenze — und, weil §35 gilt, KEINE stille: was nicht mehr
-       hineinpasst, wird gezählt, im Ausdruck an seinem Platz benannt und dem
-       Menschen gesagt. Eine Prüfung, die schweigend die Hälfte weglässt, sieht
-       aus wie eine vollständige. */
     const DRUCK_BILDER_MAX = 40 * 1024 * 1024;
     const bilderSammeln = async (p, alsDaten = true) => {
         const adressen = {};
@@ -2358,20 +1795,11 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     continue;
                 if (b.type === 'pdfseite' && b.bildDateiId) {
                     if (!alsDaten) {
-                        /* Für die Präsentation: eine `blob:`-Adresse kostet nichts —
-                           der Browser hält die Bytes ohnehin schon (E109). */
                         adressen[b.id] = (await Dateien.adresse(b.bildDateiId)) || '';
                     }
                     else {
                         const satz = await Store.dateiHolen(b.bildDateiId);
                         const gross = Number(satz?.groesse) || 0;
-                        /* `summe > 0` ist die Ausnahme für den ersten: EIN Bild kommt
-                           immer mit, auch wenn es allein die Grenze reisst. Sonst
-                           druckte ein Dokument aus einer einzigen grossen Seite gar
-                           nichts, und „gar nichts" ist ein schlechteres Ergebnis als
-                           „einmal zu viel Speicher". Redions eigener Rasterer liefert
-                           rund 200 KB je Seite; über 40 MB kommt nur, was von aussen
-                           eingespielt wurde. */
                         if (summe + gross > DRUCK_BILDER_MAX && summe > 0) {
                             ausgelassen.push(b.id);
                         }
@@ -2387,14 +1815,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         await gehe(p.id, 0);
         return { adressen, ausgelassen };
     };
-    /** Die Striche eines Blocks als SVG-Text. */
-    /**
-     * Die Striche eines Blocks als SVG-Text.
-     *
-     * @param rand Zusatzbreite rechts (E301). Ohne sie wäre alles, was neben
-     *        der Seite steht, auf dem Ausdruck abgeschnitten — und das merkt
-     *        man erst, wenn das Blatt aus dem Drucker kommt.
-     */
     const markenAlsSvg = (block, breite, hoehe, rand = 0) => {
         const marken = Array.isArray(block.marken) ? block.marken : [];
         if (!marken.length || typeof Marken === 'undefined')
@@ -2406,12 +1826,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             .join('');
         if (!teile)
             return '';
-        /* DIE VERLAUF-VORLAGEN GEHÖREN MIT INS SVG (E545). Ein `<linearGradient>`
-           lebt in `<defs>` und wird per `fill="url(#…)"` gerufen; diese Kette
-           hier baut das SVG aus dem `outerHTML` der EINZELNEN Markenknoten, und
-           ein `<defs>` ist kein Markenknoten — ohne diese Zeile fiele es
-           ersatzlos heraus. Der Deckel bliebe trotzdem gedeckt (SVGs Rückfall
-           auf die feste Farbe), aber flach. */
         const defs = typeof Marken.verlaufDefs === 'function'
             ? (Marken.verlaufDefs(marken)?.outerHTML || '') : '';
         return `<svg class="marken" viewBox="0 0 ${breite + Math.max(0, rand)} ${hoehe}" ` +
@@ -2424,21 +1838,11 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         '.blatt-druck .blatt-text{padding:9.5%; font-size:11pt}' +
         '.blatt-druck .marken{position:absolute; inset:0; width:100%; height:100%; ' +
         'color:#111}' +
-        /* Der Randstreifen auf Papier: das Bild nimmt seinen Anteil, der Rest
-           bleibt weiss, und die Striche liegen über beidem (E301). */
         '.blatt-druck.mit-rand img{width:var(--seiten-anteil,100%)}' +
         '.blatt-druck.mit-rand{background:#fff}' +
         '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
         'border:1px dashed #bbb}';
-    /**
-     * Der Druckweg selbst; `drucken()` darunter hält die Karte und fängt den
-     * Fehler. `karte` ist null, wenn das Bauteil nicht geladen ist — dann
-     * läuft alles wie vor E458.
-     */
     const druckLauf = async (p, karte) => {
-        /* DIE DRUCKER-KARTE (E458) sagt, was gerade geschieht: Bilder sammeln,
-           Seiten setzen, Dialog offen, fertig. Jeder Zustand wird HIER gesetzt,
-           an der Stelle, die ihn wahr macht — kein Zeitgeber rät. */
         karte?.setzen('vorbereiten');
         const { adressen: bilder, ausgelassen } = await bilderSammeln(p);
         const zuGross = new Set(ausgelassen);
@@ -2447,32 +1851,16 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 (ausgelassen.length === 1 ? '' : 'er') + ' ist für einen Ausdruck zu ' +
                 'gross und bleibt leer — drucke das Dokument in Abschnitten.', 8000);
         karte?.setzen('rendern');
-        /* Der Sonderfall setzt PDF-Seiten und Blätter; alles andere macht die
-           gewöhnliche Kette. `null` heisst „nicht meine Sache". */
         const inhalt = seiteAlsHtml(p, (b, tiefe, hinab) => {
             if (b.type === 'pdfseite') {
                 const bw = Number(b.bw) || 595.28, bh = Number(b.bh) || 841.89;
                 const adr = bilder[b.id] || '';
-                /* `esc(adr)` und nicht `adr`: die Daten-Adresse traegt ihren
-                   MIME-Teil WOERTLICH aus dem Datei-Satz — und der stammt bei einer
-                   eingespielten Sicherung aus fremder Hand. `image/png" onerror="…`
-                   ueberlebt den Blob-Bauer (nur Zeichen ausserhalb U+0020–U+007E
-                   werden dort verworfen, `"` gehoert nicht dazu) und stuende hier
-                   mitten im Attribut. Bei einer ECHTEN Daten-Adresse aendert `esc`
-                   nichts: das Base64-Alphabet enthaelt keines der fuenf Zeichen.
-                   Die Folie daneben macht es seit E109 richtig; hier fehlte es
-                   schlicht (E112). */
-                /* Drei Fälle, drei Sätze. „Leer" ist keiner davon: wer eine leere
-                   Seite im Ausdruck findet, muss wissen, WARUM sie leer ist (§35). */
                 const fehlt = zuGross.has(b.id)
                     ? `Seite ${esc(b.nr || '')} — dieses Dokument ist für einen ` +
                         'Ausdruck am Stück zu gross. Die Striche stehen unten trotzdem; ' +
                         'für das Seitenbild drucke das Dokument in Abschnitten.'
                     : `Seite ${esc(b.nr || '')} — das Bild fehlt in diesem Bestand. ` +
                         'Hol es in Redion aus dem Original zurück.';
-                /* MIT RANDSTREIFEN WIRD DAS BILD SCHMALER, NICHT DIE SEITE BREITER
-                   (E301). Sonst stünde auf dem Papier alles, was daneben steht,
-                   ausserhalb — und gemerkt hätte man es erst am Drucker. */
                 const randDruck = Math.round(bw * Math.max(0, Math.min(1.5, Number(p.randBreite) || 0)));
                 const anteil = (100 * bw / (bw + randDruck)).toFixed(4) + '%';
                 return '<figure class="blatt-druck' + (randDruck ? ' mit-rand' : '') +
@@ -2489,9 +1877,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     '<div class="blatt-text">' + hinab(b.id, tiefe + 1) + '</div>' +
                     markenAlsSvg(b, bw, bh) + '</figure>';
             }
-            /* Spalten kommen beim Drucken UNTEREINANDER. Nebeneinander auf A4
-               hochkant wären zwei Spalten von je 90 mm — lesbar ist das nicht, und
-               die Reihenfolge Seite, Blatt, Seite, Blatt bleibt eindeutig. */
             if (b.type === 'columns' || b.type === 'columns3' || b.type === 'spalte')
                 return hinab(b.id, tiefe + 1);
             return null;
@@ -2500,20 +1885,12 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         f.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0';
         document.body.appendChild(f);
         const d = f.contentDocument;
-        /* Ohne Dokument im Rahmen gibt es nichts zu drucken. */
         if (!d) {
             f.remove();
             karte?.setzen('fehler', 'Der Druckrahmen liess sich nicht öffnen.');
             karte?.entfernen(8000);
             return;
         }
-        /* KOPFZEILE, DATUM UND SEITENZAHLEN (E244). Sie leben in den
-           @page-Randkästen: der Browser wiederholt sie auf JEDER gedruckten
-           Seite und zählt selbst — genau das kann kein Element im Fluss.
-           Die erste Seite trägt keine Kopfzeile, dort steht der H1 schon.
-           In einer CSS-content-Zeichenkette escapen \ und " — ein Titel
-           `Bericht "Q3"` darf die Regel nicht sprengen. Browser ohne
-           Randkästen drucken wie bisher, nur mit @page- statt body-Rand. */
         const inhaltText = (wert) => wert.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\s+/g, ' ').slice(0, 60);
         const heute = new Date();
         const druckDatum = heute.getDate() + '. ' +
@@ -2537,10 +1914,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + inhalt + '</body></html>');
         d.close();
         setTimeout(() => {
-            /* `print()` kehrt erst zurück, wenn der Dialog zu ist (Chromium,
-               Firefox, Safari). Davor „speichern", danach „fertig" — und nach
-               2,5 s ist die Karte weg. `afterprint` wäre genauer, kommt aber
-               ohne Dialog (Prüflauf ohne Kopf) gar nicht erst. */
             karte?.setzen('speichern');
             f.contentWindow?.focus();
             f.contentWindow?.print();
@@ -2555,9 +1928,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             await druckLauf(p, karte);
         }
         catch (e) {
-            /* Vorher flog der Fehler unbeachtet nach oben — die Konsole sah ihn,
-               der Mensch nicht. Jetzt steht sein Satz acht Sekunden auf der Karte
-               (role="status", also auch hörbar); ohne Karte wie vorher ein Toast. */
             const satz = e instanceof Error ? e.message : String(e);
             if (karte) {
                 karte.setzen('fehler', satz);
@@ -2567,9 +1937,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 UI.toast('Drucken hat nicht geklappt: ' + satz);
         }
     };
-    /* ========================================================================
-     * 15. VERSCHIEBEN NACH   (Notion „Move to")
-     * ======================================================================*/
     const verschiebenNach = (p) => {
         const ziele = Links.seiten().filter(z => z.id !== p.id && !istUnter(z.id, p.id));
         const o = document.createElement('div');
@@ -2607,10 +1974,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         });
         inp.focus();
     };
-    /** `stillerHinweis` unterdrückt NUR den Satz „Verschoben" — für Aufrufer,
-     *  die selbst einen besseren sagen (E368: das Ziehen im Regal nennt Heft
-     *  und Ziel). Ohne den Zusatz bleibt alles, wie es war; zwei Sätze für
-     *  eine Handlung wären einer zu viel, und der bessere ist nicht dieser. */
     const verschiebe = (p, zielId, stillerHinweis = false) => {
         const alt = Store.getBlock(p.parentId);
         if (alt) {
@@ -2629,12 +1992,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         if (!stillerHinweis)
             UI.toast('Verschoben');
     };
-    /* ========================================================================
-     * 16. WIKI   (Notions „In Wiki umwandeln")
-     * ------------------------------------------------------------------------
-     * Eine Seite wird zum Verzeichnis ihrer Unterseiten — mit Besitzer und
-     * dem Vermerk, ob der Inhalt geprüft ist.
-     * ======================================================================*/
     const wikiUmwandeln = (p) => {
         Store.updateBlock(p.id, { wiki: !p.wiki, icon: p.wiki ? (p.icon || '📄') : '📚' });
         App.zeichneSeite();
@@ -2680,15 +2037,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         });
         wrap.appendChild(d);
     };
-    /* ========================================================================
-     * 17. TEILEN   (Notions „Share")
-     * ------------------------------------------------------------------------
-     * OHNE KONTO heisst Weitergeben: eine Datei erzeugen — und davon gibt es
-     * jede Form. MIT KONTO kommt die echte Freigabe dazu (Link ins Netz,
-     * widerrufbar, nur die freigegebene Seite). Bis E270 behauptete dieses
-     * Menü, es gäbe „keinen Server und kein Konto" — vierzehn Zeilen unter
-     * einem Aufruf des Freigabe-Fensters (Zeile 279).
-     * ======================================================================*/
     const wolkeDa = () => {
         const w = globalThis.Wolke;
         return !!(w?.angemeldet?.() && globalThis.WolkeFenster?.teilenFenster);
@@ -2708,10 +2056,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<button data-a="ordner"><span class="mi">📁</span>Alles als Markdown-Ordner</button>' +
             '<button data-a="obsidian"><span class="mi">🔮</span>Als Obsidian-Vault (.zip)</button>' +
             '<hr>' +
-            /* HIER STAND, ES GÄBE KEINEN SERVER (E270) — vierzehn Zeilen unter
-               einem Aufruf von `WolkeFenster.teilenFenster`, der genau das tut.
-               Jetzt sagt das Menü, was wirklich geht: mit Konto eine Freigabe,
-               ohne Konto eine Datei. */
             (wolkeDa()
                 ? '<button data-a="wolke"><span class="mi">↗</span>Teilen und veröffentlichen …</button>' +
                     '<div class="teilen-hinweis">Eine Freigabe ist ein Link ins Netz — ' +
@@ -2757,9 +2101,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 void obsidianVaultExport();
         });
     };
-    /* ========================================================================
-     * 18. KLEINIGKEITEN
-     * ======================================================================*/
     const alleToggles = () => {
         const bloecke = document.querySelectorAll('.b-toggle');
         const alleAuf = [...bloecke].every(b => b.classList.contains('open'));
@@ -2770,13 +2111,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         });
         App.zeichneSeite();
     };
-    /* ========================================================================
-     * FORMEL-BIBLIOTHEK — eigene Funktionen
-     * ------------------------------------------------------------------------
-     * Notions Formelsprache hat kein LAMBDA: Logik, die man mehrfach braucht,
-     * muss man mehrfach hinschreiben — und läuft dann in die 15-Ebenen-Grenze.
-     * Hier definiert man sie einmal und ruft sie überall auf.
-     * ======================================================================*/
     const BEISPIELE = [
         { name: 'istWerktag', params: ['d'],
             koerper: 'not isWeekend(d)', beschreibung: 'Fällt das Datum auf Montag bis Freitag?' },
@@ -2793,7 +2127,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             beschreibung: 'Fortschrittsbalken aus einem Anteil zwischen 0 und 1' }
     ];
     const formelBibliothekLesen = () => Store.getMeta('formelBibliothek', []) || [];
-    /** Beim Start einlesen, damit die Funktionen sofort in Formeln gelten. */
     const formelBibliothekAnwenden = () => {
         const kaputt = Formula.setzeBibliothek(formelBibliothekLesen());
         if (kaputt.length)
@@ -2841,8 +2174,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     'Noch keine eigene Funktion. „Beispiele einfügen" zeigt sechs nützliche.</div>';
             pruefen();
         };
-        /* Nach jeder Änderung wird jede Funktion geparst und, wenn sie ohne
-           Parameter auskommt, gleich einmal ausgerechnet. */
         const einsammeln = () => {
             const wert = (z, kl) => (z.querySelector(kl)?.value ?? '').trim();
             liste = [...o.querySelectorAll('.fb-zeile')].map(z => ({
@@ -2915,8 +2246,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         zeichne();
     };
     const tastenkuerzel = () => {
-        /* Die Liste steht in register/tasten.js — dort wird ein Kürzel
-           eingetragen, und diese Übersicht zeigt es danach von selbst. */
         const G = Register.tasten.alle();
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -2939,14 +2268,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 o.remove();
         });
     };
-    /* ========================================================================
-     * ZUSATZEINTRÄGE IM SEITENMENÜ
-     * ======================================================================*/
-    /* GEZEICHNETE ZEICHEN STATT EMOJI (E701) — dieselben Zeilen, dieselben
-       Kennungen, dieselben Wörter; nur das Bild kommt aus `Register.symbole`
-       und nimmt die stille Farbe seiner Zeile an. „Verschlüsseln" trägt den
-       Schlüssel und nicht das Schloss: das Schloss heisst im selben Menü
-       schon „Seite sperren" (E273: ein Bild, eine Bedeutung). */
     const mi = (name) => {
         let svg = '';
         try {
@@ -3001,23 +2322,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         tuIt();
         return true;
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
-    /**
-     * Räumt den Papierkorb nach der eingestellten Frist auf (wie Notions
-     * 30 Tage). Die Frist selbst steht in `kern/ablage` — hier reicht nur
-     * noch der Name durch, weil er zur öffentlichen Fläche dieses Bereichs
-     * gehört und aussen gerufen wird.
-     *
-     * Vorher rechnete diese Fassung die Frist selbst, und in
-     * `bereiche/einstellungen/pflege.js` stand eine zweite, die auf zwei
-     * Feldnamen zeigte, die es nie gab. Die eine räumte, die andere fand nie
-     * etwas — und beide räumten nur Seiten, nie die weggelegten Blöcke.
-     *
-     * Aufgeräumt wird nur noch an einer Stelle. Gemeldet wird hier: eine
-     * Zahl, die niemand sieht, ist keine Aufräumung, sondern ein Verschwinden.
-     */
     const papierkorbAufraeumen = async () => {
         const weg = await Store.papierkorbAufraeumen();
         if (weg)
@@ -3026,11 +2330,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 ' endgültig gelöscht');
         return weg;
     };
-    /* ========================================================================
-     * DATEIEN AUF DIE SEITE ZIEHEN
-     * ------------------------------------------------------------------------
-     * Markdown, Text, CSV, TSV, HTML und Bilder — einfach fallen lassen.
-     * ======================================================================*/
     const ziehenUndAblegen = () => {
         const bereich = document.getElementById('scroll');
         if (!bereich)
@@ -3045,17 +2344,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             if (e.target === bereich)
                 bereich.classList.remove('ablegen');
         });
-        /* ======================================================================
-         * EINE GRENZE STATT ZWEIER (E99)
-         * ----------------------------------------------------------------------
-         * Bis hierher nahm das Ziehen-und-Ablegen Dateien bis 12 MB als
-         * Data-Adresse und warf alles Grössere mit einem Hinweis weg — während
-         * der Knopf am Datei-Block dieselbe Datei bis 500 MB in Stücken ablegte.
-         * Dieselbe Datei, zwei Ergebnisse, je nachdem wie man sie hereinbrachte.
-         * §14 nennt genau diese 12-MB-Grenze als nicht endgültig.
-         *
-         * Jetzt entscheidet `Dateien.lohntSich` an EINER Stelle, wie beim Knopf.
-         * ====================================================================*/
         const anhaengen = async (seite, f, art) => {
             const grund = art === 'image'
                 ? { caption: f.name } : { text: f.name };
@@ -3074,8 +2362,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                                 melder.textContent = '„' + f.name + '" wird abgelegt … ' +
                                     Math.round(anteil * 100) + ' %';
                         } });
-                    /* Nur die Kennung in den Block — die blob-Adresse gilt nur für
-                       diese Sitzung (E98). */
                     await Dateien.adresse(satz.id);
                     Store.updateBlock(b.id, { dateiId: satz.id, typ: f.type });
                     if (melder && melder.remove)
@@ -3091,8 +2377,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 }
                 return;
             }
-            /* Kleines geht weiter den kurzen Weg — für ein Bild von 40 KB wäre
-               der Apparat oben Unfug. */
             const daten = await new Promise(ok => {
                 const r = new FileReader();
                 r.onload = () => ok(r.result);
@@ -3106,11 +2390,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             e.preventDefault();
             bereich.classList.remove('ablegen');
             const seite = App.aktuelleSeite();
-            /* IM REGAL GIBT ES KEINE SEITE — ALSO WIRD JEDE DATEI EIN DOKUMENT (E350).
-               Bis hierher hiess es „Erst eine Seite öffnen", und genau dort, wo
-               die Dokumente liegen, ging nichts. Jetzt: eine ZIP wird entpackt,
-               wie sie ist, alles andere wird ein Dokument an der Wurzel — oder im
-               offenen Fach der Notizhefte. */
             const ort = typeof App.schauplatz === 'function' ? App.schauplatz() : '';
             const imRegal = !seite && (ort === 'bibliothek' || ort === 'notizhefte');
             if (!seite && !imRegal) {
@@ -3151,7 +2430,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     await anhaengen(seite, f, 'image');
                     continue;
                 }
-                /* Excel, Word, PowerPoint und EPUB laufen über den eigenen ZIP-Leser */
                 if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
                     try {
                         const erg = await Einlesen.datei(f, seite);
@@ -3166,7 +2444,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                         continue;
                     }
                 }
-                /* EINE ZIP WIRD ENTPACKT, WIE SIE IST (E350) — unter der offenen Seite. */
                 if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
                     try {
                         const erg = await ArchivImport.importZip(f, seite, { still: true });
@@ -3177,9 +2454,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     }
                     continue;
                 }
-                /* NUR TEXT WIRD ALS TEXT GELESEN (E350). Hier stand `await f.text()`
-                   für ALLES, was bis hierher kam — auch für ein 400-MB-Video, das
-                   gleich darauf ohnehin Anhang wurde. */
                 const istText = /\.(csv|tsv|html?|htm|md|markdown|txt)$/i.test(name);
                 const text = istText ? await f.text() : '';
                 if (name.endsWith('.csv') || name.endsWith('.tsv')) {
@@ -3218,29 +2492,20 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     UI.toast(f.name + ' als Unterseite angelegt');
                     continue;
                 }
-                /* Ein PDF wird zu beschreibbaren Seiten (E103) — das Original
-                   legt `alsSeiten` selbst als Anhang ab, Byte für Byte. */
                 if (/\.pdf$/i.test(name) && typeof PdfEinlesen !== 'undefined') {
                     try {
                         await PdfEinlesen.alsSeiten(f, seite);
                         continue;
                     }
-                    catch { /* Nichts verschlucken (E104): `alsSeiten` hängt die Datei
-                               selbst an, sobald es sie abgelegt hat, und wirft nur
-                               dann noch, wenn nicht einmal DAS ging. Dann ist der
-                               gewöhnliche Weg genau der richtige — vorher stand hier
-                               `continue`, und ein kaputtes PDF hinterliess eine leere
-                               Seite (test173). */
+                    catch {
                     }
                 }
-                /* Alles andere als Datei anhängen — ohne willkürliche Grenze. */
                 await anhaengen(seite, f, 'file');
             }
             App.zeichneSeite();
             App.zeichneBaum();
         });
     };
-    /** HTML in Blöcke übersetzen — für Ziehen und Ablegen und den Import. */
     const ausHtml = (seiteId, html) => {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const raus = (knoten) => {
@@ -3268,11 +2533,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     Store.addBlock(seiteId, 'divider');
                 }
                 else if (tag === 'img' && n.getAttribute('src')) {
-                    /* Die einzige Stelle in `ausHtml`, an der etwas anderes als Text aus
-                       dem fremden Dokument übernommen wird. `Sanitize.url` lässt
-                       http(s) und `data:image/…` durch und wirft `javascript:` weg. Ein
-                       `<img>` führt eine solche Adresse zwar nicht aus — aber der Wert
-                       bleibt gespeichert, und was morgen daraus liest, weiss niemand. */
                     const bildSrc = Sanitize.url(n.getAttribute('src'));
                     if (bildSrc)
                         Store.addBlock(seiteId, 'image', { src: bildSrc, caption: n.getAttribute('alt') || '' });
@@ -3294,18 +2554,12 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     };
     const start = () => {
         ziehenUndAblegen();
-        /* Erinnerungen alle halbe Minute prüfen */
         erinnerungenPruefen();
         setInterval(erinnerungenPruefen, 30000);
-        /* Den Papierkorb stösst `Pflege.start()` an — einmal nach dem Start und
-           danach täglich. Hier stand dasselbe noch einmal, drei Sekunden früher.
-           Zwei Zeitgeber für dieselbe Arbeit sind kein doppelter Boden: sie
-           sorgen dafür, dass man beim Suchen den falschen findet. */
         document.addEventListener('keydown', e => {
             const strg = e.ctrlKey || e.metaKey;
             if (!strg)
                 return;
-            /* Hat der Editor die Taste schon behandelt (z. B. Kommentar am Block)? */
             if (e.defaultPrevented)
                 return;
             const k = e.key.toLowerCase();
@@ -3348,9 +2602,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                 alleToggles();
                 return;
             }
-            /* Wie bei Notion: Strg+Alt+P präsentiert, Strg+Shift+P verschiebt.
-               Die Palette rückt dafür auf Strg+Shift+K — beides steht in der
-               Kürzelliste. */
             if (e.altKey && k === 'p') {
                 e.preventDefault();
                 const p2 = Store.getBlock(App.aktuelleSeite());
@@ -3387,17 +2638,6 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     };
 })();
 window.Werkzeuge = Werkzeuge;
-/* ============================================================================
- * DIE KONTEXTKANTE EINER OFFENEN SEITE (E272 Phase F)
- * ----------------------------------------------------------------------------
- * Hier meldet sich der Editor selbst an. Die Kante kennt diesen Bereich
- * nicht — sie fragt `Register.kontext.fuer('editor')` und zeichnet, was
- * zurückkommt (§5).
- *
- * KEIN EINZIGER NEUER GRIFF. Jede Zeile ruft dieselbe Funktion wie das
- * Menüband und das Seitenmenü. Eine Kante mit eigener Logik wäre eine
- * dritte Stelle, an der „Fassungen" etwas anderes bedeutet.
- * ==========================================================================*/
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
     const seite = () => {
@@ -3438,8 +2678,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         tun: () => { const p = seite(); if (p)
             Werkzeuge.versionen(p); }
     });
-    /* `karten()` GIBT EINE LISTE ZURÜCK und öffnet nichts — nachgesehen,
-       nicht geraten (Zeile 567). Der Weg zum Lernen ist `lernen()`. */
     K.melde({
         bereich: 'editor', id: 'karteikarten', name: 'Karteikarten',
         zeichen: 'cards', rang: 40,
@@ -3462,13 +2700,11 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                     tun: () => { try {
                         App.zeigeBlock(k.id);
                     }
-                    catch { /* … */ } }
+                    catch { } }
                 });
             return raus;
         }
     });
-    /* DERSELBE KATALOG WIE „EINFÜGEN" (§8). Ein zweiter Blockkatalog wäre
-       eine Liste, die bei jeder neuen Blockart vergessen wird. */
     K.melde({
         bereich: 'editor', id: 'bloecke', name: 'Blöcke',
         zeichen: 'plus', rang: 30,
@@ -3484,7 +2720,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                         Store.addBlock(p.id, b.id, {});
                         App.zeichneSeite();
                     }
-                    catch { /* eine Blockart, die es nicht mehr gibt, tut nichts */ }
+                    catch { }
                 }
             }));
         }

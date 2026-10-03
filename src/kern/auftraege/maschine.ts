@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/auftraege/maschine.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/auftraege/maschine.ts — die Auftragsmaschine
  * ----------------------------------------------------------------------------

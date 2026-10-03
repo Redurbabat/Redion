@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/formeln/laufzeit.ts (npm run bauen:ts). */
 /* ============================================================================
  * formula.js — Die Formelsprache
  * ----------------------------------------------------------------------------

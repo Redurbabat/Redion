@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/abgleich/maschine.ts (npm run bauen:ts). */
 /* ==========================================================================
  * WOLKE — die Verbindung zum eigenen Server
  * --------------------------------------------------------------------------

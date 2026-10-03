@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/simulation.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/elektro/simulation.ts — der Strom fliesst wirklich
  * ----------------------------------------------------------------------------

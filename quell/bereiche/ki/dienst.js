@@ -1,70 +1,8 @@
 "use strict";
-/* ============================================================================
- * ai.js — Die lokale KI
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/ki/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/ki/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Zwei Wege, beide kostenlos, beide lokal. Umschaltbar wie in Notion.
- *
- *   1) OLLAMA        läuft als Programm auf dem Rechner (localhost:11434)
- *                    schneller, deutlich bessere Modelle, braucht einmal
- *                    eine Installation
- *
- *   2) WEBLLM        läuft direkt im Browser über WebGPU
- *                    keine Installation, lädt das Modell einmal herunter
- *                    und behält es im Browser-Cache
- *
- * Kein Text verlässt den Rechner. Es gibt keinen Server, keinen Schlüssel,
- * keine Abrechnung.
- *
- * OLLAMA VORBEREITEN
- *   Damit der Browser Ollama ansprechen darf, muss einmal die Herkunft
- *   erlaubt werden — und zwar GENAU DIESE EINE, nicht alle.
- *
- *   Hier stand bis zum 3. September 2026 ein Stern. Das war bequem und
- *   falsch: `OLLAMA_ORIGINS=*` erlaubt JEDER Webseite im selben Browser,
- *   mit dem lokalen Ollama zu sprechen — Modelle aufzulisten, Anfragen zu
- *   stellen, Antworten zu lesen. Redion wirbt damit, dass kein Text den
- *   Rechner verlaesst (§21); eine Anleitung, die nebenbei die Tuer fuer
- *   alle aufmacht, nimmt genau dieses Versprechen zurueck.
- *
- *   Die Oberflaeche zeigt den Befehl deshalb MIT DER ECHTEN HERKUNFT
- *   dieses Fensters, zum Kopieren (`ollamaBefehl()` weiter unten).
- *
- *     Windows : setx OLLAMA_ORIGINS "https://…"   danach Ollama neu starten
- *     macOS   : launchctl setenv OLLAMA_ORIGINS "https://…"
- *     Linux   : OLLAMA_ORIGINS=https://… ollama serve
- *
- *   Beim Start ueber `file://` gibt es keine Herkunft: der Browser sendet
- *   `Origin: null`. Dafuer waere `OLLAMA_ORIGINS=null` noetig, und das
- *   erlaubt JEDE oertlich geoeffnete Datei. Die Oberflaeche sagt das und
- *   raet stattdessen zur ausgelieferten Fassung.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/dienst.ts (npm run bauen:ts). */
 const KI = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const OLLAMA = 'http://localhost:11434';
-    /* ══ DIE HERKUNFT, NICHT DER STERN ═══════════════════════════════════════
-       Hier stand `OLLAMA_ORIGINS=*` als Anleitung. Ein Stern erlaubt JEDER
-       Webseite im selben Browser, das lokale Ollama anzusprechen — die
-       Modelle zu lesen, Anfragen zu stellen, Antworten mitzunehmen. Redion
-       verspricht, dass kein Text den Rechner verlaesst (§21); diese eine
-       Zeile Anleitung nahm das Versprechen zurueck.
-  
-       Jetzt steht der Befehl mit DER Herkunft da, aus der Redion gerade
-       laeuft — nachgesehen statt geraten, und damit auch richtig, wenn
-       jemand die App unter einer eigenen Adresse betreibt.
-  
-       DER SONDERFALL `file://`. Wer `index.html` doppelklickt, hat keine
-       Herkunft: der Browser sendet `Origin: null`. `OLLAMA_ORIGINS=null`
-       waere zwar enger als der Stern, erlaubt aber immer noch JEDE oertlich
-       geoeffnete Datei. Das wird gesagt, nicht verschwiegen (§33). */
     const ollamaBefehl = () => {
         const her = String(location.origin || '');
         if (!her || her === 'null')
@@ -77,8 +15,6 @@ const KI = (() => {
             'Nur diese eine Herkunft — ein <code>*</code> erlaubt jeder Webseite im ' +
             'Browser den Zugriff auf dein Ollama.';
     };
-    /* Die WebLLM-Modelle, die sich für einen Notizen-Assistenten eignen.
-     * Klein genug zum Herunterladen, gut genug für Zusammenfassungen. */
     const WEB_MODELLE = [
         { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 · 1B', groesse: '~0,8 GB', hinweis: 'Am schnellsten' },
         { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 · 3B', groesse: '~2,3 GB', hinweis: 'Guter Mittelweg' },
@@ -87,24 +23,7 @@ const KI = (() => {
         { id: 'Phi-3.5-mini-instruct-q4f16_1-MLC', name: 'Phi 3.5 mini', groesse: '~2,2 GB', hinweis: 'Gut beim Strukturieren' },
         { id: 'gemma-2-2b-it-q4f16_1-MLC', name: 'Gemma 2 · 2B', groesse: '~1,6 GB', hinweis: 'Kompakt' }
     ];
-    /* ------------------------------------------------------------------------
-     * WOLKEN-ANBIETER
-     * ------------------------------------------------------------------------
-     * Alle sprechen dieselbe Sprache wie OpenAI. Der Schlüssel gehört dir und
-     * bleibt in diesem Browser — er wird nur an den jeweiligen Anbieter
-     * geschickt, an sonst niemanden.
-     *
-     * „frei" heisst: es gibt ein kostenloses Kontingent ohne Kreditkarte.
-     * ----------------------------------------------------------------------*/
     const ANBIETER = [
-        /* DIE MODELLNAMEN HIER SIND EIN RÜCKFALL, KEINE WAHRHEIT (E661).
-           Ein Anbieter mustert Modelle aus, ohne dass dieses Programm es
-           erfährt: Redur bekam am 20. September 2026 eine 404 für
-           `llama-3.3-70b-versatile`, das hier an erster Stelle stand und
-           deshalb als Vorgabe gewählt wurde. Es ist gestrichen — was an seine
-           Stelle getreten ist, weiss der Anbieter, nicht ich, und geraten wird
-           hier nichts (§56). `modelleHolen` fragt ihn; diese Liste hält nur
-           das Menü am Leben, solange niemand gefragt hat. */
         { id: 'groq', name: 'Groq', frei: true,
             url: 'https://api.groq.com/openai/v1/chat/completions',
             modelle: ['llama-3.1-8b-instant'],
@@ -137,21 +56,7 @@ const KI = (() => {
     ];
     const anbieter = (id) => ANBIETER.find(a => a.id === id) || ANBIETER[0];
     const schluessel = (id) => Store.getMeta('api:' + id, '');
-    /* ========================================================================
-     * NETZ MIT WIEDERHOLUNG
-     * ------------------------------------------------------------------------
-     * Teil 9 der Doku beschreibt, wie ein Client mit Fehlern umgehen soll:
-     * 429 und 5xx sind vorübergehend, also nach kurzer Pause noch einmal
-     * versuchen und die Pause jedes Mal verdoppeln. Steht im Kopf ein
-     * Retry-After, gilt der. 4xx ausser 429 sind endgültig — da hilft kein
-     * zweiter Versuch, das muss der Mensch richten.
-     * ======================================================================*/
     const WIEDERHOLBAR = [408, 409, 425, 429, 500, 502, 503, 504];
-    /**
-     * Eine Wartezeit, die ein laufender Agent wirklich abbrechen kann. Ein
-     * `AbortSignal` nur am nächsten `fetch` reicht nicht: während eines
-     * Retry-Backoffs hinge der Lauf sonst trotz gedrücktem Abbruch weiter.
-     */
     const schlafen = (ms, signal) => new Promise((ok, nein) => {
         if (signal?.aborted) {
             nein(new DOMException('Der Lauf wurde abgebrochen.', 'AbortError'));
@@ -167,7 +72,6 @@ const KI = (() => {
         };
         signal?.addEventListener('abort', abbrechen, { once: true });
     });
-    /** Was steckt hinter einem Fehlercode? Klartext statt nackter Zahl. */
     const FEHLERTEXT = {
         400: 'Die Anfrage war fehlerhaft (invalid_request).',
         401: 'Der Schlüssel wurde nicht angenommen (unauthorized). Einstellungen → Schlüssel und APIs.',
@@ -181,25 +85,6 @@ const KI = (() => {
         503: 'Der Dienst ist überlastet (service_unavailable).',
         504: 'Der Anbieter hat zu lange gebraucht (gateway_timeout).'
     };
-    /**
-     * Was in der Meldung steht — und WARUM nicht einfach die Tabelle.
-     *
-     * Redur, 20. September 2026, aus seinem Fenster:
-     *
-     *   „⚠ Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found).
-     *    {"error":{"message":"The model `llama-3.3-70b-versatile` does not exist
-     *    …","code":"model_not_found"}}"
-     *
-     * Die Adresse gab es sehr wohl — Groq hat sie beantwortet. Es war das
-     * MODELL, das ausgemustert wurde, und der Anbieter sagte das wörtlich.
-     * Redion hatte den Satz in der Hand und stellte trotzdem seine eigene,
-     * falsche Erklärung davor. Wer sie liest, sucht am falschen Ort.
-     *
-     * EINE STATUSZAHL HAT MEHRERE URSACHEN, der Anbieter kennt die richtige.
-     * Also gilt: sagt er etwas, gilt SEIN Satz. Die Tabelle bleibt die
-     * Antwort für den, der schweigt — und das ist der häufigere Fall bei
-     * einem kaputten Proxy oder einer leeren 502.
-     */
     const fehlerSatz = (status, koerper) => {
         let meldung = '', code = '';
         try {
@@ -208,14 +93,10 @@ const KI = (() => {
             meldung = String((e && (e.message || e.msg)) || '').trim();
             code = String((e && (e.code || e.type)) || '').trim();
         }
-        catch { /* kein JSON — dann eben die Tabelle */ }
+        catch { }
         if (!meldung)
             return (FEHLERTEXT[status] || 'unbekannter Fehler') +
                 (koerper ? ' ' + koerper.slice(0, 180) : '');
-        /* DER HÄUFIGSTE FALL BEKOMMT EINEN WEG, NICHT NUR EINEN BEFUND. Ein
-           Anbieter mustert Modelle aus; die eingebaute Liste merkt es nie.
-           „Das Modell gibt es nicht mehr" ohne „und so kommst du weiter" ist
-           eine halbe Auskunft. */
         const modellWeg = /model_not_found/i.test(code) ||
             /does not exist|has been deprecated|decommissioned|no longer/i.test(meldung);
         if (modellWeg)
@@ -224,10 +105,6 @@ const KI = (() => {
                 'den Anbieter, was er heute anbietet.';
         return meldung;
     };
-    /**
-     * fetch mit Wiederholung. Gibt die Antwort zurück, sobald sie brauchbar ist.
-     * @param {object} opt  versuche, basis (ms), beiWartezeit (Rückmeldung)
-     */
     const holen = async (url, init = {}, opt = {}) => {
         const versuche = opt.versuche ?? 4;
         const basis = opt.basis ?? 700;
@@ -238,7 +115,6 @@ const KI = (() => {
                 r = await fetch(url, init);
             }
             catch (e) {
-                /* Netz ganz weg — das ist ein Fall für einen zweiten Versuch */
                 letzter = e;
                 if (init.signal && init.signal.aborted)
                     throw e;
@@ -252,7 +128,6 @@ const KI = (() => {
             letzter = new Error('HTTP ' + r.status + ' — ' + (FEHLERTEXT[r.status] || 'unbekannter Fehler'));
             if (i === versuche - 1)
                 return r;
-            /* Sagt der Anbieter selbst, wie lange gewartet werden soll? */
             const kopfWarte = parseFloat(r.headers.get('retry-after') || '');
             const warte = !isNaN(kopfWarte) && kopfWarte > 0
                 ? Math.min(kopfWarte * 1000, 20000)
@@ -263,27 +138,6 @@ const KI = (() => {
         }
         throw letzter || new Error('Die Anfrage hat nicht geklappt.');
     };
-    /**
-     * Fragt einen Wolken-Anbieter. Streamt Stück für Stück, damit die Antwort
-     * genauso erscheint wie bei den lokalen Modellen.
-     */
-    /* ========================================================================
-     * DEN ANBIETER FRAGEN, WAS ER HAT (E661)
-     * ------------------------------------------------------------------------
-     * `ANBIETER` führt seine Modelle als Text im Programm. Groq mustert
-     * Modelle aus, und die Liste merkt es nie — bis jemand eine 404 bekommt.
-     * Für Ollama fragt Redion längst nach, was da ist (`sucheOllamaJetzt`);
-     * für die Wolke stand dieselbe Frage nie.
-     *
-     * Alle OpenAI-artigen Anbieter haben `/models` unter derselben Wurzel wie
-     * `/chat/completions`. Anthropic ebenso, unter `/v1/models`.
-     *
-     * DIE EINGEBAUTE LISTE BLEIBT — als Rückfall, nicht als Wahrheit. Ohne
-     * Netz, ohne Schlüssel oder bei einem Anbieter ohne `/models` steht
-     * immer noch etwas im Menü; ein leeres Menü wäre schlimmer als ein
-     * veraltetes.
-     * ======================================================================*/
-    /** Die Adresse der Modell-Liste zu einer Chat-Adresse. */
     const modellAdresse = (url) => {
         if (!url)
             return '';
@@ -293,11 +147,6 @@ const KI = (() => {
             return url.replace(/\/messages\/?$/, '/models');
         return url.replace(/\/+$/, '') + '/models';
     };
-    /**
-     * Holt die Modelle beim Anbieter und merkt sie. Gibt `null` zurück, wenn
-     * es nicht geht — und wirft dabei NICHT: wer im Menü auf „erneut holen"
-     * drückt, soll kein rotes Fenster bekommen, sondern die alte Liste.
-     */
     const modelleHolen = async (id) => {
         try {
             const a = anbieter(id);
@@ -305,8 +154,6 @@ const KI = (() => {
             const url = modellAdresse(a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url);
             if (!url)
                 return null;
-            /* DERSELBE KOPF WIE BEIM FRAGEN, nicht ein zweiter daneben (§8).
-               Und er geht an DIESE Adresse und an keine andere (§21, §42). */
             const kopf = { 'Content-Type': 'application/json' };
             if (a.id === 'anthropic') {
                 kopf['x-api-key'] = key;
@@ -323,8 +170,6 @@ const KI = (() => {
             const roh = Array.isArray(d?.data) ? d.data : (Array.isArray(d?.models) ? d.models : []);
             const liste = roh
                 .map((m) => String(m?.id || m?.name || '')).filter(Boolean)
-                /* WAS NICHT REDEN KANN, GEHÖRT NICHT IN EIN CHAT-MENÜ. Groq führt
-                   Whisper und TTS in derselben Liste; sie beantworten keine Frage. */
                 .filter((n) => !/whisper|tts|embed|guard|moderat|vision-ocr/i.test(n))
                 .sort();
             if (!liste.length)
@@ -333,31 +178,15 @@ const KI = (() => {
             return liste;
         }
         catch {
-            /* Kein Netz, kein JSON, kein `/models` — die eingebaute Liste gilt. */
             return null;
         }
     };
-    /**
-     * Ein Modell für diesen Anbieter — frisch erfragt, sonst das Eingebaute.
-     *
-     * WARUM DAS HIER STEHT UND NICHT IN DEN EINSTELLUNGEN (E665). Dort stand
-     * erst `KI.anbieter(id).modelle[0]`, dann wollte ich
-     * `await KI.modelleHolen(id)` und `KI.modelleVon(id)[0]` schreiben — zwei
-     * Griffe statt einem. `test537` hat es gemeldet: ein Querverweis mehr
-     * zwischen zwei Bereichen, und das Verzeichnis darf nur schrumpfen
-     * (§5 Regel 1).
-     *
-     * Der Wächter hatte recht, und zwar doppelt: „erst holen, dann das erste
-     * nehmen" ist eine Prozedur der KI und keine Sache, die die
-     * Einstellungsseite wissen muss. Ein Griff, ein Satz.
-     */
     const modellWaehlen = async (id) => {
         if (id === 'eigen')
             return Store.getMeta('api:eigenModell', 'lokal');
         await modelleHolen(id);
         return modelleVon(id)[0] || '';
     };
-    /** Was das Menü zeigt: was der Anbieter zuletzt sagte, sonst das Eingebaute. */
     const modelleVon = (id) => {
         const gemerkt = Store.getMeta('ki:modelle:' + id, null);
         if (Array.isArray(gemerkt) && gemerkt.length)
@@ -365,13 +194,7 @@ const KI = (() => {
         const a = anbieter(id);
         return Array.isArray(a.modelle) ? a.modelle : [];
     };
-    const wolkeFragen = async function* (nachrichten, modell, signal, 
-    /* WOHIN DIE GEZÄHLTE TOKENZAHL GEHT (L104, E319).
-       Ein Generator liefert Textstücke; die Abrechnung
-       ist kein Textstück und hätte in `yield` nichts zu
-       suchen. Sie kommt deshalb über ein Fach heraus,
-       das der Aufrufer hinhält. */
-    abrechnung) {
+    const wolkeFragen = async function* (nachrichten, modell, signal, abrechnung) {
         const a = anbieter(zustand.anbieter);
         const key = schluessel(a.id);
         const url = a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url;
@@ -379,7 +202,6 @@ const KI = (() => {
             throw new Error('Für diesen Anbieter fehlt die Adresse.');
         if (!key && a.id !== 'eigen')
             throw new Error('Es ist noch kein Schlüssel hinterlegt. Einstellungen → Schlüssel.');
-        /* Anthropic spricht ein eigenes Format */
         const istAnthropic = a.id === 'anthropic';
         const kopf = { 'Content-Type': 'application/json' };
         if (istAnthropic) {
@@ -396,10 +218,6 @@ const KI = (() => {
             ? { model: modell, max_tokens: 2000, stream: true,
                 system: sys ? sys.content : undefined, messages: rest }
             : { model: modell, messages: nachrichten, stream: true,
-                /* NUR WO ES SICHER IST. „Eigener Server" ist eine Adresse, die
-                   der Mensch einträgt — ein Server, der unbekannte Felder
-                   ablehnt, scheiterte daran mit 400. Eine kaputte Antwort gegen
-                   eine genauere Zahl zu tauschen wäre ein schlechtes Geschäft. */
                 ...(KiAbrechnung.willAbrechnung(a.id)
                     ? { stream_options: { include_usage: true } } : {}) };
         const r = await holen(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper), signal: signal ?? null }, { beiWartezeit: (sek, nr, code) => UI.toast(`${a.name}: ${code} — neuer Versuch ${nr + 1} in ${sek} s`) });
@@ -428,9 +246,6 @@ const KI = (() => {
                     return;
                 try {
                     const d = JSON.parse(rohdaten);
-                    /* HIER FIEL DIE ABRECHNUNG BISHER HERUNTER. Jedes Ereignis, das
-                       kein Textstück war, ging in den Papierkorb — auch das eine,
-                       das sagt, wie viele Token es wirklich waren (L104). */
                     if (abrechnung) {
                         const teil = KiAbrechnung.ausEreignis(d, istAnthropic);
                         if (teil) {
@@ -455,23 +270,18 @@ const KI = (() => {
         }
     };
     const zustand = {
-        quelle: 'ollama', /* 'ollama', 'webllm' oder 'wolke' */
+        quelle: 'ollama',
         anbieter: 'groq',
         modell: '',
         bereit: false,
         laedt: false,
         ollamaModelle: [],
-        engine: null, /* die WebLLM-Instanz */
-        abbruch: null, /* läuft gerade eine Antwort? (E652) */
+        engine: null,
+        abbruch: null,
         verlauf: [],
-        chatId: '', /* welcher gespeicherte Chat gerade offen ist */
-        modus: 'standard' /* 'standard' darf ändern, 'fragen' nur antworten */
+        chatId: '',
+        modus: 'standard'
     };
-    /* ========================================================================
-     * CHATS — GESPEICHERTE UNTERHALTUNGEN
-     * Notion führt sie in der Seitenleiste, nach Tagen gruppiert, jeder
-     * anheftbar. Hier liegen sie im Speicher unter „chats".
-     * ======================================================================*/
     const chatsLesen = () => Store.getMeta('chats', []) || [];
     const chatsSchreiben = (liste) => Store.setMeta('chats', liste.slice(0, 200));
     const chatSichern = () => {
@@ -534,7 +344,6 @@ const KI = (() => {
         chatsSchreiben(liste);
         App.zeichneBaum();
     };
-    /** Nach Tagen gruppiert: Heute, Gestern, Diese Woche, Älter. */
     const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August',
         'September', 'Oktober', 'November', 'Dezember'];
     const chatsGruppiert = () => {
@@ -542,7 +351,6 @@ const KI = (() => {
         const heute = new Date();
         heute.setHours(0, 0, 0, 0);
         const tag = 86400000;
-        /* Bis eine Woche zurück nach Tagen, danach nach Monaten — wie bei Notion */
         const reihe = [];
         const rein = (name, c) => {
             let g = reihe.find(x => x[0] === name);
@@ -577,7 +385,6 @@ const KI = (() => {
         });
         return reihe.filter(g => g[1].length);
     };
-    /** „vor 3 Monaten" — Notion schreibt es unter jeden Chat. */
     const wieLange = (wann) => {
         const d = Date.parse(wann);
         if (isNaN(d))
@@ -598,11 +405,6 @@ const KI = (() => {
         const jahre = Math.floor(tage / 365);
         return 'vor ' + jahre + (jahre === 1 ? ' Jahr' : ' Jahren');
     };
-    /* ========================================================================
-     * FÄHIGKEITEN
-     * Notion nennt sie „Skills": benannte Aufgaben, die die KI kann. Man ruft
-     * sie im Chat mit @ auf oder über das Menü bei markiertem Text.
-     * ======================================================================*/
     const FAEHIG_START = [
         { id: 'stil', icon: '✍️', name: 'Schreibstil verbessern',
             auftrag: 'Verbessere den Stil des Textes. Behalte Inhalt und Bedeutung genau bei.' },
@@ -627,9 +429,6 @@ const KI = (() => {
         Store.setMeta('kiFaehigkeiten', liste);
     };
     const faehigkeitLoeschen = (id) => Store.setMeta('kiFaehigkeiten', faehigkeiten().filter((f) => f.id !== id));
-    /* ========================================================================
-     * OLLAMA
-     * ======================================================================*/
     const ollamaPruefen = async () => {
         try {
             const c = new AbortController();
@@ -683,17 +482,10 @@ const KI = (() => {
             }
         }
     };
-    /* ========================================================================
-     * WEBLLM
-     * ======================================================================*/
     let webllmLib = null;
     const webllmLaden = async (modellId, fortschritt) => {
         if (!webllmLib) {
             try {
-                /* Die Bibliothek kommt zur Laufzeit von einem CDN. `tsc` würde den
-                   Pfad auflösen wollen und fände ihn nicht — deshalb der Umweg über
-                   `new Function`, der das `import` erst im Browser entstehen lässt.
-                   Am Verhalten ändert sich nichts. */
                 webllmLib = await (new Function('p', 'return import(p)'))('https://esm.run/@mlc-ai/web-llm');
             }
             catch {
@@ -711,16 +503,11 @@ const KI = (() => {
     const webllmFragen = async function* (nachrichten, signal) {
         if (signal?.aborted)
             throw new DOMException('Der Lauf wurde abgebrochen.', 'AbortError');
-        /* WebLLM benutzt keinen `fetch`, den wir mit einem Signal versehen
-           könnten. Seine eigene Unterbrechung wird deshalb an dasselbe Signal
-           gehängt. Ältere Fassungen ohne `interruptGenerate` bleiben kompatibel;
-           dort verhindert die Prüfung in der Schleife wenigstens jedes weitere
-           Textstück und damit jeden folgenden Agentenschritt. */
         const abbrechen = () => {
             try {
                 zustand.engine?.interruptGenerate?.();
             }
-            catch { /* schon beendet */ }
+            catch { }
         };
         signal?.addEventListener('abort', abbrechen, { once: true });
         try {
@@ -739,20 +526,6 @@ const KI = (() => {
             signal?.removeEventListener('abort', abbrechen);
         }
     };
-    /* ========================================================================
-     * GEMEINSAMER AUFRUF
-     * ======================================================================*/
-    /**
-     * Schickt eine Anfrage an das aktive Modell.
-     * @param {Array}  nachrichten  [{role:'user'|'system'|'assistant', content}]
-     * @param {Function} beiText    wird für jedes Textstück aufgerufen
-     */
-    /**
-     * Bringt die Nachrichten in die Form, die beide Modelle erwarten:
-     * höchstens eine Systemnachricht, und die ganz am Anfang.
-     * Ollama ist da nachsichtig, WebLLM nicht — es warnt sonst mit
-     * „System prompt should always be the first message in messages".
-     */
     const ordne = (nachrichten) => {
         const systeme = nachrichten.filter((m) => m.role === 'system').map((m) => m.content);
         const rest = nachrichten.filter((m) => m.role !== 'system');
@@ -764,9 +537,6 @@ const KI = (() => {
         if (!zustand.modell)
             throw new Error('Es ist noch kein Modell gewählt.');
         const n = ordne(nachrichten);
-        /* Ins Protokoll — ohne den Inhalt der Frage. Was jemand die KI fragt,
-           gehört ihm; dass er sie gefragt hat und mit welchem Modell, gehört
-           in die Nachvollziehbarkeit. */
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('ki', 'KI gefragt (' + (zustand.quelle || 'lokal') + ')', { wie: zustand.modell || '' });
         if (zustand.quelle === 'ollama') {
@@ -775,22 +545,6 @@ const KI = (() => {
             return;
         }
         if (zustand.quelle === 'wolke') {
-            /* --- DIE KOSTENPRÜFUNG SITZT HIER, UND ZWAR NUR HIER (E287) --------
-               `frage` ist das einzige Tor: `frageKurz` geht durch, die
-               Agentenschleife geht durch, der Chat geht durch. Eine Prüfung an
-               drei Stellen wäre dreimal zu pflegen und zweimal zu vergessen.
-      
-               NUR für die Wolke. Ollama und WebLLM kosten nichts; eine Bremse
-               davor wäre Reibung ohne Gegenwert.
-      
-               Und sie prüft VOR dem Aufruf. Danach zu zählen wäre eine
-               Buchhaltung, keine Grenze. */
-            /* ZUERST SCHÄTZEN, DANACH BERICHTIGEN (L104, E319).
-               Die Grenze muss VOR dem Aufruf prüfen — danach zu zählen wäre eine
-               Buchhaltung, keine Grenze. Die wirkliche Tokenzahl kommt aber erst
-               am Ende des Stroms. Also wird geschätzt, gebucht, und wenn der
-               Anbieter am Ende sagt, wie viele es waren, wird die Buchung
-               ersetzt statt verdoppelt. */
             let gebucht = null;
             if (typeof KiBuch !== 'undefined') {
                 const urteil = KiBuch.pruefen(zustand.modell, n, { lokal: false });
@@ -807,11 +561,6 @@ const KI = (() => {
                     beiText(t);
             }
             finally {
-                /* IM `finally`, UND DAS IST DER PUNKT. Wer mitten in einer langen
-                   Antwort abbricht, hat die Eingabetoken trotzdem bezahlt — und
-                   Anthropic schickt die schon im ERSTEN Ereignis. Eine Berichtigung
-                   nur im Erfolgsfall liesse gerade den Abbruch zu hoch gebucht
-                   stehen, also genau den Fall, den man später sucht. */
                 if (gebucht && KiAbrechnung.vollstaendig(abrechnung)) {
                     KiBuch.berichtigen(gebucht.id, abrechnung.ein, abrechnung.aus);
                 }
@@ -823,7 +572,6 @@ const KI = (() => {
         for await (const t of webllmFragen(n, optionen?.signal))
             beiText(t);
     };
-    /** Ein Rundruf ohne Streaming — für kurze Aufgaben. */
     const frageKurz = async (prompt, system, optionen) => {
         let out = '';
         const n = [];
@@ -833,12 +581,8 @@ const KI = (() => {
         await frage(n, (t) => out += t, optionen);
         return out.trim();
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
     const start = async () => {
         const gemerkt = Store.getMeta('ki', null);
-        /* Zuletzt ein Wolken-Modell benutzt und der Schlüssel liegt noch da? */
         if (gemerkt && gemerkt.quelle === 'wolke' &&
             (schluessel(gemerkt.anbieter) || gemerkt.anbieter === 'eigen')) {
             zustand.quelle = 'wolke';
@@ -849,29 +593,6 @@ const KI = (() => {
             zeichneModellKnopf();
             return;
         }
-        /* ======================================================================
-         * NUR SUCHEN, WER SCHON EINMAL GEFUNDEN HAT (E233)
-         * ----------------------------------------------------------------------
-         * Hier stand `ollamaPruefen()` ohne Bedingung. Bei JEDEM Start ging
-         * damit eine Anfrage an `localhost:11434` — auch bei jemandem, der KI
-         * nie geöffnet hat und Ollama nie installiert hat.
-         *
-         * Es verlässt nichts den Rechner (§21 ist also gewahrt), aber:
-         *
-         *   · Jeder Start hinterlässt einen Fehler in der Konsole
-         *     (`ERR_CONNECTION_REFUSED`). Und eine Konsole, in der immer ein
-         *     Fehler steht, ist eine Konsole, in der man den nächsten übersieht.
-         *     Die eigenen Prüfläufe fragen „Keine Fehler auf der Seite" — dieser
-         *     hier wurde nur deshalb nicht rot, weil er als Netzfehler und nicht
-         *     als Skriptfehler zählt.
-         *   · Hört ein anderes Programm auf 11434, redet Redion mit ihm.
-         *
-         * Gesucht wird jetzt, wenn es einen Grund gibt: Ollama war schon einmal
-         * die Quelle, ODER der Mensch öffnet die Modellauswahl (`modellMenue`
-         * fragt ohnehin), ODER er drückt dort „Suche nach Ollama".
-         *
-         * Wer Ollama benutzt, merkt nichts. Wer es nicht benutzt, startet leise.
-         * ====================================================================*/
         const lohntSuche = !!gemerkt && gemerkt.quelle === 'ollama';
         const da = lohntSuche ? await ollamaPruefen() : false;
         if (da) {
@@ -916,9 +637,6 @@ const KI = (() => {
             return;
         b.onclick = () => modellMenue(b);
     };
-    /* ========================================================================
-     * MODELLAUSWAHL — der Umschalter wie in Notion
-     * ======================================================================*/
     const modellMenue = async (anker) => {
         const r = anker.getBoundingClientRect();
         const da = await ollamaPruefen();
@@ -947,14 +665,12 @@ const KI = (() => {
                 `<span class="mi">${an ? '✓' : '○'}</span>` +
                 `<span>${esc(m.name)}<span class="sub">${m.groesse} · ${m.hinweis}</span></span></button>`;
         });
-        /* Wolken-Anbieter — nur die zeigen, für die ein Schlüssel hinterlegt ist */
         const mitSchluessel = ANBIETER.filter(a => schluessel(a.id) || (a.id === 'eigen' && Store.getMeta('api:eigenUrl', '')));
         if (mitSchluessel.length) {
             html += '<hr><div class="grp">Über deinen eigenen Schlüssel</div>';
             mitSchluessel.forEach(a => {
                 const modelle = a.id === 'eigen'
                     ? [Store.getMeta('api:eigenModell', 'lokal')]
-                    /* Was der Anbieter zuletzt gesagt hat, sonst das Eingebaute (E661). */
                     : modelleVon(a.id);
                 modelle.forEach(mo => {
                     const an = zustand.quelle === 'wolke' && zustand.anbieter === a.id && zustand.modell === mo;
@@ -966,8 +682,6 @@ const KI = (() => {
             });
         }
         html += '<hr><button data-q="check"><span class="mi">⟳</span>Erneut nach Ollama suchen</button>';
-        /* Nur zeigen, wo es etwas zu holen gibt — ein Knopf ohne Schlüssel
-           könnte nichts tun und wäre genau das, was §47 verbietet. */
         if (mitSchluessel.some(a => a.id !== 'eigen'))
             html += '<button data-q="modelle"><span class="mi">☁</span>Modelle erneut holen</button>';
         html += '<button data-q="schluessel"><span class="mi">🔑</span>Schlüssel hinterlegen …</button>';
@@ -982,10 +696,6 @@ const KI = (() => {
                 UI.toast('Suche nach Ollama …');
                 return;
             }
-            /* JEDEN ANBIETER MIT SCHLÜSSEL FRAGEN, was er heute anbietet (E661).
-               Der Knopf sagt danach, was herauskam — auch wenn es nichts war:
-               ein Knopf, der schweigend nichts tut, ist die heimtückischere
-               Hälfte von §47. */
             if (b.dataset.q === 'modelle') {
                 m.remove();
                 UI.toast('Frage die Anbieter nach ihren Modellen …');
@@ -1022,16 +732,10 @@ const KI = (() => {
                 melde('Modell gewechselt zu ' + kurzName(zustand.modell) + ' (Ollama).');
                 return;
             }
-            /* WebLLM muss erst geladen werden */
             zustand.bereit = false;
             zustand.laedt = true;
             status('load', 'Lädt …');
             const zeile = melde('Modell wird geladen. Beim ersten Mal dauert das ein paar Minuten — danach liegt es im Browser-Cache.');
-            /* DER FLÜSSIGE RING (E461). Diese Stelle ist die einzige im ganzen
-               Bestand, die von aussen einen echten 0..1-Anteil bekommt
-               (`initProgressCallback`) — also bekommt sie das Bild, das einen
-               Anteil zeigen darf. Der alte Balken bleibt als Rückfall, falls
-               das Bauteil nicht geladen ist. */
             const ring = typeof Lader !== 'undefined'
                 ? Lader.bauen({ art: 'fluss', anteil: 0, text: 'Modell wird geladen …' }) : null;
             const balken = document.createElement('div');
@@ -1065,9 +769,6 @@ const KI = (() => {
         });
     };
     const esc = (s) => String(s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] ?? c));
-    /* ========================================================================
-     * CHAT
-     * ======================================================================*/
     const melde = (text) => {
         const chat = document.getElementById('chat');
         const d = document.createElement('div');
@@ -1090,7 +791,6 @@ const KI = (() => {
         }
         return d;
     };
-    /** Der Inhalt der offenen Seite als Kontext für die KI. */
     const seitenKontext = () => {
         const id = App.aktuelleSeite();
         const p = Store.getBlock(id);
@@ -1126,13 +826,6 @@ const KI = (() => {
         'beziehst du dich ausschliesslich darauf und erfindest nichts dazu. ' +
         'Steht die Antwort nicht in den Ausschnitten, sagst du das offen. ' +
         'Keine Floskeln, keine Wiederholung der Frage.';
-    /* ------------------------------------------------------------------------
-     * QUELLENKARTE
-     * ------------------------------------------------------------------------
-     * Eine Antwort aus dem Arbeitsbereich ohne Quellen ist wertlos — man kann
-     * sie nicht prüfen. Deshalb steht unter jeder Antwort, woher sie stammt,
-     * anklickbar und mit dem Datum der letzten Änderung.
-     * ----------------------------------------------------------------------*/
     const quellenKarte = (quellen) => {
         if (!quellen || !quellen.length)
             return null;
@@ -1159,7 +852,6 @@ const KI = (() => {
         });
         return d;
     };
-    /** Die Quellen-Schalter über dem Eingabefeld. */
     const quellenLeiste = () => {
         const q = Kontext.quellen();
         const NAMEN = [
@@ -1192,23 +884,6 @@ const KI = (() => {
         });
         return d;
     };
-    /* ══ DER STOPP-KNOPF (E652) ═════════════════════════════════════════════
-     * Die ganze Abbruchkette war gebaut: `frage(…, {signal})`, ein
-     * abbrechbares `schlafen` für den Backoff, `signal` bis in `fetch`
-     * hinein. Nur `senden` rief `frage` OHNE das dritte Argument, und im
-     * Markup gab es keinen Knopf dafür. Wer eine lange Antwort losgeschickt
-     * hatte, konnte sie nur durch Schliessen des Tabs beenden.
-     *
-     * Das Teure war gebaut, das Billige fehlte.
-     *
-     * KEIN ZWEITER KNOPF. Der Senden-Knopf wird für die Dauer des Laufs zum
-     * Stopp-Knopf — dasselbe Element, dieselbe Grösse. Ein Knopf, der
-     * daneben auftaucht, verschiebt die Trefferfläche mitten in der
-     * Bewegung; §37 verlangt das Gegenteil. `test544` misst die Grösse vor
-     * und nach dem Lauf.
-     *
-     * Und der Zustand steht NICHT nur in der Farbe (§38): `aria-label`
-     * wechselt mit, sonst weiss ein Vorleseprogramm nichts davon. */
     const sendenKnopf = (imLauf) => {
         const k = document.getElementById('ai-senden');
         if (!k)
@@ -1221,7 +896,6 @@ const KI = (() => {
         else
             k.removeAttribute('data-lauf');
     };
-    /** Bricht die laufende Antwort ab. Ohne Lauf tut es nichts. */
     const abbrechen = () => {
         if (!zustand.abbruch)
             return false;
@@ -1240,23 +914,12 @@ const KI = (() => {
         schreibe('user', text);
         const ziel = schreibe('assistant', '');
         ziel.textContent = '…';
-        /* WICHTIG: Genau EINE Systemnachricht, und die muss ganz vorne stehen.
-           WebLLM warnt sonst „System prompt should always be the first message"
-           und wirft den Zusatz weg. Deshalb wird der Seiteninhalt in dieselbe
-           Systemnachricht hineingeschrieben, statt eine zweite anzuhängen. */
-        /* Die Kontext-Schicht sucht die passenden Stellen heraus und prüft
-           dabei, was der angemeldete Mensch überhaupt lesen darf. */
         let system = SYSTEM;
         let quellen = [];
         if (mitKontext && Store.getMeta('kiKontext', true)) {
             ziel.textContent = 'Sucht im Arbeitsbereich …';
             const k = await Kontext.bauenFuerFrage(text, { anzahl: 6 });
             quellen = k.quellen;
-            /* NUR-QUELLEN-MODUS (E305, Redurs Punkt 11). Findet sich nichts, wird
-               das Modell GAR NICHT GEFRAGT. Der Satz darunter — „sag das offen,
-               statt etwas zu erfinden" — ist eine Bitte, und ein Modell ohne
-               Vorlage antwortet trotzdem. Wer vor einer Prüfung sitzt, braucht
-               keine Bitte, sondern eine Zusage. */
             const tor = Kontext.darfFragen(k);
             if (!tor.ok) {
                 ziel.textContent = tor.grund;
@@ -1273,10 +936,6 @@ const KI = (() => {
                     'statt etwas zu erfinden.';
             if (Kontext.nurQuellen())
                 system += Kontext.nurQuellenAnweisung();
-            /* Websuche nur, wenn sie eingeschaltet ist — und nur zusätzlich.
-               IM NUR-QUELLEN-MODUS GAR NICHT: „meine Quellen" heisst die eigenen
-               Unterlagen. Eine Wikipedia-Zusammenfassung ist keine davon, und sie
-               wäre die eine Zeile, die den ganzen Modus wieder aushebelt. */
             if (Kontext.quellen().web && !Kontext.nurQuellen()) {
                 try {
                     const begriff = (text.split(/[?.!]/)[0] ?? '').slice(0, 60);
@@ -1291,7 +950,6 @@ const KI = (() => {
         }
         if (Store.getMeta('ki:persoenlich', ''))
             system += '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '');
-        /* Im Modus „Fragen" darf die KI nur antworten, nichts anlegen oder ändern */
         if (zustand.modus === 'fragen')
             system += '\n\nWichtig: Du beantwortest nur Fragen. Lege nichts an, ändere nichts ' +
                 'und schlage keine Änderungen vor, um die man dich nicht gebeten hat.';
@@ -1304,21 +962,13 @@ const KI = (() => {
         if (laenge === 'lang')
             system += '\n\nAntworte ausführlich und gut gegliedert.';
         const nachrichten = [{ role: 'system', content: system }];
-        /* Aus dem Verlauf niemals Systemnachrichten übernehmen */
         zustand.verlauf.slice(-6)
             .filter(m => m.role === 'user' || m.role === 'assistant')
             .forEach(m => nachrichten.push(m));
         nachrichten.push({ role: 'user', content: text });
         let antwort = '';
-        /* Der Schimmer sagt „hier kommt noch etwas" und muss deshalb im
-           `finally` wieder weg: der Fehlerzweig schreibt seine Meldung in
-           dasselbe Feld, und durchsichtiger Text würde sie unlesbar machen.
-           Eine Fehlermeldung, die man nicht lesen kann, ist der schlechtere
-           Fehler. */
         const aktivitaet = zeigeAktivitaet(ziel);
         ziel.classList.add('ki-schreibt');
-        /* Ein Steuermann je Lauf (E652). Er steht im Zustand, damit der Knopf
-           und `abbrechen()` denselben erreichen. */
         const steuer = new AbortController();
         zustand.abbruch = steuer;
         sendenKnopf(true);
@@ -1334,10 +984,6 @@ const KI = (() => {
             zustand.verlauf.push({ role: 'assistant', content: antwort });
         }
         catch (e) {
-            /* EIN ABBRUCH IST KEIN FEHLER, und `AbortError` ist kein Satz, den
-               ein Mensch lesen will. Was schon dasteht, bleibt stehen — es
-               gehört dem Nutzer (§51); nur der Verlauf bekommt die halbe
-               Antwort nicht, weil sie unvollständig ist. */
             const abbruch = steuer.signal.aborted
                 || (e instanceof Error && e.name === 'AbortError');
             if (abbruch) {
@@ -1355,16 +1001,13 @@ const KI = (() => {
             ziel.classList.remove('ki-schreibt');
             aktivitaet.remove();
         }
-        /* Quellen unter die Antwort */
         const qk = quellenKarte(quellen);
         if (qk && antwort)
             ziel.appendChild(qk);
-        /* Der Chat wandert in die Seitenleiste — wie bei Notion */
         if (antwort) {
             chatSichern();
             App.zeichneBaum();
         }
-        /* Zeile mit Aktionen unter der Antwort: kopieren, Daumen */
         if (antwort) {
             const tat = document.createElement('div');
             tat.className = 'msg-tat';
@@ -1388,7 +1031,6 @@ const KI = (() => {
             });
             ziel.appendChild(tat);
         }
-        /* Antwort in die Seite übernehmen */
         if (antwort) {
             const btn = document.createElement('button');
             btn.textContent = '↧ In die Seite einfügen';
@@ -1425,9 +1067,6 @@ const KI = (() => {
             ziel.appendChild(btn);
         }
     };
-    /* ========================================================================
-     * KI-AKTIONEN AUF BLÖCKEN
-     * ======================================================================*/
     const blockAktion = async (art, block) => {
         App.kiPanel(true);
         const auftraege = {
@@ -1447,13 +1086,6 @@ const KI = (() => {
             return;
         await senden(auftrag, !['ai-edit', 'ai-improve', 'ai-translate'].includes(art));
     };
-    /* ========================================================================
-     * DIE KI BAUT MIT
-     * ------------------------------------------------------------------------
-     * Notion lässt die KI Seiten und Datenbanken anlegen. Hier ebenso — nur
-     * lokal. Das Modell antwortet in JSON, die App baut daraus echte Objekte
-     * und schreibt jeden Schritt ins Protokoll, damit man ihn zurücknehmen kann.
-     * ======================================================================*/
     const protokoll = [];
     const merkeSchritt = (was, ids) => {
         protokoll.push({ zeit: Store.now(), was, ids });
@@ -1469,7 +1101,6 @@ const KI = (() => {
             return JSON.parse(text.slice(anfang, ende + 1));
         }
         catch { }
-        /* Manche Modelle setzen Kommentare oder Kommas zu viel */
         try {
             return JSON.parse(text.slice(anfang, ende + 1)
                 .replace(/\/\/[^\n]*/g, '').replace(/,\s*([}\]])/g, '$1'));
@@ -1478,23 +1109,12 @@ const KI = (() => {
             return null;
         }
     };
-    /* WAS EIN MODELL SCHREIBT, AUF REDIONS TYPEN. Das ist KEIN zweiter
-       Katalog (§8): das Register hält die Kennungen, diese Karte fängt die
-       vielen Schreibweisen dafür ab — deutsch wie englisch, denn die App
-       fragt deutsch und das Modell antwortet deutsch.
-       GEZÄHLT WAR SIE UNVOLLSTÄNDIG (E428): 30 Typen stehen im Register, 13
-       erreichte die KI. Die übrigen fielen still auf `text` zurück, und
-       „bau mir eine Bewertung und einen Fortschritt" ergab zwei Textspalten.
-       Kein Fehler, keine Meldung — nur eine Datenbank, die weniger kann als
-       bestellt. */
     const TYP_KARTE = {
         text: 'text', zahl: 'number', number: 'number', auswahl: 'select', select: 'select',
         mehrfach: 'multi', multi: 'multi', status: 'status', datum: 'date', date: 'date',
         person: 'person', kontrollkästchen: 'checkbox', checkbox: 'checkbox', url: 'url',
         email: 'email', 'e-mail': 'email', telefon: 'phone', phone: 'phone', formel: 'formula',
         formula: 'formula', dateien: 'files', files: 'files',
-        /* Die sieben, die nur vergessen waren — sie brauchen nichts ausser
-           ihrem Namen. */
         sterne: 'sterne', bewertung: 'sterne', rating: 'sterne',
         prozent: 'prozent', fortschritt: 'prozent', progress: 'prozent',
         place: 'place', ort: 'place', adresse: 'place',
@@ -1502,20 +1122,7 @@ const KI = (() => {
         created: 'created', erstellt: 'created', 'erstellt am': 'created',
         edited: 'edited', 'geändert': 'edited', 'zuletzt geändert': 'edited',
         uid: 'uid', nummer: 'uid', 'laufende nummer': 'uid'
-        /* UND WAS MIT GRUND DRAUSSEN BLEIBT: `relation` und `rollup` brauchen
-           eine Zieldatenbank, die im Plan nicht steht; `gdrive`, `figma`,
-           `githubpr` und `zendesk` eine eingerichtete Verbindung; `button`,
-           `ki` und `verify` eine Einstellung, die niemand geraten hat. Jede
-           davon entstünde leer und kaputt — eine Textspalte ist dann die
-           ehrlichere Antwort, sie hält wenigstens, was hineingeschrieben wird.
-           `test421 §5` hält diese Grenze fest. */
     };
-    /** Baut aus einer Beschreibung eine echte Datenbank. */
-    /**
-     * Baut aus einem fertigen Plan eine echte Datenbank.
-     * Wird von der KI-Antwort benutzt und vom Agenten — deshalb steht sie
-     * für sich und nicht mitten in der Chat-Funktion.
-     */
     const datenbankBauenAus = (plan, seiteId) => {
         const schema = {};
         let titelGesetzt = false;
@@ -1625,7 +1232,6 @@ const KI = (() => {
         });
         ziel.appendChild(leiste);
     };
-    /** Baut eine ganze Seite mit Überschriften und Blöcken. */
     const seiteBauen = async (auftrag) => {
         App.kiPanel(true);
         const seite = App.aktuelleSeite();
@@ -1670,7 +1276,6 @@ const KI = (() => {
         App.zeichneBaum();
         ziel.textContent = '✓ ' + neueIds.length + ' Blöcke eingefügt.';
     };
-    /** Das Protokoll: was die KI gebaut hat, mit Rückgängig je Schritt. */
     const protokollZeigen = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -1707,12 +1312,6 @@ const KI = (() => {
             UI.toast('Zurückgenommen');
         });
     };
-    /* ========================================================================
-     * WIKIPEDIA NACHSCHLAGEN
-     * ------------------------------------------------------------------------
-     * Kostenlos, ohne Schlüssel, und die einzige Stelle, an der diese App von
-     * sich aus ins Netz greift. Gut, wenn das lokale Modell etwas nicht weiss.
-     * ======================================================================*/
     const wikipedia = async (begriff) => {
         const url = 'https://de.wikipedia.org/api/rest_v1/page/summary/' +
             encodeURIComponent(begriff.trim().replace(/\s+/g, '_'));
@@ -1724,7 +1323,6 @@ const KI = (() => {
         const d = await r.json();
         return { titel: d.title, text: d.extract, link: d.content_urls?.desktop?.page || '' };
     };
-    /** Schlägt nach und schreibt das Ergebnis in den Chat — mit Knopf zum Einfügen. */
     const nachschlagen = async (begriff) => {
         App.kiPanel(true);
         schreibe('user', 'Nachschlagen: ' + begriff);
@@ -1761,7 +1359,6 @@ const KI = (() => {
                 ' — ohne Netz geht das Nachschlagen nicht.';
         }
     };
-    /** Aus der Auswahlleiste heraus: die markierte Stelle an die KI geben. */
     const frageMitAuswahl = (auswahl) => {
         const ta = document.getElementById('ai-input');
         if (!ta)
@@ -1783,15 +1380,6 @@ const KI = (() => {
             `Nenne drei Muster, die dir auffallen, und einen konkreten Verbesserungsvorschlag.\n\n` +
             tabelle.slice(0, 6000), false);
     };
-    /* ========================================================================
-     * PANEL AUFBAUEN
-     * ======================================================================*/
-    /* ========================================================================
-     * SCHREIBASSISTENT
-     * ------------------------------------------------------------------------
-     * Die Befehle, die in Notion direkt im Editor sitzen. Sie arbeiten mit dem
-     * markierten Text, sonst mit der ganzen Seite.
-     * ======================================================================*/
     const SCHREIB_BEFEHLE = [
         { id: 'weiter', icon: '✒️', name: 'Weiterschreiben',
             auftrag: 'Schreib den Text sinnvoll weiter. Gleiche Stimme, gleicher Ton, keine Wiederholung.' },
@@ -1826,7 +1414,6 @@ const KI = (() => {
         { id: 'fragen', icon: '❓', name: 'Rückfragen finden',
             auftrag: 'Nenne fünf Fragen, die dieser Text offen lässt.' }
     ];
-    /** Der markierte Text — oder, wenn nichts markiert ist, die ganze Seite. */
     const arbeitsText = () => {
         const sel = String(getSelection() || '').trim();
         if (sel.length > 3)
@@ -1857,8 +1444,6 @@ const KI = (() => {
             await schreibLauf(befehl, auftrag);
         });
     };
-    /** Eigene Statuszeile: Streaming ersetzt den Antworttext, nicht den Status.
-        Entfernen in finally gilt auch bei Fehlern und abgebrochenen Anfragen. */
     const zeigeAktivitaet = (ziel) => {
         const status = document.createElement('div');
         status.className = 'ki-aktivitaet';
@@ -1941,12 +1526,10 @@ const KI = (() => {
         });
         ziel.appendChild(leiste);
     };
-    /** Antworttext als richtige Blöcke ablegen — inklusive Markdown-Tabellen. */
     const alsBloeckeEinfuegen = (text) => {
         const zeilen = String(text || '').split('\n');
         const seite = App.aktuelleSeite();
         let tabelle = null;
-        /* Eine angefangene Tabelle abschliessen, bevor etwas anderes kommt. */
         const tabelleAbschliessen = () => {
             if (!tabelle)
                 return;
@@ -1962,7 +1545,7 @@ const KI = (() => {
             if (/^\|.*\|$/.test(z)) {
                 const zellen = z.split('|').slice(1, -1).map(x => x.trim());
                 if (zellen.every(c => /^:?-{2,}:?$/.test(c)))
-                    return; /* Trennzeile */
+                    return;
                 if (!tabelle) {
                     tabelle = { rows: [] };
                 }
@@ -2005,9 +1588,6 @@ const KI = (() => {
         App.zeichneSeite();
         UI.toast('In die Seite eingefügt');
     };
-    /* ========================================================================
-     * PERSONALISIEREN, FÄHIGKEITEN, DIKTAT, SEITENLEISTE
-     * ======================================================================*/
     const GESICHTER = ['✨', '🦉', '🐤', '🦊', '🐙', '🧠', '🤖', '🌱', '🔭', '📎', '🧭', '🪄'];
     const persona = () => Store.getMeta('kiPersona', { name: 'KI', gesicht: '✨' });
     const personalisieren = () => {
@@ -2145,11 +1725,8 @@ const KI = (() => {
             }
         });
     };
-    /** Diktieren über die Spracherkennung des Browsers — kostenlos. */
     let hoert = null;
     const diktat = (feld) => {
-        /* Die Spracherkennung gibt es nur in Chrome, Edge und Safari — und in
-           keiner Typendatei. */
         const SR = window
             .SpeechRecognition ||
             window.webkitSpeechRecognition;
@@ -2188,29 +1765,6 @@ const KI = (() => {
         document.getElementById('ai-diktat')?.classList.add('an');
         UI.toast('Ich höre zu — nochmal tippen beendet es');
     };
-    /**
-     * Der Chat-Reiter der Seitenleiste: Agenten oben, darunter der Verlauf
-     * nach Tagen gruppiert — so wie Notion es zeigt.
-     */
-    /* ==========================================================================
-     * DER CHATVERLAUF — EIN ZEICHNER, ZWEI ORTE (E273, L93)
-     * --------------------------------------------------------------------------
-     * Die Liste stand fest in `seitenleiste()`. Am Telefon war das richtig; am
-     * Rechner ist die Seitenleiste seit E272 Phase F `display:none`, und
-     * `seitenleiste` wird von nirgends sonst gerufen — der ganze Verlauf war
-     * dort nicht mehr zu erreichen. `chatsGruppiert()` und `chatOeffnen(id)`
-     * gab es die ganze Zeit; sie riefen nur nirgends.
-     *
-     * Statt einer zweiten Liste im Panel (§8) steht der Zeichner jetzt hier
-     * und wird von beiden Orten gerufen: von `seitenleiste(baum)` am Telefon
-     * und von `verlauf()` im Kopf des KI-Fensters.
-     *
-     * Warum im KI-Fenster und nicht an der Kontextkante: die KI ist kein Ort,
-     * sondern ein Panel neben dem Inhalt. `kiPanel` lässt `sonder` und
-     * `seiteId` in Ruhe, `App.schauplatz()` bleibt beim Editor oder wo man
-     * gerade war — es gibt keinen Schauplatz `ki`, auf den sich ein
-     * Kantenknopf melden könnte. Das Fenster ist sein eigenes Zuhause.
-     * ========================================================================*/
     const chatBaum = (ziel) => {
         chatsGruppiert().forEach(([name, chats]) => {
             const k = document.createElement('div');
@@ -2226,12 +1780,6 @@ const KI = (() => {
             ziel.appendChild(k);
             const liste = document.createElement('div');
             liste.className = 'wz-block';
-            /* DREI EMOJI WENIGER (E202, E273). Die Liste stand nur in der
-               Seitenleiste des Telefons; seit sie auch im KI-Fenster am Rechner
-               steht, ist sie Schale, und dort haben Emoji nichts zu suchen —
-               💬 war ein blaugrauer Fleck in einer Reihe einfarbiger Striche.
-               Der Stern für „angeheftet" folgt E200: EIN Zeichen, der Zustand
-               steckt in der Klasse, nicht in einem zweiten Bildchen. */
             const zeichen = (id, gr = 15) => {
                 try {
                     return Register.symbole.alsSvg(id, gr) || '';
@@ -2268,12 +1816,6 @@ const KI = (() => {
             ziel.appendChild(liste);
         });
     };
-    /**
-     * Der Verlauf als Überlagerung — der Weg dorthin am Rechner.
-     *
-     * `fokus.ts` gibt jeder `.overlay` Rolle, Fokusfalle und den Weg zurück;
-     * deshalb steht hier weder `role` noch ein eigener Esc-Griff.
-     */
     const verlauf = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -2311,8 +1853,6 @@ const KI = (() => {
             koerper.appendChild(leer);
         }
         k.appendChild(koerper);
-        /* Ein Klick auf eine Unterhaltung öffnet sie UND schliesst die Liste.
-           `chatBaum` weiss davon nichts — es kennt nur seinen eigenen Ort. */
         koerper.addEventListener('click', e => {
             if (elVon(e)?.closest('[data-c]') &&
                 !elVon(e)?.closest('[data-pin]') &&
@@ -2354,9 +1894,6 @@ const KI = (() => {
         baum.appendChild(agenten);
         chatBaum(baum);
         if (!chatsGruppiert().length) {
-            /* Vorher stand hier eine graue Zeile in 12,5 Pixeln: „Noch keine
-               Unterhaltung." Das sagt, DASS nichts da ist — nicht, was es hier
-               gäbe und wie man anfängt. Jetzt dieselbe Form wie im Posteingang. */
             const leer = document.createElement('div');
             leer.innerHTML = Hinweis.leer({
                 zeichen: '💬',
@@ -2377,8 +1914,6 @@ const KI = (() => {
     const bindePanel = () => {
         const ta = document.getElementById('ai-input');
         const chat = document.getElementById('chat');
-        /* Werkzeuge bleiben erreichbar, ohne die Eingabe zu verdrängen.
-           Nur bestehende Knoten verschieben: Kennungen und Klicks bleiben. */
         const actions = document.querySelector('.ai-quick');
         if (actions && !actions.querySelector('.ai-action-group')) {
             const prompts = Array.from(actions.querySelectorAll('button[data-p]'));
@@ -2431,8 +1966,6 @@ const KI = (() => {
         if (!ta)
             return;
         ta.addEventListener('keydown', e => {
-            /* Steht „Eingabetaste macht eine neue Zeile" an, wird mit Strg+Enter
-               gesendet — das ist Notions Eingabeoption. */
             const neueZeile = !!Store.getMeta('enterZeile', false);
             const senderTaste = neueZeile
                 ? (e.key === 'Enter' && (e.ctrlKey || e.metaKey))
@@ -2452,7 +1985,6 @@ const KI = (() => {
         document.querySelectorAll('.ai-quick button[data-p]').forEach(b => {
             b.addEventListener('click', () => senden(b.dataset.p ?? ''));
         });
-        /* --- Die Leiste unter dem Eingabefeld ------------------------------- */
         const modusKnopf = document.getElementById('ai-modus');
         const modusZeigen = () => {
             if (modusKnopf)
@@ -2494,9 +2026,6 @@ const KI = (() => {
             }
         });
         document.getElementById('ai-senden')?.addEventListener('click', () => {
-            /* Läuft gerade eine Antwort, ist derselbe Knopf der Stopp-Knopf
-               (E652). Erst danach wird das Feld geleert — sonst verlöre man
-               seine Frage beim Abbrechen. */
             if (abbrechen())
                 return;
             const t = ta.value;
@@ -2575,13 +2104,6 @@ const KI = (() => {
                 if (!b)
                     return;
                 m.remove();
-                /* HIER STAND `quellenKarte(e.currentTarget)` (E652): ein
-                   HTML-Element an eine Funktion, die eine LISTE erwartet.
-                   `!element.length` ist wahr, also kam lautlos `null` zurück — und
-                   selbst das wurde nirgends eingehängt. Der Punkt zeigte eine Zahl
-                   und ein „▸", versprach also ein Untermenü, und tat nichts.
-                   Jetzt öffnet er DIESELBE Schalterleiste, die im Fuss steht:
-                   ein Katalog, nicht zwei (§8). */
                 if (b.dataset.y === 'quellen') {
                     const q2 = UI.menu('<div class="grp">Meine Quellen</div>', r.left, r.top - 160);
                     q2.appendChild(quellenLeiste());
@@ -2596,8 +2118,6 @@ const KI = (() => {
         });
         document.getElementById('ai-faehig')?.addEventListener('click', (e) => faehigkeitenMenue(e.currentTarget));
         document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
-        /* Redur, 9. September: die beiden Bau-Knöpfe unverändert behalten;
-           alle übrigen Aktionen erhalten genau denselben bestehenden Effekt. */
         if (typeof Funkel !== 'undefined')
             Funkel.alle(document, '.ai-quick button, .ai-tools-settings button');
         document.getElementById('ai-db')?.addEventListener('click', async () => {
@@ -2621,8 +2141,6 @@ const KI = (() => {
             if (begriff)
                 nachschlagen(begriff);
         });
-        /* DER VERLAUF, DEN ES SEIT PHASE F NICHT MEHR ZU SEHEN GAB (L93).
-           Er stand nur in der Seitenleiste, und die ist am Rechner weg. */
         document.getElementById('ai-verlauf')?.addEventListener('click', () => verlauf());
         document.getElementById('ai-clear')?.addEventListener('click', () => {
             zustand.verlauf = [];
@@ -2632,9 +2150,6 @@ const KI = (() => {
         });
         melde('Alles läuft lokal. Kein Text verlässt deinen Rechner.');
     };
-    /* Der Weg für die Schale (E233): beim ÖFFNEN des KI-Fensters einmal nach
-       Ollama sehen — aber nur, wenn noch keine Quelle steht. Zweimal fragen
-       wäre so unnötig wie gar nicht fragen. */
     const sucheOllamaJetzt = async () => {
         if (zustand.bereit || zustand.quelle === 'ollama')
             return;

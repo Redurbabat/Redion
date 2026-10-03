@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/lernwelt.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/wissen/lernwelt.ts — die Hauptwelt „Lernen & Alltag"
  * ----------------------------------------------------------------------------

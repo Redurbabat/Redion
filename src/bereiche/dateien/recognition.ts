@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/recognition.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/dateien/recognition.ts — Erfassen und optionale lokale Erkennung
  * ----------------------------------------------------------------------------

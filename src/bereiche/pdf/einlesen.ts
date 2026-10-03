@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/einlesen.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/pdf/einlesen.ts — ein PDF wird zu Seiten
  * ----------------------------------------------------------------------------

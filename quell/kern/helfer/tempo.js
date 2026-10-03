@@ -1,45 +1,13 @@
 "use strict";
-/* ============================================================================
- * tempo.js — Schnell bleiben, auch bei vielen Zeilen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/helfer/tempo.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/helfer/tempo.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion wird bei grossen Datenbanken spürbar zäh, und man erfährt nie,
- * woran es liegt. Hier stehen drei Antworten darauf:
- *
- *   1. FORMELSPEICHER — jede Formel wird je Zeile einmal gerechnet und
- *      gemerkt, bis sich an den Daten etwas ändert. Bei 500 Zeilen mit
- *      fünf Formeln sind das statt 2500 Rechnungen je Neuzeichnen null.
- *
- *   2. FENSTERWEISES ZEICHNEN — von einer langen Tabelle stehen nur die
- *      Zeilen im Dokument, die man sehen kann. Der Rest ist Platzhalter.
- *
- *   3. MESSUNG — eine Anzeige, die sagt, wie lange das Zeichnen gedauert
- *      hat, wie viele Formeln gerechnet wurden und welche die teuersten
- *      sind. Notion zeigt so etwas nirgends.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/tempo.ts (npm run bauen:ts). */
 const Tempo = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * 1. FORMELSPEICHER
-     * ------------------------------------------------------------------------
-     * Der Schlüssel ist Zeile + Spalte. Gültig bleibt der Eintrag, solange
-     * sich am Bestand nichts geändert hat: jede Schreiboperation zählt einen
-     * Takt hoch, und ein Eintrag aus einem älteren Takt wird verworfen.
-     * ======================================================================*/
     let takt = 0;
     let speicher = new Map();
     const zahlen = { treffer: 0, fehlschlag: 0, zeit: 0, gerechnet: 0 };
-    const teuer = new Map(); /* key -> { name, ms, anzahl } */
+    const teuer = new Map();
     let an = true;
     const veraendert = () => { takt++; speicher.clear(); };
     const hole = (row, key, coll, rechne) => {
@@ -75,9 +43,6 @@ const Tempo = (() => {
         teuer.clear();
         zahlen.treffer = zahlen.fehlschlag = zahlen.zeit = zahlen.gerechnet = 0;
     };
-    /* ========================================================================
-     * 2. ZEICHENDAUER
-     * ======================================================================*/
     const dauer = { seite: 0, zeilen: 0, wann: 0 };
     const misstSeite = (fn) => {
         const t0 = performance.now();
@@ -87,14 +52,6 @@ const Tempo = (() => {
         anzeigeAuffrischen();
         return r;
     };
-    /* ========================================================================
-     * 3. FENSTERWEISES ZEICHNEN
-     * ------------------------------------------------------------------------
-     * Für eine Tabelle: alle Zeilen über der Schwelle werden ausgeblendet und
-     * erst eingeblendet, wenn man in ihre Nähe scrollt. Das Dokument bleibt
-     * damit klein, ohne dass etwas fehlt — Suchen im Browser findet die
-     * versteckten Zeilen zwar nicht, dafür bleibt das Scrollen flüssig.
-     * ======================================================================*/
     const SCHWELLE = () => Number(Store.getMeta('tempoSchwelle', 120)) || 120;
     const fensterweise = (tabelle, scroller) => {
         const koerper = tabelle.tBodies && tabelle.tBodies[0];
@@ -105,42 +62,17 @@ const Tempo = (() => {
             return;
         if (Store.getMeta('tempoFenster', true) === false)
             return;
-        /* ---------------------------------------------------------------------
-         * DIE ZEILENHÖHE WIRD GEMESSEN, NICHT ANGENOMMEN.
-         *
-         * Hier stand `const hoehe = 34`. Eine Zeile ist aber nie 34 px hoch:
-         * `table.grid td` bringt sie über `padding` zustande, und die Ansicht
-         * hat drei Stufen. Gemessen am 8. August, Chromium:
-         *
-         *     h-klein    31,25 px
-         *     h-normal   37,25 px
-         *     h-gross    49,25 px
-         *
-         * Der Schaden war nicht kosmetisch. Der Platzhalter oben bekommt
-         * `von * hoehe`; bei 142 übersprungenen Zeilen sind das 4828 px statt
-         * der wirklichen 6994. Der Versatz von 2166 px ist grösser als der
-         * Puffer von 25 Zeilen — wer in einer langen Tabelle mit „alle
-         * Einträge" weit nach unten rollt, sieht die falschen Zeilen.
-         *
-         * Zwei Zahlen abzugleichen wäre die schlechtere Antwort gewesen: dann
-         * gäbe es die Fehlerquelle weiterhin, nur mit einem Kommentar daneben.
-         * Eine gemessene Zahl kann nicht auseinanderlaufen.
-         *
-         * Gemessen wird JETZT, solange noch alle Zeilen sichtbar sind — nach
-         * dem ersten Ausblenden gäbe es nichts mehr zu messen.
-         * ------------------------------------------------------------------- */
         const gemessen = () => {
             for (const z of zeilen) {
                 const h = z.getBoundingClientRect().height;
                 if (h > 4)
-                    return h; /* > 4, damit eine eingeklappte Zeile nicht zählt */
+                    return h;
             }
-            return 34; /* Nur, wenn gar nichts zu messen ist. */
+            return 34;
         };
         let hoehe = gemessen();
         const puffer = 25;
         const kasten = scroller || document.getElementById('scroll') || document.documentElement;
-        /* Damit die Bildlaufleiste stimmt: eine Zeile, die den Rest ausfüllt. */
         const oben = document.createElement('tr');
         oben.className = 'vs-luft';
         const unten = document.createElement('tr');
@@ -160,10 +92,6 @@ const Tempo = (() => {
                 kasten.removeEventListener('scroll', zeichne);
                 return;
             }
-            /* Die Höhe kann sich ändern, ohne dass neu gezeichnet wird: der
-               Nutzer stellt im Ansichtsmenü von „normal" auf „gross". Also bei
-               jedem Durchgang an einer sichtbaren Zeile nachsehen — das kostet
-               eine Messung und erspart genau den Fehler, den diese Stelle hatte. */
             for (const z of zeilen) {
                 if (z.style.display === 'none')
                     continue;
@@ -198,13 +126,6 @@ const Tempo = (() => {
         zeichne();
         return zeichne;
     };
-    /* ========================================================================
-     * 4. SUCHREGISTER
-     * ------------------------------------------------------------------------
-     * Ein Wörterbuch von Wort auf Blockliste. Es wird beim ersten Suchen
-     * gebaut und bei Änderungen verworfen — für ein paar tausend Blöcke ist
-     * das in wenigen Millisekunden erledigt und danach ist jede Suche sofort da.
-     * ======================================================================*/
     let register = null, registerTakt = -1;
     const bauen = () => {
         const t0 = performance.now();
@@ -225,20 +146,15 @@ const Tempo = (() => {
         registerTakt = takt;
         return { woerter: r.size, ms: performance.now() - t0 };
     };
-    /** Alle Blöcke, deren Text dieses Wort enthält — über das Register. */
     const finde = (wort) => {
         if (!register || registerTakt !== takt)
             bauen();
-        /* `bauen()` setzt `register` — aber das steht in einer anderen Funktion,
-           und TypeScript folgt dorthin nicht. Die Zeile schreibt hin, was ohnehin
-           gilt, statt es anzunehmen. */
         const reg = register;
         if (!reg)
             return [];
         const w = String(wort || '').toLowerCase();
         if (w.length < 2)
             return [];
-        /* Genaue Treffer zuerst, dann Wörter, die so anfangen. */
         const raus = new Set(reg.get(w) || []);
         if (raus.size < 200) {
             for (const [k, ids] of reg) {
@@ -250,9 +166,6 @@ const Tempo = (() => {
         }
         return [...raus];
     };
-    /* ========================================================================
-     * 5. ANZEIGE
-     * ======================================================================*/
     const anzeigeAuffrischen = () => {
         const el = document.getElementById('tempo-anzeige');
         if (!el)
@@ -346,11 +259,6 @@ const Tempo = (() => {
             }
         });
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
-    /* Jede Schreiboperation macht den Speicher ungültig. Store meldet nicht
-       jede einzelne, deshalb legen wir uns um die Schreibfunktionen herum. */
     const SCHREIBER = ['setProp', 'updateBlock', 'addBlock', 'addRow', 'trashBlock',
         'restoreBlock', 'purgeBlock', 'updateCollection', 'updateView',
         'addDatabase', 'addView', 'removeView', 'baumEinfuegen',

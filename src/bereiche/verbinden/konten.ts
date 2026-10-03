@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/konten.ts (npm run bauen:ts). */
 /* ============================================================================
  * verbindungen.js — Anbindung an fremde Dienste
  * ----------------------------------------------------------------------------

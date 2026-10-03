@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/nin-quiz.ts (npm run bauen:ts). */
 /* ══ DER INHALT DES NIN-TRAINERS — Regeln der Technik, Kapitel 5, 6, 7 (E679) ══
    Redur, 22. September 2026: „erstelle mir direkt lerne quiz im redion für
    kapitel 5,6,7 und bei der regel der technik und alles beschriftet mit

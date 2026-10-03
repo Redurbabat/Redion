@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/erweiterungen.ts (npm run bauen:ts). */
 /* ============================================================================
  * erweiterung.js — Eigene Erweiterungen
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/sicherheit/pruefen.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/sicherheit/pruefen.js — Werte prüfen, bevor sie Schaden anrichten
  * ----------------------------------------------------------------------------

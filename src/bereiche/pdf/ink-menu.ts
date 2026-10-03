@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/ink-menu.ts (npm run bauen:ts). */
 /* E572: kleine Werkzeugfelder im obersten Browser-Layer. Kein Dokumentinhalt.
  * Die native Klappe übernimmt Escape und Aussenklick, auch im Vollbild.
  *

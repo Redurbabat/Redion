@@ -1,62 +1,11 @@
 "use strict";
-/* ============================================================================
- * austausch.js — Word, Excel und fremde Werkzeuge
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/dateien/ausgeben.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/dateien/ausgeben.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion gibt Seiten als PDF, HTML, Markdown und CSV aus — Word und Excel
- * fehlen, und beim Einlesen kennt es nur eine Handvoll Quellen.
- *
- * Hier steht beides:
- *
- *   AUSGEBEN  · .docx — eine echte Word-Datei, ohne fremde Pakete
- *             · .xlsx — eine echte Excel-Mappe, eine Tabelle je Ansicht
- *
- *   EINLESEN  · Asana (CSV)        — Abschnitte werden Status, Notizen Seiten
- *   EINLESEN  · Apple Notes (Ordner)— je HTML-Datei eine Seite, Ordner bleiben
- *   EINLESEN  · Trello (JSON)      — Listen werden Status, Karten Zeilen
- *             · Evernote (.enex)   — jede Notiz eine Seite
- *             · Obsidian (Ordner)  — [[Wikilinks]] werden echte Verweise
- *             · Notion-Export (ZIP)— Markdown und CSV daraus
- *             · Asana / Jira (CSV) — über die vorhandene CSV-Einleseroutine
- *
- * Word- und Excel-Dateien sind ZIP-Archive mit XML darin. Zum Schreiben
- * braucht es nur einen einfachen ZIP-Packer — der steht ganz oben.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/ausgeben.ts (npm run bauen:ts). */
 const Austausch = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-    /* ========================================================================
-     * 1. ZIP SCHREIBEN
-     * ------------------------------------------------------------------------
-     * Ohne Komprimierung (Methode 0). Word und Excel lesen das anstandslos,
-     * und der Code bleibt kurz genug, um ihn zu überblicken.
-     * ======================================================================*/
-    /* Die Prüfsumme rechnet seit E363 der Kern (`ZipDetails`) — dieselbe
-       Tafel für Schreiber und Leser, damit beide dasselbe meinen. */
     const crc32 = (daten) => ZipDetails.crc32(daten instanceof Uint8Array ? daten : new Uint8Array(daten));
-    /**
-     * Dieselbe Prüfsumme, aber häppchenweise — für einen Blob, der nicht in den
-     * Arbeitsspeicher passt.
-     *
-     * WARUM ES DAS BRAUCHT. `crc32` will alle Bytes auf einmal. Bei einem Video
-     * von 500 MB heisst das 500 MB im Arbeitsspeicher, nur um eine Zahl
-     * auszurechnen — auf einem Telefon der sichere Absturz. Ein Blob liegt beim
-     * Browser auf der Platte; wer ihn scheibchenweise liest, braucht nie mehr
-     * als eine Scheibe.
-     *
-     * Die Prüfsumme ist ihrer Natur nach fortlaufend, das kommt uns entgegen:
-     * Byte für Byte, ohne zu wissen, wie viele noch kommen.
-     */
     const SCHEIBE = 1024 * 1024;
     const crc32Strom = async (blob, beiFortschritt) => {
         let c = ZipDetails.crc32Start();
@@ -68,66 +17,17 @@ const Austausch = (() => {
         }
         return ZipDetails.crc32Fertig(c);
     };
-    /* ------------------------------------------------------------------------
-     * DIE DREI GRENZEN — und warum sie seit dem 6. August keine mehr sind
-     * ------------------------------------------------------------------------
-     * Ein ZIP der alten Bauart zählt Grössen und Versätze in 32 Bit, die Zahl
-     * der Einträge sogar nur in 16:
-     *
-     *     eine einzelne Datei     4 GB        (32 Bit)
-     *     das ganze Archiv        4 GB        (32 Bit)
-     *     die Anzahl der Einträge 65 535      (16 Bit)
-     *
-     * Bis heute brach der Packer an allen dreien ehrlich ab. Das war richtig
-     * gegenüber der Alternative — ein Archiv zu schreiben, das erst beim
-     * Auspacken auffällt —, aber es war keine Sicherung. Und die Meldung riet
-     * „sichere die Anhänge in zwei Schritten", während es diesen zweiten
-     * Schritt in Redion gar nicht gibt: jeder Weg mündet in dasselbe eine
-     * Archiv mit allen Anhängen. Wer 5 GB Fotos hatte, konnte nicht sichern.
-     *
-     * Deshalb jetzt ZIP64 (E39). Es ist kein grösseres Feld, sondern ein
-     * Zusatz: an den Stellen, die überlaufen, steht der Platzhalter
-     * 0xFFFFFFFF, und die echte Zahl liegt in 64 Bit daneben.
-     *
-     * NUR WENN NÖTIG. Ein Archiv unter den Grenzen wird byteweise geschrieben
-     * wie bisher — sonst könnte eine ältere Redion-Fassung die neuen
-     * Sicherungen nicht mehr lesen, und alte Werkzeuge auch nicht. Die
-     * Referenz macht es genauso: Pythons `zipfile` setzt die Platzhalter
-     * einzeln, dort wo sie gebraucht werden, und sonst nirgends.
-     * ----------------------------------------------------------------------*/
     const ZIP_GRENZE = 0xFFFFFFFF;
     const ZIP_EINTRAEGE = 65535;
-    /* DIE SCHWELLEN SIND ABSENKBAR, und das ist kein Schlupfloch, sondern die
-       einzige Art, diesen Code zu prüfen. Ein Prüflauf kann keine 4 GB
-       schreiben — wohl aber dieselbe Verzweigung bei 40 Byte nehmen. Ein
-       ZIP64 mit kleinen Dateien ist ein vollkommen gültiges ZIP64; `unzip`
-       und Pythons `zipfile` lesen es, und genau das prüft `test103`.
-       Im Betrieb bleiben die Werte, wie das Format sie vorschreibt. */
     const grenzen = { bytes: ZIP_GRENZE, eintraege: ZIP_EINTRAEGE };
-    /**
-     * @param dateien [{ name, inhalt }] — inhalt als Zeichenkette, Uint8Array
-     *                oder **Blob**. Ein Blob wird nie ganz eingelesen: seine
-     *                Prüfsumme entsteht scheibchenweise, und in das Archiv
-     *                wandert er als Blob, den der Browser selbst verwaltet.
-     * @param {(name:string, anteil:number)=>void} [beiFortschritt]
-     * @returns {Promise<Blob>}
-     */
     const zipSchreiben = async (dateien, beiFortschritt) => {
         const enc = new TextEncoder();
         const teile = [];
         const verzeichnis = [];
         let versatz = 0;
-        /* Ob dieses Archiv ZIP64 wird, entscheidet sich erst unterwegs — beim
-           ersten Eintrag, der überläuft. Gemerkt wird es hier, weil der
-           Schlusssatz am Ende davon abhängt. */
         let braucht64 = dateien.length > grenzen.eintraege;
         const schreibe32 = (a, i, w) => { a[i] = w & 255; a[i + 1] = (w >>> 8) & 255; a[i + 2] = (w >>> 16) & 255; a[i + 3] = (w >>> 24) & 255; };
         const schreibe16 = (a, i, w) => { a[i] = w & 255; a[i + 1] = (w >>> 8) & 255; };
-        /* ACHT BYTE, UND NICHT ÜBER `>>>`. Die Bit-Schieber von JavaScript
-           rechnen in 32 Bit — `4294967296 >>> 0` ist 0, nicht 2^32. Wer die
-           obere Hälfte so gewinnen will, schreibt lautlos Null in genau das
-           Feld, das den Überlauf abfangen soll. Deshalb geteilt, nicht
-           geschoben. Bis 2^53 ist das exakt, und darüber gibt es keine Blobs. */
         const schreibe64 = (a, i, w) => {
             const unten = w >>> 0;
             const oben = Math.floor(w / 4294967296);
@@ -136,29 +36,6 @@ const Austausch = (() => {
         };
         for (const d of dateien) {
             const name = enc.encode(d.name);
-            /* ══ DURCHGEREICHT ODER SELBST GESCHRIEBEN ══════════════════════════
-               Ein Eintrag mit `roh` kommt aus einer FREMDEN ZIP und wird Byte für
-               Byte übernommen — mit seiner Packmethode, seiner Prüfsumme und
-               seinen zwei Längen. Gebraucht wird das für die Rundreise: eine
-               `.docx` öffnen, EINEN Eintrag ersetzen, alles andere unangetastet
-               zurückschreiben.
-      
-               Ohne diesen Weg müsste jeder fremde Eintrag entpackt und hier neu
-               abgelegt werden, und weil der Schreiber nicht packt (Methode 0),
-               würde aus einer 40-KB-Vorlage eine 300-KB-Datei — gültig, aber ohne
-               Not aufgebläht, mit jedem eingebetteten Bild unkomprimiert darin.
-      
-               DIE PRÜFSUMME WIRD NICHT NACHGERECHNET, und das ist Absicht: die
-               Bytes werden nicht gelesen, sondern weitergereicht. Nachrechnen
-               hiesse entpacken, und genau das soll unterbleiben. Der Leser gibt
-               `roh` ausserdem nur für unverschlüsselte Einträge heraus.
-      
-               NICHT ÜBERNOMMEN werden die Flags des Originals. Bit 3 (Grössen
-               stehen erst hinter den Daten) würde sonst mitreisen, obwohl hier
-               die echten Längen im Kopf stehen — ein Leser, der Bit 3 glaubt,
-               suchte danach einen Datensatz, den es nicht gibt. Geschrieben wird
-               deshalb wie sonst nur das UTF-8-Bit.
-               ═══════════════════════════════════════════════════════════════════ */
             const durchgereicht = !!d.roh;
             const istBlob = typeof Blob !== 'undefined' &&
                 (durchgereicht ? d.roh : d.inhalt) instanceof Blob;
@@ -166,9 +43,6 @@ const Austausch = (() => {
                 : istBlob ? d.inhalt
                     : typeof d.inhalt === 'string' ? enc.encode(d.inhalt)
                         : d.inhalt;
-            /* Zwei Längen, die nur beim Durchreichen auseinandergehen: `gepackt`
-               steht im Archiv, `laenge` ist die Grösse nach dem Entpacken. Bei
-               Methode 0 sind sie gleich, und alles Bisherige bleibt unverändert. */
             const gepackt = istBlob ? inhalt.size : inhalt.length;
             const laenge = durchgereicht ? Number(d.groesse) : gepackt;
             const methode = durchgereicht ? (d.methode | 0) : 0;
@@ -176,33 +50,19 @@ const Austausch = (() => {
                 : istBlob
                     ? await crc32Strom(inhalt, (a) => beiFortschritt && beiFortschritt(d.name, a))
                     : crc32(inhalt);
-            /* Drei Entscheidungen, jede für sich. Eine grosse Datei zwingt den
-               lokalen Kopf ins ZIP64; ein weit hinten liegender Eintrag nur den
-               Verzeichniseintrag. Beides zusammen kommt vor, keines bedingt das
-               andere.
-      
-               GEPRÜFT WERDEN BEIDE LÄNGEN. Ein gepackter Eintrag kann roh über
-               der Grenze liegen und gepackt darunter — wer nur eine davon ansieht,
-               schreibt eine 32-Bit-Zahl in ein Feld, in das sie nicht passt. */
             const grosseDatei = laenge > grenzen.bytes || gepackt > grenzen.bytes;
             const weitHinten = versatz > grenzen.bytes;
             if (grosseDatei || weitHinten)
                 braucht64 = true;
-            /* Der lokale Kopf trägt sein Zusatzfeld nur wegen der GRÖSSE. Der
-               Versatz steht hier gar nicht — der Kopf IST ja an dieser Stelle. */
             const lokalExtra = grosseDatei ? 20 : 0;
             const kopf = new Uint8Array(30 + name.length + lokalExtra);
             schreibe32(kopf, 0, 0x04034b50);
-            schreibe16(kopf, 4, grosseDatei ? 45 : 20); /* benötigte Fassung */
-            schreibe16(kopf, 6, ZipDetails.UTF8_BIT); /* Flags: Bit 11 — der Name ist UTF-8 (E363, L114 Punkt 5) */
-            schreibe16(kopf, 8, methode); /* 0 = gespeichert, 8 = durchgereichter Deflate */
-            schreibe16(kopf, 10, 0); /* Uhrzeit           */
-            schreibe16(kopf, 12, 0x21); /* Datum: 1. Jan 1980 */
+            schreibe16(kopf, 4, grosseDatei ? 45 : 20);
+            schreibe16(kopf, 6, ZipDetails.UTF8_BIT);
+            schreibe16(kopf, 8, methode);
+            schreibe16(kopf, 10, 0);
+            schreibe16(kopf, 12, 0x21);
             schreibe32(kopf, 14, summe);
-            /* 18 ist die GEPACKTE, 22 die ROHE Länge — bei Methode 0 dieselbe
-               Zahl, bei einem durchgereichten Eintrag nicht. Sie zu vertauschen
-               ergibt ein Archiv, das der Browser klaglos schreibt und kein
-               Entpacker liest. */
             schreibe32(kopf, 18, grosseDatei ? ZIP_GRENZE : gepackt);
             schreibe32(kopf, 22, grosseDatei ? ZIP_GRENZE : laenge);
             schreibe16(kopf, 26, name.length);
@@ -210,17 +70,12 @@ const Austausch = (() => {
             kopf.set(name, 30);
             if (grosseDatei) {
                 const e = 30 + name.length;
-                schreibe16(kopf, e, 0x0001); /* Kennung des ZIP64-Zusatzfelds */
-                schreibe16(kopf, e + 2, 16); /* zwei Zahlen zu acht Byte      */
-                schreibe64(kopf, e + 4, laenge); /* roh     */
-                schreibe64(kopf, e + 12, gepackt); /* gepackt */
+                schreibe16(kopf, e, 0x0001);
+                schreibe16(kopf, e + 2, 16);
+                schreibe64(kopf, e + 4, laenge);
+                schreibe64(kopf, e + 12, gepackt);
             }
             teile.push(kopf, inhalt);
-            /* IM VERZEICHNIS STEHEN NUR DIE FELDER IM ZUSATZ, DIE ÜBERLAUFEN —
-               und zwar in dieser festen Reihenfolge: roh, gepackt, Versatz. Wer
-               eines davon vorsorglich mitschreibt, obwohl daneben die echte Zahl
-               steht, verschiebt alle folgenden. Abgelesen an `zipfile`, nicht
-               geraten: dort steht dieselbe Kette von drei `if`. */
             const zusatz = [];
             if (grosseDatei) {
                 zusatz.push(laenge, gepackt);
@@ -251,37 +106,19 @@ const Austausch = (() => {
                 zusatz.forEach((w, k) => schreibe64(eintrag, e + 4 + 8 * k, w));
             }
             verzeichnis.push(eintrag);
-            /* UM DIE GEPACKTE LÄNGE, NICHT UM DIE ROHE. Geschrieben wurden die
-               Bytes, die im Archiv stehen — bei Methode 0 ist das dieselbe Zahl,
-               bei einem durchgereichten Deflate-Eintrag nicht. Mit `laenge` wäre
-               jeder Versatz NACH dem ersten gepackten Eintrag falsch, und zwar
-               genau um den Unterschied: das Verzeichnis zeigte ins Leere, und
-               kein Entpacker fände die Einträge wieder. */
             versatz += kopf.length + gepackt;
         }
         const vzGroesse = verzeichnis.reduce((n, e) => n + e.length, 0);
-        /* Auch der Schlusssatz zählt in 32 Bit. Liegt das Verzeichnis jenseits
-           der Grenze oder ist es selbst zu gross, wird das Archiv hier ZIP64,
-           selbst wenn jeder einzelne Eintrag darunter blieb. */
         if (versatz > grenzen.bytes || vzGroesse > grenzen.bytes)
             braucht64 = true;
-        /* ------------------------------------------------------------------ *
-         * DER SCHLUSS — zwei zusätzliche Sätze, wenn ZIP64 nötig ist
-         * ------------------------------------------------------------------ *
-         * Zuerst der ZIP64-Schlusssatz mit den echten Zahlen (56 Byte), dann
-         * ein Wegweiser darauf (20 Byte), dann der alte Schlusssatz mit
-         * Platzhaltern. Die Reihenfolge ist nicht frei: jeder Leser sucht
-         * zuerst den alten Satz am Dateiende und findet den Wegweiser genau
-         * 20 Byte davor. Anders herum wäre er unauffindbar.
-         * ------------------------------------------------------------------ */
         const schluss = [];
         if (braucht64) {
             const z64 = new Uint8Array(56);
             schreibe32(z64, 0, 0x06064b50);
-            schreibe64(z64, 4, 44); /* Grösse ab hier: 56 − 12 */
-            schreibe16(z64, 12, 45); /* erzeugt von  */
-            schreibe16(z64, 14, 45); /* benötigt     */
-            schreibe32(z64, 16, 0); /* Datenträger  */
+            schreibe64(z64, 4, 44);
+            schreibe16(z64, 12, 45);
+            schreibe16(z64, 14, 45);
+            schreibe32(z64, 16, 0);
             schreibe32(z64, 20, 0);
             schreibe64(z64, 24, dateien.length);
             schreibe64(z64, 32, dateien.length);
@@ -291,17 +128,10 @@ const Austausch = (() => {
             const weg = new Uint8Array(20);
             schreibe32(weg, 0, 0x07064b50);
             schreibe32(weg, 4, 0);
-            schreibe64(weg, 8, versatz + vzGroesse); /* wo der ZIP64-Satz liegt */
+            schreibe64(weg, 8, versatz + vzGroesse);
             schreibe32(weg, 16, 1);
             schluss.push(weg);
         }
-        /* Im alten Schlusssatz steht ab jetzt der Platzhalter, wo die echte
-           Zahl nicht mehr hineinpasst — und nur dort. `Math.min` statt einer
-           Fallunterscheidung: 0xFFFF ist gleichzeitig der Platzhalter UND die
-           grösste Zahl, die das Feld fassen kann. Ein Archiv mit genau 65 535
-           Einträgen schreibt deshalb dieselbe Zahl wie eines mit 70 000 — und
-           genau darum darf ein Leser ZIP64 nie am Platzhalter erkennen,
-           sondern nur am Wegweiser. */
         const ende = new Uint8Array(22);
         schreibe32(ende, 0, 0x06054b50);
         schreibe16(ende, 8, Math.min(dateien.length, 0xFFFF));
@@ -317,27 +147,11 @@ const Austausch = (() => {
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 3000);
     };
-    /* ========================================================================
-     * 2. WORD SCHREIBEN
-     * ======================================================================*/
     const W_STIL = {
         h1: 'Heading1', h2: 'Heading2', h3: 'Heading3',
         'toggle-h1': 'Heading1', 'toggle-h2': 'Heading2', 'toggle-h3': 'Heading3',
         quote: 'Quote', code: 'Code'
     };
-    /** Ein Absatz in Word-XML. */
-    /**
-     * EIN LAUF MIT SEINEN EIGENSCHAFTEN (L72 Teil 2, E315).
-     *
-     * Hier stand `<w:r><w:t>${esc(text)}</w:t></w:r>` — der ROHE Blocktext.
-     * In Word stand danach `**fett**` wörtlich da, mit Sternchen. Wer eine
-     * Arbeit abgibt, gibt sie so ab.
-     *
-     * Die Reihenfolge in `w:rPr` ist nicht beliebig: Word erwartet sie nach
-     * seinem Schema (b, i, strike, rFonts). Falsch sortiert öffnet die Datei
-     * zwar, aber Word beschwert sich beim Speichern — und das schiebt der
-     * Mensch dann auf Redion.
-     */
     const wLauf = (l) => {
         const eig = (l.fett ? '<w:b/>' : '') +
             (l.kursiv ? '<w:i/>' : '') +
@@ -363,22 +177,12 @@ const Austausch = (() => {
             `<w:t xml:space="preserve">${esc(c)}</w:t></w:r></w:p></w:tc>`).join('') +
             '</w:tr>').join('') +
         '</w:tbl>';
-    /** Was Word als gewöhnliches Bild annimmt. SVG steht bewusst nicht dabei. */
     const WORT_BILDTYPEN = {
         'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif',
         'image/bmp': 'bmp', 'image/tiff': 'tiff'
     };
-    /** Die nutzbare Textbreite auf A4 mit den Rändern von `alsWord`, in EMU. */
-    const WORT_BREITE_EMU = 5715000; /* 21 cm − 2 × 2 cm ≈ 15,9 cm */
-    const EMU_JE_PIXEL = 9525; /* 914400 EMU je Zoll, 96 dpi */
-    /**
-     * Wie gross ist dieses Bild wirklich?
-     *
-     * `createImageBitmap` misst es, ohne es zu zeichnen. Geht es nicht — ein
-     * kaputtes Bild, ein Format, das der Browser nicht kennt —, wird NICHT
-     * geraten, sondern `null` gemeldet: dann bleibt der Platzhalter, und der
-     * sagt es. Ein Bild mit erfundenen Massen wäre schlimmer als keines.
-     */
+    const WORT_BREITE_EMU = 5715000;
+    const EMU_JE_PIXEL = 9525;
     const bildMasse = async (blob) => {
         const f = globalThis.createImageBitmap;
         if (typeof f !== 'function')
@@ -396,7 +200,6 @@ const Austausch = (() => {
             return null;
         }
     };
-    /** Eine Data-URL in Bytes. `null`, wenn sie keine ist. */
     const ausDatenUrl = (roh) => {
         const m = /^data:([^;,]+)(;base64)?,(.*)$/s.exec(String(roh || ''));
         if (!m)
@@ -413,20 +216,11 @@ const Austausch = (() => {
             return null;
         }
     };
-    /**
-     * Alle Bilder einer Seite einsammeln — vor dem Bauen.
-     *
-     * Der Schlüssel ist die Blockkennung. Ein Block, dessen Bild sich nicht
-     * lesen lässt, taucht hier gar nicht auf; `wortInhalt` schreibt dann den
-     * Platzhalter samt Grund.
-     */
     const wortBilder = async (seite) => {
         const raus = new Map();
         const bloecke = [];
         const lauf = (id) => {
             Store.childrenOf(id).forEach((b) => {
-                /* `schaltplan` steht seit E347 mit in der Reihe: Redion zeichnet
-                   ihn, Word hält ihn nicht — also wird er gerastert. */
                 if (b.type === 'image' || b.type === 'schaltplan')
                     bloecke.push(b);
                 if (Store.childrenOf(b.id).length)
@@ -435,9 +229,6 @@ const Austausch = (() => {
         };
         lauf(seite.id);
         for (const b of bloecke) {
-            /* ERST DAS, WAS REDION SELBST ZEICHNET (E347). Ein Schaltplan hat
-               keine Datei und keine Data-URL — er hat einen Plan, und daraus
-               wird das Bild gemacht. */
             const eigenSvg = blockAlsSvg(b);
             if (eigenSvg) {
                 const gerastert = await svgAlsPng(eigenSvg);
@@ -446,7 +237,7 @@ const Austausch = (() => {
                 continue;
             }
             if (b.type === 'schaltplan')
-                continue; /* ohne Plan: Platzhalter */
+                continue;
             let blob = null;
             let typ = '';
             if (b.dateiId && typeof Dateien !== 'undefined' && Dateien.alsBlob) {
@@ -468,9 +259,6 @@ const Austausch = (() => {
             }
             if (!blob)
                 continue;
-            /* EIN SVG-BILD WIRD JETZT GERASTERT (E347). E346 liess es als
-               Platzhalter stehen und nannte den Grund; die Maschine dafür gibt
-               es seit dem Schaltplan, also gilt derselbe Weg. */
             if (typ === 'image/svg+xml') {
                 const text = await blob.text();
                 const gerastert = await svgAlsPng(text);
@@ -480,57 +268,16 @@ const Austausch = (() => {
             }
             const endung = WORT_BILDTYPEN[typ];
             if (!endung)
-                continue; /* Unbekanntes: Platzhalter */
+                continue;
             const masse = await bildMasse(blob);
             if (!masse)
-                continue; /* Lieber Platzhalter als Ratemass */
+                continue;
             const bytes = new Uint8Array(await blob.arrayBuffer());
             raus.set(b.id, { bytes, endung, typ, breite: masse.b, hoehe: masse.h });
         }
         return raus;
     };
-    /* ────────────────────────────────────────────────────────────────────
-     * WAS REDION ZEICHNEN KANN UND WORD NICHT HÄLT (E347)
-     *
-     * Ein `schaltplan`-Block kam in der .docx als NICHTS an. Nicht als
-     * Platzhalter — als nichts. Gemessen: eine Seite mit einem Schaltplan
-     * ergab `|Elektro|Reihenschaltung|`, also den Seitentitel und die
-     * Beschriftung des Blocks. Die Zeichnung war weg, und nichts sagte es.
-     *
-     * Das ist schlimmer als der `[Bild]`-Platzhalter aus E346, den L72
-     * beklagt hat: den sah man wenigstens. Für Redur, der Elektrotechnik
-     * lernt, ist der Schaltplan das eigentliche Ergebnis — und der Lehrer
-     * bekam ein leeres Blatt.
-     *
-     * REDION ZEICHNET IHN SCHON, und zwar als SVG: `Schaltplan.alsSvg` ist
-     * derselbe Zeichner, den der Bildschirm benutzt (siehe
-     * `elektro/skizzen.ts`: „Kein zweiter Zeichner"). Was fehlte, war der
-     * Weg von dort in ein Format, das Word annimmt.
-     *
-     * ─── WARUM GERASTERT UND NICHT ALS SVG EINGEBETTET ────────────────────
-     *
-     * Word nimmt SVG erst seit 2016 an, und auch dann nur mit einem PNG
-     * daneben als Rückfallebene — sonst zeigen ältere Fassungen ein leeres
-     * Kästchen. Das PNG braucht es also ohnehin. Es allein zu schreiben ist
-     * die Fassung, die überall aufgeht; das SVG zusätzlich einzubetten ist
-     * ein eigener, kleinerer Schritt.
-     *
-     * ─── ZWEIMAL SO VIELE PIXEL, GLEICHE GRÖSSE ───────────────────────────
-     *
-     * Gezeichnet wird mit doppelter Auflösung, angegeben wird die einfache.
-     * Ein Schaltplan, der auf dem Bildschirm 800 px breit ist, wird als
-     * 1600-px-Bild geschrieben und mit der Breite von 800 px eingesetzt —
-     * am Bildschirm sieht man keinen Unterschied, gedruckt schon.
-     * ────────────────────────────────────────────────────────────────────*/
-    /** Wie fein gerastert wird. Mehr kostet nur Platz, weniger sieht man. */
     const RASTER_FAKTOR = 2;
-    /**
-     * Die Masse aus einem SVG lesen — erst `width`/`height`, sonst `viewBox`.
-     *
-     * `null`, wenn beides fehlt: dann wüsste niemand, wie gross das Bild
-     * werden soll, und ein geratenes Mass ist schlechter als ein Platzhalter
-     * (dieselbe Regel wie bei `bildMasse` in E346).
-     */
     const svgMasse = (svg) => {
         const zahl = (roh) => {
             const n = parseFloat(String(roh || ''));
@@ -548,28 +295,6 @@ const Austausch = (() => {
         }
         return null;
     };
-    /**
-     * Ein SVG so herrichten, dass es ALLEIN steht.
-     *
-     * Auf dem Bildschirm sitzt der Schaltplan in Redions Seite: das
-     * Stylesheet kennt `--text`, und `<svg>` ohne `xmlns` ist im HTML
-     * erlaubt. In einem `<img>` ist das SVG ein eigenes Dokument, und dort
-     * gilt beides nicht mehr — GEMESSEN, nicht vermutet:
-     *
-     *   · Ohne `xmlns="http://www.w3.org/2000/svg"` lädt das Bild gar nicht.
-     *     `onerror`, kein Medienteil, Platzhalter „liess sich nicht zeichnen".
-     *     Die erste Fassung von E347 kam genau so beim Prüflauf an.
-     *   · `stroke="var(--text)"` zeigt auf eine Variable, die es dort nicht
-     *     gibt. Dann fällt `stroke` auf `none` zurück, und jede Leitung ist
-     *     unsichtbar — das Bild lädt, ist aber ein weisses Blatt. Das ist
-     *     der schlimmere Fall, weil ihn niemand meldet.
-     *
-     * Also: `xmlns` nachtragen, wenn es fehlt, und jede Variable auflösen.
-     * Hat sie einen Ersatzwert (`var(--x, #abc)`), gilt der. Hat sie
-     * keinen, wird es Schwarz — nicht die Farbe des Bildschirms: im
-     * Dunkelmodus wäre `--text` fast weiss, und auf dem weissen Blatt
-     * (siehe `svgAlsPng`) ebenso unsichtbar wie `none`.
-     */
     const svgAlleinstehend = (svg) => {
         let s = svg;
         if (!/<svg[^>]*\sxmlns=/.test(s))
@@ -578,13 +303,6 @@ const Austausch = (() => {
         s = s.replace(/var\(\s*--[\w-]+\s*\)/g, '#000000');
         return s;
     };
-    /**
-     * Ein SVG in ein PNG verwandeln.
-     *
-     * `null` heisst „ging nicht" und nie „ist leer": ein SVG, das auf etwas
-     * Fremdes zeigt, macht die Zeichenfläche unlesbar und `toBlob` wirft.
-     * Dann bleibt der Platzhalter, und der sagt es.
-     */
     const svgAlsPng = async (roh) => {
         const masse = svgMasse(roh);
         if (!masse)
@@ -604,11 +322,6 @@ const Austausch = (() => {
             const g = c.getContext('2d');
             if (!g)
                 return null;
-            /* WEISSER GRUND, und das ist kein Schönheitsfehler: ein Schaltplan
-               ist schwarz auf durchsichtig gezeichnet. Auf Words weissem Blatt
-               geht das gut — in einer dunklen Vorlage wäre er unsichtbar. Ein
-               Bild, das man nur bei einer bestimmten Formatvorlage sieht, ist
-               kein Bild. */
             g.fillStyle = '#ffffff';
             g.fillRect(0, 0, c.width, c.height);
             g.drawImage(bild, 0, 0, c.width, c.height);
@@ -616,7 +329,6 @@ const Austausch = (() => {
             if (!blob)
                 return null;
             const bytes = new Uint8Array(await blob.arrayBuffer());
-            /* Die LOGISCHE Grösse zurück, nicht die gerasterte — siehe Kopf. */
             return { bytes, endung: 'png', typ: 'image/png',
                 breite: masse.b, hoehe: masse.h };
         }
@@ -627,16 +339,11 @@ const Austausch = (() => {
             URL.revokeObjectURL(url);
         }
     };
-    /** Der SVG-Text eines Blocks, den Redion selbst zeichnet — oder ''. */
     const blockAlsSvg = (b) => {
         if (!b)
             return '';
         if (b.type === 'schaltplan' && b.plan && typeof Schaltplan !== 'undefined' &&
             Schaltplan.alsSvg) {
-            /* OHNE RASTER UND OHNE ANSCHLUSSPUNKTE. Beides sind Hilfen beim
-               Zeichnen, nicht Teil der Zeichnung — auf dem abgegebenen Blatt
-               hätten sie nichts zu suchen. Die Betriebsmittelkennzeichen (`bmk`)
-               schon: ohne sie weiss niemand, welcher Widerstand R2 ist. */
             try {
                 return String(Schaltplan.alsSvg(b.plan, { raster: false, anschluesse: false, bmk: true }) || '');
             }
@@ -646,7 +353,6 @@ const Austausch = (() => {
         }
         return '';
     };
-    /** Warum dieses Bild nicht mitkommt — für den Platzhalter (§35). */
     const wortBildGrund = (b) => {
         if (b && b.type === 'schaltplan')
             return b.plan ? 'liess sich nicht zeichnen' : 'noch nichts gezeichnet';
@@ -654,14 +360,6 @@ const Austausch = (() => {
             return 'kein Bild hinterlegt';
         return 'liess sich nicht lesen';
     };
-    /**
-     * Ein Bild als Word-Absatz.
-     *
-     * `wp:inline` und nicht `wp:anchor`: das Bild steht in der Zeile, wie ein
-     * sehr grosser Buchstabe. Ein verankertes Bild schwebt und verschiebt sich
-     * beim Bearbeiten — für einen Export, den jemand weiterschreibt, ist die
-     * Zeile die ruhigere Wahl.
-     */
     const wBild = (relId, nr, breite, hoehe, beschriftung) => {
         const cx = Math.min(WORT_BREITE_EMU, Math.round(breite * EMU_JE_PIXEL));
         const cy = Math.max(1, Math.round(cx * (hoehe / breite)));
@@ -684,11 +382,8 @@ const Austausch = (() => {
             '</pic:pic></a:graphicData></a:graphic></wp:inline>' +
             '</w:drawing></w:r></w:p>';
     };
-    /** Alle Blöcke einer Seite als Word-Inhalt. */
     const wortInhalt = (seite, bilder) => {
         const raus = [];
-        /* Läuft mit den Bildern MIT: die Nummer ist zugleich die Nummer des
-           Medienteils im Archiv und die der Beziehung. */
         let bildNr = 0;
         const lauf = (id, tiefe) => {
             Store.childrenOf(id).forEach((b) => {
@@ -717,10 +412,6 @@ const Austausch = (() => {
                     return;
                 }
                 if (b.type === 'schaltplan') {
-                    /* DERSELBE WEG WIE BEIM BILD (E347) — nur die Quelle ist eine
-                       andere. Und wenn er nicht gerastert werden konnte, steht ein
-                       Platzhalter da statt gar nichts: bis E347 fiel der Schaltplan
-                       STILL heraus, und das ist der schlimmere Fehler (§13, §35). */
                     const gezeichnet = bilder && bilder.get(b.id);
                     if (gezeichnet) {
                         bildNr++;
@@ -734,10 +425,6 @@ const Austausch = (() => {
                     return;
                 }
                 if (b.type === 'image') {
-                    /* DAS ECHTE BILD, WENN ES DA IST (E346). Der Vorlauf hat es
-                       eingesammelt; hier wird nur nachgeschlagen. Und wenn nicht:
-                       der Platzhalter sagt, WARUM — „[Bild]" allein liess offen, ob
-                       Redion es nicht konnte oder die Datei fehlt. */
                     const bild = bilder && bilder.get(b.id);
                     if (bild) {
                         bildNr++;
@@ -762,14 +449,6 @@ const Austausch = (() => {
         lauf(seite.id, 0);
         return raus.join('');
     };
-    /* ══ EINEN GEÄNDERTEN ABSATZ IN DAS DOKUMENT ZURÜCKSCHREIBEN (E595) ══════
-       Dasselbe Verfahren wie bei den Folien (E593), nur auf
-       `word/document.xml`: der Block bringt `quelle.p` mit — die Nummer
-       seines Absatzes IM KÖRPER, nicht die des Blocks —, und hier wird genau
-       dieser Absatz nachgeschlagen und sein eines `<w:t>` ersetzt.
-  
-       GEÄNDERT WIRD NUR DER TEXTKNOTEN. Farben, Stile, Tabellen, Bilder und
-       der Abschnitt bleiben stehen, weil nichts anderes angefasst wird. */
     const dokumentMitText = (xml, bloecke) => {
         const spuren = (bloecke || []).filter((b) => b && b.quelle && Number.isFinite(Number(b.quelle.p)) && typeof b.text === 'string');
         if (!spuren.length)
@@ -793,24 +472,15 @@ const Austausch = (() => {
             if (!absatz || absatz.tagName !== 'w:p')
                 continue;
             const stellen = absatz.getElementsByTagName('w:t');
-            /* GENAU EINE STELLE — sonst ist die Spur falsch geworden, seit sie
-               vergeben wurde, und daneben zu schreiben wäre schlimmer als gar
-               nicht (§51). */
             if (stellen.length !== 1)
                 continue;
             const stelle = stellen[0];
-            /* DER TEXT KOMMT AUS DEM EDITOR und trägt dessen Auszeichnungen
-               (`**fett**`, `*kursiv*`). Sie gehören nicht in ein `<w:t>` — dort
-               stünden sie als Sternchen im Dokument. Der Absatz behält also seine
-               Word-Formatierung, und der Text wird ohne Markdown eingesetzt. */
             const roh = String(b.text).replace(/\*\*(.+?)\*\*/g, '$1')
                 .replace(/\*(.+?)\*/g, '$1')
                 .replace(/`(.+?)`/g, '$1');
             if (stelle.textContent === roh)
                 continue;
             stelle.textContent = roh;
-            /* Führende und schliessende Leerzeichen bewahrt Word nur mit diesem
-               Attribut — ohne es frisst jeder Leser sie. */
             if (/^\s|\s$/.test(roh))
                 stelle.setAttribute('xml:space', 'preserve');
             geschrieben++;
@@ -819,8 +489,6 @@ const Austausch = (() => {
             return { xml, geschrieben: 0 };
         return { xml: new XMLSerializer().serializeToString(doc), geschrieben };
     };
-    /* ══ DIE ORIGINALDATEI EINES EINGELESENEN DOKUMENTS (E595) ════════════════
-       Dieselbe Frage wie bei `.pptx` (E592), dieselbe Antwort. */
     const originalDokument = async (seite) => {
         if (typeof Dateien === 'undefined' || !Dateien.alsBlob)
             return null;
@@ -849,18 +517,6 @@ const Austausch = (() => {
         }
     };
     const alsWord = async (seite) => {
-        /* ══ EINE EINGELESENE .docx WIRD DURCHGEREICHT (E595) ══════════════════
-           GEMESSEN am 15. September 2026 verlor die Rundreise fast alles:
-    
-             Original 7 Einträge, 2284 Bytes   Export 6 Einträge, 5718 Bytes
-             docProps/core.xml   WEG           word/media/image1.png   WEG
-             Farbe CC0000        WEG           „Redurs Bericht.docx" stand als
-                                                ABSATZ im Dokument
-    
-           Fett, kursiv und die Tabelle überlebten — sie gehen über Markdown und
-           werden neu geschrieben. Alles andere nicht. Für ein selbst
-           geschriebenes Dokument ist der frische Weg richtig; für ein
-           eingelesenes ist er Datenverlust (§46). */
         const originalPaket = await originalDokument(seite);
         if (originalPaket) {
             const bloecke = originalPaket.kinder.filter((k) => k && k.quelle);
@@ -874,7 +530,7 @@ const Austausch = (() => {
                     geschrieben = neu.geschrieben;
                 }
             }
-            catch { /* dann bleibt das Dokument, wie es war */ }
+            catch { }
             const teile = [];
             for (const name of originalPaket.leser.namen) {
                 if (name === 'word/document.xml' && neuesDokument) {
@@ -898,17 +554,10 @@ const Austausch = (() => {
                 if (typeof UI !== 'undefined' && UI.toast)
                     UI.toast(hinweis, 7000);
             }
-            catch { /* ohne Meldung bleibt die Datei */ }
+            catch { }
             return blob;
         }
-        /* ERST DIE BILDER, DANN DER TEXT (E346). Siehe den Kopf bei
-           `wortBilder`: der Baum wird synchron gebaut, damit die Reihenfolge der
-           Absätze nicht von der Ladegeschwindigkeit abhängt. */
         const bilder = await wortBilder(seite);
-        /* Die Reihenfolge im Archiv MUSS der beim Bauen entsprechen — `wBild`
-           nummeriert in der Reihenfolge der Blöcke, also wird hier genauso
-           gezählt. Ein Bild an der falschen Beziehung ist ein Word-Dokument,
-           das sich gar nicht mehr öffnet. */
         const bildListe = [];
         const inBaum = (id) => {
             Store.childrenOf(id).forEach((b) => {
@@ -961,8 +610,6 @@ const Austausch = (() => {
                     '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
                     '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
                     '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>' +
-                    /* JE ENDUNG EINMAL, nicht je Bild: `Default` gilt für die ganze
-                       Endung, und zwei gleiche Einträge machen das Archiv ungültig. */
                     [...new Set(bildListe.map(b => b.endung))].map(e => '<Default Extension="' + e + '" ContentType="' +
                         (bildListe.find(b => b.endung === e) || { typ: 'image/png' }).typ +
                         '"/>').join('') +
@@ -990,9 +637,6 @@ const Austausch = (() => {
         laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
         return blob;
     };
-    /* ========================================================================
-     * 3. EXCEL SCHREIBEN
-     * ======================================================================*/
     const spaltenName = (n) => {
         let s = '';
         n++;
@@ -1003,11 +647,6 @@ const Austausch = (() => {
         }
         return s;
     };
-    /* XLSX speichert Funktionsnamen invariant auf Englisch, auch wenn Excel
-       selbst sie auf Deutsch anzeigt. Redions Maschine versteht beide
-       Richtungen; für den fremden Leser werden die gebräuchlichen deutschen
-       Namen beim Schreiben normalisiert. Unbekannte Namen bleiben erhalten,
-       zusammen mit dem berechneten Wert. */
     const EXCEL_FUNKTION = {
         summe: 'SUM', mittelwert: 'AVERAGE', wurzel: 'SQRT', rest: 'MOD',
         runden: 'ROUND', abrunden: 'ROUNDDOWN', aufrunden: 'ROUNDUP',
@@ -1019,7 +658,6 @@ const Austausch = (() => {
         mittelwertwenn: 'AVERAGEIF', mittelwertwenns: 'AVERAGEIFS',
         sverweis: 'VLOOKUP', wverweis: 'HLOOKUP', xverweis: 'XLOOKUP'
     };
-    /** Ein Zeichen nur ausserhalb von Zeichenketten austauschen. */
     const ausserhalb = (text, von, zu) => {
         let raus = '', zitat = false;
         for (let i = 0; i < text.length; i++) {
@@ -1038,7 +676,6 @@ const Austausch = (() => {
         }
         return raus;
     };
-    /** Nur die freien Teile einer Formel ändern; Text in "..." bleibt exakt. */
     const formelAussen = (text, aendere) => {
         let raus = '', frei = '', i = 0;
         const freiLeeren = () => { raus += aendere(frei); frei = ''; };
@@ -1074,9 +711,6 @@ const Austausch = (() => {
         f = formelAussen(f, teil => teil.replace(/([A-Za-zÄÖÜäöüß][A-Za-z0-9_ÄÖÜäöüß.]*)\s*(?=\()/g, n => EXCEL_FUNKTION[n.toLowerCase()] || n));
         return ausserhalb(f, ';', ',');
     };
-    /* ODF setzt Zellbezüge in eckige Klammern. Diese kleine Abbildung deckt
-       genau das Modell ab, das Redion selbst rechnet: A1 und A1:B9. Fremde
-       ODS-Sonderformen werden beim Einlesen im Verlustbericht genannt. */
     const formelFuerOds = (roh) => {
         const marken = [];
         let f = ausserhalb(formelFuerExcel(roh), ',', ';');
@@ -1093,13 +727,6 @@ const Austausch = (() => {
         });
         return f.replace(/@@r(\d+)@@/g, (_, i) => marken[+i] || '');
     };
-    /** Eine Tabelle als Blatt-XML. Zahlen bleiben Zahlen.
-     *
-     * `stilIx` ist je Zelle der Verweis in die cellXfs der styles.xml —
-     * 0 heisst ungestaltet. OHNE `stilIx` gilt das alte Verhalten der
-     * Datenbank-Ausgänge: Zeile 1 ist die Kopfzeile, immer Text und fett.
-     * MIT `stilIx` (der Tabellenblock, E94) ist Zeile 1 gewöhnliche
-     * Nutzerdaten — dort entscheidet allein der Zellstil. */
     const blattXml = (zeilen, stilIx, formeln) => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
         '<sheetData>' +
@@ -1127,34 +754,6 @@ const Austausch = (() => {
                 `<is><t xml:space="preserve">${esc(c)}</t></is></c>`;
         }).join('') + '</row>').join('') +
         '</sheetData></worksheet>';
-    /**
-     * @param blaetter [{ name, zeilen }]
-     */
-    /* ==========================================================================
-     * ODS SCHREIBEN
-     * --------------------------------------------------------------------------
-     * Die Gegenrichtung zu `odsLesen`. Vier Dateien reichen für ein ODS, das
-     * LibreOffice, OpenOffice, Excel und Google Sheets öffnen:
-     *
-     *   mimetype              muss ZUERST im Archiv stehen und UNKOMPRIMIERT
-     *   META-INF/manifest.xml das Verzeichnis
-     *   content.xml           die Tabellen
-     *   styles.xml            leer, aber verlangt
-     *
-     * DIE ERSTE ZEILE IST EINE FALLE. Die Norm verlangt, dass `mimetype` der
-     * erste Eintrag ist und ohne Kompression gespeichert wird — daran erkennen
-     * manche Programme das Format, noch bevor sie das Verzeichnis lesen. Der
-     * ZIP-Schreiber hier legt ohnehin alles „gespeichert" ab, damit ist die
-     * zweite Hälfte erfüllt; die erste erledigt die Reihenfolge unten.
-     *
-     * ZAHLEN BLEIBEN ZAHLEN. Eine Zelle bekommt `office:value-type="float"`
-     * samt `office:value`, wenn der Wert eine Zahl ist. Ohne das steht in
-     * LibreOffice überall Text, die Summe ist 0 und Sortieren sortiert
-     * alphabetisch — `100` vor `20`. Das war beim CSV-Import derselbe Fehler.
-     * ========================================================================*/
-    /* Zellstile für den ODS-Ausgang (E95) — das Gegenstück zu `stilSammlung`:
-       gleiche Kombis werden je EINMAL als automatic-styles angelegt, jede
-       Zelle trägt nur den Namen. Ohne Stile bleibt content.xml die alte. */
     const odsStilSammlung = (blaetter) => {
         const datenStile = [];
         const datenIx = new Map();
@@ -1256,7 +855,6 @@ const Austausch = (() => {
             ' xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0"';
         const stile = odsStilSammlung(blaetter);
         const dateien = [
-            /* ZUERST und unkomprimiert — siehe oben. */
             { name: 'mimetype', inhalt: 'application/vnd.oasis.opendocument.spreadsheet' },
             { name: 'META-INF/manifest.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?>' +
                     '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" ' +
@@ -1279,15 +877,6 @@ const Austausch = (() => {
         laden(blob, (dateiname || 'Redion') + '.ods');
         return blob;
     };
-    /**
-     * Eine Datenbank als ODS — ein Blatt je Ansicht, wie bei Excel.
-     *
-     * DIE ZELLEN WERDEN GENAUSO GELESEN WIE DORT. Der erste Versuch hatte
-     * hier `Werkzeuge.zelleAlsText` stehen — eine Funktion, die es nicht
-     * gibt. Der Übersetzer hat es gemeldet, bevor irgendetwas lief; ohne ihn
-     * wäre jede Zelle „undefined" gewesen und die Datei sähe trotzdem
-     * vollständig aus.
-     */
     const datenbankAlsOds = (coll) => {
         const ansichten = Object.values(Store.cache.views).filter(v => v.collectionId === coll.id);
         const keys = Object.keys(coll.schema);
@@ -1308,10 +897,6 @@ const Austausch = (() => {
             : [{ name: coll.name, zeilen: [kopf, ...zeilenVon(null)] }];
         return alsOds(blaetter, (coll.name || 'Datenbank').replace(/[\\/:*?"<>|]/g, '-'));
     };
-    /* Aus den Zellstilen aller Blätter eine styles.xml bauen (E94). Gleiche
-       Kombis (fett/kursiv × Ausrichtung × Zahlenformat) werden je EINMAL
-       angelegt; jede Zelle bekommt nur den Verweis. Ohne Stile entsteht
-       byte-gleich die alte Datei: zwei Schriften, zwei Verweise, Kopf fett. */
     const stilSammlung = (blaetter) => {
         const fonts = ['<font><sz val="11"/><name val="Calibri"/></font>',
             '<font><b/><sz val="11"/><name val="Calibri"/></font>'];
@@ -1320,7 +905,7 @@ const Austausch = (() => {
         const fmtIx = new Map();
         const xfs = ['<xf xfId="0"/>', '<xf fontId="1" applyFont="1" xfId="0"/>'];
         const xfIx = new Map();
-        let naechsteFmtId = 164; /* ab hier beginnen eigene Formate */
+        let naechsteFmtId = 164;
         const kombi = (stil) => {
             if (!stil)
                 return 0;
@@ -1349,9 +934,6 @@ const Austausch = (() => {
             }
             let fmtId = 0;
             if (art === 'prozent' || art === 'waehrung') {
-                /* Die Prozent-Semantik passt: Redion speichert 0.15 und ZEIGT
-                   „15 %" — genau Excels 0%. Beim Geld gehört der Name in
-                   Anführungszeichen, sonst liest Excel das C von CHF als Datum. */
                 const code = art === 'prozent'
                     ? (stellen ? '0.' + '0'.repeat(stellen) + '%' : '0%')
                     : '#,##0' + (stellen === 0 ? '' : '.' + '0'.repeat(stellen ?? 2)) +
@@ -1427,7 +1009,6 @@ const Austausch = (() => {
         laden(blob, (dateiname || 'Redion') + '.xlsx');
         return blob;
     };
-    /** Eine Datenbank als Excel-Mappe: ein Blatt je Ansicht. */
     const datenbankAlsExcel = (coll) => {
         const ansichten = Object.values(Store.cache.views).filter(v => v.collectionId === coll.id);
         const keys = Object.keys(coll.schema);
@@ -1448,7 +1029,6 @@ const Austausch = (() => {
             : [{ name: coll.name, zeilen: [kopf, ...zeilenVon(null)] }];
         return alsExcel(blaetter, (coll.name || 'Datenbank').replace(/[\\/:*?"<>|]/g, '-'));
     };
-    /** Alle Datenbanken auf einmal — ein Blatt je Datenbank. */
     const allesAlsExcel = () => {
         const dbs = Object.values(Store.cache.collections);
         if (!dbs.length) {
@@ -1467,13 +1047,6 @@ const Austausch = (() => {
         });
         return alsExcel(blaetter, 'Redion-Datenbanken');
     };
-    /* ========================================================================
-     * 4. EINLESEN
-     * ======================================================================*/
-    /* --- Trello ------------------------------------------------------------
-     * Der JSON-Export eines Boards: lists sind die Spalten, cards die Karten,
-     * labels werden zu einer Mehrfachauswahl.
-     * --------------------------------------------------------------------- */
     const ausTrello = (text, zielSeite) => {
         const d = JSON.parse(text);
         if (!d || !Array.isArray(d.cards))
@@ -1508,7 +1081,6 @@ const Austausch = (() => {
                 link: c.shortUrl || ''
             });
             n++;
-            /* Beschreibung und Checklisten kommen in die Zeilenseite */
             if (c.desc)
                 Werkzeuge.ausMarkdown(zeile, c.desc);
             const punkte = (d.checklists || []).filter((cl) => cl.idCard === c.id);
@@ -1519,17 +1091,6 @@ const Austausch = (() => {
         });
         return { seite, hinweis: n + ' Karten aus ' + listen.size + ' Listen übernommen' };
     };
-    /* --- HTML in Markdown, einmal fuer alle -------------------------------
-     * Evernote (ENML) und Apple Notes liefern beide HTML, und beide brauchen
-     * daraus dieselben Bloecke. Diese Funktion stand frueher IN `ausEvernote`;
-     * Apple Notes haette sie kopiert, und dann waere sie zweimal dagewesen —
-     * genau die Sorte doppelte Wahrheit, die L34 beschreibt.
-     *
-     * ABGEHAKTES bleibt abgehakt: Apple Notes schreibt Checklisten als
-     * `<li>` mit einem Datenattribut oder einem vorangestellten Kaestchen.
-     * Beides wird zu `- [ ]` / `- [x]`, und `ausMarkdown` macht daraus
-     * echte Aufgabenbloecke statt Strichlisten mit einem Kaestchen im Text.
-     * --------------------------------------------------------------------- */
     const HAKEN_AN = /^\s*(?:\u2611|\u2612|\u2714|\u2713|\[x\]|\[X\])\s*/;
     const HAKEN_AUS = /^\s*(?:\u2610|\[\s?\])\s*/;
     const htmlZuMarkdown = (html) => {
@@ -1548,7 +1109,6 @@ const Austausch = (() => {
             if (el.tagName === 'H3')
                 return '### ' + t;
             if (el.tagName === 'LI') {
-                /* Apple Notes kennt drei Schreibweisen fuer denselben Haken. */
                 const attr = el.getAttribute('data-apple-checklist-item')
                     || el.getAttribute('data-checked') || '';
                 if (HAKEN_AN.test(t))
@@ -1562,10 +1122,6 @@ const Austausch = (() => {
             return t;
         }).filter(Boolean).join('\n\n');
     };
-    /* --- Evernote (.enex) --------------------------------------------------
-     * Eine XML-Datei mit <note>-Einträgen. Der Inhalt steckt in ENML, das
-     * nah genug an HTML ist, um es über den HTML-Weg einzulesen.
-     * --------------------------------------------------------------------- */
     const ausEvernote = (text, zielSeite) => {
         const doc = new DOMParser().parseFromString(text, 'application/xml');
         const notizen = [...doc.querySelectorAll('note')];
@@ -1592,7 +1148,6 @@ const Austausch = (() => {
         .split('/').map(segment => segment.trim().replace(/\s+/g, ' ')).filter(Boolean)
         .join('/').toLocaleLowerCase('de');
     const WINDOWS_RESERVED = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
-    /** Pfade aus fremden Dateien dürfen den gewählten Vault nie verlassen. */
     const safeVaultPath = (value, allowText = false) => {
         const raw = String(value ?? '').normalize('NFKC').replace(/\\/g, '/').trim();
         if (!raw || raw.length > 1024 || raw.startsWith('/') || /^[A-Za-z]:/.test(raw) ||
@@ -1612,9 +1167,6 @@ const Austausch = (() => {
         const raw = String(value ?? '').normalize('NFKC').replace(/\\/g, '/').trim();
         if (!raw)
             return '';
-        /* Die angehaengte Endung ist nur der Validierungsrahmen und wird danach
-           wieder entfernt. Eine echte Seite namens `Foo.md` bleibt dadurch
-           `Foo.md` statt unbemerkt zu `Foo` zu kollabieren. */
         const safe = safeVaultPath(raw + '.md');
         return safe ? safe.slice(0, -3) : '';
     };
@@ -1645,7 +1197,7 @@ const Austausch = (() => {
                 if (Array.isArray(parsed))
                     return parsed.map(item => String(item ?? ''));
             }
-            catch { /* Einfache YAML-Liste ohne JSON-Anführungszeichen folgt. */ }
+            catch { }
             return value.slice(1, -1).split(',').map(yamlValue);
         }
         return [yamlValue(value)];
@@ -1732,14 +1284,10 @@ const Austausch = (() => {
             return true;
         if (seiteId)
             return Konten.darf(recht, seiteId);
-        /* Eine Wurzeloperation hat absichtlich keine Seite. `Konten.darf` wuerde
-           ohne ID auf die gerade sichtbare Seite ausweichen; massgeblich ist hier
-           stattdessen die aktive Kontorolle selbst. */
         const konto = typeof Konten.aktiv === 'function' ? Konten.aktiv() : null;
         const rolle = typeof Konten.rolle === 'function' ? Konten.rolle(konto?.rolle || 'voll') : null;
         return !rolle || (rolle.darf || []).includes(recht);
     };
-    /** Plant erst alle Namen, damit gleiche Geschwister keinen Pfad teilen. */
     const planVaultPaths = (erlaubt = () => true) => {
         const paths = new Map(), visited = new Set();
         const walk = (pages, parentPath, namespace) => {
@@ -1750,8 +1298,6 @@ const Austausch = (() => {
                 visited.add(page.id);
                 const children = Store.childrenOf(page.id)
                     .filter((child) => child.type === 'page' && child.parentTable !== 'collection');
-                /* Eine explizit freigegebene Unterseite darf exportierbar sein, ohne
-                   dass dadurch ihr gesperrter Elterninhalt mit hinausgeht. */
                 if (!erlaubt(page)) {
                     walk(children, parentPath, used);
                     return;
@@ -1778,9 +1324,6 @@ const Austausch = (() => {
     };
     const vaultMarkdown = (page, path, paths) => {
         let body = Werkzeuge.alsMarkdown(page);
-        /* `alsMarkdown` bewahrt Unterseiten als Platzhalter. Eine fuer diesen
-           Export nicht freigegebene Kindseite darf dabei weder ID noch Titel in
-           der Datei des erlaubten Elternteils verraten. */
         body = body.split('\n').filter((line) => {
             const marker = line.trim().match(/^<!--(?:db|wb|chart|tab|blk):([A-Za-z0-9_-]+)-->/);
             if (!marker?.[1])
@@ -1788,8 +1331,6 @@ const Austausch = (() => {
             const target = Store.getBlock(marker[1]);
             return !(target?.type === 'page' && !paths.has(target.id));
         }).join('\n');
-        /* Alte Obsidian-Importe haben Wikilinks als #id-Links gespeichert. Beim
-           neuen Export werden sie, soweit das Ziel noch existiert, repariert. */
         body = body.replace(/\[([^\]\n]+)\]\(#([0-9a-f-]{6,64})\)/gi, (whole, label, id) => {
             const target = Store.getBlock(id);
             if (!target || target.type !== 'page' || !target.alive)
@@ -1799,10 +1340,6 @@ const Austausch = (() => {
                 return whole;
             return `[[${targetPath}${label === target.text ? '' : '|' + label}]]`;
         });
-        /* Auch zwei gleichnamige Seiten bleiben im Vault verlinkbar. Normale
-           eindeutige Links bekommen den stabilen Pfad; bei einem vom Exporter
-           erzeugten Unterseiten-Link kennt die Elternseite das Ziel selbst dann,
-           wenn der blosse Titel global mehrdeutig ist. */
         body = body.replace(/\[\[([^\[\]\n|]{1,240})(?:\|([^\]\n]{1,240}))?\]\]/g, (whole, rawTarget, rawLabel) => {
             const suffixAt = String(rawTarget).search(/[#^]/);
             const suffix = suffixAt >= 0 ? String(rawTarget).slice(suffixAt) : '';
@@ -1824,7 +1361,6 @@ const Austausch = (() => {
         return vaultFrontmatter(page, path) + '\n# ' + (page.text || 'Ohne Titel') +
             (body ? '\n\n' + body : '') + '\n';
     };
-    /** Vollständiger Obsidian-Vault als ZIP; die Oberfläche kann diese API anbinden. */
     const alsObsidianVault = async (dateiname = 'Redion-Obsidian') => {
         const paths = planVaultPaths(page => vaultDarf('teilen', page.id));
         const files = [...paths.entries()].map(([id, path]) => ({
@@ -1864,19 +1400,12 @@ const Austausch = (() => {
             Store.updateBlock(parent.id, { content: [...(parent.content || []), page.id], aufgeklappt: true });
         return true;
     };
-    /**
-     * Zwei Durchgänge: erst Identitäten/Pfade anlegen, danach Inhalte lesen.
-     * So bleiben Wikilinks vorwärts wie rückwärts erhalten. Titel werden nie
-     * als Import-Schlüssel benutzt; gleiche Titel dürfen nebeneinander leben.
-     */
     const ausMarkdownOrdner = async (dateien, zielSeite) => {
         const allFiles = Array.from(dateien || []);
         const firstRelative = String(allFiles.find(file => file.webkitRelativePath)?.webkitRelativePath || '')
             .replace(/\\/g, '/');
         const vaultName = safeVaultSegment(firstRelative.split('/')[0] || 'Obsidian');
         let conflicts = 0, unsafe = 0, reused = 0, created = 0, links = 0, aliasConflicts = 0;
-        /* Vor dem Anlegen der Importwurzel: diese Pfade entsprechen genau einem
-           vorherigen Export und sind deshalb ein zulässiger Rückfall ohne ID. */
         const existingPlannedPaths = planVaultPaths();
         const entries = (await Promise.all(allFiles.map(async (file) => {
             const rawRelative = String(file.webkitRelativePath || file.name || '').replace(/\\/g, '/');
@@ -1912,15 +1441,10 @@ const Austausch = (() => {
             return { seite: null, hinweis: 'Keine sichere Markdown-Datei zum Importieren gefunden.' };
         const eigeneMetadaten = entries.filter(entry => !!entry.meta.redionPath).length;
         if (eigeneMetadaten > 0 && eigeneMetadaten < entries.length) {
-            /* Nie halb als eigener Roundtrip und halb als fremder Vault arbeiten:
-               sonst wuerden stabile Seiten bereits verschoben, waehrend ihr
-               ID-Schutz fuer denselben Lauf abgeschaltet ist. */
             return { seite: null,
                 hinweis: 'Import abgebrochen: Redion-Vault und fremde Markdown-Dateien sind gemischt. Bitte getrennt auswählen.' };
         }
         const isRedionVault = eigeneMetadaten === entries.length;
-        /* Doppelbelegte Dateien/IDs werden sichtbar getrennt angelegt statt in
-           eine zufällige Seite zusammenzufallen. */
         const pathClaims = new Map();
         const idClaims = new Map();
         entries.forEach(entry => {
@@ -1936,9 +1460,6 @@ const Austausch = (() => {
                 conflicts++;
             } });
         });
-        /* `redion-path` kennzeichnet den eigenen Export auch dann noch, wenn ein
-           Werkzeug die optionale ID entfernt hat — genau dafür existiert der
-           Pfad-Rückfall. */
         const targetPage = zielSeite ? Store.getBlock(zielSeite) : null;
         if ((targetPage && !vaultDarf('bearbeiten', targetPage.id)) ||
             (!targetPage && !vaultDarf('bearbeiten'))) {
@@ -1947,9 +1468,6 @@ const Austausch = (() => {
         const topParentId = targetPage?.type === 'page' && targetPage.alive ? targetPage.id : null;
         let root = null;
         if (!isRedionVault) {
-            /* Ein fremder Vault hat keine stabile Identitaet. Derselbe lokale
-               Ordnername ist kein Beweis, dass es derselbe Bestand ist; jeder Lauf
-               bekommt daher eine eigene Wurzel statt alte Notizen zu ueberschreiben. */
             root = Store.addBlock(topParentId, 'page', {
                 text: 'Aus Obsidian · ' + vaultName, icon: '🔮',
                 obsidianVaultRoot: true, obsidianVaultName: vaultName
@@ -2008,8 +1526,6 @@ const Austausch = (() => {
         pathClaims.forEach((list, key) => { if (list.length === 1 && list[0])
             uniqueEntryByPath.set(key, list[0]); });
         const orderedEntries = [...entries].sort((a, b) => a.stem.split('/').length - b.stem.split('/').length || a.stem.localeCompare(b.stem, 'de'));
-        /* PASS 1: Identität, Alias und Hierarchie. Elternpfade stehen wegen der
-           Sortierung bereits fest, bevor ihre Kinder verschoben werden. */
         for (const entry of orderedEntries) {
             const parentEntry = entry.folder ? uniqueEntryByPath.get(normalizeVaultKey(entry.folder)) : null;
             let parentId = isRedionVault
@@ -2019,9 +1535,6 @@ const Austausch = (() => {
             const claimedTwice = !!entry.conflict;
             const wantedId = claimedTwice ? '' : validRedionId(entry.meta.redionId);
             const byId = wantedId ? Store.getBlock(wantedId) : null;
-            /* Den berechneten Redion-Pfad nur mit ausdrücklich exportiertem
-               `redion-path` vergleichen. Eine fremde `Foo.md` darf nicht bloss
-               wegen ihres Namens eine vorhandene lokale Seite Foo überschreiben. */
             const paths = claimedTwice ? [] : pathCandidates([entry.meta.redionPath], [entry.meta.redionPath]);
             let page = null;
             if (byId && (byId.type !== 'page' || !byId.alive || byId.parentTable === 'collection')) {
@@ -2033,10 +1546,6 @@ const Austausch = (() => {
                 conflicts++;
             }
             else if (byId && paths.length === 1 && paths[0]?.id === byId.id) {
-                /* Nur beide stabilen Anker gemeinsam erlauben ein destruktives
-                   Update. Eine passende ID ODER ein passender Pfad allein kann aus
-                   einer fremden Datei kopiert sein und erzeugt deshalb eine
-                   getrennte Konfliktseite. */
                 page = byId;
                 entry.authoritative = true;
                 reused++;
@@ -2057,13 +1566,8 @@ const Austausch = (() => {
                     : 'redion-path ohne bestätigende redion-id';
                 conflicts++;
             }
-            /* Bei einem Teil-Vault fehlt die Eltern-Datei. Eine bestätigte lokale
-               Seite bleibt dann an ihrem bisherigen Ort; sie wird nie bloss wegen
-               einer unvollständigen Dateiauswahl an die Wurzel verschoben. */
             if (missingParent && page)
                 parentId = page.parentId || null;
-            /* Konflikte werden nicht gemergt. Eine neue Seite erhält bewusst eine
-               neue ID; beide Fassungen bleiben erhalten und der Hinweis zählt sie. */
             if (!page) {
                 const patch = { text: entry.title };
                 if (!entry.conflict && wantedId && !Store.getBlock(wantedId))
@@ -2091,7 +1595,6 @@ const Austausch = (() => {
             });
             entry.page = page;
         }
-        /* PASS 2: Erst jetzt sind auch Vorwärtslinks und Aliase bekannt. */
         for (const entry of orderedEntries) {
             if (!entry.page)
                 continue;
@@ -2131,16 +1634,11 @@ const Austausch = (() => {
                 (aliasConflicts ? ` · ${aliasConflicts} mehrdeutige Aliase markiert` : '') +
                 (unsafe ? ` · ${unsafe} unsichere/ungeeignete Pfade übersprungen` : '') };
     };
-    /* --- Notion-Export (ZIP) -----------------------------------------------
-     * Notions eigener Export: Markdown-Dateien und CSV-Dateien, die Ordner
-     * bilden die Seitenhierarchie. Die langen IDs im Dateinamen fliegen raus.
-     * --------------------------------------------------------------------- */
     const ausNotionZip = async (puffer, zielSeite) => {
         const zip = await Einlesen.zipLesen(puffer);
         const wurzel = Store.addBlock(zielSeite || null, 'page', { text: 'Aus Notion' });
         const ordner = new Map([['', wurzel.id]]);
         const saeubern = (n) => String(n).replace(/\s+[0-9a-f]{32}(?=$|\.)/i, '').trim();
-        /* Wie oben: der Pfad ist ein Text, keine Liste. */
         const ordnerFuer = (pfad) => {
             const da = ordner.get(pfad);
             if (da !== undefined)
@@ -2152,12 +1650,6 @@ const Austausch = (() => {
             ordner.set(pfad, s.id);
             return s.id;
         };
-        /* Ein Notion-Export enthält die BILDER der Seiten als Dateien neben dem
-           Markdown. Bis heute las dieser Import .md, .csv und .json — und liess
-           alles andere STUMM fallen: zwölf Bilder weg, und der Hinweis sagte
-           „8 Seiten übernommen", als wäre nichts. Jetzt werden bekannte Medien
-           als echte Dateien abgelegt (mit Stücken, wie jeder Upload), und was
-           wirklich niemand kennt, wird wenigstens GEZÄHLT und genannt. */
         const MEDIEN = {
             png: { typ: 'image/png', block: 'image' },
             jpg: { typ: 'image/jpeg', block: 'image' },
@@ -2182,7 +1674,6 @@ const Austausch = (() => {
             if (/\.md$/i.test(datei)) {
                 const text = await zip.text(name);
                 const s = Store.addBlock(eltern, 'page', { text: saeubern(datei.replace(/\.md$/i, '')) });
-                /* Notion setzt den Titel als erste Zeile mit # — die fliegt raus. */
                 Werkzeuge.ausMarkdown(s, text.replace(/^#\s+.*\n+/, ''));
                 seiten++;
             }
@@ -2193,11 +1684,6 @@ const Austausch = (() => {
                 tabellen++;
             }
             else if (/\.json$/i.test(datei)) {
-                /* --- Notions Rohform ------------------------------------------
-                 * Wer den Export über die API zieht, bekommt JSON statt CSV: dort
-                 * stehen die Werte verschachtelt ([["80"]]) und die Formeln als
-                 * Baum. Genau das liest NotionFormat.
-                 * ------------------------------------------------------------- */
                 try {
                     const roh = JSON.parse(await zip.text(name));
                     const erg = ausNotionJson(roh, eltern, saeubern(datei.replace(/\.json$/i, '')));
@@ -2205,7 +1691,7 @@ const Austausch = (() => {
                     formeln += erg.formeln;
                     tabellen += erg.tabellen;
                 }
-                catch { /* keine Notion-Struktur — dann eben nicht */ }
+                catch { }
             }
             else {
                 const endung = (datei.split('.').pop() || '').toLowerCase();
@@ -2222,14 +1708,11 @@ const Austausch = (() => {
                     }
                     const b = Store.addBlock(eltern, art.block, { text: saeubern(datei) });
                     const satz = await Dateien.ablegen(new File([bytes], saeubern(datei), { type: art.typ }), { blockId: b.id });
-                    /* Nur die Kennung — siehe E98. */
                     await Dateien.adresse(satz.id);
                     Store.updateBlock(b.id, { dateiId: satz.id, typ: art.typ });
                     anhaenge++;
                 }
                 catch {
-                    /* Ein kaputter Anhang bricht nicht den ganzen Import — aber er
-                       verschwindet auch nicht wortlos. */
                     ausgelassen.push('.' + endung);
                 }
             }
@@ -2243,11 +1726,6 @@ const Austausch = (() => {
                 (ausgelassen.length ? ' — ' + ausgelassen.length + ' Datei(en) nicht übernommen (' +
                     [...new Set(ausgelassen)].join(', ') + ')' : '') };
     };
-    /**
-     * Eine Notion-Sammlung aus der Rohform.
-     * Erwartet { name, schema:{ key:{name,type,formula?} }, rows:[{ props }] }
-     * — genau so, wie Notions interne Antwort sie liefert.
-     */
     const ausNotionJson = (roh, elternId, ersatzName) => {
         if (!roh || typeof roh !== 'object')
             return { werte: 0, formeln: 0, tabellen: 0 };
@@ -2261,7 +1739,6 @@ const Austausch = (() => {
             Object.entries(c.schema).forEach(([k, d]) => {
                 const s = { name: (Array.isArray(d.name) ? NotionFormat.wertLesen(d.name) : d.name) || k,
                     type: d.type || 'text' };
-                /* Formel als Baum → unser Text */
                 if (d.formula) {
                     const t = NotionFormat.formelAusNotion(d.formula);
                     if (t) {
@@ -2294,28 +1771,7 @@ const Austausch = (() => {
         });
         return { werte, formeln, tabellen };
     };
-    /* --- Asana (.csv) ------------------------------------------------------
-     * Asana schreibt seinen Export als CSV mit festen Spaltennamen. Der
-     * allgemeine CSV-Weg liest das auch — aber er liest ALLES als Text:
-     *
-     *     Section/Column  ->  Text          statt  Status (und Gruppierung)
-     *     Due Date        ->  Text          statt  Datum
-     *     Tags            ->  Text          statt  Mehrfachauswahl
-     *     Completed At    ->  Text          statt  Haken
-     *     Notes           ->  eine Zelle mit vier Absaetzen darin
-     *
-     * Das Letzte ist das Schlimmste: die Beschreibung einer Aufgabe landet in
-     * einer Tabellenzelle, wo man sie nicht lesen und nicht gliedern kann.
-     * Hier wird sie zum Seiteninhalt, wo sie hingehört.
-     *
-     * WAS NICHT ERKANNT WIRD, GEHT TROTZDEM MIT. Asana hängt eigene Felder
-     * als weitere Spalten an, und die heissen bei jedem anders. Sie werden
-     * als Textspalten übernommen — lieber eine Spalte zu viel als ein
-     * verlorenes Feld.
-     * --------------------------------------------------------------------- */
-    /** Was Asana schreibt -> was Redion daraus macht. */
     const ASANA_FELDER = [
-        /* Muster auf den Spaltennamen | Schlüssel | Anzeigename | Typ */
         [/^name$|^task name$/i, 'title', 'Aufgabe', 'title'],
         [/^section\/column$|^section$/i, 'abschnitt', 'Abschnitt', 'status'],
         [/^assignee$/i, 'wer', 'Zuständig', 'text'],
@@ -2326,11 +1782,7 @@ const Austausch = (() => {
         [/^parent task$/i, 'ueber', 'Gehört zu', 'text'],
         [/^priority$/i, 'prio', 'Priorität', 'select'],
     ];
-    /* Diese vier werden gelesen, aber NICHT zu Spalten: `Notes` wird der
-       Seiteninhalt, `Completed At` wird der Haken, die beiden Kennungen
-       interessieren niemanden mehr, sobald die Daten hier sind. */
     const ASANA_STUMM = /^notes$|^completed at$|^task id$|^assignee email$|^created at$|^last modified$/i;
-    /** Ein Wert wie „a, b, c" wird zur Liste — Asana trennt Etiketten so. */
     const asanaListe = (v) => String(v ?? '').split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
     const ausAsana = (text, zielSeite, name) => {
         const zeilen = (typeof Csv !== 'undefined')
@@ -2340,9 +1792,6 @@ const Austausch = (() => {
             throw new Error('Die Datei enthält keine Zeilen');
         const kopf = (zeilen[0] ?? []).map((x) => String(x ?? '').replace(/^﻿/, '').trim());
         const saetze = zeilen.slice(1);
-        /* Erkennt Asana daran, dass „Name" ODER „Task Name" dasteht. Ohne das
-           wäre jede beliebige CSV ein Asana-Export, und die Zuordnung unten
-           würde raten statt lesen. */
         const titelSpalte = kopf.findIndex(k => /^name$|^task name$/i.test(k));
         if (titelSpalte < 0)
             throw new Error('Das sieht nicht nach einem Asana-Export aus — die Spalte „Name" fehlt');
@@ -2358,26 +1807,20 @@ const Austausch = (() => {
             if (treffer) {
                 const [, key, anzeige, typ] = treffer;
                 if (schema[key])
-                    return; /* zweimal dieselbe Spalte: die erste gewinnt */
+                    return;
                 schema[key] = { name: anzeige, type: typ };
                 zuordnung.push({ i, key, typ });
             }
             else {
-                /* Ein eigenes Feld von Asana. Der Schlüssel darf nicht rein
-                   numerisch sein — siehe E96/E172. */
                 const key = 'a' + eigene++;
                 schema[key] = { name: spaltenName, type: 'text' };
                 zuordnung.push({ i, key, typ: 'text' });
             }
         });
-        /* Der Haken kommt aus `Completed At`: dort steht ein Datum, wenn die
-           Aufgabe fertig ist, und nichts, wenn nicht. */
         const fertigSpalte = kopf.findIndex(k => /^completed at$/i.test(k));
         if (fertigSpalte >= 0)
             schema['fertig'] = { name: 'Erledigt', type: 'checkbox' };
         const notizSpalte = kopf.findIndex(k => /^notes$/i.test(k));
-        /* Die Auswahlspalten brauchen ihre Werte, bevor die erste Zeile da ist —
-           sonst steht die Zeile auf einer Option, die es nicht gibt. */
         const werteVon = (i) => saetze.map((z) => String(z[i] ?? '').trim());
         const FARBEN = ['gray', 'blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow'];
         zuordnung.forEach(z => {
@@ -2416,7 +1859,6 @@ const Austausch = (() => {
                 props['title'] = 'Ohne Titel';
             const zeile = Store.addRow(db.collectionId, props);
             n++;
-            /* Die Beschreibung wird Seiteninhalt, nicht Zellinhalt. */
             const notiz = notizSpalte >= 0 ? String(z[notizSpalte] ?? '').trim() : '';
             if (notiz) {
                 Werkzeuge.ausMarkdown(zeile, notiz);
@@ -2425,9 +1867,6 @@ const Austausch = (() => {
         });
         return { seite, hinweis: n + ' Aufgaben übernommen, ' + mitText + ' mit Beschreibung' };
     };
-    /* Der Not-Zerleger, falls `core/spreadsheet/csv.js` fehlt. Er trennt nur
-       bei Komma; das ist schlechter als `Csv.zerlege`, aber besser als nichts,
-       und es macht `ausAsana` nicht von einer zweiten Datei abhängig. */
     const csvZerlegenNot = (text) => {
         const raus = [];
         let feld = '', zeile = [], inAnf = false;
@@ -2464,24 +1903,11 @@ const Austausch = (() => {
         }
         return raus.filter(z => z.some(x => String(x).trim()));
     };
-    /* --- Apple Notes (Ordner mit .html) ------------------------------------
-     * Apple Notes kann nicht selbst in einem Rutsch exportieren; die üblichen
-     * Wege liefern einen ORDNER mit einer HTML-Datei je Notiz, und die Ordner
-     * der App werden zu Unterordnern. Beides wird hier abgebildet:
-     *
-     *     Notizen/Rezepte/Brot.html   ->  Seite „Rezepte" > Seite „Brot"
-     *
-     * Der Titel kommt aus `<title>`, aus der ersten Überschrift oder aus dem
-     * Dateinamen — in dieser Reihenfolge, weil die ersten beiden Umlaute und
-     * Satzzeichen behalten, die der Dateiname verloren hat.
-     * --------------------------------------------------------------------- */
     const ausAppleNotes = async (dateien, zielSeite) => {
         const htmls = dateien.filter(d => /\.html?$/i.test(d.name || ''));
         if (!htmls.length)
             throw new Error('Keine .html-Dateien in diesem Ordner');
         const wurzel = Store.addBlock(zielSeite || null, 'page', { text: 'Aus Apple Notes', icon: '📒' });
-        /* Ordnerpfad -> Seite. Wird beim ersten Bedarf angelegt, damit ein leerer
-           Ordner keine leere Seite hinterlaesst. */
         const ordner = new Map();
         const ordnerSeite = (pfad) => {
             if (!pfad)
@@ -2504,12 +1930,9 @@ const Austausch = (() => {
             const titel = (doc.querySelector('title')?.textContent || '').trim()
                 || (doc.querySelector('h1, h2')?.textContent || '').trim()
                 || ausDatei;
-            /* Der Pfad OHNE das oberste Verzeichnis: das ist der Name des
-               gewählten Ordners und steht schon als Wurzelseite da. */
             const voll = String(d.webkitRelativePath || d.name || '');
             const teile = voll.split('/').slice(1, -1);
             const seite = Store.addBlock(ordnerSeite(teile.join('/')).id, 'page', { text: titel });
-            /* Die Überschrift, die schon der Titel ist, nicht noch einmal. */
             const erste = doc.querySelector('h1, h2');
             if (erste && (erste.textContent || '').trim() === titel)
                 erste.remove();
@@ -2521,9 +1944,6 @@ const Austausch = (() => {
         Store.updateBlock(wurzel.id, { aufgeklappt: true });
         return { seite: wurzel, hinweis: n + ' Notizen aus ' + (ordner.size || 1) + ' Ordnern übernommen' };
     };
-    /* ========================================================================
-     * 5. DAS FENSTER
-     * ======================================================================*/
     const QUELLEN = [
         ['trello', '📋', 'Trello', 'Das JSON eines Boards — Listen werden Status, Karten Zeilen', '.json'],
         ['evernote', '🐘', 'Evernote', 'Eine .enex-Datei — jede Notiz wird eine Seite', '.enex,.xml'],
@@ -2550,10 +1970,6 @@ const Austausch = (() => {
                 '<div class="fbtns"><button data-a="zu">Schliessen</button></div>' +
                 '</div>';
         document.body.appendChild(o);
-        /* DIE LISTE ROLLT, UND MAN SOLL DAS SEHEN (E183). Mit acht Quellen passt
-           sie am Rechner um 28 px nicht mehr, am Telefon um 127. Erreichbar war
-           die letzte immer — sichtbar war nur, dass sie keine Beschreibung hat.
-           Dieselbe Antwort wie an der Tabelle: eine weiche Kante, kein Hinweis. */
         if (typeof Rollrand !== 'undefined')
             Rollrand.binde(o.querySelector('.ax-liste'), { achse: 'hoch' });
         o.addEventListener('click', async (e) => {
@@ -2567,8 +1983,6 @@ const Austausch = (() => {
             const art = q.dataset.q;
             const quelle = QUELLEN.find(x => x[0] === art);
             o.remove();
-            /* Ohne passende Quelle gibt es nichts zu öffnen. Vorher las die Zeile
-               darunter `quelle[4]` ungeprüft. */
             if (!quelle)
                 return;
             const inp = document.createElement('input');
@@ -2627,31 +2041,6 @@ const Austausch = (() => {
             inp.click();
         });
     };
-    /* ========================================================================
-     * .pptx — eine echte PowerPoint-Datei, ohne fremde Pakete
-     * ------------------------------------------------------------------------
-     * DERSELBE ZIP-SCHREIBER WIE BEI .docx UND .xlsx (L69). Der Aufwand liegt
-     * im Folien-XML, nicht im Behälter — das steht so schon in der Lücke, und
-     * es hat gestimmt.
-     *
-     * WO DIE FOLIEN HERKOMMEN. Aus `Folien.teilen`, demselben Kern, den auch
-     * der Vortragsmodus benutzt. Eine zweite Teilung hier wäre die zweite
-     * Wahrheit darüber, wo eine Folie anfängt — und sie liefe irgendwann von
-     * der ersten weg. Gemerkt hätte man es in der Schule.
-     *
-     * WAS EINE PPTX MINDESTENS BRAUCHT, damit PowerPoint sie öffnet: einen
-     * Folienmaster, ein Layout und ein Thema. Keines davon ist optional; eine
-     * Datei mit nur Folien darin wird als beschädigt gemeldet. Deshalb steht
-     * hier mehr Gerüst als Inhalt.
-     *
-     * WAS NICHT NACHGEMESSEN IST, und das gehört dazugesagt: dass PowerPoint
-     * selbst sie öffnet. `test292` prüft die Struktur streng — jede Beziehung
-     * zeigt auf eine Datei, die es gibt; jeder Teil hat seinen Content-Type;
-     * jedes XML ist wohlgeformt —, aber ein echtes PowerPoint gibt es hier
-     * nicht, und LibreOffice läuft im Prüfcontainer nicht (nachgemessen: es
-     * lädt dort nicht einmal eine .txt). Das steht auch in LUECKEN.md.
-     * ======================================================================*/
-    /** 16:9 in EMU — Englische Metrische Einheiten, 914400 je Zoll. */
     const FOLIE_BREITE = 12192000, FOLIE_HOEHE = 6858000;
     const pptxThema = () => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Redion">' +
@@ -2669,8 +2058,6 @@ const Austausch = (() => {
         '<a:majorFont><a:latin typeface="Calibri Light"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont>' +
         '<a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont>' +
         '</a:fontScheme>' +
-        /* Drei Einträge je Liste — die Zahl steht so im Schema, und ein Leser,
-           der den zweiten oder dritten sucht, findet sonst nichts. */
         '<a:fmtScheme name="Redion">' +
         '<a:fillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'.repeat(3) +
         '</a:fillStyleLst>' +
@@ -2700,15 +2087,12 @@ const Austausch = (() => {
         'accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" ' +
         'hlink="hlink" folHlink="folHlink"/>' +
         '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>' +
-        /* `txStyles` ist im Schema Pflicht am Master. Ohne ihn melden manche
-           Leser die Datei als beschädigt, statt einfach die Vorgabe zu nehmen. */
         '<p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles>' +
         '</p:sldMaster>';
     const pptxLayout = () => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<p:sldLayout ' + PPTX_NS + ' type="blank" preserve="1">' +
         '<p:cSld name="Leer">' + pptxBaum('') + '</p:cSld>' +
         '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>';
-    /** Eine Folie: Titel oben, Text darunter. Zwei Formen, mehr nicht. */
     const pptxFolie = (titel, zeilen) => {
         const rahmen = (x, y, cx, cy) => '<a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + cx + '" cy="' + cy + '"/>';
         const form = (id, name, x, y, cx, cy, inhalt) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + esc(name) + '"/>' +
@@ -2729,8 +2113,6 @@ const Austausch = (() => {
                 '<a:r><a:rPr lang="de-DE" sz="' + (z.art === 'kopf' ? 2800 : 2000) + '"' +
                 (z.art === 'kopf' ? ' b="1"' : '') + ' dirty="0"/>' +
                 '<a:t>' + esc(z.text) + '</a:t></a:r></a:p>').join('')
-            /* Eine leere Folie braucht trotzdem einen Absatz — ein Textkörper
-               ohne `a:p` ist nach Schema ungültig. */
             : '<a:p><a:endParaRPr lang="de-DE"/></a:p>';
         formen += form(id++, 'Inhalt', rand, oben, FOLIE_BREITE - 2 * rand, FOLIE_HOEHE - oben - 457200, absaetze);
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -2743,10 +2125,6 @@ const Austausch = (() => {
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
         eintraege + '</Relationships>';
     const rel = (id, art, ziel) => '<Relationship Id="' + id + '" Type="' + REL + art + '" Target="' + ziel + '"/>';
-    /**
-     * Die Teile einer .pptx — ohne ZIP, damit ein Prüflauf sie einzeln
-     * ansehen kann, ohne ein Archiv aufzumachen.
-     */
     const pptxTeile = (folien) => {
         const n = Math.max(1, folien.length);
         const nr = [];
@@ -2793,19 +2171,6 @@ const Austausch = (() => {
         });
         return dateien;
     };
-    /* ══ EINEN GEÄNDERTEN TEXT IN DIE FOLIE ZURÜCKSCHREIBEN (E593, O5b) ══════
-       Die Marke bringt seit E593 mit, woher sie stammt: `quelle.sp` ist die
-       Kennung ihrer Form (`p:cNvPr@id`), `quelle.p` die Nummer ihres Absatzes.
-       Beides vergibt der Einleser nur dort, wo es EINDEUTIG ist — ein Absatz,
-       ein Lauf, kein Aufzählungszeichen.
-  
-       Hier wird deshalb nichts gesucht und nichts geraten: die Form wird an
-       ihrer Kennung nachgeschlagen, der Absatz an seiner Nummer, und in ihm
-       genau das eine `<a:t>` ersetzt. Was keine Spur hat, bleibt stehen.
-  
-       GEÄNDERT WIRD NUR DER TEXTKNOTEN. Die Folie behält ihre Füllung, ihre
-       Bilder, ihre Masse, ihre Drehung — alles andere im XML wird nicht
-       angefasst, weil nichts anderes angefasst wird. */
     const folieMitText = (xml, marken) => {
         const spuren = (marken || []).filter((m) => m && m.art === 'text' && m.quelle && m.quelle.sp && typeof m.text === 'string');
         if (!spuren.length)
@@ -2819,8 +2184,6 @@ const Austausch = (() => {
         catch {
             return { xml, geschrieben: 0 };
         }
-        /* Die Formen einmal nach ihrer Kennung ablegen — sonst wäre es je Marke
-           ein Durchlauf durch den ganzen Baum. */
         const formen = new Map();
         for (const sp of Array.from(doc.getElementsByTagName('p:sp'))) {
             const id = sp.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id');
@@ -2839,9 +2202,6 @@ const Austausch = (() => {
             if (!absatz)
                 continue;
             const stellen = absatz.getElementsByTagName('a:t');
-            /* GENAU EINE STELLE — sonst wäre die Spur falsch geworden, seit sie
-               vergeben wurde (eine fremde Bearbeitung der Datei, ein zweiter
-               Lauf). Dann lieber nichts schreiben als daneben. */
             if (stellen.length !== 1)
                 continue;
             const stelle = stellen[0];
@@ -2854,20 +2214,6 @@ const Austausch = (() => {
             return { xml, geschrieben: 0 };
         return { xml: new XMLSerializer().serializeToString(doc), geschrieben };
     };
-    /**
-     * EINE SEITE ALS POWERPOINT (L69).
-     *
-     * Die Berufsschule verlangt oft eine Abgabe: eine Datei hochladen oder auf
-     * dem Schul-PC öffnen. Der Vortragsmodus reicht dafür nicht — er lebt in
-     * Redion.
-     */
-    /* ══ DIE ORIGINALDATEI EINER EINGELESENEN PRÄSENTATION (E592, Bogen O5) ═══
-       Redur, 12. September 2026: „aber wichtig die originale datei wird immer
-       geschützt."
-  
-       Seit E538 hängt die eingelesene `.pptx` als Anhang an Platz 0 der Seite.
-       Diese Zeilen holen sie zurück — Block, Dateisatz, Bytes —, damit die
-       Ausgabe sie durchreichen kann statt eine frische Datei zu bauen. */
     const originalPaket = async (seite) => {
         if (typeof Dateien === 'undefined' || !Dateien.alsBlob)
             return null;
@@ -2888,8 +2234,6 @@ const Austausch = (() => {
                 return null;
             const puffer = await blob.arrayBuffer();
             const leser = await Einlesen.zipLesen(puffer);
-            /* Eine `.pptx` ohne `ppt/presentation.xml` ist keine — dann lieber den
-               frischen Weg als ein Paket, das PowerPoint nicht öffnet. */
             if (!leser || !leser.namen?.includes('ppt/presentation.xml'))
                 return null;
             return { leser, name: String(anhang.text || '') };
@@ -2898,34 +2242,6 @@ const Austausch = (() => {
             return null;
         }
     };
-    /**
-     * EINE SEITE ALS POWERPOINT (L69).
-     *
-     * Die Berufsschule verlangt oft eine Abgabe: eine Datei hochladen oder auf
-     * dem Schul-PC öffnen. Der Vortragsmodus reicht dafür nicht — er lebt in
-     * Redion.
-     *
-     * ZWEI WEGE, und welcher gilt, entscheidet die Herkunft:
-     *
-     *   · EINGELESENE Präsentation → die Originaldatei wird DURCHGEREICHT.
-     *     Jeder Eintrag geht Byte für Byte zurück, mit seiner Packmethode und
-     *     seiner Prüfsumme (E539). Bild, Thema, Layouts, Master, `docProps` —
-     *     alles bleibt.
-     *   · SELBST GESCHRIEBENE Präsentation → der frische Weg von unten.
-     *
-     * GEMESSEN am 15. September 2026, warum es diesen Weg braucht. Eine fremde
-     * Datei mit zwei Folien, einem Bild, einer gefüllten Form und eigenem
-     * Thema, eingelesen und wieder ausgegeben:
-     *
-     *     Original 16 Einträge     Export 15
-     *     docProps/core.xml        WEG        ppt/media/image1.png  WEG
-     *     2 Folien                 3          Füllfarbe FFCC00      WEG
-     *     „Erste Folie"            „[Datei: …pptx]"
-     *
-     * Es überlebte nichts ausser der Endung — und der Dateianhang selbst wurde
-     * zur ersten Folie. Für eine selbst geschriebene Präsentation ist der
-     * frische Weg richtig; für eine eingelesene ist er Datenverlust (§46).
-     */
     const alsPowerPoint = async (seite) => {
         if (!seite || !seite.id)
             throw new Error('Ohne Seite gibt es nichts zu zeigen.');
@@ -2934,9 +2250,6 @@ const Austausch = (() => {
         const dateiName = (seite.text || 'Vortrag').replace(/[\\/:*?"<>|]/g, '-') + '.pptx';
         const paket = await originalPaket(seite);
         if (paket) {
-            /* Welche Folie welchem Blattblock entspricht: `ppt/slides/slideN.xml`
-               in der Reihenfolge der Präsentation, und die Blätter der Seite in
-               ihrer Reihenfolge. Der Anhang an Platz 0 ist kein Blatt (E592). */
             const blaetter = (Store.childrenOf(seite.id) || [])
                 .filter((k) => k && k.type === 'blatt');
             const folienNamen = paket.leser.namen
@@ -2956,7 +2269,7 @@ const Austausch = (() => {
                         geschrieben += neu.geschrieben;
                     }
                 }
-                catch { /* diese Folie bleibt, wie sie war */ }
+                catch { }
             }
             const teile = [];
             for (const name of paket.leser.namen) {
@@ -2965,12 +2278,6 @@ const Austausch = (() => {
                     teile.push({ name, inhalt: ersetzt });
                     continue;
                 }
-                /* `rohBytes` gibt den ganzen Satz zurück — Bytes, Methode,
-                   Prüfsumme, Rohgrösse —, nicht nur die Bytes. Beim ersten Wurf
-                   stand hier `roh: (await rohBytes(name))`, also das OBJEKT im Feld
-                   `roh`: der Schreiber hielt es für Inhalt, `inhalt.length` war
-                   `undefined`, und das Archiv kündigte fünfzehn Einträge an, von
-                   denen keiner an seiner Stelle lag. */
                 const teil = await paket.leser.rohBytes(name);
                 if (!teil)
                     continue;
@@ -2980,29 +2287,17 @@ const Austausch = (() => {
             laden(blob, dateiName);
             const folien = paket.leser.namen
                 .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length;
-            /* EHRLICH SAGEN, WAS NOCH NICHT GEHT (§35): die Folien stehen so
-               darin, wie sie hereinkamen. Was in Redion daran geändert wurde,
-               trägt diese Datei noch nicht — dafür fehlt die Rückspur von der
-               Marke zu ihrem `<a:t>`, und die wird beim Einlesen angelegt
-               (Bogen O5b, L168). Ein stilles Weglassen wäre das Schlimmere. */
-            /* ══ EHRLICH SAGEN, WAS DRIN IST UND WAS NICHT (§35) ════════════════
-               Zurückgeschrieben wird nur, was eine Rückspur trägt. Der Satz
-               richtet sich deshalb danach, ob überhaupt etwas geschrieben wurde —
-               eine feste Formel wäre in einem der beiden Fälle gelogen. */
             const hinweis = geschrieben
                 ? 'Die Originaldatei ist vollständig erhalten; '
                     + geschrieben + (geschrieben === 1 ? ' Textstelle wurde' : ' Textstellen wurden')
                     + ' übernommen. Formen ohne eindeutige Zuordnung stehen unverändert darin.'
                 : 'Die Originaldatei ist vollständig erhalten. In Redion '
                     + 'geänderte Folieninhalte stehen noch nicht darin.';
-            /* UND ZWAR SICHTBAR, nicht nur im Rückgabewert. Wer speichert, sieht
-               eine Datei und glaubt sonst, seine Änderung sei darin — das wäre
-               ein stiller Verlust, und still ist hier das Schlimmere (§35). */
             try {
                 if (typeof UI !== 'undefined' && UI.toast)
                     UI.toast(hinweis, 7000);
             }
-            catch { /* ohne Meldung bleibt der Rückgabewert */ }
+            catch { }
             return { blob, folien, durchgereicht: true, geschrieben, hinweis };
         }
         const roh = Folien.teilen(seite, (id) => Store.childrenOf(id));
@@ -3019,9 +2314,6 @@ const Austausch = (() => {
         ausTrello, ausEvernote, ausAsana, ausAppleNotes, htmlZuMarkdown,
         ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
         dialog, QUELLEN,
-        /* Nur für Prüfläufe — siehe die Erklärung bei `grenzen`. Wer sie
-           im Betrieb verstellt, schreibt ZIP64, wo es keines braucht:
-           gültig, aber ohne Not unlesbar für alte Werkzeuge. */
         grenzen };
 })();
 window.Austausch = Austausch;

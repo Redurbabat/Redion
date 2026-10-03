@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/lernbilder.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/elektro/lernbilder.ts — Formeldreieck und Sinuskurve
  * ----------------------------------------------------------------------------

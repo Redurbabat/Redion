@@ -1,5 +1,34 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 3. Oktober 2026 · E715 · Der Start holt ein Drittel weniger
+
+**Redur:** am 27. September „… ohne eine funktione löschen …", am
+3. Oktober „Weiter ohne pause".
+
+**Gefunden:** Die zweite Welle (E708 bis E714) passte zusammen nicht unter
+die Startdecke von 2850 KB (`test388` §5; morgen-besser stand bei 2826).
+Gezählt: 1039 der 2826 KB waren Kommentare im erzeugten JavaScript — tsc
+liess sie stehen (`removeComments: false`).
+
+**Gebaut:** `removeComments: true` in `tsconfig.bauen.json`; `src/` behält
+jeden Kommentar. Jede der 227 Quellen beginnt mit einer Zeile
+`/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/… */`, die im `.js`
+stehen bleibt (`dienststand.mts` und `chronik.mts` schreiben sie selbst).
+`sw.js` behält seine Kommentare. Start 2826 → 1805 KB, Einzeldatei
+11,8 → 9,1 MB; die Decke sinkt auf 1950 KB.
+
+**Geprüft:** `test105` §3 jetzt für alle 227 erzeugten Dateien und
+`test388` §5 mit der neuen Decke, beide zuerst rot gegen 4d9a9a3fb;
+`test272` liest die Quelle. Jede erzeugte Datei ist Byte für Byte, was tsc
+aus den Quellen von 4d9a9a3fb ohne Kommentare macht (ausser der ersten
+Zeile); 34 Datei- und 103 Browserläufe, die `quell/` oder die Einzeldatei
+lesen, wie auf dem Grundstand (messungen §86). Nichts gelöscht, nichts
+später geladen.
+
+**Offen:** neue Quellen der zweiten Welle (`delete.ts`, `kacheln.ts`,
+`tropfen.ts`) bekommen die ERZEUGT-Zeile beim Zusammenführen; die
+Kommentare der Stilblätter (261 KB) bleiben — CSS ist Quelle.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

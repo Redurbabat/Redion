@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/sicherheit/krypto.ts (npm run bauen:ts). */
 /* ============================================================================
  * krypto.js — Verschlüsselung mit einem Passwort
  * ----------------------------------------------------------------------------

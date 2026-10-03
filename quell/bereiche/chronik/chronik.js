@@ -1,56 +1,13 @@
 "use strict";
-/* ============================================================================
- * chronik/chronik.js — das zweite Gehirn, in Redion sichtbar
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/chronik/chronik.ts`. `npm run bauen:ts`
- * schreibt daraus diese Datei.
- * ==========================================================================*/
-/* ===========================================================================
- * WAS DAS IST (E514)
- * ===========================================================================
- *
- * Redur, 9. September 2026:
- *
- *   „es sollte auch im Redion sichtbar sein: wenn ich bei der Redion in der
- *    Suche 'Red-ur' schreibe, sollte dort direkt die Daten sich öffnen, aber
- *    mit Zugangscode 733877, und dort solltest du die Graphen verwenden,
- *    3D-Ansichten und so."
- *
- * DIE DATEN KOMMEN AUS EINER QUELLE (§8). `chronik/chronik.json` hält sie;
- * `node chronik.mts` schreibt daraus UR.md, PROBLEME.md und `daten.ts`, das
- * dieser Bereich liest. Wer hier etwas anderes zeigt als in UR.md, hat einen
- * Fehler — nicht eine zweite Meinung.
- *
- * ══ DER CODE IST EIN TÜRSCHILD, KEIN SCHLOSS ═══════════════════════════════
- *
- * Das gehört an den Anfang und nicht ins Kleingedruckte: Redion ist ein
- * offenes Verzeichnis. Wer den Quelltext liest, findet die sechs Ziffern in
- * zehn Sekunden — sie stehen hier, im Klartext, weil sie hier stehen MÜSSEN:
- * die App läuft ohne Server, es gibt niemanden, der eine Prüfung vornehmen
- * könnte (§22). Ein Passwortfeld, das etwas anderes behauptet, wäre genau
- * das, was §33 verbietet: ein Versprechen, das nicht hält.
- *
- * Was der Code TATSÄCHLICH tut, ist das, wofür Redur ihn wollte: die Chronik
- * geht nicht versehentlich auf. Wer neben ihm sitzt und über die Schulter
- * schaut, sieht sie nicht, weil er ein Wort in die Suche getippt hat.
- *
- * Ein echtes Schloss gäbe es: dieselbe Verschlüsselung, die Redion für
- * verschlüsselte Seiten benutzt (AES-GCM, §19), mit einem Passwort, das nur
- * im Kopf steht. Das ist ein eigener Bogen und steht als L140.
- * ===========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/chronik/chronik.ts (npm run bauen:ts). */
 const Chronik = (() => {
     const CODE = '733877';
-    const M_OFFEN = 'chronik:offen'; /* nur für diese Sitzung gemerkt */
+    const M_OFFEN = 'chronik:offen';
     const esc = (wert) => String(wert ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const daten = () => window.ChronikDaten || { tage: [], probleme: [] };
-    /** Passt der Suchtext auf die Chronik? „Red-ur", „redur", „red ur". */
     const trifft = (text) => /^\s*red[\s\-_]?ur\s*$/i.test(String(text ?? ''));
-    /* ── Zahlen für die Graphen ────────────────────────────────────────────
-       Sie werden GERECHNET, nicht abgeschrieben. Eine zweite Zahlenreihe
-       neben den Tagen liefe mit ihnen auseinander (§8). */
     const zahlen = () => {
         const d = daten();
         const tage = (d.tage || []).map((t) => ({
@@ -70,10 +27,6 @@ const Chronik = (() => {
         });
         return { tage, schweren, probleme: (d.probleme || []).length };
     };
-    /* ── Ein Balkendiagramm, aus SVG, ohne Bibliothek ──────────────────────
-       Kein Diagrammpaket: §6 verbietet unnötige Abhängigkeiten, und ein
-       Balken ist ein Rechteck. Beschriftet wird jeder Balken, damit die
-       Auskunft nicht nur in der Höhe steckt (§38). */
     const balken = (titel, reihen) => {
         const hoch = Math.max(1, ...reihen.map(r => r.wert));
         const b = 100 / Math.max(1, reihen.length);
@@ -89,20 +42,10 @@ const Chronik = (() => {
                     `<text class="chr-name" x="${(x + w / 2).toFixed(2)}" y="54">${esc(r.name)}</text>`;
             }).join('') + '</svg></figure>';
     };
-    /* ── Der 3D-Stapel ────────────────────────────────────────────────────
-       Redur wollte „3D-Ansichten". Was hier räumlich ist, ist der STAPEL DER
-       TAGE: jeder Tag eine Platte, hintereinander gestaffelt, und man dreht
-       sie mit dem Zeiger. Das ist keine Zierde — die Tiefe SAGT etwas: wie
-       viele Tage schon hinter uns liegen und wie dick jeder war.
-  
-       Reine CSS-Perspektive, kein WebGL (§6). Bei `prefers-reduced-motion`
-       steht der Stapel still und liegt flach — die Auskunft bleibt dieselbe. */
     const stapel = () => {
         const z = zahlen();
         return '<div class="chr-3d" data-chr-3d><div class="chr-buehne">' +
             z.tage.map((t, i) => {
-                /* DIE KANTE IST DIE ARBEIT DES TAGES, gedeckelt: bei 26 px wäre
-                   sie breiter als der Text daneben und sagte nichts mehr. */
                 const dick = Math.min(14, 3 + t.commits + t.arbeiten);
                 return `<div class="chr-platte" style="--i:${i};--dick:${dick}px">` +
                     `<b>${esc(t.datum)}</b><span>${esc(t.titel)}</span>` +
@@ -111,7 +54,6 @@ const Chronik = (() => {
             '<p class="chr-fuss">Zeiger darüber bewegen dreht den Stapel. ' +
             'Die Dicke einer Platte ist die Arbeit des Tages.</p></div>';
     };
-    /* ── Die Ansichten ────────────────────────────────────────────────────*/
     const uebersicht = () => {
         const z = zahlen();
         return '<div class="chr-raster">' +
@@ -196,17 +138,8 @@ const Chronik = (() => {
         { id: 'probleme', name: 'Probleme', bauen: problemAnsicht },
         { id: 'wissen', name: 'Redur & Arbeitsweise', bauen: wissenAnsicht }
     ];
-    /* ── Das Fenster ──────────────────────────────────────────────────────*/
     let lage = null;
     const schliessen = () => { lage?.remove(); lage = null; };
-    /**
-     * Zeigen — und vorher die Daten holen, falls sie noch nicht da sind (E613).
-     *
-     * `chronik/daten.js` hängt seit E613 nicht mehr in `index.html`; sie wird
-     * hier nachgeholt. Deshalb ist diese Funktion asynchron geworden. Wer sie
-     * ohne `await` ruft, bekommt trotzdem die volle Chronik — nur einen
-     * Wimpernschlag später.
-     */
     const zeigen = async () => {
         if (typeof ChronikLaden !== 'undefined') {
             try {
@@ -267,8 +200,6 @@ const Chronik = (() => {
         schliessen();
         document.removeEventListener('keydown', beiTaste);
     };
-    /** Der Stapel dreht sich mit dem Zeiger — die einzige Bewegung, die
-     *  etwas sagt: sie zeigt, dass die Platten hintereinander liegen. */
     const dreherBinden = () => {
         const kasten = lage?.querySelector('[data-chr-3d]');
         if (!kasten)
@@ -288,7 +219,6 @@ const Chronik = (() => {
             buehne.style.removeProperty('--dy');
         });
     };
-    /* ── Die Tür ──────────────────────────────────────────────────────────*/
     const offen = () => {
         try {
             return sessionStorage.getItem(M_OFFEN) === '1';
@@ -297,13 +227,6 @@ const Chronik = (() => {
             return false;
         }
     };
-    /**
-     * Öffnen — mit Code, wenn er in dieser Sitzung noch nicht kam.
-     *
-     * EINMAL JE SITZUNG, nicht einmal je Klick: wer die Chronik durchsieht,
-     * geht zehnmal hinein und heraus. Beim nächsten Öffnen der App fragt sie
-     * wieder.
-     */
     const oeffnen = async () => {
         if (offen()) {
             await zeigen();
@@ -322,11 +245,10 @@ const Chronik = (() => {
         try {
             sessionStorage.setItem(M_OFFEN, '1');
         }
-        catch { /* dann eben je Klick */ }
+        catch { }
         await zeigen();
         return true;
     };
-    /* Als Befehl in der Palette — derselbe Weg, denselben Namen (§8). */
     if (typeof Register !== 'undefined' && Register.befehle) {
         Register.befehle.melde({
             titel: 'Red-ur — die Chronik', gruppe: 'Redion',

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/objects.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/objects.ts — Objekte kopieren, vergleichen, tief anfassen
  * ----------------------------------------------------------------------------

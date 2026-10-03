@@ -1,20 +1,5 @@
 "use strict";
-/* ============================================================================
- * register/vorlagen.js — die Vorlagengalerie
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/vorlagen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/register/vorlagen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Eine Vorlage ist kein Bild, sondern ein Programm: sie legt Seiten,
- * Datenbanken, Ansichten und Beispielzeilen an. Deshalb steht hier nicht der
- * Inhalt, sondern der Verweis auf die Funktion, die ihn baut — und die
- * Fassungsnummer, ohne die es später kein Update geben kann.
- *
- * Eine neue Vorlage: ein Eintrag hier und eine Funktion im Bereich Vorlagen.
- * Danach steht sie in der Galerie, in der Befehlspalette und im Rundgang.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/vorlagen.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.vorlagen = (() => {
     const LISTE = [];
@@ -26,7 +11,6 @@ Register.vorlagen = (() => {
         LISTE.push(eintrag);
         return true;
     };
-    /** Was der Bereich Vorlagen selbst mitbringt. */
     const ausDerGalerie = () => {
         try {
             return (typeof Galerie !== 'undefined' && Galerie.VORLAGEN) ? Galerie.VORLAGEN : [];
@@ -40,7 +24,6 @@ Register.vorlagen = (() => {
         return [...ausDerGalerie().filter(v => !eigene.has(v.id)), ...LISTE];
     };
     const eines = (id) => alle().find(x => x.id === id) || null;
-    /** Die Fassung einer Vorlage — für Updates auf eingesetzten Seiten. */
     const fassung = (id) => {
         try {
             return (typeof Fassung !== 'undefined') ? Fassung.jetzige(id) : 1;
@@ -49,10 +32,6 @@ Register.vorlagen = (() => {
             return 1;
         }
     };
-    /**
-     * Eine Vorlage einsetzen. Geht über den Bereich, damit der Vermerk
-     * „stammt aus Vorlage X, Fassung Y" auf der Seite landet.
-     */
     const bauen = (id) => {
         const v = eines(id);
         if (!v) {
@@ -64,11 +43,6 @@ Register.vorlagen = (() => {
             const ausGalerie = (typeof Galerie !== 'undefined') ? Galerie.bauen(id) : null;
             if (ausGalerie)
                 return ausGalerie;
-            /* EINE GEMELDETE VORLAGE BAUT SICH SELBST (E677). `melde` gab es seit
-               jeher, doch `bauen` fragte nur die Galerie — und die kennt nur ihre
-               eigene Liste: eine Vorlage aus einem Bereich stand im Register und
-               war trotzdem nicht baubar. Den Vermerk „stammt aus Vorlage X" setzt
-               Fassung, damit auch diese Seiten später ein Update bekommen. */
             const s = v.bauen ? v.bauen() : null;
             return (s && typeof Fassung !== 'undefined' && Fassung.markiere) ? Fassung.markiere(s, id) : s;
         }

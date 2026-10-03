@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/electrical/calculations.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/electrical/calculations.ts — reine, normfreie Elektrotechnik-Rechnung
  * ----------------------------------------------------------------------------

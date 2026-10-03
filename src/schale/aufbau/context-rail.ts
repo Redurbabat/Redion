@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/context-rail.ts (npm run bauen:ts). */
 /* ============================================================================
  * context-rail.js — die Kontextkante: 54 Pixel, die sich merken, wo man ist
  * ----------------------------------------------------------------------------

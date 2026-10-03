@@ -1,20 +1,5 @@
 "use strict";
-/* ============================================================================
- * register/eigenschaften.js — alle Spaltentypen an einer Stelle
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/eigenschaften.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/register/eigenschaften.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Hier entsteht ein neuer Spaltentyp. Danach steht er im Typmenü, in der
- * Filterauswahl, im Import und in der Schema-Ansicht — ohne dass jemand
- * vier Dateien nachträgt.
- *
- * Ein Eintrag ist bewusst knapp: id, Name, Zeichen. Alles Weitere — wie ein
- * Wert gelesen, gezeichnet, gefiltert und sortiert wird — steht im Bereich
- * Datenbanken. Ein Register beschreibt, es rechnet nicht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/eigenschaften.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.eigenschaften = (() => {
     const EINGEBAUT = [
@@ -27,8 +12,6 @@ Register.eigenschaften = (() => {
         { id: 'date', name: 'Datum', icon: '📅' },
         { id: 'person', name: 'Person', icon: '👤' },
         { id: 'checkbox', name: 'Kontrollkästchen', icon: '☑' },
-        /* Zwei Typen, die Notion nicht hat und die jeder mit Zahl plus
-           Anzeige-Einstellung nachbaut — hier gleich richtig. */
         { id: 'sterne', name: 'Bewertung', icon: '★' },
         { id: 'prozent', name: 'Fortschritt', icon: '▰' },
         { id: 'url', name: 'URL', icon: '🔗' },
@@ -43,7 +26,6 @@ Register.eigenschaften = (() => {
         { id: 'uid', name: 'Laufende Nummer', icon: 'ID' },
         { id: 'button', name: 'Knopf', icon: '🔘' },
         { id: 'ki', name: 'KI-Feld', icon: '✨' },
-        /* --- ab hier neu, damit alle 29 Typen aus Teil 7 da sind ------------- */
         { id: 'createdBy', name: 'Erstellt von', icon: '👤' },
         { id: 'editedBy', name: 'Zuletzt bearbeitet von', icon: '👥' },
         { id: 'place', name: 'Ort', icon: '📍' },
@@ -52,16 +34,12 @@ Register.eigenschaften = (() => {
         { id: 'ki-fassung', name: 'KI: Zusammenfassung', icon: '✨' },
         { id: 'ki-sprache', name: 'KI: Übersetzung', icon: '✨' },
         { id: 'ki-worte', name: 'KI: Schlagwörter', icon: '✨' },
-        /* --- Felder, die an einer Verbindung hängen (Notion: mit ↑-Abzeichen) -- */
         { id: 'gdrive', name: 'Google Drive Datei', icon: '🟢', dienst: 'google' },
         { id: 'figma', name: 'Figma Datei', icon: '🎨', dienst: 'figma' },
         { id: 'githubpr', name: 'GitHub-Pull-Request', icon: '🐙', dienst: 'github' },
         { id: 'zendesk', name: 'Zendesk Ticket', icon: '🎫', dienst: 'zendesk' }
     ];
-    /* Eine Liste, und immer dieselbe — siehe register/bloecke.js. */
     const LISTE = EINGEBAUT.slice();
-    /* Nur was von aussen kam, darf wieder gehen — eine eingebaute Feldart
-       abzumelden hiesse, dass jede Spalte dieses Typs ihr Menü verliert. */
     const vonAussen = new Set();
     const melde = (eintrag) => {
         const e = eintrag;
@@ -73,15 +51,6 @@ Register.eigenschaften = (() => {
         vonAussen.add(e.id);
         return true;
     };
-    /**
-     * Wieder abmelden — für Erweiterungen, die abgeschaltet werden.
-     *
-     * `Register.bloecke` hatte das von Anfang an, dieses Register nicht — eine
-     * Unwucht, die test142 nur festhalten konnte, statt sie zu benutzen: sein
-     * Probetyp blieb bis zum Neuladen im Katalog. Spalten, die den Typ schon
-     * TRAGEN, behalten ihn übrigens auch nach dem Abmelden — `name` und `icon`
-     * fallen dann auf die Kennung bzw. „≡" zurück, gelöscht wird nichts.
-     */
     const nimmZurueck = (id) => {
         if (!vonAussen.has(id))
             return false;
@@ -96,14 +65,12 @@ Register.eigenschaften = (() => {
     const eines = (id) => alle().find(x => x.id === id) || null;
     const name = (id) => eines(id)?.name || String(id);
     const icon = (id) => eines(id)?.icon || '≡';
-    /* Gruppen, wie sie im Typmenü stehen. Eine Liste von 35 Einträgen ohne
-       Gliederung findet niemand. */
     const GRUPPEN = {
         'Grundlegend': ['title', 'text', 'number', 'select', 'multi', 'status', 'date', 'person',
             'files', 'checkbox', 'url', 'email', 'phone'],
         'Berechnet': ['formula', 'rollup', 'relation', 'uid'],
         'Automatisch': ['created', 'edited', 'createdBy', 'editedBy'],
-        'Weiteres': [] /* alles, was in keiner Gruppe steht */
+        'Weiteres': []
     };
     const inGruppe = (g) => {
         if (g !== 'Weiteres') {

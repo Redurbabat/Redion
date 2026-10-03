@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zugang/rechte.ts (npm run bauen:ts). */
 /* ============================================================================
  * feldrechte.js — Rechte bis auf die einzelne Spalte
  * ----------------------------------------------------------------------------

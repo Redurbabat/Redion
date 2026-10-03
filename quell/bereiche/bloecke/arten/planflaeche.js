@@ -1,38 +1,7 @@
 "use strict";
-/* ============================================================================
- * bereiche/bloecke/arten/planflaeche.ts — den Schaltplan bedienen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/bloecke/arten/planflaeche.ts`.
- * ----------------------------------------------------------------------------
- * WARUM ZWEI DATEIEN
- *
- * `schaltplan.ts` weiss, WAS ein Plan ist und wie er aussieht — Modell und
- * Bild, ohne ein einziges Ereignis. Diese Datei weiss, wie man ihn BEDIENT.
- * Die Trennung ist dieselbe wie im Editor (rendern / tastatur / auswahl) und
- * hat einen handfesten Nutzen: die Prüfläufe können einen Plan rechnen und
- * zeichnen lassen, ohne je einen Zeiger zu bewegen.
- *
- * ALLES GEHT ÜBER `aendere`. Jede Änderung am Plan läuft durch diese eine
- * Funktion, und sie tut drei Dinge in fester Reihenfolge: den Plan in den
- * Block schreiben, neu zeichnen, den Verlauf merken. Wer irgendwo daneben
- * direkt an `plan.teile` schraubt, verliert das Rückgängig — und merkt es
- * erst, wenn jemand es braucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/planflaeche.ts (npm run bauen:ts). */
 const Planflaeche = (() => {
     const esc = Schaltplan.esc;
-    /* ------------------------------------------------------------------------
-     * DIE PALETTE (Punkte 5, 6, 12)
-     * ------------------------------------------------------------------------
-     * Links stehen die Symbole, nach Gruppen. Welche Gruppe oben steht, sagt
-     * die Planart: wer einen Installationsplan zeichnet, will Schalter und
-     * Steckdosen zuerst und nicht Halbleiter.
-     *
-     * FAVORITEN (Punkt 6) liegen in `Store.meta` und nicht im Plan — sie
-     * gehören dem Menschen, nicht dem Dokument. Wer zwei Pläne öffnet, hat in
-     * beiden dieselben Favoriten, und ein Plan, den man weitergibt, nimmt die
-     * eigenen Gewohnheiten nicht mit.
-     * ----------------------------------------------------------------------*/
     const FAVORITEN = 'elektro:favoriten';
     const favoriten = () => {
         const roh = (typeof Store !== 'undefined') ? Store.getMeta(FAVORITEN, []) : [];
@@ -54,7 +23,6 @@ const Planflaeche = (() => {
             return '';
         const art = Schaltplan.artVon(planArt);
         const alleGruppen = Register.fachzeichen.gruppen();
-        /* Erst die Gruppen, die zu dieser Planart passen, dann der Rest. */
         const sortiert = [
             ...art.gruppen.map(g => alleGruppen.find(x => x[0] === g)).filter(Boolean),
             ...alleGruppen.filter(x => !art.gruppen.includes(x[0]))
@@ -81,10 +49,6 @@ const Planflaeche = (() => {
                     zeichen.map(z => knopf(z, fav.includes(z.id))).join('') + '</div>';
             }).join('');
     };
-    /* ------------------------------------------------------------------------
-     * DIE FLÄCHE
-     * ----------------------------------------------------------------------*/
-    /** Bildschirmpunkt in Plankoordinaten — mit Raster (Punkt 22). */
     const ortAus = (svg, e, plan, ohneRaster = false) => {
         const r = svg.getBoundingClientRect();
         const sx = plan.breite / (r.width || 1);
@@ -93,12 +57,6 @@ const Planflaeche = (() => {
         const y = (e.clientY - r.top) * sy;
         return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
     };
-    /**
-     * Die interaktive Fläche für einen Block.
-     *
-     * Gibt das fertige Element zurück. Alles, was der Editor davon wissen muss,
-     * ist: hier reinstecken, fertig.
-     */
     const zeichne = (block) => {
         const wurzel = document.createElement('div');
         wurzel.className = 'sp-wrap';
@@ -118,7 +76,6 @@ const Planflaeche = (() => {
             spulenStand: {},
             ergebnis: null
         };
-        /* --- Speichern, zeichnen, merken — in dieser Reihenfolge -------------- */
         const abzug = () => JSON.stringify(z.plan);
         const aendere = (was, merken = true) => {
             const vorher = merken ? abzug() : '';
@@ -145,7 +102,6 @@ const Planflaeche = (() => {
             z.plan = JSON.parse(naechster);
             aendere(() => { }, false);
         };
-        /* --- Aufbau ---------------------------------------------------------- */
         const kopf = document.createElement('div');
         kopf.className = 'sp-kopf';
         const palette = document.createElement('div');
@@ -161,7 +117,6 @@ const Planflaeche = (() => {
         wurzel.appendChild(kopf);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
-        /* --- Der Kopf: Planart, Werkzeuge, Ansicht --------------------------- */
         const kopfMalen = () => {
             const art = Schaltplan.artVon(z.plan.art);
             kopf.innerHTML =
@@ -177,8 +132,6 @@ const Planflaeche = (() => {
                         `title="${esc(t)}" aria-label="${esc(t)}">${ic}</button>`).join('') +
                     `</span>` +
                     `<span class="sp-rechts">` +
-                    /* Nur im Stromlaufplan: im Installationsplan (Grundriss) gibt es
-                       keine Sammelschienen. */
                     (z.plan.art.startsWith('stromlauf')
                         ? `<button class="sp-netz" data-a="netz" ` +
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
@@ -196,13 +149,6 @@ const Planflaeche = (() => {
                     `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
                     `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button></span>`;
         };
-        /* --- Der Fuss: Ebenen und Auswahl ------------------------------------ */
-        /**
-         * Was die Simulation zu sagen hat. Ein Fehler steht allein — wenn nichts
-         * gerechnet werden konnte, sind Warnungen darunter nur Lärm. Sonst
-         * kommen zuerst die Warnungen (die kann man beheben) und dann die
-         * Annahmen (die muss man nur wissen).
-         */
         const meldungHtml = () => {
             const e = z.ergebnis;
             if (!e)
@@ -265,12 +211,6 @@ const Planflaeche = (() => {
                     b.classList.add('an');
             });
         };
-        /* --- Die Simulation rechnen (Punkte 13, 14, 30) ----------------------
-         * Einmal je Zeichnung, und nur wenn sie läuft. Das Ergebnis wandert in
-         * `z.ergebnis` und von dort in die Zeichnung UND in die Meldezeile —
-         * zwei Anzeigen aus einer Rechnung. Zwei Rechnungen würden irgendwann
-         * verschiedene Dinge behaupten.
-         * --------------------------------------------------------------------- */
         const rechnen = () => {
             if (!z.simulation || typeof Stromfluss === 'undefined') {
                 z.ergebnis = null;
@@ -288,11 +228,6 @@ const Planflaeche = (() => {
                 nummern: z.zeigeNummern,
                 auswahl: z.simulation ? new Set() : z.auswahl
             };
-            /* `strom` wird nur GESETZT, wenn gerechnet wurde — nicht auf undefined.
-               Ein gesetztes undefined ist bei `exactOptionalPropertyTypes` etwas
-               anderes als ein fehlendes Feld, und der Unterschied ist hier auch
-               inhaltlich richtig: „keine Simulation" und „Simulation ohne Ergebnis"
-               sollen dasselbe Bild geben. */
             if (e && e.ok)
                 opt.strom = {
                     netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
@@ -302,16 +237,13 @@ const Planflaeche = (() => {
             buehne.classList.toggle('sp-laeuft', z.simulation);
             if (!z.simulation)
                 return;
-            /* Schaltbare Bauteile bekommen den Zeigefinger und eine Ansage, was ein
-               Tippen tut. Ohne das ist die Simulation ein Bild: hübsch und ohne
-               die eine Frage, die zählt — „was passiert, wenn ich schalte?" */
             z.plan.teile.forEach(t => {
                 const st = Stromfluss.stellungenVon(t.zeichen);
                 if (st.length < 2)
                     return;
                 const vh = Stromfluss.verhalten(t.zeichen);
                 if (vh && vh.folgtSpule)
-                    return; /* die schaltet die Spule */
+                    return;
                 const g = buehne.querySelector(`[data-id="${CSS.escape(t.id)}"]`);
                 if (!g)
                     return;
@@ -323,7 +255,6 @@ const Planflaeche = (() => {
             });
         };
         const male = () => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); };
-        /* --- Symbol setzen (Punkt 12) ---------------------------------------- */
         const setzeSymbol = (id, x, y) => {
             if (!id)
                 return;
@@ -338,20 +269,8 @@ const Planflaeche = (() => {
                 });
             });
         };
-        /* --- Das Netz: L1 und N als Sammelschienen (E262) ---------------------
-         * Redur: „füge dort alle Leitungen wie L1 und N ein, damit ich direkt
-         * testen kann." Ein aufgelöster Stromlaufplan beginnt im Lehrmittel
-         * immer gleich: L1 als Schiene oben, N als Schiene unten, dazwischen
-         * die Zweige. Der Knopf zeichnet genau das — und hängt die Schienen an
-         * eine Wechselspannungsquelle links, damit die Simulation sofort
-         * rechnen kann. Die Schienen sind gewöhnliche Leitungen: wer einen
-         * Zweig darauf ENDEN lässt, ist verbunden (die Simulation zapft
-         * Sammelschienen ausdrücklich an, simulation.ts, netzInfo). PE kommt
-         * bewusst nicht mit: ohne Fehlerfall führte er nichts und stünde nur
-         * als toter Strich im Bild. */
         const netzSchonDa = () => z.plan.texte.some(t => t && t.t === 'L1') ||
             z.plan.teile.some(t => t && t.zeichen === 'wechselspannung');
-        /** Netz oder ein Beispiel aus dem Kern einfügen (Schaltplan.beispielBauen). */
         const schaltungEinfuegen = (id) => {
             if (netzSchonDa()) {
                 UI.toast('Das Netz steht schon — für ein neues Beispiel zuerst „… → Plan leeren".');
@@ -366,10 +285,6 @@ const Planflaeche = (() => {
             if (beispiel)
                 UI.toast(beispiel.hinweis);
         };
-        /** Eine selbst gespeicherte Vorlage einsetzen — mit FRISCHEN Kennungen.
-         *  Die Vorlage trägt die Kennungen des Plans, aus dem sie ausgeschnitten
-         *  wurde; zweimal eingesetzt wären es doppelte, und die Auswahl fasste
-         *  beide zugleich an. */
         const vorlageEinsetzen = (v) => {
             aendere(() => {
                 const neuId = new Map();
@@ -390,9 +305,6 @@ const Planflaeche = (() => {
                 });
             });
         };
-        /** Das Menü hinter „⚡ Schaltung": Netz, Beispiele, eigene Vorlagen.
-         *  Die eigenen liessen sich bisher nur SPEICHERN, nirgends einsetzen —
-         *  ein Weg ins Leere (§47), hier endet er. */
         const schaltungMenue = (anker) => {
             const r = anker.getBoundingClientRect();
             const eigene = (Store.getMeta(VORLAGEN, []) || [])
@@ -415,15 +327,11 @@ const Planflaeche = (() => {
                     vorlageEinsetzen(v);
             });
         };
-        /* Auf welche Ebene wird gezeichnet: die oberste sichtbare, die nicht
-           „plan" ist, sonst „plan". So landet eine Lösung auf der Lösungsebene,
-           ohne dass jemand vorher etwas umstellen muss. */
         const aktiveEbene = () => {
             const e = z.plan.ebenen.filter(x => x.sichtbar);
             const nurAufgabe = e.length === 1 && e[0].id !== 'plan';
             return nurAufgabe ? e[0].id : 'plan';
         };
-        /* --- Auswahl (Punkt 24) ---------------------------------------------- */
         const inRahmen = (a, b) => {
             const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x);
             const y1 = Math.min(a.y, b.y), y2 = Math.max(a.y, b.y);
@@ -440,7 +348,6 @@ const Planflaeche = (() => {
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
-        /* --- Verschieben (Punkt 25), mit mitziehenden Leitungen -------------- */
         const verschiebe = (dx, dy) => {
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
@@ -453,7 +360,6 @@ const Planflaeche = (() => {
                 if (l)
                     l.punkte = l.punkte.map((p) => ({ x: Schaltplan.rasten(p.x + dx), y: Schaltplan.rasten(p.y + dy) }));
             });
-            /* Und die Leitungsenden, die an einem verschobenen Teil hängen (23). */
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
                     const t = teilVon(l.vonTeil);
@@ -469,7 +375,6 @@ const Planflaeche = (() => {
                 }
             });
         };
-        /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) ------- */
         const drehen = () => aendere(() => {
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
@@ -486,9 +391,6 @@ const Planflaeche = (() => {
             });
             leitungenNachziehen();
         });
-        /* Nach Drehen und Spiegeln liegen die Anschlüsse woanders — die
-           Leitungen, die daran hängen, müssen mit. Ohne das enden sie in der
-           Luft und der Plan sieht verbunden aus, wo er es nicht ist. */
         const leitungenNachziehen = () => {
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil) {
@@ -524,7 +426,6 @@ const Planflaeche = (() => {
             const teile = [...z.auswahl].map(teilVon).filter(Boolean);
             if (teile.length < 2)
                 return;
-            /* Schon alle in derselben Gruppe? Dann heisst der Knopf „auflösen". */
             const erste = teile[0].gruppe;
             const zusammen = erste && teile.every((t) => t.gruppe === erste);
             const g = zusammen ? '' : Schaltplan.uid();
@@ -536,21 +437,12 @@ const Planflaeche = (() => {
             z.plan.texte = z.plan.texte.filter(x => !z.auswahl.has(x.id));
             z.auswahl.clear();
         });
-        /* Wer ein Teil einer Gruppe anfasst, fasst die ganze Gruppe an (29). */
         const mitGruppe = (id) => {
             const t = teilVon(id);
             if (!t || !t.gruppe)
                 return [id];
             return z.plan.teile.filter(x => x.gruppe === t.gruppe).map(x => x.id);
         };
-        /* --- Schalten, solange die Simulation läuft (Punkt 14) ---------------
-         * Ein Tipp geht durch die Stellungen der Reihe nach. Beim Ausschalter
-         * sind das zwei, beim Gruppenschalter vier — und weil die Namen aus dem
-         * Verhalten kommen, steht in der Anzeige „Gruppe 1+2" und nicht „Stufe 2".
-         *
-         * Der Zustand wird NICHT gespeichert. Das ist Absicht, nicht Vergesslich-
-         * keit: siehe die Begründung am Zustandstyp.
-         * --------------------------------------------------------------------- */
         const schalte = (teilId) => {
             if (typeof Stromfluss === 'undefined')
                 return false;
@@ -562,9 +454,6 @@ const Planflaeche = (() => {
                 return false;
             const vh = Stromfluss.verhalten(t.zeichen);
             if (vh && vh.folgtSpule) {
-                /* Einen Schützkontakt kann man nicht von Hand zuhalten. Wer es
-                   versucht, soll wissen warum — sonst sucht er den Fehler in der
-                   Zeichnung. */
                 UI.toast(`${t.bmk || 'Dieser Kontakt'} wird von der Spule geschaltet, nicht von Hand.`);
                 return true;
             }
@@ -573,18 +462,8 @@ const Planflaeche = (() => {
             male();
             return true;
         };
-        /* Ein Teil ist ein `[data-id]` IM SVG — und nur dort. Der Editor hängt
-           an JEDEN Block-Kasten `data-id = block.type` (editor.ts, render):
-           von der leeren Fläche aus wanderte `closest('[data-id]')` am SVG
-           vorbei bis zum Kasten und hielt jeden Klick für „Teil ‚schaltplan'
-           angeklickt". Einfügen, Radieren und das Schalten in der Simulation
-           gingen im Seiten-Editor darum ins Leere — vom ersten Tag an, denn
-           kein Prüflauf hat je echt geklickt, alle haben über Store gesät
-           (E261, gefunden von Redur mit der Maus). */
         const teilAm = (ziel) => ziel.closest('svg [data-id]');
-        /* Für die Doppeltipp-Erkennung unten: welcher Teil, wie eben. */
         let letzterTipp = { id: '', zeit: 0 };
-        /* --- Zeigerereignisse ------------------------------------------------ */
         buehne.addEventListener('pointerdown', e => {
             const svg = buehne.querySelector('svg');
             if (!svg)
@@ -592,9 +471,6 @@ const Planflaeche = (() => {
             const ziel = e.target;
             const roh = ortAus(svg, e, z.plan, true);
             const p = ortAus(svg, e, z.plan);
-            /* Läuft die Simulation, ist die Fläche kein Zeichenbrett mehr, sondern
-               eine Schalttafel. Nichts wird verschoben, nichts gelöscht — man kann
-               den Plan beim Ausprobieren nicht versehentlich kaputt machen. */
             if (z.simulation) {
                 const g = teilAm(ziel);
                 if (g && g.dataset.id)
@@ -627,10 +503,8 @@ const Planflaeche = (() => {
                 svg.setPointerCapture(e.pointerId);
                 return;
             }
-            /* Werkzeug „zeigen" */
             const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
-                /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
                 if (z.gewaehltesZeichen) {
                     setzeSymbol(z.gewaehltesZeichen, p.x, p.y);
                     return;
@@ -643,12 +517,6 @@ const Planflaeche = (() => {
                 return;
             }
             const id = g.dataset.id;
-            /* Doppeltipp aufs Teil: sein Dialog (Betriebsmittel, Anschlüsse,
-               Punkte 18/19). Von Hand erkannt, nicht über das native dblclick —
-               das stirbt hier zweimal: der erste Klick wählt aus und zeichnet die
-               Fläche neu, der zweite trifft einen NEUEN Knoten, und der Browser
-               zählt Klicks nur auf demselben weiter. Und am Telefon gibt es gar
-               kein dblclick. Gemessen mit test263 §2: null Ereignisse (E261). */
             const jetztMs = Date.now();
             if (letzterTipp.id === id && jetztMs - letzterTipp.zeit < 400) {
                 letzterTipp = { id: '', zeit: 0 };
@@ -694,8 +562,6 @@ const Planflaeche = (() => {
                 buehneMalen();
                 return;
             }
-            /* Vorschau beim Leitungziehen und beim Rahmen — ohne den Plan zu
-               ändern, damit ein abgebrochener Zug nichts hinterlässt. */
             buehneMalen();
             const svg2 = buehne.querySelector('svg');
             if (!svg2)
@@ -759,10 +625,6 @@ const Planflaeche = (() => {
         };
         buehne.addEventListener('pointerup', zugEnde);
         buehne.addEventListener('pointercancel', zugEnde);
-        /* KEIN dblclick-Horcher mehr: das Doppeltippen erkennt der
-           pointerdown selbst (Begründung dort). Ein zweiter Horcher öffnete
-           den Dialog doppelt, sobald der Browser doch ein dblclick baut. */
-        /* --- Der Dialog am Teil ---------------------------------------------- */
         const teilDialog = (t) => {
             const zeichen = Register.fachzeichen.holen(t.zeichen);
             if (!zeichen)
@@ -805,49 +667,20 @@ const Planflaeche = (() => {
             });
             o.querySelector('#sp-bmk')?.focus();
         };
-        /* --- Das Formelheft (Punkt 61) ---------------------------------------
-         * Redur hat es genau so beschrieben: „wenn ich zeichne und dort bei
-         * einfügen Formelheft klicke, sollte das Formelheft dort kommen, und ich
-         * kann es bewegen." Der Punkt ist das WÄHREND. Ein Nachschlagewerk, das
-         * man erst öffnen und dann wieder schliessen muss, um weiterzuzeichnen,
-         * ist keins — man merkt sich die Formel falsch und zeichnet weiter.
-         *
-         * Deshalb ist es ein schwebendes Fenster und kein Dialog: der Plan
-         * bleibt darunter bedienbar, das Heft bleibt offen, und man kann in der
-         * einen Hand die Formel und in der anderen den Schaltplan haben.
-         * -------------------------------------------------------------------- */
         const heftOffen = () => typeof Formelheft !== 'undefined' && Formelheft.offen();
         const heftUmschalten = () => {
             if (typeof Formelheft === 'undefined') {
                 UI.toast('Das Formelheft ist nicht geladen.');
                 return;
             }
-            /* Beim Öffnen gleich das passende Kapitel: wer einen Motor gezeichnet
-               hat, sucht Drehstrom, und wer eine Lampe gezeichnet hat, Leistung.
-               Das erspart drei Klicks in genau dem Moment, in dem man sie am
-               wenigsten machen will. */
             Formelheft.umschalten(kapitelZumPlan());
             kopfMalen();
         };
-        /**
-         * Welches Kapitel zum Plan passt — abgelesen an dem, was darin steht.
-         *
-         * Die Kennungen kommen aus `Register.elektroformeln.kapitel()` und werden
-         * NICHT geraten: der erste Versuch schrieb hier „drehstrom", „steuerung"
-         * und „installation", und keines der drei gibt es. Das Heft wäre stumm
-         * beim vorgesehenen Kapitel gelandet, ohne dass irgendwo etwas kaputt
-         * ausgesehen hätte.
-         */
         const KAPITEL_ZU_ZEICHEN = [
             ['dreh', ['motor-drehstrom', 'motorschutzschalter', 'thermorelais']],
             ['motor', ['motor-wechselstrom', 'motor-gleichstrom']],
             ['trafo', ['transformator']],
             ['konden', ['kondensator', 'elko']],
-            /* Eine Lampe im Stromlaufplan ist ein VERBRAUCHER. Zuerst stand sie
-               hier bei „Lichttechnik", und das Heft öffnete beim Zeichnen eines
-               gewöhnlichen Stromkreises die Beleuchtungsstärke — richtig geraten
-               nach dem Symbol, falsch geraten nach der Frage. Lichttechnik gehört
-               zum Bauplan, nicht zum Stromlauf. */
             ['leistung', ['lampe', 'signalleuchte', 'hupe', 'klingel', 'ch-kontrolllampe']],
             ['licht', ['bp-leuchte', 'bp-einbauleuchte', 'bp-leuchtstelle']],
             ['quelle', ['batterie', 'gleichspannung', 'generator']],
@@ -861,15 +694,6 @@ const Planflaeche = (() => {
                     return kapitel;
             return undefined;
         };
-        /**
-         * Den Strom ein- und ausschalten.
-         *
-         * Beim Einschalten wird die Auswahl geleert und das Werkzeug auf „zeigen"
-         * gestellt: sonst stünde noch der Radiergummi bereit, während die Fläche
-         * schon eine Schalttafel ist. Beim Ausschalten fällt alles Gerechnete weg
-         * — auch die Schalterstellungen, damit der Plan wieder so aussieht, wie er
-         * gezeichnet ist und nicht wie er zuletzt bedient wurde.
-         */
         const simulationUmschalten = () => {
             z.simulation = !z.simulation;
             z.auswahl.clear();
@@ -885,7 +709,6 @@ const Planflaeche = (() => {
             male();
             paletteMalen();
         };
-        /* --- Kopf und Fuss bedienen ------------------------------------------ */
         kopf.addEventListener('change', e => {
             const s = e.target.closest('.sp-art');
             if (!s)
@@ -966,7 +789,6 @@ const Planflaeche = (() => {
             if (liste)
                 liste.innerHTML = paletteHtml(z.plan.art, f.value);
         });
-        /* --- Tastatur --------------------------------------------------------- */
         wurzel.tabIndex = 0;
         wurzel.addEventListener('keydown', e => {
             const inFeld = e.target.tagName === 'INPUT';
@@ -1022,7 +844,6 @@ const Planflaeche = (() => {
                 return e.shiftKey ? vorwaerts() : zurueck();
             }
         });
-        /* --- Das Mehr-Menü ---------------------------------------------------- */
         const mehrMenue = (anker) => {
             const r = anker.getBoundingClientRect();
             const m = UI.menu(`<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
@@ -1057,7 +878,6 @@ const Planflaeche = (() => {
                     return aendere(() => Schaltplan.schienenBauen(z.plan));
                 if (was === 'nummerieren')
                     return aendere(() => {
-                        /* Erst leeren, dann von vorn — sonst blieben Lücken bestehen. */
                         z.plan.teile.forEach(t => { t.bmk = ''; });
                         z.plan.teile.forEach(t => { t.bmk = Schaltplan.naechstesBmk(z.plan, t.zeichen); });
                     });
@@ -1074,7 +894,6 @@ const Planflaeche = (() => {
                     return alsBildSpeichern();
             });
         };
-        /* --- Vorlagen (Punkt 30) --------------------------------------------- */
         const VORLAGEN = 'elektro:planvorlagen';
         const vorlageSpeichern = () => {
             void (async () => {
@@ -1088,7 +907,6 @@ const Planflaeche = (() => {
                     UI.toast('Nichts zu speichern');
                     return;
                 }
-                /* Relativ zur linken oberen Ecke, damit die Vorlage überall passt. */
                 const x0 = Math.min(...teile.map((t) => t.x));
                 const y0 = Math.min(...teile.map((t) => t.y));
                 const liste = Store.getMeta(VORLAGEN, []) || [];

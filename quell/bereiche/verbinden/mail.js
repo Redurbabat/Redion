@@ -1,42 +1,10 @@
 "use strict";
-/* ============================================================================
- * mail.js — Mail
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/verbinden/mail.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/verbinden/mail.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Teil 10 der Doku beschreibt Notion Mail: Mail-Ansichten mit Eigenschaften
- * und Filtern, automatische Beschriftungen, Textbausteine, Schnellantworten
- * und die Gmail-Kürzel. Alles das gibt es hier.
- *
- * ZWEI WEGE HINEIN
- *   GMAIL      über die richtige Schnittstelle, mit Anmeldung. Lesen,
- *              beschriften, archivieren, als gelesen markieren. Antworten
- *              werden vorbereitet und in Gmail geöffnet — abgeschickt wird
- *              nur, was du selbst abschickst.
- *   EML-DATEI  jede einzelne Mail lässt sich aus jedem Programm als .eml
- *              speichern und hier einlesen. Ohne Konto, ohne Netz.
- *
- * IMAP geht aus einem Browser grundsätzlich nicht — dafür fehlt die
- * Steckdose. Das ist keine Bequemlichkeit, sondern eine Grenze des Browsers.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/mail.ts (npm run bauen:ts). */
 const Mail = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
-    /* ========================================================================
-     * DIE MAIL-DATENBANK
-     * ------------------------------------------------------------------------
-     * Mails sind hier ganz normale Datenbankzeilen. Damit gelten für sie alle
-     * Filter, Sortierungen, Ansichten und Automationen, die es sonst auch gibt.
-     * ======================================================================*/
     const SCHEMA = () => ({
         title: { name: 'Betreff', type: 'title' },
         von: { name: 'Von', type: 'text' },
@@ -60,7 +28,6 @@ const Mail = (() => {
         const { collectionId } = Store.addDatabase(App.aktuelleSeite(), name, SCHEMA(), 'table');
         const c = Store.getCollection(collectionId);
         Store.updateCollection(c.id, { icon: '✉️' });
-        /* Die Ansichten, die man bei Mail wirklich braucht */
         const regel = (key, op, wert) => ({ operator: 'and', rules: [{ key, op, wert: wert ?? '' }] });
         const v0 = Store.getView(c.viewIds[0]);
         Store.updateView(v0.id, { name: 'Posteingang',
@@ -80,11 +47,7 @@ const Mail = (() => {
             Store.updateView(nachLabel.id, { groupBy: 'labels' });
         return c;
     };
-    /* ========================================================================
-     * GMAIL
-     * ======================================================================*/
     const token = () => Verbindungen.googleZugang(['profil', 'mail']);
-    /** base64url, wie Google es schickt — inklusive Umlauten. */
     const entpacke = (s) => {
         if (!s)
             return '';
@@ -97,7 +60,6 @@ const Mail = (() => {
             return '';
         }
     };
-    /** Aus dem verschachtelten Nachrichtenbaum den lesbaren Text ziehen. */
     const textAus = (teil) => {
         if (!teil)
             return '';
@@ -109,14 +71,6 @@ const Mail = (() => {
                 return klar;
         }
         if (teil.mimeType === 'text/html' && teil.body?.data) {
-            /* HIER STAND `d.innerHTML = …` MIT EINEM LOSGELÖSTEN div, und das war
-               der Fehler: „losgelöst" schützt nicht. Ein `<img src=x onerror=…>`
-               aus einer fremden Mail feuert beim Zuweisen, auch wenn das Element
-               nie in der Seite landet — nachgestellt und bestätigt. Der Text wurde
-               danach zwar nur gelesen, aber da war der Code längst gelaufen.
-               `Sanitize.textOnly` benutzt ein <template>, und dessen Inhalt ist
-               träge: dort feuert nichts. Nebenbei fällt der Inhalt von <style>
-               und <script> weg, der vorher als Text in der Notiz landete. */
             return Sanitize.textOnly(entpacke(teil.body.data))
                 .replace(/\n{3,}/g, '\n\n').trim();
         }
@@ -128,10 +82,6 @@ const Mail = (() => {
         const d = await Verbindungen.jsonRuf(API + '/labels', { token: t });
         return (d.labels || []).map((l) => ({ id: l.id, name: l.name, art: l.type }));
     };
-    /**
-     * Mails holen. Die Suchsprache ist die von Gmail:
-     *   is:unread   from:chef@firma.de   newer_than:7d   has:attachment
-     */
     const gmailHolen = async (suche = 'in:inbox newer_than:30d', wieViele = 40) => {
         const t = await token();
         const liste = await Verbindungen.jsonRuf(API + '/messages?maxResults=' + wieViele + '&q=' + encodeURIComponent(suche), { token: t });
@@ -159,7 +109,6 @@ const Mail = (() => {
         }
         return mails;
     };
-    /** Beschriftungen ändern, als gelesen markieren, archivieren. */
     const gmailAendern = async (mid, dazu = [], weg = []) => {
         const t = await token();
         return Verbindungen.jsonRuf(API + '/messages/' + mid + '/modify', {
@@ -170,15 +119,11 @@ const Mail = (() => {
     };
     const alsGelesen = (mid) => gmailAendern(mid, [], ['UNREAD']);
     const archivieren = (mid) => gmailAendern(mid, [], ['INBOX']);
-    /* ========================================================================
-     * EML EINLESEN — geht immer, auch ohne Konto
-     * ======================================================================*/
     const emlLesen = (roh) => {
         const text = String(roh || '').replace(/\r\n/g, '\n');
         const trenn = text.indexOf('\n\n');
         const kopfteil = trenn < 0 ? text : text.slice(0, trenn);
         const koerper = trenn < 0 ? '' : text.slice(trenn + 2);
-        /* Umgebrochene Kopfzeilen zusammenkleben */
         const zeilen = kopfteil.replace(/\n[ \t]+/g, ' ').split('\n');
         const kopfe = {};
         zeilen.forEach(z => {
@@ -186,7 +131,6 @@ const Mail = (() => {
             if (i > 0)
                 kopfe[z.slice(0, i).trim().toLowerCase()] = z.slice(i + 1).trim();
         });
-        /* =?UTF-8?B?…?= und =?UTF-8?Q?…?= auflösen */
         const lesbar = (s) => String(s || '').replace(/=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi, (_, zeichensatz, art, inhalt) => {
             try {
                 if (art.toUpperCase() === 'B') {
@@ -213,9 +157,6 @@ const Mail = (() => {
             inhalt = koerper.replace(/=\n/g, '')
                 .replace(/=([0-9A-F]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
         }
-        /* Dieselbe Stelle noch einmal, für den Weg über die Brücke statt über
-           Gmail. Sie wäre beim ersten Blick fast durchgerutscht: derselbe Fehler,
-           zwei Bildschirmseiten weiter unten. */
         if (/text\/html/i.test(kopfe['content-type'] || ''))
             inhalt = Sanitize.textOnly(inhalt);
         const d = kopfe.date ? new Date(kopfe.date) : null;
@@ -232,9 +173,6 @@ const Mail = (() => {
             text: inhalt.slice(0, 8000), link: ''
         };
     };
-    /* ========================================================================
-     * ÜBERNEHMEN UND REGELN
-     * ======================================================================*/
     const optionSichern = (coll, key, name) => {
         if (!name || !coll.schema[key])
             return;
@@ -246,10 +184,6 @@ const Mail = (() => {
         coll.schema[key].options = liste;
         Store.updateCollection(coll.id, { schema: coll.schema });
     };
-    /* --- Automatische Beschriftungen ---------------------------------------
-     * Eine Regel schaut sich Absender, Betreff oder Text an und hängt eine
-     * Beschriftung an, markiert als wichtig oder legt die Mail gleich ab.
-     * ----------------------------------------------------------------------*/
     const regeln = () => Store.getMeta('mail:regeln', []) || [];
     const regelnSpeichern = (l) => Store.setMeta('mail:regeln', l);
     const REGEL_FELDER = [['von', 'Absender'], ['titel', 'Betreff'], ['text', 'Inhalt'], ['an', 'Empfänger']];
@@ -316,9 +250,6 @@ const Mail = (() => {
         });
         return { neu, frisch, beschriftet };
     };
-    /* ========================================================================
-     * TEXTBAUSTEINE UND SCHNELLANTWORTEN
-     * ======================================================================*/
     const BAUSTEINE_START = [
         { name: 'Danke', text: 'Vielen Dank für die Nachricht — ich schaue es mir an und melde mich.' },
         { name: 'Termin', text: 'Passt Ihnen {tag} um {zeit}? Sonst schlagen Sie gern etwas anderes vor.' },
@@ -344,11 +275,6 @@ const Mail = (() => {
             .replace(/\{datum\}/g, d.toLocaleDateString('de-DE'))
             .replace(/\{zeit\}/g, p(d.getHours()) + ':' + p(d.getMinutes()));
     };
-    /**
-     * Antwort vorbereiten. Diese App verschickt nichts von selbst — sie
-     * öffnet den Entwurf dort, wo die Mail herkommt. Abgeschickt wird nur,
-     * was du selbst abschickst.
-     */
     const antwortOeffnen = (row, coll, text) => {
         const an = String(Datenbank.wert(row, 'von', coll) || '');
         const adresse = (an.match(/<([^>]+)>/) || [null, an])[1];
@@ -359,12 +285,6 @@ const Mail = (() => {
             '&body=' + encodeURIComponent(text || '');
         window.open(gmail, '_blank', 'noopener');
     };
-    /* ========================================================================
-     * GMAIL-TASTENKÜRZEL
-     * ------------------------------------------------------------------------
-     * Wer Gmail gewohnt ist, tippt diese Tasten im Schlaf. In einer Mail-Zeile
-     * tun sie hier dasselbe.
-     * ======================================================================*/
     const KUERZEL = [
         ['j', 'eine Mail nach unten'],
         ['k', 'eine Mail nach oben'],
@@ -398,7 +318,6 @@ const Mail = (() => {
                 return;
             if (e.ctrlKey || e.metaKey || e.altKey)
                 return;
-            /* Nur, wenn gerade eine Mail-Datenbank auf der Seite steht */
             const coll = Object.values(Store.cache.collections)
                 .find(c => c.schema && c.schema.mid && c.schema.von &&
                 document.querySelector(`[data-cid="${c.id}"], .db`));
@@ -480,13 +399,6 @@ const Mail = (() => {
                 UI.toast(w ? 'Als wichtig markiert' : 'Nicht mehr wichtig');
                 return;
             }
-            /* Die zwei Tasten, die eine Zeile VERSCHWINDEN lassen, gehen den Weg
-               erst beim Server und dann lokal. Vorher lief es umgekehrt:
-               `versuche()` schluckte die Gmail-Ablehnung, die Zeile war weg, und
-               „Archiviert" stand da — bei Gmail lag die Mail weiter im Eingang.
-               Eine .eml-Mail (eingelesen, kein Gmail-Konto dahinter — erkennbar
-               am leeren `link`) KONNTE der Aufruf nie treffen; da ist „nur
-               lokal" die ehrliche Auskunft, kein Fehler. */
             if (taste === 'e' || taste === '#') {
                 e.preventDefault();
                 const gmail = !!(r.props || {}).link;
@@ -507,7 +419,6 @@ const Mail = (() => {
                     UI.toast(wohin);
                 }
                 catch (err) {
-                    /* Die Zeile bleibt liegen — es gibt nichts zurückzurollen. */
                     UI.toast('Gmail hat abgelehnt: ' +
                         (err instanceof Error ? err.message : String(err)));
                 }
@@ -518,10 +429,6 @@ const Mail = (() => {
                 antwortMenue(r, coll);
                 return;
             }
-            /* `l` öffnet die Beschriftungen. Hier stand `Datenbank.zelleMenueFuer`
-               — die Funktion gibt es nicht, und wegen des `?.` tat die Taste
-               stillschweigend nichts. Die Zelle bearbeiten heisst
-               `zelleBearbeiten`, und sie braucht das <td> aus der Tabelle. */
             if (taste === 'l') {
                 e.preventDefault();
                 const td = document.querySelector(`.grid tbody tr[data-rid="${r.id}"] td[data-key="labels"]`);
@@ -538,7 +445,6 @@ const Mail = (() => {
             }
         });
     };
-    /** Netzarbeit, die auch scheitern darf — ohne dass die Oberfläche stockt. */
     const versuche = (fn) => { try {
         Promise.resolve(fn()).catch(() => { });
     }
@@ -570,9 +476,6 @@ const Mail = (() => {
                 bausteinDialog();
         });
     };
-    /* ========================================================================
-     * OBERFLÄCHE
-     * ======================================================================*/
     const bausteinDialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';

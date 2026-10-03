@@ -1,55 +1,11 @@
 "use strict";
-/* ============================================================================
- * bereiche/elektro/lernbilder.ts — Formeldreieck und Sinuskurve
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/elektro/lernbilder.ts`.
- * ----------------------------------------------------------------------------
- * ZWEI BILDER, DIE MEHR ERKLÄREN ALS EIN ABSATZ
- *
- * DAS FORMELDREIECK (Punkt 65) ist die älteste Merkhilfe der Elektrotechnik
- * und immer noch die beste: oben die Grösse, die aus den beiden unteren
- * hervorgeht, und wer eine davon zuhält, sieht die Formel für sie. U zuhalten
- * ergibt R · I, R zuhalten ergibt U / I. Das kann man in dreissig Sekunden
- * lernen und vergisst es nicht mehr.
- *
- * Es wird nicht von Hand gezeichnet, sondern aus der SCHREIBWEISE der Formel
- * abgeleitet. `U = R · I` und `I = U / R` beschreiben dasselbe Dreieck; das
- * Modul erkennt beide Formen und legt sie zusammen. So gibt es genau so viele
- * Dreiecke, wie es dreiteilige Produktformeln gibt — und wenn morgen eine
- * dazukommt, gibt es morgen ihr Dreieck.
- *
- * DIE SINUSKURVE (Punkt 90) beantwortet die Frage, an der im Wechselstrom
- * die meisten hängenbleiben: warum sind 230 V nicht 230 V. Der Scheitelwert
- * ist 325, der Effektivwert 230, und der Momentanwert ist irgendwas
- * dazwischen — je nachdem, wann man hinsieht. Drei Zahlen für dieselbe
- * Spannung, und in einer Zeichnung sind sie in einem Blick auseinander.
- *
- * BEIDE SIND NUR SVG. Kein Rechenwerk, kein Zustand, keine Bibliothek —
- * eine Zeichenkette hinein, eine Zeichenkette heraus. Die Zahlen kommen aus
- * `Register.elektroformeln`, die Bewegung aus einem Schieber daneben.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/lernbilder.ts (npm run bauen:ts). */
 const Elektrolernbilder = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    /**
-     * Ein Dreieck aus einer Schreibweise lesen.
-     *
-     * Erkannt werden die zwei Formen, in denen dieselbe Beziehung geschrieben
-     * wird — als Produkt und als Bruch:
-     *
-     *     U = R · I     →  oben U, unten R und I
-     *     I = U / R     →  oben U, unten I und R
-     *
-     * Alles andere gibt `null`. Das ist Absicht: eine Formel mit vier Grössen
-     * oder mit einer Wurzel hat kein Dreieck, und eines zu erfinden wäre eine
-     * Merkhilfe, die falsch merkt.
-     */
     const ausSchreibweise = (schreibweise) => {
         const roh = String(schreibweise || '').replace(/\s+/g, ' ').trim();
-        /* Nur einfache Namen: Buchstaben, Ziffern, Indexzeichen. Klammern und
-           Konstanten wie π sind ein Zeichen dafür, dass es kein Dreieck ist. */
         const teil = '([A-Za-zΦΩμµ][A-Za-z0-9₀₁₂₃ₙ_]*)';
         const produkt = new RegExp(`^${teil} = ${teil} · ${teil}$`);
         const bruch = new RegExp(`^${teil} = ${teil} / ${teil}$`);
@@ -79,7 +35,6 @@ const Elektrolernbilder = (() => {
             ]
         };
     };
-    /** Alle Dreiecke, die es im Formelregister gibt — ohne Doppelte. */
     const alleDreiecke = () => {
         const R = (typeof Register !== 'undefined' && Register.elektroformeln)
             ? Register.elektroformeln : null;
@@ -91,9 +46,6 @@ const Elektrolernbilder = (() => {
             const d = ausSchreibweise(f.schreibweise);
             if (!d)
                 return;
-            /* `U = R · I` und `I = U / R` sind DASSELBE Dreieck. Der Schlüssel ist
-               deshalb die sortierte Menge der drei Grössen und nicht die
-               Schreibweise — sonst stünde dieselbe Merkhilfe dreimal da. */
             const schluessel = [d.oben, d.links, d.rechts].slice().sort().join('|');
             if (gesehen.has(schluessel))
                 return;
@@ -102,13 +54,6 @@ const Elektrolernbilder = (() => {
         });
         return raus;
     };
-    /**
-     * Das Dreieck als SVG.
-     *
-     * `zeigeAuf` blendet eine Grösse AUS und die zugehörige Formel ein — genau
-     * die Bewegung, die man mit dem Daumen macht. Sie ist der ganze Sinn der
-     * Merkhilfe und deshalb keine Zusatzfunktion, sondern der Normalfall.
-     */
     const dreieckSvg = (d, opt = {}) => {
         if (!d)
             return '';
@@ -129,11 +74,8 @@ const Elektrolernbilder = (() => {
             `role="img" aria-label="Formeldreieck ${esc(d.formel)}">` +
             `<path d="M${b / 2},${m} L${b - m},${h - m} L${m},${h - m} Z" ` +
             `fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" opacity=".55"/>` +
-            /* Der Bruchstrich. Er ist der Grund, warum das Dreieck funktioniert:
-               oben durch unten, und unten mal unten. */
             `<line x1="${m + b * 0.08}" y1="${h * 0.54}" x2="${b - m - b * 0.08}" y2="${h * 0.54}" ` +
             `stroke="currentColor" stroke-width="1.5" opacity=".35"/>` +
-            /* Und das Malzeichen zwischen den unteren beiden. */
             `<text x="${b / 2}" y="${h * 0.79}" text-anchor="middle" dominant-baseline="central" ` +
             `font-size="${Math.round(b * 0.1)}" fill="currentColor" opacity=".4">·</text>` +
             feld(d.oben, b / 2, h * 0.31) +
@@ -141,7 +83,6 @@ const Elektrolernbilder = (() => {
             feld(d.rechts, b * 0.71, h * 0.79) +
             `</svg>`;
     };
-    /** Welche Formel man abliest, wenn man `groesse` zuhält. */
     const formelFuer = (d, groesse) => {
         if (!d)
             return '';
@@ -154,7 +95,6 @@ const Elektrolernbilder = (() => {
         return '';
     };
     const WURZEL2 = Math.SQRT2;
-    /** Die drei Zahlen zu einer Kurve. */
     const werte = (k) => {
         const scheitel = k.ueff * WURZEL2;
         const bogen = k.winkel * Math.PI / 180;
@@ -167,22 +107,9 @@ const Elektrolernbilder = (() => {
         };
     };
     const rund = (x, stellen = 1) => Number(x.toFixed(stellen));
-    /**
-     * Die Kurve als SVG.
-     *
-     * Gezeichnet wird EINE Periode, mit Nulllinie, Scheitelwert, Effektivwert
-     * als waagrechte Linie und einem beweglichen Punkt. Der Effektivwert steht
-     * bewusst als LINIE da und nicht als Zahl am Rand: dass er unter dem
-     * Scheitel liegt, ist die ganze Aussage, und eine Zahl daneben zeigt das
-     * nicht.
-     */
     const kurveSvg = (k, opt = {}) => {
         const b = opt.breite || 720;
         const h = opt.hoehe || 300;
-        /* Der linke Rand trägt die Beschriftung „û 325.3" — rechtsbündig an der
-           Achse. Bei 46 px ragte sie links aus der Zeichenfläche heraus und war
-           angeschnitten: die Zahl stand da, das Zeichen davor nur halb. Gemessen
-           an der längsten Beschriftung, die vorkommt, und nicht geschätzt. */
         const linksRand = 68, rechtsRand = 16, obenRand = 18, untenRand = 32;
         const zeichenB = b - linksRand - rechtsRand;
         const zeichenH = h - obenRand - untenRand;
@@ -191,8 +118,6 @@ const Elektrolernbilder = (() => {
         const massstab = (zeichenH / 2) / (w.scheitel * 1.12);
         const yVon = (v) => mitte - v * massstab;
         const xVon = (grad) => linksRand + (grad / 360) * zeichenB;
-        /* Die Kurve selbst, in Zweigradschritten. Feiner bringt nichts sichtbar
-           und macht die Zeichenkette doppelt so lang. */
         const punkte = [];
         for (let g = 0; g <= 360; g += 2)
             punkte.push(`${xVon(g).toFixed(1)},${yVon(w.scheitel * Math.sin(g * Math.PI / 180)).toFixed(1)}`);
@@ -203,19 +128,15 @@ const Elektrolernbilder = (() => {
             `text-anchor="end" dominant-baseline="central">${esc(text)}</text>`;
         return `<svg class="sk-kurve" viewBox="0 0 ${b} ${h}" width="${b}" height="${h}" ` +
             `role="img" aria-label="Sinuskurve, Effektivwert ${rund(k.ueff)} Volt">` +
-            /* Nulllinie und Gradachse */
             `<line class="sk-null" x1="${linksRand}" y1="${mitte}" x2="${b - rechtsRand}" y2="${mitte}"/>` +
             [90, 180, 270].map(g => `<line class="sk-teil" x1="${xVon(g).toFixed(1)}" y1="${obenRand}" ` +
                 `x2="${xVon(g).toFixed(1)}" y2="${h - untenRand}"/>`).join('') +
             [0, 90, 180, 270, 360].map(g => `<text class="sk-grad" x="${xVon(g).toFixed(1)}" y="${h - untenRand + 16}" ` +
                 `text-anchor="middle">${g}°</text>`).join('') +
-            /* Scheitel und Effektivwert */
             linie(w.scheitel, 'sk-scheitel', 'û ' + rund(w.scheitel)) +
             linie(w.effektiv, 'sk-effektiv', 'U ' + rund(w.effektiv)) +
             linie(-w.effektiv, 'sk-effektiv', '') +
-            /* Die Kurve */
             `<polyline class="sk-linie" points="${punkte.join(' ')}"/>` +
-            /* Der bewegliche Punkt mit seiner Lotrechten */
             `<line class="sk-lot" x1="${px.toFixed(1)}" y1="${mitte}" ` +
             `x2="${px.toFixed(1)}" y2="${py.toFixed(1)}"/>` +
             `<circle class="sk-punkt" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5"/>` +
@@ -223,14 +144,6 @@ const Elektrolernbilder = (() => {
             `${rund(w.momentan)} V</text>` +
             `</svg>`;
     };
-    /**
-     * Die ganze Lernansicht: Kurve, Schieber, drei Zahlen.
-     *
-     * Der Schieber ist ein `input[type=range]` und kein gezogener Punkt im SVG.
-     * Das ist keine Bequemlichkeit: ein Schieber lässt sich mit der Tastatur
-     * bedienen, hat einen Namen für den Screenreader und funktioniert am
-     * Telefon ohne Zielgenauigkeit (§38, §37).
-     */
     const sinusFlaeche = (start = {}) => {
         const wurzel = document.createElement('div');
         wurzel.className = 'sk-wrap';
@@ -280,9 +193,6 @@ const Elektrolernbilder = (() => {
                 k.f = Math.max(1, zahl);
             else
                 return;
-            /* Beim Schieber NICHT alles neu zeichnen — der Finger läge sonst nach
-               jedem Pixel auf einem neuen Element und der Zug bräche ab. Nur die
-               Zeichnung und die Zahlen werden ersetzt. */
             const bild = wurzel.querySelector('.sk-bild');
             if (bild)
                 bild.innerHTML = kurveSvg(k);
@@ -311,9 +221,6 @@ const Elektrolernbilder = (() => {
         male();
         return wurzel;
     };
-    /* ------------------------------------------------------------------------
-     * 3. DIE DREIECKS-FLÄCHE
-     * ----------------------------------------------------------------------*/
     const dreieckFlaeche = () => {
         const wurzel = document.createElement('div');
         wurzel.className = 'fd-wrap';
@@ -353,7 +260,6 @@ const Elektrolernbilder = (() => {
         male();
         return wurzel;
     };
-    /* Zwei Befehle. */
     if (typeof Register !== 'undefined' && Register.befehle) {
         Register.befehle.melde({
             titel: 'Elektro: Formeldreieck', gruppe: 'Elektro',

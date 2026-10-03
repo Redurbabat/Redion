@@ -1,33 +1,5 @@
 "use strict";
-/* ============================================================================
- * core/import/zipdetails.js — was ein ZIP-Eintrag über sich sagt (E363)
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/import/zipdetails.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/core/import/zipdetails.js`. Wer das .js bearbeitet, verliert
- * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
- * vorher.
- * ----------------------------------------------------------------------------
- * Drei Dinge, die der Leser (bereiche/dateien/einlesen.ts) bisher überging
- * (L114 Punkt 5), hier als reiner Kern ohne DOM und ohne Ablage:
- *
- *   · DIE PRÜFSUMME. Jeder Eintrag trägt eine CRC-32 seiner rohen Bytes.
- *     Wer sie nicht nachrechnet, nimmt einen beschädigten Eintrag als
- *     vollständiges Dokument an — still. Die Rechnung ist fortlaufend
- *     (`crc32Weiter`), damit ein Blob scheibchenweise geprüft werden kann,
- *     ohne je ganz im Arbeitsspeicher zu liegen.
- *   · DER NAME. Bit 11 der Flags sagt „UTF-8". Fehlt es, stammt der Name
- *     aus einem alten Windows-Packer und ist CP437 — „Übung" käme sonst mit
- *     Ersatzzeichen an. Gültiges UTF-8 ohne Bit wird trotzdem als UTF-8
- *     gelesen (viele Packer setzen das Bit nicht, schreiben aber UTF-8);
- *     erst was kein UTF-8 ist, wird CP437.
- *   · VERSCHLÜSSELT. Bit 0 der Flags. Redion kann das nicht lesen und
- *     sagt es, statt beim Entpacken mit einer allgemeinen Meldung zu
- *     scheitern.
- *
- * Der Schreiber (ausgeben.ts) nimmt dieselbe Prüfsumme; die Tafel steht
- * damit nur noch einmal.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/import/zipdetails.ts (npm run bauen:ts). */
 const ZipDetails = (() => {
     const UTF8_BIT = 0x800;
     const VERSCHLUESSELT_BIT = 0x1;
@@ -44,9 +16,7 @@ const ZipDetails = (() => {
         }
         return tafel;
     };
-    /** Der Anfangswert einer fortlaufenden Rechnung. */
     const crc32Start = () => 0xFFFFFFFF;
-    /** Ein Stück Bytes in die laufende Rechnung nehmen. */
     const crc32Weiter = (zwischen, bytes) => {
         const t = crc32Tafel();
         let c = zwischen >>> 0;
@@ -54,12 +24,9 @@ const ZipDetails = (() => {
             c = (t[(c ^ (bytes[i] ?? 0)) & 0xFF] ?? 0) ^ (c >>> 8);
         return c >>> 0;
     };
-    /** Die Rechnung abschliessen. */
     const crc32Fertig = (zwischen) => ((zwischen ^ 0xFFFFFFFF) >>> 0);
-    /** Alles auf einmal — für Bytes, die ohnehin im Speicher liegen. */
     const crc32 = (bytes) => crc32Fertig(crc32Weiter(crc32Start(), bytes));
     const crc32Hex = (n) => (n >>> 0).toString(16).padStart(8, '0');
-    /* CP437 — die obere Hälfte (0x80–0xFF), in der Reihenfolge der Tabelle. */
     const CP437_OBEN = 'ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»' +
         '░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀' +
         'αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ';
@@ -71,7 +38,6 @@ const ZipDetails = (() => {
         }
         return s;
     };
-    /** Der Name eines Eintrags aus seinen Bytes und den Flags des Kopfs. */
     const nameDecodieren = (bytes, flags) => {
         if ((flags & UTF8_BIT) !== 0)
             return new TextDecoder('utf-8').decode(bytes);

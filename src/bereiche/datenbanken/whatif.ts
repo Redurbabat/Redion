@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/whatif.ts (npm run bauen:ts). */
 /* ============================================================================
  * whatif.ts — Was wäre, wenn (L28)
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/funkel.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/funkel.ts — der dunkle Knopf, dessen Buchstaben glimmen
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/schnittstelle.ts (npm run bauen:ts). */
 /* ==========================================================================
  * API — die Schnittstelle unter /v1/, in Notions Form
  * --------------------------------------------------------------------------

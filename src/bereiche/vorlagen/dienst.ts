@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/vorlagen/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * vorlagenfassung.js — Vorlagen als Programme, nicht als Fotokopien
  * ----------------------------------------------------------------------------

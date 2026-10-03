@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/aufgaben.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/elektro/aufgaben.ts — Übungen, die sich selbst erzeugen
  * ----------------------------------------------------------------------------

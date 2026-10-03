@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/seitenansichten.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/seitenansichten.ts — der Katalog der drei Blicke auf EINE Seite
  * ----------------------------------------------------------------------------

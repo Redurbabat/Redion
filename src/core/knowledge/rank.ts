@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/knowledge/rank.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/knowledge/rank.ts — welche Seiten das Netz trägt
  * ----------------------------------------------------------------------------

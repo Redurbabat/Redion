@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/verbindungen.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/verbindungen.js — was nach draussen geht
  * ----------------------------------------------------------------------------

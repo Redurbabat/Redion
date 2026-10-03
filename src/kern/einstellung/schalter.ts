@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/schalter.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/einstellung/schalter.js — Funktionen ein- und ausschalten
  * ----------------------------------------------------------------------------

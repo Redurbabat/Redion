@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/security/sanitize.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/security/sanitize.ts — fremdes HTML entschärfen
  * ----------------------------------------------------------------------------

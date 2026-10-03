@@ -1,50 +1,5 @@
 "use strict";
-/* ============================================================================
- * core/gfx/toolbar.ts — EINE Werkzeugleiste für alle Flächen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/gfx/toolbar.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/core/gfx/toolbar.js`; `pruefungen/lauf/test105.mts` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Der dritte Bewohner des GFX-Kerns, nach dem Verlauf (`history.ts`, E687) und
- * dem Raum (`core/sheet/space.ts`). Redur, 25. September 2026, mit einem Bild
- * von AFFiNEs Edgeless-Leiste: „ich will so was haben wie die affine" —
- * „integriere alles zusammen".
- *
- * WAS DAS BAUTEIL IST: ein Zeichner für Leisten. Es bekommt Werkzeuge und
- * Aktionen als Daten, baut daraus Knöpfe, hält fest, welches Werkzeug gewählt
- * ist, öffnet Untermenüs und führt die Tastatur. Mehr nicht.
- *
- * WAS ES NICHT IST — und das ist der Grund, warum es hier liegen darf (§5):
- * Es kennt keine Fläche. Kein `wb-`, kein `gk-`, kein `sp-`, kein `blatt-`,
- * kein `Store`, kein `Register`, kein `App`. Was ein Werkzeug TUT, weiss nur
- * die Fläche, die es ausführt; dieses Bauteil ruft dafür einen Rückruf. Und
- * die Strichzeichen füllt der AUFRUFER ein (`Register.symbole.fuelle`) — der
- * Kern schreibt nur `data-sym` an die Stelle, an der eines hingehört.
- * `test572 §1` liest das gebaute JavaScript und hält das fest.
- *
- * ── DREI ENTSCHEIDUNGEN, DIE MAN IM BILD SIEHT ─────────────────────────────
- *
- * 1 · ZWEI KAPSELN IN EINEM SOCKEL. Gemessen: ein Whiteboard-Kasten auf einer
- *     gewöhnlichen Seite ist 708 px breit (`#page` mit `max-width:900` und
- *     96 px Rand). Zwölf Werkzeuge, acht Farben, vier Zoomknöpfe und vier
- *     Aktionen passen dort in EINE Kapsel nicht — gerechnet 714 px bei 708.
- *     Also trägt die linke Kapsel die Werkzeuge, die rechte Zoom, Verlauf und
- *     „…". Das ist zugleich AFFiNEs Aufteilung, dort nur als zweite Pille
- *     links unten.
- *
- * 2 · DIE LEISTE ROLLT, SIE BLÄTTERT NICHT. AFFiNE blättert die rechte Gruppe
- *     mit ‹ ›. Redion hat für schmale Fenster schon eine Antwort, und zwar
- *     eine erprobte: die Studioleiste rollt waagrecht (E356, `test393` hält
- *     die Verlaufsknöpfe dabei am Rand fest). Zwei Antworten auf dieselbe
- *     Frage wären eine zu viel (§8). Blättern kann in Bogen 5e dazukommen,
- *     wenn es jemand vermisst.
- *
- * 3 · KEIN `position:fixed`. Die Leiste sitzt IM Kasten ihrer Fläche und
- *     rollt mit der Seite. Eine feste Leiste läge am Telefon unter
- *     `#handy-oben` (z-index 401, `bausteine.css:1729`) — und §37 verlangt
- *     ohnehin, dass eine Werkzeugleiste nicht verdeckt, was sie bedient.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/toolbar.ts (npm run bauen:ts). */
 const GfxToolbar = (() => {
     const esc = (wert) => String(wert ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -56,14 +11,6 @@ const GfxToolbar = (() => {
         let offenesMenue = null;
         const wurzel = document.createElement('div');
         wurzel.className = 'gfx-tb-sockel' + (o.klasse ? ' ' + o.klasse : '');
-        /* DER ROLLER IST EINE EIGENE EBENE, und das ist kein Schmuck.
-           Erster Anlauf: der Sockel selbst rollte (overflow-x:auto). Das Menue lag
-           darin — und CSS macht aus `overflow-x:auto` mit `overflow-y:visible`
-           beidseitig `auto`: das Menue war GEMESSEN an der richtigen Stelle
-           (148 x 80 px ueber dem Knopf, im Kasten) und auf dem Bild trotzdem nicht
-           da, weil der Sockel es abschnitt. Gefunden hat das nicht der Waechter,
-           sondern das Bild (§55.1). Jetzt rollt eine Ebene tiefer, und das Menue
-           haengt am Sockel darueber. */
         const roller = document.createElement('div');
         roller.className = 'gfx-tb-roller';
         const leiste = document.createElement('div');
@@ -72,9 +19,6 @@ const GfxToolbar = (() => {
         leiste.setAttribute('aria-label', o.beschriftung || 'Werkzeuge');
         const neben = document.createElement('div');
         neben.className = 'gfx-tb gfx-tb-neben';
-        /** Ein Knopf: Strichzeichen aus `data-sym`, Name für den Vorleser (§38).
-         *  Das Textzeichen bleibt als Rückfall darin, falls kein Symbol da ist —
-         *  ein leerer Knopf wäre schlimmer als ein Emoji. */
         const knopf = (teil, art, menue = false) => {
             const b = document.createElement('button');
             b.type = 'button';
@@ -89,7 +33,6 @@ const GfxToolbar = (() => {
                 : `<span class="zeichen" aria-hidden="true">${esc(teil.zeichen ?? '')}</span>`;
             return b;
         };
-        /* --- Die Werkzeuge: quick links, senior rechts, ein Strich dazwischen --- */
         const quick = werkzeuge.filter(w => w.gruppe === 'quick');
         const senior = werkzeuge.filter(w => w.gruppe !== 'quick');
         const gruppe = (klasse) => {
@@ -125,7 +68,6 @@ const GfxToolbar = (() => {
             leiste.append(trenner());
         if (senior.length)
             leiste.append(gSenior);
-        /* --- Die Aktionen ------------------------------------------------------ */
         const inWerkzeuge = aktionen.filter(a => a.kapsel === 'werkzeuge');
         const inNeben = aktionen.filter(a => a.kapsel !== 'werkzeuge');
         const setzeAktionen = (liste, ziel) => {
@@ -148,10 +90,6 @@ const GfxToolbar = (() => {
         if (neben.childNodes.length)
             roller.append(neben);
         wurzel.append(roller);
-        /* --- Das Untermenü ------------------------------------------------------
-           Es klappt NACH OBEN auf. Nach unten wäre es ausserhalb des Kastens —
-           die Leiste sitzt schon an dessen unterem Rand —, und am Telefon läge es
-           hinter der unteren Leiste der Schale. */
         const menueZu = () => {
             wurzel.querySelector('.gfx-tb-menue')?.remove();
             wurzel.querySelectorAll('[data-menue]').forEach(b => b.setAttribute('aria-expanded', 'false'));
@@ -169,13 +107,11 @@ const GfxToolbar = (() => {
             wurzel.append(m);
             offenesMenue = id;
             ausloeser.setAttribute('aria-expanded', 'true');
-            /* Waagrecht am Auslöser ausrichten und in den Kasten klemmen. */
             const wr = wurzel.getBoundingClientRect(), ar = ausloeser.getBoundingClientRect();
             const mb = m.getBoundingClientRect();
             const links = Math.max(0, Math.min(wr.width - mb.width, ar.left - wr.left + ar.width / 2 - mb.width / 2));
             m.style.left = Math.round(links) + 'px';
         };
-        /* --- Klicks ------------------------------------------------------------ */
         const beiKlick = (e) => {
             const ziel = e.target;
             if (!ziel)
@@ -202,17 +138,12 @@ const GfxToolbar = (() => {
             const ak = ziel.closest('[data-a]');
             if (ak && wurzel.contains(ak)) {
                 const id = ak.dataset.a ?? '';
-                /* Ein Klick IM Untermenü schliesst es — er hat ja gewirkt. */
                 if (ziel.closest('.gfx-tb-menue'))
                     menueZu();
                 o.aufAktion?.(id);
             }
         };
         wurzel.addEventListener('click', beiKlick);
-        /* --- Tastatur: EIN Tabstopp, Pfeile führen (§38) ------------------------
-           Dieselbe Regel wie in der Studioleiste (`marken.ts`, „roving tabindex"):
-           die Leiste ist EIN Halt beim Tabben, drinnen bewegen Pfeile. Sonst
-           braucht man dreissig Tabs, um an der Leiste vorbeizukommen. */
         const knoepfe = () => [...wurzel.querySelectorAll('button')]
             .filter(b => !b.disabled && b.offsetParent !== null && !b.closest('.gfx-tb-menue'));
         const tabstoppSetzen = () => {
@@ -247,8 +178,6 @@ const GfxToolbar = (() => {
             b.focus();
         };
         wurzel.addEventListener('keydown', beiTaste);
-        /* Ein Klick irgendwo sonst schliesst das Menü. Ein Menü, das offen bleibt,
-           während man weiterzeichnet, verdeckt genau das, was man gerade tut. */
         const beiAussen = (e) => {
             if (!offenesMenue)
                 return;
@@ -257,7 +186,6 @@ const GfxToolbar = (() => {
                 menueZu();
         };
         document.addEventListener('pointerdown', beiAussen, true);
-        /* --- Was die Fläche von aussen darf ------------------------------------ */
         const setzeWerkzeug = (id) => {
             aktiv = id;
             wurzel.querySelectorAll('[data-wz]').forEach(b => {

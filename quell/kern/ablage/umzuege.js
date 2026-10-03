@@ -1,36 +1,6 @@
 "use strict";
-/* ============================================================================
- * kern/ablage/umzuege.js — wie die Ablage über die Zeit gewachsen ist
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/ablage/umzuege.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/ablage/umzuege.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * IndexedDB kennt eine Fassungsnummer. Steigt sie, läuft `onupgradeneeded`,
- * und dort werden neue Fächer angelegt. Das steht in `indexdb.js` und muss
- * dort stehen — der Browser ruft es genau einmal, mitten im Öffnen.
- *
- * Was dort **nicht** hingehört, ist die Erklärung: warum es das Fach gibt,
- * was vorher fehlte, und was passiert, wenn jemand mit einer alten Fassung
- * dieselbe Datenbank öffnet. Das steht hier.
- *
- * Und ein zweiter Teil, der ohne diese Datei nirgends stünde: **Umzüge im
- * Inhalt.** Ein neues Fach legt der Browser an. Ein Feld, das früher anders
- * hiess, muss jemand umschreiben — einmal, beim ersten Start nach dem
- * Wechsel, und nie wieder.
- *
- * Die Regel für jeden Inhaltsumzug hier:
- *
- *   · Er läuft **einmal** und merkt sich das.
- *   · Er ist **wiederholbar** — zweimal laufen darf nichts kaputtmachen.
- *   · Er wirft **nichts weg**, sondern ergänzt. Das alte Feld bleibt, bis
- *     zwei Fassungen später niemand mehr davon liest.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ablage/umzuege.ts (npm run bauen:ts). */
 const Umzuege = (() => {
-    /* ========================================================================
-     * 1 · DIE FASSUNGEN DER ABLAGE
-     * ======================================================================*/
     const FASSUNGEN = [
         { nr: 1, was: 'Die vier Grundfächer',
             faecher: ['blocks', 'collections', 'views', 'meta'],
@@ -71,62 +41,14 @@ const Umzuege = (() => {
                 'erledigter Auftrag auf einem anderen Gerät hätte seine ' +
                 'Eingaben nicht (E286).' }
     ];
-    /* Die letzte Fassung — und die Liste ist nie leer, sonst gäbe es keine
-       Ablage. `?.nr ?? 0` schreibt genau das hin, statt es anzunehmen. */
     const JETZIGE = FASSUNGEN[FASSUNGEN.length - 1]?.nr ?? 0;
-    /** Alle Fächer, die es geben muss. */
     const faecher = () => FASSUNGEN.flatMap(f => f.faecher);
-    /** Was kam zwischen zwei Fassungen dazu? */
     const zwischen = (von, nach) => FASSUNGEN.filter(f => f.nr > von && f.nr <= nach);
-    /**
-     * Der Satz, der im Fehlerfall zählt.
-     * Eine ältere Fassung der App kann eine neuere Datenbank **nicht** öffnen —
-     * IndexedDB verweigert das, und das ist richtig so. Ohne diesen Hinweis
-     * sieht man nur eine App, die nicht startet.
-     */
     const hinweisZuAlt = (dbFassung) => 'Diese Ablage wurde von einer neueren Fassung von Redion angelegt ' +
         '(Fassung ' + dbFassung + ', diese App kennt ' + JETZIGE + '). ' +
         'Öffne die neuere Fassung, oder lege über „Sichern" eine Datei an und ' +
         'spiele sie dort wieder ein.';
-    /* ========================================================================
-     * 2 · UMZÜGE IM INHALT
-     * ------------------------------------------------------------------------
-     * Jeder Eintrag: eine Kennung, ein Satz, und eine Funktion, die einmal
-     * über den Bestand läuft. Sie muss zweimal laufen können, ohne zu schaden.
-     * ======================================================================*/
-    /* ------------------------------------------------------------------------
-     * Spaltenschlüssel ohne Ziffer am Anfang (L36, E172)
-     * ------------------------------------------------------------------------
-     * Ein Schlüssel ist nur ein Name für eine Spalte. Besteht er aus lauter
-     * Ziffern, behandelt JavaScript ihn als Feldindex: `Object.keys` gibt ihn
-     * VOR allen anderen zurück, aufsteigend sortiert. Die Spalte steht dann
-     * immer ganz links, und keine Bedienung der Welt schiebt sie weg.
-     *
-     * WO EIN SCHLÜSSEL ÜBERALL STEHT. Das ist die eigentliche Arbeit, und die
-     * Liste ist nachgesehen, nicht geraten:
-     *
-     *   schema[key]           die Spalte selbst
-     *   zeile.props[key]      jeder Wert in jeder Zeile
-     *   schema[x].relation    die Verknüpfung, auf der ein Rollup sitzt
-     *   schema[x].zielKey     die Spalte DRÜBEN, die er einsammelt
-     *   ansicht.groupBy       … und zwei Dutzend weitere Felder der Ansicht
-     *   ansicht.hidden[]      Listen von Schlüsseln
-     *   ansicht.calc{}        Objekte, deren SCHLÜSSEL Spaltenschlüssel sind
-     *   automationen          wenn.key, dann-Schritte, Filter und Sortierung
-     *
-     * WAS NICHT MITGEHT: Formeln. `prop("Name")` spricht die Spalte über ihren
-     * ANZEIGENAMEN an (`dienst.ts`, `formelRechnen`) — ein Schlüsselwechsel
-     * geht daran vorbei. Nachgesehen, nicht angenommen.
-     *
-     * UND WARUM NICHT EINFACH ALLES ERSETZEN. Ein Wert, der zufällig „4711"
-     * heisst, ist keine Spalte: eine Filterbedingung „Zahl ist gleich 4711",
-     * eine Auswahloption mit diesem Namen, eine Zelle mit dieser Zahl. Deshalb
-     * werden OBJEKTSCHLÜSSEL überall ersetzt — ein Feldname aus lauter Ziffern
-     * kommt im Code nicht vor —, WERTE aber nur an benannten Stellen.
-     * ----------------------------------------------------------------------*/
-    /** Ein Schlüssel, den `Object.keys` als Feldindex behandelt. */
     const nurZiffern = (k) => /^\d+$/.test(k);
-    /** Feldnamen, deren WERT ein Spaltenschlüssel ist. */
     const SCHLUESSELFELDER = new Set([
         'key', 'groupBy', 'zielKey', 'relation', 'setzeKey', 'filterKey',
         'bildKey', 'dateKey', 'datumKey', 'startKey', 'endeKey', 'ortKey',
@@ -134,17 +56,9 @@ const Umzuege = (() => {
         'pivotZeile', 'pivotSpalte', 'pivotWert',
         'chartGruppe', 'chartWert', 'chartStufe'
     ]);
-    /** Feldnamen, deren Wert eine LISTE von Spaltenschlüsseln ist. */
     const SCHLUESSELLISTEN = new Set([
         'hidden', 'pflicht', 'fixiert', 'zuGruppen', 'bahnenZu', 'spalten'
     ]);
-    /**
-     * Einen Satz umschreiben. Gibt zurück, ob sich etwas geändert hat.
-     *
-     * Läuft rekursiv, weil Filter Gruppen enthalten können und Automationen
-     * Schritte, die wieder Filter enthalten. Ein flacher Durchgang hätte
-     * genau die Stellen ausgelassen, an denen es niemand nachsieht.
-     */
     const satzUmschreiben = (wert, alt, neu) => {
         if (!wert || typeof wert !== 'object')
             return false;
@@ -171,11 +85,6 @@ const Umzuege = (() => {
             else if (satzUmschreiben(inhalt, alt, neu))
                 geaendert = true;
         }
-        /* Und die Objektschlüssel — `props`, `calc`, `breiten`, `schema`.
-           ZUM SCHLUSS und über eine neu gebaute Reihenfolge: `delete` und dann
-           `set` würde die Spalte ans Ende hängen, und dann stünde sie nach dem
-           Umzug woanders als vorher. Ein Umzug, den man sieht, ist ein Umzug,
-           den man für einen Fehler hält. */
         if (Object.prototype.hasOwnProperty.call(wert, alt)) {
             const neuerSatz = {};
             for (const feld of Object.keys(wert))
@@ -187,7 +96,6 @@ const Umzuege = (() => {
         }
         return geaendert;
     };
-    /** Ein freier Schlüssel, der wie der alte aussieht und keiner ist. */
     const freierSchluessel = (schema, alt) => {
         let neu = 's' + alt;
         let n = 2;
@@ -204,13 +112,10 @@ const Umzuege = (() => {
                 continue;
             for (const alt of betroffen) {
                 const neu = freierSchluessel(coll.schema, alt);
-                /* 1 · Die Sammlung selbst — Schema und alles, was drinsteckt
-                       (`relation` und `zielKey` an Rollups, die Automationen). */
                 if (satzUmschreiben(coll, alt, neu)) {
                     Store.rohSetzen('collections', coll);
                     n++;
                 }
-                /* 2 · Die Ansichten dieser Sammlung. */
                 for (const vid of coll.viewIds || []) {
                     const view = Store.cache.views[vid];
                     if (view && satzUmschreiben(view, alt, neu)) {
@@ -218,9 +123,6 @@ const Umzuege = (() => {
                         n++;
                     }
                 }
-                /* 3 · Die Zeilen. `rowsOf` gibt nur die lebenden zurück — der
-                       Papierkorb muss aber mit, sonst kommt eine zurückgeholte Zeile
-                       mit dem alten Schlüssel wieder. */
                 for (const block of Object.values(Store.cache.blocks)) {
                     if (block && block.parentTable === 'collection' && block.parentId === coll.id
                         && satzUmschreiben(block, alt, neu)) {
@@ -228,16 +130,6 @@ const Umzuege = (() => {
                         n++;
                     }
                 }
-                /* 4 · Und die FREMDEN Sammlungen: ein Rollup drüben sammelt über
-                       `zielKey` eine Spalte von HIER ein. Ohne diesen Durchgang
-                       zeigte er nach dem Umzug ins Leere.
-        
-                       NUR `zielKey`, nicht der ganze Satz. Die fremde Sammlung kann
-                       denselben Zifferschlüssel selbst tragen — dann ist das ihre
-                       eigene Spalte, sie bekommt ihren eigenen neuen Namen, wenn sie
-                       an der Reihe ist. Sie hier mitzuziehen hiesse, ihr einen
-                       Schlüssel zu geben, der in IHREM Schema schon vergeben sein
-                       kann. */
                 for (const fremd of sammlungen) {
                     if (fremd.id === coll.id)
                         continue;
@@ -256,10 +148,6 @@ const Umzuege = (() => {
                         n++;
                     }
                 }
-                /* 5 · Die vorberechneten Werte dieser Sammlung sind nach Schlüssel
-                       abgelegt. Sie sind ABGELEITET — wegwerfen kostet eine
-                       Neuberechnung und kann nichts verlieren; sie umzuschreiben
-                       wäre eine weitere Stelle, die man vergessen kann. */
                 if (Store.vorratWeg)
                     Store.vorratWeg(coll.id).catch(() => { });
             }
@@ -321,7 +209,6 @@ const Umzuege = (() => {
     const GEMERKT = 'umzuegeGelaufen';
     const gelaufen = () => (typeof Store !== 'undefined')
         ? (Store.getMeta(GEMERKT, []) || []) : [];
-    /** Alle offenen Inhaltsumzüge laufen lassen. */
     const laufen = () => {
         if (typeof Store === 'undefined' || !Store.cache)
             return { gelaufen: [], geaendert: 0 };
@@ -339,7 +226,7 @@ const Umzuege = (() => {
                 const grund = e instanceof Error ? e.message : String(e);
                 if (typeof Reporter !== 'undefined')
                     Reporter.error('Umzug ' + u.id, grund, e);
-                return; /* nicht als gelaufen merken — beim nächsten Start nochmal */
+                return;
             }
             geaendert += n;
             neu.push(u.id);
@@ -353,7 +240,6 @@ const Umzuege = (() => {
         }
         return { gelaufen: bericht, geaendert };
     };
-    /** Für die Fehlersuche: alles noch einmal laufen lassen. */
     const zuruecksetzen = () => { if (typeof Store !== 'undefined')
         Store.setMeta(GEMERKT, []); };
     return { FASSUNGEN, JETZIGE, INHALT, faecher, zwischen, hinweisZuAlt,

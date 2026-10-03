@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/staatskunde-inhalt.ts (npm run bauen:ts). */
 /* ══ DER INHALT DES STAATSKUNDE-TRAINERS (E677) ═══════════════════════════
    Kapitel 6 „Leben in der Schweiz", Seiten 155–160 des Lehrmittels
    „Allgemeinbildung, Ausgabe Basel". Die Texte stehen so da, wie sie im

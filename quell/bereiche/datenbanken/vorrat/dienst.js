@@ -1,48 +1,8 @@
 "use strict";
-/* ============================================================================
- * vorrat.js — Vorberechnete Werte, mit sichtbarem Stand
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/vorrat/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/vorrat/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Idee 14 der 10000×-Liste: „Materialisierte Ansichten und Zwischenspeicher".
- * Grosse Datenbanken mit Formeln und Rollups werden zäh — und man erfährt
- * nirgends, warum. Die Idee schlägt vor: teure Werte vorberechnen, einfrieren,
- * und **anzeigen**, wie alt der Stand ist: *„Diese Übersicht wird alle 15
- * Minuten neu berechnet."*
- *
- * Der Unterschied zum Formelspeicher in `tempo.js` ist wichtig, sonst baut man
- * zweimal dasselbe:
- *
- *   tempo.js   rechnet **jede** Formel einmal je Datenstand und wirft alles
- *              weg, sobald sich irgendetwas ändert. Nach einem Neuladen ist
- *              er leer. Er macht ein Neuzeichnen billig.
- *
- *   vorrat.js  rechnet auf Wunsch **einmal** und behält das Ergebnis über
- *              Änderungen und über das Neuladen hinweg. Er macht das
- *              *Öffnen* einer grossen Datenbank billig — und nimmt dafür in
- *              Kauf, dass ein Wert eine Weile veraltet ist.
- *
- * Genau deshalb ist das kein stiller Beschleuniger, sondern eine Abmachung,
- * die sichtbar sein muss. Über der Tabelle steht dann, wann gerechnet wurde
- * und wie viele Änderungen es seither gab. Ein Zwischenspeicher, den man
- * nicht sieht, ist eine Falle: irgendwann steht eine Zahl da, die nicht mehr
- * stimmt, und niemand weiss warum.
- *
- * Eingeschaltet ist er nirgends von selbst. Er lohnt sich erst ab vielen
- * Zeilen, und Redion sagt auch, ab wann.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/vorrat/dienst.ts (npm run bauen:ts). */
 const Vorrat = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
-    /* Ab so vielen Zeilen lohnt sich das überhaupt. Darunter kostet das
-       Verwalten mehr, als das Rechnen spart. */
     const LOHNT_AB = 120;
     const TAKTE = [
         ['manuell', 'Nur auf Knopfdruck'],
@@ -50,16 +10,8 @@ const Vorrat = (() => {
         ['15', 'Alle 15 Minuten'],
         ['60', 'Stündlich']
     ];
-    /* sammlungId -> { wann, dauer, anzahl, werte: {rowId|key: rohWert} } */
     const speicher = new Map();
     const geladen = new Set();
-    /* ========================================================================
-     * 1 · WERTE HALTBAR MACHEN
-     * ------------------------------------------------------------------------
-     * Ein Datum ist kein JSON. Wer es einfach hineinschreibt, bekommt beim
-     * Zurücklesen eine Zeichenkette und wundert sich, warum die Sortierung
-     * anders ist als vorher.
-     * ======================================================================*/
     const einpacken = (v) => {
         if (v instanceof Date)
             return { __d: v.toISOString() };
@@ -74,9 +26,6 @@ const Vorrat = (() => {
             return v.map(auspacken);
         return v;
     };
-    /* ========================================================================
-     * 2 · AN UND AUS
-     * ======================================================================*/
     const einstellung = (coll) => (coll && coll.vorrat) || null;
     const aktiv = (collId) => {
         const c = Store.getCollection(collId);
@@ -102,7 +51,6 @@ const Vorrat = (() => {
         }
         catch { }
     };
-    /** Lohnt sich das hier überhaupt? Mit einer ehrlichen Begründung. */
     const lohntSich = (collId) => {
         const c = Store.getCollection(collId);
         if (!c)
@@ -121,20 +69,10 @@ const Vorrat = (() => {
             warum: zeilen + ' Zeilen mit ' + teuer + ' gerechneten Spalten — das sind ' +
                 (zeilen * teuer) + ' Rechnungen bei jedem Öffnen.' };
     };
-    /* ========================================================================
-     * 3 · RECHNEN
-     * ======================================================================*/
-    /**
-     * Alle gerechneten Spalten einmal durch, Zeit dabei messen.
-     * Läuft bewusst über Datenbank.wert und nicht an ihm vorbei: sonst
-     * käme hier etwas anderes heraus als in der Tabelle.
-     */
     const berechnen = async (collId) => {
         const c = Store.getCollection(collId);
         if (!c)
             return null;
-        /* Während des Rechnens darf der Vorrat nicht mitreden — sonst schreibt
-           er alte Werte ab und behauptet, sie seien neu. */
         speicher.delete(collId);
         const keys = Object.entries(c.schema)
             .filter(([, d]) => d.type === 'formula' || d.type === 'rollup')
@@ -164,7 +102,6 @@ const Vorrat = (() => {
         catch { }
         return satz;
     };
-    /** Beim ersten Blick auf eine Datenbank den gespeicherten Stand holen. */
     const laden = async (collId) => {
         if (geladen.has(collId))
             return speicher.get(collId) || null;
@@ -183,18 +120,9 @@ const Vorrat = (() => {
         catch { }
         return null;
     };
-    /* ========================================================================
-     * 4 · DER GRIFF IN DEN VORRAT
-     * ------------------------------------------------------------------------
-     * Wird aus Datenbank.wert gerufen, bevor gerechnet wird. Gibt undefined
-     * zurück, wenn nichts da ist — dann rechnet die Tabelle wie immer.
-     * ======================================================================*/
     const hole = (collId, rowId, key) => {
         const e = speicher.get(collId);
         if (!e) {
-            /* Noch nicht geladen? Dann jetzt, im Hintergrund. Dieser eine
-               Durchgang rechnet noch selbst — das ist richtig so, denn ein
-               Ladebalken für einen Zwischenspeicher wäre absurd. */
             if (!geladen.has(collId))
                 laden(collId);
             return undefined;
@@ -202,14 +130,6 @@ const Vorrat = (() => {
         const v = e.werte[rowId + '|' + key];
         return v === undefined ? undefined : auspacken(v);
     };
-    /**
-     * Wie viel hat sich seit der Berechnung geändert?
-     *
-     * Bewusst nachgezählt statt mitgezählt: ein Zähler, der an einem Ereignis
-     * hängt, wird irgendwann falsch — er verpasst einen Weg, über den auch
-     * geschrieben wird, und zeigt dann beruhigende Nullen. Die Zeitstempel
-     * lügen nicht.
-     */
     const seitherZahl = (collId) => {
         const e = speicher.get(collId);
         if (!e)
@@ -218,7 +138,7 @@ const Vorrat = (() => {
         let n = Store.rowsOf(collId)
             .filter((z) => String(z.edited || z.created || '') > String(e.wann)).length;
         if (c && String(c.edited || '') > String(e.wann))
-            n++; /* Schemaänderung */
+            n++;
         return n;
     };
     const stand = (collId) => {
@@ -228,9 +148,6 @@ const Vorrat = (() => {
         return { wann: e.wann, dauer: e.dauer, anzahl: e.anzahl,
             seither: seitherZahl(collId) };
     };
-    /* ========================================================================
-     * 5 · DIE ANZEIGE
-     * ======================================================================*/
     const vorText = (iso) => {
         const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
         if (min < 1)
@@ -243,19 +160,12 @@ const Vorrat = (() => {
         return h === 1 ? 'vor einer Stunde' : 'vor ' + h + ' Stunden';
     };
     const taktName = (t) => (TAKTE.find(x => x[0] === String(t)) || ['', String(t)])[1];
-    /**
-     * Die Leiste über der Tabelle. Sie ist der eigentliche Punkt dieser Datei:
-     * ein Zwischenspeicher, den man nicht sieht, ist eine Falle.
-     */
     const leiste = (coll) => {
         if (!aktiv(coll.id))
             return null;
         const s = stand(coll.id);
         const e = einstellung(coll);
         const d = document.createElement('div');
-        /* Das Aussehen steht in `datenbanken.css` unter `.vorrat-leiste` (E418).
-           Hier standen sieben Deklarationen als `style.cssText` — die Klasse gab
-           es schon, sie war nur leer. */
         d.className = 'vorrat-leiste';
         if (!s) {
             d.innerHTML = '<span>❄ Vorberechnung ist an, aber es liegt noch nichts vor.</span>' +
@@ -291,9 +201,6 @@ const Vorrat = (() => {
         });
         return d;
     };
-    /* ========================================================================
-     * 6 · DAS FENSTER
-     * ======================================================================*/
     const fenster = (collId) => {
         const coll = Store.getCollection(collId);
         if (!coll)
@@ -356,9 +263,6 @@ const Vorrat = (() => {
         });
         return o;
     };
-    /* ========================================================================
-     * 7 · DER TAKT
-     * ======================================================================*/
     let uhr;
     const takten = async () => {
         for (const c of Object.values(Store.cache.collections)) {
@@ -368,8 +272,6 @@ const Vorrat = (() => {
             const s = stand(c.id);
             const minuten = Number(e.takt) || 15;
             if (!s || (Date.now() - new Date(s.wann).getTime()) / 60000 >= minuten) {
-                /* Nur, wenn sich überhaupt etwas geändert hat — sonst rechnet die
-                   App stündlich dasselbe aus und verbraucht Strom für nichts. */
                 if (!s || s.seither > 0)
                     await berechnen(c.id);
             }

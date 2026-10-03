@@ -1,30 +1,5 @@
 "use strict";
-/* ============================================================================
- * entwicklung/ui-reserve/reserve.ts — die Galerie der UI-Reserve
- * ----------------------------------------------------------------------------
- * ERZEUGT DARAUS WIRD `quell/entwicklung/ui-reserve/reserve.js`.
- * Die Quelle ist DIESE Datei; `npm run bauen:ts` schreibt das .js (§54).
- * ----------------------------------------------------------------------------
- * WAS DAS IST. Eine Entwicklerseite, die NICHT zur App gehört: sie steht
- * weder in `index.html` noch im GRUNDSTOCK noch in einem Register. Sie
- * zeigt die Uiverse-Originale, die für Redion geprüft wurden — samt der
- * Entscheidung, was aus jedem geworden ist.
- *
- * WARUM DIE ORIGINALE IN EINEM IFRAME LAUFEN. Sie tragen Klassen wie
- * `.button`, `.container`, `.loader` und `.spinner` — global und
- * ungekapselt. Im selben Dokument wie die Galerie kämen sie einander in
- * die Quere; jedes Original für sich in einem Rahmen bleibt unverändert
- * (das ist der Sinn eines Archivs) und stört nichts.
- *
- * WARUM KEIN ORIGINAL ERFUNDEN WIRD. 30 der 50 Einträge liegen ohne Code
- * vor. Sie bekommen eine Karte mit dem Satz „Originalcode noch nicht
- * verifiziert" — keine Rekonstruktion, keine ähnliche Komponente desselben
- * Autors. Ein Archiv, das rät, ist keins (Auftrag §0.10, §55.2).
- * ==========================================================================*/
-/* Nur diese Stufen dürfen ein Original ZEIGEN. „nur-identifiziert" und
-   „nicht-verifiziert" haben keins — und dürften auch keins zeigen, wenn
-   eines dastünde (Auftrag §7: „darf nicht behaupten, ihr Code sei das
-   Original"). */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/entwicklung/ui-reserve/reserve.ts (npm run bauen:ts). */
 const ZEIGBAR = new Set([
     'chat-original', 'chat-original-snippet', 'uiverse-galaxy-verifiziert',
     'uiverse-galaxy-verifiziert-struktur', 'uiverse-seite-verifiziert'
@@ -68,8 +43,6 @@ const karte = (e) => {
         const rahmen = document.createElement('iframe');
         rahmen.loading = 'lazy';
         rahmen.title = `Originalvorschau: ${e.name}`;
-        /* Ohne `allow-scripts`: die Originale brauchen kein JavaScript, und
-           ein Archiv, das keins ausführt, kann auch keins mitbringen. */
         rahmen.setAttribute('sandbox', '');
         rahmen.src = e.original;
         vorschau.append(rahmen);

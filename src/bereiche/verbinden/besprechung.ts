@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/besprechung.ts (npm run bauen:ts). */
 /* ============================================================================
  * meeting.js — Meeting Notes
  * ----------------------------------------------------------------------------

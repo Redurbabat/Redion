@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ablage/befehle.ts (npm run bauen:ts). */
 /* ==========================================================================
  * TRANSAKTION — Notions interne Befehle, und die drei Endpunkte dahinter
  * --------------------------------------------------------------------------

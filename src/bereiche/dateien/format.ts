@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/format.ts (npm run bauen:ts). */
 /* ==========================================================================
  * NOTIONFORMAT — Notions eigene Schreibweisen lesen und schreiben
  * --------------------------------------------------------------------------

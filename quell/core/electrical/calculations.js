@@ -1,15 +1,5 @@
 "use strict";
-/* ============================================================================
- * core/electrical/calculations.ts — reine, normfreie Elektrotechnik-Rechnung
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/electrical/calculations.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/core/electrical/calculations.js`.
- * ----------------------------------------------------------------------------
- * Dieser Kern kennt weder DOM noch Redion-Daten. Er rechnet Definitionen und
- * algebraische Umstellungen. Schutzorgane, Leiterquerschnitte, Spannungsfall-
- * Grenzen und regionale Normregeln gehoeren ausdruecklich nicht hierher (E128).
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/electrical/calculations.ts (npm run bauen:ts). */
 const ElectricalCalculations = (() => {
     const number = (value, label, zero = true) => {
         const parsed = Number(value);

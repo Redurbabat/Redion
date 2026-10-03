@@ -1,92 +1,18 @@
 "use strict";
-/* ============================================================================
- * bereiche/elektro/formelheft.ts — das Formelheft, das mitschwebt
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/elektro/formelheft.ts`.
- * ----------------------------------------------------------------------------
- * WOZU EIN SCHWEBENDES HEFT
- *
- * Beim Zeichnen und Rechnen braucht man die Formel NEBEN der Arbeit, nicht
- * statt ihrer. Ein Heft, das die Seite ersetzt, zwingt zum Hin- und
- * Herspringen; eines, das darüber schwebt, bleibt offen, während man
- * weiterzeichnet. Deshalb ist es ein Fenster und kein Bereich:
- *
- *   · es liegt über allem und lässt sich frei verschieben
- *   · es bleibt offen, wenn die Seite wechselt
- *   · es merkt sich, wo es stand und welche Seite offen war
- *
- * ZWEI HEFTE IN EINEM
- *
- *   Formeln    Redions eigene Sammlung aus `register/elektroformeln.js` —
- *              durchsuchbar und RECHENBAR: Werte einsetzen, Ergebnis lesen,
- *              Rechenweg ansehen.
- *   Mein Heft  ein eigenes PDF, das man einmal lädt und danach durchblättert.
- *              Es bleibt als normaler Redion-Anhang liegen und geht durch
- *              Sicherung und Wiederherstellung wie jede andere Datei.
- *
- * WARUM KEIN HEFT MITGELIEFERT WIRD. Eine gescannte Formelsammlung ist
- * fremdes Lehrmaterial mit eigenem Urheberrecht. Redion liefert deshalb die
- * FÄHIGKEIT, ein Heft zu benutzen, und eine eigene, selbst geschriebene
- * Sammlung dazu — die Formeln selbst gehören niemandem, die Auswahl und der
- * Satz eines fremden Hefts schon.
- *
- * ALLES BLEIBT LOKAL. Das geladene PDF liegt in der IndexedDB dieses
- * Browsers, wie jeder andere Anhang. Es geht an keinen Server.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/formelheft.ts (npm run bauen:ts). */
 const Formelheft = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    /**
-     * `R_V` wird zu R mit tiefgestelltem V.
-     *
-     * Im Register steht `R_V`, weil eine Zeichenkette keine Tiefstellung hat
-     * und der Unterstrich seit jeher dafür steht. Im gedruckten Heft steht
-     * dort ein tiefgestelltes V — und der Unterschied ist nicht Schönheit,
-     * sondern Lesbarkeit: `X_L − X_C` liest sich als drei Zeichen mit
-     * Strichen dazwischen, `X` mit tiefem `L` minus `X` mit tiefem `C` liest
-     * sich als eine Differenz zweier Grössen.
-     *
-     * ERST ESCAPEN, DANN AUSZEICHNEN. Die Reihenfolge ist die ganze Sicherheit
-     * dieser Funktion (§19): das `<sub>` kommt NACH dem Escapen hinein, also
-     * kann aus dem Inhalt kein Tag werden. Umgekehrt wäre es eine Lücke.
-     *
-     * Unicode-Tiefstellungen (U₀, Rᵢ, N₁) bleiben, wie sie sind — sie sehen
-     * bereits richtig aus und haben keinen Unterstrich.
-     */
-    /* WELCHE ZEICHEN TIEFGESTELLT WERDEN, und warum die alte Liste zu kurz war.
-     *
-     * Hier stand `[A-Za-zÄÖÜäöüß0-9]`. Das ist die deutsche Tastatur, nicht die
-     * Physik. Im Heft steht `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ`
-     * (Scheinleistung in Dreieckschaltung) und `AF_%` (relativer Anzeigefehler)
-     * — 42 Stellen, an denen der Unterstrich als Unterstrich stehen blieb.
-     *
-     * Ein sichtbarer Unterstrich in einer Formel ist kein Schönheitsfehler: er
-     * sieht aus wie ein Zeichen der Formel. `R_ϑ` liest sich als „R Unterstrich
-     * Theta", und es gibt keine solche Grösse.
-     *
-     * `\p{L}` nimmt jeden Buchstaben JEDER Schrift, `\p{N}` jede Ziffer, und
-     * `%` steht ausdrücklich dabei, weil es keins von beidem ist. Was nicht
-     * dazugehört — Leerzeichen, Klammern, Rechenzeichen — beendet die
-     * Tiefstellung weiterhin. Und weil `esc` VORHER läuft, kann durch die
-     * Erweiterung kein Zeichen hereinkommen, das vorher draussen war.
-     *
-     * Dieselbe Zeile steht in `schaltplan.ts`, `skizzen.ts` und
-     * `formelheft.ts`. test244 vergleicht die drei — auseinanderlaufen ist
-     * genau der Weg, auf dem dieser Fehler entstanden ist.
-     */
     const tief = (wert) => esc(wert).replace(/_([\p{L}\p{N}%]+)/gu, '<sub>$1</sub>');
-    /* Was sich das Heft über Sitzungen hinweg merkt. Alles in `Store.meta` —
-       es gehört dem Menschen, nicht einem Dokument. */
-    const M_ORT = 'elektro:heftOrt'; /* wo das Fenster stand */
-    const M_KAPITEL = 'elektro:heftKapitel'; /* welches Kapitel offen war */
-    const M_FAVORITEN = 'elektro:heftFavoriten'; /* gemerkte Formeln */
-    const M_PDF = 'elektro:heftPdf'; /* Kennung des eigenen Hefts */
-    const M_PDFSEITE = 'elektro:heftPdfSeite'; /* welche Seite zuletzt offen */
-    const M_PDFFAV = 'elektro:heftPdfFavoriten'; /* gemerkte PDF-Seiten */
-    const M_ANSICHT = 'elektro:heftAnsicht'; /* 'kapitel' oder 'buch' */
-    const M_SEITE = 'elektro:heftSeite'; /* welche Buchseite offen war */
+    const M_ORT = 'elektro:heftOrt';
+    const M_KAPITEL = 'elektro:heftKapitel';
+    const M_FAVORITEN = 'elektro:heftFavoriten';
+    const M_PDF = 'elektro:heftPdf';
+    const M_PDFSEITE = 'elektro:heftPdfSeite';
+    const M_PDFFAV = 'elektro:heftPdfFavoriten';
+    const M_ANSICHT = 'elektro:heftAnsicht';
+    const M_SEITE = 'elektro:heftSeite';
     const merke = (schluessel, wert) => {
         if (typeof Store !== 'undefined')
             Store.setMeta(schluessel, wert);
@@ -121,21 +47,8 @@ const Formelheft = (() => {
         merke(M_PDFFAV, liste);
         return i < 0;
     };
-    /* Nur EIN Heft zur Zeit — ein zweites Fenster wäre ein zweiter Zustand. */
     let fenster = null;
     const offen = () => !!fenster && document.body.contains(fenster);
-    /* ------------------------------------------------------------------------
-     * WER WISSEN WILL, OB DAS HEFT OFFEN IST (E503)
-     * ------------------------------------------------------------------------
-     * Der Knopf in der Zeichenleiste des Studios ZEIGT einen Zustand, den er
-     * nicht besitzt. Er könnte ihn abfragen — aber wann? Das Fenster geht auch
-     * über sein eigenes ✕ zu und über Escape, und beides sieht die Leiste
-     * nicht. Ein Knopf, der dann noch gedrückt aussieht, lügt.
-     *
-     * Also sagt das Heft Bescheid. Dasselbe Muster wie `Zeichenziel.horche`,
-     * damit es nicht ein zweites gibt (§8): eine Menge, ein Ruf, und wer nicht
-     * mehr im Baum hängt, meldet sich beim nächsten Ruf mit `vergiss` ab.
-     * ----------------------------------------------------------------------*/
     const horcher = new Set();
     const horche = (fn) => { horcher.add(fn); };
     const vergiss = (fn) => { horcher.delete(fn); };
@@ -143,17 +56,9 @@ const Formelheft = (() => {
         horcher.forEach(fn => { try {
             fn();
         }
-        catch { /* ein toter Horcher hält niemanden auf */ } });
+        catch { } });
     };
     const schliessen = () => { fenster?.remove(); fenster = null; sagen(); };
-    /* ------------------------------------------------------------------------
-     * DER RECHNER AN DER FORMEL (Punkte 61–90)
-     * ------------------------------------------------------------------------
-     * Jede Formel bekommt Eingabefelder für ihre Grössen und eine Auswahl,
-     * WONACH gesucht wird. Das gesuchte Feld wird gesperrt, statt es zu
-     * verstecken: so sieht man, welche Grösse gerade herauskommt, und die
-     * Felder springen beim Umschalten nicht durcheinander.
-     * ----------------------------------------------------------------------*/
     const rechnerHtml = (id) => {
         const f = Register.elektroformeln.holen(id);
         if (!f)
@@ -182,30 +87,10 @@ const Formelheft = (() => {
         `<div class="fh-groessen">` + f.groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ${esc(x.name)}` +
         (x.einheit ? ` <em>${esc(x.einheit)}</em>` : '') + `</span>`).join('') + `</div>` +
         rechnerHtml(f.id) + `</article>`;
-    /* ========================================================================
-     * DIE BUCHSEITE (E194)
-     * ------------------------------------------------------------------------
-     * Redion schreibt sein Formelbuch selbst — eigene Gestaltung, eigene
-     * Skizzen — aber mit DENSELBEN SEITENZAHLEN wie das gedruckte Heft. Wer
-     * beides nebeneinander liegen hat, blättert in beiden auf 14 und findet
-     * beide Male die Wechselstromwiderstände.
-     *
-     * Das ist der ganze Zweck, und er ist nicht dasselbe wie „das PDF
-     * anzeigen": ein Scan ist ein Bild und bleibt eines. Eine Buchseite in
-     * Redion ist RECHENBAR — jede Formel darauf lässt sich antippen und mit
-     * Werten füllen —, sie ist durchsuchbar, sie folgt Hell und Dunkel, und
-     * sie wird auf dem Telefon nicht kleiner, sondern anders angeordnet.
-     *
-     * WAS DIE SEITE ZEIGT, KOMMT AUS DEM REGISTER. Die Abschnitte, ihre
-     * Reihenfolge und ihre Seitenzahl stehen in `Register.elektroformeln`;
-     * hier wird nur gesetzt. Eine Seite, die Redion noch nicht geschrieben
-     * hat, sagt das — statt leer zu bleiben und wie ein Fehler auszusehen.
-     * ======================================================================*/
     const seiteJetzt = () => {
         const n = Number(gemerkt(M_SEITE, 4)) || 4;
         return Math.max(1, Math.min(Register.elektroformeln.letzteSeite(), Math.round(n)));
     };
-    /** Die nächste Seite in `richtung`, auf der wirklich etwas steht. */
     const naechsteVolle = (von, richtung) => {
         const voll = Register.elektroformeln.seitenMitInhalt();
         if (!voll.length)
@@ -213,29 +98,10 @@ const Formelheft = (() => {
         const treffer = richtung > 0
             ? voll.find(n => n > von)
             : [...voll].reverse().find(n => n < von);
-        /* Am Ende stehenbleiben statt umzuspringen: wer vorwärts blättert und
-           plötzlich auf Seite 4 landet, hat den Faden verloren. */
         return treffer ?? von;
     };
-    /**
-     * Ein Abschnitt, aufgebaut wie eine Zeile im gedruckten Heft: die
-     * Überschrift darüber, links die Skizze, in der Mitte die Grössenliste,
-     * rechts die Formelzeilen — ALLE, in Buchreihenfolge.
-     *
-     * Die Anordnung ist die des Hefts, weil sie das Mitlesen trägt: wer im
-     * gedruckten Heft die dritte Formel von oben sucht, findet sie hier als
-     * dritte Zeile wieder. Gestaltung — Farben, Schrift, eigene Skizzen,
-     * eigene Erklärsätze — bleibt Redions eigene (E194).
-     *
-     * Antippbar ist eine Zeile, wenn hinter ihr ein RECHENBARER Eintrag
-     * steht. Zeilen ohne Rechenweg — Beziehungen wie `1 kWh = 3600 kWs` —
-     * stehen als Text da: wahr, aber nichts zum Auflösen.
-     */
     const abschnittHtml = (a, zeilen, fav) => {
         const skizze = (typeof Elektroskizzen !== 'undefined') ? Elektroskizzen.zu(a.id) : '';
-        /* Die Grössenliste steht im Heft neben dem Abschnitt und kommt von dort.
-           Fehlt sie, wird sie aus den rechenbaren Zeilen zusammengesetzt — jede
-           Grösse einmal, in der Reihenfolge ihres ersten Auftretens. */
         const groessen = (a.groessen || []).slice();
         if (!groessen.length) {
             const gesehen = new Set();
@@ -249,11 +115,6 @@ const Formelheft = (() => {
                 });
             });
         }
-        /* AUCH DIE BESCHREIBUNG WIRD TIEFGESTELLT, nicht nur das Zeichen.
-           „Spannung an R_V" stand mit sichtbarem Unterstrich in der Liste, weil
-           hier `esc` statt `tief` lief. Eine Grösse, die in ihrer eigenen
-           Erklärung falsch geschrieben ist, erklärt nichts.
-           Im `title` bleibt `esc`: ein Attribut verträgt keine Auszeichnung. */
         const legende = groessen.map((x) => `<span title="${esc(x.was || x.name)}"><i>${tief(x.zeichen)}</i> ` +
             `${tief(x.name)}${x.einheit ? ` <em>${esc(x.einheit)}</em>` : ''}</span>`).join('');
         const formelnHtml = zeilen.map(z => {
@@ -266,25 +127,15 @@ const Formelheft = (() => {
             }
             return `<span class="bs-zeile">${tief(z.f)}</span>`;
         }).join('');
-        /* Eine Wertetabelle (Konstanten, Werkstoffe): erste Zeile ist der Kopf. */
         const tabelle = (a.tabelle && a.tabelle.length)
             ? `<div class="bs-tabelle"><table>` +
                 `<thead><tr>` + a.tabelle[0].map((z) => `<th>${tief(z)}</th>`).join('') + `</tr></thead>` +
                 `<tbody>` + a.tabelle.slice(1).map(reihe => `<tr>` + reihe.map(z => `<td>${tief(z)}</td>`).join('') + `</tr>`).join('') +
                 `</tbody></table></div>`
             : '';
-        /* Ein Abschnitt, der NUR ein Bild zeigt — die Bauelemente-Seite hat
-           zwölf davon — braucht keine Formelspalte. Er bekommt eine eigene
-           Klasse und stellt sich zu zweit nebeneinander, wie im Heft. Ohne das
-           stand jedes Bauteil allein in einer Zeile und zwei Drittel der Seite
-           blieben weiss. */
         const nurBild = !formelnHtml && !legende && !tabelle;
         return `<section class="bs-abschnitt${nurBild ? ' bs-nurbild' : ''}" ` +
             `data-abschnitt="${esc(a.id)}">` +
-            /* Auch die Überschrift und der Hinweis werden tiefgestellt. „Reihen-
-               schaltung von R, X_L und X_C" stand auf Seite 14 und 15 mit zwei
-               sichtbaren Unterstrichen in der Überschrift — der auffälligsten
-               Zeile des Abschnitts. */
             `<h3>${tief(a.titel)}</h3>` +
             (a.hinweis ? `<p class="bs-hinweis">${tief(a.hinweis)}</p>` : '') +
             `<div class="bs-koerper">` +
@@ -317,14 +168,6 @@ const Formelheft = (() => {
                     `${esc(voll.join(', '))}.</p></div>`) +
             `</div>`;
     };
-    /* ------------------------------------------------------------------------
-     * DAS EIGENE PDF
-     * ------------------------------------------------------------------------
-     * Es liegt als normaler Redion-Anhang in der IndexedDB — dieselbe Ablage
-     * wie Bilder und Aufnahmen, also stückweise gespeichert und in `.redion`
-     * mitgesichert. Gerendert wird mit demselben pdf.js, das der PDF-Bereich
-     * schon benutzt: kein zweiter Leser, keine zweite Bibliothek.
-     * ----------------------------------------------------------------------*/
     const pdfLaden = async () => {
         const eingabe = document.createElement('input');
         eingabe.type = 'file';
@@ -335,9 +178,6 @@ const Formelheft = (() => {
                 return;
             UI.toast('Heft wird abgelegt …');
             try {
-                /* Über den gewöhnlichen Dateiweg — stückweise, ohne alles in den
-                   Arbeitsspeicher zu holen (§14). Ein 90-seitiges Heft kann gross
-                   sein, und es soll auch auf dem Telefon gehen. */
                 const angelegt = await Dateien.ablegen(datei, null);
                 merke(M_PDF, angelegt.id);
                 merke(M_PDFSEITE, 1);
@@ -350,7 +190,6 @@ const Formelheft = (() => {
         });
         eingabe.click();
     };
-    /** Das geladene Heft wieder entfernen — die Datei bleibt in der Ablage. */
     const pdfLoesen = () => {
         merke(M_PDF, '');
         merke(M_PDFSEITE, 1);
@@ -358,7 +197,6 @@ const Formelheft = (() => {
     };
     let pdfDoc = null;
     let pdfDateiId = '';
-    /** Eine Seite des eigenen Hefts zeichnen. Gibt null, wenn keins da ist. */
     const pdfSeite = async (nr, breite) => {
         const id = String(gemerkt(M_PDF, ''));
         if (!id)
@@ -375,7 +213,6 @@ const Formelheft = (() => {
         const seite = Math.max(1, Math.min(anzahl, Math.round(nr) || 1));
         const s = await pdfDoc.getPage(seite);
         const roh = s.getViewport({ scale: 1 });
-        /* Auf die Fensterbreite skalieren, aber nicht kleiner als lesbar. */
         const skala = Math.max(0.7, Math.min(3, breite / roh.width));
         const vp = s.getViewport({ scale: skala });
         const leinwand = document.createElement('canvas');
@@ -384,9 +221,6 @@ const Formelheft = (() => {
         await s.render({ canvasContext: leinwand.getContext('2d'), viewport: vp }).promise;
         return { seiten: anzahl, nr: seite, bild: leinwand.toDataURL('image/png') };
     };
-    /* ------------------------------------------------------------------------
-     * DAS FENSTER
-     * ----------------------------------------------------------------------*/
     let neuMalen = () => { };
     const oeffne = (kapitelWunsch) => {
         if (offen()) {
@@ -401,70 +235,25 @@ const Formelheft = (() => {
         f.setAttribute('role', 'dialog');
         f.setAttribute('aria-label', 'Formelheft');
         fenster = f;
-        /* Wo es zuletzt stand — aber nie ausserhalb des Bildes. Ein Fenster,
-           das nach einem Bildschirmwechsel unerreichbar ist, ist verloren. */
-        /* `null` heisst „noch nie gemerkt" — und das ist NICHT dasselbe wie
-           „gemerkt bei 0". Hier stand `ort.x || vorgabe`, und damit vergass das
-           Heft seinen Platz genau dann, wenn man es an den linken oder oberen
-           Rand geschoben hatte: 0 ist falsch im Sinne von JavaScript und richtig
-           im Sinne des Menschen. Derselbe Fehler wie eine Zahl, die zu einer
-           anderen Zahl wird — er sieht aus wie Absicht. */
         const ort = gemerkt(M_ORT, null);
         const zahl = (wert, vorgabe) => (typeof wert === 'number' && Number.isFinite(wert)) ? wert : vorgabe;
         const breite = Math.min(Math.max(zahl(ort?.w, 420), 320), window.innerWidth - 20);
         const hoehe = Math.min(Math.max(zahl(ort?.h, 520), 260), window.innerHeight - 20);
         f.style.width = breite + 'px';
         f.style.height = hoehe + 'px';
-        /* Im Bild bleiben, aber die Kante DARF die Kante sein. Ein erzwungener
-           Rand von 8 px verschiebt jedes gemerkte Fenster bei jedem Öffnen. */
         f.style.left = Math.max(0, Math.min(zahl(ort?.x, window.innerWidth - breite - 30), Math.max(0, window.innerWidth - breite))) + 'px';
-        /* ES DARF NICHT DEN KNOPF VERDECKEN, DER ES ÖFFNET (E503).
-         *
-         * Im Studio stehen Kopfleiste und Zeichenleiste oben; die alte Vorgabe
-         * von 90 px legte das Heft mit seiner Kopfzeile genau darauf. Aufgehen
-         * ging danach noch — zugehen nicht mehr, weil das Fenster den Knopf
-         * abfängt. Gefunden hat es der Prüflauf, nicht das Auge: Playwright
-         * sagte „fh-kopf intercepts pointer events", und genau das täte auch
-         * ein Finger.
-         *
-         * GEMESSEN, NICHT GERATEN (§36): der tiefste Rand der Leiste, nicht
-         * eine Zahl, die beim nächsten Umbau wieder falsch ist. Ohne Studio
-         * gibt es keine Leiste, und dann bleibt es bei 90.
-         *
-         * Und es gilt AUCH für einen gemerkten Ort: über der Leiste zu parken
-         * wählt niemand mit Absicht — das ist der Zustand, in dem der Knopf
-         * nicht mehr zu treffen ist. */
         const leiste = document.querySelector('.document-drawingbar');
         const untenVon = leiste
             ? Math.round(leiste.getBoundingClientRect().bottom) + 10
             : 0;
         f.style.top = Math.max(0, Math.min(Math.max(zahl(ort?.y, 90), untenVon), Math.max(0, window.innerHeight - hoehe))) + 'px';
         document.body.appendChild(f);
-        /* --- Inhalt ---------------------------------------------------------- */
         let suchtext = '';
-        /* WELCHE ANSICHT OFFEN WAR, ÜBERLEBT DAS SCHLIESSEN — und seit E503
-           gilt das auch für das EIGENE Heft.
-    
-           Bis dahin war `pdfModus` eine reine Sitzungsvariable: wer sein Heft
-           aufgeschlagen hatte, bekam beim nächsten Öffnen wieder das
-           Kapitelverzeichnis und musste sich durchklicken. Genau das hat Redur
-           gemeint mit „die im PDF dort sehen kann" — es soll DA sein, nicht
-           zwei Tipps entfernt.
-    
-           `&& hatEigenes()`: gemerkt wird die Ansicht, aber gezeigt wird sie
-           nur, solange es ein Heft gibt. Wer seins über ⤒ gelöst hat, landet
-           wieder bei den Formeln statt auf einer Einladung, die er kennt. */
         const ansicht = String(gemerkt(M_ANSICHT, 'kapitel'));
         const hatEigenes = () => !!String(gemerkt(M_PDF, ''));
         let pdfModus = ansicht === 'pdf' && hatEigenes();
         let buchModus = ansicht === 'buch';
-        /* EINE TÜR für die drei Ansichten (§8). Zwei `merke`-Aufrufe mit je
-           eigener Fallunterscheidung liefen beim ersten Entwurf auseinander:
-           „Buch" schrieb 'kapitel', obwohl das eigene Heft offen blieb. */
         const ansichtMerken = () => merke(M_ANSICHT, pdfModus ? 'pdf' : (buchModus ? 'buch' : 'kapitel'));
-        /* Welche Formel nach dem nächsten Malen aufgeklappt werden soll — der
-           Weg von einem Suchtreffer zur Formel auf ihrer Seite. Wird nach dem
-           Malen wieder geleert, sonst klappt sie bei jedem Blättern erneut auf. */
         let buchOeffnen = '';
         const male = async () => {
             const kapitel = String(gemerkt(M_KAPITEL, 'grund'));
@@ -521,11 +310,6 @@ const Formelheft = (() => {
                 }
                 return;
             }
-            /* Redions eigenes Buch, Seite für Seite (E194).
-      
-               Die Suche gilt AUCH hier: wer etwas sucht, will es finden und nicht
-               erst die richtige Seite raten. Ein Treffer sagt dann, auf welcher
-               Seite er steht — und ein Tipp darauf blättert hin. */
             if (buchModus) {
                 const nr = seiteJetzt();
                 const R = Register.elektroformeln;
@@ -567,7 +351,6 @@ const Formelheft = (() => {
                     `</div>`;
                 return;
             }
-            /* Die eigene Sammlung */
             const kapitelListe = Register.elektroformeln.kapitel();
             const treffer = suchtext
                 ? Register.elektroformeln.suche(suchtext)
@@ -587,22 +370,8 @@ const Formelheft = (() => {
                     ? treffer.map((x) => formelHtml(x, fav)).join('')
                     : `<div class="fh-leer"><p>Nichts gefunden.</p></div>`) +
                 `</div>`;
-            /* Zwei Dinge am Kapitelband, und beide fielen erst beim Hinsehen auf:
-               es lief rechts scharf aus dem Fenster („Leistung und E…"), und das
-               aktive Kapitel stand ausserhalb des Bildes, sodass gar kein Kapitel
-               hervorgehoben AUSSAH. Wer nicht weiss, wo er ist, blättert nicht
-               weiter — er sucht.
-      
-               Der auslaufende Rand kommt von `Rollrand` und nicht von einer
-               vierten abgeschriebenen Rechnung (E141, E151, E159 sind die drei
-               vorigen). */
             const band = f.querySelector('.fh-kapitel');
             if (band) {
-                /* Der Verlauf gehört an die HÜLLE `.fh-band`, nicht ans Rollfeld: ein
-                   Pseudo-Element im Rollfeld rollt mit und wäre nach dem ersten Wisch
-                   weg. Die Hülle steht deshalb im Markup und wird nicht nachträglich
-                   gesucht — `parentElement` wäre hier das ganze Fenster gewesen, und
-                   der Verlauf hätte über die volle Höhe gelegen. */
                 const huelle = band.closest('.fh-band');
                 if (typeof Rollrand !== 'undefined')
                     Rollrand.binde(band, { art: 'mehr', an: huelle });
@@ -613,21 +382,6 @@ const Formelheft = (() => {
         };
         neuMalen = () => {
             void male().then(() => {
-                /* DER GRIFF ZUM ZIEHEN KOMMT ZURÜCK (E503).
-                 *
-                 * `male` schreibt `f.innerHTML` neu — und nahm damit jedes Mal den
-                 * Griff unten rechts weg. Angehängt wurde er einmal beim Öffnen,
-                 * gleich darauf malte `neuMalen` das Fenster, und ab da war er fort:
-                 * das Heft liess sich seit jeher NICHT in der Grösse ändern, obwohl
-                 * `pointermove` es konnte und `M_ORT` sogar Breite und Höhe merkte.
-                 *
-                 * Gefunden hat es Redurs Satz „so dass ich es … kleiner grösser
-                 * machen kann" — und dann der Prüflauf, der `.fh-groesse` suchte
-                 * und `null` bekam. Kein Auge hätte es gemeldet: ein 14-px-Dreieck,
-                 * das fehlt, sieht aus wie eine Ecke.
-                 *
-                 * `appendChild` mit demselben Knoten ist ein Verschieben ans Ende,
-                 * also auch beim zweiten Mal richtig. */
                 f.appendChild(griff);
                 if (!buchOeffnen)
                     return;
@@ -636,7 +390,6 @@ const Formelheft = (() => {
                 ziel?.click();
             });
         };
-        /* --- Verschieben und Grösse ändern ------------------------------------ */
         let zieht = null;
         f.addEventListener('pointerdown', e => {
             const ziel = e.target;
@@ -650,26 +403,16 @@ const Formelheft = (() => {
             zieht = amRand
                 ? { dx: e.clientX - r.width, dy: e.clientY - r.height, art: 'groesse' }
                 : { dx: e.clientX - r.left, dy: e.clientY - r.top, art: 'ort' };
-            /* EIN VERWEIGERTER FANG IST KEIN ABSTURZ (E503).
-               `setPointerCapture` wirft `NotFoundError`, wenn der Zeiger nicht
-               mehr aktiv ist — ein abgebrochener Stift, ein Finger, den das
-               System schon zurückgezogen hat. Ohne Fang zieht das Fenster
-               weiterhin (die Griffe hängen an `f`, nicht am Zeiger); MIT einer
-               geworfenen Ausnahme stand stattdessen „Etwas ist schiefgelaufen"
-               über der Seite. Eine Fehlerkarte für eine Fensterbewegung ist
-               nicht verhältnismässig (§35: sagen, was zählt — und nur das). */
             try {
                 f.setPointerCapture(e.pointerId);
             }
-            catch { /* ohne Fang geht es auch */ }
+            catch { }
             e.preventDefault();
         });
         f.addEventListener('pointermove', e => {
             if (!zieht)
                 return;
             if (zieht.art === 'ort') {
-                /* Immer im Bild bleiben — sonst schiebt man das Heft weg und
-                   bekommt es nicht zurück. */
                 const b = f.offsetWidth, h = f.offsetHeight;
                 f.style.left = Math.max(0, Math.min(window.innerWidth - b, e.clientX - zieht.dx)) + 'px';
                 f.style.top = Math.max(0, Math.min(window.innerHeight - h, e.clientY - zieht.dy)) + 'px';
@@ -692,7 +435,6 @@ const Formelheft = (() => {
         };
         f.addEventListener('pointerup', zugEnde);
         f.addEventListener('pointercancel', zugEnde);
-        /* --- Klicks ----------------------------------------------------------- */
         f.addEventListener('click', e => {
             const b = e.target.closest('[data-a],[data-k],[data-fav],[data-gesucht],[data-springe],' +
                 '[data-buchformel],[data-buchseite]');
@@ -719,7 +461,6 @@ const Formelheft = (() => {
                 merke(M_SEITE, naechsteVolle(seiteJetzt(), b.dataset.a === 'naechsteVoll' ? 1 : -1));
                 return neuMalen();
             }
-            /* Ein Treffer aus der Suche: erst hinblättern, dann die Formel öffnen. */
             if (b.dataset.buchseite) {
                 const seite = Number(b.dataset.buchseite);
                 if (seite > 0)
@@ -728,9 +469,6 @@ const Formelheft = (() => {
                 buchOeffnen = b.dataset.buchformel || '';
                 return neuMalen();
             }
-            /* Eine Formel auf der Buchseite antippen: der Rechner klappt darunter
-               auf. Nur einer zur Zeit — zwei offene Rechner sind zwei Zustände,
-               und man verliert, welcher gerade gemeint ist. */
             if (b.dataset.buchformel) {
                 const id = b.dataset.buchformel;
                 const abschnitt = b.closest('.bs-abschnitt');
@@ -781,7 +519,6 @@ const Formelheft = (() => {
                 favoritUmschalten(b.dataset.fav);
                 return neuMalen();
             }
-            /* Die gesuchte Grösse umschalten — und gleich neu rechnen. */
             if (b.dataset.gesucht) {
                 const rechner = b.closest('.fh-rechner');
                 rechner.querySelectorAll('[data-gesucht]').forEach(x => x.classList.remove('an'));
@@ -789,7 +526,6 @@ const Formelheft = (() => {
                 return rechne(rechner);
             }
         });
-        /* --- Eingaben --------------------------------------------------------- */
         f.addEventListener('input', e => {
             const feld = e.target;
             if (feld.type === 'search') {
@@ -808,22 +544,17 @@ const Formelheft = (() => {
             if (rechner)
                 rechne(rechner);
         });
-        /* --- Rechnen ---------------------------------------------------------- */
         const rechne = (rechner) => {
             const id = rechner.dataset.formel || '';
             const gesucht = rechner.querySelector('[data-gesucht].an')?.dataset.gesucht || '';
             const werte = {};
             rechner.querySelectorAll('[data-g]').forEach(feld => {
                 const z = feld.dataset.g || '';
-                /* Das gesuchte Feld wird gesperrt statt versteckt — sonst springen
-                   die Felder beim Umschalten, und man verliert die Übersicht. */
                 const istGesucht = z === gesucht;
                 feld.disabled = istGesucht;
                 feld.closest('.fh-feld')?.classList.toggle('gesucht', istGesucht);
                 if (istGesucht)
                     return;
-                /* Komma UND Punkt annehmen — auf einer Schweizer Tastatur tippt man
-                   1450,5, und daran darf keine Rechnung scheitern. */
                 const roh = feld.value.trim().replace(',', '.');
                 if (roh !== '')
                     werte[z] = Number(roh);
@@ -837,7 +568,6 @@ const Formelheft = (() => {
             if (!erg.ok) {
                 anzeige.className = 'fh-ergebnis fh-wartet';
                 anzeige.textContent = erg.fehler;
-                /* Das gesuchte Feld bleibt leer, solange nichts herauskommt. */
                 const feld = rechner.querySelector(`[data-g="${CSS.escape(gesucht)}"]`);
                 if (feld)
                     feld.value = '';
@@ -852,12 +582,6 @@ const Formelheft = (() => {
             if (feld)
                 feld.value = zahlText(gerundet);
         };
-        /**
-         * Zahlen lesbar schreiben (Punkt 70).
-         *
-         * Sehr grosse und sehr kleine Werte in technischer Schreibweise, alles
-         * dazwischen normal. `0,000008` liest niemand; `8e-6` schon.
-         */
         const zahlText = (n) => {
             if (!isFinite(n))
                 return '—';
@@ -874,12 +598,10 @@ const Formelheft = (() => {
                 '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
             return String(e).split('').map(c => zeichen[c] || c).join('');
         };
-        /* Der Griff zum Grösseändern, unten rechts. */
         const griff = document.createElement('div');
         griff.className = 'fh-groesse';
         griff.setAttribute('aria-hidden', 'true');
         f.appendChild(griff);
-        /* Escape schliesst (§38). */
         f.addEventListener('keydown', e => { if (e.key === 'Escape')
             schliessen(); });
         if (kapitelWunsch)
@@ -888,29 +610,12 @@ const Formelheft = (() => {
         sagen();
         return f;
     };
-    /** Auf- und zuklappen — für Tastenkürzel und Menüeinträge. */
     const umschalten = (kapitel) => {
         if (offen())
             schliessen();
         else
             oeffne(kapitel);
     };
-    /* ------------------------------------------------------------------------
-     * DER WEG HIERHER
-     * ------------------------------------------------------------------------
-     * Zwei Eingänge, und beide sind nötig.
-     *
-     * Der Knopf in der Planfläche ist der wichtigere — dort wird gezeichnet,
-     * und dort wird nachgeschlagen. Aber eine Formel braucht man auch beim
-     * Schreiben einer Aufgabe, beim Ausfüllen einer Tabelle und beim
-     * Nachrechnen einer Rechnung, und für diese Fälle steht der Befehl in der
-     * Palette (Strg K → „Formelheft"). Beides zeigt DASSELBE Fenster: es gibt
-     * nur eines, und `umschalten` findet es wieder.
-     *
-     * Angemeldet wird beim Laden, nicht beim ersten Öffnen. Ein Befehl, der
-     * erst existiert, nachdem man ihn einmal anders benutzt hat, ist kein
-     * Befehl — er ist ein Andenken.
-     * ----------------------------------------------------------------------*/
     if (typeof Register !== 'undefined' && Register.befehle) {
         Register.befehle.melde({
             titel: 'Formelheft öffnen',

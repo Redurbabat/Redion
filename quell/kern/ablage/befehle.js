@@ -1,49 +1,8 @@
 "use strict";
-/* ==========================================================================
- * TRANSAKTION — Notions interne Befehle, und die drei Endpunkte dahinter
- * --------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/ablage/befehle.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/ablage/befehle.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notions eigene App spricht nicht über die öffentliche API mit sich selbst.
- * Sie benutzt drei interne Adressen:
- *
- *   /api/v3/loadPageChunk        eine Seite samt allem, was daran hängt
- *   /api/v3/queryCollection      die Zeilen einer Datenbank durch eine Ansicht
- *   /api/v3/submitTransaction    jede Änderung, als Liste kleiner Befehle
- *
- * Der dritte ist der interessante. Notion schickt nie „speichere diese
- * Seite", sondern immer eine Liste von Operationen:
- *
- *   { id, table, path, command, args }
- *
- * mit fünf Befehlen: set, update, listAfter, listBefore, listRemove. Alles,
- * was in Notion geschieht — Tippen, Verschieben, Löschen — ist eine solche
- * Liste.
- *
- * Diese beiden Punkte standen hier als einzige auf „offen", mit der
- * Begründung „ohne Server sinnlos". Das war zu bequem gedacht. Der Nutzen
- * liegt nicht im Server, sondern im Modell: eine Liste von Befehlen ist
- * genau eine Änderung. Sie geht ganz durch oder gar nicht, sie ist ein
- * einziger Schritt beim Rückgängigmachen, und sie lässt sich aufheben und
- * später noch einmal abspielen.
- *
- * Genau das gibt es hier jetzt. Und weil der Servicearbeiter schon /v1/
- * durchreicht, beantwortet er auch /api/v3/ — echte Aufrufe, echte Antworten
- * in Notions Form.
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ablage/befehle.ts (npm run bauen:ts). */
 const Transaktion = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const TABELLEN = ['block', 'collection', 'collection_view', 'notion_user'];
-    /* ========================================================================
-     * 1 · DEN DATENSATZ FINDEN
-     * ======================================================================*/
     const holen = (table, id) => {
         if (table === 'block')
             return Store.getBlock(id);
@@ -64,20 +23,11 @@ const Transaktion = (() => {
             return Store.updateView(satz.id, patch);
         return satz;
     };
-    /* ========================================================================
-     * 2 · DER PFAD
-     * ------------------------------------------------------------------------
-     * Notion adressiert in den Datensatz hinein: ["properties","title"] meint
-     * satz.properties.title. Bei uns heisst properties „props" — das wird
-     * übersetzt, damit fremde Werkzeuge dieselben Pfade schreiben können wie
-     * gegen Notion.
-     * ======================================================================*/
     const UEBERSETZT = { properties: 'props', content: 'content', format: 'format',
         schema: 'schema', last_edited_time: 'edited',
         created_time: 'created', alive: 'alive' };
     const pfadTeile = (pfad) => (Array.isArray(pfad) ? pfad : (pfad ? [pfad] : []))
         .map((p, i) => (i === 0 && UEBERSETZT[p]) ? UEBERSETZT[p] : p);
-    /** Geht den Pfad entlang und legt fehlende Zwischenstufen an. */
     const hin = (wurzel, teile) => {
         let k = wurzel;
         for (const t of teile) {
@@ -96,9 +46,6 @@ const Transaktion = (() => {
         }
         return k;
     };
-    /* ========================================================================
-     * 3 · DIE FÜNF BEFEHLE
-     * ======================================================================*/
     const befehlAusfuehren = (op) => {
         const { id, table, command } = op;
         const args = op.args;
@@ -108,7 +55,6 @@ const Transaktion = (() => {
         const satz = holen(table, id);
         if (!satz)
             return { ok: false, fehler: 'Kein Datensatz mit der ID ' + id };
-        /* --- set: setzt genau diesen Platz auf diesen Wert ----------------- */
         if (command === 'set') {
             if (!teile.length)
                 return { ok: false, fehler: 'set ohne Pfad' };
@@ -116,7 +62,6 @@ const Transaktion = (() => {
             const eltern = teile.slice(0, -1);
             if (letzter === undefined)
                 return { ok: false, fehler: 'set ohne Pfad' };
-            /* Auf oberster Ebene direkt am Satz — sonst tief hinein */
             if (!eltern.length) {
                 sichern(table, satz, { [letzter]: args });
             }
@@ -130,8 +75,6 @@ const Transaktion = (() => {
             }
             return { ok: true };
         }
-        /* --- update: legt die Felder von args obendrauf, ohne den Rest zu
-               verlieren. Notions Unterschied zu set. --------------------- */
         if (command === 'update') {
             if (!args || typeof args !== 'object')
                 return { ok: false, fehler: 'update braucht ein Objekt' };
@@ -148,7 +91,6 @@ const Transaktion = (() => {
             }
             return { ok: true };
         }
-        /* --- Die drei Listenbefehle ---------------------------------------- */
         if (command === 'listAfter' || command === 'listBefore' || command === 'listRemove') {
             const wurzel = teile[0] ?? 'content';
             const restPfad = teile.slice(1);
@@ -162,7 +104,6 @@ const Transaktion = (() => {
                 liste.splice(i, 1);
             }
             else {
-                /* Doppelte gibt es nicht — erst raus, dann an die neue Stelle */
                 const schon = liste.indexOf(wert);
                 if (schon >= 0)
                     liste.splice(schon, 1);
@@ -170,13 +111,13 @@ const Transaktion = (() => {
                 let ziel = anker === undefined || anker === null ? -1 : liste.indexOf(anker);
                 if (command === 'listAfter') {
                     if (ziel < 0)
-                        liste.push(wert); /* ohne Anker: ans Ende */
+                        liste.push(wert);
                     else
                         liste.splice(ziel + 1, 0, wert);
                 }
                 else {
                     if (ziel < 0)
-                        liste.unshift(wert); /* ohne Anker: an den Anfang */
+                        liste.unshift(wert);
                     else
                         liste.splice(ziel, 0, wert);
                 }
@@ -196,21 +137,13 @@ const Transaktion = (() => {
         }
         return { ok: false, fehler: 'Unbekannter Befehl: ' + command };
     };
-    /* ========================================================================
-     * 4 · EINE TRANSAKTION
-     * ------------------------------------------------------------------------
-     * Alles oder nichts: geht ein Befehl schief, wird der Stand von vorher
-     * wiederhergestellt. Dafür wird vorher gemerkt, wie die betroffenen
-     * Datensätze aussahen — nicht die ganze Ablage, nur das Nötige.
-     * ======================================================================*/
-    const verlauf = []; /* die letzten Transaktionen, zum Abspielen */
+    const verlauf = [];
     const MAX_VERLAUF = 50;
     const ausfuehren = (operationen, opt = {}) => {
         opt = opt || {};
         const ops = Array.isArray(operationen) ? operationen : [];
         if (!ops.length)
             return { ok: true, ausgefuehrt: 0, fehler: [] };
-        /* Der Stand vorher — je Datensatz einmal, auch wenn er mehrfach vorkommt */
         const vorher = new Map();
         ops.forEach(op => {
             const schluessel = op.table + ':' + op.id;
@@ -220,7 +153,6 @@ const Transaktion = (() => {
             if (satz)
                 vorher.set(schluessel, JSON.parse(JSON.stringify(satz)));
         });
-        /* Ein Schritt zum Rückgängigmachen für die ganze Liste, nicht je Befehl */
         if (!opt.stumm && typeof Verlauf !== 'undefined')
             Verlauf.merke(true);
         const fehler = [];
@@ -240,7 +172,6 @@ const Transaktion = (() => {
             if (!e.ok && !opt.weiterMachen)
                 break;
         }
-        /* Ging etwas schief, kommt der alte Stand zurück */
         if (fehler.length && !opt.weiterMachen) {
             vorher.forEach((satz, schluessel) => {
                 const [table, id] = [schluessel.slice(0, schluessel.indexOf(':')),
@@ -267,18 +198,12 @@ const Transaktion = (() => {
         }
         return { ok: !fehler.length, ausgefuehrt: getan, fehler };
     };
-    /** Eine gemerkte Transaktion noch einmal abspielen. */
     const abspielen = (i) => {
         const t = verlauf[i];
         if (!t)
             return { ok: false, fehler: [{ fehler: 'Diese Transaktion gibt es nicht' }] };
         return ausfuehren(t.ops);
     };
-    /* ========================================================================
-     * 5 · HANDLICHE BAUSTEINE
-     * ------------------------------------------------------------------------
-     * Damit man die Befehle nicht von Hand zusammensetzen muss.
-     * ======================================================================*/
     const setze = (id, pfad, wert, table) => ({ id, table: table || 'block', path: pfad, command: 'set', args: wert });
     const aendere = (id, pfad, felder, table) => ({ id, table: table || 'block', path: pfad, command: 'update', args: felder });
     const dahinter = (id, pfad, was, anker, table) => ({ id, table: table || 'block', path: pfad, command: 'listAfter',
@@ -286,10 +211,6 @@ const Transaktion = (() => {
     const davor = (id, pfad, was, anker, table) => ({ id, table: table || 'block', path: pfad, command: 'listBefore',
         args: anker ? { id: was, before: anker } : { id: was } });
     const heraus = (id, pfad, was, table) => ({ id, table: table || 'block', path: pfad, command: 'listRemove', args: { id: was } });
-    /* ========================================================================
-     * 6 · DIE DREI INTERNEN ENDPUNKTE
-     * ======================================================================*/
-    /** Ein Datensatz in Notions Umschlag: { role, value }. */
     const umschlag = (wert) => ({ role: 'editor', value: wert });
     const alsBlock = (b) => ({
         id: b.id, version: 1, type: b.type,
@@ -303,11 +224,6 @@ const Transaktion = (() => {
         view_ids: b.collectionId
             ? (Store.getCollection(b.collectionId) || {}).viewIds : undefined
     });
-    /**
-     * loadPageChunk — eine Seite und alles, was daran hängt.
-     * Notions Antwort ist eine „recordMap": nach Tabelle sortierte Datensätze,
-     * jeder in einem Umschlag mit Rolle.
-     */
     const loadPageChunk = (k) => {
         const id = k.pageId || k.page_id;
         const wurzel = Store.getBlock(id);
@@ -338,11 +254,6 @@ const Transaktion = (() => {
                                 name: v.name, query2: { filter: v.filters, sort: v.sorts },
                                 parent_id: b.id, parent_table: 'block', alive: true });
                     });
-                    /* Notion holt die Zeilen erst über queryCollection nach. Hier
-                       kommen sie gleich mit: wer eine Seite lädt, will die Tabelle
-                       darauf sehen, nicht erst einen zweiten Aufruf machen. Die
-                       Grenze gilt weiterhin — eine Datenbank mit tausend Zeilen
-                       sprengt die Antwort sonst. */
                     Store.rowsOf(c.id).forEach((z) => {
                         if (gezaehlt >= grenze || bloecke[z.id])
                             return;
@@ -360,11 +271,6 @@ const Transaktion = (() => {
                 isTaggedForLoad: gezaehlt >= grenze
             } };
     };
-    /**
-     * queryCollection — die Zeilen einer Datenbank, durch den Filter einer
-     * Ansicht gesehen. Notion gibt IDs und Gesamtzahl zurück, die Daten selbst
-     * stehen wieder in der recordMap.
-     */
     const queryCollection = (k) => {
         const cid = k.collectionId || k.collection_id;
         const coll = Store.getCollection(cid);
@@ -393,11 +299,6 @@ const Transaktion = (() => {
                             name: [[coll.name || '']], schema: coll.schema, alive: true }) } }
             } };
     };
-    /**
-     * submitTransaction — Notions saveTransactionsFanout.
-     * Erwartet { requestId, transactions: [{ id, operations: [...] }] }
-     * oder kurz { operations: [...] }.
-     */
     const submitTransaction = (k) => {
         const ops = Array.isArray(k.operations) ? k.operations
             : (k.transactions || []).flatMap((t) => t.operations || []);
@@ -412,11 +313,6 @@ const Transaktion = (() => {
                     hinweis: erg.hinweis } };
         return { status: 200, body: {} };
     };
-    /**
-     * Der Weg von aussen — derselbe Kanal wie bei /v1/.
-     * Notions interne Adressen kennen kein Token; hier wird trotzdem eines
-     * verlangt, denn ein Skript, das mitliest, hätte sonst freien Zugriff.
-     */
     const anfrage = (methode, pfad, koerper, kopf) => {
         kopf = kopf || {};
         const erwartet = Api.tokenHolen();
@@ -445,9 +341,6 @@ const Transaktion = (() => {
         return { status: 404, body: { errorId: Store.uid(), name: 'ObjectNotFound',
                 message: 'Diese interne Adresse gibt es nicht: ' + name } };
     };
-    /* ========================================================================
-     * 7 · EIN FENSTER
-     * ======================================================================*/
     const dialog = () => {
         const seite = App.aktuelleSeite && App.aktuelleSeite();
         const o = document.createElement('div');
@@ -455,7 +348,6 @@ const Transaktion = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">⚙ Interne Befehle <button class="icon-btn" data-a="zu">✕</button></div>' +
-                // Klassen statt Inline-Stil (E348, L111): siehe `.fn-blatt` in werkzeuge.css.
                 '<div class="res fn-blatt">' +
                 '<p>' +
                 'Notions App schickt nie „speichere die Seite", sondern immer eine Liste ' +
@@ -491,9 +383,6 @@ const Transaktion = (() => {
                 setze('gibtesnicht', ['properties', 'title'], [['Hier bricht es ab']])
             ], null, 2)
         };
-        /* Die drei Felder einmal holen statt bei jedem Klick neu — und dabei
-           gleich prüfen, dass es sie gibt. Vorher stand überall
-           `o.querySelector('#tx-ops').value` ohne Prüfung. */
         const feldOps = o.querySelector('#tx-ops');
         const feldAus = o.querySelector('#tx-aus');
         const feldZahl = o.querySelector('#tx-zahl');

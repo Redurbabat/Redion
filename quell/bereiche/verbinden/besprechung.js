@@ -1,52 +1,14 @@
 "use strict";
-/* ============================================================================
- * meeting.js — Meeting Notes
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/verbinden/besprechung.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/verbinden/besprechung.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Der Ablauf aus der Doku, Schritt für Schritt:
- *
- *     Audio  →  Transkript  →  KI-Zusammenfassung  →  Aufgaben und
- *     Entscheidungen  →  Notion-Seite
- *
- * WIE DAS OHNE DIENST GEHT
- *   Der Browser kann selbst zuhören. Chrome und Edge bringen eine
- *   Spracherkennung mit (SpeechRecognition), die live mitschreibt —
- *   kostenlos, ohne Schlüssel, ohne Konto. Parallel läuft eine Aufnahme
- *   mit dem MediaRecorder, damit man später nachhören kann.
- *
- *   Firefox und Safari haben die Spracherkennung nicht. Dort wird nur
- *   aufgenommen, und das Transkript tippt man selbst — oder man lädt es
- *   als Textdatei dazu. Das steht auch so in der Oberfläche; es wird
- *   nichts vorgetäuscht.
- *
- * WAS WO BLEIBT
- *   Die Aufnahme liegt im Browser. In den Einstellungen steht, ob sie
- *   überhaupt behalten wird und ob das Transkript nach der Zusammenfassung
- *   gelöscht werden soll.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/besprechung.ts (npm run bauen:ts). */
 const Meeting = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const p2 = (n) => String(n).padStart(2, '0');
-    /* ------------------------------------------------------------------------
-     * EINSTELLUNGEN
-     * ----------------------------------------------------------------------*/
     const E = {
         audioBehalten: () => Store.getMeta('meet:audio', true),
         transkriptLoeschen: () => Store.getMeta('meet:transkriptWeg', false),
         sprache: () => Store.getMeta('meet:sprache', 'de-DE'),
-        /* Der Sidecar wird nie von selbst angesprochen. Eine Adresse allein
-           schaltet nichts ein; erst der ausdrückliche Knopf nach der Aufnahme
-           und eine Zustimmung schicken Ton dorthin. */
         sidecar: () => String(Store.getMeta('meet:sidecar', '') || '').trim()
     };
     const erkennungsBau = () => window.SpeechRecognition ||
@@ -54,8 +16,6 @@ const Meeting = (() => {
     const kannZuhoeren = () => !!erkennungsBau();
     const kannAufnehmen = () => !!(navigator.mediaDevices && window.MediaRecorder);
     let laeuft = null;
-    /** Der Browser entscheidet letztlich. Wir bevorzugen Opus, greifen aber
-        nicht zu einem Typ, den seine MediaRecorder-Implementierung ablehnt. */
     const aufnahmeTyp = () => {
         const moeglich = [
             'audio/webm;codecs=opus',
@@ -76,7 +36,6 @@ const Meeting = (() => {
             recorder: null, erkennung: null, strom: null, uhr: null,
             mime: '', fehler: ''
         };
-        /* 1. Mitschnitt */
         if (kannAufnehmen()) {
             try {
                 zustand.strom = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -103,7 +62,6 @@ const Meeting = (() => {
                     (e instanceof Error ? e.message : String(e)));
             }
         }
-        /* 2. Mitschreiben */
         if (kannZuhoeren()) {
             const SR = erkennungsBau();
             if (SR) {
@@ -126,7 +84,6 @@ const Meeting = (() => {
                     if (beiText)
                         beiText(zustand.transkript, teil);
                 };
-                /* Die Erkennung hört von selbst auf — dann eben wieder anfangen. */
                 r.onend = () => { if (laeuft === zustand) {
                     try {
                         r.start();
@@ -152,8 +109,6 @@ const Meeting = (() => {
         laeuft = zustand;
         return zustand;
     };
-    /** Eine bewusste Marke während der laufenden Aufnahme. Sie wird später als
-        normaler Textblock gespeichert und verweist auf die Tonstelle. */
     const markieren = (text = '') => {
         if (!laeuft)
             return null;
@@ -186,8 +141,6 @@ const Meeting = (() => {
             beendet = true;
             if (z.strom)
                 z.strom.getTracks().forEach((t) => t.stop());
-            /* Ein noch nicht als „final“ gemeldeter Satz darf beim Stoppen nicht
-               verschwinden. Er bleibt mit seiner Zeit im normalen Transkript. */
             const rest = String(z.teil || '').trim();
             if (rest && z.transkript[z.transkript.length - 1]?.text !== rest)
                 z.transkript.push({
@@ -231,9 +184,6 @@ const Meeting = (() => {
             return 'wav';
         return 'webm';
     };
-    /** Speichert einen Mitschnitt in derselben Stück-Ablage wie andere
-        Anhänge. Die reservierte Blockkennung macht eine unterbrochene
-        Seitenanlage als verwaist erkennbar und damit aufräumbar. */
     const audioAblegen = async (blob, dauer, marken = [], blockId = Store.uid()) => {
         if (!blob || !blob.size)
             throw new Error('Der Mitschnitt enthält keine Audiodaten.');
@@ -254,8 +204,6 @@ const Meeting = (() => {
             marken: marken.map(m => ({ sek: Math.max(0, Number(m.sek) || 0), text: String(m.text || '') }))
         };
     };
-    /** Ein optionaler Sidecar ist ein bewusster Export. Ohne gültige Adresse,
-        Knopfdruck und anschliessende Zustimmung bleibt der Ton lokal. */
     const sidecarTranskribieren = async (blob) => {
         const roh = E.sidecar();
         if (!roh)
@@ -290,13 +238,6 @@ const Meeting = (() => {
             throw new Error('Die Antwort enthält kein Transkript.');
         return text.slice(0, 500000);
     };
-    /* ------------------------------------------------------------------------
-     * AUSWERTEN
-     * ------------------------------------------------------------------------
-     * Ein Durchgang, drei Ergebnisse: Zusammenfassung, Entscheidungen,
-     * Aufgaben. Alles auf einmal, damit das lokale Modell nicht dreimal
-     * denselben Text lesen muss.
-     * ----------------------------------------------------------------------*/
     const auswerten = async (text, beiFortschritt) => {
         if (!String(text || '').trim())
             throw new Error('Es gibt keinen Text zum Auswerten.');
@@ -310,11 +251,6 @@ const Meeting = (() => {
             '"themen":["Thema"],"beteiligte":["Name"]}\n' +
             'Höchstens sechs Punkte je Liste. Alles auf Deutsch. ' +
             'Erfinde nichts — was nicht im Text steht, lässt du weg.\n' +
-            /* §44 will den Weg zurück bis auf die Sekunde. Die Zeiten stehen im
-               Protokoll ([mm:ss] am Zeilenanfang); welche Zeile zu welcher
-               Aufgabe gehört, weiss nur, wer den Text gelesen hat. Also fragen
-               wir danach — und glauben die Antwort nur, wenn es die Zeile
-               wirklich gibt (siehe `sekundeAusText`, E161). */
             'Bei „sek" trägst du die Zeitmarke der Zeile ein, in der die Aufgabe ' +
             'besprochen wird — die Zahl aus [mm:ss] am Zeilenanfang, umgerechnet ' +
             'in Sekunden. Bist du dir nicht sicher, lässt du „sek" weg.';
@@ -326,9 +262,6 @@ const Meeting = (() => {
             throw new Error('Die KI hat kein brauchbares Ergebnis geliefert.');
         return plan;
     };
-    /* ------------------------------------------------------------------------
-     * DIE SEITE
-     * ----------------------------------------------------------------------*/
     const seiteAnlegen = (ergebnis, transkript, dauer, audio) => {
         const jetzt = new Date();
         const p = Store.addPage(App.aktuelleSeite(), {
@@ -348,15 +281,6 @@ const Meeting = (() => {
             Store.addBlock(p.id, 'h2', { text: 'Entscheidungen' });
             ergebnis.entscheidungen.forEach((x) => Store.addBlock(p.id, 'quote', { text: String(x) }));
         }
-        /* WELCHE SEKUNDEN ES IM PROTOKOLL WIRKLICH GIBT.
-           Die KI darf zu jeder Aufgabe eine Zeitmarke nennen. Geglaubt wird sie
-           nur, wenn eine Zeile mit genau dieser Zeit dasteht — geraten wäre
-           schlimmer als gar nichts: man springt hin, hört etwas anderes und
-           hält die Aufnahme für kaputt (L57).
-    
-           Dasselbe Muster wie unten beim Transkript, absichtlich Zeichen für
-           Zeichen: was hier nicht als Zeitmarke gilt, bekommt dort auch keinen
-           `audioRef`, und dann zeigte der Sprung ins Leere. */
         const ZEITMARKE = /^\[(?:(\d+):)?(\d{1,2}):(\d{2})\]\s*/;
         const sekundenImText = new Set();
         String(transkript || '').split('\n').forEach(z => {
@@ -370,9 +294,6 @@ const Meeting = (() => {
                 return null;
             return sekundenImText.has(s) ? s : null;
         };
-        /* Die Aufgabenblöcke entstehen VOR dem Transkript, ihr Ziel liegt aber
-           darin. Also erst anlegen und merken, den `sourceRef` weiter unten
-           nachtragen — das ist billiger, als die Seite umzusortieren. */
         const aufgabenBloecke = [];
         if ((ergebnis.aufgaben || []).length) {
             Store.addBlock(p.id, 'h2', { text: 'Aufgaben' });
@@ -390,8 +311,6 @@ const Meeting = (() => {
         let audioBlock = null;
         if (audio && E.audioBehalten()) {
             Store.addBlock(p.id, 'h2', { text: 'Aufnahme' });
-            /* `string` ist der Altbestand: vorhandene Data-URL-Aufnahmen bleiben
-               abspielbar. Neue Aufnahmen tragen nur die stabile Datei-Kennung. */
             audioBlock = typeof audio === 'string'
                 ? Store.addBlock(p.id, 'audio', {
                     src: audio,
@@ -412,7 +331,6 @@ const Meeting = (() => {
                 }));
             }
         }
-        /* Welche Zeile zu welcher Sekunde gehört — für den Rücksprung unten. */
         const zeileZurSekunde = new Map();
         if (transkript && !E.transkriptLoeschen()) {
             const t = Store.addBlock(p.id, 'toggle', { text: 'Volles Transkript', open: false });
@@ -432,17 +350,6 @@ const Meeting = (() => {
                     zeileZurSekunde.set(sek, zeile.id);
             });
         }
-        /* DER WEG ZURÜCK (§44, E161).
-           Bis hierher schrieb `seiteAnlegen` gar keine Herkunft — eine Aufgabe
-           aus einer Besprechung wusste nicht, woher sie kam. Der Rücksprung im
-           Editor gab es zwar, aber nur für Blöcke, die anderswo einen
-           `sourceRef` bekamen; für Besprechungsaufgaben war er tote Mechanik.
-    
-           Mit Sekunde zeigt der Knopf sie an: „↩ Bauleitung KW 35 · 01:02".
-           `zeit` steht als fertiger Text daneben, damit der Editor die Zahl
-           nicht formatieren muss — er darf `bereiche/verbinden` nicht kennen
-           (CLAUDE.md §5 Regel 1), und eine zweite Formatierfunktion wäre genau
-           die Abschrift, die E159 gerade zusammengelegt hat. */
         const quelleFuer = (sek) => {
             const zielId = sek !== null ? zeileZurSekunde.get(sek) : undefined;
             return Object.assign({
@@ -458,8 +365,6 @@ const Meeting = (() => {
             const quelle = quelleFuer(x.sek);
             Store.updateBlock(x.id, { sourceRef: quelle, lernquelle: quelle });
         });
-        /* Aufgaben zusätzlich in eine Datenbank, damit sie nicht nur auf dieser
-           Seite stehen — genau das macht Notion auch. */
         if ((ergebnis.aufgaben || []).length) {
             const db = aufgabenDatenbank();
             ergebnis.aufgaben.forEach((a, i) => {
@@ -467,10 +372,6 @@ const Meeting = (() => {
                     wer: a.wer || '', bis: a.bis || '', status: 'Offen',
                     quelle: ergebnis.titel || 'Besprechung', seite: p.id
                 });
-                /* Die Zeile in der Datenbank ist dieselbe Aufgabe wie der Block auf
-                   der Seite — sie bekommt denselben Weg zurück. Ohne ihn steht in
-                   „Meine Aufgaben" eine Zeile ohne Herkunft, und die Spalte
-                   „quelle" nennt nur einen Titel, den man nicht anklicken kann. */
                 const quelle = quelleFuer(aufgabenBloecke[i]?.sek ?? null);
                 Store.updateBlock(r.id, { text: String(a.was || a), sourceRef: quelle });
             });
@@ -500,9 +401,6 @@ const Meeting = (() => {
         }, 'board');
         return Store.getCollection(collectionId);
     };
-    /* ------------------------------------------------------------------------
-     * OBERFLÄCHE
-     * ----------------------------------------------------------------------*/
     const panel = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -512,7 +410,7 @@ const Meeting = (() => {
             '<div class="meet-text" id="mt"></div>' +
             '<div class="fbtns" id="mf"></div></div>';
         document.body.appendChild(o);
-        let phase = 'bereit'; /* bereit · laeuft · speichert · fertig · ausgewertet */
+        let phase = 'bereit';
         let ergebnisAudio = null;
         let ergebnisRohBlob = null;
         let ergebnisMarken = [];
@@ -659,9 +557,6 @@ const Meeting = (() => {
             if (!r.blob && E.audioBehalten() && kannAufnehmen() && !aufnahmeWarnung)
                 aufnahmeWarnung = 'Der Browser hat keine Audiodaten geliefert; das Transkript bleibt erhalten.';
             const browserText = transkriptText(r.transkript);
-            /* Das sichtbare Feld enthält oft schon den letzten Interim-Satz; die
-               Ergebnisliste dafür eventuell einen etwas späteren finalen Satz.
-               Der längere Stand ist der weniger verlustreiche. */
             ergebnisText = String(feldText || '').trim().length >= browserText.trim().length
                 ? (feldText || ergebnisText)
                 : (browserText || ergebnisText);
@@ -700,8 +595,6 @@ const Meeting = (() => {
             if (hatInhalt && !confirm('Besprechungsnotiz und noch nicht angelegte Aufnahme wirklich verwerfen?'))
                 return;
             if (ergebnisAudio) {
-                /* Erst schliessen, wenn auch die reservierte Datei weg ist. Ein
-                   Fehler bleibt sichtbar und erzeugt keinen stillen Waisen. */
                 await Dateien.weg(ergebnisAudio.dateiId);
                 ergebnisAudio = null;
             }
@@ -754,7 +647,6 @@ const Meeting = (() => {
                         if (!f)
                             return;
                         let t = await f.text();
-                        /* Untertitelformate von den Zeitmarken befreien */
                         t = t.replace(/^WEBVTT.*$/gm, '')
                             .replace(/^\d+$/gm, '')
                             .replace(/^[\d:.,]+\s*-->.*$/gm, '')
@@ -943,11 +835,6 @@ const Meeting = (() => {
             }
         });
     };
-    /**
-     * Der Besprechungs-Reiter der Seitenleiste. Notion zeigt oben, was ansteht,
-     * darunter die heutigen Notizen — mit einem Weg zum Kalender, wenn keiner
-     * verbunden ist.
-     */
     const seitenleiste = (baum) => {
         const abschnitt = (name) => {
             const d = document.createElement('div');
@@ -983,14 +870,10 @@ const Meeting = (() => {
         baum.appendChild(abschnitt('Heute'));
         const unten = document.createElement('div');
         unten.className = 'wz-block';
-        /* Alle Seiten, die aus einer Besprechung entstanden sind */
         const notizen = Object.values(Store.cache.blocks)
             .filter(b => b.type === 'page' && b.alive !== false && b.besprechung)
             .sort((a, b) => String(b.created).localeCompare(String(a.created)))
             .slice(0, 8);
-        /* IST HIER GAR NICHTS, steht der leere Zustand statt der Liste — mit
-           der einen Handlung, die es an dieser Stelle gibt. Eine graue Zeile
-           unter einem „＋"-Knopf sagt weniger als beides zusammen. */
         unten.innerHTML = notizen.length
             ? '<button class="side-item" data-a="neu"><span>＋</span><span>Neue Meeting-Notiz</span></button>' +
                 notizen.map(p => `<button class="side-item" data-p="${p.id}"><span>${p.icon || '🎙'}</span>` +

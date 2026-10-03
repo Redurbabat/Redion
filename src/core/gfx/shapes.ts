@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/shapes.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/gfx/shapes.ts — EIN Zeichner für die Formen aller Flächen
  * ----------------------------------------------------------------------------

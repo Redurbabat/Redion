@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/leser.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/pdf/leser.ts — die einzige Datei, die pdf.js kennt
  * ----------------------------------------------------------------------------

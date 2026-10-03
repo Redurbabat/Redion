@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/learning/fsrs.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/learning/fsrs.ts — der freie Wiederholungsplaner (FSRS 4.5)
  * ----------------------------------------------------------------------------

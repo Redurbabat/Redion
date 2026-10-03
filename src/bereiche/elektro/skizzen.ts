@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/skizzen.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/elektro/skizzen.ts — die Bilder im Formelbuch, selbst gezeichnet
  * ----------------------------------------------------------------------------

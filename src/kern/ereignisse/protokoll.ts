@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ereignisse/protokoll.ts (npm run bauen:ts). */
 /* ==========================================================================
  * PROTOKOLL — was wann von wem geschehen ist
  * --------------------------------------------------------------------------

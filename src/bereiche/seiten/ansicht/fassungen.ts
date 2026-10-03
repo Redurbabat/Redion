@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/seiten/ansicht/fassungen.ts (npm run bauen:ts). */
 /* ============================================================================
  * vergleich.js — Fassungen vergleichen, einzelne Blöcke zurückholen
  * ----------------------------------------------------------------------------

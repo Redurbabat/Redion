@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/calendar/zeitzone.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/calendar/zeitzone.ts — eine Wandzeit in einer fremden Zone verstehen
  * ----------------------------------------------------------------------------

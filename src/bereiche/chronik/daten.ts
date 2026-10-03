@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: chronik/chronik.json, über src/bereiche/chronik/daten.ts (node chronik.mts). */
 /* ============================================================================
  * chronik/daten.js — die Chronik, wie Redion sie liest
  * ----------------------------------------------------------------------------

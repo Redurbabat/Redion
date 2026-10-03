@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/kommentare/ansicht/faden.ts (npm run bauen:ts). */
 /* ============================================================================
  * apps/schreiben/kommentare/ansicht.js — aus notion.js herausgelöst
  * ----------------------------------------------------------------------------

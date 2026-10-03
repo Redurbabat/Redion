@@ -1,64 +1,8 @@
 "use strict";
-/* ============================================================================
- * schale/aufbau/seitenleiste.js — die linke Leiste, für sich allein
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/schale/aufbau/seitenleiste.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/schale/aufbau/seitenleiste.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Sie lag bis hierher mitten in `schale.js`, zwischen Routing, Seitenmenü,
- * Suche und Start. Das ist die Datei, in der alles zusammenläuft — und genau
- * deshalb war sie der falsche Ort: wer an der Seitenleiste etwas ändern
- * wollte, musste 2600 Zeilen aufmachen und hoffen, die richtige Stelle zu
- * treffen.
- *
- * Hier steht jetzt alles, was die Leiste ausmacht, und sonst nichts:
- *
- *   ABSCHNITTE          welche es gibt, ein- und ausblendbar wie bei Notion
- *   die Reihenfolge     umsortierbar — Notion kann das nicht
- *   das Auf- und Zuklappen, je Abschnitt gemerkt
- *   die Reiter          Start · Chat · Besprechungen, am PC und am Telefon
- *   zeichne()           der Baum: Werkzeuge, Agenten, Kürzlich, Favoriten,
- *                       Bereiche, Privat, Meine Apps und was das Register
- *                       beisteuert
- *
- * WAS DARAN LEICHT SCHIEFGEHT
- *
- * 1. `ordne`, das `setTimeout(…, 0)` am Ende von `zeichne` und `abschnitt()`
- *    gehören zusammen. Die ersten beiden arbeiten auf dem **fertigen** DOM und
- *    lesen den Namen aus `span.firstChild.textContent` — also aus genau der
- *    Form, die `abschnitt()` erzeugt. Wer eines davon ändert, ändert alle
- *    drei, sonst bricht die Sortierung still.
- *
- * 2. Diese Datei ruft `App` nicht. Was sie von dort braucht, bekommt sie über
- *    `binde({ … })` gereicht — einmal in `App.start()`, vor dem ersten
- *    Zeichnen. Das ist kein Selbstzweck: solange die Leiste `App` kennt und
- *    `App` die Leiste, lässt sich keines von beiden allein prüfen.
- *
- * 3. `App.zeichneBaum` bleibt als Name bestehen — er steht an über fünfzig
- *    Stellen im Projekt. Er reicht nur noch hierher weiter, genau wie `UI` es
- *    für `Menue`, `Hinweis` und `Dialog` tut.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/seitenleiste.ts (npm run bauen:ts). */
 const Seitenleiste = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    /* Eigenes `esc` statt eingespeistem — so hält es auch `aufbau/reiter.js`.
-       Drei Zeilen doppelt sind billiger als eine Abhängigkeit mehr. */
     const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ------------------------------------------------------------------------
-     * WAS VON AUSSEN KOMMT
-     * Sieben Dinge braucht die Leiste, die ihr nicht gehören: das Öffnen einer
-     * Seite, die aktuelle Seite, die Listen „Kürzlich" und „Kommende Termine",
-     * das Seitenmenü, die Suche und den Papierkorb. Sie kommen über `binde`.
-     *
-     * Fehlt eines, sagt der Fehler, was fehlt und wohin es gehört. Ein
-     * `undefined is not a function` mitten im Zeichnen hätte niemandem gesagt,
-     * dass jemand `binde` vergessen hat.
-     * ----------------------------------------------------------------------*/
     let gebunden = {};
     const braucht = (name) => (...args) => {
         const fn = gebunden[name];
@@ -75,19 +19,6 @@ const Seitenleiste = (() => {
     const kommendeTermine = braucht('kommendeTermine');
     const seitenMenue = braucht('seitenMenue');
     const suche = braucht('suche');
-    /* `papierkorb` stand hier, solange die Apps-Kette ihn selbst aufrief. Der
-       Registereintrag ruft jetzt `App.papierkorb()`; die durchgereichte
-       Fassung wäre eine zweite Adresse für dieselbe Handlung (E166).
-       `binde` nimmt den Schlüssel weiterhin entgegen — er schadet nicht, und
-       ein Bereich, der ihn morgen wieder braucht, holt ihn mit `braucht`. */
-    /* ========================================================================
-     * SEITENLEISTE
-     * ======================================================================*/
-    /* --------------------------------------------------------------------- *
-     * ABSCHNITTE DER SEITENLEISTE
-     * Notion lässt jeden Abschnitt einzeln ausblenden („Abschnitte anpassen").
-     * Hier steht, welche es gibt; was aus ist, merkt sich der Speicher.
-     * --------------------------------------------------------------------- */
     const ABSCHNITTE = [
         ['werkzeuge', 'Werkzeuge'],
         ['agenten', 'Agenten'],
@@ -98,42 +29,12 @@ const Seitenleiste = (() => {
         ['privat', 'Privat'],
         ['apps', 'Meine Apps']
     ];
-    /**
-     * Die Schubladen in „Meine Apps" (E206).
-     *
-     * Kennung, Name, Zeichen. Die Reihenfolge hier ist die Reihenfolge auf dem
-     * Bildschirm; die Reihenfolge INNERHALB einer Schublade steht als `rang`
-     * am Registereintrag.
-     *
-     * Wer eine fünfte Gruppe braucht, trägt sie hier ein und setzt `gruppe`
-     * am Eintrag. Wer nur einen Eintrag anmeldet und keine Gruppe nennt,
-     * bekommt „Sonstiges" — die Zeile geht nicht verloren, und niemand muss
-     * zwei Stellen pflegen.
-     */
     const APP_GRUPPEN = [
         ['planen', 'Planen', 'calendar'],
         ['daten', 'Daten', 'database'],
         ['einrichten', 'Einrichten', 'settings'],
         ['hilfe', 'Hilfe & Pflege', 'help']
     ];
-    /**
-     * Ist dieser Abschnitt eingeschaltet?
-     *
-     * `vorgabe` ist neu (E210). Bisher war alles an, was nicht ausdrücklich in
-     * `sidebarAus` stand — und für die Werkzeuge soll es umgekehrt sein: sie
-     * stehen jetzt im Menüband, hier also aus, bis jemand sie zurückholt.
-     *
-     * Wichtig ist der Unterschied zwischen „nie etwas gesagt" und „ausdrücklich
-     * abgeschaltet". `sidebarAn` merkt sich das Einschalten; wer den Abschnitt
-     * früher abgeschaltet hatte, findet ihn nicht plötzlich wieder da.
-     */
-    /* Welche Abschnitte sind von Haus aus an? Alle ausser diesem einen — die
-       Werkzeuge stehen seit E210 im Menüband. Wächst die Liste, wächst sie
-       hier und nicht verstreut an drei Stellen. */
-    /* E211: drei weitere. Bei „agenten" und „bespr" war der Abschnitt im Baum
-       ohnehin eine Doppelung — die Seitenleiste hat oben schon Reiter dafür.
-       „kuerzlich" führt jetzt über das Menüband in die Bibliothek, wo es
-       Vorschauen statt einer Namensliste gibt. */
     const VORGABE_AUS = ['werkzeuge', 'agenten', 'bespr', 'kuerzlich'];
     const VORGABE_AN = (id) => !VORGABE_AUS.includes(id);
     const abschnittAn = (id, vorgabe = true) => {
@@ -144,8 +45,6 @@ const Seitenleiste = (() => {
             return true;
         return (Store.getMeta('sidebarAn', []) || []).includes(id);
     };
-    /** Die Abschnitte in der selbst gewählten Reihenfolge. Notion lässt sie
-        nur ein- und ausblenden, nicht umsortieren. */
     const abschnitteGeordnet = () => {
         const folge = Store.getMeta('sidebarFolge', null);
         if (!Array.isArray(folge) || !folge.length)
@@ -167,29 +66,15 @@ const Seitenleiste = (() => {
         Store.setMeta('sidebarFolge', folge);
         zeichneBaum();
     };
-    /**
-     * Einen Abschnitt ein- oder ausschalten.
-     *
-     * Seit E210 gibt es zwei Listen und nicht mehr eine. `sidebarAus` sagt
-     * „ausdrücklich weg", `sidebarAn` sagt „ausdrücklich her" — die zweite
-     * braucht es für Abschnitte, deren VORGABE aus ist. „Werkzeuge" ist der
-     * erste davon: die sieben Zeilen stehen jetzt im Menüband.
-     *
-     * Ohne die zweite Liste wäre „Werkzeuge einblenden" ein Knopf, der aus
-     * `sidebarAus` etwas entfernt, das gar nicht drinsteht — er hätte
-     * ausgesehen, als täte er etwas, und nichts wäre passiert.
-     */
     const abschnittSchalten = (id) => {
         const aus = Store.getMeta('sidebarAus', []) || [];
         const an = Store.getMeta('sidebarAn', []) || [];
         if (abschnittAn(id, VORGABE_AN(id))) {
-            /* jetzt an → ausschalten */
             Store.setMeta('sidebarAn', an.filter(x => x !== id));
             if (!aus.includes(id))
                 Store.setMeta('sidebarAus', [...aus, id]);
         }
         else {
-            /* jetzt aus → einschalten */
             Store.setMeta('sidebarAus', aus.filter(x => x !== id));
             if (!an.includes(id))
                 Store.setMeta('sidebarAn', [...an, id]);
@@ -207,85 +92,26 @@ const Seitenleiste = (() => {
         if (!leiste)
             return;
         leiste.classList.toggle('ohne-namen', !tabNamen());
-        /* WELCHER REITER LEUCHTET, HÄNGT AM BAUM DARUNTER — nicht daran, wo
-           man gerade ist. Die drei Reiter der Seitenleiste sind kein Ortsschild,
-           sondern ein Umschalter: `zeichneBaum()` zeigt für `chat` die Agenten,
-           für `bespr` die Besprechungen und SONST den Seitenbaum.
-           `reiter` trägt aber auch die Werte der Wegeleiste am Telefon —
-           `dokumente`, `lernen`, `mehr`. Stand einer davon, leuchtete hier gar
-           nichts, während der Seitenbaum darunter stand: drei Reiter, keiner
-           an, und der mittlere Kasten zeigt trotzdem den Baum des ersten.
-           Seit E236 fällt das jedem sofort auf, weil Redion mit dem Regal
-           ÖFFNET und `dokumente` damit der erste Wert überhaupt ist.
-           Das ist NICHT der Rückfall auf „Start", den `handyLeiste()` weiter
-           unten ausdrücklich nicht macht. Dort lautet die Frage „wo bin ich?",
-           und darauf ist „Start" eine falsche Antwort. Hier lautet sie „welcher
-           Baum steht da?", und darauf ist „der Seitenbaum" die richtige. */
         const baumReiter = (reiter === 'chat' || reiter === 'bespr') ? reiter : 'start';
         leiste.querySelectorAll('.sr').forEach(b => {
             const hier = b.dataset.reiter === baumReiter;
             b.classList.toggle('on', hier);
-            /* Die Klasse `on` färbt den Reiter. Ein Vorleseprogramm sieht keine
-               Farbe — für es ist `aria-current` der einzige Unterschied zwischen
-               „Start" und „Start, aktuelle Seite". Ohne die Zeile klingen alle
-               fünf Reiter gleich. */
             if (hier)
                 b.setAttribute('aria-current', 'page');
             else
                 b.removeAttribute('aria-current');
         });
-        /* Die untere Leiste am Telefon zeigt dieselben Bereiche — sie muss
-           mitgehen, sonst stimmt an einem der beiden Orte die Markierung nicht. */
         if (typeof handyLeiste === 'function')
             handyLeiste();
     };
     let reiter = 'start';
-    /* Beim allerersten Setzen darf die Pille nicht gleiten. Sonst schiebt
-       sie sich beim Öffnen der App von der linken Kante herein — eine
-       Bewegung ohne Anlass, und die liest sich als Fehler. */
     let pilleGesetzt = false;
-    /**
-     * DIE GLEITENDE PILLE UNTER DEN REITERN.
-     *
-     * Sie ist der Hintergrund der aktiven Pille, aber als eigenes Feld: statt
-     * an einer Stelle zu verschwinden und an der nächsten aufzutauchen,
-     * wandert sie hinüber. Das Auge folgt der Bewegung und ist beim Ankommen
-     * schon dort — ein Sprung dagegen muss erst wieder gesucht werden.
-     *
-     * ZWEI DINGE, DIE HIER LEICHT SCHIEFGEHEN:
-     *
-     *   1. GEMESSEN WIRD NACH DEM SETZEN VON `.an`. Die aktive Pille zeigt
-     *      als einzige ihre Beschriftung und ist deshalb breiter als vorher.
-     *      Wer vorher misst, bekommt die alte Breite und die Pille endet
-     *      einen Zentimeter zu kurz.
-     *
-     *   2. DIE LEISTE ROLLT SEITWÄRTS. `offsetLeft` zählt vom Anfang des
-     *      Inhalts, nicht vom Bildrand — und genau das wird gebraucht: die
-     *      Pille liegt IN der rollenden Leiste und rollt mit. Wer hier
-     *      `getBoundingClientRect()` nähme, hätte die Pille an der richtigen
-     *      Stelle des Bildschirms und an der falschen des Inhalts.
-     */
-    /* HIER STANDEN ZWEI UHREN (E646). `fahrtUhr` nahm die Dehnung nach 190 ms
-       zurück, `glasUhr` die Brechung nach 430 ms — zwei Zahlen, die raten
-       mussten, wann die Bewegung vorbei ist. Jetzt weiss die Bewegung es
-       selbst: `SelectionFlow` hält seinen Lauf, und `.faehrt` fällt, wenn die
-       Feder ausgelaufen ist. Eine Uhr, die neben einer Animation herläuft, ist
-       immer eine Vermutung über deren Ende. */
     const pilleSchieben = (l, aktiv) => {
         const pille = l.querySelector('#ho-pille');
         if (!pille)
             return;
-        /* DAS GLAS BRAUCHT SEINEN FILTER. Er hängt einmal am Ende von `<body>`
-           (`linse.ts`, nach dem Muster der Textur aus E462). Ohne ihn bleibt
-           die Fläche stehen, wie sie vorher war — die Regel im Stilblatt ist
-           so gebaut, dass nur die Brechung wegfällt, nicht die Hervorhebung. */
         if (typeof Linse !== 'undefined')
             Linse.sicherstellen();
-        /* DIE PILLE LÄSST SICH GREIFEN (E706, Redur 27.09. ca. 21:47: „ich will das
-           du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen
-           usw") — das Material der Tab-Leiste des Kits, in `SelectionFlow.ziehbar`.
-           Losgelassen auf einem anderen Weg wird DESSEN Knopf geklickt, genau
-           einmal — derselbe Weg wie beim Tippen. Rollen und `aria-selected` bleiben. */
         if (typeof SelectionFlow !== 'undefined' && !l.dataset['ziehbar']) {
             SelectionFlow.ziehbar({
                 reihe: l, flaeche: pille, hub: 1.1,
@@ -301,10 +127,6 @@ const Seitenleiste = (() => {
                 }
             });
         }
-        /* „Mehr" und „Kompass" haben oben keinen Reiter (E42). Dann gehört
-           auch keine Pille irgendwohin — sie bleibt, wo sie war, und
-           verschwindet. Sie an den Anfang zu schieben wäre eine Aussage, und
-           zwar eine falsche. */
         if (!aktiv) {
             pille.style.opacity = '0';
             return;
@@ -313,49 +135,16 @@ const Seitenleiste = (() => {
         const b = aktiv.offsetWidth;
         const y = aktiv.offsetTop;
         if (!b)
-            return; /* Leiste unsichtbar — am Rechner */
+            return;
         if (!pilleGesetzt)
             pille.classList.add('stumm');
-        /* ══════════════════════════════════════════════════════════════════════
-         * DIE FLÄCHE WANDERT — UND ZWAR AUCH DANN, WENN DER HAUPTFADEN ARBEITET
-         * (E646, aus Redurs Aufnahme vom 20. September, 10:12 Uhr)
-         * ----------------------------------------------------------------------
-         * Hier stand eine Rechnung, die `--dehnung` setzte und die Bewegung dem
-         * Stilblatt überliess (`transition: transform, width`). Am Rechner sah
-         * das richtig aus — 16 bis 21 Zwischenorte je Wechsel. Auf dem Telefon
-         * kam davon NICHTS an: Redurs Aufnahme zeigt viermal einen einzigen
-         * Bildsprung über 190 bis 210 Pixel.
-         *
-         * Der Grund ist nicht die Kurve, sondern der Faden. Ein Wechsel auf
-         * „Heute" oder „Lernen" baut einen ganzen Bildschirm neu auf; eine
-         * CSS-Transition, die `width` mitanimiert, läuft dabei auf demselben
-         * Faden und kommt nicht voran. Gemessen mit gedrosselter Rechenleistung:
-         *
-         *     Drossel 1×   16 Orte      Drossel 4×   7 Orte      Drossel 8×   5 Orte
-         *
-         * Die Bewegung gehört deshalb auf den Compositor, und dorthin kommt sie
-         * nur über `transform` allein. `SelectionFlow` rechnet die Federbahn
-         * einmal aus und übergibt sie als Keyframes; die Breite wird gesetzt,
-         * nicht bewegt. Dass sie dabei gleich bleiben DARF, ist kein Zufall:
-         * `flex:1 1 0` gibt allen fünf Wegen dieselbe Breite (gemessen 70 px bei
-         * 390 px Fensterbreite). `test541` misst das nach, damit aus der
-         * Voraussetzung keine stille Annahme wird.
-         * ══════════════════════════════════════════════════════════════════════ */
         const vorher = Number(pille.dataset['x'] ?? NaN);
         const wegJetzt = Number.isFinite(vorher) ? Math.abs(x - vorher) : 0;
         pille.dataset['x'] = String(x);
-        /* NUR ZWISCHEN NACHBARN WIRD GEDEHNT (E641, Redurs Entscheidung).
-           `recipes/shape-stretch-compress.md`: „Disable deformation for
-           long-distance navigation." Gemessen wird in Reiterbreiten, damit die
-           Regel auch bei anderen Massen gilt. */
         const nachbar = wegJetzt > 1 && wegJetzt / Math.max(1, b) <= 1.35;
         pille.style.width = b + 'px';
         pille.style.top = y + 'px';
         pille.style.opacity = '1';
-        /* OHNE DAS MODUL BLEIBT DIE ALTE ANTWORT STEHEN. Ein Browser, der die
-           Datei nicht geladen hat, bekommt die Fläche gesetzt statt bewegt —
-           das ist weniger schön und keineswegs kaputt (§38: der aktive Reiter
-           bleibt markiert). */
         if (typeof SelectionFlow === 'undefined') {
             pille.style.transform = `translateX(${x}px)`;
         }
@@ -363,34 +152,15 @@ const Seitenleiste = (() => {
             SelectionFlow.folge(pille, x, nachbar, !pilleGesetzt || pille.classList.contains('stumm'));
         }
         if (!pilleGesetzt) {
-            /* Die Sperre erst im nächsten Bild lösen, sonst gilt sie für die
-               eben gesetzten Werte schon nicht mehr. */
             pilleGesetzt = true;
             requestAnimationFrame(() => requestAnimationFrame(() => pille.classList.remove('stumm')));
         }
-        /* Steht der neue Reiter halb ausserhalb, ihn hereinholen. Bei 390 px
-           passen die fünf Wege nicht alle ins Bild; ohne das tippt man auf
-           „Mehr" und sieht danach nicht, dass man dort ist. */
         const links = x - l.scrollLeft;
         if (links < 0 || links + b > l.clientWidth) {
-            const ruhig = AppEinstellung.wenigBewegung(); /* System oder „Ruhig" (E702) */
+            const ruhig = AppEinstellung.wenigBewegung();
             l.scrollTo({ left: Math.max(0, x - 16), behavior: ruhig ? 'auto' : 'smooth' });
         }
     };
-    /**
-     * Die untere Leiste am Telefon markieren und den Punkt am Posteingang
-     * setzen. Wird bei jedem Wechsel und nach jedem Zeichnen aufgerufen —
-     * eine Leiste, die nicht zeigt, wo man ist, ist nur eine Knopfreihe.
-     */
-    /* ==========================================================================
-     * WO MAN IST — ÜBER DAS EREIGNIS, NICHT ÜBER `App` (E274)
-     * --------------------------------------------------------------------------
-     * `test87 §3` führt diese Datei namentlich: die Zeichner rufen `App` nicht,
-     * sie bekommen ihre Griffe über `binde({…})`. Für den Schauplatz braucht es
-     * aber gar keinen Griff — die Schale ruft ihn seit E272 Phase E aus:
-     * `redion:schauplatz` trägt den Bezeichner im `detail`. Genau so hört auch
-     * die Kontextkante zu.
-     * ========================================================================*/
     let schauplatzJetzt = 'leer';
     try {
         addEventListener('redion:schauplatz', (e) => {
@@ -398,52 +168,18 @@ const Seitenleiste = (() => {
             handyLeiste();
         });
     }
-    catch { /* ohne Ereignisse bleibt der Rest */ }
-    /* Schauplatz → Knopf unten. Was hier fehlt, hat unten KEINEN Knopf. */
+    catch { }
     const ORT_ZU_KNOPF = {
         heute: 'hl-start', lernen: 'hl-lernen',
         bibliothek: 'hl-dok', notizhefte: 'hl-dok',
         kalender: 'hl-bespr', mehr: 'hl-mehr'
     };
-    /* Orte, die es WIRKLICH gibt und die unten trotzdem keinen Knopf haben.
-       Sie stehen ausdrücklich da, statt „alles andere" zu heissen: `seite`
-       und `leer` sind auch nicht in `ORT_ZU_KNOPF`, sollen aber weiter dem
-       Reiter folgen — wer ein Dokument öffnet, kam aus „Dokumente", und die
-       Pille soll dort stehenbleiben. */
     const ORTE_OHNE_KNOPF = ['posteingang', 'kompass', 'workspace',
         'aufgaben', 'papierkorb', 'elektro'];
-    /* ══ EIN ZIEL DARF VORAUSGESCHICKT WERDEN (E648) ═══════════════════════
-     * `vorauf` ist die Kennung des Knopfes, auf den gleich gewechselt wird —
-     * bevor der Bildschirm dahinter steht.
-     *
-     * WARUM ES DAS BRAUCHT. `dockWechsel` in `schale.ts` (Redurs #109) will
-     * genau das: erst die Fläche losschicken, dann den Bildschirm bauen. Nur
-     * ging der Griff ins Leere. Seit E274 sticht der SCHAUPLATZ den Reiter,
-     * und der Schauplatz ändert sich erst, wenn die neue Ansicht wirklich
-     * aufgebaut ist. Ein `handyLeiste()` davor liest also noch den alten Ort
-     * und lässt die Fläche stehen, wo sie steht.
-     *
-     * GEMESSEN, nicht vermutet: `test541` §3 las nach 60 ms „17 → 17" — die
-     * Fläche war nach einem Sechzehntel der Federdauer noch keinen Pixel
-     * gewandert.
-     *
-     * E274 wird damit nicht zurückgenommen. Der Schauplatz bleibt die
-     * Wahrheit; `vorauf` ist eine ANSAGE für ein einziges Bild, und der
-     * nächste Ruf (aus `redion:schauplatz`) setzt sie gerade, falls die
-     * Ansage nicht eingetreten ist. */
     const handyLeiste = (vorauf) => {
         const l = document.getElementById('handy-oben');
         if (!l)
             return;
-        /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
-           stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
-           kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
-        /* SEIT E236 STEHT SIE UNTEN UND HAT FÜNF WEGE.
-           „Seiten"/„Workspace" hat dort keinen Knopf mehr — der Weg steht im
-           Mehr-Blatt. Er FEHLT hier deshalb absichtlich: der Absatz weiter
-           unten erklärt, warum kein Rückfall auf „Start" stattfindet, und
-           genau das gilt hier auch. Wer im Workspace ist, soll unten nirgends
-           markiert sein statt an der falschen Stelle. */
         const karte = {
             dokumente: 'hl-dok', bibliothek: 'hl-dok',
             start: 'hl-start', lernen: 'hl-lernen',
@@ -451,29 +187,8 @@ const Seitenleiste = (() => {
         };
         l.querySelectorAll('button[role="tab"]').forEach(b => {
             b.classList.remove('an');
-            /* `aria-selected` gehört zu `role="tab"` wie das Ziel zum Verweis.
-               Ohne die Angabe meldet ein Vorleseprogramm vier gleichrangige
-               Reiter und verschweigt, auf welchem man steht — die Auskunft
-               steckte einzig in der Farbe der Pille (CLAUDE.md §38: keine
-               Information nur über Farbe). */
             b.setAttribute('aria-selected', 'false');
         });
-        /* KEIN RÜCKFALL AUF „START". Hier stand `karte[reiter] || 'hl-start'`,
-           und das war eine Behauptung: „Mehr" und „Kompass" haben oben keinen
-           Reiter, also leuchtete beim Öffnen die Start-Pille — man stand im
-           Kompass, und oben stand „Start". Wer nirgends in der Reiterleiste
-           ist, soll dort auch nirgends markiert sein. */
-        /* DER SCHAUPLATZ STICHT DEN REITER (E274).
-           Gemessen war: „Mehr → Posteingang" liess unten „Heute" leuchten, und
-           der Kompass ebenso. Der Grund stand zwei Funktionen weiter unten —
-           `reiterWechseln('inbox')` setzt `reiter` danach auf `'start'` zurück,
-           und die Leiste las nur den Reiter.
-    
-           Der Absatz darüber wollte schon damals das Richtige („wer nirgends in
-           der Reiterleiste ist, soll dort auch nirgends markiert sein"); es gab
-           nur nichts, woran man das hätte erkennen können. Seit E273 gibt es
-           das: `App.schauplatz()` sagt seit den sechs umgestellten Bildschirmen
-           auf JEDEM Bildschirm die Wahrheit. */
         const id = vorauf
             ?? ORT_ZU_KNOPF[schauplatzJetzt]
             ?? (ORTE_OHNE_KNOPF.includes(schauplatzJetzt) ? undefined : karte[reiter]);
@@ -483,21 +198,6 @@ const Seitenleiste = (() => {
             aktiv.setAttribute('aria-selected', 'true');
         }
         pilleSchieben(l, aktiv);
-        /* EIN PUNKT, WENN IM POSTEINGANG ETWAS UNGELESENES LIEGT — und ein
-           Satz dazu. Der Punkt ist rot, klein und leer: für ein
-           Vorleseprogramm ist er nichts. Wer die App hört statt sie zu sehen,
-           erfuhr nie, dass etwas anliegt.
-    
-           Der Punkt wird deshalb versteckt (er ist Bild, kein Inhalt) und die
-           Zahl wandert in den Namen des Knopfes: „Mehr, 3 ungelesen". Der
-           Titel bleibt der schlichte, damit die Maus-Blase kurz bleibt.
-    
-           DER ZWEITE PUNKT IST GEGANGEN. „Seiten" trug auch einen — ein Rest
-           aus der Zeit, als der Reiter „Chats" hiess (E38). Angezeigt wurde er
-           nie, weil nur der erste gefundene Punkt gesetzt wurde; er hätte
-           ungelesene Nachrichten an einem Ort gemeldet, an dem keine liegen.
-           Der Posteingang steht seit E42 unter „Mehr", und dort steht auch
-           der Punkt. */
         l.querySelectorAll('.hl-punkt').forEach(pt => {
             pt.setAttribute('aria-hidden', 'true');
             const knopf = pt.closest('button');
@@ -537,9 +237,6 @@ const Seitenleiste = (() => {
     };
     const zeichneBaum = () => {
         const baum = document.getElementById('tree');
-        /* Ohne den Baumkasten gibt es nichts zu zeichnen. Vorher stand hier
-           ungeprüft `baum.innerHTML = ''` — beim Zeichnen vor dem Aufbau der
-           Schale warf das und die ganze Seitenleiste blieb leer. */
         if (!baum)
             return;
         const altAufraeumen = baum.__seitenFensterAufraeumen;
@@ -547,7 +244,6 @@ const Seitenleiste = (() => {
             altAufraeumen();
         baum.innerHTML = '';
         zeichneReiter();
-        /* Der Chat-Reiter ersetzt den Baum durch Agenten und Verlauf */
         if (reiter === 'chat') {
             KI.seitenleiste(baum);
             return;
@@ -556,7 +252,6 @@ const Seitenleiste = (() => {
             Meeting.seitenleiste(baum);
             return;
         }
-        /* Anpassmodus: jeder Abschnitt bekommt ein Auge */
         if (anpassModus) {
             const kopf = document.createElement('div');
             kopf.className = 'side-section';
@@ -611,28 +306,9 @@ const Seitenleiste = (() => {
             baum.appendChild(fertig);
             return;
         }
-        /* DIE WERKZEUGE SIND NACH OBEN GEZOGEN (E210).
-    
-           Sieben Zeilen standen hier — Journal, Schnellnotizen, Vorlagen, Graph,
-           Schlagwörter, Karteikarten, Umsetzungsstand. Redur wollte die
-           Seitenleiste kürzer und die Werkzeuge im Menüband; sie stehen jetzt
-           dort unter „Werkzeuge", mit denselben Handlungen.
-    
-           NICHTS IST WEG. Die Liste ist nicht gelöscht, sondern umgezogen: sie
-           steht in `register/menueband.ts` und ist von dort aus dieselbe Wahrheit
-           für beide Ansichten. Wer den Abschnitt lieber hier hätte, schaltet ihn
-           über `sidebarAus` wieder ein — dann zeichnet die Seitenleiste ihn aus
-           demselben Register, und die zwei Wege können nicht auseinanderlaufen.
-    
-           Die Vorgabe ist AUS, und zwar nur die Vorgabe: wer den Abschnitt
-           früher ausdrücklich abgeschaltet hatte, behält seine Wahl. */
         if (abschnittAn('werkzeuge', VORGABE_AN('werkzeuge'))) {
             const wz = document.createElement('div');
             wz.className = 'wz-block';
-            /* Eine eigene Kennung. `wz-block` ist eine LAYOUT-Klasse und wird von
-               fünf weiteren Stellen benutzt (Erweiterungen, Besprechung, KI …) — wer
-               danach sucht, findet die halbe Seitenleiste. Die Prüfung ist genau
-               darauf hereingefallen und meldete 36 Werkzeuge statt sieben. */
             wz.dataset['abschnitt'] = 'werkzeuge';
             const eintraege = (Register?.menueband?.inReiter?.('werkzeuge') || [])
                 .flatMap((g) => g.eintraege || []);
@@ -669,7 +345,6 @@ const Seitenleiste = (() => {
             if (lz && faellig)
                 lz.textContent = String(faellig);
         }
-        /* Agenten — wie in Notions Seitenleiste */
         if (abschnittAn('agenten', VORGABE_AN('agenten'))) {
             const agenten = Agent.eigene();
             baum.appendChild(abschnitt('Agenten', () => Agent.eigenerDialog()));
@@ -689,7 +364,6 @@ const Seitenleiste = (() => {
             });
             baum.appendChild(ag);
         }
-        /* Besprechungen */
         if (abschnittAn('bespr', VORGABE_AN('bespr'))) {
             const bes = document.createElement('div');
             bes.className = 'wz-block';
@@ -713,7 +387,6 @@ const Seitenleiste = (() => {
             baum.appendChild(abschnitt('Besprechungen'));
             baum.appendChild(bes);
         }
-        /* Kürzlich verwendet */
         const letzte = abschnittAn('kuerzlich', VORGABE_AN('kuerzlich')) ? kuerzlich() : [];
         if (letzte.length) {
             baum.appendChild(abschnitt('Kürzlich verwendet'));
@@ -728,13 +401,11 @@ const Seitenleiste = (() => {
             });
             baum.appendChild(kv);
         }
-        /* Favoriten */
         const favs = abschnittAn('favoriten') ? Store.favorites() : [];
         if (favs.length) {
             baum.appendChild(abschnitt('Favoriten'));
             favs.forEach((p) => baum.appendChild(zeile(p, 0)));
         }
-        /* Bereiche (bei Notion: Teamspaces) */
         const bereiche = abschnittAn('bereiche') ? (Store.getMeta('bereiche', []) || []) : [];
         bereiche.forEach((b) => {
             const drin = Store.rootPages().filter((p) => p.bereich === b.id && !p.system && !p.archiviert);
@@ -752,7 +423,6 @@ const Seitenleiste = (() => {
             }
             seitenAnhaengen(baum, drin);
         });
-        /* Privat */
         if (abschnittAn('privat')) {
             const kopf = abschnitt('Privat', () => {
                 const p = Store.addPage(null, { text: '' });
@@ -769,50 +439,22 @@ const Seitenleiste = (() => {
                 baum.appendChild(leer);
             }
             seitenAnhaengen(baum, seiten);
-            /* Systemseiten (Journal, Vorlagen, Schnellnotizen) getrennt unten */
             const sys = Store.rootPages().filter((p) => p.system);
             if (sys.length) {
                 baum.appendChild(abschnitt('Angelegt von den Werkzeugen'));
                 seitenAnhaengen(baum, sys);
             }
         }
-        /* Meine Apps — bei Notion steht hier „Notion-Apps" ganz unten */
         if (!abschnittAn('apps'))
             return;
-        /* `data-ruhig="chrome"` heisst: das hier ist Gerüst, keine eigene Seite.
-           Die ruhige Fassung blendet Gerüst aus und lässt Eigenes stehen (E219).
-           Der Unterschied ist nicht kosmetisch: „Privat" und „Kürzlich" tragen,
-           was Redur selbst geschrieben hat — das versteckt man nicht. */
         const appKopf = abschnitt('Meine Apps', null, () => abschnitteAnpassen());
         appKopf.dataset['ruhig'] = 'chrome';
         baum.appendChild(appKopf);
-        /* AUS DEM REGISTER, NICHT AUS ZWEI LISTEN (L58, E166).
-           Hier standen die zwanzig Apps als Datentabelle und darunter eine Kette
-           aus zwanzig `if (a === '…')`. Zwei Listen für dieselben zwanzig Dinge:
-           wer eine hinzufügte, musste an beide denken, und wer eine umbenannte,
-           an eine. Dieselbe Lage, die E160 eine Gruppe weiter oben aufgelöst hat.
-    
-           `esc` ist Pflicht, auch wenn heute nur eingebaute Einträge kommen:
-           `melde` steht jedem Bereich offen, und ein Erweiterungsname ist
-           Nutzertext (CLAUDE.md §19). */
         const apps = document.createElement('div');
         apps.className = 'wz-block apps-block';
         apps.dataset['ruhig'] = 'chrome';
         const appliste = (typeof Register !== 'undefined' && Register.navigation)
             ? Register.navigation.anPlatz('apps') : [];
-        /* VIER GRUPPEN STATT ZWANZIG ZEILEN (E206).
-           Redur am 26. August: „Links habe ich so viel Bereiche, reduziere es."
-           Zwanzig gleichrangige Zeilen untereinander sind keine Liste, sondern
-           eine Wand — man liest sie nicht, man sucht darin. Und weil sie ganz
-           unten steht, scrollt man an allem anderen vorbei, um sie zu sehen.
-    
-           Gelöscht wird dabei nichts: jede App bleibt, sie steht nur in einer
-           Schublade. Zu ist die Voreinstellung, aufgeklappt merkt sich der
-           Speicher — wer „Einrichten" offen lässt, findet es offen wieder.
-    
-           Ein Eintrag ohne `gruppe` fällt nicht heraus, sondern landet unter
-           „Sonstiges". Eine Erweiterung, die sich über `melde` anhängt, kennt
-           diese Gruppennamen nicht und darf trotzdem erscheinen. */
         const offeneGruppen = () => {
             const g = Store.getMeta('appGruppenAuf', []);
             return Array.isArray(g) ? g : [];
@@ -824,9 +466,6 @@ const Seitenleiste = (() => {
             zeichneBaum();
         };
         const inGruppe = (id) => appliste.filter((x) => id === 'sonstiges' ? !APP_GRUPPEN.some(([g]) => g === x.gruppe) : x.gruppe === id);
-        /* „Sonstiges" steht ausdrücklich in derselben Form wie die vier echten
-           Gruppen, damit die Schleife eine Schleife bleibt und keine Sonderzeile
-           darunter braucht. */
         const alleGruppen = [...APP_GRUPPEN, ['sonstiges', 'Sonstiges', 'dots']];
         apps.innerHTML = alleGruppen
             .map(([id, name, zeichen]) => {
@@ -850,7 +489,6 @@ const Seitenleiste = (() => {
                 return;
             }
         });
-        /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
         setTimeout(() => {
             let versteckt = false;
             [...baum.children].forEach(el => {
@@ -863,8 +501,6 @@ const Seitenleiste = (() => {
                     el.style.display = versteckt ? 'none' : '';
             });
         }, 0);
-        /* Die Handlung steht am Eintrag. Ein Fehler darin darf die Leiste nicht
-           mitreissen — er gehört in den Reporter, wie beim Anhängepunkt unten. */
         apps.addEventListener('click', e => {
             const b = elVon(e)?.closest('[data-app]');
             if (!b)
@@ -882,14 +518,6 @@ const Seitenleiste = (() => {
             }
         });
         baum.appendChild(apps);
-        /* --- Was das Register beisteuert -------------------------------------
-           Ein Bereich, der einen Eintrag in der Seitenleiste braucht, meldet ihn
-           in register/navigation.js an — statt hier eine Zeile einzufügen. Sonst
-           ist diese Datei die eine Stelle, die jeder anfassen muss, und ihre
-           Reihenfolge hängt davon ab, wer zuletzt geladen wurde.
-    
-           `anPlatz` filtert selbst über `zeigen()`: ein Eintrag, der etwas
-           verspricht, das ohne Konto nicht geht, kommt gar nicht erst mit. */
         if (typeof Register !== 'undefined' && Register.navigation) {
             const dazu = Register.navigation.anPlatz('unten').filter((x) => x.tun && x.vonAussen);
             if (dazu.length) {
@@ -912,27 +540,13 @@ const Seitenleiste = (() => {
                 baum.appendChild(kasten);
             }
         }
-        /* Die selbst gewählte Reihenfolge der Abschnitte anwenden */
         abschnitteOrdnen(baum);
-        /* Erweiterungsknöpfe wieder anhängen — zeichneBaum leert den Baum */
         if (typeof Erweiterung !== 'undefined' && Erweiterung.knoepfeAnhaengen)
             Erweiterung.knoepfeAnhaengen();
-        /* UND ZULETZT DIE ZEICHEN (E200). `zeichneBaum` leert den Baum und baut
-           ihn neu; die `<span data-sym>` darin sind danach wieder leer. Der Ruf
-           beim Start füllt nur, was zu diesem Zeitpunkt schon dasteht — alles
-           Spätere muss sich selbst darum kümmern.
-           Nur der Baum, nicht das ganze Dokument: was ausserhalb liegt, ist
-           schon gefüllt, und ein zweiter Durchlauf darüber kostet bei jedem
-           Neuzeichnen der Seitenleiste Zeit für nichts (§73). */
         if (typeof Register !== 'undefined' && Register.symbole) {
             Register.symbole.fuelle(baum);
         }
     };
-    /**
-     * Ordnet die fertig gezeichneten Abschnitte um.
-     * Ein Abschnitt ist seine Überschrift plus alles bis zur nächsten. Was vor
-     * der ersten Überschrift steht, gehört zu „Werkzeuge".
-     */
     const abschnitteOrdnen = (baum) => {
         const folge = Store.getMeta('sidebarFolge', null);
         if (!Array.isArray(folge) || !folge.length)
@@ -963,30 +577,19 @@ const Seitenleiste = (() => {
         teile.sort((a, b) => rang(a.id) - rang(b.id));
         teile.forEach(t => t.nodes.forEach(n => baum.appendChild(n)));
     };
-    /** Welche Abschnitte sind zugeklappt? Notion merkt sich das je Abschnitt. */
     const abschnittZu = (name) => (Store.getMeta('sidebarZu', []) || []).includes(name);
     const abschnittKlappen = (name) => {
         const zu = Store.getMeta('sidebarZu', []) || [];
         Store.setMeta('sidebarZu', zu.includes(name) ? zu.filter((x) => x !== name) : [...zu, name]);
         zeichneBaum();
     };
-    /** Vom sichtbaren Namen zurück auf den Schlüssel in ABSCHNITTE. */
     const abschnittId = (name) => (ABSCHNITTE.find(([, n]) => n === name) || [])[0] || null;
-    /**
-     * Das ⋯-Menü eines Abschnitts. Was hier steht, muss auch etwas tun —
-     * ein Menüpunkt, der nur da ist, damit es ihn gibt, ist schlimmer als
-     * gar keiner.
-     */
     const abschnittMenue = (anker, name) => {
         document.querySelectorAll('.menu').forEach(m => m.remove());
         const id = abschnittId(name);
         const zu = abschnittZu(name);
         const folge = abschnitteGeordnet().map(x => x[0]);
         const i = id ? folge.indexOf(id) : -1;
-        /* Über `Menue.menu`, nicht von Hand: von Hand gebaut wurde dieses Menü
-           am Telefon NIE zum Blatt — es stand als Rechner-Kästchen mitten auf
-           dem kleinen Bildschirm, ohne Wischgeste, ohne Karten. Das Modul kann
-           das alles; man muss es nur benutzen (§8-Gedanke, auf Menüs gewandt). */
         const r = anker.getBoundingClientRect();
         const m = Menue.menu(`<button data-a="klappen"><span class="mi">${zu ? '⌄' : '›'}</span>` +
             `${zu ? 'Aufklappen' : 'Zuklappen'}</button>` +
@@ -1005,8 +608,6 @@ const Seitenleiste = (() => {
             if (!b || b.disabled)
                 return;
             const a = b.dataset.a;
-            /* Beides weg — am Telefon steht hinter dem Blatt der dunkle Grund,
-               und ein Grund ohne Blatt wäre eine unsichtbare Wand vor der App. */
             document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
             if (a === 'klappen')
                 abschnittKlappen(name);
@@ -1018,8 +619,6 @@ const Seitenleiste = (() => {
                 Store.setMeta('sidebarZu', []);
                 zeichneBaum();
             }
-            /* Ohne Kennung gibt es den Abschnitt in der Reihenfolge nicht — dann
-               tun diese drei Punkte auch nichts. */
             if (!id)
                 return;
             if (a === 'hoch')
@@ -1033,15 +632,10 @@ const Seitenleiste = (() => {
             if (a === 'anpassen')
                 abschnitteAnpassen();
         });
-        /* Das Schliessen von aussen übernimmt das Modul: am Rechner der
-           mousedown daneben, am Telefon der Grund und die Wischgeste. Der
-           once-Klick-Schliesser, der hier stand, hätte am Telefon das Blatt
-           entfernt und den Grund stehen lassen — eine unsichtbare Wand. */
     };
     const abschnitt = (name, beiPlus, beiZahnrad) => {
         const d = document.createElement('div');
         d.className = 'side-section';
-        /* Chevron zum Auf- und Zuklappen — wie in Notions Telefon-App */
         d.innerHTML = `<span>${name}<i class="ss-pfeil">${abschnittZu(name) ? '›' : '⌄'}</i></span>`;
         d.querySelector('span')?.addEventListener('click', () => abschnittKlappen(name));
         if (beiZahnrad) {
@@ -1058,13 +652,6 @@ const Seitenleiste = (() => {
             b.addEventListener('click', beiPlus);
             d.appendChild(b);
         }
-        /* --- Das Drei-Punkte-Menü des Abschnitts -------------------------
-         * Bisher gab es zum Abschnitt nur den Pfeil und das Plus; alles
-         * andere — ausblenden, umsortieren — lag im Anpassmodus versteckt.
-         * Notion hat an jedem Abschnitt ein eigenes ⋯. Das holt es nach und
-         * legt gleich das dazu, was hier wirklich nützlich ist: alles
-         * zuklappen, und ein Weg zur Anpassliste.
-         * ---------------------------------------------------------------- */
         const punkte = document.createElement('button');
         punkte.textContent = '⋯';
         punkte.title = 'Mehr zu diesem Abschnitt';
@@ -1078,9 +665,6 @@ const Seitenleiste = (() => {
     let gemesseneZeilenHoehe = 30;
     const FENSTER_SCHWELLE = 240;
     const FENSTER_PUFFER = 12;
-    /** Sichtbare Seitenhierarchie als flache Folge. Nur aufgeklappte Kinder
-        gehören hinein — genau dieselbe Regel wie beim bisherigen rekursiven
-        Zeichnen. */
     const sichtbareSeiten = (wurzeln) => {
         const raus = [];
         const nimm = (p, tiefe) => {
@@ -1094,12 +678,6 @@ const Seitenleiste = (() => {
         wurzeln.forEach(p => nimm(p, 0));
         return raus;
     };
-    /**
-     * Ein echter Fenster-Renderer für grosse Seitenlisten. Der Scrollbereich
-     * bleibt so hoch wie die vollständige Liste; im DOM stehen nur die Zeilen
-     * im Bild plus zwölf darüber und darunter. Die Höhe wird an einer echten
-     * `.row` gemessen und nicht aus dem CSS abgeschrieben.
-     */
     const seitenAnhaengen = (baum, wurzeln) => {
         const liste = sichtbareSeiten(wurzeln);
         if (liste.length <= FENSTER_SCHWELLE) {
@@ -1163,8 +741,6 @@ const Seitenleiste = (() => {
         const r = document.createElement('div');
         r.className = 'row' + (p.id === aktuelleSeite() ? ' on' : '');
         r.draggable = true;
-        /* DIE ORDNERFARBE IN DER SEITENLEISTE (E672) — als schmaler Rücken
-           links, wie am Deckel. Nur bekannte Kennungen (`Farben.kennung`). */
         const zeilenFarbe = typeof Farben !== 'undefined' && Farben.kennung ? Farben.kennung(p.color) : '';
         if (zeilenFarbe) {
             r.dataset['farbe'] = zeilenFarbe;
@@ -1210,7 +786,6 @@ const Seitenleiste = (() => {
         act.appendChild(mehr);
         r.append(tw, ico, nm, act);
         r.addEventListener('click', () => oeffne(p.id));
-        /* Seiten in der Leiste umhängen */
         r.addEventListener('dragstart', e => { e.dataTransfer?.setData('text/seite', p.id); });
         r.addEventListener('dragover', e => { e.preventDefault(); r.classList.add('drop'); });
         r.addEventListener('dragleave', () => r.classList.remove('drop'));
@@ -1233,12 +808,6 @@ const Seitenleiste = (() => {
         }
         return w;
     };
-    /* ------------------------------------------------------------------------
-     * Die öffentliche Fläche. `zeichne` heisst hier so, wie es heisst — der
-     * alte Name `zeichneBaum` lebt in `App` weiter und reicht hierher.
-     * `reiter()` liest, `reiter('chat')` setzt; es zeichnet dabei bewusst
-     * nicht, weil die Aufrufstellen das schon selbst tun.
-     * ----------------------------------------------------------------------*/
     return {
         binde,
         zeichne: zeichneBaum,

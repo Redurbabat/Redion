@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/navigation.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/navigation.js — was in der Seitenleiste steht, und in welcher Folge
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/ansicht/editor.ts (npm run bauen:ts). */
 /* ============================================================================
  * blocks.js — Der Block-Editor
  * ----------------------------------------------------------------------------

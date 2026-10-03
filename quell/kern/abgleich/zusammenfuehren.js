@@ -1,65 +1,13 @@
 "use strict";
-/* ============================================================================
- * zusammen.js — Zusammenführen statt Überschreiben
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/abgleich/zusammenfuehren.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/abgleich/zusammenfuehren.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Idee 8 der 10000×-Liste: „Konfliktfreie Zusammenarbeit". Die Notion-KI
- * schreibt dazu selbst, warum Notion das nicht hat: Text-CRDTs sind schon
- * schwer, Datenbank- und Rechte-CRDTs deutlich schwerer.
- *
- * Der erste Abgleich hier konnte nur „meins oder deins": wer später
- * gespeichert hat, gewinnt, der andere verliert seine Arbeit — still, ohne
- * eine Zeile Hinweis. Das ist der schlimmste Datenverlust, den es gibt,
- * weil niemand merkt, dass er stattgefunden hat.
- *
- * Mit dem letzten gemeinsamen Stand geht mehr. Drei Fassungen liegen vor:
- *
- *      BASIS   – wie der Satz aussah, als beide Geräte ihn gleich sahen
- *      HIER    – wie er auf diesem Gerät jetzt aussieht
- *      DORT    – wie er auf dem anderen Gerät jetzt aussieht
- *
- * Daraus lässt sich sagen, WER WAS geändert hat. Hat nur einer ein Feld
- * angefasst, kommt seine Änderung durch. Haben beide dasselbe Feld
- * verschieden gesetzt, ist es wirklich ein Konflikt — und der wird gezeigt,
- * statt heimlich entschieden.
- *
- * Drei Stufen, von grob nach fein:
- *
- *   1. FELDWEISE   – A ändert den Status, B die Priorität: beides bleibt.
- *   2. WORTWEISE   – A schreibt am Anfang des Absatzes, B am Ende: beides
- *                    bleibt. Erst wenn beide dieselbe Stelle ändern, hakt es.
- *   3. LISTENWEISE – A hängt einen Block an, B löscht einen anderen: beides
- *                    bleibt, und die Reihenfolge stimmt danach noch.
- *
- * Was übrig bleibt, landet in der Konfliktliste mit beiden Fassungen
- * nebeneinander und einer Wahl. Nichts wird weggeworfen, bevor jemand
- * hingesehen hat.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/abgleich/zusammenfuehren.ts (npm run bauen:ts). */
 const Zusammen = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     const gleich = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-    /* Sehr grosse Texte werden nicht wortweise verglichen — der Vergleich
-       kostet Länge × Länge, und ein 10 000-Wort-Block würde die Oberfläche
-       einfrieren. Dann lieber ehrlich einen Konflikt melden. */
     const MAX_WORTE = 4000;
-    /* ==========================================================================
-     * 1 · WORTWEISE — der Vergleich zweier Texte
-     * ========================================================================*/
-    /** In Wörter und Zwischenräume zerlegen, so dass join('') wieder passt. */
     const teile = (s) => String(s ?? '').split(/(\s+)/).filter(x => x !== '');
     const lcs = (A, B) => {
         const n = A.length, m = B.length;
-        /* Gleiche Anfänge und Enden vorweg abziehen — das macht den teuren
-           Teil in der Praxis winzig, weil zwei Fassungen meist fast gleich sind. */
         let vorn = 0;
         while (vorn < n && vorn < m && A[vorn] === B[vorn])
             vorn++;
@@ -73,10 +21,6 @@ const Zusammen = (() => {
             paare.push({ a: i, b: i });
         const ni = a.length, mi = b.length;
         if (ni && mi) {
-            /* Dieselben zwei Handgriffe wie in `fassungen.ts`: die Tabelle ist
-               (ni+1)×(mi+1) gross und die Schleifen laufen nur bis ni-1 bzw.
-               mi-1 — jeder Zugriff trifft. TypeScript weiss das nicht, und
-               zwölfmal `!` zu schreiben sagt weniger als zwei benannte Zeilen. */
             const t = Array.from({ length: ni + 1 }, () => new Uint32Array(mi + 1));
             const tab = (i, j) => t[i]?.[j] ?? 0;
             const setzeTab = (i, j, w) => { const z = t[i]; if (z)
@@ -102,10 +46,6 @@ const Zusammen = (() => {
             paare.push({ a: n - hinten + k, b: m - hinten + k });
         return paare;
     };
-    /**
-     * Die Änderungen von `basis` nach `neu` als Stücke:
-     * „ersetze basis[von…bis) durch diese Wörter".
-     */
     const stuecke = (B, N) => {
         const paare = lcs(B, N);
         const out = [];
@@ -118,10 +58,6 @@ const Zusammen = (() => {
         }
         return out;
     };
-    /**
-     * Drei Texte zu einem machen.
-     * @returns {{text:string, konflikt:boolean}}
-     */
     const textDreiWege = (basis, hier, dort) => {
         const b = String(basis ?? ''), h = String(hier ?? ''), d = String(dort ?? '');
         if (h === d)
@@ -134,9 +70,6 @@ const Zusammen = (() => {
         if (B.length > MAX_WORTE || H.length > MAX_WORTE || D.length > MAX_WORTE)
             return { text: h, konflikt: true };
         const sh = stuecke(B, H), sd = stuecke(B, D);
-        /* Überschneiden sich zwei Änderungen, ist es einer. Zwei Einfügungen an
-           derselben Stelle überschneiden sich nicht — dann stehen beide da,
-           meine zuerst. Lieber ein Satz zu viel als ein Satz zu wenig. */
         for (const x of sh)
             for (const y of sd)
                 if (x.von < y.bis && y.von < x.bis)
@@ -153,15 +86,6 @@ const Zusammen = (() => {
         raus.push(...B.slice(pos));
         return { text: raus.join(''), konflikt: false };
     };
-    /* ==========================================================================
-     * 2 · LISTENWEISE — Reihenfolgen mit Einfügen und Löschen
-     * ========================================================================*/
-    /**
-     * Drei Listen von Kennungen (z. B. die Kinder einer Seite) zu einer machen.
-     * Gelöscht wird, was einer gelöscht hat. Neu ist, was einer angehängt hat —
-     * an der Stelle, an der er es angehängt hat.
-     * @returns {{liste:Array, konflikt:boolean}}
-     */
     const listeDreiWege = (basis, hier, dort) => {
         const B = Array.isArray(basis) ? basis : [];
         const H = Array.isArray(hier) ? hier : [];
@@ -174,7 +98,6 @@ const Zusammen = (() => {
             return { liste: H, konflikt: false };
         const inH = new Set(H), inD = new Set(D), inB = new Set(B);
         const weg = new Set(B.filter(x => !inH.has(x) || !inD.has(x)));
-        /* Die gemeinsame Reihenfolge: hat nur einer umsortiert, gilt seine. */
         const nurAlte = (L) => L.filter((x) => inB.has(x) && !weg.has(x));
         const oB = B.filter(x => !weg.has(x)), oH = nurAlte(H), oD = nurAlte(D);
         let grund, konflikt = false;
@@ -188,7 +111,6 @@ const Zusammen = (() => {
             grund = oH.slice();
             konflikt = true;
         }
-        /* Neues einbauen — jeweils hinter das Element, hinter dem es stand. */
         const einbauen = (L) => {
             L.forEach((x, i) => {
                 if (inB.has(x) || grund.includes(x))
@@ -201,9 +123,6 @@ const Zusammen = (() => {
                         break;
                     }
                 }
-                /* Hat die andere Seite an derselben Stelle schon etwas eingehängt,
-                   dann dahinter — sonst überholt der zweite Neuzugang den ersten und
-                   die Reihenfolge kippt um. */
                 while (anker + 1 < grund.length && !inB.has(grund[anker + 1]))
                     anker++;
                 grund.splice(anker + 1, 0, x);
@@ -213,31 +132,13 @@ const Zusammen = (() => {
         einbauen(D);
         return { liste: grund, konflikt };
     };
-    /* ==========================================================================
-     * 3 · FELDWEISE — der ganze Satz
-     * ========================================================================*/
-    /* Felder, die nie ein Konflikt sind: Zeitstempel und Zählwerke. Bei ihnen
-       gewinnt schlicht der grössere Wert. Ein „Konflikt" im Datum der letzten
-       Änderung wäre eine Frage, auf die es keine sinnvolle Antwort gibt. */
     const ZEIT = new Set(['edited', 'updated', 'created', 'wolkeVersion', 'version',
         'lastEdited', 'zuletzt']);
-    /* Felder, deren Inhalt Text ist und deshalb wortweise zusammengeht. */
     const TEXT = new Set(['text', 'name', 'title', 'beschreibung', 'notiz', 'caption']);
-    /* Felder, die Listen von Kennungen sind. */
     const LISTE = new Set(['content', 'children', 'viewIds', 'spalten', 'reihenfolge']);
     const istObjekt = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
-    /**
-     * Der Kern: drei Fassungen eines Satzes zu einer.
-     *
-     * @param {Object} basis  der letzte gemeinsame Stand (null = keiner bekannt)
-     * @param {Object} hier   die Fassung auf diesem Gerät
-     * @param {Object} dort   die Fassung vom Server
-     * @returns {{satz:Object, konflikte:Array, zusammengefuehrt:boolean}}
-     */
     const dreiWege = (basis, hier, dort) => {
         const konflikte = [];
-        /* Ohne gemeinsamen Stand bleibt nur der Zeitpunkt — dann ist es kein
-           Zusammenführen, sondern eine Entscheidung, und die wird gemeldet. */
         if (!basis) {
             if (gleich(hier, dort))
                 return { satz: hier, konflikte: [], zusammengefuehrt: false };
@@ -271,7 +172,6 @@ const Zusammen = (() => {
                         raus[k] = H;
                     continue;
                 }
-                /* Ab hier haben beide dasselbe Feld angefasst. */
                 if (ZEIT.has(k)) {
                     const x = String(H ?? ''), y = String(D ?? '');
                     raus[k] = (typeof H === 'number' || typeof D === 'number')
@@ -299,13 +199,10 @@ const Zusammen = (() => {
                         gemischt = true;
                     continue;
                 }
-                if (istObjekt(H) && istObjekt(D)) { /* props, schema, format … */
+                if (istObjekt(H) && istObjekt(D)) {
                     raus[k] = geheDurch(istObjekt(B) ? B : {}, H, D, p);
                     continue;
                 }
-                /* Zwei einfache Werte, beide geändert: das ist ein echter Konflikt.
-                   Bis jemand entscheidet, bleibt der eigene Wert stehen — auf dem
-                   eigenen Gerät die eigene Arbeit zu sehen ist das Erwartbare. */
                 raus[k] = H !== undefined ? H : D;
                 konflikte.push({ pfad: p, feld: pfadName(p), hier: H, dort: D,
                     grund: 'Beide haben diesen Wert verschieden gesetzt.' });
@@ -315,7 +212,6 @@ const Zusammen = (() => {
         const satz = geheDurch(basis, hier || {}, dort || {}, []);
         return { satz, konflikte, zusammengefuehrt: gemischt && !konflikte.length ? true : gemischt };
     };
-    /** Aus einem Pfad einen lesbaren Namen machen. */
     const pfadName = (p) => {
         if (!p.length)
             return 'die ganze Seite';
@@ -324,12 +220,8 @@ const Zusammen = (() => {
             filter: 'Filter', sorts: 'Sortierung', type: 'Typ' };
         return p.map((x) => uebersetzt[x] || x).join(' › ');
     };
-    /* ==========================================================================
-     * 4 · DIE KONFLIKTLISTE
-     * ========================================================================*/
     const MAX_KONFLIKTE = 200;
     const offene = () => Store.getMeta('konflikte', []) || [];
-    /** Nach dem Abgleich: was übrig blieb, in die Liste. */
     const merke = (id, tabelle, liste) => {
         if (!liste || !liste.length)
             return 0;
@@ -337,8 +229,6 @@ const Zusammen = (() => {
         const jetzt = Store.now();
         liste.forEach((k) => {
             const schluessel = id + '|' + (k.pfad || []).join('.');
-            /* Derselbe Konflikt zweimal ist einer — sonst wächst die Liste bei
-               jedem Abgleich weiter, obwohl sich nichts geändert hat. */
             const i = alt.findIndex((x) => x.schluessel === schluessel);
             const satz = { schluessel, id, tabelle, pfad: k.pfad || [], feld: k.feld,
                 hier: k.hier, dort: k.dort, grund: k.grund, wann: jetzt };
@@ -350,7 +240,6 @@ const Zusammen = (() => {
         Store.setMeta('konflikte', alt.slice(-MAX_KONFLIKTE));
         return liste.length;
     };
-    /** Einen Wert tief in einem Satz setzen. */
     const setzeTief = (obj, pfad, wert) => {
         if (!pfad.length)
             return wert;
@@ -375,11 +264,6 @@ const Zusammen = (() => {
     const satzHolen = (tabelle, id) => tabelle === 'collections' ? Store.cache.collections[id]
         : tabelle === 'views' ? Store.cache.views[id]
             : Store.cache.blocks[id];
-    /**
-     * Einen Konflikt entscheiden.
-     * @param {string} schluessel
-     * @param {'hier'|'dort'} wahl
-     */
     const loese = (schluessel, wahl) => {
         const liste = offene();
         const k = liste.find((x) => x.schluessel === schluessel);
@@ -410,9 +294,6 @@ const Zusammen = (() => {
         liste.slice().forEach((k) => loese(k.schluessel, wahl));
         return liste.length;
     };
-    /* ==========================================================================
-     * 5 · DAS FENSTER
-     * ========================================================================*/
     const kurz = (v) => {
         if (v === undefined)
             return '<i>gelöscht</i>';
@@ -437,9 +318,6 @@ const Zusammen = (() => {
         const zeichne = () => {
             const liste = offene();
             const ziel = o.querySelector('#zu-inhalt');
-            /* Ohne das Ziel gibt es nichts zu zeichnen. Vorher stand hier
-               ungeprüft `ziel.innerHTML = …`: wäre das Fenster in der Zwischenzeit
-               geschlossen worden, hätte das mitten im Neuzeichnen geworfen. */
             if (!ziel)
                 return;
             if (!liste.length) {
@@ -497,10 +375,6 @@ const Zusammen = (() => {
         zeichne();
         return o;
     };
-    /* ==========================================================================
-     * 6 · DER HINWEIS
-     * ========================================================================*/
-    /** Ein stiller Konflikt ist ein verlorener Konflikt — also nicht still. */
     const melde = () => {
         const n = offene().length;
         document.querySelectorAll('[data-konflikt-zahl]').forEach(el => {
@@ -514,9 +388,6 @@ const Zusammen = (() => {
         if (!n)
             return;
         const t = UI.toast(n + ' Stelle' + (n === 1 ? '' : 'n') + ' braucht eine Entscheidung', 9000);
-        /* Der Hinweis ist anklickbar — sonst weiss man, dass etwas ist, aber
-           nicht, wo man hinschauen soll. Ein Konflikt, den man nicht findet,
-           ist so gut wie keiner. */
         const el = document.getElementById('toast');
         if (el) {
             el.style.cursor = 'pointer';

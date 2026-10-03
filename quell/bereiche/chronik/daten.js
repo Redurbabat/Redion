@@ -1,11 +1,5 @@
 "use strict";
-/* ============================================================================
- * chronik/daten.js — die Chronik, wie Redion sie liest
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `chronik/chronik.json`; `node chronik.mts` schreibt daraus
- * diese Datei, UR.md und PROBLEME.md. Eine Wahrheit, drei Ansichten (§8).
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: chronik/chronik.json, über src/bereiche/chronik/daten.ts (node chronik.mts). */
 const ChronikDaten = {
     "hinweis": "DIE QUELLE. UR.md und PROBLEME.md werden aus dieser Datei erzeugt (node chronik.mts), und die Chronik in Redion liest sie ebenfalls. Eine Wahrheit, drei Ansichten (§8).",
     "ueberRedur": {

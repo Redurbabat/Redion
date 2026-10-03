@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/electrical/rechenweg.ts (npm run bauen:ts). */
 /* ============================================================================
  * rechenweg.js — Jede Rechnung zeigt ihren Weg
  * ----------------------------------------------------------------------------

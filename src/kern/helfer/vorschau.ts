@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/vorschau.ts (npm run bauen:ts). */
 /* ============================================================================
  * vorschau.js — Eine Seite so zeigen, dass man sie wiedererkennt
  * ----------------------------------------------------------------------------

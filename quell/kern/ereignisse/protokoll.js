@@ -1,46 +1,9 @@
 "use strict";
-/* ==========================================================================
- * PROTOKOLL — was wann von wem geschehen ist
- * --------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/ereignisse/protokoll.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/ereignisse/protokoll.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Es gab hier schon drei Stellen, an denen etwas mitgeschrieben wurde: der
- * Versionsverlauf einer Seite, das KI-Protokoll und der Laufverlauf der
- * Automationen. Drei Orte, drei Formen, und keiner beantwortet die Frage,
- * die man wirklich hat: „Was ist gestern hier eigentlich passiert?"
- *
- * Notion nennt das im Unternehmenstarif „Audit log". Der Sinn ist nicht die
- * Überwachung, sondern die Nachvollziehbarkeit: wer hat die Seite gelöscht,
- * wann lief die Automation zuletzt, wer hat die Rechte geändert, wann wurde
- * exportiert.
- *
- * Dieses Modul führt ein einziges Protokoll. Es schreibt nichts doppelt und
- * hängt sich dort ein, wo etwas geschieht, statt jede Stelle im Code
- * anzufassen — die meisten Ereignisse fallen beim Umschliessen der
- * Speicherfunktionen von selbst an.
- *
- * Zwei bewusste Grenzen:
- *
- *   1. Es steht im Browser, nicht auf einem Server. Wer den Browser
- *      aufmacht, kann es lesen und auch löschen. Ein Protokoll, das gegen
- *      den eigenen Besitzer schützen soll, braucht einen fremden Ort — das
- *      geht hier nicht, und es steht auch so im Fenster.
- *   2. Es zählt nicht mit, was jemand nur ansieht. Das wäre Überwachung
- *      ohne Nutzen.
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ereignisse/protokoll.ts (npm run bauen:ts). */
 const Protokoll = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const SCHLUESSEL = 'protokoll';
-    const MAX = 2000; /* danach fällt das Älteste heraus */
-    /* Die Arten von Ereignissen. Jede hat ein Zeichen und einen Satz, damit
-       die Liste sich lesen lässt wie ein Bericht, nicht wie eine Logdatei. */
+    const MAX = 2000;
     const ARTEN = [
         ['seite-neu', '📄', 'Seite angelegt'],
         ['seite-weg', '🗑', 'In den Papierkorb'],
@@ -61,19 +24,11 @@ const Protokoll = (() => {
         ['einstellung', '⚙', 'Einstellung geändert'],
         ['sonstiges', '·', 'Sonstiges']
     ];
-    /**
-     * Die Art zu einer Kennung — oder „Sonstiges".
-     *
-     * Der Rückgabetyp steht ausgeschrieben, weil `ARTEN[länge-1]` unter
-     * `noUncheckedIndexedAccess` `undefined` sein könnte. Die Liste ist nie
-     * leer; der letzte Eintrag steht deshalb noch einmal als Notnagel da,
-     * statt an sechs Aufrufstellen geprüft zu werden.
-     */
     const SONSTIGES = ['sonstiges', '·', 'Sonstiges'];
     const artVon = (id) => ARTEN.find(a => a[0] === id)
         ?? ARTEN[ARTEN.length - 1]
         ?? SONSTIGES;
-    let puffer = null; /* im Speicher, damit nicht jedes Ereignis schreibt */
+    let puffer = null;
     let schreibUhr;
     const laden = () => {
         if (!puffer)
@@ -91,12 +46,6 @@ const Protokoll = (() => {
             catch { }
         }, 800);
     };
-    /**
-     * Ein Ereignis aufnehmen.
-     * @param {string} art     eine der Arten oben
-     * @param {string} text    was geschehen ist, in einem Satz
-     * @param {object} zusatz  { seite, id, wer, wie }
-     */
     const notieren = (art, text, zusatz) => {
         if (Store.getMeta('protokollAus', false))
             return null;
@@ -105,9 +54,6 @@ const Protokoll = (() => {
         const eintrag = {
             id: Store.uid().slice(0, 8),
             wann: Store.now(),
-            /* `artVon` fällt auf „Sonstiges" zurück, gibt also immer etwas — aber
-               das steht in einer anderen Funktion, und `?? 'sonstiges'` schreibt
-               hier hin, worauf sich der Eintrag verlässt. */
             art: artVon(art)[0],
             text: String(text || ''),
             wer: z['wer'] || (typeof Konten !== 'undefined' ? (Konten.aktiv() || {}).name : '') || 'Ich',
@@ -123,9 +69,6 @@ const Protokoll = (() => {
     };
     const alle = () => laden().slice();
     const leeren = () => { puffer = []; Store.setMeta(SCHLUESSEL, []); };
-    /* ========================================================================
-     * FILTER UND ZÄHLUNG
-     * ======================================================================*/
     const gefiltert = ({ art, wer, seite, von, bis, suche } = {}) => laden().filter((e) => {
         if (art && e.art !== art)
             return false;
@@ -152,14 +95,6 @@ const Protokoll = (() => {
         });
         return { gesamt: liste.length, nachArt, nachWer, nachTag };
     };
-    /* ========================================================================
-     * EINKLINKEN
-     * ------------------------------------------------------------------------
-     * Die meisten Ereignisse fallen an den Speicherfunktionen an. Sie werden
-     * einmal umschlossen, statt an dreissig Stellen im Code eine Zeile
-     * einzufügen — das wäre nicht nur mehr Arbeit, sondern auch die Sorte
-     * Änderung, die man beim nächsten Mal vergisst.
-     * ======================================================================*/
     let eingeklinkt = false;
     const einklinken = () => {
         if (eingeklinkt)
@@ -169,15 +104,12 @@ const Protokoll = (() => {
         const altAdd = Store.addBlock;
         Store.addBlock = function (parentId, type, patch, index) {
             const b = altAdd.call(Store, parentId, type, patch, index);
-            /* Nur Seiten und Datenbanken — jeder Textabsatz wäre Lärm */
             if (b && b.type === 'page')
                 notieren('seite-neu', 'Seite „' + nameVon(b) + '" angelegt', { seite: b.id, id: b.id });
             if (b && b.type === 'database')
                 notieren('db-neu', 'Datenbank „' + nameVon(b) + '" angelegt', { seite: b.id, id: b.id });
             return b;
         };
-        /* addDatabase legt den Block über die modulinterne Funktion an, nicht
-           über Store.addBlock — der Umweg oben sieht ihn deshalb nicht. */
         const altDb = Store.addDatabase;
         Store.addDatabase = function (parentId, name, schema, layout) {
             const erg = altDb.call(Store, parentId, name, schema, layout);
@@ -232,9 +164,6 @@ const Protokoll = (() => {
             return altColl.call(Store, id, patch);
         };
     };
-    /* ========================================================================
-     * DAS FENSTER
-     * ======================================================================*/
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     const wannText = (iso) => {
         const d = new Date(iso);
@@ -267,8 +196,6 @@ const Protokoll = (() => {
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">📜 Protokoll <em id="pr-zahl"></em>' +
                 '<button class="icon-btn" data-a="zu">✕</button></div>' +
-                // Die Felder tragen `fn-feld`, seit die breite `.finder input`-Regel nur
-                // noch das Suchfeld der Palette meint (E348, L111).
                 '<div class="fn-reihe" style="padding:12px 16px 0; gap:7px">' +
                 '<select id="pr-art" class="fn-feld" style="flex:0 0 auto"><option value="">Alle Arten</option>' +
                 ARTEN.map(([id, ic, n]) => `<option value="${id}">${ic} ${esc(n)}</option>`).join('') +
@@ -285,8 +212,6 @@ const Protokoll = (() => {
                 '</div>' +
                 '</div>';
         document.body.appendChild(o);
-        /* Ein Feld des Fensters — sie stehen alle in der Zeichenkette oben, aber
-           `querySelector` weiss das nicht. Einmal geschrieben statt achtmal. */
         const feld = (id) => o.querySelector(id);
         const werListe = () => {
             const namen = [...new Set(laden().map((e) => e.wer))].sort();
@@ -375,8 +300,6 @@ const Protokoll = (() => {
     };
     const start = () => {
         einklinken();
-        /* Der Start selbst ist auch ein Ereignis — daran sieht man später, wann
-           zuletzt jemand die App geöffnet hat. */
         notieren('konto', 'Redion geöffnet', { wie: navigator.platform || '' });
     };
     return { notieren, alle, gefiltert, zahlen, leeren, dialog, start,

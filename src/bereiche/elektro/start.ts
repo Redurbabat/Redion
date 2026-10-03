@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/start.ts (npm run bauen:ts). */
 /* ==========================================================================
  * start.ts — Elektro als ORT, nicht als Fenster (L65)
  *

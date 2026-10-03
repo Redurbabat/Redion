@@ -1,17 +1,5 @@
 "use strict";
-/* ============================================================================
- * arbeitswelt.ts — Sammlungen in Bibliothek, Aufgaben und Kalender
- * ----------------------------------------------------------------------------
- * Diese Datei ist eine Sicht auf den vorhandenen Bestand. Sie führt weder
- * Seiten noch Datenbanken, Aufgaben, Termine oder Fenster ein zweites Mal.
- * Jeder Eintrag wird bei `snapshot()` frisch aus Store, Links, Bibliothek,
- * Register und Fenster abgeleitet; Änderungen gehen ausschliesslich über die
- * dafür bereits vorhandenen Dienste zurück.
- *
- * Die Datei bringt absichtlich keine CSS- oder Schalenänderung mit. Ihre
- * stabilen Integrationshaken sind `produkt-welt arbeitswelt` am Ziel und
- * `aw-*` an allen eigenen Elementen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/arbeitswelt.ts (npm run bauen:ts). */
 const Arbeitswelt = (() => {
     const TITEL = 'Seiten & Wissen';
     const MAX_LISTE = 80;
@@ -34,11 +22,6 @@ const Arbeitswelt = (() => {
     const dateiIcons = {
         file: '📎', image: '🖼', audio: '🎵', video: '🎬'
     };
-    /* AUS DEM REGISTER (E422, §8). Hier stand die fünfte Kopie derselben
-       Liste. Diese hier war sogar vollständig — und genau das ist der Punkt:
-       eine Kopie, die heute stimmt, ist die, von der man morgen nicht mehr
-       weiss, dass sie eine ist. Gefunden hat sie nicht das Lesen, sondern
-       `test415 §4`. */
     const ansichtIcons = new Proxy({}, {
         get: (_z, art) => (typeof Register !== 'undefined' && Register.ansichten)
             ? Register.ansichten.icon(art) : '▦'
@@ -88,8 +71,6 @@ const Arbeitswelt = (() => {
         return global?.Lebensbereiche && typeof global.Lebensbereiche === 'object'
             ? global.Lebensbereiche : null;
     };
-    /** Liest Definitionen defensiv. Ungültige Einträge werden nur in dieser
-        flüchtigen Sicht ausgelassen und niemals im Store bereinigt. */
     const bereichDefinitionen = () => {
         let roh = [];
         try {
@@ -138,17 +119,7 @@ const Arbeitswelt = (() => {
         return id && id !== ALLE_BEREICHE && bereiche.some(bereich => bereich.id === id)
             ? id : ALLE_BEREICHE;
     };
-    /** Nur direkte Felder lesen. Die bevorzugte API kennt das kanonische
-        `meta.lebensbereiche`; der Fallback hält zusätzlich das alte
-        Einzelattribut `bereich` lesbar. */
     const direkteBereichIds = (satz) => {
-        /* `unknown` stand hier, und darüber lief `for (const wert of roh)` — das
-           kann TypeScript nicht durchlassen, und `npm run typecheck` brach
-           genau daran ab. Weil `bauen:ts` erst nach dem typecheck läuft, wurde
-           KEINE der fünf neuen Dateien je nach `quell/` geschrieben; `index.html`
-           lud sie trotzdem, und die ganze Produktwelt war im Browser tot (404).
-           Ein Zeichen Typ, fünf tote Module — deshalb steht das hier so
-           ausführlich. */
         let roh = null;
         try {
             const api = lebensbereichApi();
@@ -187,7 +158,7 @@ const Arbeitswelt = (() => {
             if (id)
                 return id;
         }
-        catch { /* Konten-Fallback folgt. */ }
+        catch { }
         try {
             const konto = typeof Konten !== 'undefined' && typeof Konten.aktiv === 'function'
                 ? Konten.aktiv() : null;
@@ -213,11 +184,8 @@ const Arbeitswelt = (() => {
             if (typeof Store !== 'undefined' && typeof Store.setMeta === 'function')
                 Store.setMeta(bereichMetaKey(), bereichId);
         }
-        catch { /* Eine nicht speicherbare UI-Präferenz blockiert die Sicht nicht. */ }
+        catch { }
     };
-    /* Die Rechtefrage steht seit E181 in `kern/zugang/lesefrage.ts` — sie war
-       hier und in `lebensbereiche.ts` je einmal ausgeschrieben, und die zwei
-       Fassungen antworteten bei leerer Seitenkennung verschieden (L50). */
     const rechteAktiv = () => Lesefrage.aktiv();
     const erlaubt = (aktion, pageId) => pageId === undefined ? Lesefrage.erlaubt(aktion) : Lesefrage.erlaubt(aktion, pageId);
     const hinweis = (text) => {
@@ -271,11 +239,6 @@ const Arbeitswelt = (() => {
         datenbanken: [], bloecke: [], dateien: [], pdfs: [], flaechen: [], aufgaben: [],
         termine: [], wiki: [], vorlagen: [], zaehler: {}
     });
-    /**
-     * Baut eine flüchtige, schreibgeschützte Sicht auf den aktuellen Bestand.
-     * Die Zusammenfassungen enthalten nur Kennungen und Anzeigewerte; die
-     * Originaldaten bleiben in Store die einzige Wahrheit.
-     */
     const snapshot = (auswahl = ALLE_BEREICHE) => {
         const bereiche = bereichDefinitionen();
         const bereichId = normalisiereBereichId(auswahl, bereiche);
@@ -374,29 +337,6 @@ const Arbeitswelt = (() => {
             seitenCache.set(id, page || null);
             return page || null;
         };
-        /* ZWEI FRAGEN, DIE IN EINER ZEILE STANDEN (L50, E169).
-           `erlaubt('lesen', …)` ist die Rechtefrage: darf ich diese Seite
-           sehen? `!block.system` ist etwas ganz anderes: Journal,
-           Schnellnotizen und Vorlagen sollen nicht in der SEITENLISTE stehen,
-           weil sie ihren eigenen Platz in der Seitenleiste haben.
-    
-           Beides zusammen ergab `lesbareIds`, und daran hingen fünf ganz andere
-           Listen: Aufgaben, Dateien, PDFs, Flächen und Inhaltsblöcke. Damit
-           verschwand alles, was auf einer Systemseite steht — gemessen an einem
-           Haken im Journal:
-    
-               Lebensbereiche.aufgaben()          steht drin
-               Arbeitswelt.snapshot().aufgaben    fehlt
-    
-           Derselbe Haken, zwei Listen, und keine sagt etwas. Genauso ein PDF,
-           das man ins Journal zieht, ein Whiteboard in den Schnellnotizen, eine
-           Datei in einer Vorlage. Das Journal ist die Stelle, an der man etwas
-           schnell hinwirft — und war die einzige, aus der es nicht wieder
-           auftauchte.
-    
-           Getrennt: `alleLesbarenSeiten` beantwortet nur noch die Rechtefrage;
-           die Systemseiten fallen erst bei `roheSeiten` heraus, also genau
-           dort, wo Seiten ALS Seiten aufgezählt werden. */
         const alleLesbarenSeiten = bloecke.filter(block => block.type === 'page' &&
             block.parentTable !== 'collection' && erlaubt('lesen', block.id));
         const lesbareIds = new Set(alleLesbarenSeiten.map(page => String(page.id)));
@@ -417,9 +357,6 @@ const Arbeitswelt = (() => {
                 ? Links.aliasesVon(page) : (Array.isArray(page.aliases) ? page.aliases.map(String) : []);
             aliasesNachId.set(String(page.id), aliases);
         });
-        /* Ein einziger flüchtiger Referenzindex ersetzt N vollständige
-           `Links.verweiseAuf`-Scans. Mehrdeutige Namen erzeugen bewusst keinen
-           Rückverweis — dieselbe Kollisionsregel wie im Linkdienst. */
         const namensIndex = new Map();
         const indexiere = (name, pageId) => {
             const key = normalisiere(name);
@@ -804,28 +741,6 @@ const Arbeitswelt = (() => {
         }
         return item;
     };
-    /* ==========================================================================
-     * EINS IST EINE ANDERE ZAHL ALS ZWEI (E231)
-     * --------------------------------------------------------------------------
-     * In der Bibliothek stand unter jeder Seite mit genau einem Kind
-     * „1 Einträge". Zwei Zeilen davon waren im Bildschirmfoto gleichzeitig zu
-     * sehen.
-     *
-     * Ärgerlich daran ist nicht der Fehler, sondern dass die Lösung 146 Zeilen
-     * tiefer in DERSELBEN Datei schon stand:
-     *
-     *     `${pdf.seiten} ${pdf.seiten === 1 ? 'Seite' : 'Seiten'}`
-     *     `${board.formen} ${board.formen === 1 ? 'Form' : 'Formen'}`
-     *
-     * Dreimal richtig, einmal vergessen — genau wie bei den Kacheln (E228).
-     * Damit es nicht ein viertes Mal passiert, steht es jetzt an einer Stelle.
-     *
-     * UND SEIT E281 (L67) NICHT MEHR HIER, sondern in `core/helpers/plural.ts`.
-     * An EINER Stelle zu stehen war richtig — aber die eine Stelle lag in einem
-     * BEREICH, und nach §5 darf kein anderer Bereich sie holen. Elf weitere
-     * Dateien schrieben die Verzweigung deshalb weiter von Hand oder gar nicht.
-     * Der Name hier bleibt, damit die acht Aufrufer unten unverändert lesen;
-     * er zeigt nur woandershin. */
     const zahlWort = (n, einzahl, mehrzahl) => Plural.count(n, einzahl, mehrzahl);
     const seitenListe = (seiten, suche, leerText) => {
         const list = element('ul', 'aw-liste');
@@ -1029,18 +944,6 @@ const Arbeitswelt = (() => {
         });
         main.append(databases.length ? liste : leer('Keine Datenbank gefunden', 'Lege eine Datenbank an; ihre Ansichten erscheinen hier automatisch.', 'new-database', 'Datenbank anlegen'));
     };
-    /* ==========================================================================
-     * WHITEBOARDS ALS EIGENER ARBEITSBEREICH (E138, Auftrag §22)
-     * --------------------------------------------------------------------------
-     * Die Flächen lagen schon im Schnappschuss — sichtbar waren sie nur als
-     * eine Zeile in der Übersicht, zusammen mit den Tabellen. §22 verlangt
-     * einen eigenen Top-Level-Bereich; §52 verbietet dafür eine zweite
-     * Datenhaltung. Beides zusammen heisst: EIN Reiter mehr auf denselben
-     * Daten, und die Vorschau liest den Block, den es ohnehin schon gibt.
-     * ========================================================================*/
-    /** Ein kleines Abbild der Fläche — dieselben Formen, nur klein und ohne
-        Bedienung. Ohne Vorschau sähen zehn Whiteboards gleich aus, und man
-        müsste jedes öffnen, um seines zu finden. */
     const MINIATUR_FORMEN = 60;
     const miniatur = (blockId) => {
         const block = typeof Store.getBlock === 'function' ? Store.getBlock(blockId) : null;
@@ -1073,8 +976,6 @@ const Arbeitswelt = (() => {
             const kasten = rahmen[index];
             if (form.art === 'stift' && Array.isArray(form.pts) && form.pts.length > 1) {
                 const pfad = document.createElementNS(ns, 'path');
-                /* Derselbe Weg wie auf der Tafel (E704): durch die Mittelpunkte
-                   gebogen, aus dem Kern — keine dritte Abschrift des Strichs (§8). */
                 const punkte = form.pts.map((punkt) => [Number(punkt?.[0]) || 0, Number(punkt?.[1]) || 0]);
                 pfad.setAttribute('d', typeof InkGeometry !== 'undefined' && punkte.length >= 3
                     ? InkGeometry.path(punkte)
@@ -1270,15 +1171,6 @@ const Arbeitswelt = (() => {
             aside.append(split);
         }
     };
-    /* NACKT = OHNE DIE WORKSPACE-SCHALE (E431). Redur wollte den Kalender als
-       eigenen Ort, nicht als Abschnitt des Arbeitsbereichs: keine Spalte mit
-       Übersicht/Bibliothek/Aufgaben daneben, keine Krume „Workspace", kein
-       Reiterpanel rechts.
-       Gezeichnet wird trotzdem von hier, und das ist der Punkt: der
-       Kalenderabschnitt, seine Suche, seine Klickgriffe und die
-       Lebensbereich-Auswahl gibt es schon. Sie ein zweites Mal zu schreiben
-       wäre der doppelte Katalog aus §8 — zwei Kalender, die auseinanderlaufen,
-       und niemand merkt, welcher gilt. */
     const controllerBauen = (root, startAnsicht, nackt = false) => {
         const id = `aw-${++instanz}`;
         const startBereiche = bereichDefinitionen();
@@ -1297,8 +1189,6 @@ const Arbeitswelt = (() => {
             const main = element('main', 'aw-inhalt');
             main.id = `${id}-inhalt`;
             main.tabIndex = -1;
-            /* Die Fensterwerkzeuge bleiben bei den Seiten, als aufklappbarer
-               Abschnitt statt einer dauerhaften dritten Navigationsspalte. */
             if (zustand.ansicht === 'uebersicht') {
                 const fenster = element('details', 'aw-fenster');
                 fenster.open = reiterOffen;
@@ -1315,8 +1205,6 @@ const Arbeitswelt = (() => {
         };
         const ansichtWechseln = (ansicht) => {
             const ziel = normalisiereAnsicht(ansicht);
-            /* Eingebettete Controller bleiben lokal bedienbar; echte Orte erhalten
-               beim Wechsel auch die richtige Adresse und Navigationsmarkierung. */
             if (nackt) {
                 oeffnen(ziel);
                 return;
@@ -1494,12 +1382,6 @@ const Arbeitswelt = (() => {
                 return;
             }
             const split = target.closest('[data-aw-split]');
-            /* UND NEU ZEICHNEN. Die anderen drei Wege hier verlassen den Workspace
-               (`oeffnen`, `wechseln` und `schliessen` rufen alle `App.oeffne`), die
-               Teilung nicht: sie hängt sich in `#main` und lässt den Workspace
-               stehen. Ohne diesen Aufruf blieb das Feld daneben stumm — kein
-               „Geteilt: …“, und vor allem kein Knopf zum Schliessen. Gemessen am
-               25. August: `Fenster.geteilt()` gesetzt, `.aw-teilung` nicht da. */
             if (split?.dataset.awSplit) {
                 reiter.teilen(split.dataset.awSplit);
                 zeichnen();
@@ -1587,14 +1469,12 @@ const Arbeitswelt = (() => {
         zeichnen();
         return controller;
     };
-    /** Bestehender Renderer; keine zweite Datenhaltung und keine Workspace-Schale. */
     const render = (ziel, ansicht = 'uebersicht', nackt = false) => {
         controllerNachRoot.get(ziel)?.zerstoeren();
         const controller = controllerBauen(ziel, ansicht, nackt);
         controllerNachRoot.set(ziel, controller);
         return controller;
     };
-    /** Jede Sammlung ist ein eigenständiger, wiederherstellbarer Ort. */
     const oeffnen = (ansicht = 'uebersicht') => {
         if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function')
             return null;
@@ -1604,11 +1484,6 @@ const Arbeitswelt = (() => {
         App.zeigeSonder(titel, (ziel) => { controller = render(ziel, zielAnsicht, true); });
         return controller;
     };
-    /** Der Kalender als eigener Ort (E431).
-     *
-     *  `zeigeSonder` vergibt die Adresse selbst — aus dem Titel wird `#kalender`
-     *  —, merkt den Ort für „Weiter wo du warst" und meldet den Schauplatz.
-     *  Genau das unterscheidet einen Ort von einer Überlagerung. */
     const kalenderOeffnen = () => {
         return oeffnen('kalender');
     };
@@ -1619,16 +1494,6 @@ const Arbeitswelt = (() => {
     };
 })();
 window.Arbeitswelt = Arbeitswelt;
-/* Der Workspace meldet seine Kontextkante an (E273).
-   ZWEI KNÖPFE UND NICHT FÜNF. Aus dem Vorschlag gestrichen wurden „Neu"
-   (die Kennung gibt es im Fuss der Kante schon — App.erstellenBlatt, auf
-   JEDEM Schauplatz; eine zweite Tür 30 px darüber ist die doppelte Liste
-   aus §8) und „Suchen" (dieselbe Lupe steht im Menüband, auf jedem
-   Bildschirm — genau der Fund von E160).
-
-   Die Ansichtsnamen tragen im Register Emoji (`ansichten`, Zeile 209ff).
-   Die Lade nimmt deshalb `a.name` und NICHT `a.icon + a.name`: E202 hält
-   Emoji aus der Schale heraus, und eine Ladezeile ist Schale. */
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
     K.melde({ bereich: 'bibliothek', id: 'sammlungen', name: 'Dateien & Wissen',

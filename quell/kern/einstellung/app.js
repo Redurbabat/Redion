@@ -1,30 +1,8 @@
 "use strict";
-/* ============================================================================
- * kern/einstellung/app.js — was diese Fassung ist und wo sie läuft
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/einstellung/app.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/einstellung/app.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Drei Fragen, die in jeder Fehlermeldung auftauchen und die vorher niemand
- * beantworten konnte:
- *
- *   Welche Fassung ist das?
- *   Läuft sie von der Festplatte, von einem Server oder als eine Datei?
- *   Was ist hier überhaupt möglich — gibt es Speicher, Netz, Zwischenablage?
- *
- * Ohne diese Antworten heisst jede Rückmeldung „bei mir geht es nicht", und
- * die Suche fängt bei null an.
- *
- * Alles hier wird **gemessen**, nicht angenommen. Ein `try` um jede Prüfung,
- * denn genau die Umgebungen, in denen etwas fehlt, sind auch die, in denen
- * schon das Nachfragen einen Fehler wirft.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/app.ts (npm run bauen:ts). */
 const AppEinstellung = (() => {
     const FASSUNG = '2026.08.03';
     const NAME = 'Redion';
-    /* --- Wo läuft das? ------------------------------------------------------ */
     const herkunft = () => {
         try {
             const p = location.protocol;
@@ -38,7 +16,6 @@ const AppEinstellung = (() => {
             return 'unbekannt';
         }
     };
-    /** Läuft die App als eine einzige Datei? Dann gibt es keinen Server. */
     const einzeldatei = () => {
         try {
             return herkunft() === 'festplatte' &&
@@ -50,10 +27,6 @@ const AppEinstellung = (() => {
     };
     const alsApp = () => {
         try {
-            /* `navigator.standalone` gibt es nur in Safari auf dem iPhone und
-               steht in keiner Norm — deshalb kennt TypeScript es nicht, und
-               deshalb steht die Umgehung hier und nicht als Zusage irgendwo, wo
-               sie nach Vereinbarung aussähe. */
             return window.matchMedia('(display-mode: standalone)').matches ||
                 navigator.standalone === true;
         }
@@ -62,15 +35,6 @@ const AppEinstellung = (() => {
         }
     };
     const amTelefon = () => {
-        /* `<=`, nicht `<`. Die CSS sagt `max-width: 760px`, und das schliesst
-           760 EIN. Mit `<` hätte genau die Breite 760 hier „Rechner" geheissen
-           und dort „Telefon" — ein Pixel breites Band, das man nie findet.
-    
-           EIN IPHONE IM QUERFORMAT IST BREITER ALS 760 PX. Breite allein machte
-           daraus deshalb einen Rechner: keine Blätter, keine Touch-Leiste, kein
-           Kartenraster. Die zweite Hälfte erkennt bewusst nur ein grobes
-           Zeigegerät UND eine kurze Bildschirmseite. Ein schmales Rechnerfenster
-           bleibt damit schmal, ein berührbarer Laptop aber weiterhin Rechner. */
         try {
             const grenze = typeof KONSTANTEN !== 'undefined'
                 ? KONSTANTEN.TELEFON_BREITE : 760;
@@ -82,9 +46,6 @@ const AppEinstellung = (() => {
             return false;
         }
     };
-    /* WENIGER BEWEGUNG — eine Frage, zwei Quellen (E702): das System ODER
-       „Ruhige Darstellung". Acht Stellen in JavaScript fragten nur das System.
-       In kern/, damit jeder Bereich fragen darf (§5); gefragt beim Aufruf. */
     const wenigBewegung = () => {
         try {
             return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true ||
@@ -94,17 +55,6 @@ const AppEinstellung = (() => {
             return false;
         }
     };
-    /* ----------------------------------------------------------------------
-     * DER SICHTBARE AUSSCHNITT
-     * --------------------------------------------------------------------
-     * iOS verkleinert bei geöffneter Tastatur nicht immer `innerHeight`.
-     * `visualViewport` kennt dagegen die wirklich sichtbare Fläche. Früher
-     * rechnete nur die Editorleiste damit; jedes Blatt und jeder Dialog hatte
-     * wieder seine eigene, meist fehlende Rechnung.
-     *
-     * Die Werte sind reine Darstellung. Sie speichern nichts und bleiben auch
-     * in Browsern ohne `visualViewport` sinnvoll (unten 0, Höhe innerHeight).
-     */
     const viewportAktualisieren = () => {
         try {
             const vv = window.visualViewport;
@@ -118,7 +68,7 @@ const AppEinstellung = (() => {
             wurzel.style.setProperty('--visual-bottom', unten + 'px');
             document.body?.classList.toggle('tastatur-offen', unten > 80);
         }
-        catch { /* Darstellung darf den Start nicht verhindern. */ }
+        catch { }
     };
     const viewportStart = () => {
         viewportAktualisieren();
@@ -127,7 +77,6 @@ const AppEinstellung = (() => {
         window.visualViewport?.addEventListener('resize', viewportAktualisieren, { passive: true });
         window.visualViewport?.addEventListener('scroll', viewportAktualisieren, { passive: true });
     };
-    /* --- Was geht hier? ----------------------------------------------------- */
     const kann = () => {
         const p = (fn) => { try {
             return !!fn();
@@ -138,9 +87,6 @@ const AppEinstellung = (() => {
         return {
             speicher: p(() => self.indexedDB),
             dateien: p(() => window.File && window.FileReader && window.Blob),
-            /* Nicht nur der neue Weg. Seit `kern/helfer/ablage.ts` gibt es den
-               alten dazu, und der geht auch dort, wo `writeText` abgewiesen wird
-               — die Antwort „kann nicht" wäre sonst falsch. */
             zwischenlage: p(() => (navigator.clipboard && navigator.clipboard.writeText) ||
                 (typeof document.execCommand === 'function')),
             arbeiter: p(() => 'serviceWorker' in navigator),
@@ -151,11 +97,6 @@ const AppEinstellung = (() => {
             sprache: p(() => navigator.language) ? navigator.language : 'de'
         };
     };
-    /**
-     * Eine Zeile, die in jede Fehlermeldung gehört.
-     * Bewusst ohne alles, was jemanden wiedererkennbar macht — kein
-     * Nutzername, keine Kennung, keine Adresse.
-     */
     const steckbrief = () => {
         const k = kann();
         return [
@@ -173,16 +114,11 @@ const AppEinstellung = (() => {
             } })()
         ].join('\n');
     };
-    /** Wie viel Platz ist noch da? Kommt aus dem Browser, nicht geschätzt. */
     const platz = async () => {
         try {
             if (!navigator.storage || !navigator.storage.estimate)
                 return null;
             const e = await navigator.storage.estimate();
-            /* Beide Angaben sind freiwillig — ein Browser darf `quota` nennen und
-               `usage` verschweigen. Vorher stand hier `e.usage / e.quota`, und in
-               diesem Fall wäre `anteil` NaN geworden: eine Zahl, die sich durch
-               jede Anzeige weiterreicht und nirgends als Fehler auffällt. */
             const benutzt = e.usage ?? 0;
             const platzGesamt = e.quota ?? 0;
             return { benutzt, frei: platzGesamt - benutzt,
@@ -192,11 +128,6 @@ const AppEinstellung = (() => {
             return null;
         }
     };
-    /**
-     * Bittet den Browser, den Speicher nicht bei Platznot wegzuräumen.
-     * Ohne das kann ein Browser die Daten löschen, wenn die Platte voll wird —
-     * still, ohne zu fragen.
-     */
     const speicherSichern = async () => {
         try {
             if (!navigator.storage || !navigator.storage.persist)

@@ -1,26 +1,9 @@
 "use strict";
-/* ============================================================================
- * einstellungen.js — Der Einstellungsbereich
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/einstellungen/ansicht/seite.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/einstellungen/ansicht/seite.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Nach Notions Vorbild aufgebaut: links die Bereiche, rechts die Optionen.
- * Was bei Notion nur mit Konto und Server geht (Mitglieder, Abrechnung,
- * SSO), steht hier als das da, was es lokal bedeutet — ehrlich benannt,
- * nicht weggelassen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/ansicht/seite.ts (npm run bauen:ts). */
 const Einstellungen = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* Alles, was hier eingestellt wird, liegt in meta. */
     const V = (k, fallback) => Store.getMeta(k, fallback);
     const S = (k, v) => { Store.setMeta(k, v); anwenden(); };
     const GRUPPEN = [
@@ -52,9 +35,6 @@ const Einstellungen = (() => {
                 ['ueber', 'info', 'Über diese App']
             ]]
     ];
-    /** Ein Zeichen aus dem Register — oder nichts, wenn es fehlt. Eine leere
-        Zelle ist ehrlicher als ein Emoji als Ersatz: das wäre der alte
-        Zustand, nur versteckt (E701). */
     const zeichen = (name) => {
         try {
             return Register.symbole.alsSvg(name, 18);
@@ -64,29 +44,21 @@ const Einstellungen = (() => {
         }
     };
     const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
-    /* ========================================================================
-     * ANWENDEN — Einstellungen wirken sofort
-     * ======================================================================*/
     const anwenden = () => {
         document.documentElement.dataset.theme = V('theme', 'dark');
         document.body.dataset.schrift = V('schriftgroesse', 'normal');
         document.body.dataset.dichte = V('dichte', 'normal');
         document.body.classList.toggle('kontrast', !!V('kontrast', false));
-        /* Barrierefreiheit: ruhige Darstellung, leichteres Lesen, hoher Kontrast */
         document.body.dataset.bewegung = V('bewegung', 'normal');
-        /* Die Inseln hören mit (E702): das Kit fragt `data-ui-motion` (L222). */
         if (V('bewegung', 'normal') === 'ruhig')
             document.documentElement.dataset['uiMotion'] = 'reduce';
         else
             delete document.documentElement.dataset['uiMotion'];
         document.body.dataset.lesen = V('lesen', 'normal');
         document.body.dataset.kontrast = V('kontrast', false) ? 'hoch' : 'normal';
-        /* Das eigene Farbschema hat das letzte Wort — sonst würde die Zeile
-           oben es bei jedem Anwenden wieder auf hell oder dunkel zurückdrehen. */
         if (typeof Aussehen !== 'undefined')
             Aussehen.anwenden();
     };
-    /** Datum so ausgeben, wie es eingestellt ist. */
     const datum = (wert, mitZeit = false) => {
         if (!wert)
             return '';
@@ -111,13 +83,8 @@ const Einstellungen = (() => {
         }
         return s;
     };
-    /** Beginnt die Woche am Montag? Der Kalender richtet sich danach. */
     const wochenstart = () => (V('wochenstart', 'montag') === 'sonntag' ? 0 : 1);
-    /* ========================================================================
-     * DER DIALOG
-     * ======================================================================*/
     let offenerBereich = 'allgemein';
-    /* Der Stand aus stand.ts (E361) — und der Weg, aus der Adresse gelesen. */
     const standFassung = () => typeof Stand !== 'undefined' && Stand && Number(Stand.fassung) > 0 ? 'v' + Number(Stand.fassung) : '';
     const herkunft = () => {
         const ort = String(location.protocol || '');
@@ -142,31 +109,11 @@ const Einstellungen = (() => {
     const oeffne = (bereich) => {
         offenerBereich = bereich || offenerBereich;
         document.querySelectorAll('.overlay').forEach(o => o.remove());
-        /* ========================================================================
-         * ZWEI SPALTEN AM RECHNER, ZWEI SEITEN AM TELEFON (Vorgabe §12, E58)
-         * ------------------------------------------------------------------------
-         * GEMESSEN AM 8. AUGUST BEI 390 PX, und es war die schlechteste Seite
-         * der ganzen App: die Rechner-Aufteilung von 236 px Navigation plus
-         * Inhalt lief unverändert weiter. Übrig blieben **129 Pixel** für den
-         * Inhalt. Jede Beschreibung brach in Einzelwörter um — „Hell, dunkel
-         * oder wie das System" stand als sechs Zeilen —, und die Auswahlfelder
-         * daneben ragten über den Rand hinaus.
-         *
-         * Zwei Spalten passen nicht auf ein Telefon. Also zwei SEITEN: erst die
-         * Liste der Bereiche, dann der gewählte Bereich mit einem Weg zurück.
-         * Genau so macht es jedes Telefon-Betriebssystem, und aus demselben
-         * Grund.
-         *
-         * `data-blick` sagt, welche der beiden gerade dran ist. Am Rechner
-         * steht dieselbe Angabe da und ändert nichts — dort sind beide Spalten
-         * immer sichtbar, und der Klick in die Liste zeichnet rechts neu.
-         * ======================================================================*/
         const amTelefon = () => window.matchMedia('(max-width: 760px)').matches;
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML =
             '<div class="einst-fenster" data-blick="liste">' +
-                /* `data-material` (E706): die gewählte Zeile gleitet zur neuen. */
                 '<div class="einst-nav" data-material="einstellungen">' +
                 `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
                 `<div><b>${esc(V('arbeitsName', 'Redion'))}</b>` +
@@ -175,14 +122,7 @@ const Einstellungen = (() => {
                     liste.map(([id, i, n]) => `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
                         `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('')).join('') +
                 '</div>' +
-                /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
-                   weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`
-                   rollt, und ein Kind darin würde mitrollen statt unten zu bleiben.
-                   `.einst-fenster` ist `position:relative`, also genügt das. */
                 '<div class="einst-mehr" aria-hidden="true">\u2304</div>' +
-                /* Der Weg zurück zur Liste — nur am Telefon zu sehen. Ohne ihn
-                   wäre die zweite Seite eine Sackgasse: das ✕ schliesst alles,
-                   und dann fängt man von vorn an. */
                 '<div class="einst-inhalt" id="ei">' +
                 '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
                 '‹ Übersicht</button>' +
@@ -201,28 +141,6 @@ const Einstellungen = (() => {
             binde(o);
         };
         zeichne();
-        /* ========================================================================
-         * „ES GEHT NOCH WEITER" (E392)
-         * ------------------------------------------------------------------------
-         * GEMESSEN AM 4. SEPTEMBER, vor jeder Änderung: die Liste braucht 810 px
-         * für 19 Einträge und drei Gruppenüberschriften, bekam aber nur 718 px
-         * (1360×900), 632 (1280×720) oder 570 (1280×650). Verdeckt lagen immer
-         * dieselben drei Einträge — Speicher, Abrechnung, Über diese App.
-         *
-         * Das Fenster ist jetzt hoch genug, dass auf einem gewöhnlichen Schirm
-         * nichts mehr fehlt. Auf einem kleinen rollt die Liste weiterhin, und
-         * DASS sie rollt, muss man sehen können. Der Rollbalken leistet das
-         * nicht: er belegt ein Pixel und blendet sich aus.
-         *
-         * Also ein eigener Streifen — der WIEDER VERSCHWINDET, sobald man unten
-         * angekommen ist. Eine Anzeige, die immer etwas anzeigt, wird nicht
-         * gelesen; das ist der Fehler, in den diese App schon sechsmal gelaufen
-         * ist. `test392 §3` misst genau das.
-         *
-         * Ein `ResizeObserver` statt eines Fensterhorchers: er hängt am Element,
-         * verschwindet mit ihm und lässt beim Schliessen nichts zurück. Und er
-         * feuert einmal von selbst, was den ersten Anstrich gleich mit erledigt.
-         * ======================================================================*/
         const navEl = o.querySelector('.einst-nav');
         const mehrPruefen = () => {
             if (!navEl || !fenster)
@@ -235,8 +153,6 @@ const Einstellungen = (() => {
             new ResizeObserver(mehrPruefen).observe(navEl);
         }
         mehrPruefen();
-        /* Am Telefon: der Bereich kommt von rechts, die Liste beim Zurück von
-           links — dieselbe Ankunft wie unten beim Reiterwechsel (E702). */
         const blick = (ziel) => {
             if (!fenster)
                 return;
@@ -265,8 +181,6 @@ const Einstellungen = (() => {
                 o.remove();
                 return;
             }
-            /* Zurück zur Liste. Am Rechner kommt man hier nie hin — der Knopf
-               steht dort auf `display:none`. */
             if (elVon(e)?.closest('[data-a="liste"]')) {
                 blick('liste');
                 return;
@@ -275,8 +189,6 @@ const Einstellungen = (() => {
             if (b) {
                 offenerBereich = b.dataset.b ?? offenerBereich;
                 zeichne();
-                /* Am Telefon eine Seite weiter; am Rechner ändert die Angabe
-                   nichts, weil dort beide Spalten stehen. */
                 if (amTelefon())
                     blick('bereich');
                 const inh = o.querySelector('#ei');
@@ -284,13 +196,8 @@ const Einstellungen = (() => {
                     inh.scrollTop = 0;
             }
         });
-        /* Wurde das Fenster mit einem Bereich aufgerufen — etwa aus dem
-           R-Blatt heraus —, dann ist die Liste nicht gemeint. */
         if (bereich && amTelefon())
             fenster?.setAttribute('data-blick', 'bereich');
-        /* Escape geht eine Stufe zurück, nicht gleich ganz hinaus. Wer in
-           „Sicherheit" steht und abbrechen will, meint meistens diesen
-           Bereich und nicht das ganze Fenster. */
         const beiTaste = (e) => {
             if (e.key !== 'Escape')
                 return;
@@ -302,11 +209,8 @@ const Einstellungen = (() => {
             document.removeEventListener('keydown', beiTaste, true);
         };
         document.addEventListener('keydown', beiTaste, true);
-        /* Der Rundgang ruft das Fenster von aussen zum Neuzeichnen auf. Ein
-           eigenes Feld an einem `div` gibt es im Typ nicht — hier ausdrücklich. */
         o.neuZeichnen = zeichne;
     };
-    /* --- Bausteine ---------------------------------------------------------- */
     const zeile = (titel, beschreibung, steuerung) => `<div class="ez-zeile"><div class="ez-text"><b>${titel}</b>` +
         (beschreibung ? `<span>${beschreibung}</span>` : '') + '</div>' +
         `<div class="ez-steuer">${steuerung}</div></div>`;
@@ -315,36 +219,17 @@ const Einstellungen = (() => {
             const [wert, name] = Array.isArray(w) ? w : [w, w];
             return `<option value="${esc(wert)}"${wert === jetzt ? ' selected' : ''}>${esc(name)}</option>`;
         }).join('') + '</select>';
-    /* EIN KIPPSCHALTER SAGT, WAS ER IST UND WIE ER STEHT.
-       Vorher war er ein <button> ohne Text, ohne Marke und ohne Zustand: ein
-       Vorleseprogramm las „Schaltfläche" und sonst nichts, und ob er an war,
-       stand allein in seiner Farbe — genau das, was §38 verbietet. */
     const schalter = (schluessel, an, name = '') => `<button class="schalter${an ? ' an' : ''}" data-toggle="${esc(schluessel)}" ` +
         `role="switch" aria-checked="${an ? 'true' : 'false'}"` +
         (name ? ` aria-label="${esc(name)}"` : '') + `><i></i></button>`;
     const knopf = (aktion, text, klasse = '') => `<button class="ez-knopf ${klasse}" data-tun="${aktion}">${text}</button>`;
-    /* EIN KNOPF, DER SEINEN VERLAUF ZEIGT (E441). Die Seite wird als Text
-       gezeichnet; ein Zustandsknopf ist aber ein Element mit Zustand. Deshalb
-       steht hier nur ein Platzhalter, und `binde()` tauscht ihn gegen den
-       echten Knopf aus `zustandsknopf.ts`. `data-zk` bleibt am fertigen
-       Knopf stehen, damit ein Prüflauf ihn findet. */
     const zustandsknopf = (id) => `<span data-zk="${esc(id)}"></span>`;
-    /**
-     * Die Aufträge der Zustandsknöpfe dieser Seite. Der Zustand kommt aus
-     * der Zusage der echten Arbeit — nie aus einem Zeitgeber.
-     *
-     * Die Sicherung endet bei „Heruntergeladen": eine `.redion` oder `.json`
-     * kann der Browser nicht öffnen, also gibt es kein „Öffnen". Die
-     * HTML-Einzeldatei dagegen kann er — sie bekommt den Öffnen-Weg.
-     */
     const zustandsknopfAuftrag = (id) => {
         if (id === 'export-json')
             return {
                 art: 'laden', klasse: 'ez-knopf',
                 texte: { bereit: 'Speichern', arbeitet: 'Wird erstellt …',
                     fertig: 'Heruntergeladen', fehler: 'Nicht gesichert' },
-                /* `sicherungSpeichern` fängt seine Fehler selbst und sagt `false`
-                   (E146); der Knopf wertet genau das als Fehlschlag. */
                 aktion: () => App.sicherungSpeichern()
             };
         if (id === 'einzeldatei') {
@@ -354,9 +239,6 @@ const Einstellungen = (() => {
                 texte: { bereit: 'Erzeugen', arbeitet: 'Wird erzeugt …',
                     geschafft: 'Heruntergeladen', fertig: 'Öffnen' },
                 aktion: () => { blob = Werkzeuge.einzelDatei(); },
-                /* Die Adresse wird nicht zurückgegeben: das Fenster braucht sie,
-                   solange es offen ist, und der Browser räumt sie mit der Seite
-                   auf. */
                 oeffnen: () => { if (blob)
                     window.open(URL.createObjectURL(blob), '_blank'); }
             };
@@ -365,30 +247,11 @@ const Einstellungen = (() => {
     };
     const feld = (schluessel, wert, platzhalter = '') => `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
     const kopf = (titel, unter) => `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
-    /* ========================================================================
-     * DIE EINZELNEN BEREICHE
-     * ======================================================================*/
     const inhalt = (b) => ({
-        /* HIER STAND DAS GEGENTEIL DESSEN, WAS GEBAUT IST (E270).
-           „Diese App kennt kein Konto und keinen Server", „es gibt keine
-           Anmeldung", „Nichts wird übertragen, es gibt keine Sitzungen" —
-           drei Sätze aus der Zeit vor dem Serverbau. Seither gibt es Konten
-           (GitHub, Google, Gerätecode), Sitzungen, Abgleich und Freigaben,
-           samt Wolke-Fenster. Wer hier nachlas, bekam die Auskunft, es gäbe
-           nichts davon.
-           Die Seite baut deshalb KEINEN zweiten Dialog (E29), sondern sagt
-           die Wahrheit und führt zum vorhandenen. Vier Zustände, weil es
-           vier gibt — und die mittleren zwei sind die wichtigsten: angemeldet
-           und trotzdem nichts hinausgeschickt (E1/E34), und angemeldet mit
-           einer offenen Entscheidung nach einem Einspielen (L76/E279). */
         konto: () => {
             const w = globalThis.Wolke;
             const angemeldet = !!(w && w.angemeldet && w.angemeldet());
             const gleichtAb = angemeldet && !!(w.abgleichErlaubt && w.abgleichErlaubt());
-            /* VIER Zustände seit L76 — es waren drei. Steht die Frage nach einem
-               eingespielten „Ersetzen", ist `abgleichErlaubt()` falsch, und diese
-               Seite behauptete darum „Der Abgleich ist ausgeschaltet". Das hat
-               niemand ausgeschaltet: es wartet eine Entscheidung. */
             const frage = angemeldet && !!(w.neuAbgleichOffen && w.neuAbgleichOffen());
             const wo = angemeldet ? String(w.adresse?.() || '') : '';
             const geraet = angemeldet ? String(w.geraeteName?.() || '') : '';
@@ -522,15 +385,6 @@ const Einstellungen = (() => {
             zeile('SAML SSO und Nutzerbereitstellung', 'Braucht einen Identitätsanbieter und einen Server', '<span class="ez-grau">nicht möglich ohne Server</span>') +
             zeile('Datenschutz', '', '<span class="ez-grau">alles im Browser; nur was du verbindest, geht hinaus</span>'),
         daten: () => {
-            /* DIE AUTOMATISCHE SICHERUNG (E270).
-               Redur wollte „alle Daten auf iCloud". Ein Browser kann nicht in
-               iCloud schreiben — aber er kann in EINEN Ordner schreiben, den
-               man ihm gezeigt hat, und wenn dieser Ordner in iCloud Drive (oder
-               OneDrive, oder Dropbox) liegt, erledigt den Rest der Dienst
-               selbst.
-               Kann der Browser das nicht — Safari auf iPhone und iPad, Firefox —
-               steht hier ein Satz und KEIN Knopf. Ein Knopf, der beim Drücken
-               nichts tut, ist der Fehler, gegen den §47 geschrieben ist. */
             const os = globalThis.OrdnerSicherung;
             const ordnerGeht = !!(os && os.moeglich && os.moeglich());
             const ordnerAn = !!(os && os.an && os.an());
@@ -554,8 +408,6 @@ const Einstellungen = (() => {
                         ? 'Alle fünf Minuten, aber nur wenn sich etwas geändert hat. Die letzten ' +
                             'sieben Tage bleiben vollständig liegen, davor je Monat eine.' +
                             (ordnerZuletzt
-                                /* Ohne Sekunden — bei einer Sicherung, die alle fünf Minuten
-                                   nachsieht, ist die Sekunde kein Wissen, sondern Lärm. */
                                 ? ' Zuletzt: ' + esc(new Date(ordnerZuletzt).toLocaleString('de-CH', { dateStyle: 'short', timeStyle: 'short' }))
                                 : ' Noch nichts geschrieben.')
                         : 'Wähle einen Ordner — zum Beispiel in iCloud Drive, OneDrive oder ' +
@@ -573,12 +425,6 @@ const Einstellungen = (() => {
                 zeile('Offene Seite als HTML', '', knopf('seite-html', 'Speichern')) +
                 zeile('Offene Seite drucken oder als PDF', '', knopf('seite-pdf', 'Drucken')) +
                 zeile('Sicherung in einen Ordner', ordnerUnter, ordnerRecht + (ordnerFehler ? ' ' + knopf('ordner-sicherung-an', 'Neu wählen') : '')) +
-                /* DER SCHALTER HIESS „Beim Schliessen an eine Sicherung erinnern" (E270).
-                   Das konnte er nicht halten: beim Entladen einer Seite darf kein
-                   Fenster mehr aufgehen, und was der Schalter versprach, war nirgends
-                   gebaut. Jetzt verspricht er, was die Plattform hergibt — und
-                   `OrdnerSicherung` löst es beim Zurückkommen ein, über dieselbe
-                   Wochenfrist, die `Sicherung.ERINNERN` ohnehin führt. */
                 zeile('An die Sicherung erinnern', 'Beim Zurückkommen melden, wenn die letzte Sicherung älter als eine ' +
                     'Woche ist', schalter('sicherungErinnern', V('sicherungErinnern', false)));
         },
@@ -592,7 +438,6 @@ const Einstellungen = (() => {
             zeile('Seiteninhalt mitgeben', 'Die KI sieht die offene Seite als Zusammenhang', schalter('kiKontext', V('kiKontext', true))) +
             zeile('Antwortlänge', '', wahl('kiLaenge', [['kurz', 'Kurz'], ['normal', 'Normal'], ['lang', 'Ausführlich']], V('kiLaenge', 'normal'))) +
             zeile('KI-Felder in Datenbanken', 'Spaltentyp „KI-Feld" füllt sich selbst', '<span class="ez-grau">verfügbar</span>') +
-            /* --- Quellen: was darf die KI überhaupt sehen? ------------------- */
             kopf('Quellen', 'Die KI weiss nichts über deinen Arbeitsbereich. Sie bekommt die ' +
                 'passenden Ausschnitte gereicht — und zwar nur aus den Quellen, die hier ' +
                 'eingeschaltet sind. Jede Antwort nennt danach ihre Quellen.') +
@@ -602,13 +447,8 @@ const Einstellungen = (() => {
             zeile('Verbundene Dienste', 'Was über Verbindungen hereingeholt wurde', schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
             zeile('Websuche', 'Wikipedia nachschlagen — dabei verlässt der Suchbegriff den Rechner', schalter('q:web', Kontext.quellen().web)) +
             zeile('Vor jeder Webanfrage nachfragen', 'Sicherheitshalber einmal bestätigen', schalter('ki:webFragen', V('ki:webFragen', true))) +
-            /* NUR-QUELLEN-MODUS (E305). Er steht bewusst UNTER den Quellen und
-               nicht bei den Antwortlängen: er ist keine Geschmacksfrage, sondern
-               die Zusage, dass nichts kommt, was nicht in den eingeschalteten
-               Quellen steht. */
             zeile('Nur aus meinen Quellen antworten', 'Findet sich nichts, wird das Modell gar nicht erst gefragt — statt ' +
                 'einer Antwort, die nirgends nachzulesen ist', schalter('ki:nurQuellen', V('ki:nurQuellen', false))) +
-            /* --- Gedächtnis --------------------------------------------------- */
             kopf('Gedächtnis', 'Die KI erinnert sich nicht wie ein Mensch. Sie findet wieder, ' +
                 'was du gespeichert hast. Der Suchindex ist dieses Gedächtnis.') +
             zeile('Suchindex', 'Wird bei Bedarf neu gebaut', `<span class="ez-grau">${Kontext.holen().anzahl} Einträge</span> ` +
@@ -620,7 +460,6 @@ const Einstellungen = (() => {
             zeile('Dauerhafte Anweisungen', 'Gilt für jede Antwort und jeden Agenten', `<textarea data-set="ki:persoenlich" rows="3" class="ez-lang" ` +
                 `placeholder="z. B. Antworte immer auf Deutsch. Fasse lange Antworten am Ende ` +
                 `kurz zusammen.">${esc(V('ki:persoenlich', ''))}</textarea>`) +
-            /* --- Agenten und Besprechungen ------------------------------------ */
             kopf('Agenten und Besprechungen', '') +
             zeile('Agenten', 'Vier feste Typen plus eigene mit eigenen Rechten', `<span class="ez-grau">${Agent.alle().length} vorhanden</span> ` +
                 knopf('agent-verwalten', 'Verwalten')) +
@@ -628,12 +467,6 @@ const Einstellungen = (() => {
                 knopf('agent-worker', 'Bearbeiten')) +
             zeile('Besprechungsnotizen', 'Aufnehmen, mitschreiben, auswerten', `<span class="ez-grau">${Meeting.kannZuhoeren() ? 'Mitschreiben geht' : 'nur Aufnahme'}` +
                 `</span> ` + knopf('meet-einst', 'Einstellungen')) +
-            /* --- Kosten und Grenzen (L104 Punkt 1, E321) ------------------------
-               Das Buch gab es seit E287, die Griffe `stand()`, `monatJeAnbieter()`
-               und `grenzenSetzen()` auch — nur sah man nichts davon. Wer seine
-               Grenzen ändern wollte, konnte es allein über die Konsole. Das ist
-               §47 von der leisen Seite: eine Bremse, die wirkt, aber die niemand
-               einstellen kann, ist eine fremde Entscheidung. */
             (() => {
                 const lage = KiKosten.belegLage(KiBuch.buchungen(), new Date().toISOString().slice(0, 7));
                 const stand = KiBuch.stand();
@@ -645,29 +478,18 @@ const Einstellungen = (() => {
                     `<span class="ez-grau">${esc(KiKosten.WAEHRUNG)}</span>`;
                 return kopf('Kosten und Grenzen', 'Gilt nur für Wolken-Modelle mit eigenem Schlüssel. Ollama und WebLLM ' +
                     'kosten nichts und werden nicht gebremst.') +
-                    /* DIE ZAHL MIT IHRER GRUNDLAGE, wie E289 es für die Lernzahlen
-                       vormacht. Und ohne Buchung steht hier nichts — „0,00 $, 0 %
-                       gezählt" wäre eine Zeile, die nichts behauptet. */
                     (lage.anzahl
                         ? zeile('Diesen Monat', esc(KiKosten.belegSatz(lage)), `<b>${esc(KiKosten.geld(stand.monat))}</b>`) +
                             zeile('Heute', '', `<span class="ez-grau">${esc(KiKosten.geld(stand.heute))}</span>`) +
-                            /* NUR ANBIETER, DIE ETWAS GEKOSTET HABEN. Groq mit einem
-                               freien Modell steht sonst mit „0,00 USD" da — eine Zeile,
-                               die nichts behauptet und trotzdem Platz nimmt. Wer wissen
-                               will, wohin das Geld geht, will die sehen, die welches
-                               gekostet haben. */
                             Object.keys(jeAnb).filter(a => (jeAnb[a] ?? 0) > 0).sort().map(a => zeile(esc(a), '', `<span class="ez-grau">${esc(KiKosten.geld(jeAnb[a] ?? 0))}</span>`)).join('')
                         : zeile('Diesen Monat', 'Noch kein Wolken-Aufruf verbucht.', '<span class="ez-grau">—</span>')) +
                     zeile('Höchstens je Aufruf', 'Darüber fragt Redion nicht an', grenzfeld('jeAufruf', g.jeAufruf)) +
                     zeile('Höchstens je Agentenlauf', 'Eine Schleife, die entgleist, kostet nichts weiter', grenzfeld('jeLauf', g.jeLauf)) +
                     zeile('Höchstens am Tag', '', grenzfeld('jeTag', g.jeTag)) +
                     zeile('Höchstens im Monat', '', grenzfeld('jeMonat', g.jeMonat)) +
-                    /* Der Hinweis zur alternden Preisliste kommt erst nach einem
-                       halben Jahr (E319). Bis dahin steht hier nur das Datum. */
                     zeile('Preisliste', alt ? '<b>' + esc(alt) + '</b>'
                         : 'Stand: ' + esc(KiKosten.STAND), knopf('ki-buch-leeren', 'Buch leeren'));
             })() +
-            /* --- Datenschutz --------------------------------------------------- */
             kopf('Datenschutz', '') +
             zeile('Daten zur Verbesserung freigeben', 'Es gibt niemanden, an den etwas ginge', '<span class="ez-grau">aus — dauerhaft</span>') +
             zeile('Wohin dein Text geht', '', '<span class="ez-grau">' +
@@ -698,8 +520,6 @@ const Einstellungen = (() => {
                 zeile('Notion', 'Für den Import aus einem echten Notion-Arbeitsbereich. ' +
                     'Schlüssel holen: <b>notion.so/my-integrations</b>', feld('api:notion', V('api:notion', ''), 'secret_… oder ntn_…')) +
                 zeile('Webhook-Adresse', 'Automationen können hier etwas hinschicken — Zapier, Make, n8n, eigener Server', feld('api:webhook', V('api:webhook', ''), 'https://…')) +
-                /* Anmeldung am Webhook — Notion schickt gar keine mit, viele Dienste
-                   weisen deshalb jede Anfrage ab. */
                 zeile('Webhook-Anmeldung', 'Wie sich Redion beim Webhook ausweist', '<select data-set="webhookAuthArt">' +
                     [['keine', 'ohne Anmeldung'],
                         ['bearer', 'Bearer-Schlüssel im Kopf'],
@@ -723,9 +543,6 @@ const Einstellungen = (() => {
             zeile('Blöcke', '', `<span class="ez-grau">${Object.keys(Store.cache.blocks).length}</span>`) +
             zeile('Datenbanken', '', `<span class="ez-grau">${Object.keys(Store.cache.collections).length}</span>`) +
             zeile('Ansichten', '', `<span class="ez-grau">${Object.keys(Store.cache.views).length}</span>`) +
-            /* „N Seiten" stimmte nur zur Hälfte: daneben lagen weggelegte Blöcke,
-               die niemand zählte und niemand zeigte. Wer hier eine Zahl liest,
-               soll wissen, wie viel wirklich im Papierkorb liegt. */
             zeile('Papierkorb', '', `<span class="ez-grau">${Store.trashed().length} Seiten` +
                 ((Store.papierkorbBloecke ? Store.papierkorbBloecke().length : 0)
                     ? `, ${Store.papierkorbBloecke().length} Blöcke` : '') +
@@ -735,54 +552,23 @@ const Einstellungen = (() => {
             zeile('Alte Versionen aufräumen', 'Dünnt aus statt abzuschneiden: die jüngsten bleiben, danach eine je Tag, ' +
                 'danach eine je Monat. Von Hand gesicherte bleiben alle', knopf('versionen-aufraeumen', 'Aufräumen')) +
             zeile('Speicher dauerhaft anfordern', 'Der Browser räumt die Daten dann nicht von selbst weg', knopf('speicher-sichern', 'Anfordern')) +
-            /* --- Lange Arbeiten (L103 Punkt 5, E342) ---------------------------
-               OCR über achtzig Seiten, ein grosser Import, ein Embedding-Lauf.
-               Die Auftragsmaschine konnte sie seit E286 überleben, aber nicht
-               WARTEN WOLLEN — sie liefen, sobald sie dran waren. Ohne diesen
-               Abschnitt wäre der Zeitplan da und niemand käme heran (§47), wie
-               die KI-Grenzen vor E321. */
             (() => {
                 const b = (typeof Auftraege !== 'undefined' && Auftraege.plan)
                     ? Auftraege.plan() : null;
                 const l = (typeof Auftraege !== 'undefined' && Auftraege.lage)
                     ? Auftraege.lage() : { laedt: null, teuer: null };
-                /* DIE UHRZEIT ZEIGT DER BROWSER, NICHT REDION. Ein
-                   `<input type="time">` folgt der Spracheinstellung des BROWSERS,
-                   nicht dem `lang` des Dokuments — nachgemessen: `lang="de"` am
-                   Feld ändert gar nichts. Auf einem englisch eingestellten Browser
-                   steht dort „10:00 PM", während der Satz darüber „22:00" sagt.
-        
-                   Das bleibt so, und zwar mit Absicht: ein eigenes Feld verlöre die
-                   Uhr zum Antippen, die Tastaturbedienung und das Rad am Telefon
-                   (§37, §38). Wer seinen Browser auf Englisch stellt, ERWARTET
-                   „10:00 PM". Der Satz darüber sagt es zusätzlich auf Deutsch. */
                 const zeit = (k, wert) => `<input type="time" class="ez-plan-zeit" data-plan="${k}" ` +
                     `value="${esc(Zeitplan.uhr(wert) || '')}">`;
-                /* `schalter`, NICHT `ez-schalter`. Der erste Wurf erfand die zweite
-                   Klasse, und weil es dazu kein Stück CSS gibt, stand dort ein
-                   Knopf ohne Grösse, ohne Farbe, ohne alles — ein Schalter, den
-                   niemand sehen und niemand treffen kann (§47). Kein Prüflauf
-                   hatte etwas dagegen; gefunden auf dem Bild (§55.1). */
                 const haken = (k, an) => `<button type="button" class="schalter${an ? ' an' : ''}" ` +
                     `data-plan-an="${esc(k)}" role="switch" aria-checked="${an ? 'true' : 'false'}" ` +
                     `aria-label="${esc(k)}"><i></i></button>`;
                 return kopf('Lange Arbeiten', 'Gilt für neue Aufträge — Seitenbilder, OCR, grosse Sicherungen. ' +
                     'Was schon läuft, läuft weiter.') +
-                    /* DER SATZ NUR, WENN ES EINEN GIBT. Ohne Zeitplan steht hier
-                       nichts — eine Zeile „kein Zeitplan eingestellt" wäre eine
-                       Zeile, die nichts behauptet (E321, gleiche Stelle). */
                     (Zeitplan.hatBedingung(b)
                         ? zeile('Eingestellt', '', `<b>${esc(Zeitplan.satz(b))}</b>`)
                         : '') +
-                    /* „Nur von … bis …" und nicht „zwischen … und …" — damit die Zeile
-                       dieselben Wörter benutzt wie der Satz zwei Zeilen darüber. */
                     zeile('Nur von', 'Leer lassen heisst: zu jeder Zeit', zeit('von', b && b.vonMinute) + ' <span class="ez-grau">bis</span> ' +
                         zeit('bis', b && b.bisMinute)) +
-                    /* WAS DER BROWSER NICHT WEISS, STEHT DABEI. Firefox und Safari
-                       kennen `getBattery` nicht; dort wirkt „nur am Strom" nicht,
-                       und das gehört an den Schalter geschrieben statt still zu
-                       geschehen. Ein Auftrag wartet deswegen trotzdem nie ewig:
-                       unbekannt heisst ja (siehe `core/jobs/zeitplan.ts`). */
                     zeile('Nur am Strom', l.laedt === null
                         ? 'Dieser Browser sagt nicht, ob geladen wird — der Schalter bleibt dann wirkungslos'
                         : (l.laedt ? 'Das Gerät lädt gerade' : 'Das Gerät lädt gerade nicht'), haken('amStrom', !!(b && b.amStrom))) +
@@ -799,7 +585,6 @@ const Einstellungen = (() => {
             zeile('KI-Guthaben', 'Lokale Modelle rechnen nicht ab', '<span class="ez-grau">unbegrenzt</span>') +
             zeile('Speicherplatz', 'So viel, wie dein Browser hergibt', '<span class="ez-grau">gerätabhängig</span>') +
             zeile('Rechnungen', '', '<span class="ez-grau">keine</span>'),
-        /* --- MCP ------------------------------------------------------------ */
         mcp: () => {
             const server = Store.getMeta('mcp:server', []) || [];
             const aus = Store.getMeta('mcp:eigenAus', []) || [];
@@ -815,7 +600,6 @@ const Einstellungen = (() => {
                 zeile('Als Server erreichbar?', 'Ein Browser kann nichts entgegennehmen', '<span class="ez-grau">nur über die Brücke — bruecke.js oder Cloudflare</span>') +
                 zeile('Protokollfassung', '', `<span class="ez-grau">${MCP.VERSION}</span>`);
         },
-        /* --- Öffentliche Seiten --------------------------------------------- */
         oeffentlich: () => {
             const seiten = Links.seiten().filter(p2 => p2.oeffentlich);
             return kopf('Öffentliche Seiten', 'In Notion heisst das „im Web veröffentlichen". ' +
@@ -831,7 +615,6 @@ const Einstellungen = (() => {
                     : '') +
                 zeile('Die ganze App im Netz', 'Cloudflare Pages, kostenlos', '<span class="ez-grau">CLOUDFLARE.md im App-Ordner</span>');
         },
-        /* --- Worker ---------------------------------------------------------- */
         worker: () => {
             const liste = Agent.worker();
             return kopf('Worker', 'Kleine Programme, die auf deine Daten losgelassen werden — ' +
@@ -847,7 +630,6 @@ const Einstellungen = (() => {
                 zeile('Zeitgrenze', 'Danach wird abgebrochen', wahl('workerZeit', [['5', '5 Sekunden'], ['15', '15 Sekunden'], ['30', '30 Sekunden']], V('workerZeit', '5'))) +
                 zeile('Was ein Worker darf', 'Rechnen, umformen, zusammenzählen', '<span class="ez-grau">kein DOM, kein Netz, kein Speicherzugriff</span>');
         },
-        /* --- Verifizierte Seiten --------------------------------------------- */
         verifiziert: () => {
             const alle = Object.values(Store.cache.blocks)
                 .filter(b2 => b2.type === 'page' && b2.alive !== false && !b2.system);
@@ -867,7 +649,6 @@ const Einstellungen = (() => {
                         (p2.gepruefBis ? ' · gültig bis ' + String(p2.gepruefBis).slice(0, 10) : ''), `<button class="ez-knopf" data-tun="pruef-weg:${p2.id}">Häkchen entfernen</button>`)).join('')
                     : '');
         },
-        /* --- Analysen -------------------------------------------------------- */
         analysen: () => {
             const bloecke = Object.values(Store.cache.blocks).filter(b2 => b2.alive !== false);
             const seiten = bloecke.filter(b2 => b2.type === 'page' && !b2.system);
@@ -901,7 +682,6 @@ const Einstellungen = (() => {
                     : '') +
                 zeile('Als CSV ausgeben', 'Zahlen zum Weiterrechnen', knopf('analysen-csv', 'Herunterladen'));
         },
-        /* --- Emoji ----------------------------------------------------------- */
         emoji: () => {
             const eigene = Store.getMeta('emoji:eigene', []) || [];
             return kopf('Emoji', 'Eigene Bilder als Symbol für Seiten und Datenbanken. ' +
@@ -928,18 +708,9 @@ const Einstellungen = (() => {
             zeile('Eigene Formelfunktionen', 'Einmal definieren, in jeder Formel nutzen — Notion kann das nicht', knopf('formelbib', 'Bibliothek öffnen')) +
             zeile('Tastenkürzel', '', knopf('kuerzel', 'Alle anzeigen')) +
             zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>') +
-            /* DER STAND UND DER WEG (E361, L83 Punkt 2): welche Fassung laeuft,
-               wann ihr Inhalt zuletzt gebaut wurde, und ob Redur gerade den
-               Ordner, start.bat oder Cloudflare ansieht. Drei Wege, und keiner
-               nannte sich — jetzt steht es hier, wo man nachsieht, wenn etwas
-               „alt aussieht". */
             zeile('Stand', 'Fassung des Programms und der Weg, über den es gerade läuft', `<span class="ez-grau ez-stand" data-fassung="${esc(standFassung())}">${esc(standText())}</span>`)
     }[b] || (() => kopf('Unbekannt')))();
-    /* ========================================================================
-     * BEDIENUNG
-     * ======================================================================*/
     const binde = (o) => {
-        /* Auswahlfelder und Textfelder */
         o.querySelectorAll('[data-set]').forEach((el) => {
             el.addEventListener('change', () => {
                 let wert = el.value;
@@ -955,11 +726,9 @@ const Einstellungen = (() => {
                     kopfzeileAuffrischen();
                 });
         });
-        /* Schalter */
         o.querySelectorAll('[data-toggle]').forEach((b) => {
             b.addEventListener('click', () => {
                 const k = b.dataset.toggle;
-                /* Die Quellen der KI liegen zusammen in einem Eintrag, nicht einzeln */
                 if (k.startsWith('q:')) {
                     const name = k.slice(2);
                     const jetzt = Kontext.quellen()[name];
@@ -973,10 +742,6 @@ const Einstellungen = (() => {
                         .forEach(x => x.classList.toggle('an', !jetzt));
                     return;
                 }
-                /* `kartenMelden` steht NICHT mehr in dieser Liste: seine Vorgabe ist
-                   seit E409 aus. Redur bekam den Streifen auf jedem Bildschirm zu
-                   sehen, ohne je danach gefragt zu haben. Der Schalter bleibt — wer
-                   die Meldung will, holt sie sich. */
                 const neu = !V(k, k === 'erinnernInApp' ||
                     k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
                 S(k, neu);
@@ -985,12 +750,6 @@ const Einstellungen = (() => {
                     App.zeichneSeite();
             });
         });
-        /* KI-Grenzen (L104 Punkt 1, E321).
-           Eigene Verdrahtung und kein `data-set`: die vier Grenzen liegen
-           ZUSAMMEN in einem Eintrag `ki:grenzen`, nicht als vier Schlüssel.
-           Ein `data-set` schriebe vier neue Einträge und die Bremse läse
-           weiter die alten — ein Regler, der sich bewegt und nichts bewirkt
-           (§47). */
         o.querySelectorAll('[data-grenze]').forEach((el) => {
             const uebernehmen = () => {
                 const wert = Number(el.value);
@@ -1003,17 +762,10 @@ const Einstellungen = (() => {
             el.addEventListener('change', uebernehmen);
             el.addEventListener('blur', uebernehmen);
         });
-        /* Zeitplan für lange Arbeiten (L103 Punkt 5, E342).
-           Wieder eigene Verdrahtung, und aus demselben Grund wie eine Zeile
-           weiter oben: die vier Werte liegen ZUSAMMEN in einem Eintrag
-           `auftragPlan`. Vier `data-set`-Schlüssel wären vier Regler, die sich
-           bewegen und nichts bewirken (§47). */
         const planSchreiben = async (aendern) => {
             const b = { ...(Auftraege.plan() || {}) };
             aendern(b);
             await Auftraege.planSetzen(b);
-            /* Neu zeichnen, weil der Satz oben („zwischen 22:00 und 06:00 und
-               nur am Strom") sich mitändert. */
             o.neuZeichnen && o.neuZeichnen();
         };
         const ausUhr = (text) => {
@@ -1043,7 +795,6 @@ const Einstellungen = (() => {
                 void planSchreiben(b => { b[k] = !b[k]; });
             });
         });
-        /* Bereiche löschen */
         o.querySelectorAll('[data-bereich-weg]').forEach((b) => {
             b.addEventListener('click', () => {
                 const id = b.dataset.bereichWeg;
@@ -1053,11 +804,7 @@ const Einstellungen = (() => {
                 o.neuZeichnen();
             });
         });
-        /* Knöpfe */
         o.querySelectorAll('[data-tun]').forEach((b) => b.addEventListener('click', () => tun(b.dataset.tun, o)));
-        /* Die Zustandsknöpfe (E441): Platzhalter gegen das echte Element
-           tauschen. Ein Platzhalter ohne Auftrag bleibt leer — lieber eine
-           Lücke, die auffällt, als ein Knopf, der nichts tut. */
         o.querySelectorAll('span[data-zk]').forEach(platz => {
             const id = platz.dataset['zk'] ?? '';
             const auftrag = zustandsknopfAuftrag(id);
@@ -1067,7 +814,6 @@ const Einstellungen = (() => {
             griff.element.dataset['zk'] = id;
             platz.replaceWith(griff.element);
         });
-        /* Speicherplatz nachreichen */
         const zahlen = o.querySelector('#speicher-zahlen');
         if (zahlen)
             Store.usage().then(u => {
@@ -1078,20 +824,12 @@ const Einstellungen = (() => {
             });
     };
     const kopfzeileAuffrischen = () => {
-        /* SEIT E236 TRÄGT AUCH DIE MENÜLEISTE DAS ZEICHEN (`mb-konto`).
-           Hier stand `btn.querySelector('.ws-icon')` — eine Stelle, ein
-           Zeichen. Wer es änderte, sah es in der Seitenleiste sofort und in
-           der Menüleiste erst nach dem nächsten Neuzeichnen: zwei Buchstaben
-           für einen Arbeitsbereich. Gesucht wird deshalb im ganzen Blatt. */
         document.querySelectorAll('.ws-icon').forEach(ico => {
             ico.textContent = V('arbeitsIcon', 'N');
         });
         const btn = document.querySelector('#btn-settings');
         if (!btn)
             return;
-        /* NACH BEDEUTUNG, NICHT NACH PLATZ (E590) — dieselbe Falle wie in
-           `schale.ts`: `span[1]` war der Name und ist seit der
-           Bewegungsschicht das Zeichen. */
         const name = btn.querySelector('.ws-name');
         if (name)
             name.textContent = V('arbeitsName', 'Redion');
@@ -1099,9 +837,6 @@ const Einstellungen = (() => {
     const tun = async (was, o) => {
         const seite = App.aktuelleSeite() ? Store.getBlock(App.aktuelleSeite()) : null;
         if (was === 'ki-buch-leeren') {
-            /* GEFRAGT WIRD VORHER. Das Buch ist die einzige Auskunft darüber, was
-               die Wolke bisher gekostet hat — weg ist weg, und die 70 Tage
-               Historie kommen nicht zurück (§46). */
             if (!confirm('Alle verbuchten KI-Kosten löschen? Die Übersicht beginnt ' +
                 'danach wieder bei null. Die Grenzen bleiben.'))
                 return;
@@ -1184,8 +919,6 @@ const Einstellungen = (() => {
                 UI.toast('Erst eine Seite öffnen');
                 return;
             }
-            /* `Werkzeuge.alsHtmlDatei` gibt es nicht; die Einzeldatei schreibt
-               `einzelDatei()`. Der Zweig war tot, es lief immer das Teilen-Menü. */
             Werkzeuge.einzelDatei();
             return;
         }
@@ -1204,7 +937,6 @@ const Einstellungen = (() => {
             o.neuZeichnen && o.neuZeichnen();
             return;
         }
-        /* --- Worker ---------------------------------------------------------- */
         if (was === 'worker-neu') {
             const name = await UI.frage('Wie heisst der Worker?', 'Zahlen zusammenzählen');
             if (!name)
@@ -1241,7 +973,6 @@ const Einstellungen = (() => {
             }
             return;
         }
-        /* --- Verifizierte Seiten --------------------------------------------- */
         if (was === 'pruef-setzen') {
             if (!seite) {
                 UI.toast('Erst eine Seite öffnen');
@@ -1277,7 +1008,6 @@ const Einstellungen = (() => {
             UI.toast('Prüfungen erneuert');
             return;
         }
-        /* --- Analysen -------------------------------------------------------- */
         if (was === 'analysen-csv') {
             const seiten = Object.values(Store.cache.blocks)
                 .filter(b2 => b2.type === 'page' && b2.alive !== false && !b2.system);
@@ -1310,7 +1040,6 @@ const Einstellungen = (() => {
                 const bild = await new Promise(ok2 => {
                     const fr = new FileReader();
                     fr.onload = () => {
-                        /* Auf 64 Pixel bringen — sonst wird der Speicher voll */
                         const img = new Image();
                         img.onload = () => {
                             const c = document.createElement('canvas');
@@ -1366,17 +1095,6 @@ const Einstellungen = (() => {
             try {
                 KI.zustand.quelle = 'wolke';
                 KI.zustand.anbieter = id;
-                /* ZUERST FRAGEN, WAS ES GIBT (E661). Die eingebaute Liste veraltet
-                   still: Redur bekam am 20. September eine 404 für
-                   `llama-3.3-70b-versatile`, weil Groq es ausgemustert hatte und
-                   die Liste im Programm es noch führte. Der Probelauf ist der
-                   natürliche Ort dafür — hier wird der Schlüssel ohnehin das erste
-                   Mal benutzt. Geht es schief, gilt die eingebaute Liste weiter.
-        
-                   EIN GRIFF, NICHT ZWEI (E665). „Holen und dann das erste nehmen"
-                   ist eine Prozedur der KI; diese Seite braucht nur das Ergebnis.
-                   `test537` hat den zweiten Griff als neuen Querverweis gemeldet,
-                   und er hatte recht (§5 Regel 1). */
                 KI.zustand.modell = await KI.modellWaehlen(id);
                 let antwort = '';
                 for await (const t of KI.wolkeFragen([{ role: 'user', content: 'Antworte nur mit dem Wort: bereit' }], KI.zustand.modell))
@@ -1413,10 +1131,6 @@ const Einstellungen = (() => {
             'dateien-lesen': () => { o.remove(); Werkzeuge.dateienLesen(); },
             'einzeldatei': () => Werkzeuge.einzelDatei(),
             'export-json': () => App.sicherungSpeichern(),
-            /* --- Die automatische Sicherung in einen Ordner (E270) -----------
-               `waehlen` bekommt die Zusage-Frage als Angabe gereicht, statt
-               selbst ein `confirm` zu bauen — so nimmt die Oberfläche ihren
-               eigenen Dialog (E29) und ein Prüflauf kann sie setzen. */
             'ordner-sicherung-an': async () => {
                 const os = globalThis.OrdnerSicherung;
                 if (!os)
@@ -1449,8 +1163,6 @@ const Einstellungen = (() => {
                 const os = globalThis.OrdnerSicherung;
                 if (!os)
                     return;
-                /* Was im Ordner liegt, bleibt liegen — und das muss dastehen,
-                   sonst rechnet jemand mit dem Gegenteil. */
                 const w = await Dialog.wahl({
                     titel: 'Automatische Sicherung abschalten?',
                     text: 'Redion sichert dann nicht mehr von selbst in „' + os.name() + '".',
@@ -1473,9 +1185,6 @@ const Einstellungen = (() => {
                 Werkzeuge.drucken(seite); },
             'seite-sperren': () => { o.remove(); if (seite)
                 Werkzeuge.sperren(seite); },
-            /* Der Weg zum vorhandenen Wolke-Fenster — dasselbe Muster, mit dem
-               es das Mehr-Blatt schon öffnet (E251). Kein zweiter Dialog (E29),
-               und kein Import: der Bereich greift über den globalen Namen (§5). */
             'wolke-oeffnen': () => {
                 o.remove();
                 const wf = globalThis.WolkeFenster;
@@ -1535,17 +1244,6 @@ const Einstellungen = (() => {
                     });
                 });
             },
-            /**
-             * HIER STAND `v.slice(5)`. Ein Knopf, der ohne Rückfrage fünf Fassungen
-             * je Seite behielt und alle übrigen endgültig löschte — bei einer Seite
-             * mit dreissig Fassungen also fünfundzwanzig, unwiederbringlich, mit
-             * einem Klick. Das war eine dritte Zahl neben `slice(30)` und
-             * `VERSIONEN_MAX: 200`, und die schärfste von allen.
-             *
-             * Jetzt wendet der Knopf dieselbe Regel an wie das Speichern, nur
-             * sofort statt beim nächsten Mal: ausdünnen, nicht abschneiden. Und er
-             * fragt vorher — mit der Zahl, um die es geht.
-             */
             'versionen-aufraeumen': async () => {
                 const opfer = [];
                 try {
@@ -1555,10 +1253,6 @@ const Einstellungen = (() => {
                     }
                 }
                 catch (err) {
-                    /* Auf halbem Weg abbrechen ist hier richtig: was schon in `opfer`
-                       steht, ist nur eine Auswahl aus den Seiten, die lesbar waren.
-                       Danach zu löschen hiesse, nach einem unvollständigen Bild zu
-                       handeln — und gelöschte Fassungen kommen nicht wieder. */
                     UI.toast('Der Verlauf ist gerade nicht lesbar — es wurde nichts gelöscht');
                     if (typeof Reporter !== 'undefined')
                         Reporter.error('einstellungen', 'Aufräumen abgebrochen: Verlauf nicht lesbar', err);
@@ -1589,9 +1283,6 @@ const Einstellungen = (() => {
                     return;
                 if (!confirm('Ganz sicher? Am besten vorher eine Sicherung speichern.'))
                     return;
-                /* Kein Neuladen, wenn es nicht ganz geklappt hat: nach dem Neuladen
-                   sähe der Bildschirm leer aus, und genau das wäre die Lüge — die
-                   Daten wären noch da. Lieber stehen bleiben und es sagen. */
                 try {
                     await Store.wipe();
                 }
@@ -1606,31 +1297,10 @@ const Einstellungen = (() => {
         if (tuIt)
             await tuIt();
     };
-    /* ========================================================================
-     * WAS BEIM START GILT
-     * ======================================================================*/
     const start = () => {
         anwenden();
         if (V('seiteZu', false))
             document.getElementById('sidebar')?.classList.add('collapsed');
-        /* FÄLLIGE KARTEIKARTEN MELDEN — EINMAL AM TAG, NICHT BEI JEDEM START.
-         *
-         * Der Schalter dazu gibt es seit jeher („Karteikarten · Beim Start
-         * melden"), und er stand auf an. Nur meldete es bei JEDEM Öffnen und
-         * bei jedem Neuladen — wer an Redion arbeitet, sah den Streifen
-         * vierzigmal am Tag, und wer ihn wegdrücken wollte, musste die
-         * ganze Meldung abschalten.
-         *
-         * Eine Erinnerung, die man schon kennt, ist keine Erinnerung mehr.
-         * Also merkt sie sich den TAG, an dem sie gezeigt wurde.
-         *
-         * Der Merker wird nur gesetzt, wenn wirklich etwas gezeigt wurde. Sonst
-         * würde ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr
-         * verschlucken, wenn dann welche fällig sind. */
-        /* AUS, BIS ER SIE EINSCHALTET (E409). Die Vorgabe war an, und damit stand
-           der Streifen bei jedem ersten Start des Tages unten in der Mitte — auch
-           über jedem Bildschirmfoto und über dem, was gerade gebaut wurde. Eine
-           Meldung, um die niemand gebeten hat, ist Werbung, keine Erinnerung. */
         if (V('kartenMelden', false)) {
             const heute3 = new Date().toISOString().slice(0, 10);
             if (Store.getMeta('kartenGemeldet', '') !== heute3) {

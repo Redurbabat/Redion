@@ -5394,3 +5394,74 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+## §86 · Der Startweg ohne Kommentare im erzeugten JavaScript (E715, 3. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/startlast-leichter` gegen `4d9a9a3fb`
+(morgen-besser, E701–E706). Statisch: jede Datei, die `index.html` beim
+Start holt (Skripte, Stilblätter samt `@import`, die Seite selbst), einzeln
+mit gzip Stufe 6 gepackt und zusammengezählt — so, wie `test388` §5 sie
+über seinen Server ausliefert. Dazu `test388` selbst, vorher (auf einem
+Abzug von 4d9a9a3fb) und nachher.
+
+**Die Hebel, gezählt, bevor gebaut wurde** (KB gzip):
+
+```txt
+                                                 vorher    ohne Kommentare
+erzeugtes JavaScript, 224 Skripte                 2395,8       1375,5
+  … davon die Zeile „ERZEUGT" je Datei (/*!)          —           18,4
+Stilblätter, 23 Dateien                            416,7        416,7  (Kommentare darin: 261,3 — Quelle, bleibt)
+index.html                                          13,2         13,2  (Kommentare darin: 6,4 — bleibt)
+zusammen (248 Dateien)                              2826         1805
+roh                                                 9688 KB      7063 KB
+```
+
+**Die grössten Einzelposten** (gzip, KB):
+
+```txt
+                                          vorher   nachher   weniger
+quell/bereiche/pdf/marken.js              132,3     55,8      76,6
+quell/bereiche/pdf/document-mode.js        82,5     35,2      47,3
+quell/schale/aufbau/schale.js              76,1     34,2      41,9
+quell/bereiche/datenbanken/steuerung.js   132,0     94,9      37,2
+quell/kern/ablage/indexdb.js               52,7     17,9      34,8
+quell/bereiche/dateien/einlesen.js         40,7     18,9      21,8
+```
+
+**Was danach noch zu holen wäre** (ohne Kommentare gemessen, nicht
+gebaut): Studio (`marken.js` + `document-mode.js`) 91,0 KB, Datenbanken
+(`steuerung.js`) 94,9 KB, Lerninhalt (L216: `nin-quiz.js` +
+`staatskunde-inhalt.js`) 17,5 KB — alles nur mit Nachladen, also mit
+geändertem Zeitpunkt; die Kommentare der Stilblätter 261,3 KB — nur mit
+einem Bauschritt für CSS.
+
+**Die Einzeldatei.** 11'784'203 → 9'095'626 Bytes (−2,56 MB); gzip
+3'606'395 → 2'618'339 Bytes.
+
+**Was vorher Kommentar war und gebraucht wurde.** `test105` §3 (Warnung im
+erzeugten Kopf; vorher nur `core/`, 46 Dateien — auf 4d9a9a3fb fehlte sie
+in 44 der 227), `test264`, `test265`, `test268` (ERZEUGT-Kopf in je einer
+Datei) und `test272` (die Beschreibung der toten Verdrahtung `hl-seiten`
+in `schale.js`). Alle Läufe, die `quell/…js` oder die Einzeldatei lesen,
+sind gelaufen: 34 Dateiläufe grün; 103 Browserläufe unter dem Schloss,
+davon nach der ERZEUGT-Zeile und `test272` aus der Quelle alle grün bis
+auf acht, die auf dem Grundstand genauso rot sind: `test270` (die
+`.git`-Datei des Arbeitsbaums, E671), `test343` §6 und `test461` (E708),
+`test464` §1 und `test492` (E714), `test365` („Dreizehn Werkzeuge" 14
+gegen 13, dieselbe Ursache wie `test464` §1), `test448` (Klappe des
+Reglers, 20/22) und `test470` (wartet 5 s auf „sichern"). Die drei
+letzten sind auf einem Abzug von 4d9a9a3fb nachgefahren, mit demselben
+Ergebnis.
+
+**test388 §5.** Vorher (4d9a9a3fb): 2826 KB über 248 Dateien, Decke
+2850, 21/21. Mit der neuen Decke auf demselben Stand: 20/22 — „2826 KB …
+Decke 1950" und „removeComments" rot. Nachher: **1805 KB über 248
+Dateien, Decke 1950, 22/22.** Die Zahl des Laufs und die statische
+Zählung stimmen auf das KB überein.
+
+**Derselbe Code.** Die Quellen von 4d9a9a3fb mit `tsc -p
+tsconfig.bauen.json --removeComments` in einen leeren Ordner gebaut und
+gegen `quell/` des Zweigs gelegt, ohne die ERZEUGT-Zeile: 227 Dateien,
+226 Byte für Byte gleich, die eine andere ist `stand.js` (nur der
+Stempel). Was der Browser ausführt, ist also genau das Alte ohne
+Kommentare — kein Skript kommt später, keine Funktion fehlt.

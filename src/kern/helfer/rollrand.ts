@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/rollrand.ts (npm run bauen:ts). */
 /* ============================================================================
  * rollrand.js — Wo ein Rollfeld angeschnitten ist, soll man das sehen
  * ----------------------------------------------------------------------------

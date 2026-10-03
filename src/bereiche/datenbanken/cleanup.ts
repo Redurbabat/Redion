@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/cleanup.ts (npm run bauen:ts). */
 /* ============================================================================
  * cleanup.ts — Spalten aufräumen, bevor man mit ihnen rechnet (L27)
  * ----------------------------------------------------------------------------

@@ -1,39 +1,14 @@
 "use strict";
-/* E572: kleine Werkzeugfelder im obersten Browser-Layer. Kein Dokumentinhalt.
- * Die native Klappe übernimmt Escape und Aussenklick, auch im Vollbild.
- *
- * ══ E575: EIN FELD, DAS AUFGEHT, MUSS AUCH WIEDER ZUGEHEN ══════════════════
- * Der erste Stand kannte nur EINEN Weg nach draussen: den Helfer selbst.
- * Gemessen am 14. September, Fenster 1440 × 960: nach `App.oeffne()` einer
- * gewöhnlichen Textseite stand das Laserfeld immer noch offen — 380 × 54
- * Pixel bei 520/159, schwebend über fremdem Text, während
- * `.document-workspace` längst weg war. Der `resize`-Horcher lief weiter,
- * denn abgemeldet wird er nur im `toggle`-Ereignis, und das kommt nie, wenn
- * niemand schliesst.
- *
- * Der Grund ist einfach und deshalb leicht zu übersehen: das Panel hängt an
- * `document.body`, nicht am Studio. Wer die Fläche darunter wegräumt, räumt
- * das Panel nicht mit.
- *
- * Drei Dinge halten es jetzt:
- *   · Es beobachtet seinen ANKER. Verlässt der den Baum, geht das Feld zu —
- *     ganz gleich, wer ihn weggeräumt hat und ob dieser Weg daran gedacht hat.
- *   · `closeAll()` ist der ausdrückliche Weg für alle, die es wissen.
- *   · Aufräumen ist idempotent. `hidePopover()` löst `toggle` aus, das
- *     wieder aufräumen will — zweimal aufräumen darf nichts kosten.
- */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/ink-menu.ts (npm run bauen:ts). */
 const InkMenu = (() => {
     let offen = null;
-    /** Schliesst ein offenes Feld. `weg` heisst: die Umgebung ist fort. */
     const closeAll = (grund = 'weg') => {
         offen?.ende(grund);
-        /* Nachzügler aus früheren Fassungen oder aus einem Baum, der unter einem
-           Panel weggezogen wurde: sie tragen keine Rückmeldung mehr, also hart weg. */
         document.querySelectorAll('.blatt-popover').forEach(node => {
             try {
                 node.hidePopover?.();
             }
-            catch { /* war nie offen */ }
+            catch { }
             node.remove();
         });
     };
@@ -55,12 +30,6 @@ const InkMenu = (() => {
         const body = document.createElement('div');
         body.className = 'blatt-popover-body';
         panel.append(body);
-        /* ══ DIE NATIVE KLAPPE, WENN ES SIE GIBT ════════════════════════════════
-           `popover` bringt die oberste Ebene, Escape und den Aussenklick mit —
-           auch im Vollbild, wo ein selbstgebauter Kasten schlicht unsichtbar
-           wäre. Wo es sie nicht gibt, baut der Zweig darunter dasselbe von Hand
-           nach; er ist nicht Zierde, sondern wird in `test524` wirklich
-           durchlaufen (die Prüfung nimmt `showPopover` weg). */
         const nativ = typeof panel.showPopover === 'function' && typeof panel.hidePopover === 'function';
         if (nativ)
             panel.setAttribute('popover', 'auto');
@@ -81,7 +50,6 @@ const InkMenu = (() => {
             panel.style.bottom = above ? Math.max(12, window.innerHeight - rect.top + 12) + 'px' : 'auto';
             panel.style.maxHeight = Math.max(100, (above ? rect.top : window.innerHeight - rect.bottom) - 24) + 'px';
         };
-        /* Der Anker ist der Faden zum Studio. Reisst er, geht das Feld zu. */
         const wache = new MutationObserver(() => { if (!anchor.isConnected)
             ende('weg'); });
         const draussen = (event) => {
@@ -94,8 +62,6 @@ const InkMenu = (() => {
             event.preventDefault();
             ende('escape');
         };
-        /* Auch bei der nativen Klappe brauchen wir die Taste — nicht zum
-           Schliessen (das kann sie selbst), sondern um den GRUND zu kennen. */
         const merkeEscape = (event) => { if (event.key === 'Escape')
             grund = 'escape'; };
         function ende(warum) {
@@ -112,17 +78,12 @@ const InkMenu = (() => {
                 try {
                     panel.hidePopover();
                 }
-                catch { /* war schon zu */ }
+                catch { }
             }
             panel.remove();
             offen = null;
             if (anchor.isConnected) {
                 anchor.setAttribute('aria-expanded', 'false');
-                /* ══ ESCAPE GIBT DEN FOKUS ZURÜCK, EIN AUSSENKLICK NICHT ════════════
-                   Wer mit Escape oder „×" schliesst, will dort weitermachen, wo er
-                   war. Wer daneben tippt, wollte DORTHIN — ihn zurückzuziehen wäre
-                   der Fokusdiebstahl, den der Plan ausschliesst. `weg` gibt gar
-                   nichts zurück: die Umgebung ist fort, da gibt es kein Zurück. */
                 if (warum === 'escape' || warum === 'knopf')
                     anchor.focus({ preventScroll: true });
             }
@@ -142,8 +103,6 @@ const InkMenu = (() => {
         }
         else {
             document.addEventListener('keydown', taste, true);
-            /* Erst im nächsten Zug horchen: sonst schliesst der Klick, der das
-               Feld geöffnet hat, es gleich wieder. */
             setTimeout(() => { if (!fertig)
                 document.addEventListener('pointerdown', draussen, true); }, 0);
         }

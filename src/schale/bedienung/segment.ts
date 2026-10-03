@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/segment.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/segment.ts — der Umschalter für zwei bis vier Dinge
  * ----------------------------------------------------------------------------

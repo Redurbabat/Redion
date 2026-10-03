@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/mehrfach.ts (npm run bauen:ts). */
 /* ============================================================================
  * apps/schreiben/mehrfach/ansicht.js — aus notion.js herausgelöst
  * ----------------------------------------------------------------------------
