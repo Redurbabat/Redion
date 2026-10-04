@@ -21,6 +21,8 @@ type Kachel = {
   stufen?: readonly string[];
   namen?: readonly string[];
   stand?: () => string;
+  /** Trennstellen des Namens (weicher Strich, Durchsicht E712). */
+  teile?: readonly string[];
 };
 
 const Schnellkacheln = (() => {
@@ -56,9 +58,11 @@ const Schnellkacheln = (() => {
         return (z.pausiert ? 'Angehalten · ' : 'Läuft · ') + m + ':' + String(s).padStart(2, '0');
       } },
     { id: 'schrift', name: 'Schriftgrösse', kurz: 'Schrift', zeichen: 'textSize', art: 'regler',
-      schluessel: 'schriftgroesse', stufen: ['klein', 'normal', 'gross'], namen: ['Klein', 'Normal', 'Gross'] },
+      schluessel: 'schriftgroesse', stufen: ['klein', 'normal', 'gross'], namen: ['Klein', 'Normal', 'Gross'],
+      teile: ['Schrift', 'grösse'] },
     { id: 'abstand', name: 'Zeilenabstand', kurz: 'Abstand', zeichen: 'menu', art: 'regler',
-      schluessel: 'dichte', stufen: ['eng', 'normal', 'weit'], namen: ['Eng', 'Normal', 'Weit'] }
+      schluessel: 'dichte', stufen: ['eng', 'normal', 'weit'], namen: ['Eng', 'Normal', 'Weit'],
+      teile: ['Zeilen', 'abstand'] }
   ];
 
   const zeichen = (name: string): string => {
@@ -99,7 +103,7 @@ const Schnellkacheln = (() => {
     z.innerHTML = zeichen(k.zeichen);            /* nur ein Zeichen aus dem Register */
     const n = document.createElement('span');
     n.className = 'ru-kachel-name';
-    n.textContent = chip ? k.kurz : k.name;
+    n.textContent = chip ? k.kurz : k.teile ? k.teile.join('\u00AD') : k.name;
     b.append(z, n);
     if (!chip) {
       const s = document.createElement('span');
@@ -181,12 +185,16 @@ const Schnellkacheln = (() => {
       e.preventDefault();
       regeln(k, s);
     });
-    /* Ziehen: eine Stufe je 28 px, ohne Sprung zum Finger. */
+    /* Ziehen: eine Stufe je 28 px, mit Maus und Stift; der Finger rollt die
+       Seite und tippt (Durchsicht E712). */
     let zug: { id: number; y: number; k: Kachel; b: HTMLElement; start: number } | null = null;
     wurzel.addEventListener('pointerdown', e => {
       const b = e.target instanceof Element ? e.target.closest<HTMLElement>('.ru-kachel-regler[data-kachel]') : null;
       const k = b ? KACHELN.find(x => x.id === b.dataset['kachel']) : undefined;
       if (!b || !k) return;
+      /* ein Zug ohne Klick schluckt nicht den nächsten Tipp */
+      delete b.dataset['gezogen'];
+      if (e.pointerType === 'touch') return;
       zug = { id: e.pointerId, y: e.clientY, k, b, start: stufe(k) };
     });
     wurzel.addEventListener('pointermove', e => {

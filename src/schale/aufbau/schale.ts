@@ -585,7 +585,13 @@ const App = (() => {
         tropfen: [
           { id: 'wz-praesi', name: 'Präsentieren', zeichen: 'play', ziel: '[data-a="wz-praesi"]' },
           { id: 'merkzeichen', name: 'Merkzeichen', zeichen: 'bookmark', an: !!p.favorite,
-            kippen: () => favoritKippen(p) },
+            kippen: () => {
+              const an = favoritKippen(p);
+              /* der Eintrag darunter sagt dasselbe (Durchsicht E712) */
+              const eintrag = document.querySelector<HTMLElement>('.menu .menu-liste [data-a="fav"]');
+              if (eintrag) eintrag.innerHTML = mi('star') + (an ? 'Aus Favoriten entfernen' : 'Zu Favoriten');
+              return an;
+            } },
           { id: 'teilen', name: 'Teilen und ausgeben', zeichen: 'share', ziel: '[data-a="teilen"]',
             tun: () => Werkzeuge.teilenMenue(anker, p) }
         ],

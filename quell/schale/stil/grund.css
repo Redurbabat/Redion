@@ -284,6 +284,7 @@
   body #handy-oben #ho-pille.faehrt::before{ opacity:0 }
   body .ru-fach-art{ background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
   html body #ai .ai-head .rmo-orb-karte{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
+  body .ru-held-linse{ display:none }
 }
 /* Dieselben Zeilen für Redions eigene zwei Schalter: „Hoher Kontrast" in
    den Einstellungen (`body[data-kontrast]`, seite.ts) und das Schema
@@ -304,6 +305,16 @@ body[data-kontrast="hoch"], html[data-schema="kontrast"] > body{
   background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ai .ai-head .rmo-orb-karte{
   background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
+/* Kachel „Hoher Kontrast" an: Gelb und Schwarz des Schemas „Starker
+   Kontrast" — hier, weil Farben von Hand nur in Markendateien stehen
+   (test584 §11; Durchsicht E712). */
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-kachel[data-kachel="kontrast"]::before,
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-kachel-chip[data-kachel="kontrast"][aria-pressed="true"]{
+  background:#ffd400 }
+/* Die Linse über „Heute" ist Zier aus Glas: ohne Glas keine Linse (E712). */
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-held-linse{ display:none }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) :is(.ru-kachel, .ru-kachel-chip)[data-kachel="kontrast"][aria-pressed="true"]{
+  color:#000 }
 
 /* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder
    einzelnen Stelle, sondern hier einmal: die vier Dauern werden auf nahezu

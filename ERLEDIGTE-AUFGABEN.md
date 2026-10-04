@@ -24,6 +24,17 @@ Glaskacheln oben in „Mehr" und in Einstellungen → Allgemein
 **Geprüft:** `test589` (72 ok, 0 offen), rot gegen `b3cf1933` (28 ok, 44 offen); fünf
 Gegenproben rot gesehen; die dreizehn Dateiläufe grün; die Browser-Nachbarn folgen im Nachtrag.
 
+**Durchsicht (4. Oktober 2026):** zwölf Funde, alle behoben (E712,
+„Durchsicht“): der Tropfenfilter dauernd im Halter (`test539` §2 rot), ein
+Gelb von Hand (`test584` §11 rot), das Merkzeichen sagte darunter das
+Gegenteil, am Telefon flossen die Tropfen 743 px abwärts, Vorleser hörten
+die Überschrift doppelt, die Linse lag nach einer Grössenänderung neben dem
+Wort und unter Kontrast über der Schrift, der Daumen stellte die Schrift
+statt zu rollen, zwei Kachelnamen abgeschnitten, der Stand unter 4,5 : 1,
+ein Beobachter ohne Ende, die Bilder fehlten. `test589` 91 ok (rot gegen
+`f6b9f007`: 74 ok, 17 offen), zwei Gegenproben rot gesehen, die
+Browser-Nachbarn gelaufen; `test388` §5: 2840 KB.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

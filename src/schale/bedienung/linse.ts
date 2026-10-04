@@ -54,8 +54,8 @@ const Linse = (() => {
      zwei Filter war „ein Filterwert lässt sich nicht animieren"; jetzt
      wechselt die Pille zwischen KEINEM und diesem einen, und das genügt. */
   const FAHRT = 'ru-linse-fahrt';
-  /* Der Tropfen (E712): EIN Goo-Filter für das Dokument, im selben Halter
-     (kein dritter, E649); keine Fläche trägt ihn in Ruhe (wie E646). */
+  /* Der Tropfen (E712): EIN Goo-Filter im selben Halter (E649), nur solange
+     es fliesst (`tropfenLeihen`); in Ruhe nur FAHRT (test539 §2). */
   const TROPFEN = 'ru-linse-tropfen';
 
   /* Die Karte als Bild. Sie wird auf die Grösse der Linse gezogen
@@ -161,7 +161,7 @@ const Linse = (() => {
      * Bei 12 sind es ±6, und der Name bleibt lesbar, während die Linse
      * darüberläuft. Der Farbsaum geht von 0,55 auf 0,3 mit — er verdoppelt
      * sonst optisch, was die Verschiebung schon verzogen hat. */
-    defs.append(glas(FAHRT, '9', '12', '0.3'), tropfen());
+    defs.append(glas(FAHRT, '9', '12', '0.3'));
     svg.append(defs);
     /* ══ DER HALTER LIEGT IN EINER HÜLLE (E649) ══════════════════════════
      * Hier stand `document.body.append(svg)`, und das hat `test272` rot
@@ -202,6 +202,22 @@ const Linse = (() => {
     document.body.append(huelle);
   };
 
+  /* Kommt mit der ersten Bühne, geht mit der letzten (Durchsicht E712). */
+  let tropfenNutzer = 0;
+  const tropfenLeihen = (): (() => void) => {
+    sicherstellen();
+    const defs = document.querySelector(`#${HALTER} defs`);
+    if (defs && !document.getElementById(TROPFEN)) defs.append(tropfen());
+    tropfenNutzer++;
+    let zurueck = false;
+    return () => {
+      if (zurueck) return;
+      zurueck = true;
+      tropfenNutzer = Math.max(0, tropfenNutzer - 1);
+      if (!tropfenNutzer) document.getElementById(TROPFEN)?.remove();
+    };
+  };
+
   /* DIE LINSE ÜBER DEM SATZ (E712, Szene 03): einmal beim Ankommen über
      „Aufmachen. / Weiterdenken.", dann Stillstand. Eine Abschrift in der
      Linse, verschoben und um 1,2 vergrössert — nur `transform`, die Bahn
@@ -209,6 +225,29 @@ const Linse = (() => {
      weichgezeichnet, nur Deckkraft), in Ruhe die Brechung `FAHRT`. */
   const SATZ_GESAMT = 1650;
   let satzBeginn = 0;
+
+  /* Ändert sich der Satz (Fenster, Schrift), legt sich die Linse neu an
+     ihren Ort, ohne neue Fahrt (Durchsicht E712). */
+  let satzBeobachter: ResizeObserver | null = null;
+  let beobachtet: HTMLElement | null = null;
+  const beobachten = (satz: HTMLElement): void => {
+    if (beobachtet === satz || typeof ResizeObserver === 'undefined') return;
+    satzBeobachter?.disconnect();
+    beobachtet = satz;
+    let mass = '';
+    satzBeobachter = new ResizeObserver(() => {
+      if (!satz.isConnected) {
+        satzBeobachter?.disconnect(); satzBeobachter = null; beobachtet = null;
+        return;
+      }
+      const r = satz.getBoundingClientRect();
+      const neu = Math.round(r.width) + '×' + Math.round(r.height) + ' ' + getComputedStyle(satz).fontSize;
+      if (!mass || neu === mass) { mass = neu; return; }
+      mass = neu;
+      ueberSatz(satz, false);
+    });
+    satzBeobachter.observe(satz);
+  };
 
   const ueberSatz = (satz: HTMLElement, gleiten: boolean): void => {
     const traeger = satz.parentElement;
@@ -218,6 +257,7 @@ const Linse = (() => {
     const z1 = zeilen[0], z2 = zeilen[zeilen.length - 1];
     if (!z1 || !z2) return;
     sicherstellen();
+    beobachten(satz);
 
     const still = typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
     const jetzt = performance.now();
@@ -346,7 +386,7 @@ const Linse = (() => {
     }).catch(() => { /* abgebrochen: die Ansicht ist schon weg */ });
   };
 
-  return { HALTER, FAHRT, TROPFEN, sicherstellen, ueberSatz };
+  return { HALTER, FAHRT, TROPFEN, sicherstellen, tropfenLeihen, ueberSatz };
 })();
 
 (window as any).Linse = Linse;

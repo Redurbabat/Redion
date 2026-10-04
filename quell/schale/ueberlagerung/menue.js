@@ -254,11 +254,26 @@ const Menue = (() => {
         const r = el.getBoundingClientRect();
         return { left: r.left, top: r.top, width: r.width, height: r.height };
     };
+    /** Wie weit ein Element gerade senkrecht verschoben ist (sein `transform`). */
+    const versatzY = (el) => {
+        const t = getComputedStyle(el).transform;
+        if (!t || t === 'none' || typeof DOMMatrixReadOnly === 'undefined')
+            return 0;
+        try {
+            return new DOMMatrixReadOnly(t).m42;
+        }
+        catch {
+            return 0;
+        }
+    };
     const tropfenAuf = (m, kopf, anker, blatt) => {
         if (typeof Tropfen === 'undefined' || Tropfen.still() || !anker.isConnected)
             return;
         const knoepfe = [...kopf.querySelectorAll('.ru-tropfen-rund')];
-        const ziele = knoepfe.map(rechteck);
+        /* Das Blatt steht hier noch unten (`herein`): zielen, wo die Knöpfe
+           ankommen (Durchsicht E712). */
+        const unten = blatt ? versatzY(m) : 0;
+        const ziele = knoepfe.map(rechteck).map(r => ({ ...r, top: r.top - unten }));
         const a = rechteck(anker);
         if (!blatt)
             Tropfen.wachsen(m, a);
@@ -298,6 +313,8 @@ const Menue = (() => {
             zuletzt = { flaeche: rechteck(m),
                 kreise: [...kopf.querySelectorAll('.ru-tropfen-rund')].map(rechteck) };
         };
+        /* misst nach, wenn die Suche filtert; endet mit dem Menü */
+        let nachmessen = null;
         let grund = null;
         const schliessen = () => {
             m.remove();
@@ -319,6 +336,7 @@ const Menue = (() => {
             grund?.remove();
             document.removeEventListener('keydown', escape, true);
             waechter.disconnect();
+            nachmessen?.disconnect();
             /* Zu fliesst es in den Knopf zurück (E712) — nur ein Bild, aria-hidden;
                das Menü selbst ist schon weg (Escape, Wahl, remove() bleiben sofort).
                Nach dem eigenen Abgang des Blattes (Wegwischen) fliesst nichts nach. */
@@ -423,7 +441,10 @@ const Menue = (() => {
         if (kopf && anker) {
             messen();
             tropfenAuf(m, kopf, anker, false);
-            new ResizeObserver(messen).observe(m);
+            if (typeof ResizeObserver !== 'undefined') {
+                nachmessen = new ResizeObserver(messen);
+                nachmessen.observe(m);
+            }
         }
         setTimeout(() => {
             const zu = (e) => {

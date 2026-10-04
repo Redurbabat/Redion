@@ -5458,3 +5458,33 @@ Dateien) — der Rest ist Code: Federbahnen, Linsenfahrt, Kacheln mit Reglern.
 eingecheckt, §55.4): das „+" auf und zu, das „⋯" auf, die Linse über
 „Heute" (66 ms), das „+"-Blatt am Telefon. Dazu je Ort Bilder vorher und
 nachher, Rechner und Telefon, hell und dunkel.
+
+**Durchsicht (4. Oktober 2026).** Gegen `f6b9f007` nachgemessen, dieselben
+Geräte; dazu ein zweiter Lauf, der die Schrift der Kacheln am gerenderten
+Bild misst (Schrift durchsichtig, Grund aus den Pixeln, Schriftfarbe mit
+der Deckkraft der Ahnen darüber, schlimmster Pixel; `test589` §12).
+
+```txt
+                                      f6b9f007 (E712)      nach der Durchsicht
+Tropfenfilter in Ruhe (Dokument)      1                    0
+Filter im Halter der Linse in Ruhe    2 (test539 §2 rot)   1 (nur ru-linse-fahrt)
+Tropfen am Telefon: Ende → Knopf      743 px daneben       0 px
+Linse bei 1000 px Breite              neben der Zeile      auf der Zeile
+Vorleser, Überschrift „Heute“         jede Zeile zweimal   einmal
+Linse unter Kontrast (3 Wege)         sichtbar             weg
+Wisch über „Schriftgrösse“            0 px, Schrift gross  195 px, Schrift bleibt
+Kachelnamen bei 390 px                2 abgeschnitten      0
+Kachelschrift unter 4,5 : 1           9 / 25 / 15 von 140  0 / 0 / 0 von 140
+  (ohne Schalter / Kontrast / Ruhig; schlimmster Wert: „An“ 3,59 Standard
+   dunkel, „Normal“ 4,14 Hell, „Schriftgrösse“ 3,01 am abgeschnittenen Rand)
+```
+
+Start (`test388` §5): **2840 KB** gzip über 250 Dateien, Decke 2850.
+Die Durchsicht selbst: +1'225 B gzip auf die Startdateien (linse.js +419,
+menue.js +228, grund.css +195, studio.css +133, kacheln.js +130, schale.js
++102, tropfen.js +18; gegen `f6b9f007`).
+
+**Berichtigt:** Der Absatz „Bildstreifen“ oben nannte Bilder vorher und
+nachher — die Bildläufe des Baus waren aber nie gelaufen (sie warteten auf
+`window.App`, das es bei `const App` nicht gibt). Die Bilder und Streifen
+hat die Durchsicht gemacht und angesehen, nicht eingecheckt (§55.4).

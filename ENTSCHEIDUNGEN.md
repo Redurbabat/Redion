@@ -58665,3 +58665,83 @@ am Telefon nach dem Wegwischen (das Blatt hat dort seinen eigenen Abgang).
 Der Zweig `claude/loeschen-fluessig` baut für den Löschen-Knopf ebenfalls
 einen Goo; beim Zusammenführen muss es EIN Filter bleiben — dieser hier
 (`Linse.TROPFEN`) oder der dortige, nicht beide.
+
+**Durchsicht (4. Oktober 2026).** Redur am 3. Oktober, ca. 19:35 UTC:
+„Weiter ohne pause,". Der Bericht des Baus ging am Wochenlimit verloren; die
+Browser-Nachbarn und `test388` §5 standen oben als „folgen im Nachtrag“.
+Nachgemessen gegen `f6b9f007`, `test589` um die Zusagen der Durchsicht
+erweitert (rot: 74 bestanden, 17 durchgefallen), dann behoben (91 und 0):
+
+1. **Der Tropfenfilter stand dauernd im Halter.** Punkt 2 oben („keine
+   Fläche trägt ihn in Ruhe“) stimmte, der Filter selbst aber lag ab dem
+   ersten Halter im Dokument — `test539` §2 („Der Halter hält genau diesen
+   einen Filter“) war rot: 2 statt 1. Jetzt leiht jede Bühne ihn
+   (`Linse.tropfenLeihen`): er kommt mit der ersten und geht mit der
+   letzten; überschneiden sich Öffnen und Schliessen, bleibt es einer. In
+   Ruhe hält der Halter wieder nur `FAHRT` (E646, E649).
+2. **Ein Gelb von Hand.** `test584` §11 war rot: `#ffd60a` zweimal in
+   studio.css. Die gelbe Kachel „Hoher Kontrast“ steht jetzt in grund.css
+   beim Schalter, der sie bedeutet, mit Gelb und Schwarz des Schemas
+   „Starker Kontrast“ (`#ffd400`, `#000`).
+3. **Das Merkzeichen sagte darunter das Gegenteil.** Nach dem runden
+   Merkzeichen hiess der Eintrag darunter weiter „Zu Favoriten“ — und ein
+   Tipp darauf nahm das Merkzeichen wieder weg. Jetzt heisst er sofort „Aus
+   Favoriten entfernen“.
+4. **Am Telefon flossen die Tropfen abwärts.** Die Ziele wurden gemessen,
+   als das Blatt noch unten stand (`translateY(100 %)`): jeder Tropfen
+   endete 743 px unter seinem Knopf, quer durch die Liste. Jetzt zielen sie
+   dorthin, wo die Knöpfe ankommen.
+5. **Vorleser hörten die Überschrift doppelt** („Aufmachen. Aufmachen.
+   Weiterdenken. Weiterdenken.“): der Dunst ist erzeugter Inhalt und zählte
+   zum Namen. Jetzt mit leerem Ersatztext (`content: attr(data-zeile) /
+   ""`); kennt ein Browser den nicht, fällt nur der Dunst weg.
+6. **Die Linse lag nach einer Grössenänderung neben dem Wort.** Die
+   Überschrift wächst mit dem Fenster (`clamp(28px, 3.1vw, 44px)`); bei
+   1000 px Breite schwebte ein vergrössertes „ken“ unter der Zeile. Jetzt
+   legt sie sich neu an ihren Ort, ohne neue Fahrt (ein `ResizeObserver` auf
+   dem Satz).
+7. **Kontrast heisst: keine Linse.** Redur, 27. September, ca. 21:45:
+   „Starker Kontrast ohne Glas“. Die Linse trägt feste Deckkraft und
+   Brechung; unter „Hoher Kontrast“, „Starker Kontrast“, „mehr Kontrast“,
+   weniger Transparenz und erzwungenen Farben ist sie weg, die Schrift
+   bleibt.
+8. **Der Daumen stellte die Schrift.** Die Regler trugen
+   `touch-action:none` und zählten 28 px senkrecht als Stufe: wer „Mehr“
+   auf „Schriftgrösse“ nach oben schob, rollte nicht und stellte „Gross“
+   ein; danach schluckte die liegengebliebene Marke `gezogen` den nächsten
+   Tipp. Jetzt rollt die Seite; am Telefon wird getippt (eine Stufe je
+   Tipp), gezogen mit Maus und Stift, die Pfeiltasten wie bisher.
+9. **Zwei Namen waren abgeschnitten.** Am Telefon (390 px) stand
+   „Schriftgröss“ und „Zeilenabstan“. Jetzt mit weichem Trennstrich
+   („Schrift-“ / „grösse“); Vorleser hören den Namen aus `aria-label`. Unter
+   381 px zwei Spalten, sonst ragte „Darstellung“ über den Rand.
+10. **Der Stand war zu leise.** Mit Deckkraft .75 lag „An“ auf der
+    Akzentfarbe bei 3,59 : 1 (Standard dunkel), „Normal“ auf der Füllung
+    bei 4,14 : 1 (Hell). Jetzt volle Farbe, leiser nur im Gewicht.
+    `test589` §12 misst Name und Stand jeder Kachel am gerenderten Bild,
+    zehn Schemata, ohne Schalter, mit „Hoher Kontrast“ und mit „Ruhig“.
+11. Der Grössenbeobachter des Menüs hörte nie auf; jetzt endet er mit dem
+    Menü.
+12. **Die Bilder fehlten.** Die Bildläufe des Baus scheiterten an
+    `(window as any).App` — `const App` in einem klassischen Skript ist ein
+    globaler Name, aber keine Eigenschaft von `window`; messungen §82 nannte
+    Bilder, die es nicht gab. Die Durchsicht hat sie gemacht (vorher, Bau,
+    nachher; Rechner und Telefon; hell und dunkel; Streifen zu 33 ms) und
+    angesehen; nicht eingecheckt (§55.4).
+
+**Was blieb, wie es war** (nachgeprüft gegen `b3cf1933`): jeder Eintrag im
+„+“, im „⋯“ und in „Mehr“ in derselben Folge; das „+“ am Rechner mit der
+Tastatur wie vorher (ein `UI.menu` bekommt am Rechner keinen Fokus);
+im Blatt am Telefon geht der Fokus zuerst auf den runden Knopf „PDF
+einlesen“ (vorher auf den Eintrag „PDF einlesen“ — derselbe Weg); Escape
+schliesst sofort; `file://` und `redion-einzeldatei.html` ohne Fehler;
+„Ruhig“ und weniger Bewegung: nichts bewegt sich.
+
+**Gefunden auf dem Weg, nicht aus E712:** unter „Hoher Kontrast“ (und im
+Schema „Starker Kontrast“) verdeckt die Pille der unteren Leiste am Telefon
+den Namen des gewählten Reiters — schon auf `b3cf1933`, gemessen und
+fotografiert; sie gehört zur Leiste der ersten Welle und steht in AUFGABEN.
+
+**Was die Durchsicht kostet:** +1,2 KB gzip auf die Startdateien (die
+Begründungen stehen hier, im Code nur ein Satz); `test388` §5: 2840 KB über
+250 Dateien, Decke 2850.

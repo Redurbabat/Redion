@@ -491,7 +491,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 /* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. */
 .lernwelt .lw-desk-copy{position:relative}
 .ru-held-zeile{display:inline-block;position:relative}
-.ru-held-zeile::before{content:attr(data-zeile);position:absolute;left:0;top:0;white-space:nowrap;
+/* Der Dunst ist Bild: leerer Ersatztext für Vorleser (Durchsicht E712). */
+.ru-held-zeile::before{content:attr(data-zeile) / "";position:absolute;left:0;top:0;white-space:nowrap;
   filter:blur(5px);opacity:0;pointer-events:none}
 h2.ru-held-kommt .ru-held-zeile{animation:ru-held-zeile-kommt var(--feder-knapp-dauer) var(--feder-knapp) both;
   animation-delay:var(--ru-held-versatz,0ms)}
@@ -522,16 +523,16 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
   opacity:0;transition:opacity var(--motion-normal) var(--ease)}
 .ru-kachel[aria-pressed="true"]{color:var(--auf-accent)}
 .ru-kachel[aria-pressed="true"]::before{opacity:1}
-.ru-kachel[data-kachel="kontrast"]::before{background:#ffd60a}
-.ru-kachel[data-kachel="kontrast"][aria-pressed="true"]{color:#161616}
 .ru-kachel-breit{grid-column:span 2}
 .ru-kachel-zeichen{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
   background:color-mix(in srgb,currentColor 10%,transparent)}
 .ru-kachel-zeichen > svg{width:18px;height:18px}
-.ru-kachel-name{font-size:13px;font-weight:600;line-height:1.2}
-.ru-kachel-stand{font-size:12px;line-height:1.2;opacity:.75;margin-top:calc(-1 * var(--space-1))}
+.ru-kachel-name{font-size:13px;font-weight:600;line-height:1.2;max-width:100%}
+/* Stand in voller Farbe, leiser nur im Gewicht (Durchsicht E712, test589 §12). */
+.ru-kachel-stand{font-size:12px;font-weight:400;line-height:1.2;margin-top:calc(-1 * var(--space-1))}
 .ru-kachel:focus-visible,.ru-kachel-chip:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
-.ru-kachel-regler{touch-action:none}
+/* Der Daumen rollt die Seite; gezogen wird mit Maus und Stift (Durchsicht E712). */
+.ru-kachel-regler{touch-action:manipulation}
 .ru-kachel-fuellung{position:absolute;inset:0;z-index:-1;transform-origin:50% 100%;
   transform:scaleY(var(--ru-kachel-fuellung,.67));background:color-mix(in srgb,var(--accent) 30%,transparent);
   transition:transform var(--feder-knapp-dauer) var(--feder-knapp)}
@@ -548,12 +549,15 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
   color:var(--text);font-size:13px;white-space:nowrap;
   transition:background-color var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease)}
 .ru-kachel-chip[aria-pressed="true"]{background:var(--accent);color:var(--auf-accent)}
-.ru-kachel-chip[data-kachel="kontrast"][aria-pressed="true"]{background:#ffd60a;color:#161616}
 .ru-kachel-chip .ru-kachel-zeichen{width:auto;height:auto;background:none}
 @media(max-width:760px){
   .ru-kachel{min-height:84px;padding:var(--space-2) var(--space-3) var(--space-3)}
   .ru-kachel-name{font-size:12px}
   .ru-kachel-stand{font-size:11px}
+}
+/* Kleine Telefone: zwei Spalten, sonst ragt „Darstellung" über den Rand (Durchsicht E712). */
+@media(max-width:380px){
+  .ru-kacheln-gitter{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(prefers-reduced-motion:reduce){
   h2.ru-held-kommt .ru-held-zeile,h2.ru-held-kommt .ru-held-zeile::before{animation:none}

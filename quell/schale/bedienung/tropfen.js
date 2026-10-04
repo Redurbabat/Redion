@@ -10,10 +10,9 @@ const Tropfen = (() => {
     const still = () => typeof AppEinstellung !== 'undefined' ? AppEinstellung.wenigBewegung()
         : window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
     const mitte = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
-    /** Die Bühne umschliesst nur den Weg — der Filter rechnet nur dort. */
+    /** Die Bühne umschliesst nur den Weg; der Filter steht, solange sie steht. */
     const buehne = (alle) => {
-        if (typeof Linse !== 'undefined')
-            Linse.sicherstellen();
+        const zurueck = typeof Linse !== 'undefined' ? Linse.tropfenLeihen() : () => { };
         const RAND = 40;
         const l = Math.min(...alle.map(r => r.left)) - RAND;
         const t = Math.min(...alle.map(r => r.top)) - RAND;
@@ -30,7 +29,7 @@ const Tropfen = (() => {
         goo.className = 'ru-tropfen-goo';
         el.append(goo);
         document.body.append(el);
-        return { el, goo, ox: l, oy: t };
+        return { el, goo, ox: l, oy: t, weg: () => { el.remove(); zurueck(); } };
     };
     /** Ein Kreis auf der Bühne, in seiner Ruhelage `d` px gross. */
     const kreis = (goo, d) => {
@@ -56,7 +55,7 @@ const Tropfen = (() => {
     const teilen = (von, nach, verzug = 40) => {
         if (still() || !nach.length)
             return 0;
-        const { el, goo, ox, oy } = buehne([von, ...nach]);
+        const { el, goo, ox, oy, weg } = buehne([von, ...nach]);
         const d0 = Math.max(24, Math.min(von.width, von.height));
         const m = mitte(von);
         const lokal = (p, d) => ({ x: p.x - ox - d / 2, y: p.y - oy - d / 2 });
@@ -80,15 +79,15 @@ const Tropfen = (() => {
         });
         /* Übergabe an die echten Knöpfe; spätestens dann weg (verborgener Reiter). */
         const aus = el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, delay: ankunft, easing: 'linear', fill: 'both' });
-        aus.finished.then(() => el.remove()).catch(() => el.remove());
-        setTimeout(() => el.remove(), ankunft + 6000);
+        aus.finished.then(weg).catch(weg);
+        setTimeout(weg, ankunft + 6000);
         return ankunft;
     };
     /** Die Tropfen an `von` (und die Scheibe `flaeche`) fliessen in `nach`. */
     const vereinen = (von, nach, flaeche = null) => {
         if (still() || !von.length)
             return;
-        const { el, goo, ox, oy } = buehne([nach, ...von, ...(flaeche ? [flaeche] : [])]);
+        const { el, goo, ox, oy, weg } = buehne([nach, ...von, ...(flaeche ? [flaeche] : [])]);
         const exit = getComputedStyle(document.documentElement).getPropertyValue('--ease-exit').trim() || 'ease-in';
         if (flaeche) {
             const g = document.createElement('div');
@@ -125,8 +124,8 @@ const Tropfen = (() => {
             { transform: `translate(${mp.x}px,${mp.y}px) scale(1)`, opacity: 0 }
         ], { duration: ende + 160, easing: 'linear', fill: 'both' });
         const aus = el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: ende, easing: 'linear', fill: 'both' });
-        aus.finished.then(() => el.remove()).catch(() => el.remove());
-        setTimeout(() => el.remove(), ende + 6000);
+        aus.finished.then(weg).catch(weg);
+        setTimeout(weg, ende + 6000);
     };
     /** Die Scheibe wächst aus dem Knopf; der Inhalt blendet nach (Rechner). */
     const wachsen = (flaeche, aus) => {
