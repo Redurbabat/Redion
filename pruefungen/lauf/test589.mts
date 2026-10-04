@@ -44,6 +44,29 @@
  *   §10 Die Kacheln in den Einstellungen (Rechner): oben in „Allgemein",
  *       die alten Felder darunter, beide zeigen denselben Stand.
  *   §11 Kein Seitenfehler.
+ *   §12 Die Schrift der Kacheln ist lesbar, in jedem Schema (Durchsicht).
+ *
+ * DURCHSICHT (4. Oktober 2026; Redur am 3. Oktober, ca. 19:35 UTC: „Weiter
+ * ohne pause,"). Der Bericht des Baus ging am Wochenlimit verloren; die
+ * Durchsicht hat nachgemessen und diese Zusagen dazugeschrieben — jede gegen
+ * den Stand f6b9f007 (E712) rot gesehen, ausser wo „bleibt" steht:
+ *   §3/§4 Der Tropfenfilter steht NUR, solange es fliesst — in Ruhe hält der
+ *       Halter der Linse nur die Fahrt (sonst ist `test539` §2 rot: 2 statt
+ *       1); auch wenn sich Öffnen und Schliessen überschneiden, EINER.
+ *   §5  Nach dem runden Merkzeichen heisst der Eintrag darunter „Aus
+ *       Favoriten entfernen" (vorher „Zu Favoriten" — und ein Tipp darauf
+ *       nahm das Merkzeichen wieder weg).
+ *   §6  Am Telefon fliessen die Tropfen dorthin, wo die runden Knöpfe
+ *       ankommen (vorher abwärts quer durch die Liste).
+ *   §8  Vorleser hören jede Zeile der Überschrift einmal; nach einer
+ *       Grössenänderung des Fensters liegt die Linse weiter auf der Zeile;
+ *       „Hoher Kontrast", „Starker Kontrast" und „mehr Kontrast": keine
+ *       Linse. „Weniger Bewegung" im System: nichts gleitet (bleibt).
+ *   §9  Kein Name ragt aus seiner Kachel (390 px); ein Wisch nach oben über
+ *       einen Regler rollt „Mehr" und lässt die Einstellung stehen; ein Tipp
+ *       danach zählt.
+ *   §12 Name und Stand jeder Kachel ≥ 4,5 : 1 am gerenderten Bild, in allen
+ *       zehn Schemata, ohne Schalter, mit „Hoher Kontrast", mit „Ruhig".
  *
  * KANN ER ROT WERDEN? Gegen den Stand b3cf1933 (vor E712) ist er rot, in
  * jedem Abschnitt ausser den „bleibt"-Zusagen — siehe Commit „test589 (rot)".
@@ -157,7 +180,8 @@ const MESSEN = `
   const frueh = await s.evaluate(() => ({
     buehne: !!document.querySelector('.ru-tropfen-buehne'),
     traeger: (window as any).__tropfenTraeger(),
-    nurTransform: (window as any).__nurTransform()
+    nurTransform: (window as any).__nurTransform(),
+    filter: document.querySelectorAll('filter#ru-linse-tropfen').length
   }));
   await warte(s, 1300);
   const lage = await s.evaluate(() => {
@@ -204,14 +228,23 @@ const MESSEN = `
   p('Beim Öffnen fliesst ein Tropfen (die Bühne steht)', frueh.buehne);
   p('… und genau dann trägt eine Fläche den Tropfenfilter', frueh.traeger >= 1, String(frueh.traeger));
   gleich('… bewegt wird nur transform und opacity', frueh.nurTransform, []);
+  /* DER FILTER STEHT NUR, SOLANGE ES FLIESST (Durchsicht E712). Hier stand
+     „Der Filter steht genau einmal im Dokument" — auch in Ruhe. Das hat
+     `test539` §2 rot gemacht: der Halter der Linse hält in Ruhe GENAU EINEN
+     Filter, die Fahrt (E646: ein Filter, den niemand ruft, ist eine Zeile,
+     die aussieht, als täte sie etwas). Jetzt: während des Fliessens genau
+     einer, in Ruhe keiner — und der Halter wieder nur mit der Fahrt. */
+  gleich('… und der Tropfenfilter steht dann genau einmal im Dokument', frueh.filter, 1);
   const ruhe = await s.evaluate(() => ({
     buehne: document.querySelectorAll('.ru-tropfen-buehne').length,
     traeger: (window as any).__tropfenTraeger(),
-    filter: document.querySelectorAll('filter#ru-linse-tropfen').length
+    filter: document.querySelectorAll('filter#ru-linse-tropfen').length,
+    halter: [...document.querySelectorAll('#ru-linse-halter filter')].map(f => f.id)
   }));
   gleich('In Ruhe: keine Bühne mehr', ruhe.buehne, 0);
   gleich('In Ruhe: KEIN Element trägt den Tropfenfilter', ruhe.traeger, 0);
-  gleich('Der Filter steht genau einmal im Dokument', ruhe.filter, 1);
+  gleich('In Ruhe: kein Tropfenfilter im Dokument', ruhe.filter, 0);
+  gleich('In Ruhe hält der Halter der Linse nur die Fahrt (test539 §2)', ruhe.halter, ['ru-linse-fahrt']);
 
   console.log('\n§4 · Zu: sofort weg, und der Tropfen fliesst zurück');
   await s.keyboard.press('Escape');
@@ -224,13 +257,24 @@ const MESSEN = `
   await warte(s, 1200);
   gleich('… danach ist auch er weg', await s.evaluate(() => document.querySelectorAll('.ru-tropfen-buehne').length), 0);
 
-  /* Zweimal auf, zweimal zu — der Filter bleibt einer. */
+  /* Zweimal auf, zweimal zu — und einmal so schnell, dass Teilen und
+     Vereinen sich überschneiden: es bleibt kein Filter liegen. */
   for (let i = 0; i < 2; i++) {
     await s.click('#studio-create'); await warte(s, 700);
     await s.keyboard.press('Escape'); await warte(s, 700);
   }
-  gleich('Nach dreimal Auf und Zu: weiter genau EIN Filter', await s.evaluate(() =>
-    document.querySelectorAll('filter#ru-linse-tropfen').length), 1);
+  await s.click('#studio-create'); await warte(s, 60);
+  const schnell = await s.evaluate(() => document.querySelectorAll('filter#ru-linse-tropfen').length);
+  await s.keyboard.press('Escape'); await warte(s, 60);
+  const ueberlappt = await s.evaluate(() => ({
+    buehnen: document.querySelectorAll('.ru-tropfen-buehne').length,
+    filter: document.querySelectorAll('filter#ru-linse-tropfen').length
+  }));
+  await warte(s, 1400);
+  gleich('Schnell auf und zu: auch mit zwei Bühnen genau EIN Tropfenfilter', [schnell, ueberlappt.filter], [1, 1]);
+  gleich('Nach viermal Auf und Zu: kein Tropfenfilter übrig, der Halter hält nur die Fahrt', await s.evaluate(() =>
+    [document.querySelectorAll('filter#ru-linse-tropfen').length,
+     document.querySelectorAll('#ru-linse-halter filter').length]), [0, 1]);
 
   /* Der runde Knopf „Neue Seite" tut, was der Eintrag „Neue Seite" tut. */
   const vorher = await s.evaluate(() => Store.rootPages().length);
@@ -271,10 +315,18 @@ const MESSEN = `
     await new Promise(r => setTimeout(r, 300));
     const b2 = document.querySelector<HTMLElement>('.menu .ru-tropfen-knopf[data-tropfen="merkzeichen"]');
     return { vorher, nachher: b2?.getAttribute('aria-pressed'), fav: !!Store.getBlock(pid)?.favorite,
-             offen: !!document.querySelector('.menu') };
+             offen: !!document.querySelector('.menu'),
+             eintrag: (document.querySelector('.menu .menu-liste [data-a="fav"]')?.textContent || '').trim(),
+             kopf: document.getElementById('btn-fav')?.getAttribute('aria-pressed') };
   }, id);
   gleich('Das Merkzeichen füllt sich an Ort und Stelle', [merk.vorher, merk.nachher, merk.fav, merk.offen],
     ['false', 'true', true, true]);
+  /* DER EINTRAG DARUNTER SAGT DASSELBE (Durchsicht E712). Hier stand nach
+     dem runden Knopf weiter „Zu Favoriten" — ein Tipp darauf hätte das
+     Merkzeichen wieder entfernt, unter einem Namen, der das Gegenteil
+     verspricht. Das Merkzeichen im Kopf der Seite zieht mit. */
+  gleich('… der Eintrag darunter heisst jetzt „Aus Favoriten entfernen", der Kopf zieht mit',
+    [merk.eintrag, merk.kopf], ['Aus Favoriten entfernen', 'true']);
   const praesi = await s.evaluate(async () => {
     const W = (window as any).Werkzeuge;
     const alt = W.seitenMenueAktion;
@@ -311,6 +363,38 @@ const MESSEN = `
   gleich('Drei runde Knöpfe', await s.evaluate(() => (window as any).__kopf()), ['PDF einlesen', 'Neue Seite', 'Notizbuch']);
   p('… direkt unter dem Titel', blatt.nachTitel);
   gleich('… und darunter jeder Weg', blatt.wege, blatt.katalog);
+  await aufraeumen(s);
+
+  /* DIE TROPFEN FLIESSEN DORTHIN, WO DIE KNÖPFE ANKOMMEN (Durchsicht E712).
+     Am Telefon wurden die Ziele gemessen, als das Blatt noch ganz unten
+     stand (translateY(100 %)): die Tropfen flossen abwärts quer durch die
+     Liste, die Knöpfe erschienen oben. Gemessen wird das Ende jeder
+     Tropfenbahn (der letzte Schritt ihrer Federbahn auf der Bühne) gegen die
+     Mitte des runden Knopfs, wenn das Blatt steht. Ausgelöst wie von Hand:
+     über das sichtbare „Neu" (mit Anker), sonst fliesst nichts. */
+  const bahn = await s.evaluate(() => {
+    const k = [...document.querySelectorAll<HTMLElement>('[data-neu-auf], #studio-create')]
+      .find(b => b.getBoundingClientRect().width > 0);
+    if (!k) return null;
+    k.click();
+    const st = document.querySelector<HTMLElement>('.ru-tropfen-buehne');
+    if (!st) return [];
+    const ox = parseFloat(st.style.left), oy = parseFloat(st.style.top);
+    const zahl = (t: unknown): number[] =>
+      (String(t).match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/) || []).slice(1).map(Number);
+    return [...st.querySelectorAll<HTMLElement>('.ru-tropfen-kreis')].map(c => {
+      const kf = (c.getAnimations()[0]?.effect as KeyframeEffect | undefined)?.getKeyframes() || [];
+      return { a: zahl(kf[0]?.['transform']), b: zahl(kf[kf.length - 1]?.['transform']) };
+    }).filter(z => z.a.length === 2 && z.b.length === 2 &&
+      Math.abs(z.a[0]! - z.b[0]!) + Math.abs(z.a[1]! - z.b[1]!) > 4)
+      .map(z => ({ x: ox + z.b[0]! + 22, y: oy + z.b[1]! + 22 }));
+  });
+  await warte(s, 1300);
+  const runde = await s.evaluate(() => [...document.querySelectorAll<HTMLElement>('.menu.blatt .ru-tropfen-rund')]
+    .map(r => { const q = r.getBoundingClientRect(); return { x: q.left + q.width / 2, y: q.top + q.height / 2 }; }));
+  const daneben = (bahn || []).map((z, i) => Math.round(Math.hypot(z.x - (runde[i]?.x ?? 1e4), z.y - (runde[i]?.y ?? 1e4))));
+  p('Jeder Tropfen endet in der Mitte seines runden Knopfs, wenn das Blatt steht (höchstens 8 px daneben)',
+    daneben.length === 3 && daneben.every(d => d <= 8), JSON.stringify({ daneben, bahn, runde }));
   await aufraeumen(s);
   await ctx.close();
 }
@@ -379,8 +463,45 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
   });
   gleich('Danach steht alles still (keine Dauerbewegung)', spaeter.laeuft, 0);
   gleich('Die Überschrift bleibt echte Schrift', spaeter.text, 'Aufmachen.Weiterdenken.');
+  /* VORLESER HÖREN SIE EINMAL (Durchsicht E712). Der Dunst, mit dem die
+     Zeilen hereinkommen, ist `::before{content:attr(data-zeile)}` — und
+     erzeugter Inhalt zählt zum Namen einer Überschrift. Vorgelesen wurde
+     „Aufmachen. Aufmachen. Weiterdenken. Weiterdenken.". */
+  const vorgelesen = await s.locator('.lw-desk h2').ariaSnapshot();
+  gleich('Vorleser hören jede Zeile genau einmal', [
+    (vorgelesen.match(/Aufmachen\./g) || []).length, (vorgelesen.match(/Weiterdenken\./g) || []).length], [1, 1]);
   p('In Ruhe bricht die Linse mit der Brechung aus linse.ts', spaeter.bruch);
   gleich('EINE Brechung im Dokument (keine dritte)', spaeter.displacement, 1);
+  /* DIE LINSE BLEIBT AM SATZ, WENN DAS FENSTER SICH ÄNDERT (Durchsicht
+     E712). Die Überschrift wächst mit dem Fenster (clamp(28px, 3.1vw,
+     44px)); die Linse lag in den Pixeln des Ankommens und stand nach einer
+     Grössenänderung neben dem Wort, mit einer Abschrift in der alten
+     Schriftgrösse. Gemessen bei 1000 px Breite: die Mitte der Linse liegt
+     auf der zweiten Zeile, die Abschrift hat die Grösse der Überschrift —
+     und es fährt dabei nichts neu los. */
+  await s.setViewportSize({ width: 1000, height: 900 });
+  await warte(s, 900);
+  const schmal = await s.evaluate(() => {
+    const held = document.querySelector('.lw-desk');
+    const l = held?.querySelector<HTMLElement>('.ru-held-linse');
+    const z = [...(held?.querySelectorAll<HTMLElement>('.ru-held-zeile') || [])];
+    const q = l?.getBoundingClientRect(), z2 = z[z.length - 1]?.getBoundingClientRect();
+    const mx = q ? q.left + q.width / 2 : -1, my = q ? q.top + q.height / 2 : -1;
+    const bild = l?.querySelector<HTMLElement>('.ru-held-linse-bild');
+    const h2 = held?.querySelector<HTMLElement>('h2');
+    return {
+      aufZeile: !!(q && z2 && mx >= z2.left && mx <= z2.right && my >= z2.top && my <= z2.bottom),
+      gleicheSchrift: !!bild && !!h2 && getComputedStyle(bild).fontSize === getComputedStyle(h2).fontSize,
+      laeuft: document.getAnimations().filter(a => {
+        const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
+        return !!t && !!held && held.contains(t) && a.playState === 'running';
+      }).length
+    };
+  });
+  gleich('Schmaleres Fenster: die Linse liegt weiter auf der zweiten Zeile, die Abschrift in der Grösse der Überschrift, nichts fährt',
+    [schmal.aufZeile, schmal.gleicheSchrift, schmal.laeuft], [true, true, 0]);
+  await s.setViewportSize({ width: 1440, height: 900 });
+  await warte(s, 300);
   await s.evaluate(() => Einstellungen.S('bewegung', 'ruhig'));
   await s.evaluate(() => Produktwelten.lernen('heute'));
   await warte(s, 400);
@@ -394,6 +515,62 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
   });
   gleich('Ruhig: die Linse liegt still an ihrem Ort, nichts gleitet', [still.linse, still.laeuft], [true, 0]);
   await ctx.close();
+}
+{
+  /* Dasselbe mit „weniger Bewegung" im System — die zweite Quelle. */
+  const { ctx, s } = await oeffnen(false, true);
+  await s.evaluate(() => Produktwelten.lernen('heute'));
+  await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
+  const proben: number[] = [];
+  for (let i = 0; i < 4; i++) {
+    proben.push(await s.evaluate(() => {
+      const held = document.querySelector('.lw-desk');
+      return document.getAnimations().filter(a => {
+        const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
+        return !!t && !!held && held.contains(t) && a.playState === 'running';
+      }).length;
+    }));
+    await warte(s, 120);
+  }
+  const da = await s.evaluate(() => !!document.querySelector('.lw-desk .ru-held-linse'));
+  gleich('prefers-reduced-motion: die Linse liegt still, nichts gleitet, keine Zeile kommt geflogen',
+    [da, Math.max(...proben)], [true, 0]);
+  await ctx.close();
+}
+{
+  /* KONTRAST HEISST: KEIN GLAS (Redur, 27.09., ca. 21:45: „Starker Kontrast
+     ohne Glas"; grund.css schaltet dafür alles Glas deckend). Die Linse über
+     „Heute" liest keine Marke — sie trägt eine feste halbe Deckkraft und die
+     Brechung. Durchsicht E712: in allen fünf Eingängen des Schalters ist sie
+     weg; die Überschrift bleibt. Geprüft: die beiden in Redion und „mehr
+     Kontrast" im System. */
+  for (const [name, weg] of [['„Hoher Kontrast"', 'einstellung'], ['Schema „Starker Kontrast"', 'schema'],
+                             ['System „mehr Kontrast"', 'system']] as const) {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 },
+      ...(weg === 'system' ? { contrast: 'more' as const } : {}) });
+    const s = await ctx.newPage();
+    s.on('pageerror', e => fehler.push(e.message));
+    await s.goto(`http://127.0.0.1:${PORT}/index.html`);
+    await s.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'undefined' &&
+      (document.getElementById('tree')?.children.length || 0) > 0, null, { timeout: 30000 });
+    await s.evaluate((w: string) => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
+      if (w === 'einstellung') Einstellungen.S('kontrast', true);
+      if (w === 'schema') (window as any).Aussehen.setzen({ schema: 'kontrast' });
+    }, weg);
+    await s.evaluate(() => Produktwelten.lernen('heute'));
+    await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
+    await warte(s, 2200);
+    const r = await s.evaluate(() => {
+      const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+      const q = l?.getBoundingClientRect();
+      return { linse: !!l && !!q && q.width > 0 && getComputedStyle(l).display !== 'none',
+               text: (document.querySelector('.lw-desk h2')?.textContent || '').replace(/\s+/g, '') };
+    });
+    gleich(`${name}: keine Linse über der Überschrift, die Schrift bleibt`, [r.linse, r.text], [false, 'Aufmachen.Weiterdenken.']);
+    await ctx.close();
+  }
 }
 
 /* ==========================================================================
@@ -413,7 +590,18 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     return {
       da: !!kacheln,
       vorListe: !!kacheln && !!erstesH2 && !!(kacheln.compareDocumentPosition(erstesH2) & Node.DOCUMENT_POSITION_FOLLOWING),
-      namen: alle.map(b => (b.querySelector('.ru-kachel-name')?.textContent || '').trim()),
+      /* Der weiche Trennstrich (Durchsicht E712) ist Satz, nicht Name. */
+      namen: alle.map(b => (b.querySelector('.ru-kachel-name')?.textContent || '').replace(/\u00AD/g, '').trim()),
+      /* Steht jeder Name ganz in seiner Kachel? Die Schrift als Bereich
+         gemessen, nicht als Kasten — der Kasten darf breiter sein. */
+      abgeschnitten: alle.filter(b => {
+        const n = b.querySelector('.ru-kachel-name');
+        if (!n) return true;
+        const bereich = document.createRange();
+        bereich.selectNodeContents(n);
+        const t = bereich.getBoundingClientRect(), q = b.getBoundingClientRect();
+        return t.right > q.right - 1 || t.left < q.left + 1;
+      }).map(b => (b.querySelector('.ru-kachel-name')?.textContent || '').replace(/\u00AD/g, '')),
       klein: alle.filter(b => { const r = b.getBoundingClientRect(); return r.width < 44 || r.height < 44; }).length,
       schalter: alle.filter(b => b.hasAttribute('aria-pressed')).map(b => b.dataset['kachel']),
       regler: alle.filter(b => b.getAttribute('role') === 'slider')
@@ -424,12 +612,64 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
   p('Die Kacheln stehen oben in „Mehr", vor der ersten Gruppe', k.da && k.vorListe);
   gleich('Sieben Griffe in dieser Folge', k.namen, NAMEN);
   gleich('Keiner unter 44 px (§37)', k.klein, 0);
+  /* KEIN NAME ABGESCHNITTEN (Durchsicht E712). Am Telefon (390 px) ist eine
+     Kachel 74 px breit, 50 px davon für die Schrift: dort stand
+     „Schriftgröss" und „Zeilenabstan" — der Rest lag hinter dem Rand. */
+  gleich('Kein Name ragt über seine Kachel hinaus (390 px)', k.abgeschnitten, []);
   gleich('Vier Schalter mit aria-pressed', k.schalter, ['dunkel', 'fokus', 'ruhig', 'kontrast']);
   gleich('Zwei Regler mit drei Stufen', k.regler,
     [['schrift', '0', '2', true], ['abstand', '0', '2', true]]);
   gleich('Jeder bisherige Weg in „Mehr" bleibt', k.wege,
     ['workspace', 'schublade', 'kompass', 'befehle', 'tasten', 'vorlagen', 'sichern', 'import', 'inbox', 'wolke',
      'papierkorb', 'einstellungen', 'ueber']);
+
+  /* WER ÜBER DEN REGLER WISCHT, ROLLT „MEHR" (Durchsicht E712). Die zwei
+     Regler trugen `touch-action:none` und zählten jede 28 px senkrecht als
+     Stufe: wer „Mehr" mit dem Daumen auf „Schriftgrösse" nach oben rollen
+     wollte, rollte nicht — und stellte die Schrift auf „Gross". Ein echter
+     Wisch über das Protokoll des Browsers (CDP), nicht über Ereignisse von
+     Hand: nur so entscheidet der Browser selbst, ob er rollt. */
+  {
+    const r = await s.evaluate(() => {
+      const b = document.querySelector<HTMLElement>('.ru-kacheln [data-kachel="schrift"]');
+      const q = b?.getBoundingClientRect();
+      return q ? { x: q.left + q.width / 2, y: q.top + q.height / 2 } : null;
+    });
+    const vor = await s.evaluate(() => ({ top: document.getElementById('scroll')!.scrollTop,
+      schrift: Einstellungen.V('schriftgroesse', 'normal') }));
+    if (r) {
+      const cdp = await ctx.newCDPSession(s);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: r.x, y: r.y }] });
+      for (let i = 1; i <= 12; i++) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: r.x, y: r.y - i * 15 }] });
+        await warte(s, 16);
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await cdp.detach();
+      await warte(s, 600);
+    }
+    const nach = await s.evaluate(() => ({ top: document.getElementById('scroll')!.scrollTop,
+      schrift: Einstellungen.V('schriftgroesse', 'normal') }));
+    p('Ein Wisch nach oben über „Schriftgrösse" rollt „Mehr"', !!r && nach.top > vor.top + 40,
+      JSON.stringify({ vor, nach }));
+    gleich('… und lässt die Schriftgrösse, wie sie war', nach.schrift, vor.schrift);
+    await s.evaluate(() => { const sc = document.getElementById('scroll')!; sc.scrollTop = 0; sc.dispatchEvent(new Event('scroll')); });
+    await s.evaluate(() => Einstellungen.S('schriftgroesse', 'normal'));
+    await warte(s, 400);
+    /* DER TIPP DANACH ZÄHLT (Durchsicht E712). Ein Zug ohne Klick am Ende
+       liess die Marke „gezogen" stehen, und sie schluckte den nächsten
+       Tipp: nach dem Wisch blieb ein Tipp auf „Schriftgrösse" ohne Wirkung. */
+    const t = await s.evaluate(() => {
+      const q = document.querySelector<HTMLElement>('.ru-kacheln [data-kachel="schrift"]')?.getBoundingClientRect();
+      return q ? { x: q.left + q.width / 2, y: q.top + q.height / 2 } : null;
+    });
+    if (t) await s.touchscreen.tap(t.x, t.y);
+    await warte(s, 300);
+    gleich('… und ein Tipp danach stellt eine Stufe weiter (Normal → Gross)',
+      await s.evaluate(() => Einstellungen.V('schriftgroesse', 'normal')), 'gross');
+    await s.evaluate(() => Einstellungen.S('schriftgroesse', 'normal'));
+    await warte(s, 300);
+  }
 
   const tu = async (was: string): Promise<void> => {
     await s.evaluate((w: string) => document.querySelector<HTMLElement>(`.home .ru-kacheln [data-kachel="${w}"]`)?.click(), was);
@@ -520,7 +760,7 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     const felder = [...ei.querySelectorAll<HTMLElement>('[data-set],[data-toggle]')]
       .map(f => f.dataset['set'] || f.dataset['toggle']);
     return { direkt: !!h2 && !!kacheln && h2.nextElementSibling === kacheln,
-             namen: [...(kacheln?.querySelectorAll('.ru-kachel-name') || [])].map(n => (n.textContent || '').trim()),
+             namen: [...(kacheln?.querySelectorAll('.ru-kachel-name') || [])].map(n => (n.textContent || '').replace(/\u00AD/g, '').trim()),
              felder };
   });
   p('Die Kacheln stehen direkt unter „Einstellungen"', e.direkt);
@@ -544,6 +784,98 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
   gleich('Kachel → Feld: derselbe Stand', sync.nachKachel, 'eng');
   gleich('Feld → Kachel: derselbe Stand', sync.kachel, '2');
   await s.evaluate(() => Einstellungen.S('dichte', 'normal'));
+  await ctx.close();
+}
+
+/* ==========================================================================
+ * §12 · Die Schrift der Kacheln ist lesbar — in jedem Schema (Durchsicht E712)
+ * ----------------------------------------------------------------------------
+ * Gemessen am gerenderten Bild, nicht an den Marken: die Schrift wird
+ * durchsichtig gemacht, der Grund aus den Pixeln unter ihr gelesen (Glas,
+ * Farbschicht, Füllung des Reglers — was eben darunter liegt), die
+ * Schriftfarbe mit der Deckkraft aller Ahnen darübergelegt; zählt der
+ * SCHLIMMSTE Pixel. Vorher stand der Stand („An", „Normal") mit Deckkraft
+ * .75 da: 3,6 : 1 auf der Akzentfarbe (Standard dunkel), 4,1 : 1 auf der
+ * Füllung (Hell). Zehn Schemata, je ohne Schalter, mit „Hoher Kontrast"
+ * (die gelbe Kachel) und mit „Ruhige Darstellung" (eine zweite gedrückte).
+ * ========================================================================*/
+{
+  console.log('\n§12 · Die Schrift der Kacheln, am Bild gemessen, in jedem Schema');
+  const { ctx, s } = await oeffnen(true);
+  const schemata: string[] = await s.evaluate(() => (Aussehen.SCHEMATA as Array<{ id: string }>).map(x => x.id));
+  p('Zehn Schemata zum Durchmessen', schemata.length === 10, String(schemata.length));
+  const messen = async (): Promise<Array<{ t: string; min: number }>> => {
+    const n = await s.evaluate(() => {
+      const els = [...document.querySelectorAll<HTMLElement>('.ru-kacheln .ru-kachel-name, .ru-kacheln .ru-kachel-stand')]
+        .filter(e => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2 && r.top >= 0 && r.bottom <= innerHeight; });
+      els.forEach((e, i) => {
+        e.dataset['m589'] = String(i);
+        e.dataset['m589farbe'] = getComputedStyle(e).color;
+        let o = 1;
+        for (let x: Element | null = e; x && x !== document.documentElement; x = x.parentElement) o *= parseFloat(getComputedStyle(x).opacity) || 1;
+        e.dataset['m589deck'] = String(o);
+        e.style.setProperty('color', 'transparent', 'important');
+      });
+      return els.length;
+    });
+    await warte(s, 60);
+    const bild = (await s.screenshot()).toString('base64');
+    const raus = await s.evaluate(async (b64: string) => {
+      const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const g = c.getContext('2d')!; g.drawImage(img, 0, 0);
+      const dpr = img.width / innerWidth;
+      const lin = (v: number) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+      const L = (r: number, gg: number, b: number) => 0.2126 * lin(r) + 0.7152 * lin(gg) + 0.0722 * lin(b);
+      const farbe = (t: string): number[] => {
+        let m = t.match(/color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.e-]+))?\)/);
+        if (m) return [+m[1]! * 255, +m[2]! * 255, +m[3]! * 255, m[4] ? +m[4] : 1];
+        m = t.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
+        return m ? [+m[1]!, +m[2]!, +m[3]!, m[4] ? +m[4] : 1] : [0, 0, 0, 1];
+      };
+      const liste: Array<{ t: string; min: number }> = [];
+      for (const e of document.querySelectorAll<HTMLElement>('[data-m589]')) {
+        const r = e.getBoundingClientRect();
+        const x = Math.round(r.left * dpr), y = Math.round(r.top * dpr);
+        const w = Math.max(1, Math.min(c.width - x, Math.round(r.width * dpr)));
+        const h = Math.max(1, Math.min(c.height - y, Math.round(r.height * dpr)));
+        const d = g.getImageData(x, y, w, h).data;
+        const [tr, tg, tb, ta] = farbe(e.dataset['m589farbe'] || '');
+        const a = (ta ?? 1) * parseFloat(e.dataset['m589deck'] || '1');
+        let min = 99;
+        for (let i = 0; i < d.length; i += 12) {
+          const br = d[i]!, bg = d[i + 1]!, bb = d[i + 2]!;
+          const l1 = L(a * tr! + (1 - a) * br, a * tg! + (1 - a) * bg, a * tb! + (1 - a) * bb), l2 = L(br, bg, bb);
+          min = Math.min(min, (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05));
+        }
+        liste.push({ t: (e.textContent || '').replace(/­/g, '').trim(), min: +min.toFixed(2) });
+        e.style.removeProperty('color');
+        delete e.dataset['m589']; delete e.dataset['m589farbe']; delete e.dataset['m589deck'];
+      }
+      return liste;
+    }, bild);
+    return n ? raus : [];
+  };
+  for (const zustand of ['ohne Schalter', '„Hoher Kontrast" an', '„Ruhige Darstellung" an'] as const) {
+    const schlecht: string[] = [];
+    let gemessen = 0;
+    for (const sch of schemata) {
+      await s.evaluate(({ sch, zustand }) => {
+        Aussehen.setzen({ schema: sch });
+        Einstellungen.S('kontrast', zustand.includes('Kontrast'));
+        Einstellungen.S('bewegung', zustand.includes('Ruhige') ? 'ruhig' : 'normal');
+        Ansichten.mehr();
+        const sc = document.getElementById('scroll'); if (sc) sc.scrollTop = 0;
+      }, { sch, zustand });
+      await warte(s, 450);
+      const m = await messen();
+      gemessen += m.length;
+      for (const x of m) if (x.min < 4.5) schlecht.push(`${sch}: „${x.t}" ${x.min}`);
+    }
+    p(`${zustand}: Name und Stand jeder Kachel ≥ 4,5 : 1 am schlimmsten Pixel (${gemessen} gemessen)`,
+      gemessen >= schemata.length * 14 && schlecht.length === 0, `${schlecht.length}: ` + schlecht.slice(0, 8).join(' · '));
+  }
+  await s.evaluate(() => { Einstellungen.S('kontrast', false); Einstellungen.S('bewegung', 'normal'); Aussehen.setzen({ schema: 'standard' }); });
   await ctx.close();
 }
 
