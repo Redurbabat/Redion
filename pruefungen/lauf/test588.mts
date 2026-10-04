@@ -43,8 +43,9 @@
  *      NICHT zusätzlich den Posteingang; der Stapel steht über der Leiste.
  *   §11 DURCHSICHT (Nachtrag, 4. Oktober): der Fächer geht auch wieder zu —
  *      ein Klick oder Tipp daneben, der Fokus geht hinaus (Tab, Strg P);
- *      nach „Alle gelesen" mit der Tastatur steht der Fokus wieder an der
- *      Glocke, und die Glocke sagt mit `aria-expanded`, ob er offen ist. Die
+ *      nach „Alle gelesen" mit der Tastatur bleibt der Fokus im Kopf, die
+ *      Glocke steht, bis die Karten in ihr sind, und sie sagt mit
+ *      `aria-expanded`, ob der Fächer offen ist. EIN Escape tut EINES. Die
  *      Schrift auf der Marke (Zeile, Kürzel, Ausschnitt, Stern, „↵ Enter")
  *      hält 4,5 : 1 in allen zehn Schemata, so gemessen, wie sie gemalt wird
  *      (Deckkraft und Tönung mitgerechnet). Am Telefon wischt ein Finger
@@ -572,8 +573,26 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
   await pc.keyboard.press('ArrowDown');
   await pc.waitForTimeout(500);
   await pc.focus('#ru-glocken-faecher [data-faecher="gelesen"]');
+  /* Die Glocke nimmt die Karten auf: sie steht, solange sie fliessen (sonst
+     flögen sie ins Leere — und, weil der Kopf nachrückt, in den Knopf
+     daneben), und geht erst danach, weil nichts mehr ungelesen ist. */
+  const ort0 = await rechteck(pc, '#studio-glocke');
+  const glockeWaehrend = pc.evaluate(`new Promise(fertig => {
+    const orte = []; const t0 = performance.now();
+    const schritt = () => {
+      const g = document.getElementById('studio-glocke'); const r = g.getBoundingClientRect();
+      if (document.querySelector('#ru-glocken-faecher.fliesst')) orte.push(Math.round(r.width) + '@' + Math.round(r.left));
+      if (performance.now() - t0 < 700) requestAnimationFrame(schritt); else fertig(orte);
+    };
+    requestAnimationFrame(schritt);
+  })`) as Promise<string[]>;
   await pc.keyboard.press('Enter');
-  await pc.waitForTimeout(1200);
+  const waehrend = await glockeWaehrend;
+  await pc.waitForTimeout(600);
+  const nachFluss = await pc.evaluate(`document.getElementById('studio-glocke').hidden`) as boolean;
+  p('„Alle gelesen": die Glocke steht, solange die Karten in sie fliessen, an ihrem Ort — und geht danach',
+    !!ort0 && waehrend.length >= 5 && waehrend.every(w => w === Math.round(ort0.b) + '@' + Math.round(ort0.l)) && nachFluss,
+    JSON.stringify({ ort0, waehrend: waehrend.slice(0, 6), bilder: waehrend.length, nachFluss }));
   const fokus = await pc.evaluate(`(() => { const a = document.activeElement; const g = document.getElementById('studio-glocke');
     return { zu: (() => { const f = document.getElementById('ru-glocken-faecher'); return !f || f.hidden; })(),
       wo: a ? (a.id || a.tagName) : null, imKopf: !!a && a !== document.body && !!g.parentElement && g.parentElement.contains(a),
