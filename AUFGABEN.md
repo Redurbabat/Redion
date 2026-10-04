@@ -1529,3 +1529,10 @@ zuerst):
 4. Wenn Redur es sagt: das bisherige Fenster (`frageAlt`, `wahlAlt`,
    `mehrzeiligAlt`) aus `dialog.ts` nehmen (§43 — bis dahin ist es der
    Rückweg, wenn die Inseln nicht laden).
+5. Am iPhone nachsehen (Nachtrag 3. und 4. Oktober): In den Bildern aus
+   Chromium trägt die erste Antwort den Fokusrahmen, wenn die Frage ohne
+   vorherigen Fokus kommt (das Kit setzt den Fokus dorthin). Nach einem
+   echten Tipp sollte er nicht zu sehen sein — prüfen, sonst im Kit (L222).
+   Und wo der Rahmen zu sehen ist, schneidet das runde Eck des Fensters ihn
+   ab (unten links an „Abbrechen", 1440×900): der Rahmen sollte der Rundung
+   folgen — ebenfalls im Kit (L222), nicht in `fremd/touch` von Hand.

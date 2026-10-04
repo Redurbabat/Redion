@@ -1,5 +1,28 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 3. und 4. Oktober 2026 · E710 Nachtrag · Der Endbau im Browser, die erste Frage aus der Einzeldatei
+
+**Redur:** am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden:** Der Endbau von E710 hatte keinen Browserlauf. Jetzt
+gelaufen (22 Nachbarn, zweimal): grün bis auf fremde Rote (auf der Basis
+`b3cf193` mit denselben Zeilen ebenso rot: 343, 348, 464, 470, 582) und
+`test458` §3c — er mass das Aktionsblatt am Telefon 450 ms nach den
+Knöpfen, mitten in der Feder (796 ms). `test587` §11 (neu) fand im
+bisherigen Fenster einen alten Fehler: mit Enter beantwortet, kam dieselbe
+Frage sofort wieder (der Tastendruck fiel auf den Knopf, dem Fokus den
+Fokus zurückgab).
+
+**Gebaut:** `frageAlt` und `mehrzeiligAlt` verhindern den Tastendruck nach
+der Antwort, wie das Fenster des Kits; sonst unverändert (§43). `test458`
+misst nach der Ankunft (`wahlDa`), nicht nach einer festen Pause.
+
+**Geprüft:** `test587` §11 (Einzeldatei allein, ohne Netz: die erste Frage
+nach 22 bis 71 ms im Kit; Fokus zurück zum Auslöser nach Escape, Enter und
+`Dialog.bestaetigen`; Gegenprobe ohne React-Behälter), die Gegenproben für
+§8 und §11 (ohne beide Rückgaben des Fokus rot), die Nachbarn und die
+Bilder im Commit „E710: Nachtrag".
+
 ## 28. September 2026 · E710 · Die Fragen der Schale im Fenster des Touch Kits
 
 **Redur:** um ca. 21:49 „was du beim touckit gebaut hast ich will alles so

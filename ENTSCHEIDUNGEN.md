@@ -58675,3 +58675,77 @@ ihn wie der Anfang eines Kommentars aus. Und das Kit liess seinen Dialog aus
 Deckkraft 0 kommen — genau das, was E703 für jedes Glas abgestellt hat
 („Glas kommt als Scheibe, nicht als Nebel"); `test582` hätte es gesehen,
 sobald er die Frage im Kit sucht, und `test587` §1 misst es jetzt selbst.
+
+**Nachtrag, 3. und 4. Oktober 2026 — der erste Browserlauf auf dem
+Endbau, und was er fand.** Redur, 3. Oktober, ca. 19:35 UTC: „Weiter ohne
+pause,". Der Endbau `9575ebc40` war am 28. September ohne Browserlauf
+eingecheckt worden (das Wochenlimit hielt alle Läufe an). Jetzt gelaufen,
+unter der Sperre, zweimal: am 3. Oktober (21:06–21:16 UTC) der Endbau mit
+dem neuen §11, am 4. Oktober (15:51–16:00 UTC) der Endbau mit den
+Korrekturen unten (Dienststand v1397) — die 17 Nachbarn aus dem Auftrag,
+dazu 143, 296, 353, 388 und 412. Grün: 129, 143, 181, 196, 198, 212, 296,
+353, 388, 412, 466, 468, 496, 538, 579 und 587 (73/73). Von den sieben,
+die der erste Bau rot machte (129, 181, 196, 458, 496, 579, 582 mit E703),
+ist keiner mehr rot durch diesen Zweig — 458 erst mit dem Punkt unten.
+Rot und auf der Basis `b3cf193` ebenso rot, mit denselben Zeilen (fremd,
+nicht dieser Zweig; gemessen am 3. Oktober, 21:19–21:24 UTC): 343 §6
+(Tupfer), 348 (Tupfer; „44 px" fiel auf der Basis ebenso), 464 §1
+(„Dreizehn Werkzeuge" 14 ≠ 13), 470 §2 (wartet auf `[data-w="sichern"]`)
+und 582 (Kontrast „sand"/„wald" über dem schlimmsten Grund und die
+Schemaliste — dieselben fünf Zeilen). Die Gegenprobe für §8 (Träger auf
+`z-index:1`) ist jetzt rot, wie sie sein muss.
+
+**458 — eine Pause, kürzer als die Feder.** Am Telefon kommt die
+Farbwahl (zwölf Antworten) als Aktionsblatt von unten, auf der weichen
+Feder des Kits (`--ui-spring-smooth-duration`, 796 ms). `test458` wartete
+seit dem 28. September nach dem Erscheinen der Knöpfe fest 450 ms und mass
+dann, ob das Fenster im Bild steht: das Blatt war noch unterwegs, sein Rand
+unter der Kante — §3c „Telefon: das Fenster bleibt im Bild" rot
+(`fensterImBild: false`, der letzte Knopf trotzdem erreichbar). Am
+3. Oktober brach derselbe Abschnitt schon vorher ab („Execution context
+was destroyed" beim Einrichten der Telefon-Seite, vor jeder Frage); auf der
+Basis war 458 grün. In Ruhe passt das Blatt (`max-height` ist der sichtbare
+Ausschnitt, der Rest rollt). **Entschieden:** der Lauf misst, wenn das
+Fenster angekommen ist (`wahlDa`: die Knöpfe sind da, und im Träger läuft
+keine Bewegung mehr) — dieselbe Messung, am Ziel statt unterwegs; keine
+Zusage gelockert. Alternative: die Feder des Blatts kürzen — das hiesse,
+das Kit für einen Prüflauf zu ändern (L222: das Kit wird nie von Hand
+geändert). Kosten: keine im Programm; der Lauf wartet höchstens so lange
+wie die Feder.
+
+**Was die Durchsicht dazu verlangte** (Auftrag: die erste Frage muss sich
+sofort anfühlen und per Doppelklick und aus der Einzeldatei ohne Netz
+gehen; laden die Inseln nicht, antwortet das bisherige Fenster; Escape
+schliesst, der Fokus kehrt zum Auslöser zurück, eine Ebene nach der
+anderen). Das prüfte `test587` noch nicht ganz, darum **§11**: die
+Einzeldatei allein in einem leeren Ordner, ohne Netz, die Frage über einen
+Knopf mit der Tastatur gestellt — sie kommt im Fenster des Kits nach 22 bis
+71 ms (fünf Läufe, Grenze 250 ms), ohne eine Datei daneben zu holen, und nach Escape,
+nach einer Antwort mit Enter und nach `Dialog.bestaetigen` steht der Fokus
+wieder auf dem Knopf. Gegenprobe im Lauf: dieselbe Datei ohne ihren
+React-Behälter — dann kommt die Frage im bisherigen Fenster (nach 25 bis
+43 ms) und antwortet ebenso.
+
+**Gefunden auf dem Weg.** Genau diese Gegenprobe war rot (am Endbau
+`9575ebc40`, 3. Oktober): im bisherigen Fenster ging die Antwort verloren,
+und dieselbe Frage stand sofort wieder da. Das Enter schloss das Fenster
+schon beim Niederdrücken (`keydown`), Fokus gab dem Knopf, der gefragt
+hatte, seinen Fokus zurück — und der Tastendruck (`keypress`) desselben
+Enters fiel dann auf diesen Knopf und stellte die Frage noch einmal. Das
+ist der Code von `b3cf193` Zeile für Zeile (`frageAlt` war dort `frage`):
+jede Frage hinter einem Knopf, der den Fokus behält, und mit Enter
+beantwortet, kam so zurück. Das Fenster des Kits tut es nicht — es
+verhindert den Tastendruck (`preventDefault`). **Entschieden:** `frageAlt`
+und `mehrzeiligAlt` tun dasselbe, je eine Zeile; sonst bleiben sie, wie
+sie waren (§43, der Rückweg). Alternative: Fokus den Fokus später
+zurückgeben lassen (nach dem Tastendruck) — das hätte jedes alte Fenster
+verändert, nicht nur die zwei, an denen es auffiel. Kosten: wenige Bytes
+in `dialog.js`.
+
+**Und:** die Rückgabe des Fokus steht zweimal da — in `dialog.ts` (der
+Auslöser wird gemerkt, bevor Fokus die Seite stilllegt) und in `useModal`
+des Kits. Die Gegenprobe ohne die eine blieb grün (3. Oktober); ohne beide
+werden die Fokus-Punkte von §11 rot (4. Oktober: 69 bestanden, 4
+durchgefallen — der Fokus bleibt auf `BODY`). Beide bleiben: die eigene
+schützt den Fall, in dem der Auslöser schon still ist, wenn das Kit
+nachsieht.

@@ -5449,3 +5449,43 @@ Schrift läge „Standard" darunter (L222: 3,16 : 1).
 **Das Kit neu geholt:** d21c402, 103 Dateien, 583'770 Bytes (vorher
 c192821: 96 Dateien, 518'395 Bytes). `tsc -p tsconfig.islands.json` mit
 Redions strengen Schaltern: 0 Fehler (bei c192821: 73).
+
+**Nachtrag, 3. und 4. Oktober 2026 — der Endbau im Browser** (unter der
+Sperre, Chromium aus Playwright, file:// und `listen(0)`; vier Rechenkerne,
+geteilt mit drei anderen Zweigen):
+
+```txt
+Lauf 1, 3. Okt. 21:06–21:16 UTC, Endbau 9575ebc40 + §11 (Dienststand v1396), 19 Läufe
+  587    70/71 — rot nur §11 „… und antwortet ebenso" (bisheriges Fenster, Enter)
+  458    Abbruch in §3c („Execution context was destroyed", Telefon, vor jeder Frage)
+Basis b3cf193, 3. Okt. 21:19–21:24 UTC: 343 348 464 470 582 rot, 458 54/54 grün
+Lauf 2, 4. Okt. 15:51–16:00 UTC, Endbau + Korrektur (Dienststand v1397), 22 Läufe
+  grün   129 (26 ok) · 143 (23 ok) · 181 (47/47) · 196 (40 ok) · 198 (17 ok)
+         212 (32/32) · 296 (17/17) · 353 (105/105) · 388 (21/21) · 412 (27/27)
+         466 (32/32) · 468 (29/29) · 496 (148) · 538 (53/53) · 579 (76/76)
+         587 (73/73)
+  rot, auf b3cf193 mit denselben Zeilen ebenso (fremd):
+         343 (Tupfer, Abbruch §6) · 348 (31/34) · 464 (62/63, 14 ≠ 13)
+         470 (Abbruch §2, [data-w="sichern"]) · 582 (171 ok, 5 rot: sand, wald, Liste)
+  rot durch diesen Zweig: 458 (53/54) — §3c „Telefon: das Fenster bleibt im
+         Bild", gemessen 450 ms nach den Knöpfen, das Blatt noch auf der Feder
+Gegenprobe §8      Träger auf z-index:1             → §8 rot (3. Okt. 69/71, 4. Okt. 72/73), zurück, cmp gleich
+Gegenprobe §11     ohne Rückgabe in dialog.ts       → Fokus-Punkte grün (useModal), cmp gleich
+Gegenprobe §11     ohne beide Rückgaben (+ useModal) → 69/73, die vier Fokus-Punkte rot, cmp gleich
+test458 §3c        feste Pause 450 ms (Lauf 2)      → rot 53/54; mit wahlDa (Ankunft) 54/54,
+                   auf b3cf193 54/54 (4. Okt., unter der Sperre, je einzeln)
+```
+
+**`test388` §5:** „Der Start holt 2830 KB (gzip) über 248 Dateien — Decke
+2850 KB" (Lauf 1 und Lauf 2, wie am 28. September).
+
+**Die erste Frage** (`test587` §11, Einzeldatei allein, ohne Netz, die
+Inseln im Leerlauf vorgewärmt, Klick per Enter auf einen Knopf bis zum
+ersten Knoten des Fensters): 22 bis 71 ms im Fenster des Kits (fünf Läufe
+am 3. und 4. Oktober, unter geteilter Last; Grenze 250 ms); ohne den
+React-Behälter 25 bis 43 ms bis zum bisherigen Fenster.
+
+**Das Aktionsblatt am Telefon** (Farbwahl, zwölf Antworten, 390×844):
+weiche Feder des Kits, 796 ms (`--ui-spring-smooth-duration`); der
+Dialog in der Mitte auf der schnellen, 542 ms. Eine feste Pause von 450 ms
+misst das Blatt unterwegs.

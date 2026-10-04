@@ -1479,7 +1479,11 @@ bleibt. Am Telefon misst er die Lage (Mitte, Aktionsblatt unten), in allen
 zehn Schemata den Kontrast der Knöpfe (Akzent als Schrift, L222 Punkt 6),
 dazu „Starker Kontrast ohne Glas", die Scheibe ohne Nebel (E703), die
 gefährliche Ja/Nein-Frage mit „Abbrechen" im Fokus, den Rückweg ohne
-Inseln, den Zeitmesser auf Escape und die Rundung im Tastaturfokus. Gezählt am 28. September, im
+Inseln, den Zeitmesser auf Escape und die Rundung im Tastaturfokus. Seit
+dem Nachtrag vom 4. Oktober (§11) auch die Einzeldatei allein, ohne Netz:
+die erste Frage kommt sofort im Kit, der Fokus kehrt nach Escape oder
+Antwort zum Knopf zurück, der gefragt hat, und ohne React antwortet das
+bisherige Fenster. Gezählt am 28. September, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf
 seinem Zweig; die zweite Welle zählt beim Zusammenführen neu.*
 

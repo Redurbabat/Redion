@@ -84,8 +84,15 @@ const Dialog = (() => {
                 fertig(null);
         });
         inp.addEventListener('keydown', e => {
-            if (e.key === 'Enter')
+            /* `preventDefault` (E710, Durchsicht 3. Oktober): sonst fällt dasselbe
+               Enter als Tastendruck (`keypress`) auf den Knopf, dem Fokus nach dem
+               Schliessen seinen Fokus zurückgibt — und der stellt die Frage sofort
+               noch einmal (gemessen in `test587` §11: Antwort verloren, Fenster
+               wieder offen). Das Fenster des Kits tut das schon. */
+            if (e.key === 'Enter') {
+                e.preventDefault();
                 fertig(inp.value);
+            }
             if (e.key === 'Escape')
                 fertig(null);
         });
@@ -186,8 +193,11 @@ const Dialog = (() => {
                 fertig(null);
         });
         feld.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey))
+            /* `preventDefault` wie oben bei `frageAlt` (E710, Durchsicht). */
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
                 fertig(feld.value);
+            }
             if (e.key === 'Escape')
                 fertig(null);
         });

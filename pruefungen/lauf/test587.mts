@@ -30,12 +30,19 @@
  *   §10 Die Fenster des Browsers (confirm, prompt, alert) werden weniger,
  *       nie mehr: ein Bestand, der nur schrumpfen darf — der Weg dafür ist
  *       `Dialog.bestaetigen` / `Dialog.melden` / `Dialog.frage` (ohne Browser).
+ *   §11 Die Einzeldatei allein, ohne Netz: die erste Frage kommt sofort im
+ *       Fenster des Kits, und nach Escape oder Antwort steht der Fokus
+ *       wieder auf dem Knopf, der gefragt hat (Durchsicht, 3. Oktober).
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Sie WAR es: rot eingecheckt (commit „test587 (rot)") gegen den Stand
  * b3cf193, auf dem es keine Dialog-Insel gab. Dazu im Lauf: eine Gegenprobe
  * je Messart (ein Punkt mitten im Dialog, der NICHT im Dialog liegen dürfte;
  * ein Kontrast, der zu schwach ist; ein Fenster, das inert ist).
+ * §11 (Nachtrag) war rot gegen den Endbau 9575ebc40: im bisherigen Fenster
+ * ging die mit Enter gegebene Antwort verloren (3. Oktober). Ohne beide
+ * Rückgaben des Fokus (dialog.ts und `useModal` des Kits) werden seine
+ * Fokus-Punkte rot (4. Oktober, 69/73).
  *
  * Eigener Port: keiner — `listen(0)`, wie test400 empfiehlt.
  *
@@ -47,6 +54,7 @@ import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -545,6 +553,135 @@ await s6.fill('.overlay #fq', 'geht');
 await s6.keyboard.press('Enter');
 gleich('… und gibt dieselbe Antwort', await antwort(s6), 'geht');
 await k6.close();
+
+/* ==========================================================================
+ * §11 · Die Einzeldatei allein, ohne Netz: die erste Frage sofort im Kit,
+ *       und der Fokus kehrt zum Auslöser zurück (Durchsicht, 3. Oktober)
+ * --------------------------------------------------------------------------
+ * Die Inseln kommen erst nach dem Start (E699). Redion läuft aber auch als
+ * EINE Datei per Doppelklick, ohne Netz — dort darf die erste Frage weder
+ * warten noch ausbleiben. Und wer mit der Tastatur fragt, steht nach Escape
+ * oder Antwort wieder auf dem Knopf, von dem die Frage kam (§38; das Kit
+ * liest seinen Rückweg erst nach dem Öffnen, wenn Fokus die Seite schon
+ * stillgelegt hat — darum merkt sich dialog.ts den Auslöser selbst).
+ * Gegenprobe im Lauf: dieselbe Datei ohne ihren React-Behälter — dann MUSS
+ * dieselbe Frage im bisherigen Fenster kommen, sonst misst der Punkt nichts.
+ * ======================================================================== */
+console.log('\n§11 · Die Einzeldatei allein, ohne Netz: die erste Frage sofort im Kit, der Fokus zurück');
+
+const ALLEIN = fs.mkdtempSync(path.join(os.tmpdir(), 'redion-t587-'));
+const EINZEL = fs.readFileSync(path.join(WURZEL, 'redion-einzeldatei.html'), 'utf8');
+const REACT_BEHAELTER = '<script type="text/plain" id="inseln-react">';
+fs.writeFileSync(path.join(ALLEIN, 'redion-einzeldatei.html'), EINZEL);
+fs.writeFileSync(path.join(ALLEIN, 'ohne-react.html'),
+  EINZEL.replace(REACT_BEHAELTER, '<script type="text/plain" id="inseln-react-fehlt">'));
+p('Die Einzeldatei trägt ihren React-Behälter genau einmal (für die Gegenprobe)',
+  EINZEL.split(REACT_BEHAELTER).length === 2);
+
+/** Ein Knopf, der fragt; er misst die Zeit von seinem Klick bis zum Fenster der Frage. */
+const ausloeser = async (seite: Page, ausdruck: string): Promise<void> => {
+  await seite.evaluate((a) => {
+    document.getElementById('t587-ausloeser')?.remove();
+    const k = document.createElement('button');
+    k.id = 't587-ausloeser';
+    k.textContent = 'Fragen';
+    k.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:5';
+    k.addEventListener('click', () => {
+      const w = window as any;
+      w.__a587 = undefined;
+      w.__t587 = { klick: performance.now(), da: 0 };
+      const beob = new MutationObserver(() => {
+        if (!document.querySelector('.overlay :is(.ui-touch-dialog, .finder)')) return;
+        w.__t587.da = performance.now();
+        beob.disconnect();
+      });
+      beob.observe(document.body, { childList: true, subtree: true });
+      ((0, eval)(a) as Promise<unknown>).then(x => { w.__a587 = x; });
+    });
+    document.body.appendChild(k);
+  }, ausdruck);
+  await seite.focus('#t587-ausloeser');
+  await seite.keyboard.press('Enter');
+};
+const zeitBisFenster = (seite: Page): Promise<number> => seite.evaluate(() => {
+  const t = (window as any).__t587;
+  return t?.da ? Math.round(t.da - t.klick) : -1;
+});
+const fokusAuf = (seite: Page): Promise<string | null> =>
+  seite.evaluate(() => document.activeElement?.id || document.activeElement?.tagName || null);
+
+const k11 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+await k11.setOffline(true);
+const s11 = await k11.newPage();
+const f11 = fehlerVon(s11);
+const geholt11: string[] = [];
+s11.on('request', r => geholt11.push(r.url()));
+await s11.goto(pathToFileURL(path.join(ALLEIN, 'redion-einzeldatei.html')).href, { waitUntil: 'load' });
+await bereitMachen(s11);
+p('Ohne Netz, per Doppelklick: die Einzeldatei wärmt die Inseln im Leerlauf vor',
+  await s11.waitForFunction('typeof window.RedionIslands !== "undefined"', null, { timeout: 10000 })
+    .then(() => true, () => false));
+
+await ausloeser(s11, `UI.frage('Blatt umbenennen', 'Skizze')`);
+p('Die erste Frage kommt im Fenster des Kits', await kitOffen(s11));
+const zeit11 = await zeitBisFenster(s11);
+console.log(`    gemessen: ${zeit11} ms vom Klick bis zum Fenster`);
+p('… sofort: höchstens 250 ms vom Klick bis zum Fenster', zeit11 >= 0 && zeit11 <= 250, zeit11 + ' ms');
+await s11.keyboard.press('Escape');
+gleich('Escape bricht ab (null) …', await antwort(s11), null);
+await s11.waitForTimeout(450);
+gleich('… und der Fokus steht wieder auf dem Knopf, der gefragt hat', await fokusAuf(s11), 't587-ausloeser');
+
+await s11.keyboard.press('Enter');
+await kitOffen(s11);
+await s11.keyboard.type('Stromkreis');
+await s11.keyboard.press('Enter');
+gleich('Eine Antwort mit Enter …', await antwort(s11), 'Stromkreis');
+await s11.waitForTimeout(450);
+gleich('… gibt den Fokus ebenso zurück', await fokusAuf(s11), 't587-ausloeser');
+
+await ausloeser(s11, `Dialog.bestaetigen({ titel: 'Alle verbuchten KI-Kosten löschen?', ja: 'Löschen', gefahr: true })`);
+await kitOffen(s11);
+await s11.keyboard.press('Escape');
+const nein11 = await antwort(s11);
+await s11.waitForTimeout(450);
+gleich('Dialog.bestaetigen: Escape heisst nein, der Fokus zurück auf dem Knopf', [nein11, await fokusAuf(s11)],
+  [false, 't587-ausloeser']);
+gleich('Kein Zugriff auf eine Datei daneben (nur die Seite und Blob-Adressen)',
+  geholt11.filter(u => !u.startsWith('blob:') && !u.startsWith('data:') && !/redion-einzeldatei\.html$/.test(u))
+    .map(u => u.split('/').slice(-3).join('/')), []);
+alleFehler.push(...f11);
+await k11.close();
+
+/* Gegenprobe: ohne den React-Behälter findet die Datei keine Inseln (sie
+   sucht dann `quell/fremd/react/react.js` neben sich — dort ist nichts). */
+const k11g = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+await k11g.setOffline(true);
+const s11g = await k11g.newPage();
+const f11g = fehlerVon(s11g);
+await s11g.goto(pathToFileURL(path.join(ALLEIN, 'ohne-react.html')).href, { waitUntil: 'load' });
+await bereitMachen(s11g);
+await ausloeser(s11g, `UI.frage('Ohne React', 'bleibt')`);
+const alt11 = await s11g.waitForSelector('.overlay .finder #fq', { timeout: 5000 }).then(() => true, () => false);
+console.log(`    Gegenprobe: ${await zeitBisFenster(s11g)} ms bis zum bisherigen Fenster`);
+p('Gegenprobe: ohne den React-Behälter kommt dieselbe Frage im bisherigen Fenster, nicht im Kit',
+  alt11 && !(await s11g.$('.ui-touch-dialog')));
+await s11g.fill('.overlay #fq', 'trotzdem');
+await s11g.keyboard.press('Enter');
+gleich('… und antwortet ebenso', await antwort(s11g), 'trotzdem');
+/* Gefunden mit diesem Punkt (3. Oktober): das Enter fiel nach dem Schliessen
+   als Tastendruck auf den Knopf, dem Fokus den Fokus zurückgab — die Antwort
+   ging verloren, und dieselbe Frage stand sofort wieder da. */
+gleich('… und dieselbe Frage geht danach nicht gleich wieder auf', await zu(s11g), 0);
+await ausloeser(s11g, `Dialog.mehrzeilig('Haftnotiz', '')`);
+await s11g.waitForSelector('.overlay .finder textarea#fq', { timeout: 5000 }).catch(() => {});
+await s11g.keyboard.type('Ohmsches Gesetz');
+await s11g.keyboard.press('Control+Enter');
+gleich('Die mehrzeilige Frage im bisherigen Fenster: Strg+Enter übernimmt, und sie geht nicht wieder auf',
+  [await antwort(s11g), await zu(s11g)], ['Ohmsches Gesetz', 0]);
+if (f11g.length) console.log('    (Meldungen der Gegenprobe, erwartet: ' + f11g.slice(0, 2).join(' | ') + ')');
+await k11g.close();
+fs.rmSync(ALLEIN, { recursive: true, force: true });
 
 console.log('');
 gleich('Keine unerwarteten Fehler auf den Seiten', alleFehler.slice(0, 5), []);
