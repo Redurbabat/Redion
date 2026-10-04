@@ -5465,3 +5465,47 @@ gegen `quell/` des Zweigs gelegt, ohne die ERZEUGT-Zeile: 227 Dateien,
 226 Byte für Byte gleich, die eine andere ist `stand.js` (nur der
 Stempel). Was der Browser ausführt, ist also genau das Alte ohne
 Kommentare — kein Skript kommt später, keine Funktion fehlt.
+
+**Nachtrag (4. Oktober 2026, Durchsicht nach dem Abbruch vom 3. Oktober).**
+Die erste Sitzung brach nach den beiden Commits ab; die Bilder, die der
+Commit nennt, lagen nicht im Ordner. Nachgeholt und alles noch einmal
+selbst gezählt, unter dem Schloss:
+
+- *Zahlen, unabhängig nachgerechnet* (jede Datei, die `index.html` beim
+  Start holt, samt `@import`, gzip 6): 4d9a9a3fb 2826 KB über 248
+  Dateien (JS 2396, CSS 417), roh 9688 KB; der Zweig 1805 KB (JS 1376,
+  CSS 417), roh 7063 KB. `test388` §5 nennt dieselbe Zahl: 1805 KB,
+  Decke 1950, 22/22. Einzeldatei 11'784'203 → 9'095'626 Bytes.
+- *Derselbe Code, noch einmal*: die Quellen von 4d9a9a3fb (`git archive`)
+  mit `tsc -p tsconfig.bauen.json --removeComments` gebaut — 226 von 227
+  Dateien Byte für Byte gleich `quell/` des Zweigs ohne die
+  ERZEUGT-Zeile (sie steht als zweite Zeile, nach `"use strict";`, die
+  Anweisung bleibt die erste); `stand.js` weicht nur im Stempel ab.
+  `src/` ändert sich nur um die 227 ERZEUGT-Zeilen und den Stempel.
+- *Bilder vorher/nachher*, per Doppelklick (`file://`) und als
+  Einzeldatei, Rechner 1440×900 und Telefon 390×844, hell und dunkel
+  (16 Bilder, `welle2-bilder/startlast/vorher-…`/`nachher-…`, nicht
+  eingecheckt, §55.4): alle acht Paare **Pixel für Pixel gleich** (0 von
+  1'296'000 bzw. 1'316'640 Bildpunkten anders), kein Konsolenfehler,
+  kein Seitenfehler. Fertig (Baum gefüllt) nach 779–1100 ms vorher und
+  794–861 ms nachher (`index.html`), 684–822 und 628–666 ms
+  (Einzeldatei).
+- *Früh bedienen* (zweiter Start, nach „Loslegen"; ab dem ersten Byte
+  alle 20 ms ein Klick auf „Suchen", bis das Suchfeld steht; Median aus
+  drei): `index.html` Rechner 1323 → 803 ms, Telefon 718 → 688 ms;
+  Einzeldatei Rechner 498 → 425 ms, Telefon 581 → 467 ms. Nie
+  später, kein Fehler. Strg P im selben 20-ms-Takt: vorher wie nachher
+  nie ein stehendes Suchfeld gesehen (der Grund ist nicht gesucht, er ist
+  auf beiden Ständen derselbe); darum noch einmal im Raster von 400 ms —
+  drücken, 150 ms warten, nachsehen: `index.html`
+  Rechner 1063 → 1149 ms, Telefon 1125 → 1168 ms; Einzeldatei Rechner
+  1057 → 681 ms, Telefon 729 → 690 ms — die Unterschiede liegen innerhalb
+  eines Rasterschritts; der genauere Klick (20 ms) zeigt nachher überall
+  früher. Beim ERSTEN Start fängt meist der Dialog „Willkommen bei
+  Redion" (Fokus auf „Loslegen") einen Druck gleich bei DOMContentLoaded
+  ab — vorher wie nachher: in je einem von acht Versuchen (Strg P oder
+  Klick, beide Seiten, beide Geräte) ging die Suche vor ihm auf.
+- *Gegenproben, je rot gesehen und zurückgenommen*: die ERZEUGT-Zeile aus
+  `src/bereiche/pdf/marken.ts` und `marken.js` → `test105` 333 ok,
+  2 offen; `removeComments: false` in `tsconfig.bauen.json` (ohne
+  Neubau) → `test388` 21/22, „reist ohne Kommentare" rot.

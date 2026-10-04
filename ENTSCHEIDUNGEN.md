@@ -58504,8 +58504,8 @@ alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 ## E715 — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie
 
 **Datum:** 3. Oktober 2026 · **Entschieden von** Redur (Auftrag vom
-27. September, „ohne eine funktione löschen"; 3. Oktober „Weiter ohne
-pause") · **ergänzt** E389, E613 und E688 (die Startdecke) und E28/§54.2
+27. September, „ohne eine funktione löschen"; 3. Oktober ca. 19:35 UTC
+„Weiter ohne pause,") · **ergänzt** E389, E613 und E688 (die Startdecke) und E28/§54.2
 (erzeugtes JavaScript) · **Wächter:** `test388` §5, `test105` §3
 (erweitert), `test272` (liest die Quelle) · **Zweig**
 `claude/startlast-leichter` · **Messung:** `messungen.md` §86.
@@ -58524,7 +58524,7 @@ pause") · **ergänzt** E389, E613 und E688 (die Startdecke) und E28/§54.2
                        ordnungen bessere übergagnge besssere efeckten ,
                        bessere oberfläsche alles kannst du nur an reddion
                        arbeiten"
-03.10.                 „Weiter ohne pause"
+03.10. ca. 19:35 UTC   „Weiter ohne pause,"
 ```
 
 **Was war.** `test388` §5 deckt, was der Start über die Leitung holt, bei

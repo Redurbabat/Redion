@@ -293,7 +293,8 @@ p('`bauen.mts` bricht wirklich ab, wenn sie fehlt',
  * heraus — bis auf die eine Zeile „ERZEUGT … NICHT VON HAND ÄNDERN" je
  * Datei (`/*!`, test105 §3), die 18 KB kostet und es wert ist.
  * Gemessen an diesem Lauf: **2826 → 1805 KB**, derselbe Code, Zeichen für
- * Zeichen; die Einzeldatei von 11,2 auf 8,7 MB.
+ * Zeichen; die Einzeldatei von 11,78 auf 9,10 MB (11'784'203 → 9'095'626
+ * Bytes, messungen §86).
  *
  * ── UND DESHALB STEHT DIE DECKE JETZT AUF 1950 ───────────────────────────
  *

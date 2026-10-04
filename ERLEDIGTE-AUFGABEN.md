@@ -3,7 +3,7 @@
 ## 3. Oktober 2026 · E715 · Der Start holt ein Drittel weniger
 
 **Redur:** am 27. September „… ohne eine funktione löschen …", am
-3. Oktober „Weiter ohne pause".
+3. Oktober ca. 19:35 UTC „Weiter ohne pause,".
 
 **Gefunden:** Die zweite Welle (E708 bis E714) passte zusammen nicht unter
 die Startdecke von 2850 KB (`test388` §5; morgen-besser stand bei 2826).
