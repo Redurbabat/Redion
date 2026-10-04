@@ -58630,3 +58630,30 @@ fester Keilhöhe statt `strokeWidth(mark)` rot („dick 5.99 : dünn 5.99 =
 1.00"), die Farbzeile dabei richtig grün; `test582` mit `ru-lader-herein`
 1,2 s statt 0,3 s in allen vier Szenen rot (`"laengste":1200`) — die alte
 Zeile wäre dort grün geblieben.
+
+**Durchsicht** (4. Oktober; Redur am 4. Oktober: *„Weiter"*). Jede geänderte
+Zusage der vier Wächter alt gegen neu gelesen (§31, §47: nur erweitern):
+`test492` — die alte Zeile Wort für Wort, eine neue dazu; `test464` — statt
+der Zahl die Zahl UND die vierzehn Namen in Reihenfolge, weiter EINE Höhe
+(strenger); `test247` — Farbe `#2f7ed8` und Verhältnis 3,5 bis 5 unverändert,
+gelesen wird nur dort, wo die Tinte seit E704 steht, und neu müssen beide
+Striche der Keil sein (strenger). **Eine Lücke** in `test582` §6: die alte
+Zeile „Toast und Lader sind da" steht Wort für Wort, wird aber seit E714
+erst NACH dem Warten gefragt. Ein Toast, dem der Code `.show` erst nach
+700 ms setzte, während der Lader über dem Zeichenblatt noch hereinkommt,
+wäre dort grün geworden, wo sie vorher rot war. **Jetzt** hält die neue Zeile
+VOR dem Warten fest, ob der Toast `.show` trägt (`zeigt`) — das setzt
+`UI.toast` sofort, ohne auf ein Bild zu warten, also hängt es nicht an
+SwiftShader. Und **`test579` §9** mass in der Einzeldatei nur den Akzent
+(die Commit-Nachricht von E714 sagte „Akzent, 44 px"); gerade dieser Weg ist
+in E714 neu. **Jetzt** verlangt §9 dort auch 44 px (ohne Blatt 24 px, §11)
+und nach einem zweiten `bereit()` genau EIN angenommenes Blatt der Inseln und
+kein `<link>`. Nachgeprüft ohne Änderung: alle echten `<style>` der
+Einzeldatei stehen im `<head>` (die sechs Fundstellen „<style" danach sind
+Kommentare und Zeichenketten der Ausfuhr, kein Code legt zur Laufzeit eines
+an) — das angenommene Blatt steht also, wo das `<link>` stand; `islands.css`
+hat kein `@import` und kein `url()`, `replaceSync` liest dieselben Regeln.
+**Gegenproben**, je rot gesehen und zurückgenommen: `test582` mit `.show`
+900 ms zu spät in allen vier Szenen rot (`"zeigt":false`); `test579` mit
+einer Einzeldatei, die das Blatt nicht annimmt, rot („24", `{"angenommen":0}`,
+der Akzent `rgba(0, 0, 0, 0)`).

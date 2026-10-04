@@ -18,6 +18,13 @@ zählte die Leiste vor „Text ändern" (E671).
 und mit Gegenprobe rot gesehen; die Nachbarn in der Commit-Nachricht. Keine
 Funktion weg.
 
+**Durchsicht (4. Oktober):** jede geänderte Zusage alt gegen neu gelesen.
+Eine Lücke gefunden und geschlossen: `test582` fragte „Toast und Lader sind
+da" seit E714 erst nach dem Warten — jetzt steht `.show` des Toasts schon
+bei 700 ms fest. `test579` §9 misst in der Einzeldatei jetzt auch, dass das
+angenommene Blatt wirkt (44 px, genau eines, kein `<link>`). Beide
+Erweiterungen mit Gegenprobe rot gesehen.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

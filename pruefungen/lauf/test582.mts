@@ -613,8 +613,18 @@ const stapel = async (pg: Page, szene: string) => {
      selbst, nicht auf der des Prüfrechners: jede, die nach 700 ms noch
      läuft, endet samt Verzögerung bei höchstens 700 ms. Läuft keine mehr,
      wird nicht gewartet, und die Frage unten gilt wie vorher. Was gar nicht
-     erst erscheint (kein `.show`, kein Lader), bleibt dort rot. */
+     erst erscheint (kein `.show`, kein Lader), bleibt dort rot.
+     UND DER ZUSTAND STEHT BEI 700 MS (E714, Durchsicht). Die Frage unten
+     kommt jetzt erst nach dem Warten — ein Toast, dem `.show` erst NACH
+     700 ms gesetzt würde (eine Verzögerung im Code, während der Lader über
+     dem Zeichenblatt noch hereinkommt), wäre dort grün geworden, wo die alte
+     Zeile rot war. Deshalb wird hier, VOR dem Warten, festgehalten, ob der
+     Toast `.show` trägt und der Lader im Dokument hängt. Beides setzt der
+     Code sofort (`UI.toast`, `Lader.schweben`), ohne auf ein Bild zu warten
+     — also hängt es nicht an SwiftShader, und es bleibt die Zusage von
+     vorher: in 700 ms da. */
   const herein = await pg.evaluate(async () => {
+    const zeigt = !!document.getElementById('toast')?.classList.contains('show');
     const wer = [document.getElementById('toast'), document.querySelector('.ru-lader-schwebt')]
       .filter((e): e is HTMLElement => !!e);
     const endlich = wer.flatMap(e => e.getAnimations({ subtree: true }))
@@ -623,12 +633,12 @@ const stapel = async (pg: Page, szene: string) => {
     const t0 = performance.now();
     await Promise.race([Promise.all(endlich.map(a => a.finished.catch(() => null))),
       new Promise(f => setTimeout(f, 8000))]);
-    return { elemente: wer.length, animationen: endlich.length, laengste,
+    return { zeigt, elemente: wer.length, animationen: endlich.length, laengste,
              offen: endlich.filter(a => a.playState !== 'finished').length,
              gewartet: Math.round(performance.now() - t0) };
   });
   p(`${szene}: Toast und Lader kommen auf ihrer eigenen Uhr in höchstens 700 ms herein`,
-    herein.elemente === 2 && herein.laengste <= 700 && herein.offen === 0,
+    herein.zeigt && herein.elemente === 2 && herein.laengste <= 700 && herein.offen === 0,
     JSON.stringify(herein));
   const k = await pg.evaluate(() => {
     const box = (w: string) => [...document.querySelectorAll<HTMLElement>(w)]

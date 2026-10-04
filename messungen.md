@@ -5449,3 +5449,14 @@ test464  button('textfix') aus der Leiste           ist [13,1,[…ohne textfix�
 test247  Keilhöhe fest 6 statt strokeWidth(mark)    dick 5.99 : dünn 5.99 = 1.00 (erwartet 4.17)
 test582  ru-lader-herein 1,2 s statt 0,3 s          {"elemente":2,"laengste":1200,"offen":0}, alle vier Szenen
 ```
+
+**Durchsicht, Gegenproben (4. Oktober, 16:03–16:06 UTC, auf dem Zweig, unter
+dem Schloss; je zurückgenommen, Arbeitsbaum danach sauber):**
+
+```txt
+Lauf          Eingriff                                          rot mit
+test582 §6    UI.toast setzt .show 900 ms zu spät               {"zeigt":false,…,"gewartet":0}, alle vier Szenen (172 ok, 8 rot)
+test579 §9    Einzeldatei: das Blatt wird nicht angenommen      Knopf 24 px · {"angenommen":0,"links":0} · Akzent rgba(0, 0, 0, 0) (75 / 3)
+```
+
+**Startgrösse nach der Durchsicht (`test388` §5, 4. Oktober, 16:06–16:13 UTC):** **2826 KB** gzip über 248 Dateien, DECKE 2850 KB — unverändert, die Durchsicht ändert nur Prüfungen und Doku.
