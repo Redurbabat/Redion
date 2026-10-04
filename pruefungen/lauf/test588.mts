@@ -41,10 +41,23 @@
  *      kleine Marke, Text, Zeit) — ohne eigene Unschärfe je Karte.
  *   §10 AM TELEFON: langes Drücken auf die Glocke fächert auf und öffnet
  *      NICHT zusätzlich den Posteingang; der Stapel steht über der Leiste.
+ *   §11 DURCHSICHT (Nachtrag, 4. Oktober): der Fächer geht auch wieder zu —
+ *      ein Klick oder Tipp daneben, der Fokus geht hinaus (Tab, Strg P);
+ *      nach „Alle gelesen" mit der Tastatur steht der Fokus wieder an der
+ *      Glocke, und die Glocke sagt mit `aria-expanded`, ob er offen ist. Die
+ *      Schrift auf der Marke (Zeile, Kürzel, Ausschnitt, Stern, „↵ Enter")
+ *      hält 4,5 : 1 in allen zehn Schemata, so gemessen, wie sie gemalt wird
+ *      (Deckkraft und Tönung mitgerechnet). Am Telefon wischt ein Finger
+ *      eine Karte des Stapels weg (das stand zugesagt, geprüft war es
+ *      nicht) — aber ein Zug, der unter einer Meldung auf einer Fläche
+ *      beginnt, die ihre Finger selbst nimmt (`touch-action:none`: das
+ *      Blatt mit dem Stift, die Tafel), kommt dort an und bleibt ein Strich.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E711) fällt sie in §1–§10: es gibt weder die
  * Marke noch den Stapel noch den Fächer. Gegenproben stehen im Commit E711.
+ * §11 fiel gegen 556ffdaa (E711 vor der Durchsicht) — siehe den Commit
+ * „test588 (rot): … Durchsicht".
  *
  *   node pruefungen/lauf/test588.mts
  * ==========================================================================*/
@@ -482,6 +495,274 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
     p('Escape schliesst den Fächer', await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); return !f || f.hidden; })()`));
   }
   await a.zu();
+}
+
+/* ==========================================================================
+ * §11 · DURCHSICHT (Nachtrag zu E711, 4. Oktober): der Fächer geht auch
+ * wieder zu, die Marke ist lesbar, und der Stapel nimmt keinem Strich den Zug
+ * ========================================================================*/
+{
+  console.log('\n§11 Durchsicht: der Fächer geht zu, die Marke ist lesbar, der Strich kommt an');
+  const a = await aufmachen({ handy: false });
+  const { pc } = a;
+  const faecherZu = () => pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); return !f || f.hidden; })()`) as Promise<boolean>;
+  const offenUndDrin = () => pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); return !!f && !f.hidden && f.contains(document.activeElement); })()`) as Promise<boolean>;
+  const erweitert = () => pc.evaluate(`document.getElementById('studio-glocke').getAttribute('aria-expanded')`) as Promise<string | null>;
+  await pc.evaluate(`(() => {
+    Werkzeuge.posteingangMelden({ text: 'Erinnerung: Elektro lernen', quelle: 'Erinnerungen' });
+    Werkzeuge.posteingangMelden({ text: 'Karteikarten fällig: 12', quelle: 'Lernen' });
+  })()`);
+  await pc.waitForTimeout(300);
+  /* Mit der Tastatur auf (↓ auf der Glocke); die Glocke sagt, dass er offen ist. */
+  await pc.focus('#studio-glocke');
+  await pc.keyboard.press('ArrowDown');
+  await pc.waitForTimeout(500);
+  const aufT = await offenUndDrin();
+  const ariaAuf = await erweitert();
+  /* Ein Klick daneben schliesst ihn. */
+  await pc.mouse.click(700, 700);
+  await pc.waitForTimeout(450);
+  const ariaZu = await erweitert();
+  p('Rechner: ein Klick daneben schliesst den Fächer', aufT && await faecherZu(), JSON.stringify({ aufT }));
+  p('… und die Glocke sagt es (aria-expanded true → false)', ariaAuf === 'true' && ariaZu === 'false', JSON.stringify({ ariaAuf, ariaZu }));
+  /* Der Fokus verlässt den Fächer (Tab bis hinaus): er schliesst sich. */
+  await pc.focus('#studio-glocke');
+  await pc.keyboard.press('ArrowDown');
+  await pc.waitForTimeout(500);
+  for (let n = 0; n < 6; n++) await pc.keyboard.press('Tab');
+  await pc.waitForTimeout(450);
+  const tab = await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); return { zu: !f || f.hidden, drin: !!f && f.contains(document.activeElement) }; })()`) as any;
+  p('Verlässt der Fokus den Fächer (Tab), geht er zu', tab.zu && !tab.drin, JSON.stringify(tab));
+  /* Strg P aus dem offenen Fächer: die Suche steht vorn, der Fächer liegt nicht darüber. */
+  await pc.focus('#studio-glocke');
+  await pc.keyboard.press('ArrowDown');
+  await pc.waitForTimeout(500);
+  await pc.keyboard.press('Control+p');
+  await pc.waitForTimeout(500);
+  const strgP = await pc.evaluate(`({ such: !!document.querySelector('.overlay .finder.such'), zu: (() => { const f = document.getElementById('ru-glocken-faecher'); return !f || f.hidden; })() })`) as any;
+  p('Strg P aus dem offenen Fächer: die Suche ist da, der Fächer zu', strgP.such && strgP.zu, JSON.stringify(strgP));
+  await pc.keyboard.press('Escape');
+  await pc.waitForTimeout(300);
+  /* Mit der Maus aufgefächert (der Fokus steht NICHT darin), dann Strg P:
+     das Fenster liegt vorn, der Fächer nicht darüber — er ist ein Menü der
+     Glocke, kein Fenster über den Fenstern. */
+  const gl11 = await rechteck(pc, '#studio-glocke');
+  if (gl11) await pc.mouse.move(gl11.l + gl11.b / 2, gl11.t + gl11.h / 2);
+  await pc.waitForTimeout(700);
+  const ueber = await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher');
+    if (!f || f.hidden) return null; const r = f.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + 30 }; })()`) as { x: number; y: number } | null;
+  await pc.keyboard.press('Control+p');
+  await pc.waitForTimeout(500);
+  /* Gemessen wird, was GEMALT wird, nicht der Treffer (`elementFromPoint`
+     überspringt den Fächer, sobald `fokus.ts` ihn hinter dem Fenster träge
+     macht — gemalt wird er trotzdem, test244 kennt das vom Toast). */
+  const vorn = await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); const o = document.querySelector('.overlay');
+    const offen = !!f && !f.hidden && getComputedStyle(f).display !== 'none';
+    return { such: !!o && !!o.querySelector('.finder.such'), offen,
+             zf: f ? Number(getComputedStyle(f).zIndex) : null, zo: o ? Number(getComputedStyle(o).zIndex) : null }; })()`) as any;
+  p('Mit der Maus aufgefächert, dann Strg P: die Suche liegt vorn, der Fächer nicht darüber',
+    !!ueber && vorn.such && (!vorn.offen || vorn.zf < vorn.zo), JSON.stringify({ ueber, vorn }));
+  await pc.keyboard.press('Escape');
+  await pc.mouse.move(700, 700);
+  await pc.waitForTimeout(500);
+  /* „Alle gelesen" mit der Tastatur: danach steht der Fokus wieder im Kopf —
+     an der Glocke, oder (ist nichts mehr ungelesen, geht die Glocke weg) an
+     ihrem Nachbarn. Nie im Leeren (`body`). */
+  await pc.focus('#studio-glocke');
+  await pc.keyboard.press('ArrowDown');
+  await pc.waitForTimeout(500);
+  await pc.focus('#ru-glocken-faecher [data-faecher="gelesen"]');
+  await pc.keyboard.press('Enter');
+  await pc.waitForTimeout(1200);
+  const fokus = await pc.evaluate(`(() => { const a = document.activeElement; const g = document.getElementById('studio-glocke');
+    return { zu: (() => { const f = document.getElementById('ru-glocken-faecher'); return !f || f.hidden; })(),
+      wo: a ? (a.id || a.tagName) : null, imKopf: !!a && a !== document.body && !!g.parentElement && g.parentElement.contains(a),
+      sichtbar: !!a && a.getBoundingClientRect().width > 0 }; })()`) as any;
+  p('„Alle gelesen" mit der Tastatur: der Fächer geht zu, der Fokus bleibt im Kopf (Glocke oder Nachbar), nicht im Leeren',
+    fokus.zu && fokus.imKopf && fokus.sichtbar, JSON.stringify(fokus));
+
+  /* Ein Escape tut EINES (test296 §3): schliesst es die Suche, bleibt der
+     Stapel stehen; erst das nächste räumt ihn ab. */
+  await pc.evaluate(`(() => { UI.toast('Eins gespeichert', 9000); UI.toast('Zwei verschoben', 9000); })()`);
+  await pc.waitForTimeout(400);
+  await pc.click('#studio-search');
+  await pc.waitForTimeout(500);
+  const esc0 = await pc.evaluate(`document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)').length`) as number;
+  await pc.keyboard.press('Escape');
+  await pc.waitForTimeout(400);
+  const esc1 = await pc.evaluate(`({ such: !!document.querySelector('.finder.such'), show: document.getElementById('toast').classList.contains('show'),
+    alt: document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)').length })`) as any;
+  await pc.keyboard.press('Escape');
+  await pc.waitForTimeout(400);
+  const esc2 = await pc.evaluate(`({ show: document.getElementById('toast').classList.contains('show'),
+    alt: document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)').length })`) as any;
+  p('Escape in der offenen Suche schliesst NUR die Suche — der Stapel bleibt', !esc1.such && esc1.show && esc0 >= 1 && esc1.alt === esc0, JSON.stringify({ esc0, ...esc1 }));
+  p('… das nächste Escape räumt den Stapel ab', !esc2.show && esc2.alt === 0, JSON.stringify(esc2));
+
+  /* Die Schrift auf der Marke (Zeile, Kürzel, Ausschnitt, Stern, „↵ Enter")
+     gegen die Fläche der Marke, so wie sie gemalt wird: Deckkraft (auch die
+     der Eltern bis zur Zeile) und die getönte Fläche des Chips mitgerechnet.
+     4,5 : 1 in allen zehn Schemata. */
+  const schemata = await pc.evaluate(`Aussehen.SCHEMATA.map(s => s.id)`) as string[];
+  const MESSEN = `(liste) => {
+    const rgb = c => (c.match(/[\\d.]+/g) || []).map(Number);
+    const mix = (fg, a, bg) => [0, 1, 2].map(i => fg[i] * a + bg[i] * (1 - a));
+    const L = x => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+      return .2126 * f(x[0]) + .7152 * f(x[1]) + .0722 * f(x[2]); };
+    const kon = (a, b) => { const l1 = L(a), l2 = L(b); return (Math.max(l1, l2) + .05) / (Math.min(l1, l2) + .05); };
+    const m = document.querySelector(liste + ' > .ru-marke'), on = document.querySelector(liste + ' > button.on');
+    if (!m || !on) return null;
+    const grund = rgb(getComputedStyle(m).backgroundColor);
+    const werte = {};
+    const lies = (name, el, unter = grund) => {
+      if (!el || !el.offsetWidth) return;
+      const s = getComputedStyle(el); if (s.visibility === 'hidden') return;
+      let a = 1; for (let e = el; e && e !== on.parentElement; e = e.parentElement) a *= Number(getComputedStyle(e).opacity);
+      const c = rgb(s.color); a *= (c[3] ?? 1);
+      werte[name] = Math.round(kon(mix(c, a, unter), unter) * 100) / 100;
+    };
+    lies('zeile', on.querySelector('span:nth-child(2) > span') || on.querySelector('span:nth-child(2)') || on);
+    on.querySelectorAll('.pth, .snip').forEach((el, k) => lies('klein' + k, el));
+    lies('stern', on.querySelector('.fest'));
+    const t = m.querySelector('.ru-marke-taste');
+    if (t && t.offsetWidth) { const b = rgb(getComputedStyle(t).backgroundColor); lies('taste', t, mix(b, b[3] ?? 1, grund)); }
+    return werte;
+  }`;
+  const schlecht: string[] = [];
+  for (const s of schemata) {
+    await pc.evaluate(`Aussehen.setzen({ schema: ${JSON.stringify(s)} })`);
+    await pc.waitForTimeout(120);
+    await pc.evaluate(`Werkzeuge.palette()`);
+    await pc.waitForTimeout(500);
+    await pc.keyboard.press('Control+Enter');   /* die erste Zeile angeheftet: der Stern steht da */
+    await pc.waitForTimeout(200);
+    const pal1 = await pc.evaluate(`(${MESSEN})('#cr')`) as Record<string, number> | null;
+    await pc.keyboard.press('Control+Enter');   /* zurück, wie es war */
+    await pc.waitForTimeout(150);
+    await pc.keyboard.press('ArrowDown');
+    await pc.waitForTimeout(700);
+    const pal = await pc.evaluate(`(${MESSEN})('#cr')`) as Record<string, number> | null;
+    await pc.keyboard.press('Escape');
+    await pc.waitForTimeout(150);
+    await pc.click('#studio-search');
+    await pc.waitForTimeout(500);
+    await pc.keyboard.type('Elektr', { delay: 5 });
+    await pc.waitForTimeout(400);
+    await pc.keyboard.press('ArrowDown');
+    await pc.waitForTimeout(700);
+    const such = await pc.evaluate(`(${MESSEN})('#res')`) as Record<string, number> | null;
+    await pc.keyboard.press('Escape');
+    await pc.waitForTimeout(150);
+    const alle = { ...Object.fromEntries(Object.entries(pal1 || {}).map(([k, v]) => ['fest-' + k, v])), ...(pal || {}),
+                   ...Object.fromEntries(Object.entries(such || {}).map(([k, v]) => ['suche-' + k, v])) };
+    const zuWenig = Object.entries(alle).filter(([, v]) => v < 4.5);
+    if (!pal1 || !pal || !such || !('taste' in alle) || !('fest-stern' in alle) || zuWenig.length)
+      schlecht.push(s + ' ' + JSON.stringify(zuWenig.length ? zuWenig : alle));
+  }
+  await pc.evaluate(`Aussehen.setzen({ schema: 'standard' })`);
+  p('Schrift auf der Marke ≥ 4,5 : 1 in allen ' + schemata.length + ' Schemata (Zeile, Kürzel, Ausschnitt, Stern, „↵ Enter")',
+    schemata.length >= 10 && schlecht.length === 0, schlecht.slice(0, 4).join(' · '));
+  await a.zu();
+
+  /* Telefon: langes Drücken öffnet, ein Tipp daneben schliesst. */
+  const h = await aufmachen({ handy: true, dunkel: true });
+  await h.pc.evaluate(`(() => { Werkzeuge.posteingangMelden({ text: 'Eins', quelle: 'A' }); Werkzeuge.posteingangMelden({ text: 'Zwei', quelle: 'B' }); })()`);
+  await h.pc.waitForTimeout(400);
+  const g = await h.pc.evaluate(`(() => {
+    const g = [...document.querySelectorAll('#mb-glocke, #studio-glocke')].find(e => e.getBoundingClientRect().width > 0 && !e.hidden);
+    if (!g) return null; g.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    const r = g.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  })()`) as { x: number; y: number } | null;
+  if (g) {
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: g.x, y: g.y }] });
+    await h.pc.waitForTimeout(650);
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await h.pc.waitForTimeout(500);
+    const auf2 = !(await h.pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); return !f || f.hidden; })()`));
+    await h.pc.touchscreen.tap(195, 640);
+    await h.pc.waitForTimeout(500);
+    const zu2 = await h.pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); return !f || f.hidden; })()`);
+    p('Telefon: ein Tipp daneben schliesst den Fächer', auf2 && zu2, JSON.stringify({ auf2, zu2 }));
+  } else p('Telefon: ein Tipp daneben schliesst den Fächer', false, 'keine Glocke');
+
+  /* Ein waagerechter Finger-Zug über eine Karte des Stapels nimmt sie weg. */
+  const zug = async (x0: number, y: number, dx: number): Promise<void> => {
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y }] });
+    for (let i = 1; i <= 15; i++) {
+      await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + dx * i / 15, y }] });
+      await h.pc.waitForTimeout(16);
+    }
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await h.pc.waitForTimeout(400);
+  };
+  /* Über einer Textseite (der häufigste Grund unter den Karten): ein
+     Schnippen zur Seite. Der Browser darf den Inhalt dabei rollen und
+     bricht den Zug dann ab (`pointercancel`) — das Schnippen zählt trotzdem. */
+  await h.pc.evaluate(`(async () => {
+    const page = Store.addPage(null, { text: 'Lesen unter dem Stapel', icon: '📄' });
+    for (let k = 0; k < 30; k++) Store.addBlock(page.id, 'text', { text: 'Zeile ' + k + ' mit gewöhnlichem Text, der nur senkrecht rollt.' });
+    await Store.flush(); App.oeffne(page.id);
+  })()`);
+  await h.pc.waitForTimeout(900);
+  await h.pc.evaluate(`(() => { UI.toast('Eins gespeichert', 9000); UI.toast('Zwei verschoben', 9000); })()`);
+  await h.pc.waitForTimeout(600);
+  const karte = await h.pc.evaluate(`(() => { const e = document.querySelector('#ru-toast-stapel .ru-toast-alt'); if (!e) return null;
+    const r = e.getBoundingClientRect(); return { x: r.left + 40, y: r.top + r.height / 2 }; })()`) as { x: number; y: number } | null;
+  if (karte) {
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: karte.x, y: karte.y }] });
+    for (let i = 1; i <= 6; i++) {
+      await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: karte.x + i * 30, y: karte.y }] });
+      await h.pc.waitForTimeout(8);
+    }
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await h.pc.waitForTimeout(500);
+  }
+  p('Telefon: ein Schnippen zur Seite nimmt eine Karte des Stapels weg', !!karte &&
+    await h.pc.evaluate(`document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)').length === 0`), JSON.stringify(karte));
+  await h.pc.keyboard.press('Escape');
+  await h.pc.waitForTimeout(300);
+
+  /* Ein Strich auf der Tafel, der unter der Meldung beginnt, kommt an — die
+     Tafel nimmt ihre Finger selbst (`touch-action:none`), der Stapel darf sie
+     ihr nicht wegnehmen. Die echte Tafel (`whiteboard`), mit dem Finger. */
+  const tafel = await h.pc.evaluate(`(async () => {
+    const page = Store.addPage(null, { text: 'Tafel unter der Meldung', icon: '🖍' });
+    for (let k = 0; k < 14; k++) Store.addBlock(page.id, 'text', { text: 'Zeile ' + k + ' über der Tafel, damit sie tiefer liegt.' });
+    const block = Store.addBlock(page.id, 'whiteboard', { text: 'Skizze' });
+    for (let k = 0; k < 14; k++) Store.addBlock(page.id, 'text', { text: 'Zeile ' + k + ' unter der Tafel.' });
+    await Store.flush();
+    App.oeffne(page.id);
+    await new Promise(r => setTimeout(r, 900));
+    return block.id;
+  })()`) as string;
+  await h.pc.evaluate(`UI.toast('Gespeichert', 20000)`);
+  await h.pc.waitForTimeout(500);
+  const lage = await h.pc.evaluate(`(() => {
+    const t = document.getElementById('toast').getBoundingClientRect();
+    const f = document.querySelector('.wb-flaeche');
+    if (!f) return null;
+    const r = f.getBoundingClientRect();
+    let e = f.parentElement; while (e && !(e.scrollHeight > e.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(e).overflowY))) e = e.parentElement;
+    if (e) e.scrollTop += (r.top + r.height / 2) - (t.top + t.height / 2);
+    const x = t.left + 40, y = t.top + t.height / 2;
+    const unter = [...document.elementsFromPoint(x, y)].find(n => !n.closest('#toast, #ru-toast-stapel'));
+    return { x, y, unterTafel: !!unter && !!unter.closest('.wb-flaeche'), ta: unter ? getComputedStyle(unter.closest('.wb-flaeche') || unter).touchAction : '' };
+  })()`) as { x: number; y: number; unterTafel: boolean; ta: string } | null;
+  const vorStriche = await h.pc.evaluate(`(Store.getBlock(${JSON.stringify(tafel)}).shapes || []).filter(s => s.art === 'stift').length`) as number;
+  if (lage?.unterTafel) await zug(lage.x, lage.y, 170);
+  await h.pc.waitForTimeout(300);
+  const strich = await h.pc.evaluate(`(() => {
+    const s = (Store.getBlock(${JSON.stringify(tafel)}).shapes || []).filter(s => s.art === 'stift');
+    const l = s[s.length - 1];
+    const xs = l ? l.pts.map(q => Array.isArray(q) ? q[0] : q.x) : [];
+    return { zahl: s.length, breite: xs.length ? Math.round(Math.max(...xs) - Math.min(...xs)) : 0,
+             toast: document.getElementById('toast').classList.contains('show'),
+             verschoben: document.getElementById('toast').style.translate || '' };
+  })()`) as any;
+  p('Telefon: ein Strich auf der Tafel, der unter der Meldung beginnt, kommt ganz an',
+    !!lage?.unterTafel && strich.zahl === vorStriche + 1 && strich.breite >= 120, JSON.stringify({ lage, vorStriche, strich }));
+  p('… und die Meldung bleibt stehen (der Strich ist kein Wischen)', strich.toast && !strich.verschoben, JSON.stringify(strich));
+  await h.zu();
 }
 
 p('Keine Ausnahme im Browser', fehler.length === 0, fehler.slice(0, 3).join(' · '));
