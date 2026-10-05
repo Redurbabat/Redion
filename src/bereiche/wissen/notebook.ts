@@ -912,7 +912,7 @@ const Notebook = (() => {
       const was = String(b?.dataset['w'] || '');
       if (was === 'heft') return createNotebook();
       if (was === 'fach') { void createFach(); return; }
-      if (was === 'alle') return App.erstellenBlatt();
+      if (was === 'alle') return App.erstellenBlatt(anker);
       /* Erst schliessen, dann handeln — wie im Katalog-Blatt selbst. */
       setTimeout(() => App.erstellenWeg(was), 60);
     });

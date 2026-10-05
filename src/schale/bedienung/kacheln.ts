@@ -195,10 +195,14 @@ const Schnellkacheln = (() => {
       /* ein Zug ohne Klick schluckt nicht den nächsten Tipp */
       delete b.dataset['gezogen'];
       if (e.pointerType === 'touch') return;
+      /* Der Regler hält den Zeiger fest: auch draussen losgelassen endet der
+         Zug (Nachtrag E712 — sonst stellte danach schon das Darüberfahren). */
+      try { b.setPointerCapture(e.pointerId); } catch { /* dann endet er beim Loslassen darauf */ }
       zug = { id: e.pointerId, y: e.clientY, k, b, start: stufe(k) };
     });
     wurzel.addEventListener('pointermove', e => {
       if (!zug || e.pointerId !== zug.id) return;
+      if (!(e.buttons & 1)) { los(e); return; }
       const schritte = Math.round((zug.y - e.clientY) / 28);
       if (!schritte) return;
       zug.b.dataset['gezogen'] = '1';
@@ -214,9 +218,11 @@ const Schnellkacheln = (() => {
     };
     wurzel.addEventListener('pointerup', los);
     wurzel.addEventListener('pointercancel', los);
+    wurzel.addEventListener('lostpointercapture', los);
   };
 
   /* Ändert es jemand woanders (Feld, Strg ⇧ L/F, Aussehen), ziehen sie nach. */
+  const beobachter = new WeakMap<HTMLElement, IntersectionObserver>();
   let horcht = false;
   const horchen = (): void => {
     if (horcht) return;
@@ -225,6 +231,10 @@ const Schnellkacheln = (() => {
     new MutationObserver(nach).observe(document.body,
       { attributes: true, attributeFilter: ['class', 'data-schrift', 'data-dichte', 'data-bewegung', 'data-kontrast'] });
     new MutationObserver(nach).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    /* Die Uhr meldet jeden Schritt (zeitmesser.ts, Nachtrag E712). */
+    document.addEventListener('redion:zeitmesser', () => {
+      if (document.querySelector('[data-kachel="zeit"]')) markieren();
+    });
   };
 
   /** Nach `nach` (sonst oben in `ziel`); rollt `rolle`, wird es eine Leiste. */
@@ -275,12 +285,16 @@ const Schnellkacheln = (() => {
         a.finished.then(() => { leiste.hidden = true; }).catch(() => { leiste.hidden = true; });
       }
     };
-    new IntersectionObserver(eintraege => {
+    const io = new IntersectionObserver(eintraege => {
       for (const e of eintraege) {
         const oben = e.boundingClientRect.bottom < (e.rootBounds?.top ?? 0) + 8;
         zeigen(!e.isIntersecting && oben);
       }
-    }, { root: rolle, threshold: 0 }).observe(gitter);
+    }, { root: rolle, threshold: 0 });
+    /* Wer „Mehr" neu zeichnet, nimmt den alten Beobachter mit (Nachtrag E712). */
+    beobachter.get(rolle)?.disconnect();
+    beobachter.set(rolle, io);
+    io.observe(gitter);
   };
 
   return { KACHELN, einsetzen, markieren };

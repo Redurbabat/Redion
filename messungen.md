@@ -5488,3 +5488,27 @@ menue.js +228, grund.css +195, studio.css +133, kacheln.js +130, schale.js
 nachher — die Bildläufe des Baus waren aber nie gelaufen (sie warteten auf
 `window.App`, das es bei `const App` nicht gibt). Die Bilder und Streifen
 hat die Durchsicht gemacht und angesehen, nicht eingecheckt (§55.4).
+
+**Nachtrag der zweiten Durchsicht (5. Oktober 2026).** Gegen `510f3971`
+(erste Durchsicht) und nach dem Nachtrag gemessen, Rechner 1440 × 900,
+unter der Sperre; die Linse ohne ihre Abschrift (Glas und Milchglas
+verborgen), innere 70 % des Kreises, hellster gegen dunkelsten Pixel
+(`test589` §13).
+
+```txt
+                                      510f3971             nach dem Nachtrag
+Liste unter den runden Knöpfen  „+"   448 px               537 px (Menü 629 px)
+                                „⋯"   433 px               537 px (Menü 644 px)
+„Neu erstellen" aus der Kante         Menü oben rechts     an seinem Knopf
+„Alle Wege …" der Notizhefte          über „＋ Neu"         an „＋ Neu"
+Maus-Zug draussen losgelassen         bleibt offen,        endet; Darüber-
+                                      „gross" → „klein"    fahren stellt nichts
+Kachel „Zeitmesser", Uhr läuft        „Stoppuhr und Timer“ „Läuft · 0:01" …
+Linse ohne Abschrift, dunkel          7,2 : 1              1,34 : 1
+Linse ohne Abschrift, hell            4,1 : 1              1,15 : 1
+Beobachter nach fünfmal „Mehr"        5                    1
+```
+
+Start (`test388` §5): **2841 KB** gzip, Decke 2850. Der Nachtrag selbst:
++583 B gzip (kacheln.js +315, studio.css +113, zeitmesser.js +76, menue.js
++74, context-rail.js +4, notebook.js +1; gegen `510f3971`).

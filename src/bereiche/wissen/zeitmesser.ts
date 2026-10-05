@@ -212,6 +212,8 @@ const Zeitmesser = (() => {
   };
 
   const zeichneStand = (): void => {
+    /* Wer den Stand sonst zeigt (die Kachel in „Mehr", E712), hört mit. */
+    document.dispatchEvent(new CustomEvent('redion:zeitmesser'));
     const feld = document.querySelector<HTMLElement>('.zm-feld');
     if (!feld) return;
     /* Beim Tick bleiben die Tasten samt Fokus erhalten. Nur ein echter

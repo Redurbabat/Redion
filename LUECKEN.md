@@ -8372,10 +8372,10 @@ das „+" und das „⋯" fliessen in ihr Menü (01), die Linse gleitet über
    eine kurzlebige Bühne — keinen zweiten Filter, keinen Filter je Zeile
    (Liquid-Karte, „Must-fix" 2).
 4. **Die Startgrösse.** E712 wächst den Start um 14,3 KB gzip, mit der
-   Durchsicht um 15,5; jedem Zweig der zweiten Welle waren rund 10
-   zugeteilt. `test388` §5 auf diesem Zweig allein: 2840 KB von 2850 (4.
-   Oktober). Wer zusammenführt, zählt nach; sparen liesse sich zuerst an den
-   Kommentaren von `linse.ts` und `menue.ts`.
+   Durchsicht um 15,5, mit dem Nachtrag um 16,1; jedem Zweig der zweiten
+   Welle waren rund 10 zugeteilt. `test388` §5 auf diesem Zweig allein:
+   2841 KB von 2850 (5. Oktober). Wer zusammenführt, zählt nach; sparen
+   liesse sich zuerst an den Kommentaren von `linse.ts` und `menue.ts`.
 
 **Was es NICHT ist:** kein Fehler. Jeder Eintrag beider Menüs steht, wo er
 stand, und jede Einstellung hat ihren alten Ort (§43).

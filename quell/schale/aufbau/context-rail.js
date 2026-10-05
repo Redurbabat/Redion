@@ -473,8 +473,8 @@ const Kontextkante = (() => {
             }
             catch { /* ohne KI bleibt der Knopf */ } } },
         { id: 'neu', name: 'Neu erstellen', zeichen: 'plus',
-            tun: () => { try {
-                App.erstellenBlatt();
+            tun: (b) => { try {
+                App.erstellenBlatt(b);
             }
             catch { /* ohne Katalog nichts */ } } },
         { id: 'einstellungen', name: 'Einstellungen', zeichen: 'settings',

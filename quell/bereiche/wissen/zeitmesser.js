@@ -204,6 +204,8 @@ const Zeitmesser = (() => {
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
     const zeichneStand = () => {
+        /* Wer den Stand sonst zeigt (die Kachel in „Mehr", E712), hört mit. */
+        document.dispatchEvent(new CustomEvent('redion:zeitmesser'));
         const feld = document.querySelector('.zm-feld');
         if (!feld)
             return;

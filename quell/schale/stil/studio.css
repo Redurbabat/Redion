@@ -479,6 +479,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 /* Die Scheibe wächst aus dem Knopf (tropfen.ts) — keine zweite Ankunft. */
 .menu.ru-tropfen-menue:not(.blatt),
 .menu.ru-tropfen-menue:not(.blatt) > *{animation:none}
+/* Die Knöpfe kommen DAZU: die Liste darunter behält ihre 60vh (Nachtrag E712). */
+.menu.ru-tropfen-menue:not(.blatt){max-height:min(calc(60vh + var(--ru-tropfen-kopf,0px) + var(--space-1)),calc(100vh - var(--space-5)))}
 
 /* 8b · Die Bühne: nur während es fliesst. */
 .ru-tropfen-buehne{position:fixed;z-index:605;pointer-events:none}
@@ -488,7 +490,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .ru-tropfen-geist{position:absolute;border-radius:var(--radius-2xl);transform-origin:0 0;
   background:var(--bg-schwebend-dicht);box-shadow:var(--glas-kante),var(--studio-elevation)}
 
-/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. */
+/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Sie trägt
+   Schrift, also dichtes Glas (E695) — sonst stünde „ken" doppelt da. */
 .lernwelt .lw-desk-copy{position:relative}
 .ru-held-zeile{display:inline-block;position:relative}
 /* Der Dunst ist Bild: leerer Ersatztext für Vorleser (Durchsicht E712). */
@@ -503,7 +506,7 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
 @keyframes ru-held-zeile-kommt{0%{opacity:0;transform:translateY(.42em)}25%{opacity:1}100%{opacity:1;transform:none}}
 @keyframes ru-held-dunst{0%{opacity:1}70%{opacity:0}100%{opacity:0}}
 .ru-held-linse{position:absolute;left:0;top:0;z-index:2;border-radius:50%;overflow:hidden;pointer-events:none;
-  transform-origin:50% 50%;background:color-mix(in srgb,var(--bg-side) 35%,transparent);
+  transform-origin:50% 50%;background:var(--bg-schwebend-dicht);
   box-shadow:var(--glas-kante),0 8px 20px rgba(0,0,0,.22)}
 .ru-held-linse-glas,.ru-held-linse-frost{position:absolute;inset:0;border-radius:50%;overflow:hidden}
 .ru-held-linse-glas{filter:url(#ru-linse-fahrt)}

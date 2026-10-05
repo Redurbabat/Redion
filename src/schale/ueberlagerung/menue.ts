@@ -450,6 +450,9 @@ const Menue = (() => {
     document.body.appendChild(m);
     waechter.observe(document.body, { childList: true });
 
+    /* Die runden Knöpfe kommen oben DAZU, die Liste behält ihren Platz
+       (Nachtrag E712; studio.css 8a). */
+    if (kopf) m.style.setProperty('--ru-tropfen-kopf', kopf.offsetHeight + 'px');
     /* Nicht über den Rand — und mit Anker AN ihm (E712; „Neu erstellen"
        stand bei (0, 0), oben links, weit weg vom „+"). */
     if (anker) amAnker(m, anker);

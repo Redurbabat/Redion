@@ -23608,6 +23608,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 /* Die Scheibe wächst aus dem Knopf (tropfen.ts) — keine zweite Ankunft. */
 .menu.ru-tropfen-menue:not(.blatt),
 .menu.ru-tropfen-menue:not(.blatt) > *{animation:none}
+/* Die Knöpfe kommen DAZU: die Liste darunter behält ihre 60vh (Nachtrag E712). */
+.menu.ru-tropfen-menue:not(.blatt){max-height:min(calc(60vh + var(--ru-tropfen-kopf,0px) + var(--space-1)),calc(100vh - var(--space-5)))}
 
 /* 8b · Die Bühne: nur während es fliesst. */
 .ru-tropfen-buehne{position:fixed;z-index:605;pointer-events:none}
@@ -23617,7 +23619,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .ru-tropfen-geist{position:absolute;border-radius:var(--radius-2xl);transform-origin:0 0;
   background:var(--bg-schwebend-dicht);box-shadow:var(--glas-kante),var(--studio-elevation)}
 
-/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. */
+/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Sie trägt
+   Schrift, also dichtes Glas (E695) — sonst stünde „ken" doppelt da. */
 .lernwelt .lw-desk-copy{position:relative}
 .ru-held-zeile{display:inline-block;position:relative}
 /* Der Dunst ist Bild: leerer Ersatztext für Vorleser (Durchsicht E712). */
@@ -23632,7 +23635,7 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
 @keyframes ru-held-zeile-kommt{0%{opacity:0;transform:translateY(.42em)}25%{opacity:1}100%{opacity:1;transform:none}}
 @keyframes ru-held-dunst{0%{opacity:1}70%{opacity:0}100%{opacity:0}}
 .ru-held-linse{position:absolute;left:0;top:0;z-index:2;border-radius:50%;overflow:hidden;pointer-events:none;
-  transform-origin:50% 50%;background:color-mix(in srgb,var(--bg-side) 35%,transparent);
+  transform-origin:50% 50%;background:var(--bg-schwebend-dicht);
   box-shadow:var(--glas-kante),0 8px 20px rgba(0,0,0,.22)}
 .ru-held-linse-glas,.ru-held-linse-frost{position:absolute;inset:0;border-radius:50%;overflow:hidden}
 .ru-held-linse-glas{filter:url(#ru-linse-fahrt)}
@@ -26851,7 +26854,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1401, inhalt: '1a003a6348977b04', gebaut: '2026-10-04T17:08:04.636Z' };
+const Stand = { fassung: 1402, inhalt: 'd9f7db5aff146319', gebaut: '2026-10-05T00:12:25.107Z' };
 window.Stand = Stand;
 
 </script>
@@ -51007,6 +51010,10 @@ const Menue = (() => {
         }
         document.body.appendChild(m);
         waechter.observe(document.body, { childList: true });
+        /* Die runden Knöpfe kommen oben DAZU, die Liste behält ihren Platz
+           (Nachtrag E712; studio.css 8a). */
+        if (kopf)
+            m.style.setProperty('--ru-tropfen-kopf', kopf.offsetHeight + 'px');
         /* Nicht über den Rand — und mit Anker AN ihm (E712; „Neu erstellen"
            stand bei (0, 0), oben links, weit weg vom „+"). */
         if (anker)
@@ -55196,11 +55203,21 @@ const Schnellkacheln = (() => {
             delete b.dataset['gezogen'];
             if (e.pointerType === 'touch')
                 return;
+            /* Der Regler hält den Zeiger fest: auch draussen losgelassen endet der
+               Zug (Nachtrag E712 — sonst stellte danach schon das Darüberfahren). */
+            try {
+                b.setPointerCapture(e.pointerId);
+            }
+            catch { /* dann endet er beim Loslassen darauf */ }
             zug = { id: e.pointerId, y: e.clientY, k, b, start: stufe(k) };
         });
         wurzel.addEventListener('pointermove', e => {
             if (!zug || e.pointerId !== zug.id)
                 return;
+            if (!(e.buttons & 1)) {
+                los(e);
+                return;
+            }
             const schritte = Math.round((zug.y - e.clientY) / 28);
             if (!schritte)
                 return;
@@ -55221,8 +55238,10 @@ const Schnellkacheln = (() => {
         };
         wurzel.addEventListener('pointerup', los);
         wurzel.addEventListener('pointercancel', los);
+        wurzel.addEventListener('lostpointercapture', los);
     };
     /* Ändert es jemand woanders (Feld, Strg ⇧ L/F, Aussehen), ziehen sie nach. */
+    const beobachter = new WeakMap();
     let horcht = false;
     const horchen = () => {
         if (horcht)
@@ -55232,6 +55251,11 @@ const Schnellkacheln = (() => {
             markieren(); };
         new MutationObserver(nach).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-schrift', 'data-dichte', 'data-bewegung', 'data-kontrast'] });
         new MutationObserver(nach).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        /* Die Uhr meldet jeden Schritt (zeitmesser.ts, Nachtrag E712). */
+        document.addEventListener('redion:zeitmesser', () => {
+            if (document.querySelector('[data-kachel="zeit"]'))
+                markieren();
+        });
     };
     /** Nach `nach` (sonst oben in `ziel`); rollt `rolle`, wird es eine Leiste. */
     const einsetzen = (ziel, opt = {}) => {
@@ -55284,12 +55308,16 @@ const Schnellkacheln = (() => {
                 a.finished.then(() => { leiste.hidden = true; }).catch(() => { leiste.hidden = true; });
             }
         };
-        new IntersectionObserver(eintraege => {
+        const io = new IntersectionObserver(eintraege => {
             for (const e of eintraege) {
                 const oben = e.boundingClientRect.bottom < (e.rootBounds?.top ?? 0) + 8;
                 zeigen(!e.isIntersecting && oben);
             }
-        }, { root: rolle, threshold: 0 }).observe(gitter);
+        }, { root: rolle, threshold: 0 });
+        /* Wer „Mehr" neu zeichnet, nimmt den alten Beobachter mit (Nachtrag E712). */
+        beobachter.get(rolle)?.disconnect();
+        beobachter.set(rolle, io);
+        io.observe(gitter);
     };
     return { KACHELN, einsetzen, markieren };
 })();
@@ -171276,7 +171304,7 @@ const Notebook = (() => {
                 return;
             }
             if (was === 'alle')
-                return App.erstellenBlatt();
+                return App.erstellenBlatt(anker);
             /* Erst schliessen, dann handeln — wie im Katalog-Blatt selbst. */
             setTimeout(() => App.erstellenWeg(was), 60);
         });
@@ -172079,6 +172107,8 @@ const Zeitmesser = (() => {
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
     const zeichneStand = () => {
+        /* Wer den Stand sonst zeigt (die Kachel in „Mehr", E712), hört mit. */
+        document.dispatchEvent(new CustomEvent('redion:zeitmesser'));
         const feld = document.querySelector('.zm-feld');
         if (!feld)
             return;
@@ -181351,8 +181381,8 @@ const Kontextkante = (() => {
             }
             catch { /* ohne KI bleibt der Knopf */ } } },
         { id: 'neu', name: 'Neu erstellen', zeichen: 'plus',
-            tun: () => { try {
-                App.erstellenBlatt();
+            tun: (b) => { try {
+                App.erstellenBlatt(b);
             }
             catch { /* ohne Katalog nichts */ } } },
         { id: 'einstellungen', name: 'Einstellungen', zeichen: 'settings',

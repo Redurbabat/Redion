@@ -874,7 +874,7 @@ const Notebook = (() => {
                 return;
             }
             if (was === 'alle')
-                return App.erstellenBlatt();
+                return App.erstellenBlatt(anker);
             /* Erst schliessen, dann handeln — wie im Katalog-Blatt selbst. */
             setTimeout(() => App.erstellenWeg(was), 60);
         });

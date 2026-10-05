@@ -35,6 +35,16 @@ ein Beobachter ohne Ende, die Bilder fehlten. `test589` 91 ok (rot gegen
 `f6b9f007`: 74 ok, 17 offen), zwei Gegenproben rot gesehen, die
 Browser-Nachbarn gelaufen; `test388` §5: 2840 KB.
 
+**Nachtrag der zweiten Durchsicht (5. Oktober 2026):** sechs Funde, alle
+behoben (E712 Punkte 13–18): die runden Knöpfe nahmen der Liste Platz
+(„Volle Breite", „Pfadnavigation", „Seite anpassen" unter dem Rand), „Neu
+erstellen" aus der Kante und „Alle Wege …" der Notizhefte wuchsen aus dem
+„+" oben rechts, ein Maus-Zug am Regler endete draussen nicht, die Kachel
+„Zeitmesser" stand still, die ruhende Linse zeigte „ken" doppelt, jeder
+Besuch in „Mehr" liess einen Beobachter stehen. `test589` 100 ok (rot gegen
+`510f3971`: 91 ok, 9 offen), zwei Gegenproben rot gesehen; `test388` §5:
+2841 KB.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

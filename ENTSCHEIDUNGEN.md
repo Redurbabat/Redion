@@ -58745,3 +58745,52 @@ fotografiert; sie gehört zur Leiste der ersten Welle und steht in AUFGABEN.
 **Was die Durchsicht kostet:** +1,2 KB gzip auf die Startdateien (die
 Begründungen stehen hier, im Code nur ein Satz); `test388` §5: 2840 KB über
 250 Dateien, Decke 2850.
+
+
+**Nachtrag der zweiten Durchsicht (4./5. Oktober 2026).** Redur, 3. Oktober,
+ca. 19:35 UTC: „Weiter ohne pause,“. Die zweite Durchsicht hat jeden
+berührten Griff am Rechner und am Telefon angeklickt, die Bilder und
+Streifen angesehen und sechs weitere Stellen gefunden, an denen etwas
+schlechter erreichbar oder falsch zu sehen war als vor E712. `test589` §13
+hält sie (rot gesehen gegen den Stand der ersten Durchsicht), behoben:
+
+13. **Die runden Knöpfe nahmen der Liste Platz.** Das Menü blieb bei 60 %
+    der Fensterhöhe; die Knöpfe oben (rund 90 px beim „+“, 110 px beim „⋯“)
+    gingen davon ab. Beim „⋯“ standen „Volle Breite“, „Pfadnavigation
+    anzeigen“ und „Seite anpassen“ dadurch unter dem Rand, wo sie vorher zu
+    sehen waren. Jetzt kommen die Knöpfe DAZU: am Rechner darf ein Menü mit
+    Knöpfen um ihre Höhe grösser sein, höchstens bis 16 px unter den
+    Fensterrand (`--ru-tropfen-kopf`, studio.css 8a).
+14. **Zwei Wege zu „Neu erstellen“ wuchsen aus dem falschen Knopf.** Die
+    Kante („Neu erstellen“ am linken Rand) und „Alle Wege …“ der
+    Notizhefte riefen das Menü ohne Knopf; es wuchs dann aus dem „+“ oben
+    rechts, quer über den Schirm — der Fund von E712 auf zwei Wegen wieder
+    da (vor E712 stand es dort wenigstens links oben, nah an der Kante).
+    Jetzt gibt jeder Weg seinen Knopf mit.
+15. **Ein Zug am Regler endete nicht, wenn man draussen losliess.** Mit der
+    Maus über die Kacheln hinaus gezogen und dort losgelassen, hielt der
+    Regler den Zug fest; danach stellte schon das Darüberfahren die Schrift
+    zurück („gross“ → „klein“). Jetzt hält der Regler den Zeiger fest
+    (`setPointerCapture`), und ohne gedrückte Taste endet der Zug.
+16. **Die Kachel „Zeitmesser“ stand still.** Sie las den Stand der Uhr nur,
+    wenn sich sonst etwas änderte — bei laufender Stoppuhr stand weiter
+    „Stoppuhr und Timer“. Jetzt meldet die Uhr jeden Schritt
+    (`redion:zeitmesser`, wie `redion:meldungen`), und die Kachel zeigt
+    „Läuft · 0:03“ und zählt mit.
+17. **Die ruhende Linse zeigte „ken“ doppelt.** Sie war zu 35 % gedeckt;
+    unter der vergrösserten Abschrift schien das Wort darunter durch, und
+    „Weiterdenken.“ las sich wie „Weiterdenk“ mit einem zweiten, grösseren
+    „en“ (Kontrast im Innern ohne Abschrift: 7,2 : 1 dunkel, 4,1 : 1 hell).
+    Die Linse trägt Schrift, also ist sie dichtes Glas (E695:
+    `--bg-schwebend-dicht`) — jetzt 1,34 : 1 dunkel, 1,15 : 1 hell.
+18. **Jeder Besuch in „Mehr“ liess einen Beobachter stehen.** Die
+    Chipleiste beobachtet die Kacheln; beim nächsten Zeichnen blieb der
+    alte Beobachter samt alten Kacheln hängen. Jetzt einer je Rollfläche.
+
+Was blieb (nachgeprüft): jeder Eintrag in derselben Folge, Escape sofort,
+die Tastatur wie vorher, die Linse gleitet einmal und liegt still, unter
+„Ruhig“ und weniger Bewegung nichts.
+
+**Was der Nachtrag kostet:** +583 B gzip auf die Startdateien (kacheln.js
++315, studio.css +113, zeitmesser.js +76, menue.js +74, context-rail.js +4,
+notebook.js +1); `test388` §5: 2841 KB, Decke 2850.
