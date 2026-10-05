@@ -48,6 +48,9 @@
  *   §13 Nachtrag: Platz unter den Knöpfen, jeder Weg aus seinem Knopf, der
  *       Zug endet, die Uhr zählt, die Linse ist dicht, ein Beobachter.
  *   §14 Dritte Durchsicht: ein Weg aus den Einstellungen führt hinaus.
+ *   §15 Zusammenführen der zweiten Welle: EIN Klebefilter in der ganzen
+ *       App — Löschen-Knopf (E709), Meldungen (E711) und Tropfen leihen
+ *       `Linse.TROPFEN`; liest nur Dateien.
  *
  * DURCHSICHT (4. Oktober 2026; Redur am 3. Oktober, ca. 19:35 UTC: „Weiter
  * ohne pause,"). Der Bericht des Baus ging am Wochenlimit verloren; die
@@ -131,6 +134,39 @@ const p = (n: string, wahr: unknown, extra = ''): void => {
 const gleich = (n: string, ist: unknown, soll: unknown): void =>
   p(n, JSON.stringify(ist) === JSON.stringify(soll),
     `ist ${JSON.stringify(ist)}, soll ${JSON.stringify(soll)}`);
+
+/* §15 · EIN KLEBEFILTER IN DER GANZEN APP (Zusammenführen der zweiten Welle,
+   5. Oktober 2026). Drei Zweige derselben Woche hatten je einen eigenen
+   gebaut: der Löschen-Knopf (E709, `#ru-loesch-goo`), die Meldungen (E711,
+   `SelectionFlow.goo`, `#ru-goo`) und der Tropfen (E712, `Linse.TROPFEN`).
+   Drei Filter für EINE Bewegung sind drei Stellen, die auseinanderlaufen
+   (§8). Der Auftrag zum Zusammenführen: „Nur ein Goo-Filter: Löschen-Knopf
+   und Tropfen teilen sich `Linse.TROPFEN`." Hier steht es als Zahl: im
+   Quelltext genau EINE Alpha-Schwelle (`0 0 0 k −c` in einem
+   feColorMatrix), und sie steht in linse.ts; kein Stilblatt nennt einen
+   anderen Klebefilter; wer fliesst, leiht ihn. Liest nur Dateien. */
+console.log('\n§15 · Ein Klebefilter in der ganzen App');
+{
+  const alleTs = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => {
+    const f = path.join(d, e.name);
+    return e.isDirectory() ? (e.name === 'islands' ? [] : alleTs(f)) : (/\.ts$/.test(e.name) ? [f] : []);
+  });
+  const schwelle = /0 0 0 \d+(?:\.\d+)? -\d+(?:\.\d+)?/;
+  const mitSchwelle = alleTs(path.join(WURZEL, 'src'))
+    .filter(f => schwelle.test(fs.readFileSync(f, 'utf8')))
+    .map(f => path.relative(WURZEL, f).split(path.sep).join('/')).sort();
+  gleich('Im Quelltext steht EINE Alpha-Schwelle, und zwar in der Linse', mitSchwelle,
+    ['src/schale/bedienung/linse.ts']);
+  const stilOrt = path.join(WURZEL, 'quell/schale/stil');
+  const fremdeKleber = fs.readdirSync(stilOrt).filter(f => f.endsWith('.css')).sort()
+    .flatMap(f => [...fs.readFileSync(path.join(stilOrt, f), 'utf8').matchAll(/url\(#(ru-[a-z-]*goo[a-z-]*)\)/g)]
+      .map(m => f + ' → #' + m[1]));
+  gleich('Kein Stilblatt nennt einen eigenen Klebefilter', fremdeKleber, []);
+  const leihtNicht = ['src/schale/bedienung/delete.ts', 'src/schale/bedienung/selection-flow.ts',
+                      'src/schale/bedienung/tropfen.ts']
+    .filter(f => !/Linse\.tropfenLeihen\(\)/.test(fs.readFileSync(path.join(WURZEL, f), 'utf8')));
+  gleich('Löschen-Knopf, Meldungen und Tropfen leihen ihn (Linse.tropfenLeihen)', leihtNicht, []);
+}
 
 const browser = await chromium.launch();
 const fehler: string[] = [];
