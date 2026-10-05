@@ -8387,6 +8387,34 @@ Posteingang zeigt Glaskarten (`test588`).
    Glas für Toast und Lader verworfen (doppelter Druck beim Einblenden über
    `opacity`, Glas auf Glas). Der Stapel ist deshalb deckend mit
    Lichtkante. Glas hier nur, wenn Redur E703 (c) dafür aufhebt.
+8. **Wegwischen ist am Telefon ein Schnippen, kein Ziehen** (Durchsicht,
+   4. Oktober). Die Karten sind `pointer-events:none` wie `#toast` — ein
+   Tipp geht durch sie hindurch. Darunter liegt meist Inhalt, der rollen
+   darf; der Browser nimmt den Zug deshalb nach ein, zwei Bewegungen an sich
+   (`pointercancel`). Gezählt wird seither die letzte Bewegung: deutlich zur
+   Seite ist ein Schnippen und nimmt die Karte weg; langsam mitziehen geht
+   nicht. Echt ziehen hiesse, die Karten am Telefon zu Zielen zu machen —
+   dann nähmen sie den Knöpfen darunter den Tipp. Redur entscheidet.
+9. **Die Trefferzeilen der Suche sind am Telefon 39 px hoch** (gefunden in
+   der Durchsicht, 5. Oktober; NICHT von E711 — auf `b3cf1933` genauso,
+   gemessen mit derselben Sonde). §37 verlangt 44 px auf dem Hauptweg. Die
+   Zeilen tragen jetzt die Marke; ihre Höhe hat E711 nicht angefasst. Ein
+   eigener Bogen: die Zeilen am Telefon auf `var(--touch-min)`, mit
+   `test362` (exakte Zahlen in `marken-decke.json`) und `test402` als
+   Nachbarn und einem Lauf, der die Höhe am Telefon misst.
+10. ~~**Der Fächer beim Zeigen liegt über „KI" und „Favorit"**~~ —
+   GESCHLOSSEN am 5. Oktober (fünfte Durchsicht). Gefunden in der vierten
+   Durchsicht: am Rechner ging er 8 px unter der Glocke auf, 340 × 242 px,
+   und deckte die zwei Knöpfe rechts in der Kopfzeile der Seite. Wer auf
+   der Glocke verweilte und dann dorthin wollte, fuhr in den Fächer; solange
+   der Zeiger darauf lag, blieb er offen, und ein Klick traf eine Meldung.
+   Die vierte Durchsicht liess es Redur offen; die fünfte hat es repariert,
+   weil der Weg länger war als auf `b3cf1933`: der Fächer geht jetzt unter
+   der Reihe auf, die direkt unter der Glocke steht (`unterDerReihe` in
+   hinweis.ts), „KI", „Favorit" und „…" bleiben frei. Beweis: `test588`
+   §13 — rot gegen die Reparatur der vierten Durchsicht, grün danach; die
+   Gegenprobe (Fächer wieder 8 px unter der Glocke) macht ihn wieder rot.
+   Ob der Fächer beim Zeigen überhaupt aufgehen soll, bleibt Redurs Wahl.
 
 **Was es NICHT ist:** kein Fehler. Jeder Griff geht wie vorher (Klick auf
 die Glocke, Strg P, Strg K, `#q`, `[data-i]`, Enter, Escape).

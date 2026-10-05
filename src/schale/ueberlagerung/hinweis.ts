@@ -127,7 +127,7 @@ const Hinweis = (() => {
   /* WISCHEN: ein waagerechter Zug über 12 px, der auf einer Karte begann,
      gehört ihr (`wischen.ts` hört ihn dann nicht); über 40 % oder schnell: weg. */
   let zug: { id: number; x0: number; y0: number; t0: number; el: HTMLElement; wer: Aeltere | null;
-             gefangen: boolean } | null = null;
+             gefangen: boolean; x: number; y: number; t: number } | null = null;
   const trifft = (x: number, y: number): { el: HTMLElement; wer: Aeltere | null } | null => {
     for (const a of aeltere) {
       const r = a.el.getBoundingClientRect();
@@ -140,14 +140,31 @@ const Hinweis = (() => {
     }
     return null;
   };
+  /* WAS SEINE FINGER SELBST NIMMT, BEHÄLT SIE (Durchsicht E711): unter den
+     Karten (`pointer-events:none`) lag die Tafel, der Stapel fing den Strich
+     nach 12 px ab — es kamen 8 von 170 px an. Der Zug gehört der Meldung
+     nur, wo die Fläche das Waagerechte dem Browser lässt. */
+  const nimmtSelbst = (ziel: EventTarget | null): boolean => {
+    for (let el = ziel instanceof Element ? ziel : null; el && el !== document.body; el = el.parentElement) {
+      if (el instanceof HTMLElement && el.dataset['keinWisch'] !== undefined) return true;
+      if (el instanceof HTMLInputElement && el.type === 'range') return true;
+      const s = getComputedStyle(el);
+      const ta = s.touchAction;
+      if (ta && ta !== 'auto' && ta !== 'manipulation' && !/pan-x|pan-left|pan-right/.test(ta)) return true;
+      if (el.scrollWidth > el.clientWidth + 2 && /auto|scroll/.test(s.overflowX)) return true;
+    }
+    return false;
+  };
   addEventListener('pointerdown', (e: PointerEvent) => {
     zug = null;
     if (e.pointerType !== 'touch') return;
     const z = trifft(e.clientX, e.clientY);
-    if (z) zug = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, ...z, gefangen: false };
+    if (z && !nimmtSelbst(e.target)) zug = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, ...z,
+      gefangen: false, x: e.clientX, y: e.clientY, t: e.timeStamp };
   }, { capture: true, passive: true });
   addEventListener('pointermove', (e: PointerEvent) => {
     if (!zug || e.pointerId !== zug.id) return;
+    zug.x = e.clientX; zug.y = e.clientY; zug.t = e.timeStamp;
     const dx = e.clientX - zug.x0, dy = e.clientY - zug.y0;
     if (!zug.gefangen) {
       if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 12) { if (Math.abs(dy) > 12) zug = null; return; }
@@ -157,13 +174,10 @@ const Hinweis = (() => {
     zug.el.style.translate = dx.toFixed(1) + 'px 0';
     zug.el.style.opacity = String(Math.max(0.2, 1 - Math.abs(dx) / 260));
   }, { capture: true, passive: true });
-  const zugEnde = (e: PointerEvent): void => {
-    if (!zug || e.pointerId !== zug.id) return;
-    const z = zug; zug = null;
-    if (!z.gefangen) return;
-    e.stopPropagation();
-    const dx = e.clientX - z.x0;
-    const schnell = Math.abs(dx) / Math.max(1, e.timeStamp - z.t0) > 0.6;
+  /** Losgelassen bei `x` zur Zeit `t`: schnell oder weit genug → weg. */
+  const loslassen = (z: NonNullable<typeof zug>, x: number, t: number): void => {
+    const dx = x - z.x0;
+    const schnell = Math.abs(dx) / Math.max(1, t - z.t0) > 0.6;
     const weit = Math.abs(dx) > z.el.getBoundingClientRect().width * 0.4;
     z.el.style.removeProperty('translate');
     z.el.style.removeProperty('opacity');
@@ -171,8 +185,23 @@ const Hinweis = (() => {
     if (z.wer) gehen(z.wer);
     else { clearTimeout(toastTimer); document.getElementById('toast')?.classList.remove('show'); }
   };
-  addEventListener('pointerup', zugEnde, { capture: true });
-  addEventListener('pointercancel', zugEnde, { capture: true });
+  addEventListener('pointerup', (e: PointerEvent) => {
+    if (!zug || e.pointerId !== zug.id) return;
+    const z = zug; zug = null;
+    if (!z.gefangen) return;
+    e.stopPropagation();
+    loslassen(z, e.clientX, e.timeStamp);
+  }, { capture: true });
+  /* ROLLT DER BROWSER, kommt `pointercancel` nach ein, zwei Bewegungen —
+     seine Lage sagt nichts (Durchsicht E711). Gezählt wird die LETZTE
+     Bewegung: deutlich zur Seite (≥ 8 px) war ein Schnippen. */
+  addEventListener('pointercancel', (e: PointerEvent) => {
+    if (!zug || e.pointerId !== zug.id) return;
+    const z = zug; zug = null;
+    const dx = z.x - z.x0, dy = z.y - z.y0;
+    if (z.gefangen || (Math.abs(dx) >= 8 && Math.abs(dx) > Math.abs(dy))) loslassen(z, z.x, z.t);
+    else { z.el.style.removeProperty('translate'); z.el.style.removeProperty('opacity'); }
+  }, { capture: true });
 
   /* ------------------------------------------------------------------------
    * EIN FUND DES UMZUGS. Hier stand `document.getElementById('toast')` und
@@ -286,10 +315,25 @@ const Hinweis = (() => {
 
   const faecherOffen = (): boolean => !!faecher && !faecher.hidden;
 
+  /** Fokus an die Glocke, oder (nichts mehr ungelesen, sie ist weg) an
+   *  ihren Nachbarn im Kopf — nie ins Leere (§38, Durchsicht E711). */
+  const fokusImKopf = (g: HTMLElement): void => {
+    if (!g.isConnected) return;
+    if (!g.hidden && g.offsetParent !== null) { g.focus(); return; }
+    const reihe = [...(g.parentElement?.querySelectorAll<HTMLElement>('button, a[href], [tabindex="0"]') ?? [])]
+      .filter(e => e === g || (!e.hidden && e.offsetParent !== null && !e.matches(':disabled')));
+    const k = reihe.indexOf(g);
+    (reihe[k + 1] ?? reihe[k - 1])?.focus();
+  };
+
   const faecherSchliessen = (sofort = false): void => {
     clearTimeout(faecherUhr); clearTimeout(faecherZu);
     const f = faecher;
     if (!f || f.hidden) return;
+    /* Wer darin stand, steht wieder im Kopf; die Glocke sagt „zu". */
+    const g = faecherGlocke;
+    g?.setAttribute('aria-expanded', 'false');
+    if (g && f.contains(document.activeElement)) fokusImKopf(g);
     const fertig = (): void => { f.hidden = true; f.classList.remove('geht'); };
     if (sofort || ruhig()) { fertig(); return; }
     f.classList.add('geht');
@@ -313,7 +357,11 @@ const Hinweis = (() => {
     if (!f || !ziel || ruhig()) { faecherSchliessen(true); return; }
     const ebene = f.querySelector<HTMLElement>('.ru-faecher-karten');
     const karten = [...f.querySelectorAll<HTMLElement>('.ru-meldung')];
-    if (!ebene || !karten.length) { faecherSchliessen(true); return; }
+    if (!ebene || !karten.length || !g) { faecherSchliessen(true); return; }
+    /* Die Glocke bleibt, bis die Karten in ihr sind (Durchsicht E711):
+       `glockeFrisch` nahm sie sofort weg, die Karten flogen auf „Konto". */
+    const hielt = g.hidden;
+    g.hidden = false;
     f.classList.add('fliesst');
     SelectionFlow.goo(ebene, true);
     const mx = ziel.left + ziel.width / 2, my = ziel.top + ziel.height / 2;
@@ -334,8 +382,17 @@ const Hinweis = (() => {
       f.classList.remove('fliesst');
       bahnen.forEach(b => b.cancel());
       faecherSchliessen(true);
-      g?.animate([{ transform: 'scale(1.18)' }, { transform: 'none' }],
+      const weg = (): void => {
+        let offen = false;
+        try { offen = (Werkzeuge.meldungen() as any[]).some(m => !m.gelesen); } catch { /* wie vorher */ }
+        if (!hielt || offen || g.hidden) return;
+        const hatte = document.activeElement === g;
+        g.hidden = true;
+        if (hatte) fokusImKopf(g);
+      };
+      const puls = g.animate([{ transform: 'scale(1.18)' }, { transform: 'none' }],
         { duration: 320, easing: RedionSpring.token('press').easing });
+      puls.finished.then(weg).catch(weg);
     };
     Promise.all(bahnen.map(b => b.finished)).then(ende).catch(ende);
   };
@@ -364,7 +421,28 @@ const Hinweis = (() => {
       if (m?.seite) App.oeffne(m.seite);
       else zuDenMeldungen();
     });
+    /* Geht der Fokus woandershin (Strg P …), geht der Fächer mit (Durchsicht E711). */
+    f.addEventListener('focusout', (e: FocusEvent) => {
+      const nach = e.relatedTarget instanceof Node ? e.relatedTarget : null;
+      if (!nach || f.contains(nach) || faecherGlocke?.contains(nach)) return;
+      faecherSchliessen();
+    });
     f.addEventListener('keydown', (e: KeyboardEvent) => {
+      /* Tab hinaus: zu, und weiter neben der Glocke wie bei einem Menüknopf —
+         sonst ging der Fokus aus der Seite, der Fächer blieb (Durchsicht E711). */
+      if (e.key === 'Tab') {
+        const alle = [...f.querySelectorAll<HTMLElement>('button')];
+        const k = alle.indexOf(document.activeElement as HTMLElement);
+        const g = faecherGlocke;
+        if (!g || (e.shiftKey ? k > 0 : k < alle.length - 1)) return;
+        e.preventDefault();
+        faecherSchliessen(true);
+        const reihe = [...(g.parentElement?.querySelectorAll<HTMLElement>('button, a[href], [tabindex="0"]') ?? [])]
+          .filter(x => !x.hidden && x.offsetParent !== null && !x.matches(':disabled'));
+        const i = reihe.indexOf(g);
+        if (i >= 0) (e.shiftKey ? reihe[i] : reihe[i + 1] ?? reihe[i])?.focus();
+        return;
+      }
       if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
       const alle = [...f.querySelectorAll<HTMLElement>('button')];
       const k = alle.indexOf(document.activeElement as HTMLElement);
@@ -376,12 +454,40 @@ const Hinweis = (() => {
     return f;
   };
 
+  /* NICHTS ZUDECKEN, WAS DIREKT UNTER DER GLOCKE STEHT (fünfte Durchsicht
+     E711, test588 §13). 8 px unter der Glocke lag der Fächer am Rechner über
+     „KI" und „Favorit" in der Kopfzeile der Seite: wer auf der Glocke
+     verweilte und dann dorthin wollte, fuhr in ihn hinein, und er blieb
+     offen — ein Klick traf eine Meldung. Jetzt geht er unter der Reihe auf,
+     die direkt unter der Glocke steht: Ziele, die GANZ in ihr stehen
+     (Oberkante unter der Glocke, Unterkante höchstens 96 px darunter),
+     abgetastet über seine Breite. Die Reihe ist schmal (am Rechner 55 px),
+     der Zeiger quert sie auf dem Weg in den Fächer in weniger als den
+     280 ms, nach denen er zugeht. Was tiefer reicht (Karten, Text), zählt
+     nicht — ein Fächer liegt immer über etwas; er soll nur nicht über dem
+     liegen, wohin man von der Glocke aus als Nächstes zeigt. */
+  const REIHE = 72;
+  const unterDerReihe = (g: DOMRect, links: number, breite: number): number => {
+    let unten = g.bottom;
+    for (let y = g.bottom + 4; y <= g.bottom + REIHE; y += 12) {
+      for (let x = links + 4; x <= links + breite - 4; x += 16) {
+        const ziel = document.elementFromPoint(x, y)
+          ?.closest<HTMLElement>('button, a[href], input, select, textarea, [role="button"]');
+        if (!ziel || ziel.closest('#ru-glocken-faecher')) continue;
+        const r = ziel.getBoundingClientRect();
+        if (r.top >= g.bottom - 2 && r.bottom <= g.bottom + REIHE + 24) unten = Math.max(unten, r.bottom);
+      }
+    }
+    return unten;
+  };
+
   const faecherOeffnen = (glocke: HTMLElement, fokus = false): void => {
     clearTimeout(faecherUhr); clearTimeout(faecherZu);
     if (typeof Werkzeuge === 'undefined' || glocke.hidden || glocke.offsetParent === null) return;
     const liste = (Werkzeuge.meldungen() as any[]).slice(0, 3);
     if (!liste.length) return;
     const f = faecherBauen();
+    if (faecherGlocke && faecherGlocke !== glocke) faecherGlocke.setAttribute('aria-expanded', 'false');
     faecherGlocke = glocke;
     const zeit = (w: string): string => { try { return Werkzeuge.zeitKurz(w); } catch { return ''; } };
     f.innerHTML =
@@ -397,12 +503,18 @@ const Hinweis = (() => {
         '<button type="button" data-faecher="posteingang">Posteingang öffnen</button>' +
       '</div>';
     f.classList.remove('geht', 'fliesst');
-    f.hidden = false;
     const g = glocke.getBoundingClientRect();
     const breite = Math.min(340, innerWidth - 16);
+    const links = Math.max(8, Math.min(g.right - breite, innerWidth - breite - 8));
+    /* Abgetastet, solange er verborgen ist — sonst träfe er sich selbst. */
+    f.hidden = true;
+    const oben = unterDerReihe(g, links, breite);
+    f.hidden = false;
     f.style.width = breite + 'px';
-    f.style.left = Math.max(8, Math.min(g.right - breite, innerWidth - breite - 8)) + 'px';
-    f.style.top = (g.bottom + 8) + 'px';
+    f.style.left = links + 'px';
+    /* Unter einer Reihe 16 px Luft — sonst sässe er auf ihrer Trennlinie
+       (in den Bildern gesehen); direkt an der Glocke wie bisher 8. */
+    f.style.top = (oben > g.bottom ? oben + 16 : g.bottom + 8) + 'px';
     if (!ruhig()) {
       const feder = RedionSpring.token('snappy');
       const mx = g.left + g.width / 2, my = g.top + g.height / 2;
@@ -417,20 +529,37 @@ const Hinweis = (() => {
       f.querySelector<HTMLElement>('.ru-faecher-fuss')?.animate([{ opacity: 0 }, { opacity: 1 }],
         { duration: 180, delay: 120, fill: 'backwards' });
     }
+    glocke.setAttribute('aria-controls', f.id);
+    glocke.setAttribute('aria-expanded', 'true');
     if (fokus) f.querySelector<HTMLElement>('button')?.focus();
   };
+
+  /* EIN TIPP ODER KLICK DANEBEN schliesst den Fächer (Durchsicht E711) — am
+     Telefon blieb er sonst stehen; der Tipp geht weiter an sein Ziel. */
+  addEventListener('pointerdown', (e: PointerEvent) => {
+    if (!faecherOffen()) return;
+    const ziel = e.target instanceof Node ? e.target : null;
+    if (ziel && (faecher?.contains(ziel) || faecherGlocke?.contains(ziel))) return;
+    faecherSchliessen();
+  }, { capture: true, passive: true });
 
   /** Eine Glocke bekommt den Fächer — einmal, der Klick bleibt ihrer. */
   const faecherBinden = (glocke: HTMLElement | null): void => {
     if (!glocke || glocke.dataset['faecher'] === 'an') return;
     glocke.dataset['faecher'] = 'an';
     glocke.setAttribute('aria-haspopup', 'true');
+    glocke.setAttribute('aria-expanded', 'false');
     let lang: ReturnType<typeof setTimeout> | undefined;
     let schlucken = false;
     let x0 = 0, y0 = 0;
     glocke.addEventListener('pointerenter', (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return;
       clearTimeout(faecherZu);
+      /* SCHON OFFEN, UND NICHT IM GEHEN: nichts neu (vierte Durchsicht E711).
+         Die Karten fliegen aus der Glocke, also im ersten Bild unter dem
+         ruhenden Zeiger hervor — er „verliess" die Glocke und kam zurück,
+         und der Fächer ging zu und wieder auf, immer wieder. */
+      if (faecherOffen() && faecherGlocke === glocke && !faecher?.classList.contains('geht')) return;
       faecherUhr = setTimeout(() => faecherOeffnen(glocke), 220);
     });
     glocke.addEventListener('pointerleave', (e: PointerEvent) => {

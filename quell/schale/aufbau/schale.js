@@ -3699,6 +3699,15 @@ const App = (() => {
            `fokus.ts` rechnet seit E223 genauso — die letzte im Dokument ist
            die oberste. Dieselbe Regel an beiden Stellen, sonst schliesst Esc
            etwas anderes, als der Fokus gerade hält. */
+        /* WAS BEIM DRUCK OFFEN WAR (Durchsicht E711): eigene Griffe (Suche,
+           Palette) nehmen ihr Fenster VOR diesem — derselbe Druck räumte dann
+           auch die Meldungen ab (zwei auf einen, vgl. test296 §3). Im Einfangen
+           wird nur notiert; geschlossen wird weiter nur unten. */
+        let warOffen = false;
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape')
+                warOffen = !!document.querySelector('.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf');
+        }, true);
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape')
                 return;
@@ -3712,8 +3721,9 @@ const App = (() => {
                 m.remove();
             else if (o)
                 o.remove();
-            /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff). */
-            else if (typeof Hinweis !== 'undefined')
+            /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff) —
+               aber nur, wenn dieses Escape nicht schon ein Fenster genommen hat. */
+            else if (!warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined')
                 Hinweis.escape();
         });
     };

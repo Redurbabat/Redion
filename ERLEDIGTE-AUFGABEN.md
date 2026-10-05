@@ -1,5 +1,54 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 4. und 5. Oktober 2026 · E711, Durchsicht · Der Fächer geht wieder zu, ein Escape tut eines, die Marke ist lesbar, der Strich kommt an, die jetzige Wahl bleibt markiert, „KI" bleibt frei
+
+**Redur:** am 3. Oktober um ca. 19:35 UTC „Weiter ohne pause," — und weiter
+„ohne eine funktione löschen".
+
+**Gefunden:** Mit der Tastatur geöffnet blieb der Fächer an der Glocke nach
+einem Klick daneben, nach Tab und nach Strg P stehen (über der Suche); am
+Telefon nach langem Drücken. Nach „Alle gelesen" fiel der Fokus auf `body`,
+und die Karten flossen ins Leere, weil die Glocke schon weg war. Ein Escape
+in der Suche schloss die Suche UND räumte die Meldungen ab. Die Schrift auf
+der Marke fiel in mehreren Schemata unter 4,5 : 1 (der Stern der Palette bis
+1,0). Ein Strich auf der Tafel, der unter einer Meldung begann, kam mit 8
+von 170 px an.
+
+**Gebaut:** Klick oder Tipp daneben, Tab, ein Fokus anderswo schliessen den
+Fächer; die Glocke sagt `aria-expanded`; der Fokus bleibt im Kopf; die
+Glocke steht, bis die Karten in ihr sind. Der gemeinsame Escape-Griff merkt
+sich im Einfangen, ob ein Fenster offen war. Volle Schrift auf der Marke,
+der Chip ohne Tönung, der Stern in der Farbe der Zeile. Ein Zug unter einer
+Meldung gehört ihr nur, wo die Fläche darunter das Waagerechte nicht selbst
+nimmt; ein Schnippen zählt nach der letzten Bewegung.
+
+**Vierte Durchsicht (5. Oktober):** im Menü mit Suche verlor die jetzige
+Wahl (`.on`, „Quelle wechseln") ihre Fläche — der Akzent der Marke gilt
+jetzt nur in Suche und Palette. Der Fächer flackerte, solange der Zeiger
+auf der Glocke ruhte (die Karten fliegen unter ihm hervor) — ein
+`pointerenter` baut ihn nicht mehr neu. Er deckte die Blase der Glocke halb
+zu — sie geht, solange er offen ist. Wächter `test588` §12.
+
+**Fünfte Durchsicht (5. Oktober):** der Fächer, der beim Zeigen aufgeht,
+lag am Rechner über „KI" und „Favorit" direkt unter der Glocke; wer von der
+Glocke dorthin wollte, fuhr in ihn hinein, und ein Klick traf eine Meldung
+(die vierte Durchsicht hatte es Redur offen gelassen, L232 Punkt 10). Er
+geht jetzt unter der Reihe auf, die direkt unter der Glocke steht
+(`unterDerReihe`); wer in ihn hinein will, quert die Reihe. Wächter
+`test588` §13. Dazu die acht Gegenproben, die beim Abbruch der vierten
+Durchsicht noch fehlten. Die sechste Durchsicht (5. Oktober abends) hat den
+Endstand gemessen — `test588`, die Sonden, `test388`, die Bilder und die
+Nachbarn, unter dem Schloss — und eingecheckt.
+
+**Geprüft:** `test588` §11 (rot gegen `556ffdaa`: 46 von 57), §12 (rot
+gegen `6853b992`: 47 von 63, und gegen die Reparatur der Durchsicht: 58 von
+63) und §13 (rot gegen die Reparatur der vierten Durchsicht: 66 von 68),
+danach 69 von 69 auf dem Endstand; Gegenproben und Nachbarn im Nachtrag zu
+E711, `test388` §5 2838 KB (Grundstand 2825, Decke 2850).
+Nicht von E711, aber gefunden: die Trefferzeilen am Telefon sind 39 px
+(L232 Punkt 9); im Schema „Starker Kontrast" ist am Telefon der aktive
+Reiter der unteren Leiste leer (auf `b3cf1933` genauso, E705).
+
 ## 28. September 2026 · E711 · Die Suche wächst aus der Kapsel, die Meldungen stapeln sich
 
 **Redur:** um ca. 22:05 das Video „Liquid Glass" und dazu „Schau mal das

@@ -1481,7 +1481,16 @@ der einen Live-Region, die Glocke, deren Klick WEITER den Posteingang
 nur während des Zusammenfliessens, und alles noch einmal ruhig und am
 Telefon (langes Drücken). Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf seinem Zweig, neben
-den anderen Zweigen der zweiten Welle; beim Zusammenführen nachzählen.*
+den anderen Zweigen der zweiten Welle; beim Zusammenführen nachzählen.
+Die Durchsicht vom 4. Oktober hat ihm §11 gegeben (keine neue Datei, die
+Zahl bleibt): der Fächer geht wieder zu, ein Escape tut eines, die Schrift
+auf der Marke hält 4,5 : 1 in allen zehn Schemata, und ein Strich auf der
+Tafel unter einer Meldung kommt ganz an. Die vierte Durchsicht vom
+5. Oktober §12: im Menü mit Suche bleibt die jetzige Wahl (`.on`) markiert,
+der Fächer flackert nicht, solange der Zeiger auf der Glocke ruht, und er
+deckt ihre Blase nicht halb zu. Die fünfte am selben Tag §13: der Fächer
+deckt die Reihe direkt unter der Glocke nicht zu — „KI" und „Favorit"
+bleiben auf dem kürzesten Weg klickbar.*
 
 ### Die Befehle
 

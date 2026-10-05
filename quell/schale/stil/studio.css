@@ -466,17 +466,27 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
   box-shadow:inset 0 1px 0 rgb(255 255 255 / .22),0 1px 3px rgb(0 0 0 / .18)}
 .ru-marke[hidden]{display:none}
 .ru-marke-still{background:var(--bg-hover);box-shadow:none}
-.ru-marke-traeger > button.on{background:transparent;color:var(--auf-accent);transition:color var(--motion-fast) var(--ease)}
-.ru-marke-traeger > button.on :is(.pth,.snip){color:inherit;opacity:.82}
+/* Akzent mit heller Schrift NUR in der Suche und der Palette (`.finder .res`): im
+   Menü mit Suche heisst `.on` „das gilt jetzt" („Quelle wechseln") und behält
+   seine Fläche und seine Schrift — sonst stand dort Weiss auf Weiss (vierte
+   Durchsicht E711, test588 §12). */
+.finder .res.ru-marke-traeger > button.on{background:transparent;color:var(--auf-accent);transition:color var(--motion-fast) var(--ease)}
+/* Kürzel und Ausschnitt voll auf der Marke: mit .82 nur 3,77–3,99 : 1 (Durchsicht E711). */
+.finder .res.ru-marke-traeger > button.on :is(.pth,.snip){color:inherit;opacity:1}
+/* Der Stern folgt auf der Marke der Zeile (Grau/Gold dort 1,0–2,7 : 1); ★/☆ sagt die Form (§38). */
+.finder .res.ru-marke-traeger > button.on > .fest,
+.finder .res.ru-marke-traeger > button.on > .fest:hover{color:inherit}
 .menu-liste.ru-marke-traeger button.jetzt{background:transparent}
-/* „↵ Enter" reitet auf der Marke — nur am Rechner (am Telefon gibt es die Taste so nicht). */
+/* „↵ Enter" reitet auf der Marke — nur am Rechner (am Telefon gibt es die Taste so nicht).
+   Ohne Tönung, mit Rand in der Schriftfarbe: getönt nur 3,64 : 1 (Durchsicht E711). */
 .ru-marke-taste{position:absolute;right:10px;top:50%;translate:0 -50%;padding:2px 7px;
   border-radius:var(--radius-sm);font:600 11px/1.4 var(--font);letter-spacing:.02em;white-space:nowrap;
-  color:var(--auf-accent);background:rgb(255 255 255 / .2)}
-.ru-marke-traeger > button.on > .pth{margin-right:64px}
+  color:var(--auf-accent);background:none;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--auf-accent) 45%,transparent)}
+.finder .res.ru-marke-traeger > button.on > .pth{margin-right:64px}
 @media(max-width:760px){
   .ru-marke-taste{display:none}
-  .ru-marke-traeger > button.on > .pth{margin-right:0}
+  .finder .res.ru-marke-traeger > button.on > .pth{margin-right:0}
 }
 /* Die neuen Treffer kommen nacheinander (33 ms Abstand, wie im Video). */
 .ru-kommt{animation:ru-kommt var(--motion-normal) var(--ease-enter) both;animation-delay:calc(var(--ru-n) * 33ms)}
@@ -497,6 +507,9 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 /* Der Fächer: Karten ohne eigene Unschärfe — im Goo-Filter sähe sie nichts. */
 #ru-glocken-faecher{position:fixed;z-index:880;display:grid;gap:var(--space-3)}
 #ru-glocken-faecher[hidden]{display:none}
+/* Solange der Fächer offen ist, sagt ER, was in der Glocke liegt: die Blase
+   (E462) stünde genau unter ihm und ragte halb heraus (vierte Durchsicht E711). */
+#studio-glocke[aria-expanded="true"]::after{display:none}
 .ru-faecher-karten{display:grid;gap:var(--space-3)}
 .ru-meldung{display:grid;grid-template-columns:1fr auto;grid-template-areas:"quelle zeit" "text text";gap:2px 10px;
   min-height:var(--touch-min);padding:10px 14px;text-align:left;border-radius:var(--radius-xl);

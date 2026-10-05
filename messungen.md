@@ -5450,3 +5450,115 @@ Auffächern an der Glocke und das Zusammenfliessen nach „Alle gelesen" —
 Wiedergabe 1/10 über `Animation.setPlaybackRate`, ein Bild alle 330 ms
 Echtzeit, also alle 33 ms Bewegungszeit; Rechner und Telefon, hell und
 dunkel, je vorher und nachher.
+
+### Nachtrag — die Durchsicht (4. und 5. Oktober 2026)
+
+**Wo und wie.** Derselbe Zweig nach der Durchsicht (`test588` §11 und die
+Reparatur), dieselbe Umgebung; gemessen am 5. Oktober um ca. 00:40 UTC
+unter dem geteilten Schloss, Rechner 1440 × 900, hell, Standard-Schema.
+Die Zahlen, die oben „folgen im Nachtrag" heissen:
+
+```txt
+Suche aufgehen      EINE Web-Animation auf der Scheibe, nur transform, 796 ms auf
+                    --feder-sanft (linear(), ohne Überschwingen); erstes Bild
+                    translate(613px,-118px) scale(.386,.106) = das Rechteck der Kapsel
+Staffel             nur neue Zeilen: Verzögerung 0 / 33 / 66 ms, je 200 ms
+Marke bei ↓         12 verschiedene Orte über 39 px, ruht nach 278 ms genau auf der
+                    Zeile; Höhe unterwegs bis 41,1 px (Dehnung), am Ziel 39 px;
+                    ↓ baut nichts neu (dieselben Knöpfe)
+Stapel              drei Meldungen: #toast oben 835 px (43 hoch), darüber die zwei
+                    davor bei 788 und 741 px (39 hoch, 8 px Lücke); weg nach 6,2 s
+Fächer              drei Karten auf --feder-knapp, je 542 ms, 0 / 40 / 80 ms
+                    versetzt; Knöpfe 58 / 58 / 58 / 44 / 44 px hoch
+„Alle gelesen"      Goo-Filter an EINER Ebene von 5 bis 541 ms, danach an keiner;
+                    die Glocke steht in allen Bildern des Fliessens an ihrem Ort
+                    und geht danach; Fokus am Nachbarn („Konto"); 3 von 3 gelesen,
+                    keine gelöscht
+```
+
+**Start (test388 §5).** Auf dem Endstand 2838 KB gzip über 248 Dateien,
+Decke 2850 KB; auf dem Grundstand `b3cf1933` gleich danach 2825 KB (beide
+am 5. Oktober um ca. 18:00 UTC, unter dem Schloss, sechste Durchsicht) —
+der Zweig allein kostet 13 KB (zugedacht waren je Zweig etwa 10 KB) und
+hält die Decke mit 12 KB Luft. Je Datei (gzip -9) gegen `b3cf1933`
++12'973 Bytes über zehn Dateien (`hinweis.js` +7'133, `selection-flow.js`
++2'484, `studio.css` +1'792, `schale.js` +828, `werkzeuge.js` +308,
+`dienst.js` +192, `menue.js` +118, `studio.js` +73, `menueband.js` +46,
+`stand.js` −1), davon +3'053 aus den Durchsichten (`hinweis.js` +2'415,
+`studio.css` +406, `schale.js` +232). Die dritte und die vierte Durchsicht
+hatten 2837 KB gegen 2825 KB gemessen, die fünfte (ca. 14:27 UTC) 2838
+gegen 2825 KB.
+
+**Der flackernde Fächer** (vierte Durchsicht, 5. Oktober ca. 06:10 UTC,
+gegen den Stand der Reparatur der Durchsicht, Rechner 1440 × 900): der
+Zeiger ruht in der Mitte der Glocke, 6 s lang, alle 150 ms gefragt. Die
+Glocke bekam alle ~400 ms ein `pointerleave` (der Nachfolger: die
+fliegende Karte `.ru-meldung-text` unter dem Zeiger) und ~170 ms später
+wieder ein `pointerenter` — 15 Mal in 6 s; jedes Mal baute der Fächer
+220 ms später neu auf und flog wieder heraus, `:hover` wechselte im Takt
+(die Blase blinkte mit). Mit Wiedergabe 1/10 dasselbe im Takt der
+Bewegung. Nach der Reparatur (ca. 07:09 UTC): ein `pointerleave` und ein
+`pointerenter` am Anfang (die erste Karte fliegt unter dem Zeiger hervor),
+danach 6 s lang offen und `:hover`, kein Neuaufbau.
+
+**Kontrast** (wie gemalt, Deckkraft und Tönung mitgerechnet; das kleinste
+Verhältnis je Schema):
+
+```txt
+                 Schrift auf der Marke    Fächer, Stapel, Posteingang
+                 vorher → nachher         nachher
+standard         2,16 → 5,15              6,06
+hell             1,03 → 5,70              5,50
+nacht            1,18 → 5,90              5,76
+wald             1,10 → 7,93              6,62
+sand             1,30 → 4,71              4,90
+papier           1,05 → 7,46              7,20
+kontrast         1,08 → 14,67             13,83
+rose             1,24 → 5,80              5,38
+touchkit-hell    1,00 → 6,37              5,27
+touchkit-dunkel  1,06 → 8,23              7,63
+```
+
+(„vorher" ist E711 vor der Durchsicht, gemessen von der Sonde der zweiten
+Durchsicht am 4. Oktober um ca. 16:15 UTC; das kleinste war in jedem
+Schema der Stern der Palette, Grau oder Gold auf dem Akzent. Daneben lagen
+Kürzel und Ausschnitt bei 3,77 bis 4,48 und „↵ Enter" bei 3,64 bis 4,48.)
+
+**Der Fächer über „KI"** (gefunden von der fünften Durchsicht, 5. Oktober
+ca. 14:19 UTC; nachgemessen von der sechsten um ca. 18:04 UTC mit einer
+eigenen Sonde, unter dem Schloss — auf der Reparatur der vierten Durchsicht
+und auf dem Endstand; die Seite „Elektrotechnik Skript" offen, zwei
+ungelesene Meldungen). Die Glocke unten bei 50 px. Vorher: der Fächer ab
+58 px, 8 px unter der Glocke; „KI" (70–105 px) und „Favorit" (73–102 px)
+lagen darunter — `elementFromPoint` in ihrer Mitte traf die erste Karte —,
+bei 1440 × 900, 1280 × 800 und 1024 × 768 gleich; am Telefon (langes
+Drücken auf `#mb-glocke`) ab 51 px, 7 px unter der Glocke, über „Zurück"
+(45–89 px). In `test588` §13 der Weg Glocke → „KI" in sechs Schritten,
+450 ms Ruhe, Klick: die KI blieb zu, die Karte galt als gelesen. Nachher:
+der Fächer ab 121 px, 71 px unter der Glocke und 16 px unter der Reihe, die
+bei 105 px endet (die Reihe ist 55 px hoch), an allen drei Breiten; „KI",
+„Favorit" und „…" frei, derselbe Weg öffnet die KI, der Fächer ist dann
+zu; der Weg Glocke → erste Karte (acht Schritte, je 16 ms) quert die Reihe,
+der Fächer bleibt offen. Am Telefon ab 105 px (61 px unter der Glocke),
+unten bei 281 von 844 — ganz im Bild, „Zurück" frei. Das Abtasten:
+6 × 21 = 126 Mal `elementFromPoint`, nur beim Öffnen. Mit 8 px unter der
+Reihe, wie die fünfte ihn zuerst gebaut hatte, stand er bei 113 px — genau
+auf der Trennlinie unter der Kopfzeile (114 px, in ihren Bildern von ca.
+14:28 UTC); mit 16 px steht er jetzt 7 px darunter. Die Tastatur um die Glocke ist
+dieselbe wie vorher: ↓ öffnet, Tab geht durch die Karten, „Alle gelesen",
+„Posteingang öffnen" und dann zu „Konto" — der Fächer ist zu.
+
+**Gegenproben, die noch fehlten** (fünfte Durchsicht, 5. Oktober ca. 14:04
+bis 14:17 UTC, in der Kopie des Endstands der vierten Durchsicht, je eine
+Verbiegung im gebauten `quell/`, `test588` darüber): alle acht rot —
+zwei-auf-einen 62/63, strich-gefangen 61/63, blass 62/63, stern-grau
+62/63, chip-getoent 62/63, marke-leckt 60/63, flackert 62/63, blase-halb
+62/63. Die zehn davor hatte die vierte Durchsicht um ca. 07:41 bis 07:57
+UTC gesehen.
+
+**Der lange Druck am Telefon** (Sonde der zweiten Durchsicht): um ca. 07:08
+UTC einmal rot („langes Drücken öffnet den Fächer" — null, unter Last);
+um ca. 13:48 UTC zweimal auf dem Zweig und einmal auf der Reparatur davor
+grün (13 von 13). Der Druck hält 650 ms, der Fächer kommt nach 480 ms; bei
+voller Maschine reicht das knapp. `test588` §10 prüft denselben Weg mit
+mehr Luft und war in allen Läufen grün.

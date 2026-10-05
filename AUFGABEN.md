@@ -1526,4 +1526,13 @@ Offen, jeweils mit eigenem Wächter (rot zuerst):
 5. Beim Zusammenführen der zweiten Welle: EIN Goo-Filter (`#ru-goo`) für
    Löschen-Knopf (E709), Tropfen (E712) und Glocke (E711).
 6. Meldungen als Glas nur, wenn Redur E703 (c) dafür aufhebt (L232 Punkt 7).
+7. Die Trefferzeilen der Suche am Telefon auf 44 px (heute 39 px, schon vor
+   E711; §37, L232 Punkt 9) — mit einem Lauf, der die Höhe am Telefon misst.
+
+## Gefunden beim Durchsehen von E711, gehört zu den Farben (E705)
+
+Im Schema „Starker Kontrast" steht am Telefon auf dem aktiven Reiter der
+unteren Leiste weder Zeichen noch Wort — Schwarz auf der schwarzen Pille.
+Gesehen in den Vorher-Bildern von E711 (`b3cf1933`), also nicht von E711.
+Mit eigenem Wächter (rot zuerst), im Bogen der Farben.
 

@@ -63,7 +63,8 @@
  *   §13 FÜNFTE DURCHSICHT (5. Oktober): der Fächer deckt die Reihe direkt
  *      unter der Glocke nicht zu („KI", „Favorit" in der Kopfzeile der
  *      Seite). Wer von der Glocke dorthin will, klickt sie; wer in den
- *      Fächer will, kommt über die Reihe hinweg hinein.
+ *      Fächer will, kommt über die Reihe hinweg hinein. Eine grosse Fläche
+ *      unter der Glocke schiebt ihn nicht weg.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E711) fällt sie in §1–§10: es gibt weder die
@@ -991,6 +992,20 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
     return { offen: !!f && !f.hidden, aufKarte: !!t && !!k && k.contains(t) }; })()`) as { offen: boolean; aufKarte: boolean };
   p('Von der Glocke in den Fächer (über die Reihe hinweg): er bleibt offen, der Zeiger liegt auf der Karte', !!karte && r3.offen && r3.aufKarte,
     JSON.stringify(r3));
+  await pc.mouse.move(700, 700);
+  await pc.waitForTimeout(400);
+  /* Nur die REIHE zählt: eine grosse Fläche, die unter der Glocke beginnt
+     und weit hinunter reicht (eine Karte, ein Bild), schiebt den Fächer
+     nicht von der Glocke weg — sonst stünde er irgendwo auf der Seite. */
+  await pc.evaluate(`(() => { const g = document.getElementById('studio-glocke').getBoundingClientRect();
+    const b = document.createElement('button'); b.id = 't588-gross'; b.textContent = 'Grosse Fläche';
+    b.style.cssText = 'position:fixed;z-index:5;left:' + (g.right - 300) + 'px;top:' + (g.bottom + 4) + 'px;width:300px;height:220px';
+    document.body.appendChild(b); })()`);
+  await pc.mouse.move(mitte.x, mitte.y); await pc.waitForTimeout(900);
+  const r4 = await pc.evaluate(REIHE) as { offen: boolean; oben: number | null; gUnten: number };
+  p('Eine grosse Fläche unter der Glocke schiebt den Fächer nicht weg (höchstens 96 px darunter)',
+    r4.offen && r4.oben !== null && r4.oben - r4.gUnten <= 96, JSON.stringify({ offen: r4.offen, oben: r4.oben, gUnten: r4.gUnten }));
+  await pc.evaluate(`document.getElementById('t588-gross')?.remove()`);
   await pc.mouse.move(700, 700);
   await pc.waitForTimeout(400);
   await a.zu();
