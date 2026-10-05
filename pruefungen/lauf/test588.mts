@@ -53,12 +53,20 @@
  *      nicht) — aber ein Zug, der unter einer Meldung auf einer Fläche
  *      beginnt, die ihre Finger selbst nimmt (`touch-action:none`: das
  *      Blatt mit dem Stift, die Tafel), kommt dort an und bleibt ein Strich.
+ *   §12 VIERTE DURCHSICHT (5. Oktober): die Akzent-Marke bleibt in der Suche
+ *      und der Palette. Im Menü mit Suche heisst `.on` „das gilt jetzt"
+ *      („Quelle wechseln") — diese Zeile behält ihre Fläche und bleibt
+ *      lesbar (≥ 4,5 : 1), hell und dunkel. Ruht der Zeiger auf der Glocke,
+ *      geht der Fächer EINMAL auf und bleibt (er flackerte), und er deckt
+ *      die Blase der Glocke (E462) nicht halb zu: solange er offen ist,
+ *      geht sie.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E711) fällt sie in §1–§10: es gibt weder die
  * Marke noch den Stapel noch den Fächer. Gegenproben stehen im Commit E711.
  * §11 fiel gegen 556ffdaa (E711 vor der Durchsicht) — siehe den Commit
- * „test588 (rot): … Durchsicht".
+ * „test588 (rot): … Durchsicht". §12 fiel gegen denselben Stand und gegen
+ * die Reparatur der Durchsicht — siehe „test588 (rot): Vierte Durchsicht".
  *
  *   node pruefungen/lauf/test588.mts
  * ==========================================================================*/
@@ -782,6 +790,109 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
     !!lage?.unterTafel && strich.zahl === vorStriche + 1 && strich.breite >= 120, JSON.stringify({ lage, vorStriche, strich }));
   p('… und die Meldung bleibt stehen (der Strich ist kein Wischen)', strich.toast && !strich.verschoben, JSON.stringify(strich));
   await h.zu();
+}
+
+/* ==========================================================================
+ * §12 · VIERTE DURCHSICHT (5. Oktober): die Akzent-Marke bleibt in ihren
+ * zwei Listen. `.ru-marke-traeger > button.on` machte JEDE Liste mit Marke
+ * zur Akzentliste — auch das Menü mit Suche, wo `.on` nicht „die Wahl der
+ * Pfeile" heisst, sondern „das gilt jetzt" („Quelle wechseln" in der
+ * Datenbank, steuerung.ts). Dort verlor die Zeile ihre Fläche: welche Quelle
+ * jetzt gilt, war nicht mehr zu sehen. Und am Rechner flackerte der Fächer,
+ * solange der Zeiger auf der Glocke ruhte.
+ * ========================================================================*/
+{
+  console.log('\n§12 Vierte Durchsicht: die jetzige Wahl bleibt markiert, der Fächer flackert nicht, keine halbe Blase');
+  const LESEN = `(() => {
+    /* \`color-mix()\` kommt als \`color(srgb r g b / a)\` mit Werten 0–1 zurück
+       (die Fläche des Menüs) — so gelesen wie \`rgb()\`, sonst wäre sie schwarz. */
+    const rgb = c => { const z = (c.match(/[\\d.]+/g) || []).map(Number);
+      return /^color\\(srgb/.test(c) ? [z[0] * 255, z[1] * 255, z[2] * 255, z[3] ?? 1] : z; };
+    const L = x => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+      return .2126 * f(x[0]) + .7152 * f(x[1]) + .0722 * f(x[2]); };
+    const kon = (a, b) => { const l1 = L(a), l2 = L(b); return (Math.max(l1, l2) + .05) / (Math.min(l1, l2) + .05); };
+    const mix = (fg, a, bg) => [0, 1, 2].map(i => fg[i] * a + bg[i] * (1 - a));
+    /* Der Grund hinter der Zeile, Schicht für Schicht bis zum ersten deckenden. */
+    const grund = el => {
+      const schichten = [];
+      for (let e = el; e; e = e.parentElement) {
+        const c = rgb(getComputedStyle(e).backgroundColor);
+        if (c.length && (c[3] ?? 1) > 0) { schichten.push(c); if ((c[3] ?? 1) >= 1) break; }
+      }
+      const seite = [document.body, document.documentElement].map(e => rgb(getComputedStyle(e).backgroundColor))
+        .find(c => c.length && (c[3] ?? 1) >= 1);
+      let g = seite ? seite.slice(0, 3) : [255, 255, 255];
+      for (const c of schichten.reverse()) g = mix(c, c[3] ?? 1, g);
+      return g;
+    };
+    const m = document.querySelector('.menu'); if (!m) return null;
+    const on = m.querySelector('.menu-liste > button.on'); if (!on) return null;
+    const c = rgb(getComputedStyle(on).color), g = grund(on), f = rgb(getComputedStyle(on).backgroundColor);
+    return { jetzt: on.classList.contains('jetzt'), flaeche: f.length > 0 && (f[3] ?? 1) > 0,
+             kontrast: Math.round(kon(mix(c, c[3] ?? 1, g), g) * 100) / 100,
+             marke: !!m.querySelector('.menu-liste > .ru-marke') };
+  })()`;
+  for (const dunkel of [false, true]) {
+    const a = await aufmachen({ dunkel });
+    const { pc } = a;
+    /* Dieselbe Form wie „Quelle wechseln" (steuerung.ts): die jetzige Quelle
+       trägt `.on`, die Pfeile wählen mit `.jetzt` — zwei verschiedene Dinge. */
+    await pc.evaluate(`UI.menuMitSuche(
+      '<button data-c="a"><span class="mi">⛁</span>Aufgaben</button>' +
+      '<button data-c="b" class="on"><span class="mi">⛁</span>Projekte</button>' +
+      '<button data-c="c"><span class="mi">⛁</span>Lesestoff</button>',
+      200, 200, { platzhalter: 'Datenquelle suchen …', kopf: '<div class="grp">Quelle wechseln</div>' })`);
+    await pc.waitForTimeout(600);
+    const s = await pc.evaluate(LESEN) as { jetzt: boolean; flaeche: boolean; kontrast: number; marke: boolean } | null;
+    const wo = dunkel ? 'dunkel' : 'hell';
+    p(`Menü mit Suche (${wo}): die jetzige Wahl (.on) behält ihre Fläche`, !!s && !s.jetzt && s.marke && s.flaeche, JSON.stringify(s));
+    p(`… und ihre Schrift ist lesbar (≥ 4,5 : 1, ${wo})`, !!s && s.kontrast >= 4.5, JSON.stringify(s));
+    if (!dunkel) {
+      /* DER ZEIGER RUHT AUF DER GLOCKE. Die Karten fliegen aus der Glocke —
+         also im ersten Bild UNTER dem Zeiger hervor. Für den Browser verliess
+         er damit die Glocke, kam beim Wegfliegen zurück, und der Fächer ging
+         zu und wieder auf, immer wieder (gesehen in den Streifen: ein
+         Fächer, der flackert). Er geht EINMAL auf und bleibt.
+         Und die Blase der Glocke (E462, „Posteingang, 3 ungelesen") steht
+         genau dort, wo der Fächer aufgeht: er deckte sie zur Hälfte zu,
+         „…ngelesen" ragte rechts heraus. Solange er offen ist, sagt ER, was
+         in der Glocke liegt — die Blase geht. */
+      await pc.keyboard.press('Escape');
+      await pc.evaluate(`(() => { Werkzeuge.posteingangMelden({ text: 'Erinnerung: Elektro lernen', quelle: 'Erinnerungen' });
+        Werkzeuge.posteingangMelden({ text: 'Karteikarten fällig: 12', quelle: 'Lernen' });
+        const t = document.getElementById('toast'); if (t) t.classList.remove('show'); })()`);
+      await pc.waitForTimeout(400);
+      const gl = await rechteck(pc, '#studio-glocke');
+      const ruhe = pc.evaluate(`new Promise(fertig => {
+        let auf = 0, zu = 0, neu = 0, war = false, karte = null, blase = null;
+        const t0 = performance.now();
+        const schritt = () => {
+          const f = document.getElementById('ru-glocken-faecher'), g = document.getElementById('studio-glocke');
+          const offen = !!f && !f.hidden;
+          if (offen && !war) auf++;
+          if (!offen && war) zu++;
+          war = offen;
+          const k = f && f.querySelector('.ru-meldung');
+          if (offen && k && karte && k !== karte) neu++;
+          if (k) karte = k;
+          const t = performance.now() - t0;
+          if (t > 120 && t < 200 && blase === null) blase = getComputedStyle(g, '::after').display;
+          if (t < 2600) requestAnimationFrame(schritt);
+          else fertig({ auf, zu, neu, offen, vorher: blase, blase: getComputedStyle(g, '::after').display, zeigt: g.matches(':hover') });
+        };
+        requestAnimationFrame(schritt);
+      })`) as Promise<{ auf: number; zu: number; neu: number; offen: boolean; vorher: string | null; blase: string; zeigt: boolean }>;
+      if (gl) await pc.mouse.move(gl.l + gl.b / 2, gl.t + gl.h / 2);
+      const r = await ruhe;
+      p('Der Zeiger ruht auf der Glocke: der Fächer geht EINMAL auf und bleibt (kein Zu und Wieder-auf)',
+        !!gl && r.auf === 1 && r.zu === 0 && r.neu === 0 && r.offen && r.zeigt, JSON.stringify(r));
+      p('… erst die Blase, dann der Fächer — und mit offenem Fächer keine halb verdeckte Blase',
+        !!gl && r.vorher === 'block' && r.offen && r.zeigt && r.blase === 'none', JSON.stringify(r));
+      await pc.mouse.move(700, 700);
+      await pc.waitForTimeout(500);
+    }
+    await a.zu();
+  }
 }
 
 p('Keine Ausnahme im Browser', fehler.length === 0, fehler.slice(0, 3).join(' · '));
