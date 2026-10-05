@@ -312,6 +312,7 @@ const Hinweis = (() => {
         f.classList.add('fliesst');
         SelectionFlow.goo(ebene, true);
         const mx = ziel.left + ziel.width / 2, my = ziel.top + ziel.height / 2;
+        const feder = RedionSpring.token('snappy');
         const bahnen = karten.map((k, n) => {
             const r = k.getBoundingClientRect();
             const dx = mx - (r.left + r.width / 2), dy = my - (r.top + r.height / 2);
@@ -320,7 +321,7 @@ const Hinweis = (() => {
                 { transform: 'none' },
                 { transform: 'translate(' + (dx * 0.35).toFixed(1) + 'px,' + (dy * 0.55).toFixed(1) + 'px) scale(.9,.8)', offset: 0.45 },
                 { transform: 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(3) + ')', opacity: 0.4 }
-            ], { duration: 460 + n * 30, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' });
+            ], { duration: feder.duration + n * 30, easing: feder.easing, fill: 'forwards' });
         });
         f.querySelector('.ru-faecher-fuss')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' });
         const ende = () => {

@@ -321,6 +321,11 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
     display:block; animation:studio-blase-auf var(--motion-fast) var(--ease)
   }
   @keyframes studio-blase-auf{ from{ opacity:0; translate:-50% 0 } }
+  /* Solange ein Menü offen ist, keine Blase: seit E712 wächst das Menü AUS
+     dem Knopf, und die Blase des Knopfs, über dem der Zeiger noch steht,
+     ragte als „…llen" unter der Scheibe hervor (Gesamtbild beim
+     Zusammenführen der zweiten Welle, 5. Oktober). */
+  body:has(.menu) .studio-icon[aria-label]::after{display:none}
 }
 @media (prefers-reduced-motion: reduce){
   .studio-icon:is(:hover,:focus-visible){transform:none}
