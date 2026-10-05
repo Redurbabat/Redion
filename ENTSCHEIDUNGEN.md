@@ -58906,3 +58906,78 @@ Kopf.
 darunter der langsame, zitternd gehaltene aus `test461` — vorher sind die
 beiden kurzen Tintenstriche mit spitzen Enden (`stift:8`), nachher Linien
 wie der lange; keine Seitenfehler.
+
+**Dritte Durchsicht** (5. Oktober 2026, dritter Prüfer; nur Doku, kein
+Quelltext). Nachgesehen, Commit für Commit gegen `b3cf1933`, und selbst
+gemessen, was die beiden ersten nur nachgestellt oder enger gerechnet hatten:
+
+* *Der echte Farbwähler.* Bis hierher war `change` nachgestellt — im
+  kopflosen Chromium geht der Wähler nicht auf. Jetzt im sichtbaren Chromium
+  von Playwright auf einem eigenen Xvfb-Bildschirm, mit echten Maus- und
+  Tastendrücken über XTest, über `file://` (messungen §85):
+
+  ```txt
+  Was die Hand tut (im Wähler des Systems)       was er meldet                    Palette
+  Wähler auf, Escape                             click; kein change               offen, nichts gemerkt
+  Farbe gewählt, Eingabe                         click, input, change (neu)       zu, Tupfer markiert, gemerkt
+  Farbe gewählt, daneben geklickt                click, input, change (neu)       zu, Tupfer markiert, gemerkt
+  Farbe gewählt, Escape                          click, input, input (alter Wert) offen, nichts gemerkt
+  Farbe gewählt, alte Farbe in R/G/B getippt,    click, input × 7; kein change    offen, nichts gemerkt
+    Eingabe
+  Hex getippt, Wähler auf, Escape / Eingabe      click; kein change               offen, nichts gemerkt
+  Fokus, Leertaste / Eingabe (Tastatur)          keydown, click (Ausgangswert)    der Wähler geht auf
+  … dann gewählt, Eingabe                        input, change (neu)              zu, Tupfer markiert, gemerkt
+  ```
+
+  Nach jeder Übernahme stand der Fokus wieder am Farbknopf der Leiste;
+  keine Seitenfehler. Damit ist die offene Frage des Baus — ob `change` nach
+  den `input`-Meldungen noch kommt, obwohl `update()` den Wert des Wählers
+  dabei zurückschreibt — für Chromium beantwortet: ja. Und Chromium selbst
+  meldet kein `change`, wenn der Wert beim Schliessen der alte ist; die
+  Prüfung „nur ein neuer Wert" bleibt für Browser, die es anders halten.
+  **Nicht geprüft: Safari (iPad).** Hier ist kein WebKit; ein kurzer Blick
+  auf Redurs iPad bleibt empfohlen.
+* *Gehaltene Formen, breiter nachgerechnet* (ohne Browser: Glätter und
+  `InkShapes` des Grundstands gegen die des Baus im `vm`-Kontext, Logik wie
+  `addSample` und `finish`): 32'400 Züge — 27 Züge (Linien waagrecht,
+  schräg und senkrecht, kurz und sehr kurz; Dreieck aufrecht, um 30° gedreht
+  und kopfüber; Rechteck, Quadrat, Kreis, Ellipse, kleiner Kreis, Bogen
+  90° und 180°; S, U, V, W, „M", „N", Z, Zickzack, „L", Haken, Pfeil,
+  Spirale) × 1, 3, 8, 15, 25 Einheiten je Meldung × alle 8 ms, alle 16 ms
+  und streuend × mit und ohne Rauschen auf dem Weg × ±0, 1, 2, 3, 5 Zittern
+  × 0, 120, 500, 900 ms gehalten × mit und ohne Pause in der Mitte. Die
+  Tinte ist auf 198'396 Meldungen Zahl für Zahl die des Grundstands. Bei
+  900 ms Halten erkennt der Bau in **keinem** Zug weniger als der
+  Grundstand, aus keinem Zug mit Ecken (S, U, V, W, „M", „N", Z, Zickzack,
+  „L", Haken, Pfeil, Spirale, Halbkreis) wird neu eine Form, und anders
+  erkannt wird ein einziger: ein kleiner Kreis in 25er-Schritten, den der
+  Grundstand „Dreieck" nannte, ist eine Ellipse. Bei 500 ms — 50 ms über
+  `HALTEN_MS` — sagen beide Uhren je nach Lage der Ruhepunkte bald
+  „gehalten", bald nicht: mit ruhiger Hand (±0) der Grundstand 551-mal, der
+  Bau 544-mal von 810, bei ±1 509- und 510-mal, die gemessene Ruhe im
+  Median gleich (Unterschied 0 ms). Das ist die Schwelle, keine verlorene
+  Funktion; ab ±2 hält erst der Bau (500 ms: 75 gegen 398, 900 ms: 109
+  gegen 808; ±3: 0 gegen 362 und 0 gegen 800).
+* *`test201` §1* nachgelesen: E676 Punkt 5 legt die Kehre ausdrücklich in
+  `InkGeometry.stueck` („geht dort als Gerade **durch** den Punkt"), und die
+  Probe ist (10|20) gegen (20|−10), cos 0. Überholt, nicht kaputt; der
+  Entscheid bleibt bei Redur (L235 Punkt 1).
+* *Startgrösse* gegen `b3cf1933`, Node-`zlib` Stufe 6: `marken.js` +1'797,
+  `stroke.js` +210, `stand.js` −1, zusammen +2'006 Bytes; `test388` §5 „Der
+  Start holt 2827 KB (gzip) über 248 Dateien — Decke 2850 KB".
+
+*Geprüft* (5. Oktober, am Bau v1398, unverändert nachgebaut: `npm run
+typecheck` sauber, `bauen:ts` „Dienststand v1398: unverändert", `stand`,
+`node bauen.mts` — danach kein Unterschied im Baum). Unter der Sperre,
+06:09–06:20 UTC: `test461` 38/38, `test343` 32/32, `test347` 31/31,
+`test201` 31/32 (§1, L235 Punkt 1). Nachbarn mit `alle.mts`, alle 34 grün:
+`test47` (42), `test174` (25), `test344` (53), `test345` (44), `test346`
+(31), `test350` (14), `test364` (54), `test366` (45), `test388` (21),
+`test437` (36), `test438` (59), `test439` (38), `test445` (19), `test447`
+(31), `test449` (16), `test451` (22), `test455` (18), `test456` (24),
+`test472` (21), `test474` (30), `test475` (22), `test477` (42), `test478`
+(43), `test480` (60), `test510` (18), `test532` (22), `test535` (28),
+`test561` (26), `test562` (24), `test563` (13/13), `test564` (11),
+`test575` (40), `test577` (29), `test583` (64). Ohne Sperre: `test367`
+(19), `test87` (177), `test105` (152), `test109` (25), `test225` (11),
+`test400`, `test537` (17), `test549` (6), `test550` (8) grün.

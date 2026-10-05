@@ -5635,3 +5635,68 @@ Grundstand erkannte — die zwei verlorenen Linien (40 in 10er-, 80 in
 bleiben Striche, jede Ecke bei 0,00. Ein Zug schwankt mit dem Tempo:
 20 Einheiten in 7er-Schritten mit ±2 war am Kopf eine Linie und hier ein
 Strich (30 Punkte) — der Grundstand liess ihn ebenfalls Strich.
+
+**Dritte Durchsicht** (5. Oktober 2026, dritter Prüfer, am Bau v1398).
+
+*Der echte Farbwähler.* Chromium 1194 von Playwright, **sichtbar**
+(`headless: false`) auf einem eigenen Xvfb-Bildschirm 1440×1000, die App
+über `file://` (index.html), Stift gewählt, Palette offen. Maus und Tastatur
+als echte X-Ereignisse über XTest (libXtst über ctypes), nicht als
+nachgestellte DOM-Ereignisse; mitgeschrieben die Ereignisse am Wähler
+(`focus`, `click`, `input`, `change`, `blur`, `keydown`, jeweils mit seinem
+Wert) und danach Palette, Tupfer der Leiste und `zeichnen:farben`. Unter
+der gemeinsamen Sperre, 05:21–05:39 UTC:
+
+```txt
+Fall  Was die Hand tut                                   Ereignisse am Wähler                       Ergebnis
+A     Wähler auf, Escape                                 focus, click #111111                       offen, kein Tupfer, nichts gemerkt
+B1    im Feld eine Farbe, Eingabe                        click, input #a33838, change #a33838, blur Palette zu, #a33838 markiert, gemerkt
+B2    im Feld eine Farbe, Klick daneben (Kopf)           click, input #b71f1f, change #b71f1f, blur Palette zu, #b71f1f markiert, gemerkt
+B3    im Feld eine Farbe, Escape                         click, input #6c3d3d, input #a33838        offen, nichts dazu
+C     im Feld eine Farbe, 17/17/17 in R/G/B getippt,     click, input #433232 … #111111 (7×),       offen, nichts gemerkt
+        Eingabe                                            kein change
+E     Hex #2266aa getippt, Wähler auf, Escape; auf,       click #2266aa (2×), kein change            offen, nichts gemerkt
+        Eingabe ohne Wahl
+D     Fokus, Leertaste; Escape; Eingabe                  keydown " ", click; keydown Enter, click   der Wähler geht auf
+      … im Feld eine Farbe, Eingabe                      input #8e2525, change #8e2525, blur        Palette zu, #8e2525 markiert, gemerkt
+Seitenfehler: keine. Fokus nach jeder Übernahme: „Farben: eigene Farbe wählen oder Farbsätze" (das „+" der Leiste).
+```
+
+*Gehaltene Formen, breit.* Glätter und `InkShapes` aus dem gebauten
+`quell/core/ink/` des Grundstands `b3cf1933` und des Baus in je einem
+`vm`-Kontext; je Zug die Logik von `addSample` (Punktschwelle 0,6,
+`RUHE_RADIUS` 3, die Uhr des Grundstands an der Tinte, die des Baus an der
+Hand mit `handRestFrom`) und von `finish` (Grundstand: `recognize` der
+ganzen Tinte; Bau: bis zur Ruhe + Abhebepunkt, sonst die ganze Tinte).
+27 Züge × 5 Schrittweiten × 3 Takte × 2 Wege × 5 Zittern × 4 Haltezeiten ×
+Pause ja/nein = 32'400 Züge (Zufall mit festem Samen).
+
+```txt
+Tinte, Bau gegen Grundstand, 198'396 Meldungen     grösste Abweichung 0
+Haltezeit 900 ms:  weniger erkannt 0 · andere Form 1 (kleiner Kreis, 25er-Schritte, ±2, Pause:
+                   Dreieck → Ellipse) · aus Zügen mit Ecken neu eine Form 0
+Haltezeit 500 ms:  weniger erkannt 28, alle, weil die Uhr des Baus „nicht gehalten" sagte
+                   (Lage der Ruhepunkte an der Schwelle, siehe unten)
+Haltezeit 120 / 0: in beiden Ständen nie gehalten, nie eine Form
+
+„gehalten" (je 810 Züge)    Grundstand   Bau    Ruhe(Grundstand) − Ruhe(Bau), Median / 5 % / 95 %
+±0, 500 ms                     551        544    0 / 0 / 0 ms   (Mittel +0,6, höchstens 112)
+±0, 900 ms                     810        810    0 / 0 / 0 ms
+±1, 500 ms                     509        510    0 / 0 / 0 ms
+±1, 900 ms                     807        807    0 / 0 / 0 ms
+±2, 500 ms                      75        398    −416 / −500 / 0 ms
+±2, 900 ms                     109        808    −816 / −900 / 0 ms
+±3, 500 ms                       0        362    −432 / −480 / −275 ms
+±3, 900 ms                       0        800    −848 / −880 / −675 ms
+```
+
+Mit ruhiger Hand messen beide Uhren dieselbe Ruhe; bei 500 ms, 50 ms über
+`HALTEN_MS`, entscheidet die Lage des letzten Ruhepunkts in beiden Ständen
+bald so, bald so (sieben von 810 mehr im Grundstand, einer weniger bei ±1).
+Ab ±2 hält erst der Bau.
+
+*Start*, Node-`zlib` Stufe 6 gegen `b3cf1933`: `marken.js` 135'496 →
+137'293 (+1'797), `stroke.js` 9'591 → 9'801 (+210), `stand.js` 440 → 439
+(−1), zusammen +2'006 Bytes. `test388` §5 unter der Sperre (ca. 06:13
+UTC, im Nachbarlauf): „Der Start holt 2827 KB (gzip) über 248 Dateien —
+Decke 2850 KB", 21 bestanden.
