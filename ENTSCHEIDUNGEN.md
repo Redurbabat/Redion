@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-690 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E710 bis E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+691 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E711 bis E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -751,6 +751,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
 * **E708** — Rot zuerst am Stift: drei Wächter des Zeichnens, jeder bis zum Commit zurückverfolgt. Das Halten fragt wieder die Hand — derselbe Glätter ohne den Eckensprung aus E676, die Tinte behält ihre Ecken; bei ±2 Zittern 875 ms Ruhe statt 175 —, und die Formerkennung sieht das Knäuel des Haltens nicht mehr, nur den Strich bis zur Ruhe und den Punkt, an dem die Hand abhob: der gehaltene Strich wird wieder gerade (`test461`, rot seit E676). Der Systemfarbwähler der Palette übernimmt beim Schliessen und wird ein Tupfer wie seit E351 (`test343` §6, rot seit E697, auf dem Grundstand brach er danach ab, §7/§8 liefen nicht). `test201` §1 fragt einen rechten Winkel nach einer Kurve — seit E676 mit Absicht eine Ecke; nicht angefasst, Entscheid bei Redur (L235). In der Durchsicht: findet die Erkennung bis zur Ruhe nichts, fragt sie die ganze Tinte wie vorher — der schnelle, kurze, still gehaltene Strich bleibt eine Linie (`test461` §1)
 * **E709** — Der Löschen-Knopf, der zerfliesst, überall wo gelöscht wird (Redur: „Ich will das du löschen button so ist überla wo etwas zum löschen eine buton gibt"): EIN Helfer in Redions eigenem TypeScript und CSS (`RedionDelete`, nachgebaut nach DeleteButton aus dem Touch Kit, ohne React beim Start); jede Stelle macht mit einem Merkmal `data-loeschknopf` mit, ihr alter Griff bleibt am selben Ort; ein Druck, und der Kreis zerfliesst in „Löschen" und „Abbrechen", EIN Klebefilter je Dokument, an nur während des Fliessens; 23 Stellen in 16 Dateien; die zwei `confirm()` hinter einem Papierkorbknopf entfallen, „Papierkorb leeren" fragt weiter. Wächter `test586`.
+* **E710** — Die Fragen der Schale im Fenster des Touch Kits (Stufe 1b von E699; Redur: „was du beim touckit gebaut hast ich will alles so haben mit redion passende inhalten"): `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` zeichnen den Dialog des Kits (am Telefon ab drei Antworten das Aktionsblatt) am selben Auslöser mit denselben Antworten und Haken, das bisherige Fenster bleibt als Rückweg; Fokus und der gemeinsame Escape-Griff sehen mit dem Kit EINE oberste Ebene (vorher: beide `inert`), „Ruhige Darstellung" erreicht die Federn des Kits, Akzent als Schrift liest `--accent-text`, das Kit neu geholt von d21c402 und unter Redions strengen Schaltern geprüft, der Zeitmesser schliesst auf Escape; `Dialog.bestaetigen`/`Dialog.melden` für `confirm()`/`alert()`. Wächter `test587`.
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 
@@ -17101,6 +17102,11 @@ Wiederholungen hätten das in zwei Minuten geklärt. Steht als L66.
 E223 — Was das Weglassen kaputt gemacht hat
 ================================================================================
 
+> **Ergänzt durch E710 (28. September 2026).** Fokus zählt ein Fenster des
+> Touch Kits (`data-insel-traeger`) als oberste Ebene und legt alles darunter
+> still, überlässt Rolle, Fokus beim Öffnen und die Tab-Falle aber dem Kit
+> (`useModal`) — eine Falle, nicht zwei. `test587` §2.
+
 Der volle Durchlauf nach E219–E222: 6 von 214 rot. Einer davon ist der
 Lastflatterer aus L66. Die anderen fünf gehören zur ruhigen Fassung, und die
 Aufteilung ist die interessante Auskunft:
@@ -23615,6 +23621,13 @@ typecheck grün · sw v63 · Einzeldatei 7706 KB.
 E302 — Die Lücke war falsch: den Escape-Griff gibt es längst
 ================================================================================
 1. September 2026
+
+> **Ergänzt durch E710 (28. September 2026).** Der gemeinsame Griff bleibt
+> der eine: ein Fenster des Touch Kits (`data-insel-traeger`) lässt er
+> stehen — das Kit schliesst es selbst und gibt dem Aufrufer seine Antwort —
+> und nimmt dabei nichts darunter weg; ein loses Feld mit
+> `data-esc-schliesst` (der Zeitmesser) geht zu, wenn kein Menü und kein
+> Fenster davorliegt. `test587` §2 und §7, `test296` unverändert.
 
 L105 Punkt 1 sagte: „Redion hat KEINEN gemeinsamen Escape-Griff für
 `.overlay`. Der Wissensgraph und das Schlagwortregister schliessen bis heute
@@ -57161,6 +57174,12 @@ Stiftpalette, und die Farbe ist dieselbe wie bei jedem anderen Fehler.
 `test578` (Dateien, ohne Browser) und `test579` (im Browser, drei Startwege)
 · **Stufe 1a** — die Grundlage; noch ersetzt keine Insel etwas Sichtbares.
 
+> **Fortgesetzt durch E710 (28. September 2026) — Stufe 1b.** Die erste
+> sichtbare Insel: `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig`
+> zeichnen den Dialog des Kits, das Tor (eine oberste Ebene für Fokus,
+> Escape und `inert`) steht, das Kit ist neu geholt von d21c402. Regel 5
+> gilt weiter: `test578` erlaubt genau die Probe und die Dialoge.
+
 **Redurs Sätze, wörtlich:**
 
 ```txt
@@ -59314,6 +59333,323 @@ Fokuspunkt rot). Alternative: das Paar im body über 620 heben — dann
 schlösse der erste Druck auf eine Pille die Leiste (sie schliesst bei
 jedem Druck ausserhalb), und die Pille hinge im Leeren. Kosten: ein
 Träger mehr in der Liste, eine Regel, ein Rückfall von drei Zeilen.
+
+## E710 — Die Fragen der Schale im Fenster des Touch Kits: in der Mitte, mit Feder und Glas, und eine Ebene für Fokus und Escape
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Auftrag
+27. September ca. 16:45, Touch Kit ca. 21:49, „ohne pause" ca. 22:10) ·
+**Stufe 1b von** E699 (dort Punkt 10: „Dialoge zuerst, nachdem Escape und
+Fokus des Kits mit E302 und Fokus versöhnt sind") · **ergänzt** E302 (ein
+gemeinsamer Escape-Griff) und E223 (Fokus) · **Wächter:** `test587` ·
+**Zweig** `claude/dialoge-im-kit`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` bauten
+einen Kasten (`.overlay > .finder`) mit Inline-Stil, der am Rechner oben im
+Bild stand und am Telefon ebenso — oben angeklebt, die Tastatur darunter.
+Beim Schliessen verschwand er in einem Bild (`o.remove()`). Die Wahl hatte
+keinen sichtbaren Abbruch (nur Escape und daneben tippen — am Telefon gibt
+es kein Escape). Daneben standen 51 Fenster des Browsers (`confirm`,
+`prompt`, `alert`): grau, anhaltend, in jedem System anders, ohne roten
+Knopf für „das löscht etwas". Und die Inseln von E699 hatten drei
+gemessene Fehler, bevor die erste echte Insel stehen durfte (Kit-Karte,
+insel-8): ein Kit-Fenster über einem alten liess BEIDE `inert` zurück
+(nichts mehr bedienbar), der gemeinsame Escape-Griff nahm das alte Fenster
+UNTER dem Kit-Dialog weg, und „Ruhige Darstellung" erreichte die Federn des
+Kits in JavaScript nicht (Liquid-Karte, „must-fix 1").
+
+**Was wurde entschieden.**
+
+1. **Das Kit neu geholt: d21c402** (`node skripte/touch-holen.mts
+   ../UI-Kit d21c402`) — Redurs neuester Stand: strenge Typen,
+   `data-ui-motion`, Hinweis und `buttonProps` an Dialog und Aktionsblatt,
+   Toast-Thema, DeleteButton. 103 Dateien, 583'770 Bytes, HERKUNFT.txt
+   sha256 `9315fea73c4a…`; `fremd-bestand.json` und FREMDCODE §2 nachgezogen,
+   im Kit keine Zeile von Hand. **`tsconfig.islands.json` trägt jetzt
+   Redions Schalter** (`noUncheckedIndexedAccess`,
+   `exactOptionalPropertyTypes`, `useUnknownInCatchVariables`,
+   `noImplicitReturns`, `verbatimModuleSyntax`) — das Kit ist darunter
+   sauber, die Abweichung von §52.6 ist weg (L222 Punkt 1 geschlossen).
+2. **Die drei Fragen zeichnen den Dialog des Kits** (`src/islands/
+   dialog.tsx`, Insel „dialog"): in der Mitte, federt aus 1,08 herein
+   (`--ui-spring-snappy`), blendet beim Schliessen aus. Die Wahl trägt ihre
+   Hinweise unter den Knöpfen (als Beschreibung des Knopfes für
+   Vorleseprogramme) und bekommt ein sichtbares „Abbrechen"; am Telefon
+   kommt eine Wahl ab drei Antworten als Aktionsblatt von unten. **Am
+   selben Auslöser, mit denselben Antworten** (Text / `null` / `''` /
+   Kennung) und denselben Haken (`#fq`, `data-w`, `data-a`) — E699
+   Regel 4. Die Insel ist nur Ansicht (Regel 5): ein Rückruf hinaus.
+3. **Der Träger ist ein `.overlay`** mit `data-insel-traeger`, und das Kit
+   zeichnet seine Ebene DARIN (`container`). So sehen Fokus, der
+   gemeinsame Escape-Griff, `body:has(.overlay)` und jeder Prüflauf, der
+   `.overlay #fq` sucht, ein offenes Fenster — wie immer — und für beide
+   Systeme gibt es EINE oberste Ebene. Fokus legt weiter alles darunter
+   still, überlässt aber Rolle, Fokus und Tab-Falle dem Kit (`useModal`):
+   eine Falle, nicht zwei. Der Escape-Griff lässt einen Träger stehen —
+   das Kit schliesst ihn selbst und gibt dem Aufrufer seine Antwort; er
+   nimmt dabei nichts darunter weg. Beim Antworten ist der Träger sofort
+   kein `.overlay` mehr: die Seite ist bedienbar, während der Dialog
+   ausblendet, und der Fokus geht dorthin zurück, woher die Frage kam.
+4. **Das bisherige Fenster bleibt als Rückweg** (`frageAlt`, `wahlAlt`,
+   `mehrzeiligAlt`, Zeile für Zeile wie vorher): kommen die Inseln nicht
+   (eine Datei fehlt, React lädt nicht, der allererste Besuch über ein
+   langsames Netz braucht länger als 1,5 s), fragt es — nie beides, nie
+   keins. Dazu wärmt der erste Tipp oder Tastendruck die Inseln im
+   Leerlauf vor (beim ersten Besuch über das Netz tat das bisher nichts).
+5. **Eine Ebene über allem, was fragen kann**: der Träger liegt auf
+   `z-index:1100` — über den Einstellungen am Telefon (940), `#r-blatt`
+   (950) und den Vollbild-Werkzeugen (1000). Die Ebenen des Kits für lose
+   Portale bleiben die von E699 (700/760/800/900).
+6. **Ein Glas** (E695): die Scheibe des Kits wird Redions dichte Glasfläche
+   (`--bg-schwebend-dicht`, `--glas-blur`, `--glas-kante`), gelesen am
+   Element — „Starker Kontrast", „Hoher Kontrast" und weniger Transparenz
+   machen sie deckend. **Akzent als Schrift** (L222 Punkt 6): im Dialog
+   und im Aktionsblatt legt die Brücke die Akzentmarke des Kits auf
+   `--accent-text`. **Ruhe**: die Brücke spiegelt `body[data-bewegung=
+   "ruhig"]` nach `html[data-ui-motion="reduce"]` — auch die JS-Federn des
+   Kits stehen still (L222 Punkt 2). **Fokusrahmen**: Redions `4px`-Rundung
+   aus `:focus-visible` gilt nicht mehr in den Inseln (das Kit zeichnet
+   seinen eigenen Rahmen), mit `:where` bei derselben Genauigkeit. **Die
+   Scheibe kommt als Scheibe** (E703): das Kit liess den Dialog auch aus
+   Deckkraft 0 kommen — auf Glas liegt dann die Seite scharf hinter der
+   Schrift; die Brücke lässt die Scheibe nur federn und blendet ihren
+   Inhalt ein (`glas-inhalt`), wie jedes Glas in Redion.
+7. **`Dialog.bestaetigen` und `Dialog.melden`** für `confirm()` und
+   `alert()`, auf `wahl` gebaut (ein roter Knopf mit `gefahr`). Sechs Stellen
+   sind umgezogen (die Gefahrzone der Einstellungen — KI-Buch leeren, alte
+   Fassungen löschen, zweimal „alles löschen" samt Fehlermeldung — und das
+   Löschen mehrerer Datenbankzeilen); 45 stehen noch, und `test587` §10 lässt
+   die Zahl nur sinken. Löscht die eine Antwort etwas (`gefahr`), steht
+   „Abbrechen" links und hat den Fokus — ein Enter aus Versehen löscht
+   nichts; die Antwort ist rot.
+8. **Der Zeitmesser schliesst auf Escape.** Er ist `role="dialog"`, aber
+   kein `.overlay` (er bleibt beim Arbeiten offen) — und hatte keinen
+   Escape. Jetzt trägt er `data-esc-schliesst`, und der EINE gemeinsame
+   Griff nimmt ihn, wenn kein Menü und kein Fenster davorliegt.
+
+**Warum.** Redur will am Morgen „eien komplet besseren webseit … bessere
+übergagnge besssere efeckten , bessere oberfläsche" sehen, „ohne eine
+funktione löschen". Die Fragen sind die Stelle, an der Redion am meisten
+wie eine Webseite von 2010 aussah — und die Stelle, die E699 als erste
+Insel vorgesehen hat. Das Tor (Punkt 3) ist die Bedingung dafür: ohne eine
+gemeinsame oberste Ebene wäre jede weitere Insel (Menüs, Blätter, Toasts)
+ein Würfel mit Fokus und Escape.
+
+**Was war die Alternative.**
+(a) Den alten Kasten nur umstylen (Mitte, Glas, Ausblenden in CSS) — billig,
+aber es bliebe Redions Nachbau statt des Kits, das Redur „alles so haben"
+will, und die Inseln hätten weiter kein Tor. (b) Das Kit-Portal lose an
+`<body>` (wie das Kit es von sich aus tut) und Fokus beibringen, `.ui-touch-
+portal` als Fenster zu zählen — gemessen führt das in den Stillstand oder
+verlangt, dass Fokus und `setInertOutside` einander zählen; und alle 267
+Prüfläufe, die `.overlay` kennen, sähen kein Fenster mehr. (c) Alle 51
+Browserfenster in einem Bogen umziehen — viele liegen an Wegen, die ein
+Prüflauf über das Fenster des Browsers beantwortet (test265: das Passwort
+des Verschlüsselns); sie ziehen je Datei mit ihrem Lauf um, und bis dahin
+hält §10 die Zahl.
+
+**Was kostet es.** Start: +4,8 KB gzip (dialog.js +2,5, schale.js +0,5,
+laden.js +0,4, aufbau.css +0,4, fokus.js +0,3, bausteine.css +0,2,
+seite.js, steuerung.js und zeitmesser.js je +0,1–0,2) — gemessen,
+messungen §80, dort auch die Zahl aus `test388` §5; unter der Decke von
+2850 KB. Die Inseln selbst kommen nicht beim Start: `islands.js` 7,4 KB
+gzip (vorher 4,2), `islands.css` 6,4 KB (vorher 4,9). Die Einzeldatei
+wächst um 35 KB (die Behälter).
+Eine erste Frage vor dem Vorwärmen wartet auf die Inseln (lokal gemessen
+um 100–300 ms); danach 1–2 Bilder. Und zwei Wege für dieselbe Frage — der
+alte bleibt, bis Redur sagt, er darf gehen (§43).
+
+**Gefunden auf dem Weg.** lightningcss fasst im Kit bei Dialog und
+Aktionsblatt `backdrop-filter; -webkit-backdrop-filter` zu EINER Zeile mit
+Präfix zusammen (L222 Punkt 3 gilt nicht nur für den Glasknopf) — die
+Brücke setzt dort Redions Glas neu, `-webkit-` zuerst, und `test578` §9
+erkennt eine solche Überschreibung jetzt ausdrücklich (mit Gegenprobe:
+ohne sie wären genau diese zwei Flächen rot). Und der erste Zähler für §10
+verschluckte eine Stelle: ein `'image/*'` in einer Zeichenkette sah für
+ihn wie der Anfang eines Kommentars aus. Und das Kit liess seinen Dialog aus
+Deckkraft 0 kommen — genau das, was E703 für jedes Glas abgestellt hat
+(„Glas kommt als Scheibe, nicht als Nebel"); `test582` hätte es gesehen,
+sobald er die Frage im Kit sucht, und `test587` §1 misst es jetzt selbst.
+
+**Nachtrag, 3. und 4. Oktober 2026 — der erste Browserlauf auf dem
+Endbau, und was er fand.** Redur, 3. Oktober, ca. 19:35 UTC: „Weiter ohne
+pause,". Der Endbau `9575ebc40` war am 28. September ohne Browserlauf
+eingecheckt worden (das Wochenlimit hielt alle Läufe an). Jetzt gelaufen,
+unter der Sperre, zweimal: am 3. Oktober (21:06–21:16 UTC) der Endbau mit
+dem neuen §11, am 4. Oktober (15:51–16:00 UTC) der Endbau mit den
+Korrekturen unten (Dienststand v1397) — die 17 Nachbarn aus dem Auftrag,
+dazu 143, 296, 353, 388 und 412. Grün: 129, 143, 181, 196, 198, 212, 296,
+353, 388, 412, 466, 468, 496, 538, 579 und 587 (73/73). Von den sieben,
+die der erste Bau rot machte (129, 181, 196, 458, 496, 579, 582 mit E703),
+ist keiner mehr rot durch diesen Zweig — 458 erst mit dem Punkt unten.
+Rot und auf der Basis `b3cf193` ebenso rot, mit denselben Zeilen (fremd,
+nicht dieser Zweig; gemessen am 3. Oktober, 21:19–21:24 UTC): 343 §6
+(Tupfer), 348 (Tupfer; „44 px" fiel auf der Basis ebenso), 464 §1
+(„Dreizehn Werkzeuge" 14 ≠ 13), 470 §2 (wartet auf `[data-w="sichern"]`)
+und 582 (Kontrast „sand"/„wald" über dem schlimmsten Grund und die
+Schemaliste — dieselben fünf Zeilen). Die Gegenprobe für §8 (Träger auf
+`z-index:1`) ist jetzt rot, wie sie sein muss.
+
+**458 — eine Pause, kürzer als die Feder.** Am Telefon kommt die
+Farbwahl (zwölf Antworten) als Aktionsblatt von unten, auf der weichen
+Feder des Kits (`--ui-spring-smooth-duration`, 796 ms). `test458` wartete
+seit dem 28. September nach dem Erscheinen der Knöpfe fest 450 ms und mass
+dann, ob das Fenster im Bild steht: das Blatt war noch unterwegs, sein Rand
+unter der Kante — §3c „Telefon: das Fenster bleibt im Bild" rot
+(`fensterImBild: false`, der letzte Knopf trotzdem erreichbar). Am
+3. Oktober brach derselbe Abschnitt schon vorher ab („Execution context
+was destroyed" beim Einrichten der Telefon-Seite, vor jeder Frage); auf der
+Basis war 458 grün. In Ruhe passt das Blatt (`max-height` ist der sichtbare
+Ausschnitt, der Rest rollt). **Entschieden:** der Lauf misst, wenn das
+Fenster angekommen ist (`wahlDa`: die Knöpfe sind da, und im Träger läuft
+keine Bewegung mehr) — dieselbe Messung, am Ziel statt unterwegs; keine
+Zusage gelockert. Alternative: die Feder des Blatts kürzen — das hiesse,
+das Kit für einen Prüflauf zu ändern (L222: das Kit wird nie von Hand
+geändert). Kosten: keine im Programm; der Lauf wartet höchstens so lange
+wie die Feder.
+
+**Was die Durchsicht dazu verlangte** (Auftrag: die erste Frage muss sich
+sofort anfühlen und per Doppelklick und aus der Einzeldatei ohne Netz
+gehen; laden die Inseln nicht, antwortet das bisherige Fenster; Escape
+schliesst, der Fokus kehrt zum Auslöser zurück, eine Ebene nach der
+anderen). Das prüfte `test587` noch nicht ganz, darum **§11**: die
+Einzeldatei allein in einem leeren Ordner, ohne Netz, die Frage über einen
+Knopf mit der Tastatur gestellt — sie kommt im Fenster des Kits nach 22 bis
+71 ms (fünf Läufe, Grenze 250 ms), ohne eine Datei daneben zu holen, und nach Escape,
+nach einer Antwort mit Enter und nach `Dialog.bestaetigen` steht der Fokus
+wieder auf dem Knopf. Gegenprobe im Lauf: dieselbe Datei ohne ihren
+React-Behälter — dann kommt die Frage im bisherigen Fenster (nach 25 bis
+43 ms) und antwortet ebenso.
+
+**Gefunden auf dem Weg.** Genau diese Gegenprobe war rot (am Endbau
+`9575ebc40`, 3. Oktober): im bisherigen Fenster ging die Antwort verloren,
+und dieselbe Frage stand sofort wieder da. Das Enter schloss das Fenster
+schon beim Niederdrücken (`keydown`), Fokus gab dem Knopf, der gefragt
+hatte, seinen Fokus zurück — und der Tastendruck (`keypress`) desselben
+Enters fiel dann auf diesen Knopf und stellte die Frage noch einmal. Das
+ist der Code von `b3cf193` Zeile für Zeile (`frageAlt` war dort `frage`):
+jede Frage hinter einem Knopf, der den Fokus behält, und mit Enter
+beantwortet, kam so zurück. Das Fenster des Kits tut es nicht — es
+verhindert den Tastendruck (`preventDefault`). **Entschieden:** `frageAlt`
+und `mehrzeiligAlt` tun dasselbe, je eine Zeile; sonst bleiben sie, wie
+sie waren (§43, der Rückweg). Alternative: Fokus den Fokus später
+zurückgeben lassen (nach dem Tastendruck) — das hätte jedes alte Fenster
+verändert, nicht nur die zwei, an denen es auffiel. Kosten: wenige Bytes
+in `dialog.js`.
+
+**Und:** die Rückgabe des Fokus steht zweimal da — in `dialog.ts` (der
+Auslöser wird gemerkt, bevor Fokus die Seite stilllegt) und in `useModal`
+des Kits. Die Gegenprobe ohne die eine blieb grün (3. Oktober); ohne beide
+werden die Fokus-Punkte von §11 rot (4. Oktober: 69 bestanden, 4
+durchgefallen — der Fokus bleibt auf `BODY`). Beide bleiben: die eigene
+schützt den Fall, in dem der Auslöser schon still ist, wenn das Kit
+nachsieht.
+
+**Durchsicht, 5. Oktober 2026 — was die Aufrufer mitbringen, bleibt; und
+keine Frage bleibt stehen, wenn das Kit stolpert.** Redur, 3. Oktober,
+ca. 19:35 UTC: „Weiter ohne pause,"; der Auftrag dahinter: „ohne eine
+funktione löschen". Die Durchsicht hat jeden Weg der Fragen im Browser
+nachgegangen (Rechner und Telefon, Tastatur, file:// und Einzeldatei, ohne
+React) und fünf Dinge gefunden, die der Endbau `1654e75d9` falsch machte —
+jedes gesehen, jedes jetzt in `test587` §12 (rot gegen den Endbau: 80 bestanden,
+17 durchgefallen — alle 17 in §12; auf diesem Stand 97/97):
+
+1. **Die Folge des Aufrufers.** Bringt ein Aufrufer seinen eigenen
+   Abbruch mit, setzte das Kit-Fenster ihn immer ans Ende — im bisherigen
+   Fenster stand er, wo der Aufrufer ihn hinsetzte, oft ZUERST, und dann
+   hatte er den Fokus. „Blatt löschen?" (Tabelle): „Behalten" vor
+   „Löschen" — im Kit stand der Fokus auf „Löschen", und ein Enter löschte
+   das Blatt mit seinen Zellen. „Vektoren bauen?" (KI): „Abbrechen" vor
+   „Bauen", das Geld kostet — im Kit stand der Fokus auf „Bauen".
+   **Entschieden:** die Knöpfe stehen in der Folge des Aufrufers, sein
+   Abbruch an seiner Stelle; nur ohne eigenen Abbruch kommt „Abbrechen"
+   dazu (bei einer gefährlichen einzigen Antwort zuerst, sonst zuletzt —
+   wie bisher).
+2. **Ein „Abbrechen", nicht zwei.** Vier Aufrufer nennen ihren Abbruch
+   „Abbrechen", aber unter der Kennung `nein` (Seiten zerlegen; zweimal
+   „ersetzen?" in der Stiftleiste; Vektoren bauen). Das Kit-Fenster stellte
+   sein eigenes „Abbrechen" daneben: zwei gleiche Knöpfe, und React hatte
+   zwei Knöpfe mit demselben Schlüssel. **Entschieden:** ein Knopf, der
+   „Abbrechen" heisst, IST der Abbruch des Aufrufers (wenn es keinen mit
+   der Kennung `''` gibt); er antwortet mit seiner Kennung, auch auf
+   Escape — alle vier fragen nach „ja". Alternative: die vier Aufrufer auf
+   die Kennung `''` umstellen — vier Bereiche und drei Prüfläufe
+   (`data-w="nein"` in 129, 196, 468) für etwas, das die Insel allein
+   richtig machen kann.
+3. **Stolpert die Insel beim Zeichnen**, fing ihre Fehlergrenze den Fehler,
+   und im Träger stand nur ihr Fehlersatz: eine unsichtbare Ebene über der
+   ganzen Seite, alles darunter still, Escape liess den Träger stehen (er
+   gehört ja dem Kit), und die Frage kam nie — gesehen mit einem Fokus, der
+   im Kit wirft. **Entschieden:** `dialog.ts` hört auf
+   `redion-insel-fehler`; trifft es DIESES Fenster, geht der Träger, und das
+   bisherige Fenster fragt — wie, wenn die Inseln gar nicht kommen
+   (Punkt 4 oben: „nie beides, nie keins"). Dazu nimmt der eine
+   Escape-Griff einen Träger, in dem kein Fenster des Kits steht, wie jedes
+   Fenster weg.
+4. **„Ruhige Darstellung" im selben Bild.** Ohne Bewegung meldet das Kit
+   kein Ende seiner Ausblendung (`animation:none`), und seine
+   Sicherheitsfrist hielt das Fenster nach der Antwort noch 240 ms
+   regungslos stehen — ein Escape, auf das scheinbar nichts geschieht.
+   **Entschieden:** bei „ruhig" ist ein Träger, der geht, unsichtbar
+   (`visibility:hidden`, aufbau.css) — im nächsten Bild weg. Mit Bewegung
+   blendet er aus wie bisher (Gegenprobe im Lauf). **Und** das Etikett
+   `html[data-ui-motion="reduce"]` setzt E702 schon beim Anwenden der
+   Einstellungen; die Brücke von E710 spiegelte es ein zweites Mal und
+   nahm es mit der letzten Insel wieder weg — „ruhig" galt, das Etikett
+   war fort. Jetzt lässt sie es stehen, wie „ruhig" es sagt.
+5. **Der Rückweg für Ja/Nein.** Ohne Inseln hatte `Dialog.bestaetigen` im
+   bisherigen Fenster nur den einen Knopf („Alles löschen") — kein
+   sichtbares „Abbrechen", am Telefon nur ein Tipp daneben; `confirm()`
+   hatte eines. Jetzt steht „Abbrechen" da, bei Gefahr zuerst und im
+   Fokus.
+
+**Fertig gemacht in der finalen Durchsicht (5. Oktober, abends; Redur,
+ca. 14:15 UTC: „Also an was du jetzt macht mache es jetzt fertig und
+danach arbeite nicht mehr weiter …").** Die Durchsicht war vor ihrem
+Commit abgebrochen worden (Sitzungsgrenze). Nachgesehen und behalten,
+was oben steht — keine Zusage eines Wächters gelockert, nur §12 dazu. Zwei
+Dinge am Wächter selbst: (a) „`data-ui-motion` bleibt" (Punkt 4) lief auf
+der Seite, auf der vorher die Insel stolperte, und war gegen den Endbau
+GRÜN — die gestolperte Insel hielt dort den Spiegel an. Er läuft jetzt auf
+einer eigenen Seite und misst erst, wenn Träger und Insel fort sind;
+gegen den Endbau rot (ist `null`). (b) Ein namenloser `DIV`, der in einem
+Nachbarlauf als „stillgelegt" auftauchte, war die Hülle eines SVG-Halters
+(`textur.ts`, `linse.ts`: `aria-hidden`, von Geburt an `inert`, E649) —
+kein Rest einer Frage; nachgestellt mit sechsfacher CPU-Drossel, drei
+Runden, kein anderer stiller Teil. Je Korrektur eine Gegenprobe (in einer
+Kopie verbogen, nie im Zweig): ohne den Hörer auf `redion-insel-fehler`
+wird Punkt 3 rot, ohne die Regel für „ruhig" in `aufbau.css` Punkt 4, mit
+dem Escape-Griff des Endbaus der Träger ohne Kit-Fenster, mit dem Rückweg
+des Endbaus Punkt 5 (Zahlen in messungen §80). **Gesehen, nicht geändert**
+(AUFGABEN E710 Punkt 8, im Kit): seit es nur noch EIN „Abbrechen" gibt,
+stehen zwei Antworten so, wie das Kit zwei Knöpfe setzt — nebeneinander;
+mit Hinweisen bricht am Telefon die Beschriftung um (92 px hoch). Lesbar
+und über 44 px; iOS stellt sie in dem Fall untereinander.
+
+**Kosten:** im Start +0,9 KB gzip (`dialog.js` +587, `schale.js` +178,
+`aufbau.css` +137, `stand.js` +8 Bytes; gzip -6), `islands.js` +57 Bytes
+gzip (nicht beim Start), Einzeldatei +3'090 Bytes; `test388` §5: „Der Start holt 2831 KB (gzip) über
+248 Dateien — Decke 2850 KB" (Endbau: 2830).
+**Nicht geändert:** jede Frage am selben Auslöser, mit denselben Antworten
+und Haken; nichts gelöscht, nichts verlegt.
 
 ## E714 — Rot zuerst, vier Inseln: ein Stilblatt ohne `<link>`, ein Wettlauf mit SwiftShader, der Keil als Fläche, vierzehn Werkzeuge
 

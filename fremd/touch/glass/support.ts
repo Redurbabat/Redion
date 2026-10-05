@@ -7,7 +7,9 @@
  * underneath, so a positive Blink token is required and iOS is excluded.
  */
 export function supportsRefraction(
-  env: { CSS?: { supports(property: string, value: string): boolean }; userAgent: string } | undefined = typeof window === 'undefined'
+  env:
+    | { CSS?: { supports(property: string, value: string): boolean } | undefined; userAgent: string }
+    | undefined = typeof window === 'undefined'
     ? undefined
     : { CSS: window.CSS, userAgent: navigator.userAgent },
 ): boolean {

@@ -27,13 +27,13 @@ export function tabbables(root: Element): HTMLElement[] {
 export function trapTab(event: KeyboardEvent, container: HTMLElement) {
   if (event.key !== 'Tab') return
   const items = tabbables(container)
-  if (items.length === 0) {
+  const first = items[0]
+  const last = items.at(-1)
+  if (!first || !last) {
     event.preventDefault()
     container.focus()
     return
   }
-  const first = items[0]
-  const last = items[items.length - 1]
   const active = document.activeElement
   const inside = active instanceof Node && container.contains(active)
   if (event.shiftKey && (active === first || !inside || active === container)) {

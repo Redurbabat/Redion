@@ -10,15 +10,15 @@ type NativeInputProps = Omit<
 
 export interface ToggleBaseProps extends NativeInputProps {
   /** Controlled state. Leave undefined for an uncontrolled toggle. */
-  checked?: boolean
+  checked?: boolean | undefined
   /** Initial state of an uncontrolled toggle. */
-  defaultChecked?: boolean
+  defaultChecked?: boolean | undefined
   /** Called with the new state after the user flips the switch. */
-  onChange?: (checked: boolean, event: ChangeEvent<HTMLInputElement>) => void
+  onChange?: ((checked: boolean, event: ChangeEvent<HTMLInputElement>) => void) | undefined
   /** Where the visible text sits. `start` = settings-row style (text, then switch). */
-  labelPosition?: 'start' | 'end'
+  labelPosition?: 'start' | 'end' | undefined
   /** Stretch the label to the container width (switch at the far end with `labelPosition="start"`). */
-  block?: boolean
+  block?: boolean | undefined
 }
 
 /** A switch always needs an accessible name: visible text, `aria-label` or `aria-labelledby`. */

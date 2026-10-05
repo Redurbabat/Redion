@@ -10,17 +10,17 @@ export type ButtonShape = 'rounded' | 'capsule' | 'circle'
 
 export interface ButtonProps extends ComponentPropsWithRef<'button'> {
   /** filled = main action, tinted/gray = secondary, plain = text only, glass = over imagery. */
-  variant?: ButtonVariant
+  variant?: ButtonVariant | undefined
   /** large 50 px, medium 44 px, small 32 px (small keeps a 44 px hit area). */
-  size?: ButtonSize
-  shape?: ButtonShape
+  size?: ButtonSize | undefined
+  shape?: ButtonShape | undefined
   /** Destructive action (delete, sign out): uses the danger colour. */
-  destructive?: boolean
+  destructive?: boolean | undefined
   /** Stretch to the container width. */
-  block?: boolean
+  block?: boolean | undefined
   /** Glyph before the label. */
-  icon?: GlyphName
-  children?: ReactNode
+  icon?: GlyphName | undefined
+  children?: ReactNode | undefined
 }
 
 /**
@@ -69,9 +69,9 @@ export interface IconButtonProps extends Omit<ButtonProps, 'children' | 'icon' |
   /** Accessible name — required, because the button shows no text. */
   label: string
   /** Makes it a toggle button (aria-pressed), e.g. favourite on/off. */
-  selected?: boolean
+  selected?: boolean | undefined
   /** Render the glyph filled (e.g. a filled heart when selected). */
-  filled?: boolean
+  filled?: boolean | undefined
 }
 
 /** Round button with only a glyph. Always has an accessible name. */

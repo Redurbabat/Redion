@@ -37,9 +37,9 @@ export interface SymbolSwapProps extends Omit<ComponentPropsWithRef<'span'>, 'ch
   /** The glyph to show. Changing it plays the swap. */
   symbol: GlyphName
   /** Filled rendering (heart, star …). Changing only this does not swap. */
-  filled?: boolean
+  filled?: boolean | undefined
   /** Glyph size in px (default 24). */
-  size?: number
+  size?: number | undefined
 }
 
 interface LeavingGlyphProps {
@@ -129,15 +129,15 @@ export function SymbolSwap({ symbol, filled = false, size = 24, className, ...re
 export interface PlayPauseButtonProps
   extends Omit<ButtonProps, 'children' | 'icon' | 'shape' | 'block' | 'aria-label' | 'aria-pressed'> {
   /** Controlled state. Leave undefined for an uncontrolled button. */
-  playing?: boolean
+  playing?: boolean | undefined
   /** Initial state when uncontrolled (default: paused). */
-  defaultPlaying?: boolean
+  defaultPlaying?: boolean | undefined
   /** Called with the new state after a click (skipped when `onClick` calls preventDefault()). */
-  onPlayingChange?: (playing: boolean, event: MouseEvent<HTMLButtonElement>) => void
+  onPlayingChange?: ((playing: boolean, event: MouseEvent<HTMLButtonElement>) => void) | undefined
   /** Accessible name while paused — the action the button performs (default "Abspielen"). */
-  playLabel?: string
+  playLabel?: string | undefined
   /** Accessible name while playing (default "Pausieren"). */
-  pauseLabel?: string
+  pauseLabel?: string | undefined
 }
 
 const PLAY_PAUSE_GLYPH_SIZE = { large: 26, medium: 20, small: 16 } as const

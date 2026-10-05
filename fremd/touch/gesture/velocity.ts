@@ -14,28 +14,37 @@ export interface VelocityTracker {
   reset(): void
 }
 
-export function createVelocityTracker({ windowMs = 100 }: { windowMs?: number } = {}): VelocityTracker {
+export function createVelocityTracker({ windowMs = 100 }: { windowMs?: number | undefined } = {}): VelocityTracker {
   let samples: Array<{ value: number; time: number }> = []
 
   return {
     add(value, time) {
       samples.push({ value, time })
-      // Keep a little more than the window so the reference sample survives.
+      // Keep a little more than the window so the reference sample survives (and always the last two).
       const cutoff = time - windowMs * 4
-      while (samples.length > 2 && samples[0].time < cutoff) samples.shift()
+      while (samples.length > 2) {
+        const oldest = samples[0]
+        // `!(a < b)` rather than `a >= b`: a NaN time stops the trimming, as it always did.
+        if (!oldest || !(oldest.time < cutoff)) break
+        samples.shift()
+      }
     },
     velocity(now) {
-      if (samples.length < 2) return 0
-      const last = samples[samples.length - 1]
+      const last = samples.at(-1)
+      const previous = samples.at(-2)
+      if (!last || !previous) return 0 // fewer than two samples
       if (now - last.time > windowMs) return 0
 
       // Oldest sample that still lies inside the window before the last one.
-      let i = samples.length - 1
-      while (i > 0 && last.time - samples[i - 1].time <= windowMs) i -= 1
-      let reference = samples[i]
+      let reference = last
+      for (let i = samples.length - 2; i >= 0; i -= 1) {
+        const sample = samples[i]
+        // `!(a <= b)` rather than `a > b`: a NaN time ends the search, as it always did.
+        if (!sample || !(last.time - sample.time <= windowMs)) break
+        reference = sample
+      }
       if (reference === last) {
         // Sparse events: fall back to the previous sample unless it is a stale touch-down.
-        const previous = samples[samples.length - 2]
         if (last.time - previous.time > windowMs * 2) return 0
         reference = previous
       }

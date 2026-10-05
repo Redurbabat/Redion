@@ -1511,6 +1511,56 @@ Wächter (rot zuerst):
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
 
+## E710 · Die Fragen im Fenster des Touch Kits — was danach kommt
+
+E710 hat `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` in den
+Dialog des Kits gebracht und das Tor für Inseln gebaut (eine oberste Ebene
+für Fokus, Escape und `inert`). Offen, jeweils mit eigenem Wächter (rot
+zuerst):
+
+1. Die übrigen 45 `confirm()`/`prompt()`/`alert()` je Datei auf
+   `Dialog.bestaetigen`, `Dialog.melden` und `Dialog.frage` umziehen, mit
+   ihren Prüfläufen im selben Bogen (L231); `test587` §10 senken. Zuerst das
+   Passwort des Verschlüsselns (`wissen/werkzeuge.ts`, test265 §7).
+2. Die übrigen Fragen ohne `Dialog.*` (eigene `.overlay`-Kästen mit
+   `.fbtns`) auf dieselbe Insel — Stelle für Stelle, am selben Auslöser.
+3. Menüs und Blätter als Inseln (nächste Welle): dasselbe Tor —
+   Träger `.overlay`/`.menu` mit `data-insel-traeger`, das Kit zeichnet darin.
+4. Wenn Redur es sagt: das bisherige Fenster (`frageAlt`, `wahlAlt`,
+   `mehrzeiligAlt`) aus `dialog.ts` nehmen (§43 — bis dahin ist es der
+   Rückweg, wenn die Inseln nicht laden).
+5. Am iPhone nachsehen (Nachtrag 3. und 4. Oktober): In den Bildern aus
+   Chromium trägt die erste Antwort den Fokusrahmen, wenn die Frage ohne
+   vorherigen Fokus kommt (das Kit setzt den Fokus dorthin). Nach einem
+   echten Tipp sollte er nicht zu sehen sein — prüfen, sonst im Kit (L222).
+   Und wo der Rahmen zu sehen ist, schneidet das runde Eck des Fensters ihn
+   ab (unten links an „Abbrechen", 1440×900): der Rahmen sollte der Rundung
+   folgen — ebenfalls im Kit (L222), nicht in `fremd/touch` von Hand.
+6. Gesehen bei der Durchsicht (5. Oktober), nicht geändert: eine Meldung
+   (`#toast`, Ebene 900), die erscheint, während eine Frage offen ist,
+   liegt jetzt UNTER dem Schleier des Trägers (1100) — vorher lag das
+   Fenster auf 700, die Meldung darüber. Fokus legt sie ohnehin still.
+   Wenn eine Meldung während einer Frage zählt (Fortschritt im
+   Hintergrund): die Meldung über den Träger heben, mit einem Lauf, der sie
+   während einer offenen Frage misst.
+7. Im Kit (L222, upstream in UI-Kit, nicht in `fremd/touch` von Hand),
+   gesehen bei der Durchsicht (5. Oktober): `useModal` ist nicht sicher
+   gegen einen Fehler MITTEN in seinem Effekt. Wirft dort etwas nach dem
+   Eintrag in den Stapel (in der Probe: `focus()`), bleibt der Eintrag samt
+   Tab-Falle und `inert` für immer stehen — die nächste Tab-Taste fängt
+   sich an einem Fenster, das es nicht mehr gibt. Redion fängt den
+   Zeichenfehler selbst (E710 Durchsicht Punkt 3: das bisherige Fenster
+   fragt); das Kit sollte seinen Effekt in `try`/`finally` aufräumen.
+8. Im Kit (L222), gesehen bei der finalen Durchsicht (5. Oktober), nicht
+   geändert: Seit der Durchsicht kein doppeltes „Abbrechen" mehr — eine
+   Wahl mit zwei Antworten steht darum jetzt so, wie das Kit zwei Knöpfe
+   setzt: nebeneinander. Mit einem Hinweis unter jedem Knopf bricht am
+   Telefon (390 px) die Beschriftung um („In 3 Seiten / zerlegen", 92 px
+   hoch; am Rechner 70 px). Lesbar und ≥ 44 px, aber eng. iOS stellt zwei
+   Knöpfe untereinander, sobald einer nicht auf eine Zeile passt — das
+   gehört als Regel ins Kit (`Dialog`: nebeneinander nur, wenn beide auf
+   eine Zeile passen), mit einem Lauf, der die Höhe am Telefon misst.
+
 ## Der Löschen-Knopf nach E709 (L230)
 
 E709 hat alle runden Löschen-Knöpfe auf `RedionDelete` gestellt. Offen,

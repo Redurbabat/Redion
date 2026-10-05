@@ -34,6 +34,9 @@
  *   §3 (Reihenfolge) → in `tupferZeigen` wieder `reverse()` einsetzen: die
  *        eben gewählte Farbe steht rechts und nach dem Neuzeichnen links.
  *        Gelaufen, rot.
+ *   §3c (Telefon, seit E710) → statt auf die Ankunft (`wahlDa`) fest 450 ms
+ *        warten: das Aktionsblatt ist noch auf der Feder, sein Rand unter
+ *        der Kante. Gelaufen, rot (4. Oktober, 53/54).
  *
  *   node pruefungen/lauf/test458.mts
  * ==========================================================================*/
@@ -72,6 +75,25 @@ const p = (n: string, b: unknown, extra = ''): void => {
 const gleich = (n: string, ist: unknown, soll: unknown): void =>
   p(n, JSON.stringify(ist) === JSON.stringify(soll), `ist ${JSON.stringify(ist)}, soll ${JSON.stringify(soll)}`);
 const lies = (f: string): string => fs.readFileSync(path.join(WURZEL, f), 'utf8');
+
+/**
+ * Seit E710 kommt die Wahl als Dialog des Touch Kits — am Telefon ab drei
+ * Antworten als Aktionsblatt von unten. Eine Insel, einen Augenblick
+ * später, und sie federt herein: das Blatt auf der weichen Feder des Kits
+ * (`--ui-spring-smooth-duration`, 796 ms), der Dialog auf der schnellen
+ * (542 ms). Gemessen wird erst, wenn sie ANGEKOMMEN ist: die Knöpfe sind
+ * da, und im Fenster läuft keine Bewegung mehr. Eine feste Pause von
+ * 450 ms (28. September) war kürzer als die Feder — am Telefon stand das
+ * Blatt in §3c noch unter der Kante (E710, Nachtrag 4. Oktober). Das
+ * bisherige Fenster bewegt sich nicht; dort geht es sofort weiter.
+ */
+const wahlDa = async (s: Page): Promise<void> => {
+  await s.waitForSelector('.overlay [data-w]', { timeout: 5000 }).catch(() => {});
+  await s.waitForFunction(() => {
+    const o = document.querySelector('.overlay');
+    return !!o && o.getAnimations({ subtree: true }).every(a => a.playState !== 'running');
+  }, null, { timeout: 5000 }).catch(() => {});
+};
 
 const browser = await chromium.launch();
 const fehler: string[] = [];
@@ -270,8 +292,11 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   /* E697: Der direkte Farbwähler kommt zuerst; die unveränderte Verwaltung
      der Sätze liegt dahinter. Alle bisherigen Speicherzusagen bleiben. */
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits: erst ankommen
+     lassen, dann messen (`wahlDa`, oben). */
+  await wahlDa(s);
   const auf = JSON.parse(await s.evaluate(`(() => {
-    const o = document.querySelector('.overlay .finder');
+    const o = document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)');
     return JSON.stringify({ da: !!o,
       knoepfe: [...document.querySelectorAll('.overlay [data-w]')].map(b => b.dataset.w) });
   })()`) as string);
@@ -318,6 +343,9 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
      gerufen wurde — ihn im selben `try` wieder wegzunehmen kam zu früh,
      und dann tat der Knopf scheinbar nichts. */
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits: erst ankommen
+     lassen, dann messen (`wahlDa`, oben). */
+  await wahlDa(s);
   await s.evaluate(`(() => {
     window.__echterKlick = HTMLInputElement.prototype.click;
     HTMLInputElement.prototype.click = function () {
@@ -344,6 +372,9 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.blatt-werk .blatt-farbe-neu')?.click());
   await s.waitForTimeout(300);
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits: erst ankommen
+     lassen, dann messen (`wahlDa`, oben). */
+  await wahlDa(s);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.overlay [data-w="zuruecksetzen"]')?.click());
   await s.waitForTimeout(300);
   gleich('Zurücksetzen räumt die Tupfer aus der Leiste',
@@ -413,8 +444,11 @@ for (const [wo, breit, hoch] of [['Rechner', 1280, 900], ['Telefon', 390, 844]] 
      letzte Knopf DARF unter der Kante stehen, solange man ihn hinrollen
      kann. Vor E486 konnte man das nicht: `.finder` schnitt ab. */
   await s.locator('[data-color-sets]').click();
+  /* Seit E710 kommt die Wahl als Dialog des Touch Kits: erst ankommen
+     lassen, dann messen (`wahlDa`, oben). */
+  await wahlDa(s);
   const m = JSON.parse(await s.evaluate(`(() => {
-    const f = document.querySelector('.overlay .finder');
+    const f = document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)');
     const k = [...document.querySelectorAll('.overlay [data-w]')];
     const letzt = k[k.length - 1];
     const rf = f.getBoundingClientRect();

@@ -64,6 +64,89 @@ bei 700 ms fest. `test579` §9 misst in der Einzeldatei jetzt auch, dass das
 angenommene Blatt wirkt (44 px, genau eines, kein `<link>`). Beide
 Erweiterungen mit Gegenprobe rot gesehen.
 
+## 5. Oktober 2026 · E710 Durchsicht · Was die Aufrufer mitbringen, bleibt
+
+**Redur:** am 3. Oktober um ca. 19:35 „Weiter ohne pause,"; am 5. Oktober
+um ca. 14:15 „Also an was du jetzt macht mache es jetzt fertig und danach
+arbeite nicht mehr weiter …".
+
+**Gefunden** (jeden Weg der Fragen im Browser nachgegangen, Rechner und
+Telefon, Tastatur, file:// und Einzeldatei, ohne React): das Kit-Fenster
+setzte den eigenen Abbruch eines Aufrufers immer ans Ende — bei „Blatt
+löschen?" stand der Fokus auf „Löschen", und ein Enter löschte das Blatt;
+vier Aufrufer, die ihren Abbruch „Abbrechen" unter der Kennung `nein`
+nennen, bekamen ein zweites „Abbrechen" daneben; stolperte die Insel beim
+Zeichnen, blieb eine unsichtbare Ebene über der Seite, alles still, und die
+Frage kam nie; mit „Ruhige Darstellung" stand das Fenster nach der Antwort
+noch 240 ms regungslos, und die letzte Insel nahm das Etikett
+`data-ui-motion` (E702) mit; ohne Inseln hatte `Dialog.bestaetigen` kein
+sichtbares „Abbrechen".
+
+**Gebaut:** die Knöpfe in der Folge des Aufrufers, sein Abbruch an seiner
+Stelle (`dialog.tsx`); ein „Abbrechen" unter `nein` ist DAS Abbrechen; ein
+Zeichenfehler der Insel lässt das bisherige Fenster fragen, und Escape
+nimmt einen Träger ohne Kit-Fenster weg (`dialog.ts`, `schale.ts`); bei
+„ruhig" ist ein gehender Träger sofort unsichtbar (`aufbau.css`), und die
+Brücke lässt `data-ui-motion` stehen, solange „ruhig" gilt (`bridge.tsx`);
+der Rückweg für Ja/Nein mit „Abbrechen", bei Gefahr zuerst.
+
+**Geprüft:** `test587` §12 (rot gegen den Endbau 1654e75d9: 80/17, alle
+17 in §12; jetzt 97/97); in der finalen Durchsicht §12 d) auf eine frische
+Seite gelegt (vorher gegen den Endbau aus dem falschen Grund grün) und je
+Korrektur eine Gegenprobe; die Nachbarn, die Bilder vorher/nachher und die
+Kosten im Commit „E710: Durchsicht".
+
+## 3. und 4. Oktober 2026 · E710 Nachtrag · Der Endbau im Browser, die erste Frage aus der Einzeldatei
+
+**Redur:** am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden:** Der Endbau von E710 hatte keinen Browserlauf. Jetzt
+gelaufen (22 Nachbarn, zweimal): grün bis auf fremde Rote (auf der Basis
+`b3cf193` mit denselben Zeilen ebenso rot: 343, 348, 464, 470, 582) und
+`test458` §3c — er mass das Aktionsblatt am Telefon 450 ms nach den
+Knöpfen, mitten in der Feder (796 ms). `test587` §11 (neu) fand im
+bisherigen Fenster einen alten Fehler: mit Enter beantwortet, kam dieselbe
+Frage sofort wieder (der Tastendruck fiel auf den Knopf, dem Fokus den
+Fokus zurückgab).
+
+**Gebaut:** `frageAlt` und `mehrzeiligAlt` verhindern den Tastendruck nach
+der Antwort, wie das Fenster des Kits; sonst unverändert (§43). `test458`
+misst nach der Ankunft (`wahlDa`), nicht nach einer festen Pause.
+
+**Geprüft:** `test587` §11 (Einzeldatei allein, ohne Netz: die erste Frage
+nach 22 bis 71 ms im Kit; Fokus zurück zum Auslöser nach Escape, Enter und
+`Dialog.bestaetigen`; Gegenprobe ohne React-Behälter), die Gegenproben für
+§8 und §11 (ohne beide Rückgaben des Fokus rot), die Nachbarn und die
+Bilder im Commit „E710: Nachtrag".
+
+## 28. September 2026 · E710 · Die Fragen der Schale im Fenster des Touch Kits
+
+**Redur:** um ca. 21:49 „was du beim touckit gebaut hast ich will alles so
+haben mit redion passende inhalten"; um ca. 22:10 „du muss ofne pause an
+redion arbeiten ich will wenn ich am morgen die redion öfnnen eien komplet
+besseren webseit sehen ohne eine funktione löschen bessere ordnungen
+bessere übergagnge besssere efeckten , bessere oberfläsche alles kannst du
+nur an reddion arbeiten".
+
+**Gefunden:** Die Fragen standen als Kasten oben im Bild (am Telefon oben
+angeklebt), verschwanden ohne Übergang, die Wahl hatte keinen sichtbaren
+Abbruch. Ein Kit-Fenster über einem alten legte beide still (gemessen), der
+gemeinsame Escape-Griff nahm das Fenster darunter weg, „Ruhige Darstellung"
+erreichte die Federn des Kits nicht, und der Zeitmesser ging auf Escape
+nicht zu.
+
+**Gebaut:** das Kit neu geholt (d21c402) und unter Redions strengen
+Schaltern geprüft; die Insel „dialog" (`src/islands/dialog.tsx`) für
+`Dialog.frage/wahl/mehrzeilig` — Mitte mit Feder, Glas, Hinweise, sichtbares
+„Abbrechen", am Telefon ab drei Antworten das Aktionsblatt — in einem
+`.overlay`-Träger, den Fokus und der Escape-Griff kennen; das bisherige
+Fenster als Rückweg; Vorwärmen beim ersten Tipp; `Dialog.bestaetigen` und
+`Dialog.melden` (sechs Browserfenster umgezogen); Zeitmesser auf Escape.
+
+**Geprüft:** `test587` (neu, rot zuerst), `test578` (Neuholen, Stufe 1b,
+strenge Schalter, Glas-Überschreibung), die Nachbarn im Commit
+E710.
+
 ## 5. Oktober 2026 · E709 Durchsicht · Der Name sagt, was weggeht; unter dem Zeiger ganz und lesbar; der Fokus fällt nicht auf den body
 
 **Redur:** „Weiter ohne pause" (3. Oktober).

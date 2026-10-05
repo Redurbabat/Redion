@@ -59,7 +59,19 @@ try {
       await page.locator('.rmo-health').screenshot({ path: path.join(root, 'bilder/motion-rest-health-' + width + '.png') });
     }
     await page.locator('.overlay .fh [data-a="zu"]').click();
-    await page.evaluate(() => { void UI.frage('Motion-Prüfung', 'Unveränderter Text'); });
+    /* Seit E710 fragt UI.frage im Dialog des Touch Kits (eine Insel, ohne
+       `.fbtns`). Die Glasregel für `.fbtns button.prim` gilt weiter für
+       jedes übrige Fenster Redions (Einstellungen, Datenbanken, Wissen …)
+       — geprüft an einem solchen Fenster, gebaut wie der bisherige Kasten. */
+    await page.evaluate(() => {
+      const o = document.createElement('div');
+      o.className = 'overlay';
+      o.innerHTML = '<div class="finder"><div class="fh">Motion-Prüfung</div>' +
+        '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button>' +
+        '<button data-a="zu">Abbrechen</button></div></div>';
+      o.addEventListener('click', e => { if ((e.target as Element).closest('[data-a]')) o.remove(); });
+      document.body.appendChild(o);
+    });
     const apply = page.locator('.fbtns button.prim');
     await apply.waitFor(); await page.waitForTimeout(120);
     check('Glasknopf gewinnt gegen die alte Klassenregel', await apply.evaluate(el =>

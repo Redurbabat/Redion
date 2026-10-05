@@ -19,17 +19,17 @@ export type StepDirection = 1 | -1
 
 export interface StepOptions {
   /** Lower bound, also the anchor of the step grid (default: unbounded, grid anchored at 0). */
-  min?: number
+  min?: number | undefined
   /** Upper bound (default: unbounded). */
-  max?: number
+  max?: number | undefined
   /** Step size, must be > 0 (default 1). */
-  step?: number
+  step?: number | undefined
 }
 
 /** Decimals needed to write `n` exactly: 0.1 → 1, 2.25 → 2, 1e-7 → 7. */
 function decimalsOf(n: number): number {
   if (!Number.isFinite(n)) return 0
-  const [mantissa, exponent = '0'] = String(n).toLowerCase().split('e')
+  const [mantissa = '', exponent = '0'] = String(n).toLowerCase().split('e')
   const fraction = mantissa.split('.')[1]?.length ?? 0
   return Math.max(0, fraction - Number(exponent))
 }
@@ -85,25 +85,25 @@ export interface StepperProps extends Omit<ComponentPropsWithRef<'div'>, 'onChan
   /** Accessible name of the group (e.g. "Anzahl"). */
   label: string
   /** Controlled value. */
-  value?: number
+  value?: number | undefined
   /** Initial value when uncontrolled (default: `min`, or 0 when min is unbounded; clamped into range). */
-  defaultValue?: number
-  onChange?: (value: number) => void
+  defaultValue?: number | undefined
+  onChange?: ((value: number) => void) | undefined
   /** Default 0 (like a native iOS stepper). Pass -Infinity for no lower bound. */
-  min?: number
+  min?: number | undefined
   /** Default 100. Pass Infinity for no upper bound. */
-  max?: number
+  max?: number | undefined
   /** Default 1. */
-  step?: number
+  step?: number | undefined
   /** Text shown for a value (default: locale number with the step's decimals). */
-  format?: (value: number) => string
+  format?: ((value: number) => string) | undefined
   /** Accessible name of the minus button. */
-  decrementLabel?: string
+  decrementLabel?: string | undefined
   /** Accessible name of the plus button. */
-  incrementLabel?: string
-  disabled?: boolean
+  incrementLabel?: string | undefined
+  disabled?: boolean | undefined
   /** Adds a hidden input so the value submits with a form. */
-  name?: string
+  name?: string | undefined
 }
 
 interface Roll {
@@ -234,7 +234,9 @@ export function Stepper({
   if (!Object.is(roll.value, current)) {
     setRoll({ value: current, previous: roll.value, direction: current > roll.value ? 'up' : 'down', seq: roll.seq + 1 })
   }
-  const settleRoll = (seq: number) => setRoll((r) => (r.seq === seq ? { ...r, previous: undefined } : r))
+  // Settled: the same roll without a leaving value.
+  const settleRoll = (seq: number) =>
+    setRoll((r) => (r.seq === seq ? { value: r.value, direction: r.direction, seq: r.seq } : r))
 
   const decimals = precisionOf(step > 0 ? step : 1, min)
   const show =

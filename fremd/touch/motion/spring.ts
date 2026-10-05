@@ -37,11 +37,11 @@ export interface SpringSample {
 
 export interface SettleOptions {
   /** Distance to the target that counts as "arrived". Default 0.001. */
-  restDelta?: number
+  restDelta?: number | undefined
   /** Speed that counts as "stopped". Default 0.01 units/s. */
-  restSpeed?: number
+  restSpeed?: number | undefined
   /** Hard upper bound in seconds. Default 10. */
-  maxDuration?: number
+  maxDuration?: number | undefined
 }
 
 const MAX_BOUNCE = 0.95
@@ -154,7 +154,7 @@ export function settleDuration(
  */
 export function springToLinearEasing(
   params: SpringParams,
-  { maxPoints = 48, precision = 4 }: { maxPoints?: number; precision?: number } = {},
+  { maxPoints = 48, precision = 4 }: { maxPoints?: number | undefined; precision?: number | undefined } = {},
 ): { easing: string; duration: number } {
   if (!(maxPoints >= 2)) throw new RangeError(`maxPoints must be >= 2, got ${maxPoints}`)
   const maxDuration = 10

@@ -5,13 +5,13 @@ import { supportsRefraction } from './support'
 
 export interface GlassOptions {
   /** Displacement strength in px (0 turns refraction off). Default 44. */
-  refraction?: number
+  refraction?: number | undefined
   /** Saturated rim glow 0…1. Default 0.35. */
-  rim?: number
+  rim?: number | undefined
   /** Width of the refracting edge in px. Default 16. */
-  bevel?: number
+  bevel?: number | undefined
   /** Set false to force the plain frosted look (e.g. while something animates underneath). */
-  refract?: boolean
+  refract?: boolean | undefined
 }
 
 const TRANSPARENCY = '(prefers-reduced-transparency: reduce)'

@@ -31,25 +31,25 @@ export interface SliderProps
   extends Omit<ComponentPropsWithRef<'input'>, 'value' | 'defaultValue' | 'onChange' | 'type' | 'min' | 'max' | 'step' | 'children'> {
   /** Accessible name; shown above the track when `showLabel` is set, otherwise used as aria-label. */
   label: string
-  showLabel?: boolean
+  showLabel?: boolean | undefined
   /** Controlled value. */
-  value?: number
+  value?: number | undefined
   /** Initial value when uncontrolled (default: midpoint, like a native range). */
-  defaultValue?: number
+  defaultValue?: number | undefined
   /** Called with the new number on every movement (native `input` event). */
-  onChange?: (value: number) => void
+  onChange?: ((value: number) => void) | undefined
   /** Default 0. */
-  min?: number
+  min?: number | undefined
   /** Default 100. */
-  max?: number
+  max?: number | undefined
   /** Default 1. */
-  step?: number | 'any'
+  step?: number | 'any' | undefined
   /** Decorative glyph at the start of the track (e.g. "moon" for dim). */
-  minGlyph?: GlyphName
+  minGlyph?: GlyphName | undefined
   /** Decorative glyph at the end of the track (e.g. "sun" for bright). */
-  maxGlyph?: GlyphName
+  maxGlyph?: GlyphName | undefined
   /** Spoken value (aria-valuetext), e.g. `(n) => `${n} Prozent``. */
-  valueText?: (value: number) => string
+  valueText?: ((value: number) => string) | undefined
 }
 
 /**

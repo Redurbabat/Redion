@@ -34,12 +34,12 @@ export interface GlassFilterOptions {
    * is what the rim can pull in — while the element itself stays glass-sized
    * and its own border-radius clips the result cleanly.
    */
-  margin?: number
+  margin?: number | undefined
   refraction: number
   /** 0…1 — strength of the saturated rim glow. */
   rim: number
   /** Backdrop blur applied before the filter (for the padding only). */
-  blur?: number
+  blur?: number | undefined
 }
 
 const n = (v: number) => String(Math.round(v * 100) / 100)

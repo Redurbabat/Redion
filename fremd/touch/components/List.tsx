@@ -26,49 +26,49 @@ export type ListTileTint = 'accent' | 'info' | 'success' | 'warning' | 'danger' 
 export interface ListRowTile {
   glyph: GlyphName
   /** Named kit tint (default `accent`) or any CSS colour, e.g. `#f08a24`. */
-  tint?: ListTileTint | (string & {})
+  tint?: ListTileTint | (string & {}) | undefined
   /** Glyph colour. Named tints pick a readable one; custom tints default to white. */
-  ink?: string
+  ink?: string | undefined
 }
 
 export interface ListProps extends Omit<ComponentPropsWithRef<'section'>, 'children'> {
   /** `inset` = rounded card with side margins (settings screen), `plain` = full-bleed. */
-  variant?: ListVariant
+  variant?: ListVariant | undefined
   /** Short text above the list. It also becomes the list's accessible name. */
-  header?: ReactNode
+  header?: ReactNode | undefined
   /** Note below the list. It also becomes the list's accessible description. */
-  footer?: ReactNode
+  footer?: ReactNode | undefined
   /** Rows rise into place one after another when the list mounts (35 ms apart, at most 350 ms). */
-  appear?: boolean
+  appear?: boolean | undefined
   /** `ListRow`s. Arrays, fragments and conditional `{cond && …}` rows are fine: each row counts on its own. */
-  children?: ReactNode
+  children?: ReactNode | undefined
 }
 
 export interface ListRowProps extends Omit<ComponentPropsWithRef<'li'>, 'title' | 'onClick' | 'children'> {
   title: ReactNode
   /** Second line under the title (the row grows to at least 52 px). */
-  subtitle?: ReactNode
+  subtitle?: ReactNode | undefined
   /** Secondary text on the trailing side, e.g. the current value. */
-  detail?: ReactNode
+  detail?: ReactNode | undefined
   /** A `{ glyph, tint }` icon tile, or any node (avatar, image). */
-  leading?: ReactNode | ListRowTile
+  leading?: ReactNode | ListRowTile | undefined
   /**
    * Custom node at the end, e.g. a Badge or a Toggle. Inside a row with
    * `href` / `onClick` it must not be interactive itself (no control inside a
    * link or button) — give a Toggle row no action instead.
    */
-  trailing?: ReactNode
+  trailing?: ReactNode | undefined
   /** Disclosure chevron. Default: shown when the row has `href` or `onClick`; a choice row (`selected`) shows its check instead. */
-  chevron?: boolean
+  chevron?: boolean | undefined
   /** Makes the whole row a link. */
-  href?: string
-  target?: string
-  rel?: string
+  href?: string | undefined
+  target?: string | undefined
+  rel?: string | undefined
   /** Makes the whole row a button (unless `href` is set, then it is the link's click handler). */
-  onClick?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void
-  disabled?: boolean
+  onClick?: ((event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void) | undefined
+  disabled?: boolean | undefined
   /** Destructive action (sign out, delete): the title uses the danger colour. */
-  destructive?: boolean
+  destructive?: boolean | undefined
   /**
    * Makes a button row (`onClick`, no `href`) a choice in a picker, single or
    * multiple choice: `true` shows an accent check mark at the end, `false`
@@ -82,18 +82,18 @@ export interface ListRowProps extends Omit<ComponentPropsWithRef<'li'>, 'title' 
    * header (e.g. "Sortieren nach"). Controlled: set it from your state in
    * `onClick`. Links and static rows cannot carry the state and show no mark.
    */
-  selected?: boolean
+  selected?: boolean | undefined
   /** Position for the staggered entrance. Set automatically inside `List`. */
-  index?: number
+  index?: number | undefined
   /** Hairline under the row. Default: every row of a `List` except the last one. */
-  divider?: boolean
+  divider?: boolean | undefined
   /**
    * Swipe actions (e.g. `{ trailing: [{ label: 'Löschen', tone: 'danger', onSelect }] }`):
    * the row content slides aside to reveal them. They are also real buttons
    * after the row for keyboard and screen readers, named after a string
    * `title` ("Löschen: Nachtfahrt"); set `context` for another name (`''`: none).
    */
-  swipe?: Omit<SwipeActionsProps, 'children' | 'className'>
+  swipe?: Omit<SwipeActionsProps, 'children' | 'className'> | undefined
 }
 
 interface RowPosition {

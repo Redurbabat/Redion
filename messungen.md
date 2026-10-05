@@ -5395,6 +5395,8 @@ tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
 
+---
+
 ## §79 · Der Löschen-Knopf, der zerfliesst: Stellen, Filter, Startpaket, Bildstreifen (E709, 28. September 2026)
 
 **Wo und wie.** Zweig `claude/loeschen-fluessig` gegen den Stand
@@ -5543,6 +5545,141 @@ nicht obenauf (elementFromPoint traf die Seitenleiste) an allen vier
 Geräten → nach der Behebung obenauf, „Löschen" 2 → 1, der Fokus in der
 neuen Leiste (Lauf D). Die Chatliste am Rechner: der Knopf in Ruhe
 `display: flex` (vor E709 `none`) → wieder `none`, beim Überfahren da.
+
+## §80 · Die Fragen im Fenster des Touch Kits: Startpaket, Inselbündel, Browserfenster (E710, 28. September 2026)
+
+**Gemessen, bevor gebaut wurde** (Kit-Karte insel-8, Stand `0976b5f`, 4×
+gedrosselte CPU, Telefon 390×844, file://, Median aus 15): `Dialog.frage`
+bis zum ersten Bild 78 ms; ein Kit-Dialog als Insel warm 59 ms, kalt
+(Skript einhängen und erstes Zeichnen) 288–510 ms, Median 351 ms. Dazu der
+Stillstand: altes `.overlay` + Kit-Dialog → beide `inert`, Escape nahm das
+alte Fenster darunter weg.
+
+**Startpaket** (gzip Stufe 6 mit `gzip -6`, Stand `b3cf193` → dieser Zweig):
+
+```txt
+quell/schale/ueberlagerung/dialog.js          3'601 →   6'133   +2'532
+quell/schale/aufbau/schale.js                77'671 →  78'183     +512
+quell/schale/inseln/laden.js                  4'433 →   4'849     +416
+quell/schale/stil/aufbau.css                 16'421 →  16'780     +359
+quell/schale/ueberlagerung/fokus.js           4'942 →   5'276     +334
+quell/schale/stil/bausteine.css             167'864 → 168'069     +205
+quell/bereiche/einstellungen/ansicht/seite.js 30'711 → 30'863     +152
+quell/bereiche/datenbanken/steuerung.js     134'754 → 134'904     +150
+quell/bereiche/wissen/zeitmesser.js           4'290 →   4'434     +144
+                                                     zusammen   +4'804
+```
+
+Die Hälfte von `dialog.js` ist Kommentar (die Begründung des Trägers);
+ohne Kommentare wächst der Code um rund 1,1 KB. **`test388` §5** (Lauf
+vom 28. September, ca. 14:30 UTC, Dienststand v1395): „Der Start holt
+2830 KB (gzip) über 248 Dateien — Decke 2850 KB". Keine neue Datei im Startweg.
+
+**Nicht beim Start** — die Inseln (`Inseln.bereit()`, vorgewärmt):
+
+```txt
+quell/islands/islands.js     10'637 → 21'593 Bytes   gzip 4'162 → 7'404
+quell/islands/islands.css    21'645 → 31'799 Bytes   gzip 4'879 → 6'448
+redion-einzeldatei.html      11'783'171 → 11'818'635 Bytes   +35'464
+```
+
+Mit dem Dialog kommen aus dem Kit: Dialog, ActionSheet, Portal, useModal,
+usePresence, focus, inert, scrollLock, pageTheme (Stufe 1a: Button,
+Toggle, Glyph, usePress, cx).
+
+**Browserfenster in `src/`** (`test587` §10, Kommentare ausgenommen):
+51 auf `b3cf193`, 45 nach E710 (−6: Gefahrzone der Einstellungen, Löschen
+mehrerer Datenbankzeilen).
+
+**Kontrast der Antwort-Knöpfe** (`test587` §5, gerenderte Schriftfarbe
+gegen `--bg-card`): in allen zehn Schemata ≥ 4,5 : 1; mit `--accent` als
+Schrift läge „Standard" darunter (L222: 3,16 : 1).
+
+**Das Kit neu geholt:** d21c402, 103 Dateien, 583'770 Bytes (vorher
+c192821: 96 Dateien, 518'395 Bytes). `tsc -p tsconfig.islands.json` mit
+Redions strengen Schaltern: 0 Fehler (bei c192821: 73).
+
+**Nachtrag, 3. und 4. Oktober 2026 — der Endbau im Browser** (unter der
+Sperre, Chromium aus Playwright, file:// und `listen(0)`; vier Rechenkerne,
+geteilt mit drei anderen Zweigen):
+
+```txt
+Lauf 1, 3. Okt. 21:06–21:16 UTC, Endbau 9575ebc40 + §11 (Dienststand v1396), 19 Läufe
+  587    70/71 — rot nur §11 „… und antwortet ebenso" (bisheriges Fenster, Enter)
+  458    Abbruch in §3c („Execution context was destroyed", Telefon, vor jeder Frage)
+Basis b3cf193, 3. Okt. 21:19–21:24 UTC: 343 348 464 470 582 rot, 458 54/54 grün
+Lauf 2, 4. Okt. 15:51–16:00 UTC, Endbau + Korrektur (Dienststand v1397), 22 Läufe
+  grün   129 (26 ok) · 143 (23 ok) · 181 (47/47) · 196 (40 ok) · 198 (17 ok)
+         212 (32/32) · 296 (17/17) · 353 (105/105) · 388 (21/21) · 412 (27/27)
+         466 (32/32) · 468 (29/29) · 496 (148) · 538 (53/53) · 579 (76/76)
+         587 (73/73)
+  rot, auf b3cf193 mit denselben Zeilen ebenso (fremd):
+         343 (Tupfer, Abbruch §6) · 348 (31/34) · 464 (62/63, 14 ≠ 13)
+         470 (Abbruch §2, [data-w="sichern"]) · 582 (171 ok, 5 rot: sand, wald, Liste)
+  rot durch diesen Zweig: 458 (53/54) — §3c „Telefon: das Fenster bleibt im
+         Bild", gemessen 450 ms nach den Knöpfen, das Blatt noch auf der Feder
+Gegenprobe §8      Träger auf z-index:1             → §8 rot (3. Okt. 69/71, 4. Okt. 72/73), zurück, cmp gleich
+Gegenprobe §11     ohne Rückgabe in dialog.ts       → Fokus-Punkte grün (useModal), cmp gleich
+Gegenprobe §11     ohne beide Rückgaben (+ useModal) → 69/73, die vier Fokus-Punkte rot, cmp gleich
+test458 §3c        feste Pause 450 ms (Lauf 2)      → rot 53/54; mit wahlDa (Ankunft) 54/54,
+                   auf b3cf193 54/54 (4. Okt., unter der Sperre, je einzeln)
+```
+
+**`test388` §5:** „Der Start holt 2830 KB (gzip) über 248 Dateien — Decke
+2850 KB" (Lauf 1 und Lauf 2, wie am 28. September).
+
+**Die erste Frage** (`test587` §11, Einzeldatei allein, ohne Netz, die
+Inseln im Leerlauf vorgewärmt, Klick per Enter auf einen Knopf bis zum
+ersten Knoten des Fensters): 22 bis 71 ms im Fenster des Kits (fünf Läufe
+am 3. und 4. Oktober, unter geteilter Last; Grenze 250 ms); ohne den
+React-Behälter 25 bis 43 ms bis zum bisherigen Fenster.
+
+**Das Aktionsblatt am Telefon** (Farbwahl, zwölf Antworten, 390×844):
+weiche Feder des Kits, 796 ms (`--ui-spring-smooth-duration`); der
+Dialog in der Mitte auf der schnellen, 542 ms. Eine feste Pause von 450 ms
+misst das Blatt unterwegs.
+
+**Durchsicht, 5. Oktober 2026 — was die Aufrufer mitbringen, bleibt**
+(unter der Sperre, Chromium aus Playwright, file:// und `listen(0)`; der
+Endbau 1654e75d9 als eingefrorene Kopie; Gegenproben in Kopien des
+Zweigs, nie im Zweig selbst):
+
+```txt
+test587 gegen den Endbau 1654e75d9   80 bestanden, 17 durchgefallen — alle 17 in §12 (18:08 UTC)
+test587 auf diesem Stand             97/97 (18:09 UTC; im Nachbarlauf 19:10 ebenso 97/97)
+Gegenprobe 1: ohne den Hörer auf redion-insel-fehler (dialog.js) und
+              ohne die Regel für „ruhig" (aufbau.css)  → 92/5: §12 c) (altes Fenster,
+              Antwort, Stilllegung, Träger) und d) 267 ms rot
+Gegenprobe 2: Escape-Griff wie im Endbau (schale.js) und
+              Rückweg von bestaetigen wie im Endbau     → 93/4: §12 c) „Escape nimmt
+              den Träger" und die drei Punkte von e) rot
+„Ruhig", Escape bis unsichtbar (§12 d)   Endbau 268–275 ms · jetzt ≤ 50 ms (ein Bild);
+                                         mit Bewegung ≥ 100 ms (Ausblenden bleibt)
+Bildstreifen „ruhig" (Rechner, CDP)     Endbau: Fenster noch +1172 ms, weg +1407 ms
+                                         jetzt: weg im ersten Bild nach Escape (+1150 ms)
+Nachbarn, 18:58–19:10 UTC, 34 Läufe     grün 29: 126 129 143 167 171 181 184 186 196 198
+                                         212 245 272 296 353 362 388 399 412 458 466 468
+                                         496 510 538 576 579 581 587
+  rot, auf der Basis b3cf193 mit denselben Zeilen ebenso (18:10–18:13 UTC, fremd):
+                                         343 (Tupfer, Abbruch) · 348 (31/34) · 464 (62/63,
+                                         14 ≠ 13) · 470 (Abbruch [data-w="sichern"]) ·
+                                         582 (171 ok, 5 rot: sand, wald, Liste)
+Dateiwächter                             47 (42/42) 87 (177 ok) 105 (152 ok) 109 (25 ok)
+                                         225 (11/11) 290 (17/17) 400 401 402 410 537 (17 ok)
+                                         549 (6/6) 550 (8/8) 578 (115/115)
+```
+
+**Kosten** (gzip -6, gegen den Endbau): `dialog.js` 6'314 → 6'901 (+587),
+`schale.js` 78'173 → 78'351 (+178), `aufbau.css` 16'769 → 16'906 (+137),
+`stand.js` +8 — im Start +910 Bytes. Nicht beim Start: `islands.js`
+7'393 → 7'450 (+57). Einzeldatei 11'819'225 → 11'822'315 (+3'090).
+**`test388` §5:** „Der Start holt 2831 KB (gzip) über 248 Dateien — Decke
+2850 KB" (Endbau 2830).
+
+**Zwei Antworten mit Hinweis** (nebeneinander, wie das Kit zwei Knöpfe
+setzt): Knopfhöhe 70 px am Rechner, 92 px am Telefon (390 px, Beschriftung
+umgebrochen) — vorher drei Knöpfe untereinander, je 52/53 px, davon zwei
+„Abbrechen". AUFGABEN E710 Punkt 8.
 
 ## §84 · Rot zuerst, vier Inseln: Stilblatt, Wettlauf, Keil, Werkzeuge (E714, 3. Oktober 2026)
 

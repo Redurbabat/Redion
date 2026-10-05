@@ -23,15 +23,15 @@ export function progressPercent(value: number): number {
 
 export interface ProgressBarProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   /** Progress 0..1 (clamped). Ignored while `indeterminate`. */
-  value?: number
+  value?: number | undefined
   /** Accessible name, e.g. "Hochladen". Shown above the bar with `showLabel`, otherwise aria-label. */
   label: string
   /** Show the label and the percent above the bar. */
-  showLabel?: boolean
+  showLabel?: boolean | undefined
   /** Unknown duration: a segment sweeps across instead of a fill; no value is announced. */
-  indeterminate?: boolean
+  indeterminate?: boolean | undefined
   /** Spoken value (aria-valuetext), e.g. `(p) => `${p} Prozent, 10 von 40 MB``. */
-  valueText?: (percent: number) => string
+  valueText?: ((percent: number) => string) | undefined
 }
 
 /**

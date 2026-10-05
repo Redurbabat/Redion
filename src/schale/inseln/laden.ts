@@ -255,6 +255,33 @@ const Inseln = (() => {
   };
   if (typeof window !== 'undefined') window.addEventListener('redion-insel-fehler', fehlerAnnehmen);
 
+  /* BEIM ERSTEN TIPPEN ODER TASTENDRUCK (E710). Beim ersten Besuch über das
+     Netz wärmt der Leerlauf nichts vor (oben: `darfVorwaermen`) — die erste
+     Frage kam dann kalt: 288–510 ms bis zum ersten Bild, gemessen bei 4×
+     gedrosselter CPU (Kit-Karte, insel-8). Wer tippt, arbeitet; eine Frage
+     kann folgen. Also holt der erste Tipp die Inseln im Hintergrund. Der
+     Start bleibt, was er war: `test388` §5 misst ohne Tipp. */
+  const beimErstenGebrauch = (): void => {
+    removeEventListener('pointerdown', beimErstenGebrauch, true);
+    removeEventListener('keydown', beimErstenGebrauch, true);
+    if (geladen()) return;
+    /* Nicht mitten in die Bewegung, die der Tipp auslöst (die Pille der
+       unteren Leiste, ein Blatt): erst, wenn der Browser Luft hat. */
+    const holen = (): void => {
+      if (geladen()) return;
+      bereit().catch((e: unknown) => {
+        if (typeof Reporter !== 'undefined')
+          Reporter.warn('Inseln', 'Vorwärmen beim ersten Tipp gescheitert: ' + (e instanceof Error ? e.message : String(e)));
+      });
+    };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(holen, { timeout: 2000 });
+    else setTimeout(holen, 400);
+  };
+  if (typeof window !== 'undefined') {
+    addEventListener('pointerdown', beimErstenGebrauch, { capture: true, passive: true });
+    addEventListener('keydown', beimErstenGebrauch, { capture: true, passive: true });
+  }
+
   /* Nach dem LADEN, nicht beim Start: der Start bleibt, was er war. Und dann
      erst im Leerlauf — Safari kennt `requestIdleCallback` nicht, dort
      wartet ein gewöhnlicher Zeitgeber ab. */

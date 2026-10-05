@@ -15,9 +15,9 @@ export interface SnapOptions {
   /** Release velocity, units per second, positive = towards larger values. */
   velocity: number
   points: number[]
-  decelerationRate?: number
+  decelerationRate?: number | undefined
   /** Speed above which the flick direction must be respected. Default 300 units/s. */
-  flickVelocity?: number
+  flickVelocity?: number | undefined
 }
 
 /**
@@ -26,23 +26,32 @@ export interface SnapOptions {
  * finger. Returns the index into `points`.
  */
 export function selectSnapPoint({ position, velocity, points, decelerationRate = 0.998, flickVelocity = 300 }: SnapOptions): number {
-  if (points.length === 0) throw new RangeError('selectSnapPoint needs at least one point')
+  const first = points[0]
+  if (first === undefined) throw new RangeError('selectSnapPoint needs at least one point')
   const projected = position + project(velocity, decelerationRate)
   let best = 0
-  for (let i = 1; i < points.length; i += 1) {
-    if (Math.abs(points[i] - projected) < Math.abs(points[best] - projected)) best = i
-  }
+  let bestPoint = first
+  points.forEach((point, i) => {
+    if (Math.abs(point - projected) < Math.abs(bestPoint - projected)) {
+      best = i
+      bestPoint = point
+    }
+  })
 
   if (Math.abs(velocity) >= flickVelocity) {
     const direction = Math.sign(velocity)
-    const behind = (points[best] - position) * direction < 0
+    const behind = (bestPoint - position) * direction < 0
     if (behind) {
       // Nearest point that lies ahead in the flick direction, if there is one.
       let ahead = -1
-      for (let i = 0; i < points.length; i += 1) {
-        const d = (points[i] - position) * direction
-        if (d > 0 && (ahead === -1 || d < (points[ahead] - position) * direction)) ahead = i
-      }
+      let aheadDistance = 0
+      points.forEach((point, i) => {
+        const d = (point - position) * direction
+        if (d > 0 && (ahead === -1 || d < aheadDistance)) {
+          ahead = i
+          aheadDistance = d
+        }
+      })
       if (ahead !== -1) best = ahead
     }
   }

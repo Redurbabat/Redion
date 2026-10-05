@@ -17,7 +17,7 @@ export interface PageTransitionOptions {
    * ancestor), else the element's own `border-radius`. Keep decorations
    * such as frame shadows outside it — they would slide along.
    */
-  scope?: HTMLElement | null
+  scope?: HTMLElement | null | undefined
 }
 
 const SCOPE_NAME = 'ui-touch-page'

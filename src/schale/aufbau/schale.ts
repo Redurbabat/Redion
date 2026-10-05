@@ -3411,6 +3411,21 @@ const App = (() => {
        `fokus.ts` rechnet seit E223 genauso — die letzte im Dokument ist
        die oberste. Dieselbe Regel an beiden Stellen, sonst schliesst Esc
        etwas anderes, als der Fokus gerade hält. */
+    /* ZWEI ERGÄNZUNGEN (E710), beide ohne einen zweiten Griff:
+
+       EIN FENSTER DES TOUCH KITS (`data-insel-traeger`, dialog.ts) schliesst
+       sein Kit selbst — `useModal` ruft dabei „Abbrechen" und gibt dem
+       Aufrufer seine Antwort (`null`, `''`). Nähme dieser Griff das
+       `.overlay` einfach weg, bliebe die Antwort aus, und die Ausblendung
+       fiele weg. Also lässt er es stehen — und nimmt NICHTS darunter: ein
+       Druck, ein Fenster (test296 §2). Gemessen war vorher: er nahm das
+       alte Fenster UNTER dem Kit-Dialog weg, und der Dialog blieb stehen.
+
+       EIN LOSES FELD mit `data-esc-schliesst` (der Zeitmesser: `role=
+       "dialog"`, aber kein `.overlay`, weil er beim Arbeiten offen bleiben
+       darf) geht zu, wenn kein Menü und kein Fenster davorliegt. Vorher
+       schloss es nur sein ✕ — §38: „Escape schliesst das passende
+       Overlay". */
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
       const letztes = (wahl: string): Element | null => {
@@ -3419,8 +3434,22 @@ const App = (() => {
       };
       const m = letztes('.menu');
       const o = letztes('.overlay');
+      const feld = letztes('[data-esc-schliesst]');
+      /* Ein Träger OHNE Fenster des Kits darin (die Insel stolperte, oder
+         sie zeichnet noch nicht) geht wie jedes Fenster: sonst bliebe eine
+         unsichtbare Ebene über der Seite, die alles stilllegt und die kein
+         Escape mehr erreicht. dialog.ts gibt dem Aufrufer dann „abgebrochen"
+         (Durchsicht, 5. Oktober). */
       if (m) m.remove();
-      else if (o) o.remove();
+      else if (o) {
+        if (!o.hasAttribute('data-insel-traeger') ||
+            !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet')) o.remove();
+      }
+      else if (feld) {
+        const warDrin = feld.contains(document.activeElement);
+        feld.remove();
+        if (warDrin) document.getElementById('page')?.focus();
+      }
     });
   };
 

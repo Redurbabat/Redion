@@ -25,12 +25,12 @@ export interface PopoverProps {
   anchorRef: RefObject<HTMLElement | null>
   /** Accessible name of the popover. */
   label: string
-  prefer?: 'top' | 'bottom'
+  prefer?: 'top' | 'bottom' | undefined
   children: ReactNode
-  className?: string
+  className?: string | undefined
   /** 'dialog' for free content, 'menu' when children are menu items. */
-  role?: 'dialog' | 'menu'
-  width?: number
+  role?: 'dialog' | 'menu' | undefined
+  width?: number | undefined
 }
 
 const EXIT_MS = 150
@@ -139,10 +139,10 @@ export function Popover({
 
 export interface MenuItem {
   label: string
-  icon?: GlyphName
-  destructive?: boolean
-  disabled?: boolean
-  onSelect?: () => void
+  icon?: GlyphName | undefined
+  destructive?: boolean | undefined
+  disabled?: boolean | undefined
+  onSelect?: (() => void) | undefined
 }
 
 function MenuItemButton({ item, onChoose }: { item: MenuItem; onChoose: () => void }) {
@@ -168,11 +168,18 @@ export function moveMenuFocus(items: HTMLElement[], current: number, key: string
   const enabled = items.map((el, i) => (el.hasAttribute('disabled') ? -1 : i)).filter((i) => i >= 0)
   if (enabled.length === 0) return -1
   const position = enabled.indexOf(current)
-  if (key === 'Home') return enabled[0]
-  if (key === 'End') return enabled[enabled.length - 1]
-  if (key === 'ArrowDown') return enabled[(position + 1 + enabled.length) % enabled.length]
-  if (key === 'ArrowUp') return enabled[(position - 1 + enabled.length * 2) % enabled.length]
-  return current
+  const slot =
+    key === 'Home'
+      ? 0
+      : key === 'End'
+        ? enabled.length - 1
+        : key === 'ArrowDown'
+          ? (position + 1 + enabled.length) % enabled.length
+          : key === 'ArrowUp'
+            ? (position - 1 + enabled.length * 2) % enabled.length
+            : -1
+  // Every slot above lies inside the (non-empty) list; any other key keeps the focus where it is.
+  return enabled[slot] ?? current
 }
 
 export interface MenuProps extends Omit<PopoverProps, 'children' | 'role'> {
@@ -220,8 +227,8 @@ export interface ContextMenuProps {
   /** The element that can be long-pressed / right-clicked. Must be focusable for keyboard users. */
   children: ReactNode
   /** Hold duration for touch (ms). */
-  holdMs?: number
-  className?: string
+  holdMs?: number | undefined
+  className?: string | undefined
 }
 
 /**

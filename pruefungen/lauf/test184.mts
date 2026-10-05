@@ -162,7 +162,7 @@ await seite.waitForSelector('.overlay #fq', { timeout: 25000 });
 
 const feld = await seite.evaluate(() => {
   const i = document.querySelector('.overlay #fq') as HTMLInputElement;
-  return { art: i.type, titel: document.querySelector('.overlay .fh')?.textContent || '',
+  return { art: i.type, titel: document.querySelector('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title)')?.textContent || '',
            auto: i.getAttribute('autocomplete') || '' };
 });
 gleich('Das Feld verbirgt die Eingabe', feld.art, 'password');
@@ -173,7 +173,7 @@ gleich('Und der Browser merkt es sich nicht', feld.auto, 'off');
 await seite.fill('.overlay #fq', 'daneben');
 await seite.click('.overlay [data-a="ok"]');
 await seite.waitForFunction(() =>
-  /stimmte nicht/i.test(document.querySelector('.overlay .fh')?.textContent || ''),
+  /stimmte nicht/i.test(document.querySelector('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title)')?.textContent || ''),
   null, { timeout: 25000 });
 p('Nach dem falschen Versuch sagt sie das', true);
 

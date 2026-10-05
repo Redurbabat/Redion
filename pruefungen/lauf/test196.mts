@@ -249,8 +249,8 @@ const grossStart = async (titel: string) => {
 };
 await grossStart('P3-GROSS-NEIN');
 const vorschau = await seite.evaluate(() => ({
-  titel: document.querySelector('.overlay .fh')?.textContent || '',
-  text: document.querySelector('.overlay .finder > div:nth-child(2)')?.textContent || '',
+  titel: document.querySelector('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title)')?.textContent || '',
+  text: document.querySelector('.overlay :is(.finder > div:nth-child(2), .ui-touch-dialog-message, .ui-touch-action-sheet-message)')?.textContent || '',
   knoepfe: [...document.querySelectorAll<HTMLElement>('.overlay [data-w]')].map(x => x.dataset.w)
 }));
 p('Titel kennzeichnet große Agentenänderung', /Große Agentenänderung/.test((vorschau as any).titel));
@@ -296,7 +296,7 @@ await seite.evaluate(({ bloecke }) => {
 await seite.waitForSelector('.overlay [data-w="ja"]');
 await seite.click('.overlay [data-w="ja"]');
 await seite.waitForFunction(() =>
-  (document.querySelector('.overlay .finder > div:nth-child(2)')?.textContent || '').includes('Teil 2'));
+  (document.querySelector('.overlay :is(.finder > div:nth-child(2), .ui-touch-dialog-message, .ui-touch-action-sheet-message)')?.textContent || '').includes('Teil 2'));
 await seite.click('.overlay [data-w="ja"]');
 const summe = await seite.evaluate(async () => {
   const g = globalThis as any; const prot = await g.__p3SummenLauf;

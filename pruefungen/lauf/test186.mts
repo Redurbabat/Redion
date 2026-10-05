@@ -102,9 +102,9 @@ await seite.waitForTimeout(700);
 
 const nachDemDialog = await seite.evaluate(() => ({
   geknackt: !!(window as any).__geknackt,
-  bilder: document.querySelectorAll('.overlay .fh img').length,
-  titelHtml: document.querySelector('.overlay .fh')?.innerHTML || '',
-  titelText: document.querySelector('.overlay .fh')?.textContent || '',
+  bilder: document.querySelectorAll('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title) img').length,
+  titelHtml: document.querySelector('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title)')?.innerHTML || '',
+  titelText: document.querySelector('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title)')?.textContent || '',
 }));
 
 p('Es lief kein fremder Code', !nachDemDialog.geknackt);

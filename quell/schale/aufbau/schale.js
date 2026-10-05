@@ -2572,10 +2572,20 @@ const App = (() => {
             };
             const m = letztes('.menu');
             const o = letztes('.overlay');
+            const feld = letztes('[data-esc-schliesst]');
             if (m)
                 m.remove();
-            else if (o)
-                o.remove();
+            else if (o) {
+                if (!o.hasAttribute('data-insel-traeger') ||
+                    !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet'))
+                    o.remove();
+            }
+            else if (feld) {
+                const warDrin = feld.contains(document.activeElement);
+                feld.remove();
+                if (warDrin)
+                    document.getElementById('page')?.focus();
+            }
         });
     };
     const rolleZu = (blockId) => {

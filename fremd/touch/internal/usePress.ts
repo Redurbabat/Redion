@@ -1,13 +1,13 @@
 import { useState, type KeyboardEvent, type PointerEvent } from 'react'
 
 export interface PressHandlers<E extends Element> {
-  onPointerDown?: (event: PointerEvent<E>) => void
-  onPointerUp?: (event: PointerEvent<E>) => void
-  onPointerCancel?: (event: PointerEvent<E>) => void
-  onPointerLeave?: (event: PointerEvent<E>) => void
-  onKeyDown?: (event: KeyboardEvent<E>) => void
-  onKeyUp?: (event: KeyboardEvent<E>) => void
-  onBlur?: (event: React.FocusEvent<E>) => void
+  onPointerDown?: ((event: PointerEvent<E>) => void) | undefined
+  onPointerUp?: ((event: PointerEvent<E>) => void) | undefined
+  onPointerCancel?: ((event: PointerEvent<E>) => void) | undefined
+  onPointerLeave?: ((event: PointerEvent<E>) => void) | undefined
+  onKeyDown?: ((event: KeyboardEvent<E>) => void) | undefined
+  onKeyUp?: ((event: KeyboardEvent<E>) => void) | undefined
+  onBlur?: ((event: React.FocusEvent<E>) => void) | undefined
 }
 
 /**

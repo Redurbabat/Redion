@@ -990,12 +990,16 @@ const Datenbank = (() => {
                 return;
             }
             if (a === 'del') {
-                if (!confirm(ids.length + ' Einträge löschen?'))
-                    return;
-                ids.forEach((id) => Store.trashBlock(id));
-                l.remove();
-                App.zeichneSeite();
-                UI.toast(ids.length + ' Einträge gelöscht');
+                void Dialog.bestaetigen({ titel: ids.length + ' Einträge löschen?',
+                    text: 'Sie gehen in den Papierkorb.', ja: 'Löschen', gefahr: true }).then(ja => {
+                    if (!ja)
+                        return;
+                    ids.forEach((id) => Store.trashBlock(id));
+                    l.remove();
+                    App.zeichneSeite();
+                    UI.toast(ids.length + ' Einträge gelöscht');
+                });
+                return;
             }
             if (a === 'dup') {
                 ids.forEach(id => {

@@ -1,36 +1,21 @@
 import {
-  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   type ComponentPropsWithRef,
+  type DOMAttributes,
   type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
-  type PointerEventHandler,
-  type Ref,
 } from 'react'
 import { Button, type ButtonProps } from '../components/Button'
 import { cx } from '../internal/cx'
+import { useMergedRef } from '../internal/useMergedRef'
 import { useGlassRefraction, type GlassOptions } from './useGlassRefraction'
 import './Glass.css'
 
-/** One stable callback ref that feeds our own ref and the caller's. */
-function useMergedRef<T>(own: { current: T | null }, outer: Ref<T> | undefined) {
-  return useCallback(
-    (value: T | null) => {
-      own.current = value
-      if (typeof outer === 'function') outer(value)
-      else if (outer) (outer as { current: T | null }).current = value
-    },
-    [own, outer],
-  )
-}
-
-interface GlareHandlers<E extends HTMLElement> {
-  onPointerMove?: PointerEventHandler<E>
-  onPointerLeave?: PointerEventHandler<E>
-}
+/** The two pointer handlers the glare wraps — the caller's own ones are React props, so each may be undefined. */
+type GlareHandlers<E extends HTMLElement> = Pick<DOMAttributes<E>, 'onPointerMove' | 'onPointerLeave'>
 
 /**
  * Glare that follows the pointer (mouse / pen / finger), throttled to one
@@ -66,9 +51,9 @@ function useGlare<E extends HTMLElement>(enabled: boolean, own: GlareHandlers<E>
 
 export interface GlassSurfaceProps extends ComponentPropsWithRef<'div'>, GlassOptions {
   /** Specular glare follows the pointer. */
-  glare?: boolean
+  glare?: boolean | undefined
   /** 'regular' is clear; 'tinted' is milkier for text-heavy panels. */
-  tone?: 'regular' | 'tinted'
+  tone?: 'regular' | 'tinted' | undefined
 }
 
 /**
@@ -110,7 +95,7 @@ export function GlassSurface({
   )
 }
 
-export type GlassButtonProps = Omit<ButtonProps, 'variant'> & GlassOptions & { glare?: boolean }
+export type GlassButtonProps = Omit<ButtonProps, 'variant'> & GlassOptions & { glare?: boolean | undefined }
 
 /**
  * GlasKnopf — the kit Button in glass, with the same press spring.
@@ -209,13 +194,14 @@ export function GlassBar({ label, className, onKeyDown, onFocus, ref, children, 
           ? items.length - 1
           : (current + (forward ? 1 : -1) + items.length) % items.length
     rove(items, next)
-    items[next].focus()
+    items[next]?.focus()
   }
 
   return (
     <GlassSurface
-      refraction={36}
       {...rest}
+      // After the spread: an explicit refraction={undefined} still means the bar's default.
+      refraction={rest.refraction ?? 36}
       ref={mergedRef}
       role="toolbar"
       aria-label={label}

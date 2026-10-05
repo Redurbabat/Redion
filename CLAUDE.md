@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 528 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 529 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1487,6 +1487,31 @@ Chatliste zeigt ihren Knopf am Rechner erst beim Überfahren (Durchsicht
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf seinem Zweig (die
 zweite Welle zählt der Zusammenführer nach).*
 
+*Und 529: `test587` — die Fragen der Schale im Fenster des Touch Kits
+(E710, Stufe 1b von E699). Er stellt `Dialog.frage`, `Dialog.wahl` und
+`Dialog.mehrzeilig` wirklich und liest die Antworten zurück (Text, `null`,
+`''`, Kennung), öffnet einen Kit-Dialog über einem alten Fenster und misst,
+dass beide Systeme dieselbe oberste Ebene sehen (vorher: beide `inert`,
+nichts bedienbar), dass Escape genau eines schliesst und Tab im Dialog
+bleibt. Am Telefon misst er die Lage (Mitte, Aktionsblatt unten), in allen
+zehn Schemata den Kontrast der Knöpfe (Akzent als Schrift, L222 Punkt 6),
+dazu „Starker Kontrast ohne Glas", die Scheibe ohne Nebel (E703), die
+gefährliche Ja/Nein-Frage mit „Abbrechen" im Fokus, den Rückweg ohne
+Inseln, den Zeitmesser auf Escape und die Rundung im Tastaturfokus. Seit
+dem Nachtrag vom 4. Oktober (§11) auch die Einzeldatei allein, ohne Netz:
+die erste Frage kommt sofort im Kit, der Fokus kehrt nach Escape oder
+Antwort zum Knopf zurück, der gefragt hat, und ohne React antwortet das
+bisherige Fenster. Seit der Durchsicht vom 5. Oktober (§12) auch, dass die
+Knöpfe in der Folge des Aufrufers stehen (sein „Behalten" zuerst und im
+Fokus — vorher löschte ein Enter das Blatt), dass ein „Abbrechen" unter der
+Kennung `nein` nicht verdoppelt wird, dass eine stolpernde Insel dem
+bisherigen Fenster weicht statt die Seite stillzulegen, dass „ruhig" im
+selben Bild schliesst und dass der Rückweg für Ja/Nein ein sichtbares
+„Abbrechen" hat. Gezählt am 28. September, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf
+seinem Zweig; die zweite Welle zählt beim Zusammenführen neu. Beim Zusammenführen nachgezählt (5. Oktober,
+`claude/morgen-besser-2`, nach `test586`): 529.*
+
 ### Die Befehle
 
 ```txt
@@ -1503,7 +1528,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 528 Läufe
+npm run pruefen                      alle 529 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1593,7 +1618,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 528 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 529 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

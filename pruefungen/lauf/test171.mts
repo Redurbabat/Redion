@@ -162,7 +162,7 @@ const blk1 = await seite.evaluate(async () => {
 const eingang1 = seite.locator('input[type="file"][accept*="ods"]');
 await eingang1.waitFor({ state: 'attached', timeout: 5000 });
 await eingang1.setInputFiles(mehrOds);
-const mehrKnopf = seite.locator('.overlay .wahl-knoepfe button[data-w="rein"]');
+const mehrKnopf = seite.locator('.overlay button[data-w="rein"]');
 await mehrKnopf.waitFor({ state: 'visible', timeout: 8000 });
 await mehrKnopf.click();
 await seite.waitForTimeout(900);
@@ -213,7 +213,7 @@ const eingang2 = seite.locator('input[type="file"][accept*="ods"]');
 await eingang2.waitFor({ state: 'attached', timeout: 5000 });
 await eingang2.setInputFiles(einXlsx);
 
-const a1Knopf = seite.locator('.overlay .wahl-knoepfe button[data-w="a1"]');
+const a1Knopf = seite.locator('.overlay button[data-w="a1"]');
 await a1Knopf.waitFor({ state: 'visible', timeout: 8000 });
 await a1Knopf.click();
 await seite.waitForTimeout(700);

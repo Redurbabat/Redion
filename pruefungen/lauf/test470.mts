@@ -267,7 +267,7 @@ console.log('\n§4 Eine PDF-Seite wird eine Bildmarke');
   await (await waehler).setFiles({ name: 'Formelbuch.pdf', mimeType: 'application/pdf', buffer: pdf() });
   /* Zwei Seiten — also fragt Redion, welche. */
   await s.waitForSelector('.overlay #fq', { timeout: 15000 });
-  const frage = String(await s.evaluate(`document.querySelector('.overlay .fh').textContent`));
+  const frage = String(await s.evaluate(`document.querySelector('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title)').textContent`));
   p('Bei mehreren Seiten wird gefragt, welche',
     /Formelbuch/.test(frage) && /1 bis 2/.test(frage), frage);
   await s.fill('.overlay #fq', '2');

@@ -35,6 +35,24 @@
   text-size-adjust: 100%;
 }
 
+/*
+ * An app's own "less motion" switch: data-ui-motion="reduce" on <html> stops
+ * CSS motion in kit roots, overlay layers and a toast region placed outside a
+ * root — ::before/::after included (shimmer, ping, sheen). JS springs:
+ * motion/reducedMotion.ts. The OS setting keeps its gentler per-component
+ * alternatives in each file.
+ */
+[data-ui-motion='reduce'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region),
+[data-ui-motion='reduce'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region)::before,
+[data-ui-motion='reduce'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region)::after,
+[data-ui-motion='reduce'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region) *,
+[data-ui-motion='reduce'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region) *::before,
+[data-ui-motion='reduce'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region) *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+}
+
 /* Text that exists for assistive technology only. */
 .ui-touch-visually-hidden {
   position: absolute;

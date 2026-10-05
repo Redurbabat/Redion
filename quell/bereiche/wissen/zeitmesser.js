@@ -192,6 +192,7 @@ const Zeitmesser = (() => {
         feld.className = 'zm-feld';
         feld.setAttribute('role', 'dialog');
         feld.setAttribute('aria-label', 'Zeitmesser');
+        feld.setAttribute('data-esc-schliesst', '');
         feld.innerHTML = feldHtml();
         feld.addEventListener('click', e => {
             const b = e.target.closest('[data-zm]');

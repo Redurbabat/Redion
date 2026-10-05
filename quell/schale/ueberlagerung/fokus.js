@@ -41,6 +41,8 @@ const Fokus = (() => {
         if (d.dataset.fokusFertig)
             return;
         d.dataset.fokusFertig = 'ja';
+        if (d.hasAttribute('data-insel-traeger'))
+            return;
         if (!d.getAttribute('role'))
             d.setAttribute('role', 'dialog');
         if (!d.hasAttribute('aria-modal'))
@@ -75,6 +77,8 @@ const Fokus = (() => {
             return;
         const d = oberste();
         if (!d || !d.isConnected)
+            return;
+        if (d.hasAttribute('data-insel-traeger'))
             return;
         const liste = greifbareIn(d);
         if (!liste.length) {

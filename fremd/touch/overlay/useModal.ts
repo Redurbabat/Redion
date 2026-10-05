@@ -10,17 +10,17 @@ export interface ModalOptions {
   /** The dialog element (role="dialog", tabIndex -1). */
   containerRef: RefObject<HTMLElement | null>
   /** Default true — every overlay closes with Escape unless it must block. */
-  closeOnEscape?: boolean
+  closeOnEscape?: boolean | undefined
   /** Element to focus on open; default: first focusable, else the dialog. */
-  initialFocusRef?: RefObject<HTMLElement | null>
+  initialFocusRef?: RefObject<HTMLElement | null> | undefined
   /** Return focus to the element that had it before opening. Default true. */
-  restoreFocus?: boolean
+  restoreFocus?: boolean | undefined
   /** Make the rest of the page inert (modal). Default true. */
-  inertOutside?: boolean
+  inertOutside?: boolean | undefined
   /** Lock page scroll. Default true. */
-  lockPageScroll?: boolean
+  lockPageScroll?: boolean | undefined
   /** Element made "outside-proof" instead of the dialog (e.g. its portal root). */
-  layerRef?: RefObject<HTMLElement | null>
+  layerRef?: RefObject<HTMLElement | null> | undefined
 }
 
 interface StackEntry {

@@ -25,7 +25,11 @@
  * dieselbe Zusage haben. Ohne diesen Namen leitete TypeScript aus einer
  * leeren Vorgabe `never[]` ab, und jeder Aufruf mit Knöpfen wäre ein Fehler.
  */
-type DialogKnopf = { id: string; text: string; hinweis?: string };
+type DialogKnopf = {
+  id: string; text: string; hinweis?: string;
+  /** Rot: diese Antwort löscht oder verwirft etwas (E710; im Kit „destructive"). */
+  gefahr?: boolean;
+};
 
 const Dialog = (() => {
 
@@ -67,8 +71,8 @@ const Dialog = (() => {
    * ihn sich auch nicht. Ein PDF-Passwort gehört niemandem ausser dem
    * Menschen davor — es wird weitergereicht und nirgends abgelegt (E110).
    */
-  const frage = (titel: string, vorgabe = '',
-                 art: 'text' | 'passwort' = 'text'): Promise<string | null> =>
+  const frageAlt = (titel: string, vorgabe = '',
+                    art: 'text' | 'passwort' = 'text'): Promise<string | null> =>
     new Promise<string | null>(ok => {
     const o = document.createElement('div');
     o.className = 'overlay';
@@ -95,7 +99,12 @@ const Dialog = (() => {
       else if (ziel?.closest('[data-a="zu"]') || e.target === o) fertig(null);
     });
     inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') fertig(inp.value);
+      /* `preventDefault` (E710, Durchsicht 3. Oktober): sonst fällt dasselbe
+         Enter als Tastendruck (`keypress`) auf den Knopf, dem Fokus nach dem
+         Schliessen seinen Fokus zurückgibt — und der stellt die Frage sofort
+         noch einmal (gemessen in `test587` §11: Antwort verloren, Fenster
+         wieder offen). Das Fenster des Kits tut das schon. */
+      if (e.key === 'Enter') { e.preventDefault(); fertig(inp.value); }
       if (e.key === 'Escape') fertig(null);
     });
     inp.focus(); inp.select();
@@ -119,7 +128,7 @@ const Dialog = (() => {
    * nicht `null`: eine Kennung ist immer eine Zeichenkette, und wer
    * `if (!wahl) return;` schreibt, deckt damit beide Fälle.
    */
-  const wahl = (
+  const wahlAlt = (
     { titel, text, knoepfe = [] }:
     { titel: string; text: string; knoepfe?: DialogKnopf[] }
   ): Promise<string> => new Promise<string>(ok => {
@@ -168,7 +177,7 @@ const Dialog = (() => {
    * `prompt()` in LUECKEN.md schon als Schwäche steht. Enter macht eine
    * neue Zeile; übernehmen heisst Strg+Enter oder der Knopf.
    */
-  const mehrzeilig = (titel: string, vorgabe = ''): Promise<string | null> =>
+  const mehrzeiligAlt = (titel: string, vorgabe = ''): Promise<string | null> =>
     new Promise<string | null>(ok => {
     const o = document.createElement('div');
     o.className = 'overlay';
@@ -193,13 +202,204 @@ const Dialog = (() => {
       else if (ziel?.closest('[data-a="zu"]') || e.target === o) fertig(null);
     });
     feld.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) fertig(feld.value);
+      /* `preventDefault` wie oben bei `frageAlt` (E710, Durchsicht). */
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fertig(feld.value); }
       if (e.key === 'Escape') fertig(null);
     });
     feld.focus(); feld.select();
   });
 
-  return { frage, wahl, mehrzeilig };
+  /* ==========================================================================
+   * DAS FENSTER DES TOUCH KITS (E710, Stufe 1b von E699)
+   * --------------------------------------------------------------------------
+   * Redur, 27. September 2026, 21:49 UTC: „was du beim touckit gebaut hast ich
+   * will alles so haben mit redion passende inhalten" — und 22:10 UTC: „…
+   * ohne eine funktione löschen bessere ordnungen bessere übergagnge
+   * besssere efeckten , bessere oberfläsche alles".
+   *
+   * Dieselben drei Fragen, dieselben Antworten, derselbe Auslöser — nur die
+   * Ansicht ist jetzt der Dialog des Kits (`src/islands/dialog.tsx`): er
+   * federt in der Mitte herein, statt als Kasten oben am Telefon zu kleben,
+   * trägt Redions Glas und blendet beim Schliessen aus, statt zu
+   * verschwinden. Am Telefon kommt eine Wahl ab drei Antworten als
+   * Aktionsblatt von unten.
+   *
+   * DER TRÄGER IST EIN `.overlay`, mit `data-insel-traeger`. Dadurch sehen
+   * Fokus (inert), der gemeinsame Escape-Griff und jeder Prüflauf, der nach
+   * `.overlay #fq` oder `[data-w]` sucht, ein offenes Fenster — wie immer.
+   * Das Kit zeichnet seine Ebene DARIN (`container`): für beide Systeme gibt
+   * es genau eine oberste Ebene. Fokus und Tab-Falle überlässt Fokus dem Kit
+   * (fokus.ts), Escape der gemeinsame Griff (schale.ts) — beide E710.
+   *
+   * DAS BISHERIGE FENSTER BLEIBT — als Rückweg, nicht als zweiter Katalog:
+   * kommen die Inseln nicht (kein React geladen, eine Datei fehlt, beim
+   * allerersten Besuch über ein langsames Netz länger als `WARTEN_MS`), zeigt
+   * `…Alt` dieselbe Frage wie bisher. Keine Frage bleibt je unbeantwortet
+   * stehen, weil etwas nicht lud (§43: nichts geht verloren).
+   * ========================================================================*/
+
+  /** So lange wartet die erste Frage höchstens auf die Inseln. */
+  const WARTEN_MS = 1500;
+
+  /** Die Inseln, wenn sie da sind oder rechtzeitig kommen — sonst `null` (dann der Rückweg). */
+  const inselnHolen = (): Promise<RedionIslandsApi | null> => {
+    if (typeof Inseln === 'undefined') return Promise.resolve(null);
+    if (Inseln.geladen() && window.RedionIslands) return Promise.resolve(window.RedionIslands);
+    return new Promise<RedionIslandsApi | null>(ok => {
+      let entschieden = false;
+      const zeit = setTimeout(() => { if (!entschieden) { entschieden = true; ok(null); } }, WARTEN_MS);
+      Inseln.bereit().then(
+        api => { if (!entschieden) { entschieden = true; clearTimeout(zeit); ok(api); } },
+        (e: unknown) => {
+          if (typeof Reporter !== 'undefined')
+            Reporter.warn('Dialog', 'Die Inseln kamen nicht — die Frage kommt im bisherigen Fenster: ' +
+              (e instanceof Error ? e.message : String(e)));
+          if (!entschieden) { entschieden = true; clearTimeout(zeit); ok(null); }
+        });
+    });
+  };
+
+  /** Am Telefon? Dieselbe Frage, die auch die Menüs stellen (≤ 760 px oder grober Zeiger). */
+  const amTelefon = (): boolean => typeof Menue !== 'undefined' && Menue.amTelefon();
+
+  /**
+   * Eine Frage im Fenster des Kits. `abbruch` ist die Antwort, wenn das
+   * Fenster ohne Wahl verschwindet — auch, wenn jemand den Träger von
+   * aussen wegnimmt (dann wartet kein Aufrufer für immer).
+   */
+  const imKit = <T extends string | null>(api: RedionIslandsApi, daten: Record<string, unknown>,
+                                          abbruch: T): Promise<T> => new Promise<T>((ok, fehler) => {
+    /* Woher die Frage kam — dorthin geht der Fokus zurück. Jetzt gelesen,
+       bevor Fokus die Seite dahinter stilllegt. */
+    const vorher = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.setAttribute('data-insel-traeger', 'offen');
+    document.body.appendChild(o);
+
+    let beantwortet = false;
+    const waechter = new MutationObserver(() => { if (!o.isConnected) antwort(abbruch); });
+    /* STOLPERT DIE INSEL BEIM ZEICHNEN (Durchsicht, 5. Oktober), fängt ihre
+       Fehlergrenze den Fehler (main.tsx) und meldet ihn als
+       `redion-insel-fehler`. Im Träger stand dann statt des Fensters nur der
+       Fehlersatz der Grenze — unsichtbar über der ganzen Seite, alles
+       darunter still, Escape liess den Träger stehen, und die Frage kam nie.
+       Jetzt gilt dasselbe wie, wenn die Inseln gar nicht kommen: der Träger
+       geht, und das bisherige Fenster fragt (`kitOderAlt`). Nur, wenn es
+       DIESES Fenster getroffen hat — sein Träger trägt dann den Fehlersatz. */
+    const beiInselFehler = (e: Event): void => {
+      if (beantwortet || (e as CustomEvent<{ insel?: string }>).detail?.insel !== 'dialog') return;
+      setTimeout(() => {
+        if (beantwortet || !o.querySelector('[data-insel-fehler]')) return;
+        beantwortet = true;
+        waechter.disconnect();
+        removeEventListener('redion-insel-fehler', beiInselFehler);
+        weg();
+        if (typeof Fokus !== 'undefined') Fokus.inertAktualisieren();
+        if (vorher?.isConnected) vorher.focus({ preventScroll: true });
+        fehler(new Error('Das Fenster des Kits stolperte beim Zeichnen.'));
+      }, 0);
+    };
+    addEventListener('redion-insel-fehler', beiInselFehler);
+    const antwort = (wert: T): void => {
+      if (beantwortet) return;
+      beantwortet = true;
+      waechter.disconnect();
+      removeEventListener('redion-insel-fehler', beiInselFehler);
+      /* Kein Fenster mehr für Fokus, Escape und Prüfläufe — die Seite ist
+         sofort wieder bedienbar, während der Dialog ausblendet. */
+      o.classList.remove('overlay');
+      o.setAttribute('data-insel-traeger', 'geht');
+      if (typeof Fokus !== 'undefined') Fokus.inertAktualisieren();
+      const a = document.activeElement;
+      if ((!a || a === document.body || o.contains(a)) && vorher?.isConnected) vorher.focus({ preventScroll: true });
+      ok(wert);
+    };
+    const weg = (): void => {
+      try { api.unmount(o); } catch { /* schon weg */ }
+      o.remove();
+    };
+    try {
+      api.mount(o, 'dialog', {
+        ...daten,
+        telefon: amTelefon(),
+        traeger: o,
+        onAntwort: (wert: string | null) => antwort((wert === null ? abbruch : wert) as T),
+        onWeg: weg
+      });
+    } catch (e: unknown) {
+      beantwortet = true;
+      removeEventListener('redion-insel-fehler', beiInselFehler);
+      o.remove();
+      fehler(e);
+      return;
+    }
+    waechter.observe(document.body, { childList: true });
+  });
+
+  /** Erst das Kit, sonst das bisherige Fenster — nie beides, nie keins. */
+  const kitOderAlt = <T extends string | null>(daten: Record<string, unknown>, abbruch: T,
+                                               alt: () => Promise<T>): Promise<T> =>
+    inselnHolen().then(api => {
+      if (!api) return alt();
+      return imKit(api, daten, abbruch).catch((e: unknown) => {
+        if (typeof Reporter !== 'undefined')
+          Reporter.warn('Dialog', 'Das Fenster des Kits liess sich nicht öffnen — das bisherige springt ein: ' +
+            (e instanceof Error ? e.message : String(e)));
+        return alt();
+      });
+    });
+
+  /** Eine Frage mit einem Eingabefeld: der Text, oder `null` beim Abbrechen. */
+  const frage = (titel: string, vorgabe = '',
+                 art: 'text' | 'passwort' = 'text'): Promise<string | null> =>
+    kitOderAlt<string | null>({ art: art === 'passwort' ? 'passwort' : 'frage', titel: String(titel ?? ''), vorgabe: String(vorgabe ?? '') },
+      null, () => frageAlt(titel, vorgabe, art));
+
+  /** Die Frage mit mehreren Antworten: die `id` des Knopfes, `''` beim Abbruch. */
+  const wahl = (
+    { titel, text, knoepfe = [] }:
+    { titel: string; text: string; knoepfe?: DialogKnopf[] }
+  ): Promise<string> =>
+    kitOderAlt<string>({ art: 'wahl', titel: String(titel ?? ''), text: String(text ?? ''),
+                         knoepfe: knoepfe.map(k => ({ ...k })) },
+      '', () => wahlAlt({ titel, text, knoepfe }));
+
+  /** Die mehrzeilige Frage: Enter macht eine Zeile, Strg+Enter übernimmt. */
+  const mehrzeilig = (titel: string, vorgabe = ''): Promise<string | null> =>
+    kitOderAlt<string | null>({ art: 'mehrzeilig', titel: String(titel ?? ''), vorgabe: String(vorgabe ?? '') },
+      null, () => mehrzeiligAlt(titel, vorgabe));
+
+  /**
+   * JA ODER NEIN — statt `confirm()` (E710). Das Fenster des Browsers hält
+   * die ganze Seite an, sieht in jedem System anders aus und kennt keinen
+   * roten Knopf für „das löscht etwas". Dies ist eine Wahl mit einer
+   * Antwort und „Abbrechen": `true` nur, wenn der Knopf gedrückt wurde.
+   */
+  const bestaetigen = (
+    { titel, text = '', ja = 'OK', gefahr = false }:
+    { titel: string; text?: string; ja?: string; gefahr?: boolean }
+  ): Promise<boolean> => {
+    const knopf: DialogKnopf = { id: 'ja', text: ja, gefahr };
+    /* Im bisherigen Fenster (der Rückweg ohne Inseln) stand hier nur der
+       eine Knopf — kein sichtbares „Abbrechen", am Telefon nur ein Tipp
+       daneben; `confirm()` hatte eines (Durchsicht, 5. Oktober). Jetzt steht
+       es da, bei Gefahr ZUERST: dort hat es den Fokus, und ein Enter löscht
+       nichts. Das Kit-Fenster setzt sein „Abbrechen" selbst (dialog.tsx). */
+    const abbruch: DialogKnopf = { id: '', text: 'Abbrechen' };
+    return kitOderAlt<string>({ art: 'wahl', titel: String(titel ?? ''), text: String(text ?? ''), knoepfe: [{ ...knopf }] },
+      '', () => wahlAlt({ titel, text, knoepfe: gefahr ? [abbruch, knopf] : [knopf, abbruch] }))
+      .then(w => w === 'ja');
+  };
+
+  /**
+   * NUR ZUR KENNTNIS — statt `alert()` (E710). Ein Knopf („OK"), Escape und
+   * ein Tipp daneben schliessen ebenso; die Seite bleibt dabei lebendig.
+   */
+  const melden = ({ titel, text = '' }: { titel: string; text?: string }): Promise<void> =>
+    wahl({ titel, text, knoepfe: [{ id: '', text: 'OK' }] }).then(() => undefined);
+
+  return { frage, wahl, mehrzeilig, bestaetigen, melden };
 })();
 
 (window as any).Dialog = Dialog;

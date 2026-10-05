@@ -24,11 +24,11 @@ function cssLength(value: number | string | undefined) {
 
 export interface SkeletonProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
   /** Default 100 % of the container. */
-  width?: number | string
+  width?: number | string | undefined
   /** Default 1em (one line of the surrounding text). */
-  height?: number | string
+  height?: number | string | undefined
   /** Corner radius. Default 6 px; "50%" makes a circle (avatars). */
-  radius?: number | string
+  radius?: number | string | undefined
 }
 
 /**
@@ -48,9 +48,9 @@ export function Skeleton({ width, height, radius, className, style, ...rest }: S
 
 export interface SkeletonTextProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
   /** Number of lines. Default 3. */
-  lines?: number
+  lines?: number | undefined
   /** Width of the last line (when there is more than one). Default "60%". */
-  lastLineWidth?: string
+  lastLineWidth?: string | undefined
 }
 
 /**
@@ -79,10 +79,10 @@ export function SkeletonText({ lines = 3, lastLineWidth, className, ...rest }: S
 
 export interface SkeletonGroupProps extends ComponentPropsWithRef<'div'> {
   /** True while loading (default). Set false when the real content is in. */
-  busy?: boolean
+  busy?: boolean | undefined
   /** What is loading, for screen readers. Default "Inhalt lädt". */
-  busyLabel?: string
-  children?: ReactNode
+  busyLabel?: string | undefined
+  children?: ReactNode | undefined
 }
 
 /**

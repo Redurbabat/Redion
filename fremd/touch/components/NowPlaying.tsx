@@ -29,7 +29,7 @@ export interface NowPlayingTrack {
   title: string
   artist: string
   /** Image URL, or a CSS gradient / colour used as placeholder art. */
-  artwork?: string
+  artwork?: string | undefined
 }
 
 export interface NowPlayingLabels {
@@ -52,19 +52,19 @@ export interface NowPlayingProps {
   playing: boolean
   onPlayingChange: (playing: boolean) => void
   /** Controlled full-screen state. */
-  expanded?: boolean
-  defaultExpanded?: boolean
-  onExpandedChange?: (expanded: boolean) => void
+  expanded?: boolean | undefined
+  defaultExpanded?: boolean | undefined
+  onExpandedChange?: ((expanded: boolean) => void) | undefined
   /** Without a handler the matching button is disabled. */
-  onNext?: () => void
-  onPrevious?: () => void
+  onNext?: (() => void) | undefined
+  onPrevious?: (() => void) | undefined
   /** Playback position 0…1 shown in the full player (placeholder bar). */
-  progress?: number
+  progress?: number | undefined
   /** Portal target for the full player in contained layouts (e.g. a phone frame). Default document.body. */
-  container?: HTMLElement | null
-  labels?: Partial<NowPlayingLabels>
+  container?: HTMLElement | null | undefined
+  labels?: Partial<NowPlayingLabels> | undefined
   /** Class of the mini player bar. */
-  className?: string
+  className?: string | undefined
 }
 
 const DEFAULT_LABELS: NowPlayingLabels = {
@@ -440,6 +440,7 @@ export function NowPlaying({
       paint()
       runPath(0, velocity, finishCollapse)
     }
+    return undefined
     // Runs once per phase change; the helpers only read refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])

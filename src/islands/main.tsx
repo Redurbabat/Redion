@@ -47,6 +47,7 @@ import '../../fremd/touch/touch.css'
 import { Component, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { Probe, type ProbeProps } from './probe'
+import { RedionDialog, type RedionDialogProps } from './dialog'
 import { startThemeMirror, stopThemeMirror } from './bridge'
 import './bridge.css'
 
@@ -56,12 +57,17 @@ export const version = '1'
 type Props = Record<string, unknown>
 
 /**
- * DER KATALOG. Stufe 1a hat genau eine Insel, und die ist die Probe für
- * `test579`. Jede weitere kommt mit ihrem eigenen Bogen hinzu (1b: Dialoge)
- * — und ersetzt dabei etwas, statt daneben zu stehen.
+ * DER KATALOG. Stufe 1a hatte genau eine Insel, die Probe für `test579`.
+ * Jede weitere kommt mit ihrem eigenen Bogen hinzu — und ersetzt dabei
+ * etwas, statt daneben zu stehen:
+ *
+ *   dialog   Stufe 1b (E710): die Fragen der Schale — `Dialog.frage`,
+ *            `Dialog.wahl`, `Dialog.mehrzeilig` —, eingehängt von
+ *            `src/schale/ueberlagerung/dialog.ts` an derselben Stelle.
  */
 const catalog: Record<string, (props: Props) => ReactNode> = {
   probe: (props) => <Probe {...(props as ProbeProps)} />,
+  dialog: (props) => <RedionDialog {...(props as unknown as RedionDialogProps)} />,
 }
 
 interface Mounted {

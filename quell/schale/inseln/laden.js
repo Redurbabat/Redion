@@ -118,6 +118,28 @@ const Inseln = (() => {
     };
     if (typeof window !== 'undefined')
         window.addEventListener('redion-insel-fehler', fehlerAnnehmen);
+    const beimErstenGebrauch = () => {
+        removeEventListener('pointerdown', beimErstenGebrauch, true);
+        removeEventListener('keydown', beimErstenGebrauch, true);
+        if (geladen())
+            return;
+        const holen = () => {
+            if (geladen())
+                return;
+            bereit().catch((e) => {
+                if (typeof Reporter !== 'undefined')
+                    Reporter.warn('Inseln', 'Vorwärmen beim ersten Tipp gescheitert: ' + (e instanceof Error ? e.message : String(e)));
+            });
+        };
+        if (typeof requestIdleCallback === 'function')
+            requestIdleCallback(holen, { timeout: 2000 });
+        else
+            setTimeout(holen, 400);
+    };
+    if (typeof window !== 'undefined') {
+        addEventListener('pointerdown', beimErstenGebrauch, { capture: true, passive: true });
+        addEventListener('keydown', beimErstenGebrauch, { capture: true, passive: true });
+    }
     const imLeerlauf = () => {
         if (typeof requestIdleCallback === 'function')
             requestIdleCallback(vorwaermen, { timeout: 4000 });

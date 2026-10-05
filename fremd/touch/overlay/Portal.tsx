@@ -1,22 +1,12 @@
 import './Portal.css'
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { pageTheme } from './pageTheme'
 
 export interface PortalProps {
   children: ReactNode
   /** Where to mount; default document.body. Pass an element for contained demos (e.g. a phone frame). */
-  container?: HTMLElement | null
-}
-
-/**
- * The theme for a layer in <body>, which sits outside every `.ui-touch-root`:
- * the theme forced around the kit root (or layer) that has the focus — the
- * one the overlay was most likely opened from — else around the page's first
- * kit root; the system theme when nothing is forced.
- */
-function pageTheme(): string {
-  const root = document.activeElement?.closest('.ui-touch-root, .ui-touch-portal') ?? document.querySelector('.ui-touch-root')
-  return root?.closest('[data-ui-theme]')?.getAttribute('data-ui-theme') || 'system'
+  container?: HTMLElement | null | undefined
 }
 
 /**

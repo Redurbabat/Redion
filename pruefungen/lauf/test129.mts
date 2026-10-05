@@ -222,10 +222,10 @@ const laufFrage = seite.evaluate(async () => {
 });
 await seite.waitForTimeout(700);
 const frage = await seite.evaluate(() => {
-  const d = document.querySelector<HTMLElement>('.overlay .fh');
+  const d = document.querySelector<HTMLElement>('.overlay :is(.fh, .ui-touch-dialog-title, .ui-touch-action-sheet-title)');
   const kn = [...document.querySelectorAll<HTMLElement>('.overlay [data-w]')]
     .map(b => b.dataset['w']);
-  const text = (document.querySelector('.overlay .finder > div:nth-child(2)')?.textContent || '');
+  const text = (document.querySelector('.overlay :is(.finder > div:nth-child(2), .ui-touch-dialog-message, .ui-touch-action-sheet-message)')?.textContent || '');
   return { titel: (d?.textContent || '').trim(), knoepfe: kn, text };
 });
 p('Vor dem ersten ändernden Schritt steht eine Frage',

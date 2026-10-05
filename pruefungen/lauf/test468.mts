@@ -181,7 +181,7 @@ console.log('\n§2 Drei Seiten werden drei Blätter — §3 mit ihren Marken');
     [1, Math.round(A4 * 3), ['auf-1', 'auf-2', 'auf-3']]);
   await s.click('[data-document-action="page-split"]');
   await s.waitForSelector('.overlay [data-w="ja"]', { timeout: 5000 });
-  const frage = String(await s.evaluate(`document.querySelector('.overlay .finder').textContent`));
+  const frage = String(await s.evaluate(`document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)').textContent`));
   p('Die Frage sagt, was geschieht', /drei Seiten|3 Seiten/.test(frage), frage.slice(0, 120));
   p('… und dass keine Marke über eine Grenze läuft',
     /Keine Marke läuft/.test(frage), frage.slice(0, 200));
@@ -209,7 +209,7 @@ console.log('\n§4 Eine Marke über der Grenze wird gezählt und gesagt');
   const s = await dreiseitig(true);
   await s.click('[data-document-action="page-split"]');
   await s.waitForSelector('.overlay [data-w="ja"]', { timeout: 5000 });
-  const frage = String(await s.evaluate(`document.querySelector('.overlay .finder').textContent`));
+  const frage = String(await s.evaluate(`document.querySelector('.overlay :is(.finder, .ui-touch-dialog, .ui-touch-action-sheet)').textContent`));
   p('Die Frage nennt die Zahl', /1 Marke läuft/.test(frage), frage.slice(0, 260));
   p('… und sagt, was mit ihr geschieht',
     /ragen dort über den Rand|ragt|Überstand/.test(frage), frage.slice(0, 300));

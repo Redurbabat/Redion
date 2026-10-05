@@ -161,3 +161,148 @@ body[data-bewegung='ruhig'] :is(.ui-touch-root, .ui-touch-portal) *::after {
   animation: none !important;
   transition: none !important;
 }
+
+/* Seit E710 steht bei „ruhig" auch `html[data-ui-motion="reduce"]` (der
+   Spiegel in bridge.tsx), und das Kit setzt dort jede Dauer auf 1 ms —
+   ebenfalls `!important` und genauer als Redions Regel. Ohne Übergang ist
+   es so oder so (`transition-property: none`), aber „ruhig" heisst in
+   Redion 0 s (`test579` §6): hier genauer als beide. */
+html[data-ui-motion='reduce'] body[data-bewegung='ruhig'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region) *,
+html[data-ui-motion='reduce'] body[data-bewegung='ruhig'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region) *::before,
+html[data-ui-motion='reduce'] body[data-bewegung='ruhig'] :is(.ui-touch-root, .ui-touch-portal, .ui-touch-toast-region) *::after {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
+/* ============================================================================
+ * DIE FRAGEN DER SCHALE ALS DIALOG DES KITS (E710, Stufe 1b)
+ * ----------------------------------------------------------------------------
+ * `src/islands/dialog.tsx` zeichnet `Dialog.frage`, `Dialog.wahl` und
+ * `Dialog.mehrzeilig` mit dem Dialog und dem Aktionsblatt des Kits. Was
+ * hier steht, macht daraus Redions Fenster — ohne eine Zeile im Kit.
+ * ==========================================================================*/
+
+/* EIN GLAS (E695). Die Scheibe des Kits wird Redions dichte Glasfläche
+   (Schrift darauf): dieselbe Marke, dieselbe Unschärfe, dieselbe Lichtkante
+   wie jedes Menü. Die Marken werden HIER am Element gelesen, nicht an
+   `:root` — so schaltet „Starker Kontrast", „Hoher Kontrast" und „weniger
+   Transparenz" (grund.css: dort werden die Marken am `body` deckend) auch
+   dieses Glas aus. Redur, 27. September: „Starker Kontrast ohne Glas".
+   `-webkit-` ZUERST: in der anderen Folge fasst lightningcss beide zu einer
+   Zeile mit Präfix zusammen, und Chrome hätte kein Glas (L222 Punkt 3). */
+.ui-touch-dialog,
+.ui-touch-action-sheet-group {
+  background: var(--bg-card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--glas-kante, 0 0 0 transparent), var(--ui-shadow-overlay);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ui-touch-dialog,
+  .ui-touch-action-sheet-group {
+    background: var(--bg-schwebend-dicht);
+    -webkit-backdrop-filter: var(--glas-blur);
+    backdrop-filter: var(--glas-blur);
+  }
+}
+
+/* DAS GLAS KOMMT ALS SCHEIBE, NICHT ALS NEBEL (E703, studio.css). Das Kit
+   lässt seinen Dialog aus 1,08 herein federn UND von Deckkraft 0 kommen.
+   Auf Glas heisst das: in den ersten Bildern ist die Scheibe halb
+   durchsichtig, und die Seite liegt SCHARF hinter der Schrift. Also hier
+   wie bei jedem Glas in Redion: die Scheibe federt nur (dieselbe Feder des
+   Kits, derselbe Weg), und ihr INHALT blendet ein (`glas-inhalt` aus
+   studio.css). Beim Schliessen bleibt das Ausblenden des Kits
+   (`data-state="closing"`, genauer als diese Zeile). Ohne Bewegung gilt,
+   was das Kit und „Ruhige Darstellung" sagen — darum nur bei
+   `no-preference`. Das Aktionsblatt gleitet ohnehin nur (translateY). */
+@keyframes glas-ankunft-insel {
+  from {
+    transform: scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ui-touch-dialog {
+      animation: glas-ankunft-insel var(--ui-spring-snappy-duration) var(--ui-spring-snappy) both;
+    }
+    .ui-touch-dialog > * {
+      animation: glas-inhalt var(--motion-fast) linear both;
+    }
+  }
+}
+
+/* AKZENT ALS SCHRIFT (L222 Punkt 6). Das Kit hat EINE Akzentmarke für
+   Fläche und Schrift; in einem Dialog ist sie nur Schrift — die Knöpfe sind
+   Text auf Glas. Redion trennt beides: `--accent` füllt, `--accent-text`
+   schreibt. Im dunklen „Standard" hätte der Akzent als Schrift 3,16 : 1 auf
+   der Fläche, `--accent-text` hat 5,67 (L222). Hier, am Fenster, wird die
+   Marke des Kits für dieses eine Stück umgelegt; `test587` misst es in allen
+   zehn Schemata. Der Fokusrahmen bleibt Redions `--accent` (oben). */
+.ui-touch-dialog,
+.ui-touch-action-sheet {
+  --ui-color-accent: var(--accent-text);
+}
+
+/* PASST IMMER AUF DEN BILDSCHIRM (§37: „Dialoge müssen auf kleine
+   Bildschirme passen"; E486: eine Wahl mit elf Knöpfen war 1019 px hoch,
+   der letzte Knopf nicht erreichbar). Höchstens so hoch wie der sichtbare
+   Ausschnitt — am Telefon über der Tastatur (`--visual-height`, gemessen in
+   app.ts) —, und was darüber hinausgeht, rollt im Fenster. */
+.ui-touch-dialog {
+  max-height: calc(var(--visual-height, 100vh) - 2 * var(--ui-space-6));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.ui-touch-action-sheet {
+  max-height: var(--visual-height, 100vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Redions Wahl-Texte haben Absätze (`\n\n`) — sie bleiben Absätze. */
+.ui-touch-dialog-message,
+.ui-touch-action-sheet-message {
+  white-space: pre-line;
+}
+
+/* Ein Knopf mit Hinweis hat zwei Zeilen („Ersetzen" / „Die alten Seiten
+   gehen in den Papierkorb"): etwas Luft darüber, sonst klebt die Antwort
+   an der Linie (gesehen am Rechner, 1440×900). Der Hinweis bringt seinen
+   Abstand nach unten schon mit. */
+.ui-touch-dialog-button:has(.ui-touch-dialog-button-hint) {
+  padding-top: var(--ui-space-2);
+}
+
+/* Eine Wahl erklärt mehr als ein „Löschen?": etwas breiter am Rechner. */
+[data-insel-traeger]:has([data-insel-dialog='wahl']) .ui-touch-dialog {
+  width: min(100%, 380px);
+}
+
+/* Das Feld der Frage: Redions Eingabefläche, die Schrift des Kits (17 px —
+   darunter zoomt Safari beim Antippen die ganze Seite), 44 px hoch (§37). */
+[data-dialog-feld] {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--ui-hit-min);
+  margin: var(--ui-space-3) 0 0;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-sm);
+  background: var(--bg-input);
+  color: var(--text);
+  font: var(--ui-text-body);
+  text-align: start;
+  outline: none;
+  transition: border-color var(--ui-duration-short) var(--ui-ease-standard), box-shadow var(--ui-duration-short) var(--ui-ease-standard);
+}
+[data-dialog-feld]:focus-visible,
+[data-dialog-feld]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+[data-dialog-feld='mehrzeilig'] {
+  min-height: calc(4 * 22px + 2 * var(--ui-space-2));
+  resize: vertical;
+}

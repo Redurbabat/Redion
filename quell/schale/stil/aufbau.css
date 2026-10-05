@@ -259,6 +259,28 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   .overlay{bottom:var(--visual-bottom, 0px); padding-top:min(10vh, 72px)}
   .finder{max-height:calc(var(--visual-height, 100vh) - 24px)}
 }
+/* EIN FENSTER DES TOUCH KITS (E710). `Dialog.frage/wahl/mehrzeilig` legen
+   wie immer ein `.overlay` an — damit Fokus, Escape und jeder Prüflauf es
+   als oberstes Fenster sehen —, und die Insel zeichnet den Dialog darin.
+   Der Schleier und die Mitte kommen dann vom Kit, nicht von hier: kein
+   eigener Grund, kein Abstand oben. Über allem, was eine Frage stellen kann
+   (Einstellungen am Telefon 940, #r-blatt 950, Vollbild-Werkzeuge 1000) —
+   eine Frage, die hinter ihrem Fenster aufgeht, sieht niemand. Beim
+   Schliessen ist es kein `.overlay` mehr (`geht`): die Seite ist sofort
+   wieder bedienbar, während der Dialog ausblendet. */
+[data-insel-traeger]{
+  position:fixed; inset:0; z-index:1100; display:block;
+  background:none; padding:0;
+}
+[data-insel-traeger="geht"]{ pointer-events:none }
+/* „Ruhige Darstellung" hält jede Bewegung an — auch die Ausblendung des
+   Kits, und ohne sie meldet es kein Ende: das Fenster stand nach der Antwort
+   noch 240 ms regungslos da (Durchsicht, 5. Oktober). Ohne Bewegung ist es
+   im selben Bild weg. */
+body[data-bewegung="ruhig"] [data-insel-traeger="geht"]{ visibility:hidden }
+@media(max-width:760px), (max-height:500px) and (pointer:coarse){
+  [data-insel-traeger]{ bottom:var(--visual-bottom, 0px); padding:0 }
+}
 .finder{
   width:min(640px,92vw); background:var(--bg-side); border:1px solid var(--line);
   border-radius:10px; box-shadow:var(--shadow); overflow:hidden;
