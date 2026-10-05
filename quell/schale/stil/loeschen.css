@@ -59,6 +59,14 @@ html body [data-loeschknopf][data-loeschknopf] > *{ display: none; }
    fliessen („Endgültig löschen", „Abbrechen"), haben trotzdem volle 44 px. */
 html body .pk-tat[data-loeschknopf][data-loeschknopf],
 html body .ki-weg[data-loeschknopf][data-loeschknopf]{ --loesch-groesse: 32px; }
+/* Die Chatliste der KI zeigt ihre Griffe am Rechner erst beim Überfahren
+   (bausteine.css, `.ki-chat .ki-weg`, wie vor E709) — `display` oben darf das
+   nicht überstimmen: sonst stand der rote Kreis in jeder Zeile, und beim
+   Überfahren schob der Stern ihn unter dem Zeiger weg (Durchsicht
+   5. Oktober, test586 §7). Offen bleibt er stehen, das Paar hängt an ihm. */
+@media (hover: hover){
+  html body .ki-chat:not(:hover) .ki-weg[data-loeschknopf][data-loeschknopf]:not([data-loesch-offen]){ display: none; }
+}
 html body [data-loeschknopf][data-loeschknopf]::before{
   content: '';
   inline-size: 20px;

@@ -5532,3 +5532,14 @@ delete.js (roh / gzip, zlib 6)       19'408 / 6'075 B        20'164 / 6'359 B
 loeschen.css                         18'151 / 4'830 B        18'772 / 5'104 B
 redion-einzeldatei.html              11'822'114 B            11'824'223 B (+2'109)
 ```
+
+Und die Sonde über alle Stellen (`rv5-loeschen/sonde-a.mjs`, 20 Orte ×
+Rechner/Telefon × hell/dunkel, 5. Oktober 13:09–13:22 UTC): an 17 Orten
+alles wie verlangt (erster Druck fragt nur, Fokus auf „Abbrechen", Filter
+nur beim Fliessen, Escape und „Abbrechen" schliessen nur das Paar und
+geben den Fokus zurück, die rote Pille nimmt genau eines, keine
+Browser-Frage, Luft neben jedem Wort 40 px). Die Bedingte Farbe: Pillen
+nicht obenauf (elementFromPoint traf die Seitenleiste) an allen vier
+Geräten → nach der Behebung obenauf, „Löschen" 2 → 1, der Fokus in der
+neuen Leiste (Lauf D). Die Chatliste am Rechner: der Knopf in Ruhe
+`display: flex` (vor E709 `none`) → wieder `none`, beim Überfahren da.

@@ -58786,3 +58786,25 @@ Kosten: `delete.js` 20'164 B roh (+756, meist Kommentar), `loeschen.css`
 18'772 B (+621); gzip zusammen +0,6 KB; redion-einzeldatei.html
 11'822'114 → 11'824'223 B (+2'109). `test388` §5 auf dem Zweig: 2837 KB
 gzip über 250 Dateien (vorher 2836; Grundstand `b3cf1933` 2825), Decke 2850.
+
+**Und an zwei Stellen wohnt der Knopf anders (Durchsicht 5. Oktober, die
+Sonde über alle 20 erreichbaren Orte).** In der **Bedingten Farbe** einer
+Datenbank liegen die Regeln in einer Seitenleiste (`.db-leiste`,
+z-index 620; ein Druck ausserhalb schliesst sie). Das Paar lag im body
+(580) UNTER ihr: der Knopf wurde durchsichtig, die Pillen sah und
+erreichte niemand — eine Farbregel liess sich dort nicht mehr löschen,
+am Telefon wie am Rechner. Jetzt ist die Seitenleiste ein Träger wie
+`.overlay` und `.menu`; und weil sie sich nach dem Löschen neu zeichnet,
+sucht `keepFocus()` den nächsten Knopf im neuesten Träger derselben Art
+(der Fokus fiel sonst auf den body). Die **Chatliste der KI** zeigt ihre
+Griffe am Rechner erst beim Überfahren (`bausteine.css`); `loeschen.css`
+überstimmte das mit seiner Spezifität — der rote Kreis stand in jeder
+Zeile, und beim Überfahren schob der Stern ihn unter dem Zeiger weg. Jetzt
+wieder wie vor E709 (offen bleibt er stehen). `test586` §7 hält beides
+(sechs Punkte, rot gesehen: 54 von 59 und 59 von 60; danach 60 von 60;
+Gegenproben G14 Träger ohne Seitenleiste → drei Punkte rot, G15 ohne die
+Regel fürs Überfahren → ein Punkt rot, G16 ohne den Rückfall → der
+Fokuspunkt rot). Alternative: das Paar im body über 620 heben — dann
+schlösse der erste Druck auf eine Pille die Leiste (sie schliesst bei
+jedem Druck ausserhalb), und die Pille hinge im Leeren. Kosten: ein
+Träger mehr in der Liste, eine Regel, ein Rückfall von drei Zeilen.

@@ -1480,8 +1480,10 @@ rote Pille löscht genau eines; zurück fliesst es in die Grösse des Knopfs,
 ohne Sprung und ohne Blinken, und ein schneller zweiter Druck lässt das neue
 Paar offen (Nachtrag 3. Oktober); jede Stelle nennt, was sie löscht, unter
 dem ruhenden Zeiger kommt die rote Pille ganz und bleibt lesbar (≥ 4,5 : 1),
-und schliesst das Paar von selbst, steht der Fokus wieder am Knopf
-(Durchsicht 5. Oktober). Gezählt am 28. September, im selben Bogen:
+und schliesst das Paar von selbst, steht der Fokus wieder am Knopf; in der
+Seitenleiste der Bedingten Farbe liegen die Pillen obenauf, und die
+Chatliste zeigt ihren Knopf am Rechner erst beim Überfahren (Durchsicht
+5. Oktober). Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf seinem Zweig (die
 zweite Welle zählt der Zusammenführer nach).*
 

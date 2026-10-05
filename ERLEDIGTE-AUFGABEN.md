@@ -25,6 +25,13 @@ Werkzeuge" (fremd, auf `b3cf1933` genauso). Nachgesehen, welche
 Löschen-Stellen fehlen: keine weitere runde; vier neue Stellen für Redurs
 Wahl (L230 Punkt 5, AUFGABEN).
 
+**Und von der Sonde über alle Stellen gefunden:** in der Bedingten Farbe
+einer Datenbank lagen die Pillen unter der Seitenleiste — eine Farbregel
+liess sich nicht mehr löschen; jetzt ist die Leiste ein Träger, und der
+Fokus bleibt nach dem Löschen in der neu gezeichneten Leiste. Die
+Chatliste der KI zeigt ihren Knopf am Rechner wieder erst beim Überfahren
+(wie vor E709). `test586` §7, rot gesehen, dann 60 von 60.
+
 ## 3. Oktober 2026 · E709 Nachtrag · Die Läufe nach den zwei Korrekturen, und eine Durchsicht
 
 **Redur:** „Weiter ohne pause".

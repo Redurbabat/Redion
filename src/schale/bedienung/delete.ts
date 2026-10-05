@@ -16,8 +16,11 @@ const RedionDelete = (() => {
   /** Wer mitmacht. */
   const MARK = '[data-loeschknopf]';
   /** Worin das Paar liegt: im obersten Träger des Knopfs, sonst im body —
-   *  so bleibt es in der Falle von `Fokus` und wird nicht `inert`. */
-  const CARRIER = '.overlay, .menu, .iblatt, #r-blatt';
+   *  so bleibt es in der Falle von `Fokus` und wird nicht `inert`. Dazu die
+   *  Seitenleiste einer Datenbank (`.db-leiste`, z-index 620, ein Druck
+   *  ausserhalb schliesst sie): im body lag das Paar UNTER ihr, und eine
+   *  Farbregel liess sich nicht mehr löschen (Durchsicht 5. Oktober). */
+  const CARRIER = '.overlay, .menu, .iblatt, #r-blatt, .db-leiste';
 
   const FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -295,10 +298,17 @@ const RedionDelete = (() => {
       if (marks.length > 1) { list = a; index = marks.indexOf(trigger); }
     }
     if (!list || index < 0) return;
+    /* Zeichnet sich der ganze Träger NEU (die Seitenleiste einer Datenbank
+       baut eine neue <aside>), ist keiner der alten Vorfahren mehr da — dann
+       der neueste Träger derselben Art (Durchsicht 5. Oktober, test586 §7). */
+    const carrier = trigger.closest(CARRIER);
+    const again = !carrier ? '' : carrier.id ? '#' + carrier.id
+      : carrier.classList.length ? '.' + carrier.classList[0] : '';
     const fix = (): void => {
       const active = document.activeElement;
       if (active && active !== document.body && active.isConnected) return;
-      const root = chain.find(a => a.isConnected);
+      const root = chain.find(a => a.isConnected) ??
+        (again ? Array.from(document.querySelectorAll(again)).pop() : undefined);
       if (!root) return;
       const marks = Array.from(root.querySelectorAll<HTMLElement>(MARK));
       if (!marks.length) return;
