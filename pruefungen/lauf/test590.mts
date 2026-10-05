@@ -60,6 +60,12 @@
  *   §13 DER NAME DER PILLE wechselt nicht im Sekundentakt.
  *   §14 ESCAPE MITTEN IN DER FAHRT schliesst die Karte zurück in die Pille.
  *
+ * DAZU AUS DER DRITTEN DURCHSICHT (5. Oktober), rot gegen den Stand der
+ * zweiten:
+ *   §15 DIE OFFENE KARTE — am Telefon liegt kein Toast auf ihr (er geht nach
+ *      oben wie bei offenen Fenstern), und „Beenden" mitten in der Fahrt
+ *      lässt keine versteckte Pille zurück.
+ *
  * ─── KANN DIESER LAUF ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E713) fällt er in §1–§9: es gibt keine
  * Pille, kein Escape, keinen deckenden Boden, keine Knöpfe im Verlauf.
@@ -758,6 +764,53 @@ const blattSeite = (pc: Page, lage: string): Promise<unknown> => pc.evaluate(`(a
     p('Escape während der Fahrt schliesst die Karte zurück in die Pille', mitten.kopie && !mitten.feld && mitten.pille && mitten.laeuft,
       JSON.stringify(mitten));
   } catch (e) { p('§13–§14 laufen bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+
+/* ══ §15 · Die offene Karte (dritte Durchsicht) ═════════════════════════════
+ * Am Telefon steht die OFFENE Karte unten rechts über der Leiste, ihre
+ * Tasten Start · Pause · Beenden zuunterst. Ein Toast — so breit wie der
+ * Schirm, auf `--melde-boden` — lag für seine Sekunden genau auf dieser
+ * Reihe: gemessen bei der dritten Durchsicht (5. Oktober) Toast 720–763,
+ * Karte 462–759, Schnitt 11'700 px². Das Feld stand dort schon vor E713;
+ * die Durchsicht hat den Stapel über die PILLE gerückt und die offene Karte
+ * nicht bedacht. Ausgerechnet „⏰ Zeit um" kommt, während man die Karte
+ * offen hat. Wie bei offenen Fenstern (L109, E310) geht der Toast dann
+ * nach OBEN.
+ * Und: wer die Karte aus der Pille öffnet und mitten in der Fahrt „Beenden"
+ * tippt, behielt eine versteckte Pille im Dokument (die Uhr war aus) — das
+ * Polster unter `#scroll` blieb, bis die Karte zuging. */
+{
+  const a = await aufmachen({ handy: true });
+  try {
+    console.log('\n15 · Die offene Karte (Telefon)');
+    await a.pc.evaluate(`(() => { Zeitmesser.panel(); Zeitmesser.start('timer', 25 * 60); })()`);
+    await a.pc.waitForTimeout(900);
+    const toast = await a.pc.evaluate(`(async () => {
+      UI.toast('Gespeichert.');
+      await new Promise(f => setTimeout(f, 700));
+      const t = document.getElementById('toast').getBoundingClientRect(), k = document.querySelector('.zm-feld').getBoundingClientRect();
+      const schnitt = Math.max(0, Math.min(t.right, k.right) - Math.max(t.left, k.left)) * Math.max(0, Math.min(t.bottom, k.bottom) - Math.max(t.top, k.top));
+      return { schnitt: Math.round(schnitt), toast: [Math.round(t.top), Math.round(t.bottom)], karte: [Math.round(k.top), Math.round(k.bottom)],
+        drin: t.top >= 0 && t.bottom <= innerHeight, sichtbar: document.getElementById('toast').classList.contains('show') };
+    })()`) as any;
+    p('Ein Toast liegt nicht auf der offenen Karte — er geht nach oben', toast.sichtbar && toast.schnitt === 0 && toast.drin,
+      JSON.stringify(toast));
+    await a.pc.waitForTimeout(3000);
+    await a.pc.evaluate(`document.querySelector('.zm-feld [data-zm="zu"]')?.click()`);
+    await a.pc.waitForTimeout(900);
+    const mitten = await a.pc.evaluate(`(async () => {
+      const p = document.getElementById('zm-pille');
+      if (!p) return null;
+      p.click();
+      await new Promise(f => setTimeout(f, 80));
+      document.querySelector('.zm-feld [data-zm="stopp"]')?.click();
+      await new Promise(f => setTimeout(f, 1500));
+      return { laeuft: Zeitmesser.stand().laeuft, feld: !!document.querySelector('.zm-feld'), pilleImDokument: !!document.getElementById('zm-pille') };
+    })()`) as any;
+    p('Beenden mitten in der Fahrt: die Uhr ist aus, die Karte offen, und keine Pille bleibt zurück',
+      !!mitten && !mitten.laeuft && mitten.feld && !mitten.pilleImDokument, JSON.stringify(mitten));
+  } catch (e) { p('§15 läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
   await a.zu();
 }
 
