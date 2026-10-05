@@ -18,7 +18,9 @@
  *   §2 JEDER RUNDE LÖSCHEN-KNOPF MACHT MIT — jedes `🗑` als eigener Knopf
  *      im Quelltext trägt `data-loeschknopf`; Menüeinträge nicht (ein
  *      Menüeintrag ist kein runder Knopf). Und die zwei `confirm()`, die
- *      der Knopf ersetzt, sind weg; „Papierkorb leeren" fragt weiter.
+ *      der Knopf ersetzt, sind weg; „Papierkorb leeren" fragt weiter. Und
+ *      jeder nennt, WAS er löscht — kein nacktes „Löschen" als Name
+ *      (Durchsicht 5. Oktober).
  *   §3 DER PAPIERKORB (Rechner, dunkel): ein Druck öffnet „Endgültig
  *      löschen" / „Abbrechen", der Fokus steht auf „Abbrechen", gelöscht
  *      ist nichts; EIN Filter im Dokument, an während des Fliessens, aus
@@ -28,11 +30,16 @@
  *      da — kein Sprung, kein Blinken (Nachtrag 3. Oktober, im Bildstreifen
  *      gesehen); „Abbrechen" und gleich wieder gedrückt lässt das neue Paar
  *      offen; ein Doppelklick löscht nicht; die rote Pille löscht genau einmal,
- *      ohne Browser-Frage, und der Fokus bleibt in der Liste.
+ *      ohne Browser-Frage, und der Fokus bleibt in der Liste. Durchsicht
+ *      5. Oktober: der Knopf nennt die Seite; unter dem ruhenden Zeiger kommt
+ *      die rote Pille ganz (nicht aus dem Durchsichtigen) und bleibt lesbar
+ *      (≥ 4,5 : 1); schliesst das Paar von selbst, steht der Fokus wieder am
+ *      Knopf.
  *   §4 DIE MASSE (§37): Kreis rund, Pillen mindestens 44 px hoch, und
  *      jedes Wort passt in seine Pille (Luft ≥ 24 px).
  *   §5 DIE BEREICHE IN DEN EINSTELLUNGEN (Telefon, hell): Druck daneben
- *      schliesst; „Löschen" nimmt den Bereich weg.
+ *      schliesst; „Löschen" nimmt den Bereich weg; das Paar heisst für
+ *      Vorleser „Bereich „Schule" löschen", ohne das Wort zu doppeln.
  *   §6 WENIGER BEWEGUNG: kein Filter, das Paar blendet nur auf — und die
  *      Tastatur (Enter öffnet, Enter auf „Abbrechen" schliesst, Fokus zurück).
  *
@@ -125,6 +132,17 @@ p('„Papierkorb leeren" behält seine Frage (viele Dinge auf einmal)',
 const erw = lies('src/bereiche/einstellungen/erweiterungen.ts');
 p('Erweiterung entfernen: die Frage stellt der Knopf, nicht confirm()',
   !/wirklich entfernen\?/.test(erw) && erw.includes('data-loeschknopf="Entfernen"'));
+/* Durchsicht 5. Oktober: zwei Knöpfe hiessen für Vorleser nur „Löschen" —
+   das Paar sagte dann „Löschen: Löschen", und WAS gelöscht wird, stand
+   nirgends. Ein Name aus dem nackten Wort zählt nicht. */
+const nackt: string[] = [];
+for (const f of dateien) {
+  const t = fs.readFileSync(f, 'utf8');
+  for (const m of t.matchAll(/<(?:button|span)\b[^<>]*data-loeschknopf[^<>]*>/g))
+    if (/(?:aria-label|title)="(?:Löschen|Entfernen)"/.test(m[0])) nackt.push(path.relative(WURZEL, f) + ': ' + m[0].slice(0, 80));
+}
+p('Jeder runde Löschen-Knopf nennt, WAS er löscht (kein nacktes „Löschen" als Name)', nackt.length === 0,
+  nackt.slice(0, 4).join(' | '));
 
 /* `--dateien`: nur §1 und §2, ohne Browser (für den schnellen Lauf und
    für Gegenproben ohne Browser-Schloss). */
@@ -180,7 +198,9 @@ const aufmachen = async (o: { handy?: boolean; ruhig?: boolean; dunkel?: boolean
 
 const papierkorbFuellen = (pc: Page) => pc.evaluate(() => {
   for (const n of ['Nachtfahrt', 'Skizzen', 'Einkauf']) {
-    const s = Store.addPage({ text: n });
+    /* addPage(Eltern, Felder) — vorher stand das Objekt als Eltern da, und
+       die drei Seiten hiessen „Ohne Titel" (Durchsicht 5. Oktober). */
+    const s = Store.addPage(null, { text: n });
     Store.trashBlock(s.id);
   }
   App.papierkorb();
@@ -230,6 +250,40 @@ console.log('\n§3 · Der Papierkorb (Rechner, dunkel)');
   const knopf = pc.locator('.pk-tat[data-a="purge"]').first();
   p('Der Endgültig-Löschen-Knopf trägt data-loeschknopf',
     await knopf.getAttribute('data-loeschknopf') === 'Endgültig löschen');
+  /* Für Vorleser nennt er, WAS endgültig weggeht (Durchsicht 5. Oktober;
+     vorher hiess das Paar „Endgültig löschen: Endgültig löschen"). */
+  const pkName = await knopf.getAttribute('aria-label');
+  p('Er nennt die Seite, die endgültig weggeht', /^„(Nachtfahrt|Skizzen|Einkauf)“ endgültig löschen$/.test(pkName ?? ''),
+    String(pkName));
+  /* Das Aufgehen Bild für Bild (Durchsicht 5. Oktober): am Rechner ruht der
+     Zeiger nach dem Druck auf der roten Pille (sie liegt, wo der Kreis war).
+     Bei der Übergabe von der Flüssigkeit an die CSS-Pille blendete deren
+     Fläche über den Übergang fürs Überfahren aus dem Durchsichtigen ein —
+     ein, zwei Bilder lang war die Pille leer (Bildstreifen vom 3. Oktober,
+     753 ms). Gemessen wird die Deckkraft der Fläche im ersten Bild ohne
+     Fliessen. */
+  await pc.evaluate(() => {
+    const w = window as unknown as { __aufBilder: Array<{ ms: number; fliesst: boolean; deck: number }> };
+    w.__aufBilder = [];
+    const los = performance.now();
+    const bild = (): void => {
+      const l = document.querySelector('.ru-loesch[data-auf]');
+      const ja = l?.querySelector<HTMLElement>('.ru-loesch-ja');
+      if (l && ja) {
+        /* Die Deckkraft aus rgb()/rgba() ODER color(srgb … / a) — ein
+           color-mix() kommt als color(srgb …) zurück; was keine Farbe ist,
+           zählt als durchsichtig. */
+        const s = getComputedStyle(ja).backgroundColor;
+        const c = s.match(/^color\(srgb\s+[^/)]+(?:\/\s*([\d.]+))?\)/);
+        const r = s.match(/^rgba?\(([^)]+)\)/);
+        const t = (r?.[1] ?? '').split(/[ ,/]+/).filter(Boolean).map(Number);
+        const deck = c ? (c[1] !== undefined ? Number(c[1]) : 1) : r ? (t.length > 3 ? (t[3] ?? 0) : 1) : 0;
+        w.__aufBilder.push({ ms: Math.round(performance.now() - los), fliesst: l.hasAttribute('data-fliesst'), deck });
+      }
+      if (performance.now() - los < 1300) requestAnimationFrame(bild);
+    };
+    requestAnimationFrame(bild);
+  });
   await druecke(pc, '.pk-tat[data-a="purge"]');
   await pc.waitForTimeout(120);
   const z1 = await zustand(pc);
@@ -245,6 +299,43 @@ console.log('\n§3 · Der Papierkorb (Rechner, dunkel)');
   const z2 = await zustand(pc);
   p('In Ruhe ist er aus (keine Flüssigkeit, CSS-Pillen)', !/url\(/.test(z2.filter) || z2.sichtbar === 'hidden',
     z2.filter + ' ' + z2.sichtbar);
+  type AufBild = { ms: number; fliesst: boolean; deck: number };
+  const aufBilder = await pc.evaluate(() => (window as unknown as { __aufBilder: AufBild[] }).__aufBilder);
+  const uebergabe = aufBilder.find((b, i) => i > 0 && !b.fliesst && !!aufBilder[i - 1]?.fliesst);
+  p('Am Rechner kommt die rote Pille unter dem Zeiger ganz, nicht aus dem Durchsichtigen',
+    !!uebergabe && uebergabe.deck >= 0.99,
+    `erstes Bild ohne Fliessen: ${JSON.stringify(uebergabe)}, ${aufBilder.length} Bilder`);
+  /* Und lesbar unter dem Zeiger: eine rote Tönung unter dem roten Wort nahm
+     ihm im dunklen Standard den Kontrast (3,94 : 1, in „Wald" 3,81). */
+  const zeiger = await pc.evaluate(() => {
+    const ja = document.querySelector<HTMLElement>('.ru-loesch-ja');
+    const wort = ja?.querySelector<HTMLElement>('.ru-loesch-wort:not(.ru-loesch-schmier)');
+    if (!ja || !wort) return { hover: false, kontrast: 0 };
+    /* rgb()/rgba() ODER color(srgb r g b / a) (so kommt ein color-mix()
+       zurück, Kanäle 0–1). Was keine Farbe ist, gilt als durchsichtig — dann
+       misst der Punkt nichts und bleibt rot (früher las er es als Schwarz). */
+    const farbe = (s: string): number[] => {
+      const c = s.match(/^color\(srgb\s+([^/)]+)(?:\/\s*([\d.]+))?\)/);
+      if (c) {
+        const k = (c[1] ?? '').trim().split(/\s+/).map(Number);
+        return [(k[0] ?? 0) * 255, (k[1] ?? 0) * 255, (k[2] ?? 0) * 255, c[2] !== undefined ? Number(c[2]) : 1];
+      }
+      const r = s.match(/^rgba?\(([^)]+)\)/);
+      if (!r) return [0, 0, 0, 0];
+      const t = (r[1] ?? '').split(/[ ,/]+/).filter(Boolean).map(Number);
+      return [t[0] ?? 0, t[1] ?? 0, t[2] ?? 0, t.length > 3 ? (t[3] ?? 0) : 1];
+    };
+    const lum = (c: number[]): number => {
+      const f = (v: number): number => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+      return 0.2126 * f(c[0] ?? 0) + 0.7152 * f(c[1] ?? 0) + 0.0722 * f(c[2] ?? 0);
+    };
+    const g = farbe(getComputedStyle(ja).backgroundColor);
+    if ((g[3] ?? 0) < 0.99) return { hover: ja.matches(':hover'), kontrast: 0 };
+    const a = lum(farbe(getComputedStyle(wort).color)), b = lum(g);
+    return { hover: ja.matches(':hover'), kontrast: Math.round((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) * 100) / 100 };
+  });
+  p('Unter dem ruhenden Zeiger ist „Endgültig löschen" lesbar (mindestens 4,5 : 1)',
+    zeiger.hover && zeiger.kontrast >= 4.5, JSON.stringify(zeiger));
 
   /* §4 · Masse */
   const mass = await pc.evaluate(() => {
@@ -323,8 +414,17 @@ console.log('\n§3 · Der Papierkorb (Rechner, dunkel)');
   const z4 = await zustand(pc);
   p('Abbrechen und gleich wieder gedrückt: das neue Paar bleibt offen, der Knopf gehört ihm',
     z4.offen && z4.expanded === 'true', JSON.stringify(z4));
-  await pc.keyboard.press('Escape');
+  /* Schliesst das Paar von selbst (Grösse ändern, Rollen, ein Druck
+     daneben), während der Fokus in ihm steht (auf „Abbrechen"): die Pillen
+     werden `inert`, und der Fokus fiel auf den body (Durchsicht 5. Oktober).
+     Er gehört dann zurück an den Knopf. */
+  const vorGroesse = await zustand(pc);
+  await pc.evaluate(() => window.dispatchEvent(new Event('resize')));
   await pc.waitForTimeout(600);
+  const z5 = await zustand(pc);
+  p('Schliesst es von selbst (Grösse geändert), steht der Fokus wieder am Knopf, nicht auf dem body',
+    vorGroesse.fokusAbbrechen && !z5.offen && z5.fokusKnopf && z5.overlays === 1,
+    JSON.stringify({ vorher: vorGroesse.fokusAbbrechen, offen: z5.offen, knopf: z5.fokusKnopf, fenster: z5.overlays }));
 
   await druecke(pc, '.pk-tat[data-a="purge"]', true);
   await pc.waitForTimeout(150);
@@ -358,6 +458,13 @@ console.log('\n§5 · Die Bereiche in den Einstellungen (Telefon, hell)');
   await druecke(pc, '[data-bereich-weg="b-a"]');
   await pc.waitForTimeout(150);
   p('Ein Tipp öffnet das Paar', (await zustand(pc)).offen);
+  /* Für Vorleser nennt das Paar, was gelöscht wird — ohne das Wort zu
+     doppeln (vorher „Löschen: Bereich „Schule" löschen"). */
+  const namen = await pc.evaluate(() => ({
+    paar: document.querySelector('.ru-loesch-paar')?.getAttribute('aria-label') ?? null,
+    ja: document.querySelector('.ru-loesch-ja')?.getAttribute('aria-label') ?? null }));
+  p('Das Paar nennt, was gelöscht wird, ohne das Wort zu doppeln',
+    namen.paar === 'Bereich „Schule“ löschen' && namen.ja === 'Bereich „Schule“ löschen', JSON.stringify(namen));
   await pc.mouse.click(20, 120);
   await pc.waitForTimeout(600);
   p('Ein Tipp daneben schliesst es, nichts ist weg',
