@@ -42,6 +42,11 @@
  *      Vorleser „Bereich „Schule" löschen", ohne das Wort zu doppeln.
  *   §6 WENIGER BEWEGUNG: kein Filter, das Paar blendet nur auf — und die
  *      Tastatur (Enter öffnet, Enter auf „Abbrechen" schliesst, Fokus zurück).
+ *   §7 WO DER KNOPF ANDERS WOHNT (Rechner, dunkel; Durchsicht 5. Oktober):
+ *      in der Seitenleiste der Bedingten Farbe liegen die Pillen obenauf,
+ *      „Abbrechen" lässt die Leiste offen, „Löschen" nimmt eine Regel; die
+ *      Chatliste der KI zeigt ihren Knopf am Rechner erst beim Überfahren,
+ *      wie vor E709, und von dort öffnet er das Paar.
  *
  * KANN DAS ROT WERDEN? (§55.2) Ja — gegen den Stand b3cf193 (vor E709) fällt
  * §1 bis §6: es gibt weder den Helfer noch ein `data-loeschknopf`, und der
@@ -53,6 +58,7 @@
  *   node pruefungen/lauf/test586.mts --dateien   nur §1 und §2, ohne Browser
  * ==========================================================================*/
 declare const Store: any; declare const App: any; declare const Einstellungen: any;
+declare const Datenbank: any; declare const KI: any;
 import { chromium, type Page } from 'playwright';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -504,6 +510,90 @@ console.log('\n§6 · Weniger Bewegung und die Tastatur');
   const z2 = await zustand(pc);
   p('Enter auf „Abbrechen" schliesst, der Fokus ist zurück', !z2.offen && z2.fokusKnopf, JSON.stringify(z2));
   p('Und nichts ist gelöscht', await zahl(pc) === 3, String(await zahl(pc)));
+  await zu();
+}
+
+/* ==========================================================================
+ * §7 · Wo der Knopf anders wohnt (Rechner, dunkel) — Durchsicht 5. Oktober
+ * --------------------------------------------------------------------------
+ * Die Bedingte Farbe einer Datenbank liegt in einer Seitenleiste
+ * (`.db-leiste`, z-index 620, ein Druck ausserhalb schliesst sie): das Paar
+ * lag im body darunter (580) — der Knopf wurde durchsichtig, die Pillen
+ * sah niemand, löschen ging nicht mehr. Und die Chatliste der KI zeigt ihre
+ * Griffe am Rechner erst beim Überfahren (bausteine.css); die Spezifität
+ * von loeschen.css überstimmte das — der Knopf stand immer da, und beim
+ * Überfahren schob der Stern ihn unter dem Zeiger weg.
+ * ========================================================================*/
+console.log('\n§7 · Wo der Knopf anders wohnt (Rechner, dunkel)');
+{
+  const { pc, zu } = await aufmachen({ dunkel: true });
+  const sicher = async (wahl: string): Promise<boolean> => { try { return await druecke(pc, wahl); } catch { return false; } };
+  const obenauf = () => pc.evaluate(() => {
+    const auf = (sel: string): boolean => {
+      const el = document.querySelector<HTMLElement>(sel);
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      const m = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return !!m && (m === el || el.contains(m));
+    };
+    return { ja: auf('.ru-loesch-ja'), nein: auf('.ru-loesch-nein') };
+  });
+  await pc.evaluate(() => {
+    const s = Store.addBlock(null, 'page', { text: 'DB-Probe' });
+    const db = Store.addDatabase(s.id, 'Tickets', { title: { name: 'Titel', type: 'title' } });
+    const c = Store.getCollection(db.collectionId);
+    Store.addRow(c.id, { title: 'R1' });
+    const view: any = Object.values(Store.cache.views).find((v: any) => v.collectionId === c.id);
+    view.farbregeln = [{ key: 'title', op: 'contains', wert: 'R', farbe: 'red' },
+                       { key: 'title', op: 'contains', wert: 'S', farbe: 'blue' }];
+    (window as any).__v = view;
+    Datenbank.farbregelPanel(c, view, null);
+  });
+  await pc.waitForTimeout(600);
+  const regeln = () => pc.evaluate(() => ((window as any).__v.farbregeln || []).length) as Promise<number>;
+  await sicher('.fr-zeile [data-loeschknopf]');
+  await pc.waitForTimeout(800);
+  const f1 = await obenauf();
+  p('Bedingte Farbe (Seitenleiste): die Pillen liegen obenauf, nicht unter der Leiste', f1.ja && f1.nein, JSON.stringify(f1));
+  const abgebrochen = await sicher('.ru-loesch-nein');
+  await pc.waitForTimeout(600);
+  const f2 = await pc.evaluate(() => ({ leiste: document.querySelectorAll('.db-leiste').length,
+                                         schicht: document.querySelectorAll('.ru-loesch').length }));
+  p('„Abbrechen" schliesst nur das Paar — die Seitenleiste bleibt, die Regeln auch',
+    abgebrochen && f2.leiste === 1 && f2.schicht === 0 && await regeln() === 2,
+    JSON.stringify({ abgebrochen, ...f2, regeln: await regeln() }));
+  await sicher('.fr-zeile [data-loeschknopf]');
+  await pc.waitForTimeout(800);
+  const geloescht = await sicher('.ru-loesch-ja');
+  await pc.waitForTimeout(500);
+  p('„Löschen" nimmt dort genau eine Regel weg', geloescht && await regeln() === 1, String(await regeln()));
+  await pc.evaluate(() => document.querySelectorAll('.db-leiste').forEach(x => x.remove()));
+
+  await pc.evaluate(() => {
+    Store.setMeta('chats', [{ id: 'c1', titel: 'Referat Zellbiologie', wann: Date.now(), verlauf: [] },
+                            { id: 'c2', titel: 'Ferienplanung', wann: Date.now() - 1000, verlauf: [] }]);
+    KI.verlauf();
+  });
+  await pc.waitForTimeout(700);
+  await pc.mouse.move(4, 4);
+  await pc.waitForTimeout(200);
+  const zeig = () => pc.evaluate(() => {
+    const w = document.querySelector<HTMLElement>('.ki-chat .ki-weg');
+    return w ? getComputedStyle(w).display : null;
+  });
+  const ruhend = await zeig();
+  p('Chatliste am Rechner: der Löschen-Knopf erscheint erst beim Überfahren (wie vor E709)', ruhend === 'none', String(ruhend));
+  await pc.hover('.ki-chat').catch(() => {});
+  await pc.waitForTimeout(150);
+  const ueber = await zeig();
+  const geoeffnet = await sicher('.ki-chat .ki-weg');
+  await pc.waitForTimeout(800);
+  const c3 = await obenauf();
+  p('… beim Überfahren ist er da, ein Druck öffnet das Paar, und es liegt obenauf',
+    !!ueber && ueber !== 'none' && geoeffnet && (await zustand(pc)).offen && c3.ja && c3.nein,
+    JSON.stringify({ ueber, geoeffnet, ...c3 }));
+  await pc.keyboard.press('Escape');
+  await pc.waitForTimeout(500);
   await zu();
 }
 
