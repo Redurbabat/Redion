@@ -33,6 +33,12 @@
  *   §11 Die Einzeldatei allein, ohne Netz: die erste Frage kommt sofort im
  *       Fenster des Kits, und nach Escape oder Antwort steht der Fokus
  *       wieder auf dem Knopf, der gefragt hat (Durchsicht, 3. Oktober).
+ *   §12 Was die Aufrufer mitbringen, bleibt: ihr eigener Abbruch steht, wo
+ *       sie ihn hinsetzten (und hat den Fokus, wenn er zuerst kommt), ein
+ *       „Abbrechen" unter der Kennung `nein` ist DAS Abbrechen; stolpert die
+ *       Insel, fragt das bisherige Fenster; „ruhig" schliesst im selben
+ *       Bild, und `data-ui-motion` (E702) bleibt; der Rückweg für Ja/Nein hat
+ *       ein sichtbares „Abbrechen" (Durchsicht, 5. Oktober).
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Sie WAR es: rot eingecheckt (commit „test587 (rot)") gegen den Stand
@@ -43,6 +49,11 @@
  * ging die mit Enter gegebene Antwort verloren (3. Oktober). Ohne beide
  * Rückgaben des Fokus (dialog.ts und `useModal` des Kits) werden seine
  * Fokus-Punkte rot (4. Oktober, 69/73).
+ * §12 (Durchsicht) war rot gegen den Endbau 1654e75d9: 80 bestanden, 17
+ * durchgefallen, alle 17 in §12 (5. Oktober). Sein Punkt d) läuft auf einer
+ * eigenen Seite: auf der Seite von c) hielt gegen den Endbau eine gestolperte
+ * Insel den Spiegel an, und „data-ui-motion bleibt" war dort aus dem
+ * falschen Grund grün.
  *
  * Eigener Port: keiner — `listen(0)`, wie test400 empfiehlt.
  *
@@ -682,6 +693,235 @@ gleich('Die mehrzeilige Frage im bisherigen Fenster: Strg+Enter übernimmt, und 
 if (f11g.length) console.log('    (Meldungen der Gegenprobe, erwartet: ' + f11g.slice(0, 2).join(' | ') + ')');
 await k11g.close();
 fs.rmSync(ALLEIN, { recursive: true, force: true });
+
+/* ==========================================================================
+ * §12 · Durchsicht (5. Oktober): was die Aufrufer mitbringen, bleibt, und
+ *       keine Frage bleibt stehen, wenn das Kit stolpert
+ * --------------------------------------------------------------------------
+ * Gefunden bei der Durchsicht am Endbau 1654e75d9, je im Browser gesehen:
+ *
+ *  a) DIE FOLGE DES AUFRUFERS. Bringt ein Aufrufer seinen eigenen Abbruch
+ *     mit, stand er im bisherigen Fenster dort, wo der Aufrufer ihn
+ *     hinsetzte — oft ZUERST, und dann hatte er den Fokus („Blatt löschen?":
+ *     „Behalten" vor „Löschen"; „Vektoren bauen?": „Abbrechen" vor dem Knopf,
+ *     der Geld kostet). Das Kit-Fenster schob ihn ans Ende: der Fokus stand
+ *     auf „Löschen", und ein Enter löschte das Blatt.
+ *  b) EIN „ABBRECHEN", NICHT ZWEI. Vier Aufrufer nennen ihren Abbruch
+ *     „Abbrechen" unter der Kennung `nein` (Seiten zerlegen, zwei Mal
+ *     „ersetzen?" in der Stiftleiste, Vektoren bauen). Das Kit-Fenster
+ *     stellte sein eigenes „Abbrechen" daneben — zwei gleiche Knöpfe.
+ *  c) STOLPERT DIE INSEL beim Zeichnen, stand ein leeres, unsichtbares
+ *     Fenster über der ganzen Seite: alles still, Escape tat nichts, die
+ *     Frage kam nie. Jetzt fragt das bisherige Fenster — wie wenn die Inseln
+ *     gar nicht kommen —, und Escape nimmt einen Träger ohne Kit-Fenster weg.
+ *  d) „RUHIGE DARSTELLUNG": ohne Bewegung meldet das Kit kein Ende seiner
+ *     Ausblendung, und das Fenster stand nach der Antwort noch 240 ms
+ *     regungslos da. Jetzt ist es im selben Bild weg. Und das Etikett
+ *     `data-ui-motion`, das E702 für „ruhig" setzt, nahm die Brücke mit der
+ *     letzten Insel wieder weg — es bleibt, solange „ruhig" gilt.
+ *  e) DER RÜCKWEG FÜR JA/NEIN: ohne Inseln hatte `Dialog.bestaetigen` im
+ *     bisherigen Fenster nur den einen Knopf („Alles löschen") — kein
+ *     sichtbares „Abbrechen", am Telefon nur ein Tipp daneben. `confirm()`
+ *     hatte eines. Jetzt steht es da, bei Gefahr zuerst und im Fokus.
+ * ======================================================================== */
+console.log('\n§12 · Durchsicht: die Folge des Aufrufers, ein Abbrechen, kein totes Fenster, ruhig im selben Bild');
+
+/** Die Knöpfe des offenen Fensters: Haken, Beschriftung, und wer den Fokus hat. */
+const knopfListe = (seite: Page): Promise<{ haken: string[]; namen: string[]; fokus: string | null }> =>
+  seite.evaluate(() => {
+    const k = [...document.querySelectorAll<HTMLElement>(
+      '.overlay :is(.ui-touch-dialog, .ui-touch-action-sheet, .finder) button')];
+    const haken = (b: HTMLElement): string => b.dataset['w'] !== undefined ? 'w:' + b.dataset['w'] : 'a:' + (b.dataset['a'] ?? '?');
+    const a = document.activeElement as HTMLElement | null;
+    return {
+      haken: k.map(haken),
+      namen: k.map(b => (b.querySelector('.ui-touch-dialog-button-label, .ui-touch-action-sheet-button-label, b')
+        ?.textContent ?? b.textContent ?? '').trim()),
+      fokus: a && k.includes(a) ? haken(a) : null
+    };
+  });
+
+const k12 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const s12 = await k12.newPage();
+alleFehler.push(...fehlerVon(s12));
+await s12.goto(pathToFileURL(path.join(WURZEL, 'index.html')).href);
+await bereitMachen(s12);
+
+/* a) „Blatt löschen?" (spreadsheet/ansicht.ts): „Behalten" (Kennung '') zuerst. */
+await stellen(s12, `Dialog.wahl({ titel: 'Blatt „Tabelle 2" löschen?', text: '12 gefüllte Zellen', knoepfe: [
+  { id: '', text: 'Behalten', hinweis: 'Es wird nichts verändert' },
+  { id: 'ja', text: 'Löschen', hinweis: '12 Zellen gehen verloren' }] })`);
+await kitOffen(s12);
+const behalten = await knopfListe(s12);
+gleich('a) Der eigene Abbruch des Aufrufers bleibt, wo er stand: „Behalten" zuerst', behalten.haken, ['w:', 'w:ja']);
+gleich('… und hat den Fokus, wie im bisherigen Fenster', behalten.fokus, 'w:');
+await s12.keyboard.press('Enter');
+gleich('… ein Enter behält das Blatt ("") — es löscht nicht', await antwort(s12), '');
+
+/* a/b) „Vektoren bauen?" (ki/kontext.ts): „Abbrechen" unter `nein`, zuerst. */
+await stellen(s12, `Dialog.wahl({ titel: 'Vektoren für 3 Seite(n) bauen?', text: 'Kostet etwa 0,01 CHF.', knoepfe: [
+  { id: 'nein', text: 'Abbrechen', hinweis: 'Es wird nichts gesendet und nichts berechnet.' },
+  { id: 'ja', text: 'Bauen', hinweis: 'Die semantische Suche wird danach besser.' }] })`);
+await kitOffen(s12);
+const bauen = await knopfListe(s12);
+gleich('b) Ein „Abbrechen" des Aufrufers (Kennung nein) ist DAS Abbrechen — kein zweites daneben',
+  bauen.namen, ['Abbrechen', 'Bauen']);
+gleich('… es steht zuerst und hat den Fokus (der andere Knopf kostet Geld)', [bauen.haken, bauen.fokus],
+  [['w:nein', 'w:ja'], 'w:nein']);
+await s12.keyboard.press('Escape');
+gleich('… und Escape antwortet wie es (nein) — der Aufrufer prüft auf „ja"', await antwort(s12), 'nein');
+
+/* b) „Den Satz ersetzen?" (pdf/marken.ts): „Abbrechen" unter `nein`, zuletzt. */
+await stellen(s12, `Dialog.wahl({ titel: 'Den Satz ersetzen?', text: 'Es gibt schon einen Farbsatz „Tinte".', knoepfe: [
+  { id: 'ja', text: 'Ersetzen', hinweis: 'Die bisherigen Farben dieses Satzes gehen weg' },
+  { id: 'nein', text: 'Abbrechen', hinweis: 'Nichts ändert sich' }] })`);
+await kitOffen(s12);
+const ersetzen = await knopfListe(s12);
+gleich('b) „Ersetzen?": zwei Knöpfe, ein „Abbrechen"', ersetzen.namen, ['Ersetzen', 'Abbrechen']);
+await s12.click('.overlay [data-w="nein"]');
+gleich('… und ein Tipp darauf gibt die Kennung des Aufrufers (nein)', await antwort(s12), 'nein');
+await s12.waitForTimeout(400);
+
+/* c) Die Insel stolpert beim Zeichnen: das Portal des Kits lässt sich nicht
+   einhängen (nur dieses eine Element wirft). Ein Fehler beim Zeichnen, den
+   die Fehlergrenze der Insel fängt — wie jeder, den das Kit in einem
+   Browser hätte, den es nicht kennt. */
+await s12.evaluate(() => {
+  const w = window as any;
+  w.__echtesAnhaengen = Node.prototype.appendChild;
+  Node.prototype.appendChild = function <T extends Node>(this: Node, kind: T): T {
+    if (kind instanceof Element && kind.classList.contains('ui-touch-portal'))
+      throw new Error('Probe test587 §12c: das Kit stolpert');
+    return w.__echtesAnhaengen.call(this, kind);
+  };
+});
+await stellen(s12, `UI.frage('Kaputt', 'bleibt')`);
+const alt12 = await s12.waitForSelector('.overlay .finder #fq', { timeout: 4000, state: 'visible' })
+  .then(() => true, () => false);
+const tot = await s12.evaluate(() => document.querySelectorAll('[data-insel-traeger]').length);
+p('c) Stolpert die Insel, fragt das bisherige Fenster — kein leeres Fenster über der Seite',
+  alt12 && tot === 0, JSON.stringify({ altesFenster: alt12, traeger: tot }));
+if (alt12) {
+  await s12.fill('.overlay #fq', 'trotzdem');
+  await s12.keyboard.press('Enter');
+}
+gleich('… und die Antwort kommt an', await antwort(s12), 'trotzdem');
+/* Stillgelegt von Geburt an sind nur die Hüllen der SVG-Halter (textur.ts,
+   linse.ts — `aria-hidden`, nie Inhalt); alles andere muss wieder gehen. */
+gleich('… danach ist nichts mehr stillgelegt', await s12.evaluate(() =>
+  [...document.body.children].filter(c => c.hasAttribute('inert') && c.getAttribute('aria-hidden') !== 'true')
+    .map(c => c.id || c.className || c.tagName).slice(0, 6)), []);
+await s12.evaluate(() => { Node.prototype.appendChild = (window as any).__echtesAnhaengen; });
+
+/* c) Escape nimmt einen Träger, in dem kein Fenster des Kits steht. */
+await s12.evaluate(() => {
+  const o = document.createElement('div');
+  o.className = 'overlay';
+  o.setAttribute('data-insel-traeger', 'offen');
+  document.body.appendChild(o);
+});
+await s12.waitForTimeout(150);
+await s12.keyboard.press('Escape');
+await s12.waitForTimeout(150);
+gleich('… und Escape nimmt einen Träger ohne Kit-Fenster weg (sonst bliebe alles still)',
+  await s12.evaluate(() => document.querySelectorAll('[data-insel-traeger]').length), 0);
+
+await k12.close();
+
+/* d) Ruhige Darstellung: im selben Bild weg, und das Etikett bleibt.
+   AUF EINER FRISCHEN SEITE (finale Durchsicht, 5. Oktober): auf der Seite
+   von c) blieb gegen den Endbau eine gestolperte Insel stehen, und mit ihr
+   der Spiegel — das Etikett blieb dort aus dem falschen Grund, und der Punkt
+   war gegen den Endbau grün. Hier steht nur die eine Frage, und gemessen
+   wird erst, wenn ihr Träger fort ist (die letzte Insel weg). */
+const k12d = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const s12d = await k12d.newPage();
+alleFehler.push(...fehlerVon(s12d));
+await s12d.goto(pathToFileURL(path.join(WURZEL, 'index.html')).href);
+await bereitMachen(s12d);
+await s12d.evaluate(() => (window as any).Einstellungen.S('bewegung', 'ruhig'));
+await s12d.waitForTimeout(150);
+await stellen(s12d, `UI.frage('Ruhig', 'x')`);
+await kitOffen(s12d);
+await s12d.waitForTimeout(300);
+const ruhigWeg = await s12d.evaluate(() => new Promise<number>(fertig => {
+  const t0 = performance.now();
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  const schau = (): void => {
+    const d = document.querySelector<HTMLElement>('.ui-touch-dialog');
+    const sichtbar = !!d && d.checkVisibility({ opacityProperty: true, visibilityProperty: true } as CheckVisibilityOptions);
+    if (!sichtbar || performance.now() - t0 > 1000) fertig(Math.round(performance.now() - t0));
+    else requestAnimationFrame(schau);
+  };
+  requestAnimationFrame(schau);
+}));
+p('d) „Ruhig": nach Escape ist das Fenster im nächsten Bild weg (vorher 240 ms regungslos)', ruhigWeg <= 50,
+  ruhigWeg + ' ms');
+gleich('… die Antwort ist null', await antwort(s12d), null);
+const ohneInsel = await s12d.waitForFunction(() => !document.querySelector('[data-insel-traeger], [data-insel]'),
+  null, { timeout: 3000 }).then(() => true, () => false);
+p('… danach ist der Träger fort und keine Insel mehr eingehängt (der Spiegel ist aus)', ohneInsel);
+await s12d.waitForTimeout(150);
+gleich('… und html[data-ui-motion="reduce"] (E702) bleibt, solange „ruhig" gilt — auch ohne Insel',
+  await s12d.evaluate(() => document.documentElement.getAttribute('data-ui-motion')), 'reduce');
+await s12d.evaluate(() => (window as any).Einstellungen.S('bewegung', 'normal'));
+await s12d.waitForTimeout(150);
+gleich('… „ruhig" aus: es geht', await s12d.evaluate(() => document.documentElement.getAttribute('data-ui-motion')), null);
+await stellen(s12d, `UI.frage('Normal', 'x')`);
+await kitOffen(s12d);
+await s12d.waitForTimeout(700);
+const normalWeg = await s12d.evaluate(() => new Promise<number>(fertig => {
+  const t0 = performance.now();
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  const schau = (): void => {
+    const d = document.querySelector<HTMLElement>('.ui-touch-dialog');
+    if (!d || performance.now() - t0 > 1000) { fertig(Math.round(performance.now() - t0)); return; }
+    requestAnimationFrame(schau);
+  };
+  requestAnimationFrame(schau);
+}));
+p('Gegenprobe: mit Bewegung blendet es aus (es steht noch einige Bilder, ≥ 100 ms)', normalWeg >= 100,
+  normalWeg + ' ms');
+await antwort(s12d);
+await k12d.close();
+
+/* b) Am Telefon dasselbe: „Seiten zerlegen" (pdf/document-mode.ts). */
+const k12t = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+const s12t = await k12t.newPage();
+alleFehler.push(...fehlerVon(s12t));
+await s12t.goto(pathToFileURL(path.join(WURZEL, 'index.html')).href);
+await bereitMachen(s12t);
+await stellen(s12t, `Dialog.wahl({ titel: 'Dieses Blatt in 3 Seiten zerlegen?', text: 'Aus einem Blatt werden drei.', knoepfe: [
+  { id: 'ja', text: 'In 3 Seiten zerlegen', hinweis: 'Nichts geht dabei verloren' },
+  { id: 'nein', text: 'Abbrechen', hinweis: 'Das Blatt bleibt, wie es ist' }] })`);
+await kitOffen(s12t);
+gleich('b) Telefon, „Seiten zerlegen": ein „Abbrechen", nicht zwei',
+  (await knopfListe(s12t)).namen, ['In 3 Seiten zerlegen', 'Abbrechen']);
+await s12t.tap('.overlay [data-w="nein"]');
+gleich('… und es antwortet „nein"', await antwort(s12t), 'nein');
+await k12t.close();
+
+/* e) Der Rückweg für Ja/Nein: ohne Inseln ein sichtbares „Abbrechen". */
+const k12r = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
+  serviceWorkers: 'block' });
+const s12r = await k12r.newPage();
+alleFehler.push(...fehlerVon(s12r));
+await s12r.route(/\/quell\/fremd\/react\/react\.js$/, r => r.abort('internetdisconnected'));
+await s12r.goto(`http://localhost:${PORT}/index.html`);
+await bereitMachen(s12r);
+await stellen(s12r, `Dialog.bestaetigen({ titel: 'Alle Daten löschen?', ja: 'Alles löschen', gefahr: true })`);
+await s12r.waitForSelector('.overlay .finder [data-w]', { timeout: 5000 }).catch(() => {});
+const rueck = await knopfListe(s12r);
+gleich('e) Ohne Inseln: „Abbrechen" steht sichtbar da, bei Gefahr zuerst und im Fokus',
+  [rueck.namen, rueck.haken, rueck.fokus], [['Abbrechen', 'Alles löschen'], ['w:', 'w:ja'], 'w:']);
+await s12r.keyboard.press('Enter');
+gleich('… ein Enter löscht nichts (false)', await antwort(s12r), false);
+await stellen(s12r, `Dialog.bestaetigen({ titel: 'Übernehmen?', ja: 'Übernehmen' })`);
+await s12r.waitForSelector('.overlay .finder [data-w]', { timeout: 5000 }).catch(() => {});
+gleich('… ohne Gefahr steht die Antwort zuerst, „Abbrechen" daneben', (await knopfListe(s12r)).haken, ['w:ja', 'w:']);
+await s12r.tap('.overlay [data-w="ja"]');
+gleich('… und ein Tipp darauf gibt true', await antwort(s12r), true);
+await k12r.close();
 
 console.log('');
 gleich('Keine unerwarteten Fehler auf den Seiten', alleFehler.slice(0, 5), []);
