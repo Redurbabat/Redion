@@ -2359,8 +2359,14 @@ body .rmo-transport .rmo-tr-sym [data-figur] {
   transform-origin: center;
   transition: opacity var(--motion-fast) var(--ease), transform var(--feder-druck-dauer) var(--feder-druck);
 }
-body .rmo-transport:not([data-zustand="pausiert"]) .rmo-tr-sym [data-figur="weiter"],
-body .rmo-transport[data-zustand="pausiert"] .rmo-tr-sym [data-figur="pause"] {
+/* Ohne `.rmo-tr-sym` im Selektor (dritte Durchsicht von E713): `test303`
+   liest jede Regel, die `.rmo-tr-sym` nennt und `opacity:0` setzt, als
+   „das Zeichen ist weg" — und die Überfahr-Regel weiter unten als die
+   einzige, die es zurückholt: eine Falle für das Telefon, die es nicht
+   gibt. Verborgen ist nur die GERADE NICHT gültige Figur; `[data-figur]`
+   steht ohnehin nur im Zeichen der Pausentaste. */
+body .rmo-transport:not([data-zustand="pausiert"]) [data-figur="weiter"],
+body .rmo-transport[data-zustand="pausiert"] [data-figur="pause"] {
   opacity: 0;
   transform: scale(.3);
 }

@@ -8379,6 +8379,13 @@ Escape) — mit eigener Datei, `index.html`, GRUNDSTOCK und Startlast
   Seit der Durchsicht steht der Monatsverlauf in Zeilen zu zehn, jede
   Spalte mindestens 32 px (Nebenweg, §37) — treffbar, aber Wischen wäre der
   schnellere Weg.
+- Am Rechner kann ein langer Toast in einem schmalen Fenster die offene
+  Karte streifen (gemessen in der dritten Durchsicht bei 1024 px: Schnitt
+  3'840 px², mit dem alten Feld auf `b3cf1933` 2'560) — der Toast steht
+  mittig, die Karte rechts; er nimmt keine Klicks an. Am Telefon geht er bei
+  offener Karte nach oben (`test590` §15).
+- Die Tasten Stoppuhr, 5 Min und 25 Min sind 34 px hoch, das ✕ am Rechner
+  34 × 34 — so seit E268, ohne geschriebenen Grund am Ort (§37).
 
 **Was fehlt:** die gemeinsame Pille in `schale/`, mit Wächter (rot zuerst),
 und der Zeitmarken-Ton als ihr zweiter Nutzer.

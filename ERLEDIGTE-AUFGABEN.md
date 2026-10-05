@@ -1,5 +1,25 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 5. Oktober 2026 · E713 · Dritte Durchsicht der Zeitpille und der Balkenkarte
+
+**Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",
+am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden:** die zweite Durchsicht war fertig gebaut, aber nicht
+eingecheckt — selbst nachgeprüft und eingecheckt. Dazu, je zuerst rot: am
+Telefon lag ein Toast auf der offenen Karte (über Start · Pause ·
+Beenden); „Beenden" mitten in der Fahrt liess eine versteckte Pille samt
+Polster zurück; `test303` war seit dem Bau von E713 rot (ein Selektor
+nannte `.rmo-tr-sym`).
+
+**Gebaut:** der Toast geht bei offener Karte am Telefon nach oben (eigene
+Regel neben der für offene Fenster); am Ende der Fahrt geht die Pille, wenn
+die Uhr aus ist; der Selektor der verborgenen Figur nennt nur
+`[data-figur]`.
+
+**Geprüft:** `test590` §15 (rot zuerst), die Gegenproben, `test303`,
+Nachbarn und Startlast stehen in E713 („Die dritte Durchsicht").
+
 ## 4./5. Oktober 2026 · E713 · Durchsicht der Zeitpille und der Balkenkarte
 
 **Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",

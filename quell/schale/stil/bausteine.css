@@ -4252,6 +4252,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     top:12px; bottom:auto; transform:translateY(-80px);
   }
   body:has(.overlay) #toast.show{ transform:translateY(0) }
+  /* UND DIE OFFENE KARTE DES ZEITMESSERS (dritte Durchsicht von E713). Sie
+     ist keine `.overlay`, steht aber genauso unten mit ihren Tasten
+     zuunterst: gemessen auf 390 × 844 Toast 720–763 auf der Karte 462–759,
+     über Start · Pause · Beenden — und „⏰ Zeit um" kommt genau dann, wenn
+     man die Karte offen hat. Dieselbe Antwort wie oben: nach OBEN. Eine
+     eigene Regel, nicht ein zweites Glied in der oberen — `test304` liest
+     jene beim Wortlaut. Geprüft in `test590` §15. */
+  body:has(.zm-feld) #toast{
+    top:12px; bottom:auto; transform:translateY(-80px);
+  }
+  body:has(.zm-feld) #toast.show{ transform:translateY(0) }
 }
 
 /* ===========================================================================

@@ -1482,7 +1482,9 @@ einen Tag mit Tipp und Tasten und liest den Hinweis. Seit der Durchsicht
 (4./5. Oktober) auch: die Pille liegt auf keinem Werkzeug und kein Toast auf
 ihr, der Monatsverlauf zeigt alle dreissig Zahlen, ein zweites Zeichnen
 zählt nicht zurück, ihr Name wechselt nicht im Sekundentakt, und Escape
-wirkt auch mitten in der Fahrt. Gezählt am
+wirkt auch mitten in der Fahrt. Seit der dritten Durchsicht (5. Oktober):
+am Telefon liegt kein Toast auf der offenen Karte, und „Beenden" mitten in
+der Fahrt lässt keine Pille zurück. Gezählt am
 28. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
 sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
 

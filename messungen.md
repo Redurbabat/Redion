@@ -5502,3 +5502,21 @@ zusammen (neun Dateien)                389'703 → 399'908 → 402'598
 dieselbe Stufe, einige Hundert Bytes Unterschied je grosser Datei. Darum
 wird nur innerhalb dieser Tabelle verglichen.) Die
 Einzeldatei: 11'818'312 → 11'825'765 Bytes (+7'453).
+
+**Nachtrag 2 — die dritte Durchsicht (5. Oktober 2026).** `test590` §15
+gegen den Stand der zweiten Durchsicht (`95abc5de`: 60 von 62) und danach
+(62 von 62); dieselben Fenster und Daten, Telefon 390 × 844.
+
+```txt
+Toast bei offener Karte (Telefon)   720–763 auf der Karte 462–759 (11'700 px²)
+                                    → oben 12–55, Schnitt 0
+„Beenden" 80 ms nach dem Tipp       Pille bleibt versteckt im Dokument,
+                                    #scroll-Polster 153 px → Pille fort, 93 px
+test303 (Telefonfallen)             1 („motion.css .rmo-tr-sym") → 0
+Rechner 1024 × 768, langer Toast    Schnitt mit der Karte 3'840 px²
+                                    (b3cf1933, altes Feld: 2'560) — offen, L234
+```
+
+**Start (test388 §5).** 2838 KB von 2850 (21/21). Die drei berührten
+Dateien +508 Bytes gzip (bausteine.css +231, motion.css +169,
+zeitmesser.js +108), die Einzeldatei 11'825'765 → 11'827'154 Bytes.

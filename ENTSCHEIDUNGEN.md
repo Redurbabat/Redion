@@ -58829,6 +58829,53 @@ genauso. Behoben ist es auf `claude/morgen-besser` mit „Morgen besser 6c"
 (`4d9a9a3f`, die deckende Pille liegt unter den Knöpfen) — dieser Zweig
 steht auf `b3cf1933`, davor; mit dem Zusammenführen ist es weg.
 
+**Die dritte Durchsicht** (5. Oktober 2026). Die zweite brach am
+Sitzungslimit ab, bevor sie einchecken konnte; die dritte hat ihren Stand
+Datei für Datei gelesen, neu gebaut (unverändert), `test590`, die
+Gegenproben (auf dem Endstand neu gebogen), die Nachbarn und die Startlast
+selbst laufen lassen und ihn eingecheckt. Dazu jede Taste am Telefon und am
+Rechner mit Finger, Maus und Tastatur, alle zehn Schemata (Kontrast der
+Karte, der Pille und der Balkenkarte gemessen), „Ruhige Darstellung" und
+weniger Bewegung, Querformat und 320 px, `file://` und die Einzeldatei.
+Drei Dinge hielten nicht — die ersten beiden zuerst als Lauf (`test590`
+§15, rot gegen den Stand der zweiten Durchsicht: 60 von 62):
+
+1. **Ein Toast lag auf der offenen Karte.** Am Telefon stehen Start ·
+   Pause · Beenden zuunterst; der Toast — so breit wie der Schirm — lag für
+   seine Sekunden darauf (gemessen 720–763 auf der Karte 462–759), und
+   „⏰ Zeit um" kommt genau dann, wenn man die Karte offen hat. Das Feld
+   stand dort schon vor E713; die Durchsicht hatte den Stapel über die
+   PILLE gerückt, nicht über die Karte. Jetzt geht der Toast nach oben wie
+   bei offenen Fenstern (L109, E310) — in einer eigenen Regel neben jener,
+   weil `test304` jene beim Wortlaut liest.
+2. **„Beenden" mitten in der Fahrt liess eine versteckte Pille zurück.**
+   Die Uhr war aus, die Pille blieb im Dokument und mit ihr das Polster
+   unter `#scroll`, bis die Karte zuging. Jetzt geht sie am Ende der Fahrt
+   mit.
+3. **`test303` war rot seit `fb7e590e`** — ein bestehender Wächter, den der
+   Bau nicht laufen liess: die Regel, die die gerade nicht gültige Figur
+   der Pausentaste verbirgt, nannte `.rmo-tr-sym`, und der Lauf las sie als
+   „das Zeichen ist weg, und nur das Überfahren holt es zurück" — eine
+   Falle für das Telefon, die es nicht gibt. Der Wächter bleibt, wie er
+   ist; der Selektor nennt jetzt nur noch `[data-figur]`.
+
+Gegenproben, je eine Verbiegung in `quell/` einer Kopie des Baums,
+zurückgeholt: die Regel für die offene Karte aus und die Pille am Ende der
+Fahrt wieder nur versteckt → `test590` §15 rot an beiden Zusagen (Schnitt
+11'700 px², Pille im Dokument; 60 von 62); `.rmo-tr-sym` wieder im
+Selektor → `test303` rot („motion.css .rmo-tr-sym", 15 von 16). Auf dem
+Endstand `test590` 62/62, `test303` 16/16, `test304` 12/12 (der Toast bei
+offenen Fenstern wie vorher), Pause ↔ Weiter tauscht die Figur wie vorher
+(gemessen: „pause 0, weiter 1").
+
+Gemessen: `test388` §5 2838 KB von 2850 (21/21); die drei Dateien wachsen um
+508 Bytes gzip (fast nur Begründung am Ort), die Einzeldatei um 1'389.
+
+Nicht von E713 und nicht hier behoben: am Rechner kann ein langer Toast in
+einem schmalen Fenster die offene Karte streifen (1024 px: Schnitt
+3'840 px², auf `b3cf1933` mit dem alten Feld 2'560) — der Toast steht dort
+mittig, die Karte rechts, und er nimmt keine Klicks an. In L234.
+
 **Nicht in diesem Bogen** (L234): der Ton der Zeitmarken und die laufende
 Besprechung in derselben Pille (eine gemeinsame „läuft"-Pille in der
 Schale); Wischen über die Balken (heute Tipp und Tasten).

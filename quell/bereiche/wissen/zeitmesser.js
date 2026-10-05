@@ -433,7 +433,13 @@ const Zeitmesser = (() => {
             feld.style.removeProperty('transform-origin');
             pille.style.removeProperty('transform-origin');
             pille.classList.remove('zm-fliegt');
-            pille.hidden = true;
+            /* Wurde mitten in der Fahrt „Beenden" getippt, ist die Uhr schon aus:
+               dann geht die Pille ganz (dritte Durchsicht von E713) — sonst blieb
+               sie versteckt im Dokument, und `#scroll` behielt ihr Polster. */
+            if (lauf)
+                pille.hidden = true;
+            else
+                pille.remove();
             if (fahrt?.ende === ende)
                 fahrt = null;
         };
