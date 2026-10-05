@@ -1,45 +1,16 @@
 "use strict";
-/* ============================================================================
- * links.js — Verknüpfungen zwischen Seiten
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/wissen/verweise.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/wissen/verweise.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Das, was Notion „Link to page" nennt und was Logseq, Foam, SiYuan und
- * Obsidian gross gemacht haben:
- *
- *   [[Seitenname]]   verlinkt eine Seite. Gibt es sie nicht, wird sie angelegt.
- *   #stichwort       setzt ein Schlagwort.
- *   ((Blockverweis)) verweist auf einen einzelnen Block.
- *
- * Dazu die Gegenrichtung: Rückverweise unter jeder Seite, unverlinkte
- * Erwähnungen und ein Graph, der zeigt, was womit zusammenhängt.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/verweise.ts (npm run bauen:ts). */
 const Links = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * INLINE-DARSTELLUNG
-     * ------------------------------------------------------------------------
-     * Bekommt bereits maskiertes HTML von Blocks.inline() und ergänzt
-     * Seitenlinks, Schlagwörter und Blockverweise.
-     * ======================================================================*/
     const inline = (html) => String(html)
-        /* ((Blockverweis)) */
         .replace(/\(\(([0-9a-f-]{6,})\)\)/gi, (_, id) => {
         const b = Store.getBlock(id);
         if (!b)
             return '<span class="wl tot">((verwaister Verweis))</span>';
         return `<a class="bl" data-bref="${id}" title="Zum Block springen">${esc(b.text || 'Block')}</a>`;
     })
-        /* [[Seitenname]] */
         .replace(/\[\[([^\[\]\n|]{1,240})(?:\|([^\]\n]{1,240}))?\]\]/g, (_, roh, alias) => {
         const name = roh.trim();
         const anzeige = String(alias || name).trim() || name;
@@ -53,20 +24,11 @@ const Links = (() => {
         return `<a class="wl${klasse}" data-wl="${esc(name)}" ` +
             `title="${esc(titel)}">${esc(anzeige)}</a>`;
     })
-        /* #stichwort — nur am Wortanfang, damit URLs mit # unberührt bleiben.
-           Und nicht nach `](` — das ist ein Markdown-Sprungziel `[…](#abschnitt)`,
-           kein Schlagwort (E348). */
         .replace(/(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g, (_, vor, tag) => `${vor}<a class="tg" data-tag="${esc(tag)}">#${esc(tag)}</a>`);
-    /* ========================================================================
-     * NACHSCHLAGEN
-     * ======================================================================*/
-    /** Alle echten Seiten (keine Datenbankzeilen, nichts im Papierkorb). */
     const seiten = () => Object.values(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection');
-    /** Leerzeichen und Grossschreibung sind für Seitennamen nicht bedeutend. */
     const normalisiereSeitennamen = (value) => String(value ?? '')
         .normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('de');
-    /** Nur echte, nichtleere Aliasnamen gelangen in die Link-Wahrheit. */
     const aliasesVon = (page) => {
         if (!Array.isArray(page?.aliases))
             return [];
@@ -86,7 +48,6 @@ const Links = (() => {
         .replace(/\.(?:md|markdown)$/i, '').replace(/^\/+|\/+$/g, '')
         .split('/').map(segment => segment.trim().replace(/\s+/g, ' ')).filter(Boolean)
         .join('/').toLocaleLowerCase('de');
-    /** Hierarchischer Pfad für gleichnamige Seiten ausserhalb eines Vaults. */
     const internerPfad = (page) => {
         if (!page?.id)
             return '';
@@ -101,7 +62,6 @@ const Links = (() => {
             list.push(page);
         map.set(key, list);
     };
-    /** Ein flüchtiger Index; er ist Ableitung und niemals ein zweiter Speicher. */
     const baueSeitenIndex = (pages = seiten()) => {
         const byName = new Map(), byPath = new Map();
         pages.forEach(page => {
@@ -112,15 +72,8 @@ const Links = (() => {
         });
         return { byName, byPath, pages };
     };
-    /**
-     * Eine Referenz hat genau dann ein Ziel, wenn es genau einen Kandidaten
-     * gibt. Pfade und `redion:<id>` dürfen gleiche Titel ausdrücklich
-     * disambiguieren; ein Alias mit zwei Besitzern wählt niemals den ersten.
-     */
     const loeseSeitenverweisMitIndex = (name, index) => {
         const requested = String(name ?? '').trim();
-        /* Obsidian hängt Überschrift oder Blockkennung an das Seitensziel. Die
-           Stelle gehört nicht zur Identität der Seite und bleibt im Text stehen. */
         const raw = requested.replace(/(?:#|\^).*$/, '').trim();
         const direct = raw.match(/^redion:([0-9a-f-]{16,64})$/i);
         if (direct) {
@@ -147,11 +100,8 @@ const Links = (() => {
         };
     };
     const loeseSeitenverweis = (name) => loeseSeitenverweisMitIndex(name, baueSeitenIndex());
-    /** Kompatibler Name, aber jetzt Titel + Alias + Pfad und kollisionssicher. */
     const seiteMitTitel = (name) => loeseSeitenverweis(name).page;
-    /** Kandidaten-API für Picker und Importe; sie verschweigt Kollisionen nicht. */
     const seitenMitTitelOderAlias = (name) => loeseSeitenverweis(name).candidates;
-    /** Die kürzeste Referenz, die diese eine Seite tatsächlich eindeutig meint. */
     const referenzFuerSeite = (page) => {
         const index = baueSeitenIndex();
         const title = String(page?.text || 'Ohne Titel').trim();
@@ -163,7 +113,6 @@ const Links = (() => {
         }
         return `redion:${page?.id || ''}`;
     };
-    /** Aliasfelder bleiben normale Page-Daten; diese Funktion säubert nur. */
     const aliasesSetzen = (pageId, values) => {
         const page = Store.getBlock(pageId);
         if (!page || page.type !== 'page' || page.parentTable === 'collection')
@@ -175,7 +124,6 @@ const Links = (() => {
             .filter(entry => entry.candidates.length > 1);
         return { page, aliases, collisions };
     };
-    /** Zu welcher Seite gehört ein Block? Läuft den Baum nach oben. */
     const seiteVon = (blockId) => {
         let cur = Store.getBlock(blockId);
         let schutz = 0;
@@ -183,7 +131,6 @@ const Links = (() => {
             if (cur.type === 'page' && cur.parentTable !== 'collection')
                 return cur;
             if (cur.parentTable === 'collection') {
-                /* Datenbankzeile: über die Sammlung zum Datenbankblock */
                 const dbBlock = Object.values(Store.cache.blocks)
                     .find(b => b.collectionId === cur.parentId);
                 cur = dbBlock ? Store.getBlock(dbBlock.parentId) : null;
@@ -193,7 +140,6 @@ const Links = (() => {
         }
         return null;
     };
-    /** Öffnet die Seite mit diesem Titel — und legt sie an, wenn es sie nicht gibt. */
     const oeffneOderAnlegen = (name) => {
         const resolution = loeseSeitenverweis(name);
         if (resolution.status === 'mehrdeutig') {
@@ -213,25 +159,17 @@ const Links = (() => {
         let z = resolution.page;
         if (!z) {
             z = Store.addPage(null, { text: name.trim(), icon: '📄' });
-            /* Ein leerer Absatz, damit die neue Seite gleich einen Platz zum
-               Schreiben hat. Der Rückgabewert wurde nie gebraucht. */
             Store.addBlock(z.id, 'text');
             UI.toast('Seite „' + name.trim() + '" angelegt');
             App.zeichneBaum();
         }
         App.oeffne(z.id);
     };
-    /* ========================================================================
-     * RÜCKVERWEISE
-     * ------------------------------------------------------------------------
-     * Wer zeigt auf diese Seite? Genau das fehlt in Notion und ist der Grund,
-     * warum Logseq und Foam überhaupt entstanden sind.
-     * ======================================================================*/
     const verweiseAuf = (seiteId) => {
         const p = Store.getBlock(seiteId);
         if (!p)
             return [];
-        const treffer = new Map(); /* seitenId -> { seite, stellen: [] } */
+        const treffer = new Map();
         const index = baueSeitenIndex();
         Object.values(Store.cache.blocks).forEach(b => {
             if (!b.alive || !b.text)
@@ -250,10 +188,8 @@ const Links = (() => {
                 treffer.set(quelle.id, { seite: quelle, stellen: [] });
             treffer.get(quelle.id).stellen.push(b);
         });
-        /* Unterseiten zählen auch als Verweis — das ist die Baumkante. */
         return [...treffer.values()];
     };
-    /** Seiten, die den Titel erwähnen, ohne ihn zu verlinken. */
     const unverlinkt = (seiteId) => {
         const p = Store.getBlock(seiteId);
         if (!p)
@@ -287,23 +223,6 @@ const Links = (() => {
         return [...out.values()];
     };
     const entschaerfe = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    /* ========================================================================
-     * SCHLAGWÖRTER
-     * ======================================================================*/
-    /* ------------------------------------------------------------------------
-     * ALLE SEITENVERWEISE AUF EINMAL (E288)
-     *
-     * `loeseSeitenverweis` baut den Seitenindex bei JEDEM Aufruf neu. Für
-     * einen einzelnen Verweis ist das richtig — er soll den Stand von jetzt
-     * sehen. Wer aber alle Verweise eines Bestands durchgehen will, baut
-     * damit den Index einmal je Verweis: bei 400 Verweisen und 900 Seiten
-     * sind das 360 000 Durchläufe für eine Auskunft, die einer genügt hätte.
-     *
-     * Deshalb steht die Schleife hier und nicht beim Aufrufer: das Auflösen
-     * eines `[[Ziels]]` — mit Aliasen, Pfaden, Überschriften-Anhängseln und
-     * Mehrdeutigkeit — ist die Sache dieses Moduls, und niemand sonst soll
-     * das Muster noch einmal schreiben müssen.
-     * ---------------------------------------------------------------------- */
     const alleSeitenverweise = () => {
         const index = baueSeitenIndex();
         const out = [];
@@ -330,14 +249,10 @@ const Links = (() => {
         return out;
     };
     const alleTags = () => {
-        const map = new Map(); /* tag -> Set von Seiten-IDs */
+        const map = new Map();
         Object.values(Store.cache.blocks).forEach(b => {
             if (!b.alive || !b.text)
                 return;
-            // matchAll statt match: mit dem g-Flag liefert match() den GANZEN Treffer
-            // samt Vorzeichen, und `(#tag` wurde nach trim() zum Schlagwort „(#tag".
-            // Gesehen im Register als `(#2-formeln` — ein Markdown-Sprungziel aus den
-            // Hilfeseiten, das obendrein gar kein Schlagwort ist (E348).
             const gefunden = [...String(b.text).matchAll(/(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g)];
             if (!gefunden.length)
                 return;
@@ -357,9 +272,6 @@ const Links = (() => {
             .map(([tag, set]) => ({ tag, seiten: [...set].map(id => Store.getBlock(id)).filter(Boolean) }))
             .sort((a, b) => b.seiten.length - a.seiten.length || a.tag.localeCompare(b.tag));
     };
-    /* ========================================================================
-     * DIE FUSSZEILE UNTER JEDER SEITE
-     * ======================================================================*/
     const fusszeile = (seite, wrap) => {
         if (!seite)
             return;
@@ -388,9 +300,6 @@ const Links = (() => {
         });
         wrap.appendChild(d);
     };
-    /* ========================================================================
-     * AUTOVERVOLLSTÄNDIGUNG BEIM TIPPEN VON [[
-     * ======================================================================*/
     let picker = null;
     const pickerSchliessen = () => {
         if (picker) {
@@ -407,7 +316,6 @@ const Links = (() => {
         r.setEnd(s.getRangeAt(0).endContainer, s.getRangeAt(0).endOffset);
         return r.toString();
     };
-    /** Ersetzt das offene [[… am Ende durch [[Name]]. */
     const einsetzen = (ct, name) => {
         const b = Store.getBlock(ct.closest('.blk')?.dataset.bid);
         if (!b)
@@ -451,14 +359,6 @@ const Links = (() => {
         if (erste)
             erste.classList.add('on');
     };
-    /* ========================================================================
-     * DER GRAPH
-     * ------------------------------------------------------------------------
-     * Der Graph ist eine ABLEITUNG aus den bestehenden Blöcken, Relationen und
-     * Schlagwörtern. Er wird weder gespeichert noch zur zweiten Link-Wahrheit.
-     * Für grosse Bestände wird nur die Nachbarschaft der aktuellen Seite
-     * gezeichnet; der vollständige lineare Index dient allein zum Nachschlagen.
-     * ======================================================================*/
     const normalizeGraphText = (value) => String(value ?? '')
         .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
     const knowledgeKindForCollection = (collection) => {
@@ -476,11 +376,6 @@ const Links = (() => {
             return 'source';
         return 'row';
     };
-    /**
-     * Baut einen flüchtigen Index in O(Blöcke + Relationen). `[[Links]]`
-     * bleiben Text im bestehenden Blockspeicher; der Index ist nur eine
-     * Lesesicht und darf jederzeit verworfen werden.
-     */
     const buildGraphIndex = () => {
         const blocks = Object.values(Store.cache.blocks).filter(block => block?.alive);
         const collections = new Map(Object.values(Store.cache.collections)
@@ -512,13 +407,10 @@ const Links = (() => {
             edgeKeys.add(key);
             edges.push({ source: first, target: second, kind });
         };
-        /* Die Seitenhierarchie ist eine vorhandene Beziehung, keine neue. */
         pageBlocks.forEach(page => {
             if (page.parentTable !== 'collection' && page.parentId && nodes.has(page.parentId))
                 addEdge(page.parentId, page.id, 'tree');
         });
-        /* Eigentümer eines Inhaltsblocks. Datenbankzeilen sind selbst Seiten
-           und bleiben deshalb Endpunkt von Relationen und Links. */
         const ownerCache = new Map();
         const ownerFor = (blockId) => {
             if (ownerCache.has(blockId))
@@ -565,8 +457,6 @@ const Links = (() => {
                 tagsByOwner.get(owner.id)?.set(normalizedTag, shown);
             }
         });
-        /* Vorhandene Datenbankrelationen. Auch wechselseitige Relationen werden
-           dank der Kantenkennung nur einmal gezeichnet. */
         pageBlocks.filter(row => row.parentTable === 'collection').forEach(row => {
             const collection = collections.get(row.parentId);
             if (!collection)
@@ -580,9 +470,6 @@ const Links = (() => {
                     addEdge(row.id, id, 'relation'); });
             });
         });
-        /* Tags sind virtuelle Knoten. Sie speichern nichts und verschwinden beim
-           Schliessen des Graphen. #entscheidung und #quelle geben normalen
-           Seiten zugleich einen klaren Typ, ohne einen neuen Blocktyp zu bauen. */
         tagsByOwner.forEach((tags, ownerId) => {
             const owner = nodes.get(ownerId);
             if (owner && tags.has('entscheidung')) {
@@ -633,7 +520,6 @@ const Links = (() => {
     const DEFAULT_GRAPH_FILTERS = {
         links: true, backlinks: true, relations: true, tags: false, tree: true, nodeKind: 'all'
     };
-    /** Eine begrenzte Nachbarschaft für Tiefe 1/2 plus ausdrücklich erweiterte Knoten. */
     const buildGraphSlice = (index, centerId, depth = 1, filters = DEFAULT_GRAPH_FILTERS, expandedIds = []) => {
         if (!index.nodes.has(centerId))
             return { centerId, nodes: [], edges: [], truncated: false };
@@ -723,8 +609,6 @@ const Links = (() => {
             const ids = new Set(component);
             const edgeCount = index.edges.filter(edge => edge.kind !== 'tag' &&
                 ids.has(edge.source) && ids.has(edge.target)).length;
-            /* Ein reiner Baum ist verbunden, aber noch kein stark verbundener
-               Bereich. Mindestens ein zusätzlicher Weg (Kreis/Querverweis) muss da sein. */
             if (edgeCount < component.length)
                 continue;
             const density = 2 * edgeCount / (component.length * (component.length - 1));
@@ -761,8 +645,6 @@ const Links = (() => {
         UI.toast(kind === 'decision' ? 'Entscheidungsseite angelegt' : 'Quellenseite angelegt');
         return page;
     };
-    /* Rückwärtsverträglicher Messweg aus P7. Die alte Form wird weiterhin
-       geliefert, aber aus demselben linearen Index wie der neue Teilgraph. */
     const graphVorbereiten = () => {
         const index = buildGraphIndex();
         const entityNodes = [...index.nodes.values()].filter(node => node.kind !== 'tag');
@@ -781,17 +663,6 @@ const Links = (() => {
     };
     const graph = () => {
         const index = buildGraphIndex();
-        /* OHNE OFFENE SEITE NIMMT DER GRAPH DIE ZULETZT BEARBEITETE (E137).
-           Vorher stand hier nur „Öffne zuerst eine Seite für ihren Teilgraphen".
-           Das war richtig, solange die App auf einer Seite startete. Seit E132
-           ist die Startansicht das Heute-Dashboard, und das ist KEINE Seite —
-           `App.aktuelleSeite()` gibt dort nichts zurück. Damit war der Satz
-           nicht mehr die Ausnahme, sondern der Normalfall: wer nach dem Start
-           Strg+Umschalt+G drückte, bekam eine Absage statt eines Graphen.
-    
-           Die zuletzt bearbeitete Seite ist die ehrlichste Wahl — sie ist das,
-           woran man zuletzt war. Gibt es überhaupt keine Seite, bleibt es bei
-           der Absage; dann ist sie wahr. */
         const offen = App.aktuelleSeite?.() || '';
         const zuletzt = () => {
             let beste = '', wann = '';
@@ -807,10 +678,6 @@ const Links = (() => {
             });
             return beste;
         };
-        /* `let`, nicht `const` (E253): die Suche macht ihren Treffer zum neuen
-           Mittelpunkt — der Graph baut sich dann um ihn statt um die offene
-           Seite. `center` bleibt der ERSTE Mittelpunkt; er dient nur noch als
-           Rückfall für die Knotenkarte. */
         let centerId = index.nodes.has(offen) ? offen : zuletzt();
         const center = index.nodes.get(centerId);
         if (!center) {
@@ -832,11 +699,6 @@ const Links = (() => {
                 '<button type="button" class="icon-btn" data-a="zu" aria-label="Graph schliessen">✕</button>' +
                 '</div>' +
                 '<div class="graph-controls" aria-label="Graph filtern">' +
-                /* DIE SUCHE ZUERST (E253). Der Graph zeigt nur den Ausschnitt um
-                   den Mittelpunkt — wer eine BESTIMMTE Seite im Geflecht sucht,
-                   musste sie bisher erst im Editor öffnen und den Graphen neu
-                   aufmachen. Tippen listet Treffer aus dem GANZEN Index im
-                   Seitenfeld; Klick oder Enter springt hin. */
                 '<input type="search" class="graph-suche" data-graph-suche ' +
                 'placeholder="Knoten suchen …" aria-label="Knoten im Graphen suchen" ' +
                 'autocomplete="off" spellcheck="false">' +
@@ -902,9 +764,6 @@ const Links = (() => {
             close();
             App.oeffne(node.rawId);
         };
-        /* Treffer aus dem GANZEN Index, nicht nur dem sichtbaren Ausschnitt —
-           das ist der Sinn der Suche: finden, was der Ausschnitt gerade nicht
-           zeigt. Gedeckelt wie die Verwaisten-Liste. */
         const sucheTreffer = () => {
             const wort = sucheWort.trim().toLowerCase();
             if (!wort)
@@ -917,9 +776,6 @@ const Links = (() => {
             if (!index.nodes.has(id))
                 return;
             selectedId = id;
-            /* Liegt der Treffer ausserhalb des Ausschnitts, wird er der neue
-               Mittelpunkt — sonst zeigte die Karte einen Knoten, den das Bild
-               nicht enthält. Liegt er drin, reicht das Auswählen. */
             if (!visibleSlice.nodes.some(node => node.id === id))
                 centerId = id;
             panelMode = 'node';
@@ -962,9 +818,6 @@ const Links = (() => {
             const canExpand = visibleSlice.nodes.some(node => node.id === selected.id);
             panel.innerHTML = `<h2>${esc(selected.icon)} ${esc(selected.name)}</h2>` +
                 `<p>${kindName(selected.kind)} · ${selected.degree} Verbindungen` +
-                /* „Mittelpunkt des Graphen", nicht „aktuelle Seite": seit die
-                   Suche recentert (E253), ist der Mittelpunkt nicht mehr immer
-                   die offene Seite — das alte Wort wäre dann eine Behauptung. */
                 (selected.id === centerId ? ' · Mittelpunkt des Graphen' : '') + '</p>' +
                 '<div class="graph-panel-actions">' +
                 (selected.rawId ? `<button type="button" data-graph-open="${esc(selected.id)}">Öffnen</button>` : '') +
@@ -1018,9 +871,6 @@ const Links = (() => {
             overlay.querySelectorAll('[data-graph-depth]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.graphDepth) === depth)));
             showPanel();
         };
-        /* Räumliche Zellen vergleichen pro Knoten höchstens 9 × 28 Nachbarn.
-           Anders als die alte Paar-Schleife bleibt ein Bild damit O(Knoten +
-           Kanten), auch wenn der Teilgraph seine Obergrenze erreicht. */
         const simulate = () => {
             const bucketSize = 96, maxPerBucket = 28;
             const buckets = new Map();
@@ -1292,12 +1142,6 @@ const Links = (() => {
         document.addEventListener('keydown', event => {
             if (event.key !== 'Escape')
                 return;
-            /* ESCAPE IM SUCHFELD LEERT ERST DIE SUCHE (E253). Dieser Horcher
-               läuft in der capture-Phase — VOR dem Feld selbst; ein
-               stopPropagation am Feld käme also zu spät. Die Ausnahme muss
-               deshalb hier stehen: Feld mit Inhalt → leeren, Graph bleibt.
-               Wer wirklich schliessen will, drückt noch einmal (§38: kein
-               Überraschungs-Zuschlag mitten im Tippen). */
             const feld = event.target instanceof HTMLInputElement &&
                 event.target.closest('.graph-overlay') &&
                 event.target.matches('[data-graph-suche]') ? event.target : null;
@@ -1317,9 +1161,6 @@ const Links = (() => {
         loop();
         return overlay;
     };
-    /* ========================================================================
-     * SCHLAGWORT-REGISTER
-     * ======================================================================*/
     const tagRegister = (vorgewaehlt = '') => {
         const tags = alleTags();
         const o = document.createElement('div');
@@ -1343,11 +1184,6 @@ const Links = (() => {
             res.innerHTML =
                 '<div class="tagwolke">' + tags.map(t => `<button class="tagpill${t.tag === aktiv ? ' on' : ''}" data-t="${esc(t.tag)}">` +
                     `#${esc(t.tag)} <em>${t.seiten.length}</em></button>`).join('') + '</div>' +
-                    /* MIT KLASSE, DAMIT DER TREFFER WIE EIN TREFFER AUSSIEHT (E293).
-                       `grund.css` nimmt jedem Knopf sein Aussehen — richtig so, Redion
-                       setzt es über Klassen. Diese hier hatten keine, und die Liste stand
-                       als nackter Text da: zwei Zeilen, die man anklicken kann, ohne es
-                       zu wissen. Gefunden von test289, das genau danach sucht. */
                     (aktiv ? (tags.find(t => t.tag === aktiv)?.seiten || []).map(p => `<button class="tagtreffer" data-open="${p.id}">` +
                         `<span>${esc(p.icon || '📄')}</span>` +
                         `<span class="tt-name">${esc(p.text || 'Ohne Titel')}</span>` +
@@ -1370,11 +1206,7 @@ const Links = (() => {
                 o.remove();
         });
     };
-    /* ========================================================================
-     * START — globale Klicks und das Tippen überwachen
-     * ======================================================================*/
     const start = () => {
-        /* Klick auf einen Seitenlink, ein Schlagwort oder einen Blockverweis */
         document.addEventListener('click', e => {
             const wl = elVon(e)?.closest('a.wl');
             if (wl) {
@@ -1407,7 +1239,6 @@ const Links = (() => {
                 }, 80);
             }
         });
-        /* [[ tippen öffnet die Seitenauswahl */
         document.getElementById('page')?.addEventListener('input', e => {
             const ct = elVon(e)?.closest('.ct');
             if (!ct) {
@@ -1458,9 +1289,6 @@ const Links = (() => {
     };
 })();
 window.Links = Links;
-/* Verweise und Rückverweise in der Kontextkante (E272 Phase F).
-   `verweiseAuf(id)` ist dieselbe Quelle wie die Fusszeile der Seite — eine
-   zweite Suche über den Index wäre derselbe Lauf zweimal. */
 if (typeof Register !== 'undefined' && Register.kontext) {
     Register.kontext.melde({
         bereich: 'editor', id: 'verweise', name: 'Verweise',
@@ -1490,7 +1318,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                 zeichen: 'page', tun: () => { try {
                     App.oeffne(b.id);
                 }
-                catch { /* … */ } }
+                catch { } }
             }));
         }
     });

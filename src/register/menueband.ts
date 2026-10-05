@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/menueband.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/menueband.js — das Menüband: Start, Einfügen, Zeichnen …
  * ----------------------------------------------------------------------------

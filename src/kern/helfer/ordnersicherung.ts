@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/ordnersicherung.ts (npm run bauen:ts). */
 /* ============================================================================
  * ordnersicherung.js — Die Sicherung schreibt sich selbst, in einen Ordner
  * ----------------------------------------------------------------------------

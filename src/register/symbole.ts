@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/symbole.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/symbole.js — die Zeichen der Oberfläche
  * ----------------------------------------------------------------------------

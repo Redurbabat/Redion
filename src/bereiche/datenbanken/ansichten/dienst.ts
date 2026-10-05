@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/ansichten/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * apps/tabellen/ansichten/dienst.js — aus notion.js herausgelöst
  * ----------------------------------------------------------------------------

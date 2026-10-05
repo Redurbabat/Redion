@@ -1,48 +1,12 @@
 "use strict";
-/* ============================================================================
- * bereiche/elektro/arbeitsplatz.ts — üben, prüfen, arbeiten
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/elektro/arbeitsplatz.ts`.
- * ----------------------------------------------------------------------------
- * DREI SPALTEN, EINE ARBEIT (Punkt 100)
- *
- * Redur hat den Arbeitsplatz so beschrieben: „links Aufgaben/Fachzeichen, in
- * der Mitte PDF oder Schaltplan und rechts Formelblatt, Werte, Lösung und
- * persönliche Notizen."
- *
- * Der Grund für drei Spalten ist nicht Platz, sondern ZEIT. Eine Aufgabe
- * lösen heisst: lesen, zeichnen, nachschlagen, rechnen, aufschreiben — und
- * zwischen diesen fünf Dingen springt man ein Dutzend Mal hin und her. Wer
- * dafür die Ansicht wechseln muss, verliert bei jedem Sprung den Faden, und
- * am Ende hat er die Aufgabe dreimal neu gelesen.
- *
- * WAS HIER NICHT NEU IST
- *
- * Die Mitte ist ein gewöhnlicher Redion-Block — ein Schaltplan oder eine
- * PDF-Seite. Rechts steht das Formelheft, das es schon gibt. Links stehen
- * Aufgaben, die `Elektroaufgaben` erzeugt. Dieses Modul erfindet nichts
- * davon neu; es stellt es nebeneinander. Ein zweiter Schaltplaneditor „für
- * den Arbeitsplatz" wäre L34 in gross: zwei Editoren, die auseinanderlaufen,
- * und niemand merkt es, bis einer etwas kann, was der andere nicht kann.
- *
- * DER PRÜFUNGSMODUS (Punkt 99)
- *
- * Er ist dieselbe Aufgabenliste mit drei Unterschieden: die Erklärung kommt
- * erst am Schluss, die Aufgaben sind gemischt, und es gibt eine Auswertung.
- * Der Startwert der Prüfung wird angezeigt — damit lässt sich dieselbe
- * Prüfung noch einmal stellen, im Unterricht für alle gleich, und beim
- * Nachbesprechen zeigt sie wieder genau dieselben Aufgaben.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/arbeitsplatz.ts (npm run bauen:ts). */
 const Elektroarbeitsplatz = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    /* Was sich der Arbeitsplatz merkt. Alles in `Store.meta` — es gehört dem
-       Menschen und nicht einem Dokument. */
-    const M_STAND = 'elektro:uebungsstand'; /* richtig/falsch je Art */
-    const M_ARTEN = 'elektro:uebungsarten'; /* welche Arten gewählt sind */
-    const M_PRUEFUNG = 'elektro:letztePruefung'; /* Startwert und Ergebnis */
+    const M_STAND = 'elektro:uebungsstand';
+    const M_ARTEN = 'elektro:uebungsarten';
+    const M_PRUEFUNG = 'elektro:letztePruefung';
     const merke = (k, w) => {
         if (typeof Store !== 'undefined')
             Store.setMeta(k, w);
@@ -52,14 +16,6 @@ const Elektroarbeitsplatz = (() => {
         const roh = gemerkt(M_STAND, {});
         return (roh && typeof roh === 'object') ? roh : {};
     };
-    /**
-     * Einen Versuch verbuchen.
-     *
-     * Gezählt wird JE ART und nicht je Aufgabe: die einzelne Aufgabe ist
-     * gewürfelt und kommt nie wieder, die Art bleibt. „Bei Anschlussnummern
-     * liege ich in der Hälfte der Fälle daneben" ist eine Auskunft, mit der
-     * man etwas anfangen kann; „Aufgabe 4711 war falsch" ist keine.
-     */
     const verbuche = (art, richtig) => {
         const s = stand();
         const e = s[art] || { richtig: 0, falsch: 0 };
@@ -71,7 +27,6 @@ const Elektroarbeitsplatz = (() => {
         merke(M_STAND, s);
         return s;
     };
-    /** Die schwächste Art — die, die als Nächste drankommen sollte. */
     const schwaeche = () => {
         const s = stand();
         let schlechteste = null;
@@ -80,7 +35,7 @@ const Elektroarbeitsplatz = (() => {
             const e = s[art];
             const gesamt = e.richtig + e.falsch;
             if (gesamt < 3)
-                return; /* zu wenig, um etwas zu sagen */
+                return;
             const q = e.richtig / gesamt;
             if (q < quote) {
                 quote = q;
@@ -90,32 +45,17 @@ const Elektroarbeitsplatz = (() => {
         return quote < 0.8 ? schlechteste : null;
     };
     const A = () => (typeof Elektroaufgaben !== 'undefined') ? Elektroaufgaben : null;
-    /* ------------------------------------------------------------------------
-     * EINE AUFGABE ZEICHNEN
-     * ------------------------------------------------------------------------
-     * Nur HTML, kein Zustand. Die Fläche unten hängt die Ereignisse dran.
-     * ----------------------------------------------------------------------*/
     const aufgabeHtml = (a, opt = {}) => {
         if (!a)
             return `<div class="ea-leer"><p>Keine Aufgabe.</p></div>`;
         const fz = (typeof Register !== 'undefined' && Register.fachzeichen)
             ? Register.fachzeichen : null;
-        /* Das Bild zur Frage: ein einzelnes Zeichen oder ein ganzer Plan. */
         let bild = '';
         if (a.zeichen && fz) {
             bild = `<div class="ea-bild">${fz.alsSvg(a.zeichen, { farbe: 'currentColor' })}</div>`;
         }
         else if (a.plan && typeof Schaltplan !== 'undefined') {
-            /* Beim Stromweg wird IN den Plan getippt. Die angetippten Leitungen
-               gehen als `auswahl` an denselben Zeichner, der sie auch im Editor
-               hervorhebt — keine zweite Darstellung für dieselbe Sache. */
             const wege = a.antwortart === 'wege';
-            /* Vor dem Antworten zeigt die Hervorhebung, was ANGETIPPT wurde.
-               Danach zeigt sie, was RICHTIG gewesen wäre — sonst sähe man sein
-               eigenes Kreuz und wüsste immer noch nicht, wo der Strom fliesst.
-               Dass die Bedeutung wechselt, steht als Zeile darunter; eine
-               Hervorhebung, die zwei Dinge heissen kann, ohne es zu sagen, ist
-               schlimmer als keine. */
             const menge = (x) => new Set(String(x ?? '').split(',').map(y => y.trim()).filter(Boolean));
             const zeigen = !wege ? new Set()
                 : opt.beantwortet ? menge(a.loesung) : menge(opt.antwort);
@@ -134,7 +74,6 @@ const Elektroarbeitsplatz = (() => {
                         : 'Hervorgehoben: was du angetippt hast.') +
                     `</p>` : '');
         }
-        /* Die Frage kann mehrzeilig sein (Rechenaufgaben haben Gegeben/Gesucht). */
         const frage = String(a.frage).split('\n')
             .map((z, i) => i === 0
             ? `<p class="ea-frage">${esc(z)}</p>`
@@ -144,9 +83,6 @@ const Elektroarbeitsplatz = (() => {
             antwortfeld = `<div class="ea-wahl">` + a.optionen.map((o, i) => {
                 const gewaehlt = opt.antwort === o;
                 const istLoesung = o === a.loesung;
-                /* Nach dem Antworten wird die richtige Antwort IMMER markiert — auch
-                   wenn man sie getroffen hat. Wer nur sieht „falsch", weiss immer
-                   noch nicht, was stimmt, und rät beim nächsten Mal wieder. */
                 const klasse = !opt.beantwortet ? ''
                     : istLoesung ? ' loesung'
                         : gewaehlt ? ' daneben' : '';
@@ -159,11 +95,6 @@ const Elektroarbeitsplatz = (() => {
             }).join('') + `</div>`;
         }
         else if (a.antwortart === 'wege') {
-            /* Kein Eingabefeld — die Antwort steht im Plan. Hier stehen nur der
-               Zähler und der Knopf.
-               Der Zähler nennt NICHT, wie viele es sein müssen: das wäre die halbe
-               Lösung. Er sagt nur, wie viele man bisher angetippt hat, damit man
-               weiss, dass ein Tipp angekommen ist. */
             const wieViele = String(opt.antwort ?? '')
                 .split(',').map(x => x.trim()).filter(Boolean).length;
             antwortfeld =
@@ -186,8 +117,6 @@ const Elektroarbeitsplatz = (() => {
                     (opt.beantwortet ? '' : `<button class="prim" data-a="pruefen">Prüfen</button>`) +
                     `</div>`;
         }
-        /* Die Auflösung. Im Prüfungsmodus kommt sie erst am Schluss — sonst
-           wäre die Prüfung eine Übung mit Zeitdruck. */
         const aufloesung = (opt.beantwortet && !opt.pruefung)
             ? `<div class="ea-aufloesung ${opt.richtig ? 'gut' : 'daneben'}">` +
                 `<p class="ea-urteil">${opt.richtig ? '✓ Richtig' : '✗ ' + esc(opt.hinweis || '')}</p>` +
@@ -205,17 +134,6 @@ const Elektroarbeitsplatz = (() => {
             `<span class="ea-stufe-aus">${'●'.repeat(3 - a.stufe)}</span></span></div>` +
             bild + frage + antwortfeld + aufloesung + `</article>`;
     };
-    /**
-     * Die Griffe im Plan auf Fingergrösse bringen (§37, Punkt 59).
-     *
-     * Ein SVG wird auf die Breite seines Kastens verkleinert; ein Radius von
-     * neun Planeinheiten wird dabei zu vier Bildschirmpixeln. Wie stark
-     * verkleinert wird, steht erst fest, wenn das Bild im Baum hängt — CSS
-     * kann es deshalb nicht wissen, und der Zeichner beim Erzeugen auch nicht.
-     * Also wird hier gemessen und der Radius nachgestellt.
-     *
-     * `ZIEL` ist der Durchmesser in Bildschirmpixeln. 44 ist die Zahl aus §37.
-     */
     const griffeGross = (wo) => {
         const ZIEL = 44;
         wo.querySelectorAll('.ea-tippbar svg').forEach(el => {
@@ -231,9 +149,6 @@ const Elektroarbeitsplatz = (() => {
             svg.querySelectorAll('.sp-griff').forEach(g => g.setAttribute('r', String(Math.round(r * 10) / 10)));
         });
     };
-    /* ------------------------------------------------------------------------
-     * DIE ÜBUNGSFLÄCHE
-     * ----------------------------------------------------------------------*/
     const uebung = () => {
         const wurzel = document.createElement('div');
         wurzel.className = 'ea-wrap';
@@ -250,14 +165,10 @@ const Elektroarbeitsplatz = (() => {
             if (!a)
                 return;
             const gewaehlt = arten();
-            /* Ohne Wunsch: die schwächste Art bevorzugen, wenn es eine gibt. Das
-               ist der ganze Sinn einer Statistik — sonst übt man weiter das, was
-               man ohnehin kann. */
             const art = artWunsch
                 || (gewaehlt.length === 1 ? gewaehlt[0] : undefined)
                 || (gewaehlt.length ? undefined : schwaeche() || undefined);
             let neu = a.erzeuge(art);
-            /* Ist eine Auswahl getroffen, muss die Aufgabe dazu passen. */
             if (gewaehlt.length && neu && !gewaehlt.includes(neu.art)) {
                 for (let i = 0; i < 20 && neu && !gewaehlt.includes(neu.art); i++)
                     neu = a.erzeuge(gewaehlt[i % gewaehlt.length]);
@@ -303,48 +214,24 @@ const Elektroarbeitsplatz = (() => {
                         : 'Noch nichts geübt') + `</span>` +
                     `<button class="prim" data-a="weiter">${beantwortet ? 'Nächste Aufgabe' : 'Überspringen'}</button>` +
                     `</div>`;
-            /* Der auslaufende Rand an der Artenleiste — über `Rollrand`, wie
-               überall sonst auch (E141, E151, E159, E188). Die Kante gehört an
-               `.ea-leiste`: ein Pseudo-Element im Rollfeld rollte mit. */
             const band = wurzel.querySelector('.ea-artwahl');
             if (band && typeof Rollrand !== 'undefined')
                 Rollrand.binde(band, { art: 'mehr',
                     an: band.closest('.ea-leiste') });
-            /* Und die gewählte Art ins Bild holen, sonst sieht man nicht, wo man ist. */
             const aktiv = band?.querySelector('.an');
             if (aktiv)
                 aktiv.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-            /* Zweimal: einmal jetzt (für jedes Neuzeichnen im eingehängten Baum)
-               und einmal im nächsten Bild. Beim ERSTEN Durchgang hängt `wurzel`
-               noch nicht im Dokument — `uebung()` zeichnet, bevor `zeigeAls` das
-               Ergebnis einsetzt —, und dann ist die gemessene Breite null. */
             griffeGross(wurzel);
             requestAnimationFrame(() => griffeGross(wurzel));
-            /* Am Telefon ist der Tippplan breiter als das Fenster und wird
-               geschoben. Ohne auslaufende Kante sieht ein abgeschnittener
-               Schaltplan nach einem Fehler aus und nicht nach einer Einladung
-               zum Wischen (E151, E159). */
             const tippfeld = wurzel.querySelector('.ea-plan.ea-tippbar');
             if (tippfeld && typeof Rollrand !== 'undefined')
                 Rollrand.binde(tippfeld, { art: 'mehr' });
         };
         wurzel.addEventListener('click', e => {
-            /* `.ea-art` und nicht bloss `[data-art]`.
-               ------------------------------------------------------------------
-               Die Aufgabe selbst trägt `data-art` als ANGABE — `<article
-               class="ea-aufgabe" data-art="plan-fehler">` —, die Knöpfe der
-               Artenleiste tragen es als BEFEHL. `closest('[data-art]')` sieht
-               beide gleich, und damit landete jeder Klick irgendwo in die Aufgabe
-               hinein beim Artenknopf: die Aufgabe wurde neu gewürfelt UND der
-               gewählte Übungsbereich stillschweigend auf ihre Art umgestellt.
-               Aufgefallen ist es beim Antippen einer Leitung (Punkt 59) — vorher
-               gab es in der Aufgabe nichts, worauf man klickt. */
             const b = e.target.closest('[data-a],[data-wahl],.ea-art');
             if (!b)
                 return;
             if (b.dataset.art !== undefined) {
-                /* Mehrfachauswahl: mit gedrückter Umschalttaste dazu, sonst nur die
-                   eine. „Alles gemischt" leert die Auswahl. */
                 const id = b.dataset.art;
                 const alt = arten();
                 const neu = !id ? []
@@ -379,10 +266,6 @@ const Elektroarbeitsplatz = (() => {
                 return;
             }
         });
-        /* Tippen auf eine Leitung im Plan (Punkt 59).
-           Eigener Zuhörer, weil der obere nur auf `[data-a]`, `[data-wahl]` und
-           `[data-art]` hört — eine Leitung trägt keines davon, sondern die
-           Kennung, die auch der Editor benutzt. */
         wurzel.addEventListener('click', e => {
             if (!jetzt || jetzt.antwortart !== 'wege' || beantwortet)
                 return;
@@ -416,8 +299,6 @@ const Elektroarbeitsplatz = (() => {
         naechste();
         return wurzel;
     };
-    /* 90 Sekunden je Aufgabe — an Berufsschul-Kurzaufgaben gemessen eher
-       knapp als grosszügig; wer mehr braucht, gibt Minuten selbst mit. */
     const zeitFuer = (anzahl, minuten) => Math.round((typeof minuten === 'number' ? minuten : anzahl * 1.5) * 60000);
     const pruefungStarten = (anzahl = 10, saat, minuten) => {
         const a = A();
@@ -431,7 +312,6 @@ const Elektroarbeitsplatz = (() => {
             jetzt: 0, fertig: false,
             endeUm: Date.now() + zeitFuer(anzahl, minuten), zeitAus: false };
     };
-    /** Auswerten — je Aufgabe und in der Summe. */
     const auswerten = (p) => {
         const a = A();
         const einzeln = p.aufgaben.map((auf, i) => {
@@ -441,9 +321,6 @@ const Elektroarbeitsplatz = (() => {
         const richtig = einzeln.filter(x => x.richtig).length;
         const gesamt = einzeln.length;
         const prozent = gesamt ? Math.round(richtig / gesamt * 100) : 0;
-        /* Die Schweizer Notenskala, linear von 1 bis 6. Sie steht hier, weil
-           Redion für die Schweizer Grundbildung gebaut wird — und sie steht
-           als FORMEL da, damit niemand sie für eine amtliche Bewertung hält. */
         const note = gesamt ? (1 + 5 * richtig / gesamt).toFixed(1) : '—';
         return { richtig, gesamt, prozent, note, einzeln };
     };
@@ -451,10 +328,6 @@ const Elektroarbeitsplatz = (() => {
         const wurzel = document.createElement('div');
         wurzel.className = 'ea-wrap ea-pruefung';
         let p = pruefungStarten(anzahl, saat, minuten);
-        /* Die Uhr tickt sekündlich und räumt sich SELBST auf, sobald die
-           Fläche nicht mehr im Baum hängt — sonst tickte jede verlassene
-           Prüfung für immer weiter (dieselbe Leckform wie der nie
-           abgemeldete resize-Zuhörer des Graphen, L-Notiz in LUECKEN.md). */
         const restText = () => {
             const rest = Math.max(0, Math.ceil(((p?.endeUm ?? 0) - Date.now()) / 1000));
             return 'Noch ' + Math.floor(rest / 60) + ':' + String(rest % 60).padStart(2, '0');
@@ -472,9 +345,6 @@ const Elektroarbeitsplatz = (() => {
                 return;
             }
             if (Date.now() >= p.endeUm) {
-                /* Die Zeit ist um: abgegeben wird, was da war — wie auf Papier.
-                   Erst die offene Antwort einsammeln, sonst verlöre der Ablauf
-                   genau die Aufgabe, an der gerade geschrieben wurde. */
                 merkeAntwort();
                 p.zeitAus = true;
                 p.fertig = true;
@@ -507,10 +377,6 @@ const Elektroarbeitsplatz = (() => {
                         `<ol class="ea-liste">` + e.einzeln.map((x, i) => `<li class="${x.richtig ? 'gut' : 'daneben'}">` +
                         `<b>${i + 1}.</b> ${esc((A()?.artVon(x.art) || { name: x.art }).name)}` +
                         (x.richtig ? '' : ` — ${esc(x.hinweis)}`) + `</li>`).join('') + `</ol>` +
-                        /* Der Startwert wird angezeigt: damit lässt sich dieselbe Prüfung
-                           im Unterricht für alle gleich stellen und später Wort für Wort
-                           nachbesprechen. Ohne ihn ist jede Prüfung einmalig und die
-                           Besprechung eine Erinnerungsübung. */
                         `<p class="ea-saat">Startwert dieser Prüfung: <code>${esc(p.saat)}</code>` +
                         ` — damit kommt sie genau so wieder.</p>` +
                         `<div class="ea-fuss"><button data-a="durchgehen">Aufgaben durchgehen</button>` +
@@ -529,8 +395,6 @@ const Elektroarbeitsplatz = (() => {
                     })}</div>` +
                     `<div class="ea-fuss">` +
                     `<button data-a="zurueck"${p.jetzt ? '' : ' disabled'}>Zurück</button>` +
-                    /* `weiter` (E441): der Pfeil nur, solange eine Aufgabe folgt —
-                       „Abgeben" führt nirgendwohin, es schliesst ab. */
                     `<button class="prim${p.jetzt + 1 === p.aufgaben.length ? '' : ' weiter'}" data-a="vor">` +
                     (p.jetzt + 1 === p.aufgaben.length ? 'Abgeben' : 'Weiter') + `</button></div>`;
         };
@@ -547,9 +411,6 @@ const Elektroarbeitsplatz = (() => {
                 return;
             if (b.dataset.wahl !== undefined) {
                 p.antworten[p.jetzt] = b.dataset.wahl;
-                /* In der Prüfung geht es nach der Wahl WEITER — aber ohne Auflösung.
-                   Wer zurückblättert, sieht seine Antwort noch stehen und kann sie
-                   ändern; das ist bei jeder Prüfung auf Papier auch so. */
                 if (p.jetzt + 1 < p.aufgaben.length)
                     p.jetzt++;
                 else
@@ -580,8 +441,6 @@ const Elektroarbeitsplatz = (() => {
                 return;
             }
             if (was === 'durchgehen') {
-                /* Nach der Abgabe darf alles gezeigt werden — jetzt ist es Lernstoff
-                   und keine Prüfung mehr. */
                 const e2 = auswerten(p);
                 wurzel.innerHTML = `<div class="ea-durchgang">` +
                     p.aufgaben.map((auf, i) => aufgabeHtml(auf, {
@@ -597,9 +456,6 @@ const Elektroarbeitsplatz = (() => {
         uhrAn();
         return wurzel;
     };
-    /* ------------------------------------------------------------------------
-     * DER ARBEITSPLATZ SELBST (Punkt 100)
-     * ----------------------------------------------------------------------*/
     const arbeitsplatz = (mitte) => {
         const wurzel = document.createElement('div');
         wurzel.className = 'ea-platz';
@@ -625,7 +481,6 @@ const Elektroarbeitsplatz = (() => {
             `<button data-a="heft">📐 Formelheft</button>` +
             `<button data-a="pruefung">📝 Prüfung starten</button>` +
             `</div>`;
-        /* Die Notizen gehören dem Menschen und überleben den Neustart. */
         const feld = rechts.querySelector('.ea-notizen');
         feld.value = String(gemerkt('elektro:notizen', ''));
         let warten;
@@ -649,7 +504,6 @@ const Elektroarbeitsplatz = (() => {
         wurzel.appendChild(rechts);
         return wurzel;
     };
-    /* Zwei Befehle, damit man überhaupt hierher kommt. */
     if (typeof Register !== 'undefined' && Register.befehle) {
         Register.befehle.melde({
             titel: 'Elektro: üben', gruppe: 'Elektro',
@@ -664,14 +518,6 @@ const Elektroarbeitsplatz = (() => {
             tun: () => zeigeAls('Elektro-Arbeitsplatz', arbeitsplatz())
         });
     }
-    /**
-     * Etwas in einem grossen Fenster zeigen.
-     *
-     * Absichtlich schlicht: eine Überlagerung mit Titel und Schliessknopf.
-     * Ein eigener Bereich mit eigener Navigation wäre mehr Bauwerk als Nutzen,
-     * solange nicht klar ist, ob der Arbeitsplatz täglich oder wöchentlich
-     * gebraucht wird.
-     */
     const zeigeAls = (titel, inhalt) => {
         const o = document.createElement('div');
         o.className = 'overlay ea-overlay';

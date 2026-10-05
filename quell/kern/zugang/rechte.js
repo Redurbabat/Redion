@@ -1,33 +1,5 @@
 "use strict";
-/* ============================================================================
- * feldrechte.js — Rechte bis auf die einzelne Spalte
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/zugang/rechte.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/zugang/rechte.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Idee 21 der 10000×-Liste. Eine Freigabe sagt „diese Seite ja". Oft ist das
- * zu grob: die Personalliste soll das Team sehen, die Gehaltsspalte nicht.
- * Notion kann das nicht — dort ist die Seite die kleinste Einheit.
- *
- * Drei Stufen je Spalte und Person:
- *
- *      voll   sehen und ändern
- *      lesen  sehen, aber nicht ändern
- *      kein   gar nicht — der Wert verlässt den Server nicht
- *
- * Wo die Sperre wirklich sitzt: **auf dem Server.** Beim Herunterladen wirft
- * er die Werte weg, beim Hochladen dreht er unerlaubte Änderungen zurück.
- * Was diese Datei hier macht, ist nur die Höflichkeit davor: eine Spalte, die
- * man nicht ändern darf, soll sich auch nicht ändern lassen, statt es erst
- * beim Abgleich stillschweigend zurückzunehmen.
- *
- * Und eine ehrliche Grenze: das geht nur bei geteilten Seiten. Was
- * verschlüsselt hochgeht, kann der Server nicht filtern — er sieht Zufall.
- * Dort hat aber ohnehin nur einer den Schlüssel. Feldrechte greifen also
- * genau dort, wo es sie braucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zugang/rechte.ts (npm run bauen:ts). */
 const Feldrechte = (() => {
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     const STUFEN = [
@@ -35,15 +7,7 @@ const Feldrechte = (() => {
         ['lesen', 'Nur sehen'],
         ['kein', 'Gar nicht']
     ];
-    /* ========================================================================
-     * 1 · WAS HIER GILT
-     * ------------------------------------------------------------------------
-     * Der Server schickt beim Abgleich mit, was für dieses Konto gilt. Das
-     * liegt lokal, damit die Oberfläche auch ohne Netz weiss, was sie zeigen
-     * darf — und wird bei jedem Abgleich frisch geholt.
-     * ======================================================================*/
     const alleKarten = () => Store.getMeta('feldrechteMeins', {}) || {};
-    /** Die Karte { feldSchlüssel: 'voll'|'lesen'|'kein' } für eine Sammlung. */
     const karte = (sammlungId) => alleKarten()[sammlungId] || {};
     const karteSetzen = (sammlungId, k) => {
         const alle = alleKarten();
@@ -53,15 +17,6 @@ const Feldrechte = (() => {
             delete alle[sammlungId];
         Store.setMeta('feldrechteMeins', alle);
     };
-    /**
-     * Gilt hier überhaupt eine Einschränkung?
-     *
-     * Die Karte entsteht ausschliesslich aus dem, was der Server geschickt hat.
-     * Ist sie leer, gibt es niemanden, gegen den geprüft werden müsste — dann
-     * darf alles. Bewusst nicht an „angemeldet" gehängt: wer die Verbindung
-     * verliert, soll nicht plötzlich Spalten ändern dürfen, die ihm gesperrt
-     * sind. Die gemerkte Karte gilt weiter, bis der Server etwas anderes sagt.
-     */
     const inKraft = () => Object.keys(alleKarten()).length > 0;
     const stufe = (sammlungId, feld) => {
         if (!inKraft())
@@ -70,15 +25,10 @@ const Feldrechte = (() => {
     };
     const darfSehen = (sammlungId, feld) => stufe(sammlungId, feld) !== 'kein';
     const darfSchreiben = (sammlungId, feld) => stufe(sammlungId, feld) === 'voll';
-    /** Für den Kopf einer Spalte: ein Schloss, wenn sie nicht offen ist. */
     const zeichen = (sammlungId, feld) => {
         const s = stufe(sammlungId, feld);
         return s === 'kein' ? '⃠' : s === 'lesen' ? '🔒' : '';
     };
-    /* ========================================================================
-     * 2 · MIT DEM SERVER REDEN
-     * ======================================================================*/
-    /** Die Rechte einer Sammlung holen — und gleich merken, was für mich gilt. */
     const holen = async (sammlungId) => {
         if (typeof Wolke === 'undefined' || !Wolke.angemeldet())
             return null;
@@ -87,7 +37,6 @@ const Feldrechte = (() => {
         karteSetzen(sammlungId, a.meins || {});
         return a;
     };
-    /** Ein Recht setzen. konto: eine Mail, eine Konto-Kennung oder '*'. */
     const setzen = async (sammlungId, feld, konto, rolle, entfernen = false) => {
         const a = await Wolke.ruf('/feldrecht', { m: 'POST', k: {
                 bereich: Wolke.bereich(), sammlung: sammlungId, feld,
@@ -96,7 +45,6 @@ const Feldrechte = (() => {
         await holen(sammlungId);
         return a;
     };
-    /** Nach dem Abgleich: für alle Sammlungen, die es hier gibt, neu holen. */
     const auffrischen = async () => {
         if (typeof Wolke === 'undefined' || !Wolke.angemeldet() || !Wolke.bereich())
             return;
@@ -110,19 +58,13 @@ const Feldrechte = (() => {
                     return;
                 const fuerSammlung = meins[f.sammlung] ?? {};
                 meins[f.sammlung] = fuerSammlung;
-                /* Ein persönlicher Eintrag sticht den für alle. */
                 if (f.kontoId === ich || fuerSammlung[f.feld] === undefined)
                     fuerSammlung[f.feld] = f.rolle;
             });
-            /* Der Besitzer sieht immer alles — sonst könnte er sich selbst
-               aus seinen eigenen Daten aussperren. */
             Store.setMeta('feldrechteMeins', (ich && ich === a.besitzer) ? {} : meins);
         }
-        catch { /* kein Netz: die gemerkte Karte gilt weiter */ }
+        catch { }
     };
-    /* ========================================================================
-     * 3 · DAS FENSTER
-     * ======================================================================*/
     const fenster = async (sammlungId) => {
         const coll = Store.getCollection(sammlungId);
         if (!coll)

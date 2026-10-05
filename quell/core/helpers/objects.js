@@ -1,55 +1,7 @@
 "use strict";
-/* ============================================================================
- * core/helpers/objects.ts — Objekte kopieren, vergleichen, tief anfassen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/helpers/objects.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/core/helpers/objects.js`. Wer das .js bearbeitet, verliert
- * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
- * vorher.
- * ----------------------------------------------------------------------------
- * Vier Handgriffe, die überall gebraucht werden und die man überall ein
- * bisschen anders falsch macht:
- *
- *   clone(x)          eine Kopie, die keine Verbindung zum Original hat
- *   equal(a, b)       Vergleich nach Inhalt, nicht nach Identität
- *   get(o, pfad)      tief lesen, ohne bei jedem Schritt zu prüfen
- *   set(o, pfad, w)   tief schreiben, Zwischenebenen anlegen
- *
- * Warum das zählt: `Object.assign` und `{...x}` kopieren nur die erste
- * Ebene. Wer damit ein Schema kopiert und dann eine Spalte ändert, ändert
- * sie im Original mit — und sucht den Fehler an der falschen Stelle.
- * `JSON.stringify`-Vergleich wiederum ist von der Reihenfolge der Schlüssel
- * abhängig: zwei gleiche Objekte gelten als verschieden, nur weil sie in
- * anderer Reihenfolge entstanden sind.
- *
- * ─── SPRACHE ────────────────────────────────────────────────────────────────
- *
- * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27. Auch die
- * öffentliche Schnittstelle ist umgestellt: aus `Objekte.kopie()` wurde
- * `Objects.clone()`.
- *
- * Das war der einfachste Fall der ganzen Migration: gemessen **null** Aufrufe
- * in Produktivcode und neun in `test85.mjs`. Die Zuordnung, falls jemand die
- * alte Fassung sucht:
- *
- *   istObjekt → isObject      kopie → clone         gleich → equal
- *   hole → get                setze → set           misch → merge
- *   unterschiede → differences                      ohneLeere → withoutEmpty
- *   nur → pick                ohne → omit           gruppiere → groupBy
- *
- * ─── WARUM HIER `any` STEHT ─────────────────────────────────────────────────
- *
- * Diese Datei fasst beliebige Daten an — Schemata, Zeilen, gespeicherte
- * Sätze, alles, was durch die Ablage geht. Ein enger Typ wäre hier keine
- * Zusage, sondern eine Behauptung: er würde etwas versprechen, was zur
- * Laufzeit niemand einhält. `any` an der Grenze zu ungetypten Daten ist
- * genau der Fall, den `CLAUDE.md` §52 erlaubt. Innerhalb der Funktionen
- * wird trotzdem geprüft, bevor zugegriffen wird.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/objects.ts (npm run bauen:ts). */
 const Objects = (() => {
     const isObject = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
-    /** Eine tiefe Kopie. Daten, keine Klassen — mehr braucht Redion nicht. */
     const clone = (x) => {
         if (x === null || typeof x !== 'object')
             return x;
@@ -62,10 +14,6 @@ const Objects = (() => {
             out[k] = clone(x[k]);
         return out;
     };
-    /**
-     * Vergleich nach Inhalt — unabhängig von der Reihenfolge der Schlüssel.
-     * `{a:1,b:2}` und `{b:2,a:1}` sind hier gleich; über JSON wären sie es nicht.
-     */
     const equal = (a, b) => {
         if (a === b)
             return true;
@@ -88,7 +36,6 @@ const Objects = (() => {
     const parts = (path) => Array.isArray(path)
         ? path
         : String(path || '').split('.').filter(x => x !== '');
-    /** Tief lesen. Fehlt unterwegs etwas, kommt der Ersatzwert. */
     const get = (o, path, fallback = undefined) => {
         let z = o;
         for (const k of parts(path)) {
@@ -98,15 +45,12 @@ const Objects = (() => {
         }
         return z === undefined ? fallback : z;
     };
-    /** Tief schreiben. Fehlende Zwischenebenen entstehen als Objekte. */
     const set = (o, path, value) => {
         const p = parts(path);
         if (!p.length)
             return value;
         let z = o;
         for (let i = 0; i < p.length - 1; i++) {
-            /* `?? ''` nur wegen `noUncheckedIndexedAccess`: i läuft bis length-2,
-               der Zugriff kann nicht danebengehen. */
             const k = p[i] ?? '';
             if (!isObject(z[k]) && !Array.isArray(z[k]))
                 z[k] = {};
@@ -119,11 +63,6 @@ const Objects = (() => {
             z[last] = value;
         return o;
     };
-    /**
-     * Zwei Objekte tief zusammenlegen. `b` sticht `a`.
-     * Arrays werden ersetzt, nicht verschmolzen — beim Verschmelzen von Listen
-     * kommt fast nie das heraus, was jemand erwartet.
-     */
     const merge = (a, b) => {
         if (!isObject(a) || !isObject(b))
             return clone(b === undefined ? a : b);
@@ -133,7 +72,6 @@ const Objects = (() => {
         }
         return out;
     };
-    /** Was hat sich geändert? Gibt die Pfade zurück, nicht nur „ja/nein". */
     const differences = (a, b, path = []) => {
         const out = [];
         if (equal(a, b))
@@ -147,7 +85,6 @@ const Objects = (() => {
             out.push(...differences(a[k], b[k], [...path, k]));
         return out;
     };
-    /** Leere Felder herauswerfen — für Ausgaben, die knapp sein sollen. */
     const withoutEmpty = (o) => {
         if (!isObject(o))
             return o;
@@ -162,14 +99,12 @@ const Objects = (() => {
         }
         return out;
     };
-    /** Nur diese Felder behalten. */
     const pick = (o, fields) => {
         const out = {};
         (fields || []).forEach(k => { if (k in (o || {}))
             out[k] = o[k]; });
         return out;
     };
-    /** Alles ausser diesen Feldern. */
     const omit = (o, fields) => {
         const drop = new Set(fields || []);
         const out = {};
@@ -177,7 +112,6 @@ const Objects = (() => {
             out[k] = o[k]; });
         return out;
     };
-    /** Eine Liste nach einem Schlüssel gruppieren. */
     const groupBy = (list, key) => {
         const out = {};
         (list || []).forEach((x) => {

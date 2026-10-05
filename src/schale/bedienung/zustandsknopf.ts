@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/zustandsknopf.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/zustandsknopf.ts — der Knopf, der zeigt, was er tut
  * ----------------------------------------------------------------------------

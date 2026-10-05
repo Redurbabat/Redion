@@ -1,23 +1,5 @@
 "use strict";
-/* ══ DER INHALT DES STAATSKUNDE-TRAINERS (E677) ═══════════════════════════
-   Kapitel 6 „Leben in der Schweiz", Seiten 155–160 des Lehrmittels
-   „Allgemeinbildung, Ausgabe Basel". Die Texte stehen so da, wie sie im
-   Buch stehen (Redur: „möglichst 1:1 von den Buchseiten") — die sieben
-   Prüfungsfragen sind die des Lehrers, Wort für Wort, mit seinen
-   Lösungen; die „Verstanden?"-Fragen 6.1–6.13 tragen die Lösungen aus dem
-   Lösungsheft. Wo das Lösungsheft älter ist als das Buch (6.9, Stand
-   Januar 2018), steht der Stand des Buches (2024) und der Unterschied
-   daneben — nicht stillschweigend das eine oder das andere.
-
-   Drei Aufgabenformen:
-     mc         Multiple Choice — mehrere Antworten können richtig sein,
-                wie in der Prüfung („Kreuzen Sie die richtige(n) Antwort(en) an.")
-     schreiben  eine Frage, die man in eigenen Worten beantwortet; danach
-                die Musterlösung und die Selbsteinschätzung
-     luecke     ein Satz mit einer Lücke; die Antwort wird getippt und
-                nachsichtig verglichen (Gross/klein, Leerzeichen, Umlaute)
-
-   Jede Aufgabe nennt ihre Quelle (Seite), damit man nachlesen kann. */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/staatskunde-inhalt.ts (npm run bauen:ts). */
 const StaatskundeInhalt = (() => {
     const THEMEN = [
         { id: 'regierung', name: 'Regierungsformen', seite: 'S. 155–156' },
@@ -28,7 +10,6 @@ const StaatskundeInhalt = (() => {
         { id: 'gericht', name: 'Bundesgericht', seite: 'S. 160' },
     ];
     const AUFGABEN = [
-        /* ── DIE SIEBEN PRÜFUNGSFRAGEN DES LEHRERS, 1:1 ───────────────────────── */
         { id: 'p1', art: 'mc', thema: 'regierung', quelle: 'Prüfung 1/21 · S. 155', pruefung: true,
             frage: 'Was grenzt die Demokratie von der Diktatur ab?',
             antworten: ['Aufteilung der Staatsgewalt; die drei Gewalten kontrollieren sich gegenseitig',
@@ -69,7 +50,6 @@ const StaatskundeInhalt = (() => {
             frage: 'Wobei handelt es sich um Grundrechte/Menschenrechte?',
             antworten: ['Niederlassungsfreiheit', 'Glaubens- und Gewissensfreiheit', 'Versammlungsfreiheit', 'Stimm- und Wahlrecht'],
             richtig: [1, 2] },
-        /* ── „VERSTANDEN?" 6.1–6.13 — Frage aus dem Buch, Lösung aus dem Lösungsheft ── */
         { id: 'v1', art: 'schreiben', thema: 'regierung', quelle: 'S. 156', nummer: '6.1',
             frage: 'Welche drei Formen der Demokratie unterscheidet man?',
             loesung: ['Direkte Demokratie', 'Parlamentarische Demokratie', 'Präsidiale Demokratie'] },
@@ -114,7 +94,6 @@ const StaatskundeInhalt = (() => {
         { id: 'v13', art: 'schreiben', thema: 'gericht', quelle: 'S. 160', nummer: '6.13',
             frage: 'Welche Bedeutung haben die Entscheide des Bundesgerichts?',
             loesung: ['Alle Entscheide gelten für die ganze Schweiz. Die Entscheide können nur noch an den Europäischen Gerichtshof für Menschenrechte in Strassburg weitergezogen werden.'] },
-        /* ── TABELLENWISSEN S. 155–156: Regierungsformen ────────────────────────── */
         { id: 'r1', art: 'mc', thema: 'regierung', quelle: 'S. 156',
             frage: 'Welche Formen der Diktatur nennt das Buch?',
             antworten: ['Militärdiktatur', 'Parteidiktatur', 'Theokratie (Gottesstaat)', 'Präsidiale Diktatur'],
@@ -154,7 +133,6 @@ const StaatskundeInhalt = (() => {
         { id: 'r8', art: 'luecke', thema: 'regierung', quelle: 'S. 155',
             frage: 'In der Diktatur ist die Staatsgewalt in der Hand eines Einzelnen (Diktator) oder weniger Personen (___, Partei).',
             loesung: ['Junta'] },
-        /* ── S. 157: Bundesverfassung ─────────────────────────────────────────── */
         { id: 'b1', art: 'mc', thema: 'verfassung', quelle: 'S. 157',
             frage: 'Die Bundesverfassung …',
             antworten: ['enthält die Grundrechte.',
@@ -179,7 +157,6 @@ const StaatskundeInhalt = (() => {
         { id: 'b5', art: 'luecke', thema: 'verfassung', quelle: 'S. 157',
             frage: 'Die Bundesverfassung beginnt mit der ___, dann folgen die Allgemeinen Bestimmungen (BV 1–6).',
             loesung: ['Präambel'] },
-        /* ── S. 158: Gewaltentrennung ─────────────────────────────────────────── */
         { id: 'g1', art: 'mc', thema: 'gewalten', quelle: 'S. 158',
             frage: 'Das Prinzip der Machtteilung am Beispiel Schweiz — welche Zuordnung stimmt?',
             antworten: ['Legislative = Parlament = gesetzgebende Behörde',
@@ -211,7 +188,6 @@ const StaatskundeInhalt = (() => {
         { id: 'g7', art: 'luecke', thema: 'gewalten', quelle: 'S. 158',
             frage: 'Das Bundesgericht besteht aus ___ Bundesrichtern.',
             loesung: ['38', 'achtunddreissig'] },
-        /* ── S. 158–159: Parlament ────────────────────────────────────────────── */
         { id: 'n1', art: 'mc', thema: 'parlament', quelle: 'S. 159',
             frage: 'Nationalrat und Ständerat — welche Aussagen stimmen?',
             antworten: ['Der Nationalrat repräsentiert das Volk, der Ständerat die Kantone.',
@@ -253,7 +229,6 @@ const StaatskundeInhalt = (() => {
                 'Die SP hat im Nationalrat 41 Sitze.',
                 'Die FDP hat im Ständerat 28 Sitze.'],
             richtig: [0, 1, 2] },
-        /* ── S. 159–160: Bundesrat ────────────────────────────────────────────── */
         { id: 'e1', art: 'mc', thema: 'bundesrat', quelle: 'S. 159',
             frage: 'Der Bundesrat — welche Aussagen stimmen?',
             antworten: ['Die Regierung der Schweiz besteht aus den sieben Mitgliedern des Bundesrats.',
@@ -285,7 +260,6 @@ const StaatskundeInhalt = (() => {
             frage: 'Wer gehörte 2024 dem Bundesrat an?',
             antworten: ['Karin Keller-Sutter (FDP)', 'Viola Amherd (Die Mitte)', 'Beat Jans (SP)', 'Viktor Rossi (GLP) — er ist Bundeskanzler, nicht Bundesrat'],
             richtig: [0, 1, 2] },
-        /* ── S. 160: Bundesgericht ────────────────────────────────────────────── */
         { id: 'j1', art: 'mc', thema: 'gericht', quelle: 'S. 160',
             frage: 'Das Bundesgericht — welche Aussagen stimmen?',
             antworten: ['Es hat seinen Hauptsitz in Lausanne.',
@@ -300,14 +274,6 @@ const StaatskundeInhalt = (() => {
             frage: 'Das Bundesgericht hat seinen Hauptsitz in ___.',
             loesung: ['Lausanne'] },
     ];
-    /* ── DAS KAPITEL ALS SEITE (E677) ────────────────────────────────────────
-       Der Trainer hat keinen eigenen Speicher: jede Aufgabe wird eine
-       gewöhnliche Lernkarte (`type: 'flashcard'`) auf einer Seite, mit dem
-       Feld `quiz`, das sagt, wie gefragt wird. `text` bleibt „Frage :: Antwort"
-       beziehungsweise „Satz mit {{Lücke}}" — so versteht auch die klassische
-       Lernrunde jede Karte, und `Learning.cards()` zählt sie mit. Der
-       Fortschritt landet über `WissenDienst.planen` in `sr` und reist mit der
-       Seite in jede Sicherung (§9, §17). */
     const themaName = (id) => THEMEN.find(t => t.id === id)?.name || id;
     const karteVon = (a) => {
         const gemeinsam = { kapitel: 'Staatskunde — Leben in der Schweiz', thema: a.thema, topic: themaName(a.thema), quelle: a.quelle };
@@ -329,15 +295,11 @@ const StaatskundeInhalt = (() => {
         return { text: a.frage.replace('___', '{{' + (a.loesung[0] || '') + '}}'),
             quiz: { kind: 'luecke', ...gemeinsam, loesungen: a.loesung.slice() } };
     };
-    /** Legt das Kapitel als Seite mit Lernkarten an — Nutzerdaten, sichtbar, veränderbar. */
     const alsSeite = () => {
         const seite = Store.addPage(null, { text: 'Staatskunde — Leben in der Schweiz', icon: '🇨🇭' });
         Store.addBlock(seite.id, 'text', { text: 'Kapitel 6 „Leben in der Schweiz" aus «Allgemeinbildung, Ausgabe Basel», S. 155–160. ' +
                 'Jede Karte hier ist eine Aufgabe des Trainers (Lernzentrum → Trainer): die sieben Prüfungsfragen des Lehrers, ' +
                 'die Verstanden-Fragen 6.1–6.13 mit den Lösungen aus dem Lösungsheft und Aufgaben aus den Buchseiten. Du kannst jede Karte lesen und ändern.' });
-        /* Die sieben Prüfungsfragen zuerst und in der Reihenfolge des Lehrers —
-           nicht nach Thema verteilt: die Prüfungsrunde liest die Seite von oben
-           nach unten, und Frage 5 (Gewaltentrennung) käme sonst vor Frage 4. */
         Store.addBlock(seite.id, 'h2', { text: 'Die Prüfungsfragen des Lehrers · 1–7 von 21' });
         for (const a of AUFGABEN)
             if (a.art === 'mc' && a.pruefung)

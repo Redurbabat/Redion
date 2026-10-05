@@ -1,46 +1,5 @@
 "use strict";
-/* ============================================================================
- * schale/bedienung/lader.ts — vier Bilder für „es läuft", und jedes sagt etwas
- * ----------------------------------------------------------------------------
- * ERZEUGT DARAUS WIRD `quell/schale/bedienung/lader.js`.
- * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
- * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
- * ----------------------------------------------------------------------------
- * WOFÜR. Redion hat sechs Zustandswörter (`zustand.ts`) und einen Knopf,
- * der sie spricht (`zustandsknopf.ts`). Was ihm fehlte, war das Bild für
- * längere Vorgänge — und zwar EIN Bild je Sorte Auskunft, nicht ein
- * Kreisel für alles:
- *
- *   fluss    ES GIBT EINEN ECHTEN ANTEIL. Der Stand steigt wie eine
- *            Flüssigkeit, die Zahl steht daneben. Genau eine Stelle im
- *            ganzen Bestand liefert einen 0..1-Wert von aussen: der
- *            Modell-Download von WebLLM (`initProgressCallback`).
- *   sterne   ES LÄUFT, ABER NIEMAND WEISS WIE LANGE. Fünf Sterne drehen
- *            sich. Für Aufträge mit `schritte: 0` — dort verbietet sich
- *            ein Balken (E286), und bis hierher stand nur eine Zahl da.
- *   wort     ES LÄUFT ODER ES LÄUFT NICHT, mehr weiss man nicht. Die
- *            Buchstaben eines Wortes gehen der Reihe nach an. Für den
- *            Abgleich, der nur `laeuft` kennt.
- *   presse   EIN AUFTRAG MACHT BLÄTTER. Für die Auftragsart `pdf-bilder`:
- *            Seite für Seite kommt aus der Presse, und der Balken daneben
- *            sagt die echte Zahl.
- *
- * WOHER. Vier Vorgaben von Redur vom 6. September 2026 aus
- * `loader-sammlung.css` im Vorgaben-Archiv: der flüssige Ring, die
- * fünf Sterne, der Buchstabenring und die isometrische Druckpresse.
- *
- * DIE REGEL, DIE ÜBER ALLEN VIER STEHT. Ein Lader ist ein Bild und keine
- * Auskunft — die Auskunft ist der Text daneben. Deshalb trägt jeder Lader
- * `role="status"` mit einem Satz, jedes Bild ist `aria-hidden`, und
- * `fluss` schreibt seine Zahl als Text hin statt sie nur zu malen (§38).
- * Und keiner von ihnen erfindet einen Anteil: wer keinen bekommt, zeigt
- * keinen (Auftrag §0.8, E441).
- *
- * SVG-IDS SIND JE INSTANZ EINDEUTIG. Der flüssige Ring braucht eine Maske,
- * und eine Maske braucht eine ID. Zwei Lader auf einer Seite mit derselben
- * ID teilen sich die Maske — der Befund aus E440 zum KI-Funken. `zaehler`
- * vergibt deshalb je Instanz eine neue.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/lader.ts (npm run bauen:ts). */
 const Lader = (() => {
     const NS = 'http://www.w3.org/2000/svg';
     let zaehler = 0;
@@ -63,12 +22,6 @@ const Lader = (() => {
             eltern.append(e);
         return e;
     };
-    /* ---- fluss: der Stand steigt, die Zahl steht daneben ----------------- *
-     * Die Klumpen sind der Trick der Vorgabe: weichgezeichnete Formen, über
-     * die ein hoher Kontrast läuft, fliessen ineinander. In einer Maske
-     * heisst weiss „hier ist Flüssigkeit"; die Kanten dazwischen werden vom
-     * Kontrast zu einer einzigen welligen Linie.
-     * --------------------------------------------------------------------- */
     const flussBild = (id) => {
         const svg = svgEl('svg');
         svg.setAttribute('viewBox', '0 0 100 100');
@@ -80,13 +33,11 @@ const Lader = (() => {
         maske.setAttribute('id', id);
         const gruppe = svgEl('g', maske);
         gruppe.setAttribute('class', 'ru-lader-klumpen');
-        /* Die Fläche unter der Oberfläche — ihre Höhe IST der Anteil. */
         const flaeche = svgEl('rect', gruppe);
         flaeche.setAttribute('class', 'ru-lader-spiegel');
         flaeche.setAttribute('x', '0');
         flaeche.setAttribute('width', '100');
         flaeche.setAttribute('fill', '#fff');
-        /* Drei Wellen auf der Oberfläche, jede mit eigener Drehung. */
         for (let i = 0; i < 3; i++) {
             const welle = svgEl('ellipse', gruppe);
             welle.setAttribute('class', 'ru-lader-welle');
@@ -109,7 +60,6 @@ const Lader = (() => {
         saft.setAttribute('r', '47');
         return svg;
     };
-    /* ---- sterne: fünf, die sich drehen ---------------------------------- */
     const sterneBild = () => {
         const b = el('div', 'ru-lader-bild ru-lader-sterne');
         b.setAttribute('aria-hidden', 'true');
@@ -117,14 +67,11 @@ const Lader = (() => {
             el('i', 'ru-lader-stern', b).style.setProperty('--ru-schritt', String(i));
         return b;
     };
-    /* ---- wort: die Buchstaben gehen der Reihe nach an -------------------- */
     const wortBild = (wort) => {
         const b = el('div', 'ru-lader-bild ru-lader-wort');
         b.setAttribute('aria-hidden', 'true');
         el('i', 'ru-lader-ring', b);
         const zeile = el('span', 'ru-lader-buchstaben', b);
-        /* Array.from und nicht split(''): ein Zeichen ausserhalb der
-           Grundebene (ein Emoji im Wort) zerfiele sonst in zwei halbe. */
         Array.from(wort).forEach((zeichen, i) => {
             const s = el('span', 'ru-lader-buchstabe', zeile);
             s.textContent = zeichen;
@@ -132,7 +79,6 @@ const Lader = (() => {
         });
         return b;
     };
-    /* ---- presse: Blätter kommen heraus ---------------------------------- */
     const presseBild = () => {
         const b = el('div', 'ru-lader-bild ru-lader-presse');
         b.setAttribute('aria-hidden', 'true');
@@ -177,8 +123,6 @@ const Lader = (() => {
             if (!spiegel)
                 return;
             const hoch = wert === null ? 0 : Math.max(0, Math.min(1, wert));
-            /* Die Oberfläche steht bei `100 - 100·Anteil`; die Wellen sitzen
-               genau darauf, damit sie den Rand verwischen und nicht die Mitte. */
             const kante = 100 - hoch * 100;
             spiegel.setAttribute('y', String(kante));
             spiegel.setAttribute('height', String(hoch * 100));
@@ -187,9 +131,6 @@ const Lader = (() => {
                 w.setAttribute('cy', String(kante));
             });
             if (zahl) {
-                /* DIE ZAHL STEHT ALS TEXT DA, nicht nur als Höhe. Wer die Füllung
-                   nicht sieht, liest „42 %" (§38). Ohne Anteil steht nichts —
-                   „0 %" wäre eine Behauptung über etwas Unbekanntes. */
                 zahl.textContent = wert === null ? '' : Math.round(hoch * 100) + ' %';
             }
             wurzel.dataset['anteil'] = wert === null ? 'unbekannt' : 'bekannt';
@@ -204,17 +145,6 @@ const Lader = (() => {
         return { element: wurzel, setzen, anteil: () => anteil,
             entfernen: () => wurzel.remove() };
     };
-    /**
-     * Ein Lader als SCHWEBENDE KARTE unten rechts — dort, wo auch die
-     * Drucker-Karte (E458) steht. Für Vorgänge, die keinen eigenen Ort
-     * haben: das Einlesen einer PDF läuft über dem Regal, über einer Seite,
-     * über allem, und ein Toast dafür war zwei Zeilen Text, die man nach
-     * der dritten Seite nicht mehr ansah (E463).
-     *
-     * Die Karte hängt sich selbst an `<body>` und nimmt sich mit `entfernen`
-     * wieder weg. Sie hat `pointer-events:none`: sie meldet, sie bedient
-     * nichts — wer darunter arbeiten will, klickt durch sie hindurch.
-     */
     const schweben = (auftrag) => {
         const griff = bauen(auftrag);
         const karte = el('div', 'ru-lader-karte ru-lader-schwebt');

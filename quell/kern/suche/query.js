@@ -1,15 +1,5 @@
 "use strict";
-/* ============================================================================
- * query.ts — eine gemeinsame Abfragesprache für Redions Suche
- * ----------------------------------------------------------------------------
- * Die Oberfläche und die Textsyntax erzeugen beide `SearchQuery`. Dadurch
- * kann `typ:seite` nicht mehr etwas anderes bedeuten als die Auswahl
- * „ohne Datenbank", und ein Syntaxfehler sieht nicht wie null Treffer aus.
- *
- * Diese Datei kennt weder DOM noch IndexedDB. Sie wertet normalisierte
- * Suchdokumente aus; die Schale übersetzt den echten Bestand genau einmal in
- * diese kleine Form. So bleibt die Sprache auch für spätere Filter nutzbar.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/suche/query.ts (npm run bauen:ts). */
 const QueryLanguage = (() => {
     const empty = (source = '') => ({
         source,
@@ -27,7 +17,6 @@ const QueryLanguage = (() => {
     const keyFold = (value) => fold(value)
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
-    /** Zerlegt Leerraum nur außerhalb von Anführungszeichen. */
     const tokenize = (source) => {
         const tokens = [];
         const issues = [];
@@ -225,7 +214,6 @@ const QueryLanguage = (() => {
         }
         return issues.length ? { ok: false, query, issues } : { ok: true, query, issues: [] };
     };
-    /** Auswahllisten überschreiben nur Werte, die dort ausdrücklich gesetzt sind. */
     const applyUiFilters = (source, filters) => ({
         ...source,
         clauses: source.clauses.map(clause => ({ ...clause })),

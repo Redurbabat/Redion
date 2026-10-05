@@ -1,69 +1,13 @@
 "use strict";
-/* ============================================================================
- * bereiche/spreadsheet/ansicht.ts — der Tabellenblock, wie man ihn sieht
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/spreadsheet/ansicht.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/bereiche/spreadsheet/ansicht.js`. Wer das .js
- * bearbeitet, verliert die Änderung beim nächsten Bauen;
- * `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Das Rechnen steht in `core/spreadsheet/engine.ts` und weiss nichts von
- * einem Bildschirm. Diese Datei weiss nichts vom Rechnen. Das ist die Regel
- * aus `AUFGABEN.md` A4, und hier ist sie von Anfang an eingehalten statt
- * hinterher hergestellt.
- *
- * Die Gestaltungsentscheidungen stehen in `DESIGN-TABELLE.md`, die Farben
- * und Masse in `quell/schale/stil/tabelle.css`.
- *
- * ─── WARUM NICHT ALLE ZELLEN GEZEICHNET WERDEN ──────────────────────────────
- *
- * Ein Blatt hat 50 × 20 Zellen, das wären tausend Knoten — noch tragbar.
- * Sobald jemand eine CSV mit fünftausend Zeilen einliest, sind es
- * hunderttausend, und der Tab steht. Gezeichnet wird deshalb nur, was zu
- * sehen ist: die Zeilen liegen absolut in einem Platzhalter voller Höhe, und
- * beim Rollen wird neu bestückt.
- *
- * ─── DIE DREI STELLEN, AN DENEN SO ETWAS SCHIEFGEHT ─────────────────────────
- *
- * **1 · Der Rahmen der Auswahl darf das Raster nicht verschieben.** Deshalb
- * liegt er innen (`inset box-shadow`). Ein `border` wäre zwei Pixel breit und
- * die ganze Tabelle zuckte bei jedem Klick.
- *
- * **2 · Beim Neuzeichnen darf die Auswahl nicht verlorengehen.** Sie steht
- * deshalb hier oben und nicht im DOM: das DOM wird weggeworfen und neu
- * gebaut, die Auswahl überlebt es.
- *
- * **3 · Das blosse ÖFFNEN einer Seite darf nichts speichern.** Der erste
- * Entwurf rief nach dem ersten Rechnen `Store.updateBlock` — und damit stand
- * beim reinen Ansehen einer Seite ein neues `edited`-Datum in der Ablage, ein
- * Schritt im Rückgängig-Stapel und ein Schreibvorgang. Beim Abgleich ist das
- * kein Schönheitsfehler: das Gerät, auf dem jemand nur nachgesehen hat, gilt
- * als das neuere und überschreibt die echte Änderung vom anderen. Gespeichert
- * wird deshalb nur, wenn sich der Inhalt wirklich unterscheidet.
- *
- * SPRACHE. Namen englisch, Erklärungen deutsch — E27. Neu, also TypeScript
- * von Anfang an — E28.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/spreadsheet/ansicht.ts (npm run bauen:ts). */
 const SpreadsheetView = (() => {
     const kern = () => (typeof Spreadsheet !== 'undefined') ? Spreadsheet : null;
     const refs = () => (typeof CellRefs !== 'undefined') ? CellRefs : null;
-    /* Die Zeilenhöhe steht an ZWEI Stellen: hier und als `--tbl-zh` in
-       `tabelle.css`. Sie MÜSSEN übereinstimmen — das fensterweise Zeichnen
-       rechnet mit dieser Zahl aus, welche Zeilen im Bild sind, und schon zwei
-       Pixel Unterschied verschieben die Platzhalter gegen den Inhalt.
-       `test137` vergleicht beide Zahlen, statt sich auf diesen Satz zu
-       verlassen. */
     const ZH = 32;
-    /* 44 und nicht 40. CLAUDE.md §37 nennt 44 px als Mindestmass für alles,
-       was mit dem Finger getroffen wird, und eine Zelle wird angetippt, um
-       sie auszuwählen. Hier stand 40 mit dem Kommentar „32 px trifft man mit
-       dem Finger nicht" — richtig erkannt, nur nicht zu Ende gerechnet.
-       Gekostet hat es eine Zeile: 660 px Blockhöhe zeigen jetzt 14 statt 16. */
     const ZH_HANDY = 44;
-    const SB = 110; /* Spaltenbreite, Vorgabe — --tbl-sb */
+    const SB = 110;
     const SB_MIN = 48;
-    const PUFFER = 6; /* Zeilen über und unter dem Sichtfenster */
+    const PUFFER = 6;
     const amTelefon = () => typeof window !== 'undefined' && typeof AppEinstellung !== 'undefined'
         ? AppEinstellung.amTelefon()
         : typeof window !== 'undefined' && window.matchMedia
@@ -71,22 +15,11 @@ const SpreadsheetView = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-    /* ==========================================================================
-     * ANZEIGE EINES WERTES
-     * ------------------------------------------------------------------------
-     * Was in der Zelle steht, ist nicht immer, was gespeichert ist: eine Zahl
-     * bekommt Schweizer Schreibweise, ein Datum ein Format, ein Fehlerwert
-     * bleibt wie er ist.
-     *
-     * Wahrheitswerte heissen WAHR und FALSCH und nicht ✅ und ☐ wie in der
-     * Datenbank. In einer Tabelle sind sie ein Wert, mit dem gerechnet wird —
-     * ein Kästchen sähe aus wie etwas zum Anklicken.
-     * ========================================================================*/
     const zeigeWert = (wert, format) => {
         if (wert === null || wert === undefined || wert === '')
             return '';
         if (typeof wert === 'string' && wert.startsWith('#'))
-            return wert; /* Fehlerwert */
+            return wert;
         if (wert instanceof Date)
             return wert.toLocaleDateString('de-CH');
         if (typeof wert === 'boolean')
@@ -114,14 +47,6 @@ const SpreadsheetView = (() => {
         return String(wert);
     };
     const istFehler = (wert) => typeof wert === 'string' && /^#[A-Z/0-9]+[!?]$/.test(wert);
-    /* ==========================================================================
-     * WAS EIN FEHLERWERT HEISST
-     * ------------------------------------------------------------------------
-     * `#NAME?` allein ist keine Meldung, sondern ein Rätsel — und zwar eines,
-     * das Tabellenprogramme seit dreissig Jahren aufgeben. Die Fusszeile
-     * beantwortet die drei Fragen, die eine Meldung beantworten muss: was ist
-     * passiert, warum zählt es, was kann ich tun.
-     * ========================================================================*/
     const FEHLER_TEXT = {
         '#NAME?': 'Diese Funktion kennt Redion nicht. Tippe = und die ersten Buchstaben — ' +
             'dann steht die richtige Schreibweise da.',
@@ -135,7 +60,6 @@ const SpreadsheetView = (() => {
             'eine leere Zelle zählt als null.'
     };
     const erklaere = (wert) => (typeof wert === 'string' && FEHLER_TEXT[wert]) || '';
-    /** Drei Striche als Zeichen für die Ausrichtung — ohne fremdes Symbolpaket. */
     const strichIcon = (art) => {
         const kurz = art === 'links' ? 'x="1"' : art === 'rechts' ? 'x="5"' : 'x="3"';
         return '<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true" fill="currentColor">' +
@@ -143,25 +67,6 @@ const SpreadsheetView = (() => {
             '<rect ' + kurz + ' y="5.2" width="8" height="1.6" rx=".8"/>' +
             '<rect x="1" y="9.4" width="12" height="1.6" rx=".8"/></svg>';
     };
-    /* ==========================================================================
-     * BEDINGTE FORMATIERUNG (L15)
-     * --------------------------------------------------------------------------
-     * Eine Regel gehört dem BLATT, nicht der Zelle. Der Unterschied ist nicht
-     * kosmetisch: eine Farbe an der Zelle müsste bei jeder Änderung mitgeführt,
-     * beim Einfügen einer Zeile verschoben und beim Löschen aufgeräumt werden.
-     * Eine Regel am Blatt sagt stattdessen, WANN gefärbt wird, und überlebt
-     * jede Umstellung der Daten darunter.
-     *
-     * SIE ÄNDERT DIE DATEN NICHT. Was in `wert` steht, bleibt, was es war —
-     * eine bedingte Farbe ist eine Sicht darauf, keine Bearbeitung. Deshalb
-     * lässt sie sich abschalten, ohne dass etwas zurückzunehmen wäre.
-     *
-     * DIE ERSTE REGEL, DIE ZUTRIFFT, GEWINNT — dieselbe Regel wie bei den
-     * bedingten Farben der Datenbanken. Zwei Regeln, die dieselbe Zelle
-     * einfärben wollen, sind kein Fehler, sondern der Normalfall („über 100
-     * grün, über 1000 blau"); es braucht nur eine feste Reihenfolge.
-     * ========================================================================*/
-    /** Die neun Marken aus dem Farbsystem — dieselben wie in den Datenbanken. */
     const REGELFARBEN = {
         rot: 'red', orange: 'orange', gelb: 'yellow', gruen: 'green',
         blau: 'blue', lila: 'purple'
@@ -181,28 +86,12 @@ const SpreadsheetView = (() => {
         ['balken', 'Balken nach Wert'],
         ['symbol', 'Symbol nach Wert']
     ];
-    /**
-     * Die Symbolsätze. Drei Stufen, immer in der Reihenfolge klein → gross.
-     *
-     * Warum genau drei und nicht Excels fünf: eine vierte Stufe unterscheidet
-     * sich auf einem Telefonbildschirm nicht mehr erkennbar von der dritten,
-     * und ein Symbol, das man nicht auseinanderhält, sagt weniger als keines.
-     */
     const SYMBOLSAETZE = {
         ampel: ['🔴', '🟡', '🟢'],
         pfeile: ['▼', '▬', '▲'],
         formen: ['◆', '■', '●'],
         noten: ['✗', '~', '✓']
     };
-    /**
-     * Ein Datum aus einer Zelle — als ORTSZEIT um Mitternacht.
-     *
-     * `new Date('2026-08-10')` liest ISO-Daten als UTC. Wer östlich von
-     * Greenwich sitzt, bekäme damit den Vortag um zwei Uhr nachts, und
-     * „überfällig" spränge einen Tag zu früh an. Deshalb aus den Teilen
-     * gebaut, nicht geparst. Dieselbe Rechnung wie in `steuerung.ts`, wo
-     * „Nächste Termine" seit jeher `setHours(0,0,0,0)` nimmt.
-     */
     const alsDatum = (v) => {
         const t = String(v ?? '').trim();
         if (!t)
@@ -210,23 +99,18 @@ const SpreadsheetView = (() => {
         let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
         if (m)
             return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
-        m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(t); /* 10.08.2026 */
+        m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(t);
         if (m)
             return new Date(+m[3], +m[2] - 1, +m[1]).getTime();
         return NaN;
     };
-    /** Heute um Mitternacht, in der Zeitzone des Geräts. */
     const heuteUm0 = () => {
         const d = new Date();
         d.setHours(0, 0, 0, 0);
         return d.getTime();
     };
-    /* Welche Arten welches Feld brauchen — an EINER Stelle, weil dieselbe
-       Liste vorher an drei Stellen stand und beim Dazukommen einer Art an
-       zwei davon vergessen worden wäre. */
     const OHNE_WERT = ['leer', 'nichtLeer', 'doppelt', 'ueberfaellig', 'skala', 'balken'];
     const OHNE_FARBE = ['skala', 'balken', 'symbol'];
-    /** Ein Bereich `A1:C20` als Zeilen-/Spaltengrenzen. Leer = ganzes Blatt. */
     const bereichLesen = (text, R, blatt) => {
         const ganz = { vonZ: 0, bisZ: (blatt.zeilen || 1) - 1,
             vonS: 0, bisS: (blatt.spalten || 1) - 1 };
@@ -250,14 +134,6 @@ const SpreadsheetView = (() => {
         const n = parseFloat(String(v ?? '').replace(',', '.'));
         return isFinite(n) ? n : NaN;
     };
-    /**
-     * Was in einem Bereich steht — einmal je Regel gerechnet, nicht je Zelle.
-     *
-     * `skala` und `balken` brauchen das kleinste und grösste, `doppelt` die
-     * Häufigkeiten. Ohne diesen Schritt liefe je Zelle eine Schleife über den
-     * ganzen Bereich: bei 1000 × 26 wären das 26 Millionen Vergleiche für
-     * eine Farbe.
-     */
     const bereichsWerte = (g, blatt, R) => {
         let min = Infinity, max = -Infinity;
         const wieOft = new Map();
@@ -280,7 +156,6 @@ const SpreadsheetView = (() => {
         }
         return { min, max, wieOft };
     };
-    /** Trifft eine Vergleichsregel auf einen Wert zu? */
     const regelTrifft = (regel, wert, hilf) => {
         const leer = wert === '' || wert == null;
         switch (regel.art) {
@@ -311,9 +186,6 @@ const SpreadsheetView = (() => {
                 return isFinite(a) && isFinite(u) && isFinite(o) &&
                     a >= Math.min(u, o) && a <= Math.max(u, o);
             }
-            /* Was kein Datum ist, ist nicht überfällig — sondern gar nichts.
-               Die Zahl 5 in einer Datumsspalte darf nicht rot werden, nur weil
-               sie kleiner ist als irgendetwas. */
             case 'ueberfaellig': {
                 const d = alsDatum(wert);
                 return isFinite(d) && d < heuteUm0();
@@ -325,20 +197,11 @@ const SpreadsheetView = (() => {
                 const tage = alsZahl(regel.wert);
                 const spanne = isFinite(tage) && tage > 0 ? tage : 7;
                 const heute = heuteUm0();
-                /* Heute zählt mit, gestern nicht — das ist `ueberfaellig`. */
                 return d >= heute && d <= heute + spanne * 86400000;
             }
             default: return false;
         }
     };
-    /**
-     * Welche der drei Stufen? Gibt 0, 1 oder 2 zurück — oder -1 für „kein Wert".
-     *
-     * Ohne eigene Grenzen wird der Bereich gedrittelt. Mit `wert`/`wert2`
-     * gelten die als Grenzen, und dann zählt nur, was der Mensch eingetragen
-     * hat: bei „Ampel ab 50 und ab 80" soll die 79 gelb sein, egal ob im
-     * Blatt zufällig eine 900 steht.
-     */
     const symbolStufe = (regel, wert, hilf) => {
         const n = alsZahl(wert);
         if (!isFinite(n))
@@ -356,17 +219,8 @@ const SpreadsheetView = (() => {
             const t = spanne === 0 ? 1 : (n - hilf.min) / spanne;
             stufe = t < 1 / 3 ? 0 : t < 2 / 3 ? 1 : 2;
         }
-        /* „Tage überfällig" ist ein Wert, bei dem klein gut ist. Ohne diesen
-           Schalter müsste man den Symbolsatz rückwärts lesen. */
         return regel.umgekehrt ? 2 - stufe : stufe;
     };
-    /**
-     * Was eine Zelle an Aussehen bekommt — Klasse und/oder Inline-Stil.
-     *
-     * Gibt `null` zurück, wenn keine Regel greift. Der Inline-Stil ist hier
-     * die richtige Wahl und nicht der Ausnahmefall: die Farbe hängt vom WERT
-     * ab, es gäbe also eine Klasse je möglichem Wert.
-     */
     const regelAussehen = (z, s, wert, vorbereitet) => {
         for (const v of vorbereitet) {
             if (!inBereich(z, s, v.g))
@@ -378,45 +232,19 @@ const SpreadsheetView = (() => {
                 const n = alsZahl(wert);
                 if (!isFinite(n) || !isFinite(v.hilf.min) || !isFinite(v.hilf.max))
                     continue;
-                /* DER BALKEN MISST VON NULL, die Skala von klein nach gross — und
-                   das ist kein Versehen, sondern der Unterschied zwischen den
-                   beiden.
-        
-                   Ein Balken zeigt eine GRÖSSE. Bei 340, 890, 1200, 2400, 3100
-                   wäre der kleinste Wert mit einer Skala von min bis max null
-                   Pixel lang, und 340 sähe aus wie „nichts" — dabei ist es ein
-                   Neuntel des grössten. Genau so lügen Diagramme mit
-                   abgeschnittener Achse. Gesehen am Bildschirmfoto vom 8. August,
-                   nicht im Quelltext.
-        
-                   `Math.min(0, …)` hält den Fall mit negativen Zahlen offen: dann
-                   beginnt der Balken wieder unten, weil es sonst keinen ehrlichen
-                   Nullpunkt gäbe.
-        
-                   Eine SKALA zeigt dagegen einen PLATZ in einer Reihe — dort ist
-                   der kleinste Wert zu Recht am einen Ende. */
                 const unten = v.regel.art === 'balken' ? Math.min(0, v.hilf.min) : v.hilf.min;
                 const oben = v.regel.art === 'balken' ? Math.max(0, v.hilf.max) : v.hilf.max;
                 const spanne = oben - unten;
                 const t = spanne === 0 ? 1 : (n - unten) / spanne;
                 if (v.regel.art === 'skala') {
-                    /* Von Rot (0°) über Gelb (55°) nach Grün (135°) — dieselbe
-                       Farbfolge wie die Heatmap der Datenbanken, damit dasselbe
-                       Bild dasselbe bedeutet. */
                     const ton = Math.round(t * 135);
                     return { klasse: ' regel-skala',
                         stil: `background:hsl(${ton} 62% 42% / .5)` };
                 }
                 const p = Math.round(Math.max(0, Math.min(1, t)) * 100);
-                /* Der Balken liegt HINTER dem Text, nicht daneben: eine Spalte
-                   ist selten breit genug für beides, und die Zahl ist wichtiger
-                   als ihr Bild. */
                 return { klasse: ' regel-balken',
                     stil: `--regel-balken:${p}%` };
             }
-            /* Ein Symbol färbt nicht, es stellt sich davor. Deshalb steht es
-               nicht bei den Vergleichsregeln: es trifft nicht zu oder nicht zu,
-               es sagt bei jedem Wert etwas. */
             if (v.regel.art === 'symbol') {
                 if (leer)
                     continue;
@@ -424,9 +252,6 @@ const SpreadsheetView = (() => {
                 if (stufe < 0)
                     continue;
                 const satz = SYMBOLSAETZE[v.regel.satz || 'ampel'] || SYMBOLSAETZE['ampel'];
-                /* Über eine CSS-Eigenschaft, nicht über den Zellinhalt: `wert`
-                   bleibt damit unangetastet, und beim Kopieren nach Excel geht
-                   kein Emoji als Text mit. */
                 return { klasse: ' regel-symbol',
                     stil: `--regel-symbol:'${satz[stufe] ?? ''}'` };
             }
@@ -437,26 +262,16 @@ const SpreadsheetView = (() => {
         }
         return null;
     };
-    /* ==========================================================================
-     * TELEFON: ZEILEN ALS KARTEN (E89)
-     * ------------------------------------------------------------------------
-     * Eine Karte je Zeile: der erste gefüllte Wert ist der Titel, die
-     * übrigen stehen als Name/Wert-Paare darunter — die Namen kommen aus der
-     * Kopfzeile, ersatzweise aus dem Spaltenbuchstaben. Formeln stehen
-     * AUSGERECHNET da: die Karte zeigt, was das Raster zeigt.
-     * ========================================================================*/
     const kartenAnsicht = (w, block, blatt, K, R) => {
         w.className = 'tblk-karten';
         const rasterOeffnen = (zelle) => {
             Store.updateBlock(block.id, { telefonRaster: true, telefonZelle: zelle });
             App.zeichneSeite();
         };
-        /* Erst rechnen, dann zeigen — sonst stünden Formeln leer oder alt da.
-           Das Raster tut dasselbe bei jedem Zeichnen. */
         try {
             K.rechneMappe(block.mappe);
         }
-        catch { /* Zirkel etc. zeigt die Zelle selbst */ }
+        catch { }
         let hochZ = 0, hochS = 0;
         Object.keys(blatt.zellen || {}).forEach((a) => {
             const p = R.lies(a);
@@ -500,21 +315,6 @@ const SpreadsheetView = (() => {
             for (let s = 0; s < hochS; s++) {
                 const adr = R.schreibe(z, s);
                 const zelle = blatt.zellen[adr];
-                /* `zelle.stil.format`, NICHT `zelle.format` (E227).
-                 *
-                 * Geschrieben wird das Format nach `zelle.stil.format` (siehe das
-                 * Zellmenü weiter unten), und überall sonst wird es auch von dort
-                 * gelesen. Nur hier stand `zelle.format` — eine Eigenschaft, die es
-                 * nicht gibt. Die Kartenansicht hat also NIE ein Zellformat
-                 * angewendet.
-                 *
-                 * GEMESSEN, dieselbe Zelle, Format Währung/CHF/2 Stellen:
-                 *     Gitter   1’450.00 CHF
-                 *     Karte    1’450
-                 *
-                 * Dieselbe Zahl, zwei Schreibweisen — und die Karte ist das, was am
-                 * Telefon zuerst zu sehen ist. Der Betrag verlor seine Währung genau
-                 * dort, wo niemand danebenlegen kann, um es zu merken. */
                 const anzeige = zeigeWert(K.wert(blatt, adr), zelle && zelle.stil && zelle.stil.format);
                 if (anzeige === '')
                     continue;
@@ -533,8 +333,7 @@ const SpreadsheetView = (() => {
                 karte.appendChild(f);
             }
             if (!karte.childElementCount)
-                continue; /* leere Zeile, keine leere Karte */
-            /* Bearbeitet wird im Raster — die Karte ist der Weg dorthin. */
+                continue;
             const oeffneZeile = () => rasterOeffnen(R.schreibe(z, 0));
             karte.addEventListener('click', oeffneZeile);
             karte.addEventListener('keydown', e => {
@@ -547,9 +346,6 @@ const SpreadsheetView = (() => {
         }
         return w;
     };
-    /* ==========================================================================
-     * DER BLOCK
-     * ========================================================================*/
     const zeichne = (block) => {
         const K = kern(), R = refs();
         const w = document.createElement('div');
@@ -558,32 +354,16 @@ const SpreadsheetView = (() => {
             w.textContent = 'Der Tabellenkern ist nicht geladen.';
             return w;
         }
-        /* --- Die Daten ------------------------------------------------------
-           Ein Block ohne Mappe bekommt eine. Nichts wird überschrieben: gibt es
-           schon eine, wird sie benutzt, wie sie ist. */
         const hatteMappe = !!(block.mappe && block.mappe.blaetter && block.mappe.blaetter.length);
         if (!hatteMappe)
             block.mappe = K.neueMappe(block.text || 'Tabelle');
-        /* WELCHES BLATT GERADE OFFEN IST, steht in der Mappe und nicht hier —
-           so überlebt es das Neuzeichnen und den Neustart. Zeigt `aktiv` auf ein
-           Blatt, das es nicht mehr gibt, wird es das erste: eine Mappe ohne
-           sichtbares Blatt wäre eine leere Fläche ohne Erklärung. */
         let blatt = block.mappe.blaetter.find((b) => b.id === block.mappe.aktiv)
             || block.mappe.blaetter[0];
         block.mappe.aktiv = blatt.id;
         if (!blatt.breiten)
             blatt.breiten = {};
-        /* --- Telefon: Karten statt Raster (E89) ------------------------------
-           Die Datenbank zeigt am Telefon längst Karten; der Tabellenblock
-           blieb dasselbe Rechner-Raster, mit leeren Zeilen auf halbem
-           Bildschirm. Jetzt: Zeilen als Karten, die Kopfzeile liefert die
-           Feldnamen, Formeln stehen ausgerechnet da. Der Umschalter ⊞ bleibt
-           sichtbar — wer das Raster will, ist einen Tipp entfernt
-           (`telefonRaster`, je Block gespeichert; der Feldname ist deutsch,
-           weil er so gespeichert wird). */
         if (amTelefon() && !block.telefonRaster)
             return kartenAnsicht(w, block, blatt, K, R);
-        /* Und im Raster der Rückweg — sonst wäre der Umschalter eine Einbahn. */
         if (amTelefon()) {
             const zurueck = document.createElement('button');
             zurueck.type = 'button';
@@ -596,47 +376,15 @@ const SpreadsheetView = (() => {
             });
             w.appendChild(zurueck);
         }
-        /* Die Auswahl lebt hier, nicht im DOM — sie überlebt jedes Neuzeichnen. */
         let gewaehlt = R.gueltig(block.telefonZelle) ? block.telefonZelle : 'A1';
-        let anker = gewaehlt; /* für die Bereichsauswahl */
-        /* Beim Ziehen am Anfasser: wohin der Zeiger gerade zeigt. Nur das —
-           ob überhaupt gezogen wird, steht in den Zuhörern, die `beimZiehen`
-           auf- und wieder abbaut, und nicht noch einmal in einer Fahne hier. */
+        let anker = gewaehlt;
         let fuellZiel = null;
         let zirkel = [];
-        /* ----------------------------------------------------------------------
-         * WIE BREIT EINE SPALTE AM TELEFON SEIN MUSS — gemessen, nicht geschätzt.
-         *
-         * `redion-mobile-ux` nennt zwei Zahlen, und zusammen ergeben sie eine
-         * dritte: mindestens 88 px breit, und mindestens 16 px Schrift. Bei
-         * 16 px ist `1’450.00 CHF` neunundneunzig Pixel breit, dazu zweimal
-         * sieben Pixel Innenabstand und eine Linie — macht 114. In eine 110 px
-         * breite Spalte passt das nicht, und der Block tat genau das Richtige:
-         * er schrieb `###`.
-         *
-         * Auf dem Bildschirm hiess das: in einem Haushaltsplan stand bei JEDEM
-         * Betrag `###`. Die Regel war richtig, die Spalte zu schmal.
-         *
-         * Also 128 px am Telefon statt 110, und die Untergrenze 112 statt 88 —
-         * 88 stammt aus einer Welt mit kleinerer Schrift. Die Folge ist, dass
-         * zweieinhalb Spalten ins Bild passen statt drei. Das ist richtig so:
-         * waagerecht rollen ist am Telefon vorgesehen, `###` nicht.
-         * --------------------------------------------------------------------*/
         const handy = amTelefon();
         const vorgabeBreite = handy ? 128 : SB;
         const minBreite = handy ? 112 : SB_MIN;
         const breiteVon = (s) => Math.max(minBreite, Number(blatt.breiten[s]) || vorgabeBreite);
         const zh = handy ? ZH_HANDY : ZH;
-        /* ======================================================================
-         * SPEICHERN — und zwar nur, wenn es etwas zu speichern gibt
-         * --------------------------------------------------------------------
-         * Siehe Punkt 3 im Kopf. `geaendert` steht bewusst NICHT im Vergleich:
-         * sonst unterschiede sich der Stand bei jedem Rechnen von sich selbst,
-         * und die Prüfung wäre keine.
-         * ====================================================================*/
-        /* Verglichen wird die GANZE Mappe. Mit einem Blatt allein bliebe eine
-           Änderung auf einem anderen Blatt ungespeichert — und zwar genau die,
-           die eine blattübergreifende Formel gerade ausgelöst hat. */
         const standVon = () => JSON.stringify(block.mappe.blaetter);
         let letzterStand = hatteMappe ? standVon() : '';
         const sichere = () => {
@@ -649,7 +397,6 @@ const SpreadsheetView = (() => {
                 Store.updateBlock(block.id, { mappe: block.mappe });
             return true;
         };
-        /* --- Bearbeitungszeile ---------------------------------------------- */
         const kopf = document.createElement('div');
         kopf.className = 'tbl-kopf';
         const adresse = document.createElement('div');
@@ -657,11 +404,6 @@ const SpreadsheetView = (() => {
         const fx = document.createElement('div');
         fx.className = 'tbl-fx';
         fx.textContent = 'fx';
-        /* IN WELCHER FORMELWELT MAN STEHT. Redion hat zwei: die der Datenbank
-           (`prop("Preis") * 1.081`) und die der Tabelle (`=B2*1,081`). Beide
-           laufen durch dieselbe Maschine, sehen aber verschieden aus — und wer
-           das nicht weiss, tippt hier die falsche und versteht die Meldung
-           nicht. Ein Wort im Titel kostet nichts und beantwortet es. */
         fx.title = 'Tabellenformel — beginnt mit =, Zellen heissen A1, Bereiche A1:A9';
         const eingabe = document.createElement('input');
         eingabe.className = 'tbl-eingabe';
@@ -669,22 +411,6 @@ const SpreadsheetView = (() => {
         eingabe.placeholder = 'Wert oder =Formel';
         const werkzeuge = document.createElement('div');
         werkzeuge.className = 'tbl-werkzeuge';
-        /* ------------------------------------------------------------------
-         * ELF KNÖPFE AM RECHNER, ZWEI AM TELEFON.
-         *
-         * Gemessen, nicht geschätzt: 48 px Adresse + 30 px fx + elf Knöpfe zu
-         * 34 px sind über 410 px. Auf einem iPhone mit 390 px hiess das
-         * zweierlei, und beides war schlimm — das Eingabefeld wurde auf null
-         * Pixel gequetscht, und die letzten Knöpfe standen ausserhalb des
-         * Bildes. Darunter der ⋯-Knopf, also der ganze Weg zu „Als Excel
-         * speichern". Eine Funktion, die man am Telefon nicht erreicht, gibt es
-         * am Telefon nicht.
-         *
-         * Die Lösung ist nicht, dieselben elf Knöpfe kleiner zu machen — 38 px
-         * sind unter den 44, die ein Finger braucht. Sondern: **Format** öffnet
-         * ein Blatt von unten mit allem, was gestaltet, und **⋯** den Rest. Zwei
-         * grosse Ziele statt elf kleiner.
-         * ----------------------------------------------------------------*/
         const AUSRICHTUNG = '<button data-a="links" title="Linksbündig" aria-label="Linksbündig">' + strichIcon('links') + '</button>' +
             '<button data-a="mitte" title="Zentriert" aria-label="Zentriert">' + strichIcon('mitte') + '</button>' +
             '<button data-a="rechts" title="Rechtsbündig" aria-label="Rechtsbündig">' + strichIcon('rechts') + '</button>';
@@ -693,10 +419,6 @@ const SpreadsheetView = (() => {
                 '<button data-a="mehr" title="Mehr" aria-label="Weitere Befehle">⋯</button>'
             : '<button data-a="fett" title="Fett" aria-label="Fett"><b>F</b></button>' +
                 '<button data-a="kursiv" title="Kursiv" aria-label="Kursiv"><i>K</i></button>' +
-                /* DREI STRICHE STATT ⟨ ≡ ⟩. Die Klammern sahen auf dem Bildschirm aus
-                   wie „(" und „)" — ein Knopf, dessen Bedeutung man raten muss, ist
-                   keiner. Drei Linien unterschiedlicher Länge sind das Zeichen für
-                   Ausrichtung in jedem Programm, das es gibt. */
                 AUSRICHTUNG +
                 '<button data-a="waehrung" title="Währung" aria-label="Währung">CHF</button>' +
                 '<button data-a="prozent" title="Prozent" aria-label="Prozent">%</button>' +
@@ -704,7 +426,6 @@ const SpreadsheetView = (() => {
                 '<button data-a="spalte" title="Spalte anhängen" aria-label="Spalte anhängen">+→</button>' +
                 '<button data-a="mehr" title="Mehr" aria-label="Weitere Befehle">⋯</button>';
         kopf.append(adresse, fx, eingabe, werkzeuge);
-        /* --- Rollfeld -------------------------------------------------------- */
         const feld = document.createElement('div');
         feld.className = 'tbl-feld';
         feld.tabIndex = 0;
@@ -715,28 +436,15 @@ const SpreadsheetView = (() => {
         const koerper = document.createElement('div');
         koerper.className = 'tbl-koerper';
         feld.append(spaltenKopf, koerper);
-        /* Die weiche Kante rechts, wo die Tabelle über den Bildrand hinausgeht.
-           Am Telefon stand `1'450.00 CHF` dort als `1'45` — eine gültige Zahl,
-           nur eine andere. Siehe `kern/helfer/rollrand.ts`. */
         if (typeof Rollrand !== 'undefined')
             Rollrand.binde(feld);
         const fuss = document.createElement('div');
         fuss.className = 'tbl-fuss';
-        /* ======================================================================
-         * DIE BLATTREITER
-         * --------------------------------------------------------------------
-         * Unten, wie in jedem Tabellenprogramm. Oben wären sie über der
-         * Bearbeitungszeile und damit über dem, was man liest; unten sind sie
-         * dort, wo man sie sucht — und am Telefon in Daumenreichweite.
-         * ====================================================================*/
         const reiter = document.createElement('div');
         reiter.className = 'tbl-reiter';
         reiter.setAttribute('role', 'tablist');
         reiter.setAttribute('aria-label', 'Blätter');
         w.append(kopf, feld, reiter, fuss);
-        /* ======================================================================
-         * ZEICHNEN
-         * ====================================================================*/
         const bereich = () => {
             const a = R.lies(anker), b = R.lies(gewaehlt);
             if (!a || !b)
@@ -746,7 +454,6 @@ const SpreadsheetView = (() => {
                 vonS: Math.min(a.spalte, b.spalte), bisS: Math.max(a.spalte, b.spalte)
             };
         };
-        /* Was der Anfasser gerade überstreicht — die Vorschau beim Ziehen. */
         const fuellBereich = () => {
             const b = bereich();
             if (!b || !fuellZiel)
@@ -770,7 +477,6 @@ const SpreadsheetView = (() => {
                 d.style.flex = '0 0 ' + breiteVon(s) + 'px';
                 d.dataset.s = String(s);
                 d.textContent = R.spalteZuText(s);
-                /* Der Griff zum Breiterziehen — 6 px am rechten Rand. */
                 const griff = document.createElement('span');
                 griff.className = 'tbl-griff';
                 griff.dataset.griff = String(s);
@@ -778,8 +484,6 @@ const SpreadsheetView = (() => {
                 spaltenKopf.appendChild(d);
             }
         };
-        /* Nur das Sichtbare. Der Platzhalter trägt die volle Höhe, damit die
-           Rolleiste stimmt. */
         const koerperZeichnen = () => {
             koerper.style.height = (blatt.zeilen * zh) + 'px';
             const oben = Math.max(0, Math.floor(feld.scrollTop / zh) - PUFFER);
@@ -787,9 +491,6 @@ const SpreadsheetView = (() => {
             const unten = Math.min(blatt.zeilen, oben + sichtbar);
             const b = bereich();
             const fb = fuellBereich();
-            /* Die Regeln EINMAL je Zeichnung vorbereiten, nicht je Zelle. Bei
-               1000 × 26 Zellen wäre das sonst eine Schleife über den ganzen
-               Bereich pro Zelle — Millionen Vergleiche für eine Farbe. */
             const regeln = (blatt.regeln || []).filter((r) => r && r.an !== false);
             const vorbereitet = regeln.map((regel) => {
                 const g = bereichLesen(regel.bereich, R, blatt);
@@ -813,8 +514,6 @@ const SpreadsheetView = (() => {
                     const d = document.createElement('div');
                     const klassen = ['tbl-z'];
                     const imB = !!(b && z >= b.vonZ && z <= b.bisZ && s >= b.vonS && s <= b.bisS);
-                    /* Der Anfasser sitzt an der letzten Zelle des Bereichs, nicht an
-                       der aktiven — sonst zöge man von der falschen Ecke. */
                     const istEcke = !!(b && z === b.bisZ && s === b.bisS);
                     if (a === gewaehlt)
                         klassen.push('gewaehlt');
@@ -838,11 +537,6 @@ const SpreadsheetView = (() => {
                         klassen.push(stil.ausrichtung);
                     d.className = klassen.join(' ');
                     d.style.flex = '0 0 ' + breiteVon(s) + 'px';
-                    /* Die bedingte Farbe kommt VOR der Auswahl und dem Fehlerzustand
-                       in die Klassenliste, aber NACH ihnen im Stilblatt: eine
-                       gewählte Zelle muss gewählt aussehen, auch wenn eine Regel sie
-                       färbt. Sonst verliert man beim Malen die Stelle, an der man
-                       gerade steht. */
                     if (vorbereitet.length) {
                         const aus = regelAussehen(z, s, wert, vorbereitet);
                         if (aus) {
@@ -860,8 +554,6 @@ const SpreadsheetView = (() => {
                         d.title = passend.titel;
                     d.dataset.a = a;
                     d.setAttribute('role', 'gridcell');
-                    /* Vorgelesen wird IMMER der volle Wert — die Kürzung ist eine
-                       Sache des Platzes auf dem Bildschirm, nicht des Inhalts. */
                     d.setAttribute('aria-label', a + (wert === '' ? ' leer' : ': ' + voll));
                     d.textContent = passend.text;
                     zeile.appendChild(d);
@@ -869,61 +561,9 @@ const SpreadsheetView = (() => {
                 koerper.appendChild(zeile);
             }
         };
-        /* ----------------------------------------------------------------------
-         * ### STATT EINER FALSCHEN ZAHL
-         * ----------------------------------------------------------------------
-         * DER GEFÄHRLICHSTE FEHLER, DEN DIESER BLOCK HATTE — und er sah aus wie
-         * ein Schönheitsfehler. Eine Zahl steht rechtsbündig; passt sie nicht in
-         * die Spalte, schneidet der Browser sie VORNE ab. Aus `634.2166666667`
-         * wurde auf dem Bildschirm `34.2166666667`, und das ist keine
-         * abgeschnittene Zahl mehr, sondern **eine andere Zahl**. Sie sieht
-         * vollständig aus, sie ist plausibel, und niemand rechnet nach.
-         *
-         * Excel macht seit dreissig Jahren `####` daraus, und zwar genau
-         * deswegen. Lieber sichtbar nichts zeigen als unsichtbar etwas Falsches.
-         *
-         * Gemessen wird in EINEM Durchgang nach dem Bauen: erst alle Knoten
-         * setzen, dann alle lesen. Abwechselnd schreiben und messen zwänge den
-         * Browser zu einem Umbruch je Zelle.
-         * --------------------------------------------------------------------*/
-        /* ----------------------------------------------------------------------
-         * PASST DIE ZAHL IN DIE SPALTE?
-         * ----------------------------------------------------------------------
-         * DER GEFÄHRLICHSTE FEHLER, DEN DIESER BLOCK HATTE — und er sah aus wie
-         * ein Schönheitsfehler. Eine Zahl steht rechtsbündig; passt sie nicht in
-         * die Spalte, schneidet der Browser sie VORNE ab. Aus `634.2166666667`
-         * wurde auf dem Bildschirm `34.2166666667`, und das ist keine
-         * abgeschnittene Zahl mehr, sondern **eine andere Zahl**. Sie sieht
-         * vollständig aus, sie ist plausibel, und niemand rechnet nach.
-         *
-         * ─── DER ERSTE VERSUCH MASS DAS FALSCHE ────────────────────────────────
-         *
-         * Er verglich `scrollWidth` mit `clientWidth`. Gemessen ergab das für
-         * eine 21-stellige Zahl in einer 109 px breiten Zelle: 109 gegen 109.
-         * Der Grund ist Flexbox — der Text ist ein anonymes Flex-Element und
-         * wird GESTAUCHT statt überzustehen. Es gibt also gar keinen
-         * überstehenden Inhalt zu messen; abgeschnitten wird trotzdem.
-         *
-         * Eine Prüfung, die immer „passt schon" sagt, ist keine Prüfung.
-         *
-         * ─── JETZT WIRD DIE SCHRIFT GEMESSEN ───────────────────────────────────
-         *
-         * Über eine Leinwand: `measureText` braucht kein DOM, erzwingt keinen
-         * Umbruch und kostet nichts. Und es geschieht BEIM BAUEN der Zelle statt
-         * hinterher — kein zweiter Durchgang, kein Zurücklesen des Layouts.
-         *
-         * Passt die Zahl nicht, wird sie erst KÜRZER GESCHRIEBEN, nicht sofort
-         * verworfen: `98.1166666667` ist keine Zahl, die nicht passt, sondern
-         * eine, die zu genau dasteht. Erst wenn nicht einmal die Vorkommastellen
-         * hineingehen, steht `###` da — so wie in Excel, und aus demselben
-         * Grund: der Mensch will die Grössenordnung sehen.
-         * --------------------------------------------------------------------*/
         const STUFEN = [6, 4, 2, 1, 0];
         let messer = null;
         let schriftBasis = '14px sans-serif';
-        /* Die Kurzschreibweise von CSS verlangt diese Reihenfolge: Stil, Gewicht,
-           Grösse, Familie. Anders herum nimmt die Leinwand die Angabe nicht an
-           und misst still mit der Vorgabeschrift weiter. */
         const schriftFuer = (stil) => ((stil && stil.kursiv) ? 'italic ' : '') +
             ((stil && stil.fett) ? '700 ' : '') + schriftBasis;
         const breiteDesTextes = (text, stil) => {
@@ -936,15 +576,8 @@ const SpreadsheetView = (() => {
             messer.font = schriftFuer(stil);
             return messer.measureText(text).width;
         };
-        /**
-         * Der Text, der wirklich in der Zelle stehen darf.
-         * Gibt zusätzlich zurück, ob gekürzt oder ganz aufgegeben wurde.
-         */
         const passendMachen = (text, wert, spalte, stil) => {
-            const platz = breiteVon(spalte) - 15; /* 2 × 7 px Innenabstand + Linie */
-            /* Zwei Pixel Luft: `measureText` kennt `tabular-nums` nicht und liegt
-               um Haaresbreite daneben. Lieber einmal zu viel anzeigen als eine
-               Zahl grundlos verstümmeln. */
+            const platz = breiteVon(spalte) - 15;
             if (typeof wert !== 'number' || breiteDesTextes(text, stil) <= platz + 2)
                 return { text, klasse: '', titel: '' };
             const voll = text;
@@ -986,11 +619,6 @@ const SpreadsheetView = (() => {
                 s.innerHTML = text;
                 fuss.appendChild(s);
             };
-            /* DER LEERE ZUSTAND. Ein Raster ohne einen Wert erklärt sich nicht von
-               selbst — wer noch nie eine Formel getippt hat, weiss nicht, dass sie
-               mit `=` anfängt. Das steht leise in der Fusszeile und nicht als
-               Kasten über dem Raster: ein Kasten müsste weggeklickt werden, und
-               beim zweiten Mal ist er nur noch im Weg. */
             if (!gefuellt) {
                 teil('Tippe einen Wert — oder <code>=SUMME(A1:A5)</code> für eine Formel.', 'tbl-tipp');
                 return;
@@ -1006,8 +634,6 @@ const SpreadsheetView = (() => {
                 teil('Anzahl <b>' + zahlen + '</b>');
             }
             teil(gefuellt + ' gefüllt');
-            /* Steht in der gewählten Zelle ein Fehlerwert, sagt die Fusszeile, was
-               er heisst. Ohne das steht dort `#NAME?` und sonst nichts. */
             const aktiv = blatt.zellen[gewaehlt];
             const erklaerung = erklaere(aktiv && aktiv.wert);
             if (erklaerung)
@@ -1031,13 +657,6 @@ const SpreadsheetView = (() => {
                 b.classList.toggle('on', !!an);
             });
         };
-        /* ----------------------------------------------------------------------
-         * DIE REITER ZEICHNEN
-         * --------------------------------------------------------------------
-         * Bei EINEM Blatt bleiben sie unsichtbar. Ein einzelner Reiter über
-         * einer einzelnen Tabelle erklärt nichts und kostet eine Zeile Höhe in
-         * jedem Block, den jemals jemand angelegt hat.
-         * ------------------------------------------------------------------*/
         const reiterZeichnen = () => {
             const viele = block.mappe.blaetter.length > 1;
             reiter.classList.toggle('einzeln', !viele);
@@ -1068,8 +687,6 @@ const SpreadsheetView = (() => {
             if (!blatt.breiten)
                 blatt.breiten = {};
             block.mappe.aktiv = blatt.id;
-            /* Die Auswahl gehört zum Blatt, nicht zur Mappe — beim Wechseln fängt
-               sie oben links an, wie in jedem Tabellenprogramm. */
             gewaehlt = anker = 'A1';
             feld.scrollTop = 0;
             sichere();
@@ -1083,25 +700,11 @@ const SpreadsheetView = (() => {
             reiterZeichnen();
         };
         const rechneUndZeichne = () => {
-            /* Die MAPPE rechnen, nicht das Blatt: `Januar!A1` darf auf
-               `Februar!B2` zeigen, und ein Kreis über zwei Blätter fiele beim
-               blattweisen Rechnen gar nicht auf. */
             const erg = K.rechneMappe(block.mappe);
             zirkel = erg.zirkel || [];
             sichere();
             alles();
         };
-        /* ======================================================================
-         * DAS FENSTER FÜR DIE BEDINGTE FORMATIERUNG (L15)
-         * ----------------------------------------------------------------------
-         * Eine Liste und ein Formular darunter. Kein Assistent in drei Schritten:
-         * eine Regel ist ein Satz — „B2:B40 ist grösser als 100, dann rot" —,
-         * und ein Satz gehört in eine Zeile.
-         *
-         * DER BEREICH IST VORAUSGEFÜLLT mit dem, was gerade markiert ist. Das
-         * ist der ganze Unterschied zwischen „ich probiere das mal aus" und
-         * „ich muss erst nachsehen, wie meine Spalte heisst".
-         * ====================================================================*/
         const regelFenster = () => {
             const o = document.createElement('div');
             o.className = 'overlay';
@@ -1112,18 +715,9 @@ const SpreadsheetView = (() => {
             o.innerHTML = '<div class="finder" style="width:min(620px,94vw)">' +
                 '<div class="fh">🎨 Bedingte Formatierung' +
                 '<button class="icon-btn" data-a="zu">✕</button></div>' +
-                /* Eigene Klasse, weil `.dl-hinweis` keinen seitlichen Rand hat — es
-                   steht sonst in einem Kasten, der selbst schon einen hat. Hier
-                   liegt es direkt im Fenster, und der Satz stiess bei 390 px an
-                   den Rahmen. */
                 '<div class="dl-hinweis rg-hinweis">Die erste Regel, die zutrifft, färbt ' +
                 'die Zelle. Die Werte selbst bleiben unverändert — eine Regel ist eine ' +
                 'Sicht, keine Bearbeitung.</div>' +
-                /* NICHT `.res`. Das ist die Trefferliste des Finders, und dort gilt
-                   `button { width:100% }` — die beiden kleinen Knöpfe ☑ und 🗑
-                   sprangen damit auf je eine eigene Zeile, und aus einer Regel
-                   wurden drei Zeilen Papier. Gefunden beim Hinsehen (§55), nicht
-                   beim Lesen: im Quelltext sah es richtig aus. */
                 '<div class="rg-liste" id="rg-liste"></div>' +
                 '<div class="rg-neu">' +
                 `<input id="rg-bereich" placeholder="Bereich, z. B. B2:B40" value="${esc(vorschlag)}">` +
@@ -1174,8 +768,6 @@ const SpreadsheetView = (() => {
                         'ausgefüllt, wenn du vorher etwas markiert hast.</div>';
             };
             zeichneListe();
-            /* Welche Felder eine Art überhaupt braucht — ein Feld, das nichts tut,
-               ist eine Frage ohne Antwort. */
             const felderAnpassen = () => {
                 const art = o.querySelector('#rg-art')?.value || '';
                 const w1 = o.querySelector('#rg-wert');
@@ -1194,8 +786,6 @@ const SpreadsheetView = (() => {
                     sa.style.display = art === 'symbol' ? '' : 'none';
                 if (um)
                     um.style.display = art === 'symbol' ? 'flex' : 'none';
-                /* Der Platzhalter sagt, was das Feld hier bedeutet — „Wert" heisst
-                   bei drei Arten drei verschiedene Dinge. */
                 if (w1f)
                     w1f.placeholder = art === 'symbol' ? 'ab'
                         : art === 'faelligBald' ? 'Tage' : 'Wert';
@@ -1253,9 +843,6 @@ const SpreadsheetView = (() => {
                 zeichneListe();
             });
         };
-        /* ======================================================================
-         * BEDIENEN
-         * ====================================================================*/
         const waehle = (a, mitAnker = false) => {
             if (!R.gueltig(a))
                 return;
@@ -1263,7 +850,6 @@ const SpreadsheetView = (() => {
             if (!mitAnker)
                 anker = a;
             alles();
-            /* Ins Sichtfeld rollen — sonst wandert die Auswahl aus dem Bild. */
             const l = R.lies(a);
             if (l) {
                 const oben = l.zeile * zh, unten = oben + zh;
@@ -1282,8 +868,6 @@ const SpreadsheetView = (() => {
             K.setze(blatt, gewaehlt, text);
             rechneUndZeichne();
         };
-        /* Ein echtes Eingabefeld über der Zelle — kein contenteditable. Es
-           verhält sich wie überall sonst: Auswahl, Einfügen, Rückgängig. */
         const bearbeite = (start) => {
             const d = koerper.querySelector('[data-a="' + gewaehlt + '"]');
             if (!d)
@@ -1295,10 +879,6 @@ const SpreadsheetView = (() => {
             feldchen.focus();
             if (start === undefined)
                 feldchen.select();
-            /* DIE TASTATUR BELEGT AM TELEFON DEN HALBEN BILDSCHIRM. Steht die
-               Zelle in der unteren Hälfte, tippt man ab jetzt blind. Also erst
-               einmal in die Mitte rollen — die Browser tun das teils selbst, aber
-               nicht alle und nicht zuverlässig, und „teils" reicht hier nicht. */
             if (handy && d.scrollIntoView)
                 setTimeout(() => d.scrollIntoView({ block: 'center', inline: 'nearest' }), 50);
             let beendet = false;
@@ -1333,18 +913,6 @@ const SpreadsheetView = (() => {
             });
             feldchen.addEventListener('blur', () => schliesse(true));
         };
-        /* ======================================================================
-         * ZIEHEN — Auswahl, Ausfüllen, Spaltenbreite
-         * --------------------------------------------------------------------
-         * ALLE DREI HÄNGEN SICH NUR SOLANGE ANS DOKUMENT, WIE SIE ZIEHEN.
-         *
-         * Der erste Entwurf hatte ein festes `document.addEventListener('mouseup')`
-         * pro Block. `App.zeichneSeite()` läuft aber bei jeder Kleinigkeit —
-         * Häkchen setzen, Block aufklappen, Farbe wechseln — und jedes Mal
-         * entstand ein Zuhörer mehr, der nie wieder ging. Nach einer Stunde
-         * Arbeit an einer Seite hingen Hunderte daran. Nichts stürzt dabei ab;
-         * die App wird nur langsam, und niemand weiss wovon.
-         * ====================================================================*/
         const beimZiehen = (bewegen, fertig) => {
             const auf = (e) => { bewegen(e); };
             const ab = () => {
@@ -1363,11 +931,9 @@ const SpreadsheetView = (() => {
             const l = R.lies(z.dataset.a);
             return l ? { z: l.zeile, s: l.spalte } : null;
         };
-        /* --- Maus im Raster --------------------------------------------------- */
         koerper.addEventListener('mousedown', (e) => {
             const ziel = e.target;
             const z = ziel.closest('.tbl-z');
-            /* Der Anfasser: die unteren rechten 10 × 10 Pixel der Eckzelle. */
             if (z && z.classList.contains('ecke')) {
                 const r = z.getBoundingClientRect();
                 if (e.clientX > r.right - 10 && e.clientY > r.bottom - 10) {
@@ -1405,18 +971,8 @@ const SpreadsheetView = (() => {
             }
         });
         feld.addEventListener('scroll', () => koerperZeichnen());
-        /* DER FOKUS DES RASTERS. `DESIGN-TABELLE.md` sagt: der Auswahlrahmen ist
-           zugleich der Fokusring. Ein zweiter, 2 px starker Rahmen um das ganze
-           Raster stritt sichtbar mit ihm — auf dem Bildschirm zog sich eine
-           blaue Linie am rechten Rand entlang, und man wusste nicht, was sie
-           bedeutet. Also färbt sich stattdessen der Rahmen des Blocks: leise,
-           eindeutig, und ohne dem Auswahlrahmen die Aufmerksamkeit zu nehmen.
-    
-           Als Klasse und nicht über `:has()`, damit es auch dort gilt, wo `:has`
-           fehlt — ein Fokuszeichen, das mancherorts ausfällt, ist keines. */
         feld.addEventListener('focus', () => w.classList.add('imFokus'));
         feld.addEventListener('blur', () => w.classList.remove('imFokus'));
-        /* --- Zeilen- und Spaltenköpfe ---------------------------------------- */
         koerper.addEventListener('click', (e) => {
             const nr = e.target.closest('.tbl-zn');
             if (!nr || nr.dataset.z === undefined)
@@ -1427,7 +983,6 @@ const SpreadsheetView = (() => {
         });
         spaltenKopf.addEventListener('mousedown', (e) => {
             const ziel = e.target;
-            /* Breite ziehen */
             if (ziel.dataset && ziel.dataset.griff !== undefined) {
                 e.preventDefault();
                 const s = Number(ziel.dataset.griff);
@@ -1452,13 +1007,6 @@ const SpreadsheetView = (() => {
                 feld.focus();
             }
         });
-        /* ======================================================================
-         * DAS KONTEXTMENÜ AN DEN KÖPFEN
-         * --------------------------------------------------------------------
-         * Zeile einfügen und löschen, Spalte einfügen und löschen, sortieren.
-         * `Menue.menu` macht daraus am Telefon von allein ein Blatt, das von
-         * unten hochfährt — deshalb steht hier keine einzige Zeile für Touch.
-         * ====================================================================*/
         const menuFuer = (art, index, x, y) => {
             if (typeof Menue === 'undefined')
                 return;
@@ -1497,8 +1045,6 @@ const SpreadsheetView = (() => {
                         if (blatt.spalten <= 1)
                             return;
                         K.spalteLoeschen(blatt, index);
-                        /* Die Breiten rücken mit — sonst trägt die neue Spalte C
-                           plötzlich die Breite der gelöschten. */
                         const neu = {};
                         Object.keys(blatt.breiten).forEach(k => {
                             const s = Number(k);
@@ -1531,7 +1077,6 @@ const SpreadsheetView = (() => {
         };
         koerper.addEventListener('contextmenu', aufKopfMenue);
         spaltenKopf.addEventListener('contextmenu', aufKopfMenue);
-        /* Am Telefon gibt es keine rechte Maustaste: ein langer Druck tut es. */
         let druckUhr = 0;
         const langerDruck = (e) => {
             const t = e.touches[0];
@@ -1557,13 +1102,6 @@ const SpreadsheetView = (() => {
             el.addEventListener('touchend', druckWeg);
             el.addEventListener('touchmove', druckWeg, { passive: true });
         });
-        /* ======================================================================
-         * TASTATUR
-         * --------------------------------------------------------------------
-         * Die Tabelle ist EIN Tabstopp. Wer hineinspringt, bewegt sich mit den
-         * Pfeilen darin — sich durch tausend Zellen zu tabben wäre keine
-         * Bedienbarkeit, sondern eine Strafe.
-         * ====================================================================*/
         feld.addEventListener('keydown', (e) => {
             const k = e.key;
             const mit = e.shiftKey;
@@ -1628,15 +1166,11 @@ const SpreadsheetView = (() => {
                 const l = R.lies(gewaehlt);
                 return waehle(R.schreibe(strg ? blatt.zeilen - 1 : (l ? l.zeile : 0), blatt.spalten - 1), mit);
             }
-            /* Ein sichtbares Zeichen fängt das Bearbeiten an — wie in Excel. */
             if (k.length === 1 && !strg && !e.altKey) {
                 e.preventDefault();
                 return bearbeite(k);
             }
         });
-        /* --- Kopieren und Einfügen -------------------------------------------
-           Über die Zwischenablage als Tabulatortext: so versteht Excel es, und
-           Excel versteht uns. Das ist der Weg, auf dem Daten wirklich wandern. */
         feld.addEventListener('copy', (e) => {
             const b = bereich();
             if (!b || !e.clipboardData)
@@ -1664,8 +1198,6 @@ const SpreadsheetView = (() => {
             const zeilen = text.replace(/\r\n?/g, '\n').replace(/\n$/, '').split('\n');
             zeilen.forEach((zeile, dz) => {
                 zeile.split('\t').forEach((wert, ds) => {
-                    /* Das Blatt wächst mit dem, was hineinkommt — sonst fällt der
-                       Rest der Zwischenablage lautlos weg. */
                     if (start.zeile + dz + 1 > blatt.zeilen)
                         blatt.zeilen = start.zeile + dz + 1;
                     if (start.spalte + ds + 1 > blatt.spalten)
@@ -1675,7 +1207,6 @@ const SpreadsheetView = (() => {
             });
             rechneUndZeichne();
         });
-        /* --- Bearbeitungszeile ------------------------------------------------ */
         eingabe.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -1692,16 +1223,6 @@ const SpreadsheetView = (() => {
             if (eingabe.value !== K.eingabe(blatt, gewaehlt))
                 uebernimm(eingabe.value);
         });
-        /* ======================================================================
-         * AUSGEBEN
-         * --------------------------------------------------------------------
-         * Excel und CSV, und beides über das, was `dateien/ausgeben.js` schon
-         * kann. Eine zweite ZIP-Schreiberei für xlsx wäre die Sorte Arbeit, die
-         * man zweimal pflegt und einmal vergisst.
-         * ====================================================================*/
-        /* Je Blatt, nicht nur fürs aktive: der Excel-Ausgang nimmt seit E91
-           die GANZE Mappe mit — eine Mappe mit drei Blättern, die als eines
-           herauskam, war stiller Datenverlust (§13). */
         const alsZeilenVon = (vonBlatt) => {
             const raus = [];
             let letzteVolle = 0;
@@ -1720,15 +1241,9 @@ const SpreadsheetView = (() => {
                 if (etwasDrin)
                     letzteVolle = raus.length;
             }
-            /* Ein Blatt hat 50 Zeilen, gefüllt sind meist zehn. Die vierzig leeren
-               gehören nicht in die Datei — eine CSV mit vierzig leeren Zeilen am
-               Ende sieht in jedem anderen Programm nach einem Fehler aus. */
             return raus.slice(0, letzteVolle);
         };
         const alsZeilen = () => alsZeilenVon(blatt);
-        /* Rohwerte samt Zellstil je Zelle — für den Excel-Ausgang (E94). Der
-           ANZEIGETEXT machte dort aus 0.15 „15 %" und aus jeder grossen Zahl
-           per Tausenderzeichen Text; Summen in Excel ergaben 0. */
         const alsRohVon = (vonBlatt) => {
             const zeilen = [];
             const anzeigen = [];
@@ -1765,28 +1280,18 @@ const SpreadsheetView = (() => {
                 stile: stile.slice(0, letzteVolle),
                 formeln: formeln.slice(0, letzteVolle) };
         };
-        /* Geschrieben wird über `core/spreadsheet/csv.ts` — dieselbe Stelle, die
-           auch einliest. Zwei eigene Regeln fürs Anführen liefen auseinander,
-           und dann öffnet die eigene Datei sich selbst nicht mehr richtig. */
         const alsCsv = () => Csv.schreibe(alsZeilen(), ';');
         const gibAus = (art) => {
             const name = (blatt.name || block.mappe.name || 'Tabelle').replace(/[\\/:*?"<>|]/g, '-');
-            /* Beide Ausgänge nehmen die GANZE Mappe (E91) — der Rückfall aufs
-               aktive Blatt war stiller Datenverlust — und beide tragen seit
-               E94/E95 Rohwerte samt Zellstil statt des Anzeigetexts. */
             if (art === 'xlsx') {
                 if (typeof Austausch === 'undefined')
                     return;
-                /* Rohwerte samt Zellstil (E94), nicht ganzeMappe(): dort steht der
-                   Anzeigetext, und aus „15 %" würde in Excel Text. */
                 Austausch.alsExcel(block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), ...alsRohVon(b) })), name);
                 return;
             }
             if (art === 'ods') {
                 if (typeof Austausch === 'undefined')
                     return;
-                /* Fürs Fehlschlagen gibt es einen Satz: alsOds ist asynchron, und
-                   ein stilles Scheitern sähe aus wie ein vergessener Klick. */
                 Austausch.alsOds(block.mappe.blaetter.map((b, i) => ({ name: b.name || ('Blatt ' + (i + 1)), ...alsRohVon(b) })), name)
                     .catch((e) => {
                     if (typeof UI !== 'undefined' && UI.toast)
@@ -1795,8 +1300,6 @@ const SpreadsheetView = (() => {
                 });
                 return;
             }
-            /* CSV mit Semikolon und BOM: so öffnet Excel im deutschen Sprachraum
-               die Datei richtig, statt alles in eine Spalte zu legen. */
             const blob = new Blob([Csv.mitBom(alsCsv())], { type: 'text/csv;charset=utf-8' });
             if (typeof Austausch !== 'undefined' && Austausch.laden)
                 Austausch.laden(blob, name + '.csv');
@@ -1808,24 +1311,6 @@ const SpreadsheetView = (() => {
                 setTimeout(() => URL.revokeObjectURL(a.href), 1000);
             }
         };
-        /* ======================================================================
-         * EINLESEN
-         * --------------------------------------------------------------------
-         * DAS LOCH, DAS DAS AUSGEBEN AUFGEMACHT HAT. „Als Excel speichern" ohne
-         * „Excel öffnen" ist ein Rundlauf, der nicht rundläuft.
-         *
-         * ─── UND WARUM ERST GEFRAGT WIRD ──────────────────────────────────────
-         *
-         * Einlesen überschreibt Zellen. `redion-mobile-ux` sagt zum Import:
-         * *Datei wählen → Vorschau → Ziel wählen → Import starten → Ergebnis.
-         * Nie direkt alles übernehmen.* Und die oberste Regel dieses Projekts
-         * heisst: keine Datenverluste.
-         *
-         * Also steht vor dem Übernehmen eine Frage, und die sagt **nachgezählt**,
-         * was passieren wird: wie viele Zeilen und Spalten kommen, und wie viele
-         * gefüllte Zellen dabei überschrieben werden. „Bist du sicher?" ist keine
-         * Frage — „37 gefüllte Zellen werden überschrieben" ist eine.
-         * ====================================================================*/
         const einlesen = () => {
             const eingang = document.createElement('input');
             eingang.type = 'file';
@@ -1841,10 +1326,6 @@ const SpreadsheetView = (() => {
                 let stilMatrix = null;
                 let formelMatrix = null;
                 let importBericht = null;
-                /* Den gelesenen Zellstil an die Zelle tragen (E97). Je Zelle eine
-                   KOPIE: der ODS-Leser gibt wiederholten Zellen dasselbe
-                   Stil-Objekt, und ein geteiltes Objekt hiesse, dass Fett-Schalten
-                   in einer Zelle alle Geschwister mitschaltet. */
                 const stilDazu = (ziel, z, sp, adr, matrix) => {
                     const st = matrix && matrix[z] && matrix[z][sp];
                     if (!st)
@@ -1852,10 +1333,6 @@ const SpreadsheetView = (() => {
                     const zelle = ziel.zellen[adr] || (ziel.zellen[adr] = { wert: '' });
                     zelle.stil = JSON.parse(JSON.stringify(st));
                 };
-                /* Erst den gespeicherten Ergebniswert setzen, dann die Formel. So
-                   bleibt der Wert sichtbar, selbst wenn eine fremde Funktion in
-                   Redion nicht rechnet; die Formel selbst geht trotzdem nicht
-                   verloren. */
                 const setzeGelesen = (ziel, adr, wert, formel) => {
                     if (wert !== '')
                         K.setze(ziel, adr, wert);
@@ -1867,23 +1344,13 @@ const SpreadsheetView = (() => {
                     if (/\.(xlsx|xlsm|ods)$/i.test(datei.name)) {
                         if (typeof Einlesen === 'undefined')
                             throw new Error('Der Tabellen-Leser ist nicht geladen.');
-                        /* .ods geht an den ODS-Leser — er liefert Zahlen als echte
-                           Zahlen (office:value), und `setze` normalisiert selbst. */
                         const blaetter = /\.ods$/i.test(datei.name)
                             ? await Einlesen.odsLesen(await datei.arrayBuffer())
                             : await Einlesen.xlsxLesen(await datei.arrayBuffer());
                         if (!blaetter || !blaetter.length)
                             throw new Error('In dieser Datei steckt kein Tabellenblatt.');
                         importBericht = blaetter.bericht || null;
-                        /* Mehrere Blätter (E91): jedes wird ein EIGENES Blatt der
-                           Mappe. Der Satz, der hier vorher stand, verneinte
-                           Mehrblatt je Block — während die Blattreiter darunter es
-                           längst konnten. Ein einzelnes Blatt geht weiter den alten
-                           Weg: an den Schreibzeiger, mit Zählung des
-                           Überschriebenen. */
                         if (blaetter.length > 1) {
-                            /* Alles zuerst ausserhalb der Mappe vorbereiten. Scheitert
-                               Blatt 2, bleibt Blatt 1 nicht halb importiert zurück. */
                             const belegt = new Set(block.mappe.blaetter.map((b) => String(b.name)));
                             const importName = (roh) => {
                                 const basis = roh || 'Blatt';
@@ -1927,11 +1394,6 @@ const SpreadsheetView = (() => {
                                 return;
                             block.mappe.blaetter.push(...vorbereitet);
                             const letztes = block.mappe.blaetter[block.mappe.blaetter.length - 1];
-                            /* Über `zuBlatt`, nicht von Hand: es setzt auch `breiten`
-                               und die Auswahl. Der handgeschriebene Wechsel liess
-                               `breiten` aus, und `alles()` stürzte gleich nach dem
-                               Anlegen — unsichtbar, solange die Prüfung die Logik
-                               nachbaute, statt durch den echten Dateiwähler zu gehen. */
                             zuBlatt(letztes.id);
                             rechneUndZeichne();
                             if (typeof UI !== 'undefined' && UI.toast)
@@ -1959,8 +1421,6 @@ const SpreadsheetView = (() => {
                 }
                 const breite = zeilen.reduce((m, z) => Math.max(m, z.length), 0);
                 const start = R.lies(gewaehlt) || { zeile: 0, spalte: 0 };
-                /* NACHGEZÄHLT, nicht geschätzt: wie viele gefüllte Zellen fallen
-                   weg, wenn ab hier eingelesen wird? */
                 const zaehleUeberschrieben = (vonZ, vonS) => {
                     let n = 0;
                     for (let z = 0; z < zeilen.length; z++)
@@ -1999,9 +1459,6 @@ const SpreadsheetView = (() => {
                     return;
                 const vonZ = antwort === 'hier' ? start.zeile : 0;
                 const vonS = antwort === 'hier' ? start.spalte : 0;
-                /* Das Blatt wächst mit dem, was hineinkommt — sonst fällt der Rest
-                   der Datei lautlos weg, und das ist genau die Sorte Verlust, die
-                   niemand bemerkt. */
                 if (vonZ + zeilen.length > blatt.zeilen)
                     blatt.zeilen = vonZ + zeilen.length;
                 if (vonS + breite > blatt.spalten)
@@ -2018,9 +1475,6 @@ const SpreadsheetView = (() => {
             });
             eingang.click();
         };
-        /* Eine Stelle für beides: die Leiste am Rechner und das Blatt am
-           Telefon rufen dasselbe auf. Zwei Kopien liefen auseinander, und die
-           am Telefon wäre die vergessene. */
         const stilSetzen = (a) => {
             const ber = bereich();
             if (!ber)
@@ -2036,9 +1490,6 @@ const SpreadsheetView = (() => {
             for (let z = ber.vonZ; z <= ber.bisZ; z++)
                 for (let s = ber.vonS; s <= ber.bisS; s++) {
                     const adr = R.schreibe(z, s);
-                    /* Eine leere Zelle bekommt erst dann einen Eintrag, wenn sie einen
-                       Stil trägt — sonst füllt sich das Blatt mit Nichts und die
-                       Sicherung wächst ohne Inhalt. */
                     const zelle = blatt.zellen[adr] || (blatt.zellen[adr] = { wert: '' });
                     zelle.stil = zelle.stil || {};
                     if (a === 'fett')
@@ -2056,7 +1507,6 @@ const SpreadsheetView = (() => {
                 }
             rechneUndZeichne();
         };
-        /* --- Werkzeuge -------------------------------------------------------- */
         werkzeuge.addEventListener('click', (e) => {
             const b = e.target.closest('button');
             if (!b || !b.dataset.a)
@@ -2072,9 +1522,6 @@ const SpreadsheetView = (() => {
                 rechneUndZeichne();
                 return;
             }
-            /* DAS FORMAT-BLATT AM TELEFON. Dieselben Befehle wie oben am Rechner,
-               nur als Blatt von unten — dort, wo der Daumen hinkommt. `Menue.menu`
-               macht daraus von allein eines. */
             if (a === 'format') {
                 if (typeof Menue === 'undefined')
                     return;
@@ -2143,17 +1590,6 @@ const SpreadsheetView = (() => {
             }
             stilSetzen(a);
         });
-        /* ======================================================================
-         * DIE REITER BEDIENEN
-         * --------------------------------------------------------------------
-         * Klicken wechselt · Doppelklick benennt um · Rechtsklick oder langer
-         * Druck öffnet das Menü · `+` legt an.
-         *
-         * DAS LÖSCHEN IST DIE STELLE, AN DER MAN AUFPASSEN MUSS. Ein Blatt zu
-         * löschen, auf das Formeln zeigen, macht diese Formeln kaputt — und zwar
-         * auf einem ANDEREN Blatt, das man gerade nicht sieht. Deshalb wird
-         * vorher nachgezählt und gesagt, wie viele es sind.
-         * ====================================================================*/
         const blattMenue = (b, x, y) => {
             if (typeof Menue === 'undefined')
                 return;
@@ -2181,9 +1617,6 @@ const SpreadsheetView = (() => {
                     return;
                 }
                 if (a === 'del') {
-                    /* NACHGEZÄHLT: wie viele Formeln auf ANDEREN Blättern zeigen
-                       hierher? Sie stehen woanders, man sieht sie gerade nicht, und
-                       sie werden gleich alle `#BEZUG!`. */
                     let betroffen = 0;
                     block.mappe.blaetter.forEach((andere) => {
                         if (andere.id === b.id)
@@ -2221,7 +1654,6 @@ const SpreadsheetView = (() => {
                 }
             });
         };
-        /** Ein Name, den es noch nicht gibt — sonst zeigen zwei Blätter auf eins. */
         const freierName = (wunsch) => {
             const belegt = new Set(block.mappe.blaetter.map((b) => b.name));
             if (!belegt.has(wunsch))
@@ -2237,15 +1669,11 @@ const SpreadsheetView = (() => {
             const neu = await Dialog.frage('Blatt umbenennen', b.name);
             if (!neu || neu === b.name)
                 return;
-            /* Kein `!` im Namen: er steht in jeder Formel vor dem Ausrufezeichen,
-               und ein zweites darin wäre nicht mehr eindeutig zu lesen. */
             const sauber = String(neu).replace(/[!'"]/g, '').trim().slice(0, 40);
             if (!sauber)
                 return;
             const alt = b.name;
             b.name = freierName(sauber);
-            /* JEDE FORMEL AUF JEDEM BLATT NACHZIEHEN. Ohne das zeigt nach dem
-               Umbenennen alles ins Leere — und zwar sofort und überall. */
             block.mappe.blaetter.forEach((andere) => {
                 Object.keys(andere.zellen || {}).forEach(adr => {
                     const z = andere.zellen[adr];
@@ -2284,7 +1712,6 @@ const SpreadsheetView = (() => {
             if (b)
                 blattMenue(b, e.clientX, e.clientY);
         });
-        /* Am Telefon gibt es keine rechte Maustaste — ein langer Druck tut es. */
         let reiterUhr = 0;
         reiter.addEventListener('touchstart', (e) => {
             const t = e.touches[0];
@@ -2304,21 +1731,13 @@ const SpreadsheetView = (() => {
         } };
         reiter.addEventListener('touchend', reiterLos);
         reiter.addEventListener('touchmove', reiterLos, { passive: true });
-        /* --- Erster Aufbau ---------------------------------------------------- */
         rechneUndZeichne();
-        /* EINMAL NACH DEM EINHÄNGEN, aus zwei Gründen auf einmal:
-           · Erst dann steht die Höhe fest — sonst stünde nur die erste Zeile da.
-           · Erst dann steht die wirkliche Schrift fest. Vorher gäbe
-             `getComputedStyle` die des Dokuments zurück, und die Breitenmessung
-             läge daneben — mal zu grosszügig, mal zu streng. */
         setTimeout(() => {
             const eine = koerper.querySelector('.tbl-z');
             if (eine) {
                 const g = getComputedStyle(eine);
                 schriftBasis = g.fontSize + ' ' + g.fontFamily;
             }
-            /* Eine angetippte Karte öffnet genau ihre Zeile, nicht wieder A1.
-               Erst jetzt ist die Feldhöhe bekannt und der Zielversatz ehrlich. */
             if (handy && block.telefonZelle) {
                 const ziel = R.lies(gewaehlt);
                 if (ziel)
@@ -2328,9 +1747,6 @@ const SpreadsheetView = (() => {
         }, 0);
         return w;
     };
-    /* REGELARTEN und SYMBOLSAETZE geben wir mit heraus: `test130` §11 fragt
-       den Katalog, statt eine zweite Liste danebenzustellen — eine Liste, die
-       jemand nachschreiben müsste, läuft mit der Zeit auseinander. */
     return { zeichne, zeigeWert, istFehler, REGELARTEN, SYMBOLSAETZE };
 })();
 window.SpreadsheetView = SpreadsheetView;

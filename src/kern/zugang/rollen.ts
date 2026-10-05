@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zugang/rollen.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/zugang/rollen.js — wer was darf
  * ----------------------------------------------------------------------------

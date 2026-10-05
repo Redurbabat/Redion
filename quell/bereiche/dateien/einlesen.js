@@ -1,76 +1,8 @@
 "use strict";
-/* ============================================================================
- * import.js — Excel, Word und EPUB einlesen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/dateien/einlesen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/dateien/einlesen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Alle drei Formate sind im Kern dasselbe: ein ZIP-Archiv voller XML-Dateien.
- * Deshalb steht hier zuerst ein kleiner ZIP-Leser, der ohne fremdes Paket
- * auskommt — das Entpacken übernimmt der Browser selbst über
- * DecompressionStream. Danach wird das XML gelesen und in Blöcke übersetzt.
- *
- *   .xlsx   →  eine Datenbank je Tabellenblatt
- *   .docx   →  Überschriften, Absätze, Listen und Tabellen
- *   .epub   →  ein Kapitel je Unterseite
- *
- * Kostenlos, offline, ohne Abhängigkeit.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/einlesen.ts (npm run bauen:ts). */
 const Einlesen = (() => {
-    /* ========================================================================
-     * DER ZIP-LESER
-     * ------------------------------------------------------------------------
-     * Ein ZIP endet mit dem „End of Central Directory". Von dort steht, wo das
-     * Inhaltsverzeichnis liegt; darin steht zu jeder Datei, wo ihre Daten
-     * beginnen. Mehr braucht es nicht.
-     * ======================================================================*/
-    /* ------------------------------------------------------------------------
-     * ZIP64 — seit dem 6. August gelesen statt abgelehnt (E39)
-     * ------------------------------------------------------------------------
-     * Über 65 535 Einträgen oder 4 GB schreiben Werkzeuge ZIP64. Im alten
-     * Schlusssatz stehen dann Platzhalter (0xFFFF, 0xFFFFFFFF); die echten
-     * Zahlen liegen in einem eigenen Satz davor.
-     *
-     * DREI STUFEN, und es lohnt sich, sie auseinanderzuhalten:
-     *
-     *   1. Ungeprüft war das der schlimmste Fall, den es gibt: `blob.slice`
-     *      auf einen Versatz von 0xFFFFFFFF gibt einen leeren Ausschnitt, die
-     *      Schleife läuft nullmal — **null Dateien und kein Fehler**. Wer eine
-     *      Sicherung mit 70 000 Anhängen einspielte, sah „0 Anhänge".
-     *   2. Dann eine ehrliche Ablehnung. Besser, aber keine Sicherung.
-     *   3. Jetzt gelesen. Redion schreibt solche Archive selbst, seit die
-     *      4-GB-Grenze gefallen ist — ein Packer, dessen Leser nicht
-     *      mitkommt, schriebe Sicherungen, die niemand zurückholen kann.
-     *
-     * WARUM AM WEGWEISER UND NICHT AN DEN PLATZHALTERN. Ein gewöhnliches
-     * Archiv mit genau 65 535 Einträgen schreibt ebenfalls 0xFFFF in das
-     * Anzahlfeld, ohne ZIP64 zu sein. Der Wegweiser (0x07064b50) steht
-     * dagegen nur dort, wo wirklich ZIP64 vorliegt — und immer genau 20 Byte
-     * vor dem Schlusssatz.
-     *
-     * UND ZIP64 IST NICHT ALLES-ODER-NICHTS. Pythons `zipfile` schreibt bei
-     * einer einzelnen grossen Datei die Platzhalter nur in den lokalen Kopf
-     * und lässt Verzeichnis und Schlusssatz gewöhnlich — nachgemessen am
-     * 6. August. Solche Archive las Redion schon immer richtig, weil es die
-     * Längen aus dem Verzeichnis nimmt. Deshalb wird hier jedes Feld einzeln
-     * angesehen und nicht das Archiv als Ganzes eingeordnet.
-     * ----------------------------------------------------------------------*/
     const istZip64 = (d, eocd) => eocd >= 20 && d.getUint32(eocd - 20, true) === 0x07064b50;
-    /* Acht Byte lesen. `getBigUint64` gäbe ein BigInt, und damit rechnet
-       `blob.slice` nicht — also gleich als Zahl. Bis 2^53 ist das exakt; ein
-       Archiv jenseits von acht Petabyte gibt es nicht. */
     const lies64 = (d, i) => d.getUint32(i, true) + d.getUint32(i + 4, true) * 4294967296;
-    /**
-     * Die echten Zahlen aus dem ZIP64-Zusatzfeld eines Verzeichniseintrags.
-     *
-     * DIE REIHENFOLGE IST FEST und die Anwesenheit bedingt: roh, gepackt,
-     * Versatz — jede Zahl steht nur dann da, wenn das zugehörige 32-Bit-Feld
-     * den Platzhalter trägt. Wer stattdessen alle drei erwartet, liest ab der
-     * ersten fehlenden Zahl alles verschoben und bekommt Werte, die fast
-     * stimmen. Abgelesen an Pythons `zipfile._decodeExtra`, nicht geraten.
-     */
     const zip64Zusatz = (d, extraStart, extraLaenge, roh, gepackt, versatz) => {
         let e = extraStart;
         const ende = extraStart + extraLaenge;
@@ -102,23 +34,6 @@ const Einlesen = (() => {
         'ist beschädigt. Ohne ihn stünden im alten Schlusssatz nur Platzhalter, ' +
         'und Redion läse aus einem Archiv voller Dateien null Dateien heraus — ' +
         'ohne das zu merken. Lieber diese Meldung.';
-    /**
-     * Anzahl, Grösse und Ort des Verzeichnisses — aus dem ZIP64-Schlusssatz,
-     * wenn es einen gibt, sonst aus dem alten.
-     *
-     * `z64Satz` ist der ZIP64-Schlusssatz, falls der Aufrufer ihn getrennt
-     * holen musste: beim Lesen aus einem Blob deckt `d` nur ein Fenster am
-     * Dateiende ab, und bei einem langen Archivkommentar liegt der Satz
-     * davor.
-     *
-     * WARUM HIER GEWORFEN WIRD UND NICHT AUSGEWICHEN. Der erste Entwurf
-     * nahm bei einem unlesbaren ZIP64-Satz „ersatzweise" die Zahlen aus dem
-     * alten Schlusssatz. Das ist die schlechteste aller Möglichkeiten: dort
-     * stehen dann 0xFFFFFFFF, `blob.slice` gibt einen leeren Ausschnitt, und
-     * heraus kommen **null Dateien und kein Fehler**. Genau der Fall, gegen
-     * den dieser Code einmal geschrieben wurde — beim Umbau auf ZIP64 wäre
-     * er beinahe zurückgekehrt. Gefunden hat ihn der eigene Prüflauf.
-     */
     const schlussLesen = (d, eocd, z64Satz) => {
         const anzahl = d.getUint16(eocd + 10, true);
         const groesse = d.getUint32(eocd + 12, true);
@@ -131,11 +46,7 @@ const Einlesen = (() => {
         return { anzahl: lies64(s, 32), groesse: lies64(s, 40),
             start: lies64(s, 48), zip64: true };
     };
-    /** Wo der ZIP64-Schlusssatz liegt — absolut, laut Wegweiser. */
     const z64Ort = (d, eocd) => lies64(d, eocd - 20 + 8);
-    /* Ein Archiv, das N Einträge ankündigt und keinen einzigen liefert, ist
-       kaputt — und schweigend leer zurückzugeben ist der Fehler, der Leuten
-       ihre Anhänge kostet. Diese eine Zeile fängt jede Sorte davon ab. */
     const vollzaehlig = (versprochen, gefunden) => {
         if (versprochen > 0 && gefunden === 0)
             throw new Error('Dieses Archiv kündigt ' + versprochen + ' Einträge an, ' +
@@ -146,7 +57,6 @@ const Einlesen = (() => {
     const zipLesen = async (puffer) => {
         const d = new DataView(puffer);
         const bytes = new Uint8Array(puffer);
-        /* Das Ende des Inhaltsverzeichnisses suchen — höchstens 65 KB Kommentar */
         let eocd = -1;
         for (let i = d.byteLength - 22; i >= Math.max(0, d.byteLength - 65558); i--) {
             if (d.getUint32(i, true) === 0x06054b50) {
@@ -156,9 +66,6 @@ const Einlesen = (() => {
         }
         if (eocd < 0)
             throw new Error('Das ist kein gültiges ZIP-Archiv.');
-        /* Hier liegt das ganze Archiv im Speicher, der ZIP64-Satz also auch —
-           er wird nur ausgeschnitten, damit `schlussLesen` beide Wege gleich
-           behandeln kann. */
         const z64 = istZip64(d, eocd) ? (() => {
             const o = z64Ort(d, eocd);
             return (o >= 0 && o + 56 <= d.byteLength)
@@ -172,19 +79,15 @@ const Einlesen = (() => {
             if (d.getUint32(zeiger, true) !== 0x02014b50)
                 break;
             const methode = d.getUint16(zeiger + 10, true);
-            /* Flags und Prüfsumme standen hier immer — gelesen wurden sie nie (E363). */
             const flags = d.getUint16(zeiger + 8, true);
             const crc = d.getUint32(zeiger + 16, true);
             const nameLaenge = d.getUint16(zeiger + 28, true);
             const extra = d.getUint16(zeiger + 30, true);
             const kommentar = d.getUint16(zeiger + 32, true);
             const name = ZipDetails.nameDecodieren(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge), flags);
-            /* Erst die 32-Bit-Felder, dann die echten Zahlen aus dem Zusatz —
-               aber nur für die Felder, die den Platzhalter tragen. */
             const echt = zip64Zusatz(d, zeiger + 46 + nameLaenge, extra, d.getUint32(zeiger + 24, true), d.getUint32(zeiger + 20, true), d.getUint32(zeiger + 42, true));
             const gepackt = echt.gepackt;
             const offset = echt.versatz;
-            /* Am lokalen Kopf stehen die tatsächlichen Längen der Zusatzfelder */
             const lokalName = d.getUint16(offset + 26, true);
             const lokalExtra = d.getUint16(offset + 28, true);
             const start = offset + 30 + lokalName + lokalExtra;
@@ -193,10 +96,6 @@ const Einlesen = (() => {
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
-        /* Entpacken übernimmt der Browser — und DANACH wird nachgerechnet (E363):
-           ein Eintrag, dessen Bytes nicht zur Prüfsumme passen, ist beschädigt
-           und kommt nicht als Datei heraus. Ein verschlüsselter kommt gar nicht
-           erst in den Entpacker. */
         const holen = async (name) => {
             const e = dateien.get(name);
             if (!e)
@@ -227,25 +126,6 @@ const Einlesen = (() => {
             const b = await holen(name);
             return b ? new TextDecoder().decode(b) : null;
         };
-        /**
-         * DIE BYTES, WIE SIE IM ARCHIV STEHEN — ungepackt gelassen.
-         *
-         * `holen` entpackt immer. Für eine Rundreise ist das falsch: wer eine
-         * `.docx` öffnet, EINEN Eintrag ändert und den Rest zurückschreiben
-         * will, müsste sonst jeden fremden Eintrag entpacken und neu ablegen.
-         * Der Schreiber packt nicht (Methode 0), aus einer 40-KB-Vorlage würde
-         * damit eine 300-KB-Datei — gültig, aber ohne Not aufgebläht, und
-         * jedes eingebettete Bild läge unkomprimiert darin.
-         *
-         * Hier kommen die Bytes deshalb unberührt heraus, mit allem, was der
-         * Schreiber braucht, um sie wieder einzusetzen: Methode, Prüfsumme,
-         * Rohgrösse. Es wird NICHT nachgerechnet — die Bytes werden ja nicht
-         * gelesen, sondern weitergereicht; die Prüfsumme des Originals bleibt
-         * gültig, solange die Bytes gleich bleiben.
-         *
-         * Verschlüsselte Einträge kommen auch hier nicht heraus: sie ohne
-         * Schlüssel weiterzureichen ergäbe ein Archiv, das niemand öffnen kann.
-         */
         const rohBytes = (name) => {
             const e = dateien.get(name);
             if (!e)
@@ -257,23 +137,6 @@ const Einlesen = (() => {
         };
         return { namen: [...dateien.keys()], holen, text, eintrag, rohBytes };
     };
-    /**
-     * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
-     *
-     * WARUM ES BEIDE GIBT. `zipLesen` bekommt einen ArrayBuffer — das ganze
-     * Archiv liegt dann im Speicher. Für eine Word-Datei ist das richtig und
-     * einfach. Für eine Redion-Sicherung mit einem Video darin ist es das
-     * Ende: `await datei.arrayBuffer()` auf ein halbes Gigabyte bringt ein
-     * Telefon zu Fall.
-     *
-     * Ein ZIP kommt einem dabei entgegen. Sein Inhaltsverzeichnis steht am
-     * ENDE; man liest die letzten paar Kilobyte, weiss danach, wo jeder
-     * Eintrag anfängt und wie lang er ist — und holt sich nur den, den man
-     * gerade braucht. `blob.slice` schneidet, ohne zu lesen.
-     *
-     * Zurück kommt deshalb ein **Blob** je Eintrag und kein Byte-Feld: wer ihn
-     * weiterreicht, ohne ihn anzusehen, hat ihn nie im Speicher gehabt.
-     */
     const zipLesenAusBlob = async (blob) => {
         const fensterStart = Math.max(0, blob.size - 65558);
         const ende = new DataView(await blob.slice(fensterStart).arrayBuffer());
@@ -285,12 +148,6 @@ const Einlesen = (() => {
             }
         if (eocd < 0)
             throw new Error('Das ist kein gültiges ZIP-Archiv.');
-        /* DEN ZIP64-SATZ HOLT SICH DIESER WEG SELBST, per absolutem Versatz aus
-           dem Blob. Ihn aus dem Fenster zu schneiden wäre naheliegend und in
-           den meisten Fällen richtig — aber bei einem langen Archivkommentar
-           liegt er davor, und dann läse man an einer beliebigen Stelle nach.
-           Ein `slice` kostet nichts; eine Sicherung, die daran scheitert,
-           kostet alles. */
         const z64 = istZip64(ende, eocd)
             ? await (async () => {
                 const o = z64Ort(ende, eocd);
@@ -322,13 +179,6 @@ const Einlesen = (() => {
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
-        /* Die Längen der Zusatzfelder stehen am lokalen Kopf noch einmal, und
-           zwar oft anders als im Verzeichnis. Wer das Verzeichnis glaubt, liest
-           um ein paar Byte verschoben — und bekommt Daten, die fast stimmen. */
-        /* DIE PRÜFSUMME SCHEIBCHENWEISE (E363): ein Blob liegt beim Browser,
-           nicht im Arbeitsspeicher — geprüft wird er in Stücken von einem
-           Megabyte, wie der Schreiber ihn rechnet. Ein beschädigter Eintrag
-           kam vorher als vollständige Datei heraus, still. */
         const SCHEIBE = 1024 * 1024;
         const pruefsumme = async (name, b, soll) => {
             let z = ZipDetails.crc32Start();
@@ -370,25 +220,15 @@ const Einlesen = (() => {
             const b = await alsBlob(name);
             return b ? await b.text() : null;
         };
-        /* DIE ROHGRÖSSE VOR DEM ENTPACKEN (E350). Sie steht im Verzeichnis; wer
-           sie kennt, schickt einen Eintrag, der 1 KB gepackt und 10 GB roh ist,
-           gar nicht erst durch den Entpacker. -1 heisst: unbekannt. */
         const groesse = (name) => {
             const e = dateien.get(name);
             return e && Number.isFinite(Number(e.roh)) ? Number(e.roh) : -1;
         };
-        /** Was das Verzeichnis über einen Eintrag sagt — vor dem ersten Byte (E363). */
         const eintrag = (name) => {
             const e = dateien.get(name);
             return e ? { methode: e.methode, groesse: Number(e.roh), gepackt: Number(e.gepackt), crc: e.crc >>> 0,
                 flags: e.flags, verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
         };
-        /**
-         * Dasselbe Durchreichen wie in `zipLesen`, nur als Blob — hier liegt das
-         * Archiv nicht im Speicher, und ein Video als `Uint8Array` wäre genau
-         * der Sturz, den dieser Leser vermeidet. Der Schreiber nimmt Blobs
-         * ohnehin entgegen, ohne sie ganz zu laden.
-         */
         const rohBytes = async (name) => {
             const e = dateien.get(name);
             if (!e)
@@ -403,13 +243,6 @@ const Einlesen = (() => {
         return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag, rohBytes };
     };
     const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
-    /* ========================================================================
-     * EXCEL
-     * ------------------------------------------------------------------------
-     * Zellen stehen in sheet1.xml, Texte meist ausgelagert in sharedStrings.xml.
-     * Die Spaltenbuchstaben werden in Nummern zurückgerechnet, damit leere
-     * Zellen nicht die Reihenfolge verschieben.
-     * ======================================================================*/
     const spalteZuNummer = (bezug) => {
         const m = String(bezug).match(/^([A-Z]+)/);
         if (!m)
@@ -431,7 +264,6 @@ const Einlesen = (() => {
         blaetter.bericht = bericht;
         return blaetter;
     };
-    /** Nutzertext für die Vorschau vor der ersten Mutation. */
     const tabellenBerichtText = (bericht) => {
         if (!bericht)
             return '';
@@ -453,7 +285,6 @@ const Einlesen = (() => {
             teile.push('Nicht übernommen: ' + verloren.join(' · '));
         return teile.join('\n');
     };
-    /** Ziel eines OPC-Bezugs relativ zur Quelldatei normalisieren. */
     const paketZiel = (quelle, ziel) => {
         if (ziel.startsWith('/'))
             return ziel.replace(/^\/+/, '');
@@ -469,7 +300,6 @@ const Einlesen = (() => {
         }
         return teile.join('/');
     };
-    /** ODF-Zellbezüge zurück in Redions A1-Schreibweise. */
     const formelAussen = (text, aendere) => {
         let raus = '', frei = '', i = 0;
         const freiLeeren = () => { raus += aendere(frei); frei = ''; };
@@ -508,43 +338,10 @@ const Einlesen = (() => {
         f = formelAussen(f, teil => teil
             .replace(/\[\.(\$?[A-Z]{1,3}\$?\d+):\.(\$?[A-Z]{1,3}\$?\d+)\]/g, '$1:$2')
             .replace(/\[\.(\$?[A-Z]{1,3}\$?\d+)\]/g, '$1'));
-        /* Blatt-, Datei- und Matrixbezüge in eckigen Klammern gehören nicht zu
-           Redions Formelmodell. Den zwischengespeicherten Wert behalten wir,
-           aber behaupten im Bericht nicht, der Ausdruck sei übernommen. */
         if (formelAussen(f, teil => /[\[\]]/.test(teil) ? '[' : '').includes('['))
             return null;
         return '=' + f.replace(/^=/, '');
     };
-    /* ==========================================================================
-     * ODS — das Tabellenformat von LibreOffice und OpenOffice
-     * --------------------------------------------------------------------------
-     * WARUM ÜBERHAUPT. Wer keine Excel-Lizenz hat, speichert in .ods — das ist
-     * der Normalfall auf einem Linux-Rechner und in vielen Schulen und
-     * Verwaltungen. Eine Tabellen-App, die dieses Format nicht lesen kann,
-     * sagt solchen Leuten: hol dir erst Excel.
-     *
-     * WIE ES GEBAUT IST. Ein ODS ist ein ZIP mit `content.xml` darin. Die
-     * Tabellen stehen als `<table:table>`, die Zeilen als `<table:table-row>`,
-     * die Zellen als `<table:table-cell>`.
-     *
-     * ZWEI DINGE, DIE MAN LEICHT ÜBERSIEHT UND DIE ALLES VERSCHIEBEN:
-     *
-     *   1. WIEDERHOLUNGEN. Steht in zehn Zellen nebeneinander dasselbe — oder
-     *      nichts —, schreibt LibreOffice EINE Zelle mit
-     *      `table:number-columns-repeated="10"`. Wer das ignoriert, bekommt
-     *      eine Tabelle, in der ab der ersten Lücke jede Spalte verrutscht
-     *      ist. Dasselbe für Zeilen.
-     *
-     *   2. DER SCHWANZ. Am Ende jedes Blattes stehen oft tausend leere Zeilen
-     *      mit einer einzigen Wiederholungsangabe — „ab hier ist bis Zeile
-     *      1048576 nichts". Wer die ausrollt, baut eine Million leerer Zeilen
-     *      und friert den Browser ein. Deshalb wird die Wiederholung gedeckelt
-     *      und am Schluss abgeschnitten, was leer ist.
-     *
-     * DER WERT steht als Zahl in `office:value` und als Text in `<text:p>`.
-     * Genommen wird die Zahl, wenn es eine gibt — sonst käme aus „1.450,50"
-     * beim Rechnen nichts heraus.
-     * ========================================================================*/
     const ODS_MAX_WIEDERHOLUNG = 1024;
     const odsLesen = async (puffer) => {
         const zip = await zipLesen(puffer);
@@ -562,8 +359,6 @@ const Einlesen = (() => {
         bericht.ausgelassen.verbundeneZellen = [...doc.getElementsByTagName('table:table-cell')]
             .filter(c => +(c.getAttribute('table:number-columns-spanned') || 1) > 1 ||
             +(c.getAttribute('table:number-rows-spanned') || 1) > 1).length;
-        /* Die Zellstile (E97) aus den automatic-styles — übernommen wird, was
-           Redion kennt: fett, kursiv, Ausrichtung, Prozent, Währung. */
         const zellStil = new Map();
         const zellStilVerlust = new Set();
         {
@@ -611,8 +406,6 @@ const Einlesen = (() => {
                     zellStilVerlust.add(stilName);
             }
         }
-        /* `getElementsByTagName` mit dem vollen Namen: `querySelectorAll` kommt
-           mit dem Doppelpunkt im Namensraum nicht zurecht. */
         const tabellen = [...doc.getElementsByTagName('table:table')];
         const blaetter = [];
         for (const tab of tabellen) {
@@ -661,8 +454,6 @@ const Einlesen = (() => {
                         formelWerte.push(formel);
                     }
                 }
-                /* Rechts abschneiden, was leer ist — sonst schleppt jede Zeile die
-                   ausgerollten Wiederholungen mit. Die Stile laufen synchron. */
                 while (werte.length && (werte[werte.length - 1] === '' ||
                     werte[werte.length - 1] === undefined) &&
                     !formelWerte[werte.length - 1] && !stilWerte[werte.length - 1])
@@ -675,7 +466,6 @@ const Einlesen = (() => {
                     formeln.push([...formelWerte]);
                 }
             }
-            /* Und unten dasselbe. */
             while (zeilen.length && !(zeilen[zeilen.length - 1] ?? []).length)
                 zeilen.pop();
             stile.length = zeilen.length;
@@ -695,7 +485,6 @@ const Einlesen = (() => {
             if (kommentarText)
                 bericht.ausgelassen.kommentare += xml(kommentarText).querySelectorAll('comment').length;
         }
-        /* Gemeinsame Texte */
         const stText = await zip.text('xl/sharedStrings.xml');
         const gemeinsam = [];
         if (stText) {
@@ -703,10 +492,6 @@ const Einlesen = (() => {
                 gemeinsam.push([...si.querySelectorAll('t')].map(t => t.textContent ?? '').join(''));
             });
         }
-        /* Die Zellstile (E97): cellXfs verweisen auf Schriften und
-           Zahlenformate. Übernommen wird, was Redion selbst kennt —
-           fett, kursiv, Ausrichtung, Prozent, Währung. Der Rest der
-           styles.xml (Farben, Rahmen, Füllungen) bleibt bewusst liegen. */
         const stilText = await zip.text('xl/styles.xml');
         let xfListe = [];
         let xfVerlust = [];
@@ -720,7 +505,6 @@ const Einlesen = (() => {
             const formatVon = (id) => {
                 if (!id)
                     return undefined;
-                /* 9 und 10 sind Excels eingebaute Prozentformate. */
                 if (id === 9)
                     return { art: 'prozent', stellen: 0 };
                 if (id === 10)
@@ -771,10 +555,6 @@ const Einlesen = (() => {
                     unbekannteSchrift || (!!numFmtId && !formatVon(numFmtId));
             });
         }
-        /* Blattnamen UND ihre echten OPC-Beziehungen aus der Mappe. `sheet1.xml`
-           muss nicht Blatt 1 sein; fremde Schreiber dürfen beliebige Dateinamen
-           und Relationship-Reihenfolgen verwenden. Die alte numerische Sortierung
-           konnte deshalb Namen und Inhalt vertauschen. */
         const wbText = await zip.text('xl/workbook.xml');
         const meta = [];
         if (wbText)
@@ -794,7 +574,6 @@ const Einlesen = (() => {
                 if (id && ziel)
                     beziehungen.set(id, paketZiel('xl/workbook.xml', ziel));
             });
-        /* Jedes Blatt einlesen */
         const blaetter = [];
         const rueckfall = zip.namen.filter((n) => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
             .sort((a, b) => (+a.match(/\d+/)[0]) - (+b.match(/\d+/)[0]));
@@ -865,30 +644,10 @@ const Einlesen = (() => {
         }
         return berichtAn(blaetter, bericht);
     };
-    /* ========================================================================
-     * WORD
-     * ======================================================================*/
-    /**
-     * EIN ABSATZ MIT SEINER AUSZEICHNUNG (L72 Teil 2, E315).
-     *
-     * Hier stand `[...getElementsByTagName('w:t')].map(…).join('')` — nur der
-     * Text. Fett und kursiv standen in `w:rPr` daneben und wurden
-     * weggeworfen; wer eine Word-Datei einlas, bekam eine graue Wand.
-     *
-     * Gelesen wird je LAUF, und zurückgeschrieben über denselben Kern, den
-     * der Export benutzt (`core/text/inline.ts`). Damit passen die beiden
-     * Richtungen zusammen — das ist der ganze Grund, warum der Kern
-     * überhaupt einer ist.
-     *
-     * `w:tab` und `w:br` sind keine Läufe, sondern Zeichen: ohne sie klebt
-     * das Wort davor am Wort danach.
-     */
     const absatzText = (absatz) => {
         const laeufe = [];
         for (const r of absatz.getElementsByTagName('w:r')) {
             const eig = r.getElementsByTagName('w:rPr')[0];
-            /* `w:b w:val="0"` heisst AUSDRÜCKLICH nicht fett — Word schreibt das,
-               wenn eine Vorlage fett ist und ein Lauf es zurücknimmt. */
             const an = (name) => {
                 const e = eig?.getElementsByTagName('w:' + name)[0];
                 if (!e)
@@ -907,22 +666,12 @@ const Einlesen = (() => {
             }
             if (!text)
                 continue;
-            /* FESTE BREITE IST AUCH EINE AUSZEICHNUNG. Der Export schreibt für
-               `code` ein `w:rFonts w:ascii="Consolas"`; wer sie hier nicht
-               zurückliest, verliert sie beim Rundlauf — und die beiden
-               Richtungen laufen genau da auseinander, wo der gemeinsame Kern sie
-               zusammenhalten sollte.
-               Erkannt wird die FAMILIE, nicht der eine Name: eine Word-Datei aus
-               fremder Hand schreibt „Courier New" oder „Consolas", nicht das,
-               was Redion schreibt. */
             const schrift = String(eig?.getElementsByTagName('w:rFonts')[0]
                 ?.getAttribute('w:ascii') || '');
             const fest = /consol|courier|mono|menlo|liberation mono/i.test(schrift);
             laeufe.push({ text, fett: an('b'), kursiv: an('i'), durch: an('strike'),
                 code: fest });
         }
-        /* Gleich ausgezeichnete Nachbarn zusammenlegen: Word zerschneidet einen
-           Satz gern in fünf Läufe, und `**a****b**` wäre daraus geworden. */
         const glatt = [];
         for (const l of laeufe) {
             const vor = glatt[glatt.length - 1];
@@ -942,22 +691,6 @@ const Einlesen = (() => {
         const doc = xml(t);
         const bloecke = [];
         const koerper = doc.getElementsByTagName('w:body')[0] || doc.documentElement;
-        /* ══ DIE RÜCKSPUR ZUM `<w:t>` (E595, Bogen O7) ═════════════════════════
-           Damit ein geänderter Absatz wieder in die Originaldatei kommt, muss
-           der Block wissen, WOHER er stammt. Er bekommt deshalb
-           `quelle: { p: <Nummer im Körper> }`.
-    
-           DIE NUMMER IST DIE IM KÖRPER, NICHT DIE DES BLOCKS. Leere Absätze
-           werden übersprungen (`if (!text) continue`), Tabellen sind eigene
-           Knoten — der dritte Block ist also nicht der dritte `<w:p>`. Wer das
-           verwechselt, schreibt Text in den falschen Absatz, und das ist
-           schlimmer als gar nicht zu schreiben (§51).
-    
-           NUR WO ES EINDEUTIG IST: eine Spur bekommt nur ein Absatz mit genau
-           EINER Textstelle. Ein Absatz aus mehreren Läufen — „Ein zweiter
-           Absatz mit *kursivem* Teil" — müsste beim Zurückschreiben auf seine
-           Läufe verteilt werden, und jede Verteilung wäre geraten. Dasselbe
-           Urteil wie bei den Folien (E593). */
         let nr = -1;
         for (const knoten of koerper.children) {
             const tag = knoten.tagName;
@@ -1001,30 +734,7 @@ const Einlesen = (() => {
         }
         return bloecke;
     };
-    /* ========================================================================
-     * POWERPOINT (.pptx)
-     * ------------------------------------------------------------------------
-     * EINE FOLIE IST EIN `blatt`-BLOCK. Kein neuer Blocktyp: das A4-Blatt
-     * trägt bereits `blattBreite`/`blattHoehe` und die Zeichenschicht
-     * `Marken` (E103) — und damit Textkästen mit Schrift und Rahmen, Bilder
-     * mit eigener Datei, Verschieben, Drehen, Sperren und hundert Schritte
-     * rückgängig. Eine zweite Maschine für dieselbe Frage wäre der zweite
-     * Katalog aus §8, und der zweite ist immer der schlechtere.
-     *
-     * DAS MASS. PowerPoint rechnet in EMU (English Metric Units), 914400 je
-     * Zoll. Redions Marken rechnen in Blattpunkten, 72 je Zoll. Das sind
-     * genau 12700 EMU je Punkt — eine ganze Zahl, kein Rundungsfehler.
-     * Schriftgrade stehen in Hundertstelpunkten (`sz="2800"` = 28 pt).
-     *
-     * WAS HIER NICHT PASSIERT. Es wird nichts gerendert und nichts geraten:
-     * gelesen werden die Formen, die im Folien-XML wirklich stehen. Was eine
-     * Folie vom Layout oder vom Master ERBT — Hintergründe, Platzhaltertexte,
-     * Fusszeilen — steht dort nicht und kommt hier deshalb auch nicht an. Das
-     * ist als Lücke eingetragen, nicht stillschweigend weggelassen.
-     * ======================================================================*/
-    /** EMU → Blattpunkte. 914400 EMU je Zoll, 72 Punkte je Zoll. */
     const emuZuPunkt = (wert) => Math.round((Number(wert) || 0) / 12700 * 100) / 100;
-    /** Die Beziehungen einer Teildatei: r:id → Ziel, schon aufgelöst. */
     const relsLesen = async (zip, teil) => {
         const schraeg = teil.lastIndexOf('/');
         const ordner = schraeg < 0 ? '' : teil.slice(0, schraeg);
@@ -1039,9 +749,6 @@ const Einlesen = (() => {
             let ziel = r.getAttribute('Target') || '';
             if (!id || !ziel)
                 continue;
-            /* Ziele stehen relativ zur Teildatei. `../media/bild1.png` von
-               `ppt/slides/` aus ist `ppt/media/bild1.png`. Ohne das Auflösen
-               fände der Leser kein einziges Bild. */
             if (!ziel.startsWith('/')) {
                 const teile = (ordner ? ordner.split('/') : []);
                 for (const stueck of ziel.split('/')) {
@@ -1058,33 +765,9 @@ const Einlesen = (() => {
         }
         return karte;
     };
-    /**
-     * DER ERSTE LAUF EINES ABSATZES BESTIMMT SEIN FORMAT — nicht der erste
-     * Lauf des ganzen KASTENS (E557).
-     *
-     * Hier stand `txBody.getElementsByTagName('a:rPr')[0]`, also der erste
-     * Lauf der ersten Zeile, für alles. Gemessen an einer eigens gebauten
-     * Datei: „klein"(12 pt) + „GROSS"(36 pt, fett, blau) kam als EINE Marke
-     * „klein GROSS" in 12 pt normal an; ein roter Titel (`srgbClr CC0000`)
-     * kam schwarz; drei Aufzählungsebenen kamen als flacher Block.
-     *
-     * INNERHALB eines Absatzes bleibt es beim ersten Lauf — Redions Textmarke
-     * hat genau einen Grad, und das ist eine Lücke, keine Nachlässigkeit
-     * (L151). Ein Absatz ist aber die Einheit, die ein Mensch als „Zeile mit
-     * eigenem Aussehen" sieht, und die ist jetzt erreichbar.
-     */
     const absaetzeLesen = (txBody, thema = {}, paar = { major: '', minor: '' }) => {
         const raus = [];
         for (const absatz of txBody.getElementsByTagName('a:p')) {
-            /* ══ JEDER LAUF MIT SEINEM EIGENEN FORMAT (E561) ════════════════════
-               Bis hierher nahm diese Schleife nur den TEXT jedes Laufs und das
-               FORMAT des ersten. „klein GROSS" kam damit vollständig in 12 pt an,
-               und der Grad des zweiten Laufs war lautlos weg.
-      
-               Ein `a:br` ist ein harter Umbruch und wird ein eigener Lauf mit
-               `\n` — so bleibt er in der Reihenfolge stehen, statt am Ende zu
-               landen. Ein `a:fld` (Foliennummer, Datum) trägt sein Format wie
-               ein Lauf und wird auch so gelesen. */
             let text = '';
             const laeufe = [];
             const laufAnhaengen = (stueck, eigen) => {
@@ -1110,18 +793,11 @@ const Einlesen = (() => {
                 }
             }
             const pPr = [...absatz.children].find(k => k.tagName === 'a:pPr');
-            /* Der erste ECHTE Lauf, nicht der erste `a:rPr` überhaupt: `a:pPr`
-               trägt ein `a:defRPr`, und das ist nicht das Format des Textes. */
             const lauf = [...absatz.children].find(k => k.tagName === 'a:r');
             const rPr = lauf?.getElementsByTagName('a:rPr')[0];
             const sz = Number(rPr?.getAttribute('sz'));
-            /* Die Farbe des Textes steht im LAUF, nicht in `p:spPr` — dort wäre
-               es die Füllung der Form. `formFarbe` darf hier also nicht helfen. */
             const fuellung = rPr ? [...rPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
             const rgb = farbeAus(fuellung, thema).replace('#', '');
-            /* `buNone` schlägt jedes geerbte Zeichen; `buAutoNum` bekommt einen
-               Punkt, weil die echte Nummer erst aus der Absatzfolge käme — und
-               eine falsche Nummer wäre schlimmer als ein neutrales Zeichen. */
             let zeichen = '';
             if (pPr && !pPr.getElementsByTagName('a:buNone')[0]) {
                 const buChar = pPr.getElementsByTagName('a:buChar')[0]?.getAttribute('char');
@@ -1138,35 +814,11 @@ const Einlesen = (() => {
                 zeichen, ausricht: absatzAusricht(pPr), laeufe,
                 schrift: schriftFamilie(schriftName(rPr, paar)) });
         }
-        /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
-           und der macht aus einem Titel einen Kasten mit Loch darunter. */
         while (raus.length && !raus[raus.length - 1]?.text.trim())
             raus.pop();
         return raus;
     };
-    /** Der ganze Text eines Kastens, für Titelsuche und Leerprüfung. */
     const formText = (txBody) => absaetzeLesen(txBody).map(a => a.text).join('\n');
-    /**
-     * Die Ausrichtung eines Absatzes — `a:pPr@algn` (E560).
-     *
-     * Heisst `absatzAusricht` und nicht `ausrichtung`: sechshundert Zeilen
-     * weiter oben gibt es schon ein `ausrichtung`, und das ist ein Element aus
-     * einer Excel-Stilvorlage. Zwei Namen für zwei Sachen.
-     *
-     * PowerPoint kennt fünf Werte, Redions Textmarke drei. Die Zuordnung ist
-     * deshalb keine Tabelle, sondern eine Entscheidung:
-     *
-     *     l     → links     (und das ist auch der Fall ohne Angabe)
-     *     ctr   → mitte
-     *     r     → rechts
-     *     just  → links     Blocksatz. Er BRAUCHT gestreckte Wortabstände,
-     *     dist  → links     und die hat die Markenschicht nicht. Links ist
-     *                       die Kante, die der Blocksatz mit sich teilt —
-     *                       zentriert wäre an jeder Zeile falsch.
-     *
-     * Gibt '' zurück, wo nichts steht: dann bekommt die Marke gar kein Feld,
-     * und eine alte Marke ohne das Feld verhält sich weiter wie bisher.
-     */
     const absatzAusricht = (pPr) => {
         const algn = pPr?.getAttribute('algn') || '';
         if (algn === 'ctr')
@@ -1175,36 +827,10 @@ const Einlesen = (() => {
             return 'rechts';
         return '';
     };
-    /**
-     * EINE TABELLE ALS MARKEN AUF DER FOLIE (E565).
-     *
-     * Redion hat einen Tabellenblock — aber eine Folie ist ein BLATT mit
-     * Marken, kein Editor. Die Tabelle zum Block zu machen hiesse, sie von
-     * der Folie zu nehmen und woanders hinzulegen; die Folie sähe dann anders
-     * aus als das Original, und genau das war der Sinn der letzten acht Bögen.
-     * Also bleibt sie, wo sie ist: als Gitter aus Rechtecken und einem Text je
-     * Zelle. Sie später als Datenbank HERAUSZUZIEHEN wäre eine eigene
-     * Handlung und eine eigene Entscheidung.
-     *
-     * ─── DIE MASSE STEHEN IM GITTER, NICHT AN DEN ZELLEN ─────────────────
-     *     <a:tblGrid><a:gridCol w="2743200"/>…   Spaltenbreiten in EMU
-     *     <a:tr h="370840">                      Zeilenhöhe in EMU
-     * Eine Zelle hat keine eigene Lage. Sie ergibt sich aus der Summe der
-     * Spalten links von ihr und der Zeilen über ihr — und deshalb muss die
-     * Schleife mitzählen statt zu fragen.
-     *
-     * ─── VERBUNDENE ZELLEN ──────────────────────────────────────────────
-     * `gridSpan` sagt, über wie viele Spalten eine Zelle geht; `hMerge` und
-     * `vMerge` markieren die VERSCHLUCKTEN Nachbarn. Die werden übersprungen —
-     * ein Rechteck darüber wäre ein Strich mitten durch die verbundene Zelle.
-     * `rowSpan` wird gelesen, damit die Zelle hoch genug wird.
-     */
     const tabelleLesen = (frame, thema, grund) => {
         const tbl = frame.getElementsByTagName('a:tbl')[0];
         if (!tbl)
             return [];
-        /* EIN `p:graphicFrame` TRÄGT `p:xfrm`, NICHT `a:xfrm`. Derselbe Inhalt,
-           ein anderer Namensraum — `formLage` findet ihn deshalb nicht. */
         const xfrm = frame.getElementsByTagName('p:xfrm')[0]
             || frame.getElementsByTagName('a:xfrm')[0];
         const off = xfrm?.getElementsByTagName('a:off')[0];
@@ -1226,8 +852,6 @@ const Einlesen = (() => {
             let c = 0;
             for (const tc of [...tr.children].filter(k => k.tagName === 'a:tc')) {
                 const breite = spalten[c] ?? 0;
-                /* Eine verschluckte Zelle bekommt kein Rechteck — sonst liefe ein
-                   Strich mitten durch die verbundene. Ihre Breite zählt trotzdem. */
                 if (tc.getAttribute('hMerge') === '1' || tc.getAttribute('vMerge') === '1') {
                     x += breite;
                     c++;
@@ -1251,8 +875,6 @@ const Einlesen = (() => {
                 const text = absaetze.map(a => a.text).join('\n').trim();
                 if (text) {
                     const a0 = absaetze.find(a => a.text.trim()) || absaetze[0];
-                    /* Der Rand der Zelle: PowerPoints Vorgabe sind 0,1 Zoll links und
-                       rechts, 0,05 oben und unten — 7,2 bzw. 3,6 Punkt. */
                     raus.push({ art: 'text', text,
                         x: x + 7.2, y: y + 3.6,
                         breiteBox: Math.max(12, voll - 14.4),
@@ -1273,18 +895,6 @@ const Einlesen = (() => {
             ?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface') || '';
         return { major: namen('a:majorFont'), minor: namen('a:minorFont') };
     };
-    /**
-     * Aus einem Schriftnamen eine von Redions fünf Familien machen.
-     *
-     * DIE LISTE IST KURZ UND EHRLICH. Sie nennt, was auf Schweizer Rechnern
-     * und in Office-Vorlagen wirklich vorkommt; alles andere fällt auf
-     * `standard`. Dazu drei Endungen, die für sich sprechen — „Serif",
-     * „Mono", „Condensed" stehen im Namen, wenn sie zutreffen.
-     *
-     * KEINE RATEREI ÜBER DAS HINAUS: „Optima" ist serifenlos, „Rockwell" hat
-     * Serifen, und keins von beidem sagt es im Namen. Wer eine Schrift
-     * vermisst, trägt sie hier ein — eine Zeile, nachprüfbar.
-     */
     const SCHRIFT_SERIF = new Set([
         'georgia', 'times new roman', 'times', 'garamond', 'eb garamond',
         'adobe garamond pro', 'cambria', 'constantia', 'book antiqua', 'palatino',
@@ -1324,7 +934,6 @@ const Einlesen = (() => {
             return 'serif';
         return '';
     };
-    /** Den Schriftnamen aus einem `a:rPr`/`a:defRPr` holen, `+mj-lt` aufgelöst. */
     const schriftName = (pr, paar) => {
         const roh = pr?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface') || '';
         if (roh === '+mj-lt')
@@ -1333,17 +942,6 @@ const Einlesen = (() => {
             return paar.minor;
         return roh;
     };
-    /**
-     * WELCHE FORM ES IST — `a:prstGeom@prst` (E566).
-     *
-     * PowerPoint kennt weit über hundert Formen, Redions Markenschicht fünf
-     * geschlossene und zwei offene. Abgebildet wird nur, was WIRKLICH passt;
-     * alles andere gibt '' zurück und wird gezählt statt geraten. Ein Stern
-     * als Rechteck wäre schlimmer als ein Stern, der fehlt und genannt wird.
-     *
-     * Ein Kasten ohne `a:prstGeom` ist in PowerPoint ein Rechteck — so steht
-     * es im Format, und so schreibt es auch jeder Textrahmen.
-     */
     const FORMEN = {
         rect: 'rectangle', roundRect: 'roundrect', round1Rect: 'roundrect',
         round2SameRect: 'roundrect', round2DiagRect: 'roundrect', snip1Rect: 'rectangle',
@@ -1359,19 +957,6 @@ const Einlesen = (() => {
             return 'rectangle';
         return FORMEN[geom.getAttribute('prst') || ''] || '';
     };
-    /**
-     * DER UMRISS einer Form — `a:ln` (E566).
-     *
-     * `null` heisst „kein Strich". Das ist der häufige Fall und der wichtige:
-     * ein farbiger Kasten hinter einem Titel hat KEINEN Rand, und ein Rand in
-     * der Vorgabefarbe würde ihn um zweieinhalb Punkt vergrössern und mit
-     * einem grauen Saum umgeben, den im Original niemand sieht.
-     *
-     * Auch ein fehlendes `a:ln` heisst hier „kein Strich". Genau genommen käme
-     * die Vorgabe dann aus `p:style > a:lnRef` und dem Thema — aber zwischen
-     * „nichts zeichnen" und „etwas Geratenes zeichnen" ist nichts das
-     * ehrlichere.
-     */
     const formRand = (form, thema) => {
         const spPr = form.getElementsByTagName('p:spPr')[0];
         const ln = spPr ? [...spPr.children].find(k => k.tagName === 'a:ln') : undefined;
@@ -1383,28 +968,11 @@ const Einlesen = (() => {
         const farbe = farbeAus(voll, thema);
         if (!farbe)
             return null;
-        /* `w` steht in EMU; 12700 EMU sind ein Punkt. */
         const roh = Number(ln.getAttribute('w'));
         const breite = Number.isFinite(roh) && roh > 0
             ? Math.max(0.5, Math.round((roh / 12700) * 10) / 10) : 1;
         return { farbe, breite };
     };
-    /**
-     * Die DREHUNG einer Form, in Grad im Uhrzeigersinn (E563).
-     *
-     * `a:xfrm@rot` steht in 60000steln Grad: 5400000 sind 90°. Die Richtung
-     * ist dieselbe wie bei SVGs `rotate` und bei Redions `dreh` — es muss
-     * also nichts gespiegelt werden, nur geteilt.
-     *
-     * AUF 0…360 GEBRACHT, und 0 heisst „keine". PowerPoint schreibt auch
-     * negative Werte und solche über 360; eine Marke mit `dreh: -90` wäre
-     * gültig, aber `dreh: 270` ist dieselbe Drehung und liest sich besser.
-     *
-     * NUR AUS DEM EIGENEN `a:xfrm`. `getElementsByTagName` fände auch das
-     * `a:xfrm` eines Kindes in einer Gruppe — und dessen Drehung gehört dem
-     * Kind, nicht der Gruppe. Deshalb derselbe Weg wie `formLage`: das erste,
-     * und das ist in einem `p:sp` das eigene.
-     */
     const formDrehung = (form) => {
         const xfrm = form.getElementsByTagName('a:xfrm')[0];
         const roh = Number(xfrm?.getAttribute('rot'));
@@ -1413,7 +981,6 @@ const Einlesen = (() => {
         const grad = Math.round((roh / 60000) * 100) / 100;
         return ((grad % 360) + 360) % 360;
     };
-    /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
     const formLage = (form) => {
         const xfrm = form.getElementsByTagName('a:xfrm')[0];
         if (!xfrm)
@@ -1425,15 +992,6 @@ const Einlesen = (() => {
         return { x: emuZuPunkt(off.getAttribute('x')), y: emuZuPunkt(off.getAttribute('y')),
             w: emuZuPunkt(ext.getAttribute('cx')), h: emuZuPunkt(ext.getAttribute('cy')) };
     };
-    /* ══ DER ÜBERGANG EINER FOLIE (E600) ═══════════════════════════════════
-       PowerPoint kennt über vierzig Übergänge, viele davon als 3D-Effekt, den
-       ein Browser ohne eigene Grafikschicht nicht nachbaut. Redion kennt SECHS
-       und sagt bei allem anderen, was es wirklich war.
-  
-       WARUM NICHT MEHR: ein Übergang, der „Prisma" heisst und wie ein Blenden
-       aussieht, ist eine Lüge im Bild. Ein Blenden, das im Hinweis „war
-       Prisma" sagt, ist die Wahrheit mit einer Näherung — und die Originaldatei
-       trägt den echten Effekt ohnehin unverändert weiter (E592). */
     const UEBERGAENGE = {
         cut: 'keine',
         fade: 'blenden', dissolve: 'blenden', fadeThroughBlack: 'blenden',
@@ -1442,27 +1000,14 @@ const Einlesen = (() => {
         wipe: 'wischen', strips: 'wischen', blinds: 'wischen', comb: 'wischen',
         zoom: 'zoom', newsflash: 'zoom'
     };
-    /* `pull` zieht die ALTE Folie weg, `push` schiebt die NEUE herein — aus der
-       Sicht der ankommenden Folie sind die Richtungen umgekehrt. */
     const GEGENRICHTUNG = { l: 'r', r: 'l', u: 'd', d: 'u' };
     const SPD_MS = { slow: 1000, med: 700, fast: 400 };
-    /**
-     * Den Übergang aus einer Folie lesen.
-     *
-     * MEHRERE `p:transition` SIND DER NORMALFALL, nicht die Ausnahme: neuere
-     * Effekte stehen in `mc:AlternateContent` — einmal als `mc:Choice` mit dem
-     * echten Effekt (`p14:prism`), einmal als `mc:Fallback` mit etwas, das
-     * jedes PowerPoint kann. Gelesen wird der ERSTE, der sich abbilden lässt;
-     * gibt es keinen, gilt der erste überhaupt, als „blenden" mit seinem
-     * echten Namen daneben.
-     */
     const uebergangLesen = (doc) => {
         const alle = Array.from(doc.getElementsByTagName('p:transition'));
         if (!alle.length)
             return null;
         let erster = null;
         for (const knoten of alle) {
-            /* Der Effekt ist das erste Kind, das kein Klang ist (`p:sndAc`). */
             const effekt = Array.from(knoten.children)
                 .find(k => k.localName !== 'sndAc' && k.localName !== 'extLst');
             if (!effekt)
@@ -1471,9 +1016,6 @@ const Einlesen = (() => {
             const spd = String(knoten.getAttribute('spd') || 'med');
             const roh = Number(knoten.getAttribute('p14:dur')
                 || knoten.getAttributeNS('http://schemas.microsoft.com/office/powerpoint/2010/main', 'dur'));
-            /* Gedeckelt, damit eine Folie mit acht Sekunden Übergang keinen
-               Vortrag anhält, und nicht unter 150 ms, weil darunter ein Übergang
-               wie ein Flackern aussieht. */
             const dauer = Math.round(Math.max(150, Math.min(3000, Number.isFinite(roh) && roh > 0 ? roh : (SPD_MS[spd] ?? 700))));
             const dir = String(effekt.getAttribute('dir') || '');
             const art = UEBERGAENGE[name];
@@ -1483,42 +1025,18 @@ const Einlesen = (() => {
                     ? (GEGENRICHTUNG[dir] ?? dir) : dir;
             if (!erster)
                 erster = eintrag;
-            /* WESSEN NAME STEHT DANN DA? Der des ERSTEN — also des Effekts, den
-               PowerPoint wirklich zeigen würde. Die abbildbare Fassung liefert
-               Art und Dauer, der erste liefert die Wahrheit über die Datei:
-               „blenden, war eigentlich prism". Ohne das stünde „fade" da, und die
-               Datei hätte etwas anderes gemeint. */
             if (art)
                 return (erster && erster.original !== eintrag.original)
                     ? { ...eintrag, statt: erster.original } : eintrag;
         }
         return erster;
     };
-    /**
-     * DIE KLICKSCHRITTE EINER FOLIE — und was sie aufdecken.
-     *
-     * An Redurs Lehrunterlage gemessen: zehn der 27 Folien tragen `p:timing`,
-     * zusammen 22 Klickschritte, und ALLE Effekte sind `presetClass="exit"`
-     * mit `filter="dissolve"`. Das ist das Muster jeder Übungsfolie: die
-     * Antwort steht längst auf der Folie, ein deckendes Rechteck liegt
-     * darüber, und der Klick löst das Rechteck auf.
-     *
-     * Wer diese Rechtecke nicht mitliest, zeigt die Folie mit ALLEN ANTWORTEN
-     * OFFEN — und merkt es nicht, weil die Folie vollständig aussieht. Genau
-     * das ist in der ersten Fassung passiert (E541): Formen ohne Text wurden
-     * übersprungen, und die Abdeckungen haben keinen.
-     *
-     * Zurück kommt: Form-Kennung → Nummer des Klicks, bei dem sie verschwindet.
-     */
     const klickschritte = (doc) => {
         const karte = new Map();
         const zeit = doc.getElementsByTagName('p:timing')[0];
         if (!zeit)
             return karte;
         let schritt = 0;
-        /* Jeder `p:par` mit `nodeType="clickEffect"` ist EIN Klick. Verschachtelt
-           sind sie tief; gezählt wird in Dokumentordnung, und das ist die
-           Reihenfolge, in der auch PowerPoint sie abarbeitet. */
         for (const knoten of zeit.getElementsByTagName('p:cTn')) {
             if (knoten.getAttribute('nodeType') !== 'clickEffect')
                 continue;
@@ -1531,31 +1049,9 @@ const Einlesen = (() => {
         }
         return karte;
     };
-    /**
-     * Die Füllfarbe einer Form.
-     *
-     * ERST DER VERLAUF, DANN DIE FESTE FARBE. An Redurs Datei gemessen: die
-     * Abdeckungen sind KEINE einfarbigen Rechtecke, sondern ein Verlauf
-     * weiss → #FFCC00 in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`).
-     * Die `a:solidFill`, die daneben steht, gehört der Umrisslinie.
-     *
-     * Der erste Versuch las nur `a:solidFill` und traf die richtige Farbe
-     * bloss durch den Rückfall — das ist kein Lesen, das ist Glück. Jetzt
-     * kommt die Farbe aus dem KRÄFTIGSTEN Stopp des Verlaufs, also dem, der
-     * nicht die Hintergrundfarbe ist.
-     *
-     * Sie bleibt als RÜCKFALL stehen, auch seit `formVerlauf` daneben den
-     * ganzen Verlauf liest (E545): eine Abdeckung trägt IMMER eine feste
-     * Farbe, und das SVG malt sie, wenn die Verlaufsvorlage fehlt. Ohne sie
-     * wäre ein `fill="url(#…)"` ins Leere ein UNSICHTBARER Deckel — und ein
-     * unsichtbarer Deckel ist eine offene Antwort.
-     */
     const formFarbe = (form, thema = {}) => {
         const verlauf = form.getElementsByTagName('a:gradFill')[0];
         if (verlauf) {
-            /* Der mittlere Stopp ist bei einem Deckel die Farbe; die äusseren
-               sind das Papier. Fällt die Wahl schwer, gewinnt der erste echte
-               RGB-Wert — ein `schemeClr` ist ohne Thema ohnehin nicht auflösbar. */
             const stopps = [...verlauf.getElementsByTagName('a:gs')];
             const mitte = stopps.find(g => g.getAttribute('pos') === '50000') || null;
             const rgbMitte = farbeAus(mitte, thema);
@@ -1570,13 +1066,9 @@ const Einlesen = (() => {
         const voll = form.getElementsByTagName('a:solidFill')[0];
         return farbeAus(voll, thema);
     };
-    /** Ein `a:srgbClr` / `a:sysClr` / `a:schemeClr` zu `#rrggbb`. */
     const farbeAus = (eltern, thema) => {
         if (!eltern)
             return '';
-        /* Die direkten Kinder, nicht der ganze Teilbaum: unter einer Füllung
-           kann eine Linie mit eigener Farbe liegen (§E545 hat das schon einmal
-           gekostet). */
         const knoten = [...eltern.children].find(k => k.tagName === 'a:srgbClr' || k.tagName === 'a:sysClr' || k.tagName === 'a:schemeClr');
         if (!knoten)
             return '';
@@ -1587,8 +1079,6 @@ const Einlesen = (() => {
             roh = knoten.getAttribute('lastClr') || '';
         else {
             const name = knoten.getAttribute('val') || '';
-            /* `phClr` ist die Farbe des Platzhalters, der diese Vorlage BENUTZT —
-               sie steht nirgends und lässt sich hier nicht auflösen. */
             if (name === 'phClr')
                 return '';
             roh = (thema[name] || '').replace('#', '');
@@ -1597,17 +1087,6 @@ const Einlesen = (() => {
             return '';
         return abwandeln('#' + roh, knoten);
     };
-    /**
-     * `lumMod`, `lumOff`, `tint`, `shade` auf eine fertige Farbe anwenden.
-     *
-     * OHNE ABWANDLUNG KOMMT DIE FARBE UNVERÄNDERT ZURÜCK — Byte für Byte, mit
-     * der Schreibweise aus der Datei. Die erste Fassung rechnete immer und gab
-     * darum immer klein geschriebenes Hex heraus; `test512` und `test513`
-     * wurden davon rot („ist '#cc0000', soll '#CC0000'"). Gezeichnet hätte es
-     * dasselbe — Hex ist in CSS gleichgültig gegen Gross und Klein —, aber
-     * eine Änderung, die niemand wollte, ist eine Änderung zu viel: was
-     * unverändert aus der Datei kommt, geht unverändert weiter.
-     */
     const abwandeln = (farbe, knoten) => {
         const WANDLER = ['a:lumMod', 'a:lumOff', 'a:tint', 'a:shade'];
         if (![...knoten.children].some(k => WANDLER.includes(k.tagName)))
@@ -1620,8 +1099,6 @@ const Einlesen = (() => {
             return Number.isFinite(v) ? v / 100000 : null;
         };
         let [r, g, b] = [0, 1, 2].map(n => parseInt(farbe.slice(1 + n * 2, 3 + n * 2), 16) / 255);
-        /* `tint` mischt gegen Weiss, `shade` gegen Schwarz — beide linear auf
-           dem Kanal, so steht es in ECMA-376 §20.1.2.3.34 und .30. */
         const tint = wert('a:tint');
         if (tint !== null) {
             r = r * tint + (1 - tint);
@@ -1634,9 +1111,6 @@ const Einlesen = (() => {
             g *= shade;
             b *= shade;
         }
-        /* `lumMod`/`lumOff` arbeiten auf der HELLIGKEIT, nicht auf dem Kanal.
-           Deshalb der Umweg über HSL — auf den Kanälen gerechnet würde aus
-           einem kräftigen Blau ein blasses Grau statt eines hellen Blaus. */
         const lumMod = wert('a:lumMod');
         const lumOff = wert('a:lumOff');
         if (lumMod !== null || lumOff !== null) {
@@ -1671,14 +1145,6 @@ const Einlesen = (() => {
         const zwei = (v) => Math.min(255, Math.max(0, Math.round(v * 255))).toString(16).padStart(2, '0');
         return '#' + zwei(r) + zwei(g) + zwei(b);
     };
-    /**
-     * Die Farbzuordnung des Masters und das Thema zu einer Karte verrechnen.
-     *
-     * Heraus kommt eine flache Karte von JEDEM Namen, der in einer Folie
-     * stehen darf (`bg1`, `tx2`, `accent3`, `hlink`, …) auf `#rrggbb`. Die
-     * Themennamen selbst (`lt1`, `dk2`) stehen zusätzlich darin, weil ein
-     * Layout sie auch unmittelbar nennen darf.
-     */
     const themaLesen = (themaDoc, masterDoc) => {
         const karte = {};
         if (!themaDoc)
@@ -1692,7 +1158,6 @@ const Einlesen = (() => {
             if (wert)
                 karte[name] = wert;
         }
-        /* Und jetzt die Stufe, die man vergisst: die Zuordnung des Masters. */
         const zuordnung = masterDoc?.getElementsByTagName('p:clrMap')[0];
         if (zuordnung) {
             for (const attribut of zuordnung.attributes) {
@@ -1703,26 +1168,14 @@ const Einlesen = (() => {
         }
         return karte;
     };
-    /**
-     * Der Schlüssel eines Platzhalters.
-     *
-     * PowerPoint unterscheidet sie über `type` UND `idx`, und beide können
-     * fehlen. Ein fehlender `type` heisst „body", ein fehlender `idx` heisst
-     * „0" — das steht so im Format, und ohne diese zwei Vorgaben fände ein
-     * Titel seinen Platzhalter im Layout nicht wieder.
-     */
     const phSchluessel = (ph) => {
         if (!ph)
             return '';
         const typ = ph.getAttribute('type') || 'body';
         const idx = ph.getAttribute('idx') || '0';
-        /* `ctrTitle` und `title` sind für die Vererbung dasselbe: beide sind
-           DER Titel der Folie, und ein Layout schreibt mal das eine, mal das
-           andere. Ohne diese Zeile erbt eine zentrierte Titelfolie nichts. */
         const gleich = typ === 'ctrTitle' ? 'title' : typ;
         return gleich + '#' + idx;
     };
-    /** Alle Platzhalter eines Layout- oder Master-XML, nach Schlüssel. */
     const vorgabenLesen = (doc, thema = {}, paar = { major: '', minor: '' }) => {
         const karte = new Map();
         if (!doc)
@@ -1734,12 +1187,6 @@ const Einlesen = (() => {
             const ph = form.getElementsByTagName('p:ph')[0];
             if (!ph)
                 continue;
-            /* AUS `a:defRPr` KOMMT MEHR ALS DER GRAD (E566).
-               Gemessen an Redurs Datei: der Titel steht dort weiss auf einem
-               dunkelblauen Kasten, und die Farbe steht NICHT im Lauf, sondern hier
-               in der Vorgabe des Platzhalters. Bis hierher wurde von diesem
-               Element nur `sz` gelesen — der Titel kam darum schwarz an, und auf
-               Folie 2 kamen vier verschiedene Farben allesamt als Schwarz. */
             const defRPr = form.getElementsByTagName('a:defRPr')[0];
             const sz = Number(defRPr?.getAttribute('sz'));
             const voll = defRPr ? [...defRPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
@@ -1747,43 +1194,20 @@ const Einlesen = (() => {
                 lage: formLage(form),
                 sz: Number.isFinite(sz) && sz > 0 ? Math.round(sz / 100) : 0,
                 farbe: farbeAus(voll, thema),
-                /* SEIT E567 WIRD `a:latin` AUCH GELESEN — und benutzt. Bei E566
-                   stand hier, dass das Feld absichtlich fehlt; das war richtig,
-                   solange es niemand ausgewertet hätte. */
                 schrift: schriftFamilie(schriftName(defRPr, paar)),
             });
         }
         return karte;
     };
-    /**
-     * Die Hintergrundfarbe eines Folien-, Layout- oder Master-XML.
-     *
-     * NUR EINE VOLLE FARBE. Ein Verlauf, ein Bild oder eine Themenfarbe
-     * (`schemeClr` — ohne `theme1.xml` gar nicht auflösbar) geben leer zurück,
-     * und dann bleibt das Blatt weiss. Eine falsche Hintergrundfarbe wäre
-     * schlimmer als gar keine: sie macht den Text unlesbar, und man sieht
-     * nicht, woher sie kommt.
-     */
     const hintergrund = (doc, thema = {}) => {
         if (!doc)
             return '';
         const bg = doc.getElementsByTagName('p:bg')[0];
         if (!bg)
             return '';
-        /* `p:bgPr > a:solidFill > a:srgbClr`. Über `getElementsByTagName` geht
-           auch ein `a:srgbClr` in einer Linie oder einem Effekt darunter mit —
-           deshalb der Weg über die volle Füllung. */
         const voll = bg.getElementsByTagName('a:solidFill')[0];
         return farbeAus(voll, thema);
     };
-    /**
-     * Welche Tinte auf diesem Grund lesbar ist — '' heisst „die gewohnte".
-     *
-     * Gerechnet wird der Kontrast nach WCAG, nicht nach Gefühl: die relative
-     * Helligkeit beider Farben, und daraus (hell + 0,05) / (dunkel + 0,05).
-     * Erst wenn Schwarz unter 4,5:1 fällt, wird auf Weiss gewechselt. Ein
-     * Grund wie `#f8f8f5` ändert damit gar nichts.
-     */
     const tinteFuer = (grund) => {
         const treffer = /^#([0-9a-fA-F]{6})$/.exec(grund);
         if (!treffer)
@@ -1794,11 +1218,6 @@ const Einlesen = (() => {
             return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
         };
         const helligkeit = 0.2126 * kanal(0) + 0.7152 * kanal(1) + 0.0722 * kanal(2);
-        /* `#111111` — die Farbe, die eine Textmarke ohne eigene Farbe bekommt —
-           hat die relative Helligkeit 0,005605. NACHGERECHNET, nicht geschätzt:
-           meine erste Zahl hier war 0,005182 und damit falsch (P32 zum zweiten
-           Mal). Die Schwelle liegt dadurch bei L < 0,2002, und das ist eine
-           messbare Kante: `#767676` kippt (4,16:1), `#888888` nicht (5,33:1). */
         const schwarz = 0.005605;
         const gegenSchwarz = (helligkeit + 0.05) / (schwarz + 0.05);
         return gegenSchwarz < 4.5 ? '#ffffff' : '';
@@ -1807,62 +1226,39 @@ const Einlesen = (() => {
         const spPr = form.getElementsByTagName('p:spPr')[0];
         if (!spPr)
             return null;
-        /* `[0]` über spPr statt über die Form: ein `a:gradFill` unter `a:ln`
-           wäre die Linie, nicht die Füllung. Deshalb die direkten Kinder. */
         const verlauf = [...spPr.children].find(k => k.tagName === 'a:gradFill');
         if (!verlauf)
             return null;
         const stopps = [];
         for (const g of [...verlauf.getElementsByTagName('a:gs')]) {
             const rgb = farbeAus(g, thema);
-            /* Seit E559 ist eine Themenfarbe auflösbar. Leer bleibt nur noch, was
-               wirklich niemand kennt — ein Bild als Füllung oder `phClr`. */
             if (!rgb)
                 continue;
             const roh = String(g.getAttribute('pos') ?? '');
-            /* `pos` steht in Tausendstel Prozent (0…100000); die neuere
-               Schreibweise `50%` gibt es auch. Beides auf 0…1 bringen. */
             const anteil = roh.endsWith('%') ? Number(roh.slice(0, -1)) / 100
                 : Number(roh) / 100000;
             if (!Number.isFinite(anteil))
                 continue;
             stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: rgb });
         }
-        /* Weniger als zwei Stopps sind kein Verlauf. Und wenn EINER der Stopps
-           eine Themenfarbe war, fehlt er — dann ist der Verlauf unvollständig
-           und die feste Farbe die ehrlichere Antwort. */
         if (stopps.length < 2 || stopps.length !== verlauf.getElementsByTagName('a:gs').length)
             return null;
         stopps.sort((a, b) => a.pos - b.pos);
-        /* Der Winkel steht in 60000steln Grad, 0 = nach rechts, im
-           Uhrzeigersinn. 5400000 sind 90°, also von oben nach unten. Ohne
-           `a:lin` ist es kein linearer Verlauf, den wir nachbauen können. */
         const lin = [...verlauf.children].find(k => k.tagName === 'a:lin');
         if (!lin)
             return null;
         const winkel = Number(lin.getAttribute('ang')) || 0;
         return { stopps, winkel };
     };
-    /**
-     * Eine `.pptx` lesen. Zurück kommen Folien mit ihren Objekten — noch ohne
-     * Kennungen und ohne abgelegte Bilder; das macht `datei()`, weil erst dort
-     * feststeht, an welchem Block eine Bilddatei hängt.
-     */
     const pptxLesen = async (puffer) => {
         const zip = await zipLesen(puffer);
         const praesT = await zip.text('ppt/presentation.xml');
         if (!praesT)
             throw new Error('In dieser Datei steckt keine PowerPoint-Präsentation.');
         const praes = xml(praesT);
-        /* Das Folienmass. Fehlt es, gilt 16:9 in der Vorgabe von PowerPoint —
-           12192000 × 6858000 EMU, also 960 × 540 pt. */
         const sz = praes.getElementsByTagName('p:sldSz')[0];
         const breite = emuZuPunkt(sz?.getAttribute('cx')) || 960;
         const hoehe = emuZuPunkt(sz?.getAttribute('cy')) || 540;
-        /* DIE REIHENFOLGE STEHT IN `sldIdLst`, NICHT IN DEN DATEINAMEN.
-           `slide10.xml` kommt in der Zeichensortierung vor `slide2.xml`, und
-           eine Präsentation, deren Folien in falscher Ordnung erscheinen, ist
-           schlimmer als eine, die gar nicht aufgeht. */
         const praesRels = await relsLesen(zip, 'ppt/presentation.xml');
         const pfade = [];
         for (const eintrag of praes.getElementsByTagName('p:sldId')) {
@@ -1881,7 +1277,6 @@ const Einlesen = (() => {
                 continue;
             const doc = xml(t);
             const rels = await relsLesen(zip, pfad);
-            /* ── DIE ERBKETTE: Folie → Layout → Master (E558) ────────────────── */
             const holeXml = async (ziel) => {
                 if (!ziel)
                     return null;
@@ -1904,10 +1299,6 @@ const Einlesen = (() => {
                     .find(([, z]) => /slideMasters\//.test(String(z)))?.[1] || '');
                 masterDoc = await holeXml(masterPfad);
             }
-            /* DAS THEMA HÄNGT AM MASTER, NICHT AN DER FOLIE (E559). Auch hier
-               über die `.rels` und nicht über den Namen: ein Master darf
-               `theme3.xml` benutzen. Die Farbzuordnung (`p:clrMap`) steht dagegen
-               IM Master selbst — sie kommt also aus `masterDoc`. */
             let themaDoc = null;
             if (masterPfad) {
                 const mRels = await relsLesen(zip, masterPfad);
@@ -1916,22 +1307,11 @@ const Einlesen = (() => {
                 themaDoc = await holeXml(String(themaPfad));
             }
             const thema = themaLesen(themaDoc, masterDoc);
-            /* Layout gewinnt gegen Master — deshalb wird der Master ZUERST
-               eingetragen und vom Layout überschrieben. */
             const paar = schriftpaarLesen(themaDoc);
             const vorgaben = new Map([...vorgabenLesen(masterDoc, thema, paar),
                 ...vorgabenLesen(layoutDoc, thema, paar)]);
-            /* Und die Folie gewinnt gegen beide. */
             const grundfarbe = hintergrund(doc, thema) || hintergrund(layoutDoc, thema)
                 || hintergrund(masterDoc, thema);
-            /* DIE TINTE MUSS AUF DEM GRUND LESBAR BLEIBEN (E558).
-               Eine Textmarke ohne eigene Farbe zeichnet `#111111` — das war
-               richtig, solange jedes Blatt weiss war. Mit einem geerbten dunklen
-               Grund wäre es schwarz auf dunkelblau, also unsichtbar. PowerPoint
-               hat dafür die Themenfarbe; die haben wir nicht. Was wir haben, ist
-               der Kontrast, und der entscheidet: nur wenn Schwarz die Schwelle
-               von 4,5:1 REISST (§38), bekommt der Absatz ausdrücklich Weiss.
-               Ein Absatz mit eigener Farbe behält sie in jedem Fall. */
             const standardTinte = tinteFuer(grundfarbe);
             const baum = doc.getElementsByTagName('p:spTree')[0];
             const schritte = klickschritte(doc);
@@ -1943,12 +1323,10 @@ const Einlesen = (() => {
                 return { x: ab.dx + l.x * ab.sx, y: ab.dy + l.y * ab.sy,
                     w: l.w * ab.sx, h: l.h * ab.sy };
             };
-            /** Was weggelassen werden musste — je Art gezählt, für den Hinweis. */
             const weggelassen = new Map();
             const merkeWeg = (was) => void weggelassen.set(was, (weggelassen.get(was) || 0) + 1);
             const formenLesen = async (formen, ab, tiefe) => {
                 for (const form of formen) {
-                    /* ── Gruppe: hineingehen, statt sie zu übersehen (E555) ───────── */
                     if (form.tagName === 'p:grpSp') {
                         if (tiefe >= 8) {
                             merkeWeg('tief verschachtelte Gruppen');
@@ -1966,7 +1344,6 @@ const Einlesen = (() => {
                             const cx = emuZuPunkt(ext.getAttribute('cx')), cy = emuZuPunkt(ext.getAttribute('cy'));
                             const kx = emuZuPunkt(cOff.getAttribute('x')), ky = emuZuPunkt(cOff.getAttribute('y'));
                             const kcx = emuZuPunkt(cExt.getAttribute('cx')), kcy = emuZuPunkt(cExt.getAttribute('cy'));
-                            /* Null als Nenner heisst „keine Angabe" und nicht „unendlich". */
                             const sx = kcx > 0 ? cx / kcx : 1, sy = kcy > 0 ? cy / kcy : 1;
                             const eigen = { dx: ox - kx * sx, dy: oy - ky * sy, sx, sy };
                             innen = ab
@@ -1977,15 +1354,10 @@ const Einlesen = (() => {
                         await formenLesen(form.children, innen, tiefe + 1);
                         continue;
                     }
-                    /* ── Tabelle: als Gitter auf der Folie (E565). Diagramm: noch
-                          nicht, aber NICHT still (E555). ────────────────────────────── */
                     if (form.tagName === 'p:graphicFrame') {
                         if (form.getElementsByTagName('a:tbl').length) {
                             const zellen = tabelleLesen(form, thema, standardTinte);
                             if (zellen.length) {
-                                /* DIE ABBILDUNG DER GRUPPE GILT AUCH HIER. Eine Tabelle kann
-                                   in einer Gruppe liegen; `abbilden` rechnet dann jede Zelle
-                                   mit, statt dass die Tabelle als einzige danebenläge. */
                                 for (const z of zellen) {
                                     const l = abbilden({ x: z.x, y: z.y, w: z.w ?? z.breiteBox ?? 0, h: z.h ?? 0 }, ab);
                                     if (!l)
@@ -2008,33 +1380,13 @@ const Einlesen = (() => {
                             merkeWeg('Diagramme');
                         continue;
                     }
-                    /* ── Textkasten ──────────────────────────────────────────────── */
                     if (form.tagName === 'p:sp') {
                         const txBody = form.getElementsByTagName('p:txBody')[0];
                         const text = txBody ? formText(txBody) : '';
-                        /* DURCH DIE ABBILDUNG DER GRUPPE (E555). Ausserhalb einer Gruppe
-                           ist `ab` null und `abbilden` gibt die Lage unverändert zurück —
-                           dieselbe Zeile trägt beide Fälle. */
-                        /* UND WENN DIE FOLIE KEINE LAGE ANGIBT, ERBT SIE SIE (E558).
-                           PowerPoint schreibt `a:xfrm` nur, wenn die Folie den Platzhalter
-                           VERSCHOBEN hat. Ohne die Vererbung landete der Text auf einer
-                           geratenen Stelle — `breite * 0.08`, `hoehe * 0.1` —, und das
-                           sieht man sofort. */
                         const eigenePh = form.getElementsByTagName('p:ph')[0];
                         const geerbt = eigenePh ? vorgaben.get(phSchluessel(eigenePh)) : undefined;
                         const lage = abbilden(formLage(form) || geerbt?.lage || null, ab);
-                        /* Die Drehung erbt NICHT (E563). Ein Layout gibt vor, wo ein
-                           Platzhalter steht und wie gross er ist; dass er schief steht,
-                           ist eine Entscheidung der einzelnen Folie. PowerPoint hält es
-                           genauso: `rot` steht im `a:xfrm` der Form, und ein geerbter
-                           Platzhalter hat gar keins. */
                         const dreh = formDrehung(form);
-                        /* ── EINE ABDECKUNG ──────────────────────────────────────────
-                           Kein Text, eine feste Füllung, und ein Klick lässt sie
-                           verschwinden: das ist ein Deckel über der Antwort. Redion hat
-                           dafür die Abdeck-Marke (E266) — zugedeckt gespeichert,
-                           antippen deckt auf, und der Speicher wird dabei nie
-                           angefasst. Dieselbe Sache, schon gebaut. */
                         const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
                         const schritt = sid ? schritte.get(sid) : undefined;
                         if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
@@ -2043,14 +1395,6 @@ const Einlesen = (() => {
                                 x: lage.x, y: lage.y, w: lage.w, h: lage.h, ...(dreh ? { dreh } : {}) });
                             continue;
                         }
-                        /* ══ DIE FORM SELBST (E566) ═══════════════════════════════════
-                           Gemessen an Redurs echter Datei: der dunkelblaue Kasten hinter
-                           dem Titel und der rote Balken über „PERSON" fehlten BEIDE. Ohne
-                           sie steht der Titel im Nichts — das ist kein Schönheitsfehler,
-                           sondern eine andere Folie.
-              
-                           Die Form wird VOR dem Text eingetragen, damit der Text darauf
-                           liegt und nicht darunter. */
                         const fuellung = formFarbe(form, thema);
                         const geo = formGeometrie(form);
                         const rand = formRand(form, thema);
@@ -2061,63 +1405,21 @@ const Einlesen = (() => {
                                 ...(dreh ? { dreh } : {}) });
                         }
                         else if (!text.trim() && lage && lage.w > 0 && lage.h > 0) {
-                            /* Was übrig bleibt, verschwindet nicht schweigend (E555): eine
-                               Form, deren Umriss Redion nicht kennt — ein Stern, ein Pfeil,
-                               eine Sprechblase. Gezählt wird sie nur, wenn sie überhaupt
-                               eine Fläche hat, sonst zählte jeder unsichtbare Platzhalter
-                               mit. */
                             merkeWeg('Formen');
                         }
                         if (!text.trim())
                             continue;
-                        /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
-                           Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
-                           gemischten Graden käme also vereinfacht an. Das ist eine Lücke
-                           und steht so in LUECKEN.md. */
-                        /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
                         const ph = eigenePh;
                         const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
                         const absaetze = txBody ? absaetzeLesen(txBody, thema, paar) : [];
                         if (istTitel && !titel)
                             titel = absaetze[0]?.text.split('\n')[0] || '';
-                        /* DER GRAD KOMMT AUS DEM LAYOUT, WENN DIE FOLIE KEINEN NENNT
-                           (E558). Die feste 40/20 bleibt als letzter Rückfall — sie ist
-                           geraten und war bis hierher die einzige Antwort. */
                         const grund = geerbt?.sz || (istTitel ? 40 : 20);
-                        /* UND DIE FARBE EBENSO (E566). Der Lauf gewinnt, dann die Vorgabe
-                           aus dem Layout, dann die Lesbarkeitsregel aus E558. Genau diese
-                           Reihenfolge: was in der Folie steht, schlägt was im Layout
-                           steht, und beides schlägt eine Notlösung. */
                         const grundfarbeText = geerbt?.farbe || standardTinte;
-                        /* Und die Schrift ebenso (E567): Lauf, dann Layout, dann nichts —
-                           und „nichts" heisst `standard`, also genau der heutige Zustand. */
                         const grundschrift = geerbt?.schrift || '';
                         const kx = lage ? lage.x : breite * 0.08;
                         const ky = lage ? lage.y : hoehe * 0.1;
                         const kb = lage && lage.w > 0 ? lage.w : breite * 0.84;
-                        /* ══ EINE MARKE JE ABSATZ — ABER NUR, WENN ES ETWAS BRINGT (E557)
-                           Absätze, die sich in NICHTS unterscheiden, bleiben EINE Marke
-                           mit `\n` dazwischen: genau wie bisher. Das ist der häufige Fall,
-                           und für ihn ist eine Marke die bessere — wer den Textkasten im
-                           Editor schiebt, schiebt dann den Kasten und nicht eine Zeile.
-              
-                           Aufgeteilt wird erst, wenn Grad, Gewicht, Farbe oder Ebene
-                           auseinandergehen. Dann ist eine Marke schlicht falsch: sie hat
-                           genau einen Grad, und der des ersten Absatzes gälte für alle.
-              
-                           DIE HÖHEN KOMMEN VOM ZEICHNER SELBST. `InkGeometry.textLayout`
-                           ist dieselbe Rechnung, die das Blatt später benutzt — samt
-                           Umbruch an `breiteBox`. Eine eigene Schätzung („Grad mal 1,25")
-                           liefe bei jedem umbrechenden Absatz in den nächsten hinein. */
-                        /* ══ LÄUFE NUR, WENN SIE ETWAS BRINGEN (E561) ══════════════════
-                           Dieselbe Regel wie bei den Absätzen in E557: ein Absatz, dessen
-                           Läufe alle dasselbe Format haben — also der Normalfall —, trägt
-                           KEIN `laeufe`. Er bleibt genau die Marke, die er vorher war,
-                           und geht im Zeichner den alten Weg.
-              
-                           Der Grund ist nicht Sparsamkeit, sondern Rückwärtsrisiko: der
-                           neue Satz läuft nur dort, wo er gebraucht wird. Wo er nicht
-                           gebraucht wird, kann er auch nichts kaputt machen (§9). */
                         const laeufeNoetig = (laeufe) => {
                             const echte = laeufe.filter(l => l.text && l.text !== '\n');
                             if (echte.length < 2)
@@ -2126,30 +1428,10 @@ const Einlesen = (() => {
                             return echte.some(l => l.sz !== erste.sz || l.fett !== erste.fett
                                 || l.farbe !== erste.farbe);
                         };
-                        /* Der Einzug und das Aufzählungszeichen gehören VOR den ersten
-                           Lauf — sonst stünde das Zeichen im Format des Kastens und der
-                           Text daneben in seinem eigenen. */
                         const mitZeichen = (a) => a.zeichen
                             ? [{ text: a.zeichen + ' ', sz: a.sz, fett: a.fett, farbe: a.farbe,
                                     schrift: a.schrift }, ...a.laeufe]
                             : a.laeufe;
-                        /* ══ DIE RÜCKSPUR ZUM `<a:t>` (E593, Bogen O5b) ═══════════════════
-                           Damit ein geänderter Text wieder in die Originaldatei kommt,
-                           muss die Marke wissen, WOHER sie stammt. Sie bekommt deshalb
-                           `quelle: { sp, p }` — die Kennung ihrer Form (`p:cNvPr@id`,
-                           innerhalb einer Folie eindeutig) und die Nummer ihres Absatzes.
-              
-                           NUR WO ES EINDEUTIG IST. Eine Spur bekommt nur, was genau EINEM
-                           Absatz mit genau EINEM Lauf und ohne Aufzählungszeichen
-                           entspricht. Alles andere — mehrere Läufe mit eigenem Format,
-                           zusammengefasste Absätze, Aufzählungen — bleibt ohne Spur und
-                           wird nicht zurückgeschrieben.
-              
-                           Der Grund ist nicht Bequemlichkeit: bei mehreren Läufen müsste
-                           der neue Text auf sie verteilt werden, und jede Verteilung wäre
-                           geraten. Ein falscher Text ist schlimmer als ein fehlender
-                           (§51). Was keine Spur hat, bleibt stehen, und die Ausgabe sagt
-                           es (§35). */
                         const spur = (absatzNr) => {
                             const a = absaetze[absatzNr];
                             if (!sid || !a || a.zeichen)
@@ -2162,14 +1444,7 @@ const Einlesen = (() => {
                         const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
                             && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
                             && !a.zeichen === !absaetze[0].zeichen
-                            /* Die Ausrichtung gehört dazu (E560): ein zentrierter Titel über
-                               einem linksbündigen Absatz ist genau der Fall, in dem EINE
-                               Marke die falsche Antwort ist. */
                             && a.ausricht === absaetze[0].ausricht
-                            /* Und die Schrift (E567). Sie steht bewusst NICHT in
-                               `laeufeNoetig`: die Marke hat EINE Schriftfamilie für alle
-                               ihre Stücke, ein `laeufe` könnte den Unterschied also gar
-                               nicht ausdrücken. Zwischen ABSÄTZEN geht es — darum hier. */
                             && a.schrift === absaetze[0].schrift);
                         if (absaetze.length <= 1 || gleichFormat) {
                             const a = absaetze[0];
@@ -2182,9 +1457,6 @@ const Einlesen = (() => {
                                 ...(a.ausricht ? { ausricht: a.ausricht } : {}),
                                 ...((a.schrift || grundschrift) ? { schrift: a.schrift || grundschrift } : {}),
                                 ...(dreh ? { dreh } : {}),
-                                /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
-                                   mit `\n` dazwischen zu einer Kette — genau die Reihenfolge,
-                                   die der Text oben auch hat. */
                                 ...(() => {
                                     const kette = [];
                                     absaetze.forEach((z, i) => {
@@ -2195,18 +1467,12 @@ const Einlesen = (() => {
                                     });
                                     return laeufeNoetig(kette) ? { laeufe: kette } : {};
                                 })(),
-                                /* Nur bei GENAU EINEM Absatz. Sind mehrere zu einer Marke
-                                   zusammengefasst, stünden hinter einer Spur mehrere `<a:p>`,
-                                   und das Zurückschreiben müsste den Text auf sie aufteilen —
-                                   wieder ein Raten. */
                                 ...(absaetze.length === 1 ? spur(0) : {}) });
                             continue;
                         }
                         let y = ky;
                         for (const [absatzNr, a] of absaetze.entries()) {
                             if (!a.text.trim()) {
-                                /* Ein leerer Absatz in der Mitte ist eine Leerzeile, keine
-                                   Marke — er bekommt seine Höhe und sonst nichts. */
                                 y += (a.sz || grund) * 1.25;
                                 continue;
                             }
@@ -2223,21 +1489,17 @@ const Einlesen = (() => {
                                 ...(dreh ? { dreh } : {}),
                                 ...spur(absatzNr) };
                             objekte.push(marke);
-                            /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
-                               geladenes Fenster), bleibt die einfache Schätzung — dann
-                               stehen die Absätze vielleicht eng, aber sie sind da. */
                             let h = (a.sz || grund) * 1.25;
                             try {
                                 const l = InkGeometry.textLayout({ ...marke, point: [marke.x, y] });
                                 if (l && l.height > 0)
                                     h = l.height;
                             }
-                            catch { /* dann die Schätzung */ }
+                            catch { }
                             y += h;
                         }
                         continue;
                     }
-                    /* ── Bild ─────────────────────────────────────────────────────── */
                     if (form.tagName === 'p:pic') {
                         const blip = form.getElementsByTagName('a:blip')[0];
                         const rid = blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')
@@ -2249,9 +1511,6 @@ const Einlesen = (() => {
                         if (!bytes)
                             continue;
                         const lage = abbilden(formLage(form), ab);
-                        /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
-                           gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
-                           entstünden 27 Dateisätze mit denselben Bytes. */
                         objekte.push({ art: 'bild', pfad: ziel, name: ziel.slice(ziel.lastIndexOf('/') + 1),
                             bytes,
                             x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
@@ -2262,13 +1521,6 @@ const Einlesen = (() => {
                 }
             };
             await formenLesen(baum ? baum.children : [], null, 0);
-            /* KEIN PLATZHALTER, TROTZDEM EIN TITEL. An Redurs echter Datei
-               gemessen: 27 Folien, NULL `p:ph`-Elemente. Die Erkennung über den
-               Platzhaltertyp konnte dort nie greifen — PowerPoint schreibt ihn
-               nur, wenn die Form aus einem Layout stammt.
-               Also der Weg, den auch ein Mensch geht: von oben nach unten lesen.
-               Welcher der Kandidaten wirklich die Überschrift ist, entscheidet
-               sich aber erst, wenn ALLE Folien gelesen sind — siehe unten. */
             const kandidaten = objekte
                 .filter(o => o.art === 'text' && String(o.text).trim())
                 .sort((a, b) => a.y - b.y)
@@ -2278,13 +1530,6 @@ const Einlesen = (() => {
                 uebergang: uebergangLesen(doc),
                 weg: [...weggelassen.entries()] });
         }
-        /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
-           Der oberste allein genügt nicht. An Redurs Datei gemessen: dort
-           steht ganz oben auf JEDER der 27 Folien „Band 1 / Auflage 2021" —
-           eine Kopfzeile, keine Überschrift. Genau das liesse sich nicht
-           erraten, aber sehr wohl abzählen: was auf mehr als einem Drittel
-           der Folien wortgleich wiederkehrt, ist eine Kopf- oder Fusszeile.
-           Der erste Kandidat, der das NICHT tut, ist der Titel. */
         const haeufig = new Map();
         for (const f of folien)
             for (const z of new Set(f.kandidaten))
@@ -2297,9 +1542,6 @@ const Einlesen = (() => {
         }
         return { breite, hoehe, folien };
     };
-    /* ========================================================================
-     * EPUB
-     * ======================================================================*/
     const epubLesen = async (puffer) => {
         const zip = await zipLesen(puffer);
         const container = await zip.text('META-INF/container.xml');
@@ -2313,7 +1555,6 @@ const Einlesen = (() => {
         const opf = xml(await zip.text(opfPfad));
         const ordner = opfPfad.includes('/') ? opfPfad.slice(0, opfPfad.lastIndexOf('/') + 1) : '';
         const titel = opf.querySelector('title')?.textContent || 'Buch';
-        /* Reihenfolge steht im spine, die Dateien im manifest */
         const karte = {};
         opf.querySelectorAll('manifest > item').forEach(it => { const id = it.getAttribute('id'); if (id)
             karte[id] = it.getAttribute('href'); });
@@ -2332,10 +1573,6 @@ const Einlesen = (() => {
         }
         return { titel, kapitel };
     };
-    /* ========================================================================
-     * IN DIE APP ÜBERNEHMEN
-     * ======================================================================*/
-    /** Eine Tabelle als Datenbank anlegen — erste Zeile ist die Kopfzeile. */
     const alsDatenbank = (seiteId, name, zeilen) => {
         const brauchbar = zeilen.filter((z) => z.some((x) => String(x).trim()));
         if (brauchbar.length < 2)
@@ -2343,7 +1580,6 @@ const Einlesen = (() => {
         const kopf = (brauchbar[0] ?? []).map((x, i) => String(x).trim() || 'Spalte ' + (i + 1));
         const schema = { title: { name: kopf[0], type: 'title' } };
         const karte = ['title'];
-        /* Typ raten: alles Zahlen? dann Zahl. Sieht aus wie Datum? dann Datum. */
         kopf.slice(1).forEach((n, i) => {
             const spalte = brauchbar.slice(1).map((z) => String(z[i + 1] ?? '').trim()).filter(Boolean);
             const alleZahlen = spalte.length && spalte.every((v) => /^-?[\d.,]+$/.test(v));
@@ -2368,32 +1604,7 @@ const Einlesen = (() => {
         });
         return collectionId;
     };
-    /**
-     * DAS ORIGINAL ZUERST — dieselbe Reihenfolge wie beim PDF
-     * (`bereiche/pdf/einlesen.ts:105`), und aus demselben Grund.
-     *
-     * WAS HIER VORHER FEHLTE: `datei()` las die Bytes in einen Puffer, schrieb
-     * Blöcke und liess die Datei fallen. Nach dem Einlesen hielt Redion nur
-     * das Umwandlungsergebnis; der einzige Weg zurück zur Word- oder
-     * Tabellendatei war die Platte des Nutzers. Und die Umwandlung ist
-     * verlustbehaftet — Bilder, Kopfzeilen, Fussnoten, Spalten, Schriftgrade
-     * bleiben zurück. Wer die Datei danach von der Platte löschte, hatte sie
-     * verloren, ohne dass irgendwo stand, dass etwas fehlt.
-     *
-     * Office war die EINZIGE Gruppe, die an diesem Weg vorbeilief: der PDF-Weg
-     * legt ab, der Anhang-Weg in `archiveImport.ts:204` legt ab, hier nicht.
-     *
-     * Schlägt das Ablegen fehl, fliegt der Fehler nach oben und es hat noch
-     * nichts stattgefunden — dann übernimmt der gewöhnliche Anhang-Weg.
-     */
     const originalSichern = async (f, elternId) => Dateien.ablegen(f, { blockId: elternId });
-    /**
-     * Der sichtbare Anhang auf die abgelegte Quelle, an Stelle 0 der neuen
-     * Seite — vor dem Umgewandelten, damit man ihn findet.
-     *
-     * Der Dateisatz zeigt danach auf DIESEN Block. Ohne das überlebte er das
-     * Löschen des Anhangs (E99, derselbe Fund wie beim PDF).
-     */
     const originalAnhaengen = async (seiteId, f, quelle) => {
         try {
             const a = Store.addBlock(seiteId, 'file', {
@@ -2402,13 +1613,10 @@ const Einlesen = (() => {
             }, 0);
             await Store.dateiPut({ ...quelle, blockId: a.id });
         }
-        catch { /* ohne Anhang bleibt wenigstens das Umgewandelte */ }
+        catch { }
     };
-    /** Eine Datei einlesen — erkennt das Format an der Endung. */
     const datei = async (f, elternId) => {
         const name = f.name.toLowerCase();
-        /* Nur für die Formate, die dieser Weg wirklich umwandelt. Alles andere
-           fällt unten auf `null` und geht den Anhang-Weg, der ohnehin ablegt. */
         const wandelbar = /\.(xlsx|xlsm|ods|docx|pptx|ppsx|pptm|ppsm|epub)$/.test(name);
         const quelle = wandelbar ? await originalSichern(f, elternId) : null;
         const puffer = await f.arrayBuffer();
@@ -2430,9 +1638,6 @@ const Einlesen = (() => {
             return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt'
                     + (quelle ? ' · das Original liegt als Anhang dabei' : '') };
         }
-        /* Dieselbe Behandlung wie .xlsx: ein Blatt wird eine Datenbank. Wer eine
-           Tabelle einliest, will damit rechnen und filtern können — nicht ein
-           Bild davon. */
         if (name.endsWith('.ods')) {
             const blaetter = await odsLesen(puffer);
             if (!blaetter.length)
@@ -2463,99 +1668,33 @@ const Einlesen = (() => {
             });
             if (quelle)
                 await originalAnhaengen(seite.id, f, quelle);
-            /* „übernommen", nicht „eingelesen": die Umwandlung lässt Bilder,
-               Kopfzeilen, Fussnoten und Spalten zurück (siehe docxLesen). Der
-               Satz sagt deshalb auch, wo das Vollständige liegt. */
             return { seite, hinweis: bloecke.length + ' Absätze übernommen'
                     + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
         }
-        /* `.ppsx` ist dasselbe Paket wie `.pptx`, nur als Bildschirm-
-           präsentation gespeichert; `.pptm`/`.ppsm` dasselbe mit Makros. Alle
-           vier tragen `ppt/presentation.xml`, und der Leser sieht ohnehin in
-           die Datei statt auf den Namen. Gefunden an einer echten Datei von
-           Redur: `.ppsx` lief vorher stumm in den Anhang-Zweig. */
         if (/\.(pptx|ppsx|pptm|ppsm)$/.test(name)) {
             const p = await pptxLesen(puffer);
             const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📽️' });
             if (quelle)
                 await originalAnhaengen(seite.id, f, quelle);
-            /* UND GLEICH ALS FOLIENSATZ AUFSCHLAGEN (E546). Derselbe Fund wie E397:
-               „ein Weg, der das Ding anlegt, aber nicht öffnet." Der Dokumentmodus
-               kann Blatt-Blöcke längst — Miniaturleiste, eine Folie gross, die
-               Werkzeuge daneben (`document-mode.ts`, `documentsIn` nimmt
-               `pdfseite` UND `blatt`). Er sprang hier nur nicht an, weil
-               `active()` die Flagge am Seitenblock verlangt und niemand sie setzte.
-               Ohne sie stand die eingelesene Präsentation als Stapel Blätter
-               untereinander, jedes mit eigener Werkzeugleiste.
-               Die Seite ist frisch, also ist die Flagge immer `undefined` — die
-               Bedingung des PDF-Wegs („nur beim ERSTEN Mal", `pdf/einlesen.ts`)
-               ist hier von selbst erfüllt, und wer den Modus später verlässt,
-               bleibt draussen. */
             Store.updateBlock(seite.id, { dokumentModus: true });
-            /* Eine Folie = ein `blatt`-Block mit Folienmass. Die Objekte werden
-               Marken auf DERSELBEN Zeichenschicht, die auch PDF-Seite und
-               A4-Blatt benutzen — also sofort verschiebbar, drehbar und
-               rückgängig zu machen. */
             let mitBild = 0, mitDeckel = 0;
-            /* Pfad im Paket → Kennung des abgelegten Satzes. Gemessen an einer
-               echten Präsentation: 108 Bildvorkommen, aber nur 36 verschiedene
-               Bilder. Ohne diese Karte lägen 108 Dateisätze im Speicher, davon
-               72 als reine Verdopplung (§9: keine Daten ohne Not vermehren). */
             const schonAbgelegt = new Map();
             for (const [nr, folie] of p.folien.entries()) {
                 const block = Store.addBlock(seite.id, 'blatt', {
                     text: folie.titel || ('Folie ' + (nr + 1)),
                     blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko',
-                    /* Nur wenn es eine gibt — ein leeres Feld an jedem Blatt wäre
-                       Ballast, und `blatt.ts` fällt ohne es auf Weiss zurück (E558). */
                     ...(folie.grundfarbe ? { grundfarbe: folie.grundfarbe } : {}),
-                    /* Der Übergang beim Blättern im Vortrag (E600). Nur wenn die Folie
-                       einen nennt — ein leeres Feld an jedem Blatt wäre Ballast. */
                     ...(folie.uebergang ? { uebergang: folie.uebergang } : {})
                 });
                 const marken = [];
                 for (const o of folie.objekte) {
                     const id = 'm' + Math.random().toString(36).slice(2, 10);
                     if (o.art === 'text') {
-                        /* ══ DIE FELDLISTE IST UMGEDREHT (E560) ══════════════════════
-                           Hier stand eine Liste, die AUFZÄHLT, was mitreisen darf. Sie
-                           hat dreimal dasselbe vergessen, und jedes Mal erst der
-                           Prüflauf es gefunden:
-            
-                               E545  `verlauf`   fehlte
-                               E557  `farbe`     fehlte    („ist '', soll '#CC0000'")
-                               E560  `ausricht`  fehlte    („ist '', soll 'mitte'")
-            
-                           Der Kommentar, der hier stand, sagte selbst voraus, dass sie
-                           „beim nächsten Feld wieder vergisst" — und begründete ihr
-                           Bleiben damit, dass ein blindes Durchreichen `x`/`y`/`w`/`h`
-                           mit in die Ablage nähme. Das stimmt. Es ist nur kein Grund
-                           für eine Erlaubnisliste, sondern einer für eine VERBOTSLISTE:
-            
-                           Was nicht in die Ablage darf, ist eine kurze, bekannte,
-                           abgeschlossene Menge — die Masse, aus denen `point` und
-                           `breiteBox` schon gerechnet sind. Was mitreisen soll, ist es
-                           nicht: jedes neue Feld eines Absatzes gehört dazu.
-            
-                           Seither reist alles mit AUSSER diesen vieren. Ein viertes
-                           vergessenes Feld kann es nicht mehr geben. */
                         const { x: _x, y: _y, w: _w, h: _h, art: _art, ...rest } = o;
                         marken.push({ id, art: 'text', point: [o.x, o.y], ...rest, fett: !!o.fett });
                         continue;
                     }
                     if (o.art === 'abdeck') {
-                        /* `schritt` reist mit, auch wenn heute noch jede Abdeckung für
-                           sich angetippt wird. Ohne die Zahl wäre die Reihenfolge, in
-                           der die Folie gedacht war, verloren — und sie steht nur in
-                           der Quelldatei. */
-                        /* `verlauf` nur, wenn es einen gibt — ein `undefined` im Objekt
-                           überlebt `JSON.stringify` ohnehin nicht, und ein `null` an
-                           jeder von Hand gezogenen Abdeckung wäre nur Ballast. */
-                        /* HIER BLEIBT DIE ERLAUBNISLISTE, anders als beim Text (E560).
-                           Ein Abdeck- und ein Bildobjekt tragen `bytes`, `pfad` und
-                           `name` — ein Durchreichen legte die ganzen Bilddaten in den
-                           Block. Die verbotene Menge ist hier also NICHT kurz und
-                           abgeschlossen, und damit gilt die Umkehrung nicht. */
                         marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
                             ...(o.verlauf ? { verlauf: o.verlauf } : {}),
                             ...(o.dreh ? { dreh: o.dreh } : {}),
@@ -2564,16 +1703,6 @@ const Einlesen = (() => {
                     }
                     if (o.art === 'rectangle' || o.art === 'roundrect' || o.art === 'ellipse'
                         || o.art === 'triangle' || o.art === 'line') {
-                        /* EINE TABELLENZELLE (E565).
-                           Dieser Zweig muss VOR dem Bildzweig stehen. Die Schleife hat
-                           keinen Auffangfall: was weder Text noch Abdeckung ist, gilt
-                           als Bild. Beim ersten Lauf sass die Prüfung versehentlich IM
-                           Abdeckzweig — die Zellen fielen durch, landeten im Bildzweig
-                           und legten zehn leere Anhänge an. Der Hinweis sagte dann
-                           „10 Bilder aus 1 Dateien", und auf dem Blatt fehlte das Gitter.
-            
-                           Wie bei Abdeckung und Bild bleibt hier die Erlaubnisliste —
-                           nur sind es weniger Felder. */
                         marken.push({ id, art: o.art, farbe: o.farbe || '#9aa3ad',
                             ...(o.fuellung ? { fuellung: o.fuellung } : {}),
                             ...(o.breite ? { breite: o.breite } : {}),
@@ -2582,8 +1711,6 @@ const Einlesen = (() => {
                             pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                         continue;
                     }
-                    /* Das Bild bekommt einen eigenen Dateisatz, der an DIESEM Block
-                       hängt — dieselbe Ordnung wie beim PDF-Anhang (E99). */
                     try {
                         let dateiId = schonAbgelegt.get(o.pfad) || '';
                         if (!dateiId) {
@@ -2599,22 +1726,12 @@ const Einlesen = (() => {
                             mitBild++;
                         }
                     }
-                    catch { /* ohne das Bild bleibt die Folie stehen */ }
+                    catch { }
                 }
                 mitDeckel += marken.filter((m) => m.art === 'abdeck').length;
                 if (marken.length)
                     Store.updateBlock(block.id, { marken });
             }
-            /* ══ WAS NICHT ANKAM, STEHT IM HINWEIS (E555) ══════════════════════
-               Hier stand nur, was ANKAM: „27 Folien übernommen, 12 Bilder,
-               8 Antworten zugedeckt". Das ist die gefährliche Hälfte einer
-               Auskunft — §11 sagt es für die Sicherung („eine Sicherung, die nicht
-               sagt, was sie auslässt, ist die gefährlichste Sorte"), und für einen
-               Import gilt es genauso: die Folie SIEHT vollständig aus.
-      
-               Gezählt wird über alle Folien zusammen und je Art, in der
-               Reihenfolge, in der es auffällt. Keine Zahl heisst: es fehlt
-               nichts — dann steht auch nichts da. */
             const fehltGesamt = new Map();
             for (const f of p.folien)
                 for (const [was, n] of (f.weg || []))

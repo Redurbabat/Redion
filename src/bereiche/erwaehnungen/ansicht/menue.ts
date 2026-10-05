@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/erwaehnungen/ansicht/menue.ts (npm run bauen:ts). */
 /* ============================================================================
  * apps/kontakte/erwaehnungen/ansicht.js — aus notion.js herausgelöst
  * ----------------------------------------------------------------------------

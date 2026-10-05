@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/inhaltsflaeche.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/aufbau/inhaltsflaeche.js — der Inhalt selbst
  * ----------------------------------------------------------------------------

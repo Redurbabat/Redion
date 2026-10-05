@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/vorrat/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * vorrat.js — Vorberechnete Werte, mit sichtbarem Stand
  * ----------------------------------------------------------------------------

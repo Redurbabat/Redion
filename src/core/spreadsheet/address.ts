@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/spreadsheet/address.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/spreadsheet/address.ts — A1 und was dahintersteckt
  * ----------------------------------------------------------------------------

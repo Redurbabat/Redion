@@ -1,26 +1,6 @@
 "use strict";
-/* ============================================================================
- * canvas.js — Zeichenfläche, Diagramme, einfache Tabelle, Mathematik
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/bloecke/arten/zeichenflaeche.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/bloecke/arten/zeichenflaeche.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Vier Blöcke, die man sonst nur in anderen Programmen bekommt:
- *
- *   Whiteboard   frei zeichnen, Formen, Haftnotizen  (wie AFFiNE „edgeless")
- *   Diagramm     Balken, Linie, Ring                 (wie tui.editor / Notion Chart)
- *   Tabelle      einfache Tabelle ohne Datenbank     (Notions „Simple table")
- *   Mathematik   LaTeX-Formeln ohne fremde Pakete    (wie MarkText / Zettlr)
- *
- * Alles ohne Abhängigkeiten, alles offline.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/zeichenflaeche.ts (npm run bauen:ts). */
 const Zusatz = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -30,39 +10,8 @@ const Zusatz = (() => {
         Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));
         return e;
     };
-    /* DIE FARBE BRAUCHT EINEN NAMEN. Ein Feld, das nur farbig ist, sagt einem
-       Vorleseprogramm gar nichts und jemandem mit Farbsehschwäche zu wenig —
-       §38: keine Information nur über Farbe. */
-    /* Die acht Farben stehen seit E693 im Kern (`core/gfx/shapes.ts`): die
-       Seitenflaeche braucht dieselben, und zwei Listen liefen auseinander
-       (Paragraph 8). Der Name bleibt, damit die sechs Diagrammstellen und das
-       Farbmenue unveraendert weiterlesen. */
     const PALETTE = GfxShapes.PALETTE;
-    /* --------------------------------------------------------------------------
-     * DIE FARBE AN STELLE i — UND WARUM ES DIESEN HELFER GIBT (E414)
-     *
-     * `PALETTE` ist eine Liste von PAAREN: [Farbe, Name]. Der Name steht darin,
-     * weil der Farbwähler des Whiteboards ihn braucht.
-     *
-     * Alle sechs Diagrammstellen schrieben aber `fill: PALETTE[i]` — also das
-     * ganze Paar. Als Zeichenkette ergibt das „#529cca,Blau", und das ist kein
-     * gültiger Farbwert: SVG malt dann SCHWARZ. Auf dem Bild standen neun
-     * schwarze Balken auf dunklem Grund, praktisch unsichtbar, und die
-     * Legendenpunkte waren gar nicht zu sehen.
-     *
-     * Der Fehler ist eine Regression: die Palette war einmal eine Liste von
-     * Farben und wurde für den Farbwähler auf Paare umgestellt. Eine Stelle
-     * (Zeile 53) wurde mitgezogen, sechs nicht — und TypeScript sagte nichts,
-     * weil `fill` in `sv()` als `any` durchgeht.
-     *
-     * Dieser Helfer heisst deshalb `farbeVon` und nicht `PALETTE[i][0]` an
-     * sechs Stellen: ein Name, den man sucht, findet man wieder.
-     * ------------------------------------------------------------------------*/
     const farbeVon = (i) => PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#529cca';
-    /* DIE DIAGRAMMFARBEN JE GRUNDTON (E705). Vorher malten Diagramme mit den
-       dunklen Whiteboard-Farben (Gelb auf Weiss 1,35). Jetzt je Grundton acht
-       gestufte Töne, Nachbarn ΔE_OK ≥ 0,19; aufgelöst im `fill` (test409),
-       umgefärbt beim Wechsel des Grundtons. `test584` §8 misst es. */
     const DIAGRAMM = {
         light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'],
         dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'],
@@ -90,75 +39,26 @@ const Zusatz = (() => {
         });
         reihenWache.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     };
-    /* ========================================================================
-     * 1. WHITEBOARD
-     * ======================================================================*/
     const whiteboard = (block) => {
         const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
-        /* DIE RAUMFASSUNG (E686). Die Zahlen in `shapes` sind Flächenpunkte:
-           CSS-Pixel bei Massstab 1, Ursprung links oben der ungeschobenen Fläche.
-           Das Blatt trägt seit E125 `raumVersion`, das Whiteboard bis E686 nichts
-           — und ohne Fassung wäre jede spätere Änderung der Deutung eine stille
-           Verschiebung jeder alten Fläche (`space.ts`, Kopf). Ein Brett OHNE das
-           Feld ist Fassung 1: genau die Deutung, die es immer hatte (§9,
-           rückwärts denken). Geschrieben wird das Feld mit jedem Speichern, nicht
-           beim Laden — ein Brett, das nur angesehen wird, bleibt unverändert. */
         const RAUM_VERSION = 1;
         let werkzeug = 'stift';
         let farbe = PALETTE[0]?.[0] ?? '#529cca';
         const hoehe = block.hoehe || 380;
-        /* DIE FLÄCHE IST GRÖSSER ALS DAS FENSTER (E138, Auftrag §22).
-           Bis hierher war das Whiteboard genau so gross wie sein Kasten: was
-           rechts hinausging, war weg. Die Formen behalten ihre Koordinaten —
-           neu ist nur ein AUSSCHNITT darüber. `sicht.x/y` ist die linke obere
-           Ecke des Ausschnitts in Formkoordinaten, `sicht.z` der Massstab.
-    
-           Damit bleiben alte Boards Zeichen für Zeichen gültig: ohne
-           gespeicherte Sicht ist der Ausschnitt 0/0 bei Massstab 1, und das ist
-           genau das Bild von vorher. */
         const zahl = (wert, ersatz) => typeof wert === 'number' && Number.isFinite(wert) ? wert : ersatz;
         const gespeichert = block.sicht && typeof block.sicht === 'object' ? block.sicht : {};
-        /* DER KLEINSTE MASSSTAB IST 10 %, NICHT 25 %. Gemessen an einer Fläche
-           mit 900 × 380 px und einer Haftnotiz bei 2600/1800: „alles ins Bild"
-           brauchte 22,7 % und bekam 25 % — die Notiz blieb unten draussen, und
-           der Knopf hielt sein Versprechen nicht.
-           Ein Knopf, der „alles" sagt und nicht alles zeigt, ist schlimmer als
-           keiner: man glaubt ihm und sucht nicht weiter. */
         const KLEINSTER = .1, GROESSTER = 4;
         const sicht = { x: zahl(gespeichert.x, 0), y: zahl(gespeichert.y, 0),
             z: Math.min(GROESSTER, Math.max(KLEINSTER, zahl(gespeichert.z, 1))) };
         let verbindeVon = null;
         const w = document.createElement('div');
         w.className = 'wb';
-        /* ══ DIE LEISTE KOMMT AUS DEM KERN (E689, W6, Bogen 5a) ═══════════════
-           Hier stand ein HTML-String mit 28 Knöpfen: zwölf Werkzeuge, acht Farben,
-           vier Zoomknöpfe, vier Aktionen — und sieben davon trugen ein Emoji.
-           Gemessen war die Leiste am Rechner 67 px hoch in DREI Zeilen, am Telefon
-           95 px in VIER, und jeder Knopf mass 28 × 26 statt der 44 px aus §37 (die
-           44 lagen in einem `::after`, das man nicht sieht und nicht misst — L206).
-    
-           Jetzt baut `GfxToolbar` (core/gfx/toolbar.ts) die Leiste, und die
-           Werkzeuge kommen aus `Register.werkzeuge` — derselbe Katalog, aus dem
-           später Gedankenkarte, Planfläche und Studio lesen. Redur, 25. September:
-           „integriere alles zusammen".
-    
-           WAS HIER BLEIBT: die Wähler, an denen die Wächter hängen — `.wb-tools`
-           (als Zusatzklasse an der Wurzel), `[data-wz]`, `[data-a]`,
-           `.wb-massstab`, `.wb-farbe[data-c]`. Ein Umzug, der die Wächter
-           mitnimmt, ist kein Umzug, sondern ein Neubau (§30). */
         const massstabZeigen = document.createElement('b');
         massstabZeigen.className = 'wb-massstab';
         massstabZeigen.setAttribute('aria-live', 'polite');
         massstabZeigen.textContent = '100 %';
-        /** Die zwölf Werkzeuge dieser Fläche, in ihrer Reihenfolge. Was sie
-         *  heissen und wie sie aussehen, steht im Register; was sie TUN, steht
-         *  hier — ein Register beschreibt, es zeichnet nicht. */
         const WERKZEUG_IDS = ['zeiger', 'hand', 'verbindung', 'radierer',
             'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'text', 'bild'];
-        /** Die acht Farben klappen als Untermenü auf, statt als acht Tupfer in der
-         *  Reihe zu stehen. Gerechnet passten Werkzeuge UND Farben bei 708 px
-         *  Kastenbreite nicht in eine Zeile; und eine Farbe wählt man seltener,
-         *  als man das Werkzeug wechselt. */
         const farbMenue = () => {
             const kasten = document.createElement('div');
             kasten.className = 'gfx-tb-farben';
@@ -174,7 +74,6 @@ const Zusatz = (() => {
             }
             return kasten;
         };
-        /** „…" trägt, was man selten und nie versehentlich tut. */
         const mehrMenue = () => {
             const kasten = document.createElement('div');
             kasten.className = 'gfx-tb-liste';
@@ -198,8 +97,6 @@ const Zusatz = (() => {
                 { id: 'vor', name: 'Schritt vorwärts', sym: 'redo', gesperrt: true },
                 { id: 'mehr', name: 'Mehr', titel: 'Alles löschen, als Bild speichern', sym: 'dots', menue: true }
             ],
-            /* Der Massstab steht ZWISCHEN Minus und Plus — die drei sind ein Regler,
-               kein Haufen (derselbe Grund wie bei der alten `.wb-zoom`-Klammer). */
             zusatz: { groesser: massstabZeigen },
             aktiv: werkzeug,
             klasse: 'wb-tools',
@@ -208,8 +105,6 @@ const Zusatz = (() => {
             aufWerkzeug: (id) => {
                 werkzeug = id;
                 verbindeVon = null;
-                /* Der Griff gehört zum Zeiger. Bleibt er beim Wechsel stehen, sieht
-                   die Fläche aus, als wäre noch etwas ausgewählt. */
                 if (werkzeug !== 'zeiger')
                     gewaehlt = null;
                 w.classList.toggle('wb-schiebt', werkzeug === 'hand');
@@ -241,17 +136,9 @@ const Zusatz = (() => {
         const flaeche = sv('svg', { class: 'wb-flaeche', width: '100%', height: hoehe });
         flaeche.style.height = hoehe + 'px';
         w.appendChild(flaeche);
-        /* DIE LEISTE STEHT UNTER DER FLÄCHE (§37, hart: „Die Werkzeugleiste darf
-           nicht verdecken, was sie bedient"). AFFiNEs Leiste schwebt über dem
-           Blatt; Redions Regel sagt das Gegenteil, und `test209` setzt den Zeiger
-           bis 20 px an den unteren Rand — eine schwebende Leiste finge den Druck
-           ab. Das Bild bleibt trotzdem dasselbe: gerundet, eigener Grund, eigener
-           Schatten, unten in der Mitte. */
         w.appendChild(leiste.element);
         leiste.element.style.setProperty('--wb-farbe', farbe);
         Register.symbole.fuelle(leiste.element);
-        /* Die Farben tragen `data-c`, kein `data-wz` und kein `data-a` — der Kern
-           kennt sie also nicht, und das ist richtig: eine Farbe ist kein Werkzeug. */
         leiste.element.addEventListener('click', (e) => {
             const c = e.target?.closest('[data-c]');
             if (!c || !leiste.element.contains(c))
@@ -265,23 +152,7 @@ const Zusatz = (() => {
         griff.className = 'wb-griff';
         griff.title = 'Höhe ziehen';
         w.appendChild(griff);
-        /* --- Zeichnen ------------------------------------------------------- */
-        /* MEHRSTUFIGES ZURÜCK (E144, L54). `↶` war `daten.pop()` — es nahm die
-           zuletzt ANGEHÄNGTE Form weg, egal was zuletzt passiert war. Ein
-           Verschieben liess sich damit nicht zurücknehmen, ein Radieren auch
-           nicht, und zweimal drücken warf die vorletzte Form weg statt den
-           vorletzten Schritt.
-    
-           Jetzt liegt vor jeder Änderung ein Abbild auf einem Stapel. Vierzig
-           Schritte weit; darüber fällt das älteste heraus. Vierzig, weil ein
-           Abbild einer vollen Fläche einige Kilobyte hat und der Stapel nur im
-           Arbeitsspeicher lebt — er wird bewusst NICHT mitgespeichert. Wer die
-           Seite neu lädt, hat seine Zeichnung, aber keine Schrittfolge; das ist
-           die ehrlichere Grenze, als den Block mit Verlauf aufzublähen. */
         const SCHRITTE = 40;
-        /* DER STAPEL SELBST WOHNT IM KERN (E687): `GfxHistory` — dieselbe Regel
-           für Whiteboard, Gedankenkarte und Planfläche, hier nur noch mit der
-           Tiefe von E144. */
         const verlauf = GfxHistory.erstelle(SCHRITTE);
         const abbild = () => JSON.stringify(daten);
         const merken = () => {
@@ -292,11 +163,6 @@ const Zusatz = (() => {
             daten.length = 0;
             JSON.parse(roh).forEach((form) => daten.push(form));
         };
-        /* ZURÜCK UND VOR SIND JE EINE FUNKTION, weil zwei Wege sie rufen — der
-           Knopf und die Taste. Bis E682 stand der Schritt nur im Klick-Horcher,
-           und das Whiteboard hatte gar keine Taste: Strg+Z fiel zur Schale durch
-           und nahm den SEITENVERLAUF zurück, der die Seite neu baut und jedem
-           Block eine frische Kennung gibt (test568 §3). */
         const schrittZurueck = () => {
             const vorher = verlauf.zurueck(abbild());
             if (vorher === null)
@@ -320,23 +186,13 @@ const Zusatz = (() => {
             leiste.setzeGesperrt('vor', !verlauf.kannVor());
         };
         const sichern = () => Store.updateBlock(block.id, { shapes: daten, raumVersion: RAUM_VERSION });
-        /* Der Ausschnitt in Formkoordinaten. Solange der Kasten noch nicht im
-           Dokument hängt, misst der Browser 0 — dann rechnen wir mit einer
-           Ersatzbreite und zeichnen beim ersten Anblick neu (ResizeObserver
-           weiter unten). Ohne das stünde beim ersten Bild ein viewBox von
-           Breite 0, und die Fläche bliebe leer. */
         const ausschnitt = () => {
             const r = flaeche.getBoundingClientRect();
             const breite = r.width > 4 ? r.width : 900;
             const hoch = r.height > 4 ? r.height : hoehe;
             return { x: sicht.x, y: sicht.y, w: breite / sicht.z, h: hoch / sicht.z };
         };
-        /* Der Platzbedarf einer Form. Seit E693 rechnet ihn der Kern
-           (`core/gfx/shapes.ts`): dieselbe Rechnung staende sonst auch auf der
-           Seitenflaeche, und zwei Fassungen laufen auseinander (Paragraph 8). */
         const rahmenVon = (s) => GfxShapes.rahmenVon(s);
-        /* Wo eine Verbindung den Rand ihrer Form trifft. Ohne das steckte die
-           Pfeilspitze mitten in der Haftnotiz. */
         const randPunkt = (rahmen, zielX, zielY) => {
             const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
             const dx = zielX - mx, dy = zielY - my;
@@ -354,14 +210,10 @@ const Zusatz = (() => {
             raster.appendChild(sv('circle', { cx: 1, cy: 1, r: 1, fill: 'currentColor', opacity: .18 }));
             const defs = sv('defs');
             defs.appendChild(raster);
-            /* Die Pfeilspitze kommt seit E693 aus dem Kern - dieselben Zahlen,
-               nur an einer Stelle. Die Kennung bleibt je Flaeche eigen, sonst
-               naehme das Entfernen der einen der anderen die Spitze mit. */
             GfxShapes.pfeilMarke(defs, 'p' + block.id.slice(0, 6));
             flaeche.appendChild(defs);
             flaeche.appendChild(sv('rect', { x: feld.x, y: feld.y, width: feld.w, height: feld.h,
                 fill: `url(#r${block.id.slice(0, 6)})` }));
-            /* Verbindungen zuerst — sie gehören unter die Formen, die sie verbinden. */
             daten.filter((s) => s.art === 'verbindung')
                 .forEach((s) => { const linie = verbindungZeichnen(s); if (linie)
                 flaeche.appendChild(linie); });
@@ -384,10 +236,6 @@ const Zusatz = (() => {
             if (anzeige)
                 anzeige.textContent = Math.round(sicht.z * 100) + ' %';
         };
-        /* `undefined` heisst „noch nicht gefragt", `null` heisst „gibt es nicht
-           mehr", eine Zeichenkette ist die Adresse. Drei Zustände, weil zwei zu
-           wenig sind: ohne den Unterschied fragte die Fläche bei jeder
-           Neuzeichnung wieder nach einer Datei, die gelöscht ist. */
         const bildAdressen = new Map();
         const bildHolen = (dateiId) => {
             const ablage = globalThis.Dateien;
@@ -402,9 +250,6 @@ const Zusatz = (() => {
                     male();
             }).catch(() => { bildAdressen.set(dateiId, null); });
         };
-        /* Ein Bild von der Festplatte auf die Fläche. Die Datei geht denselben
-           Weg wie jeder andere Anhang — in Stücken in die Ablage, verknüpft mit
-           diesem Block, damit sie beim Löschen der Seite mitgeht. */
         const bildWaehlen = (x, y) => {
             const ablage = globalThis.Dateien;
             if (!ablage?.ablegen) {
@@ -440,14 +285,6 @@ const Zusatz = (() => {
             });
             feld.click();
         };
-        /* SCHREIBEN AUF DER FLÄCHE, NICHT IM BROWSERFENSTER (E144, L54).
-           Hier stand `prompt()`. Das ist ein Fenster des Browsers: es steht in
-           der Mitte des Bildschirms, sagt nichts darüber, WO der Text hinkommt,
-           nimmt am Telefon die halbe Höhe weg und kennt keine zweite Zeile.
-    
-           Jetzt steht das Feld genau dort, wo die Notiz entsteht, in derselben
-           Grösse und Farbe. Enter schliesst ab (bei der Haftnotiz erst mit
-           Strg), Escape wirft weg, ein Klick daneben übernimmt. */
         const textErfassen = (x, y, breite, hoehe, vorgabe) => new Promise(fertig => {
             const r = flaeche.getBoundingClientRect();
             const wRect = w.getBoundingClientRect();
@@ -482,10 +319,6 @@ const Zusatz = (() => {
             feld.addEventListener('blur', () => schliessen(feld.value));
             setTimeout(() => { feld.focus(); feld.select(); }, 0);
         });
-        /* Was sich in der Grösse ändern lässt: alles mit einem echten Rechteck.
-           Ein Stiftstrich hat Punkte statt Kanten, eine Verbindung hängt an zwei
-           Formen, und ein Text hat nur eine Schriftgrösse — die drei bleiben
-           draussen. */
         const groessenFaehig = (s) => s && s.art !== 'stift' && s.art !== 'verbindung' && s.art !== 'text';
         const verbindungZeichnen = (s) => {
             const a = daten.find((q) => q.id === s.von);
@@ -502,32 +335,11 @@ const Zusatz = (() => {
             p.dataset.sid = s.id;
             return p;
         };
-        /* DER ZEICHNER STEHT IM KERN (E693). Hier standen hundertzwanzig
-           Zeilen, die jede Art in SVG uebersetzen - Stift, Linie, Pfeil,
-           Rechteck, Haftnotiz, Bild, Ellipse, Text. Mit E690 bekam die Seite
-           eine eigene Flaeche, und die zweite Kopie waere genau der Fall, vor
-           dem Paragraph 8 warnt: man sieht das Auseinanderlaufen nicht beim
-           Lesen, sondern irgendwann daran, dass ein Pfeil hier eine Spitze hat
-           und dort nicht.
-    
-           Was der Kern nicht wissen kann, bekommt er mit: die Kennung der
-           Pfeilmarke DIESER Flaeche und den Weg zu einer Bildadresse
-           (Paragraph 14 - in `shapes` steht nur die Kennung, nie das Bild). */
         const formZeichnen = (s) => GfxShapes.zeichne(s, {
             pfeilMarke: 'p' + block.id.slice(0, 6),
             bildAdresse: (id) => bildAdressen.get(id),
             bildHolen: (id) => bildHolen(id)
         });
-        /* VON BILDSCHIRM AUF FLÄCHE — ÜBER DIE MATRIX (E686). Bis E686 stand hier
-           die Handformel `sicht.x + (e.clientX - r.left) / sicht.z`. Sie war nicht
-           falsch: weil `ausschnitt()` den viewBox aus demselben Kasten rechnet,
-           kürzt sich jede achsenparallele Skalierung heraus — gemessen mit
-           `scale(0.8)` am Elternteil, grün (test570 §3). Erst eine Drehung trennt
-           Formel und Matrix (§3b). Der Grund für den Umzug ist §8: eine
-           Umrechnung für alle Flächen (`SheetSpace.umrechner`, E511), nicht vier.
-           Die Matrix kennt Rollstand, Zoom und jede CSS-Verwandlung darüber.
-           Fällt sie aus (Fläche nicht im Dokument), bleibt die alte Formel als
-           Rückfall — dann wird nicht geraten, sondern wie bisher gerechnet. */
         const punkt = (e) => {
             const ueberMatrix = (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
                 ? SheetSpace.umrechner(flaeche)(e) : null;
@@ -537,9 +349,6 @@ const Zusatz = (() => {
             return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z),
                 Math.round(sicht.y + (e.clientY - r.top) / sicht.z)];
         };
-        /* DER STIFT DER TAFEL SCHREIBT WIE DER DES BLATTS (E704): alle
-           gesammelten Ereignisse, `InkStroke.glaetter`, zwei Stellen, ein Bild je
-           Bild nur für den wachsenden Strich, beim Absetzen RDP. */
         const punktFein = (e) => {
             const ueberMatrix = (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
                 ? SheetSpace.umrechner(flaeche)(e) : null;
@@ -552,7 +361,6 @@ const Zusatz = (() => {
         let stiftGlatt = null;
         let stiftZeit = 0;
         let stiftBildGeplant = false;
-        /** Nur den wachsenden Strich neu setzen — einmal je Bild. */
         const stiftNachziehen = () => {
             stiftBildGeplant = false;
             if (!aktiv || aktiv.art !== 'stift')
@@ -570,9 +378,6 @@ const Zusatz = (() => {
                 z: Math.round(sicht.z * 100) / 100 },
             raumVersion: RAUM_VERSION
         });
-        /* Vergrössern um den festgehaltenen Punkt: was unter dem Finger liegt,
-           bleibt unter dem Finger. Ohne Mittelpunkt springt das Bild bei jedem
-           Schritt weg, und man sucht seine Zeichnung wieder. */
         const massstab = (neuZ, haltX, haltY) => {
             const r = flaeche.getBoundingClientRect();
             const z = Math.min(GROESSTER, Math.max(KLEINSTER, neuZ));
@@ -607,24 +412,11 @@ const Zusatz = (() => {
             male();
             sichtSichern();
         };
-        /* GRÖSSE ÄNDERN (E144, L54). Wer ein Rechteck zu klein gezogen hatte,
-           musste es löschen und neu ziehen — Verschieben ging, Skalieren nicht.
-    
-           Der Griff sitzt an der rechten unteren Ecke und wird NUR für die
-           zuletzt angefasste Form gezeichnet. Ein Griff an jeder Form wäre auf
-           einer vollen Fläche ein Punktemeer; einer ohne sichtbaren Griff wäre
-           ein Geheimnis. */
         let gewaehlt = null;
         const GRIFF = 9;
         let aktiv = null, verschiebt = null, schiebt = null, groesst = null;
         const finger = new Map();
         let kneifen = null;
-        /* DIE TASTE GEHÖRT DER FLÄCHE (E682). Der Kasten ist fokussierbar wie
-           `.sp-wrap` der Planfläche; wer auf die Fläche tippt, hat danach die
-           Tastatur hier. `preventDefault` sagt der Schale, dass die Taste genommen
-           ist — sie fragt seit E682 danach, statt den Seitenverlauf zu bewegen.
-           Im Schreibfeld einer Textform gilt das nicht: dort gehört Strg+Z dem
-           Feld. */
         w.tabIndex = 0;
         w.addEventListener('keydown', (e) => {
             const ziel = e.target;
@@ -648,10 +440,6 @@ const Zusatz = (() => {
             flaeche.setPointerCapture(e.pointerId);
             finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (finger.size === 2) {
-                /* ZWEI FINGER SIND IMMER ZOOM, egal welches Werkzeug gewählt ist.
-                   Am Telefon ist das die einzige Geste, die man dafür kennt — und
-                   ein angefangener Strich wird dabei zurückgenommen, sonst bleibt
-                   bei jedem Kneifen ein Kritzel liegen. */
                 if (aktiv) {
                     daten.pop();
                     aktiv = null;
@@ -696,9 +484,6 @@ const Zusatz = (() => {
                     const i = daten.findIndex((s) => s.id === sid);
                     if (i >= 0) {
                         merken();
-                        /* Mit der Form gehen ihre Verbindungen. Sonst bliebe ein Pfeil
-                           stehen, der nichts mehr verbindet — gezeichnet wird er dann
-                           gar nicht, aber er läge weiter in den Daten. */
                         daten.splice(i, 1);
                         for (let j = daten.length - 1; j >= 0; j--)
                             if (daten[j].art === 'verbindung' && (daten[j].von === sid || daten[j].nach === sid))
@@ -710,8 +495,6 @@ const Zusatz = (() => {
                 return;
             }
             if (werkzeug === 'zeiger') {
-                /* Erst der Griff: er liegt über der Form und muss deshalb zuerst
-                   gefragt werden, sonst schiebt man beim Ziehen daran. */
                 const gewaehlteForm = daten.find((q) => q.id === gewaehlt);
                 if (gewaehlteForm && groessenFaehig(gewaehlteForm)) {
                     const rahmen = rahmenVon(gewaehlteForm);
@@ -730,16 +513,6 @@ const Zusatz = (() => {
                     merken();
                     verschiebt = { s, x, y };
                 }
-                /* HIER DARF NICHT NEU GEZEICHNET WERDEN. `male()` setzt
-                   `flaeche.innerHTML = ''` — und damit verschwindet genau das
-                   Element, auf dem der Zeiger gerade heruntergegangen ist. Chrome
-                   gibt daraufhin die Zeigerhaltung frei und schickt ein
-                   `pointercancel`; `fertig()` setzt `verschiebt` auf null, und das
-                   Ziehen war vorbei, bevor es angefangen hat.
-        
-                   Gemessen: der Kasten lag nach einem Zug über 200 px immer noch bei
-                   x = 60. Der Griff wird deshalb erst beim Loslassen gezeichnet —
-                   dort steht `male()` ohnehin. */
                 return;
             }
             if (werkzeug === 'bild') {
@@ -762,8 +535,6 @@ const Zusatz = (() => {
                 return;
             }
             merken();
-            /* Der Aufsetzpunkt geht roh und genau durch (E376) — und von ihm aus
-               glättet der Stift der Tafel wie der des Blatts (E704). */
             const fein = werkzeug === 'stift' ? punktFein(e) : [x, y];
             aktiv = werkzeug === 'stift'
                 ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [fein], farbe }
@@ -794,8 +565,6 @@ const Zusatz = (() => {
             const [x, y] = punkt(e);
             if (groesst) {
                 const s = groesst.s;
-                /* Von der linken oberen Ecke aus, damit die Form nicht wegläuft:
-                   bei negativer Breite läge sie sonst plötzlich woanders. */
                 const links = Math.min(s.x, s.x + s.w), oben = Math.min(s.y, s.y + s.h);
                 s.x = links;
                 s.y = oben;
@@ -821,7 +590,6 @@ const Zusatz = (() => {
             if (!aktiv)
                 return;
             if (aktiv.art === 'stift') {
-                /* ALLE gesammelten Ereignisse, nicht nur das letzte (E704). */
                 const gesammelt = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
                 for (const ereignis of (gesammelt.length ? gesammelt : [e])) {
                     const roh = punktFein(ereignis);
@@ -830,7 +598,6 @@ const Zusatz = (() => {
                     stiftZeit = jetzt;
                     const q = stiftGlatt ? stiftGlatt(roh, dt) : roh;
                     const letzter = aktiv.pts[aktiv.pts.length - 1];
-                    /* Weniger als ein halbes Pixel auf dem Glas ist kein neuer Punkt. */
                     if (letzter && Math.hypot(q[0] - letzter[0], q[1] - letzter[1]) < 0.6 / Math.max(0.1, sicht.z))
                         continue;
                     aktiv.pts.push([Math.round(q[0] * 100) / 100, Math.round(q[1] * 100) / 100]);
@@ -855,10 +622,7 @@ const Zusatz = (() => {
                 sichtSichern();
             }
             if (aktiv) {
-                /* Winzige Kritzler wieder entfernen */
                 if (aktiv.art === 'stift' && aktiv.pts.length >= 2) {
-                    /* Die Spitze endet, wo der Stift sich hob (E704, wie das Blatt):
-                       der Glätter läuft hinterher, der letzte Punkt ist der rohe. */
                     if (e && typeof e.clientX === 'number' && e.type === 'pointerup') {
                         const roh = punktFein(e);
                         const letzter = aktiv.pts[aktiv.pts.length - 1];
@@ -874,9 +638,6 @@ const Zusatz = (() => {
                 const klein = aktiv.art === 'stift' ? aktiv.pts.length < 2 : Math.abs(aktiv.w) < 4 && Math.abs(aktiv.h) < 4;
                 if (klein) {
                     daten.pop();
-                    /* Und mit dem Kritzler auch den Schritt: sonst läge ein Abbild auf
-                       dem Stapel, das genau denselben Stand beschreibt — `↶` täte dann
-                       einmal scheinbar nichts. */
                     verlauf.letztenVerwerfen();
                     standZeigen();
                 }
@@ -898,8 +659,6 @@ const Zusatz = (() => {
         flaeche.addEventListener('pointerup', fertig);
         flaeche.addEventListener('pointercancel', fertig);
         flaeche.addEventListener('pointerleave', fertig);
-        /* ZWEIMAL TIPPEN ÄNDERT DEN TEXT. Bisher gab es keinen Weg dazu: eine
-           vertippte Haftnotiz musste man radieren und neu schreiben. */
         flaeche.addEventListener('dblclick', (e) => {
             const sid = e.target?.dataset?.sid;
             const s = daten.find((q) => q.id === sid);
@@ -917,17 +676,11 @@ const Zusatz = (() => {
                 sichern();
             });
         });
-        /* Am Rechner ist das Rad der gewohnte Weg. `passive: false` steht da,
-           weil `preventDefault` sonst nichts tut und die ganze Seite mitrollt. */
         flaeche.addEventListener('wheel', (e) => {
             e.preventDefault();
             const r = flaeche.getBoundingClientRect();
             massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), sicht.x + (e.clientX - r.left) / sicht.z, sicht.y + (e.clientY - r.top) / sicht.z);
         }, { passive: false });
-        /* Die Werkzeugleiste horcht selbst (E689): `GfxToolbar` verteilt die
-           Klicks an `aufWerkzeug` und `aufAktion` weiter oben. Hier stand dafür
-           ein eigener Horcher mit drei `closest`-Zweigen. */
-        /* --- Höhe ziehen ----------------------------------------------------- */
         griff.addEventListener('pointerdown', e => {
             e.preventDefault();
             const start = e.clientY, h0 = flaeche.getBoundingClientRect().height;
@@ -944,16 +697,9 @@ const Zusatz = (() => {
             addEventListener('pointermove', zug);
             addEventListener('pointerup', stop);
         });
-        /* Erst wenn der Kasten wirklich Breite hat, stimmt der Ausschnitt.
-           Vorher zeichnet `male()` mit der Ersatzbreite — sichtbar wäre das als
-           falscher Massstab beim allerersten Bild. */
         if (typeof ResizeObserver === 'function') {
             let letzte = '';
             new ResizeObserver(() => {
-                /* BEIDE MASSE, nicht nur die Breite: der Höhengriff verändert nur
-                   die Höhe, und mit einer nur auf Breite wachenden Prüfung behielt
-                   der Ausschnitt danach seine alte Höhe — sichtbar als gestauchtes
-                   oder gedehntes Bild. */
                 const kasten = flaeche.getBoundingClientRect();
                 const masse = Math.round(kasten.width) + '×' + Math.round(kasten.height);
                 if (masse === letzte)
@@ -965,7 +711,6 @@ const Zusatz = (() => {
         male();
         return w;
     };
-    /** SVG als PNG herunterladen — ohne fremde Pakete. */
     const alsBild = (svgEl, hoehe) => {
         const kopie = svgEl.cloneNode(true);
         const breite = Math.round(svgEl.getBoundingClientRect().width);
@@ -994,12 +739,6 @@ const Zusatz = (() => {
         bild.onerror = () => UI.toast('Das Bild liess sich nicht erzeugen');
         bild.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(quelle)));
     };
-    /* ========================================================================
-     * 2. DIAGRAMM
-     * ------------------------------------------------------------------------
-     * Datenquelle: entweder eingetippte Zeilen „Name: Wert" oder eine
-     * Datenbank auf derselben Seite.
-     * ======================================================================*/
     const CHART_TYPEN = [['bar', 'Balken'], ['column', 'Säulen'], ['line', 'Linie'], ['donut', 'Ring'],
         ['area', 'Fläche'], ['kpi', 'Kennzahl']];
     const diagramm = (block) => {
@@ -1050,7 +789,6 @@ const Zusatz = (() => {
         return w;
     };
     const chartDaten = (block) => {
-        /* Aus einer Datenbank? */
         if (block.quelleDb) {
             const c = Store.getCollection(block.quelleDb);
             if (c) {
@@ -1067,7 +805,6 @@ const Zusatz = (() => {
                 }
             }
         }
-        /* Aus dem Text */
         return String(block.daten || '').split('\n')
             .map(z => z.trim()).filter(Boolean)
             .map(z => {
@@ -1079,7 +816,6 @@ const Zusatz = (() => {
     };
     const chartSvg = (typ, werte) => {
         const B = 640, H = 260, pad = 34;
-        /* Kennzahl: eine grosse Zahl mit Vergleich — Notions „Number" */
         if (typ === 'kpi') {
             const summe = werte.reduce((a, v) => a + v.wert, 0);
             const letzter = werte[werte.length - 1]?.wert ?? 0;
@@ -1129,23 +865,6 @@ const Zusatz = (() => {
             s.appendChild(t);
             return s;
         }
-        /* --------------------------------------------------------------------------
-         * ACHSEN — SO VIELE MARKEN, WIE ES WERTE ZU TRENNEN GIBT (E414)
-         *
-         * Hier standen fest FÜNF Marken: `Math.round(max * (1 - i/4))`. Bei einem
-         * Höchstwert von 3 ergab das 3, 2.25, 1.5, 0.75, 0 — gerundet
-         *
-         *     3   2   2   1   0
-         *
-         * Die Zwei stand zweimal, an zwei verschiedenen Höhen. Wer die Achse
-         * liest, sieht zwei gleiche Zahlen und weiss nicht mehr, welche Linie
-         * welche Höhe meint. Bei einem Höchstwert von 1 war es „1 1 1 0 0".
-         *
-         * Bei kleinen ganzen Zahlen wird deshalb in Einerschritten geteilt, und
-         * es gibt so viele Marken, wie ganze Zahlen hineinpassen. Darüber
-         * bleibt es bei fünf — bei einem Höchstwert von 12 000 will niemand
-         * zwölftausend Linien.
-         * ------------------------------------------------------------------------*/
         const ganz = Number.isInteger(max) && max <= 8 && max >= 1;
         const stufen = ganz ? max : 4;
         for (let i = 0; i <= stufen; i++) {
@@ -1153,8 +872,6 @@ const Zusatz = (() => {
             s.appendChild(sv('line', { x1: pad, y1: y, x2: B - 8, y2: y, stroke: 'currentColor', opacity: .13 }));
             const t = sv('text', { x: pad - 6, y: y + 4, 'text-anchor': 'end', 'font-size': 10, fill: 'currentColor', opacity: .55 });
             const wert = max * (1 - i / stufen);
-            /* Bei Bruchteilen eine Nachkommastelle, sonst ganz — „0.8" ist eine
-               Auskunft, „1 1 1" ist keine. */
             t.textContent = ganz || Number.isInteger(wert)
                 ? String(Math.round(wert))
                 : String(Math.round(wert * 10) / 10);
@@ -1198,7 +915,6 @@ const Zusatz = (() => {
                     rc.dataset.i = i;
                     rc.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
                     s.appendChild(rc);
-                    /* Der Wert über dem Balken — Notion zeigt ihn nur beim Überfahren. */
                     const wt = sv('text', { x: pad + feld * i + feld * 0.5, y: Math.max(12, H - pad - h - 5),
                         'text-anchor': 'middle', 'font-size': 10.5,
                         fill: 'currentColor', opacity: .75 });
@@ -1207,7 +923,6 @@ const Zusatz = (() => {
                 }
             });
         }
-        /* Beschriftung unten */
         werte.forEach((v, i) => {
             const t = sv('text', {
                 x: pad + feld * (i + 0.5), y: H - pad + 15, 'text-anchor': 'middle',
@@ -1219,11 +934,6 @@ const Zusatz = (() => {
         return s;
     };
     const datenEditor = (block) => {
-        /* DIE QUELLE WAR NUR LESBAR (E247). `chartDaten` konnte längst aus
-           einer Datenbank gruppieren und summieren — aber keine Oberfläche
-           schrieb `quelleDb`, `gruppeNach` oder `messen`. Der Bild-Abgleich
-           fand es: „der Codepfad steht, nur die Bedienung fehlt." Hier ist
-           sie: Handdaten ODER Datenbank, mit Gruppier- und Messspalte. */
         const sammlungen = Object.values(Store.cache.collections)
             .filter(c => c && c.name)
             .sort((a, b) => String(a.name).localeCompare(String(b.name), 'de-CH'));
@@ -1292,9 +1002,6 @@ const Zusatz = (() => {
                         gruppeNach: gruppe?.value || '', messen: mess?.value || '' });
                 }
                 else {
-                    /* Zurück zu Handdaten heisst: die Quelle WIRKLICH loslassen —
-                       ein stehengebliebenes `quelleDb` würde die Zeilen unten
-                       still übertrumpfen (chartDaten fragt zuerst die Datenbank). */
                     Store.updateBlock(block.id, { quelleDb: '', gruppeNach: '', messen: '',
                         daten: ta ? ta.value : block.daten });
                 }
@@ -1305,9 +1012,6 @@ const Zusatz = (() => {
                 o.remove();
         });
     };
-    /* ========================================================================
-     * 3. EINFACHE TABELLE  (Notions „Simple table" — ohne Datenbank)
-     * ======================================================================*/
     const tabelle = (block) => {
         const rows = block.rows && block.rows.length ? block.rows : [['', '', ''], ['', '', ''], ['', '', '']];
         const kopf = block.kopfZeile !== false;
@@ -1346,9 +1050,6 @@ const Zusatz = (() => {
             t.appendChild(tr);
         });
         w.appendChild(t);
-        /* --- Griffe über den Spalten und neben den Zeilen -------------------- */
-        /* Genau wie in Notion: beim Überfahren erscheinen zwei kleine Griffe.
-           Ein Klick öffnet das Menü für diese Spalte oder diese Zeile. */
         const gX = document.createElement('div');
         gX.className = 'stab-griff x';
         const gY = document.createElement('div');
@@ -1450,7 +1151,6 @@ const Zusatz = (() => {
                 sichern();
             });
         });
-        /* Rechtsklick in einer Zelle öffnet dasselbe Menü */
         t.addEventListener('contextmenu', (e) => {
             const zelle = elVon(e)?.closest('td,th');
             if (!zelle)
@@ -1506,12 +1206,6 @@ const Zusatz = (() => {
         w.appendChild(werkzeuge);
         return w;
     };
-    /* ========================================================================
-     * 4. MATHEMATIK
-     * ------------------------------------------------------------------------
-     * Ein kleiner LaTeX-Übersetzer. Deckt ab, was in Notizen wirklich
-     * vorkommt: Brüche, Wurzeln, Hoch/Tief, Summen, griechische Buchstaben.
-     * ======================================================================*/
     const GRIECHISCH = {
         alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ', eta: 'η', theta: 'θ',
         iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', pi: 'π', rho: 'ρ', sigma: 'σ',
@@ -1528,27 +1222,20 @@ const Zusatz = (() => {
     };
     const mathe = (roh) => {
         let s = esc(roh || '');
-        /* \frac{a}{b} */
         for (let i = 0; i < 4; i++) {
             s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '<span class="mfrac"><span class="mz">$1</span><span class="mn">$2</span></span>');
         }
-        /* \sqrt{a} und \sqrt[n]{a} */
         s = s.replace(/\\sqrt\[([^\]]*)\]\{([^{}]*)\}/g, '<sup class="mw">$1</sup>√<span class="munter">$2</span>');
         s = s.replace(/\\sqrt\{([^{}]*)\}/g, '√<span class="munter">$1</span>');
-        /* \text{…} */
         s = s.replace(/\\(?:text|mathrm)\{([^{}]*)\}/g, '<span class="mtext">$1</span>');
-        /* Hoch und tief */
         s = s.replace(/\^\{([^{}]*)\}/g, '<sup>$1</sup>').replace(/\^(\w)/g, '<sup>$1</sup>');
         s = s.replace(/_\{([^{}]*)\}/g, '<sub>$1</sub>').replace(/_(\w)/g, '<sub>$1</sub>');
-        /* Befehle */
         s = s.replace(/\\([A-Za-z]+)/g, (_, name) => GRIECHISCH[name] ||
             ZEICHEN[name] ||
             ('<span class="mop">' + name + '</span>'));
-        /* Reste */
         s = s.replace(/[{}]/g, '');
         return '<span class="mathe">' + s + '</span>';
     };
-    /** Der Formelblock: zeigt gerendert, beim Klick erscheint die Quelle. */
     const formelBlock = (block) => {
         const w = document.createElement('div');
         w.className = 'eq';
@@ -1583,13 +1270,6 @@ const Zusatz = (() => {
         w.appendChild(quelle);
         return w;
     };
-    /* ========================================================================
-     * 5. SYNTAX-EINFÄRBUNG FÜR CODEBLÖCKE
-     * ------------------------------------------------------------------------
-     * Kein fremdes Paket, sondern ein kleiner Zerleger: Kommentare, Texte,
-     * Zahlen, Schlüsselwörter. Deckt die Sprachen ab, die in Notizen
-     * wirklich vorkommen.
-     * ======================================================================*/
     const SCHLUESSEL = {
         javascript: 'const let var function return if else for while do switch case break continue new class extends super this typeof instanceof await async try catch finally throw import export default null undefined true false',
         typescript: 'const let var function return if else for while interface type enum implements public private readonly await async class extends import export null undefined true false',
@@ -1629,10 +1309,6 @@ const Zusatz = (() => {
         const woerter = (SCHLUESSEL[lang] || SCHLUESSEL.javascript)
             .split(' ').filter(Boolean);
         let out = roh;
-        /* Erst Texte und Kommentare wegsichern, damit dort nichts eingefärbt wird */
-        /* Der Platzhalter darf keine Ziffern enthalten — sonst färbt die
-           Zahlen-Regel weiter unten den Platzhalter selbst ein und zerstört ihn.
-           Deshalb steckt der Index in einem Zeichen aus dem privaten Bereich. */
         const sicher = [];
         const parke = (treffer, klasse) => {
             sicher.push('<span class="' + klasse + '">' + treffer + '</span>');

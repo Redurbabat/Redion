@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/ordnerkarte.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/ordnerkarte.ts — der Blick in einen Ordner, ohne hineinzugehen
  * ----------------------------------------------------------------------------

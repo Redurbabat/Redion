@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/seitenansicht.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/aufbau/seitenansicht.ts — der Umschalter über der Seite
  * ----------------------------------------------------------------------------

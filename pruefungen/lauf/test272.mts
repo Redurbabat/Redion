@@ -293,10 +293,14 @@ p('Die Marken der ruhigen Fassung sind noch am Markup',
    hält fest, dass sie es sind, damit Phase J sie wirklich entfernt und nicht
    nur verschiebt. Wird die Zeile gelöscht UND das Element bleibt fort, dreht
    sich diese Prüfung in Phase J um. */
-const schaleJs = lies('quell/schale/aufbau/schale.js');
+/* AUS DER QUELLE, NICHT AUS DEM ERZEUGTEN (E715). Die Beschreibung ist ein
+   Kommentar („HIER STAND `an('hl-seiten', …)`"), und Kommentare reisen seit
+   E715 nicht mehr ins erzeugte .js mit. Die Quelle trägt Code UND
+   Kommentar — sie sieht also alles, was das .js je zeigen konnte, und mehr. */
+const schaleTs = lies('src/schale/aufbau/schale.ts');
 const indexHtml = lies('index.html');
 p('Die tote Verdrahtung hl-seiten ist noch beschrieben, nicht heimlich weg',
-  schaleJs.includes('hl-seiten') === !indexHtml.includes('id="hl-seiten"'),
+  schaleTs.includes('hl-seiten') === !indexHtml.includes('id="hl-seiten"'),
   'Verdrahtung und Markup müssen zusammen gehen oder zusammen fehlen');
 
 /* ==========================================================================

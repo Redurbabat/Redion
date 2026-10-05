@@ -1,24 +1,5 @@
 "use strict";
-/* ══ DER INHALT DES NIN-TRAINERS — Regeln der Technik, Kapitel 5, 6, 7 (E679) ══
-   Redur, 22. September 2026: „erstelle mir direkt lerne quiz im redion für
-   kapitel 5,6,7 und bei der regel der technik und alles beschriftet mit
-   nummern, seiten im nin compact, wie im test und noch multiple choice
-   fragen, schreiben usw alles".
-
-   Die Quelle sind die drei Kapitelblätter von Heinz Boxler (NIN 2020:
-   5.1 Aufteilung in Stromkreise, 6.1 Stromversorgung für Sicherheitszwecke,
-   7.1–7.6 Äussere Einflüsse), die NIN Compact 2024 (Seitenzahlen = gedruckte
-   Zahl unten auf der Seite), die Antworten des Lehrers von den Folien und
-   der Wortlaut der NEV (Totalrevision 2015). Wo Blatt und Buch sich
-   widersprechen, steht beides (Prüffinger 12 / 12,5 mm; Kanal EI60 / EI 30).
-
-   Die 34 PRÜFUNGSFRAGEN sind die zwei Probeprüfungen, die nach dem Muster
-   der echten Tests des Lehrers gebaut wurden (Prüfung 200329 und 260602:
-   20 Minuten, 22–27 Punkte, Blattreihenfolge, „Nennen Sie zwei", Ankreuzen
-   mit vier Kästchen). Jede trägt Nummer und Punkte wie auf dem Blatt.
-
-   Drei Aufgabenformen wie beim Staatskunde-Kapitel: `mc`, `schreiben`,
-   `luecke`. Jede Aufgabe nennt ihre Seite in der NIN Compact. */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/nin-quiz.ts (npm run bauen:ts). */
 const NinQuiz = (() => {
     const KAPITEL = 'Regeln der Technik — NIN Kap. 5, 6, 7';
     const THEMEN = [
@@ -34,7 +15,6 @@ const NinQuiz = (() => {
     const P1 = 'Probeprüfung 1';
     const P2 = 'Probeprüfung 2 · Nr. 260923';
     const AUFGABEN = [
-        /* ── PROBEPRÜFUNG 1 — 17 Fragen, 27 Punkte, wie Prüfung 260602 ─────── */
         { id: 'p1-1', art: 'schreiben', thema: 'stromkreise', quelle: 'NIN Compact S. 100', pruefung: true, nummer: P1 + ' · 1 · 1,5 Pt.',
             frage: 'Jede Anlage muss in mehrere Stromkreise aufgeteilt werden. Auf welche Teile sollen Störungen und Schäden begrenzt bleiben? Nennen Sie drei.',
             loesung: ['selbstständige Anlageteile', 'einzelne Gebäudekörper', 'einzelne Stockwerke', 'einzelne Räume'] },
@@ -93,7 +73,6 @@ const NinQuiz = (() => {
             frage: 'Welche Angaben muss eine Konformitätserklärung nach NEV Art. 8 enthalten?',
             antworten: ['Name und Adresse des Herstellers', 'Verkaufspreis des Erzeugnisses', 'angewandte Vorschriften und Normen', 'Name der Person, die unterzeichnet'],
             richtig: [0, 2, 3] },
-        /* ── PROBEPRÜFUNG 2 · Nr. 260923 — 17 Fragen, 27 Punkte ─────────────── */
         { id: 'p2-1', art: 'schreiben', thema: 'stromkreise', quelle: 'NIN Compact S. 100', pruefung: true, nummer: P2 + ' · 1 · 1,5 Pt.',
             frage: 'Installationen sind so zu unterteilen, dass Störungen und Schäden begrenzt bleiben auf: (drei nennen)',
             loesung: ['selbstständige Anlageteile', 'einzelne Gebäudekörper', 'einzelne Stockwerke', 'einzelne Räume'] },
@@ -150,7 +129,6 @@ const NinQuiz = (() => {
         { id: 'p2-17', art: 'schreiben', thema: 'nev', quelle: 'Blatt 7.6 · NEV Art. 3', pruefung: true, nummer: P2 + ' · 17 · 1,5 Pt.',
             frage: 'Was bestätigt der Hersteller mit der CE-Kennzeichnung, und wird das Produkt dabei von einer unabhängigen Stelle geprüft?',
             loesung: ['Der Hersteller bestätigt in Eigenverantwortung die Konformität des Produkts.', 'Nein, keine Prüfung durch eine unabhängige Stelle. CE dient dem freien Warenverkehr in der EU; in der Schweiz ist CE keine Pflicht.'] },
-        /* ── BLATT 5.1 · Aufteilung in Stromkreise ───────────────────────────── */
         { id: 's1', art: 'mc', thema: 'stromkreise', quelle: 'NIN Compact S. 100',
             frage: 'Welche Gründe nennt die NIN dafür, eine Anlage in mehrere Stromkreise aufzuteilen?',
             antworten: ['Vermeidung von Gefahren', 'Erleichterung der Prüfung und Wartung', 'Senkung der Anzahl unerwünschter Auslösungen von RCD', 'Senkung der Stromkosten'],
@@ -172,7 +150,6 @@ const NinQuiz = (() => {
             frage: 'Aufgabe 3½-Zimmer-Wohnung: Kochherd 10 kW, Geschirrspüler 2,2 kW, Waschmaschine 2,3 kW, Wäschetrockner 1,2 kW. Wie teilen Sie die Stromkreise sinnvoll auf?',
             loesung: ['Kochherd 3×400/230 V, 10 kW: eigener LS 3-polig', 'Geschirrspüler 2,2 kW: eigener LS (mehr als 2 kW)', 'Waschmaschine 2,3 kW: eigener LS', 'Wäschetrockner 1,2 kW: darf mit Steckdosen zusammen (unter 2 kW)',
                 'Licht und Steckdosen Küche/Essen, Wohnzimmer, Schlafzimmer: je LS 13 A Typ C, 3×1,5 mm², hinter RCD 30 mA', 'Beleuchtung auf mindestens zwei Stromkreise'] },
-        /* ── BLATT 6.1 · Stromversorgung für Sicherheitszwecke ───────────────── */
         { id: 'z1', art: 'luecke', thema: 'sicherheit', quelle: 'NIN Compact S. 231',
             frage: 'Schaltgeräte und Überstrom-Schutzeinrichtungen für Sicherheitszwecke müssen durch eine Abtrennung EI 60 vollständig getrennt oder um mindestens ___ m distanziert sein.',
             loesung: ['0,8', '0.8'] },
@@ -210,7 +187,6 @@ const NinQuiz = (() => {
             frage: 'Beleuchtungsstärken der Sicherheitsbeleuchtung — was stimmt?',
             antworten: ['Wege zu Ausgängen: min. 1 lx', 'Bekämpfungs- oder Meldeeinrichtungen entlang der Rettungswege: min. 5 lx', 'Arbeiten in Verbindung mit Sicherheitsmassnahmen: min. 15 lx', 'Antipanikbeleuchtung: min. 50 lx'],
             richtig: [0, 1, 2] },
-        /* ── BLATT 7.1 · Raumarten ───────────────────────────────────────────── */
         { id: 'r1', art: 'schreiben', thema: 'raumarten', quelle: 'NIN Compact S. 87 · Blatt 7.1',
             frage: 'Feuergefährdete Räume mit brennbarem Staub: Definition und Beispiele.',
             loesung: ['Räume oder Zonen, in welchen leichtbrennbare Stoffe erzeugt, verarbeitet oder in beträchtlichen Mengen aufbewahrt werden und in denen bei der normalen Benützung mit einer Staubablagerung in gefährlichen Mengen zu rechnen ist.', 'Beispiele (Lehrer): Schreinereien, Sägereien, Heuböden'] },
@@ -243,7 +219,6 @@ const NinQuiz = (() => {
         { id: 'r9', art: 'schreiben', thema: 'raumarten', quelle: 'NIN Compact S. 317 · Blatt 7.5',
             frage: 'Wer legt die explosionsgefährdeten Bereiche und die Einteilung in Zonen fest?',
             loesung: ['Die Suva und die zuständige kantonale Brandschutzbehörde in Zusammenarbeit mit der für den Arbeitsschutz zuständigen Stelle, aufgrund der Betreiberangaben.'] },
-        /* ── BLATT 7.2 · Schutzart IP ────────────────────────────────────────── */
         { id: 'i1', art: 'luecke', thema: 'ip', quelle: 'Blatt 7.2 · NIN Compact S. 175',
             frage: 'IP ist die Abkürzung für ___ Protection.',
             loesung: ['International', 'Ingress'] },
@@ -269,7 +244,6 @@ const NinQuiz = (() => {
         { id: 'i7', art: 'luecke', thema: 'ip', quelle: 'NIN Compact S. 51',
             frage: 'IP X5 bedeutet Schutz gegen ___.',
             loesung: ['Strahlwasser'] },
-        /* ── BLATT 7.3 · Symbole für Betriebsmittel ──────────────────────────── */
         { id: 'y1', art: 'mc', thema: 'symbole', quelle: 'NIN Compact S. 52',
             frage: 'Symbole für Betriebsmittel — welche Zuordnung stimmt?',
             antworten: ['tropfwassersicher: IP X1', 'regensicher (nur für Leuchten): IP X3', 'spritzwassersicher: IP X4', 'strahlwassersicher: IP X7'],
@@ -295,7 +269,6 @@ const NinQuiz = (() => {
         { id: 'y7', art: 'luecke', thema: 'symbole', quelle: 'Blatt 7.3',
             frage: 'Sonderisoliertes Material (Doppelquadrat) sind Betriebsmittel mit verstärkter oder zusätzlicher ___, z. B. Handbohrmaschine, Heckenschere.',
             loesung: ['Isolierung', 'Isolation'] },
-        /* ── BLATT 7.4 · Zugang zu gefährlichen Teilen ───────────────────────── */
         { id: 'g1', art: 'mc', thema: 'zugang', quelle: 'Blatt 7.4 · NIN Compact S. 176',
             frage: 'Der erweiterte IP-Code (EN 60529) — was stimmt?',
             antworten: ['Er wurde im Jahr 2000 mit der Europanorm EN 60529 eingeführt.', 'Die IP-Kennzeichnung kann mit einem Buchstaben A bis D ergänzt werden.',
@@ -322,7 +295,6 @@ const NinQuiz = (() => {
             antworten: ['Der IK-Code steht für die Schutzart durch Gehäuse gegen äussere mechanische Beanspruchung.', 'Er besteht aus zwei Ziffern von 00 bis 10.',
                 'Betriebsmittel für den Gebrauch im Haushalt entsprechen mindestens IK 02, das sind 0,2 Joule.', 'IK 10 entspricht 2 Joule.'],
             richtig: [0, 1, 2] },
-        /* ── BLATT 7.5 · Äussere Einflüsse ───────────────────────────────────── */
         { id: 'e1', art: 'luecke', thema: 'einfluesse', quelle: 'NIN Compact S. 174 · Blatt 7.5',
             frage: 'Die Kennzeichnung der äusseren Einflüsse besteht aus einer Gruppe von 2 ___ und einer Ziffer.',
             loesung: ['Grossbuchstaben', 'Großbuchstaben'] },
@@ -357,7 +329,6 @@ const NinQuiz = (() => {
             frage: 'Mechanische Beanspruchung (Tabelle 2) — was stimmt?',
             antworten: ['AG1: niedrige Beanspruchung, Haushalt, Betriebsmittel ≥ IK 02', 'AG2: mittlere Beanspruchung, z. B. Schreinereien, Werkstätten, ≥ IK 07', 'AG3: hohe Beanspruchung, erschwerte industrielle Bedingungen, ≥ IK 08', 'AH = Schlag und Schock'],
             richtig: [0, 1, 2] },
-        /* ── BLATT 7.6 · Niederspannungserzeugnisse NEV ──────────────────────── */
         { id: 'n1', art: 'mc', thema: 'nev', quelle: 'NIN Compact S. 27, 71, 80',
             frage: 'NEV und NIV — was stimmt?',
             antworten: ['NEV = Verordnung über elektrische Niederspannungserzeugnisse, SR 734.26: Geräte und Betriebsmittel', 'NIV = Niederspannungs-Installationsverordnung, SR 734.27: Installationen',
@@ -391,12 +362,6 @@ const NinQuiz = (() => {
             frage: 'Das Konformitätszeichen des ___ bietet zusätzlich die laufende Überwachung der Produktion.',
             loesung: ['SEV'] },
     ];
-    /* ── DAS KAPITEL ALS SEITE — wie beim Staatskunde-Kapitel (E677) ────────
-       Keine zweite Ablage: jede Aufgabe wird eine Lernkarte mit `quiz`, der
-       Fortschritt steht am Block in `sr`. Neu gegenüber E677 ist das Feld
-       `kapitel`, damit der Trainer zwei Kapitel auseinanderhält, und
-       `pruefung: false` an den Themenaufgaben in Schreibform, damit die
-       Prüfungsrunde nur die 34 nummerierten Fragen nimmt. */
     const themaName = (id) => THEMEN.find(t => t.id === id)?.name || id;
     const karteVon = (a) => {
         const gemeinsam = { kapitel: KAPITEL, thema: a.thema, topic: themaName(a.thema), quelle: a.quelle };
@@ -425,8 +390,6 @@ const NinQuiz = (() => {
         Store.addBlock(seite.id, 'text', { text: 'Kapitel 5 (Aufteilung in Stromkreise), 6 (Stromversorgung für Sicherheitszwecke) und 7 (Äussere Einflüsse) nach den Kapitelblättern ' +
                 'und der NIN Compact 2024. Jede Karte ist eine Aufgabe des Trainers (Lernzentrum → Trainer): zwei Probeprüfungen im Muster des Lehrers mit Nummer und Punkten, ' +
                 'dazu Aufgaben je Blatt. Jede Karte nennt die Seite in der NIN Compact. Du kannst jede Karte lesen und ändern.' });
-        /* Die Prüfungsfragen zuoberst und in Blattreihenfolge — die
-           Prüfungsrunde liest die Seite von oben nach unten (P106). */
         Store.addBlock(seite.id, 'h2', { text: 'Probeprüfung 1 · 17 Fragen · 27 Punkte · 20 Minuten' });
         for (const a of AUFGABEN)
             if (a.pruefung && a.id.startsWith('p1-'))

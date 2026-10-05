@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/hinweis.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/ueberlagerung/hinweis.js — Toast und Banner
  * ----------------------------------------------------------------------------

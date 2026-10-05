@@ -1,41 +1,13 @@
 "use strict";
-/* ============================================================================
- * fenster.js — Reiter, geteilte Ansicht und Linkvorschau
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/schale/aufbau/reiter.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/schale/aufbau/reiter.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Drei Dinge, die man an Notion am Windows-PC vermisst:
- *
- *   REITER — Notions Desktop-App hat sie erst seit 2023 und nur dort. Hier
- *     gibt es sie überall, auch im Browser: Strg+Alt+N neuer Reiter,
- *     Strg+Alt+W zu, Strg+Tab weiter, Strg+1…9 direkt hin. (Strg+T und
- *     Strg+W gehören dem Browser — die Begründung steht unten bei `tasten`.)
- *     Sie überleben den Neustart. Und seit E300 bekommt jedes DOKUMENT
- *     seinen eigenen Reiter, so wie in GoodNotes.
- *
- *   GETEILTE ANSICHT — zwei Seiten nebeneinander, die Trennlinie lässt sich
- *     ziehen. In Notion geht das nur in der Desktop-App und nur zu zweit;
- *     hier auch untereinander.
- *
- *   LINKVORSCHAU — über einem Seitenlink erscheint nach kurzem Verweilen
- *     eine Karte mit Titel, Pfad und den ersten Zeilen. Notion zeigt beim
- *     Überfahren gar nichts.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/reiter.ts (npm run bauen:ts). */
 const Fenster = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     let reiter = [];
     let aktiv = 0;
-    let stumm = false; /* verhindert Rückkopplung beim eigenen Öffnen */
-    let bereit = false; /* vor start() nichts überschreiben */
+    let stumm = false;
+    let bereit = false;
     const lesen = () => {
         const g = Store.getMeta('reiter', null);
         if (g && Array.isArray(g.liste) && g.liste.length) {
@@ -66,7 +38,6 @@ const Fenster = (() => {
                 return;
             main.insertBefore(leiste, document.getElementById('topbar'));
         }
-        /* Ein einzelner Reiter ohne Nutzen wird nicht gezeigt. */
         const dokument = !!Store.getBlock(App.aktuelleSeite())?.dokumentModus;
         if (Store.getMeta('reiterAn', true) === false || (reiter.length < 2 && !dokument)) {
             leiste.style.display = 'none';
@@ -82,16 +53,6 @@ const Fenster = (() => {
             `title="Reiter schliessen (Strg + Alt + W)">✕</button></div>`).join('') +
             '<button type="button" class="rt-plus" aria-label="Neuer Reiter" ' +
             'title="Neuer Reiter (Strg + Alt + N)">＋</button>';
-        /* DER AKTIVE REITER MUSS ZU SEHEN SEIN (E300). Am Telefon passen zwei
-           Reiter nicht nebeneinander — der zweite stand halb ausserhalb des
-           Bildschirms, mit abgeschnittenem Namen. Gefunden auf dem Bild, nicht
-           im Prüflauf: die Zeile selbst endete brav am Rand, nur ihr Inhalt
-           nicht (§55.1, derselbe Fehler wie die abgeschnittene Zahl im
-           Tabellenblock).
-    
-           Gerechnet wird über die Bildschirmrechtecke und nicht über
-           `offsetLeft`: die Zeile ist nicht positioniert, also zählt
-           `offsetLeft` an ihr vorbei zum nächsten positionierten Vorfahren. */
         const an = leiste.querySelector('.rt-tab.an');
         if (an) {
             const tr = an.getBoundingClientRect();
@@ -140,30 +101,8 @@ const Fenster = (() => {
         sichern();
         wechseln(aktiv);
     };
-    /** Zeigt diese Seite ein Dokument — eine PDF, ein Heft, eine Mappe? */
     const istDokument = (id) => !!(id && Store.getBlock(id)?.dokumentModus);
-    /**
-     * App.oeffne meldet sich hier: der aktive Reiter zeigt jetzt woandershin.
-     *
-     * WANN EIN NEUER REITER ENTSTEHT (E300). Bis hierher gab es nur einen Fall:
-     * der aktive Reiter wurde überschrieben. Damit konnte gar keine Reiterzeile
-     * entstehen — wer eine zweite PDF öffnete, verlor die erste aus der Zeile,
-     * und der Weg zwischen zwei Dokumenten führte jedes Mal übers Regal.
-     *
-     * Die Regel ist ein Satz: *ein Dokument wird nicht verdrängt.* Zeigt der
-     * aktive Reiter ein Dokument und kommt etwas anderes, bekommt das Neue
-     * einen eigenen Reiter daneben. In allen anderen Fällen bleibt es beim
-     * Überschreiben.
-     *
-     * Was das nicht tut — und das ist der Grund für genau diesen Zuschnitt:
-     * gewöhnliche Seiten lösen einander weiterhin ab. Sonst hätte jeder Klick
-     * im Baum einen Reiter erzeugt und die Zeile wäre nach zehn Minuten
-     * unbrauchbar. Zwei PDFs und eine Notiz ergeben drei Reiter; zwanzig
-     * Notizen nacheinander ergeben einen.
-     */
     const gemerkt = (id) => {
-        /* Beim Hochfahren öffnet die App die zuletzt gesehene Seite, bevor die
-           Reiter gelesen sind. Ohne diese Sperre würde das die Liste löschen. */
         if (!bereit || stumm || !id)
             return;
         if (!reiter.length) {
@@ -173,9 +112,6 @@ const Fenster = (() => {
             zeichnen();
             return;
         }
-        /* Schon offen? Dann dorthin, nicht ein zweites Mal. Vorher stand hier
-           nur das Überschreiben: wer von Reiter 1 aus die Seite öffnete, die in
-           Reiter 2 lag, hatte danach zweimal dieselbe Seite in der Zeile. */
         const schon = reiter.findIndex(t => t.id === id);
         if (schon >= 0) {
             aktiv = schon;
@@ -191,9 +127,6 @@ const Fenster = (() => {
         sichern();
         zeichnen();
     };
-    /* ========================================================================
-     * GETEILTE ANSICHT
-     * ======================================================================*/
     let geteilt = null;
     const teilen = (id, richtung) => {
         const ziel = id || App.aktuelleSeite();
@@ -228,9 +161,6 @@ const Fenster = (() => {
                 '<button data-a="zu" title="Teilung aufheben">✕</button>';
         kopf.addEventListener('click', e => {
             const b = elVon(e)?.closest('button[data-a]');
-            /* Der Kopf steht in der geteilten Ansicht — aber der Klick kann
-               eintreffen, nachdem sie aufgehoben wurde (Esc, ein Tastenkürzel,
-               eine andere Seite). Dann gibt es nichts mehr zu tauschen. */
             const g = geteilt;
             if (!b || !g)
                 return;
@@ -295,7 +225,6 @@ const Fenster = (() => {
             neu.innerHTML = '<div class="teil-griff" title="Ziehen ändert die Breite"></div>' +
                 '<div class="teil-seite"></div>';
             main.appendChild(neu);
-            /* Trennlinie ziehen */
             neu.querySelector('.teil-griff')?.addEventListener('pointerdown', ev => {
                 ev.preventDefault();
                 const quer = g.richtung === 'quer';
@@ -323,9 +252,6 @@ const Fenster = (() => {
         if (seite)
             zweiteSeite(seite, g.id);
     };
-    /* ========================================================================
-     * LINKVORSCHAU
-     * ======================================================================*/
     let schweb = null;
     let uhr;
     const vorschauZu = () => {
@@ -365,7 +291,6 @@ const Fenster = (() => {
         schweb.addEventListener('mouseenter', () => clearTimeout(uhr));
         schweb.addEventListener('mouseleave', vorschauZu);
     };
-    /** Welche ID steckt hinter dem Element unter dem Zeiger? */
     const idVon = (el) => {
         const a = el?.closest('[data-seite], [data-id]');
         if (!a)
@@ -386,7 +311,6 @@ const Fenster = (() => {
             uhr = setTimeout(() => vorschauZeigen(el, id), 420);
             el.addEventListener('mouseleave', () => { clearTimeout(uhr); uhr = setTimeout(vorschauZu, 220); }, { once: true });
         });
-        /* Shift + Klick auf einen Seitenlink teilt die Ansicht. */
         document.addEventListener('click', e => {
             if (!e.shiftKey)
                 return;
@@ -403,9 +327,6 @@ const Fenster = (() => {
             UI.toast('Rechts geöffnet');
         }, true);
     };
-    /* ========================================================================
-     * TASTEN
-     * ======================================================================*/
     const tasten = (e) => {
         const strg = e.ctrlKey || e.metaKey;
         if (!strg)
@@ -418,23 +339,6 @@ const Fenster = (() => {
             wechseln(e.shiftKey ? (aktiv - 1 + reiter.length) % reiter.length : (aktiv + 1) % reiter.length);
             return;
         }
-        /* --- Warum hier NICHT Strg T und Strg W stehen ----------------------
-         * Beide gehören dem Browser, und er gibt sie nicht her: `preventDefault`
-         * bleibt bei ihnen wirkungslos. Gebunden waren sie trotzdem, und das
-         * Ergebnis war, dass BEIDES geschah — Redion schloss seinen Reiter, und
-         * der Browser schloss das Fenster darüber. Der Mensch kam zurück und
-         * fand einen seiner Reiter nicht mehr, ohne Anhaltspunkt, warum.
-         *
-         * Nachweisen lässt sich das im Prüfstand nicht: Playwright schickt
-         * Tastendrücke an die Seite, nicht an die Browseroberfläche. Deshalb
-         * wird hier nicht bewiesen, sondern ausgewichen — auf zwei Kürzel, bei
-         * denen die Frage gar nicht erst entsteht. `test134` hält fest, dass
-         * Strg T und Strg W wieder beim Browser liegen.
-         *
-         * Und selbst wenn der Browser sie hergäbe: wer Strg W drückt, meint
-         * meistens den Browserreiter. Eine Seite, die das umdeutet, ist
-         * unhöflich zu einer Gewohnheit, die älter ist als sie.
-         * ------------------------------------------------------------------ */
         if (e.altKey && e.key.toLowerCase() === 'n' && !e.shiftKey) {
             e.preventDefault();
             neuerReiter();
@@ -450,20 +354,14 @@ const Fenster = (() => {
             geteilt ? teilenAus() : teilen(App.aktuelleSeite(), 'quer');
             return;
         }
-        /* Strg + 1…9 springt zum Reiter — nur ausserhalb von Textfeldern */
         if (!tippt && !e.shiftKey && !e.altKey && /^[1-9]$/.test(e.key) && reiter.length > 1) {
             e.preventDefault();
             wechseln(Math.min(+e.key - 1, reiter.length - 1));
         }
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
     const start = () => {
         lesen();
         bereit = true;
-        /* Die App hat beim Hochfahren schon eine Seite geöffnet — der aktive
-           Reiter soll darauf zeigen, ohne die anderen zu verlieren. */
         const jetzt = App.aktuelleSeite();
         if (jetzt && reiter[aktiv] && reiter[aktiv]?.id !== jetzt) {
             const schon = reiter.findIndex(t => t.id === jetzt);
@@ -497,7 +395,6 @@ const Fenster = (() => {
             if (t?.dataset["i"])
                 wechseln(+t.dataset["i"]);
         });
-        /* Reiter mit der Maus umsortieren */
         let zieht = null;
         document.getElementById('reiterleiste')?.addEventListener('dragstart', e => {
             const t = elVon(e)?.closest('[data-i]');

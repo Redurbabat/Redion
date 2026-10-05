@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/studio.ts (npm run bauen:ts). */
 /* Redion Studio: shortcuts into existing controllers; no content storage. */
 const StudioSchale = (() => {
   let gestartet = false;

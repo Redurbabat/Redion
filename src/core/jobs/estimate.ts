@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/jobs/estimate.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/jobs/estimate.js — was ein langer Auftrag kosten wird
  * ----------------------------------------------------------------------------

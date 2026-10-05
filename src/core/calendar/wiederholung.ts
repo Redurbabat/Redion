@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/calendar/wiederholung.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/calendar/wiederholung.ts — Wiederholungsregeln, die wirklich gelesen
  *                                 werden

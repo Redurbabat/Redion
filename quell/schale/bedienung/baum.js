@@ -1,7 +1,5 @@
 "use strict";
-/* schale/bedienung/baum.ts — gemeinsame Baumansicht
-   Quelle: Redion-Adaption der Uiverse-Baumidee von ashif_6672.
-   Kein eigenes Datenmodell; Bereiche liefern nur Knoten und Zustand. */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/baum.ts (npm run bauen:ts). */
 const Baumansicht = (() => {
     const bauen = (auftrag) => {
         const wurzel = document.createElement('div');
@@ -51,21 +49,11 @@ const Baumansicht = (() => {
                         zeile.setAttribute('aria-disabled', 'true');
                     zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
                     zeile.style.setProperty('--baum-ebene', String(ebene - 1));
-                    /* DIE FARBE DES KNOTENS (E672) — noch einmal durch die Whitelist,
-                       auch wenn der Aufrufer sie schon geprüft hat: dieser Baum ist
-                       eine gemeinsame Ansicht, und der nächste Aufrufer prüft
-                       vielleicht nicht. */
                     const farbe = typeof Farben !== 'undefined' && Farben.kennung ? Farben.kennung(k.farbe) : '';
                     if (farbe) {
                         zeile.dataset['farbe'] = farbe;
                         zeile.style.setProperty('--baum-farbe', 'var(--c-' + farbe + ')');
                     }
-                    /* EIN `span`, KEIN `button`. Der Knick ist Zierat am Treeitem: die
-                       Zeile selbst ist das Bedienelement (Klick, Pfeiltasten, Enter),
-                       und der Klick auf den Knick wird über `closest()` an der Zeile
-                       erkannt. Als Knopf war er 20 × 24 gross, `aria-hidden` und
-                       `tabindex=-1` — für den Finger ein Ziel unter 44 px (§37), für
-                       den Vorleser ein Knopf, den es nicht gibt. test114 mass ihn. */
                     const knick = document.createElement('span');
                     knick.className = 'ru-baum-knick';
                     knick.setAttribute('aria-hidden', 'true');

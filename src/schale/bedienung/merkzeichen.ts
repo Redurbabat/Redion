@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/merkzeichen.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/merkzeichen.ts — das Lesezeichen: ein Merker, eine Sprache
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ablage/nachbarn.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/ablage/nachbarn.js — der Draht zwischen zwei offenen Fenstern
  * ----------------------------------------------------------------------------

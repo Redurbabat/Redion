@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/learning.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/wissen/learning.ts — Lernen aus normalen Redion-Inhalten
  * ----------------------------------------------------------------------------

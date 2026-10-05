@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/seite.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/pdf/seite.ts — eine PDF-Seite als Block
  * ----------------------------------------------------------------------------

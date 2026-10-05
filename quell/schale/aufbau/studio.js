@@ -1,5 +1,5 @@
 "use strict";
-/* Redion Studio: shortcuts into existing controllers; no content storage. */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/studio.ts (npm run bauen:ts). */
 const StudioSchale = (() => {
     let gestartet = false;
     const META = 'studio:navigation-kompakt';
@@ -12,14 +12,10 @@ const StudioSchale = (() => {
             bewegt.clear();
         }
     });
-    /** Nur echte Navigation animieren, nicht jeden Such-/Editor-Rerender.
-        Keine Papier-/Canvas-Transformation: Ink-Koordinaten bleiben unverändert. */
     const ankommen = (element, x = 0, y = 6, delay = 0) => {
-        /* „Ruhige Darstellung" zählt wie das System (E702) — gefragt beim Aufruf. */
         const still = ruhig.matches || (typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung());
         if (!element || still || document.hidden || typeof element.animate !== 'function')
             return;
-        /* eine Bewegung zugleich: gleitet die Bühne herein, nicht auch die Karten (E702) */
         if (element.closest('#scroll.wisch-links, #scroll.wisch-rechts'))
             return;
         const tokens = getComputedStyle(document.documentElement);
@@ -69,13 +65,10 @@ const StudioSchale = (() => {
         an('studio-create', () => App.erstellenBlatt());
         an('studio-import', () => Bibliothek.pdfImportieren());
         an('studio-account', () => App.arbeitsbereich());
-        /* Dieselbe Handlung wie `mb-glocke` im Band (menueband.ts). */
         an('studio-glocke', () => { try {
             Ansichten.posteingang();
         }
-        catch { /* ohne Posteingang bleibt der Kopf */ } });
-        /* Die Sterne (E463): sie stehen nur, solange ein Auftrag läuft, und
-           öffnen dasselbe Fenster wie der Knopf im Menüband. */
+        catch { } });
         an('studio-auftraege', () => {
             if (typeof AuftragsAnzeige !== 'undefined')
                 AuftragsAnzeige.oeffnen();

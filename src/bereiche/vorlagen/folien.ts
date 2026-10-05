@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/vorlagen/folien.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/vorlagen/folien.ts — fertige Folienlayouts
  * ----------------------------------------------------------------------------

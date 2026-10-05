@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/plural.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/plural.ts — eins ist eine andere Zahl als zwei
  * ----------------------------------------------------------------------------

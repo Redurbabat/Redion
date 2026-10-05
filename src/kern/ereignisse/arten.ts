@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ereignisse/arten.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/ereignisse/arten.js — die Namen, auf die man horchen kann
  * ----------------------------------------------------------------------------

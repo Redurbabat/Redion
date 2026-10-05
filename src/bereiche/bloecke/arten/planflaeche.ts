@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/planflaeche.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/bloecke/arten/planflaeche.ts — den Schaltplan bedienen
  * ----------------------------------------------------------------------------

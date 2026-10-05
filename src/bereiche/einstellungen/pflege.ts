@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/pflege.ts (npm run bauen:ts). */
 /* ============================================================================
  * pflege.js — Bestand pflegen: Gesundheit, Dubletten, Papierkorb, Fehler
  * ----------------------------------------------------------------------------

@@ -1,123 +1,17 @@
 "use strict";
-/* ============================================================================
- * register/menueband.js — das Menüband: Start, Einfügen, Zeichnen …
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/menueband.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/register/menueband.js`. Wer das .js bearbeitet, verliert die
- * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
- * ----------------------------------------------------------------------------
- * WAS DAS MENÜBAND IST
- *
- * Eine Reihe Reiter über der Seite — Start, Einfügen, Zeichnen, Werkzeuge,
- * Elektro, Ansicht — und unter dem gewählten Reiter die Knöpfe, gruppiert.
- * Das Muster kennt jeder aus Textprogrammen; es ist deshalb hier, weil Redur
- * es ausdrücklich so wollte.
- *
- * WARUM ES EIN REGISTER IST UND KEINE ZEICHENDATEI
- *
- * CLAUDE.md §8, Regel 3: neue Dinge sind Register-Objekte. Ein Menüband, das
- * seine Knöpfe selbst kennt, ist der Anfang genau der Datei, vor der §5 warnt
- * — eine, in der jeder Bereich ein bisschen mitschreibt. Hier steht der
- * KATALOG; gezeichnet wird in `schale/aufbau/menueband.ts`.
- *
- * DIE WICHTIGSTE REGEL DIESER DATEI
- *
- * Kein Eintrag darf etwas Neues tun. Jeder ruft eine Funktion, die es schon
- * gibt und die schon geprüft ist. Ein Menüband ist eine ZWEITE ANSICHT auf
- * das, was Redion kann — keine zweite Fassung davon. Wo hier eine eigene
- * Rechnung stünde, liefe sie irgendwann von der ersten weg, und zwar still.
- *
- * Deshalb ist der Reiter „Einfügen" auch nicht aufgezählt, sondern kommt aus
- * `Register.bloecke` — dieselbe Liste, aus der sich das Slash-Menü bedient.
- * Eine neue Blockart erscheint dort von selbst, ohne dass jemand hier etwas
- * nachträgt. Ein zweiter Katalog wäre nach der dritten neuen Blockart falsch.
- *
- * `zeigen()` VERHINDERT DIE HÄUFIGSTE ENTTÄUSCHUNG
- *
- * Wie bei `register/befehle.ts`: ein Eintrag, dessen Modul fehlt, kommt gar
- * nicht erst in die Liste. Ein Knopf, der dasteht und beim Klick sagt, dass
- * er hier nicht geht, ist schlimmer als einer, den es nicht gibt — und in der
- * Einzeldatei oder bei einem nicht geladenen Bereich ist genau das der Fall.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/menueband.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.menueband = (() => {
-    /* ======================================================================== *
-     * DIE REITER
-     * ======================================================================== */
-    /* ACHT REITER SEIT E272, und zwei Dinge daran brauchen eine Erklärung.
-     *
-     * „ELEKTRO" IST NICHT MEHR DABEI — die acht Einträge sehr wohl.
-     * Redur hat entschieden: kein eigener Elektro-Reiter, wie im Entwurf.
-     * Die Einträge behalten trotzdem `reiter: 'elektro'`, denn
-     * `bereiche/elektro/start.ts:64-66` liest daraus seine acht Kacheln.
-     * Wer statt dieser Liste das Feld ändert, leert die Elektro-Startseite —
-     * und kein anderer Lauf merkt es. test272 §5 hält genau das fest.
-     * Sichtbar sind sie über die Elektro-Seite selbst und ab Phase F über die
-     * Kontextkante des Bereichs.
-     *
-     * „WERKZEUGE" GIBT ES NICHT MEHR. Der Reiter war eine Restekiste — vier
-     * Gruppen, die nichts miteinander zu tun hatten („Schreiben",
-     * „Wiederfinden", „Lernen", „Weiteres"). Seine elf Einträge stehen jetzt
-     * dort, wo man sie suchen würde; die Umzugsliste steht in
-     * doku/PREMIUM-SHELL-MATRIX.md, R6.
-     *
-     * „GEHEN" IST HIER SCHON EINGETRAGEN, hat aber vorerst nur die sechs
-     * Einträge, die aus „Werkzeuge" kommen. `reiter()` zeigt nur Reiter, die
-     * etwas zu zeigen haben — ein leerer Reiter verschwände von selbst. Die
-     * volle Fassung aus `Register.module` und `Register.navigation` kommt in
-     * Phase E. */
-    /* „GEHEN" STEHT HIER NICHT MEHR (E391, Audit F02).
-     *
-     * Der Reiter zeigte, wohin man geht. Seit E388 stehen die Orte in der
-     * linken Leiste, und zwei Wege zum selben Ziel sind genau der Befund des
-     * Prüfberichts: „vier Navigationslogiken nebeneinander". Redur hat
-     * entschieden: das Menüband trägt nur noch dokumentbezogene Werkzeuge.
-     *
-     * DIE EINTRÄGE BLEIBEN, nur der Reiter geht. Sie tragen weiterhin
-     * `reiter: 'gehen'` — das ist ihre Ablage im Register, nicht ihre
-     * Anzeige —, und `orte()` liefert sie unverändert an die Kante. Wer sie
-     * hier löschte, nähme der linken Leiste ihre Liste weg.
-     *
-     * `reiter()` zeigt ohnehin nur, was in REITER steht; ein Eintrag ohne
-     * Reiter verschwindet also von selbst aus dem Band und bleibt dem
-     * Register erhalten. Genau dafür war die Trennung da. */
     const REITER = [
         { id: 'start', name: 'Start', zeichen: 'pencil' },
         { id: 'einfuegen', name: 'Einfügen', zeichen: 'plus' },
         { id: 'zeichnen', name: 'Zeichnen', zeichen: 'page' },
-        /* DER REITER FÜR FOLIEN (E549). Er steht hier, seine KNÖPFE stehen aber
-           nicht in dieser Datei: `bereiche/vorlagen/folien.ts` meldet sie als
-           Lieferant an. Das ist derselbe Grund wie beim Reiter „Einfügen" oben —
-           der Katalog gehört dem Bereich, der die Sache kann, und ein zweiter
-           hier liefe irgendwann davon weg.
-           `reiter()` blendet ihn von selbst aus, wenn kein Foliensatz offen ist:
-           jeder Eintrag trägt `zeigen()`, und ein Reiter ohne sichtbaren Eintrag
-           kommt gar nicht erst in die Liste. */
         { id: 'praesentation', name: 'Präsentation', zeichen: 'play' },
         { id: 'verlauf', name: 'Verlauf', zeichen: 'history' },
         { id: 'ueberpruefen', name: 'Überprüfen', zeichen: 'search' },
         { id: 'ansicht', name: 'Ansicht', zeichen: 'sun' },
         { id: 'hilfe', name: 'Hilfe', zeichen: 'help' }
     ];
-    /* ======================================================================== *
-     * HILFEN
-     * ======================================================================== */
-    /**
-     * Kann dieses Modul das?
-     *
-     * Der Aufrufer schreibt den Namen HIN — `kann(() => Werkzeuge.journal)` —
-     * statt ihn als Zeichenkette zu übergeben. Das ist Absicht: eine
-     * Zeichenkette müsste zur Laufzeit nachgeschlagen werden, und der einzige
-     * Weg dahin wäre `eval`. Das ist in Redion verboten (§20), und der erste
-     * Entwurf dieser Datei hat es trotzdem getan.
-     *
-     * Fehlt das Modul ganz, wirft der Zugriff einen ReferenceError: mit
-     * `module: none` sind die Module gewöhnliche Konstanten im Skript-Bereich
-     * und hängen NICHT am Fenster. (`(globalThis as any).Store` war beim
-     * Vorschau-Helfer deshalb immer `undefined`, und die Vorschau blieb still
-     * leer — E207.) Der Fehler wird gefangen und heisst dann schlicht „nein".
-     */
     const kann = (griff) => {
         try {
             return typeof griff() === 'function';
@@ -126,17 +20,6 @@ Register.menueband = (() => {
             return false;
         }
     };
-    /**
-     * Die offene Seite als Block.
-     *
-     * Sechs Werkzeuge nehmen sie als Parameter — `versionen(p)`, `sperren(p)`,
-     * `praesentation(p)`, `drucken(p)`, `quelltext(p)`, `htmlExport(p)`. Der
-     * erste Entwurf rief sie ohne Argument; der Typprüfer hat es gefunden,
-     * bevor daraus sechs Knöpfe wurden, die still nichts tun.
-     *
-     * `null` heisst „gerade keine Seite offen" — dann steht der Knopf auch
-     * nicht da, siehe `seiteDa`.
-     */
     const seiteJetzt = () => {
         try {
             const id = App.aktuelleSeite();
@@ -146,18 +29,10 @@ Register.menueband = (() => {
             return null;
         }
     };
-    /** Ein Knopf, der eine offene Seite braucht, wartet auf eine. */
     const seiteDa = (griff) => kann(griff) && !!seiteJetzt();
-    /* ======================================================================== *
-     * START — was man mit dem Text macht
-     * ======================================================================== */
-    /* Die Blockarten, die als „Absatzart" gelten. Die Kennungen sind dieselben
-       wie in `Register.bloecke`; `Blocks.einfuegenAmEnde` nimmt sie direkt. */
     const ABSATZARTEN = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number', 'quote', 'callout'];
     const startEintraege = () => {
         const aus = [];
-        /* Absatzarten — aus dem Blockregister, damit Name und Zeichen dieselben
-           sind wie im Slash-Menü. Ein eigener Text hier liefe davon weg. */
         if (Register?.bloecke?.eines) {
             for (const id of ABSATZARTEN) {
                 const b = Register.bloecke?.eines?.(id);
@@ -172,10 +47,6 @@ Register.menueband = (() => {
                 });
             }
         }
-        /* Auszeichnung. `Auswahl.umschliesse` setzt die Markdown-Marken um das,
-           was markiert ist — dieselbe Funktion, die die Auswahlleiste ruft.
-           Ohne Markierung tut sie nichts, und das ist richtig so: sie sagt es
-           über die Leiste, nicht über einen zweiten Weg. */
         const marken = [
             ['fett', 'Fett', 'B', '**'],
             ['kursiv', 'Kursiv', 'I', '*'],
@@ -196,46 +67,12 @@ Register.menueband = (() => {
             tun: () => Auswahl.linkSetzen(),
             zeigen: () => kann(() => Auswahl.linkSetzen)
         });
-        /* SUCHEN UND BEFEHLE STEHEN HIER NICHT.
-    
-           Sie standen kurz als eigene Gruppe „Finden" im Reiter „Start", mit der
-           Begründung, ein Menüband dürfe wiederholen, was anderswo steht. Die
-           Messung sagt etwas anderes: mit ihnen ist „Start" 1185 px breit, und
-           in einem 1400 px breiten Fenster (Seitenleiste ab) bleiben 1160 —
-           das Band brach auf zwei Zeilen um und wurde 221 px hoch statt 137.
-    
-           Zwei Knöpfe, die es oben in der Kopfzeile („Suchen in Redion …",
-           Strg P) und links in der Seitenleiste („Suchen", „Befehle") schon
-           gibt, sind das nicht wert. Sie verdrängten die Zeile für etwas, das
-           woanders zweimal steht. */
         return aus;
     };
-    /* ======================================================================== *
-     * EINFÜGEN — kommt vollständig aus dem Blockregister
-     * ======================================================================== */
-    /* Die Reihenfolge der Gruppen im Band. Was `Register.bloecke` sonst noch
-       kennt, hängt sich hinten an — eine neue Gruppe verschwindet also nicht,
-       sie steht nur nicht vorne. */
     const GRUPPEN_FOLGE = ['Grundlegend', 'Medien', 'Datenbank', 'Wissen', 'Erweitert', 'KI'];
-    /**
-     * DIE DREI SLASH-AKTIONEN, DIE OHNE SCHREIBZEIGER GEHEN (E215/L63).
-     *
-     * Welche das sind, entscheidet der Editor über `Blocks.AM_ENDE` — hier
-     * steht keine zweite Liste. Wer dort eine vierte einträgt, bekommt sie
-     * hier ohne Zutun; wer eine streicht, verliert auch den Knopf. Genau das
-     * ist der Zweck eines Katalogs.
-     *
-     * Namen und Zeichen kommen aus `Register.bloecke`, wo die Slash-Einträge
-     * ohnehin stehen. „Person oder Seite erwähnen" ist für eine Kachel zu
-     * lang; das Register kennt es unter diesem Namen, und für den Knopf wird
-     * daraus „Erwähnung" — der ganze Name bleibt im Hinweis.
-     */
     const KURZNAME = {
         mention: 'Erwähnung', emoji: 'Emoji'
     };
-    /* Der Registername „Person oder Seite erwähnen" verschweigt, dass dasselbe
-       Menü auch „heute", „morgen" und „Datum wählen …" führt. Wer ein Datum
-       sucht, findet den Knopf sonst nicht. */
     const LANGNAME = {
         mention: 'Seite, Person oder Datum einfügen'
     };
@@ -272,17 +109,6 @@ Register.menueband = (() => {
     const einfuegenEintraege = () => {
         if (!Register?.bloecke?.alle)
             return [];
-        /* `aktion` trennt die echten Blockarten von den Slash-BEFEHLEN
-           („Umwandeln in …", „Duplizieren", „Erwähnen"). Die meisten brauchen
-           den Schreibzeiger und den Block darunter — `Blocks.slashAktion(ct,
-           block, was)` — und beides hat ein Knopf im Band nicht. Sie stehen
-           deshalb nicht hier, sondern weiterhin im Slash-Menü.
-    
-           Drei von ihnen gehen inzwischen doch: „Erwähnung", „Datum" und
-           „Emoji" fügen etwas EIN, statt an einem bestimmten Block zu drehen.
-           Für sie hängt `Blocks.aktionAmEnde` einen leeren Textblock ans Ende
-           und schreibt dort das Auslösezeichen (E215/L63). Welche das sind,
-           sagt `Blocks.AM_ENDE` — nicht eine Liste hier. */
         const bloecke = Register.bloecke.alle().filter(b => b && b.id && !b.aktion);
         const rang = (g) => {
             const i = GRUPPEN_FOLGE.indexOf(g);
@@ -291,17 +117,9 @@ Register.menueband = (() => {
         return bloecke
             .slice()
             .sort((a, b) => rang(a.gruppe) - rang(b.gruppe))
-            /* Der Rückgabetyp steht ausdrücklich da: ohne ihn schliesst der
-               Typprüfer aus dem Literal einen engeren Typ (`hinweis` als PFLICHT,
-               weil es hier immer gesetzt wird) und lehnt danach das `concat` mit
-               echten `BandEintrag` ab, bei denen es freiwillig ist. */
             .map((b) => ({
             reiter: 'einfuegen', gruppe: String(b.gruppe || 'Weiteres'),
             id: 'blk-' + b.id, name: String(b.name || b.id),
-            /* `zeichen` vor `icon`: im Band stehen gezeichnete Striche, und
-               ein Emoji fällt dazwischen heraus — 🖼 fehlte der Schrift sogar
-               ganz. Welcher Block welches Symbol bekommt, sagt das Register
-               (E273); wer keines nennt, behält sein Schriftzeichen. */
             zeichen: String(b.zeichen || b.icon || '▫'),
             ...(b.kurz ? { kurz: String(b.kurz) } : {}),
             hinweis: String(b.name || b.id) + ' einfügen',
@@ -310,23 +128,6 @@ Register.menueband = (() => {
         }))
             .concat(imTextEintraege());
     };
-    /* ======================================================================== *
-     * ZEICHNEN — Blatt, Whiteboard, Plan, Kamera
-     * ======================================================================== */
-    /* DIE ECHTEN ZEICHENWERKZEUGE (E212, L64).
-  
-       Sie standen nicht hier, und das war kein Versehen: ein Knopf oben muss
-       wissen, AUF WELCHE Fläche er wirkt, und auf einer Seite können mehrere
-       Blätter liegen. `Zeichenziel` im Kern beantwortet das jetzt — die
-       Fläche, die zuletzt berührt wurde.
-  
-       `zeigen: flaecheDa` heisst: gibt es keine, steht der Knopf gar nicht
-       erst da. Ein Stift, der beim Klick sagt „hier geht das nicht", ist
-       schlimmer als einer, den es nicht gibt (die Regel aus `befehle.ts`).
-  
-       Die Namen und Zeichen sind dieselben wie in `Marken.leiste` — sie
-       stammen aus derselben Vorstellung, und wer eines ändert, sieht das
-       andere daneben. */
     const flaecheDa = () => {
         try {
             return Zeichenziel.da() === true;
@@ -335,19 +136,6 @@ Register.menueband = (() => {
             return false;
         }
     };
-    /* ────────────────────────────────────────────────────────────────────── *
-     * FARBE UND STRICHSTÄRKE
-     *
-     * Beim Zeichnen sind sie kein Nebenwerkzeug: welchen Stift man nimmt und
-     * in welcher Farbe, gehört zusammen. In der Leiste an der Fläche stehen
-     * sie deshalb direkt neben den Werkzeugen, und hier stehen sie es auch.
-     *
-     * DIE WERTE STEHEN NICHT HIER. `Marken.FARBEN` und `Marken.BREITEN` sind
-     * die Quelle — eine zweite Liste wäre ein zweiter Katalog (CLAUDE.md §8),
-     * und sie liefe irgendwann von der ersten weg. Genau das ist der Grund,
-     * warum die Blockarten oben auch aus `Register.bloecke` kommen.
-     * ────────────────────────────────────────────────────────────────────── */
-    /** Deutsche Namen zu den fünf Farbwerten. Unbekannte behalten ihren Code. */
     const FARBWORT = {
         '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
         '#3aa757': 'Grün', '#e0a419': 'Gelb'
@@ -364,8 +152,6 @@ Register.menueband = (() => {
         return werte.map((wert, i) => ({
             reiter: 'zeichnen', gruppe: 'Farbe', id: 'zf-' + i,
             name: FARBWORT[wert] ?? wert,
-            /* Der Name steht darunter, das Zeichen ist die Farbe selbst. Ohne den
-               Namen wäre die Auswahl nur über Farbe zu treffen — §38. */
             zeichen: '', probe: { farbe: wert },
             hinweis: `Mit ${FARBWORT[wert] ?? wert} weiterzeichnen`,
             an: () => { try {
@@ -403,28 +189,6 @@ Register.menueband = (() => {
             zeigen: flaecheDa
         }));
     };
-    /* ══ DIE WERKZEUGE DES BANDES — EINE FOLGE, KEINE LISTE (E212, E694) ═════
-       Hier standen dreizehn Vierertupel `[Kennung, Name, Zeichen, Hinweis]`,
-       und daneben hielt `marken.ts` vierzehn Werkzeuge mit denselben Namen.
-       Dass beide auseinanderlaufen, ist keine Vermutung: als „Abdecken" im
-       Studio einmal still zu „Abdeckband" wurde, sagte das Band weiter
-       „Abdecken" (`test266 §1`). Genau davor warnt §8.
-  
-       JETZT STEHT HIER NUR NOCH, WELCHE UND IN WELCHER REIHENFOLGE. Name,
-       Zeichen und Beschreibung kommen aus dem Katalog; `test572 §3` lässt in
-       dieser Datei keinen Namen mehr zu.
-  
-       ZWEI QUELLEN, UND DAS IST KEIN WIDERSPRUCH ZU §8. Neun Kennungen sind
-       Werkzeuge des Studios (`Register.werkzeuge`); vier sind FORMEN
-       (`Marken.FORMEN`) — im Studio liegen sie unter dem einen Knopf
-       `formen`, im Band stehen sie einzeln, weil dort kein Untermenü
-       aufgeht. Sie sind verschiedene Dinge, keine zwei Fassungen desselben.
-  
-       UND DIE QUELLE MUSS DABEISTEHEN, nicht erraten werden: die Kennung
-       `ellipse` gibt es ZWEIMAL — als Flächenwerkzeug (`◯`) und als
-       Studio-Form (`○`). Ein „erst im Register nachsehen, sonst bei den
-       Formen" hätte hier still das falsche Zeichen gezeigt. Deshalb sagt
-       jede Zeile, wohin sie gehört. */
     const WERKZEUGE = [
         ['schreiben', 'werkzeug'],
         ['stift', 'werkzeug'],
@@ -440,11 +204,6 @@ Register.menueband = (() => {
         ['select', 'werkzeug'],
         ['radierer', 'werkzeug']
     ];
-    /** Name, Zeichen und Beschreibung einer Kennung — aus dem Katalog, der
-     *  dafür zuständig ist. Findet sie keiner, wird die Zeile AUSGELASSEN und
-     *  gemeldet, nicht mit der Kennung als Namen gezeigt: ein Knopf, der
-     *  `rectangle` heisst, ist schlimmer als einer, den es nicht gibt
-     *  (dieselbe Regel wie in `Register.werkzeuge.auswahl`). */
     const bandWerkzeug = (id, woher) => {
         try {
             const q = woher === 'form'
@@ -461,36 +220,8 @@ Register.menueband = (() => {
             return null;
         }
     };
-    /* DIE FLÄCHENKNÖPFE SIND NUR GROSS, SOLANGE KEINE FLÄCHE DA IST.
-  
-       „Blatt einfügen" ist das Wichtigste, bevor man eines hat — danach sind
-       es die Werkzeuge. Gemessen: mit drei grossen Kacheln kam der Reiter auf
-       19 Knöpfe und 1292 px und brach auf zwei Zeilen um; ohne sie auf
-       1166 px und eine. */
     const flaecheGross = () => !flaecheDa();
-    /* DIE REIHENFOLGE IST SEIT E272 EINE ENTSCHEIDUNG, KEINE GEWOHNHEIT.
-     *
-     * Hoechstens fuenfzehn Befehle sind sichtbar; was danach kommt, steht im
-     * Mehr-Knopf. Damit wird die Reihenfolge hier zur Frage „was braucht man
-     * beim Zeichnen zuerst?" — und die Antwort war vorher falsch herum.
-     *
-     * Vorher: Flaeche, Werkzeug, Zuruecknehmen, Aufnehmen, Farbe, Strich.
-     * Beim Zeichnen landeten damit ALLE Farben und Strichstaerken im Mehr —
-     * im Prueflauf gesehen: „Der gezogene Strich ist wirklich blau" wurde rot,
-     * weil der blaue Knopf gar nicht mehr dastand.
-     *
-     * Jetzt zuerst, was die Hand die ganze Zeit braucht: Werkzeug, Farbe,
-     * Strich. Danach das Zuruecknehmen, und zuletzt, was man einmal am Anfang
-     * tut — eine Flaeche anlegen oder etwas einlesen.
-     */
     const zeichnenEintraege = () => [
-        /* Die Rueckgabe ist ausdruecklich angeschrieben. Solange dieser Block
-           NACH einem Objektliteral stand, hat TypeScript den Typ von dort
-           genommen; seit er als erster kommt, schliesst es aus `WERKZEUGE`
-           zurueck — und mit `noUncheckedIndexedAccess` ist jedes Feld dort
-           moeglicherweise `undefined`. Eine Zeile Typ statt einer Stunde
-           Suche. */
-        /* Die Werkzeuge selbst — nur, wenn eine Flaeche da ist (`zeigen`). */
         ...WERKZEUGE.map(([id, woher]) => ({ id, w: bandWerkzeug(id, woher) }))
             .filter((x) => x.w !== null)
             .map(({ id, w }) => ({
@@ -498,11 +229,6 @@ Register.menueband = (() => {
             name: w.name, zeichen: w.zeichen, hinweis: w.hinweis,
             tun: () => { if (!Zeichenziel.setze(id))
                 UI.toast('Erst eine Zeichenfläche öffnen'); },
-            /* WELCHES WERKZEUG IST AN? Ohne diese Zeile stand im Band nichts
-               markiert, und der graue Kasten um den zuletzt geklickten Knopf war
-               nur der Fokus — er blieb auch dann, wenn man in der Leiste unten
-               etwas anderes wählte (§38: nicht nur Farbe, aber auch nicht gar
-               nichts). */
             an: () => { try {
                 return Zeichenziel.jetzt() === id;
             }
@@ -537,11 +263,6 @@ Register.menueband = (() => {
             zeichen: 'camera', hinweis: 'Ein Blatt mit der Kamera aufnehmen und den Text erkennen',
             tun: () => Recognition.capturePage(),
             zeigen: () => kann(() => Recognition.capturePage) },
-        /* „PDF einlesen" stand hier einmal, flog wieder raus und ist jetzt
-           wieder da — aber richtig herum. `alsSeiten` braucht eine `File`, und
-           einen Dateiwähler in einem KATALOG zu bauen wäre genau das Verhalten,
-           das hier verboten ist. Der Wähler steht deshalb im Bereich selbst
-           (`PdfEinlesen.waehlen`, L62), und hier steht nur der Eintrag. */
         { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-pdf', name: 'PDF einlesen',
             zeichen: 'upload', hinweis: 'Eine PDF aussuchen und ihre Seiten in die Seite legen',
             tun: () => { void PdfEinlesen.waehlen(); },
@@ -551,146 +272,53 @@ Register.menueband = (() => {
             tun: () => Recognition.scan(),
             zeigen: () => kann(() => Recognition.scan) }
     ];
-    /* ======================================================================== *
-     * WERKZEUGE — die sieben Zeilen, die bis E210 links standen
-     * ======================================================================== */
-    /* Diese Liste hiess vorher `wz` und stand in `schale/aufbau/seitenleiste.ts`
-       mitten im Zeichnen. Sie steht jetzt hier, weil sie ein KATALOG ist und
-       kein Aussehen — und weil das Menüband und die Seitenleiste sonst zwei
-       Fassungen davon hätten. Die Handlungen sind wörtlich dieselben. */
-    /* ======================================================================== *
-     * GEHEN — wohin man geht (E272)
-     * ------------------------------------------------------------------------
-     * Vorerst nur die sechs Einträge, die aus dem aufgelösten Reiter
-     * „Werkzeuge" kommen. Die volle Fassung liest in Phase E aus
-     * `Register.module` und `Register.navigation` — dieselbe Wahrheit, aus
-     * der auch die Seitenleiste lebt, damit es keinen zweiten Katalog gibt.
-     * ======================================================================== */
-    /* WOHIN GEHÖRT WAS — die einzige Liste, die dieser Reiter selbst führt.
-     *
-     * Sie sagt nicht, WAS es gibt (das steht in `Register.module` und
-     * `Register.navigation`), sondern nur, unter welcher Überschrift es
-     * erscheint. Eine Kennung, die hier fehlt, landet unter „Weiteres" —
-     * sie verschwindet nicht. Das ist Absicht: ein neuer Bereich soll
-     * auftauchen, auch wenn niemand daran gedacht hat, ihn hier
-     * einzutragen. */
     const GEHEN_GRUPPE = {
-        /* Hauptbereiche — wohin man am häufigsten geht */
         heute: 'Hauptbereiche', lernzentrum: 'Hauptbereiche',
         bibliothekOben: 'Hauptbereiche', 'app-bib': 'Hauptbereiche',
         aufgaben: 'Hauptbereiche',
         'app-notizhefte': 'Hauptbereiche',
-        /* Planung & Lernen */
         elektro: 'Planung & Lernen', 'app-kalender': 'Planung & Lernen',
         'app-tagesplan': 'Planung & Lernen', 'app-woche': 'Planung & Lernen',
         'app-spaeter': 'Planung & Lernen', 'app-aufgaben': 'Planung & Lernen',
         wissen: 'Planung & Lernen', 'w-zeit': 'Planung & Lernen',
-        /* Erfassen — was man anlegt */
         neu: 'Erfassen', 'w-journal': 'Erfassen', 'w-memos': 'Erfassen',
         'w-vorlagen': 'Erfassen', 'app-markt': 'Erfassen',
         erkennung: 'Erfassen', dateien: 'Erfassen',
-        /* Verbinden */
         'w-agenten': 'Verbinden', 'w-bespr': 'Verbinden', ki: 'Verbinden',
         verbinden: 'Verbinden', 'app-eingang': 'Verbinden',
         posteingang: 'Verbinden',
-        /* Daten */
         datenbanken: 'Daten', arbeitswelt: 'Daten', 'app-modell': 'Daten', 'app-kennzahl': 'Daten',
-        /* System */
         einstellungen: 'System', 'app-aussehen': 'System', 'app-tempo': 'System',
         'app-krypto': 'System', 'app-erweitern': 'System', 'app-pwa': 'System',
         suche: 'System', befehle: 'System'
     };
-    /* WAS ZWEIMAL DASSELBE TUT — gemessen an den GRIFFEN, nicht an den Namen
-     * (doku/PREMIUM-SHELL-MATRIX.md, Teil 2).
-     *
-     * Links steht, was wegfällt; rechts, was bleibt. Beide Register führen
-     * ihre Einträge weiter — hier wird nur nicht zweimal derselbe Knopf
-     * gezeichnet.
-     *
-     * NICHT dabei sind die beiden Fälle, die gleich HEISSEN und Verschiedenes
-     * tun: `bibliothekOben` geht über die Arbeitswelt, `app-bib` öffnet die
-     * Liste; `aufgaben` und `app-aufgaben` ebenso. Der Kommentar in
-     * `navigation.ts:141` hält das ausdrücklich fest. Sie stehen beide da,
-     * unter ihren eigenen Namen. */
     const GEHEN_DOPPELT = {
-        lernwelt: 'heute', /* Produktwelten.lernen('heute') */
-        /* HIER STAND KURZ `'app-bib': 'bibliothekOben'` (6. September). Beide
-           öffneten nach der Workspace-Auflösung dasselbe Regal — und „Alle
-           Seiten" war damit aus der Lade hinter „Mehr Orte" verschwunden
-           (test33). Seither öffnet `app-bib` den Reiter „Alle" der Bibliothek,
-           die flache Liste über den ganzen Bestand, und ist wieder ein
-           eigenes Ziel. */
-        notizhefte: 'app-notizhefte', /* Notebook.oeffnen()            */
-        hilfe: 'app-kann', /* Rundgang.uebersicht()         */
-        vorlagen: 'app-markt', /* Galerie.oeffne()              */
-        bibliothek: 'bibliothekOben', /* Bibliothek.oeffne() — das Regal, wie `btn-library` */
-        papierkorb: 'papierkorbFuss', /* App.papierkorb()              */
-        /* ZWEIMAL DERSELBE ZEITMESSER (E393). `zeitmesser` aus `Register.module`
-           und `w-zeit` aus der Liste unten rufen beide `Zeitmesser.panel()`;
-           gemessen öffnen beide dasselbe Feld von 280 × 226 Pixeln. In der
-           Lade stand er dadurch zweimal — einmal unter „Planung & Lernen",
-           einmal unter „Weiteres". Es bleibt `w-zeit`, weil sein Hinweis
-           sagt, worauf sich die Uhr bezieht: „misst die Zeit an der offenen
-           Seite". Der Hinweis des Moduls nennt statt dessen die Entscheidung,
-           aus der es kam. */
+        lernwelt: 'heute',
+        notizhefte: 'app-notizhefte',
+        hilfe: 'app-kann',
+        vorlagen: 'app-markt',
+        bibliothek: 'bibliothekOben',
+        papierkorb: 'papierkorbFuss',
         zeitmesser: 'w-zeit'
     };
-    /* Was kein ORT ist und deshalb nicht unter „Gehen" gehört.
-       `lebensbereiche` sagt im Register selbst „KEIN EIGENER BILDSCHIRM";
-       `dokumentmodus` schaltet einen Modus AUF der offenen Seite (er steht
-       unter Ansicht); `editor` führt zur laufenden Seite zurück, das ist
-       kein Hingehen. Ohne offene Seite geben alle drei nur einen Toast — und
-       ein Knopf, der das tut, ist ein Knopf ins Leere (§47). */
     const GEHEN_NICHT = new Set(['lebensbereiche', 'dokumentmodus', 'editor',
         'favoriten', 'seiten', 'geteilt']);
-    /* Die Reihenfolge der Gruppen im Band. Was hier nicht steht, kommt
-       danach — in der Reihenfolge, in der es auftaucht. */
     const GEHEN_FOLGE = ['Hauptbereiche', 'Planung & Lernen', 'Erfassen',
         'Verbinden', 'Daten', 'System', 'Weiteres'];
-    /* ======================================================================== *
-     * GEHEN — wohin man geht (E272)
-     * ------------------------------------------------------------------------
-     * KEIN EIGENER KATALOG. Der Reiter liest, was es gibt, aus den zwei
-     * Registern, die es ohnehin führen:
-     *
-     *     Register.module      die 16 Bereiche
-     *     Register.navigation  die Zeilen der Seitenleiste
-     *
-     * Das ist nicht Bequemlichkeit, sondern die Bedingung dafür, dass „Gehen"
-     * die Seitenleiste ABLÖSEN kann (Phase F): zwei Listen, die dasselbe
-     * behaupten, laufen auseinander — bei `suche` und `palette` ist das schon
-     * einmal passiert (E160).
-     *
-     * DABEI KOMMEN FÜNF WEGE ZURÜCK, die heute niemand sieht. Die Einträge
-     * auf Platz `unten` — Vorlagen, Bibliothek, Papierkorb, Einstellungen,
-     * Hilfe — werden von `seitenleiste.ts:733` weggefiltert (`vonAussen`
-     * fehlt bei eingebauten Einträgen). Sie stehen seit ihrer Eintragung im
-     * Register und waren nie auf dem Bildschirm.
-     * ======================================================================== */
     const gehenEintraege = () => {
         const roh = [];
-        /* 1. Die Bereiche. `oeffne(id)` statt `m.oeffnen()`: das Register fängt
-              dort den Fehler ab und schreibt ihn in den Reporter — ein Bereich,
-              der wirft, darf nicht das Band mitreissen. */
         try {
             for (const m of (Register?.module?.alle?.() || [])) {
                 const id = String(m?.id ?? '');
                 if (!id || GEHEN_NICHT.has(id) || GEHEN_DOPPELT[id])
                     continue;
-                /* `zeichen` VOR `icon`. Beide Register führen seit E272 beides: ein
-                   Emoji für Listenzeilen und den Namen eines Strichzeichens fürs
-                   Band. Im Band ist das Emoji falsch — E202 hat den Grund
-                   aufgeschrieben, und der erste Bildschirm des Reiters „Gehen" hat
-                   ihn bestätigt: dreizehn Emoji nebeneinander in einer Reihe
-                   gleich grosser Zeichen. */
                 roh.push({ id, name: String(m.name ?? id),
                     zeichen: String(m.zeichen ?? m.icon ?? 'dots'),
                     hinweis: String(m.was ?? m.name ?? ''),
                     tun: () => { Register.module.oeffne(id); } });
             }
         }
-        catch { /* ohne Modulregister bleibt der Rest */ }
-        /* 2. Die Wege der Seitenleiste, in ihrer eigenen Reihenfolge. */
+        catch { }
         for (const platz of ['oben', 'apps', 'fuss', 'unten']) {
             let liste = [];
             try {
@@ -704,7 +332,7 @@ Register.menueband = (() => {
                 if (!id || GEHEN_NICHT.has(id) || GEHEN_DOPPELT[id])
                     continue;
                 if (typeof e.tun !== 'function')
-                    continue; /* Überschriften ohne Handlung */
+                    continue;
                 if (roh.some(x => x.id === id))
                     continue;
                 roh.push({ id, name: String(e.name ?? id),
@@ -713,9 +341,6 @@ Register.menueband = (() => {
                     tun: () => { e.tun(); } });
             }
         }
-        /* 3. Die sechs aus dem aufgelösten Reiter „Werkzeuge". Sie stehen in
-              keinem der beiden Register — ihre Griffe gehören Modulen, die
-              keinen eigenen Bereich haben. */
         const eigene = [
             { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-journal'] ?? 'Erfassen',
                 id: 'w-journal', name: 'Journal', zeichen: 'calendar', kurz: 'Strg ⇧ J',
@@ -733,26 +358,7 @@ Register.menueband = (() => {
                 id: 'w-zeit', name: 'Zeitmesser', zeichen: 'clock',
                 hinweis: 'Stoppuhr und Timer — misst die Zeit an der offenen Seite',
                 tun: () => window.Zeitmesser?.panel?.(),
-                /* `.panel`, NICHT das Modul. `kann()` fragt `typeof griff() ===
-                   'function'`; `Zeitmesser` selbst ist ein Objekt, also war die
-                   Antwort seit E268 immer „nein" und der Knopf stand nie da. */
                 zeigen: () => kann(() => window.Zeitmesser?.panel) },
-            /* DER GRIFFWECHSEL, DEN PHASE F ANGEKUENDIGT HAT — und der jetzt
-               faellig ist, weil er sonst ein Knopf ins Nichts waere.
-      
-               Beide riefen `App.reiterWechseln('chat')` bzw. `('bespr')`. Das
-               schaltet den MODUS DER SEITENLEISTE um, und die Seitenleiste ist
-               am Rechner seit E272 Phase F `display:none`. Der Klick tat also
-               etwas — nur sah es niemand. Das ist die heimtueckischere Haelfte
-               von §47: nicht ein Knopf, der bedauert, sondern einer, der
-               schweigend nichts bewirkt.
-      
-               Die neuen Griffe sind die, die es schon gab und die eine eigene
-               Flaeche oeffnen: `Agent.panel()` (agenten.ts:1024, exportiert
-               :1488) und `Meeting.panel()` (besprechung.ts:544, exportiert
-               :1024). Am Telefon bleibt die Seitenleiste die Schublade — dort
-               waere `reiterWechseln` weiter richtig, aber zwei Wege je nach
-               Breite waeren zwei Wahrheiten. Eine Flaeche geht auf beiden. */
             { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-agenten'] ?? 'Verbinden',
                 id: 'w-agenten', name: 'Agenten', zeichen: 'robot',
                 hinweis: 'Auftraege, Zeitplaene und der Notaus',
@@ -770,9 +376,6 @@ Register.menueband = (() => {
             id: e.id, name: e.name, zeichen: e.zeichen, hinweis: e.hinweis,
             tun: e.tun
         }));
-        /* Nach Gruppen ordnen — `inReiter` behält die Reihenfolge des Feldes,
-           also entscheidet sie hier. Innerhalb einer Gruppe bleibt es bei der
-           Folge der Register. */
         const rang = (g) => {
             const i = GEHEN_FOLGE.indexOf(g);
             return i < 0 ? GEHEN_FOLGE.length : i;
@@ -781,21 +384,6 @@ Register.menueband = (() => {
             .slice()
             .sort((a, b) => rang(a.gruppe) - rang(b.gruppe));
     };
-    /* ======================================================================== *
-     * VERLAUF — was man zurücknimmt und wiederfindet (E272)
-     * ------------------------------------------------------------------------
-     * ZWEI VERSCHIEDENE „ZURÜCK", und die Namen müssen es sagen.
-     *
-     * Im Reiter „Zeichnen" nimmt `wz-undo` einen STRICH zurück
-     * (`Zeichenziel.ruf('undo')`). Hier nimmt `v-undo` eine Änderung an der
-     * SEITE zurück (`Verlauf.zurueck()`). Zwei Knöpfe, beide „Zurück"
-     * genannt, wären eine Falle — deshalb heissen diese „Rückgängig" und
-     * „Wiederherstellen".
-     *
-     * `Verlauf.zurueck()` gibt es seit langem; gerufen wurde es bisher nur
-     * von Strg+Z (`schale.ts`) und aus dem Seitenmenü. Ein Knopf dafür
-     * fehlte im Band — er ruft dieselbe Funktion, keine zweite.
-     * ======================================================================== */
     const verlaufEintraege = () => [
         { reiter: 'verlauf', gruppe: 'Zurücknehmen', id: 'v-undo', name: 'Rückgängig',
             zeichen: 'undo', kurz: 'Strg Z', gross: true,
@@ -835,18 +423,6 @@ Register.menueband = (() => {
             zeichen: 'trash', hinweis: 'Gelöschtes ansehen und zurückholen',
             tun: () => App.papierkorb(), zeigen: () => kann(() => App.papierkorb) }
     ];
-    /* ======================================================================== *
-     * ÜBERPRÜFEN — nachsehen, zählen, wiederholen (E272)
-     * ------------------------------------------------------------------------
-     * ELEKTROS „ÜBEN" UND „PRÜFUNG" STEHEN HIER NOCH NICHT.
-     * Der Entwurf sieht sie vor, und die Griffe gibt es
-     * (`Elektroarbeitsplatz.uebung`, `.pruefungFlaeche`). Sie hier
-     * einzutragen hiesse aber, jedem eine Elektro-Prüfung anzubieten, der
-     * gerade einen Einkaufszettel schreibt. Sinn ergeben sie erst, wenn
-     * `zeigen()` den Schauplatz kennt — das kommt mit der Kontextkante in
-     * Phase F/H. Bis dahin sind sie über die Elektro-Seite erreichbar, die
-     * ihre acht Kacheln aus `inReiter('elektro')` liest.
-     * ======================================================================== */
     const ueberpruefenEintraege = () => [
         { reiter: 'ueberpruefen', gruppe: 'Lernen', id: 'w-lernen', name: 'Karteikarten',
             zeichen: 'cards', gross: true, hinweis: 'Wiederholen nach Plan',
@@ -872,9 +448,6 @@ Register.menueband = (() => {
             zeichen: 'shield', hinweis: 'Was in den Daten nicht stimmt',
             tun: () => Pflege.gesundheit(), zeigen: () => kann(() => Pflege.gesundheit) }
     ];
-    /* ======================================================================== *
-     * HILFE (E272)
-     * ======================================================================== */
     const hilfeEintraege = () => [
         { reiter: 'hilfe', gruppe: 'Lernen, was geht', id: 'h-rundgang', name: 'Was Redion kann',
             zeichen: 'help', gross: true, hinweis: 'Der Rundgang durch alle Bereiche',
@@ -896,9 +469,6 @@ Register.menueband = (() => {
             zeichen: 'upload', hinweis: 'Eine gespeicherte Sicherung zurückholen',
             tun: () => App.sicherungLaden(), zeigen: () => kann(() => App.sicherungLaden) }
     ];
-    /* ======================================================================== *
-     * ELEKTRO — der Beruf, um den es geht
-     * ======================================================================== */
     const elektroEintraege = () => [
         { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-rechner', name: 'Rechner',
             zeichen: 'bolt', gross: true, hinweis: 'Zehn Rechnungen mit gezeigtem Lösungsweg',
@@ -931,9 +501,6 @@ Register.menueband = (() => {
             tun: () => Blocks.einfuegenAmEnde('schaltplan'),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde) }
     ];
-    /* ======================================================================== *
-     * ANSICHT — wie die Seite aussieht und wohin sie geht
-     * ======================================================================== */
     const ansichtEintraege = () => [
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-fokus', name: 'Fokus',
             zeichen: 'compass', gross: true, hinweis: 'Alles ausblenden bis auf den Text',
@@ -941,15 +508,6 @@ Register.menueband = (() => {
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-praes', name: 'Präsentation',
             zeichen: 'rocket', gross: true, hinweis: 'Die Seite als Folien zeigen',
             tun: () => Werkzeuge.praesentation(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.praesentation) },
-        /* VOLLBILD (E283 / L85 Punkt 1). Er steht neben „Fokus", weil beide
-           dasselbe Ziel haben und Gegenteiliges tun: Fokus räumt REDIONS
-           Oberfläche weg und lässt den Browser stehen, Vollbild räumt den
-           BROWSER weg und lässt Redion stehen. Nebeneinander sieht man das.
-    
-           `an` liest den Zustand FRISCH bei jedem Zeichnen — Escape verlässt das
-           Vollbild ohne uns, und ein gemerkter Wert stünde danach falsch.
-           `zeigen` fragt zusätzlich `vollbildGeht()`: auf dem iPhone gibt es
-           kein Element-Vollbild, und ein Knopf, der dort nichts tut, ist §47. */
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-vollbild', name: 'Vollbild',
             zeichen: 'maximize', hinweis: 'Den ganzen Bildschirm nutzen — Esc beendet es',
             an: () => kann(() => App.vollbildAn) && App.vollbildAn(),
@@ -978,12 +536,6 @@ Register.menueband = (() => {
             zeichen: 'share', hinweis: 'Die Seite als HTML-Datei sichern',
             tun: () => Werkzeuge.htmlExport(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.htmlExport) }
     ];
-    /* ======================================================================== *
-     * FREMDE EINTRÄGE
-     * ======================================================================== */
-    /* Wie bei `register/befehle.ts`: ein Bereich meldet seine eigenen Einträge
-       an, ohne dass diese Datei ihn kennen muss. Ohne das stünde hier über
-       kurz oder lang jeder Bereich drin, und §5 Regel 1 wäre umgangen. */
     const fremde = [];
     const lieferanten = [];
     const melde = (eintrag) => {
@@ -1007,16 +559,6 @@ Register.menueband = (() => {
         fremde.splice(i, 1);
         return true;
     };
-    /**
-     * Einen Lieferanten wieder abmelden (E277, L87).
-     *
-     * `melde` hatte seit jeher ein `nimmZurueck`, `meldeLieferant` nicht.
-     * Wer einen Lieferanten anmeldete, wurde ihn nicht mehr los — für eine
-     * Gegenprobe heisst das: ihr Fantasie-Eintrag steht bis zum Ende des
-     * Laufs im Band und taucht dann in einem ganz anderen Punkt als
-     * „Weg, der nichts tut" auf. Genau das ist bei `Register.module`
-     * passiert (E273), und dort war die Antwort dieselbe.
-     */
     const nimmZurueckLieferant = (fn) => {
         const i = lieferanten.indexOf(fn);
         if (i < 0)
@@ -1024,69 +566,25 @@ Register.menueband = (() => {
         lieferanten.splice(i, 1);
         return true;
     };
-    /**
-     * Ist das ein brauchbarer Bandeintrag? (E277, L87)
-     *
-     * DIESE PRÜFUNG STAND NUR IN `melde`. Ein Lieferant durfte zurückgeben,
-     * was er wollte — ohne Kennung, ohne Reiter, ohne lebendes `tun` —, und
-     * `alle()` schob es ungesehen ins Band. Sichtbar wurde das erst als
-     * Knopf, der beim Klick wirft, oder als Zeichen ohne Namen.
-     *
-     * Beides an EINER Stelle zu prüfen ist nicht bloss ordentlicher: die
-     * Lieferanten sind die Quelle, die sich zur Laufzeit ändert. `melde`
-     * bekommt sein Objekt einmal und behält es; ein Lieferant baut bei jedem
-     * Zeichnen ein neues. Er ist also der Weg, auf dem ein kaputter Eintrag
-     * WIRKLICH hereinkommt — und war der ungeprüfte.
-     *
-     * `Register.kontext` macht es seit E272 Phase F genau so (context.ts:145).
-     */
     const brauchbar = (e) => {
         if (!e || typeof e !== 'object')
             return false;
         const x = e;
         return !!x.id && !!x.reiter && !!x.name && typeof x.tun === 'function';
     };
-    /* ======================================================================== *
-     * DIE ABFRAGE
-     * ======================================================================== */
-    /**
-     * Alle Einträge für diesen Augenblick.
-     *
-     * Ein Lieferant, der einen Fehler wirft, fällt weg — das Band bleibt
-     * stehen. Ein Menüband, das sich wegen eines Bereichs gar nicht zeichnet,
-     * wäre der schlimmere Fehler.
-     */
-    /**
-     * Welche Reiter ohne offene Seite nichts können.
-     *
-     * Sie steht hier und nicht bei jedem der 108 Einträge: die Bedingung
-     * gilt für den ganzen Reiter, nicht für einzelne Zeilen darin. Wer
-     * einen Eintrag hinzufügt, der trotz fehlender Seite geht, gibt ihm
-     * einen eigenen Reiter oder sagt es hier.
-     */
     const BRAUCHT_SEITE = new Set(['start', 'einfuegen', 'zeichnen']);
     const alle = () => {
         const aus = [];
         const quellen = [
             gehenEintraege, startEintraege, einfuegenEintraege, zeichnenEintraege,
             verlaufEintraege, ueberpruefenEintraege, ansichtEintraege, hilfeEintraege,
-            /* `elektroEintraege` steht weiter in der Liste, obwohl „Elektro" kein
-               Reiter mehr ist. Das ist kein Versehen: `alle()` ist die Quelle für
-               `inReiter()`, und `bereiche/elektro/start.ts` fragt genau darüber
-               nach seinen acht Kacheln. Nähme man die Zeile heraus, wäre die
-               Elektro-Startseite leer — und keine Prüfung ausser test272 §5
-               merkte es. */
             elektroEintraege
         ];
-        /* DIE EIGENEN QUELLEN UNGEPRÜFT, DIE FREMDEN GEPRÜFT.
-           Die Liste oben steht in dieser Datei; wer sie kaputt macht, sieht es
-           beim Typprüfen. Ein Lieferant kommt von aussen und baut bei jedem
-           Zeichnen neu — dort wird gesiebt (L87). */
         for (const q of quellen) {
             try {
                 aus.push(...(q() || []));
             }
-            catch { /* dieser Teil fehlt, der Rest steht */ }
+            catch { }
         }
         for (const l of lieferanten) {
             try {
@@ -1094,27 +592,10 @@ Register.menueband = (() => {
                     if (brauchbar(e))
                         aus.push(e);
             }
-            catch { /* ein kaputter Lieferant nimmt die anderen nicht mit */ }
+            catch { }
         }
         aus.push(...fremde);
         return aus.filter(e => {
-            /* DREI REITER SCHREIBEN IN EINE SEITE (E236).
-               „Start" formatiert Absätze, „Einfügen" hängt Blöcke ans Ende,
-               „Zeichnen" braucht eine Fläche. Ohne offene Seite tun sie
-               entweder nichts oder melden „Erst eine Seite öffnen" — und ein
-               Knopf, der das sagt, ist ein Knopf ins Leere (§47).
-      
-               Bisher wurde deshalb die GANZE Leiste versteckt, sobald keine
-               Seite offen war (E219). Das war richtig, solange die Leiste unter
-               der Kopfzeile sass und sonst nichts konnte. Seit sie ganz oben
-               steht und immer da sein soll, ist es zu viel: „Werkzeuge",
-               „Elektro" und „Ansicht" öffnen ihre eigenen Sachen und
-               funktionieren ohne Seite.
-      
-               Also fällt jetzt weg, was wirklich eine Seite braucht — und die
-               drei anderen Reiter bleiben. `reiter()` zählt danach, welche
-               Reiter überhaupt etwas zu zeigen haben, und lässt die leeren
-               von selbst verschwinden. */
             if (BRAUCHT_SEITE.has(e.reiter) && !seiteJetzt())
                 return false;
             if (typeof e.zeigen !== 'function')
@@ -1127,7 +608,6 @@ Register.menueband = (() => {
             }
         });
     };
-    /** Die Einträge eines Reiters, nach Gruppen geordnet. */
     const inReiter = (reiter) => {
         const drin = alle().filter(e => e.reiter === reiter);
         const folge = [];
@@ -1141,26 +621,7 @@ Register.menueband = (() => {
         }
         return folge.map(g => ({ gruppe: g, eintraege: nach.get(g) }));
     };
-    /**
-     * DIE ORTE — wohin man gehen kann (E388).
-     *
-     * Derselbe Katalog, den der Reiter „Gehen" zeichnet, unter einem Namen,
-     * der von einem Ort spricht und nicht von einem Reiterblatt.
-     *
-     * WARUM DAS EINEN EIGENEN NAMEN BRAUCHT. Die linke Leiste zeigt seit
-     * E388 die Orte, und sie holte sie zuerst über `inReiter('gehen')`.
-     * `test272 §14` fing das: die Kante darf sich nicht an ein Reiterblatt
-     * hängen. Der Wächter hat recht, und zwar nicht formal — sobald „Gehen"
-     * das Band verlässt (und genau dahin geht der Weg), wäre die Leiste
-     * still leer gewesen.
-     *
-     * Der EINTRAG bleibt am Feld `reiter: 'gehen'` hängen; das ist seine
-     * Ablage im Register, nicht seine Anzeige. Ob das Band einen Reiter
-     * dafür zeigt, entscheidet `reiter()` — und wenn es keinen mehr zeigt,
-     * liefert `orte()` weiterhin dieselbe Liste.
-     */
     const orte = () => inReiter('gehen');
-    /** Die Reiter, die überhaupt etwas zu zeigen haben. */
     const reiter = () => {
         const belegt = new Set(alle().map(e => e.reiter));
         return REITER.filter(r => belegt.has(r.id));

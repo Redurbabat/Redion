@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/selection-flow.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/selection-flow.ts — eine Fläche, die wandert
  * ----------------------------------------------------------------------------

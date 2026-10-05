@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/spring.ts (npm run bauen:ts). */
 /* schale/bedienung/spring.ts — die Federn des Touch Kits, ohne React (E702).
  * ERZEUGT: quell/schale/bedienung/spring.js (`npm run bauen:ts`, test105).
  * Übertragen aus dem Kit (UI-Kit @c192821, fremd/touch/: motion/spring.ts,

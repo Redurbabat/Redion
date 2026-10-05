@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/ablage.ts (npm run bauen:ts). */
 /* ============================================================================
  * ablage.js — Eines in die Zwischenablage legen, und dabei die Wahrheit sagen
  * ----------------------------------------------------------------------------

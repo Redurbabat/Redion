@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/steuerung.ts (npm run bauen:ts). */
 /* ============================================================================
  * database.js — Datenbanken
  * ----------------------------------------------------------------------------

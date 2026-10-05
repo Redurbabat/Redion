@@ -1,37 +1,10 @@
 "use strict";
-/* ============================================================================
- * kern/sicherheit/pruefen.js — Werte prüfen, bevor sie Schaden anrichten
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/sicherheit/pruefen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/sicherheit/pruefen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Zwei Sorten Prüfung, und sie werden gern verwechselt:
- *
- *   **Form** — passt der Wert überhaupt in dieses Feld? Eine Zahl in ein
- *   Zahlenfeld, ein Datum in ein Datumsfeld. Das prüft `Formen`.
- *
- *   **Sinn** — ist der Wert brauchbar? Eine E-Mail mit @, eine Adresse, die
- *   irgendwohin führt, ein Betrag, der nicht negativ ist. Das prüft diese
- *   Datei.
- *
- * Jede Prüfung gibt hier **keinen Wahrheitswert zurück, sondern einen Satz.**
- * `false` sagt niemandem, was zu tun ist. „Da fehlt das @" schon.
- *
- * Und jede Prüfung ist **nachsichtig beim Lesen, streng beim Schreiben**:
- * ein vorhandener Wert, der nicht passt, wird gemeldet — aber nie still
- * gelöscht. Daten wegzuwerfen, weil sie einer Regel nicht genügen, ist der
- * sichere Weg, Arbeit zu vernichten.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/sicherheit/pruefen.ts (npm run bauen:ts). */
 const Pruefen = (() => {
     const leer = (v) => v === undefined || v === null || v === '' ||
         (Array.isArray(v) && !v.length);
     const gut = () => ({ ok: true, satz: '' });
     const schlecht = (satz) => ({ ok: false, satz });
-    /* ========================================================================
-     * 1 · EINZELNE WERTE
-     * ======================================================================*/
     const mail = (v) => {
         if (leer(v))
             return gut();
@@ -84,10 +57,6 @@ const Pruefen = (() => {
     const datum = (v) => {
         if (leer(v))
             return gut();
-        /* `isNaN(d)` mit einem Date darin ging, weil JavaScript vorher in eine
-           Zahl umrechnet — und ging genau deshalb still schief, wenn `Dates.parse`
-           etwas anderes als ein Date zurückgab. `getTime()` sagt, was gemeint
-           ist, und meldet es, wenn es kein Datum ist. */
         const d = (typeof Dates !== 'undefined')
             ? Dates.parse(v) : new Date(String(v));
         if (!(d instanceof Date) || isNaN(d.getTime()))
@@ -118,9 +87,6 @@ const Pruefen = (() => {
             return schlecht('Das sieht nicht nach einer Kennung aus.');
         return gut();
     };
-    /* Ein Passwortsatz — bewusst nach Länge, nicht nach Sonderzeichen.
-       Vier zufällige Wörter sind sicherer als „P@ssw0rt!" und leichter zu
-       merken; die Regel mit den Sonderzeichen erzeugt nur Zettel am Monitor. */
     const satzFuerSchluessel = (v) => {
         const s = String(v ?? '');
         if (s.length < 12)
@@ -132,14 +98,6 @@ const Pruefen = (() => {
             return schlecht('Ein einzelnes Wort ist schnell geraten. Nimm einen Satz.');
         return gut();
     };
-    /* ========================================================================
-     * 2 · GANZE SÄTZE
-     * ======================================================================*/
-    /**
-     * Alle Regeln einer Spalte auf einen Wert anwenden.
-     * Nutzt dieselben Regeln wie die Prüfregeln der Datenbank — hier steht
-     * nur die Sinnprüfung dazu.
-     */
     const feld = (def, wert) => {
         if (!def)
             return gut();
@@ -157,7 +115,6 @@ const Pruefen = (() => {
                 muster: def.muster, satz: def.musterSatz });
         }
     };
-    /** Eine ganze Zeile prüfen. Eine leere Liste heisst: nichts zu melden. */
     const zeile = (schema, props) => {
         const raus = [];
         for (const [k, def] of Object.entries(schema || {})) {
@@ -167,10 +124,6 @@ const Pruefen = (() => {
         }
         return raus;
     };
-    /* ========================================================================
-     * 3 · GRENZEN
-     * ======================================================================*/
-    /** Passt das noch in die Ablage? */
     const groesse = (bytes, grenze) => {
         const g = grenze || (typeof KONSTANTEN !== 'undefined' ? KONSTANTEN.DATEI_MAX : 500 * 1024 * 1024);
         if (bytes > g)

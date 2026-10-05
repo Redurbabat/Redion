@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/produktwelten.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/wissen/produktwelten.ts — Navigation und alte Routen, ein Datenbestand
  * ----------------------------------------------------------------------------

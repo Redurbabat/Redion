@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/wischen.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/aufbau/wischen.ts — mit dem Daumen zwischen den Bereichen
  * ----------------------------------------------------------------------------

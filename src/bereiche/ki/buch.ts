@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/buch.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/ki/buch.ts — das Kassenbuch der KI
  * ----------------------------------------------------------------------------

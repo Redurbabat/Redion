@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/spreadsheet/csv.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/spreadsheet/csv.ts — CSV lesen und schreiben, ohne Bildschirm
  * ----------------------------------------------------------------------------

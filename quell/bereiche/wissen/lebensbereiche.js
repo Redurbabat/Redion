@@ -1,25 +1,8 @@
 "use strict";
-/* ============================================================================
- * bereiche/wissen/lebensbereiche.ts — Lebensbereiche als Sichten auf Bestand
- * ----------------------------------------------------------------------------
- * Schule, Ausbildung, Universität, Arbeit und Privat sind keine eigenen
- * Speicher. Eine Zuordnung ist ein kleines Metafeld am bereits vorhandenen
- * Block, an der Sammlung oder an der Datei. Alle Listen in dieser Datei sind
- * daraus neu berechnete Sichten; sie dürfen jederzeit verworfen werden.
- *
- * Zwei ältere Formen bleiben absichtlich lesbar:
- *
- *   Store.getMeta('bereiche')   die schon vorhandenen Bereichsdefinitionen
- *   block.bereich               die bisherige einzelne Seitenzuordnung
- *
- * Nichts wird beim Lesen umgeschrieben. Erst `zuordnen` bzw. `entfernen`
- * ändern ein Objekt, und auch dann bleiben fremde Metafelder unangetastet.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/lebensbereiche.ts (npm run bauen:ts). */
 const Lebensbereiche = (() => {
     const META_KEY = 'lebensbereiche';
-    /** Eingebettete Fassung bleibt ausschließlich als lesbare Kompatibilität. */
     const LERN_KEY = 'lernzustaende';
-    /** Persönliche Zustände leben getrennt vom kanonischen Karteninhalt. */
     const LERN_STORE_KEY = 'persoenlicheLernzustaende';
     const LERN_STORE_VERSION = 1;
     const MAX_BEREICHE = 64;
@@ -53,7 +36,6 @@ const Lebensbereiche = (() => {
         const zahl = zeitZahl(wert);
         return zahl ? new Date(zahl).toISOString() : '';
     };
-    /** YYYY-MM-DD ist ein Kalendertag, nicht Mitternacht in UTC. */
     const datumsZahl = (wert) => {
         const roh = wert && typeof wert === 'object'
             ? wert.start ?? wert.date ?? wert.from
@@ -97,8 +79,6 @@ const Lebensbereiche = (() => {
     };
     const jetztIso = () => typeof Store.now === 'function'
         ? String(Store.now()) : new Date().toISOString();
-    /* Siehe `kern/zugang/lesefrage.ts` — dieselbe Frage stand hier und in
-       `arbeitswelt.ts` je einmal, mit zwei Antworten (L50, E181). */
     const rightsActive = () => Lesefrage.aktiv();
     const erlaubt = (aktion, pageId) => Lesefrage.erlaubt(aktion, pageId);
     const globalBearbeitbar = (pageId = '') => {
@@ -123,7 +103,6 @@ const Lebensbereiche = (() => {
             edited: iso(roh?.edited)
         };
     };
-    /** Bestehende Definitionen werden nur gelesen und nie beim Listen bereinigt. */
     const auflisten = () => {
         const roh = Store.getMeta('bereiche', []);
         const raus = [];
@@ -154,7 +133,6 @@ const Lebensbereiche = (() => {
             .slice(0, 50) || 'bereich';
         return 'bereich-' + slug + '-' + hashKurz(name);
     };
-    /** Gleicher Name ohne explizite Kennung ergibt wieder denselben Bereich. */
     const anlegen = (eingabe) => {
         const name = text(eingabe?.name, 80);
         if (!name)
@@ -251,7 +229,6 @@ const Lebensbereiche = (() => {
             return { art: 'file', id };
         return { art: eingabe?.type === 'page' ? 'page' : 'block', id };
     };
-    /** Immer den kanonischen Satz holen; übergebene Kopien werden nie geschrieben. */
     const aufloesen = async (eingabe) => {
         const ref = refAus(eingabe);
         if (!ref)
@@ -454,13 +431,6 @@ const Lebensbereiche = (() => {
         const personen = allePersonen.filter(key => feldSichtbar(idText(collection.id), key));
         if (allePersonen.length && !personen.length)
             return false;
-        /* DIESELBE REGEL WIE IN `bibliothek.ts`, und das ist der Punkt: zwei
-           Listen, die „meine Aufgaben" verschieden beantworten, sind schlimmer
-           als eine, die es schlecht tut (E147). Eine gefüllte Personenzelle sagt,
-           wem die Zeile gehört; steht in keiner ein Name, gehört sie dem, der
-           zusieht. Der Vergleich mit `erstelltVon` stand hier wie dort und war
-           hier wie dort falsch — `Store.addRow` schrieb das Feld gar nicht
-           (L56, E153). */
         const eingetragen = personen
             .map(key => text(propsWert(row, key), 500).toLocaleLowerCase('de-CH'))
             .filter(Boolean);
@@ -761,12 +731,6 @@ const Lebensbereiche = (() => {
             raus.zuletzt = zuletzt;
         return raus;
     };
-    /**
-     * Kollisionsfreie, reproduzierbare Kennung. Die Längenangabe trennt Actor
-     * und Karten-ID auch dann eindeutig, wenn eine der Kennungen Doppelpunkte
-     * enthält. Karteninhalt wird weder in der Kennung noch in der Entität
-     * dupliziert.
-     */
     const lernzustandId = (cardId, actorId) => 'v1:' + actorId.length + ':' + actorId + ':' + cardId;
     const normalisiereLernentitaet = (wert) => {
         const roh = alsObjekt(wert);
@@ -785,12 +749,6 @@ const Lebensbereiche = (() => {
             updatedAt: iso(roh.updatedAt || roh.edited)
         };
     };
-    /**
-     * Fremde oder beschädigte Felder werden beim Lesen ignoriert, aber nie
-     * zurückgeschrieben. Doppelte Entitäten gewinnen reproduzierbar nach
-     * Änderungszeit und ursprünglichem Schlüssel; Karten- und Gesamtgrenzen
-     * werden ebenfalls in stabiler Reihenfolge angewandt.
-     */
     const normalisiereLernspeicher = (wert) => {
         const envelope = alsObjekt(wert);
         if (Number(envelope.version) !== LERN_STORE_VERSION)
@@ -851,12 +809,6 @@ const Lebensbereiche = (() => {
         quelle: 'leer',
         updatedAt: ''
     });
-    /**
-     * Rein lesend und ohne Migration: zuerst der externe actor+card-Satz, dann
-     * die frühere eingebettete Personenfassung. Nur der aktuelle Actor darf
-     * zuletzt auf den alten lokalen Kartenstand zurückfallen; bei einer
-     * fremden Actor-ID wäre derselbe Stand sonst zwei Personen zugeschrieben.
-     */
     const lernzustandLesen = (karte, actorId) => {
         const cardId = idText(karte?.id);
         const aktuell = aktuellerAktor();
@@ -866,8 +818,6 @@ const Lebensbereiche = (() => {
         const extern = externerLernspeicher().entities[lernzustandId(cardId, actor)];
         if (extern)
             return lernzustandAusEntitaet(extern, 'extern');
-        /* Für Kompatibilitäts- und Legacy-Daten zählt stets die kanonische Karte,
-           nicht eine vom Aufrufer veränderte Kopie. */
         const kanonisch = Store.getBlock(cardId) || karte;
         const person = eingebetteteLernzustaende(kanonisch)[actor];
         if (person && typeof person === 'object') {
@@ -905,9 +855,6 @@ const Lebensbereiche = (() => {
                 throw new Error('Der persönliche Lernspeicher hat seine Grenze von ' +
                     MAX_LERNZUSTAENDE + ' Zuständen erreicht.');
         }
-        /* Ein kompatibler Altstand wird nur auf ausdrückliche Anforderung Basis.
-           Ein normales partielles Schreiben übernimmt ausschließlich den schon
-           vorhandenen externen Zustand und löst daher keine stille Migration aus. */
         const expliziteBasis = optionen.kompatibilitaetAlsBasis === true ||
             optionen.legacyAlsBasis === true;
         const basis = vorhanden

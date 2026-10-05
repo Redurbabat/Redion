@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/notebook.ts (npm run bauen:ts). */
 /* ============================================================================
  * ERZEUGT — NICHT VON HAND ÄNDERN.
  * Die Quelle ist `src/bereiche/wissen/notebook.ts`. `npm run bauen:ts` schreibt daraus

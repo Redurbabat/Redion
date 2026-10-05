@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/pwa.ts (npm run bauen:ts). */
 /* ============================================================================
  * pwa.js — Als App installieren
  * ----------------------------------------------------------------------------

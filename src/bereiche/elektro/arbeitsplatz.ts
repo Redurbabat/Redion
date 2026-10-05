@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/arbeitsplatz.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/elektro/arbeitsplatz.ts — üben, prüfen, arbeiten
  * ----------------------------------------------------------------------------

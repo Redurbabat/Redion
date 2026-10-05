@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/press.ts (npm run bauen:ts). */
 /* schale/bedienung/press.ts — jeder Knopf sinkt ein und federt zurück (E702).
  * ERZEUGT: quell/schale/bedienung/press.js (`npm run bauen:ts`).
  * Redur, 27.09., ca. 21:45: „Wie im UI-Kit (Empfohlen)". EIN passiver

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/text/inline.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/text/inline.ts — Auszeichnung im Fliesstext, in beide Richtungen
  * ----------------------------------------------------------------------------

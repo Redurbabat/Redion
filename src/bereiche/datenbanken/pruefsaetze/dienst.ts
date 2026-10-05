@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/pruefsaetze/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * pruefsatz.js — Prüfsätze für Formeln und Automationen
  * ----------------------------------------------------------------------------

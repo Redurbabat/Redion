@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/verweise.ts (npm run bauen:ts). */
 /* ============================================================================
  * links.js — Verknüpfungen zwischen Seiten
  * ----------------------------------------------------------------------------

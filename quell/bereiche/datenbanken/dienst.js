@@ -1,64 +1,10 @@
 "use strict";
-/* ============================================================================
- * bereiche/datenbanken/dienst.js — was eine Datenbank rechnet, ohne sie zu zeigen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Die Eigenschaftstypen, das Lesen eines Wertes, Filtern, Sortieren,
- * Gruppieren und die Berechnungen unter einer Spalte. 930 Zeilen, die vorher
- * am Anfang von `steuerung.js` standen — zwischen 7700 Zeilen Oberfläche.
- *
- * DER PUNKT DIESER DATEI IST, WAS SIE NICHT TUT: sie fasst das Dokument nicht
- * an. Kein `document`, kein `createElement`, kein `innerHTML`. Damit lässt
- * sie sich in Node laden und prüfen, ohne einen Browser zu starten — und ein
- * Prüflauf, der in achtzig Millisekunden fertig ist statt in zwölf Sekunden,
- * wird auch wirklich gelaufen.
- *
- * DASS DAS GING, WAR NICHT SELBSTVERSTÄNDLICH, und es wurde nachgerechnet
- * statt gehofft: über alle Namen gezählt braucht dieser Teil **nichts** aus
- * dem Rest der Datei, während der Rest sechzehn Namen von hier holt. Die
- * Abhängigkeit läuft nur in eine Richtung. Wäre es andersherum auch nur an
- * einer Stelle gewesen, hätte man die beiden nicht trennen können, ohne
- * Verhalten zu ändern.
- *
- * DREI DINGE, DIE DAFÜR NÖTIG WAREN:
- *
- * 1. `esc` kam aus `Blocks` — einem Modul, das zeichnet. Eine Datei, die
- *    nichts zeigen will, soll nicht am Editor hängen; die zwei Zeilen stehen
- *    jetzt hier. Wortgleich, damit sich nichts an der Ausgabe ändert.
- *
- * 2. `window.Tempo` wurde zu `typeof Tempo !== 'undefined'`. Das ist keine
- *    Geschmacksfrage: CLAUDE.md schreibt es vor, weil die Module dieser App
- *    gewöhnliche `const` auf oberster Ebene sind und nicht an `window`
- *    hängen. Und ohne `window` gibt es in Node kein Laden.
- *
- * 3. Am Ende hängt sich die Datei nur dann an `window`, wenn es eines gibt.
- *
- * WAS SIE WEITERHIN BRAUCHT, und das ist in Ordnung: `Store` für die Zeilen,
- * `Register` für die Typenliste, `Formula` zum Rechnen, `Datum` für Daten,
- * `Tempo` für den Formelspeicher. Alles Module ohne Oberfläche — ein Prüflauf
- * kann sie laden oder eine Attrappe hinstellen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/dienst.ts (npm run bauen:ts). */
 const DatenbankDienst = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
-    /* Wortgleich mit `Blocks.esc`. Die Verdopplung ist der Preis dafür, dass
-       diese Datei den Editor nicht kennt — zwei Zeilen gegen eine Abhängigkeit. */
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * DIE EIGENSCHAFTSTYPEN
-     * ======================================================================*/
-    /* Die Liste steht in register/eigenschaften.js. */
     const TYPEN = Register.eigenschaften.alle();
-    /* Diese vier zeigen ein verknüpftes Objekt von aussen: {url, titel, zusatz} */
     const DIENST_TYPEN = ['gdrive', 'figma', 'githubpr', 'zendesk'];
-    /* Alle Felder, die die KI selbst füllt — sie teilen sich eine Mechanik. */
     const KI_TYPEN = ['ki', 'ki-fassung', 'ki-sprache', 'ki-worte'];
     const KI_AUFTRAG = {
         'ki': 'Fasse diesen Eintrag in einem kurzen Satz zusammen.',
@@ -66,17 +12,12 @@ const DatenbankDienst = (() => {
         'ki-sprache': 'Übersetze den Titel dieses Eintrags ins Englische. Gib nur die Übersetzung zurück.',
         'ki-worte': 'Nenne drei bis fünf Schlagwörter zu diesem Eintrag, mit Komma getrennt.'
     };
-    /* Felder, die die App selbst füllt und die niemand tippt. */
     const NUR_LESEN = ['formula', 'created', 'edited', 'rollup', 'uid', 'createdBy', 'editedBy'];
     const propTyp = (id) => TYPEN.find((t) => t.id === id) || TYPEN[1];
     const FARBEN = ['gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red'];
-    /* Welche Filter-Operatoren gibt es zu welchem Typ? (aus Teil 7 der Doku) */
     const OPERATOREN = {
         text: ['enthält', 'enthält nicht', 'ist', 'ist nicht', 'beginnt mit', 'endet mit', 'ist leer', 'ist nicht leer'],
         title: ['enthält', 'enthält nicht', 'ist', 'ist nicht', 'beginnt mit', 'endet mit', 'ist leer', 'ist nicht leer'],
-        /* Notion behandelt URL, E-Mail und Telefon genau wie Text — mit allen
-           acht Bedingungen. Beleg: Notion-API-Referenz „Filter data source
-           entries", Rich-Text-Filter. */
         url: ['enthält', 'enthält nicht', 'ist', 'ist nicht', 'beginnt mit', 'endet mit', 'ist leer', 'ist nicht leer'],
         email: ['enthält', 'enthält nicht', 'ist', 'ist nicht', 'beginnt mit', 'endet mit', 'ist leer', 'ist nicht leer'],
         phone: ['enthält', 'enthält nicht', 'ist', 'ist nicht', 'beginnt mit', 'endet mit', 'ist leer', 'ist nicht leer'],
@@ -99,15 +40,10 @@ const DatenbankDienst = (() => {
         formula: ['enthält', 'ist', 'ist gleich', 'größer als', 'kleiner als', 'ist aktiviert', 'ist nicht aktiviert', 'ist leer', 'ist nicht leer'],
         files: ['ist leer', 'ist nicht leer'],
         relation: ['enthält', 'enthält nicht', 'ist leer', 'ist nicht leer'],
-        /* Notion filtert Rollups auf zwei Weisen: über den zusammengefassten Wert
-           und — bei Listen — über jedes einzelne Element mit any/every/none.
-           Beides steht hier. */
         rollup: ['ist gleich', 'ist nicht gleich', 'größer als', 'kleiner als', 'größer oder gleich', 'kleiner oder gleich',
             'enthält', 'enthält nicht', 'ist vor', 'ist nach', 'ist leer', 'ist nicht leer',
             'irgendeiner ist', 'irgendeiner enthält', 'irgendeiner ist grösser', 'irgendeiner ist kleiner',
             'irgendeiner ist leer', 'alle sind', 'alle enthalten', 'keiner ist', 'keiner enthält'],
-        /* Die laufende Nummer ist eine Zahl und filtert wie eine. Notion nennt
-           für ID keine Leer-Bedingungen — die Nummer ist ja nie leer. */
         uid: ['ist gleich', 'ist nicht gleich', 'größer als', 'kleiner als', 'größer oder gleich', 'kleiner oder gleich'],
         ki: ['enthält', 'enthält nicht', 'ist', 'ist leer', 'ist nicht leer'],
         button: [],
@@ -117,18 +53,13 @@ const DatenbankDienst = (() => {
         duration: ['ist gleich', 'ist nicht gleich', 'größer als', 'kleiner als', 'größer oder gleich', 'kleiner oder gleich', 'ist leer', 'ist nicht leer'],
         verify: ['ist geprüft', 'ist nicht geprüft', 'ist abgelaufen', 'ist abgelehnt']
     };
-    /* Die KI-Spalten filtern wie Text. */
     ['ki-fassung', 'ki-sprache', 'ki-worte'].forEach(t => { OPERATOREN[t] = OPERATOREN['ki'] ?? []; });
-    /* Welche Rollup-Berechnungen gibt es? (Teil 14 der Doku, Kapitel 3.3) */
-    /* Die 21 Berechnungsarten aus Teil 4 und Teil 8 der Dokumentation.
-       Dieselbe Liste gilt für Rollups und für die Zeile unter der Spalte. */
     const ROLLUP_ARTEN = ['Original zeigen', 'Anzahl alle', 'Werte zählen', 'Eindeutige zählen', 'Leere zählen',
         'Gefüllte zählen', 'Prozent leer', 'Prozent gefüllt',
         'Summe', 'Durchschnitt', 'Median', 'Minimum', 'Maximum', 'Spanne',
         'Frühestes Datum', 'Spätestes Datum', 'Zeitspanne',
         'Aktivierte zählen', 'Nicht aktivierte zählen',
         'Prozent aktiviert', 'Prozent nicht aktiviert'];
-    /* Welche Berechnungen passen unter eine Spalte? */
     const RECHNUNGEN = {
         alle: ['—', 'Anzahl alle', 'Werte zählen', 'Eindeutige zählen', 'Leere zählen', 'Gefüllte zählen',
             'Prozent leer', 'Prozent gefüllt', 'Original zeigen'],
@@ -136,18 +67,6 @@ const DatenbankDienst = (() => {
         checkbox: ['Aktivierte zählen', 'Nicht aktivierte zählen', 'Prozent aktiviert', 'Prozent nicht aktiviert'],
         date: ['Frühestes Datum', 'Spätestes Datum', 'Zeitspanne']
     };
-    /* ========================================================================
-     * WERTE LESEN UND ANZEIGEN
-     * ======================================================================*/
-    /** Liefert den Rohwert einer Spalte für eine Zeile. */
-    /* ------------------------------------------------------------------------
-     * Verknüpfungen in Formeln
-     * ------------------------------------------------------------------------
-     * Ein Seitenbezug sieht für die Formel wie sein Titel aus, merkt sich aber
-     * die ID. Damit funktioniert beides:
-     *     join(prop("Aufgaben"), ", ")                    → Titel
-     *     map(prop("Aufgaben"), current.prop("Kosten"))   → Werte der Zielzeile
-     * ----------------------------------------------------------------------*/
     let formelTiefe = 0;
     const seitenBezug = (id, name) => ({
         __seite: id, name,
@@ -158,7 +77,6 @@ const DatenbankDienst = (() => {
         const b = Store.getBlock(id);
         return seitenBezug(id, b ? (b.text || 'Ohne Titel') : 'Gelöscht');
     });
-    /** Liest eine Eigenschaft einer verknüpften Zeile — current.prop("…"). */
     const fremdWert = (el, name) => {
         const id = typeof el === 'string' ? el : (el && (el.__seite || el.id));
         const z = id && Store.getBlock(id);
@@ -176,25 +94,7 @@ const DatenbankDienst = (() => {
         const v = wert(z, k, zc);
         return zc.schema[k].type === 'relation' ? seitenListe(v) : v;
     };
-    /* Läuft gerade eine Spaltenabfrage? Schützt vor Formeln, die sich selbst
-       über runningSum() oder rank() aufrufen würden. */
     const spaltenLauf = new Set();
-    /* ========================================================================
-     * PRÜFREGELN — was Notion nicht hat
-     * ------------------------------------------------------------------------
-     * Notion lässt jeden Wert zu: leere Pflichtfelder, doppelte Rechnungs-
-     * nummern, kaputte E-Mail-Adressen. Das ist die meistgenannte Lücke gleich
-     * nach Pivot. Hier bekommt jede Spalte Regeln, und ein falscher Wert wird
-     * gar nicht erst geschrieben — mit einer Erklärung, warum.
-     *
-     * Regeln je Spalte (alle freiwillig):
-     *   pflicht     – darf nicht leer sein
-     *   eindeutig   – darf in dieser Datenbank nur einmal vorkommen
-     *   muster      – regulärer Ausdruck, dem der Text entsprechen muss
-     *   min / max   – Zahlenbereich
-     *   regel       – eine Formel, die wahr ergeben muss
-     *   regelText   – was dem Menschen gesagt wird, wenn sie nicht zutrifft
-     * ======================================================================*/
     const MUSTER_VORLAGEN = [
         ['', 'Kein Muster'],
         ['^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$', 'E-Mail-Adresse'],
@@ -204,15 +104,10 @@ const DatenbankDienst = (() => {
         ['^[0-9]{4}$', 'Vierstellige Zahl'],
         ['^[A-Z]{2,4}-[0-9]{1,6}$', 'Kennzeichen wie RE-1234']
     ];
-    /** Hat diese Spalte überhaupt Regeln? */
     const hatRegeln = (def) => !!(def && (def.pflicht || def.eindeutig || def.muster ||
         (def.uebergaenge && Object.keys(def.uebergaenge).length) ||
         (def.regelMin !== undefined && def.regelMin !== '') ||
         (def.regelMax !== undefined && def.regelMax !== '') || def.regel));
-    /**
-     * Prüft einen Wert gegen die Regeln seiner Spalte.
-     * @returns {{ok:boolean, fehler?:string}}
-     */
     const pruefeWert = (coll, key, row, neuerWert) => {
         const def = coll && coll.schema && coll.schema[key];
         if (!def || !hatRegeln(def))
@@ -235,7 +130,7 @@ const DatenbankDienst = (() => {
                     return { ok: false, fehler: def.musterText ||
                             `„${neuerWert}" passt nicht zum Muster von „${name}".` };
             }
-            catch { /* kaputtes Muster blockiert nichts */ }
+            catch { }
         }
         if (!leer && (def.type === 'number' || def.type === 'duration')) {
             const z = Number(neuerWert);
@@ -246,9 +141,6 @@ const DatenbankDienst = (() => {
                     return { ok: false, fehler: `„${name}" darf nicht grösser als ${def.regelMax} sein.` };
             }
         }
-        /* Statusübergänge: von welchem Wert darf man zu welchem?
-           Notion lässt jeden Sprung zu — hier steht in „uebergaenge" je Wert,
-           welche Nachfolger erlaubt sind. Ein leerer Eintrag heisst: alles. */
         if (!leer && def.uebergaenge && (def.type === 'status' || def.type === 'select')) {
             const alt2 = String((row && row.props ? row.props[key] : '') ?? '').trim();
             const neu2 = String(neuerWert).trim();
@@ -259,9 +151,6 @@ const DatenbankDienst = (() => {
                             `springen — nicht auf „${neu2}".` };
             }
         }
-        /* Die freie Regel als Formel — sie sieht die Zeile MIT dem neuen Wert,
-           damit man „wenn Status = Fertig, dann muss Abschlussdatum stehen"
-           schreiben kann. */
         if (def.regel && row) {
             const probe = { ...row, props: { ...(row.props || {}), [key]: neuerWert } };
             const r = Formula.run(def.regel, (n) => {
@@ -277,7 +166,6 @@ const DatenbankDienst = (() => {
         }
         return { ok: true };
     };
-    /** Prüft eine ganze Zeile — für den Bericht und vor dem Import. */
     const pruefeZeile = (coll, row) => {
         const fehler = [];
         Object.keys(coll.schema).forEach(k => {
@@ -287,20 +175,6 @@ const DatenbankDienst = (() => {
         });
         return fehler;
     };
-    /**
-     * Baut die Umgebung, die eine Formel über ihre eigene Zeile hinausschauen
-     * lässt. Zwei Dinge stehen darin:
-     *
-     *   zeile — wo diese Zeile in der Ansicht steht (`index`), wie viele es
-     *           sind (`anzahl`) und alle Werte einer Spalte in Ansichtsreihen-
-     *           folge (`spalte`). Daraus entstehen rowNumber(), previous(),
-     *           next(), runningSum(), rank(), percentOfTotal() …
-     *   db    — die Zeilen einer ANDEREN Datenbank, über ihren Namen gefunden.
-     *           Daraus entstehen findRows(), countWhere(), sumWhere() …
-     *
-     * Beides kann Notion nicht. Dort braucht jede Auswertung über die Zeile
-     * hinaus eine Verknüpfung und ein Rollup.
-     */
     const formelUmgebung = (row, coll) => {
         let zwischen = null;
         const reihen = () => {
@@ -333,8 +207,6 @@ const DatenbankDienst = (() => {
                         const werte = reihen().map((r) => {
                             try {
                                 const v = wert(r, k, coll);
-                                /* Formula.run fängt den Fehler selbst ab und gibt ihn als Text
-                                   zurück — deshalb hier auf den Text schauen, nicht auf throw. */
                                 if (typeof v === 'string' && /sich selbst/.test(v))
                                     selbst = new Error('Diese Formel bezieht sich auf sich selbst');
                                 return v;
@@ -345,8 +217,6 @@ const DatenbankDienst = (() => {
                                 return null;
                             }
                         });
-                        /* Wenn die Spalte sich selbst gefragt hat, ist das keine Null,
-                           sondern ein Fehler — sonst stünde stillschweigend 0 da. */
                         if (selbst)
                             throw selbst;
                         return werte;
@@ -376,43 +246,31 @@ const DatenbankDienst = (() => {
             return row.created;
         if (def.type === 'edited')
             return row.edited;
-        /* Ohne Konten gibt es nur einen Menschen: den, der hier sitzt. Sein Name
-           steht in den Einstellungen und wird beim Anlegen mitgeschrieben. */
         if (def.type === 'createdBy')
             return row.erstelltVon || Store.getMeta('nutzer', '') || 'Ich';
         if (def.type === 'editedBy')
             return row.geaendertVon || Store.getMeta('nutzer', '') || 'Ich';
-        /* Zeitspanne: gespeichert wird in Minuten, angezeigt als 1 h 30 min */
         if (def.type === 'duration') {
             const v = (row.props || {})[key];
             return v === '' || v == null ? null : Number(v);
         }
-        /* Laufende Nummer: die Position in der Sammlung, wie Notions Unique ID */
         if (def.type === 'uid') {
             const i = Store.rowsOf(coll.id).findIndex(r => r.id === row.id);
             return (def.praefix ? def.praefix + '-' : '') + (i + 1);
         }
-        /* Verknüpfung: Liste von IDs anderer Datenbankzeilen oder Seiten */
         if (def.type === 'relation') {
             const v = (row.props || {})[key];
             return Array.isArray(v) ? v : (v ? [v] : []);
         }
-        /* Vorberechnet? Dann steht der Wert schon da. Bewusst vor dem
-           Formelspeicher: der gilt nur für einen Datenstand, dieser hier über
-           Änderungen und Neuladen hinweg — und die Tabelle sagt oben, wie alt
-           er ist. */
         if ((def.type === 'rollup' || def.type === 'formula') &&
             typeof Vorrat !== 'undefined' && !formelTiefe && Vorrat.aktiv(coll.id)) {
             const v = Vorrat.hole(coll.id, row.id, key);
             if (v !== undefined)
                 return v;
         }
-        /* Rollup: rechnet über die verknüpften Zeilen */
         if (def.type === 'rollup')
             return rollupWert(row, def, coll);
         if (def.type === 'formula') {
-            /* Gerechnet wird über den Formelspeicher: derselbe Wert für dieselbe
-               Zeile wird nur einmal je Datenstand ausgerechnet. */
             if (typeof Tempo !== 'undefined' && !formelTiefe)
                 return Tempo.hole(row, key, coll, () => formelRechnen(row, key, coll, def));
             return formelRechnen(row, key, coll, def);
@@ -428,21 +286,6 @@ const DatenbankDienst = (() => {
             return Array.isArray(v) ? v : (v ? String(v).split(',').map(s => s.trim()) : []);
         return v ?? '';
     };
-    /**
-     * Denselben Wert rechnen, aber OHNE die Zwischenspeicher (L28, E176).
-     *
-     * `Tempo` und `Vorrat` merken sich das Ergebnis unter der ZEILENKENNUNG.
-     * Eine Probezeile — ein Satz mit denselben Feldern und einem geänderten
-     * Wert darin, wie ihn `WhatIf` für die Zielwertsuche baut — trägt dieselbe
-     * Kennung wie das Original. Sie bekäme deshalb bei jedem Probewert
-     * denselben gespeicherten Wert zurück, und die Suche sähe eine Gerade, wo
-     * eine Kurve ist. Gemessen: die Zielwertsuche fand gar nichts, die
-     * Optimierung lief an den Rand.
-     *
-     * Beide Speicher stehen ohnehin still, solange `formelTiefe` über null
-     * ist — das ist der Weg, den eine Formel nimmt, die eine andere aufruft.
-     * Dieser Aufruf geht denselben Weg, absichtlich.
-     */
     const wertFrisch = (row, key, coll) => {
         formelTiefe++;
         try {
@@ -452,7 +295,6 @@ const DatenbankDienst = (() => {
             formelTiefe--;
         }
     };
-    /** Die eigentliche Formelrechnung — ohne Speicher davor. */
     const formelRechnen = (row, _key, coll, def) => {
         {
             if (formelTiefe > 12)
@@ -463,8 +305,6 @@ const DatenbankDienst = (() => {
                     const k = Object.keys(coll.schema).find(x => coll.schema[x].name === name);
                     if (!k)
                         return null;
-                    /* Verknüpfungen kommen als Seitenbezüge herein: sie zeigen ihren
-                       Titel an und lassen sich mit current.prop("…") weiterlesen. */
                     if (coll.schema[k].type === 'relation')
                         return seitenListe(wert(row, k, coll));
                     return wert(row, k, coll);
@@ -479,10 +319,6 @@ const DatenbankDienst = (() => {
             }
         }
     };
-    /**
-     * Rechnet einen Rollup aus: über die Verknüpfung in die Zieldatenbank
-     * schauen, dort eine Spalte einsammeln und zusammenfassen.
-     */
     const rollupWert = (row, def, coll) => {
         const relDef = coll.schema[def.relation];
         if (!relDef || relDef.type !== 'relation')
@@ -495,11 +331,6 @@ const DatenbankDienst = (() => {
         const werte = zeilen2.map((z) => wert(z, def.zielKey, zielColl));
         return zusammenfassen(def.rollup || 'Original zeigen', werte, zeilen2.length);
     };
-    /**
-     * Die Einzelwerte hinter einem Rollup, unzusammengefasst.
-     * Notions Rollup-Filter „any / every / none" arbeiten darauf: nicht auf
-     * der Summe, sondern auf jedem Element der Liste.
-     */
     const rollupListe = (row, def, coll) => {
         const relDef = coll.schema[def.relation];
         if (!relDef || relDef.type !== 'relation')
@@ -511,24 +342,6 @@ const DatenbankDienst = (() => {
             .map((id) => Store.getBlock(id)).filter(Boolean)
             .map((z) => wert(z, def.zielKey, zielColl));
     };
-    /* --------------------------------------------------------------------------
-     * DIE EINHEIT EINER ZAHL (E412)
-     *
-     * „420" stand in der Tabelle und auf jeder Karte, und ob es Franken,
-     * Stunden oder Stueck waren, wusste nur, wer die Spalte benannt hatte.
-     * Redion konnte einer Zahlenspalte bis hierher keine Einheit geben —
-     * `def.anzeige` gibt es (Balken, Ring, Skala, Heatmap), aber nichts, was
-     * die Zahl beschriftet.
-     *
-     * NACHGESTELLT mit schmalem Leerzeichen (U+202F): so schreibt man es im
-     * deutschen Sprachraum, auch bei Waehrungen (420 CHF, nicht CHF 420). Das
-     * schmale Leerzeichen bindet — die Zahl und ihre Einheit brechen nie auf
-     * zwei Zeilen um, und genau das passiert mit einem gewoehnlichen.
-     *
-     * Die Einheit ist eine ANZEIGE, kein Wert: sie kommt nie in `props`, nie
-     * in eine Formel und nie in eine Sicherung. Wer nach „420" sucht, findet
-     * die Zeile weiterhin.
-     * ------------------------------------------------------------------------*/
     const mitEinheit = (roh, def) => {
         const t = String(roh ?? '');
         const e = String(def?.einheit ?? '').trim();
@@ -536,35 +349,17 @@ const DatenbankDienst = (() => {
             return t;
         return t + '\u202F' + e;
     };
-    /** Baut das HTML für eine Zelle. */
     const zelle = (row, key, coll) => {
         const def = coll.schema[key];
         const v = wert(row, key, coll);
         if (def.type === 'checkbox')
             return `<input type="checkbox" ${v ? 'checked' : ''} data-k="${key}" style="accent-color:var(--accent);cursor:pointer">`;
-        /* Bewertung: fünf Sterne, anklickbar. Notion hat den Typ nicht. */
         if (def.type === 'sterne') {
             const n = Math.max(0, Math.min(5, Math.round(Formula.zahl(v))));
             return '<span class="sterne" data-k="' + key + '">' +
                 [1, 2, 3, 4, 5].map(i => `<i data-n="${i}" class="${i <= n ? 'an' : ''}">★</i>`).join('') +
                 '</span>';
         }
-        /* Fortschritt: eine Bahn, darin der Balken, daneben die Zahl.
-         *
-         * DIE BAHN IST NEU UND SIE IST DER GANZE PUNKT (E409). Vorher stand der
-         * Balken unmittelbar in `.proz`, und `width: n%` bezog sich damit auf
-         * die GANZE Zelle — bei 100 % nahm er sie ganz ein und schob die
-         * Prozentzahl hinaus. Gemessen in einer 90 px breiten Spalte: bei 0 %
-         * brauchte die Zelle 89 px und die Zahl stand da, bei 100 % brauchte
-         * sie 122 px und die Zahl war weg.
-         *
-         * Auf dem Bild sahen 55 %, 80 % und 100 % dadurch gleich aus — drei
-         * Balken bis zum Rand, keine Zahl dabei. Das ist der Fehler aus §55.1:
-         * eine abgeschnittene Anzeige zeigt einen ANDEREN Wert, und beide sehen
-         * gültig aus.
-         *
-         * Jetzt nimmt die Zahl ihren Platz zuerst, die Bahn bekommt den Rest,
-         * und `n%` bezieht sich auf die Bahn. */
         if (def.type === 'prozent') {
             const n = Math.max(0, Math.min(100, Math.round(Formula.zahl(v))));
             return '<span class="proz"><span class="proz-bahn">' +
@@ -606,9 +401,6 @@ const DatenbankDienst = (() => {
             return `<a href="${esc(v)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(v)}</a>`;
         if (def.type === 'email' && v)
             return `<a href="mailto:${esc(v)}" style="color:var(--accent)">${esc(v)}</a>`;
-        /* Farbskala und Heatmap — Notion hat keine bedingte Formatierung.
-           Die Zelle wird nach ihrem Platz zwischen dem kleinsten und dem
-           grössten Wert der Spalte eingefärbt: rot unten, grün oben. */
         if ((def.type === 'number' || def.type === 'formula' || def.type === 'rollup') && v != null &&
             (def.anzeige === 'skala' || def.anzeige === 'heat')) {
             const z = Formula.zahl(v);
@@ -617,7 +409,6 @@ const DatenbankDienst = (() => {
             const min = alle.length ? Math.min(...alle) : 0;
             const max = alle.length ? Math.max(...alle) : 1;
             const t = max === min ? 0.5 : (z - min) / (max - min);
-            /* Von Rot (0°) über Gelb (55°) nach Grün (135°) */
             const ton = Math.round(t * 135);
             const stil = def.anzeige === 'heat'
                 ? `background:hsl(${ton} 62% 42% / .55)`
@@ -637,17 +428,6 @@ const DatenbankDienst = (() => {
             }
             return `<div>${esc(Formula.anzeige(v))}<div class="bar"><i style="width:${p}%"></i></div></div>`;
         }
-        /* `esc` als ZWEITE Tür, nicht als erste. Die erste ist `wert()` weiter
-           oben: `if (def.type === 'number') … Number(v)`. Damit kommt aus einer
-           Zahlenspalte nie etwas anderes als eine Zahl oder `NaN`, auch wenn ein
-           Import in `props` schreibt, was er will.
-    
-           Das steht hier so genau, weil beim Bau von E412 zuerst das Gegenteil
-           im Kommentar stand — „ohne esc ist das ein Loch". Gemessen kam `NaN`
-           heraus, nicht der eingeschleuste Text. Ein `esc` kostet nichts und
-           bleibt; es als den Riegel auszugeben wäre eine falsche Behauptung
-           über die eigene Sicherheit, und die ist schlimmer als gar keine.
-           `test407 §6` hält beides fest. */
         if (def.type === 'number' && v != null)
             return esc(mitEinheit(v, def));
         if (def.type === 'formula')
@@ -712,7 +492,6 @@ const DatenbankDienst = (() => {
         }
         return esc(v) || '<span style="color:var(--text-faint)">—</span>';
     };
-    /** 95 → „1 h 35 min" */
     const dauerText = (min) => {
         const m = Math.round(Number(min) || 0);
         if (!m)
@@ -721,7 +500,6 @@ const DatenbankDienst = (() => {
         const s = h ? (h + ' h' + (r ? ' ' + r + ' min' : '')) : (r + ' min');
         return (m < 0 ? '−' : '') + s;
     };
-    /** „1h30", „90", „1:30" → 90 Minuten */
     const dauerLesen = (text) => {
         const t = String(text || '').trim().toLowerCase().replace(',', '.');
         if (!t)
@@ -729,8 +507,6 @@ const DatenbankDienst = (() => {
         const doppel = t.match(/^(\d+)\s*[:.]\s*(\d{1,2})$/);
         if (doppel)
             return (Number(doppel[1])) * 60 + (Number(doppel[2]));
-        /* „1h30", „1 h 30", „1h 30min" — die Minuten hinter der Stunde zählen mit,
-           auch wenn niemand „min" dazuschreibt. */
         const beides = t.match(/^([\d.]+)\s*(?:h|std|stunden?)\s*([\d.]+)\s*(?:m|min|minuten?)?$/);
         if (beides)
             return Math.round(parseFloat(beides[1] ?? '0') * 60 + parseFloat(beides[2] ?? '0'));
@@ -751,9 +527,6 @@ const DatenbankDienst = (() => {
         }
         return Math.round(min);
     };
-    /* ========================================================================
-     * FILTERN, SORTIEREN, GRUPPIEREN
-     * ======================================================================*/
     const heute = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
     const trifftZu = (row, regel, coll) => {
         const v = wert(row, regel.key, coll);
@@ -761,17 +534,10 @@ const DatenbankDienst = (() => {
         if (!def)
             return true;
         const op = regel.op;
-        /* Notion vergleicht nur mit einem festen Wert. Redion kann eine Spalte
-           auch mit einer anderen Spalte derselben Zeile vergleichen — etwa
-           „Ende ist vor Start" oder „Ist-Kosten sind grösser als Budget". */
         const z = (regel.vergleich === 'feld' && regel.wertKey && coll.schema[regel.wertKey])
             ? wert(row, regel.wertKey, coll)
             : regel.wert;
         const leer = v == null || v === '' || (Array.isArray(v) && !v.length);
-        /* --- Rollup: any / every / none ---------------------------------------
-         * Notions verschachtelte Rollup-Filter. Sie sehen nicht auf die Summe,
-         * sondern auf jeden Einzelwert hinter der Verknüpfung.
-         * -------------------------------------------------------------------- */
         if (def.type === 'rollup' &&
             /^(irgendeiner|alle|keiner)\b/.test(op)) {
             const liste = rollupListe(row, def, coll).map((x) => Array.isArray(x) ? x.join(', ') : x);
@@ -786,7 +552,7 @@ const DatenbankDienst = (() => {
                     return Formula.zahl(x) < Formula.zahl(z);
                 if (/enthält$|enthalten$/.test(op))
                     return t.includes(suche);
-                return t === suche; /* „ist" und „sind" */
+                return t === suche;
             };
             if (!liste.length)
                 return op.startsWith('keiner') || op.startsWith('alle');
@@ -805,7 +571,6 @@ const DatenbankDienst = (() => {
             return !!v;
         if (op === 'ist nicht aktiviert')
             return !v;
-        /* Prüfung — geprüft, offen, abgelaufen, abgelehnt */
         if (op.startsWith('ist geprüft') || op === 'ist nicht geprüft' ||
             op === 'ist abgelaufen' || op === 'ist abgelehnt') {
             const o = v && typeof v === 'object' ? v : null;
@@ -819,7 +584,6 @@ const DatenbankDienst = (() => {
             if (op === 'ist abgelehnt')
                 return !!o && o.stand === 'nein';
         }
-        /* Beim Ort zählt der Name, nicht das ganze Objekt. */
         const roh = (v && typeof v === 'object' && def.type === 'place') ? (v.name || '') : v;
         const t = String(roh ?? '').toLowerCase();
         const s = String(z ?? '').toLowerCase();
@@ -848,7 +612,6 @@ const DatenbankDienst = (() => {
             return a >= b;
         if (op === 'kleiner oder gleich')
             return a <= b;
-        /* Datumsvergleiche */
         const dv = v ? new Date(v) : null;
         if (dv && !isNaN(dv.getTime())) {
             const dz = z ? new Date(z) : null;
@@ -856,7 +619,6 @@ const DatenbankDienst = (() => {
             tag.setHours(0, 0, 0, 0);
             const h = heute();
             const tage = (n) => { const d = new Date(h); d.setDate(d.getDate() + n); return d; };
-            /* Wochenanfang nach Einstellung (Montag oder Sonntag) */
             const wocheAb = (versatz) => {
                 const start = Einstellungen.wochenstart();
                 const d = new Date(h);
@@ -895,8 +657,6 @@ const DatenbankDienst = (() => {
                 return dv < jetzt;
             if (op === 'liegt in der Zukunft')
                 return dv > jetzt;
-            /* Die drei, die Notions API kennt und uns noch fehlten:
-               past_year, next_month, next_year. */
             if (op === 'ist letztes Jahr')
                 return dv.getFullYear() === jetzt.getFullYear() - 1;
             if (op === 'ist dieses Jahr')
@@ -922,10 +682,6 @@ const DatenbankDienst = (() => {
         }
         return true;
     };
-    /**
-     * Prüft eine Filtergruppe. Eine Gruppe hat einen Operator und Regeln;
-     * eine Regel kann selbst wieder eine Gruppe sein — beliebig tief.
-     */
     const gruppeTrifftZu = (row, gruppe, coll, tiefe = 0) => {
         if (!gruppe || !(gruppe.rules || []).length)
             return true;
@@ -938,9 +694,7 @@ const DatenbankDienst = (() => {
             ? gruppe.rules.some(pruef)
             : gruppe.rules.every(pruef);
     };
-    /** Zählt alle Regeln einer Gruppe, auch die in Untergruppen. */
     const regelAnzahl = (gruppe) => (gruppe?.rules || []).reduce((n, r) => n + (r.rules !== undefined ? regelAnzahl(r) : 1), 0);
-    /** Notions Ladelimit: nicht alles auf einmal zeigen. */
     const begrenzen = (rows, view) => {
         const n = view.limit === 0 ? 0 : (view.limit || 50);
         return n && rows.length > n ? rows.slice(0, n) : rows;
@@ -952,14 +706,11 @@ const DatenbankDienst = (() => {
         return rows.filter((r) => gruppeTrifftZu(r, f, coll));
     };
     const sortiert = (rows, view, coll) => {
-        /* Ohne eigene Sortierregel gilt die von Hand gezogene Reihenfolge. */
         if (!(view.sorts || []).length && rows.some((r) => r.ordnung != null)) {
             return rows.slice().sort((a, b) => (a.ordnung ?? 1e9) - (b.ordnung ?? 1e9) || a.created.localeCompare(b.created));
         }
         if (!view.sorts || !view.sorts.length)
             return rows;
-        /* Nach einer Formel sortieren, ohne dafür eine Spalte anzulegen —
-           Notion verlangt dort immer eine echte Formel-Eigenschaft. */
         const formelWert = (r, s) => {
             try {
                 const res = Formula.run(s.formel, (n) => {
@@ -1002,11 +753,6 @@ const DatenbankDienst = (() => {
             return 0;
         });
     };
-    /**
-     * Alle Rohzeilen einer Ansicht — die eigene Datenquelle und, falls
-     * eingerichtet, weitere. Notion nennt das seit 2025 „mehrere Datenquellen
-     * in einer Ansicht"; im Menü heisst der Eintrag „Neue Datenquelle".
-     */
     const rohZeilen = (coll, view) => {
         let alle = Store.rowsOf(coll.id);
         (view.extraDbs || []).forEach((x) => {
@@ -1015,17 +761,10 @@ const DatenbankDienst = (() => {
                 return;
             alle = alle.concat(Store.rowsOf(c2.id));
         });
-        /* Archiviertes bleibt draussen, bis man es ausdrücklich sehen will */
         if (!view.archivZeigen)
             alle = alle.filter(r => !r.archiviert);
         return alle;
     };
-    /**
-     * Die zuletzt gezeichnete Reihenfolge einer Ansicht.
-     * Formeln wie rowNumber(), previous(), runningSum() und rank() brauchen sie:
-     * sie müssen wissen, wo diese Zeile in der Ansicht steht und was davor kam.
-     * Notion kann das nicht — dort sieht eine Formel nur ihre eigene Zeile.
-     */
     let ansichtOrdnung = null;
     const zeilen = (coll, view) => {
         const alle = sortiert(gefiltert(rohZeilen(coll, view), view, coll), view, coll);
@@ -1033,20 +772,7 @@ const DatenbankDienst = (() => {
         ansichtOrdnung = { collId: coll.id, ids: sicht.map((r) => r.id) };
         return sicht;
     };
-    /** Wie viele wurden weggelassen? Das gehört dem Menschen gesagt. */
     const zeilenGesamt = (coll, view) => sortiert(gefiltert(rohZeilen(coll, view), view, coll), view, coll).length;
-    /* ========================================================================
-     * BERECHNUNGEN UNTER DER SPALTE
-     * ======================================================================*/
-    /**
-     * Die eine Stelle, an der gerechnet wird. Rollups und die Zeile unter
-     * der Spalte benutzen dieselbe Liste und denselben Code — sonst laufen
-     * die beiden auseinander.
-     *
-     * @param art      Name der Berechnung
-     * @param werte    die Rohwerte
-     * @param gesamt   Bezugsgrösse für Prozente (Standard: Anzahl der Werte)
-     */
     const zusammenfassen = (art, werte, gesamt) => {
         const n = gesamt == null ? werte.length : gesamt;
         const voll = (v) => v != null && v !== '' && !(Array.isArray(v) && !v.length);
@@ -1136,7 +862,5 @@ const DatenbankDienst = (() => {
         mitEinheit,
         zusammenfassen };
 })();
-/* Nur, wenn es ein Fenster gibt. In Node gibt es keines — und genau das ist
-   der Zweck dieser Datei. */
 if (typeof window !== 'undefined')
     window.DatenbankDienst = DatenbankDienst;

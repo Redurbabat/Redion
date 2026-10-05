@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/hilfe/wissensseiten.ts (npm run bauen:ts). */
 /* ============================================================================
  * wissen.js — Alles, was über Notion zusammengetragen wurde, in Redion selbst
  * ----------------------------------------------------------------------------

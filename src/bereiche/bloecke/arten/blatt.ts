@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/blatt.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/bloecke/arten/blatt.ts — das A4-Blatt
  * ----------------------------------------------------------------------------

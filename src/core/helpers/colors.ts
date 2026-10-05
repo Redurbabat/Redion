@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/colors.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/colors.ts — Farben haben Namen
  * ----------------------------------------------------------------------------

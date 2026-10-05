@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/ablage.ts (npm run bauen:ts). */
 /* ==========================================================================
  * DATEIEN — hochladen in Schritten, in Stücken abgelegt
  * --------------------------------------------------------------------------

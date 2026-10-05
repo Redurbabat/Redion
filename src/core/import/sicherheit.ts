@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/import/sicherheit.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/import/sicherheit.ts — fremde Sicherungen entschärfen
  * ----------------------------------------------------------------------------

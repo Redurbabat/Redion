@@ -1,84 +1,9 @@
 "use strict";
-/* ============================================================================
- * core/knowledge/rank.ts — welche Seiten das Netz trägt
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/knowledge/rank.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/core/knowledge/rank.js`. Wer das .js bearbeitet, verliert die
- * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
- * ----------------------------------------------------------------------------
- * WAS BISHER DA WAR, UND WAS NICHT (E285).
- *
- * Redions Wissensgraph ist reich: fünf Knotenarten, vier Kantenarten,
- * Rückverweise, unverlinkte Erwähnungen, Alias-Auflösung. Was er nicht
- * hatte, ist eine Aussage darüber, welcher Knoten WICHTIG ist.
- *
- * `analyzeKnowledgeGraph` zählt Kanten (`verweise.ts:709`) und nennt die
- * Zwölf mit den meisten „Naben". Das ist der Grad, und der Grad ist eine
- * schwache Auskunft: eine Seite, auf die zwanzig Wegwerfnotizen zeigen,
- * steht damit über einer, auf die drei zentrale Seiten zeigen.
- *
- * PageRank beantwortet genau diese Frage anders: nicht „wie viele zeigen
- * her", sondern „wie wichtig sind die, die herzeigen". Die Wichtigkeit
- * ergibt sich aus sich selbst, und man rechnet sie aus, indem man das
- * Verteilen so lange wiederholt, bis sich nichts mehr ändert.
- *
- * ─── DER FEHLER, DEN DIE NAIVE FASSUNG MACHT ────────────────────────────────
- *
- * DREI VON VIER KANTENARTEN SIND GAR NICHT GERICHTET.
- *
- * `addEdge` in `verweise.ts:533` normalisiert:
- *
- *     const undirected = kind !== 'link';
- *     const first  = undirected && source > target ? target : source;
- *     const second = undirected && source > target ? source : target;
- *
- * Bei `relation`, `tag` und `tree` ist `source` also schlicht die
- * lexikalisch kleinere Kennung. Wer diese Kanten als gerichtet nimmt,
- * rechnet eine Rangfolge aus, die davon abhängt, wie die Zufallskennungen
- * ausfallen. Das Ergebnis sähe vollkommen plausibel aus und wäre Unsinn —
- * die schlimmste Sorte Fehler.
- *
- * Deshalb sagt der Aufrufer AUSDRÜCKLICH, welche Arten eine Richtung
- * tragen. Eine Vorgabe gibt es, aber sie steht als Wert da und nicht als
- * Annahme im Code.
- *
- * ─── UND DER ZWEITE: SACKGASSEN VERSCHLUCKEN GEWICHT ────────────────────────
- *
- * Ein Knoten ohne ausgehende Kante („dangling node") hat nichts, wohin er
- * sein Gewicht weitergeben könnte. Wer das nicht behandelt, verliert in
- * jeder Runde Masse; nach dreissig Runden ist die Summe nicht mehr 1,
- * sondern 0,4, und die Zahlen sind untereinander nicht mehr vergleichbar.
- *
- * In Redion ist das kein Randfall, sondern der Normalfall: jede Seite ohne
- * ausgehenden Link ist eine Sackgasse, und das sind die meisten.
- *
- * Ihr Gewicht wird deshalb gleichmässig auf ALLE verteilt — so, als führe
- * von ihnen eine Kante zu jedem. Die Prüfung misst genau das: die Summe
- * muss 1 bleiben. Das ist die eine Eigenschaft, die einen kaputten
- * PageRank zuverlässig verrät.
- *
- * ─── WAS DIESE DATEI NICHT TUT ──────────────────────────────────────────────
- *
- * Sie speichert nichts. Kein Fach, kein Meta-Schlüssel, keine zweite
- * Datenbank. Sie bekommt Knoten und Kanten, sie gibt Zahlen zurück. Der
- * Rang ist ABGELEITET und jederzeit neu ausrechenbar — genau wie Redurs
- * Regel für die Vorschaubilder.
- *
- * Sie kennt auch keinen Bereich. `verweise.ts` reicht seinen Graph hinein;
- * dass es Seiten, Zeilen und Entscheidungen gibt, erfährt sie nur als
- * Zeichenkette in `kind`.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/knowledge/rank.ts (npm run bauen:ts). */
 const KnowledgeRank = (() => {
     const VORGABE_GEWICHT = {
         link: 1.0, relation: 0.8, tree: 0.5, tag: 0.3
     };
-    /**
-     * Der Rang jedes Knotens.
-     *
-     * @param nodes  alle Knoten. Doppelte Kennungen gewinnen zuletzt.
-     * @param edges  alle Kanten. Kanten auf unbekannte Knoten fallen weg.
-     */
     const rank = (nodes, edges, opt = {}) => {
         const gerichtet = new Set(opt.gerichtet || ['link']);
         const gewicht = opt.gewicht || VORGABE_GEWICHT;
@@ -86,10 +11,6 @@ const KnowledgeRank = (() => {
         const maxRunden = opt.runden || 100;
         const toleranz = typeof opt.toleranz === 'number' ? opt.toleranz : 1e-8;
         const ohne = new Set(opt.ohne || []);
-        /* --- Knoten auf Zahlen abbilden ---------------------------------------
-           Maps mit Zeichenketten-Schlüsseln in einer Schleife, die millionenfach
-           läuft, sind der teuerste Teil. Einmal umschreiben, danach nur noch
-           Zahlen. */
         const ids = [];
         const index = new Map();
         for (const n of nodes) {
@@ -107,11 +28,6 @@ const KnowledgeRank = (() => {
             return { liste: [], nachId: Object.create(null), runden: 0,
                 rest: 0, summe: 0, sackgassen: 0 };
         }
-        /* --- Kanten in eine gerichtete Form bringen ---------------------------
-           Eine ungerichtete Kante wird zu ZWEI gerichteten. Das ist nicht
-           dasselbe wie „Richtung ignorieren": das Gewicht fliesst dann wirklich
-           in beide Richtungen, und ein Knoten mit einer einzigen ungerichteten
-           Kante ist keine Sackgasse mehr. */
         const vonListe = new Array(N);
         const gewListe = new Array(N);
         for (let i = 0; i < N; i++) {
@@ -137,7 +53,6 @@ const KnowledgeRank = (() => {
             if (!gerichtet.has(art))
                 lege(b, a, w);
         }
-        /* Die Summe der ausgehenden Gewichte je Knoten — einmal, nicht je Runde. */
         const ausSumme = new Float64Array(N);
         let sackgassen = 0;
         for (let i = 0; i < N; i++) {
@@ -149,15 +64,12 @@ const KnowledgeRank = (() => {
             if (s === 0)
                 sackgassen++;
         }
-        /* --- Die Iteration ---------------------------------------------------- */
         let r = new Float64Array(N);
         let neu = new Float64Array(N);
         r.fill(1 / N);
         let runden = 0;
         let rest = 0;
         for (; runden < maxRunden; runden++) {
-            /* Was die Sackgassen halten, wird gleichmässig verteilt — sonst
-               verschwindet es, und die Summe fällt unter 1. */
             let hAngig = 0;
             for (let i = 0; i < N; i++)
                 if (ausSumme[i] === 0)
@@ -172,9 +84,6 @@ const KnowledgeRank = (() => {
                 const ziel = vonListe[i];
                 const g = gewListe[i];
                 for (let k = 0; k < ziel.length; k++) {
-                    /* `noUncheckedIndexedAccess` verlangt die Zwischenvariable: bei
-                       `neu[ziel[k]!] += …` hält TypeScript das Ziel für vielleicht
-                       `undefined`, obwohl `Float64Array` immer eine Zahl gibt. */
                     const j = ziel[k];
                     neu[j] = neu[j] + anteil * g[k];
                 }
@@ -190,16 +99,12 @@ const KnowledgeRank = (() => {
                 break;
             }
         }
-        /* --- Ausgeben --------------------------------------------------------- */
         let summe = 0;
         for (let i = 0; i < N; i++)
             summe += r[i];
         const liste = new Array(N);
         for (let i = 0; i < N; i++)
             liste[i] = { id: ids[i], rang: r[i], platz: 0 };
-        /* Bei gleichem Rang nach Kennung, damit die Reihenfolge zwischen zwei
-           Läufen dieselbe ist. Ein Wissensrang, der sich beim Neuladen
-           umsortiert, sieht aus wie ein Fehler. */
         liste.sort((a, b) => b.rang - a.rang || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
         const nachId = Object.create(null);
         for (let i = 0; i < liste.length; i++) {
@@ -208,17 +113,6 @@ const KnowledgeRank = (() => {
         }
         return { liste, nachId, runden, rest, summe, sackgassen };
     };
-    /**
-     * Aus dem Rang eine Zahl von 0 bis 100.
-     *
-     * Der Höchste bekommt immer 100 — die Zahl ist ein VERGLEICH innerhalb
-     * dieses Bestands, keine absolute Note. Bei einem einzigen Knoten ist das
-     * ebenso richtig wie bei zehntausend.
-     *
-     * Die Wurzel dazwischen ist Absicht: PageRank ist extrem schief verteilt,
-     * und eine gerade Umrechnung gäbe dem Zweitplatzierten 8 von 100. Mit der
-     * Wurzel wird aus der Rangfolge etwas, das man lesen kann.
-     */
     const punkte = (erg, nodes, opt = {}) => {
         const frischeStaerke = typeof opt.frische === 'number' ? opt.frische : 0.25;
         const frischeTage = opt.frischeTage || 180;
@@ -232,17 +126,12 @@ const KnowledgeRank = (() => {
         const roh = [];
         for (const r of erg.liste) {
             const n = info.get(r.id);
-            /* Die Wurzel macht aus der schiefen Verteilung eine lesbare. */
             let wert = Math.sqrt(Math.max(0, r.rang));
             if (n) {
                 if (frischeStaerke > 0 && n.edited) {
                     const t = Date.parse(n.edited);
                     if (Number.isFinite(t)) {
                         const tage = (jetzt - t) / 86400000;
-                        /* Linear auf null über `frischeTage`; älter gibt nichts, aber
-                           zieht auch nichts ab. Ein Zuschlag, der negativ werden kann,
-                           wäre eine Bestrafung für Bestand — und Bestand ist der Sinn
-                           eines Wissensspeichers. */
                         const frisch = Math.max(0, 1 - Math.max(0, tage) / frischeTage);
                         wert *= (1 + frischeStaerke * frisch);
                     }

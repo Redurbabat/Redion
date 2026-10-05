@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/electrical.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/wissen/electrical.ts — Ausbildung auf normalen Redion-Bausteinen
  * ----------------------------------------------------------------------------

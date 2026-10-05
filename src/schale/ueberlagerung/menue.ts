@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/menue.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/ueberlagerung/menue.js — Menüs und Kontextmenüs
  * ----------------------------------------------------------------------------

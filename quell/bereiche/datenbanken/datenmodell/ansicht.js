@@ -1,35 +1,9 @@
 "use strict";
-/* ============================================================================
- * schema.js — Das Datenmodell sehen und Kennzahlen bauen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/datenmodell/ansicht.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/datenmodell/ansicht.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Zwei Ideen aus der 10000×-Liste, die Notion nicht hat:
- *
- *   18 · SCHEMA-ANSICHT — alle Datenbanken, ihre Eigenschaften und die
- *        Verknüpfungen dazwischen, als Diagramm. Notion zeigt nirgends,
- *        wie das eigene Datenmodell aussieht.
- *   15 · KENNZAHLEN-TAFEL — Zahlen aus mehreren Datenbanken nebeneinander,
- *        mit Ziel, Pfeil und Farbe. Notions Dashboards sind nur Seiten mit
- *        verknüpften Ansichten.
- *
- * Beides rechnet aus dem, was ohnehin da ist — nichts wird zusätzlich
- * gespeichert ausser der Tafel selbst.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/datenmodell/ansicht.ts (npm run bauen:ts). */
 const Schema = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * 1. DAS DATENMODELL
-     * ======================================================================*/
     const modell = () => {
         const dbs = Object.values(Store.cache.collections).map(c => {
             const zeilen = Store.rowsOf(c.id);
@@ -109,7 +83,6 @@ const Schema = (() => {
             const k = elVon(e)?.closest('[data-db]');
             if (!k)
                 return;
-            /* Zur Seite springen, auf der diese Datenbank steht */
             const block = Object.values(Store.cache.blocks)
                 .find(b => b.type === 'database' && b.collectionId === k.dataset.db && b.alive);
             if (block && Store.getBlock(block.parentId)) {
@@ -120,12 +93,6 @@ const Schema = (() => {
                 UI.toast('Diese Datenbank steht auf keiner Seite');
         });
     };
-    /* ========================================================================
-     * 2. KENNZAHLEN-TAFEL
-     * ------------------------------------------------------------------------
-     * Eine Kennzahl ist: Datenbank + Rechnung + Spalte + optional ein Filter
-     * und ein Ziel. Sie wird bei jedem Öffnen frisch gerechnet.
-     * ======================================================================*/
     const kennzahlen = () => Store.getMeta('kennzahlen', []) || [];
     const rechne = (kz) => {
         const c = Store.getCollection(kz.db);
@@ -144,12 +111,6 @@ const Schema = (() => {
     const tafel = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
-        /* ------------------------------------------------------------------------
-         * Fünf Felder, die es nach `innerHTML` sicher gibt — aber `querySelector`
-         * weiss das nicht, und vorher stand an jeder der zwölf Stellen ein
-         * ungeprüfter Zugriff. Einmal holen, einmal prüfen, und alles darunter
-         * hat echte Eingabefelder statt `Element | null`.
-         * ---------------------------------------------------------------------- */
         const feld = (id) => o.querySelector(id);
         const zeichne = () => {
             const karten = kennzahlen().map((kz, i) => {

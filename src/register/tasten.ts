@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/tasten.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/tasten.js — alle Tastenkürzel an einer Stelle
  * ----------------------------------------------------------------------------

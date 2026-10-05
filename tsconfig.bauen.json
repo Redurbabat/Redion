@@ -25,7 +25,17 @@
     "Das erzeugte .js wird mitversioniert. `pruefungen/lauf/test105.mjs`",
     "prüft, dass es zur .ts-Datei passt: wer das .js von Hand ändert,",
     "verliert die Änderung beim nächsten Bauen, und das soll auffallen,",
-    "bevor es passiert."
+    "bevor es passiert.",
+    "",
+    "WARUM `removeComments: true` (E715, 3. Oktober 2026). Die Kommentare",
+    "stehen in src/ — dort liest man sie, dort werden sie gepflegt. Im",
+    "erzeugten .js waren sie Gewicht ohne Leser: 1039 von 2826 KB, die der",
+    "Start über die Leitung holt (gzip, test388 §5), und 2,7 MB der",
+    "Einzeldatei. Der Code bleibt Zeichen für Zeichen derselbe; nur was",
+    "zwischen /* */ und hinter // stand, reist nicht mehr mit. test388 §5",
+    "hält das: die Decke steht seither auf 1950 KB, und wer die Kommentare",
+    "zurückholt, reisst sie. Der Dienstarbeiter (tsconfig.sw.json) behält",
+    "seine — er liegt nicht im Startweg."
   ],
 
   "extends": "./tsconfig.json",
@@ -37,7 +47,7 @@
     "moduleResolution": "Classic",
     "isolatedModules": false,
     "verbatimModuleSyntax": false,
-    "removeComments": false,
+    "removeComments": true,
     "newLine": "lf",
     "rootDir": "src",
     "outDir": "quell"

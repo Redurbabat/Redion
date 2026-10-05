@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/ink-ruler.ts (npm run bauen:ts). */
 /* E572: ein sichtbares Lineal im Dokumentraum (72 pt = 1 Zoll).
  * Nur Bedienoberfläche: keine Marke, kein Verlauf, kein Export.
  * Zeichnen nahe einer Kante bindet genau diesen Zug an die Kante.

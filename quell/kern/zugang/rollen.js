@@ -1,29 +1,6 @@
 "use strict";
-/* ============================================================================
- * kern/zugang/rollen.js — wer was darf
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/zugang/rollen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/zugang/rollen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Die Rollen standen bisher zweimal da: einmal im Server (`server/kern.js`)
- * und einmal verstreut in der Oberfläche. Zwei Listen, die dasselbe meinen,
- * laufen auseinander — und zwar immer in dieselbe Richtung: die Oberfläche
- * erlaubt etwas, das der Server verweigert, und der Mensch sieht einen Knopf,
- * der nicht funktioniert.
- *
- * Hier steht die Liste für die Oberfläche. Sie ist bewusst **wortgleich** mit
- * der des Servers, und der Prüflauf vergleicht beide.
- *
- * Der wichtige Satz zu dieser Datei: **das hier ist keine Sperre.** Was hier
- * steht, blendet Knöpfe aus und graut Felder ab. Die Sperre sitzt im Server,
- * weil nur er den Datensatz zurückhalten kann. Wer im Browser herumschraubt,
- * kommt an alles heran, was auf dem Gerät liegt — das ist keine Lücke,
- * sondern die Folge davon, dass die Daten dem Gerät gehören.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zugang/rollen.ts (npm run bauen:ts). */
 const Rollen = (() => {
-    /* Die Rangfolge zählt: wer mehr darf, darf auch alles Kleinere. */
     const ROLLEN = {
         voll: { rang: 5, name: 'Vollzugriff',
             darf: ['lesen', 'kommentieren', 'bearbeiten', 'teilen', 'loeschen', 'rechte'],
@@ -42,7 +19,6 @@ const Rollen = (() => {
             satz: 'Sieht diese Seite nicht — auch wenn er den Bereich darüber sieht.' }
     };
     const REIHE = ['voll', 'edit', 'komm', 'lesen', 'kein'];
-    /* Was man tun kann, und was es im Klartext heisst. */
     const TATEN = {
         lesen: 'ansehen',
         kommentieren: 'kommentieren',
@@ -51,36 +27,15 @@ const Rollen = (() => {
         loeschen: 'löschen',
         rechte: 'Rechte vergeben'
     };
-    /**
-     * Die Beschreibung zu einer Rolle — und `kein`, wenn es sie nicht gibt.
-     *
-     * Diese eine Zeile stand vorher siebenmal als `ROLLEN[x] || ROLLEN.kein`
-     * da. Siebenmal dieselbe Vorsicht ist sechsmal die Gelegenheit, sie zu
-     * vergessen.
-     */
     const zu = (rolle) => {
         const b = typeof rolle === 'string' ? ROLLEN[rolle] : undefined;
         return b ?? ROLLEN.kein;
     };
-    /** Darf diese Rolle das? Unbekannte Rolle heisst nein. */
     const darf = (rolle, was) => zu(rolle).darf.some(t => t === was);
-    /** Die schwächere von zweien — für geerbte Rechte. */
     const schwaechere = (a, b) => zu(a).rang <= zu(b).rang ? a : b;
-    /** Die stärkere von zweien. */
     const staerkere = (a, b) => zu(a).rang >= zu(b).rang ? a : b;
     const name = (rolle) => zu(rolle).name;
     const satz = (rolle) => zu(rolle).satz;
-    /**
-     * Warum darf jemand etwas nicht? Ein Satz, den man anzeigen kann.
-     * „Keine Berechtigung" ist keine Erklärung, sondern eine Sackgasse.
-     *
-     * EIN FUND DES UMZUGS. `REIHE…find(…)` kann `undefined` ergeben — nämlich
-     * dann, wenn KEINE Rolle diese Tat erlaubt, etwa weil sie falsch
-     * geschrieben wurde. `name(undefined)` gab dann „Kein Zugriff", und der
-     * Satz lautete: „Dafür braucht es mindestens ‚Kein Zugriff'." Das ist
-     * nicht nur unsinnig, es ist irreführend — es klingt, als läge es an der
-     * Rolle. Jetzt sagt der Satz, was wirklich los ist.
-     */
     const warumNicht = (rolle, was) => {
         if (darf(rolle, was))
             return '';
@@ -90,11 +45,6 @@ const Rollen = (() => {
         return 'Dafür braucht es mindestens „' + name(noetig) + '". Du hast „' +
             name(rolle) + '".';
     };
-    /**
-     * Für die Oberfläche: soll dieser Knopf überhaupt da sein?
-     * Ohne Konto gilt volle Freiheit — dann gehört der Bestand dem Gerät,
-     * und es gibt niemanden, gegen den zu prüfen wäre.
-     */
     const zeigen = (was, rolle) => {
         if (rolle === undefined || rolle === null || rolle === '')
             return true;

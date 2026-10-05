@@ -1,37 +1,10 @@
 "use strict";
-/* ============================================================================
- * spiegel.js — Gespiegelte Datenbanken
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/spiegel/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/spiegel/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion nennt das „Synced databases": eine Datenbank, die einem fremden
- * System gehört und hier nur gezeigt wird. Zwei Systeme sind angebunden:
- *
- *   GITHUB   Issues und Pull Requests. Läuft direkt aus dem Browser —
- *            GitHub erlaubt das ausdrücklich. Ein Token mit Leserecht reicht.
- *            Zurückschreiben geht auch: Titel, Zustand, Beschriftungen.
- *
- *   JIRA     Vorgänge eines Projekts. Atlassian lässt den Browser meist
- *            nicht direkt heran; dann läuft es über die Brücke.
- *
- * Der Abgleich merkt sich für jede Zeile die fremde Nummer. Beim zweiten
- * Durchlauf wird aufgefrischt statt doppelt angelegt.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/spiegel/dienst.ts (npm run bauen:ts). */
 const Spiegel = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const opt = (...paare) => paare.map(([name, color]) => ({ name, color }));
-    /* ========================================================================
-     * GITHUB
-     * ======================================================================*/
     const GH_SCHEMA = () => ({
         title: { name: 'Titel', type: 'title' },
         nr: { name: 'Nummer', type: 'number' },
@@ -50,7 +23,6 @@ const Spiegel = (() => {
         repo: { name: 'Projekt', type: 'text' },
         text: { name: 'Beschreibung', type: 'text' }
     });
-    /** Sorgt dafür, dass eine Auswahloption existiert. */
     const optionSichern = (coll, key, name) => {
         if (!name || !coll.schema[key])
             return;
@@ -62,65 +34,20 @@ const Spiegel = (() => {
         coll.schema[key].options = liste;
         Store.updateCollection(coll.id, { schema: coll.schema });
     };
-    /* ══ DER VERBINDUNGSSCHALTER GILT WIRKLICH (E651) ═══════════════════════
-     * Das Datenbankmenü hat seit je einen Punkt „Verbindungen dieser
-     * Datenbank" mit einem Fusstext, der etwas Sicherheitsrelevantes zusagt:
-     *
-     *     „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und
-     *      schreiben — etwa der GitHub-Spiegel."
-     *
-     * Gemessen am 20. September: `coll.verbindungen` wurde an genau zwei
-     * Stellen ANGEFASST — vom Menü, das es schreibt, und von der Zeile, die
-     * die Anzahl zeigt. GELESEN als Erlaubnis wurde es nirgends. Der Spiegel
-     * hängt an `gespiegelt` und `spiegelQuelle` und fragte den Schalter nie.
-     *
-     * Zwei Fehler auf einmal, und der zweite ist der schlimmere: die ANZEIGE
-     * stimmte auch nicht. `drin.includes(id)` ist bei einer nie angefassten
-     * Datenbank für jeden Dienst falsch — das Menü zeigte „GitHub · aus",
-     * WÄHREND der GitHub-Spiegel lief. Wer das liest, glaubt, er sei
-     * geschützt. Das ist §47 in seiner gefährlichen Form.
-     *
-     * ─── WARUM `undefined` ERLAUBT UND `[]` SPERRT ────────────────────────
-     *
-     * Ein Schalter, der bei seiner Einführung jeden laufenden Spiegel
-     * abwürgt, wäre schlimmer als der Fehler, den er behebt (§46, §51).
-     * Deshalb dieser Unterschied, und er ist der ganze Entwurf:
-     *
-     *     verbindungen fehlt   → nie eingerichtet → erlaubt, wie bisher
-     *     verbindungen: []     → ausdrücklich leer → gesperrt
-     *     verbindungen: ['github'] → genau das ist erlaubt
-     *
-     * Das Menü schreibt beim ersten Anfassen eine echte Liste, und ab da
-     * gilt sie. Wer nie hingeht, merkt nichts — und wer hingeht, sieht ab
-     * sofort die Wahrheit, weil die Anzeige dieselbe Frage stellt.
-     *
-     * EINE FRAGE, EIN ORT (§8). `steuerung.ts` zeichnet das Menü und ruft
-     * für die Anzeige dieselbe Funktion, die hier sperrt. Zwei getrennte
-     * Regeln liefen unweigerlich auseinander, und genau das war der Zustand
-     * davor. */
     const darf = (coll, dienst) => {
         const liste = coll && coll.verbindungen;
         if (!Array.isArray(liste))
             return true;
         return liste.includes(dienst);
     };
-    /** Der Dienst, an dem dieser Spiegel hängt — oder nichts. */
     const eigenerDienst = (coll) => String((coll && coll.spiegelQuelle) || '').split(':')[0] || '';
-    /** Sperrt, wenn der Schalter es sagt. Wirft mit einem Grund statt still
-        zurückzukehren — eine stille Rückkehr sähe aus wie „nichts zu tun". */
     const sperrePruefen = (coll, dienst) => {
         if (darf(coll, dienst))
             return;
         throw new Error('Für diese Datenbank ist die Verbindung zu ' + dienst
             + ' ausgeschaltet. Datenbankmenü → Verbindungen.');
     };
-    /** Die schon vorhandene Zieldatenbank zu einem Spiegelnamen — oder nichts. */
     const zielSchon = (name) => Object.values(Store.cache.collections).find(c => c.name === name && c.gespiegelt) || null;
-    /* Der Fusstext sagt „lesen UND schreiben". Also muss die Sperre VOR den
-       Netzruf, nicht dazwischen — sonst waere das Holen erlaubt und nur das
-       Zurueckschreiben gesperrt, und das Versprechen bliebe halbwahr (E651).
-       Gibt es die Zieldatenbank noch gar nicht, ist nichts zu schuetzen: einen
-       neuen Spiegel legt der Nutzer ausdruecklich an. */
     const sperrePruefenFuerZiel = (name, dienst) => {
         const da = zielSchon(name);
         if (da)
@@ -135,7 +62,6 @@ const Spiegel = (() => {
         Store.updateCollection(c.id, { gespiegelt: true, icon: '🔄' });
         return c;
     };
-    /** Issues und Pull Requests holen. */
     const githubHolen = async (repo, zustand = 'all', seiten = 3) => {
         const alle = [];
         for (let s = 1; s <= seiten; s++) {
@@ -152,7 +78,6 @@ const Spiegel = (() => {
         sperrePruefenFuerZiel('GitHub · ' + repo, 'github');
         const roh = await githubHolen(repo, zustand);
         const coll = zielDatenbank('GitHub · ' + repo, GH_SCHEMA, 'board');
-        /* Board nach Zustand gruppieren, damit man sofort etwas sieht */
         const v = Store.getView(coll.viewIds[0]);
         if (v && v.layout === 'board' && !v.groupBy)
             Store.updateView(v.id, { groupBy: 'status' });
@@ -199,9 +124,7 @@ const Spiegel = (() => {
         });
         return { neu, frisch, coll };
     };
-    /** Eine Änderung zurück nach GitHub schreiben. */
     const githubZurueck = async (row, coll) => {
-        /* VOR jedem Ruf, nicht danach (E651). */
         sperrePruefen(coll || (row && row.parentId ? Store.getCollection(row.parentId) : null), 'github');
         const repo = (row.props || {}).repo || Store.getMeta('api:githubRepo', '');
         const nr = (row.props || {}).nr;
@@ -219,7 +142,6 @@ const Spiegel = (() => {
         });
         return true;
     };
-    /** Ein neues Issue anlegen. */
     const githubNeu = async (repo, titel, text) => {
         const d = await Verbindungen.githubRuf(`/repos/${repo}/issues`, {
             method: 'POST',
@@ -228,9 +150,6 @@ const Spiegel = (() => {
         });
         return d;
     };
-    /* ========================================================================
-     * JIRA
-     * ======================================================================*/
     const JI_SCHEMA = () => ({
         title: { name: 'Zusammenfassung', type: 'title' },
         key: { name: 'Schlüssel', type: 'text' },
@@ -291,7 +210,6 @@ const Spiegel = (() => {
         });
         return { neu, frisch, coll };
     };
-    /** Jira schreibt Beschreibungen als verschachteltes JSON. Text herausholen. */
     const textAusAdf = (knoten) => {
         if (!knoten)
             return '';
@@ -303,9 +221,6 @@ const Spiegel = (() => {
             return knoten.content.map(textAusAdf).join(knoten.type === 'paragraph' ? '' : '\n');
         return '';
     };
-    /* ========================================================================
-     * ALLE SPIEGEL AUFFRISCHEN
-     * ======================================================================*/
     const spiegelListe = () => Object.values(Store.cache.collections)
         .filter(c => c.gespiegelt && c.spiegelQuelle);
     const alleAuffrischen = async () => {
@@ -338,9 +253,6 @@ const Spiegel = (() => {
         else
             UI.toast(n + ' Einträge abgeglichen');
     };
-    /* ========================================================================
-     * OBERFLÄCHE
-     * ======================================================================*/
     const githubDialog = async () => {
         const repo = await UI.frage('Welches Projekt? (benutzer/projekt)', Store.getMeta('api:githubRepo', ''));
         if (!repo)

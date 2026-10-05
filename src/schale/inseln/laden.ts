@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/inseln/laden.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/inseln/laden.ts — React und die Inseln erst holen, wenn es sie braucht
  * ----------------------------------------------------------------------------

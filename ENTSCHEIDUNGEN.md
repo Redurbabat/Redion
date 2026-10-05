@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-687 Entscheidungen, E1 bis E714 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+688 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -750,6 +750,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
+* **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 
 ---
 
@@ -1998,6 +1999,12 @@ Datei ohnehin migriert wird.
 ---
 
 ## E28 · Die Sprachen, die dieses Projekt benutzt
+
+> **Ergänzt durch E715 (3. Oktober 2026) — das erzeugte JavaScript reist
+> ohne Kommentare.** `tsconfig.bauen.json` setzt `removeComments`; die
+> Erklärungen stehen in `src/`. Jede Quelle beginnt mit
+> `/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/… (npm run bauen:ts). */`,
+> die tsc stehen lässt; `test105` §3 prüft sie in jeder erzeugten Datei.
 
 **Problem**
 
@@ -31807,6 +31814,10 @@ E389 — Der Start wartet nicht mehr auf 185 Skripte
 ================================================================================
 4. September 2026 · Redur schickte einen PageSpeed-Bericht
 
+> **Ergänzt durch E715 (3. Oktober 2026).** pdf.js bleibt beim Bedarf, wie
+> hier entschieden; die übrigen Skripte reisen seither ohne Kommentare, der
+> Start holt 1805 KB gzip unter einer Decke von 1950 (`test388` §5).
+
 DIE ZAHLEN VON GOOGLE KAMEN NICHT AN — der Netzzugang dieses Containers
 verweigert `googleapis.com` (403 am Tunnel, nachgesehen im Proxy-Status).
 Also selbst gemessen, mit derselben Drosselung, die Lighthouse mobil
@@ -49847,6 +49858,11 @@ rot, ohne dass etwas zugewachsen wäre.
 
 ## E613 — Die Chronik kommt erst, wenn jemand sie öffnet (und die Decke bekommt ihre Begründung)
 
+> **Ergänzt durch E688 (2850 KB) und E715 (3. Oktober 2026, 1950 KB).**
+> Die Chronik bleibt beim Öffnen, wie hier entschieden; die Decke in
+> `test388` §5 steht seit E715 auf 1950 KB, weil das erzeugte JavaScript
+> ohne Kommentare reist (1805 KB beim Start).
+
 **16. September 2026.** `test388 §5` war rot, und zwar seit zwölf Tagen,
 ohne dass es jemandem aufgefallen wäre — die Läufe auf GitHub brechen seit
 Wochen nach drei Sekunden ab (Konto-Ebene, kein Codefehler), und im Container
@@ -56159,6 +56175,13 @@ Reihenfolge in `index.html` fest.
 
 ## E688 — Die Startdecke steigt auf 2850 KB, und zwei Posten darin sind Inhalt, kein Code
 
+> **Ergänzt durch E715 (3. Oktober 2026) — die Decke sinkt auf 1950 KB.**
+> Das erzeugte JavaScript reist seither ohne Kommentare (`removeComments`
+> in `tsconfig.bauen.json`); der Start holt 1805 statt 2826 KB, derselbe
+> Code. Bei 2850 käme pdf.js (526 KB) unbemerkt zurück — deshalb steht die
+> Decke in `test388` §5 jetzt auf 1950. Was dieser Eintrag über das Anheben
+> sagt, gilt weiter: wer sie anhebt, zählt vorher und sieht zuerst nach L216.
+
 **Datum:** 25. September 2026 · **Wächter:** `test388 §5` (19 Zusagen) ·
 **Messung:** `messungen.md`, Abschnitt zur Startnutzlast vom 25. September
 
@@ -58657,3 +58680,159 @@ hat kein `@import` und kein `url()`, `replaceSync` liest dieselben Regeln.
 900 ms zu spät in allen vier Szenen rot (`"zeigt":false`); `test579` mit
 einer Einzeldatei, die das Blatt nicht annimmt, rot („24", `{"angenommen":0}`,
 der Akzent `rgba(0, 0, 0, 0)`).
+
+## E715 — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie
+
+**Datum:** 3. Oktober 2026 · **Entschieden von** Redur (Auftrag vom
+27. September, „ohne eine funktione löschen"; 3. Oktober ca. 19:35 UTC
+„Weiter ohne pause,") · **ergänzt** E389, E613 und E688 (die Startdecke) und E28/§54.2
+(erzeugtes JavaScript) · **Wächter:** `test388` §5, `test105` §3
+(erweitert), `test272` (liest die Quelle) · **Zweig**
+`claude/startlast-leichter` · **Messung:** `messungen.md` §86.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+27.09. ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die
+                       oberfläche bischen ruhige machen ohne etwas lösche also
+                       eine funktionen und ich will das es flüssigere
+                       animationen , glass efeck usw alles haben dann bessere
+                       stift efeckte beim zeichnen bessere farben"
+27.09. ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich
+                       am morgen die redion öfnnen eien komplet besseren
+                       webseit sehen ohne eine funktione löschen bessere
+                       ordnungen bessere übergagnge besssere efeckten ,
+                       bessere oberfläsche alles kannst du nur an reddion
+                       arbeiten"
+03.10. ca. 19:35 UTC   „Weiter ohne pause,"
+```
+
+**Was war.** `test388` §5 deckt, was der Start über die Leitung holt, bei
+2850 KB gzip (E688). Die erste Welle (`claude/morgen-besser`, 4d9a9a3fb)
+holt 2826 KB über 248 Dateien. Die sieben Zweige der zweiten Welle
+(E708 bis E714) bringen je 5 bis 10 KB — `loeschen` allein steht bei 2836,
+`zeit` bei 2835; zusammen passen sie nicht unter die Decke. Weglassen geht
+nicht („ohne eine funktione löschen"), die Decke still anheben auch nicht
+(E688: „Wer sie das nächste Mal anhebt, zählt vorher"). Also gezählt.
+
+**Gemessen, bevor gebaut wurde** (gzip Stufe 6, was `index.html` holt;
+`messungen.md` §86):
+
+```txt
+Hebel                                              gzip       Verhalten
+(a) Kommentare im erzeugten JavaScript             1039 KB    unverändert — derselbe Code
+      … davon für die Zeile „ERZEUGT" je Datei      −18 KB
+(b) nach dem ersten Bild nachladen (E389/E613):
+      pdf/marken.js + pdf/document-mode.js           91 KB    Studio muss beim ersten Tipp da sein
+      datenbanken/steuerung.js                       95 KB    Tabellen beim Start
+      nin-quiz.js + staatskunde-inhalt.js (L216)     18 KB    Trainer liest Register.vorlagen beim Start
+(c) Kommentare in den 23 Stilblättern               261 KB    CSS IST die Quelle (§54.1)
+    tote Teile                                       nicht gezählt
+```
+
+(b) und (c) sind hinter (a) gemessen (ohne Kommentare), damit die Zahlen
+zusammen gelten.
+
+**Was entschieden wurde.**
+
+1. **`tsconfig.bauen.json` setzt `removeComments: true`.** Die Kommentare
+   stehen in `src/`, dort liest und pflegt man sie; das erzeugte `.js` ist
+   Ausgabe (§54.2), und jeder erste Besuch holte sie bisher über die
+   Leitung. tsc nimmt nur Kommentare heraus — Bezeichner, Zeichenketten,
+   Reihenfolge bleiben. Nichts in Redion liest zur Laufzeit Quelltext
+   (gesucht: kein `toString` auf Funktionen, kein `currentScript`, kein
+   `fetch` auf `quell/…js` ausser den drei Ladern für pdf.js, Chronik und
+   Inseln, die ganze Dateien ausführen).
+2. **Die Warnung bleibt — in jeder Datei, nicht nur in den meisten.** Jede
+   der 227 Quellen, aus denen tsc ein `quell/…js` macht, beginnt mit
+   `/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/… (npm run bauen:ts). */`;
+   tsc lässt Kommentare mit `/*!` stehen. Vorher reiste der ganze Kopf mit,
+   und 183 von 227 Dateien warnten so nebenbei; 44 nie — darunter
+   `pdf/marken.js` und die Chronik. `test105` §3 sah nur `core/` (46).
+   `dienststand.mts` (für `stand.ts`) und `chronik.mts` (für
+   `chronik/daten.ts`) schreiben die Zeile selbst, sonst verlöre sie der
+   nächste Lauf.
+3. **`sw.js` behält seine Kommentare** (`tsconfig.sw.json` setzt
+   `removeComments: false`): er liegt nicht im Startweg, und wer ohne Netz
+   einen Fehler sucht, liest ihn in der Wurzel. Was nichts spart, wird
+   nicht angefasst.
+4. **Die Decke sinkt auf 1950 KB.** Nicht, weil eine tiefere Decke schöner
+   wäre — die zweite Zusicherung in §5 verlangt es: bei 2850 passte pdf.js
+   (526 KB) wieder unbemerkt hinein (1805 + 526 = 2331). 1950 lässt 145 KB
+   Luft (so viel wie E688 für neun Tage Arbeit gab, und mehr, als die
+   ganze zweite Welle braucht) und liegt 381 KB unter dem Punkt, an dem
+   pdf.js zurückkäme. Eine dritte Zusicherung nennt die Ursache, falls sie
+   reisst: `removeComments` muss an sein.
+5. **`test272` liest die Beschreibung der toten Verdrahtung `hl-seiten`
+   aus `src/schale/aufbau/schale.ts`** statt aus dem erzeugten `schale.js`.
+   Die Beschreibung ist ein Kommentar; die Quelle trägt Code und Kommentar,
+   sieht also alles, was das `.js` je zeigen konnte.
+
+**Was es bringt.** Start **2826 → 1805 KB** gzip (−1021 KB, −36 %), roh
+9688 → 7063 KB. Die Einzeldatei **11,78 → 9,10 MB** (gzip 3,61 → 2,62 MB).
+Unter der neuen Decke 145 KB Luft — die zweite Welle passt, auch zusammen.
+Das Verhalten ist gleich, weil der Code gleich ist: jede der 227
+erzeugten Dateien ist Byte für Byte das, was tsc aus den Quellen von
+4d9a9a3fb mit `--removeComments` macht — bis auf die neue erste Zeile und
+den Stempel in `stand.js`. Kein Skript kommt später als vorher; jede
+Funktion ist im selben Augenblick da wie bisher, nur über weniger Bytes.
+Die 103 Browserläufe, die `quell/…js` oder die Einzeldatei lesen, gingen
+durch wie auf dem Grundstand (§86).
+
+**Was es kostet.**
+- Wer im Debugger des Browsers liest, sieht Code ohne Erklärung. Die erste
+  Zeile sagt, welche Quelle die Erklärung trägt.
+- Fehlermeldungen nennen ihren Ort als `datei.js:Zeile` (`schale.ts`,
+  der Fehlerbalken; `pflege.ts`, die gemerkten Fehler). Die Zeile zeigt
+  weiter in die ausgelieferte Datei — aber auf eine andere Nummer als vor
+  E715. Ein Bericht von vorher passt nicht mehr Zeile für Zeile; die
+  Nummer in der `.ts` war nie dieselbe (tsc schreibt neu, Quellkarten gibt
+  es keine).
+- 227 Quellen haben eine Zeile mehr, und **jede neue Quelle braucht sie**
+  — `test105` §3 meldet jede, der sie fehlt. Für das Zusammenführen der
+  zweiten Welle heisst das: `src/schale/bedienung/delete.ts` (E709),
+  `kacheln.ts` und `tropfen.ts` (E712) bekommen die Zeile, bevor gebaut
+  wird.
+- Jede Datei unter `quell/` ändert sich einmal ganz; wer zwei Zweige
+  zusammenführt, baut `quell/` ohnehin neu (§30, erzeugt wird nie von
+  Hand gemischt).
+
+**Die Alternativen.**
+- *Die Decke anheben.* Hätte die zweite Welle für ein paar Tage
+  durchgelassen und dem nächsten Bogen dieselbe Frage gestellt — ohne dass
+  ein Byte weniger über die Leitung ginge.
+- *(b) Nachladen.* Ändert, wann eine Funktion da ist; jedes nachgeladene
+  Stück braucht seinen Lader, seine Marke in der Einzeldatei und einen
+  Lauf, der den schnellen ersten Tipp prüft. Ein Zehntel des Ertrags von
+  (a) bei viel mehr Risiko. L216 bleibt Redurs Frage.
+- *(c) Kommentare aus den Stilblättern.* CSS ist hier Quelle, nicht
+  Ausgabe; sie herauszunehmen hiesse, die Begründungen zu löschen, die
+  `test402` und `test362` an Ort und Stelle verlangen, oder CSS einen
+  Bauschritt zu geben (§6). Beides nicht.
+- *Ein Verkleinerer (Terser o. ä.).* Brächte mehr, ist aber fremder Code
+  (§57) und eine neue Abhängigkeit — für einen Gewinn, den `removeComments`
+  zum grössten Teil schon bringt.
+
+**Gefunden auf dem Weg.** `test105` §3 prüfte die Warnung nur unter
+`core/` — 44 erzeugte Dateien trugen nie eine. `test272` las einen
+Kommentar aus erzeugtem JavaScript; `test264`, `test265` und `test268`
+verlangen den ERZEUGT-Kopf im erzeugten `.js` und finden ihn jetzt in der
+`/*!`-Zeile. Die Chronik (`chronik/daten.js`) warnte, nannte aber keine
+`.ts` — `test105` hätte sie nie gezählt.
+
+**Durchsicht (5. Oktober 2026, nach dem zweiten Abbruch).** Nachgeprüft,
+nicht übernommen: (1) *Derselbe Code, unabhängig von tsc* — ein zweiter
+Parser (oxc, über `rolldown/parseAst`, schon für die Inseln im Haus) liest
+jedes alte `.js` MIT Kommentaren und jedes neue OHNE: 226 von 227 Bäumen
+sind gleich, `stand.js` nur im Stempel. Zeichenketten, Vorlagen und
+reguläre Ausdrücke mit `//` oder `/* */` darin (141, 9 und 1) stehen
+unverändert; eine geänderte Zeichenkette merkt der Vergleich. (2) Die
+Zahlen selbst gezählt: 2826 → 1805 KB über 248 Dateien, roh 9688 → 7063,
+Einzeldatei 11'784'203 → 9'095'626 Bytes. (3) Kein Lizenzkopf geht
+verloren: unter `src/` steht keiner (FREMDCODE: `src/` ist Redions
+Code), React, pdf.js und die Inseln gehen nicht durch tsc. (4) `test105`
+§3 prüft jetzt auch, dass die Zeile ihre EIGENE Quelle nennt — seit E715
+ist sie alles, was das `.js` von seiner Quelle weiss. (5) Die Verweise auf
+E715 stehen jetzt auch in E28, E389, E613 und E688; README sagte noch
+„Ein Prüflauf ist rot (L146) … 2300 KB" — L146 ist seit E613
+geschlossen. Messung: `messungen.md` §86, Durchsicht.

@@ -5460,3 +5460,175 @@ test579 §9    Einzeldatei: das Blatt wird nicht angenommen      Knopf 24 px · 
 ```
 
 **Startgrösse nach der Durchsicht (`test388` §5, 4. Oktober, 16:06–16:13 UTC):** **2826 KB** gzip über 248 Dateien, DECKE 2850 KB — unverändert, die Durchsicht ändert nur Prüfungen und Doku.
+
+## §86 · Der Startweg ohne Kommentare im erzeugten JavaScript (E715, 3. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/startlast-leichter` gegen `4d9a9a3fb`
+(morgen-besser, E701–E706). Statisch: jede Datei, die `index.html` beim
+Start holt (Skripte, Stilblätter samt `@import`, die Seite selbst), einzeln
+mit gzip Stufe 6 gepackt und zusammengezählt — so, wie `test388` §5 sie
+über seinen Server ausliefert. Dazu `test388` selbst, vorher (auf einem
+Abzug von 4d9a9a3fb) und nachher.
+
+**Die Hebel, gezählt, bevor gebaut wurde** (KB gzip):
+
+```txt
+                                                 vorher    ohne Kommentare
+erzeugtes JavaScript, 224 Skripte                 2395,8       1375,5
+  … davon die Zeile „ERZEUGT" je Datei (/*!)          —           18,4
+Stilblätter, 23 Dateien                            416,7        416,7  (Kommentare darin: 261,3 — Quelle, bleibt)
+index.html                                          13,2         13,2  (Kommentare darin: 6,4 — bleibt)
+zusammen (248 Dateien)                              2826         1805
+roh                                                 9688 KB      7063 KB
+```
+
+**Die grössten Einzelposten** (gzip, KB):
+
+```txt
+                                          vorher   nachher   weniger
+quell/bereiche/pdf/marken.js              132,3     55,8      76,6
+quell/bereiche/pdf/document-mode.js        82,5     35,2      47,3
+quell/schale/aufbau/schale.js              76,1     34,2      41,9
+quell/bereiche/datenbanken/steuerung.js   132,0     94,9      37,2
+quell/kern/ablage/indexdb.js               52,7     17,9      34,8
+quell/bereiche/dateien/einlesen.js         40,7     18,9      21,8
+```
+
+**Was danach noch zu holen wäre** (ohne Kommentare gemessen, nicht
+gebaut): Studio (`marken.js` + `document-mode.js`) 91,0 KB, Datenbanken
+(`steuerung.js`) 94,9 KB, Lerninhalt (L216: `nin-quiz.js` +
+`staatskunde-inhalt.js`) 17,5 KB — alles nur mit Nachladen, also mit
+geändertem Zeitpunkt; die Kommentare der Stilblätter 261,3 KB — nur mit
+einem Bauschritt für CSS.
+
+**Die Einzeldatei.** 11'784'203 → 9'095'626 Bytes (−2,56 MB); gzip
+3'606'395 → 2'618'339 Bytes.
+
+**Was vorher Kommentar war und gebraucht wurde.** `test105` §3 (Warnung im
+erzeugten Kopf; vorher nur `core/`, 46 Dateien — auf 4d9a9a3fb fehlte sie
+in 44 der 227), `test264`, `test265`, `test268` (ERZEUGT-Kopf in je einer
+Datei) und `test272` (die Beschreibung der toten Verdrahtung `hl-seiten`
+in `schale.js`). Alle Läufe, die `quell/…js` oder die Einzeldatei lesen,
+sind gelaufen: 34 Dateiläufe grün; 103 Browserläufe unter dem Schloss,
+davon nach der ERZEUGT-Zeile und `test272` aus der Quelle alle grün bis
+auf acht, die auf dem Grundstand genauso rot sind: `test270` (die
+`.git`-Datei des Arbeitsbaums, E671), `test343` §6 und `test461` (E708),
+`test464` §1 und `test492` (E714), `test365` („Dreizehn Werkzeuge" 14
+gegen 13, dieselbe Ursache wie `test464` §1), `test448` (Klappe des
+Reglers, 20/22) und `test470` (wartet 5 s auf „sichern"). Die drei
+letzten sind auf einem Abzug von 4d9a9a3fb nachgefahren, mit demselben
+Ergebnis.
+
+**test388 §5.** Vorher (4d9a9a3fb): 2826 KB über 248 Dateien, Decke
+2850, 21/21. Mit der neuen Decke auf demselben Stand: 20/22 — „2826 KB …
+Decke 1950" und „removeComments" rot. Nachher: **1805 KB über 248
+Dateien, Decke 1950, 22/22.** Die Zahl des Laufs und die statische
+Zählung stimmen auf das KB überein.
+
+**Derselbe Code.** Die Quellen von 4d9a9a3fb mit `tsc -p
+tsconfig.bauen.json --removeComments` in einen leeren Ordner gebaut und
+gegen `quell/` des Zweigs gelegt, ohne die ERZEUGT-Zeile: 227 Dateien,
+226 Byte für Byte gleich, die eine andere ist `stand.js` (nur der
+Stempel). Was der Browser ausführt, ist also genau das Alte ohne
+Kommentare — kein Skript kommt später, keine Funktion fehlt.
+
+**Nachtrag (4. Oktober 2026, Durchsicht nach dem Abbruch vom 3. Oktober).**
+Die erste Sitzung brach nach den beiden Commits ab; die Bilder, die der
+Commit nennt, lagen nicht im Ordner. Nachgeholt und alles noch einmal
+selbst gezählt, unter dem Schloss:
+
+- *Zahlen, unabhängig nachgerechnet* (jede Datei, die `index.html` beim
+  Start holt, samt `@import`, gzip 6): 4d9a9a3fb 2826 KB über 248
+  Dateien (JS 2396, CSS 417), roh 9688 KB; der Zweig 1805 KB (JS 1376,
+  CSS 417), roh 7063 KB. `test388` §5 nennt dieselbe Zahl: 1805 KB,
+  Decke 1950, 22/22. Einzeldatei 11'784'203 → 9'095'626 Bytes.
+- *Derselbe Code, noch einmal*: die Quellen von 4d9a9a3fb (`git archive`)
+  mit `tsc -p tsconfig.bauen.json --removeComments` gebaut — 226 von 227
+  Dateien Byte für Byte gleich `quell/` des Zweigs ohne die
+  ERZEUGT-Zeile (sie steht als zweite Zeile, nach `"use strict";`, die
+  Anweisung bleibt die erste); `stand.js` weicht nur im Stempel ab.
+  `src/` ändert sich nur um die 227 ERZEUGT-Zeilen und den Stempel.
+- *Bilder vorher/nachher*, per Doppelklick (`file://`) und als
+  Einzeldatei, Rechner 1440×900 und Telefon 390×844, hell und dunkel
+  (16 Bilder, `welle2-bilder/startlast/vorher-…`/`nachher-…`, nicht
+  eingecheckt, §55.4): alle acht Paare **Pixel für Pixel gleich** (0 von
+  1'296'000 bzw. 1'316'640 Bildpunkten anders), kein Konsolenfehler,
+  kein Seitenfehler. Fertig (Baum gefüllt) nach 779–1100 ms vorher und
+  794–861 ms nachher (`index.html`), 684–822 und 628–666 ms
+  (Einzeldatei).
+- *Früh bedienen* (zweiter Start, nach „Loslegen"; ab dem ersten Byte
+  alle 20 ms ein Klick auf „Suchen", bis das Suchfeld steht; Median aus
+  drei): `index.html` Rechner 1323 → 803 ms, Telefon 718 → 688 ms;
+  Einzeldatei Rechner 498 → 425 ms, Telefon 581 → 467 ms. Nie
+  später, kein Fehler. Strg P im selben 20-ms-Takt: vorher wie nachher
+  nie ein stehendes Suchfeld gesehen (der Grund ist nicht gesucht, er ist
+  auf beiden Ständen derselbe); darum noch einmal im Raster von 400 ms —
+  drücken, 150 ms warten, nachsehen: `index.html`
+  Rechner 1063 → 1149 ms, Telefon 1125 → 1168 ms; Einzeldatei Rechner
+  1057 → 681 ms, Telefon 729 → 690 ms — die Unterschiede liegen innerhalb
+  eines Rasterschritts; der genauere Klick (20 ms) zeigt nachher überall
+  früher. Beim ERSTEN Start fängt meist der Dialog „Willkommen bei
+  Redion" (Fokus auf „Loslegen") einen Druck gleich bei DOMContentLoaded
+  ab — vorher wie nachher: in je einem von acht Versuchen (Strg P oder
+  Klick, beide Seiten, beide Geräte) ging die Suche vor ihm auf.
+- *Gegenproben, je rot gesehen und zurückgenommen*: die ERZEUGT-Zeile aus
+  `src/bereiche/pdf/marken.ts` und `marken.js` → `test105` 333 ok,
+  2 offen; `removeComments: false` in `tsconfig.bauen.json` (ohne
+  Neubau) → `test388` 21/22, „reist ohne Kommentare" rot.
+
+**Durchsicht (5. Oktober 2026, nach dem zweiten Abbruch).** Eine zweite
+Durchsicht brach am 4./5. Oktober ab, bevor sie etwas festhielt; ihre
+fünf offenen Änderungen (Verweise in E28, E389, E613, E688, L216, README,
+`doku/MIGRATION-REZEPT.md`, `umzug.mts`) sind geprüft und übernommen. Neu
+gemessen, auf `c287b388e` plus diese Änderungen:
+
+- *Zahlen* (jede Datei, die `index.html` beim Start holt, samt
+  `@import` ausserhalb von Kommentaren, gzip 6): 4d9a9a3fb 2826 KB über
+  248 Dateien (JS 2395,8, CSS 416,7, HTML 13,2), roh 9688 KB; der Zweig
+  1805 KB (JS 1375,5), roh 7063 KB. Einzeldatei 11'784'203 → 9'095'626
+  Bytes. Stimmt mit dem Nachtrag überein.
+- *Derselbe Code, mit einem zweiten Parser.* tsc hat die Kommentare
+  genommen; ob es dabei Code angefasst hat, sagt ein Vergleich mit tsc
+  nicht. Deshalb oxc (`rolldown/parseAst`, mit Vite schon im Haus): jedes
+  alte `.js` von 4d9a9a3fb MIT Kommentaren und jedes neue OHNE geparst,
+  der Baum ohne Positionen verglichen — 226 von 227 gleich, `stand.js`
+  gleich bis auf den Stempel. Im erzeugten Code stehen 141 Zeichenketten,
+  9 Vorlagen und 1 regulärer Ausdruck mit `//`, `/*` oder `*/` darin; alle
+  unverändert. Gegenprobe: eine Zeichenkette in `marken.js` um ein Zeichen
+  geändert → Baum anders; ein Kommentar dazu → Baum gleich.
+- *Lizenzköpfe.* Unter `src/` steht kein fremder Kopf (`Copyright`,
+  `@license`, `SPDX`, `©` nur in einer Zeichenkette für OpenStreetMap);
+  `quell/fremd/react/react.js`, `quell/fremd/pdfjs/daten.js` und
+  `quell/islands/islands.js` gehen nicht durch tsc und sind unverändert.
+- *Bilder, Grundstand gegen Zweig* (eigene Probe, unter dem Schloss;
+  index.html und Einzeldatei je Rechner 1440×900 und Telefon 390×844,
+  dunkel, weniger Bewegung, feste Uhr und fester Zufall): Willkommen,
+  Start, 13 Wege über `Register.navigation`, alle zehn Schemata (auch
+  „Starker Kontrast" und beide Touch-Kit-Schemata), „Ruhige Darstellung"
+  und Strg P — 108 Bildpaare, 107 Pixel für Pixel gleich; eines
+  (Einzeldatei, Rechner, Bibliothek) mit 152 von 1'296'000 Bildpunkten,
+  verstreut über die schräg gestellten Dokumentblätter der Grafik.
+  Nachgefahren, je Stand dreimal derselbe Ausschnitt: alle sechs Pixel
+  für Pixel gleich — ein einmaliges Rauschen beim Rastern, nicht E715.
+  Kein Seiten- und kein Konsolenfehler in allen acht Durchgängen; Strg P
+  öffnet überall die Suche; `data-bewegung="ruhig"` greift überall.
+- *Wächter.* `test105` §3 verlangt jetzt auch, dass die Zeile ihre eigene
+  Quelle nennt. Gegenprobe: in `src/core/helpers/ids.ts` und `ids.js`
+  „idz.ts" eingesetzt → `test105` 335 ok, 1 offen („Jede Warnung nennt
+  ihre eigene Quelle … quell/core/helpers/ids.js"), §2 grün;
+  zurückgenommen.
+- *Läufe.* Dateiläufe auf diesem Stand: `test87` 177 ok, `test105` 336
+  ok/0 offen, `test109` 25, `test225` 11/11, `test549` 6/6, `test550` 8/8,
+  `test578` 110/110, dazu 47, 75, 79, 88, 89, 92, 93, 101, 102, 103, 106,
+  107, 108, 110, 113, 119, 131, 203, 216, 246, 275, 290, 294, 298, 354,
+  367, 400, 401, 402, 410, 537, 553, 571 grün; `test274` 11 ok, 1 offen
+  („verwaiste Nachschlagestelle … pdf/marken.ts: redion-graphit", E704) —
+  auf 4d9a9a3fb genauso, fremd. Unter dem Schloss: `test388` 22/22 (1805
+  KB, Decke 1950), `test353` 105/105, `test143` 23, `test412` 27/27,
+  `test579` 76/76 (mit §10 ohne Netz), `test272` 153/0, `test264` 25/25,
+  `test265` 39/39, `test268` 15/15, `test222` 52, `test510` 18, `test126`
+  29, `test127` 22, `test245` 51, `test296` 17; und die Läufe, deren
+  Prüftexte in alten Kommentaren vorkamen und die bisher keiner
+  nachgefahren hatte: `test141` 27, `test183` 27, `test191` 23, `test303`
+  16, `test341` 37, `test362` 18/18, `test411` 26, `test427` 55, `test444`
+  13, `test576` 30/30, `test582` 176, `test584` 37 — alle ohne Offenes.

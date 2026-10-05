@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/bytes.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/bytes.ts — Bytes nach Base64 und zurück
  * ----------------------------------------------------------------------------

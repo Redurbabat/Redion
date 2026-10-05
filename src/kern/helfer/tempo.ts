@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/tempo.ts (npm run bauen:ts). */
 /* ============================================================================
  * tempo.js — Schnell bleiben, auch bei vielen Zeilen
  * ----------------------------------------------------------------------------

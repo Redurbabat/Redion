@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/jobs/zeitplan.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/jobs/zeitplan.ts — wann ein Auftrag laufen DARF
  * ----------------------------------------------------------------------------

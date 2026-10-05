@@ -1,50 +1,5 @@
 "use strict";
-/* ============================================================================
- * bereiche/bloecke/arten/gedankenkarte.ts — die Gedankenkarte (Mindmap)
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/bloecke/arten/gedankenkarte.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/bereiche/bloecke/arten/gedankenkarte.js`. Wer das .js
- * bearbeitet, verliert die Änderung beim nächsten Bauen; `test105` meldet es
- * vorher.
- * ----------------------------------------------------------------------------
- * Ein zentrales Thema in der Mitte, Äste nach links und rechts, Text direkt am
- * Knoten — das, wofür man sonst XMind öffnet. Ohne Konto, ohne Wolke, ohne
- * Nachladen: die Karte ist ein gewöhnlicher Block und reist damit in jeder
- * `.redion`-Sicherung mit, ohne dass Sicherung oder Abgleich etwas davon
- * wissen müssen (§9).
- *
- * ZWEI ENTSCHEIDUNGEN, DIE DEN REST ERKLÄREN
- *
- * 1. DIE KNOTEN SIND HTML, NUR DIE LINIEN SIND SVG.
- *
- *    Der nächstliegende Weg wäre ein einziges <svg> mit <text> darin. Dann
- *    aber muss die Breite eines Knotens GESCHÄTZT werden — SVG bricht keinen
- *    Text um, und `getComputedTextLength` gibt es erst, wenn das Element
- *    schon hängt. Genau diese Schätzung steht seit L173 als offene Lücke in
- *    der PDF-Fläche, und sie war dort schon einmal um 18 % daneben.
- *
- *    Hier misst der Browser: jeder Knoten ist ein <div> mit `max-width` und
- *    Umbruch, wird eingehängt, und erst DANACH wird gerechnet. `offsetWidth`
- *    und `offsetHeight` sind die Wahrheit, keine Formel. Der Preis ist ein
- *    zweiter Durchgang beim Zeichnen; er kostet gemessen weniger als eine
- *    Millisekunde bei 60 Knoten und ist jede Schätzung wert.
- *
- * 2. DAS SCHREIBFELD IST EIN `contenteditable`-DIV, KEIN `<textarea>`.
- *
- *    Dasselbe wie in E597/E598 bei der freien Textmarke, aus demselben Grund
- *    und mit einer Falle weniger: `bausteine.css` setzt unter 760 px
- *    `input, textarea, select { font-size:16px !important }`, damit iOS beim
- *    Tippen nicht hineinzoomt. Ein `<textarea>` in einem Knoten würde am
- *    Telefon also plötzlich 16 px gross — und der Knoten spränge beim
- *    Antippen auf eine andere Breite als die, die er eben noch hatte. Ein
- *    Div ist von dieser Regel nicht betroffen; nachgesehen, nicht vermutet.
- *
- * ALLES GEHT ÜBER `aendere`. Wie beim Schaltplan (Planflaeche): eine einzige
- * Funktion schreibt in den Block, zeichnet neu und legt den Schritt auf den
- * Rückgängig-Stapel. Wer daneben an `karte.knoten` schraubt, verliert das
- * Rückgängig und merkt es erst, wenn jemand es braucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/gedankenkarte.ts (npm run bauen:ts). */
 const Gedankenkarte = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;')
@@ -58,32 +13,11 @@ const Gedankenkarte = (() => {
         Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));
         return e;
     };
-    /* DIE FARBE BRAUCHT EINEN NAMEN (§38: keine Information nur über Farbe).
-       Dieselbe Begründung wie im Whiteboard — der Farbwähler liest den Namen
-       vor, und wer die Farben nicht unterscheiden kann, hört sie. */
     const PALETTE = [
         ['#d9534f', 'Rot'], ['#e08a2e', 'Orange'], ['#c9a227', 'Gelb'],
         ['#4a9d5f', 'Grün'], ['#2f8ab5', 'Blau'], ['#7a5cc5', 'Violett'],
         ['#c2549b', 'Rosa'], ['#3fa3a0', 'Türkis'],
     ];
-    /* Die Farbe an Stelle i — mit demselben Helfer und aus demselben Grund wie
-       `farbeVon` im Whiteboard (E414): `PALETTE[i]` ist ein PAAR, und als
-       Zeichenkette ergibt das „#d9534f,Rot". SVG malt dann schwarz. */
-    /* ══ DIE FORMEN (E628) ══════════════════════════════════════════════════
-       Redur: „es sollte so verschiedene Formen haben". Sechs, nicht zwanzig —
-       eine Form muss auf dreissig Pixel Höhe noch als DIESE Form erkennbar
-       sein, und ein Achteck ist bei der Grösse ein Kreis mit Ecken.
-  
-       Kennung und Name — KEIN Zeichen. Zuerst standen hier sechs: ▢ ▭ ▰ ⬭ ◇ ⬡.
-       Auf dem Bild vom 19. September war ▰ (U+25B0) ein schwarzer Klecks und
-       sagte alles Mögliche, nur nicht „Pille" — dieselbe Sorte Fund wie der
-       Stift, der wie eine Büroklammer aussah (§55.1). Jeder Knopf zeigt
-       stattdessen die Form SELBST, aus demselben Stil wie der Knoten; der
-       Name steht im `aria-label` und im Tooltip (§38).
-  
-       Der Wert `rund` steht nie in den Daten: er ist, was ein Knoten OHNE
-       Feld ist, und genau so bleibt jede schon gespeicherte Karte
-       unverändert (§9). */
     const FORMEN = [
         ['rund', 'Abgerundet'],
         ['kasten', 'Rechteck'],
@@ -93,8 +27,6 @@ const Gedankenkarte = (() => {
         ['sechseck', 'Sechseck'],
     ];
     const farbeVon = (i) => PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#2f8ab5';
-    /* DIE ASTFARBE AUF HELLEM GRUND (E705): gespeichert bleibt sie (§9);
-       daneben derselbe Ton mit 4,6 : 1 für das helle Thema, oder `null`. */
     const astHell = (farbe) => {
         if (typeof Farben === 'undefined' || !Farben.parse(farbe))
             return null;
@@ -104,11 +36,7 @@ const Gedankenkarte = (() => {
     const uid = () => (typeof Ids !== 'undefined' && Ids.short)
         ? 'gk' + Ids.short()
         : 'gk' + Math.floor(performance.now() * 1000).toString(36);
-    /* --------------------------------------------------------------------------
-     * DAS MODELL
-     * ------------------------------------------------------------------------*/
     const zahl = (wert, ersatz) => typeof wert === 'number' && Number.isFinite(wert) ? wert : ersatz;
-    /** Eine frische Karte mit einem einzigen Knoten. */
     const neueKarte = (titel = 'Zentrales Thema') => ({
         knoten: [{ id: 'w', text: titel, eltern: null }],
         verbindungen: [],
@@ -166,17 +94,6 @@ const Gedankenkarte = (() => {
             ],
         },
     ];
-    /**
-     * Aus einer Vorlage eine Karte bauen.
-     *
-     * Die Äste wechseln die Seite (rechts, links, rechts …) und bekommen der
-     * Reihe nach eine Farbe. Beides ist dasselbe, was ein Mensch von Hand täte,
-     * und beides ist keine Datenfrage: `seite` und `farbe` stehen schon im
-     * Modell, es kommt kein neues Feld dazu (§9).
-     *
-     * Die Wurzel heisst `'w'` wie bei `neueKarte` — aus demselben Grund: eine
-     * gewürfelte Wurzelkennung überlebt kein Neuzeichnen.
-     */
     const vorlageKarte = (v) => {
         const knoten = [{ id: 'w', text: v.wurzel, eltern: null }];
         v.aeste.forEach((reihe, i) => {
@@ -193,19 +110,6 @@ const Gedankenkarte = (() => {
         });
         return { knoten, verbindungen: [], aufbau: 'karte', sicht: { x: 0, y: 0, z: 1 } };
     };
-    /**
-     * Die Karte aus einem Block lesen — und dabei gutmütig sein.
-     *
-     * Ein Block aus einer fremden oder älteren Fassung kann alles Mögliche in
-     * `karte` haben. Statt abzustürzen wird geprüft und ergänzt: was kein
-     * Knoten ist, fliegt raus; wer keinen Text hat, bekommt einen leeren; wer
-     * keine Kennung hat, bekommt eine. Kaputte Daten sollen abgefangen werden,
-     * nicht still wirken (§9).
-     *
-     * WICHTIG: Die Wurzelkennung der Standardkarte ist fest `'w'` und nicht
-     * gewürfelt. Sonst bekäme derselbe Block bei jedem Zeichnen eine andere
-     * Kennung, und die Auswahl überlebte kein Neuzeichnen.
-     */
     const leseKarte = (block) => {
         const roh = block && typeof block.karte === 'object' && block.karte ? block.karte : null;
         if (!roh || !Array.isArray(roh.knoten) || !roh.knoten.length)
@@ -230,30 +134,17 @@ const Gedankenkarte = (() => {
                 eintrag.farbe = k.farbe;
             if (k.zu === true)
                 eintrag.zu = true;
-            /* EINE UNBEKANNTE FORM BLEIBT STEHEN (§18). Hier stand einmal
-               `FORMEN.some(...)` — damit hätte eine Karte aus einer NEUEREN
-               Fassung ihre Sternform beim ersten Öffnen verloren, still und
-               endgültig. Geprüft wird jetzt nur die Gestalt des Wertes, nicht
-               seine Bekanntheit: Kleinbuchstaben, Ziffern, Bindestrich, höchstens
-               24 Zeichen. Was der Stil nicht kennt, sieht rund aus — und ist beim
-               nächsten Sichern noch da. */
             if (typeof k.form === 'string' && /^[a-z][a-z0-9-]{0,23}$/.test(k.form))
                 eintrag.form = k.form;
             knoten.push(eintrag);
         });
         if (!knoten.length)
             return neueKarte(block?.text || undefined);
-        /* Ohne Wurzel wäre die Karte unzeichenbar — der erste Knoten wird eine. */
         if (!knoten.some(k => !k.eltern)) {
             const erster = knoten[0];
             if (erster)
                 erster.eltern = null;
         }
-        /* DIE VERBINDUNGEN, UND ZWAR NUR DIE, DIE BEIDE ENDEN HABEN (E628).
-           Eine Verbindung zu einem gelöschten Knoten ist kein Fehler im Sinne
-           von „kaputt", sondern der Normalfall nach einem gelöschten Ast — sie
-           fällt still weg, statt eine Linie ins Nichts zu zeichnen (§9: kaputte
-           Daten abfangen, nicht still wirken lassen). */
         const da = new Set(knoten.map(k => k.id));
         const verbindungen = [];
         const schonV = new Set();
@@ -265,8 +156,6 @@ const Gedankenkarte = (() => {
                 const zu = typeof v.zu === 'string' ? v.zu : '';
                 if (!da.has(von) || !da.has(zu) || von === zu)
                     return;
-                /* Zweimal dieselbe Verbindung ist eine Linie auf einer Linie — man
-                   sieht sie nicht und kann nur eine davon löschen. */
                 const paar = von < zu ? von + '|' + zu : zu + '|' + von;
                 if (schonV.has(paar))
                     return;
@@ -289,21 +178,6 @@ const Gedankenkarte = (() => {
             },
         };
     };
-    /**
-     * Der Baum hinter der flachen Liste — und die Stelle, an der ein kaputter
-     * Bestand aufgefangen wird.
-     *
-     * Zwei Sorten Schaden sind denkbar und beide kommen aus dem echten Leben:
-     * ein Knoten zeigt auf einen Elternteil, den es nicht (mehr) gibt, und ein
-     * Knoten hängt über Umwege an sich selbst. Der erste Fall entsteht beim
-     * Zusammenführen zweier Geräte, der zweite beim Verschieben eines Astes in
-     * sich hinein.
-     *
-     * Beide enden hier gleich: der Knoten hängt sich an die Wurzel. Er ist
-     * dann vielleicht am falschen Platz — aber er ist SICHTBAR, und sein Text
-     * ist da. Ein Knoten, der wegen eines kaputten Zeigers gar nicht gezeichnet
-     * wird, sieht aus wie gelöscht (§51).
-     */
     const baum = (karte) => {
         const kinder = {};
         karte.knoten.forEach(k => { kinder[k.id] = []; });
@@ -311,7 +185,6 @@ const Gedankenkarte = (() => {
         if (!wurzel)
             return { kinder, wurzel: null };
         const nach = new Map(karte.knoten.map(k => [k.id, k]));
-        /** Führt der Weg nach oben wirklich zur Wurzel, ohne Ring? */
         const traegt = (k) => {
             const weg = new Set([k.id]);
             let p = k.eltern;
@@ -334,27 +207,10 @@ const Gedankenkarte = (() => {
         });
         return { kinder, wurzel: wurzel.id };
     };
-    /* --------------------------------------------------------------------------
-     * DER AUFBAU — reines Rechnen, ohne DOM
-     *
-     * Die Funktion bekommt die gemessenen Grössen herein und gibt Orte heraus.
-     * Genau deshalb kann ein Prüflauf sie rechnen lassen, ohne je einen Zeiger
-     * zu bewegen — dieselbe Trennung wie zwischen `schaltplan` und
-     * `planflaeche`.
-     * ------------------------------------------------------------------------*/
-    /* DIE UNTERGRENZE FÜR DEN ERSTEN BLICK — und warum sie gemessen ist.
-       Ohne sie passt die App die Karte beim Öffnen IMMER ganz ein. Auf dem
-       Bild vom 16. September am iPhone 13 Pro Max hiess das: 33 %. Ein Knoten
-       mit 14 px Schrift stand dort mit 4,6 px am Bildschirm — sichtbar, aber
-       nicht lesbar, und lesbar ist der Punkt einer Gedankenkarte.
-       10 px sind die Grenze, unter der man aufhört zu lesen und anfängt zu
-       raten. 10 / 13,5 ergibt 0,74; gerundet 0,72, weil die Schrift am Telefon
-       14 px ist und dort schon 0,72 reichen. Wer wirklich alles sehen will,
-       drückt ⤢ — der Knopf kennt diese Grenze nicht. */
     const LESBAR = .72;
-    const LUECKE_X = 54; /* Abstand zwischen zwei Ebenen */
-    const LUECKE_Y = 14; /* Abstand zwischen Geschwistern */
-    const RAND = 28; /* Luft um die ganze Karte */
+    const LUECKE_X = 54;
+    const LUECKE_Y = 14;
+    const RAND = 28;
     const aufbauen = (karte, masse) => {
         const { kinder, wurzel } = baum(karte);
         const orte = {};
@@ -370,7 +226,7 @@ const Gedankenkarte = (() => {
             const schon = hMerk[id];
             if (schon !== undefined)
                 return schon;
-            hMerk[id] = mass(id).h; /* Ringschutz: erst setzen, dann rechnen */
+            hMerk[id] = mass(id).h;
             const ks = sichtbar(id);
             let wert = mass(id).h;
             if (ks.length) {
@@ -380,10 +236,6 @@ const Gedankenkarte = (() => {
             hMerk[id] = wert;
             return wert;
         };
-        /* Welche Äste gehen nach rechts, welche nach links? Wer eine eigene Seite
-           gespeichert hat, behält sie — sonst wechseln sie sich ab. Das hält die
-           Karte beim Wachsen von selbst im Gleichgewicht, statt sie nach einer
-           Seite kippen zu lassen. */
         const ebene1 = sichtbar(wurzel);
         const rechts = [];
         const links = [];
@@ -392,16 +244,12 @@ const Gedankenkarte = (() => {
             const seite = k?.seite ?? (i % 2 === 0 ? 'rechts' : 'links');
             (seite === 'links' ? links : rechts).push(id);
         });
-        /* Die Farbe: jeder Ast der ersten Ebene bekommt eine, und alles darunter
-           erbt sie. Eine eigene Farbe am Knoten schlägt das Erbe. */
         const faerben = (id, farbe) => {
             farben[id] = eigen.get(id) || farbe;
             (kinder[id] ?? []).forEach(k => faerben(k, farben[id]));
         };
         farben[wurzel] = eigen.get(wurzel) || 'var(--accent)';
         ebene1.forEach((id, i) => faerben(id, farbeVon(i)));
-        /* Eingeklappte Äste bekommen trotzdem eine Farbe — sie werden zwar nicht
-           gezeichnet, aber ihr Zähler steht am Elternknoten. */
         karte.knoten.forEach(k => { if (!farben[k.id])
             farben[k.id] = eigen.get(k.id) || 'var(--text-dim)'; });
         const legen = (id, kante, mitteY, richtung) => {
@@ -452,47 +300,21 @@ const Gedankenkarte = (() => {
             hoehe: Math.round(maxY - minY + RAND * 2),
         };
     };
-    /* --------------------------------------------------------------------------
-     * DAS BILD
-     * ------------------------------------------------------------------------*/
     const zeichne = (block) => {
         let karte = leseKarte(block);
         let gewaehlt = karte.knoten.find(k => !k.eltern)?.id ?? null;
         let schreibt = null;
-        /* Was gerade gewählt ist, ist ENTWEDER ein Knoten ODER eine Verbindung —
-           nie beides. Sonst löschte die Entf-Taste zwei Dinge auf einmal, und
-           man sähe nur eines davon verschwinden. */
         let gewaehlteVerb = null;
         let letzterAufbau = null;
         let letzteMasse = {};
         const hoehe = Math.max(220, zahl(block.hoehe, 420));
-        /* HAT DER NUTZER JE EINE SICHT GEWÄHLT? Wenn nicht, wird beim ersten Bild
-           eingepasst — sonst begänne jede Karte oben links, und auf dem Bild vom
-           16. September lag die halbe Karte ausserhalb des Kastens; am Telefon
-           war nicht einmal das zentrale Thema zu sehen.
-           Eingepasst wird OHNE zu speichern: eine Karte, die sich beim Öffnen von
-           selbst zurechtrückt, ist angenehmer als eine, die beim blossen Ansehen
-           den Block ändert. Wer selbst schiebt oder zoomt, speichert — ab dann
-           gilt seine Sicht. */
         let mussEinpassen = !(block && block.karte && typeof block.karte.sicht === 'object'
             && block.karte.sicht);
         const w = document.createElement('div');
         w.className = 'gk';
-        /* --- Leiste ------------------------------------------------------------
-           DIE KNÖPFE SIND NICHT DIE BEQUEME FASSUNG DER TASTATUR (§37).
-           Am Rechner legt Tab ein Kind an und Enter ein Geschwister — am Telefon
-           gibt es beide Tasten nicht. Ohne diese Leiste wäre die Gedankenkarte
-           dort eine Karte zum Ansehen, und §37 sagt: kein Desktop-only für
-           Kernfunktionen. Deshalb kann jeder Weg hier auch mit dem Finger
-           gegangen werden. */
         const LEISTE = [
             ['kind', '＋', 'Unterthema anlegen (Tab)'],
             ['neben', '⏎', 'Thema daneben anlegen (Enter)'],
-            /* `T` UND NICHT `✎` (angesehen, nicht vermutet). Der Stift U+270E wird
-               von der Emoji-Schrift als schräg liegender Stift gezeichnet, und auf
-               dem Bild vom 16. September sah er aus wie eine BÜROKLAMMER — dieselbe
-               Sorte Fund wie die Ausrichtungsknöpfe, die wie Klammern aussahen
-               (§55.1). Ein Buchstabe kann nicht falsch gelesen werden. */
             ['text', 'T', 'Umbenennen (F2)'],
             ['klapp', '⊟', 'Ast auf- oder zuklappen (Leertaste)'],
             ['weg', '🗑', 'Ast löschen (Entf)'],
@@ -501,11 +323,6 @@ const Gedankenkarte = (() => {
             '<div class="gk-leiste">' +
                 LEISTE.map(([id, ico, titel]) => `<button data-a="${id}" title="${esc(titel)}" aria-label="${esc(titel)}">${ico}</button>`).join('') +
                 '<span class="gk-trenn"></span>' +
-                /* Die acht Farben und das ✕ sind EINE Gruppe. Am Telefon bricht die
-                   Leiste um, und auf dem Bild vom 16. September stand das ✕ allein am
-                   Anfang der zweiten Zeile — weit weg von den Farben, die es aufhebt.
-                   Dieselbe Lehre wie bei `.wb-zoom`: ein Regler in zwei Zeilen ist
-                   keiner mehr. */
                 '<span class="gk-farben">' +
                 PALETTE.map(([c, n]) => `<button class="gk-farbe" data-c="${c}" style="background:${c}" ` +
                     `title="Ast einfärben: ${n}" aria-label="Ast einfärben: ${n}"></button>`).join('') +
@@ -513,25 +330,14 @@ const Gedankenkarte = (() => {
                 `aria-label="Eigene Farbe entfernen">✕</button>` +
                 '</span>' +
                 '<span class="gk-trenn"></span>' +
-                /* ══ DIE FORMEN (E628) ═══════════════════════════════════════════
-                   Eine Gruppe wie die Farben, und aus demselben Grund beieinander:
-                   am Telefon bricht die Leiste um, und eine Form allein am
-                   Zeilenanfang gehört sichtbar zu nichts mehr. */
                 '<span class="gk-formen">' +
                 FORMEN.map(([id, name]) => `<button class="gk-form" data-f="${id}" title="Form: ${esc(name)}" ` +
                     `aria-label="Form: ${esc(name)}"><i></i></button>`).join('') +
                 '</span>' +
                 '<span class="gk-trenn"></span>' +
-                /* ══ VORLAGEN (E628) ══════════════════════════════════════════════
-                   „fertige Vorlagen usw." — sechs Karten, die man kennt, statt
-                   eines leeren Blatts. Der Knopf öffnet eine Liste; was sie tut,
-                   steht dort, und sie fragt nach, wenn die Karte nicht leer ist. */
                 '<button data-a="vorlage" title="Fertige Vorlage einsetzen" ' +
                 'aria-label="Fertige Vorlage einsetzen" aria-haspopup="menu">▤</button>' +
                 '<span class="gk-trenn"></span>' +
-                /* Die vier Zoomknöpfe bleiben beieinander — am Telefon bricht die
-                   Leiste sonst zwischen „−" und „＋" um, und ein Regler in zwei
-                   Zeilen ist keiner mehr (dieselbe Lehre wie im Whiteboard). */
                 '<span class="gk-zoom">' +
                 '<button data-a="kleiner" title="Verkleinern" aria-label="Verkleinern">−</button>' +
                 '<b class="gk-massstab" aria-live="polite">100 %</b>' +
@@ -558,10 +364,7 @@ const Gedankenkarte = (() => {
         griff.className = 'gk-griff';
         griff.title = 'Höhe ziehen';
         w.appendChild(griff);
-        /* --- Rückgängig ----------------------------------------------------- */
         const SCHRITTE = 40;
-        /* Der Stapel wohnt im Kern (E687, `GfxHistory`) — Zeile für Zeile war er
-           hier derselbe wie im Whiteboard. */
         const verlauf = GfxHistory.erstelle(SCHRITTE);
         const abbild = () => JSON.stringify(karte);
         const standZeigen = () => {
@@ -576,7 +379,6 @@ const Gedankenkarte = (() => {
         const sichern = () => {
             Store.updateBlock(block.id, { karte: JSON.parse(JSON.stringify(karte)) });
         };
-        /** Der einzige Weg, die Karte zu ändern. */
         const aendere = (tun) => {
             merken();
             tun();
@@ -592,10 +394,8 @@ const Gedankenkarte = (() => {
             male();
             standZeigen();
         };
-        /* --- Helfer am Modell ------------------------------------------------ */
         const knotenVon = (id) => id ? (karte.knoten.find(k => k.id === id) ?? null) : null;
         const kinderVon = (id) => letzterAufbau?.kinder[id] ?? [];
-        /** Der Ast unter `id`, samt `id` selbst. */
         const ast = (id) => {
             const raus = [];
             const stapel = [id];
@@ -610,11 +410,6 @@ const Gedankenkarte = (() => {
             }
             return raus;
         };
-        /* --- Messen und Malen ------------------------------------------------ */
-        /**
-         * Ein Knoten als DOM-Element. Noch ohne Ort — der kommt erst, wenn
-         * gemessen wurde.
-         */
         const knotenEl = (k, ebene, kinderZahl) => {
             const el = document.createElement('div');
             el.className = 'gk-kn' + (k.eltern ? '' : ' gk-wurzel') + (k.id === gewaehlt ? ' on' : '');
@@ -626,8 +421,6 @@ const Gedankenkarte = (() => {
                 el.setAttribute('aria-expanded', k.zu ? 'false' : 'true');
             const txt = document.createElement('span');
             txt.className = 'gk-txt';
-            /* `textContent`, nicht `innerHTML` — der Text kommt aus den Daten des
-               Nutzers und darf nie als Auszeichnung gelesen werden (§19). */
             txt.textContent = k.text || '';
             if (!k.text)
                 txt.classList.add('gk-leer');
@@ -640,39 +433,12 @@ const Gedankenkarte = (() => {
                     : kinderZahl + ' verborgene Unterthemen';
                 el.appendChild(zahlEl);
             }
-            /* Die Form steht am Knoten, nicht im Stil einer Klasse je Form: so
-               braucht `bausteine`… — hier `werkzeuge.css` — genau einen Wähler je
-               Form, und ein unbekannter Wert (aus einer neueren Fassung) fällt
-               still auf die runde Grundform zurück, statt den Knoten zu
-               verstümmeln (§18: unbekannte Werte nicht löschen). */
             if (k.form && k.form !== 'rund')
                 el.dataset.form = k.form;
-            /* ══ DIE VIER GRIFFE (E628) ═══════════════════════════════════════
-               Nur am GEWÄHLTEN Knoten. An jedem Knoten wären es bei vierzig
-               Themen hundertsechzig Knöpfe — und vier Punkte an jedem Kasten
-               sehen aus wie ein Raster, nicht wie ein Angebot.
-      
-               Jeder Griff kann zweierlei, und das ist Absicht:
-                 tippen  → ein neues Thema in dieser Richtung
-                 ziehen  → eine freie Verbindung zu dem Knoten, auf dem man
-                           loslässt
-               Dieselbe Doppelung wie beim Platz-Griff der Zeichenleiste (E620):
-               der kurze Weg bleibt ein Tipp, der lange wird ein Zug. */
             if (k.id === gewaehlt)
                 griffeBauen(el);
             return el;
         };
-        /**
-         * Die vier Griffe an EINEN Knoten hängen.
-         *
-         * Eigener Helfer, weil zwei Wege hierher führen und beide gebraucht
-         * werden: das Neuzeichnen (`knotenEl`) und das blosse Wählen (`waehle`).
-         * Der zweite zeichnet die Karte NICHT neu — er setzt nur die Marke `on`
-         * um. Ohne diesen Helfer erschienen die Griffe deshalb erst beim
-         * nächsten Neuzeichnen, also nach der nächsten Änderung: angeklickt,
-         * und nichts passiert. Gemessen im ersten Lauf von `test538`: null
-         * Griffe am gewählten Knoten statt vier.
-         */
         const griffeBauen = (el) => {
             const RICHTUNGEN = [
                 ['oben', 'darüber'],
@@ -690,7 +456,6 @@ const Gedankenkarte = (() => {
                 el.appendChild(g);
             });
         };
-        /** Eine Verbindung von Elternteil zu Kind — ein weicher Bogen. */
         const bogen = (von, vonM, zu, zuM, farbe, dick) => {
             const rechtsHerum = zu.x + zuM.w / 2 >= von.x + vonM.w / 2;
             const px = rechtsHerum ? von.x + vonM.w : von.x;
@@ -703,7 +468,6 @@ const Gedankenkarte = (() => {
                     `${(cx - dx).toFixed(1)} ${cy.toFixed(1)}, ${cx.toFixed(1)} ${cy.toFixed(1)}`,
                 fill: 'none', stroke: farbe, 'stroke-width': dick, 'stroke-linecap': 'round',
             });
-            /* Im Hellen dunklere Tinte (E705, grund.css). */
             const hell = astHell(farbe);
             if (hell) {
                 ast.setAttribute('data-tinte', 'strich');
@@ -711,24 +475,6 @@ const Gedankenkarte = (() => {
             }
             return ast;
         };
-        /* ══ EINE FREIE VERBINDUNG ZEICHNEN (E628) ═══════════════════════════
-           Sie darf NICHT aussehen wie ein Ast. Ein Ast sagt „gehört dazu", eine
-           Verbindung sagt „hat damit zu tun" — zwei Auskünfte, also zwei
-           Gestalten: gestrichelt, dünner, in der gedämpften Textfarbe, und mit
-           einer Spitze am Ziel.
-    
-           Sie hängt sich an die NÄCHSTEN Kanten der beiden Kästen, nicht an
-           ihre Mitten; sonst liefe die Linie quer durch den eigenen Knoten und
-           käme auf der anderen Seite wieder heraus.
-    
-           UND SIE MACHT EINEN BOGEN ZUR SEITE — das ist keine Verzierung.
-           Zuerst lief sie gerade: zwei Äste links und rechts der Wurzel auf
-           gleicher Höhe ergaben eine waagerechte Linie MITTEN DURCH die Wurzel.
-           Gemessen im ersten Lauf von `test538`: der Kasten der Linie war
-           181 × 0 px, sie lag komplett hinter dem Wurzelknoten, und ein Klick
-           darauf traf die Wurzel statt die Verbindung. Der Bogen weicht
-           senkrecht zur Verbindung aus, und zwar WEG von der Mitte der Karte —
-           dort steht das meiste im Weg. */
         const verbBogen = (a, aM, b, bM, mitte, id, an) => {
             const amx = a.x + aM.w / 2, amy = a.y + aM.h / 2;
             const bmx = b.x + bM.w / 2, bmy = b.y + bM.h / 2;
@@ -741,9 +487,6 @@ const Gedankenkarte = (() => {
                 : { x: bmx, y: bmy >= amy ? b.y : b.y + bM.h };
             const sx = p2.x - p1.x, sy = p2.y - p1.y;
             const laenge = Math.hypot(sx, sy) || 1;
-            /* Die Senkrechte auf der Verbindung — und die Richtung, in die sie
-               zeigen soll: vom Mittelpunkt der Karte fort. Liegt die Verbindung
-               genau auf der Mitte (der Fall oben), gilt „nach oben". */
             let nx = -sy / laenge, ny = sx / laenge;
             const mx = (p1.x + p2.x) / 2 - mitte.x, my = (p1.y + p2.y) / 2 - mitte.y;
             const weg = nx * mx + ny * my;
@@ -757,9 +500,6 @@ const Gedankenkarte = (() => {
                 + `${(p2.x - sx / 3 + nx * hoch).toFixed(1)} ${(p2.y - sy / 3 + ny * hoch).toFixed(1)}, `
                 + `${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
             const g = sv('g', { class: 'gk-verb' + (an ? ' on' : ''), 'data-v': id });
-            /* ZWEI PFADE ÜBEREINANDER. Der untere ist breit und unsichtbar — er
-               ist die Trefffläche. Eine zwei Pixel dünne Linie mit der Maus zu
-               treffen ist Glückssache, mit dem Finger unmöglich (§37). */
             g.appendChild(sv('path', { d, class: 'gk-verb-fang', fill: 'none' }));
             g.appendChild(sv('path', {
                 d, class: 'gk-verb-linie', fill: 'none',
@@ -774,19 +514,13 @@ const Gedankenkarte = (() => {
             if (m)
                 m.textContent = Math.round(karte.sicht.z * 100) + ' %';
         };
-        /**
-         * Zeichnen in zwei Durchgängen: erst einhängen und messen, dann rechnen
-         * und setzen. Siehe Kopf der Datei, Punkt 1.
-         */
         const male = () => {
             if (schreibt)
-                return; /* wer gerade tippt, verliert sonst den Zeiger */
+                return;
             welt.querySelectorAll('.gk-kn').forEach(el => el.remove());
             const { kinder, wurzel } = baum(karte);
             if (!wurzel)
                 return;
-            /* Ebenen für `aria-level` — eine Karte ist für ein Vorleseprogramm ein
-               Baum, und ein Baum ohne Ebenen ist eine Liste. */
             const ebenen = { [wurzel]: 1 };
             const reihe = [wurzel];
             while (reihe.length) {
@@ -810,19 +544,8 @@ const Gedankenkarte = (() => {
                 els[k.id] = el;
                 welt.appendChild(el);
             });
-            /* Erst JETZT messen. */
             const masse = {};
             Object.entries(els).forEach(([id, el]) => { masse[id] = { w: el.offsetWidth, h: el.offsetHeight }; });
-            /* DIE KARTE DARF NICHT SPRINGEN, WENN SIE WÄCHST.
-               `aufbauen` schiebt das Ergebnis so, dass die linke obere Ecke bei
-               `RAND` liegt — sonst hätte die Welt negative Koordinaten und das SVG
-               müsste sie tragen. Die Folge: wächst die Karte nach LINKS, wandert
-               in Weltkoordinaten alles nach rechts, und der Ausschnitt zeigt
-               plötzlich etwas anderes. Beim Anlegen eines Unterthemas auf der
-               linken Seite hüpfte damit die ganze Karte weg.
-               Deshalb wird der Ausschnitt um genau denselben Betrag mitgezogen,
-               um den die Wurzel gewandert ist. Für das Auge bleibt dann alles
-               stehen, egal auf welcher Seite etwas dazukommt. */
             const wurzelVorher = letzterAufbau?.orte[wurzel];
             letzteMasse = masse;
             const plan = aufbauen(karte, masse);
@@ -868,9 +591,6 @@ const Gedankenkarte = (() => {
                     linien.appendChild(bogen(o, m, ko, km, plan.farben[kid] ?? 'var(--text-dim)', dick));
                 });
             });
-            /* DIE FREIEN VERBINDUNGEN ZULETZT — sie liegen über den Ästen, denn
-               sie sind das Seltenere und sollen nicht unter einem dicken Ast der
-               ersten Ebene verschwinden. */
             if (karte.verbindungen.length) {
                 const spitze = sv('marker', {
                     id: 'gk-spitze', viewBox: '0 0 10 10', refX: '9', refY: '5',
@@ -883,9 +603,6 @@ const Gedankenkarte = (() => {
                 karte.verbindungen.forEach(v => {
                     const a = plan.orte[v.von], b = plan.orte[v.zu];
                     const aM = masse[v.von], bM = masse[v.zu];
-                    /* Ein Ende in einem zugeklappten Ast: die Linie liefe ins Leere.
-                       Sie fällt weg, bis der Ast wieder auf ist — die Verbindung
-                       selbst bleibt in den Daten stehen. */
                     if (!a || !b || !aM || !bM)
                         return;
                     linien.appendChild(verbBogen(a, aM, b, bM, { x: plan.breite / 2, y: plan.hoehe / 2 }, v.id, v.id === gewaehlteVerb));
@@ -897,9 +614,6 @@ const Gedankenkarte = (() => {
                 einpassen(1, false, LESBAR);
             }
         };
-        /* --- Schreiben -------------------------------------------------------
-           Wie in E597/E598: ein `contenteditable`-Div, kein `<textarea>`. Die
-           Begründung steht im Kopf der Datei. */
         const schreiberSchliessen = (weiter) => {
             const id = schreibt;
             if (!id)
@@ -935,8 +649,6 @@ const Gedankenkarte = (() => {
             el.classList.add('gk-schreibt');
             el.contentEditable = 'true';
             el.spellcheck = false;
-            /* Ein neu angelegtes Unterthema kann ausserhalb des Ausschnitts liegen —
-               dann tippte man in etwas, das man nicht sieht. */
             const kasten = el.closest('.gk-kn');
             if (kasten)
                 insBild(kasten);
@@ -947,7 +659,6 @@ const Gedankenkarte = (() => {
             auswahl?.removeAllRanges();
             auswahl?.addRange(bereich);
         };
-        /* --- Die Wege --------------------------------------------------------- */
         const neuesKind = (elternId) => {
             const eltern = knotenVon(elternId);
             if (!eltern)
@@ -956,10 +667,6 @@ const Gedankenkarte = (() => {
             aendere(() => {
                 if (eltern.zu)
                     delete eltern.zu;
-                /* Direkt hinter den letzten schon vorhandenen Nachfahren — sonst
-                   stünde ein neues Unterthema in der Liste vor seinen älteren
-                   Geschwistern, und die Reihenfolge am Bild wäre eine andere als
-                   die in den Daten. */
                 const kinder = kinderVon(eltern.id);
                 const letzterKind = kinder.length ? kinder[kinder.length - 1] : null;
                 const nach = letzterKind
@@ -976,7 +683,7 @@ const Gedankenkarte = (() => {
             if (!k.eltern) {
                 neuesKind(k.id);
                 return;
-            } /* die Wurzel hat keine Geschwister */
+            }
             const neu = { id: uid(), text: '', eltern: k.eltern };
             aendere(() => {
                 const nach = Math.max(...ast(k.id).map(x => karte.knoten.findIndex(n => n.id === x)));
@@ -1000,31 +707,12 @@ const Gedankenkarte = (() => {
             UI.toast(weg.size === 1 ? 'Thema gelöscht — mit ↶ zurückholen'
                 : weg.size + ' Themen gelöscht — mit ↶ zurückholen');
         };
-        /* ══ EIN NEUES THEMA IN EINER RICHTUNG (E628) ════════════════════════
-           Was ein Griff tut, hängt davon ab, was der Aufbau in dieser Richtung
-           überhaupt KANN — und das ehrlich, statt etwas zu versprechen, das
-           hinterher woanders landet:
-    
-             links / rechts   ein KIND. Die Karte wächst waagerecht: Äste gehen
-                              nach links und rechts. Bei einem Thema der ersten
-                              Ebene wird die Seite gleich festgeschrieben, sonst
-                              suchte sich `aufbauen` selbst eine aus und der
-                              Knoten spränge auf die andere Seite.
-             oben / unten     ein GESCHWISTER. Senkrecht stehen in diesem Aufbau
-                              die Geschwister; ein Kind „über" dem Elternteil
-                              gibt es nicht. `vor` sagt, ob es davor oder
-                              dahinter einsortiert wird.
-    
-           Das ist keine Ausrede, sondern die Zuordnung, die das Auge ohnehin
-           erwartet: der neue Kasten erscheint dort, wo der Griff sitzt. */
         const neuerNachbar = (id, richtung) => {
             const k = knotenVon(id);
             if (!k)
                 return;
             if (richtung === 'links' || richtung === 'rechts') {
                 const neu = { id: uid(), text: '', eltern: k.id };
-                /* Nur die erste Ebene hat eine eigene Seite — darunter erbt jeder
-                   Ast die des Zweiges, und ein `seite` täte dort nichts. */
                 if (!k.eltern)
                     neu.seite = richtung;
                 aendere(() => {
@@ -1040,10 +728,7 @@ const Gedankenkarte = (() => {
                 bearbeite(neu.id);
                 return;
             }
-            /* oben / unten */
             if (!k.eltern) {
-                /* Die Wurzel hat keine Geschwister — dort ist „darüber" so nah an
-                   „ein neues Unterthema", dass ein Tipp nicht ins Leere gehen soll. */
                 neuesKind(k.id);
                 return;
             }
@@ -1058,7 +743,6 @@ const Gedankenkarte = (() => {
             });
             bearbeite(neu.id);
         };
-        /* ══ EINE FREIE VERBINDUNG ANLEGEN UND LÖSCHEN (E628) ════════════════ */
         const verbinden = (vonId, zuId) => {
             if (vonId === zuId) {
                 UI.toast('Ein Thema mit sich selbst zu verbinden sagt nichts.');
@@ -1073,8 +757,6 @@ const Gedankenkarte = (() => {
                 UI.toast('Diese Verbindung gibt es schon.');
                 return;
             }
-            /* Eine Verbindung zwischen Elternteil und Kind wäre eine zweite Linie
-               auf einer, die schon da ist — der Ast. */
             const kEltern = knotenVon(vonId)?.eltern, zEltern = knotenVon(zuId)?.eltern;
             if (kEltern === zuId || zEltern === vonId) {
                 UI.toast('Die beiden hängen schon aneinander — das ist ihr Ast.');
@@ -1097,7 +779,6 @@ const Gedankenkarte = (() => {
             male();
             UI.toast('Verbindung gelöscht — mit ↶ zurückholen');
         };
-        /* ══ DIE FORM (E628) ═════════════════════════════════════════════════ */
         const formSetzen = (id, form) => {
             const k = knotenVon(id);
             if (!k)
@@ -1125,7 +806,6 @@ const Gedankenkarte = (() => {
             else
                 delete k.farbe; });
         };
-        /* --- Nachbarn für die Pfeiltasten ------------------------------------ */
         const nachbar = (id, richtung) => {
             const plan = letzterAufbau;
             if (!plan)
@@ -1140,9 +820,6 @@ const Gedankenkarte = (() => {
                         : o.y < mein.y;
             const naehe = ([, o]) => {
                 const dx = o.x - mein.x, dy = o.y - mein.y;
-                /* Quer zur Richtung wiegt schwerer — sonst springt „nach rechts" in
-                   einen weit entfernten Ast, nur weil er ein Pixel weiter rechts
-                   beginnt. */
                 return richtung === 'links' || richtung === 'rechts'
                     ? Math.abs(dx) + Math.abs(dy) * 3
                     : Math.abs(dy) + Math.abs(dx) * 3;
@@ -1153,8 +830,6 @@ const Gedankenkarte = (() => {
         const waehle = (id) => {
             if (!id)
                 return;
-            /* Ein Thema zu wählen hebt die gewählte Verbindung auf — sonst stünden
-               zwei Dinge markiert da und die Entf-Taste wäre nicht mehr eindeutig. */
             if (gewaehlteVerb) {
                 gewaehlteVerb = null;
                 male();
@@ -1169,7 +844,6 @@ const Gedankenkarte = (() => {
             if (el)
                 insBild(el);
         };
-        /** Holt einen Knoten ins Bild, wenn er danebenliegt. */
         const insBild = (el) => {
             const b = buehne.getBoundingClientRect();
             const k = el.getBoundingClientRect();
@@ -1188,14 +862,11 @@ const Gedankenkarte = (() => {
             karte.sicht.y += dy;
             sichtAnwenden();
         };
-        /* --- Massstab --------------------------------------------------------- */
         const zoomen = (faktor) => {
             const alt = karte.sicht.z;
             const neu = Math.min(4, Math.max(.2, alt * faktor));
             if (neu === alt)
                 return;
-            /* Um die Mitte der Bühne, nicht um die linke obere Ecke — sonst wandert
-               beim Verkleinern alles aus dem Bild. */
             const b = buehne.getBoundingClientRect();
             karte.sicht.x = (karte.sicht.x + b.width / 2) * (neu / alt) - b.width / 2;
             karte.sicht.y = (karte.sicht.y + b.height / 2) * (neu / alt) - b.height / 2;
@@ -1203,15 +874,6 @@ const Gedankenkarte = (() => {
             sichtAnwenden();
             sichern();
         };
-        /**
-         * Die ganze Karte in den Kasten holen und mittig stellen.
-         *
-         * `hoechstens` deckelt den Massstab. Der Knopf ⤢ sagt „alles ins Bild"
-         * und darf dafür auch VERGRÖSSERN — eine Karte mit drei Knoten füllt dann
-         * den Kasten. Der erste Blick beim Öffnen deckelt dagegen bei 1: eine
-         * kleine Karte auf 340 % aufgeblasen sieht nicht nach Sorgfalt aus,
-         * sondern nach einem Fehler.
-         */
         const einpassen = (hoechstens, speichern, mindestens = .2) => {
             const plan = letzterAufbau;
             if (!plan || !plan.breite || !plan.hoehe)
@@ -1225,13 +887,10 @@ const Gedankenkarte = (() => {
             const wurzelOrt = plan.wurzel ? plan.orte[plan.wurzel] : null;
             const wurzelMass = plan.wurzel ? letzteMasse[plan.wurzel] : null;
             if (passt >= mindestens || !wurzelOrt || !wurzelMass) {
-                /* Es passt — die ganze Karte mittig in den Kasten. */
                 karte.sicht.x = (plan.breite * z - breite) / 2;
                 karte.sicht.y = (plan.hoehe * z - hoch) / 2;
             }
             else {
-                /* Es passt NICHT, ohne unlesbar zu werden. Dann lieber die Mitte
-                   zeigen und den Rest erschieben lassen, als alles hineinquetschen. */
                 const mx = wurzelOrt.x + wurzelMass.w / 2;
                 const my = wurzelOrt.y + wurzelMass.h / 2;
                 karte.sicht.x = mx * z - breite / 2;
@@ -1241,15 +900,6 @@ const Gedankenkarte = (() => {
             if (speichern)
                 sichern();
         };
-        /* ══ DAS VORLAGEN-MENÜ (E628) ═══════════════════════════════════════
-           Eine Vorlage ERSETZT die Karte. Das ist der gefährlichste Knopf in
-           dieser Leiste, und deshalb hat er als einziger eine Rückfrage — aber
-           nur dann, wenn wirklich etwas auf dem Spiel steht (§9).
-    
-           „Leer" heisst hier: ein einziger Knoten, dessen Text noch der ist, den
-           eine frische Karte mitbringt, und keine Verbindung. Wer zwei Wörter
-           getippt hat, wird gefragt; wer die Karte gerade angelegt hat, nicht —
-           eine Rückfrage, die immer kommt, wird nicht mehr gelesen (§55.3). */
         const karteLeer = () => karte.knoten.length <= 1 &&
             !karte.verbindungen.length &&
             (!karte.knoten[0] || !karte.knoten[0].text.trim() ||
@@ -1293,7 +943,6 @@ const Gedankenkarte = (() => {
                     vorlageEinsetzen(v);
             });
         };
-        /* --- Ereignisse ------------------------------------------------------- */
         const elVon = (e) => e.target instanceof Element ? e.target : null;
         w.querySelector('.gk-leiste')?.addEventListener('click', e => {
             const farbKnopf = elVon(e)?.closest('.gk-farbe');
@@ -1355,11 +1004,6 @@ const Gedankenkarte = (() => {
             }
         });
         buehne.addEventListener('pointerdown', e => {
-            /* ══ EIN GRIFF KANN ZWEIERLEI (E628) ═══════════════════════════════
-               Tippen legt ein Thema an, Ziehen zieht eine Verbindung. Entschieden
-               wird am Weg: unter sechs Pixeln ist es ein Tipp. Dieselbe Schwelle
-               und derselbe Grund wie beim Platz-Griff der Zeichenleiste (E620) —
-               ein Finger wackelt immer ein wenig. */
             const griffel = elVon(e)?.closest('.gk-griffel');
             if (griffel) {
                 e.preventDefault();
@@ -1403,14 +1047,8 @@ const Gedankenkarte = (() => {
                 window.addEventListener('pointercancel', aus);
                 return;
             }
-            /* Eine Verbindung anfassen: sie wird gewählt, der Knoten nicht. */
             const verb = elVon(e)?.closest('.gk-verb');
             if (verb) {
-                /* OHNE `preventDefault` NIMMT DER BROWSER DEN FOKUS WIEDER WEG.
-                   Gemessen: nach dem Klick auf die Linie stand `document.activeElement`
-                   auf dem Körper der Seite, nicht auf der Bühne — und die Entf-Taste
-                   lief ins Leere. Ein Knoten ist ein `div` und gibt den Fokus an die
-                   Bühne weiter; ein SVG-Pfad tut das nicht. */
                 e.preventDefault();
                 const id = verb.getAttribute('data-v') || '';
                 if (schreibt)
@@ -1435,7 +1073,6 @@ const Gedankenkarte = (() => {
                 schreiberSchliessen(null);
                 return;
             }
-            /* Auf leerer Fläche: schieben. */
             const startX = e.clientX, startY = e.clientY;
             const vonX = karte.sicht.x, vonY = karte.sicht.y;
             buehne.classList.add('gk-schiebt');
@@ -1465,8 +1102,6 @@ const Gedankenkarte = (() => {
             zoomen(e.deltaY < 0 ? 1.1 : 1 / 1.1);
         }, { passive: false });
         buehne.addEventListener('keydown', e => {
-            /* Beim Schreiben gehört die Tastatur dem Text — bis auf die drei
-               Tasten, die XMind dort anders belegt. */
             if (schreibt) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -1525,8 +1160,6 @@ const Gedankenkarte = (() => {
                 case 'Backspace':
                     e.preventDefault();
                     e.stopPropagation();
-                    /* Gewählt ist ENTWEDER ein Thema ODER eine Verbindung (E628) —
-                       also löscht dieselbe Taste das eine oder das andere, nie beides. */
                     if (gewaehlteVerb)
                         verbindungWeg(gewaehlteVerb);
                     else
@@ -1548,9 +1181,6 @@ const Gedankenkarte = (() => {
                 default: return;
             }
         });
-        /* Ein Zeichen tippen, während ein Knoten gewählt ist, ersetzt seinen Text
-           — wie in XMind. Das läuft über `keypress`-artiges `beforeinput` nicht,
-           weil die Bühne selbst nicht editierbar ist; deshalb hier. */
         buehne.addEventListener('keypress', e => {
             if (schreibt || e.ctrlKey || e.metaKey || e.altKey)
                 return;
@@ -1573,8 +1203,6 @@ const Gedankenkarte = (() => {
                 auswahl?.addRange(bereich);
             }
         });
-        /* Beim Einfügen kommt reiner Text, keine Auszeichnung — sonst käme
-           fremdes HTML über die Zwischenablage in einen Knoten (§19). */
         welt.addEventListener('paste', e => {
             if (!schreibt)
                 return;
@@ -1589,13 +1217,10 @@ const Gedankenkarte = (() => {
             if (!schreibt)
                 return;
             const ziel = e.relatedTarget;
-            /* Ein Klick auf die eigene Leiste soll das Schreiben nicht beenden —
-               dieselbe Ausnahme wie bei der freien Textmarke (E599). */
             if (ziel && typeof ziel.closest === 'function' && ziel.closest('.gk-leiste'))
                 return;
             schreiberSchliessen(null);
         });
-        /* --- Höhe ziehen ------------------------------------------------------ */
         griff.addEventListener('pointerdown', e => {
             e.preventDefault();
             const startY = e.clientY;
@@ -1612,9 +1237,6 @@ const Gedankenkarte = (() => {
             window.addEventListener('pointermove', zug);
             window.addEventListener('pointerup', aus);
         });
-        /* Solange der Kasten noch nicht hängt, misst der Browser 0 — dann wäre
-           jeder Knoten 0 breit und die ganze Karte läge übereinander. Beim ersten
-           echten Anblick wird deshalb neu gezeichnet. */
         if (typeof ResizeObserver !== 'undefined') {
             let hatte = false;
             const beobachter = new ResizeObserver(() => {

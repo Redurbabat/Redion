@@ -1,35 +1,9 @@
 "use strict";
-/* ============================================================================
- * register/formeln.js — jede Formelfunktion mit Namen und Bedeutung
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/formeln.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/register/formeln.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Die Formel-Maschine kennt ihre Funktionen — als Tabelle von Namen zu Code.
- * Was sie nicht kennt, ist, was sie **bedeuten**: welche Argumente, welche
- * Gruppe, ein Beispiel, ob Notion sie auch hat.
- *
- * Genau das braucht die Oberfläche: der Formeleditor listet sie, die Hilfe
- * erklärt sie, die Vervollständigung schlägt sie vor. Bisher stand das
- * verstreut — und lief mit jeder neuen Funktion weiter auseinander.
- *
- * Hier steht die Beschreibung. Der Code bleibt in der Maschine; ein Register
- * beschreibt, es rechnet nicht.
- *
- * Der Prüflauf vergleicht beide Listen: eine Funktion ohne Beschreibung
- * findet niemand, eine Beschreibung ohne Funktion ist ein Versprechen, das
- * beim Tippen bricht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/formeln.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.formeln = (() => {
-    /* Gruppen in der Reihenfolge, in der sie im Editor stehen. */
     const GRUPPEN = ['Text', 'Zahlen', 'Datum', 'Logik', 'Listen',
         'Zeilen', 'Fremde Datenbanken', 'Personen', 'Sonstiges'];
-    /* Nur die Funktionen, die über Notion hinausgehen oder Erklärung brauchen,
-       stehen hier ausgeschrieben. Alles andere holt sich das Register aus der
-       Maschine — eine Liste, die man doppelt pflegen muss, wird nicht gepflegt. */
     const BESCHRIEBEN = [
         { name: 'random', gruppe: 'Zahlen', args: '()',
             was: 'Zufallszahl zwischen 0 und 1', notion: false,
@@ -78,29 +52,7 @@ Register.formeln = (() => {
         { name: 'boolean', gruppe: 'Logik', args: '(x)',
             was: 'Irgendetwas in wahr/falsch verwandeln', notion: false }
     ];
-    /* ==========================================================================
-     * DIE DEUTSCHEN EXCEL-NAMEN
-     * --------------------------------------------------------------------------
-     * Nachgemessen (`doku/EXCEL-IN-REDION-RECHERCHE.md`): 37 der 63 Funktionen
-     * des Excel-Startpakets liefen längst — aber keine unter ihrem deutschen
-     * Namen. Wer `SUMME(1; 2; 3)` tippte, bekam „Unbekannte Funktion".
-     *
-     * Die Namen selbst hängen in `formeln/laufzeit.js` an denselben Funktionen
-     * wie ihre englischen Geschwister. Hier stehen sie, damit die **Suche im
-     * Formeleditor** sie findet — sonst gäbe es sie und niemand entdeckte sie.
-     * Das ist derselbe Gedanke wie bei den 129 Funktionen ohne Beschreibung:
-     * eine Funktion, die niemand findet, ist fast wie nicht vorhanden.
-     *
-     * `notion: false` stimmt hier wörtlich — Notion kennt keine deutschen
-     * Funktionsnamen. Das ist einer der Punkte, an denen Redion mehr kann.
-     *
-     * MIN, MAX und ABS brauchen in `laufzeit.js` keinen Eintrag — sie heissen
-     * in beiden Sprachen gleich. Beschrieben werden sie hier trotzdem: sie
-     * standen bis dahin unbeschrieben unter „Sonstiges", und wer aus Excel
-     * kommt, sucht genau nach ihnen.
-     * ======================================================================== */
     const DEUTSCH = [
-        /* --- Zahlen ---------------------------------------------------------- */
         { name: 'SUMME', gruppe: 'Zahlen', args: '(a; b; …)', notion: false,
             was: 'Alles zusammenzählen — wie in Excel', beispiel: 'SUMME(1; 2; 3)' },
         { name: 'MIN', gruppe: 'Zahlen', args: '(a; b; …)', notion: true,
@@ -119,10 +71,6 @@ Register.formeln = (() => {
         { name: 'RUNDEN', gruppe: 'Zahlen', args: '(zahl)', notion: false,
             was: 'Runden — die Hälfte von der Null weg, wie in Excel',
             beispiel: 'RUNDEN(-2,5) → -3' },
-        /* ABRUNDEN und AUFRUNDEN runden zur Null hin und von der Null weg — wie
-           in Excel, nicht wie floor/ceil. Bei negativen Zahlen ist das ein
-           Unterschied: ABRUNDEN(-2,5) ist -2, floor(-2,5) ist -3. Wer immer nach
-           unten will, nimmt GANZZAHL. */
         { name: 'ABRUNDEN', gruppe: 'Zahlen', args: '(zahl)', notion: false,
             was: 'Zur Null hin runden', beispiel: 'ABRUNDEN(-2,5) → -2' },
         { name: 'AUFRUNDEN', gruppe: 'Zahlen', args: '(zahl)', notion: false,
@@ -138,7 +86,6 @@ Register.formeln = (() => {
             was: 'Wie viele davon sind nicht leer?' },
         { name: 'POTENZ', gruppe: 'Zahlen', args: '(zahl; hoch)', notion: false,
             was: 'Hoch rechnen', beispiel: 'POTENZ(2; 10) → 1024' },
-        /* --- Logik ----------------------------------------------------------- */
         { name: 'WENN', gruppe: 'Logik', args: '(prüfung; dann; sonst)', notion: false,
             was: 'Die Wenn-Dann-Sonst-Frage', beispiel: 'WENN(Betrag > 100; "gross"; "klein")' },
         { name: 'WENNFEHLER', gruppe: 'Logik', args: '(ausdruck; ersatz)', notion: false,
@@ -154,7 +101,6 @@ Register.formeln = (() => {
             was: 'Wahr, wenn mindestens eines wahr ist' },
         { name: 'NICHT', gruppe: 'Logik', args: '(a)', notion: false,
             was: 'Dreht wahr und falsch um' },
-        /* --- Datum ----------------------------------------------------------- */
         { name: 'HEUTE', gruppe: 'Datum', args: '()', notion: false,
             was: 'Das heutige Datum' },
         { name: 'JETZT', gruppe: 'Datum', args: '()', notion: false,
@@ -176,7 +122,6 @@ Register.formeln = (() => {
         { name: 'WOCHENTAG', gruppe: 'Datum', args: '(datum)', notion: false,
             was: 'Der Wochentag als Zahl — Sonntag ist 1, wie in Excel',
             beispiel: 'WOCHENTAG("2026-08-04") → 3 (Dienstag)' },
-        /* --- Text ------------------------------------------------------------ */
         { name: 'LÄNGE', gruppe: 'Text', args: '(text)', notion: false,
             was: 'Wie viele Zeichen?' },
         { name: 'LINKS', gruppe: 'Text', args: '(text; anzahl)', notion: false,
@@ -216,14 +161,12 @@ Register.formeln = (() => {
         { name: 'TEXTVERKETTEN', gruppe: 'Text', args: '(trenner; a; b; …)', notion: false,
             was: 'Mit einem Trenner verbinden — der Trenner steht vorn, wie in Excel',
             beispiel: 'TEXTVERKETTEN("-"; "a"; "b") → a-b' },
-        /* --- Information ----------------------------------------------------- */
         { name: 'ISTLEER', gruppe: 'Logik', args: '(wert)', notion: false,
             was: 'Ist da nichts drin?' },
         { name: 'ISTZAHL', gruppe: 'Logik', args: '(wert)', notion: false,
             was: 'Ist das wirklich eine Zahl? „42" als Text ist keine' },
         { name: 'ISTTEXT', gruppe: 'Logik', args: '(wert)', notion: false,
             was: 'Ist das Text?' },
-        /* --- Suchen und Verweisen -------------------------------------------- */
         { name: 'VERGLEICH', gruppe: 'Listen', args: '(wert; liste)', notion: false,
             was: 'An welcher Stelle steht der Wert? Ab 1 gezählt, 0 = nicht da',
             beispiel: 'VERGLEICH("Genf"; ["Bern"; "Genf"]) → 2' },
@@ -258,30 +201,7 @@ Register.formeln = (() => {
         { name: 'EINDEUTIG', gruppe: 'Listen', args: '(liste)', notion: false,
             was: 'Doppelte Werte entfernen' }
     ];
-    /* ==========================================================================
-     * DIE MASCHINE, BESCHRIEBEN
-     * --------------------------------------------------------------------------
-     * `LUECKEN.md` L9 führte das lange als Lücke: 169 Namen, die die Maschine
-     * kann und über die niemand einen Satz sagt. Gefunden wurden sie nicht
-     * beim Lesen, sondern von `abgleich()` — der Vergleich, den es hier seit
-     * jeher gibt, hat sie all die Zeit korrekt gemeldet.
-     *
-     * DER FRÜHERE GRUND, SIE WEGZULASSEN, STAND ZWEI ABSÄTZE WEITER OBEN:
-     * „eine Liste, die man doppelt pflegen muss, wird nicht gepflegt." Das
-     * stimmt — solange niemand nachsieht. `test122` sieht jetzt nach: es
-     * verlangt, dass `abgleich()` in BEIDE Richtungen leer bleibt. Eine
-     * Funktion ohne Satz macht den Lauf rot, ein Satz ohne Funktion auch.
-     * Damit ist die Doppelpflege nicht mehr eine Frage der Sorgfalt.
-     *
-     * JEDER SATZ IST AM QUELLTEXT GEMESSEN, nicht aus dem Namen geraten —
-     * und wo die Maschine etwas anderes tut, als der Name vermuten lässt,
-     * steht genau das da. `date()` gibt den Tag im Monat, nicht das Datum.
-     * `sort()` sortiert als Text, also steht 10 vor 9. `divide()` durch null
-     * ergibt 0 und keinen Fehler. Wer das nicht weiss, rechnet falsch und
-     * merkt es nicht.
-     * ========================================================================*/
     const KERN = [
-        /* --- Logik ------------------------------------------------------------ */
         { name: 'and', gruppe: 'Logik', args: '(a, b, …)', notion: true,
             was: 'Wahr, wenn alle wahr sind' },
         { name: 'or', gruppe: 'Logik', args: '(a, b, …)', notion: true,
@@ -304,7 +224,6 @@ Register.formeln = (() => {
             was: 'Wahr, wenn beide genau gleich sind' },
         { name: 'unequal', gruppe: 'Logik', args: '(a, b)', notion: true,
             was: 'Wahr, wenn beide verschieden sind' },
-        /* --- Zahlen ----------------------------------------------------------- */
         { name: 'add', gruppe: 'Zahlen', args: '(a, b)', notion: true, was: 'Addiert zwei Zahlen' },
         { name: 'subtract', gruppe: 'Zahlen', args: '(a, b)', notion: true, was: 'Zieht b von a ab' },
         { name: 'multiply', gruppe: 'Zahlen', args: '(a, b)', notion: true, was: 'Multipliziert zwei Zahlen' },
@@ -368,7 +287,6 @@ Register.formeln = (() => {
             was: 'Rundet wie Excel — die Hälfte immer von der Null weg' },
         { name: 'formatnumber', gruppe: 'Zahlen', args: '(zahl, [format])', notion: false,
             was: 'Zahl als Text, mit Tausendertrennung' },
-        /* --- Text ------------------------------------------------------------- */
         { name: 'format', gruppe: 'Text', args: '(wert)', notion: true,
             was: 'Macht aus allem Text' },
         { name: 'length', gruppe: 'Text', args: '(text oder liste)', notion: true,
@@ -440,7 +358,6 @@ Register.formeln = (() => {
             was: 'Die Stelle in der Liste, ab 1 gezählt' },
         { name: 'textformat', gruppe: 'Text', args: '(wert, format)', notion: false,
             was: 'Zahl oder Datum nach Muster als Text' },
-        /* --- Listen ------------------------------------------------------------ */
         { name: 'at', gruppe: 'Listen', args: '(liste, stelle)', notion: true,
             was: 'Der Eintrag an dieser Stelle, ab null gezählt' },
         { name: 'first', gruppe: 'Listen', args: '(liste oder text)', notion: true,
@@ -484,7 +401,6 @@ Register.formeln = (() => {
             was: 'Gibt einem Zwischenergebnis einen Namen' },
         { name: 'lets', gruppe: 'Listen', args: '(n1, w1, n2, w2, …, ausdruck)', notion: true,
             was: 'Mehrere Namen auf einmal; spätere dürfen frühere benutzen' },
-        /* --- Datum -------------------------------------------------------------- */
         { name: 'now', gruppe: 'Datum', args: '()', notion: true, was: 'Jetzt, mit Uhrzeit' },
         { name: 'today', gruppe: 'Datum', args: '()', notion: true, was: 'Heute, um null Uhr' },
         { name: 'daterange', gruppe: 'Datum', args: '(von, bis)', notion: true,
@@ -544,7 +460,6 @@ Register.formeln = (() => {
             was: 'Der Abstand zur Weltzeit in Minuten' },
         { name: 'formatdate', gruppe: 'Datum', args: '(datum, format)', notion: true,
             was: 'Datum als Text nach Muster', beispiel: 'formatdate(now(), "DD.MM.YYYY")' },
-        /* --- Zeilen und Spalten ------------------------------------------------- */
         { name: 'prop', gruppe: 'Zeilen', args: '(spalte)', notion: true,
             was: 'Der Wert dieser Spalte in dieser Zeile', beispiel: 'prop("Preis") * 1.08' },
         { name: 'runningcount', gruppe: 'Zeilen', args: '()', notion: false,
@@ -559,7 +474,6 @@ Register.formeln = (() => {
             was: 'Der Durchschnitt der ganzen Spalte' },
         { name: 'rowcount', gruppe: 'Zeilen', args: '()', notion: false,
             was: 'Wie viele Zeilen die Ansicht hat' },
-        /* --- Fremde Datenbanken -------------------------------------------------- */
         { name: 'firstwhere', gruppe: 'Fremde Datenbanken', args: '(datenbank, bedingung)', notion: false,
             was: 'Die erste Zeile, auf die es passt; current ist die Zeile' },
         { name: 'lastwhere', gruppe: 'Fremde Datenbanken', args: '(datenbank, bedingung)', notion: false,
@@ -586,7 +500,6 @@ Register.formeln = (() => {
             was: 'Sucht waagerecht' },
         { name: 'xlookup', gruppe: 'Fremde Datenbanken', args: '(suche, wo, was, [sonst])', notion: false,
             was: 'Sucht in einer Liste und gibt den Wert aus einer anderen' },
-        /* --- Information und Darstellung ----------------------------------------- */
         { name: 'isnumber', gruppe: 'Sonstiges', args: '(wert)', notion: false, was: 'Ist das eine Zahl?' },
         { name: 'istext', gruppe: 'Sonstiges', args: '(wert)', notion: false, was: 'Ist das Text?' },
         { name: 'style', gruppe: 'Sonstiges', args: '(text, …)', notion: true,
@@ -611,7 +524,6 @@ Register.formeln = (() => {
         LISTE.push(e);
         return true;
     };
-    /** Welche Namen kennt die Maschine wirklich? */
     const ausDerMaschine = () => {
         try {
             if (typeof Formula === 'undefined' || !Formula.namen)
@@ -622,10 +534,6 @@ Register.formeln = (() => {
             return [];
         }
     };
-    /**
-     * Alle Funktionen — beschriebene zuerst, dann alles Weitere aus der
-     * Maschine mit dem, was bekannt ist.
-     */
     const alle = () => {
         const beschrieben = new Set(LISTE.map(x => x.name.toLowerCase()));
         const rest = ausDerMaschine()
@@ -635,7 +543,6 @@ Register.formeln = (() => {
     };
     const eines = (name) => alle().find(x => x.name.toLowerCase() === String(name).toLowerCase()) || null;
     const inGruppe = (g) => alle().filter(x => x.gruppe === g);
-    /** Was ausserhalb von Notion geht — das ist die Liste, die zählt. */
     const ueberNotionHinaus = () => alle().filter(x => x.notion === false);
     const suche = (text) => {
         const t = String(text || '').toLowerCase();
@@ -644,10 +551,6 @@ Register.formeln = (() => {
         return alle().filter(x => x.name.toLowerCase().startsWith(t) ||
             (x.was || '').toLowerCase().includes(t));
     };
-    /**
-     * Der Vergleich, der beide Listen ehrlich hält.
-     * @returns {{ohneBeschreibung:Array, ohneFunktion:Array}}
-     */
     const abgleich = () => {
         const inMaschine = new Set(ausDerMaschine().map((n) => String(n).toLowerCase()));
         return {

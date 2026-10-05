@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/marken.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/pdf/marken.ts — eine Ink-Schicht fuer A4-Blatt und PDF-Seite
  * ----------------------------------------------------------------------------

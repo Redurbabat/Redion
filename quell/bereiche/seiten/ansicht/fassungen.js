@@ -1,37 +1,9 @@
 "use strict";
-/* ============================================================================
- * vergleich.js — Fassungen vergleichen, einzelne Blöcke zurückholen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/seiten/ansicht/fassungen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/seiten/ansicht/fassungen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notions Versionsverlauf zeigt eine alte Fassung und bietet einen einzigen
- * Knopf: alles zurück. Was sich geändert hat, muss man selbst suchen, und wer
- * nur einen Absatz zurückhaben will, hat Pech.
- *
- * Hier gibt es:
- *   · den Vergleich zweier Fassungen, Block für Block, mit Wörtern in Farbe
- *   · das Zurückholen eines einzelnen Blocks statt der ganzen Seite
- *   · den Vergleich zweier beliebiger Fassungen, nicht nur gegen jetzt
- *   · eine Zusammenfassung: so viele Blöcke neu, geändert, gelöscht
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/seiten/ansicht/fassungen.ts (npm run bauen:ts). */
 const Vergleich = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * BAUM FLACH MACHEN
-     * ------------------------------------------------------------------------
-     * Store.baum liefert die Seite mit allen Kindern. Zum Vergleichen ist eine
-     * flache Liste einfacher: jeder Block mit seiner Kennung, seiner Tiefe und
-     * seinem Text.
-     * ======================================================================*/
     const flach = (knoten, tiefe = 0, raus = []) => {
         (knoten.kinder || []).forEach((k) => {
             raus.push({ id: k.id, typ: k.type, text: k.text || '', tiefe, roh: k });
@@ -39,30 +11,13 @@ const Vergleich = (() => {
         });
         return raus;
     };
-    /** Die Seite, wie sie jetzt ist — im selben Format wie eine Fassung. */
     const jetzt = (pageId) => Store.baum(pageId);
-    /* ========================================================================
-     * WÖRTER VERGLEICHEN
-     * ------------------------------------------------------------------------
-     * Innerhalb eines geänderten Blocks soll man sehen, welche Wörter neu sind
-     * und welche weg. Das ist dieselbe Rechnung wie beim Zeilenvergleich, nur
-     * auf Wörtern.
-     * ======================================================================*/
     const woerter = (s) => String(s || '').split(/(\s+)/).filter(x => x !== '');
     const wortDiff = (alt, neu) => {
         const a = woerter(alt), b = woerter(neu);
         const n = a.length, m = b.length;
-        /* Bei sehr langen Texten würde die Tabelle zu gross — dann grob vergleichen. */
         if (n * m > 250000)
             return [['weg', String(alt ?? '')], ['neu', String(neu ?? '')]];
-        /* ----------------------------------------------------------------------
-         * Die Tabelle ist (n+1)×(m+1) gross und die Schleifen laufen nur bis n-1
-         * bzw. m-1 — jeder Zugriff hier trifft. TypeScript weiss das nicht, und
-         * `noUncheckedIndexedAccess` besteht deshalb auf einer Antwort.
-         *
-         * Statt zwölfmal `!` zu schreiben, stehen hier zwei Handgriffe: sie
-         * machen den Zugriff EINMAL sicher und benennen dabei, was gemeint ist.
-         * -------------------------------------------------------------------- */
         const t = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
         const tab = (i, j) => t[i]?.[j] ?? 0;
         const setzeTab = (i, j, w) => { const z = t[i]; if (z)
@@ -104,15 +59,11 @@ const Vergleich = (() => {
         return raus;
     };
     const wortHtml = (alt, neu) => wortDiff(alt, neu).map(([art, s]) => art === 'gleich' ? esc(s) : `<${art === 'weg' ? 'del' : 'ins'}>${esc(s)}</${art === 'weg' ? 'del' : 'ins'}>`).join('');
-    /* ========================================================================
-     * ZWEI FASSUNGEN VERGLEICHEN
-     * ======================================================================*/
     const rechne = (altBaum, neuBaum) => {
         const a = flach(altBaum), b = flach(neuBaum);
         const beiA = new Map(a.map(x => [x.id, x]));
         const beiB = new Map(b.map(x => [x.id, x]));
         const zeilen = [];
-        /* Der neuen Fassung folgen — so bleibt die Reihenfolge lesbar. */
         b.forEach(x => {
             const alt = beiA.get(x.id);
             if (!alt)
@@ -122,12 +73,9 @@ const Vergleich = (() => {
             else
                 zeilen.push({ art: 'gleich', alt, neu: x });
         });
-        /* Was nur in der alten Fassung stand, hinten anhängen — an der Stelle,
-           an der es einmal stand. */
         a.forEach((x, i) => {
             if (beiB.has(x.id))
                 return;
-            /* Möglichst dort einfügen, wo der Vorgänger steht */
             const vor = a[i - 1];
             const stelle = vor ? zeilen.findIndex(z => (z.neu ?? z.alt)?.id === vor.id) : -1;
             const eintrag = { art: 'weg', alt: x };
@@ -142,14 +90,7 @@ const Vergleich = (() => {
             titelAlt: altBaum.text || '',
             titelNeu: neuBaum.text || '' };
     };
-    /* ========================================================================
-     * EINZELNEN BLOCK ZURÜCKHOLEN
-     * ======================================================================*/
     const blockZurueck = (pageId, eintrag) => {
-        /* `alt` und `neu` sind je nach Art da oder nicht — genau deshalb stehen
-           sie mit Fragezeichen im Typ. Vorher stand in jedem Zweig ein
-           ungeprüfter Zugriff, und die Zweige gehören zusammen: `art: 'weg'`
-           ohne `alt` wäre eine Zeile, die nichts aussagt. */
         const alt = eintrag.alt, neu = eintrag.neu;
         if (eintrag.art === 'geaendert') {
             if (!alt || !Store.getBlock(alt.id))
@@ -160,9 +101,6 @@ const Vergleich = (() => {
         if (eintrag.art === 'weg') {
             if (!alt)
                 return false;
-            /* Liegt der Block nur im Papierkorb, holen wir genau ihn zurück — dann
-               behält er seine Kennung und der Vergleich ist danach wirklich leer.
-               Wurde er endgültig entfernt, setzen wir ihn neu ein. */
             const imPapierkorb = Store.cache.blocks[alt.id];
             if (imPapierkorb && imPapierkorb.alive === false) {
                 Store.restoreBlock(alt.id);
@@ -176,18 +114,12 @@ const Vergleich = (() => {
         if (eintrag.art === 'neu') {
             if (!neu)
                 return false;
-            /* Diesen Block gab es in der alten Fassung nicht — also wieder weg. */
             Store.trashBlock(neu.id);
             return true;
         }
         return false;
     };
-    /* ========================================================================
-     * FENSTER
-     * ======================================================================*/
     const dialog = async (p, vorgabeAltId) => {
-        /* Die Meldung darunter behauptet etwas über den Bestand. Sie darf nur
-           fallen, wenn wirklich nachgesehen werden konnte. */
         let liste;
         try {
             liste = await Store.versionen(p.id);
@@ -264,8 +196,6 @@ const Vergleich = (() => {
             listenFeld.innerHTML = zeigen.length
                 ? zeigen.map(z => {
                     const idx = erg.zeilen.indexOf(z);
-                    /* Jede Zeile hat mindestens eine Seite — sonst wäre sie keine.
-                       Fehlt beides, wird sie übersprungen statt zu werfen. */
                     const roh = z.neu ?? z.alt;
                     if (!roh)
                         return '';
@@ -331,10 +261,6 @@ const Vergleich = (() => {
                     'Der jetzige Stand wird vorher gesichert.'))
                     return;
                 await Store.versionSpeichern(p.id, 'vor Wiederherstellung');
-                /* ABGLEICHEN, NICHT ABREISSEN (E685, wie E684 im Verlauf): bis
-                   hierher purgte `kinderLeeren` jedes Kind und `baumEinfuegen` legte
-                   es mit frischer Kennung neu an — eine Unterseite verlor dabei
-                   Kennung und Fassungen. */
                 Store.baumAbgleichen(p.id, v.daten);
                 Store.updateBlock(p.id, { text: v.daten.text, icon: v.daten.icon });
                 o.remove();

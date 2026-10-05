@@ -1,38 +1,9 @@
 "use strict";
-/* ============================================================================
- * konten.js — Konten, Rollen und Freigaben
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/zugang/sitzung.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/zugang/sitzung.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Teil 8 der Doku beschreibt eine Berechtigungsmatrix mit fünf Rollen, Teil 13
- * die Anmeldung über einen fremden Anbieter. Beides gibt es jetzt.
- *
- * EHRLICH GESAGT: ohne eigenen Server kann diese App niemanden aussperren.
- * Alle Daten liegen im Browser desjenigen, der die App öffnet. Was hier
- * gebaut ist, wirkt sauber und vollständig — es ist aber eine Absprache,
- * kein Schloss. Sobald die Daten geteilt werden (Datei, Ordner, Server),
- * gilt wieder das, was der andere in seinem Browser tun kann.
- *
- * Was echt ist:
- *   · die Anmeldung über Google liefert einen geprüften Namen und eine
- *     geprüfte E-Mail-Adresse — das ist eine richtige Identität
- *   · die Rollen steuern die Oberfläche zuverlässig
- *   · jede Änderung wird mit dem angemeldeten Namen protokolliert
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zugang/sitzung.ts (npm run bauen:ts). */
 const Konten = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ------------------------------------------------------------------------
-     * DIE FÜNF ROLLEN   (Teil 8, Berechtigungsmatrix)
-     * ----------------------------------------------------------------------*/
     const ROLLEN = [
         { id: 'voll', name: 'Vollzugriff', icon: '👑',
             darf: ['lesen', 'kommentieren', 'bearbeiten', 'teilen', 'loeschen', 'rechte'],
@@ -50,12 +21,8 @@ const Konten = (() => {
             darf: [],
             text: 'Sieht die Seite gar nicht.' }
     ];
-    /** Eine Rolle zu ihrer Kennung — oder die erste, die es immer gibt. */
     const KEINE = { id: 'kein', name: 'Kein Zugriff', icon: '🚫', darf: [], text: 'Sieht die Seite gar nicht.' };
     const rolle = (id) => ROLLEN.find(r => r.id === id) ?? ROLLEN[0] ?? KEINE;
-    /* ------------------------------------------------------------------------
-     * KONTEN
-     * ----------------------------------------------------------------------*/
     const FARBEN = ['blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow', 'brown'];
     const alle = () => Store.getMeta('konten', []) || [];
     const speichern = (liste) => Store.setMeta('konten', liste);
@@ -64,7 +31,6 @@ const Konten = (() => {
         const gefunden = alle().find((k) => k.id === id);
         if (gefunden)
             return gefunden;
-        /* Ohne Anmeldung gilt der Name aus den Einstellungen. */
         return { id: 'lokal', name: Store.getMeta('nutzer', '') || 'Ich',
             mail: '', rolle: 'voll', farbe: 'blue', herkunft: 'lokal' };
     };
@@ -78,8 +44,6 @@ const Konten = (() => {
         }
         const k = {
             id: Store.uid().slice(0, 8), name: name || 'Ohne Namen', mail: mail || '',
-            /* Ohne ausdrückliche Angabe bekommt der erste Mensch alle Rechte —
-               danach ist Bearbeiten die vernünftige Voreinstellung. */
             herkunft, bild, rolle: rolleId || (liste.length ? 'edit' : 'voll'),
             farbe: FARBEN[liste.length % FARBEN.length], seit: Store.now()
         };
@@ -100,22 +64,12 @@ const Konten = (() => {
         if (Store.getMeta('kontoAktiv', '') === kontoId)
             Store.setMeta('kontoAktiv', '');
     };
-    /* ------------------------------------------------------------------------
-     * FREIGABEN JE SEITE
-     * ------------------------------------------------------------------------
-     * An der Seite steht, wer welche Rolle hat. Vererbt wird nach unten:
-     * eine Unterseite ohne eigene Freigabe erbt die der Elternseite.
-     * ----------------------------------------------------------------------*/
     const freigabenVon = (seiteId) => {
         const b = Store.getBlock(seiteId);
         return (b && b.freigaben) || null;
     };
-    /* Je kleiner die Zahl, desto mehr ist erlaubt. Trifft eine Freigabe auf
-       eine Kontorolle, gilt immer die strengere von beiden — ein Konto mit
-       Leserecht kann nicht durch eine Seitenfreigabe zum Bearbeiter werden. */
     const RANG = { voll: 0, edit: 1, komm: 2, lesen: 3, kein: 4 };
     const strenger = (a, b) => (RANG[a] ?? 0) >= (RANG[b] ?? 0) ? a : b;
-    /** Welche Rolle hat ein Konto auf dieser Seite? Erbt nach oben. */
     const rolleAuf = (seiteId, kontoId) => {
         const konto = kontoId || aktiv().id;
         const kontoRolle = kontoId
@@ -130,64 +84,19 @@ const Konten = (() => {
                 return strenger(fr['*'], kontoRolle);
             cur = cur.parentId ? Store.getBlock(cur.parentId) : null;
         }
-        /* Keine Freigabe hinterlegt: wer das Ding angelegt hat, behält es. */
         const b = Store.getBlock(seiteId);
         const ich = aktiv();
         if (!kontoId && b && b.erstelltVon && b.erstelltVon === ich.name)
             return strenger('voll', kontoRolle);
         return strenger(Store.getMeta('rolleStandard', 'voll'), kontoRolle);
     };
-    /**
-     * Darf DIESES KONTO das überhaupt — ohne jeden Ort?
-     *
-     * Die Rolle allein, ohne Freigaben, ohne Seite. Für Handlungen, die
-     * keinen Ort haben: einen fremden Worker starten, eine Sicherung
-     * einspielen, das Konto wechseln. Wer einen Ort hat, fragt `darf` mit
-     * seiner Kennung oder `darfAnSammlung`.
-     */
     const darfUeberhaupt = (was) => rolle(aktiv().rolle || 'voll').darf.includes(was);
-    /**
-     * Darf ich das?
-     *
-     * OHNE SEITENANGABE FÄLLT DIE FRAGE AUF DIE OFFENE SEITE ZURÜCK. Und ohne
-     * offene Seite auf die ROLLE — seit E331. Vorher lautete die Antwort dort
-     * schlicht `true`.
-     *
-     * Der Kommentar an dieser Stelle sagte schon immer, was richtig wäre:
-     * „‚darf ich überhaupt bearbeiten' ist eine Frage nach der Rolle, nicht
-     * nach einem Ort." Der Code beantwortete sie trotzdem nicht mit der Rolle,
-     * sondern mit Ja. Solange die Startansicht eine Seite war, fiel das nicht
-     * auf; seit E132 ist sie das Heute-Dashboard, und damit war der Normalfall
-     * beim Start: keine Seite, also alles erlaubt — für JEDES Konto, auch für
-     * eines mit der Rolle `lesen`.
-     *
-     * Fünf Aufrufer fragen ohne Kennung, und alle fünf meinen genau die
-     * Rollenfrage (`ki/werkzeuge.ts:192`, `ki/agenten.ts:813`,
-     * `zugang/lesefrage.ts:56` und zweimal das Muster
-     * `pageId ? darf(x, pageId) : darf(x)`). Für alle fünf ist die Rolle die
-     * richtige Antwort, und für keinen war es das Ja.
-     *
-     * Es bleibt die falsche Frage, sobald der Aufrufer WEISS, was er anfassen
-     * wird. Dann gehört die Kennung hinein. Wer eine Datenbank meint, nimmt
-     * `darfAnSammlung`.
-     */
     const darf = (was, seiteId) => {
         const id = seiteId || App.aktuelleSeite();
         if (!id)
             return darfUeberhaupt(was);
         return rolle(rolleAuf(id, '')).darf.includes(was);
     };
-    /**
-     * Die Seite, auf der eine Datenbank lebt — dort hängen ihre Rechte.
-     *
-     * Eine Zeile hat als Elternteil die SAMMLUNG, nicht einen Block; der Weg
-     * nach oben führt deshalb über den Datenbankblock. Verknüpfte Ansichten
-     * derselben Sammlung gibt es mehrfach — die echte ist die unverknüpfte.
-     *
-     * Steht hier `''`, ist die Datenbank an keiner Seite zu finden. Dann gilt
-     * sie als frei: eine Rechteprüfung, die kein Ziel findet, darf nicht
-     * heimlich sperren — sie muss es sagen, und das tut der Aufrufer.
-     */
     const seiteZuSammlung = (collectionId) => {
         if (!collectionId)
             return '';
@@ -204,13 +113,6 @@ const Konten = (() => {
         }
         return '';
     };
-    /**
-     * Darf ich das an DIESER Datenbank?
-     *
-     * Findet sich keine Seite dazu, wird nicht heimlich erlaubt und nicht
-     * heimlich gesperrt — die Antwort ist `null`, und der Aufrufer sagt dem
-     * Menschen, dass er es nicht entscheiden konnte.
-     */
     const darfAnSammlung = (was, collectionId) => {
         const seite = seiteZuSammlung(collectionId);
         if (!seite)
@@ -228,8 +130,6 @@ const Konten = (() => {
         else
             delete fr[kontoId];
         Store.updateBlock(seiteId, { freigaben: fr });
-        /* Eine Rechteänderung ist genau die Art Ereignis, die man später
-           nachschlagen will — deshalb ins Protokoll, mit Vorher und Nachher. */
         if (typeof Protokoll !== 'undefined' && vorher !== (rolleId || null)) {
             const wer = kontoId === '*' ? 'alle'
                 : ((alle().find((k) => k.id === kontoId) || {}).name || kontoId);
@@ -238,9 +138,6 @@ const Konten = (() => {
                 (rolleId ? rolle(rolleId).name : 'nichts'), { seite: seiteId, id: seiteId });
         }
     };
-    /* ------------------------------------------------------------------------
-     * DIE MATRIX ALS TABELLE
-     * ----------------------------------------------------------------------*/
     const matrix = () => {
         const RECHTE = [
             ['lesen', 'Seite ansehen'],
@@ -274,9 +171,6 @@ const Konten = (() => {
                 o.remove();
         });
     };
-    /* ------------------------------------------------------------------------
-     * FREIGABE-DIALOG FÜR EINE SEITE
-     * ----------------------------------------------------------------------*/
     const freigeben = (seiteId) => {
         const b = Store.getBlock(seiteId);
         if (!b)
@@ -361,9 +255,6 @@ const Konten = (() => {
             }
         });
     };
-    /* ------------------------------------------------------------------------
-     * KONTENVERWALTUNG
-     * ----------------------------------------------------------------------*/
     const verwalten = () => {
         const o = document.createElement('div');
         o.className = 'overlay';

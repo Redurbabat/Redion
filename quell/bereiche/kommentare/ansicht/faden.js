@@ -1,20 +1,6 @@
 "use strict";
-/* ============================================================================
- * apps/schreiben/kommentare/ansicht.js — aus notion.js herausgelöst
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/kommentare/ansicht/faden.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/kommentare/ansicht/faden.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Stammt aus der früheren Sammeldatei notion.js. Der Inhalt ist unverändert;
- * nur der Ort ist jetzt der, an dem man ihn sucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/kommentare/ansicht/faden.ts (npm run bauen:ts). */
 const Kommentare = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const alle = (pageId) => {
         const out = [];
@@ -43,14 +29,7 @@ const Kommentare = (() => {
         App.zeichneSeite();
         UI.toast('Kommentar hinzugefügt');
     };
-    /* ------------------------------------------------------------------------
-     * ANTWORTEN, REAKTIONEN, ERWÄHNUNGEN
-     * ------------------------------------------------------------------------
-     * Notion hat Threads mit Antworten und Emoji-Reaktionen. Bisher war hier
-     * jeder Kommentar für sich allein — das holt es nach.
-     * ---------------------------------------------------------------------- */
     const REAKTIONEN = ['👍', '🎉', '👀', '❤️', '🤔', '✅'];
-    /** Einen Kommentar in seiner Liste finden. */
     const finde = (blockId, kommId) => {
         const b = Store.getBlock(blockId);
         if (!b)
@@ -80,7 +59,6 @@ const Kommentare = (() => {
         Store.updateBlock(blockId, { kommentare: f.liste });
         return true;
     };
-    /** Eine Reaktion an- oder abwählen. */
     const reagieren = (blockId, kommId, emoji) => {
         const f = finde(blockId, kommId);
         if (!f)
@@ -101,13 +79,11 @@ const Kommentare = (() => {
         Store.updateBlock(blockId, { kommentare: f.liste });
         return r;
     };
-    /** Wer wird in einem Kommentar erwähnt? @Name oder @@Seitentitel. */
     const erwaehnt = (text) => {
         const raus = [];
         String(text || '').replace(/@([A-Za-zÄÖÜäöüß0-9_.\-]{2,})/g, (ganz, n) => { raus.push(n); return ganz; });
         return [...new Set(raus)];
     };
-    /** Erwähnungen als Link auf die gleichnamige Seite anzeigen. */
     const mitErwaehnungen = (text) => esc(text).replace(/@([A-Za-zÄÖÜäöüß0-9_.\-]{2,})/g, (_ganz, n) => {
         const seite = Object.values(Store.cache.blocks).find(b => b.alive !== false && b.type === 'page' &&
             String(b.text || '').toLowerCase() === n.toLowerCase());
@@ -115,7 +91,6 @@ const Kommentare = (() => {
             ? `<a class="komm-erw" data-seite="${seite.id}">@${esc(n)}</a>`
             : `<span class="komm-erw tot">@${esc(n)}</span>`;
     });
-    /** Alle Kommentare, in denen jemand vorkommt — für den Posteingang. */
     const anMich = () => {
         const wer = String(Store.getMeta('nutzer', 'Ich')).toLowerCase();
         const raus = [];
@@ -143,7 +118,6 @@ const Kommentare = (() => {
                 (liste.length ? liste.map(({ block, k }) => `<div class="komm ${k.erledigt ? 'fertig' : ''}" data-b="${block.id}" data-k="${k.id}">` +
                     (k.zitat ? `<div class="komm-zitat">„${esc(k.zitat)}"</div>` : '') +
                     `<div class="komm-txt">${mitErwaehnungen(k.text)}</div>` +
-                    /* Reaktionen — angeklickte sind hervorgehoben */
                     '<div class="komm-reak">' + REAKTIONEN.map(r => {
                     const n = ((k.reaktionen || {})[r] || []).length;
                     return `<button data-r="${r}" class="${n ? 'an' : ''}" ` +
@@ -155,7 +129,6 @@ const Kommentare = (() => {
                     `<button data-a="springen">Zur Stelle</button>` +
                     `<button data-a="fertig">${k.erledigt ? 'Wieder öffnen' : 'Erledigt'}</button>` +
                     `<button data-a="del">Löschen</button></div>` +
-                    /* Der Faden darunter */
                     ((k.antworten || []).length
                         ? '<div class="komm-faden">' + k.antworten.map((a) => `<div class="komm-antwort" data-antwort="${a.id}">` +
                             `<div class="komm-txt">${mitErwaehnungen(a.text)}</div>` +
@@ -173,7 +146,6 @@ const Kommentare = (() => {
                 o.remove();
                 return;
             }
-            /* Erwähnung öffnet die Seite */
             const erw = elVon(e)?.closest('.komm-erw[data-seite]');
             if (erw) {
                 o.remove();
@@ -186,15 +158,9 @@ const Kommentare = (() => {
             const block = Store.getBlock(box.dataset['b']);
             if (!block)
                 return;
-            /* Die Kennung des angeklickten Kommentars. Sie steht in jedem Zweig
-               unten und war überall ungeprüft: ein `.komm` ohne `data-k` — den
-               gibt es beim Zeichnen für einen Augenblick — hätte `reagieren`,
-               `antworten` und `antwortWeg` mit `undefined` gerufen, und die
-               suchen dann einen Kommentar, den es nicht gibt. */
             const kommId = box.dataset['k'];
             if (!kommId)
                 return;
-            /* Reaktion */
             const r = elVon(e)?.closest('[data-r]');
             if (r?.dataset['r']) {
                 reagieren(block.id, kommId, r.dataset['r']);
@@ -202,7 +168,6 @@ const Kommentare = (() => {
                 panel(pageId);
                 return;
             }
-            /* Antworten */
             if (elVon(e)?.closest('[data-a="antwort"]')) {
                 antworten(block.id, kommId).then(gut => {
                     if (!gut)
@@ -256,11 +221,6 @@ const Kommentare = (() => {
         erwaehnt, mitErwaehnungen, anMich, finde, REAKTIONEN };
 })();
 window.Kommentare = Kommentare;
-/* ==========================================================================
- * 5. MEHRFACHAUSWAHL VON BLÖCKEN
- * ========================================================================*/
-/* Die Kommentare melden sich für die Kontextkante an (E272 Phase F).
-   `panel()` ist derselbe Griff wie im Menüband und in der Kopfzeile. */
 if (typeof Register !== 'undefined' && Register.kontext) {
     Register.kontext.melde({
         bereich: 'editor', id: 'kommentare', name: 'Kommentare',
@@ -275,7 +235,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             try {
                 Kommentare.panel(App.aktuelleSeite());
             }
-            catch { /* ohne offene Seite gibt es nichts zu kommentieren */ }
+            catch { }
         }
     });
 }

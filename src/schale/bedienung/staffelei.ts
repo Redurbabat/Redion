@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/staffelei.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/staffelei.ts — hell und dunkel als Bild auf einer Leinwand
  * ----------------------------------------------------------------------------

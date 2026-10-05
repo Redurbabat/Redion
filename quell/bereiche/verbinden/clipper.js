@@ -1,37 +1,6 @@
 "use strict";
-/* ============================================================================
- * clipper.js — Der Web Clipper ohne Erweiterung
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/verbinden/clipper.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/verbinden/clipper.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notions Clipper ist eine Browsererweiterung. Die kann diese App nicht sein —
- * aber es geht auch anders, und zwar mit etwas, das jeder Browser seit
- * dreissig Jahren kann: einem Lesezeichen, in dem statt einer Adresse ein
- * kleines Programm steht.
- *
- * SO LÄUFT ES
- *   1. Der Knopf unten wird einmal in die Lesezeichenleiste gezogen.
- *   2. Auf einer beliebigen Webseite draufklicken.
- *   3. Das Lesezeichen liest Titel, Adresse, Auswahl und den Fliesstext,
- *      packt alles zusammen und öffnet diese App damit.
- *   4. Die App legt daraus einen Eintrag in der Datenbank „Gesammelt" an.
- *
- * Es wird nichts verschickt und nichts hochgeladen. Die Daten laufen über
- * den Adressanhang (das Stück hinter dem #) direkt von der einen Seite in
- * die andere — das verlässt den Rechner nicht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/clipper.ts (npm run bauen:ts). */
 const Clipper = (() => {
-    /* ------------------------------------------------------------------------
-     * EIN FUND DES UMZUGS: `esc` stand hier und wurde nirgends benutzt.
-     *
-     * Das ist nicht harmlos. Eine Fluchtfunktion, die dasteht, liest sich wie
-     * eine Zusage — wer die Datei überfliegt, denkt, hier werde geschützt. In
-     * Wahrheit baut dieses Modul sein HTML woanders. `noUnusedLocals` hat sie
-     * gefunden; sie ist weg, und damit auch der falsche Eindruck.
-     * ----------------------------------------------------------------------*/
     const SCHEMA = () => ({
         title: { name: 'Titel', type: 'title' },
         url: { name: 'Adresse', type: 'url' },
@@ -76,9 +45,6 @@ const Clipper = (() => {
         coll.schema[key].options = liste;
         Store.updateCollection(coll.id, { schema: coll.schema });
     };
-    /* ------------------------------------------------------------------------
-     * EINEN FUND ABLEGEN
-     * ----------------------------------------------------------------------*/
     const ablegen = (fund) => {
         const coll = zielDatenbank();
         let host = '';
@@ -96,8 +62,6 @@ const Clipper = (() => {
             tags: fund.tags || []
         });
         Store.updateBlock(r.id, { text: fund.titel || fund.url || 'Ohne Titel' });
-        /* Der Fliesstext kommt als Blöcke auf die Eintragsseite — so bleibt
-           der Artikel lesbar, auch wenn die Quelle irgendwann verschwindet. */
         if (fund.text) {
             Store.addBlock(r.id, 'quote', { text: (fund.titel || '') + ' · ' + host });
             String(fund.text).split(/\n{2,}/).slice(0, 120).forEach(a => {
@@ -119,12 +83,6 @@ const Clipper = (() => {
         }
         return r;
     };
-    /* ------------------------------------------------------------------------
-     * DER LESEZEICHEN-SCHNIPSEL
-     * ------------------------------------------------------------------------
-     * Er läuft auf der fremden Seite, sammelt dort ein und ruft diese App.
-     * Bewusst kurz gehalten — ein Lesezeichen darf nicht endlos lang sein.
-     * ----------------------------------------------------------------------*/
     const schnipsel = () => {
         const ziel = location.origin + location.pathname;
         const code = `(function(){
@@ -143,9 +101,6 @@ window.open('${ziel}#clip='+encodeURIComponent(JSON.stringify(p)),'_blank');
 })();`;
         return 'javascript:' + encodeURIComponent(code.replace(/\n/g, ''));
     };
-    /* ------------------------------------------------------------------------
-     * ANNAHME — was das Lesezeichen schickt
-     * ----------------------------------------------------------------------*/
     const pruefeAdresse = () => {
         const h = location.hash || '';
         const m = h.match(/[#&]clip=(.*)$/);
@@ -167,9 +122,6 @@ window.open('${ziel}#clip='+encodeURIComponent(JSON.stringify(p)),'_blank');
         return true;
     };
     const start = () => { setTimeout(pruefeAdresse, 300); };
-    /* ------------------------------------------------------------------------
-     * OBERFLÄCHE
-     * ----------------------------------------------------------------------*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';

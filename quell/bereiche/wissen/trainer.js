@@ -1,55 +1,16 @@
 "use strict";
-/* ══ DER TRAINER — Boxen, Auswahl-, Schreib- und Lückenaufgaben (E677) ═══
-   Redur, 21. September 2026: „jetzt will ich eine flüssige lern app im
-   redion bauen nicht die karten sollte im bereichen sein sondern direkt
-   eine app dort … ich will so boxen haben die ich weiss sollte selten
-   vorkommen und die ich nicht weiss mehrmals auch schreiben und multiple
-   choice". Und dazu: „es sollte direkt mit redion verbunden sein die app
-   nicht getrennt".
-
-   DESHALB IST DER TRAINER KEIN ZWEITER SPEICHER. Seine Aufgaben sind
-   gewöhnliche Lernkarten (`type: 'flashcard'`) auf einer Seite — mit einem
-   Feld `quiz`, das sagt, wie gefragt wird: `mc` (mehrere Antworten können
-   richtig sein, wie in der Prüfung), `schreiben` (eigene Antwort, dann die
-   Musterlösung und die Selbsteinschätzung) oder `luecke` (getippt,
-   nachsichtig verglichen). Der Fortschritt steht am Block in `sr` und
-   `reviewVerlauf`, geschrieben allein von `WissenDienst.planen` — dieselbe
-   Rechnung, die die Tagesrunde, das Fehlertraining und die Kennzahlen
-   lesen. Eine Karte, die hier sitzt, sitzt überall; sie reist in `.json`,
-   `.redion`, in die Wolke und in den zweiten Tab, ohne dass dieser Bereich
-   etwas dafür tut (§9, §17).
-
-   DIE BOXEN sind eine ABLEITUNG, kein zweiter Plan: eine Karte ohne `sr`
-   ist „neu", sonst ist ihre Box `min(5, sr.wdh + 1)` — wie oft sie zuletzt
-   hintereinander gewusst wurde. SM-2 (oder FSRS, je nach Schalter) setzt
-   die Abstände: Gewusstes kommt in Tagen und Wochen wieder, Nichtgewusstes
-   sofort. Und in einer Runde kommt eine falsch beantwortete Karte nach drei
-   anderen NOCH EINMAL, höchstens zweimal — man sieht, was man nicht weiss,
-   mehrmals, bevor die Runde zu Ende ist. Was man wusste, kommt in der
-   Runde nicht wieder.
-
-   Der Inhalt (das Staatskunde-Kapitel) ist eine Vorlage in
-   `Register.vorlagen` und wird beim ersten Öffnen als Seite angelegt —
-   Nutzerdaten, sichtbar, veränderbar, sicherbar (§2). Der Trainer kennt
-   kein Kapitel beim Namen: er nimmt jede Lernkarte mit `quiz`.
-
-   Alles, was aus einer Karte in HTML geht, läuft durch `esc` (§19). */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/trainer.ts (npm run bauen:ts). */
 const Trainer = (() => {
     const BOXEN = 5;
     const RUNDE_HOECHSTENS = 20;
     const NOCHMAL_NACH = 3;
     const NOCHMAL_HOECHSTENS = 2;
-    const NOTE_RICHTIG = 3; /* Gut — nicht Leicht: ein Ankreuztreffer hebt die Leichtigkeit nicht */
+    const NOTE_RICHTIG = 3;
     const NOTE_FALSCH = 1;
     const esc = (wert) => String(wert ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const zustand = { ziel: null, aktor: 'ich', runde: null, gewaehlt: new Set(), geprueft: false, aufgedeckt: false };
-    /* ── Die Karten und ihre Boxen ────────────────────────────────────────── */
-    /* In SEITENREIHENFOLGE, nicht nach `created`: eine Vorlage legt sechzig
-       Karten in derselben Millisekunde an, und `created` allein hätte die
-       sieben Prüfungsfragen in beliebiger Folge gebracht. Die Reihenfolge
-       auf der Seite ist die, die der Mensch sieht und ändern kann. */
     const ordnung = (k) => {
         const eltern = (typeof Store !== 'undefined' && k?.parentId) ? Store.getBlock(k.parentId) : null;
         const i = Array.isArray(eltern?.content) ? eltern.content.indexOf(k.id) : -1;
@@ -74,17 +35,12 @@ const Trainer = (() => {
         const t = new Date(String(f)).getTime();
         return !Number.isFinite(t) || t <= Date.now();
     };
-    /* Der Name eines Themas steht an der Karte (`quiz.topic`), nicht in einem
-       Inhaltsmodul: der Trainer kennt kein Kapitel beim Namen (E679). */
     const themaName = (id) => {
         const k = karten().find(x => String(x.quiz.thema || '') === id && typeof x.quiz.topic === 'string' && x.quiz.topic);
         return k ? String(k.quiz.topic) : id;
     };
-    /** Zu welchem Kapitel eine Karte gehört — Karten aus E677 tragen das Feld noch nicht. */
     const kapitelVon = (k) => String(k?.quiz?.kapitel || 'Staatskunde — Leben in der Schweiz');
-    /** Eine Prüfungsfrage: ausdrücklich so markiert — oder eine Schreibaufgabe, die es nicht ausdrücklich verneint (E677). */
     const istPruefung = (k) => k.quiz.pruefung === true || (k.quiz.kind === 'schreiben' && k.quiz.pruefung !== false);
-    /** Die Vorlagen, die ein Kapitel für den Trainer bauen (`trainer: true`), und ob es schon eine Seite daraus gibt. */
     const kapitelVorlagen = () => {
         const reg = globalThis.Register;
         let alle = [];
@@ -108,7 +64,6 @@ const Trainer = (() => {
         const i = text.indexOf('::');
         return (i >= 0 ? text.slice(0, i) : text).trim();
     };
-    /* Nachsichtiger Vergleich für die Lücke: Gross/klein, Umlaute, Satzzeichen, Leerraum. */
     const normal = (s) => String(s || '').toLowerCase()
         .replace(/ß/g, 'ss').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
         .replace(/[^a-z0-9]+/g, ' ').trim();
@@ -120,7 +75,6 @@ const Trainer = (() => {
         }
         return b;
     };
-    /** Welche Karten eine Runde meint. */
     const aufgabenVon = (name) => {
         const alle = karten();
         if (name === 'pruefung')
@@ -135,7 +89,6 @@ const Trainer = (() => {
             return alle.filter(k => String(k.quiz.kind) === name.slice(4));
         return alle;
     };
-    /** Die Reihenfolge einer Runde: Fällige zuerst, schwächste Box zuerst; die Prüfung in Seitenreihenfolge. */
     const warteschlange = (name, aufgaben) => {
         if (name === 'pruefung' || name.startsWith('pruefung:'))
             return aufgaben;
@@ -143,7 +96,6 @@ const Trainer = (() => {
         const rest = mischen(aufgaben.filter(k => !istFaellig(k))).sort((a, b) => boxRang(a) - boxRang(b));
         return faellig.concat(rest).slice(0, RUNDE_HOECHSTENS);
     };
-    /* ── Die angefangene Runde überlebt ein Neuladen ──────────────────────── */
     const rundeSchluessel = () => 'lernen:' + zustand.aktor + ':runde';
     const rundeMerken = () => {
         if (typeof Store === 'undefined')
@@ -154,7 +106,7 @@ const Trainer = (() => {
             else
                 Store.setMeta(rundeSchluessel(), null);
         }
-        catch { /* nur diese Sitzung */ }
+        catch { }
     };
     const gemerkteRunde = () => {
         if (typeof Store === 'undefined')
@@ -169,7 +121,6 @@ const Trainer = (() => {
         return { name: String(roh.name || 'lernen'), reihenfolge: ids, index, nochmal: (roh.nochmal && typeof roh.nochmal === 'object') ? roh.nochmal : {},
             richtig: Number(roh.richtig) || 0, falsch: Number(roh.falsch) || 0, begonnen: String(roh.begonnen || '') };
     };
-    /* ── Zeichnen ─────────────────────────────────────────────────────────── */
     const knopf = (text, attr, klasse = '') => `<button type="button"${klasse ? ` class="${klasse}"` : ''} ${attr}>${esc(text)}</button>`;
     const sym = (name) => {
         const reg = globalThis.Register;
@@ -181,7 +132,7 @@ const Trainer = (() => {
             if (zustand.ziel && reg?.symbole?.fuelle)
                 reg.symbole.fuelle(zustand.ziel);
         }
-        catch { /* ohne Symbole */ }
+        catch { }
     };
     const boxenZeile = (alle) => {
         const zaehler = { neu: 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
@@ -196,8 +147,6 @@ const Trainer = (() => {
             return;
         zustand.runde = null;
         const alle = karten();
-        /* Kapitel, die es als Vorlage gibt und noch nicht als Seite: ein Knopf je
-           Kapitel — auch dann, wenn schon eines liegt (E679). */
         const offen = kapitelVorlagen().filter(v => !v.angelegt);
         const anlegen = offen.length
             ? `<h3 class="lw-trainer-h3">Kapitel anlegen</h3><div class="lw-trainer-reihe">${offen.map((v, i) => knopf(`Kapitel «${v.name}» anlegen`, `data-tr-anlegen="${esc(v.id)}"`, i === 0 && !alle.length ? 'is-primary' : '')).join('')}</div>
@@ -213,7 +162,6 @@ const Trainer = (() => {
         const faellig = alle.filter(istFaellig).length;
         const gemerkt = gemerkteRunde();
         const kapitel = Array.from(new Set(alle.map(kapitelVon)));
-        /* Je Kapitel: die Prüfung der Reihe nach, dann die Themen. */
         const kapitelBloecke = kapitel.map(kap => {
             const zu = alle.filter(k => kapitelVon(k) === kap);
             const themen = Array.from(new Set(zu.map(k => String(k.quiz.thema || '')).filter(Boolean)));
@@ -249,7 +197,6 @@ const Trainer = (() => {
     </section>`;
         fuelle();
     };
-    /* ── Die Runde ────────────────────────────────────────────────────────── */
     const rundeStarten = (name) => {
         const gemerkt = gemerkteRunde();
         if (gemerkt && gemerkt.name === name && gemerkt.reihenfolge.every(id => typeof Store !== 'undefined' && Store.getBlock(id))) {
@@ -298,7 +245,6 @@ const Trainer = (() => {
             return;
         const k = aktuelleKarte();
         if (!k) {
-            /* Eine gelöschte Karte wird übersprungen; ist nichts mehr da, ist die Runde zu Ende. */
             if (r.index < r.reihenfolge.length) {
                 r.index++;
                 rundeMerken();
@@ -312,10 +258,6 @@ const Trainer = (() => {
         let rumpf = '';
         if (kind === 'mc') {
             const optionen = Array.isArray(k.quiz.optionen) ? k.quiz.optionen : [];
-            /* Die Antworten werden bei JEDER Anzeige gemischt (E680). Gespeichert
-               stehen die richtigen meist zuerst — wer das einmal gesehen hat,
-               kreuzt a) b) c) an und lernt nichts. `data-tr-option` bleibt der
-               gespeicherte Platz, die Buchstaben folgen der Anzeige. */
             const reihenfolge = mischen(optionen.map((_, i) => i));
             rumpf = `<h3 class="lw-trainer-frage">${esc(frageVon(k))}</h3>
         <p class="lw-trainer-anweisung">Kreuzen Sie die richtige(n) Antwort(en) an.</p>
@@ -347,12 +289,10 @@ const Trainer = (() => {
         const feld = ziel.querySelector('[data-tr-luecke], [data-tr-antwort]');
         if (feld)
             feld.focus();
-        /* Zum KOPF der Lernwelt rollen, nicht zur Karte: die Karte allein oben
-           liegt am Telefon unter dem Zurück-Pfeil der Schale (Bild, §55.1). */
         try {
             (ziel.closest('.lernwelt') || ziel).scrollIntoView({ block: 'start' });
         }
-        catch { /* alte Browser */ }
+        catch { }
     };
     const fussSetzen = (html) => {
         const fuss = zustand.ziel?.querySelector('.lw-trainer-fuss');
@@ -364,7 +304,6 @@ const Trainer = (() => {
         if (erg)
             erg.innerHTML = html;
     };
-    /** Der Weg zu Note und Speicher — eine Stelle. */
     const bewerten = (k, note) => {
         const r = zustand.runde;
         if (!r)
@@ -373,7 +312,7 @@ const Trainer = (() => {
             if (typeof WissenDienst !== 'undefined')
                 WissenDienst.planen(k, note);
         }
-        catch { /* nur lesbar oder ohne Dienst */ }
+        catch { }
         if (note >= NOTE_RICHTIG)
             r.richtig++;
         else
@@ -465,12 +404,10 @@ const Trainer = (() => {
         fuelle();
     };
     const beenden = () => {
-        /* Die Runde bleibt gemerkt — Escape verliert nichts. */
         rundeMerken();
         zustand.runde = null;
         start();
     };
-    /* ── Horcher ──────────────────────────────────────────────────────────── */
     const beiKlick = (e) => {
         const ziel = zustand.ziel;
         const el = e.target?.closest('[data-tr-start], [data-tr-anlegen], [data-tr-pruefen], [data-tr-weiter], [data-tr-aufdecken], [data-tr-rate], [data-tr-ende], [data-tr-zurueck], [data-tr-option]');
@@ -495,7 +432,7 @@ const Trainer = (() => {
             try {
                 reg?.vorlagen?.bauen?.(id);
             }
-            catch { /* ohne Vorlage */ }
+            catch { }
             start();
             return;
         }
@@ -593,7 +530,6 @@ const Trainer = (() => {
         zustand.ziel = null;
         zustand.runde = null;
     };
-    /** In ein Element zeichnen — die Lernwelt gibt es her. */
     const render = (ziel, opts = {}) => {
         abmelden();
         zustand.ziel = ziel;

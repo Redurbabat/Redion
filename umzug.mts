@@ -55,8 +55,16 @@ const bestandSchreiben = (liste: string[]): void =>
  * Er muss in die ersten 1200 Zeichen, weil `pruefungen/lauf/test105.mts` nur
  * dort nachsieht. Steht ein Kopfkommentar da, wird er hinter dessen erste
  * Trennlinie gesetzt; sonst kommt ein eigener Block davor.
+ *
+ * SEIT E715 DAZU EINE EIGENE ERSTE ZEILE mit `/*!`. tsc nimmt alle übrigen
+ * Kommentare aus dem erzeugten .js (`removeComments`); nur diese Zeile kommt
+ * dort an, und `test105` §3 verlangt sie in jeder erzeugten Datei.
  */
-const hinweisEinsetzen = (s: string, ts: string, js: string): string => {
+const hinweisEinsetzen = (s: string, ts: string, js: string): string =>
+  '/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: ' + ts + ' (npm run bauen:ts). */\n' +
+  kopfEinsetzen(s, ts, js);
+
+const kopfEinsetzen = (s: string, ts: string, js: string): string => {
   const kopf =
     ' * ERZEUGT — NICHT VON HAND ÄNDERN.\n' +
     ' * Die Quelle ist `' + ts + '`. `npm run bauen:ts` schreibt daraus\n' +

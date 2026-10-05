@@ -1,48 +1,12 @@
 "use strict";
-/* ============================================================================
- * ki-kontext.js — Kontext, Berechtigung und Suche für die KI
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/ki/kontext.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/ki/kontext.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Das ist die Schicht, die in Notion zwischen deiner Frage und dem Modell
- * sitzt. Sie beantwortet drei Fragen, bevor das Modell überhaupt etwas sieht:
- *
- *   1. WELCHE QUELLEN sind erlaubt?        → Kontext-Schicht
- *   2. WAS DARF ICH DAVON LESEN?           → Berechtigungsschicht
- *   3. WELCHE STELLEN PASSEN ZUR FRAGE?    → Suche / Retrieval
- *
- * Zusammen ist das RAG: das Modell weiss nichts über deinen Arbeitsbereich,
- * es bekommt die passenden Ausschnitte gereicht und schreibt daraus eine
- * Antwort — mit Quellen, damit man nachsehen kann.
- *
- * DIE SUCHE
- *   Ohne fremden Dienst gibt es keine echten Embeddings. Statt so zu tun,
- *   als gäbe es welche, steht hier ein Verfahren, das man versteht:
- *
- *     · BM25          zählt Wörter, gewichtet seltene Wörter höher
- *     · Wortstämme    „Ziele", „Ziel", „Zielen" gelten als dasselbe
- *     · Verwandte     eine kleine Wortverwandtschaft für den Alltag
- *     · Dreiergruppen fängt Tippfehler und Wortformen ab
- *     · Frische       was zuletzt bearbeitet wurde, zählt etwas mehr
- *
- *   Wer echte Embeddings will und einen Schlüssel hat, schaltet sie in den
- *   KI-Einstellungen ein — dann werden die Vektoren einmal berechnet und
- *   im Browser abgelegt. Beides läuft nebeneinander.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/kontext.ts (npm run bauen:ts). */
 const Kontext = (() => {
-    /* ------------------------------------------------------------------------
-     * WORTARBEIT
-     * ----------------------------------------------------------------------*/
     const STOPP = new Set(('der die das ein eine einer eines einem einen und oder aber ' +
         'ist sind war waren sein hat habe haben hatte wird werden wurde in im am an auf ' +
         'aus bei mit von vor nach zu zur zum für über unter durch gegen ohne um es er sie ' +
         'ich du wir ihr mir mich dir dich uns euch sich als also auch noch nur schon wenn ' +
         'dass weil denn doch mal man nicht kein keine dem den des this that the and or of ' +
         'to in is are was were be has have with for from at on by').split(' '));
-    /** Ein grober Stammschnitt fürs Deutsche. Nicht perfekt, aber verlässlich. */
     const stamm = (w) => {
         let s = w;
         if (s.length > 6)
@@ -55,8 +19,6 @@ const Kontext = (() => {
             s = s.replace(/(e|n|s|t)$/, '');
         return s;
     };
-    /* Ein paar Verwandtschaften, die im Alltag ständig gebraucht werden.
-       Das ersetzt keine Embeddings, hilft aber genau dort, wo es zählt. */
     const VERWANDT = {
         ziel: ['vorhaben', 'plan', 'vorsatz', 'okr', 'absicht', 'wunsch'],
         aufgab: ['todo', 'task', 'erledig', 'punkt', 'arbeit', 'job'],
@@ -79,7 +41,6 @@ const Kontext = (() => {
         .filter(w => w.length > 2 && !STOPP.has(w))
         .map(stamm)
         .filter(Boolean);
-    /** Die Frage um verwandte Wörter erweitern — das ist der semantische Teil. */
     const erweitern = (woerter) => {
         const raus = new Set(woerter);
         woerter.forEach((w) => {
@@ -102,14 +63,6 @@ const Kontext = (() => {
             raus.push(s.slice(i, i + 3));
         return raus;
     };
-    /* ------------------------------------------------------------------------
-     * DER INDEX — PERSISTENT, INKREMENTELL, REPARIERBAR
-     * ------------------------------------------------------------------------
-     * Jede Seite und jede Datenbankzeile wird ein Eintrag. Die Einträge liegen
-     * im IndexedDB-Fach `suchindex`; Blöcke und Sammlungen bleiben jedoch immer
-     * die Wahrheit. Ein fehlender, alter oder unlesbarer Eintrag wird aus ihnen
-     * neu gebaut. Kein Reparaturweg schreibt jemals Nutzerdaten.
-     * ----------------------------------------------------------------------*/
     const INDEX_FASSUNG = 1;
     const KOPF_ID = '@suchindex';
     let index = null;
@@ -117,8 +70,6 @@ const Kontext = (() => {
     let letzterBericht = null;
     let schreibkette = Promise.resolve();
     let letzterSchreibfehler = '';
-    /** Zwei kleine, unabhängige 32-Bit-Prüfsummen. Kein Sicherheits-Hash —
-        nur eine billige Antwort auf „hat sich diese Quelle verändert?". */
     const signatur = (teile) => {
         let a = 2166136261, b = 0x9e3779b9;
         for (const teil of teile) {
@@ -132,9 +83,6 @@ const Kontext = (() => {
         return a.toString(36) + '-' + b.toString(36);
     };
     const spaeter = (a, b) => String(a || '') > String(b || '') ? a : b;
-    /** Inhalt plus Quellenstand. Der Stand enthält auch Text und Reihenfolge;
-        dadurch heilt der Index sogar Sicherungen, deren `edited`-Zeitstempel
-        fälschlich gleich geblieben ist. */
     const inhaltVonSeite = (seiteId) => {
         const text = [], teile = [];
         let geaendert = '';
@@ -143,16 +91,8 @@ const Kontext = (() => {
                 return;
             Store.childrenOf(id).forEach((k) => {
                 if (!k.alive || k.type === 'page')
-                    return; /* Unterseite = eigener Eintrag */
+                    return;
                 geaendert = spaeter(geaendert, k.edited || k.created || '');
-                /* `suchtext` gehört mit in die Signatur, sonst merkt der Index nicht,
-                   dass eine PDF-Seite ihren Text bekommen hat (E124). */
-                /* DIESELBE LISTE WIE `Store.search`, nicht eine zweite daneben. Was ein
-                   Block an durchsuchbarem Text hat, entscheidet `Store.durchsuchbar` —
-                   inzwischen auch der Dateiname aus dem Fach `dateien` und die
-                   Quellenangabe an einer Lernkarte. Stünde die Liste hier ein zweites
-                   Mal, hätten die beiden Suchen wieder zwei Antworten; genau das ist
-                   bei den PDF-Texten schon einmal passiert (E124). */
                 const felderText = typeof Store.durchsuchbar === 'function'
                     ? Store.durchsuchbar(k).filter(Boolean)
                     : [k.text, k.suchtext, k.ocrText].filter(Boolean).map(String);
@@ -165,12 +105,6 @@ const Kontext = (() => {
                     }
                     return;
                 }
-                /* EINE PDF-SEITE HAT KEINEN `text` — sie ist ein Bild. Ihr Wortlaut
-                   steht seit E107 in `suchtext`, und `Store.search` liest ihn auch.
-                   Der Index hier tat es nicht: die Suche im Fenster fand ein
-                   eingelesenes Skript nicht mehr, während `Store.search` es fand.
-                   Zwei Suchen mit zwei Antworten sind schlimmer als eine schlechte.
-                   Deshalb kommt die Liste jetzt von dort. */
                 felderText.forEach((wert) => text.push(wert));
                 if (Array.isArray(k.rows))
                     text.push(k.rows.flat().join(' '));
@@ -188,7 +122,6 @@ const Kontext = (() => {
         woerter.forEach(w => { zaehler[w] = (zaehler[w] || 0) + 1; });
         return { zaehler, laenge: woerter.length };
     };
-    /** Ein Durchgang über `blocks`, keine Vollsuche je Sammlung. */
     const indexQuellen = () => {
         const raus = [];
         Object.values(Store.cache.blocks).forEach(b => {
@@ -264,8 +197,6 @@ const Kontext = (() => {
         anzahl, gebaut: new Date().toISOString()
     });
     const schreibe = (tun) => {
-        /* Immer in Reihenfolge: ein langsamer Vollaufbau darf nicht nachträglich
-           einen jüngeren inkrementellen Stand überschreiben. */
         schreibkette = schreibkette.catch(() => undefined).then(tun).then(() => {
             letzterSchreibfehler = '';
         }, (err) => {
@@ -323,7 +254,6 @@ const Kontext = (() => {
             schreibe(() => Store.suchindexAendern([k, ...setzen], loeschen));
         return index;
     };
-    /** Der ausdrückliche Neuaufbau aus den Nutzerdaten. */
     const bauen = () => abgleichen(true);
     const holen = (frisch = false) => {
         const stand = Store.datenFassung ? Store.datenFassung() : 0;
@@ -345,9 +275,6 @@ const Kontext = (() => {
         bericht: letzterBericht,
         schreibfehler: letzterSchreibfehler
     });
-    /** Kandidaten für Quick Find. `null` bedeutet: nicht sicher eingrenzbar,
-        also den echten Bestand vollständig prüfen. Eine leere Liste bedeutet:
-        die Wortmengen sind sicher disjunkt. So verliert der Cache nie Treffer. */
     const kandidaten = (frage) => {
         const ix = holen();
         const ws = [...new Set(zerlegen(frage))];
@@ -370,9 +297,6 @@ const Kontext = (() => {
         }
         return [...(menge || [])].map(nr => ix.eintraege[nr].seiteId);
     };
-    /* ------------------------------------------------------------------------
-     * SUCHE
-     * ----------------------------------------------------------------------*/
     const bm25 = (eintrag, frageWoerter, ix) => {
         const k1 = 1.5, b = 0.75;
         let punkte = 0;
@@ -387,7 +311,6 @@ const Kontext = (() => {
         });
         return punkte;
     };
-    /** Dreiergruppen fangen ab, was der Stammschnitt verfehlt. */
     const unschaerfe = (eintrag, frageWoerter) => {
         if (!frageWoerter.length)
             return 0;
@@ -403,11 +326,6 @@ const Kontext = (() => {
         });
         return gesamt ? treffer / gesamt : 0;
     };
-    /**
-     * Findet die Stellen, die zur Frage passen.
-     * @param frage   die Frage im Klartext
-     * @param opt     { anzahl, quellen, nurSeite }
-     */
     const finden = (frage, opt = {}) => {
         const ix = holen(opt.frisch);
         const roh = zerlegen(frage);
@@ -416,16 +334,12 @@ const Kontext = (() => {
             return [];
         const jetzt = Date.now();
         const q = quellen();
-        /* Die invertierte Wortliste macht den Normalfall abhängig von der Zahl
-           der Treffer, nicht von der Zahl aller Seiten. Nur wenn kein Wort exakt
-           vorkommt, läuft die absichtlich teurere Tippfehler-Gegenprobe. */
         const nummern = new Set();
         woerter.forEach(w => (ix.posting.get(w) || []).forEach((nr) => nummern.add(nr)));
         const pool = nummern.size
             ? [...nummern].map(nr => ix.eintraege[nr]).filter(Boolean)
             : ix.eintraege;
         const bewertet = pool.map((e) => {
-            /* --- Berechtigungsschicht: was nicht gelesen werden darf, fliegt raus */
             if (!Konten.darf('lesen', e.seiteId))
                 return null;
             if (opt.nurSeite && e.seiteId !== opt.nurSeite && !istUnter(e.seiteId, opt.nurSeite))
@@ -443,7 +357,7 @@ const Kontext = (() => {
             const alter = (jetzt - new Date(e.geaendert || 0).getTime()) / 86400000;
             const frische = alter < 400 ? (1 - alter / 400) * 0.9 : 0;
             const punkte = basis
-                + imTitel * 2.2 /* Titeltreffer wiegen schwer */
+                + imTitel * 2.2
                 + fuzzy * 1.6
                 + frische
                 + (e.seiteId === App.aktuelleSeite() ? 1.4 : 0);
@@ -461,12 +375,6 @@ const Kontext = (() => {
         }
         return false;
     };
-    /* ------------------------------------------------------------------------
-     * AUSSCHNITTE
-     * ------------------------------------------------------------------------
-     * Nicht die ganze Seite ans Modell geben, sondern die Stelle, um die es
-     * geht. Spart Platz und macht die Antwort genauer.
-     * ----------------------------------------------------------------------*/
     const ausschnitt = (eintrag, frage, laenge = 700) => {
         const woerter = zerlegen(frage);
         const saetze = String(eintrag.text || '').split(/(?<=[.!?])\s+|\n+/).filter(s => s.trim());
@@ -490,9 +398,6 @@ const Kontext = (() => {
         const text = genommen.map(x => x.s.trim()).join(' … ');
         return text.slice(0, laenge + 200);
     };
-    /* ------------------------------------------------------------------------
-     * QUELLEN — einzeln ein- und ausschaltbar
-     * ----------------------------------------------------------------------*/
     const QUELLEN_STANDARD = {
         aktuelleSeite: true,
         arbeitsbereich: true,
@@ -501,29 +406,8 @@ const Kontext = (() => {
         web: false
     };
     const quellen = () => Object.assign({}, QUELLEN_STANDARD, Store.getMeta('ki:quellen', {}) || {});
-    /* ------------------------------------------------------------------------
-     * NUR AUS DEINEN QUELLEN (E305, Redurs Punkt 11)
-     * ------------------------------------------------------------------------
-     * Der gewöhnliche Modus gibt dem Modell die gefundenen Stellen MIT und
-     * bittet es, nichts zu erfinden. Das ist eine Bitte. Wer vor einer Prüfung
-     * sitzt, will keine Bitte, sondern eine Zusage: entweder es steht in meinen
-     * Unterlagen, oder ich bekomme keine Antwort.
-     *
-     * Der Unterschied ist nicht die Formulierung der Anweisung — es ist, dass
-     * bei leerem Fund GAR NICHT GEFRAGT wird. Ein Modell, das nichts vorliegen
-     * hat, antwortet trotzdem; das ist seine Natur, und keine Anweisung ändert
-     * daran zuverlässig etwas. Also fragt Redion es dann nicht.
-     * ----------------------------------------------------------------------*/
     const nurQuellen = () => !!Store.getMeta('ki:nurQuellen', false);
     const nurQuellenSetzen = (an) => Store.setMeta('ki:nurQuellen', !!an);
-    /**
-     * Darf diese Frage überhaupt ans Modell?
-     *
-     * Gibt zurück, was zu tun ist — und im Fall `nein` gleich den Satz, der
-     * stattdessen dasteht. Der Satz gehört hierher und nicht in die Oberfläche:
-     * die Agenten (`ki/agenten.ts`) brauchen dieselbe Entscheidung, und zwei
-     * Fassungen davon liefen irgendwann auseinander.
-     */
     const darfFragen = (k) => {
         if (!nurQuellen())
             return { ok: true, grund: '' };
@@ -534,7 +418,6 @@ const Kontext = (() => {
                 'zu bekommen, die nirgends nachzulesen ist. Schalte ihn in den ' +
                 'KI-Einstellungen aus, wenn du trotzdem fragen willst.' };
     };
-    /** Die Anweisung, die im Nur-Quellen-Modus vor die Auszüge kommt. */
     const nurQuellenAnweisung = () => '\n\nWICHTIG — NUR-QUELLEN-MODUS: Antworte AUSSCHLIESSLICH aus den ' +
         'Auszügen oben. Steht die Antwort dort nicht, sage genau das und rate ' +
         'nicht. Nenne zu jeder Aussage, aus welcher der Quellen sie stammt. ' +
@@ -544,14 +427,10 @@ const Kontext = (() => {
         q[k] = an;
         Store.setMeta('ki:quellen', q);
     };
-    /* ------------------------------------------------------------------------
-     * DER FERTIGE KONTEXT FÜR DAS MODELL
-     * ----------------------------------------------------------------------*/
     const bauenFuerFrage = async (frage, opt = {}) => {
         const q = quellen();
         const teile = [];
         const quellenListe = [];
-        /* 1. Die Seite, auf der man gerade steht */
         if (q.aktuelleSeite && App.aktuelleSeite()) {
             const p = Store.getBlock(App.aktuelleSeite());
             if (p && Konten.darf('lesen', p.id)) {
@@ -561,12 +440,7 @@ const Kontext = (() => {
                     art: 'Offene Seite', geaendert: p.edited });
             }
         }
-        /* 2. Der Rest des Arbeitsbereichs — gesucht, nicht komplett */
         if (q.arbeitsbereich || q.datenbanken) {
-            /* HIER HÄNGT DER VEKTORWEG (E333, L102 Punkt 3). `findenMitVektoren`
-               fällt selbst auf `finden` zurück, wenn keine Vektoren da sind, das
-               Kontingent nicht reicht oder der Aufruf scheitert — der gewöhnliche
-               Weg bleibt also der gewöhnliche. */
             const treffer = await findenMitVektoren(frage, opt.anzahl || 6, { nurSeite: opt.nurSeite });
             treffer.forEach((t) => {
                 if (t.seiteId === App.aktuelleSeite() && q.aktuelleSeite)
@@ -584,9 +458,6 @@ const Kontext = (() => {
             leer: !teile.length
         };
     };
-    /* ------------------------------------------------------------------------
-     * ECHTE EMBEDDINGS — nur, wenn jemand sie will und einen Schlüssel hat
-     * ----------------------------------------------------------------------*/
     const embeddingsAn = () => !!Store.getMeta('ki:embeddings', false);
     const embeddingHolen = async (texte) => {
         const anbieter = Store.getMeta('ki:embAnbieter', 'gemini');
@@ -624,7 +495,6 @@ const Kontext = (() => {
         }
         return (na && nb) ? p / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
     };
-    /** Alle Seiten einmal durchrechnen. Dauert, kostet ein paar Cent, hält lange. */
     const embeddingsBauen = async (beiFortschritt) => {
         const ix = holen(true);
         const gemerkt = Store.getMeta('ki:vektoren', {}) || {};
@@ -632,17 +502,6 @@ const Kontext = (() => {
             gemerkt[e.id].stand !== String(e.geaendert));
         if (!offen.length)
             return { neu: 0, gesamt: Object.keys(gemerkt).length };
-        /* --- EIN KLICK, ZWEITAUSEND AUFRUFE (E287) --------------------------
-           Das hier war die konkreteste Kostengefahr in ganz Redion: jede Seite
-           geht einzeln an eine kostenpflichtige API, ohne dass vorher eine
-           Zahl fällt, ohne Obergrenze, ohne Abbruch.
-    
-           Geschätzt wird der GANZE Stapel, nicht der einzelne Aufruf. Die
-           einzelne Anfrage ist harmlos; zweitausend davon sind es nicht, und
-           genau diesen Unterschied sieht eine Prüfung je Aufruf nicht.
-    
-           Gefragt wird EINMAL, vorher. Eine Rückfrage je Seite wäre
-           zweitausend Rückfragen — also keine. */
         const modellName = Store.getMeta('ki:embeddingModell', '') ||
             (Store.getMeta('ki:embedding', '') === 'gemini'
                 ? 'text-embedding-004' : 'text-embedding-3-small');
@@ -650,9 +509,6 @@ const Kontext = (() => {
             const texte = offen.map((e) => e.titel + '\n' + e.text.slice(0, 3000));
             const s = KiBuch.stapelSchaetzen(modellName, texte);
             if (s.bekannt && !s.frei && s.betrag > 0 && typeof Dialog !== 'undefined') {
-                /* `Dialog.wahl` und nicht `confirm`: beide Antworten sind
-                   vertretbar, und jede bekommt einen Hinweis darunter, damit
-                   niemand raten muss, was „Abbrechen" hier bedeutet. */
                 const antwort = await Dialog.wahl({
                     titel: 'Vektoren für ' + offen.length + ' Seite(n) bauen?',
                     text: 'Jede Seite geht einzeln an ' + modellName + '.\n\n' + s.satz +
@@ -668,7 +524,6 @@ const Kontext = (() => {
                     return { neu: 0, gesamt: Object.keys(gemerkt).length, abgebrochen: true };
                 }
             }
-            /* Und die Grenzen gelten auch hier — nicht nur die Rückfrage. */
             const urteil = KiKosten.pruefen(s, KiBuch.grenzen(), KiBuch.stand());
             if (!urteil.erlaubt)
                 throw new Error(urteil.satz);
@@ -691,37 +546,11 @@ const Kontext = (() => {
         }
         return { neu: n, gesamt: Object.keys(gemerkt).length };
     };
-    /**
-     * DIE SEMANTISCHE SUCHE — UND WARUM SIE BIS E333 NIEMAND RIEF.
-     *
-     * L102 Punkt 3: „Der ganze Vektorweg ist toter Code. `findenMitVektoren`
-     * ist definiert und exportiert, und im gesamten Verzeichnis ruft es
-     * niemand auf. Die semantische Suche existiert also als Code und nicht
-     * als Weg (§47)."
-     *
-     * DIE NAHELIEGENDE VERDRAHTUNG WÄRE FALSCH GEWESEN. Diese Funktion
-     * schickt für JEDE Frage eine Einbettung an eine kostenpflichtige API.
-     * Sie einfach an den Chat zu hängen hiesse: jede Chatnachricht kostet
-     * still Geld — genau der Zustand, den E287 abgeräumt hat, nur an einer
-     * anderen Stelle.
-     *
-     * DER SCHALTER IST DESHALB DAS VORHANDENSEIN DER VEKTOREN. Wer sie
-     * gebaut hat, hat dafür einmal ausdrücklich Ja gesagt (E287 fragt mit
-     * Betrag). Wer nicht, merkt von alledem nichts und zahlt nichts: dann
-     * fällt die Suche auf `finden` zurück, wie sie es schon immer tat.
-     *
-     * UND DIE EINE ANFRAGE GEHT DURCH DIE KASSE wie jede andere. Reicht das
-     * Kontingent nicht, wird nicht heimlich gespart und nicht heimlich
-     * ausgegeben — es wird gesucht wie vorher.
-     */
     const findenMitVektoren = async (frage, anzahl = 8, opt = {}) => {
         const wieBisher = () => finden(frage, { anzahl, nurSeite: opt.nurSeite });
         const gemerkt = Store.getMeta('ki:vektoren', {}) || {};
         if (!Object.keys(gemerkt).length)
             return wieBisher();
-        /* Die Frage selbst kostet eine Einbettung. Erst fragen, dann buchen,
-           und bei Nein den gewöhnlichen Weg gehen — eine Suche, die wegen
-           eines Kontingents GAR NICHT sucht, wäre die schlechtere Antwort. */
         const modellName = Store.getMeta('ki:embeddingModell', '') ||
             (Store.getMeta('ki:embAnbieter', 'gemini') === 'gemini'
                 ? 'text-embedding-004' : 'text-embedding-3-small');
@@ -749,11 +578,6 @@ const Kontext = (() => {
                 return null;
             if (!Konten.darf('lesen', e.seiteId))
                 return null;
-            /* UND `nurSeite` GILT AUCH HIER (E333). `finden` achtet es seit
-               jeher (Zeile 433); der Vektorweg tat es nicht, weil ihn niemand
-               rief. Beim Verdrahten wäre daraus ein Leck geworden: `bauenFuerFrage`
-               reicht `nurSeite` durch, wenn der Aufrufer eine Seite meint, und
-               ohne diese Zeile hätte das Modell den ganzen Bestand gesehen. */
             if (opt.nurSeite && e.seiteId !== opt.nurSeite && !istUnter(e.seiteId, opt.nurSeite))
                 return null;
             return { ...e, punkte: cosinus(fv, g.v) * 10 };

@@ -1,19 +1,7 @@
 "use strict";
-/* ============================================================================
- * apps/tabellen/ansichten/dienst.js — aus notion.js herausgelöst
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/ansichten/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/ansichten/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Stammt aus der früheren Sammeldatei notion.js. Der Inhalt ist unverändert;
- * nur der Ort ist jetzt der, an dem man ihn sucht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/ansichten/dienst.ts (npm run bauen:ts). */
 const Ansichten = (() => {
     const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /** Ein gezeichnetes Zeichen aus `Register.symbole` (E273) — oder nichts.
-        Eine leere Stelle ist ehrlicher als ein Emoji als Ersatz (E701). */
     const zeichen = (name, groesse = 18) => {
         try {
             return Register.symbole.alsSvg(name, groesse);
@@ -22,52 +10,16 @@ const Ansichten = (() => {
             return '';
         }
     };
-    /**
-     * Zwei Handgriffe, die in dieser Datei elfmal gebraucht werden.
-     *
-     * `flaeche()` holt die Bühne (`#page`) und die Brotkrume (`#crumb`) — oder
-     * nichts, wenn die Schale noch nicht steht. Vorher stand hier
-     * `document.getElementById('crumb').innerHTML = …` ohne Nachsehen; das ist
-     * derselbe Fund wie in `hinweis.ts`, nur an einer Stelle, die beim Start
-     * läuft.
-     */
     const flaeche = () => {
         const wrap = document.getElementById('page');
         const crumb = document.getElementById('crumb');
         return wrap && crumb ? { wrap, crumb } : null;
     };
-    /* ==========================================================================
-     * EIN BILDSCHIRM SAGT, WO ER IST (E273)
-     * --------------------------------------------------------------------------
-     * Sechs Ansichten in dieser Datei — Start, Posteingang, Seiten, Termine,
-     * Mehr, Kompass — haben sich früher selbst in `#page` gezeichnet:
-     * `flaeche()` holen, `App.setzeSeite(null)`, Krume schreiben, malen.
-     *
-     * Das ging, solange niemand fragte, WO man ist. Seit E272 fragt die
-     * Kontextkante genau das. Und `App.schauplatz()` (schale.ts:698) kennt nur
-     * zwei Dinge: eine offene Seite oder ein `sonder`, das `zeigeSonder`
-     * gesetzt hat. Wer keins von beidem setzt, ändert den Schauplatz NICHT —
-     * er bleibt auf dem letzten stehen.
-     *
-     * Gemessen war das kein leerer Rand, sondern ein FALSCHER: von „Meine
-     * Aufgaben" auf „Start" geklickt, und links standen weiter Tagesplan,
-     * Wochenrückblick und Fällig. Von „Notizhefte" auf „Posteingang", und die
-     * Kante blieb bei den Notizheften. Sechs Bildschirme logen über ihren Ort.
-     *
-     * Der Weg dahin führt nicht über einen zweiten Melder, sondern über den,
-     * den alle anderen sieben Bildschirme schon nehmen: `App.zeigeSonder`.
-     * Es setzt `sonder`, ruft den Zeichner, meldet den Schauplatz und schreibt
-     * die Krume aus dem Titel — deshalb steht sie hier nicht mehr in jeder
-     * Ansicht, und deshalb sind die Emoji daraus verschwunden (E202).
-     *
-     * `flaeche()` bleibt: es ist die Probe, ob die Schale überhaupt steht.
-     */
     const bildschirm = (titel, malen) => {
         if (!flaeche())
             return;
         App.zeigeSonder(titel, malen);
     };
-    /** Das angeklickte Element — oder nichts, wenn es kein Element war. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const gruss = () => {
         const h = new Date().getHours();
@@ -75,17 +27,6 @@ const Ansichten = (() => {
         const teil = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
         return teil + (name && name !== 'Ich' ? ', ' + name : '');
     };
-    /* DIE RECHNUNG STEHT IM KERN (E208).
-       Hier stand sie ausgeschrieben, und die Bibliothek brauchte sie auch —
-       ein Bereich darf aber nicht aus einem anderen importieren (§5, Regel 1).
-       Abschreiben wäre hier schlimmer als anderswo: bei einem Anriss fällt es
-       auf, wenn zwei Fassungen auseinanderlaufen, bei einer FRIST nicht. Eine
-       Ansicht, die „gesichert" sagt, während die andere warnt, ist genau die
-       Sorte Fehler, die §46 meint.
-  
-       `SICHERUNG_ERINNERN` und `SICHERUNG_WARNEN` stehen weiter unten noch als
-       Zahlen — sie sind jetzt eine Kopie der Kernwerte, und deshalb liest der
-       Text unten sie auch nicht mehr; er nimmt die Stufe. */
     const sicherungsstand = () => Sicherung.stand();
     const sicherungBand = () => {
         const s = sicherungsstand();
@@ -94,7 +35,6 @@ const Ansichten = (() => {
                 : s.tage === 1 ? 'gestern'
                     : 'vor ' + s.tage + ' Tagen';
         if (s.stufe === 'gut') {
-            /* Alles in Ordnung: eine Zeile, kein Kasten, kein Ausrufezeichen. */
             const ohneAnhaenge = s.art === 'json'
                 ? ' · JSON-Sicherung, ohne Anhänge' : '';
             return '<div class="home-sich home-sich-gut">' +
@@ -116,13 +56,6 @@ const Ansichten = (() => {
             '<button class="hs-tun prim" data-a="sichern">Jetzt sichern</button>' +
             '</div>';
     };
-    /* --------------------------------------------------------------------------
-     * PRIVAT — die eigenen Seiten auf oberster Ebene
-     * ---------------------------------------------------------------------------
-     * „Zuletzt bearbeitet" beantwortet: woran war ich dran? Diese Liste
-     * beantwortet: was habe ich überhaupt? Das ist auf dem Handy die
-     * wichtigere Frage, weil es dort keine Seitenleiste mit dem Baum gibt.
-     * ------------------------------------------------------------------------ */
     const PRIVAT_MAX = 8;
     const privatListe = () => {
         const alle = Store.rootPages().filter((p) => !p.system);
@@ -142,22 +75,6 @@ const Ansichten = (() => {
             (mehr > 0 ? `<div class="leer">und ${mehr} weitere in der Seitenleiste</div>` : '') +
             '</div>';
     };
-    /* --------------------------------------------------------------------------
-     * SCHNELLZUGRIFF — was der Nutzer selbst nach oben gestellt hat
-     * ---------------------------------------------------------------------------
-     * Der Wunsch war: „Ausbildung" und „Mediathek" als eigene Kacheln auf dem
-     * Start-Bildschirm. Zwei feste Kacheln einzubauen wäre die kurze Antwort —
-     * und die falsche: der Nächste braucht „Rezepte" und „Trainingsplan", und
-     * dann stehen vier Kacheln da, die niemand bestellt hat.
-     *
-     * Redion kennt bereits einen Begriff dafür, dass etwas wichtig ist: den
-     * Stern. Wer eine Seite mit ★ markiert, stellt sie damit nach oben — in der
-     * Seitenleiste und ab jetzt auch hier. Kein zweites Anheften, kein
-     * Einstellungsdialog, keine Liste, die man doppelt pflegt.
-     *
-     * Vier Stück, mehr nicht. Der Schnellzugriff soll der erste Blick sein,
-     * nicht das Inhaltsverzeichnis; alles Weitere steht in der Seitenleiste.
-     * ------------------------------------------------------------------------ */
     const SCHNELL_MAX = 4;
     const schnellKarten = () => {
         const sterne = Links.seiten()
@@ -196,7 +113,6 @@ const Ansichten = (() => {
                 `<span>${journalHeute ? 'Heutiger Eintrag ist angelegt' : 'Heutigen Eintrag anlegen'}</span></button>` +
                 `<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b><span>Gedanken sofort festhalten</span></button>` +
                 `<button class="hk" data-a="lernen"><b>🎴 Karteikarten</b>` +
-                /* „1 Karten fällig" stand hier, seit es die Karte gibt. */
                 `<span>${karten ? karten + (karten === 1 ? ' Karte fällig' : ' Karten fällig')
                     : 'Keine Karten fällig'}</span></button>` +
                 `<button class="hk" data-a="graph"><b>🕸 Graph</b><span>Wie alles zusammenhängt</span></button>` +
@@ -225,20 +141,6 @@ const Ansichten = (() => {
                 zahl(Werkzeuge.karten().length, 'Karteikarten') +
                 `</div>` +
                 '</div>';
-        /* `onclick =`, NICHT `addEventListener`. Der Unterschied ist hier kein
-           Geschmack, sondern ein gefundener Fehler (E57).
-    
-           `wrap` ist `#page` und bleibt stehen; nur sein Inhalt wird neu
-           geschrieben. Mit `addEventListener` kam bei jedem Zeichnen ein
-           weiterer Zuhörer dazu — und `start()` läuft bei jeder Rückkehr zum
-           Start-Bildschirm. Nach dem dritten Mal legte ein Klick auf
-           „Tagesjournal" drei Journale an, und ein Klick auf „Jetzt sichern"
-           startete drei Sicherungen nacheinander, bei Anhängen also dreimal
-           durch alle Dateien.
-    
-           Gefunden hat das die Prüfung zum Sicherungsknopf: sie zählte zwei
-           Klicks und bekam drei Aufrufe. Die vier anderen Ansichten in dieser
-           Datei machten es von Anfang an richtig. */
         wrap.onclick = (e) => {
             const ziel = elVon(e);
             const o = ziel?.closest('[data-open]');
@@ -257,28 +159,12 @@ const Ansichten = (() => {
                 Werkzeuge.lernen();
             if (a.dataset['a'] === 'graph')
                 Links.graph();
-            /* DER KNOPF IM SICHERUNGSBAND — und was er dabei erzählt (E57).
-               Derselbe Weg wie in den Einstellungen; neu ist, was dazwischen
-               zu sehen ist.
-      
-               Eine `.redion`-Sicherung mit Anhängen dauert Sekunden bis Minuten.
-               Bis hierher passierte in dieser Zeit auf der Karte NICHTS: der
-               Knopf blieb, wie er war, und irgendwann kam ein Toast. Am Telefon
-               steht der Toast über der Aktionsleiste und ist nach 2,6 Sekunden
-               weg — wer in dem Moment wegsieht, weiss nicht, ob überhaupt etwas
-               geschieht, und tippt ein zweites Mal.
-      
-               Also sagt es der Knopf selbst: erst „Sichern …" mit einem Kreisel,
-               dann ein Haken, dann die neu gezeichnete Karte mit „Gesichert
-               heute". Drei Zustände, und der mittlere ist der, den man sonst
-               verpasst. */
             if (a.dataset['a'] === 'sichern') {
                 const knopf = a;
                 const wieVorher = knopf.innerHTML;
                 knopf.disabled = true;
                 knopf.classList.add('laeuft');
                 knopf.innerHTML = '<i class="hs-kreisel" aria-hidden="true"></i>Sichern …';
-                /* Was das Vorleseprogramm hört. Ein Kreisel ist für es nichts. */
                 knopf.setAttribute('aria-live', 'polite');
                 const fertig = (gut) => {
                     if (!knopf.isConnected)
@@ -286,9 +172,6 @@ const Ansichten = (() => {
                     knopf.classList.remove('laeuft');
                     knopf.classList.toggle('fertig', gut);
                     knopf.innerHTML = gut ? '✓ Gesichert' : 'Nicht gesichert';
-                    /* Den Haken kurz stehen lassen. Sofort neu zu zeichnen hiesse:
-                       der Knopf blinkt einmal und die Karte sieht aus wie vorher —
-                       man hätte nichts gesehen. */
                     setTimeout(() => {
                         if (document.getElementById('page')?.querySelector('.home-sich'))
                             start();
@@ -299,15 +182,8 @@ const Ansichten = (() => {
                         }
                     }, 1200);
                 };
-                /* `sicherungSpeichern` fängt seine Fehler selbst und kehrt regulär
-                   zurück — deshalb reicht `.then(() => fertig(true))` nicht, der
-                   Haken erschien auch nach dem „Es wurde nichts geschrieben"-Alert.
-                   Nur ein ausdrückliches `false` ist ein Fehlschlag; `undefined`
-                   (etwa aus einem Prüf-Stellvertreter) zählt weiter als Erfolg. */
                 void Promise.resolve(App.sicherungSpeichern())
                     .then((gut) => fertig(gut !== false))
-                    /* Auch der Fehlschlag gehört auf den Knopf. Ein Kreisel, der
-                       ewig dreht, ist die schlechteste aller Auskünfte. */
                     .catch(() => fertig(false));
             }
         };
@@ -318,7 +194,6 @@ const Ansichten = (() => {
         const meld = Werkzeuge.meldungen();
         const kommentare = [];
         Links.seiten().forEach((p) => Kommentare.alle(p.id).forEach((k) => kommentare.push({ seite: p, ...k })));
-        /* Was direkt an mich gerichtet ist — @Name in einem offenen Kommentar */
         const anMich = Kommentare.anMich();
         const geaendert = Object.values(Store.cache.blocks)
             .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
@@ -338,29 +213,15 @@ const Ansichten = (() => {
                         daten: 'data-filter="1"'
                     })
                     : '') +
-                /* Direkt an mich gerichtet — steht ganz oben, wie in Notion */
                 (anMich.length
                     ? '<h2>An dich gerichtet</h2><div class="home-liste">' +
-                        anMich.map((m) => 
-                        /* NICHT `data-open` MIT `parentId` (E275, L98).
-                           Gemessen: bei einem verschachtelten Block ist `parentId`
-                           der ELTERNBLOCK, und `App.oeffne` zeichnete ihn dann wie
-                           eine Seite — Krume „Skript / Kapitel 4", Inhalt der Toggle
-                           statt der Seite. Es führte also nicht ins Leere, aber an
-                           einen Ort, den es als Seite nicht gibt.
-          
-                           `App.zeigeBlock` kann das seit E105 richtig: es sucht die
-                           echte Seite, öffnet sie und rollt zum Block. `data-komm`
-                           stand daneben und wurde nirgends gelesen — die Kennung des
-                           Blocks ist das, worauf es ankommt. */
-                        `<button data-block="${m.block.id}">` +
+                        anMich.map((m) => `<button data-block="${m.block.id}">` +
                             '<span>@</span>' +
                             `<span style="flex:1">${esc(m.k.text)}` +
                             `<em style="opacity:.6"> — ${esc(m.k.autor || 'jemand')}</em></span>` +
                             `<span style="opacity:.5">${Werkzeuge.zeitKurz(m.k.zeit)}</span></button>`).join('') +
                         '</div>'
                     : '') +
-                /* Was Automationen gemeldet haben — Notions „Send notification to" */
                 (meld.length
                     ? '<h2>Benachrichtigungen</h2><div class="home-liste">' +
                         meld.slice(0, 30).map((m) => `<button data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
@@ -388,14 +249,11 @@ const Ansichten = (() => {
                     `<span class="pth">${esc(Werkzeuge.zeitKurz(p.edited))}</span></button>`).join('') +
                 '</div>' +
                 '</div>';
-        /* `onclick =` — siehe die Begründung bei `start()`. */
         wrap.onclick = (e) => {
             const ziel = elVon(e);
-            /* Eine Benachrichtigung gilt als gelesen, sobald man sie antippt */
             const m = ziel?.closest('[data-meld]');
             if (m && m.dataset['meld'])
                 Werkzeuge.meldungGelesen(m.dataset['meld']);
-            /* VOR `data-open`: ein Blocksprung ist kein Seitenaufruf. */
             const bl = ziel?.closest('[data-block]');
             if (bl?.dataset['block']) {
                 App.zeigeBlock(bl.dataset['block']);
@@ -414,7 +272,6 @@ const Ansichten = (() => {
                 posteingangFilter(ziel);
         };
     });
-    /** Was soll im Posteingang auftauchen? */
     const posteingangFilter = (anker) => {
         const jetzt = Store.getMeta('posteingangFilter', { erinnerungen: true, kommentare: true, geaendert: true });
         const r = anker.getBoundingClientRect();
@@ -434,36 +291,11 @@ const Ansichten = (() => {
             posteingang();
         });
     };
-    /* ==========================================================================
-     * DER SEITEN-BEREICH  (E38)
-     * --------------------------------------------------------------------------
-     * Hier stand am Telefon einmal „Chats". Redion ist aber keine Chat-App:
-     * die KI ist ein Werkzeug, kein Hauptbereich. Sie bleibt unten in der
-     * Leiste („KI fragen") und im R-Blatt erreichbar — der Platz oben gehört
-     * dem, was man täglich sucht.
-     *
-     * Fünf Abschnitte, und jeder erscheint nur, wenn er etwas enthält. Ein
-     * leerer Abschnitt mit Überschrift ist eine Behauptung ohne Inhalt; er
-     * kostet Platz und sagt nichts.
-     * ========================================================================*/
     const seiten = () => bildschirm('Seiten', (wrap) => {
         const alle = Object.values(Store.cache.blocks)
             .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' && !b.system);
         const kuerzlich = [...alle]
             .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 6);
-        /* ══ EIN KATALOG, NICHT ZWEI (E402, L128 Punkt 3) ═════════════════════
-           Hier stand `alle.filter(b => b.fav)`. Das Feld heisst `favorite` —
-           `b.fav` gibt es an keinem Block. Die Liste war deshalb IMMER leer,
-           und weil `block()` einen leeren Abschnitt ganz weglässt (unten), fiel
-           nicht einmal eine Überschrift auf: der Bildschirm sah aus, als hätte
-           man einfach keine Favoriten.
-    
-           Statt das eine Wort zu berichtigen, fragt der Bildschirm jetzt den
-           Katalog, den es längst gibt — `Store.favorites()` (indexdb.ts:850).
-           Ein zweiter, von Hand geschriebener Filter für dieselbe Sache läuft
-           mit dem ersten auseinander, und genau das ist hier passiert (§8).
-           Die eigene Einschränkung bleibt: keine Datenbankzeilen, keine
-           Systemseiten — deshalb der Schnitt mit `alle`. */
         const festeIds = new Set((Store.favorites?.() || [])
             .map((b) => String(b.id)));
         const sterne = alle.filter(b => festeIds.has(String(b.id)));
@@ -501,10 +333,6 @@ const Ansichten = (() => {
                 '<button class="hk" data-a="memo"><b>⚡ Schnellnotiz</b>' +
                 '<span>Gedanken sofort festhalten</span></button>' +
                 '</div>' +
-                /* LEERER ZUSTAND (Vorgabe §13). „Noch keine Seiten" allein ist eine
-                   Feststellung; erst die zwei Knöpfe daneben machen daraus einen
-                   Weg. Der zweite ist wichtiger, als er aussieht: wer gerade das
-                   Gerät gewechselt hat, will nicht anfangen, sondern zurückholen. */
                 (alle.length ? '' :
                     '<div class="leer-zustand"><div class="lz-zeichen">📄</div>' +
                         '<b>Noch keine Seiten</b>' +
@@ -539,9 +367,6 @@ const Ansichten = (() => {
             }
             const db = el?.closest('[data-db]');
             if (db?.dataset.db) {
-                /* Eine Sammlung selbst ist keine Seite — geöffnet wird der Block,
-                   der sie zeigt. Findet sich keiner, bleibt die Ansicht stehen,
-                   statt in eine leere Seite zu springen. */
                 const traeger = Object.values(Store.cache.blocks)
                     .find(b => b && b.collectionId === db.dataset.db && b.alive);
                 if (traeger)
@@ -561,23 +386,6 @@ const Ansichten = (() => {
                 App.papierkorb();
         };
     });
-    /* ========================================================================
-     * TERMINE — der dritte Bereich am Telefon
-     * ------------------------------------------------------------------------
-     * VORHER ÖFFNETE DIESER REITER DIE SCHUBLADE, also die Seitenleiste des
-     * Rechners auf 390 px geschoben — genau das, was das R-Blatt für den
-     * Kreis links oben abgeschafft hat (E38). Gemessen am 6. August: die
-     * Zeilen kamen zwar aus `Meeting.seitenleiste`, standen aber in einem
-     * Behälter, der für 260 px Breite und einen Mauszeiger gebaut ist.
-     *
-     * Jetzt dieselben Angaben auf der Bühne, in Fingerzeilen: was ansteht,
-     * und was aus Besprechungen entstanden ist.
-     *
-     * Die Daten kommen über `App` und `Store` — kein Bereich greift in einen
-     * anderen hinein (Architekturregel 1). `Kalender` und `Meeting` werden
-     * nur angetippt, wenn es sie gibt; fehlt eines, fehlt die Zeile und nicht
-     * die Ansicht.
-     * ========================================================================*/
     const termine = () => bildschirm('Termine', (wrap) => {
         const kommend = (() => {
             try {
@@ -596,18 +404,6 @@ const Ansichten = (() => {
         wrap.innerHTML =
             '<div class="home">' +
                 '<h1>Termine</h1>' +
-                /* DREI KARTEN, NICHT ZWEI (E430). „Kalender" führte hier zum
-                   VERBINDUNGSDIALOG — die Zeile „Termine hereinholen" sagt das
-                   zwar, aber von diesem Bildschirm führte damit gar kein Weg zum
-                   Kalender selbst. Wer auf „Termine" geht und einen Kalender sucht,
-                   landete bei Google-Client-IDs.
-                   Jetzt zuerst der Kalender als Ort, dann das Verbinden als das,
-                   was es ist. */
-                /* Gezeichnete Zeichen statt 📅 🔗 🎙 und der Stecknadel an jeder
-                   Zeile (E701): dieselben drei Karten, dieselben Wörter, derselbe
-                   Ort. Was ein Mensch einer Besprechungsseite als Zeichen gegeben
-                   hat, bleibt sein Zeichen — nur wo Redion selbst eines erfand,
-                   steht jetzt ein Strich. */
                 '<div class="home-karten">' +
                 '<button class="hk" data-a="kal-auf"><b>' + zeichen('calendar') + 'Kalender</b>' +
                 '<span>Alle Termine in einer Chronologie</span></button>' +
@@ -619,9 +415,6 @@ const Ansichten = (() => {
                 block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>${zeichen('calendarDays')}</span>` +
                     `<span class="pt">${esc(t.text)}</span>` +
                     `<span class="pth">${esc(t.wann)}</span></button>`).join('')) +
-                /* Steht nichts an, sagt die Ansicht das — und daneben den einen
-                   Weg, der etwas ändert. Eine leere Liste ohne Ausweg ist eine
-                   Sackgasse. */
                 (kommend.length ? '' :
                     '<h2>Bevorstehend</h2><div class="home-liste">' +
                         '<button data-a="kal"><span>' + zeichen('link') + '</span><span class="pt">Kalender verbinden</span>' +
@@ -649,30 +442,7 @@ const Ansichten = (() => {
                 window.Meeting?.panel?.();
         };
     });
-    /* ========================================================================
-     * MEHR — die Werkzeuge, geordnet und mit einem Satz dazu
-     * ------------------------------------------------------------------------
-     * Aus Redurs Entwurf „Nocturne" (E42). Bisher lagen diese Wege im R-Blatt
-     * als nackte Liste: „Importieren", „Sichern", „Papierkorb". Wer nicht
-     * schon wusste, was dahintersteckt, erfuhr es dort nicht.
-     *
-     * Drei Gruppen, und jede Zeile sagt in einem Satz, wofür sie da ist. Das
-     * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
-     * ======================================================================*/
-    /* `z` IST DER NAME EINES ZEICHENS aus `Register.symbole`, kein Emoji
-       mehr (E701). Hier standen ▤ ⌂ 🧭 ⌘ ⌨ 🧩 💾 📥 📥 ☁ 🗑 ⚙ ℹ — zweimal
-       derselbe Briefkasten für zwei verschiedene Wege. Jetzt hat „Importieren"
-       den Pfeil hinauf wie in den Einstellungen und „Posteingang" den Kasten,
-       wie in der Seitenleiste. */
     const mehrGruppen = () => [
-        /* DIE ZWEI WEGE, DIE UNTEN KEINEN PLATZ MEHR HABEN (E236).
-           Die Navigation hat seit E236 fünf Wege statt sechs — und aus dem
-           R-Kreis links oben wurde ein Knopf in der Menüleiste. „Workspace"
-           und „Arbeitsbereich wechseln" hatten damit keinen Ort mehr.
-    
-           Sie stehen deshalb hier. Das ist keine Ablage für Übriggebliebenes:
-           §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
-           noch über die Adresszeile findet, ist verschwunden. */
         { name: 'Wo du arbeitest', eintraege: [
                 { z: 'pages', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
                 { z: 'workspace', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
@@ -687,11 +457,6 @@ const Ansichten = (() => {
                 { z: 'download', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
                 { z: 'upload', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
                 { z: 'inbox', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
-                /* DER WEG ZUR WOLKE (E251). Der Dialog konnte längst anmelden und
-                   abgleichen — erreichbar war er nur über die Befehlspalette, und
-                   ein Weg, den man nur über die Palette findet, ist verschwunden
-                   (dieselbe Regel wie zwei Gruppen weiter oben). Hier steht er
-                   neben Sicherung und Import, wo Daten-Dinge wohnen. */
                 { z: 'cloud', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
                 { z: 'trash', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
             ] },
@@ -717,7 +482,6 @@ const Ansichten = (() => {
             const a = el?.closest('[data-a]')?.dataset.a;
             if (!a)
                 return;
-            /* Die zwei Wege, die mit E236 aus der Navigation hierherkamen. */
             if (a === 'workspace')
                 Produktwelten.workspace('start');
             else if (a === 'schublade')
@@ -750,23 +514,6 @@ const Ansichten = (() => {
                 App.einstellungen('ueber');
         };
     });
-    /* ========================================================================
-     * KOMPASS — was diese App kann, an einer Stelle
-     * ------------------------------------------------------------------------
-     * Der Bereich, den Redurs Entwurf als einzigen ganz neu erfindet, und der
-     * die grösste Lücke schliesst: Redion kann viel, und nichts davon sagt es
-     * von selbst. Wer nicht weiss, dass es Karteikarten gibt, findet sie nie.
-     *
-     * ZWEI SACHEN SIND HIER ABSICHTLICH SO GEBAUT:
-     *
-     * Die Befehle tragen ihren Stand — fertig, teilweise, geplant. Ein
-     * Wegweiser, der Geplantes wie Fertiges aussehen lässt, ist eine
-     * Enttäuschung mit Ansage. Lieber steht daneben „geplant".
-     *
-     * Und die Liste kommt, wo es geht, aus dem Register statt aus dieser
-     * Datei. Eine von Hand gepflegte Aufzählung erzählt nach dem dritten
-     * neuen Befehl von einer App, die es nicht mehr gibt.
-     * ======================================================================*/
     const kompass = () => bildschirm('Kompass', (wrap) => {
         const aufbau = [
             ['Start', 'Armaturenbrett mit Schnellkarten, Sicherungsstand und zuletzt Bearbeitetem.'],
@@ -786,7 +533,6 @@ const Ansichten = (() => {
             ['Strg + P', 'Suchen'], ['Strg + ⇧ + P', 'Befehle'], ['Strg + N', 'Neue Seite'],
             ['Strg + /', 'Tastenkürzel'], ['Esc', 'Menü schliessen']
         ];
-        /* Aus dem Register, nicht von Hand: so altert die Liste mit der App. */
         const kann = (() => {
             try {
                 const b = Object.keys(Register.bloecke?.alle?.() || Register.bloecke || {}).length;
@@ -837,17 +583,6 @@ const Ansichten = (() => {
                 App.sicherungSpeichern();
         };
     });
-    /* ========================================================================
-     * DAS SKELETT — was dasteht, bevor etwas dasteht (Vorgabe §23, E46)
-     * ------------------------------------------------------------------------
-     * Ein Kreisel sagt „warte". Ein Skelett sagt „hier kommen sechs Zeilen
-     * mit einem Symbol links und einem Datum rechts" — man weiss, was gleich
-     * kommt, und wenn es kommt, springt nichts.
-     *
-     * Die Strichbreiten sind ABSICHTLICH ungleich. Sechs gleich lange
-     * Balken sehen aus wie ein Muster; ungleiche sehen aus wie Text, und
-     * genau darum geht es.
-     * ======================================================================*/
     const skelett = (wieViele = 6, mitKarten = false) => (mitKarten
         ? '<div class="sk-karten"><div class="sk-karte"></div><div class="sk-karte"></div></div>'
         : '') +
@@ -858,13 +593,6 @@ const Ansichten = (() => {
             `<div class="sk-strich" style="width:${b}"></div>` +
             '<div class="sk-rechts"></div></div>').join('') +
         '</div>';
-    /**
-     * Ein Skelett auf die Bühne stellen, bis der Inhalt da ist.
-     *
-     * WARUM MIT FRIST. Ein Skelett, das bei jedem Wechsel aufblitzt, ist
-     * schlimmer als keines — die Ansicht flackert. Erst ab 180 ms Wartezeit
-     * lohnt es sich; darunter merkt niemand, dass etwas geladen wurde.
-     */
     const beimLaden = async (arbeit, wieViele = 6, mitKarten = false) => {
         const f = flaeche();
         let gezeigt = false;
@@ -886,7 +614,6 @@ const Ansichten = (() => {
         gruss, skelett, beimLaden };
 })();
 window.Ansichten = Ansichten;
-/* Die Startansicht „Heute" meldet ihre Kontextkante an (E272 Phase F). */
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
     const bereiche = ['heute', 'leer'];
@@ -899,8 +626,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             zeichen: 'calendar', rang: 30, tun: () => Ansichten.termine() });
         K.melde({ bereich: b, id: 'posteingang', name: 'Posteingang',
             zeichen: 'inbox', rang: 40, tun: () => Ansichten.posteingang() });
-        /* ZULETZT GEÖFFNET, ganz oben im Bild und ganz oben in der Kante —
-           derselbe Bestand wie im Startbild (`App.kuerzlich()`). */
         K.melde({ bereich: b, id: 'zuletzt', name: 'Zuletzt geöffnet',
             zeichen: 'history', rang: 50,
             liefern: () => {
@@ -919,24 +644,12 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                     tun: () => { try {
                         App.oeffne(x.id);
                     }
-                    catch { /* … */ } }
+                    catch { } }
                 }));
             }
         });
     }
 }
-/* ============================================================================
- * DIE KANTEN DER VIER ÜBRIGEN BILDSCHIRME DIESER DATEI (E273)
- * ----------------------------------------------------------------------------
- * „Heute" und „leer" stehen oben. Posteingang, Kalender, Kompass und Mehr
- * standen bis E273 NICHT hier, und der Grund war kein Versäumnis: es gab die
- * Schauplätze nicht. Die vier Bildschirme zeichneten sich selbst in `#page`,
- * ohne `zeigeSonder`, und `App.schauplatz()` blieb auf dem letzten stehen.
- * Ein Knopf mit `bereich: 'posteingang'` wäre nie gezeichnet worden.
- *
- * Seit `bildschirm()` weiter oben gibt es die Schauplätze wirklich. Erst
- * deshalb steht das hier.
- * ==========================================================================*/
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
     const da = (pfad) => {
@@ -947,11 +660,8 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             return false;
         }
     };
-    /* --- POSTEINGANG ------------------------------------------------------- */
     K.melde({ bereich: 'posteingang', id: 'uebersicht', name: 'Übersicht',
         zeichen: 'inbox', rang: 10, tun: () => Ansichten.posteingang() });
-    /* Die drei Listen sind Laden und keine Knöpfe: sie ändern sich, während
-       man hinsieht, und dürfen deshalb erst beim Öffnen entstehen. */
     K.melde({ bereich: 'posteingang', id: 'meldungen', name: 'Benachrichtigungen',
         zeichen: 'bell', rang: 20,
         zeigen: () => da(() => Werkzeuge.meldungen),
@@ -965,8 +675,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             }
             if (!liste.length)
                 return [{ id: 'keine', name: 'Nichts Neues.', tun: () => { } }];
-            /* Dreissig, wie im Posteingang selbst. Eine Lade, die vierhundert
-               Zeilen zeichnet, macht den Klick langsam und niemanden klüger. */
             return liste.slice(0, 30).map((m, i) => ({
                 id: 'm-' + (m.id ?? i), name: String(m.text || 'Meldung'),
                 ...(m.gelesen ? {} : { unter: 'ungelesen' }),
@@ -976,14 +684,14 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                         if (m.id)
                             Werkzeuge.meldungGelesen(m.id);
                     }
-                    catch { /* … */ }
+                    catch { }
                     try {
                         if (m.seite)
                             App.oeffne(m.seite);
                         else
                             Ansichten.posteingang();
                     }
-                    catch { /* … */ }
+                    catch { }
                 }
             }));
         }
@@ -1001,8 +709,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             }
             if (!liste.length)
                 return [{ id: 'keine', name: 'Keine Erinnerungen.', tun: () => { } }];
-            /* DIE ZEIT IST DAS EINZIGE, WOFÜR EINE ERINNERUNG DA IST.
-               Sie steht deshalb im zweiten Satz, und die nächste steht oben. */
             return [...liste]
                 .sort((a, b) => String(b.zeit || '').localeCompare(String(a.zeit || '')))
                 .slice(0, 30)
@@ -1022,7 +728,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                         if (e.pageId)
                             App.oeffne(e.pageId);
                     }
-                    catch { /* … */ } }
+                    catch { } }
                 };
             });
         }
@@ -1040,32 +746,20 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             }
             if (!liste.length)
                 return [{ id: 'keine', name: 'Nichts an dich.', tun: () => { } }];
-            /* `id` und `name` SIND PFLICHT — `zeilen()` (register/context.ts:177)
-               wirft jede Zeile ohne sie lautlos weg. `anMich` liefert
-               `{ block, k }`, also weder das eine noch das andere; wer die Liste
-               durchreicht, bekommt eine leere Lade und keinen Fehler. */
             return liste.slice(0, 30).map((m, i) => ({
                 id: 'am-' + (m?.k?.id ?? i),
                 name: String(m?.k?.text || 'Kommentar'),
                 unter: String(m?.k?.autor || 'jemand'),
                 zeichen: 'comment',
-                /* `zeigeBlock` statt `oeffne(parentId)` — siehe die Begründung an
-                   der Zeile im Posteingang (E275, L98). */
                 tun: () => {
                     try {
                         App.zeigeBlock(String(m?.block?.id || ''));
                     }
-                    catch { /* … */ }
+                    catch { }
                 }
             }));
         }
     });
-    /* ALLE GELESEN — und ausdrücklich NICHT „leeren" (E276, L96).
-       `meldungenLeeren` räumt denselben Punkt weg und wirft dabei alles fort.
-       An einem Kantenknopf, der ohne Rückfrage auslöst, hat das nichts zu
-       suchen; hier steht der Griff, der ein Feld ändert statt etwas zu
-       nehmen. Sichtbar nur, solange es überhaupt etwas Ungelesenes gibt —
-       sonst wäre es ein Knopf, der nichts tut (§47). */
     K.melde({ bereich: 'posteingang', id: 'gelesen', name: 'Alle gelesen',
         zeichen: 'checkCircle', rang: 50,
         zeigen: () => {
@@ -1083,18 +777,17 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             try {
                 wie = Werkzeuge.meldungenAlleGelesen() || 0;
             }
-            catch { /* … */ }
+            catch { }
             try {
                 UI.toast(wie === 1 ? '1 Meldung als gelesen markiert'
                     : wie + ' Meldungen als gelesen markiert');
             }
-            catch { /* … */ }
+            catch { }
             try {
                 Ansichten.posteingang();
             }
-            catch { /* … */ }
+            catch { }
         } });
-    /* --- KALENDER („Termine") ---------------------------------------------- */
     K.melde({ bereich: 'kalender', id: 'uebersicht', name: 'Übersicht',
         zeichen: 'calendar', rang: 10, tun: () => Ansichten.termine() });
     K.melde({ bereich: 'kalender', id: 'kommend', name: 'Kommende Termine',
@@ -1117,7 +810,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                     if (t.id)
                         App.oeffne(t.id);
                 }
-                catch { /* … */ } }
+                catch { } }
             }));
         }
     });
@@ -1133,8 +826,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         zeichen: 'link', rang: 50,
         zeigen: () => da(() => globalThis.Kalender?.dialog),
         tun: () => globalThis.Kalender.dialog() });
-    /* ABGLEICHEN NUR MIT ABO. `alleAbosHolen` steigt ohne eines sofort wieder
-       aus — der Knopf täte dann sichtbar nichts (§47). */
     K.melde({ bereich: 'kalender', id: 'abgleichen', name: 'Jetzt abgleichen',
         zeichen: 'redo', rang: 60,
         zeigen: () => {
@@ -1148,11 +839,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             }
         },
         tun: () => { void globalThis.Kalender.alleAbosHolen(); } });
-    /* --- KOMPASS und MEHR --------------------------------------------------
-       Zwei Übersichtsseiten. Sie brauchen keine eigenen Werkzeuge — sie SIND
-       das Werkzeug —, aber ohne einen einzigen Knopf stünde die Kante leer da
-       und sähe aus wie ein Fehler. Die drei Wege sind die, die von einer
-       Übersicht aus wirklich weiterführen. */
     for (const b of ['kompass', 'mehr']) {
         K.melde({ bereich: b, id: 'start', name: 'Start',
             zeichen: 'today', rang: 10, tun: () => Ansichten.start() });

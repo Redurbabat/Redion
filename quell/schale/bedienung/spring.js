@@ -1,16 +1,7 @@
 "use strict";
-/* schale/bedienung/spring.ts — die Federn des Touch Kits, ohne React (E702).
- * ERZEUGT: quell/schale/bedienung/spring.js (`npm run bauen:ts`, test105).
- * Übertragen aus dem Kit (UI-Kit @c192821, fremd/touch/: motion/spring.ts,
- * motion/presets.ts, gesture/velocity.ts, gesture/rubberband.ts) in derselben
- * Rechenfolge; `test581` §2 rechnet beide nach und verlangt GLEICHE Zahlen
- * (§8). Warum kein drittes Bündel: E702. Dazu für Redion `sample()` und
- * `token()` (Kurve und Dauer aus grund.css, E259). */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/spring.ts (npm run bauen:ts). */
 const RedionSpring = (() => {
     const MAX_BOUNCE = 0.95;
-    /** Die fünf Federn des Kits (presets.ts) — in grund.css als `--feder-…`:
-     *  press → druck (Knopf), snappy → knapp (Schalter), smooth → sanft
-     *  (Blätter, Seiten), bouncy → lebhaft, gentle → weich. */
     const PRESETS = {
         press: { duration: 0.32, bounce: 0.3 },
         snappy: { duration: 0.36, bounce: 0.14 },
@@ -22,7 +13,6 @@ const RedionSpring = (() => {
         press: '--feder-druck', snappy: '--feder-knapp', smooth: '--feder-sanft',
         bouncy: '--feder-lebhaft', gentle: '--feder-weich',
     };
-    /** Dauer + Bounce → Feder (Masse 1). */
     const fromPerceptual = ({ duration, bounce }) => {
         if (!(duration > 0))
             throw new RangeError(`Spring duration must be > 0, got ${duration}`);
@@ -36,7 +26,6 @@ const RedionSpring = (() => {
         if (!(stiffness > 0) || !(mass > 0) || !(damping >= 0))
             throw new RangeError(`Invalid spring: stiffness=${stiffness} damping=${damping} mass=${mass}`);
     };
-    /** t (s) ↦ {Ort, Tempo}; geschlossen gelöst, von der Bildrate unabhängig. */
     const solve = (params, from, to, initialVelocity = 0) => {
         assertPhysical(params);
         const x0 = from - to;
@@ -46,7 +35,6 @@ const RedionSpring = (() => {
         const omega0 = Math.sqrt(params.stiffness / params.mass);
         const zeta = dampingRatio(params);
         if (Math.abs(zeta - 1) < 1e-6) {
-            /* kritisch gedämpft (wie SelectionFlow, E646) */
             const b = v0 + omega0 * x0;
             return (t) => {
                 const e = Math.exp(-omega0 * t);
@@ -54,7 +42,6 @@ const RedionSpring = (() => {
             };
         }
         if (zeta < 1) {
-            /* unterdämpft */
             const omegaD = omega0 * Math.sqrt(1 - zeta * zeta);
             const decay = zeta * omega0;
             const b = (v0 + decay * x0) / omegaD;
@@ -68,7 +55,6 @@ const RedionSpring = (() => {
                 };
             };
         }
-        /* überdämpft (Vieta-Form) */
         const s = zeta + Math.sqrt(zeta * zeta - 1);
         const r1 = -omega0 / s;
         const r2 = -omega0 * s;
@@ -80,7 +66,6 @@ const RedionSpring = (() => {
             return { value: to + e1 + e2, velocity: r1 * e1 + r2 * e2 };
         };
     };
-    /** Sekunden, bis die Feder ruht. */
     const settle = (params, from, to, initialVelocity = 0, { restDelta = 0.001, restSpeed = 0.01, maxDuration = 10 } = {}) => {
         const at = solve(params, from, to, initialVelocity);
         const step = 1 / 1000;
@@ -91,7 +76,6 @@ const RedionSpring = (() => {
         }
         return maxDuration;
     };
-    /** 0 → 1 als `linear(…)` plus Dauer — so entstehen die Marken in grund.css. */
     const toLinearEasing = (params, { maxPoints = 48, precision = 4 } = {}) => {
         if (!(maxPoints >= 2))
             throw new RangeError(`maxPoints must be >= 2, got ${maxPoints}`);
@@ -112,7 +96,6 @@ const RedionSpring = (() => {
         return { easing: `linear(${points.join(', ')})`, duration };
     };
     const preset = (name) => fromPerceptual(PRESETS[name]);
-    /** Tempo beim Loslassen aus den Fingerproben der letzten 100 ms. */
     const velocityTracker = ({ windowMs = 100 } = {}) => {
         let samples = [];
         return {
@@ -149,7 +132,6 @@ const RedionSpring = (() => {
             reset() { samples = []; },
         };
     };
-    /** Gummiband jenseits einer Kante. */
     const rubberband = (overshoot, dimension, constant = 0.55) => {
         if (overshoot === 0 || dimension <= 0)
             return 0;
@@ -162,9 +144,6 @@ const RedionSpring = (() => {
             return max + rubberband(value - max, dimension, constant);
         return value;
     };
-    /* ── ab hier Redion, nicht aus dem Kit ── */
-    /** Stützpunkte für `element.animate()` (Tempo je Sekunde), einmal gerechnet —
-     *  als Keyframes mit `easing: 'linear'` malt sie der Compositor (E646). */
     const sample = (params, from, to, initialVelocity = 0, stepMs = 8) => {
         const seconds = settle(params, from, to, initialVelocity, { restDelta: Math.max(0.01, Math.abs(to - from) * 0.001), restSpeed: 1 });
         const at = solve(params, from, to, initialVelocity);
@@ -175,8 +154,6 @@ const RedionSpring = (() => {
         values.push(to);
         return { values, duration };
     };
-    /** Kurve und Dauer aus grund.css — mit Rückfall (Safari < 17.2) und 1 ms
-     *  unter „weniger Bewegung", genau wie CSS an derselben Stelle. */
     const token = (name) => {
         try {
             const style = getComputedStyle(document.documentElement);
@@ -186,7 +163,7 @@ const RedionSpring = (() => {
             if (easing && Number.isFinite(n))
                 return { easing, duration: /ms$/.test(raw) ? n : n * 1000 };
         }
-        catch { /* ohne Seite: die gerechnete Feder */ }
+        catch { }
         const selbst = toLinearEasing(preset(name));
         return { easing: selbst.easing, duration: Math.round(selbst.duration * 1000) };
     };

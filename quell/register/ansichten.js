@@ -1,33 +1,11 @@
 "use strict";
-/* ============================================================================
- * register/ansichten.js — die Ansichtsarten einer Datenbank
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/ansichten.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/register/ansichten.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Dieselben Daten, andere Brille. Eine neue Ansicht entsteht hier als ein
- * Eintrag; gezeichnet wird sie im Bereich Datenbanken.
- *
- * Ein Eintrag ist ein Dreier: [id, Zeichen, Name]. Diese Form stand schon so
- * im Code und bleibt so — eine Umstellung auf Objekte hätte hier nichts
- * gebracht ausser Arbeit an vierzig Aufrufstellen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/ansichten.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.ansichten = (() => {
     const EINGEBAUT = [
         ['table', '▦', 'Tabelle'],
-        /* Dieselben Daten mit der Bedienung eines Tabellenprogramms: Pfeiltasten,
-           Bereichsauswahl, Einfügen von dreissig Zeilen aus Excel auf einmal.
-           Notions grösste Lücke bei der Eingabe — siehe bereiche/datenbanken/raster.ts */
         ['raster', '🧮', 'Raster'],
         ['board', '▤', 'Board'],
-        /* „Zeitstrahl", nicht „Zeitleiste" (E422). Beide Wörter standen im
-           Projekt für dieselbe Ansicht: das Register sagte Zeitleiste, der
-           Reiter Zeitstrahl, und die Fehlermeldung „Für den Zeitstrahl braucht
-           es eine Datums-Eigenschaft" auch. Es gewinnt das Wort, das der Nutzer
-           schon liest. */
         ['timeline', '▬', 'Zeitstrahl'],
         ['calendar', '📅', 'Kalender'],
         ['list', '☰', 'Liste'],
@@ -36,11 +14,9 @@ Register.ansichten = (() => {
         ['feed', '📰', 'Feed'],
         ['map', '🗺', 'Karte'],
         ['dashboard', '🧮', 'Dashboard'],
-        /* Notions grösste Lücke, hier als eigene Ansicht: Zeilen × Spalten × Werte */
         ['pivot', '⊞', 'Pivot'],
         ['form', '📝', 'Formular']
     ];
-    /* Eine Liste, und immer dieselbe — siehe register/bloecke.js. */
     const LISTE = EINGEBAUT.slice();
     const melde = (id, icon, name) => {
         if (!id || LISTE.some(x => x[0] === id))

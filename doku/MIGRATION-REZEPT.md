@@ -103,6 +103,19 @@ Die Quelle ist `src/…/x.ts`. `npm run bauen:ts` schreibt daraus `quell/…/x.j
 In die **ersten 1200 Zeichen** — `test105` prüft das, und zwar aus einem
 Grund: weiter unten liest ihn niemand mehr.
 
+**Seit E715 (3. Oktober 2026) als eigene erste Zeile.** `tsconfig.bauen.json`
+nimmt alle Kommentare aus dem erzeugten `.js` (`removeComments`) — bis auf
+die, die mit `/*!` beginnen. Ein Hinweis im gewöhnlichen Kopfkommentar
+käme also nicht mehr an. Jede Quelle beginnt deshalb mit
+
+```txt
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/…/x.ts (npm run bauen:ts). */
+```
+
+und `test105` §3 meldet jede erzeugte Datei, der sie fehlt oder deren
+Zeile eine andere Quelle nennt. `umzug.mts` setzt sie selbst, mit dem
+richtigen Pfad.
+
 ### 3 · Den Ordner in `tsconfig.bauen.json` eintragen
 
 Die `include`-Liste ist bewusst eine Aufzählung und kein `src/**`.

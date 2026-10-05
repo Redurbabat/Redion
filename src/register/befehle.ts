@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/befehle.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/befehle.js — die Befehlspalette
  * ----------------------------------------------------------------------------

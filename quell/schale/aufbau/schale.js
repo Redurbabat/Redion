@@ -1,26 +1,6 @@
 "use strict";
-/* ============================================================================
- * app.js — Die Anwendung
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/schale/aufbau/schale.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/schale/aufbau/schale.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Hält alles zusammen: Seitenleiste, Seitenanzeige, Suche, Tastenkürzel,
- * Einstellungen, Papierkorb, Sicherung, Navigation.
- * ==========================================================================*/
-/* ==========================================================================
- * KLEINE OBERFLÄCHENHELFER
- * ========================================================================*/
-/* ==========================================================================
- * DIE ANWENDUNG
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/schale.ts (npm run bauen:ts). */
 const App = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     let seiteId = null;
     const esc = (s) => String(s ?? '')
@@ -57,16 +37,6 @@ const App = (() => {
             navKnoepfeStellen();
         }
     };
-    /* DIE KNÖPFE SAGEN VORHER, OB SIE KÖNNEN (Audit F15).
-       Vorher waren `‹` und `›` immer anklickbar und meldeten erst NACH dem
-       Druck „Kein Schritt zurück". Ein Knopf, der aktiv aussieht und dann
-       nichts tut, ist ein Fehlmoment, den niemand braucht — und für ein
-       Vorleseprogramm war der Unterschied überhaupt nicht hörbar.
-  
-       `disabled` statt nur blass: dann überspringt ihn auch die Tabtaste,
-       und der Zustand steht im Zugänglichkeitsbaum. Die Tastenkürzel
-       Strg + [ und Strg + ] behalten ihre Meldung — dort gibt es keinen
-       Knopf, an dem man den Zustand vorher sehen könnte. */
     const navKnoepfeStellen = () => {
         const setz = (id, kann) => {
             const k = document.getElementById(id);
@@ -98,7 +68,6 @@ const App = (() => {
         if (ziel)
             navOeffnen(ziel);
         else {
-            // A directly opened or restored page still needs a way out.
             navSperre = true;
             try {
                 Register.navigation.eines('bibliothekOben')?.tun?.();
@@ -120,9 +89,6 @@ const App = (() => {
             rueck.push(jetzt);
         navOeffnen(ziel);
     };
-    /* ------------------------------------------------------------------------
-     * Was zuletzt offen war — Notions „Kürzlich verwendet".
-     * ----------------------------------------------------------------------*/
     const kuerzlichMerken = (id) => {
         const b = Store.getBlock(id);
         if (!b || b.type !== 'page' || b.parentTable === 'collection')
@@ -134,36 +100,12 @@ const App = (() => {
         .map((id) => Store.getBlock(id))
         .filter((b) => b && b.alive && b.type === 'page' && b.parentTable !== 'collection')
         .slice(0, 6);
-    /* ------------------------------------------------------------------------
-     * EIN TAG IST KEIN ZEITPUNKT (E229)
-     * ------------------------------------------------------------------------
-     * `new Date('2026-08-27')` ist nach ECMAScript-Regel UTC-Mitternacht, nicht
-     * Mitternacht hier. Verglichen wurde danach mit LOKALER Mitternacht, und
-     * angezeigt wurde eine Ortszeit. Gemessen an derselben Aufgabe, die kein
-     * einziges Mal eine Uhrzeit hat:
-     *
-     *     UTC                 00:00  00:00  00:00
-     *     Europe/Zurich       02:00  02:00  02:00
-     *     Pacific/Auckland    12:00  12:00          ← nur noch ZWEI
-     *
-     * Die dritte fehlte. Die Verschiebung hatte sie über die Tagesgrenze aus
-     * dem Fenster geschoben. Eine erfundene Uhrzeit ist ärgerlich; ein Termin,
-     * der auf manchen Geräten gar nicht mehr dasteht, ist ein Datenfehler.
-     *
-     * Die Unterscheidung gibt es in Redion schon — die Kalenderansicht fragt
-     * `String(v).length > 10`: zehn Zeichen sind ein Tag, mehr ist ein
-     * Zeitpunkt. Sie stand nur nicht hier. Ein Wert, zwei Antworten, und die
-     * zweite war falsch.
-     * ----------------------------------------------------------------------*/
-    /** Zehn Zeichen sind ein Kalendertag, alles Längere trägt eine Uhrzeit. */
     const nurTag = (wert) => /^\d{4}-\d{2}-\d{2}$/.test(String(wert).trim());
-    /** Ein Kalendertag wird zu Mitternacht HIER, nicht zu Mitternacht in UTC. */
     const alsDatum = (wert) => {
         const t = String(wert).trim();
         const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
         return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(t);
     };
-    /** Die nächsten Termine aus allen Termin-Datenbanken. */
     const kommendeTermine = (wieViele = 3) => {
         const raus = [];
         const heute = new Date();
@@ -187,19 +129,6 @@ const App = (() => {
         });
         return raus.sort((a, b) => a.d - b.d).slice(0, wieViele);
     };
-    /* ========================================================================
-     * DIE SEITENLEISTE — sie liegt jetzt nebenan
-     * ------------------------------------------------------------------------
-     * Rund 600 Zeilen standen hier: Abschnitte, Reihenfolge, Klappen, Reiter,
-     * der Baum. Sie liegen in `schale/aufbau/seitenleiste.js`.
-     *
-     * Was hier bleibt, sind Weiterreichungen — und zwar aus einem Grund, nicht
-     * aus Bequemlichkeit: `zeichneBaum` steht an über fünfzig Stellen im
-     * Projekt und an sechsundzwanzig weiteren in dieser Datei. Diese Aufrufe
-     * alle umzuschreiben wäre viel Arbeit für keinen Gewinn und ein hohes
-     * Risiko — jede übersehene Stelle wäre ein Fehler, den erst ein Mensch
-     * findet. Genau so hält es `UI` für `Menue`, `Hinweis` und `Dialog`.
-     * ======================================================================*/
     const zeichneBaum = () => Seitenleiste.zeichne();
     const handyLeiste = (vorauf) => Seitenleiste.handyLeiste(vorauf);
     const reiterWechseln = (id) => Seitenleiste.reiterWechseln(id);
@@ -207,10 +136,6 @@ const App = (() => {
     const abschnittAn = (id) => Seitenleiste.abschnittAn(id);
     const abschnittSchalten = (id) => Seitenleiste.abschnittSchalten(id);
     const ABSCHNITTE = Seitenleiste.ABSCHNITTE;
-    /* ========================================================================
-     * DAS SEITENMENÜ (⋯) — der vollständige Notion-Umfang
-     * ======================================================================*/
-    /** Wie viele Wörter stehen auf der Seite? Notion zeigt das im Seitenmenü. */
     const woerterZaehlen = (seiteId) => {
         let n = 0;
         const zaehle = (id, tiefe) => {
@@ -229,10 +154,6 @@ const App = (() => {
         zaehle(seiteId, 0);
         return n;
     };
-    /* ------------------------------------------------------------------ *
-     * ÜBERSETZEN, VORSCHLÄGE, BENACHRICHTIGUNGEN, VERBINDUNGEN
-     * Vier Einträge, die es bei Notion im Seitenmenü gibt.
-     * ------------------------------------------------------------------ */
     const SPRACHEN = [
         ['Deutsch', 'Deutsch'], ['Englisch', 'English'], ['Französisch', 'Français'],
         ['Italienisch', 'Italiano'], ['Spanisch', 'Español'], ['Portugiesisch', 'Português'],
@@ -240,23 +161,7 @@ const App = (() => {
         ['Russisch', 'Русский'], ['Japanisch', '日本語'], ['Koreanisch', '한국어'],
         ['Chinesisch (vereinfacht)', '简体中文']
     ];
-    /* Notion kennt genau zwei Stufen, nicht drei. */
     const BENACHRICHTIGUNG = { alle: 'Kommentare', erwaehnungen: 'Erwähnungen' };
-    /**
-     * DAS ZEICHEN EINER MENÜZEILE, GEZEICHNET (E701).
-     *
-     * Das ⋯-Menü der Seite trug dreiunddreissig Emoji und Schriftzeichen
-     * durcheinander — Kette, Klemmbrett, Karteischrank, Eimer, Pfeile —, jedes
-     * in seiner eigenen Farbe und auf seiner eigenen Grundlinie. Redur hat am
-     * 27. September „Gezeichnete Zeichen" gewählt: „Alles bleibt am selben
-     * Ort." Jede Zeile behält Kennung, Wort, Kürzel und Platz; nur das Bild
-     * kommt jetzt aus `Register.symbole` (E273, §8: ein Katalog für Zeichen).
-     *
-     * Als fertiges `<svg>` im Text und nicht als `data-sym`, das später
-     * gefüllt wird: `Menue.menu` misst das Menü gleich nach dem Einhängen, um
-     * es am Rand zu halten — ein Zeichen, das erst danach käme, verschöbe die
-     * Messung.
-     */
     const menueZeichen = (name) => {
         try {
             return Register.symbole.alsSvg(name, 16);
@@ -266,30 +171,15 @@ const App = (() => {
         }
     };
     const mi = (name) => `<span class="mi">${menueZeichen(name)}</span>`;
-    /** Eine Menüzeile mit echtem Schalter rechts — so macht es Notion. */
     const schalterZeile = (a, zeichen, text, an) => `<button data-a="${a}" class="mit-schalter" role="switch" aria-checked="${an ? 'true' : 'false'}">` +
         `${mi(zeichen)}${text}` +
         `<span class="mschalter${an ? ' an' : ''}"><i></i></span></button>`;
-    /**
-     * Der Schalter kippt an zwei Stellen, und bis hierher kippte nur die
-     * FARBE: `.an` färbt die Pille ein, und mehr stand nirgends. Damit war
-     * der Zustand ausschliesslich über Farbe zu erkennen — genau das, was
-     * §38 verbietet, und ein Vorleseprogramm las eine Schaltfläche ohne
-     * jeden Zustand vor. Beide Stellen gehen deshalb durch diese Funktion:
-     * zwei Aufrufer, eine Wahrheit (§8).
-     */
     const schalterKippen = (knopf, an) => {
         if (!knopf)
             return;
         knopf.querySelector('.mschalter')?.classList.toggle('an', an);
         knopf.setAttribute('aria-checked', an ? 'true' : 'false');
     };
-    /**
-     * „Mit KI verwenden" — bei Notion macht dieser Eintrag aus der Seite
-     * selbst etwas für die KI: eine Fähigkeit, eine dauerhafte Anweisung
-     * oder die Anweisung für Besprechungsnotizen. Darunter stehen bei uns
-     * zusätzlich die Schreibbefehle.
-     */
     const mitKiMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();
         const m = UI.menu('<button data-k="faehig"><span class="mi">🧩</span>Als KI-Fähigkeit verwenden' +
@@ -370,11 +260,6 @@ const App = (() => {
             }
         });
     };
-    /**
-     * Vorschlagsmodus. Solange er an ist, wird jede Textänderung als Vorschlag
-     * festgehalten statt einfach übernommen — mit Balken zum Annehmen oder
-     * Verwerfen, wie bei Notion.
-     */
     const vorschlagModus = (p) => {
         const an = !p.vorschlagModus;
         Store.updateBlock(p.id, { vorschlagModus: an });
@@ -525,14 +410,11 @@ const App = (() => {
         const r = anker.getBoundingClientRect();
         const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
             ? Lebensbereiche.direkteBereichIds(p).length : 0;
-        const m = UI.menuMitSuche(
-        /* Darstellung */
-        '<div class="schrift-kacheln">' +
+        const m = UI.menuMitSuche('<div class="schrift-kacheln">' +
             [['default', 'Ag', 'Standard'], ['serif', 'Ag', 'Serife'], ['mono', 'Ag', 'Mono']]
                 .map(([id, ag, n]) => `<button data-schrift="${id}" class="${(p.font || 'default') === id ? 'on' : ''}">` +
                 `<b class="sk-${id}">${ag}</b><span>${n}</span></button>`).join('') +
             '</div>' +
-            /* Seitenaktionen — Reihenfolge wie in Notions Menü */
             '<button data-a="link">' + mi('link') + 'Link kopieren<span class="ms">Strg Alt L</span></button>' +
             '<button data-a="inhalt">' + mi('clipboard') + 'Seiteninhalte kopieren</button>' +
             '<button data-a="dup">' + mi('copy') + 'Duplizieren<span class="ms">Strg D</span></button>' +
@@ -553,13 +435,6 @@ const App = (() => {
             schalterZeile('wz-gesperrt', 'lock', 'Seite sperren', p.gesperrt) +
             '<button data-a="mitki">' + mi('sparkle') + 'Mit KI verwenden<span class="ms">▸</span></button>' +
             '<hr>' +
-            /* Auf dem Telefon ist die Kopfzeile schmal wie in Notion: nur ☰, ‹,
-               Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar.
-               In der ruhigen Fassung (E219) gilt derselbe Grund am Rechner: die
-               fünf Zeichen sind aus der Kopfzeile heraus, und der EINZIGE Weg,
-               den sie dann noch haben, ist dieser hier. Deshalb steht die
-               Bedingung an genau der Stelle, an der auch das Verstecken hängt —
-               wer eines ändert, sieht das andere. */
             ((UI.amTelefon() || (typeof Ruhig !== 'undefined' && Ruhig.an()))
                 ? '<button data-a="teilen">' + mi('share') + 'Teilen und ausgeben</button>' +
                     '<button data-a="verlauf">' + mi('history') + 'Versionsverlauf</button>' +
@@ -583,7 +458,6 @@ const App = (() => {
             '<button data-a="uebersetzen">' + mi('translate') + 'Übersetzen<span class="ms">▸</span></button>' +
             '<button data-a="undo">' + mi('undo') + 'Rückgängig machen<span class="ms">Strg Z</span></button>' +
             '<hr>' +
-            /* Daten */
             '<button data-a="export">' + mi('download') + 'Als Markdown</button>' +
             '<button data-a="import">' + mi('upload') + 'Markdown einlesen</button>' +
             Werkzeuge.seitenMenueZusatz(p) +
@@ -599,9 +473,6 @@ const App = (() => {
                 `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
                 esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
         m.addEventListener('click', async (e) => {
-            /* Nur die Schriftkacheln im Menü, nicht der <body> — der trägt
-               ebenfalls ein data-schrift für die Schriftgrösse. Ohne die
-               Einschränkung auf button fing dieser Zweig jeden Klick ab. */
             const sk = elVon(e)?.closest('button[data-schrift]');
             if (sk) {
                 Store.updateBlock(p.id, { font: sk.dataset.schrift });
@@ -614,7 +485,6 @@ const App = (() => {
             if (!b)
                 return;
             const a = b.dataset.a;
-            /* Untermenüs bleiben offen */
             if (a === 'icon') {
                 m.remove();
                 UI.emojiWaehlen(anker, (em) => {
@@ -635,14 +505,10 @@ const App = (() => {
                 UI.toast('Alles liegt ohnehin auf diesem Gerät — auch ohne Netz.');
                 return;
             }
-            /* „Volle Breite" hat seit E283 einen eigenen Griff und steht deshalb
-               VOR dem Sammelzweig — der Schalter kippt trotzdem an Ort und Stelle,
-               nur die Schreibarbeit macht `volleBreite`. */
             if (a === 'breit') {
                 schalterKippen(b, volleBreite(p));
                 return;
             }
-            /* Schalter bleiben im Menü stehen und kippen an Ort und Stelle */
             if (a === 'klein' || a === 'wz-gesperrt' || a === 'pfad') {
                 const feld = a === 'klein' ? 'small'
                     : a === 'pfad' ? 'pfad' : 'gesperrt';
@@ -720,7 +586,6 @@ const App = (() => {
             }
             if (Werkzeuge.seitenMenueAktion(a, p))
                 return;
-            /* Die vier, die auf dem Telefon aus der Kopfzeile hierher gewandert sind */
             if (a === 'teilen') {
                 Werkzeuge.teilenMenue(anker, p);
                 return;
@@ -817,10 +682,6 @@ const App = (() => {
             }
         });
     };
-    /**
-     * Der Cover-Wähler. Aufbau wie in Notions App: oben Entfernen · Titel ·
-     * Schliessen, darunter Reiter, darunter Gruppen mit Kacheln.
-     */
     const dupliziereSeite = (id, zielEltern) => {
         const daten = Store.baum(id);
         const neu = Store.baumEinfuegen(daten, zielEltern);
@@ -828,30 +689,7 @@ const App = (() => {
             Store.updateBlock(neu.id, { text: (Store.getBlock(id).text || 'Ohne Titel') + ' (Kopie)' });
         return neu;
     };
-    /* ========================================================================
-     * SEITE ANZEIGEN
-     * ======================================================================*/
-    /* Sonderansichten — Bibliothek, Meine Aufgaben. Sie ersetzen den Seiteninhalt,
-       ohne eine echte Seite zu sein, genau wie bei Notion. */
     let sonder = null;
-    /* ========================================================================
-     * DER SCHAUPLATZ — wo man gerade ist (E272)
-     * ------------------------------------------------------------------------
-     * Die Kontextkante zeigt je Bereich andere Knöpfe; dafür muss sie
-     * fragen können, welcher Bereich das gerade ist. Bisher wusste das
-     * niemand ausser `zeigeSonder` und `oeffne` selbst — in einer lokalen
-     * Variablen, die keiner sieht.
-     *
-     * `schauplatz()` gibt EINEN kleinen Bezeichner zurück, nicht das ganze
-     * Innenleben: `'heute'`, `'bibliothek'`, `'seite'`, `'leer'`. Wer mehr
-     * braucht — ob auf der Seite ein PDF liegt zum Beispiel —, fragt seinen
-     * eigenen Bereich; die Schale soll nicht wissen müssen, was ein PDF ist.
-     *
-     * Und ein Ereignis dazu, damit niemand pollen muss. Es heisst
-     * `redion:schauplatz` und trägt den Bezeichner im `detail`. Das ist die
-     * Bauart, die §5 verlangt: die Kante hängt nicht an `App`, sondern hört
-     * zu.
-     * ====================================================================== */
     const SCHAUPLATZ_NAMEN = {
         'Lernen & Alltag': 'heute', 'Heute': 'heute', 'Start': 'heute',
         'Lernzentrum': 'lernen',
@@ -861,31 +699,12 @@ const App = (() => {
         'Datenbanken': 'bibliothek', 'Whiteboards': 'bibliothek',
         'Wissen & Verweise': 'bibliothek', 'Vorlagen': 'bibliothek',
         'Notizhefte': 'notizhefte',
-        /* BEIDE NAMEN, EIN ZIEL (Audit F16). „Workspace" heisst seit dem
-           3. September „Arbeitsbereich"; der alte Name bleibt hier als Alias
-           stehen, damit ein gemerkter Schauplatz, ein Verweis oder eine ältere
-           Sicherung nicht ins Leere zeigt. Ein Alias ist kein Doppelkatalog:
-           er führt zur selben Kennung. */
         'Arbeitsbereich': 'bibliothek', 'Workspace': 'bibliothek',
         'Meine Aufgaben': 'aufgaben',
         'Aufgaben': 'aufgaben', 'Posteingang': 'posteingang',
         'Elektrotechnik': 'elektro', 'Elektro': 'elektro',
         'Papierkorb': 'papierkorb', 'Kalender': 'kalender', 'Termine': 'kalender'
     };
-    /* DREI NAMEN KAMEN MIT E273 DAZU — UND WARUM SIE NÖTIG WAREN.
-       „Start", „Seiten" und „Termine" sind die Titel, unter denen
-       `Ansichten.start/seiten/termine` sich seit E273 über `zeigeSonder`
-       zeichnen. Ohne Eintrag hier bekämen sie aus dem Schnipsel unten die
-       Schauplätze „start", „seiten" und „termine" — drei Kennungen, auf die
-       sich niemand angemeldet hat, obwohl es dieselben Bildschirmfamilien
-       sind wie „heute", „bibliothek" und „kalender".
-  
-       Umgekehrt gilt: 'Papierkorb' und 'Lernzentrum' stehen hier, ohne dass
-       sie heute jemand ruft. Sie sind kein Schaden — ein Titel, den niemand
-       benutzt, kostet nichts —, aber auch kein Beweis: wer eine Kante für
-       'papierkorb' anmeldet, meldet sie an einen Schauplatz an, den es im
-       Betrieb nicht gibt. Vorher nachsehen, wer `zeigeSonder` mit dem Titel
-       ruft (heute: acht Stellen). */
     const schauplatz = () => {
         if (seiteId)
             return 'seite';
@@ -894,39 +713,12 @@ const App = (() => {
         const titel = String(sonder.titel || '');
         if (SCHAUPLATZ_NAMEN[titel])
             return SCHAUPLATZ_NAMEN[titel];
-        /* Ein unbekannter Titel wird zu einer brauchbaren Kennung statt zu
-           „unbekannt": kleingeschrieben, ohne Sonderzeichen. So bekommt ein
-           neuer Bereich von selbst einen Schauplatz, ohne dass jemand ihn
-           hier einträgt — und die Kante kann sich darauf anmelden. */
         return titel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
             || 'leer';
     };
     let letzterSchauplatz = '';
-    /**
-     * DIE SEITE ZÄHLT MIT (L95, E312).
-     *
-     * Bis hierher wurde nur gemeldet, wenn sich `schauplatz()` änderte. Von
-     * einer Seite auf eine andere bleibt der aber „seite" — es kam also kein
-     * Signal, und die Kontextkante zeichnete sich nicht neu.
-     *
-     * Das fiel erst mit der Datenbank-Kante auf, war aber schon vorher da:
-     * `bereichJetzt()` verfeinert „seite" zu editor/pdf/datenbank, und beim
-     * Wechsel von einer PDF auf eine Textseite blieben die PDF-Griffe stehen.
-     * Ein Griff, der zur offenen Seite nicht gehört, ist schlimmer als keiner.
-     *
-     * Der `detail` bleibt der Schauplatz — wer nur ihn liest, merkt nichts.
-     * Die zusätzlichen Meldungen kosten ein Neuzeichnen der Kante, und das
-     * geschieht beim Seitenwechsel ohnehin schon zweimal.
-     */
     const schauplatzMelden = () => {
         const jetzt = schauplatz();
-        /* DIE ADRESSE ZÄHLT MIT (E393) — dieselbe Sorte Lücke wie die Seite
-           oben, nur eine Ebene höher. Von „Heute" auf „Lernzentrum" bleibt
-           `schauplatz()` bei `heute` (beide Ansichten heissen so) und `seiteId`
-           bleibt leer. Es kam also kein Signal, und die Kontextkante liess
-           ihre Markierung auf „Heute" stehen, obwohl man woanders war.
-           `location.hash` unterscheidet die beiden — er sagt
-           `#welt-lernen-heute` gegen `#welt-lernen-lernen`. */
         let adr = '';
         try {
             adr = String(location.hash || '');
@@ -941,7 +733,7 @@ const App = (() => {
         try {
             window.dispatchEvent(new CustomEvent('redion:schauplatz', { detail: jetzt }));
         }
-        catch { /* ohne CustomEvent bleibt der Rest */ }
+        catch { }
     };
     const zeigeSonder = (titel, zeichner) => {
         if (seiteId || !sonder || sonder.titel !== titel)
@@ -951,10 +743,6 @@ const App = (() => {
         navKnoepfeStellen();
         const ort = titel.toLowerCase().replace(/[^a-z]+/g, '-');
         location.hash = '#' + ort;
-        /* WO MAN WAR, NICHT NUR WAS ZULETZT OFFEN WAR (E349). `letzte` zeigt
-           weiter auf die zuletzt geöffnete Seite — „Weiter wo du warst" braucht
-           sie. Ob der nächste Start diese Seite oder das Regal zeigt, entscheidet
-           dieser Ort: `seite`, oder der Name der Sonderansicht. */
         Store.setMeta('zuletztOrt', ort);
         zeichneBaum();
         zeichneSeite();
@@ -990,42 +778,6 @@ const App = (() => {
         if (scr)
             scr.scrollTop = 0;
     };
-    /* ========================================================================
-     * SEITE ZEICHNEN — das Zusammensetzen
-     * ------------------------------------------------------------------------
-     * Was hier steht, ist nur noch die Entscheidung, WAS gezeichnet wird:
-     * eine Sonderansicht, gar nichts, oder eine echte Seite. Das WIE liegt in
-     * `kopfleiste.js` und `inhaltsflaeche.js`.
-     *
-     * Der Rückgabewert von `Kopfleiste.zeichne` ist der wichtige Teil: false
-     * heisst, die Seite ist verschlüsselt und danach kommt nichts mehr.
-     * ======================================================================*/
-    /**
-     * Zeichnet die offene Seite neu.
-     * @param {string} fokus  ID des Blocks, der danach den Cursor bekommt
-     * @param {string} wo     'ende' setzt den Cursor ans Textende
-     */
-    /* ==========================================================================
-     * DAS KI-FELD BLEIBT NICHT IM DOKUMENT STEHEN (E394, Audit F08)
-     * --------------------------------------------------------------------------
-     * GEMESSEN AM 4. SEPTEMBER auf 1360 × 900, mit einem A4-Blatt im
-     * Dokumentmodus: `#ai` stand weiter da, 380 Pixel breit, und liess dem
-     * Blatt 980 von 1360 — 28 % des Bildschirms für ein Feld, das man gerade
-     * nicht braucht.
-     *
-     * E384 hat den Dokumentmodus damit begründet, dass „die ganze Schale
-     * wegfällt", und die CSS blendet dort auch Menüband, Kopfzeile, untere
-     * Leiste und Kontextkante aus. Das KI-Feld fehlte in dieser Liste.
-     *
-     * WARUM NICHT EINFACH `display:none` IN DER CSS. Weil man die KI IM
-     * Dokument sehr wohl brauchen kann — „fasse diese Seite zusammen" ist
-     * genau dort die Frage. Ein Feld, das sich nicht öffnen lässt, wäre die
-     * Reparatur, die mehr kaputt macht als der Fehler.
-     *
-     * Also: beim EINTRETEN zuklappen und sich merken, dass es offen war; beim
-     * VERLASSEN wieder aufklappen. Wer es im Dokument von Hand öffnet,
-     * behält es — die Erinnerung wird beim Eintreten gesetzt, nicht laufend
-     * nachgeführt. */
     let kiVorDokument = false;
     let warImDokument = false;
     const kiAmDokumentAnpassen = (imDokument) => {
@@ -1049,22 +801,6 @@ const App = (() => {
         const wrap = document.getElementById('page');
         if (!wrap)
             return;
-        /* EIN OFFENES DOKUMENT IST DER GANZE BILDSCHIRM (E384). Redurs Satz kam
-           ein zweites Mal: „ich will das die pdf nicht im bereichen sich öffnet
-           so wie goodnotes". E296 hatte den SEITENKOPF weggeraeumt — den Kasten
-           INNERHALB der Seite. Was stehen blieb, war die Schale um sie herum,
-           und genau die meint das Wort „Bereiche".
-    
-           Gemessen auf 1440x900: Menueband 37 + Kopfzeile 54 + Dokumentleiste 47
-           + die Original-Karte 45 = die oberen 222 der 900 Pixel, bevor das
-           erste Blatt anfaengt. Am Telefon 232 von 844, und unten stand noch
-           die Reiterleiste. GoodNotes hat dort EINE Leiste und darunter Papier.
-    
-           Die Flagge steht am `body`, weil Menueband, Kopfzeile und die untere
-           Leiste ausserhalb von `#page` liegen; ein Haken an `#page` erreicht
-           sie nicht. Geloescht wird sie hier, gesetzt nur im Dokumentzweig —
-           so faellt sie auch bei jedem fruehen Ausstieg zurueck (Sonderansicht,
-           leere Seite, Sperrbildschirm). */
         delete document.body.dataset['dokument'];
         delete document.body.dataset['foliensatz'];
         kiAmDokumentAnpassen(false);
@@ -1083,19 +819,12 @@ const App = (() => {
             zeichneCrumbs();
             return;
         }
-        /* WELCHE DER DREI ANSICHTEN (E690). Sie steht am Block unter
-           `seitenAnsicht`; kein Feld heisst 'redion' — also genau das, was diese
-           Seite immer gezeigt hat (§9). */
         const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
         wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
             (ansicht === 'flaeche' ? ' flaeche-page' : '');
         document.body.dataset.font = p.font || 'default';
         document.body.dataset.small = p.small ? '1' : '';
         wrap.innerHTML = '';
-        /* DER UMSCHALTER STEHT VOR ALLEM ANDEREN. Er gehört keiner der drei
-           Ansichten, sondern der Seite — und muss deshalb auch dann da sein,
-           wenn der Kopf gleich abbricht (verschlüsselte Seite): sonst wäre die
-           Ansicht einer gesperrten Seite nicht mehr wechselbar. */
         if (typeof Seitenansicht !== 'undefined')
             Seitenansicht.schalter(wrap, p);
         if (!Kopfleiste.zeichne(wrap, p)) {
@@ -1103,31 +832,9 @@ const App = (() => {
             return;
         }
         if (DocumentMode.active(p)) {
-            /* DAS DOKUMENT IST DIE SEITE, NICHT EIN KASTEN AUF DER SEITE (E296).
-               Bis hierher stand ueber dem Arbeitsraum noch der ganze Seitenkopf:
-               Cover, das grosse Symbol, der Titel in Ueberschriftsgroesse und die
-               Werkzeugzeile „Cover · Volle Breite · Dokumentmodus". Auf 1440x900
-               gemessen frass das die oberen 380 der 900 Pixel — die PDF-Seite
-               bekam, was uebrig blieb, und darunter standen dann noch ZWEI
-               Werkzeugleisten uebereinander.
-      
-               Der Kopf wird trotzdem erst gezeichnet und dann weggeraeumt, denn an
-               ihm haengen zwei Dinge, die auch hier gelten: der Sperrbildschirm
-               einer verschluesselten Seite (er gibt `false` zurueck, dann sind wir
-               eine Zeile darueber schon heraus) und der Fenstertitel. Verloren
-               geht dabei nichts, was man braucht — der Titel steht ab jetzt in der
-               Kopfzeile des Dokuments, und der Hinweis auf eine gegen Bearbeiten
-               gesperrte Seite ebenso. */
             wrap.className = 'wide document-page';
             wrap.innerHTML = '';
             document.body.dataset['dokument'] = 'an';
-            /* EIN FOLIENSATZ BEKOMMT SEIN MENÜBAND (E549). Redur: „oben mit Menü."
-               `pdf-studio.css` räumt im Dokumentmodus alles Gerüst weg, auch
-               `#menueband` — richtig für eine PDF und für ein Notizheft, wo die
-               Dokumentleiste alles trägt. Eine Präsentation ist der eine Fall, für
-               den PowerPoints Muster gilt: Reiter oben, Folien links.
-               Die Marke steht hier und nicht im Stilblatt, weil nur hier bekannt
-               ist, WELCHES Dokument offen ist. Das Stilblatt liest sie nur. */
             const folien = typeof Folienvorlagen !== 'undefined' &&
                 Folienvorlagen.istFoliensatz(p.id);
             if (folien)
@@ -1138,18 +845,8 @@ const App = (() => {
             DocumentMode.render(wrap, p);
         }
         else {
-            /* WER DAS DOKUMENT VERLAESST, LAESST pdf.js LOS (E473, Fund der
-               Prüfung). Die Suche im Studio haelt je Quelle ein offenes
-               pdf.js-Dokument; ohne diese Zeile blieben sie samt Arbeiter
-               liegen, bis der Tab zuging. Jede Seitenzeichnung laeuft hier
-               durch — Regal, „Normale Seite", ein anderer Ort. */
             DocumentMode.freigeben?.();
             if (ansicht === 'flaeche' && typeof Seitenflaeche !== 'undefined') {
-                /* DIE FLÄCHE IST DER KÖRPER, NICHT EIN KASTEN DARIN (wie E296 beim
-                   Dokument). Der Kopf bleibt aber stehen — anders als im
-                   Dokumentmodus, der ihn wegräumt: `Seitenflaeche` hängt Symbol und
-                   Titel in den Kopf des Kastens um, und der Umschalter muss oben
-                   bleiben, damit man wieder herauskommt. */
                 Seitenflaeche.zeichne(wrap, p);
             }
             else {
@@ -1158,7 +855,6 @@ const App = (() => {
         }
         zeichneCrumbs();
         streifenZeichnen();
-        /* Fokus setzen */
         if (fokus) {
             const ct = document.querySelector(`[data-bid="${fokus}"] .ct`);
             if (ct instanceof HTMLElement) {
@@ -1169,29 +865,10 @@ const App = (() => {
             }
         }
     };
-    /* Weiterreichungen. `zeichneCrumbs` steht an sechs Stellen in dieser Datei,
-       `coverWaehlen` im Seitenmenü — die Namen bleiben, wo sie sind. */
     const zeichneCrumbs = () => Kopfleiste.pfad();
     const coverWaehlen = (p) => Kopfleiste.coverWaehlen(p);
     const streifenZeichnen = () => Inhaltsflaeche.streifen();
-    /* ========================================================================
-     * SUCHE
-     * ======================================================================*/
-    /**
-     * Die grosse Suche.
-     *
-     * @param vorgabe Ein Wort, mit dem sie schon gefüllt aufgeht — für den
-     *        Weg aus einer kleinen Suche heraus (E282: die Regal-Suche findet
-     *        nur Titel und führt hierher, statt Inhalte nachzubauen, E29).
-     *        Ohne Angabe geht sie leer auf, wie bisher.
-     */
     const suche = (vorgabe) => {
-        /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
-           Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
-           Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
-           Drittel davon ins Feld, und was übrig bleibt („Suchen — auch
-           typ:seite, in:Projekte, nach:202") liest sich wie ein Fehler. Lieber
-           ein Wort, das stimmt, als ein Satz, der abbricht. */
         const eng = matchMedia('(max-width:760px)').matches;
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -1216,12 +893,6 @@ const App = (() => {
                 '<div class="res" id="res"></div>' +
                 '<div class="such-vorschau" id="vorschau"></div>' +
                 '</div>' +
-                /* Die Fusszeile hat zwei Hälften, und nur eine gilt überall.
-                   „↑ ↓ auswählen · Enter öffnen · Esc schliessen" nennt drei Tasten,
-                   die eine Telefontastatur nicht hat — das ist keine Hilfe, sondern
-                   eine Anleitung für ein anderes Gerät. Die Suchbefehle dagegen
-                   gelten auf beiden, also bleiben sie. Getrennt, damit das
-                   Stilblatt die eine Hälfte ausblenden kann und die andere nicht. */
                 '<div class="hint">' +
                 '<span class="hint-tasten">↑ ↓ auswählen · Enter öffnen · Esc schliessen · </span>' +
                 '<span class="hint-befehle">Beispiele: <code>titel:&quot;Projekt&quot;</code> ' +
@@ -1236,20 +907,6 @@ const App = (() => {
         let treffer = [];
         let i = 0;
         let queryError = '';
-        /* ----------------------------------------------------------------------
-         * „ZULETZT GESUCHT" (Vorgabe §17)
-         * ----------------------------------------------------------------------
-         * Vorher war das leere Suchfeld ein leeres Fenster. Das ist der
-         * häufigste Zustand überhaupt — man öffnet die Suche und hat noch
-         * nichts getippt — und ausgerechnet dort stand nichts.
-         *
-         * Menschen suchen wiederholt dasselbe. Die letzten sechs Begriffe als
-         * antippbare Marken sind deshalb kein Beiwerk, sondern die schnellste
-         * Abkürzung, die eine Suche haben kann: einmal tippen statt elfmal.
-         *
-         * Gemerkt wird erst beim Öffnen eines Treffers, nicht bei jedem
-         * Tastendruck — sonst stünde dort „f", „fo", „for", „form".
-         * -------------------------------------------------------------------- */
         const letzteSuchen = () => {
             try {
                 return (Store.getMeta('suchverlauf', []) || []).slice(0, 6);
@@ -1268,10 +925,6 @@ const App = (() => {
             }
             catch { }
         };
-        /* Der Verlauf steht ÜBER der Liste, nicht statt ihrer. Das leere
-           Suchfeld zeigt nämlich schon alle Seiten — mein erster Entwurf
-           prüfte auf `!treffer.length` und griff deshalb nie. Gesehen hat das
-           die Probe, nicht der Code. */
         const verlaufBlock = () => {
             if (inp.value)
                 return '';
@@ -1309,8 +962,6 @@ const App = (() => {
                 `<span>${t.page.icon || '📄'}</span>` +
                 `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
                 (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
-                /* Der Ausschnitt steht beim Inhaltstreffer — und seit E500 auch
-                   beim Dokumenttreffer, wo er die Stelle zeigt. */
                 (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
                 `</span><span class="pth">${t.treffer}</span></button>`).join('');
             verlaufBinden();
@@ -1325,7 +976,6 @@ const App = (() => {
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
             zeigeVorschau(i);
         };
-        /* Rechts eine kleine Vorschau der markierten Seite */
         const zeigeVorschau = (k) => {
             const v = o.querySelector('#vorschau');
             if (!v)
@@ -1336,16 +986,6 @@ const App = (() => {
                 return;
             }
             const p2 = t.page;
-            /* HÜLLEN SIND KEIN INHALT (E118).
-               Gelesen wurden bisher nur die DIREKTEN Kinder der Seite. Seit E104
-               ist „nebeneinander" die Vorgabe beim PDF-Einlesen, und dann ist das
-               einzige direkte Kind ein `columns`-Block — der hat keinen `text`,
-               also kam '' zurück, und die Vorschau behauptete „Diese Seite ist
-               noch leer." über eine ganze Schulaufgabe. Genau der Satz, den E107
-               abschaffen wollte, an genau der Anordnung, die Standard ist.
-               Also hinabsteigen — aber nur in das, was selbst nichts zu sagen hat:
-               Spaltenblock, Spalte, Blatt. In einen Textblock mit Kindern nicht;
-               der hat seinen eigenen Satz, und die Vorschau ist eine Vorschau. */
             const HUELLE = new Set(['columns', 'columns3', 'spalte', 'blatt', 'toggle']);
             const zeilen = [];
             const GRENZE = 14;
@@ -1361,8 +1001,6 @@ const App = (() => {
                             `${c ? Store.rowsOf(c.id).length : 0} Einträge</div>`);
                         continue;
                     }
-                    /* Eine PDF-Seite hat keinen `text` — sie ist ein Bild. Ihr erster
-                       Satz steht seit E107 in `suchtext`. */
                     if (b.type === 'pdfseite') {
                         const erste = String(b.suchtext || b.ocrText || '').split('\n')[0] || '';
                         zeilen.push(`<div class="vs-t">📄 Seite ${esc(b.nr || '?')}` +
@@ -1423,9 +1061,6 @@ const App = (() => {
             const named = record['name'] ?? record['value'] ?? record['text'];
             return named === undefined ? [] : valueList(named, depth + 1);
         };
-        /* Der persistente Index aus Phase 18 liefert Seiten UND Datenbankzeilen.
-           Er ist nur Beschleuniger: kann er nicht gelesen werden, entsteht die
-           gleiche Dokumentform direkt aus dem echten Bestand. */
         let documentCache = null;
         const queryDocuments = () => {
             if (documentCache)
@@ -1444,9 +1079,6 @@ const App = (() => {
                     .map(block => ({ id: block.id, seiteId: block.id,
                     art: block.parentTable === 'collection' ? 'zeile' : 'seite',
                     titel: block.text || '', text: Store.childrenOf(block.id)
-                        /* Auch `suchtext` — sonst findet dieser Weg eine PDF-Seite
-                           nicht, während `Store.search` sie findet (E124). Die beiden
-                           müssen dasselbe sagen. */
                         .map((child) => (child.text || child.suchtext || child.ocrText || '')).join(' '),
                     geaendert: block.edited || block.created || '' }));
             }
@@ -1499,18 +1131,6 @@ const App = (() => {
         };
         const suchen = () => {
             const roh = inp.value;
-            /* ══ „Red-ur" ÖFFNET DIE CHRONIK (E514) ═══════════════════════════════
-               Redur, 9. September: „wenn ich bei der Redion in der Suche 'Red-ur'
-               schreibe, sollte dort direkt die Daten sich öffnen."
-      
-               HIER UND NICHT IN DER BEFEHLSPALETTE, weil er die SUCHE genannt hat
-               — und weil eine Chronik über Redion selbst dort hingehört, wo man
-               nach Dingen sucht, nicht wo man Befehle gibt. In der Palette steht
-               sie trotzdem, über denselben Weg (§8): `Chronik.oeffnen`.
-      
-               DER TEXT MUSS GENAU PASSEN. Ein Treffer, der bei jedem „red"
-               aufspringt, wäre eine Überraschung statt einer Tür — deshalb prüft
-               `Chronik.trifft` auf das ganze Wort, mit oder ohne Bindestrich. */
             if (typeof Chronik !== 'undefined' && Chronik.trifft(roh)) {
                 queryError = '';
                 treffer = [];
@@ -1532,26 +1152,6 @@ const App = (() => {
                 zuletzt();
                 return;
             }
-            /* EINE KENNUNG IST KEINE ABFRAGE (L23, E175).
-               L23 nennt ausdrücklich „Titel, Inhalt, Zeilen UND KENNUNGEN".
-               `Store.search` kann das seit Langem — es schneidet die Kennung sogar
-               aus einer ganzen Seitenadresse heraus und findet auch Blöcke im
-               Papierkorb, was bei einer Verwaltungssuche der Sinn der Sache ist.
-               Das Suchfenster ging seit der Abfragesprache daran vorbei: es fragt
-               `QueryLanguage.run` über die Dokumentenform, und die kennt nur
-               Titel, Inhalt, Schlagwörter und Status. Wer eine Kennung einfügte,
-               bekam „Nichts gefunden".
-      
-               Der Zweig steht hier und nicht in `query.ts`: die Sprache kennt
-               weder DOM noch Ablage, und das soll so bleiben.
-      
-               WAS IHN SICHER MACHT, ist nicht der Ausdruck, sondern die zweite
-               Bedingung: `Store.search` muss WIRKLICH über die Kennung gefunden
-               haben. Der Zweig geht an der Abfragesprache vorbei und damit an
-               ihren Filtern; griffe er schon, wenn der Text zufällig wie eine
-               Kennung aussieht, zeigte „nur Titel" plötzlich Inhaltstreffer
-               (test229 §4, gegengeprobt). Der Ausdruck davor spart nur den
-               Aufruf bei jedem Tastendruck. */
             const alsKennung = roh.trim().replace(/^.*#block=/, '');
             if (/^[0-9a-f]{8}-?[0-9a-f]{4}/i.test(alsKennung)) {
                 const gefunden = Store.search(alsKennung);
@@ -1579,21 +1179,6 @@ const App = (() => {
                 snippet: match.snippet,
                 pfad: match.document.path
             })).filter(hit => !!hit.page);
-            /* ══ BEI EINEM DOKUMENT DIE STELLE NACHLIEFERN (E500) ════════════════
-               Die Schalensuche fand bisher SEITEN. Bei einem Skript mit
-               zweihundert PDF-Seiten landete man damit auf Seite eins und musste
-               dort ein zweites Mal suchen — genau der Weg, den die Suche im
-               Studio (E468, E487) abgeschafft hat, nur eine Ebene höher.
-      
-               DIE FREIEN WÖRTER, NICHT DIE ABFRAGE. `titel:"Projekt"` und
-               `tag:arbeit` sind Filter und stehen in keinem Seitentext; gesucht
-               wird mit dem, was daneben steht. Das ist eine Näherung, und sie
-               steht hier, weil die Abfragesprache ihren Klartext nicht
-               herausgibt — sie kennt weder DOM noch Ablage, und das soll so
-               bleiben (derselbe Grund wie beim Kennungszweig oben).
-      
-               NUR BEI DOKUMENTEN, und nur für die Treffer, die ohnehin schon da
-               sind: `stelleIn` liest, was im Speicher liegt, nicht die PDF. */
             const freieWorte = roh.split(/\s+/)
                 .filter(w => w && !/^[\p{L}]+:/u.test(w)).join(' ').replace(/["']/g, '').trim();
             const dok = typeof DocumentMode !== 'undefined' ? DocumentMode : null;
@@ -1606,26 +1191,8 @@ const App = (() => {
                         continue;
                     hit.blockId = stelle.blockId;
                     hit.treffer = 'Seite ' + stelle.nr;
-                    /* DER AUSSCHNITT DER STELLE SCHLÄGT DEN DER SEITE (Fund des
-                       Bildes). Die Abfragesprache schneidet aus dem Text der GANZEN
-                       Seite; bei einem Dokument ist das der Text aller Seiten
-                       hintereinander, und der Schnitt fiel mitten in ein Wort
-                       („…trom Kapitel 2 —"). `stelle.auszug` steht um das gesuchte
-                       Wort herum und sagt, was auf DIESER Seite steht. */
                     hit.snippet = stelle.auszug;
                 }
-                /* ══ UND DIE STELLEN, DIE DIE ABFRAGESPRACHE NICHT KENNT ══════════
-                   Was ein Mensch auf ein Blatt SCHREIBT, steht in einer Marke — und
-                   Marken stehen in keinem Suchindex. Ein Skript, in dem „Knotensatz"
-                   nur handschriftlich als Textmarke steht, war über Strg P nicht zu
-                   finden; im Studio (E487) war es das längst.
-        
-                   NUR BEI EINER REINEN WORTSUCHE. Dieser Zweig geht an der
-                   Abfragesprache vorbei und damit an ihren Filtern — dieselbe
-                   Gefahr, die E175 am Kennungszweig gefunden hat: griffe er auch
-                   bei „nur Titel", zeigte dieser Filter plötzlich Inhaltstreffer.
-                   Also nur, wenn nichts gefiltert ist und die Abfrage aus genau
-                   den freien Wörtern besteht. */
                 if (!hasUiFilter && roh.trim() === freieWorte && typeof dok.stellenSuchen === 'function') {
                     const schon = new Set(treffer.map(h => String(h.page?.id || '')));
                     const gefunden = dok.stellenSuchen(freieWorte);
@@ -1667,10 +1234,6 @@ const App = (() => {
                 o.remove();
             }
         });
-        /* WELCHER FILTER IST GESETZT? Am Telefon sind die Filter Marken, und
-           eine gesetzte Marke muss man sehen, ohne sie zu öffnen — sonst sucht
-           man in einem Ausschnitt und weiss es nicht. `.leer` heisst: steht
-           auf der Vorgabe, also unauffällig. */
         const filterMarken = () => {
             o.querySelectorAll('.such-filter select').forEach(s2 => {
                 const vorgabe = s2.options[0]?.value ?? '';
@@ -1682,61 +1245,20 @@ const App = (() => {
         filterMarken();
         o.addEventListener('mousedown', e => { if (e.target === o)
             o.remove(); });
-        /* EINMAL ZEICHNEN, BEVOR JEMAND TIPPT. Ohne das blieb das leere
-           Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
-           überhaupt: man öffnet die Suche und hat noch nichts eingegeben.
-           Genau dort gehören die letzten Suchbegriffe hin. */
-        /* Die Vorgabe VOR dem Zeichnen setzen, sonst zeigte der erste Aufbau
-           den leeren Zustand („Zuletzt gesucht") und erst der nächste
-           Tastendruck die Treffer — man sähe eine Suche, die ihr eigenes Wort
-           nicht kennt. */
         if (vorgabe)
             inp.value = String(vorgabe);
         zeichne();
         inp.focus();
-        /* Und den Anschlag ans Ende, nicht an den Anfang: wer aus dem Regal
-           kommt, will weitertippen und nicht vor sein eigenes Wort geraten. */
         if (vorgabe)
             inp.setSelectionRange(inp.value.length, inp.value.length);
     };
-    /**
-     * Einen Suchtreffer öffnen.
-     *
-     * Kennt die Suche den Block, geht es dorthin — sonst zur Seite. Für einen
-     * Treffer im Titel gibt es keinen Block, und für eine Seite, deren Inhalt
-     * eine Zeile weit oben ist, wäre das Hinrollen auch keine Hilfe. Wo es
-     * eine Hilfe ist: eine Fundstelle auf Seite 63 eines Skripts (E107).
-     */
     const zumTreffer = (t) => {
         if (!t)
             return;
-        /* DER SPRUNG INS DOKUMENT BRAUCHT HIER NICHTS NEUES (E500, Fund der
-           Gegenprobe). `zeigeBlock` kann ihn längst: es erkennt ein
-           `pdfseite`/`blatt`-Ziel, wählt über `DocumentMode.select` DIE Seite
-           und schaltet den Dokumentmodus notfalls ein. Der erste Entwurf hat
-           daneben einen zweiten Weg gebaut — und der wäre am Rechteweg und an
-           `Links.seiteVon` vorbeigelaufen (§8: keine zweite Tür).
-           Neu ist nur, dass ein Suchtreffer jetzt eine `blockId` MITBRINGT. */
         if (t.blockId && zeigeBlock(t.blockId))
             return;
         oeffne(t.page.id);
     };
-    /** Suchen auf der offenen Seite — Strg + F.
-     *
-     *  SEIT E667 GEHT ES AUCH ZUR ZWEITEN STELLE. Vorher markierte diese
-     *  Leiste jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" —
-     *  und zu den elf anderen gab es keinen Weg. Eine Zahl, die elf Orte
-     *  nennt und einen zeigt, ist dasselbe Versprechen wie ein README, das
-     *  etwas ankündigt, das nicht läuft (§47).
-     *
-     *  Die Geste ist die des Schreibstudios (E468) und die jedes Browsers:
-     *  Enter vor, Umschalt+Enter zurück, ‹ und › als Knöpfe, Escape zu. Sie
-     *  läuft um — hinter der letzten Stelle steht wieder die erste, und das
-     *  ist der Unterschied zwischen einem Ring und einer Wand.
-     *
-     *  Die aktive Stelle trägt `.aktiv` und nicht nur eine andere Farbe: §38
-     *  verbietet Information allein über Farbe, und der Zähler sagt sie
-     *  deshalb noch einmal in Worten — „2 von 4". */
     const seitenSuche = () => {
         const alt = document.getElementById('findbar');
         if (alt) {
@@ -1760,9 +1282,6 @@ const App = (() => {
         const n = bar.querySelector('.n');
         if (!n)
             return;
-        /* Die Fundstellen in der Reihenfolge, in der sie auf der Seite stehen,
-           und die, bei der man gerade ist. Beides lebt nur, solange die Leiste
-           steht — `zeichneSeite()` baut den Text ohnehin neu. */
         let stellen = [];
         let bei = 0;
         const zeige = (rollen) => {
@@ -1783,7 +1302,6 @@ const App = (() => {
             if (rollen)
                 jetzt.scrollIntoView({ block: 'center', behavior: 'smooth' });
         };
-        /* Ein Ring, keine Wand: hinter der letzten Stelle kommt die erste. */
         const gehe = (richtung) => {
             if (!stellen.length)
                 return;
@@ -1841,8 +1359,6 @@ const App = (() => {
                 zeichneSeite();
                 return;
             }
-            /* Nach dem Klick gehört die Schreibmarke wieder ins Feld — sonst
-               landet das nächste Enter auf dem Knopf statt in der Suche. */
             if (was === 'vor' || was === 'zurueck') {
                 gehe(was === 'vor' ? 1 : -1);
                 inp.focus();
@@ -1850,10 +1366,6 @@ const App = (() => {
         });
         inp.focus();
     };
-    /* ========================================================================
-     * PAPIERKORB
-     * ======================================================================*/
-    /** Wohin soll das Wiederhergestellte? Notion legt es immer an den alten Ort. */
     const wohin = (id, fertig) => {
         const b = Store.getBlock(id);
         if (!b)
@@ -1897,7 +1409,6 @@ const App = (() => {
                 return;
             const ziel = z.dataset.ziel;
             Store.restoreBlock(id);
-            /* An den neuen Ort hängen */
             const alt = Store.getBlock(Store.getBlock(id).parentId);
             if (alt)
                 Store.updateBlock(alt.id, { content: (alt.content || []).filter((x) => x !== id) });
@@ -1915,22 +1426,12 @@ const App = (() => {
         });
     };
     const papierkorb = () => {
-        /* Wie bei Notion: Suchfeld oben, drei Filterknöpfe, je Zeile ein Pfeil
-           zum Zurückholen und ein Eimer zum endgültigen Löschen. */
         let suche = '', filterVon = '', filterOrt = '', filterBereich = '';
         const o = document.createElement('div');
         o.className = 'overlay';
         document.body.appendChild(o);
-        /* Ein weggelegter Block ist keine Seite und hat keinen Titel — er hat
-           einen Anfang. Für die Liste ist der Anfang der Name, und dazu, woher
-           er kam: ohne die Herkunft steht dort dreimal „Text" und niemand weiss,
-           welches davon zurückzuholen ist. */
         const blockName = (b) => {
             const roh = String(b.text || '').replace(/\s+/g, ' ').trim();
-            /* `Register.bloecke` ist kein Feld, sondern ein Katalog mit `eines(id)`.
-               Der Unterschied kostet hier nichts und im Betrieb einen Absturz
-               mitten im Zeichnen — deshalb steht der richtige Name jetzt da und
-               nicht der geratene. */
             const art = (typeof Register !== 'undefined' && Register.bloecke &&
                 (Register.bloecke.eines(b.type) || {}).name) || b.type;
             return roh ? (roh.length > 60 ? roh.slice(0, 60) + '…' : roh) : art;
@@ -1950,11 +1451,6 @@ const App = (() => {
                 liste = liste.filter(p => (p.parentId || '') === filterOrt);
             if (filterBereich)
                 liste = liste.filter(p => (p.bereich || '') === filterBereich);
-            /* Weggelegte Blöcke. Bis hierher zeigte sie niemand: `Strg`+`Umschalt`+
-               `Rücktaste` meldete „Block in den Papierkorb" und legte ihn an einen
-               Ort, den es nicht gab. Er lag auf der Platte und war an keiner
-               Oberfläche mehr zu erreichen — das ist schlimmer als gelöscht,
-               weil es aussieht wie Absicht. */
             let bloecke = Store.papierkorbBloecke ? Store.papierkorbBloecke() : [];
             if (suche)
                 bloecke = bloecke.filter(b => (blockName(b) + ' ' + blockHer(b)).toLowerCase().includes(suche.toLowerCase()));
@@ -1963,7 +1459,6 @@ const App = (() => {
             if (filterOrt)
                 bloecke = bloecke.filter(b => (b.parentId || '') === filterOrt);
             const chip = (id, text, an) => `<button class="pk-chip${an ? ' on' : ''}" data-f="${id}">${text}<span>⌄</span></button>`;
-            /* Archiviertes ist nicht gelöscht — es steht als eigene Gruppe darüber */
             const archiv = Object.values(Store.cache.blocks)
                 .filter(x => x.type === 'page' && x.alive !== false && x.archiviert)
                 .filter(x => !suche || (x.text || '').toLowerCase().includes(suche.toLowerCase()));
@@ -2009,10 +1504,6 @@ const App = (() => {
                                 '</button>').join('')
                         : '') +
                     '</div>' +
-                    /* Die Frist steht in den Einstellungen und nicht fest bei 30 — hier
-                       stand jahrelang „30 Tage", auch wenn jemand 7 eingestellt hatte.
-                       Eine Zusage, die von der Einstellung abweicht, ist schlimmer als
-                       gar keine: sie wird geglaubt. */
                     '<div class="hint pk-hint">' + (() => {
                     const t = Number(Store.getMeta('papierkorbTage', 30));
                     return t ? `Nach ${t} Tagen im Papierkorb wird endgültig gelöscht. `
@@ -2108,8 +1599,6 @@ const App = (() => {
             if (!id)
                 return;
             if (s && s.dataset.a === 'restore') {
-                /* Ist der alte Ort selbst im Papierkorb, käme die Seite nicht zurück —
-                   Notion sagt in dem Fall nichts und man sucht ewig. */
                 const b2 = Store.getBlock(id);
                 const eltern = b2 && b2.parentId ? Store.getBlock(b2.parentId) : null;
                 if (eltern && eltern.alive === false) {
@@ -2120,9 +1609,6 @@ const App = (() => {
                 Store.restoreBlock(id);
                 zeichne();
                 zeichneBaum();
-                /* Ein Block kommt auf einer Seite zurück, nicht im Baum. Ohne das
-                   Neuzeichnen stünde er wieder in der Ablage und nicht auf dem
-                   Bildschirm — und wer nichts sieht, klickt noch einmal. */
                 App.zeichneSeite();
                 UI.toast('Wiederhergestellt');
                 return;
@@ -2143,9 +1629,6 @@ const App = (() => {
                 UI.toast('Endgültig gelöscht');
                 return;
             }
-            /* Klick auf die Zeile selbst: zurückholen und hingehen. Bei einem
-               Block ist „hin" nicht der Block — der ist keine Seite und liesse
-               sich nicht öffnen —, sondern die Seite, auf der er wieder steht. */
             const w2 = Store.getBlock(id);
             Store.restoreBlock(id);
             o.remove();
@@ -2153,27 +1636,8 @@ const App = (() => {
         });
         zeichne();
     };
-    /* ========================================================================
-     * EINSTELLUNGEN
-     * ======================================================================*/
-    /* Der Einstellungsbereich liegt in einer eigenen Datei. */
     const einstellungen = (bereich) => Einstellungen.oeffne(bereich);
-    /* ==========================================================================
-     * DAS R-BLATT — der Arbeitsbereich am Telefon (Phase 7)
-     * --------------------------------------------------------------------------
-     * Ein Blatt über den ganzen Bildschirm statt einer hereingeschobenen
-     * Seitenleiste. Zwei Gruppen: oben die Wege, unten die Werkzeuge — und
-     * ganz oben der Satz, der Redion von allem anderen unterscheidet.
-     *
-     * Die Zeilen sind 56 px hoch. Das ist keine Grosszügigkeit, sondern die
-     * Rechnung: darunter trifft der Daumen die Nachbarzeile mit.
-     * ========================================================================*/
     const rMenue = () => {
-        /* `zeichen` IST EIN NAME AUS `Register.symbole` (E701). Hier standen
-           🔍 ⌘ 🏠 📄 🧭 ✚ ✨ ⭱ ⬇ 🗑 ⌨ ⚙ — und „Mehr" trug den Kompass, obwohl
-           unten in der Leiste derselbe Weg die drei Punkte trägt. Jetzt hat
-           jeder Weg hier dasselbe Zeichen wie überall sonst, in `currentColor`
-           und still; die Wörter, die Kennungen und die Folge bleiben. */
         const zeile = (was, zeichen, name, hinweis = '') => `<button data-r="${was}"><span class="rm-z">${menueZeichen(zeichen)}</span>` +
             `<span class="rm-n">${name}</span>` +
             (hinweis ? `<span class="rm-h">${hinweis}</span>` : '') + '</button>';
@@ -2190,16 +1654,8 @@ const App = (() => {
                 zeile('befehle', 'command', 'Befehle') +
                 zeile('start', 'home', 'Start') +
                 zeile('seiten', 'pages', 'Seiten') +
-                /* „Mehr" statt „Posteingang" (E42 §16). Der Posteingang ist kein
-                   eigener Weg mehr, sondern eine Zeile IN Mehr — er ist meistens
-                   leer, und ein Platz in der Hauptnavigation gehört dem, was man
-                   oft braucht. Der Kompass steht bewusst NICHT hier: die Vorgabe
-                   sagt ausdrücklich, er sei eine Seite in Mehr, kein Reiter. */
                 zeile('mehr', 'dots', 'Mehr') +
                 zeile('neu', 'plus', 'Neue Seite') +
-                /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
-                   weg: unten steht „KI fragen", und hier steht der Weg zu allem,
-                   was länger dauert als eine Frage. */
                 zeile('ki', 'sparkle', 'KI und Verlauf') +
                 '</div>' +
                 '<div class="rm-gruppe">' +
@@ -2212,15 +1668,6 @@ const App = (() => {
                 '</div>';
         document.body.appendChild(o);
         requestAnimationFrame(() => o.classList.add('auf'));
-        /* DER SPEICHERBALKEN (Vorgabe §16). Er gehört genau hierher und
-           nirgendwo sonst: das R-Blatt ist der Ort für den Arbeitsbereich, und
-           „wie viel liegt hier eigentlich?" ist bei einer App, die alles auf
-           dem Gerät hält, die erste Frage danach.
-    
-           NACHGETRAGEN, NICHT MITGEBAUT — `navigator.storage.estimate()` ist
-           asynchron und braucht auf einem vollen Gerät spürbar Zeit. Darauf zu
-           warten hiesse, das Blatt später zu öffnen; also kommt der Balken
-           nach, wenn er da ist. Ist das Blatt bis dahin zu, passiert nichts. */
         void (async () => {
             let stand = null;
             try {
@@ -2255,8 +1702,6 @@ const App = (() => {
                 return;
             const was = b.dataset.r;
             zu();
-            /* Erst schliessen, dann handeln: ein Dialog, der unter einem Blatt
-               aufgeht, ist von aussen nicht erreichbar. */
             setTimeout(() => {
                 if (was === 'ki')
                     kiPanel(true);
@@ -2264,10 +1709,6 @@ const App = (() => {
                     suche();
                 else if (was === 'befehle')
                     Werkzeuge.palette();
-                /* DERSELBE FUND WIE OBEN AN DEN REITERN, und hier stand er dreimal:
-                   `handyLeiste()` liest `Seitenleiste.reiter()`. Wer nur zeichnet,
-                   bekommt die Ansicht — und daneben eine Pille, die auf den vorigen
-                   Bereich zeigt. Erst den Reiter setzen, dann zeichnen. */
                 else if (was === 'seiten') {
                     Seitenleiste.reiter('seiten');
                     Ansichten.seiten();
@@ -2297,95 +1738,12 @@ const App = (() => {
                     einstellungen();
             }, 60);
         });
-        /* Zurück-Taste des Telefons schliesst das Blatt, statt die Seite zu
-           verlassen — sonst ist der einzige Weg heraus das kleine Kreuz. */
         const zurueckTaste = () => { zu(); removeEventListener('popstate', zurueckTaste); };
         addEventListener('popstate', zurueckTaste);
     };
-    /**
-     * Die Sicherung schreiben.
-     *
-     * ZWEI FORMATE, UND DAS IST ABSICHT.
-     *
-     *   ohne Anhänge → `.json`, wie bisher. Lesbar, klein, in jedem Editor zu
-     *                  öffnen. Für einen Bestand aus Text ist das genau richtig.
-     *   mit Anhängen → `.redion`, ein ZIP: `daten.json` plus einen Ordner
-     *                  `dateien/` mit den Anhängen unter ihren echten Namen.
-     *
-     * WARUM NICHT IMMER ZIP. Wer nur Text hat, soll seine Sicherung aufmachen
-     * und lesen können. Ein Archiv um eine einzige JSON-Datei ist eine Hürde
-     * ohne Gegenwert.
-     *
-     * WARUM DIE ANHÄNGE UNTER IHREN ECHTEN NAMEN LIEGEN. Ein `.redion` ist ein
-     * gewöhnliches ZIP. Wer es in zehn Jahren öffnet — mit irgendeinem
-     * Packprogramm, ohne Redion —, findet darin seine Bilder und Videos, jedes
-     * mit seinem Namen. Das ist der eigentliche Sinn einer Sicherung: sie muss
-     * die App überleben, die sie geschrieben hat.
-     *
-     * WARUM DAS 500-MB-VIDEO DURCHGEHT. Kein Anhang wird je ganz in den
-     * Arbeitsspeicher geholt. Die Stücke liegen als Blob in der Ablage,
-     * `Dateien.alsBlob` reiht sie aneinander, ohne sie zu lesen, und der
-     * ZIP-Packer rechnet die Prüfsumme scheibchenweise. Was durch den Speicher
-     * geht, ist immer nur ein Megabyte.
-     */
-    /**
-     * Merkt sich, dass gerade gesichert wurde.
-     *
-     * WARUM DAS HIER FEHLTE UND WAS ES ANRICHTETE. Den Zeitstempel
-     * `sicherung:zuletzt` schrieb bis jetzt einzig `Krypto.sicherungSchreiben`
-     * — der Weg über den Verschlüsselungs-Dialog. Der Hauptweg, dieser hier,
-     * schrieb ihn nicht: nicht aus den Einstellungen, nicht aus der PWA, nicht
-     * aus der Befehlsleiste. Wer also normal sicherte — und das sind alle —
-     * bekam bis in alle Ewigkeit „Noch nie gesichert." zu lesen. Eine Warnung,
-     * die auch dann kommt, wenn alles in Ordnung ist, bringt einem bei, sie zu
-     * übersehen; und dann übersieht man sie auch, wenn sie stimmt.
-     *
-     * `sicherung:art` steht daneben, weil die beiden Sicherungen nicht
-     * dasselbe können: `.redion` nimmt die Anhänge mit, `.json` nicht. Wer nur
-     * JSON gesichert hat, hat seine Bilder nicht gesichert — das darf die
-     * Anzeige nicht verschweigen.
-     */
-    /* Der Zeitpunkt wird im Kern festgehalten (E208) — dieselbe Stelle, die
-       ihn auch wieder ausliest. Zwei Schreiber auf einer Marke sind zwei
-       Gelegenheiten, den Namen zu vertippen. */
     const sicherungGemerkt = (art) => Sicherung.merken(art);
-    /**
-     * Gibt zurück, ob die Sicherung wirklich zustande kam.
-     *
-     * Der `catch` unten fängt den Fehler und kehrt regulär zurück — richtig
-     * für die Aufrufer, die nur einen Knopf drücken. Aber der Sichern-Knopf
-     * in den Datenbank-Ansichten zeigte danach „✓ Gesichert", weil `.then`
-     * eine reguläre Rückkehr nicht von einem Erfolg unterscheiden kann.
-     * Deshalb: `true` heisst gesichert, `false` heisst nicht.
-     */
-    /**
-     * DAS PAKET BAUEN — ohne es auszuliefern (E270).
-     *
-     * Vorher war Bauen und Ausliefern ein Stück: derselbe Ablauf las den
-     * Bestand, packte das Archiv, hängte ein `<a download>` an den Browser
-     * und meldete „Gesichert". Für den Knopf ist das richtig. Für die
-     * automatische Sicherung in einen Ordner ist es unbrauchbar — sie will
-     * genau dasselbe Paket, aber in eine Datei schreiben statt in den
-     * Download-Ordner, und ohne dass ein Fenster aufgeht.
-     *
-     * Die Alternative wäre gewesen, das Packen ein zweites Mal zu
-     * schreiben. Zwei Stellen, die eine Sicherung bauen, sind zwei
-     * Gelegenheiten, dass die eine etwas auslässt, was die andere mitnimmt —
-     * und man merkt es erst, wenn man die Sicherung braucht. Also einmal
-     * bauen, zweimal ausliefern. Dasselbe, was `Krypto.paketBauen` vormacht.
-     *
-     * Wirft bei einem Fehler, statt `false` zurückzugeben: der Knopf zeigt
-     * daraus einen `alert`, die automatische Sicherung darf das nicht (ein
-     * Fenster, das im Hintergrund aufspringt, ist keine Meldung, sondern ein
-     * Überfall). Wer ruft, entscheidet, wie er es sagt.
-     *
-     * @param melden Wohin die Zwischenstände gehen. Ohne Angabe: Toast.
-     *        Die automatische Sicherung gibt hier eine stille Funktion mit.
-     */
     const sicherungPaketBauen = async (melden) => {
         const sagen = melden || ((t) => UI.toast(t));
-        /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
-           Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
         const stand = await Store.exportVorbereiten();
         if (!stand.dateien) {
             return { blob: new Blob([Store.exportAll()], { type: 'application/json' }),
@@ -2394,15 +1752,6 @@ const App = (() => {
         }
         sagen(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
         {
-            /* ABGELEITETES BLEIBT DRAUSSEN (E103). Ein gerastertes PDF-Seiten-
-               bild entsteht beim Einlesen in Sekunden neu; mitgepackt kostet es
-               bei 200 KB je Seite und 500 Seiten hundert Megabyte in JEDER
-               Sicherung. Eine Sicherung, die man auf dem Telefon nicht mehr
-               herunterladen kann, ist keine Sicherung.
-               Gefiltert wird HIER und nicht in der Schleife unten, weil
-               `dateien.json` aus derselben Liste entsteht: ein Satz darin, dessen
-               Bytes fehlen, wäre ein Anhang, den der Block sucht und nicht
-               findet. Lieber gar nicht erwähnt als falsch versprochen. */
             const saetze = (await Store.dateiAlle())
                 .filter((s) => !(s && s.abgeleitet));
             const eintraege = [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
@@ -2410,10 +1759,7 @@ const App = (() => {
             for (const satz of saetze) {
                 const inhalt = await Dateien.alsBlob(satz.id);
                 if (!inhalt)
-                    continue; /* angefangener Upload ohne Stücke */
-                /* Zwei Bilder dürfen „foto.jpg" heissen. Im Archiv darf ein Name nur
-                   einmal vorkommen, sonst überschreibt das Auspacken das eine mit dem
-                   anderen — still, wie immer bei dieser Sorte Fehler. */
+                    continue;
                 const roh = String(satz.name || 'Datei').replace(/[\\/:*?"<>|]/g, '-');
                 let name = 'dateien/' + roh;
                 if (belegt.has(name)) {
@@ -2428,18 +1774,12 @@ const App = (() => {
                 belegt.add(name);
                 eintraege.push({ name, inhalt, kennung: satz.id });
             }
-            /* Die Zuordnung Name → Kennung gehört in die Sicherung, sonst weiss
-               beim Einspielen niemand, welcher Block welches Bild meint. */
             const karte = {};
             eintraege.forEach(e => { if (e.kennung)
                 karte[e.name] = e.kennung; });
             eintraege.push({ name: 'dateien.json', inhalt: JSON.stringify({
                     version: 1, saetze, zuordnung: karte
                 }, null, 2) });
-            /* „Gesichert: foto.jpg" log hier: der Fortschritt kommt aus der
-               Prüfsummen-Schleife, das Archiv ist da noch gar nicht gebaut,
-               geschweige denn heruntergeladen. Das Wort „Gesichert" gehört dem
-               Abschluss-Toast unten — hier ist es nur ein Lebenszeichen. */
             const blob = await Austausch.zipSchreiben(eintraege, (name, anteil) => { if (anteil >= 1)
                 sagen('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
             return { blob, art: 'redion', endung: '.redion',
@@ -2461,74 +1801,18 @@ const App = (() => {
             return true;
         }
         catch (err) {
-            /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
-               hat, ist schlechter dran als jemand, der es weiss.
-               Neu seit E270 deckt dieser Fang auch den JSON-Weg ab — der lief
-               vorher ungeschützt, und ein Fehler dort verschwand in einer nicht
-               behandelten Zusage. */
             alert('Die Sicherung kam nicht zustande: ' +
                 (err instanceof Error ? err.message : String(err)) +
                 '\n\nEs wurde nichts geschrieben.');
             return false;
         }
     };
-    /**
-     * Die Anhänge aus einem `.redion` zurück in die Ablage.
-     *
-     * MIT DEN ALTEN KENNUNGEN, und das ist der ganze Punkt. Ein Block zeigt
-     * über die Kennung auf seine Datei. Legte man die Anhänge als neue Uploads
-     * ab, bekäme jeder eine frische Kennung — die Bilder wären da und keiner
-     * fände sie. Deshalb werden Dateisatz und Stücke von Hand geschrieben,
-     * statt den bequemen Weg über `Dateien.ablegen` zu nehmen.
-     *
-     * In Stücke zerlegt wird wieder, weil die Ablage es so hält: `blob.slice`
-     * schneidet, ohne zu lesen — auch bei einem halben Gigabyte.
-     */
-    /**
-     * DIE ANHÄNGE KOMMEN NACH DEN BLÖCKEN — UND EINZELN (L101 Punkt 2, E317).
-     *
-     * Die Alles-oder-nichts-Zusage von `importAll` gilt für fünf Fächer. Die
-     * Anhänge folgen danach, jeder in einer eigenen Transaktion; ein grosses
-     * Video in EINER Transaktion würde die Ablage minutenlang blockieren
-     * (§10), und daran ändert dieser Bogen nichts.
-     *
-     * Was er ändert, ist das SCHWEIGEN. Vorher stand hier zweimal `continue`
-     * — fehlte ein Eintrag im Archiv oder liess er sich nicht lesen, wurde er
-     * übersprungen, und am Ende meldete Redion nur, wie viele es geschafft
-     * haben. Ein Block zeigte danach auf eine Datei, die es nicht gibt, und
-     * niemand hatte etwas gesagt.
-     *
-     * Jetzt wird gezählt, was FEHLT, und beim Namen genannt. Und ein einzelner
-     * Fehler bricht nicht mehr den Rest ab: wer neunzig von hundert Anhängen
-     * retten kann, soll neunzig retten und die zehn benennen.
-     *
-     * ─── UND WAS ANKAM, IST NICHT ZWINGEND GANZ (L101 Punkt 4, E318) ─────────
-     *
-     * Der verschlüsselte Weg vergleicht die angekündigte Bytezahl mit der
-     * gelieferten und nennt einen Eintrag „fehlt oder ist abgeschnitten"
-     * (`krypto.ts`). Der offene Weg hatte dieselbe Zahl vorliegen — jeder
-     * Dateisatz führt seine `groesse` mit — und sah nicht hin. Er schrieb die
-     * TATSÄCHLICHE Länge in den Satz und stempelte `zustand: 'fertig'`. Ein
-     * halbes Video hiess danach vollständig, und der einzige Hinweis war das
-     * Video selbst.
-     *
-     * Weggeworfen wird deswegen nichts (§46): neunzig Prozent eines Fotos sind
-     * neunzig Prozent, und im offenen Archiv ist eine Verkürzung viel eher
-     * eine unvollständige Sicherung als ein Angriff — der verschlüsselte Weg
-     * kann das über den AEAD-Anhänger unterscheiden, dieser nicht. Gesagt wird
-     * es trotzdem, und in einer EIGENEN Liste: „fehlt" und „kam verkürzt an"
-     * sind zwei verschiedene Sätze mit zwei verschiedenen Folgen.
-     */
     const anhaengeEinspielen = async (zip, art) => {
         const leer = { da: 0, erwartet: 0, fehlend: [],
             unvollstaendig: [] };
         const roh = await zip.text('dateien.json');
         if (!roh)
             return leer;
-        /* NICHT `JSON.parse` (E318). `dateien.json` ist genauso fremd wie
-           `daten.json`, und ihr Inhalt geht gleich durch `Object.assign` in die
-           Ablage — das ist wörtlich das Loch, das E284 für die fünf Fächer
-           geschlossen hat. Hier stand es noch offen, ein Stockwerk tiefer. */
         let karte;
         try {
             karte = ImportSicherheit.lesen(roh).wert;
@@ -2539,9 +1823,6 @@ const App = (() => {
         if (!karte || typeof karte !== 'object')
             return leer;
         const STUECK = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.STUECK : 1024 * 1024;
-        /* Prototyplos, aus demselben Grund: eine Kennung `constructor` aus der
-           Datei gäbe sonst `Object` zurück statt `undefined`, und die Prüfung
-           „steht nicht im Archiv" verfehlte genau den Fall, für den sie da ist. */
         const nachName = Object.create(null);
         Object.entries(karte.zuordnung || {}).forEach(([name, id]) => { nachName[id] = name; });
         let wieViele = 0;
@@ -2550,21 +1831,6 @@ const App = (() => {
         const nichtGeschafft = (satz, warum) => {
             fehlend.push(String(satz?.name || satz?.id || 'ohne Namen') + ' (' + warum + ')');
         };
-        /**
-         * Sagt, um wie viele Bytes ein Anhang zu kurz ankam — oder 0.
-         *
-         * SCHWEIGT IN DREI FÄLLEN, und jeder einzelne ist ein echter Normalfall,
-         * kein Nachlassen:
-         *
-         *   · Die Sicherung nennt keine Grösse. Ältere `.redion` und fremde
-         *     Werkzeuge tun das; ohne Zahl gibt es nichts zu vergleichen.
-         *   · Der Satz war schon beim Sichern unfertig (`zustand` nicht
-         *     `fertig`, oder `angekommen < teile`). Dann sind die kurzen Bytes
-         *     genau das, was dasteht — ein laufender Upload zur Sicherungszeit.
-         *   · Es kam MEHR an als angekündigt. Das ist keine Verkürzung; es wäre
-         *     eine andere Frage, und eine Warnung dafür hätte hier nichts zu
-         *     suchen.
-         */
         const zuKurz = (satz, hat) => {
             const soll = satz?.groesse;
             if (typeof soll !== 'number' || !Number.isFinite(soll) || soll <= 0)
@@ -2588,14 +1854,8 @@ const App = (() => {
                     nichtGeschafft(satz, 'liess sich nicht lesen');
                     continue;
                 }
-                /* `alsBlob` hat die Bytes nie gelesen — hier bleibt es dabei. Der Typ
-                   kommt aus dem Dateisatz, nicht aus dem Archiv: ein ZIP kennt keine
-                   Medientypen, und ohne ihn zeigt der Browser ein Bild als Download. */
                 const blob = roh2.type === (satz.typ || '') ? roh2
                     : new Blob([roh2], { type: satz.typ || 'application/octet-stream' });
-                /* Alte Stücke derselben Kennung zuerst weg — sonst lägen beim
-                   Dazulegen zwei Fassungen übereinander und die Datei wäre doppelt
-                   so lang wie sie sein sollte. */
                 for (const alt of await Store.stueckeVon(satz.id))
                     await Store.stueckWeg(alt.id);
                 const teile = Math.max(1, Math.ceil(blob.size / STUECK));
@@ -2604,10 +1864,6 @@ const App = (() => {
                     await Store.stueckPut({ id: satz.id + ':' + nr, dateiId: satz.id, nr,
                         blob: blob.slice(von, Math.min(von + STUECK, blob.size)) });
                 }
-                /* DIE ANGEKÜNDIGTE LÄNGE GEGEN DIE GELIEFERTE (E318). Geschrieben wird
-                   die TATSÄCHLICHE — ein Satz, der eine Länge behauptet, die seine
-                   Stücke nicht hergeben, wäre die nächste stille Lüge. Gesagt wird die
-                   Differenz stattdessen. */
                 const fehlt = zuKurz(satz, blob.size);
                 if (fehlt > 0) {
                     unvollstaendig.push(String(satz.name || satz.id) +
@@ -2619,22 +1875,9 @@ const App = (() => {
                 wieViele++;
             }
             catch (e) {
-                /* EIN ANHANG BRICHT NICHT DEN REST AB. Voller Speicher, ein
-                   beschädigtes Stück, ein Blob, den der Browser nicht mag — das
-                   betrifft diese eine Datei, nicht die neunzig danach. */
                 nichtGeschafft(satz, e instanceof Error ? e.message.slice(0, 60) : 'Fehler');
             }
         }
-        /* ERSETZEN heisst: der Bestand sieht danach aus wie die Sicherung. Für
-           die Anhänge gilt das nur, wenn die Sicherung sie überhaupt abdeckt —
-           und genau das tut sie hier, sonst gäbe es keine `dateien.json`.
-           Anhänge, die in ihr nicht vorkommen, gehören zu Seiten, die es jetzt
-           auch nicht mehr gibt; sie blieben sonst für immer unerreichbar liegen.
-    
-           Bei einer `.json`-Sicherung geschieht das ausdrücklich NICHT: die sagt
-           selbst, dass sie die Anhänge nicht enthält. Etwas wegzuwerfen, weil es
-           in einer Datei fehlt, die zugibt, es nicht zu kennen, wäre die
-           schlimmste Art von Datenverlust. */
         if (art === 'ersetzen') {
             const gehoertDazu = new Set((karte.saetze || []).map((s) => s.id));
             for (const alt of await Store.dateiAlle()) {
@@ -2643,8 +1886,6 @@ const App = (() => {
                 for (const st of await Store.stueckeVon(alt.id))
                     await Store.stueckWeg(st.id);
                 await Store.dateiWeg(alt.id);
-                /* Und die Adresse aus dem Zwischenspeicher — sonst zeigt ein Block,
-                   der noch auf diese Kennung zeigt, weiter das alte Bild (E106). */
                 Dateien.adresseWeg(alt.id);
             }
         }
@@ -2659,10 +1900,6 @@ const App = (() => {
             const f = inp.files?.[0];
             if (!f)
                 return;
-            /* Ein `.redion` ist ein ZIP mit `daten.json` darin. Erkannt wird es am
-               Inhalt und nicht an der Endung: eine umbenannte Datei ist deswegen
-               nicht kaputt, und eine `.json`, die in Wahrheit ein ZIP ist, wäre
-               sonst „keine Sicherung". */
             let zip = null, text = '';
             const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
             const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
@@ -2685,14 +1922,6 @@ const App = (() => {
             else {
                 text = await f.text();
             }
-            /* WAS SOLL GESCHEHEN? Vorher gab es diese Frage nicht, und das Ergebnis
-               war keines von beidem: die Sicherung überschrieb den Zwischenspeicher
-               und liess die Ablage stehen. Nach dem nächsten Neuladen lagen die
-               alten Seiten wieder zwischen den eingespielten. Es sah aus wie ein
-               geglückter Vorgang — die schlimmste Sorte Fehler, die diese App
-               haben kann.
-      
-               `CLAUDE.md`: nichts löschen ohne Rückfrage. Also wird gefragt. */
             let vorschau = {};
             try {
                 vorschau = JSON.parse(text);
@@ -2701,18 +1930,6 @@ const App = (() => {
                 alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
                 return;
             }
-            /* --- WAS SICH ÄNDERT, NICHT WIE GROSS DIE DATEI IST (L101, E316) ---
-               Hier stand: „Die Datei enthält 1247 Blöcke. In diesem Bestand
-               liegen gerade 1180." Das sagt, wie GROSS die Sicherung ist, nicht
-               was sie tut. Wer wissen will, ob die eigene Seite von gestern
-               überlebt, erfuhr es erst danach — und dann war sie weg.
-      
-               Es ist die letzte Stelle vor einem Vorgang, der löscht. Genau dort
-               gehört die Frage beantwortet, die ein Mensch wirklich hat.
-      
-               Gerechnet wird für BEIDE Wege getrennt, denn sie tun Verschiedenes:
-               beim Dazulegen verschwindet nichts, beim Ersetzen schon. Der Satz
-               steht deshalb am jeweiligen Knopf und nicht darüber. */
             const faecherJetzt = {
                 blocks: Store.cache.blocks || {},
                 collections: Store.cache.collections || {},
@@ -2745,26 +1962,6 @@ const App = (() => {
             });
             if (!wahl)
                 return;
-            /* DAS NETZ UNTER DEM SEIL (E292, L101 Punkt 3).
-               Der VERSCHLÜSSELTE Weg schreibt seit jeher eine Sicherheitskopie,
-               bevor er ersetzt (`krypto.ts:935`, dort steht derselbe Satz). Der
-               offene Weg tat es nicht — und das ist genau verkehrt herum zur
-               Gefahr, denn den offenen Weg benutzen mehr Leute.
-      
-               Nur beim ERSETZEN, denn nur dort wird gelöscht. Beim Dazulegen
-               bliebe alles stehen, und eine Kopie, die niemand braucht, ist eine
-               Datei im Download-Ordner, die man nicht bestellt hat.
-      
-               `sicherungSpeichern` und nicht `Krypto.sicherungSchreiben`: dieser
-               Weg nimmt auch ein `.redion`, und bei einem `.redion` löscht das
-               Ersetzen auch ANHÄNGE (`anhaengeEinspielen` weiter unten). Eine
-               Kopie in reinem JSON hätte die Anhänge nicht — ein Netz mit Löchern
-               genau dort, wo die grössten Dateien fallen. `sicherungSpeichern`
-               baut dieselbe Sicherung wie der Knopf „Sicherung speichern": mit
-               Anhängen, wenn es welche gibt.
-      
-               Schlägt das Schreiben fehl, wird NICHT eingespielt. Ein Netz, das
-               reisst, ist schlimmer als keines: man hätte sich darauf verlassen. */
             let kopie = false;
             if (wahl === 'ersetzen') {
                 kopie = await sicherungSpeichern();
@@ -2776,41 +1973,23 @@ const App = (() => {
             }
             try {
                 const erg = await Store.importAll(text, wahl);
-                /* Die Anhänge NACH den Blöcken. Andersherum stünden die Dateien in
-                   der Ablage und würden beim „Ersetzen" gleich wieder mit gelöscht —
-                   `ersetzen` räumt weg, was nicht in der Sicherung steht. */
                 let anhaenge = { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
                 if (zip)
                     anhaenge = await anhaengeEinspielen(zip, wahl);
                 danach && danach();
                 zeichneBaum();
                 zeichneSeite();
-                /* EIN Hinweis, nicht zwei. `UI.toast` schreibt in dasselbe Element:
-                   ein zweiter Aufruf direkt danach überschriebe den ersten, und
-                   gesehen hätte man nur die zweite Hälfte.
-        
-                   Hat das Einspielen eine Entscheidung offen gelassen (L76), gehört
-                   sie in denselben Satz. Eine Frage, von der niemand weiss, dass
-                   sie wartet, ist ein stehender Abgleich ohne Grund — und der
-                   fällt erst auf, wenn das andere Gerät nichts mehr bekommt. */
                 UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
                     (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
                         'Download-Ordner)' : '') +
                     (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
                     (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
-                    /* WAS NICHT ANKAM, WIRD GENANNT (L101 Punkt 2, E317). Und
-                       nur dann — „0 fehlen" ist eine Zeile, über die man
-                       hinwegliest. */
                     (anhaenge.fehlend.length
                         ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
                             ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
                             (anhaenge.fehlend.length > 3 ? ' …' : '') +
                             '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
                         : '') +
-                    /* UND WAS VERKÜRZT ANKAM (L101 Punkt 4, E318). Eine eigene
-                       Zeile, weil es eine andere Nachricht ist: die Datei IST
-                       da, sie ist nur nicht ganz. Wer „fehlt" liest, sucht die
-                       Datei; wer das hier liest, sieht sie und traut ihr nicht. */
                     (anhaenge.unvollstaendig.length
                         ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
                             'kamen verkürzt an: ' +
@@ -2841,8 +2020,6 @@ const App = (() => {
     };
     const theme = (was) => {
         const neu = was || (document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
-        /* Mit einem eigenen Farbschema heisst „umschalten": zum passenden
-           Gegenstück wechseln, nicht das Schema übergehen. */
         if (typeof Aussehen !== 'undefined') {
             const jetzt = Aussehen.einstellung();
             const s = Aussehen.SCHEMATA.find(x => x.id === jetzt.schema);
@@ -2856,43 +2033,9 @@ const App = (() => {
         document.documentElement.dataset.theme = neu;
         Store.setMeta('theme', neu);
     };
-    /* ========================================================================
-     * VOLLBILD  (E283 / L85 Punkt 1)
-     * ------------------------------------------------------------------------
-     * Nicht zu verwechseln mit `Werkzeuge.fokus()`. Der Fokus-Modus blendet
-     * REDIONS eigene Oberfläche aus und lässt die Leisten des Browsers stehen;
-     * Vollbild macht das Gegenteil — Redion bleibt vollständig, der Browser
-     * verschwindet. Beide sind sinnvoll, und beide zusammen ergeben die
-     * ruhigste Ansicht, die Redion hat.
-     *
-     * DREI DINGE, DIE DIE NAIVE FASSUNG FALSCH MACHT:
-     *
-     * 1. Ein gemerktes `let vollbild = false` geht am ersten Escape kaputt.
-     *    Escape verlässt das Vollbild im BROWSER, ohne uns zu fragen — die
-     *    Erinnerung stünde danach für immer falsch, und der Knopf zeigte „AN"
-     *    über einem Fenster mit Adressleiste. Deshalb wird der Zustand nie
-     *    gemerkt, sondern jedes Mal frisch an `document.fullscreenElement`
-     *    abgelesen.
-     * 2. `requestFullscreen()` gibt es nicht überall. Auf dem iPhone kennt
-     *    Safari kein Element-Vollbild (nur `<video>`), und in einem
-     *    eingebetteten Rahmen ohne `allowfullscreen` ist es gesperrt. Ein
-     *    Knopf, der dort dasteht und nichts tut, ist §47 — `vollbildGeht()`
-     *    beantwortet die Frage, und das Menüband blendet ihn danach aus.
-     * 3. Der Aufruf kann auch dort ABGELEHNT werden, wo er möglich ist: ohne
-     *    frische Nutzerhandlung wirft er. Deshalb ein `catch` mit einem Satz,
-     *    der sagt was zu tun ist — und nicht eine Fehlermeldung in der Konsole,
-     *    die niemand sieht.
-     * ======================================================================*/
-    /** Kann dieses Gerät überhaupt Vollbild? */
     const vollbildGeht = () => !!(document.fullscreenEnabled &&
         typeof document.documentElement.requestFullscreen === 'function');
-    /** Ist gerade Vollbild? IMMER frisch gelesen — siehe Punkt 1 oben. */
     const vollbildAn = () => !!document.fullscreenElement;
-    /**
-     * Vollbild an, aus oder umschalten.
-     * @param an `undefined` schaltet um, `true`/`false` setzt hart.
-     * @returns den Zustand NACH dem Versuch — nicht den gewünschten.
-     */
     const vollbild = async (an) => {
         if (!vollbildGeht()) {
             UI.toast('Dieser Browser kann kein Vollbild.');
@@ -2906,49 +2049,21 @@ const App = (() => {
                 await document.exitFullscreen();
         }
         catch {
-            /* Nicht verschweigen: der Knopf sah aus, als hätte er gewirkt. */
             UI.toast(ziel
                 ? 'Vollbild wurde abgelehnt — der Browser lässt es nur direkt nach einem Klick zu.'
                 : 'Das Vollbild liess sich nicht beenden — Escape hilft immer.');
         }
         return vollbildAn();
     };
-    /* ========================================================================
-     * VOLLE BREITE  (E283 / L85 Punkt 2)
-     * ------------------------------------------------------------------------
-     * DERSELBE SCHALTER STAND AN DREI STELLEN, nicht an zwei: L85 nannte das
-     * Seitenmenü (`schale.ts`) und die Kopfleiste — der Schalter in der
-     * Schalterzeile desselben Menüs war übersehen. Alle drei schrieben
-     * `Store.updateBlock(p.id, { wide: !p.wide })` von Hand, jeder mit seinem
-     * eigenen Nachlauf.
-     *
-     * Das ist genau die Sorte Verdopplung, die still auseinanderläuft: wer
-     * morgen eine Regel ergänzt (etwa „am Telefon hat volle Breite keine
-     * Wirkung", E156), ergänzt sie an einer Stelle und wundert sich, warum
-     * der andere Weg sie nicht kennt.
-     * ======================================================================*/
-    /**
-     * Volle Breite für eine Seite umschalten.
-     * @param p   die Seite; ohne `id` passiert nichts (und es wird nichts
-     *            behauptet — der Rückgabewert sagt es).
-     * @param an  `undefined` schaltet um, `true`/`false` setzt hart.
-     * @returns den Zustand danach.
-     */
     const volleBreite = (p, an) => {
         if (!p || !p.id)
             return false;
         const neu = an === undefined ? !p.wide : !!an;
         Store.updateBlock(p.id, { wide: neu });
-        /* Das übergebene Objekt MIT nachziehen: die Aufrufer zeichnen ihr Menü
-           aus derselben Kopie weiter und zeigten sonst den alten Stand. */
         p.wide = neu;
         zeichneSeite();
         return neu;
     };
-    /* ========================================================================
-     * EXPORT
-     * ======================================================================*/
-    /** Die Seite als Markdown — für „Seiteninhalte kopieren" und den Export. */
     const markdownVonSeite = (p) => `# ${p.text || 'Ohne Titel'}\n\n${Werkzeuge.alsMarkdown(p)}\n`;
     const markdownExport = (p) => {
         const md = markdownVonSeite(p);
@@ -2959,9 +2074,6 @@ const App = (() => {
         a.click();
         UI.toast('Als Markdown gespeichert');
     };
-    /* ========================================================================
-     * KI-PANEL
-     * ======================================================================*/
     const kiPanel = (auf) => {
         const p = document.getElementById('ai');
         if (!p)
@@ -2969,44 +2081,12 @@ const App = (() => {
         const an = auf === undefined ? !p.classList.contains('open') : auf;
         p.classList.toggle('open', an);
         document.getElementById('btn-ai')?.classList.toggle('on', an);
-        /* BEIM ÖFFNEN NACH OLLAMA SEHEN, NICHT BEIM START (E233).
-           Seit E233 fragt `KI.start()` nur noch, wenn Ollama schon einmal die
-           Quelle war — sonst schweigt der Start. Damit hätte jemand, der Ollama
-           installiert hat und Redion zum ERSTEN Mal öffnet, „Modell wählen"
-           gesehen statt seines Modells. Hier ist der richtige Ort: er will
-           gerade die KI, also darf jetzt gesucht werden. */
         if (an && typeof KI !== 'undefined' && KI.sucheOllamaJetzt)
             KI.sucheOllamaJetzt();
         if (an)
             setTimeout(() => document.getElementById('ai-input')?.focus(), 60);
     };
-    /* ══ DER GRIFF AM BLATT (E653) ═══════════════════════════════════════════
-     * Am Telefon ist `#ai` kein Panel neben der Seite, sondern ein Blatt, das
-     * von unten kommt — und `#ai::before` zeichnet oben einen Strich. Der
-     * Kommentar daneben (bausteine.css:356) sagt wörtlich, was der Strich
-     * verspricht: „er sagt ohne Wort, dass man das Blatt wegwischen kann".
-     *
-     * Gewischt werden konnte nichts. `wischen.ts` kennt `#handy-oben` und
-     * sonst nichts; auf `#ai` hörte niemand zu. Ein gezeichnetes Versprechen
-     * ist dasselbe Versprechen (§47) — und weil `#btn-ai` am Telefon auf
-     * `display:none` steht, war der Strich nicht nur unehrlich, sondern der
-     * einzige Hinweis auf einen Weg, den es nicht gab.
-     *
-     * NUR AM TELEFON. Am Rechner ist `#ai` eine Spalte; sie nach unten zu
-     * ziehen ergäbe keinen Sinn und würde das Markieren von Text im Kopf
-     * stören. `matchMedia` fragt dieselbe Grenze ab, die auch die Stilblätter
-     * benutzen: 760 px.
-     *
-     * NUR AM KOPF. Unter dem Kopf steht der Verlauf, und der rollt. Ein Zug
-     * irgendwo auf dem Blatt wäre beides zugleich.
-     *
-     * UND NICHT AUF DEN KNÖPFEN. Wer „Neuer Chat" trifft und dabei um zwei
-     * Pixel verrutscht, meint den Knopf.
-     * ======================================================================*/
-    /** So weit muss der Zug gehen, damit er als Wegwischen zählt. Darunter
-     *  federt das Blatt zurück — sonst wäre jedes Verrutschen ein Schliessen. */
     const BLATT_ZUG = 90;
-    /** 760 px: dieselbe Grenze wie in `bausteine.css` und `ki.css`. */
     const blattAmTelefon = () => typeof matchMedia === 'function' && matchMedia('(max-width:760px)').matches;
     const kiGriff = () => {
         const blatt = document.getElementById('ai');
@@ -3026,9 +2106,6 @@ const App = (() => {
             document.removeEventListener('pointermove', bewegen);
             document.removeEventListener('pointerup', ende);
             document.removeEventListener('pointercancel', ende);
-            /* Erst den Übergang zurückgeben, DANN den Wert ändern. Ohne das
-               Lesen von `offsetHeight` dazwischen fasst der Browser beides zu
-               einem Schritt zusammen, und das Blatt springt statt zu gleiten. */
             blatt.style.transition = '';
             void blatt.offsetHeight;
             blatt.style.transform = '';
@@ -3062,7 +2139,6 @@ const App = (() => {
         return p;
     };
     const ERSTELLEN = [
-        /* --- Hereinholen ------------------------------------------------- */
         { gruppe: 'Hereinholen', id: 'pdf', zeichen: '📕', name: 'PDF einlesen',
             sub: 'Blättern, beschreiben, Text durchsuchen',
             da: () => typeof PdfEinlesen !== 'undefined' && !!PdfEinlesen.waehlen },
@@ -3077,15 +2153,6 @@ const App = (() => {
         { gruppe: 'Hereinholen', id: 'umzug', zeichen: '⇤', name: 'Aus anderem Werkzeug',
             sub: 'Notion, Obsidian, Trello, Evernote, Anki …',
             da: () => typeof Austausch !== 'undefined' && !!Austausch.dialog },
-        /* --- Schreiben ---------------------------------------------------- */
-        /* DAS NOTIZBUCH FEHLTE (E513). Redur hat GoodNotes danebengehalten:
-           dort steht hinter dem „+" Notizbuch, Textdokument, Whiteboard,
-           Schnellnotiz. Alle vier gab es in Redion — nur das Notizbuch war von
-           hier aus nicht erreichbar, obwohl es im Regal „Notizhefte" seit E264
-           einen Knopf dafür gibt. Ein Weg, den man nur kennt, wenn man ihn
-           schon kennt, ist keiner.
-           Er steht ZUERST, weil er in GoodNotes zuerst steht und weil er das
-           ist, womit die meisten anfangen. */
         { gruppe: 'Schreiben', id: 'heft', zeichen: '📓', name: 'Notizbuch',
             sub: 'Ein Heft mit Papier — liniert, kariert, blanko',
             da: () => typeof Notebook !== 'undefined' && !!Notebook.createNotebook },
@@ -3100,31 +2167,15 @@ const App = (() => {
             sub: 'Mit fertiger Struktur starten' },
         { gruppe: 'Schreiben', id: 'ordner', zeichen: '🗂', name: 'Ordner',
             sub: 'Eine Seite, die andere hält' },
-        /* --- Zeichnen ----------------------------------------------------- */
         { gruppe: 'Zeichnen', id: 'board', zeichen: '🖍', name: 'Whiteboard',
             sub: 'Freie Fläche zum Skizzieren' },
-        /* DIE UNTERZEILE SAGT DEN ZWECK, NICHT NUR DAS PAPIER (E397). Sie hiess
-           „A4 — liniert, kariert, Punktraster, Millimeter" und beschrieb damit
-           den Bogen, nicht das, wofür man ihn nimmt. Wer mit der Hand schreiben
-           will, sucht nicht nach Papiersorten.
-           Der NAME bleibt „Blatt": so heisst die Blockart, so heisst die
-           Werkzeugleiste, so heissen E100 und E359. Zwei Namen für dieselbe
-           Sache laufen auseinander (§8). */
         { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
             sub: 'Mit der Hand schreiben — A4, liniert, kariert, Punktraster' },
-        /* DIE PRÄSENTATION IST EIN EIGENER WEG (E548). Redur: „könntest du so
-           eine PowerPoint-Modus im Menü einfügen … so dass ich Präsentation
-           erstellen könnte." Die ANSICHT gab es längst — der Dokumentmodus hat
-           die Leiste oben und die Folienliste links (E546, E547). Was fehlte,
-           war der Weg hinein: wer eine Präsentation wollte, legte eine Seite
-           an, setzte ein Blatt hinein, stellte dessen Masse von Hand auf 16:9
-           und suchte den Dokumentmodus selbst. */
         { gruppe: 'Zeichnen', id: 'praesentation', zeichen: '📽️', name: 'Präsentation',
             sub: 'Folien in 16:9 — mit fertigen Vorlagen',
             da: () => typeof Folienvorlagen !== 'undefined' && !!Folienvorlagen.anlegenMitWahl },
         { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
             sub: 'Mit Fachzeichen und Stromsimulation' },
-        /* --- Ordnen und rechnen ------------------------------------------- */
         { gruppe: 'Ordnen und rechnen', id: 'db', zeichen: '▦', name: 'Neue Datenbank',
             sub: 'Zeilen sind eigene Seiten' },
         { gruppe: 'Ordnen und rechnen', id: 'tabelle', zeichen: '📊', name: 'Neue Tabelle',
@@ -3133,37 +2184,17 @@ const App = (() => {
             sub: 'Mit Datum planen' },
         { gruppe: 'Ordnen und rechnen', id: 'diagramm', zeichen: '📈', name: 'Diagramm',
             sub: 'Zahlen aus einer Datenbank zeichnen' },
-        /* --- Lernen -------------------------------------------------------- */
         { gruppe: 'Lernen', id: 'karte', zeichen: '📚', name: 'Karteikarte',
             sub: 'Später wiederholen (SM-2)' },
         { gruppe: 'Lernen', id: 'lernen', zeichen: '🎓', name: 'Lernzentrale öffnen',
             sub: 'Fällige Karten, Fehler, Prüfungen',
             da: () => typeof Produktwelten !== 'undefined' && !!Produktwelten.lernen },
-        /* --- Aufnehmen ------------------------------------------------------ */
         { gruppe: 'Aufnehmen', id: 'aufnahme', zeichen: '🎙', name: 'Besprechung aufnehmen',
             sub: 'Mitschnitt mit Marken und Notizen',
             da: () => typeof Meeting !== 'undefined' && !!Meeting.panel }
     ];
-    /**
-     * Der Arbeitsbereich — Name, Zeichen und der Baum aller Seiten.
-     *
-     * AM TELEFON DAS R-BLATT, AM RECHNER DIE SCHUBLADE. Das ist keine
-     * Laune: E38 hat den Weg am Telefon ausdrücklich WEG von der Schublade
-     * geführt — die ist die Seitenleiste des Rechners, auf 390 px
-     * geschoben, samt Baum und 33-px-Zeilen.
-     *
-     * Herausgegeben seit E236: der Weg wird jetzt von drei Stellen
-     * gebraucht — dem alten Kreis, dem Knopf rechts in der Menüleiste und
-     * der Zeile im Mehr-Blatt. Drei Aufrufe, eine Entscheidung (§8).
-     */
     const arbeitsbereich = () => {
         if (!window.matchMedia('(max-width: 760px)').matches) {
-            /* AM RECHNER SEIT E272 PHASE G: die Datei-Fläche, Fach „Konto".
-               Vorher ging hier die Seitenleisten-Schublade auf — und die
-               verschwindet am Rechner in Phase F. Der Knopf hätte dann kein
-               Ziel mehr gehabt; deshalb steht G vor F und nicht danach.
-               Die Schublade bleibt der Notweg, solange die Fläche fehlt
-               (Einzeldatei, halb geladenes Fenster, Prüflauf ohne das Modul). */
             const bs = window.Backstage;
             if (bs?.oeffne) {
                 bs.oeffne('konto');
@@ -3176,28 +2207,14 @@ const App = (() => {
         PWA.schubladeZu && PWA.schubladeZu();
         rMenue();
     };
-    /* Der da()-gefilterte Katalog, OHNE die da-Funktionen — für jeden, der
-       die Wege anbieten will, ohne die fremden Module selbst zu kennen.
-       Seit E265 fragt das Notizhefte-Regal hier nach: sein Neu-Menü darf
-       keinen Weg versprechen, den diese Fassung nicht geladen hat (§47),
-       und dürfte dafür nicht selbst nach PdfEinlesen greifen (§5). */
     const erstellenWege = () => ERSTELLEN.filter(w => !w.da || w.da())
         .map(w => ({ id: w.id, zeichen: w.zeichen, name: w.name, sub: w.sub }));
     const erstellenBlatt = () => {
-        /* Erst aussortieren, was es hier nicht gibt, DANN gruppieren — sonst
-           bleibt eine Überschrift ohne Zeilen darunter stehen. */
         const wege = ERSTELLEN.filter(w => !w.da || w.da());
         const gruppen = [];
         for (const w of wege)
             if (!gruppen.includes(w.gruppe))
                 gruppen.push(w.gruppe);
-        /* EINE LISTE, NICHT SECHS. Der erste Entwurf gab jeder Gruppe ihre
-           eigene `.menu-liste` — und die trägt am Telefon `flex:1`, weil sie
-           dort das ganze Blatt füllen soll. Sechs davon teilten sich die Höhe
-           und schnitten sich gegenseitig ab: „Dokument scannen" war halb weg,
-           „Neue Tabelle" halb weg, und gerollt hat keine von ihnen.
-           Die Überschriften laufen deshalb IN der Liste mit — `.grp` ist genau
-           dafür da und wird in jedem anderen Menü auch so verwendet. */
         const html = '<div class="menu-liste">' + gruppen.map(g => `<div class="grp">${esc(g)}</div>` +
             wege.filter(w => w.gruppe === g).map(w => `<button data-neu="${esc(w.id)}"><span class="mi">${esc(w.zeichen)}</span>` +
                 `<span class="ne-txt"><b>${esc(w.name)}</b><i>${esc(w.sub)}</i></span>` +
@@ -3211,18 +2228,10 @@ const App = (() => {
                 return;
             const was = b.dataset['neu'];
             document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
-            /* Erst schliessen, dann handeln — ein Dialog unter einem Blatt ist
-               von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
             setTimeout(() => { erstellenWeg(was || ''); }, 60);
         });
     };
-    /* Führt genau EINEN Weg aus dem Katalog aus. Herausgelöst aus dem
-       Klick-Handler von erstellenBlatt (E265), wörtlich — damit das
-       Notizhefte-Regal dieselben Wege gehen kann, ohne eine zweite
-       PDF-Anlege-Maschine zu bauen (E29). */
     const erstellenWeg = (was) => {
-        /* Wege, die kein Blatt Papier brauchen: sie öffnen etwas, das es
-           schon gibt, oder einen Wähler. */
         if (was === 'heft') {
             Notebook.createNotebook();
             return;
@@ -3240,8 +2249,6 @@ const App = (() => {
             return;
         }
         if (was === 'zip') {
-            /* ZIP INS REGAL (E350): Ziel ist das offene Fach der Notizhefte, sonst
-               die Wurzel — dort, wo „Dokumente" seine Deckel zeigt. */
             const fach = String(Store.getMeta('heft:fach') || '');
             const ziel = schauplatz() === 'notizhefte' && fach && Store.getBlock(fach) ? fach : null;
             void ArchivImport.waehlen(ziel);
@@ -3268,19 +2275,6 @@ const App = (() => {
             return;
         }
         if (was === 'pdf') {
-            /* GEMESSEN UND EINE SACKGASSE GEFUNDEN. `PdfEinlesen.waehlen()`
-               beginnt mit `App.aktuelleSeite()` und meldet „Erst eine Seite
-               öffnen", wenn keine offen ist — und im Regal ist keine offen.
-               Von dort führte der Weg also ins Nichts (§47).
-      
-               Aus dem Blatt „Neu erstellen" heraus ist das ohnehin die
-               falsche Frage: wer hier klickt, will ein NEUES Dokument aus
-               der PDF, keine PDF in einer bestehenden Seite. Also erst die
-               Seite, dann hinein damit.
-      
-               Bricht jemand den Dateiwähler ab, bleibt eine leere,
-               namenlose Seite übrig — die wandert in den Papierkorb, nicht
-               in den Abgrund: `alive:false` ist umkehrbar (§46). */
             const ziel = neueSeite();
             void PdfEinlesen.waehlen(ziel.id).then((erg) => {
                 if (erg) {
@@ -3300,10 +2294,6 @@ const App = (() => {
             return;
         }
         if (was === 'praesentation') {
-            /* Der Wähler legt selbst an und öffnet selbst — und wenn jemand
-               abbricht, entsteht GAR NICHTS. Der PDF-Weg zwei Zweige weiter oben
-               muss dafür eine leere Seite in den Papierkorb schieben; hier ist
-               die Reihenfolge herum, also gibt es den Fall nicht (§47). */
             void Folienvorlagen.anlegenMitWahl();
             return;
         }
@@ -3319,49 +2309,22 @@ const App = (() => {
             return;
         }
         if (was === 'ordner') {
-            /* EIN ORDNER IST KEINE NEUE DATENART. Er ist eine Seite, die
-               andere hält — genau so liest die Bibliothek ihn auch wieder
-               (E236, `artVon`). Ein eigenes Feld dafür wäre eine Migration
-               für eine Ansicht (§9). Das Mappensymbol sagt, wozu sie da
-               ist; wer sie vollschreibt, hat trotzdem eine Seite. */
             const ord = Store.addPage(null, { text: '', icon: '\ud83d\uddc2' });
             zeichneBaum();
             oeffne(ord.id);
             setTimeout(() => document.getElementById('title')?.focus(), 60);
             return;
         }
-        /* Alles andere entsteht IN einer Seite — es gibt es nicht ohne
-           eine. Also erst die Seite, dann der Block darin, und der Cursor
-           steht schon an der richtigen Stelle. */
         const p = neueSeite();
         setTimeout(() => {
             if (was === 'db')
                 Store.addDatabase(p.id, 'Ohne Namen');
-            /* `spreadsheet`, NICHT `tabelle` — und das ist kein Schönheitsfehler.
-               Es gibt gar keine Blockart `tabelle`: der Editor kennt `table`
-               (Einfache Tabelle) und `spreadsheet` (Kalkulationstabelle).
-               Gemessen wurde ein `tabelle`-Block 24 px hoch mit dem Inhalt
-               „+⋮⋮" — nur der Griff, sonst nichts. Der Weg legte seit E45
-               einen Block an, den niemand zeichnet.
-               Welcher der beiden es sein muss, sagt der Weg selbst: unter
-               „Neue Tabelle" steht „Rechnen wie in Excel". Das ist die
-               Kalkulationstabelle (gemessen 513 px, mit A1, fx, CHF und %). */
             else if (was === 'tabelle')
                 Store.addBlock(p.id, 'spreadsheet', {});
             else if (was === 'board')
                 Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
             else if (was === 'blatt') {
                 Store.addBlock(p.id, 'blatt', { text: '' });
-                /* UND GLEICH ZUM SCHREIBEN AUFSCHLAGEN (E397, Audit F10).
-                   GEMESSEN AM 4. SEPTEMBER: „Blatt" legte eine Seite mit den
-                   Blöcken ["text", "blatt"] an und liess `dokumentModus` auf
-                   `false`. Man landete also im Texteditor, mit einem leeren
-                   Absatz oben und dem Blatt als Kasten darunter — und musste
-                   „Dokumentmodus" erst selbst finden, um darauf schreiben zu
-                   können. Ein Weg, der das Ding anlegt, aber nicht öffnet.
-        
-                   Die Notizhefte machen es längst richtig (`notebook.ts:348`
-                   und `:370` setzen die Flagge beim Anlegen). Hier fehlte sie. */
                 Store.updateBlock(p.id, { dokumentModus: true });
             }
             else if (was === 'plan')
@@ -3373,9 +2336,6 @@ const App = (() => {
             zeichneSeite();
         }, 80);
     };
-    /* ------------------------------------------------------------------------
-     * BREITE DER SEITENLEISTE
-     * ---------------------------------------------------------------------- */
     const seitenleisteBreite = () => {
         const side = document.getElementById('sidebar');
         if (!side || side.querySelector('.side-griff'))
@@ -3409,27 +2369,18 @@ const App = (() => {
             addEventListener('pointermove', zug);
             addEventListener('pointerup', stop);
         });
-        /* 240, nicht 260: die Startbreite steht seit §68 in `aufbau.css` auf 240,
-           und `test245` verlangt 220–250. Der Rücksetzer sprang trotzdem auf 260 —
-           also auf einen Wert, den die App selbst verbietet. Wer zurücksetzt,
-           landet jetzt dort, wo er ohne Zutun auch stünde. */
         griff.addEventListener('dblclick', () => {
             setze(240);
             Store.setMeta('seiteBreite', 240);
             UI.toast('Breite zurückgesetzt');
         });
     };
-    /* ========================================================================
-     * TASTENKÜRZEL
-     * ======================================================================*/
     const tasten = () => {
         document.addEventListener('keydown', e => {
             const strg = e.ctrlKey || e.metaKey;
             if (!strg)
                 return;
             const k = e.key.toLowerCase();
-            /* Selbst belegte Kürzel haben Vorrang vor den eingebauten. Wer nichts
-               umbelegt hat, merkt davon nichts — dann greift die Liste unten. */
             if (typeof Aussehen !== 'undefined' && Object.keys(Aussehen.eigene()).length) {
                 const tu = { suche, palette: () => Werkzeuge.palette(), neu: () => { neueSeite(); },
                     ki: () => kiPanel(), chat: () => KI.neuerChat && KI.neuerChat(),
@@ -3442,17 +2393,12 @@ const App = (() => {
                     reiterZu: () => Fenster.schliessen(Fenster.aktiv()) };
                 for (const id of Object.keys(Aussehen.eigene())) {
                     const fn = tu[id];
-                    /* Auch alte, bereits gespeicherte Belegungen dürfen keine
-                       Browser- oder Bearbeitungstaste stehlen. Der Dialog verhindert
-                       neue Konflikte; diese zweite Grenze schützt Bestandsdaten. */
                     if (fn && !Aussehen.reserviert(Aussehen.alsText(e)) && Aussehen.ist(id, e)) {
                         e.preventDefault();
                         fn();
                         return;
                     }
                 }
-                /* Ein eingebautes Kürzel, das jemand woandershin gelegt hat, darf
-                   an seiner alten Stelle nichts mehr auslösen. */
                 const belegt = Object.keys(Aussehen.eigene());
                 const jetzt = Aussehen.alsText(e).toLowerCase();
                 const kollision = Aussehen.KUERZEL.find(([id, , std]) => belegt.includes(id) && String(std ?? '').toLowerCase() === jetzt);
@@ -3464,7 +2410,6 @@ const App = (() => {
                 neueSeite();
                 return;
             }
-            /* Strg+Alt+P gehört der Präsentation, nicht der Suche */
             if (k === 'p' && !e.shiftKey && !e.altKey) {
                 e.preventDefault();
                 suche();
@@ -3475,11 +2420,6 @@ const App = (() => {
                 suche();
                 return;
             }
-            /* Strg+Backslash war „Seitenleiste auf/zu" und ist seit E272 Phase F
-               „Kontextkante auf/zu" — dieselbe Taste, dasselbe Versprechen (die
-               Spalte links weg oder da), nur ist die Spalte jetzt 54 statt 240
-               Pixel breit. Am Telefon gibt es die Kante nicht; dort schaltet
-               die Taste weiter die Schublade, damit sie nicht ins Leere geht. */
             if (k === '\\') {
                 e.preventDefault();
                 if (typeof Kontextkante !== 'undefined'
@@ -3491,11 +2431,6 @@ const App = (() => {
                 }
                 return;
             }
-            /* Strg+M: die Lade der Kante auf und zu (E272 Phase F). Vorher war es
-               „Mehr" in der Seitenleiste (E219); die gibt es am Rechner nicht
-               mehr, am Telefon schon — deshalb beide, jeder an seinem Ort.
-               Ohne beides ruft die Taste kein `preventDefault` und bleibt dem
-               Browser. */
             if (k === 'm' && !e.shiftKey) {
                 if (typeof Kontextkante !== 'undefined'
                     && !window.matchMedia('(max-width: 760px)').matches) {
@@ -3539,12 +2474,6 @@ const App = (() => {
                 seitenSuche();
                 return;
             }
-            /* EINE TASTE, DIE EIN BLOCK SCHON GENOMMEN HAT, NIMMT DIE SCHALE NICHT
-               NOCH EINMAL (E682, L212). Planfläche, Marken, Whiteboard und
-               Gedankenkarte haben eigene Verläufe und nehmen Strg+Z selbst; die
-               Taste läuft trotzdem bis hierher. Gemessen am 25. September: der
-               Block nahm seinen Schritt zurück UND der Seitenverlauf baute die
-               Seite neu — mit frischen Kennungen für jeden Block (test568). */
             if (e.defaultPrevented && (k === 'z' || k === 'y'))
                 return;
             if (k === 'z' && !e.shiftKey) {
@@ -3552,8 +2481,6 @@ const App = (() => {
                 Verlauf.zurueck();
                 return;
             }
-            /* Strg+Y ist Wiederholen — Strg+Umschalt+Y gehört den Favoriten,
-               deshalb hier ausdrücklich ohne Umschalt. */
             if ((k === 'y' && !e.shiftKey) || (e.shiftKey && k === 'z')) {
                 e.preventDefault();
                 Verlauf.vor();
@@ -3564,14 +2491,11 @@ const App = (() => {
                 Auswahl.letzteFarbeAnwenden();
                 return;
             }
-            /* --- Was Notion sonst noch belegt ---------------------------------- */
-            /* Strg+L: Adresse dieser Seite kopieren */
             if (k === 'l' && !e.shiftKey && !e.altKey) {
                 e.preventDefault();
                 Ablage.kopiereJetzt(location.origin + location.pathname + '#' + aktuelleSeite(), 'Link zur Seite kopiert');
                 return;
             }
-            /* Strg+Umschalt+U: eine Ebene nach oben in der Seitenhierarchie */
             if (e.shiftKey && k === 'u') {
                 e.preventDefault();
                 const b = Store.getBlock(aktuelleSeite());
@@ -3582,19 +2506,11 @@ const App = (() => {
                     UI.toast('Diese Seite liegt schon ganz oben');
                 return;
             }
-            /* Strg+Alt+T: alle Toggles der Seite auf- oder zuklappen */
             if (e.altKey && k === 't') {
                 e.preventDefault();
                 Blocks.alleToggles();
                 return;
             }
-            /* --- Fünf, die an der Seite selbst hängen --------------------------
-             * Sie standen bisher nur in Menüs. Bewusst nur Buchstaben, die noch
-             * frei sind: Umschalt+F gehört dem Fokus-Modus, Umschalt+P dem
-             * Verschieben, Umschalt+G dem Graphen. Ein Kürzel, das ein anderes
-             * überdeckt, ist kein Gewinn, sondern ein Fehler.
-             * ------------------------------------------------------------------ */
-            /* Strg+Umschalt+D: diese Seite verdoppeln */
             if (e.shiftKey && k === 'd') {
                 e.preventDefault();
                 const b = Store.getBlock(aktuelleSeite());
@@ -3602,7 +2518,6 @@ const App = (() => {
                     dupliziereSeite(b.id);
                 return;
             }
-            /* Strg+Umschalt+Y: an- und abheften */
             if (e.shiftKey && k === 'y') {
                 e.preventDefault();
                 const b = Store.getBlock(aktuelleSeite());
@@ -3613,7 +2528,6 @@ const App = (() => {
                 UI.toast(b.favorite ? 'Zu den Favoriten' : 'Von den Favoriten genommen');
                 return;
             }
-            /* Strg+Umschalt+N: eine Unterseite hier anlegen */
             if (e.shiftKey && k === 'n') {
                 e.preventDefault();
                 const b = Store.getBlock(aktuelleSeite());
@@ -3622,21 +2536,17 @@ const App = (() => {
                 oeffne(p.id);
                 return;
             }
-            /* Strg+Umschalt+B: Papierkorb */
             if (e.shiftKey && k === 'b') {
                 e.preventDefault();
                 papierkorb();
                 return;
             }
-            /* Strg+Umschalt+O: Übersicht „Was Redion kann" */
             if (e.shiftKey && k === 'o') {
                 e.preventDefault();
                 if (typeof Rundgang !== 'undefined')
                     Rundgang.uebersicht();
                 return;
             }
-            /* Strg + Plus / Minus / 0: Textgrösse — Notion zoomt, wir vergrössern
-               die Schrift, weil das im Browser dasselbe Ziel erreicht. */
             if (!e.shiftKey && (k === '+' || k === '-' || k === '0') && !e.altKey) {
                 const stufen = ['klein', 'normal', 'gross'];
                 const jetzt = Store.getMeta('schriftgroesse', 'normal');
@@ -3656,19 +2566,6 @@ const App = (() => {
                 return;
             }
         });
-        /* ── Esc schliesst Menüs und Überlagerungen ────────────────────────
-           DIE OBERSTE, NICHT DIE ERSTE (E272 Phase G).
-    
-           Hier stand `document.querySelector('.overlay')` — und das ist die
-           ERSTE im Baum, nicht die vorderste auf dem Bildschirm. Liegt noch
-           eine ältere Überlagerung weiter oben im Dokument, schloss Esc die
-           unsichtbare dahinter und liess die vor der Nase stehen. Gemessen
-           beim Bau der Datei-Fläche: sie ging mit Esc nicht zu, obwohl sie
-           ganz vorne stand.
-    
-           `fokus.ts` rechnet seit E223 genauso — die letzte im Dokument ist
-           die oberste. Dieselbe Regel an beiden Stellen, sonst schliesst Esc
-           etwas anderes, als der Fokus gerade hält. */
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape')
                 return;
@@ -3684,25 +2581,6 @@ const App = (() => {
                 o.remove();
         });
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
-    /* ==========================================================================
-     * EIN LINK AUF GENAU EINEN BLOCK
-     * --------------------------------------------------------------------------
-     * Strg + Umschalt + C legt seit Langem eine Adresse der Form
-     * `…#block=<kennung>` in die Zwischenablage und meldet „Link auf diesen
-     * Block kopiert". GELESEN HAT SIE NIE JEMAND. Beim Start wurde der Hash als
-     * Seitenkennung genommen — `Store.getBlock('block=abc')` gibt nichts, also
-     * fiel der Start auf die zuletzt geöffnete Seite zurück. Der Link tat
-     * etwas, nur nicht das Versprochene, und gemerkt hat es niemand, weil
-     * „irgendeine Seite geht auf" wie ein Erfolg aussieht (E105).
-     *
-     * Jetzt führt er hin: Seite des Blocks suchen, sie öffnen, zum Block
-     * rollen, ihn kurz hervorheben.
-     * ========================================================================*/
-    /** Erst rollen, wenn der Zeichner durch ist — und noch einmal, wenn ein
-     *  Bild darin nachlädt und alles darunter verschiebt. */
     const rolleZu = (blockId) => {
         const hin = () => {
             const ziel = document.querySelector(`[data-bid="${blockId}"]`);
@@ -3711,36 +2589,14 @@ const App = (() => {
             ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });
             ziel.classList.add('hebe-hervor');
             setTimeout(() => ziel.classList.remove('hebe-hervor'), 1400);
-            /* Ein PDF-Seitenbild kommt aus der Stücke-Ablage und ist beim ersten
-               Rollen oft noch nicht da. Es ist genau das, was die Seite hoch
-               macht — also noch einmal, wenn es steht. Kein fester Zeitwert:
-               gewartet wird auf das Bild, nicht auf die Uhr. */
             const bild = ziel.querySelector('img');
             if (bild && !bild.complete)
                 bild.addEventListener('load', () => ziel.scrollIntoView({ behavior: 'smooth', block: 'center' }), { once: true });
             return true;
         };
-        /* Zwei Bilder Zeit: `oeffne` setzt am Ende `scrollTop = 0`, und davor
-           zu rollen hiesse, gegen diese Zeile anzurollen. */
         requestAnimationFrame(() => { if (!hin())
             requestAnimationFrame(hin); });
     };
-    /**
-     * Aufklappzeilen über einem Ziel öffnen.
-     *
-     * EIN ZIEL IN EINER ZUGEKLAPPTEN AUFKLAPPZEILE IST DA UND UNSICHTBAR.
-     * `.toggle-kids` steht auf `display:none`, die Kinder werden aber sehr
-     * wohl gezeichnet — `rolleZu` findet `[data-bid=…]`, meldet Erfolg, und
-     * auf dem Bildschirm passiert nichts.
-     *
-     * Aufgefallen beim Weg zurück in die Besprechung (E161): das volle
-     * Transkript steht in einer Aufklappzeile, die zu ist. Der Sprung auf
-     * „01:02" traf die richtige Zeile und zeigte sie nicht. Betroffen war
-     * jeder Tieflink dorthin, nicht nur dieser.
-     *
-     * Die Tiefe ist begrenzt: eine kaputte Elternkette darf hier nicht
-     * hängenbleiben.
-     */
     const klappeAuf = (blockId) => {
         let geaendert = false;
         let b = Store.getBlock(blockId);
@@ -3757,10 +2613,6 @@ const App = (() => {
         }
         return geaendert;
     };
-    /**
-     * Zu einem Block springen — Seite öffnen, hinrollen, hervorheben.
-     * Gibt zurück, ob es geklappt hat.
-     */
     const zeigeBlock = (blockId) => {
         const b = blockId ? Store.getBlock(blockId) : null;
         if (!b || b.alive === false) {
@@ -3773,28 +2625,17 @@ const App = (() => {
             UI.toast('Zu diesem Block führt kein Weg — seine Seite fehlt.');
             return false;
         }
-        /* Ein Dokumentmodus rendert absichtlich nur eine volle Seite. Ein
-           Deep-Link muss diese Seite daher VOR dem Öffnen wählen, sonst gäbe es
-           den Zielknoten im DOM noch nicht. */
         const dokumentZiel = b.type === 'pdfseite' || b.type === 'blatt';
         let ansichtGeaendert = false;
         if (dokumentZiel && typeof DocumentMode !== 'undefined' && DocumentMode.select(seite, b.id)) {
-            /* `select` aendert nur den fluechtigen Ansichtsstand. Auch wenn der
-               Dokumentmodus schon offen ist, muss dieselbe Seite neu gezeichnet
-               werden, damit ein Link auf PDF-Seite 18 nicht weiter Seite 3 zeigt. */
             ansichtGeaendert = true;
             if (!seite.dokumentModus)
                 Store.updateBlock(seite.id, { dokumentModus: true });
         }
         else if (!dokumentZiel && seite.dokumentModus) {
-            /* Ein normaler Notiz-/Kartenblock kommt in der Ein-Seiten-Ansicht nicht
-               vor. Quellsuche und Backlinks muessen deshalb fuer dieses Ziel in die
-               normale Seite zurueckwechseln. */
             Store.updateBlock(seite.id, { dokumentModus: false });
             ansichtGeaendert = true;
         }
-        /* Ist die Seite schon offen, NICHT neu öffnen: `oeffne` setzt den Lauf
-           zurück auf null und zählt einen Aufruf mit. Rollen genügt. */
         const aufgeklappt = klappeAuf(blockId);
         if (aktuelleSeite() !== seite.id)
             oeffne(seite.id);
@@ -3803,23 +2644,10 @@ const App = (() => {
         rolleZu(blockId);
         return true;
     };
-    /** `#block=<kennung>` aus einer Adresse holen, sonst leer. */
     const blockAusHash = (roh) => {
         const m = String(roh || '').replace(/^#/, '').match(/^block=(.+)$/);
         return m && m[1] ? decodeURIComponent(m[1]) : '';
     };
-    /* DIE ORTE, DIE DER START WIEDERHERSTELLT (E349). Wer die App im Regal
-       oder im Notizhefte-Regal verlassen hat, kommt dort wieder an. Alle
-       anderen Sonderansichten — „Meine Aufgaben", „Lernen & Alltag",
-       „Elektro" — führen zum Regal: das ist der Ort, an dem die Sachen
-       liegen, und Redurs Wunsch für „nichts offen". */
-    /* UND SEIT E431 AUCH DER KALENDER. Er ist mit demselben Bogen ein eigener
-       Ort geworden — eigene Krume, eigene Adresse `#kalender`, keine
-       Workspace-Schale. Ein Ort, an den man nicht zurückkommt, ist aber nur
-       ein halber: wer die App im Kalender verlässt oder `#kalender` als
-       Lesezeichen speichert, landete ohne diese Zeile im Regal.
-       Die Tabelle ist beides — sie beantwortet „wo war ich zuletzt" UND
-       „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
     const SONDER_START = {
         dokumente: () => Bibliothek.oeffne(),
         'alle-seiten': () => (Bibliothek.alleZeigen ? Bibliothek.alleZeigen() : Bibliothek.oeffne()),
@@ -3847,40 +2675,18 @@ const App = (() => {
                 Bibliothek.oeffne();
         },
     };
-    /* DER VORHANG GEHT AUF (E463). `index.html` legt ihn als Text über die
-       Seite, bevor das erste Skript läuft — die Sekunde, in der sonst leere
-       Kästchen und halbe Leisten stünden. Hier geht er auf: nach dem Start,
-       und auch nach einem gescheiterten Start, denn ein Vorhang vor einem
-       Fehlerbanner wäre ein stiller Absturz (§7). Das Stilblatt zieht ihn
-       ausserdem nach sechs Sekunden von selbst auf, falls diese Zeile nie
-       erreicht wird. */
     const vorhangWeg = () => {
         const v = document.getElementById('ru-vorhang');
         if (!v || v.hidden)
             return;
         v.classList.add('ru-vorhang-weg');
-        /* Erst nach der Blende verstecken — und nur, wenn ihn niemand in der
-           Zwischenzeit wieder zugezogen hat (`bilder.mts` tut das fürs Bild). */
         setTimeout(() => { if (v.classList.contains('ru-vorhang-weg'))
             v.hidden = true; }, 600);
     };
     const start = async () => {
-        /* DIE ZEICHEN DER OBERFLÄCHE ZUERST (E200).
-           `index.html` schreibt nur die Stellen — `<span data-sym="search">` —,
-           und hier werden sie gefüllt. Das steht ganz vorn, weil sonst zwischen
-           Aufbau und Füllung ein Bild mit leeren Kästchen stünde; auf einem
-           langsamen Gerät sieht man das.
-           Fehlt das Register, bleibt es bei leeren Stellen: die Zeilen tragen
-           ihren Namen als Text, also fehlt Bedeutung, nicht Bedienbarkeit. */
         if (typeof Register !== 'undefined' && Register.symbole) {
             Register.symbole.fuelle(document);
         }
-        /* VORFÜHRMODUS: EIN BALKEN, DER NICHT ZU ÜBERSEHEN IST (L31, E177).
-           `?demo` öffnet eine eigene Ablage (`notizen-demo`) — die echten Notizen
-           liegen unberührt daneben. Genau das muss aber dastehen: eine App, die
-           aussieht wie die eigene und es nicht ist, ist die unangenehmste Sorte
-           Überraschung. Der Balken steht ganz oben, bleibt stehen und nennt den
-           Weg zurück. */
         if (typeof Store !== 'undefined' && Store.istDemo && Store.istDemo()) {
             const balken = document.createElement('div');
             balken.id = 'demo-balken';
@@ -3890,41 +2696,11 @@ const App = (() => {
                 'berührt. <a href="./index.html">Zu deinen Notizen</a>';
             document.body.prepend(balken);
             document.body.classList.add('hat-demo');
-            /* Die Höhe GEMESSEN, nicht geschätzt: am Telefon bricht der Satz um,
-               und eine feste Zahl läge dann über der App. */
             const hoeheSetzen = () => document.documentElement.style
                 .setProperty('--demo-hoehe', balken.offsetHeight + 'px');
             hoeheSetzen();
             addEventListener('resize', hoeheSetzen);
         }
-        /* ----------------------------------------------------------------------
-         * WIE VIEL LUFT NEBEN DER SEITE STEHT (E409)
-         *
-         * Gemessen, nicht geraten: bei 1280 px Fenster ist `#page` 900 px breit
-         * und seine Datenbank 708 — die Tabelle daneben braucht 1637 px. 57 %
-         * davon lagen hinter einem waagerechten Roller, den niemand sieht. Bei
-         * 1920 px Fenster ändert sich daran NICHTS: `#page` bleibt 900, und
-         * links und rechts stehen je 483 px leer.
-         *
-         * Fliesstext soll schmal bleiben, das ist richtig. Eine Datenbank ist
-         * kein Fliesstext. Sie darf über den Textrand hinaus — aber nur so weit,
-         * wie wirklich Platz ist, und den kennt allein die Schale: die
-         * Seitenleiste kann offen oder eingeklappt sein, und eine feste Zahl in
-         * einer Media-Query wüsste davon nichts.
-         *
-         * Deshalb steht hier eine gemessene Zahl statt einer geschätzten.
-         * `datenbanken.css` rechnet damit; ist sie 0, ändert sich nichts.
-         * -------------------------------------------------------------------*/
-        /* Eine feste Reserve statt der gemessenen Rollbalkenbreite. Mit
-           `clientWidth` hing die Zahl davon ab, OB der senkrechte Rollbalken
-           gerade da ist, und sprang beim Laden von Bildern um sechzehn Pixel
-           hin und her.
-    
-           ABER: das ist NICHT die Reparatur der Schleifenmeldung, auch wenn es
-           zuerst so aussah. Nachgemessen mit `test404 §8` — die Reserve allein
-           liess den Fehler weiterbestehen, die Drosselung unten allein behob
-           ihn. Diese Zeile macht die Breite ruhig, nicht den Beobachter. Wer
-           sie herausnimmt, bekommt ein zuckendes Layout, keinen Fehler. */
         const ROLLER_RESERVE = 16;
         let luftZuletzt = -1;
         const luftMessen = () => {
@@ -3933,21 +2709,11 @@ const App = (() => {
             if (!roller || !seite)
                 return;
             const wert = Math.max(0, Math.round((roller.offsetWidth - ROLLER_RESERVE - seite.clientWidth) / 2));
-            /* NUR BEI ÄNDERUNG SCHREIBEN, und erst ab acht Pixeln: unter dieser
-               Schwelle ist der Gewinn nicht zu sehen, das erneute Zeichnen aber
-               zu bezahlen. */
             if (Math.abs(wert - luftZuletzt) < 8)
                 return;
             luftZuletzt = wert;
             seite.style.setProperty('--seite-luft', wert + 'px');
         };
-        /* EINMAL JE BILD, NICHT JE MELDUNG — und DAS ist die Reparatur.
-           Ein ResizeObserver, der in seinem eigenen Rückruf das Layout ändert,
-           meldet „ResizeObserver loop completed with undelivered notifications",
-           und Redion machte daraus eine Fehlerkarte quer über der Ansicht.
-           Nachgemessen: ohne diese Drosselung erscheint der Fehler bei `list`,
-           `gallery` und `chart` — überall dort, wo nach dem ersten Zeichnen noch
-           etwas nachwächst. `test404 §8` hält es fest. */
         let luftGeplant = false;
         const luftBald = () => {
             if (luftGeplant)
@@ -3957,12 +2723,6 @@ const App = (() => {
         };
         luftMessen();
         addEventListener('resize', luftBald, { passive: true });
-        /* BEIDE BEOBACHTEN, und das ist der Punkt, an dem der erste Versuch
-           scheiterte: beobachtet war nur `#scroll`. Das ändert seine Breite nie
-           — die Seitenleiste schiebt es zwar zusammen, aber `#page` bekommt
-           seine 900 px erst später. Gemessen wurde deshalb einmal, viel zu
-           früh, mit dem Ergebnis 0, und danach kam nie wieder ein Anlass.
-           Auf dem Bild sah das aus, als hätte die Regel nicht gegriffen. */
         if (typeof ResizeObserver !== 'undefined') {
             const beobachter = new ResizeObserver(luftBald);
             const roller = document.getElementById('scroll');
@@ -3972,97 +2732,36 @@ const App = (() => {
             if (seite2)
                 beobachter.observe(seite2);
         }
-        /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
-           Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
-           es `zeichneBaum`, und das läuft dann schon nach drüben. */
         Seitenleiste.binde({
             oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
         });
-        /* Die ruhige Fassung setzt nur ein Attribut am `body` (E219). Hier steht
-           sie, damit der Schalter hängt und die Leiste nicht erst voll aufblitzt
-           — aber `Store.getMeta` kann an dieser Stelle NOCH NICHTS wissen:
-           `Store.load()` läuft erst 135 Zeilen weiter unten, in
-           `starteWirklich`. Bis dahin gewinnt immer die Vorgabe.
-    
-           Genau das hat test248 §6 gemeldet: „ausgeschaltet" überlebte den
-           Neustart nicht, obwohl der Wert richtig gespeichert war. Es ist
-           dieselbe Falle wie beim Bibliotheks-Regal (E207) — gelesen, bevor
-           die Ablage offen war. Deshalb steht unten ein zweites `anwenden`. */
         if (typeof Ruhig !== 'undefined')
             Ruhig.binde();
         Kopfleiste.binde({
             zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
-            /* Seit E283 EIN Griff für „volle Breite" statt dreier Handgriffe. */
             volleBreite,
-            /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
-               der Schale, und die Pfadleiste muss den jeweils aktuellen sehen. */
             sonder: () => sonder
         });
         Inhaltsflaeche.binde({ aktuelleSeite });
-        /* DIE KONTEXTKANTE (E272 Phase F). Sie kommt NACH allen anderen: sie
-           liest `App.schauplatz()` und hört auf `redion:schauplatz`, und beides
-           gibt es erst, wenn die Schale steht. Ohne das Modul (Einzeldatei
-           älteren Standes, Prüflauf ohne die Datei) bleibt der Platz leer und
-           die Seitenleiste sichtbar — kein Absturz. */
         if (typeof Kontextkante !== 'undefined')
             Kontextkante.binde();
-        /* DIE AUFTRAGSMASCHINE (E286). Nach der Ablage, weil sie sie braucht,
-           und nach den Bereichen, weil die ihre Läufer anmelden. Ohne einen
-           einzigen angemeldeten Läufer tut ihr Takt gar nichts — sie liest
-           dann nicht einmal das Fach. */
         if (typeof Auftraege !== 'undefined') {
             void Auftraege.start();
         }
-        /* ----------------------------------------------------------------------
-         * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
-         * ----------------------------------------------------------------------
-         * Eine stumme Seite hilft niemandem. Ein Balken, der „Script error."
-         * sagt und dann um Weitergabe bittet, aber auch nicht: dieser Text ist
-         * die leere Hülle, die jeder Browser liefert, wenn ein Skript von einer
-         * FREMDEN Adresse stolpert. Datei, Zeile und Stapel verschweigt er aus
-         * Sicherheitsgründen — es gibt nichts zu melden, und die Bitte darum
-         * lässt den Menschen mit einer Aufgabe zurück, die er nicht lösen kann.
-         *
-         * Woher so etwas kommt: die KI-Bibliothek von `esm.run`, eingebetteter
-         * fremder Inhalt, oder — am häufigsten auf dem Telefon — eine
-         * Browser-Erweiterung oder ein Inhaltsblocker. Redion läuft in all
-         * diesen Fällen weiter, und genau das gehört dann dagestanden.
-         *
-         * Dazu zwei Kleinigkeiten, die vorher fehlten: Ort und Zeile werden
-         * mitgenannt, wenn es sie gibt, und derselbe Fehler erscheint nur
-         * einmal. Ein Fehler in einer Schleife baute vorher einen Balken pro
-         * Durchgang, bis nichts anderes mehr zu sehen war.
-         * -------------------------------------------------------------------- */
         const schonGemeldet = new Set();
         const fehlerMelden = (text, ort, fremd) => {
             const schluessel = text + '|' + ort;
             if (schonGemeldet.has(schluessel))
                 return;
             schonGemeldet.add(schluessel);
-            /* Für später aufheben — auf dem Telefon gibt es keine Konsole, in die
-               man hineinsehen könnte. Zwanzig reichen; ältere fallen hinten raus. */
             try {
                 const bisher = Store.getMeta('fehlerprotokoll', []) || [];
                 bisher.push({ wann: new Date().toISOString(), text, ort, fremd });
                 Store.setMeta('fehlerprotokoll', bisher.slice(-20));
             }
-            catch { /* wenn nicht einmal das geht, hilft ein Balken auch nicht */ }
+            catch { }
             fehlerKarte(fremd, text, ort);
         };
-        /* ----------------------------------------------------------------------
-         * DIE FEHLERKARTE (Telefon-Vorgabe, Phase 8)
-         * ----------------------------------------------------------------------
-         * Vorher war das ein Balken über die ganze Breite mit dem technischen
-         * Text darin. Auf dem Telefon sah das aus wie ein kaputtes Stück Seite:
-         * im Bildschirmfoto vom 6. August hatte Redur den Text markiert, weil
-         * er wie Inhalt aussah und weil dort „bitte melde mir diesen Text"
-         * stand.
-         *
-         * Jetzt: eine kleine Karte, ein Satz in Alltagssprache, und der
-         * technische Teil hinter „Details kopieren". Wer ihn braucht, holt ihn;
-         * wer ihn nicht braucht, sieht ihn nicht. Nicht markierbar, damit sie
-         * nicht wie Text wirkt, den man anfassen soll.
-         * -------------------------------------------------------------------- */
         const fehlerKarte = (fremd, text, ort) => {
             document.getElementById('fehler-karte')?.remove();
             const k = document.createElement('div');
@@ -4098,8 +2797,6 @@ const App = (() => {
                     b.textContent = 'Kopiert';
                 }
                 catch {
-                    /* Ohne Zwischenablage (altes iOS, kein sicherer Kontext) wenigstens
-                       zeigen, statt nur „ging nicht" zu sagen. */
                     b.textContent = 'Kopieren geht hier nicht';
                     const pre = document.createElement('pre');
                     pre.className = 'fk-roh';
@@ -4109,14 +2806,10 @@ const App = (() => {
             });
         };
         addEventListener('error', (e) => {
-            /* Kein Skriptfehler, sondern ein Bild oder eine Datei, die nicht kam.
-               `e.message` ist dann leer, und der Balken sagte „undefined". */
             if (!(e instanceof ErrorEvent))
                 return;
             const text = String(e.message || (e.error && e.error.message) || '').trim();
             const ort = e.filename ? e.filename.split('/').pop() + ':' + e.lineno : '';
-            /* Die Kennzeichen der leeren Hülle: genau dieser Satz, kein Ort, kein
-               Fehlerobjekt. Fehlt eines davon, ist es ein echter Fehler von hier. */
             const fremd = (!text || /^script error/i.test(text)) && !e.filename && !e.error;
             fehlerMelden(text || 'Unbekannter Fehler', ort, fremd);
         });
@@ -4139,16 +2832,9 @@ const App = (() => {
     };
     const starteWirklich = async () => {
         await Store.load();
-        /* JETZT erst steht in `Store.cache.meta`, was der Nutzer wollte. Ohne
-           diese Zeile gewinnt oben immer die Vorgabe, und der Schalter in den
-           Einstellungen wäre wirkungslos, ohne dass es jemand merkt (E219). */
         if (typeof Ruhig !== 'undefined')
             Ruhig.anwenden();
-        /* Ist eine Sperre eingerichtet, geht ohne Passwort nichts weiter. */
         await Krypto.startPruefen();
-        /* Die App hiess früher „Notizen" und heisst jetzt Redion. Wer den Namen
-           nie selbst geändert hat, bekommt den neuen — wer einen eigenen gesetzt
-           hat, behält ihn. */
         if (Store.getMeta('arbeitsName', '') === 'Notizen')
             Store.setMeta('arbeitsName', 'Redion');
         document.documentElement.dataset.theme = Store.getMeta('theme', 'dark');
@@ -4156,16 +2842,9 @@ const App = (() => {
         Einstellungen.anwenden();
         if (!Store.rootPages().length)
             beispielAnlegen();
-        /* Das gesammelte Notion-Wissen als echte Seiten — beim ersten Start
-           angelegt, danach nur noch, wenn der Text neuer geworden ist. */
         Wissen.sicherstellen();
-        /* Eigene Formelfunktionen bereitstellen, bevor die erste Seite rechnet */
         Werkzeuge.formelBibliothekAnwenden();
-        /* Fehler sammeln, Papierkorb nach Frist aufräumen */
         Pflege.start();
-        /* Ein Blocklink nennt keine Seite, sondern einen Block. Welche Seite
-           aufgehen muss, steht erst nach dem Hochlaufen fest — deshalb hier die
-           Seite DES BLOCKS, und nicht der Hash selbst (E105). */
         const produktRoute = Produktwelten.routeAusHash(location.hash);
         const zielBlock = produktRoute ? '' : blockAusHash(location.hash);
         const rohHash = location.hash.slice(1).split(':')[0] || '';
@@ -4173,35 +2852,13 @@ const App = (() => {
             ? ((typeof Links !== 'undefined' && Links.seiteVon)
                 ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
             : rohHash;
-        /* NUR EINE SEITE IM HASH IST EIN ZIEL (E349). `#dokumente` steht nach
-           jedem Besuch des Regals in der Adresse (`zeigeSonder`), und beim
-           Neuladen sah der Start darin bisher eine Seitenkennung: die Bedingung
-           für die Startansicht wurde falsch, das Regal kam nicht — stattdessen
-           `letzte` oder die erste Wurzelseite. Ein Hash zählt nur, wenn es die
-           Seite gibt; der Hash einer Sonderansicht ist ein ORT. */
         const hashSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash : '';
         const sonderHash = (!produktRoute && !zielBlock && rohHash in SONDER_START) ? rohHash : '';
         const zuletztOffen = Store.getMeta('letzte');
-        /* HIER GEMERKT UND NICHT WEITER UNTEN GEFRAGT (E236).
-           `oeffne()` schreibt `letzte` selbst — schon zwei Zeilen später zeigt
-           die Marke also auf die Seite, die gerade aufgegangen ist, und nicht
-           mehr auf die von gestern. Wer weiter unten fragt „gab es ein
-           zuletzt geöffnetes Dokument?", bekommt deshalb IMMER ja.
-           Genau daran ist der erste Versuch gescheitert: das Regal ging nie
-           auf, weil die Bedingung nie falsch wurde. */
         const zuletztBlock = zuletztOffen ? Store.getBlock(zuletztOffen) : null;
-        /* Eine Seite im Papierkorb ist kein Ort zum Weiterarbeiten (E349). */
         const hatteDokument = !!(zuletztBlock && zuletztBlock.alive !== false);
-        /* WO MAN WAR (E349). `zuletztOrt` sagt, ob zuletzt eine Seite offen war
-           oder eine Sonderansicht; ein Bestand von vor E349 kennt den Ort nicht,
-           und dann gilt, was vorher galt: die zuletzt geöffnete Seite. */
         const ortZuletzt = String(sonderHash || Store.getMeta('zuletztOrt', 'seite') || 'seite');
         const wiederDokument = hatteDokument && ortZuletzt === 'seite';
-        /* EINMALIG (E349): „Heute" und „Workspace" als Startansicht stammten
-           fast immer aus dem Onboarding, das sie ungefragt setzte — wer es
-           durchlief, sah nie seine PDF, egal was E236 versprach. Beide fallen
-           einmal auf „dokument" zurück; wer sie danach in den Einstellungen neu
-           wählt, behält sie, denn die Marke steht dann schon. */
         if (!Store.getMeta('startAnsichtE349')) {
             const alt = Store.getMeta('startAnsicht');
             if (alt === 'start' || alt === 'workspace')
@@ -4210,13 +2867,6 @@ const App = (() => {
         }
         const wunsch = Store.getMeta('startAnsicht', 'dokument');
         const dokumentStart = wunsch === 'dokument' || wunsch === 'letzte';
-        /* DAS REGAL BRAUCHT KEINE SEITE DAVOR (E349). Hier stand: keine Seite
-           gemerkt, dann die erste Wurzelseite öffnen — und `oeffne()` schrieb
-           sie als `letzte` und zählte einen Aufruf. Der ZWEITE Start zeigte
-           deshalb „Willkommen" statt des Regals; das Regal hielt genau einen
-           Start. Kommt das Regal, wird jetzt keine Seite geöffnet, keine Marke
-           geschrieben, kein Zähler erhöht. Die Fläche ist einen Wimpernschlag
-           leer, bis am Ende von start() das Regal steht. */
         const startSeite = hashSeite ? hashSeite
             : dokumentStart ? (wiederDokument ? zuletztOffen : '')
                 : hatteDokument ? zuletztOffen
@@ -4228,13 +2878,8 @@ const App = (() => {
             zeichneSeite();
             schauplatzMelden();
         }
-        /* Kam der Start über einen Blocklink, steht jetzt die richtige Seite —
-           aber oben. Also noch hinrollen. */
         if (zielBlock)
             zeigeBlock(zielBlock);
-        /* Und für jeden Blocklink, der SPÄTER angeklickt wird. `oeffne` schreibt
-           die Seitenkennung selbst in die Adresse; solche Änderungen laufen hier
-           durch, weil sie nicht mit `block=` beginnen. */
         addEventListener('hashchange', () => {
             const b = blockAusHash(location.hash);
             if (b) {
@@ -4251,46 +2896,7 @@ const App = (() => {
             if (ort !== jetzt && SONDER_START[ort])
                 SONDER_START[ort]();
         });
-        /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
-           Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
-           eine Webseite; eine App beginnt bei ihrer Übersicht. Der Reiter
-           stand oben schon auf „Start" — nur der Inhalt darunter war die
-           zuletzt geöffnete Seite. Beides zeigte gleichzeitig etwas anderes.
-    
-           Nur beim ERSTEN Öffnen: wer über einen Link mit `#seite` kommt oder
-           schon in dieser Sitzung gearbeitet hat, will dorthin zurück und
-           nicht auf den Start geschickt werden. */
-        /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
-           die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
-           gesetzt. Die Bedingung war damit nie wahr. */
-        /* HIER STAND EIN ZWEITER ENTSCHLUSS ÜBER DIESELBE FRAGE (E236).
-           Der Absatz darüber begründet gut, warum eine App bei ihrer Übersicht
-           beginnt und nicht in einem halb gescrollten Text. Nur traf er die
-           Entscheidung ein zweites Mal — und ohne die Einstellung zu lesen.
-    
-           Die Folge: „Beim Öffnen zeigen: Zuletzt geöffnete Seite" gab es in
-           den Einstellungen seit Langem, und am Telefon tat sie nichts. Wer
-           sie wählte, landete trotzdem auf „Heute".
-    
-           Jetzt entscheidet die Wahl, und zwar an EINER Stelle: weiter unten
-           bei `wunsch`. Was hier bleibt, ist nur noch die Vorgabe für den, der
-           nie gewählt hat — und die heisst seit E236 „Dokument". */
         void 0;
-        /* ----------------------------------------------------------------------
-           WAS DAS ANDERE FENSTER GEÄNDERT HAT
-           ----------------------------------------------------------------------
-           `kern/ablage/nachbarn.js` hält den Draht, `indexdb.js` trägt fremde
-           Sätze in den Zwischenspeicher ein. Was fehlt, ist das Sichtbarmachen —
-           und das gehört hierher, weil der Kern die Oberfläche nicht kennt.
-    
-           DAS NEUZEICHNEN HAT EINE BEDINGUNG. Wer gerade tippt, verliert beim
-           Neuzeichnen den Schreibzeiger und mitten im Satz den Faden. Deshalb
-           wird der Zwischenspeicher IMMER aufgefrischt — daran hängt, dass
-           nichts überschrieben wird —, gezeichnet aber nur, wenn niemand
-           schreibt. Der Rest kommt beim nächsten Klick von selbst.
-    
-           Die Reihenfolge ist Absicht: erst der Baum (billig, fast immer
-           sichtbar), dann die Seite. */
         const schreibtGerade = () => {
             const a = document.activeElement;
             if (!(a instanceof HTMLElement))
@@ -4301,10 +2907,6 @@ const App = (() => {
             if (was !== 'fremd' && was !== 'fremd-alles')
                 return;
             if (was === 'fremd-alles') {
-                /* Drüben wurde eine Sicherung eingespielt oder alles gelöscht. Was
-                   hier im Speicher liegt, ist danach nicht mehr derselbe Bestand —
-                   und einzelne Sätze nachzulesen hilft nicht. Ehrlicher ist die
-                   Bitte, neu zu laden, als eine Oberfläche, die halb stimmt. */
                 UI.toast('Ein anderes Fenster hat den ganzen Bestand ausgetauscht — bitte neu laden');
                 return;
             }
@@ -4313,65 +2915,8 @@ const App = (() => {
             zeichneBaum();
             zeichneSeite();
         });
-        /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
-        /* DIE VORGABE IST „DOKUMENT" (E236).
-           Redur: „wenn ich die Webseite öffne, sollte die zuletzt geöffnete
-           PDF sich öffnen; wenn keine offen war, direkt dort, wo die Dateien
-           liegen." Das ist die Erwartung an ein Werkzeug, in dem man arbeitet
-           — nicht an eine Webseite, die einen begrüsst.
-    
-           Wer schon einmal etwas anderes gewählt hat, behält seine Wahl:
-           `getMeta` gibt den gespeicherten Wert zurück und die Vorgabe nur,
-           wenn keiner da ist. */
         let startAnsichtZeigen = null;
-        /* DIE STARTANSICHT DARF NICHT ÜBERSCHREIBEN, WAS SCHON OFFEN IST (E138).
-           Hier stand ein blankes `setTimeout(…, 60)`. Wer in diesen 60 ms eine
-           Seite anklickt — und beim Start liegt der Baum längst da —, sah sie
-           einen Wimpernschlag lang und dann das Heute-Bild.
-    
-           Gemessen mit einem Whiteboard, das direkt nach dem Laden geöffnet
-           wurde:
-    
-               sofort      Zeichenfläche da
-               nach 600 ms Zeichenfläche weg, Lernwelt da
-    
-           Das war auch der wahre Grund für das falsche Papier-Bild in E136.
-           Dort steht, `App.oeffne` räume die Sonderansicht nicht weg — das
-           stimmt nicht: sie räumt sie weg, und die verspätete Startansicht holt
-           sie zurück.
-    
-           Die Bedingung ist deshalb: nur zeigen, wenn seither niemand etwas
-           anderes geöffnet hat. */
-        /* NICHT „IN 60 MILLISEKUNDEN", SONDERN „AM ENDE VON start()" (E138).
-    
-           Hier stand `setTimeout(…, 60)`, und der Grund dafür ist gut: die
-           Startansicht braucht `Produktwelten.start()`, und das läuft erst
-           weiter unten. Nur ist eine Zeitspanne die falsche Art, auf eine
-           Reihenfolge zu warten — sie ist ein Versprechen ohne Deckung.
-    
-           Was in diesen 60 ms passieren kann, ist alles: ein Klick im Baum,
-           ein Aufruf von aussen. Gemessen mit `bilder.mts`, zwei Durchgänge
-           hintereinander mit demselben Code:
-    
-               dunkel   Zeichenfläche da
-               hell     Zeichenfläche weg, Heute-Bild da
-    
-           Zwei verschiedene Bilder aus demselben Aufruf — das ist ein Wettlauf,
-           kein Fehler in der Ansicht. Die Startansicht wird deshalb GEMERKT und
-           ganz am Ende von `start()` ausgeführt, wenn alle Module stehen. Danach
-           kommt jedes `oeffne()` von aussen garantiert später und gewinnt. */
         if (!hashSeite && !produktRoute) {
-            /* „DOKUMENT": das zuletzt geöffnete, sonst das Regal.
-               `startSeite` weiter oben zeigt bereits auf `Store.getMeta('letzte')`,
-               wenn es den Block noch gibt — dann ist die Seite schon offen und
-               hier ist nichts zu tun. Gibt es sie nicht mehr (gelöscht, anderes
-               Gerät, erster Start), geht das Regal auf.
-      
-               `letzte` ist derselbe Weg: die Wahl gab es in den Einstellungen
-               schon, nur hat sie nie jemand ausgewertet. Sie führte über den
-               Umweg „startAnsichtZeigen bleibt leer" zufällig zum richtigen
-               Ergebnis — am Rechner. Am Telefon nicht: dort schickte der Block
-               weiter oben JEDEN auf „Heute". */
             if (dokumentStart && !wiederDokument)
                 startAnsichtZeigen = SONDER_START[ortZuletzt] || (() => Bibliothek.oeffne());
             if (wunsch === 'dokumente')
@@ -4384,9 +2929,6 @@ const App = (() => {
                 startAnsichtZeigen = () => Ansichten.posteingang();
             if (wunsch === 'journal')
                 startAnsichtZeigen = () => Werkzeuge.journal();
-            /* Die Notizhefte (E264): beide Enden im SELBEN Schritt wie die
-               Einstellungs-Werte verdrahtet — die E236-Lehre („die Wahl gab es,
-               nur hat sie nie jemand ausgewertet") wiederholt sich nicht. */
             if (wunsch === 'notizhefte')
                 startAnsichtZeigen = () => globalThis.Notebook?.oeffnen?.();
             if (wunsch === 'notizheft')
@@ -4401,21 +2943,8 @@ const App = (() => {
             startAnsichtZeigen = () => Produktwelten.routeOeffnen(produktRoute);
         else if (sonderHash)
             startAnsichtZeigen = SONDER_START[sonderHash] || null;
-        /* Name und Symbol des Arbeitsbereichs */
         const wsBtn = document.getElementById('btn-settings');
-        /* ══ NACH BEDEUTUNG, NICHT NACH PLATZ (E590) ════════════════════════
-           Hier stand `wsBtn?.querySelectorAll('span')[1]`. Das war einmal der
-           Name — bis die Bewegungsschicht (`motion.ts`) eine `rmo-sliders`-
-           Hülle als erstes Kind einsetzte. Seither ist `[1]` das ZEICHEN, und
-           die Zeile darunter schrieb den Namen hinein: in der Seitenleiste
-           stand zweimal „Redion" nebeneinander, und das eingestellte Zeichen
-           kam dort nie an.
-           Ein Zugriff nach Platz hält nur so lange, wie niemand etwas
-           davorstellt — und genau das darf eine Schicht, die nichts von
-           dieser Zeile weiss. */
         const wsName = wsBtn?.querySelector('.ws-name');
-        /* Alle `.ws-icon` — die Schublade und die Einstellungen. Das Konto rechts
-           in der Menüleiste trägt seit E456 ein Symbol statt des Zeichens. */
         document.querySelectorAll('.ws-icon').forEach(ico => {
             ico.textContent = Store.getMeta('arbeitsIcon', 'N');
         });
@@ -4425,7 +2954,6 @@ const App = (() => {
         tasten();
         KI.bindePanel();
         KI.start();
-        /* Die Zusatzschichten */
         Links.start();
         Werkzeuge.start();
         Verlauf.start();
@@ -4449,75 +2977,22 @@ const App = (() => {
         Fassung.start();
         Vorrat.start();
         Wolke.start();
-        /* Die automatische Sicherung in einen Ordner (E270). Sie tut nichts,
-           solange kein Ordner gewählt ist — `start()` setzt dann nicht einmal
-           einen Zeitgeber. */
         if (typeof OrdnerSicherung !== 'undefined')
             OrdnerSicherung.start();
         Produktwelten.start();
-        /* Das Menüband (E210). Es steht nach den Bereichen, weil sein Register
-           beim Zeichnen `zeigen()` fragt — und das prüft, ob es die Module gibt.
-           Vorher gefragt wäre die Antwort „nein" gewesen, und das Band wäre
-           leer geblieben, ohne dass jemand einen Fehler gesehen hätte. */
         Menueband.start();
         if (typeof StudioSchale !== 'undefined')
             StudioSchale.start();
         Blocks.auswahlEinklinken();
-        /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
-           Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der
-           Rundgang nur, „wenn das Onboarding nichts gezeigt hat". Damit hat die
-           Einrichtung der Hauptwelten den Bildschirm übernommen, den E55
-           ausdrücklich für den Rundgang beschlossen hatte — und E55 begründet
-           das mit dem Satz, der auch für die Einrichtung gilt: „ein Fenster,
-           das den Bildschirm nimmt, bevor man etwas getan hat, ist zudringlich."
-    
-           Nebenwirkungen, gemessen: der Rundgang kam beim ZWEITEN Start doch
-           noch — zwei Begrüssungen an zwei Tagen (L52) —, und die Einrichtung
-           fing als Modal jeden Klick ab, woran im vollen Durchgang mehrere
-           Prüfläufe hängenblieben.
-    
-           Die Einrichtung ist deshalb ein Angebot statt einer Pflicht: sie steht
-           in der Befehlspalette und als Karte auf dem Heute-Bild, solange sie
-           noch nicht durchlaufen ist. `vielleichtStarten` bleibt im Modul — wer
-           sie wieder von selbst öffnen lassen will, ruft sie hier auf. */
         Rundgang.vielleichtStarten();
-        /* Seitenleiste und Kopfzeile */
         const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
-        /* DIE OBERSTE GRUPPE HÄNGT AM REGISTER (L51, E160).
-           Hier standen acht Zeilen `an('btn-…', …)`, und daneben stand ein
-           Register, das dieselben Zeilen anders beschrieb — „Suchen" öffnete
-           dort die Befehlspalette, „Posteingang" die Meldungsliste. Beides fiel
-           nicht auf, weil das Register nie ausgeführt wurde.
-    
-           Jetzt gibt es die Handlung nur einmal. Das Aussehen bleibt in
-           index.html, wo es hingehört; `knopfId` verbindet beide, und test222
-           §5 vergleicht Markup und Register Zeile für Zeile. */
         if (typeof Register !== 'undefined' && Register.navigation) {
-            /* Zwei Plätze, dieselbe Verdrahtung: die oberste Gruppe und der Fuss
-               (E167). Beide tragen ihr Aussehen in index.html und ihre Handlung
-               im Register. */
             [...Register.navigation.anPlatz('oben'),
                 ...Register.navigation.anPlatz('fuss')].forEach((e) => {
                 if (e.knopfId && e.tun)
                     an(e.knopfId, () => {
                         try {
                             e.tun();
-                            /* WO BIN ICH? (E221)
-                             *
-                             * Bis hierher markierte nur `produktwelten.css` — zwei fest
-                             * verdrahtete Zeilen für „Lernzentrum" und „Workspace", und
-                             * sonst nichts. Ein Klick auf „Bibliothek" liess also
-                             * „Workspace" aufleuchten; ein Klick auf „Aufgaben" ebenso.
-                             *
-                             * Mit 32 Zeilen war das eine grobe Auskunft. Mit fünf (E219)
-                             * ist es falsch: „Workspace" steht dann gar nicht mehr da, und
-                             * die Leiste sagt überhaupt nichts mehr. Wer wenig zeigt, muss
-                             * das Wenige richtig zeigen.
-                             *
-                             * Deshalb hier, an der einen Stelle, an der ohnehin jeder
-                             * Eintrag durchkommt — kein zweiter Katalog, keine Liste von
-                             * Sonderfällen. Der Fuss („Importieren", „Papierkorb") wird
-                             * ausgenommen: das sind Handlungen, keine Orte. */
                             if (e.platz === 'oben') {
                                 document.querySelectorAll('#sidebar .side-item[aria-current]')
                                     .forEach(k => k.removeAttribute('aria-current'));
@@ -4532,81 +3007,20 @@ const App = (() => {
             });
         }
         an('btn-ai', () => kiPanel());
-        /* Der Weg zurück, und er gilt auf JEDEM Bildschirm (E653). Am
-           Telefon ist er der einzige — `#btn-ai` ist dort ausgeblendet. */
         an('ai-zu', () => kiPanel(false));
         kiGriff();
-        /* `btn-trash` hängt seit E167 am Register — die Zeile hier wäre die
-           zweite Verdrahtung desselben Knopfes, und wohin das führt, steht in
-           E160: ein Klick auf „Neue Seite" legte zwei Seiten an. */
         an('btn-settings', einstellungen);
         an('btn-theme', () => theme());
         an('btn-side', () => document.getElementById('sidebar')?.classList.toggle('collapsed'));
-        /* Breite der Seitenleiste ziehen — Notion kann das, aber merkt sie sich
-           nicht je Gerät; hier bleibt sie gespeichert. */
         seitenleisteBreite();
-        /* `btn-new` HING HIER EINMAL ZU VIEL. Die Schleife oben hängt jede Zeile
-           der obersten Gruppe an, „Neue Seite" eingeschlossen — die Zeile hier
-           kam dazu, und ein Klick legte ZWEI Seiten an. Gemessen: 13 Seiten
-           vorher, 15 nachher.
-    
-           Keine Prüfung sah das. „Macht die Zeile etwas auf?" ist bei zwei
-           Seiten genauso grün wie bei einer. test222 §5 zählt jetzt nach
-           (E160). `btn-new-bottom` bleibt: den kennt das Register nicht. */
         an('btn-new-bottom', () => neueSeite());
         an('btn-neuer-chat', () => { Seitenleiste.reiter('chat'); zeichneBaum(); KI.neuerChat(); });
-        /* Leiste am unteren Rand — nur auf dem Telefon sichtbar */
-        /* --- Die untere Leiste am Telefon --------------------------------
-         * Sie zeigt jetzt dieselben vier Bereiche wie die Reiterleiste am PC:
-         * Start, Chats, Besprechungen, Posteingang. Bisher kam man an drei
-         * davon nur über die Schublade — man musste also wissen, dass es sie
-         * gibt. Der Kreis in der Mitte bleibt die KI.
-         * ---------------------------------------------------------------- */
-        /* DOKUMENTE — das Regal, wo Redion jetzt öffnet (E236). */
-        /* Den Reiter setzt `Bibliothek.oeffne()` selbst — dort gehört er hin,
-           weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
-           Verweis aufgeht und die Markierung jedes Mal stimmen muss. */
-        /* Erst die gemeinsame Dock-Fläche auf das getippte Ziel schicken.
-           Der eigentliche Bildschirmaufbau folgt im nächsten Frame. So kann der
-           Browser mindestens einen sichtbaren Compositor-Frame der Reise zeigen,
-           bevor die neue Ansicht synchron DOM aufbaut. */
-        /* ══ UND DAS ZIEL MUSS MITGEGEBEN WERDEN (E648) ════════════════════
-         * Hier stand `handyLeiste()` ohne Angabe, und der Griff ging ins Leere:
-         * seit E274 sticht der SCHAUPLATZ den Reiter, und der ändert sich erst,
-         * wenn `oeffnen()` gelaufen ist — also einen Bildaufbau später. Die
-         * Fläche blieb stehen, wo sie stand, und der gewonnene Frame ging an
-         * niemanden.
-         *
-         * `test541` §3 hat es gemessen: nach 60 ms „17 → 17", keinen Pixel
-         * gewandert. Mit der Angabe fährt sie sofort los, und der Ruf aus
-         * `redion:schauplatz` bestätigt sie danach. */
         const dockWechsel = (reiterId, knopfId, oeffnen) => {
-            /* woher, wohin — für die Ankunft (E702), vor dem Umschalten gelesen */
             const vorher = typeof Wischen !== 'undefined' ? Wischen.jetzt() : -1;
             const nachher = typeof Wischen !== 'undefined'
                 ? Wischen.reiter().findIndex(b => b.id === knopfId) : -1;
             Seitenleiste.reiter(reiterId);
             handyLeiste(knopfId);
-            /* ══ ZWEI BILDER, NICHT EINES (E648) ══════════════════════════════
-             * Hier stand ein einzelnes `requestAnimationFrame`, und gemessen kam
-             * dabei heraus:
-             *
-             *     t =   6 ms   x = 17   Animation läuft (1)
-             *     t = 100 ms   x = 17   — 94 ms lang kein Bild, und kein Pixel
-             *     t = 125 ms   x = 27   erst jetzt geht es los
-             *
-             * Eine Animation bekommt ihre Startzeit erst, wenn das erste Bild
-             * nach `animate()` WIRKLICH gemalt wurde. Mit einem einzigen `rAF`
-             * fällt der Bildschirmaufbau in genau dieses Bild — die Bahn hat
-             * ihre Uhr also noch nicht gestartet, steht die ganze Blockade über
-             * still und fängt erst danach an. Der gewonnene Frame ging an
-             * niemanden.
-             *
-             * Mit zwei Bildern ist das erste dem Losfahren gewidmet und der
-             * Aufbau kommt ins zweite. Das kostet eine Bildauffrischung Latenz
-             * (rund 16 ms) und gibt dafür den Anfang der Bewegung — den Teil,
-             * den das Auge braucht, um ihr folgen zu können. */
-            /* die Ankunft kommt mit dem neuen Inhalt, im selben Bild (E702) */
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 oeffnen();
                 if (typeof Wischen !== 'undefined')
@@ -4625,82 +3039,25 @@ const App = (() => {
             PWA.schubladeZu && PWA.schubladeZu();
             dockWechsel('lernen', 'hl-lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); });
         });
-        /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
-           Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
-           Erklärung stehen, „bis Redur sagt, dass der Weg wirklich weg soll".
-           Er hat es in E277 gesagt.
-           Der Weg selbst bleibt: `Produktwelten.workspace('start')` steht in
-           `register/navigation.ts` (Knopf `btn-workspace`), in der
-           Befehlspalette und in der Mehr-Kante. */
-        /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
-           dieser Reiter auch am Telefon die Schublade auf — also die
-           Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
-           33-px-Zeilen. Genau davon ist das R-Blatt weggekommen (E38); ein
-           Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
             dockWechsel('bespr', 'hl-bespr', () => { Produktwelten.planung(); handyLeiste(); });
         });
-        /* `hu-ki`, `hu-suche` und `hu-neu` gab es in der schwebenden Leiste
-           unten. Sie ist mit E236 weggefallen — zwei Leisten am unteren Rand
-           wären eine zu viel gewesen. Die drei Wege sind nicht weg:
-             Suche → `mb-suche` rechts in der Menüleiste (und Strg+P)
-             KI    → `mb-ki`    rechts in der Menüleiste (und Strg+J)
-             Neu   → der „+ Neu"-Knopf im Regal und das Mehr-Blatt
-           `an()` bindet still, wenn es das Element nicht gibt; die drei Zeilen
-           hier stehenzulassen wäre trotzdem eine Lüge über den Aufbau. */
-        /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
-           wie früher der ☰. */
-        /* ----------------------------------------------------------------------
-         * DAS R-MENÜ (Telefon-Vorgabe Phase 7)
-         * ----------------------------------------------------------------------
-         * Vorher zog der Kreis die Seitenleiste als Schublade herein — also die
-         * Rechner-Oberfläche auf ein Telefon geschoben: Baum, Reiter, kleine
-         * Zeilen. Am Telefon gehört an diese Stelle ein Blatt mit grossen
-         * Zeilen und den Wegen, die man wirklich sucht.
-         *
-         * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
-         * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
-         * -------------------------------------------------------------------- */
-        /* UND HIER STAND `an('hl-konto', …)` — ebenfalls bis E280 (L86).
-           Der R-Kreis steht seit E236 rechts in der Menüleiste; sein Klick
-           hängt an `mb-konto` in `menueband.ts` und ruft dort `App.arbeitsbereich()`.
-           Die Zeile hier band an nichts. */
-        /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
-           Papierkorb und Einstellungen brauchen einen Platz oben — ein
-           Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
-           in Mehr und ist damit keinen Griff weiter weg als vorher.
-           `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
         an('hl-mehr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
             dockWechsel('mehr', 'hl-mehr', () => { Ansichten.mehr(); handyLeiste(); });
         });
         an('btn-suche-handy', () => suche());
-        /* HIER STAND `an('btn-suche-mitte', …)` — bis E272.
-           Den Knopf gibt es seit dem Wegfall der grossen Suchbox nicht mehr.
-           Die Zeile stehen zu lassen wäre die vierte tote Verdrahtung dieser
-           Datei gewesen: `an()` bindet mit `?.` still ins Leere, und niemand
-           merkt es (L86 führt die drei anderen). Die Suche selbst ist
-           unverändert erreichbar — `mb-suche` in der Reiterzeile, Strg + P,
-           `btn-search` in der Seitenleiste, `btn-suche-handy` am Telefon; alle
-           vier rufen dasselbe `suche()`. */
         an('btn-neu-handy', () => neueSeite());
-        /* MIT DEM DAUMEN ZWISCHEN DEN BEREICHEN (E526). `Wischen` kennt keinen
-           Bereich — es sucht den nächsten Reiter und DRÜCKT IHN, damit für die
-           Geste alles gilt, was für den Tipp darüber gilt. Deshalb steht der
-           Aufruf hier, hinter den fünf Bindungen, und nicht früher. */
         try {
             window.Wischen?.starten?.();
         }
-        catch { /* ohne Geste */ }
+        catch { }
         handyLeiste();
-        /* Reiterleiste oben in der Seitenleiste */
         document.getElementById('side-reiter')?.addEventListener('click', (e) => {
             const b = elVon(e)?.closest('[data-reiter]');
             if (!b)
                 return;
-            /* Zweiter Klick auf denselben Reiter öffnet seine Einstellungen —
-               genau wie bei Notion beim Home-Reiter. */
             const r = b.dataset.reiter;
             if (!r)
                 return;
@@ -4716,10 +3073,6 @@ const App = (() => {
         });
         an('btn-import', (e) => {
             const r = e.currentTarget.getBoundingClientRect();
-            /* Am Telefon wird nur angeboten, was dort wirklich geht: Ordner wählen
-               können Telefon-Browser nicht, und eine Datei auf die Seite ziehen
-               kann auf einem Touchscreen niemand. Ein toter Knopf ist schlimmer
-               als ein fehlender. */
             const telefon = window.matchMedia('(max-width: 760px)').matches;
             const m = UI.menu('<div class="grp">Was soll hereinkommen?</div>' +
                 '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
@@ -4744,11 +3097,8 @@ const App = (() => {
                     Werkzeuge.ordnerLesen();
             });
         });
-        /* `btn-hilfe` ebenfalls — siehe E167. */
         an('btn-back', zurueck);
         an('btn-fwd', vorwaerts);
-        /* DER ANFANGSZUSTAND IST DER WICHTIGE (F15): nach einem Neuladen ist der
-           Verlauf leer, und genau da stand der Knopf bisher aktiv da. */
         navKnoepfeStellen();
         an('btn-komm', () => seiteId && Kommentare.panel(seiteId));
         an('btn-teilen', (e) => {
@@ -4811,16 +3161,11 @@ const App = (() => {
             zeichneBaum();
             zeichneCrumbs();
         });
-        /* Glocke und Wolke-Punkt hängen NICHT hier (E251, zweiter Anlauf):
-           die Kopfzeile gehört der Seite, die Menüleiste der App — dort
-           zeichnet menueband.ts beide, und der Wolke-Dialog steht unter
-           „Mehr → Wolke". */
         an('btn-page-menu', (e) => {
             const p = Store.getBlock(seiteId);
             if (p)
                 seitenMenue(e.currentTarget, p);
         });
-        /* Seitenleiste in der Breite ziehen — wie in Notion */
         const griff = document.createElement('div');
         griff.id = 'side-griff';
         document.getElementById('sidebar')?.appendChild(griff);
@@ -4840,21 +3185,8 @@ const App = (() => {
             addEventListener('pointermove', zug);
             addEventListener('pointerup', stop);
         });
-        /* Beim Verlassen noch schnell alles sichern */
         addEventListener('beforeunload', () => { Store.flush().catch(() => { }); });
-        /* GANZ ZUM SCHLUSS die Startansicht — siehe die Begründung oben. Alle
-           Module stehen jetzt, und wer danach eine Seite öffnet, kommt später
-           und bleibt sichtbar. */
         if (startAnsichtZeigen) {
-            /* DER FANG SCHWEIGT NICHT MEHR (E236). Hier stand ein leeres
-               `catch { }` mit dem Trost „ohne Startbildschirm bleibt die zuletzt
-               geöffnete Seite". Das stimmt — und man erfährt nie, dass es
-               schiefging. Beim Umbau auf „Dokument, sonst Regal" ging genau
-               hier etwas schief, und die Suche danach kostete eine Stunde, weil
-               nichts davon irgendwo stand.
-               Der Nutzer bekommt weiterhin keine Meldung: er hat eine Seite,
-               alles ist da, und ein Fehlerbanner für einen Startbildschirm wäre
-               Lärm. Aber die Konsole sagt es, und ein Prüflauf kann es lesen. */
             try {
                 startAnsichtZeigen();
             }
@@ -4863,15 +3195,10 @@ const App = (() => {
             }
         }
     };
-    /* --- Beispielinhalt beim ersten Start ----------------------------------- */
     const beispielAnlegen = () => {
         const p = Store.addPage(null, { text: 'Willkommen', icon: '👋' });
         const b = (typ, text, extra) => Store.addBlock(p.id, typ, Object.assign({ text }, extra || {}));
         b('h1', 'Willkommen in Redion');
-        /* E270: „kein Konto, kein Server, keine Cloud" stimmte, bis der Server
-           gebaut war. Der erste Satz, den ein neuer Nutzer liest, darf nicht
-           der erste sein, der nicht mehr gilt. Local-first bleibt die Wahrheit
-           — nur ist es jetzt eine Wahl und keine Grenze. */
         b('text', 'Alles hier liegt **lokal** in deinem Browser — ohne Konto, ohne Server. ' +
             'Ein eigener Server für den Abgleich zwischen deinen Geräten ist ' +
             'möglich und freiwillig (Mehr → Wolke).');
@@ -4924,33 +3251,14 @@ const App = (() => {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
-        /* E283 / L85: die zwei Griffe, die der Entwurf verlangte und die es
-           vorher nur als verstreuten Code gab. `vollbildGeht` gehört dazu —
-           ohne die Frage stünde im Menüband ein Knopf, der auf dem iPhone
-           nichts tut (§47). */
         vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
-        /* Wo man gerade ist — für die Kontextkante (E272). */
         schauplatz,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
         sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
-        /* Seit E317 auch einzeln: nur so lässt sich messen, was ein Archiv mit
-           Loch macht — der Weg dorthin führt sonst über einen Dateiwähler, und
-           den kann kein Prüflauf antippen. */
         anhaengeEinspielen,
-        /* HERAUSGEGEBEN SEIT E236. Das Blatt „Neu erstellen" war eine interne
-           Funktion hinter dem Stift am Telefon — und damit unerreichbar für den
-           „+ Neu"-Knopf im Regal und für alles am Rechner. Es ist derselbe
-           Katalog, nur endlich von überall erreichbar (§8). */
         erstellenBlatt,
-        /* Seit E265 auch einzeln: die Liste der geladenen Wege und das
-           Ausführen genau eines Wegs — für Menüs, die nur eine Auswahl des
-           Katalogs zeigen (Notizhefte), ohne die Module dahinter zu kennen. */
         erstellenWege, erstellenWeg
     };
 })();
-/* Los geht's */
-/* Kein Selbststart mehr: gestartet wird ausschliesslich in start.js.
-   Wer die Datei einzeln lädt, bekommt eine Schale, die bereitsteht — aber
-   nicht von selbst losläuft. Ein Einstiegspunkt, nicht fünf. */

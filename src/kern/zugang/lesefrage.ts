@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zugang/lesefrage.ts (npm run bauen:ts). */
 /* ============================================================================
  * lesefrage.ts — dieselbe Rechtefrage, einmal beantwortet (L50)
  * ----------------------------------------------------------------------------

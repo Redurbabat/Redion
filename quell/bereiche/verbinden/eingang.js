@@ -1,39 +1,6 @@
 "use strict";
-/* ============================================================================
- * eingang.js — Was von aussen hereinkommt
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/verbinden/eingang.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/verbinden/eingang.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion hat seit 2024 einen eingehenden Webhook: ein fremder Dienst schickt
- * etwas hin und löst damit eine Automation aus. Dafür braucht Notion einen
- * Server — Redion hat keinen.
- *
- * Der Weg hier ist ein anderer, und er hat einen Vorteil: nichts geht durch
- * fremde Hände.
- *
- *   1. ABHOLEN statt zugeschickt bekommen. Redion fragt in einem Takt eine
- *      Adresse ab (eigener Server, Zapier-Catch, Pipedream, eine JSON-Datei
- *      auf einem Speicher). Was dort steht, wird zu Zeilen.
- *
- *   2. EINWERFEN von Hand oder aus der Zwischenablage — JSON hineinkippen,
- *      Felder zuordnen, fertig.
- *
- *   3. AUS DER ADRESSE. Ein Link mit `#neu=...` legt beim Öffnen eine Zeile
- *      an. Damit kann jede Verknüpfung, jeder Tastenkürzel-Dienst und jedes
- *      Handy-Kurzbefehl etwas nach Redion schicken.
- *
- * Jeder Eingang gehört zu genau einer Datenbank, hat eine Feldzuordnung und
- * lässt sich einzeln abschalten. Was hereinkommt, löst die Automationen der
- * Datenbank aus — genau wie eine von Hand angelegte Zeile.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/eingang.ts (npm run bauen:ts). */
 const Eingang = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -46,24 +13,12 @@ const Eingang = (() => {
     ];
     const liste = () => Store.getMeta('eingaenge', []) || [];
     const sichern = (l) => Store.setMeta('eingaenge', l);
-    /* ========================================================================
-     * EINE MELDUNG IN EINE ZEILE VERWANDELN
-     * ======================================================================*/
-    /**
-     * @param e       der Eingang mit seiner Zuordnung
-     * @param daten   ein Objekt aus der fremden Quelle
-     * @returns die neue Zeile oder null
-     */
     const alsZeile = (e, daten) => {
         const c = Store.getCollection(e.db);
         if (!c || !daten || typeof daten !== 'object')
             return null;
-        /* Doppelte fernhalten: wenn ein Schlüsselfeld gesetzt ist und der Wert
-           schon existiert, wird nichts angelegt. Notions Webhook kann das nicht. */
         const props = {};
         let titel = '';
-        /* Jeder Wert kommt als Text herein — hier wird er zu dem, was die Spalte
-           erwartet. Sonst stünde in einer Zahlenspalte der Text „9". */
         const passend = (typ, v) => typ === 'checkbox' ? (v === true || v === 'true' || v === '1' || v === 1)
             : typ === 'number' || typ === 'sterne' || typ === 'prozent'
                 ? (String(v).trim() === '' ? null : Number(String(v).replace(',', '.')))
@@ -86,7 +41,6 @@ const Eingang = (() => {
                 return;
             props[nach] = passend(c.schema[nach].type, v);
         });
-        /* Felder, die genauso heissen wie eine Spalte, werden ohne Zuordnung übernommen */
         if (e.automatisch !== false) {
             Object.entries(daten).forEach(([n, v]) => {
                 const k = Object.keys(c.schema).find(x => c.schema[x].name.toLowerCase() === String(n).toLowerCase());
@@ -112,11 +66,9 @@ const Eingang = (() => {
         }
         const z = Store.addRow(c.id, props);
         Store.updateBlock(z.id, { text: titel });
-        /* Genau wie bei einer Formularantwort: die Automationen laufen mit. */
         setTimeout(() => Datenbank.automationenLaufen(Store.getBlock(z.id), c, 'formular-neu'), 0);
         return z;
     };
-    /** Mehrere auf einmal — die Quelle darf ein Objekt oder eine Liste liefern. */
     const uebernehmen = (e, roh) => {
         let daten = roh;
         if (typeof daten === 'string') {
@@ -138,9 +90,6 @@ const Eingang = (() => {
             uebersprungen++; });
         return { neu, uebersprungen };
     };
-    /* ========================================================================
-     * ABHOLEN
-     * ======================================================================*/
     const holen = async (e) => {
         if (!e.url)
             return { fehler: 'Keine Adresse' };
@@ -186,12 +135,6 @@ const Eingang = (() => {
         }
         return raus;
     };
-    /* ========================================================================
-     * AUS DER ADRESSE — #neu=<datenbank>&titel=…&feld=…
-     * ------------------------------------------------------------------------
-     * Damit kann jede Verknüpfung auf dem Desktop, jeder Kurzbefehl auf dem
-     * Telefon und jeder Dienst mit „URL öffnen" etwas nach Redion schicken.
-     * ======================================================================*/
     const ausAdresse = () => {
         const h = String(location.hash || '');
         if (!h.includes('neu='))
@@ -218,9 +161,6 @@ const Eingang = (() => {
         }
         return z;
     };
-    /* ========================================================================
-     * DAS FENSTER
-     * ======================================================================*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -350,7 +290,6 @@ const Eingang = (() => {
             }
         });
     };
-    /** Einen Eingang einrichten oder ändern. */
     const einrichten = (e, index, fertig) => {
         const dbs = Object.values(Store.cache.collections);
         const jetzt = e || { name: '', db: (dbs[0] || {}).id, url: '', takt: 'stunde',
@@ -456,9 +395,6 @@ const Eingang = (() => {
             }
         });
     };
-    /* ========================================================================
-     * START
-     * ======================================================================*/
     let uhr;
     const start = () => {
         setTimeout(() => { ausAdresse(); }, 900);
@@ -466,7 +402,6 @@ const Eingang = (() => {
             return;
         setTimeout(() => alleHolen('start'), 2500);
         clearInterval(uhr);
-        /* Ein Takt von fünf Minuten reicht als Raster für alle Stufen. */
         let zaehler = 0;
         uhr = setInterval(() => {
             zaehler++;

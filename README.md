@@ -1947,15 +1947,15 @@ große Dateien brauchen .redion statt JSON
 
 Über 4 GB geht seit August 2026: die Sicherung schreibt ZIP64, wenn eine Datei, das Archiv oder die Zahl der Einträge die alten Grenzen sprengt. Kleine Sicherungen bleiben dabei gewöhnliche ZIP-Dateien, die jedes Programm öffnet.
 
-Vier offene Punkte, die nicht verschwiegen gehören:
+**Die Startnutzlast steht wieder unter ihrer Decke** (L146, geschlossen mit E613). `test388 §5` deckelt, was der Start an Daten holt. Seit E715 reist das erzeugte JavaScript ohne Kommentare — die Erklärungen stehen in `src/` —, und der Start holte am 3. Oktober 1805 KB gzip unter einer Decke von 1950 KB (`messungen.md` §86). Die Decke steht so tief, dass pdf.js (526 KB) nicht unbemerkt zurückkäme.
+
+Drei offene Punkte, die nicht verschwiegen gehören:
 
 **Die Wolke lief nie** (L143). Kein Deploy ist durchgegangen; unter der Worker-Adresse steht Cloudflares „Hello world". Datenbank und Eimer liegen im falschen Konto, und darum sind ihre Bindungen in `wrangler.toml` auskommentiert. Für die lokale Nutzung ändert das nichts, für Abgleich, Konto, Rechte und Teilen alles.
 
 **Ob `.assetsignore` wirkt, ist unbekannt** (L145). Die Datei soll `src/`, `pruefungen/` und Persönliches vom Hochladen ausnehmen. Geprüft wurde bisher nur ihr Inhalt, nie ihre Wirkung, und die Messung mit `wrangler deploy --dry-run` war nicht eindeutig. Geht der erste Deploy durch, muss als Erstes eine Adresse abgefragt werden: liefert sie die persönliche PDF, wirkt die Liste nicht.
 
 **Der Zugangscode der Chronik ist ein Türschild, kein Schloss** (L140). Die sechs Ziffern stehen im Quelltext, im Klartext. Sie verhindern, dass die Chronik versehentlich aufgeht — nicht, dass jemand sie liest, der den Quelltext hat.
-
-**Ein Prüflauf ist rot** (L146). `test388 §5` deckelt, was der Start an Daten holt, auf 2300 KB gzip. Gemessen wurden zuletzt 2389 bis 2396 KB. Die Decke bleibt stehen, bis nachgesehen ist, wo die Kilobyte herkommen — eine Decke, die nachgibt, sobald sie greift, ist keine.
 
 Zwei Grenzen, die zu kennen wichtiger ist als die technischen:
 
@@ -1979,7 +1979,7 @@ Versionen stabil
 Multi-Tab sicherer
 Backup mit Anhängen
 .redion-Format
-Tests grün — bis auf `test388 §5`, die Startnutzlast (L146)
+Tests grün — die Startnutzlast (`test388 §5`) ist es seit E613 wieder (L146 geschlossen; E715: 1805 von 1950 KB am 3. Oktober); was sonst rot ist, zeigt erst der volle Lauf (§30)
 
 Etappe 2: TypeScript-Grundlage — erledigt
 

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/datenmodell/ansicht.ts (npm run bauen:ts). */
 /* ============================================================================
  * schema.js — Das Datenmodell sehen und Kennzahlen bauen
  * ----------------------------------------------------------------------------

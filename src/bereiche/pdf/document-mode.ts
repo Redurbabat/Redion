@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/document-mode.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/pdf/document-mode.ts — ein Arbeitsraum fuer vorhandene Dokumente
  * ----------------------------------------------------------------------------

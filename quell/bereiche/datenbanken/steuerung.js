@@ -1,68 +1,21 @@
 "use strict";
-/* ============================================================================
- * database.js — Datenbanken
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/steuerung.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/steuerung.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Eine Datenbank besteht aus drei Teilen, genau wie bei Notion:
- *
- *   block      type 'database'  – der sichtbare Container auf der Seite
- *   collection                  – das Schema: welche Spalten gibt es
- *   views                       – Layout, Filter, Sortierung, sichtbare Spalten
- *
- * Eine Zeile ist ein Block vom Typ 'page' mit parentTable 'collection'.
- * Dadurch kann jede Zeile eine eigene Seite mit eigenem Inhalt haben.
- * ==========================================================================*/
-/* ----------------------------------------------------------------------------
- * SEIT A4: was diese Datei RECHNET, steht nebenan in dienst.js — die
- * Eigenschaftstypen, das Lesen eines Wertes, Filtern, Sortieren, Gruppieren
- * und die Berechnungen. Hier steht nur noch, was etwas ZEIGT.
- *
- * Die Namen werden hereingeholt statt umgeschrieben. Das ist dieselbe
- * Entscheidung wie bei `UI` → `Menue`/`Hinweis`/`Dialog` und bei
- * `App.zeichneBaum`: die siebentausend Zeilen darunter rufen `wert`,
- * `zelle`, `trifftZu` und die anderen an hunderten Stellen. Sie alle
- * umzuschreiben wäre viel Arbeit für keinen Gewinn und ein hohes Risiko —
- * jede übersehene Stelle wäre ein Fehler, den erst ein Mensch findet.
- * -------------------------------------------------------------------------- */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/steuerung.ts (npm run bauen:ts). */
 const Datenbank = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    /* Dasselbe für Eingaben: das Feld, in dem gerade getippt oder geklickt
-       wurde. `(feldVon(e)?.value ?? '')` stand an zwei Dutzend Stellen ungeprüft da —
-       bei einem Ereignis ohne Ziel warf jede davon. */
     const feldVon = (e) => e.target instanceof HTMLElement && 'value' in e.target
         ? e.target : null;
-    /* Und für alles, was ein `HTMLElement` sein muss (classList, style, type). */
     const htmlVon = (e) => e.target instanceof HTMLElement ? e.target : null;
-    /* Inhalt in einen Kasten schreiben — wenn es ihn gibt. Die Oberfläche wird
-       aus Zeichenketten gebaut; fehlt ein Kasten, ist das kein Grund zu werfen,
-       es gibt dann eben nichts zu füllen. Vorher stand an dreissig Stellen
-       `o.querySelector<HTMLElement>('#x').innerHTML = …` ohne jede Prüfung. */
     const fuelle = (wo, sel, html) => {
         const el = wo && wo.querySelector(sel);
         if (el)
             el.innerHTML = html;
     };
-    /* Einen Kasten zeigen oder verstecken — wenn es ihn gibt. Dieselbe
-       Überlegung wie bei `fuelle`: ist der Kasten nicht da, gibt es auch
-       nichts zu verstecken. `wie` ist die Anzeigeart im gezeigten Zustand;
-       leer heisst „was das Stylesheet ohnehin vorsieht". */
     const zeige = (wo, sel, ob, wie = '') => {
         const el = wo && wo.querySelector(sel);
         if (el)
             el.style.display = ob ? wie : 'none';
     };
     const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, mitEinheit, zelle, zusammenfassen } = DatenbankDienst;
-    /* ========================================================================
-     * RENDERN
-     * ======================================================================*/
     const render = (block) => {
         const coll = Store.getCollection(block.collectionId);
         const w = document.createElement('div');
@@ -75,16 +28,8 @@ const Datenbank = (() => {
             ? block.aktiveView : coll.viewIds[0];
         const view = Store.getView(viewId);
         const rows = zeilen(coll, view);
-        /* --- Kopfzeile ------------------------------------------------------- */
         const kopf = document.createElement('div');
         kopf.className = 'db-head';
-        /* DER TITEL DER DATENQUELLE (E417). Er stand als Schalter im
-           Layout-Panel — „Titel der Datenquelle anzeigen" —, und es gab ihn
-           nicht. Kein Titel im Kopf, nichts zum Ein- oder Ausschalten: der
-           Schalter war die einzige Spur einer Funktion, die nie gebaut wurde.
-           Vorgabe AN, weil eine Datenbank ohne Namen auf einer Seite mit
-           mehreren nicht auseinanderzuhalten ist. Wer ihn nicht will — etwa
-           weil die Überschrift darüber schon dasselbe sagt — schaltet ihn aus. */
         if (view.titelZeigen !== false) {
             const t = document.createElement('div');
             t.className = 'db-titel';
@@ -99,9 +44,6 @@ const Datenbank = (() => {
                 return;
             const b = document.createElement('button');
             b.className = 'db-tab' + (id === viewId ? ' on' : '');
-            /* AUS DEM REGISTER, NICHT AUS EINER EIGENEN KARTE (E422, §8). Hier
-               stand eine Karte mit elf von dreizehn Arten; `pivot` und `raster`
-               bekamen deshalb das Rückfallzeichen ▦ statt ⊞ und 🧮. */
             const ico = Register.ansichten.icon(v.layout);
             b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
             b.addEventListener('click', () => {
@@ -121,7 +63,6 @@ const Datenbank = (() => {
         plus.addEventListener('click', () => neueAnsicht(plus, coll, block));
         tabs.appendChild(plus);
         kopf.appendChild(tabs);
-        /* --- Werkzeuge ------------------------------------------------------- */
         const tools = document.createElement('div');
         tools.className = 'db-tools';
         const anzahlFilter = regelAnzahl(view.filters);
@@ -160,7 +101,6 @@ const Datenbank = (() => {
             if (a === 'menu')
                 dbMenue(b, coll, view, block);
         });
-        /* --- Aktive Filter als Chips ---------------------------------------- */
         if (anzahlFilter) {
             const chips = document.createElement('div');
             chips.style.cssText = 'display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px';
@@ -184,26 +124,16 @@ const Datenbank = (() => {
             });
             w.appendChild(chips);
         }
-        /* --- Der eigentliche Inhalt ------------------------------------------ */
         const koerper = document.createElement('div');
-        /* Vorberechnete Werte sind eine Abmachung, keine stille Beschleunigung:
-           über der Tabelle steht, wann gerechnet wurde und was sich seither
-           geändert hat. Ein Zwischenspeicher, den man nicht sieht, ist eine
-           Falle — irgendwann steht eine Zahl da, die nicht mehr stimmt. */
         if (typeof Vorrat !== 'undefined') {
             const vl = Vorrat.leiste(coll);
             if (vl)
                 koerper.appendChild(vl);
         }
-        /* Tabelle, Liste und Galerie können gruppiert werden — mit eigener
-           Berechnungszeile je Gruppe. Board bringt seine Gruppierung selbst mit. */
         if (view.groupBy && coll.schema[view.groupBy] &&
             ['table', 'list', 'gallery', undefined, ''].includes(view.layout)) {
             koerper.appendChild(alsGruppiert(coll, view, rows, block));
         }
-        /* Das Raster kommt VOR der Gruppierung nicht in Frage und danach zuerst:
-           es ist die einzige Ansicht, die von der Gruppierung nichts wissen will
-           — ein Raster mit Zwischenüberschriften wäre keines mehr. */
         else if (view.layout === 'raster' && typeof DbRaster !== 'undefined')
             koerper.appendChild(DbRaster.zeichne(coll, view, rows));
         else if (view.layout === 'board')
@@ -228,31 +158,11 @@ const Datenbank = (() => {
             koerper.appendChild(alsDashboard(coll, view, rows));
         else if (view.layout === 'pivot')
             koerper.appendChild(alsPivot(coll, view, rows));
-        /* Am Telefon ist eine seitlich scrollende Tabelle unbrauchbar. Notion
-           zeigt dort Karten. Wer die Tabelle will, schaltet sie im Menü an. */
         else if (UI.amTelefon() && view.handyTabelle !== true)
             koerper.appendChild(alsHandyKarten(coll, view, rows));
         else
             koerper.appendChild(alsTabelle(coll, view, rows, block));
         w.appendChild(koerper);
-        /* ----------------------------------------------------------------------
-         * WAS NICHT DASTEHT, MUSS DASTEHEN (L22, E180)
-         * ----------------------------------------------------------------------
-         * `begrenzen` zeigt 50 Zeilen und nimmt die übrigen weg. Gemessen an
-         * 300 Zeilen: die Tabelle endet nach der fünfzigsten mit „+ Neu", und
-         * NICHTS sagt, dass zweihundertfünfzig fehlen. Eine Tabelle, die einen
-         * Teil zeigt und aussieht wie das Ganze, ist die gefährlichere Sorte
-         * Unvollständigkeit — man merkt sie erst, wenn man etwas sucht, das
-         * dasteht und nicht gefunden wird.
-         *
-         * HIER UND NICHT IN DER TABELLE: `begrenzen` gilt für jede Ansichtsart.
-         * In den Tabellenfuss geschrieben, hätten Board, Galerie und Feed
-         * weiter stumm abgeschnitten.
-         *
-         * Der Weg heraus steht daneben, nicht in einem Menü drei Ebenen tiefer:
-         * die Ladegrenze gibt es zwar unter „Layout", aber wer nicht weiss,
-         * dass abgeschnitten wird, sucht sie nicht.
-         * -------------------------------------------------------------------- */
         const gesamt = zeilenGesamt(coll, view);
         if (gesamt > rows.length) {
             const fuss = document.createElement('div');
@@ -265,8 +175,6 @@ const Datenbank = (() => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)
                     return;
-                /* Die Grenze steht an der ANSICHT und bleibt damit stehen — wer
-                   einmal alle sehen wollte, will es beim nächsten Öffnen wieder. */
                 const jetzt = view.limit === 0 ? 0 : (view.limit || 50);
                 Store.updateView(view.id, { limit: b.dataset.a === 'alle' ? 0 : jetzt + 50 });
                 App.zeichneSeite();
@@ -275,19 +183,6 @@ const Datenbank = (() => {
         }
         return w;
     };
-    /* ========================================================================
-     * PIVOT — Kreuztabelle
-     * ------------------------------------------------------------------------
-     * Genau das, was Notion nicht hat und was in der Lückenliste an zweiter
-     * Stelle steht: Zeilenfeld × Spaltenfeld × Wertefeld, mit Zwischensummen,
-     * Gesamtsumme und Prozentwerten.
-     *
-     *   view.pivotZeile   – nach welcher Eigenschaft die Zeilen gruppiert werden
-     *   view.pivotSpalte  – nach welcher die Spalten (leer = nur eine Spalte)
-     *   view.pivotWert    – welche Eigenschaft zusammengerechnet wird
-     *   view.pivotArt     – summe | schnitt | anzahl | eindeutig | min | max | median
-     *   view.pivotProzent – aus | zeile | spalte | gesamt
-     * ======================================================================*/
     const PIVOT_ARTEN = [
         ['summe', 'Summe'], ['schnitt', 'Durchschnitt'],
         ['anzahl', 'Anzahl'], ['eindeutig', 'Anzahl verschieden'],
@@ -325,7 +220,6 @@ const Datenbank = (() => {
         const wk = view.pivotWert || keys.find(k => coll.schema[k].type === 'number') || '';
         const art = view.pivotArt || (wk ? 'summe' : 'anzahl');
         const proz = view.pivotProzent || 'aus';
-        /* Der Kopf mit den vier Auswahlfeldern — wie eine Pivot-Tabelle in Excel */
         const feld = (id, wert, leerText) => `<select data-p="${id}"><option value="">${leerText}</option>` +
             keys.map(k => `<option value="${k}"${wert === k ? ' selected' : ''}>` +
                 esc(coll.schema[k].name) + '</option>').join('') + '</select>';
@@ -360,7 +254,6 @@ const Datenbank = (() => {
             w.innerHTML += '<div class="pivot-leer">Wähle oben, wonach die Zeilen gruppiert werden sollen.</div>';
             return w;
         }
-        /* --- Gruppieren ------------------------------------------------------ */
         const schluessel = (r, k) => {
             if (!k)
                 return '';
@@ -379,7 +272,7 @@ const Datenbank = (() => {
         const spaltenNamen = sk
             ? [...new Set(rows.map((r) => schluessel(r, sk)))].sort((a, b) => a.localeCompare(b, 'de'))
             : ['Wert'];
-        const zellen = {}; /* "zeile|spalte" -> Liste der Werte */
+        const zellen = {};
         rows.forEach((r) => {
             const z = schluessel(r, zk);
             const s = sk ? schluessel(r, sk) : 'Wert';
@@ -391,8 +284,6 @@ const Datenbank = (() => {
         const spalteSumme = (s) => pivotRechne(art, zeilenNamen.flatMap(z => zellen[z + '\u0000' + s] || []));
         const gesamt = pivotRechne(art, Object.values(zellen).flat());
         const zeig = (v, z, s) => {
-            /* `Werkzeuge.zahlKurz` gibt es nicht — der Zweig war tot, es lief immer
-               `rund`. Also gleich `rund`. */
             if (proz === 'aus')
                 return rund(v);
             const bezug = proz === 'zeile' ? zeileSumme(z) : proz === 'spalte' ? spalteSumme(s) : gesamt;
@@ -401,11 +292,6 @@ const Datenbank = (() => {
             return prozText(v, bezug);
         };
         const prozText = (v, bezug) => (Math.round(v / bezug * 1000) / 10).toString().replace('.', ',') + ' %';
-        /* Die Ränder brauchen eine eigene Rechnung: längs zum Prozentbezug sind
-           sie definitionsgemäss 100 %, quer dazu ist der Bezug die Gesamtsumme.
-           Vorher lief auch der Rand durch `zeig(…, z, null)` — das suchte
-           `spalteSumme(null)`, fand den Schlüssel nie, und in beiden Modi stand
-           am ganzen Quer-Rand „0 %". */
         const randRechts = (z) => {
             const v = zeileSumme(z);
             if (proz === 'aus')
@@ -426,7 +312,6 @@ const Datenbank = (() => {
             const n = Math.round(v * 100) / 100;
             return String(n).replace('.', ',');
         };
-        /* --- Zeichnen -------------------------------------------------------- */
         const t = document.createElement('table');
         t.className = 'pivot';
         const kopfZeile = ['<tr><th class="pv-ecke">' +
@@ -449,7 +334,6 @@ const Datenbank = (() => {
             `<td class="pv-summe">${esc(proz === 'aus' ? rund(gesamt) : (gesamt ? '100 %' : '0 %'))}</td></tr>`;
         t.innerHTML = '<thead>' + kopfZeile.join('') + '</thead><tbody>' + koerper + fuss + '</tbody>';
         w.appendChild(t);
-        /* Hineinschauen: welche Zeilen stecken in dieser Zelle? */
         t.addEventListener('click', e => {
             const td = elVon(e)?.closest('td[data-z]');
             if (!td)
@@ -467,7 +351,6 @@ const Datenbank = (() => {
             (PIVOT_ARTEN.find(x => x[0] === art) || [])[1] +
             (wk ? ' von „' + coll.schema[wk].name + '"' : '');
         w.appendChild(fussZeile);
-        /* CSV — damit die Kreuztabelle in Excel weiterlebt */
         kopf.querySelector('[data-p="csv"]')?.addEventListener('click', () => {
             const zeilenCsv = [[coll.schema[zk].name, ...spaltenNamen, 'Gesamt']];
             zeilenNamen.forEach(z => zeilenCsv.push([z,
@@ -483,13 +366,6 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* ------------------------------------------------------------------------
-     * TABELLE AM TELEFON: KARTEN STATT SPALTEN
-     * ------------------------------------------------------------------------
-     * Auf 428 Pixeln passt keine Tabelle. Notion zeigt am Handy eine Liste,
-     * in der jeder Eintrag als Karte steht: Titel gross, darunter die
-     * sichtbaren Eigenschaften als Paare. Antippen öffnet die Zeile.
-     * --------------------------------------------------------------------- */
     const alsHandyKarten = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'hk-liste';
@@ -527,7 +403,6 @@ const Datenbank = (() => {
             w.appendChild(k);
         });
         w.addEventListener('click', (e) => {
-            /* Kontrollkästchen direkt in der Karte schalten, sonst Zeile öffnen */
             const box = elVon(e)?.closest('input[type="checkbox"][data-k]');
             const karte = elVon(e)?.closest('.hk-karte');
             if (!karte)
@@ -540,20 +415,8 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* --- Tabelle ------------------------------------------------------------ */
-    /* ========================================================================
-     * GRUPPIERTE ANSICHT
-     * ------------------------------------------------------------------------
-     * Notion gruppiert Tabellen, Listen und Galerien nach einer Eigenschaft.
-     * Redion kann zusätzlich:
-     *   · Datumsspalten in Zeitabschnitte legen (Tag, Woche, Monat, Quartal,
-     *     Jahr) statt jeden einzelnen Tag zur eigenen Gruppe zu machen,
-     *   · Zahlenspalten in Stufen zerlegen,
-     *   · und zeigt in jeder Gruppenüberschrift die Summe der Gruppe.
-     * ======================================================================*/
     const ZEIT_STUFEN = [['tag', 'Tag'], ['woche', 'Woche'], ['monat', 'Monat'],
         ['quartal', 'Quartal'], ['jahr', 'Jahr']];
-    /** Der Gruppenschlüssel einer Zeile — bei Datum je nach Zeitstufe. */
     const gruppeVon = (r, gk, coll, view) => {
         const def = coll.schema[gk] || {};
         const v = wert(r, gk, coll);
@@ -593,7 +456,6 @@ const Datenbank = (() => {
             return v.map(x => String(x && x.name ? x.name : x));
         return [String(v)];
     };
-    /** Alle Gruppen einer Ansicht, in der gewünschten Reihenfolge. */
     const gruppenListe = (coll, view, rows) => {
         const gk = view.groupBy;
         const def = coll.schema[gk] || {};
@@ -612,7 +474,6 @@ const Datenbank = (() => {
         else {
             namen = [...topf.keys()].filter((k) => k !== '(Leer)');
             if (['date', 'created', 'edited'].includes(def.type)) {
-                /* Zeitgruppen nach dem frühesten Datum sortieren, nicht alphabetisch */
                 const ersteZeit = (g) => Math.min(...topf.get(g).map((r) => {
                     const d = new Date(wert(r, gk, coll));
                     return isNaN(d.getTime()) ? Infinity : d.getTime();
@@ -648,8 +509,6 @@ const Datenbank = (() => {
         const gk = view.groupBy;
         const gruppen = gruppenListe(coll, view, rows);
         const zu = view.zuGruppen || [];
-        /* Die Berechnung, die in der Überschrift stehen soll: die erste
-           eingestellte Spaltenberechnung — so wie Notion es zeigt. */
         const calcKey = Object.keys(view.calc || {}).find(k => (view.calc || {})[k] &&
             (view.calc || {})[k] !== '—');
         gruppen.forEach((g) => {
@@ -705,27 +564,15 @@ const Datenbank = (() => {
         return w;
     };
     const alsTabelle = (coll, view, rows, block) => {
-        /* Die Spalten, die Notion beim Einschalten von Unter-Elementen und
-           Abhängigkeiten selbst anlegt, bleiben aus der Tabelle heraus — sie
-           stehen auf der Zeilenseite und im Menü. */
         const sichtbar = Object.keys(coll.schema)
             .filter(k => !(view.hidden || []).includes(k))
             .filter(k => !coll.schema[k].eigen || (view.eigenZeigen || []).includes(k));
         const t = document.createElement('table');
-        /* ZWEI SCHALTER, DIE NIEMAND LAS (E417). `linien` und `umbruchAlle`
-           standen im Layout-Panel, wurden richtig gespeichert und von keiner
-           Zeile gelesen. Sie hängen als Klassen an der TABELLE und nicht an
-           jeder Zelle: eine Regel, hundert Zellen.
-           Die Vorgaben sind verschieden herum, und mit Absicht — Linien an
-           (eine Tabelle ohne sie ist schwer zu lesen), Umbruch aus (eine
-           Tabelle, in der jede Zelle umbricht, ist keine mehr). */
         t.className = 'grid h-' + (view.hoehe || 'normal') +
             (view.linien === false ? ' ohne-linien' : '') +
             (view.umbruchAlle ? ' umbruch-alle' : '');
-        /* Kopf */
         const thead = document.createElement('thead');
         const tr = document.createElement('tr');
-        /* Ganz links: Auswahlkästchen für alle Zeilen */
         const thAus = document.createElement('th');
         thAus.className = 'th-aus';
         thAus.innerHTML = '<input type="checkbox" title="Alle auswählen">';
@@ -748,7 +595,6 @@ const Datenbank = (() => {
             }
             if ((view.fixiert || []).includes(k))
                 th.classList.add('fixiert');
-            /* Spalten mit der Maus umsortieren */
             th.draggable = true;
             th.addEventListener('dragstart', e => e.dataTransfer?.setData('text/spalte', k));
             th.addEventListener('dragover', e => { e.preventDefault(); th.classList.add('ziel'); });
@@ -766,12 +612,9 @@ const Datenbank = (() => {
                     return;
                 spaltenMenue(th, coll, view, k, block);
             });
-            /* Breite mit der Maus ziehen — wie in Notion */
             th.querySelector('.th-griff')?.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                /* Solange gezogen wird, darf der Browser die Spalte nicht als
-                   Drag-and-drop behandeln — sonst kommen keine Bewegungen mehr an. */
                 th.draggable = false;
                 const start = e.clientX;
                 const b0 = th.getBoundingClientRect().width;
@@ -800,9 +643,6 @@ const Datenbank = (() => {
         tr.appendChild(plus);
         thead.appendChild(tr);
         t.appendChild(thead);
-        /* Zeilen — Unterelemente hängen unter ihrer Hauptzeile (Notions Sub-items).
-           Beliebig tief; jede Elternzeile bekommt einen Schalter zum Auf- und
-           Zuklappen, genau wie in Notion. */
         const tbody = document.createElement('tbody');
         const sichtbareIds = new Set(rows.map((r) => r.id));
         const geordnet = [];
@@ -824,20 +664,17 @@ const Datenbank = (() => {
                 zr.classList.add('unterzeile');
             if (r.archiviert)
                 zr.classList.add('archivzeile');
-            /* Bedingte Farbe: die erste zutreffende Regel färbt die Zeile */
             const farbe = farbeFuerZeile(r, view, coll);
             if (farbe)
                 zr.classList.add('farbzeile', 'bg-' + farbe);
             zr.dataset.rid = r.id;
             zr.draggable = true;
-            /* Auswahl und Nummer */
             const tdAus = document.createElement('td');
             tdAus.className = 'td-aus';
             tdAus.innerHTML = `<span class="zeilen-nr">${nr + 1}</span>` +
                 `<input type="checkbox" class="zeilen-aus" data-rid="${r.id}">`;
             tdAus.querySelector('input')?.addEventListener('change', auswahlAuffrischen);
             zr.appendChild(tdAus);
-            /* Zeilen mit der Maus sortieren */
             zr.addEventListener('dragstart', e => {
                 e.dataTransfer?.setData('text/zeile', r.id);
                 zr.classList.add('zieht');
@@ -869,13 +706,6 @@ const Datenbank = (() => {
                                 ? `<button class="tt-klapp" title="${zuJetzt ? 'Aufklappen' : 'Zuklappen'}">${zuJetzt ? '▸' : '▾'}</button>`
                                 : (coll.unterElemente ? '<span class="tt-klapp leer"></span>' : '')) +
                             (r.archiviert ? '<span class="tt-archiv" title="Archiviert">🗄</span>' : '') +
-                            /* DAS ZEICHEN DER SEITE (E417). Auch dieses gab es nicht: der
-                               Schalter „Seiten-Icon anzeigen" stand da, die Titelspalte
-                               zeigte nie eines. `aria-hidden`, weil daneben schon der Titel
-                               steht — sonst liest ein Vorleseprogramm „Magnet Schaltplan"
-                               (§38). Zeilen ohne eigenes Zeichen bekommen keines
-                               angedichtet; ein Platzhalter für alle wäre kein Zeichen mehr,
-                               sondern eine Spalte Rauschen. */
                             (view.seitenIcon !== false && r.icon
                                 ? `<span class="tt-icon" aria-hidden="true">${esc(r.icon)}</span>` : '') +
                             (() => {
@@ -895,9 +725,6 @@ const Datenbank = (() => {
                     });
                     td.querySelector('.tt-t')?.addEventListener('click', () => zeilePeek(r, coll));
                     td.querySelector('.tt-auf')?.addEventListener('click', (e) => { e.stopPropagation(); App.oeffne(r.id); });
-                    /* Auch die Titelspalte gehört zur Tastaturnavigation. Bisher fing
-                       die Reise erst bei der zweiten Spalte an — man kam mit dem Pfeil
-                       nach links nie bis zum Namen der Zeile. */
                     td.tabIndex = 0;
                     td.dataset.zelle = r.id + '|title';
                 }
@@ -912,8 +739,6 @@ const Datenbank = (() => {
                             Store.setProp(r.id, k, (feldVon(e)?.checked ?? false));
                             return;
                         }
-                        /* Sterne direkt in der Zelle setzen — nochmal auf denselben
-                           Stern tippt die Bewertung wieder weg. */
                         const stern = elVon(e)?.closest('.sterne i[data-n]');
                         if (stern) {
                             const n = Number(stern.dataset.n);
@@ -942,7 +767,6 @@ const Datenbank = (() => {
             zr.appendChild(document.createElement('td'));
             tbody.appendChild(zr);
         });
-        /* Zeile hinzufügen */
         const neu = document.createElement('tr');
         const ntd = document.createElement('td');
         ntd.colSpan = sichtbar.length + 2;
@@ -952,7 +776,6 @@ const Datenbank = (() => {
         neu.appendChild(ntd);
         tbody.appendChild(neu);
         t.appendChild(tbody);
-        /* Berechnungen */
         const tfoot = document.createElement('tfoot');
         const ftr = document.createElement('tr');
         ftr.appendChild(document.createElement('td'));
@@ -972,12 +795,8 @@ const Datenbank = (() => {
         ftr.appendChild(document.createElement('td'));
         tfoot.appendChild(ftr);
         t.appendChild(tfoot);
-        /* Lange Tabellen fensterweise zeichnen — erst wenn die Tabelle im
-           Dokument steht, sonst gibt es noch keine Masse. */
         if (typeof Tempo !== 'undefined')
             setTimeout(() => Tempo.fensterweise(t), 0);
-        /* Mit Pfeilen von Zelle zu Zelle, Enter bearbeitet, Tab geht weiter —
-           so, wie man es aus Tabellen kennt. */
         t.addEventListener('keydown', (e) => {
             const td = elVon(e)?.closest('td[data-zelle]');
             if (!td)
@@ -1012,8 +831,6 @@ const Datenbank = (() => {
                 e.preventDefault();
                 springe(0, e.shiftKey ? -1 : 1);
             }
-            /* Pos1 und Ende springen an den Rand der Zeile, mit Strg an den Rand
-               der Tabelle — dasselbe, was man aus jeder Tabellenkalkulation kennt. */
             if (e.key === 'Home') {
                 e.preventDefault();
                 if (e.ctrlKey || e.metaKey) {
@@ -1034,11 +851,6 @@ const Datenbank = (() => {
                 else
                     spalten[spalten.length - 1]?.focus();
             }
-            /* --- Die Zeile als Seite ------------------------------------------
-             * In Notion öffnet die Leertaste die Zeile in der Vorschau und
-             * Strg+Enter als ganze Seite. Bisher musste man dafür zur Maus
-             * greifen und den kleinen Öffnen-Knopf treffen.
-             * ------------------------------------------------------------------ */
             if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
                 const rid = (td.dataset.zelle ?? '').split('|')[0];
@@ -1047,8 +859,6 @@ const Datenbank = (() => {
                     zeilePeek(zeile4, coll);
                 return;
             }
-            /* Erst die engere Bedingung prüfen — sonst fängt Strg+Enter das
-               Strg+Umschalt+Enter mit ab und die geteilte Ansicht bliebe tot. */
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
                 e.preventDefault();
                 if (typeof Fenster !== 'undefined')
@@ -1060,7 +870,6 @@ const Datenbank = (() => {
                 App.oeffne((td.dataset.zelle ?? '').split('|')[0]);
                 return;
             }
-            /* Umschalt+Enter legt eine Zeile darunter an */
             if (e.shiftKey && e.key === 'Enter') {
                 e.preventDefault();
                 const neu = Store.addRow(coll.id, {});
@@ -1080,8 +889,6 @@ const Datenbank = (() => {
                 const zeile3 = Store.getBlock(rid);
                 if (!zeile3)
                     return;
-                /* Die Titelspalte ist keine gewöhnliche Zelle: dort steht der Name
-                   der Zeile samt Klappknopf. Enter öffnet sie deshalb. */
                 if (key === 'title')
                     zeilePeek(zeile3, coll);
                 else
@@ -1092,25 +899,17 @@ const Datenbank = (() => {
                 if (!rid || !key)
                     return;
                 if (key === 'title')
-                    return; /* der Name geht so nicht weg */
+                    return;
                 e.preventDefault();
                 if (!['formula', 'created', 'edited', 'rollup', 'uid'].includes(coll.schema[key]?.type)) {
                     Store.setProp(rid, key, '');
                     App.zeichneSeite();
                 }
             }
-            /* --- Strg+D und Strg+R: ausfüllen ---------------------------------
-             * Notions einzige Datenbank-Tastenkürzel, die uns noch fehlten.
-             * Strg+D nimmt den Wert dieser Zelle und schreibt ihn in dieselbe
-             * Spalte aller Zeilen darunter — oder, wenn Zeilen ausgewählt sind,
-             * genau in diese. Strg+R holt den Wert aus der Spalte links.
-             * ---------------------------------------------------------------- */
             if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D' ||
                 e.key === 'r' || e.key === 'R')) {
                 e.preventDefault();
                 const [rid, key] = (td.dataset.zelle ?? '').split('|');
-                /* „title" steht nicht in props, sondern als Text am Block — beim
-                   Ausfüllen wird sie deshalb übersprungen statt still verfälscht. */
                 const gesperrt = (k) => k === 'title' ||
                     ['formula', 'created', 'edited', 'rollup', 'uid', 'createdBy', 'editedBy']
                         .includes(coll.schema[k]?.type);
@@ -1159,18 +958,11 @@ const Datenbank = (() => {
         box.className = 'db-rollbox';
         box.style.overflowX = 'auto';
         box.appendChild(t);
-        /* Die weiche Kante, wo die Tabelle über den Rand hinausgeht. Am Telefon
-           ist das der Regelfall, sobald jemand im Ansichtsmenü „Tabelle statt
-           Karten" wählt: 703 px Inhalt in 334 px Kasten. Ohne sie steht dort
-           eine Zahl mit scharfer Kante — und `14500` liest sich als `1450`.
-           Siehe `kern/helfer/rollrand.ts` und ENTSCHEIDUNGEN.md E63. */
         if (typeof Rollrand !== 'undefined')
             Rollrand.binde(box);
         return box;
     };
-    /** Welche Zeilen sind gerade angehakt? */
     const gewaehlteZeilen = () => [...document.querySelectorAll('input.zeilen-aus:checked')].map(cb => cb.dataset.rid);
-    /** Zeigt die Leiste mit den Sammelaktionen, sobald etwas angehakt ist. */
     const auswahlAuffrischen = () => {
         const ids = gewaehlteZeilen();
         document.getElementById('sammelleiste')?.remove();
@@ -1240,7 +1032,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /** Eine Zeile vor eine andere schieben — die eigene Reihenfolge merken. */
     const zeileEinordnen = (coll, quelleId, zielId) => {
         const alle = Store.rowsOf(coll.id);
         alle.forEach((r, i) => { if (r.ordnung == null)
@@ -1255,7 +1046,6 @@ const Datenbank = (() => {
         liste.forEach((r, i) => Store.updateBlock(r.id, { ordnung: i }));
         App.zeichneSeite();
     };
-    /** Eine Spalte vor eine andere schieben. */
     const spalteEinordnen = (coll, quelle, ziel) => {
         const keys = Object.keys(coll.schema);
         const q = keys.indexOf(quelle), z = keys.indexOf(ziel);
@@ -1268,12 +1058,10 @@ const Datenbank = (() => {
         Store.updateCollection(coll.id, { schema: neu });
         App.zeichneSeite();
     };
-    /** Die Sammlung, auf die eine Verknüpfungsspalte zeigt. */
     const zielColl = (coll, key) => {
         const def = coll.schema[key];
         return def && def.type === 'relation' ? Store.getCollection(def.ziel) : null;
     };
-    /** Ein Knopf in einer Zelle — legt einen Eintrag an oder setzt einen Wert. */
     const knopfInZelle = (row, key, coll) => {
         const def = coll.schema[key];
         const ziel = def.setzeKey;
@@ -1283,7 +1071,6 @@ const Datenbank = (() => {
             App.zeichneSeite();
             return;
         }
-        /* Ohne Einstellung: fragen, was der Knopf tun soll */
         const m = UI.menu('<div class="grp">Was soll der Knopf setzen?</div>' +
             Object.keys(coll.schema).filter(k => k !== key && coll.schema[k].type !== 'title')
                 .map(k => `<button data-k="${k}">${esc(coll.schema[k].name)}</button>`).join(''), innerWidth / 2 - 120, 160);
@@ -1302,16 +1089,6 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    /* --- KI-Feld: Notions „AI Autofill", nur lokal --------------------------- */
-    /**
-     * Gibt zurück, ob wirklich etwas Brauchbares in der Zelle steht.
-     *
-     * `false` heisst: die KI gab nichts, sie warf, oder das Schreiben prallte
-     * am Spaltenrecht ab (`setProp` kehrt dann still zurück — das wird hier
-     * durch Nachlesen erkannt, ohne die Rechteprüfung anzufassen). Die
-     * Aufrufer im Automationslauf ignorieren den Wert; der KI-Agent zählt
-     * damit, was er wirklich gefüllt hat, statt was er angefasst hat.
-     */
     const kiFeldFuellen = async (row, key, coll) => {
         const def = coll.schema[key];
         const auftrag = def.auftrag || KI_AUFTRAG[def.type] ||
@@ -1328,8 +1105,6 @@ const Datenbank = (() => {
                 '\n\nAntworte knapp, ohne Einleitung, in höchstens 20 Wörtern.');
         }
         catch (err) {
-            /* Die Zelle darf nicht ewig „… denkt nach" zeigen — das sieht aus
-               wie Arbeit und ist keine. Erst aufräumen, dann weiterwerfen. */
             Store.setProp(row.id, key, '(Fehler)');
             App.zeichneSeite();
             throw err;
@@ -1337,15 +1112,8 @@ const Datenbank = (() => {
         const final = (antwort || '').trim();
         Store.setProp(row.id, key, final || '(keine Antwort)');
         App.zeichneSeite();
-        /* Nachlesen statt glauben: prallte das Schreiben am Spaltenrecht ab,
-           steht der Wert jetzt NICHT da — und genau das ist die Antwort. */
         return !!final && ((Store.getBlock(row.id) || {}).props || {})[key] === final;
     };
-    /**
-     * Setzt eine Verknüpfung und pflegt die Gegenrichtung.
-     * Ist die Spalte wechselseitig eingerichtet, trägt sie sich auf der
-     * anderen Seite selbst ein und wieder aus — wie in Notion.
-     */
     const relationSetzen = (row, key, coll, neueIds) => {
         const def = coll.schema[key];
         const alt2 = wert(row, key, coll) || [];
@@ -1356,7 +1124,6 @@ const Datenbank = (() => {
         const ziel = Store.getCollection(def.ziel);
         if (!ziel || !ziel.schema[def.gegen])
             return;
-        /* Bei den Weggefallenen austragen */
         alt2.filter((id) => !grenze.includes(id)).forEach((id) => {
             const z = Store.getBlock(id);
             if (!z)
@@ -1364,21 +1131,6 @@ const Datenbank = (() => {
             const liste = (z.props?.[def.gegen] || []).filter((x) => x !== row.id);
             Store.setProp(id, def.gegen, liste);
         });
-        /* Bei den Neuen eintragen.
-         *
-         * DIE GEGENSEITE HAT IHRE EIGENE GRENZE, und die galt bis E306 nicht
-         * (Redurs Punkt 12). Hier stand `[...liste, row.id]` — angehängt, ohne
-         * zu fragen, wie viele drüben erlaubt sind. Eine Verknüpfung, die auf
-         * beiden Seiten „nur eine" heisst, wurde damit auf der Gegenseite
-         * stillschweigend zu „beliebig viele": zwei Zeilen konnten dieselbe
-         * Zielzeile für sich beanspruchen, und beide sahen richtig aus.
-         *
-         * Jetzt gilt drüben, was drüben eingestellt ist. Ist die Gegenseite auf
-         * eine begrenzt und schon belegt, wird die alte Verbindung GELÖST — das
-         * ist, was „genau eine" heisst — und zwar auf BEIDEN Seiten. Ein
-         * Verdrängter, der weiterhin auf sein altes Ziel zeigt, während das Ziel
-         * ihn nicht mehr kennt, wäre der schlechtere Zustand: die Ansicht zeigt
-         * dann je nach Blickrichtung etwas anderes (§46). */
         const gegenDef = ziel.schema[def.gegen] || {};
         grenze.filter((id) => !alt2.includes(id)).forEach((id) => {
             const z = Store.getBlock(id);
@@ -1388,8 +1140,6 @@ const Datenbank = (() => {
             if (liste.includes(row.id))
                 return;
             if (gegenDef.limit === 1) {
-                /* Die Verdrängten aus IHRER Spalte austragen, bevor die Zielzeile
-                   umgehängt wird — sonst zeigen sie ins Leere. */
                 liste.filter((x) => x !== row.id).forEach((verdraengt) => {
                     const v = Store.getBlock(verdraengt);
                     if (!v)
@@ -1404,7 +1154,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /** Was die Art im Klartext heisst — ein Satz, kein Fachwort. */
     const relationsartSatz = (art) => ({
         '1:1': 'Genau eine, und die gehört dann nur hierher. Trägst du sie ' +
             'woanders ein, wird sie hier gelöst.',
@@ -1414,20 +1163,6 @@ const Datenbank = (() => {
         'einseitig': 'Nur in diese Richtung — die Gegenseite weiss nichts davon.',
         'einseitig, eine': 'Nur in diese Richtung, und höchstens eine.'
     }[art] || 'Noch kein Ziel gewählt.');
-    /**
-     * Die ART einer Verknüpfung, abgelesen aus den zwei Grenzen (E306,
-     * Redurs Punkt 12).
-     *
-     * Redion hat die Art nie geführt, sondern nur je Seite eine Grenze. Das
-     * ist dasselbe in klein — man muss es nur aussprechen, damit man beim
-     * Einrichten sieht, was man gerade baut. Eine Fachlehrerin und ihr Fach
-     * sind etwas anderes als ein Fach und seine Karteikarten, und wer das erst
-     * merkt, wenn zwei Zeilen dieselbe Lehrerin für sich beanspruchen, hat es
-     * zu spät gemerkt.
-     *
-     * Ohne Gegenrichtung gibt es keine Art — dann ist es ein einseitiger
-     * Verweis, und das steht dann auch da.
-     */
     const relationsart = (coll, key) => {
         const def = coll?.schema?.[key];
         if (!def || def.type !== 'relation')
@@ -1442,7 +1177,6 @@ const Datenbank = (() => {
         const dort = gegen.limit === 1 ? '1' : 'n';
         return hier + ':' + dort;
     };
-    /** Richtet eine Verknüpfung ein: Ziel, Gegenrichtung, Limit. */
     const relationEinrichten = (coll, key) => {
         const def = coll.schema[key];
         const alle = Object.values(Store.cache.collections);
@@ -1466,10 +1200,6 @@ const Datenbank = (() => {
                 '<div style="font-size:12.5px; color:var(--text-faint); line-height:1.5">' +
                 'Wechselseitig heisst: Trägst du hier etwas ein, steht es auf der anderen Seite ' +
                 'automatisch auch. Rollups brauchen das nicht, funktionieren damit aber sauberer.</div>' +
-                /* DIE ART STEHT DA, WÄHREND MAN SIE EINSTELLT (E306). Sie ergibt
-                   sich aus den zwei Grenzen und wurde deshalb nie ausgesprochen —
-                   und wer sie nicht ausspricht, merkt erst beim dritten Eintrag,
-                   dass er etwas anderes gebaut hat, als er meinte. */
                 '<div class="rel-art" style="font-size:12.5px; line-height:1.5">' +
                 'Art dieser Verknüpfung: <b>' + esc(relationsart(coll, key) || '—') + '</b>' +
                 '<span style="color:var(--text-faint)"> — ' +
@@ -1510,11 +1240,9 @@ const Datenbank = (() => {
             UI.toast('Verknüpfung eingerichtet');
         });
     };
-    /* --- Verknüpfungen bearbeiten ------------------------------------------- */
     const relationWaehlen = (row, key, coll) => {
         const def = coll.schema[key];
         let ziel = Store.getCollection(def.ziel);
-        /* Noch keine Zieldatenbank? Erst die auswählen. */
         if (!ziel) {
             const alle = Object.values(Store.cache.collections);
             if (!alle.length) {
@@ -1584,14 +1312,6 @@ const Datenbank = (() => {
         });
         o.querySelector('#rq')?.focus();
     };
-    /* --- Zelle bearbeiten --------------------------------------------------- */
-    /* ------------------------------------------------------------------------
-     * FELDER, DIE AN EINER VERBINDUNG HÄNGEN
-     * Google Drive, Figma, GitHub-Pull-Request, Zendesk. Die Adresse wird
-     * eingefügt; ist der Dienst verbunden, holt die App Titel und Zustand
-     * dazu. Ohne Verbindung bleibt die Adresse — das ist ehrlicher als ein
-     * Feld, das ohne Konto gar nichts kann.
-     * ----------------------------------------------------------------------*/
     const DIENST_HILFE = {
         gdrive: ['Google Drive', 'https://drive.google.com/file/d/…/view'],
         figma: ['Figma', 'https://figma.com/file/…'],
@@ -1621,7 +1341,7 @@ const Datenbank = (() => {
                 return { titel: d.name, zusatz: (d.mimeType || '').split('.').pop() };
             }
         }
-        catch (e) { /* Ohne Verbindung bleibt es bei der Adresse. */ }
+        catch (e) { }
         return null;
     };
     const dienstFeld = async (_td, row, key, coll) => {
@@ -1653,7 +1373,6 @@ const Datenbank = (() => {
         }
     };
     const zelleBearbeiten = (td, row, key, coll) => {
-        /* Sterne werden angeklickt, nicht getippt. */
         if (coll.schema[key] && coll.schema[key].type === 'sterne')
             return;
         const def = coll.schema[key];
@@ -1677,7 +1396,6 @@ const Datenbank = (() => {
             UI.toast('Dieses Feld wird berechnet und kann nicht direkt bearbeitet werden.');
             return;
         }
-        /* Prüfung — Notions „Verification": geprüft, abgelehnt, mit Frist */
         if (def.type === 'verify') {
             const r = td.getBoundingClientRect();
             const jetzt = wert(row, key, coll) || {};
@@ -1715,8 +1433,6 @@ const Datenbank = (() => {
             });
             return;
         }
-        /* Ort — Adresse eintippen, Nominatim sucht die Koordinaten dazu.
-           Kostenlos, ohne Schlüssel; ohne Netz bleibt einfach der Text stehen. */
         if (def.type === 'place') {
             const jetzt = wert(row, key, coll);
             const alt = jetzt && typeof jetzt === 'object' ? jetzt.name : (jetzt || '');
@@ -1761,7 +1477,6 @@ const Datenbank = (() => {
             });
             return;
         }
-        /* Zeitspanne — „1h30", „90", „1:30" ergeben alle 90 Minuten */
         if (def.type === 'duration') {
             const inp = document.createElement('input');
             const alt = wert(row, key, coll);
@@ -1823,7 +1538,6 @@ const Datenbank = (() => {
             });
             return;
         }
-        /* Freies Eingabefeld direkt in der Zelle */
         const alt = wert(row, key, coll);
         const inp = document.createElement('input');
         inp.type = def.type === 'date' ? 'date'
@@ -1852,42 +1566,10 @@ const Datenbank = (() => {
             }
         });
     };
-    /* --- Board -------------------------------------------------------------- */
-    /** Bildquelle einer Zeile für die Kartenvorschau — Datei-, Bild- oder URL-Spalte. */
-    /* --------------------------------------------------------------------------
-     * WELCHER WERT SEINEN NAMEN BRAUCHT (E411)
-     *
-     * Auf einer Karte stand bisher: „08.09.2026 10.09.2026 85 ▬ 0 % ★★★☆☆
-     * Lina 📍Bern ☐" — alle Werte in einer Zeile, ohne Namen und ohne Trenner.
-     * Welches Datum ist der Anfang? Ist 85 ein Preis oder eine Stückzahl? Was
-     * bedeutet das leere Kästchen?
-     *
-     * Alle Namen anzuschreiben wäre die falsche Antwort: ein farbiges
-     * Status-Etikett erklärt sich selbst, und „Status: Offen" verdoppelt nur
-     * die Zeile. Dieselbe Regel wie überall hier — was IMMER dasteht, wird
-     * nicht mehr gelesen.
-     *
-     * Also bekommt seinen Namen, was ihn braucht:
-     *   · nackte Zahlen, Daten, Formeln, Zeitspannen, freier Text
-     *   · und JEDER Wert, dessen Spaltentyp auf der Karte mehrfach vorkommt —
-     *     zwei Datumsspalten nebeneinander sind ohne Namen nicht zu trennen,
-     *     auch wenn ein einzelnes Datum es wäre.
-     *
-     * Selbsterklärend bleiben Etiketten, Haken, Sterne, Ortsmarken, Anhänge
-     * und alles mit eigener Einheit im Text.
-     * ------------------------------------------------------------------------*/
-    /* `checkbox` steht hier BEWUSST NICHT drin, obwohl ein Haken erst einmal
-       selbsterklärend aussieht. Ein gesetzter Haken ist es auch — ein LEERES
-       Kästchen dagegen sagt gar nichts, und auf dem Bild stand genau das:
-       ein weisses Quadrat neben dem Ort, ohne jeden Hinweis worauf es sich
-       bezieht. Die häufigere Hälfte eines Zustands entscheidet. */
     const SELBSTERKLAEREND = new Set(['select', 'status', 'multi',
         'sterne', 'prozent', 'files', 'url', 'email', 'phone', 'place', 'person',
         'image', 'verify', 'button', 'relation']);
-    /** Die Werteliste einer Karte — mit Namen dort, wo der Wert allein nicht spricht. */
     const kartenWerte = (r, coll, view, ausser = [], hoechstens = 0) => {
-        /* Zuerst zählen, welcher Typ mehrfach vorkommt: zwei Datumsspalten sind
-           auch dann nicht zu trennen, wenn eine allein es wäre. */
         const sichtbar = Object.keys(coll.schema).filter(k => coll.schema[k].type !== 'title' && !ausser.includes(k) &&
             !(view.hidden || []).includes(k));
         const proTyp = {};
@@ -1898,11 +1580,6 @@ const Datenbank = (() => {
         let aus = '';
         let wieviele = 0;
         sichtbar.forEach(k => {
-            /* EINE OBERGRENZE, WENN DIE STELLE EINE BRAUCHT (E424). Board- und
-               Galeriekarten zeigen alles: dort ist die Karte das Ganze. Der Feed
-               ist ein Strom zum Überfliegen — dreizehn Werte in einer Zeile sind
-               dort keine Auskunft mehr, sondern eine Wand. `0` heisst „alles",
-               damit die Karten nichts merken. */
             if (hoechstens && wieviele >= hoechstens)
                 return;
             const def = coll.schema[k];
@@ -1912,8 +1589,6 @@ const Datenbank = (() => {
             wieviele++;
             const mehrfach = (proTyp[def.type] ?? 0) > 1;
             const braucht = mehrfach || !SELBSTERKLAEREND.has(def.type);
-            /* `title` steht IMMER da, auch beim selbsterklärenden Wert: wer doch
-               einmal unsicher ist, fährt darüber, statt die Spalte zu suchen. */
             aus += `<span class="mv" title="${esc(def.name || k)}">` +
                 (braucht ? `<b class="mv-n">${esc(def.name || k)}</b>` : '') +
                 z + '</span>';
@@ -1936,22 +1611,18 @@ const Datenbank = (() => {
                     return u;
             }
         }
-        /* Sonst: das erste Bild im Seiteninhalt der Zeile */
         const kind = Store.childrenOf(r.id).find((b) => b.type === 'image' && b.props && b.props.src);
         return kind ? kind.props.src : null;
     };
     const alsBoard = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'board';
-        /* Nach welcher Spalte gruppieren? Erste Select/Status-Spalte als Standard. */
         const gk = view.groupBy ||
             Object.keys(coll.schema).find(k => ['select', 'status'].includes(coll.schema[k].type));
         if (!gk) {
             w.innerHTML = '<div style="color:var(--text-faint)">Für ein Board wird eine Auswahl- oder Status-Spalte gebraucht.</div>';
             return w;
         }
-        /* Bahnen (Swimlanes): eine zweite Gruppierung quer zum Board.
-           Notion hat das nicht — dort geht immer nur eine Achse. */
         const bahnKey = view.bahnKey && coll.schema[view.bahnKey] && view.bahnKey !== gk
             ? view.bahnKey : null;
         if (bahnKey) {
@@ -2000,15 +1671,11 @@ const Datenbank = (() => {
         w.appendChild(boardSpalten(coll, view, rows, gk, null, null));
         return w;
     };
-    /** Die Spalten eines Boards — einmal für das ganze Board oder je Bahn. */
     const boardSpalten = (coll, view, rows, gk, bahnKey, bahnWert) => {
         const w = document.createElement('div');
         w.className = 'board';
         const def = coll.schema[gk];
         let gruppen = [...(def.options || []).map((o) => o.name), '(Leer)'];
-        /* Wie sollen die Gruppen selbst sortiert sein? Notion bietet dafür
-           manuell (= Reihenfolge der Optionen), alphabetisch auf- und absteigend
-           sowie nach Anzahl. „(Leer)" bleibt immer hinten. */
         const wieViele = (g) => rows.filter((r) => (wert(r, gk, coll) || '(Leer)') === g).length;
         const art = view.gruppeSort || 'manuell';
         if (art !== 'manuell') {
@@ -2026,12 +1693,8 @@ const Datenbank = (() => {
         }
         gruppen.forEach(g => {
             const drin = rows.filter((r) => (wert(r, gk, coll) || '(Leer)') === g);
-            /* Die Sammelspalte für leere Werte nur zeigen, wenn wirklich etwas drin ist */
             if (g === '(Leer)' && !drin.length)
                 return;
-            /* Leere Gruppen ausblenden — ausser der Nutzer will sie sehen */
-            /* Notion zeigt bei Auswahl- und Status-Spalten alle Optionen als Spalte,
-               auch die leeren. Wer sie loswerden will, schaltet sie im Menü aus. */
             if (!drin.length && view.leereGruppen === false)
                 return;
             const col = document.createElement('div');
@@ -2043,8 +1706,6 @@ const Datenbank = (() => {
                 c.className = 'card';
                 c.draggable = true;
                 c.dataset.rid = r.id;
-                /* `gk` bleibt aussen vor: die Bahn, nach der gruppiert wird, steht
-                   schon als Überschrift der Spalte. */
                 const meta = kartenWerte(r, coll, view, [gk]);
                 const bild = view.bild === false ? null : kartenBild(r, coll, view);
                 c.innerHTML =
@@ -2075,7 +1736,6 @@ const Datenbank = (() => {
                 if (!id)
                     return;
                 Store.setProp(id, gk, g === '(Leer)' ? '' : g);
-                /* Über eine Bahn gezogen heisst: auch die zweite Gruppierung ändern. */
                 if (bahnKey && bahnWert)
                     Store.setProp(id, bahnKey, bahnWert === '(Leer)' ? '' : bahnWert);
                 App.zeichneSeite();
@@ -2084,20 +1744,11 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* --- Liste -------------------------------------------------------------- */
     const alsListe = (coll, view, rows) => {
         const w = document.createElement('div');
         rows.forEach((r) => {
             const d = document.createElement('div');
             d.className = 'list-row';
-            /* DIESELBE MASCHINE WIE KARTE UND FEED (E425, aus E411). Hier stand
-               eine eigene Schleife, die jede Zelle in ein `span` ohne Namen
-               steckte. Auf dem Bild las sich das als
-                   01.09.2026 12.09.2026 420 CHF
-               — zwei Daten nebeneinander, und nichts sagt, welches der Anfang ist.
-               Eine Zeile darunter stand „15.09.2026 15.09.2026": zweimal dasselbe
-               Datum, ohne Beschriftung eine Auskunft über nichts.
-               Sechs Werte, nicht dreizehn: eine Liste ist zum Überfliegen da. */
             d.innerHTML = `<span class="lr-titel">${esc(r.text || 'Ohne Titel')}</span>` +
                 `<span class="lr-werte">${kartenWerte(r, coll, view, [], 6)}</span>`;
             d.addEventListener('click', () => App.oeffne(r.id));
@@ -2107,7 +1758,6 @@ const Datenbank = (() => {
             w.innerHTML = '<div class="db-leer">Noch keine Einträge</div>';
         return w;
     };
-    /* --- Galerie ------------------------------------------------------------ */
     const alsGalerie = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'gallery';
@@ -2126,40 +1776,7 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* --- Kalender ----------------------------------------------------------- */
-    /* --- Kalender -----------------------------------------------------------
-     * Drei Stufen wie in Notion Calendar: Tag, Woche, Monat — umschaltbar mit
-     * den Tasten T/D, W und M. Neben der eigenen Datenbank können weitere
-     * Datenbanken als zusätzliche Kalender eingeblendet werden, jede in ihrer
-     * eigenen Farbe, ein- und ausschaltbar und in der Reihenfolge verschiebbar.
-     * ----------------------------------------------------------------------*/
     const KAL_FARBEN = ['blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow', 'brown'];
-    /* --------------------------------------------------------------------------
-     * WELCHE SPALTE DAS ENDE IST, WENN NIEMAND ES GESAGT HAT (E410)
-     *
-     * `dateKey` hatte seit jeher einen Vorgabewert — die erste Datumsspalte.
-     * `endeKey` hatte keinen. Damit stand jeder Termin immer nur an EINEM Tag,
-     * auch wenn die Datenbank ein Enddatum trug. Ein Projekt vom 1. bis zum
-     * 12. September stand am 1., und wer im Monat nachsah, was gerade laeuft,
-     * sah es nicht.
-     *
-     * Der durchgehende Balken war die ganze Zeit gebaut (`spurenDerWoche`,
-     * `balkenWoche`, `.cw-bar`) — er sprang nur nie an. Eine Funktion, deren
-     * Schalter keinen Vorgabewert hat, ist eine Funktion, die es nicht gibt.
-     *
-     * GERATEN WIRD NUR, WAS DIE DATEN BELEGEN. Eine zweite Datumsspalte muss
-     * nicht das Ende sein — sie kann „Erinnerung" heissen oder „zuletzt
-     * geprueft". Ein Balken ueber die falsche Spanne waere schlimmer als gar
-     * keiner. Deshalb drei Bedingungen, und alle drei muessen halten:
-     *
-     *   · Es gibt genau EINE weitere Datumsspalte.
-     *   · Mindestens eine Zeile traegt beide Werte — sonst weiss man nichts.
-     *   · Und bei JEDER Zeile, die beide traegt, liegt der zweite Wert nicht
-     *     vor dem ersten. Ein einziges Gegenbeispiel genuegt zum Schweigen.
-     *
-     * `view.endeKey === undefined` heisst „nie entschieden"; `''` heisst
-     * „ausdruecklich ein Tag" und wird nicht ueberstimmt.
-     * ------------------------------------------------------------------------*/
     const endeGeraten = (coll, anfangKey) => {
         if (!anfangKey)
             return null;
@@ -2177,22 +1794,19 @@ const Datenbank = (() => {
             const da = new Date(String(a)), db = new Date(String(b));
             if (isNaN(da.getTime()) || isNaN(db.getTime()))
                 continue;
-            /* Ein einziges frueheres Ende widerlegt die Annahme. */
             if (db.getTime() < da.getTime())
                 return null;
             mitBeiden++;
         }
         return mitBeiden > 0 ? kandidat : null;
     };
-    /** Die Endspalte einer Kalenderansicht — gewaehlt, geraten oder keine. */
     const kalEnde = (coll, view, anfangKey) => {
         if (view.endeKey && coll.schema[view.endeKey])
             return view.endeKey;
         if (view.endeKey !== undefined)
-            return null; /* '' = ausdruecklich ein Tag */
+            return null;
         return endeGeraten(coll, anfangKey);
     };
-    /** Alle Kalender dieser Ansicht: der eigene zuerst, dann die zugeschalteten. */
     const kalenderQuellen = (coll, view) => {
         const eigen = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
         const liste = [{
@@ -2217,7 +1831,6 @@ const Datenbank = (() => {
         });
         return liste;
     };
-    /** Die Termine einer Quelle für einen bestimmten Tag. */
     const termineAmTag = (q, tag, rows) => {
         const zeilen2 = rows || Store.rowsOf(q.id);
         const t0 = new Date(tag);
@@ -2282,8 +1895,6 @@ const Datenbank = (() => {
             stand.setTime(Date.now());
         const heuteStr = new Date().toDateString();
         const wsMontag = Einstellungen.wochenstart() === 1;
-        /* Die Termine der Fremdkalender holen wir selbst, die eigenen sind
-           schon durch Filter und Sortierung der Ansicht gelaufen. */
         const zeilenVon = (q) => q.eigen ? rows : Store.rowsOf(q.id);
         const wochenAnfang = (d) => {
             const x = new Date(d);
@@ -2292,7 +1903,6 @@ const Datenbank = (() => {
             x.setDate(x.getDate() - ((x.getDay() - start + 7) % 7));
             return x;
         };
-        /* --- Kopfzeile ----------------------------------------------------- */
         const titel = stufe === 'monat'
             ? stand.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
             : stufe === 'woche'
@@ -2341,7 +1951,6 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
         w.appendChild(kopf);
-        /* --- Alle Termine aller eingeschalteten Kalender, mit Zeitraum ------- */
         const alleTermine = () => {
             const liste = [];
             quellen.forEach(q => zeilenVon(q).forEach((r) => {
@@ -2373,7 +1982,6 @@ const Datenbank = (() => {
             return liste;
         };
         const termine = alleTermine();
-        /* --- Eine Tageszelle, wie sie Monat und Woche brauchen -------------- */
         const tagesZelle = (tag, ausserhalb, ohneLange) => {
             const d = document.createElement('div');
             d.className = 'day' + (tag.toDateString() === heuteStr ? ' today' : '') +
@@ -2392,8 +2000,6 @@ const Datenbank = (() => {
             });
             return d;
         };
-        /* Mehrtägige Termine einer Woche in Spuren legen, damit sich nichts
-           überdeckt — das ist der durchgehende Balken, den Notion nicht zeichnet. */
         const spurenDerWoche = (wochenStart) => {
             const wEnde = new Date(wochenStart);
             wEnde.setDate(wochenStart.getDate() + 6);
@@ -2434,7 +2040,6 @@ const Datenbank = (() => {
             }));
             return lage;
         };
-        /* --- Monat ---------------------------------------------------------- */
         if (stufe === 'monat') {
             const g = document.createElement('div');
             g.className = 'cal-monat';
@@ -2460,9 +2065,6 @@ const Datenbank = (() => {
                     const t = new Date(wa);
                     t.setDate(wa.getDate() + i);
                     const z = tagesZelle(t, t.getMonth() !== monat, true);
-                    /* 8 statt 5: die Balkenlage beginnt bei 4 px (bausteine.css), jeder
-                       Balken ist 18 px hoch im 20er-Abstand. Der letzte endet damit
-                       bei 4 + n*20 - 2; darunter braucht die Tageszahl noch Luft. */
                     if (spuren.length)
                         z.style.paddingTop = (8 + spuren.length * 20) + 'px';
                     tage.appendChild(z);
@@ -2474,7 +2076,6 @@ const Datenbank = (() => {
             }
             w.appendChild(g);
         }
-        /* --- Woche: echtes Stundenraster wie in Notion Calendar -------------- */
         if (stufe === 'woche') {
             const a = wochenAnfang(stand);
             const tage7 = Array.from({ length: 7 }, (_, i) => {
@@ -2484,13 +2085,11 @@ const Datenbank = (() => {
             });
             const g = document.createElement('div');
             g.className = 'kw';
-            /* Kopf */
             const kw = document.createElement('div');
             kw.className = 'kw-kopf';
             kw.innerHTML = '<div class="kw-ecke"></div>' + tage7.map(t => `<div class="kw-tag${t.toDateString() === heuteStr ? ' jetzt' : ''}">` +
                 `${t.toLocaleDateString('de-DE', { weekday: 'short' })} <b>${t.getDate()}.</b></div>`).join('');
             g.appendChild(kw);
-            /* Ganztägige Termine und Balken über die Woche */
             const spuren = spurenDerWoche(a);
             const oben = document.createElement('div');
             oben.className = 'kw-ganz';
@@ -2513,7 +2112,6 @@ const Datenbank = (() => {
             }
             oben.appendChild(gzFlaeche);
             g.appendChild(oben);
-            /* Stundenraster */
             const koerper = document.createElement('div');
             koerper.className = 'kw-koerper';
             const mitZeit = termine.filter(e => e.stunde != null && !e.mehrtaegig);
@@ -2545,7 +2143,6 @@ const Datenbank = (() => {
             }
             g.appendChild(koerper);
             w.appendChild(g);
-            /* Jetzt-Linie */
             const nun = new Date();
             if (nun >= a && nun < new Date(a.getTime() + 7 * 86400000) &&
                 nun.getHours() >= vonStd && nun.getHours() <= bisStd) {
@@ -2562,7 +2159,6 @@ const Datenbank = (() => {
                 }, 0);
             }
         }
-        /* --- Tag ------------------------------------------------------------ */
         if (stufe === 'tag') {
             const g = document.createElement('div');
             g.className = 'kal-tag';
@@ -2581,7 +2177,6 @@ const Datenbank = (() => {
             }
             for (let h = 0; h < 24; h++) {
                 const drin = alle.filter(e => e.stunde === h);
-                /* Nachts nur zeigen, was auch belegt ist — sonst scrollt man ewig. */
                 if (!drin.length && (h < 7 || h > 21))
                     continue;
                 const z = document.createElement('div');
@@ -2610,7 +2205,6 @@ const Datenbank = (() => {
             }
             w.appendChild(g);
         }
-        /* --- Fuss: Kalenderliste und Zeitraum-Spalte ------------------------ */
         const alleQuellen = kalenderQuellen(coll, view);
         const datumKeys2 = Object.keys(coll.schema).filter(k => ['date', 'created', 'edited'].includes(coll.schema[k].type));
         const fuss = document.createElement('div');
@@ -2618,9 +2212,6 @@ const Datenbank = (() => {
         fuss.innerHTML =
             '<span>Doppelklick legt einen Eintrag an · Tasten T, W, M</span>' +
                 `<button data-a="kalender">Kalender: <b>${alleQuellen.filter(q => q.an).length}</b></button>` +
-                /* GERATEN WIRD GESAGT (E410). Eine stille Annahme ist schlimmer als
-                   eine falsche: eine falsche kann der Nutzer berichtigen, eine stille
-                   nicht einmal bemerken. */
                 '<button data-a="ende">Zeitraum bis: <b>' +
                 (() => {
                     if (view.endeKey && coll.schema[view.endeKey])
@@ -2651,8 +2242,6 @@ const Datenbank = (() => {
             }
         });
         w.appendChild(fuss);
-        /* Tastenkürzel T/D, W, M — nur solange dieser Kalender auf der Seite steht
-           und niemand gerade in ein Feld tippt. */
         if (!w.dataset.tasten) {
             w.dataset.tasten = '1';
             const taste = (e) => {
@@ -2677,7 +2266,6 @@ const Datenbank = (() => {
         }
         return w;
     };
-    /** Welche Datenbanken liegen im Kalender übereinander? */
     const kalenderListe = (r, coll, view) => {
         const zeichnen = () => {
             const liste = kalenderQuellen(coll, view);
@@ -2695,7 +2283,7 @@ const Datenbank = (() => {
         m.addEventListener('click', e => {
             const hoch = elVon(e)?.closest('[data-hoch]');
             if (hoch) {
-                const i = Number(hoch.dataset.hoch) - 1; /* 0 ist die eigene Datenbank */
+                const i = Number(hoch.dataset.hoch) - 1;
                 const x = view.extraDbs || [];
                 if (i > 0) {
                     [x[i - 1], x[i]] = [x[i], x[i - 1]];
@@ -2705,16 +2293,6 @@ const Datenbank = (() => {
                 App.zeichneSeite();
                 return;
             }
-            /* --- Probelauf ------------------------------------------------------
-             * Hier stand ein „Testlauf", der die Automation WIRKLICH ausführte
-             * und hinterher sagte, ob sich etwas geändert hat. Er hiess Test und
-             * änderte echte Daten — wer ihn drückte, um zu sehen, ob seine Regel
-             * stimmt, hatte sie danach angewendet. Bei „Eintrag in den Papierkorb"
-             * war die Zeile weg, und rückgängig macht der Toast nichts.
-             *
-             * Jetzt zeigt er den PLAN: welche Aktion mit welchem Wert an der
-             * Reihe wäre. Geschrieben wird nichts (`ctx.probe`).
-             * ------------------------------------------------------------------ */
             const test = elVon(e)?.closest('[data-test]');
             if (test) {
                 const a = coll.automationen[Number(test.dataset.test)];
@@ -2739,7 +2317,6 @@ const Datenbank = (() => {
                             'und Bedingungen</button>'), test.getBoundingClientRect().left - 220, test.getBoundingClientRect().bottom + 4);
                 return;
             }
-            /* Laufverlauf ansehen */
             const verl = elVon(e)?.closest('[data-verlauf]');
             if (verl) {
                 const a = coll.automationen[Number(verl.dataset.verlauf)];
@@ -2814,54 +2391,17 @@ const Datenbank = (() => {
             }
         });
     };
-    /* --- Dashboard -----------------------------------------------------------
-     * Notions elfter Ansichtstyp. Kein neues Datenmodell, sondern eine
-     * Zusammenfassung: oben die Kennzahlen, darunter die Verteilung nach
-     * einer Spalte und die letzten Einträge. Was gezeigt wird, stellt man
-     * über „Kacheln" ein.
-     * ------------------------------------------------------------------------*/
-    /* ==========================================================================
-     * DAS DASHBOARD (L17)
-     * --------------------------------------------------------------------------
-     * Bis E185 zeigte es EINE Datenbank: die eigene. Vier Dinge fehlten, und
-     * L17 nannte sie beim Namen — mehrere Datenquellen, KPI-Karten, Layout,
-     * Diagrammquellen. Alle vier hängen an derselben Stelle, nämlich daran,
-     * was in einer Kachel stehen darf:
-     *
-     *     { art: 'anzahl' }                          wie bisher
-     *     { art: 'summe',       key }                wie bisher
-     *     { art: 'verteilung',  key }                wie bisher
-     *
-     *     { art: 'kpi',         key, ziel, richtung } NEU — Wert gegen Ziel
-     *     { art: 'verteilung',  key, wertKey }        NEU — Summe statt Anzahl
-     *     { …,  quelle: <collectionId> }              NEU — aus einer FREMDEN
-     *                                                 Datenbank
-     *
-     * `quelle` ist der Schlüssel zu allem: eine Kachel ohne `quelle` meint die
-     * eigene Datenbank und die GEFILTERTEN Zeilen der Ansicht; eine Kachel mit
-     * `quelle` holt sich die Zeilen der genannten Datenbank frisch.
-     *
-     * WARUM DIE FREMDEN ZEILEN UNGEFILTERT KOMMEN. Ein Filter gehört zu einer
-     * Ansicht, und die fremde Datenbank hat ihre eigenen. Welche davon gälte?
-     * Eine Kachel „Summe · Betrag aus Rechnungen" muss den Betrag ALLER
-     * Rechnungen nennen, sonst nennt sie eine Zahl, deren Bedeutung von einer
-     * Einstellung anderswo abhängt — und das ist die Sorte Zahl, der man nicht
-     * trauen kann. Steht es unter der Karte, weiss man es.
-     * ========================================================================*/
-    /** Die Zeilen für eine Kachel: die eigenen gefilterten oder alle fremden. */
     const dashZeilen = (kachel, coll, rows) => {
         if (!kachel || !kachel.quelle || kachel.quelle === coll.id)
             return rows;
         const fremd = Store.getCollection(kachel.quelle);
         return fremd ? Store.rowsOf(fremd.id) : [];
     };
-    /** Die Datenbank für eine Kachel — für Schema und Beschriftung. */
     const dashColl = (kachel, coll) => {
         if (!kachel || !kachel.quelle || kachel.quelle === coll.id)
             return coll;
         return Store.getCollection(kachel.quelle) || coll;
     };
-    /** Steht der Name der fremden Datenbank unter der Karte? Nur wenn fremd. */
     const dashHerkunft = (kachel, coll) => {
         const c = dashColl(kachel, coll);
         return c && c.id !== coll.id ? (c.name || 'Andere Datenbank') : '';
@@ -2869,8 +2409,6 @@ const Datenbank = (() => {
     const alsDashboard = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'dash';
-        /* Die Spaltenlisten je Datenbank — auch für die fremden, weil das Menü
-           sie anbieten muss. */
         const zahlKeysVon = (c) => Object.keys(c.schema)
             .filter(k => ['number', 'formula', 'rollup', 'duration'].includes(c.schema[k].type));
         const gruppKeysVon = (c) => Object.keys(c.schema)
@@ -2884,9 +2422,6 @@ const Datenbank = (() => {
             ...(zahlKeys.slice(0, 2).map(k => ({ art: 'summe', key: k }))),
             ...(gruppKeys.slice(0, 1).map(k => ({ art: 'verteilung', key: k })))
         ];
-        /* Eine Kachel ändern oder wegnehmen. Die Liste wird IMMER ganz neu
-           geschrieben — `view.kacheln` kann `undefined` sein (die Vorgabe oben),
-           und dann gäbe es nichts, worin man an Stelle i etwas ändern könnte. */
         const kachelnSchreiben = (liste) => {
             Store.updateView(view.id, { kacheln: liste });
             App.zeichneSeite();
@@ -2901,15 +2436,7 @@ const Datenbank = (() => {
             liste.splice(ziel, 0, x);
             kachelnSchreiben(liste);
         };
-        /* Die Griffe an einer Kachel — links, rechts, weg. Sie stehen an JEDER
-           Kachel, nicht nur an den neuen: bis E185 gab es „Alle Kacheln
-           entfernen" und sonst nichts, und wer eine falsche hinzugefügt hatte,
-           musste alle wegwerfen. */
         const griffe = (d, i) => {
-            /* Was Griffe trägt, IST eine Kachel. „Zuletzt geändert" und „Als
-               Nächstes" tragen dieselbe Klasse `dash-block`, sind aber feste
-               Teile des Dashboards und keine Kacheln — ohne diese Marke kann
-               weder die CSS noch ein Prüflauf die beiden auseinanderhalten. */
             d.classList.add('dash-kachel');
             const g = document.createElement('div');
             g.className = 'dk-griffe';
@@ -2929,7 +2456,6 @@ const Datenbank = (() => {
             });
             d.appendChild(g);
         };
-        /* --- Kennzahlen ------------------------------------------------------ */
         const oben = document.createElement('div');
         oben.className = 'dash-zahlen';
         kacheln.forEach((k, i) => {
@@ -2945,10 +2471,6 @@ const Datenbank = (() => {
                     `<span class="dz-name">Einträge</span>`;
             }
             else if (k.art === 'kpi') {
-                /* DIE KPI-KARTE. Eine Zahl allein ist keine Kennzahl — „48 000" sagt
-                   nichts, „48 000 von 60 000" sagt alles. Dazu die Richtung: bei
-                   Umsatz ist mehr besser, bei Fehlern weniger. Ohne sie müsste die
-                   Farbe raten, und eine ratende Farbe ist schlimmer als keine. */
                 const name = kc.schema[k.key]?.name || '?';
                 const roh = zusammenfassen(k.summe === false ? 'Durchschnitt' : 'Summe', kr.map((r) => wert(r, k.key, kc)), kr.length);
                 const zahl = Number(roh) || 0;
@@ -2956,11 +2478,8 @@ const Datenbank = (() => {
                 const runter = k.richtung === 'runter';
                 const hat = isFinite(ziel) && ziel !== 0;
                 const anteil = hat ? zahl / ziel : 0;
-                /* „Geschafft" heisst je nach Richtung etwas anderes. */
                 const gut = hat && (runter ? zahl <= ziel : zahl >= ziel);
                 const proz = hat ? Math.round(anteil * 100) : 0;
-                /* Der Balken wird bei 100 % gekappt — sonst läuft er aus der Karte,
-                   und 340 % sähen aus wie 100 %. Die ZAHL daneben sagt die Wahrheit. */
                 const breit = Math.max(0, Math.min(100, runter ? (hat ? 100 - proz : 0) : proz));
                 d.className = 'dash-karte dash-kpi ' + (hat ? (gut ? 'kpi-gut' : 'kpi-offen') : '');
                 d.innerHTML =
@@ -2975,17 +2494,8 @@ const Datenbank = (() => {
                 const name = kc.schema[k.key]?.name || '?';
                 const art = k.art === 'summe' ? 'Summe' : k.art === 'schnitt' ? 'Durchschnitt' : 'Maximum';
                 const wert2 = zusammenfassen(art, kr.map((r) => wert(r, k.key, kc)), kr.length);
-                /* „Summe · Summe · Offene Rechnungen" stotterte: die Rechenart heisst
-                   wie die Spalte. Heisst sie gleich, steht sie einmal da. */
                 const bezeichnung = art.toLowerCase() === String(name).toLowerCase()
                     ? esc(name) : esc(art) + ' · ' + esc(name);
-                /* DIE EINHEIT GEHÖRT AN DIE SUMME (E421). E412 hat der Zahlenspalte
-                   eine Einheit gegeben und sie in der ZELLE angehängt; die Kachel
-                   darüber rechnete weiter ohne. „2630" stand da, und 2630 was, bei
-                   einer Spalte namens „Kosten"? `mitEinheit` fasst den Wert nicht
-                   an — es hängt ein schmales Leerzeichen und die Einheit an die
-                   ANZEIGE. Die Anzahl-Kachel bekommt keine: „9 CHF Einträge" wäre
-                   schlimmer als gar nichts, und sie geht hier nicht durch. */
                 d.innerHTML = `<span class="dz-wert">` +
                     `${esc(mitEinheit(Formula.anzeige(wert2), kc.schema[k.key]))}</span>` +
                     `<span class="dz-name">${bezeichnung}` +
@@ -2996,7 +2506,6 @@ const Datenbank = (() => {
         });
         if (oben.children.length)
             w.appendChild(oben);
-        /* --- Verteilung ------------------------------------------------------ */
         kacheln.forEach((k, i) => {
             if (k.art !== 'verteilung' || !k.key)
                 return;
@@ -3005,10 +2514,6 @@ const Datenbank = (() => {
             const def = kc.schema[k.key];
             if (!def)
                 return;
-            /* DIE DIAGRAMMQUELLE (L17). Bis E185 zählte die Verteilung immer nur
-               ZEILEN: „12 Aufträge in Zürich". Was man wissen will, ist meistens
-               „180 000 Umsatz in Zürich" — dieselbe Gruppierung, ein anderer Wert.
-               `wertKey` nennt die Zahlenspalte; ohne ihn wird gezählt wie bisher. */
             const wertDef = k.wertKey ? kc.schema[k.wertKey] : null;
             const beitrag = (r) => wertDef ? (Formula.zahl(wert(r, k.wertKey, kc)) || 0) : 1;
             const zaehler = new Map();
@@ -3016,9 +2521,6 @@ const Datenbank = (() => {
             kr.forEach((r) => {
                 const v = wert(r, k.key, kc);
                 const um = beitrag(r);
-                /* Bei einer Mehrfachauswahl zählt die Zeile in JEDER ihrer Gruppen.
-                   Die Summe der Balken ist dann grösser als das Ganze — das ist bei
-                   Mehrfachauswahl richtig so und steht als Fussnote darunter. */
                 if (Array.isArray(v))
                     v.forEach(x => dazu(String(x), um));
                 else
@@ -3043,7 +2545,6 @@ const Datenbank = (() => {
             griffe(box, i);
             w.appendChild(box);
         });
-        /* --- Zuletzt geändert ------------------------------------------------ */
         const letzte = document.createElement('div');
         letzte.className = 'dash-block';
         const sortiertNach = rows.slice().sort((a, b) => new Date(b.edited || b.created).getTime() - new Date(a.edited || a.created).getTime()).slice(0, 8);
@@ -3059,7 +2560,6 @@ const Datenbank = (() => {
                 zeilePeek(Store.getBlock(b.dataset.rid), coll);
         });
         w.appendChild(letzte);
-        /* --- Nächste Termine ------------------------------------------------- */
         if (datumKeys.length) {
             const dk = datumKeys[0];
             const heute2 = new Date();
@@ -3083,12 +2583,8 @@ const Datenbank = (() => {
                 w.appendChild(t);
             }
         }
-        /* --- Kacheln einstellen ---------------------------------------------- */
         const fuss = document.createElement('div');
         fuss.className = 'cal-fuss';
-        /* Andere Datenbanken derselben Ablage — die Quellen, die eine Kachel
-           ausser der eigenen haben kann. Nach Namen sortiert, damit die Liste
-           nicht bei jedem Öffnen anders aussieht. */
         const fremde = Object.values(Store.cache.collections)
             .filter((c) => c && c.id !== coll.id)
             .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
@@ -3098,20 +2594,9 @@ const Datenbank = (() => {
                 (anzahlWoher === 1 ? '' : 'n') + ' aus anderen Datenbanken' :
                 ' über diese Datenbank'}.</span>` +
                 '<button data-a="kacheln">Kachel hinzufügen</button>';
-        /* Das Menü für EINE Datenbank — die eigene oder eine fremde. `q` ist die
-           Kennung, die in die Kachel wandert; leer heisst „die eigene". */
         const menueFuer = (c, q) => {
             const zk = zahlKeysVon(c), gk = gruppKeysVon(c);
             const p = q ? '@' + q : '';
-            /* DER NAME DER FREMDEN DATENBANK GEHÖRT AN JEDEN EINTRAG, nicht nur in
-               die Gruppenüberschrift. Der Filter von `menuMitSuche` liest den
-               KNOPFTEXT — steht der Name nur oben, findet „Rechnung" null Einträge,
-               und das Suchfeld ist eine Zusage, die es nicht hält. Gemessen: 0 von
-               23 (E186).
-      
-               Er macht die Zeile ausserdem für sich lesbar. Wer weit gerollt hat,
-               sieht die Überschrift nicht mehr und weiss sonst nicht, aus welcher
-               Datenbank die Zeile unter dem Zeiger stammt. */
             const woher = q ? ' · ' + esc(c.name || 'Ohne Namen') : '';
             return '<button data-neu="anzahl' + p + '">Anzahl der Einträge' + woher + '</button>' +
                 zk.map(k => `<button data-neu="summe:${k}${p}">Summe · ${esc(c.schema[k].name)}${woher}</button>` +
@@ -3125,14 +2610,6 @@ const Datenbank = (() => {
             if (!elVon(e)?.closest('[data-a="kacheln"]'))
                 return;
             const r = (htmlVon(e) ?? document.body).getBoundingClientRect();
-            /* MIT SUCHE, NICHT OHNE (E186). Das Menü wächst mit dem Arbeitsbereich:
-               je Datenbank eine Anzahl-Zeile, drei je Zahlenspalte und eine je
-               Paar aus Gruppen- und Zahlenspalte. Eine Datenbank mit drei Zahlen-
-               und zwei Gruppenspalten macht 18 Einträge; bei fünfzig Datenbanken
-               sind es neunhundert. Durch neunhundert Knöpfe rollt niemand.
-      
-               `menuMitSuche` gibt es dafür seit langem und steht in dieser Datei
-               schon dreimal. Ein zweiter Weg dafür wäre L34 in klein. */
             const m = UI.menuMitSuche(`<div class="grp">Aus dieser Datenbank</div>` + menueFuer(coll, '') +
                 (fremde.length
                     ? fremde.map((c) => `<div class="grp">Aus „${esc(c.name || 'Ohne Namen')}"</div>` + menueFuer(c, c.id)).join('')
@@ -3142,8 +2619,6 @@ const Datenbank = (() => {
                 const b = elVon(ev)?.closest('[data-neu]');
                 if (!b)
                     return;
-                /* `art:key:wertKey@quelle` — die Quelle steht hinten, weil eine
-                   Kennung Doppelpunkte enthalten könnte, ein `@` aber nicht. */
                 const [vorn, quelle] = (b.dataset.neu ?? '').split('@');
                 const [art, key, wertKey] = (vorn ?? '').split(':');
                 if (art === 'leer') {
@@ -3159,9 +2634,6 @@ const Datenbank = (() => {
                 if (quelle)
                     neue.quelle = quelle;
                 m.remove();
-                /* Eine Kennzahl ohne Ziel ist keine Kennzahl — also gleich fragen.
-                   Wer abbricht, bekommt trotzdem die Kachel, nur ohne Ziel: sie sagt
-                   dann „Ohne Ziel" und lässt sich später nachrüsten. */
                 if (art === 'kpi') {
                     void (async () => {
                         const c2 = quelle ? (Store.getCollection(quelle) || coll) : coll;
@@ -3169,8 +2641,6 @@ const Datenbank = (() => {
                         const zahl = Formula.zahl(antwort);
                         if (zahl || zahl === 0) {
                             neue.ziel = zahl;
-                            /* Ein Ziel, das man UNTERschreiten will — Fehler, Kosten,
-                               Rückstände. Ohne diese Frage müsste die Farbe raten. */
                             neue.richtung = (await Dialog.wahl({
                                 titel: 'In welche Richtung ist gut?',
                                 text: 'Bei Umsatz ist mehr besser, bei Fehlern weniger. ' +
@@ -3193,15 +2663,6 @@ const Datenbank = (() => {
         w.appendChild(fuss);
         return w;
     };
-    /* --- Zeitstrahl ---------------------------------------------------------
-     * Notions Timeline: jede Zeile ein Balken auf einer Zeitachse.
-     * Redion kann dazu, was Notion nicht kann:
-     *   · fünf Zoomstufen (Tag bis Jahr) statt der drei von Notion,
-     *   · Abhängigkeitspfeile zwischen den Balken, wenn es eine Verknüpfung
-     *     auf dieselbe Datenbank gibt („hängt ab von"),
-     *   · Balken mit der Maus schieben und am rechten Rand länger ziehen,
-     *   · eine feste Namensspalte links wie in einem Projektplan.
-     * ----------------------------------------------------------------------*/
     const ZS_STUFEN = [
         ['tag', 'Tag', 42],
         ['woche', 'Woche', 15],
@@ -3209,14 +2670,12 @@ const Datenbank = (() => {
         ['quartal', 'Quartal', 2],
         ['jahr', 'Jahr', 0.8]
     ];
-    const ZS_ZEILE = 32; /* Höhe einer Zeile in Pixeln */
-    const ZS_KOPF = 34; /* Höhe der Zeitleiste oben   */
-    /** Tagesbeginn als eigenes Datum — ohne die Uhrzeit der Vorlage. */
+    const ZS_ZEILE = 32;
+    const ZS_KOPF = 34;
     const zsTag = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
-    /** Schreibt ein verschobenes Datum zurück und behält die Uhrzeit bei. */
     const zsSchreibe = (row, key, neu, alt) => {
         const roh = String(alt || '');
-        const zeit = roh.length > 10 ? roh.slice(10, 16) : ''; /* "T08:30" */
+        const zeit = roh.length > 10 ? roh.slice(10, 16) : '';
         const p = (n) => String(n).padStart(2, '0');
         Store.setProp(row.id, key, neu.getFullYear() + '-' + p(neu.getMonth() + 1) + '-' + p(neu.getDate()) + zeit);
     };
@@ -3225,22 +2684,11 @@ const Datenbank = (() => {
         w.className = 'zeitstrahl';
         const datumKeys = Object.keys(coll.schema).filter(k => ['date', 'created', 'edited'].includes(coll.schema[k].type));
         const startKey = view.startKey && coll.schema[view.startKey] ? view.startKey : datumKeys[0];
-        /* DIESELBE ERKENNUNG WIE IM KALENDER (E413). Hier stand die Zeile, die
-           E410 im Kalender ersetzt hat — und sie stand hier weiter. Die Folge
-           war schlimmer als dort: ein Zeitstrahl OHNE Enddatum zeichnet jedes
-           Projekt als Quadrat von dreissig Pixeln, und in dreissig Pixeln steht
-           vom Titel genau ein Buchstabe. Auf dem Bild las man „E", „\", „S",
-           „E" — neun Balken, die alle gleich aussahen und alle nichts sagten.
-    
-           Das ist der zweitteuerste wiederkehrende Fehler dieses Projekts,
-           wörtlich aus §45: eine Sache an einer Stelle reparieren und die
-           Nachbarstelle nicht ansehen. */
         const endeKey = kalEnde(coll, view, startKey);
         if (!startKey) {
             w.innerHTML = '<div class="db-leer">Für den Zeitstrahl braucht es eine Datums-Eigenschaft.</div>';
             return w;
         }
-        /* Verknüpfungen auf dieselbe Datenbank taugen als Abhängigkeit. */
         const abhKeys = Object.keys(coll.schema).filter(k => coll.schema[k].type === 'relation' && coll.schema[k].ziel === coll.id);
         const abhKey = view.abhKey === '' ? null
             : (view.abhKey && coll.schema[view.abhKey] ? view.abhKey : abhKeys[0] || null);
@@ -3260,19 +2708,7 @@ const Datenbank = (() => {
         }
         const stufeId = view.zoom && ZS_STUFEN.some(s => s[0] === view.zoom) ? view.zoom : 'monat';
         const stufe = ZS_STUFEN.find(s => s[0] === stufeId) ?? ZS_STUFEN[0];
-        /* Pixel je Tag. `ZS_STUFEN` steht als Liste da; die dritte Stelle ist die
-           Breite. Ohne die Umwandlung liest TypeScript daraus `string | number`. */
         const pxBasis = Number(stufe?.[2] ?? 8);
-        /* VERÄNDERLICH, WEIL DIE BREITE ERST NACH DEM EINHÄNGEN BEKANNT IST
-           (E419, L130 Punkt 5). `ZS_STUFEN` gibt eine feste Zahl je Zoomstufe —
-           5 px je Tag auf der Monatsstufe. Bei 65 Tagen sind das 325 px in
-           einem Behälter von 1130: gemessen, nicht geschätzt. Zwei Drittel
-           blieben weiss, und die Mindestbreite von 22 px zog dabei jede Spanne
-           unter fünf Tagen auf dieselbe Breite zusammen — ein Balken über EINEN
-           Tag sah aus wie einer über DREI.
-           Unten, nach dem Einhängen, wird `px` gestreckt, wenn Platz übrig ist.
-           Kleiner wird es nie: ein langer Zeitraum soll rollen, sonst wäre der
-           Zoom eine Anzeige, die immer gleich aussieht. */
         let px = pxBasis;
         const minD = zsTag(new Date(Math.min(...eintraege.map((e) => e.von))));
         const maxD = zsTag(new Date(Math.max(...eintraege.map((e) => e.bis))));
@@ -3284,7 +2720,6 @@ const Datenbank = (() => {
         eintraege.sort((a, b) => a.von - b.von || String(a.row.text || '').localeCompare(String(b.row.text || ''), 'de'));
         const platz = {};
         eintraege.forEach((e, i) => { platz[e.row.id] = i; });
-        /* ---- Gerüst ---------------------------------------------------------- */
         const leiste = document.createElement('div');
         leiste.className = 'zs-leiste';
         leiste.innerHTML =
@@ -3306,17 +2741,11 @@ const Datenbank = (() => {
         scroll.className = 'zs-scroll';
         const flaeche = document.createElement('div');
         flaeche.className = 'zs-flaeche';
-        /* ---- Die Fläche zeichnen — alles hängt an `px` ------------------------
-           Marken, Balken, Pfeile und die Gesamtbreite werden AUS `px` gerechnet.
-           Deshalb genügt es, `px` zu ändern und dies noch einmal zu rufen; ein
-           Umbau auf Anteile, den L130 Punkt 5 für nötig hielt, war nicht nötig.
-           ---------------------------------------------------------------------*/
         const jetzt = zsTag(new Date());
         const zeichneFlaeche = () => {
             breiteG = Math.round(tage * px);
             flaeche.style.width = breiteG + 'px';
             flaeche.style.height = (ZS_KOPF + eintraege.length * ZS_ZEILE + 8) + 'px';
-            /* ---- Kopfzeile: je nach Zoomstufe Tage, Wochen, Monate oder Jahre ---- */
             const marken = [];
             const lauf = new Date(minD);
             if (stufeId === 'tag') {
@@ -3351,25 +2780,13 @@ const Datenbank = (() => {
                     lauf.setFullYear(lauf.getFullYear() + 1);
                 }
             }
-            /* DIE ERSTE MARKE STAND LINKS AUSSERHALB (E419, L130 Punkt 6). Auf dem
-               Bild trugen „Sept. 26" und „Okt. 26" ihre Beschriftung, der August
-               nicht — und der Grund war nicht, dass die Marke fehlte, sondern dass
-               `lauf.setDate(1)` auf den Monatsersten springt und der VOR `minD`
-               liegt. Gemessen: x = −45. Die Marke war da, sie stand nur draussen.
-               Geklemmt wird nur die Beschriftung, nicht die Gitterlinie: die Linie
-               gehört an den echten Monatsersten, und der liegt ausserhalb, also
-               sieht man sie zu Recht nicht. Ein Strich bei 0 behauptete, hier
-               beginne ein Monat. */
             const beschriftung = marken.map((m, i) => ({ ...m, x: i === 0 ? Math.max(0, m.x) : m.x }));
-            /* Kopf + Gitterlinien */
             let html = `<div class="zs-kopf" style="height:${ZS_KOPF}px">` +
                 beschriftung.map(m => `<span style="left:${m.x}px">${esc(m.text)}</span>`).join('') +
                 marken.map(m => `<i class="zs-gitter${m.wochenende ? ' we' : ''}" style="left:${m.x}px"></i>`).join('') +
                 '</div>';
-            /* Heute-Linie */
             if (jetzt >= minD && jetzt <= maxD)
                 html += `<div class="zs-heute" style="left:${xVon(jetzt)}px; top:${ZS_KOPF - 6}px"></div>`;
-            /* Balken */
             const balkenBreite = (e) => Math.max(px < 4 ? 6 : 22, ((e.bis - e.von) / 86400000 + 1) * px);
             eintraege.forEach((e, i) => {
                 const links = xVon(e.von);
@@ -3379,43 +2796,19 @@ const Datenbank = (() => {
                     `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
                     `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
                     (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
-                    /* DER TITEL WANDERT NACH DRAUSSEN, WENN ER DRINNEN NICHT PASST
-                       (E413). Auf dem Bild stand in den kurzen Balken „\", „I", „M" —
-                       je EIN Buchstabe, ohne Auslassungszeichen. „\" ist ein
-                       abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus
-                       wie ein Zeichen, nicht wie ein Rest. Genau der Fall aus §55.1:
-                       eine abgeschnittene Anzeige zeigt etwas ANDERES, und beides sieht
-                       gültig aus.
-          
-                       WER DRAUSSEN STEHT, ENTSCHEIDET DIE MESSUNG WEITER UNTEN, nicht
-                       diese Zeile. Eine feste Pixelschwelle stand hier zuerst — 64 px —
-                       und war nachweislich falsch: „Bericht Kapitel 2" bekam 70 px
-                       Balken für 91 px Text und blieb drinnen, abgeschnitten. Wie breit
-                       ein Titel wirklich ist, weiss erst der Browser. */
                     `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
                     (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
             });
             flaeche.innerHTML = html;
-            /* JETZT ERST MESSEN, wo der Titel hinpasst — vorher weiss es niemand.
-               `scrollWidth` gegen die Innenbreite des Balkens: passt der Text nicht,
-               wandert er nach rechts hinaus. Neun Balken, ein Durchgang; das kostet
-               nichts und trifft im Gegensatz zu jeder festen Zahl immer. */
             requestAnimationFrame(() => {
                 flaeche.querySelectorAll('.zs-balken').forEach(b => {
                     const t = b.querySelector('.zs-txt');
                     if (!t)
                         return;
-                    /* Gegen die eigene clientWidth des TEXTES, nicht die des Balkens:
-                       `b.clientWidth` schliesst das Polster von zweimal 9 px MIT ein,
-                       und der Text hat es nicht zur Verfügung. Auf dem Bild blieb
-                       „Steuerung Ro…" deshalb drinnen — 97 px Text gegen 110 px Balken
-                       sah nach „passt" aus, während wirklich nur 92 px übrig waren.
-                       Zwei Pixel Spiel gegen Rundung. */
                     if (t.scrollWidth > t.clientWidth + 2)
                         t.classList.add('draussen');
                 });
             });
-            /* ---- Abhängigkeitspfeile -------------------------------------------- */
             if (abhKey) {
                 const linien = [];
                 eintraege.forEach((e) => {
@@ -3450,52 +2843,20 @@ const Datenbank = (() => {
         scroll.appendChild(flaeche);
         raster.appendChild(scroll);
         w.appendChild(raster);
-        /* ---- ERST JETZT WEISS JEMAND, WIE BREIT DER PLATZ IST (E419) --------
-           `zs-scroll` steht in der Seite, und `clientWidth` ist damit eine Zahl
-           statt einer Schätzung. Ist das Gemalte schmaler als der Platz, wird
-           `px` gestreckt und einmal neu gezeichnet — zehn Balken, ein Durchgang,
-           vor dem ersten Malen des Browsers. Die Titelmessung läuft in
-           `zeichneFlaeche` mit, also stimmt sie danach auch wieder.
-    
-           NUR GRÖSSER, NIE KLEINER. Auf der Tagesstufe sind 65 Tage 2730 px und
-           passen nicht; dort bleibt es beim Rollen. Ein Zoom, der jede Stufe auf
-           dieselbe Breite zöge, wäre kein Zoom mehr, sondern eine Anzeige, die
-           immer gleich aussieht.
-    
-           DIE VIER PIXEL SPIEL sind der Platz, den ein waagerechter Roller
-           einnimmt, falls er doch erscheint. Ohne sie streckt die Messung auf
-           genau die Behälterbreite, der Roller kommt, der Behälter wird
-           schmaler — und beim nächsten Zeichnen ginge es von vorn los. */
         const anpassen = () => {
             const frei = scroll.clientWidth - 4;
-            /* NUR WACHSEN, UND NUR WENN ES SICH LOHNT. Beides zusammen macht die
-               Rückkopplung unmöglich: `breiteG` wächst höchstens bis `frei`, und
-               unter vier Pixeln Unterschied geschieht gar nichts. */
             if (frei > 0 && breiteG < frei - 4) {
                 px = frei / tage;
                 zeichneFlaeche();
             }
         };
         requestAnimationFrame(anpassen);
-        /* UND NOCH EINMAL, WENN DER BEHÄLTER SEINE ENDGÜLTIGE BREITE HAT (E419).
-           Die eine Messung oben reicht nicht: `.db` bekommt seine Breite selbst
-           erst in einem `requestAnimationFrame` (E409, `luftMessen`), und wer
-           zuerst dran ist, entscheidet die Reihenfolge der Einhängungen — nicht
-           ich. Gemessen: die erste Messung sah 670 px, wo am Ende 1130 standen,
-           und der Zeitstrahl blieb bei der halben Breite stehen.
-           EINE RÜCKKOPPLUNG GIBT ES TROTZDEM NICHT. `.zs-scroll` trägt
-           `overflow-x:auto`, und damit ist seine automatische Mindestbreite
-           null — ein breiterer Inhalt schiebt den Behälter nicht auf. Das ist
-           der Unterschied zu E409, wo genau das den Beobachter in die Schleife
-           schickte. */
         if (typeof ResizeObserver !== 'undefined')
             new ResizeObserver(anpassen).observe(scroll);
-        /* Erst nach dem Einhängen scrollen: zum heutigen Tag */
         setTimeout(() => {
             if (jetzt >= minD && jetzt <= maxD)
                 scroll.scrollLeft = Math.max(0, xVon(jetzt) - scroll.clientWidth / 3);
         }, 0);
-        /* ---- Schieben und Verlängern ---------------------------------------- */
         let zieh = null;
         flaeche.addEventListener('mousedown', ev => {
             const b = elVon(ev)?.closest('.zs-balken');
@@ -3561,7 +2922,6 @@ const Datenbank = (() => {
             if (e)
                 view.oeffnenAls === 'voll' ? App.oeffne(e.row.id) : zeilePeek(e.row, coll);
         });
-        /* ---- Leiste ---------------------------------------------------------- */
         leiste.addEventListener('click', ev => {
             const z = elVon(ev)?.closest('[data-zoom]');
             if (z) {
@@ -3605,7 +2965,6 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /** ISO-Kalenderwoche — für die Wochen-Zoomstufe. */
     const kalenderWoche = (d) => {
         const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         x.setDate(x.getDate() + 3 - ((x.getDay() + 6) % 7));
@@ -3613,12 +2972,6 @@ const Datenbank = (() => {
         ersterDo.setDate(ersterDo.getDate() + 3 - ((ersterDo.getDay() + 6) % 7));
         return 1 + Math.round((x.getTime() - ersterDo.getTime()) / 604800000);
     };
-    /* --- Karte: OpenStreetMap, kostenlos und ohne Schlüssel ----------------
-     * Kein fremdes Kartenpaket: die Kacheln kommen direkt von openstreetmap.org,
-     * die Umrechnung von Länge und Breite auf Kacheln steht unten.
-     * Orte werden über Nominatim gesucht (ebenfalls kostenlos) und danach in
-     * der Zeile gespeichert, damit dieselbe Adresse nie zweimal gesucht wird.
-     * ----------------------------------------------------------------------*/
     const KACHEL = 256;
     const nachKachel = (lat, lon, z) => {
         const n = Math.pow(2, z);
@@ -3627,7 +2980,6 @@ const Datenbank = (() => {
         const y = (1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2 * n;
         return { x, y };
     };
-    /** Sucht eine Adresse — höchstens eine Anfrage je Sekunde, so will es Nominatim. */
     let letzteSuche = 0;
     const ortSuchen = async (text2) => {
         const warten = Math.max(0, 1100 - (Date.now() - letzteSuche));
@@ -3646,21 +2998,7 @@ const Datenbank = (() => {
     const alsKarte = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'karte-w';
-        /* ZWEI FEHLER IN ZWEI ZEILEN (E423). Erstens fehlte `place` in der Liste
-           — der eine Typ, der wörtlich „hier steht ein Ort" bedeutet und im
-           Eigenschaftenregister 📍 heisst. Zweitens war die Vorgabe `ortKeys[0]`,
-           und der Titel steht in jedem Schema zuerst. Auf dem Bild stand
-           deshalb „Ortsspalte: Projekt" und „0 auf der Karte": neun Zeilen,
-           neun unauffindbare Orte, denn „Schaltplan Werkstatt" ist keiner.
-           Das ist wörtlich der Befund aus E414, nur an einer anderen Ansicht —
-           dort war die Vorgabe-Gruppierung `gruppierbar[0]` und schloss `title`
-           ein. Zweimal derselbe Fehler: eine Vorgabe, die die erste Spalte
-           nimmt statt der passenden. */
         const ortKeys = Object.keys(coll.schema).filter(k => ['place', 'text', 'title', 'select'].includes(coll.schema[k].type));
-        /* Die Reihenfolge der Wahl: erst was ein Ort IST, dann was einer sein
-           KANN, und der Titel zuletzt. Er bleibt in `ortKeys` und damit im
-           Menü — wer seine Orte im Titel führt, soll das weiter können (E414 §5:
-           eine bessere Vorgabe nimmt keine Möglichkeit weg). */
         const ortVorgabe = ortKeys.find(k => coll.schema[k].type === 'place')
             ?? ortKeys.find(k => coll.schema[k].type !== 'title')
             ?? ortKeys[0];
@@ -3669,7 +3007,6 @@ const Datenbank = (() => {
             w.innerHTML = '<div class="db-leer">Für die Karte braucht es eine Textspalte mit Orten.</div>';
             return w;
         }
-        /* Was ist schon bekannt? */
         const punkte = rows.map((r) => {
             const g = (r.geo || {})[ortKey];
             return g ? { row: r, lat: g.lat, lon: g.lon } : null;
@@ -3687,7 +3024,6 @@ const Datenbank = (() => {
         const flaeche = document.createElement('div');
         flaeche.className = 'karte';
         w.appendChild(flaeche);
-        /* Mittelpunkt und Zoom */
         let z = view.zoom || 5;
         let mitte = punkte.length
             ? { lat: punkte.reduce((a, p) => a + p.lat, 0) / punkte.length,
@@ -3744,7 +3080,6 @@ const Datenbank = (() => {
             });
             flaeche.appendChild(werkzeuge);
         };
-        /* Ziehen verschiebt die Karte */
         let zieht = false, zx = 0, zy = 0;
         flaeche.addEventListener('pointerdown', e => {
             if (elVon(e)?.closest('.nadel, .karte-zoom'))
@@ -3808,7 +3143,6 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* --- Feed: der Zeitstrom, neueste zuerst (Notions Feed-View) ----------- */
     const alsFeed = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'feed';
@@ -3826,26 +3160,12 @@ const Datenbank = (() => {
         sortiert2.forEach((r) => {
             const e = document.createElement('article');
             e.className = 'feed-eintrag';
-            /* DEUTSCH, NICHT ROH (E424). Hier stand `Formula.anzeige(...)`, und
-               das liefert für ein Datum die gespeicherte Zeichenkette: oben rechts
-               stand `2026-09-22`, in derselben Karte `30.09.2026`. Zwei Formate in
-               einer Karte, und eines davon schreibt kein deutschsprachiger Mensch
-               (§3). `Einstellungen.datum` ist derselbe Formatierer, den die Zelle
-               benutzt — damit steht in der Karte überall dasselbe. */
             const wannRoh = datumKey ? wert(r, datumKey, coll) : null;
             const wannDat = wannRoh ? new Date(wannRoh) : null;
             const wann = (wannDat && !isNaN(wannDat.getTime()))
                 ? Einstellungen.datum(wannDat, coll.schema[datumKey]?.type !== 'date')
                 : (datumKey ? String(Formula.anzeige(wannRoh)) : Werkzeuge.zeitKurz(r.created));
-            /* DIESELBE MASCHINE WIE DIE KARTEN (E424, aus E411). Hier klebten die
-               ersten vier Zellen mit einem Leerzeichen aneinander: auf dem Bild
-               stand „15.09.2026 60 CHF" als sähe es aus wie EIN Wert, ohne Namen
-               und ohne Trennung. `kartenWerte` schreibt an, was seinen Namen
-               braucht, und lässt Etiketten, Sterne und Ortsmarken ohne — eine
-               Beschriftung an JEDEM Wert läse wieder niemand.
-               Das Datum der Kopfzeile bleibt aussen vor: es steht schon oben. */
             const merkmale = kartenWerte(r, coll, view, datumKey ? [datumKey] : [], 5);
-            /* Der Anfang des Seiteninhalts als Vorschau */
             const vorschau = Store.childrenOf(r.id)
                 .map((b) => b.text || '').filter(Boolean).join(' ').slice(0, 220);
             e.innerHTML =
@@ -3867,23 +3187,11 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* --- Diagrammansicht ----------------------------------------------------
-     * Notions Chart-View: gruppieren, zusammenfassen, zeichnen.
-     * ----------------------------------------------------------------------*/
     const alsDiagramm = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'db-chart';
         const gruppierbar = Object.keys(coll.schema).filter(k => ['select', 'status', 'multi', 'checkbox', 'person', 'text', 'title', 'date'].includes(coll.schema[k].type));
         const messbar = Object.keys(coll.schema).filter(k => ['number', 'formula', 'rollup'].includes(coll.schema[k].type));
-        /* DIE VORGABE IST NICHT DIE ERSTE SPALTE (E414). `gruppierbar` schliesst
-           `title` ein — und der Titel steht in jedem Schema zuerst. Damit
-           gruppierte jedes neue Diagramm nach dem TITEL: neun Zeilen ergaben
-           neun Balken der Höhe 1. Ein Diagramm, das für jede Zeile einen Balken
-           der Höhe eins zeigt, sagt genau nichts.
-    
-           Gewählt wird jetzt wie beim Board: erst eine Auswahl- oder
-           Statusspalte, dann ein Datum, und der Titel erst, wenn es sonst
-           nichts gibt. Wählbar bleibt er — jemand könnte ihn wollen. */
         const VORZUG = ['select', 'status', 'checkbox', 'multi', 'person'];
         const vorgabeGruppe = Object.keys(coll.schema).find(k => VORZUG.includes(coll.schema[k].type)) ||
             Object.keys(coll.schema).find(k => coll.schema[k].type === 'date') ||
@@ -3896,7 +3204,6 @@ const Datenbank = (() => {
             w.innerHTML = '<div class="db-leer">Für ein Diagramm braucht es eine Spalte zum Gruppieren.</div>';
             return w;
         }
-        /* Datumsstufe: Tag, Woche, Monat, Quartal oder Jahr — wie in Notion */
         const stufe = view.chartStufe || 'monat';
         const alsStufe = (roh) => {
             const d = new Date(roh);
@@ -3917,9 +3224,7 @@ const Datenbank = (() => {
                 return String(j);
             return d.toISOString().slice(0, 7);
         };
-        /* Zusammenfassen — nicht nur Summe */
         const art = view.chartArt || (mKey ? 'Summe' : 'Anzahl');
-        /* Zu welcher Gruppe gehört eine Zeile? Wird auch zum Hineinschauen gebraucht. */
         const gruppeNamen = (r) => {
             let k = wert(r, gKey, coll);
             if (Array.isArray(k))
@@ -4027,15 +3332,9 @@ const Datenbank = (() => {
         w.appendChild(flaeche);
         const legende = document.createElement('div');
         legende.className = 'chart-legende';
-        legende.innerHTML = werte.map((v, i) => 
-        /* `Zusatz.PALETTE[i]` ist ein PAAR [Farbe, Name] — als Zeichenkette
-           „#529cca,Blau" und damit kein gültiger Farbwert. Die Legendenpunkte
-           waren dadurch unsichtbar (E414). */
-        `<span data-i="${i}"><i style="background:${Zusatz.farbeVon(i)}"></i>` +
+        legende.innerHTML = werte.map((v, i) => `<span data-i="${i}"><i style="background:${Zusatz.farbeVon(i)}"></i>` +
             `${esc(v.name)} <b>${Formula.anzeige(v.wert)}</b></span>`).join('');
         w.appendChild(legende);
-        /* Hineinschauen: ein Klick auf Balken, Segment oder Legende zeigt die
-           Zeilen, aus denen die Zahl kommt. Notions Diagramme sind stumm. */
         const hinein = (i) => {
             const name = (werte[i] || {}).name;
             if (name === undefined)
@@ -4057,7 +3356,6 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* Ein Fenster mit genau den Zeilen hinter einer Zahl. */
     const drilldown = (coll, _view, titel, zeilen2, untertitel) => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -4109,9 +3407,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /* --- Formularansicht ----------------------------------------------------
-     * Notions Form-View: eine Eingabemaske, die neue Einträge anlegt.
-     * ----------------------------------------------------------------------*/
     const alsFormular = (coll, view, block) => {
         const w = document.createElement('div');
         w.className = 'db-form';
@@ -4137,7 +3432,6 @@ const Datenbank = (() => {
             feld.innerHTML = `<span>${esc(def.name)}${pflicht ? ' <em>*</em>' : ''}` +
                 (regel ? `<em class="fl-hinweis">nur wenn ${esc(coll.schema[regel.key]?.name || '?')} = ` +
                     `${esc(regel.wert)}</em>` : '') + '</span>';
-            /* Die 13 Fragetypen aus Teil 8 — jeder bekommt das Feld, das zu ihm passt. */
             let eingabe;
             if (['select', 'status'].includes(def.type)) {
                 eingabe = document.createElement('select');
@@ -4145,7 +3439,6 @@ const Datenbank = (() => {
                     (def.options || []).map((o) => `<option>${esc(o.name)}</option>`).join('');
             }
             else if (def.type === 'multi') {
-                /* Mehrfachauswahl: eine Reihe Kästchen, wie in Notions Formular */
                 eingabe = document.createElement('div');
                 eingabe.className = 'form-mehr';
                 eingabe.innerHTML = (def.options || []).map((o) => `<label class="tag bg-${o.color}"><input type="checkbox" data-o="${esc(o.name)}"> ${esc(o.name)}</label>`).join('') || '<span style="color:var(--text-faint)">Noch keine Optionen</span>';
@@ -4160,7 +3453,6 @@ const Datenbank = (() => {
                 eingabe.multiple = true;
             }
             else if (def.type === 'text') {
-                /* Lange Antwort */
                 eingabe = document.createElement('textarea');
                 eingabe.rows = 3;
                 eingabe.placeholder = def.beschreibung || '';
@@ -4208,7 +3500,6 @@ const Datenbank = (() => {
             Store.updateView(view.id, f.dataset.f === 'titel'
                 ? { formTitel: f.textContent } : { formText: f.textContent });
         });
-        /* Bedingte Fragen: erst zeigen, wenn eine andere Antwort passt */
         const logikPruefen = () => {
             box.querySelectorAll('.form-feld[data-zeigt-wenn]').forEach(f => {
                 const [k2, w2] = (f.dataset.zeigtWenn ?? '').split('|');
@@ -4332,9 +3623,6 @@ const Datenbank = (() => {
                 const k = el.dataset.k;
                 if (!k || !coll.schema[k])
                     return;
-                /* Nur echte Eingabefelder — die Beschriftung trägt denselben Schlüssel,
-                   hat aber keinen Wert. Ohne diese Zeile hielt jedes Pflichtfeld die
-                   ganze Antwort auf. */
                 if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) &&
                     !el.classList.contains('form-mehr'))
                     return;
@@ -4374,7 +3662,6 @@ const Datenbank = (() => {
             const r = Store.addRow(coll.id, props);
             Store.updateBlock(r.id, { text: titel || 'Ohne Titel' });
             setTimeout(() => automationenLaufen(r, coll, 'formular-neu'), 0);
-            /* Angehängte Dateien bleiben lokal — als Data-URL am Eintrag. */
             dateiFelder.forEach(([k, dateien]) => {
                 [...dateien].slice(0, 5).forEach(d => {
                     if (d.size > 6 * 1024 * 1024) {
@@ -4390,8 +3677,6 @@ const Datenbank = (() => {
                     leser.readAsDataURL(d);
                 });
             });
-            /* Danke-Seite statt nur einer Meldung — Notion zeigt hier eine
-               Bestätigung mit eigenem Text und der Wahl, noch einmal zu antworten. */
             const zahl = (Number(view.formAnzahl) || 0) + 1;
             Store.updateView(view.id, { formAnzahl: zahl });
             w.innerHTML =
@@ -4427,18 +3712,6 @@ const Datenbank = (() => {
         });
         return w;
     };
-    /* ========================================================================
-     * ZEILE ALS SEITENVORSCHAU  (Notions Side Peek)
-     * ======================================================================*/
-    /**
-     * Der INHALT der Vorschau — Titel, Eigenschaften, Blöcke.
-     *
-     * Er steht hier für sich, weil ihn zwei Hüllen benutzen: das Seitenfenster
-     * am Rechner und das Blatt von unten am Telefon (E371). Einen mobilen
-     * Zwilling zu bauen wäre der teure Weg gewesen; ein Gefäss zu tauschen ist
-     * der billige. Gibt das Element zurück, in dem die Blöcke stehen — der
-     * Aufrufer muss `Blocks.bindeEditor` darauf rufen.
-     */
     const peekInhalt = (koerper, row, coll) => {
         const titel = document.createElement('div');
         titel.className = 'peek-titel';
@@ -4449,7 +3722,6 @@ const Datenbank = (() => {
             Store.updateBlock(row.id, { text: titel.textContent });
         });
         koerper.appendChild(titel);
-        /* Eigenschaften */
         const props = document.createElement('div');
         props.className = 'peek-props';
         Object.keys(coll.schema).forEach(k => {
@@ -4470,7 +3742,6 @@ const Datenbank = (() => {
             props.appendChild(z);
         });
         koerper.appendChild(props);
-        /* Inhalt der Zeile — eine Zeile ist eine vollwertige Seite */
         const inhalt = document.createElement('div');
         inhalt.className = 'peek-inhalt';
         inhalt.id = 'peek-page';
@@ -4481,20 +3752,7 @@ const Datenbank = (() => {
         koerper.appendChild(inhalt);
         return inhalt;
     };
-    /**
-     * Die Vorschau am Telefon: ein Blatt von unten, das die Tabelle stehen
-     * lässt.
-     *
-     * BIS E371 SPRANG SIE ZUR GANZEN SEITE. Das war bequem gebaut — dieselbe
-     * Editorlogik, kein zweites Gefäss — und teuer benutzt: die Tabelle war
-     * weg, die Rollposition auch, und zurück ging es nur über die Navigation.
-     * Wer zehn Zeilen ansieht, navigiert zwanzig Mal. Ein 560-px-Seitenfenster
-     * auf 390 px zu quetschen wäre die andere falsche Antwort gewesen; die
-     * richtige ist die Form, die das Telefon dafür hat.
-     */
     const zeilePeekBlatt = (row, coll) => {
-        /* Ohne das Modul bleibt der alte Weg — er ist schlechter, aber er
-           funktioniert. Eine Vorschau, die gar nichts tut, wäre schlimmer. */
         if (typeof Sheet === 'undefined') {
             App.oeffne(row.id);
             return;
@@ -4518,9 +3776,6 @@ const Datenbank = (() => {
                 Blocks.bindeEditor(inhalt);
                 voll.addEventListener('click', () => { griff.schliessen(); App.oeffne(row.id); });
                 mehr.addEventListener('click', () => zeilenMenue(mehr, row, coll, () => griff.schliessen()));
-                /* Wer im Titel oder in einem Block schreibt, will Platz. Das Blatt
-                   zieht sich dann von selbst auf — sonst tippt man in einen
-                   Streifen von 58 %, während die Tastatur die Hälfte davon nimmt. */
                 koerper.addEventListener('focusin', e => {
                     const z = e.target instanceof Element ? e.target : null;
                     if (z?.closest('[contenteditable="true"], input, textarea'))
@@ -4568,7 +3823,6 @@ const Datenbank = (() => {
                 zeilenMenue(b, row, coll, () => p.remove());
         });
     };
-    /* --- Rechtsklick auf eine Zeile ---------------------------------------- */
     const zeilenMenue = (anker, row, coll, danach) => {
         const r = anker.getBoundingClientRect
             ? anker.getBoundingClientRect()
@@ -4594,8 +3848,6 @@ const Datenbank = (() => {
             '<button data-a="komm"><span class="mi">💬</span>Kommentar</button>' +
             '<hr>' +
             `<button data-a="archiv"><span class="mi">🗄</span>${row.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
-            /* Der kurze Weg zu einem Prüfsatz: eine Zeile, bei der es stimmt,
-               festhalten. Ein Formular auszufüllen macht sonst niemand. */
             (typeof Pruefsatz !== 'undefined' &&
                 Object.values(coll.schema).some(d => d.type === 'formula')
                 ? '<button data-a="festhalten"><span class="mi">✔</span>Diesen Fall festhalten</button>' : '') +
@@ -4665,7 +3917,6 @@ const Datenbank = (() => {
                     unterElementeAn(coll, true);
                 const k = Store.addRow(coll.id, {});
                 Store.updateBlock(k.id, { unterVon: row.id, text: 'Unterelement' });
-                /* Auch in den beiden Spalten festhalten, damit Formeln es sehen */
                 const eltern = (row.props || {})[UNTER_KEYS.kinder] || [];
                 Store.setProp(row.id, UNTER_KEYS.kinder, [...eltern, k.id]);
                 Store.setProp(k.id, UNTER_KEYS.eltern, [row.id]);
@@ -4692,7 +3943,6 @@ const Datenbank = (() => {
                     const id = z.dataset.z;
                     const neu = jetzt.includes(id) ? jetzt.filter((x) => x !== id) : [...jetzt, id];
                     Store.setProp(row.id, key, neu);
-                    /* Gegenrichtung mitpflegen */
                     const gegenKey = a === 'blockiert' ? ABH_KEYS.blockiertVon : ABH_KEYS.blockiert;
                     const gegen = (Store.getBlock(id).props || {})[gegenKey] || [];
                     Store.setProp(id, gegenKey, neu.includes(id) ? [...new Set([...gegen, row.id])] : gegen.filter((x) => x !== row.id));
@@ -4717,10 +3967,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /* ========================================================================
-     * MENÜS
-     * ======================================================================*/
-    /* Elf Ansichtstypen als Kachelraster — genau wie in Notion. */
     const neueAnsicht = (anker, coll, block) => {
         const r = anker.getBoundingClientRect();
         const m = UI.menu('<div class="grp">Neue Ansicht hinzufügen</div>' +
@@ -4748,25 +3994,10 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    /* DER NAME EINER ANSICHTSART STEHT IM REGISTER (E422, §8). Hier stand eine
-       zweite Karte, und sie war mit dem Register auseinandergelaufen: `pivot`
-       und `raster` fehlten ganz, und `timeline` hiess hier „Zeitleiste", im
-       Reiter aber „Zeitstrahl". Zwei deutsche Wörter für dieselbe Ansicht,
-       nebeneinander in derselben App. */
     const LAYOUT_NAMEN = new Proxy({}, {
         get: (_z, art) => Register.ansichten.name(art)
     });
-    /** Gruppieren als eigenes kleines Menü — wird von zwei Stellen gebraucht. */
-    /* ========================================================================
-     * LAYOUT-PANEL
-     * ------------------------------------------------------------------------
-     * In Notion fährt rechts eine Leiste herein statt eines Menüs: neun
-     * Kacheln für die Ansichtsart, darunter die Schalter, die zu dieser Art
-     * passen. Genau so hier.
-     * ======================================================================*/
-    /* Die Liste steht in register/ansichten.js. */
     const LAYOUTS = Register.ansichten.alle();
-    /** Eine Leiste, die rechts hereinfährt. */
     const leiste = (titel, inhalt, beiSchliessen) => {
         document.querySelectorAll('.db-leiste').forEach(x => x.remove());
         const d = document.createElement('aside');
@@ -4865,13 +4096,6 @@ const Datenbank = (() => {
         };
         zeichne();
     };
-    /* ========================================================================
-     * BEDINGTE FARBE
-     * ------------------------------------------------------------------------
-     * Eine Regel färbt die ganze Zeile, wenn eine Bedingung zutrifft. Notion
-     * nennt das „Bedingte Farbe"; in Tabellenprogrammen heisst es bedingte
-     * Formatierung. Die erste Regel, die zutrifft, gewinnt.
-     * ======================================================================*/
     const FARBWAHL = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown', 'gray'];
     const farbregeln = (view) => view.farbregeln || [];
     const farbeFuerZeile = (row, view, coll) => {
@@ -4976,7 +4200,6 @@ const Datenbank = (() => {
         };
         zeichne();
     };
-    /** KI-Autofill: welche Spalte soll die KI für alle Zeilen füllen? */
     const kiAutofillMenue = (anker, coll, view) => {
         const r = anker.getBoundingClientRect();
         const kiSpalten = Object.keys(coll.schema).filter(k => KI_TYPEN.includes(coll.schema[k].type));
@@ -5018,10 +4241,6 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    /**
-     * Datenquellen einer Ansicht. Notion zeigt hier die eigene Quelle, alle
-     * zusätzlichen und den Knopf „Neue Datenquelle".
-     */
     const quelleMenue = (anker, coll, view, _block) => {
         const r = anker.getBoundingClientRect();
         const extra = view.extraDbs || [];
@@ -5103,13 +4322,6 @@ const Datenbank = (() => {
         };
         zeichnen();
     };
-    /* ------------------------------------------------------------------------
-     * WEITERE EINSTELLUNGEN
-     * Notion versteckt hinter „⋯ Weitere Einstellungen" fünf Dinge, die eine
-     * Datenbank von einer Tabelle unterscheiden: Unter-Elemente,
-     * Abhängigkeiten, Verbindungen, Seitenlayout und Aufgaben.
-     * ----------------------------------------------------------------------*/
-    /** Die zwei Spalten, die Notion beim Einschalten der Unter-Elemente anlegt. */
     const UNTER_KEYS = { eltern: 'unterEltern', kinder: 'unterKinder' };
     const ABH_KEYS = { blockiert: 'abhBlockiert', blockiertVon: 'abhBlockiertVon' };
     const unterElementeAn = (coll, an) => {
@@ -5142,11 +4354,6 @@ const Datenbank = (() => {
         Store.updateCollection(coll.id, { schema: coll.schema, abhaengigkeiten: coll.abhaengigkeiten });
         App.zeichneSeite();
     };
-    /**
-     * Ist eine Zeile blockiert? Notion verschiebt bei „Verschiebung
-     * verwerfen" nichts; hier wird nur gewarnt, wenn eine blockierende
-     * Zeile noch offen ist.
-     */
     const blockiertDurch = (row, coll) => {
         if (!coll.abhaengigkeiten)
             return [];
@@ -5203,7 +4410,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /** Ein kleiner Erklärkasten mit einem Schalter — wie bei Notion. */
     const schalterPanel = ({ titel, text, bild, an, anText, ausText, schalten }) => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -5278,7 +4484,6 @@ const Datenbank = (() => {
                     s.aufgFrist = { name: 'Frist', type: 'date' };
             }
             Store.updateCollection(coll.id, { schema: s, istAufgaben: an });
-            /* Die Aufgabenseite fragt diese Liste ab */
             const q = Store.getMeta('aufgabenQuellen', null);
             if (an && q && !q.includes(coll.id))
                 Store.setMeta('aufgabenQuellen', [...q, coll.id]);
@@ -5291,21 +4496,9 @@ const Datenbank = (() => {
     const dbVerbindungenMenue = (anker, coll) => {
         const r = anker.getBoundingClientRect();
         const dienste = Verbindungen.DIENSTE || [];
-        /* ══ DIE ANZEIGE STELLT DIESELBE FRAGE WIE DIE SPERRE (E651) ═════════
-         * Hier stand `drin.includes(d.id) ? 'an' : 'aus'` — und bei einer nie
-         * angefassten Datenbank ist das für JEDEN Dienst falsch. Das Menü zeigte
-         * „GitHub · aus", während der GitHub-Spiegel lief.
-         *
-         * `Spiegel.darf` beantwortet die Frage an EINER Stelle: fehlt das Feld,
-         * ist nichts eingerichtet und alles erlaubt; eine ausdrückliche Liste
-         * gilt. Zwei getrennte Regeln liefen unweigerlich auseinander — das war
-         * genau der Zustand davor (§8). */
         const offen = (id) => typeof Spiegel !== 'undefined' && Spiegel.darf
             ? Spiegel.darf(coll, id)
             : (coll.verbindungen || []).includes(id);
-        /* Beim ersten Anfassen entsteht eine echte Liste aus dem, was HEUTE
-           gilt — sonst würde ein einziger Klick alle anderen Dienste
-           mitsperren, ohne dass jemand das gesagt hat. */
         const jetzt = Array.isArray(coll.verbindungen)
             ? coll.verbindungen.slice()
             : dienste.filter((d) => offen(d.id)).map((d) => d.id);
@@ -5325,7 +4518,6 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    /** Notions „Seitenlayout individuell anpassen" für die Datensatzseite. */
     const seitenLayoutPanel = (coll) => {
         const l = coll.seitenLayout || { breite: 'normal', eigenschaften: 'oben', kommentare: true, rueck: true };
         const o = document.createElement('div');
@@ -5372,7 +4564,6 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    /** „Datenquellen verwalten" — was gehört dieser Datenbank, wer nutzt sie? */
     const quellenVerwalten = (_anker, coll, _view, _block) => {
         const nutzer = Object.values(Store.cache.views)
             .filter(v => v.collectionId === coll.id ||
@@ -5423,10 +4614,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /**
-     * „Als ganze Seite öffnen" — die Datenbank füllt den Hauptbereich allein,
-     * ohne den Text drumherum. Zurück geht es über die Krume.
-     */
     const ganzeSeite = (coll, view, block) => {
         App.zeigeSonder(coll.name || 'Datenbank', (wrap) => {
             const kopf = document.createElement('h1');
@@ -5442,8 +4629,6 @@ const Datenbank = (() => {
     const ansichtMenue = (anker, coll, view, block) => {
         const r = anker.getBoundingClientRect();
         const sichtbar = Object.keys(coll.schema).filter(k => !(view.hidden || []).includes(k)).length;
-        /* Auch hier das Register (E422). Dieselbe Karte stand zweimal in
-           derselben Datei — einmal für den Reiter, einmal für das Menü. */
         const LAY_ICON = new Proxy({}, {
             get: (_z, art) => Register.ansichten.icon(art)
         });
@@ -5489,7 +4674,6 @@ const Datenbank = (() => {
             '<button data-a="lock"><span class="mi">🔒</span>' + (view.locked ? 'Entsperren' : 'Ansicht sperren') + '</button>' +
             '<button data-a="del"><span class="mi">🗑</span>Ansicht löschen</button>', r.left, r.bottom + 4, { platzhalter: 'Einstellung suchen …', breite: '300px',
             titel: 'Einstellungen', kopf: kopfKarte });
-        /* Der ⓘ-Knopf in der Kopfkarte */
         m.querySelector('[data-info]')?.addEventListener('click', async (ev) => {
             ev.stopPropagation();
             const t = await UI.frage('Beschreibung dieser Ansicht', view.beschreibung || '');
@@ -5499,7 +4683,6 @@ const Datenbank = (() => {
                 App.zeichneSeite();
             }
         });
-        /* Name der Ansicht direkt in der Kopfkarte ändern */
         const nf = m.querySelector('.av-name');
         if (!nf)
             return;
@@ -5626,7 +4809,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /** Alle Einstellungen einer Ansicht — ohne das, was zur Ansicht selbst gehört. */
     const ANSICHT_EIGEN = ['id', 'collectionId', 'name', 'created'];
     const ansichtKopie = (view) => {
         const k = {};
@@ -5637,9 +4819,6 @@ const Datenbank = (() => {
         });
         return k;
     };
-    /* Ansichtsvorlagen: eine fertig eingerichtete Ansicht bekommt einen Namen
-       und lässt sich auf jede andere Datenbank anwenden. Notion kennt nur
-       Seitenvorlagen, keine Ansichtsvorlagen. */
     const ansichtVorlagen = (anker, coll, view) => {
         const r = anker.getBoundingClientRect();
         const liste = Store.getMeta('ansichtVorlagen', []) || [];
@@ -5656,7 +4835,6 @@ const Datenbank = (() => {
             if (v) {
                 const vor = liste[Number(v.dataset.v)];
                 const neu = Store.addView(coll.id, vor.daten.layout || 'table', vor.name);
-                /* Nur Einstellungen übernehmen, deren Spalten es hier auch gibt. */
                 const d = JSON.parse(JSON.stringify(vor.daten));
                 const gibt = (k) => !k || !!coll.schema[k];
                 if (!gibt(d.groupBy))
@@ -5705,12 +4883,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /* ------------------------------------------------------------------------
-     * FILTER-EDITOR
-     * ------------------------------------------------------------------------
-     * Notions „Advanced filter": Regeln und Gruppen, UND oder ODER, mehrere
-     * Ebenen tief. Jede Zeile lässt sich einzeln ändern.
-     * ----------------------------------------------------------------------*/
     const filterMenue = (_anker, coll, view, _block) => {
         view.filters = view.filters || { operator: 'and', rules: [] };
         const o = document.createElement('div');
@@ -5730,7 +4902,6 @@ const Datenbank = (() => {
                 '</div>';
         document.body.appendChild(o);
         const keys = Object.keys(coll.schema);
-        /* Braucht dieser Operator überhaupt einen Wert? */
         const ohneWert = (op) => /^(ist leer|ist nicht leer|ist aktiviert|ist nicht aktiviert|ist heute|ist gestern|ist morgen|ist diese Woche|ist letzte Woche|ist nächste Woche|ist dieser Monat|ist letzter Monat|ist in den|liegt in der)/.test(op);
         const zeichneGruppe = (gruppe, pfad, tiefe) => {
             const kopf = tiefe === 0 ? '' :
@@ -5892,8 +5063,6 @@ const Datenbank = (() => {
                 KiBau.filterSchreiben(coll, view);
                 return;
             }
-            /* Filtervorlagen — Notion hat das nicht: einmal gebaute Filter
-               bekommen einen Namen und lassen sich überall wieder anwenden. */
             if (elVon(e)?.closest('[data-a="vorlagen"]')) {
                 const r2 = (htmlVon(e) ?? document.body).getBoundingClientRect();
                 const liste = Store.getMeta('filterVorlagen', []) || [];
@@ -5941,8 +5110,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /* Mehrstufige Sortierung wie in Notion — dazu, was Notion nicht kann:
-       nach einer Formel sortieren, ohne dafür eine Spalte anzulegen. */
     const sortMenue = (anker, coll, view, _block) => {
         const r = anker.getBoundingClientRect();
         const m = UI.menu('', r.left, r.bottom + 4);
@@ -6046,17 +5213,10 @@ const Datenbank = (() => {
             m.remove();
         });
     };
-    /**
-     * Legt eine Eigenschaft an. `stelle` sagt, an welcher Position sie im
-     * Schema landen soll — Notion nennt das „Links einfügen" und
-     * „Rechts einfügen". Ohne Angabe kommt sie ans Ende.
-     */
     const eigenschaftAnlegen = async (coll, t, stelle = -1, neben = null) => {
         const name = await UI.frage('Name der Eigenschaft', propTyp(t).name);
         if (!name)
             return null;
-        /* Ids.short, nie uid().slice: ein rein numerischer Schlüssel wandert
-           in Object.keys an Position 0, und die Spalte stünde immer vorn (E96). */
         const key = Ids.short(5);
         const def = { name, type: t };
         if (['select', 'status', 'multi'].includes(t))
@@ -6075,8 +5235,6 @@ const Datenbank = (() => {
             def.auftrag = KI_AUFTRAG[t] || KI_AUFTRAG['ki'];
         if (t === 'button')
             def.knopfText = 'Ausführen';
-        /* Die Stelle jetzt bestimmen, nicht vorhin: dazwischen lagen zwei
-           Fragen an den Menschen, und das Schema kann sich geändert haben. */
         if (neben && neben.nebenKey) {
             const i = Object.keys(coll.schema).indexOf(neben.nebenKey);
             stelle = i < 0 ? Object.keys(coll.schema).length : i + (neben.versatz ?? 0);
@@ -6085,7 +5243,6 @@ const Datenbank = (() => {
             coll.schema[key] = def;
         }
         else {
-            /* Reihenfolge der Schlüssel bestimmt die Spaltenfolge — also neu bauen */
             const keys = Object.keys(coll.schema);
             const neu = {};
             keys.slice(0, stelle).forEach(k => { neu[k] = coll.schema[k]; });
@@ -6101,7 +5258,6 @@ const Datenbank = (() => {
             relationEinrichten(coll, key);
         return key;
     };
-    /** Typauswahl mit Suche — dieselbe Liste wie beim Ändern eines Typs. */
     const typWahl = (anker, titel, danach) => {
         const r = anker.getBoundingClientRect();
         const html = typGruppen().map(([name, ids]) => `<div class="grp">${name}</div>` +
@@ -6122,38 +5278,8 @@ const Datenbank = (() => {
         return m;
     };
     const neueEigenschaft = (anker, coll, _block) => typWahl(anker, 'Neue Eigenschaft', (t) => eigenschaftAnlegen(coll, t, -1));
-    /**
-     * „Links einfügen" und „Rechts einfügen" — und zwar neben DIESER Spalte.
-     *
-     * HIER STAND EINE ZAHL, UND DAS WAR DER FEHLER. Das Spaltenmenü rechnete
-     * beim Öffnen `idx = keys.indexOf(key)` aus und reichte `idx + 1` weiter.
-     * Zwischen dem Öffnen des Menüs und dem Anlegen liegen aber zwei Fragen an
-     * den Menschen — die Typwahl und der Name —, und in der Zeit kann sich das
-     * Schema geändert haben. Fand `indexOf` den Schlüssel nicht, kam **−1**
-     * heraus, und `−1 + 1` ist `0`: die neue Spalte landete **ganz vorn**.
-     *
-     * Nachgestellt: von drei Läufen einer. `test33` hat es als „flockig"
-     * gemeldet, und das sah lange nach einem Fehler im Prüflauf aus.
-     *
-     * Jetzt wird die Stelle erst beim Anlegen bestimmt, aus dem Schema, das
-     * dann wirklich da ist. Und wenn die Nachbarspalte inzwischen weg ist,
-     * geht die neue ans **Ende** — nicht an den Anfang. Ans Ende ist harmlos
-     * und nachvollziehbar; ganz vorn ist der einzige Platz, an dem niemand
-     * sie sucht.
-     */
     const neueEigenschaftNeben = (anker, coll, _view, nebenKey, versatz) => typWahl(anker, versatz === 0 ? 'Links einfügen' : 'Rechts einfügen', (t) => eigenschaftAnlegen(coll, t, -1, { nebenKey, versatz }));
-    /* „Eigenschaft links/rechts einfügen". Der Unterstrich sagt: hier ruft im
-       Modul selbst niemand an — der Weg führt über das Spaltenmenü, das
-       `typWahl` und `eigenschaftAnlegen` direkt benutzt. Die Hülle bleibt,
-       weil sie beide Schritte an einer Stelle zeigt. */
     const neueEigenschaftBei = (anker, coll, _view, stelle) => typWahl(anker, stelle === 0 ? 'Links einfügen' : 'Neue Eigenschaft', (t) => eigenschaftAnlegen(coll, t, stelle));
-    /* ------------------------------------------------------------------------
-     * TYP-AUSWAHL
-     * ------------------------------------------------------------------------
-     * Wie in Notion: oben die KI-Felder als eigene Gruppe, darunter alle Typen
-     * in zwei Spalten, mit Suchfeld. Bei über dreissig Typen findet man sonst
-     * nichts mehr.
-     * ----------------------------------------------------------------------*/
     const TYP_GRUPPEN = [
         ['KI-Autofill', ['ki-fassung', 'ki-sprache', 'ki-worte', 'ki']],
         ['Basis', ['text', 'number', 'select', 'multi', 'status', 'date', 'person',
@@ -6163,25 +5289,7 @@ const Datenbank = (() => {
         ['Automatisch', ['created', 'edited', 'createdBy', 'editedBy']],
         ['Verbindungen', ['gdrive', 'figma', 'githubpr', 'zendesk']]
     ];
-    /* `title` steht mit Absicht in keiner Gruppe: eine Spalte lässt sich nicht
-       in den Titel verwandeln, es gibt genau einen. */
     const NICHT_WAEHLBAR = ['title'];
-    /**
-     * Die Gruppen des Menüs — plus eine Auffanggruppe für alles, was im
-     * Register steht und oben nicht genannt ist.
-     *
-     * WARUM DIE AUFFANGGRUPPE NÖTIG IST. `TYP_GRUPPEN` ist eine
-     * Literalliste, `Register.eigenschaften` die Wahrheit. Heute decken sich
-     * beide — 34 hier, 35 dort, und der Unterschied ist `title`. Wer aber
-     * einen Typ ins Register einträgt und diese Liste vergisst, bekommt
-     * einen Typ, den es gibt und den niemand auswählen kann: kein Fehler,
-     * keine Meldung, nur ein Eintrag, der im Menü fehlt.
-     *
-     * Das Register hat für genau diesen Fall `inGruppe('Weiteres')`. Hier
-     * dasselbe, damit nichts hinten runterfällt. `test142` prüft, dass die
-     * Auffanggruppe im Normalfall LEER ist — sonst wäre sie eine Ausrede
-     * dafür, die Gliederung nicht zu pflegen.
-     */
     const typGruppen = () => {
         const genannt = new Set(TYP_GRUPPEN.flatMap(([, ids]) => ids).concat(NICHT_WAEHLBAR));
         const rest = TYPEN.map((t) => t.id).filter((id) => !genannt.has(id));
@@ -6222,12 +5330,6 @@ const Datenbank = (() => {
             UI.toast('Typ geändert: ' + propTyp(def.type).name);
         });
     };
-    /**
-     * Der Dialog für die Prüfregeln einer Spalte.
-     * Zeigt am Ende, wie viele bestehende Zeilen die neuen Regeln verletzen —
-     * damit man nicht blind eine Regel setzt, gegen die die halbe Datenbank
-     * verstösst.
-     */
     const regelnDialog = (coll, key) => {
         const def = coll.schema[key];
         const zahl = ['number', 'duration'].includes(def.type);
@@ -6255,8 +5357,6 @@ const Datenbank = (() => {
                         `<input id="rm" value="${esc(def.muster || '')}" placeholder="eigener regulärer Ausdruck" style="margin-top:6px">` +
                         `<input id="rmt" value="${esc(def.musterText || '')}" placeholder="Was soll dastehen, wenn es nicht passt?" style="margin-top:6px">` +
                         '</label>') +
-                /* Statusübergänge — Notion kennt sie nicht: dort darf jeder Wert
-                   auf jeden anderen springen. */
                 ((def.type === 'status' || def.type === 'select') && (def.options || []).length
                     ? '<div class="ue-block"><b>Erlaubte Übergänge</b>' +
                         '<div class="ue-hinweis">Je Wert: worauf darf er springen? Nichts angehakt ' +
@@ -6340,7 +5440,6 @@ const Datenbank = (() => {
             }
             if (elVon(e)?.closest('[data-a="ok"]')) {
                 Object.assign(coll.schema[key], lesen());
-                /* Leere Angaben wieder wegräumen, damit hatRegeln() stimmt */
                 ['muster', 'musterText', 'regel', 'regelText', 'regelMin', 'regelMax', 'uebergaenge']
                     .forEach(k2 => {
                     if (coll.schema[key][k2] === '' || coll.schema[key][k2] === undefined)
@@ -6358,8 +5457,6 @@ const Datenbank = (() => {
         });
     };
     const spaltenMenue = (anker, coll, view, key, _block) => {
-        /* Eine gesperrte Datenbank lässt ihren Aufbau nicht mehr ändern —
-           Werte darf man weiter eintragen. Genau wie bei Notion. */
         if (coll.gesperrt) {
             UI.toast('Diese Datenbank ist gesperrt. Über das Ansichtsmenü lässt sie sich entsperren.');
             return;
@@ -6369,9 +5466,7 @@ const Datenbank = (() => {
         const keys = Object.keys(coll.schema);
         const idx = keys.indexOf(key);
         const umbruchAn = (view.umbruch || []).includes(key);
-        const m = UI.menu(
-        /* Kopf wie bei Notion: Symbol, Namensfeld, ⓘ für die Beschreibung */
-        '<div class="sp-kopf">' +
+        const m = UI.menu('<div class="sp-kopf">' +
             `<button class="sp-icon" data-a="icon" title="Symbol wählen">${def.icon || propTyp(def.type).icon}</button>` +
             `<input class="sp-name" value="${esc(def.name)}" spellcheck="false" placeholder="Eigenschaftsnamen eingeben …">` +
             '<button class="sp-info" data-a="beschreibung" title="Beschreibung">ⓘ</button>' +
@@ -6412,8 +5507,6 @@ const Datenbank = (() => {
             '<button data-a="links"><span class="mi">←</span>Nach links</button>' +
             '<button data-a="rechts"><span class="mi">→</span>Nach rechts</button>' +
             '<button data-a="hide"><span class="mi">👁</span>In dieser Ansicht ausblenden</button>' +
-            /* Ausblenden versteckt nur — Rechte sperren wirklich. Deshalb stehen
-               beide nebeneinander und heissen verschieden. */
             (typeof Feldrechte !== 'undefined'
                 ? '<button data-a="feldrechte"><span class="mi">🔒</span>Rechte für diese Spalte' +
                     `<span class="ms">${Feldrechte.stufe(coll.id, key) === 'voll' ? 'offen' : 'gesperrt'}</span></button>`
@@ -6425,7 +5518,6 @@ const Datenbank = (() => {
                 ? '<hr><button data-a="dup"><span class="mi">⧉</span>Eigenschaft duplizieren</button>' +
                     '<button data-a="del"><span class="mi">🗑</span>Eigenschaft löschen</button>'
                 : ''), r.left, r.bottom + 2);
-        /* Der Name lässt sich direkt oben im Menü ändern — wie bei Notion. */
         const nameFeld = m.querySelector('.sp-name');
         if (!nameFeld)
             return;
@@ -6463,7 +5555,6 @@ const Datenbank = (() => {
                 typMenue(anker, coll, key);
                 return;
             }
-            /* Eigenes Symbol für die Spalte */
             if (a === 'icon') {
                 UI.emojiWaehlen(b, (em) => {
                     def.icon = em;
@@ -6473,7 +5564,6 @@ const Datenbank = (() => {
                 });
                 return;
             }
-            /* Gruppieren nach genau dieser Spalte — an oder aus */
             if (a === 'gruppe') {
                 m.remove();
                 const anJetzt = view.groupBy === key;
@@ -6482,19 +5572,16 @@ const Datenbank = (() => {
                 UI.toast(anJetzt ? 'Gruppierung aufgehoben' : 'Gruppiert nach ' + def.name);
                 return;
             }
-            /* Fussrechnung für diese Spalte */
             if (a === 'berechnen') {
                 m.remove();
                 rechnenMenue(anker, coll, view, key, Store.rowsOf(coll.id));
                 return;
             }
-            /* Neue Eigenschaft links oder rechts daneben */
             if (a === 'neulinks' || a === 'neurechts') {
                 m.remove();
                 neueEigenschaftNeben(anker, coll, view, key, a === 'neurechts' ? 1 : 0);
                 return;
             }
-            /* Untermenüs */
             if (a === 'optionen') {
                 m.remove();
                 optionenEditor(coll, key);
@@ -6543,23 +5630,10 @@ const Datenbank = (() => {
                 });
                 return;
             }
-            /* --------------------------------------------------------------------
-             * DIE EINHEIT EINER ZAHLENSPALTE (E412)
-             *
-             * Die acht Vorschläge sind das, was in dieser App wirklich vorkommt —
-             * Redurs Projekte rechnen in Franken, Stunden, Metern und Ampere.
-             * Aber die Liste ist NICHT die Grenze: das Feld darunter nimmt, was
-             * jemand eintippt. Eine feste Liste wäre genau der Fehler, den §20
-             * beim Spaltentyp beschreibt — streng statt richtig.
-             * ------------------------------------------------------------------*/
             if (a === 'einheit') {
                 const VORSCHLAG = ['CHF', '€', '%', 'h', 'min', 'kg', 'm', 'A'];
                 m.innerHTML = '<div class="grp">Einheit hinter der Zahl</div>' +
                     VORSCHLAG.map(e => `<button data-e="${esc(e)}">${def.einheit === e ? '✓ ' : ''}${esc(e)}</button>`).join('') +
-                    /* `.menu-suche` ist die Klasse, die es GIBT — sie stylt jedes
-                       Eingabefeld in einem Menü (bausteine.css). Eine eigene zu
-                       erfinden wäre der Fehler aus E406: sieben Tokens waren dort
-                       erfunden und je zweimal unsichtbar. */
                     '<hr><div class="grp">Oder eigene</div>' +
                     '<div class="menu-suche">' +
                     `<input data-eigen value="${esc(String(def.einheit || ''))}" ` +
@@ -6704,8 +5778,6 @@ const Datenbank = (() => {
                 App.zeichneSeite();
             }
             if (a === 'del') {
-                /* Erst zeigen, was daran hängt — ein „Wirklich löschen?" beantwortet
-                   die falsche Frage. Die richtige ist: was geht dabei kaputt? */
                 const tun = () => {
                     delete coll.schema[key];
                     Store.updateCollection(coll.id, { schema: coll.schema });
@@ -6722,7 +5794,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /* --- Auswahl-Optionen bearbeiten ---------------------------------------- */
     const optionenEditor = (coll, key) => {
         const def = coll.schema[key];
         def.options = def.options || [];
@@ -6742,9 +5813,6 @@ const Datenbank = (() => {
             fuelle(o, '#op', def.options.length
                 ? def.options.map((opt, i) => `<div class="opt-zeile"><span class="tag bg-${opt.color}">${esc(opt.name)}</span>` +
                     '<div class="opt-farben">' +
-                    /* Der Titel war die rohe Kennung („purple"). Jetzt der Name,
-                       und das Gewählte trägt seinen Zustand, statt ihn nur zu
-                       färben (§38). */
                     FARBEN.map(f => `<button data-i="${i}" data-f="${f}" ` +
                         `title="${esc(Farben.name(f))}" aria-label="${esc(Farben.name(f))}" ` +
                         `aria-pressed="${opt.color === f ? 'true' : 'false'}" ` +
@@ -6791,7 +5859,6 @@ const Datenbank = (() => {
                 o.querySelector('[data-a="add"]')?.click();
         });
     };
-    /* --- Rollup einrichten --------------------------------------------------- */
     const rollupEditor = (coll, key) => {
         const def = coll.schema[key];
         const relKeys = Object.keys(coll.schema).filter(k => coll.schema[k].type === 'relation');
@@ -6859,13 +5926,6 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    /* ========================================================================
-     * SPALTEN AUFRÄUMEN (L27, E178)
-     * ------------------------------------------------------------------------
-     * Die Rechnung steht in `cleanup.ts` und ändert nichts. Hier steht der
-     * Weg dorthin und — der eigentliche Punkt — die VORSCHAU: welche Zeile
-     * sähe danach wie aus. Erst dann gibt es einen Knopf, der schreibt.
-     * ======================================================================*/
     const aufraeumenDialog = (coll) => {
         const spalten = Aufraeumen.spalten(coll);
         if (!spalten.length) {
@@ -6918,9 +5978,6 @@ const Datenbank = (() => {
                     esc(vorschau.spalte) + '" ist keine Zeile betroffen.</div>';
                 return;
             }
-            /* HÖCHSTENS ZEHN ZEILEN ZEIGEN, und sagen, dass es mehr sind. Eine
-               Vorschau mit dreihundert Zeilen liest niemand, und eine, die
-               schweigend abschneidet, verspricht dreihundert und zeigt zehn. */
             const zeige = vorschau.zeilen.slice(0, 10);
             kasten.innerHTML =
                 '<div class="au-kopf">' + vorschau.betroffen + ' von ' + vorschau.gesamt +
@@ -6951,19 +6008,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /* ========================================================================
-     * WAS WÄRE, WENN (L28, E176)
-     * ------------------------------------------------------------------------
-     * Die Rechnung steht in `whatif.ts` und schreibt beim Suchen nichts. Hier
-     * steht nur der Weg dorthin: welche Zeile, welche Stellschraube, welches
-     * Ziel — und ein Knopf, der das Ergebnis übernimmt, wenn ein Mensch das
-     * will.
-     *
-     * DAS ERGEBNIS WIRD ANGEZEIGT, NICHT EINGETRAGEN. Eine Zielwertsuche ist
-     * eine Frage, keine Anweisung; wer sie stellt, will erst einmal die
-     * Antwort sehen. Excel schreibt sofort und bietet danach „Rückgängig" an
-     * — das ist einen Klick billiger und einen Gedanken teurer.
-     * ======================================================================*/
     const wasWaereWenn = (coll, view) => {
         const zeilen = Datenbank.zeilen ? Datenbank.zeilen(coll, view) : Store.rowsOf(coll.id);
         if (!zeilen.length) {
@@ -6990,15 +6034,10 @@ const Datenbank = (() => {
                 '<label>Zeile ' +
                 '<select id="ww-zeile">' + zeilen.map((z, i) => `<option value="${esc(z.id)}"${i === 0 ? ' selected' : ''}>` +
                 `${esc(z.text || 'Ohne Titel')}</option>`).join('') + '</select></label>' +
-                /* Der heutige Wert gehört NEBEN die Spalte, um die es geht, nicht
-                   darüber: mit Augen gesehen stand „Ziel steht gerade bei 600"
-                   eine Zeile über der Auswahl und sagte etwas über eine Spalte,
-                   die man noch gar nicht gewählt hatte (§55). */
                 '<label>Diese Spalte soll … ' + auswahl('ww-ziel', ziele) +
                 '<span id="ww-jetzt" class="ww-jetzt"></span></label>' +
                 '<label>… diesen Wert erreichen <input id="ww-wunsch" type="number" step="any"></label>' +
                 '<label>… indem sich diese ändert ' + auswahl('ww-stell', stellen) + '</label>' +
-                /* Die Antwort auf die gestellte Frage — nicht in Hinweisgrau. */
                 '<div id="ww-ergebnis" class="ww-ergebnis" role="status"></div>' +
                 '</div>' +
                 '<div class="fbtns">' +
@@ -7038,8 +6077,6 @@ const Datenbank = (() => {
                 }
                 gefunden = r.wert;
                 knopfUebernimm.disabled = false;
-                /* Gerundet ANGEZEIGT, ungerundet übernommen: „104,00000000001" liest
-                   sich falsch, und „104" wäre gelogen, wenn es 104,3 heissen müsste. */
                 erg.textContent = esc(coll.schema[el('ww-stell').value].name) + ' = ' +
                     (Math.round(r.wert * 1e6) / 1e6) + ' — dann steht ' +
                     esc(coll.schema[el('ww-ziel').value].name) + ' bei ' +
@@ -7090,19 +6127,12 @@ const Datenbank = (() => {
             '<button data-a="link"><span class="mi">🔗</span>Link zur Ansicht kopieren</button>' +
             '<button data-a="csv"><span class="mi">⭳</span>Als CSV exportieren</button>' +
             '<button data-a="xlsx"><span class="mi">📗</span>Als Excel-Mappe (.xlsx)</button>' +
-            /* .ods für alle, die kein Excel haben — LibreOffice, OpenOffice und
-               Google Sheets öffnen es ohne Umweg. */
             '<button data-a="ods"><span class="mi">📙</span>Als OpenDocument (.ods)</button>' +
             '<button data-a="csvin"><span class="mi">⭱</span>CSV einlesen</button>' +
             '<button data-a="ai"><span class="mi">✨</span>Mit KI auswerten</button>' +
             '<button data-a="dubletten"><span class="mi">⧉</span>Dubletten finden</button>' +
-            /* Nur wo Text steht: eine Datenbank aus lauter Zahlen und Daten hat
-               keine Leerzeichen am Rand (L27, E178). */
             (Aufraeumen.spalten(coll).length
                 ? '<button data-a="putzen"><span class="mi">🧹</span>Spalten aufräumen …</button>' : '') +
-            /* Nur wo es etwas zu rechnen gibt: ohne gerechnete Spalte hat eine
-               Zielwertsuche kein Ziel, und ein Eintrag, der nur eine Absage
-               zeigt, ist kein Eintrag (L28, E176). */
             (Object.values(coll.schema).some((d) => d && (d.type === 'formula' || d.type === 'rollup'))
                 ? '<button data-a="wenn"><span class="mi">⚖</span>Was wäre, wenn …</button>' : '') +
             (typeof Pruefsatz !== 'undefined'
@@ -7335,11 +6365,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /**
-     * Rückt eine Formel lesbar ein: nach jeder öffnenden Klammer eine Ebene
-     * tiefer, nach jedem Komma eine neue Zeile. Text in Anführungszeichen
-     * bleibt unangetastet. Notion hat dafür nichts.
-     */
     const formelEinruecken = (src) => {
         let aus = '', tiefe = 0, imText = false, anf = '';
         const zeilenumbruch = () => { aus += '\n' + '  '.repeat(tiefe); };
@@ -7383,10 +6408,6 @@ const Datenbank = (() => {
         }
         return aus.split('\n').map(z => z.replace(/\s+$/, '')).filter(z => z.trim()).join('\n');
     };
-    /**
-     * Zerlegt eine Formel in ihre Teilausdrücke — jede vollständige Klammer
-     * und die ganze Formel. So sieht man, was jeder Baustein für sich ergibt.
-     */
     const teilausdruecke = (src) => {
         const raus = [];
         let imText = false, anf = '';
@@ -7404,7 +6425,6 @@ const Datenbank = (() => {
                 continue;
             }
             if (c === '(') {
-                /* Den Funktionsnamen davor mitnehmen, damit „sum(…)" dasteht */
                 let j = i - 1;
                 while (j >= 0 && /[A-Za-zÄÖÜäöüß0-9_.]/.test(src[j]))
                     j--;
@@ -7422,10 +6442,8 @@ const Datenbank = (() => {
         const ganz = src.trim();
         if (ganz && !raus.includes(ganz))
             raus.push(ganz);
-        return raus.slice(-25); /* die letzten 25 reichen zum Verstehen */
+        return raus.slice(-25);
     };
-    /* --- Formel-Editor ------------------------------------------------------ */
-    /** Was für ein Wert ist das? Für die Anzeige im Formeleditor. */
     const typName = (v) => {
         if (v === null || v === undefined || v === '')
             return 'leer';
@@ -7525,9 +6543,6 @@ const Datenbank = (() => {
         const out = overlay.querySelector('#fxout');
         if (!ta || !out)
             return;
-        /* Namen, die in der Formel stehen, aber keine Spalte sind. Notion zeigt
-           dafür einen Fehler; hier bleibt die Formel gültig — sie rechnet dann
-           mit „leer" —, aber der Editor sagt es wenigstens. */
         const unbekannteSpalten = (src) => {
             const namen = new Set();
             String(src || '').replace(/prop\s*\(\s*(["'])([^"']*)\1\s*\)/g, (_, _q, n) => {
@@ -7552,7 +6567,6 @@ const Datenbank = (() => {
                     ' — die Formel rechnet damit als wäre sie leer.';
                 return;
             }
-            /* Mit der ersten Zeile testen, damit man das Ergebnis sieht */
             const erste = Store.rowsOf(coll.id)[0];
             if (erste) {
                 const r = Formula.run(ta.value, (name) => {
@@ -7564,7 +6578,6 @@ const Datenbank = (() => {
                     return wert(erste, k, coll);
                 }, fremdWert, formelUmgebung(erste, coll));
                 out.style.color = r.ok ? 'var(--c-green)' : 'var(--c-red)';
-                /* Notion sagt nie, was für ein Wert herauskommt. Hier steht es dabei. */
                 out.textContent = r.ok
                     ? '✓ ' + typName(r.wert) + ' · Beispiel: ' + Formula.anzeige(r.wert)
                     : '⚠ ' + r.fehler;
@@ -7582,17 +6595,11 @@ const Datenbank = (() => {
             ta.focus();
             pruefe();
         }));
-        /* ------------------------------------------------------------------
-         * FORMEL-WERKSTATT
-         * Zwei Dinge, die Notion nicht hat: eine Formel lesbar einrücken, und
-         * Schritt für Schritt zeigen, was jeder Teilausdruck ergibt.
-         * ---------------------------------------------------------------- */
         overlay.querySelector('#fxfmt')?.addEventListener('click', () => {
             ta.value = formelEinruecken(ta.value);
             pruefe();
             UI.toast('Formel eingerückt');
         });
-        /* Die KI schreibt — geprüft wird trotzdem hier, an einer echten Zeile. */
         overlay.querySelector('#fxki')?.addEventListener('click', () => {
             KiBau.formelSchreiben(coll, key, ta.value, (neu) => {
                 ta.value = neu;
@@ -7654,7 +6661,6 @@ const Datenbank = (() => {
         overlay.addEventListener('click', e => { if (e.target === overlay)
             overlay.remove(); });
     };
-    /* --- Suche in der Datenbank -------------------------------------------- */
     const suchFeld = (wrap, _coll, _view, _block) => {
         let box = wrap.querySelector('.dbsuche');
         if (box) {
@@ -7675,7 +6681,6 @@ const Datenbank = (() => {
             });
         });
     };
-    /* --- CSV-Export --------------------------------------------------------- */
     const csvExport = (coll, view) => {
         const keys = Object.keys(coll.schema);
         const rows = zeilen(coll, view);
@@ -7694,10 +6699,6 @@ const Datenbank = (() => {
         a.click();
         UI.toast('CSV heruntergeladen');
     };
-    /* ========================================================================
-     * ZEILENVORLAGEN   (Notions „New with template")
-     * ======================================================================*/
-    /** Platzhalter in Vorlagen: heute, morgen, jetzt, {datum} … */
     const platzhalter = (v) => {
         if (typeof v !== 'string')
             return v;
@@ -7726,7 +6727,6 @@ const Datenbank = (() => {
         const jahresstart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
         return Math.ceil(((t.getTime() - jahresstart.getTime()) / 86400000 + 1) / 7);
     };
-    /** Einen Eintrag aus einer Vorlage anlegen — auch die Unterseiten kommen mit. */
     const ausVorlage = (coll, v) => {
         const props = JSON.parse(JSON.stringify(v.props || {}));
         Object.keys(props).forEach(k => { props[k] = platzhalter(props[k]); });
@@ -7801,7 +6801,6 @@ const Datenbank = (() => {
                 });
                 return;
             }
-            /* Aus einer Vorlage anlegen */
             const v = liste[Number(b.dataset.v)];
             if (!v)
                 return;
@@ -7810,11 +6809,6 @@ const Datenbank = (() => {
             UI.toast('Eintrag aus Vorlage angelegt');
         });
     };
-    /* ------------------------------------------------------------------------
-     * Wiederkehrende Vorlagen — Notions „Repeat" an einer Datenbankvorlage.
-     * Die Vorlage legt sich in einem festen Takt selbst an. Geprüft wird beim
-     * Start und danach stündlich; jede Periode kommt höchstens einmal dran.
-     * ----------------------------------------------------------------------*/
     const WDH_ARTEN = [
         ['', 'Nicht wiederholen'],
         ['taeglich', 'Jeden Tag'],
@@ -7940,12 +6934,6 @@ const Datenbank = (() => {
             }
         });
     };
-    /* ========================================================================
-     * AUTOMATIONEN
-     * ------------------------------------------------------------------------
-     * Notions Datenbank-Automationen: „Wenn etwas passiert, dann tu das."
-     * Hier läuft alles im Browser — kein Dienst, keine Wartezeit.
-     * ======================================================================*/
     const AUSLOESER = [
         ['zeile-neu', 'Ein Eintrag wird angelegt'],
         ['prop-geaendert', 'Eine Eigenschaft ändert sich'],
@@ -7955,14 +6943,7 @@ const Datenbank = (() => {
         ['formular-neu', 'Über das Formular kommt eine Antwort'],
         ['zeit-vor', 'Einige Tage vor einem Datum'],
         ['zeit-nach', 'Einige Tage nach einem Datum'],
-        /* Notions dritter Auslösertyp: „Every {frequency}". Er hängt an keiner
-           Spalte und an keiner Änderung, sondern nur an der Uhr. */
         ['wiederkehrend', 'Wiederkehrend nach Zeitplan'],
-        /* --- Sechs, die an etwas anderem hängen als an einer Spalte --------
-         * Der Filter einer Ansicht ist eine Zustandsgrenze: eine Zeile ist
-         * drin oder draussen. Interessant ist der Übergang — „ist gerade
-         * hereingekommen" sagt mehr als „hat den Status geändert".
-         * ------------------------------------------------------------------ */
         ['ansicht-rein', 'Ein Eintrag kommt neu in eine Ansicht'],
         ['ansicht-raus', 'Ein Eintrag fällt aus einer Ansicht heraus'],
         ['kommentar-neu', 'Jemand schreibt einen Kommentar'],
@@ -7970,29 +6951,10 @@ const Datenbank = (() => {
         ['datei-neu', 'Eine Datei wird angehängt'],
         ['zeile-zurueck', 'Ein Eintrag kommt aus dem Papierkorb zurück']
     ];
-    /* Diese Auslöser hängen an keiner einzelnen Spalte. */
     const OHNE_SPALTE = ['zeile-neu', 'zeile-geaendert', 'zeile-weg', 'formular-neu',
         'wiederkehrend', 'ansicht-rein', 'ansicht-raus',
         'kommentar-neu', 'erwaehnung', 'zeile-zurueck'];
-    /* ------------------------------------------------------------------------
-     * BEDINGUNGEN
-     * ------------------------------------------------------------------------
-     * Bisher konnte man an eine Automation Filterregeln hängen — „Status ist
-     * Fertig". Das beantwortet aber nur Fragen über den Zustand, nie über die
-     * Veränderung: „war das Feld vorher leer?", „ist die Zahl gewachsen?",
-     * „hat sich überhaupt etwas geändert?". Genau daran scheitern in Notion
-     * die meisten Automationen — sie feuern auch, wenn derselbe Wert nochmal
-     * geschrieben wird.
-     *
-     * Deshalb hier ein benannter Katalog. Eine Bedingung mit `art` wird von
-     * dieser Liste beantwortet; eine ohne `art` bleibt eine gewöhnliche
-     * Filterregel. Alte Automationen laufen also unverändert weiter.
-     *
-     * Spalte  = braucht eine Spalte      Zahl = braucht eine Zahl
-     * Text    = braucht einen Text       —    = braucht nichts
-     * ---------------------------------------------------------------------- */
     const BEDINGUNGEN = [
-        /* Was mit dem Wert geschehen ist */
         ['wert-leer', 'Die Eigenschaft ist jetzt leer', 'spalte'],
         ['wert-gefuellt', 'Die Eigenschaft ist jetzt gefüllt', 'spalte'],
         ['war-leer', 'Sie war vorher leer', 'spalte'],
@@ -8003,7 +6965,6 @@ const Datenbank = (() => {
         ['wert-enthaelt', 'Der Wert enthält …', 'spalte,text'],
         ['wert-groesser', 'Die Zahl ist grösser als …', 'spalte,zahl'],
         ['wert-kleiner', 'Die Zahl ist kleiner als …', 'spalte,zahl'],
-        /* Was für ein Eintrag es ist */
         ['zeile-jung', 'Der Eintrag ist jünger als … Tage', 'zahl'],
         ['zeile-alt', 'Der Eintrag ist älter als … Tage', 'zahl'],
         ['zeile-gesperrt', 'Der Eintrag ist gesperrt', ''],
@@ -8012,7 +6973,6 @@ const Datenbank = (() => {
         ['zeile-archiviert', 'Der Eintrag ist archiviert', ''],
         ['formel-wahr', 'Eine freie Formel ergibt „wahr"', 'formel'],
         ['in-ansicht', 'Der Eintrag steht in der Ansicht …', 'ansicht'],
-        /* Wann es geschieht */
         ['heute-werktag', 'Heute ist ein Werktag', ''],
         ['heute-wochenende', 'Heute ist Wochenende', ''],
         ['wochentag', 'Heute ist ein bestimmter Wochentag', 'wochentag'],
@@ -8020,12 +6980,6 @@ const Datenbank = (() => {
         ['datum-vergangen', 'Das Datum in der Spalte liegt zurück', 'spalte'],
         ['hoechstens', 'Diese Automation lief heute höchstens … mal', 'zahl']
     ];
-    /* WOCHENTAGE steht schon weiter oben — hier wird dieselbe Liste benutzt. */
-    /**
-     * Beantwortet eine benannte Bedingung.
-     * ctx trägt das, was eine reine Zustandsprüfung nicht wissen kann:
-     * den alten Wert, die betroffene Spalte und die Automation selbst.
-     */
     const bedingungTrifft = (b, row, coll, ctx) => {
         ctx = ctx || {};
         const k = b.key || ctx.key;
@@ -8084,7 +7038,6 @@ const Datenbank = (() => {
                     return (h ?? 0) * 60 + (m ?? 0);
                 };
                 const von = alsMin(b.von || '08:00'), bis = alsMin(b.bis || '18:00');
-                /* Über Mitternacht hinaus: 22:00–06:00 soll auch gelten */
                 return von <= bis ? (min >= von && min <= bis) : (min >= von || min <= bis);
             }
             case 'datum-vergangen': {
@@ -8104,7 +7057,6 @@ const Datenbank = (() => {
             default: return true;
         }
     };
-    /** Eine Bedingung als Satz — für die Liste und für den Prüfbericht. */
     const bedingungText = (b) => {
         const e = BEDINGUNGEN.find(x => x[0] === b.art);
         if (!e)
@@ -8116,16 +7068,9 @@ const Datenbank = (() => {
             t = t.replace('…', String(b.wert));
         return t;
     };
-    /** Alle Bedingungen einer Automation prüfen — benannte und Filterregeln. */
     const bedingungenTreffen = (a, row, coll, ctx) => (a.bedingungen || []).every((b) => b && b.art
         ? bedingungTrifft(b, row, coll, Object.assign({ automation: a }, ctx))
         : trifftZu(row, b, coll));
-    /**
-     * Gespeicherte Automationen dürfen nach dem Löschen oder Ändern einer
-     * Spalte nicht still so tun, als wäre ihre Bedingung bloss falsch. Dieser
-     * reine Vorabcheck liefert deshalb einen benannten Fehler für Vorschau und
-     * Laufverlauf; er verändert weder Automation noch Zeile.
-     */
     const bedingungFehler = (b, coll) => {
         if (!b || typeof b !== 'object')
             return 'Die Bedingung ist leer oder beschädigt';
@@ -8156,8 +7101,6 @@ const Datenbank = (() => {
             return 'Die Bedingung braucht zwei gültige Uhrzeiten';
         return '';
     };
-    /* Die Takte für den wiederkehrenden Auslöser. Notion nennt in seiner Hilfe
-       nur „every day, week, month, and so on" — hier sind sie ausgeschrieben. */
     const TAKTE = [
         ['stuendlich', 'Stündlich'],
         ['taeglich', 'Täglich'],
@@ -8178,12 +7121,10 @@ const Datenbank = (() => {
         ['fremd-setzen', 'Einträge einer anderen Datenbank ändern'],
         ['webhook', 'An eine Webadresse schicken'],
         ['melden', 'Kurze Meldung zeigen'],
-        /* --- Die vier, die Notion hat und uns fehlten --------------------- */
         ['variablen', 'Variablen festlegen'],
         ['neue-zeile', 'Seite in einer Datenbank anlegen'],
         ['benachricht', 'Benachrichtigung senden'],
         ['mail', 'E-Mail senden'],
-        /* --- Sechs weitere, die Notion in seiner Liste führt ---------------- */
         ['archivieren', 'Eintrag archivieren'],
         ['loeschen', 'Eintrag in den Papierkorb'],
         ['leeren', 'Eigenschaft leeren'],
@@ -8191,14 +7132,12 @@ const Datenbank = (() => {
         ['kommentar', 'Kommentar an den Eintrag'],
         ['zurueckstellen', 'Eintrag auf später zurückstellen']
     ];
-    /** „1 Woche", „3 Tage", „monatlich", „14" — alles wird zu einem Datumssprung. */
     const naechstesDatum = (basis, takt) => {
         const d = new Date(basis);
         if (isNaN(d.getTime()))
             return null;
         const t = String(takt || '1 Woche').toLowerCase();
         const n = parseInt(t.replace(/[^0-9]/g, ''), 10) || 1;
-        /* Der 31. plus ein Monat ist der 30. — nicht der 1. des übernächsten. */
         const monateDazu = (anzahl) => {
             const tagImMonat = d.getDate();
             d.setDate(1);
@@ -8227,14 +7166,8 @@ const Datenbank = (() => {
         return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
             (kurz ? '' : 'T' + p(d.getHours()) + ':' + p(d.getMinutes()));
     };
-    /* Die Kettentiefe (E86): >0, solange gerade Aktionen einer Automation
-       laufen. Der setProp-Hook fängt sie SYNCHRON und reicht sie in seinen
-       verzögerten Lauf weiter — so weiss die nächste Automation, die
-       wievielte Stufe einer Kette sie ist. Ein globaler Lauf-Riegel kann das
-       nicht leisten und würde bei kooperativen Mehrzeilenläufen sogar echte
-       Folgeereignisse verschlucken. */
     let laufKette = 0;
-    let wdhZaehler = 0; /* Notbremse gegen Ketten, die sich selbst nachlegen */
+    let wdhZaehler = 0;
     const aktiveAutomationsLaeufe = new Map();
     let aktuellerAutomationsKontext = null;
     const automationsKontextKopie = () => aktuellerAutomationsKontext ? {
@@ -8275,14 +7208,6 @@ const Datenbank = (() => {
         'archivieren', 'loeschen', 'leeren', 'duplizieren', 'kommentar',
         'zurueckstellen', 'webhook'
     ]);
-    /**
-     * Was eine Aktion im Probelauf zu melden hat — der Wert, mit dem sie
-     * arbeiten WÜRDE, mit aufgelösten Variablen und Platzhaltern.
-     *
-     * Nur lesen. Diese Funktion darf nichts anfassen; sie läuft an der
-     * Stelle, an der der Probelauf abbricht, und wäre sonst genau das Leck,
-     * das er verhindern soll.
-     */
     const probeWert = (d, mitVars, coll, row) => {
         const fuellen = (t) => String(mitVars(String(t ?? ''))).replace(/\{titel\}/g, row?.text || '');
         switch (d.art) {
@@ -8314,11 +7239,6 @@ const Datenbank = (() => {
             default: return fuellen(d.wert ?? '');
         }
     };
-    /**
-     * Einträge einer anderen Datenbank ändern — Notions „Edit pages in".
-     * Wahlweise alle, die durch den Filter einer Ansicht kommen, oder alle,
-     * die einer Regel entsprechen. Höchstens 500 auf einmal.
-     */
     const fremdSetzen = (d, row, coll) => {
         const ziel = Store.getCollection(d.ziel);
         if (!ziel) {
@@ -8362,8 +7282,6 @@ const Datenbank = (() => {
         });
         return zeilen.length;
     };
-    /* Der Laufverlauf wird gebündelt gesichert — sonst schreibt jede Aktion
-       die ganze Sammlung neu. */
     let verlaufTimer = null;
     const verlaufSichern = (coll) => {
         clearTimeout(verlaufTimer);
@@ -8374,7 +7292,6 @@ const Datenbank = (() => {
             catch { }
         }, 900);
     };
-    /** Die eigene Datenbank für einen kontrollierten Mehrzeilenlauf auswählen. */
     const fuerJedeZeilen = (a, coll) => {
         const cfg = a.fuerJede || {};
         let zeilen = Store.rowsOf(coll.id).slice();
@@ -8434,11 +7351,6 @@ const Datenbank = (() => {
             for (const a of coll.automationen) {
                 if (a.an === false)
                     continue;
-                /* --- Mehrere Auslöser -------------------------------------------
-                 * Notion kennt „wenn einer davon eintritt" und „wenn alle eintreten".
-                 * Bei „alle" müssen sie innerhalb von rund drei Sekunden passieren —
-                 * genau die Regel, die Notions Hilfe nennt.
-                 * -------------------------------------------------------------- */
                 const alleAusloeser = [a.wenn || {}, ...(a.weitereWenn || [])];
                 const passt = (w) => {
                     if (w.art !== art)
@@ -8447,12 +7359,9 @@ const Datenbank = (() => {
                         return false;
                     if (w.art === 'prop-wert' && String(neuerWert ?? '') !== String(w.wert ?? ''))
                         return false;
-                    /* Die Ansichts-Auslöser gelten je Ansicht — sonst würde eine
-                       Automation für „Diese Woche" auch bei „Alle" feuern. */
                     if ((w.art === 'ansicht-rein' || w.art === 'ansicht-raus') &&
                         w.ansicht && w.ansicht !== ctx.ansicht)
                         return false;
-                    /* Eine Datei-Automation darf an einer Spalte hängen */
                     if (w.art === 'datei-neu' && w.key && w.key !== key)
                         return false;
                     return true;
@@ -8460,10 +7369,6 @@ const Datenbank = (() => {
                 const getroffen = alleAusloeser.findIndex(passt);
                 if (getroffen < 0)
                     continue;
-                /* Dieselbe Automation darf in derselben Wirkungskette nicht wieder
-                   zu sich zurückkehren. Das fängt insbesondere `zeile-neu → neue
-                   Zeile` und `zeile-neu → duplizieren`, deren addRow-Hook früher
-                   ohne Herkunft eine neue, endlose Kette begann. */
                 if (ctx.trace.includes(a.id)) {
                     a.verlauf = [{ wann: new Date().toISOString(), zeile: row?.text || '',
                             aktionen: [], fehler: 'Schleife gestoppt: Automation „' +
@@ -8472,12 +7377,6 @@ const Datenbank = (() => {
                     verlaufSichern(coll);
                     continue;
                 }
-                /* --- Schleifenschutz, Stufe 2: der KETTEN-DECKEL (E86) ----------
-                 * Fünf Stufen Automation-löst-Automation-aus sind erlaubt — eine
-                 * ehrliche Kette braucht selten mehr als zwei. Ab der sechsten
-                 * ist es fast sicher ein Kreisel mit wechselnden Werten, den der
-                 * Gleichwert-Schutz nicht fangen kann. Der Halt steht im Verlauf:
-                 * still verhungern lassen wäre gelogen. */
                 if (((ctx && ctx.kette) || 0) >= 5) {
                     a.verlauf = [{ wann: new Date().toISOString(),
                             zeile: (row && row.text) || '', aktionen: [],
@@ -8490,7 +7389,6 @@ const Datenbank = (() => {
                     a.gefeuert = a.gefeuert || {};
                     const jetztMs = new Date().getTime();
                     a.gefeuert[getroffen] = jetztMs;
-                    /* Zu alte Treffer zählen nicht mehr mit */
                     Object.keys(a.gefeuert).forEach(i => {
                         if (jetztMs - a.gefeuert[i] > 3000)
                             delete a.gefeuert[i];
@@ -8526,41 +7424,22 @@ const Datenbank = (() => {
                         }
                     })();
                     const probeStart = Array.isArray(ctx.probe) ? ctx.probe.length : 0;
-                    /* Zusätzliche Bedingungen — alle müssen zutreffen. Benannte
-                       Bedingungen dürfen auch nach dem alten Wert fragen.
-            
-                       Seit E85 entscheiden sie den ZWEIG, statt nur abzubrechen:
-                       treffen sie zu, läuft `dann`; treffen sie nicht, läuft `sonst`.
-                       Kein sonst heisst wie eh und je: nichts. Der Feldname `sonst`
-                       ist deutsch, weil er so gespeichert wird — als Schwester des
-                       bestehenden `dann` (§53.3); bei alten Automationen fehlt er
-                       einfach, und fehlen heisst leer. */
                     const bedingungenOk = !(a.bedingungen || []).length ||
                         bedingungenTreffen(a, row, coll, { key, alterWert: ctx.alterWert, neuerWert });
                     const zweigListe = bedingungenOk ? (a.dann || []) : (a.sonst || []);
                     if (!bedingungenOk && !zweigListe.length)
                         return;
-                    /* Gilt die Automation nur für eine Ansicht? Dann muss die Zeile
-                       auch durch deren Filter kommen. */
                     if (a.nurAnsicht) {
                         const v = Store.getView(a.nurAnsicht);
                         if (v && !gruppeTrifftZu(row, v.filters, coll))
                             return;
                     }
-                    /* --- Laufverlauf ------------------------------------------------
-                     * Notion hat weder Protokoll noch Testlauf; wenn eine Automation
-                     * nicht läuft, steht man im Dunkeln. Hier wird jeder Lauf notiert:
-                     * wann, für welche Zeile, mit welchen Aktionen und welchem Fehler.
-                     * -------------------------------------------------------------- */
                     const laufNotiz = { wann: new Date().toISOString(),
                         zeile: (row && row.text) || '', aktionen: [], fehler: '' };
                     let rechteFehler = false;
                     let sonstigerFehler = false;
                     if (!bedingungenOk)
                         laufNotiz.zweig = 'sonst';
-                    /* Im Probelauf sagt die erste Zeile, welcher Zweig liefe — aber nur,
-                       wenn es überhaupt einen sonst-Zweig gibt: Automationen ohne ihn
-                       behalten ihre Vorschau unverändert. */
                     if (ctx.probe && (a.sonst || []).length) {
                         ctx.probe.push({ name: bedingungenOk
                                 ? 'Bedingungen treffen — der dann-Zweig läuft'
@@ -8569,33 +7448,15 @@ const Datenbank = (() => {
                     const notieren = () => {
                         a.verlauf = [laufNotiz, ...(a.verlauf || [])].slice(0, 100);
                         verlaufSichern(coll);
-                        /* Und einmal ins gemeinsame Protokoll, damit man nicht in jeder
-                           Datenbank einzeln nachsehen muss, was heute gelaufen ist. */
                         if (typeof Protokoll !== 'undefined')
                             Protokoll.notieren('automation', 'Automation „' + (a.name || 'Ohne Namen') + '" in „' + (coll.name || 'Datenbank') + '"', { seite: row && row.id, id: a.id,
                                 wie: (laufNotiz.zeile ? 'für „' + laufNotiz.zeile + '"' : '') });
                     };
-                    /* Variablen, die eine Aktion setzt, stehen allen folgenden zur
-                       Verfügung — als {{name}} in jedem Textfeld. Genau wie Notions
-                       „Define variables". */
                     const vars = {};
                     const mitVars = (v) => typeof v === 'string'
                         ? v.replace(/\{\{\s*([A-Za-zÄÖÜäöüß0-9_]+)\s*\}\}/g, (_, n) => (n in vars ? String(vars[n]) : ''))
                         : v;
-                    /* Jede Aktion läuft EINMAL für diese Zeile.
-                       Über mehrere Zeilen läuft nur `fremd-setzen` — es nimmt die
-                       Zeilen einer anderen Datenbank, gefiltert über eine Ansicht, eine
-                       eigene Regel oder die Verknüpfung zu dieser Zeile, und ändert sie
-                       alle (höchstens 500).
-                       Hier stand einmal, eine Aktion dürfe „mehrfach wiederholt werden".
-                       Das konnte sie nie; es gibt kein Feld dafür und keinen Zweig, der
-                       es läse. Ein Satz im Quelltext ist keine Funktion. */
-                    /* Der Rumpf bleibt, wo er ist — er wird nur benannt, damit der Aufruf
-                       darunter ihn einpacken kann. Ein `try` um zweihundert Zeilen wäre
-                       dieselbe Wirkung mit einer Verschiebung jeder einzelnen davon. */
                     const eineAktion = (d) => {
-                        /* --- Bedingung an der einzelnen Aktion — das „sonst" von
-                               Notions Automationen, das es dort nicht gibt ------------- */
                         if (d.wenn) {
                             const fehler = bedingungFehler(d.wenn, coll);
                             if (fehler) {
@@ -8624,7 +7485,6 @@ const Datenbank = (() => {
                                 return;
                             }
                         }
-                        /* --- Variablen festlegen ---------------------------------- */
                         if (d.art === 'variablen') {
                             (d.vars || []).forEach((v) => {
                                 if (!v || !v.name)
@@ -8636,27 +7496,6 @@ const Datenbank = (() => {
                                 vars[v.name] = r.ok ? Formula.anzeige(r.wert) : '';
                             });
                         }
-                        /* =================================================================
-                         * DER PROBELAUF ENDET HIER — und zwar an EINER Stelle.
-                         *
-                         * Alles oberhalb liest nur: die Bedingung an der Aktion fragt
-                         * Werte ab, „Variablen festlegen" schreibt in ein Objekt, das
-                         * beim Verlassen dieser Funktion verschwindet. Alles unterhalb
-                         * schreibt: `Store.setProp`, `Store.addRow`, `Store.trashBlock`,
-                         * `fetch`, `location.href`.
-                         *
-                         * Diese Reihenfolge ist der ganze Schutz. Eine neue Aktion, die
-                         * jemand unten anhängt, ist damit automatisch mitgeschützt — und
-                         * eine, die jemand versehentlich OBEN einfügt, fällt auf, weil
-                         * `test133` §2 nach einem Probelauf die Zeile Feld für Feld
-                         * vergleicht.
-                         *
-                         * Warum kein Nachbau der Aktionen für die Vorschau: dann gäbe es
-                         * zwei Beschreibungen desselben Ablaufs, und die zweite läuft der
-                         * ersten davon. Was der Probelauf zeigt, ist deshalb NICHT das
-                         * Ergebnis, sondern der Plan — welche Aktion mit welchen Werten
-                         * an der Reihe wäre.
-                         * =============================================================== */
                         const aktionsName = (AKTIONEN.find(x => x[0] === d.art) || ['', d.art])[1];
                         const brauchtEigenesFeld = ['setze-prop', 'ki-fuellen', 'zaehler', 'leeren'].includes(d.art);
                         const feldFehlt = brauchtEigenesFeld && (!d.key || !coll.schema[d.key]);
@@ -8718,7 +7557,6 @@ const Datenbank = (() => {
                                 v = new Date().toISOString().slice(0, 16);
                             Store.setProp(row.id, d.key, v);
                         }
-                        /* --- Seite in einer Datenbank anlegen — Notions „Add page to" -- */
                         if (d.art === 'neue-zeile') {
                             const ziel = Store.getCollection(d.zielDb);
                             if (!ziel) {
@@ -8738,7 +7576,6 @@ const Datenbank = (() => {
                             Store.updateBlock(neu.id, { text: titel });
                             UI.toast('Neue Seite in „' + (ziel.name || 'Datenbank') + '"');
                         }
-                        /* --- Benachrichtigung — bei uns in den Posteingang ------------- */
                         if (d.art === 'benachricht') {
                             const text = platzhalter(mitVars(String(d.text || ''))
                                 .replace(/\{titel\}/g, row.text || '')) || (row.text || coll.name);
@@ -8746,16 +7583,11 @@ const Datenbank = (() => {
                                 text, quelle: coll.name || 'Automation', seite: row.id, art: 'automation'
                             });
                         }
-                        /* --- E-Mail senden -------------------------------------------- */
                         if (d.art === 'mail') {
                             const betreff = platzhalter(mitVars(String(d.betreff || ''))
                                 .replace(/\{titel\}/g, row.text || '')) || (row.text || 'Redion');
                             const koerper = platzhalter(mitVars(String(d.text || ''))
                                 .replace(/\{titel\}/g, row.text || ''));
-                            /* Hier stand ein Zweig für `Mail.senden` — die Funktion gibt es
-                               nicht, das Mail-Modul kann lesen und antworten, aber nicht
-                               verschicken. Der Zweig war tot; es blieb ohnehin immer beim
-                               Mailprogramm. */
                             {
                                 location.href = 'mailto:' + encodeURIComponent(mitVars(d.an || '')) +
                                     '?subject=' + encodeURIComponent(betreff) +
@@ -8766,10 +7598,6 @@ const Datenbank = (() => {
                             Store.setProp(row.id, d.key, Formula.zahl(wert(row, d.key, coll)) + 1);
                         }
                         if (d.art === 'ki-fuellen' && d.key) {
-                            /* Läuft neben dem Lauf her, wie der Webhook: der Verlauf ist
-                               längst geschrieben, wenn die KI scheitert. Ohne den `.catch`
-                               war das eine unbehandelte Ablehnung, die Zelle blieb auf
-                               „… denkt nach", und im Verlauf stand ✓. */
                             kiFeldFuellen(row, d.key, coll).catch((e) => {
                                 const text = e instanceof Error ? e.message : String(e);
                                 laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
@@ -8791,8 +7619,6 @@ const Datenbank = (() => {
                         if (d.art === 'unterseite') {
                             Store.addBlock(row.id, 'text', { text: d.text || '' });
                         }
-                        /* Wiederkehrende Aufgabe: der erledigte Eintrag bleibt stehen,
-                           daneben entsteht der nächste Termin. */
                         if (d.art === 'wiederholen') {
                             if (wdhZaehler++ > 30) {
                                 UI.toast('Wiederholung gestoppt — zu viele auf einmal');
@@ -8808,8 +7634,6 @@ const Datenbank = (() => {
                             const props = JSON.parse(JSON.stringify(row.props || {}));
                             if (dk)
                                 props[dk] = neuDatum;
-                            /* Das Feld, das die Automation ausgelöst hat, wird zurückgesetzt —
-                               sonst wäre der neue Eintrag sofort wieder erledigt. */
                             if (key && coll.schema[key]) {
                                 props[key] = coll.schema[key].type === 'checkbox' ? false : '';
                             }
@@ -8822,7 +7646,6 @@ const Datenbank = (() => {
                             Store.updateBlock(neu3.id, { text: row.text || '' });
                             UI.toast('🔁 Nächster Termin: ' + neuDatum.slice(0, 10));
                         }
-                        /* Einträge einer anderen Datenbank ändern — Notions „Edit pages in". */
                         if (d.art === 'fremd-setzen' && d.ziel) {
                             const n = fremdSetzen(d, row, coll);
                             if (n)
@@ -8831,7 +7654,6 @@ const Datenbank = (() => {
                         if (d.art === 'melden') {
                             UI.toast('⚡ ' + (d.text || a.name || 'Automation ausgeführt'));
                         }
-                        /* --- Die sechs neuen Aktionen ------------------------------- */
                         if (d.art === 'archivieren') {
                             Store.updateBlock(row.id, { archiviert: true, archiviertAm: Store.now() });
                         }
@@ -8871,8 +7693,6 @@ const Datenbank = (() => {
                             Object.keys(coll.schema).forEach(k2 => {
                                 paket.werte[coll.schema[k2].name] = Formula.anzeige(wert(row, k2, coll));
                             });
-                            /* Anmeldung am Webhook — Notion schickt gar keine mit. Der
-                               Schlüssel steht in den Einstellungen und bleibt im Gerät. */
                             const kopf = { 'Content-Type': 'application/json' };
                             const art = Store.getMeta('webhookAuthArt', 'keine');
                             const wert2 = Store.getMeta('api:webhookAuth', '');
@@ -8884,13 +7704,6 @@ const Datenbank = (() => {
                                 kopf[Store.getMeta('webhookAuthName', 'X-Api-Key')] = wert2;
                             if (wert2 && art === 'geheim')
                                 paket.geheimnis = wert2;
-                            /* Der Webhook läuft neben dem Lauf her — `eineAktion` kehrt
-                               zurück, bevor die Antwort da ist, und `notieren()` schreibt
-                               den Verlauf mit ✓. Ein Fehler, der DANACH eintrifft, muss den
-                               Eintrag noch auf ⚠ drehen: `notieren` legt `laufNotiz` als
-                               Objekt in den Verlauf, die Referenz lebt also weiter, und
-                               `verlaufSichern` schreibt den Stand erneut. Ohne das stand im
-                               Verlauf ein Haken, obwohl nie etwas ankam. */
                             const webhookFehler = (text) => {
                                 laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
                                     'Webhook: ' + text;
@@ -8918,20 +7731,6 @@ const Datenbank = (() => {
                         }
                         laufNotiz.aktionen.push((AKTIONEN.find((x) => x[0] === d.art) || [])[1] || d.art);
                     };
-                    /* --- Ein Fehler stoppt nicht alles Weitere ------------------------
-                     * `laufNotiz.fehler` gab es seit jeher, und der Laufverlauf zeigt
-                     * dafür ein ⚠. Gesetzt hat es nie jemand — das Feld stand auf ''
-                     * und blieb dort. Ein Zeichen, das nie erscheint, ist schlimmer als
-                     * keines: es sagt „hier wäre ein Fehler zu sehen".
-                     *
-                     * Und schlimmer noch war, was ohne diesen Griff geschah: eine
-                     * Aktion, die wirft, riss den ganzen forEach mit. Die Aktionen
-                     * DAHINTER liefen nicht, die Automation schrieb keinen Verlauf,
-                     * und die nächste Automation der Datenbank kam nie an die Reihe —
-                     * still, denn geworfen wurde in einen Aufruf, den niemand fängt.
-                     * ---------------------------------------------------------------- */
-                    /* Solange die Aktionen laufen, gilt die nächste Stufe der Kette —
-                       jeder setProp darin fängt sie synchron (E86). */
                     const ketteVorher = laufKette;
                     const kontextVorher = aktuellerAutomationsKontext;
                     laufKette = ((ctx && ctx.kette) || 0) + 1;
@@ -8958,7 +7757,6 @@ const Datenbank = (() => {
                                 laufNotiz.fehler = (laufNotiz.fehler ? laufNotiz.fehler + ' · ' : '') +
                                     name + ': ' + text;
                                 sonstigerFehler = true;
-                                /* Nicht nur ins Protokoll: wer gerade zusieht, soll es sehen. */
                                 if (!ctx.probe)
                                     UI.toast('⚠ „' + name + '“ ging nicht: ' + text);
                             }
@@ -8968,9 +7766,6 @@ const Datenbank = (() => {
                         laufKette = ketteVorher;
                         aktuellerAutomationsKontext = kontextVorher;
                     }
-                    /* Ein Probelauf ist nicht gelaufen. Er darf deshalb weder im
-                       Laufverlauf noch im gemeinsamen Protokoll stehen — sonst zeigte
-                       die Automation morgen zwanzig Läufe, von denen keiner stattfand. */
                     if (!ctx.probe)
                         notieren();
                     const standNachher = (() => {
@@ -9033,10 +7828,6 @@ const Datenbank = (() => {
                         summe.geaendert++;
                     else
                         summe.unveraendert++;
-                    /* Ein Mehrzeilenlauf gibt dem Browser regelmässig Luft. Nur so
-                       kann der sichtbare Abbruchknopf während eines 500-Zeilen-Laufs
-                       tatsächlich angeklickt werden; ein synchroner Knopf wäre bloss
-                       Dekoration. Vorschauen bleiben synchron und schreiben nie. */
                     if (!ctx.probe && a.fuerJede?.an && zeilenIndex + 1 < auswahl.zeilen.length &&
                         (zeilenIndex + 1) % 8 === 0)
                         await new Promise(resolve => setTimeout(resolve, 4));
@@ -9067,28 +7858,6 @@ const Datenbank = (() => {
             }
         }
     };
-    /**
-     * Zeitauslöser: „drei Tage vor dem Fälligkeitsdatum". Wird beim Start und
-     * danach stündlich geprüft. Jede Zeile löst höchstens einmal je Automation aus.
-     */
-    /**
-     * Wann war der letzte fällige Zeitpunkt eines Taktes vor „jetzt"?
-     * Gibt eine Marke zurück wie „2026-08-02T09" — läuft die Automation schon
-     * unter dieser Marke, passiert nichts mehr. So läuft sie genau einmal je
-     * Takt, egal wie oft die App geöffnet wird.
-     */
-    /* ------------------------------------------------------------------------
-     * ZEITZONEN
-     * ------------------------------------------------------------------------
-     * „Jeden Montag um 09:00" heisst: 09:00 wo? Bisher galt immer die Uhr des
-     * Geräts — wer auf Reisen ist oder im Team über Länder hinweg arbeitet,
-     * bekam den Lauf zur falschen Stunde. Jetzt darf jede wiederkehrende
-     * Automation ihre eigene Zone haben.
-     *
-     * Der Trick: aus einem Zeitpunkt die Wanduhrzeit der Zielzone lesen und
-     * daraus ein neues Datum bauen. Dessen Ortsgetter liefern dann genau die
-     * Zahlen der Zielzone — Sommerzeit inbegriffen, weil Intl das rechnet.
-     * ---------------------------------------------------------------------- */
     const inZone = (d, zone) => {
         if (!zone)
             return new Date(d);
@@ -9103,9 +7872,8 @@ const Datenbank = (() => {
         }
         catch {
             return new Date(d);
-        } /* unbekannte Zone: lieber Gerätezeit als gar nichts */
+        }
     };
-    /** Die Zonen, die der Browser kennt — sonst eine kurze, ehrliche Liste. */
     const ZONEN = () => {
         try {
             if (Intl.supportedValuesOf)
@@ -9132,8 +7900,6 @@ const Datenbank = (() => {
         if (takt === 'stuendlich') {
             return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours());
         }
-        /* Alle anderen Takte haben eine feste Uhrzeit am Tag. Ist sie heute
-           noch nicht erreicht, zählt der Tag davor. */
         const heuteFaellig = new Date(d);
         heuteFaellig.setHours(hh ?? 0, mm ?? 0, 0, 0);
         const bezug = d >= heuteFaellig ? new Date(d) : new Date(d.getTime() - 86400000);
@@ -9142,7 +7908,6 @@ const Datenbank = (() => {
         if (takt === 'taeglich')
             return tag;
         if (takt === 'werktags') {
-            /* Am Wochenende läuft nichts — die Marke bleibt die vom Freitag */
             const w = bezug.getDay();
             if (w === 0 || w === 6)
                 return null;
@@ -9165,11 +7930,6 @@ const Datenbank = (() => {
             return String(bezug.getFullYear());
         return tag;
     };
-    /**
-     * Der wiederkehrende Auslöser — Notions „Every {frequency}".
-     * Er hängt an keiner Änderung, sondern an der Uhr, und läuft für jede
-     * Zeile im Wirkungsbereich: ganze Datenbank oder eine bestimmte Ansicht.
-     */
     const wiederkehrendeAutomationen = () => {
         const jetzt = new Date();
         Object.values(Store.cache.collections).forEach(coll => {
@@ -9178,24 +7938,17 @@ const Datenbank = (() => {
                 if (a.an === false || !a.wenn || a.wenn.art !== 'wiederkehrend')
                     return;
                 const w = a.wenn;
-                /* Ab- und Enddatum beachten — in derselben Zone wie der Takt,
-                   sonst endet ein Zeitplan in Tokio nach Zürcher Kalender. */
                 const jetztZ = inZone(jetzt, w.zone);
                 if (w.ab && jetztZ < new Date(w.ab))
                     return;
                 if (w.bis && jetztZ > new Date(w.bis + 'T23:59:59'))
                     return;
-                /* Die Zone steht in der Marke mit drin: wer sie umstellt, bekommt
-                   den nächsten Lauf in der neuen Zone, statt einen zu verlieren.
-                   Erst prüfen, dann anhängen — sonst würde aus „kein Lauf heute"
-                   die Marke „null@Europe/Zurich" und die Automation liefe doch. */
                 const roh = taktMarke(w.takt || 'taeglich', w.uhr, jetzt, w.zone);
                 if (!roh)
                     return;
                 const marke = roh + (w.zone ? '@' + w.zone : '');
                 if (a.zuletzt === marke)
                     return;
-                /* Auf welche Zeilen wirkt sie? */
                 let zeilenListe = Store.rowsOf(coll.id).filter(r => !r.archiviert);
                 if (a.nurAnsicht) {
                     const v = Store.getView(a.nurAnsicht);
@@ -9206,8 +7959,6 @@ const Datenbank = (() => {
                     zeilenListe = zeilenListe.filter(r => bedingungenTreffen(a, r, coll, {}));
                 a.zuletzt = marke;
                 veraendert = true;
-                /* Ohne Zeilen läuft die Automation trotzdem einmal — für Aktionen,
-                   die keine Zeile brauchen, etwa „Seite anlegen in". */
                 const ziel = zeilenListe.length ? zeilenListe : [null];
                 ziel.slice(0, 500).forEach(r => {
                     if (r)
@@ -9257,11 +8008,8 @@ const Datenbank = (() => {
             });
         });
     };
-    /* An die Speicherfunktionen hängen, damit jede Änderung erfasst wird. */
     const automationenEinklinken = () => {
         setTimeout(zeitAutomationen, 4000);
-        /* Stündlich reicht für Tages- und Wochentakte; der Stundentakt braucht
-           einen engeren Puls, deshalb zusätzlich alle fünf Minuten. */
         setInterval(zeitAutomationen, 3600000);
         setInterval(wiederkehrendeAutomationen, 300000);
         setTimeout(vorlagenLaufen, 5000);
@@ -9270,7 +8018,6 @@ const Datenbank = (() => {
         const altAddRow = Store.addRow;
         Store.addRow = function (collectionId, props) {
             const ursprung = automationsKontextKopie();
-            /* Standardwerte je Spalte — Notion kann das nur über Vorlagen. */
             const c0 = Store.getCollection(collectionId);
             if (c0) {
                 const mit = Object.assign({}, props || {});
@@ -9292,16 +8039,9 @@ const Datenbank = (() => {
         const altSetProp = Store.setProp;
         Store.setProp = function (rowId, key, value) {
             const ursprung = automationsKontextKopie();
-            /* Erst prüfen, dann schreiben. Ein Wert, der gegen eine Regel
-               verstösst, kommt gar nicht erst in die Datenbank — und der Mensch
-               erfährt, warum. Wer das nicht will, schaltet es in den
-               Einstellungen auf „nur warnen". */
             const zeile = Store.getBlock(rowId);
             const samml = zeile && zeile.parentTable === 'collection'
                 ? Store.getCollection(zeile.parentId) : null;
-            /* Gesperrt heisst gesperrt: eine gesperrte Zeile nimmt keine Werte an.
-               Automationen dürfen weiter schreiben — sonst stünde die Sperre auch
-               Aufräumarbeiten im Weg. */
             if (zeile && zeile.gesperrt && !aktuellerAutomationsKontext) {
                 try {
                     UI.toast('🔒 Diese Zeile ist gesperrt');
@@ -9321,11 +8061,6 @@ const Datenbank = (() => {
                         return zeile;
                 }
             }
-            /* --- Vor dem Schreiben merken, was danach anders sein könnte ------
-             * Für „kommt in eine Ansicht" reicht der Zustand nachher nicht; man
-             * braucht das Vorher. Gemessen wird nur, wenn es solche Automationen
-             * überhaupt gibt — sonst kostet jede Zuweisung unnötig Filterläufe.
-             * ---------------------------------------------------------------- */
             const alterWert = zeile ? zeile.props?.[key] : undefined;
             const wachen = samml ? (samml.automationen || []).filter((a) => a.an !== false && a.wenn &&
                 (a.wenn.art === 'ansicht-rein' || a.wenn.art === 'ansicht-raus') &&
@@ -9340,13 +8075,6 @@ const Datenbank = (() => {
             const erg = altSetProp.call(Store, rowId, key, value);
             const r = Store.getBlock(rowId);
             const c = r && r.parentTable === 'collection' ? Store.getCollection(r.parentId) : null;
-            /* --- Schleifenschutz, Stufe 1: GLEICHWERT (E86) -------------------
-             * „Eine Eigenschaft ändert sich" muss ändern heissen. Eine
-             * Automation „wenn X sich ändert → setze X auf fest" lief sonst
-             * endlos — gemessen: 720 Schreibvorgänge in drei Sekunden, für
-             * immer. Der imLauf-Riegel hilft nicht, weil der Hook verzögert
-             * feuert. Listen (Dateien, Verknüpfungen) werden nach Inhalt
-             * verglichen, nicht nach Hülle. */
             const gleichGeblieben = alterWert === value ||
                 (() => {
                     try {
@@ -9356,10 +8084,6 @@ const Datenbank = (() => {
                         return false;
                     }
                 })();
-            /* --- Stufe 2: KETTENTIEFE — synchron gefangen ---------------------
-             * Läuft dieser setProp aus einer Automation heraus, trägt er ihre
-             * Tiefe weiter. Ping-Pong mit WECHSELNDEN Werten (a→b→a→…) fängt
-             * Stufe 1 nicht — den fängt der Deckel im Läufer. */
             const kette = ursprung?.kette ?? laufKette;
             if (c)
                 setTimeout(() => {
@@ -9369,11 +8093,9 @@ const Datenbank = (() => {
                         automationenLaufen(r, c, 'prop-wert', key, value, { ...basis, alterWert, kette });
                         automationenLaufen(r, c, 'zeile-geaendert', key, value, { ...basis, alterWert, kette });
                     }
-                    /* Eine Datei ist dazugekommen */
                     if ((c.schema[key] || {}).type === 'files' &&
                         Array.isArray(value) && value.length > dateiVorher)
                         automationenLaufen(r, c, 'datei-neu', key, value, { ...(ursprung ? { lauf: ursprung.lauf, trace: ursprung.trace } : {}), alterWert, kette });
-                    /* Grenzübertritt in eine Ansicht — in beide Richtungen */
                     const gesehen = {};
                     wachen.forEach((a) => {
                         const vid = a.wenn.ansicht;
@@ -9392,11 +8114,6 @@ const Datenbank = (() => {
                 }, 0);
             return erg;
         };
-        /* --- Kommentare und Erwähnungen ----------------------------------
-         * Kommentare landen über updateBlock in der Zeile — egal ob als neuer
-         * Faden, als Antwort oder aus einer Automation heraus. Ein Blick auf
-         * die Länge der Liste genügt, um „da ist einer dazugekommen" zu sehen.
-         * ---------------------------------------------------------------- */
         const altUpdate = Store.updateBlock;
         Store.updateBlock = function (id, patch) {
             const ursprung = automationsKontextKopie();
@@ -9424,7 +8141,6 @@ const Datenbank = (() => {
             }
             return erg;
         };
-        /* Aus dem Papierkorb zurück — der Gegenpol zu „zeile-weg". */
         const altRestore = Store.restoreBlock;
         Store.restoreBlock = function (id) {
             const ursprung = automationsKontextKopie();
@@ -9437,7 +8153,6 @@ const Datenbank = (() => {
             }
             return erg;
         };
-        /* Wird ein Eintrag weggeworfen, feuert das noch, solange es ihn gibt. */
         const altTrash = Store.trashBlock;
         Store.trashBlock = function (id) {
             const ursprung = automationsKontextKopie();
@@ -9489,8 +8204,6 @@ const Datenbank = (() => {
                     (a.wenn.zone ? ' · ' + esc(a.wenn.zone.replace(/_/g, ' ')) : '') +
                     (a.fuerJede?.an ? ' · Für jede eigene Zeile (max. ' +
                         esc(String(a.fuerJede.max || 100)) + ')' : '') +
-                    /* Bedingungen sichtbar machen — sonst rätselt man, warum eine
-                       Automation nicht läuft, obwohl der Auslöser stimmt. */
                     ((a.bedingungen || []).length
                         ? ' · Nur wenn: ' + esc(a.bedingungen.map((b) => b && b.art
                             ? bedingungText(b)
@@ -9524,9 +8237,6 @@ const Datenbank = (() => {
                 zeichne();
                 return;
             }
-            /* Der Knopf steht in DIESEM Fenster. Die frühere Behandlung lag
-               versehentlich im Kalenderquellen-Menü und war deshalb im Produkt
-               unerreichbar; Direktaufrufe in Prüfungen hatten das verdeckt. */
             const test = elVon(e)?.closest('[data-test]');
             if (test) {
                 const a = coll.automationen[Number(test.dataset.test)];
@@ -9618,7 +8328,6 @@ const Datenbank = (() => {
                 keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
                 '</select></label>' +
                 '<label id="awl">… mit diesem Wert<br><input id="av" placeholder="z. B. Erledigt"></label>' +
-                /* Zeitplan — nur beim wiederkehrenden Auslöser sichtbar */
                 '<div id="azp" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
                 'padding:12px; flex-direction:column; gap:11px">' +
                 '<label>Wie oft<br><select id="azt">' +
@@ -9632,15 +8341,12 @@ const Datenbank = (() => {
                 Object.values(Store.cache.views).filter(v => v.collectionId === coll.id)
                     .map(v => `<option value="${v.id}">${esc(v.name || 'Ansicht')}</option>`).join('') +
                 '</select></label>' +
-                /* Zeitzone — „09:00 wo?" ist keine Kleinigkeit, sobald jemand
-                   reist oder ein Team über Länder verteilt arbeitet. */
                 '<label>In welcher Zeitzone<br><select id="azz">' +
                 ZONEN().map(z => `<option value="${esc(z)}"${z === eigeneZone() ? ' selected' : ''}>` +
                     `${esc(z.replace(/_/g, ' '))}</option>`).join('') +
                 '</select><span style="font-size:12px;color:var(--text-dim)">' +
                 'Sommerzeit wird mitgerechnet.</span></label>' +
                 '</div>' +
-                /* Welche Ansicht ist gemeint? — für „kommt rein" und „fällt raus" */
                 '<label id="aavl" style="display:none">… bei dieser Ansicht<br><select id="aav">' +
                 Object.values(Store.cache.views).filter(v => v.collectionId === coll.id)
                     .map(v => `<option value="${v.id}">${esc(v.name || 'Ansicht')}</option>`).join('') +
@@ -9669,11 +8375,6 @@ const Datenbank = (() => {
                 keys.map(k => `<option value="${k}">${esc(coll.schema[k].name)}</option>`).join('') +
                 '</select></label>' +
                 '<label id="adw">… auf diesen Wert<br><input id="adv" placeholder="z. B. heute"></label>' +
-                /* Der sonst-Zweig (E85): treffen die Bedingungen der Automation
-                   NICHT zu, laufen die hier markierten Aktionen — statt gar
-                   keiner. Der Hinweis ist Pflicht: ein sonst ohne Bedingungen
-                   liefe nie, und ein Häkchen, das still nichts bewirkt, wäre
-                   gelogen. */
                 '<div class="ab-wenn"><label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
                 '<input type="checkbox" id="adsonst" style="width:auto"> in den sonst-Zweig legen ' +
                 '(läuft, wenn die Bedingungen NICHT zutreffen)</label>' +
@@ -9681,8 +8382,6 @@ const Datenbank = (() => {
                 'Der sonst-Zweig braucht Bedingungen („Nur wenn"): ohne sie treffen ' +
                 'die Bedingungen immer zu, und sonst-Aktionen liefen nie.</div>' +
                 '</div>' +
-                /* Bedingung nur für diese eine Aktion — Notions Automationen
-                   können das nicht, dort gilt jede Bedingung für alle Aktionen. */
                 '<div class="ab-wenn"><label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
                 '<input type="checkbox" id="adwenn"> nur wenn eine Bedingung stimmt</label>' +
                 '<div id="adwenn2" style="display:none; gap:7px; margin-top:8px; flex-wrap:wrap">' +
@@ -9692,7 +8391,6 @@ const Datenbank = (() => {
                 '<label style="display:flex;gap:6px;align-items:center;font-size:12.5px">' +
                 '<input type="checkbox" id="adwn" style="width:auto"> umkehren (sonst-Fall)</label>' +
                 '</div></div>' +
-                /* Variablen festlegen — je Zeile ein Name und eine Formel */
                 '<div id="avz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
                 'padding:12px; flex-direction:column; gap:8px">' +
                 '<div style="font-size:12.5px; color:var(--text-dim)">Je Zeile: ' +
@@ -9702,7 +8400,6 @@ const Datenbank = (() => {
                 'placeholder="tage = dateBetween(prop(&quot;Fällig&quot;), today(), &quot;days&quot;)&#10;' +
                 'stufe = if(tage &lt; 0, &quot;überfällig&quot;, &quot;offen&quot;)"></textarea>' +
                 '</div>' +
-                /* Seite in einer Datenbank anlegen */
                 '<div id="anz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
                 'padding:12px; flex-direction:column; gap:11px">' +
                 '<label>In welcher Datenbank<br><select id="and">' +
@@ -9715,13 +8412,11 @@ const Datenbank = (() => {
                 '<select id="ank"></select>' +
                 '<input id="anv" placeholder="Wert · heute · {titel} · {{variable}}" style="margin-top:5px"></label>' +
                 '</div>' +
-                /* Benachrichtigung */
                 '<div id="abz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
                 'padding:12px; flex-direction:column; gap:11px">' +
                 '<label>Text der Benachrichtigung<br><input id="abt" ' +
                 'placeholder="{titel} ist überfällig"></label>' +
                 '</div>' +
-                /* E-Mail */
                 '<div id="amz" style="display:none; border:1px solid var(--line); border-radius:6px; ' +
                 'padding:12px; flex-direction:column; gap:11px">' +
                 '<label>An<br><input id="ama" placeholder="name@beispiel.ch"></label>' +
@@ -9743,12 +8438,6 @@ const Datenbank = (() => {
                 '<label style="display:flex;gap:8px;align-items:center;font-size:13px">' +
                 '<input type="checkbox" id="afr"> nur Einträge, die mit diesem hier verknüpft sind</label>' +
                 '</div>' +
-                /* --- Bedingungen für die ganze Automation ---------------------
-                 * Der Katalog beantwortet Fragen über die Veränderung, nicht nur
-                 * über den Zustand: „war vorher leer", „hat sich wirklich
-                 * geändert", „ist gewachsen". Genau daran scheitern in Notion
-                 * die meisten Automationen.
-                 * ------------------------------------------------------------ */
                 '<hr style="border:none;border-top:1px solid var(--line)">' +
                 '<div style="border:1px solid var(--line); border-radius:6px; padding:12px; ' +
                 'display:flex; flex-direction:column; gap:9px">' +
@@ -9800,21 +8489,17 @@ const Datenbank = (() => {
             if (awl.firstChild)
                 awl.firstChild.textContent = zeit ? 'wie viele Tage?' : '… mit diesem Wert';
             av.placeholder = zeit ? 'z. B. 3' : 'z. B. Erledigt';
-            /* Auslöser, die an keiner Spalte hängen, brauchen auch keine Auswahl */
             ak.style.display = OHNE_SPALTE.includes(art0) ? 'none' : '';
-            /* Der Zeitplan gehört nur zum wiederkehrenden Auslöser */
             const wdh = art0 === 'wiederkehrend';
             azp.style.display = wdh ? 'flex' : 'none';
             if (wdh)
                 awl.style.display = 'none';
-            /* Die Ansichtsauswahl gehört nur zu den beiden Grenzauslösern */
             const anAnsicht = art0 === 'ansicht-rein' || art0 === 'ansicht-raus';
             const aavl = o.querySelector('#aavl');
             if (aavl)
                 aavl.style.display = anAnsicht ? '' : 'none';
             if (anAnsicht)
                 awl.style.display = 'none';
-            /* Eine Datei-Automation darf sich auf eine Dateispalte beschränken */
             if (art0 === 'datei-neu') {
                 ak.style.display = '';
                 awl.style.display = 'none';
@@ -9823,7 +8508,6 @@ const Datenbank = (() => {
             const fuerJedeFelder = o.querySelector('#afuer2');
             if (fuerJedeFelder)
                 fuerJedeFelder.style.display = fuerJedeAn ? 'grid' : 'none';
-            /* Welche Felder braucht die gewählte Bedingung? */
             const bArt = o.querySelector('#abda')?.value;
             const eintrag = BEDINGUNGEN.find(x => x[0] === bArt);
             const braucht = eintrag ? String(eintrag[2] ?? '').split(',').filter(Boolean) : ['spalte', 'text'];
@@ -9869,7 +8553,6 @@ const Datenbank = (() => {
                                     : d === 'kommentar' ? 'Text des Kommentars — {titel} setzt den Namen ein'
                                         : d === 'zurueckstellen' ? 'in wie vielen Tagen? z. B. 7'
                                             : 'Wert';
-            /* Bedingung an der Aktion */
             const wennAn = o.querySelector('#adwenn')?.checked;
             const adwenn2 = o.querySelector('#adwenn2');
             if (adwenn2)
@@ -9895,14 +8578,12 @@ const Datenbank = (() => {
             if (d === 'neue-zeile')
                 zielFelderNeu();
         };
-        /* Die Eigenschaftsliste für „Seite anlegen in" hängt an der Zieldatenbank */
         const zielFelderNeu = () => {
             const c = Store.getCollection(o.querySelector('#and')?.value);
             fuelle(o, '#ank', '<option value="">— keine Eigenschaft setzen —</option>' +
                 (c ? Object.keys(c.schema).filter(k => !['title', 'formula', 'rollup', 'created', 'edited', 'uid'].includes(c.schema[k].type))
                     .map(k => `<option value="${k}">${esc(c.schema[k].name)}</option>`).join('') : ''));
         };
-        /* Die Auswahl der Zieleigenschaften hängt an der gewählten Datenbank. */
         const zielFelder = () => {
             const z = Store.getCollection(o.querySelector('#afd')?.value);
             const ks = z ? Object.keys(z.schema) : [];
@@ -9929,11 +8610,9 @@ const Datenbank = (() => {
                 o.remove();
                 return;
             }
-            /* Zusätzliche Bedingung aufnehmen */
             if (elVon(e)?.closest('[data-a="bedingung"]')) {
                 const bArt = o.querySelector('#abda')?.value;
                 if (!bArt) {
-                    /* Wie bisher: eine gewöhnliche Filterregel aus Spalte und Wert */
                     const k = o.querySelector('#ak')?.value ?? '';
                     const ops = OPERATOREN[coll.schema[k]?.type] || OPERATOREN['text'] || [];
                     bedingungen.push({ key: k, op: ops[0], wert: o.querySelector('#av')?.value });
@@ -9941,11 +8620,6 @@ const Datenbank = (() => {
                 else {
                     const eintrag = BEDINGUNGEN.find(x => x[0] === bArt) || ['', '', ''];
                     const braucht = (eintrag[2] ?? '').split(',').filter(Boolean);
-                    /* WELCHE Felder dazukommen, sagt der Eintrag in BEDINGUNGEN — die
-                       Bedingung „Wochentag ist" braucht einen Wochentag, „Zeitspanne"
-                       braucht zwei Zeitpunkte, „Feld ist leer" nur eine Spalte. Darum
-                       steht hier ein offener Satz von Feldern: `{ art: bArt }` allein
-                       hiesse, es käme nie etwas dazu. */
                     const b = { art: bArt };
                     if (braucht.includes('spalte'))
                         b.key = o.querySelector('#abdk')?.value;
@@ -9972,9 +8646,6 @@ const Datenbank = (() => {
             if (!elVon(e)?.closest('[data-a="ok"]') && !elVon(e)?.closest('[data-a="mehr"]'))
                 return;
             const d = o.querySelector('#ad')?.value ?? '';
-            /* Wie bei der Bedingung: welche Felder eine Aktion mitbringt, hängt an
-               ihrer Art — eine Mail hat Empfänger, Betreff und Text, ein Zähler nur
-               eine Spalte. Der Satz ist offen, nicht `{ art: d }` und Schluss. */
             const dann = { art: d };
             if (['setze-prop', 'ki-fuellen', 'zaehler', 'wiederholen'].includes(d))
                 dann.key = o.querySelector('#adk2')?.value;
@@ -9988,14 +8659,12 @@ const Datenbank = (() => {
                 dann.text = wertFeld;
             if (d === 'zurueckstellen')
                 dann.wert = wertFeld;
-            /* Die Bedingung dieser einen Aktion */
             if (o.querySelector('#adwenn')?.checked) {
                 dann.wenn = { key: o.querySelector('#adwk')?.value,
                     op: o.querySelector('#adwo')?.value,
                     wert: o.querySelector('#adwv')?.value,
                     umkehren: o.querySelector('#adwn')?.checked };
             }
-            /* --- Die vier neuen Aktionen ---------------------------------- */
             if (d === 'variablen') {
                 dann.vars = (o.querySelector('#avt')?.value || '').split('\n')
                     .map((z) => z.trim()).filter(Boolean)
@@ -10031,7 +8700,6 @@ const Datenbank = (() => {
                 }
                 dann.nurVerknuepft = o.querySelector('#afr')?.checked;
             }
-            /* Das Häkchen entscheidet den Zweig (E85) */
             const sonstKasten = o.querySelector('#adsonst');
             if (sonstKasten?.checked)
                 gesammeltSonst.push(dann);
@@ -10099,12 +8767,6 @@ const Datenbank = (() => {
                     : ' angelegt'));
         });
     };
-    /* ========================================================================
-     * CSV EINLESEN
-     * ------------------------------------------------------------------------
-     * Notions Import für Tabellen: die Kopfzeile wird zum Schema, jede
-     * weitere Zeile zu einem Eintrag. Fehlende Spalten werden angelegt.
-     * ======================================================================*/
     const csvZerlegen = (text) => {
         const zeilen = [];
         let feld = '', zeile = [], inAnf = false;
@@ -10141,30 +8803,6 @@ const Datenbank = (() => {
         }
         return zeilen.filter(z => z.some(x => String(x).trim()));
     };
-    /* ------------------------------------------------------------------------
-     * CSV EINLESEN — jetzt mit Vorschau, und mit dem richtigen Trennzeichen
-     * ------------------------------------------------------------------------
-     * ZWEI DINGE STANDEN HIER FALSCH, und beide kosten Daten.
-     *
-     * **1 · Das Trennzeichen.** `csvZerlegen` trennt bei Komma UND Semikolon
-     * UND Tabulator, gleichzeitig. Eine deutsche oder Schweizer Datei benutzt
-     * das Semikolon zum Trennen und das Komma als Dezimalzeichen:
-     *
-     *     Miete;1450,50;Januar
-     *
-     * Daraus wurden fünf Felder statt drei, und aus `1450,50` wurden `1450`
-     * und `50`. Der Betrag war weg, und es sah nicht nach einem Fehler aus —
-     * es sah nach zwei Spalten mehr aus. `Csv.zerlege` erkennt das Zeichen,
-     * und zwar ausserhalb von Anführungszeichen gezählt, damit ein Komma in
-     * „Meier, Hans" nicht mitredet.
-     *
-     * **2 · Es wurde nichts gefragt.** Einlesen legt Zeilen an und ergänzt
-     * Spalten am Schema — das ist eine Massenänderung, und sie geschah
-     * wortlos. Jetzt steht davor, was passieren wird: wie viele Zeilen, welche
-     * Spalten zugeordnet werden und wie viele NEU angelegt werden. Die letzte
-     * Zahl ist die wichtigere: eine falsch benannte Spalte in der Datei legt
-     * sonst still eine zweite Spalte gleichen Inhalts an.
-     * ----------------------------------------------------------------------*/
     const csvImport = (coll) => {
         const inp = document.createElement('input');
         inp.type = 'file';
@@ -10174,9 +8812,6 @@ const Datenbank = (() => {
             if (!f)
                 return;
             const roh = await f.text();
-            /* Der bessere Zerleger, wenn er da ist — sonst der alte. Ein Import,
-               der ohne `core/spreadsheet/csv.js` gar nicht mehr ginge, wäre die
-               schlechtere Abhängigkeit. */
             const zeilen = (typeof Csv !== 'undefined')
                 ? Csv.zerlege(roh).filter(z => z.some(x => String(x).trim()))
                 : csvZerlegen(roh.replace(/^﻿/, ''));
@@ -10192,12 +8827,6 @@ const Datenbank = (() => {
                 const k = Object.keys(coll.schema).find(x => String(coll.schema[x].name).toLowerCase() === String(name).toLowerCase());
                 if (k)
                     return { name, key: k, neu: false, typ: coll.schema[k].type };
-                /* WELCHE SORTE die neue Spalte wird, statt „alles ist Text". Eine
-                   Textspalte rechnet nicht: die Summe ergibt 0, Sortieren sortiert
-                   alphabetisch (`100` vor `20`), und „grösser als" hat nichts zu
-                   vergleichen. Der Mensch merkt das an der falschen Summe und nicht
-                   am Import. Geraten wird vorsichtig — ein einziger Text in der
-                   Spalte, und sie bleibt Text. */
                 const spaltenWerte = zeilen.slice(1).map(z => z[i]);
                 const erkannt = (typeof Spaltentyp !== 'undefined')
                     ? Spaltentyp.erkenne(spaltenWerte) : { typ: 'text', optionen: [] };
@@ -10232,15 +8861,11 @@ const Datenbank = (() => {
                 : 'ja';
             if (antwort !== 'ja')
                 return;
-            /* Jetzt erst die neuen Spalten anlegen. */
             plan.forEach((x, i) => {
                 if (!x.neu)
                     return;
                 x.key = Ids.short(5);
                 const def = { name: x.name || 'Spalte ' + (i + 1), type: x.typ || 'text' };
-                /* Eine Auswahlspalte braucht ihre Möglichkeiten, sonst ist sie eine
-                   Auswahl ohne Auswahl. Die Farben nimmt sie der Reihe nach — das
-                   ist besser als alles grau und billiger als eine Frage mehr. */
                 if (def.type === 'select') {
                     const farben = ['blue', 'green', 'orange', 'purple', 'pink', 'yellow', 'brown', 'red', 'gray'];
                     def.options = (x.optionen || []).map((o, j) => ({ name: o, color: farben[j % farben.length] }));
@@ -10254,9 +8879,6 @@ const Datenbank = (() => {
                 plan.forEach((x, i) => {
                     if (x.key === titelKey)
                         return;
-                    /* Der Wert wird in die erkannte Sorte gebracht — sonst stünde in
-                       einer Zahlenspalte der Text `1450,50`, und die Summe wäre
-                       wieder 0. Genau das war der Anlass. */
                     props[x.key] = (typeof Spaltentyp !== 'undefined')
                         ? Spaltentyp.wandle(z[i] ?? '', x.typ || 'text')
                         : (z[i] ?? '');
@@ -10271,15 +8893,7 @@ const Datenbank = (() => {
         });
         inp.click();
     };
-    /* Automationen an den Speicher hängen — einmal beim Laden. */
     automationenEinklinken();
-    /**
-     * Die offene Datenbank samt Ansicht und Block — für die Kontextkante (L95).
-     *
-     * `sammlungAufSeite` gab nur eine Kennung zurück. Damit lässt sich keines
-     * der Menüs aufrufen: sie wollen alle drei Stücke, und die Ansicht ist die,
-     * die der Block gerade zeigt — nicht einfach die erste.
-     */
     const offeneSammlung = (seiteId) => {
         let id = String(seiteId || '');
         if (!id) {
@@ -10302,8 +8916,6 @@ const Datenbank = (() => {
         if (!coll)
             return null;
         const ids = coll.viewIds || [];
-        /* `aktiveView` kann auf eine gelöschte Ansicht zeigen — dann gilt die
-           erste, statt dass alles danach `undefined` liest. */
         const viewId = block.aktiveView && ids.includes(block.aktiveView)
             ? block.aktiveView : ids[0];
         const view = viewId ? Store.cache.views[viewId] : null;
@@ -10311,7 +8923,6 @@ const Datenbank = (() => {
             return null;
         return { coll, view, block };
     };
-    /** Welche Sammlung liegt auf dieser Seite? Für Befehle, die eine brauchen. */
     const sammlungAufSeite = (seiteId) => {
         const s = Store.getBlock(seiteId);
         if (!s)
@@ -10324,12 +8935,7 @@ const Datenbank = (() => {
         return kind ? kind.collectionId : null;
     };
     return { render, sammlungAufSeite, offeneSammlung, spaltenMenue, TYPEN, propTyp, wert, wertFrisch, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
-        /* Die vier Menüs standen nicht im Rückgabeobjekt — von aussen
-           waren sie `undefined`, und genau daran scheiterte die
-           Kontextkante der Datenbank (L95, dritter Punkt). */
-        filterMenue, sortMenue, eigenschaftenMenue, /* `gruppierenMenue` steht schon weiter unten */
-        /* `zelleBearbeiten` war nicht ausgeführt — der Mail-Bereich wollte
-           es und griff deshalb ins Leere. */
+        filterMenue, sortMenue, eigenschaftenMenue,
         zelleBearbeiten,
         relationsart, relationsartSatz,
         automationenMenue, automationenLaufen, automationAbbrechen,
@@ -10352,36 +8958,14 @@ const Datenbank = (() => {
         unterElementeAn, abhaengigkeitenAn, blockiertDurch, UNTER_KEYS, ABH_KEYS,
         weitereEinstellungen, quellenVerwalten, seitenLayoutPanel, dbMenue };
 })();
-/* ============================================================================
- * DIE KONTEXTKANTE DER DATENBANK (L95, E312)
- * ----------------------------------------------------------------------------
- * Drei Dinge fehlten, und alle drei stehen jetzt:
- *
- *   1 · Ein Schauplatz. `bereichJetzt()` kennt seit E312 „datenbank" —
- *       aber nur, wenn die Seite AUSSER der Datenbank nichts zeigt. Eine
- *       Seite mit Text davor und danach bleibt der Editor; dort will man
- *       ihn, und die Kante darf ihn nicht wegnehmen.
- *   2 · Ein Griff. `offeneSammlung()` liefert `{coll, view, block}` statt
- *       nur einer Kennung — ohne alle drei lässt sich kein Menü aufrufen.
- *   3 · Ausgeführte Menüs. Die vier standen nicht im Rückgabeobjekt und
- *       waren von aussen `undefined`.
- *
- * Und der Anker: die Kante gibt ihren Knopf an `tun` weiter (context-rail.ts).
- * `sortMenue` und `gruppierenMenue` lesen sofort `getBoundingClientRect()` —
- * ohne Anker hätten sie geworfen, und ein Knopf, der wirft, ist ein Knopf,
- * der nichts tut (§47).
- * ==========================================================================*/
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
-    /** Die dreizehn Ansichtsarten auf Strichzeichen. Emoji stehen im
-        Ansichtenregister; an der Kante sind sie verboten (E202). */
     const ANSICHT_ZEICHEN = {
         table: 'grid', raster: 'grid', board: 'boxChecked', timeline: 'chart',
         calendar: 'calendar', list: 'pages', gallery: 'image', chart: 'chart',
         feed: 'history', map: 'compass', dashboard: 'graph', pivot: 'grid',
         form: 'clipboard'
     };
-    /** Die offene Datenbank — oder nichts. Jeder Griff fragt zuerst hier. */
     const jetzt = () => {
         try {
             return Datenbank.offeneSammlung();
@@ -10391,7 +8975,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         }
     };
     const da = () => !!jetzt();
-    /** Ein Menü öffnen, das drei Stücke und einen Anker braucht. */
     const menue = (fn) => (anker) => {
         const o = jetzt();
         if (!o || !anker)
@@ -10399,7 +8982,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         try {
             fn(anker, o.coll, o.view, o.block);
         }
-        catch { /* … */ }
+        catch { }
     };
     K.melde({ bereich: 'datenbank', id: 'db-ansicht', name: 'Ansicht',
         zeichen: 'grid', rang: 10,
@@ -10427,7 +9010,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                         try {
                             App.oeffne(App.aktuelleSeite());
                         }
-                        catch { /* … */ }
+                        catch { }
                     }
                 };
             });

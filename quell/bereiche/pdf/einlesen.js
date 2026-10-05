@@ -1,75 +1,14 @@
 "use strict";
-/* ============================================================================
- * bereiche/pdf/einlesen.ts — ein PDF wird zu Seiten
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/pdf/einlesen.ts`.
- * ----------------------------------------------------------------------------
- * Der Weg vom Dokument zu beschreibbaren Seiten, mit vier Regeln:
- *
- *   Das Original bleibt   Es wird als Anhang abgelegt, Byte für Byte, und
- *                         nie überschrieben.
- *   Eine Seite zur Zeit   Nie zwei Leinwände gleichzeitig im Speicher. Eine
- *                         A4-Seite kostet gerastert rund neun Megabyte; bei
- *                         fünfzig Seiten gleichzeitig gibt jedes Telefon auf.
- *   Sichtbarer Fortschritt Ein Skript mit achtzig Seiten braucht Zeit. Wer
- *                         nicht sieht, dass etwas geschieht, drückt noch
- *                         einmal.
- *   Abgeleitet ist abgeleitet  Seitenbilder tragen `abgeleitet: true`. Sie
- *                         gehören nicht in jede Sicherung und nicht in jeden
- *                         Abgleich — sie entstehen in Sekunden neu.
- *
- *   Nichts verschwindet lautlos  Klappt das Lesen nicht — kaputt, mit
- *                         Passwort geschützt, oder der Mensch bricht ab —
- *                         hängt die Datei trotzdem SICHTBAR an der Seite.
- *                         Bytes ablegen und keinen Block bauen hiesse: der
- *                         Mensch zieht etwas herein und sieht nichts (E104).
- *
- * SEIT E104 GIBT ES ZWEI ANORDNUNGEN. Redur hatte es so beschrieben: „wenn
- * ich die pdf hochlade sollte ich neben es … so leeren a4 blatt haben die
- * ich direk dort schreiben kann". Also kann jede Seite ein Notizblatt neben
- * sich bekommen — genauso hoch und breit wie sie selbst, damit links und
- * rechts auf einer Linie liegen.
- *
- *   untereinander    Seite, Seite, Seite. Wie bisher.
- *   nebeneinander    je Seite: columns → spalte(Seite) + spalte(Blatt)
- *
- * GEFRAGT WIRD JEDES MAL, nicht einmal und dann heimlich gemerkt. Die
- * zuletzt gewählte Anordnung steht nur vorn — ein gemerkter Zustand, den
- * man nirgends sieht und nirgends ändert, ist genau die Sorte Falle, die
- * man erst beim dritten PDF bemerkt.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/einlesen.ts (npm run bauen:ts). */
 const PdfEinlesen = (() => {
-    /* Ab hier wird nicht mehr ungefragt alles gerastert. Achtzig Seiten sind
-       rund fünfzehn Megabyte Bilder — das soll ein Mensch entscheiden. */
     const OHNE_FRAGE = 30;
-    /* `%PDF-` als Bytes — siehe `alsSeiten`. */
     const PDF_KOPF = [0x25, 0x50, 0x44, 0x46, 0x2d];
     const alsSeiten = async (datei, elternId, vorgabe) => {
         if (typeof PdfLeser === 'undefined')
             throw new Error('Der PDF-Leser ist nicht geladen.');
-        /* Jedes PDF beginnt mit `%PDF-`. Fünf Bytes lesen kostet nichts und
-           spart bei einer falsch benannten 20-MB-Datei das vollständige Ablegen
-           und Einlesen, bevor jemand merkt, dass es keine ist. Wer hier
-           herausfliegt, geht den gewöhnlichen Anhang-Weg — und der legt den
-           Block ZUERST an, sodass sofort etwas dasteht.
-    
-           VERGLICHEN WIRD ÜBER ZAHLEN, nicht über eine Zeichenkette. Der erste
-           Entwurf schrieb `String.fromCharCode(...kopf)`, und `test87` §9 hat
-           das zu Recht angestrichen: der Spread reicht jedes Byte als eigenen
-           Aufrufparameter weiter und sprengt bei grossen Puffern den Stapel.
-           Bei fünf Bytes wäre er harmlos — aber genau so wandert ein Muster
-           weiter, und die nächste Stelle hat dann ein Megabyte. */
         const kopf = new Uint8Array(await datei.slice(0, PDF_KOPF.length).arrayBuffer());
         if (PDF_KOPF.some((b, i) => kopf[i] !== b))
             throw new Error('Das ist keine PDF-Datei.');
-        /* DIE PRESSE STATT DES TOASTS (E463). Ein Toast ist zwei Zeilen Grau,
-           und beim zwölften „Seite 7 von 12" sieht ihn niemand mehr an. Die
-           Karte unten rechts zeigt Bogen für Bogen, wie aus der Datei Seiten
-           werden, und schreibt dieselbe Zahl daneben — als `role="status"`,
-           also hört der Vorleser denselben Satz wie vorher. Beides zugleich
-           wäre der Satz zweimal. Ohne `Lader` (alte Einzeldatei, Prüflauf ohne
-           Schale) bleibt es beim Toast. */
         const presse = typeof Lader !== 'undefined'
             ? Lader.schweben({ art: 'presse', text: '„' + datei.name + '" wird gelesen …' })
             : null;
@@ -79,18 +18,11 @@ const PdfEinlesen = (() => {
                 melder.textContent = t;
             presse?.setzen({ text: t });
         };
-        /* Toast oder Karte gehen auf JEDEM Weg hinaus weg — eine Presse, die
-           nach dem Fehler weiterläuft, wäre eine Behauptung. */
         const wegMelden = () => {
             melder?.remove();
             presse?.entfernen();
         };
         let griff = null;
-        /* DAS ORIGINAL ZUERST — es ist das, was zählt. Geht danach etwas schief,
-           hat der Mensch trotzdem seine Datei. Geht schon DAS schief, fliegt der
-           Fehler nach oben: dann hat noch nichts stattgefunden, und der
-           gewöhnliche Anhang-Weg in `werkzeuge.ts` übernimmt von vorn.
-           Ausserhalb des grossen `try`, damit `quelle` auch im `catch` da ist. */
         let quelle;
         try {
             quelle = await Dateien.ablegen(datei, { blockId: elternId });
@@ -99,27 +31,14 @@ const PdfEinlesen = (() => {
             wegMelden();
             throw e;
         }
-        /**
-         * Der Rückfall: die Datei hängt SICHTBAR an der Seite, als gewöhnlicher
-         * Anhang. Gebraucht wird er, wenn das Lesen scheitert oder der Mensch
-         * abbricht.
-         *
-         * VORHER GAB ES IHN NICHT, und das war ein stiller Verlust: die Bytes
-         * lagen in der Ablage, ein Block dazu entstand nie. Wer ein kaputtes PDF
-         * hereinzog, sah eine Meldung und danach eine leere Seite. `test173`
-         * fiel darüber — mit einem 20 MB grossen „PDF", das keines war. Ein
-         * Hinweistext ist kein Ersatz für etwas, das man anklicken kann.
-         */
         const nurAnhaengen = async (warum) => {
             const b = Store.addBlock(elternId, 'file', {
                 text: datei.name, dateiId: quelle.id, typ: datei.type
             });
-            /* Der Datei-Satz zeigt jetzt auf DIESEN Block statt auf die Seite —
-               sonst überlebte er das Löschen des Anhangs (E99). */
             try {
                 await Store.dateiPut({ ...quelle, blockId: b.id });
             }
-            catch { /* der Satz bleibt dann an der Seite; kein Verlust */ }
+            catch { }
             App.zeichneSeite();
             UI.toast('„' + datei.name + '" ' + warum);
             return { seiten: 0, quelle, block: b.id };
@@ -134,7 +53,6 @@ const PdfEinlesen = (() => {
                     : 'Passwort für „' + datei.name + '"', '', 'passwort');
             });
             const gesamt = griff.seiten;
-            /* ---- Anordnung ---------------------------------------------------- */
             const zuletzt = String(Store.getMeta('pdfAnordnung', 'nebeneinander'));
             const knopfSeite = {
                 id: 'nebeneinander', text: 'Seite und Notizblatt nebeneinander',
@@ -146,11 +64,6 @@ const PdfEinlesen = (() => {
                 hinweis: 'Seite für Seite untereinander. Schreiben und malen kannst ' +
                     'du auch direkt darauf.'
             };
-            /* OHNE RÜCKFRAGE, WENN DER AUFRUFER SIE SCHON BEANTWORTET HAT (E350).
-               Ein ZIP-Import mit vierzig PDFs darf nicht vierzig Fenster stellen;
-               er fragt einmal oder gar nicht und reicht die Antwort herein. Die
-               Merkregel `pdfAnordnung` bleibt dann unberührt — sie gehört dem
-               Menschen, nicht dem Massenimport. */
             const anordnung = vorgabe && vorgabe.anStelle ? 'untereinander'
                 : vorgabe && vorgabe.anordnung ? vorgabe.anordnung
                     : typeof Dialog !== 'undefined'
@@ -201,16 +114,11 @@ const PdfEinlesen = (() => {
                 bis = antwort === 'erste' ? OHNE_FRAGE : gesamt;
             }
             const gemacht = [];
-            /* Die Stelle wandert mit jeder Seite eine weiter (E469). */
             let stelle = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.index : -1;
             for (let n = 1; n <= bis; n++) {
                 sageAn('Seite ' + n + ' von ' + bis + ' …');
                 const geo = await griff.geometrie(n);
                 const bild = await griff.alsBild(n);
-                /* Nebeneinander: ein Spaltenblock je Seite, mit derselben Hülle wie
-                   die von Hand angelegten Spalten (E102) — columns → spalte →
-                   Inhalt. Eine eigene Bauform wäre eine zweite Wahrheit über
-                   dasselbe Ding. */
                 let wohin = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.elternId : elternId;
                 let nachher = () => { };
                 if (daneben) {
@@ -219,10 +127,6 @@ const PdfEinlesen = (() => {
                     const rechts = Store.addBlock(sp.id, 'spalte', { text: '' });
                     wohin = links.id;
                     nachher = () => {
-                        /* Das Notizblatt bekommt die MASSE DER SEITE, nicht A4. Ein
-                           querformatiges PDF neben einem hochkanten Blatt sähe aus wie
-                           ein Fehler, und die Zeilen links und rechts lägen nie auf
-                           einer Höhe. */
                         const blatt = Store.addBlock(rechts.id, 'blatt', {
                             text: '', blattBreite: geo.bw, blattHoehe: geo.bh,
                             raumVersion: SheetSpace.RAUM_VERSION
@@ -230,71 +134,22 @@ const PdfEinlesen = (() => {
                         Store.addBlock(blatt.id, 'text', { text: '' });
                     };
                 }
-                /* Die SEITE zuerst, das Blatt danach. Bei achtzig Seiten sieht man
-                   beim Einlesen zu, und ein Spaltenblock mit leerem linken Fach ist
-                   für den Bruchteil einer Sekunde ein Bild von einem Fehler.
-        
-                   UND DIE SEITE WEISS GLEICH, WER SIE IST. Vorher entstand sie leer
-                   und bekam Nummer, Masse und Herkunft erst nach dem Ablegen des
-                   Bildes nachgereicht. Dazwischen lag ein Block ohne alles — für ein
-                   paar Millisekunden je Seite, aber lang genug, dass zwei Prüfläufe
-                   genau dort hineinlasen und `nr: null` fanden. Ein Zustand, der
-                   nicht vorkommen kann, muss auch nicht behandelt werden.
-                   Nur `bildDateiId` bleibt ein Nachtrag: die Ablage braucht die
-                   Block-Kennung, die es vorher noch nicht gibt. Diese eine Lücke
-                   kennt der Zeichner und schreibt „Seite wird vorbereitet …" hin. */
-                /* DER TEXT DER SEITE, damit die Suche sie findet (E107). Er steht
-                   in `suchtext` und nicht in `text`: `text` ist, was ein Mensch
-                   geschrieben hat, und die Oberfläche zeigt es an vielen Stellen —
-                   eine halbe Seite Skript in der Krümelspur wäre keine Verbesserung.
-                   Anders als die Bilder kommt der Text MIT in die Sicherung: er ist
-                   klein, und ohne ihn wäre ein eingespieltes Skript stumm, bis
-                   jemand alle Seiten neu rechnet. */
                 const seitenText = await griff.text(n);
-                /* DIE VERWEISE DER SEITE KOMMEN GLEICH MIT (E473, Fund der Prüfung).
-                   E468 holte sie beim ANSEHEN und zog dafür die ganze Original-PDF
-                   in den Arbeitsspeicher — pdf.js stand damit wieder im Anzeigeweg,
-                   gegen `leser.ts` („So läuft sie einmal je Dokument") und gegen §36.
-                   Hier ist der Griff ohnehin offen; ein paar Rechtecke je Seite sind
-                   klein und wandern wie `suchtext` (E107) in die Sicherung. */
                 const seitenVerweise = await griff.verweise(n);
                 const b = Store.addBlock(wohin, 'pdfseite', {
                     text: '', suchtext: seitenText, nr: n, vonSeiten: gesamt,
                     bw: geo.bw, bh: geo.bh, dreh: geo.dreh,
                     quelleId: quelle.id, raumVersion: SheetSpace.RAUM_VERSION,
-                    /* Aus einem fremden Dokument, nicht selbst geschrieben (E307).
-                       `quelleId` sagt schon, WELCHES — `herkunft` sagt, dass es
-                       überhaupt eines ist, und das ist die Frage, die man beim
-                       Wiederlesen stellt. */
                     herkunft: 'quelle',
-                    /* AUCH DIE LEERE LISTE WIRD GESCHRIEBEN (E477). Vorher stand das
-                       Feld nur an Seiten MIT Verweisen — damit sahen „keine
-                       Verweise" und „noch nie nachgesehen" gleich aus, und der
-                       Nachtrag für alte Seiten liefe bei jedem Öffnen über jede
-                       Seite ohne Verweise wieder los. Ein leeres Array je Seite
-                       kostet sechzehn Zeichen in der Sicherung. */
                     verweise: Array.isArray(seitenVerweise) ? seitenVerweise : []
                 }, stelle >= 0 ? stelle++ : -1);
                 nachher();
                 const satz = await Dateien.ablegen(new File([bild], datei.name.replace(/\.pdf$/i, '') + '-s' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
                 Store.updateBlock(b.id, { bildDateiId: satz.id });
                 gemacht.push(b.id);
-                /* Dem Browser Luft lassen — sonst steht die Oberfläche still. */
                 await new Promise(r => setTimeout(r, 0));
             }
             wegMelden();
-            /* ══ DAS ORIGINAL BLEIBT OBEN STEHEN (E299) ═══════════════════════════
-               Redur: „ganz oben sollte immer die orginale pdf dort stehen und die
-               anderen als eien kopier dort ausdrucken". Genau so macht es OneNote:
-               die Datei als Anhang, darunter der Ausdruck.
-      
-               Bis hierher gab es sie nur als `quelleId` an jeder Seite — die Bytes
-               lagen in der Ablage, aber nichts auf der Seite zeigte darauf. Wer die
-               Datei weiterschicken oder auf einem anderen Rechner oeffnen wollte,
-               kam nicht an sie heran, obwohl sie da war.
-      
-               An Stelle 0, also VOR den Seiten. Und der Dateisatz zeigt auf DIESEN
-               Block: sonst ueberlebte er das Loeschen des Anhangs (E99). */
             let anhang = '';
             if (bis > 0) {
                 try {
@@ -305,54 +160,11 @@ const PdfEinlesen = (() => {
                     anhang = a.id;
                     await Store.dateiPut({ ...quelle, blockId: a.id });
                 }
-                catch { /* ohne Anhang bleiben wenigstens die Seiten */ }
+                catch { }
             }
-            /* UND DANN GEHT DIE PDF AUCH ALS DOKUMENT AUF (E296).
-               Bisher landeten die Seitenbloecke in der laufenden Notizseite:
-               zwischen Text und Werkzeugzeile, in Spaltenbreite, unter einem
-               Seitenkopf, der ein Drittel des Bildes nahm. Wer eine Vorlesungs-PDF
-               einliest, will sie lesen — nicht einen Absatz darin.
-      
-               ZWEI BEDINGUNGEN, UND BEIDE SIND WICHTIG:
-      
-               `bis > 0` — ohne Seiten gaebe es nichts zu zeigen, und der
-               Dokumentmodus liesse sich gar nicht einschalten (`available()`
-               zaehlt die Dokumentbloecke).
-      
-               `dokumentModus === undefined` — nur beim ERSTEN Mal. Wer den Modus
-               schon einmal verlassen hat, steht danach auf `false`, und ein
-               zweites Einlesen holt ihn nicht zurueck. Eine Ansicht, die sich
-               gegen die Entscheidung des Nutzers wieder einschaltet, ist keine
-               Hilfe (§47).
-      
-               UND NICHT BEI „NEBENEINANDER". Das ist die dritte Bedingung, und
-               sie kam erst durch drei Pruefungen dazu, die genau darueber fielen
-               (test177, test178, test228 im vollen Lauf).
-      
-               Wer oben „Seite und Notizblatt nebeneinander" waehlt, sagt damit:
-               ich will beim Lesen daneben schreiben. Der Dokumentmodus zeigt aber
-               EINE Seite und keine Spalten — die eben getroffene Wahl waere
-               unsichtbar geworden, ohne Meldung. Eine Ansicht, die die Antwort auf
-               ihre eigene Frage ueberschreibt, ist schlimmer als gar keine Frage.
-      
-               Bei „Nur die Seiten" gilt das nicht: dort ist genau das gemeint,
-               was der Dokumentmodus zeigt. */
             const zielSeite = typeof Links !== 'undefined' ? Links.seiteVon(elternId) : null;
             if (bis > 0 && !daneben && zielSeite && zielSeite.dokumentModus === undefined)
                 Store.updateBlock(zielSeite.id, { dokumentModus: true });
-            /* ══ DER DATEINAME WIRD DER TITEL, WENN NOCH KEINER DA IST (Audit F06)
-               Vorher hiess jede eingelesene PDF „Ohne Titel": der Name stand am
-               Datei-Block, nie an der Seite. Wer drei Skripte einlas, hatte drei
-               gleich heissende Seiten im Baum und musste jede oeffnen, um sie zu
-               unterscheiden.
-      
-               NUR, WENN NOCH KEINER DA IST. Ein Titel, den ein Mensch getippt
-               hat, wird nicht ueberschrieben — auch nicht beim zweiten Einlesen
-               in dieselbe Seite. Geprueft wird gegen leer UND gegen den
-               Vorgabetext, denn eine frisch angelegte Seite traegt ihn wirklich.
-      
-               Die Endung faellt weg: „Vorlesung 3.pdf" wird „Vorlesung 3". Der
-               volle Dateiname bleibt am Datei-Block stehen, wo er hingehoert. */
             const OHNE_NAMEN = ['', 'Ohne Titel', 'Neue Seite'];
             if (bis > 0 && zielSeite && OHNE_NAMEN.includes(String(zielSeite.text || '').trim())) {
                 const titel = datei.name.replace(/\.[^.]+$/, '').trim();
@@ -366,18 +178,10 @@ const PdfEinlesen = (() => {
         catch (e) {
             wegMelden();
             const text = e instanceof Error ? e.message : String(e);
-            /* Verschlüsselte Dateien sind der häufigste Fall — und der einzige,
-               bei dem eine allgemeine Meldung ratlos machen würde. */
             const warum = /password|encrypt/i.test(text)
-                /* Seit E110 gibt es die Passwortfrage — wer hier landet, hat sie
-                   abgebrochen oder dreimal danebengetippt. Der Satz sagt deshalb
-                   nicht mehr „Redion kann sie nicht öffnen", sondern was los ist. */
                 ? 'bleibt ohne Passwort zu — sie liegt als Anhang auf der Seite.'
                 : 'liess sich nicht als Seiten lesen (' + text +
                     ') — sie liegt als Anhang auf der Seite.';
-            /* NICHT weiterwerfen: die Datei ist da und sichtbar. Ein Fehler, der
-               nach oben geht, obwohl unten alles aufgeräumt ist, führt nur dazu,
-               dass jemand oben noch einmal dasselbe versucht. */
             return await nurAnhaengen(warum);
         }
         finally {
@@ -385,33 +189,6 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    /* ==========================================================================
-     * SEITENBILDER AUS DEM ORIGINAL ZURÜCKHOLEN
-     * --------------------------------------------------------------------------
-     * E103 lässt die gerasterten Seitenbilder aus der Sicherung heraus, weil sie
-     * „in Sekunden neu entstehen". Der Satz stimmte bisher nur der Möglichkeit
-     * nach: NICHTS stellte sie wirklich wieder her. Wer eine `.redion` einspielte,
-     * bekam sein Skript zurück — die Marken darauf, die Notizblätter daneben, das
-     * Original als Anhang — und lauter leere Seiten mit dem Satz „Für diese Seite
-     * gibt es noch kein Bild." Ein Hinweis ohne Ausweg.
-     *
-     * Jetzt gibt es den Ausweg, und zwar für das GANZE Dokument auf einmal: das
-     * Original aufzuschlagen ist der teure Teil, eine einzelne Seite daraus zu
-     * zeichnen der billige. Wer eine Seite anklickt, meint das Skript.
-     *
-     * DIE MASSE WERDEN NICHT NEU GELESEN. `bw`, `bh` und `nr` stehen am Block und
-     * bleiben, wie sie sind — die Marken liegen in genau diesem Raum (E100).
-     * Käme aus einer neuen Messung eine andere Zahl, läge jeder Strich woanders.
-     * ========================================================================*/
-    /**
-     * Alle Seiten eines Dokuments, die kein Bild haben.
-     *
-     * „KEIN BILD" HEISST NICHT NUR „KEINE KENNUNG". Nach dem Einspielen einer
-     * Sicherung trägt jeder Block seine alte `bildDateiId` — die Datei dahinter
-     * ist aber nicht mitgekommen (E103). Eine Kennung, die ins Leere zeigt,
-     * ist kein Bild; wer nur auf ihr Vorhandensein sieht, hält genau die
-     * Seiten für fertig, um die es hier geht.
-     */
     const ohneBild = async (quelleId) => {
         const kandidaten = Object.values(Store.cache.blocks)
             .filter(b => b && b.alive !== false && b.type === 'pdfseite' &&
@@ -429,118 +206,27 @@ const PdfEinlesen = (() => {
         }
         return offen;
     };
-    /**
-     * Die fehlenden Seitenbilder eines Dokuments neu rechnen.
-     * @param quelleId Kennung des abgelegten Originals
-     */
-    /* ==========================================================================
-     * DAS ZURÜCKHOLEN IST EIN AUFTRAG (E327, L103 Punkt 1)
-     * --------------------------------------------------------------------------
-     * Bis hierher rechnete das Zurückholen im Tab, in dem geklickt wurde.
-     * Drei Dinge folgten daraus, und das dritte ist ein Datenschaden:
-     *
-     *   · WER DEN TAB SCHLIESST, verliert den Lauf. Die schon gerechneten
-     *     Seiten bleiben — der Rest fängt beim nächsten Klick wieder an.
-     *   · WER ZUSIEHT, sieht einen Toast und sonst nichts. Kein Abbrechen,
-     *     kein Stand, kein Wiederfinden nach einem Wechsel der Ansicht.
-     *   · ZWEI TABS RECHNETEN BEIDE. `laufendeRechnungen` war eine Map IM
-     *     TAB — sie schützte genau den einen. Der Kommentar darüber
-     *     beschrieb die Gefahr schon richtig: beide legen für denselben
-     *     Block eine Datei ab, nur die zuletzt geschriebene steht danach in
-     *     `bildDateiId`, und die andere bleibt als fertiger Satz mit
-     *     LEBENDEM `blockId` liegen. `Dateien.verwaist()` sucht Sätze OHNE
-     *     Block und findet sie darum nie. Eine Dateileiche, die niemand mehr
-     *     wegräumen kann — und sie entstand, sobald jemand Redion zweimal
-     *     offen hatte.
-     *
-     * Die Auftragsmaschine (E286) beantwortet alle drei mit einer Sache: der
-     * Auftrag steht in der Ablage, nicht im Tab. Seine Kennung leitet sich
-     * aus dem Dokument ab, also gibt es je Dokument höchstens einen; wer ihn
-     * genommen hat, hält eine Pacht, und seit E323 sprechen sich die Tabs
-     * über `navigator.locks` ab.
-     *
-     * DIE WIEDERAUFNAHME KOSTET NICHTS, weil sie schon da war: `ohneBild`
-     * leitet bei jedem Lauf neu her, was noch fehlt. Genau deshalb nennt
-     * L103 dieses Stück als ersten Anschluss und nicht das Einlesen selbst.
-     * ========================================================================*/
-    /** Die Art, unter der die Maschine diesen Läufer kennt. */
     const AUFTRAG_ART = 'pdf-bilder';
-    /**
-     * Die Kennung eines Auftrags LEITET SICH AB, sie wird nicht gewürfelt.
-     *
-     * Das ist die ganze Absprache zwischen zwei Tabs und zwei Klicks: wer
-     * denselben Auftrag meint, kommt auf dieselbe Kennung, und
-     * `Store.auftragNehmen` gibt ihn nur einem.
-     */
     const auftragsId = (quelleId) => 'pdfbild-' + quelleId;
-    /* ── DER NACHTRAG DER VERWEISE (E477, L133) ──────────────────────────────
-       E473 hat pdf.js aus dem ANZEIGEWEG genommen: die Verweise einer Seite
-       stehen seither am Block, geschrieben beim Einlesen. Alles, was VOR
-       E473 eingelesen wurde, hat das Feld nicht — und weil „keine Verweise"
-       und „noch nicht nachgesehen" beide wie nichts aussehen, zeigten diese
-       Seiten für immer keine Verweise mehr.
-  
-       Nachgetragen wird über dieselbe Maschine wie die Seitenbilder: EIN
-       Lauf je Original, im Hintergrund, mit Pacht und Abbrechen-Knopf. Das
-       ist der Unterschied zum Zustand vor E473 — dort hing die ganze PDF am
-       Ansehen JEDER Seite; hier wird sie einmal geöffnet, alle Seiten
-       bekommen ihr Feld, und danach nie wieder. */
     const AUFTRAG_VERWEISE = 'pdf-verweise';
     const verweisAuftragsId = (quelleId) => 'pdfverweise-' + quelleId;
-    /** Seiten einer Quelle, an denen das Feld `verweise` fehlt. Ein leeres
-     *  Feld zählt NICHT als fehlend — es ist die Antwort „nachgesehen, keine". */
     const ohneVerweise = (quelleId) => Object.values(Store.cache.blocks)
         .filter(b => b && b.alive !== false && b.type === 'pdfseite' &&
         b.quelleId === quelleId && !Array.isArray(b.verweise))
         .sort((a, b) => (Number(a.nr) || 0) - (Number(b.nr) || 0));
-    /**
-     * KEINE WIEDERHOLUNGEN. Der Vorgabewert der Maschine ist drei, und der
-     * ist für Aufträge gedacht, die an einem Netz hängen. Hier ist KEIN
-     * Fehlschlag vorübergehend: fehlt das Original, fehlt es auch in dreissig
-     * Sekunden; lässt sich das PDF nicht öffnen, lässt es sich nie öffnen.
-     * Dreimal zu warten hiesse nur, die Meldung dreimal so spät zu zeigen.
-     * Ein neuer Versuch ist ein Klick, und der leitet ohnehin neu her.
-     */
     const MAX_VERSUCHE = 1;
-    /**
-     * Der Läufer.
-     *
-     * Er bekommt den Auftrag und die drei Griffe der Maschine: einen Schritt
-     * festschreiben, fragen ob abgebrochen wurde, die Pacht halten.
-     *
-     * WAS ER NICHT TUT: er zeigt nichts an. Ein Läufer, der Toasts wirft,
-     * wirft sie im falschen Tab — er läuft dort, wo die Pacht liegt, und das
-     * muss nicht der sein, in dem geklickt wurde. Angezeigt wird aus den
-     * Ereignissen (siehe `beiAuftragEreignis` weiter unten) und im
-     * Auftragsfenster (E322).
-     */
     const bilderLaeufer = async (auftrag, hilfe) => {
         const quelleId = String(auftrag?.eingabe?.quelleId || '');
         if (!quelleId)
             throw new Error('Dem Auftrag fehlt die Kennung des Originals.');
-        /* NEU HERGELEITET, NICHT AUS DEM STAND GELESEN. Beim Wiederaufnehmen
-           nach einem Neustart wäre eine gespeicherte Liste von Block-Kennungen
-           eine Behauptung über die Vergangenheit — Blöcke können inzwischen im
-           Papierkorb liegen, Bilder können von Hand gelöscht worden sein.
-           `ohneBild` fragt den Bestand. */
         const offen = await ohneBild(quelleId);
         if (!offen.length)
             return { seiten: 0, grund: 'nichts offen' };
         const roh = await Dateien.alsBlob(quelleId);
         if (!roh) {
-            /* Das kann echt vorkommen: eine `.json`-Sicherung kennt keine
-               Anhänge, also fehlt auch das Original. Kein Fehler der Maschine,
-               sondern eine Auskunft an den Menschen — und weil sie ihn erreichen
-               muss, ist es hier eine Ausnahme und kein stilles `return`. */
             throw new Error('Das Original fehlt in diesem Bestand — zieh die PDF-Datei ' +
                 'noch einmal herein.');
         }
-        /* DER NAME DES DOKUMENTS GEHÖRT IN JEDEN SCHRITT-TEXT, nicht nur in den
-           ersten. `hilfe.schritt(stand, text)` ERSETZT den Text — der schöne
-           Satz von `anlegen` („„elektro.pdf": Seitenbilder werden zurückgeholt")
-           war nach der ersten Seite fort, und im Fenster stand nur noch „Seite 7
-           von 14". Bei zwei Skripten gleichzeitig sind zwei solche Zeilen nicht
-           auseinanderzuhalten. Auch das fand das Bild und kein Prüflauf. */
         const satzQuelle = await Store.dateiHolen(quelleId);
         const name = String(satzQuelle?.name || 'dem Original');
         let griff = null;
@@ -548,33 +234,20 @@ const PdfEinlesen = (() => {
         try {
             griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
             for (const b of offen) {
-                /* IN JEDER SCHLEIFE FRAGEN — so verlangt es die Maschine, und so
-                   kommt der Abbrechen-Knopf aus E322 überhaupt zum Zug. */
                 if (hilfe.abgebrochen())
                     break;
                 const n = Number(b.nr) || 1;
                 if (n > griff.seiten)
-                    continue; /* Seite gibt es im Original nicht */
-                /* Wer diese Seite einmal schärfer gerechnet hat, will sie nicht
-                   beim nächsten Zurückholen wieder grob haben. Die Breite steht am
-                   Block und kommt mit in die Sicherung (E173). */
+                    continue;
                 const bild = await griff.alsBild(n, Number(b.bildBreite) || undefined);
                 const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
-                /* Fehlt der Suchtext noch — bei allem, was vor E107 eingelesen
-                   wurde —, kommt er jetzt mit. Das Dokument ist ohnehin offen. */
                 const nach = { bildDateiId: satz.id };
                 if (!b.suchtext)
                     nach.suchtext = await griff.text(n);
                 Store.updateBlock(b.id, nach);
                 fertig++;
-                /* DER WIEDERAUFSETZPUNKT. Nach diesem Aufruf steht in der Ablage,
-                   dass diese Seite fertig ist — ein Absturz eine Zeile später
-                   kostet höchstens diese eine. Die Zählung im Text ist die des
-                   DOKUMENTS und nicht die der Restliste: „Seite 80 von 1" war
-                   genau der Fehler, den E116 abgeräumt hat. */
                 await hilfe.schritt({ quelleId, fertig }, '„' + name + '": Seite ' + n + ' von ' +
                     (Number(b.vonSeiten) || griff.seiten));
-                /* Dem Browser Luft lassen — sonst steht die Oberfläche still. */
                 await new Promise(r => setTimeout(r, 0));
             }
             return { seiten: fertig, quelleId };
@@ -584,10 +257,6 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    /**
-     * Der Läufer für die Verweise (E477). Wie `bilderLaeufer` gebaut, nur
-     * kürzer: er schreibt kein Bild, sondern ein Feld je Seite.
-     */
     const verweiseLaeufer = async (auftrag, hilfe) => {
         const quelleId = String(auftrag?.eingabe?.quelleId || '');
         if (!quelleId)
@@ -609,10 +278,6 @@ const PdfEinlesen = (() => {
                 if (hilfe.abgebrochen())
                     break;
                 const n = Number(b.nr) || 1;
-                /* AUCH DIE LEERE LISTE WIRD GESCHRIEBEN — und auch für eine Seite,
-                   die es im Original gar nicht mehr gibt. „Keine Verweise" und
-                   „noch nicht nachgesehen" müssen sich unterscheiden, sonst liefe
-                   dieser Nachtrag bei jedem Öffnen des Dokuments wieder los. */
                 const liste = n > griff.seiten ? [] : await griff.verweise(n);
                 Store.updateBlock(b.id, { verweise: Array.isArray(liste) ? liste : [] });
                 fertig++;
@@ -628,14 +293,6 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    /**
-     * Den Nachtrag anstossen — einmal je Original.
-     *
-     * OHNE ORIGINAL WIRD GAR NICHTS ANGELEGT. Eine `.json`-Sicherung kennt
-     * keine Anhänge (§11); ein Auftrag, der scheitert und dem Menschen eine
-     * Fehlermeldung wirft für etwas, das er nicht ändern kann, ist Lärm. Der
-     * Fall steht in L133 und bleibt dort stehen.
-     */
     const verweiseNachtragen = async (quelleId) => {
         if (typeof Auftraege === 'undefined' || !Auftraege.anlegen)
             return { auftrag: null, grund: 'ohne Maschine' };
@@ -657,37 +314,10 @@ const PdfEinlesen = (() => {
         });
         return { auftrag, seiten: offen.length };
     };
-    /* Anmelden, sobald das Modul geladen ist. Die Maschine steht in
-       index.html vor diesem Bereich (Zeile 456 gegen 510), also ist sie hier
-       immer da; der Wächter gilt Prüfläufen, die einzelne Dateien laden. */
     if (typeof Auftraege !== 'undefined' && Auftraege.anmelden) {
         Auftraege.anmelden(AUFTRAG_ART, bilderLaeufer, 'Seitenbilder zurückholen');
         Auftraege.anmelden(AUFTRAG_VERWEISE, verweiseLaeufer, 'Verweise nachtragen');
     }
-    /* ── WAS DER MENSCH DAVON SIEHT ─────────────────────────────────────────
-       Der Läufer schweigt (siehe oben). Angezeigt wird HIER, aus den
-       Ereignissen — und zwar in jedem Tab, auch in dem, der nicht rechnet.
-  
-       ZWEIMAL NEU ZEICHNEN, und beide Male mit Grund: nach dem Ende, weil
-       dann die letzten Bilder da sind, UND nach einem Fehler, weil bei einem
-       Abbruch auf Seite 40 vierzig Bilder fertig am Block stehen und nur
-       nicht erschienen. Genau das hat E116 einmal von Hand geflickt; jetzt
-       hängt es an einer Stelle statt an zweien. */
-    /**
-     * WÄHREND DES LAUFS AUCH — aber gedrosselt.
-     *
-     * Auf dem Bild stand ein vierzehnseitiges Skript eine halbe Minute lang
-     * grau da, während der Auftrag brav Seite für Seite rechnete. Das war
-     * schon vorher so, und schon vorher falsch: der Kopf dieser Datei
-     * verspricht „Sichtbarer Fortschritt — wer nicht sieht, dass etwas
-     * geschieht, drückt noch einmal". Als Auftrag wiegt es schwerer, weil er
-     * nun auch im Hintergrund läuft und länger dauern darf.
-     *
-     * Vierzehnmal neu zu zeichnen wäre die andere Übertreibung. Höchstens
-     * alle anderthalb Sekunden, und nur wenn überhaupt eine PDF-Seite auf
-     * dem Schirm ist — läuft der Auftrag zu einem Dokument, das gerade
-     * niemand ansieht, gibt es nichts aufzufrischen.
-     */
     const ZEICHEN_ABSTAND_MS = 1500;
     let zuletztGezeichnet = 0;
     const beiAuftragEreignis = (name, daten) => {
@@ -717,15 +347,6 @@ const PdfEinlesen = (() => {
         Ereignisse.horche(ARTEN.auftragBeendet, (d) => beiAuftragEreignis('auftrag.beendet', d));
         Ereignisse.horche(ARTEN.auftragFehler, (d) => beiAuftragEreignis('auftrag.fehler', d));
     }
-    /**
-     * Die fehlenden Seitenbilder eines Dokuments neu rechnen — als Auftrag.
-     *
-     * Gibt den Auftrag zurück, nicht das Ergebnis. Das ist der Unterschied,
-     * den dieser Bogen ausmacht: der Aufrufer wartet nicht mehr auf achtzig
-     * Seiten, er stösst etwas an, das auch ohne ihn zu Ende geht.
-     *
-     * @param quelleId Kennung des abgelegten Originals
-     */
     const neuBerechnen = async (quelleId) => {
         if (typeof Auftraege === 'undefined') {
             UI.toast('Die Auftragsmaschine steht nicht — Seitenbilder lassen sich ' +
@@ -736,11 +357,6 @@ const PdfEinlesen = (() => {
         if (!offen.length)
             return { auftrag: null, seiten: 0, grund: 'nichts offen' };
         const id = auftragsId(quelleId);
-        /* SCHON UNTERWEGS? Dann NICHT neu anlegen. `Auftraege.anlegen` schreibt
-           den Satz mit `auftragPut` — auf einen laufenden angewandt setzte es
-           ihn zurück auf `wartet`, mit Schritt 0 und ohne Halter, während sein
-           Läufer noch rechnet. Zwei Läufer auf einem Auftrag ist genau der
-           Zustand, den dieser Bogen abschafft. */
         const schon = await Auftraege.einer(id);
         if (schon && !JobModell.beendet(schon))
             return { auftrag: schon, schon: true };
@@ -752,23 +368,6 @@ const PdfEinlesen = (() => {
         });
         return { auftrag, seiten: offen.length };
     };
-    /* ========================================================================
-     * EINE SEITE SCHÄRFER RECHNEN (L37, E173)
-     * ------------------------------------------------------------------------
-     * Seiten entstehen bei 1654 px Breite — bei A4 genau 200 dpi, Scan-
-     * Qualität. Wer stark hineinzoomt, sieht trotzdem Unschärfe, und L37 hielt
-     * das als offene Arbeit fest: eine Seite auf Wunsch feiner rechnen.
-     *
-     * Alles dafür war schon da und wurde nur nie gerufen: `alsBild` nimmt seit
-     * jeher eine Breite entgegen, das Original liegt in der Ablage (E103), und
-     * die Marken liegen in SEITENPUNKTEN und nicht in Bildpunkten (E100) —
-     * sie bleiben deshalb liegen, wo sie liegen. Das ist der Grund, warum das
-     * hier überhaupt gefahrlos geht.
-     *
-     * Die Grenze ist 3308 px, also 400 dpi bei A4. Darüber wird eine Seite als
-     * WebP schnell ein paar Megabyte, und das trägt ein Telefon nicht mehr
-     * (§36, §37).
-     * ======================================================================*/
     const BREITE_MAX = 3308;
     const schaerfer = async (block) => {
         if (!block || block.type !== 'pdfseite')
@@ -793,11 +392,6 @@ const PdfEinlesen = (() => {
                 return { ok: false, grund: 'Diese Seite gibt es im Original nicht.' };
             const bild = await griff.alsBild(n, ziel);
             const satz = await Dateien.ablegen(new File([bild], 'seite-' + n + '-' + ziel + '.webp', { type: 'image/webp' }), { blockId: block.id, abgeleitet: true });
-            /* ERST DIE NEUE KENNUNG AN DEN BLOCK, DANN DIE ALTE DATEI WEG.
-               Andersherum stünde zwischen beiden Schritten eine Seite ohne Bild da,
-               und bricht es dazwischen ab, ist das Bild fort und das neue nicht da.
-               In dieser Reihenfolge ist der schlimmste Fall eine Datei zu viel —
-               die findet die Pflegeseite (E171). */
             const alt = block.bildDateiId;
             Store.updateBlock(block.id, { bildDateiId: satz.id, bildBreite: ziel });
             if (alt && alt !== satz.id) {
@@ -823,24 +417,6 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
-    /**
-     * EINE PDF AUSSUCHEN UND EINLESEN (L62).
-     *
-     * `alsSeiten` braucht eine `File`. Der Weg dahin war bisher nur das Ziehen
-     * einer PDF auf die Seite — und für jemanden mit Vorlesungs-PDFs ist das
-     * Menüband genau die Stelle, an der er zuerst sucht.
-     *
-     * WARUM DER WÄHLER HIER STEHT UND NICHT IM BAND. `register/menueband.ts`
-     * ist ein KATALOG: er führt auf, was es gibt, und tut selbst nichts (E210).
-     * Ein `<input type="file">` dort wäre neues Verhalten in einer Datei, die
-     * keines haben darf. Also bekommt der Bereich, dem die Sache gehört, den
-     * Einstieg, und das Band führt ihn nur auf — dieselbe Antwort wie bei den
-     * Zeichenwerkzeugen (E212).
-     *
-     * OHNE ZIELSEITE PASSIERT NICHTS. `alsSeiten` legt die Seitenblöcke unter
-     * einem Elternblock an; ohne den wüsste niemand, wohin. Ein Knopf, der
-     * still nichts tut, ist schlimmer als einer, der sagt warum.
-     */
     const waehlen = async (elternId, vorgabe) => {
         const ziel = elternId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
         if (!ziel) {
@@ -850,17 +426,7 @@ const PdfEinlesen = (() => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'application/pdf,.pdf';
-        /* MEHRERE AUF EINMAL (E471): wer ein Semester einliest, hat selten eine
-           Datei. Gefragt wird nur bei der ERSTEN nach der Anordnung; die
-           uebrigen folgen ihr, sonst staende der Mensch vor zehn gleichen
-           Fragen. Mit `anStelle` wird ohnehin nicht gefragt. */
         input.multiple = true;
-        /* Der Wähler hängt im Dokument. In Chromium öffnet er sich auch ohne
-           das — nachgemessen mit der Gegenprobe zu test247 §13. Es bleibt
-           trotzdem stehen, weil andere Browser hier bekanntermassen
-           empfindlich sind und es nichts kostet; dass ES DORT NÖTIG ist, ist
-           hier aber nicht nachgemessen und wird deshalb auch nicht behauptet.
-           Danach wieder weg. */
         input.style.display = 'none';
         document.body.appendChild(input);
         return new Promise(fertig => {
@@ -891,9 +457,6 @@ const PdfEinlesen = (() => {
                 }
             };
             input.addEventListener('change', () => { void auf(); });
-            /* Abbrechen meldet in den meisten Browsern `cancel`. Wo nicht, bleibt
-               das Versprechen offen — es hängt dann an nichts weiter als an sich
-               selbst, und der nächste Klick legt einen neuen Wähler an. */
             input.addEventListener('cancel', () => {
                 if (entschieden)
                     return;
@@ -904,18 +467,6 @@ const PdfEinlesen = (() => {
             input.click();
         });
     };
-    /* ══ BILDER ALS SEITEN (E469) ══════════════════════════════════════════════
-       Ein Foto, ein Scan, eine PNG-Grafik wird eine SEITE des Dokuments — wie
-       in GoodNotes „Bild als Seite einfügen". Dieselbe Bauart wie eine
-       PDF-Seite (`pdfseite` mit `bildDateiId`, `bw`, `bh`), nur ohne
-       `quelleId`: es gibt kein Original, aus dem sich etwas neu rechnen
-       liesse, und `herkunft: 'bild'` sagt es. Das Bild ist NUTZERDATEN, kein
-       abgeleitetes Seitenbild — darum `abgeleitet: false`, damit es in jede
-       `.redion`-Sicherung kommt (§11, §14).
-  
-       Die Seite ist A4-breit; ihre Hoehe folgt dem Bild. Riesige Fotos werden
-       auf 2480 px Kantenlaenge gebracht (300 dpi bei A4): mehr sieht niemand,
-       und ein 12-Megapixel-Foto je Seite spraengte das Telefon (§36). */
     const BILD_KANTE_MAX = 2480;
     const bildMass = (blob) => new Promise((ok, nein) => {
         const url = URL.createObjectURL(blob);
@@ -1018,19 +569,6 @@ const PdfEinlesen = (() => {
             input.click();
         });
     };
-    /**
-     * MIT DER KAMERA EINE SEITE MACHEN (E482, L133).
-     *
-     * GoodNotes hat „Foto aufnehmen"; Redion hatte nur den Dateiwähler.
-     * Der Unterschied ist EIN Attribut: `capture` sagt dem Telefon, dass es
-     * die Kamera aufmachen soll statt der Galerie. Am Rechner ohne Kamera
-     * tut es nichts — dort kommt der gewohnte Wähler, und das ist die
-     * richtige Antwort und kein Fehler.
-     *
-     * `multiple` bleibt aus: eine Aufnahme ist eine Seite. Alles Weitere —
-     * Grösse, Einpassen, Anlegen — macht `bilderAlsSeiten`, dieselbe
-     * Stelle wie beim Wähler (kein zweiter Weg für dasselbe Ziel).
-     */
     const kameraWaehlen = (elternId, anStelle) => {
         const input = document.createElement('input');
         input.type = 'file';

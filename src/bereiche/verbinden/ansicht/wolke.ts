@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/ansicht/wolke.ts (npm run bauen:ts). */
 /* ==========================================================================
  * WOLKE-FENSTER — die Oberfläche zum Server
  * --------------------------------------------------------------------------

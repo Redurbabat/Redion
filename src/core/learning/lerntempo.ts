@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/learning/lerntempo.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/learning/lerntempo.ts — wie lange eine Karte WIRKLICH dauert
  * ----------------------------------------------------------------------------

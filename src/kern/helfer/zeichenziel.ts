@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/zeichenziel.ts (npm run bauen:ts). */
 /* ============================================================================
  * zeichenziel.js — welche Zeichenfläche ist gerade gemeint?
  * ----------------------------------------------------------------------------

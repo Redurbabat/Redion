@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ai/abrechnung.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/ai/abrechnung.ts — die WIRKLICHE Tokenzahl aus dem Antwortstrom
  * ----------------------------------------------------------------------------

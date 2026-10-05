@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/context.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/context.js — was am Rand steht, sagt der Bereich selbst
  * ----------------------------------------------------------------------------

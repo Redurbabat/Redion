@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/clipper.ts (npm run bauen:ts). */
 /* ============================================================================
  * clipper.js — Der Web Clipper ohne Erweiterung
  * ----------------------------------------------------------------------------

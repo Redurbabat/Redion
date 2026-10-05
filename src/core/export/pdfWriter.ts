@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/export/pdfWriter.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/export/pdfWriter.ts — ein PDF aus fertigen Seitenbildern schreiben
  * ----------------------------------------------------------------------------

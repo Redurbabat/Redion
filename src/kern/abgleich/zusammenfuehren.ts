@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/abgleich/zusammenfuehren.ts (npm run bauen:ts). */
 /* ============================================================================
  * zusammen.js — Zusammenführen statt Überschreiben
  * ----------------------------------------------------------------------------

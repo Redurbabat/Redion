@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/zustand.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/zustand.ts — die eine Sprache für „läuft, fertig, Fehler"
  * ----------------------------------------------------------------------------

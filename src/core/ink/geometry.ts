@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ink/geometry.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/ink/geometry.ts — neutrale Geometrie fuer Freihand und Formen
  * ----------------------------------------------------------------------------

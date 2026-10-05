@@ -1,68 +1,9 @@
 "use strict";
-/* ============================================================================
- * bereiche/datenbanken/raster.ts — eine Datenbank wie eine Tabelle bedienen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/raster.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/bereiche/datenbanken/raster.js`. Wer das .js
- * bearbeitet, verliert die Änderung beim nächsten Bauen;
- * `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * ─── WAS DAS IST, UND WARUM ES DIE GRÖSSTE LÜCKE VON NOTION SCHLIESST ───────
- *
- * Notions Tabellenansicht sieht aus wie eine Tabelle und lässt sich nicht wie
- * eine bedienen. Man kann nicht mit den Pfeiltasten durchgehen. Man kann
- * keinen Bereich auswählen. Man kann nicht dreissig Zellen auf einmal aus
- * Excel einfügen. Für jede einzelne Zelle: klicken, tippen, Escape.
- *
- * Wer hundert Zeilen zu erfassen hat, macht das in Excel und kopiert es
- * hinterher irgendwie hinein. Genau dort verliert Notion die Leute, die
- * wirklich Daten haben.
- *
- * Diese Ansicht ist dieselbe Datenbank — mit der Bedienung eines
- * Tabellenprogramms:
- *
- *     Pfeiltasten · Umschalt+Pfeil für Bereiche · Tab und Enter
- *     Tippen fängt sofort an · Entf leert · Strg+A
- *     Kopieren und Einfügen als Tabulatortext, also mit Excel in BEIDE
- *     Richtungen — und Einfügen legt fehlende Zeilen an
- *
- * ─── DIE ZWEI STELLEN, AN DENEN DAS GEFÄHRLICH WIRD ─────────────────────────
- *
- * **1 · Einfügen ist eine Massenänderung.** Dreissig Zeilen aus der
- * Zwischenablage schreiben dreissig mal fünf Werte. Geht dabei etwas schief,
- * ist es viel auf einmal. Deshalb wird vorher gesagt, wie viel kommt und wie
- * viel überschrieben wird — nachgezählt, nicht geschätzt.
- *
- * **2 · Nicht jede Spalte lässt sich schreiben.** Eine Formelspalte, eine
- * Rollup-Spalte, „erstellt am" — die rechnen sich aus, und ein Wert von Hand
- * hätte dort keine Wirkung, aber es sähe aus, als hätte er eine. Sie sind
- * hier gesperrt und dabei sichtbar: gezeigt wird, was drinsteht, nur ändern
- * lässt es sich nicht.
- *
- * ─── UND WAS SIE NICHT IST ──────────────────────────────────────────────────
- *
- * Kein zweiter Editor für Zellen mit eigener Oberfläche. Auswahl-, Datums-
- * und Verknüpfungsspalten haben in der gewöhnlichen Tabellenansicht ihre
- * eigenen kleinen Fenster, und die sind dort richtig. Hier wird Text getippt
- * und beim Übernehmen umgewandelt — das ist die Bedienung, die man von einem
- * Raster erwartet.
- *
- * SPRACHE. Namen englisch, Erklärungen deutsch — E27. Neu, also TypeScript
- * von Anfang an — E28.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/raster.ts (npm run bauen:ts). */
 const DbRaster = (() => {
-    const SB = 150; /* Spaltenbreite, Vorgabe */
+    const SB = 150;
     const SB_MIN = 60;
     const ZH = 32;
-    /* 44 und nicht 40 — aus zwei Gründen, und der zweite wiegt schwerer.
-       §37 verlangt 44 px für alles, was mit dem Finger getroffen wird, und
-       eine Rasterzelle wird angetippt.
-       Vor allem aber teilt sich das Raster die CSS mit dem Tabellenblock:
-       `class="tbl tbl-db"`, also gilt `--tbl-zh` hier mit. Als E64 die
-       Variable auf 44 setzte, rechnete dieses Modul weiter mit 40 — und die
-       Zeilennummern standen versetzt zu ihren Zellen. Beide Zahlen gehören
-       zusammen; `test137` §2b misst es jetzt auch für das Raster. */
     const ZH_HANDY = 44;
     const PUFFER = 6;
     const amTelefon = () => typeof window !== 'undefined' && typeof AppEinstellung !== 'undefined'
@@ -72,31 +13,9 @@ const DbRaster = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-    /**
-     * Spalten, die sich ausrechnen und deshalb nicht von Hand geschrieben
-     * werden können.
-     *
-     * Sie sind hier gesperrt und trotzdem zu sehen. Der andere Weg — sie
-     * ausblenden — wäre schlechter: dann fehlte in der Ansicht genau die
-     * Spalte, wegen der man hinsieht.
-     */
     const GERECHNET = ['formula', 'rollup', 'created', 'edited', 'createdBy', 'editedBy', 'uid'];
     const schreibbar = (def) => !!def && !GERECHNET.includes(def.type);
-    /** Spalten, deren Wert ein Zeitpunkt ist — auch wenn er als Text ankommt. */
     const ZEITSPALTEN = ['date', 'created', 'edited'];
-    /**
-     * Was in der Zelle steht — als Text, wie ihn auch die CSV bekäme.
-     *
-     * DER ZEITSTEMPEL IST DER FALL, DEN MAN ÜBERSIEHT. `created` und `edited`
-     * kommen nicht als `Date` zurück, sondern als ISO-Zeichenkette:
-     *
-     *     2026-08-04T17:57:39.184Z
-     *
-     * Das ging durch jede Prüfung — es ist ja ein gültiger Text — und stand
-     * dann so in der Spalte „Kunde seit". Niemand liest das, und in eine
-     * Spalte, die 130 Pixel breit ist, passt es auch nicht. Gesehen habe ich
-     * es erst auf dem Bildschirmfoto.
-     */
     const alsText = (row, key, coll) => {
         if (typeof Datenbank === 'undefined')
             return '';
@@ -113,9 +32,6 @@ const DbRaster = (() => {
         if (def && ZEITSPALTEN.includes(def.type) && typeof v === 'string') {
             const d = new Date(v);
             if (!isNaN(d.getTime())) {
-                /* Bei „erstellt am" gehört die Uhrzeit dazu — zwei Zeilen am selben
-                   Tag unterscheiden sich sonst nicht. Bei einer gewöhnlichen
-                   Datumsspalte nicht: dort hat der Mensch ein Datum gemeint. */
                 return def.type === 'date'
                     ? d.toLocaleDateString('de-CH')
                     : d.toLocaleDateString('de-CH') + ' ' +
@@ -126,13 +42,6 @@ const DbRaster = (() => {
             return String(Formula.anzeige(v));
         return String(v);
     };
-    /**
-     * Einen getippten Text in den Wert der Spalte umwandeln.
-     *
-     * DAS DEUTSCHE KOMMA ZÄHLT MIT: wer `1,5` in eine Zahlenspalte tippt, meint
-     * eineinhalb. Ohne diese Zeile stünde dort Text, die Spaltensumme wäre um
-     * diesen Betrag zu klein — und niemand sähe, warum.
-     */
     const ausText = (text, def) => {
         const t = String(text ?? '').trim();
         if (!def)
@@ -153,9 +62,6 @@ const DbRaster = (() => {
                 return t;
         }
     };
-    /* ==========================================================================
-     * ZEICHNEN
-     * ========================================================================*/
     const zeichne = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'tbl tbl-db';
@@ -168,23 +74,15 @@ const DbRaster = (() => {
         const zeilen = rows || [];
         const handy = amTelefon();
         const zh = handy ? ZH_HANDY : ZH;
-        /* Die Breiten gehören zur ANSICHT und nicht zur Datenbank: zwei Ansichten
-           auf dieselben Daten dürfen verschieden breit sein. */
         if (!view.breiten)
             view.breiten = {};
         const breiteVon = (k) => Math.max(handy ? 110 : SB_MIN, Number(view.breiten[k]) || (handy ? 170 : SB));
         let gewaehlt = { z: 0, s: 0 };
         let anker = { z: 0, s: 0 };
-        /* Die Ansicht sichern. Hier standen zwei Wege — `Store.saveView(view)`
-           und `Store.save('views', view)` —, und es gibt weder das eine noch das
-           andere: die Ablage kennt nur `updateView`. Beide Zweige waren tot, also
-           wurde beim Ändern einer Spaltenbreite nie etwas gespeichert; nach dem
-           Neuladen standen die alten Breiten wieder da. */
         const sichere = () => {
             if (typeof Store !== 'undefined' && view && view.id)
                 Store.updateView(view.id, view);
         };
-        /* --- Kopf ------------------------------------------------------------ */
         const kopf = document.createElement('div');
         kopf.className = 'tbl-kopf';
         const adresse = document.createElement('div');
@@ -208,8 +106,6 @@ const DbRaster = (() => {
         feld.tabIndex = 0;
         feld.setAttribute('role', 'grid');
         feld.setAttribute('aria-label', 'Raster ' + (coll.name || ''));
-        /* Dieselbe weiche Kante wie im Tabellenblock — dasselbe Raster, derselbe
-           Fund: am Telefon stand `14500` als `1450` da. */
         if (typeof Rollrand !== 'undefined')
             Rollrand.binde(feld);
         const spaltenKopf = document.createElement('div');
@@ -341,9 +237,6 @@ const DbRaster = (() => {
             fussZeichnen();
             kopfZeichnen();
         };
-        /* ======================================================================
-         * SCHREIBEN
-         * ====================================================================*/
         const schreibe = (z, s, text) => {
             const row = zeilen[z];
             const k = spalten[s];
@@ -428,9 +321,6 @@ const DbRaster = (() => {
             });
             feldchen.addEventListener('blur', () => schliesse(true));
         };
-        /* ======================================================================
-         * MAUS
-         * ====================================================================*/
         const beimZiehen = (bewegen, fertig) => {
             const auf = (e) => bewegen(e);
             const ab = () => {
@@ -445,13 +335,6 @@ const DbRaster = (() => {
             const z = e.target.closest('.tbl-z');
             if (!z || z.dataset.z === undefined)
                 return;
-            /* Ohne preventDefault ging die Tastatur nach einem Zellklick ins
-               LEERE: waehle() zeichnet neu, das Ereignisziel hängt damit ab, und
-               die Browser-Standardaktion nach mousedown findet am abgehängten
-               Ziel keinen fokussierbaren Vorfahren mehr — sie warf den Fokus auf
-               BODY, NACHDEM feld.focus() unten schon gelaufen war. Pfeile,
-               Kopieren, Enter: alles erst nach einem Tab. Gefunden beim Bau der
-               Ausfüll-Kürzel (L20). */
             e.preventDefault();
             waehle(Number(z.dataset.z), Number(z.dataset.s), e.shiftKey);
             feld.focus();
@@ -505,9 +388,6 @@ const DbRaster = (() => {
         feld.addEventListener('scroll', () => koerperZeichnen());
         feld.addEventListener('focus', () => w.classList.add('imFokus'));
         feld.addEventListener('blur', () => w.classList.remove('imFokus'));
-        /* ======================================================================
-         * TASTATUR
-         * ====================================================================*/
         feld.addEventListener('keydown', (e) => {
             const k = e.key;
             const mit = e.shiftKey;
@@ -575,12 +455,6 @@ const DbRaster = (() => {
                     UI.toast(n + ' Zellen geleert');
                 return;
             }
-            /* Ausfüllen wie in Excel und Notion (L20): Strg+D nimmt die oberste
-               Zeile der Auswahl für alle darunter — bei einer einzelnen den Wert
-               DARÜBER. Strg+R dasselbe nach rechts. Nur hier im fokussierten
-               Raster: global gehört Strg+R dem Browser und Strg+D dem
-               Duplizieren (E62). stopPropagation, damit Strg+D nicht zugleich
-               den ganzen Datenbank-Block dupliziert. */
             if (strg && (k === 'd' || k === 'D' || k === 'r' || k === 'R')) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -618,8 +492,6 @@ const DbRaster = (() => {
                     }
                 }
                 alles();
-                /* Auch das Nichts wird gesagt — ein Kürzel, das still nichts tut,
-                   lässt einen an der eigenen Hand zweifeln. */
                 if (typeof UI !== 'undefined' && UI.toast)
                     UI.toast(n
                         ? n + (n === 1 ? ' Zelle' : ' Zellen') + (runter ? ' nach unten' : ' nach rechts') + ' ausgefüllt'
@@ -631,13 +503,6 @@ const DbRaster = (() => {
                 return bearbeite(k);
             }
         });
-        /* ======================================================================
-         * KOPIEREN UND EINFÜGEN — der eigentliche Grund für diese Ansicht
-         * --------------------------------------------------------------------
-         * Tabulatortext ist das, was Excel in die Zwischenablage legt und was es
-         * von dort auch wieder annimmt. Damit wandern Daten in BEIDE Richtungen,
-         * ohne dass jemand eine Datei anfassen muss.
-         * ====================================================================*/
         feld.addEventListener('copy', (e) => {
             if (!e.clipboardData)
                 return;
@@ -663,9 +528,6 @@ const DbRaster = (() => {
                 .map(z => z.split('\t'));
             const hochZ = eingefuegt.length;
             const hochS = eingefuegt.reduce((m, z) => Math.max(m, z.length), 0);
-            /* NACHGEZÄHLT, was passieren wird — Einfügen ist hier eine
-               Massenänderung, und dreissig Zeilen auf einmal sind viel, wenn es
-               schiefgeht. */
             let neueZeilen = 0, ueberschrieben = 0, gesperrt = 0;
             for (let z = 0; z < hochZ; z++) {
                 const zielZ = gewaehlt.z + z;
@@ -701,8 +563,6 @@ const DbRaster = (() => {
                 : 'ja';
             if (antwort !== 'ja')
                 return;
-            /* Fehlende Zeilen anlegen — sonst fällt der Rest der Zwischenablage
-               lautlos weg, und genau das merkt niemand. */
             const titelKey = Object.keys(coll.schema).find(k => coll.schema[k].type === 'title') || '';
             while (zeilen.length < gewaehlt.z + hochZ) {
                 const neu = Store.addRow ? Store.addRow(coll.id, {}) : null;
@@ -720,7 +580,6 @@ const DbRaster = (() => {
                 UI.toast(n + ' Zellen eingefügt' + (neueZeilen ? ', ' + neueZeilen + ' Zeilen angelegt' : ''));
             void titelKey;
         });
-        /* --- Bearbeitungszeile ------------------------------------------------ */
         eingabe.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();

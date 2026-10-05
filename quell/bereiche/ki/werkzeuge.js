@@ -1,56 +1,17 @@
 "use strict";
-/* ============================================================================
- * mcp.js — MCP in beide Richtungen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/ki/werkzeuge.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/ki/werkzeuge.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * MCP ist ein offenes Protokoll, mit dem ein Programm fremde Werkzeuge
- * benutzen und eigene anbieten kann. Es ist schlichtes JSON-RPC:
- *
- *     initialize  →  tools/list  →  tools/call
- *
- * NACH DRAUSSEN (Client) — läuft
- *   Diese App spricht MCP über HTTP. Jeder Server, der die HTTP-Anbindung
- *   kann und dem Browser den Zugriff erlaubt, lässt sich eintragen. Seine
- *   Werkzeuge stehen danach dem Agenten zur Verfügung — einzeln
- *   an- und abschaltbar, und nur von Servern, die auf der Freigabeliste
- *   stehen.
- *
- * NACH INNEN (Server) — mit Einschränkung
- *   Ein Browser kann nichts entgegennehmen; er hat keinen Anschluss, an dem
- *   jemand klopfen könnte. Was hier geht: der vollständige Werkzeugkatalog
- *   dieser App wird als MCP-Beschreibung ausgegeben, und jede JSON-RPC-
- *   Anfrage wird beantwortet — nur muss sie jemand hereinreichen. Wer die
- *   beiliegende bruecke.js laufen lässt, hat damit einen echten MCP-Server
- *   für diese App. Ohne Brücke bleibt es beim Katalog zum Ansehen und
- *   Kopieren. Das steht auch so in der Oberfläche.
- *
- * Die meisten MCP-Server sprechen nur über stdio — die erreicht ein Browser
- * grundsätzlich nicht. Das ist keine Bequemlichkeit, sondern eine Grenze.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/werkzeuge.ts (npm run bauen:ts). */
 const MCP = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const VERSION = '2024-11-05';
-    /* ========================================================================
-     * CLIENT
-     * ======================================================================*/
     const server = () => Store.getMeta('mcp:server', []) || [];
     const serverSpeichern = (l) => Store.setMeta('mcp:server', l);
-    /** Nur Server auf der Freigabeliste werden überhaupt angesprochen. */
     const freigegeben = () => Store.getMeta('mcp:freigabe', []) || [];
     const istFrei = (url) => {
         const liste = freigegeben();
         if (!liste.length)
-            return true; /* keine Liste = keine Sperre */
+            return true;
         try {
             const h = new URL(url).hostname;
             return liste.some((e) => e === h || (e.startsWith('.') && h.endsWith(e)));
@@ -77,7 +38,6 @@ const MCP = (() => {
         if (sitzung)
             s.sitzung = sitzung;
         const roh = await r.text();
-        /* Manche Server antworten als Ereignisstrom statt als schlichtes JSON */
         const text = roh.includes('data:')
             ? roh.split('\n').filter(z => z.startsWith('data:')).map(z => z.slice(5).trim()).join('')
             : roh;
@@ -122,7 +82,6 @@ const MCP = (() => {
         const r = await ruf(s, 'resources/list', {});
         return r?.resources || [];
     };
-    /** Alle eingeschalteten Werkzeuge aller Server — für den Agenten. */
     const alleWerkzeuge = () => {
         const raus = [];
         server().forEach((s, si) => {
@@ -136,7 +95,6 @@ const MCP = (() => {
         });
         return raus;
     };
-    /** Die MCP-Werkzeuge in den Agenten einhängen. */
     const inAgentEinhaengen = () => {
         Object.keys(Agent.WERKZEUGE)
             .filter(k => k.startsWith('mcp_'))
@@ -152,9 +110,6 @@ const MCP = (() => {
         });
         return Object.keys(Agent.WERKZEUGE).filter(k => k.startsWith('mcp_')).length;
     };
-    /* ========================================================================
-     * SERVER — der eigene Katalog
-     * ======================================================================*/
     const eigenerKatalog = () => Object.entries(Agent.WERKZEUGE)
         .filter(([k]) => !k.startsWith('mcp_'))
         .filter(([k]) => (Store.getMeta('mcp:eigenAus', []) || []).indexOf(k) < 0)
@@ -163,7 +118,6 @@ const MCP = (() => {
         description: w.beschreibung,
         inputSchema: { type: 'object', properties: {}, additionalProperties: true }
     }));
-    /** Beantwortet eine JSON-RPC-Anfrage — genau wie ein echter MCP-Server. */
     const beantworten = async (anfrage) => {
         const antwort = (ergebnis) => ({ jsonrpc: '2.0', id: anfrage.id, result: ergebnis });
         const fehler = (code, text) => ({ jsonrpc: '2.0', id: anfrage.id,
@@ -214,9 +168,6 @@ const MCP = (() => {
         }
         return fehler(-32601, 'Unbekannte Methode: ' + anfrage.method);
     };
-    /* ========================================================================
-     * OBERFLÄCHE
-     * ======================================================================*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -232,7 +183,6 @@ const MCP = (() => {
             if (!mb)
                 return;
             mb.innerHTML =
-                /* Fremde Server */
                 '<div class="verb-karte">' +
                     '<div class="verb-kopf"><span>📥</span><b>Fremde Werkzeuge benutzen</b>' +
                     `<span class="verb-status ${liste.length ? 'an' : ''}">${liste.length} Server</span></div>` +
@@ -252,7 +202,6 @@ const MCP = (() => {
                     '<div class="verb-knoepfe"><button data-a="neu">＋ Server eintragen</button>' +
                     '<button data-a="einhaengen">In den Agenten übernehmen</button></div>' +
                     '</div>' +
-                    /* Eigener Katalog */
                     '<div class="verb-karte">' +
                     '<div class="verb-kopf"><span>📤</span><b>Eigene Werkzeuge anbieten</b>' +
                     `<span class="verb-status an">${eigenerKatalog().length} von ` +
@@ -269,7 +218,6 @@ const MCP = (() => {
                     '<div class="verb-knoepfe"><button data-a="katalog">Katalog anzeigen</button>' +
                     '<button data-a="probe">Anfrage ausprobieren</button></div>' +
                     '</div>' +
-                    /* Freigabeliste */
                     '<div class="verb-karte">' +
                     '<div class="verb-kopf"><span>🛡</span><b>Freigabeliste der Verwaltung</b>' +
                     `<span class="verb-status ${freigegeben().length ? 'an' : ''}">` +
@@ -434,7 +382,6 @@ const MCP = (() => {
             }
         });
     };
-    /** Beim Start die eingetragenen Werkzeuge in den Agenten hängen. */
     const start = () => { setTimeout(() => { try {
         inAgentEinhaengen();
     }

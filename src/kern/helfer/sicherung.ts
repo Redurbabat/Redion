@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/helfer/sicherung.ts (npm run bauen:ts). */
 /* ============================================================================
  * sicherung.js — Wann wurde zuletzt gesichert, und wieviel Platz ist noch da
  * ----------------------------------------------------------------------------

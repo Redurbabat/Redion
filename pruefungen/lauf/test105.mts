@@ -108,6 +108,9 @@ console.log('\n2 · Das erzeugte JavaScript ist auf dem Stand der Quellen');
 
 const nachTmp = _tmpOrdner(_dazu(_tmp(), 'redion-ts-'));
 let baufehler = null;
+/* Was der Bau WIRKLICH erzeugt — alle .js, nicht nur die unter core/.
+   §3 braucht die Liste (E715). */
+const erzeugt: string[] = [];
 try {
   _lauf(process.execPath, [TSC, '-p', 'tsconfig.bauen.json', '--outDir', nachTmp],
         { cwd: WURZEL, stdio: 'pipe' });
@@ -130,6 +133,14 @@ if (!baufehler) {
     abweichend.length === 0,
     abweichend.join(', ') + ' — bitte `npm run bauen:ts` laufen lassen und ' +
     'das Ergebnis mitcommitten');
+  const sammle = (ordner: string): void => {
+    for (const n of _liesOrdner(ordner)) {
+      const voll = _dazu(ordner, n);
+      if (_stat(voll).isDirectory()) sammle(voll);
+      else if (n.endsWith('.js')) erzeugt.push(_rel(nachTmp, voll).split('\\').join('/'));
+    }
+  };
+  sammle(nachTmp);
 }
 _weg(nachTmp, { recursive: true, force: true });
 
@@ -142,14 +153,41 @@ _weg(nachTmp, { recursive: true, force: true });
  * ------------------------------------------------------------------------*/
 console.log('\n3 · Das erzeugte JavaScript sagt selbst, dass es erzeugt ist');
 
-for (const ts of quellen) {
-  const rel = _rel(_dazu(WURZEL, 'src'), ts).replace(/\.ts$/, '.js');
+/* SEIT E715 FÜR JEDE ERZEUGTE DATEI, nicht nur für core/. Bis dahin reiste
+   der ganze Kopfkommentar der Quelle mit, und 183 der 227 Dateien warnten
+   so ganz nebenbei — die übrigen 44 (darunter `pdf/marken.js`, das grösste
+   Skript im Start) nie, und niemand sah hin, weil hier nur core/ stand.
+   Seit E715 nimmt `removeComments` jeden Kommentar aus dem erzeugten .js;
+   übrig bleibt allein die erste Zeile jeder Quelle, „ERZEUGT aus src/… —
+   NICHT VON HAND ÄNDERN", die tsc stehen lässt, weil ihr Kommentar mit
+   Schrägstrich, Stern und Ausrufezeichen beginnt. Ob sie
+   in JEDER Datei steht, prüft dieser Abschnitt — mit der Liste dessen, was
+   der Bau in §2 wirklich geschrieben hat. Schlug der Bau fehl, gilt die
+   alte Liste (core/), damit §3 nie stillschweigend nichts prüft. */
+const zuPruefen = erzeugt.length > 0
+  ? erzeugt
+  : quellen.map(ts => _rel(_dazu(WURZEL, 'src'), ts).split('\\').join('/').replace(/\.ts$/, '.js'));
+p(`§3 sieht alles, was der Bau schreibt (${zuPruefen.length} Dateien, core/ allein ${quellen.length})`,
+  zuPruefen.length > quellen.length, 'nur core/ — dann blieben die übrigen ungeprüft');
+const ohneWarnung: string[] = [];
+/* UND DIE WARNUNG NENNT DIE EIGENE QUELLE (Durchsicht E715). Seit E715 ist
+   die eine Zeile alles, was im .js von der Quelle erzählt — wer sie für eine
+   neue Datei abschreibt und den Pfad nicht anpasst, schickt den Leser in die
+   falsche .ts. `/\.ts/` allein merkte das nicht. */
+const fremdeQuelle: string[] = [];
+for (const rel of zuPruefen) {
   const js = _dazu(WURZEL, 'quell', rel);
   if (!_da(js)) continue;
   const kopf = _lies(js, 'utf8').slice(0, 1200);
-  p('quell/' + rel + ' warnt vor Änderungen von Hand',
-    /NICHT VON HAND/i.test(kopf) && /\.ts/.test(kopf));
+  const warnt = /NICHT VON HAND/i.test(kopf) && /\.ts/.test(kopf);
+  if (!warnt) ohneWarnung.push('quell/' + rel);
+  else if (!kopf.includes('src/' + rel.replace(/\.js$/, '.ts'))) fremdeQuelle.push('quell/' + rel);
+  p('quell/' + rel + ' warnt vor Änderungen von Hand', warnt);
 }
+p(`Alle ${zuPruefen.length} erzeugten Dateien warnen`, ohneWarnung.length === 0,
+  `${ohneWarnung.length} ohne: ` + ohneWarnung.slice(0, 6).join(', '));
+p('Jede Warnung nennt ihre eigene Quelle (quell/…/x.js → src/…/x.ts)', fremdeQuelle.length === 0,
+  `${fremdeQuelle.length} nennen eine andere: ` + fremdeQuelle.slice(0, 6).join(', '));
 
 /* --------------------------------------------------------------------------
  * Die Gegenrichtung: keine Importzeile

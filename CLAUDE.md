@@ -2856,6 +2856,18 @@ Code, den der BROWSER lädt:
 Das erzeugte .js wird mitversioniert. Es ist Ausgabe, kein Quelltext — und
 es ist der Grund, warum die App weiterhin per Doppelklick startet.
 
+Seit E715 reist es OHNE Kommentare (`removeComments` in
+`tsconfig.bauen.json`): die Erklärungen stehen in `src/`, dort werden sie
+gelesen; im `.js` waren sie 1039 von 2826 KB des Starts. Übrig bleibt
+eine Zeile, mit der jede Quelle beginnt und die tsc stehen lässt:
+
+    /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/…/name.ts (npm run bauen:ts). */
+
+Wer eine neue Quelle anlegt, schreibt sie als erste Zeile, mit dem eigenen
+Pfad; `test105` §3 meldet jede erzeugte Datei, der sie fehlt oder deren
+Zeile eine andere Quelle nennt, und `test388` §5 reisst, wenn die
+Kommentare zurückkommen.
+
 Eine React-INSEL (E699) — die dritte Sorte erzeugtes JavaScript:
 
     src/islands/name.tsx     wird bearbeitet (Bauteile aus fremd/touch/)

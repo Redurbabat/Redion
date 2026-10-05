@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/reporter.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/reporter.ts — was schiefgeht, soll auffindbar sein
  * ----------------------------------------------------------------------------

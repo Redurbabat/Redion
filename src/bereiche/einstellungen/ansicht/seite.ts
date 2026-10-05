@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/ansicht/seite.ts (npm run bauen:ts). */
 /* ============================================================================
  * einstellungen.js — Der Einstellungsbereich
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/orb/modes.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/orb/modes.js — die neun Betriebsarten der Denkkugel
  * ----------------------------------------------------------------------------

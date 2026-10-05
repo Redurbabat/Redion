@@ -1,108 +1,13 @@
 "use strict";
-/* ============================================================================
- * schale/bedienung/selection-flow.ts — eine Fläche, die wandert
- * ----------------------------------------------------------------------------
- * ERZEUGT DARAUS WIRD `quell/schale/bedienung/selection-flow.js`.
- * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
- * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
- * ----------------------------------------------------------------------------
- * WOFÜR. Redur hat am 20. September eine Aufnahme der unteren Leiste
- * geschickt und gefragt, ob das so gut sei. Nachgemessen, Bild für Bild bei
- * 60 Bildern je Sekunde, war die Antwort nein — und zwar messbar nein:
- *
- *     Dokumente → Heute    2,717 s: x = 127 px   →   2,733 s: x = 318 px
- *     Heute → Lernen       4,333 s: x = 369 px   →   4,350 s: x = 578 px
- *     Lernen → Termine     5,617 s: x = 602 px   →   5,633 s: x = 742 px
- *     Termine → Mehr       7,083 s: x = 842 px   →   7,100 s: x = 1013 px
- *
- * Vier Wechsel, viermal EIN Bild für 190 bis 210 Pixel. Auf dem Telefon
- * wandert dort nichts; es steht einmal hier und dann dort.
- *
- * ─── UND DAS ÜBERRASCHENDE: AM RECHNER TUT SIE ES DOCH ──────────────────────
- *
- * Dieselbe Fassung, im Browser gemessen: 16 bis 21 Zwischenorte je Wechsel.
- * Die Bewegung ist also da und kommt nur nicht an. Mit gedrosselter Rechen-
- * leistung (Emulation.setCPUThrottlingRate) wurde sichtbar, warum:
- *
- *     Drossel 1×   „Heute" 16 Orte · „Lernen" 17 Orte
- *     Drossel 4×   „Heute"  7 Orte · „Lernen"  9 Orte
- *     Drossel 8×   „Heute"  5 Orte · „Lernen"  5 Orte
- *
- * Und der Gegenversuch ohne die Glasbrechung änderte NICHTS (5 → 4 Orte).
- * Der Filter war also nicht schuld — meine erste Vermutung war falsch.
- *
- * Schuld ist der Hauptfaden. „Heute" und „Lernen" bauen beim Wechsel einen
- * ganzen Bildschirm neu auf; solange das läuft, malt niemand. Eine
- * CSS-Transition, die `width` mitanimiert, LÄUFT AUF DEM HAUPTFADEN — sie
- * kann nicht vorankommen, während er blockiert ist, und springt beim nächsten
- * Bild dorthin, wo ihre Uhr inzwischen steht.
- *
- * `implementation/high-refresh-motion.md` sagt genau das voraus:
- *
- *     „Prefer transform and opacity for frequent motion. Minimize synchronous
- *      layout reads/writes … A nominal short duration does not guarantee
- *      smooth motion."
- *
- * ─── WAS DIESE DATEI DESHALB ANDERS MACHT ───────────────────────────────────
- *
- *   1. NUR `transform`. Keine Breite, kein Layout je Bild. Damit darf die
- *      Bewegung auf den Compositor — und der malt weiter, während der
- *      Hauptfaden einen Bildschirm zusammensetzt.
- *   2. EINE FEDER STATT EINER KURVE. Die alte Kurve legte 72 % des Weges in
- *      den ersten 50 ms zurück und kroch die restlichen 250 ms. Das liest
- *      sich als Sprung mit Nachzittern, auch wenn jedes Bild ankommt.
- *   3. GESCHWINDIGKEIT BLEIBT ERHALTEN. Wer A → B → C tippt, bevor B
- *      angekommen ist, sieht keine neue Bewegung von null, sondern dieselbe
- *      Fläche, die unterwegs umgelenkt wird. `recipes/interruptible-motion.md`:
- *      „The newest valid user intent wins. Do not queue stale UI transitions."
- *
- * ─── WARUM EINE EIGENE DATEI, UND WARUM GENAU DIESE ─────────────────────────
- *
- * Weil dieselbe Rechnung schon zweimal gebraucht wird: die Pille der unteren
- * Leiste (`seitenleiste.ts`) und die fliegende Fläche der Werkzeugleiste im
- * Schreibstudio (`marken.ts`, E640). **L204 hat im selben Atemzug verlangt,
- * dass sie in EINEN Helfer gehört (§8)** — hier ist er. Die Werkzeugleiste
- * zieht in einem eigenen Bogen nach; wer sie anfasst, findet hier alles,
- * was er braucht.
- *
- * ─── DIE FEDER, AUSGESCHRIEBEN ──────────────────────────────────────────────
- *
- * SEIT E706 IST ES DIE FEDER DES TOUCH KITS (Redur, 27.09., ca. 21:45
- * „Wie im UI-Kit (Empfohlen)", ca. 21:47 die Tab-Leiste des Kits). Hier
- * stand ζ = 1 (E646). Die Kit-Feder `snappy` (hier `knapp`, 0,36 s,
- * Schwung 0,14, also ζ = 0,86) schwingt um ein halbes Prozent über —
- * beim Nachbarn 0,4 px. Aus E646 bleibt das Wichtigere: NUR `transform`,
- * die Bahn EINMAL gerechnet, das Tempo beim Umlenken mitgenommen.
- *
- *     ω₀ = 2π / Dauer    ζ = 1 − Schwung    ω_d = ω₀·√(1 − ζ²)
- *     x(t) = e^(−ζω₀t) · ( x₀·cos ω_d t + B·sin ω_d t ),   B = (v₀ + ζω₀x₀)/ω_d
- *
- * Das ist `solveSpring` aus `UI-Kit/app/src/touch/motion/spring.ts` —
- * in Redion EINMAL als `RedionSpring.solve` (E702); `FEDERN` unten liest es.
- *
- * ─── WARUM KEYFRAMES UND KEINE EIGENE SCHLEIFE ──────────────────────────────
- *
- * Eine Feder je Bild in JavaScript zu rechnen wäre wieder Hauptfaden — genau
- * der Fehler, den diese Datei behebt. Stattdessen wird die Bahn EINMAL
- * ausgerechnet und als Keyframes übergeben; `element.animate()` mit lauter
- * `transform`-Werten und `easing:'linear'` darf auf den Compositor.
- * `implementation/web-animations.md`: „Keep references to active animations
- * so new input can cancel, reverse or continue from current visual state."
- * Genau dafür wird die laufende Animation hier gemerkt.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/selection-flow.ts (npm run bauen:ts). */
 const SelectionFlow = (() => {
     const kitFeder = (name) => ({ dauer: RedionSpring.PRESETS[name].duration, schwung: RedionSpring.PRESETS[name].bounce });
     const FEDERN = { knapp: kitFeder('snappy'), druck: kitFeder('press') };
-    /** Abgetastet wird alle 8 ms — bei 120 Hz knapp ein Wert je Bild. */
     const SCHRITT = 8;
-    /** Die Feder als Bahn in Millisekunden und px/ms — gelöst von
-     *  `RedionSpring.solve` (Sekunden, Einheiten je Sekunde; E702). */
     const bahnVon = (f, x0, v0) => {
         const bei = RedionSpring.solve(RedionSpring.fromPerceptual({ duration: f.dauer, bounce: f.schwung }), x0, 0, v0 * 1000);
         return t => { const z = bei(t / 1000); return { x: z.value, v: z.velocity / 1000 }; };
     };
-    /** Ab wann eine Bahn ruht: nah genug UND langsam genug (beides, sonst
-     *  hielte der Nulldurchgang beim Überschwingen für ein Ende). */
     const ruheNach = (bahn, genau = 0.35, still = 0.02) => {
         for (let t = 0; t < 1200; t += SCHRITT) {
             const s = bahn(t);
@@ -111,52 +16,22 @@ const SelectionFlow = (() => {
         }
         return 1200;
     };
-    /** Die längste Fahrt, die vorkommt (1000 px). Rufer bauen ihre Netze damit. */
     const DAUER = ruheNach(bahnVon(FEDERN.knapp, -1000, 0), 0.5);
-    /** ω₀ der Feder `knapp`, je Millisekunde — nur noch als Auskunft. */
     const OMEGA = (2 * Math.PI) / (FEDERN.knapp.dauer * 1000);
-    /**
-     * DIE DEHNUNG IST GEDECKELT, UND ZWAR NIEDRIG (E641, Redurs Entscheidung
-     * vom 20. September). `recipes/shape-stretch-compress.md`: „Keep
-     * deformation subtle. Preserve recognizable control boundaries and avoid
-     * cartoon-like elasticity in professional/productivity UI."
-     */
     const DEHNUNG_MAX = 0.24;
-    /** Aus Tempo wird Dehnung: `materialStretch` des Kits (0,2 je px/ms),
-       *  gedeckelt nach E641. */
     const dehnungAus = (v) => 1 + Math.min(DEHNUNG_MAX, Math.abs(v) * 0.2);
     const STILL = () => ({ x: 0, v: 0 });
     const ruhend = (ziel) => ({ ziel, bahn: STILL, dauer: 0, dehnen: false, hub0: 1, hubBahn: STILL });
     const laeufe = new WeakMap();
-    /** OHNE BEWEGUNG — aus zwei Quellen (E706): das System UND „Ruhige
-       *  Darstellung" (`body[data-bewegung="ruhig"]`). Eine WAAPI-Bahn hält
-       *  sich an kein Stilblatt; vorher schwang die Pille dort trotzdem.
-       *  Gefragt wird die EINE Frage aus E702 (`AppEinstellung.wenigBewegung`),
-       *  dieselbe wie in press.ts und den acht anderen Stellen. */
     const ruhig = () => typeof AppEinstellung !== 'undefined' ? AppEinstellung.wenigBewegung()
         : !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
             || document.body?.dataset['bewegung'] === 'ruhig';
-    /**
-     * Die Uhr der laufenden Bewegung.
-     *
-     * NICHT `performance.now()`: eine Animation, die auf dem Compositor läuft,
-     * hat ihre eigene Zeit, und die ist die einzige, die zum gemalten Bild
-     * passt. Wer hier die Wanduhr nähme, bekäme beim Umlenken einen Ort, der
-     * nie auf dem Bildschirm stand.
-     */
     const uhr = (l) => {
         if (!l.anim)
             return l.dauer;
         const t = l.anim.currentTime;
-        /* Kein Zahlenwert heisst: die Bewegung ist vorbei oder war nie da.
-           Dann zählt das ENDE der Bahn, nicht ihr Anfang — mit 0 stünde hier
-           der Startabstand, und die Fläche spränge beim nächsten Wechsel an
-           ihren vorletzten Ort zurück. Genau das ist beim Bauen passiert und
-           im Film aufgefallen: jeder Wechsel begann bei x = 51. */
         return typeof t === 'number' ? t : l.dauer;
     };
-    /** Ort, Tempo und Hebung JETZT — aus der Formel, nicht aus
-       *  `getComputedStyle` (kein Stilabruf mitten in der Bewegung). */
     const stand = (flaeche) => {
         const l = laeufe.get(flaeche);
         if (l?.frei)
@@ -166,44 +41,14 @@ const SelectionFlow = (() => {
             const s = l.bahn(t);
             return { ort: l.ziel + s.x, tempo: s.v, hub: 1 + l.hubBahn(t).x };
         }
-        /* Kein Lauf gemerkt: dann steht sie da, wo der Stil sagt. */
         const m = flaeche.style.transform.match(/translateX\((-?[\d.]+)px\)/);
         return { ort: m && m[1] ? Number(m[1]) : 0, tempo: 0, hub: 1 };
     };
-    /**
-     * Eine Fläche einem Ziel folgen lassen.
-     *
-     * @param flaeche  die EINE Fläche — sie wird nie ersetzt, nur bewegt.
-     * @param ziel     wohin, in Pixeln vom Anfang ihres Behälters (`offsetLeft`).
-     * @param nachbar  ob Quelle und Ziel nebeneinanderliegen. Nur dann wird
-     *                 gedehnt; `shape-stretch-compress.md` verlangt
-     *                 ausdrücklich „Disable deformation for long-distance
-     *                 navigation". Hat der Finger sie losgelassen, dehnt sie
-     *                 sich mit ihrem Tempo, wie im Kit.
-     * @param sofort   ohne Bewegung setzen (erster Aufruf, `reduce`, ruhig).
-     */
     const folge = (flaeche, ziel, nachbar, sofort) => {
         const alt = laeufe.get(flaeche);
-        /* ══ SCHON DORT ODER SCHON DORTHIN UNTERWEGS? DANN NICHTS. ════════════
-           Ein Wechsel auf denselben Reiter ist keine Bewegung, und eine
-           Bewegung ohne Anlass ist genau das, was `test114` §17 seit E236
-           verbietet.
-    
-           HIER STAND `!alt.anim &&` DAZWISCHEN, und das war ein Fehler mit
-           sichtbarer Folge: `handyLeiste()` läuft je Tipp ZWEIMAL — einmal aus
-           dem Klick, einmal aus `redion:schauplatz`. Der zweite Ruf traf die
-           laufende Feder, und weil `dataset.x` da schon umgeschrieben war,
-           kam er mit `nachbar = false` — die Bahn wurde neu gestartet und die
-           Dehnung fiel weg. `test541` §6 hat es gemessen: 1,000 statt 1,175.
-           Eine Feder, die auf ihr eigenes Ziel neu gestartet wird, verliert
-           jedes Mal ihren Schwung. Hält der Finger sie (`frei`), ist sie
-           NIRGENDS unterwegs — dann muss die Bahn beginnen. */
         if (alt && !alt.frei && alt.ziel === ziel)
             return;
         if (sofort || ruhig()) {
-            /* `continuous-material-selection.md`, Abschnitt Reduced motion:
-               „Selection changes immediately. Remove travel/stretch and use an
-               instant material relocation." */
             alt?.anim?.cancel();
             flaeche.style.transform = 'translateX(' + ziel + 'px)';
             flaeche.style.removeProperty('--dehnung');
@@ -211,18 +56,12 @@ const SelectionFlow = (() => {
             laeufe.set(flaeche, ruhend(ziel));
             return;
         }
-        /* ══ DER STAND DER LAUFENDEN BEWEGUNG WIRD ÜBERNOMMEN ═══════════════════
-         * `recipes/velocity-preserving-springs.md`: „spring transitions should
-         * inherit current motion rather than restart from zero velocity."
-         * Dasselbe gilt für eine Fläche, die der Finger eben losgelassen hat:
-         * sie nimmt SEIN Tempo mit (Kit: `springTo(stop, velocity)`). */
         const jetzt = stand(flaeche);
         alt?.anim?.cancel();
         const x0 = jetzt.ort - ziel;
         const v0 = jetzt.tempo;
         const hub0 = jetzt.hub;
         const dehnen = nachbar || !!alt?.frei;
-        /* Steht sie schon fast und kommt kein Tempo mit: setzen statt bewegen. */
         if (Math.abs(x0) < 0.5 && Math.abs(v0) < 0.01 && Math.abs(hub0 - 1) < 0.002) {
             flaeche.style.transform = 'translateX(' + ziel + 'px)';
             laeufe.set(flaeche, ruhend(ziel));
@@ -232,15 +71,6 @@ const SelectionFlow = (() => {
         const gehoben = Math.abs(hub0 - 1) >= 0.002;
         const hubBahn = gehoben ? bahnVon(FEDERN.druck, hub0 - 1, 0) : STILL;
         const dauer = Math.max(ruheNach(bahn), gehoben ? ruheNach(hubBahn, 0.0008, 0.00002) : 0);
-        /* ══ DIE BAHN ═════════════════════════════════════════════════════════
-         * Einmal gerechnet, dann übergeben. Jeder Keyframe trägt Ort, Dehnung
-         * und — nach dem Halten — die Hebung; alles steckt in `transform`, also
-         * bleibt es eine einzige Eigenschaft, und der Compositor kann sie allein.
-         *
-         * `--dehnung` wird NICHT mitanimiert: eine benutzerdefinierte
-         * Eigenschaft ist für den Compositor unbekanntes Gelände, und schon
-         * eine davon in den Keyframes zöge die ganze Bewegung zurück auf den
-         * Hauptfaden. */
         const bilder = [];
         for (let t = 0; t <= dauer; t += SCHRITT) {
             const s = bahn(t);
@@ -251,28 +81,17 @@ const SelectionFlow = (() => {
         bilder.push({ transform: 'translateX(' + ziel + 'px) scaleX(1)' + (gehoben ? ' scale(1)' : '') });
         const anim = flaeche.animate(bilder, { duration: dauer, easing: 'linear', fill: 'forwards' });
         laeufe.set(flaeche, { ziel, bahn, dauer, dehnen, hub0, hubBahn, anim });
-        /* WIE OFT SIE GEFLOGEN IST — als Zahl am Element, nicht als Ereignis.
-           `transitionstart` gibt es bei der Web-Animations-Schnittstelle nicht,
-           und `test114` §17 braucht die Auskunft „beim Start ist sie NICHT
-           geflogen". Eine Zahl am Element ist dafür das ehrlichere Mass: sie
-           zählt die ABSICHT und hängt an keinem Malen (derselbe Grund, aus dem
-           §17 schon einmal von Bildern auf Ereignisse umgestellt wurde). */
         flaeche.dataset['fluege'] = String(Number(flaeche.dataset['fluege'] ?? 0) + 1);
         flaeche.classList.add('faehrt');
         anim.finished.then(() => {
             if (laeufe.get(flaeche)?.anim !== anim)
-                return; /* schon umgelenkt */
+                return;
             flaeche.style.transform = 'translateX(' + ziel + 'px)';
             anim.cancel();
-            /* ANGEKOMMEN HEISST: KEIN ABSTAND, KEIN TEMPO, KEINE HEBUNG MEHR. Ohne
-               das bliebe der Startabstand der eben beendeten Bahn stehen, und der
-               nächste Wechsel begänne dort statt hier. */
             laeufe.set(flaeche, ruhend(ziel));
             flaeche.classList.remove('faehrt');
         }).catch(() => { });
     };
-    /** DER FINGER HÄLT DIE FLÄCHE (E706): ein Bild, vom Finger gesetzt;
-       *  `folge` fährt beim Loslassen von genau hier weiter. */
     const setze = (flaeche, ort, tempo, dehnung, hub) => {
         laeufe.get(flaeche)?.anim?.cancel();
         flaeche.style.transform = 'translateX(' + ort.toFixed(2) + 'px) scaleX(' + dehnung.toFixed(4) + ')'
@@ -281,17 +100,6 @@ const SelectionFlow = (() => {
         laeufe.set(flaeche, { ziel: NaN, bahn: STILL, dauer: 0, dehnen: true, hub0: hub, hubBahn: STILL,
             frei: { ort, tempo, hub } });
     };
-    /**
-     * Ein Element von `von` nach `nach` fliegen lassen.
-     *
-     * `von` und `nach` sind in DEMSELBEN Mass wie `left`/`top` des Elements:
-     * Bildschirmmasse bei `position:fixed` (Werkzeugleiste), Masse im Behälter
-     * bei `position:absolute` (Umschalter). Zurück kommt die Animation, damit
-     * der Rufer sie abbrechen oder ihr Ende abwarten kann.
-     *
-     * @param dehnen  ob sie sich unterwegs dehnen darf; ohne Angabe: nur
-     *                zwischen Nachbarn (höchstens 1,35 Breiten Weg).
-     */
     const fliege = (flaeche, von, nach, dehnen) => {
         if (!nach.width || !nach.height)
             return null;
@@ -319,8 +127,6 @@ const SelectionFlow = (() => {
         const bilder = [];
         for (let t = 0; t <= dauer; t += SCHRITT) {
             const s = bahn(t);
-            /* Der Rest des Weges: 1 am Anfang, 0 am Ziel — und kurz unter null,
-               wenn die Feder über das Ziel hinausschwingt. */
             const rest = -s.x / weit;
             let kx = 1 + (sx - 1) * rest;
             let ky = 1 + (sy - 1) * rest;
@@ -385,22 +191,17 @@ const SelectionFlow = (() => {
             bilder.push({ scale: (1 + bahn(t).x).toFixed(4) });
         bilder.push({ scale: '1' });
         const anim = el.animate(bilder, { duration: dauer, easing: 'linear' });
-        /* seit -1: federt zurück; ein neuer Druck holt den Wert hier ab. */
         gedrueckt.set(el, { anim, seit: -1 });
         anim.finished.then(() => { if (gedrueckt.get(el)?.anim === anim)
             gedrueckt.delete(el); })
             .catch(() => { });
     };
-    /* DIE GESTE DES KITS, OHNE REACT (E706): Achse, Tempo, Gummiband,
-       Rastpunkt — aus `UI-Kit/app/src/touch/gesture/*` übertragen. */
-    /** `lockAxis`: erst nach `schwelle` px entscheiden (Finger 10, Maus 2). */
     const achse = (dx, dy, schwelle) => {
         const ax = Math.abs(dx), ay = Math.abs(dy);
         if (Math.max(ax, ay) < schwelle)
             return null;
         return ax >= ay ? 'x' : 'y';
     };
-    /** `createVelocityTracker`: Tempo aus den letzten 100 ms, in px/ms. */
     const tempoMesser = () => {
         let proben = [];
         const FENSTER = 100;
@@ -417,7 +218,7 @@ const SelectionFlow = (() => {
                 if (!letzte || !davor)
                     return 0;
                 if (jetzt - letzte.zeit > FENSTER)
-                    return 0; /* der Finger ruht */
+                    return 0;
                 let bezug = letzte;
                 for (let i = proben.length - 2; i >= 0; i--) {
                     const p = proben[i];
@@ -438,7 +239,6 @@ const SelectionFlow = (() => {
             }
         };
     };
-    /** `rubberbandClamp`: über die Enden hinaus immer zäher, nie weiter als `weite`. */
     const gummiband = (wert, min, max, weite) => {
         const band = (ueber) => (ueber * weite * 0.55) / (weite + 0.55 * Math.abs(ueber));
         if (wert < min)
@@ -447,8 +247,6 @@ const SelectionFlow = (() => {
             return max + band(wert - max);
         return wert;
     };
-    /** `selectSnapPoint`: der Punkt am Ende des Schwungs — ein klares Wischen
-     *  landet nie hinter dem Finger. `tempo` in px/ms. */
     const rastpunkt = (ort, tempo, punkte, bremse = 0.98) => {
         const vs = tempo * 1000;
         const weiter = vs === 0 ? 0 : ((vs / 1000) * bremse) / (1 - bremse);
@@ -477,7 +275,7 @@ const SelectionFlow = (() => {
     };
     const ziehbar = (a) => {
         if (a.reihe.dataset['ziehbar'])
-            return; /* nie zweimal binden */
+            return;
         a.reihe.dataset['ziehbar'] = 'an';
         const HUB = a.hub ?? 1.12;
         let zug = null;
@@ -520,7 +318,6 @@ const SelectionFlow = (() => {
             const erste = z.mitten[0] ?? 0, letzte = z.mitten[z.mitten.length - 1] ?? 0;
             const ziel = gummiband(z.finger - z.versatz, Math.min(erste, letzte), Math.max(erste, letzte), z.breite * 0.5) - z.breite / 2;
             if (z.zieht) {
-                /* Zum Finger gezogen, auf der Feder: jedes Bild eine neue Bahn. */
                 const s = bahnVon(FEDERN.knapp, z.ort - ziel, z.tempo)(dt);
                 z.ort = ziel + s.x;
                 z.tempo = s.v;
@@ -533,7 +330,6 @@ const SelectionFlow = (() => {
                 z.ort = ziel;
                 z.tempo = z.messer.tempo(jetzt);
             }
-            /* Dehnung folgt dem Tempo und löst sich, wenn der Finger ruht (Kit). */
             const soll = ruhig() ? 1 : dehnungAus(z.tempo);
             z.dehnung = soll > z.dehnung ? soll : 1 + (z.dehnung - 1) * Math.pow(0.5, dt / 40);
             const hubSoll = ruhig() ? 1 : HUB;
@@ -577,7 +373,6 @@ const SelectionFlow = (() => {
                 return;
             if (a.nurAmGewaehlten && k !== aktiv)
                 return;
-            /* Einmal gemessen, beim Aufsetzen — nicht je Bild. */
             const ar = aktiv.getBoundingClientRect();
             let nullX = ar.left;
             if (a.flaeche) {
@@ -613,13 +408,12 @@ const SelectionFlow = (() => {
                     lasseLos(gedrucktes);
                     return;
                 }
-                /* ES WIRD GEZOGEN. */
                 z.amZiehen = true;
                 lasseLos(gedrucktes);
                 try {
                     a.reihe.setPointerCapture(e.pointerId);
                 }
-                catch { /* schon weg */ }
+                catch { }
                 window.getSelection()?.removeAllRanges();
                 a.reihe.dataset['gehalten'] = '';
                 if (!z.flaeche && a.baue)
@@ -629,7 +423,6 @@ const SelectionFlow = (() => {
                     delete a.reihe.dataset['gehalten'];
                     return;
                 }
-                /* Gegriffen, wo sie ist (ab HIER, damit nichts springt), sonst gezogen. */
                 if (z.auf)
                     z.versatz = (e.clientX - z.nullX) - (z.ort + z.breite / 2);
                 else
@@ -647,7 +440,7 @@ const SelectionFlow = (() => {
             zug = null;
             lasseLos(gedrucktes);
             if (!z.amZiehen || !z.flaeche)
-                return; /* ein Tipp: der Klick wählt */
+                return;
             aufraeumen(z);
             const tempo = z.zieht ? z.tempo : z.messer.tempo(e.timeStamp);
             const wahl = z.liste[rastpunkt(z.ort + z.breite / 2, tempo, z.mitten)] ?? null;
@@ -676,8 +469,6 @@ const SelectionFlow = (() => {
             if (e.target === a.reihe && zug && zug.amZiehen && e.pointerId === zug.id)
                 abbrechen();
         });
-        /* Der Klick nach dem Ziehen ist kein Tipp — nur dieser, nur 0,5 s lang;
-               ein Vorleser wählt ohne Aufsetzen und kommt immer an. */
         a.reihe.addEventListener('click', (e) => {
             if (eigenerKlick)
                 return;
@@ -687,8 +478,6 @@ const SelectionFlow = (() => {
                 e.stopPropagation();
             }
         }, true);
-        /* Und die Schublade bleibt zu: ein Zug ab x < 26 sähe für `pwa.ts`
-               aus wie der Wisch vom Rand. */
         a.reihe.addEventListener('touchend', (e) => {
             if (performance.now() - schlucken < 300)
                 e.stopPropagation();
@@ -701,26 +490,14 @@ const SelectionFlow = (() => {
             abbrechen();
         }, true);
     };
-    /* DIE UMSCHALTER: EIN MATERIAL FÜR JEDE WAHL (E706) — Seite/Fläche/Redion,
-       Heute, die Wege im Regal, Aussehen, Einstellungen, das Zubehör der
-       Stiftleiste. DER ZUSTAND BLEIBT AM KNOPF (E640): die meisten Reihen
-       werden je Wahl neu gezeichnet, eine bleibende Fläche veraltete. Also
-       fliegt nur der Wechsel — eine kurzlebige Fläche im Aussehen der Wahl,
-       unter der Schrift; das Ziel leuchtet derweil schwach vor.
-       DER VERTRAG IST EIN MERKMAL (`data-material`), KEIN AUFRUF (§5): die
-       Schale hört einmal am Dokument zu, merkt VOR dem Klick, fliegt im
-       nächsten Bild — auch in eine neu gezeichnete Reihe an derselben Stelle. */
     const GEWAEHLT = '[aria-checked="true"],[aria-selected="true"],[aria-current="page"],' +
         '[aria-current="true"],[aria-pressed="true"],.on,.an,.is-active';
-    /** Die Wahlen einer Reihe; mit `data-material-je="gruppe"` nur die mit
-       *  demselben `data-gruppe` (Stiftleiste). Ohne das Merkmal: keine. */
     const optionenIn = (reihe, gruppe = null) => {
         const je = reihe instanceof HTMLElement ? reihe.dataset['materialJe'] : undefined;
         return Array.from(reihe.children).filter((k) => k instanceof HTMLElement && k.matches('button,[role="tab"],[role="radio"]')
             && (!je || (gruppe !== null && k.dataset[je] === gruppe)));
     };
     const gewaehltIn = (reihe, gruppe = null) => optionenIn(reihe, gruppe).find(k => k.matches(GEWAEHLT)) || null;
-    /** Der Kasten, der die Fläche trägt: `display:contents` hat keinen. */
     const traegerVon = (reihe) => {
         let t = reihe;
         while (t.parentElement && getComputedStyle(t).display === 'contents')
@@ -729,8 +506,6 @@ const SelectionFlow = (() => {
     };
     const DURCHSICHTIG = /^(transparent|rgba\([^)]*,\s*0\))$/;
     const reiheFluege = new WeakMap();
-    /** Eine neu gezeichnete Reihe wiederfinden: dieselbe `data-material`
-       *  an (fast) derselben Stelle. */
     const reiheSuchen = (name, rahmen) => {
         let beste = null;
         let abstand = Infinity;
@@ -754,13 +529,10 @@ const SelectionFlow = (() => {
             return;
         if (Math.abs(von.left - nach.left) < 1 && Math.abs(von.top - nach.top) < 1)
             return;
-        /* Kein Flug quer über einen Umbruch: dieselbe Zeile ODER dieselbe Spalte. */
         const zeile = Math.abs(von.top - nach.top) < Math.max(von.height, nach.height) * 0.5;
         const spalte = Math.abs(von.left - nach.left) < Math.max(von.width, nach.width) * 0.5;
         if (!zeile && !spalte)
             return;
-        /* Wie sieht die Wahl aus? Am Ziel gelesen. Eine Farbe als `style` ist
-               Inhalt (Farbtupfer): sie fliegt nicht und bleibt stehen, nur ihr Ring fliegt. */
         const st = getComputedStyle(neu);
         const inhalt = !!(neu.style.background || neu.style.backgroundColor);
         const grund = inhalt ? 'transparent' : st.backgroundColor;
@@ -774,7 +546,6 @@ const SelectionFlow = (() => {
         if (DURCHSICHTIG.test(grund.trim()) && bild === 'none' && st.boxShadow === 'none' && !rand)
             return;
         const traeger = traegerVon(reihe);
-        /* Unterbrechen, nicht anstellen: ab dem Ort der laufenden Fläche. */
         let start = von;
         const alt = reiheFluege.get(traeger);
         if (alt) {
@@ -792,12 +563,8 @@ const SelectionFlow = (() => {
         for (const r of seiten) {
             flug.style.setProperty('border-' + r.s, r.w + 'px ' + (r.art || 'none') + ' ' + r.farbe);
         }
-        /* Eigene Ebene nur für den Flug (`isolation`): `z-index:-1` liegt dann
-               über dem Grund der Reihe und unter der Schrift. */
         traeger.classList.add('ru-traeger');
         traeger.append(flug);
-        /* In den Massen ihres `offsetParent`, samt Rollstand. Die Lage des
-               Trägers bleibt, wie sie ist (eine Klappe darin verrutschte sonst). */
         const bezug = flug.offsetParent ?? traeger;
         const b = bezug.getBoundingClientRect();
         const lokal = (r) => ({
@@ -805,16 +572,14 @@ const SelectionFlow = (() => {
             top: r.top - b.top - bezug.clientTop + bezug.scrollTop,
             width: r.width, height: r.height
         });
-        /* Das Ziel leuchtet schwach vor, es wird nie leer (E640/test478). */
         neu.style.setProperty('--ru-grund', grund);
         neu.classList.add(inhalt ? 'ru-wartet-rand' : 'ru-wartet');
         const eintrag = { flug, ziel: neu, fertig: () => { } };
         reiheFluege.set(traeger, eintrag);
         eintrag.fertig = () => {
             if (reiheFluege.get(traeger) !== eintrag)
-                return; /* überholt */
+                return;
             reiheFluege.delete(traeger);
-            /* Landen ohne Überblenden: der eigene Grund kommt im selben Bild. */
             neu.classList.add('ru-landet');
             neu.classList.remove('ru-wartet', 'ru-wartet-rand');
             neu.style.removeProperty('--ru-grund');
@@ -829,18 +594,13 @@ const SelectionFlow = (() => {
         }
         flug.dataset['fluege'] = '1';
         bahn.finished.then(eintrag.fertig).catch(() => { });
-        /* Netz: eine Bewegung, die nie beginnt, meldet kein Ende. */
         setTimeout(eintrag.fertig, DAUER + 250);
-        /* NEU GEZEICHNET MITTEN IM FLUG (gefunden an „Heute": die Reihe wird
-           nach dem Klick noch einmal gezeichnet, die Fläche verschwand nach zwei
-           Bildern am Start). Dann fliegt sie in der neuen Reihe weiter — ab dem
-           Ort, an dem sie zuletzt zu sehen war, höchstens dreimal. */
         const name = reihe.dataset['material'] || '';
         let zuletzt = start;
         let rahmen = reihe.getBoundingClientRect();
         const wache = () => {
             if (reiheFluege.get(traeger) !== eintrag)
-                return; /* gelandet oder überholt */
+                return;
             if (flug.isConnected && neu.isConnected && reihe.isConnected) {
                 zuletzt = flug.getBoundingClientRect();
                 rahmen = reihe.getBoundingClientRect();
@@ -857,7 +617,6 @@ const SelectionFlow = (() => {
     };
     const nachsehen = (m, runde) => {
         requestAnimationFrame(() => {
-            /* Neu gezeichnet: dieselbe Reihe an derselben Stelle suchen. */
             const reihe = m.reihe.isConnected ? m.reihe : reiheSuchen(m.name, m.rahmen);
             const neu = reihe ? gewaehltIn(reihe, m.gruppe) : null;
             if (!reihe || !neu || neu === m.alt) {
@@ -865,9 +624,6 @@ const SelectionFlow = (() => {
                     nachsehen(m, runde + 1);
                 return;
             }
-            /* Die Reihe selbst kann dabei gewandert sein (ein neuer Seitenkopf
-               darüber). Das ist nicht der Weg der Wahl: der Start zieht mit der
-               Reihe mit, geflogen wird nur IN ihr. */
             const q = reihe.getBoundingClientRect();
             if (m.von)
                 materialFliegen(reihe, { left: m.von.left + q.left - m.rahmen.left,
@@ -883,7 +639,7 @@ const SelectionFlow = (() => {
         const knopf = Array.from(reihe.children).find(k => k.contains(ziel));
         const gruppe = je && knopf instanceof HTMLElement ? (knopf.dataset[je] ?? null) : null;
         if (je && gruppe === null)
-            return; /* ein Werkzeug: es fliegt selbst (E640) */
+            return;
         if (!optionenIn(reihe, gruppe).some(k => k.contains(ziel)))
             return;
         const alt = gewaehltIn(reihe, gruppe);
@@ -893,7 +649,6 @@ const SelectionFlow = (() => {
         nachsehen({ name: reihe.dataset['material'] || '', reihe, rahmen: reihe.getBoundingClientRect(), gruppe,
             von: r ? { left: r.left, top: r.top, width: r.width, height: r.height } : null, alt }, 0);
     };
-    /* Einmal am Dokument, nicht je Reihe — die Reihen kommen und gehen. */
     document.addEventListener('click', vormerken, true);
     document.addEventListener('keydown', (e) => {
         if (/^(Arrow|Home$|End$)/.test(e.key))

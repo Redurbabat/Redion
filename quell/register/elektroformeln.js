@@ -1,32 +1,5 @@
 "use strict";
-/* ============================================================================
- * register/elektroformeln.js — die Formelsammlung, rechenbar
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/elektroformeln.ts`.
- * ----------------------------------------------------------------------------
- * WARUM EINE FORMELSAMMLUNG IM CODE UND NICHT ALS PDF
- *
- * Ein gescanntes Formelheft kann man ansehen. Mehr nicht: man kann nicht
- * suchen, nicht rechnen, keinen Wert einsetzen. Wer P aus U und I braucht,
- * blättert, findet die Zeile, tippt sie in den Taschenrechner ab und
- * verrechnet sich beim Abtippen.
- *
- * Hier steht jede Formel als DATEN: welche Grössen vorkommen, welche Einheit
- * jede hat, und wie man nach jeder einzelnen auflöst. Damit kann Redion
- * rechnen, suchen, den Weg zeigen und die Einheiten mitführen — und das
- * eigene Heft als PDF bleibt trotzdem daneben liegen (siehe `formelheft.ts`).
- *
- * DIE FORMELN SELBST GEHÖREN NIEMANDEM. `U = R · I` ist seit 1826 bekannt und
- * steht in jedem Lehrbuch. Was in einem Heft geschützt ist, ist die Auswahl,
- * die Anordnung und der Satz — und davon ist hier nichts übernommen: die
- * Reihenfolge folgt dem, was in der Ausbildung zuerst gebraucht wird.
- *
- * KEINE NORMATIVEN ENTSCHEIDUNGEN (E128). Hier steht keine Schutz- oder
- * Leiterdimensionierung, keine Verlegeart, keine Tabelle aus einer Norm.
- * Was hier steht, sind physikalische Zusammenhänge — und wo eine Annahme
- * nötig ist (etwa ρ für Kupfer), steht sie sichtbar dabei.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/elektroformeln.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.elektroformeln = (() => {
     const KAPITEL = [
@@ -53,26 +26,6 @@ Register.elektroformeln = (() => {
         ['elektronik', 'Elektronische Schaltungen', '▷'],
         ['spulen', 'Drahtlängen von Spulen', '◎']
     ];
-    /* ==========================================================================
-     * DAS BUCH: ABSCHNITTE UND SEITENZAHLEN
-     * --------------------------------------------------------------------------
-     * Redion schreibt sein Formelbuch SELBST — eigene Gestaltung, eigene
-     * Skizzen, eigene Erklärungen. Aber die SEITENZAHLEN sind dieselben wie im
-     * gedruckten Heft, mit dem gelernt wird. Wer beides nebeneinander liegen
-     * hat, blättert in beiden auf 14 und findet beide Male die
-     * Wechselstromwiderstände.
-     *
-     * Das ist der ganze Zweck: nicht abschreiben, sondern mitblättern können.
-     *
-     * DIE SEITENZAHL STEHT NUR HIER. An der Formel steht nur, in welchem
-     * ABSCHNITT sie liegt; auf welcher Seite der Abschnitt steht, sagt diese
-     * Liste. Zwei Stellen mit derselben Seitenzahl wären zwei Wahrheiten, und
-     * eine davon wäre irgendwann falsch.
-     * ========================================================================*/
-    /** Die Kapitel des Buchs, so nummeriert und benannt wie im Inhaltsverzeichnis. */
-    /* Der Grössen-Helfer steht VOR den Abschnitten, weil die Abschnitte ihn
-       schon benutzen: jeder trägt die Grössenliste, die im Heft neben ihm
-       steht. Stand er darunter, war er zur Auswertungszeit noch nicht da. */
     const g = (zeichen, name, einheit, was) => was === undefined ? { zeichen, name, einheit } : { zeichen, name, einheit, was };
     const BUCHKAPITEL = [
         [1, 'Grundformeln Quickie'],
@@ -105,7 +58,6 @@ Register.elektroformeln = (() => {
         [28, 'Werkstoffwerte'],
         [29, 'Grössen und Einheiten'],
     ];
-    /** Die letzte Seite mit Inhalt. Das Stichwortverzeichnis steht auf 36. */
     const LETZTE_SEITE = 36;
     const ABSCHNITTE = [
         {
@@ -2475,11 +2427,9 @@ Register.elektroformeln = (() => {
             ]
         }
     ];
-    /* Hilfen, damit die Liste lesbar bleibt. */
     const WURZEL = Math.sqrt;
     const PI = Math.PI;
     const EINGEBAUT = [
-        /* ---- Grundformeln ---------------------------------------------------- */
         {
             id: 'ohm', kapitel: 'grund', schreibweise: 'U = R · I',
             groessen: [g('U', 'Spannung', 'V', 'Wie stark die Ladung getrieben wird'),
@@ -2533,10 +2483,6 @@ Register.elektroformeln = (() => {
             loese: { K: v => v.k * v.W, k: v => v.K / v.W, W: v => v.K / v.k },
             erklaerung: 'Was der Verbrauch kostet.'
         },
-        /* ---- Messtechnik (Kapitel 4 des Heftes) ------------------------------
-           Die Messbereicherweiterung ist das Stück Messtechnik, das man im
-           Beruf wirklich rechnet: ein Messwerk verträgt Milliampere, gemessen
-           werden sollen Ampere. Der Rest ist Ohm. */
         {
             id: 'mess-vorwiderstand', kapitel: 'messen', schreibweise: 'R_V = (n − 1) · R_m',
             groessen: [g('R_V', 'Vorwiderstand', 'Ω', 'Kommt VOR das Messwerk, in Reihe'),
@@ -2692,7 +2638,6 @@ Register.elektroformeln = (() => {
             loese: { R_m: v => v.MB * v.r_k, MB: v => v.R_m / v.r_k, r_k: v => v.R_m / v.MB },
             erklaerung: 'Wie hochohmig ein analoges Voltmeter im gewählten Bereich ist.'
         },
-        /* ---- Magnetische Grössen (Kapitel 9 des Heftes) ---------------------- */
         {
             id: 'magnet-durchflutung', kapitel: 'magnet', schreibweise: 'Θ = I · N',
             groessen: [g('Θ', 'Durchflutung', 'A'), g('I', 'Strom', 'A'),
@@ -2768,11 +2713,6 @@ Register.elektroformeln = (() => {
             erklaerung: 'Warum eine Spule beim Ausschalten Funken zieht — und warum eine ' +
                 'Freilaufdiode danebengehört.'
         },
-        /* ---- Spannungsfall und Leistungsverlust (Kapitel 15 des Heftes) ------
-           DER ENTSCHEIDENDE PUNKT STEHT IN DEN FORMELN, NICHT DANEBEN: bei
-           Gleich- und Wechselstrom zählt die Leitung ZWEIMAL — hin und zurück.
-           Bei Drehstrom nur einmal. Wer das verwechselt, rechnet den halben oder
-           den doppelten Spannungsfall. */
         {
             id: 'fall-leitungswiderstand', kapitel: 'fall',
             schreibweise: 'R_Ltg = ρ · 2 · l / A',
@@ -2916,7 +2856,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Was hinten herauskommt, geteilt durch das, was vorn hineingeht. Nie über 1.'
         },
-        /* ---- Reihenschaltung ------------------------------------------------- */
         {
             id: 'reihe-r', kapitel: 'reihe', schreibweise: 'R = R₁ + R₂ + … + Rₙ',
             groessen: [g('R', 'Gesamtwiderstand', 'Ω'), g('R₁', 'Widerstand 1', 'Ω'),
@@ -2959,7 +2898,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Der belastungsfreie Spannungsteiler. Wer belastet, rechnet R₂ parallel zur Last.'
         },
-        /* ---- Parallelschaltung ----------------------------------------------- */
         {
             id: 'parallel-r2', kapitel: 'parallel', schreibweise: 'R = (R₁ · R₂) / (R₁ + R₂)',
             groessen: [g('R', 'Gesamtwiderstand', 'Ω'), g('R₁', 'Widerstand 1', 'Ω'),
@@ -2999,7 +2937,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'UMGEKEHRT zum Spannungsteiler: durch den kleineren Widerstand fliesst mehr.'
         },
-        /* ---- Leiter ---------------------------------------------------------- */
         {
             id: 'spannungsteiler-belastet', kapitel: 'parallel',
             schreibweise: 'U₂ = U · R₂₃ / (R₁ + R₂₃)',
@@ -3075,10 +3012,6 @@ Register.elektroformeln = (() => {
             erklaerung: 'Je länger und dünner, desto mehr Widerstand — und desto mehr Spannungsfall.'
         },
         {
-            /* Hier stand `R₉` — eine tiefgestellte NEUN, die wie das kleine Theta
-               aussieht, aber keines ist. Wer im Heft R mit tiefem ϑ liest und hier
-               R neun sucht, findet nichts. Unicode hat kein tiefgestelltes ϑ,
-               darum die Unterstrich-Schreibweise wie bei R_V und X_L. */
             id: 'temperatur', kapitel: 'leiter', schreibweise: 'R_ϑ = R₂₀ · (1 + α · Δϑ)',
             groessen: [g('R_ϑ', 'Widerstand warm', 'Ω'), g('R₂₀', 'Widerstand bei 20 °C', 'Ω'),
                 g('α', 'Temperaturbeiwert', '1/K', 'Kupfer 0,0039'),
@@ -3092,7 +3025,6 @@ Register.elektroformeln = (() => {
             annahme: 'α gilt für den Bereich, in dem der Zusammenhang linear ist.',
             erklaerung: 'Metall wird bei Wärme hochohmiger. Deshalb zieht ein kalter Motor mehr Strom.'
         },
-        /* ---- Elektrowärme ---------------------------------------------------- */
         {
             id: 'waermemenge', kapitel: 'waerme', schreibweise: 'Q = m · c · Δϑ',
             groessen: [g('Q', 'Wärmemenge', 'J'), g('m', 'Masse', 'kg'),
@@ -3121,7 +3053,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Der Boiler: elektrische Energie mal Wirkungsgrad ergibt die Wärme im Wasser.'
         },
-        /* ---- Spannungsquellen ------------------------------------------------ */
         {
             id: 'klemmenspannung', kapitel: 'quelle', schreibweise: 'U = U₀ − Rᵢ · I',
             groessen: [g('U', 'Klemmenspannung', 'V'), g('U₀', 'Leerlaufspannung', 'V'),
@@ -3213,7 +3144,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Bei gleichen Elementen teilt sich der Laststrom zu gleichen Teilen auf. Sind sie ungleich, stimmt das nicht mehr — und die stärkere Zelle lädt die schwächere.'
         },
-        /* ---- Akkumulator und Batterie ---------------------------------------- */
         {
             id: 'akku-ladekapazitaet', kapitel: 'akku', schreibweise: 'Q_L = I_L · t_L',
             groessen: [g('Q_L', 'Ladekapazität', 'Ah'), g('I_L', 'Ladestrom', 'A'),
@@ -3280,7 +3210,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Der schlechtere der beiden Wirkungsgrade — weil die Entladespannung tiefer liegt als die Ladespannung, geht neben der Ladung auch noch Spannung verloren.'
         },
-        /* ---- Kondensator ----------------------------------------------------- */
         {
             id: 'kondensator-parallel', kapitel: 'konden', schreibweise: 'C = C₁ + C₂ + … + Cₙ',
             groessen: [g('C', 'Gesamtkapazität', 'µF'), g('C₁', 'Kapazität 1', 'µF'),
@@ -3304,11 +3233,6 @@ Register.elektroformeln = (() => {
             erklaerung: 'In Reihe wird die Gesamtkapazität kleiner als die kleinste einzelne.'
         },
         {
-            /* Der Plattenabstand heisst hier `l` und nicht `d`. Das ist keine
-               Willkür: das Heft schreibt `C = ε₀ · εᵣ · A / l`, und wer die Seite
-               daneben liegen hat, soll dasselbe Zeichen im Rechner wiederfinden.
-               Ein anderer Buchstabe für dieselbe Grösse ist eine Stolperstelle,
-               die man erst bemerkt, wenn man sich schon vertan hat. */
             id: 'plattenkondensator', kapitel: 'konden', schreibweise: 'C = ε₀ · εᵣ · A / l',
             groessen: [g('C', 'Kapazität', 'F'),
                 g('ε₀', 'elektrische Feldkonstante', 'F/m', 'fest: 8,854·10⁻¹²'),
@@ -3322,7 +3246,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Grosse Fläche und kleiner Abstand geben viel Kapazität.'
         },
-        /* ---- Wechselstrom ---------------------------------------------------- */
         {
             id: 'kondensator-ladung', kapitel: 'konden', schreibweise: 'Q = C · U',
             groessen: [g('Q', 'gespeicherte Ladung', 'As'), g('C', 'Kapazität', 'F'),
@@ -3668,7 +3591,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Das Leistungsdreieck. Auch hier gilt Pythagoras.'
         },
-        /* ---- Drehstrom ------------------------------------------------------- */
         {
             id: 'dreh-schein', kapitel: 'dreh', schreibweise: 'S = √3 · U · I',
             groessen: [g('S', 'Scheinleistung', 'VA'), g('U', 'Aussenleiterspannung', 'V'),
@@ -3712,7 +3634,6 @@ Register.elektroformeln = (() => {
             loese: { I: v => WURZEL(3) * v.I_Str, I_Str: v => v.I / WURZEL(3) },
             erklaerung: 'Dreieckschaltung: volle Spannung am Strang, dafür teilt sich der Strom auf.'
         },
-        /* ---- Transformator --------------------------------------------------- */
         {
             id: 'stern-spannung', kapitel: 'dreh', schreibweise: 'U_Str = U / √3',
             groessen: [g('U_Str', 'Strangspannung', 'V', 'Über einem einzelnen Wicklungsstrang'),
@@ -3835,7 +3756,6 @@ Register.elektroformeln = (() => {
             annahme: 'Gilt für den verlustfreien Transformator.',
             erklaerung: 'Der Strom geht UMGEKEHRT: mehr Spannung heisst weniger Strom.'
         },
-        /* ---- Motor ----------------------------------------------------------- */
         {
             id: 'trafo-nennleistung', kapitel: 'trafo', schreibweise: 'S_N = U₂N · I₂N',
             groessen: [g('S_N', 'Nennleistung', 'VA'),
@@ -3969,7 +3889,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Was ein Aufzug oder eine Winde an Leistung braucht.'
         },
-        /* ---- Lichttechnik ---------------------------------------------------- */
         {
             id: 'motor-polpaare', kapitel: 'motor', schreibweise: 'p = f · 60 / n_s',
             groessen: [g('p', 'Anzahl Polpaare', ''), g('f', 'Frequenz', 'Hz'),
@@ -4066,11 +3985,6 @@ Register.elektroformeln = (() => {
             erklaerung: 'Wie lange die Winde für die Last braucht. 1 W = 1 Nm/s.'
         },
         {
-            /* Φ_N und nicht Φ — und der Unterschied ist kein Schönheitsfehler:
-               der NUTZlichtstrom ist das, was nach Leuchten- und Raumverlusten
-               unten ankommt. Wer mit dem blossen Lampenlichtstrom rechnet, plant
-               den Raum zu hell und wundert sich auf der Baustelle. Das Heft
-               schreibt an beiden Stellen Φ_N. */
             id: 'beleuchtungsstaerke', kapitel: 'licht', schreibweise: 'E = Φ_N / A',
             groessen: [g('E', 'Beleuchtungsstärke', 'lx'),
                 g('Φ_N', 'Nutzlichtstrom', 'lm', 'was nach allen Verlusten auf der Fläche ankommt'),
@@ -4212,11 +4126,6 @@ Register.elektroformeln = (() => {
             erklaerung: 'Eine Lichtleiste verliert langsamer mit dem Abstand als ein Punkt: ' +
                 'doppelter Abstand heisst hier die HÄLFTE, nicht ein Viertel.'
         },
-        /* ---- Antenneninstallation (Kapitel 16 des Heftes) --------------------
-           Der Grund, warum hier LOGARITHMEN stehen: eine Antennenanlage hat
-           Verstärker und Dämpfungen hintereinander, und deren Faktoren müsste
-           man multiplizieren. In Dezibel ADDIERT man sie stattdessen — und
-           Addieren geht im Kopf. */
         {
             id: 'verstaerkungsfaktor-u', kapitel: 'antenne', schreibweise: 'V_U = U₂ / U₁',
             groessen: [g('V_U', 'Spannungsverstärkungsfaktor', ''),
@@ -4309,7 +4218,6 @@ Register.elektroformeln = (() => {
             erklaerung: 'DAS ist der Grund für Dezibel: Dämpfungen hintereinander werden ' +
                 'addiert statt multipliziert.'
         },
-        /* ---- Kompensation ---------------------------------------------------- */
         {
             id: 'kompensation-q', kapitel: 'kompen', schreibweise: 'Q_C = P · (tan φ₁ − tan φ₂)',
             groessen: [g('Q_C', 'Kondensatorleistung', 'var'), g('P', 'Wirkleistung', 'W'),
@@ -4334,7 +4242,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Aus der Blindleistung die Kapazität des Kondensators.'
         },
-        /* ---- Leitwert, Stromdichte, Querschnitt (Seite 4) -------------------- */
         {
             id: 'leitwert', kapitel: 'leiter',
             schreibweise: 'G = 1 / R',
@@ -4373,12 +4280,6 @@ Register.elektroformeln = (() => {
             loese: { 'γ': v => 1 / v['ρ'], 'ρ': v => 1 / v['γ'] },
             erklaerung: 'Kupfer hat 56, Aluminium 36. Manche Tabellen geben das eine, manche das andere — hier ist der Weg dazwischen.'
         },
-        /* ---- Gleichrichter (Seite 23) ---------------------------------------
-         * Die Faktoren stehen fest und sind keine gerundeten Messwerte: 0,45 ist
-         * √2/π, 0,9 ist 2·√2/π, 1,35 ist 3·√2/π. Was gerundet IST, sind die
-         * Werte mit Ladekondensator — sie hängen von der Welligkeit ab, und die
-         * Angabe gilt für 5 %.
-         * -------------------------------------------------------------------*/
         {
             id: 'gleich-einweg-u', kapitel: 'gleichrichter',
             schreibweise: 'U₂ ≈ 0,45 · U₁',
@@ -4504,7 +4405,6 @@ Register.elektroformeln = (() => {
             annahme: 'Gilt mit und ohne Ladekondensator.',
             erklaerung: 'Der Strommittelwert der Drehstrom-Brückenschaltung.'
         },
-        /* ---- Elektronische Schaltungen (Seite 24) ---------------------------- */
         {
             id: 'diode-vorwiderstand', kapitel: 'elektronik',
             schreibweise: 'R_V = (U₁ − U_F) / I_F',
@@ -4656,7 +4556,6 @@ Register.elektroformeln = (() => {
             },
             erklaerung: 'Was am Transistor übrig bleibt. Beim Schalten sind das fast 0 V — und darum bleibt er kühl.'
         },
-        /* ---- Drahtlängen von Spulen (Seite 27) ------------------------------- */
         {
             id: 'spule-drahtlaenge', kapitel: 'spulen',
             schreibweise: 'l = d_m · π · N',
@@ -4738,7 +4637,6 @@ Register.elektroformeln = (() => {
     const imKapitel = (k) => LISTE.filter(f => f.kapitel === k);
     const kapitel = () => KAPITEL.slice();
     const kapitelName = (id) => (KAPITEL.find(k => k[0] === id) || [id, id, ''])[1];
-    /* ---- Der Weg durchs Buch --------------------------------------------- */
     const abschnitte = () => ABSCHNITTE.map(a => ({ ...a }));
     const abschnitt = (id) => {
         const a = ABSCHNITTE.find(x => x.id === id);
@@ -4747,54 +4645,25 @@ Register.elektroformeln = (() => {
     const buchkapitel = () => BUCHKAPITEL.slice();
     const buchkapitelName = (nr) => (BUCHKAPITEL.find(k => k[0] === nr) || [nr, ''])[1];
     const letzteSeite = () => LETZTE_SEITE;
-    /**
-     * Was auf einer Buchseite steht: die Abschnitte in Buchreihenfolge, jeder
-     * mit seinen Formeln.
-     *
-     * Eine Seite OHNE Abschnitte gibt eine leere Liste zurück und keinen
-     * Fehler — es gibt Seiten im Buch, die Redion (noch) nicht geschrieben
-     * hat, und eine leere Seite ist eine ehrliche Antwort darauf.
-     */
     const aufSeite = (nr) => ABSCHNITTE.filter(a => a.seite === nr)
         .map(a => ({ abschnitt: { ...a }, zeilen: (a.zeilen || []).map(z => ({ ...z })) }));
-    /** Die Seitenzahlen, auf denen wirklich etwas steht. */
     const seitenMitInhalt = () => [...new Set(ABSCHNITTE.map(a => a.seite))].sort((a, b) => a - b);
-    /**
-     * ALLE Seiten, auf denen eine Formel steht.
-     *
-     * Das Heft führt seine wichtigen Formeln mehrfach: `P = U · I` steht im
-     * Quickie auf Seite 2 und ausführlich auf Seite 8. Eine einzelne Zahl
-     * kann das nicht sagen, und die erste zu nennen und die zweite zu
-     * verschweigen wäre eine halbe Antwort.
-     */
     const seitenVon = (formelId) => [...new Set(ABSCHNITTE
             .filter(a => (a.zeilen || []).some(z => z.id === formelId))
             .map(a => a.seite))].sort((x, y) => x - y);
-    /** Auf welcher Seite eine Formel steht. 0, wenn ihr Abschnitt fehlt. */
     const seiteVon = (formelId) => {
         const f = LISTE.find(x => x.id === formelId);
         if (!f)
             return 0;
-        /* Die ERSTE Seite, auf der die Formel steht. `P = U · I` steht im Heft
-           auf 2 und auf 8; für „wo finde ich das" ist die vordere die
-           nützlichere Antwort. */
         const a = ABSCHNITTE.find(x => (x.zeilen || []).some(z => z.id === formelId));
         return a ? a.seite : 0;
     };
-    /** Eine eigene Formel anmelden — für spätere Erweiterungen. */
     const melde = (f) => {
         if (!f || !f.id || LISTE.some(x => x.id === f.id))
             return false;
         LISTE.push(f);
         return true;
     };
-    /**
-     * Suchen — über Zeichen, Namen, Kapitel und Erklärung.
-     *
-     * Wer „Strom" tippt, will alles finden, wo I vorkommt; wer „cos" tippt,
-     * den Leistungsfaktor. Eine Suche nur über den Formelnamen fände beides
-     * nicht, denn die Formeln haben gar keine Namen — sie haben Zeichen.
-     */
     const suche = (q) => {
         const s = String(q || '').trim().toLowerCase();
         if (!s)
@@ -4806,18 +4675,10 @@ Register.elektroformeln = (() => {
                 x.name.toLowerCase().includes(s) ||
                 (x.was || '').toLowerCase().includes(s)));
     };
-    /** Nach welchen Grössen lässt sich diese Formel auflösen? */
     const loesbarNach = (id) => {
         const f = holen(id);
         return f ? Object.keys(f.loese) : [];
     };
-    /**
-     * Rechnen.
-     *
-     * Gibt IMMER ein Ergebnis-Objekt zurück, nie eine Ausnahme: eine
-     * Formelsammlung, die beim Teilen durch null wirft, reisst die Seite mit,
-     * auf der sie eingeblendet ist. Was schiefging, steht als Text darin.
-     */
     const rechne = (id, gesucht, werte) => {
         const f = holen(id);
         if (!f)
@@ -4826,8 +4687,6 @@ Register.elektroformeln = (() => {
         if (!auf)
             return { ok: false, fehler: `Nach ${gesucht} lässt sich diese Formel nicht auflösen. Möglich: ` +
                     Object.keys(f.loese).join(', ') + '.' };
-        /* Erst nachsehen, ob alles da ist — sonst rechnet man mit undefined
-           und bekommt NaN, ohne zu wissen, welche Zahl fehlte. */
         const gebraucht = f.groessen.map(x => x.zeichen).filter(x => x !== gesucht);
         const fehlend = gebraucht.filter(x => werte[x] === undefined || werte[x] === null || !isFinite(Number(werte[x])));
         if (fehlend.length)

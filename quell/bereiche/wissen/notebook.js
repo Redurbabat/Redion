@@ -1,77 +1,12 @@
 "use strict";
-/* ============================================================================
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/wissen/notebook.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/wissen/notebook.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * ==========================================================================*/
-/* ==========================================================================
- * notebook.js — die Ansicht „Notizhefte" (E264, Bibliothek dazu in E265)
- *
- * Redur, wörtlich: „Ich brauche eine ganz neue Ansicht, komplett neu, wie
- * GoodNotes. Es sollte schnell zugreifbar sein — wenn man öffnet, muss man
- * direkt wissen, was man machen muss." Und zum Dossier: „Es muss so sein —
- * aber ohne unsere Funktionen zu löschen."
- *
- * Die Ansicht ist ein Regal aus Heft-Deckeln, das mit EINEM Tipp in ein
- * schreibbereites A4-Heft führt. Seit E265 ist sie zusätzlich die
- * Heft-Bibliothek aus dem GoodNotes-Dossier: Reiter (Dokumente, Favoriten,
- * Papierkorb), Fächer, Gitter oder Liste, Stern, Deckelfarbe und das
- * Verschlüsseln im Kontextmenü. GoodNotes liefert dabei nur die ABLÄUFE;
- * die Optik besteht vollständig aus Redions gezeichneten Deckeln und
- * Marken — nichts wird nachgebaut.
- *
- * EIN HEFT IST KEINE NEUE DATENART, sondern eine Ansichtsregel: eine
- * lebende Seite, deren direkte Kinder mindestens einen blatt-Block und
- * keinen pdfseite-Block enthalten. Kein gespeichertes Feld, keine
- * Migration (§9) — dieselbe Linie, mit der die Bibliothek ihre Deckel-Art
- * bestimmt (artVon: pdf hat Vorrang vor blatt). Das geöffnete Heft ist
- * der vorhandene Dokumentmodus; diese Datei steuert nur den kurzen Weg
- * dorthin bei.
- *
- * EIN FACH IST GENAUSO WENIG EINE DATENART: eine lebende Seite ohne
- * eigene Blätter, in der Hefte liegen. Das einzige gespeicherte Korn ist
- * `heftArt` — 'fach' am frisch angelegten, noch leeren Fach (sonst wäre
- * es unsichtbar, bis das erste Heft darin liegt) und 'heft' an einer
- * Seite, die IM REGAL verschlüsselt wurde (ihre Kinder sind dann
- * Chiffretext, die abgeleitete Regel wäre blind). Beides ist additiv,
- * nichts Bestehendes ändert seine Bedeutung.
- *
- * Die Ansicht heisst „Notizhefte" und nicht „Hefte", weil „Heft" seit
- * E207 in der Bibliothek die Quellen-Gruppierung meint — ein Wort darf
- * nicht zwei Dinge bezeichnen.
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/notebook.ts (npm run bauen:ts). */
 const Notebook = (() => {
-    /* Sicher escapen — mit `&quot;`, denn Heftnamen landen in Attributen. */
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
-    /* DER ZUSTAND DES REGALS ÜBERLEBT DAS NEULADEN (E282 / L78 Punkt 3).
-       Hier stand: „Reiter und offenes Fach sind Blickrichtungen, keine Orte
-       — nach einem Neuladen beginnt das Regal vorn." Das war beim Bau von
-       E265 eine vertretbare Grenze und ist beim Benutzen eine ärgerliche:
-       wer in einem Fach arbeitet, ein Heft öffnet und zurückgeht, stand
-       wieder an der Wurzel. Redur hat es in E277 entschieden.
-  
-       ZWEI WÄCHTER, und beide sind nötig. Ein gemerkter Reiter, den es
-       nicht gibt, und ein gemerktes Fach, das gelöscht wurde, sind KEIN
-       Zustand, sondern eine Sackgasse: das Regal öffnete sich in eine
-       Brotkrume ohne Inhalt und mit einem Zurück-Knopf als einzigem Weg.
-       Beide fallen deshalb auf die Wurzel zurück, statt zu zeigen, was
-       nicht mehr da ist.
-  
-       Der Suchtext wird ABSICHTLICH nicht gemerkt. Er ist eine Frage, keine
-       Blickrichtung — und eine Frage von vorgestern beim Öffnen wieder
-       vorzufinden, mit einem halb leeren Regal darunter, sieht aus wie ein
-       Fehler. */
     const REITER = ['dokumente', 'favoriten', 'papierkorb'];
     const gemerkterReiter = () => {
         const w = String(Store.getMeta('heft:reiter', '') || '');
         return REITER.includes(w) ? w : 'dokumente';
     };
-    /** Das gemerkte Fach — aber nur, wenn es das noch gibt UND es noch ein
-     *  Fach ist. Ein Heft, das sein letztes Unterheft verloren hat, ist
-     *  keins mehr (siehe `istFach`); es als Fach zu öffnen zeigte eine
-     *  leere Mappe. */
     const gemerktesFach = () => {
         const id = String(Store.getMeta('heft:fach', '') || '');
         if (!id)
@@ -87,17 +22,6 @@ const Notebook = (() => {
     let shelfRoot = null;
     let tab = 'dokumente';
     let fachId = null;
-    /* ------------------------------------------------------------------ *
-     * Die Heft-Regel — und seit E265 die Fach-Regel daneben
-     * ------------------------------------------------------------------ */
-    /** Heftartig OHNE die Frage, ob die Seite lebt — der Papierkorb-Reiter
-     *  braucht dieselbe Regel für tote Seiten. `trashBlock` lässt die
-     *  Kinder lebendig, `childrenOf` funktioniert also unverändert.
-     *  Eine verschlüsselte Seite hat KEINE lesbaren Kinder mehr; sie
-     *  zählt als Heft, solange sie gesperrt ist und den Merker trägt
-     *  (gesetzt beim Sperren aus dem Regal). Sobald sie wieder offen ist,
-     *  entscheidet allein die abgeleitete Regel — ein verwaister Merker
-     *  kann so nie lügen. */
     const heftArtig = (p) => {
         if (!p || p.type !== 'page' || p.system)
             return false;
@@ -108,41 +32,12 @@ const Notebook = (() => {
             return false;
         return kinder.some((k) => k.type === 'blatt');
     };
-    /** Eine Seite ist ein Heft, wenn sie lebt und heftartig ist. Nur
-     *  direkte Kinder; der pdf-Vorrang ist deckungsgleich mit der
-     *  Deckel-Art der Bibliothek. Grenzen stehen in LUECKEN.md. */
     const isNotebook = (p) => !!p && p.alive !== false && heftArtig(p);
-    /** Wie tief die Fach-Regel schaut. Ein Ordnerbaum aus einer ZIP ist
-     *  selten tiefer als fünf; zwölf ist grosszügig und begrenzt zugleich
-     *  die Arbeit auf einem kaputten Bestand. */
     const FACH_TIEFE = 12;
-    /** Ein Fach: eine lebende Seite ohne eigene Blätter/PDF-Seiten, in der
-     *  mindestens ein Heft ODER ein weiteres Fach liegt — oder die als Fach
-     *  angelegt wurde (`heftArt:'fach'`), damit sie nicht unsichtbar ist,
-     *  solange sie leer ist. Eine verschlüsselte Seite ist nie ein Fach:
-     *  was in ihr liegt, ist von aussen nicht zu sehen.
-     *
-     *  DAS „ODER EIN WEITERES FACH" IST E366 (L78 Punkt 2). Vorher zählte
-     *  nur ein DIREKTES Heft, und damit war „Schule" in
-     *  `Schule/Physik/Heft` gar kein Fach: „Physik" stand allein an der
-     *  Wurzel, und dass es zu „Schule" gehört, sah man nur im Baum. Nach
-     *  einem Import aus einer ZIP mit Ordnern war das die halbe Struktur.
-     *
-     *  Die Rekursion braucht zwei Bremsen, und beide sind nicht theoretisch:
-     *  `tiefe` gegen einen sehr tiefen Baum, `gesehen` gegen einen Ring in
-     *  `content` — ein solcher Ring wäre kaputt, aber er darf die App nicht
-     *  aufhängen (§46: lieber nichts anzeigen als hängen). */
     const istFach = (p, tiefe = 0, gesehen) => {
         if (!p || p.type !== 'page' || p.alive === false || p.system || p.locked)
             return false;
         const kinder = Store.childrenOf(p.id);
-        /* DIESE ZEILE STEHT VOR DEM MERKER, UND DAS IST DER GANZE PUNKT.
-           Der erste Wurf von E366 zog `heftArt === 'fach'` als billigen
-           Vorab-Ausstieg nach oben — und machte damit genau die Lüge möglich,
-           gegen die E364 den Merker abgesichert hatte: ein gemerktes Fach, das
-           selbst ein Blatt bekommt, wäre ein Fach GEBLIEBEN. test356 §2 hat es
-           gefangen (27/28). Der Merker darf die abgeleitete Regel ergänzen,
-           nie überstimmen. */
         if (kinder.some((k) => k.type === 'blatt' || k.type === 'pdfseite'))
             return false;
         if (p.heftArt === 'fach')
@@ -157,34 +52,15 @@ const Notebook = (() => {
         weg.add(p.id);
         return kinder.some((k) => istFach(k, tiefe + 1, weg));
     };
-    /** EIN FACH MERKT SICH, DASS ES EINES IST (E364, L78 Punkt 5). Eine
-     *  gewöhnliche Seite, in der ein Heft liegt, ist ein Fach — bis ihr
-     *  letztes Heft im Papierkorb liegt: dann fiel sie aus dem Regal, und
-     *  mit ihr die Karte, in der die Hefte zurückzuholen wären. Der Merker
-     *  wird beim Zeichnen des Regals gesetzt, für jedes abgeleitete Fach
-     *  ohne Merker — einmal, nicht bei jedem Zeichnen. Er kann nicht lügen:
-     *  eine Seite, die selbst Blätter bekommt, fällt in `istFach` schon
-     *  vorher heraus. */
     const faecherMerken = () => {
         Object.values(Store.cache.blocks).forEach(p => {
             if (!p || p.heftArt === 'fach' || !istFach(p))
                 return;
-            /* Nur, was sich HEUTE ableiten lässt, wird gemerkt — ein Fach, das
-               nur über ein Unterfach eines ist, hängt an dessen Merker und
-               bekommt keinen eigenen. Sonst behauptete der Merker eine
-               Zugehörigkeit, die es nicht mehr gibt, sobald das Unterfach geht. */
             const kinder = Store.childrenOf(p.id);
             if (kinder.some(isNotebook))
                 Store.updateBlock(p.id, { heftArt: 'fach' });
         });
     };
-    /* DAS REGAL ANTWORTET, BEVOR EINE SEITE ZUGEHT (E364, L78 Punkt 4):
-       werkzeuge.ts fragt vor dem Verschlüsseln über den Bus, was die Seite
-       mitnehmen soll. Ist sie ein Heft — solange ihre Kinder lesbar sind,
-       lässt sich das ableiten —, sagt das Regal „heftArt: heft"; gesperrt
-       zählt dann der Merker, und das Heft bleibt in seiner Bibliothek.
-       Vorher wusste das nur das Regal selbst (`sperrenHier`); eine Seite,
-       die aus dem Seitenmenü oder der Palette verschlüsselt wurde, fehlte. */
     if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
         try {
             Ereignisse.horche(ARTEN.seiteWirdGesperrt, (d) => {
@@ -192,26 +68,19 @@ const Notebook = (() => {
                 return p && !p.locked && heftArtig(p) ? { heftArt: 'heft' } : null;
             });
         }
-        catch { /* ohne Bus bleibt der Weg aus dem Regal */ }
+        catch { }
     }
     const notebookPages = () => Object.values(Store.cache.blocks)
         .filter(isNotebook)
         .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
     const nachNamen = (a, b) => String(a.text || '').localeCompare(String(b.text || ''), 'de');
-    /** JEDES Fach, egal wie tief — für das Verschieben-Menü, das sonst
-     *  genau die Fächer verlöre, die E366 erst sichtbar gemacht hat. */
     const alleFaecher = () => (faecherMerken(),
         Object.values(Store.cache.blocks).filter((p) => istFach(p)).sort(nachNamen));
-    /** Das Fach, in dem dieses Fach liegt — oder null an der Wurzel. */
     const elternFach = (f) => (f && f.parentId && f.parentTable !== 'collection')
         ? (istFach(Store.getBlock(f.parentId)) ? Store.getBlock(f.parentId) : null)
         : null;
-    /** Die Fächer der obersten Ebene: die, die in keinem Fach liegen. */
     const faecher = () => alleFaecher().filter(f => !elternFach(f));
-    /** Die Fächer DIREKT in einem Fach (E366). */
     const unterFaecher = (fid) => Store.childrenOf(fid).filter((k) => istFach(k)).sort(nachNamen);
-    /** Der Weg von der Wurzel bis zu diesem Fach — die Brotkrume (E366).
-     *  Mit Ringbremse, aus demselben Grund wie in `istFach`. */
     const fachWeg = (fid) => {
         const weg = [];
         const gesehen = new Set();
@@ -223,18 +92,9 @@ const Notebook = (() => {
         }
         return weg;
     };
-    /** Hefte, deren Eltern-Seite KEIN Fach ist — sie liegen lose im Regal
-     *  (Hefte in gewöhnlichen Seiten bleiben so sichtbar, wie seit E264). */
     const loseHefte = () => notebookPages().filter(p => !istFach(p.parentId ? Store.getBlock(p.parentId) : null));
     const fachHefte = (fid) => Store.childrenOf(fid).filter(isNotebook)
         .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
-    /** WAS IN EINEM FACH LIEGT, IN EINEM SATZ (E366).
-     *
-     *  Vorher stand an jeder Fach-Karte „n Hefte" — auch an einem Fach, in
-     *  dem gar keine Hefte liegen, sondern zwei Unterfächer. Dort stand dann
-     *  „0 Hefte", und das ist die unangenehme Sorte falsch: es sieht aus wie
-     *  „hier ist nichts", während der ganze Bestand eine Ebene tiefer liegt.
-     *  Genannt wird deshalb, was WIRKLICH drin ist, und nur das. */
     const fachInhaltSatz = (fid) => {
         const h = fachHefte(fid).length;
         const f = unterFaecher(fid).length;
@@ -245,11 +105,7 @@ const Notebook = (() => {
             teile.push(h === 1 ? '1 Heft' : h + ' Hefte');
         return teile.length ? teile.join(' · ') : 'leer';
     };
-    /** Tote Hefte für den Papierkorb-Reiter. */
     const toteHefte = () => Store.trashed().filter(heftArtig);
-    /** Wie viele A4-Blätter die Seite hat — echt gerechnet aus der
-     *  Blatthöhe (E208: keine erfundene Zahl), je blatt-Block mindestens
-     *  eines. */
     const sheetCount = (p) => {
         const a4 = (typeof SheetSpace !== 'undefined' && SheetSpace.A4_HOEHE) || 842;
         return Store.childrenOf(p.id)
@@ -258,40 +114,17 @@ const Notebook = (() => {
     };
     const wann = (p) => {
         const bib = globalThis.Bibliothek;
-        /* wannText nimmt den ZEITSTEMPEL, nicht die Seite — der erste Wurf
-           übergab die Seite und bekam für jedes Heft ein „—" (Bild-Fund). */
         return bib && typeof bib.wannText === 'function' ? bib.wannText(p.edited) : '';
     };
-    /** „1 Blatt", „5 Blätter" — eine Einzahl, die „1 Blätter" sagt, sieht
-     *  aus wie ein Rechenfehler. Bei einer verschlüsselten Seite wäre die
-     *  Zahl 0 und damit gelogen — dort steht das ehrliche Wort. */
     const sheetLabel = (p) => {
         if (p.locked)
             return 'Verschlüsselt';
         const n = sheetCount(p);
         return n === 1 ? '1 Blatt' : n + ' Blätter';
     };
-    /* Die Deckelfarbe ist das BESTEHENDE Feld `color`, das an jeder Seite
-       liegt und bei Seiten nie gezeichnet wurde — hier wird es zur Kante
-       am Deckel. Nur diese Namen erzeugen ein Attribut: der Wert wandert
-       in einen Stil, und ein Feld aus einer fremden Sicherung darf dort
-       nichts einschleusen können (§19). */
-    /* Die Namen stehen seit E406 in `core/helpers/colors.ts`, weil vier
-       Stellen sie brauchen und drei davon keine hatten. Hier bleibt nur die
-       Auswahl: ein Heftdeckel kennt kein „Standard". */
     const FARBEN = ['gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
         .map(id => ({ id, name: Farben.name(id) }));
-    /* Die Whitelist steht seit E672 in `Farben.kennung` — dieselbe für
-       Hefte, Fächer, Bibliotheksordner, Seitenleiste und Ablagebaum. */
     const farbeVon = (p) => Farben.kennung(p?.color);
-    /* ------------------------------------------------------------------ *
-     * Öffnen und Anlegen
-     * ------------------------------------------------------------------ */
-    /** Den Cursor in die erste Textzeile des ersten Blatts setzen.
-     *  `App.zeichneSeite(kindId)` ist der sanktionierte Weg; weil der
-     *  Dokumentmodus asynchron nachzeichnet, folgt EIN rAF-Nachversuch
-     *  direkt am Feld — mit Wache, dass die Seite noch offen ist. Danach
-     *  wird ohne Fehler aufgegeben (der Nutzer klickt dann selbst). */
     const focusFirstLine = (pageId) => {
         const sheet = Store.childrenOf(pageId).find((k) => k.type === 'blatt');
         if (!sheet)
@@ -312,16 +145,11 @@ const Notebook = (() => {
     const openNotebook = (id) => {
         const p = Store.getBlock(id);
         if (!p || p.alive === false) {
-            /* Kein toter Knopf (E118): sagen, was los ist, und das Regal
-               auffrischen, damit der Deckel verschwindet. */
             UI.toast('Dieses Heft gibt es nicht mehr.');
             renderShelf();
             return;
         }
         if (p.locked) {
-            /* Eine gesperrte Seite öffnet ihren Sperrbildschirm über den ganz
-               normalen Weg — kein Dokumentmodus, kein Fokusversuch in
-               Chiffretext. */
             Store.setMeta('heft:zuletzt', id);
             App.oeffne(id);
             return;
@@ -332,13 +160,6 @@ const Notebook = (() => {
         App.oeffne(id);
         focusFirstLine(id);
     };
-    /** Ein Heft anlegen und SOFORT schreibbereit öffnen — ohne Dialog.
-     *  Im offenen Fach entsteht es IM Fach. Die Papierwahl liegt im
-     *  geöffneten Heft einen Tipp entfernt (Blatt-Leiste); als Vorgabe
-     *  gilt das zuletzt gewählte Papier — und wer im Neu-Menü ein Papier
-     *  antippt, wählt es damit zugleich als neue Vorgabe. Das
-     *  E118-Textkind wird hier selbst angelegt, damit der Fokusweg die
-     *  Kennung kennt, statt auf den Renderer zu warten. */
     const createNotebook = (papier) => {
         const gewaehlt = papier || String(Store.getMeta('heft:papier', 'liniert'));
         if (papier)
@@ -353,10 +174,6 @@ const Notebook = (() => {
         App.oeffne(p.id);
         focusFirstLine(p.id);
     };
-    /** Ein Fach anlegen — eine gewöhnliche Seite mit Mappensymbol. Der
-     *  `heftArt:'fach'`-Merker hält sie im Regal sichtbar, solange sie
-     *  leer ist; sobald Hefte darin liegen, trüge sie sich auch ohne ihn
-     *  selbst (istFach). */
     const createFach = async () => {
         const name = await UI.frage('Name des Fachs', '');
         if (!name)
@@ -364,10 +181,6 @@ const Notebook = (() => {
         Store.addPage(null, { text: name, icon: '🗂', heftArt: 'fach' });
         renderShelf();
     };
-    /** Ein Heft in ein Fach hängen (oder mit zielId null zurück ins
-     *  Regal). `Werkzeuge.verschiebe` pflegt beide content-Listen und
-     *  zeichnet selbst neu; die Ring-Wache davor fehlt ihm — ein Fach,
-     *  das UNTER dem Heft hängt, wäre sonst sein eigener Grossvater. */
     const moveToFach = (heftId, zielId) => {
         const p = Store.getBlock(heftId);
         if (!p)
@@ -381,21 +194,13 @@ const Notebook = (() => {
         }
         Werkzeuge.verschiebe(p, zielId);
     };
-    /**
-     * DASSELBE, ABER MIT EINEM SATZ (E368).
-     *
-     * Beim Verschieben über das Menü hat man eben noch den Zielnamen gelesen;
-     * beim ZIEHEN nicht. Die Karte verschwindet aus der Ansicht, und ob sie
-     * im richtigen Fach gelandet ist, sieht man erst, wenn man hineingeht.
-     * Ein Satz danach ist hier kein Beiwerk, sondern die einzige Quittung.
-     */
     const ziehenAblegen = (heftId, zielId) => {
         const p = Store.getBlock(heftId);
         if (!p)
             return false;
         const jetzt = p.parentTable === 'collection' ? null : (p.parentId || null);
         if ((zielId || null) === jetzt)
-            return false; /* dorthin, wo es liegt */
+            return false;
         if (zielId) {
             if (zielId === heftId ||
                 (typeof WissenDienst !== 'undefined' && WissenDienst.istUnter(zielId, heftId))) {
@@ -416,9 +221,6 @@ const Notebook = (() => {
         Store.updateBlock(id, { favorite: !p.favorite });
         renderShelf();
     };
-    /* `danach` (E672): die Bibliothek ruft denselben Wähler für ihre Ordner
-       und will danach SICH neu zeichnen, nicht das Regal. Ohne Angabe bleibt
-       es beim Regal — so, wie die Hefte es seit E406 tun. */
     const setzeFarbe = (id, farbe, danach) => {
         Store.updateBlock(id, { color: Farben.kennung(farbe) });
         if (danach)
@@ -426,11 +228,6 @@ const Notebook = (() => {
         else
             renderShelf();
     };
-    /** Verschlüsseln aus dem Regal. NACH dem erfolgreichen Sperren wird
-     *  `heftArt:'heft'` gesetzt — die Kinder sind dann Chiffretext, und
-     *  ohne den Merker fiele das Heft aus seiner eigenen Bibliothek
-     *  (Erfolg = das locked-Feld steht wirklich am Block; ein Abbruch im
-     *  Passwortdialog ändert nichts). */
     const sperrenHier = async (id) => {
         const p = Store.getBlock(id);
         if (!p)
@@ -448,8 +245,6 @@ const Notebook = (() => {
         await Werkzeuge.entsperren(p);
         renderShelf();
     };
-    /** Für die Startansicht „Zuletzt benutztes Heft": direkt hinein — und
-     *  wenn es das Heft nicht mehr gibt, lautlos das Regal (§47). */
     const resume = () => {
         const id = String(Store.getMeta('heft:zuletzt', '') || '');
         const p = id ? Store.getBlock(id) : null;
@@ -458,9 +253,6 @@ const Notebook = (() => {
         else
             oeffnen();
     };
-    /* Beim Wechseln MERKEN, nicht beim Zeichnen (E282). `renderShelf` läuft
-       auch bei jeder Datenänderung; dort zu schreiben hiesse, bei jedem
-       Tastendruck in einem Heft eine Meta-Zeile zu setzen. */
     const openFach = (id) => {
         fachId = id;
         Store.setMeta('heft:fach', id);
@@ -471,40 +263,11 @@ const Notebook = (() => {
         Store.setMeta('heft:fach', '');
         renderShelf();
     };
-    /* ------------------------------------------------------------------ *
-     * Das Regal
-     * ------------------------------------------------------------------ */
     const form = () => Store.getMeta('heft:form', 'gitter') === 'liste' ? 'liste' : 'gitter';
-    /** Ein Deckel im Regal. Die Optik ist die gezeichnete Deckelkarte der
-     *  Bibliothek (Klassen `bib-deckel`/`bib-deckel-blatt`, E207) — das
-     *  Markup steht hier bewusst NOCH EINMAL, denn ein Bereich importiert
-     *  keinen anderen (§5); geteilt wird über die Stilklassen. Das
-     *  Deckel-Blatt trägt das Papier des ersten Blatts: ein kariertes
-     *  Heft sieht im Regal kariert aus. Stern und ⋯ sind GESCHWISTER des
-     *  Deckel-Knopfs — ein Knopf im Knopf wäre keiner (§38). */
     const coverCard = (p) => {
         const sheet = Store.childrenOf(p.id).find((k) => k.type === 'blatt');
         const papier = String(sheet?.papier || 'blanko');
         const farbe = farbeVon(p);
-        /* DIE HANDSCHRIFT AUF DEM DECKEL (E374, L61 Rest). Bis hierher war
-           jeder Deckel im Regal leer: ein Heft, in das nur geschrieben wurde,
-           hat keine Datei, die man zeigen könnte — und ein Regal aus weissen
-           Rechtecken ist eine Liste ohne Namen. Die Striche liegen im Block;
-           sie zu zeichnen kostet keine Datei und kann nicht veralten.
-    
-           BEI EINEM GESPERRTEN HEFT NICHT. Wer es sperrt, will nicht, dass man
-           von aussen liest, was darin steht — ein Deckel mit lesbarer
-           Handschrift wäre genau das (§26).
-    
-           UND HIER STAND FAST EINE FALSCHE BEHAUPTUNG. Der Schutz ist NICHT
-           dieses `!p.locked`, sondern der Zweig darunter: ein gesperrtes Heft
-           bekommt den Schloss-Deckel und gar keinen Inhalt. Die Gegenprobe hat
-           es gezeigt — das `!p.locked` herausgenommen, und der Lauf blieb grün.
-           Es bleibt trotzdem stehen, aus zwei Gründen: es spart die Rechnung
-           für ein Heft, dessen Schrift ohnehin niemand sieht, und es hält die
-           Zusage auch dann, wenn jemand den Zweig darunter einmal umbaut. Ein
-           zweites Schloss ist kein überflüssiges, solange man weiss, welches
-           zuerst hält. */
         const tinte = (!p.locked && typeof Vorschau !== 'undefined' && Vorschau.tinteSvg)
             ? Vorschau.tinteSvg(p.id) : '';
         const deckelBlatt = p.locked
@@ -516,8 +279,6 @@ const Notebook = (() => {
             `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="blatt"` +
             (farbe ? ` data-farbe="${esc(farbe)}" style="--deckel-farbe:var(--c-${esc(farbe)})"` : '') +
             ` aria-label="Heft öffnen: ${esc(p.text || 'Ohne Titel')}">` +
-            /* `is-leer` lässt das gezeichnete Papier durch — auf diesen Deckeln
-               steht nie Vorschautext, das Papier IST die Vorschau. */
             deckelBlatt +
             `<span class="bib-deckel-name"><b>${esc(p.text || 'Ohne Titel')}</b></span>` +
             `<small>${esc(sheetLabel(p))}${p.locked ? '' : ' · ' + esc(wann(p))}</small>` +
@@ -526,10 +287,6 @@ const Notebook = (() => {
             `<button class="nh-mehr" data-mehr="${esc(p.id)}" title="Mehr zu diesem Heft" ` +
             `aria-label="Mehr zu ${esc(p.text || 'diesem Heft')}">⋯</button></div>`;
     };
-    /** Der Merker zeigt seinen Zustand über die FORM (Band gefüllt oder
-     *  offen) und `aria-pressed` — nicht nur über Farbe (§38). Seit E460
-     *  ist es DASSELBE Zeichen wie in der Kopfleiste: „★" hier und ein SVG
-     *  dort waren zwei Sprachen für ein Feld. */
     const sternKnopf = (p) => {
         const name = p.text || 'Ohne Titel';
         if (typeof Merkzeichen !== 'undefined')
@@ -542,13 +299,8 @@ const Notebook = (() => {
             `aria-label="${p.favorite ? 'Aus Favoriten: ' : 'Zu Favoriten: '}` +
             `${esc(name)}">${p.favorite ? '★' : '☆'}</button>`;
     };
-    /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
-     *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
     const fachCard = (f) => {
         const deckel = `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner"` +
-            /* DIE FARBE DES FACHS (E672) — dasselbe Feld und dieselbe Marke wie
-               beim Heft darunter. `Farben.marke` gibt nur bekannte Kennungen
-               heraus, deshalb steht hier kein `esc` (es gäbe nichts zu escapen). */
             Farben.marke(f.color) + ' ' +
             `aria-label="Fach öffnen: ${esc(f.text || 'Ohne Namen')}">` +
             `<span class="bib-deckel-blatt is-leer">` +
@@ -556,12 +308,6 @@ const Notebook = (() => {
             `<span class="bib-deckel-name"><b>${esc(f.text || 'Ohne Namen')}</b></span>` +
             `<small>${esc(fachInhaltSatz(f.id))}</small>` +
             `</button>`;
-        /* DAS AUGE, WIE IM REGAL (E611). Redur, 16. September: „das ist nur bei
-           Bibliothek — ich will überall, wenn ein Ordner erstellt wird, das
-           haben." Geholt, nicht nachgebaut: `mitBlick` ist dieselbe Quelle, die
-           die Bibliothek benutzt, damit hier nie ein zweites, anders gelauntes
-           Auge entsteht. Fehlt die Bibliothek (sie ist ein eigenes Skript), steht
-           die Kachel wie vorher da — ohne Auge, aber vollständig bedienbar. */
         const kachel = typeof Bibliothek !== 'undefined' && Bibliothek.mitBlick
             ? Bibliothek.mitBlick(deckel, f.id, f.text || 'Ohne Namen')
             : deckel;
@@ -569,7 +315,6 @@ const Notebook = (() => {
             `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
             `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
     };
-    /** Eine Zeile der Listenform — Mini-Deckel, Name, Blattzahl, Zeit. */
     const listRow = (p) => {
         const sheet = Store.childrenOf(p.id).find((k) => k.type === 'blatt');
         const papier = String(sheet?.papier || 'blanko');
@@ -599,9 +344,6 @@ const Notebook = (() => {
             `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
             `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
     };
-    /** Ein toter Deckel im Papierkorb-Reiter: nichts zu öffnen, nur der
-     *  eine Wort-Knopf. Endgültig löschen gibt es hier NICHT — die eine
-     *  Löschmaschine mit Rückfrage ist der Papierkorb selbst (E29). */
     const trashCard = (p) => {
         const sheet = Store.childrenOf(p.id).find((k) => k.type === 'blatt');
         const papier = String(sheet?.papier || 'blanko');
@@ -635,23 +377,8 @@ const Notebook = (() => {
         (andereSeiten
             ? `<button class="rb leise" data-alle>Alle Dokumente ansehen</button>` : '') +
         `</div>`;
-    /* ------------------------------------------------------------------ *
-     * Der Kopf: Titel oder Brotkrume, Suche, Neu, Reiter, Formwahl
-     * ------------------------------------------------------------------ */
     const kopfHtml = () => {
         const fach = fachId ? Store.getBlock(fachId) : null;
-        /* DIE BROTKRUME ZEIGT DEN GANZEN WEG (E366). Solange das Regal eine
-           Ebene tief war, genügte „← Notizhefte": es gab nur einen Ort, an
-           den man zurückkonnte. Mit Fächern in Fächern wäre derselbe Knopf
-           eine Lüge — er spränge über drei Ebenen hinweg an die Wurzel. Der
-           Zurück-Knopf führt deshalb EINE Ebene hoch und trägt den Namen des
-           Ortes, an den er führt; der ganze Weg steht in einer eigenen Zeile
-           darüber, jede Station anklickbar.
-    
-           Die Zeile erscheint NUR ab der zweiten Ebene. An einem Wurzelfach
-           stünde dort „Notizhefte / Physik" neben der Überschrift „Physik"
-           und dem Knopf „← Notizhefte" — dreimal dasselbe. Eine Anzeige, die
-           immer da ist, wird nicht gelesen. */
         const weg = fach ? fachWeg(fach.id) : [];
         const oben = weg.length > 1 ? weg[weg.length - 2] : null;
         const krumeHtml = weg.length > 1
@@ -678,24 +405,6 @@ const Notebook = (() => {
             `<button class="rb nh-neu-knopf" data-neu-menue>＋ Neu</button>` +
             `<button class="rb nh-alle" data-alle>Alle Dokumente</button>` +
             `</div>`;
-        /* Die REITERZEILE nur an der Wurzel — im offenen Fach führt die
-           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig.
-    
-           DIE DARSTELLUNGSWAHL DAGEGEN STEHT ÜBERALL (E283, Nachlauf zu E282).
-           Vorher fiel sie mit der Reiterzeile zusammen weg, und das war
-           harmlos, solange ein offenes Fach flüchtig war: einmal zurück, und
-           der Umschalter war wieder da.
-    
-           Seit E282 überlebt das Fach das Neuladen — und damit war der
-           Umschalter genau dort unerreichbar, wo er noch WIRKT: der
-           Fach-Inhalt liest `form()` weiter (siehe `shelfHtml`). Wer im Fach
-           auf Liste stand, konnte nicht zurück auf Gitter, ohne das Fach zu
-           verlassen. Ein Zustand, den man einstellen kann und nicht mehr
-           ändern, ist §47 von der anderen Seite.
-    
-           Gefunden hat es test265 §4, das genau hier über den fehlenden
-           Umschalter stolperte — die Prüfung hielt das alte Verhalten fest
-           und wurde durch die Entscheidung rot. */
         const favN = notebookPages().filter(p => p.favorite).length;
         const korbN = toteHefte().length;
         const reiterHtml = fach ? '' :
@@ -706,8 +415,6 @@ const Notebook = (() => {
                 `<button data-reiter="papierkorb"${tab === 'papierkorb' ? ' class="on"' : ''}>Papierkorb` +
                 `${korbN ? ' (' + korbN + ')' : ''}</button>` +
                 `</div>`;
-        /* Im Papierkorb nicht: dort gibt es nur die Liste, und ein Umschalter
-           ohne zweite Stellung ist eine Attrappe. */
         const formHtml = (!fach && tab === 'papierkorb') ? '' :
             `<div class="nh-form" role="group" aria-label="Darstellung">` +
                 `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
@@ -720,28 +427,12 @@ const Notebook = (() => {
         return `<header class="nh-kopf" data-kopfzeile="eigene">` +
             `${krumeHtml}${zeile1}${zeile2}</header>`;
     };
-    /* ------------------------------------------------------------------ *
-     * Der Inhalt je Reiter
-     * ------------------------------------------------------------------ */
     const gefiltert = (liste) => {
         const filter = searchText.trim().toLowerCase();
         return filter
             ? liste.filter(p => String(p.text || '').toLowerCase().includes(filter))
             : liste;
     };
-    /* DER WEG ZUR GROSSEN SUCHE (E282 / L77 Punkt 1).
-       Die Regal-Suche findet nur TITEL — das steht so in L77 und bleibt so:
-       die grosse Suche kennt längst Inhalte und Handschrift-Erkanntes, und
-       das Regal soll sie nicht nachbauen (E29), sondern dorthin führen.
-  
-       Bisher führte sie nirgendwohin. Wer „Ohmsches Gesetz" tippte und es
-       im Titel keines Heftes stand, bekam „Kein Heft heisst ..." und musste
-       selbst darauf kommen, dass es Strg+P gibt.
-  
-       Die Zeile steht bei JEDER Suche da, nicht nur bei null Treffern: auch
-       wer drei Hefte findet, sucht vielleicht das vierte, in dem das Wort
-       nur im Text vorkommt. Ein Angebot, das nur im Misserfolgsfall
-       erscheint, findet man genau dann nicht, wenn man es bräuchte. */
     const weiterSuchenZeile = () => !searchText.trim() ? '' :
         `<button class="rb leise nh-weitersuchen" data-weitersuchen>` +
             `<span data-sym="search" aria-hidden="true"></span> ` +
@@ -785,10 +476,6 @@ const Notebook = (() => {
                         `an jeder Karte.</p>`);
         }
         else if (fachId && Store.getBlock(fachId)) {
-            /* IM FACH STEHEN AUCH DIE UNTERFÄCHER (E366) — vorher zeigte das
-               offene Fach nur seine Hefte, und ein Fach darin war von hier aus
-               gar nicht erreichbar. Während einer Suche bleiben sie weg: dann
-               wird gesucht, nicht geblättert (dieselbe Regel wie an der Wurzel). */
             const hefte = gefiltert(fachHefte(fachId));
             const unter = searchText.trim() ? [] : unterFaecher(fachId);
             inhalt = (searchText.trim() && !hefte.length) ? nichtsSatz()
@@ -796,7 +483,7 @@ const Notebook = (() => {
         }
         else {
             if (fachId)
-                fachId = null; /* das Fach ist weg — zurück zur Wurzel */
+                fachId = null;
             const alle = notebookPages();
             const filter = searchText.trim();
             if (!alle.length && !faecher().length) {
@@ -804,8 +491,6 @@ const Notebook = (() => {
                     .some((b) => b?.type === 'page' && b.alive !== false && !b.system));
             }
             else if (filter) {
-                /* Während der Suche flach über ALLE Hefte — finden schlägt
-                   sortieren; die Fach-Karten träten nur dazwischen. */
                 const hefte = gefiltert(alle);
                 inhalt = resumeCard() + (hefte.length
                     ? (form() === 'liste' ? listeHtml(hefte, false) : gitterHtml(hefte, false, false))
@@ -817,21 +502,10 @@ const Notebook = (() => {
                     ? listeHtml(lose, true) : gitterHtml(lose, true, true));
             }
         }
-        /* Die Brücke zur grossen Suche steht UNTER dem Ergebnis, nicht statt
-           seiner — auch dann, wenn Treffer da sind (siehe `weiterSuchenZeile`). */
         return `<div class="nh-regal">` + kopfHtml() + inhalt + weiterSuchenZeile() +
             `<button class="nh-neu-fab" data-neu-menue aria-label="Neu">＋</button>` +
             `</div>`;
     };
-    /* ------------------------------------------------------------------ *
-     * Menüs
-     * ------------------------------------------------------------------ */
-    /** Das Neu-Menü am ＋-Knopf im Kopf und am Telefon-FAB. Die grosse
-     *  ＋-Kachel im Gitter bleibt davon unberührt der EIN-Klick-Weg zum
-     *  Heft (die Seele von E264). Fremde Wege laufen über den EINEN
-     *  Katalog der Schale: `App.erstellenWege()` sagt, was diese Fassung
-     *  geladen hat (§47), `App.erstellenWeg(id)` führt aus — so kennt
-     *  dieser Bereich weder PdfEinlesen noch das Whiteboard (§5, E29). */
     const neuMenue = (anker) => {
         const geladen = new Set((App.erstellenWege ? App.erstellenWege() : []).map((w) => String(w.id)));
         const weg = (id, zeichen, name) => geladen.has(id)
@@ -875,15 +549,9 @@ const Notebook = (() => {
             }
             if (was === 'alle')
                 return App.erstellenBlatt();
-            /* Erst schliessen, dann handeln — wie im Katalog-Blatt selbst. */
             setTimeout(() => App.erstellenWeg(was), 60);
         });
     };
-    /* ══ DER FARBWÄHLER — EINER FÜR ALLE (E672) ═══════════════════════════
-       Er stand hier für Hefte. Fächer hatten ihn nicht, Bibliotheksordner
-       auch nicht — und ein zweiter Wähler daneben wäre §8. Deshalb steht er
-       im Rückgabeobjekt, und die Bibliothek ruft ihn mit ihrem eigenen
-       `danach`. Dieselben neun Felder, dieselben Namen, dasselbe Häkchen. */
     const farbMenue = (anker, id, danach) => {
         const p = Store.getBlock(id);
         if (!p)
@@ -908,11 +576,6 @@ const Notebook = (() => {
         const p = Store.getBlock(heftId);
         if (!p)
             return;
-        /* JEDES Fach ist ein Ziel, nicht nur die der obersten Ebene (E366).
-           `faecher()` gibt seit diesem Bogen nur die Wurzelfächer zurück —
-           hier stünde damit genau die Schachtelung nicht zur Wahl, die das
-           Regal gerade sichtbar gemacht hat. Der Weg steht am Ziel, sonst
-           stehen zwei Fächer „Physik" ununterscheidbar untereinander. */
         const ziele = alleFaecher().filter(f => f.id !== heftId &&
             !(typeof WissenDienst !== 'undefined' && WissenDienst.istUnter(f.id, heftId)));
         const imFach = istFach(p.parentId ? Store.getBlock(p.parentId) : null);
@@ -1002,7 +665,6 @@ const Notebook = (() => {
                 return;
             }
             if (k === 'korb') {
-                /* Umkehrbar — der Papierkorb-Reiter holt es mit einem Klick zurück. */
                 Store.trashBlock(id);
                 UI.toast('Ins Papierkorb gelegt — Reiter „Papierkorb" holt es zurück.');
                 renderShelf();
@@ -1014,18 +676,10 @@ const Notebook = (() => {
         if (!f)
             return;
         const r = anker.getBoundingClientRect();
-        /* „BLICK HINEIN" AUCH HIER (E611, §37). Das Auge an der Kachel ist der
-           Weg für Maus und Stift; der Finger braucht einen genannten. In der
-           Bibliothek steht er seit E459 im ⌄-Menü — in den Notizheften fehlte
-           er, und damit gab es gar keine Möglichkeit, in ein Fach zu sehen,
-           ohne es zu öffnen. */
         const kannBlick = typeof Bibliothek !== 'undefined' && !!Bibliothek.blickHinein;
         const m = UI.menu(`<button data-k="auf">Öffnen</button>` +
             (kannBlick ? `<button data-k="blick"><span class="mi">⌕</span>Blick hinein</button>` : '') +
             `<button data-k="name">Umbenennen</button>` +
-            /* „FARBE …" AUCH AM FACH (E672). Die Hefte hatten es seit E406, das
-               Fach daneben nicht — Redur, 21. September: „ich sollte die ordner
-               farben wählen können und farben wechseln können". */
             `<button data-k="farbe">Farbe …</button>` +
             `<div class="sep"></div>` +
             `<button data-k="korb">In den Papierkorb</button>`, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
@@ -1051,46 +705,16 @@ const Notebook = (() => {
                 return;
             }
             if (b.dataset['k'] === 'korb') {
-                /* Die Hefte darin bleiben lebendig und erscheinen als lose Hefte
-                   an der Wurzel — trashBlock nimmt nur das Fach heraus. */
                 Store.trashBlock(id);
                 UI.toast('Fach in den Papierkorb gelegt. Seine Hefte bleiben im Regal.');
                 renderShelf();
             }
         });
     };
-    /* ------------------------------------------------------------------ *
-     * Verdrahtung
-     * ------------------------------------------------------------------ */
-    /* ==================================================================== *
-     * ZIEHEN UND ABLEGEN IM REGAL (E368, L78 Punkt 1 und L114 Punkt 4)
-     * -------------------------------------------------------------------- *
-     * Seit E366 SIEHT man die Schachtelung — bewegen konnte man ein Heft
-     * aber nur über „⋯ → Verschieben". Das ist der Weg, den GoodNotes gar
-     * nicht hat: dort zieht man den Deckel auf das Fach.
-     *
-     * EINE Geste für Maus und Finger, über Pointer-Ereignisse. Der Weg über
-     * HTML5-`dragstart` (wie in der Seitenleiste) wäre am Rechner billiger,
-     * am TELEFON aber gar nichts: Touch löst kein `dragstart` aus. Zwei
-     * Wege nebeneinander hiessen zwei Verhalten, die auseinanderlaufen —
-     * und die Telefon-Fassung ist genau das, was L78 Punkt 1 verlangt.
-     *
-     * DREI SCHWELLEN, und jede hat einen Grund:
-     *  · `HEBEN_MS` (400) — am Finger wird erst nach langem Drücken gehoben,
-     *    sonst hebt jeder Tipp beim Blättern eine Karte an.
-     *  · `HEBEN_PX` (6) — an der Maus reicht ein Stück Weg; auf ein langes
-     *    Drücken zu warten wäre am Rechner nur zäh.
-     *  · `ROLL_PX` (10) — bewegt sich der Finger VOR dem Heben weiter als
-     *    das, war es Blättern und nicht Ziehen. Ohne diese Schwelle ist die
-     *    Liste am Telefon nicht mehr zu rollen.
-     * -------------------------------------------------------------------- */
     const HEBEN_MS = 400;
     const HEBEN_PX = 6;
     const ROLL_PX = 10;
     let zug = null;
-    /** Wohin ein Ablegen an dieser Stelle ginge — oder `undefined` für
-     *  „nirgendwohin" (dann bleibt alles, wo es ist). `null` heisst
-     *  ausdrücklich „ins Regal, aus jedem Fach heraus". */
     const zielUnter = (x, y) => {
         const el = document.elementFromPoint(x, y);
         if (!el)
@@ -1098,12 +722,8 @@ const Notebook = (() => {
         const fach = el.closest('[data-fach]');
         if (fach && fach.dataset['fach'])
             return fach.dataset['fach'];
-        /* Die Brotkrume ist eine Ablegezone: sie ist der einzige Weg, ein Heft
-           aus dem offenen Fach WIEDER HERAUSZUHOLEN, ohne es erst zu öffnen. */
         if (el.closest('[data-zurueck]'))
             return null;
-        /* Die freie Fläche des offenen Fachs bedeutet „hierher" — an der
-           Wurzel bedeutet dieselbe Fläche „aus dem Fach heraus". */
         if (el.closest('.nh-regal'))
             return fachId || null;
         return undefined;
@@ -1146,7 +766,6 @@ const Notebook = (() => {
             if (e.button !== 0 && e.pointerType === 'mouse')
                 return;
             const ziel = e.target instanceof Element ? e.target : null;
-            /* Knöpfe auf der Karte bleiben Knöpfe. */
             if (!ziel || ziel.closest('[data-mehr], [data-mehr-fach], [data-stern], .nh-neu'))
                 return;
             const karte = ziel.closest('.bib-deckel[data-id], .nh-zeile-auf[data-id]');
@@ -1166,7 +785,6 @@ const Notebook = (() => {
                 return;
             const weg = Math.hypot(e.clientX - zug.x0, e.clientY - zug.y0);
             if (!zug.gehoben) {
-                /* Am Finger: zu viel Weg VOR dem Heben ist Rollen, kein Ziehen. */
                 if (!zug.maus) {
                     if (weg > ROLL_PX)
                         aufraeumen();
@@ -1186,8 +804,6 @@ const Notebook = (() => {
                 zug.schatten.style.left = e.clientX + 'px';
                 zug.schatten.style.top = e.clientY + 'px';
             }
-            /* Der Schatten liegt unter dem Zeiger — er darf sich nicht selbst
-               als Ziel melden. */
             if (zug.schatten)
                 zug.schatten.style.visibility = 'hidden';
             const el = document.elementFromPoint(e.clientX, e.clientY);
@@ -1207,34 +823,23 @@ const Notebook = (() => {
             const wohin = gehoben ? zielUnter(e.clientX, e.clientY) : undefined;
             aufraeumen();
             if (!gehoben)
-                return; /* war ein Tipp — der Klick trägt */
+                return;
             if (wohin === undefined)
-                return; /* daneben abgelegt: nichts tun */
+                return;
             if (ziehenAblegen(id, wohin))
                 renderShelf();
         };
         wurzel.addEventListener('pointerup', loslassen);
-        /* DAS ROLLEN AM FINGER WIRKLICH ANHALTEN.
-           `touch-action:none` allein genügt nicht: der Browser liest es beim
-           `touchstart` und hat sich schon entschieden, wenn die Karte 400 ms
-           später gehoben wird. Danach schickt er `pointercancel` — der Zeiger
-           ist weg, das Ziel unbekannt, und am Telefon passierte gar nichts.
-           Ein `touchmove`-Zuhörer mit `passive:false` hält die Bewegung an,
-           solange etwas gehoben ist; vorher lässt er sie durch, damit die
-           Liste sich weiter rollen lässt. */
         wurzel.addEventListener('touchmove', e => {
             if (zug && zug.gehoben)
                 e.preventDefault();
         }, { passive: false });
         wurzel.addEventListener('pointercancel', () => aufraeumen());
-        /* Wird die Karte beim Heben aus dem DOM genommen (Auffrischen während
-           des Ziehens), verliert der Zeiger sein Ziel — dann lieber nichts. */
         wurzel.addEventListener('lostpointercapture', () => aufraeumen());
     };
     const bindShelf = (wurzel) => {
         bindZiehen(wurzel);
         wurzel.addEventListener('click', e => {
-            /* Ein Klick, der aus einem Ziehen kommt, öffnet nichts. */
             if (document.body.classList.contains('nh-zieht')) {
                 e.stopPropagation();
                 return;
@@ -1291,8 +896,6 @@ const Notebook = (() => {
                 return;
             }
             if (ziel.closest('[data-weitersuchen]')) {
-                /* Nicht selbst suchen — hinführen. Die grosse Suche nimmt das Wort
-                   mit, damit niemand es zweimal tippt. */
                 App.suche(searchText);
                 return;
             }
@@ -1316,7 +919,6 @@ const Notebook = (() => {
             if (!feld.classList.contains('nh-suche'))
                 return;
             searchText = feld.value;
-            /* Nur den Inhalt neu, das Feld behält Fokus und Anschlag. */
             const alt = wurzel.querySelector('.nh-gitter, .nh-liste, .nh-nichts');
             if (!alt)
                 return;
@@ -1325,12 +927,6 @@ const Notebook = (() => {
             const neu = probe.querySelector('.nh-gitter, .nh-liste, .nh-nichts');
             if (neu)
                 alt.replaceWith(neu);
-            /* UND DIE BRÜCKE ZUR GROSSEN SUCHE MIT (E282). Dieser Weg tauscht
-               absichtlich nur den Ergebnisblock, damit das Feld Fokus und
-               Anschlag behält — die Brücke steht daneben und wäre sonst beim
-               Tippen nie zu sehen: sie erschiene erst beim nächsten vollen
-               Zeichnen, also praktisch nie. Genau die Sorte Griff, die es gibt
-               und die niemand findet. */
             const brueckeAlt = wurzel.querySelector('.nh-weitersuchen');
             const brueckeNeu = probe.querySelector('.nh-weitersuchen');
             if (brueckeAlt && brueckeNeu)
@@ -1338,22 +934,12 @@ const Notebook = (() => {
             else if (brueckeAlt)
                 brueckeAlt.remove();
             else if (brueckeNeu) {
-                /* Vor den FAB, damit sie unter dem Ergebnis steht und nicht
-                   darunter weg. */
                 const fab = wurzel.querySelector('.nh-neu-fab');
                 if (fab)
                     fab.before(brueckeNeu);
                 else
                     wurzel.querySelector('.nh-regal')?.append(brueckeNeu);
             }
-            /* UND DIE ZEICHEN NACHZIEHEN. `Register.symbole.fuelle()` läuft am
-               Ende von `render()` — dieser Weg hier ruft `render` aber gerade
-               NICHT, das ist ja sein Sinn. Ohne diese Zeile blieb das Suchzeichen
-               in der Brücke ein leerer Platzhalter mit Breite.
-      
-               Gefunden beim Hinsehen, nicht beim Messen (§55.1): der Prüflauf
-               fragte, ob die Brücke DA ist — sie war da, mit einer Lücke, wo das
-               Zeichen sein sollte. Ein Bild zeigt so etwas in einer Sekunde. */
             if (typeof Register !== 'undefined') {
                 const frisch = wurzel.querySelector('.nh-weitersuchen');
                 if (frisch)
@@ -1369,19 +955,12 @@ const Notebook = (() => {
             searchText = '';
             renderShelf();
         });
-        /* DIE AUGEN VERDRAHTEN (E611) — und zwar mit `openFach`. Ohne diesen
-           Mitgabewert nähme die Bibliothek ihr eigenes `geheIn`, und „Ordner
-           öffnen" in der Karte spränge aus dem Regal in die Bibliothek. Das
-           ist der Fehler, den `test531` §2 festhält. */
         if (typeof Bibliothek !== 'undefined' && Bibliothek.blickAnbringen)
             Bibliothek.blickAnbringen(wurzel, (id) => openFach(id));
     };
     const render = (wrap) => {
-        /* Das Inhaltsverzeichnis am Rand gehört zu Dokumentseiten, nicht
-           hierher (dasselbe tun die Produktwelten beim Betreten). */
         document.getElementById('rand-toc')?.remove();
         wrap.innerHTML = shelfHtml();
-        /* Die Lupe und andere [data-sym]-Zeichen malt das Register. */
         if (typeof Register !== 'undefined')
             Register.symbole?.fuelle?.(wrap);
         shelfRoot = wrap.querySelector('.nh-regal');
@@ -1389,64 +968,32 @@ const Notebook = (() => {
             bindShelf(shelfRoot);
     };
     const renderShelf = () => {
-        /* Nur auffrischen, wenn das Regal wirklich noch steht — sonst malte
-           ein später Aufruf über eine offene Seite (die E136-Falle). */
         const wrap = shelfRoot?.parentElement;
         if (wrap && wrap.isConnected && document.querySelector('.nh-regal'))
             render(wrap);
     };
     const oeffnen = () => {
-        /* DA WEITERMACHEN, WO MAN AUFGEHÖRT HAT (E282 / L78 Punkt 3).
-           Hier stand „vorhersehbar beginnen: die Dokumente-Wurzel, nicht der
-           Reiter von vorhin". Beim Benutzen ist es andersherum: wer in einem
-           Fach arbeitet, ein Heft öffnet und zurückgeht, will das Fach
-           wiedersehen und nicht die Wurzel.
-    
-           Die Wächter stehen in `gemerkterReiter`/`gemerktesFach` — ein
-           gelöschtes Fach oder ein unbekannter Reiter fallen dort auf die
-           Wurzel zurück, statt eine leere Brotkrume zu zeigen.
-    
-           Der Suchtext wird bewusst zurückgesetzt: eine Frage von vorgestern
-           beim Öffnen wieder vorzufinden, mit halb leerem Regal darunter,
-           sieht aus wie ein Fehler. */
         searchText = '';
         tab = gemerkterReiter();
         fachId = gemerktesFach();
-        /* Ein Fach gehört zum Dokumente-Reiter. Steht der gemerkte Reiter auf
-           Favoriten oder Papierkorb, zeigt die Kopfzeile gar keine Reiter
-           (siehe `kopfHtml`) — dann wäre die Brotkrume der einzige Weg
-           zurück, und der Reiter läge unsichtbar daneben. */
         if (fachId && tab !== 'dokumente') {
             tab = 'dokumente';
             Store.setMeta('heft:reiter', tab);
         }
         App.zeigeSonder('Notizhefte', render);
     };
-    /* Die Regeln kommen mit heraus, damit ein Prüflauf sie OHNE Fenster
-       messen kann — dieselbe Trennung wie bei `Wissensluecken.sammeln`. */
     return { oeffnen, open: oeffnen, resume, render,
-        /* Der Farbwähler nach aussen (E672) — für die Ordner der Bibliothek. */
         farbMenue,
         istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
         fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE,
         ziehenAblegen,
-        /* NACH AUSSEN SEIT E513 — damit „Neu erstellen" ein Notizbuch
-           anlegen kann, ohne eine zweite Anlege-Maschine zu bauen (§8,
-           derselbe Grund wie bei `App.erstellenWeg` in E265). */
         createNotebook };
 })();
 window.Notebook = Notebook;
-/* Die Notizhefte melden ihre Kontextkante an (E273).
-   Bis hierher war die Kante auf diesem Schauplatz LEER — vier Griffe, die
-   es alle gibt, und keiner davon zu sehen. */
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
     K.melde({ bereich: 'notizhefte', id: 'regal', name: 'Regal',
         zeichen: 'book', rang: 10, tun: () => Notebook.oeffnen() });
-    /* WEITERSCHREIBEN NUR MIT HEFT — UND DIE KENNUNG ALLEIN REICHT NICHT.
-       `resume` prüft beides (oben, Zeile 302-304): die Kennung UND ob der
-       Block noch lebt. Ein gelöschtes Heft hinterlässt die Kennung; wer nur
-       sie prüft, zeigt einen Knopf, der ins Regal fällt. */
     K.melde({ bereich: 'notizhefte', id: 'weiter', name: 'Weiterschreiben',
         zeichen: 'pencil', rang: 20,
         zeigen: () => {

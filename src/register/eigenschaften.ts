@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/eigenschaften.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/eigenschaften.js — alle Spaltentypen an einer Stelle
  * ----------------------------------------------------------------------------

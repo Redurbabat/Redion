@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/ruhig.ts (npm run bauen:ts). */
 /* ============================================================================
  * ruhig.js — die Schale zeigt fünf Wege statt zweiunddreissig
  * ----------------------------------------------------------------------------

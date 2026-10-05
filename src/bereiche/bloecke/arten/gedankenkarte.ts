@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/gedankenkarte.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/bloecke/arten/gedankenkarte.ts — die Gedankenkarte (Mindmap)
  * ----------------------------------------------------------------------------

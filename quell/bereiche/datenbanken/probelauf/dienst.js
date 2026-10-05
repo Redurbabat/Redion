@@ -1,35 +1,6 @@
 "use strict";
-/* ============================================================================
- * probelauf.js — Erst zeigen, was passieren würde. Dann erst tun.
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/probelauf/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/probelauf/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Idee 36 der 10000×-Liste: „Workspace-Simulator". Vor einer grossen
- * Änderung wissen, was sie anrichtet — welche Formeln brechen, welche
- * Ansichten leer werden, welche Werte verschwinden. Wie ein `plan` bei
- * Terraform, nur für Notizen.
- *
- * Warum das nötig ist: eine Spalte zu löschen dauert eine Sekunde. Dass
- * damit vier Formeln kaputtgehen, zwei Ansichten ihren Filter verlieren und
- * 312 Werte weg sind, merkt man erst danach — und der Papierkorb hilft dann
- * nicht, weil er Seiten kennt und keine Spalten.
- *
- * Drei Regeln, an die sich diese Datei hält:
- *
- *   1. Sie ändert nichts. Kein einziger Aufruf hier schreibt.
- *   2. Sie zählt echt nach, statt zu schätzen. „312 Werte" heisst: 312 Zeilen
- *      haben in dieser Spalte etwas stehen, gerade eben nachgezählt.
- *   3. Sie sagt auch, wenn nichts passiert. „Diese Spalte benutzt niemand"
- *      ist die nützlichste Antwort, die sie geben kann.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/probelauf/dienst.ts (npm run bauen:ts). */
 const Probelauf = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     const leer = (v) => v === undefined || v === null || v === '' ||
@@ -42,16 +13,12 @@ const Probelauf = (() => {
         const raus = { formeln: [], filter: [], sortierung: [], gruppen: [],
             rollups: [], relationen: [], automationen: [], diagramme: [],
             pruefsaetze: [] };
-        /* --- Prüfsätze, die diese Spalte betreffen ---------------------------
-           Der einzige Punkt in dieser Liste, den ein Mensch selbst gesetzt hat.
-           Deshalb wiegt er schwerer als jede Heuristik. */
         if (typeof Pruefsatz !== 'undefined') {
             Pruefsatz.alle(coll).forEach(ps => {
                 if (ps.spalte === key || (ps.gegeben && key in ps.gegeben))
                     raus.pruefsaetze.push({ wo: coll.name || 'Datenbank', was: ps.name || 'Prüfsatz' });
             });
         }
-        /* --- Formeln in derselben Datenbank ---------------------------------- */
         Object.entries(coll.schema).forEach(([k, d]) => {
             if (k === key)
                 return;
@@ -60,9 +27,6 @@ const Probelauf = (() => {
             if (d.type === 'rollup' && (d.rollupProp === key || d.eigenschaft === key))
                 raus.rollups.push({ wo: coll.name || 'Datenbank', was: d.name });
         });
-        /* --- Formeln und Rollups in ANDEREN Datenbanken ----------------------
-           Eine Formel darf über findRows/sumWhere in fremde Tabellen greifen.
-           Wer nur die eigene durchsucht, übersieht genau die teuren Fälle. */
         Object.values(Store.cache.collections).forEach(c => {
             if (c.id === coll.id)
                 return;
@@ -77,7 +41,6 @@ const Probelauf = (() => {
                 }
             });
         });
-        /* --- Verknüpfungen, die auf diese Spalte zeigen ----------------------- */
         if (def.type === 'relation') {
             const ziel = Store.getCollection(def.ziel);
             if (ziel && def.gegen && ziel.schema[def.gegen])
@@ -89,7 +52,6 @@ const Probelauf = (() => {
                     raus.relationen.push({ wo: c.name || 'Datenbank', was: d.name });
             });
         });
-        /* --- Ansichten ------------------------------------------------------- */
         const regelnSuchen = (gruppe, treffer) => {
             (gruppe && gruppe.rules || []).forEach((r) => {
                 if (r.rules !== undefined)
@@ -112,7 +74,6 @@ const Probelauf = (() => {
             if (v.chartX === key || v.chartY === key || v.chartWert === key)
                 raus.diagramme.push({ wo: v.name || v.layout, was: 'Diagramm' });
         });
-        /* --- Automationen und Knöpfe ----------------------------------------- */
         const drin = (x) => JSON.stringify(x || {}).includes('"' + key + '"');
         (coll.automationen || []).forEach((a) => {
             if (drin(a))
@@ -124,10 +85,6 @@ const Probelauf = (() => {
         });
         return raus;
     };
-    /* ========================================================================
-     * 2 · DIE VORHABEN
-     * ======================================================================*/
-    /** Wie viele Zeilen haben in dieser Spalte überhaupt etwas stehen? */
     const gefuellt = (coll, key) => Store.rowsOf(coll.id).filter((r) => !leer((r.props || {})[key])).length;
     const spalteWeg = (coll, key) => {
         const def = coll.schema[key] || {};
@@ -171,8 +128,6 @@ const Probelauf = (() => {
                 'du hast selbst festgehalten, dass es so stimmen soll.', nutzer.pruefsaetze.map(f => f.was)));
         return { titel: 'Spalte „' + (def.name || key) + '" löschen', befunde: b };
     };
-    /* --- Typ ändern -------------------------------------------------------- */
-    /* Was sich in was verwandeln lässt, ohne dass etwas verloren geht. */
     const ZAHLIG = ['number', 'formula', 'rollup'];
     const TEXTIG = ['text', 'title', 'url', 'email', 'phone'];
     const passt = (wert, typ) => {
@@ -187,7 +142,7 @@ const Probelauf = (() => {
             return ['true', 'false', 'ja', 'nein', '1', '0', ''].includes(t.toLowerCase());
         if (typ === 'select' || typ === 'status')
             return !Array.isArray(wert) || wert.length <= 1;
-        return true; /* nach Text passt alles */
+        return true;
     };
     const spalteTyp = (coll, key, neuerTyp) => {
         const def = coll.schema[key] || {};
@@ -221,7 +176,6 @@ const Probelauf = (() => {
         return { titel: 'Spalte „' + (def.name || key) + '" auf ' + neuerTyp + ' umstellen',
             befunde: b };
     };
-    /* --- Umbenennen -------------------------------------------------------- */
     const spalteName = (coll, key, neuerName) => {
         const def = coll.schema[key] || {};
         const nutzer = nutzerDerSpalte(coll, key);
@@ -240,12 +194,10 @@ const Probelauf = (() => {
         return { titel: 'Spalte „' + (def.name || key) + '" in „' + neuerName + '" umbenennen',
             befunde: b };
     };
-    /* --- Seite löschen ----------------------------------------------------- */
     const seiteWeg = (id) => {
         const s = Store.getBlock(id);
         if (!s)
             return { titel: 'Seite löschen', befunde: [befund('hinweis', 'Diese Seite gibt es nicht mehr.')] };
-        /* Alles darunter zählen, nicht nur die erste Ebene. */
         let bloecke = 0, seiten = 0, dbs = 0, zeilen = 0;
         const gehe = (bid, tiefe = 0) => {
             if (tiefe > 40)
@@ -263,23 +215,12 @@ const Probelauf = (() => {
             (b.content || []).forEach((k) => gehe(k, tiefe + 1));
         };
         (s.content || []).forEach((k) => gehe(k));
-        /* Rückverweise. Hier stand `Links.rueckverweise` — die Funktion heisst
-           aber `verweiseAuf` und hat nie existiert. Weil der Aufruf hinter
-           `&& Links.rueckverweise` stand, fiel das nie auf: die Liste war immer
-           leer, und beim Löschen einer Seite kam der Satz „andere Seiten
-           verweisen hierher" kein einziges Mal. Genau der Hinweis, für den es
-           diesen Probelauf gibt. */
         const rueck = typeof Links !== 'undefined' ? (Links.verweiseAuf(id) || []) : [];
         const b = [];
         b.push(befund(seiten || dbs ? 'verlust' : 'hinweis', bloecke + ' Blöcke darunter, davon ' + seiten + ' Unterseiten und ' + dbs +
             ' Datenbanken mit zusammen ' + zeilen + ' Zeilen.'));
         if (rueck.length)
-            b.push(befund('bruch', rueck.length + ' andere Seite(n) verweisen hierher. Die Verweise zeigen danach ins Leere.', 
-            /* `verweiseAuf` liefert `{ seite, stellen }` — der Titel steht eine
-               Ebene tiefer. Die alte Zeile las `r.text` am falschen Objekt und
-               hätte auch mit dem richtigen Namen nur „Ohne Titel" gezeigt. */
-            rueck.slice(0, 8).map((r) => (r.seite?.text || 'Ohne Titel'))));
-        /* Verknüpfungen aus Datenbankzeilen auf diese Seite */
+            b.push(befund('bruch', rueck.length + ' andere Seite(n) verweisen hierher. Die Verweise zeigen danach ins Leere.', rueck.slice(0, 8).map((r) => (r.seite?.text || 'Ohne Titel'))));
         let verknuepft = 0;
         Object.values(Store.cache.blocks).forEach(x => {
             if (x.parentTable !== 'collection' || x.alive === false)
@@ -295,7 +236,6 @@ const Probelauf = (() => {
             'wenn die Frist abläuft oder jemand sie dort löscht.'));
         return { titel: 'Seite „' + (s.text || 'Ohne Titel') + '" löschen', befunde: b };
     };
-    /* --- Ansicht löschen --------------------------------------------------- */
     const ansichtWeg = (viewId) => {
         const v = Store.getView(viewId);
         if (!v)
@@ -314,7 +254,6 @@ const Probelauf = (() => {
         b.push(befund('hinweis', 'Die Zeilen selbst bleiben. Eine Ansicht ist nur eine Brille.'));
         return { titel: 'Ansicht „' + (v.name || v.layout) + '" löschen', befunde: b };
     };
-    /* --- Automation trocken laufen lassen ---------------------------------- */
     const automation = (coll, index) => {
         const a = (coll.automationen || [])[index];
         if (!a)
@@ -323,8 +262,6 @@ const Probelauf = (() => {
         const treffer = zeilen.filter((r) => {
             if (!a.bedingungen || !a.bedingungen.length)
                 return true;
-            /* Die ganze Automation, nicht ihre Bedingungsliste — sonst prüft
-               every() eine leere Liste und alles trifft zu. */
             try {
                 return Datenbank.bedingungenTreffen(a, r, coll);
             }
@@ -334,11 +271,6 @@ const Probelauf = (() => {
         });
         const b = [];
         b.push(befund(treffer.length ? 'hinweis' : 'hinweis', treffer.length + ' von ' + zeilen.length + ' Zeilen erfüllen die Bedingungen.', treffer.slice(0, 8).map((r) => r.text || 'Ohne Titel')));
-        /* Hier stand `a.aktionen` mit den Arten `setzen` und `wert` — beides
-           gibt es nicht. Die Liste heisst seit jeher `dann` (seit E85 dazu
-           `sonst`), die Art heisst `setze-prop`. Wäre dieser Pfad je gerufen
-           worden, hätte er JEDER Automation „keine Aktionen" bescheinigt —
-           toter Code, der beim Erwachen gelogen hätte. */
         const zweig = (liste, wo) => (liste || []).forEach((ak) => {
             const feld = ak.key && coll.schema[ak.key] ? coll.schema[ak.key].name : ak.key;
             if (ak.art === 'setze-prop')
@@ -355,9 +287,6 @@ const Probelauf = (() => {
             b.push(befund('hinweis', 'Diese Automation hat keine Aktionen — sie tut nichts.'));
         return { titel: 'Probelauf: ' + (a.name || 'Automation'), befunde: b, trocken: true };
     };
-    /* ========================================================================
-     * 3 · DIE EINE TÜR
-     * ======================================================================*/
     const fuer = (vorhaben) => {
         const v = vorhaben || {};
         const coll = v.coll ? (typeof v.coll === 'string' ? Store.getCollection(v.coll) : v.coll) : null;
@@ -371,16 +300,7 @@ const Probelauf = (() => {
             default: return { titel: 'Probelauf', befunde: [befund('hinweis', 'Für dieses Vorhaben gibt es noch keinen Probelauf.')] };
         }
     };
-    /** Wiegt der Befund schwer genug, um vorher zu fragen? */
     const lohntSich = (plan) => (plan.befunde || []).some((b) => b.schwere === 'verlust' || b.schwere === 'bruch');
-    /* ========================================================================
-     * 4 · DAS FENSTER
-     * ======================================================================*/
-    /**
-     * @param {Object} vorhaben
-     * @param {Function} [tun]  wird beim Bestätigen aufgerufen
-     * @returns {Promise<boolean>} ob bestätigt wurde
-     */
     const fenster = (vorhaben, tun) => new Promise((fertig) => {
         const plan = fuer(vorhaben);
         const o = document.createElement('div');
@@ -449,10 +369,6 @@ const Probelauf = (() => {
         setTimeout(() => { if (!entschieden)
             o.querySelector('[data-a="zu"]')?.focus(); }, 50);
     });
-    /**
-     * Bequem für Löschknöpfe: nur fragen, wenn es weh tut.
-     * @returns {Promise<boolean>}
-     */
     const fragenWennNoetig = async (vorhaben, tun) => {
         const plan = fuer(vorhaben);
         if (!lohntSich(plan)) {

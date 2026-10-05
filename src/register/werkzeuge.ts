@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/werkzeuge.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/werkzeuge.ts — der EINE Katalog der Zeichenwerkzeuge
  * ----------------------------------------------------------------------------

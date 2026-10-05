@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/ansichten.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/ansichten.js — die Ansichtsarten einer Datenbank
  * ----------------------------------------------------------------------------

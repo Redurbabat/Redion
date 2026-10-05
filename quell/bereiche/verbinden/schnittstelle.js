@@ -1,52 +1,10 @@
 "use strict";
-/* ==========================================================================
- * API — die Schnittstelle unter /v1/, in Notions Form
- * --------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/verbinden/schnittstelle.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/verbinden/schnittstelle.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion hat eine öffentliche REST-Schnittstelle: man schickt ein Token mit,
- * sagt in einem Kopfzeilenfeld, welche Fassung man erwartet, und bekommt
- * Seiten, Blöcke und Datenbanken als JSON zurück.
- *
- * Das stand hier lange auf „teilweise" mit der Begründung: dafür bräuchte es
- * einen Server. Das stimmt nur halb. Ein Server wird gebraucht, damit jemand
- * VON AUSSEN anfragen kann. Die Schnittstelle selbst — die Adressen, die
- * Formen, die Fehlercodes, die Blätterung — braucht keinen. Sie kann im
- * Browser laufen und die Daten beantworten, die dort ohnehin liegen.
- *
- * Genau das tut dieses Modul. Es beantwortet Anfragen an /v1/…, und der
- * Servicearbeiter reicht echte fetch()-Aufrufe derselben Adresse hierher
- * durch. Ein Skript auf der Seite, eine Erweiterung oder die eigene Konsole
- * können also wirklich
- *
- *     fetch('/v1/pages/…', { headers: { 'Notion-Version': '2022-06-28',
- *                                       Authorization: 'Bearer …' } })
- *
- * aufrufen und bekommen dieselbe Antwort wie von Notion.
- *
- * Was es nicht kann, und das steht auch so in der Statusliste: Anfragen aus
- * dem Internet. Die Daten liegen im Browser des Menschen, und dort kommt
- * niemand von aussen hin. Das ist keine Lücke, sondern der Grund, warum die
- * App so gebaut ist.
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/schnittstelle.ts (npm run bauen:ts). */
 const Api = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    const FASSUNG = '2022-06-28'; /* dieselbe Fassung wie Notions */
-    const SEITE_STANDARD = 100; /* page_size, wie bei Notion */
+    const FASSUNG = '2022-06-28';
+    const SEITE_STANDARD = 100;
     const SEITE_MAX = 100;
-    /* ========================================================================
-     * 1 · TOKEN
-     * ------------------------------------------------------------------------
-     * Ohne Token keine Antwort — auch hier, wo alles im selben Browser liegt.
-     * Sonst könnte jedes eingebettete Fremdskript die ganze Ablage auslesen.
-     * ======================================================================*/
     const tokenHolen = () => Store.getMeta('apiToken', '') || '';
     const tokenNeu = () => {
         const zufall = () => Math.random().toString(36).slice(2) +
@@ -58,21 +16,11 @@ const Api = (() => {
         return t;
     };
     const tokenWeg = () => Store.setMeta('apiToken', '');
-    /* ========================================================================
-     * 2 · FEHLER — dieselben Codes wie bei Notion
-     * ======================================================================*/
     const fehler = (status, code, nachricht) => ({
         status,
         body: { object: 'error', status, code, message: nachricht,
             request_id: Store.uid() }
     });
-    /* ========================================================================
-     * 3 · WERTE — die öffentliche Form der API
-     * ------------------------------------------------------------------------
-     * Achtung, nicht zu verwechseln mit der internen Form [["80"]]: die
-     * öffentliche API schreibt {"number": 80}. NotionFormat kümmert sich um
-     * die interne, hier steht die öffentliche.
-     * ======================================================================*/
     const richText = (s) => {
         const t = String(s ?? '');
         if (!t)
@@ -82,7 +30,6 @@ const Api = (() => {
                     underline: false, code: false, color: 'default' },
                 plain_text: t, href: null }];
     };
-    /* Unser Spaltentyp → Notions Typname in der API */
     const TYP_API = {
         title: 'title', text: 'rich_text', number: 'number', select: 'select',
         multi: 'multi_select', status: 'status', date: 'date', person: 'people',
@@ -90,8 +37,6 @@ const Api = (() => {
         formula: 'formula', created: 'created_time', edited: 'last_edited_time',
         files: 'files', relation: 'relation', rollup: 'rollup', uid: 'unique_id',
         createdBy: 'created_by', editedBy: 'last_edited_by', button: 'button',
-        /* Was Notion nicht kennt, kommt als das nächstliegende heraus — mit
-           einem Zusatzfeld, damit klar ist, was es hier wirklich ist. */
         sterne: 'number', prozent: 'number', duration: 'number',
         place: 'rich_text', verify: 'checkbox',
         ki: 'rich_text', 'ki-fassung': 'rich_text', 'ki-sprache': 'rich_text',
@@ -103,7 +48,6 @@ const Api = (() => {
         const roh = def.type === 'title' ? (zeile.text || '')
             : Datenbank.wert(zeile, key, coll);
         const huelle = { id: key, type: typ };
-        /* Ein eigener Typ, den Notion nicht hat, wird ehrlich benannt */
         if (!['title', 'rich_text', 'number', 'select', 'multi_select', 'status', 'date',
             'people', 'checkbox', 'url', 'email', 'phone_number', 'formula',
             'created_time', 'last_edited_time', 'files', 'relation', 'rollup',
@@ -162,7 +106,6 @@ const Api = (() => {
             default: return { ...huelle, rich_text: richText(roh) };
         }
     };
-    /** Aus einem API-Wert wieder etwas, das Store versteht. */
     const wertRein = (v) => {
         if (v === null || v === undefined)
             return '';
@@ -201,9 +144,6 @@ const Api = (() => {
         }
         return '';
     };
-    /* ========================================================================
-     * 4 · OBJEKTE
-     * ======================================================================*/
     const elternVon = (b) => {
         if (!b)
             return { type: 'workspace', workspace: true };
@@ -236,7 +176,6 @@ const Api = (() => {
             url: location.origin + location.pathname + '#' + b.id
         };
     };
-    /* Unser Blocktyp → Notions Blocktyp in der API */
     const BLOCK_API = {
         text: 'paragraph', h1: 'heading_1', h2: 'heading_2', h3: 'heading_3',
         bullet: 'bulleted_list_item', number: 'numbered_list_item', todo: 'to_do',
@@ -300,8 +239,6 @@ const Api = (() => {
             archived: b.alive === false, in_trash: b.alive === false,
             type: typ, ...kern
         };
-        /* Bausteine, die es bei Notion nicht gibt, sagen das offen, statt sich
-           als etwas anderes auszugeben. */
         if (!BLOCK_API[b.type] || ['html', 'chart', 'whiteboard', 'flashcard', 'backlinks']
             .includes(b.type))
             raus.redion_type = b.type;
@@ -344,9 +281,6 @@ const Api = (() => {
             url: location.origin + location.pathname + '#' + (block ? block.id : coll.id)
         };
     };
-    /* ========================================================================
-     * 5 · BLÄTTERN — start_cursor und has_more wie bei Notion
-     * ======================================================================*/
     const blaettern = (liste, koerper, wandeln) => {
         const groesse = Math.min(Number(koerper.page_size) || SEITE_STANDARD, SEITE_MAX);
         let ab = 0;
@@ -364,14 +298,6 @@ const Api = (() => {
             type: 'page_or_database', page_or_database: {}
         };
     };
-    /* ========================================================================
-     * 6 · FILTER UND SORTIERUNG für /databases/{id}/query
-     * ------------------------------------------------------------------------
-     * Notions Filter sind verschachtelt: { and: [ … ] } oder
-     * { property: "Name", number: { greater_than: 5 } }. Übersetzt wird in
-     * unsere eigene Filterform, damit dieselbe Maschine rechnet wie in der
-     * Oberfläche — sonst hätten wir zwei Wahrheiten.
-     * ======================================================================*/
     const OP_API = {
         equals: 'ist', does_not_equal: 'ist nicht',
         contains: 'enthält', does_not_contain: 'enthält nicht',
@@ -395,7 +321,6 @@ const Api = (() => {
         const key = Object.keys(coll.schema).find(k => k === f.property || coll.schema[k].name === f.property);
         if (!key)
             return { operator: 'and', rules: [] };
-        /* Der Block hinter dem Typnamen enthält genau einen Vergleich */
         const block = Object.keys(f).find(k => k !== 'property' && f[k] && typeof f[k] === 'object');
         if (!block)
             return { operator: 'and', rules: [] };
@@ -403,7 +328,6 @@ const Api = (() => {
         const op = apiOp === undefined ? undefined : OP_API[apiOp];
         if (!op)
             return { operator: 'and', rules: [] };
-        /* Bei „ist leer" trägt Notion true als Wert — der gehört nicht in die Regel */
         const w = (apiOp === 'is_empty' || apiOp === 'is_not_empty') ? '' : wert;
         return { operator: 'and', rules: [{ key, op, wert: w }] };
     };
@@ -416,28 +340,15 @@ const Api = (() => {
         const key = Object.keys(coll.schema).find(k => k === s.property || coll.schema[k].name === s.property);
         return key ? { key, richtung: s.direction === 'descending' ? -1 : 1 } : null;
     }).filter(Boolean);
-    /* ========================================================================
-     * 7 · DER EIGENTLICHE BEANTWORTER
-     * ======================================================================*/
     const teile = (pfad) => pfad.replace(/^\/+|\/+$/g, '').split('/');
-    /**
-     * Beantwortet eine Anfrage.
-     * @param {string} methode  GET, POST, PATCH, DELETE
-     * @param {string} pfad     z. B. /v1/pages/abc
-     * @param {object} koerper  schon geparstes JSON (oder {})
-     * @param {object} kopf     Kopfzeilen, klein geschrieben
-     * @returns {{status:number, body:object}}
-     */
     const anfrage = (methode, pfad, koerper, kopf) => {
         koerper = koerper || {};
         kopf = kopf || {};
         const m = String(methode || 'GET').toUpperCase();
-        /* --- Fassung: fehlt sie, ist es ein Fehler — genau wie bei Notion --- */
         const fassung = kopf['notion-version'] || kopf['redion-version'];
         if (!fassung)
             return fehler(400, 'missing_version', 'Notion-Version header failed validation: Notion-Version header should be defined, ' +
                 'instead was `undefined`.');
-        /* --- Token --------------------------------------------------------- */
         const erwartet = tokenHolen();
         const gegeben = String(kopf.authorization || '').replace(/^Bearer\s+/i, '');
         if (!erwartet)
@@ -449,13 +360,10 @@ const Api = (() => {
         if (t[0] !== 'v1')
             return fehler(404, 'object_not_found', 'Unbekannter Pfad: ' + pfad);
         const bereich = t[1], id = t[2], unter = t[3], unterId = t[4];
-        /* Schreibende Zugriffe über die Schnittstelle gehören ins Protokoll —
-           lesende nicht, sonst ersäuft es in Abfragen. */
         if (typeof Protokoll !== 'undefined' && ['POST', 'PATCH', 'DELETE'].includes(m) &&
             !(bereich === 'databases' && unter === 'query') && bereich !== 'search')
             Protokoll.notieren('api', m + ' ' + pfad, { id: id || null });
         try {
-            /* ---------------- Seiten ----------------------------------------- */
             if (bereich === 'pages') {
                 if (m === 'POST' && !id)
                     return seiteAnlegen(koerper);
@@ -479,7 +387,6 @@ const Api = (() => {
                     return seiteAendern(b, koerper);
                 return fehler(405, 'invalid_request', m + ' geht hier nicht.');
             }
-            /* ---------------- Blöcke ----------------------------------------- */
             if (bereich === 'blocks') {
                 if (!id)
                     return fehler(400, 'validation_error', 'Es fehlt die ID.');
@@ -508,7 +415,6 @@ const Api = (() => {
                 }
                 return fehler(405, 'invalid_request', m + ' geht hier nicht.');
             }
-            /* ---------------- Datenbanken ------------------------------------ */
             if (bereich === 'databases') {
                 if (m === 'POST' && !id)
                     return datenbankAnlegen(koerper);
@@ -525,10 +431,8 @@ const Api = (() => {
                     return datenbankAendern(coll, koerper);
                 return fehler(405, 'invalid_request', m + ' geht hier nicht.');
             }
-            /* ---------------- Suche ------------------------------------------ */
             if (bereich === 'search' && m === 'POST')
                 return suchen(koerper);
-            /* ---------------- Nutzer ----------------------------------------- */
             if (bereich === 'users') {
                 const ich = { object: 'user', id: 'redion', name: Store.getMeta('nutzer', 'Ich'),
                     avatar_url: null, type: 'person',
@@ -542,7 +446,6 @@ const Api = (() => {
                 return id === 'redion' ? { status: 200, body: ich }
                     : fehler(404, 'object_not_found', 'Diesen Nutzer gibt es nicht.');
             }
-            /* ---------------- Kommentare ------------------------------------- */
             if (bereich === 'comments') {
                 if (m === 'GET')
                     return kommentareLesen(koerper, kopf);
@@ -555,9 +458,6 @@ const Api = (() => {
             return fehler(500, 'internal_server_error', e instanceof Error ? e.message : String(e));
         }
     };
-    /* ========================================================================
-     * 8 · DIE EINZELNEN HANDGRIFFE
-     * ======================================================================*/
     const seiteAnlegen = (k) => {
         const eltern = k.parent || {};
         const props = k.properties || {};
@@ -746,7 +646,7 @@ const Api = (() => {
     };
     const suchen = (k) => {
         const frage = String(k.query || '').toLowerCase();
-        const nurTyp = (k.filter || {}).value; /* 'page' oder 'database' */
+        const nurTyp = (k.filter || {}).value;
         let treffer = [];
         if (nurTyp !== 'database') {
             treffer = Object.values(Store.cache.blocks)
@@ -760,7 +660,6 @@ const Api = (() => {
                 .map(c => ({ __art: 'db', id: c.id, edited: c.edited || c.created }));
             treffer = treffer.concat(dbs);
         }
-        /* Notion sortiert standardmässig nach letzter Änderung, absteigend */
         const richtung = ((k.sort || {}).direction === 'ascending') ? 1 : -1;
         treffer.sort((a, b) => (String(a.edited || '') < String(b.edited || '') ? -1 : 1) * richtung);
         return { status: 200, body: blaettern(treffer, k, (x) => x.__art === 'db' ? datenbankRaus(Store.getCollection(x.id))
@@ -800,13 +699,6 @@ const Api = (() => {
                 created_by: { object: 'user', id: 'redion', name: c.autor },
                 rich_text: richText(text) } };
     };
-    /* ========================================================================
-     * 9 · DER WEG VON AUSSEN: echte fetch()-Aufrufe
-     * ------------------------------------------------------------------------
-     * Der Servicearbeiter fängt /v1/… ab und fragt hier nach. So funktioniert
-     * ein ganz gewöhnliches fetch('/v1/pages/…') aus jedem Skript auf der
-     * Seite — ohne dass irgendwo ein Server läuft.
-     * ======================================================================*/
     const horchen = () => {
         if (!navigator.serviceWorker)
             return;
@@ -816,7 +708,6 @@ const Api = (() => {
                 return;
             let erg;
             try {
-                /* Notions interne Adressen beantwortet das Transaktionsmodul */
                 erg = /\/api\/v3\//.test(d.pfad) && typeof Transaktion !== 'undefined'
                     ? Transaktion.anfrage(d.methode, d.pfad, d.koerper, d.kopf)
                     : anfrage(d.methode, d.pfad, d.koerper, d.kopf);
@@ -827,9 +718,6 @@ const Api = (() => {
             e.ports[0].postMessage(erg);
         });
     };
-    /* ========================================================================
-     * 10 · DAS FENSTER — Token verwalten und Anfragen ausprobieren
-     * ======================================================================*/
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     const BEISPIELE = [
         ['GET', '/v1/users/me', ''],
@@ -846,7 +734,6 @@ const Api = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">🔌 Schnittstelle /v1/ <button class="icon-btn" data-a="zu">✕</button></div>' +
-                // Klassen statt Inline-Stil (E348, L111): siehe `.fn-blatt` in werkzeuge.css.
                 '<div class="res fn-blatt">' +
                 '<p>' +
                 'Dieselben Adressen, Formen und Fehlercodes wie Notions API — beantwortet ' +
@@ -877,8 +764,6 @@ const Api = (() => {
                 '</div>' +
                 '</div>';
         document.body.appendChild(o);
-        /* Die fünf Felder des Fensters einmal holen — und ehrlich sein, wenn
-           eines fehlt, statt an jeder Stelle ungeprüft `.value` zu schreiben. */
         const feld = (id) => o.querySelector(id);
         const ausgabe = () => o.querySelector('#api-aus');
         const setzeToken = () => {

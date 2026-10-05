@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/formeln.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/formeln.js — jede Formelfunktion mit Namen und Bedeutung
  * ----------------------------------------------------------------------------

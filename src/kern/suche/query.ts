@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/suche/query.ts (npm run bauen:ts). */
 /* ============================================================================
  * query.ts — eine gemeinsame Abfragesprache für Redions Suche
  * ----------------------------------------------------------------------------

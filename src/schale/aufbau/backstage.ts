@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/backstage.ts (npm run bauen:ts). */
 /* ============================================================================
  * backstage.js — „Datei": eine Fläche statt eines Menübands
  * ----------------------------------------------------------------------------

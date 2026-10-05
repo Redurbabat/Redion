@@ -1,42 +1,5 @@
 "use strict";
-/* ============================================================================
- * bereiche/elektro/skizzen.ts — die Bilder im Formelbuch, selbst gezeichnet
- * ----------------------------------------------------------------------------
- * WARUM SELBST ZEICHNEN UND NICHT ABFOTOGRAFIEREN
- *
- * Ein gedrucktes Formelbuch lebt von seinen Skizzen. Neben `U = R · I` steht
- * ein Stromkreis, neben `Z = √(R² + X²)` ein Dreieck, neben dem
- * Spannungsteiler zwei Widerstände mit einem Abgriff dazwischen. Ohne diese
- * Bilder ist eine Formelsammlung eine Liste; mit ihnen ist sie ein Lehrmittel.
- *
- * Redion zeichnet sie SELBST. Nicht aus Vorsicht allein — obwohl der Satz und
- * die Zeichnungen eines gekauften Buchs fremdes Werk sind und bleiben —,
- * sondern weil selbst gezeichnete Bilder etwas können, was ein Scan nie kann:
- *
- *   · Sie sind Vektoren. Sie werden mit dem Fenster gross und bleiben scharf.
- *   · Sie folgen dem Farbschema. Hell und dunkel, ohne zweiten Satz Bilder.
- *   · Sie kommen aus DENSELBEN Fachzeichen wie der Schaltplan-Editor. Was
- *     im Buch steht, lässt sich im Editor genauso hinsetzen — dasselbe
- *     Symbol, dieselben Anschlussnummern.
- *   · Sie kosten fast nichts. Neunzig Bilder als PNG wären ein Vielfaches
- *     der ganzen App.
- *
- * ZWEI SORTEN, UND DER UNTERSCHIED IST WICHTIG
- *
- *   SCHALTBILDER entstehen aus einem echten `Schaltplan`-Plan und werden von
- *   `Schaltplan.alsSvg` gezeichnet. Kein zweiter Zeichner, keine zweite
- *   Symbolsammlung: wird morgen das Widerstandssymbol geändert, ändert es
- *   sich hier mit.
- *
- *   DIAGRAMME — Dreiecke, Kennlinien, Kurven — sind eigenes SVG. Für sie gibt
- *   es keine Fachzeichen, und ein Zeigerdreieck aus Bauteilen zu bauen wäre
- *   ein Umweg über drei Ecken.
- *
- * KEINE ZAHL WIRD HIER GERECHNET. Die Skizze zeigt die GESTALT einer
- * Schaltung, nicht ihr Ergebnis. Wer rechnen will, tippt die Formel darunter
- * an — dort steht der Rechner, und dort kommt die Zahl aus
- * `Register.elektroformeln` und nicht aus einer zweiten, stillen Quelle.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/skizzen.ts (npm run bauen:ts). */
 const Elektroskizzen = (() => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -61,10 +24,6 @@ const Elektroskizzen = (() => {
             an: (teil, nr) => {
                 const a = Schaltplan.anschluesseVon(teil)
                     .find(x => String(x.nr) === nr);
-                /* Ein fehlender Anschluss wäre ein Tippfehler in der Skizze, kein
-                   Laufzeitfall — aber ein Absturz im Formelbuch wäre schlimmer als
-                   eine Leitung, die in der Bauteilmitte beginnt. Der Prüflauf sucht
-                   genau danach. */
                 return a ? { x: a.x, y: a.y } : { x: teil.x, y: teil.y };
             },
             draht: (a, aNr, b, bNr, ...knicke) => {
@@ -86,9 +45,6 @@ const Elektroskizzen = (() => {
                 w.linie({ x: Math.min(...xs), y }, { x: Math.max(...xs), y });
                 klemmen.forEach(([t, nr], i) => {
                     const o = orte[i];
-                    /* Liegt der Anschluss SCHON auf der Sammelhöhe, gibt es keinen
-                       Stummel — eine Leitung von einem Punkt zu demselben Punkt ist
-                       keine, und der Prüflauf hält das zu Recht für einen Fehler. */
                     if (Math.abs(o.y - y) < 0.5)
                         return;
                     plan.leitungen.push({
@@ -115,12 +71,6 @@ const Elektroskizzen = (() => {
         bauen(w);
         return Schaltplan.alsSvg(plan, { raster: false, anschluesse: false, bmk: true });
     };
-    /* ------------------------------------------------------------------------
-     * 2. DIAGRAMME — eigenes SVG
-     * ------------------------------------------------------------------------
-     * Farben kommen aus den Stil-Variablen, damit hell und dunkel ohne einen
-     * zweiten Satz Bilder auskommen (§39).
-     * ----------------------------------------------------------------------*/
     const STRICH = 'var(--text)';
     const BETONT = 'var(--accent)';
     const BLASS = 'var(--text-faint)';
@@ -141,41 +91,13 @@ const Elektroskizzen = (() => {
             `<path d="M${x2},${y2} L${p1x.toFixed(1)},${p1y.toFixed(1)} ` +
             `L${p2x.toFixed(1)},${p2y.toFixed(1)} Z" fill="${farbe}" stroke="none"/>`;
     };
-    /**
-     * `X_L` wird zu X mit tiefgestelltem L — wie im Schaltplan-Zeichner, aus
-     * demselben Grund und mit derselben Reihenfolge: erst escapen, dann
-     * auszeichnen (§19).
-     */
-    /* WELCHE ZEICHEN TIEFGESTELLT WERDEN, und warum die alte Liste zu kurz war.
-     *
-     * Hier stand `[A-Za-zÄÖÜäöüß0-9]`. Das ist die deutsche Tastatur, nicht die
-     * Physik. Im Heft steht `R_ϑ` (Widerstand bei der Temperatur ϑ), `S_Δ`
-     * (Scheinleistung in Dreieckschaltung) und `AF_%` (relativer Anzeigefehler)
-     * — 42 Stellen, an denen der Unterstrich als Unterstrich stehen blieb.
-     *
-     * Ein sichtbarer Unterstrich in einer Formel ist kein Schönheitsfehler: er
-     * sieht aus wie ein Zeichen der Formel. `R_ϑ` liest sich als „R Unterstrich
-     * Theta", und es gibt keine solche Grösse.
-     *
-     * `\p{L}` nimmt jeden Buchstaben JEDER Schrift, `\p{N}` jede Ziffer, und
-     * `%` steht ausdrücklich dabei, weil es keins von beidem ist. Was nicht
-     * dazugehört — Leerzeichen, Klammern, Rechenzeichen — beendet die
-     * Tiefstellung weiterhin. Und weil `esc` VORHER läuft, kann durch die
-     * Erweiterung kein Zeichen hereinkommen, das vorher draussen war.
-     *
-     * Dieselbe Zeile steht in `schaltplan.ts`, `skizzen.ts` und
-     * `formelheft.ts`. test244 vergleicht die drei — auseinanderlaufen ist
-     * genau der Weg, auf dem dieser Fehler entstanden ist.
-     */
     const tief = (wert) => esc(wert).replace(/_([\p{L}\p{N}%]+)/gu, '<tspan baseline-shift="sub" font-size="0.72em">$1</tspan>');
     const txt = (t, x, y, anker = 'middle', farbe = STRICH, groesse = 13) => `<text x="${x}" y="${y}" text-anchor="${anker}" fill="${farbe}" stroke="none" ` +
         `font-size="${groesse}" font-style="italic">${tief(t)}</text>`;
-    /** Achsenkreuz mit Beschriftung an den Spitzen. */
     const achsen = (x0, y0, breite, hoehe, wLabel, hLabel) => pfeil(x0, y0, x0 + breite, y0, BLASS, 1.3) +
         pfeil(x0, y0, x0, y0 - hoehe, BLASS, 1.3) +
         txt(wLabel, x0 + breite, y0 + 17, 'end', BLASS, 12) +
         txt(hLabel, x0 - 7, y0 - hoehe + 5, 'end', BLASS, 12);
-    /** Ein rechtwinkliges Dreieck mit drei Beschriftungen — S/P/Q und Z/R/X. */
     const dreieck = (unten, rechts, schraeg) => svg(300, 175, pfeil(50, 135, 230, 135, STRICH, 2) +
         pfeil(230, 135, 230, 48, STRICH, 2) +
         pfeil(50, 135, 230, 48, BETONT, 2.4) +
@@ -184,15 +106,7 @@ const Elektroskizzen = (() => {
         txt(rechts, 246, 96, 'start', STRICH) +
         txt(schraeg, 128, 82, 'middle', BETONT) +
         txt('φ', 77, 129, 'middle', BLASS, 12));
-    /* ------------------------------------------------------------------------
-     * 3. DIE SKIZZEN
-     * ------------------------------------------------------------------------
-     * Der Schlüssel ist die Abschnittskennung aus `Register.elektroformeln`.
-     * Ein Abschnitt ohne Eintrag bekommt kein Bild — das ist eine Lücke, kein
-     * Fehler, und sie fällt beim Durchblättern auf.
-     * ----------------------------------------------------------------------*/
     const SKIZZEN = {
-        /* --- Seite 4 · Grundlagen Elektrotechnik ---------------------------- */
         'g-ohm': () => planSvg(300, 190, w => {
             const g = w.teil('gleichspannung', 'G', 40, 60);
             const r = w.teil('widerstand', 'R', 210, 60);
@@ -215,7 +129,6 @@ const Elektroskizzen = (() => {
             txt('R₂₀', 39, 112, 'end', BLASS, 12) +
             txt('ΔR', 258, 80, 'start', BETONT, 12) +
             txt('Δϑ', 148, 126, 'middle', BLASS, 12)),
-        /* --- Seite 5 · Schaltungen von Widerständen ------------------------- */
         's-reihe': () => planSvg(320, 310, w => {
             const g = w.teil('gleichspannung', 'G', 30, 115);
             const r1 = w.teil('widerstand', 'R1', 220, 30);
@@ -241,21 +154,13 @@ const Elektroskizzen = (() => {
             w.text('I₂', 266, 62);
             w.text('I₃', 366, 62);
         }),
-        /* --- Seite 6 · Spannungsteiler und Brücke --------------------------- */
         's-teiler': () => planSvg(300, 265, w => {
             const g = w.teil('gleichspannung', 'G', 20, 90);
             const r1 = w.teil('widerstand', 'R1', 170, 30);
             const r2 = w.teil('widerstand', 'R2', 170, 150);
-            /* Der obere Steg lag auf y = 15 und das `U` darüber auf y = 11 — und
-               eine 13 px hohe Grossbuchstabenzeile braucht über ihrer Grundlinie
-               etwa 14. Das `U` stand also mit dem Kopf ausserhalb des Blattes und
-               war oben abgeschnitten. Steg und Beschriftung rücken 7 px nach
-               unten; die Bauteile bleiben, wo sie sind. */
             w.steg(g, '+', r1, '1', 22);
             w.draht(r1, '2', r2, '1');
             w.steg(r2, '2', g, '−', 248);
-            /* Der Abgriff: zwischen den beiden Widerständen heraus und unten
-               heraus — dazwischen steht U₂. */
             w.linie({ x: 190, y: 120 }, { x: 265, y: 120 });
             w.linie({ x: 190, y: 248 }, { x: 265, y: 248 });
             w.text('U', 92, 18);
@@ -276,9 +181,7 @@ const Elektroskizzen = (() => {
             w.draht(v, '−', r3, '2', { x: 310, y: 140 });
             w.text('U', 90, 16);
         }),
-        /* --- Seite 7 · Messtechnik ------------------------------------------ */
         'm-vmeter': () => planSvg(390, 170, w => {
-            /* Vorwiderstand in REIHE zum Messwerk: was zu viel ist, fällt an ihm ab. */
             const rv = w.teil('widerstand', 'Rv', 130, 30, 90);
             const v = w.teil('voltmeter', 'V', 230, 30);
             w.ab(rv, '2', { x: 30, y: 60 });
@@ -292,7 +195,6 @@ const Elektroskizzen = (() => {
             w.linie({ x: 30, y: 120 }, { x: 360, y: 120 });
         }),
         'm-ameter': () => planSvg(390, 210, w => {
-            /* Shunt PARALLEL zum Messwerk: was zu viel ist, fliesst daran vorbei. */
             const a = w.teil('amperemeter', 'A', 160, 30);
             const rp = w.teil('widerstand', 'Rp', 190, 130, 90);
             w.ab(a, '+', { x: 40, y: 60 });
@@ -304,8 +206,6 @@ const Elektroskizzen = (() => {
             w.text('I_p', 186, 200);
         }),
         'm-spannungsfehler': () => planSvg(400, 215, w => {
-            /* A vor V: das Amperemeter misst nur den Verbraucherstrom, aber die
-               Spannung enthält den Abfall am Amperemeter. */
             const g = w.teil('gleichspannung', 'G', 20, 75);
             const a = w.teil('amperemeter', 'A', 110, 5);
             const v = w.teil('voltmeter', 'V', 210, 75);
@@ -319,8 +219,6 @@ const Elektroskizzen = (() => {
             w.text('U_R', 288, 70);
         }),
         'm-stromfehler': () => planSvg(400, 215, w => {
-            /* V vor A: das Voltmeter misst nur die Verbraucherspannung, aber der
-               Strom enthält den Strom durch das Voltmeter. */
             const g = w.teil('gleichspannung', 'G', 20, 75);
             const v = w.teil('voltmeter', 'V', 100, 5);
             const a = w.teil('amperemeter', 'A', 220, 5);
@@ -334,7 +232,6 @@ const Elektroskizzen = (() => {
             w.text('I_V', 166, 100);
             w.text('I_R', 286, 70);
         }),
-        /* --- Seite 8 · Leistung --------------------------------------------- */
         'a-gleich': () => planSvg(390, 215, w => {
             const g = w.teil('gleichspannung', 'G', 20, 75);
             const a = w.teil('amperemeter', 'A', 120, 5);
@@ -347,7 +244,6 @@ const Elektroskizzen = (() => {
             w.linie({ x: 290, y: 105 }, { x: 350, y: 105 });
         }),
         'a-wechsel': () => dreieck('P', 'Q', 'S'),
-        /* --- Seite 9 · Wirkungsgrad und Wärme -------------------------------- */
         'a-wirkungsgrad': () => svg(320, 155, `<rect x="112" y="48" width="96" height="58" rx="6" stroke="${STRICH}" ` +
             `stroke-width="1.6" fill="var(--bg-hover)"/>` +
             pfeil(22, 77, 108, 77, BETONT, 2.4) +
@@ -369,26 +265,17 @@ const Elektroskizzen = (() => {
             txt('m, c', 106, 116, 'middle', STRICH, 12) +
             txt('Δϑ', 166, 36, 'start', BETONT, 12) +
             txt('Q', 130, 180, 'middle', BLASS, 12)),
-        /* --- Seite 11 · Batterien ------------------------------------------- */
         'b-innen': () => planSvg(390, 250, w => {
-            /* Der Innenwiderstand steckt IN der Quelle — darum der gestrichelte
-               Kasten im Buch. Hier steht er sichtbar daneben, denn genau das ist
-               der Denkfehler, den die Formel auflöst: man misst ihn nie direkt. */
             const g = w.teil('gleichspannung', 'U0', 40, 110);
             const ri = w.teil('widerstand', 'Ri', 50, 30);
             const rl = w.teil('widerstand', 'RL', 300, 110);
             w.draht(g, '+', ri, '2');
-            /* Wie beim Spannungsteiler: das `I` sass auf y = 12 und stiess mit
-               seinem Kopf über die Blattkante. Steg und Beschriftung 6 px tiefer. */
             w.steg(ri, '1', rl, '1', 22);
             w.steg(g, '−', rl, '2', 230);
             w.text('U', 190, 160);
             w.text('I', 190, 18);
             w.text('U_Ri', 100, 62);
         }),
-        /* 270 statt 250 breit: das Betriebsmittelkennzeichen „RL" steht 6 px
-           rechts neben dem Widerstand, und der endet bei 230. Mit 250 lag die
-           Beschriftung des rechten Bauteils ausserhalb des Blattes. */
         'b-reihe': () => planSvg(270, 310, w => {
             const b1 = w.teil('batterie', 'G1', 50, 15);
             const b2 = w.teil('batterie', 'G2', 50, 105);
@@ -411,7 +298,6 @@ const Elektroskizzen = (() => {
             w.text('I₁', 66, 70);
             w.text('I', 270, 24);
         }),
-        /* --- Seite 12 · Kondensator ----------------------------------------- */
         'c-parallel': () => planSvg(410, 215, w => {
             const g = w.teil('gleichspannung', 'G', 20, 70);
             const c1 = w.teil('kondensator', 'C1', 140, 70);
@@ -433,10 +319,6 @@ const Elektroskizzen = (() => {
             w.text('U', 115, 18);
         }),
         'c-laden': () => planSvg(390, 230, w => {
-            /* Schalter und Widerstand liegen WAAGRECHT in der oberen Leitung —
-               so wie man einen Ladekreis zeichnet, wenn man ihn erklärt. Gedreht
-               wandern die Anschlüsse mit; `w.an` weiss davon, die Skizze muss es
-               nicht wissen. */
             const g = w.teil('gleichspannung', 'G', 20, 90);
             const s = w.teil('schliesser', 'S1', 130, 20, 90);
             const r = w.teil('widerstand', 'R', 240, 20, 90);
@@ -447,13 +329,7 @@ const Elektroskizzen = (() => {
             w.steg(g, '−', c, '2', 200);
             w.text('U_C', 250, 140);
         }),
-        /* --- Seite 13 · Magnetische Grössen --------------------------------- */
-        'mag-feld': () => svg(300, 180, 
-        /* Der Kern als geschlossener Rahmen, die Wicklung UM den linken
-           Schenkel: vier Bögen, die links davon herausstehen. Lagen sie
-           daneben statt darum, sah es aus wie eine Spule neben einem Kasten
-           — und genau so sah es aus, bis jemand hingesehen hat. */
-        `<rect x="72" y="40" width="168" height="96" rx="4" stroke="${STRICH}" ` +
+        'mag-feld': () => svg(300, 180, `<rect x="72" y="40" width="168" height="96" rx="4" stroke="${STRICH}" ` +
             `stroke-width="2" fill="none"/>` +
             `<rect x="98" y="66" width="116" height="44" rx="3" stroke="${STRICH}" ` +
             `stroke-width="2" fill="none"/>` +
@@ -464,7 +340,6 @@ const Elektroskizzen = (() => {
             txt('N · I', 40, 32, 'start', BETONT, 12) +
             txt('l_m', 156, 160, 'middle', BLASS, 12) +
             txt('A', 250, 92, 'start', BLASS, 12)),
-        /* --- Seite 13 · Wechselstrom-Grundlagen ------------------------------ */
         'w-frequenz': () => {
             const links = 46, rechts = 275, mitte = 92, hoch = 58;
             let d = `M${links},${mitte}`;
@@ -486,24 +361,7 @@ const Elektroskizzen = (() => {
                 txt('T', links + (rechts - links) / 4, mitte + 22, 'middle', BLASS, 12) +
                 txt('t', rechts + 14, mitte + 20, 'end', BLASS, 12));
         },
-        /* --- Seite 13 · die drei Bild-Abschnitte des Magnetkapitels ---------
-         * Das Heft hat hier drei Überschriften OHNE Formeln — sie erklären mit
-         * Bildern. Ohne Zeichnung stünde in Redion eine Überschrift über nichts,
-         * und die Seite wäre gerade dort dünn, wo das Heft anschaulich wird.
-         * -------------------------------------------------------------------*/
         's13-ummagnetisierungskennlinien': () => {
-            /* Eine echte Hystereseschleife, nicht ein Blatt.
-             *
-             * Der erste Versuch änderte nur die Kontrollpunkte einer Linse — und
-             * die breite sah aus wie die schmale. Damit war das Bild wertlos: es
-             * zeigt ZWEI Kurven, und ihr Unterschied IST die Aussage.
-             *
-             * Jetzt bestimmt `hc` die Koerzitivfeldstärke — wie weit man das Feld
-             * umkehren muss, bis der Werkstoff seine Magnetisierung aufgibt. Beim
-             * Dauermagneten weit, beim Trafokern fast nicht. Die eingeschlossene
-             * FLÄCHE ist die Verlustarbeit je Ummagnetisierung; darum will man im
-             * Kern die schmale.
-             */
             const schleife = (cx, hc) => {
                 const cy = 88, hx = 50, by = 40;
                 const d = `M${cx - hx},${cy + by} ` +
@@ -523,23 +381,8 @@ const Elektroskizzen = (() => {
                 txt('weichmagnetisch', 254, 170, 'middle', STRICH, 11));
         },
         's13-magnetfelder-bei-spulen': () => {
-            /* Feldlinien um eine Spule im Längsschnitt: innen dicht und gerade,
-             * aussen weit ausholend und geschlossen. Dass sie GESCHLOSSEN sind,
-             * ist der ganze Unterschied zum elektrischen Feld.
-             *
-             * Beim Hinsehen fielen drei Dinge auf, die kein Prüflauf sehen kann:
-             *
-             *  · Das `I` stand über einer Stelle, an der gar keine Leitung war.
-             *    Eine Beschriftung ohne Gegenstand ist schlimmer als keine.
-             *  · Nur der Nordpol war benannt. Eine Spule hat zwei Pole, und der
-             *    Südpol ist der, an dem die Linien wieder hineingehen — genau die
-             *    Aussage, die das Bild machen soll.
-             *  · Der gerade Teil der Feldlinie wurde zweimal übereinander
-             *    gezeichnet, weil beide Linien ihn im selben `d` mitführten.
-             */
             const wick = [0, 1, 2, 3, 4].map(i => `<path d="M${116 + i * 22},72 A14,14 0 1,1 ${116 + i * 22},108" ` +
                 `stroke="${STRICH}" stroke-width="2" fill="none"/>`).join('');
-            /* Der gerade Teil liegt innen und gehört beiden Linien — einmal. */
             const kern = `<path d="M120,90 L218,90" stroke="${BETONT}" ` +
                 `stroke-width="1.5" fill="none"/>`;
             const bogen = (dy) => `<path d="M218,90 C${262 + dy},90 ${262 + dy},${52 - dy} 169,${52 - dy} ` +
@@ -547,7 +390,6 @@ const Elektroskizzen = (() => {
                 `stroke-width="1.5" fill="none"/>`;
             return svg(340, 196, bogen(0) + bogen(14) + kern +
                 wick +
-                /* Zuleitungen, damit das `I` etwas hat, woran es steht. */
                 lin(116, 108, 116, 152, STRICH, 1.6) +
                 pfeil(64, 152, 116, 152, STRICH, 1.6) +
                 lin(204, 108, 204, 152, STRICH, 1.6) +
@@ -560,9 +402,6 @@ const Elektroskizzen = (() => {
                 txt('Die Feldlinien sind geschlossen.', 170, 184, 'middle', BLASS, 11));
         },
         's13-kraefte-auf-strom-durchflossene': () => {
-            /* Ein Leiter im Feld zwischen Nord und Süd: Strom in die Zeichenebene
-               (das ⊗), Feld von oben nach unten, Kraft nach rechts. Die drei
-               stehen senkrecht aufeinander — das ist die ganze Aussage. */
             const feldpfeil = (x) => pfeil(x, 52, x, 128, BLASS, 1.3);
             return svg(320, 190, `<rect x="60" y="30" width="200" height="22" rx="3" stroke="${STRICH}" ` +
                 `stroke-width="1.6" fill="var(--bg-hover)"/>` +
@@ -579,7 +418,6 @@ const Elektroskizzen = (() => {
                 txt('B', 84, 96, 'end', BLASS, 12) +
                 txt('F = B · I · l', 160, 180, 'middle', BLASS, 11));
         },
-        /* --- Seite 14/15 · Wechselstromwiderstände --------------------------- */
         'wx-induktiv': () => planSvg(280, 200, w => {
             const g = w.teil('wechselspannung', 'G', 30, 70);
             const l = w.teil('spule-induktivitaet', 'L', 200, 70);
@@ -628,7 +466,6 @@ const Elektroskizzen = (() => {
             txt('X_L', 246, 48, 'start', BETONT, 12) +
             txt('X_C', 66, 40, 'start', STRICH, 12) +
             txt('f_r', 124, 152, 'middle', BLASS, 12)),
-        /* --- Seite 16 · Drehstrom ------------------------------------------- */
         'd-stern': () => svg(300, 215, lin(150, 112, 150, 44, STRICH, 2) +
             lin(150, 112, 92, 170, STRICH, 2) +
             lin(150, 112, 208, 170, STRICH, 2) +
@@ -654,22 +491,14 @@ const Elektroskizzen = (() => {
             txt('L3', 254, 200, 'middle', BETONT, 12) +
             txt('I_Str', 104, 102, 'end', STRICH, 12) +
             txt('I', 150, 194, 'middle', BLASS, 12)),
-        /* --- Seite 18 · Transformator --------------------------------------- */
         't-einphasen': () => planSvg(350, 215, w => {
             const t = w.teil('transformator', 'T1', 140, 70);
             w.draht(t, '1U', t, '1V', { x: 55, y: 70 }, { x: 55, y: 140 });
             w.draht(t, '2U', t, '2V', { x: 300, y: 70 }, { x: 300, y: 140 });
-            /* Die Beschriftungen unter die Schleifen, nicht hinein — dort lagen
-               sie auf der Wicklung und liessen beide schlechter lesen. */
             w.text('U₁, N₁', 34, 172);
             w.text('U₂, N₂', 258, 172);
         }),
-        /* --- Seite 19 · Motoren --------------------------------------------- */
         'mo-dreh': () => planSvg(340, 215, w => {
-            /* Hier stand `draht(m,'U1', m,'U1', …)` — eine Leitung von einem
-               Anschluss zu DEMSELBEN Anschluss. Sie lief hin und wieder zurück,
-               und im Bild sah das aus wie drei Diagonalen quer durch den Motor.
-               Eine Leitung, die frei endet, ist `ab` und nicht `draht`. */
             const m = w.teil('motor-drehstrom', 'M1', 140, 95);
             w.ab(m, 'U1', { x: 150, y: 40 }, { x: 45, y: 40 });
             w.ab(m, 'V1', { x: 170, y: 62 }, { x: 45, y: 62 });
@@ -677,57 +506,27 @@ const Elektroskizzen = (() => {
             w.text('L1', 16, 44);
             w.text('L2', 16, 66);
             w.text('L3', 16, 88);
-            /* Hier stand noch ein freies `M` rechts neben dem Motor. Das Zeichen
-               trägt sein `M` und sein `3 ~` bereits im Kreis, und das Betriebs-
-               mittelkennzeichen `M1` schreibt der Planzeichner daneben. Ein
-               drittes M erklärte nichts und stand nur im Weg. */
         }),
-        /* --- Seite 20 · Spannungsfall ---------------------------------------- */
         's20-gleichstromleitung': () => {
-            /* NEU GEZEICHNET, weil das alte Bild drei Dinge falsch machte.
-             *
-             *  · `ΔU` stand unter dem Bild und zeigte auf nichts. Der Spannungs-
-             *    fall entsteht AUF der Leitung, also gehört er an die Leitung.
-             *  · Die Länge `l` lag als gestrichelte Linie INNERHALB des Kastens
-             *    und war kürzer als die Leitung, die sie messen soll.
-             *  · `I` und `l` standen beide frei in derselben kursiven Schrift, in
-             *    der sie derselbe Strich sind. Jetzt sagt die Form, was gemeint
-             *    ist: ein Pfeil in Flussrichtung ist ein Strom, ein Doppelpfeil
-             *    zwischen zwei Grenzen ist ein Mass.
-             *
-             * Die Grössen kommen aus dem Register des Abschnitts: U₁ am Netz,
-             * U₂ am Verbraucher, ΔU dazwischen. Und weil `R_Ltg = ρ · 2 · l / A`
-             * rechnet, zeigt der Rückleiter seinen Strom mit: `l` ist die einfache
-             * Länge, gezählt wird zweimal.
-             */
             const HIN = 54, ZURUECK = 134, LINKS = 46, RECHTS = 252;
-            /* Ein Mass: Doppelpfeil zwischen zwei Grenzstrichen. */
             const mass = (x1, x2, y) => strichel(x1, y - 8, x1, y + 6) + strichel(x2, y - 8, x2, y + 6) +
                 pfeil(x1, y, x2, y, BLASS, 1.2) + pfeil(x2, y, x1, y, BLASS, 1.2);
-            return svg(340, 210, 
-            /* Die beiden Leiter und der Verbraucher am Ende. */
-            lin(LINKS, HIN, RECHTS, HIN, STRICH, 2) +
+            return svg(340, 210, lin(LINKS, HIN, RECHTS, HIN, STRICH, 2) +
                 lin(LINKS, ZURUECK, RECHTS, ZURUECK, STRICH, 2) +
                 `<rect x="${RECHTS}" y="${HIN}" width="46" height="${ZURUECK - HIN}" ` +
                 `stroke="${STRICH}" stroke-width="1.8" fill="var(--bg-hover)"/>` +
-                /* Netzspannung links, als Pfeil zwischen den Leitern. */
                 pfeil(LINKS, ZURUECK, LINKS, HIN, BETONT, 2.2) +
                 txt('U₁', LINKS - 8, 98, 'end', BETONT, 12) +
-                /* Verbraucherspannung rechts, vor dem Kasten. */
                 pfeil(RECHTS - 12, ZURUECK, RECHTS - 12, HIN, BETONT, 1.8) +
                 txt('U₂', RECHTS - 18, 98, 'end', BETONT, 12) +
-                /* Der Strom: hin oben, zurück unten. */
                 pfeil(92, HIN - 12, 196, HIN - 12, BETONT, 1.5) +
                 txt('I', 144, HIN - 20, 'middle', BETONT, 12) +
                 pfeil(196, ZURUECK + 14, 92, ZURUECK + 14, BETONT, 1.5) +
-                /* Der Spannungsfall LÄNGS der Leitung, nicht darunter. */
                 pfeil(LINKS + 14, HIN + 18, RECHTS - 14, HIN + 18, STRICH, 1.4) +
                 txt('ΔU', 150, HIN + 34, 'middle', STRICH, 12) +
-                /* Und die einfache Leitungslänge als Mass. */
                 mass(LINKS, RECHTS, 176) +
                 txt('l', 149, 196, 'middle', BLASS, 12));
         },
-        /* --- Seite 21 · Antenne ---------------------------------------------- */
         'an-mass': () => svg(330, 155, `<path d="M42,46 L42,106 L78,76 Z" stroke="${STRICH}" stroke-width="1.8" ` +
             `fill="var(--bg-hover)"/>` +
             lin(78, 76, 132, 76, STRICH, 1.8) +
@@ -739,7 +538,6 @@ const Elektroskizzen = (() => {
             txt('U₁', 48, 128, 'middle', BETONT, 12) +
             txt('U₂', 262, 128, 'middle', BETONT, 12) +
             txt('dB', 161, 81, 'middle', STRICH, 12)),
-        /* --- Seite 4 · Stromdichte ------------------------------------------ */
         'g-stromdichte': () => svg(300, 165, `<path d="M70,55 L230,55 L230,105 L70,105 Z" stroke="${STRICH}" stroke-width="1.6"/>` +
             `<ellipse cx="70" cy="80" rx="11" ry="25" stroke="${BETONT}" stroke-width="2" ` +
             `fill="var(--bg-hover)"/>` +
@@ -749,7 +547,6 @@ const Elektroskizzen = (() => {
             txt('I', 155, 74, 'middle', BETONT) +
             txt('A', 48, 84, 'end', BETONT) +
             txt('J = I / A', 150, 142, 'middle', BLASS, 12)),
-        /* --- Seite 23 · Gleichrichter ---------------------------------------- */
         'gr-einweg': () => planSvg(420, 230, w => {
             const g = w.teil('wechselspannung', 'G', 20, 85);
             const d = w.teil('diode', 'V1', 150, 20, 90);
@@ -764,8 +561,6 @@ const Elektroskizzen = (() => {
             w.text('U₂', 306, 130);
         }),
         'gr-bruecke': () => planSvg(420, 300, w => {
-            /* Die Grätzschaltung: vier Dioden im Quadrat, die Wechselspannung an
-               der einen Diagonale, die Gleichspannung an der anderen. */
             const g = w.teil('wechselspannung', 'G', 20, 115);
             const d1 = w.teil('diode', 'V1', 140, 40, 90);
             const d2 = w.teil('diode', 'V2', 240, 40, 90);
@@ -781,7 +576,6 @@ const Elektroskizzen = (() => {
             w.text('U₁', 60, 90);
             w.text('U₂', 384, 160);
         }),
-        /* --- Seite 24 · Elektronische Schaltungen ---------------------------- */
         'el-diode': () => planSvg(360, 240, w => {
             const g = w.teil('gleichspannung', 'U1', 20, 90);
             const rv = w.teil('widerstand', 'Rv', 150, 20, 90);
@@ -821,10 +615,7 @@ const Elektroskizzen = (() => {
             w.text('U₁', 46, 200);
             w.text('I_B', 150, 132);
         }),
-        /* --- Seite 27 · Drahtlängen von Spulen ------------------------------- */
         'sp-einlagig': () => {
-            /* Ein Schnitt durch die Spule: der Kern in der Mitte, oben und unten
-               je eine Reihe Drahtquerschnitte. */
             const draht = (x, y) => `<circle cx="${x}" cy="${y}" r="6" stroke="${BETONT}" stroke-width="1.4" ` +
                 `fill="var(--bg-hover)"/>`;
             const reihe = (y) => Array.from({ length: 14 }, (_, i) => draht(70 + i * 12.5, y)).join('');
@@ -832,24 +623,13 @@ const Elektroskizzen = (() => {
                 `stroke-width="1.6" fill="none"/>` +
                 reihe(58) + reihe(120) +
                 strichel(50, 89, 280, 89) +
-                /* d₂ misst von Draht zu Draht, d₁ den Kern dazwischen — jedes mit
-                   eigenem Doppelpfeil. Vorher hatte nur d₂ einen; d₁ und d_m
-                   standen als zwei Beschriftungen übereinander in der Mitte und
-                   berührten sich fast. */
                 pfeil(292, 52, 292, 126, BLASS, 1.2) + pfeil(292, 126, 292, 52, BLASS, 1.2) +
                 txt('d₂', 302, 92, 'start', BLASS, 12) +
                 pfeil(96, 66, 96, 112, BLASS, 1.2) + pfeil(96, 112, 96, 66, BLASS, 1.2) +
-                /* Beide Beschriftungen weg von der Strichlinie: auf ihr sahen sie
-                   durchgestrichen aus. d₁ nach unten in den Kern, d_m darüber —
-                   und weit genug, dass die Tiefstellung von d_m die Linie nicht
-                   mehr berührt. */
                 txt('d₁', 104, 106, 'start', BLASS, 12) +
                 txt('d_m', 196, 79, 'middle', BETONT, 12) +
                 pfeil(70, 158, 245, 158, BLASS, 1.2) + pfeil(245, 158, 70, 158, BLASS, 1.2) +
                 txt('b', 158, 178, 'middle', BLASS, 12) +
-                /* Der Drahtdurchmesser braucht eine Linie zu dem Draht, den er
-                   meint — sonst schwebt das `d` über dem Bild und könnte alles
-                   bedeuten. */
                 lin(70, 52, 84, 38, BETONT, 1.2) +
                 txt('d', 88, 36, 'start', BETONT, 12));
         },
@@ -857,19 +637,10 @@ const Elektroskizzen = (() => {
             const draht = (x, y) => `<circle cx="${x}" cy="${y}" r="5.5" stroke="${BETONT}" stroke-width="1.3" ` +
                 `fill="var(--bg-hover)"/>`;
             const block = (y0) => [0, 1, 2].map(l => Array.from({ length: 13 }, (_, i) => draht(72 + i * 12, y0 + l * 11)).join('')).join('');
-            /* 334 × 210 statt 320 × 200: das `d₂` rechts und das `b` unten standen
-               je einen Punkt über der Kante. Ein Punkt ist unsichtbar — aber ein
-               Blatt, das seinen Inhalt gerade so nicht fasst, hat beim nächsten
-               Zeichen keinen Platz mehr. (Beim ersten Anlauf habe ich dafür den
-               einlagigen Zwilling verbreitert — der lief nie hinaus. Die Zahlen
-               320 × 200 gehören diesem hier.) */
             return svg(334, 210, `<rect x="60" y="82" width="200" height="36" stroke="${STRICH}" ` +
                 `stroke-width="1.6" fill="none"/>` +
                 block(48) + block(126) +
                 strichel(48, 100, 286, 100) +
-                /* Derselbe Umbau wie beim einlagigen Zwilling: d₁ bekommt einen
-                   eigenen Doppelpfeil über den Kern, und beide Beschriftungen
-                   rücken von der Strichlinie weg. */
                 pfeil(296, 44, 296, 156, BLASS, 1.2) + pfeil(296, 156, 296, 44, BLASS, 1.2) +
                 txt('d₂', 306, 104, 'start', BLASS, 12) +
                 pfeil(96, 82, 96, 118, BLASS, 1.2) + pfeil(96, 118, 96, 82, BLASS, 1.2) +
@@ -879,28 +650,7 @@ const Elektroskizzen = (() => {
                 txt('b', 144, 197, 'middle', BLASS, 12) +
                 txt('N₂ Lagen', 40, 36, 'start', BETONT, 12));
         },
-        /* --- Seite 23 · Elektronische Bauelemente ---------------------------
-         * Das Heft zeigt hier zwölf Bauteile, jedes mit seinem Zeichen und
-         * seiner Kennlinie. Genau dafür gibt es das Fachzeichen-Register: das
-         * Symbol kommt von dort, die Kennlinie daneben ist eigenes SVG.
-         *
-         * Die Kennlinie ist der eigentliche Inhalt der Seite. Das Zeichen sagt,
-         * WIE das Bauteil heisst; die Kennlinie sagt, WAS es tut — und bei PTC
-         * und NTC ist das der einzige Unterschied.
-         * -------------------------------------------------------------------*/
-        /** Ein Bauteil links, seine Kennlinie rechts. */
         ...(() => {
-            /**
-             * `mitte` entscheidet über das Achsenkreuz, und das ist keine
-             * Geschmacksfrage:
-             *
-             *   false — der Ursprung sitzt unten links. Für Kennlinien, die nur
-             *           im ersten Quadranten leben: R über ϑ, R über E.
-             *   true  — der Ursprung sitzt in der MITTE. Für Strom über Spannung
-             *           bei Bauteilen, die auch rückwärts etwas tun. Ohne den
-             *           dritten Quadranten sieht die Z-Diode aus wie eine Diode,
-             *           und genau der Unterschied ist ihr Zweck.
-             */
             const bauteil = (zeichen, kurve, wLabel, hLabel, mitte = false) => () => {
                 const sym = (typeof Register !== 'undefined' && Register.fachzeichen)
                     ? Register.fachzeichen.alsSvg(zeichen, { strich: 1.8 }) : '';
@@ -913,29 +663,22 @@ const Elektroskizzen = (() => {
                     svg(190, 150, kreuz + kurve) +
                     `</div>`;
             };
-            /* Ursprung unten links (30,118), nach rechts oben. */
             const steigend = `<path d="M36,112 C70,110 96,96 118,66 C134,44 146,36 164,32" ` +
                 `stroke="${BETONT}" stroke-width="2.2" fill="none"/>`;
             const fallend = `<path d="M36,34 C58,66 76,94 104,106 C126,114 146,116 164,117" ` +
                 `stroke="${BETONT}" stroke-width="2.2" fill="none"/>`;
-            /* Ursprung in der Mitte (100,74). */
-            /* Diode: vorwärts ab der Schwelle steil, rückwärts fast nichts. */
             const diodeKurve = `<path d="M26,73 L112,73 C120,72 124,56 128,26" ` +
                 `stroke="${BETONT}" stroke-width="2.2" fill="none"/>`;
-            /* Z-Diode: vorwärts wie eine Diode, RÜCKWÄRTS ab U_Z ebenso steil —
-               das ist der Unterschied, und er ist der Grund für das Bauteil. */
             const zenerKurve = `<path d="M112,73 C120,72 124,56 128,26" stroke="${BETONT}" ` +
                 `stroke-width="2.2" fill="none"/>` +
                 `<path d="M112,75 L48,75 C42,76 40,92 38,124" stroke="${BETONT}" ` +
                 `stroke-width="2.2" fill="none"/>` +
                 strichel(48, 74, 48, 124) +
                 txt('U_Z', 46, 138, 'middle', BLASS, 11);
-            /* Punktsymmetrisch: in beide Richtungen dasselbe. */
             const beidseitig = `<path d="M100,74 C112,72 120,56 126,24" stroke="${BETONT}" ` +
                 `stroke-width="2.2" fill="none"/>` +
                 `<path d="M100,74 C88,76 80,92 74,124" stroke="${BETONT}" ` +
                 `stroke-width="2.2" fill="none"/>`;
-            /* Ein Kennlinienfeld: je Steuerstrom eine Kurve. */
             const schar = [0, 1, 2, 3].map(i => `<path d="M36,${106 - i * 19} C50,${106 - i * 19} 56,${92 - i * 19} ` +
                 `64,${88 - i * 19} C94,${84 - i * 19} 132,${82 - i * 19} 164,${80 - i * 19}" ` +
                 `stroke="${BETONT}" stroke-width="1.7" fill="none"/>`).join('');
@@ -954,13 +697,7 @@ const Elektroskizzen = (() => {
                 's23-triac': bauteil('triac', beidseitig, 'U', 'I', true)
             };
         })(),
-        /* --- Seite 17 · Neutralleiterstrom ----------------------------------- */
-        's17-neutralleiterstrom-bei-unsymmetr': () => svg(320, 210, 
-        /* Drei Strangströme als Zeiger im 120-Grad-Stern; bei GLEICHER Last
-           heben sie sich auf und der Neutralleiter führt nichts. Sind sie
-           verschieden lang, bleibt eine Summe übrig — und genau die fliesst
-           durch den Neutralleiter. */
-        pfeil(150, 110, 150, 34, BETONT, 2.2) +
+        's17-neutralleiterstrom-bei-unsymmetr': () => svg(320, 210, pfeil(150, 110, 150, 34, BETONT, 2.2) +
             pfeil(150, 110, 84, 156, BETONT, 2.2) +
             pfeil(150, 110, 202, 148, BETONT, 2.2) +
             pfeil(150, 110, 196, 76, STRICH, 2.6) +
@@ -969,7 +706,6 @@ const Elektroskizzen = (() => {
             txt('I_L3', 212, 164, 'middle', BETONT, 12) +
             txt('I_N', 204, 66, 'start', STRICH, 12) +
             txt('Bei gleicher Last ist I_N = 0.', 160, 198, 'middle', BLASS, 11)),
-        /* --- Seite 22 · Beleuchtung ------------------------------------------ */
         'l-abstand': () => svg(300, 195, `<path d="M120,26 L180,26 L194,48 L106,48 Z" stroke="${STRICH}" stroke-width="1.8" ` +
             `fill="var(--bg-hover)"/>` +
             lin(106, 48, 42, 152, BETONT, 1.4) +
@@ -980,17 +716,7 @@ const Elektroskizzen = (() => {
             txt('Φ', 150, 20, 'middle', BETONT, 12) +
             txt('A', 150, 174, 'middle', BLASS, 12))
     };
-    /* ------------------------------------------------------------------------
-     * 4. ZUGRIFF
-     * ----------------------------------------------------------------------*/
-    /** Gibt es zu diesem Abschnitt eine Skizze? */
     const hat = (abschnitt) => Object.prototype.hasOwnProperty.call(SKIZZEN, abschnitt);
-    /**
-     * Die Skizze zu einem Abschnitt. Leere Zeichenkette heisst „gibt es nicht" —
-     * und das ist eine Antwort, kein Fehler: das Buch wird Abschnitt für
-     * Abschnitt bebildert, und ein Abschnitt ohne Bild soll trotzdem lesbar
-     * sein.
-     */
     const zu = (abschnitt) => {
         const bauen = SKIZZEN[abschnitt];
         if (!bauen)
@@ -999,15 +725,11 @@ const Elektroskizzen = (() => {
             return bauen();
         }
         catch (e) {
-            /* Eine kaputte Skizze darf die Seite nicht mitreissen. Sie fehlt dann
-               eben — sichtbar, aber ohne Schaden. */
             console.warn('Skizze ' + abschnitt + ' liess sich nicht zeichnen:', e);
             return '';
         }
     };
-    /** Welche Abschnitte bebildert sind — für den Prüflauf und die Doku. */
     const alle = () => Object.keys(SKIZZEN).sort();
     return { hat, zu, alle };
 })();
-/* Im Browser sichtbar machen — das Formelheft und der Prüflauf greifen darauf zu. */
 globalThis.Elektroskizzen = Elektroskizzen;

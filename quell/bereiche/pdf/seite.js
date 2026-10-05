@@ -1,95 +1,36 @@
 "use strict";
-/* ============================================================================
- * bereiche/pdf/seite.ts — eine PDF-Seite als Block
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/pdf/seite.ts`.
- * ----------------------------------------------------------------------------
- * Drei Schichten übereinander, in einem Kasten mit dem Seitenverhältnis der
- * echten Seite:
- *
- *   1. das Seitenbild aus der Stücke-Ablage (Adresse beim Zeichnen, E98)
- *   2. die Zeichenschicht (dieselbe wie beim A4-Blatt, E100/E103)
- *   3. die Werkzeugleiste darüber
- *
- * Zoom ist allein die Breite des Kastens — keine gespeicherte Zahl ändert
- * sich dabei. Deshalb liegt ein Strich auf jedem Bildschirm an derselben
- * Stelle der Seite, und deshalb braucht diese Datei pdf.js nicht: sie zeigt
- * ein Bild und ein SVG.
- *
- * WAS DIE SEITE ÜBER SICH WEISS, steht beim Umwandeln fest und wird danach
- * nur gelesen:
- *
- *   bw, bh      Breite und Höhe in Punkten (bei /Rotate 90 getauscht)
- *   nr          welche Seite des Dokuments
- *   bildDateiId das gerasterte Bild
- *   quelleId    das unveränderte Original
- *
- * Eine spätere Neurasterung benutzt diese Zahlen, sie liefert keine neuen —
- * sonst läge dieselbe Marke plötzlich woanders.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/seite.ts (npm run bauen:ts). */
 const PdfSeite = (() => {
     const zeichne = (block) => {
         const breite = Number(block.bw) || 595.28;
         const hoehe = Number(block.bh) || 841.89;
         const w = document.createElement('div');
         w.className = 'blatt-huelle pdfs';
-        /* WIE BREIT DER RAND IST, steht an der SEITE und nicht am Seitenblock:
-           wer neben seinem Skript schreibt, will das für das ganze Skript und
-           nicht Seite für Seite (E301). Null heisst aus, und das ist die
-           Vorgabe — ein Rand, den niemand bestellt hat, nimmt nur Platz. */
         const seite = (typeof Links !== 'undefined' && Links.seiteVon)
             ? Links.seiteVon(block.id) : null;
         const randAnteil = Math.max(0, Math.min(1.5, Number(seite?.randBreite) || 0));
         const rand = Math.round(breite * randAnteil);
         const schicht = Marken.schicht(block, breite, hoehe, 0, rand);
-        /* Die Leiste bekommt rechts die Seitenzahl — sie beantwortet die Frage
-           „wo bin ich", ohne dass man zählen muss — und daneben den ANKER: einen
-           Verweis auf genau diese Seite. Bei einem Skript mit achtzig Seiten ist
-           das der Unterschied zwischen „ich weiss, dass es drinsteht" und „ich
-           bin da" (E105, L37). */
-        const werk = Marken.leiste(schicht, 
-        /* NUR DAS ZEICHEN, auch am Rechner. Mit dem Wort „Verweis" daneben
-           passte die Leiste bei der üblichen Spaltenbreite von 708 px nicht
-           mehr in eine Zeile und klappte in zwei um (mit Augen gesehen, §55).
-           `aria-label` statt bloss `title`, damit ein Vorleseprogramm ihn
-           auch nennt (§38). */
-        '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
+        const werk = Marken.leiste(schicht, '<button data-a="anker" aria-label="Verweis auf diese Seite kopieren" ' +
             'title="Verweis auf genau diese Seite kopieren">🔗</button>' +
-            /* SCHÄRFER RECHNEN (L37, E173). Nur wenn es überhaupt geht: ohne das
-               Original in der Ablage gibt es nichts, woraus man rechnen könnte,
-               und ein Knopf, der nur eine Entschuldigung zeigt, ist kein Knopf.
-               Auch nur dann, wenn noch Luft nach oben ist. */
             (block.quelleId && (Number(block.bildBreite) || 1654) < 3308
                 ? '<button data-a="feiner" aria-label="Diese Seite feiner rechnen" ' +
                     'title="Diese Seite feiner rechnen — schärfer beim Hineinzoomen">⊕</button>'
                 : '') +
-            /* AUSSCHNEIDEN ALS LERNKARTE (Punkt 43).
-               Kein eigenes Gummiband: das RECHTECK-Werkzeug gibt es längst, und ein
-               gezeichnetes Rechteck ist zugleich die Auswahl und der bleibende
-               Vermerk, was man aus dieser Seite herausgeschnitten hat. Ein zweites
-               Ziehwerkzeug daneben wäre eine zweite Bedienung für dieselbe Geste. */
             '<button data-a="karte" aria-label="Rechteck als Lernkarte ausschneiden" ' +
             'title="Das zuletzt gezeichnete Rechteck als Karteikarte ausschneiden">✂</button>' +
             '<span class="blatt-trenn"></span>' +
-            /* Beide Zahlen durch `Number` — `nr` war es schon, `vonSeiten` nicht.
-               Der Text hier geht ueber `Marken.leiste` in ein `innerHTML`, und ein
-               Block aus einer eingespielten Sicherung sagt, was er will. Eine Zahl
-               kann nichts sein ausser einer Zahl (E112). */
             '<span class="pdfs-nr">Seite ' + (Number(block.nr) || 1) +
             (Number(block.vonSeiten) ? ' von ' + Number(block.vonSeiten) : '') +
             '</span>');
         werk.addEventListener('click', e => {
             const k = e.target?.closest?.('button');
             if (k?.dataset.a === 'feiner') {
-                /* Sperren, solange gerechnet wird — sonst startet ein zweiter Klick
-                   einen zweiten Lauf, und der legt für denselben Block eine zweite
-                   Datei ab (derselbe Fehler wie E116). */
                 k.setAttribute('disabled', 'disabled');
                 k.textContent = '…';
                 PdfEinlesen.schaerfer(block).then((erg) => {
                     if (erg && erg.ok)
-                        return; /* neu gezeichnet, Knopf ist fort */
+                        return;
                     if (!k.isConnected)
                         return;
                     k.removeAttribute('disabled');
@@ -105,8 +46,6 @@ const PdfSeite = (() => {
             }
             if (k?.dataset.a !== 'anker')
                 return;
-            /* `location.href` ohne Hash — dieselbe Form wie Strg + Umschalt + C,
-               und die einzige, die auch als Datei über `file://` stimmt. */
             const adr = location.href.split('#')[0] + '#block=' + block.id;
             Ablage.kopiereJetzt(adr, 'Verweis auf Seite ' +
                 (Number(block.nr) || 1) + ' kopiert');
@@ -115,64 +54,37 @@ const PdfSeite = (() => {
         const papier = document.createElement('div');
         papier.className = 'blatt-papier pdfs-papier';
         papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
-        /* OHNE RAND BLEIBT DER AUFBAU, WIE ER WAR. Zwei Formen sind mehr Code
-           als eine, aber die Alternative wäre, den Aufbau JEDER Seite zu ändern,
-           auch der Millionen ohne Rand — und daran hängen fünfzehn Prüfläufe,
-           die Masse am Papier nehmen. */
         let flur = null;
         if (rand > 0) {
             flur = document.createElement('div');
             flur.className = 'blatt-flur';
-            /* Der Anteil der Seite an der ganzen Fläche. Genau dieser Anteil hält
-               die Einheit auf dem Bildschirm gleich gross wie ohne Rand — und
-               darum liegt jede alte Marke danach an derselben Stelle. */
             flur.style.setProperty('--seiten-anteil', (100 * breite / (breite + rand)).toFixed(4) + '%');
-            /* Dieselbe Zahl als Faktor, für das Telefon: dort wird der Flur breiter
-               als die Spalte gemacht und waagrecht gerollt, statt die Seite
-               schmaler zu machen (E301, auf dem Bild gefunden). */
             flur.style.setProperty('--flur-faktor', ((breite + rand) / breite).toFixed(4));
             const randfeld = document.createElement('div');
             randfeld.className = 'blatt-randfeld';
             flur.appendChild(papier);
             flur.appendChild(randfeld);
-            /* Gedreht wird die ganze Flaeche samt Rand (E467); ungedreht ist
-               `drehHuelle` der Flur selbst — kein neuer Knoten. */
             w.appendChild(SheetSpace.drehHuelle(block, flur));
         }
         else {
             w.appendChild(SheetSpace.drehHuelle(block, papier));
         }
-        /* Das Bild: Adresse beim Zeichnen aus der Kennung holen, nie speichern
-           (E98). Fehlt sie noch, steht ein Satz da statt eines leeren Kastens. */
         const bild = document.createElement('img');
         bild.className = 'pdfs-bild';
         bild.alt = 'Seite ' + (Number(block.nr) || 1);
         bild.decoding = 'async';
         bild.loading = 'lazy';
-        /* NOCH NICHT einhängen. Ein `img` ohne `src` ist für den Browser ein
-           kaputtes Bild: er malt sein Bruchsymbol und den Alt-Text hin — über
-           den Satz, der dasselbe in Ordentlich sagt (E105, mit Augen gesehen). */
         const hinweis = document.createElement('div');
         hinweis.className = 'pdfs-wartet';
         hinweis.textContent = 'Seite wird vorbereitet …';
         papier.appendChild(hinweis);
-        /**
-         * Aus dem Hinweis einen Weg machen.
-         *
-         * NACH DEM EINSPIELEN EINER `.redion` IST DAS DER NORMALFALL, nicht der
-         * Ausnahmefall: E103 lässt die gerasterten Seitenbilder bewusst draussen,
-         * weil sie sich neu rechnen lassen. „Lässt sich" ist aber kein Weg, solange
-         * niemand ihn gehen kann. Also steht er hier — ein Knopf, der das ganze
-         * Dokument auf einmal zurückholt, weil das Original aufzuschlagen der teure
-         * Teil ist und eine einzelne Seite daraus der billige (E106).
-         */
         const wegZeigen = (text) => {
             hinweis.textContent = '';
             const satz = document.createElement('div');
             satz.textContent = text;
             hinweis.appendChild(satz);
             if (!block.quelleId)
-                return; /* ohne Original kein Weg */
+                return;
             const k = document.createElement('button');
             k.type = 'button';
             k.className = 'pdfs-neu';
@@ -180,27 +92,12 @@ const PdfSeite = (() => {
             k.addEventListener('click', () => {
                 k.disabled = true;
                 k.textContent = 'wird gerechnet …';
-                /* Der Erfolg zeichnet die Seite neu, und dieser Knopf ist dann
-                   ohnehin fort. Kommt aber KEIN Bild — das Original fehlt im
-                   Bestand, das Rechnen scheitert —, muss er wieder anfassbar sein:
-                   ein Knopf, der für immer „wird gerechnet …" sagt, ist schlimmer
-                   als gar keiner (E116). */
                 const zurueck = () => {
                     if (!k.isConnected)
                         return;
                     k.disabled = false;
                     k.textContent = 'Aus dem Original zurückholen';
                 };
-                /* SEIT E327 IST DAS EIN AUFTRAG, und `neuBerechnen` kommt zurück,
-                   sobald er ANGELEGT ist — nicht wenn er fertig ist. Auf sein Ende
-                   zu warten ginge hier gar nicht: er läuft womöglich in einem
-                   anderen Tab, und dessen Ereignisse erreichen diesen nie.
-        
-                   Also wartet dieser Knopf nicht mehr, sondern HÖRT ZU. Das Ende
-                   zeichnet die Seite neu (einlesen.ts), womit er meist verschwindet;
-                   bleibt er stehen, weil das Bild nicht kam, wird er wieder
-                   anfassbar. Genau die Zusage von E116, nur nicht mehr an einem
-                   Versprechen hängend. */
                 const aus = [];
                 const fertig = (d) => {
                     if (!d || d.art !== 'pdf-bilder')
@@ -214,9 +111,6 @@ const PdfSeite = (() => {
                     aus.push(Ereignisse.horche(ARTEN.auftragFehler, fertig));
                 }
                 PdfEinlesen.neuBerechnen(block.quelleId).then((e) => {
-                    /* Nichts angelegt heisst: nichts wird kommen. Ein Knopf, der auf
-                       ein Ereignis wartet, das niemand auslöst, ist der Knopf von
-                       E116 mit mehr Schritten davor. */
                     if (!e || !e.auftrag)
                         fertig({ art: 'pdf-bilder' });
                 }, () => fertig({ art: 'pdf-bilder' }));
@@ -245,22 +139,6 @@ const PdfSeite = (() => {
         else {
             wegZeigen('Für diese Seite gibt es noch kein Bild.');
         }
-        /* ------------------------------------------------------------------------
-         * EIN AUSSCHNITT WIRD EINE LERNKARTE (Punkt 43)
-         * ------------------------------------------------------------------------
-         * Das zuletzt gezeichnete Rechteck bestimmt den Ausschnitt. Geschnitten
-         * wird aus dem `img`, das ohnehin schon auf der Seite steht — es kommt
-         * aus einem `blob:`-Verweis derselben Herkunft, die Zeichenfläche wird
-         * dadurch nicht unrein, und `toBlob` darf lesen.
-         *
-         * Der Ausschnitt wird als gewöhnlicher Anhang abgelegt. Damit geht er
-         * durch Papierkorb, `.redion`-Sicherung und Wiederherstellung wie jedes
-         * andere Bild — ohne dass irgendwo ein Sonderfall dafür stehen müsste.
-         *
-         * URHEBERRECHT: Ein Ausschnitt aus einem gekauften Lehrmittel in die
-         * eigene Karteikarte auf dem eigenen Rechner ist Privatgebrauch. Er geht
-         * an keinen Server. Redion liefert das Werkzeug, nicht den Inhalt.
-         * ----------------------------------------------------------------------*/
         const alsLernkarte = async () => {
             const rechtecke = schicht.marken
                 .filter(m => m && m.art === 'rectangle' && Array.isArray(m.pts) && m.pts.length >= 2);
@@ -275,8 +153,6 @@ const PdfSeite = (() => {
             }
             const pts = InkGeometry.points(letztes.pts);
             const a = pts[0], b = pts[1];
-            /* Blattkoordinaten in Bildpunkte: das Bild kann feiner gerechnet sein
-               als das Blatt gross ist (E173, „schärfer rechnen"). */
             const jeX = bild.naturalWidth / breite;
             const jeY = bild.naturalHeight / hoehe;
             const x = Math.max(0, Math.min(a[0], b[0]) * jeX);
@@ -324,8 +200,6 @@ const PdfSeite = (() => {
                     (e instanceof Error ? e.message : String(e)));
             }
         };
-        /* Die Fläche spannt über Seite UND Rand, sonst könnte kein Strich über
-           die Kante laufen. Ohne Rand liegt sie wie immer auf dem Papier. */
         (flur ?? papier).appendChild(schicht.flaeche);
         return w;
     };

@@ -1,49 +1,9 @@
 "use strict";
-/* ============================================================================
- * aussehen.js — Aussehen und Tastenkürzel selbst bestimmen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/einstellungen/ansicht/aussehen.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/einstellungen/ansicht/aussehen.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion lässt genau zwei Dinge zu: hell oder dunkel, und drei Schriften auf
- * der Seite. Sonst nichts. Hier gibt es:
- *
- *   · zehn Farbschemata, hell wie dunkel, dazu eine frei wählbare Akzentfarbe
- *     — zwei davon sind der Look des Touch Kits (E699)
- *   · Schriftart und Schriftgrösse für die ganze App, nicht nur je Seite
- *   · Zeilenabstand und Seitenbreite
- *   · umbelegbare Tastenkürzel — Notions Kürzel sind fest verdrahtet
- *
- * Alles liegt im Speicher der App und wird beim Start wieder gesetzt.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/ansicht/aussehen.ts (npm run bauen:ts). */
 const Aussehen = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ========================================================================
-     * FARBSCHEMATA
-     * ------------------------------------------------------------------------
-     * Jedes Schema setzt nur die wenigen Grundwerte; alles andere leitet sich
-     * daraus ab. „grund" sagt, ob darüber das helle oder das dunkle Grundgerüst
-     * gilt.
-     * ======================================================================*/
-    /* STANDARD UND HELL TRAGEN KEINEN EIGENEN AKZENT, und das ist der Punkt:
-       ein Inline-Stil auf `documentElement` schlägt jedes Stilblatt. Solange
-       hier `#2eaadc` stand, konnte `dunkel.css` seinen Akzent gar nicht
-       durchsetzen — die Nocturne-Farbe war gesetzt und blieb unsichtbar.
-  
-       Schlimmer noch: EIN Wert kann für hell und dunkel nicht beide richtig
-       sein. Das Orange, das auf Schwarz mit 6.6:1 leuchtet, kommt auf Weiss
-       auf 2.8:1 — unter jeder Lesbarkeitsgrenze. Genau deshalb steht der
-       Akzent jetzt in `dunkel.css` und `hell.css`, jeder mit seinem eigenen,
-       nachgerechneten Wert. Die anderen Schemata setzen ihn weiter selbst;
-       sie bringen ja auch ihre eigenen Flächen mit. */
     const SCHEMATA = [
         { id: 'standard', name: 'Standard', grund: 'dark', akzent: '', werte: {} },
         { id: 'hell', name: 'Hell', grund: 'light', akzent: '', werte: {} },
@@ -67,8 +27,6 @@ const Aussehen = (() => {
                 '--bg-hover': '#efefee', '--bg-input': '#f8f8f7',
                 '--line': '#e3e3e1', '--line-soft': '#eeeeec', '--text': '#242424'
             } },
-        /* Schwarze Schrift auf Gelb (E705; Redur: „Starker Kontrast ohne Glas").
-           Vorher Weiss darauf, 1,43 : 1; jetzt 14,7 : 1, Überfahren heller. */
         { id: 'kontrast', name: 'Starker Kontrast', grund: 'dark', akzent: '#ffd400', werte: {
                 '--bg': '#000000', '--bg-side': '#0a0a0a', '--bg-card': '#141414',
                 '--bg-hover': '#1f1f1f', '--bg-input': '#111111',
@@ -82,50 +40,6 @@ const Aussehen = (() => {
                 '--bg-hover': '#33262e', '--bg-input': '#261d23',
                 '--line': '#3d2f37', '--line-soft': '#2f242b', '--text': '#f0e6ec'
             } },
-        /* DER LOOK DES TOUCH KITS (E699). Redur, 27. September 2026: „Also
-           beiden bei der ausehen dort aollte ich die fraben ändern kann" — die
-           Bauteile des Kits tragen Redions Farben (die Brücke in
-           `src/islands/bridge.css`), UND der Kit-Look steht hier als Schema.
-    
-           ZWEI KARTEN, WIE „Standard" UND „Hell": ein Schema gehört in Redion zu
-           EINEM Grundton, und die Staffelei merkt sich je Grundton das zuletzt
-           gewählte (`studio:schema-light`/`-dark`). Wer einmal beide gewählt
-           hat, wechselt mit der Staffelei zwischen ihnen hin und her.
-    
-           Die Werte sind die Palette aus `fremd/touch/tokens.css` (UI-Kit
-           @c192821), Rolle für Rolle auf Redions Marken gelegt:
-    
-               Kit                     Redion
-               bg                      --bg
-               surface-sunken          --bg-side, --bg-input (dunkel)
-               surface                 --bg-card
-               fill über surface       --bg-hover (hell), --bg-press, --bg-input (hell)
-               surface-raised          --bg-hover (dunkel)
-               separator · fill        --line · --line-soft
-               label · secondary · tertiary   --text · --text-dim · --text-faint
-               accent · pressed · soft · on-accent
-                                       --accent · --accent-hover · --accent-schwach · --auf-accent
-               danger · success · warning · info
-                                       --gefahr · --erfolg · --warnung · --info
-                                       (danger nur hell — siehe unten)
-    
-           Wo das Kit keine eigene Farbe hat (gedrückt, Eingabefeld), steht die
-           Füllung des Kits über seiner Fläche ausgerechnet, nicht geschätzt.
-           Mehr Rollen als die anderen Schemata, und zwar mit Absicht: der dunkle
-           Akzent des Kits ist ein HELLES Violett (#a39dff), und Weiss darauf
-           hätte 2,38 : 1 — also bringt das Schema seine Schrift auf dem Akzent
-           mit (#0b0a1a, 8,23 : 1). `test47` hält diese Schrift fest; `test510`
-           misst die Leisten des PDF-Studios in allen zehn.
-    
-           DAS ROT BLEIBT IM DUNKLEN REDIONS (Durchsicht von E699). Das Rot des
-           Kits im Dunkeln ist ein helles Rosa (#ff7088), gemacht für DUNKLE
-           Schrift darauf. Redion malt aber WEISS auf `--gefahr` — die Zahl an
-           der Glocke, der Gefahrknopf unter dem Zeiger, die Marke am Buchdeckel.
-           Mit dem Rosa waren das 2,65 : 1 statt 3,76 : 1 wie in jedem anderen
-           dunklen Schema. Also steht `--gefahr` hier nicht: es gilt Redions
-           Rot aus `dunkel.css`, die Bauteile des Kits schreiben darauf mit
-           `--bg`; Weiss auf Rot steht auf `--gefahr-flaeche` (E705). `test579`
-           §5 misst es in allen zehn. */
         { id: 'touchkit-hell', name: 'Touch Kit hell', grund: 'light', akzent: '#5345e0', werte: {
                 '--bg': '#f3f2f8', '--bg-side': '#e9e9ef', '--bg-card': '#ffffff',
                 '--bg-hover': '#eeeef1', '--bg-press': '#e3e2e8', '--bg-input': '#eeeef1',
@@ -133,8 +47,6 @@ const Aussehen = (() => {
                 '--text': '#0b0b10', '--text-dim': '#5e5e6b', '--text-faint': '#7a7a86',
                 '--auf-accent': '#ffffff', '--accent-text': '#5345e0', '--accent-hover': '#4336c8',
                 '--accent-schwach': 'rgba(83,69,224,.12)',
-                /* Warnung eine Stufe dunkler als im Kit (#b45309: 4,34 auf dem
-                   Überfahren), E705. */
                 '--gefahr': '#b81c3c', '--erfolg': '#0f766e', '--warnung': '#af4f00', '--info': '#0e7490'
             } },
         { id: 'touchkit-dunkel', name: 'Touch Kit dunkel', grund: 'dark', akzent: '#a39dff', werte: {
@@ -154,10 +66,6 @@ const Aussehen = (() => {
         ['mono', 'Monospace', '"SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace'],
         ['lesbar', 'Gut lesbar', '"Atkinson Hyperlegible", "Verdana", "Segoe UI", sans-serif']
     ];
-    /* Die ruhige Fassung liegt NICHT in `aussehen`, sondern unter dem eigenen
-       Schlüssel `ruhig` — dort, wo `schale/aufbau/ruhig.ts` sie liest. Zwei
-       Speicherplätze für dieselbe Sache wären genau die Doppelung, gegen die
-       E219 antritt. Hier steht nur die Bedienung. */
     const ruhigAn = () => typeof Ruhig !== 'undefined' ? Ruhig.an() : Store.getMeta('ruhig', true) !== false;
     const einstellung = () => Object.assign({
         schema: 'standard', akzent: '', schrift: 'system', groesse: 100,
@@ -165,22 +73,13 @@ const Aussehen = (() => {
     }, Store.getMeta('aussehen', {}) || {});
     const anwenden = (e) => {
         const s = e || einstellung();
-        /* Die Listen sind nie leer — aber `find` und `[0]` geben beide
-           `undefined`, und ohne Schema gäbe es hier nichts anzuwenden. Ein
-           stiller Abbruch ist besser als eine halb gesetzte Oberfläche. */
         const sch = SCHEMATA.find(x => x.id === s.schema) ?? SCHEMATA[0];
         if (!sch)
             return;
         const w = document.documentElement;
-        /* Erst alles zurücksetzen, was ein früheres Schema gesetzt hat */
         (w.dataset['gesetzt'] || '').split(' ').filter(Boolean)
             .forEach(v => w.style.removeProperty(v));
         w.dataset['theme'] = sch.grund;
-        /* WELCHES SCHEMA, steht jetzt auch als Attribut da (E703). Die Werte
-           oben sind Farben; ob es Glas gibt, ist keine Farbe. „Starker
-           Kontrast" hat keines (Redur, Fragebogen: „Starker Kontrast ohne
-           Glas"), und das sagt `grund.css` an genau diesem Attribut — an einer
-           Stelle für alles Glas, statt in der Farbtabelle. */
         w.dataset['schema'] = sch.id;
         const gesetzt = [];
         const eigen = sch.werte;
@@ -190,10 +89,6 @@ const Aussehen = (() => {
             w.style.setProperty('--accent', akz);
             gesetzt.push('--accent');
         }
-        /* DIE BEGLEITER FOLGEN DER FARBE (E705): Leiter und Akzent-Begleiter
-           werden aus dem Schema abgeleitet, gegen die Flächen, die wirklich
-           gelten. Was ein Schema selbst mitbringt, bleibt; eine EIGENE Farbe
-           bringt immer alle vier Begleiter mit. */
         const f = typeof Farben !== 'undefined' ? Farben : null;
         if (f && (akz || eigen['--bg'])) {
             const cs = getComputedStyle(w);
@@ -229,7 +124,6 @@ const Aussehen = (() => {
         document.body.style.fontSize = (s.groesse || 100) + '%';
         document.body.dataset['abstand'] = s.abstand || 'normal';
         document.body.dataset['breite'] = s.breite || 'normal';
-        /* Damit der alte Hell/Dunkel-Schalter weiter das Richtige tut */
         Store.setMeta('theme', sch.grund);
     };
     const setzen = (patch) => {
@@ -238,13 +132,6 @@ const Aussehen = (() => {
         anwenden(neu);
         return neu;
     };
-    /* ========================================================================
-     * TASTENKÜRZEL UMBELEGEN
-     * ------------------------------------------------------------------------
-     * Die Liste sagt, was es gibt und was von Haus aus gilt. Wer etwas ändert,
-     * legt nur die Abweichung ab. Beim Drücken fragt der Rest der App hier
-     * nach: „ist das gerade der Befehl X?"
-     * ======================================================================*/
     const KUERZEL = [
         ['suche', 'Suchen', 'Ctrl+K'],
         ['palette', 'Befehle', 'Ctrl+P'],
@@ -252,8 +139,6 @@ const Aussehen = (() => {
         ['ki', 'KI-Bereich', 'Ctrl+J'],
         ['chat', 'Neuer Chat', 'Ctrl+O'],
         ['seitenleiste', 'Seitenleiste ein und aus', 'Ctrl+\\'],
-        /* Nicht Ctrl+T und Ctrl+W: die gibt der Browser nicht her, und dann
-           geschieht beides. Siehe `schale/aufbau/reiter.ts`. */
         ['reiterNeu', 'Neuer Reiter', 'Ctrl+Alt+N'],
         ['reiterZu', 'Reiter schliessen', 'Ctrl+Alt+W'],
         ['teilen', 'Geteilte Ansicht', 'Ctrl+Alt+S'],
@@ -268,22 +153,14 @@ const Aussehen = (() => {
         ['unter', 'Unterstrichen', 'Ctrl+U'],
         ['durch', 'Durchgestrichen', 'Ctrl+Shift+S'],
         ['codeText', 'Code im Text', 'Ctrl+E'],
-        /* Im Editor mit Auswahl; ohne Auswahl bleibt Ctrl+K die globale Suche. */
         ['link', 'Link setzen', 'Ctrl+K'],
         ['duplizieren', 'Block duplizieren', 'Ctrl+D']
     ];
-    /* Nur globale Befehle, für die `schale.ts` tatsächlich einen Aufruf
-       besitzt, dürfen hier umbelegt werden. Formatierung und Blockaktionen
-       hängen am Editor-Kontext; sie im Dialog anzubieten, ohne den neuen
-       Griff dort auszuwerten, war ein falsches Versprechen. */
     const UMBELEGBAR = new Set([
         'suche', 'palette', 'neu', 'ki', 'chat', 'seitenleiste',
         'reiterNeu', 'reiterZu', 'teilen', 'zurueck', 'vor', 'hell',
         'hilfe', 'einstellung'
     ]);
-    /* Browser- und Bearbeitungskürzel, die eine Web-App nicht neu vergeben
-       darf. Der Default-Konflikttest schützte nur den Auslieferungszustand;
-       über den Dialog konnte man danach trotzdem Strg+C oder Strg+W stehlen. */
     const RESERVIERT = new Set([
         'ctrl+c', 'ctrl+v', 'ctrl+x', 'ctrl+a', 'ctrl+z', 'ctrl+y',
         'ctrl+b', 'ctrl+i', 'ctrl+u', 'ctrl+e', 'ctrl+d', 'ctrl+k',
@@ -307,7 +184,6 @@ const Aussehen = (() => {
             return e[id];
         return KUERZEL.find(k => k[0] === id)?.[2] ?? '';
     };
-    /** Aus einem Tastenereignis die Schreibweise „Ctrl+Shift+K" machen. */
     const alsText = (ev) => {
         const t = [];
         if (ev.ctrlKey || ev.metaKey)
@@ -326,22 +202,17 @@ const Aussehen = (() => {
         t.push(k);
         return t.join('+');
     };
-    /** Passt dieses Ereignis zum Befehl? */
     const ist = (id, ev) => {
         const soll = kuerzelVon(id);
         if (!soll)
             return false;
         return alsText(ev).toLowerCase() === soll.toLowerCase();
     };
-    /* DIE AKZENTWAHL (E705). Die Karten „Standard"/„Hell" brauchen Werte aus
-       dem Stilblatt; `cssRules` ist unter file:// gesperrt, also stehen sie
-       hier, und `test584` §6 vergleicht die Karte mit dem gerechneten Stil. */
     const STILBLATT = {
         dark: { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
         light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
     };
     const stilblatt = (grund) => STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};
-    /** Neun Scheiben mit „Aa" in der Schrift, die auf ihnen stehen wird. */
     const akzentWahl = (s) => {
         const w = document.documentElement;
         const cs = getComputedStyle(w);
@@ -357,8 +228,6 @@ const Aussehen = (() => {
                 (an ? '<span class="au-akz-haken" aria-hidden="true">✓</span>' : '') +
                 `<span class="au-akz-name">${esc(n)}</span></button>`;
         };
-        /* Eine früher gewählte Farbe (auch #2eaadc …) steht als „Eigene" gewählt
-           da — nichts wird umgestellt, ohne dass jemand klickt. */
         const bekannt = Farben.ACCENTS.some(([c]) => c === jetzt);
         const eigen = !!jetzt && !bekannt && !!Farben.parse(jetzt);
         const eigenName = eigen
@@ -379,23 +248,18 @@ const Aussehen = (() => {
             `aria-pressed="${jetzt ? 'false' : 'true'}">wie im Schema</button>` +
             '</div>';
     };
-    /** Hauptknopf, Verweis, gewählter Reiter — nur zum Ansehen. */
     const akzentVorschau = () => '<div class="au-akz-vorschau" aria-hidden="true">' +
         '<span class="au-vs-titel">Vorschau</span>' +
         '<span class="au-vs-knopf">Speichern</span>' +
         '<span class="au-vs-verweis">ein Verweis</span>' +
         '<span class="au-vs-reiter">Gewählter Reiter</span>' +
         '</div>';
-    /* ========================================================================
-     * DIALOG
-     * ======================================================================*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML =
             '<div class="finder" style="width:min(780px,95vw)">' +
                 '<div class="fh">🎨 Aussehen und Tasten<button class="icon-btn" data-a="zu">✕</button></div>' +
-                /* `data-material` (E706): der Strich unter dem Reiter fliegt hinüber. */
                 '<div class="au-reiter" data-material="aussehen-reiter">' +
                 '<button data-r="farbe" class="an">Farben</button>' +
                 '<button data-r="schrift">Schrift und Layout</button>' +
@@ -408,8 +272,6 @@ const Aussehen = (() => {
                 '</div>';
         document.body.appendChild(o);
         const inhalt = o.querySelector('#au-inhalt');
-        /* Der Kasten steht in der Zeichenkette oben — ohne ihn gäbe es keinen
-           Ort für die Einstellungen, und die Überlagerung bliebe leer stehen. */
         if (!inhalt) {
             o.remove();
             return;
@@ -419,15 +281,9 @@ const Aussehen = (() => {
             const s = einstellung();
             if (reiter === 'farbe') {
                 inhalt.innerHTML =
-                    /* DIE STAFFELEI (E462) steht über den Karten: sie wechselt den
-                       GRUNDTON, die Karten wählen das Schema darunter. Der Platz
-                       wird unten mit dem Bauteil gefüllt — ein Umschalter ist ein
-                       Element mit Zustand, keine Zeichenkette. */
                     '<div class="au-staffelei" id="au-staffelei"></div>' +
                         '<div class="au-titel">Farbschema</div>' +
                         '<div class="au-schemata">' + SCHEMATA.map(x => {
-                        /* Ehrliche Karten (E705): Standard/Hell lesen das Stilblatt statt
-                           alter Ersatzwerte, und ihr Akzentpunkt ist nicht mehr leer. */
                         const stil = stilblatt(x.grund);
                         const w = x.werte;
                         const bg = w['--bg'] || stil['--bg'] || '';
@@ -450,14 +306,6 @@ const Aussehen = (() => {
                     platz.append(Staffelei.bauen({
                         hell: grund === 'light',
                         beiWechsel: () => {
-                            /* DIESELBE REGEL WIE IM STUDIO-KOPF (studio.ts): das zuletzt
-                               benutzte Schema des Ziel-Grundtons, sonst Hell bzw.
-                               Standard. Zwei Umschalter, eine Regel (§8).
-              
-                               VON WO, sagt das GESPEICHERTE Schema — nicht der Knopf.
-                               Der kann hinterherhinken, wenn anderswo gewechselt wurde;
-                               dann stünde das dunkle Schema unter dem hellen Schlüssel,
-                               und der nächste Wechsel liefe ins Leere. */
                             const jetzt = einstellung();
                             const jetztGrund = SCHEMATA.find(x => x.id === jetzt.schema)?.grund || 'dark';
                             const hell = jetztGrund === 'dark';
@@ -486,11 +334,6 @@ const Aussehen = (() => {
                         '</div>' +
                         '<div class="au-hinweis">Die Schriftwahl je Seite (Standard, Serif, Mono) bleibt daneben ' +
                         'bestehen — sie sticht diese Einstellung für die eine Seite.</div>' +
-                        /* RUHIGE OBERFLÄCHE (E219). Der Schalter steht hier, weil er
-                           dasselbe entscheidet wie Zeilenabstand und Seitenbreite: wie
-                           viel Platz die Oberfläche für sich selbst nimmt. Der Hinweis
-                           nennt den Weg zurück ausdrücklich — ein Schalter, nach dem man
-                           die halbe Seitenleiste sucht, ist ein schlechter Schalter. */
                         '<div class="au-titel">Ruhige Oberfläche</div>' +
                         '<div class="au-liste">' +
                         ['<button data-ruhig-schalter="an" class="' + (ruhigAn() ? 'an' : '') +
@@ -516,7 +359,6 @@ const Aussehen = (() => {
             }
         };
         zeichne();
-        /* Ein Kürzel neu belegen */
         let faengt = null;
         const fangen = (ev) => {
             const id = faengt;
@@ -540,9 +382,6 @@ const Aussehen = (() => {
             if (['Control', 'Meta', 'Alt', 'Shift'].includes(ev.key))
                 return;
             const neu = alsText(ev);
-            /* Der globale Ausführer arbeitet absichtlich nur mit Ctrl/Cmd-
-               Kombinationen. Eine einzelne Taste hier zu speichern sah nach
-               Erfolg aus und konnte anschliessend nie auslösen. */
             if (!(ev.ctrlKey || ev.metaKey)) {
                 UI.toast('Bitte Strg oder Cmd zusammen mit der Taste verwenden');
                 return;
@@ -612,9 +451,6 @@ const Aussehen = (() => {
             if (ru) {
                 if (typeof Ruhig !== 'undefined')
                     Ruhig.setzen(ru.dataset['ruhigSchalter'] === 'an');
-                /* Das Menüband entscheidet beim Zeichnen, ob es dasteht — es muss
-                   also neu zeichnen, sonst bleibt es weg (oder da), bis irgendetwas
-                   anderes es anfasst. */
                 if (typeof Menueband !== 'undefined')
                     Menueband.zeichne();
                 zeichne();
@@ -647,7 +483,6 @@ const Aussehen = (() => {
         o.addEventListener('change', e => {
             if (e.target instanceof HTMLInputElement && e.target.id === 'au-gr')
                 zeichne();
-            /* Erst nach dem Farbwähler neu zeichnen, sonst schlösse er sich. */
             if (e.target instanceof HTMLInputElement && e.target.id === 'au-frei')
                 zeichne();
         });

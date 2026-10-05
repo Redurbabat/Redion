@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ablage/formen.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/ablage/formen.js — welche Form ein Satz hat, und wie er wieder heil wird
  * ----------------------------------------------------------------------------

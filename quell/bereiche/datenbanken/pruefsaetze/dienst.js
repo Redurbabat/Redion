@@ -1,40 +1,6 @@
 "use strict";
-/* ============================================================================
- * pruefsatz.js — Prüfsätze für Formeln und Automationen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/datenbanken/pruefsaetze/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/datenbanken/pruefsaetze/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Idee 20 der 10000×-Liste. Die Notion-KI nennt dort auch gleich den Grund,
- * warum es das nirgends gibt: *„Tests sind ein Softwarekonzept; es müsste so
- * einfach werden, dass normale Nutzer es verstehen."*
- *
- * Deshalb heisst hier nichts „Test", „Assertion" oder „Fixture". Ein
- * Prüfsatz ist ein Satz in zwei Hälften:
- *
- *      WENN  Betrag = 100 und Land = "CH"
- *      DANN  ist MwSt gleich 8.1
- *
- * Und der wichtigste Weg dorthin geht gar nicht über ein Formular: man nimmt
- * eine Zeile, bei der es **stimmt**, und sagt „so soll es bleiben". Daraus
- * baut Redion den Prüfsatz selbst. Wer nie ein Formular ausfüllen will, muss
- * es auch nicht.
- *
- * Was das bringt: eine Formel zu ändern ist billig, sie kaputtzumachen auch.
- * Der Unterschied fällt oft erst Wochen später auf, wenn eine Zahl komisch
- * aussieht. Ein Prüfsatz merkt es sofort — und der Probelauf (probelauf.js)
- * kann vor einer Änderung sagen, welche Sätze danach anders ausgingen.
- *
- * Nichts hier fasst echte Daten an. Geprüft wird immer an einer erfundenen
- * Zeile, die nur für den Augenblick der Prüfung existiert.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/pruefsaetze/dienst.ts (npm run bauen:ts). */
 const Pruefsatz = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     const VERGLEICHE = [
@@ -49,13 +15,6 @@ const Pruefsatz = (() => {
         ['trifftNicht', 'die Automation greift nicht']
     ];
     const vergleichName = (v) => (VERGLEICHE.find(x => x[0] === v) || [v, v])[1];
-    /* ========================================================================
-     * 1 · SPEICHERN
-     * ------------------------------------------------------------------------
-     * Die Prüfsätze gehören zur Datenbank, nicht zur Ansicht: sie prüfen die
-     * Regel, nicht die Brille. Damit wandern sie beim Abgleich mit und gelten
-     * auf jedem Gerät.
-     * ======================================================================*/
     const alle = (coll) => (coll && coll.pruefsaetze) || [];
     const setzen = (coll, liste) => {
         Store.updateCollection(coll.id, { pruefsaetze: liste });
@@ -68,12 +27,6 @@ const Pruefsatz = (() => {
         return s;
     };
     const loeschen = (coll, id) => setzen(coll, alle(coll).filter((s) => s.id !== id));
-    /* ========================================================================
-     * 2 · DIE ERFUNDENE ZEILE
-     * ------------------------------------------------------------------------
-     * Sie sieht aus wie eine echte, liegt aber nie in der Ablage. Deshalb kann
-     * ein Prüfsatz auch nichts kaputtmachen — schlimmstenfalls ist er falsch.
-     * ======================================================================*/
     const probeZeile = (coll, gegeben) => ({
         id: 'pruefsatz-probe',
         type: 'page',
@@ -86,9 +39,6 @@ const Pruefsatz = (() => {
         created: Store.now(),
         edited: Store.now()
     });
-    /* ========================================================================
-     * 3 · EINEN SATZ LAUFEN LASSEN
-     * ======================================================================*/
     const alsZahl = (v) => {
         if (typeof v === 'number')
             return v;
@@ -115,9 +65,6 @@ const Pruefsatz = (() => {
             default: return false;
         }
     };
-    /**
-     * @returns {{ok:boolean, ist:string, text:string, fehler?:string}}
-     */
     const laufe = (coll, satz) => {
         if (!coll || !satz)
             return { ok: false, ist: '', text: 'Nichts zu prüfen.' };
@@ -125,7 +72,6 @@ const Pruefsatz = (() => {
         const wenn = Object.entries(satz.gegeben || {})
             .map(([k, v]) => (coll.schema[k] ? coll.schema[k].name : k) + ' = ' + alsText(v))
             .join(' und ') || 'nichts gesetzt';
-        /* --- Automationen: greift die Bedingung? --------------------------- */
         if (satz.art === 'automation') {
             const a = (coll.automationen || [])[satz.index];
             if (!a)
@@ -133,9 +79,6 @@ const Pruefsatz = (() => {
                     text: 'Diese Automation gibt es nicht mehr.', fehler: 'weg' };
             let trifft = false;
             try {
-                /* bedingungenTreffen nimmt die ganze Automation, nicht ihre Liste —
-                   wer nur die Liste übergibt, bekommt „trifft immer" zurück, weil
-                   every() auf einer leeren Liste wahr ist. */
                 trifft = Datenbank.bedingungenTreffen(a, zeile, coll);
             }
             catch (e) {
@@ -151,7 +94,6 @@ const Pruefsatz = (() => {
                     (a.name || 'Automation') + '"'
             };
         }
-        /* --- Formeln und jede andere Spalte --------------------------------- */
         const key = satz.spalte;
         const def = coll.schema[key];
         if (!def)
@@ -183,7 +125,6 @@ const Pruefsatz = (() => {
             ergebnisse
         };
     };
-    /** Über alle Datenbanken — für den Gesundheitsbericht. */
     const ueberall = () => {
         const raus = [];
         Object.values(Store.cache.collections).forEach(c => {
@@ -199,14 +140,6 @@ const Pruefsatz = (() => {
             liste: raus
         };
     };
-    /* ========================================================================
-     * 4 · DER KURZE WEG: AUS EINER ECHTEN ZEILE
-     * ------------------------------------------------------------------------
-     * „Diese Zeile stimmt — halt das fest." Alles, was die Formel braucht,
-     * wird aus der Zeile abgeschrieben; das Ergebnis wird das Erwartete. Wer
-     * nie ein Formular ausfüllen will, kommt so trotzdem zu Prüfsätzen.
-     * ======================================================================*/
-    /** Welche Spalten nennt diese Formel beim Namen? */
     const zutaten = (coll, key) => {
         const def = coll.schema[key] || {};
         if (def.type !== 'formula')
@@ -241,9 +174,6 @@ const Pruefsatz = (() => {
             ausZeile: rowId
         });
     };
-    /* ========================================================================
-     * 5 · DAS FENSTER
-     * ======================================================================*/
     const fenster = (collId) => {
         const coll = Store.getCollection(collId);
         if (!coll)
@@ -318,7 +248,6 @@ const Pruefsatz = (() => {
         zeichne();
         return o;
     };
-    /* --- Anlegen von Hand -------------------------------------------------- */
     const bearbeiten = (coll) => {
         const felder = Object.entries(coll.schema);
         const o = document.createElement('div');

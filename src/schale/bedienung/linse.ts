@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/linse.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/linse.ts — die wandernde Glaslinse, genau einmal definiert
  * ----------------------------------------------------------------------------

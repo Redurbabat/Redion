@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/zeitmesser.ts (npm run bauen:ts). */
 /* ============================================================================
  * ERZEUGT — NICHT VON HAND ÄNDERN.
  * Die Quelle ist `src/bereiche/wissen/zeitmesser.ts`. `npm run bauen:ts` schreibt daraus

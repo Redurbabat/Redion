@@ -1,28 +1,7 @@
 "use strict";
-/* ============================================================================
- * fremd/pdfjs/laden.ts — die Bibliothek auspacken und bereitstellen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/fremd/pdfjs/laden.ts`.
- * ----------------------------------------------------------------------------
- * Diese Datei ist REDION-CODE, kein fremder. Sie liegt neben `daten.js` — dem
- * Behälter mit den eingepackten Bytes von pdf.js — und tut genau zwei Dinge:
- * auspacken und einmal merken.
- *
- * DIE TRENNUNG IST DER PUNKT. Fremde Bytes stehen in `daten.js` und in
- * `pruefungen/fremd-bestand.json`, wo sie nachgerechnet werden. Was Redion
- * selbst schreibt, steht hier — in TypeScript, mit Kommentaren, unter §54.4
- * wie jede andere Datei. Eine handgeschriebene `.js` mit fremden Bytes darin
- * wäre beides gleichzeitig und keins davon prüfbar.
- *
- * ERST BEIM GEBRAUCH. Wer nie ein PDF öffnet, soll keine 1,7 MB entpacken.
- * `laden()` tut es einmal und behält das Versprechen — nicht das Ergebnis:
- * zwei gleichzeitige Aufrufe warten dann auf dasselbe Auspacken statt es
- * zweimal zu starten.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/fremd/pdfjs/laden.ts (npm run bauen:ts). */
 const PdfFremd = (() => {
     let versprechen = null;
-    /** Base64 zu Bytes. `atob` gibt Zeichen, kein Feld — also von Hand. */
     const bytes = (b64) => {
         const roh = atob(b64);
         const u = new Uint8Array(new ArrayBuffer(roh.length));
@@ -30,35 +9,11 @@ const PdfFremd = (() => {
             u[i] = roh.charCodeAt(i);
         return u;
     };
-    /** Ein gzip-Paket auspacken — dieselbe Technik, mit der Redion ZIP liest. */
     const entpacke = async (b64) => {
         const strom = new Blob([bytes(b64)]).stream()
             .pipeThrough(new DecompressionStream('gzip'));
         return new Uint8Array(await new Response(strom).arrayBuffer());
     };
-    /** Einmal auspacken, dann behalten. Gibt das pdf.js-Modul zurück. */
-    /**
-     * DIE BYTES ERST HOLEN, WENN SIE GEBRAUCHT WERDEN (E389).
-     *
-     * `daten.js` ist 717 KB roh und 527 KB über die Leitung — der grösste
-     * Einzelposten des ganzen Starts und ein Fünftel von allem. Bis zum
-     * 4. September lud `index.html` sie mit einem gewöhnlichen `<script
-     * src>`, also bei JEDEM Start, auch wenn nie eine PDF geöffnet wurde.
-     * Gemessen mobil gedrosselt (4× CPU, Slow 4G): 2607 KB gesamt, und
-     * davon gingen 527 auf diese eine Datei.
-     *
-     * EIN `<script>`-ELEMENT UND KEIN `fetch`. Redion muss sich per
-     * Doppelklick öffnen lassen (§6) — unter `file://` scheitert `fetch`
-     * an der Herkunftsprüfung, ein eingehängtes Skript nicht.
-     *
-     * IN DER EINZELDATEI GIBT ES NICHTS ZU HOLEN: dort setzt `bauen.mts`
-     * die Bytes direkt ein, `PDFJS_EINGEPACKT` steht also schon da, und
-     * diese Funktion kehrt sofort zurück.
-     *
-     * OFFLINE BLEIBT ES OFFLINE: `daten.js` steht weiterhin im GRUNDSTOCK
-     * von `sw.ts`, wird also beim ersten Besuch im Hintergrund abgelegt.
-     * Das Nachladen bedient dann der Zwischenspeicher, nicht das Netz.
-     */
     const bytesHolen = () => new Promise((ja, nein) => {
         if (typeof PDFJS_EINGEPACKT !== 'undefined') {
             ja();
@@ -91,8 +46,6 @@ const PdfFremd = (() => {
                 throw new Error('Dieser Browser kann kein gzip auspacken — PDF-Seiten gehen hier nicht.');
             const lib = await entpacke(PDFJS_EINGEPACKT.LIB);
             const wk = await entpacke(PDFJS_EINGEPACKT.WORKER);
-            /* Blob-Adressen statt Dateien: nur so läuft es auch in der
-               Einzeldatei über `file://`, wo es kein Verzeichnis gibt. */
             const libUrl = URL.createObjectURL(new Blob([lib], { type: 'text/javascript' }));
             const wkUrl = URL.createObjectURL(new Blob([wk], { type: 'text/javascript' }));
             const modul = await import(libUrl);

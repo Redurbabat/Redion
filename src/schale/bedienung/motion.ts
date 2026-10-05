@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/motion.ts (npm run bauen:ts). */
 /* Redurs 15 Vorlagen: lokale Dekoration, keine gespeicherten Werte. */
 type MotionEffectId = 'folder' | 'sliders' | 'light' | 'gradient' | 'letters' |
   'liquid' | 'toggle' | 'carousel' | 'glass' | 'metric' | 'status' | 'ticket' |

@@ -1,66 +1,15 @@
 "use strict";
-/* ==========================================================================
- * DATEIEN — hochladen in Schritten, in Stücken abgelegt
- * --------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/dateien/ablage.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/dateien/ablage.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Notion lädt grosse Dateien in drei Schritten hoch: erst anmelden („ich
- * habe eine Datei dieser Grösse"), dann die Teile schicken, dann bestätigen.
- * Der Grund ist nicht Umständlichkeit, sondern Wirklichkeit: eine Datei von
- * 300 MB geht nicht in einem Stück, und wenn bei Teil 47 die Verbindung
- * abreisst, will man nicht wieder bei Teil 1 anfangen.
- *
- * Hier steht das lange auf „teilweise" mit der Begründung: die Datei wird
- * direkt als Data-URL abgelegt. Das ist bequem und für ein kleines Bild
- * richtig — aber es hat drei Nachteile, die man erst bei grösseren Dateien
- * merkt:
- *
- *   1. Eine Data-URL ist Base64. Sie ist um ein Drittel grösser als die
- *      Datei selbst.
- *   2. Sie liegt vollständig im Arbeitsspeicher, jedes Mal, wenn der Block
- *      gezeichnet wird — auch wenn niemand hinsieht.
- *   3. Der ganze Block wird mitgeschrieben, sobald sich irgendetwas an ihm
- *      ändert. Ein Video von 50 MB wandert dann bei jedem Umbenennen des
- *      Bildtitels durch die Ablage.
- *
- * Deshalb hier derselbe Ablauf wie bei Notion, nur ohne Server: anmelden,
- * Stücke schreiben, bestätigen. Jedes Stück liegt einzeln in IndexedDB —
- * als Blob, nicht als Text. Zum Anzeigen wird eine Blob-Adresse gebaut, die
- * der Browser selbst verwaltet und die keinen Arbeitsspeicher kostet.
- *
- * Was bleibt: kleine Dateien gehen weiter den kurzen Weg. Für ein Bild von
- * 40 KB wäre dieser Apparat Unfug.
- * ========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/ablage.ts (npm run bauen:ts). */
 const Dateien = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    /* AUS DEN KONSTANTEN, nicht abgeschrieben. Hier standen dieselben drei
-       Zahlen ein zweites Mal — sie stimmten überein, aber nichts hätte es
-       gemerkt, wenn eine der beiden Seiten sich geändert hätte. Genau diese
-       Fehlerklasse hat am 8. August dreimal zugeschlagen (E64, E65).
-       Der Rückfall gilt nur, wenn `konstanten.js` nicht geladen ist — dann
-       ist die App ohnehin kaputt, aber eine Grenze von `undefined` liesse
-       jede Datei durch, und das wäre schlimmer als eine falsche Grenze. */
     const K = (n, standard) => (typeof KONSTANTEN !== 'undefined' && Number(KONSTANTEN[n])) || standard;
-    const STUECK = K('STUECK', 1024 * 1024); /* 1 MB je Stück */
-    const KLEIN = K('KLEIN', 256 * 1024); /* darunter lohnt der Aufwand nicht */
-    const GRENZE = K('DATEI_MAX', 500 * 1024 * 1024); /* darüber wird es auch lokal eng */
-    /* Laufende Uploads: id → { datei, teile, fertig, abgebrochen } */
+    const STUECK = K('STUECK', 1024 * 1024);
+    const KLEIN = K('KLEIN', 256 * 1024);
+    const GRENZE = K('DATEI_MAX', 500 * 1024 * 1024);
     const laufend = new Map();
-    /* Blob-Adressen, die schon gebaut wurden — damit dieselbe Datei nicht
-       zehnmal zusammengesetzt wird. */
     const adressen = new Map();
     const laufendeAdressen = new Map();
     const adressVersionen = new Map();
-    /* ========================================================================
-     * 1 · ANMELDEN — Notions „create file upload"
-     * ======================================================================*/
     const anmelden = async ({ name, groesse, typ, blockId, abgeleitet }) => {
         if (!groesse && groesse !== 0)
             throw new Error('Es fehlt die Grösse.');
@@ -72,12 +21,6 @@ const Dateien = (() => {
         const satz = {
             id, name: name || 'Datei', groesse, typ: typ || 'application/octet-stream',
             blockId: blockId || null, teile, angekommen: 0,
-            /* ABGELEITET heisst: aus etwas anderem in Sekunden neu herstellbar —
-               ein gerastertes PDF-Seitenbild etwa. Solche Dateien gehören NICHT
-               in jede Sicherung und nicht in jeden Abgleich: bei 200 KB je Seite
-               und 500 Seiten wären das 100 MB in jedem `.redion`, für etwas, das
-               sich neu berechnen lässt. Eine Sicherung, die man auf dem Telefon
-               nicht mehr herunterladen kann, ist keine Sicherung (E103). */
             abgeleitet: !!abgeleitet,
             zustand: 'wartet', angelegt: Store.now(), fertigAm: null
         };
@@ -85,9 +28,6 @@ const Dateien = (() => {
         laufend.set(id, { satz, abgebrochen: false });
         return satz;
     };
-    /* ========================================================================
-     * 2 · EIN STÜCK SCHICKEN — Notions „send file upload part"
-     * ======================================================================*/
     const stueckSchicken = async (dateiId, nr, blob) => {
         const lauf = laufend.get(dateiId);
         const satz = (lauf && lauf.satz) || await Store.dateiHolen(dateiId);
@@ -103,16 +43,12 @@ const Dateien = (() => {
         await Store.dateiPut(satz);
         return { nr, von: satz.teile, anteil: satz.angekommen / satz.teile };
     };
-    /* ========================================================================
-     * 3 · BESTÄTIGEN — Notions „complete file upload"
-     * ======================================================================*/
     const bestaetigen = async (dateiId) => {
         const satz = await Store.dateiHolen(dateiId);
         if (!satz)
             throw new Error('Diesen Upload gibt es nicht.');
         const stuecke = await Store.stueckeVon(dateiId);
         if (stuecke.length !== satz.teile) {
-            /* Ehrlich sagen, welches Stück fehlt — sonst sucht man im Dunkeln. */
             const da = new Set(stuecke.map((s) => s.nr));
             const fehlt = [];
             for (let i = 0; i < satz.teile; i++)
@@ -130,7 +66,6 @@ const Dateien = (() => {
                 groesseText(satz.groesse) + ', ' + satz.teile + ' Stück)', { id: dateiId });
         return satz;
     };
-    /* Abbrechen: die Stücke wieder weg, sonst liegt Müll in der Ablage. */
     const abbrechen = async (dateiId) => {
         const lauf = laufend.get(dateiId);
         if (lauf)
@@ -138,20 +73,8 @@ const Dateien = (() => {
         await weg(dateiId);
         return true;
     };
-    /* ========================================================================
-     * 4 · DER BEQUEME WEG — eine ganze Datei auf einmal
-     * ======================================================================*/
-    /**
-     * Legt eine Datei ab und ruft dabei laufend zurück, wie weit es ist.
-     * @param {File|Blob} datei
-     * @param {object} opt  { blockId, name, beiFortschritt(anteil, nr, von) }
-     * @returns {Promise<object>} der Dateisatz
-     */
     const ablegen = async (datei, opt) => {
         opt = opt || {};
-        /* MediaRecorder liefert einen Blob, keinen File. Der Name gehört deshalb
-           zur Option; bei einem echten File bleibt sein eigener Name der
-           Rückfall. Audio muss dadurch nie erst als Data-URL aufgebläht werden. */
         const dateiName = typeof File !== 'undefined' && datei instanceof File ? datei.name : '';
         const satz = await anmelden({
             name: opt.name || dateiName || 'Datei',
@@ -175,12 +98,6 @@ const Dateien = (() => {
             throw e;
         }
     };
-    /**
-     * Verbindet eine bereits abgelegte Datei nachträglich mit ihrem Block.
-     * Normalerweise ist die Blockkennung schon beim Ablegen bekannt. Dieser
-     * Weg bleibt für Importe und alte Aufnahmen, deren Block erst danach
-     * angelegt wird. Die Datei selbst wird dabei nicht neu geschrieben.
-     */
     const verknuepfen = async (dateiId, blockId) => {
         const satz = await Store.dateiHolen(dateiId);
         if (!satz)
@@ -189,10 +106,6 @@ const Dateien = (() => {
         await Store.dateiPut(satz);
         return satz;
     };
-    /* ========================================================================
-     * 5 · WIEDER HERAUS
-     * ======================================================================*/
-    /** Die ganze Datei als Blob — erst hier wird zusammengesetzt. */
     const alsBlob = async (dateiId) => {
         const satz = await Store.dateiHolen(dateiId);
         if (!satz)
@@ -200,13 +113,6 @@ const Dateien = (() => {
         const stuecke = await Store.stueckeVon(dateiId);
         if (!stuecke.length)
             return null;
-        /* Unvollständig ist nicht „etwas kleiner", sondern KAPUTT. Hier wurden
-           bis eben 25 von 40 Stücken kommentarlos aneinandergereiht — ein
-           abgebrochener Upload wanderte so als halbes Video in die
-           `.redion`-Sicherung, deren `dateien.json` daneben 40 Teile
-           deklarierte. Beim Einspielen wurde aus den 25 dann `zustand: 'fertig'`
-           — und die fehlenden 15 MB waren keine Lücke mehr, sondern Geschichte.
-           Ein halbes Video ist kein kleineres Video; es ist keines. */
         if (typeof satz.teile === 'number' && satz.teile > 0 &&
             stuecke.length !== satz.teile) {
             if (typeof Reporter !== 'undefined')
@@ -216,14 +122,6 @@ const Dateien = (() => {
         }
         return new Blob(stuecke.map((s) => s.blob), { type: satz.typ });
     };
-    /**
-     * Eine Adresse, die sich in ein src-Feld schreiben lässt.
-     * Der Browser hält den Blob selbst; wir merken uns die Adresse, damit
-     * dieselbe Datei nicht bei jedem Zeichnen neu zusammengesetzt wird.
-     */
-    /* Schon gebaut? Dann synchron zurückgeben. Der Zeichner braucht das: er
-       läuft nicht asynchron, und beim zweiten Zeichnen derselben Seite soll
-       das Bild nicht kurz verschwinden und wiederkommen (E98). */
     const adresseBekannt = (dateiId) => adressen.get(dateiId) || null;
     const adresse = (dateiId) => {
         const bekannte = adressen.get(dateiId);
@@ -234,9 +132,6 @@ const Dateien = (() => {
             return laufende;
         const version = adressVersionen.get(dateiId) || 0;
         const arbeit = alsBlob(dateiId).then(blob => {
-            /* Wurde die Datei waehrend des Lesens entfernt, darf die spaete
-               Antwort weder eine neue URL lecken noch den geloeschten Satz im
-               Adresscache scheinbar wiederbeleben. */
             if (!blob || version !== (adressVersionen.get(dateiId) || 0))
                 return null;
             const url = URL.createObjectURL(blob);
@@ -261,7 +156,6 @@ const Dateien = (() => {
             adressen.delete(dateiId);
         }
     };
-    /** Herunterladen, ohne die Datei je ganz durch den Arbeitsspeicher zu ziehen. */
     const herunterladen = async (dateiId) => {
         const satz = await Store.dateiHolen(dateiId);
         const url = await adresse(dateiId);
@@ -277,16 +171,10 @@ const Dateien = (() => {
             Protokoll.notieren('export', 'Datei „' + satz.name + '" heruntergeladen', { id: dateiId });
         return true;
     };
-    /* ========================================================================
-     * 6 · AUFRÄUMEN
-     * ======================================================================*/
     const weg = async (dateiId) => {
         const stuecke = await Store.stueckeVon(dateiId);
         for (const s of stuecke)
             await Store.stueckWeg(s.id);
-        /* Endgültig weg heisst: dem Server sagen (E249). Der Grabstein
-           entsteht nur, wenn der Server die Datei kennt — abgebrochene
-           Uploads und Abgeleitetes erzeugen nichts (Wache im Store). */
         if (Store.dateiGrabstein)
             Store.dateiGrabstein(dateiId);
         await Store.dateiWeg(dateiId);
@@ -294,16 +182,8 @@ const Dateien = (() => {
         laufend.delete(dateiId);
         return stuecke.length;
     };
-    /**
-     * Verwaiste Dateien: der Block, an dem sie hingen, ist weg — oder der
-     * Upload wurde nie zu Ende gebracht. Beides sammelt sich sonst still an.
-     */
     const verwaist = async () => {
         const alle = await Store.dateiAlle();
-        /* WER SIE HEUTE ZEIGT. Ein Duplikat trägt dieselbe `dateiId` wie das
-           Original (E171). Liegt das Original im Papierkorb, zeigte diese Liste
-           die Datei als herrenlos an — und ein Klick auf „Aufräumen" nahm dem
-           lebenden Duplikat sein Bild. */
         const beansprucht = Store.dateiAnspruch
             ? Store.dateiAnspruch(true) : new Map();
         return alle.filter((d) => {
@@ -326,9 +206,6 @@ const Dateien = (() => {
         }
         return { anzahl: liste.length, bytes };
     };
-    /* ========================================================================
-     * 7 · ZAHLEN UND TEXTE
-     * ======================================================================*/
     const groesseText = (n) => {
         const b = Number(n) || 0;
         if (b < 1024)
@@ -350,11 +227,7 @@ const Dateien = (() => {
             stuecke: alle.reduce((n, d) => n + (d.teile || 0), 0)
         };
     };
-    /* Lohnt sich der Umweg? Kleine Dateien gehen weiter direkt in den Block. */
     const lohntSich = (groesse) => Number(groesse) > KLEIN;
-    /* ========================================================================
-     * 8 · DAS FENSTER
-     * ======================================================================*/
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     const dialog = async () => {
         const o = document.createElement('div');

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/import/zipdetails.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/import/zipdetails.js — was ein ZIP-Eintrag über sich sagt (E363)
  * ----------------------------------------------------------------------------

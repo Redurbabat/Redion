@@ -168,6 +168,9 @@ const problemText = (): string => {
 
 /* ── Die Daten für Redion ───────────────────────────────────────────────── */
 const appText = (): string =>
+  /* Die erste Zeile beginnt mit `/*!`: sie bleibt im erzeugten .js stehen,
+     obwohl tsc dort seit E715 alle übrigen Kommentare weglässt (test105 §3). */
+  '/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: chronik/chronik.json, über src/bereiche/chronik/daten.ts (node chronik.mts). */\n' +
   '/* ============================================================================\n' +
   ' * chronik/daten.js — die Chronik, wie Redion sie liest\n' +
   ' * ----------------------------------------------------------------------------\n' +

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/ablage/umzuege.ts (npm run bauen:ts). */
 /* ============================================================================
  * kern/ablage/umzuege.js — wie die Ablage über die Zeit gewachsen ist
  * ----------------------------------------------------------------------------

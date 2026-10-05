@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/einstellungen.ts (npm run bauen:ts). */
 /* ============================================================================
  * register/einstellungen.js — jede Einstellung an einer Stelle
  * ----------------------------------------------------------------------------

@@ -1,44 +1,18 @@
 "use strict";
-/* ══ DER STAATSKUNDE-TRAINER (E677, vorläufiger Stand) ═══════════════════
-   Redur, 21. September 2026: „ich brauche eine provisorische momentan …
-   etwas das ich gut lernen kann". Das hier ist die Lernmaschine ohne die
-   Anbindung ans Lernzentrum: sie hängt sich in irgendein Element
-   (`mount`) und bekommt ihren Speicher von aussen (`Speicher`) — vorläufig
-   der Browser-Speicher der Seite `lernen/staatskunde.html`, später das
-   Meta-Fach von Redion. Der Inhalt kommt aus `staatskunde-inhalt.ts`.
-
-   DIE LERNMETHODE: Boxen mit Abständen (Leitner).
-     · Jede Aufgabe beginnt in Box 1. Richtig → eine Box höher (bis 5),
-       falsch → zurück in Box 1.
-     · Box n wird nach ABSTAND_TAGE[n-1] Tagen wieder fällig: heute,
-       morgen, 3 Tage, 1 Woche, 2 Wochen. Was sitzt, kommt selten.
-     · In einer Runde kommt eine falsch beantwortete Aufgabe nach drei
-       anderen NOCH EINMAL — bis zu zweimal. Was man nicht weiss, sieht
-       man mehrmals, bevor die Runde zu Ende ist.
-     · Fällige Aufgaben zuerst, niedrige Boxen zuerst; sind zu wenige
-       fällig, füllen die schwächsten Karten die Runde auf.
-
-   DREI AUFGABENFORMEN: Multiple Choice (mehrere Antworten können richtig
-   sein — wie in der Prüfung), Schreiben (eigene Antwort, dann die
-   Musterlösung und die Selbsteinschätzung), Lücke (getippt, nachsichtig
-   verglichen). Die Prüfungsfragen des Lehrers stehen 1:1 da.
-
-   Alles, was aus dem Inhalt in HTML geht, läuft durch `esc` (§19). */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/staatskunde-trainer.ts (npm run bauen:ts). */
 const StaatskundeTrainer = (() => {
     const BOXEN = 5;
     const ABSTAND_TAGE = [0, 1, 3, 7, 14];
     const RUNDE_HOECHSTENS = 20;
-    const NOCHMAL_NACH = 3; /* eine falsche Aufgabe kommt nach so vielen anderen wieder */
+    const NOCHMAL_NACH = 3;
     const NOCHMAL_HOECHSTENS = 2;
     const SPEICHER_SCHLUESSEL = 'staatskunde-trainer';
     const esc = (wert) => String(wert ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    /* Der Tag als `JJJJ-MM-TT` in der Ortszeit — Vergleich als Zeichenkette reicht. */
     const tagVon = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const heute = () => tagVon(new Date());
     const tagPlus = (tage) => { const d = new Date(); d.setDate(d.getDate() + tage); return tagVon(d); };
-    /* Vorläufig: der Speicher der Seite selbst. Redion bringt später das Meta-Fach. */
     const lokalerSpeicher = {
         lesen: () => {
             try {
@@ -52,12 +26,11 @@ const StaatskundeTrainer = (() => {
         schreiben: f => { try {
             localStorage.setItem(SPEICHER_SCHLUESSEL, JSON.stringify(f));
         }
-        catch { /* voll oder gesperrt */ } }
+        catch { } }
     };
     const leer = () => ({ karten: {}, runden: 0 });
     const standVon = (f, id) => f.karten[id] ?? { box: 1, richtig: 0, falsch: 0, faellig: heute(), zuletzt: '' };
     const istFaellig = (f, id) => standVon(f, id).faellig <= heute();
-    /* Nachsichtiger Vergleich für die Lücke: Gross/klein, Umlaute, Satzzeichen, Leerraum. */
     const normal = (s) => String(s || '').toLowerCase()
         .replace(/ß/g, 'ss').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
         .replace(/[^a-z0-9]+/g, ' ').trim();
@@ -69,7 +42,6 @@ const StaatskundeTrainer = (() => {
         }
         return b;
     };
-    /** Die Runde: fällige zuerst (schwächste Box vorn), dann die schwächsten nicht fälligen. */
     const warteschlange = (f, aufgaben, hoechstens = RUNDE_HOECHSTENS) => {
         const nachBox = (a) => standVon(f, a.id).box;
         const faellig = mischen(aufgaben.filter(a => istFaellig(f, a.id))).sort((a, b) => nachBox(a) - nachBox(b));
@@ -85,7 +57,6 @@ const StaatskundeTrainer = (() => {
     };
     const themaName = (id) => StaatskundeInhalt.THEMEN.find(t => t.id === id)?.name ?? id;
     const artName = (a) => a.art === 'mc' ? 'Multiple Choice' : a.art === 'schreiben' ? 'Schreiben' : 'Lücke';
-    /* ── Aufbau ─────────────────────────────────────────────────────────────── */
     const mount = (wurzel, speicher = lokalerSpeicher) => {
         let f = speicher.lesen() ?? leer();
         if (!f.karten || typeof f.karten !== 'object')
@@ -128,7 +99,6 @@ const StaatskundeTrainer = (() => {
           <p class="sk-klein">${knopf('Fortschritt zurücksetzen', 'sk-leise', 'data-a="reset"')} · ${pruefung.length} Prüfungsfragen</p>
         </section>`;
         };
-        /* ── Die Runde ─────────────────────────────────────────────────────────── */
         const runde = (aufgaben, name) => {
             const schlange = aufgaben.slice();
             const nochmal = {};
@@ -165,7 +135,6 @@ const StaatskundeTrainer = (() => {
                     richtigZahl++;
                 else
                     falschZahl++;
-                /* Was man nicht wusste, kommt nach drei anderen noch einmal — höchstens zweimal. */
                 if (!richtig && name !== 'pruefung' && (nochmal[a.id] ?? 0) < NOCHMAL_HOECHSTENS) {
                     nochmal[a.id] = (nochmal[a.id] ?? 0) + 1;
                     schlange.splice(Math.min(schlange.length, i + 1 + NOCHMAL_NACH), 0, a);
@@ -312,7 +281,6 @@ const StaatskundeTrainer = (() => {
                 return alle.filter(a => a.art === name.slice(4));
             return alle;
         };
-        /* Tasten: 1–4 wählen, Enter prüft oder geht weiter, J/N bewerten die Schreibaufgabe. */
         wurzel.addEventListener('keydown', e => {
             const ziel = e.target;
             const imText = ziel instanceof HTMLTextAreaElement;

@@ -1,40 +1,5 @@
 "use strict";
-/* ============================================================================
- * core/helpers/ids.ts — Kennungen erzeugen und lesen
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/core/helpers/ids.ts`. `npm run bauen:ts` schreibt
- * daraus `quell/core/helpers/ids.js`. Wer das .js bearbeitet, verliert die
- * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
- * vorher.
- * ----------------------------------------------------------------------------
- * Eine Kennung ist das Einzige an einem Satz, das sich nie ändern darf. Der
- * Titel wird umbenannt, der Ort verschoben, der Inhalt ersetzt — die Kennung
- * bleibt, sonst reisst jeder Verweis darauf.
- *
- * Deshalb steht sie hier und nicht in fünf Dateien verstreut. Vorher stand
- * derselbe Dreizeiler an drei Stellen; wenn eine davon nachgezogen wird und
- * die anderen nicht, entstehen zwei Sorten Kennungen im selben Bestand.
- *
- * Drei Formen, jede mit einem Grund:
- *
- *   long()      UUID — für alles, was gespeichert wird. Kollisionsfrei genug,
- *               dass zwei Geräte ohne Absprache Kennungen vergeben dürfen.
- *   short(n)    für Spaltenschlüssel und Ähnliches, wo die Kennung im JSON
- *               tausendfach vorkommt und Länge wirklich Platz kostet.
- *   readable()  für Codes, die ein Mensch abtippt — ohne 0/O und 1/I/l.
- *
- * ─── SPRACHE ────────────────────────────────────────────────────────────────
- *
- * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27. Diese Datei
- * ist die erste, bei der auch die **öffentliche** Schnittstelle umgestellt
- * wurde: aus `Kennungen.lang()` wurde `Ids.long()`.
- *
- * Das war vertretbar, weil es gemessen nur fünfzehn Aufrufe in drei Dateien
- * waren — nicht die verbotene Massenumbenennung, sondern der Fall „im Rahmen
- * einer geplanten Migration". Bei einem Modul mit hundert Aufrufern wäre die
- * Antwort eine andere gewesen.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/ids.ts (npm run bauen:ts). */
 const Ids = (() => {
     function randomHex(n) {
         if (self.crypto && crypto.getRandomValues) {
@@ -47,32 +12,18 @@ const Ids = (() => {
             s += Math.random().toString(16).slice(2);
         return s.slice(0, n);
     }
-    /** Die volle Form. Wird gespeichert, wandert im Abgleich, steht in Links. */
     const long = () => (self.crypto && crypto.randomUUID)
         ? crypto.randomUUID()
         : randomHex(8) + '-' + randomHex(4) + '-4' + randomHex(3) + '-' +
-            /* Die Variante-Ziffer einer UUID4 ist 8, 9, a oder b — nicht beliebig.
-               `?? '8'` steht dort nur, weil `noUncheckedIndexedAccess` bei jedem
-               Indexzugriff `undefined` für möglich hält; hier kann es das nicht. */
             ('89ab'[Math.floor(Math.random() * 4)] ?? '8') +
             randomHex(3) + '-' + randomHex(12);
-    /** Kurz, aber immer noch zufällig. Für Spaltenschlüssel.
-     *
-     * NIE REIN NUMERISCH. Ein Schlüssel wie „12345" ist für JavaScript ein
-     * Integer-Schlüssel und wandert in `Object.keys` VOR alle String-Schlüssel
-     * — eine so benannte Spalte stünde immer ganz links, egal wo sie
-     * eingefügt wurde. Bei fünf Hex-Zeichen trifft das 9,6 % aller Schlüssel,
-     * bei vieren 15 % (gemessen, E96). Beginnt der Schnipsel mit einer
-     * Ziffer, wird sie deterministisch auf a–f abgebildet. */
     const short = (n = 5) => {
         const roh = long().replace(/-/g, '').slice(0, n);
         return /^[0-9]/.test(roh)
             ? ('abcdef'[roh.charCodeAt(0) % 6] ?? 'a') + roh.slice(1)
             : roh;
     };
-    /* Ohne 0/O und 1/I/L — die verwechselt jeder beim Abtippen. */
     const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-    /** Ein Code zum Vorlesen und Eintippen, z. B. „K7M2-QW9F". */
     const readable = (length = 8, group = 4) => {
         let s = '';
         for (let i = 0; i < length; i++) {
@@ -82,9 +33,6 @@ const Ids = (() => {
         }
         return s;
     };
-    /* --- Notions Schreibweisen ---------------------------------------------
-       Die Schnittstelle bekommt Kennungen mal mit, mal ohne Striche. Beides
-       meint dasselbe, und beides muss verglichen werden können. */
     const withoutDashes = (id) => String(id || '').replace(/-/g, '');
     const withDashes = (id) => {
         const s = withoutDashes(id);
@@ -94,9 +42,7 @@ const Ids = (() => {
             s.slice(16, 20) + '-' + s.slice(20);
     };
     const equal = (a, b) => withoutDashes(a).toLowerCase() === withoutDashes(b).toLowerCase();
-    /** Sieht das überhaupt nach einer Kennung aus? */
     const isValid = (id) => /^[0-9a-f]{32}$/i.test(withoutDashes(id));
-    /** Die Kennung aus einer Adresse herausschneiden. */
     const fromUrl = (text) => {
         const t = String(text || '');
         const m = t.match(/[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/i);

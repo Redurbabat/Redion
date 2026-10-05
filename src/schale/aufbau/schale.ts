@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/schale.ts (npm run bauen:ts). */
 /* ============================================================================
  * app.js — Die Anwendung
  * ----------------------------------------------------------------------------

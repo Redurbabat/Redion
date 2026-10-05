@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/textur.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/bedienung/textur.ts — die eine Rauschtextur, genau einmal definiert
  * ----------------------------------------------------------------------------

@@ -1,46 +1,18 @@
 "use strict";
-/* ============================================================================
- * vorlagen.js — Die Vorlagengalerie
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/vorlagen/daten.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/vorlagen/daten.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Fertige Aufbauten, die man mit einem Klick anlegt. Zwei davon kommen
- * wörtlich aus der Dokumentation:
- *
- *   Habit-Tracker   Teil 12 — die reparierte 100-Punkte-Formel
- *   Fitness-OS      Teil 16 — zehn verknüpfte Datenbanken
- *
- * Dazu einige, die man ständig braucht: Projekte, Lesetagebuch,
- * Wissensdatenbank, Wochenplan.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/vorlagen/daten.ts (npm run bauen:ts). */
 const Galerie = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const heute = () => new Date().toISOString().slice(0, 10);
     const inTagen = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
-    /* Kurzschreibweise für Auswahloptionen */
     const opt = (...paare) => paare.map(([name, color]) => ({ name, color }));
-    /* Eine Ansicht anlegen und gleich einrichten. `addView` gibt `null`
-       zurück, wenn es die Sammlung nicht gibt — dann gibt es auch nichts
-       einzustellen. Vorher stand an neun Stellen `Store.updateView(x.id, …)`
-       direkt hinter dem `addView`, ohne dazwischen zu prüfen. */
     const sicht = (collectionId, layout, name, patch) => {
         const v = Store.addView(collectionId, layout, name);
         if (v)
             Store.updateView(v.id, patch);
         return v;
     };
-    /* ========================================================================
-     * 1. HABIT-TRACKER   (Teil 12)
-     * ======================================================================*/
     const habitTracker = () => {
         const p = Store.addPage(null, { text: 'Habit-Tracker', icon: '📊' });
         Store.addBlock(p.id, 'h1', { text: 'Täglich eintragen, monatlich auswerten' });
@@ -86,7 +58,6 @@ const Galerie = (() => {
             notiz: { name: 'Notizen', type: 'text' }
         };
         const { collectionId } = Store.addDatabase(p.id, 'Tagesdaten', schema, 'table');
-        /* Sechs Ansichten wie im Bauplan */
         sicht(collectionId, 'table', 'Heute', { filters: { operator: 'and', rules: [{ key: 'dt', op: 'ist heute', wert: '' }] } });
         sicht(collectionId, 'table', 'Echte Tage', {
             filters: { operator: 'and', rules: [{ key: 'voll', op: 'ist aktiviert', wert: '' }] },
@@ -102,7 +73,6 @@ const Galerie = (() => {
             sorts: [{ key: 'dt', richtung: 'ab' }]
         });
         sicht(collectionId, 'chart', 'Körper', { chartGruppe: 'woche', chartWert: 'gew', chartTyp: 'line' });
-        /* Drei Beispieltage, damit man sofort etwas sieht */
         [[0, true, true, true, 2.4, 8, 2100, 78.5, 8],
             [-1, false, true, false, 1.2, 6.5, 2600, 78.8, 6],
             [-2, true, false, true, 2.0, 7.5, 2200, 78.6, 7]].forEach(([tag, gym, fit, les, was, sch, kcal, gew, sel]) => {
@@ -119,9 +89,6 @@ const Galerie = (() => {
             .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
         return p;
     };
-    /* ========================================================================
-     * 2. FITNESS-OS   (Teil 16)
-     * ======================================================================*/
     const fitnessOS = () => {
         const p = Store.addPage(null, { text: 'Fitness-OS', icon: '🏋️' });
         Store.addBlock(p.id, 'h1', { text: 'Zehn Datenbanken, die zusammenspielen' });
@@ -134,7 +101,6 @@ const Galerie = (() => {
             Store.addBlock(p.id, 'h2', { text: icon + ' ' + name });
             return Store.addDatabase(p.id, name, schema, layout || 'table');
         };
-        /* --- Stammdaten ---------------------------------------------------- */
         const uebung = db('Übungen-Katalog', '🏋️', {
             title: { name: 'Übung', type: 'title' },
             mg: { name: 'Muskelgruppe', type: 'select', options: opt(['Brust', 'red'], ['Rücken', 'blue'], ['Beine', 'green'], ['Schultern', 'orange'], ['Arme', 'purple'], ['Bauch', 'yellow'], ['Ganzkörper', 'gray']) },
@@ -144,7 +110,6 @@ const Galerie = (() => {
             ersatz: { name: 'Ersatzübung', type: 'relation' },
             hinweis: { name: 'Ausführung', type: 'text' }
         });
-        /* Selbstverknüpfung — Ersatzübung zeigt auf dieselbe Datenbank */
         const uc = Store.getCollection(uebung.collectionId);
         uc.schema.ersatz.ziel = uebung.collectionId;
         Store.updateCollection(uc.id, { schema: uc.schema });
@@ -158,7 +123,6 @@ const Galerie = (() => {
             fett: { name: 'Fett pro 100g', type: 'number' },
             ampel: { name: 'Bewertung', type: 'select', options: opt(['Top', 'green'], ['Okay', 'yellow'], ['Selten', 'red']) }
         });
-        /* --- Tagesbilanz als Drehscheibe ------------------------------------ */
         const tag = db('Tagesbilanz', '📅', {
             title: { name: 'Tag', type: 'title' },
             dt: { name: 'Datum', type: 'date' },
@@ -175,7 +139,6 @@ const Galerie = (() => {
                     'if(prop("Tages-Score") > 0, "🟠", "⚪")))' },
             balken: { name: 'Fortschritt', type: 'formula', formula: 'repeat("█", round(prop("Tages-Score") / 10)) + repeat("░", 10 - round(prop("Tages-Score") / 10))' }
         });
-        /* --- Training -------------------------------------------------------- */
         const einheit = db('Trainingseinheiten', '💪', {
             title: { name: 'Einheit', type: 'title' },
             dt: { name: 'Datum', type: 'date' },
@@ -198,7 +161,6 @@ const Galerie = (() => {
             intensitaet: { name: 'Intensität', type: 'formula', formula: 'if(prop("RPE") >= 9, "🔴 sehr hart", if(prop("RPE") >= 7, "🟠 hart", ' +
                     'if(prop("RPE") >= 5, "🟡 mittel", "🟢 locker")))' }
         });
-        /* --- Ernährung -------------------------------------------------------- */
         const mahlzeit = db('Mahlzeiten', '🍽', {
             title: { name: 'Mahlzeit', type: 'title' },
             dt: { name: 'Datum', type: 'date' },
@@ -210,7 +172,6 @@ const Galerie = (() => {
             kcal: { name: 'Kalorien', type: 'formula', formula: 'round(prop("Menge g") / 100 * prop("Kalorien je 100g"))' },
             tagRel: { name: 'Tagesbilanz', type: 'relation', ziel: tag.collectionId }
         });
-        /* --- Gewohnheiten und Körper ------------------------------------------ */
         const habit = db('Habit-Log', '✅', {
             title: { name: 'Gewohnheit', type: 'title' },
             dt: { name: 'Datum', type: 'date' },
@@ -244,7 +205,6 @@ const Galerie = (() => {
             schnitt: { name: 'Score-Schnitt', type: 'number' },
             fazit: { name: 'Fazit', type: 'text' }
         });
-        /* --- Beispieldaten ----------------------------------------------------- */
         const uebungen = [['Bankdrücken', 'Brust', 'Langhantel'], ['Kniebeuge', 'Beine', 'Langhantel'],
             ['Klimmzug', 'Rücken', 'Eigengewicht'], ['Schulterdrücken', 'Schultern', 'Kurzhantel']];
         const uIds = uebungen.map(([n, mg, g]) => {
@@ -285,10 +245,6 @@ const Galerie = (() => {
             const r = Store.addRow(habit.collectionId, { dt: heute(), erledigt: i < 4, kat: 'Gesundheit', tagRel: [tIds[0]] });
             Store.updateBlock(r.id, { text: n });
         });
-        /* --- Zwölf fertige Ansichten, jede mit gesetztem Filter --------------
-         * Teil 16 der Doku listet sie namentlich auf. Sie entstehen hier gleich
-         * mit, damit nach dem Anlegen nichts mehr eingestellt werden muss.
-         * -------------------------------------------------------------------*/
         const ansicht = (collectionId, layout, name, patch) => {
             const v = Store.addView(collectionId, layout, name);
             if (v && patch)
@@ -296,20 +252,16 @@ const Galerie = (() => {
             return v;
         };
         const regel = (key, op, wert) => ({ operator: 'and', rules: [{ key, op, wert: wert ?? '' }] });
-        /* Tagesbilanz */
         ansicht(tag.collectionId, 'calendar', 'Monatsübersicht', { dateKey: 'dt' });
         ansicht(tag.collectionId, 'chart', 'Score-Verlauf', { chartGruppe: 'dt', chartWert: 'score', chartArt: 'Durchschnitt', chartTyp: 'line', chartStufe: 'tag' });
         ansicht(tag.collectionId, 'table', 'Nur Trainingstage', { filters: regel('workout', 'ist aktiviert'), sorts: [{ key: 'dt', richtung: 'ab' }] });
         ansicht(tag.collectionId, 'table', 'Schwache Tage', { filters: regel('quote', 'kleiner als', '50'), sorts: [{ key: 'dt', richtung: 'ab' }] });
-        /* Training */
         ansicht(einheit.collectionId, 'board', 'Nach Art', { groupBy: 'art' });
         ansicht(einheit.collectionId, 'timeline', 'Trainingsplan', { startKey: 'dt' });
         ansicht(satz.collectionId, 'table', 'Harte Sätze', { filters: regel('rpe', 'größer oder gleich', '8'), sorts: [{ key: 'volumen', richtung: 'ab' }] });
         ansicht(satz.collectionId, 'chart', 'Volumen je Übung', { chartGruppe: 'uebRel', chartWert: 'volumen', chartArt: 'Summe', chartTyp: 'bar' });
-        /* Ernährung */
         ansicht(mahlzeit.collectionId, 'board', 'Tagesablauf', { groupBy: 'zeit' });
         ansicht(mahlzeit.collectionId, 'table', 'Heute gegessen', { filters: regel('dt', 'ist heute'), calc: { kcal: 'Summe' } });
-        /* Gewohnheiten */
         ansicht(habit.collectionId, 'table', 'Offen', { filters: regel('erledigt', 'ist nicht aktiviert'), sorts: [{ key: 'dt', richtung: 'ab' }] });
         ansicht(habit.collectionId, 'chart', 'Quote je Bereich', { chartGruppe: 'kat', chartWert: 'erledigt', chartArt: 'Prozent aktiviert', chartTyp: 'bar' });
         Store.addBlock(p.id, 'h2', { text: 'Wie alles zusammenhängt' });
@@ -321,9 +273,6 @@ const Galerie = (() => {
             .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
         return p;
     };
-    /* ========================================================================
-     * 3. WEITERE VORLAGEN
-     * ======================================================================*/
     const projekte = () => {
         const p = Store.addPage(null, { text: 'Projekte', icon: '🚀' });
         Store.addBlock(p.id, 'h1', { text: 'Was gerade läuft' });
@@ -347,12 +296,6 @@ const Galerie = (() => {
         Store.addView(collectionId, 'calendar', 'Kalender');
         return p;
     };
-    /* ========================================================================
-     * MUSIK-APP   (Teil 2, Kapitel 4)
-     * ------------------------------------------------------------------------
-     * Zwei Datenbanken: Song-Bibliothek und Playlists, mit den vier Ansichten
-     * aus der Dokumentation.
-     * ======================================================================*/
     const musik = () => {
         const p = Store.addPage(null, { text: 'Musik', icon: '🎵' });
         Store.addBlock(p.id, 'h1', { text: 'Nach Stimmung sortiert, nicht nach Alphabet' });
@@ -375,7 +318,6 @@ const Galerie = (() => {
             link: { name: 'Link', type: 'url' },
             pl: { name: 'Playlist', type: 'select', options: opt(['🏋️ Gym Power', 'red'], ['🌙 Abends chillen', 'blue'], ['📚 Lernen & Fokus', 'purple'], ['🚗 Autofahrt', 'orange']) }
         }, 'table');
-        /* Die vier Ansichten aus der Doku */
         sicht(song.collectionId, 'board', 'Nach Stimmung', { groupBy: 'st' });
         Store.addView(song.collectionId, 'gallery', 'Galerie');
         sicht(song.collectionId, 'list', 'Playlist-Liste', { sorts: [{ key: 'pl', richtung: 'auf' }] });
@@ -419,12 +361,6 @@ const Galerie = (() => {
             .forEach(t => Store.addBlock(p.id, 'bullet', { text: t }));
         return p;
     };
-    /* ========================================================================
-     * PERSÖNLICHE ANALYSE   (Teil 2, Kapitel 5)
-     * ------------------------------------------------------------------------
-     * Der tägliche Check-in mit 16 Spalten, zwei Ansichten und der
-     * Auswertung, die in der Doku auf der Seite steht.
-     * ======================================================================*/
     const analyse = () => {
         const p = Store.addPage(null, { text: 'Persönliche Analyse', icon: '📊' });
         Store.addBlock(p.id, 'callout', {
@@ -458,7 +394,6 @@ const Galerie = (() => {
             notiz: { name: 'Notiz', type: 'text' }
         }, 'table');
         sicht(check.collectionId, 'board', 'Nach Bewertung', { groupBy: 'stimmung' });
-        /* Die Beispielwoche aus der Doku */
         [['Montag', 7.5, 8, '🙂 Gut', 2.4, 9200, 1, 1, 1, 0, 4.0],
             ['Dienstag', 8.0, 9, '😄 Super', 2.8, 11400, 1, 1, 1, 1, 3.0],
             ['Mittwoch', 6.0, 6, '😐 Neutral', 1.9, 7800, 1, 1, 1, 0, 5.0],
@@ -544,13 +479,6 @@ const Galerie = (() => {
         });
         return p;
     };
-    /* ========================================================================
-     * BAUPLAN — zeigt, was Redion mehr kann als Notion
-     * ------------------------------------------------------------------------
-     * Ein echtes Bauprojekt: Aufgaben mit Abhängigkeiten, ein Board mit Bahnen,
-     * eine Kreuztabelle über Gewerk × Status und ein Zeitstrahl mit Pfeilen.
-     * Wer diese Vorlage anlegt, sieht in einer Minute alles Wesentliche.
-     * ======================================================================*/
     const bauplan = () => {
         const p = Store.addPage(null, { text: 'Bauplan', icon: '🏗' });
         Store.addBlock(p.id, 'h1', { text: 'Ein Projekt, sechs Blickwinkel' });
@@ -569,11 +497,9 @@ const Galerie = (() => {
             kosten: { name: 'Kosten', type: 'number' },
             vor: { name: 'Hängt ab von', type: 'relation', ziel: null }
         }, 'timeline');
-        /* Selbstverknüpfung — daraus entstehen die Pfeile im Zeitstrahl */
         const c = Store.getCollection(collectionId);
         c.schema.vor.ziel = collectionId;
         c.schema.vor.limit = 0;
-        /* Statusübergänge: rückwärts von Fertig auf Offen ist nicht vorgesehen */
         c.schema.st.uebergaenge = { 'Offen': ['In Arbeit'],
             'In Arbeit': ['Fertig', 'Offen'],
             'Fertig': ['In Arbeit'] };
@@ -599,7 +525,6 @@ const Galerie = (() => {
             Store.updateBlock(r.id, { text: t });
             ids[t] = r.id;
         });
-        /* Der Zeitstrahl weiss, welche Spalten er nehmen soll */
         const zs = Object.values(Store.cache.views).find(v => v.collectionId === collectionId);
         Store.updateView(zs.id, { name: 'Zeitstrahl', startKey: 'von', endeKey: 'bis',
             abhKey: 'vor', zoom: 'monat', limit: 0 });
@@ -622,9 +547,6 @@ const Galerie = (() => {
             .forEach(([a, b]) => Store.addBlock(p.id, 'bullet', { text: '**' + a + '** — ' + b }));
         return p;
     };
-    /* ========================================================================
-     * REDAKTIONSPLAN — Formular, Automation und Wiedervorlage
-     * ======================================================================*/
     const redaktion = () => {
         const p = Store.addPage(null, { text: 'Redaktionsplan', icon: '✍' });
         Store.addBlock(p.id, 'h1', { text: 'Von der Idee bis zum Beitrag' });
@@ -689,13 +611,6 @@ const Galerie = (() => {
             .forEach(([a, b]) => Store.addBlock(p.id, 'bullet', { text: '**' + a + '** — ' + b }));
         return p;
     };
-    /* ========================================================================
-     * AUSBILDUNG — normale Seiten und Datenbanken, idempotent und additiv
-     * ------------------------------------------------------------------------
-     * Keine Person, Schule oder Notenskala ist fest eingebaut. Beim zweiten
-     * Aufruf werden vorhandene Bausteine gefunden; nichts wird umbenannt,
-     * verschoben oder ueberschrieben (E128/E129).
-     * ======================================================================*/
     const ausbildung = () => {
         const blocks = Object.values(Store.cache.blocks);
         let p = blocks.find(b => b.type === 'page' && b.alive !== false &&
@@ -800,11 +715,6 @@ const Galerie = (() => {
             source: { name: 'Quelle / Seitenlink', type: 'text' },
             status: { name: 'Stand', type: 'status', options: opt(['Neu', 'gray'], ['In Arbeit', 'yellow'], ['Gelernt', 'green']) }
         });
-        /* Der Stundenplan (E243/L70): Zeiten als Text „08:15", weil sie so
-           getippt werden, wie sie auf dem Papierplan stehen. Die Wochenansicht
-           in der Lernwelt liest Tag und Zeit tolerant. Läuft die Vorlage auf
-           einem Bestand erneut, ergänzt `ensureDatabase` NUR diese Datenbank —
-           vorhandene Fächer, Noten und Prüfungen bleiben unangetastet. */
         ensureDatabase('timetable', 'Stundenplan', {
             title: { name: 'Lektion', type: 'title' },
             day: { name: 'Tag', type: 'select', options: opt(['Montag', 'blue'], ['Dienstag', 'green'], ['Mittwoch', 'orange'], ['Donnerstag', 'purple'], ['Freitag', 'red'], ['Samstag', 'gray']) },
@@ -814,11 +724,6 @@ const Galerie = (() => {
             room: { name: 'Raum', type: 'text' },
             note: { name: 'Hinweis', type: 'text' }
         });
-        /* Hausaufgaben und Lernziele (E256): die zwei Poster-Zeilen der
-           Schulsäule, die noch fehlten. Beide hängen am Fach — die Lernwelt
-           zeigt sie im Schul-Dashboard und auf der Fachseite. Läuft die
-           Vorlage auf einem Bestand erneut, ergänzt `ensureDatabase` nur,
-           was fehlt (dasselbe Versprechen wie beim Stundenplan). */
         ensureDatabase('homework', 'Hausaufgaben', {
             title: { name: 'Aufgabe', type: 'title' },
             subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
@@ -840,9 +745,6 @@ const Galerie = (() => {
         Store.updateBlock(p.id, { schoolRoot: true, systemRole: 'school-root', vorlage: 'ausbildung' });
         return p;
     };
-    /* ========================================================================
-     * DIE GALERIE
-     * ======================================================================*/
     const VORLAGEN = [
         { id: 'ausbildung', icon: '🎓', name: 'Ausbildung',
             text: 'Fächer, Prüfungen, Noten, Berichtsheft, Lernmaterial und mobiler Eingang. Additiv und ohne fest eingebaute Person oder Notenskala.',
@@ -915,7 +817,6 @@ const Galerie = (() => {
             UI.toast('„' + v.name + '" angelegt');
         });
     };
-    /** Eine Vorlage anlegen, ohne die Galerie zu öffnen. */
     const bauen = (id) => {
         const v = VORLAGEN.find(x => x.id === id);
         return v ? v.bauen() : null;

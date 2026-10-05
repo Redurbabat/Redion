@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/ansicht/aussehen.ts (npm run bauen:ts). */
 /* ============================================================================
  * aussehen.js — Aussehen und Tastenkürzel selbst bestimmen
  * ----------------------------------------------------------------------------

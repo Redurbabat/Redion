@@ -1,50 +1,9 @@
 "use strict";
-/* ============================================================================
- * verbindungen.js — Anbindung an fremde Dienste
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/verbinden/konten.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/verbinden/konten.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Hier laufen alle Verbindungen nach draussen zusammen: Google (Kalender,
- * Mail, Profil), GitHub, Jira, beliebige ICS-Kalender und eigene Server.
- *
- * WIE DAS OHNE SERVER GEHT
- *   Google erlaubt Browser-Programmen den sogenannten Token-Fluss: ein
- *   Fenster geht auf, du meldest dich bei Google an, Google schickt einen
- *   Zugangsschlüssel zurück. Dafür braucht es kein Geheimnis und keinen
- *   eigenen Server — nur eine eigene Kennung (Client-ID), die du dir einmal
- *   kostenlos in der Google Cloud Console anlegst.
- *
- * WAS DU EINMAL TUN MUSST   (steht auch in den Einstellungen)
- *   1. console.cloud.google.com öffnen, Projekt anlegen
- *   2. „APIs & Dienste → Anmeldedaten → OAuth-Client-ID → Webanwendung"
- *   3. Als autorisierten JavaScript-Ursprung und als Weiterleitungs-URI
- *      die Adresse eintragen, unter der diese App läuft
- *      (zum Beispiel http://localhost:8080)
- *   4. Die Client-ID hier in den Einstellungen einfügen
- *   5. Unter „APIs & Dienste → Bibliothek" Google Calendar API und
- *      Gmail API aktivieren
- *
- * WICHTIG: Der Token-Fluss braucht eine echte Adresse. Aus einer Datei
- * (file://) heraus geht es nicht — dann muss die App über einen kleinen
- * lokalen Server laufen. Ein Doppelklick auf „start.bat" reicht dafür.
- *
- * Alle Schlüssel bleiben in diesem Browser und gehen nur an den jeweiligen
- * Dienst — an sonst niemanden.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/konten.ts (npm run bauen:ts). */
 const Verbindungen = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    /* ------------------------------------------------------------------------
-     * DIENSTE
-     * ----------------------------------------------------------------------*/
     const DIENSTE = [
         { id: 'google', name: 'Google', icon: '🔵',
             was: 'Kalender, Gmail und dein Profil',
@@ -65,8 +24,6 @@ const Verbindungen = (() => {
             art: 'url',
             hinweis: 'Die Adresse steht beim Anbieter unter „Kalender veröffentlichen" oder „Geheime Adresse".' }
     ];
-    /* Die Rechte, die wir bei Google anfragen. Weniger geht nicht, mehr braucht
-       es nicht. Wer nur den Kalender will, schaltet Gmail in den Einstellungen ab. */
     const GOOGLE_RECHTE = {
         profil: 'openid email profile',
         kalender: 'https://www.googleapis.com/auth/calendar.events ' +
@@ -74,24 +31,10 @@ const Verbindungen = (() => {
         mail: 'https://www.googleapis.com/auth/gmail.readonly ' +
             'https://www.googleapis.com/auth/gmail.modify'
     };
-    /* ------------------------------------------------------------------------
-     * HILFSMITTEL
-     * ----------------------------------------------------------------------*/
     const wert = (k, f = '') => Store.getMeta('verb:' + k, f);
-    /*  gehört zum Paar mit  und wird von aussen gebraucht — es
-       steht im Rückgabeobjekt unten. */
-    /** Läuft die App über eine echte Adresse? Aus einer Datei geht kein OAuth. */
     const echteAdresse = () => location.protocol === 'http:' || location.protocol === 'https:';
-    /**
-     * Manche Dienste erlauben keinen Zugriff direkt aus dem Browser.
-     * Wer eine Brücke hat (eigener kleiner Server), trägt sie ein; sonst
-     * bleibt es bei einer klaren Fehlermeldung statt eines stummen Abbruchs.
-     */
     const bruecke = (url) => {
         let b = wert('proxy', '');
-        /* Läuft die App auf einem Server, liegt die Brücke gleich daneben:
-           Cloudflare Pages führt functions/api/bruecke.js von selbst aus.
-           Wer etwas anderes einträgt, hat weiterhin Vorrang. */
         if (!b && echteAdresse())
             b = location.origin + '/api/bruecke?ziel={url}';
         if (!b)
@@ -99,7 +42,6 @@ const Verbindungen = (() => {
         return b.includes('{url}') ? b.replace('{url}', encodeURIComponent(url))
             : b.replace(/\/$/, '') + '/' + url;
     };
-    /** Ein Fetch mit Wiederholung, Token im Kopf und verständlichem Fehler. */
     const ruf = async (url, opt = {}) => {
         const kopf = Object.assign({}, opt.headers || {});
         if (opt.token)
@@ -129,25 +71,16 @@ const Verbindungen = (() => {
         return { hostname: u };
     } };
     const jsonRuf = async (url, opt) => (await ruf(url, opt)).json();
-    /* ========================================================================
-     * GOOGLE — ANMELDUNG IM TOKEN-FLUSS
-     * ======================================================================*/
     const googleId = () => Store.getMeta('api:googleClientId', '');
-    /** Der Zugangsschlüssel samt Ablaufzeit. */
     const googleToken = () => {
         const t = Store.getMeta('google:token', null);
         if (!t || !t.zugang)
             return null;
         if (t.bis && Date.now() > t.bis - 60000)
-            return null; /* eine Minute Puffer */
+            return null;
         return t;
     };
     const googleAbgemeldet = () => Store.setMeta('google:token', null);
-    /**
-     * Öffnet Googles Anmeldefenster und wartet auf den Zugangsschlüssel.
-     * Kein Geheimnis, kein Server — Google schickt den Schlüssel an genau die
-     * Adresse zurück, die in der Cloud Console hinterlegt ist.
-     */
     const googleFragen = (rechte) => new Promise((ok, fehler) => {
         const id = googleId();
         if (!id) {
@@ -207,7 +140,6 @@ const Verbindungen = (() => {
             }
         }, 700);
     });
-    /** Liefert einen gültigen Schlüssel — fragt nur, wenn nötig. */
     const googleZugang = async (bereiche = ['profil', 'kalender']) => {
         const da = googleToken();
         const gebraucht = bereiche.map(b => GOOGLE_RECHTE[b]).filter(Boolean).join(' ');
@@ -220,7 +152,6 @@ const Verbindungen = (() => {
         const neu = await googleFragen(gebraucht);
         return neu.zugang;
     };
-    /** Anmelden und das Profil holen — Name und E-Mail kommen von Google. */
     const googleAnmelden = async () => {
         const token = await googleZugang(['profil']);
         const p = await jsonRuf('https://www.googleapis.com/oauth2/v3/userinfo', { token });
@@ -228,9 +159,6 @@ const Verbindungen = (() => {
         return p;
     };
     const googleProfil = () => Store.getMeta('google:profil', null);
-    /* ========================================================================
-     * GITHUB
-     * ======================================================================*/
     const githubToken = () => Store.getMeta('api:github', '');
     const githubRuf = (pfad, opt = {}) => jsonRuf(pfad.startsWith('http') ? pfad : 'https://api.github.com' + pfad, Object.assign({ token: githubToken(),
         headers: { 'Accept': 'application/vnd.github+json',
@@ -239,9 +167,6 @@ const Verbindungen = (() => {
         const u = await githubRuf('/user');
         return { name: u.login, voll: u.name || u.login };
     };
-    /* ========================================================================
-     * JIRA
-     * ======================================================================*/
     const jiraRuf = (pfad) => {
         const basis = Store.getMeta('api:jiraUrl', '').replace(/\/$/, '');
         const mail = Store.getMeta('api:jiraMail', '');
@@ -254,9 +179,6 @@ const Verbindungen = (() => {
             ueberBruecke: true
         });
     };
-    /* ========================================================================
-     * ZUSTAND — was ist verbunden?
-     * ======================================================================*/
     const zustand = () => {
         const g = googleToken();
         const gp = googleProfil();
@@ -271,9 +193,6 @@ const Verbindungen = (() => {
             bruecke: wert('proxy', '')
         };
     };
-    /* ========================================================================
-     * DER EINRICHTUNGSDIALOG
-     * ======================================================================*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -293,7 +212,6 @@ const Verbindungen = (() => {
                         'von einer echten Adresse zu. Starte <b>start.bat</b> im App-Ordner und öffne ' +
                         '<b>http://localhost:8080</b> — dann geht alles.</div>'
                     : '') +
-                    /* Google */
                     '<div class="verb-karte">' +
                     '<div class="verb-kopf"><span>🔵</span><b>Google</b>' +
                     `<span class="verb-status ${z.google.verbunden ? 'an' : ''}">` +
@@ -324,7 +242,6 @@ const Verbindungen = (() => {
                     '„Zielgruppe → Testnutzer" eintragen.</p>' +
                     '</details>' +
                     '</div>' +
-                    /* GitHub */
                     '<div class="verb-karte">' +
                     '<div class="verb-kopf"><span>🐙</span><b>GitHub</b>' +
                     `<span class="verb-status ${z.github.verbunden ? 'an' : ''}">` +
@@ -337,7 +254,6 @@ const Verbindungen = (() => {
                     '<div class="verb-knoepfe"><button data-a="gh-test">Prüfen</button>' +
                     '<button data-a="gh-hol">Issues holen</button></div>' +
                     '</div>' +
-                    /* Jira */
                     '<div class="verb-karte">' +
                     '<div class="verb-kopf"><span>🟦</span><b>Jira</b>' +
                     `<span class="verb-status ${z.jira.verbunden ? 'an' : ''}">` +
@@ -353,7 +269,6 @@ const Verbindungen = (() => {
                     `value="${esc(Store.getMeta('api:jiraProjekt', ''))}" placeholder="ABC"></label>` +
                     '<div class="verb-knoepfe"><button data-a="ji-hol">Vorgänge holen</button></div>' +
                     '</div>' +
-                    /* Brücke */
                     '<div class="verb-karte">' +
                     '<div class="verb-kopf"><span>🌉</span><b>Brücke</b>' +
                     `<span class="verb-status ${z.bruecke ? 'an' : ''}">` +

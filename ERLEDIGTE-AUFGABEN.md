@@ -1,5 +1,44 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 3. Oktober 2026 · E715 · Der Start holt ein Drittel weniger
+
+**Redur:** am 27. September „… ohne eine funktione löschen …", am
+3. Oktober ca. 19:35 UTC „Weiter ohne pause,".
+
+**Gefunden:** Die zweite Welle (E708 bis E714) passte zusammen nicht unter
+die Startdecke von 2850 KB (`test388` §5; morgen-besser stand bei 2826).
+Gezählt: 1039 der 2826 KB waren Kommentare im erzeugten JavaScript — tsc
+liess sie stehen (`removeComments: false`).
+
+**Gebaut:** `removeComments: true` in `tsconfig.bauen.json`; `src/` behält
+jeden Kommentar. Jede der 227 Quellen beginnt mit einer Zeile
+`/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/… */`, die im `.js`
+stehen bleibt (`dienststand.mts` und `chronik.mts` schreiben sie selbst).
+`sw.js` behält seine Kommentare. Start 2826 → 1805 KB, Einzeldatei
+11,8 → 9,1 MB; die Decke sinkt auf 1950 KB.
+
+**Geprüft:** `test105` §3 jetzt für alle 227 erzeugten Dateien und
+`test388` §5 mit der neuen Decke, beide zuerst rot gegen 4d9a9a3fb;
+`test272` liest die Quelle. Jede erzeugte Datei ist Byte für Byte, was tsc
+aus den Quellen von 4d9a9a3fb ohne Kommentare macht (ausser der ersten
+Zeile); 34 Datei- und 103 Browserläufe, die `quell/` oder die Einzeldatei
+lesen, wie auf dem Grundstand (messungen §86). Nichts gelöscht, nichts
+später geladen.
+
+**Offen:** neue Quellen der zweiten Welle (`delete.ts`, `kacheln.ts`,
+`tropfen.ts`) bekommen die ERZEUGT-Zeile beim Zusammenführen; die
+Kommentare der Stilblätter (261 KB) bleiben — CSS ist Quelle.
+
+**Durchsicht (5. Oktober):** derselbe Code noch einmal, diesmal mit einem
+zweiten Parser (oxc): 226 von 227 Bäumen alt mit und neu ohne Kommentare
+gleich, `stand.js` im Stempel; die Zahlen selbst gezählt; 108 Bilder
+Grundstand gegen Zweig (index.html und Einzeldatei, Rechner und Telefon,
+zehn Schemata, „Ruhige Darstellung", Strg P, 13 Wege), kein Fehler.
+`test105` §3 verlangt jetzt auch die EIGENE Quelle in der Zeile; die
+Verweise auf E715 in E28, E389, E613, E688 und L216; README ohne den
+veralteten Satz „Ein Prüflauf ist rot (L146)"; `umzug.mts` setzt die
+Zeile selbst.
+
 ## 3. Oktober 2026 · E714 · Rot zuerst, vier Inseln
 
 **Redur:** am 3. Oktober „Weiter ohne pause"; dazu weiter vom 27. September

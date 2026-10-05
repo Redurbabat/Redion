@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/start.ts (npm run bauen:ts). */
 /* ============================================================================
  * start.js — der einzige Einstiegspunkt
  * ----------------------------------------------------------------------------

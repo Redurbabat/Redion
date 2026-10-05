@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/kopfleiste.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/aufbau/kopfleiste.js — alles über dem Inhalt
  * ----------------------------------------------------------------------------

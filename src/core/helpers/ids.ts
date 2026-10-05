@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/helpers/ids.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/helpers/ids.ts — Kennungen erzeugen und lesen
  * ----------------------------------------------------------------------------

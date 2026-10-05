@@ -1,64 +1,13 @@
 "use strict";
-/* ============================================================================
- * vorlagenfassung.js — Vorlagen als Programme, nicht als Fotokopien
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/vorlagen/dienst.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/vorlagen/dienst.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Idee 19 der 10000×-Liste: „Templates als echte Apps mit Versionen, Updates,
- * Migrationsskripten".
- *
- * Das Problem ist alt und in jedem Notion-Workspace zu besichtigen: man setzt
- * ein CRM-Template ein, arbeitet ein Jahr damit, und dann kommt eine bessere
- * Fassung heraus. Man kann sie **nur neu kopieren** — und steht dann vor zwei
- * Seiten: der neuen, die leer ist, und der alten, in der die Arbeit steckt.
- * Meistens bleibt die alte, und die Verbesserung bekommt niemand.
- *
- * Hier bekommt jede Vorlage eine **Fassungsnummer** und einen Weg von einer
- * Fassung zur nächsten. Eine eingesetzte Seite merkt sich, aus welcher
- * Vorlage und welcher Fassung sie stammt. Kommt eine neue Fassung, sagt
- * Redion es — und kann die Schritte anwenden, ohne die Daten anzufassen.
- *
- * Zwei Regeln, die das erst benutzbar machen:
- *
- *   1. **Nur hinzufügen, nie ersetzen.** Ein Migrationsschritt darf eine
- *      Spalte anlegen, eine Formel setzen, eine Ansicht dazustellen. Er darf
- *      nichts löschen und keine Zeile ändern. Wer sich nicht darauf verlassen
- *      kann, wendet keine Migration an.
- *
- *   2. **Was schon da ist, bleibt.** Hat jemand die Spalte selbst angelegt
- *      oder die Formel angepasst, wird sie in Ruhe gelassen und im Bericht
- *      als „war schon da" aufgeführt. Ein Update, das eigene Arbeit
- *      überschreibt, ist keines.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/vorlagen/dienst.ts (npm run bauen:ts). */
 const Fassung = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
-    /* ========================================================================
-     * 1 · WELCHE FASSUNG IST AKTUELL
-     * ------------------------------------------------------------------------
-     * Wer eine Vorlage verbessert, erhöht hier die Zahl und schreibt unten den
-     * Weg dorthin. Ohne Eintrag gilt Fassung 1 — dann gibt es nie ein Update,
-     * und das ist der richtige Vorgabewert.
-     * ======================================================================*/
     const FASSUNGEN = {
         habit: 2,
         projekte: 2
     };
     const jetzige = (id) => FASSUNGEN[id] || 1;
-    /* ========================================================================
-     * 2 · DIE WEGE VON EINER FASSUNG ZUR NÄCHSTEN
-     * ------------------------------------------------------------------------
-     * Jeder Schritt sagt, was er tut, in welcher Datenbank, und warum. Das
-     * „warum" steht nicht als Zierde da: es ist das, was im Fenster steht,
-     * bevor jemand auf „Anwenden" drückt.
-     * ======================================================================*/
     const MIGRATIONEN = {
         habit: [
             { nach: 2, was: 'Wochentag und eine Monatsauswertung',
@@ -91,10 +40,6 @@ const Fassung = (() => {
                 ] }
         ]
     };
-    /* ========================================================================
-     * 3 · WORAUS STAMMT DIESE SEITE?
-     * ======================================================================*/
-    /** Beim Anlegen vermerken. Ohne diesen Vermerk gibt es später kein Update. */
     const markiere = (seite, vorlageId) => {
         if (!seite || !seite.id)
             return seite;
@@ -105,21 +50,11 @@ const Fassung = (() => {
         });
         return seite;
     };
-    /** Alle Seiten, die aus einer Vorlage stammen. */
     const ausVorlagen = () => Object.values(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive !== false && b.vorlage);
-    /** Welche davon hinken hinterher? */
     const veraltet = () => ausVorlagen()
         .filter(b => (Number(b.vorlageFassung) || 1) < jetzige(b.vorlage))
         .map(b => ({ seite: b, von: Number(b.vorlageFassung) || 1, nach: jetzige(b.vorlage) }));
-    /* ========================================================================
-     * 4 · DIE DATENBANK ZU EINEM NAMEN FINDEN
-     * ------------------------------------------------------------------------
-     * Bewusst über den Namen und nicht über eine gemerkte Kennung: wer die
-     * Vorlage dupliziert oder eine Datenbank verschiebt, soll das Update
-     * trotzdem bekommen. Und wer sie umbenennt, bekommt einen ehrlichen
-     * Hinweis statt einer stillen Fehlanwendung.
-     * ======================================================================*/
     const sammlungIn = (seiteId, name) => {
         let treffer = null;
         const gehe = (id, tiefe = 0) => {
@@ -140,15 +75,6 @@ const Fassung = (() => {
         gehe(seiteId);
         return treffer;
     };
-    /* ========================================================================
-     * 5 · WAS EIN SCHRITT TÄTE — UND WAS ER TUT
-     * ======================================================================*/
-    /**
-     * @param {Object} schritt
-     * @param {string} seiteId
-     * @param {boolean} echt   false = nur schauen
-     * @returns {{stand:'neu'|'schon'|'fehlt'|'getan', text:string}}
-     */
     const schrittLaufen = (schritt, seiteId, echt) => {
         const coll = schritt.db ? sammlungIn(seiteId, schritt.db) : null;
         if (schritt.tun === 'hinweis')
@@ -157,7 +83,6 @@ const Fassung = (() => {
             return { stand: 'fehlt',
                 text: 'Die Datenbank „' + esc(schritt.db) + '" ist hier nicht (mehr) zu finden. ' +
                     'Wurde sie umbenannt, muss dieser Schritt von Hand gemacht werden.' };
-        /* --- Eine Spalte dazu ------------------------------------------------ */
         if (schritt.tun === 'spalteDazu') {
             const dasselbe = Object.entries(coll.schema)
                 .find(([k, d]) => k === schritt.key ||
@@ -173,7 +98,6 @@ const Fassung = (() => {
                 text: 'Spalte „' + esc(schritt.def.name) + '" in „' + esc(schritt.db) + '"' +
                     (schritt.def.type === 'formula' ? ' (Formel)' : '') };
         }
-        /* --- Eine Formel aktualisieren --------------------------------------- */
         if (schritt.tun === 'formel') {
             const def = coll.schema[schritt.key];
             if (!def)
@@ -191,7 +115,6 @@ const Fassung = (() => {
             return { stand: echt ? 'getan' : 'neu',
                 text: 'Formel von „' + esc(def.name) + '" wird erneuert' };
         }
-        /* --- Eine Auswahloption dazu ------------------------------------------ */
         if (schritt.tun === 'optionDazu') {
             const def = coll.schema[schritt.key];
             if (!def)
@@ -206,7 +129,6 @@ const Fassung = (() => {
             return { stand: echt ? 'getan' : 'neu',
                 text: 'Option „' + esc(schritt.option.name) + '" bei „' + esc(def.name) + '"' };
         }
-        /* --- Eine Ansicht dazu ------------------------------------------------ */
         if (schritt.tun === 'ansichtDazu') {
             const da = (coll.viewIds || []).map((id) => Store.getView(id))
                 .some((v) => v && (v.name || '') === schritt.name);
@@ -228,10 +150,6 @@ const Fassung = (() => {
         }
         return { stand: 'fehlt', text: 'Unbekannter Schritt: ' + esc(schritt.tun) };
     };
-    /* ========================================================================
-     * 6 · DER PLAN UND DAS ANWENDEN
-     * ======================================================================*/
-    /** Was würde geschehen? Ändert nichts. */
     const plan = (seiteId) => {
         const s = Store.getBlock(seiteId);
         if (!s || !s.vorlage)
@@ -247,7 +165,6 @@ const Fassung = (() => {
             schon: schritte.filter(x => x.stand === 'schon').length,
             fehlt: schritte.filter(x => x.stand === 'fehlt').length };
     };
-    /** Wirklich anwenden. Fasst keine einzige Zeile an. */
     const anwenden = (seiteId) => {
         const p = plan(seiteId);
         if (!p)
@@ -266,9 +183,6 @@ const Fassung = (() => {
         catch { }
         return { ...p, bericht };
     };
-    /* ========================================================================
-     * 7 · DAS FENSTER
-     * ======================================================================*/
     const ZEICHEN = { neu: '＋', schon: '·', fehlt: '⚠️', getan: '✓', hinweis: 'ℹ️' };
     const fenster = (seiteId) => {
         const p = plan(seiteId);
@@ -317,7 +231,6 @@ const Fassung = (() => {
         });
         return o;
     };
-    /** Ein Fenster über alle Seiten, die hinterherhinken. */
     const uebersicht = () => {
         const liste = veraltet();
         const o = document.createElement('div');
@@ -352,13 +265,6 @@ const Fassung = (() => {
         });
         return o;
     };
-    /* ========================================================================
-     * 8 · EINKLINKEN
-     * ------------------------------------------------------------------------
-     * Die Galerie soll davon nichts wissen müssen. Deshalb wird sie hier
-     * umwickelt statt umgeschrieben — jede neue Vorlage bekommt den Vermerk
-     * automatisch, ohne dass jemand daran denken muss.
-     * ======================================================================*/
     let eingeklinkt = false;
     const start = () => {
         if (eingeklinkt || typeof Galerie === 'undefined')
@@ -371,8 +277,6 @@ const Fassung = (() => {
         const echtBauen = Galerie.bauen;
         Galerie.bauen = (id) => {
             const s = echtBauen(id);
-            /* Der Umweg über VORLAGEN hat schon markiert — hier nur für den Fall,
-               dass jemand bauen() mit einer Kennung ruft, die dort nicht steht. */
             return (s && !s.vorlage) ? markiere(s, id) : s;
         };
     };

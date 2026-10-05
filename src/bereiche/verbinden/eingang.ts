@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/verbinden/eingang.ts (npm run bauen:ts). */
 /* ============================================================================
  * eingang.js — Was von aussen hereinkommt
  * ----------------------------------------------------------------------------

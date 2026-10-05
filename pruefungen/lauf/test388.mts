@@ -273,14 +273,52 @@ p('`bauen.mts` bricht wirklich ab, wenn sie fehlt',
  * Und 387 KB unter dem Punkt, an dem pdf.js unbemerkt zurückkäme (2711 +
  * 526 = 3237); die zweite Zusicherung hält das weiter. Wer sie das nächste
  * Mal anhebt, zählt vorher wie hier — und sieht zuerst nach L216.
+ *
+ * ── UND DANN WAR EIN DRITTEL DAVON KOMMENTAR (E715, 3. Oktober) ──────────
+ *
+ * Die erste Welle (E701–E706) stand bei 2826 KB; die sieben Zweige der
+ * zweiten Welle bringen je 5 bis 10 KB — zusammen passten sie nicht mehr
+ * unter 2850. Gesucht wurde deshalb nicht eine Funktion zum Weglassen,
+ * sondern Gewicht ohne Wirkung. Gezählt (gzip 6, was index.html holt):
+ *
+ *     erzeugtes JavaScript, 224 Skripte    2396 KB
+ *       … davon Kommentare                 1039 KB   ← tsc liess sie stehen
+ *     Stilblätter, 23 Dateien               417 KB   (Kommentare 261 KB —
+ *                                                     aber CSS IST Quelle)
+ *     index.html                             13 KB
+ *
+ * Die Kommentare stehen in src/, dort liest und pflegt man sie; im
+ * erzeugten .js las sie niemand, und jeder erste Besuch holte sie über die
+ * Leitung. `removeComments` in tsconfig.bauen.json nimmt sie seit E715
+ * heraus — bis auf die eine Zeile „ERZEUGT … NICHT VON HAND ÄNDERN" je
+ * Datei (`/*!`, test105 §3), die 18 KB kostet und es wert ist.
+ * Gemessen an diesem Lauf: **2826 → 1805 KB**, derselbe Code, Zeichen für
+ * Zeichen; die Einzeldatei von 11,78 auf 9,10 MB (11'784'203 → 9'095'626
+ * Bytes, messungen §86).
+ *
+ * ── UND DESHALB STEHT DIE DECKE JETZT AUF 1950 ───────────────────────────
+ *
+ * Nicht, weil eine niedrigere Decke schöner wäre: die zweite Zusicherung
+ * VERLANGT es. Bei 2850 käme pdf.js (526 KB) unter der Decke unbemerkt
+ * zurück (1805 + 526 = 2331) — die Decke wäre keine mehr. 1950 lässt
+ * 145 KB Luft, so viel wie E688 für neun Tage Arbeit gab und mehr, als
+ * die ganze zweite Welle braucht; und sie liegt 381 KB unter dem Punkt,
+ * an dem pdf.js zurückkäme. Wer die Kommentare zurückholt, reisst sie
+ * sofort (2826) — und die dritte Zusicherung sagt dann, warum.
  * ======================================================================== */
 console.log('\n5 · Was der Start holt, hat eine Decke');
 const kb = Math.round(beimStart.reduce((s, g) => s + g.bytes, 0) / 1024);
-const DECKE = 2850;   /* 25. September 2026, gemessen — siehe oben (E688); davor 2700 seit E613 */
+const DECKE = 1950;   /* 3. Oktober 2026, gemessen — siehe oben (E715); davor 2850 seit E688, 2700 seit E613 */
 p(`Der Start holt ${kb} KB (gzip) über ${beimStart.length} Dateien — Decke ${DECKE} KB`,
   kb <= DECKE, `${kb} KB`);
 p('Und die Decke kann überhaupt reissen — pdf.js allein wären 526 KB mehr',
   kb + 526 > DECKE, `${kb} + 526 = ${kb + 526}`);
+/* DIE URSACHE BEIM NAMEN (E715). Reisst die Decke, weil die Kommentare
+   wieder im erzeugten JavaScript stehen, soll der Lauf das sagen und
+   nicht nur eine Zahl nennen. */
+p('Das erzeugte JavaScript reist ohne Kommentare — `removeComments` in tsconfig.bauen.json (E715)',
+  /"removeComments"\s*:\s*true/.test(lies('tsconfig.bauen.json')),
+  'ohne sie holt der Start rund 1000 KB mehr');
 p('Die Chronik wird beim Start nicht geholt (E613)',
   !beimStart.some(g => /chronik\/daten\.js/.test(g.url)),
   beimStart.filter(g => /chronik/.test(g.url)).map(g => g.url.split('/').pop()).join(', ') || '(nichts)');

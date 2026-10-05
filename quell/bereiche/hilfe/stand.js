@@ -1,22 +1,5 @@
 "use strict";
-/* ============================================================================
- * status.js — Der Umsetzungsstand
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/bereiche/hilfe/stand.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/bereiche/hilfe/stand.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Alle Teile der Notion-Dokumentation und der Recherche, Anforderung für
- * Anforderung, mit ehrlichem Vermerk: erledigt, teilweise oder offen.
- *
- * Der Befehl „Umsetzungsstand" legt daraus eine Seite in dieser App an.
- * Erledigtes steht als abgehakte Aufgabe (durchgestrichen), Offenes als
- * leere Aufgabe. Jeder Teil bekommt einen eigenen Abschnitt — alles auf
- * einer einzigen Seite.
- *
- *   f = fertig      t = teilweise      o = offen
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/hilfe/stand.ts (npm run bauen:ts). */
 const Status = (() => {
     const TEILE = [
         ['Teil 1', 'Notion-Grundlagen', [
@@ -399,7 +382,6 @@ const Status = (() => {
                     'nach Anzahl kann Notion nicht'],
                 ['f', 'Filtergruppen mit UND/ODER, mehrere Ebenen tief'],
                 ['f', 'Verschachtelte Rollup-Filter any / every / none mit eigener Unterbedingung'],
-                /* --- Automationen: gegen Notions Hilfeseiten abgeglichen ------------- */
                 ['f', 'Auslöser „Seite hinzugefügt" und „Eigenschaft bearbeitet" wie in Notion',
                     'dazu sechs Auslöser, die Notion nicht hat'],
                 ['f', 'Aktionen Eigenschaft bearbeiten, Seiten bearbeiten in, Webhook senden'],
@@ -410,7 +392,6 @@ const Status = (() => {
                 ['f', 'Aktion „Seite anlegen in" auch als Automation, nicht nur am Knopf'],
                 ['f', 'Aktionen „Benachrichtigung senden" und „E-Mail senden"'],
                 ['f', 'Mehrere Auslöser mit „einer reicht" und „alle müssen"'],
-                /* --- Was über Notion hinausgeht ------------------------------------- */
                 ['f', 'Die Zeile im Verhältnis zu den anderen: rowNumber, previous, next, delta',
                     'Notion kann das nicht — dort sieht eine Formel nur ihre eigene Zeile'],
                 ['f', 'Laufende Summe, laufendes Maximum und Minimum: runningSum, runningMax, runningMin'],
@@ -608,12 +589,6 @@ const Status = (() => {
                 ['f', 'Fortschrittsbalken aus repeat("█") und repeat("░")'],
                 ['f', 'Zwölf fertige Ansichten mit gesetzten Filtern']
             ]],
-        /* ==========================================================================
-         * Die einzige Recherche, die nie in dieser Liste stand: NOTION-10000X-BESSER.
-         * Zwei Runden mit der Notion-KI — 21 konkrete Lücken und 36 Architektur-
-         * ideen. Hier steht jede einzeln, gegen den Code geprüft, nicht gegen die
-         * Erinnerung. Wo „teilweise" steht, steht auch, was genau fehlt.
-         * ========================================================================*/
         ['Teil 18', 'Die 21 Lücken von Notion', [
                 ['f', '1 · Vollständiger Offline-Modus — alles liegt lokal, auch ohne Netz und ohne Server',
                     'Notion lädt bei Datenbanken nur die ersten 50 Zeilen der ersten Ansicht'],
@@ -694,9 +669,6 @@ const Status = (() => {
                     'Spalte löschen, Typ ändern, umbenennen, Seite löschen, Ansicht löschen, Automation trocken']
             ]]
     ];
-    /* ========================================================================
-     * ZAHLEN
-     * ======================================================================*/
     const zaehle = () => {
         let f = 0, t = 0, o = 0;
         TEILE.forEach(([, , punkte]) => punkte.forEach(([st]) => {
@@ -709,13 +681,9 @@ const Status = (() => {
         }));
         return { fertig: f, teils: t, offen: o, gesamt: f + t + o };
     };
-    /* ========================================================================
-     * DIE SEITE BAUEN
-     * ======================================================================*/
     const seiteAnlegen = () => {
         const z = zaehle();
         const prozent = Math.round((z.fertig + z.teils * 0.5) / z.gesamt * 100);
-        /* Eine vorhandene Standseite ersetzen, damit keine Dubletten entstehen */
         const alt = Object.values(Store.cache.blocks)
             .find(b => b.type === 'page' && b.alive && b.umsetzungsstand);
         if (alt) {

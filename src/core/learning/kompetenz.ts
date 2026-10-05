@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/learning/kompetenz.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/learning/kompetenz.ts — was jemand WIRKLICH kann, und woher man das weiss
  * ----------------------------------------------------------------------------

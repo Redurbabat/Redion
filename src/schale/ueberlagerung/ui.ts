@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/ui.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/ui.ts — der eine Name, den alle kennen
  * ----------------------------------------------------------------------------

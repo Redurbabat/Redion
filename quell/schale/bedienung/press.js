@@ -1,46 +1,25 @@
 "use strict";
-/* schale/bedienung/press.ts — jeder Knopf sinkt ein und federt zurück (E702).
- * ERZEUGT: quell/schale/bedienung/press.js (`npm run bauen:ts`).
- * Redur, 27.09., ca. 21:45: „Wie im UI-Kit (Empfohlen)". EIN passiver
- * Zuhörer (Einfangphase) statt rund zwanzig `:active`-Regeln: sofort auf
- * `--press-scale` hinunter (eigene Eigenschaft `scale`, per animate()),
- * mindestens 80 ms unten — das iPhone malt `:active` beim kurzen Tipp oft
- * nie —, zurück auf `--feder-druck`. Nicht: Eingaben, Inseln, eigene
- * Druckbilder (OWN_PRESS, `test581` §8), Schalter (nur `data-gedrueckt`).
- * Weniger Bewegung: nur `data-gedrueckt` (grund.css blendet ab). */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/press.ts (npm run bauen:ts). */
 const RedionPress = (() => {
-    /** Was einsinkt. */
     const PRESSABLE = [
         'button', '[role="button"]', '[role="tab"]', '[role="menuitem"]', '[role="menuitemradio"]',
         '[role="menuitemcheckbox"]', '[role="option"]', '[role="switch"]', 'summary', 'a.btn',
         '.rb', '.side-item', '.sr', '.ws-btn', '.side-chat', '.hk', '.bib-heft', '.wk-weg',
         '.lw-continue-card',
-        /* „Eigene …" in Aussehen ist ein <label> um den Farbwähler (E705) —
-           es sinkt wie seine neun Nachbarn, nicht mit einer eigenen Regel. */
         '.au-eigen'
     ].join(',');
-    /** Wo nie etwas einsinkt. */
     const NEVER = '[data-kein-druck], .ui-touch-root, .ui-touch-portal, input, textarea, select';
-    /** Knöpfe mit EIGENEM Druckbild (je eine `:active`-Regel): Glasknopf und
-     *  Zeitmesser (translateY), KI-Leiste und Senden (scale .94/.92), Karte,
-     *  Ordnerdeckel (E601/E604), Staffelei, `.hs-tun`, Funkelknopf (E528).
-     *  Und die Reiter der unteren Leiste: dort sinkt, wie in der Tab-Leiste
-     *  des Kits, nur das ZEICHEN (`SelectionFlow.druecke`, E706) — nicht der
-     *  Reiter dazu (E702 × E706, beim Zusammenführen). */
     const OWN_PRESS = [
         '.fbtns button.prim', '[data-rmo~="glass"]', '.rmo-transport button', '#ai .ai-leiste button',
         '#ai-senden', '.rmo-recent-card', '.bib-deckel', '.ru-staff', '.hs-tun', '.ru-funkel',
         '#handy-oben > button[role="tab"]', '[data-eigener-druck]'
     ].join(',');
-    /** Schalter: nur der Zustand (der Griff dehnt sich per CSS). */
     const STATE_ONLY = '.schalter, [role="switch"]';
     const MIN_HOLD = 80;
-    /** Ab dieser Breite eine Zeile/Karte: `--card-press-scale`. */
     const WIDE = 160;
     let current = null;
     let started = false;
     const running = new WeakMap();
-    /** Zähler je Element: ein verspätetes Loslassen hebt keinen neuen Druck auf. */
     const turns = new WeakMap();
     const canScale = () => {
         try {
@@ -109,7 +88,7 @@ const RedionPress = (() => {
         current = null;
         const go = () => {
             if (turns.get(p.el) !== p.turn)
-                return; /* schon wieder gedrückt */
+                return;
             p.el.removeAttribute('data-gedrueckt');
             if (!p.anim)
                 return;
@@ -146,7 +125,6 @@ const RedionPress = (() => {
             release(); };
         window.addEventListener('pointerup', end, { capture: true, passive: true });
         window.addEventListener('pointercancel', end, { capture: true, passive: true });
-        /* Die Tastatur drückt auch (Leertaste, Eingabe) — wie `usePress` im Kit. */
         window.addEventListener('keydown', (e) => {
             if (e.repeat || (e.key !== ' ' && e.key !== 'Enter'))
                 return;
@@ -158,7 +136,6 @@ const RedionPress = (() => {
             if ((e.key === ' ' || e.key === 'Enter') && current?.pointer === -1)
                 release();
         }, { capture: true });
-        /* Wer zieht, das Fenster verlässt oder den Fokus verliert, hat losgelassen. */
         window.addEventListener('dragstart', () => release(), { capture: true, passive: true });
         window.addEventListener('blur', () => release());
     };

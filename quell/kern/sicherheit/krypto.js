@@ -1,67 +1,22 @@
 "use strict";
-/* ============================================================================
- * krypto.js — Verschlüsselung mit einem Passwort
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/kern/sicherheit/krypto.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/kern/sicherheit/krypto.js`. Wer das .js bearbeitet, verliert die Änderung beim
- * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Idee 9 der 10000×-Liste: Ende-zu-Ende-Verschlüsselung. Notion hat sie nicht,
- * und die Notion-KI erklärt auch warum: sie bricht Server-Suche, KI und
- * Integrationen. Bei uns liegt ohnehin alles auf dem Gerät — deshalb kostet
- * Verschlüsselung hier fast nichts.
- *
- * Drei Dinge stecken drin:
- *
- *   1. VERSCHLÜSSELTES `.redion` — Bestand, Verlauf und alle Anhänge. Ein
- *      zufälliger Datenschlüssel verschlüsselt jeden Eintrag einzeln mit
- *      AES-GCM 256. Das Passwort schützt diesen Schlüssel über PBKDF2-SHA256
- *      mit 310 000 Runden und zufälligem Salz. Anhänge bleiben in Stücken;
- *      auch ein grosses Video geht nie vollständig durch den Arbeitsspeicher.
- *
- *   2. SCHLÜSSELWECHSEL — das Passwort wird neu abgeleitet und der zufällige
- *      Datenschlüssel neu eingehüllt. Die grossen verschlüsselten Einträge
- *      müssen dafür weder entschlüsselt noch neu verschlüsselt werden.
- *
- *   3. SPERRE — beim Öffnen erst das Passwort. Sie schützt vor dem Blick über
- *      die Schulter, nicht vor jemandem mit Zugriff auf die Festplatte; das
- *      steht auch so im Dialog. Wer echten Schutz auf der Platte will, nimmt
- *      die Sicherung und löscht den lokalen Bestand.
- *
- * Alles über die eingebaute Krypto des Browsers — keine fremde Bibliothek.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/sicherheit/krypto.ts (npm run bauen:ts). */
 const Krypto = (() => {
-    /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
-       und muss ein `Element` sein, bevor `closest` daran etwas findet. Vorher
-       stand hier ungeprüft `e.target.closest(…)`: bei einem Klick, dessen Ziel
-       kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
-    /** Ein Satz aus einem Fehler — auch wenn geworfen wurde, was kein Fehler ist. */
     const satzVon = (err) => err instanceof Error ? err.message : String(err);
     const enc = new TextEncoder();
     const dec = new TextDecoder();
-    /* Aus `core/helpers/bytes.ts`. Hier stand vorher die Fassung mit dem
-       Spread, die ab etwa 128 000 Bytes den Aufrufstapel sprengte — also genau
-       dann, wenn der Bestand gross genug war, dass sich das Sichern lohnt.
-       Dort steht, warum es nur noch eine Fassung davon gibt. */
     const b64 = (buf) => Bytes.toBase64(buf);
     const ausB64 = (s) => Bytes.fromBase64(s);
-    const RUNDEN = 310000; /* OWASP-Empfehlung für PBKDF2-SHA256 */
+    const RUNDEN = 310000;
     const PAKET_ART = 'redion-verschluesselt';
     const PAKET_FASSUNG = 2;
     const PAKET_MANIFEST = 'manifest.json';
     const PAKET_RUNDEN_MIN = 100000;
     const PAKET_RUNDEN_MAX = 2000000;
-    /** Aus Passwort und Salz einen Schlüssel machen. */
     const schluessel = async (passwort, salz, runden = RUNDEN) => {
         const roh = await crypto.subtle.importKey('raw', enc.encode(passwort), 'PBKDF2', false, ['deriveKey']);
         return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salz, iterations: runden, hash: 'SHA-256' }, roh, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
     };
-    /**
-     * Verschlüsselt einen Text.
-     * @returns {Promise<string>} eine JSON-Zeichenkette mit Salz, Zufallszahl und Inhalt
-     */
     const verschluesseln = async (text, passwort) => {
         const salz = crypto.getRandomValues(new Uint8Array(16));
         const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -72,15 +27,10 @@ const Krypto = (() => {
             salz: b64(salz), iv: b64(iv), inhalt: b64(daten)
         });
     };
-    /** Entschlüsselt, was verschluesseln() gemacht hat. */
     const entschluesseln = async (json, passwort) => {
         const p = typeof json === 'string' ? JSON.parse(json) : json;
         if (p.art !== 'redion-verschluesselt')
             throw new Error('Das ist keine verschlüsselte Redion-Datei');
-        /* `Uint8Array<ArrayBufferLike>` gegen `BufferSource`: die Web-Crypto-API
-           will einen eigenständigen Puffer, `Bytes.fromBase64` gibt eine Sicht
-           darauf. Zur Laufzeit dasselbe — die Umschreibung sagt es TypeScript,
-           ohne die Prüfung an den Aufrufstellen abzuschalten. */
         const salz = ausB64(p.salz);
         const iv = ausB64(p.iv);
         const roh = await crypto.subtle.importKey('raw', enc.encode(passwort), 'PBKDF2', false, ['deriveKey']);
@@ -93,13 +43,6 @@ const Krypto = (() => {
             throw new Error('Falsches Passwort');
         }
     };
-    /* ========================================================================
-     * SPERRE
-     * ------------------------------------------------------------------------
-     * Gespeichert wird nie das Passwort, sondern nur ein Prüfwert: ein Text,
-     * der mit dem Passwort verschlüsselt wurde. Passt das Passwort, lässt er
-     * sich entschlüsseln — sonst nicht.
-     * ======================================================================*/
     const sperreAn = () => !!Store.getMeta('sperre:pruef', '');
     const sperreEinrichten = async (passwort) => {
         const pruef = await verschluesseln('redion-sperre-ok', passwort);
@@ -118,7 +61,6 @@ const Krypto = (() => {
             return false;
         }
     };
-    /** Der Sperrbildschirm. Löst sich auf, sobald das Passwort stimmt. */
     const sperrschirm = () => new Promise((fertig) => {
         const o = document.createElement('div');
         o.id = 'sperrschirm';
@@ -135,9 +77,6 @@ const Krypto = (() => {
         const inp = o.querySelector('#sp-pw');
         const fehler = o.querySelector('#sp-fehler');
         const okKnopf = o.querySelector('#sp-ok');
-        /* Alle drei stehen in der Zeichenkette oben. Fehlt eines, gibt es kein
-           Sperrfenster — dann die Überlagerung wieder wegnehmen, statt eine
-           stehenzulassen, in die niemand etwas eintippen kann. */
         if (!inp || !fehler || !okKnopf) {
             o.remove();
             fertig(false);
@@ -157,42 +96,8 @@ const Krypto = (() => {
         inp.addEventListener('keydown', e => { if (e.key === 'Enter')
             pruefen(); });
     });
-    /* ========================================================================
-     * SICHERUNG
-     * ======================================================================*/
-    /**
-     * Der Bestand als JSON — **dasselbe**, was der Hauptweg schreibt.
-     *
-     * WARUM NICHT MEHR EIGENS GESAMMELT. Vorher stand hier ein zweites Format:
-     * `blocks`, `collections`, `views`, `meta` — und sonst nichts. Es fehlten
-     * der Versionsverlauf und, ohne ein Wort darüber, die Anhänge. Zwei
-     * Sicherungswege hiessen „Sicherung" und enthielten nicht dasselbe; wer den
-     * verschlüsselten nahm, verlor seinen Verlauf, ohne es zu erfahren.
-     *
-     * `exportAll` trägt `enthaelt`, `fehlt` und `hinweis` — genau die Felder,
-     * die eine unvollständige Sicherung dazu bringen, das selbst zu sagen.
-     * Genau die fehlten hier.
-     *
-     * `art` und `fassung` bleiben zusätzlich stehen, damit Sicherungen, die
-     * schon geschrieben wurden, weiter erkannt werden. Eine Datei, die jemand
-     * vor einem Jahr angelegt hat, ist kein Altlastenproblem — sie ist der
-     * Zweck der Übung.
-     */
-    /* Was der letzten gesammelten Sicherung fehlte — für den Toast danach.
-       Das Manifest in der Datei sagt es auch, aber verschlüsselt liest es
-       niemand, bevor er es braucht. */
     let zuletztGefehlt = [];
-    /**
-     * @param mitGeheimnissen nur wahr, wenn der Aufrufer die Sicherung
-     *        anschliessend WIRKLICH verschlüsselt. Zugangsdaten — das
-     *        Cloud-Token, jeder `api:`-Schlüssel — gehören nur in eine
-     *        Sicherung, die ohne Passwort nichts wert ist (L76 / E279).
-     *        Die Vorgabe ist die sichere Seite: wer den Schalter vergisst,
-     *        bekommt eine Sicherung ohne Zugangsdaten, nicht eine mit.
-     */
     const bestandSammeln = async (mitGeheimnissen = false) => {
-        /* Holt den Verlauf aus der Ablage; er liegt bewusst nicht im
-           Zwischenspeicher. Ohne diesen Aufruf wäre `versions` leer — still. */
         if (Store.exportVorbereiten)
             await Store.exportVorbereiten();
         const d = JSON.parse(Store.exportAll(false, mitGeheimnissen));
@@ -200,9 +105,6 @@ const Krypto = (() => {
         return JSON.stringify(Object.assign({ art: 'redion-sicherung', fassung: 1, wann: d.exportiert }, d), null, 2);
     };
     const sicherungSchreiben = async (passwort) => {
-        /* Das Passwort entscheidet BEIDES: ob verschlüsselt wird und ob die
-           Zugangsdaten mitdürfen. Es ist dieselbe Frage, also darf es nicht
-           zwei Schalter geben, die auseinanderlaufen können. */
         const roh = await bestandSammeln(!!passwort);
         const inhalt = passwort ? await verschluesseln(roh, passwort) : roh;
         const name = 'redion-sicherung-' + new Date().toISOString().slice(0, 10) +
@@ -212,20 +114,9 @@ const Krypto = (() => {
         a.download = name;
         a.click();
         Store.setMeta('sicherung:zuletzt', new Date().toISOString());
-        /* Auch dieser Weg schreibt JSON — ohne Anhänge. Der Start-Bildschirm sagt
-           das jetzt dazu, also muss hier stehen, was für eine Sicherung es war. */
         Store.setMeta('sicherung:art', 'json');
         return name;
     };
-    /**
-     * Liest eine Sicherung — verschlüsselt oder nicht.
-     *
-     * Erkannt werden beide Bauarten: die mit `art: 'redion-sicherung'` aus
-     * diesem Weg und die mit `version` aus dem Hauptweg. Eine `.json`, die
-     * jemand über „Sicherung speichern" angelegt hat, ist eine Sicherung — sie
-     * hier abzulehnen, weil ihr ein Feld fehlt, wäre eine Schikane gegen den
-     * eigenen Nutzer.
-     */
     const sicherungLesen = async (text, passwort) => {
         let roh = text;
         if (text.trim().startsWith('{') && text.includes('redion-verschluesselt'))
@@ -235,53 +126,13 @@ const Krypto = (() => {
             throw new Error('Das ist keine Redion-Sicherung');
         return p;
     };
-    /**
-     * Eine gelesene Sicherung wirklich einspielen.
-     *
-     * WAS VORHER GESCHAH, UND WARUM ES DER SCHLIMMSTE FALL WAR. An dieser
-     * Stelle standen vier `Object.assign` auf `Store.cache`, gefolgt von
-     * `Store.alles && Store.alles()`. Diese Funktion gibt es nicht; der Aufruf
-     * war abgesichert und deshalb ein stiller Leerlauf. Nichts ging in die
-     * Ablage. Neunhundert Millisekunden später lud die Seite neu, las aus der
-     * Ablage — und dort stand unverändert der alte Bestand.
-     *
-     * Die Wiederherstellung wurde als geglückt gemeldet und war eine Sekunde
-     * später verschwunden. Wer sie brauchte, brauchte sie meistens dringend.
-     *
-     * Dazu kam, dass `Object.assign` zusammenführt. Der Dialog sagte „und dann
-     * ersetzt" — zwei verschiedene Dinge, und der Nutzer las das eine und
-     * bekam das andere.
-     *
-     * Beides erledigt jetzt `Store.importAll`: es schreibt in die Ablage, es
-     * kennt „ersetzen" und „zusammenfuehren", und es lehnt jede andere Angabe
-     * ab. Es ist derselbe Weg, den die Sicherung ohne Passwort schon immer
-     * genommen hat — es gibt keinen Grund, warum die mit Passwort einen
-     * eigenen bräuchte.
-     *
-     * @param {string} text  die gelesene (bereits entschlüsselte) Sicherung
-     * @param {'ersetzen'|'zusammenfuehren'} art
-     */
     const sicherungEinspielen = async (text, art) => Store.importAll(typeof text === 'string' ? text : JSON.stringify(text), art);
-    /** Wie viele Dinge stecken in einer Sicherung? Für die Vorschau. */
     const sicherungZahlen = (p) => ({
         bloecke: Object.keys(p.blocks || {}).length,
         datenbanken: Object.keys(p.collections || {}).length,
         ansichten: Object.keys(p.views || {}).length,
         wann: p.wann
     });
-    /* ========================================================================
-     * VOLLSTÄNDIGES, VERSCHLÜSSELTES `.redion` — FORMATFASSUNG 2
-     * ------------------------------------------------------------------------
-     * Das äussere ZIP ist nur ein Behälter. Lesbar bleiben ausschliesslich die
-     * Kryptoparameter, zufällige Kennungen, Zahl und verschlüsselte Grösse der
-     * Einträge. Titel, Dateinamen, Medientypen, Datei-Kennungen und Inhalte
-     * stehen nur in AES-GCM-verschlüsselten Einträgen.
-     *
-     * Ein zufälliger Datenschlüssel schützt die Einträge. Das Passwort schützt
-     * diesen Schlüssel. Das ist keine eigene Chiffre, sondern das übliche
-     * Schlüsselhüllen-Muster mit zwei Anwendungen von AES-GCM. Es macht den
-     * Schlüsselwechsel möglich, ohne einen 500-MB-Anhang erneut zu lesen.
-     * ======================================================================*/
     const zufall = (laenge) => crypto.getRandomValues(new Uint8Array(laenge));
     const aad = (paketId, zweck) => enc.encode(`redion-paket-v${PAKET_FASSUNG}:${paketId}:${zweck}`);
     const aesVerschluesseln = async (daten, key, zusatz) => {
@@ -292,13 +143,7 @@ const Krypto = (() => {
         }, key, daten);
         return { iv: b64(iv), inhalt: new Uint8Array(inhalt) };
     };
-    const aesEntschluesseln = async (daten, key, ivText, zusatz
-    /* `Uint8Array<ArrayBuffer>`, nicht bloss `Uint8Array`: seit den neueren
-       DOM-Typen ist das voreingestellte `ArrayBufferLike` auch ein
-       `SharedArrayBuffer`, und ein solcher taugt nicht als `BlobPart`. Der
-       Wert hier kommt aus `new Uint8Array(ArrayBuffer)` und ist immer der
-       engere Fall — sagen muss man es trotzdem. */
-    ) => {
+    const aesEntschluesseln = async (daten, key, ivText, zusatz) => {
         const iv = ausB64(ivText);
         if (iv.byteLength !== 12)
             throw new Error('Die Nonce im Paket ist ungültig.');
@@ -308,7 +153,6 @@ const Krypto = (() => {
         }, key, daten);
         return new Uint8Array(inhalt);
     };
-    /** Der authentifizierte, kanonische Teil des Manifests. */
     const manifestKern = (m) => ({
         art: m.art,
         fassung: m.fassung,
@@ -321,11 +165,6 @@ const Krypto = (() => {
     });
     const manifestKernText = (m) => JSON.stringify(manifestKern(m));
     const istObjekt = (wert) => !!wert && typeof wert === 'object' && !Array.isArray(wert);
-    /**
-     * Liest nur die öffentliche Hülle und begrenzt dabei auch PBKDF2. Ein
-     * manipuliertes Paket darf nicht mit Milliarden Runden den Browser
-     * festhalten, bevor überhaupt eine Authentifizierung möglich ist.
-     */
     const manifestPruefen = (wert) => {
         if (!istObjekt(wert) || wert.art !== PAKET_ART || wert.fassung !== PAKET_FASSUNG)
             throw new Error('Das ist kein verschlüsseltes Redion-Paket der Fassung 2.');
@@ -376,7 +215,6 @@ const Krypto = (() => {
             throw new Error(`Der Eintrag „${e.pfad}“ ist beschädigt oder nicht authentisch.`);
         }
     };
-    /** Erstellt den zufälligen Datenschlüssel und seine passwortgeschützte Hülle. */
     const paketSchluesselNeu = async (passwort, paketId) => {
         if (!passwort)
             throw new Error('Für eine verschlüsselte Sicherung ist ein Passwort nötig.');
@@ -392,10 +230,6 @@ const Krypto = (() => {
             huelle: { iv: huelle.iv, inhalt: b64(huelle.inhalt) }
         };
     };
-    /**
-     * Öffnet nur den Datenschlüssel. Vor diesem Schritt wird weder eine
-     * Nutzdatei entschlüsselt noch irgendein Store-Schreibweg erreicht.
-     */
     const paketSchluesselOeffnen = async (m, passwort) => {
         try {
             const salz = ausB64(m.kdf.salz);
@@ -410,15 +244,9 @@ const Krypto = (() => {
             return { roh, datenSchluessel };
         }
         catch {
-            /* Falsches Passwort und manipulierte Hülle sind absichtlich nicht zu
-               unterscheiden. Beides muss vor der ersten Datenänderung enden. */
             throw new Error('Falsches Passwort oder beschädigte Sicherung — nichts wurde verändert.');
         }
     };
-    /**
-     * Baut ein vollständiges verschlüsseltes Archiv. Jedes Anhangsstück wird
-     * einzeln gelesen und sofort wieder als verschlüsseltes Blob abgelegt.
-     */
     const paketBauen = async (passwort) => {
         if (!passwort)
             throw new Error('Für eine verschlüsselte Sicherung ist ein Passwort nötig.');
@@ -433,15 +261,7 @@ const Krypto = (() => {
             eintraege.push({ pfad, art, iv: geheim.iv, bytes: geheim.inhalt.byteLength });
             archiv.push({ name: pfad, inhalt: geheim.inhalt });
         };
-        /* Die JSON behauptet nur dann, Anhänge seien enthalten, wenn jedes
-           Stück unten wirklich lesbar ist. Ein halber Upload bricht die ganze
-           Sicherung ab; er wird nie als vollständige Datei ausgegeben. */
-        await verschluesseltAblegen(
-        /* `true, true`: mit Anhängen und mit Zugangsdaten. Dieser Weg legt
-           die Daten verschlüsselt ab — `verschluesseltAblegen` heisst so,
-           weil es das tut —, also ist es genau der Fall, für den L76 die
-           Zugangsdaten erlaubt. */
-        'daten.enc', 'daten', enc.encode(Store.exportAll(true, true)));
+        await verschluesseltAblegen('daten.enc', 'daten', enc.encode(Store.exportAll(true, true)));
         const dateien = [];
         for (let dateiNr = 0; dateiNr < saetze.length; dateiNr++) {
             const satz = saetze[dateiNr];
@@ -501,12 +321,6 @@ const Krypto = (() => {
         Store.setMeta('sicherung:art', 'redion-verschluesselt');
         return paket.name;
     };
-    /**
-     * Entschlüsselt und authentifiziert ALLES als Probelauf. Besonders wichtig:
-     * `Store.importAll`, `dateiPut` und `stueckPut` stehen nicht in dieser
-     * Funktion. Ein falsches Passwort oder beschädigtes letztes Stück kann
-     * deshalb keinen halben Import hinterlassen.
-     */
     const paketOeffnen = async (blob, passwort) => {
         const zip = await Einlesen.zipLesenAusBlob(blob);
         const manifestText = await zip.text(PAKET_MANIFEST);
@@ -586,23 +400,10 @@ const Krypto = (() => {
             roherDatenSchluessel: geoeffnet.roh
         };
     };
-    /** Schreibt ein bereits vollständig geprüftes Paket in den Bestand. */
     const geoeffnetesPaketEinspielen = async (paket, art) => {
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss „ersetzen“ oder „zusammenfuehren“ gewählt sein.');
         const erg = await Store.importAll(paket.datenText, art);
-        /* ERST ALLES LANDEN LASSEN, DANN DIE ANHÄNGE (E123).
-           Hier stand ein `flush()` und daneben die Vermutung, `importAll`
-           schreibe gepuffert weiter. Das war falsch; gemessen hat es nichts
-           geändert. Der Wettlauf kam von `Store.purgeBlock`: das kehrt sofort
-           zurück und löscht die Anhänge in einer abgelösten Aufgabe hinterher —
-           die kam an, NACHDEM diese Schleife den Anhang neu geschrieben hatte,
-           und nahm ihn wieder mit.
-           `Store.importAll` wartet seit E123 vorn und hinten auf `settled()`.
-           Der Aufruf hier ist der Gürtel zum Hosenträger: zwischen dem
-           Einspielen und der ersten Anhangszeile darf nichts mehr unterwegs
-           sein — ein Wiederherstellen, das den Anhang STILL verliert, ist
-           schlimmer als eines, das scheitert (§46). */
         await Store.settled();
         const saetze = new Map(paket.dateiliste.saetze.map(s => [String(s.id), s]));
         const eintragNachPfad = new Map(paket.manifest.eintraege.map(e => [e.pfad, e]));
@@ -638,13 +439,6 @@ const Krypto = (() => {
         return Object.assign({}, erg, { anhaenge });
     };
     const paketEinspielen = async (blob, passwort, art) => geoeffnetesPaketEinspielen(await paketOeffnen(blob, passwort), art);
-    /**
-     * Passwortwechsel per Schlüsselhülle. Die verschlüsselten Nutzdaten werden
-     * bytegleich übernommen; nur Salz, Passwortschlüssel, Schlüsselhülle und
-     * authentifiziertes Manifest sind neu. Alte Pakete bleiben mit dem alten
-     * Passwort lesbar — eine Datei, die jemand schon besitzt, lässt sich nicht
-     * nachträglich widerrufen.
-     */
     const paketPasswortWechseln = async (blob, altesPasswort, neuesPasswort) => {
         if (!neuesPasswort)
             throw new Error('Das neue Passwort darf nicht leer sein.');
@@ -686,9 +480,6 @@ const Krypto = (() => {
             throw new Error('Das neue Passwort darf nicht leer sein.');
         await sperreEinrichten(neu);
     };
-    /* ========================================================================
-     * DER DIALOG
-     * ======================================================================*/
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -719,13 +510,6 @@ const Krypto = (() => {
                     : 'Noch nie gesichert.') +
                 '</div>' +
                 '</div>' +
-                /* FASSUNG 2 — das vollständige Paket.
-                   Diese Karte war schon einmal geschrieben und wurde wieder
-                   ausgebaut: das Zurückholen verlor den Anhang, und ein Knopf,
-                   hinter dem Datenverlust liegt, gehört nicht in die App (L42).
-                   Seit E123 ist der Wettlauf behoben und gemessen — dreimal rot
-                   ohne die Behebung, dreimal grün mit ihr. Jetzt darf der Knopf
-                   da sein. */
                 '<div class="kr-karte">' +
                 '<b>Vollständiges Paket — verschlüsselt, mit Anhängen</b>' +
                 '<div class="kr-text">Alles: Seiten, Datenbanken, Ansichten, ' +
@@ -771,15 +555,8 @@ const Krypto = (() => {
             if (elVon(e)?.closest('[data-a="sichern"]')) {
                 const pw = o.querySelector('#kr-pw')?.value ?? '';
                 const name = await sicherungSchreiben(pw || undefined);
-                /* Wenn Anhänge da sind und hier fehlen, gehört das in den Toast —
-                   nicht nur ins verschlüsselte Manifest, wo es niemand liest. */
                 const dazu = zuletztGefehlt.includes('dateien')
                     ? ' — ohne die Dateianhänge (dafür: .redion-Sicherung)' : '';
-                /* Und seit L76 fehlen einer ungeschützten Sicherung auch die
-                   Zugangsdaten. Das gehört in denselben Satz: eine Sicherung, die
-                   nicht sagt, was sie auslässt, ist die gefährlichste Sorte — und
-                   wer sie später einspielt, sucht sonst lange, warum sein
-                   GitHub-Schlüssel weg ist. */
                 const geheim = zuletztGefehlt.filter(k => k === 'wolkeToken' || k === 'wolkeProbe' || k.startsWith('api:')).length;
                 const dazu2 = geheim
                     ? (dazu ? ' und' : ' —') + ' ohne die ' + geheim +
@@ -812,11 +589,7 @@ const Krypto = (() => {
                     (p.hinweis ? '\n\n' + p.hinweis : ''));
                 if (!ok)
                     return;
-                await sicherungSchreiben(); /* Netz unter dem Seil */
-                /* „ersetzen", weil genau das oben zugesagt wurde. Und über
-                   `Store.importAll`, weil es in die Ablage schreibt — vorher ging
-                   das Eingespielte beim Neuladen neunhundert Millisekunden später
-                   wieder verloren, und gemeldet wurde trotzdem ein Erfolg. */
+                await sicherungSchreiben();
                 try {
                     await sicherungEinspielen(JSON.stringify(p), 'ersetzen');
                 }
@@ -855,11 +628,6 @@ const Krypto = (() => {
                     UI.toast('Ohne Passwort ist das Paket nicht zu öffnen');
                     return;
                 }
-                /* ERST ÖFFNEN, DANN FRAGEN. `paketOeffnen` entschlüsselt und prüft
-                   ALLES, ohne einen einzigen Satz zu schreiben. Ein falsches
-                   Passwort oder ein beschädigtes Stück scheitert also, bevor der
-                   Nutzer die Frage überhaupt sieht — und der Bestand ist zu diesem
-                   Zeitpunkt noch unangetastet. */
                 let offen;
                 try {
                     offen = await paketOeffnen(f, pw);
@@ -875,7 +643,7 @@ const Krypto = (() => {
                     'was nicht im Paket steht, wird gelöscht.');
                 if (!ok)
                     return;
-                await sicherungSchreiben(); /* Netz unter dem Seil */
+                await sicherungSchreiben();
                 try {
                     const erg = await geoeffnetesPaketEinspielen(offen, 'ersetzen');
                     o.remove();
@@ -911,7 +679,6 @@ const Krypto = (() => {
             }
         });
     };
-    /** Beim Start: wenn eine Sperre eingerichtet ist, erst fragen. */
     const startPruefen = async () => {
         if (!sperreAn())
             return true;
@@ -921,9 +688,6 @@ const Krypto = (() => {
         passwortStimmt, sperrschirm, startPruefen, dialog,
         sicherungSchreiben, sicherungLesen, sicherungZahlen, bestandSammeln,
         sicherungEinspielen,
-        /* Fassung 2 — das vollständige verschlüsselte Paket MIT Anhängen.
-           Stand bis hierher nur als Code da und war von aussen nicht
-           erreichbar; ohne diese Zeile kann niemand es aufrufen (E122). */
         paketBauen, paketSchreiben, paketOeffnen, paketEinspielen,
         geoeffnetesPaketEinspielen, paketPasswortWechseln, sperreWechseln };
 })();

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/zeichenflaeche.ts (npm run bauen:ts). */
 /* ============================================================================
  * canvas.js — Zeichenfläche, Diagramme, einfache Tabelle, Mathematik
  * ----------------------------------------------------------------------------

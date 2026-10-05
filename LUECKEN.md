@@ -8866,6 +8866,11 @@ nach, der Inhalt kommt beim Öffnen — eine Änderung am Register-Eintrag
 die Decke wäre beim nächsten Bogen wieder gerissen. Deshalb steht die
 Decke seit E688 auf 2850, und diese Lücke bleibt offen.
 
+> **Stand seit E715 (3. Oktober 2026).** Das erzeugte JavaScript reist ohne
+> Kommentare; der Start holt 1805 KB, die Decke steht auf 1950. Die zwei
+> Posten sind ohne Kommentare noch 17,5 KB gzip (`messungen.md` §86). Die
+> Frage an Redur bleibt, und die Lücke bleibt offen.
+
 **Die Frage an Redur:** sollen Lerninhalte (und künftige Kapitel — jedes
 NIN-Kapitel sind rund 4 KB gzip) grundsätzlich erst beim Öffnen des
 Trainers kommen? Wenn ja: ein Bogen mit `wissen/lerninhalt-laden.ts` nach

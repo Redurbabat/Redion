@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/einlesen.ts (npm run bauen:ts). */
 /* ============================================================================
  * import.js — Excel, Word und EPUB einlesen
  * ----------------------------------------------------------------------------

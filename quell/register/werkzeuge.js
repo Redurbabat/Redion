@@ -1,48 +1,7 @@
 "use strict";
-/* ============================================================================
- * register/werkzeuge.ts — der EINE Katalog der Zeichenwerkzeuge
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/register/werkzeuge.ts`. `npm run bauen:ts` schreibt daraus
- * `quell/register/werkzeuge.js`; `pruefungen/lauf/test105.mts` meldet es vorher.
- * ----------------------------------------------------------------------------
- * Redur, 25. September 2026, mit einem Bild von AFFiNEs Edgeless-Leiste:
- * „ich will so was haben wie die affine" — und gleich danach: „integriere
- * alles zusammen". Nicht eine Leiste fürs Whiteboard, sondern EINE für alle
- * Flächen.
- *
- * WARUM DAS HIER ANFÄNGT UND NICHT BEI DER LEISTE. Vor diesem Bogen gab es
- * vier Werkzeuglisten und keinen Katalog (gemessen, `doku/karte/thema-
- * werkzeugleisten.md`): `Marken.WERKZEUGE` im Studio (14 Werkzeuge), eine
- * zweite, kürzere in `register/menueband.ts` (13, ohne textfix, elemente,
- * bild, laser — genau der Fall, vor dem §8 warnt), ein HTML-String im
- * Whiteboard (12) und vier Kennungen in der Planfläche. Eine Leiste, die alle
- * vier bedienen soll, braucht zuerst eine Liste, aus der alle vier lesen
- * können — sonst wäre sie die fünfte.
- *
- * DIE KENNUNG IST EIN DATENWORT, KEIN NAME (§53.3). `stift`, `abdeck`,
- * `zettel` stehen so in `meta` unter `zeichnen:werkzeugwerte` und
- * `zeichnen:ordnung` an jedem Gerät, das Redion je benutzt hat. Sie zu
- * übersetzen wäre keine Umbenennung, sondern eine Datenmigration. Also
- * bleiben sie, auch wo sie hier deutsch aussehen.
- *
- * VIER KENNUNGEN GEHÖREN BEIDEN — `stift`, `text`, `bild`, `radierer`. Das
- * ist kein Zufall und kein Fehler: es ist dasselbe Werkzeug auf einer anderen
- * Fläche. Sie stehen deshalb EINMAL hier, mit dem Namen, den das Studio heute
- * auf dem Bildschirm zeigt (E614: das Wort unter dem Zeichen) — 12 + 14 − 4
- * = 22 Einträge.
- *
- * WAS HIER NICHT STEHT: was ein Werkzeug TUT. Ein Register beschreibt, es
- * zeichnet nicht (`register/formeln.ts`, Z.17). Die Handgriffe bleiben bei
- * der Fläche, die sie ausführt; hier steht nur, dass es das Werkzeug gibt,
- * wie es heisst und wie es aussieht.
- * ==========================================================================*/
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/werkzeuge.ts (npm run bauen:ts). */
 window.Register = window.Register || {};
 Register.werkzeuge = (() => {
-    /* ------------------------------------------------------------------------
-     * DIE WERKZEUGE DER FLÄCHEN (Whiteboard heute; Gedankenkarte und
-     * Planfläche kommen in 5c/5d dazu)
-     * ----------------------------------------------------------------------*/
     const FLAECHE = [
         { id: 'zeiger', name: 'Auswählen', titel: 'Auswählen und verschieben',
             sym: 'inkPointer', zeichen: '⭠', gruppe: 'quick' },
@@ -61,15 +20,6 @@ Register.werkzeuge = (() => {
         { id: 'notiz', name: 'Haftnotiz', titel: 'Eine Haftnotiz setzen und beschriften',
             sym: 'inkNote', zeichen: '🗒', gruppe: 'senior' }
     ];
-    /* ------------------------------------------------------------------------
-     * DIE WERKZEUGE DES STUDIOS
-     * ------------------------------------------------------------------------
-     * Wortgleich aus `marken.ts` (die Liste, die die Studioleiste baut). Sie
-     * liest noch aus ihrer eigenen Fassung — der Umzug ist Bogen 5b, und bis
-     * dahin hält `test572 §3` die beiden im Gleichlauf: jede Kennung dort steht
-     * mit DEMSELBEN Namen hier. Genau das hat `test266` einmal gefunden, als
-     * „Abdecken" im Studio still zu „Abdeckband" wurde und im Menüband nicht.
-     * ----------------------------------------------------------------------*/
     const STUDIO = [
         { id: 'schreiben', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig',
             sym: 'inkHand', zeichen: '✎', gruppe: 'quick' },
@@ -109,9 +59,6 @@ Register.werkzeuge = (() => {
     ];
     const EINGEBAUT = [...FLAECHE, ...STUDIO];
     const LISTE = EINGEBAUT.slice();
-    /** Ein neues Werkzeug anmelden. Eine doppelte Kennung wird ABGEWIESEN, nicht
-     *  überschrieben — ein Register, das still überschreibt, macht aus einem
-     *  Tippfehler einen Datenverlust (`register/bloecke.ts`, Z.269). */
     const melde = (werkzeug) => {
         if (!werkzeug || !werkzeug.id || LISTE.some(w => w.id === werkzeug.id))
             return false;
@@ -121,11 +68,6 @@ Register.werkzeuge = (() => {
     const holen = (id) => LISTE.find(w => w.id === id);
     const alle = () => LISTE.slice();
     const ids = () => LISTE.map(w => w.id);
-    /** Die Werkzeuge einer Fläche, in der Reihenfolge, in der sie bestellt wurden.
-     *
-     *  Eine unbekannte Kennung wird AUSGELASSEN und gemeldet — nicht als
-     *  `undefined` eingereiht. Sonst stünde in der Leiste ein leerer Knopf, und
-     *  der Fehler zeigte sich erst beim Klicken (§7: keine stillen Abstürze). */
     const auswahl = (bestellung) => {
         const raus = [];
         for (const id of bestellung) {

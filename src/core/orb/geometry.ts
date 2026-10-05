@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/orb/geometry.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/orb/geometry.js — die Rechnung hinter der Denkkugel
  * ----------------------------------------------------------------------------

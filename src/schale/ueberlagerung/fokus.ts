@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/fokus.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/ueberlagerung/fokus.js — Dialoge für die Tastatur und fürs Zuhören
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/sheet/space.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/sheet/space.ts — der Blattraum
  * ----------------------------------------------------------------------------

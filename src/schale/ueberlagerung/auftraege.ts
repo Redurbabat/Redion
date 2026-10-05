@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/auftraege.ts (npm run bauen:ts). */
 /* ============================================================================
  * schale/ueberlagerung/auftraege.ts — was gerade im Hintergrund läuft
  * ----------------------------------------------------------------------------

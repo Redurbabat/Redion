@@ -22,13 +22,19 @@
     "",
     "Weil die beiden Bibliotheken sich widersprechen, steht `src/dienst/` in",
     "`tsconfig.json` unter `exclude`: dieselbe Datei kann nicht in zwei",
-    "Welten gleichzeitig geprüft werden."
+    "Welten gleichzeitig geprüft werden.",
+    "",
+    "`removeComments: false` HIER, obwohl tsconfig.bauen.json sie seit E715",
+    "wegnimmt: sw.js liegt nicht im Startweg (test388 §5 zählt ihn nicht),",
+    "und wer einen Fehler ohne Netz sucht, liest ihn in der Wurzel. Was",
+    "nichts spart, wird nicht angefasst."
   ],
 
   "extends": "./tsconfig.bauen.json",
 
   "compilerOptions": {
     "lib": ["ES2022", "WebWorker"],
+    "removeComments": false,
     "rootDir": "src/dienst",
     "outDir": "."
   },

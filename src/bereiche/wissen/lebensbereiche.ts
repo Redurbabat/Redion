@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/lebensbereiche.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/wissen/lebensbereiche.ts — Lebensbereiche als Sichten auf Bestand
  * ----------------------------------------------------------------------------

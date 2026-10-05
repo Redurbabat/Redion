@@ -67,7 +67,8 @@ export const gelesen = (wurzel: string): { swTs: string; fassungSw: number; inha
 };
 
 const standQuelle = (s: Stand): string =>
-  `/* kern/einstellung/stand.ts — DER STAND DIESES BAUS (E361, L83)
+  `/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
+/* kern/einstellung/stand.ts — DER STAND DIESES BAUS (E361, L83)
  * ----------------------------------------------------------------------------
  * Geschrieben von dienststand.mts bei \`npm run bauen:ts\` — von Hand nicht
  * anfassen. \`fassung\` ist die Fassung des Dienst-Arbeiters (sw.ts),

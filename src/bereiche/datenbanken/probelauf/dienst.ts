@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/probelauf/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * probelauf.js — Erst zeigen, was passieren würde. Dann erst tun.
  * ----------------------------------------------------------------------------

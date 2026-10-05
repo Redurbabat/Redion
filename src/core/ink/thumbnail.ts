@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/ink/thumbnail.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/ink/thumbnail.js — der Deckel eines handbeschriebenen Blattes
  * ----------------------------------------------------------------------------

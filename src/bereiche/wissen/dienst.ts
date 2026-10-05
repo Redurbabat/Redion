@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/wissen/dienst.js — was die Werkzeuge rechnen, ohne etwas zu zeigen
  * ----------------------------------------------------------------------------

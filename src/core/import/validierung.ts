@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/import/validierung.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/import/validierung.ts — sagt VOR dem Einspielen, was in der Datei steht
  * ----------------------------------------------------------------------------

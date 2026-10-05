@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/import/spaltentyp.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/import/spaltentyp.ts — welche Sorte Spalte ist das?
  * ----------------------------------------------------------------------------

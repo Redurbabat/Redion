@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/import/vergleich.ts (npm run bauen:ts). */
 /* ============================================================================
  * core/import/vergleich.ts — was sich beim Einspielen WIRKLICH ändert
  * ----------------------------------------------------------------------------

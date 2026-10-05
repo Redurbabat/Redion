@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/spiegel/dienst.ts (npm run bauen:ts). */
 /* ============================================================================
  * spiegel.js — Gespiegelte Datenbanken
  * ----------------------------------------------------------------------------

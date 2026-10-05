@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/raster.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/datenbanken/raster.ts — eine Datenbank wie eine Tabelle bedienen
  * ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/zugang/sitzung.ts (npm run bauen:ts). */
 /* ============================================================================
  * konten.js — Konten, Rollen und Freigaben
  * ----------------------------------------------------------------------------
