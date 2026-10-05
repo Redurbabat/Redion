@@ -5489,3 +5489,45 @@ React-Behälter 25 bis 43 ms bis zum bisherigen Fenster.
 weiche Feder des Kits, 796 ms (`--ui-spring-smooth-duration`); der
 Dialog in der Mitte auf der schnellen, 542 ms. Eine feste Pause von 450 ms
 misst das Blatt unterwegs.
+
+**Durchsicht, 5. Oktober 2026 — was die Aufrufer mitbringen, bleibt**
+(unter der Sperre, Chromium aus Playwright, file:// und `listen(0)`; der
+Endbau 1654e75d9 als eingefrorene Kopie; Gegenproben in Kopien des
+Zweigs, nie im Zweig selbst):
+
+```txt
+test587 gegen den Endbau 1654e75d9   80 bestanden, 17 durchgefallen — alle 17 in §12 (18:08 UTC)
+test587 auf diesem Stand             97/97 (18:09 UTC; im Nachbarlauf 19:10 ebenso 97/97)
+Gegenprobe 1: ohne den Hörer auf redion-insel-fehler (dialog.js) und
+              ohne die Regel für „ruhig" (aufbau.css)  → 92/5: §12 c) (altes Fenster,
+              Antwort, Stilllegung, Träger) und d) 267 ms rot
+Gegenprobe 2: Escape-Griff wie im Endbau (schale.js) und
+              Rückweg von bestaetigen wie im Endbau     → 93/4: §12 c) „Escape nimmt
+              den Träger" und die drei Punkte von e) rot
+„Ruhig", Escape bis unsichtbar (§12 d)   Endbau 268–275 ms · jetzt ≤ 50 ms (ein Bild);
+                                         mit Bewegung ≥ 100 ms (Ausblenden bleibt)
+Bildstreifen „ruhig" (Rechner, CDP)     Endbau: Fenster noch +1172 ms, weg +1407 ms
+                                         jetzt: weg im ersten Bild nach Escape (+1150 ms)
+Nachbarn, 18:58–19:10 UTC, 34 Läufe     grün 29: 126 129 143 167 171 181 184 186 196 198
+                                         212 245 272 296 353 362 388 399 412 458 466 468
+                                         496 510 538 576 579 581 587
+  rot, auf der Basis b3cf193 mit denselben Zeilen ebenso (18:10–18:13 UTC, fremd):
+                                         343 (Tupfer, Abbruch) · 348 (31/34) · 464 (62/63,
+                                         14 ≠ 13) · 470 (Abbruch [data-w="sichern"]) ·
+                                         582 (171 ok, 5 rot: sand, wald, Liste)
+Dateiwächter                             47 (42/42) 87 (177 ok) 105 (152 ok) 109 (25 ok)
+                                         225 (11/11) 290 (17/17) 400 401 402 410 537 (17 ok)
+                                         549 (6/6) 550 (8/8) 578 (115/115)
+```
+
+**Kosten** (gzip -6, gegen den Endbau): `dialog.js` 6'314 → 6'901 (+587),
+`schale.js` 78'173 → 78'351 (+178), `aufbau.css` 16'769 → 16'906 (+137),
+`stand.js` +8 — im Start +910 Bytes. Nicht beim Start: `islands.js`
+7'393 → 7'450 (+57). Einzeldatei 11'819'225 → 11'822'315 (+3'090).
+**`test388` §5:** „Der Start holt 2831 KB (gzip) über 248 Dateien — Decke
+2850 KB" (Endbau 2830).
+
+**Zwei Antworten mit Hinweis** (nebeneinander, wie das Kit zwei Knöpfe
+setzt): Knopfhöhe 70 px am Rechner, 92 px am Telefon (390 px, Beschriftung
+umgebrochen) — vorher drei Knöpfe untereinander, je 52/53 px, davon zwei
+„Abbrechen". AUFGABEN E710 Punkt 8.

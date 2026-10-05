@@ -67,12 +67,19 @@ export function startThemeMirror(): void {
   }
 }
 
-/** Spiegel aus und die Attribute wieder weg — die Seite steht dann da wie vor der ersten Insel. */
+/**
+ * Spiegel aus — die Seite steht dann da wie vor der ersten Insel: ohne
+ * `data-ui-theme`, und `data-ui-motion` so, wie „Ruhige Darstellung" es
+ * sagt. Das zweite Etikett gehört nicht der Brücke allein: E702 setzt es
+ * schon beim Anwenden der Einstellungen (seite.ts), auch ohne Insel. Hier
+ * nahm die letzte Insel es bis zur Durchsicht (5. Oktober) mit — „ruhig"
+ * galt, das Etikett war weg.
+ */
 export function stopThemeMirror(): void {
   observer?.disconnect()
   observer = null
   motionObserver?.disconnect()
   motionObserver = null
   document.documentElement.removeAttribute('data-ui-theme')
-  document.documentElement.removeAttribute('data-ui-motion')
+  copyMotion()
 }

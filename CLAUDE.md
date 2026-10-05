@@ -1483,7 +1483,13 @@ Inseln, den Zeitmesser auf Escape und die Rundung im Tastaturfokus. Seit
 dem Nachtrag vom 4. Oktober (§11) auch die Einzeldatei allein, ohne Netz:
 die erste Frage kommt sofort im Kit, der Fokus kehrt nach Escape oder
 Antwort zum Knopf zurück, der gefragt hat, und ohne React antwortet das
-bisherige Fenster. Gezählt am 28. September, im
+bisherige Fenster. Seit der Durchsicht vom 5. Oktober (§12) auch, dass die
+Knöpfe in der Folge des Aufrufers stehen (sein „Behalten" zuerst und im
+Fokus — vorher löschte ein Enter das Blatt), dass ein „Abbrechen" unter der
+Kennung `nein` nicht verdoppelt wird, dass eine stolpernde Insel dem
+bisherigen Fenster weicht statt die Seite stillzulegen, dass „ruhig" im
+selben Bild schliesst und dass der Rückweg für Ja/Nein ein sichtbares
+„Abbrechen" hat. Gezählt am 28. September, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf
 seinem Zweig; die zweite Welle zählt beim Zusammenführen neu.*
 

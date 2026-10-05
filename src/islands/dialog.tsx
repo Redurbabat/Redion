@@ -77,6 +77,9 @@ export interface RedionDialogProps {
 const haken = (attribute: Record<`data-${string}`, string>): DialogAction['buttonProps'] =>
   attribute as unknown as DialogAction['buttonProps']
 
+/** Ein Knopf, der so heisst, IST der Abbruch des Aufrufers — auch unter einer anderen Kennung als ''. */
+const ABBRECHEN = /^\s*abbrechen\s*$/i
+
 /** So lange darf das Ausblenden höchstens dauern (Kit: 160 bzw. 240 ms, +80 Sicherheit). */
 const WEG_SPAETESTENS_MS = 400
 
@@ -131,10 +134,16 @@ export function RedionDialog(props: RedionDialogProps) {
 
   /* ---- Wahl ------------------------------------------------------------ */
   if (art === 'wahl') {
-    /* Hat der Aufrufer selbst einen Abbruch-Knopf (Kennung ''), ist ER das
-       Abbrechen. Sonst kommt einer dazu: am Telefon gibt es kein Escape. */
-    const eigenerAbbruch = knoepfe.find((k) => k.id === '')
-    const auswahl = knoepfe.filter((k) => k.id !== '')
+    /* Hat der Aufrufer selbst einen Abbruch-Knopf, ist ER das Abbrechen —
+       der mit der Kennung '' oder, wenn es den nicht gibt, der, der
+       „Abbrechen" HEISST (vier Aufrufer nennen ihn so unter der Kennung
+       `nein`: Seiten zerlegen, zweimal „ersetzen?" in der Stiftleiste,
+       Vektoren bauen; sonst stünden zwei „Abbrechen" da — Durchsicht,
+       5. Oktober). Er antwortet mit SEINER Kennung, auch auf Escape: jeder
+       dieser Aufrufer fragt nach „ja". Sonst kommt einer dazu: am Telefon
+       gibt es kein Escape. */
+    const eigenerAbbruch = knoepfe.find((k) => k.id === '') ?? knoepfe.find((k) => ABBRECHEN.test(k.text))
+    const auswahl = knoepfe.filter((k) => k !== eigenerAbbruch)
 
     /* Das Aktionsblatt hat seinen EIGENEN Abbruch-Knopf, und der nimmt
        keinen Haken an. Bringt der Aufrufer einen mit (`data-w=""`, Prüfläufe
@@ -162,27 +171,35 @@ export function RedionDialog(props: RedionDialogProps) {
       )
     }
 
-    const aktionen: DialogAction[] = auswahl.map((k) => ({
+    const abbrechen: DialogAction = {
+      label: eigenerAbbruch?.text || 'Abbrechen',
+      hint: eigenerAbbruch?.hinweis || undefined,
+      role: 'cancel',
+      onSelect: () => antworten(eigenerAbbruch ? eigenerAbbruch.id : ''),
+      buttonProps: haken(eigenerAbbruch ? { 'data-w': eigenerAbbruch.id } : { 'data-a': 'zu' }),
+    }
+    /* DIE FOLGE DES AUFRUFERS BLEIBT (Durchsicht, 5. Oktober). Sein eigener
+       Abbruch steht dort, wo er ihn hinsetzte — oft ZUERST, und dann hat er
+       den Fokus, wie im bisherigen Fenster („Blatt löschen?": „Behalten"
+       vor „Löschen"; „Vektoren bauen?": „Abbrechen" vor dem Knopf, der Geld
+       kostet). Hier stand er bis zur Durchsicht immer am Ende — dann stand
+       der Fokus auf „Löschen", und ein Enter löschte das Blatt. */
+    const aktionen: DialogAction[] = knoepfe.map((k) => k === eigenerAbbruch ? abbrechen : {
       label: k.text,
       hint: k.hinweis || undefined,
       role: k.gefahr ? 'destructive' : 'default',
       onSelect: () => antworten(k.id),
       buttonProps: haken({ 'data-w': k.id }),
-    }))
-    const abbrechen: DialogAction = {
-      label: eigenerAbbruch?.text || 'Abbrechen',
-      hint: eigenerAbbruch?.hinweis || undefined,
-      role: 'cancel',
-      onSelect: () => antworten(''),
-      buttonProps: haken(eigenerAbbruch ? { 'data-w': '' } : { 'data-a': 'zu' }),
+    })
+    /* Ohne eigenen Abbruch kommt „Abbrechen" dazu. EINE Antwort, und sie
+       löscht etwas (`Dialog.bestaetigen` mit `gefahr`): es steht links und
+       hat den Fokus — wie jede Ja/Nein-Frage am iPhone, und ein Enter aus
+       Versehen löscht nichts. Sonst steht es hinter den Antworten, der
+       Fokus auf der ersten (wie im bisherigen Fenster). */
+    if (!eigenerAbbruch) {
+      if (auswahl.length === 1 && auswahl[0]?.gefahr) aktionen.unshift(abbrechen)
+      else aktionen.push(abbrechen)
     }
-    /* EINE Antwort, und sie löscht etwas (`Dialog.bestaetigen` mit
-       `gefahr`): „Abbrechen" steht links und hat den Fokus — wie jede
-       Ja/Nein-Frage am iPhone, und ein Enter aus Versehen löscht nichts.
-       Sonst bleibt die Folge, wie sie war: die Antworten zuerst, der Fokus
-       auf der ersten (wie im bisherigen Fenster). */
-    if (auswahl.length === 1 && auswahl[0]?.gefahr) aktionen.unshift(abbrechen)
-    else aktionen.push(abbrechen)
     return (
       <div data-insel-dialog="wahl" onAnimationEnd={beiAnimationsende} onClick={beiKlick}>
         <Dialog open={open} onOpenChange={onOpenChange} title={titel} message={text || undefined} actions={aktionen}

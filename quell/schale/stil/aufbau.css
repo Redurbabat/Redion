@@ -273,6 +273,11 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   background:none; padding:0;
 }
 [data-insel-traeger="geht"]{ pointer-events:none }
+/* „Ruhige Darstellung" hält jede Bewegung an — auch die Ausblendung des
+   Kits, und ohne sie meldet es kein Ende: das Fenster stand nach der Antwort
+   noch 240 ms regungslos da (Durchsicht, 5. Oktober). Ohne Bewegung ist es
+   im selben Bild weg. */
+body[data-bewegung="ruhig"] [data-insel-traeger="geht"]{ visibility:hidden }
 @media(max-width:760px), (max-height:500px) and (pointer:coarse){
   [data-insel-traeger]{ bottom:var(--visual-bottom, 0px); padding:0 }
 }

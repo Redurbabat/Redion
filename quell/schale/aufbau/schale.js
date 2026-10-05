@@ -3694,10 +3694,16 @@ const App = (() => {
             const m = letztes('.menu');
             const o = letztes('.overlay');
             const feld = letztes('[data-esc-schliesst]');
+            /* Ein Träger OHNE Fenster des Kits darin (die Insel stolperte, oder
+               sie zeichnet noch nicht) geht wie jedes Fenster: sonst bliebe eine
+               unsichtbare Ebene über der Seite, die alles stilllegt und die kein
+               Escape mehr erreicht. dialog.ts gibt dem Aufrufer dann „abgebrochen"
+               (Durchsicht, 5. Oktober). */
             if (m)
                 m.remove();
             else if (o) {
-                if (!o.hasAttribute('data-insel-traeger'))
+                if (!o.hasAttribute('data-insel-traeger') ||
+                    !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet'))
                     o.remove();
             }
             else if (feld) {

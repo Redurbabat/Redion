@@ -58749,3 +58749,91 @@ werden die Fokus-Punkte von §11 rot (4. Oktober: 69 bestanden, 4
 durchgefallen — der Fokus bleibt auf `BODY`). Beide bleiben: die eigene
 schützt den Fall, in dem der Auslöser schon still ist, wenn das Kit
 nachsieht.
+
+**Durchsicht, 5. Oktober 2026 — was die Aufrufer mitbringen, bleibt; und
+keine Frage bleibt stehen, wenn das Kit stolpert.** Redur, 3. Oktober,
+ca. 19:35 UTC: „Weiter ohne pause,"; der Auftrag dahinter: „ohne eine
+funktione löschen". Die Durchsicht hat jeden Weg der Fragen im Browser
+nachgegangen (Rechner und Telefon, Tastatur, file:// und Einzeldatei, ohne
+React) und fünf Dinge gefunden, die der Endbau `1654e75d9` falsch machte —
+jedes gesehen, jedes jetzt in `test587` §12 (rot gegen den Endbau: 80 bestanden,
+17 durchgefallen — alle 17 in §12; auf diesem Stand 97/97):
+
+1. **Die Folge des Aufrufers.** Bringt ein Aufrufer seinen eigenen
+   Abbruch mit, setzte das Kit-Fenster ihn immer ans Ende — im bisherigen
+   Fenster stand er, wo der Aufrufer ihn hinsetzte, oft ZUERST, und dann
+   hatte er den Fokus. „Blatt löschen?" (Tabelle): „Behalten" vor
+   „Löschen" — im Kit stand der Fokus auf „Löschen", und ein Enter löschte
+   das Blatt mit seinen Zellen. „Vektoren bauen?" (KI): „Abbrechen" vor
+   „Bauen", das Geld kostet — im Kit stand der Fokus auf „Bauen".
+   **Entschieden:** die Knöpfe stehen in der Folge des Aufrufers, sein
+   Abbruch an seiner Stelle; nur ohne eigenen Abbruch kommt „Abbrechen"
+   dazu (bei einer gefährlichen einzigen Antwort zuerst, sonst zuletzt —
+   wie bisher).
+2. **Ein „Abbrechen", nicht zwei.** Vier Aufrufer nennen ihren Abbruch
+   „Abbrechen", aber unter der Kennung `nein` (Seiten zerlegen; zweimal
+   „ersetzen?" in der Stiftleiste; Vektoren bauen). Das Kit-Fenster stellte
+   sein eigenes „Abbrechen" daneben: zwei gleiche Knöpfe, und React hatte
+   zwei Knöpfe mit demselben Schlüssel. **Entschieden:** ein Knopf, der
+   „Abbrechen" heisst, IST der Abbruch des Aufrufers (wenn es keinen mit
+   der Kennung `''` gibt); er antwortet mit seiner Kennung, auch auf
+   Escape — alle vier fragen nach „ja". Alternative: die vier Aufrufer auf
+   die Kennung `''` umstellen — vier Bereiche und drei Prüfläufe
+   (`data-w="nein"` in 129, 196, 468) für etwas, das die Insel allein
+   richtig machen kann.
+3. **Stolpert die Insel beim Zeichnen**, fing ihre Fehlergrenze den Fehler,
+   und im Träger stand nur ihr Fehlersatz: eine unsichtbare Ebene über der
+   ganzen Seite, alles darunter still, Escape liess den Träger stehen (er
+   gehört ja dem Kit), und die Frage kam nie — gesehen mit einem Fokus, der
+   im Kit wirft. **Entschieden:** `dialog.ts` hört auf
+   `redion-insel-fehler`; trifft es DIESES Fenster, geht der Träger, und das
+   bisherige Fenster fragt — wie, wenn die Inseln gar nicht kommen
+   (Punkt 4 oben: „nie beides, nie keins"). Dazu nimmt der eine
+   Escape-Griff einen Träger, in dem kein Fenster des Kits steht, wie jedes
+   Fenster weg.
+4. **„Ruhige Darstellung" im selben Bild.** Ohne Bewegung meldet das Kit
+   kein Ende seiner Ausblendung (`animation:none`), und seine
+   Sicherheitsfrist hielt das Fenster nach der Antwort noch 240 ms
+   regungslos stehen — ein Escape, auf das scheinbar nichts geschieht.
+   **Entschieden:** bei „ruhig" ist ein Träger, der geht, unsichtbar
+   (`visibility:hidden`, aufbau.css) — im nächsten Bild weg. Mit Bewegung
+   blendet er aus wie bisher (Gegenprobe im Lauf). **Und** das Etikett
+   `html[data-ui-motion="reduce"]` setzt E702 schon beim Anwenden der
+   Einstellungen; die Brücke von E710 spiegelte es ein zweites Mal und
+   nahm es mit der letzten Insel wieder weg — „ruhig" galt, das Etikett
+   war fort. Jetzt lässt sie es stehen, wie „ruhig" es sagt.
+5. **Der Rückweg für Ja/Nein.** Ohne Inseln hatte `Dialog.bestaetigen` im
+   bisherigen Fenster nur den einen Knopf („Alles löschen") — kein
+   sichtbares „Abbrechen", am Telefon nur ein Tipp daneben; `confirm()`
+   hatte eines. Jetzt steht „Abbrechen" da, bei Gefahr zuerst und im
+   Fokus.
+
+**Fertig gemacht in der finalen Durchsicht (5. Oktober, abends; Redur,
+ca. 14:15 UTC: „Also an was du jetzt macht mache es jetzt fertig und
+danach arbeite nicht mehr weiter …").** Die Durchsicht war vor ihrem
+Commit abgebrochen worden (Sitzungsgrenze). Nachgesehen und behalten,
+was oben steht — keine Zusage eines Wächters gelockert, nur §12 dazu. Zwei
+Dinge am Wächter selbst: (a) „`data-ui-motion` bleibt" (Punkt 4) lief auf
+der Seite, auf der vorher die Insel stolperte, und war gegen den Endbau
+GRÜN — die gestolperte Insel hielt dort den Spiegel an. Er läuft jetzt auf
+einer eigenen Seite und misst erst, wenn Träger und Insel fort sind;
+gegen den Endbau rot (ist `null`). (b) Ein namenloser `DIV`, der in einem
+Nachbarlauf als „stillgelegt" auftauchte, war die Hülle eines SVG-Halters
+(`textur.ts`, `linse.ts`: `aria-hidden`, von Geburt an `inert`, E649) —
+kein Rest einer Frage; nachgestellt mit sechsfacher CPU-Drossel, drei
+Runden, kein anderer stiller Teil. Je Korrektur eine Gegenprobe (in einer
+Kopie verbogen, nie im Zweig): ohne den Hörer auf `redion-insel-fehler`
+wird Punkt 3 rot, ohne die Regel für „ruhig" in `aufbau.css` Punkt 4, mit
+dem Escape-Griff des Endbaus der Träger ohne Kit-Fenster, mit dem Rückweg
+des Endbaus Punkt 5 (Zahlen in messungen §80). **Gesehen, nicht geändert**
+(AUFGABEN E710 Punkt 8, im Kit): seit es nur noch EIN „Abbrechen" gibt,
+stehen zwei Antworten so, wie das Kit zwei Knöpfe setzt — nebeneinander;
+mit Hinweisen bricht am Telefon die Beschriftung um (92 px hoch). Lesbar
+und über 44 px; iOS stellt sie in dem Fall untereinander.
+
+**Kosten:** im Start +0,9 KB gzip (`dialog.js` +587, `schale.js` +178,
+`aufbau.css` +137, `stand.js` +8 Bytes; gzip -6), `islands.js` +57 Bytes
+gzip (nicht beim Start), Einzeldatei +3'090 Bytes; `test388` §5: „Der Start holt 2831 KB (gzip) über
+248 Dateien — Decke 2850 KB" (Endbau: 2830).
+**Nicht geändert:** jede Frage am selben Auslöser, mit denselben Antworten
+und Haken; nichts gelöscht, nichts verlegt.

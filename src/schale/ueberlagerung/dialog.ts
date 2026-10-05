@@ -278,10 +278,33 @@ const Dialog = (() => {
 
     let beantwortet = false;
     const waechter = new MutationObserver(() => { if (!o.isConnected) antwort(abbruch); });
+    /* STOLPERT DIE INSEL BEIM ZEICHNEN (Durchsicht, 5. Oktober), fängt ihre
+       Fehlergrenze den Fehler (main.tsx) und meldet ihn als
+       `redion-insel-fehler`. Im Träger stand dann statt des Fensters nur der
+       Fehlersatz der Grenze — unsichtbar über der ganzen Seite, alles
+       darunter still, Escape liess den Träger stehen, und die Frage kam nie.
+       Jetzt gilt dasselbe wie, wenn die Inseln gar nicht kommen: der Träger
+       geht, und das bisherige Fenster fragt (`kitOderAlt`). Nur, wenn es
+       DIESES Fenster getroffen hat — sein Träger trägt dann den Fehlersatz. */
+    const beiInselFehler = (e: Event): void => {
+      if (beantwortet || (e as CustomEvent<{ insel?: string }>).detail?.insel !== 'dialog') return;
+      setTimeout(() => {
+        if (beantwortet || !o.querySelector('[data-insel-fehler]')) return;
+        beantwortet = true;
+        waechter.disconnect();
+        removeEventListener('redion-insel-fehler', beiInselFehler);
+        weg();
+        if (typeof Fokus !== 'undefined') Fokus.inertAktualisieren();
+        if (vorher?.isConnected) vorher.focus({ preventScroll: true });
+        fehler(new Error('Das Fenster des Kits stolperte beim Zeichnen.'));
+      }, 0);
+    };
+    addEventListener('redion-insel-fehler', beiInselFehler);
     const antwort = (wert: T): void => {
       if (beantwortet) return;
       beantwortet = true;
       waechter.disconnect();
+      removeEventListener('redion-insel-fehler', beiInselFehler);
       /* Kein Fenster mehr für Fokus, Escape und Prüfläufe — die Seite ist
          sofort wieder bedienbar, während der Dialog ausblendet. */
       o.classList.remove('overlay');
@@ -305,6 +328,7 @@ const Dialog = (() => {
       });
     } catch (e: unknown) {
       beantwortet = true;
+      removeEventListener('redion-insel-fehler', beiInselFehler);
       o.remove();
       fehler(e);
       return;
@@ -354,8 +378,18 @@ const Dialog = (() => {
   const bestaetigen = (
     { titel, text = '', ja = 'OK', gefahr = false }:
     { titel: string; text?: string; ja?: string; gefahr?: boolean }
-  ): Promise<boolean> =>
-    wahl({ titel, text, knoepfe: [{ id: 'ja', text: ja, gefahr }] }).then(w => w === 'ja');
+  ): Promise<boolean> => {
+    const knopf: DialogKnopf = { id: 'ja', text: ja, gefahr };
+    /* Im bisherigen Fenster (der Rückweg ohne Inseln) stand hier nur der
+       eine Knopf — kein sichtbares „Abbrechen", am Telefon nur ein Tipp
+       daneben; `confirm()` hatte eines (Durchsicht, 5. Oktober). Jetzt steht
+       es da, bei Gefahr ZUERST: dort hat es den Fokus, und ein Enter löscht
+       nichts. Das Kit-Fenster setzt sein „Abbrechen" selbst (dialog.tsx). */
+    const abbruch: DialogKnopf = { id: '', text: 'Abbrechen' };
+    return kitOderAlt<string>({ art: 'wahl', titel: String(titel ?? ''), text: String(text ?? ''), knoepfe: [{ ...knopf }] },
+      '', () => wahlAlt({ titel, text, knoepfe: gefahr ? [abbruch, knopf] : [knopf, abbruch] }))
+      .then(w => w === 'ja');
+  };
 
   /**
    * NUR ZUR KENNTNIS — statt `alert()` (E710). Ein Knopf („OK"), Escape und
