@@ -10,6 +10,8 @@
  *   §1 HALTEN GILT AUCH BEI ZITTERNDER HAND. Das war der ganze Fehler: jeder
  *      aufgezeichnete Punkt setzte die Uhr zurück, und eine Hand, die hält,
  *      liefert weiter Punkte. Mit der Maus ging es, mit einer Hand nie.
+ *      Und ein schneller, kurzer Strich, still gehalten, wird ebenso eine
+ *      Linie (E708, Durchsicht).
  *   §2 DIE ERKENNUNG WAR NICHT DAS PROBLEM — nachgemessen, nicht geändert.
  *   §3 DER SCHUTZLEITER: ein grüner Strich und ein gelber Strich-Punkt
  *      darüber, in EINER Marke.
@@ -20,6 +22,10 @@
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   §1 → `bewegtUm` wieder bei jedem Punkt setzen: der gehaltene Strich
  *        bleibt krumm. Gelaufen, rot.
+ *   §1 → die Erkennung nur bis zur Ruhe der Hand fragen, ohne die ganze
+ *        Tinte als zweite Frage (E708 vor der Durchsicht): der schnelle,
+ *        kurze, still gehaltene Strich bleibt ein Strich mit 8 Punkten.
+ *        Gelaufen, rot.
  *   §3 → die Schutzleiter-Gruppe auslassen: ein Strich statt zwei, und die
  *        Farbe der Leiste statt Grün. Gelaufen, rot.
  *   §4 → `delete mark.stil` wieder ohne Ausnahme: die gerade Leitung wird
@@ -159,6 +165,43 @@ console.log('\n§1 Halten gilt auch, wenn die Hand zittert');
   await strichHalten(s3, 2, 120);
   gleich('Kurz aufgesetzt ist kein Halten', (await marken(s3)).map(x => x.art), ['stift']);
   await s3.close();
+
+  /* UND DER SCHNELLE, KURZE STRICH, STILL GEHALTEN (E708, Durchsicht).
+     Seit E708 fragt die Erkennung zuerst den Strich bis zur Ruhe der Hand.
+     Ein schneller, kurzer Zug hat bis dahin nur eine Handvoll Punkte —
+     `InkShapes` verlangt acht —; die ganze Tinte hat mehr, weil der
+     Glätter beim Halten nachzieht. Der Grundstand machte daraus eine Linie,
+     und das soll so bleiben: wer still hält (eine Maus, ein ruhiger Stift),
+     bekommt seine Linie, auch wenn der Zug kurz und schnell war. */
+  for (const [laenge, schritt] of [[40, 10], [80, 20]] as const) {
+    const s4 = await mitStift();
+    await s4.evaluate(async (a: { laenge: number; schritt: number }) => {
+      const f = document.querySelector<SVGSVGElement>('.blatt-marken')!;
+      const ctm = f.getScreenCTM()!;
+      const px = (x: number, y: number) => { const pt = f.createSVGPoint(); pt.x = x; pt.y = y; return pt.matrixTransform(ctm); };
+      const ev = (typ: string, x: number, y: number) => { const c = px(x, y); return new PointerEvent(typ, {
+        bubbles: true, cancelable: true, clientX: c.x, clientY: c.y, pointerId: 7, pointerType: 'pen',
+        isPrimary: true, button: typ === 'pointermove' ? -1 : 0,
+        buttons: typ === 'pointerup' ? 0 : 1, pressure: 0.6 }); };
+      f.dispatchEvent(ev('pointerdown', 200, 300));
+      for (let x = a.schritt; x <= a.laenge; x += a.schritt) {
+        f.dispatchEvent(ev('pointermove', 200 + x, 300));
+        await new Promise(r => setTimeout(r, 8));
+      }
+      /* Still halten: der Stift meldet weiter, an derselben Stelle. */
+      const bis = Date.now() + 900;
+      while (Date.now() < bis) {
+        f.dispatchEvent(ev('pointermove', 200 + a.laenge, 300));
+        await new Promise(r => setTimeout(r, 25));
+      }
+      f.dispatchEvent(ev('pointerup', 200 + a.laenge, 300));
+      await new Promise(r => setTimeout(r, 400));
+    }, { laenge, schritt });
+    const m4 = await marken(s4);
+    gleich(`Ein schneller, kurzer Strich (${laenge} Einheiten, ${schritt} je Meldung), still gehalten, wird eine Linie`,
+      m4.map(x => `${x.art}${x.art === 'stift' ? ':' + (x.pts || []).length : ''}`), ['line']);
+    await s4.close();
+  }
 }
 
 /* ═══ §2 Die Erkennung war nicht das Problem ═══════════════════════════════ */
