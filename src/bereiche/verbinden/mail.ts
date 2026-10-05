@@ -560,7 +560,7 @@ const Mail = (() => {
         bausteine().map((b: any, i: any) =>
           `<div class="frei-zeile"><span class="frei-kreis bg-blue">💬</span>` +
           `<span class="frei-name"><b>${esc(b.name)}</b><span>${esc(b.text).slice(0, 70)}…</span></span>` +
-          `<button data-weg="${i}">🗑</button></div>`).join('');
+          `<button data-weg="${i}" data-loeschknopf aria-label="Textbaustein löschen">🗑</button></div>`).join('');
     };
     zeichne();
 
@@ -602,7 +602,7 @@ const Mail = (() => {
               `<span class="frei-name"><b>${esc(feld)} ${esc(op)} „${esc(r.wert)}"</b>` +
               `<span>→ ${esc(r.label || '')}${r.wichtig ? ' · wichtig' : ''}` +
               `${r.gelesen ? ' · gelesen' : ''}</span></span>` +
-              `<button data-weg="${i}">🗑</button></div>`;
+              `<button data-weg="${i}" data-loeschknopf aria-label="Regel löschen">🗑</button></div>`;
           }).join('')
         : '<div style="padding:18px;color:var(--text-faint);font-size:14px">' +
           'Noch keine Regel. Zum Beispiel: <i>Absender enthält „rechnung" → Beschriftung Buchhaltung</i>.</div>';

@@ -8396,6 +8396,82 @@ verschwinden (§35):
 
 ---
 
+## L230 · Der Löschen-Knopf nach E709 — was noch nicht zerfliesst, und ein Knopf, den die Tastatur nicht erreicht — 28. September 2026
+
+**Gefunden beim Bau von E709.** Redur, 27. September, ca. 22:02: „Ich will
+das du löschen button so ist überla wo etwas zum löschen eine buton gibt".
+E709 hat alle 23 runden Löschen-Knöpfe (`🗑` als eigener Knopf, dazu das ✕
+der Chatliste) auf `RedionDelete` gestellt. Drei Dinge sind offen:
+
+1. **„Endgültig löschen" im Papierkorb ist mit der Tastatur nicht
+   erreichbar** — älter als E709. Die Tat-Stellen (`.pk-tat`, ↩ ↳ 🗑) sind
+   `<span>` IN einer Zeile, die selbst ein `<button>` ist (zurückholen und
+   öffnen). Ein Knopf in einem Knopf ist kein gültiges HTML; mit der
+   Tastatur kommt man nur an die ganze Zeile. E709 gibt den Fokus nach
+   „Abbrechen" deshalb an die Zeile zurück. Richtig wäre eine Zeile aus
+   einem Knopf und daneben drei echten Knöpfen — ein Umbau des Papierkorbs,
+   den `test33` und `test59` bewachen.
+2. **Löschen, das KEIN runder Knopf ist, fragt weiter auf seine Art.** Die
+   Menüzeilen („In den Papierkorb verschieben", „Datenbank löschen" …)
+   bleiben Menüzeilen (Auftrag: ein Menüeintrag ist kein runder Knopf). Die
+   Wortknöpfe „Löschen" in Werkzeugleisten (Auswahl im PDF, `Entf`) und im
+   Seitenblatt des Dokuments legen weg, was Strg Z oder der Papierkorb
+   zurückholt; ein zweiter Schritt dort bremst das Zeichnen. Ebenso
+   Wortknöpfe ohne Papierkorb: „Löschen" an Kommentar und Antwort
+   (`kommentare/ansicht/faden.ts`), am Datensatz-Blatt einer Datenbank
+   (`datenbanken/steuerung.ts`), „Löschen"/„Entfernen" bei Workern und
+   „Öffnen mit" in den Einstellungen. Ob auch sie zum runden Knopf werden
+   und zerfliessen sollen, entscheidet Redur mit einem Bild.
+3. **Kleine ✕ zum „Entfernen" in Formularen** (eine Filterregel, eine
+   Kachel, eine eigene Farbe) sind Bearbeiten, nicht Löschen von
+   Gespeichertem, und blieben, wie sie sind.
+4. **Nachgesehen am 3. Oktober (Durchsicht E709): zwei Zeichen-Knöpfe, die
+   die Suche von `test586` §2 nicht sieht.** Sie liest `<button …>🗑</button>`
+   wörtlich und `x.textContent = '🗑'` — nicht einen Knopf, der aus einer
+   Tabelle gebaut wird:
+   - die Leiste der Gedankenkarte, `['weg', '🗑', 'Ast löschen (Entf)']`
+     (`bloecke/arten/gedankenkarte.ts`, gebaut über `${ico}`): ein eckiger
+     Leistenknopf (28 × 26 px, Radius 5) neben ＋ ⏎ T ⊟, er nimmt den
+     gewählten Ast mit allen Unterthemen, `Entf` tut dasselbe in einem
+     Schritt;
+   - die Auswahlleiste der Planfläche, `✕` „Löschen (Entf)"
+     (`bloecke/arten/planflaeche.ts`) neben ↻ ⇄ ⧉ ⬚.
+   Beides sind Werkzeugleisten über einer Auswahl wie die Auswahl im PDF
+   (Punkt 2), keine runden Knöpfe — umgestellt ist keiner. Dazu, ebenfalls
+   unverändert: „🗑 Löschen" im Seitenblatt des Dokuments
+   (`pdf/document-mode.ts`, Wort mit Zeichen, Punkt 2) und die Liste „Eine
+   Vorlage löschen" (`datenbanken/steuerung.ts`, `🗑 <Name>` je Vorlage, ein
+   Untermenü).
+5. **Nachgesehen am 5. Oktober (zweite Durchsicht E709)**, über jedes
+   `data-weg`/`data-del`, jedes ✕ und 🗑 und jeden Namen mit „löschen" oder
+   „entfernen" im Quelltext. Kein weiterer runder 🗑-Knopf. Neu genannt,
+   NICHT umgestellt:
+   - das ✕ „Entfernen" auf der **Kennzahl-Karte**
+     (`datenbanken/datenmodell/ansicht.ts`): nimmt eine gespeicherte
+     Kennzahl weg, ein kleines ✕ im Kopf der Karte;
+   - das ✕ einer **Freigabe in der Wolke** (`verbinden/ansicht/wolke.ts`,
+     12 px, ohne Namen): nimmt einer eingeladenen Person den Zugang;
+   - die **eigenen Emoji** in den Einstellungen
+     (`einstellungen/ansicht/seite.ts`, `data-tun="emoji-weg:…"`): das Bild
+     selbst löscht beim ersten Klick („klicken zum Entfernen"), ohne Frage;
+   - das ✕ einer **Sortierung** (`datenbanken/steuerung.ts`), wie die
+     Filterregel und die Kachel aus Punkt 3 eine Formularzeile.
+   Keiner ist ein runder Löschen-Knopf; ob sie es werden, ist Redurs Wahl
+   (mit einem Bild), wie bei 2 bis 4.
+6. **Die Warnung des alten `confirm()` im Papierkorb fehlt** (gesehen am
+   5. Oktober): es sagte „… Mit ihm gehen seine Fassungen und Anhänge. Das
+   lässt sich nicht rückgängig machen." Die rote Pille sagt „Endgültig
+   löschen" — das Unumkehrbare steht da, die Fassungen und Anhänge nennt
+   niemand mehr. Ein Satz unter dem Paar (oder im Namen der roten Pille)
+   brächte es zurück, ohne das Paar zu verbreitern.
+
+**Was fehlt:** zu 1 der Umbau der Papierkorbzeile mit Wächter; zu 2, 3,
+4 und 5 Redurs Wahl (mit einem Bild der Leiste); zu 6 der Satz; zu 4 ausserdem, dass
+`test586` §2 auch aus Tabellen gebaute Knöpfe liest — erst, wenn Redur
+gewählt hat, sonst würde der Wächter eine offene Wahl als Fehler melden.
+
+---
+
 ## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
 
 **Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
@@ -9237,7 +9313,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 127 Lücken, 71 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

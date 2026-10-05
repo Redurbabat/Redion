@@ -359,7 +359,7 @@ const Einstellungen = (() => {
                 (liste.length ? liste.map((b) => `<div class="bereich-zeile"><span class="b-ico">${esc(b.icon)}</span>` +
                     `<b>${esc(b.name)}</b>` +
                     `<span class="ez-grau">${Links.seiten().filter(p => p.bereich === b.id).length} Seiten</span>` +
-                    `<button data-bereich-weg="${b.id}">🗑</button></div>`).join('')
+                    `<button data-bereich-weg="${b.id}" data-loeschknopf aria-label="Bereich „${esc(b.name)}“ löschen">🗑</button></div>`).join('')
                     : '<div class="ez-grau" style="padding:10px 0">Noch keine Bereiche angelegt.</div>') +
                 '</div>' +
                 zeile('Neuen Bereich anlegen', 'Zum Beispiel „Arbeit", „Privat", „Studium"', knopf('bereich-neu', 'Bereich anlegen')) +

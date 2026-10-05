@@ -1511,6 +1511,28 @@ Wächter (rot zuerst):
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
 
+## Der Löschen-Knopf nach E709 (L230)
+
+E709 hat alle runden Löschen-Knöpfe auf `RedionDelete` gestellt. Offen,
+jeweils mit eigenem Wächter (rot zuerst):
+
+1. Die Papierkorbzeile umbauen: eine Zeile aus einem Knopf (zurückholen und
+   öffnen) und daneben drei ECHTE Knöpfe (↩ ↳ „Endgültig löschen") — dann
+   erreicht die Tastatur auch das Endgültig-Löschen (`test33`, `test59`).
+2. Redur fragen (mit einem Bild), ob die Wortknöpfe „Löschen" in den
+   Werkzeugleisten (Auswahl im PDF, Seitenblatt des Dokuments) auch
+   zerfliessen sollen — sie legen weg, was Strg Z zurückholt.
+3. In dieselbe Frage (Durchsicht 3. Oktober, L230 Punkt 4): der 🗑 der
+   Gedankenkarten-Leiste („Ast löschen", aus einer Tabelle gebaut) und das ✕
+   der Auswahlleiste der Planfläche — beides Leistenknöpfe über einer Auswahl,
+   die `test586` §2 nicht sieht. Nach Redurs Wahl liest §2 auch aus Tabellen
+   gebaute Knöpfe (rot zuerst).
+4. In dieselbe Frage (zweite Durchsicht 5. Oktober, L230 Punkt 5): das ✕
+   der Kennzahl-Karte, das ✕ einer Freigabe in der Wolke, die eigenen Emoji
+   (das Bild löscht beim ersten Klick, ohne Frage) und das ✕ der Sortierung.
+   (Der frühere Punkt 4 — die rote Pille unter dem ruhenden Zeiger — ist am
+   5. Oktober erledigt, siehe ERLEDIGTE-AUFGABEN.)
+
 ## Zwei Fragen an die Ecke aus E676 (L235, nach E708)
 
 1. **`test201` §1 entscheiden** — die Probe ist ein rechter Winkel und seit

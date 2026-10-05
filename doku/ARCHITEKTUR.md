@@ -110,6 +110,9 @@ schale/
 │                                     (RedionSpring, E702)
 │                   press.js          die Druckfeder: jeder Knopf sinkt ein
 │                                     und federt zurück (RedionPress, E702)
+│                   delete.js         der Löschen-Knopf, der in „Löschen" und
+│                                     „Abbrechen" zerfliesst (RedionDelete, E709;
+│                                     Stil: stil/loeschen.css)
 │                   selection-flow.js die wandernde Fläche (E646), motion.js
 │                                     die Bewegungsschicht (E528–E537) …
 ├─ ueberlagerung/   Menü, Dialog, Hinweis — und UI als der alte Name

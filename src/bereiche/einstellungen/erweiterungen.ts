@@ -297,7 +297,7 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
                     `<div class="ew-text"><b>${esc(e.name)}</b>` +
                     `<span>${esc(e.kurz || (e.code || '').split('\\n')[0].slice(0, 70))}</span></div>` +
                     `<button data-code="${i}" title="Code ansehen">⌨</button>` +
-                    `<button data-weg="${i}" title="Entfernen">🗑</button>` +
+                    `<button data-weg="${i}" data-loeschknopf="Entfernen" title="${esc(e.name || 'Erweiterung')} entfernen">🗑</button>` +
                   '</div>').join('') + '</div>'
               : '<div class="pf-gut">Noch keine Erweiterung eingebaut.</div>') +
             '<div class="ew-titel">Zum Ausprobieren</div>' +
@@ -348,7 +348,7 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
       if (weg) {
         const i = +(weg.dataset["weg"] ?? -1);
         if (!l[i]) return;
-        if (!confirm('„' + l[i].name + '" wirklich entfernen?')) return;
+        /* Gefragt hat schon der Knopf (E709): „Entfernen" / „Abbrechen". */
         l.splice(i, 1); sichern(l); alleLaufen(); zeichne();
         return;
       }

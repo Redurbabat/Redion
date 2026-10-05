@@ -346,12 +346,18 @@ gleich('… und sie steht in der Liste', angelegt.zeilen, 1);
 p('… und die Tabelle darunter ist sofort gefärbt', angelegt.gemalt === true);
 
 const weggemacht = await seite.evaluate(async () => {
-  document.querySelector<HTMLElement>('#rg-liste [data-weg="0"]')!.click();
-  await new Promise(f => setTimeout(f, 300));
   const w = window as any;
-  return { anzahl: (Store.getBlock(w.__bid).mappe.blaetter[0].regeln || []).length,
+  /* Zwei Schritte (E709): der Knopf öffnet „Löschen" / „Abbrechen" und
+     nimmt noch nichts weg; erst die rote Pille löst den Löschweg aus. */
+  document.querySelector<HTMLElement>('#rg-liste [data-weg="0"]')!.click();
+  await new Promise(f => setTimeout(f, 120));
+  const gefragt = (Store.getBlock(w.__bid).mappe.blaetter[0].regeln || []).length;
+  document.querySelector<HTMLElement>('.ru-loesch-ja')?.click();
+  await new Promise(f => setTimeout(f, 300));
+  return { gefragt, anzahl: (Store.getBlock(w.__bid).mappe.blaetter[0].regeln || []).length,
            gemalt: !!document.querySelector('#pruef-regeln [data-a="A3"].regel-farbe') };
 });
+gleich('Der erste Druck auf 🗑 fragt nur (E709)', weggemacht.gefragt, 1);
 gleich('🗑 nimmt sie wieder weg', weggemacht.anzahl, 0);
 p('… und die Farbe verschwindet mit', weggemacht.gemalt === false);
 

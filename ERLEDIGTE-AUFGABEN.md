@@ -64,6 +64,84 @@ bei 700 ms fest. `test579` §9 misst in der Einzeldatei jetzt auch, dass das
 angenommene Blatt wirkt (44 px, genau eines, kein `<link>`). Beide
 Erweiterungen mit Gegenprobe rot gesehen.
 
+## 5. Oktober 2026 · E709 Durchsicht · Der Name sagt, was weggeht; unter dem Zeiger ganz und lesbar; der Fokus fällt nicht auf den body
+
+**Redur:** „Weiter ohne pause" (3. Oktober).
+
+**Gefunden:** am Rechner ruht der Zeiger nach dem Druck auf der roten Pille
+— ihre rote Tönung beim Überfahren nahm dem roten Wort in fünf dunklen
+Schemata den Kontrast (Standard 3,94, Wald 3,81, Mitternacht 4,19, Rosé und
+Touch Kit dunkel 4,05 : 1), und bei der Übergabe blendete sie aus dem
+Durchsichtigen ein (der offene Punkt 4 von AUFGABEN). Die Agenten und
+Worker hiessen für Vorleser nur „Löschen", die Bereiche „Löschen: Bereich
+„Schule" löschen", der Papierkorb nannte die Seite nicht. Schloss das Paar
+von selbst (Grösse, Rollen, Druck daneben), fiel der Fokus auf den body.
+
+**Gebaut:** Überfahren zeigt einen Ring statt einer Tönung (beide Pillen);
+jede Stelle nennt, was weggeht, ohne das Wort zu doppeln (im Papierkorb im
+title, damit die Zeile, die zurückholt, nicht „… löschen" heisst); der
+Fokus geht beim Selbst-Schliessen an den Knopf zurück.
+
+**Geprüft:** `test586` sechs Punkte mehr, rot gesehen (49 von 52, 49 von
+54), dann 54 von 54; die Gegenproben G10–G13; Nachbarn 33 59 72 126 130
+143 144 245 296 353 362 388 412 510 grün, `test464` nur §1 „Dreizehn
+Werkzeuge" (fremd, auf `b3cf1933` genauso). Nachgesehen, welche
+Löschen-Stellen fehlen: keine weitere runde; vier neue Stellen für Redurs
+Wahl (L230 Punkt 5, AUFGABEN).
+
+**Und von der Sonde über alle Stellen gefunden:** in der Bedingten Farbe
+einer Datenbank lagen die Pillen unter der Seitenleiste — eine Farbregel
+liess sich nicht mehr löschen; jetzt ist die Leiste ein Träger, und der
+Fokus bleibt nach dem Löschen in der neu gezeichneten Leiste. Die
+Chatliste der KI zeigt ihren Knopf am Rechner wieder erst beim Überfahren
+(wie vor E709). `test586` §7, rot gesehen, dann 60 von 60.
+
+## 3. Oktober 2026 · E709 Nachtrag · Die Läufe nach den zwei Korrekturen, und eine Durchsicht
+
+**Redur:** „Weiter ohne pause".
+
+**Nachgelesen:** Die Läufe vom 28. September (ca. 15:54 UTC, Stand von E709)
+sind durchgelaufen: `test586` 45 von 45, die Gegenprobe zur Pillenbreite
+rot gesehen (44 von 45) und zurück, `test362` 18 von 18, `test464` rot nur
+in §1 „Dreizehn Werkzeuge" — auf `b3cf1933` genauso (fremd). Bilder neu.
+
+**Durchsicht:** zwei Leistenknöpfe über einer Auswahl, die `test586` §2
+nicht sieht (Gedankenkarte 🗑, Planfläche ✕) — nicht umgestellt, Redurs
+Wahl (L230 Punkt 4, AUFGABEN).
+
+**Am Bild gesehen und behoben:** beim Zurückfliessen sprang der Kreis im
+Papierkorb von 44 auf 32 px, und der Knopf stand ein, zwei Bilder lang
+blass da; ein schneller zweiter Druck nach „Abbrechen" verlor
+`aria-expanded`. Jetzt fliesst die Flüssigkeit in die Grösse des Knopfs
+zurück und übergibt ohne Übergang (`test586` 48 von 48, rot gesehen 45 von
+48; Nachbarn 72 126 130 143 144 353 362 388 412 grün, 464 nur §1 fremd).
+
+## 28. September 2026 · E709 · Der Löschen-Knopf, der zerfliesst — überall, wo gelöscht wird
+
+**Redur:** um ca. 22:02 ein Video (ein runder Knopf mit rotem Papierkorb
+zerfliesst in „Confirm" und „Cancel") und dazu: „Ich will das du löschen
+button so ist überla wo etwas zum löschen eine buton gibt".
+
+**Gebaut:** EIN Helfer in Redions eigenem TypeScript und CSS
+(`src/schale/bedienung/delete.ts` → `RedionDelete`,
+`quell/schale/stil/loeschen.css`), nachgebaut nach DeleteButton aus dem
+Touch Kit, ohne React beim Start. Eine Stelle macht mit, indem ihr Knopf
+`data-loeschknopf` trägt; ein Zuhörer in der Einfangphase öffnet beim ersten
+Druck das Paar, erst die rote Pille lässt den Druck zum alten Griff durch.
+EIN Klebefilter je Dokument, an nur während des Fliessens. 23 Stellen in 16
+Dateien: Papierkorb (Seiten und Blöcke, „Endgültig löschen"), Bereiche,
+Erweiterungen, Farbregeln, Filtergruppen, Auswahl-Optionen, Automationen und
+Prüfsätze der Datenbanken, Notizen und Formeln im Wissen, Regeln der Tabelle,
+Eingänge, Textbausteine und Regeln der Mail, Kalender-Abos, Dateien,
+KI-Server, eigene Agenten und Worker, die Chatliste der KI, die Elemente der
+Zeichenfläche, Konten. Die zwei `confirm()` hinter einem Papierkorbknopf
+(einzeln endgültig löschen, Erweiterung entfernen) sind durch den zweiten
+Schritt ersetzt; „Papierkorb leeren" fragt weiter.
+
+**Geprüft:** `test586` (neu, rot auf `b3cf1933`), dazu die Läufe, die diese
+Knöpfe drücken (`test72`, `test130`, `test144`, `test464` — erweitert: der erste Druck
+fragt nur) und die Nachbarn; Zahlen in E709 und messungen §79. Offen: L230.
+
 ## 28. September bis 3. Oktober 2026 · E708 · Rot zuerst am Stift: Halten und Farbwähler wieder grün, eine Probe beim Entscheid
 
 **Redur:** um ca. 16:45 „… dann bessere stift efeckte beim zeichnen …" und

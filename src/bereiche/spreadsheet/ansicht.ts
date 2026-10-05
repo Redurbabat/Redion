@@ -1190,7 +1190,7 @@ const SpreadsheetView = (() => {
                 : `<span class="fr-punkt bg-${REGELFARBEN[r.farbe || 'gelb'] || 'yellow'}"></span>`) +
               `<span class="fr-text">${esc(satz(r))}</span>` +
               `<button data-an="${i}" title="An oder aus">${r.an === false ? '☐' : '☑'}</button>` +
-              `<button data-weg="${i}" title="Regel löschen">🗑</button></div>`).join('')
+              `<button data-weg="${i}" data-loeschknopf title="Regel löschen">🗑</button></div>`).join('')
           : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
             'Noch keine Regel. Unten eine anlegen — der Bereich ist schon ' +
             'ausgefüllt, wenn du vorher etwas markiert hast.</div>';

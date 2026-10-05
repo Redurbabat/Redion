@@ -808,7 +808,7 @@ const Kalender = (() => {
                             `<span class="frei-name"><b>${esc(a.name || 'Ohne Namen')}</b>` +
                             `<span>${esc(a.url).slice(0, 60)}…${a.zuletzt ? ' · zuletzt ' + esc(String(a.zuletzt).slice(0, 10)) : ''}</span></span>` +
                             `<button data-an="${i}" title="Ein oder aus">${a.an === false ? '☐' : '☑'}</button>` +
-                            `<button data-weg="${i}" title="Entfernen">🗑</button></div>`).join('') + '</div>'
+                            `<button data-weg="${i}" data-loeschknopf="Entfernen" title="Kalender-Abo entfernen">🗑</button></div>`).join('') + '</div>'
                         : '') +
                     '<div class="verb-knoepfe"><button data-a="abo-neu">＋ Adresse eintragen</button>' +
                     '<button data-a="abo-hol">Jetzt abgleichen</button>' +

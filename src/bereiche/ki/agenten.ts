@@ -1726,7 +1726,7 @@ const Agent = (() => {
             `<span>${(a.werkzeuge || []).length} Werkzeuge · ${a.guthaben || 8} Schritte` +
             `${a.ausloeser?.art === 'taeglich' ? ' · täglich ab ' + a.ausloeser.stunde + ' Uhr' : ''}` +
             `${(a.wissen || []).length ? ' · ' + a.wissen.length + ' Wissensseiten' : ''}</span></span>` +
-            `<button data-bearb="${i}">✎</button><button data-weg="${i}">🗑</button></div>`).join('')
+            `<button data-bearb="${i}">✎</button><button data-weg="${i}" data-loeschknopf aria-label="Agent „${esc(a.name)}“ löschen">🗑</button></div>`).join('')
         : '<div style="padding:18px;color:var(--text-faint);font-size:14px">' +
           'Noch kein eigener Agent. Ein eigener Agent hat eigene Anweisungen, eigene ' +
           'Werkzeugrechte, eigene Wissensseiten und darf zu einer festen Uhrzeit von ' +
@@ -1869,7 +1869,7 @@ const Agent = (() => {
             `<span class="frei-name"><b>${esc(w.name)}</b>` +
             `<span>${esc(w.beschreibung || '').slice(0, 60) || 'ohne Beschreibung'}</span></span>` +
             `<button data-test="${i}">Testen</button>` +
-            `<button data-bearb="${i}">✎</button><button data-weg="${i}">🗑</button></div>`).join('')
+            `<button data-bearb="${i}">✎</button><button data-weg="${i}" data-loeschknopf aria-label="Worker „${esc(w.name)}“ löschen">🗑</button></div>`).join('')
         : '<div style="padding:18px;color:var(--text-faint);font-size:14px">Noch kein Worker.</div>';
     };
     zeichne();

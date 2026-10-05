@@ -1794,7 +1794,7 @@ const KI = (() => {
                 `<span class="ki-pin${c.angeheftet ? ' on' : ''}" data-pin="${c.id}" ` +
                 `title="${c.angeheftet ? 'Nicht mehr anheften' : 'Anheften'}">` +
                 `${zeichen('star', 13)}</span>` +
-                `<span class="ki-weg" data-weg="${c.id}" title="Löschen">` +
+                `<span class="ki-weg" data-weg="${c.id}" data-loeschknopf title="Chat löschen">` +
                 `${zeichen('close', 13)}</span></button>`).join('');
             liste.addEventListener('click', e => {
                 const pin = elVon(e)?.closest('[data-pin]');

@@ -1,0 +1,392 @@
+/* loeschen.css — der Löschen-Knopf, der zerfliesst (E709; Verhalten:
+ * src/schale/bedienung/delete.ts). Nur solange offen: die Flüssigkeit
+ * (.ru-loesch-goo, Stücke, die sich nur verschieben und skalieren; der EINE
+ * Filter #ru-loesch-goo nur bei `data-fliesst`), der Papierkorb darüber und
+ * das Paar „Löschen"/„Abbrechen". In Ruhe: CSS-Formen, kein Filter.
+ * SPEZIFITÄT STATT REIHENFOLGE: Bauteil-Blatt vor bausteine.css (test87);
+ * gegen die Zeilenregeln späterer Blätter gewinnt `html body [m][m]` (0,2,2).
+ * GRÖSSE `--touch-min` (§37): „Löschen"/„Abbrechen" sind Bestätigen und
+ * Abbrechen — ein Hauptweg. */
+
+:root{
+  /* Die Fläche des Kreises und der Pillen: eine Stufe über der Karte. */
+  --loesch-flaeche: var(--bg-hover);
+  --loesch-groesse: var(--touch-min);
+  /* Das Zeichen setzt `RedionDelete.start()` aus Register.symbole ('trash'). */
+  --loesch-zeichen: none;
+}
+html[data-theme="light"]{ --loesch-flaeche: var(--bg); }
+
+/* ── Der runde Knopf in Ruhe ─────────────────────────────────────────────── */
+
+html body [data-loeschknopf][data-loeschknopf]{
+  /* Kein `position`, kein Rand, keine Deckkraft: wo der Knopf steht und ob er
+     erst beim Überfahren erscheint, bestimmt weiter seine Stelle
+     (`.elemente-weg` liegt absolut in der Ecke seiner Kachel). */
+  box-sizing: border-box;
+  /* flex, nicht grid: das versteckte Emoji ist ein namenloser Textteil und
+     schob im Raster das Zeichen um 5 px nach oben (auf dem Bild gesehen). */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: var(--loesch-groesse);
+  block-size: var(--loesch-groesse);
+  min-inline-size: var(--loesch-groesse);
+  min-block-size: var(--loesch-groesse);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--loesch-flaeche);
+  box-shadow: 0 0 0 .5px var(--line), var(--shadow-1);
+  color: var(--gefahr);
+  /* Das Emoji der alten Stelle bleibt im Markup (und als Name für Vorleser,
+     wo kein aria-label steht) — gezeigt wird das gezeichnete Zeichen. */
+  font-size: 0;
+  line-height: 0;
+  cursor: pointer;
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color var(--motion-fast) var(--ease), box-shadow var(--motion-fast) var(--ease);
+}
+/* Was die Stelle hineingeschrieben hat (Emoji, ein kleines ✕-Zeichen), bleibt
+   im Markup, wird aber nicht gezeigt — der Kreis trägt den Papierkorb. */
+html body [data-loeschknopf][data-loeschknopf] > *{ display: none; }
+/* DICHTE ZEILEN, EIN NEBENWEG (§37, geschriebener Grund): im Papierkorb und
+   in der Chatliste sitzt der Kreis IN einer Zeile, die selbst der Hauptweg
+   ist (zurückholen, öffnen). Dort 32 px statt 44 — die Pillen, die aus ihm
+   fliessen („Endgültig löschen", „Abbrechen"), haben trotzdem volle 44 px. */
+html body .pk-tat[data-loeschknopf][data-loeschknopf],
+html body .ki-weg[data-loeschknopf][data-loeschknopf]{ --loesch-groesse: 32px; }
+/* Die Chatliste der KI zeigt ihre Griffe am Rechner erst beim Überfahren
+   (bausteine.css, `.ki-chat .ki-weg`, wie vor E709) — `display` oben darf das
+   nicht überstimmen: sonst stand der rote Kreis in jeder Zeile, und beim
+   Überfahren schob der Stern ihn unter dem Zeiger weg (Durchsicht
+   5. Oktober, test586 §7). Offen bleibt er stehen, das Paar hängt an ihm. */
+@media (hover: hover){
+  html body .ki-chat:not(:hover) .ki-weg[data-loeschknopf][data-loeschknopf]:not([data-loesch-offen]){ display: none; }
+}
+html body [data-loeschknopf][data-loeschknopf]::before{
+  content: '';
+  inline-size: 20px;
+  block-size: 20px;
+  background-color: currentColor;
+  -webkit-mask: var(--loesch-zeichen, none) center / contain no-repeat;
+  mask: var(--loesch-zeichen, none) center / contain no-repeat;
+  transition: opacity var(--motion-instant) linear;
+}
+@media (hover: hover){
+  html body [data-loeschknopf][data-loeschknopf]:not([data-loesch-offen]):hover{
+    background: color-mix(in srgb, var(--gefahr) 14%, var(--loesch-flaeche));
+  }
+}
+html body [data-loeschknopf][data-loeschknopf]:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
+}
+html body button[data-loeschknopf][data-loeschknopf]:disabled{ opacity: .38; cursor: default; }
+
+/* Offen: die Flüssigkeit zeichnet den Kreis, der Knopf selbst wird durchsichtig. */
+html body [data-loeschknopf][data-loeschknopf][data-loesch-offen]{
+  background: transparent;
+  box-shadow: none;
+  transition: none;
+}
+html body [data-loeschknopf][data-loeschknopf][data-loesch-offen]::before{ opacity: 0; transition: none; }
+/* Zurück: die Flüssigkeit übergibt an den Knopf OHNE Übergang (`data-loesch-landet`,
+   zwei Bilder lang) — mit den Übergängen fürs Überfahren stand er im Bildstreifen
+   vom 3. Oktober bei 517–549 ms blass da. */
+html body [data-loeschknopf][data-loeschknopf][data-loesch-landet],
+html body [data-loeschknopf][data-loeschknopf][data-loesch-landet]::before{ transition: none; }
+
+/* Was in der Zeile unter den Pillen liegt (↩ ↳, „0 Seiten"), tritt zurück,
+   solange das Paar offen ist — die Lücke zwischen den Pillen bleibt leer. */
+html body [data-loesch-unter]{ opacity: 0; transition: opacity var(--motion-fast) var(--ease); }
+
+/* ── Die Schicht ─────────────────────────────────────────────────────────── */
+
+.ru-loesch-defs{ position: absolute; inline-size: 0; block-size: 0; overflow: hidden; pointer-events: none; }
+.ru-loesch-kante{ flood-color: var(--line-stark, var(--line)); }
+.ru-loesch-schatten{ flood-color: color-mix(in srgb, var(--bg-tief, var(--bg)) 60%, transparent); }
+html[data-theme="light"] .ru-loesch-schatten{ flood-color: color-mix(in srgb, var(--text) 18%, transparent); }
+
+.ru-loesch{
+  --loesch-s: var(--loesch-groesse);
+  --loesch-a: 88px;
+  --loesch-b: 88px;
+  --loesch-gap: 8px;
+  --loesch-pad: var(--space-5);  /* Raum für Unschärfe und Schwellen */
+  --loesch-seite: 1;
+  --loesch-saat: .5;
+  /* Knopf ÷ Kreis: in Ruhe hat der Kreis der Flüssigkeit die Grösse des
+     Knopfs (32 px in den dichten Zeilen), offen die der Pillen (setzt delete.ts). */
+  --loesch-k: 1;
+  --loesch-auf: var(--feder-lebhaft);
+  --loesch-auf-dauer: var(--feder-lebhaft-dauer);
+  --loesch-zu: var(--feder-knapp);
+  --loesch-zu-dauer: var(--feder-knapp-dauer);
+  position: absolute;
+  z-index: 30;
+  box-sizing: border-box;
+  inline-size: calc(var(--loesch-a) + var(--loesch-gap) + var(--loesch-b));
+  block-size: var(--loesch-s);
+  pointer-events: none;
+  font-size: 14px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Im body (keine Überlagerung drumherum): über der Seite, unter den Menüs. */
+body > .ru-loesch{ z-index: 580; }
+.ru-loesch[data-richtung="start"]{ --loesch-seite: -1; }
+.ru-loesch[data-geht]{ opacity: 0; transition: opacity 140ms linear; }
+
+/* ── Die zwei echten Knöpfe ──────────────────────────────────────────────── */
+
+.ru-loesch-paar{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  visibility: hidden;
+  pointer-events: none;
+  /* bleibt sichtbar, bis die Wörter verblasst sind */
+  transition: visibility 0s linear 240ms;
+}
+.ru-loesch[data-auf] .ru-loesch-paar{ visibility: visible; pointer-events: auto; transition-delay: 0s; }
+
+.ru-loesch .ru-loesch-wahl{
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: var(--loesch-a);
+  block-size: var(--loesch-s);
+  min-block-size: var(--loesch-s);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: none;
+  color: var(--gefahr);
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: .01em;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.ru-loesch .ru-loesch-nein{ inline-size: var(--loesch-b); color: var(--text); }
+
+/* In Ruhe (offen, ausgeflossen) oder ohne Bewegung: CSS-Pillen statt Flüssigkeit.
+   Die Übergabe von der Flüssigkeit an die Pille geschieht OHNE Übergang: mit
+   einem Farbübergang hier war die Pille im Bildstreifen bei 738 ms für ein
+   Bild durchsichtig („0 Seiten" schien durch). Nur das Überfahren blendet. */
+.ru-loesch[data-auf]:not([data-fliesst]) .ru-loesch-wahl,
+.ru-loesch[data-ruhig] .ru-loesch-wahl{
+  background: var(--loesch-flaeche);
+  box-shadow: 0 0 0 .5px var(--line), var(--shadow-1);
+  transition: none;
+}
+@media (hover: hover){
+  /* Überfahren zeigt ein RING in der Farbe der Pille, keine Tönung
+     (Durchsicht 5. Oktober, test586 §3). Rot unter dem roten Wort nahm ihm
+     in den dunklen Schemata den Kontrast (Standard 3,94 : 1, Wald 3,80 —
+     unter 4,5). Und weil der Zeiger nach dem Druck auf der roten Pille ruht,
+     blendete ihre Fläche bei der Übergabe über den Farbübergang aus dem
+     Durchsichtigen ein. Die Fläche bleibt jetzt, wie sie ist; nur der Ring
+     blendet. „Abbrechen" ebenso — wer während des Fliessens hinüberfährt,
+     sah dieselbe leere Pille. */
+  .ru-loesch[data-auf]:not([data-fliesst]) .ru-loesch-ja:hover,
+  .ru-loesch[data-ruhig] .ru-loesch-ja:hover{
+    box-shadow: inset 0 0 0 1.5px var(--gefahr), 0 0 0 .5px var(--line), var(--shadow-1);
+    transition: box-shadow var(--motion-fast) var(--ease);
+  }
+  .ru-loesch[data-auf]:not([data-fliesst]) .ru-loesch-nein:hover,
+  .ru-loesch[data-ruhig] .ru-loesch-nein:hover{
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text) 45%, transparent), 0 0 0 .5px var(--line), var(--shadow-1);
+    transition: box-shadow var(--motion-fast) var(--ease);
+  }
+}
+.ru-loesch .ru-loesch-ja:active{ background: color-mix(in srgb, var(--gefahr) 22%, var(--loesch-flaeche)); }
+.ru-loesch .ru-loesch-nein:active{ background: color-mix(in srgb, var(--text) 15%, var(--loesch-flaeche)); }
+
+.ru-loesch .ru-loesch-wahl:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
+}
+/* Solange die Pillen noch fliessen, wartet der Ring (er umrandete leere Luft). */
+.ru-loesch[data-setzt]:not([data-ruhig]) .ru-loesch-wahl:focus-visible{ outline-color: transparent; }
+
+/* ── Wörter und Zeichen: scharf und unscharf überblendet (nur Deckkraft) ─
+ * 0–120 ms das Zeichen wird unscharf · 30–180 ms „Löschen" unscharf ·
+ * 110–190 ms „Abbrechen" · danach werden beide scharf (wie im Video). */
+
+.ru-loesch-gesicht,
+.ru-loesch-zeichen{
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition: transform var(--loesch-zu-dauer) var(--loesch-zu);
+}
+.ru-loesch-wort,
+.ru-loesch-glyphe{ grid-area: 1 / 1; white-space: nowrap; }
+/* Gemessen wird die ganze Breite des Worts, nicht die vom Raster gekappte. */
+.ru-loesch-wort{ inline-size: max-content; }
+.ru-loesch-wort:not(.ru-loesch-schmier),
+.ru-loesch-glyphe:not(.ru-loesch-glyphe-schmier){ z-index: 1; }
+
+.ru-loesch-wort{ opacity: 0; transition: opacity 80ms linear; }
+.ru-loesch-schmier{ filter: blur(2.5px); opacity: 0; transition: none; }
+.ru-loesch[data-auf] .ru-loesch-wort:not(.ru-loesch-schmier){ opacity: 1; transition: opacity 100ms linear 180ms; }
+.ru-loesch[data-auf] .ru-loesch-nein .ru-loesch-wort:not(.ru-loesch-schmier){ transition-duration: 75ms; transition-delay: 185ms; }
+
+.ru-loesch[data-auf] .ru-loesch-schmier{ animation: ru-loesch-schaerfen 290ms linear 30ms; }
+.ru-loesch[data-auf] .ru-loesch-nein .ru-loesch-schmier{ animation-duration: 150ms; animation-delay: 110ms; }
+.ru-loesch[data-zurueck] .ru-loesch-schmier{ animation: ru-loesch-blitz-zurueck 200ms linear; }
+
+/* Zu wartet „Löschen" klein neben dem Zeichen, „Abbrechen" winzig am Kreis. */
+.ru-loesch-ja .ru-loesch-gesicht{
+  transform-origin: calc(50% - var(--loesch-seite) * 50%) 50%;
+  transform: translateX(calc(var(--loesch-seite) * 14px)) scale(.5);
+}
+.ru-loesch-nein .ru-loesch-gesicht{
+  transform: translateX(calc(var(--loesch-seite) *
+             (var(--loesch-s) + 4px - var(--loesch-a) - var(--loesch-gap) - var(--loesch-b) / 2))) scale(.1);
+}
+.ru-loesch[data-auf] .ru-loesch-gesicht{
+  transform: none;
+  transition: transform var(--loesch-auf-dauer) var(--loesch-auf);
+}
+.ru-loesch[data-auf] .ru-loesch-nein .ru-loesch-gesicht{ transition-delay: 45ms; }
+
+/* Der Papierkorb über dem Kreis (dort, wo der Knopf steht). */
+.ru-loesch-zeichen{
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--loesch-s);
+  color: var(--gefahr);
+}
+.ru-loesch[data-richtung="start"] .ru-loesch-zeichen{ inset-inline: auto 0; }
+.ru-loesch-glyphe{
+  inline-size: 20px;
+  block-size: 20px;
+  background-color: currentColor;
+  -webkit-mask: var(--loesch-zeichen, none) center / contain no-repeat;
+  mask: var(--loesch-zeichen, none) center / contain no-repeat;
+  transition: opacity 90ms linear 190ms;
+}
+.ru-loesch-glyphe-schmier{ filter: blur(3px); opacity: 0; transition: none; }
+.ru-loesch[data-auf] .ru-loesch-zeichen{
+  transform: translateX(calc(var(--loesch-seite) * -3px)) scale(1.2);
+  transition: transform var(--loesch-auf-dauer) var(--loesch-auf);
+}
+.ru-loesch[data-auf] .ru-loesch-glyphe:not(.ru-loesch-glyphe-schmier){ opacity: 0; transition: opacity 90ms linear 30ms; }
+.ru-loesch[data-auf] .ru-loesch-glyphe-schmier{ animation: ru-loesch-blitz 260ms linear; }
+.ru-loesch[data-zurueck] .ru-loesch-glyphe-schmier{ animation: ru-loesch-schaerfen 270ms linear 60ms; }
+.ru-loesch[data-zurueck] .ru-loesch-zeichen{ animation: ru-loesch-schwellen-zurueck 480ms var(--ease); }
+
+@keyframes ru-loesch-schaerfen{ 0%{ opacity: 0; } 28%, 52%{ opacity: .9; } 100%{ opacity: 0; } }
+@keyframes ru-loesch-blitz{ 0%{ opacity: 0; } 45%{ opacity: .9; } 100%{ opacity: 0; } }
+@keyframes ru-loesch-blitz-zurueck{ 0%{ opacity: 0; } 35%{ opacity: .9; } 100%{ opacity: 0; } }
+
+/* ── Die Flüssigkeit ─────────────────────────────────────────────────────── */
+
+.ru-loesch-goo{
+  position: absolute;
+  inset-block-start: calc(-1 * var(--loesch-pad));
+  inset-inline-start: calc(-1 * var(--loesch-pad));
+  inline-size: calc(var(--loesch-a) + var(--loesch-gap) + var(--loesch-b) + 2 * var(--loesch-pad));
+  block-size: calc(var(--loesch-s) + 2 * var(--loesch-pad));
+  pointer-events: none;
+  visibility: hidden;
+  /* Nach links wachsend: die Schicht wird um ihre Mitte gespiegelt. */
+  scale: var(--loesch-seite) 1;
+}
+/* Der Filter ist nur an, solange es fliesst — in Ruhe kostet er nichts. */
+.ru-loesch[data-fliesst] .ru-loesch-goo{ visibility: visible; filter: url(#ru-loesch-goo); }
+
+.ru-loesch-blob{ position: absolute; inset: 0; }
+.ru-loesch-stueck{
+  position: absolute;
+  inset-block-start: var(--loesch-pad);
+  left: var(--loesch-pad);
+  inline-size: var(--loesch-s);
+  block-size: var(--loesch-s);
+  border-radius: 50%;
+  background-color: var(--loesch-flaeche);
+  transform-origin: 50% 50%;
+  /* Zu: die zweite Pille fliesst zuerst zurück, die erste einen Schlag später. */
+  transition: transform var(--loesch-zu-dauer) var(--loesch-zu) 40ms;
+}
+.ru-loesch-mitte{
+  left: calc(var(--loesch-pad) + var(--loesch-s) / 2);
+  inline-size: calc(var(--loesch-a) - var(--loesch-s));
+  border-radius: 0;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+/* Dieselben Funktionslisten zu und offen (translateX, dann scale) — so gehen sie ineinander über. */
+.ru-loesch-blob-a .ru-loesch-stueck:not(.ru-loesch-mitte){ transform: translateX(0) scale(var(--loesch-k)); }
+.ru-loesch-blob-a .ru-loesch-mitte{ transform: scale(0, var(--loesch-k)); }
+.ru-loesch-blob-b .ru-loesch-stueck{ transform: translateX(0) scale(var(--loesch-saat)); transition-delay: 0ms; }
+.ru-loesch-blob-b .ru-loesch-mitte{
+  inline-size: calc(var(--loesch-b) - var(--loesch-s));
+  transform: translateX(0) scale(0, var(--loesch-saat));
+}
+
+.ru-loesch[data-auf] .ru-loesch-stueck{ transition: transform var(--loesch-auf-dauer) var(--loesch-auf); }
+/* Auf: die zweite Pille löst sich einen Schlag nach der ersten — der Hals bekommt Zeit. */
+.ru-loesch[data-auf] .ru-loesch-blob-b .ru-loesch-stueck{ transition-delay: 45ms; }
+.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-stueck{ transform: translateX(0) scale(1); }
+.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-mitte{ transform: scale(1); }
+.ru-loesch[data-auf] .ru-loesch-blob-a .ru-loesch-ende{ transform: translateX(calc(var(--loesch-a) - var(--loesch-s))) scale(1); }
+.ru-loesch[data-auf] .ru-loesch-blob-b .ru-loesch-stueck,
+.ru-loesch[data-auf] .ru-loesch-blob-b .ru-loesch-mitte{
+  transform: translateX(calc(var(--loesch-a) + var(--loesch-gap))) scale(1);
+}
+.ru-loesch[data-auf] .ru-loesch-blob-b .ru-loesch-ende{
+  transform: translateX(calc(var(--loesch-a) + var(--loesch-gap) + var(--loesch-b) - var(--loesch-s))) scale(1);
+}
+
+/* Beim Teilen und beim Zusammenfliessen schwillt der Tropfen kurz an. */
+.ru-loesch-blob-a{ transform-origin: calc(var(--loesch-pad) + var(--loesch-a) / 2) 50%; }
+.ru-loesch-blob-b{ transform-origin: calc(var(--loesch-pad) + var(--loesch-a) + var(--loesch-gap) + var(--loesch-b) / 2) 50%; }
+.ru-loesch[data-auf][data-fliesst] .ru-loesch-blob-a{ animation: ru-loesch-schwellen 380ms var(--ease); }
+.ru-loesch[data-auf][data-fliesst] .ru-loesch-blob-b{ animation: ru-loesch-schwellen 380ms var(--ease) 45ms; }
+.ru-loesch[data-zurueck] .ru-loesch-blob-a{ animation: ru-loesch-schwellen-zurueck 480ms var(--ease); }
+
+@keyframes ru-loesch-schwellen{ 0%, 100%{ scale: 1; } 40%{ scale: 1.1; } }
+@keyframes ru-loesch-schwellen-zurueck{ 0%, 100%{ scale: 1; } 35%{ scale: 1.18; } }
+
+/* ── Weniger Bewegung (System ODER „Ruhige Darstellung", vom Skript gesetzt):
+ *    kein Fliessen, das Paar blendet über dem Kreis auf. ── */
+.ru-loesch[data-ruhig] .ru-loesch-goo,
+.ru-loesch[data-ruhig] .ru-loesch-zeichen,
+.ru-loesch[data-ruhig] .ru-loesch-schmier{ display: none; }
+.ru-loesch[data-ruhig] .ru-loesch-paar{
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--ease), visibility 0s linear var(--motion-fast);
+}
+.ru-loesch[data-ruhig][data-auf] .ru-loesch-paar{ opacity: 1; transition-delay: 0s; }
+.ru-loesch[data-ruhig] .ru-loesch-gesicht{ transform: none; transition: none; }
+.ru-loesch[data-ruhig] .ru-loesch-wort{ opacity: 1; transition: none; }
+
+@media (prefers-reduced-motion: reduce){
+  .ru-loesch :is(.ru-loesch-stueck, .ru-loesch-zeichen, .ru-loesch-gesicht){ transition-duration: 1ms; }
+  .ru-loesch :is(.ru-loesch-schmier, .ru-loesch-glyphe-schmier, .ru-loesch-zeichen, .ru-loesch-blob){ animation: none; }
+}
+
+/* Erzwungene Farben (Windows-Kontrast): kein Filter, keine Flüssigkeit — umrandete Knöpfe. */
+@media (forced-colors: active){
+  .ru-loesch-goo, .ru-loesch-schmier, .ru-loesch-glyphe-schmier, .ru-loesch-zeichen{ display: none; }
+  html body [data-loeschknopf][data-loeschknopf],
+  .ru-loesch .ru-loesch-wahl{ border: 1px solid ButtonText; background: ButtonFace; color: ButtonText; }
+  .ru-loesch .ru-loesch-gesicht{ transform: none; }
+  .ru-loesch .ru-loesch-wort{ opacity: 1; }
+}

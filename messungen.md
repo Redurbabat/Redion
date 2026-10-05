@@ -5395,6 +5395,155 @@ tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
 
+## §79 · Der Löschen-Knopf, der zerfliesst: Stellen, Filter, Startpaket, Bildstreifen (E709, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/loeschen-fluessig` gegen den Stand
+`b3cf1933` (Welle 1: E698–E706). Chromium von Playwright, 1440 × 900 und
+390 × 844 (`isMobile`), hell und dunkel. Gzip Stufe 6 wie `test388`.
+
+**Die Stellen, gezählt vor dem Bau** (Suche nach `🗑` als eigenem Knopf im
+Quelltext, Menüzeilen `<span class="mi">🗑` nicht mitgezählt, dazu das ✕
+der Chatliste):
+
+```txt
+Knöpfe mit Papierkorb, die löschen                        23 in 16 Dateien
+  davon ohne jede Frage (erster Druck löscht)             21
+  davon mit confirm() des Browsers                         2  (Papierkorb einzeln,
+                                                               Erweiterung entfernen)
+nachher mit data-loeschknopf                              23
+confirm() hinter einem runden Löschen-Knopf                0
+„Papierkorb leeren", Datenbank/Spalte im Menü        fragen weiter (viele Dinge / Menü)
+```
+
+**Der Filter.** Das Kit legt je Knopf einen `<filter>` an und lässt ihn in
+Ruhe an. Hier, im Papierkorb mit drei Zeilen gemessen (`test586` §3): EIN
+`filter#ru-loesch-goo` im Dokument; an nur, solange `data-fliesst` steht
+(700 ms beim Öffnen, 480 ms beim Schliessen); in Ruhe `visibility: hidden`
+und kein Filter.
+
+**Startpaket** (neu: ein Skript, ein Blatt):
+
+```txt
+                                          roh        gzip
+quell/schale/bedienung/delete.js       18'258 B    5'711 B
+quell/schale/stil/loeschen.css         17'292 B    4'646 B
+                                                  10'357 B  (10,1 KiB; Richtwert je Zweig ~10 KB)
+Merkmale an 23 Stellen, Start (17 .js) +1'089 B roh
+redion-einzeldatei.html       11'783'171 → 11'820'105 B   (+36'934)
+test388 §5    2836 KB gzip über 250 Dateien, Decke 2850 KB
+              (Nachbarlauf 14:03, vor den zwei Korrekturen danach: +0,2 KB)
+```
+
+**Bildstreifen** (`welle2-bilder/loeschen/`, nicht eingecheckt, §55.4):
+Öffnen und Schliessen an drei echten Stellen (Papierkorb, Bereiche in den
+Einstellungen, Dateien), Rechner und Telefon, hell und dunkel — in Echtzeit
+aufgenommen (CDP-Bildschirmfoto des Ausschnitts, keine verlangsamte
+Wiedergabe, weil die Zeitgeber des Helfers nicht mitverlangsamt würden):
+24 Streifen (3 Orte × Rechner/Telefon × hell/dunkel × auf/zu), je 0,9 s
+ab dem Druck, 13 bis 25 Bilder je Streifen, Abstand im Mittel 35 bis
+66 ms (höchstens 149 ms; das Bildschirmfoto selbst kostet die Zeit, als
+JPEG über CDP schneller als PNG: vorher 38–82 ms im Mittel). Am Bild
+geprüft (Telefon, hell, Bereiche): bei ~75 ms schwillt der Kreis, 150 bis
+290 ms zieht die zweite Pille einen Hals aus der ersten, ab ~340 ms sind
+beide getrennt und die Wörter scharf; bei 700 ms übernimmt die CSS-Pille
+ohne Durchscheinen. Zwei Fehler kamen erst im Streifen heraus (siehe
+E709, „Gefunden auf dem Weg"): „Endgültig löschen" lief über die Pille,
+und bei der Übergabe schien „0 Seiten" ein Bild lang durch.
+
+**Nachtrag, 3. Oktober — die Läufe nach den zwei Korrekturen.** Sie liefen
+am 28. September um ca. 15:54 UTC unter dem Schloss (`loeschen-lauf2.sh`)
+gegen genau den Stand von E709 (`delete.js` byte-gleich, Arbeitsbaum
+sauber); nachgelesen am 3. Oktober:
+
+```txt
+test586 (Zweig)                       45 von 45
+  Gegenprobe: delete.js vor der Behebung (Pillen gemessen, bevor sie im
+  Paar liegen) → §4 rot, „Jedes Wort passt in seine Pille":
+  luftJa −36 px, luftNein 14 px — 44 von 45; zurück, cmp gleich
+test362 (Zweig)                       18 von 18 (die rohe 16px ist weg)
+test464 (Zweig)                       63 von 64 — nur §1 „Dreizehn Werkzeuge,
+                                      alle auf EINER Höhe": ist [14,1], soll [13,1]
+test464 (b3cf1933, eigener Baum)      62 von 63 — derselbe Punkt, gleich rot:
+                                      fremd, älter als E709
+test388 §5 (b3cf1933)                 2825 KB gzip über 248 Dateien, Decke 2850
+Streifen neu (15:56 UTC)              24, je 13–25 Bilder, im Mittel 35–67 ms
+                                      Abstand (höchstens 116 ms)
+```
+
+**Und das Zurückfliessen (3. Oktober, unter dem Schloss ca. 20:27–20:31
+UTC, `loeschen-lauf4.sh`).** `test586` §3 zeichnet jedes Bild ab Escape auf
+(requestAnimationFrame, 1 s, rund 50 Bilder):
+
+```txt
+                                     E709 (426270594)        nach dem Nachtrag
+letzter Kreis der Flüssigkeit        44 px bei 480 ms        ≈ 32 px (± 3)
+  (Knopf in der dichten Zeile 32 px)
+erstes Bild ohne Schicht (~510 ms)   Zeichen 0, Fläche       Zeichen 1, Fläche
+                                     rgba(0,0,0,0)           wie in Ruhe
+Abbrechen, nach 100 ms wieder        aria-expanded fehlt     "true", Paar offen
+test586                              45 von 48               48 von 48
+Gegenproben je Teil (G7 Landung,     —                       je 47 von 48, rot
+  G8 k = 1, G9 ohne reopened())                              genau am eigenen Punkt
+test388 §5 (Zweig)                   —                       2836 KB gzip über 250
+                                                             Dateien (Grundstand
+                                                             b3cf1933: 2825 / 248)
+delete.js                            18'258 / 5'711 B        19'408 / 6'107 B (roh/gzip)
+loeschen.css                         17'292 / 4'646 B        18'151 / 4'863 B
+  zusammen gzip                      10'357 B                10'970 B (+613)
+redion-einzeldatei.html              11'820'105 B            11'822'114 B (+2'009)
+```
+
+**Durchsicht, 5. Oktober — Kontrast unter dem Zeiger, die Übergabe, die
+Namen (unter dem Schloss, `rv5-loeschen/lauf-a.sh` und `lauf-b.sh`).**
+Kontrast der roten Pille („Endgültig löschen", `--gefahr` auf ihrer Fläche),
+gerechnet aus den berechneten Farben (WCAG; ein `color-mix()` kommt als
+`color(srgb …)` zurück und wird so gelesen):
+
+```txt
+Schema            in Ruhe   unter dem Zeiger    unter dem Zeiger
+                            vorher (Tönung)     nachher (Ring)
+Standard (dunkel) 4,80      3,94                4,80
+Hell              6,28      4,97                6,28
+Mitternacht       5,10      4,19                5,10
+Wald              4,59      3,81                4,59
+Sand              5,83      4,64                5,83
+Papier            6,28      4,97                6,28
+Starker Kontrast  5,73      4,68                5,73
+Rosé              5,01      4,05                5,01
+Touch Kit hell    5,77      4,59                5,77
+Touch Kit dunkel  4,95      4,05                4,95
+(„Abbrechen" überall 10,97 bis 17,64 : 1; das Zeichen in Ruhe wie „ja".
+ Fünf dunkle Schemata lagen unter dem Zeiger unter 4,5 — jetzt keines.)
+```
+
+```txt
+                                     ebb01d778               nach der Durchsicht
+erstes Bild ohne Fliessen,           Deckkraft 0 (769/780    1 (Fläche wie in Ruhe;
+  Zeiger auf der roten Pille         ms, Übergang aus dem    der Ring blendet)
+                                     Durchsichtigen)
+Fokus nach Grösse ändern             body                    am Knopf (Zeile)
+Name des Paars (Bereiche)            „Löschen: Bereich       „Bereich „Schule"
+                                     „Schule" löschen"       löschen"
+Name des Paars (Papierkorb)          „Endgültig löschen:     „„Nachtfahrt"
+                                     Endgültig löschen"      endgültig löschen"
+test586                              49 von 52 / 49 von 54   54 von 54
+test388 §5 (Zweig)                   2836 KB / 250 Dateien   2837 KB / 250 Dateien
+delete.js (roh / gzip, zlib 6)       19'408 / 6'075 B        20'164 / 6'359 B
+loeschen.css                         18'151 / 4'830 B        18'772 / 5'104 B
+redion-einzeldatei.html              11'822'114 B            11'824'223 B (+2'109)
+```
+
+Und die Sonde über alle Stellen (`rv5-loeschen/sonde-a.mjs`, 20 Orte ×
+Rechner/Telefon × hell/dunkel, 5. Oktober 13:09–13:22 UTC): an 17 Orten
+alles wie verlangt (erster Druck fragt nur, Fokus auf „Abbrechen", Filter
+nur beim Fliessen, Escape und „Abbrechen" schliessen nur das Paar und
+geben den Fokus zurück, die rote Pille nimmt genau eines, keine
+Browser-Frage, Luft neben jedem Wort 40 px). Die Bedingte Farbe: Pillen
+nicht obenauf (elementFromPoint traf die Seitenleiste) an allen vier
+Geräten → nach der Behebung obenauf, „Löschen" 2 → 1, der Fokus in der
+neuen Leiste (Lauf D). Die Chatliste am Rechner: der Knopf in Ruhe
+`display: flex` (vor E709 `none`) → wieder `none`, beim Überfahren da.
+
 ## §84 · Rot zuerst, vier Inseln: Stilblatt, Wettlauf, Keil, Werkzeuge (E714, 3. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/rot-zuerst-inseln` auf `claude/morgen-besser`

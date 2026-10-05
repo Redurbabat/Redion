@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 527 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 528 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1469,6 +1469,24 @@ Systems und „Ruhige Darstellung". Gezählt am 28. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagte 522 — auf seinem Zweig; beim
 Zusammenführen nach `test580` bis `test584` nachgezählt: 527.*
 
+*Und 528: `test586` — der Löschen-Knopf, der zerfliesst, überall wo
+gelöscht wird (E709). Er liest jede `🗑`-Stelle im Quelltext und findet
+keinen runden Löschen-Knopf ohne `data-loeschknopf`; dann drückt er im
+echten Papierkorb, in den Bereichen der Einstellungen und mit abgeschalteter
+Bewegung: der erste Druck löscht nichts und fragt den Browser nicht, der
+Fokus steht auf „Abbrechen", EIN Filter im Dokument, an nur während des
+Fliessens, Escape schliesst nur das Paar, ein Doppelklick löscht nicht, die
+rote Pille löscht genau eines; zurück fliesst es in die Grösse des Knopfs,
+ohne Sprung und ohne Blinken, und ein schneller zweiter Druck lässt das neue
+Paar offen (Nachtrag 3. Oktober); jede Stelle nennt, was sie löscht, unter
+dem ruhenden Zeiger kommt die rote Pille ganz und bleibt lesbar (≥ 4,5 : 1),
+und schliesst das Paar von selbst, steht der Fokus wieder am Knopf; in der
+Seitenleiste der Bedingten Farbe liegen die Pillen obenauf, und die
+Chatliste zeigt ihren Knopf am Rechner erst beim Überfahren (Durchsicht
+5. Oktober). Gezählt am 28. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf seinem Zweig (die
+zweite Welle zählt der Zusammenführer nach).*
+
 ### Die Befehle
 
 ```txt
@@ -1485,7 +1503,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 527 Läufe
+npm run pruefen                      alle 528 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1575,7 +1593,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 527 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 528 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

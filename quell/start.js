@@ -8,6 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
     App.start();
     RedionMotion.start();
     RedionPress.start();
+    RedionDelete.start();
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appSteht);
 });

@@ -4119,7 +4119,7 @@ const Datenbank = (() => {
                         `<span class="fr-text">${esc(coll.schema[r.key]?.name || '?')} ` +
                         `${esc(r.op)} ${esc(r.wert || '')}</span>` +
                         `<button data-an="${i}">${r.an === false ? '☐' : '☑'}</button>` +
-                        `<button data-weg="${i}">🗑</button></div>`).join('')
+                        `<button data-weg="${i}" data-loeschknopf aria-label="Farbregel löschen">🗑</button></div>`).join('')
                     : '<div class="dl-hinweis">Noch keine Regel.</div>') +
                 '<button class="dl-knopf" data-a="neu">＋ Regel hinzufügen</button>';
             const d = leiste('Bedingte Farbe', inhalt);
@@ -4909,7 +4909,7 @@ const Datenbank = (() => {
                     `${gruppe.operator === 'or' ? 'ODER' : 'UND'}</button>` +
                     `<span>Gruppe</span>` +
                     `<button data-add-regel="${pfad}">＋ Regel</button>` +
-                    `<button data-weg="${pfad}">🗑</button></div>`;
+                    `<button data-weg="${pfad}" data-loeschknopf aria-label="Filtergruppe löschen">🗑</button></div>`;
             const zeilen = gruppe.rules.map((r, i) => {
                 const p2 = pfad ? pfad + '.' + i : String(i);
                 if (r.rules !== undefined)
@@ -5817,7 +5817,7 @@ const Datenbank = (() => {
                         `title="${esc(Farben.name(f))}" aria-label="${esc(Farben.name(f))}" ` +
                         `aria-pressed="${opt.color === f ? 'true' : 'false'}" ` +
                         `style="background:var(--b-${f})"></button>`).join('') +
-                    '</div><button data-del="' + i + '" title="Option löschen">🗑</button></div>').join('')
+                    '</div><button data-del="' + i + '" data-loeschknopf title="Option löschen">🗑</button></div>').join('')
                 : '<div style="padding:16px; color:var(--text-faint); font-size:14px">Noch keine Optionen.</div>');
         };
         zeichne();
@@ -8217,7 +8217,7 @@ const Datenbank = (() => {
                     `<button data-verlauf="${i}" title="Laufverlauf">🕘` +
                     ((a.verlauf || []).length ? `<span class="ms">${a.verlauf.length}</span>` : '') +
                     '</button>' +
-                    `<button data-weg="${i}" title="Löschen">🗑</button>` +
+                    `<button data-weg="${i}" data-loeschknopf title="Automation löschen">🗑</button>` +
                     '</div>').join('')
                 : '<div style="padding:18px; color:var(--text-faint); font-size:14px">' +
                     'Noch keine Automation. Zum Beispiel: <i>Wenn Status auf „Erledigt" springt, ' +

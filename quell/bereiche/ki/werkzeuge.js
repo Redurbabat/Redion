@@ -197,7 +197,7 @@ const MCP = (() => {
                             `<button data-an="${i}">${s.an === false ? '☐' : '☑'}</button>` +
                             `<button data-wz="${i}">Werkzeuge</button>` +
                             `<button data-neu="${i}">↻</button>` +
-                            `<button data-weg="${i}">🗑</button></div>`).join('') + '</div>'
+                            `<button data-weg="${i}" data-loeschknopf="Entfernen" aria-label="Server entfernen">🗑</button></div>`).join('') + '</div>'
                         : '') +
                     '<div class="verb-knoepfe"><button data-a="neu">＋ Server eintragen</button>' +
                     '<button data-a="einhaengen">In den Agenten übernehmen</button></div>' +
