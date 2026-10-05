@@ -58876,6 +58876,40 @@ einem schmalen Fenster die offene Karte streifen (1024 px: Schnitt
 3'840 px², auf `b3cf1933` mit dem alten Feld 2'560) — der Toast steht dort
 mittig, die Karte rechts, und er nimmt keine Klicks an. In L234.
 
+**Die vierte Durchsicht** (5. Oktober 2026). Die dritte brach am
+Sitzungslimit ab, bevor sie ihre Reparatur einchecken konnte; die vierte
+hat die 14 Dateien gelesen, neu gebaut (bytegleich), `test590` §15 auf dem
+Stand davor rot (60 von 62) und danach grün (62 von 62) gesehen, `test303`
+ebenso (15 von 16 → 16 von 16), und sie eingecheckt. Dann jede Taste mit
+echtem Tipp und Klick am Telefon und am Rechner: Werkzeuge → Zeitmesser,
+5 Min, Pause, Weiter, Beenden, 25 Min, Stoppuhr, Start, ✕, die Pille,
+Enter und Escape; Querformat und 320 px; `file://` und die Einzeldatei —
+alles wie zugesagt, keine Fehler in der Konsole. Eines hielt nicht, zuerst
+als Lauf (`test590` §16, rot gegen den Stand der dritten Durchsicht:
+66 von 68 — Schnitt 13'800 px², verdeckt Start, Pause, Beenden):
+
+4. **Ohne Netz lag der Offline-Streifen auf Start · Pause · Beenden.** Am
+   Telefon steht er auf `--melde-boden` mit `z-index:700` über der Karte
+   (45), bis man ihn schliesst: Streifen 713–763 auf der Karte 462–759, von
+   den drei Tasten je 45 % frei, und ein echter Tipp auf „Pause" traf den
+   Streifen — die Uhr lief weiter. Auf `b3cf1933` lag er schon halb auf dem
+   alten Feld, aber die Mitte der Tasten war frei (55 %, der Tipp wirkte);
+   die höhere Karte von E713 hat die Mitte unter ihn geschoben. Wer im
+   Flugmodus lernt, trifft genau das. Jetzt steht die offene Karte am
+   Telefon über den länger lebenden Meldungen (Streifen, Einladung, Lader)
+   — auf denselben Stufen wie der Toast im Stapel, 4 px höher; der Toast
+   selbst geht weiter nach oben (Punkt 1). Am Rechner (1024 px) berührt der
+   mittige Streifen nur die linke untere Ecke der Karte (34 × 33 px
+   Polster, keine Taste) — wie auf `b3cf1933`; §16 verlangt dort, dass jede
+   Taste frei ist.
+
+Gegenprobe: die Karte nur um 40 statt 70 px gehoben (`quell/` einer Kopie)
+→ `test590` §16 rot (67 von 68 — Schnitt 6'600 px², Karte 438–735 auf
+dem Streifen 713–763: ein halber Schritt reicht nicht); zurück. Auf dem
+Endstand `test590` 68 von 68. Gemessen: `test388` §5 2839 KB von 2850 über 248 Dateien (21/21); `bausteine.css` +331 Bytes
+gzip (fast nur Begründung am Ort), die Einzeldatei 11'827'154 →
+11'828'241 Bytes.
+
 **Nicht in diesem Bogen** (L234): der Ton der Zeitmarken und die laufende
 Besprechung in derselben Pille (eine gemeinsame „läuft"-Pille in der
 Schale); Wischen über die Balken (heute Tipp und Tasten).

@@ -5520,3 +5520,25 @@ Rechner 1024 × 768, langer Toast    Schnitt mit der Karte 3'840 px²
 **Start (test388 §5).** 2838 KB von 2850 (21/21). Die drei berührten
 Dateien +508 Bytes gzip (bausteine.css +231, motion.css +169,
 zeitmesser.js +108), die Einzeldatei 11'825'765 → 11'827'154 Bytes.
+
+**Nachtrag 3 — die vierte Durchsicht (5. Oktober 2026).** `test590` §16
+gegen den Stand der dritten Durchsicht (66 von 68) und danach (68 von 68);
+dieselben Daten, ohne Netz (`setOffline`), Telefon 390 × 844, Rechner
+1024 × 768. „frei" ist der Anteil der Tastenfläche, an dem die Taste selbst
+oben liegt (Raster 4 px; S/P/B = Start, Pause, Beenden); „Tipp" ein
+echt getippter Finger in der Mitte von „Pause".
+
+```txt
+                         b3cf1933 (altes Feld)   vor dem Nachtrag     danach
+Telefon  Streifen        713–763                 713–763              713–763
+         Karte           499–759                 462–759              408–705
+         frei S/P/B      45 / 55 / 53 %          45 / 45 / 44 %       100 / 100 / 97 %
+         Tipp auf Pause  wirkt                   trifft den Streifen  wirkt
+Rechner  Streifen        282–742 × 719–754       ebenso               ebenso
+1024     Karte (links)   728                     708                  708
+         Tasten frei     97–100 %                97–100 %             97–100 %
+```
+
+**Start (test388 §5).** 2839 KB von 2850 über 248 Dateien (21/21). `bausteine.css` 170'208 → 170'539 Bytes
+gzip (+331, fast nur Begründung am Ort), die Einzeldatei 11'827'154 →
+11'828'241 Bytes.

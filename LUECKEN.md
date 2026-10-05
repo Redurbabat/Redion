@@ -8383,7 +8383,13 @@ Escape) — mit eigener Datei, `index.html`, GRUNDSTOCK und Startlast
   Karte streifen (gemessen in der dritten Durchsicht bei 1024 px: Schnitt
   3'840 px², mit dem alten Feld auf `b3cf1933` 2'560) — der Toast steht
   mittig, die Karte rechts; er nimmt keine Klicks an. Am Telefon geht er bei
-  offener Karte nach oben (`test590` §15).
+  offener Karte nach oben (`test590` §15). Ebenso berührt dort der
+  Offline-Streifen die linke untere Ecke der Karte (34 × 33 px Polster,
+  keine Taste — wie auf `b3cf1933`); am Telefon steht die offene Karte seit
+  der vierten Durchsicht über Streifen, Einladung und Lader (`test590`
+  §16). Stehen Lader und Streifen zugleich da, liegen sie am Telefon
+  aufeinander (beide auf `--melde-boden` + 12 px, schon vor E713 so) — die
+  Karte steht über beiden, aber die zwei decken einander.
 - Die Tasten Stoppuhr, 5 Min und 25 Min sind 34 px hoch, das ✕ am Rechner
   34 × 34 — so seit E268, ohne geschriebenen Grund am Ort (§37).
 

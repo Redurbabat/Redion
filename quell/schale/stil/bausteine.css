@@ -4263,6 +4263,21 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     top:12px; bottom:auto; transform:translateY(-80px);
   }
   body:has(.zm-feld) #toast.show{ transform:translateY(0) }
+  /* UND KEIN STREIFEN AUF IHR (vierte Durchsicht von E713). Die länger
+     lebenden Meldungen — Offline-Streifen, Einladung zum Rundgang, Lader —
+     stehen auf `--melde-boden` und liegen ÜBER der Karte (700, 560, 901
+     gegen 45). Gemessen auf 390 × 844 ohne Netz: Streifen 713–763 auf der
+     Karte 462–759, von Start, Pause und Beenden je 45 % frei, und ein Tipp
+     auf „Pause" traf den Streifen. Er bleibt, bis man ihn schliesst; der
+     Toast geht oben aus dem Weg (siehe oben), diese leben länger. Also
+     steht die Karte über ihnen — auf denselben Stufen wie der Toast im
+     Stapel, 4 px höher (16 statt 12, wie sonst). Geprüft in `test590` §16. */
+  body:has(#offline-streifen) .zm-karte,
+  body:has(#rg-einladung) .zm-karte{ bottom:calc(var(--melde-boden) + 70px) }
+  body:has(#rg-einladung):has(#offline-streifen) .zm-karte{ bottom:calc(var(--melde-boden) + 126px) }
+  body:has(.ru-lader-schwebt) .zm-karte,
+  body:has(.ru-lader-schwebt):is(:has(#offline-streifen), :has(#rg-einladung)) .zm-karte{
+    bottom:calc(var(--melde-boden) + 116px) }
 }
 
 /* ===========================================================================

@@ -1484,7 +1484,8 @@ ihr, der Monatsverlauf zeigt alle dreissig Zahlen, ein zweites Zeichnen
 zählt nicht zurück, ihr Name wechselt nicht im Sekundentakt, und Escape
 wirkt auch mitten in der Fahrt. Seit der dritten Durchsicht (5. Oktober):
 am Telefon liegt kein Toast auf der offenen Karte, und „Beenden" mitten in
-der Fahrt lässt keine Pille zurück. Gezählt am
+der Fahrt lässt keine Pille zurück. Seit der vierten Durchsicht: ohne
+Netz liegt der Offline-Streifen nicht auf der offenen Karte. Gezählt am
 28. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
 sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
 

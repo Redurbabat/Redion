@@ -1,5 +1,21 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 5. Oktober 2026 · E713 · Vierte Durchsicht der Zeitpille und der Balkenkarte
+
+**Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",
+am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden:** die Reparatur der dritten Durchsicht lag ungesichert im Baum
+— gelesen, bytegleich neu gebaut, rot und grün gesehen, eingecheckt. Dazu,
+zuerst rot: am Telefon lag ohne Netz der Offline-Streifen auf Start · Pause
+· Beenden der offenen Karte; ein Tipp auf „Pause" traf den Streifen.
+
+**Gebaut:** am Telefon steht die offene Karte über den länger lebenden
+Meldungen (Streifen, Einladung, Lader), auf den Stufen des Toast-Stapels.
+
+**Geprüft:** `test590` §16 (rot zuerst), Gegenprobe, Nachbarn und Startlast
+stehen in E713 („Die vierte Durchsicht").
+
 ## 5. Oktober 2026 · E713 · Dritte Durchsicht der Zeitpille und der Balkenkarte
 
 **Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",
