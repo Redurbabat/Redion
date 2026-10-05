@@ -157,7 +157,12 @@ const AuftragsAnzeige = (() => {
     if (!fenster) return;
     let liste: any[] = [];
     try { liste = await Auftraege.offen(); } catch { liste = []; }
-    const koerper = fenster.querySelector('.arb-liste');
+    /* Während des `await` kann das Fenster zugegangen sein (`zu()` setzt
+       `fenster = null`) — dann gibt es nichts mehr zu füllen. Gefunden beim
+       Bau von E713: `test436` §2 schloss das Fenster, während eine
+       Auffrischung lief, und der Browser meldete „Cannot read properties of
+       null (reading 'querySelector')". */
+    const koerper = fenster?.querySelector('.arb-liste');
     if (!koerper) return;
     koerper.innerHTML = liste.length
       ? liste.map(zeileHtml).join('')

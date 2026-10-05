@@ -1511,6 +1511,19 @@ Wächter (rot zuerst):
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
 
+## E713 · Die „läuft"-Pille für alle, die etwas laufen lassen (L234)
+
+E713 hat die Pille für den Zeitmesser gebaut (Szene 02 aus Redurs Video).
+Offen, mit eigenem Wächter (rot zuerst):
+
+1. Eine gemeinsame „läuft"-Pille in `schale/` (Editor und Wissen dürfen sich
+   nicht rufen, §5), und der Ton der Zeitmarken (`audioRefSpielen`) als ihr
+   zweiter Nutzer: Anhalten, Springen, Aufgehen zur Karte.
+2. Die laufende Besprechung und die Aufträge in derselben Pille.
+3. ~~Am Telefon: ein Toast rückt über die Pille~~ **ERLEDIGT** in der
+   Durchsicht von E713 (`test590` §10).
+4. Wischen über die Balken des Lernverlaufs.
+
 ## Der Tropfen: was nach E712 offen ist (L233, 28. September 2026)
 
 1. Die Glaskacheln beim Rollen zäh zur Leiste verschmelzen lassen (mit

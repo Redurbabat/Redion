@@ -2633,7 +2633,6 @@ const App = (() => {
             };
             const m = letztes('.menu');
             const o = letztes('.overlay');
-            const feld = letztes('[data-esc-schliesst]');
             if (m)
                 m.remove();
             else if (o) {
@@ -2641,14 +2640,19 @@ const App = (() => {
                     !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet'))
                     o.remove();
             }
-            else if (feld && !warOffen) {
-                const warDrin = feld.contains(document.activeElement);
-                feld.remove();
-                if (warDrin)
-                    document.getElementById('page')?.focus();
+            else {
+                const knopf = letztes('[data-esc-knopf]');
+                const feld = knopf?.closest('[role="dialog"]');
+                const fokus = document.activeElement;
+                const imText = fokus instanceof HTMLElement && !feld?.contains(fokus) &&
+                    (fokus.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(fokus.tagName));
+                if (knopf && feld) {
+                    if (!warOffen && !imText)
+                        knopf.click();
+                }
+                else if (!warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined')
+                    Hinweis.escape();
             }
-            else if (!feld && !warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined')
-                Hinweis.escape();
         });
     };
     const rolleZu = (blockId) => {

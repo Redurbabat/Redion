@@ -300,21 +300,27 @@ const RedionMotion = (() => {
             ensure(element, 'rmo-tr-wanne', wanne => {
                 wanne.append(ornament('rmo-tr-rauschen'), ornament('rmo-tr-glanz'));
             });
-            const angehalten = element.getAttribute('data-zustand') === 'pausiert';
             element.querySelectorAll(':scope > button').forEach(taste => {
                 const rolle = taste.getAttribute('data-rmo-taste') || taste.getAttribute('data-zm') || '';
-                const figur = rolle === 'stopp' ? ['M9 9h6v6H9z']
-                    : rolle === 'pause' && !angehalten ? ['M10 8v8', 'M14 8v8']
-                        : ['M9.5 7.5 17 12l-7.5 4.5z'];
+                const figuren = rolle === 'stopp' ? [['', ['M9 9h6v6H9z']]]
+                    : rolle === 'pause' ? [['pause', ['M10 8v8', 'M14 8v8']], ['weiter', ['M9.5 7.5 17 12l-7.5 4.5z']]]
+                        : [['', ['M9.5 7.5 17 12l-7.5 4.5z']]];
                 ensure(taste, 'rmo-tr-kappe', kappe => {
                     const zeichen = document.createElementNS(svgNs, 'svg');
                     zeichen.setAttribute('class', 'rmo-tr-sym');
                     zeichen.setAttribute('viewBox', '0 0 24 24');
                     zeichen.setAttribute('aria-hidden', 'true');
-                    for (const d of figur) {
-                        const linie = document.createElementNS(svgNs, 'path');
-                        linie.setAttribute('d', d);
-                        zeichen.append(linie);
+                    for (const [name, figur] of figuren) {
+                        const gruppe = name ? document.createElementNS(svgNs, 'g') : zeichen;
+                        if (name) {
+                            gruppe.setAttribute('data-figur', name);
+                            zeichen.append(gruppe);
+                        }
+                        for (const d of figur) {
+                            const linie = document.createElementNS(svgNs, 'path');
+                            linie.setAttribute('d', d);
+                            gruppe.append(linie);
+                        }
                     }
                     kappe.append(ornament('rmo-tr-reflex'), ornament('rmo-tr-wisch'), ornament('rmo-tr-fleck'), zeichen, ornament('rmo-led'));
                 });

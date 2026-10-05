@@ -78,7 +78,7 @@ const AuftragsAnzeige = (() => {
         catch {
             liste = [];
         }
-        const koerper = fenster.querySelector('.arb-liste');
+        const koerper = fenster?.querySelector('.arb-liste');
         if (!koerper)
             return;
         koerper.innerHTML = liste.length

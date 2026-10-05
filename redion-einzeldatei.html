@@ -2570,13 +2570,16 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 /* ==========================================================================
    KI-PANEL
    ========================================================================== */
+:root{ --ki-breite:420px }
 #ai{
   /* 420, NICHT 380 (E642). Hier stand 380, und es galt seit dem
      10. September nie: `motion.css` lädt später und setzt 420. Zwei Zahlen
      für dieselbe Breite, und die frühere war ein Versprechen, das die Seite
      nicht hielt — genau der Fall, den `test332` zählt. Die Breite steht
-     jetzt HIER, im Blatt des Bauteils, und nur hier. */
-  width:420px; flex:0 0 420px; background:var(--bg-side);
+     jetzt HIER, im Blatt des Bauteils, und nur hier — seit der Durchsicht
+     von E713 als Marke an `:root`, weil die Zeitpille am Rechner neben dem
+     offenen Panel steht und dieselbe Zahl LIEST, statt sie abzuschreiben. */
+  width:var(--ki-breite); flex:0 0 var(--ki-breite); background:var(--bg-side);
   border-left:1px solid var(--line); display:none; flex-direction:column;
 }
 #ai.open{display:flex}
@@ -7769,19 +7772,122 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 .lernwelt .lw-card-types dt{color:var(--text-dim);font-size:12px}
 .lernwelt .lw-card-types dd{font-size:13px;font-weight:740;font-variant-numeric:tabular-nums}
 
-/* Lernhistorie: native Progress-Elemente bleiben semantisch, stehen hier hochkant. */
-.lernwelt .lw-history{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(24px,1fr));align-items:end;gap:5px;
-  min-height:132px;padding:8px 2px 0
+/* DER VERLAUF ALS BALKENKARTE (E713; Redurs Video, Szene 06). Die Karte
+   STEHT, also Lichtkante und ein einmaliger Glanz, aber keine Unschärfe
+   (E703); Glas trägt nur der schwebende Hinweis. Bewegt werden nur
+   `transform`/`opacity`: der Balken steigt in seiner Säule mit `translateY`
+   aus dem Boden (kein `scaleY`, das die Ecken staucht), der Akzent der
+   Wahl ist eine zweite Schicht über `opacity`. */
+.lernwelt .lw-section:has(> .lw-verlauf){
+  position:relative;isolation:isolate;overflow:hidden;
+  box-shadow:var(--glas-kante),var(--shadow-1,0 1px 2px rgba(0,0,0,.06))
 }
-.lernwelt .lw-history>div{display:grid;justify-items:center;align-content:end;gap:4px;min-width:0}
-.lernwelt .lw-history span{color:var(--text-dim);font-size:9.5px;font-variant-numeric:tabular-nums}
-.lernwelt .lw-history progress{
-  width:9px;height:82px;writing-mode:vertical-rl;direction:rtl;border-radius:999px
+@keyframes lw-verlauf-glanz{
+  from{transform:translateX(-110%);opacity:1}
+  to{transform:translateX(110%);opacity:0}
 }
-.lernwelt .lw-history small{
-  overflow:hidden;width:100%;color:var(--text-faint);font-size:9px;text-align:center;
+.lernwelt .lw-verlauf{display:grid;gap:var(--space-3);padding:2px 0 0}
+.lernwelt .lw-verlauf-kopf{display:flex;align-items:baseline;gap:var(--space-3);min-width:0}
+.lernwelt .lw-verlauf-summe{
+  font-size:30px;font-weight:780;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums
+}
+.lernwelt .lw-verlauf-kopf span{color:var(--text-dim);font-size:12px}
+.lernwelt .lw-verlauf-flaeche{
+  position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;
+  padding-top:38px
+}
+/* DREISSIG TAGE IN ZEILEN ZU ZEHN (Durchsicht von E713, 4. Oktober). Die
+   erste Fassung stellte sie in EINE Reihe und versteckte Zahl und Wochentag
+   — vorher (bis b3cf1933) standen alle dreissig sichtbar über ihren Säulen,
+   und am Telefon war eine Säule nur 9 px breit: der Finger traf den
+   Nachbarn. „ohne eine funktione löschen": die Zahlen bleiben auf einen
+   Blick da. Eine Spalte ist mindestens 32 px breit (NEBENWEG, §37: der
+   Monatsverlauf ist Rückschau, der tägliche Weg ist der Wochenverlauf) und
+   sonst ein Zehntel der Breite — zehn je Zeile am Telefon wie am Rechner,
+   auf ganz schmalen Schirmen weniger. Die Säule ist niedriger, damit die
+   Karte nicht dreimal so hoch wird; ↑ und ↓ gehen eine Zeile. */
+.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-flaeche{
+  grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(max(var(--space-8),calc(10% - 1px)),1fr));
+  column-gap:0;row-gap:var(--space-4)
+}
+.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-saeule{height:var(--space-10)}
+/* Die ganze Säule ist die Trefffläche, nicht der Balken: im Wochenverlauf
+   138 px hoch und ein Siebtel der Breite, im Monatsverlauf siehe oben. */
+.lernwelt .lw-verlauf-tag{
+  --lw-anteil:0;--lw-index:0;
+  position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:4px;
+  min-width:0;padding:4px 0 2px;margin:0;border:0;border-radius:var(--radius-md);
+  background:none;color:inherit;font:inherit;cursor:pointer
+}
+.lernwelt .lw-verlauf-tag:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
+.lernwelt .lw-verlauf-zahl{color:var(--text-dim);font-size:10px;font-variant-numeric:tabular-nums}
+.lernwelt .lw-verlauf-saeule{
+  position:relative;display:flex;align-items:flex-end;width:min(100%,26px);height:96px;overflow:hidden;
+  border-radius:7px 7px 3px 3px
+}
+.lernwelt .lw-verlauf-saeule i{
+  position:relative;display:block;width:100%;height:max(3px,calc(var(--lw-anteil) * 100%));
+  border-radius:inherit;background:color-mix(in srgb,var(--accent) 38%,transparent)
+}
+.lernwelt .lw-verlauf-tag[data-lw-anzahl="0"] .lw-verlauf-saeule i{opacity:.35}
+.lernwelt .lw-verlauf-saeule i::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;background:var(--accent);
+  opacity:0;transition:opacity var(--motion-fast) var(--ease)
+}
+.lernwelt .lw-verlauf-tag[aria-pressed="true"] .lw-verlauf-saeule i::after{opacity:1}
+.lernwelt .lw-verlauf-tag[aria-pressed="true"] .lw-verlauf-zahl{color:var(--text);font-weight:700}
+.lernwelt .lw-verlauf-tag small{
+  overflow:hidden;width:100%;color:var(--text-faint);font-size:9.5px;text-align:center;
   text-overflow:ellipsis;white-space:nowrap
+}
+/* Das Material hinter der Wahl (E706): EINE Fläche, von `SelectionFlow`
+   gefedert und unterwegs gedehnt. In einer tieferen Zeile setzt
+   lernwelt.ts Höhe und `translate` — waagrecht fährt weiter die Feder. */
+.lernwelt .lw-verlauf-material{
+  position:absolute;left:0;top:34px;bottom:0;width:0;z-index:0;pointer-events:none;
+  border-radius:var(--radius-md);background:color-mix(in srgb,var(--accent) 14%,transparent);
+  opacity:0;transition:opacity var(--motion-fast) var(--ease)
+}
+.lernwelt .lw-verlauf-material.an{opacity:1}
+/* Der Hinweis: über der Zeile des gewählten Tages, waagrecht mit der Wahl,
+   in der Karte gehalten (Zeile und Klemmen rechnet lernwelt.ts). */
+.lernwelt .lw-verlauf-tipp{
+  position:absolute;left:0;top:0;z-index:2;pointer-events:none;
+  border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);
+  box-shadow:var(--glas-kante),var(--shadow-2)
+}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .lernwelt .lw-verlauf-tipp{
+    --text-faint:var(--text-dim);background:var(--bg-schwebend-dicht);
+    -webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)
+  }
+}
+.lernwelt .lw-verlauf-tipp[hidden]{display:none}
+.lernwelt .lw-verlauf-tipp>span{
+  display:block;padding:7px 11px;font-size:12.5px;font-weight:650;white-space:nowrap;
+  font-variant-numeric:tabular-nums
+}
+/* EINMAL wachsen, einmal glänzen — beim Ankommen, nie im Leerlauf; wird
+   die Ansicht gleich danach noch einmal gezeichnet, fährt alles weiter
+   (`--lw-seit`, lernwelt.ts, Durchsicht von E713). Ohne
+   Bewegung (System oder „Ruhige Darstellung") stehen die Balken sofort da.
+   `body:not([data-bewegung="ruhig"])` steht ausdrücklich dabei: die
+   ruhige Sperre in bausteine.css erfasst `::after` nicht. */
+@keyframes lw-verlauf-wachsen{from{transform:translateY(100%)}}
+@media (prefers-reduced-motion:no-preference){
+  body:not([data-bewegung="ruhig"]) .lernwelt .lw-verlauf-saeule i{
+    animation:lw-verlauf-wachsen var(--feder-sanft-dauer) var(--feder-sanft) both;
+    animation-delay:calc(var(--lw-index) * 35ms - var(--lw-seit, 0ms))
+  }
+  body:not([data-bewegung="ruhig"]) .lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-saeule i{
+    animation-delay:calc(var(--lw-index) * 12ms - var(--lw-seit, 0ms))
+  }
+  body:not([data-bewegung="ruhig"]) .lernwelt .lw-section:has(> .lw-verlauf)::after{
+    content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.12) 42%,transparent 50%,
+      rgba(255,255,255,.08) 56%,transparent 64%);
+    animation:lw-verlauf-glanz .7s var(--ease) calc(.25s - var(--lw-seit, 0ms)) both
+  }
 }
 
 /* --- Duolingo-artiger, aber frei zugänglicher Lernpfad ----------------- */
@@ -11416,6 +11522,26 @@ body .rmo-transport[data-rmo-visible="true"] .rmo-tr-sym path {
 }
 @keyframes rmo-tr-zeichnen { from { stroke-dashoffset: 34; } }
 
+/* PAUSE ↔ WEITER TAUSCHT IM SELBEN KNOPF (E713), wie das SymbolSwap des
+   Kits: die gehende Figur schrumpft und verblasst, die kommende wächst auf
+   der Druckfeder (E702). Vorher kam die Taste als neuer Knoten. */
+body .rmo-transport .rmo-tr-sym [data-figur] {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity var(--motion-fast) var(--ease), transform var(--feder-druck-dauer) var(--feder-druck);
+}
+/* Ohne `.rmo-tr-sym` im Selektor (dritte Durchsicht von E713): `test303`
+   liest jede Regel, die `.rmo-tr-sym` nennt und `opacity:0` setzt, als
+   „das Zeichen ist weg" — und die Überfahr-Regel weiter unten als die
+   einzige, die es zurückholt: eine Falle für das Telefon, die es nicht
+   gibt. Verborgen ist nur die GERADE NICHT gültige Figur; `[data-figur]`
+   steht ohnehin nur im Zeichen der Pausentaste. */
+body .rmo-transport:not([data-zustand="pausiert"]) [data-figur="weiter"],
+body .rmo-transport[data-zustand="pausiert"] [data-figur="pause"] {
+  opacity: 0;
+  transform: scale(.3);
+}
+
 /* --- Die Lampe ----------------------------------------------------------
  * Drei Zustände wie in der Vorlage, nur mit Redions Marken statt #51ffe2.
  * Sie ist Beiwerk: was die Taste tut, steht als Wort darauf, und ob sie
@@ -11496,7 +11622,9 @@ body .rmo-transport[data-rmo-state="laeuft"] :is([data-rmo-taste="start"], [data
 /* Wischmaske und Drehung beim Einrasten: das Feld wird bei jedem echten
    Zustandswechsel neu gezeichnet (zeitmesser.ts:229), die Taste ist also
    ein frischer Knoten — die Animation läuft dadurch genau einmal, beim
-   Start, und nie im Leerlauf. */
+   Start, und nie im Leerlauf. Seit E713 bleibt die Reihe bei Pause ↔
+   Weiter stehen; dann läuft sie bei „Weiter" noch einmal — auch das ein
+   echter Wechsel, keine Schleife. */
 body .rmo-transport[data-rmo-state="laeuft"]
   :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-tr-wisch {
   animation: rmo-tr-wisch .85s ease-out 1;
@@ -17092,6 +17220,32 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     top:12px; bottom:auto; transform:translateY(-80px);
   }
   body:has(.overlay) #toast.show{ transform:translateY(0) }
+  /* UND DIE OFFENE KARTE DES ZEITMESSERS (dritte Durchsicht von E713). Sie
+     ist keine `.overlay`, steht aber genauso unten mit ihren Tasten
+     zuunterst: gemessen auf 390 × 844 Toast 720–763 auf der Karte 462–759,
+     über Start · Pause · Beenden — und „⏰ Zeit um" kommt genau dann, wenn
+     man die Karte offen hat. Dieselbe Antwort wie oben: nach OBEN. Eine
+     eigene Regel, nicht ein zweites Glied in der oberen — `test304` liest
+     jene beim Wortlaut. Geprüft in `test590` §15. */
+  body:has(.zm-feld) #toast{
+    top:12px; bottom:auto; transform:translateY(-80px);
+  }
+  body:has(.zm-feld) #toast.show{ transform:translateY(0) }
+  /* UND KEIN STREIFEN AUF IHR (vierte Durchsicht von E713). Die länger
+     lebenden Meldungen — Offline-Streifen, Einladung zum Rundgang, Lader —
+     stehen auf `--melde-boden` und liegen ÜBER der Karte (700, 560, 901
+     gegen 45). Gemessen auf 390 × 844 ohne Netz: Streifen 713–763 auf der
+     Karte 462–759, von Start, Pause und Beenden je 45 % frei, und ein Tipp
+     auf „Pause" traf den Streifen. Er bleibt, bis man ihn schliesst; der
+     Toast geht oben aus dem Weg (siehe oben), diese leben länger. Also
+     steht die Karte über ihnen — auf denselben Stufen wie der Toast im
+     Stapel, 4 px höher (16 statt 12, wie sonst). Geprüft in `test590` §16. */
+  body:has(#offline-streifen) .zm-karte,
+  body:has(#rg-einladung) .zm-karte{ bottom:calc(var(--melde-boden) + 70px) }
+  body:has(#rg-einladung):has(#offline-streifen) .zm-karte{ bottom:calc(var(--melde-boden) + 126px) }
+  body:has(.ru-lader-schwebt) .zm-karte,
+  body:has(.ru-lader-schwebt):is(:has(#offline-streifen), :has(#rg-einladung)) .zm-karte{
+    bottom:calc(var(--melde-boden) + 116px) }
 }
 
 /* ===========================================================================
@@ -21089,21 +21243,59 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 /* Der Zeitmesser (E268): ein schwebendes Feld rechts unten, ÜBER der
    Telefon-Leiste (--hunten) und unter den Menüs. Die Uhr läuft weiter,
-   wenn das Feld zu ist — schliessen heisst nur „aus dem Blick". */
-.zm-feld{
-  position:fixed; right:16px; bottom:calc(var(--hunten, 0px) + 16px);
-  z-index:45; width:min(280px, calc(100vw - 32px));
-  padding:12px 14px; border:1px solid var(--line);
-  border-radius:var(--radius-lg, 12px); background:var(--bg-schwebend, var(--bg));
-  box-shadow:var(--shadow-3, 0 8px 30px rgba(0,0,0,.25));
+   wenn das Feld zu ist — schliessen heisst nur „aus dem Blick".
+
+   SEIT E713: `.zm-karte` ist die Form, `.zm-feld` nur „das offene Feld"
+   (beim Schliessen fällt es sofort weg, die Karte zieht sich als
+   `.zm-geht` in die Pille zurück). Am Telefon DECKEND — `--bg-schwebend`
+   ohne Unschärfe liess den Seitentext durchscheinen; am Rechner dichtes
+   Glas, nur wo es Unschärfe gibt (E695). */
+.zm-karte{
+  position:fixed; right:16px; bottom:calc(var(--melde-boden, var(--hunten, 0px)) + 16px);
+  z-index:45; width:min(300px, calc(100vw - 32px));
+  border:1px solid var(--line);
+  border-radius:var(--radius-2xl); background:var(--bg-card);
+  box-shadow:var(--glas-kante), var(--shadow-3, 0 8px 30px rgba(0,0,0,.25));
 }
+@media (min-width:761px){
+  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .zm-karte{
+      --text-faint:var(--text-dim);
+      background:var(--bg-schwebend-dicht);
+      -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+    }
+  }
+}
+.zm-inhalt{ padding:var(--space-4) var(--space-5) 10px }
+/* Die verwischte Kopie für die Fahrt (Szene 02: „unscharf, dann scharf").
+   Die Unschärfe steht still; bewegt wird nur ihre Deckkraft. */
+.zm-geist{ position:absolute; inset:0; filter:blur(6px); pointer-events:none }
 .zm-kopf{ display:flex; align-items:center; justify-content:space-between }
-.zm-kopf b{ font-size:13px }
+.zm-kopf b{ font-size:12px; color:var(--text-dim); letter-spacing:.02em }
+.zm-wo{ margin:2px 0 0; font-size:11.5px; color:var(--text-dim) }
+.zm-titel{
+  display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:17px; font-weight:700; color:var(--text); letter-spacing:-.01em;
+}
+.zm-art{ display:block; margin-top:1px }
 .zm-uhr{
   margin:6px 0 2px; font-size:34px; font-weight:740;
   font-variant-numeric:tabular-nums; letter-spacing:.01em;
 }
-.zm-wo{ margin:0 0 10px; font-size:11.5px; color:var(--text-dim) }
+/* Der Fortschritt: die Füllung steht über `transform` (kein `width`). OHNE
+   Übergang: ein Schritt je Sekunde ist bei 25 Minuten 0,2 px — eine
+   Fahrt dafür wäre Bewegung im Leerlauf, jede Sekunde neu (E528). */
+.zm-fortschritt{
+  position:relative; height:6px; margin:6px 0 12px; overflow:hidden;
+  border-radius:var(--radius-pill); background:var(--bg-hover);
+}
+.zm-fortschritt i{
+  --zm-anteil:0;
+  position:absolute; inset:0; border-radius:inherit; background:var(--accent);
+  transform:translateX(calc((var(--zm-anteil) - 1) * 100%));
+}
+.zm-wo + .zm-uhr{ margin-top:4px }
+.zm-uhr + .zm-reihe{ margin-top:10px }
 .zm-reihe{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap }
 .zm-reihe .rb{ min-height:34px }
 .zm-sitzungen{ margin-top:8px; border-top:1px solid var(--line-soft, var(--line)); padding-top:8px }
@@ -21111,6 +21303,79 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .zm-sitzungen ul{ margin:4px 0 0; padding:0; list-style:none }
 .zm-sitzungen li{ font-size:11.5px; color:var(--text-dim); padding:2px 0 }
 .zm-sitzungen i{ font-style:normal; color:var(--text-faint) }
+
+/* DIE PILLE (E713): dunkel in BEIDEN Modi wie im Video, deckend, weil sie
+   ruht (E703). Weiss auf #18171d 17,9 : 1, die Seite in #b9b7c2 9,6 : 1.
+   Die Lampe atmet nur, solange die Uhr läuft (dieselbe wie am
+   Dreierblock, E535). */
+.zm-pille{
+  position:fixed; right:var(--space-5); bottom:calc(var(--melde-boden, var(--hunten, 0px)) + var(--space-5)); z-index:45;
+  display:inline-flex; align-items:center; gap:var(--space-3);
+  min-height:var(--touch-min); max-width:min(300px, calc(100vw - 2 * var(--space-5)));
+  padding:0 var(--space-5) 0 var(--space-4);
+  border:0; border-radius:var(--radius-pill);
+  background:#18171d; color:#f5f4f8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 1px rgba(255,255,255,.07),
+             0 10px 26px rgba(20,14,40,.30);
+  font:inherit; font-size:13.5px; line-height:1.2; cursor:pointer;
+}
+.zm-pille[hidden]{ display:none }
+.zm-pille > *{ flex:0 0 auto; transition:opacity var(--motion-fast) var(--ease) }
+.zm-pille.zm-fliegt > *{ opacity:0; transition-duration:var(--motion-instant) }
+.zm-pille-lampe{
+  width:8px; height:8px; border-radius:50%; background:var(--erfolg);
+  box-shadow:0 0 8px color-mix(in srgb, var(--erfolg) 60%, transparent);
+  animation:rmo-tr-atem 4s ease-in-out infinite;
+}
+.zm-pille[data-zustand="pausiert"] .zm-pille-lampe{ background:var(--warnung); box-shadow:none; animation:none }
+.zm-pille-zeichen{ display:inline-flex; color:#b9b7c2 }
+.zm-pille-zeichen svg{ width:var(--space-5); height:var(--space-5) }
+.zm-pille-uhr{ font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.01em }
+.zm-pille[data-zustand="pausiert"] .zm-pille-uhr{ color:#b9b7c2 }
+.zm-pille-trenner{ color:#8e8c96 }
+.zm-pille-seite{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#b9b7c2 }
+.zm-pille:hover{ background:#232129 }
+.zm-pille:focus-visible{ outline:2px solid var(--accent-text); outline-offset:3px }
+/* DIE PILLE LIEGT NICHT AUF DEN WERKZEUGEN (Durchsicht von E713). Auf
+   `--hunten` lag sie am Telefon auf der Werkzeugleiste der Fläche, auf dem
+   runden Knopf „Neu" der Notizhefte und auf dem Letzten jeder Ansicht, am
+   Rechner auf „Nachricht senden" im KI-Panel. Die Regel des Toasts (E703):
+   was nur meldet, gehört nicht auf das, womit man arbeitet.
+   1. Ihr Boden ist `--melde-boden` — über Dock und Kapsel im Dokument;
+      die Zeichenleiste unten steigt selbst (siehe unten). Die Karte geht
+      von dort auf.
+   2. Solange es sie gibt, bekommt `#scroll` ihren Platz als Polster: das
+      Letzte rollt über sie, die Fläche endet über ihr.
+   3. Der runde Knopf der Notizhefte rückt über sie (`translate`; die
+      Druckfeder auf `transform` bleibt). Beim Schreiben tritt sie zur Seite
+      wie die untere Leiste — die Uhr läuft weiter.
+   4. Ist das KI-Panel offen (am Rechner IM Layout), stehen Pille und Karte
+      links daneben (`--ki-breite`, ki.css).
+   5. Am Telefon rückt, was sonst meldet, über sie (unten).
+   Gemessen in `test590` §10. */
+body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--touch-min) + 2 * var(--space-5)) }
+@media(min-width:761px){
+  body:has(#ai.open) :is(.zm-pille, .zm-karte){ right:calc(var(--ki-breite, 0px) + var(--space-5)) }
+}
+/* Ausser bei der Zeichenleiste unten (nicht im Dokument): sie klebt in
+   `#scroll` und steigt mit dessen Polster (2.) selbst über die Pille. Auf
+   `--melde-boden` stiege die Pille ein zweites Mal mit — gemessen am
+   Telefon: Leiste 572–681, Pille 572–616, wieder auf ihr. */
+body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) :is(.zm-pille, .zm-karte){
+  bottom:calc(var(--hunten, 0px) + var(--space-5)) }
+@media(max-width:760px){
+  body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--hunten) + var(--space-7) + var(--touch-min) + var(--space-5)) }
+  body:has(#zm-pille) .nh-neu-fab{ translate:0 calc(-1 * (var(--touch-min) + var(--space-4))) }
+  body.schreibt .zm-pille{ display:none }
+  /* 5. Was sonst meldet, rückt über sie — derselbe Stapel (E703), um ihre
+     Höhe verschoben. Vorher lag ein Toast, so breit wie der Schirm, für
+     seine Sekunden genau auf ihr. Ein Toast, der oben steht (offene
+     Überlagerung, Zeichenleiste unten), bleibt oben. */
+  body:not(.schreibt):has(#zm-pille:not([hidden])) :is(#offline-streifen, #rg-einladung, .ru-lader-schwebt),
+  body:not(.schreibt):has(#zm-pille:not([hidden])):not(:has(.overlay)):is([data-dokument="an"], :not(:has(.blatt-reihe[data-lage="unten"]))) #toast{
+    translate:0 calc(-1 * (var(--touch-min) + var(--space-3)))
+  }
+}
 
 /* ============================================================================
  * DIE ELEKTRO-STARTSEITE (L65)
@@ -26623,7 +26888,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1408, inhalt: 'db12170f392506b2', gebaut: '2026-10-05T22:04:41.791Z' };
+const Stand = { fassung: 1410, inhalt: 'b2523c9e70853198', gebaut: '2026-10-05T22:16:15.200Z' };
 window.Stand = Stand;
 
 </script>
@@ -47864,21 +48129,27 @@ const RedionMotion = (() => {
             ensure(element, 'rmo-tr-wanne', wanne => {
                 wanne.append(ornament('rmo-tr-rauschen'), ornament('rmo-tr-glanz'));
             });
-            const angehalten = element.getAttribute('data-zustand') === 'pausiert';
             element.querySelectorAll(':scope > button').forEach(taste => {
                 const rolle = taste.getAttribute('data-rmo-taste') || taste.getAttribute('data-zm') || '';
-                const figur = rolle === 'stopp' ? ['M9 9h6v6H9z']
-                    : rolle === 'pause' && !angehalten ? ['M10 8v8', 'M14 8v8']
-                        : ['M9.5 7.5 17 12l-7.5 4.5z'];
+                const figuren = rolle === 'stopp' ? [['', ['M9 9h6v6H9z']]]
+                    : rolle === 'pause' ? [['pause', ['M10 8v8', 'M14 8v8']], ['weiter', ['M9.5 7.5 17 12l-7.5 4.5z']]]
+                        : [['', ['M9.5 7.5 17 12l-7.5 4.5z']]];
                 ensure(taste, 'rmo-tr-kappe', kappe => {
                     const zeichen = document.createElementNS(svgNs, 'svg');
                     zeichen.setAttribute('class', 'rmo-tr-sym');
                     zeichen.setAttribute('viewBox', '0 0 24 24');
                     zeichen.setAttribute('aria-hidden', 'true');
-                    for (const d of figur) {
-                        const linie = document.createElementNS(svgNs, 'path');
-                        linie.setAttribute('d', d);
-                        zeichen.append(linie);
+                    for (const [name, figur] of figuren) {
+                        const gruppe = name ? document.createElementNS(svgNs, 'g') : zeichen;
+                        if (name) {
+                            gruppe.setAttribute('data-figur', name);
+                            zeichen.append(gruppe);
+                        }
+                        for (const d of figur) {
+                            const linie = document.createElementNS(svgNs, 'path');
+                            linie.setAttribute('d', d);
+                            gruppe.append(linie);
+                        }
                     }
                     kappe.append(ornament('rmo-tr-reflex'), ornament('rmo-tr-wisch'), ornament('rmo-tr-fleck'), zeichen, ornament('rmo-led'));
                 });
@@ -49071,7 +49342,7 @@ const AuftragsAnzeige = (() => {
         catch {
             liste = [];
         }
-        const koerper = fenster.querySelector('.arb-liste');
+        const koerper = fenster?.querySelector('.arb-liste');
         if (!koerper)
             return;
         koerper.innerHTML = liste.length
@@ -134943,11 +135214,161 @@ const Lernwelt = (() => {
     const historie = (logs, tage = 7) => {
         const werte = verlaufsTage(logs, tage);
         const maximum = Math.max(1, ...werte.map(item => item.anzahl));
-        return '<div class="lw-history" aria-label="Lernhistorie der letzten ' + tage + ' Tage">' +
-            werte.map(item => '<div><span>' + item.anzahl + '</span><progress max="' + maximum + '" value="' +
-                item.anzahl + '" aria-label="' + esc(item.tag.toLocaleDateString('de-CH')) + ': ' + item.anzahl +
-                '"></progress><small>' + esc(item.tag.toLocaleDateString('de-CH', { weekday: 'short' })) +
-                '</small></div>').join('') + '</div>';
+        const summe = werte.reduce((alle, item) => alle + item.anzahl, 0);
+        const wort = (n) => n === 1 ? 'Wiederholung' : 'Wiederholungen';
+        const wochentag = (d) => d.toLocaleDateString('de-CH', { weekday: 'short' }).replace(/\.$/, '');
+        return '<div class="lw-history lw-verlauf" role="group" aria-label="Lernhistorie der letzten ' + tage + ' Tage"' +
+            ' data-lw-tage="' + tage + '">' +
+            '<div class="lw-verlauf-kopf"><strong class="lw-verlauf-summe" data-lw-ziel="' + summe + '">' + summe + '</strong>' +
+            '<span>' + wort(summe) + ' in ' + tage + ' Tagen</span></div>' +
+            '<div class="lw-verlauf-flaeche">' +
+            '<span class="lw-verlauf-material" aria-hidden="true"></span>' +
+            '<span class="lw-verlauf-tipp" aria-hidden="true" hidden><span></span></span>' +
+            werte.map((item, index) => {
+                const name = wochentag(item.tag);
+                const tipp = (tage > 7 ? name + ' ' + item.tag.getDate() + '.' + (item.tag.getMonth() + 1) + '.' : name) +
+                    ' · ' + item.anzahl + ' ' + wort(item.anzahl);
+                return '<button type="button" class="lw-verlauf-tag" data-lw-tag="' + index + '" data-lw-anzahl="' + item.anzahl +
+                    '" data-lw-max="' + maximum + '" data-lw-tipp="' + esc(tipp) + '" aria-pressed="false"' +
+                    ' tabindex="' + (index === werte.length - 1 ? '0' : '-1') + '"' +
+                    ' aria-label="' + esc(item.tag.toLocaleDateString('de-CH')) + ': ' + item.anzahl + ' ' + wort(item.anzahl) + '">' +
+                    '<span class="lw-verlauf-zahl" aria-hidden="true">' + item.anzahl + '</span>' +
+                    '<span class="lw-verlauf-saeule" aria-hidden="true"><i></i></span>' +
+                    '<small aria-hidden="true">' + esc(name) + '</small></button>';
+            }).join('') + '</div></div>';
+    };
+    const wenigBewegung = () => typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung
+        ? AppEinstellung.wenigBewegung() : document.body?.dataset['bewegung'] === 'ruhig';
+    const hochzaehlen = (el, seit = 0) => {
+        if (!el)
+            return;
+        const ziel = Number(el.dataset['lwZiel']) || 0;
+        if (!ziel || wenigBewegung()) {
+            el.textContent = String(ziel);
+            return;
+        }
+        let beginn = -1;
+        const DAUER = 1000;
+        const wert = (t) => t >= 1 ? ziel : Math.min(ziel, Math.round(ziel * (1 - Math.exp(-7 * t))));
+        el.textContent = String(wert(Math.max(0, Math.min(1, seit / DAUER))));
+        if (seit >= DAUER)
+            return;
+        const schritt = (jetzt) => {
+            if (!el.isConnected)
+                return;
+            if (beginn < 0)
+                beginn = jetzt - seit;
+            const t = Math.max(0, Math.min(1, (jetzt - beginn) / DAUER));
+            el.textContent = String(wert(t));
+            if (t < 1)
+                requestAnimationFrame(schritt);
+        };
+        requestAnimationFrame(schritt);
+    };
+    const belebtAm = new Map();
+    const ANKOMMEN_MS = 1500;
+    const seitDemAnkommen = (schluessel) => {
+        const jetzt = performance.now();
+        const vorher = belebtAm.get(schluessel);
+        if (vorher !== undefined && jetzt - vorher < ANKOMMEN_MS)
+            return jetzt - vorher;
+        belebtAm.set(schluessel, jetzt);
+        return 0;
+    };
+    const verlaufBeleben = (wurzel, ansicht = '') => {
+        wurzel.querySelectorAll('.lw-verlauf').forEach(karte => {
+            if (karte.dataset['lwLebt'])
+                return;
+            karte.dataset['lwLebt'] = '1';
+            const summe = karte.querySelector('.lw-verlauf-summe');
+            const seit = seitDemAnkommen(ansicht + ':' + (karte.dataset['lwTage'] || '') + ':' + (summe?.dataset['lwZiel'] || ''));
+            if (seit) {
+                karte.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+                karte.closest('.lw-section')?.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+            }
+            const flaeche = karte.querySelector('.lw-verlauf-flaeche');
+            const material = karte.querySelector('.lw-verlauf-material');
+            const tipp = karte.querySelector('.lw-verlauf-tipp');
+            const tippText = tipp?.querySelector('span');
+            const tage = Array.from(karte.querySelectorAll('button[data-lw-tag]'));
+            if (!flaeche || !material || !tipp || !tippText || !tage.length)
+                return;
+            tage.forEach((knopf, index) => {
+                const anzahl = Number(knopf.dataset['lwAnzahl']) || 0;
+                const hoechst = Number(knopf.dataset['lwMax']) || 1;
+                knopf.style.setProperty('--lw-anteil', String(anzahl / hoechst));
+                knopf.style.setProperty('--lw-index', String(index));
+            });
+            hochzaehlen(summe, seit);
+            let gewaehlt = -1;
+            const setzeX = (el, x, nachbar, sofort) => {
+                if (typeof SelectionFlow !== 'undefined')
+                    SelectionFlow.folge(el, x, nachbar, sofort);
+                else
+                    el.style.transform = 'translateX(' + x + 'px)';
+            };
+            const waehle = (index, fokus) => {
+                const vorher = gewaehlt;
+                gewaehlt = index;
+                tage.forEach((knopf, i) => {
+                    knopf.setAttribute('aria-pressed', String(i === index));
+                    knopf.tabIndex = (index < 0 ? i === tage.length - 1 : i === index) ? 0 : -1;
+                });
+                if (index < 0) {
+                    tipp.hidden = true;
+                    material.classList.remove('an');
+                    return;
+                }
+                const knopf = tage[index];
+                if (!knopf)
+                    return;
+                if (fokus)
+                    knopf.focus({ preventScroll: true });
+                const erste = tage[0]?.offsetTop ?? 0;
+                const zeile = knopf.offsetTop - erste;
+                const sofort = vorher < 0 || (tage[vorher]?.offsetTop ?? erste) !== knopf.offsetTop;
+                material.style.translate = zeile ? '0 ' + zeile + 'px' : '';
+                material.style.bottom = 'auto';
+                material.style.height = (erste + knopf.offsetHeight - material.offsetTop) + 'px';
+                tipp.style.translate = zeile ? '0 ' + zeile + 'px' : '';
+                material.style.width = knopf.offsetWidth + 'px';
+                setzeX(material, knopf.offsetLeft, Math.abs(index - vorher) === 1, sofort);
+                material.classList.add('an');
+                tippText.textContent = knopf.dataset['lwTipp'] || '';
+                tipp.hidden = false;
+                const breite = tipp.offsetWidth;
+                const mitte = knopf.offsetLeft + knopf.offsetWidth / 2;
+                setzeX(tipp, Math.max(0, Math.min(flaeche.clientWidth - breite, mitte - breite / 2)), false, sofort);
+                if (sofort && !wenigBewegung() && typeof RedionSpring !== 'undefined') {
+                    const feder = RedionSpring.token('snappy');
+                    if (feder.duration > 1)
+                        tippText.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+                }
+            };
+            karte.addEventListener('click', event => {
+                const knopf = event.target.closest('button[data-lw-tag]');
+                if (!knopf || !karte.contains(knopf))
+                    return;
+                const index = Number(knopf.dataset['lwTag']);
+                waehle(index === gewaehlt ? -1 : index, false);
+            });
+            karte.addEventListener('keydown', event => {
+                const knopf = event.target.closest('button[data-lw-tag]');
+                if (!knopf)
+                    return;
+                const jetzt = Number(knopf.dataset['lwTag']);
+                const proZeile = tage.filter(k => k.offsetTop === tage[0]?.offsetTop).length || tage.length;
+                const ziel = event.key === 'ArrowRight' ? Math.min(tage.length - 1, jetzt + 1)
+                    : event.key === 'ArrowLeft' ? Math.max(0, jetzt - 1)
+                        : event.key === 'ArrowUp' && jetzt - proZeile >= 0 ? jetzt - proZeile
+                            : event.key === 'ArrowDown' && jetzt + proZeile < tage.length ? jetzt + proZeile
+                                : event.key === 'Home' ? 0 : event.key === 'End' ? tage.length - 1 : -2;
+                if (ziel === -2)
+                    return;
+                event.preventDefault();
+                waehle(ziel, true);
+            });
+        });
     };
     const kartenArt = (card) => {
         const text = String(card?.text || '');
@@ -135913,6 +136334,7 @@ const Lernwelt = (() => {
         }
         if (typeof Funkel !== 'undefined')
             Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
+        verlaufBeleben(root, zustand.ansicht);
         if (zustand.simulation && !zustand.simulation.fertig)
             timerStarten();
         else
@@ -137624,73 +138046,285 @@ const Zeitmesser = (() => {
         uebersprungenSek: lauf ? Math.round(lauf.uebersprungenSek) : 0,
         seite: lauf?.seitenName || ''
     });
+    const ruhig = () => {
+        try {
+            if (typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung)
+                return AppEinstellung.wenigBewegung();
+        }
+        catch { }
+        return document.body?.dataset['bewegung'] === 'ruhig' ||
+            !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    };
+    const zustandVon = (s) => s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit';
+    const artText = (s) => (s.art === 'timer' ? 'Timer' : 'Stoppuhr') + (s.pausiert ? ' · pausiert' : '') +
+        (s.uebersprungenSek >= 60 ? ' · ' + uhrText(s.uebersprungenSek) + ' Schlaf nicht gezählt' : '');
+    const fortschritt = () => lauf && lauf.art === 'timer' && lauf.sollSek > 0
+        ? { soll: Math.round(lauf.sollSek), vergangen: Math.min(Math.round(lauf.sollSek), Math.round(lauf.vergangenSek)) }
+        : null;
+    const fortschrittText = (f) => Math.floor(f.vergangen / 60) + ' von ' + Math.round(f.soll / 60) + ' Minuten';
     const feldHtml = () => {
         const s = stand();
+        const f = fortschritt();
         const liste = sitzungen().slice(0, 3).map(z => `<li>${esc(uhrText(z.dauerSek))} · ${esc(z.seitenName || 'Ohne Seite')}` +
             `${z.art === 'timer' ? ' <i>(Timer)</i>' : ''}</li>`).join('');
         return `<div class="zm-kopf"><b>Zeitmesser</b>` +
-            `<button class="rb zeichen" data-zm="zu" aria-label="Schliessen">✕</button></div>` +
-            `<div class="zm-uhr" aria-live="off">${uhrText(s.sekunden)}</div>` +
+            `<button class="rb zeichen" data-zm="zu" data-esc-knopf aria-label="Schliessen">✕</button></div>` +
             `<p class="zm-wo">${s.laeuft
-                ? (s.art === 'timer' ? 'Timer' : 'Stoppuhr') + ' · ' + esc(s.seite) +
-                    (s.pausiert ? ' · pausiert' : '') +
-                    (s.uebersprungenSek >= 60 ? ' · ' + esc(uhrText(s.uebersprungenSek)) + ' Schlaf nicht gezählt' : '')
+                ? `<b class="zm-titel">${esc(s.seite)}</b><span class="zm-art">${esc(artText(s))}</span>`
                 : 'Misst die Zeit an der offenen Seite.'}</p>` +
+            `<div class="zm-uhr" aria-live="off">${uhrText(s.sekunden)}</div>` +
+            (f ? `<div class="zm-fortschritt" role="progressbar" aria-label="Fortschritt des Timers" aria-valuemin="0"` +
+                ` aria-valuemax="${f.soll}" aria-valuenow="${f.vergangen}" aria-valuetext="${esc(fortschrittText(f))}"><i></i></div>` : '') +
             `<div class="zm-reihe">` +
             `<button class="rb" data-zm="stoppuhr">Stoppuhr</button>` +
             `<button class="rb" data-zm="t5">5 Min</button>` +
             `<button class="rb" data-zm="t25">25 Min</button>` +
             `</div>` +
-            `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit'}">` +
+            `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${zustandVon(s)}">` +
             `<button class="rb haupt" data-rmo-taste="start" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
-            `<button class="rb" data-rmo-taste="pause" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
+            `<button class="rb" data-rmo-taste="pause" data-zm="pause" ${s.laeuft ? '' : 'disabled'}><span class="zm-wort">${s.pausiert ? 'Weiter' : 'Pause'}</span></button>` +
             `<button class="rb" data-rmo-taste="stopp" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
             `</div>` +
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
+    const fortschrittSetzen = (wurzel) => {
+        const f = fortschritt();
+        const fuellung = wurzel.querySelector('.zm-fortschritt i');
+        if (f && fuellung)
+            fuellung.style.setProperty('--zm-anteil', String(f.soll ? f.vergangen / f.soll : 0));
+    };
     const zeichneStand = () => {
         document.dispatchEvent(new CustomEvent('redion:zeitmesser'));
+        pilleStand();
         const feld = document.querySelector('.zm-feld');
-        if (!feld)
+        const inhalt = feld?.querySelector('.zm-inhalt');
+        if (!feld || !inhalt)
             return;
         const next = document.createElement('div');
         next.innerHTML = feldHtml();
-        const currentState = feld.querySelector('.rmo-transport')?.getAttribute('data-zustand');
+        const currentState = inhalt.querySelector('.rmo-transport')?.getAttribute('data-zustand');
         const nextState = next.querySelector('.rmo-transport')?.getAttribute('data-zustand');
-        if (currentState === nextState) {
-            for (const selector of ['.zm-uhr', '.zm-wo']) {
-                const target = feld.querySelector(selector);
+        const laufend = (z) => z === 'laeuft' || z === 'pausiert';
+        const gleicheGestalt = (currentState === nextState || (laufend(currentState) && laufend(nextState))) &&
+            !!inhalt.querySelector('.zm-fortschritt') === !!next.querySelector('.zm-fortschritt') &&
+            !!inhalt.querySelector('.zm-titel') === !!next.querySelector('.zm-titel');
+        if (gleicheGestalt) {
+            const texte = next.querySelector('.zm-titel') ? ['.zm-uhr', '.zm-titel', '.zm-art', '.zm-wort'] : ['.zm-uhr', '.zm-wo', '.zm-wort'];
+            for (const selector of texte) {
+                const target = inhalt.querySelector(selector);
                 const text = next.querySelector(selector)?.textContent || '';
                 if (target && target.textContent !== text)
                     target.textContent = text;
             }
+            const leiste = inhalt.querySelector('.zm-fortschritt');
+            const neueLeiste = next.querySelector('.zm-fortschritt');
+            if (leiste && neueLeiste)
+                for (const name of ['aria-valuenow', 'aria-valuetext', 'aria-valuemax']) {
+                    const wert = neueLeiste.getAttribute(name) || '';
+                    if (leiste.getAttribute(name) !== wert)
+                        leiste.setAttribute(name, wert);
+                }
+            fortschrittSetzen(inhalt);
+            const transport = inhalt.querySelector('.rmo-transport');
+            if (transport && nextState && transport.getAttribute('data-zustand') !== nextState)
+                transport.setAttribute('data-zustand', nextState);
             return;
         }
         const focused = feld.contains(document.activeElement)
             ? document.activeElement.dataset.zm : undefined;
-        feld.replaceChildren(...Array.from(next.childNodes));
+        inhalt.replaceChildren(...Array.from(next.childNodes));
+        fortschrittSetzen(inhalt);
         if (focused)
-            feld.querySelector(`.rmo-transport [data-zm="${focused}"]:not(:disabled)`)?.focus();
+            inhalt.querySelector(`[data-zm="${focused}"]:not(:disabled)`)?.focus();
     };
-    const panel = () => {
-        const offen = document.querySelector('.zm-feld');
-        if (offen) {
-            offen.remove();
+    let fahrt = null;
+    const pilleBauen = () => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.id = 'zm-pille';
+        b.className = 'zm-pille';
+        b.innerHTML = '<span class="zm-pille-lampe" aria-hidden="true"></span>' +
+            '<span class="zm-pille-zeichen" data-sym="clock" data-sym-groesse="16" aria-hidden="true">⏱</span>' +
+            '<b class="zm-pille-uhr"></b><span class="zm-pille-trenner" aria-hidden="true">·</span>' +
+            '<span class="zm-pille-seite"></span>';
+        try {
+            globalThis.Register?.symbole?.fuelle?.(b);
+        }
+        catch { }
+        b.addEventListener('click', () => oeffnen(true));
+        return b;
+    };
+    const pilleStand = () => {
+        let pille = document.getElementById('zm-pille');
+        if (!lauf) {
+            if (pille && !fahrt)
+                pille.remove();
             return;
         }
+        const feld = document.querySelector('.zm-feld');
+        let neu = false;
+        if (!pille) {
+            if (feld)
+                return;
+            pille = pilleBauen();
+            document.body.appendChild(pille);
+            neu = true;
+        }
+        if (!fahrt)
+            pille.hidden = !!feld;
+        const s = stand();
+        const uhr = uhrText(s.sekunden);
+        const setze = (wahl, text) => {
+            const e = pille.querySelector(wahl);
+            if (e && e.textContent !== text)
+                e.textContent = text;
+        };
+        setze('.zm-pille-uhr', uhr);
+        setze('.zm-pille-seite', s.seite);
+        const zustand = zustandVon(s);
+        if (pille.dataset['zustand'] !== zustand)
+            pille.dataset['zustand'] = zustand;
+        const minuten = s.art === 'timer' ? 'noch ' + Math.ceil(s.sekunden / 60) + ' Min'
+            : s.sekunden < 60 ? 'unter 1 Min gemessen' : Math.floor(s.sekunden / 60) + ' Min gemessen';
+        const name = 'Zeitmesser: ' + minuten + ' an „' + s.seite + '"' + (s.pausiert ? ', pausiert' : '') + ' — öffnen';
+        if (pille.getAttribute('aria-label') !== name)
+            pille.setAttribute('aria-label', name);
+        if (neu && !pille.hidden && !ruhig()) {
+            const feder = typeof RedionSpring !== 'undefined' ? RedionSpring.token('smooth') : null;
+            if (feder && feder.duration > 1)
+                pille.animate([{ opacity: 0, transform: 'translateY(8px) scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+        }
+    };
+    const kasten = (e) => {
+        const r = e.getBoundingClientRect();
+        return { left: r.left, top: r.top, width: r.width, height: r.height };
+    };
+    const bahn = (box, von, nach) => {
+        const feder = RedionSpring.preset('snappy');
+        const weit = Math.max(1, Math.abs(nach.left - von.left), Math.abs(nach.top - von.top), Math.abs(nach.width - von.width), Math.abs(nach.height - von.height));
+        const roh = RedionSpring.sample(feder, 0, weit, 0, 8);
+        const lauf01 = { values: roh.values.map(v => v / weit), duration: roh.duration };
+        const bilder = lauf01.values.map(p => {
+            const l = von.left + (nach.left - von.left) * p;
+            const t = von.top + (nach.top - von.top) * p;
+            const b = von.width + (nach.width - von.width) * p;
+            const h = von.height + (nach.height - von.height) * p;
+            return { transform: 'translate(' + (l - box.left).toFixed(2) + 'px,' + (t - box.top).toFixed(2) + 'px) scale(' +
+                    (b / box.width).toFixed(4) + ',' + (h / box.height).toFixed(4) + ')' };
+        });
+        return { bilder, dauer: lauf01.duration };
+    };
+    const blende = (e, punkte, dauer) => e.animate(punkte.map(([offset, opacity]) => ({ offset, opacity })), { duration: dauer, easing: 'linear', fill: 'both' });
+    const fahrtBeenden = () => { const f = fahrt; fahrt = null; f?.ende(); };
+    const nachDerFahrt = (laeufe, ende) => {
+        Promise.all(laeufe.map(a => a.finished))
+            .then(() => { if (fahrt?.ende === ende)
+            fahrtBeenden(); })
+            .catch(() => { });
+    };
+    const aufgehen = (feld, pille, von) => {
+        const inhalt = feld.querySelector('.zm-inhalt');
+        const nach = kasten(feld);
+        if (!inhalt || !nach.width || !von.width) {
+            pille.hidden = true;
+            return;
+        }
+        const karte = bahn(nach, von, nach);
+        const tropfen = bahn(von, von, nach);
+        const d = karte.dauer;
+        const geist = inhalt.cloneNode(true);
+        geist.className = 'zm-inhalt zm-geist';
+        geist.setAttribute('aria-hidden', 'true');
+        geist.inert = true;
+        geist.querySelectorAll('[data-zm], [role], [data-rmo-taste], [data-esc-knopf]').forEach(x => {
+            x.removeAttribute('data-zm');
+            x.removeAttribute('role');
+            x.removeAttribute('data-rmo-taste');
+            x.removeAttribute('data-esc-knopf');
+        });
+        geist.querySelectorAll('.rmo-transport').forEach(x => x.classList.remove('rmo-transport'));
+        feld.appendChild(geist);
+        feld.style.transformOrigin = '0 0';
+        pille.style.transformOrigin = '0 0';
+        pille.classList.add('zm-fliegt');
+        const laeufe = [
+            feld.animate(karte.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(feld, [[0, 0], [0.08, 0], [0.4, 1], [1, 1]], d),
+            blende(inhalt, [[0, 0], [0.3, 0], [0.72, 1], [1, 1]], d),
+            blende(geist, [[0, 0], [0.12, 0], [0.35, 1], [0.72, 0], [1, 0]], d),
+            pille.animate(tropfen.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(pille, [[0, 1], [0.15, 1], [0.5, 0], [1, 0]], d)
+        ];
+        const ende = () => {
+            laeufe.forEach(a => a.cancel());
+            geist.remove();
+            feld.style.removeProperty('transform-origin');
+            pille.style.removeProperty('transform-origin');
+            pille.classList.remove('zm-fliegt');
+            if (lauf)
+                pille.hidden = true;
+            else
+                pille.remove();
+            if (fahrt?.ende === ende)
+                fahrt = null;
+        };
+        fahrt = { ende };
+        nachDerFahrt(laeufe, ende);
+    };
+    const zusammenziehen = (feld, pille) => {
+        const von = kasten(feld);
+        pille.hidden = false;
+        const nach = kasten(pille);
+        const inhalt = feld.querySelector('.zm-inhalt');
+        if (!nach.width || !von.width) {
+            feld.remove();
+            return;
+        }
+        const karte = bahn(von, von, nach);
+        const tropfen = bahn(nach, von, nach);
+        const d = karte.dauer;
+        feld.style.transformOrigin = '0 0';
+        pille.style.transformOrigin = '0 0';
+        pille.classList.add('zm-fliegt');
+        const laeufe = [
+            feld.animate(karte.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(feld, [[0, 1], [0.18, 1], [0.5, 0], [1, 0]], d),
+            pille.animate(tropfen.bilder, { duration: d, easing: 'linear', fill: 'both' }),
+            blende(pille, [[0, 0], [0.12, 0], [0.45, 1], [1, 1]], d)
+        ];
+        if (inhalt)
+            laeufe.push(blende(inhalt, [[0, 1], [0.2, 0], [1, 0]], d));
+        for (const kind of Array.from(pille.children))
+            laeufe.push(blende(kind, [[0, 0], [0.55, 0], [0.85, 1], [1, 1]], d));
+        const ende = () => {
+            laeufe.forEach(a => a.cancel());
+            feld.remove();
+            pille.style.removeProperty('transform-origin');
+            pille.classList.remove('zm-fliegt');
+            if (fahrt?.ende === ende)
+                fahrt = null;
+            pilleStand();
+        };
+        fahrt = { ende };
+        nachDerFahrt(laeufe, ende);
+    };
+    let vorherFokus = null;
+    const feldBauen = () => {
         const feld = document.createElement('div');
-        feld.className = 'zm-feld';
+        feld.className = 'zm-feld zm-karte';
         feld.setAttribute('role', 'dialog');
         feld.setAttribute('aria-label', 'Zeitmesser');
-        feld.setAttribute('data-esc-schliesst', '');
-        feld.innerHTML = feldHtml();
+        const inhalt = document.createElement('div');
+        inhalt.className = 'zm-inhalt';
+        inhalt.innerHTML = feldHtml();
+        feld.appendChild(inhalt);
         feld.addEventListener('click', e => {
             const b = e.target.closest('[data-zm]');
-            if (!b)
+            if (!b || !inhalt.contains(b))
                 return;
             const was = b.dataset['zm'];
             if (was === 'zu') {
-                feld.remove();
+                schliessen();
                 return;
             }
             if (was === 'stoppuhr')
@@ -137705,6 +138339,75 @@ const Zeitmesser = (() => {
                 return stopp();
         });
         document.body.appendChild(feld);
+        fortschrittSetzen(inhalt);
+        return feld;
+    };
+    const oeffnen = (ausPille) => {
+        fahrtBeenden();
+        document.querySelectorAll('.zm-karte.zm-geht').forEach(x => x.remove());
+        if (document.querySelector('.zm-feld'))
+            return;
+        const aktiv = document.activeElement;
+        vorherFokus = aktiv instanceof HTMLElement && aktiv !== document.body && aktiv.id !== 'zm-pille' ? aktiv : null;
+        const pille = document.getElementById('zm-pille');
+        const von = pille && !pille.hidden ? kasten(pille) : null;
+        const feld = feldBauen();
+        if (pille && von && !ruhig() && typeof RedionSpring !== 'undefined')
+            aufgehen(feld, pille, von);
+        else {
+            if (pille)
+                pille.hidden = true;
+            if (!pille && !ruhig() && typeof RedionSpring !== 'undefined') {
+                const feder = RedionSpring.token('snappy');
+                if (feder.duration > 1)
+                    feld.animate([{ opacity: 0, transform: 'translateY(10px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+            }
+        }
+        if (ausPille) {
+            const ziel = feld.querySelector('[data-zm="pause"]:not(:disabled)') ||
+                feld.querySelector('[data-zm="zu"]');
+            ziel?.focus({ preventScroll: true });
+        }
+    };
+    const schliessen = () => {
+        fahrtBeenden();
+        const feld = document.querySelector('.zm-feld');
+        if (!feld)
+            return;
+        const fokusDrin = feld.contains(document.activeElement) || document.activeElement === document.body;
+        feld.classList.remove('zm-feld');
+        feld.classList.add('zm-geht');
+        feld.removeAttribute('role');
+        feld.setAttribute('aria-hidden', 'true');
+        feld.inert = true;
+        if (!lauf) {
+            feld.remove();
+            pilleStand();
+            if (fokusDrin && vorherFokus?.isConnected)
+                vorherFokus.focus({ preventScroll: true });
+            return;
+        }
+        pilleStand();
+        const pille = document.getElementById('zm-pille');
+        if (!pille) {
+            feld.remove();
+            return;
+        }
+        if (ruhig() || typeof RedionSpring === 'undefined') {
+            feld.remove();
+            pille.hidden = false;
+        }
+        else
+            zusammenziehen(feld, pille);
+        if (fokusDrin)
+            pille.focus({ preventScroll: true });
+    };
+    const panel = () => {
+        if (document.querySelector('.zm-feld')) {
+            schliessen();
+            return;
+        }
+        oeffnen(false);
     };
     return { panel, start, pause, stopp, stand, wiederaufnehmen };
 })();
@@ -148422,7 +149125,6 @@ const App = (() => {
             };
             const m = letztes('.menu');
             const o = letztes('.overlay');
-            const feld = letztes('[data-esc-schliesst]');
             if (m)
                 m.remove();
             else if (o) {
@@ -148430,14 +149132,19 @@ const App = (() => {
                     !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet'))
                     o.remove();
             }
-            else if (feld && !warOffen) {
-                const warDrin = feld.contains(document.activeElement);
-                feld.remove();
-                if (warDrin)
-                    document.getElementById('page')?.focus();
+            else {
+                const knopf = letztes('[data-esc-knopf]');
+                const feld = knopf?.closest('[role="dialog"]');
+                const fokus = document.activeElement;
+                const imText = fokus instanceof HTMLElement && !feld?.contains(fokus) &&
+                    (fokus.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(fokus.tagName));
+                if (knopf && feld) {
+                    if (!warOffen && !imText)
+                        knopf.click();
+                }
+                else if (!warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined')
+                    Hinweis.escape();
             }
-            else if (!feld && !warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined')
-                Hinweis.escape();
         });
     };
     const rolleZu = (blockId) => {

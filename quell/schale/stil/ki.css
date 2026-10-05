@@ -16,13 +16,16 @@
 /* ==========================================================================
    KI-PANEL
    ========================================================================== */
+:root{ --ki-breite:420px }
 #ai{
   /* 420, NICHT 380 (E642). Hier stand 380, und es galt seit dem
      10. September nie: `motion.css` lädt später und setzt 420. Zwei Zahlen
      für dieselbe Breite, und die frühere war ein Versprechen, das die Seite
      nicht hielt — genau der Fall, den `test332` zählt. Die Breite steht
-     jetzt HIER, im Blatt des Bauteils, und nur hier. */
-  width:420px; flex:0 0 420px; background:var(--bg-side);
+     jetzt HIER, im Blatt des Bauteils, und nur hier — seit der Durchsicht
+     von E713 als Marke an `:root`, weil die Zeitpille am Rechner neben dem
+     offenen Panel steht und dieselbe Zahl LIEST, statt sie abzuschreiben. */
+  width:var(--ki-breite); flex:0 0 var(--ki-breite); background:var(--bg-side);
   border-left:1px solid var(--line); display:none; flex-direction:column;
 }
 #ai.open{display:flex}

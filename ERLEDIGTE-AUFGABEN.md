@@ -64,6 +64,94 @@ bei 700 ms fest. `test579` §9 misst in der Einzeldatei jetzt auch, dass das
 angenommene Blatt wirkt (44 px, genau eines, kein `<link>`). Beide
 Erweiterungen mit Gegenprobe rot gesehen.
 
+## 5. Oktober 2026 · E713 · Vierte Durchsicht der Zeitpille und der Balkenkarte
+
+**Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",
+am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden:** die Reparatur der dritten Durchsicht lag ungesichert im Baum
+— gelesen, bytegleich neu gebaut, rot und grün gesehen, eingecheckt. Dazu,
+zuerst rot: am Telefon lag ohne Netz der Offline-Streifen auf Start · Pause
+· Beenden der offenen Karte; ein Tipp auf „Pause" traf den Streifen.
+
+**Gebaut:** am Telefon steht die offene Karte über den länger lebenden
+Meldungen (Streifen, Einladung, Lader), auf den Stufen des Toast-Stapels.
+
+**Geprüft:** `test590` §16 (rot zuerst), Gegenprobe, Nachbarn und Startlast
+stehen in E713 („Die vierte Durchsicht").
+
+## 5. Oktober 2026 · E713 · Dritte Durchsicht der Zeitpille und der Balkenkarte
+
+**Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",
+am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden:** die zweite Durchsicht war fertig gebaut, aber nicht
+eingecheckt — selbst nachgeprüft und eingecheckt. Dazu, je zuerst rot: am
+Telefon lag ein Toast auf der offenen Karte (über Start · Pause ·
+Beenden); „Beenden" mitten in der Fahrt liess eine versteckte Pille samt
+Polster zurück; `test303` war seit dem Bau von E713 rot (ein Selektor
+nannte `.rmo-tr-sym`).
+
+**Gebaut:** der Toast geht bei offener Karte am Telefon nach oben (eigene
+Regel neben der für offene Fenster); am Ende der Fahrt geht die Pille, wenn
+die Uhr aus ist; der Selektor der verborgenen Figur nennt nur
+`[data-figur]`.
+
+**Geprüft:** `test590` §15 (rot zuerst), die Gegenproben, `test303`,
+Nachbarn und Startlast stehen in E713 („Die dritte Durchsicht").
+
+## 4./5. Oktober 2026 · E713 · Durchsicht der Zeitpille und der Balkenkarte
+
+**Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",
+am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden** (je zuerst als Lauf, `test590` §10–§14 rot gegen `fb7e590e`):
+die Pille lag am Telefon auf der Werkzeugleiste der Fläche, auf dem runden
+Knopf „Neu" der Notizhefte, auf der Zeichenleiste unten und auf dem Letzten
+jeder Ansicht, am Rechner auf dem KI-Panel; ein Toast lag am Telefon auf
+ihr; der Monatsverlauf versteckte Zahlen und Wochentage, die vorher
+sichtbar waren, und seine Säulen waren am Telefon 9 px breit; beim Öffnen
+sprang die Summe zurück auf 0; der Name der Pille wechselte jede Sekunde;
+Escape mitten in der Fahrt tat nichts.
+
+**Gebaut:** die Pille steht auf `--melde-boden` und bekommt ihren Platz als
+Polster, der runde Knopf rückt über sie, beim Schreiben tritt sie zur
+Seite, neben dem offenen KI-Panel steht sie links davon; was sonst meldet,
+rückt am Telefon über sie. Der Monatsverlauf steht in Zeilen zu zehn mit
+allen Zahlen und Namen, ↑/↓ gehen eine Zeile. Ein zweites Zeichnen fährt
+weiter, statt neu anzukommen. Der Name der Pille nennt Minuten. Die
+verwischte Kopie trägt kein `data-esc-knopf` mehr.
+
+**Geprüft:** `test590` (sechs neue Zusagen-Gruppen, rot zuerst), die
+Gegenproben, Nachbarn und Startlast stehen in E713 („Die Durchsicht").
+
+## 28. September 2026 · E713 · Die Zeitpille und die Balkenkarte
+
+**Redur:** um ca. 22:05 das Video „LIQUID GLASS" und dazu „Schau mal das
+auch an ich will das auch haben"; um ca. 22:10 „… bessere übergagnge
+besssere efeckten , bessere oberfläsche alles …".
+
+**Gefunden:** Nach ✕ lief der Zeitmesser unsichtbar weiter
+(`Zeitmesser.stand()` sagte `laeuft:true`, der Schirm nichts); das Feld
+schloss nicht auf Escape und liess am Telefon den Seitentext durchscheinen.
+Der Lernverlauf („Letzte 7 Tage", „Wochenverlauf", „Monatsverlauf") war
+eine Reihe stummer `<progress>`, und kein Lauf las ihn.
+
+**Gebaut:** eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste,
+solange die Uhr läuft und das Feld zu ist; ein Tipp lässt die Karte aus ihr
+wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als
+stille Kopie), ✕ und Escape ziehen sie zurück, der Fokus folgt. Die Karte
+hat die Seite als Titel, beim Timer einen echten Fortschritt, Pause ↔
+Weiter tauscht im selben Knopf (Zeichen-Tausch wie im Kit); am Telefon
+deckend, am Rechner Glas. Der eine Escape-Griff kennt schwebende Felder
+(`data-esc-knopf`). Der Lernverlauf ist eine Karte: die Summe zählt hoch,
+die Balken wachsen einmal, ein Tag lässt sich mit Tipp und Tasten wählen —
+das Material aus E706 gleitet dahinter, ein Hinweis nennt „Fr · 9
+Wiederholungen". Ohne Bewegung steht alles sofort.
+
+**Geprüft:** `test590` (neu, rot zuerst), die Gegenproben und die Nachbarn
+stehen in E713.
+
 ## 28. September 2026 · E712 · Tropfen, Linse und Kacheln aus dem Liquid-Glass-Video
 
 **Redur:** um ca. 22:05 zum Video „LIQUID GLASS": „Schau mal das auch an ich

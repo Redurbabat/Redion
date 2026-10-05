@@ -4259,6 +4259,32 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     top:12px; bottom:auto; transform:translateY(-80px);
   }
   body:has(.overlay) #toast.show{ transform:translateY(0) }
+  /* UND DIE OFFENE KARTE DES ZEITMESSERS (dritte Durchsicht von E713). Sie
+     ist keine `.overlay`, steht aber genauso unten mit ihren Tasten
+     zuunterst: gemessen auf 390 × 844 Toast 720–763 auf der Karte 462–759,
+     über Start · Pause · Beenden — und „⏰ Zeit um" kommt genau dann, wenn
+     man die Karte offen hat. Dieselbe Antwort wie oben: nach OBEN. Eine
+     eigene Regel, nicht ein zweites Glied in der oberen — `test304` liest
+     jene beim Wortlaut. Geprüft in `test590` §15. */
+  body:has(.zm-feld) #toast{
+    top:12px; bottom:auto; transform:translateY(-80px);
+  }
+  body:has(.zm-feld) #toast.show{ transform:translateY(0) }
+  /* UND KEIN STREIFEN AUF IHR (vierte Durchsicht von E713). Die länger
+     lebenden Meldungen — Offline-Streifen, Einladung zum Rundgang, Lader —
+     stehen auf `--melde-boden` und liegen ÜBER der Karte (700, 560, 901
+     gegen 45). Gemessen auf 390 × 844 ohne Netz: Streifen 713–763 auf der
+     Karte 462–759, von Start, Pause und Beenden je 45 % frei, und ein Tipp
+     auf „Pause" traf den Streifen. Er bleibt, bis man ihn schliesst; der
+     Toast geht oben aus dem Weg (siehe oben), diese leben länger. Also
+     steht die Karte über ihnen — auf denselben Stufen wie der Toast im
+     Stapel, 4 px höher (16 statt 12, wie sonst). Geprüft in `test590` §16. */
+  body:has(#offline-streifen) .zm-karte,
+  body:has(#rg-einladung) .zm-karte{ bottom:calc(var(--melde-boden) + 70px) }
+  body:has(#rg-einladung):has(#offline-streifen) .zm-karte{ bottom:calc(var(--melde-boden) + 126px) }
+  body:has(.ru-lader-schwebt) .zm-karte,
+  body:has(.ru-lader-schwebt):is(:has(#offline-streifen), :has(#rg-einladung)) .zm-karte{
+    bottom:calc(var(--melde-boden) + 116px) }
 }
 
 /* ===========================================================================
@@ -8256,21 +8282,59 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 /* Der Zeitmesser (E268): ein schwebendes Feld rechts unten, ÜBER der
    Telefon-Leiste (--hunten) und unter den Menüs. Die Uhr läuft weiter,
-   wenn das Feld zu ist — schliessen heisst nur „aus dem Blick". */
-.zm-feld{
-  position:fixed; right:16px; bottom:calc(var(--hunten, 0px) + 16px);
-  z-index:45; width:min(280px, calc(100vw - 32px));
-  padding:12px 14px; border:1px solid var(--line);
-  border-radius:var(--radius-lg, 12px); background:var(--bg-schwebend, var(--bg));
-  box-shadow:var(--shadow-3, 0 8px 30px rgba(0,0,0,.25));
+   wenn das Feld zu ist — schliessen heisst nur „aus dem Blick".
+
+   SEIT E713: `.zm-karte` ist die Form, `.zm-feld` nur „das offene Feld"
+   (beim Schliessen fällt es sofort weg, die Karte zieht sich als
+   `.zm-geht` in die Pille zurück). Am Telefon DECKEND — `--bg-schwebend`
+   ohne Unschärfe liess den Seitentext durchscheinen; am Rechner dichtes
+   Glas, nur wo es Unschärfe gibt (E695). */
+.zm-karte{
+  position:fixed; right:16px; bottom:calc(var(--melde-boden, var(--hunten, 0px)) + 16px);
+  z-index:45; width:min(300px, calc(100vw - 32px));
+  border:1px solid var(--line);
+  border-radius:var(--radius-2xl); background:var(--bg-card);
+  box-shadow:var(--glas-kante), var(--shadow-3, 0 8px 30px rgba(0,0,0,.25));
 }
+@media (min-width:761px){
+  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .zm-karte{
+      --text-faint:var(--text-dim);
+      background:var(--bg-schwebend-dicht);
+      -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+    }
+  }
+}
+.zm-inhalt{ padding:var(--space-4) var(--space-5) 10px }
+/* Die verwischte Kopie für die Fahrt (Szene 02: „unscharf, dann scharf").
+   Die Unschärfe steht still; bewegt wird nur ihre Deckkraft. */
+.zm-geist{ position:absolute; inset:0; filter:blur(6px); pointer-events:none }
 .zm-kopf{ display:flex; align-items:center; justify-content:space-between }
-.zm-kopf b{ font-size:13px }
+.zm-kopf b{ font-size:12px; color:var(--text-dim); letter-spacing:.02em }
+.zm-wo{ margin:2px 0 0; font-size:11.5px; color:var(--text-dim) }
+.zm-titel{
+  display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:17px; font-weight:700; color:var(--text); letter-spacing:-.01em;
+}
+.zm-art{ display:block; margin-top:1px }
 .zm-uhr{
   margin:6px 0 2px; font-size:34px; font-weight:740;
   font-variant-numeric:tabular-nums; letter-spacing:.01em;
 }
-.zm-wo{ margin:0 0 10px; font-size:11.5px; color:var(--text-dim) }
+/* Der Fortschritt: die Füllung steht über `transform` (kein `width`). OHNE
+   Übergang: ein Schritt je Sekunde ist bei 25 Minuten 0,2 px — eine
+   Fahrt dafür wäre Bewegung im Leerlauf, jede Sekunde neu (E528). */
+.zm-fortschritt{
+  position:relative; height:6px; margin:6px 0 12px; overflow:hidden;
+  border-radius:var(--radius-pill); background:var(--bg-hover);
+}
+.zm-fortschritt i{
+  --zm-anteil:0;
+  position:absolute; inset:0; border-radius:inherit; background:var(--accent);
+  transform:translateX(calc((var(--zm-anteil) - 1) * 100%));
+}
+.zm-wo + .zm-uhr{ margin-top:4px }
+.zm-uhr + .zm-reihe{ margin-top:10px }
 .zm-reihe{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap }
 .zm-reihe .rb{ min-height:34px }
 .zm-sitzungen{ margin-top:8px; border-top:1px solid var(--line-soft, var(--line)); padding-top:8px }
@@ -8278,6 +8342,79 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .zm-sitzungen ul{ margin:4px 0 0; padding:0; list-style:none }
 .zm-sitzungen li{ font-size:11.5px; color:var(--text-dim); padding:2px 0 }
 .zm-sitzungen i{ font-style:normal; color:var(--text-faint) }
+
+/* DIE PILLE (E713): dunkel in BEIDEN Modi wie im Video, deckend, weil sie
+   ruht (E703). Weiss auf #18171d 17,9 : 1, die Seite in #b9b7c2 9,6 : 1.
+   Die Lampe atmet nur, solange die Uhr läuft (dieselbe wie am
+   Dreierblock, E535). */
+.zm-pille{
+  position:fixed; right:var(--space-5); bottom:calc(var(--melde-boden, var(--hunten, 0px)) + var(--space-5)); z-index:45;
+  display:inline-flex; align-items:center; gap:var(--space-3);
+  min-height:var(--touch-min); max-width:min(300px, calc(100vw - 2 * var(--space-5)));
+  padding:0 var(--space-5) 0 var(--space-4);
+  border:0; border-radius:var(--radius-pill);
+  background:#18171d; color:#f5f4f8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 1px rgba(255,255,255,.07),
+             0 10px 26px rgba(20,14,40,.30);
+  font:inherit; font-size:13.5px; line-height:1.2; cursor:pointer;
+}
+.zm-pille[hidden]{ display:none }
+.zm-pille > *{ flex:0 0 auto; transition:opacity var(--motion-fast) var(--ease) }
+.zm-pille.zm-fliegt > *{ opacity:0; transition-duration:var(--motion-instant) }
+.zm-pille-lampe{
+  width:8px; height:8px; border-radius:50%; background:var(--erfolg);
+  box-shadow:0 0 8px color-mix(in srgb, var(--erfolg) 60%, transparent);
+  animation:rmo-tr-atem 4s ease-in-out infinite;
+}
+.zm-pille[data-zustand="pausiert"] .zm-pille-lampe{ background:var(--warnung); box-shadow:none; animation:none }
+.zm-pille-zeichen{ display:inline-flex; color:#b9b7c2 }
+.zm-pille-zeichen svg{ width:var(--space-5); height:var(--space-5) }
+.zm-pille-uhr{ font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.01em }
+.zm-pille[data-zustand="pausiert"] .zm-pille-uhr{ color:#b9b7c2 }
+.zm-pille-trenner{ color:#8e8c96 }
+.zm-pille-seite{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#b9b7c2 }
+.zm-pille:hover{ background:#232129 }
+.zm-pille:focus-visible{ outline:2px solid var(--accent-text); outline-offset:3px }
+/* DIE PILLE LIEGT NICHT AUF DEN WERKZEUGEN (Durchsicht von E713). Auf
+   `--hunten` lag sie am Telefon auf der Werkzeugleiste der Fläche, auf dem
+   runden Knopf „Neu" der Notizhefte und auf dem Letzten jeder Ansicht, am
+   Rechner auf „Nachricht senden" im KI-Panel. Die Regel des Toasts (E703):
+   was nur meldet, gehört nicht auf das, womit man arbeitet.
+   1. Ihr Boden ist `--melde-boden` — über Dock und Kapsel im Dokument;
+      die Zeichenleiste unten steigt selbst (siehe unten). Die Karte geht
+      von dort auf.
+   2. Solange es sie gibt, bekommt `#scroll` ihren Platz als Polster: das
+      Letzte rollt über sie, die Fläche endet über ihr.
+   3. Der runde Knopf der Notizhefte rückt über sie (`translate`; die
+      Druckfeder auf `transform` bleibt). Beim Schreiben tritt sie zur Seite
+      wie die untere Leiste — die Uhr läuft weiter.
+   4. Ist das KI-Panel offen (am Rechner IM Layout), stehen Pille und Karte
+      links daneben (`--ki-breite`, ki.css).
+   5. Am Telefon rückt, was sonst meldet, über sie (unten).
+   Gemessen in `test590` §10. */
+body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--touch-min) + 2 * var(--space-5)) }
+@media(min-width:761px){
+  body:has(#ai.open) :is(.zm-pille, .zm-karte){ right:calc(var(--ki-breite, 0px) + var(--space-5)) }
+}
+/* Ausser bei der Zeichenleiste unten (nicht im Dokument): sie klebt in
+   `#scroll` und steigt mit dessen Polster (2.) selbst über die Pille. Auf
+   `--melde-boden` stiege die Pille ein zweites Mal mit — gemessen am
+   Telefon: Leiste 572–681, Pille 572–616, wieder auf ihr. */
+body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) :is(.zm-pille, .zm-karte){
+  bottom:calc(var(--hunten, 0px) + var(--space-5)) }
+@media(max-width:760px){
+  body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--hunten) + var(--space-7) + var(--touch-min) + var(--space-5)) }
+  body:has(#zm-pille) .nh-neu-fab{ translate:0 calc(-1 * (var(--touch-min) + var(--space-4))) }
+  body.schreibt .zm-pille{ display:none }
+  /* 5. Was sonst meldet, rückt über sie — derselbe Stapel (E703), um ihre
+     Höhe verschoben. Vorher lag ein Toast, so breit wie der Schirm, für
+     seine Sekunden genau auf ihr. Ein Toast, der oben steht (offene
+     Überlagerung, Zeichenleiste unten), bleibt oben. */
+  body:not(.schreibt):has(#zm-pille:not([hidden])) :is(#offline-streifen, #rg-einladung, .ru-lader-schwebt),
+  body:not(.schreibt):has(#zm-pille:not([hidden])):not(:has(.overlay)):is([data-dokument="an"], :not(:has(.blatt-reihe[data-lage="unten"]))) #toast{
+    translate:0 calc(-1 * (var(--touch-min) + var(--space-3)))
+  }
+}
 
 /* ============================================================================
  * DIE ELEKTRO-STARTSEITE (L65)

@@ -8396,6 +8396,56 @@ verschwinden (§35):
 
 ---
 
+## L234 · Die „läuft"-Pille gibt es nur für den Zeitmesser — der Ton der Zeitmarken läuft weiter unsichtbar — 28. September 2026
+
+**Gefunden beim Bau von E713.** Redurs Video „LIQUID GLASS" (27. September,
+ca. 22:05: „Schau mal das auch an ich will das auch haben") zeigt eine
+dunkle Pille, die sagt, dass etwas läuft, und zur Karte aufgeht. E713 hat
+sie für den Zeitmesser gebaut. Dieselbe Lücke hat ein zweiter Ort: ein
+Zeitmarken-Knopf „▶ mm:ss" (`editor.ts`, `audioRefSpielen`) spielt den Ton
+über ein losgelöstes `new Audio()`, wenn der Audio-Block nicht auf der Seite
+steht — dann gibt es KEIN Bedienelement: kein Anhalten, kein Springen.
+
+**Warum nicht gleich mit:** der Editor und der Zeitmesser sind zwei Bereiche
+(`bereiche/editor`, `bereiche/wissen`), und §5 Regel 1 verbietet, dass einer
+den anderen ruft (`test537`). Die Pille muss dafür in die Schale, als EIN
+Baustein für beide („läuft": Zeichen, Zeit, Titel, Aufgehen zur Karte,
+Escape) — mit eigener Datei, `index.html`, GRUNDSTOCK und Startlast
+(`test388`).
+
+**Dazu offen:**
+- Die laufende Besprechung (`Meeting.panel`, besprechung.ts) und die
+  Aufträge könnten dieselbe Pille nutzen.
+- ~~Am Telefon rückt ein Toast nicht über die Pille~~ — erledigt in der
+  Durchsicht von E713 (4./5. Oktober): der Toast war am Telefon so breit
+  wie der Schirm und lag für seine Sekunden genau auf ihr. Jetzt rückt, was
+  meldet, um ihre Höhe darüber (`test590` §10).
+- `RedionSpring.sample` ruht bei einem Hundertstel des Weges; wer über 0…1
+  rechnet, bekommt am Ende einen Sprung. E713 rechnet in Pixeln; eine
+  Warnung am Helfer selbst fehlt.
+- Wischen über die Balken des Verlaufs (heute Tipp, Pfeile, Pos1/Ende).
+  Seit der Durchsicht steht der Monatsverlauf in Zeilen zu zehn, jede
+  Spalte mindestens 32 px (Nebenweg, §37) — treffbar, aber Wischen wäre der
+  schnellere Weg.
+- Am Rechner kann ein langer Toast in einem schmalen Fenster die offene
+  Karte streifen (gemessen in der dritten Durchsicht bei 1024 px: Schnitt
+  3'840 px², mit dem alten Feld auf `b3cf1933` 2'560) — der Toast steht
+  mittig, die Karte rechts; er nimmt keine Klicks an. Am Telefon geht er bei
+  offener Karte nach oben (`test590` §15). Ebenso berührt dort der
+  Offline-Streifen die linke untere Ecke der Karte (34 × 33 px Polster,
+  keine Taste — wie auf `b3cf1933`); am Telefon steht die offene Karte seit
+  der vierten Durchsicht über Streifen, Einladung und Lader (`test590`
+  §16). Stehen Lader und Streifen zugleich da, liegen sie am Telefon
+  aufeinander (beide auf `--melde-boden` + 12 px, schon vor E713 so) — die
+  Karte steht über beiden, aber die zwei decken einander.
+- Die Tasten Stoppuhr, 5 Min und 25 Min sind 34 px hoch, das ✕ am Rechner
+  34 × 34 — so seit E268, ohne geschriebenen Grund am Ort (§37).
+
+**Was fehlt:** die gemeinsame Pille in `schale/`, mit Wächter (rot zuerst),
+und der Zeitmarken-Ton als ihr zweiter Nutzer.
+
+---
+
 ## L233 · Der Tropfen nach E712 — was aus dem Video noch fehlt — 28. September 2026
 
 **Gefunden beim Bau von E712**, als Rest seines Auftrags. Redur hat am
@@ -9480,7 +9530,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 130 Lücken, 74 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 131 Lücken, 75 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

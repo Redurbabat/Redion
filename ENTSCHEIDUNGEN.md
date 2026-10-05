@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-693 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E713** ist dem letzten Zweig der zweiten Welle vom 28. September vergeben und folgt, sobald er landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+694 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -754,6 +754,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E710** — Die Fragen der Schale im Fenster des Touch Kits (Stufe 1b von E699; Redur: „was du beim touckit gebaut hast ich will alles so haben mit redion passende inhalten"): `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` zeichnen den Dialog des Kits (am Telefon ab drei Antworten das Aktionsblatt) am selben Auslöser mit denselben Antworten und Haken, das bisherige Fenster bleibt als Rückweg; Fokus und der gemeinsame Escape-Griff sehen mit dem Kit EINE oberste Ebene (vorher: beide `inert`), „Ruhige Darstellung" erreicht die Federn des Kits, Akzent als Schrift liest `--accent-text`, das Kit neu geholt von d21c402 und unter Redions strengen Schaltern geprüft, der Zeitmesser schliesst auf Escape; `Dialog.bestaetigen`/`Dialog.melden` für `confirm()`/`alert()`. Wächter `test587`.
 * **E711** — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich (Redur zum Video „Liquid Glass": „Schau mal das auch an ich will das auch haben", Szenen 07 und 08): die Suche geht aus dem Knopf auf, der sie trägt, neue Treffer kommen nacheinander, EINE Marke gleitet mit ↑ ↓ auf der Kit-Feder (Suche, Befehlspalette, Menü mit Suche; `SelectionFlow.highlight`, kein Neubau je Pfeil) und trägt „↵ Enter"; `#toast` wird ein Stapel aus bis zu drei Meldungen (die zwei davor waren verloren), Escape räumt ab, ein Finger wischt weg; die Glocke öffnet WEITER den Posteingang, beim Zeigen oder langen Drücken fächern die letzten drei auf, „Alle gelesen" (gelesen, nicht leeren) fliesst zäh in sie zurück — EIN Goo-Filter, nur während es fliesst; der Posteingang als Glaskarten (`test588`)
 * **E712** — Tropfen, Linse und Kacheln aus dem Liquid-Glass-Video (Redur: „Schau mal das auch an ich will das auch haben“): das „+“ und das „⋯“ fliessen wie ein Tropfen in ihr Menü, das AM Knopf wächst (das „+“-Menü stand am Rechner oben links in der Ecke), oben drei runde Glasknöpfe als Abkürzungen, jeder Eintrag bleibt darunter; EIN Goo-Filter im Halter der Linse, nur während des Fliessens; die Linse gleitet einmal über „Aufmachen. / Weiterdenken.“ mit der Brechung aus linse.ts; sieben Glaskacheln oben in „Mehr“ und in den Einstellungen, gerollt eine Chipleiste, die alten Felder bleiben (`test589`)
+* **E713** — Die Zeitpille und die Balkenkarte (Redur: „Schau mal das auch an ich will das auch haben", Video „LIQUID GLASS", Szenen 02 und 06): läuft der Zeitmesser bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste; ein Tipp lässt die Karte aus ihr wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als stille Kopie), Escape und ✕ ziehen sie zurück; die Seite ist der Titel, der Timer hat einen echten Fortschritt, Pause ↔ Weiter tauscht im selben Knopf; am Telefon deckend. Der Lernverlauf wird eine Karte: Balken wachsen einmal, die Summe zählt hoch, ein Tag lässt sich wählen (Material aus E706, Hinweis, Pfeile) — `test590`
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 
@@ -19925,6 +19926,13 @@ stehen → §3, riss erwartbar die Folgeschritte mit; Tinte immer dunkel
 E268 — Der Zeitmesser: Lernzeit messen statt schätzen
 ================================================================================
 
+> **Ergänzt durch E713 (28. September 2026).** Schliessen heisst weiter
+> „aus dem Blick, nicht aus" — aber nicht mehr unsichtbar: läuft die Uhr
+> bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über
+> der unteren Leiste, und ein Tipp lässt das Feld aus ihr wieder aufgehen.
+> Die Seite ist der Titel, der Timer hat einen Fortschritt, Pause ↔ Weiter
+> tauscht im selben Knopf; Escape schliesst das Feld (`test590`).
+
 Der »Time Keeper« aus Redurs GoodNotes-Dossier — und zugleich die
 Einlösung eines alten Punktes aus AUFGABEN.md: „Pomodoro/Lernzeit echt
 messen statt schätzen". Bis hierher gab es zwei Uhren, beide fest an
@@ -23622,6 +23630,13 @@ typecheck grün · sw v63 · Einzeldatei 7706 KB.
 
 E302 — Die Lücke war falsch: den Escape-Griff gibt es längst
 ================================================================================
+
+> **Ergänzt durch E713 (28. September 2026).** Der eine Griff kennt jetzt
+> auch schwebende Felder, die keine `.overlay` sind: ihr Schliessen-Knopf
+> trägt `data-esc-knopf`, und der Griff drückt ihn — nur, wenn kein Menü
+> und keine Überlagerung offen ist UND der Fokus im Feld steht oder
+> nirgends. Weiterhin EIN Griff (`test296` §2, `test590`).
+
 1. September 2026
 
 > **Ergänzt durch E710 (28. September 2026).** Der gemeinsame Griff bleibt
@@ -43211,6 +43226,11 @@ E535 — Sieben Vorlagenblöcke in einem Zug
 > sie hier steht. Block 06: der Verlaufsschalter ist AUS grau (Deckkraft
 > .12, entsättigt) und bekommt seinen Schimmer unter Zeiger und Fokus
 > zurück; AN und die einmalige Bewegung beim Umschalten bleiben.
+>
+> **Ergänzt durch E713 (28. September 2026).** Block 13, der Dreierblock
+> des Zeitmessers: die Pausentaste trägt beide Figuren (Pause und Weiter)
+> und tauscht sie über `data-zustand` im selben Knopf, statt neu gezeichnet
+> zu werden — Fokus und Knoten bleiben (`test590`).
 
 Der Bau, den E533 beschrieb und der beim ersten Anlauf am Sitzungslimit
 starb. Diesmal in kleineren Wellen: ein Agent je Vorlagenblock, jeder auf
@@ -60561,6 +60581,400 @@ nicht hinein (auf `b3cf1933` genauso). Steht in AUFGABEN.
 
 **Was die dritte Durchsicht kostet:** +169 B gzip auf die Startdateien
 (kacheln.js +126, studio.css +43); `test388` §5: 2841 KB, Decke 2850.
+
+## E713 — Die Zeitpille und die Balkenkarte: der Zeitmesser zieht sich in eine Pille zurück und geht aus ihr wieder auf, der Lernverlauf wird eine Karte zum Wählen
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video „LIQUID
+GLASS" am 27. September ca. 22:05; Auftrag ca. 16:45, Fragebogen ca. 21:45,
+ca. 21:47, ca. 21:49, ca. 22:10) · **ergänzt** E268 (Zeitmesser), E535
+(Dreierblock) und E302 (der eine Escape-Griff) · **Wächter:** `test590` ·
+**Zweig** `claude/zeitpille-und-balken`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC   im Fragebogen, Federn in Redion selbst: „Wie im UI-Kit
+                (Empfohlen)"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:05 UTC   schickt das Video „LIQUID GLASS" (16 s) und schreibt:
+                „Schau mal das auch an ich will das auch haben"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Zwei Szenen des Videos haben in Redion einen echten Ort, und an
+beiden fehlte genau das, was das Video zeigt:
+
+- **Szene 02 „EXPAND"** — eine dunkle Pille „läuft gerade", die zur Karte
+  aufgeht. Redion hat keinen Vorleser, aber den ZEITMESSER (E268). Nach ✕
+  lief seine Uhr weiter, und nichts auf dem Schirm sagte es: gemessen
+  meldete `Zeitmesser.stand()` `laeuft:true` mit 1498 s Rest bei leerem
+  Bildschirm. Das Feld war `role=dialog`, aber Escape liess es stehen
+  (§38) — der gemeinsame Griff (E302) kennt nur `.menu` und `.overlay`.
+  Und am Telefon schien der Seitentext durch seine Fläche: `--bg-schwebend`
+  (72 %) ohne Weichzeichner, das Muster, das E695 verbietet.
+- **Szene 06 „MEASURE"** — eine Karte mit Balken, die einmal wachsen, einer
+  Zahl, die hochzählt, und einem gewählten Tag mit Hinweis. In Redion ist
+  das der Verlauf der Lernwelt (`historie()`: „Letzte 7 Tage" im
+  Lernzentrum, „Wochenverlauf" und „Monatsverlauf" im Fortschritt). Dort
+  standen sieben (dreissig) hochkant gestellte `<progress>` — nichts
+  bewegte sich, nichts liess sich wählen, keine Summe. Kein einziger Lauf
+  las `lw-history`.
+
+**Was entschieden wurde.**
+
+1. **Die Pille.** Läuft die Uhr und ist das Feld zu, steht unten rechts
+   eine dunkle Pille „⏱ 24:13 · Seite" — über der unteren Leiste und dem
+   obersten Werkzeug, nicht auf ihnen (`--melde-boden`, seit der
+   Durchsicht), 44 px hoch (§37), ein Knopf mit Namen („Zeitmesser: noch
+   25 Min an „Seite" — öffnen"; der Name nennt Minuten, die Sekunden stehen
+   sichtbar — seit der Durchsicht). Dunkel in beiden Modi wie im Video;
+   sie RUHT, also ist sie deckend und kein Glas (E703: im Ruhen höchstens
+   drei Glasflächen). Die Lampe darin atmet nur, solange die Uhr läuft —
+   dieselbe Lampe und derselbe 4-s-Atem wie am Dreierblock (E535);
+   angehalten steht sie still und wird bernsteinfarben. Ohne laufende Uhr
+   gibt es keine Pille. Nach dem Neuladen (E364) kommt sie mit der Uhr
+   zurück.
+2. **Der Tropfen wird Karte.** Ein Tipp auf die Pille öffnet das Feld AUS
+   ihr: die Karte wächst aus der Pille, die Pille wächst mit ihr und
+   verblasst — EIN Körper, darum kein Goo-Filter (es trennt sich nichts,
+   es fliesst nichts zusammen). Die Feder ist die des wandernden Materials
+   (Kit „snappy", `RedionSpring` wie `SelectionFlow`, E702/E706): ω =
+   2π/0,36 s ≈ 17,5 — genau die ω≈17 aus der Vermessung des Videos. Nur
+   `transform` und `opacity`, die Bahn einmal gerechnet und als Keyframes
+   übergeben (die Lehre aus E646). Die Unschärfe des Videos („unscharf,
+   dann scharf") wird NICHT animiert: eine statisch verwischte Kopie des
+   Inhalts blendet über `opacity` in den scharfen über. Schliessen (✕ oder
+   Escape) fährt denselben Weg zurück in die Pille, und der Fokus geht
+   dorthin. Aus dem Menü (Werkzeuge → Zeitmesser, `Register.module`) steigt
+   die Karte ohne Pille kurz auf.
+3. **Die Karte.** Die Seite ist der Titel. Der Timer hat einen Fortschritt
+   (`role=progressbar`, Sekunden von Soll, „3 von 25 Minuten"), die
+   Stoppuhr keinen — sie hat kein Soll, und ein Balken ohne Soll wäre eine
+   Behauptung (§33). Pause ↔ Weiter wechselt AN ORT UND STELLE: derselbe
+   Knopf behält Fokus und Knoten, das Wort tauscht, und die Figur tauscht
+   wie das SymbolSwap des Kits (die Pausentaste trägt seit E713 beide
+   Figuren, `motion.css` blendet über `data-zustand`). Beenden nimmt die
+   Pille mit. Am Telefon ist die Karte deckend (`--bg-card`), am Rechner
+   dichtes Glas mit Unschärfe unter `@supports` (E695).
+4. **Escape im EINEN Griff.** Der gemeinsame Escape-Griff (schale.ts,
+   E302) kennt jetzt schwebende Felder, die keine Überlagerung sind: ihr
+   Schliessen-Knopf trägt `data-esc-knopf`, und der Griff drückt ihn — nur,
+   wenn kein Menü und keine Überlagerung offen ist UND der Fokus im Feld
+   steht oder nirgends. Wer im Text Escape drückt, meint den Text. Kein
+   zweiter Griff (`test296` §2).
+5. **Die Balkenkarte.** Der Verlauf ist eine Gruppe mit Namen; jeder Tag
+   ist ein Knopf und behält seinen Namen „Datum: Zahl" (jetzt mit dem Wort
+   „Wiederholungen"). In Ruhe tragen die Balken den Akzent leise (38 %),
+   der gewählte trägt ihn voll — der Akzent sagt „gewählt", nicht mehr. Die Balken wachsen EINMAL beim Ankommen — nicht über
+   `height` und nicht über `scaleY` (das stauchte die runden Ecken), sondern
+   mit `translateY` aus einer Säule, die sie abschneidet; 35 ms versetzt,
+   auf `--feder-sanft` (ohne Überschwingen, ein Balken darf nicht vom Boden
+   abheben). Ein Tipp wählt einen Tag: der Balken wird Akzent (eine zweite
+   Schicht über `opacity`), das Material aus E706 gleitet dahinter
+   (`SelectionFlow.folge`, gedehnt zwischen Nachbarn), und ein Hinweis
+   „Fr · 9 Wiederholungen" gleitet mit, fest in der Höhe und in der Karte
+   geklemmt. Pfeile, Pos1 und Ende wandern; die Reihe hat EINEN Tabstopp
+   (wie `Segment`, E425). Der Monatsverlauf steht in Zeilen zu zehn, jede
+   Zahl und jeder Wochentag sichtbar wie vor E713, ↑/↓ gehen eine Zeile
+   (seit der Durchsicht). Die Karte STEHT, darum Lichtkante und ein
+   einmaliger Glanz, aber keine Unschärfe (E703); Glas trägt nur der
+   schwebende Hinweis.
+6. **Die Zahl zählt hoch.** Über dem Verlauf steht die Summe genau dieser
+   Balken („36 Wiederholungen in 7 Tagen") und zählt einmal hoch, v =
+   N·(1 − e^(−7t)) wie im Video, und steht am Ende genau auf N. Die
+   Kennzahlen darüber (Lernzeit, Streak, „Wiederholungen diese Woche")
+   rollen ihre Ziffern seit E531 schon wie ein Zählwerk (`rmo-digit-roll`)
+   — ein zweites Hochzählen daneben wäre dieselbe Bewegung zweimal (§8).
+7. **Ohne Bewegung** (System ODER „Ruhige Darstellung", die EINE Frage aus
+   E702): die Karte ist sofort da, keine Fahrt; die Balken stehen, die
+   Summe steht, kein Glanz. Der Glanz ist ein `::after` — die ruhige Sperre
+   in `bausteine.css` erfasst `::after` nicht, darum steht
+   `body:not([data-bewegung="ruhig"])` an der Regel selbst.
+
+**Warum.** Redur hat das Video geschickt, und an beiden Orten fehlte etwas
+Echtes: eine Uhr, die man vergisst, weil man sie nicht sieht, und ein
+Verlauf, den man nicht befragen kann. Die Bewegung ist hier Auskunft, nicht
+Zierde: die Pille SAGT, dass die Uhr läuft; die Fahrt zeigt, wohin das Feld
+geht und woher es kommt; der gewählte Balken nennt seine Zahl.
+
+**Was war die Alternative?**
+- *Als Insel (React, E699).* Nein: die Pille erscheint nach dem Neuladen
+  ohne Zutun — R1 aus E699 sagt, beim Start lädt nichts React. Dieselbe
+  Technik in Redions eigenem TypeScript kostet 10 KB statt 68 KB.
+- *`SelectionFlow.fliege` für die Fahrt.* Es setzt Breite und Höhe des
+  fliegenden Elements auf das ZIEL — für die Pille hiesse das: ihre Schrift
+  bricht in Kartenbreite um und springt im ersten Bild. Die Bahn wird darum
+  hier aus derselben Feder gerechnet, der Kasten bleibt, wo er ist.
+- *Ein Goo-Filter wie beim flüssigen Löschen.* Nicht nötig: hier trennt
+  sich nichts. Ein Filter, der nichts verschmilzt, wäre nur Kosten.
+- *Glas mit Unschärfe auch auf der Balkenkarte.* E703 zieht die Grenze:
+  was steht, bleibt deckend. Sie bekommt das Gesicht von Glas (Kante,
+  Glanz), die Unschärfe bekommt nur, was schwebt.
+- *Der Tondialog der Zeitmarken (`audioRefSpielen`) in derselben Pille.*
+  Er gehört zum Editor, die Pille zum Zeitmesser — zwei Bereiche, die sich
+  nicht kennen dürfen (§5 Regel 1). Das braucht eine gemeinsame „läuft"-
+  Pille in der Schale; offen in L234.
+
+**Was kostet es?** Beim Start 10,0 KB gzip mehr (`test388` §5: 2835 KB über
+248 Dateien, Decke 2850 KB — messungen §83), die Einzeldatei 35 KB mehr
+(11'818'312 Bytes). Solange eine Uhr läuft, steht unten rechts ein Knopf mehr — das
+ist der Zweck. Die Pausentaste wird nicht mehr neu gebaut; die Wischmaske
+der Starttaste läuft darum auch bei „Weiter" einmal (ein echter
+Zustandswechsel, keine Schleife im Leerlauf, E528).
+
+**Gemessen, bevor gebaut wurde** (messungen.md §83): die Bilder des
+Szenenplans (Zeitmesser offen und nach ✕; der Wochenverlauf, am Telefon und
+am Rechner), `Zeitmesser.stand()` nach ✕, die Zahl der Läufe, die
+`lw-history` lesen (0), und die Startlast der sieben berührten Dateien.
+
+**Gefunden auf dem Weg.**
+
+- `RedionSpring.sample` ruht bei einem Hundertstel des Weges
+  (`restDelta = max(0,01, Weg·0,001)`). Über 0…1 gerechnet heisst das: die
+  letzten 1 % springen — bei 280 px Grössenwechsel knapp 3 px im letzten
+  Bild. `SelectionFlow` rechnet in Pixeln und hat das Problem nicht; die
+  Fahrt hier jetzt auch (Weg in px, dann geteilt: letzter Schritt 0,03 px).
+- Die erste Fassung liess die Füllung des Fortschritts jede Sekunde 500 ms
+  lang fahren (`transition` auf `transform`) — bei 25 Minuten ein Schritt
+  von 0,2 px, aber jede Sekunde eine laufende Animation: `test590` §2
+  („nach der Fahrt steht sie ruhig") war rot. Der Übergang ist fort; die
+  Füllung steht über `transform`, ohne Fahrt.
+- Im Filmstreifen stand im Monatsverlauf „−3,29e+24" statt einer Zahl:
+  das Hochzählen nahm `performance.now()` als Beginn, der Zeitstempel von
+  `requestAnimationFrame` lag unter gebremster Wiedergabe Sekunden davor,
+  und e^(−7t) wuchs bei negativem `t` ins Riesige. Jetzt ist der Beginn
+  das erste Bild, und `t` bleibt in 0…1.
+- `test436` §2 wurde auf dem Zweig rot („Cannot read properties of null
+  (reading 'querySelector')"), auf dem Grundstand nie: `auffrischen()` in
+  `auftraege.ts` prüfte das Fenster VOR dem `await Auftraege.offen()` und
+  griff danach blind zu — schliesst jemand das Fenster in dieser Lücke, gibt
+  es einen Fehler. Ein Wettlauf, den der Zweig nur öfter trifft; die Wache
+  steht jetzt nach dem `await` (`fenster?.`).
+- `test362` (die Decke der rohen Masse) war rot: der Schatten des
+  Hinweises trug ein rohes `16px` (271 statt 270). Er nimmt jetzt
+  `--shadow-2` — dieselbe Tiefe je Modus, keine neue rohe Zahl.
+- Der alte Text am Dreierblock (`motion.css`, „das Feld wird bei jedem
+  echten Zustandswechsel neu gezeichnet") stimmt seit E713 nur noch für
+  bereit ↔ läuft; der Satz ist ergänzt.
+
+**Gegenproben** — jede Verbiegung in `quell/`, `test590` darüber, dann
+zurückgeholt:
+
+- G1 der Escape-Zweig im gemeinsamen Griff entfernt: §3 rot (36/39 — das
+  Feld bleibt offen, keine Pille, kein Fokus).
+- G2 die Karte am Telefon wieder `--bg-schwebend`: §5 rot (38/39).
+- G3 Pause ↔ Weiter zeichnet die Reihe wieder neu: §4 rot („gleich":
+  false — ein neuer Knopf).
+- G4 ohne Bewegung wird trotzdem gefahren: §6 rot in beiden Fällen (2
+  laufende Animationen, die Karte bei 0,82 × 0,16 im ersten Bild).
+- G5 keine Pille: §1 rot (16/24, fünf Zusagen, dann bricht §2 ab).
+- G6 die Summe zählt nicht hoch: §9 rot („36" schon im ersten Blick).
+- G7 die Balken wachsen nicht: §7 rot (0 Animationen).
+- G8 der Hinweis wird nicht in der Karte geklemmt: §8 rot („drin": false).
+- G9 die Füllung des Fortschritts fährt wieder jede Sekunde: §2 rot („nach
+  der Fahrt steht sie ruhig").
+Alle neun zurückgeholt; `test590` danach 39/39 (zweimal, zuletzt nach dem
+Neubau von 15:04).
+
+**Geprüft:** `test590` 39/39 (rot auf `b3cf1933`: 4 von 17 —
+die Pille fehlt, §2–§5 und §8–§9 brechen ab). Nachbarn über `alle.mts`
+unter der Sperre: 67 126 143 170 202 206 208 211 217 218 220 222 223 224
+245 247 259 262 268 272 296 305 318 341 353 356 362 387 390 412 424 436
+494 547 565 567 — 33 von 36 grün; rot `test247` (zwei Zusagen zum
+gezogenen Strich, auf `b3cf1933` genauso rot: fremd, aus E704), `test362`
+(ein rohes `16px`, siehe oben — danach 18/18) und `test436` (die Auffrischung
+im Auftragsfenster, siehe oben — auf dem Zweig drei von vier Läufen rot, auf
+dem Grundstand vier von vier grün; nach der Wache 71/71, mit 202 und 208
+nachgelaufen). `test388` 21/21 (2835 KB). Ohne Browser: 87 105 109 225 290
+298 401 402 410 537 549 550 grün.
+
+**Die Durchsicht** (4./5. Oktober 2026, ein zweiter Agent, nach dem
+Wochenlimit; Redur am 3. Oktober ca. 19:35: „Weiter ohne pause,"). Gelesen
+Commit für Commit gegen `b3cf1933`, jede Taste der Karte mit Finger, Maus
+und Tastatur angefasst (Werkzeuge → Zeitmesser wie vorher, Stoppuhr, 5 Min,
+25 Min, Start, Pause/Weiter, Beenden, ✕, Escape, Pille mit Tipp, Enter und
+Leertaste; Neuladen bringt Uhr und Pille zurück; über `file://` und in der
+Einzeldatei dasselbe). Nichts fehlt, nichts ist schwerer erreichbar. Sechs
+Zusagen hielten nicht — jede zuerst als Lauf (`test590` §10–§14, gegen
+`fb7e590e` 44 von 60, sechzehn rot):
+
+1. **Die Pille lag auf Werkzeugen** (§10). Auf `--hunten` lag sie am
+   Telefon auf der Werkzeugleiste der Fläche (Radieren, Stift, Linie,
+   Pfeil, Rechteck, Ellipse), auf dem runden Knopf „Neu" der Notizhefte, auf
+   der Zeichenleiste in der Lage „unten" und auf dem Letzten jeder Ansicht;
+   am Rechner auf „Nachricht senden", „Diktieren" und dem Modellknopf des
+   KI-Panels. Jetzt gilt die Regel des Stapels (E703): ihr Boden ist
+   `--melde-boden` (über Dock und Kapsel im Dokument); solange es sie gibt,
+   bekommt `#scroll` ihren Platz als Polster; der runde Knopf rückt über
+   sie (`translate`, die Druckfeder auf `transform` bleibt); beim Schreiben
+   tritt sie zur Seite wie die untere Leiste; bei offenem KI-Panel stehen
+   Pille und Karte links daneben (`--ki-breite`, die 420 px stehen weiter
+   nur in `ki.css`). Die Zeichenleiste unten klebt in `#scroll` und steigt
+   mit dem Polster selbst — dort bleibt die Pille auf `--hunten`; auf
+   `--melde-boden` stieg sie mit und lag wieder auf ihr (gemessen: Leiste
+   572–681, Pille 572–616 px).
+2. **Ein Toast lag auf der Pille** (§10). Am Telefon ist er so breit wie
+   der Schirm und stand auf derselben Höhe — für seine Sekunden war die
+   Pille fort. Jetzt rückt, was meldet, um ihre Höhe darüber (Toast,
+   Offline-Streifen, Einladung, Lader; ein Toast, der oben steht, bleibt
+   oben). Damit ist der Punkt aus L234 erledigt.
+3. **Der Monatsverlauf war nicht mehr lesbar** (§11). Vor E713 standen alle
+   dreissig Zahlen und Wochentage sichtbar über ihren Säulen; E713 stellte
+   die dreissig Tage in EINE Reihe, versteckte Zahl und Namen
+   (`visibility:hidden`) und machte die Säule am Telefon 9,3 px breit. „ohne
+   eine funktione löschen": jetzt Zeilen zu zehn, jede Zahl und jeder Name
+   sichtbar, jede Spalte mindestens 32 px (Nebenweg, §37, Grund am Ort),
+   ↑/↓ gehen eine Zeile, Material und Hinweis stehen über IHRER Zeile.
+4. **Zweimal gezeichnet, zweimal angekommen** (§12). `zeichnen()` der
+   Lernwelt läuft beim Öffnen zweimal (sofort und nach den Bereichsdaten);
+   die Summe sprang dabei zurück („0, 4, 11, 0, 0, 11 …"). Dieselbe Karte
+   innerhalb von 1,5 s fährt jetzt weiter — das Hochzählen mit dem alten
+   Beginn und dem Wert von dort schon vor dem ersten Bild, Balken und Glanz
+   mit negativer Verzögerung (`--lw-seit`).
+5. **Der Name der Pille wechselte jede Sekunde** (§13). Nach dem Schliessen
+   steht der Fokus auf ihr; ein Bildschirmleser, der Namenswechsel am Fokus
+   ansagt, sprach im Sekundentakt. Der Name nennt jetzt Minuten („noch
+   25 Min"), die Sekunden stehen sichtbar.
+6. **Escape mitten in der Fahrt tat nichts** (§14). Die verwischte Kopie
+   behielt `data-esc-knopf`, und der eine Griff nimmt den letzten solchen
+   Knopf — den der Kopie. Sie verliert das Merkmal jetzt mit den anderen.
+
+Gegenproben, je eine Verbiegung in `quell/` einer Kopie des Baums, `test590`
+darüber:
+
+- die Regel neben dem KI-Panel aus: §10 rot (die Pille auf „Nachricht
+  senden", „Diktieren", Modellknopf);
+- der Monatsverlauf wieder in einer Reihe, Zahl und Name versteckt: §11
+  rot (0/30 Zahlen, 0/30 Namen, 9,3 px, ↑ bleibt stehen);
+- jedes Zeichnen ein neues Ankommen: §12 rot in beiden Ansichten
+  („0, 4, 7, 0, 0, 11 …");
+- der Name wieder mit Sekunden: §13 rot (drei Wechsel in 3,2 s);
+- der Toast rückt nicht: §10 rot (Schnitt 10'858 px²);
+- kein Polster: §10 rot (Fläche, Ende der Ansicht, Zeichenleiste);
+- die Pille bleibt beim Schreiben stehen: §10 rot;
+- ↑ ohne Zeile: §11 rot („27|27");
+- vor dem ersten Bild wieder 0: §12 rot in beiden Ansichten
+  („0, 4, 11, 0, 23 …");
+- nur der runde Knopf rückt nicht (das Polster bleibt): §10 rot;
+- die Ausnahme der Zeichenleiste weg: §10 rot (Leiste 572–681, Pille
+  572–616).
+§14 ist die Verbiegung selbst (die Kopie mit dem Merkmal, wie in
+`fb7e590e`): rot. Ohne eigenen roten Punkt bleibt `--melde-boden` als Boden
+der Pille im Dokument — auch auf `fb7e590e` lag sie dort auf keinem Werkzeug;
+die Zusage „Dock und Kapsel frei" ist Absicherung. Alle Verbiegungen nur in
+Kopien; `test590` auf dem Endstand 60/60.
+
+Gemessen: `test388` §5 2838 KB von 2850 (248 Dateien, 21/21). Die neun
+berührten Dateien wachsen gegen `b3cf1933` um 12'895 Bytes (gzip 6), davon
+2'690 aus der Durchsicht — fast alles Begründung am Ort. Nachbarn (67 Läufe
+über `alle.mts`, unter der Sperre): 62 grün; rot `test247`, `test332`,
+`test492` und `test582` — auf `b3cf1933` mit denselben Zusagen genauso rot,
+also fremd — und `test303`: rot durch E713 selbst, seit `fb7e590e` (der Bau
+liess ihn nicht laufen); behoben im Nachtrag der dritten Durchsicht.
+
+Gefunden, nicht von E713 und nicht hier behoben: im Schema „Starker
+Kontrast" ist am Telefon die Beschriftung der aktiven Taste der unteren
+Leiste unsichtbar — im Bild ein leeres dunkles Feld; auf `b3cf1933`
+genauso. Behoben ist es auf `claude/morgen-besser` mit „Morgen besser 6c"
+(`4d9a9a3f`, die deckende Pille liegt unter den Knöpfen) — dieser Zweig
+steht auf `b3cf1933`, davor; mit dem Zusammenführen ist es weg.
+
+**Die dritte Durchsicht** (5. Oktober 2026). Die zweite brach am
+Sitzungslimit ab, bevor sie einchecken konnte; die dritte hat ihren Stand
+Datei für Datei gelesen, neu gebaut (unverändert), `test590`, die
+Gegenproben (auf dem Endstand neu gebogen), die Nachbarn und die Startlast
+selbst laufen lassen und ihn eingecheckt. Dazu jede Taste am Telefon und am
+Rechner mit Finger, Maus und Tastatur, alle zehn Schemata (Kontrast der
+Karte, der Pille und der Balkenkarte gemessen), „Ruhige Darstellung" und
+weniger Bewegung, Querformat und 320 px, `file://` und die Einzeldatei.
+Drei Dinge hielten nicht — die ersten beiden zuerst als Lauf (`test590`
+§15, rot gegen den Stand der zweiten Durchsicht: 60 von 62):
+
+1. **Ein Toast lag auf der offenen Karte.** Am Telefon stehen Start ·
+   Pause · Beenden zuunterst; der Toast — so breit wie der Schirm — lag für
+   seine Sekunden darauf (gemessen 720–763 auf der Karte 462–759), und
+   „⏰ Zeit um" kommt genau dann, wenn man die Karte offen hat. Das Feld
+   stand dort schon vor E713; die Durchsicht hatte den Stapel über die
+   PILLE gerückt, nicht über die Karte. Jetzt geht der Toast nach oben wie
+   bei offenen Fenstern (L109, E310) — in einer eigenen Regel neben jener,
+   weil `test304` jene beim Wortlaut liest.
+2. **„Beenden" mitten in der Fahrt liess eine versteckte Pille zurück.**
+   Die Uhr war aus, die Pille blieb im Dokument und mit ihr das Polster
+   unter `#scroll`, bis die Karte zuging. Jetzt geht sie am Ende der Fahrt
+   mit.
+3. **`test303` war rot seit `fb7e590e`** — ein bestehender Wächter, den der
+   Bau nicht laufen liess: die Regel, die die gerade nicht gültige Figur
+   der Pausentaste verbirgt, nannte `.rmo-tr-sym`, und der Lauf las sie als
+   „das Zeichen ist weg, und nur das Überfahren holt es zurück" — eine
+   Falle für das Telefon, die es nicht gibt. Der Wächter bleibt, wie er
+   ist; der Selektor nennt jetzt nur noch `[data-figur]`.
+
+Gegenproben, je eine Verbiegung in `quell/` einer Kopie des Baums,
+zurückgeholt: die Regel für die offene Karte aus und die Pille am Ende der
+Fahrt wieder nur versteckt → `test590` §15 rot an beiden Zusagen (Schnitt
+11'700 px², Pille im Dokument; 60 von 62); `.rmo-tr-sym` wieder im
+Selektor → `test303` rot („motion.css .rmo-tr-sym", 15 von 16). Auf dem
+Endstand `test590` 62/62, `test303` 16/16, `test304` 12/12 (der Toast bei
+offenen Fenstern wie vorher), Pause ↔ Weiter tauscht die Figur wie vorher
+(gemessen: „pause 0, weiter 1").
+
+Gemessen: `test388` §5 2838 KB von 2850 (21/21); die drei Dateien wachsen um
+508 Bytes gzip (fast nur Begründung am Ort), die Einzeldatei um 1'389.
+
+Nicht von E713 und nicht hier behoben: am Rechner kann ein langer Toast in
+einem schmalen Fenster die offene Karte streifen (1024 px: Schnitt
+3'840 px², auf `b3cf1933` mit dem alten Feld 2'560) — der Toast steht dort
+mittig, die Karte rechts, und er nimmt keine Klicks an. In L234.
+
+**Die vierte Durchsicht** (5. Oktober 2026). Die dritte brach am
+Sitzungslimit ab, bevor sie ihre Reparatur einchecken konnte; die vierte
+hat die 14 Dateien gelesen, neu gebaut (bytegleich), `test590` §15 auf dem
+Stand davor rot (60 von 62) und danach grün (62 von 62) gesehen, `test303`
+ebenso (15 von 16 → 16 von 16), und sie eingecheckt. Dann jede Taste mit
+echtem Tipp und Klick am Telefon und am Rechner: Werkzeuge → Zeitmesser,
+5 Min, Pause, Weiter, Beenden, 25 Min, Stoppuhr, Start, ✕, die Pille,
+Enter und Escape; Querformat und 320 px; `file://` und die Einzeldatei —
+alles wie zugesagt, keine Fehler in der Konsole. Eines hielt nicht, zuerst
+als Lauf (`test590` §16, rot gegen den Stand der dritten Durchsicht:
+66 von 68 — Schnitt 13'800 px², verdeckt Start, Pause, Beenden):
+
+4. **Ohne Netz lag der Offline-Streifen auf Start · Pause · Beenden.** Am
+   Telefon steht er auf `--melde-boden` mit `z-index:700` über der Karte
+   (45), bis man ihn schliesst: Streifen 713–763 auf der Karte 462–759, von
+   den drei Tasten je 45 % frei, und ein echter Tipp auf „Pause" traf den
+   Streifen — die Uhr lief weiter. Auf `b3cf1933` lag er schon halb auf dem
+   alten Feld, aber die Mitte der Tasten war frei (55 %, der Tipp wirkte);
+   die höhere Karte von E713 hat die Mitte unter ihn geschoben. Wer im
+   Flugmodus lernt, trifft genau das. Jetzt steht die offene Karte am
+   Telefon über den länger lebenden Meldungen (Streifen, Einladung, Lader)
+   — auf denselben Stufen wie der Toast im Stapel, 4 px höher; der Toast
+   selbst geht weiter nach oben (Punkt 1). Am Rechner (1024 px) berührt der
+   mittige Streifen nur die linke untere Ecke der Karte (34 × 33 px
+   Polster, keine Taste) — wie auf `b3cf1933`; §16 verlangt dort, dass jede
+   Taste frei ist.
+
+Gegenprobe: die Karte nur um 40 statt 70 px gehoben (`quell/` einer Kopie)
+→ `test590` §16 rot (67 von 68 — Schnitt 6'600 px², Karte 438–735 auf
+dem Streifen 713–763: ein halber Schritt reicht nicht); zurück. Auf dem
+Endstand `test590` 68 von 68. Gemessen: `test388` §5 2839 KB von 2850 über 248 Dateien (21/21); `bausteine.css` +331 Bytes
+gzip (fast nur Begründung am Ort), die Einzeldatei 11'827'154 →
+11'828'241 Bytes.
+
+**Nicht in diesem Bogen** (L234): der Ton der Zeitmarken und die laufende
+Besprechung in derselben Pille (eine gemeinsame „läuft"-Pille in der
+Schale); Wischen über die Balken (heute Tipp und Tasten).
 
 ## E714 — Rot zuerst, vier Inseln: ein Stilblatt ohne `<link>`, ein Wettlauf mit SwiftShader, der Keil als Fläche, vierzehn Werkzeuge
 

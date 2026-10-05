@@ -1046,11 +1046,161 @@ const Lernwelt = (() => {
     const historie = (logs, tage = 7) => {
         const werte = verlaufsTage(logs, tage);
         const maximum = Math.max(1, ...werte.map(item => item.anzahl));
-        return '<div class="lw-history" aria-label="Lernhistorie der letzten ' + tage + ' Tage">' +
-            werte.map(item => '<div><span>' + item.anzahl + '</span><progress max="' + maximum + '" value="' +
-                item.anzahl + '" aria-label="' + esc(item.tag.toLocaleDateString('de-CH')) + ': ' + item.anzahl +
-                '"></progress><small>' + esc(item.tag.toLocaleDateString('de-CH', { weekday: 'short' })) +
-                '</small></div>').join('') + '</div>';
+        const summe = werte.reduce((alle, item) => alle + item.anzahl, 0);
+        const wort = (n) => n === 1 ? 'Wiederholung' : 'Wiederholungen';
+        const wochentag = (d) => d.toLocaleDateString('de-CH', { weekday: 'short' }).replace(/\.$/, '');
+        return '<div class="lw-history lw-verlauf" role="group" aria-label="Lernhistorie der letzten ' + tage + ' Tage"' +
+            ' data-lw-tage="' + tage + '">' +
+            '<div class="lw-verlauf-kopf"><strong class="lw-verlauf-summe" data-lw-ziel="' + summe + '">' + summe + '</strong>' +
+            '<span>' + wort(summe) + ' in ' + tage + ' Tagen</span></div>' +
+            '<div class="lw-verlauf-flaeche">' +
+            '<span class="lw-verlauf-material" aria-hidden="true"></span>' +
+            '<span class="lw-verlauf-tipp" aria-hidden="true" hidden><span></span></span>' +
+            werte.map((item, index) => {
+                const name = wochentag(item.tag);
+                const tipp = (tage > 7 ? name + ' ' + item.tag.getDate() + '.' + (item.tag.getMonth() + 1) + '.' : name) +
+                    ' · ' + item.anzahl + ' ' + wort(item.anzahl);
+                return '<button type="button" class="lw-verlauf-tag" data-lw-tag="' + index + '" data-lw-anzahl="' + item.anzahl +
+                    '" data-lw-max="' + maximum + '" data-lw-tipp="' + esc(tipp) + '" aria-pressed="false"' +
+                    ' tabindex="' + (index === werte.length - 1 ? '0' : '-1') + '"' +
+                    ' aria-label="' + esc(item.tag.toLocaleDateString('de-CH')) + ': ' + item.anzahl + ' ' + wort(item.anzahl) + '">' +
+                    '<span class="lw-verlauf-zahl" aria-hidden="true">' + item.anzahl + '</span>' +
+                    '<span class="lw-verlauf-saeule" aria-hidden="true"><i></i></span>' +
+                    '<small aria-hidden="true">' + esc(name) + '</small></button>';
+            }).join('') + '</div></div>';
+    };
+    const wenigBewegung = () => typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung
+        ? AppEinstellung.wenigBewegung() : document.body?.dataset['bewegung'] === 'ruhig';
+    const hochzaehlen = (el, seit = 0) => {
+        if (!el)
+            return;
+        const ziel = Number(el.dataset['lwZiel']) || 0;
+        if (!ziel || wenigBewegung()) {
+            el.textContent = String(ziel);
+            return;
+        }
+        let beginn = -1;
+        const DAUER = 1000;
+        const wert = (t) => t >= 1 ? ziel : Math.min(ziel, Math.round(ziel * (1 - Math.exp(-7 * t))));
+        el.textContent = String(wert(Math.max(0, Math.min(1, seit / DAUER))));
+        if (seit >= DAUER)
+            return;
+        const schritt = (jetzt) => {
+            if (!el.isConnected)
+                return;
+            if (beginn < 0)
+                beginn = jetzt - seit;
+            const t = Math.max(0, Math.min(1, (jetzt - beginn) / DAUER));
+            el.textContent = String(wert(t));
+            if (t < 1)
+                requestAnimationFrame(schritt);
+        };
+        requestAnimationFrame(schritt);
+    };
+    const belebtAm = new Map();
+    const ANKOMMEN_MS = 1500;
+    const seitDemAnkommen = (schluessel) => {
+        const jetzt = performance.now();
+        const vorher = belebtAm.get(schluessel);
+        if (vorher !== undefined && jetzt - vorher < ANKOMMEN_MS)
+            return jetzt - vorher;
+        belebtAm.set(schluessel, jetzt);
+        return 0;
+    };
+    const verlaufBeleben = (wurzel, ansicht = '') => {
+        wurzel.querySelectorAll('.lw-verlauf').forEach(karte => {
+            if (karte.dataset['lwLebt'])
+                return;
+            karte.dataset['lwLebt'] = '1';
+            const summe = karte.querySelector('.lw-verlauf-summe');
+            const seit = seitDemAnkommen(ansicht + ':' + (karte.dataset['lwTage'] || '') + ':' + (summe?.dataset['lwZiel'] || ''));
+            if (seit) {
+                karte.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+                karte.closest('.lw-section')?.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+            }
+            const flaeche = karte.querySelector('.lw-verlauf-flaeche');
+            const material = karte.querySelector('.lw-verlauf-material');
+            const tipp = karte.querySelector('.lw-verlauf-tipp');
+            const tippText = tipp?.querySelector('span');
+            const tage = Array.from(karte.querySelectorAll('button[data-lw-tag]'));
+            if (!flaeche || !material || !tipp || !tippText || !tage.length)
+                return;
+            tage.forEach((knopf, index) => {
+                const anzahl = Number(knopf.dataset['lwAnzahl']) || 0;
+                const hoechst = Number(knopf.dataset['lwMax']) || 1;
+                knopf.style.setProperty('--lw-anteil', String(anzahl / hoechst));
+                knopf.style.setProperty('--lw-index', String(index));
+            });
+            hochzaehlen(summe, seit);
+            let gewaehlt = -1;
+            const setzeX = (el, x, nachbar, sofort) => {
+                if (typeof SelectionFlow !== 'undefined')
+                    SelectionFlow.folge(el, x, nachbar, sofort);
+                else
+                    el.style.transform = 'translateX(' + x + 'px)';
+            };
+            const waehle = (index, fokus) => {
+                const vorher = gewaehlt;
+                gewaehlt = index;
+                tage.forEach((knopf, i) => {
+                    knopf.setAttribute('aria-pressed', String(i === index));
+                    knopf.tabIndex = (index < 0 ? i === tage.length - 1 : i === index) ? 0 : -1;
+                });
+                if (index < 0) {
+                    tipp.hidden = true;
+                    material.classList.remove('an');
+                    return;
+                }
+                const knopf = tage[index];
+                if (!knopf)
+                    return;
+                if (fokus)
+                    knopf.focus({ preventScroll: true });
+                const erste = tage[0]?.offsetTop ?? 0;
+                const zeile = knopf.offsetTop - erste;
+                const sofort = vorher < 0 || (tage[vorher]?.offsetTop ?? erste) !== knopf.offsetTop;
+                material.style.translate = zeile ? '0 ' + zeile + 'px' : '';
+                material.style.bottom = 'auto';
+                material.style.height = (erste + knopf.offsetHeight - material.offsetTop) + 'px';
+                tipp.style.translate = zeile ? '0 ' + zeile + 'px' : '';
+                material.style.width = knopf.offsetWidth + 'px';
+                setzeX(material, knopf.offsetLeft, Math.abs(index - vorher) === 1, sofort);
+                material.classList.add('an');
+                tippText.textContent = knopf.dataset['lwTipp'] || '';
+                tipp.hidden = false;
+                const breite = tipp.offsetWidth;
+                const mitte = knopf.offsetLeft + knopf.offsetWidth / 2;
+                setzeX(tipp, Math.max(0, Math.min(flaeche.clientWidth - breite, mitte - breite / 2)), false, sofort);
+                if (sofort && !wenigBewegung() && typeof RedionSpring !== 'undefined') {
+                    const feder = RedionSpring.token('snappy');
+                    if (feder.duration > 1)
+                        tippText.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+                }
+            };
+            karte.addEventListener('click', event => {
+                const knopf = event.target.closest('button[data-lw-tag]');
+                if (!knopf || !karte.contains(knopf))
+                    return;
+                const index = Number(knopf.dataset['lwTag']);
+                waehle(index === gewaehlt ? -1 : index, false);
+            });
+            karte.addEventListener('keydown', event => {
+                const knopf = event.target.closest('button[data-lw-tag]');
+                if (!knopf)
+                    return;
+                const jetzt = Number(knopf.dataset['lwTag']);
+                const proZeile = tage.filter(k => k.offsetTop === tage[0]?.offsetTop).length || tage.length;
+                const ziel = event.key === 'ArrowRight' ? Math.min(tage.length - 1, jetzt + 1)
+                    : event.key === 'ArrowLeft' ? Math.max(0, jetzt - 1)
+                        : event.key === 'ArrowUp' && jetzt - proZeile >= 0 ? jetzt - proZeile
+                            : event.key === 'ArrowDown' && jetzt + proZeile < tage.length ? jetzt + proZeile
+                                : event.key === 'Home' ? 0 : event.key === 'End' ? tage.length - 1 : -2;
+                if (ziel === -2)
+                    return;
+                event.preventDefault();
+                waehle(ziel, true);
+            });
+        });
     };
     const kartenArt = (card) => {
         const text = String(card?.text || '');
@@ -2016,6 +2166,7 @@ const Lernwelt = (() => {
         }
         if (typeof Funkel !== 'undefined')
             Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
+        verlaufBeleben(root, zustand.ansicht);
         if (zustand.simulation && !zustand.simulation.fertig)
             timerStarten();
         else

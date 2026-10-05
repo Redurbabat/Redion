@@ -6005,6 +6005,154 @@ Start (`test388` §5): **2841 KB** gzip, Decke 2850. Die dritte
 Durchsicht selbst: +169 B gzip (kacheln.js +126, studio.css +43; gegen
 `957abea4`).
 
+## §83 · Die Zeitpille und die Balkenkarte: Fahrt, Feder, Startlast (E713, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/zeitpille-und-balken` gegen den Grundstand
+`b3cf1933` (die erste Welle, E698–E706). Chromium von Playwright, 390 × 844
+(`isMobile`, Berührung) und 1440 × 900, hell und dunkel; `test590` mit
+`listen(0)`. Gzip Stufe 6 wie `test388`. Echte Wiederholungen über sieben
+Tage (3 5 2 6 9 7 4, zusammen 36), keine erfundenen Werte.
+
+**Vorher** (Stand `b3cf1933`, `test590` darüber): nach ✕ steht keine Pille
+da, die Uhr läuft weiter (`Zeitmesser.stand().laeuft` ist `true`); das Feld
+schliesst nicht auf Escape; am Telefon ist sein Boden `--bg-schwebend` ohne
+Unschärfe. Kein einziger Lauf las `lw-history` oder `historie(` (0 Dateien
+unter `pruefungen/lauf/`); `zm-feld` lasen drei (`test268`, `test272`,
+`test356`).
+
+**Die Fahrt, gerechnet** (Feder `snappy` = die des Materials aus E706,
+0,36 s, ζ ≈ 0,86, ω ≈ 17,5 /s — die ω ≈ 17 aus der Vermessung des Videos):
+
+```txt
+Pille (Telefon)                246,8 × 44,0 px, unten rechts, über der Leiste
+Karte (Telefon)                300,0 × 296,8 px
+erstes Bild der Karte          246,8 × 44,0 px — die Fläche der Pille (12 %)
+Weg, in Pixeln gerechnet       252 px; Ruhe bei 0,25 px (restDelta = Weg · 0,001)
+über 0…1 gerechnet (verworfen) Ruhe bei 1 % — knapp 3 px Sprung im letzten Bild
+Überblendung Kopie → scharf    Kopie 12–35 % sichtbar, 35–72 % weg; scharf ab 30 %
+bewegt                         nur transform und opacity (test590 §2)
+```
+
+**Start (test388 §5).** 2835 KB gzip über 248 Dateien, Decke 2850 KB
+(21 bestanden, 0 durchgefallen) — gemessen vor den letzten drei kleinen
+Korrekturen (Uhr des Hochzählens, Schatten als Marke, die Wache in
+`auftraege.ts`), die zusammen 0,3 KB gzip dazulegen. Gegen den Grundstand
+wachsen die acht berührten Dateien um 10'205 Bytes gzip (einzeln gemessen,
+unten) — genau die rund 10 KB, die jedem Zweig zugeteilt sind. **Es bleiben rund 15 KB
+bis zur Decke für alle übrigen Zweige der zweiten Welle** — zu wenig für
+fünf weitere Zweige zu je 10 KB; das muss beim Zusammenführen gezählt
+werden (L216, E688).
+
+**Was die Dateien wachsen** (gzip Stufe 6, gegen `b3cf1933`, Bytes):
+
+```txt
+quell/bereiche/wissen/zeitmesser.js       4'290 →   8'571   +4'281
+quell/bereiche/wissen/lernwelt.js        47'833 →  50'287   +2'454
+quell/schale/stil/lernwelt.css           21'103 →  22'624   +1'521
+quell/schale/stil/bausteine.css         167'864 → 169'008   +1'144
+quell/schale/stil/motion.css             49'578 →  49'877     +299
+quell/schale/aufbau/schale.js            77'671 →  77'876     +205
+quell/schale/ueberlagerung/auftraege.js   4'895 →   5'053     +158
+quell/schale/bedienung/motion.js         10'991 →  11'134     +143
+                                                  zusammen +10'205
+```
+
+Gerade an der Grenze von rund 10 KB je Zweig (10'205 Bytes = 9,97 KiB);
+der grösste Teil sind die Begründungen in `zeitmesser.ts`, die mit
+ausgeliefert werden. Die Einzeldatei wächst von 11'783'171 auf 11'818'312
+Bytes (+35'141, ungepackt).
+
+**Filmstreifen** (Wiedergabe ¼ über `Animation.setPlaybackRate`, ein Bild
+alle 100 ms Echtzeit plus Aufnahmezeit, also rund alle 30–45 ms
+Bewegungszeit; `welle2-bilder/zeit/`, nicht eingecheckt, §55.4): Pille →
+Karte und Karte → Pille (Escape), die Balken wachsen, die Wahl wandert von
+„Mi" zu „Sa" — je Telefon und Rechner, hell und dunkel. Das Hochzählen läuft
+in `requestAnimationFrame` und wird von der Wiedergabe ¼ nicht gebremst.
+
+**Nachtrag — die Durchsicht (4./5. Oktober 2026).** Dieselben Fenster und
+dieselben Daten, `test590` §10–§14 gegen `fb7e590e` (44 von 60, sechzehn
+rot) und auf dem Stand der Durchsicht (60 von 60). Gemessen am Telefon:
+
+```txt
+Pille (Telefon)                    110–374 × 715–759 px, unverändert
+Fläche: Werkzeugleiste vorher      unter der Pille (Radieren … Ellipse)
+Fläche: Werkzeugleiste nachher     ca. 620–665 (im Bild), über der Pille
+Notizhefte: runder Knopf „Neu"     703–759 → ca. 647–703 (translate −56 px)
+Ende einer Ansicht                 Inhalt bis 751 → endet über 715
+Zeichenleiste unten                632–741 auf der Pille → 572–681, frei
+Toast am Telefon                   699–763 auf der Pille (10'858 px²) → darüber
+KI-Panel offen (Rechner)           Pille 1177–1424 auf drei Knöpfen → links daneben
+Monatsverlauf: Spalte              9,3 px → ≥ 32 px (zehn je Zeile, 3 Zeilen)
+Monatsverlauf: sichtbare Zahlen    0 / 30 → 30 / 30, Wochentage 5 / 30 → 30 / 30
+Summe beim Öffnen, Bild für Bild   „0, 4, 7, 0, 0, 11 …" → nur aufwärts
+Name der Pille, Wechsel in 3,2 s   3 → 0 („noch 25 Min an …")
+Escape 60 ms nach dem Tipp         Karte bleibt offen → zurück in die Pille
+```
+
+**Start (test388 §5).** 2838 KB gzip über 248 Dateien, Decke 2850 KB
+(21/21), gemessen am 5. Oktober auf dem Stand der Durchsicht. Der Bau
+mass 2835 KB vor seinen letzten 0,3 KB; die Durchsicht bringt +2,7 KB.
+
+**Was die Dateien wachsen** (gzip Stufe 6, Bytes; `b3cf1933` → `fb7e590e` →
+Durchsicht):
+
+```txt
+quell/bereiche/wissen/zeitmesser.js       4'290 →   8'571 →   8'879
+quell/bereiche/wissen/lernwelt.js        47'965 →  50'414 →  51'364
+quell/schale/stil/lernwelt.css           21'191 →  22'708 →  23'073
+quell/schale/stil/bausteine.css         168'182 → 169'334 → 170'306
+quell/schale/stil/ki.css                  4'623 →   4'623 →   4'718
+motion.css, schale.js, auftraege.js,    unverändert seit fb7e590e
+motion.js
+zusammen (neun Dateien)                389'703 → 399'908 → 402'598
+                                         +10'205 E713, +2'690 Durchsicht
+```
+
+(Gepackt mit Pythons zlib, Stufe 6; die Tabelle oben kam aus Node —
+dieselbe Stufe, einige Hundert Bytes Unterschied je grosser Datei. Darum
+wird nur innerhalb dieser Tabelle verglichen.) Die
+Einzeldatei: 11'818'312 → 11'825'765 Bytes (+7'453).
+
+**Nachtrag 2 — die dritte Durchsicht (5. Oktober 2026).** `test590` §15
+gegen den Stand der zweiten Durchsicht (`95abc5de`: 60 von 62) und danach
+(62 von 62); dieselben Fenster und Daten, Telefon 390 × 844.
+
+```txt
+Toast bei offener Karte (Telefon)   720–763 auf der Karte 462–759 (11'700 px²)
+                                    → oben 12–55, Schnitt 0
+„Beenden" 80 ms nach dem Tipp       Pille bleibt versteckt im Dokument,
+                                    #scroll-Polster 153 px → Pille fort, 93 px
+test303 (Telefonfallen)             1 („motion.css .rmo-tr-sym") → 0
+Rechner 1024 × 768, langer Toast    Schnitt mit der Karte 3'840 px²
+                                    (b3cf1933, altes Feld: 2'560) — offen, L234
+```
+
+**Start (test388 §5).** 2838 KB von 2850 (21/21). Die drei berührten
+Dateien +508 Bytes gzip (bausteine.css +231, motion.css +169,
+zeitmesser.js +108), die Einzeldatei 11'825'765 → 11'827'154 Bytes.
+
+**Nachtrag 3 — die vierte Durchsicht (5. Oktober 2026).** `test590` §16
+gegen den Stand der dritten Durchsicht (66 von 68) und danach (68 von 68);
+dieselben Daten, ohne Netz (`setOffline`), Telefon 390 × 844, Rechner
+1024 × 768. „frei" ist der Anteil der Tastenfläche, an dem die Taste selbst
+oben liegt (Raster 4 px; S/P/B = Start, Pause, Beenden); „Tipp" ein
+echt getippter Finger in der Mitte von „Pause".
+
+```txt
+                         b3cf1933 (altes Feld)   vor dem Nachtrag     danach
+Telefon  Streifen        713–763                 713–763              713–763
+         Karte           499–759                 462–759              408–705
+         frei S/P/B      45 / 55 / 53 %          45 / 45 / 44 %       100 / 100 / 97 %
+         Tipp auf Pause  wirkt                   trifft den Streifen  wirkt
+Rechner  Streifen        282–742 × 719–754       ebenso               ebenso
+1024     Karte (links)   728                     708                  708
+         Tasten frei     97–100 %                97–100 %             97–100 %
+```
+
+**Start (test388 §5).** 2839 KB von 2850 über 248 Dateien (21/21). `bausteine.css` 170'208 → 170'539 Bytes
+gzip (+331, fast nur Begründung am Ort), die Einzeldatei 11'827'154 →
+11'828'241 Bytes.
+
 ## §84 · Rot zuerst, vier Inseln: Stilblatt, Wettlauf, Keil, Werkzeuge (E714, 3. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/rot-zuerst-inseln` auf `claude/morgen-besser`

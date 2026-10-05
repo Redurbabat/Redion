@@ -683,19 +683,122 @@
 .lernwelt .lw-card-types dt{color:var(--text-dim);font-size:12px}
 .lernwelt .lw-card-types dd{font-size:13px;font-weight:740;font-variant-numeric:tabular-nums}
 
-/* Lernhistorie: native Progress-Elemente bleiben semantisch, stehen hier hochkant. */
-.lernwelt .lw-history{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(24px,1fr));align-items:end;gap:5px;
-  min-height:132px;padding:8px 2px 0
+/* DER VERLAUF ALS BALKENKARTE (E713; Redurs Video, Szene 06). Die Karte
+   STEHT, also Lichtkante und ein einmaliger Glanz, aber keine Unschärfe
+   (E703); Glas trägt nur der schwebende Hinweis. Bewegt werden nur
+   `transform`/`opacity`: der Balken steigt in seiner Säule mit `translateY`
+   aus dem Boden (kein `scaleY`, das die Ecken staucht), der Akzent der
+   Wahl ist eine zweite Schicht über `opacity`. */
+.lernwelt .lw-section:has(> .lw-verlauf){
+  position:relative;isolation:isolate;overflow:hidden;
+  box-shadow:var(--glas-kante),var(--shadow-1,0 1px 2px rgba(0,0,0,.06))
 }
-.lernwelt .lw-history>div{display:grid;justify-items:center;align-content:end;gap:4px;min-width:0}
-.lernwelt .lw-history span{color:var(--text-dim);font-size:9.5px;font-variant-numeric:tabular-nums}
-.lernwelt .lw-history progress{
-  width:9px;height:82px;writing-mode:vertical-rl;direction:rtl;border-radius:999px
+@keyframes lw-verlauf-glanz{
+  from{transform:translateX(-110%);opacity:1}
+  to{transform:translateX(110%);opacity:0}
 }
-.lernwelt .lw-history small{
-  overflow:hidden;width:100%;color:var(--text-faint);font-size:9px;text-align:center;
+.lernwelt .lw-verlauf{display:grid;gap:var(--space-3);padding:2px 0 0}
+.lernwelt .lw-verlauf-kopf{display:flex;align-items:baseline;gap:var(--space-3);min-width:0}
+.lernwelt .lw-verlauf-summe{
+  font-size:30px;font-weight:780;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums
+}
+.lernwelt .lw-verlauf-kopf span{color:var(--text-dim);font-size:12px}
+.lernwelt .lw-verlauf-flaeche{
+  position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;
+  padding-top:38px
+}
+/* DREISSIG TAGE IN ZEILEN ZU ZEHN (Durchsicht von E713, 4. Oktober). Die
+   erste Fassung stellte sie in EINE Reihe und versteckte Zahl und Wochentag
+   — vorher (bis b3cf1933) standen alle dreissig sichtbar über ihren Säulen,
+   und am Telefon war eine Säule nur 9 px breit: der Finger traf den
+   Nachbarn. „ohne eine funktione löschen": die Zahlen bleiben auf einen
+   Blick da. Eine Spalte ist mindestens 32 px breit (NEBENWEG, §37: der
+   Monatsverlauf ist Rückschau, der tägliche Weg ist der Wochenverlauf) und
+   sonst ein Zehntel der Breite — zehn je Zeile am Telefon wie am Rechner,
+   auf ganz schmalen Schirmen weniger. Die Säule ist niedriger, damit die
+   Karte nicht dreimal so hoch wird; ↑ und ↓ gehen eine Zeile. */
+.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-flaeche{
+  grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(max(var(--space-8),calc(10% - 1px)),1fr));
+  column-gap:0;row-gap:var(--space-4)
+}
+.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-saeule{height:var(--space-10)}
+/* Die ganze Säule ist die Trefffläche, nicht der Balken: im Wochenverlauf
+   138 px hoch und ein Siebtel der Breite, im Monatsverlauf siehe oben. */
+.lernwelt .lw-verlauf-tag{
+  --lw-anteil:0;--lw-index:0;
+  position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:4px;
+  min-width:0;padding:4px 0 2px;margin:0;border:0;border-radius:var(--radius-md);
+  background:none;color:inherit;font:inherit;cursor:pointer
+}
+.lernwelt .lw-verlauf-tag:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
+.lernwelt .lw-verlauf-zahl{color:var(--text-dim);font-size:10px;font-variant-numeric:tabular-nums}
+.lernwelt .lw-verlauf-saeule{
+  position:relative;display:flex;align-items:flex-end;width:min(100%,26px);height:96px;overflow:hidden;
+  border-radius:7px 7px 3px 3px
+}
+.lernwelt .lw-verlauf-saeule i{
+  position:relative;display:block;width:100%;height:max(3px,calc(var(--lw-anteil) * 100%));
+  border-radius:inherit;background:color-mix(in srgb,var(--accent) 38%,transparent)
+}
+.lernwelt .lw-verlauf-tag[data-lw-anzahl="0"] .lw-verlauf-saeule i{opacity:.35}
+.lernwelt .lw-verlauf-saeule i::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;background:var(--accent);
+  opacity:0;transition:opacity var(--motion-fast) var(--ease)
+}
+.lernwelt .lw-verlauf-tag[aria-pressed="true"] .lw-verlauf-saeule i::after{opacity:1}
+.lernwelt .lw-verlauf-tag[aria-pressed="true"] .lw-verlauf-zahl{color:var(--text);font-weight:700}
+.lernwelt .lw-verlauf-tag small{
+  overflow:hidden;width:100%;color:var(--text-faint);font-size:9.5px;text-align:center;
   text-overflow:ellipsis;white-space:nowrap
+}
+/* Das Material hinter der Wahl (E706): EINE Fläche, von `SelectionFlow`
+   gefedert und unterwegs gedehnt. In einer tieferen Zeile setzt
+   lernwelt.ts Höhe und `translate` — waagrecht fährt weiter die Feder. */
+.lernwelt .lw-verlauf-material{
+  position:absolute;left:0;top:34px;bottom:0;width:0;z-index:0;pointer-events:none;
+  border-radius:var(--radius-md);background:color-mix(in srgb,var(--accent) 14%,transparent);
+  opacity:0;transition:opacity var(--motion-fast) var(--ease)
+}
+.lernwelt .lw-verlauf-material.an{opacity:1}
+/* Der Hinweis: über der Zeile des gewählten Tages, waagrecht mit der Wahl,
+   in der Karte gehalten (Zeile und Klemmen rechnet lernwelt.ts). */
+.lernwelt .lw-verlauf-tipp{
+  position:absolute;left:0;top:0;z-index:2;pointer-events:none;
+  border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);
+  box-shadow:var(--glas-kante),var(--shadow-2)
+}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .lernwelt .lw-verlauf-tipp{
+    --text-faint:var(--text-dim);background:var(--bg-schwebend-dicht);
+    -webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)
+  }
+}
+.lernwelt .lw-verlauf-tipp[hidden]{display:none}
+.lernwelt .lw-verlauf-tipp>span{
+  display:block;padding:7px 11px;font-size:12.5px;font-weight:650;white-space:nowrap;
+  font-variant-numeric:tabular-nums
+}
+/* EINMAL wachsen, einmal glänzen — beim Ankommen, nie im Leerlauf; wird
+   die Ansicht gleich danach noch einmal gezeichnet, fährt alles weiter
+   (`--lw-seit`, lernwelt.ts, Durchsicht von E713). Ohne
+   Bewegung (System oder „Ruhige Darstellung") stehen die Balken sofort da.
+   `body:not([data-bewegung="ruhig"])` steht ausdrücklich dabei: die
+   ruhige Sperre in bausteine.css erfasst `::after` nicht. */
+@keyframes lw-verlauf-wachsen{from{transform:translateY(100%)}}
+@media (prefers-reduced-motion:no-preference){
+  body:not([data-bewegung="ruhig"]) .lernwelt .lw-verlauf-saeule i{
+    animation:lw-verlauf-wachsen var(--feder-sanft-dauer) var(--feder-sanft) both;
+    animation-delay:calc(var(--lw-index) * 35ms - var(--lw-seit, 0ms))
+  }
+  body:not([data-bewegung="ruhig"]) .lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-saeule i{
+    animation-delay:calc(var(--lw-index) * 12ms - var(--lw-seit, 0ms))
+  }
+  body:not([data-bewegung="ruhig"]) .lernwelt .lw-section:has(> .lw-verlauf)::after{
+    content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.12) 42%,transparent 50%,
+      rgba(255,255,255,.08) 56%,transparent 64%);
+    animation:lw-verlauf-glanz .7s var(--ease) calc(.25s - var(--lw-seit, 0ms)) both
+  }
 }
 
 /* --- Duolingo-artiger, aber frei zugänglicher Lernpfad ----------------- */

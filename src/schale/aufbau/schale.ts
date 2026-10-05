@@ -3485,11 +3485,12 @@ const App = (() => {
        Druck, ein Fenster (test296 §2). Gemessen war vorher: er nahm das
        alte Fenster UNTER dem Kit-Dialog weg, und der Dialog blieb stehen.
 
-       EIN LOSES FELD mit `data-esc-schliesst` (der Zeitmesser: `role=
-       "dialog"`, aber kein `.overlay`, weil er beim Arbeiten offen bleiben
-       darf) geht zu, wenn kein Menü und kein Fenster davorliegt. Vorher
-       schloss es nur sein ✕ — §38: „Escape schliesst das passende
-       Overlay". */
+       EIN LOSES FELD (der Zeitmesser: `role="dialog"`, aber kein
+       `.overlay`, weil er beim Arbeiten offen bleiben darf) geht zu, wenn
+       kein Menü und kein Fenster davorliegt. Vorher schloss es nur sein ✕
+       — §38: „Escape schliesst das passende Overlay". E710 trug dafür
+       `data-esc-schliesst` am Feld; seit dem Zusammenführen mit E713
+       drückt der Griff das ✕ mit `data-esc-knopf` (siehe unten). */
     /* WAS BEIM DRUCK OFFEN WAR (Durchsicht E711): eigene Griffe (Suche,
        Palette) nehmen ihr Fenster VOR diesem — derselbe Druck räumte dann
        auch die Meldungen ab (zwei auf einen, vgl. test296 §3). Im Einfangen
@@ -3506,7 +3507,6 @@ const App = (() => {
       };
       const m = letztes('.menu');
       const o = letztes('.overlay');
-      const feld = letztes('[data-esc-schliesst]');
       /* Ein Träger OHNE Fenster des Kits darin (die Insel stolperte, oder
          sie zeichnet noch nicht) geht wie jedes Fenster: sonst bliebe eine
          unsichtbare Ebene über der Seite, die alles stilllegt und die kein
@@ -3517,18 +3517,32 @@ const App = (() => {
         if (!o.hasAttribute('data-insel-traeger') ||
             !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet')) o.remove();
       }
-      /* Das lose Feld (E710) und die Meldungen (E711) teilen die Regel aus
-         E711: hat ein eigener Griff in DIESEM Druck schon ein Fenster
-         genommen (`warOffen`), nimmt dieser nichts mehr — ein Druck, ein
-         Fenster, auch wenn der Zeitmesser daneben offen steht. */
-      else if (feld && !warOffen) {
-        const warDrin = feld.contains(document.activeElement);
-        feld.remove();
-        if (warDrin) document.getElementById('page')?.focus();
+      else {
+        /* SCHWEBENDE FELDER OHNE `.overlay` (E713, der Zeitmesser): ihr
+           Schliessen-Knopf trägt `data-esc-knopf`. Wer im TEXT Escape
+           drückt, meint den Text (E713) — also nicht, solange der Fokus in
+           einem Eingabefeld oder bearbeitbaren Block ausserhalb des Feldes
+           steht. Sonst geht das Feld zu, auch wenn der Fokus auf einem
+           Knopf der Seite steht (E710, §38: „Escape schliesst das passende
+           Overlay"; test587 §7). E710 hatte das Feld über
+           `data-esc-schliesst` einfach entfernt; der Knopf nimmt den Weg
+           des Feldes selbst (zurück in die Pille, der Fokus dorthin), also
+           gilt nur noch er. Und die Regel aus E711: hat ein eigener Griff in
+           DIESEM Druck schon ein Fenster genommen (`warOffen`), nimmt dieser
+           nichts mehr — ein Druck, ein Fenster, auch wenn der Zeitmesser
+           daneben offen steht. */
+        const knopf = letztes('[data-esc-knopf]') as HTMLElement | null;
+        const feld = knopf?.closest('[role="dialog"]');
+        const fokus = document.activeElement;
+        const imText = fokus instanceof HTMLElement && !feld?.contains(fokus) &&
+          (fokus.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(fokus.tagName));
+        if (knopf && feld) {
+          if (!warOffen && !imText) knopf.click();
+        }
+        /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff) —
+           aber nur, wenn dieses Escape nicht schon ein Fenster genommen hat. */
+        else if (!warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined') Hinweis.escape();
       }
-      /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff) —
-         aber nur, wenn dieses Escape nicht schon ein Fenster genommen hat. */
-      else if (!feld && !warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined') Hinweis.escape();
     });
   };
 
