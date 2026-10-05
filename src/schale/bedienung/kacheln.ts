@@ -169,7 +169,13 @@ const Schnellkacheln = (() => {
       if (k.art === 'regler') {
         const i = stufe(k), zahl = (k.stufen || []).length;
         S(k.schluessel || '', (k.stufen || [])[(i + 1) % zahl]);
-      } else k.tun?.();
+      } else {
+        /* Ein Weg führt hinaus: aus einem Fenster (Einstellungen) erst
+           schliessen, dann gehen — wie die Wege der Einstellungen selbst.
+           Sonst ging die Uhr HINTER dem Fenster auf (dritte Durchsicht E712). */
+        if (k.art === 'weg') b.closest('.overlay')?.remove();
+        k.tun?.();
+      }
       markieren();
     });
     wurzel.addEventListener('keydown', e => {

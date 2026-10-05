@@ -58794,3 +58794,43 @@ die Tastatur wie vorher, die Linse gleitet einmal und liegt still, unter
 **Was der Nachtrag kostet:** +583 B gzip auf die Startdateien (kacheln.js
 +315, studio.css +113, zeitmesser.js +76, menue.js +74, context-rail.js +4,
 notebook.js +1); `test388` §5: 2841 KB, Decke 2850.
+
+**Dritte Durchsicht (5. Oktober 2026).** Redur, 3. Oktober, ca. 19:35 UTC:
+„Weiter ohne pause,“. Die dritte Durchsicht hat jeden berührten Griff noch
+einmal angefasst — am Rechner mit Maus und Tastatur, am Telefon mit Finger
+und Tab — und gegen `b3cf1933` verglichen, die Schrift der neuen Teile am
+gerenderten Bild in allen zehn Schemata gemessen und die Bilder und
+Streifen nach dem Nachtrag gemacht und angesehen. `test589` §14 hält zwei
+weitere Funde (rot gesehen gegen den Stand des Nachtrags), behoben:
+
+19. **Die Uhr aus den Einstellungen ging dahinter auf.** Die Kachel
+    „Zeitmesser“ in Einstellungen → Allgemein öffnete das Feld der Uhr
+    hinter dem Fenster der Einstellungen (`.zm-feld` z 45, `.overlay`
+    z 700), und Fokus legte es still: ein Griff, der sichtbar nichts tat.
+    Jetzt schliesst ein Weg, der hinausführt, zuerst das Fenster, in dem
+    er steht — wie die Wege der Einstellungen selbst („Papierkorb“,
+    „Tastenkürzel“ …) — und das Feld steht oben und ist bedienbar. In
+    „Mehr“ ändert sich nichts.
+20. **Die Namen unter den runden Knöpfen waren zu leise.** Im Blatt am
+    Telefon lag `--text-dim` auf dem Glas des Blatts bei 4,46 : 1 („Hell“)
+    und 4,36 : 1 („Sand“). Jetzt in voller Schrift (`--text`); kleiner
+    als die Einträge sind sie weiter.
+
+Nachgeprüft und in Ordnung: die Tastatur wie vor E712 (das „+“ am Rechner
+behält den Fokus am Knopf wie vorher, Escape schliesst; im „⋯“ erreicht
+⇧Tab aus dem Suchfeld jetzt die drei runden Knöpfe, das Merkzeichen kippt
+mit der Leertaste); am Telefon geht Tab über die runden Knöpfe in dieselben
+Einträge in derselben Folge; das „⋯“ einer Zeile im Seitenbaum steht unter
+seinem Knopf statt rechts daneben, jeder Eintrag bis „Seite anpassen“ zu
+sehen wie vorher; die Chipleiste in „Mehr“ ist lesbar (alle Chips ≥ 4,5 : 1,
+auch mit „Hoher Kontrast“); `file://` und `redion-einzeldatei.html` ohne
+Fehler. Am Telefon beginnt die Liste im „⋯“-Blatt rund 100 px tiefer (das
+Blatt hat seine Höchsthöhe schon, die runden Knöpfe stehen darüber) — wie
+vorher rollt man, keiner der Einträge ist weg.
+
+**Gefunden auf dem Weg, nicht aus E712:** ein `UI.menu` am Rechner
+bekommt keinen Fokus — wer das „+“ mit der Tastatur öffnet, kommt mit Tab
+nicht hinein (auf `b3cf1933` genauso). Steht in AUFGABEN.
+
+**Was die dritte Durchsicht kostet:** +169 B gzip auf die Startdateien
+(kacheln.js +126, studio.css +43); `test388` §5: 2841 KB, Decke 2850.

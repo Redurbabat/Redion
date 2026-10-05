@@ -472,7 +472,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .menu .ru-tropfen-kopf .ru-tropfen-knopf:focus-visible{outline:none}
 .ru-tropfen-knopf:focus-visible .ru-tropfen-rund{outline:2px solid var(--accent-text);outline-offset:2px}
 .ru-tropfen-knopf[aria-pressed="true"] .ru-tropfen-rund{color:var(--accent-text)}
-.ru-tropfen-name{font-size:11.5px;line-height:1.25;color:var(--text-dim);max-width:100%}
+/* Volle Schrift: auf dem Glas des Blatts lag --text-dim bei 4,4 : 1 (dritte Durchsicht E712). */
+.ru-tropfen-name{font-size:11.5px;line-height:1.25;color:var(--text);max-width:100%}
 .menu.blatt .ru-tropfen-kopf{flex:none;padding:var(--space-2) var(--space-4) var(--space-3)}
 .menu.blatt .ru-tropfen-kopf .ru-tropfen-knopf{min-height:0;padding:2px;font-size:12px;border-radius:var(--radius-lg)}
 .menu.blatt .ru-tropfen-name{font-size:12px}

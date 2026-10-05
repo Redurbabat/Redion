@@ -5512,3 +5512,22 @@ Beobachter nach fünfmal „Mehr"        5                    1
 Start (`test388` §5): **2841 KB** gzip, Decke 2850. Der Nachtrag selbst:
 +583 B gzip (kacheln.js +315, studio.css +113, zeitmesser.js +76, menue.js
 +74, context-rail.js +4, notebook.js +1; gegen `510f3971`).
+
+**Dritte Durchsicht (5. Oktober 2026).** Gegen `957abea4` (Nachtrag) und
+danach, unter der Sperre; die Namen am gerenderten Bild wie `test589` §12
+(Schrift durchsichtig, Grund aus den Pixeln, Schriftfarbe mit der
+Deckkraft der Ahnen, schlimmster Pixel), zehn Schemata.
+
+```txt
+                                         957abea4             danach
+Einstellungen → „Zeitmesser“: das Feld   dahinter, still-     oben, bedienbar,
+                                         gelegt (z 45/700)    „Stoppuhr“ startet
+Namen unter den runden Knöpfen, Telefon  Hell 4,46 · Sand     ≥ 4,5 in allen zehn
+                                         4,36 : 1
+Namen unter den runden Knöpfen, Rechner  4,81 bis 13,96       ≥ 4,5 in allen zehn
+Chipleiste in „Mehr“ (je Chip im Bild)   ≥ 4,5 (70 + 70)      unverändert
+```
+
+Start (`test388` §5): **2841 KB** gzip, Decke 2850. Die dritte
+Durchsicht selbst: +169 B gzip (kacheln.js +126, studio.css +43; gegen
+`957abea4`).

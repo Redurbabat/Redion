@@ -45,6 +45,13 @@ Besuch in „Mehr" liess einen Beobachter stehen. `test589` 100 ok (rot gegen
 `510f3971`: 91 ok, 9 offen), zwei Gegenproben rot gesehen; `test388` §5:
 2841 KB.
 
+**Dritte Durchsicht (5. Oktober 2026):** zwei Funde, behoben (E712 Punkte
+19–20): die Kachel „Zeitmesser“ in den Einstellungen öffnete die Uhr
+hinter dem Fenster (stillgelegt, sichtbar nichts), die Namen unter den
+runden Knöpfen lagen im Blatt am Telefon bei 4,36 bis 4,47 : 1. `test589`
+103 ok (rot gegen `957abea4`: 101 ok, 2 offen), zwei Gegenproben rot
+gesehen, die Browser-Nachbarn gelaufen; `test388` §5: 2841 KB.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

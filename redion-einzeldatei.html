@@ -23601,7 +23601,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .menu .ru-tropfen-kopf .ru-tropfen-knopf:focus-visible{outline:none}
 .ru-tropfen-knopf:focus-visible .ru-tropfen-rund{outline:2px solid var(--accent-text);outline-offset:2px}
 .ru-tropfen-knopf[aria-pressed="true"] .ru-tropfen-rund{color:var(--accent-text)}
-.ru-tropfen-name{font-size:11.5px;line-height:1.25;color:var(--text-dim);max-width:100%}
+/* Volle Schrift: auf dem Glas des Blatts lag --text-dim bei 4,4 : 1 (dritte Durchsicht E712). */
+.ru-tropfen-name{font-size:11.5px;line-height:1.25;color:var(--text);max-width:100%}
 .menu.blatt .ru-tropfen-kopf{flex:none;padding:var(--space-2) var(--space-4) var(--space-3)}
 .menu.blatt .ru-tropfen-kopf .ru-tropfen-knopf{min-height:0;padding:2px;font-size:12px;border-radius:var(--radius-lg)}
 .menu.blatt .ru-tropfen-name{font-size:12px}
@@ -26854,7 +26855,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1402, inhalt: 'd9f7db5aff146319', gebaut: '2026-10-05T00:12:25.107Z' };
+const Stand = { fassung: 1403, inhalt: '3b18cc76a29591da', gebaut: '2026-10-05T05:41:24.993Z' };
 window.Stand = Stand;
 
 </script>
@@ -55172,8 +55173,14 @@ const Schnellkacheln = (() => {
                 const i = stufe(k), zahl = (k.stufen || []).length;
                 S(k.schluessel || '', (k.stufen || [])[(i + 1) % zahl]);
             }
-            else
+            else {
+                /* Ein Weg führt hinaus: aus einem Fenster (Einstellungen) erst
+                   schliessen, dann gehen — wie die Wege der Einstellungen selbst.
+                   Sonst ging die Uhr HINTER dem Fenster auf (dritte Durchsicht E712). */
+                if (k.art === 'weg')
+                    b.closest('.overlay')?.remove();
                 k.tun?.();
+            }
             markieren();
         });
         wurzel.addEventListener('keydown', e => {
