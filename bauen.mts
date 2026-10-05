@@ -111,8 +111,10 @@ html = html.replace(CHRONIK_MARKE,
  * ohne React. Also stehen die Bytes in `<script type="text/plain">` — das
  * liest der Parser, aber er führt es nicht aus. `Inseln.bereit()`
  * (`src/schale/inseln/laden.ts`) macht erst dann Skripte daraus, über
- * Blob-Adressen wie bei pdf.js, und aus dem dritten ein Stilblatt-Link
- * auf eine Blob-Adresse (kein `<style>` aus TypeScript, test412).
+ * Blob-Adressen wie bei pdf.js, und aus dem dritten ein angenommenes
+ * Stilblatt (`document.adoptedStyleSheets`) — kein `<link>`, denn in der
+ * Einzeldatei steht keines (test492, E714), und kein `<style>` aus
+ * TypeScript (test412).
  *
  * ROH EINGESETZT — deshalb darf in den Bytes kein `</script` stehen (er
  * beendete den Behälter) und kein `<!--` (er schaltet den Parser in einen

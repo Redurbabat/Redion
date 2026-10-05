@@ -1,5 +1,30 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 3. Oktober 2026 · E714 · Rot zuerst, vier Inseln
+
+**Redur:** am 3. Oktober „Weiter ohne pause"; dazu weiter vom 27. September
+ca. 22:10 „… ohne eine funktione löschen …".
+
+**Gefunden und behoben:** In der Einzeldatei hängte das Vorwärmen der Inseln
+ein Stilblatt-`<link>` auf eine Blob-Adresse ein (seit E699) — jetzt ein
+angenommenes Blatt, im Ordner bleibt das `<link>`, ältere Browser bekommen
+den alten Weg. `test582` wartete auf die Wandzeit, während SwiftShader über
+dem Zeichenblatt das erste Bild erst nach einer halben Sekunde zusammensetzte
+— jetzt auf die Uhr der Animationen, mit der Zusage „höchstens 700 ms".
+`test247` las beim Keilmarker (E704) den Strich statt der Fläche, `test464`
+zählte die Leiste vor „Text ändern" (E671).
+
+**Geprüft:** `test492` erweitert und zuerst rot eingecheckt; je Lauf halbiert
+und mit Gegenprobe rot gesehen; die Nachbarn in der Commit-Nachricht. Keine
+Funktion weg.
+
+**Durchsicht (4. Oktober):** jede geänderte Zusage alt gegen neu gelesen.
+Eine Lücke gefunden und geschlossen: `test582` fragte „Toast und Lader sind
+da" seit E714 erst nach dem Warten — jetzt steht `.show` des Toasts schon
+bei 700 ms fest. `test579` §9 misst in der Einzeldatei jetzt auch, dass das
+angenommene Blatt wirkt (44 px, genau eines, kein `<link>`). Beide
+Erweiterungen mit Gegenprobe rot gesehen.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

@@ -600,6 +600,46 @@ const stapel = async (pg: Page, szene: string) => {
     UI.toast('Gespeichert — Markierung auf Seite 2', 60000);
   });
   await pg.waitForTimeout(700);
+  /* ERST WENN SIE HEREIN SIND (E714). Die Frage unten galt nach 700 ms
+     WANDZEIT. Über dem Zeichenblatt setzt SwiftShader (der GPU-Weg oben)
+     das erste Bild mit Glas manchmal erst nach rund 500 ms zusammen — die
+     Probe zählte 3 bis 4 Bilder in 700 ms, und das Hereinkommen von Toast
+     und Lader hatte erst 17 bis 33 ms seiner Zeit hinter sich: Deckkraft
+     0,06, einmal 0. Dann war `melder` leer, und die Zeile rot — in rund zwei
+     von vier Läufen, je nachdem, was der Rechner daneben tat.
+     Gewartet wird jetzt, bis ihre endlichen Animationen fertig sind (die
+     Klumpen im Lader kreisen ohne Ende und zählen nicht), höchstens 8 s.
+     Die Zusage „in 700 ms da" bleibt — gemessen auf der Uhr der Animation
+     selbst, nicht auf der des Prüfrechners: jede, die nach 700 ms noch
+     läuft, endet samt Verzögerung bei höchstens 700 ms. Läuft keine mehr,
+     wird nicht gewartet, und die Frage unten gilt wie vorher. Was gar nicht
+     erst erscheint (kein `.show`, kein Lader), bleibt dort rot.
+     UND DER ZUSTAND STEHT BEI 700 MS (E714, Durchsicht). Die Frage unten
+     kommt jetzt erst nach dem Warten — ein Toast, dem `.show` erst NACH
+     700 ms gesetzt würde (eine Verzögerung im Code, während der Lader über
+     dem Zeichenblatt noch hereinkommt), wäre dort grün geworden, wo die alte
+     Zeile rot war. Deshalb wird hier, VOR dem Warten, festgehalten, ob der
+     Toast `.show` trägt und der Lader im Dokument hängt. Beides setzt der
+     Code sofort (`UI.toast`, `Lader.schweben`), ohne auf ein Bild zu warten
+     — also hängt es nicht an SwiftShader, und es bleibt die Zusage von
+     vorher: in 700 ms da. */
+  const herein = await pg.evaluate(async () => {
+    const zeigt = !!document.getElementById('toast')?.classList.contains('show');
+    const wer = [document.getElementById('toast'), document.querySelector('.ru-lader-schwebt')]
+      .filter((e): e is HTMLElement => !!e);
+    const endlich = wer.flatMap(e => e.getAnimations({ subtree: true }))
+      .filter(a => Number.isFinite(Number(a.effect?.getComputedTiming().endTime)));
+    const laengste = Math.max(0, ...endlich.map(a => Math.round(Number(a.effect?.getComputedTiming().endTime))));
+    const t0 = performance.now();
+    await Promise.race([Promise.all(endlich.map(a => a.finished.catch(() => null))),
+      new Promise(f => setTimeout(f, 8000))]);
+    return { zeigt, elemente: wer.length, animationen: endlich.length, laengste,
+             offen: endlich.filter(a => a.playState !== 'finished').length,
+             gewartet: Math.round(performance.now() - t0) };
+  });
+  p(`${szene}: Toast und Lader kommen auf ihrer eigenen Uhr in höchstens 700 ms herein`,
+    herein.zeigt && herein.elemente === 2 && herein.laengste <= 700 && herein.offen === 0,
+    JSON.stringify(herein));
   const k = await pg.evaluate(() => {
     const box = (w: string) => [...document.querySelectorAll<HTMLElement>(w)]
       .filter(e => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);

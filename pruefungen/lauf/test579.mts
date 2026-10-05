@@ -497,6 +497,24 @@ const f9Haengen = await probeHaengen(s9, 't579-e');
 p('Inseln.bereit() und die Probe gehen auch hier', f9Haengen === null, String(f9Haengen));
 const pr9 = await probeLesen(s9, 't579-e');
 gleich('… mit Redions Akzent', pr9.knopf?.bg, await farbe(s9, '--accent'));
+/* DAS BLATT DER INSELN WIRKT AUCH HIER — ALS ANGENOMMENES (E714, Durchsicht).
+   Seit E714 hängt `Inseln.bereit()` in der Einzeldatei kein Blob-`<link>`
+   mehr ein (test492: dort steht keines), sondern reiht die Bytes aus
+   `inseln-stil` in `document.adoptedStyleSheets` ein. Der Akzent oben zeigt
+   die Brücke; dass das Blatt selbst wirkt, zeigt die Grösse — ohne Blatt
+   ist der Knopf 24 statt 44 px (§11). Und ein zweites `bereit()` reiht das
+   Blatt kein zweites Mal ein. */
+p('… MIT ihrem Blatt: der Knopf ist mindestens 44 px hoch', (pr9.knopf?.hoehe ?? 0) >= 44,
+  String(pr9.knopf?.hoehe));
+const blatt9 = await s9.evaluate(async () => {
+  await Inseln.bereit();
+  return {
+    angenommen: document.adoptedStyleSheets
+      .filter(s => [...s.cssRules].some(r => r.cssText.includes('ui-touch-root'))).length,
+    links: document.querySelectorAll('link[rel="stylesheet"]').length };
+});
+gleich('… als angenommenes Blatt, genau eines, auch nach einem zweiten bereit() — kein <link>',
+  blatt9, { angenommen: 1, links: 0 });
 gleich('Kein einziger Zugriff auf eine Datei daneben (nur die Seite selbst und Blob-Adressen)',
   geholt9.filter(u => !u.startsWith('blob:') && !u.startsWith('data:') && !/redion-einzeldatei\.html$/.test(u))
     .map(u => u.split('/').slice(-3).join('/')), []);

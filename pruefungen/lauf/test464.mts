@@ -118,6 +118,7 @@ console.log('\n§1 Das zwölfte Werkzeug');
     const werk = document.querySelector('.blatt-werk');
     const wz = [...werk.querySelectorAll('[data-wz]')];
     raus.werkzeuge = wz.length;
+    raus.namen = wz.map(k => k.getAttribute('data-wz'));
     raus.zeilen = new Set(wz.map(k => Math.round(k.getBoundingClientRect().top))).size;
     raus.rollt = werk.scrollWidth > werk.clientWidth + 2;
     const knopf = werk.querySelector('[data-act="elemente"]');
@@ -130,8 +131,17 @@ console.log('\n§1 Das zwölfte Werkzeug');
   /* ZWÖLF WAREN ES BEI E494, DREIZEHN SEIT E512 (der Laserpointer) —
      nachgezogen am 14. September, rot seit E512. Die Zusage ist die
      EINE Höhe: ein zwölfter Knopf kippte die Zeile nicht, ein
-     dreizehnter auch nicht. */
-  gleich('Dreizehn Werkzeuge, alle auf EINER Höhe', [r.werkzeuge, r.zeilen], [13, 1]);
+     dreizehnter auch nicht.
+     VIERZEHN SEIT E671 (21. September): „Text ändern" (`textfix`, E670)
+     steht seitdem auch auf dem Blatt neben „Text" — `test523` verlangt es
+     („13 statt 14, textfix fehlt"). Diese Zeile hier blieb bei dreizehn und
+     war seit af2706c1 rot (E714, halbiert). Jetzt steht nicht nur die Zahl
+     da, sondern die vierzehn NAMEN in ihrer Reihenfolge: ein fremder Knopf
+     mit `data-wz` oder ein fehlendes Werkzeug fiele auf, auch wenn die Zahl
+     zufällig stimmte. Und alle weiter auf EINER Höhe. */
+  gleich('Vierzehn Werkzeuge, mit Namen, alle auf EINER Höhe', [r.werkzeuge, r.zeilen, r.namen],
+    [14, 1, ['schreiben', 'select', 'stift', 'marker', 'formen', 'abdeck', 'zettel', 'text', 'textfix',
+             'zeichen', 'elemente', 'bild', 'radierer', 'laser']]);
   p('… und die Leiste rollt am Rechner nicht', !r.rollt);
   gleich('Der Zubehörknopf steht in der Gruppe „elemente"', [r.knopfDa, r.knopfGruppe], [true, 'elemente']);
 

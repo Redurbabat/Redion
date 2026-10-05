@@ -5394,3 +5394,69 @@ Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
 tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
 `Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
 27 ms Bewegungszeit.
+
+## §84 · Rot zuerst, vier Inseln: Stilblatt, Wettlauf, Keil, Werkzeuge (E714, 3. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/rot-zuerst-inseln` auf `claude/morgen-besser`
+(4d9a9a3f). Chromium von Playwright 1.56.1 (1194), über `http://127.0.0.1`
+und `file://`, unter dem gemeinsamen Schloss; Halbierung in eigenen
+Arbeitsbäumen (`git checkout --detach`, die erzeugten Dateien sind
+eingecheckt).
+
+**`test492`, das Stilblatt der Einzeldatei** (`probe492`: Einzeldatei laden,
+gleich danach und nach `Inseln.bereit()` die `link[rel="stylesheet"]` lesen;
+28. September):
+
+```txt
+Stand                       gleich nach dem Laden          nach bereit()        angenommene Blätter
+E698 4f6e91f3               —                              — (keine Inseln)     0
+E699 434402a3               blob:… stil (nach 49 ms)       blob:… stil          0
+4d9a9a3f, drei Runden       blob:… stil, 3 von 3           blob:… stil          0
+E714                        —                              —                    1
+```
+
+**`test582` §6, Toast und Lader über dem Zeichenblatt** (`probe582`: wie
+`stapel()`, dazu Bilder über `requestAnimationFrame`, lange Aufgaben,
+Deckkraft und Animationen nach 700 ms Wandzeit; 1280 × 900, dunkel; erste
+Runde je Stand, die übrigen 43 Bilder und Deckkraft 1):
+
+```txt
+Stand                 Bilder in 700 ms   lange Aufgaben   Beginn nach Auslösen   Deckkraft Toast / Lader
+4d9a9a3f, Runde 1     4                  0                507 ms                 0,19 / 0,11
+E703 6b420f32, R. 1   3                  0                234 ms                 0,06 / 0,04
+E704 b3cf1933, R. 1   4                  0                (Toast schon da)       1 / 0,97
+jede weitere Runde    9 bis 44           0                im ersten Bild         1 / 1
+```
+
+**`test247`, der Keil** (Leiste „marker", Band Blau `#2f7ed8`, Stärke 5 dann
+1,2): vor E704 `stroke="#2f7ed8"`, `stroke-width` im Verhältnis 5 : 1,2; ab
+E704 `fill="#2f7ed8"`, `stroke="none"`, kein `stroke-width`, die Kante
+`strokeWidth(mark)` lang.
+
+**`test464`, die Leiste am Blatt:** 13 `[data-wz]` bis 09ac7f81, 14 ab
+af2706c1 (`textfix`, E671), eine Zeile.
+
+**Startgrösse (`test388` §5, 3. Oktober, 20:44 UTC):** **2826 KB** gzip über
+248 Dateien, DECKE 2850 KB — wie `claude/morgen-besser` (2826); `laden.js`
+wächst um weniger als ein halbes KB und rundet nicht um.
+
+**Gegenproben (Grundstand 4d9a9a3f, neue Wächter):**
+
+```txt
+Lauf     Eingriff                                   rot mit
+test492  keiner (Stand vor E714)                    nachgeladen: ['blob:null/52f9f81b-4ee3-'], alte Zeile auch
+test464  button('textfix') aus der Leiste           ist [13,1,[…ohne textfix…]], soll [14,1,[…]]
+test247  Keilhöhe fest 6 statt strokeWidth(mark)    dick 5.99 : dünn 5.99 = 1.00 (erwartet 4.17)
+test582  ru-lader-herein 1,2 s statt 0,3 s          {"elemente":2,"laengste":1200,"offen":0}, alle vier Szenen
+```
+
+**Durchsicht, Gegenproben (4. Oktober, 16:03–16:06 UTC, auf dem Zweig, unter
+dem Schloss; je zurückgenommen, Arbeitsbaum danach sauber):**
+
+```txt
+Lauf          Eingriff                                          rot mit
+test582 §6    UI.toast setzt .show 900 ms zu spät               {"zeigt":false,…,"gewartet":0}, alle vier Szenen (172 ok, 8 rot)
+test579 §9    Einzeldatei: das Blatt wird nicht angenommen      Knopf 24 px · {"angenommen":0,"links":0} · Akzent rgba(0, 0, 0, 0) (75 / 3)
+```
+
+**Startgrösse nach der Durchsicht (`test388` §5, 4. Oktober, 16:06–16:13 UTC):** **2826 KB** gzip über 248 Dateien, DECKE 2850 KB — unverändert, die Durchsicht ändert nur Prüfungen und Doku.

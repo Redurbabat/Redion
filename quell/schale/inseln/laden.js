@@ -36,9 +36,10 @@
  *   §29 DIE EINZELDATEI HAT KEINEN ORDNER. `bauen.mts` setzt die Bytes an der
  *       Marke `inseln-daten` in drei `<script type="text/plain">` — das
  *       wertet der Browser NICHT aus. Erst `bereit()` macht daraus Skripte
- *       (über Blob-Adressen, wie pdf.js) und ein Stilblatt. So startet auch
- *       die Einzeldatei ohne React, und dieselben Bytes laufen erst, wenn
- *       sie gebraucht werden.
+ *       (über Blob-Adressen, wie pdf.js) und ein angenommenes Stilblatt
+ *       (`document.adoptedStyleSheets`, kein `<link>` — E714, `test492`).
+ *       So startet auch die Einzeldatei ohne React, und dieselben Bytes
+ *       laufen erst, wenn sie gebraucht werden.
  *
  *   §28 OFFLINE BLEIBT ES OFFLINE. Alle drei Dateien stehen im GRUNDSTOCK
  *       von `sw.ts`. Der Dienst legt sie beim ersten Besuch im Hintergrund
@@ -108,24 +109,59 @@ const Inseln = (() => {
         }
     };
     /**
-     * Das Stilblatt — IMMER als `<link>`, auch in der Einzeldatei. Dort zeigt
-     * es auf eine Blob-Adresse mit den Bytes aus dem Behälter; ein
-     * eingehängtes `<style>` wäre ein Stilblock aus TypeScript, und den
-     * verbietet `test412` mit gutem Grund (E418: Stil gehört in eine Datei).
-     * Die Blob-Adresse bleibt stehen, solange die Seite lebt: ein Stilblatt
-     * darf der Browser neu lesen wollen.
+     * Das Stilblatt — je nach Weg auf eine von zwei Arten:
      *
-     * SCHEITERT ES, GEHT DAS `<link>` WIEDER. Hier stand es danach weiter im
+     *   IM ORDNER            ein `<link>` auf `quell/islands/islands.css`, wie
+     *                        jedes andere Blatt. Per Doppelklick geht das (ein
+     *                        `fetch` ginge nicht, siehe oben), über das Netz
+     *                        bedient es der Dienst.
+     *   IN DER EINZELDATEI   ein ANGENOMMENES Blatt: die Bytes aus dem
+     *                        Behälter in einem `CSSStyleSheet`, eingereiht in
+     *                        `document.adoptedStyleSheets`. Kein Element.
+     *
+     * WARUM DORT KEIN `<link>` MEHR (E714). Bis E714 stand auch in der
+     * Einzeldatei ein `<link>` — auf eine Blob-Adresse mit den Bytes aus dem
+     * Behälter. `test492` hält aber: „Einzeldatei enthält Eingabe und
+     * Bewegungsstil ohne Nachladen" — in der Einzeldatei steht KEIN
+     * `link[rel="stylesheet"]`; jedes Blatt ist beim Bauen eingesetzt, und
+     * ein `<link>` dort ist ein Blatt, das nachgeladen wird. Das Vorwärmen im
+     * Leerlauf hängte das Blob-`<link>` ein, und test492 war seit E699 rot —
+     * oder grün, je nachdem, ob der Leerlauf vor seiner Frage kam.
+     *
+     * UND KEIN `<style>`: das wäre ein Stilblock aus TypeScript, den
+     * `test412` mit gutem Grund verbietet (E418: Stil gehört in eine Datei).
+     * Das angenommene Blatt ist keins von beiden. Seine Bytes SIND
+     * `islands.css`; hier wird nur gesetzt, dass sie gelten. In der Kaskade
+     * steht es hinter allen Blättern der Seite — dort, wo vorher das `<link>`
+     * am Ende von `<head>` stand. `adoptedStyleSheets` kennen Chrome ab 73,
+     * Firefox ab 101 und Safari ab 16.4; ein älterer Browser bekommt das
+     * Blob-`<link>` von vorher (unten) — die Inseln laufen auch dort.
+     *
+     * SCHEITERT DAS `<link>`, GEHT ES WIEDER. Hier stand es danach weiter im
      * Kopf, und die erste Zeile unten fand es beim nächsten Versuch und sagte
      * „schon da" — die Insel hing dann ohne ihr Blatt (ein Knopf von 24 statt
      * 44 px, durchsichtig). Gefunden bei der Durchsicht von E699, `test579`
      * §11. Das Versprechen oben in `bereit` („beim nächsten Versuch soll es
      * wieder gehen") gilt jetzt auch für das Blatt.
      */
+    let angenommen = null;
     const stilblatt = () => {
+        const text = behaelter(BEHAELTER.stil);
+        if (text !== null && angenommen)
+            return Promise.resolve();
+        if (text !== null && 'adoptedStyleSheets' in document) {
+            const blatt = new CSSStyleSheet();
+            blatt.replaceSync(text);
+            document.adoptedStyleSheets = [...document.adoptedStyleSheets, blatt];
+            angenommen = blatt;
+            return Promise.resolve();
+        }
+        /* EIN BROWSER OHNE ANGENOMMENE BLÄTTER (vor Safari 16.4, vor Chrome 73)
+           bekommt in der Einzeldatei den Weg von vorher — das `<link>` auf eine
+           Blob-Adresse. Die Inseln laufen dort weiter (§43: nichts geht verloren);
+           nur hält er die Zusage von test492 nicht, und die prüft Chromium. */
         if (document.querySelector('link[data-insel-datei="stil"]'))
             return Promise.resolve();
-        const text = behaelter(BEHAELTER.stil);
         return new Promise((ja, nein) => {
             const l = document.createElement('link');
             const blob = text !== null ? URL.createObjectURL(new Blob([text], { type: 'text/css' })) : null;
