@@ -8395,6 +8395,10 @@ Posteingang zeigt Glaskarten (`test588`).
    Seite ist ein Schnippen und nimmt die Karte weg; langsam mitziehen geht
    nicht. Echt ziehen hiesse, die Karten am Telefon zu Zielen zu machen —
    dann nähmen sie den Knöpfen darunter den Tipp. Redur entscheidet.
+   Seit der sechsten Durchsicht (5. Oktober): ruhte der Finger länger als
+   300 ms, bevor er losging, ist es kein Schnippen — der Zug gehört dem,
+   was darunter liegt (eine Kladde, ein Block, eine Marke im PDF werden
+   nach 400 bis 500 ms gehoben; `test588` §14, `test360`).
 9. **Die Trefferzeilen der Suche sind am Telefon 39 px hoch** (gefunden in
    der Durchsicht, 5. Oktober; NICHT von E711 — auf `b3cf1933` genauso,
    gemessen mit derselben Sonde). §37 verlangt 44 px auf dem Hauptweg. Die

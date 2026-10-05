@@ -5556,6 +5556,27 @@ zwei-auf-einen 62/63, strich-gefangen 61/63, blass 62/63, stern-grau
 62/63. Die zehn davor hatte die vierte Durchsicht um ca. 07:41 bis 07:57
 UTC gesehen.
 
+**Die sechste Durchsicht** (5. Oktober abends, unter dem Schloss).
+Nachbarn ca. 18:14–18:56 UTC, 118 Läufe: 110 grün; rot und auf `b3cf1933`
+grün nur `test360`, `test362`, `test114` (die fünf anderen Roten sind dort
+genauso rot). Die Filter der Suche am Telefon (428 × 926, wie `test114`),
+Höhe Bild für Bild nach `App.suche()`, das kleinste der vier Felder:
+
+```txt
+              0 ms   101   201   302   403   504   604   705   806 ms
+E711          4,3   14,9  29,6  37,1  40,2  41,4  41,8  41,9  42,0   (wächst bis ~806 ms)
+ruhig         42    42    42    42    42    42    42    42    42
+b3cf1933      41,4  42    42    42    42    42    42    42    42     (die alte Ankunft, 200 ms)
+```
+
+`test114` mass bei 600 ms. Unter einer Karte des Stapels am Telefon (390 ×
+844): 600 ms gehalten, dann sechs Schritte zu 20 px — vorher kam KEIN
+`pointermove` und kein `pointerup` bei der Fläche darunter an (`test588`
+§14), nachher alle. Kosten der Reparatur: `hinweis.js` +288 und
+`studio.css` +112 Bytes (gzip -9, vor allem Erklärung); der Zweig gegen
+`b3cf1933` damit +13'373 Bytes über zehn Dateien. `test388` §5 danach
+(ca. 19:40 UTC) weiter 2838 KB, Decke 2850 KB.
+
 **Der lange Druck am Telefon** (Sonde der zweiten Durchsicht): um ca. 07:08
 UTC einmal rot („langes Drücken öffnet den Fächer" — null, unter Last);
 um ca. 13:48 UTC zweimal auf dem Zweig und einmal auf der Reparatur davor

@@ -1,6 +1,6 @@
 # ERLEDIGTE-AUFGABEN.md
 
-## 4. und 5. Oktober 2026 · E711, Durchsicht · Der Fächer geht wieder zu, ein Escape tut eines, die Marke ist lesbar, der Strich kommt an, die jetzige Wahl bleibt markiert, „KI" bleibt frei
+## 4. und 5. Oktober 2026 · E711, Durchsicht · Der Fächer geht wieder zu, ein Escape tut eines, die Marke ist lesbar, der Strich kommt an, die jetzige Wahl bleibt markiert, „KI" bleibt frei, eine Kladde lässt sich unter einer Meldung wieder tragen
 
 **Redur:** am 3. Oktober um ca. 19:35 UTC „Weiter ohne pause," — und weiter
 „ohne eine funktione löschen".
@@ -39,6 +39,18 @@ geht jetzt unter der Reihe auf, die direkt unter der Glocke steht
 Durchsicht noch fehlten. Die sechste Durchsicht (5. Oktober abends) hat den
 Endstand gemessen — `test588`, die Sonden, `test388`, die Bilder und die
 Nachbarn, unter dem Schloss — und eingecheckt.
+
+**Sechste Durchsicht (5. Oktober abends):** in den Nachbarn waren drei
+Läufe rot, die auf `b3cf1933` grün sind — alle drei von E711. Am Telefon
+kam eine lange gedrückte und gezogene Kladde nicht mehr an, wenn eine
+Meldung darüber lag (`test360`): der Stapel nahm jeden waagerechten Zug.
+Jetzt gehört ein Zug, vor dem der Finger länger als 300 ms ruhte, dem, was
+darunter liegt (Wächter `test588` §14, rot gesehen). Eine rohe `28px` zu
+viel in `studio.css` (`test362`) ist weg, Bild für Bild dasselbe. Und
+`test114` mass die Filter der Suche mitten im Aufgehen (41,8 statt 42 px);
+er misst jetzt, wenn die Suche steht, und prüft dazu, dass sie
+spätestens nach 1,5 s steht. Gegenproben (vier, alle rot gesehen) und
+35 Nachbarn im Nachtrag zu E711; `test588` 72 von 72, dreimal.
 
 **Geprüft:** `test588` §11 (rot gegen `556ffdaa`: 46 von 57), §12 (rot
 gegen `6853b992`: 47 von 63, und gegen die Reparatur der Durchsicht: 58 von

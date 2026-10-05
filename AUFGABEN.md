@@ -1528,6 +1528,12 @@ Offen, jeweils mit eigenem Wächter (rot zuerst):
 6. Meldungen als Glas nur, wenn Redur E703 (c) dafür aufhebt (L232 Punkt 7).
 7. Die Trefferzeilen der Suche am Telefon auf 44 px (heute 39 px, schon vor
    E711; §37, L232 Punkt 9) — mit einem Lauf, der die Höhe am Telefon misst.
+8. `test588` wartet an einigen Stellen feste Zeiten auf Bewegung (§3 das
+   Umlenken der Marke, §7 der Fächer nach dem Zeiger, §8 nach dem
+   Zusammenfliessen); am 5. Oktober um ca. 19:29 UTC unter Last einmal rot
+   in genau diesen drei Punkten, davor und danach grün. Auf das Ende der
+   Bewegung warten (`getAnimations().finished`, wie jetzt `test114` §16)
+   statt auf die Uhr — ohne die Punkte zu lockern.
 
 ## Gefunden beim Durchsehen von E711, gehört zu den Farben (E705)
 

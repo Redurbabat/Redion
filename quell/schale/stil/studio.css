@@ -496,8 +496,12 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
    er (E703 (c): Glas druckte beim Einblenden über `opacity` doppelt und
    läge oft auf anderem Glas); die Tiefe macht die Lichtkante. */
 #ru-toast-stapel{position:fixed;left:0;top:0;width:0;height:0;z-index:899}
+/* 560px allein (sechste Durchsicht E711): hier stand min(560px, 100vw - 28px) —
+   gilt aber nur über 760 px Breite, wo 100vw - 28px nie unter 560 fällt; die
+   rohe 28px zählte nur in marken-decke.json (test362) mit. Darunter gilt die
+   Telefonregel. */
 .ru-toast-alt{position:fixed;left:0;right:0;top:0;margin-inline:auto;width:fit-content;box-sizing:border-box;
-  max-width:min(560px,calc(100vw - 28px));padding:9px 18px;font-size:13.5px;line-height:1.4;
+  max-width:560px;padding:9px 18px;font-size:13.5px;line-height:1.4;
   border-radius:var(--radius-md);background:var(--bg-side);border:1px solid var(--line);color:var(--text-dim);
   box-shadow:var(--glas-kante),var(--shadow-1);pointer-events:none}
 @media(max-width:760px){

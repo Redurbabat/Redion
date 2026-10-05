@@ -127,7 +127,16 @@ const Hinweis = (() => {
   /* WISCHEN: ein waagerechter Zug über 12 px, der auf einer Karte begann,
      gehört ihr (`wischen.ts` hört ihn dann nicht); über 40 % oder schnell: weg. */
   let zug: { id: number; x0: number; y0: number; t0: number; el: HTMLElement; wer: Aeltere | null;
-             gefangen: boolean; x: number; y: number; t: number } | null = null;
+             gefangen: boolean; x: number; y: number; t: number; ab: number | null } | null = null;
+  /* WER ERST LANGE HÄLT, HEBT ETWAS AN (sechste Durchsicht E711, test588
+     §14). Die Kladde (notebook.ts) wird nach 400 ms gehoben, ein Block
+     (pwa.ts) nach 500, eine Marke im PDF (marken.ts) nach 450 — und der
+     Stapel nahm ihnen unter einer Meldung den Zug weg (`test360`: die
+     Kladde kam nicht im Fach an). Ein Schnippen fängt sofort an; ruhte der
+     Finger länger als das hier, bevor er losging, gehört der Zug dem, was
+     darunter liegt. */
+  const HALTEN_MS = 300;
+  const gehalten = (z: NonNullable<typeof zug>): boolean => z.ab !== null && z.ab - z.t0 > HALTEN_MS;
   const trifft = (x: number, y: number): { el: HTMLElement; wer: Aeltere | null } | null => {
     for (const a of aeltere) {
       const r = a.el.getBoundingClientRect();
@@ -160,14 +169,16 @@ const Hinweis = (() => {
     if (e.pointerType !== 'touch') return;
     const z = trifft(e.clientX, e.clientY);
     if (z && !nimmtSelbst(e.target)) zug = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, ...z,
-      gefangen: false, x: e.clientX, y: e.clientY, t: e.timeStamp };
+      gefangen: false, x: e.clientX, y: e.clientY, t: e.timeStamp, ab: null };
   }, { capture: true, passive: true });
   addEventListener('pointermove', (e: PointerEvent) => {
     if (!zug || e.pointerId !== zug.id) return;
     zug.x = e.clientX; zug.y = e.clientY; zug.t = e.timeStamp;
     const dx = e.clientX - zug.x0, dy = e.clientY - zug.y0;
+    if (zug.ab === null && Math.abs(dx) + Math.abs(dy) > 4) zug.ab = e.timeStamp;
     if (!zug.gefangen) {
       if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 12) { if (Math.abs(dy) > 12) zug = null; return; }
+      if (gehalten(zug)) { zug = null; return; }
       zug.gefangen = true;
     }
     e.stopPropagation();
@@ -199,7 +210,7 @@ const Hinweis = (() => {
     if (!zug || e.pointerId !== zug.id) return;
     const z = zug; zug = null;
     const dx = z.x - z.x0, dy = z.y - z.y0;
-    if (z.gefangen || (Math.abs(dx) >= 8 && Math.abs(dx) > Math.abs(dy))) loslassen(z, z.x, z.t);
+    if (z.gefangen || (Math.abs(dx) >= 8 && Math.abs(dx) > Math.abs(dy) && !gehalten(z))) loslassen(z, z.x, z.t);
     else { z.el.style.removeProperty('translate'); z.el.style.removeProperty('opacity'); }
   }, { capture: true });
 

@@ -1490,7 +1490,9 @@ Tafel unter einer Meldung kommt ganz an. Die vierte Durchsicht vom
 der Fächer flackert nicht, solange der Zeiger auf der Glocke ruht, und er
 deckt ihre Blase nicht halb zu. Die fünfte am selben Tag §13: der Fächer
 deckt die Reihe direkt unter der Glocke nicht zu — „KI" und „Favorit"
-bleiben auf dem kürzesten Weg klickbar.*
+bleiben auf dem kürzesten Weg klickbar. Die sechste am Abend §14: wer am
+Telefon unter einer Meldung lange drückt und zieht, zieht, was darunter
+liegt (die Kladde kam in `test360` nicht mehr an).*
 
 ### Die Befehle
 

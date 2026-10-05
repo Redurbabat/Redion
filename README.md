@@ -207,7 +207,8 @@ Drei Meldungen hintereinander stehen als Stapel übereinander, statt dass
 nur die letzte bleibt; Escape räumt sie ab (schliesst es gerade ein
 Fenster, bleiben sie stehen), am Telefon schnippt ein Finger eine zur Seite
 weg — ein Strich auf der Tafel oder dem Blatt, der unter einer Meldung
-beginnt, bleibt ein Strich. Ein Klick auf die Glocke öffnet wie immer den
+beginnt, bleibt ein Strich, und was man darunter lange drückt und zieht
+(eine Kladde, einen Block), zieht man. Ein Klick auf die Glocke öffnet wie immer den
 Posteingang; wer auf ihr verweilt, sie lange drückt oder ↓ drückt, sieht
 die letzten drei Meldungen mit „Alle gelesen" (liest, löscht nichts) und
 „Posteingang öffnen"; ein Klick oder Tipp daneben, Tab oder Escape

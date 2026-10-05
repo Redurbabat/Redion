@@ -58992,3 +58992,91 @@ das Aufgehen der Suche, das Gleiten der Marke, den Stapel, das Auffächern
 und das Zusammenfliessen — vorher (`b3cf1933`) und nachher. Dazu
 `zwischen4-*` (der Stand vor §13) und `*-glocke-reihe` (der Fächer an
 1440, 1280 und 1024 px Breite und am Telefon, vor und nach §13).
+
+### Nachtrag — die sechste Durchsicht (5. Oktober 2026, abends)
+
+**Redur, wörtlich:** am 5. Oktober um ca. 14:15 UTC „Also an was du jetzt
+macht mache es jetzt fertig und danach arbeite nicht mehr weiter …" — die
+laufende Durchsicht zu Ende bringen, nichts Neues anfangen. Und weiter
+„ohne eine funktione löschen".
+
+**Was die Nachbarn fanden.** Drei Läufe, die auf `b3cf1933` grün sind, waren
+auf dem Zweig rot — alle drei von E711 selbst, keiner von einer Durchsicht:
+
+12. **Eine lange gedrückte Kladde kam am Finger nicht mehr an** (`test360`
+   §7). Die Karten des Stapels und `#toast` sind `pointer-events:none`; der
+   Finger landet auf dem Inhalt darunter. Der Wisch-Griff in `hinweis.ts`
+   fing jeden waagerechten Zug über 12 px ab und hielt ihn im Einfangen an
+   — auch den, der nach langem Drücken etwas trägt: die Kladde der
+   Bibliothek (gehoben nach 400 ms), einen Block (500 ms), eine Marke im PDF
+   (450 ms). Lag eine Meldung darüber, liess sich das nicht mehr tragen.
+   Jetzt: ruhte der Finger länger als 300 ms, bevor er losging, gehört der
+   Zug dem, was darunter liegt; ein Schnippen fängt sofort an und nimmt
+   die Karte weiter weg. Wächter: `test588` §14 (rot gesehen gegen
+   `f73a2938`), dazu `test360`.
+13. **Eine rohe `28px` zu viel** (`test362` §7, die Decke der rohen Masse:
+   66 statt 65). `.ru-toast-alt` trug `max-width:min(560px, calc(100vw −
+   28px))` — die Regel gilt nur über 760 px Breite, wo `100vw − 28px` nie
+   unter 560 fällt. Jetzt `max-width:560px`, Bild für Bild dasselbe.
+14. **Die Filter der Suche am Telefon massen 41,8 statt 42 px** (`test114`
+   §16). Seit E711 wächst die Suche aus der Kapsel (rund 0,8 s, nur
+   `transform`); `test114` mass nach 600 ms, mitten im Aufgehen, wenn
+   alles darin noch 0,5 % kleiner ist (gemessen Bild für Bild: 41,4 px bei
+   504 ms, 41,8 bei 604, 42 ab 806; mit „Ruhige Darstellung" von Anfang an
+   42). Die stehende Suche hat 42 px wie auf `b3cf1933`. `test114` misst
+   jetzt, wenn die Suche STEHT — dieselben Felder, dieselbe Grenze —, und
+   bekommt dafür einen Punkt dazu: die Suche steht spätestens 1,5 s nach
+   dem Öffnen still. Das ist keine Schwächung: geprüft wird weiter die
+   Fläche, die der Daumen trifft, und ein Aufgehen, das nicht endet, wird
+   jetzt eigens rot (Gegenproben unten).
+
+**Was die Alternative war.**
+- (12) Den Wisch-Griff nur auf die sichtbare Karte legen (`pointer-events`
+  an): verworfen — die Karte nähme den Knöpfen darunter jeden Tipp, wie es
+  `#toast` seit jeher bewusst nicht tut (L232 Punkt 8). Eine Liste der
+  Dinge, die man tragen kann (`.bib-deckel`, `.blk`, …): verworfen — sie
+  liefe jedem neuen Griff hinterher; die Zeit des Haltens sagt es für alle.
+- (14) Die Suche schneller aufgehen lassen, damit sie nach 600 ms steht:
+  verworfen — das ist die Bewegung der Szene 07, die Redur mit dem Video
+  verlangt hat, und eine Durchsicht ändert sie nicht, um einer Wartezeit
+  in einem Prüflauf zu genügen. Die 600 ms einfach auf 1000 ms setzen:
+  verworfen — eine neue Zahl, die beim nächsten Aufgehen wieder reisst;
+  „bis es steht, höchstens 1,5 s" sagt, was gemeint ist.
+
+**Was es kostet.** Am Start (`test388` §5, 5. Oktober ca. 19:40 UTC, unter
+dem Schloss) weiter 2838 KB gzip über 248 Dateien, Decke 2850 KB.
+`hinweis.js` +288 und `studio.css` +112 Bytes (gzip -9), fast nur
+Erklärung; der Zweig gegen `b3cf1933` damit +13'373 Bytes über zehn
+Dateien. Zur Laufzeit ein Zeitvergleich mehr je Berührung unter einer
+Meldung.
+
+**Geprüft.** `test360` 34 von 34, `test362` 18 von 18, `test114` 156 von
+156 (5. Oktober ca. 19:29–19:30 UTC); `test588` 72 von 72, dreimal
+hintereinander (ca. 19:46–19:52 UTC). Der erste Lauf von `test588` gleich
+nach dem Bauen (ca. 19:29 UTC) hatte drei Punkte rot, die mit der
+Berührung nichts zu tun haben (die Marke landete nach dem Umlenken 14,7 px
+daneben; der Fächer ging nach dem Zeiger und nach dem Zusammenfliessen
+nicht rechtzeitig zu) — mit der Maus kommt die neue Regel gar nicht in
+Gang, und in der Kopie derselben Fassung (Gegenprobe haelt-nicht) wie in
+den drei Läufen danach waren sie grün. Das sind feste Wartezeiten unter
+Last; es steht in AUFGABEN.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen, je eine Verbiegung im
+gebauten `quell/` einer Kopie des Endstands, `scratchpad/rv6-suche/ende7`,
+der betroffene Lauf darüber, 5. Oktober ca. 19:30–19:34 UTC):
+flach (die Filter am Telefon 40 px hoch) → `test114` „… sind mit dem
+Finger zu treffen — 4 zu flach"; laeuft (das Aufgehen fünfmal so lang) →
+`test114` „Die Suche steht spätestens 1,5 s nach dem Öffnen still"
+(`{"nach":3600,"still":false}`) und „4 zu flach"; haelt-nicht (ohne die
+Regel für das Halten) → `test588` §14 (`{"bewegt":0,"los":false}`) und
+`test360` 32 von 34 (die Ablegezone zeigt sich nicht, die Kladde kommt
+nicht an); roh28 (die alte Breite) → `test362` „66 statt 65".
+
+**Nachbarn** (unter dem Schloss, `alle.mts`, ca. 19:35–19:46 UTC, 35
+Läufe um die geänderten Stellen — Meldungen, Suche, Stile, Berührung):
+32 40 47 66 67 104 126 127 143 155 222 245 248 272 296 303 353 384 388 411
+412 430 476 484 492 510 531 534 536 539 541 576 579 584 585 — 34 grün,
+`test492` rot („Einzeldatei enthält Eingabe und Bewegungsstil ohne
+Nachladen"), auf `b3cf1933` zweimal genauso rot (ca. 19:53 UTC) — fremd,
+der bekannte Wackler aus dem Zweig der roten Inseln. Ohne Browser grün:
+87 105 109 225 290 298 401 402 410 549 550.
