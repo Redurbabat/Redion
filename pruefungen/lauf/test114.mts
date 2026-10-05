@@ -1176,6 +1176,29 @@ await seite.evaluate(() => {
 });
 await seite.waitForTimeout(600);
 
+/* GEMESSEN WIRD DIE SUCHE, WENN SIE STEHT (E711, sechste Durchsicht). Seit
+   E711 wächst sie aus der Kapsel (Szene 07, eine Web-Animation auf
+   `.finder.such`, nur transform, rund 0,8 s). Nach den 600 ms oben ist sie
+   noch unterwegs und alles darin 0,5 % kleiner — die Filter massen 41,8
+   statt 42 px, und der Punkt unten fiel, obwohl der Daumen auf eine
+   stehende Suche 42 px trifft. Die Messung selbst bleibt, wie sie war
+   (dieselben Felder, dieselbe Grenze); gewartet wird, bis das Aufgehen
+   fertig ist — und DASS es bald fertig ist, ist ein eigener Punkt: eine
+   Suche, die nicht zur Ruhe kommt, wäre selbst ein Fehler. */
+const steht = await seite.evaluate(async () => {
+  const f = document.querySelector<HTMLElement>('.finder.such');
+  const t0 = performance.now();
+  const laufen = (f?.getAnimations() ?? []).filter(a => a.playState === 'running');
+  await Promise.race([
+    Promise.all(laufen.map(a => a.finished.catch(() => undefined))),
+    new Promise(r => setTimeout(r, 3000))
+  ]);
+  return { nach: 600 + Math.round(performance.now() - t0),
+    still: !(f?.getAnimations() ?? []).some(a => a.playState === 'running') };
+});
+p('Die Suche steht spätestens 1,5 s nach dem Öffnen still', steht.still && steht.nach <= 1500,
+  JSON.stringify(steht));
+
 const fl = await seite.evaluate(() => {
   const leiste = document.querySelector<HTMLElement>('.such-filter');
   const sel = [...(leiste?.querySelectorAll<HTMLSelectElement>('select') || [])];

@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 529 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 530 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1510,7 +1510,33 @@ selben Bild schliesst und dass der Rückweg für Ja/Nein ein sichtbares
 „Abbrechen" hat. Gezählt am 28. September, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf
 seinem Zweig; die zweite Welle zählt beim Zusammenführen neu. Beim Zusammenführen nachgezählt (5. Oktober,
-`claude/morgen-besser-2`, nach `test586`): 529.*
+`claude/morgen-besser-2`): 529.*
+
+*Und 530: `test588` — die Suche wächst aus der Kapsel, die Meldungen
+stapeln sich (E711, Szenen 07 und 08 aus Redurs Video „Liquid Glass"). Er
+folgt der Marke der Suche Bild für Bild und verlangt, dass ↓ dieselben
+Knöpfe `[data-i]` stehen lässt (kein Neubau), dass sie über mehrere
+Zwischenorte gleitet und genau ankommt — in der Suche, der Befehlspalette
+und im Menü mit Suche; dazu das Aufgehen aus der Kapsel (nur `transform`),
+die Staffel NUR neuer Treffer, drei Meldungen als Stapel mit `#toast` als
+der einen Live-Region, die Glocke, deren Klick WEITER den Posteingang
+öffnet und deren Fächer „Alle gelesen" liest statt leert, EINEN Goo-Filter
+nur während des Zusammenfliessens, und alles noch einmal ruhig und am
+Telefon (langes Drücken). Gezählt am 28. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagte 528 — auf seinem Zweig, neben
+den anderen Zweigen der zweiten Welle; beim Zusammenführen nachzählen.
+Die Durchsicht vom 4. Oktober hat ihm §11 gegeben (keine neue Datei, die
+Zahl bleibt): der Fächer geht wieder zu, ein Escape tut eines, die Schrift
+auf der Marke hält 4,5 : 1 in allen zehn Schemata, und ein Strich auf der
+Tafel unter einer Meldung kommt ganz an. Die vierte Durchsicht vom
+5. Oktober §12: im Menü mit Suche bleibt die jetzige Wahl (`.on`) markiert,
+der Fächer flackert nicht, solange der Zeiger auf der Glocke ruht, und er
+deckt ihre Blase nicht halb zu. Die fünfte am selben Tag §13: der Fächer
+deckt die Reihe direkt unter der Glocke nicht zu — „KI" und „Favorit"
+bleiben auf dem kürzesten Weg klickbar. Die sechste am Abend §14: wer am
+Telefon unter einer Meldung lange drückt und zieht, zieht, was darunter
+liegt (die Kladde kam in `test360` nicht mehr an). Beim Zusammenführen nachgezählt (5. Oktober,
+`claude/morgen-besser-2`): 530.*
 
 ### Die Befehle
 
@@ -1528,7 +1554,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 529 Läufe
+npm run pruefen                      alle 530 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1618,7 +1644,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 529 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 530 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

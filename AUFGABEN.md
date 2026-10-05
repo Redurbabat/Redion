@@ -1511,6 +1511,38 @@ Wächter (rot zuerst):
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
 
+## Suche und Meldungen: was aus den Szenen 07 und 08 noch fehlt (L232, nach E711)
+
+E711 hat die Suche aus der Kapsel wachsen lassen, die gleitende Marke in
+Suche, Befehlspalette und Menü mit Suche gebracht, `#toast` zum Stapel
+gemacht, der Glocke den Fächer gegeben und den Posteingang als Glaskarten.
+Offen, jeweils mit eigenem Wächter (rot zuerst):
+
+1. Escape in der Suche leert erst das Feld, dann schliesst es — zusammen mit
+   den Läufen, die heute auf „Escape schliesst" bauen.
+2. Suche und Palette als Combobox für den Vorleser (`aria-activedescendant`).
+3. Enter als Übergabe: die Scheibe hebt sich und wird zum Ergebnis.
+4. Kick und Tropfen beim Zusammenfliessen — nur, wenn Redur es will.
+5. Beim Zusammenführen der zweiten Welle: EIN Goo-Filter (`#ru-goo`) für
+   Löschen-Knopf (E709), Tropfen (E712) und Glocke (E711).
+6. Meldungen als Glas nur, wenn Redur E703 (c) dafür aufhebt (L232 Punkt 7).
+7. Die Trefferzeilen der Suche am Telefon auf 44 px (heute 39 px, schon vor
+   E711; §37, L232 Punkt 9) — mit einem Lauf, der die Höhe am Telefon misst.
+8. `test588` wartet an einigen Stellen feste Zeiten auf Bewegung (§3 das
+   Umlenken der Marke, §7 der Fächer nach dem Zeiger, §8 nach dem
+   Zusammenfliessen); am 5. Oktober um ca. 19:29 UTC unter Last einmal rot
+   in genau diesen drei Punkten, davor und danach grün. Auf das Ende der
+   Bewegung warten (`getAnimations().finished`, wie jetzt `test114` §16)
+   statt auf die Uhr — ohne die Punkte zu lockern.
+
+## Gefunden beim Durchsehen von E711, gehört zu den Farben (E705)
+
+Im Schema „Starker Kontrast" steht am Telefon auf dem aktiven Reiter der
+unteren Leiste weder Zeichen noch Wort — Schwarz auf der schwarzen Pille.
+Gesehen in den Vorher-Bildern von E711 (`b3cf1933`), also nicht von E711.
+Mit eigenem Wächter (rot zuerst), im Bogen der Farben.
+
+
 ## E710 · Die Fragen im Fenster des Touch Kits — was danach kommt
 
 E710 hat `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` in den

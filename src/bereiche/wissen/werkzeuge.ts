@@ -505,9 +505,27 @@ const Werkzeuge = (() => {
         ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
           'tipp einen Namen, um sie zu finden</div>'
         : '');
+      /* Wie in der Suche (E711): neue Zeilen kommen nacheinander, EINE Marke
+         gleitet zur Wahl — `SelectionFlow`, dasselbe Material (§8). */
+      const zeilen = [...res.querySelectorAll<HTMLElement>('button[data-i]')];
+      SelectionFlow.stagger(res, zeilen, zeilen.map(b => String(sicht[Number(b.dataset['i'])]?.name ?? '')));
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, res.querySelector<HTMLElement>('button.on'), { taste: '↵ Enter' });
     };
     zeichne();
+
+    /* ↑ ↓ OHNE NEUBAU (E711): nur `.on` wandert, die Marke gleitet hin. */
+    const waehle = (k: number): void => {
+      const n = Math.min(treffer.length, GEZEIGT);
+      if (!n) return;
+      i = Math.max(0, Math.min(k, n - 1));
+      res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+      const neu = res.querySelector<HTMLElement>(`button[data-i="${i}"]`);
+      if (!neu) { zeichne(); return; }
+      neu.classList.add('on');
+      neu.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
+    };
 
     const fuehreAus = (t: any) => {
       o.remove(); merkeBefehl(t.name, t.gruppe); setTimeout(() => t.fn(), 10);
@@ -546,9 +564,8 @@ const Werkzeuge = (() => {
     });
     inp.addEventListener('keydown', e => {
       if (e.key === 'Escape') { o.remove(); return; }
-      if (e.key === 'ArrowDown') { e.preventDefault();
-        i = Math.min(i + 1, Math.min(treffer.length, GEZEIGT) - 1); zeichne(); }
-      if (e.key === 'ArrowUp')   { e.preventDefault(); i = Math.max(i - 1, 0); zeichne(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); waehle(i + 1); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); waehle(i - 1); }
       if (e.key === 'Enter' && treffer[i]) {
         e.preventDefault();
         if (e.ctrlKey || e.metaKey) festSchalten(treffer[i].name);

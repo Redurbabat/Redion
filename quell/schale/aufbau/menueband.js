@@ -458,6 +458,7 @@ const Menueband = (() => {
             }
             catch { }
         });
+        Hinweis.faecherBinden(glocke);
         rechts.appendChild(glocke);
         const arbeit = document.createElement('button');
         arbeit.type = 'button';

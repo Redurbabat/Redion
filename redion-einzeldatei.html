@@ -24010,6 +24010,100 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
   #topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
 }
 
+/* ══ E711 · Suche wächst, Auswahl gleitet, Meldungen stapeln sich (Szenen 07/08).
+   Die Bahnen rechnet `SelectionFlow` (E706/E702); hier nur die FORM. */
+
+/* Die Scheibe wächst aus der Kapsel: ihre eigene Ankunft weicht der Bahn. */
+:is(.menu,.finder).ru-waechst{animation:none}
+.ru-waechst > *{animation:none}
+
+/* Die eine Marke: unter der Schrift, über den Karten. */
+.ru-marke-traeger{position:relative}
+:where(.ru-marke-traeger) button{position:relative;z-index:1}
+.ru-marke{position:absolute;left:0;top:0;z-index:0;display:block;pointer-events:none;
+  border-radius:var(--radius-md);background:var(--accent);
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .22),0 1px 3px rgb(0 0 0 / .18)}
+.ru-marke[hidden]{display:none}
+.ru-marke-still{background:var(--bg-hover);box-shadow:none}
+/* Akzent mit heller Schrift NUR in der Suche und der Palette (`.finder .res`): im
+   Menü mit Suche heisst `.on` „das gilt jetzt" („Quelle wechseln") und behält
+   seine Fläche und seine Schrift — sonst stand dort Weiss auf Weiss (vierte
+   Durchsicht E711, test588 §12). */
+.finder .res.ru-marke-traeger > button.on{background:transparent;color:var(--auf-accent);transition:color var(--motion-fast) var(--ease)}
+/* Kürzel und Ausschnitt voll auf der Marke: mit .82 nur 3,77–3,99 : 1 (Durchsicht E711). */
+.finder .res.ru-marke-traeger > button.on :is(.pth,.snip){color:inherit;opacity:1}
+/* Der Stern folgt auf der Marke der Zeile (Grau/Gold dort 1,0–2,7 : 1); ★/☆ sagt die Form (§38). */
+.finder .res.ru-marke-traeger > button.on > .fest,
+.finder .res.ru-marke-traeger > button.on > .fest:hover{color:inherit}
+.menu-liste.ru-marke-traeger button.jetzt{background:transparent}
+/* „↵ Enter" reitet auf der Marke — nur am Rechner (am Telefon gibt es die Taste so nicht).
+   Ohne Tönung, mit Rand in der Schriftfarbe: getönt nur 3,64 : 1 (Durchsicht E711). */
+.ru-marke-taste{position:absolute;right:10px;top:50%;translate:0 -50%;padding:2px 7px;
+  border-radius:var(--radius-sm);font:600 11px/1.4 var(--font);letter-spacing:.02em;white-space:nowrap;
+  color:var(--auf-accent);background:none;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--auf-accent) 45%,transparent)}
+.finder .res.ru-marke-traeger > button.on > .pth{margin-right:64px}
+@media(max-width:760px){
+  .ru-marke-taste{display:none}
+  .finder .res.ru-marke-traeger > button.on > .pth{margin-right:0}
+}
+/* Die neuen Treffer kommen nacheinander (33 ms Abstand, wie im Video). */
+.ru-kommt{animation:ru-kommt var(--motion-normal) var(--ease-enter) both;animation-delay:calc(var(--ru-n) * 33ms)}
+@keyframes ru-kommt{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Der Stapel: die älteren Meldungen in der Form von `#toast` — DECKEND wie
+   er (E703 (c): Glas druckte beim Einblenden über `opacity` doppelt und
+   läge oft auf anderem Glas); die Tiefe macht die Lichtkante. */
+#ru-toast-stapel{position:fixed;left:0;top:0;width:0;height:0;z-index:899}
+/* 560px allein (sechste Durchsicht E711): hier stand min(560px, 100vw - 28px) —
+   gilt aber nur über 760 px Breite, wo 100vw - 28px nie unter 560 fällt; die
+   rohe 28px zählte nur in marken-decke.json (test362) mit. Darunter gilt die
+   Telefonregel. */
+.ru-toast-alt{position:fixed;left:0;right:0;top:0;margin-inline:auto;width:fit-content;box-sizing:border-box;
+  max-width:560px;padding:9px 18px;font-size:13.5px;line-height:1.4;
+  border-radius:var(--radius-md);background:var(--bg-side);border:1px solid var(--line);color:var(--text-dim);
+  box-shadow:var(--glas-kante),var(--shadow-1);pointer-events:none}
+@media(max-width:760px){
+  .ru-toast-alt{left:14px;right:14px;width:auto;max-width:none;text-align:center}
+}
+
+/* Der Fächer: Karten ohne eigene Unschärfe — im Goo-Filter sähe sie nichts. */
+#ru-glocken-faecher{position:fixed;z-index:880;display:grid;gap:var(--space-3)}
+#ru-glocken-faecher[hidden]{display:none}
+/* Solange der Fächer offen ist, sagt ER, was in der Glocke liegt: die Blase
+   (E462) stünde genau unter ihm und ragte halb heraus (vierte Durchsicht E711). */
+#studio-glocke[aria-expanded="true"]::after{display:none}
+.ru-faecher-karten{display:grid;gap:var(--space-3)}
+.ru-meldung{display:grid;grid-template-columns:1fr auto;grid-template-areas:"quelle zeit" "text text";gap:2px 10px;
+  min-height:var(--touch-min);padding:10px 14px;text-align:left;border-radius:var(--radius-xl);
+  background:var(--bg-side);color:var(--text);box-shadow:var(--glas-kante),var(--studio-elevation)}
+.ru-meldung:hover{background:var(--bg-hover)}
+.ru-meldung-quelle{grid-area:quelle;font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
+.ru-meldung-text{grid-area:text;font-size:14px;font-weight:600;line-height:1.35}
+.ru-meldung-zeit{grid-area:zeit;font-size:11.5px;color:var(--text-dim)}
+.ru-meldung.neu .ru-meldung-quelle::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;
+  vertical-align:1px;border-radius:50%;background:var(--accent)}
+.ru-faecher-fuss{display:flex;gap:var(--space-3);justify-content:flex-end}
+.ru-faecher-fuss button{min-height:var(--touch-min);padding:0 14px;border-radius:var(--radius-pill);font-weight:600;
+  background:var(--bg-side);color:var(--text);box-shadow:var(--glas-kante),var(--shadow-1)}
+.ru-faecher-fuss button[data-faecher="gelesen"]{color:var(--accent-text)}
+:is(.ru-meldung,.ru-faecher-fuss button):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Nur während des Zusammenfliessens, an einer Ebene (SelectionFlow.goo). */
+.ru-goo-an{filter:url(#ru-goo)}
+#ru-goo-svg{position:absolute;width:0;height:0;overflow:hidden}
+
+/* Posteingang: Glaskarten mit Lichtkante, ohne Unschärfe je Karte. */
+.home-liste.pe-karten{display:grid;gap:var(--space-3);background:none;border:0;box-shadow:none;padding:0}
+.home-liste.pe-karten > .pe-karte{display:flex;align-items:center;gap:12px;width:100%;min-height:var(--touch-min);
+  padding:12px 14px;border:0;border-radius:var(--radius-xl);text-align:left;
+  background:var(--bg-side);box-shadow:var(--glas-kante),var(--shadow-1)}
+.home-liste.pe-karten > .pe-karte:hover{background:var(--bg-hover)}
+.pe-karte-inhalt{flex:1;min-width:0;display:grid;gap:2px}
+.pe-quelle{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
+.pe-karte-text{font-size:14.5px;line-height:1.4;color:var(--text)}
+.pe-karte.neu .pe-karte-text{font-weight:600}
+.pe-karte-zeit{font-size:12px;color:var(--text-dim);white-space:nowrap}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -26402,7 +26496,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1406, inhalt: '52cd69cbb113ce02', gebaut: '2026-10-05T21:53:01.528Z' };
+const Stand = { fassung: 1407, inhalt: 'b48e9972e8b7cfd3', gebaut: '2026-10-05T21:56:57.074Z' };
 window.Stand = Stand;
 
 </script>
@@ -43098,10 +43192,13 @@ const Menue = (() => {
                 b.parentElement.style.display !== 'none'));
         const markiere = (b) => {
             liste.querySelectorAll('button.jetzt').forEach(x2 => x2.classList.remove('jetzt'));
-            if (!b)
+            if (!b) {
+                SelectionFlow.highlight(liste, null, { still: true });
                 return;
+            }
             b.classList.add('jetzt');
             b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            SelectionFlow.highlight(liste, b, { still: true });
         };
         const filtern = () => {
             const q = feld.value.trim().toLowerCase();
@@ -43405,25 +43502,228 @@ window.Sheet = Sheet;
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/ueberlagerung/hinweis.ts (npm run bauen:ts). */
 const Hinweis = (() => {
     let toastTimer;
+    let aeltere = [];
+    let zaehler = 0;
+    let eigner = 0;
+    let toastBis = 0;
+    const HOECHSTENS = 2;
+    const LUECKE = 8;
+    const ruhig = () => typeof SelectionFlow !== 'undefined' ? SelectionFlow.ruhig()
+        : matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+    const stapel = () => {
+        let s = document.getElementById('ru-toast-stapel');
+        if (!s) {
+            s = document.createElement('div');
+            s.id = 'ru-toast-stapel';
+            s.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(s);
+        }
+        return s;
+    };
+    const ordnen = () => {
+        const t = document.getElementById('toast');
+        if (!t)
+            return;
+        const oben = t.offsetTop, hoehe = t.offsetHeight;
+        const nachOben = oben + hoehe / 2 > innerHeight / 2;
+        let rand = nachOben ? oben - LUECKE : oben + hoehe + LUECKE;
+        const feder = typeof RedionSpring !== 'undefined' ? RedionSpring.token('snappy') : null;
+        for (const a of aeltere) {
+            const h = a.el.offsetHeight;
+            const top = nachOben ? rand - h : rand;
+            rand = nachOben ? top - LUECKE : top + h + LUECKE;
+            a.el.style.top = top + 'px';
+            const von = a.oben ?? oben;
+            a.oben = top;
+            if (Math.abs(von - top) > 0.5 && feder && feder.duration > 2 && !ruhig()) {
+                a.el.animate([{ transform: 'translateY(' + (von - top).toFixed(1) + 'px)' }, { transform: 'none' }], { duration: feder.duration, easing: feder.easing });
+            }
+        }
+    };
+    const gehen = (a) => {
+        if (!aeltere.includes(a))
+            return;
+        aeltere = aeltere.filter(x => x !== a);
+        clearTimeout(a.uhr);
+        a.el.classList.add('geht');
+        const weg = () => { a.el.remove(); };
+        if (ruhig())
+            weg();
+        else {
+            const anim = a.el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96)' }], { duration: 180, easing: 'ease-out', fill: 'forwards' });
+            anim.finished.then(weg).catch(weg);
+        }
+        ordnen();
+    };
+    const uebernehmen = (t, id, neu) => {
+        const alt = t.textContent || '';
+        const altId = eigner;
+        eigner = id;
+        aeltere.filter(a => a.id === id || a.el.textContent === neu).forEach(gehen);
+        if (!t.classList.contains('show') || !alt || altId === id || alt === neu)
+            return;
+        aeltere.filter(a => a.el.textContent === alt).forEach(gehen);
+        const el = document.createElement('div');
+        el.className = 'ru-toast-alt';
+        el.textContent = alt;
+        stapel().prepend(el);
+        const eintrag = { id: altId, el };
+        aeltere.unshift(eintrag);
+        while (aeltere.length > HOECHSTENS) {
+            const letzte = aeltere[aeltere.length - 1];
+            if (letzte)
+                gehen(letzte);
+        }
+        const bleibt = Math.min(6000, Math.max(2200, toastBis - Date.now()));
+        eintrag.uhr = setTimeout(() => gehen(eintrag), bleibt);
+        requestAnimationFrame(ordnen);
+        ordnen();
+    };
+    const stapelLeeren = () => {
+        const t = document.getElementById('toast');
+        const da = !!t?.classList.contains('show') || aeltere.length > 0;
+        [...aeltere].forEach(gehen);
+        if (t?.classList.contains('show')) {
+            clearTimeout(toastTimer);
+            t.classList.remove('show');
+        }
+        return da;
+    };
+    let zug = null;
+    const HALTEN_MS = 300;
+    const gehalten = (z) => z.ab !== null && z.ab - z.t0 > HALTEN_MS;
+    const trifft = (x, y) => {
+        for (const a of aeltere) {
+            const r = a.el.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)
+                return { el: a.el, wer: a };
+        }
+        const t = document.getElementById('toast');
+        if (t?.classList.contains('show')) {
+            const r = t.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)
+                return { el: t, wer: null };
+        }
+        return null;
+    };
+    const nimmtSelbst = (ziel) => {
+        for (let el = ziel instanceof Element ? ziel : null; el && el !== document.body; el = el.parentElement) {
+            if (el instanceof HTMLElement && el.dataset['keinWisch'] !== undefined)
+                return true;
+            if (el instanceof HTMLInputElement && el.type === 'range')
+                return true;
+            const s = getComputedStyle(el);
+            const ta = s.touchAction;
+            if (ta && ta !== 'auto' && ta !== 'manipulation' && !/pan-x|pan-left|pan-right/.test(ta))
+                return true;
+            if (el.scrollWidth > el.clientWidth + 2 && /auto|scroll/.test(s.overflowX))
+                return true;
+        }
+        return false;
+    };
+    addEventListener('pointerdown', (e) => {
+        zug = null;
+        if (e.pointerType !== 'touch')
+            return;
+        const z = trifft(e.clientX, e.clientY);
+        if (z && !nimmtSelbst(e.target))
+            zug = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, ...z,
+                gefangen: false, x: e.clientX, y: e.clientY, t: e.timeStamp, ab: null };
+    }, { capture: true, passive: true });
+    addEventListener('pointermove', (e) => {
+        if (!zug || e.pointerId !== zug.id)
+            return;
+        zug.x = e.clientX;
+        zug.y = e.clientY;
+        zug.t = e.timeStamp;
+        const dx = e.clientX - zug.x0, dy = e.clientY - zug.y0;
+        if (zug.ab === null && Math.abs(dx) + Math.abs(dy) > 4)
+            zug.ab = e.timeStamp;
+        if (!zug.gefangen) {
+            if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 12) {
+                if (Math.abs(dy) > 12)
+                    zug = null;
+                return;
+            }
+            if (gehalten(zug)) {
+                zug = null;
+                return;
+            }
+            zug.gefangen = true;
+        }
+        e.stopPropagation();
+        zug.el.style.translate = dx.toFixed(1) + 'px 0';
+        zug.el.style.opacity = String(Math.max(0.2, 1 - Math.abs(dx) / 260));
+    }, { capture: true, passive: true });
+    const loslassen = (z, x, t) => {
+        const dx = x - z.x0;
+        const schnell = Math.abs(dx) / Math.max(1, t - z.t0) > 0.6;
+        const weit = Math.abs(dx) > z.el.getBoundingClientRect().width * 0.4;
+        z.el.style.removeProperty('translate');
+        z.el.style.removeProperty('opacity');
+        if (!(schnell || weit))
+            return;
+        if (z.wer)
+            gehen(z.wer);
+        else {
+            clearTimeout(toastTimer);
+            document.getElementById('toast')?.classList.remove('show');
+        }
+    };
+    addEventListener('pointerup', (e) => {
+        if (!zug || e.pointerId !== zug.id)
+            return;
+        const z = zug;
+        zug = null;
+        if (!z.gefangen)
+            return;
+        e.stopPropagation();
+        loslassen(z, e.clientX, e.timeStamp);
+    }, { capture: true });
+    addEventListener('pointercancel', (e) => {
+        if (!zug || e.pointerId !== zug.id)
+            return;
+        const z = zug;
+        zug = null;
+        const dx = z.x - z.x0, dy = z.y - z.y0;
+        if (z.gefangen || (Math.abs(dx) >= 8 && Math.abs(dx) > Math.abs(dy) && !gehalten(z)))
+            loslassen(z, z.x, z.t);
+        else {
+            z.el.style.removeProperty('translate');
+            z.el.style.removeProperty('opacity');
+        }
+    }, { capture: true });
     const toast = (text, dauer) => {
         const t = document.getElementById('toast');
         if (!t) {
             console.info('[Hinweis]', String(text));
             return { textContent: String(text ?? ''), remove() { } };
         }
+        const id = ++zaehler;
+        uebernehmen(t, id, String(text ?? ''));
         t.textContent = String(text ?? '');
         t.classList.add('show');
         clearTimeout(toastTimer);
+        toastBis = Date.now() + (dauer || 2600);
         toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
         return {
             set textContent(v) {
+                uebernehmen(t, id, v);
                 t.textContent = v;
                 t.classList.add('show');
                 clearTimeout(toastTimer);
+                toastBis = Date.now() + (dauer || 2600);
                 toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
             },
             get textContent() { return t.textContent || ''; },
-            remove() { clearTimeout(toastTimer); t.classList.remove('show'); }
+            remove() {
+                aeltere.filter(a => a.id === id).forEach(gehen);
+                if (eigner !== id && eigner !== 0)
+                    return;
+                clearTimeout(toastTimer);
+                t.classList.remove('show');
+            }
         };
     };
     const banner = (text, art = 'warn') => {
@@ -43444,7 +43744,332 @@ const Hinweis = (() => {
             ? `<button class="pe-link"${o.daten ? ' ' + o.daten : ''}>${o.handlung}</button>`
             : '') +
         '</div>';
-    return { toast, banner, leer };
+    let faecher = null;
+    let faecherGlocke = null;
+    let faecherUhr;
+    let faecherZu;
+    const faecherOffen = () => !!faecher && !faecher.hidden;
+    const fokusImKopf = (g) => {
+        if (!g.isConnected)
+            return;
+        if (!g.hidden && g.offsetParent !== null) {
+            g.focus();
+            return;
+        }
+        const reihe = [...(g.parentElement?.querySelectorAll('button, a[href], [tabindex="0"]') ?? [])]
+            .filter(e => e === g || (!e.hidden && e.offsetParent !== null && !e.matches(':disabled')));
+        const k = reihe.indexOf(g);
+        (reihe[k + 1] ?? reihe[k - 1])?.focus();
+    };
+    const faecherSchliessen = (sofort = false) => {
+        clearTimeout(faecherUhr);
+        clearTimeout(faecherZu);
+        const f = faecher;
+        if (!f || f.hidden)
+            return;
+        const g = faecherGlocke;
+        g?.setAttribute('aria-expanded', 'false');
+        if (g && f.contains(document.activeElement))
+            fokusImKopf(g);
+        const fertig = () => { f.hidden = true; f.classList.remove('geht'); };
+        if (sofort || ruhig()) {
+            fertig();
+            return;
+        }
+        f.classList.add('geht');
+        const anim = f.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: 'ease-out' });
+        anim.finished.then(fertig).catch(fertig);
+    };
+    const zuDenMeldungen = () => {
+        faecherSchliessen(true);
+        try {
+            Ansichten.posteingang();
+        }
+        catch { }
+    };
+    const allesGelesen = () => {
+        const f = faecher, g = faecherGlocke;
+        const ziel = g && g.offsetParent !== null ? g.getBoundingClientRect() : null;
+        let wie = 0;
+        try {
+            wie = Werkzeuge.meldungenAlleGelesen() || 0;
+        }
+        catch { }
+        if (wie)
+            toast(wie === 1 ? '1 Meldung als gelesen markiert' : wie + ' Meldungen als gelesen markiert');
+        if (!f || !ziel || ruhig()) {
+            faecherSchliessen(true);
+            return;
+        }
+        const ebene = f.querySelector('.ru-faecher-karten');
+        const karten = [...f.querySelectorAll('.ru-meldung')];
+        if (!ebene || !karten.length || !g) {
+            faecherSchliessen(true);
+            return;
+        }
+        const hielt = g.hidden;
+        g.hidden = false;
+        f.classList.add('fliesst');
+        SelectionFlow.goo(ebene, true);
+        const mx = ziel.left + ziel.width / 2, my = ziel.top + ziel.height / 2;
+        const bahnen = karten.map((k, n) => {
+            const r = k.getBoundingClientRect();
+            const dx = mx - (r.left + r.width / 2), dy = my - (r.top + r.height / 2);
+            const s = Math.max(0.08, Math.min(ziel.width / r.width, 0.5));
+            return k.animate([
+                { transform: 'none' },
+                { transform: 'translate(' + (dx * 0.35).toFixed(1) + 'px,' + (dy * 0.55).toFixed(1) + 'px) scale(.9,.8)', offset: 0.45 },
+                { transform: 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(3) + ')', opacity: 0.4 }
+            ], { duration: 460 + n * 30, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' });
+        });
+        f.querySelector('.ru-faecher-fuss')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' });
+        const ende = () => {
+            SelectionFlow.goo(ebene, false);
+            f.classList.remove('fliesst');
+            bahnen.forEach(b => b.cancel());
+            faecherSchliessen(true);
+            const weg = () => {
+                let offen = false;
+                try {
+                    offen = Werkzeuge.meldungen().some(m => !m.gelesen);
+                }
+                catch { }
+                if (!hielt || offen || g.hidden)
+                    return;
+                const hatte = document.activeElement === g;
+                g.hidden = true;
+                if (hatte)
+                    fokusImKopf(g);
+            };
+            const puls = g.animate([{ transform: 'scale(1.18)' }, { transform: 'none' }], { duration: 320, easing: RedionSpring.token('press').easing });
+            puls.finished.then(weg).catch(weg);
+        };
+        Promise.all(bahnen.map(b => b.finished)).then(ende).catch(ende);
+    };
+    const faecherBauen = () => {
+        if (faecher)
+            return faecher;
+        const f = document.createElement('div');
+        f.id = 'ru-glocken-faecher';
+        f.setAttribute('role', 'group');
+        f.setAttribute('aria-label', 'Letzte Meldungen');
+        f.hidden = true;
+        f.addEventListener('pointerenter', () => clearTimeout(faecherZu));
+        f.addEventListener('pointerleave', (e) => {
+            if (e.pointerType === 'mouse')
+                faecherZu = setTimeout(() => faecherSchliessen(), 280);
+        });
+        f.addEventListener('click', (e) => {
+            const el = e.target instanceof Element ? e.target : null;
+            const knopf = el?.closest('button');
+            if (!knopf)
+                return;
+            if (knopf.dataset['faecher'] === 'gelesen') {
+                allesGelesen();
+                return;
+            }
+            if (knopf.dataset['faecher'] === 'posteingang') {
+                zuDenMeldungen();
+                return;
+            }
+            const id = knopf.dataset['meld'] || '';
+            const m = Werkzeuge.meldungen().find(x => x.id === id);
+            try {
+                if (id)
+                    Werkzeuge.meldungGelesen(id);
+            }
+            catch { }
+            faecherSchliessen(true);
+            if (m?.seite)
+                App.oeffne(m.seite);
+            else
+                zuDenMeldungen();
+        });
+        f.addEventListener('focusout', (e) => {
+            const nach = e.relatedTarget instanceof Node ? e.relatedTarget : null;
+            if (!nach || f.contains(nach) || faecherGlocke?.contains(nach))
+                return;
+            faecherSchliessen();
+        });
+        f.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                const alle = [...f.querySelectorAll('button')];
+                const k = alle.indexOf(document.activeElement);
+                const g = faecherGlocke;
+                if (!g || (e.shiftKey ? k > 0 : k < alle.length - 1))
+                    return;
+                e.preventDefault();
+                faecherSchliessen(true);
+                const reihe = [...(g.parentElement?.querySelectorAll('button, a[href], [tabindex="0"]') ?? [])]
+                    .filter(x => !x.hidden && x.offsetParent !== null && !x.matches(':disabled'));
+                const i = reihe.indexOf(g);
+                if (i >= 0)
+                    (e.shiftKey ? reihe[i] : reihe[i + 1] ?? reihe[i])?.focus();
+                return;
+            }
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')
+                return;
+            const alle = [...f.querySelectorAll('button')];
+            const k = alle.indexOf(document.activeElement);
+            const n = alle[(k + (e.key === 'ArrowDown' ? 1 : alle.length - 1)) % alle.length];
+            if (n) {
+                e.preventDefault();
+                n.focus();
+            }
+        });
+        document.body.appendChild(f);
+        faecher = f;
+        return f;
+    };
+    const REIHE = 72;
+    const unterDerReihe = (g, links, breite) => {
+        let unten = g.bottom;
+        for (let y = g.bottom + 4; y <= g.bottom + REIHE; y += 12) {
+            for (let x = links + 4; x <= links + breite - 4; x += 16) {
+                const ziel = document.elementFromPoint(x, y)
+                    ?.closest('button, a[href], input, select, textarea, [role="button"]');
+                if (!ziel || ziel.closest('#ru-glocken-faecher'))
+                    continue;
+                const r = ziel.getBoundingClientRect();
+                if (r.top >= g.bottom - 2 && r.bottom <= g.bottom + REIHE + 24)
+                    unten = Math.max(unten, r.bottom);
+            }
+        }
+        return unten;
+    };
+    const faecherOeffnen = (glocke, fokus = false) => {
+        clearTimeout(faecherUhr);
+        clearTimeout(faecherZu);
+        if (typeof Werkzeuge === 'undefined' || glocke.hidden || glocke.offsetParent === null)
+            return;
+        const liste = Werkzeuge.meldungen().slice(0, 3);
+        if (!liste.length)
+            return;
+        const f = faecherBauen();
+        if (faecherGlocke && faecherGlocke !== glocke)
+            faecherGlocke.setAttribute('aria-expanded', 'false');
+        faecherGlocke = glocke;
+        const zeit = (w) => { try {
+            return Werkzeuge.zeitKurz(w);
+        }
+        catch {
+            return '';
+        } };
+        f.innerHTML =
+            '<div class="ru-faecher-karten">' +
+                liste.map(m => `<button type="button" class="ru-meldung${m.gelesen ? '' : ' neu'}" data-meld="${esc(m.id)}">` +
+                    (m.quelle ? `<span class="ru-meldung-quelle">${esc(m.quelle)}</span>` : '') +
+                    `<span class="ru-meldung-text">${esc(m.text || 'Meldung')}</span>` +
+                    `<span class="ru-meldung-zeit">${esc(zeit(m.wann))}</span></button>`).join('') +
+                '</div>' +
+                '<div class="ru-faecher-fuss">' +
+                '<button type="button" data-faecher="gelesen">Alle gelesen</button>' +
+                '<button type="button" data-faecher="posteingang">Posteingang öffnen</button>' +
+                '</div>';
+        f.classList.remove('geht', 'fliesst');
+        const g = glocke.getBoundingClientRect();
+        const breite = Math.min(340, innerWidth - 16);
+        const links = Math.max(8, Math.min(g.right - breite, innerWidth - breite - 8));
+        f.hidden = true;
+        const oben = unterDerReihe(g, links, breite);
+        f.hidden = false;
+        f.style.width = breite + 'px';
+        f.style.left = links + 'px';
+        f.style.top = (oben > g.bottom ? oben + 16 : g.bottom + 8) + 'px';
+        if (!ruhig()) {
+            const feder = RedionSpring.token('snappy');
+            const mx = g.left + g.width / 2, my = g.top + g.height / 2;
+            [...f.querySelectorAll('.ru-meldung')].forEach((k, n) => {
+                const r = k.getBoundingClientRect();
+                k.animate([
+                    { transform: 'translate(' + (mx - r.left - r.width / 2).toFixed(1) + 'px,' +
+                            (my - r.top - r.height / 2).toFixed(1) + 'px) scale(.12)', opacity: 0 },
+                    { transform: 'none', opacity: 1 }
+                ], { duration: feder.duration, easing: feder.easing, delay: n * 40, fill: 'backwards' });
+            });
+            f.querySelector('.ru-faecher-fuss')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, delay: 120, fill: 'backwards' });
+        }
+        glocke.setAttribute('aria-controls', f.id);
+        glocke.setAttribute('aria-expanded', 'true');
+        if (fokus)
+            f.querySelector('button')?.focus();
+    };
+    addEventListener('pointerdown', (e) => {
+        if (!faecherOffen())
+            return;
+        const ziel = e.target instanceof Node ? e.target : null;
+        if (ziel && (faecher?.contains(ziel) || faecherGlocke?.contains(ziel)))
+            return;
+        faecherSchliessen();
+    }, { capture: true, passive: true });
+    const faecherBinden = (glocke) => {
+        if (!glocke || glocke.dataset['faecher'] === 'an')
+            return;
+        glocke.dataset['faecher'] = 'an';
+        glocke.setAttribute('aria-haspopup', 'true');
+        glocke.setAttribute('aria-expanded', 'false');
+        let lang;
+        let schlucken = false;
+        let x0 = 0, y0 = 0;
+        glocke.addEventListener('pointerenter', (e) => {
+            if (e.pointerType !== 'mouse')
+                return;
+            clearTimeout(faecherZu);
+            if (faecherOffen() && faecherGlocke === glocke && !faecher?.classList.contains('geht'))
+                return;
+            faecherUhr = setTimeout(() => faecherOeffnen(glocke), 220);
+        });
+        glocke.addEventListener('pointerleave', (e) => {
+            if (e.pointerType !== 'mouse')
+                return;
+            clearTimeout(faecherUhr);
+            faecherZu = setTimeout(() => faecherSchliessen(), 280);
+        });
+        glocke.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'mouse')
+                return;
+            schlucken = false;
+            x0 = e.clientX;
+            y0 = e.clientY;
+            clearTimeout(lang);
+            lang = setTimeout(() => { schlucken = true; faecherOeffnen(glocke); }, 480);
+        });
+        glocke.addEventListener('pointermove', (e) => {
+            if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) > 10)
+                clearTimeout(lang);
+        });
+        const loslassen = () => clearTimeout(lang);
+        glocke.addEventListener('pointerup', loslassen);
+        glocke.addEventListener('pointercancel', loslassen);
+        glocke.addEventListener('contextmenu', (e) => { if (schlucken || faecherOffen())
+            e.preventDefault(); });
+        glocke.addEventListener('click', (e) => {
+            if (!schlucken) {
+                faecherSchliessen(true);
+                return;
+            }
+            schlucken = false;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }, true);
+        glocke.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                faecherOeffnen(glocke, true);
+            }
+        });
+    };
+    const escape = () => {
+        if (faecherOffen()) {
+            const g = faecherGlocke;
+            faecherSchliessen();
+            if (g && faecher?.contains(document.activeElement))
+                g.focus();
+            return true;
+        }
+        return stapelLeeren();
+    };
+    return { toast, banner, leer, faecherBinden, escape };
 })();
 window.Hinweis = Hinweis;
 
@@ -45574,8 +46199,205 @@ const SelectionFlow = (() => {
         if (/^(Arrow|Home$|End$)/.test(e.key))
             vormerken(e);
     }, true);
+    const gleitLaeufe = new WeakMap();
+    const gleitStand = (g) => {
+        const t = g.anim && typeof g.anim.currentTime === 'number' ? g.anim.currentTime : g.dauer;
+        const z = [g.ziel.left, g.ziel.top, g.ziel.width, g.ziel.height];
+        return { werte: g.bahnen.map((b, k) => (z[k] ?? 0) + b(t).x), tempi: g.bahnen.map(b => b(t).v) };
+    };
+    const glide = (marke, nach, sofort = false) => {
+        const alt = gleitLaeufe.get(marke);
+        if (alt && !sofort && Math.abs(alt.ziel.left - nach.left) < 0.5 && Math.abs(alt.ziel.top - nach.top) < 0.5
+            && Math.abs(alt.ziel.width - nach.width) < 0.5 && Math.abs(alt.ziel.height - nach.height) < 0.5)
+            return;
+        const jetzt = alt ? gleitStand(alt) : null;
+        alt?.anim?.cancel();
+        marke.style.left = nach.left + 'px';
+        marke.style.top = nach.top + 'px';
+        marke.style.width = nach.width + 'px';
+        marke.style.height = nach.height + 'px';
+        marke.style.transformOrigin = '0 0';
+        const ruhe = () => {
+            marke.style.transform = 'none';
+            marke.classList.remove('faehrt');
+            gleitLaeufe.set(marke, { ziel: nach, bahnen: [STILL, STILL, STILL, STILL], dauer: 0 });
+        };
+        if (!jetzt || sofort || ruhig() || !nach.width || !nach.height) {
+            ruhe();
+            return;
+        }
+        const z = [nach.left, nach.top, nach.width, nach.height];
+        const bahnen = z.map((zk, k) => bahnVon(FEDERN.knapp, (jetzt.werte[k] ?? zk) - zk, jetzt.tempi[k] ?? 0));
+        const [bx, by, bw, bh] = bahnen;
+        const weg = Math.max(...bahnen.map(b => Math.abs(b(0).x)), ...bahnen.map(b => Math.abs(b(0).v) * 60));
+        if (weg < 0.5) {
+            ruhe();
+            return;
+        }
+        const dauer = Math.max(...bahnen.map(b => ruheNach(b, 0.5)));
+        const senkrecht = Math.abs(by(0).x) >= Math.abs(bx(0).x);
+        const darf = senkrecht ? Math.abs(by(0).x) <= 1.35 * Math.max(nach.height, (jetzt.werte[3] ?? 0))
+            : Math.abs(bx(0).x) <= 1.35 * Math.max(nach.width, (jetzt.werte[2] ?? 0));
+        const bild = (t) => {
+            const w = nach.width + bw(t).x, h = nach.height + bh(t).x;
+            let kx = w / nach.width, ky = h / nach.height;
+            let tx = bx(t).x, ty = by(t).x;
+            if (darf) {
+                const d = dehnungAus(senkrecht ? by(t).v : bx(t).v);
+                if (senkrecht) {
+                    ty -= h * (d - 1) / 2;
+                    ky *= d;
+                }
+                else {
+                    tx -= w * (d - 1) / 2;
+                    kx *= d;
+                }
+            }
+            return { transform: 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px)'
+                    + ' scale(' + kx.toFixed(4) + ',' + ky.toFixed(4) + ')' };
+        };
+        const bilder = [];
+        for (let t = 0; t <= dauer; t += SCHRITT)
+            bilder.push(bild(t));
+        bilder.push({ transform: 'none' });
+        const anim = marke.animate(bilder, { duration: dauer, easing: 'linear', fill: 'forwards' });
+        gleitLaeufe.set(marke, { ziel: nach, bahnen, dauer, anim });
+        marke.classList.add('faehrt');
+        marke.dataset['fluege'] = String(Number(marke.dataset['fluege'] ?? 0) + 1);
+        anim.finished.then(() => {
+            if (gleitLaeufe.get(marke)?.anim !== anim)
+                return;
+            ruhe();
+            anim.cancel();
+        }).catch(() => { });
+    };
+    const lageIn = (traeger, el) => {
+        let x = 0, y = 0;
+        let e = el;
+        while (e && e !== traeger) {
+            x += e.offsetLeft;
+            y += e.offsetTop;
+            const p = e.offsetParent;
+            if (p && p !== traeger) {
+                x += p.clientLeft - p.scrollLeft;
+                y += p.clientTop - p.scrollTop;
+            }
+            e = p;
+        }
+        if (e === traeger)
+            return { left: x, top: y, width: el.offsetWidth, height: el.offsetHeight };
+        const t = traeger.getBoundingClientRect(), r = el.getBoundingClientRect();
+        return { left: r.left - t.left - traeger.clientLeft + traeger.scrollLeft,
+            top: r.top - t.top - traeger.clientTop + traeger.scrollTop, width: r.width, height: r.height };
+    };
+    const markenVon = new WeakMap();
+    const highlight = (liste, ziel, o = {}) => {
+        let m = markenVon.get(liste);
+        if (!m) {
+            m = document.createElement('i');
+            m.className = 'ru-marke' + (o.still ? ' ru-marke-still' : '');
+            m.setAttribute('aria-hidden', 'true');
+            if (o.taste) {
+                const t = document.createElement('span');
+                t.className = 'ru-marke-taste';
+                t.textContent = o.taste;
+                m.appendChild(t);
+            }
+            markenVon.set(liste, m);
+        }
+        liste.classList.add('ru-marke-traeger');
+        if (m.parentElement !== liste)
+            liste.prepend(m);
+        if (!ziel || !ziel.isConnected || !ziel.offsetWidth) {
+            m.hidden = true;
+            return m;
+        }
+        const warDa = !m.hidden && gleitLaeufe.has(m);
+        m.hidden = false;
+        glide(m, lageIn(liste, ziel), !warDa);
+        return m;
+    };
+    const gesehen = new WeakMap();
+    const stagger = (liste, zeilen, schluessel) => {
+        const vorher = gesehen.get(liste);
+        const jetzt = new Set();
+        const ruhe = ruhig();
+        let n = 0;
+        zeilen.forEach((z, k) => {
+            const s = schluessel[k] ?? String(k);
+            jetzt.add(s);
+            if (ruhe || vorher?.has(s))
+                return;
+            if (n < 10) {
+                z.classList.add('ru-kommt');
+                z.style.setProperty('--ru-n', String(n));
+            }
+            n++;
+        });
+        gesehen.set(liste, jetzt);
+    };
+    const growFrom = (fenster, anker) => {
+        if (!anker || !anker.width || !anker.height || ruhig())
+            return null;
+        const { easing, duration } = RedionSpring.token('smooth');
+        if (!(duration > 2))
+            return null;
+        fenster.classList.add('ru-waechst');
+        const r = fenster.getBoundingClientRect();
+        if (!r.width || !r.height)
+            return null;
+        fenster.style.transformOrigin = '0 0';
+        const von = 'translate(' + (anker.left - r.left).toFixed(1) + 'px,' + (anker.top - r.top).toFixed(1) + 'px)'
+            + ' scale(' + (anker.width / r.width).toFixed(4) + ',' + (anker.height / r.height).toFixed(4) + ')';
+        const inhalt = Math.min(duration, 460);
+        Array.from(fenster.children).forEach(k => {
+            if (k instanceof HTMLElement)
+                k.animate([{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1 }], { duration: inhalt, easing: 'linear' });
+        });
+        return fenster.animate([{ transform: von }, { transform: 'none' }], { duration, easing });
+    };
+    const SVG = 'http://www.w3.org/2000/svg';
+    const gooFilter = () => {
+        if (document.getElementById('ru-goo'))
+            return;
+        const svg = document.createElementNS(SVG, 'svg');
+        svg.setAttribute('id', 'ru-goo-svg');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.setAttribute('focusable', 'false');
+        const filter = document.createElementNS(SVG, 'filter');
+        filter.setAttribute('id', 'ru-goo');
+        filter.setAttribute('color-interpolation-filters', 'sRGB');
+        const blur = document.createElementNS(SVG, 'feGaussianBlur');
+        blur.setAttribute('in', 'SourceGraphic');
+        blur.setAttribute('stdDeviation', '8');
+        blur.setAttribute('result', 'weich');
+        const matrix = document.createElementNS(SVG, 'feColorMatrix');
+        matrix.setAttribute('in', 'weich');
+        matrix.setAttribute('mode', 'matrix');
+        matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
+        matrix.setAttribute('result', 'goo');
+        const oben = document.createElementNS(SVG, 'feComposite');
+        oben.setAttribute('in', 'SourceGraphic');
+        oben.setAttribute('in2', 'goo');
+        oben.setAttribute('operator', 'atop');
+        filter.append(blur, matrix, oben);
+        svg.appendChild(filter);
+        document.body.appendChild(svg);
+    };
+    const goo = (ebene, an) => {
+        if (!an || ruhig()) {
+            ebene.classList.remove('ru-goo-an');
+            return false;
+        }
+        gooFilter();
+        ebene.classList.add('ru-goo-an');
+        return true;
+    };
     return {
         folge, fliege, setze, stand, ziehbar, ruhig,
+        glide, highlight, stagger, growFrom, goo,
         druecke: { ein: drueckeEin, los: lasseLos },
         FEDERN, DAUER, OMEGA, DEHNUNG_MAX
     };
@@ -93872,9 +94694,27 @@ const Werkzeuge = (() => {
                     ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
                         'tipp einen Namen, um sie zu finden</div>'
                     : '');
+            const zeilen = [...res.querySelectorAll('button[data-i]')];
+            SelectionFlow.stagger(res, zeilen, zeilen.map(b => String(sicht[Number(b.dataset['i'])]?.name ?? '')));
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, res.querySelector('button.on'), { taste: '↵ Enter' });
         };
         zeichne();
+        const waehle = (k) => {
+            const n = Math.min(treffer.length, GEZEIGT);
+            if (!n)
+                return;
+            i = Math.max(0, Math.min(k, n - 1));
+            res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+            const neu = res.querySelector(`button[data-i="${i}"]`);
+            if (!neu) {
+                zeichne();
+                return;
+            }
+            neu.classList.add('on');
+            neu.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
+        };
         const fuehreAus = (t) => {
             o.remove();
             merkeBefehl(t.name, t.gruppe);
@@ -93913,13 +94753,11 @@ const Werkzeuge = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, Math.min(treffer.length, GEZEIGT) - 1);
-                zeichne();
+                waehle(i + 1);
             }
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                i = Math.max(i - 1, 0);
-                zeichne();
+                waehle(i - 1);
             }
             if (e.key === 'Enter' && treffer[i]) {
                 e.preventDefault();
@@ -98551,12 +99389,13 @@ const Ansichten = (() => {
                         '</div>'
                     : '') +
                 (meld.length
-                    ? '<h2>Benachrichtigungen</h2><div class="home-liste">' +
-                        meld.slice(0, 30).map((m) => `<button data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
+                    ? '<h2>Benachrichtigungen</h2><div class="home-liste pe-karten">' +
+                        meld.slice(0, 30).map((m) => `<button class="pe-karte${m.gelesen ? '' : ' neu'}" data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
                             `<span>${m.gelesen ? '🔕' : '🔔'}</span>` +
-                            `<span style="flex:1">${esc(m.text)}` +
-                            (m.quelle ? `<em style="opacity:.6"> — ${esc(m.quelle)}</em>` : '') + '</span>' +
-                            `<span style="opacity:.5">${Werkzeuge.zeitKurz(m.wann)}</span></button>`).join('') +
+                            `<span class="pe-karte-inhalt">` +
+                            (m.quelle ? `<span class="pe-quelle">${esc(m.quelle)}</span>` : '') +
+                            `<span class="pe-karte-text">${esc(m.text)}</span></span>` +
+                            `<span class="pe-karte-zeit">${Werkzeuge.zeitKurz(m.wann)}</span></button>`).join('') +
                         '</div>'
                     : '') +
                 '<h2>Erinnerungen</h2><div class="home-liste">' +
@@ -141670,6 +142509,7 @@ const Menueband = (() => {
             }
             catch { }
         });
+        Hinweis.faecherBinden(glocke);
         rechts.appendChild(glocke);
         const arbeit = document.createElement('button');
         arbeit.type = 'button';
@@ -143068,6 +143908,7 @@ const StudioSchale = (() => {
             Ansichten.posteingang();
         }
         catch { } });
+        Hinweis.faecherBinden(document.getElementById('studio-glocke'));
         an('studio-auftraege', () => {
             if (typeof AuftragsAnzeige !== 'undefined')
                 AuftragsAnzeige.oeffnen();
@@ -144897,6 +145738,12 @@ const App = (() => {
                 '<code>status:offen</code></span></div>' +
                 '</div>';
         document.body.appendChild(o);
+        const kapsel = ['studio-search', 'btn-suche-handy', 'mb-suche']
+            .map(id => document.getElementById(id))
+            .find(k => !!k && k.offsetParent !== null && k.getBoundingClientRect().width > 0);
+        const scheibe = o.querySelector('.finder.such');
+        if (scheibe && kapsel)
+            SelectionFlow.growFrom(scheibe, kapsel.getBoundingClientRect());
         const inp = o.querySelector('#q');
         const res = o.querySelector('#res');
         if (!inp || !res)
@@ -144962,7 +145809,8 @@ const App = (() => {
                 (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
                 `</span><span class="pth">${t.treffer}</span></button>`).join('');
             verlaufBinden();
-            res.querySelectorAll('button[data-i]').forEach(b => {
+            const zeilen = [...res.querySelectorAll('button[data-i]')];
+            zeilen.forEach(b => {
                 b.addEventListener('click', () => {
                     merkeSuche(inp.value);
                     zumTreffer(treffer[Number(b.dataset.i)]);
@@ -144970,7 +145818,27 @@ const App = (() => {
                 });
                 b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
             });
+            SelectionFlow.stagger(res, zeilen, zeilen.map(b => {
+                const t = treffer[Number(b.dataset.i)];
+                return String(t?.page?.id ?? '') + '#' + String(t?.blockId ?? '');
+            }));
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, res.querySelector('button.on'), { taste: '↵ Enter' });
+            zeigeVorschau(i);
+        };
+        const waehle = (k) => {
+            if (!treffer.length)
+                return;
+            i = Math.max(0, Math.min(k, treffer.length - 1));
+            res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+            const neu = res.querySelector(`button[data-i="${i}"]`);
+            if (!neu) {
+                zeichne();
+                return;
+            }
+            neu.classList.add('on');
+            neu.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
             zeigeVorschau(i);
         };
         const zeigeVorschau = (k) => {
@@ -145140,6 +146008,7 @@ const App = (() => {
                     o.remove();
                     void Chronik.oeffnen();
                 });
+                SelectionFlow.highlight(res, res.querySelector('[data-chr-tuer]'), { taste: '↵ Enter' });
                 return;
             }
             const uiFilters = readUiFilters();
@@ -145218,13 +146087,11 @@ const App = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, treffer.length - 1);
-                zeichne();
+                waehle(i + 1);
             }
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                i = Math.max(i - 1, 0);
-                zeichne();
+                waehle(i - 1);
             }
             if (e.key === 'Enter' && treffer[i]) {
                 zumTreffer(treffer[i]);
@@ -146560,6 +147427,11 @@ const App = (() => {
                 return;
             }
         });
+        let warOffen = false;
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape')
+                warOffen = !!document.querySelector('.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf');
+        }, true);
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape')
                 return;
@@ -146577,12 +147449,14 @@ const App = (() => {
                     !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet'))
                     o.remove();
             }
-            else if (feld) {
+            else if (feld && !warOffen) {
                 const warDrin = feld.contains(document.activeElement);
                 feld.remove();
                 if (warDrin)
                     document.getElementById('page')?.focus();
             }
+            else if (!feld && !warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined')
+                Hinweis.escape();
         });
     };
     const rolleZu = (blockId) => {

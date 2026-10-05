@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-691 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E711 bis E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+692 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E712 und E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -752,6 +752,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E708** — Rot zuerst am Stift: drei Wächter des Zeichnens, jeder bis zum Commit zurückverfolgt. Das Halten fragt wieder die Hand — derselbe Glätter ohne den Eckensprung aus E676, die Tinte behält ihre Ecken; bei ±2 Zittern 875 ms Ruhe statt 175 —, und die Formerkennung sieht das Knäuel des Haltens nicht mehr, nur den Strich bis zur Ruhe und den Punkt, an dem die Hand abhob: der gehaltene Strich wird wieder gerade (`test461`, rot seit E676). Der Systemfarbwähler der Palette übernimmt beim Schliessen und wird ein Tupfer wie seit E351 (`test343` §6, rot seit E697, auf dem Grundstand brach er danach ab, §7/§8 liefen nicht). `test201` §1 fragt einen rechten Winkel nach einer Kurve — seit E676 mit Absicht eine Ecke; nicht angefasst, Entscheid bei Redur (L235). In der Durchsicht: findet die Erkennung bis zur Ruhe nichts, fragt sie die ganze Tinte wie vorher — der schnelle, kurze, still gehaltene Strich bleibt eine Linie (`test461` §1)
 * **E709** — Der Löschen-Knopf, der zerfliesst, überall wo gelöscht wird (Redur: „Ich will das du löschen button so ist überla wo etwas zum löschen eine buton gibt"): EIN Helfer in Redions eigenem TypeScript und CSS (`RedionDelete`, nachgebaut nach DeleteButton aus dem Touch Kit, ohne React beim Start); jede Stelle macht mit einem Merkmal `data-loeschknopf` mit, ihr alter Griff bleibt am selben Ort; ein Druck, und der Kreis zerfliesst in „Löschen" und „Abbrechen", EIN Klebefilter je Dokument, an nur während des Fliessens; 23 Stellen in 16 Dateien; die zwei `confirm()` hinter einem Papierkorbknopf entfallen, „Papierkorb leeren" fragt weiter. Wächter `test586`.
 * **E710** — Die Fragen der Schale im Fenster des Touch Kits (Stufe 1b von E699; Redur: „was du beim touckit gebaut hast ich will alles so haben mit redion passende inhalten"): `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` zeichnen den Dialog des Kits (am Telefon ab drei Antworten das Aktionsblatt) am selben Auslöser mit denselben Antworten und Haken, das bisherige Fenster bleibt als Rückweg; Fokus und der gemeinsame Escape-Griff sehen mit dem Kit EINE oberste Ebene (vorher: beide `inert`), „Ruhige Darstellung" erreicht die Federn des Kits, Akzent als Schrift liest `--accent-text`, das Kit neu geholt von d21c402 und unter Redions strengen Schaltern geprüft, der Zeitmesser schliesst auf Escape; `Dialog.bestaetigen`/`Dialog.melden` für `confirm()`/`alert()`. Wächter `test587`.
+* **E711** — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich (Redur zum Video „Liquid Glass": „Schau mal das auch an ich will das auch haben", Szenen 07 und 08): die Suche geht aus dem Knopf auf, der sie trägt, neue Treffer kommen nacheinander, EINE Marke gleitet mit ↑ ↓ auf der Kit-Feder (Suche, Befehlspalette, Menü mit Suche; `SelectionFlow.highlight`, kein Neubau je Pfeil) und trägt „↵ Enter"; `#toast` wird ein Stapel aus bis zu drei Meldungen (die zwei davor waren verloren), Escape räumt ab, ein Finger wischt weg; die Glocke öffnet WEITER den Posteingang, beim Zeigen oder langen Drücken fächern die letzten drei auf, „Alle gelesen" (gelesen, nicht leeren) fliesst zäh in sie zurück — EIN Goo-Filter, nur während es fliesst; der Posteingang als Glaskarten (`test588`)
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 
@@ -59650,6 +59651,583 @@ gzip (nicht beim Start), Einzeldatei +3'090 Bytes; `test388` §5: „Der Start h
 248 Dateien — Decke 2850 KB" (Endbau: 2830).
 **Nicht geändert:** jede Frage am selben Auslöser, mit denselben Antworten
 und Haken; nichts gelöscht, nichts verlegt.
+
+## E711 — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich: die Szenen 07 und 08 aus „Liquid Glass"
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video „Liquid
+Glass" 27. September ca. 22:05, Auftrag ca. 22:10) · **ergänzt** E706 (das
+Material gleitet jetzt auch durch Listen) und E116 (der Fortschritt bleibt
+am Leben, jetzt neben einem Stapel) · **Wächter:** `test588` · **Zweig**
+`claude/suche-und-meldungen`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:05 UTC   schickt das Video „LIQUID GLASS" (16 s; darin ein Suchfeld mit
+                Treffern und wandernder Auswahl und ein Stapel von
+                Mitteilungen, der zusammenfliesst) und schreibt:
+                „Schau mal das auch an ich will das auch haben"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Die Suche (`App.suche`, Strg P / Strg K, `#studio-search`,
+`btn-suche-handy`, `mb-suche`) ging als Kasten auf, der sieben Pixel
+heranrutschte. Die Wahl war eine graue Zeile, die sprang — und jeder Druck
+auf ↑ oder ↓ baute die GANZE Trefferliste neu (`zeichne()`), mit neuen
+Horchern für jede Zeile. Dasselbe in der Befehlspalette
+(`Werkzeuge.palette`); im Menü mit Suche (`UI.menuMitSuche`) sprang eine
+graue Fläche. `#toast` zeigte genau eine Meldung: drei hintereinander
+(„Link kopiert", „verschoben", „Gespeichert") liessen nur die letzte stehen,
+die zwei davor waren nach einem Bild weg. Die Glocke öffnete den
+Posteingang und sonst nichts; die Benachrichtigungen dort waren Zeilen mit
+`— Quelle` am Ende.
+
+**Was entschieden wurde.**
+
+1. **Die Kapsel wächst zum Feld.** `SelectionFlow.growFrom` lässt die
+   Scheibe der Suche aus dem Rechteck des sichtbaren Suchknopfs aufgehen
+   (Kapsel am Rechner, Lupe am Telefon, `mb-suche` im Band) — auch bei
+   Strg P und Strg K, weil dort die Suche wohnt. Bewegt wird nur
+   `transform`, auf der Feder `--feder-sanft` aus `grund.css` (E702, ohne
+   Überschwingen); nur der INHALT blendet ein, die Scheibe nicht (E703:
+   Glas kommt als Scheibe, nicht als Nebel).
+2. **Neue Treffer kommen nacheinander.** `SelectionFlow.stagger` gibt NUR
+   den neuen Zeilen `ru-kommt` (8 px von unten, 33 ms Abstand wie im Video);
+   eine Zeile, die schon dastand (Schlüssel: Seite und Stelle), kommt beim
+   nächsten Buchstaben nicht noch einmal — Bewegung ohne Anlass verbietet
+   `test114` §17.
+3. **EINE Marke gleitet.** `SelectionFlow.highlight` hält je Liste eine
+   Marke (`.ru-marke`, `aria-hidden`), die das `innerHTML` der Liste
+   überlebt; `SelectionFlow.glide` fährt sie auf der Kit-Feder `knapp` zur
+   Wahl — `folge` aus E706 in zwei Richtungen und mit Grösse (vier Bahnen:
+   links, oben, Breite, Höhe; Trefferzeilen sind verschieden hoch), mit der
+   Dehnung aus dem Tempo nur zwischen Nachbarn (E641), als Keyframes aus
+   `transform` für den Compositor. Drückt man, bevor sie angekommen ist,
+   wird sie umgelenkt und behält ihr Tempo. ↑ ↓ bauen NICHTS mehr neu: nur
+   `.on` wandert (`waehle`). In der Suche und der Palette ist die Marke der
+   Akzent mit heller Schrift und trägt am Rechner „↵ Enter"; im Menü mit
+   Suche ist sie leise (`--bg-hover`). `#q`, `#cq`, `[data-i]`, `.on`,
+   `.jetzt` bleiben, wie die Läufe sie kennen.
+4. **Der Stapel.** `#toast` bleibt die EINE Live-Region mit der NEUESTEN
+   Meldung (19 Läufe lesen ihn, `test114` misst seine Bahn). Was vorher
+   darin stand und einem ANDEREN Aufruf gehörte, rückt als Karte in
+   `#ru-toast-stapel` (`aria-hidden`: schon angesagt) — höchstens zwei, also
+   drei im Ganzen, mindestens 2,2 s lesbar, höchstens 6 s. Eine
+   Wiederholung stapelt sich nicht; ein Fortschritt (E116), der sich
+   fortschreibt, gehört sich selbst und stapelt sich nicht. Die Karten
+   ziehen auf `--feder-knapp` um. Escape ohne offenes Fenster räumt den
+   Stapel ab — über den EINEN Griff in `schale.ts` (E302), kein zweiter
+   Horcher. Am Telefon wischt ein Finger eine Karte weg; erkannt wird das
+   über die LAGE, die Karten bleiben `pointer-events:none` wie `#toast`
+   (ein Tipp geht durch sie hindurch, `test244` hat genau das gesucht).
+   `#toast` bleibt DECKEND, wie E703 (c) es entschieden hat (Glas druckte
+   beim Einblenden über `opacity` doppelt und läge oft auf anderem Glas);
+   die Karten daneben haben seine Form und dazu die Lichtkante
+   (`--glas-kante`) — keine Unschärfe im Stapel (Liquid-Plan, „Must-fix" 3:
+   das Glasbudget am Telefon).
+5. **Die Glocke fächert auf.** Der Klick auf `#studio-glocke` und
+   `mb-glocke` öffnet WEITER den Posteingang (§43: derselbe Griff am selben
+   Ort). DAZU fächern beim Zeigen (220 ms), beim langen Drücken (480 ms,
+   der Klick danach wird geschluckt) und mit ↓ die letzten drei Meldungen
+   aus der Glocke auf — Quelle, Text, Zeit —, darunter „Alle gelesen" und
+   „Posteingang öffnen" (44 px). „Alle gelesen" ruft
+   `Werkzeuge.meldungenAlleGelesen` (E276: gelesen, NICHT leeren — alle
+   Meldungen bleiben stehen), meldet „N Meldungen als gelesen markiert" wie
+   der Knopf im Posteingang, und die Karten fliessen zäh in die Glocke
+   zurück.
+6. **EIN Goo-Filter.** `SelectionFlow.goo` legt `#ru-goo` einmal im
+   Dokument an (verwischen, dann Alpha ×18 − 7, Quelle darüber) und hängt
+   ihn NUR während des Zusammenfliessens an EINE Ebene; in Ruhe trägt ihn
+   kein Element, er wird nie animiert, bewegt werden die Karten per
+   `transform`. Ruhig: kein Filter, der Fächer geht einfach zu.
+7. **Der Posteingang als Glaskarten.** Die Benachrichtigungen sind Karten:
+   die Quelle als kleine Marke über dem Text, die Zeit rechts, ungelesene
+   halbfett; Lichtkante (`--glas-kante`) statt eigener Unschärfe je Karte.
+   Dieselben Daten, dieselben Griffe (`data-meld`, `data-open`).
+8. **Ruhig und „weniger Bewegung":** kein Aufgehen, keine Staffel, die Marke
+   springt, der Stapel zieht ohne Feder um, der Fächer ohne Flug, kein Goo.
+   Gefragt wird die EINE Frage (`SelectionFlow.ruhig` →
+   `AppEinstellung.wenigBewegung`).
+
+**Warum.** Redur hat das Video geschickt und „das auch haben" geschrieben,
+und dazu „bessere übergagnge besssere efeckten … ohne eine funktione
+löschen". Zwei Stellen des Videos haben in Redion einen echten Ort mit
+echtem Inhalt: die Suche ist Redions Spotlight, und der Stapel behebt einen
+VERLUST — Meldungen, die man nicht lesen konnte. Die Marke ist dasselbe
+Material wie die Pille der unteren Leiste (E706), also keine neue Sprache.
+
+**Was die Alternative war.**
+- Die Suche als React-Insel (Kit `SearchBar` + `List`): verworfen. Strg P
+  ist Start-Chrom, R1 (E699) verbietet React ohne Handlung, und der Kit hat
+  keine gleitende Marke — die hat Redion (E706).
+- Eine Marke je Zeile (Hintergrund je `.on`) mit CSS-Übergang: so sprang
+  sie bisher; ein Übergang zwischen zwei Elementen ist kein Weg.
+- Die Liste bei jedem Pfeil neu bauen und die Marke danach suchen: der
+  Neubau zerschnitt jede Bahn und liess die Staffel bei jedem Pfeil neu
+  laufen.
+- Der Stapel als eigene Live-Region je Karte: vier Läufe lesen „EIN Balken,
+  kein Element je Meldung" (`test411`), und ein Vorleser hörte jede Meldung
+  zweimal.
+- Die Glocke öffnet den Fächer STATT des Posteingangs: das hätte den Griff
+  verändert (§43). Der Liquid-Plan hat es Redur zur Entscheidung gegeben;
+  ohne seine Antwort bleibt der Klick, und der Fächer kommt dazu.
+- Ein Goo-Filter je Karte (wie der Löschen-Knopf im Kit): ein Filter je
+  Zeile, dauernd an — verworfen (Liquid-Plan „Must-fix" 2).
+- Die Meldungen als Glas (so stand es im Auftrag der zweiten Welle):
+  E703 (c) hat Glas für Toast und Lader gemessen verworfen — doppelter
+  Druck beim Einblenden über `opacity`, Glas auf Glas. Ohne eine neue
+  Entscheidung Redurs bleibt `#toast` deckend; die Tiefe kommt aus der
+  Lichtkante (L232 Punkt 7).
+
+**Was es kostet.** Startbytes: +9,9 KB gzip über zehn Dateien (gzip -9 je
+Datei, gegen `b3cf1933`) — `hinweis.js` +4,7 KB (Stapel, Wischen, Fächer),
+`selection-flow.js` +2,5 KB (Marke, Staffel, Aufgehen, Goo), `studio.css`
++1,4 KB, `schale.js` +0,6 KB, der Rest je unter 0,4 KB; das ist die Grenze
+von etwa 10 KB, die jedem Zweig zugeteilt ist. Die Zahl aus `test388` §5
+steht in messungen §81, sobald der Lauf unter dem geteilten Schloss
+gelaufen ist. Zur Laufzeit: je Pfeil EINE Bahn für EINE Marke, einmal
+gerechnet und dem Compositor übergeben; die Staffel nur für neue Zeilen;
+der Goo-Filter nur, solange die Karten in die Glocke fliessen; am Telefon
+drei Horcher (`pointerdown/move/up`) am Fenster, die ohne Meldung sofort
+zurückkehren. Nichts läuft in Ruhe.
+
+**Gemessen, bevor gebaut wurde** (messungen.md §81): die Suche ging mit der eigenen Ankunft auf
+(`translateY(7px) scale(.985)`, aus der Mitte, nicht aus der Kapsel); ↓
+baute die ganze Liste neu, die Wahl sprang (0 Zwischenorte); keine Staffel;
+drei Meldungen hintereinander → EINE sichtbar; die Glocke öffnete nur den
+Posteingang; dort Zeilen „Text — Quelle". Bilder `vorher-*` in
+`welle2-bilder/suche/`.
+
+**Gefunden auf dem Weg.**
+- `glas-ankunft` (E703) verschiebt die Scheibe im ersten Bild um 7 px und
+  verkleinert sie; gemessen werden muss NACH dem Abschalten, sonst ginge die
+  Suche aus einem falschen Rechteck auf.
+- Eine Zeile, die gerade hereinkommt (`ru-kommt`), steht noch 8 px tiefer:
+  die Marke misst deshalb das LAYOUT (`offset…`), nicht das Bild.
+- `.ru-marke-traeger` macht aus der Chronik-Zeile („Red-ur") eine helle
+  Schrift auf Akzent — ohne Marke wäre sie weiss auf durchsichtig gewesen;
+  sie trägt jetzt dieselbe Marke.
+- Der Auftrag nannte „glass toasts". E703 (c) hat genau das mit Gründen
+  verworfen (doppelter Druck beim Einblenden über `opacity`, Glas auf
+  Glas); die erste Fassung dieses Bogens hatte `#toast` trotzdem zu Glas
+  gemacht. Zurückgenommen: `#toast` bleibt deckend, der Stapel trägt seine
+  Form und die Lichtkante (L232 Punkt 7).
+- Die Zeilenregeln der Suche und der Palette gelten nur für DIREKTE
+  Knöpfe (`.finder .res > button`, E348). Die Marke ist deshalb ein `<i>`
+  und kein Knopf: keine Zeilenregel trifft sie, und `[data-i]` zählt sie
+  nicht mit.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen): vorbereitet als fünf Verbiegungen im gebauten
+`quell/` einer Kopie, je eine mit `test588` darüber und zurück: „neubau"
+(↓ ruft wieder `zeichne()`), „springt" (die Marke ohne Bahn), „ohne-stapel"
+(`HOECHSTENS = 0`), „goo-bleibt" (der Filter bleibt nach dem Fliessen an),
+„glocke-schluckt" (der Klick öffnet den Posteingang nicht mehr). Der Lauf
+steht unter dem geteilten Schloss aus; die Ergebnisse folgen im Nachtrag
+zu E711.
+
+**Geprüft:** ohne Browser grün: 87 109 290 298 401 402 410 537 225
+549 550 126 47 400 (14 von 14), nach den letzten Doku-Änderungen noch einmal
+550 549 225 87 410 290 298 401 (8 von 8). `test588` zuletzt 39 von 43
+(28. September, ca. 11:09 UTC, vorige Fassung; offen waren §2 die Staffel,
+§3 das Umlenken mitten im Flug und §7 die 44 px der Karten im Fächer). Der
+Lauf dieser Fassung, die Nachbarn unter dem Schloss (alle Läufe, die `#q`,
+`.such`, `[data-i]`, `#toast`, die Glocke oder den Posteingang lesen, dazu
+143 353 362 388 245 296 105 585 541 576) und die Bilder stehen aus — das
+Schloss war ab ca. 14:03 UTC über eine Stunde von anderen Zweigen belegt.
+Sie folgen im Nachtrag zu E711; bis dahin ist dieser Bogen NICHT als grün
+gemeldet.
+
+**Nicht in diesem Bogen** (L232): Escape leert erst das Feld; Combobox für
+den Vorleser; Enter als Übergabe; Kick und Tropfen; Wischen mit der Maus;
+EIN Goo-Filter für die ganze zweite Welle beim Zusammenführen (E709, E712).
+
+### Nachtrag — die Durchsicht (4. und 5. Oktober 2026)
+
+**Redur, wörtlich:** am 3. Oktober um ca. 19:35 UTC „Weiter ohne pause,".
+Die Sätze oben gelten weiter — vor allem „ohne eine funktione löschen".
+
+**Wer und wie.** Sechs Prüfer nacheinander: der erste wurde am 3. Oktober um
+ca. 21:40 UTC vom Sitzungslimit abgeschnitten (Notizen in
+`scratchpad/rv-suche`, nichts eingecheckt); der zweite hat am 4. Oktober
+`test588` §11 rot eingecheckt und die Reparatur gebaut, wurde um ca.
+17:15 UTC abgeschnitten, bevor Gegenproben, Nachbarn und Bilder liefen; der
+dritte hat in der Nacht auf den 5. Oktober nachgemessen (Sonde, `test388`,
+Kontrast, vierzehn der fünfzehn Gegenproben) und diese Doku vorbereitet und
+wurde um ca. 01:30 UTC abgeschnitten, bevor Bilder, Nachbarn und Commit
+liefen. Der vierte hat am 5. Oktober ab ca. 05:00 UTC alles noch einmal
+selbst gemessen, drei weitere Fehler gefunden (Punkte 8–10, `test588` §12),
+Bilder und Sonden laufen lassen und wurde um ca. 07:57 UTC mitten in den
+Gegenproben abgeschnitten, bevor er einchecken konnte. Der fünfte hat am
+5. Oktober ab ca. 13:40 UTC die Reparatur gegen die roten Läufe geprüft,
+die acht offenen Gegenproben und `test388` laufen lassen, einen weiteren
+Fehler gefunden (Punkt 11, `test588` §13, rot eingecheckt), ihn repariert
+und wurde um ca. 15:10 UTC abgeschnitten, bevor Nachbarn und Commit liefen.
+Der sechste hat am 5. Oktober ab ca. 17:50 UTC den Endstand neu gebaut (er
+blieb Byte für Byte gleich), `test588`, die Sonden, `test388`, die Bilder
+und die Nachbarn auf genau diesem Stand laufen lassen und eingecheckt. Was
+oben als „ausstehend" steht, ist gelaufen, unter dem
+geteilten Schloss; dazu drei Sonden (Einstiege, Tastatur, Klick, Palette,
+Menü mit Suche und das Seitenmenü, Stapel, Fächer, Posteingang, Fortschritt
+neben einer fremden Meldung, Kontrast je Schema, „weniger Bewegung" und
+„Ruhige Darstellung", Fokusring, 44 px, Telefon, `file://` und
+`redion-einzeldatei.html`, Konsolenfehler) — auf dem Zweig und, wo es die
+Sache schon gab, auf dem Grundstand `b3cf1933`.
+
+**Was blieb, wie es war (§43).** Jeder Einstieg der Suche öffnet GENAU eine
+Suche mit dem Fokus in `#q`: Strg P, Strg K, `#studio-search`,
+`#btn-search`, `#mb-suche`, `#btn-suche-handy` (am Telefon auch als Tipp),
+der Befehl „Suchen"; Escape schliesst. ↑ bleibt oben, ↓ bleibt unten, genau
+eine Zeile ist `.on`, die Vorschau zeigt die Wahl, Enter öffnet sie, ein
+Mausklick (am Telefon ein Tipp) auf eine Zeile öffnet sie, Zeigen ändert
+die Wahl nicht, „Zuletzt gesucht" und „Nichts gefunden" stehen da. In der
+Palette: Strg ⇧ K, Strg Enter heftet an und löst, Enter führt aus, ↓ endet
+an der 60. Zeile (E400), ein Klick auf den Stern heftet an, ohne
+auszuführen. Im Menü mit Suche: ↓↓, Filtern, Enter löst den Klick aus.
+Gemessen auf Zweig UND Grundstand: 25 von 25 Punkten, beide gleich. Die
+Glocke: ein Klick (am Telefon ein Tipp) öffnet weiter den Posteingang; ein
+Klick auf eine Karte im Fächer tut, was derselbe Klick im Posteingang tut
+(gelesen, dann die Seite oder der Posteingang).
+
+**Gefunden und behoben** (Wächter: `test588` §11, rot gesehen gegen
+`556ffdaa` mit 46 von 57; Gegenproben unten):
+
+1. **Der Fächer ging nicht wieder zu.** Mit der Tastatur geöffnet (↓ auf der
+   Glocke) blieb er nach einem Klick daneben, nach Tab hinaus und nach
+   Strg P stehen — über der Suche (`z-index` 880 gegen 700). Am Telefon
+   blieb er nach langem Drücken stehen, bis man etwas darin antippte.
+   Jetzt: ein Klick oder Tipp daneben schliesst ihn (ein Horcher am
+   Fenster, der ohne offenen Fächer sofort zurückkehrt; der Tipp geht
+   weiter an sein Ziel); geht der Fokus woandershin, geht er mit; Tab nach
+   dem letzten Knopf führt — wie bei einem Menüknopf — zum Nachbarn der
+   Glocke, Umschalt-Tab vor dem ersten zur Glocke. Die Glocke trägt
+   `aria-expanded` und `aria-controls`.
+2. **Der Fokus fiel ins Leere.** Nach „Alle gelesen" mit der Tastatur stand
+   er auf `body`: ist nichts mehr ungelesen, nimmt `glockeFrisch` (E457)
+   die Glocke weg. Jetzt geht er an die Glocke oder, ist sie weg, an ihren
+   Nachbarn im Kopf (§38).
+3. **Die Karten flossen ins Leere.** Aus demselben Grund war die Glocke
+   schon weg, BEVOR die Karten zu ihr flossen; weil der Kopf nachrückt,
+   landeten sie auf „Konto". Jetzt steht die Glocke, bis die Karten in ihr
+   sind (gemessen: in allen Bildern des Fliessens an ihrem Ort), pulst und
+   geht danach.
+4. **Ein Escape tat zwei Dinge.** Das Feld der Suche (und der Palette) nimmt
+   sein Fenster mit einem eigenen Griff, der VOR dem gemeinsamen läuft;
+   danach sah der gemeinsame kein Fenster mehr und räumte mit DEMSELBEN
+   Druck auch die Meldungen ab — genau die Klasse, die `test296` §3 für
+   Fenster verbietet. Jetzt notiert der gemeinsame Griff im Einfangen, ob
+   ein Fenster offen WAR, und räumt nur dann ab, wenn keins offen war und
+   niemand das Escape schon genommen hat (`defaultPrevented`). Geschlossen
+   wird weiter an EINER Stelle (`test296` §5: `letztes('.overlay')` genau
+   einmal).
+5. **Die Schrift auf der Marke war nicht überall lesbar.** Gemessen wie
+   gemalt: Kürzel und Ausschnitt mit Deckkraft .82 bei 3,77 („Sand") bis
+   4,48 („Rosé"), „↵ Enter" auf der weiss getönten Fläche bei 3,64
+   („Standard") bis 4,48 („Papier"), der Stern der Palette (Grau, Gold) auf
+   dem Akzent bei 1,0 bis 2,7 — in allen zehn Schemata. Jetzt: volle
+   Schrift, der Chip ohne Tönung mit einem Rand in der Schriftfarbe, der
+   Stern folgt der Zeile (angeheftet oder nicht sagt die Form ★/☆, §38).
+   Nachher ≥ 4,5 : 1 in allen zehn Schemata (4,71 in „Sand" bis 14,67 in
+   „Starker Kontrast").
+6. **Ein Strich unter einer Meldung ging verloren.** Die Karten und `#toast`
+   sind `pointer-events:none`; der Finger landet auf dem, was darunter
+   liegt. Lag dort die Tafel (oder das Blatt im Dokumentmodus,
+   `touch-action:none`), nahm der Stapel den Zug nach 12 px an sich und
+   hielt ihn an: von 170 px kamen 8 bis 10 an, und die Meldung flog mit.
+   Das war ein Verlust an einer bestehenden Funktion (Zeichnen). Jetzt
+   gehört ein Zug der Meldung nur, wo die Fläche darunter das Waagerechte
+   dem Browser lässt — kein `touch-action`, das es selbst nimmt, kein
+   Regler, nichts, das waagerecht rollt, kein `data-kein-wisch`.
+7. **Wegwischen hing an einer zufälligen Zahl.** Unter den Karten liegt
+   meist Inhalt, der rollen darf; der Browser nimmt den Zug nach ein, zwei
+   Bewegungen an sich (`pointercancel`), und dessen Lage entschied bisher,
+   ob die Karte ging. Jetzt zählt die letzte Bewegung: deutlich zur Seite
+   (≥ 8 px) ist ein Schnippen und nimmt die Karte weg (L232 Punkt 8).
+
+Gefunden in der vierten Durchsicht (Wächter: `test588` §12, rot gesehen
+gegen `6853b992` und gegen die Reparatur der Durchsicht; Gegenproben unten):
+
+8. **Die jetzige Wahl im Menü mit Suche war nicht mehr markiert.**
+   `.ru-marke-traeger > button.on` galt für JEDE Liste mit Marke — auch für
+   das Menü mit Suche, wo `.on` nicht „die Wahl der Pfeile" heisst, sondern
+   „das gilt jetzt": „Quelle wechseln" in der Datenbank (`steuerung.ts`)
+   zeigt die jetzige Quelle so. Sie verlor ihre Fläche (`--bg-hover`) und
+   war von den anderen nicht mehr zu unterscheiden — ein Verlust an einer
+   bestehenden Anzeige. Jetzt gilt der Akzent mit heller Schrift nur in
+   `.finder .res` (Suche und Palette); im Menü bleibt `.on`, wie es war, und
+   die leise Marke gleitet auf `.jetzt` darüber.
+9. **Der Fächer flackerte, solange der Zeiger auf der Glocke ruhte.** Die
+   Karten fliegen aus der Glocke — im ersten Bild also UNTER dem ruhenden
+   Zeiger hervor. Für den Browser verliess er damit die Glocke und kam beim
+   Wegfliegen zurück; das neue `pointerenter` stellte den Fächer nach
+   220 ms neu auf, und die Karten flogen wieder heraus, immer wieder
+   (gesehen in den Streifen der Bilder). Jetzt baut ein `pointerenter` den
+   Fächer nicht neu, wenn er an dieser Glocke offen ist und nicht gerade
+   geht.
+10. **Der Fächer deckte die Blase der Glocke halb zu.** Die Blase (E462,
+   „Posteingang, 3 ungelesen") steht beim Zeigen genau dort, wo der Fächer
+   aufgeht; „…ngelesen" ragte rechts unter der ersten Karte heraus.
+   Solange der Fächer offen ist (`aria-expanded="true"`), sagt ER, was in
+   der Glocke liegt — die Blase geht, und kommt wieder, wenn er zugeht.
+
+**Gefunden, nicht von E711** (L232 Punkt 9): die Trefferzeilen der Suche
+sind am Telefon 39 px hoch — auf `b3cf1933` genauso. §37 verlangt auf dem
+Hauptweg 44 px; das ist ein eigener Bogen (mit `test362` und `test402`),
+nicht diese Durchsicht. Ebenso auf `b3cf1933` (in den Vorher-Bildern):
+im Schema „Starker Kontrast" steht am Telefon auf dem aktiven Reiter der
+unteren Leiste weder Zeichen noch Wort („Dokumente") — Schwarz auf der
+schwarzen Pille; das gehört zu den Farben (E705), nicht hierher.
+
+Gefunden in der fünften Durchsicht (Wächter: `test588` §13, rot gesehen
+gegen die Reparatur der vierten Durchsicht; Gegenproben unten):
+
+11. **Der Fächer lag über „KI" und „Favorit".** Die vierte Durchsicht hatte
+   es gemessen und Redur zur Entscheidung gelassen (L232 Punkt 10): der
+   Fächer ging am Rechner 8 px unter der Glocke auf, 340 × 242 px, und
+   deckte die zwei Knöpfe, die in der Kopfzeile der Seite DIREKT unter der
+   Glocke stehen. Wer auf der Glocke verweilte und dann zu „KI" wollte —
+   der kürzeste Weg —, fuhr in den Fächer; solange der Zeiger darauf lag,
+   blieb er offen, und ein Klick traf eine Meldung (sie galt dann als
+   gelesen, und der Posteingang ging auf) statt „KI". Auf `b3cf1933` ging
+   derselbe Weg ohne Umweg. Das ist ein Weg, der länger geworden ist — nach
+   „ohne eine funktione löschen" kein Fall für später. Jetzt geht der
+   Fächer unter der Reihe auf, die direkt unter der Glocke steht: Ziele,
+   die GANZ in ihr stehen (Oberkante unter der Glocke, Unterkante
+   höchstens 96 px darunter), abgetastet über seine Breite, solange er
+   verborgen ist (`unterDerReihe`, hinweis.ts). Am Rechner liegt er damit 71 px unter
+   der Glocke statt 8 (an 1440, 1280 und 1024 px Breite gleich, 16 px unter
+   der Reihe; am Telefon 61 statt 7, dort bleibt „Zurück" frei); „KI", „Favorit" und „…" bleiben frei, ein Klick dort
+   trifft sie. Wer IN den Fächer will, quert die schmale Reihe in weniger
+   als den 280 ms, nach denen er zugeht. Was tiefer reicht (Karten,
+   Bilder, Text), zählt nicht und schiebt ihn nicht weg — ein Fächer liegt
+   immer über etwas; nur nicht über dem, wohin man von der Glocke aus als
+   Nächstes zeigt. Ob er beim Zeigen
+   überhaupt aufgehen soll, bleibt Redurs Wahl; der Weg zu „KI" hängt
+   nicht mehr daran.
+
+**Was die Alternative war.**
+- Den Fächer unter die Fenster legen (`z-index` 600, wie `.menu`):
+  verworfen — dann deckten ihn die Suchleiste der Seite (`#findbar`, 750),
+  der Seitenblick (760) und die Leiste der Datenbank (620) zu.
+- Ein Wächter am `body`, der den Fächer schliesst, sobald ein Fenster
+  aufgeht: gebaut und wieder herausgenommen — mit der Maus geöffnet schliesst
+  ihn `pointerleave` schon (gemessen: grün auf `556ffdaa`), mit der
+  Tastatur jetzt `focusout`. Ein Wächter mehr wäre Code ohne Fall.
+- Die Karten am Telefon zu echten Zielen machen (`pointer-events`), damit
+  man sie ziehen kann: verworfen — sie lägen dann über Knöpfen und nähmen
+  ihnen den Tipp, wie es `#toast` seit jeher bewusst nicht tut (ki.css).
+- Escape ohne Fenster gar nichts mehr abräumen lassen: verworfen — es war
+  zugesagt, und ohne offenes Fenster ist es richtig.
+- Die 39-px-Zeilen am Telefon gleich mit anheben: verworfen für diesen
+  Bogen — eine Änderung, ein Ziel (§43); sie betrifft die exakten Zahlen in
+  `marken-decke.json` (`test362`) und gehört in einen eigenen Bogen.
+- (8) Die Fläche von `.on` im Menü mit Suche ein zweites Mal setzen
+  (`.menu-liste … button.on{background:var(--bg-hover)}`): verworfen — das
+  wäre die Regel aus `aufbau.css` noch einmal (§8). Den Akzent auf die zwei
+  Listen zu begrenzen, für die er gebaut ist, ist die kleinere Änderung.
+- (9) Die Karten während des Auffächerns ohne Zeiger
+  (`pointer-events:none`): verworfen — wer in der halben Sekunde in den
+  Fächer fährt, wäre für ihn nicht darin, und er ginge 280 ms später zu.
+- (10) Den Fächer tiefer, unter die Blase legen: verworfen — dann klaffte
+  zwischen Glocke und Karten eine Lücke, die der Zeiger überqueren muss,
+  und die Blase sagte, was die Karten schon zeigen.
+- (11) Den Fächer beim Zeigen gar nicht mehr aufgehen lassen (nur ↓ und
+  langes Drücken): verworfen — das nähme dem Rechner die Szene 08, die
+  Redur mit dem Video verlangt hat; das soll er selbst entscheiden, nicht
+  eine Durchsicht. Den Fächer nach links neben „KI" schieben: verworfen —
+  er stünde schräg unter der Glocke, und „Favorit" steht unter ihr selbst.
+  Ihn beim Zeigen ohne Zeiger-Ziele lassen (`pointer-events:none`):
+  verworfen — man sähe Karten und klickte auf einen unsichtbaren Knopf
+  darunter. Es Redur offen lassen (wie die vierte Durchsicht): verworfen —
+  der Weg war länger als auf `b3cf1933`, das gehört repariert, nicht
+  gefragt. Die Lücke, die (10) verwarf, ist hier die Reihe selbst (am
+  Rechner 55 px), und sie trägt genau die Knöpfe, die frei bleiben
+  sollen; der Zeiger quert sie, gemessen in `test588` §13.
+
+**Was es kostet.** Am Start (`test388` §5, 5. Oktober ca. 18:00 UTC, unter
+dem Schloss) 2838 KB gzip über 248 Dateien gegen 2825 KB auf `b3cf1933` —
+der Zweig allein kostet 13 KB, etwas mehr als die etwa 10 KB, die jedem
+Zweig der zweiten Welle zugedacht waren, und hält die Decke von 2850 KB mit
+12 KB Luft. Je Datei (gzip -9) gegen `b3cf1933` +12'973 Bytes über zehn
+Dateien, davon +3'053 aus den Durchsichten (`hinweis.js` +2'415,
+`studio.css` +406, `schale.js` +232). Zur Laufzeit: ein Horcher
+`pointerdown` am Fenster, der ohne offenen Fächer sofort zurückkehrt; ein
+Horcher `keydown` im Einfangen, der nur bei Escape einen `querySelector`
+macht; je Berührung unter einer Meldung ein Gang über die Eltern des Ziels
+(`getComputedStyle`), nur wenn eine Meldung dasteht; beim Öffnen des
+Fächers 126 Mal `elementFromPoint` (die Reihe unter der Glocke).
+
+**Geprüft.** `test588` 69 von 69 auf dem Zweig (5. Oktober ca. 17:58 UTC, unter
+dem Schloss); rot gesehen: §11 gegen `556ffdaa` (46 von 57, 4. Oktober),
+§12 gegen `6853b992` (47 von 63) und gegen die Reparatur der Durchsicht
+(58 von 63), §13 gegen die Reparatur der vierten Durchsicht (66 von 68),
+alle am 5. Oktober zwischen ca. 14:02 und 14:19 UTC mit der eingecheckten
+Fassung; die Fassung vom 28. September gegen `b3cf1933`: 17 von 43 (26
+rot), am 4. Oktober um 16:13 UTC — die Zahl, die im Commit `ec518fc7`
+fehlte. Die Sonde der zweiten Durchsicht (Einstiege, Tastatur, Klick,
+Palette, Menü mit Suche, Live-Region, Stapel, Fächer, Kontrast je Schema,
+„weniger Bewegung" und „Ruhige Darstellung", `file://` und
+`redion-einzeldatei.html`, Konsolenfehler): 81 von 81 auf dem Endstand
+(5. Oktober ca. 18:02 UTC); jeder Einstieg, jede Taste und jeder Klick, den
+es auf `b3cf1933` schon gab, tut dasselbe wie dort. Die der vierten
+(Seitenmenü am Rechner und am Telefon, Kontrast von Fächer, Stapel und
+Posteingang in allen zehn Schemata — 4,90 in „Sand" bis 13,83 in „Starker
+Kontrast" —, Fokusring ≥ 3,29 : 1, Posteingangskarten ≥ 44 px, was der
+Fächer zudeckt, Fortschritt neben einer fremden Meldung): 12 von 12 (ca.
+18:03 UTC). `test67` (Abschnittsmenü und die vier Bereiche am Telefon), bei
+der fünften Durchsicht einmal 63 von 65 unter Last, auf dem Endstand 65 von
+65, auf `b3cf1933` ebenso. Ohne Browser grün (je einzeln, ca. 17:55 UTC):
+87 88 89 92 93 103 105 106 107 109 225 290 298 400 401 402 410 537 549 550
+553 — 21 von 21.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen, je eine Verbiegung im
+gebauten `quell/` einer Kopie, `test588` darüber). Die fünf des Bauers und
+die zehn der zweiten und dritten Durchsicht (die vierte, 5. Oktober ca.
+07:41–07:57 UTC, auf einer Kopie ihres Endstands): neubau 62/63 (↓ baut neu), springt 60/63
+(die Marke gleitet nicht — Suche, Palette, Menü), ohne-stapel rot in fünf
+Punkten (Stapel, höchstens drei, Wiederholung, Lage, Escape; der Lauf brach
+danach ab), goo-bleibt rot (der Filter blieb an der Ebene; Abbruch danach),
+glocke-schluckt 60/63 (der Klick öffnet den Posteingang nicht mehr, die
+Karten im Posteingang fehlen), daneben-bleibt 62/63 (Tipp daneben am
+Telefon), tab-bleibt 62/63, fokus-faellt 62/63, ohne-aria 61/63,
+glocke-geht-sofort 62/63. Die acht, die beim Abbruch der vierten fehlten
+(die fünfte, ca. 14:04–14:17 UTC, auf derselben Kopie): zwei-auf-einen 62/63 (ein Escape nimmt
+Suche UND Stapel), strich-gefangen 61/63 (7 px vom Strich kommen an, die
+Meldung fliegt mit), blass 62/63 (Kürzel 3,99), stern-grau 62/63 (Stern
+1,03–2,67), chip-getoent 62/63 („↵ Enter" 3,64), marke-leckt 60/63 (die
+jetzige Wahl im Menü ohne Fläche, 1,07 : 1), flackert 62/63 (fünfmal neu
+in 2,6 s), blase-halb 62/63 (die Blase bei offenem Fächer). Die der
+fünften, auf einer Kopie genau dieses Endstands (ca. 15:05–15:09 UTC):
+deckt-zu 67/69 (der Fächer wieder 8 px unter der Glocke: „KI" und
+„Favorit" liegen darunter, der Klick trifft die Karte), ohne-untergrenze
+68/69 (ohne die Grenze unten schiebt eine grosse Fläche den Fächer weg).
+Eine blieb grün und wurde deshalb zurückgebaut: eine Höhengrenze von 56 px
+für die Ziele der Reihe — die Grenze unten nimmt grosse Flächen schon
+allein heraus.
+
+**Nachbarn** (unter dem geteilten Schloss, `alle.mts`, 5. Oktober ca.
+18:14–18:56 UTC, 118 Läufe — die Liste der fünften Durchsicht): 110 grün,
+8 rot. Fremd, auf `b3cf1933` genauso rot (ca. 19:11–19:20 UTC): `test86`
+(die Register „seitenansichten" und „werkzeuge" stehen nicht in seiner
+Liste), `test247` (der gezogene Strich ist nicht blau), `test425` (die
+Markierung der Segmente wirkt nicht über den Grund), `test493`
+(`-webkit-backdrop-filter: blur(8px)` in `motion.css`), `test582` (Kontrast
+„Sand" und „Wald" über dem schlimmsten Grund, 4,45–4,47). Von E711, auf
+`b3cf1933` grün — behoben in der sechsten Durchsicht (unten): `test362`
+(eine rohe `28px` mehr als die Decke), `test114` (die Filter der Suche am
+Telefon nach 600 ms 41,8 statt 42 px hoch — die Suche wächst dann noch),
+`test360` (am Finger: eine Kladde, lange gedrückt und gezogen, kommt nicht
+an — der Stapel nahm den Zug).
+
+**Bilder** (nicht eingecheckt, §55.4): `welle2-bilder/suche/` —
+`nachher-*` vom Endstand (sechste Durchsicht, 5. Oktober ca. 18:05 UTC),
+Rechner 1440 × 900 und Telefon 390 × 844, hell und dunkel, dazu „Starker
+Kontrast" (Rechner und Telefon), „Touch Kit hell" (Rechner) und „Touch Kit
+dunkel" (Telefon); Streifen alle 33 ms Bewegungszeit (Wiedergabe 1/10) für
+das Aufgehen der Suche, das Gleiten der Marke, den Stapel, das Auffächern
+und das Zusammenfliessen — vorher (`b3cf1933`) und nachher. Dazu
+`zwischen4-*` (der Stand vor §13) und `*-glocke-reihe` (der Fächer an
+1440, 1280 und 1024 px Breite und am Telefon, vor und nach §13).
+
+### Nachtrag — die sechste Durchsicht (5. Oktober 2026, abends)
+
+**Redur, wörtlich:** am 5. Oktober um ca. 14:15 UTC „Also an was du jetzt
+macht mache es jetzt fertig und danach arbeite nicht mehr weiter …" — die
+laufende Durchsicht zu Ende bringen, nichts Neues anfangen. Und weiter
+„ohne eine funktione löschen".
+
+**Was die Nachbarn fanden.** Drei Läufe, die auf `b3cf1933` grün sind, waren
+auf dem Zweig rot — alle drei von E711 selbst, keiner von einer Durchsicht:
+
+12. **Eine lange gedrückte Kladde kam am Finger nicht mehr an** (`test360`
+   §7). Die Karten des Stapels und `#toast` sind `pointer-events:none`; der
+   Finger landet auf dem Inhalt darunter. Der Wisch-Griff in `hinweis.ts`
+   fing jeden waagerechten Zug über 12 px ab und hielt ihn im Einfangen an
+   — auch den, der nach langem Drücken etwas trägt: die Kladde der
+   Bibliothek (gehoben nach 400 ms), einen Block (500 ms), eine Marke im PDF
+   (450 ms). Lag eine Meldung darüber, liess sich das nicht mehr tragen.
+   Jetzt: ruhte der Finger länger als 300 ms, bevor er losging, gehört der
+   Zug dem, was darunter liegt; ein Schnippen fängt sofort an und nimmt
+   die Karte weiter weg. Wächter: `test588` §14 (rot gesehen gegen
+   `f73a2938`), dazu `test360`.
+13. **Eine rohe `28px` zu viel** (`test362` §7, die Decke der rohen Masse:
+   66 statt 65). `.ru-toast-alt` trug `max-width:min(560px, calc(100vw −
+   28px))` — die Regel gilt nur über 760 px Breite, wo `100vw − 28px` nie
+   unter 560 fällt. Jetzt `max-width:560px`, Bild für Bild dasselbe.
+14. **Die Filter der Suche am Telefon massen 41,8 statt 42 px** (`test114`
+   §16). Seit E711 wächst die Suche aus der Kapsel (rund 0,8 s, nur
+   `transform`); `test114` mass nach 600 ms, mitten im Aufgehen, wenn
+   alles darin noch 0,5 % kleiner ist (gemessen Bild für Bild: 41,4 px bei
+   504 ms, 41,8 bei 604, 42 ab 806; mit „Ruhige Darstellung" von Anfang an
+   42). Die stehende Suche hat 42 px wie auf `b3cf1933`. `test114` misst
+   jetzt, wenn die Suche STEHT — dieselben Felder, dieselbe Grenze —, und
+   bekommt dafür einen Punkt dazu: die Suche steht spätestens 1,5 s nach
+   dem Öffnen still. Das ist keine Schwächung: geprüft wird weiter die
+   Fläche, die der Daumen trifft, und ein Aufgehen, das nicht endet, wird
+   jetzt eigens rot (Gegenproben unten).
+
+**Was die Alternative war.**
+- (12) Den Wisch-Griff nur auf die sichtbare Karte legen (`pointer-events`
+  an): verworfen — die Karte nähme den Knöpfen darunter jeden Tipp, wie es
+  `#toast` seit jeher bewusst nicht tut (L232 Punkt 8). Eine Liste der
+  Dinge, die man tragen kann (`.bib-deckel`, `.blk`, …): verworfen — sie
+  liefe jedem neuen Griff hinterher; die Zeit des Haltens sagt es für alle.
+- (14) Die Suche schneller aufgehen lassen, damit sie nach 600 ms steht:
+  verworfen — das ist die Bewegung der Szene 07, die Redur mit dem Video
+  verlangt hat, und eine Durchsicht ändert sie nicht, um einer Wartezeit
+  in einem Prüflauf zu genügen. Die 600 ms einfach auf 1000 ms setzen:
+  verworfen — eine neue Zahl, die beim nächsten Aufgehen wieder reisst;
+  „bis es steht, höchstens 1,5 s" sagt, was gemeint ist.
+
+**Was es kostet.** Am Start (`test388` §5, 5. Oktober ca. 19:40 UTC, unter
+dem Schloss) weiter 2838 KB gzip über 248 Dateien, Decke 2850 KB.
+`hinweis.js` +288 und `studio.css` +112 Bytes (gzip -9), fast nur
+Erklärung; der Zweig gegen `b3cf1933` damit +13'373 Bytes über zehn
+Dateien. Zur Laufzeit ein Zeitvergleich mehr je Berührung unter einer
+Meldung.
+
+**Geprüft.** `test360` 34 von 34, `test362` 18 von 18, `test114` 156 von
+156 (5. Oktober ca. 19:29–19:30 UTC); `test588` 72 von 72, dreimal
+hintereinander (ca. 19:46–19:52 UTC). Der erste Lauf von `test588` gleich
+nach dem Bauen (ca. 19:29 UTC) hatte drei Punkte rot, die mit der
+Berührung nichts zu tun haben (die Marke landete nach dem Umlenken 14,7 px
+daneben; der Fächer ging nach dem Zeiger und nach dem Zusammenfliessen
+nicht rechtzeitig zu) — mit der Maus kommt die neue Regel gar nicht in
+Gang, und in der Kopie derselben Fassung (Gegenprobe haelt-nicht) wie in
+den drei Läufen danach waren sie grün. Das sind feste Wartezeiten unter
+Last; es steht in AUFGABEN.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen, je eine Verbiegung im
+gebauten `quell/` einer Kopie des Endstands, `scratchpad/rv6-suche/ende7`,
+der betroffene Lauf darüber, 5. Oktober ca. 19:30–19:34 UTC):
+flach (die Filter am Telefon 40 px hoch) → `test114` „… sind mit dem
+Finger zu treffen — 4 zu flach"; laeuft (das Aufgehen fünfmal so lang) →
+`test114` „Die Suche steht spätestens 1,5 s nach dem Öffnen still"
+(`{"nach":3600,"still":false}`) und „4 zu flach"; haelt-nicht (ohne die
+Regel für das Halten) → `test588` §14 (`{"bewegt":0,"los":false}`) und
+`test360` 32 von 34 (die Ablegezone zeigt sich nicht, die Kladde kommt
+nicht an); roh28 (die alte Breite) → `test362` „66 statt 65".
+
+**Nachbarn** (unter dem Schloss, `alle.mts`, ca. 19:35–19:46 UTC, 35
+Läufe um die geänderten Stellen — Meldungen, Suche, Stile, Berührung):
+32 40 47 66 67 104 126 127 143 155 222 245 248 272 296 303 353 384 388 411
+412 430 476 484 492 510 531 534 536 539 541 576 579 584 585 — 34 grün,
+`test492` rot („Einzeldatei enthält Eingabe und Bewegungsstil ohne
+Nachladen"), auf `b3cf1933` zweimal genauso rot (ca. 19:53 UTC) — fremd,
+der bekannte Wackler aus dem Zweig der roten Inseln. Ohne Browser grün:
+87 105 109 225 290 298 401 402 410 549 550.
 
 ## E714 — Rot zuerst, vier Inseln: ein Stilblatt ohne `<link>`, ein Wettlauf mit SwiftShader, der Keil als Fläche, vierzehn Werkzeuge
 

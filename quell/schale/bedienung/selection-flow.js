@@ -654,8 +654,205 @@ const SelectionFlow = (() => {
         if (/^(Arrow|Home$|End$)/.test(e.key))
             vormerken(e);
     }, true);
+    const gleitLaeufe = new WeakMap();
+    const gleitStand = (g) => {
+        const t = g.anim && typeof g.anim.currentTime === 'number' ? g.anim.currentTime : g.dauer;
+        const z = [g.ziel.left, g.ziel.top, g.ziel.width, g.ziel.height];
+        return { werte: g.bahnen.map((b, k) => (z[k] ?? 0) + b(t).x), tempi: g.bahnen.map(b => b(t).v) };
+    };
+    const glide = (marke, nach, sofort = false) => {
+        const alt = gleitLaeufe.get(marke);
+        if (alt && !sofort && Math.abs(alt.ziel.left - nach.left) < 0.5 && Math.abs(alt.ziel.top - nach.top) < 0.5
+            && Math.abs(alt.ziel.width - nach.width) < 0.5 && Math.abs(alt.ziel.height - nach.height) < 0.5)
+            return;
+        const jetzt = alt ? gleitStand(alt) : null;
+        alt?.anim?.cancel();
+        marke.style.left = nach.left + 'px';
+        marke.style.top = nach.top + 'px';
+        marke.style.width = nach.width + 'px';
+        marke.style.height = nach.height + 'px';
+        marke.style.transformOrigin = '0 0';
+        const ruhe = () => {
+            marke.style.transform = 'none';
+            marke.classList.remove('faehrt');
+            gleitLaeufe.set(marke, { ziel: nach, bahnen: [STILL, STILL, STILL, STILL], dauer: 0 });
+        };
+        if (!jetzt || sofort || ruhig() || !nach.width || !nach.height) {
+            ruhe();
+            return;
+        }
+        const z = [nach.left, nach.top, nach.width, nach.height];
+        const bahnen = z.map((zk, k) => bahnVon(FEDERN.knapp, (jetzt.werte[k] ?? zk) - zk, jetzt.tempi[k] ?? 0));
+        const [bx, by, bw, bh] = bahnen;
+        const weg = Math.max(...bahnen.map(b => Math.abs(b(0).x)), ...bahnen.map(b => Math.abs(b(0).v) * 60));
+        if (weg < 0.5) {
+            ruhe();
+            return;
+        }
+        const dauer = Math.max(...bahnen.map(b => ruheNach(b, 0.5)));
+        const senkrecht = Math.abs(by(0).x) >= Math.abs(bx(0).x);
+        const darf = senkrecht ? Math.abs(by(0).x) <= 1.35 * Math.max(nach.height, (jetzt.werte[3] ?? 0))
+            : Math.abs(bx(0).x) <= 1.35 * Math.max(nach.width, (jetzt.werte[2] ?? 0));
+        const bild = (t) => {
+            const w = nach.width + bw(t).x, h = nach.height + bh(t).x;
+            let kx = w / nach.width, ky = h / nach.height;
+            let tx = bx(t).x, ty = by(t).x;
+            if (darf) {
+                const d = dehnungAus(senkrecht ? by(t).v : bx(t).v);
+                if (senkrecht) {
+                    ty -= h * (d - 1) / 2;
+                    ky *= d;
+                }
+                else {
+                    tx -= w * (d - 1) / 2;
+                    kx *= d;
+                }
+            }
+            return { transform: 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px)'
+                    + ' scale(' + kx.toFixed(4) + ',' + ky.toFixed(4) + ')' };
+        };
+        const bilder = [];
+        for (let t = 0; t <= dauer; t += SCHRITT)
+            bilder.push(bild(t));
+        bilder.push({ transform: 'none' });
+        const anim = marke.animate(bilder, { duration: dauer, easing: 'linear', fill: 'forwards' });
+        gleitLaeufe.set(marke, { ziel: nach, bahnen, dauer, anim });
+        marke.classList.add('faehrt');
+        marke.dataset['fluege'] = String(Number(marke.dataset['fluege'] ?? 0) + 1);
+        anim.finished.then(() => {
+            if (gleitLaeufe.get(marke)?.anim !== anim)
+                return;
+            ruhe();
+            anim.cancel();
+        }).catch(() => { });
+    };
+    const lageIn = (traeger, el) => {
+        let x = 0, y = 0;
+        let e = el;
+        while (e && e !== traeger) {
+            x += e.offsetLeft;
+            y += e.offsetTop;
+            const p = e.offsetParent;
+            if (p && p !== traeger) {
+                x += p.clientLeft - p.scrollLeft;
+                y += p.clientTop - p.scrollTop;
+            }
+            e = p;
+        }
+        if (e === traeger)
+            return { left: x, top: y, width: el.offsetWidth, height: el.offsetHeight };
+        const t = traeger.getBoundingClientRect(), r = el.getBoundingClientRect();
+        return { left: r.left - t.left - traeger.clientLeft + traeger.scrollLeft,
+            top: r.top - t.top - traeger.clientTop + traeger.scrollTop, width: r.width, height: r.height };
+    };
+    const markenVon = new WeakMap();
+    const highlight = (liste, ziel, o = {}) => {
+        let m = markenVon.get(liste);
+        if (!m) {
+            m = document.createElement('i');
+            m.className = 'ru-marke' + (o.still ? ' ru-marke-still' : '');
+            m.setAttribute('aria-hidden', 'true');
+            if (o.taste) {
+                const t = document.createElement('span');
+                t.className = 'ru-marke-taste';
+                t.textContent = o.taste;
+                m.appendChild(t);
+            }
+            markenVon.set(liste, m);
+        }
+        liste.classList.add('ru-marke-traeger');
+        if (m.parentElement !== liste)
+            liste.prepend(m);
+        if (!ziel || !ziel.isConnected || !ziel.offsetWidth) {
+            m.hidden = true;
+            return m;
+        }
+        const warDa = !m.hidden && gleitLaeufe.has(m);
+        m.hidden = false;
+        glide(m, lageIn(liste, ziel), !warDa);
+        return m;
+    };
+    const gesehen = new WeakMap();
+    const stagger = (liste, zeilen, schluessel) => {
+        const vorher = gesehen.get(liste);
+        const jetzt = new Set();
+        const ruhe = ruhig();
+        let n = 0;
+        zeilen.forEach((z, k) => {
+            const s = schluessel[k] ?? String(k);
+            jetzt.add(s);
+            if (ruhe || vorher?.has(s))
+                return;
+            if (n < 10) {
+                z.classList.add('ru-kommt');
+                z.style.setProperty('--ru-n', String(n));
+            }
+            n++;
+        });
+        gesehen.set(liste, jetzt);
+    };
+    const growFrom = (fenster, anker) => {
+        if (!anker || !anker.width || !anker.height || ruhig())
+            return null;
+        const { easing, duration } = RedionSpring.token('smooth');
+        if (!(duration > 2))
+            return null;
+        fenster.classList.add('ru-waechst');
+        const r = fenster.getBoundingClientRect();
+        if (!r.width || !r.height)
+            return null;
+        fenster.style.transformOrigin = '0 0';
+        const von = 'translate(' + (anker.left - r.left).toFixed(1) + 'px,' + (anker.top - r.top).toFixed(1) + 'px)'
+            + ' scale(' + (anker.width / r.width).toFixed(4) + ',' + (anker.height / r.height).toFixed(4) + ')';
+        const inhalt = Math.min(duration, 460);
+        Array.from(fenster.children).forEach(k => {
+            if (k instanceof HTMLElement)
+                k.animate([{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1 }], { duration: inhalt, easing: 'linear' });
+        });
+        return fenster.animate([{ transform: von }, { transform: 'none' }], { duration, easing });
+    };
+    const SVG = 'http://www.w3.org/2000/svg';
+    const gooFilter = () => {
+        if (document.getElementById('ru-goo'))
+            return;
+        const svg = document.createElementNS(SVG, 'svg');
+        svg.setAttribute('id', 'ru-goo-svg');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.setAttribute('focusable', 'false');
+        const filter = document.createElementNS(SVG, 'filter');
+        filter.setAttribute('id', 'ru-goo');
+        filter.setAttribute('color-interpolation-filters', 'sRGB');
+        const blur = document.createElementNS(SVG, 'feGaussianBlur');
+        blur.setAttribute('in', 'SourceGraphic');
+        blur.setAttribute('stdDeviation', '8');
+        blur.setAttribute('result', 'weich');
+        const matrix = document.createElementNS(SVG, 'feColorMatrix');
+        matrix.setAttribute('in', 'weich');
+        matrix.setAttribute('mode', 'matrix');
+        matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
+        matrix.setAttribute('result', 'goo');
+        const oben = document.createElementNS(SVG, 'feComposite');
+        oben.setAttribute('in', 'SourceGraphic');
+        oben.setAttribute('in2', 'goo');
+        oben.setAttribute('operator', 'atop');
+        filter.append(blur, matrix, oben);
+        svg.appendChild(filter);
+        document.body.appendChild(svg);
+    };
+    const goo = (ebene, an) => {
+        if (!an || ruhig()) {
+            ebene.classList.remove('ru-goo-an');
+            return false;
+        }
+        gooFilter();
+        ebene.classList.add('ru-goo-an');
+        return true;
+    };
     return {
         folge, fliege, setze, stand, ziehbar, ruhig,
+        glide, highlight, stagger, growFrom, goo,
         druecke: { ein: drueckeEin, los: lasseLos },
         FEDERN, DAUER, OMEGA, DEHNUNG_MAX
     };

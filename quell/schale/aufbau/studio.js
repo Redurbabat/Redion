@@ -69,6 +69,7 @@ const StudioSchale = (() => {
             Ansichten.posteingang();
         }
         catch { } });
+        Hinweis.faecherBinden(document.getElementById('studio-glocke'));
         an('studio-auftraege', () => {
             if (typeof AuftragsAnzeige !== 'undefined')
                 AuftragsAnzeige.oeffnen();

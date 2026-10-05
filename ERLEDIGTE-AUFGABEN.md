@@ -64,6 +64,88 @@ bei 700 ms fest. `test579` §9 misst in der Einzeldatei jetzt auch, dass das
 angenommene Blatt wirkt (44 px, genau eines, kein `<link>`). Beide
 Erweiterungen mit Gegenprobe rot gesehen.
 
+## 4. und 5. Oktober 2026 · E711, Durchsicht · Der Fächer geht wieder zu, ein Escape tut eines, die Marke ist lesbar, der Strich kommt an, die jetzige Wahl bleibt markiert, „KI" bleibt frei, eine Kladde lässt sich unter einer Meldung wieder tragen
+
+**Redur:** am 3. Oktober um ca. 19:35 UTC „Weiter ohne pause," — und weiter
+„ohne eine funktione löschen".
+
+**Gefunden:** Mit der Tastatur geöffnet blieb der Fächer an der Glocke nach
+einem Klick daneben, nach Tab und nach Strg P stehen (über der Suche); am
+Telefon nach langem Drücken. Nach „Alle gelesen" fiel der Fokus auf `body`,
+und die Karten flossen ins Leere, weil die Glocke schon weg war. Ein Escape
+in der Suche schloss die Suche UND räumte die Meldungen ab. Die Schrift auf
+der Marke fiel in mehreren Schemata unter 4,5 : 1 (der Stern der Palette bis
+1,0). Ein Strich auf der Tafel, der unter einer Meldung begann, kam mit 8
+von 170 px an.
+
+**Gebaut:** Klick oder Tipp daneben, Tab, ein Fokus anderswo schliessen den
+Fächer; die Glocke sagt `aria-expanded`; der Fokus bleibt im Kopf; die
+Glocke steht, bis die Karten in ihr sind. Der gemeinsame Escape-Griff merkt
+sich im Einfangen, ob ein Fenster offen war. Volle Schrift auf der Marke,
+der Chip ohne Tönung, der Stern in der Farbe der Zeile. Ein Zug unter einer
+Meldung gehört ihr nur, wo die Fläche darunter das Waagerechte nicht selbst
+nimmt; ein Schnippen zählt nach der letzten Bewegung.
+
+**Vierte Durchsicht (5. Oktober):** im Menü mit Suche verlor die jetzige
+Wahl (`.on`, „Quelle wechseln") ihre Fläche — der Akzent der Marke gilt
+jetzt nur in Suche und Palette. Der Fächer flackerte, solange der Zeiger
+auf der Glocke ruhte (die Karten fliegen unter ihm hervor) — ein
+`pointerenter` baut ihn nicht mehr neu. Er deckte die Blase der Glocke halb
+zu — sie geht, solange er offen ist. Wächter `test588` §12.
+
+**Fünfte Durchsicht (5. Oktober):** der Fächer, der beim Zeigen aufgeht,
+lag am Rechner über „KI" und „Favorit" direkt unter der Glocke; wer von der
+Glocke dorthin wollte, fuhr in ihn hinein, und ein Klick traf eine Meldung
+(die vierte Durchsicht hatte es Redur offen gelassen, L232 Punkt 10). Er
+geht jetzt unter der Reihe auf, die direkt unter der Glocke steht
+(`unterDerReihe`); wer in ihn hinein will, quert die Reihe. Wächter
+`test588` §13. Dazu die acht Gegenproben, die beim Abbruch der vierten
+Durchsicht noch fehlten. Die sechste Durchsicht (5. Oktober abends) hat den
+Endstand gemessen — `test588`, die Sonden, `test388`, die Bilder und die
+Nachbarn, unter dem Schloss — und eingecheckt.
+
+**Sechste Durchsicht (5. Oktober abends):** in den Nachbarn waren drei
+Läufe rot, die auf `b3cf1933` grün sind — alle drei von E711. Am Telefon
+kam eine lange gedrückte und gezogene Kladde nicht mehr an, wenn eine
+Meldung darüber lag (`test360`): der Stapel nahm jeden waagerechten Zug.
+Jetzt gehört ein Zug, vor dem der Finger länger als 300 ms ruhte, dem, was
+darunter liegt (Wächter `test588` §14, rot gesehen). Eine rohe `28px` zu
+viel in `studio.css` (`test362`) ist weg, Bild für Bild dasselbe. Und
+`test114` mass die Filter der Suche mitten im Aufgehen (41,8 statt 42 px);
+er misst jetzt, wenn die Suche steht, und prüft dazu, dass sie
+spätestens nach 1,5 s steht. Gegenproben (vier, alle rot gesehen) und
+35 Nachbarn im Nachtrag zu E711; `test588` 72 von 72, dreimal.
+
+**Geprüft:** `test588` §11 (rot gegen `556ffdaa`: 46 von 57), §12 (rot
+gegen `6853b992`: 47 von 63, und gegen die Reparatur der Durchsicht: 58 von
+63) und §13 (rot gegen die Reparatur der vierten Durchsicht: 66 von 68),
+danach 69 von 69 auf dem Endstand; Gegenproben und Nachbarn im Nachtrag zu
+E711, `test388` §5 2838 KB (Grundstand 2825, Decke 2850).
+Nicht von E711, aber gefunden: die Trefferzeilen am Telefon sind 39 px
+(L232 Punkt 9); im Schema „Starker Kontrast" ist am Telefon der aktive
+Reiter der unteren Leiste leer (auf `b3cf1933` genauso, E705).
+
+## 28. September 2026 · E711 · Die Suche wächst aus der Kapsel, die Meldungen stapeln sich
+
+**Redur:** um ca. 22:05 das Video „Liquid Glass" und dazu „Schau mal das
+auch an ich will das auch haben"; um ca. 22:10 „… bessere übergagnge
+besssere efeckten , bessere oberfläsche alles …" — „ohne eine funktione
+löschen".
+
+**Gebaut:** Die Suche geht aus dem Knopf auf, der sie trägt
+(`SelectionFlow.growFrom`, `--feder-sanft`); neue Treffer kommen
+nacheinander (`stagger`, nur die neuen); EINE Marke gleitet mit ↑ ↓ auf der
+Kit-Feder zur Wahl (`highlight`/`glide`, vier Bahnen, umlenkbar) — in der
+Suche, der Befehlspalette und im Menü mit Suche, ohne die Liste je Pfeil
+neu zu bauen; „↵ Enter" auf der Marke. `#toast` wird ein Stapel aus bis zu
+drei Meldungen (`#ru-toast-stapel`), Escape räumt ab, ein Finger wischt
+weg. Die Glocke öffnet weiter den Posteingang und fächert beim Zeigen oder
+langen Drücken die letzten drei Meldungen auf; „Alle gelesen" fliesst zäh
+in sie zurück (EIN Goo-Filter, nur während es fliesst). Der Posteingang
+zeigt Glaskarten.
+
+**Geprüft:** `test588` (rot auf `b3cf1933`), Nachbarn in E711.
+
 ## 5. Oktober 2026 · E710 Durchsicht · Was die Aufrufer mitbringen, bleibt
 
 **Redur:** am 3. Oktober um ca. 19:35 „Weiter ohne pause,"; am 5. Oktober

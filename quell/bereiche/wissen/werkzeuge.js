@@ -375,9 +375,27 @@ const Werkzeuge = (() => {
                     ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
                         'tipp einen Namen, um sie zu finden</div>'
                     : '');
+            const zeilen = [...res.querySelectorAll('button[data-i]')];
+            SelectionFlow.stagger(res, zeilen, zeilen.map(b => String(sicht[Number(b.dataset['i'])]?.name ?? '')));
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, res.querySelector('button.on'), { taste: '↵ Enter' });
         };
         zeichne();
+        const waehle = (k) => {
+            const n = Math.min(treffer.length, GEZEIGT);
+            if (!n)
+                return;
+            i = Math.max(0, Math.min(k, n - 1));
+            res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+            const neu = res.querySelector(`button[data-i="${i}"]`);
+            if (!neu) {
+                zeichne();
+                return;
+            }
+            neu.classList.add('on');
+            neu.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
+        };
         const fuehreAus = (t) => {
             o.remove();
             merkeBefehl(t.name, t.gruppe);
@@ -416,13 +434,11 @@ const Werkzeuge = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, Math.min(treffer.length, GEZEIGT) - 1);
-                zeichne();
+                waehle(i + 1);
             }
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                i = Math.max(i - 1, 0);
-                zeichne();
+                waehle(i - 1);
             }
             if (e.key === 'Enter' && treffer[i]) {
                 e.preventDefault();

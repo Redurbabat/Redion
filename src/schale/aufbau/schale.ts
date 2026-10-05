@@ -1144,6 +1144,14 @@ const App = (() => {
       '</div>';
     document.body.appendChild(o);
 
+    /* DIE KAPSEL WÄCHST ZUM FELD (E711, Szene 07): aus dem sichtbaren
+       Suchknopf, auch bei Strg P / Strg K; ohne ihn (und ruhig) wie bisher. */
+    const kapsel = ['studio-search', 'btn-suche-handy', 'mb-suche']
+      .map(id => document.getElementById(id))
+      .find(k => !!k && k.offsetParent !== null && k.getBoundingClientRect().width > 0);
+    const scheibe = o.querySelector<HTMLElement>('.finder.such');
+    if (scheibe && kapsel) SelectionFlow.growFrom(scheibe, kapsel.getBoundingClientRect());
+
     const inp = o.querySelector<HTMLInputElement>('#q');
     const res = o.querySelector<HTMLElement>('#res');
     if (!inp || !res) return;
@@ -1222,14 +1230,34 @@ const App = (() => {
           (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
       verlaufBinden();
-      res.querySelectorAll<HTMLElement>('button[data-i]').forEach(b => {
+      const zeilen = [...res.querySelectorAll<HTMLElement>('button[data-i]')];
+      zeilen.forEach(b => {
         b.addEventListener('click', () => {
           merkeSuche(inp.value);
           zumTreffer(treffer[Number(b.dataset.i)]); o.remove();
         });
         b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
       });
+      /* Neue Treffer kommen nacheinander (Schlüssel: Seite und Stelle), die Marke gleitet (E711). */
+      SelectionFlow.stagger(res, zeilen, zeilen.map(b => {
+        const t = treffer[Number(b.dataset.i)];
+        return String(t?.page?.id ?? '') + '#' + String(t?.blockId ?? '');
+      }));
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, res.querySelector<HTMLElement>('button.on'), { taste: '↵ Enter' });
+      zeigeVorschau(i);
+    };
+
+    /* ↑ ↓ OHNE NEUBAU (E711): hier stand `zeichne()` — jetzt wandert nur `.on`. */
+    const waehle = (k: number): void => {
+      if (!treffer.length) return;
+      i = Math.max(0, Math.min(k, treffer.length - 1));
+      res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+      const neu = res.querySelector<HTMLElement>(`button[data-i="${i}"]`);
+      if (!neu) { zeichne(); return; }
+      neu.classList.add('on');
+      neu.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
       zeigeVorschau(i);
     };
 
@@ -1419,6 +1447,7 @@ const App = (() => {
           o.remove();
           void Chronik.oeffnen();
         });
+        SelectionFlow.highlight(res, res.querySelector<HTMLElement>('[data-chr-tuer]'), { taste: '↵ Enter' });
         return;
       }
       const uiFilters = readUiFilters();
@@ -1544,8 +1573,8 @@ const App = (() => {
 
     inp.addEventListener('keydown', e => {
       if (e.key === 'Escape') { o.remove(); return; }
-      if (e.key === 'ArrowDown') { e.preventDefault(); i = Math.min(i + 1, treffer.length - 1); zeichne(); }
-      if (e.key === 'ArrowUp')   { e.preventDefault(); i = Math.max(i - 1, 0); zeichne(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); waehle(i + 1); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); waehle(i - 1); }
       if (e.key === 'Enter' && treffer[i]) { zumTreffer(treffer[i]); o.remove(); }
     });
 
@@ -3426,6 +3455,14 @@ const App = (() => {
        darf) geht zu, wenn kein Menü und kein Fenster davorliegt. Vorher
        schloss es nur sein ✕ — §38: „Escape schliesst das passende
        Overlay". */
+    /* WAS BEIM DRUCK OFFEN WAR (Durchsicht E711): eigene Griffe (Suche,
+       Palette) nehmen ihr Fenster VOR diesem — derselbe Druck räumte dann
+       auch die Meldungen ab (zwei auf einen, vgl. test296 §3). Im Einfangen
+       wird nur notiert; geschlossen wird weiter nur unten. */
+    let warOffen = false;
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') warOffen = !!document.querySelector('.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf');
+    }, true);
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
       const letztes = (wahl: string): Element | null => {
@@ -3445,11 +3482,18 @@ const App = (() => {
         if (!o.hasAttribute('data-insel-traeger') ||
             !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet')) o.remove();
       }
-      else if (feld) {
+      /* Das lose Feld (E710) und die Meldungen (E711) teilen die Regel aus
+         E711: hat ein eigener Griff in DIESEM Druck schon ein Fenster
+         genommen (`warOffen`), nimmt dieser nichts mehr — ein Druck, ein
+         Fenster, auch wenn der Zeitmesser daneben offen steht. */
+      else if (feld && !warOffen) {
         const warDrin = feld.contains(document.activeElement);
         feld.remove();
         if (warDrin) document.getElementById('page')?.focus();
       }
+      /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff) —
+         aber nur, wenn dieses Escape nicht schon ein Fenster genommen hat. */
+      else if (!feld && !warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined') Hinweis.escape();
     });
   };
 

@@ -900,6 +900,12 @@ const App = (() => {
                 '<code>status:offen</code></span></div>' +
                 '</div>';
         document.body.appendChild(o);
+        const kapsel = ['studio-search', 'btn-suche-handy', 'mb-suche']
+            .map(id => document.getElementById(id))
+            .find(k => !!k && k.offsetParent !== null && k.getBoundingClientRect().width > 0);
+        const scheibe = o.querySelector('.finder.such');
+        if (scheibe && kapsel)
+            SelectionFlow.growFrom(scheibe, kapsel.getBoundingClientRect());
         const inp = o.querySelector('#q');
         const res = o.querySelector('#res');
         if (!inp || !res)
@@ -965,7 +971,8 @@ const App = (() => {
                 (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
                 `</span><span class="pth">${t.treffer}</span></button>`).join('');
             verlaufBinden();
-            res.querySelectorAll('button[data-i]').forEach(b => {
+            const zeilen = [...res.querySelectorAll('button[data-i]')];
+            zeilen.forEach(b => {
                 b.addEventListener('click', () => {
                     merkeSuche(inp.value);
                     zumTreffer(treffer[Number(b.dataset.i)]);
@@ -973,7 +980,27 @@ const App = (() => {
                 });
                 b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
             });
+            SelectionFlow.stagger(res, zeilen, zeilen.map(b => {
+                const t = treffer[Number(b.dataset.i)];
+                return String(t?.page?.id ?? '') + '#' + String(t?.blockId ?? '');
+            }));
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, res.querySelector('button.on'), { taste: '↵ Enter' });
+            zeigeVorschau(i);
+        };
+        const waehle = (k) => {
+            if (!treffer.length)
+                return;
+            i = Math.max(0, Math.min(k, treffer.length - 1));
+            res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+            const neu = res.querySelector(`button[data-i="${i}"]`);
+            if (!neu) {
+                zeichne();
+                return;
+            }
+            neu.classList.add('on');
+            neu.scrollIntoView({ block: 'nearest' });
+            SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
             zeigeVorschau(i);
         };
         const zeigeVorschau = (k) => {
@@ -1143,6 +1170,7 @@ const App = (() => {
                     o.remove();
                     void Chronik.oeffnen();
                 });
+                SelectionFlow.highlight(res, res.querySelector('[data-chr-tuer]'), { taste: '↵ Enter' });
                 return;
             }
             const uiFilters = readUiFilters();
@@ -1221,13 +1249,11 @@ const App = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, treffer.length - 1);
-                zeichne();
+                waehle(i + 1);
             }
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                i = Math.max(i - 1, 0);
-                zeichne();
+                waehle(i - 1);
             }
             if (e.key === 'Enter' && treffer[i]) {
                 zumTreffer(treffer[i]);
@@ -2563,6 +2589,11 @@ const App = (() => {
                 return;
             }
         });
+        let warOffen = false;
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape')
+                warOffen = !!document.querySelector('.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf');
+        }, true);
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape')
                 return;
@@ -2580,12 +2611,14 @@ const App = (() => {
                     !o.querySelector('.ui-touch-dialog, .ui-touch-action-sheet'))
                     o.remove();
             }
-            else if (feld) {
+            else if (feld && !warOffen) {
                 const warDrin = feld.contains(document.activeElement);
                 feld.remove();
                 if (warDrin)
                     document.getElementById('page')?.focus();
             }
+            else if (!feld && !warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined')
+                Hinweis.escape();
         });
     };
     const rolleZu = (blockId) => {

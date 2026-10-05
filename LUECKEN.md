@@ -8396,6 +8396,83 @@ verschwinden (§35):
 
 ---
 
+## L232 · Suche und Meldungen nach E711 — was aus den Szenen 07 und 08 noch fehlt — 28. September 2026
+
+**Gefunden beim Bau von E711**, als Rest seines Auftrags. Redur hat am
+27. September um ca. 22:05 das Video „Liquid Glass" geschickt: „Schau mal
+das auch an ich will das auch haben". E711 hat daraus gebaut: die Suche
+wächst aus der Kapsel, neue Treffer kommen nacheinander, EINE Marke gleitet
+mit ↑ ↓ (Suche, Befehlspalette, Menü mit Suche) und trägt „↵ Enter";
+`#toast` wird ein Stapel aus bis zu drei Meldungen; die Glocke fächert die
+letzten drei auf und fliesst nach „Alle gelesen" in sich zurück; der
+Posteingang zeigt Glaskarten (`test588`).
+
+**Was fehlt, ausdrücklich:**
+
+1. **Escape in der Suche leert zuerst das Feld** (Szene 07: „Escape clears
+   the text first and, pressed again, closes"). Heute schliesst Escape
+   sofort, wie seit jeher; mehrere Läufe verlassen sich darauf. Braucht
+   einen eigenen Lauf, der beide Wege zeigt.
+2. **Die Liste als Combobox für den Vorleser** (`role="combobox"` am Feld,
+   `listbox`/`option`, `aria-activedescendant`). Die Marke ist nur Bild
+   (`aria-hidden`); gesagt wird die Wahl heute nicht.
+3. **Enter als Übergabe** (Szene 07, 13,40–13,75 s): die Scheibe hebt sich,
+   der Inhalt geht, die Fläche wird zur Meldung. Heute schliesst Enter und
+   öffnet — ohne die Übergabe.
+4. **Der Kick und der Tropfen** (Szene 08, 14,50 s): vor dem
+   Zusammenfliessen ein kurzer Schlag (Skalierung und Drehung), danach ein
+   Glastropfen als „nichts mehr da". Bewusst weggelassen (ruhig, §39);
+   Redur entscheidet, ob er es will.
+5. **Wischen mit der Maus.** Am Rechner greifen die Karten des Stapels nicht
+   nach dem Zeiger (wie `#toast`, sonst verschluckten sie Klicks auf das
+   darunter); weggenommen werden sie dort mit Escape oder von selbst.
+6. **EIN Goo-Filter für alle Zweige.** `SelectionFlow.goo` legt `#ru-goo`
+   einmal an. Die Zweige `claude/loeschen-fluessig` (E709) und
+   `claude/tropfen-und-kacheln` (E712) bauen dieselbe Technik; beim
+   Zusammenführen bleibt EIN Filter.
+
+7. **Meldungen als Glas.** Der Auftrag nannte „glass toasts"; E703 (c) hat
+   Glas für Toast und Lader verworfen (doppelter Druck beim Einblenden über
+   `opacity`, Glas auf Glas). Der Stapel ist deshalb deckend mit
+   Lichtkante. Glas hier nur, wenn Redur E703 (c) dafür aufhebt.
+8. **Wegwischen ist am Telefon ein Schnippen, kein Ziehen** (Durchsicht,
+   4. Oktober). Die Karten sind `pointer-events:none` wie `#toast` — ein
+   Tipp geht durch sie hindurch. Darunter liegt meist Inhalt, der rollen
+   darf; der Browser nimmt den Zug deshalb nach ein, zwei Bewegungen an sich
+   (`pointercancel`). Gezählt wird seither die letzte Bewegung: deutlich zur
+   Seite ist ein Schnippen und nimmt die Karte weg; langsam mitziehen geht
+   nicht. Echt ziehen hiesse, die Karten am Telefon zu Zielen zu machen —
+   dann nähmen sie den Knöpfen darunter den Tipp. Redur entscheidet.
+   Seit der sechsten Durchsicht (5. Oktober): ruhte der Finger länger als
+   300 ms, bevor er losging, ist es kein Schnippen — der Zug gehört dem,
+   was darunter liegt (eine Kladde, ein Block, eine Marke im PDF werden
+   nach 400 bis 500 ms gehoben; `test588` §14, `test360`).
+9. **Die Trefferzeilen der Suche sind am Telefon 39 px hoch** (gefunden in
+   der Durchsicht, 5. Oktober; NICHT von E711 — auf `b3cf1933` genauso,
+   gemessen mit derselben Sonde). §37 verlangt 44 px auf dem Hauptweg. Die
+   Zeilen tragen jetzt die Marke; ihre Höhe hat E711 nicht angefasst. Ein
+   eigener Bogen: die Zeilen am Telefon auf `var(--touch-min)`, mit
+   `test362` (exakte Zahlen in `marken-decke.json`) und `test402` als
+   Nachbarn und einem Lauf, der die Höhe am Telefon misst.
+10. ~~**Der Fächer beim Zeigen liegt über „KI" und „Favorit"**~~ —
+   GESCHLOSSEN am 5. Oktober (fünfte Durchsicht). Gefunden in der vierten
+   Durchsicht: am Rechner ging er 8 px unter der Glocke auf, 340 × 242 px,
+   und deckte die zwei Knöpfe rechts in der Kopfzeile der Seite. Wer auf
+   der Glocke verweilte und dann dorthin wollte, fuhr in den Fächer; solange
+   der Zeiger darauf lag, blieb er offen, und ein Klick traf eine Meldung.
+   Die vierte Durchsicht liess es Redur offen; die fünfte hat es repariert,
+   weil der Weg länger war als auf `b3cf1933`: der Fächer geht jetzt unter
+   der Reihe auf, die direkt unter der Glocke steht (`unterDerReihe` in
+   hinweis.ts), „KI", „Favorit" und „…" bleiben frei. Beweis: `test588`
+   §13 — rot gegen die Reparatur der vierten Durchsicht, grün danach; die
+   Gegenprobe (Fächer wieder 8 px unter der Glocke) macht ihn wieder rot.
+   Ob der Fächer beim Zeigen überhaupt aufgehen soll, bleibt Redurs Wahl.
+
+**Was es NICHT ist:** kein Fehler. Jeder Griff geht wie vorher (Klick auf
+die Glocke, Strg P, Strg K, `#q`, `[data-i]`, Enter, Escape).
+
+---
+
 ## L231 · Noch 45 Fenster des Browsers: confirm, prompt und alert — 28. September 2026
 
 **Seit E710** fragen `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig`
@@ -9368,7 +9445,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 128 Lücken, 72 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 129 Lücken, 73 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -245,10 +245,13 @@ const Menue = (() => {
                 b.parentElement.style.display !== 'none'));
         const markiere = (b) => {
             liste.querySelectorAll('button.jetzt').forEach(x2 => x2.classList.remove('jetzt'));
-            if (!b)
+            if (!b) {
+                SelectionFlow.highlight(liste, null, { still: true });
                 return;
+            }
             b.classList.add('jetzt');
             b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            SelectionFlow.highlight(liste, b, { still: true });
         };
         const filtern = () => {
             const q = feld.value.trim().toLowerCase();

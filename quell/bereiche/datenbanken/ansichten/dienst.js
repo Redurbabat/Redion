@@ -223,12 +223,13 @@ const Ansichten = (() => {
                         '</div>'
                     : '') +
                 (meld.length
-                    ? '<h2>Benachrichtigungen</h2><div class="home-liste">' +
-                        meld.slice(0, 30).map((m) => `<button data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
+                    ? '<h2>Benachrichtigungen</h2><div class="home-liste pe-karten">' +
+                        meld.slice(0, 30).map((m) => `<button class="pe-karte${m.gelesen ? '' : ' neu'}" data-meld="${m.id}"${m.seite ? ` data-open="${m.seite}"` : ''}>` +
                             `<span>${m.gelesen ? '🔕' : '🔔'}</span>` +
-                            `<span style="flex:1">${esc(m.text)}` +
-                            (m.quelle ? `<em style="opacity:.6"> — ${esc(m.quelle)}</em>` : '') + '</span>' +
-                            `<span style="opacity:.5">${Werkzeuge.zeitKurz(m.wann)}</span></button>`).join('') +
+                            `<span class="pe-karte-inhalt">` +
+                            (m.quelle ? `<span class="pe-quelle">${esc(m.quelle)}</span>` : '') +
+                            `<span class="pe-karte-text">${esc(m.text)}</span></span>` +
+                            `<span class="pe-karte-zeit">${Werkzeuge.zeitKurz(m.wann)}</span></button>`).join('') +
                         '</div>'
                     : '') +
                 '<h2>Erinnerungen</h2><div class="home-liste">' +
