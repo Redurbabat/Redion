@@ -34,6 +34,8 @@
  *      die Bewegungen aus JavaScript, auch die Inseln (data-ui-motion).
  *   §8 Nur transform und opacity: kein `transition: all`, und die
  *      ersetzten `:active`-Regeln tragen kein zweites Einsinken mehr.
+ *   §9 Eine Federsprache: kein TypeScript der App schreibt eine eigene
+ *      Kurve (`cubic-bezier(`) — Zusammenführen der zweiten Welle.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Sie WAR es: rot eingecheckt (commit „test581 (rot)") gegen den Stand
@@ -207,6 +209,27 @@ if (kit && redion) {
   p('sample: die Bahn beginnt am Anfang und endet genau am Ziel',
     bahn.values[0] === 120 && bahn.values[bahn.values.length - 1] === 0 && bahn.duration > 100 && bahn.duration < 1200,
     JSON.stringify({ n: bahn.values.length, d: bahn.duration }));
+}
+
+/* §9 · EINE FEDERSPRACHE IM QUELLTEXT (Zusammenführen der zweiten Welle,
+   5. Oktober 2026). E702 hat die Federn des Kits zur einen Bewegung gemacht;
+   die zweite Welle brachte eine handgemachte Kurve zurück (E711, „Alle
+   gelesen": `cubic-bezier(.5,0,.2,1)` über 460 ms). Hier gezählt: kein
+   TypeScript der App (die Inseln ausgenommen, sie tragen die Federn des
+   Kits selbst) schreibt `cubic-bezier(` in eine Zeichenkette. In Kommentaren
+   darf es stehen — dort erklärt es, was einmal war. */
+console.log('\n§9 · Eine Federsprache: keine handgemachte Kurve im TypeScript der App');
+{
+  const alleTs = (d: string): string[] => fs.readdirSync(path.join(WURZEL, d), { withFileTypes: true }).flatMap(e => {
+    const f = path.join(d, e.name);
+    return e.isDirectory() ? (e.name === 'islands' ? [] : alleTs(f)) : (/\.ts$/.test(e.name) ? [f] : []);
+  });
+  const handgemacht = alleTs('src').flatMap(f => lies(f).split('\n')
+    .map((z, i) => ({ z, i }))
+    .filter(({ z }) => /['"]cubic-bezier\(/.test(z))
+    .map(({ i }) => f.split(path.sep).join('/') + ':' + (i + 1)));
+  p('Keine eigene Kurve: jede Bewegung im TypeScript fährt eine Feder (RedionSpring)',
+    handgemacht.length === 0, JSON.stringify(handgemacht));
 }
 
 /* ==========================================================================

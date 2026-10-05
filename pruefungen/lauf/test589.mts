@@ -259,6 +259,12 @@ const MESSEN = `
     p('… und waagrecht über dem Knopf (die Kanten überdecken sich)',
       lage.m.r >= lage.k.l && lage.m.l <= lage.k.r, JSON.stringify(lage));
   }
+  /* Zusammenführen der zweiten Welle (5. Oktober): das Menü wächst seit
+     E712 AUS dem Knopf — die Blase des Knopfs (E462, beim Zeigen) ragte
+     darunter als „…llen" hervor. Solange das Menü offen ist, keine Blase. */
+  const blase = await s.evaluate(() =>
+    getComputedStyle(document.getElementById('studio-create')!, '::after').display);
+  p('… und die Blase des Knopfs steht nicht unter dem offenen Menü', blase === 'none', blase);
 
   console.log('\n§2 · Drei runde Knöpfe oben, darunter jeder Weg');
   gleich('Oben: PDF einlesen · Neue Seite · Notizbuch', await s.evaluate(() => (window as any).__kopf()),
