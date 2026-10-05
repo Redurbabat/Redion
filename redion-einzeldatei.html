@@ -12566,7 +12566,7 @@ body .rmo-liquid::after {
 /* loeschen.css — der Löschen-Knopf, der zerfliesst (E709; Verhalten:
  * src/schale/bedienung/delete.ts). Nur solange offen: die Flüssigkeit
  * (.ru-loesch-goo, Stücke, die sich nur verschieben und skalieren; der EINE
- * Filter #ru-loesch-goo nur bei `data-fliesst`), der Papierkorb darüber und
+ * Klebefilter der App, #ru-linse-tropfen, nur bei `data-fliesst`), der Papierkorb darüber und
  * das Paar „Löschen"/„Abbrechen". In Ruhe: CSS-Formen, kein Filter.
  * SPEZIFITÄT STATT REIHENFOLGE: Bauteil-Blatt vor bausteine.css (test87);
  * gegen die Zeilenregeln späterer Blätter gewinnt `html body [m][m]` (0,2,2).
@@ -12672,10 +12672,14 @@ html body [data-loesch-unter]{ opacity: 0; transition: opacity var(--motion-fast
 
 /* ── Die Schicht ─────────────────────────────────────────────────────────── */
 
-.ru-loesch-defs{ position: absolute; inline-size: 0; block-size: 0; overflow: hidden; pointer-events: none; }
-.ru-loesch-kante{ flood-color: var(--line-stark, var(--line)); }
-.ru-loesch-schatten{ flood-color: color-mix(in srgb, var(--bg-tief, var(--bg)) 60%, transparent); }
-html[data-theme="light"] .ru-loesch-schatten{ flood-color: color-mix(in srgb, var(--text) 18%, transparent); }
+/* Kante und Schatten der Flüssigkeit. Bis zum Zusammenführen der zweiten
+   Welle waren sie zwei feDropShadow in einem eigenen Klebefilter
+   (#ru-loesch-goo); seit es EINEN gibt (Linse.TROPFEN, test589 §15), stehen
+   sie als zwei drop-shadow dahinter — mit denselben Zahlen (stdDeviation
+   0,5 und 3 heissen in CSS 1 und 6 px Unschärfe) und denselben Farben. */
+.ru-loesch{ --loesch-kante: var(--line-stark, var(--line));
+  --loesch-schatten: color-mix(in srgb, var(--bg-tief, var(--bg)) 60%, transparent); }
+html[data-theme="light"] .ru-loesch{ --loesch-schatten: color-mix(in srgb, var(--text) 18%, transparent); }
 
 .ru-loesch{
   --loesch-s: var(--loesch-groesse);
@@ -12874,7 +12878,8 @@ body > .ru-loesch{ z-index: 580; }
   scale: var(--loesch-seite) 1;
 }
 /* Der Filter ist nur an, solange es fliesst — in Ruhe kostet er nichts. */
-.ru-loesch[data-fliesst] .ru-loesch-goo{ visibility: visible; filter: url(#ru-loesch-goo); }
+.ru-loesch[data-fliesst] .ru-loesch-goo{ visibility: visible;
+  filter: url(#ru-linse-tropfen) drop-shadow(0 0 1px var(--loesch-kante)) drop-shadow(0 2px 6px var(--loesch-schatten)); }
 
 .ru-loesch-blob{ position: absolute; inset: 0; }
 .ru-loesch-stueck{
@@ -24365,8 +24370,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .ru-faecher-fuss button[data-faecher="gelesen"]{color:var(--accent-text)}
 :is(.ru-meldung,.ru-faecher-fuss button):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* Nur während des Zusammenfliessens, an einer Ebene (SelectionFlow.goo). */
-.ru-goo-an{filter:url(#ru-goo)}
-#ru-goo-svg{position:absolute;width:0;height:0;overflow:hidden}
+/* Derselbe Klebefilter wie Tropfen und Löschen-Knopf: Linse.TROPFEN (test589 §15). */
+.ru-goo-an{filter:url(#ru-linse-tropfen)}
 
 /* Posteingang: Glaskarten mit Lichtkante, ohne Unschärfe je Karte. */
 .home-liste.pe-karten{display:grid;gap:var(--space-3);background:none;border:0;box-shadow:none;padding:0}
@@ -26888,7 +26893,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1410, inhalt: 'b2523c9e70853198', gebaut: '2026-10-05T22:16:15.200Z' };
+const Stand = { fassung: 1411, inhalt: '3da41d966fbe735c', gebaut: '2026-10-05T22:29:40.885Z' };
 window.Stand = Stand;
 
 </script>
@@ -47098,42 +47103,16 @@ const SelectionFlow = (() => {
         });
         return fenster.animate([{ transform: von }, { transform: 'none' }], { duration, easing });
     };
-    const SVG = 'http://www.w3.org/2000/svg';
-    const gooFilter = () => {
-        if (document.getElementById('ru-goo'))
-            return;
-        const svg = document.createElementNS(SVG, 'svg');
-        svg.setAttribute('id', 'ru-goo-svg');
-        svg.setAttribute('aria-hidden', 'true');
-        svg.setAttribute('width', '0');
-        svg.setAttribute('height', '0');
-        svg.setAttribute('focusable', 'false');
-        const filter = document.createElementNS(SVG, 'filter');
-        filter.setAttribute('id', 'ru-goo');
-        filter.setAttribute('color-interpolation-filters', 'sRGB');
-        const blur = document.createElementNS(SVG, 'feGaussianBlur');
-        blur.setAttribute('in', 'SourceGraphic');
-        blur.setAttribute('stdDeviation', '8');
-        blur.setAttribute('result', 'weich');
-        const matrix = document.createElementNS(SVG, 'feColorMatrix');
-        matrix.setAttribute('in', 'weich');
-        matrix.setAttribute('mode', 'matrix');
-        matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
-        matrix.setAttribute('result', 'goo');
-        const oben = document.createElementNS(SVG, 'feComposite');
-        oben.setAttribute('in', 'SourceGraphic');
-        oben.setAttribute('in2', 'goo');
-        oben.setAttribute('operator', 'atop');
-        filter.append(blur, matrix, oben);
-        svg.appendChild(filter);
-        document.body.appendChild(svg);
-    };
+    const gooLeihe = new WeakMap();
     const goo = (ebene, an) => {
         if (!an || ruhig()) {
             ebene.classList.remove('ru-goo-an');
+            gooLeihe.get(ebene)?.();
+            gooLeihe.delete(ebene);
             return false;
         }
-        gooFilter();
+        if (!gooLeihe.has(ebene) && typeof Linse !== 'undefined')
+            gooLeihe.set(ebene, Linse.tropfenLeihen());
         ebene.classList.add('ru-goo-an');
         return true;
     };
@@ -48431,8 +48410,6 @@ const RedionDelete = (() => {
     const SETTLE_IN = 400;
     const FLOW_IN = 700;
     const FLOW_OUT = 480;
-    const GOO_ID = 'ru-loesch-goo';
-    const SVG = 'http://www.w3.org/2000/svg';
     let current = null;
     let passing = null;
     let started = false;
@@ -48452,34 +48429,16 @@ const RedionDelete = (() => {
         el.className = cls;
         return el;
     };
-    const ensureFilter = () => {
-        if (document.getElementById(GOO_ID))
-            return;
-        const svg = document.createElementNS(SVG, 'svg');
-        svg.setAttribute('class', 'ru-loesch-defs');
-        svg.setAttribute('width', '0');
-        svg.setAttribute('height', '0');
-        svg.setAttribute('aria-hidden', 'true');
-        svg.setAttribute('focusable', 'false');
-        const filter = document.createElementNS(SVG, 'filter');
-        for (const [k, v] of [['id', GOO_ID], ['x', '-10%'], ['y', '-25%'], ['width', '120%'],
-            ['height', '150%'], ['color-interpolation-filters', 'sRGB']])
-            filter.setAttribute(k, v);
-        const part = (tag, attrs) => {
-            const n = document.createElementNS(SVG, tag);
-            for (const [k, v] of attrs)
-                n.setAttribute(k, v);
-            filter.appendChild(n);
-        };
-        part('feGaussianBlur', [['in', 'SourceGraphic'], ['stdDeviation', '4'], ['result', 'blur']]);
-        part('feColorMatrix', [['in', 'blur'], ['type', 'matrix'],
-            ['values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7'], ['result', 'goo']]);
-        part('feDropShadow', [['class', 'ru-loesch-kante'], ['in', 'goo'], ['dx', '0'], ['dy', '0'],
-            ['stdDeviation', '0.5'], ['result', 'kante']]);
-        part('feDropShadow', [['class', 'ru-loesch-schatten'], ['in', 'kante'], ['dx', '0'], ['dy', '2'],
-            ['stdDeviation', '3']]);
-        svg.appendChild(filter);
-        document.body.appendChild(svg);
+    const leihen = new WeakMap();
+    const flowOn = (layer) => {
+        layer.dataset['fliesst'] = '';
+        if (!leihen.has(layer) && typeof Linse !== 'undefined')
+            leihen.set(layer, Linse.tropfenLeihen());
+    };
+    const flowOff = (layer) => {
+        delete layer.dataset['fliesst'];
+        leihen.get(layer)?.();
+        leihen.delete(layer);
     };
     const nameOf = (t) => (t.getAttribute('aria-label') || t.getAttribute('title') || '').trim();
     const labelOf = (word, context) => !context ? word
@@ -48600,6 +48559,7 @@ const RedionDelete = (() => {
     const finish = (o) => {
         window.clearTimeout(o.timer);
         window.clearInterval(o.watch);
+        flowOff(o.layer);
         o.layer.remove();
         showUnder(o);
         if (reopened(o))
@@ -48640,7 +48600,7 @@ const RedionDelete = (() => {
             delete o.layer.dataset['auf'];
             return;
         }
-        o.layer.dataset['fliesst'] = '';
+        flowOn(o.layer);
         o.layer.dataset['zurueck'] = '';
         void o.layer.offsetWidth;
         delete o.layer.dataset['auf'];
@@ -48690,10 +48650,8 @@ const RedionDelete = (() => {
         const reduced = calm();
         if (reduced)
             layer.dataset['ruhig'] = '';
-        else {
-            ensureFilter();
-            layer.dataset['fliesst'] = '';
-        }
+        else
+            flowOn(layer);
         carrier.appendChild(layer);
         place(o, confirm, cancel);
         hideUnder(o);
@@ -48708,7 +48666,7 @@ const RedionDelete = (() => {
         layer.dataset['auf'] = '';
         cancel.focus({ preventScroll: true });
         o.timer = window.setTimeout(() => {
-            delete layer.dataset['fliesst'];
+            flowOff(layer);
             delete layer.dataset['setzt'];
         }, reduced ? 0 : FLOW_IN);
         o.watch = window.setInterval(() => {

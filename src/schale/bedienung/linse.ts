@@ -56,7 +56,11 @@ const Linse = (() => {
      wechselt die Pille zwischen KEINEM und diesem einen, und das genügt. */
   const FAHRT = 'ru-linse-fahrt';
   /* Der Tropfen (E712): EIN Goo-Filter im selben Halter (E649), nur solange
-     es fliesst (`tropfenLeihen`); in Ruhe nur FAHRT (test539 §2). */
+     es fliesst (`tropfenLeihen`); in Ruhe nur FAHRT (test539 §2). Seit dem
+     Zusammenführen der zweiten Welle ist er der EINE Klebefilter der App:
+     auch der Löschen-Knopf (E709, delete.ts) und die Meldungen (E711,
+     SelectionFlow.goo) leihen ihn, statt je einen eigenen zu bauen
+     (test589 §15). */
   const TROPFEN = 'ru-linse-tropfen';
 
   /* Die Karte als Bild. Sie wird auf die Grösse der Linse gezogen

@@ -91,10 +91,16 @@ p('index.html verlinkt das Blatt', index.includes('<link rel="stylesheet" href="
 p('Beide stehen im GRUNDSTOCK (offline, §28)',
   sw.includes("'./quell/schale/bedienung/delete.js'") && sw.includes("'./quell/schale/stil/loeschen.css'"));
 p('start.ts startet ihn — der einzige Einstiegspunkt (§7)', lies('src/start.ts').includes('RedionDelete.start()'));
+/* EINE feste Kennung, keine je Knopf — seit dem Zusammenführen der zweiten
+   Welle die EINE der App: der Knopf baut keinen Filter mehr, er leiht
+   `Linse.TROPFEN` (#ru-linse-tropfen, test589 §15). Vorher stand hier
+   `GOO_ID = 'ru-loesch-goo'`; die Zusage ist dieselbe, nur mit weniger
+   Filtern im Dokument. */
 p('EIN Filter im Dokument (eine feste Kennung, keine je Knopf)',
-  (helfer.match(/GOO_ID = 'ru-loesch-goo'/g) || []).length === 1 && !/useId|uid\b/.test(helfer));
+  /Linse\.tropfenLeihen\(\)/.test(helfer) && !/createElementNS\([^)]*'filter'/.test(helfer) &&
+  !/useId|uid\b/.test(helfer));
 p('Der Filter hängt am Fliessen, nicht an der Ruhe',
-  /\.ru-loesch\[data-fliesst\] \.ru-loesch-goo\{[^}]*filter: url\(#ru-loesch-goo\)/.test(blatt) &&
+  /\.ru-loesch\[data-fliesst\] \.ru-loesch-goo\{[^}]*filter: url\(#ru-linse-tropfen\)/.test(blatt) &&
   !/^\.ru-loesch-goo\{[^}]*filter:/m.test(blatt));
 p('Kein React, keine Insel: der Helfer ist Redions eigenes TypeScript',
   helfer !== '' && !/React|Inseln\.|islands/.test(helfer));
@@ -236,7 +242,7 @@ const zustand = (pc: Page) => pc.evaluate(() => {
     fokusKnopf: !!a && a !== document.body &&
       (a.hasAttribute('data-loeschknopf') || !!a.querySelector('[data-loeschknopf]')),
     fokusImFenster: !!a && a !== document.body && !!a.closest('.overlay'),
-    filterZahl: document.querySelectorAll('filter#ru-loesch-goo').length,
+    filterZahl: document.querySelectorAll('filter#ru-linse-tropfen').length,
     filter: goo ? getComputedStyle(goo).filter : '',
     sichtbar: goo ? getComputedStyle(goo).visibility : '',
     overlays: document.querySelectorAll('.overlay').length,

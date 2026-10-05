@@ -1,7 +1,7 @@
 /* loeschen.css — der Löschen-Knopf, der zerfliesst (E709; Verhalten:
  * src/schale/bedienung/delete.ts). Nur solange offen: die Flüssigkeit
  * (.ru-loesch-goo, Stücke, die sich nur verschieben und skalieren; der EINE
- * Filter #ru-loesch-goo nur bei `data-fliesst`), der Papierkorb darüber und
+ * Klebefilter der App, #ru-linse-tropfen, nur bei `data-fliesst`), der Papierkorb darüber und
  * das Paar „Löschen"/„Abbrechen". In Ruhe: CSS-Formen, kein Filter.
  * SPEZIFITÄT STATT REIHENFOLGE: Bauteil-Blatt vor bausteine.css (test87);
  * gegen die Zeilenregeln späterer Blätter gewinnt `html body [m][m]` (0,2,2).
@@ -107,10 +107,14 @@ html body [data-loesch-unter]{ opacity: 0; transition: opacity var(--motion-fast
 
 /* ── Die Schicht ─────────────────────────────────────────────────────────── */
 
-.ru-loesch-defs{ position: absolute; inline-size: 0; block-size: 0; overflow: hidden; pointer-events: none; }
-.ru-loesch-kante{ flood-color: var(--line-stark, var(--line)); }
-.ru-loesch-schatten{ flood-color: color-mix(in srgb, var(--bg-tief, var(--bg)) 60%, transparent); }
-html[data-theme="light"] .ru-loesch-schatten{ flood-color: color-mix(in srgb, var(--text) 18%, transparent); }
+/* Kante und Schatten der Flüssigkeit. Bis zum Zusammenführen der zweiten
+   Welle waren sie zwei feDropShadow in einem eigenen Klebefilter
+   (#ru-loesch-goo); seit es EINEN gibt (Linse.TROPFEN, test589 §15), stehen
+   sie als zwei drop-shadow dahinter — mit denselben Zahlen (stdDeviation
+   0,5 und 3 heissen in CSS 1 und 6 px Unschärfe) und denselben Farben. */
+.ru-loesch{ --loesch-kante: var(--line-stark, var(--line));
+  --loesch-schatten: color-mix(in srgb, var(--bg-tief, var(--bg)) 60%, transparent); }
+html[data-theme="light"] .ru-loesch{ --loesch-schatten: color-mix(in srgb, var(--text) 18%, transparent); }
 
 .ru-loesch{
   --loesch-s: var(--loesch-groesse);
@@ -309,7 +313,8 @@ body > .ru-loesch{ z-index: 580; }
   scale: var(--loesch-seite) 1;
 }
 /* Der Filter ist nur an, solange es fliesst — in Ruhe kostet er nichts. */
-.ru-loesch[data-fliesst] .ru-loesch-goo{ visibility: visible; filter: url(#ru-loesch-goo); }
+.ru-loesch[data-fliesst] .ru-loesch-goo{ visibility: visible;
+  filter: url(#ru-linse-tropfen) drop-shadow(0 0 1px var(--loesch-kante)) drop-shadow(0 2px 6px var(--loesch-schatten)); }
 
 .ru-loesch-blob{ position: absolute; inset: 0; }
 .ru-loesch-stueck{

@@ -33,8 +33,6 @@ const RedionDelete = (() => {
   const FLOW_IN = 700;
   /** Und beim Schliessen. */
   const FLOW_OUT = 480;
-  const GOO_ID = 'ru-loesch-goo';
-  const SVG = 'http://www.w3.org/2000/svg';
 
   type Open = {
     trigger: HTMLElement;
@@ -63,34 +61,22 @@ const RedionDelete = (() => {
     return el;
   };
 
-  /** Der Klebefilter, einmal je Dokument. */
-  const ensureFilter = (): void => {
-    if (document.getElementById(GOO_ID)) return;
-    const svg = document.createElementNS(SVG, 'svg');
-    svg.setAttribute('class', 'ru-loesch-defs');
-    svg.setAttribute('width', '0');
-    svg.setAttribute('height', '0');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('focusable', 'false');
-    const filter = document.createElementNS(SVG, 'filter');
-    for (const [k, v] of [['id', GOO_ID], ['x', '-10%'], ['y', '-25%'], ['width', '120%'],
-                          ['height', '150%'], ['color-interpolation-filters', 'sRGB']] as const)
-      filter.setAttribute(k, v);
-    const part = (tag: string, attrs: Array<readonly [string, string]>): void => {
-      const n = document.createElementNS(SVG, tag);
-      for (const [k, v] of attrs) n.setAttribute(k, v);
-      filter.appendChild(n);
-    };
-    /* Unschärfe, dann Alpha-Schwelle × 18 − 7: näher als ~6 px verschmilzt. */
-    part('feGaussianBlur', [['in', 'SourceGraphic'], ['stdDeviation', '4'], ['result', 'blur']]);
-    part('feColorMatrix', [['in', 'blur'], ['type', 'matrix'],
-      ['values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7'], ['result', 'goo']]);
-    part('feDropShadow', [['class', 'ru-loesch-kante'], ['in', 'goo'], ['dx', '0'], ['dy', '0'],
-      ['stdDeviation', '0.5'], ['result', 'kante']]);
-    part('feDropShadow', [['class', 'ru-loesch-schatten'], ['in', 'kante'], ['dx', '0'], ['dy', '2'],
-      ['stdDeviation', '3']]);
-    svg.appendChild(filter);
-    document.body.appendChild(svg);
+  /** Der Klebefilter: EINER in der ganzen App, `Linse.TROPFEN` (E712).
+   *  Hier stand bis zum Zusammenführen der zweiten Welle ein eigener
+   *  (`#ru-loesch-goo`) — derselbe Hals zwischen zwei Flächen, nur mit
+   *  anderen Zahlen. Der Knopf LEIHT ihn, solange es fliesst, und gibt ihn
+   *  zurück; mit der letzten Leihe geht er aus dem Dokument (test589 §15).
+   *  Kante und Schatten, die früher Teil des Filters waren, setzt das
+   *  Stilblatt als `drop-shadow` dahinter (loeschen.css). */
+  const leihen = new WeakMap<HTMLElement, () => void>();
+  const flowOn = (layer: HTMLElement): void => {
+    layer.dataset['fliesst'] = '';
+    if (!leihen.has(layer) && typeof Linse !== 'undefined') leihen.set(layer, Linse.tropfenLeihen());
+  };
+  const flowOff = (layer: HTMLElement): void => {
+    delete layer.dataset['fliesst'];
+    leihen.get(layer)?.();
+    leihen.delete(layer);
   };
 
   /** Was der Knopf löscht, für Vorleser: sein aria-label, sonst sein title. */
@@ -234,6 +220,7 @@ const RedionDelete = (() => {
   const finish = (o: Open): void => {
     window.clearTimeout(o.timer);
     window.clearInterval(o.watch);
+    flowOff(o.layer);
     o.layer.remove();
     showUnder(o);
     if (reopened(o)) return;
@@ -279,7 +266,7 @@ const RedionDelete = (() => {
       delete o.layer.dataset['auf'];
       return;
     }
-    o.layer.dataset['fliesst'] = '';
+    flowOn(o.layer);
     o.layer.dataset['zurueck'] = '';
     /* Ein Bild mit Filter an, DANN zurück — sonst springt der Übergang. */
     void o.layer.offsetWidth;
@@ -325,7 +312,7 @@ const RedionDelete = (() => {
     const o: Open = { trigger, layer, pair, armedUntil: 0, timer: 0, watch: 0, under: [] };
     const reduced = calm();
     if (reduced) layer.dataset['ruhig'] = '';
-    else { ensureFilter(); layer.dataset['fliesst'] = ''; }
+    else flowOn(layer);
     carrier.appendChild(layer);
     place(o, confirm, cancel);
     hideUnder(o);
@@ -339,7 +326,7 @@ const RedionDelete = (() => {
     layer.dataset['auf'] = '';
     cancel.focus({ preventScroll: true });
     o.timer = window.setTimeout(() => {
-      delete layer.dataset['fliesst'];
+      flowOff(layer);
       delete layer.dataset['setzt'];
     }, reduced ? 0 : FLOW_IN);
     /* Verschwindet der Knopf (die Liste zeichnet sich neu), geht das Paar mit. */

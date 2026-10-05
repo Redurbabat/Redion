@@ -9,8 +9,6 @@ const RedionDelete = (() => {
     const SETTLE_IN = 400;
     const FLOW_IN = 700;
     const FLOW_OUT = 480;
-    const GOO_ID = 'ru-loesch-goo';
-    const SVG = 'http://www.w3.org/2000/svg';
     let current = null;
     let passing = null;
     let started = false;
@@ -30,34 +28,16 @@ const RedionDelete = (() => {
         el.className = cls;
         return el;
     };
-    const ensureFilter = () => {
-        if (document.getElementById(GOO_ID))
-            return;
-        const svg = document.createElementNS(SVG, 'svg');
-        svg.setAttribute('class', 'ru-loesch-defs');
-        svg.setAttribute('width', '0');
-        svg.setAttribute('height', '0');
-        svg.setAttribute('aria-hidden', 'true');
-        svg.setAttribute('focusable', 'false');
-        const filter = document.createElementNS(SVG, 'filter');
-        for (const [k, v] of [['id', GOO_ID], ['x', '-10%'], ['y', '-25%'], ['width', '120%'],
-            ['height', '150%'], ['color-interpolation-filters', 'sRGB']])
-            filter.setAttribute(k, v);
-        const part = (tag, attrs) => {
-            const n = document.createElementNS(SVG, tag);
-            for (const [k, v] of attrs)
-                n.setAttribute(k, v);
-            filter.appendChild(n);
-        };
-        part('feGaussianBlur', [['in', 'SourceGraphic'], ['stdDeviation', '4'], ['result', 'blur']]);
-        part('feColorMatrix', [['in', 'blur'], ['type', 'matrix'],
-            ['values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7'], ['result', 'goo']]);
-        part('feDropShadow', [['class', 'ru-loesch-kante'], ['in', 'goo'], ['dx', '0'], ['dy', '0'],
-            ['stdDeviation', '0.5'], ['result', 'kante']]);
-        part('feDropShadow', [['class', 'ru-loesch-schatten'], ['in', 'kante'], ['dx', '0'], ['dy', '2'],
-            ['stdDeviation', '3']]);
-        svg.appendChild(filter);
-        document.body.appendChild(svg);
+    const leihen = new WeakMap();
+    const flowOn = (layer) => {
+        layer.dataset['fliesst'] = '';
+        if (!leihen.has(layer) && typeof Linse !== 'undefined')
+            leihen.set(layer, Linse.tropfenLeihen());
+    };
+    const flowOff = (layer) => {
+        delete layer.dataset['fliesst'];
+        leihen.get(layer)?.();
+        leihen.delete(layer);
     };
     const nameOf = (t) => (t.getAttribute('aria-label') || t.getAttribute('title') || '').trim();
     const labelOf = (word, context) => !context ? word
@@ -178,6 +158,7 @@ const RedionDelete = (() => {
     const finish = (o) => {
         window.clearTimeout(o.timer);
         window.clearInterval(o.watch);
+        flowOff(o.layer);
         o.layer.remove();
         showUnder(o);
         if (reopened(o))
@@ -218,7 +199,7 @@ const RedionDelete = (() => {
             delete o.layer.dataset['auf'];
             return;
         }
-        o.layer.dataset['fliesst'] = '';
+        flowOn(o.layer);
         o.layer.dataset['zurueck'] = '';
         void o.layer.offsetWidth;
         delete o.layer.dataset['auf'];
@@ -268,10 +249,8 @@ const RedionDelete = (() => {
         const reduced = calm();
         if (reduced)
             layer.dataset['ruhig'] = '';
-        else {
-            ensureFilter();
-            layer.dataset['fliesst'] = '';
-        }
+        else
+            flowOn(layer);
         carrier.appendChild(layer);
         place(o, confirm, cancel);
         hideUnder(o);
@@ -286,7 +265,7 @@ const RedionDelete = (() => {
         layer.dataset['auf'] = '';
         cancel.focus({ preventScroll: true });
         o.timer = window.setTimeout(() => {
-            delete layer.dataset['fliesst'];
+            flowOff(layer);
             delete layer.dataset['setzt'];
         }, reduced ? 0 : FLOW_IN);
         o.watch = window.setInterval(() => {

@@ -811,42 +811,16 @@ const SelectionFlow = (() => {
         });
         return fenster.animate([{ transform: von }, { transform: 'none' }], { duration, easing });
     };
-    const SVG = 'http://www.w3.org/2000/svg';
-    const gooFilter = () => {
-        if (document.getElementById('ru-goo'))
-            return;
-        const svg = document.createElementNS(SVG, 'svg');
-        svg.setAttribute('id', 'ru-goo-svg');
-        svg.setAttribute('aria-hidden', 'true');
-        svg.setAttribute('width', '0');
-        svg.setAttribute('height', '0');
-        svg.setAttribute('focusable', 'false');
-        const filter = document.createElementNS(SVG, 'filter');
-        filter.setAttribute('id', 'ru-goo');
-        filter.setAttribute('color-interpolation-filters', 'sRGB');
-        const blur = document.createElementNS(SVG, 'feGaussianBlur');
-        blur.setAttribute('in', 'SourceGraphic');
-        blur.setAttribute('stdDeviation', '8');
-        blur.setAttribute('result', 'weich');
-        const matrix = document.createElementNS(SVG, 'feColorMatrix');
-        matrix.setAttribute('in', 'weich');
-        matrix.setAttribute('mode', 'matrix');
-        matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
-        matrix.setAttribute('result', 'goo');
-        const oben = document.createElementNS(SVG, 'feComposite');
-        oben.setAttribute('in', 'SourceGraphic');
-        oben.setAttribute('in2', 'goo');
-        oben.setAttribute('operator', 'atop');
-        filter.append(blur, matrix, oben);
-        svg.appendChild(filter);
-        document.body.appendChild(svg);
-    };
+    const gooLeihe = new WeakMap();
     const goo = (ebene, an) => {
         if (!an || ruhig()) {
             ebene.classList.remove('ru-goo-an');
+            gooLeihe.get(ebene)?.();
+            gooLeihe.delete(ebene);
             return false;
         }
-        gooFilter();
+        if (!gooLeihe.has(ebene) && typeof Linse !== 'undefined')
+            gooLeihe.set(ebene, Linse.tropfenLeihen());
         ebene.classList.add('ru-goo-an');
         return true;
     };

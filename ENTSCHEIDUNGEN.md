@@ -59057,6 +59057,15 @@ typecheck` sauber, `bauen:ts` „Dienststand v1398: unverändert", `stand`,
 Material) auf, ohne sie zu ändern; E699 bleibt (keine Insel beim Start) ·
 **Wächter:** `test586` · **Zweig** `claude/loeschen-fluessig`.
 
+> **Ergänzt beim Zusammenführen der zweiten Welle (5. Oktober 2026) — ein
+> Klebefilter für die ganze App.** Der Knopf baut seinen Filter nicht mehr
+> selbst (`#ru-loesch-goo`), er LEIHT den einen der App, `Linse.TROPFEN`
+> (E712), solange es fliesst, und gibt ihn zurück. Kante und Schatten, die
+> zwei `feDropShadow` des eigenen Filters, stehen als zwei `drop-shadow`
+> dahinter, mit denselben Zahlen und Farben. Was hier entschieden wurde,
+> bleibt: ein Filter im Dokument, nur während des Fliessens (`test586`
+> 60/60, an der einen Kennung; `test589` §15).
+
 **Redurs Sätze, wörtlich:**
 
 ```txt
@@ -59364,6 +59373,15 @@ Träger mehr in der Liste, eine Regel, ein Rückfall von drei Zeilen.
 Fokus des Kits mit E302 und Fokus versöhnt sind") · **ergänzt** E302 (ein
 gemeinsamer Escape-Griff) und E223 (Fokus) · **Wächter:** `test587` ·
 **Zweig** `claude/dialoge-im-kit`.
+
+> **Ergänzt beim Zusammenführen der zweiten Welle (5. Oktober 2026) — der
+> Zeitmesser auf Escape.** E713 hat dasselbe Feld umgebaut und trägt
+> `data-esc-knopf` an seinem ✕; der gemeinsame Griff drückt jetzt dieses ✕
+> (die Karte geht in die Pille zurück) statt das Feld über
+> `data-esc-schliesst` wegzunehmen. Die Zusage aus §7 von `test587` bleibt:
+> Escape schliesst es — ausser der Fokus steht in einem Eingabefeld oder
+> bearbeitbaren Block ausserhalb des Feldes (E713: „wer im Text Escape
+> drückt, meint den Text"). Ein Kit-Fenster schliesst weiter sich selbst.
 
 **Redurs Sätze, wörtlich:**
 
@@ -59680,6 +59698,14 @@ Glass" 27. September ca. 22:05, Auftrag ca. 22:10) · **ergänzt** E706 (das
 Material gleitet jetzt auch durch Listen) und E116 (der Fortschritt bleibt
 am Leben, jetzt neben einem Stapel) · **Wächter:** `test588` · **Zweig**
 `claude/suche-und-meldungen`.
+
+> **Ergänzt beim Zusammenführen der zweiten Welle (5. Oktober 2026).**
+> (1) `SelectionFlow.goo` baut keinen eigenen Filter mehr (`#ru-goo`), er
+> leiht den einen der App, `Linse.TROPFEN` (E712); die Zusage bleibt — EINE
+> Ebene trägt ihn, nur solange sie fliesst (`test588` §8 an der einen
+> Kennung, `test589` §15). (2) `warOffen` gilt auch für den Zeitmesser
+> (E710, E713): hat ein eigener Griff in diesem Druck schon ein Fenster
+> genommen, bleibt der Zeitmesser offen — ein Druck, ein Fenster.
 
 **Redurs Sätze, wörtlich:**
 
@@ -60259,6 +60285,16 @@ Filter — der Tropfen liegt darin, kein dritter) und E706 (die Feder
 „knapp“), ohne eine davon zu ändern · **Wächter:** `test589` ·
 **Zweig** `claude/tropfen-und-kacheln`.
 
+> **Ergänzt beim Zusammenführen der zweiten Welle (5. Oktober 2026) — der
+> Tropfen ist der EINE Klebefilter der App.** Drei Zweige derselben Woche
+> hatten je einen gebaut: E709 (`#ru-loesch-goo`), E711 (`#ru-goo`) und
+> dieser. Der Auftrag zum Zusammenführen: „Nur ein Goo-Filter:
+> Löschen-Knopf und Tropfen teilen sich `Linse.TROPFEN`." Jetzt leihen alle
+> drei `Linse.tropfenLeihen()`; der Filter kommt mit der ersten Leihe und
+> geht mit der letzten, in Ruhe hält der Halter weiter nur die Fahrt
+> (`test539` §2). `test589` §15 zählt es: EINE Alpha-Schwelle im Quelltext,
+> in linse.ts; kein Stilblatt nennt einen anderen Klebefilter.
+
 **Redurs Sätze, wörtlich:**
 
 ```txt
@@ -60589,6 +60625,14 @@ GLASS" am 27. September ca. 22:05; Auftrag ca. 16:45, Fragebogen ca. 21:45,
 ca. 21:47, ca. 21:49, ca. 22:10) · **ergänzt** E268 (Zeitmesser), E535
 (Dreierblock) und E302 (der eine Escape-Griff) · **Wächter:** `test590` ·
 **Zweig** `claude/zeitpille-und-balken`.
+
+> **Ergänzt beim Zusammenführen der zweiten Welle (5. Oktober 2026) — der
+> Escape-Griff.** E710 hatte denselben Zeitmesser über `data-esc-schliesst`
+> weggenommen; es gilt jetzt nur noch sein ✕ mit `data-esc-knopf`. Die
+> Bedingung „nur mit dem Fokus im Feld oder nirgends" ist zu „nicht, wenn
+> der Fokus in einem Eingabefeld oder bearbeitbaren Block ausserhalb steht"
+> geworden: mit ihr war `test587` §7 rot (der Fokus stand nach einer Frage
+> auf einem Knopf der Seite). Dazu die Regel aus E711, `warOffen`.
 
 **Redurs Sätze, wörtlich:**
 

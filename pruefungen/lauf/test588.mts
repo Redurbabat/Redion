@@ -409,14 +409,14 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
     await pc.waitForTimeout(700);
   }
   const vorher = await pc.evaluate(`({
-    filter: document.querySelectorAll('filter#ru-goo').length,
-    an: [...document.querySelectorAll('*')].filter(e => /ru-goo/.test(getComputedStyle(e).filter)).length,
+    filter: document.querySelectorAll('filter#ru-linse-tropfen').length,
+    an: [...document.querySelectorAll('*')].filter(e => /ru-linse-tropfen/.test(getComputedStyle(e).filter)).length,
     zahl: Werkzeuge.meldungen().length })`) as any;
   p('In Ruhe: höchstens EIN Goo-Filter im Dokument, an keinem Element', vorher.filter <= 1 && vorher.an === 0, JSON.stringify(vorher));
   const goo = pc.evaluate(`new Promise(fertig => {
     let max = 0; const t0 = performance.now();
     const schritt = () => {
-      const n = [...document.querySelectorAll('.ru-goo-an')].filter(e => /ru-goo/.test(getComputedStyle(e).filter)).length;
+      const n = [...document.querySelectorAll('.ru-goo-an')].filter(e => /ru-linse-tropfen/.test(getComputedStyle(e).filter)).length;
       max = Math.max(max, n);
       if (performance.now() - t0 < 900) requestAnimationFrame(schritt); else fertig(max);
     };
@@ -427,8 +427,8 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
   const gooMax = await goo;
   await pc.waitForTimeout(400);
   const danach = await pc.evaluate(`({
-    filter: document.querySelectorAll('filter#ru-goo').length,
-    an: [...document.querySelectorAll('*')].filter(e => /ru-goo/.test(getComputedStyle(e).filter)).length,
+    filter: document.querySelectorAll('filter#ru-linse-tropfen').length,
+    an: [...document.querySelectorAll('*')].filter(e => /ru-linse-tropfen/.test(getComputedStyle(e).filter)).length,
     zahl: Werkzeuge.meldungen().length, gelesen: Werkzeuge.meldungen().every(m => m.gelesen),
     faecher: (() => { const f = document.getElementById('ru-glocken-faecher'); return !!f && !f.hidden; })() })`) as any;
   p('Während des Zusammenfliessens trägt genau EINE Ebene den Goo-Filter', gooMax === 1, String(gooMax));

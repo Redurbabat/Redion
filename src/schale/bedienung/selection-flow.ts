@@ -1132,42 +1132,22 @@ const SelectionFlow = (() => {
     return fenster.animate([{ transform: von }, { transform: 'none' }], { duration, easing });
   };
 
-  /* DER EINE GOO-FILTER (E711, Szene 08): verwischen, dann Alpha steil
-     (×18 − 7) — Flächen bekommen Hälse. EIN Filter im Dokument, an EINER
-     Ebene nur, solange sie fliesst; nie animiert; ruhig: keiner. */
-  const SVG = 'http://www.w3.org/2000/svg';
-  const gooFilter = (): void => {
-    if (document.getElementById('ru-goo')) return;
-    const svg = document.createElementNS(SVG, 'svg');
-    svg.setAttribute('id', 'ru-goo-svg');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('width', '0');
-    svg.setAttribute('height', '0');
-    svg.setAttribute('focusable', 'false');
-    const filter = document.createElementNS(SVG, 'filter');
-    filter.setAttribute('id', 'ru-goo');
-    filter.setAttribute('color-interpolation-filters', 'sRGB');
-    const blur = document.createElementNS(SVG, 'feGaussianBlur');
-    blur.setAttribute('in', 'SourceGraphic');
-    blur.setAttribute('stdDeviation', '8');
-    blur.setAttribute('result', 'weich');
-    const matrix = document.createElementNS(SVG, 'feColorMatrix');
-    matrix.setAttribute('in', 'weich');
-    matrix.setAttribute('mode', 'matrix');
-    matrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
-    matrix.setAttribute('result', 'goo');
-    const oben = document.createElementNS(SVG, 'feComposite');
-    oben.setAttribute('in', 'SourceGraphic');
-    oben.setAttribute('in2', 'goo');
-    oben.setAttribute('operator', 'atop');
-    filter.append(blur, matrix, oben);
-    svg.appendChild(filter);
-    document.body.appendChild(svg);
-  };
+  /* DER EINE GOO-FILTER (E711, Szene 08): Flächen bekommen Hälse, an EINER
+     Ebene nur, solange sie fliesst; nie animiert; ruhig: keiner. Seit dem
+     Zusammenführen der zweiten Welle ist es DERSELBE Filter wie beim
+     Tropfen und beim Löschen-Knopf — `Linse.TROPFEN`, geliehen, solange
+     die Ebene fliesst (test589 §15). Hier stand ein eigener (`#ru-goo`,
+     ×18 − 7), dort einer mit ×22 − 10: zwei Zahlen für eine Bewegung. */
+  const gooLeihe = new WeakMap<HTMLElement, () => void>();
   /** Die Ebene fliesst (an) oder ruht (aus). Gibt zurück, ob sie fliesst. */
   const goo = (ebene: HTMLElement, an: boolean): boolean => {
-    if (!an || ruhig()) { ebene.classList.remove('ru-goo-an'); return false; }
-    gooFilter();
+    if (!an || ruhig()) {
+      ebene.classList.remove('ru-goo-an');
+      gooLeihe.get(ebene)?.();
+      gooLeihe.delete(ebene);
+      return false;
+    }
+    if (!gooLeihe.has(ebene) && typeof Linse !== 'undefined') gooLeihe.set(ebene, Linse.tropfenLeihen());
     ebene.classList.add('ru-goo-an');
     return true;
   };

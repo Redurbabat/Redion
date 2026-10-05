@@ -530,8 +530,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .ru-faecher-fuss button[data-faecher="gelesen"]{color:var(--accent-text)}
 :is(.ru-meldung,.ru-faecher-fuss button):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* Nur während des Zusammenfliessens, an einer Ebene (SelectionFlow.goo). */
-.ru-goo-an{filter:url(#ru-goo)}
-#ru-goo-svg{position:absolute;width:0;height:0;overflow:hidden}
+/* Derselbe Klebefilter wie Tropfen und Löschen-Knopf: Linse.TROPFEN (test589 §15). */
+.ru-goo-an{filter:url(#ru-linse-tropfen)}
 
 /* Posteingang: Glaskarten mit Lichtkante, ohne Unschärfe je Karte. */
 .home-liste.pe-karten{display:grid;gap:var(--space-3);background:none;border:0;box-shadow:none;padding:0}
