@@ -44,7 +44,8 @@
  *      Tastatur (Enter öffnet, Enter auf „Abbrechen" schliesst, Fokus zurück).
  *   §7 WO DER KNOPF ANDERS WOHNT (Rechner, dunkel; Durchsicht 5. Oktober):
  *      in der Seitenleiste der Bedingten Farbe liegen die Pillen obenauf,
- *      „Abbrechen" lässt die Leiste offen, „Löschen" nimmt eine Regel; die
+ *      „Abbrechen" lässt die Leiste offen, „Löschen" nimmt eine Regel, und
+ *      der Fokus bleibt in der neu gezeichneten Leiste; die
  *      Chatliste der KI zeigt ihren Knopf am Rechner erst beim Überfahren,
  *      wie vor E709, und von dort öffnet er das Paar.
  *
@@ -567,6 +568,16 @@ console.log('\n§7 · Wo der Knopf anders wohnt (Rechner, dunkel)');
   const geloescht = await sicher('.ru-loesch-ja');
   await pc.waitForTimeout(500);
   p('„Löschen" nimmt dort genau eine Regel weg', geloescht && await regeln() === 1, String(await regeln()));
+  /* Die Leiste zeichnet sich nach dem Löschen NEU (eine neue <aside>) — der
+     Fokus fiel auf den body. Er gehört in die neue Leiste, an den nächsten
+     Löschen-Knopf. */
+  await pc.waitForTimeout(600);
+  const fokusNach = await pc.evaluate(() => {
+    const a = document.activeElement;
+    return { body: a === document.body, leiste: !!a?.closest('.db-leiste'), knopf: !!a?.hasAttribute('data-loeschknopf') };
+  });
+  p('… und der Fokus bleibt in der neu gezeichneten Leiste, am nächsten Löschen-Knopf',
+    !fokusNach.body && fokusNach.leiste && fokusNach.knopf, JSON.stringify(fokusNach));
   await pc.evaluate(() => document.querySelectorAll('.db-leiste').forEach(x => x.remove()));
 
   await pc.evaluate(() => {
