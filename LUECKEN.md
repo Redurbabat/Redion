@@ -8348,6 +8348,54 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L235 · Zwei Fragen an die Ecke aus E676: eine Probe in `test201` und die Tinte einer zitternden Hand — 28. September 2026
+
+**Gefunden beim Bau von E708** (rot zuerst am Stift, Redur: „ohne eine
+funktione löschen … besssere efeckten"). E708 hat `test461` und `test343` §6
+im Code repariert. Zwei Dinge aus derselben Wurzel — dem Eckensprung, den
+E676 dem Glätter gegeben hat — bleiben offen, damit sie nicht in einem Commit
+verschwinden (§35):
+
+1. **`test201` §1 fragt einen rechten Winkel nach einer Kurve.** Die Probe
+   `InkGeometry.path([[0, 0], [10, 20], [30, 10]])` verlangt ein ` Q`; seit
+   E676 ist ein Knick über rund 57° (`ECKE_COS` = 0,55, hier cos 0) mit
+   Absicht eine Ecke, auch in `path`, und heraus kommt
+   `M0 0 L10 20 L20 15 L30 10`. Rot seit `04b8c4d5` (E676), auf `main` seit
+   PR #112. Die Zusage („Freihand wird geglättet") gilt weiter; überholt ist
+   nur die Probe. **Vorschlag:** die Probe wird ein Bogen,
+   `[[0, 0], [10, 20], [30, 30]]` (cos 0,8, heraus kommt
+   `M0 0 Q10 20 20 25 L30 30`), und der rechte Winkel steht als zweite Zusage
+   daneben: „… und ein rechter Winkel bleibt eine Ecke (E676)" (`L10 20`,
+   kein ` Q`). Das ändert einen Wächter; das darf ein Rot-zuerst-Bogen nicht
+   selbst (§31, §47) — es braucht Redurs Wort oder einen eigenen Eintrag.
+   Bis dahin steht `test201` bei 31 von 32, und das ist die ehrliche Zahl.
+2. **Die Tinte einer haltenden, zitternden Hand zittert mit.** Der
+   Eckensprung liefert bei jedem Kippen der Richtung einen rohen Punkt; ab
+   ±2 Einheiten Zittern (die „ruhige Hand" aus E490) lässt der Glätter das
+   Zittern fast ungemindert aufs Papier. Spanne der Tinte während eines
+   Haltens von 900 ms, nachgerechnet mit dem Glätter vor und seit E676:
+   ±1,5 → 1,26 und 1,26; ±2 → 1,78 und **5,07** (roh 5,14); ±3 → 2,96 und
+   **7,60** (roh 7,71). `test366` §3 misst bei ±0,4 und sieht es nicht.
+   Dasselbe Knäuel hatte auch die Formerkennung blind gemacht (die Sehne
+   war keine 90 % des Wegs mehr); das hat E708 geheilt, indem die Erkennung
+   eines gehaltenen Strichs nur bis zur Ruhe der Hand schaut. Wo eine Form
+   erkannt wird, wird der Strich ersetzt; sonst steht am Ende weiter ein
+   kleines Knäuel in der Tinte. Und eine Pause MITTEN im Strich schneidet
+   die Erkennung nicht ab (Durchsicht von E708, 4. Oktober, im echten
+   App-Lauf): eine gerade Linie, nach der Hälfte 700 ms mit ±2 Zittern
+   angehalten, weitergezogen und am Ende gehalten, bleibt auf dem
+   Grundstand und mit E708 ein Strich (53 Punkte) — gemessen ist nur der
+   Ausgang; dass es das Knäuel der Pause ist, liegt nahe, ist aber nicht
+   nachgerechnet. **Vorschlag:** der Sprung erst, wenn die alte
+   Richtung weiter gegangen ist als ein Ruhekreis — oder erst die Hand
+   (E708) fragen, ob sie hält. Mit Wächter (`test366` §3 auch bei ±2),
+   rot zuerst, und `test564` (Zickzack, „M") als Nachbar, denn es ändert
+   die Tinte.
+
+**Wächter:** Punkt 1 ist selbst ein Wächter; für Punkt 2 gibt es noch keinen.
+
+---
+
 ## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
 
 **Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
@@ -9189,7 +9237,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 125 Lücken, 69 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

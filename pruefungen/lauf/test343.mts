@@ -15,7 +15,8 @@
  *       Strich, der Pinsel schwillt stärker, die Wahl überlebt das Neuladen.
  *   5 · DER MARKER AM LINEAL ZIEHT GERADE.
  *   6 · EIGENE FARBEN — der Farbwähler des Browsers hinter der Farbwahl
- *       (E486), gemerkt als Tupfer.
+ *       (E486), gemerkt als Tupfer; auf und zu ohne neue Farbe übernimmt
+ *       er nichts (E708).
  *   7 · DER DRUCKWEG zeichnet den Füller genauso.
  *   8 · AM TELEFON sind die neuen Knöpfe Fingerknöpfe.
  *
@@ -321,13 +322,30 @@ const farbe = await pg.evaluate(async () => {
   await new Promise(f => setTimeout(f, 150));
   const feld = document.querySelector<HTMLInputElement>('input[type="color"]');
   if (!feld) return { feld: false };
+  /* AUF UND ZU OHNE NEUE FARBE ÜBERNIMMT NICHTS (E708). Seit E708 übernimmt
+     der Wähler beim Schliessen (`change`). Ein `change` mit dem Wert, mit
+     dem er aufging, ist keine Wahl: kein Tupfer, nichts gemerkt, die
+     Palette bleibt offen — gleich, ob ein Browser es beim blossen Auf- und
+     Zumachen meldet. */
+  const eigene = (): string => JSON.stringify([...document.querySelectorAll<HTMLElement>('.blatt-werk .blatt-farbe-eigen')].map(t => t.dataset.c));
+  const merk = (): string => JSON.stringify(Store.getMeta('zeichnen:farben') ?? null);
+  const vorLeer = { eigen: eigene(), meta: merk(), wert: feld.value };
+  feld.dispatchEvent(new Event('change', { bubbles: true }));
+  await new Promise(f => setTimeout(f, 150));
+  const leer = { offen: feld.isConnected, eigen: eigene() === vorLeer.eigen, meta: merk() === vorLeer.meta,
+    wert: vorLeer.wert, eigenNach: eigene(), metaNach: merk() };
   feld.value = '#8e44ad';
   feld.dispatchEvent(new Event('change', { bubbles: true }));
   await new Promise(f => setTimeout(f, 150));
   const tupfer = document.querySelector<HTMLElement>('.blatt-werk .blatt-farbe-eigen');
-  return { feld: true, tupfer: tupfer?.dataset.c, an: tupfer?.classList.contains('on'), meta: Store.getMeta('zeichnen:farben') };
+  return { feld: true, leer, tupfer: tupfer?.dataset.c, an: tupfer?.classList.contains('on'), meta: Store.getMeta('zeichnen:farben') };
 });
 p('Der Knopf öffnet einen Farbwähler', (farbe as any).feld, JSON.stringify(farbe));
+{
+  const leer = (farbe as any).leer;
+  p('… und ohne neue Farbe auf und zu übernimmt er nichts (kein Tupfer, nichts gemerkt, die Palette bleibt offen)',
+    !!leer && leer.offen === true && leer.eigen === true && leer.meta === true, JSON.stringify(leer));
+}
 gleich('Die gewählte Farbe steht als Tupfer', (farbe as any).tupfer, '#8e44ad');
 p('… ist markiert und gemerkt', (farbe as any).an === true && Array.isArray((farbe as any).meta) && (farbe as any).meta.includes('#8e44ad'), JSON.stringify(farbe));
 await werkzeug(pg, 'stift');

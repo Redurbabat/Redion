@@ -5461,6 +5461,312 @@ test579 §9    Einzeldatei: das Blatt wird nicht angenommen      Knopf 24 px · 
 
 **Startgrösse nach der Durchsicht (`test388` §5, 4. Oktober, 16:06–16:13 UTC):** **2826 KB** gzip über 248 Dateien, DECKE 2850 KB — unverändert, die Durchsicht ändert nur Prüfungen und Doku.
 
+## §85 · Rot zuerst am Stift: Halten, Farbwähler, eine Probe — zurückverfolgt und nachgerechnet (E708, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/rot-zuerst-stift` gegen den Grundstand
+`b3cf1933` (erste Welle, E698–E706). Die Wächter von HEUTE (`test201`,
+`test461`, `test343` aus `b3cf1933`) liefen in eigenen Arbeitsbäumen gegen
+den Code von damals: `e123eb10` (vor E676), `04b8c4d5` (E676), `a196b65d`
+(vor E697, Codex-Basis) und `9e306b85` (E697). Chromium von Playwright,
+unter der gemeinsamen Sperre. Die Glätter-Zahlen ohne Browser: der gebaute
+`quell/core/ink/stroke.js` des jeweiligen Stands in einem `vm`-Kontext, mit
+demselben Zug wie `test461` (40 Punkte in 4-ms-Schritten, dann Halten mit
+Zittern alle 25 ms, 900 ms lang) und derselben Logik wie `addSample`
+(Punktschwelle 0,6, `RUHE_RADIUS` 3). Gzip Stufe 6 wie `test388`.
+
+**Die Wächter, zurückverfolgt** (✗ = durchgefallene Zusagen):
+
+```txt
+Wächter  Stand                          Ergebnis
+test201  e123eb10 (vor E676)            32 ok, 0 offen
+         04b8c4d5 (E676)                31 ok, 1 offen  ✗ „Freihand … geglaettet" — M0 0 L10 20 L20 15 L30 10
+         b3cf1933 (Grundstand)          31 ok, 1 offen  (dasselbe)
+test461  e123eb10 (vor E676)            36/36
+         04b8c4d5 (E676)                33/36  ✗ §1 Linie (ist ["stift"]) ✗ … zwei Punkte ✗ §4 Linie
+         b3cf1933 (Grundstand)          33/36  (dieselben drei)
+test343  a196b65d (vor E697)            31/31
+         9e306b85 (E697)                27/31  ✗ Tupfer undefined ✗ gemerkt (meta null)
+                                               ✗ nächster Strich #111111 ✗ Tupfer nach Neuzeichnen []
+         b3cf1933 (Grundstand)          22 ✓ 2 ✗ (§6), dann page.click 30 s: die offene Palette
+                                               „Markerfarben" fängt den Tipp ab → Abbruch, §7/§8 ungelaufen
+```
+
+Jeder rote Commit hat den grünen als unmittelbaren Eltern (`git log -1
+--format=%P`): `04b8c4d5` → `e123eb10`, `9e306b85` → `a196b65d`.
+
+**Das Halten, nachgerechnet:**
+
+```txt
+±2 Zittern, 900 ms     längste Ruhe   Ruhe am Ende   Ruhekreis verlassen   Ergebnis
+vor E676 (e123eb10)    875 ms         875 ms         1× (Ankunft)          Linie
+seit E676 (b3cf1933)   175 ms          25 ms         15×                   Strich
+E708 (die Hand)        875 ms         875 ms         1× (Ankunft)          Linie
+±10, weitergefahren    ≤ 50 ms in allen drei Ständen                       Strich (richtig)
+gehalten heisst        ≥ 450 ms (HALTEN_MS)
+```
+
+Mit Zeitrauschen (400 Läufe je Zittern, Anfahrt 4–6 ms, Halten 25–32 ms je
+Meldung, Glätter des gebauten Stands): die Uhr an der Tinte sagt bei ±2 und
+bei ±3 **0-mal** „gehalten", die Uhr an der Hand **400-mal**, und jedes Mal
+wird mit 1b eine Linie daraus.
+
+**Die Erkennung des gehaltenen Strichs, nachgerechnet** (Glätter und
+`InkShapes` des gebauten Stands im `vm`-Kontext, derselbe Zug; „bis zur
+Ruhe" ist die Stelle in `running.pts`, an der die Hand zuletzt in ihren
+Ruhekreis kam):
+
+```txt
+Zug                  Punkte  bis zur Ruhe  ganzer Strich  bis zur Ruhe + Abhebepunkt     Ergebnis
+±2, 900 ms gehalten    74       42          keine Form     Linie → (478 | 300,87)         Linie
+±3, 900 ms gehalten    72       42          keine Form     Linie → (477,01 | 301,31)      Linie
+±10, weitergefahren    73       73          keine Form     keine Form                     Strich
+±2, nur 120 ms         45       42          Linie          Linie                          Strich (nicht gehalten)
+```
+
+Die Uhr allein reichte nicht: mit ihr lief `test461` im Browser weiter mit
+33 von 36 (dieselben drei Zusagen), weil die Sehne keine 90 % des Wegs mehr
+war.
+
+**Formen mit Ecken, gehalten** (3. Oktober, am neuen Bau; dieselbe
+Rechnung, langsam gezogen mit 1 px je 8-ms-Meldung wie `test564`, dann
+900 ms oder 120 ms gehalten; „Grundstand" ist die Uhr an der Tinte und die
+Erkennung auf der ganzen Tinte, „E708" die Uhr an der Hand und die
+Erkennung bis zur Ruhe):
+
+```txt
+Zug          Zittern  Grundstand (b3cf1933)        E708
+Linie        ±0       gehalten → Linie             gehalten → Linie
+             ±2, ±3   nicht gehalten → Strich      gehalten → Linie
+Dreieck      ±0       gehalten → Dreieck           gehalten → Dreieck
+             ±2, ±3   nicht gehalten → Strich      gehalten → Dreieck
+Rechteck     ±0       gehalten → Rechteck          gehalten → Rechteck
+             ±2, ±3   nicht gehalten → Strich      gehalten → Rechteck
+„M"          ±0, ±2   gehalten → keine Form        gehalten → keine Form
+             ±3       nicht gehalten → keine Form  gehalten → keine Form
+„N"          ±0       gehalten → keine Form        gehalten → keine Form
+             ±2, ±3   nicht gehalten → keine Form  gehalten → keine Form
+Zickzack     ±0       gehalten → keine Form        gehalten → keine Form
+             ±2, ±3   nicht gehalten → keine Form  gehalten → keine Form
+jeder Zug, nur 120 ms gehalten: in beiden Ständen nicht gehalten, keine Form
+```
+
+Wo der Grundstand „gehalten" sagte, sagt E708 dasselbe und erkennt dasselbe —
+für langsam gezogene Züge wie hier; schnelle, kurze siehe „Durchsicht" unten.
+Ein „M", ein „N" und ein Zickzack bleiben Striche — und weil nur die Frage an
+`InkShapes` die gekürzten Punkte bekommt, bleibt ihre Tinte Punkt für Punkt,
+wie sie war, mit allen Ecken (der Glätter mit Ecken ist der heutige, siehe
+unten).
+
+**Der Glätter ohne Ecken ist der alte, der mit Ecken der heutige.** 2000
+zufällige Meldungen (Zittern ±3, Drift, `dt` 4–34 ms): `glaetter(start,
+false)` gleich dem Glätter von `e123eb10` in jeder Zahl, `glaetter(start)`
+gleich dem von `b3cf1933` in jeder Zahl. Der Vergleich trennt: an 1925 der
+2000 Meldungen unterscheiden sich die Glätter von `e123eb10` und `b3cf1933`.
+
+**Die Tinte beim Halten** (Spanne der geglätteten Punkte ab dem fünften,
+36 Meldungen à 25 ms) — offen in L235 Punkt 2, nicht in diesem Bogen:
+
+```txt
+Zittern   roh     vor E676   seit E676
+±0,4      1,03    0,30       0,30        (test366 §3 misst hier)
+±1        2,57    0,79       0,79
+±1,5      3,86    1,26       1,26
+±2        5,14    1,78       5,07
+±3        7,71    2,96       7,60
+```
+
+**Start (test388 §5).** Am 3. Oktober am fertigen Bau: „Der Start holt
+2827 KB (gzip) über 248 Dateien — Decke 2850 KB", 21 bestanden. Was die
+Dateien wachsen (gzip Stufe 6,
+gegen `b3cf1933`, Bytes):
+
+```txt
+quell/bereiche/pdf/marken.js        135'496 → 136'961 +1'465
+quell/core/ink/stroke.js              9'591 →   9'801   +210
+quell/kern/einstellung/stand.js         440 →     438     −2
+                                              zusammen +1'673
+(sw.js, nicht beim Start: 10'226 → 10'225, −1 — der neue Stempel)
+```
+
+Gemessen am 3. Oktober am neuen Bau (Dienststand v1397), Node-`zlib`
+Stufe 6. Fast nur Kommentar: der Code selbst sind ein Parameter, eine
+Bedingung, ein Filter mehr je Meldung, zwei Werte, eine Auswahl der Punkte
+beim Absetzen, zwei Hörer und ein gemerkter Wert.
+
+**Nachgefahren am 3. Oktober** (der Bogen lag eine Woche still; am
+fertigen Bau mit der Prüfung „nur ein neuer Wert", Dienststand v1397,
+unter der gemeinsamen Sperre, Läufe zwischen 20:12 und 20:26 UTC):
+
+```txt
+Lauf                                          Ergebnis
+test461                                       36/36
+test343 (mit der neuen Zusage in §6)          32/32
+test347                                       31/31
+test201                                       31/32  ✗ §1 (die Probe, L235 Punkt 1)
+G1 Uhr an der Tinte → test461                 33/36
+G3 keepCorners wirkungslos → test461          33/36
+G4 Erkennung auf der ganzen Tinte → test461   33/36
+G2 kein change-Hörer → test343                2 ✗, dann page.click 30 s → Abbruch
+G5 change ohne Wertprüfung → test343          30/32  ✗ auf und zu übernimmt nichts
+                                                     (Palette zu, ["#ffcf33"] gemerkt)
+                                                     ✗ Tupfer nach Neuzeichnen
+                                                     ["#8e44ad","#ffcf33"]
+```
+
+**`test563` §1 „kein Buckel", wiederholt** (3. Oktober, 21:04 UTC, unter
+der Sperre, abwechselnd; im Nachbarlauf um 20:24 einmal rot mit ×1,07):
+
+```txt
+Lauf   Zweig (E708)                Grundstand b3cf1933
+1      13/13  innen 1,10 … 1,14 ×1,04   12/13  innen 1,12 … 1,24 ×1,11
+2      12/13  innen 1,10 … 1,26 ×1,15   12/13  innen 1,10 … 1,30 ×1,18
+3      12/13  innen 1,10 … 1,18 ×1,07   13/13  innen 1,10 … 1,10 ×1,00
+verlangt: < 1,05
+```
+
+Derselbe Wackler auf beiden Seiten; die Breite des Füllers folgt seit E704
+dem Tempo der Meldungen, und unter der Last von vier Bauern schwankt das
+Tempo. E708 ändert weder Breite noch Druck noch Tempo. Nicht von hier;
+gemeldet, nicht „repariert" (§31).
+
+**Durchsicht** (4./5. Oktober 2026, zweiter Prüfer). *Gehaltene Formen im
+echten App-Lauf* (Chromium von Playwright, unter der Sperre, 23:35–23:41
+UTC; Zeigerereignisse eines Stifts auf ein leeres Blatt, alle 8 ms eine
+Meldung im Zug, beim Halten alle 25 ms; jeder Zug in eigenem Kontext;
+Grundstand `b3cf1933` gegen den Kopf `7eb0998c`). Gezählt die Marke und
+ihre Punkte; „Ecken" ist der kleinste Abstand der Tinte zu jeder inneren
+Ecke des Zugs:
+
+```txt
+Zug (Einheiten je Meldung)         Halten        Grundstand    Kopf E708
+Linie 400 (3)                      ±0, 900 ms    Linie         Linie
+Linie 400 (3)                      ±2 / ±3       Strich        Linie
+Linie 400 (3)                      ±2, 120 ms    Strich        Strich
+Linie 20 (3 und 7), 40 (3), 80 (12) ±0           Linie         Linie
+Linie 20, 40, 80 (alle Schritte)   ±2            Strich        Linie
+Linie 40 (10)                      ±0, 900 ms    Linie         Strich (8)   ← verloren
+Linie 80 (20)                      ±0, 900 ms    Linie         Strich (8)   ← verloren
+Linie 400 (40)                     ±0 / ±2       Linie/Strich  Linie
+Dreieck (3)                        ±0 / ±2 / ±3  D / D / S     D / D / D
+Rechteck (3)                       ±0 / ±2 / ±3  R / S / S     R / R / R
+Kreis (3)                          ±0 / ±2       Ellipse/S     Ellipse/Ellipse
+„M" (3)                            ±0/±2/±3, 120 Strich 11/35/33/11, Ecken 0,00 — in beiden gleich
+„N", Zickzack, „L", Haken (3)      ±0 / ±2       Strich, gleiche Punktzahl, Ecken 0,00 — in beiden gleich
+Haken, 700 ms Pause in der Mitte   nicht gehalten Strich 9     Strich 9
+Linie, Pause ±2, am Ende ±2        900 ms        Strich 53     Strich 53   (L235 Punkt 2)
+```
+
+Seitenfehler in beiden: keine. Die zwei verlorenen Linien sind das, was
+`test461` §1 seit der Durchsicht hält (rot am Kopf dreimal 36/38, am
+Grundstand die neuen Zusagen dreimal grün).
+
+*Warum, ohne Browser* (Glätter und `InkShapes` des gebauten Stands im
+`vm`-Kontext, Logik wie `addSample`; schnelle, kurze Züge, alle 8 ms eine
+Meldung, dann 900 ms still oder mit ±2):
+
+```txt
+Zug, still gehalten     Tinte   bis Ruhe + Abhebepunkt   Grundstand   Kopf   Durchsicht
+60 in 15er-Schritten      8         6                    Linie        –      Linie
+80 in 20er-Schritten      8         6                    Linie        –      Linie
+80 in 12er-Schritten     12        12                    Linie        Linie  Linie
+120 in 30er-Schritten     9         8                    Linie        Linie  Linie
+```
+
+`InkShapes.recognize` verlangt acht Punkte; bis zur Ruhe sind es bei einem
+schnellen Zug weniger, die ganze Tinte hat sie, weil der Glätter beim
+Halten nachzieht. *Und über alle Formen:* 192 Züge (Linie, kurze Linie,
+Dreieck, Rechteck, „M", „N", Zickzack, „L"; 1, 3, 8, 15 Einheiten je
+Meldung; ±0, ±2, ±3; 900 und 120 ms) — die Durchsicht (Frage bis zur
+Ruhe, sonst die ganze Tinte) erkennt in **keinem** weniger als der
+Grundstand, nie eine andere Form, aus „M", „N", Zickzack und „L" nie eine
+Form, in 23 mehr; der Kopf verlor davon einen (kurze Linie, 15er-Schritte,
+±0).
+
+*Der Glätter*, nachgerechnet am Bau der Durchsicht: 5000 zufällige
+Meldungen, `glaetter(start)` gegen `b3cf1933` und `glaetter(start, false)`
+gegen `e123eb10` je grösste Abweichung 0; die beiden alten unterscheiden
+sich an 4834.
+
+*Start.* `marken.js` gzip (Stufe 6) 136'961 → 137'293 Bytes, +332 gegen
+den Kopf; `stand.js` 438 → 439. Gegen den Grundstand zusammen rund
++2,0 KB (`marken.js` +1'797, `stroke.js` +210, `stand.js` −1).
+`test388` §5 am Bau der Durchsicht (Dienststand v1398, 5. Oktober, unter
+der Sperre): „Der Start holt 2827 KB (gzip) über 248 Dateien — Decke
+2850 KB", 21 bestanden — die 332 Bytes bleiben unter der Rundung.
+
+*Nach der Reparatur*, dieselbe Sonde der gehaltenen Formen am Bau der
+Durchsicht (00:24–00:27 UTC): alle 40 Züge erkennen mindestens, was der
+Grundstand erkannte — die zwei verlorenen Linien (40 in 10er-, 80 in
+20er-Schritten, ±0) sind wieder Linien; „M", „N", Zickzack, „L" und Haken
+bleiben Striche, jede Ecke bei 0,00. Ein Zug schwankt mit dem Tempo:
+20 Einheiten in 7er-Schritten mit ±2 war am Kopf eine Linie und hier ein
+Strich (30 Punkte) — der Grundstand liess ihn ebenfalls Strich.
+
+**Dritte Durchsicht** (5. Oktober 2026, dritter Prüfer, am Bau v1398).
+
+*Der echte Farbwähler.* Chromium 1194 von Playwright, **sichtbar**
+(`headless: false`) auf einem eigenen Xvfb-Bildschirm 1440×1000, die App
+über `file://` (index.html), Stift gewählt, Palette offen. Maus und Tastatur
+als echte X-Ereignisse über XTest (libXtst über ctypes), nicht als
+nachgestellte DOM-Ereignisse; mitgeschrieben die Ereignisse am Wähler
+(`focus`, `click`, `input`, `change`, `blur`, `keydown`, jeweils mit seinem
+Wert) und danach Palette, Tupfer der Leiste und `zeichnen:farben`. Unter
+der gemeinsamen Sperre, 05:21–05:39 UTC:
+
+```txt
+Fall  Was die Hand tut                                   Ereignisse am Wähler                       Ergebnis
+A     Wähler auf, Escape                                 focus, click #111111                       offen, kein Tupfer, nichts gemerkt
+B1    im Feld eine Farbe, Eingabe                        click, input #a33838, change #a33838, blur Palette zu, #a33838 markiert, gemerkt
+B2    im Feld eine Farbe, Klick daneben (Kopf)           click, input #b71f1f, change #b71f1f, blur Palette zu, #b71f1f markiert, gemerkt
+B3    im Feld eine Farbe, Escape                         click, input #6c3d3d, input #a33838        offen, nichts dazu
+C     im Feld eine Farbe, 17/17/17 in R/G/B getippt,     click, input #433232 … #111111 (7×),       offen, nichts gemerkt
+        Eingabe                                            kein change
+E     Hex #2266aa getippt, Wähler auf, Escape; auf,       click #2266aa (2×), kein change            offen, nichts gemerkt
+        Eingabe ohne Wahl
+D     Fokus, Leertaste; Escape; Eingabe                  keydown " ", click; keydown Enter, click   der Wähler geht auf
+      … im Feld eine Farbe, Eingabe                      input #8e2525, change #8e2525, blur        Palette zu, #8e2525 markiert, gemerkt
+Seitenfehler: keine. Fokus nach jeder Übernahme: „Farben: eigene Farbe wählen oder Farbsätze" (das „+" der Leiste).
+```
+
+*Gehaltene Formen, breit.* Glätter und `InkShapes` aus dem gebauten
+`quell/core/ink/` des Grundstands `b3cf1933` und des Baus in je einem
+`vm`-Kontext; je Zug die Logik von `addSample` (Punktschwelle 0,6,
+`RUHE_RADIUS` 3, die Uhr des Grundstands an der Tinte, die des Baus an der
+Hand mit `handRestFrom`) und von `finish` (Grundstand: `recognize` der
+ganzen Tinte; Bau: bis zur Ruhe + Abhebepunkt, sonst die ganze Tinte).
+27 Züge × 5 Schrittweiten × 3 Takte × 2 Wege × 5 Zittern × 4 Haltezeiten ×
+Pause ja/nein = 32'400 Züge (Zufall mit festem Samen).
+
+```txt
+Tinte, Bau gegen Grundstand, 198'396 Meldungen     grösste Abweichung 0
+Haltezeit 900 ms:  weniger erkannt 0 · andere Form 1 (kleiner Kreis, 25er-Schritte, ±2, Pause:
+                   Dreieck → Ellipse) · aus Zügen mit Ecken neu eine Form 0
+Haltezeit 500 ms:  weniger erkannt 28, alle, weil die Uhr des Baus „nicht gehalten" sagte
+                   (Lage der Ruhepunkte an der Schwelle, siehe unten)
+Haltezeit 120 / 0: in beiden Ständen nie gehalten, nie eine Form
+
+„gehalten" (je 810 Züge)    Grundstand   Bau    Ruhe(Grundstand) − Ruhe(Bau), Median / 5 % / 95 %
+±0, 500 ms                     551        544    0 / 0 / 0 ms   (Mittel +0,6, höchstens 112)
+±0, 900 ms                     810        810    0 / 0 / 0 ms
+±1, 500 ms                     509        510    0 / 0 / 0 ms
+±1, 900 ms                     807        807    0 / 0 / 0 ms
+±2, 500 ms                      75        398    −416 / −500 / 0 ms
+±2, 900 ms                     109        808    −816 / −900 / 0 ms
+±3, 500 ms                       0        362    −432 / −480 / −275 ms
+±3, 900 ms                       0        800    −848 / −880 / −675 ms
+```
+
+Mit ruhiger Hand messen beide Uhren dieselbe Ruhe; bei 500 ms, 50 ms über
+`HALTEN_MS`, entscheidet die Lage des letzten Ruhepunkts in beiden Ständen
+bald so, bald so (sieben von 810 mehr im Grundstand, einer weniger bei ±1).
+Ab ±2 hält erst der Bau.
+
+*Start*, Node-`zlib` Stufe 6 gegen `b3cf1933`: `marken.js` 135'496 →
+137'293 (+1'797), `stroke.js` 9'591 → 9'801 (+210), `stand.js` 440 → 439
+(−1), zusammen +2'006 Bytes. `test388` §5 unter der Sperre (ca. 06:13
+UTC, im Nachbarlauf): „Der Start holt 2827 KB (gzip) über 248 Dateien —
+Decke 2850 KB", 21 bestanden.
+
 ## §86 · Der Startweg ohne Kommentare im erzeugten JavaScript (E715, 3. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/startlast-leichter` gegen `4d9a9a3fb`

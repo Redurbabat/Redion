@@ -25975,7 +25975,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1398, inhalt: 'b5a15738aa41a909', gebaut: '2026-10-05T21:41:08.206Z' };
+const Stand = { fassung: 1399, inhalt: '0299e6c62487688f', gebaut: '2026-10-05T21:45:34.906Z' };
 window.Stand = Stand;
 
 </script>
@@ -28353,7 +28353,7 @@ const InkStroke = (() => {
     const TEMPO_VOLL = 1.1;
     const MESS_MS = 16;
     const ECKE_SCHRITT = 2.5;
-    const glaetter = (start) => {
+    const glaetter = (start, keepCorners = true) => {
         let x = endlich(start[0]);
         let y = endlich(start[1]);
         let vx = endlich(start[0]);
@@ -28372,7 +28372,7 @@ const InkStroke = (() => {
                 seitAnker.shift();
             const sx = px - ax, sy = py - ay;
             const sl = Math.hypot(sx, sy);
-            if (sl >= ECKE_SCHRITT) {
+            if (keepCorners && sl >= ECKE_SCHRITT) {
                 const nx = sx / sl, ny = sy / sl;
                 if ((rx !== 0 || ry !== 0) && nx * rx + ny * ry < KEHRE) {
                     let ecke = seitAnker[0], weit = -Infinity;
@@ -55906,6 +55906,8 @@ const Marken = (() => {
         let beforeRunning = null;
         let feder = null;
         let glatt = null;
+        let handSmoother = null;
+        let handRestFrom = 0;
         let druckGlatt = null;
         let letzteZeit = 0;
         let dtLetzt = 16;
@@ -56454,6 +56456,8 @@ const Marken = (() => {
             }
             feder = null;
             glatt = null;
+            handSmoother = null;
+            handRestFrom = 0;
             druckGlatt = null;
             letzteZeit = 0;
             nassFlaeche = false;
@@ -56520,6 +56524,7 @@ const Marken = (() => {
             letzteZeit = jetzt;
             dtLetzt = dt;
             const point = glatt ? glatt(roh, dt) : roh;
+            const hand = handSmoother ? handSmoother(roh, dt) : point;
             rohLetzter = roh;
             rohDrei.push(roh);
             if (rohDrei.length > 3)
@@ -56548,9 +56553,10 @@ const Marken = (() => {
                 running.tempo.push(tempoJetzt);
             breiteFestlegen(jetzt);
             const ruhe = running.ruhePunkt;
-            if (!ruhe || Math.hypot(point[0] - ruhe[0], point[1] - ruhe[1]) > RUHE_RADIUS) {
-                running.ruhePunkt = [point[0], point[1]];
+            if (!ruhe || Math.hypot(hand[0] - ruhe[0], hand[1] - ruhe[1]) > RUHE_RADIUS) {
+                running.ruhePunkt = [hand[0], hand[1]];
                 running.bewegtUm = Date.now();
+                handRestFrom = running.pts.length;
             }
             feder?.punkt(point, halbeBreite(running, druck) * nassSpitze());
         };
@@ -56897,8 +56903,11 @@ const Marken = (() => {
             const before = beforeRunning || snapshot();
             bildAbsagen();
             const letzterRoh = rohLetzter;
+            const restFrom = handRestFrom;
             feder = null;
             glatt = null;
+            handSmoother = null;
+            handRestFrom = 0;
             druckGlatt = null;
             letzteZeit = 0;
             nassFlaeche = false;
@@ -56960,7 +56969,10 @@ const Marken = (() => {
                 }
             }
             if (mark.art === 'stift' && formen && gehalten && typeof InkShapes !== 'undefined') {
-                const form = InkShapes.recognize(mark.pts);
+                const shapePts = letzterRoh && restFrom > 0 && restFrom <= mark.pts.length
+                    ? [...mark.pts.slice(0, restFrom), letzterRoh] : mark.pts;
+                const form = InkShapes.recognize(shapePts)
+                    ?? (shapePts !== mark.pts ? InkShapes.recognize(mark.pts) : null);
                 if (form) {
                     mark.art = form.art;
                     mark.pts = form.pts;
@@ -57795,6 +57807,8 @@ const Marken = (() => {
                 breiteFestlegen(Number(e.timeStamp) || 0);
                 const p0 = running.pressure[0];
                 glatt = InkStroke.glaetter(point);
+                handSmoother = InkStroke.glaetter(point, false);
+                handRestFrom = 0;
                 rohLetzter = null;
                 rohDrei = [point];
                 druckGlatt = InkStroke.druckGlaetter(p0);
@@ -59479,6 +59493,16 @@ const Marken = (() => {
                 };
                 hex.addEventListener('input', update);
                 picker.addEventListener('input', () => { hex.value = picker.value; update(); });
+                let pickerOpenedWith = picker.value;
+                picker.addEventListener('click', () => { pickerOpenedWith = picker.value; });
+                picker.addEventListener('change', () => {
+                    if (picker.value.toLowerCase() === pickerOpenedWith.toLowerCase())
+                        return;
+                    hex.value = picker.value;
+                    update();
+                    if (!submit.disabled)
+                        apply(selected);
+                });
                 form.addEventListener('submit', event => { event.preventDefault(); if (!submit.disabled)
                     apply(selected); });
                 form.append(label, picker, error, submit);

@@ -164,7 +164,7 @@ const InkStroke = (() => {
     const TEMPO_VOLL = 1.1;
     const MESS_MS = 16;
     const ECKE_SCHRITT = 2.5;
-    const glaetter = (start) => {
+    const glaetter = (start, keepCorners = true) => {
         let x = endlich(start[0]);
         let y = endlich(start[1]);
         let vx = endlich(start[0]);
@@ -183,7 +183,7 @@ const InkStroke = (() => {
                 seitAnker.shift();
             const sx = px - ax, sy = py - ay;
             const sl = Math.hypot(sx, sy);
-            if (sl >= ECKE_SCHRITT) {
+            if (keepCorners && sl >= ECKE_SCHRITT) {
                 const nx = sx / sl, ny = sy / sl;
                 if ((rx !== 0 || ry !== 0) && nx * rx + ny * ry < KEHRE) {
                     let ecke = seitAnker[0], weit = -Infinity;

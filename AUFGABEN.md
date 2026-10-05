@@ -1511,6 +1511,17 @@ Wächter (rot zuerst):
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
 
+## Zwei Fragen an die Ecke aus E676 (L235, nach E708)
+
+1. **`test201` §1 entscheiden** — die Probe ist ein rechter Winkel und seit
+   E676 eine Ecke. Vorschlag in L235 Punkt 1 (Bogen statt Winkel, dazu „ein
+   rechter Winkel bleibt eine Ecke"). Braucht Redurs Wort, weil es einen
+   Wächter ändert (§31, §47). Bis dahin ist `test201` rot mit 31 von 32.
+2. **Die Tinte einer haltenden, zitternden Hand** (L235 Punkt 2): ab ±2
+   Zittern springt der Glätter auf rohe Punkte, am Ende eines gehaltenen
+   Strichs ohne Form bleibt ein Knäuel. Mit Wächter (`test366` §3 auch bei
+   ±2), rot zuerst, `test564` als Nachbar.
+
 ## Der Startweg nach E715 (3. Oktober)
 
 E715 hat die Kommentare aus dem erzeugten JavaScript genommen (2826 →
