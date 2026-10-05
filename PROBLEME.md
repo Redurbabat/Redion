@@ -134,6 +134,10 @@ sind der teuerste Teil und der lehrreichste.
 | P118 | 2026-09-27 | Hell und dunkel lieferten Ziffer für Ziffer dieselben Kontraste | 🟡 klein | — |
 | P119 | 2026-09-27 | Ein Umschalter oben, und unten fällt ein Griff aus dem Fenster | 🟠 mittel | — |
 | P120 | 2026-09-27 | Zwei Zweige, dieselben Nummern: E681 und test568 gab es zweimal | 🟠 mittel | — |
+| P121 | 2026-10-05 | Git schneidet einen Eintrag mitten durch | 🟠 mittel | — |
+| P122 | 2026-10-05 | Zwei Seiten schreiben dieselbe falsche Zahl, und Git nennt es keinen Konflikt | 🟠 mittel | — |
+| P123 | 2026-10-05 | Drei Zweige, ein Escape-Griff | 🟠 mittel | — |
+| P124 | 2026-10-05 | Drei Klebefilter für eine Bewegung | 🟡 klein | — |
 
 ---
 
@@ -2595,4 +2599,88 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** `git show 9e306b85 --stat` gegen `git log` des Zweigs; `git status` zeigte `AA pruefungen/lauf/test568.mts`.
 
 **Die Lehre.** Wer auf zwei Zweigen zugleich zählt, zählt doppelt. Beim Zusammenführen bekommt der NEUANKÖMMLING mit den wenigsten Verweisen die nächste freie Nummer (hier: eine Entscheidung und ein Lauf statt sechzehn und neun), und die alte Nummer steht als Herkunft dabei. Und gepusht war die ganze Zeit alles — gesperrt war das Zusammenführen.
+
+
+---
+
+## P121 · Git schneidet einen Eintrag mitten durch
+
+*2026-10-05 · 🟠 mittel*
+
+**Das Bild.** Beim Zusammenführen von claude/rot-zuerst-stift (E708) nach E714 und E715 hatte ENTSCHEIDUNGEN.md Konflikte. Wer je Konfliktblock beide Seiten behält, bekommt einen zerschnittenen Eintrag: die ersten zwölf Zeilen von E708 standen vor E714, der Rest hinter E715.
+
+**Die falsche Vermutung.** „Beide Seiten je Konfliktblock behalten“ reicht für Doku — beide Seiten gehören ja hinein.
+
+**Wie es gefunden wurde.** Beim Ansehen der Überschriften nach dem Lösen: „## E708“ mit zwölf Zeilen, dann „## E714“, „## E715“, und danach der Rest von E708 in einem Konfliktblock.
+
+**Die Ursache.** Git richtet die Blöcke nach Zeilen aus, nicht nach Einträgen. Die drei Fassungen teilen Trennzeilen, und an diesen gemeinsamen Zeilen hat Git den neuen Text von E708 auf zwei Konfliktblöcke verteilt.
+
+**Die Lösung.** Die Doku nach EINTRÄGEN zusammengeführt: jeder Eintrag für sich dreiseitig, neue Einträge in Nummernfolge eingesetzt (Index E706, E708, E714, E715).
+
+**Der Beweis.** Die Zeilen nachgezählt: das Ergebnis hat gegen jede Seite genau die Zeilen mehr, die die andere Seite gegen die Basis dazubrachte — in ENTSCHEIDUNGEN 483 und 338, dazu die eine Kopfzeile. Die Zahlen für die übrigen Dateien stehen im Commit 57c1018a.
+
+**Die Lehre.** Doku mit Einträgen wird nach Einträgen zusammengeführt, und nachgezählt. Ein Konfliktblock ist eine Zeilengrenze, keine Eintragsgrenze.
+
+
+---
+
+## P122 · Zwei Seiten schreiben dieselbe falsche Zahl, und Git nennt es keinen Konflikt
+
+*2026-10-05 · 🟠 mittel*
+
+**Das Bild.** Nach dem Zusammenführen 4 (claude/loeschen-fluessig, E709) stand in LUECKEN.md die Selbstzählung „126 Lücken, 70 offene“ — ohne Konflikt. Und in CLAUDE.md nannten sich alle fünf Läufe der zweiten Welle „Und 528“.
+
+**Die falsche Vermutung.** Was ohne Konflikt hereinkommt, stimmt — sonst hätte Git sich gemeldet.
+
+**Wie es gefunden wurde.** Neu gezählt mit der eigenen Messung von test549, statt die Zeile zu übernehmen: 127 Lücken, 71 offene.
+
+**Die Ursache.** claude/rot-zuerst-stift und claude/loeschen-fluessig hatten die Zeile beide von „125 Lücken, 69 offene“ auf „126 Lücken, 70 offene“ geändert. Gleiche Änderung auf beiden Seiten ist für Git kein Konflikt; sie wird einmal genommen. Aber jede Seite hatte eine Lücke dazugebracht — zusammen sind es zwei. Ebenso hatte jeder Zweig seinen Lauf als den nächsten nach 527 gezählt.
+
+**Die Lösung.** Die Zähler nach jedem Zusammenführen neu gezählt, nie von einer Seite übernommen; die „Und“-Absätze in der Folge der Testnummern neu gezählt.
+
+**Der Beweis.** Die Messung von test549 sagt 127 Lücken und 71 offene; die Zeile, die Git ohne Konflikt genommen hatte, sagte 126 und 70.
+
+**Die Lehre.** Zähler werden nach jedem Zusammenführen neu gezählt, nie übernommen — gerade wenn kein Konflikt kommt. Zwei Seiten, die dieselbe Zahl schreiben, haben jede für sich richtig gezählt und zusammen falsch.
+
+
+---
+
+## P123 · Drei Zweige, ein Escape-Griff
+
+*2026-10-05 · 🟠 mittel*
+
+**Das Bild.** E710, E711 und E713 hatten je den EINEN Escape-Griff in schale.ts erweitert. Naiv zusammengeführt nahm ein Escape die Suche UND den Zeitmesser; und mit der Fokusregel aus E713 war test587 §7 rot (96 von 97, „Escape schliesst es — über den gemeinsamen Griff“).
+
+**Die falsche Vermutung.** Wenn jede der drei Erweiterungen die Wächter ihres Zweigs grün hält, hält es auch die Summe.
+
+**Wie es gefunden wurde.** Mit einer Sonde (Zeitmesser offen, Strg P, ein Escape): ohne `!warOffen` am losen Feld gab sie {"vor":{"zm":true,"ov":1},"nach":{"zm":false,"ov":0}} — zwei Fenster auf einen Druck. Und mit test587 nach dem Zusammenführen 8: der Fokus stand nach einer Frage auf einem Knopf der Seite, und mit der Regel aus E713 blieb das Feld offen.
+
+**Die Ursache.** Jeder Zweig hatte den Griff für sich erweitert: E710 nahm den Zeitmesser über `data-esc-schliesst` weg; E711 merkte sich mit `warOffen`, ob beim Druck schon ein Fenster offen war — ein Druck, ein Fenster — und räumte die Meldungen über `Hinweis.escape`; E713 setzte `data-esc-knopf` an das ✕ und drückte es nur mit dem Fokus im Feld oder nirgends. Jede Regel war auf ihrem Zweig richtig; zusammen widersprachen sie sich.
+
+**Die Lösung.** Es gilt nur noch das ✕ (E713); `warOffen` (E711) gilt auch für das Feld; und das Feld geht zu, ausser der Fokus steht in einem Eingabefeld oder bearbeitbaren Block ausserhalb des Feldes.
+
+**Der Beweis.** Die Sonde mit der Zeile: {"vor":{"zm":true,"ov":1},"nach":{"zm":true,"ov":0}}, erst das zweite Escape schliesst den Zeitmesser; die Gegenprobe ohne `!warOffen` rot. Fokus im Text → das Feld bleibt offen, Fokus auf einem Knopf → es geht zu; die Gegenprobe ohne die Text-Bedingung rot. Danach test296 17/17, test587 97/97, test588 72/72, test590 68/68.
+
+**Die Lehre.** Wer drei Zweige an EINEM Griff zusammenführt, prüft jede ihrer Zusagen gegen die anderen — die Wächter jedes Zweigs zusammen, nicht nacheinander.
+
+
+---
+
+## P124 · Drei Klebefilter für eine Bewegung
+
+*2026-10-05 · 🟡 klein*
+
+**Das Bild.** In derselben Woche hatten drei Zweige je einen eigenen Klebefilter (Unschärfe, dann steile Alpha) gebaut: E709 `#ru-loesch-goo` (×18 − 7, Unschärfe 4), E711 `#ru-goo` (×18 − 7, Unschärfe 8), E712 `Linse.TROPFEN` (×22 − 10, Unschärfe 7). Jeder Zweig hatte einen Wächter, der „EIN Filter“ sagte, und jeder war grün.
+
+**Die falsche Vermutung.** „EIN Filter“ in jedem Zweig heisst EIN Filter in der App.
+
+**Wie es gefunden wurde.** Beim Zusammenführen; die Auftragsdatei verlangte einen („Nur ein Goo-Filter …“).
+
+**Die Ursache.** Die drei Zweige wurden nebeneinander gebaut, getrennt, alle vom selben Stand b3cf1933 aus, und sahen einander nicht. Jeder Wächter zählte die Filter in der App seines eigenen Zweigs.
+
+**Die Lösung.** Alle drei leihen `Linse.tropfenLeihen()`: der Filter kommt mit der ersten Leihe und geht mit der letzten.
+
+**Der Beweis.** test589 §15 zählt EINE Alpha-Schwelle im Quelltext (in linse.ts), kein Stilblatt mit eigenem Klebefilter, und dass delete.ts, selection-flow.ts und tropfen.ts leihen. Zuerst rot eingecheckt (14ab08ad, die Schwelle in drei Dateien), dann grün (3945ebfe); die Gegenprobe wieder rot.
+
+**Die Lehre.** „EIN Filter“ je Zweig heisst nicht EIN Filter in der App. Ein Wächter, der nur den eigenen Zweig sieht, kann das nicht finden.
 

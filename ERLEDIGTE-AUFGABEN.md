@@ -1,5 +1,40 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
+
+**Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von
+`claude/morgen-besser` (`4d9a9a3fb`) an", die acht Zweige in fester Folge,
+„Zähler werden neu gezählt, nie von einer Seite übernommen", „Nur ein
+Goo-Filter: Löschen-Knopf und Tropfen teilen sich `Linse.TROPFEN`."
+
+**Zusammengeführt** (je `git merge --no-ff`, nach jedem die Datei-Wächter
+550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105):
+rot-zuerst-inseln (E714) → startlast-leichter (E715) → rot-zuerst-stift
+(E708) → loeschen-fluessig (E709) → dialoge-im-kit (E710) →
+suche-und-meldungen (E711) → tropfen-und-kacheln (E712) →
+zeitpille-und-balken (E713). Die Doku nach EINTRÄGEN, nicht nach
+Git-Blöcken (P121); die Zähler nachgezählt (P122): 694 Entscheidungen,
+E1 bis E715; 532 Läufe; 131 Lücken, 75 offene, 56 geschlossene. E715 auf
+die neuen Quellen der Welle: `delete.ts`, `kacheln.ts`, `tropfen.ts`
+tragen die ERZEUGT-Zeile. Start 1850 KB gzip, Decke 1950.
+
+**Was beim Zusammenführen gebaut wurde:**
+- Der EINE Escape-Griff (P123): E710, E711 und E713 hatten ihn je
+  erweitert; jetzt drückt er das ✕ des Zeitmessers (E713), ausser der
+  Fokus steht im Text, und `warOffen` (E711) gilt auch für den Zeitmesser.
+- Ein Klebefilter für die ganze App (P124): Löschen-Knopf und Meldungen
+  leihen `Linse.TROPFEN`; `test589` §15.
+- Eine Federsprache: „Alle gelesen" fährt die Feder `knapp` statt einer
+  eigenen Kurve (`test581` §9); keine Blase unter dem offenen „+"-Menü
+  (`test589` §1).
+- `test33` tippt den Spaltennamen ins Fenster des Kits (E710), statt
+  `value` zu setzen und einen Knopf zu suchen, den es dort nicht gibt — auf
+  `claude/dialoge-im-kit` allein war er rot (104/105).
+
+**Geprüft:** die Vereinigung der Wächter aller acht Zweige unter dem
+Schloss; die Gesamtbilder (Rechner und Telefon, hell und dunkel) liegen
+nicht im Verzeichnis (§55.4).
+
 ## 3. Oktober 2026 · E715 · Der Start holt ein Drittel weniger
 
 **Redur:** am 27. September „… ohne eine funktione löschen …", am

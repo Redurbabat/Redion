@@ -1666,14 +1666,40 @@ jeweils mit eigenem Wächter (rot zuerst):
 E715 hat die Kommentare aus dem erzeugten JavaScript genommen (2826 →
 1805 KB). Offen, je mit Messung vorher:
 
-1. **Beim Zusammenführen der zweiten Welle** bekommen die neuen Quellen
+1. ~~**Beim Zusammenführen der zweiten Welle** bekommen die neuen Quellen
    `src/schale/bedienung/delete.ts`, `kacheln.ts` und `tropfen.ts` die
-   erste Zeile `/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/… (npm run
-   bauen:ts). */` mit ihrem eigenen Pfad — `test105` §3 zeigt jede, der
-   sie fehlt oder deren Zeile eine andere Quelle nennt.
+   erste Zeile `/*! ERZEUGT — NICHT VON HAND ÄNDERN. …` mit ihrem eigenen
+   Pfad.~~ Erledigt am 5. Oktober auf `claude/morgen-besser-2`
+   (Zusammenführen 4/8 und 7/8; `test105` grün).
 2. **Die Kommentare der Stilblätter** sind 261 von 417 KB CSS beim Start.
    CSS ist Quelle; sie gingen nur mit einem Bauschritt für CSS weg (§6) —
    Frage an Redur, nicht still.
 3. **L216** (Lerninhalt beim Start, ohne Kommentare noch 18 KB) bleibt
    Redurs Frage.
+
+## Nach dem Zusammenführen der zweiten Welle (5. Oktober 2026)
+
+Gefunden auf `claude/morgen-besser-2`, nicht dort gelöst — je mit dem
+Grund:
+
+1. **Fremde rote Wächter, schon auf `claude/morgen-besser` rot** (dort
+   nachgemessen, nicht nebenbei repariert): `test86` (neue Bereiche
+   `seitenansichten`, `werkzeuge` nicht angekündigt), `test201` §1 (die
+   Probe aus L235 Punkt 1 — Redurs Frage), `test270` (im Arbeitsbaum ist
+   `.git` eine Datei), `test274`, `test332` (`.menu .kenn`, `#handy-oben`),
+   `test365` („Dreizehn Werkzeuge — ist 14, soll 13", seit E671 vierzehn;
+   `test464` hat E714 nachgezogen, diesen nicht), `test425` („Die
+   Markierung wirkt über den Grund"), `test448` („Die Klappe des Reglers
+   ist offen" — `{"auf":false,"klappe":0,"regler":0}`), `test348` („Die
+   grossen Knöpfe sind mindestens 44 px"; auf dem Grundstand 31/34, hier
+   33/34), `test470` (wartet 5 s auf `.overlay [data-w="sichern"]`), `test493`
+   (`-webkit-backdrop-filter: blur(8px)` in `motion.css` — aus E695, also
+   aus meinem eigenen Bogen vom 27. September; Chromium kennt nur die
+   Form ohne Präfix, und der Lauf verlangt, dass der Browser jede neue
+   Eigenschaft versteht), `test524` („Beide Leisten tragen den Rollschatten —
+   zwei Schatten, zwei Deckel"), `test582` (Sand und Wald 4,45 : 1).
+   Ein eigener „Rot zuerst"-Zweig, Wächter nur mit Redurs Wort ändern.
+2. **Die Linse auf „Heute" ruht über „ken"** (E712): im Gesamtbild steht
+   „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
+   Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
 

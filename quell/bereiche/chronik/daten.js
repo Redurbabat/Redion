@@ -1426,7 +1426,7 @@ const ChronikDaten = {
                     "vonCommit": "0e83901",
                     "bisCommit": "d4a53c8",
                     "zeitraum": "20:23",
-                    "dauer": "ca. 50 min",
+                    "dauer": "ca. 1 h",
                     "pruefungen": "—"
                 },
                 {
@@ -2148,7 +2148,7 @@ const ChronikDaten = {
                     "vonCommit": "(E626)",
                     "bisCommit": "(15:08)",
                     "zeitraum": "15:08",
-                    "dauer": "ca. 50 min",
+                    "dauer": "ca. 1 h",
                     "pruefungen": "test538 neu, 53 Zusagen, vier Gegenproben einzeln rot"
                 },
                 {
@@ -2164,7 +2164,7 @@ const ChronikDaten = {
                     "vonCommit": "—",
                     "bisCommit": "—",
                     "zeitraum": "16:30 – 17:20",
-                    "dauer": "ca. 50 min",
+                    "dauer": "ca. 1 h",
                     "pruefungen": "keine — Analyse, kein Bau"
                 },
                 {
@@ -2401,7 +2401,7 @@ const ChronikDaten = {
                     "vonCommit": "—",
                     "bisCommit": "—",
                     "zeitraum": "00:15 – 01:05",
-                    "dauer": "ca. 50 min",
+                    "dauer": "ca. 1 h",
                     "pruefungen": "83 Regeln geprüft: 44 erfüllt, 20 teilweise, 10 verletzt"
                 },
                 {
@@ -2409,7 +2409,7 @@ const ChronikDaten = {
                     "vonCommit": "(00:31)",
                     "bisCommit": "(01:26)",
                     "zeitraum": "00:35 – 01:26",
-                    "dauer": "ca. 50 min",
+                    "dauer": "ca. 1 h",
                     "pruefungen": "test539 47/47, test478 43/43, test522, test533 unverändert grün; Gegenprobe gefahren"
                 },
                 {
@@ -2457,7 +2457,7 @@ const ChronikDaten = {
                     "vonCommit": "(08:15)",
                     "bisCommit": "(09:05)",
                     "zeitraum": "08:15 – 09:05",
-                    "dauer": "ca. 50 min",
+                    "dauer": "ca. 1 h",
                     "pruefungen": "test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483"
                 },
                 {
@@ -3440,49 +3440,63 @@ const ChronikDaten = {
                     "vonBis": "e0988e6 → f2b0b9a",
                     "zeitraum": "06:24–06:51",
                     "dauer": "ca. 30 min",
-                    "pruefungen": "test572 (51 Zusagen, gegen den alten Stand rot mit 20), test209 nachgezogen; zwölf Nachbarn grün"
+                    "pruefungen": "test572 (51 Zusagen, gegen den alten Stand rot mit 20), test209 nachgezogen; zwölf Nachbarn grün",
+                    "vonCommit": "e0988e6",
+                    "bisCommit": "f2b0b9a"
                 },
                 {
                     "was": "Gelesen: AFFiNEs zwei Ansichten — Karte-Thema und die offene Frage als A1",
                     "vonBis": "f2b0b9a → fd1a778",
                     "zeitraum": "06:51–07:31",
                     "dauer": "ca. 40 min",
-                    "pruefungen": "keine — ein Leser und eine Karte-Notiz, jeder Punkt mit Datei:Zeile"
+                    "pruefungen": "keine — ein Leser und eine Karte-Notiz, jeder Punkt mit Datei:Zeile",
+                    "vonCommit": "f2b0b9a",
+                    "bisCommit": "fd1a778"
                 },
                 {
                     "was": "E690 · Drei Ansichten einer Seite (A1)",
                     "vonBis": "43432e1 → 4d7436d",
                     "zeitraum": "07:38–08:15",
                     "dauer": "ca. 40 min",
-                    "pruefungen": "test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün"
+                    "pruefungen": "test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün",
+                    "vonCommit": "43432e1",
+                    "bisCommit": "4d7436d"
                 },
                 {
                     "was": "E691 · Der Vollausbau der Fläche (A1c)",
                     "vonBis": "e388949 → offen",
                     "zeitraum": "08:25–…",
                     "dauer": "ca. 2 h",
-                    "pruefungen": "test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün"
+                    "pruefungen": "test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün",
+                    "vonCommit": "e388949",
+                    "bisCommit": "offen"
                 },
                 {
                     "was": "E692 · L220 geschlossen — und ein Kürzel, das nie ankam",
                     "vonBis": "637eeb6 → bcd4647",
                     "zeitraum": "11:10–11:55",
                     "dauer": "ca. 45 min",
-                    "pruefungen": "test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133"
+                    "pruefungen": "test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133",
+                    "vonCommit": "637eeb6",
+                    "bisCommit": "bcd4647"
                 },
                 {
                     "was": "E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte)",
                     "vonBis": "bcd4647 → 387ca8e",
                     "zeitraum": "12:00–14:10",
                     "dauer": "ca. 2 h",
-                    "pruefungen": "test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün"
+                    "pruefungen": "test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün",
+                    "vonCommit": "bcd4647",
+                    "bisCommit": "387ca8e"
                 },
                 {
                     "was": "E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN)",
                     "vonBis": "387ca8e → fc6e606",
                     "zeitraum": "14:15–16:37",
                     "dauer": "ca. 1 h 15 min",
-                    "pruefungen": "test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck\"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe"
+                    "pruefungen": "test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck\"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe",
+                    "vonCommit": "387ca8e",
+                    "bisCommit": "fc6e606"
                 }
             ],
             "zahlen": {
@@ -3529,7 +3543,7 @@ const ChronikDaten = {
             "datum": "2026-09-27",
             "wochentag": "Sonntag",
             "titel": "Ein Glas statt vier — und die Dichte kam aus den Pixeln, nicht aus dem Gefühl",
-            "wasIchWeiss": "Redur schrieb einen Satz, der breiter kaum sein konnte: „Weiter an die animationen übergangen glass efeck usw alles verbessern.“ „Alles verbessern“ ist kein Plan, also habe ich zuerst gezählt. Die Inventur der 23 Stilblätter ergab ein Bewegungssystem, das es gibt und an das sich kaum jemand hält (E259: vier Dauern, eine Kurve — daneben 55 Dauern und 227-mal das nackte `ease`), und ein Glasrezept aus §16, das genau eine Klasse benutzte. Die Laufzeit-Sonde entwarnte bei der Bewegung (im Leerlauf läuft eine einzige Endlos-Animation, mit „weniger Bewegung“ keine) und bestätigte beim Glas: am Rechner war kein einziges Element sichtbar verwischt.\n\nAlso zuerst das Glas, weil Redur es beim Namen genannt hatte und weil man es sieht. Der Wächter `test576` stand rot, bevor eine Zeile Stil geändert war, und fand dabei einen echten Fehler fürs Zielgerät: fünf Stellen ohne `-webkit-backdrop-filter`, also auf jedem iPhone vor Safari 18 ohne Glas. Die eigentliche Lehre des Tages kam danach. Meine erste Dichte für Menüs war eine Schätzung (74 %), die Hauptschrift hielt sie spielend aus — und die stille Schrift, die ich zuerst gar nicht gemessen hatte, fiel auf 1,43 : 1. Die Dichten stehen jetzt da, wo die Messung sie hingelegt hat, mit einer Regel statt einer Liste: Fläche mit Schrift dicht, Fläche mit Zeichen leicht.\n\nUnd ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — seit meinem eigenen Bogen von gestern. Gefunden hat es der Nachbarlauf dieses Bogens; die Nachbarliste von E690 hatte ihn nicht.",
+            "wasIchWeiss": "Redur schrieb einen Satz, der breiter kaum sein konnte: „Weiter an die animationen übergangen glass efeck usw alles verbessern.“ „Alles verbessern“ ist kein Plan, also habe ich zuerst gezählt. Die Inventur der 23 Stilblätter ergab ein Bewegungssystem, das es gibt und an das sich kaum jemand hält (E259: vier Dauern, eine Kurve — daneben 55 Dauern und 227-mal das nackte `ease`), und ein Glasrezept aus §16, das genau eine Klasse benutzte. Die Laufzeit-Sonde entwarnte bei der Bewegung (im Leerlauf läuft eine einzige Endlos-Animation, mit „weniger Bewegung“ keine) und bestätigte beim Glas: am Rechner war kein einziges Element sichtbar verwischt.\n\nAlso zuerst das Glas, weil Redur es beim Namen genannt hatte und weil man es sieht. Der Wächter `test576` stand rot, bevor eine Zeile Stil geändert war, und fand dabei einen echten Fehler fürs Zielgerät: fünf Stellen ohne `-webkit-backdrop-filter`, also auf jedem iPhone vor Safari 18 ohne Glas. Die eigentliche Lehre des Tages kam danach. Meine erste Dichte für Menüs war eine Schätzung (74 %), die Hauptschrift hielt sie spielend aus — und die stille Schrift, die ich zuerst gar nicht gemessen hatte, fiel auf 1,43 : 1. Die Dichten stehen jetzt da, wo die Messung sie hingelegt hat, mit einer Regel statt einer Liste: Fläche mit Schrift dicht, Fläche mit Zeichen leicht.\n\nUnd ein Nebenfund, der mich selbst betrifft: `test534` ist seit E690 rot — seit meinem eigenen Bogen von gestern. Gefunden hat es der Nachbarlauf dieses Bogens; die Nachbarliste von E690 hatte ihn nicht.\n\nNach dem Morgen lief eine zweite Linie desselben Tages. Zuerst rot zuerst: drei Läufe waren auf main rot, keiner durch den Morgen, und E698 hat alle drei grün gemacht, zwei davon mit Redurs kurzen Entscheiden („C jetzt, B später“, „Darf ins Netz“). Dann E699: Redur hob E80 auf — React darf herein, aber als Inseln in der bestehenden Schale. Der Einwand von E80, dass er keine zweite Oberfläche braucht, ist dabei nicht weggefallen, sondern zu fünf Regeln geworden, die test578 und test579 prüfen. Stufe 1a legte nur die Grundlage; sichtbar war davon das Schema „Touch Kit“ in „Aussehen“. Eine Durchsicht fand zwei Zusagen, die nicht hielten: Weiss auf Rot im dunklen Kit mit 2,65 statt 3,76 : 1, und ein gescheitertes Stilblatt, das im Kopf liegen blieb.\n\nDaneben E700: test362 war auf main rot, weil der Codex-Stand einen Farbtupfer mit einer rohen 28 px gebracht hatte; statt die Decke zu heben, ist eine echte Wiederholung zur Marke geworden. Redur hat PR #115 und PR #116 auf GitHub zusammengeführt, und um 22:43 UTC lag mit 515451f9 der Grundstand, auf dem alles Weitere aufbaut.\n\nAb ca. 16:45 UTC kam der Auftrag, der bis zum 5. Oktober trug: ruhiger, flüssiger, Glas, Stifte, Farben — dazu um ca. 21:45 UTC ein Fragebogen, zwei Videos und um ca. 22:10 UTC „du muss ofne pause an redion arbeiten …“. Alle Uhrzeiten dieser Ergänzung sind UTC; die zwei Zusammenführungen auf GitHub stehen in git mit +0200.",
             "nachrichten": [
                 {
                     "zeit": "ca. 08:00",
@@ -3544,6 +3558,118 @@ const ChronikDaten = {
                     "woher": "wörtlich aus dem Gespräch, mit einem Bild der GitHub-Meldung „This branch has conflicts that must be resolved\"",
                     "gemeint": "Der Pull Request lässt sich nicht zusammenführen, und es sah aus, als sei das Hochladen kaputt.",
                     "besser": "„Der PR sagt Konflikte — kannst du main reinholen?\" Aber das Bild war die beste Beschreibung: es zeigte die neun Dateien, und an `test568.mts` war der eigentliche Fund schon abzulesen."
+                },
+                {
+                    "zeit": "ca. 11:00 UTC",
+                    "wortlaut": "du kannst react nutzen keien problem",
+                    "woher": "zitiert in E699 (ENTSCHEIDUNGEN.md, „Redurs Sätze, wörtlich“) und in den Commits 79ff90a8 und 164ad9b5",
+                    "gemeint": "React darf in Redion. E80 vom 9. August, das React wieder entfernt hatte, soll nicht mehr im Weg stehen.",
+                    "besser": "„Du darfst React nutzen.“",
+                    "besserePrompt": "„React ist erlaubt — als Teile in der bestehenden Oberfläche, keine zweite App, nichts beim Start. Schreib zuerst die Entscheidung und die Regeln auf, dann bau.“ So ungefähr hat E699 den Satz gelesen; im Satz selbst stand die Grenze nicht."
+                },
+                {
+                    "zeit": "ca. 11:05 UTC",
+                    "wortlaut": "Mit React (E80 aufheben)",
+                    "woher": "zitiert in E699 und im Commit 79ff90a8; eine gewählte Antwort im Fragebogen, kein getippter Satz",
+                    "gemeint": "Die Entscheidung, die §6 und §52.5 vor jedem React verlangen, ausdrücklich: E80 wird aufgehoben.",
+                    "besser": "Derselbe Klick. Eine Wahl im Fragebogen ist die genaueste Form einer Entscheidung.",
+                    "besserePrompt": "—"
+                },
+                {
+                    "zeit": "ca. 11:26 UTC",
+                    "wortlaut": "Wie im UI-Kit überall",
+                    "woher": "zitiert in E699 (Punkt 6) und E702, zu den Federn",
+                    "gemeint": "Die Bauteile sollen federn wie im Touch Kit, mit Überschwingen.",
+                    "besser": "„Federn wie im UI-Kit, überall.“",
+                    "besserePrompt": "„Federn wie im UI-Kit — auch für Redions eigene Knöpfe, Menüs und Blätter, nicht nur für die Inseln.“ Ob „überall“ Redions eigene Teile meint, blieb offen und wurde erst um ca. 21:45 UTC im Fragebogen beantwortet (E702)."
+                },
+                {
+                    "zeit": "ca. 11:27 UTC",
+                    "wortlaut": "React 19.3.0, Touch Kit (dein UI-Kit), Glas-Code (ALEXalesha, MIT)",
+                    "woher": "zitiert in E699 und im Commit 79ff90a8; die Zustimmung je fremdem Stück nach §57",
+                    "gemeint": "Drei fremde Stücke dürfen herein, jedes einzeln genannt.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "Derselbe Satz — er nennt jedes Stück mit Fassung und Lizenz, genau wie §57 es verlangt."
+                },
+                {
+                    "zeit": "ca. 11:27 UTC",
+                    "wortlaut": "Also beiden bei der ausehen dort aollte ich die fraben ändern kann",
+                    "woher": "zitiert in E699 und E705 (ENTSCHEIDUNGEN.md)",
+                    "gemeint": "Beide Aussehen — Redions und das des Kits — sollen in „Aussehen“ wählbar sein, und die Farben will er dort selbst ändern können.",
+                    "besser": "„In „Aussehen“ will ich beide Looks und die Farben selbst ändern können.“",
+                    "besserePrompt": "„Mach das Kit-Aussehen als Schema in „Aussehen“ wählbar, hell und dunkel, und lass die Akzentfarbe dort frei.“"
+                },
+                {
+                    "zeit": "vor 11:52 UTC (Commit von E698), genauer nicht bekannt",
+                    "wortlaut": "C jetzt, B später",
+                    "woher": "zitiert in E698 (ENTSCHEIDUNGEN.md) und im Commit 4f6e91f3, zu L207",
+                    "gemeint": "Von den Wegen in L207 jetzt Weg C: die KI öffnet die Einstellungen über die Schale. Weg B bleibt offen.",
+                    "besser": "Derselbe Satz. Kürzer geht eine Wahl zwischen beschriebenen Wegen nicht.",
+                    "besserePrompt": "—"
+                },
+                {
+                    "zeit": "vor 11:52 UTC (Commit von E698), genauer nicht bekannt",
+                    "wortlaut": "Darf ins Netz",
+                    "woher": "zitiert in E698 und im Commit 4f6e91f3, zum Ordner lernen/",
+                    "gemeint": "Der vorläufige Staatskunde-Trainer unter lernen/ darf mit ausgeliefert werden.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "„lernen/ darf ins Netz; der doppelte Trainer bleibt, bis ich etwas anderes sage.“ Den zweiten Halbsatz hat E698 selbst so festgehalten (L210 Punkt 2)."
+                },
+                {
+                    "zeit": "ca. 16:45 UTC",
+                    "wortlaut": "du muss mehr im redion arbeiten du kannst auch die oberfläche bischen ruhige machen ohne etwas lösche also eine funktionen und ich will das es flüssigere animationen , glass efeck usw alles haben dann bessere stift efeckte beim zeichnen bessere farben",
+                    "woher": "zitiert in E701 bis E706, E708 bis E713 und E715 (ENTSCHEIDUNGEN.md)",
+                    "gemeint": "Mehr Arbeit an Redion selbst, und eine Liste: die Oberfläche ruhiger, ohne eine Funktion zu löschen; flüssigere Bewegung; Glas; bessere Stifteffekte; bessere Farben.",
+                    "besser": "„Arbeite mehr an Redion: Oberfläche ruhiger, ohne eine Funktion zu löschen, dazu flüssigere Animationen, Glas, bessere Stifteffekte und bessere Farben.“",
+                    "besserePrompt": "„Arbeite an Redion in fünf Zweigen: ruhiger (nichts löschen), Bewegung, Glas, Stift, Farben. Frag mich vorher, was ich bei jedem genau will.“ Genau diese Lücke hat der Fragebogen um ca. 21:45 UTC gefüllt; aus der Aufzählung wurden am nächsten Tag fünf der sechs Zweige der ersten Welle."
+                },
+                {
+                    "zeit": "ca. 21:45 UTC",
+                    "wortlaut": "„Gezeichnete Zeichen (Empfohlen)“ · „Wie im UI-Kit (Empfohlen)“ · „9 ruhigere Akzentfarben“ · „Leichter kühler Ton im Dunkeln“ · „Untere Leiste besser lesbar“ · „Starker Kontrast ohne Glas“ · „Echter Textmarker“ · „Füller wie GoodNotes“ · „Bleistift mit Graphitkorn“ · „Neue Tintenfarben“",
+                    "woher": "gewählte Antworten im Fragebogen, zitiert in E701, E702, E704 und E705 (ENTSCHEIDUNGEN.md); keine getippten Sätze",
+                    "gemeint": "Zu jedem Teil des Auftrags von 16:45 eine Richtung: gezeichnete Zeichen statt Emoji, Federn auch für Redions eigene Teile, neun ruhigere Akzente, ein kühler Ton im Dunkeln, eine lesbarere untere Leiste, „Starker Kontrast“ ohne Glas, und vier Wünsche an den Stift.",
+                    "besser": "—",
+                    "besserePrompt": "Derselbe Weg. Wahlen mit Empfehlung machen aus „bessere farben“ prüfbare Sätze; sie stehen heute als Zusagen in test580 bis test585."
+                },
+                {
+                    "zeit": "ca. 21:47 UTC",
+                    "wortlaut": "ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw",
+                    "woher": "zitiert in E702, E703, E705, E706 und E709 bis E713; dazu schickte er die Vorschau der Tab-Leiste des UI-Kits (E706)",
+                    "gemeint": "„überall“: das Kit und seine Übergänge auch dort, wo Redion sie braucht, zum Beispiel beim Stift.",
+                    "besser": "„Nutze das Kit überall, wo es nötig ist — auch beim Stift und bei den Übergängen.“",
+                    "besserePrompt": "„So wie diese Tab-Leiste soll sich die untere Leiste anfühlen, und dasselbe Material überall, wo man in Redion etwas wählt.“ Das Bild hat es gesagt; der Satz allein hätte es nicht."
+                },
+                {
+                    "zeit": "ca. 21:49 UTC",
+                    "wortlaut": "was du beim touckit gebaut hast ich will alles so haben mit redion passende inhalten",
+                    "woher": "zitiert in E702, E703, E705, E706 und E709 bis E713 (ENTSCHEIDUNGEN.md)",
+                    "gemeint": "Was im Touch Kit gebaut ist, soll es in Redion geben — mit Redions eigenen Inhalten, nicht mit den Beispielen des Kits.",
+                    "besser": "„Alles aus dem Touch Kit soll es in Redion geben, mit Redions Inhalten.“",
+                    "besserePrompt": "„Alles aus dem Touch Kit in Redion, mit Redions Inhalten — in dieser Reihenfolge: …“ Ohne Reihenfolge haben die Zweige der zweiten Welle sie selbst gewählt."
+                },
+                {
+                    "zeit": "ca. 22:02 UTC",
+                    "wortlaut": "Ich will das du löschen button so ist überla wo etwas zum löschen eine buton gibt auch im skills md das einfügen",
+                    "woher": "zitiert in E709 und im Commit 099cc169; dazu ein Video: ein runder weisser Knopf mit rotem Papierkorb zerfliesst in „Confirm“ und „Cancel“, „Cancel“ fliesst zurück",
+                    "gemeint": "Überall, wo Redion einen Knopf zum Löschen hat, dieser zweistufige, fliessende Knopf — und die Regel dazu auch in die SKILL.md des Kits.",
+                    "besser": "„Jeder Löschen-Knopf soll so werden wie im Video, überall. Und schreib die Regel in die SKILL.md.“",
+                    "besserePrompt": "„Jeder runde Löschen-Knopf in Redion wird zum fliessenden Knopf aus dem Video, an seinem Ort, mit seinem Griff; Menüzeilen und Wortknöpfe zeig mir vorher.“ Diese Grenze hat E709 selbst gezogen und als L230 Redur zur Wahl gelassen."
+                },
+                {
+                    "zeit": "ca. 22:05 UTC",
+                    "wortlaut": "Schau mal das auch an ich will das auch haben",
+                    "woher": "zitiert in E703, E709, E711, E712 und E713; dazu das Video „LIQUID GLASS“ (16 s, Urheber unbekannt)",
+                    "gemeint": "Die Szenen des Videos — Tropfen, Linse, Pille, Balken, Suche, Mitteilungen — sollen in Redion ankommen.",
+                    "besser": "„Schau dir das Video an — das will ich auch.“",
+                    "besserePrompt": "„Bau die Szenen aus dem Video dort, wo Redion schon einen Ort dafür hat, und sag mir, welche keinen haben.“ So haben E711, E712 und E713 es dann gelesen."
+                },
+                {
+                    "zeit": "ca. 22:10 UTC",
+                    "wortlaut": "du muss ofne pause an redion arbeiten ich will wenn ich am morgen die redion öfnnen eien komplet besseren webseit sehen ohne eine funktione löschen bessere ordnungen bessere übergagnge besssere efeckten , bessere oberfläsche alles kannst du nur an reddion arbeiten",
+                    "woher": "zitiert in fast jedem Eintrag von E701 bis E715 und im Commit 515451f9",
+                    "gemeint": "Ohne Pause weiterarbeiten, nur an Redion. Am Morgen soll Redion sichtbar besser sein — Ordnung, Übergänge, Effekte, Oberfläche —, und keine Funktion darf dabei verloren gehen.",
+                    "besser": "„Arbeite ohne Pause nur an Redion. Morgen früh will ich eine sichtbar bessere App sehen — Ordnung, Übergänge, Effekte, Oberfläche —, ohne dass eine Funktion fehlt.“",
+                    "besserePrompt": "Derselbe Inhalt und eine Grenze dazu: „Was du über Nacht nicht prüfen kannst, lass als Zweig stehen und sag es mir.“ Am 28. September blieb ein Teil der zweiten Welle ohne Browserlauf liegen. Der wichtigste Halbsatz war „ohne eine funktione löschen“ — er ist seither der Massstab jeder Durchsicht."
                 }
             ],
             "arbeit": [
@@ -3552,34 +3678,115 @@ const ChronikDaten = {
                     "vonBis": "fc6e606 → (keine Änderung)",
                     "zeitraum": "ca. 08:00–08:30",
                     "dauer": "ca. 30 min",
-                    "pruefungen": "keine — reines Messen (messungen.md §69)"
+                    "pruefungen": "keine — reines Messen (messungen.md §69)",
+                    "vonCommit": "fc6e606",
+                    "bisCommit": "(keine Änderung)"
                 },
                 {
                     "was": "E695 · Ein Glas statt vier",
                     "vonBis": "fc6e606 → c0c34cf",
                     "zeitraum": "ca. 08:30–11:30",
                     "dauer": "ca. 3 h",
-                    "pruefungen": "test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690"
+                    "pruefungen": "test576 neu, 30 Zusagen, rot eingecheckt (b5b2155); drei Gegenproben rot (Glas auf 22 %, Schrift-Regel heraus, und der Fehlgriff mit 74 %); Nachbarn 23 von 24 grün — test534 rot, aber schon seit E690",
+                    "vonCommit": "fc6e606",
+                    "bisCommit": "c0c34cf"
                 },
                 {
                     "was": "E696 · Rot zuerst: eine Seitenspalte endet im Fenster (test534 seit E690 rot) — und test533 eine Woche nach E670 nachgezogen",
                     "vonBis": "c0c34cf → 6ad2650",
                     "zeitraum": "ca. 11:30–13:00",
                     "dauer": "ca. 1 h 30 min",
-                    "pruefungen": "test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87"
+                    "pruefungen": "test534 auf 52 Zusagen (zwei neu, auch gegen den Stand vor E690 rot), Gegenprobe rot mit sechs Zeilen; test533 13 → 14; Nachbarn 210, 285, 424, 438, 463, 480, 524, 527, 532, 535, 572, 573, 576, 105, 109, 87",
+                    "vonCommit": "c0c34cf",
+                    "bisCommit": "6ad2650"
                 },
                 {
                     "was": "main zusammengeführt: der Codex-Stand „Dokument Stift Freitext\" (PR #114) — E681 und test568 waren doppelt vergeben, das Codex-Stück wurde E697 und test577",
                     "vonBis": "6ad2650 → offen",
                     "zeitraum": "ca. 13:10–…",
                     "dauer": "ca. 45 min",
-                    "pruefungen": "test577 (der Codex-Lauf), test568 (meiner), test572, test458, test515, test524, test527, test534, test533, test576, test575, test574, test573, test105, test109, test87, test550, test549"
+                    "pruefungen": "test577 (der Codex-Lauf), test568 (meiner), test572, test458, test515, test524, test527, test534, test533, test576, test575, test574, test573, test105, test109, test87, test550, test549",
+                    "vonCommit": "6ad2650",
+                    "bisCommit": "offen"
+                },
+                {
+                    "was": "PR #115 auf GitHub zusammengeführt (von Redur): der Morgen — E695, E696 und E697 — steht auf main",
+                    "vonBis": "0f73ba1 → 323f13a",
+                    "vonCommit": "0f73ba1",
+                    "bisCommit": "323f13a",
+                    "zeitraum": "12:55 (+0200 laut git; 10:55 UTC)",
+                    "dauer": "—",
+                    "pruefungen": "keine eigenen; die drei roten Läufe auf genau diesem Stand fand danach E698"
+                },
+                {
+                    "was": "E698 · Rot zuerst: drei rote Läufe auf main, bevor das Touch Kit kommt (L207 Weg C, --danger heisst --gefahr, lernen/ darf ins Netz)",
+                    "vonBis": "323f13a → 4f6e91f",
+                    "vonCommit": "323f13a",
+                    "bisCommit": "4f6e91f",
+                    "zeitraum": "ca. 10:55–11:52 UTC",
+                    "dauer": "ca. 1 h",
+                    "pruefungen": "test537 17/17, test401 4/4, test270 grün — alle drei auf main 323f13a rot gesehen; Nachbarn 87, 105, 109, 143, 225, 353, 549, 550, 102, 131 grün"
+                },
+                {
+                    "was": "E699 (Beschluss) · React als Inseln — E80 aufgehoben, sein Einwand wird fünf Regeln",
+                    "vonBis": "4f6e91f → 164ad9b",
+                    "vonCommit": "4f6e91f",
+                    "bisCommit": "164ad9b",
+                    "zeitraum": "ca. 11:52–13:18 UTC",
+                    "dauer": "ca. 1 h 25 min",
+                    "pruefungen": "test578 rot eingecheckt (33 bestanden, 75 durchgefallen), test579 rot (5 bestanden, 1 durchgefallen, Abbruch nach §1); Nachbarn 87, 225, 537, 549, 550 grün"
+                },
+                {
+                    "was": "E699 · React-Inseln, Stufe 1a — Bau, Lader, Brücke, Probe und das Schema „Touch Kit“",
+                    "vonBis": "164ad9b → 434402a",
+                    "vonCommit": "164ad9b",
+                    "bisCommit": "434402a",
+                    "zeitraum": "13:18–15:51 UTC",
+                    "dauer": "ca. 2 h 30 min",
+                    "pruefungen": "test578 108/108, test579 67/67; Gegenproben in test109, test105, test388 und test47 je rot; Nachbarn 31 von 32 grün — test362 rot, schon auf main seit 0f73ba1d"
+                },
+                {
+                    "was": "E699 · Durchsicht durch einen zweiten Agenten: Weiss auf Rot im dunklen Touch Kit, ein gescheitertes Stilblatt geht wieder aus dem Kopf",
+                    "vonBis": "434402a → 0976b5f",
+                    "vonCommit": "434402a",
+                    "bisCommit": "0976b5f",
+                    "zeitraum": "15:51–16:20 UTC",
+                    "dauer": "ca. 30 min",
+                    "pruefungen": "test579 rot gegen 434402a (71 von 76), danach 76/76 zweimal; test578 110/110 (zwei blinde Stellen in §6 geschlossen); Nachbarn 32 von 33 grün, test362 rot wie auf main"
+                },
+                {
+                    "was": "E700 · Rot zuerst: ein Farbtupfer dazu, ein Seitenrand zur Marke (Zweig claude/rot-zuerst-28px)",
+                    "vonBis": "323f13a → b6c7e9d",
+                    "vonCommit": "323f13a",
+                    "bisCommit": "b6c7e9d",
+                    "zeitraum": "bis 16:39 UTC (Beginn nicht bekannt)",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "test362 17/18 auf main 323f13a, 18/18 hier; acht Bildpaare byte-gleich; Nachbarn 87, 105, 109, 114, 143, 221, 353, 577, 225, 549, 550 grün; test401 rot wie auf main (das repariert E698)"
+                },
+                {
+                    "was": "PR #116 auf GitHub zusammengeführt (von Redur): E698 und E699 stehen auf main",
+                    "vonBis": "0976b5f → b19135a",
+                    "vonCommit": "0976b5f",
+                    "bisCommit": "b19135a",
+                    "zeitraum": "22:06 (+0200 laut git; 20:06 UTC)",
+                    "dauer": "—",
+                    "pruefungen": "keine eigenen"
+                },
+                {
+                    "was": "Grundstand: E700 zu E698/E699 — ein Zweig, auf dem alles Weitere aufbaut",
+                    "vonBis": "0976b5f → 515451f",
+                    "vonCommit": "0976b5f",
+                    "bisCommit": "515451f",
+                    "zeitraum": "ca. 22:10–22:43 UTC",
+                    "dauer": "ca. 30 min",
+                    "pruefungen": "Nachbarn unter der Sperre: „Alle 23 Läufe bestanden.“ (test362 18/18, test578 110/110, test579 76/76; test388: der Start holt 2767 KB unter 2850)"
                 }
             ],
             "zahlen": {
-                "commits": 5,
-                "entscheidungen": 3,
-                "neuePruefläufe": 2
+                "commits": 16,
+                "entscheidungen": 6,
+                "neuePruefläufe": 4,
+                "gezählt": "git zählt für den 27. September über alle Zweige 16 Commits (UTC): 4 am Morgen (b5b2155, c0c34cf, 6ad2650, 0f73ba1) und 12 danach. Der Eintrag des Morgens nennt 5 Commits; git zeigt am Morgen vier."
             },
             "groesstesProblem": "Eine Schätzung, die sich wie eine Entscheidung anfühlte. „Glas mit 74 % Deckkraft“ war die Zahl, die schon in `--bg-schwebend` stand, und die Hauptschrift hielt sie mit 6 bis 7 : 1 aus. Dass die stille Schrift darauf 1,43 : 1 hatte, stand nirgends — ich hatte sie nicht gemessen. Hätte der Wächter nur die Hauptschrift gelesen, wäre ein Menü mit unlesbaren Tastenkürzeln als „lesbar“ gelandet.",
             "interessantesteAnfrage": "„alles verbessern“ — der breiteste Auftrag bisher, und gerade deshalb der, der am dringendsten eine Messung vorneweg brauchte. Ohne sie wäre „besser“ Geschmack gewesen.",
@@ -3595,6 +3802,507 @@ const ChronikDaten = {
                     "was": "`test534` über fünf Arbeitsbäume zurückverfolgt: grün bei 43432e1, rot ab 4d7436d (E690).",
                     "warum": "§46: rot zuerst. Und der Fehler war meiner — dann ist er zuerst zu finden, nicht zu erklären.",
                     "risiko": "Keines — Arbeitsbäume im Scratchpad, der Hauptbaum unberührt."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-28",
+            "wochentag": "Montag",
+            "titel": "Sechs Zweige in der Nacht, zusammengeführt bis zum Mittag — und fünf neue, bis das Wochenlimit alles anhielt",
+            "wasIchWeiss": "Von Redur steht an diesem Tag kein neuer Satz in den Quellen; gearbeitet wurde an seinen Sätzen vom Vorabend. Daraus wurden sechs Zweige, alle vom Grundstand 515451f9 aus, nebeneinander gebaut und jeder mit seinem roten Lauf zuerst: E701 ruhiger, E702 Federn, E703 Glas, E704 Stifte, E705 Farben, E706 das Material des Kits (test580 bis test585). Ab 08:38 UTC habe ich sie in sechs Schritten auf claude/morgen-besser zusammengeführt, in fester Folge — Bewegung, Farben, Ruhe, Material, Glas, Stift —, damit das Glas auf den fertigen Farben misst.\n\nDas Zusammenführen fand vier Dinge, die kein Zweig allein hatte: das Farbfeld aus E705 sank auf der Druckfeder aus E702 zweimal ein (2b); das Material rechnete seine Federn mit einer eigenen Tafel neben RedionSpring (4b); das Glas auf den neuen Farben lag in „Wald“ und „Sand“ knapp unter 4,5 : 1 (6b); und am Bild, nicht am Lauf: in „Starker Kontrast“ war der aktive Reiter der unteren Leiste leer, weil E703 und E706 dieselbe Frage verschieden beantwortet hatten (6c). Dazu zweimal die Doku: Git hatte die Texte von E701 und E702 ineinander verschränkt, und die Selbstzählung von LUECKEN kam ohne Konflikt und falsch herein, weil beide Seiten dieselbe Zeile geschrieben hatten.\n\nAm Nachmittag begann die zweite Welle, vom Stand b3cf1933 aus: der Löschen-Knopf, der zerfliesst (E709), die Fragen im Fenster des Kits (E710, die erste sichtbare Insel), Suche und Meldungen (E711), Tropfen, Linse und Kacheln (E712) und die Zeitpille (E713) — je zuerst rot, eingecheckt zwischen 13:57 und 15:14 UTC. Vieles blieb offen: das Schloss für Browserläufe war ab ca. 14:03 UTC über eine Stunde belegt, und laut E710 hielt danach das Wochenlimit alle Läufe an. E708 (rot zuerst am Stift) war begonnen, aber nicht eingecheckt.",
+            "nachrichten": [],
+            "arbeit": [
+                {
+                    "was": "E705 · Bessere Farben (claude/bessere-farben)",
+                    "vonBis": "515451f → 2e01a4e",
+                    "vonCommit": "515451f",
+                    "bisCommit": "2e01a4e",
+                    "zeitraum": "rot 04:06, Bau 04:43 UTC",
+                    "dauer": "nebeneinander mit den anderen Zweigen, nicht getrennt messbar",
+                    "pruefungen": "test584 rot gegen 515451f9 (10 bestanden, 27 durchgefallen), danach 37/37; Nachbarn 23 von 24 grün (test435 unter der Last von fünf Bauern 44/45)"
+                },
+                {
+                    "was": "E702 · Flüssige Bewegung — die Federn des Touch Kits in Redions Schale (claude/fluessige-bewegung)",
+                    "vonBis": "515451f → 32a0c0c",
+                    "vonCommit": "515451f",
+                    "bisCommit": "32a0c0c",
+                    "zeitraum": "rot 04:03, Bau 04:53 UTC",
+                    "dauer": "nebeneinander, nicht getrennt messbar",
+                    "pruefungen": "test581 rot gegen 515451f (24 bestanden, 55 durchgefallen), danach 91/91; test126 29/29 und test435 46/46 (beide erweitert, nicht gelockert); Nachbarn unter der Sperre grün"
+                },
+                {
+                    "was": "E703 · Glas, wo es passt (claude/glas-wo-es-passt)",
+                    "vonBis": "515451f → e866aab",
+                    "vonCommit": "515451f",
+                    "bisCommit": "e866aab",
+                    "zeitraum": "rot 03:40, Bau 09:30 UTC",
+                    "dauer": "nebeneinander, nicht getrennt messbar",
+                    "pruefungen": "test582 rot gegen 515451f (84 bestanden, 91 durchgefallen); Nachbarn ca. 08:47–08:55 UTC grün; test582 172 von 175 im Nachbarlauf nach dem letzten Bau"
+                },
+                {
+                    "was": "E704 · Bessere Stifteffekte — Keil, Füller mit Gelenken, Graphitkorn, acht Tinten (claude/stift-effekte)",
+                    "vonBis": "515451f → 7970427",
+                    "vonCommit": "515451f",
+                    "bisCommit": "7970427",
+                    "zeitraum": "erste Läufe ca. 04:55, rot 09:02, Bau 09:13, Nachtrag 09:58 UTC",
+                    "dauer": "nebeneinander, nicht getrennt messbar",
+                    "pruefungen": "test583 gegen 515451f9: 9 bestanden, 33 durchgefallen, Abbruch in §9; danach 64/64; test201, test343 und test461 rot — auf dem Grundstand genauso"
+                },
+                {
+                    "was": "E701 · Ruhiger, und nichts ist weg (claude/ruhige-oberflaeche)",
+                    "vonBis": "515451f → da47e90",
+                    "vonCommit": "515451f",
+                    "bisCommit": "da47e90",
+                    "zeitraum": "rot 01:03, Bau 09:10 UTC",
+                    "dauer": "nebeneinander, nicht getrennt messbar",
+                    "pruefungen": "test580 rot gegen 515451f9 (43 bestanden, 42 durchgefallen), danach 86/86; drei Gegenproben rot; 38 Nachbarn unter dem Schloss grün"
+                },
+                {
+                    "was": "E706 · Das Material des Touch Kits überall, wo man wählt (claude/material-ueberall)",
+                    "vonBis": "515451f → df2f3fe",
+                    "vonCommit": "515451f",
+                    "bisCommit": "df2f3fe",
+                    "zeitraum": "rot 09:12, Bau 09:30 UTC",
+                    "dauer": "nebeneinander, nicht getrennt messbar",
+                    "pruefungen": "test585 rot gegen 515451f9 (47 bestanden, 44 durchgefallen), danach 91/91; Gegenproben in einer Kopie 80/91, jede Verbiegung an ihrer Stelle rot"
+                },
+                {
+                    "was": "Morgen besser 1 bis 6: die erste Welle auf claude/morgen-besser (E702, E705, E701, E706, E703, E704), mit 2b (einmal einsinken) und 4b (eine Sprache für die Federn)",
+                    "vonBis": "515451f → b3cf193",
+                    "vonCommit": "515451f",
+                    "bisCommit": "b3cf193",
+                    "zeitraum": "08:38–10:23 UTC",
+                    "dauer": "ca. 1 h 45 min",
+                    "pruefungen": "nach jedem Schritt 14 Datei-Wächter grün; unter der Sperre die Nachbarn je Zweig; test581 §8 fand das doppelte Einsinken (rot auf 69c93cc, grün auf 11e7e43); die Vereinigung aller Nachbarn auf b3cf193: 76 von 83 grün — rot 201, 343, 461 und 492 schon auf dem Grundstand, 582 die Dichte, 534 und 576 nur unter der Last des Laufs"
+                },
+                {
+                    "was": "Morgen besser 6b und 6c: das Glas misst zuletzt (dichter um einen Punkt, Sand ohne Ausnahme); deckend heisst unter die Knöpfe",
+                    "vonBis": "b3cf193 → 4d9a9a3",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "4d9a9a3",
+                    "zeitraum": "13:34–13:41 UTC",
+                    "dauer": "ca. 10 min zwischen den Commits",
+                    "pruefungen": "6b: Wald 4,45 → 4,59, Sand 4,47 → 4,55; 582 576 534 245 127 403 435 510 579 47 584 — „Alle 11 Läufe bestanden.“ 6c am Bild gefunden; test582 §5 prüft den Namen auf dem Reiter nicht (an den Integrator gemeldet)"
+                },
+                {
+                    "was": "E708 · Rot zuerst am Stift — begonnen, nicht eingecheckt (claude/rot-zuerst-stift)",
+                    "vonBis": "b3cf193 → (kein Commit)",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "(kein Commit)",
+                    "zeitraum": "Uhrzeit nicht bekannt",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "laut E708: der erste Stand von 1b liess test347 §3 rot (die Linie endete bei x = 285); test563 auf demselben Zeichenweg 13/13"
+                },
+                {
+                    "was": "E709 · Der Löschen-Knopf, der zerfliesst — 23 Stellen in 16 Dateien (claude/loeschen-fluessig)",
+                    "vonBis": "b3cf193 → 4262705",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "4262705",
+                    "zeitraum": "rot 13:58, Bau 14:32 UTC",
+                    "dauer": "nebeneinander ab 10:23 UTC, nicht getrennt messbar",
+                    "pruefungen": "test586 rot gegen b3cf1933 (8 bestanden, 36 durchgefallen), danach 44/44; fünf Gegenproben rot; unter dem Schloss 17 von 19 grün — test362 (eine rohe 16px) behoben, test464 §1 fremd; die Läufe nach den letzten zwei Korrekturen ca. 15:54 UTC (eingetragen am 3. Oktober)"
+                },
+                {
+                    "was": "E710 · Die Fragen der Schale im Fenster des Touch Kits — die erste sichtbare Insel (claude/dialoge-im-kit)",
+                    "vonBis": "b3cf193 → 9575ebc",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "9575ebc",
+                    "zeitraum": "rot 13:57, Bau 14:46 UTC",
+                    "dauer": "nebeneinander ab 10:23 UTC, nicht getrennt messbar",
+                    "pruefungen": "test587 rot (Abbruch in §1; 10 bestanden, 6 durchgefallen), danach 52/52; erster Bau unter dem Schloss 14:12–14:30 UTC: 45 von 56 Nachbarn grün; der Endbau ist ohne Browserlauf eingecheckt — laut E710 hielt das Wochenlimit alle Läufe an"
+                },
+                {
+                    "was": "E711 · Die Suche wächst aus der Kapsel, die Meldungen stapeln sich (claude/suche-und-meldungen)",
+                    "vonBis": "b3cf193 → 556ffda",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "556ffda",
+                    "zeitraum": "rot 15:12, Bau 15:14 UTC; test588 lief schon um ca. 11:09 UTC in einer früheren Fassung",
+                    "dauer": "nebeneinander ab 10:23 UTC, nicht getrennt messbar",
+                    "pruefungen": "test588 rot eingecheckt, die Zahl gegen den Grundstand fehlte (nachgeholt am 4. Oktober: 17 bestanden, 26 durchgefallen); 14 Datei-Wächter grün; test588 zuletzt 39 von 43 (frühere Fassung); Lauf dieser Fassung, Nachbarn und Bilder standen aus — das Schloss war ab ca. 14:03 UTC über eine Stunde belegt; ausdrücklich NICHT als grün gemeldet"
+                },
+                {
+                    "was": "E712 · Tropfen, Linse und Kacheln (claude/tropfen-und-kacheln)",
+                    "vonBis": "b3cf193 → f6b9f00",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "f6b9f00",
+                    "zeitraum": "rot 14:06, Bau 14:38 UTC",
+                    "dauer": "nebeneinander ab 10:23 UTC, nicht getrennt messbar",
+                    "pruefungen": "test589 rot gegen b3cf1933 (28 bestanden, 44 durchgefallen), am Bau 72 ok, 0 offen; fünf Gegenproben rot; 13 Datei-Wächter grün; Browser-Nachbarn und test388 §5 „folgen im Nachtrag“ — der Bericht des Baus ging am Wochenlimit verloren (E712)"
+                },
+                {
+                    "was": "E713 · Die Zeitpille und die Balkenkarte (claude/zeitpille-und-balken)",
+                    "vonBis": "b3cf193 → fb7e590",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "fb7e590",
+                    "zeitraum": "rot 14:32, Bau 15:08 UTC",
+                    "dauer": "nebeneinander ab 10:23 UTC, nicht getrennt messbar",
+                    "pruefungen": "test590 rot gegen b3cf1933 (4 bestanden, 13 durchgefallen, Abbruch), danach 39/39; 33 von 36 Nachbarn grün (test247 fremd, test362 und test436 behoben); test388 21/21"
+                }
+            ],
+            "zahlen": {
+                "commits": 33,
+                "entscheidungen": 11,
+                "neuePrüfläufe": 11,
+                "gezählt": "Commits in der Geschichte von claude/morgen-besser-2 (UTC). Entscheidungen E701–E706 und E709–E713; Prüfläufe test580–test590."
+            },
+            "groesstesProblem": "Rot aus der Verbindung. Sechs Zweige, jeder für sich grün, und beim Zusammenführen vier Fehler, die keiner allein hatte: zweimal Einsinken auf zwei Kurven (2b), zwei Tafeln für dieselbe Feder (4b), Glas knapp unter 4,5 : 1 auf den neuen Farben (6b), und ein leerer Reiter in „Starker Kontrast“, den nur das Bild zeigte (6c) — test582 §5 prüfte die Fläche, nicht den Namen darauf. Dazu die Doku: Git verschränkte zwei Einträge ineinander, und die Lückenzahl kam ohne Konflikt falsch herein. Dieselben zwei Doku-Fallen kamen am 5. Oktober wieder (P121, P122).",
+            "interessantesteAnfrage": "Kein neuer Satz — aber der vom Vorabend, „ohne eine funktione löschen“, wurde an diesem Tag zur Prüfregel: test580 hält für jede leiser gewordene Stelle zwei Hälften, was ruhiger wird und dass derselbe Griff mit derselben Kennung, demselben Wort und in derselben Folge da ist.",
+            "massnahmen": [
+                {
+                    "zeit": "08:38–10:23 UTC",
+                    "was": "Die sechs Zweige in fester Folge zusammengeführt (Bewegung, Farben, Ruhe, Material, Glas, Stift); nach jedem Schritt die Zähler neu gezählt und das Erzeugte neu gebaut, beim Dienststand die höhere Fassung genommen.",
+                    "warum": "Damit das Glas auf den fertigen Farben misst und jede Zahl in der Doku stimmt; die Seite des Zweigs hätte den Dienststand von v1387 auf v1384 zurückgedreht.",
+                    "risiko": "Fehler aus der Verbindung zeigen sich erst nach dem Zusammenführen — sie bekamen eigene Commits (2b, 4b, 6b, 6c)."
+                },
+                {
+                    "zeit": "13:34 UTC",
+                    "was": "Glasdichte um einen Punkt angehoben (dunkel 90 → 91 %, hell 92 → 93 % der Karte) und die Ausnahme „sand“ in test582 gestrichen.",
+                    "warum": "Auf den Farben aus E705 lagen Wald und Sand bei 4,45 bis 4,47 : 1; Sand brauchte die Ausnahme nicht mehr und wird ohne sie strenger gemessen.",
+                    "risiko": "Ein Punkt weniger Durchblick; das Glas bleibt Glas."
+                },
+                {
+                    "zeit": "13:41 UTC",
+                    "was": "In „Starker Kontrast“ liegt die deckende Pille der unteren Leiste unter den Knöpfen (z-index 0).",
+                    "warum": "Am Bild gefunden: der aktive Reiter war leer, ohne Zeichen und ohne Namen.",
+                    "risiko": "test582 §5 prüft den Namen auf dem Reiter nicht; die Lücke im Wächter ging als Bericht an den Integrator."
+                },
+                {
+                    "zeit": "ab 13:57 UTC",
+                    "was": "Die zweite Welle von b3cf1933 aus, je rot zuerst; Browserläufe nur über das gemeinsame Schloss.",
+                    "warum": "Fünf Zweige gleichzeitig; zwei Browserläufe mit demselben Port machen einander rot (§30).",
+                    "risiko": "Das Schloss war ab ca. 14:03 UTC über eine Stunde belegt, danach hielt das Wochenlimit alles an — mehrere Bauten blieben ohne Browserlauf und ohne Bilder."
+                }
+            ]
+        },
+        {
+            "datum": "2026-10-03",
+            "wochentag": "Samstag",
+            "titel": "Nach vier Tagen ohne Commit: rot zuerst an vier Stellen und am Stift — und der Start holt ein Drittel weniger",
+            "wasIchWeiss": "Zwischen dem 28. September, 15:14 UTC, und dem 3. Oktober, 19:51 UTC, steht in der Geschichte von claude/morgen-besser-2 kein Commit. Was die Quellen dazu sagen: E708 nennt den Grund — „eine Woche lag der Bogen ungebaut, weil das Wochenkontingent alle Arbeit anhielt“; E710 nennt das Wochenlimit als Grund, warum sein Endbau ohne Browserlauf eingecheckt wurde, und bei E712 ging der Bericht des Baus daran verloren. Laut der Auftragsdatei vom 5. Oktober hat Codex am 1. Oktober zwei WIP-Zweige zu einem PDF-Auftrag gepusht; sie gehören nicht zu dieser Geschichte. Mehr weiss ich über diese Tage nicht.\n\nAm Abend schrieb Redur „Weiter ohne pause,“. Zuerst rot zuerst: E714 hat vier Läufe, die auf dem Stand der ersten Welle rot waren oder wackelten, je bis zu ihrem Commit halbiert. Einer war ein echter Fehler im Code (das Stilblatt der Inseln kam in der Einzeldatei je nach Zufall als <link>), drei waren Prüfungen, die mit E671, E703 und E704 nicht mitgegangen waren. Dann E708: das Halten am Stift fragt wieder die Hand statt der Tinte, und der Farbwähler des Systems übernimmt beim Schliessen; test201 §1 bleibt rot, weil seine Probe von E676 überholt ist — der Entscheid gehört Redur (L235).\n\nUnd E715: die zweite Welle passte zusammen nicht mehr unter die Startdecke von 2850 KB. Gezählt waren 1039 KB davon Kommentare im erzeugten JavaScript. Jetzt bleiben sie in src/, jede erzeugte Datei trägt nur noch ihre Warnzeile, der Start holt 1805 statt 2826 KB, und die Decke sinkt auf 1950. Zwei Arbeiten brachen an der Sitzungsgrenze ab: die von E715 nach ihrem Commit (die Bilder fehlten bis zum nächsten Tag) und die erste Durchsicht von E711 um ca. 21:40 UTC, ohne etwas einzuchecken.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 19:35 UTC",
+                    "wortlaut": "Weiter ohne pause,",
+                    "woher": "mit Uhrzeit und Komma zitiert in E708, E710 bis E713 und E715 (ENTSCHEIDUNGEN.md); die Commits dieses Abends schreiben „Weiter ohne pause“ ohne Komma und ohne Uhrzeit — nachgetragen in c287b388 und 27797b79",
+                    "gemeint": "Die Arbeit vom 27. September dort aufnehmen, wo sie liegen geblieben war, und ohne Unterbrechung fertig machen — mit derselben Bedingung wie damals: keine Funktion löschen.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "„Weiter ohne Pause — zuerst was rot ist, dann die offenen Nachträge der Zweige vom 28. September.“ Der kurze Satz reichte, weil die offenen Nachträge in E709 bis E713 schon sagten, was fehlte."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E714 · Rot zuerst, vier Inseln: ein Stilblatt ohne <link>, ein Wettlauf mit SwiftShader, der Keil als Fläche, vierzehn Werkzeuge (claude/rot-zuerst-inseln)",
+                    "vonBis": "4d9a9a3 → 98813b0",
+                    "vonCommit": "4d9a9a3",
+                    "bisCommit": "98813b0",
+                    "zeitraum": "19:51–21:04 UTC",
+                    "dauer": "ca. 1 h 15 min",
+                    "pruefungen": "test492 rot eingecheckt (09fb053; auf 4d9a9a3 54 grün, 1 rot), danach 55/55; test582 180/180, test247 107/107, test464 63/63; Halbierung gelaufen; vier Gegenproben rot; unter dem Schloss 20:44–21:04 UTC"
+                },
+                {
+                    "was": "E709 · Nachtrag: die Läufe vom 28. September eingetragen, das Zurückfliessen in die Grösse des Knopfs, ohne Blinken",
+                    "vonBis": "4262705 → ebb01d7",
+                    "vonCommit": "4262705",
+                    "bisCommit": "ebb01d7",
+                    "zeitraum": "19:57–20:34 UTC",
+                    "dauer": "ca. 40 min",
+                    "pruefungen": "test586 45/45 (Läufe vom 28. September, ca. 15:54 UTC); drei Punkte mehr: rot 45 von 48 (ca. 20:27 UTC), danach 48/48; test362 18/18; test464 §1 auf b3cf1933 genauso rot (fremd)"
+                },
+                {
+                    "was": "E715 · Der Start holt ein Drittel weniger, und nichts fehlt (claude/startlast-leichter)",
+                    "vonBis": "4d9a9a3 → 73debaa",
+                    "vonCommit": "4d9a9a3",
+                    "bisCommit": "73debaa",
+                    "zeitraum": "rot 20:33, Bau 20:46 UTC (Beginn nicht bekannt)",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "test105 rot gegen 4d9a9a3 (290 ok, 45 offen), test388 rot (20 bestanden, 2 durchgefallen); danach §5: 1805 KB unter der Decke 1950; die Sitzung brach danach ab, die Bilder fehlten"
+                },
+                {
+                    "was": "E708 · Rot zuerst am Stift: das Halten fragt wieder die Hand, der Systemfarbwähler übernimmt (claude/rot-zuerst-stift)",
+                    "vonBis": "b3cf193 → 7eb0998",
+                    "vonCommit": "b3cf193",
+                    "bisCommit": "7eb0998",
+                    "zeitraum": "20:49–21:06 UTC (begonnen am 28. September)",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "test461 36/36, test343 32/32, test347 31/31, test201 31/32 (§1 bleibt beim Entscheid Redurs, L235); Gegenproben G1–G5 rot; test563 je dreimal auf Zweig und Grundstand — derselbe Wackler auf beiden Seiten"
+                }
+            ],
+            "zahlen": {
+                "commits": 10,
+                "entscheidungen": 3,
+                "neuePrüfläufe": 0,
+                "gezählt": "Commits in der Geschichte von claude/morgen-besser-2 (UTC). Entscheidungen E708, E714, E715 (zuerst eingecheckt an diesem Tag); kein neuer Lauf, nur erweiterte."
+            },
+            "groesstesProblem": "Die Tage davor. Was am 28. September offen geblieben war — Browserläufe, Bilder, der Bericht eines Baus —, war nicht nur aufgeschoben: der Bericht von E712 kam nicht zurück, und E710 war ohne einen einzigen Browserlauf eingecheckt. Ein Bau, der „die Läufe folgen im Nachtrag“ schreibt, verlässt sich darauf, dass es einen Nachtrag gibt.",
+            "interessantesteAnfrage": "„Weiter ohne pause,“ — drei Wörter und ein Komma nach vier Tagen ohne Commit. Wörtlich übernommen wurde es erst beim zweiten Hinsehen: die Commits des Abends schrieben es ohne Komma und ohne Uhrzeit, eine Durchsicht hat beides nachgetragen (§56).",
+            "massnahmen": [
+                {
+                    "zeit": "19:51 UTC",
+                    "was": "Vor den Zweigen der zweiten Welle zuerst rot zuerst auf dem Stand der ersten Welle (E714): vier Läufe, jeder bis zu seinem Commit halbiert.",
+                    "warum": "§46 — rot zuerst; und die Halbierung sagt, wem ein roter Lauf gehört, bevor jemand ihn repariert.",
+                    "risiko": "In drei von vier Fällen wurde nur die Prüfung geändert — erweitert oder an die neue Form angepasst, nicht gelockert; die Durchsicht am 4. Oktober hat jede Zusage alt gegen neu gelesen."
+                },
+                {
+                    "zeit": "20:33 UTC",
+                    "was": "Die Startdecke gesenkt statt gehoben (E715: 2850 → 1950 KB), weil die Kommentare im erzeugten JavaScript nicht mehr mitreisen.",
+                    "warum": "Die zweite Welle passte nicht mehr darunter; E688 verlangt, vor dem Anheben zu zählen — gezählt waren 1039 KB Kommentare.",
+                    "risiko": "Wer im Debugger liest, sieht Code ohne Erklärung; Zeilennummern in alten Fehlerberichten passen nicht mehr. Jede neue Quelle braucht die ERZEUGT-Zeile (test105 §3)."
+                },
+                {
+                    "zeit": "20:49 UTC",
+                    "was": "Den Entscheid über test201 §1 bei Redur gelassen (L235 Punkt 1).",
+                    "warum": "Grün würde der Lauf nur, wenn E676 zurückgenommen oder die Probe geändert würde — einen Wächter ändern darf ein Bogen nicht (§31, §47).",
+                    "risiko": "Ein Lauf bleibt rot, bis Redur entscheidet."
+                }
+            ]
+        },
+        {
+            "datum": "2026-10-04",
+            "wochentag": "Sonntag",
+            "titel": "Die zweiten Prüfer: was die Bauten vom 28. September nicht mehr messen konnten",
+            "wasIchWeiss": "Ein Tag der Durchsichten. Redur schrieb „Weiter“, und die Zweige der zweiten Welle bekamen Prüfer, die nicht selbst gebaut hatten und nachmassen, was der Bau am Wochenlimit nicht mehr hatte messen können — mit dem Massstab vom 27. September: keine Funktion löschen, kein Wächter gelockert.\n\nWas sie fanden, wiegt mehr als die Bauten selbst. E710: im bisherigen Fenster ging eine mit Enter gegebene Antwort verloren, und dieselbe Frage stand sofort wieder da — der Code von b3cf193 Zeile für Zeile, gefunden von der Gegenprobe des neuen §11. E711: der Fächer an der Glocke ging nicht wieder zu, ein Escape nahm die Suche UND die Meldungen, und ein Strich auf der Tafel unter einer Meldung kam mit 8 von 170 px an. E712: der Tropfenfilter stand dauernd im Halter (test539 §2 rot), und am Telefon endeten die Tropfen 743 px unter ihren Knöpfen. E714: test582 §6 fragte die alte Zeile erst nach dem Warten — eine Lücke, die ich am Vortag in meinen eigenen Wächter gebaut hatte.\n\nDazu E715: die Bilder, die der Commit nannte, lagen nicht im Ordner; nachgeholt, acht Paare Pixel für Pixel gleich, und jede Zahl selbst nachgezählt. Der zweite Prüfer von E711 wurde um ca. 17:15 UTC an der Sitzungsgrenze abgeschnitten, bevor Gegenproben, Nachbarn und Bilder liefen; seine Reparatur ist erst am 5. Oktober eingecheckt.",
+            "nachrichten": [
+                {
+                    "zeit": "Uhrzeit nicht bekannt (vor 16:13 UTC, dem Commit f85f45bb)",
+                    "wortlaut": "Weiter",
+                    "woher": "zitiert in E714 (Absatz „Durchsicht“) und im Commit f85f45bb",
+                    "gemeint": "Weitermachen wie am Vorabend — die Durchsichten der zweiten Welle.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "—"
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E714 · Durchsicht: test582 hält „in 700 ms da“ auch für den Zustand, test579 §9 misst das angenommene Blatt",
+                    "vonBis": "98813b0 → f85f45b",
+                    "vonCommit": "98813b0",
+                    "bisCommit": "f85f45b",
+                    "zeitraum": "16:13 UTC",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "kein Code geändert; jede geänderte Zusage der vier Wächter alt gegen neu gelesen; test582 §6 und test579 §9 erweitert; zwei Gegenproben rot"
+                },
+                {
+                    "was": "E715 · Nachtrag: die Bilder nachgeholt, Pixel für Pixel gleich, und jede Zahl selbst nachgezählt",
+                    "vonBis": "73debaa → c287b38",
+                    "vonCommit": "73debaa",
+                    "bisCommit": "c287b38",
+                    "zeitraum": "16:42 UTC",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "Start 2826 → 1805 KB statisch und von test388 §5 (22/22); 226 von 227 Dateien Byte für Byte gleich dem Bau ohne Kommentare; 16 Bilder, acht Paare 0 Bildpunkte anders; zwei Gegenproben rot"
+                },
+                {
+                    "was": "E710 · Nachtrag: der Endbau im Browser — die erste Frage aus der Einzeldatei ohne Netz, das bisherige Fenster ohne doppelte Frage, test458 misst nach der Feder",
+                    "vonBis": "9575ebc → 1654e75",
+                    "vonCommit": "9575ebc",
+                    "bisCommit": "1654e75",
+                    "zeitraum": "Läufe am 3. Oktober 21:06–21:24 und am 4. Oktober 15:51–16:00 UTC, Commit 16:45 UTC",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "test587 §11 neu, 73/73; test458 misst nach der Feder (mit fester Pause rot, 53/54); 16 von 22 Nachbarn grün, fünf fremd (auf b3cf193 genauso rot), 458 durch den Zweig — behoben; vier Gegenproben rot"
+                },
+                {
+                    "was": "E711 · Durchsicht, rot eingecheckt: der Fächer geht wieder zu, die Marke ist lesbar, ein Escape tut eines, der Strich kommt an — und die Glocke nimmt die Karten auf",
+                    "vonBis": "556ffda → 6853b99",
+                    "vonCommit": "556ffda",
+                    "bisCommit": "6853b99",
+                    "zeitraum": "16:45–17:11 UTC",
+                    "dauer": "ca. 25 min zwischen den Commits",
+                    "pruefungen": "test588 §11 neu: gegen 556ffda 46 bestanden, 11 durchgefallen; gegen b3cf1933 (Fassung vom 28. September) 17 bestanden, 26 durchgefallen — die Zahl, die im roten Commit fehlte; Reparatur gebaut, der Prüfer um ca. 17:15 UTC abgeschnitten"
+                },
+                {
+                    "was": "E712 · Durchsicht: ein Tropfenfilter nur solange es fliesst, Tropfen am Telefon aufwärts, Merkzeichen, Vorleser, Kontrast ohne Linse, Kacheln lesbar und rollbar",
+                    "vonBis": "f6b9f00 → 510f397",
+                    "vonCommit": "f6b9f00",
+                    "bisCommit": "510f397",
+                    "zeitraum": "rot 17:06, Bau 23:55 UTC",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "test589 erweitert: gegen f6b9f00 74 bestanden, 17 durchgefallen, danach 91 und 0; zwei Zusagen des Baus ersetzt, nicht gelockert (sie verlangten den Filter dauernd im Dokument); test388 §5: 2840 KB über 250 Dateien"
+                }
+            ],
+            "zahlen": {
+                "commits": 7,
+                "entscheidungen": 0,
+                "neuePrüfläufe": 0,
+                "gezählt": "Commits in der Geschichte von claude/morgen-besser-2 (UTC). Keine neue Entscheidung, kein neuer Lauf — nur Nachträge, Durchsichten und erweiterte Läufe."
+            },
+            "groesstesProblem": "Zwei Wächter, die einander widersprachen, und nur einer lief: test589 verlangte nach dem Bau von E712 den Tropfenfilter dauernd im Dokument, test539 §2 verlangte, dass der Halter in Ruhe nur die Fahrt hält. Rot war der ältere; die Browser-Nachbarn des Baus standen noch aus. Die Durchsicht hat die zwei Zusagen des Baus ersetzt, nicht gelockert: genau ein Filter, solange es fliesst, keiner in Ruhe.",
+            "interessantesteAnfrage": "„Weiter“ — ein Wort, und es hat einen Tag Durchsicht getragen, weil die offenen Punkte schon in den Einträgen standen („folgen im Nachtrag“). Ein Wort reicht, wenn die Liste stimmt.",
+            "massnahmen": [
+                {
+                    "zeit": "ab ca. 15:51 UTC",
+                    "was": "Durchsichten durch Prüfer, die nicht gebaut hatten: Commit für Commit gegen den Grundstand, jede Taste mit Finger, Maus und Tastatur.",
+                    "warum": "Die Bauten waren am Wochenlimit ohne Browserläufe stehen geblieben; ein zweiter Blick findet, was der Bauer für erledigt hält.",
+                    "risiko": "Zeit — und Prüfer, die an der Sitzungsgrenze abbrechen, bevor sie einchecken."
+                },
+                {
+                    "zeit": "16:45 und 17:06 UTC",
+                    "was": "Die Funde der Durchsicht zuerst als roter Lauf eingecheckt (test588 §11, test589), erst dann die Reparatur.",
+                    "warum": "§30: sonst weiss niemand, ob die Reparatur die Sache hält — und ein abgeschnittener Prüfer hinterlässt so wenigstens den Befund.",
+                    "risiko": "Ein rot eingecheckter Lauf steht auf dem Zweig, bis die Reparatur kommt; bei E711 erst am 5. Oktober."
+                }
+            ]
+        },
+        {
+            "datum": "2026-10-05",
+            "wochentag": "Montag",
+            "titel": "Durchsichten bis zum Abend, dann acht Zusammenführungen — und aus drei Klebefiltern wird einer",
+            "wasIchWeiss": "Der Tag hatte zwei Hälften in zwei Sitzungen. Bis zum Abend liefen in der alten Sitzung weitere Durchsichten der zweiten Welle — E708 bis zur dritten, E709, E710, E711 von der dritten bis zur sechsten, E712 bis zur dritten, E713 bis zur vierten, E715 —, viele an der Sitzungsgrenze abgeschnitten und vom nächsten Prüfer übernommen. Was sie fanden, waren wieder Verluste an Bestehendem: ein schneller, kurz gehaltener Strich, der mit E708 keine Linie mehr wurde; eine Farbregel der Bedingten Farbe, die sich mit dem neuen Löschen-Knopf nicht mehr löschen liess; im Fenster des Kits stand bei „Blatt löschen?“ der Fokus auf „Löschen“ statt auf „Behalten“; ohne Netz lag der Offline-Streifen auf Start · Pause · Beenden; eine Kladde liess sich unter einer Meldung nicht mehr tragen. Um ca. 14:15 UTC schrieb Redur, die laufende Arbeit fertig zu machen und danach nicht weiterzuarbeiten.\n\nAm Abend kam in einer neuen Sitzung eine Auftragsdatei: die zweite Welle auf claude/morgen-besser-2 zusammenführen, in fester Folge, Zähler neu zählen, keine Funktion löschen, und „Nur ein Goo-Filter“. Die acht Zusammenführungen stehen zwischen 21:38 und 22:23 UTC. Drei Dinge daran sind als Probleme aufgeschrieben: Git schnitt einen Eintrag mitten durch (P121), zwei Seiten schrieben dieselbe falsche Zahl ohne Konflikt (P122), und drei Zweige hatten denselben Escape-Griff erweitert (P123). Das vierte war der Auftrag selbst: drei Zweige hatten je einen eigenen Klebefilter gebaut, und jeder Wächter sagte „EIN Filter“ (P124). test589 §15 stand zuerst rot (22:27 UTC); seit 22:39 UTC leihen alle drei Linse.TROPFEN.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 14:15 UTC",
+                    "wortlaut": "Also an was du jetzt macht mache es jetzt fertig und danach arbeite nicht mehr weiter …",
+                    "woher": "zitiert in E710 (Durchsicht) und E711 (sechste Durchsicht), ENTSCHEIDUNGEN.md; die Auslassung „…“ steht so in der Quelle",
+                    "gemeint": "Die Durchsichten, die gerade laufen, zu Ende bringen — nichts Neues anfangen.",
+                    "besser": "„Mach fertig, was läuft, und fang nichts Neues an.“",
+                    "besserePrompt": "„Bring jede laufende Durchsicht bis zum Commit, dann hör auf.“ Gerade das Einchecken war an diesem Tag mehrfach an der Sitzungsgrenze gescheitert."
+                },
+                {
+                    "zeit": "Uhrzeit nicht bekannt (vor 21:38 UTC, dem ersten Zusammenführen)",
+                    "wortlaut": "Lösche keine Funktion (§43).",
+                    "woher": "Auftragsdatei PROMPT-neuer-claude-code-chat.md, 5. Oktober (im Original fett gesetzt)",
+                    "gemeint": "Jede Funktion bleibt am selben Ort mit demselben Auslöser erreichbar — der Satz vom 27. September, jetzt mit dem Paragraphen, an dem man ihn prüft.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "Die Auftragsdatei sagt es schon vollständig: am selben Ort, mit demselben Auslöser oder einen sichtbaren Schritt entfernt — und nennt die erlaubten Ausnahmen beim Namen."
+                },
+                {
+                    "zeit": "Uhrzeit nicht bekannt (vor 21:38 UTC, dem ersten Zusammenführen)",
+                    "wortlaut": "Nur ein Goo-Filter: Löschen-Knopf und Tropfen teilen sich `Linse.TROPFEN`.",
+                    "woher": "Auftragsdatei PROMPT-neuer-claude-code-chat.md, 5. Oktober; wörtlich auch in den Commits 14ab08ad und 3945ebfe",
+                    "gemeint": "Beim Zusammenführen soll aus den eigenen Klebefiltern der Zweige einer werden — der des Tropfens.",
+                    "besser": "„Nur ein Goo-Filter in der ganzen App: alle teilen sich `Linse.TROPFEN`.“",
+                    "besserePrompt": "„Zähl beim Zusammenführen, wie viele Klebefilter es gibt, und mach einen daraus — den des Tropfens.“ Der Satz nannte zwei Zweige; E711 hatte einen dritten und ihn selbst als offen vermerkt (L232)."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E708 · Durchsicht (zweiter Prüfer) und dritte Durchsicht: was der Grundstand gehalten erkannte, bleibt erkannt; der echte Farbwähler übernimmt nur eine neue Farbe",
+                    "vonBis": "7eb0998 → b5004e4",
+                    "vonCommit": "7eb0998",
+                    "bisCommit": "b5004e4",
+                    "zeitraum": "00:02–06:43 UTC",
+                    "dauer": "ca. 6 h 40 min zwischen den Commits",
+                    "pruefungen": "test461 §1 um zwei Zusagen erweitert, rot am Kopf 7eb0998 dreimal (36 von 38), danach 38/38 dreimal (00:12–00:27 UTC); Gegenprobe G6 rot; 34 Nachbarn grün; dritte Durchsicht nur Doku: der echte Farbwähler mit echten Tastendrücken, 32'400 Züge ohne Browser nachgerechnet, 06:09–06:20 UTC wieder grün"
+                },
+                {
+                    "was": "E712 · Nachtrag der zweiten Durchsicht und dritte Durchsicht: Platz unter den runden Knöpfen, jeder Weg aus seinem Knopf, die Uhr aus den Einstellungen oben",
+                    "vonBis": "510f397 → 17f1043",
+                    "vonCommit": "510f397",
+                    "bisCommit": "17f1043",
+                    "zeitraum": "00:11–07:00 UTC",
+                    "dauer": "ca. 6 h 50 min zwischen den Commits",
+                    "pruefungen": "test589 §13 rot gegen den Stand der ersten Durchsicht, §14 rot gegen den Nachtrag, danach grün; test388 §5: 2841 KB, Decke 2850"
+                },
+                {
+                    "was": "E713 · Durchsicht, dritte und vierte: die Pille liegt auf keinem Werkzeug, der Monatsverlauf zeigt wieder alle Zahlen, kein Toast und kein Offline-Streifen auf der offenen Karte",
+                    "vonBis": "fb7e590 → a390db1",
+                    "vonCommit": "fb7e590",
+                    "bisCommit": "a390db1",
+                    "zeitraum": "00:06–14:49 UTC",
+                    "dauer": "mit Abbrüchen, nicht getrennt messbar",
+                    "pruefungen": "test590 §10–§14 rot gegen fb7e590 (44 von 60), dann 60/60; §15 rot 60 von 62, dann 62/62; §16 rot 66 von 68, dann 68/68; test303 wieder grün (15 → 16 von 16); je Punkt eine Gegenprobe rot"
+                },
+                {
+                    "was": "E709 · Durchsicht: der Name sagt, was weggeht; unter dem Zeiger ganz und lesbar; der Fokus fällt nicht auf den body; wo der Knopf anders wohnt",
+                    "vonBis": "ebb01d7 → 7ff3dc9",
+                    "vonCommit": "ebb01d7",
+                    "bisCommit": "7ff3dc9",
+                    "zeitraum": "12:55–14:03 UTC (die erste Durchsicht wurde um ca. 00:49 UTC abgeschnitten)",
+                    "dauer": "ca. 1 h 10 min zwischen den Commits",
+                    "pruefungen": "test586 rot 49 von 52 und 49 von 54, dann 54/54; §7 rot 54 von 59 und 59 von 60, dann 60/60; Gegenproben G10–G16 rot"
+                },
+                {
+                    "was": "E715 · Durchsicht: derselbe Code mit einem zweiten Parser bewiesen, die Warnung nennt ihre eigene Quelle",
+                    "vonBis": "c287b38 → b61aaba",
+                    "vonCommit": "c287b38",
+                    "bisCommit": "b61aaba",
+                    "zeitraum": "13:44 UTC (nach dem zweiten Abbruch)",
+                    "dauer": "nicht bekannt",
+                    "pruefungen": "ein zweiter Parser (oxc): 226 von 227 Bäumen gleich, stand.js nur im Stempel; test105 §3 prüft jetzt, dass die Zeile ihre eigene Quelle nennt"
+                },
+                {
+                    "was": "E711 · vierte bis sechste Durchsicht: die jetzige Wahl bleibt markiert, der Fächer flackert nicht und deckt „KI“ nicht zu, unter einer Meldung lässt sich wieder tragen",
+                    "vonBis": "6853b99 → 2c329ea",
+                    "vonCommit": "6853b99",
+                    "bisCommit": "2c329ea",
+                    "zeitraum": "14:04–19:54 UTC",
+                    "dauer": "mit Abbrüchen, nicht getrennt messbar",
+                    "pruefungen": "test588 §12, §13 und §14 je rot eingecheckt, dann 72/72 dreimal (ca. 19:46–19:52 UTC); test360 34/34, test362 18/18, test114 156/156; Nachbarn 34 von 35 grün, test492 fremd"
+                },
+                {
+                    "was": "E710 · Durchsicht: was die Aufrufer mitbringen, bleibt — ihre Folge, ein Abbrechen, kein totes Fenster, „ruhig“ im selben Bild",
+                    "vonBis": "1654e75 → 433e8f1",
+                    "vonCommit": "1654e75",
+                    "bisCommit": "433e8f1",
+                    "zeitraum": "18:12–19:13 UTC",
+                    "dauer": "ca. 1 h zwischen den Commits",
+                    "pruefungen": "test587 §12 rot gegen den Endbau (80 bestanden, 17 durchgefallen), danach 97/97; je Korrektur eine Gegenprobe rot"
+                },
+                {
+                    "was": "Zusammenführen 1/8 bis 8/8: die zweite Welle auf claude/morgen-besser-2 (E714, E715, E708, E709, E710, E711, E712, E713) — neue Sitzung",
+                    "vonBis": "4d9a9a3 → 31327b7",
+                    "vonCommit": "4d9a9a3",
+                    "bisCommit": "31327b7",
+                    "zeitraum": "21:38–22:23 UTC",
+                    "dauer": "ca. 45 min",
+                    "pruefungen": "nach jedem Schritt die 13 Datei-Wächter grün; test388 §5 von 1805 auf 1850 KB, Decke 1950; unter dem Schloss nach den Zusammenführungen am Escape-Griff test296 17/17, test587 97/97, test588 72/72, test590 68/68"
+                },
+                {
+                    "was": "Ein Klebefilter für die ganze App: Löschen-Knopf und Meldungen leihen Linse.TROPFEN",
+                    "vonBis": "31327b7 → 3945ebf",
+                    "vonCommit": "31327b7",
+                    "bisCommit": "3945ebf",
+                    "zeitraum": "22:27–22:39 UTC",
+                    "dauer": "ca. 12 min zwischen rotem Lauf und Bau",
+                    "pruefungen": "test589 §15 rot eingecheckt (14ab08a, rot an allen drei Zusagen), danach grün; Gegenprobe rot; test586 60/60, test588 72/72, test539 51/51; test332 13/14 — rot wie auf dem Grundstand"
+                },
+                {
+                    "was": "Zwei Zusammenstösse aus den Gesamtbildern: eine Federsprache („Alle gelesen“ fährt die Feder `knapp` statt `cubic-bezier(.5,0,.2,1)`) und keine Blase unter dem offenen „+“-Menü",
+                    "vonCommit": "3945ebf",
+                    "bisCommit": "a59469a",
+                    "zeitraum": "22:43–23:02 UTC",
+                    "dauer": "ca. 20 min",
+                    "pruefungen": "test581 §9 und test589 §1 zuerst rot eingecheckt; danach test581 93/93, test589 grün, test588 72/72; die 24 Gesamtbilder (Rechner und Telefon, hell und dunkel) angesehen, nicht eingecheckt"
+                },
+                {
+                    "was": "Die Vereinigung der Wächter aller acht Zweige unter dem Schloss (120 Läufe) und 39 weitere, die das Fenster von UI.frage benutzen",
+                    "vonCommit": "3945ebf",
+                    "bisCommit": "(vor dem Push)",
+                    "zeitraum": "ca. 22:43–23:39 UTC",
+                    "dauer": "ca. 1 h",
+                    "pruefungen": "108 von 120 grün; rot und auf claude/morgen-besser ebenso rot: 86, 201, 270, 274, 332, 365, 425, 448, 470, 493 (dazu 348 und 524 unter den Kandidaten); test458 einmal mit Error abgebrochen, einzeln 54/54; test33 und test35 rot auch auf claude/dialoge-im-kit allein — sie füllten das alte Fenster aus, jetzt tippen sie (107/107, 44/44)"
+                }
+            ],
+            "zahlen": {
+                "commits": 36,
+                "entscheidungen": 0,
+                "neuePrüfläufe": 0,
+                "gezählt": "Commits in der Geschichte von claude/morgen-besser-2 bis 3945ebfe (22:39 UTC): 26 in der Sitzung der Durchsichten, 10 in der Sitzung des Zusammenführens. Danach noch 4 Commits des Zusammenführens (22:52–23:02 UTC zwei, dazu der Abschluss mit Chronik vor dem Push)."
+            },
+            "groesstesProblem": "Zweige derselben Woche, je für sich geprüft und grün, hatten an zwei Stellen dasselbe gebaut: den einen Escape-Griff (P123) und den Klebefilter (P124). Jeder Wächter hatte recht über seinen Zweig und konnte über den Nachbarn nichts wissen. Dazu kamen die zwei Doku-Fallen, die schon am 28. September da waren — ein zerschnittener Eintrag (P121) und eine Zahl, die ohne Konflikt falsch hereinkam (P122).",
+            "interessantesteAnfrage": "„Nur ein Goo-Filter: Löschen-Knopf und Tropfen teilen sich `Linse.TROPFEN`.“ Ein Satz aus der Auftragsdatei, der einen Befund vorwegnahm. E711 hatte ihn als offen vermerkt („EIN Goo-Filter für die ganze zweite Welle beim Zusammenführen“); der Auftrag nannte zwei Filter, gefunden wurden drei.",
+            "massnahmen": [
+                {
+                    "zeit": "21:38–22:23 UTC",
+                    "was": "Acht Zusammenführungen mit git merge --no-ff in der Folge der Auftragsdatei; Doku nach Einträgen, Zähler neu gezählt, Erzeugtes von einer Seite genommen und neu gebaut; E715 auf die neuen Quellen angewandt (ERZEUGT-Zeile in delete.ts, kacheln.ts und tropfen.ts).",
+                    "warum": "So verlangte es die Auftragsdatei; und die Decke von 1950 KB hält nur, wenn jede neue Quelle ohne Kommentare reist.",
+                    "risiko": "Jeder Konflikt im Code ist eine Stelle, an der zwei richtige Regeln einander widersprechen können — zweimal im Escape-Griff (P123)."
+                },
+                {
+                    "zeit": "21:54 UTC",
+                    "was": "Beim Dienststand die Seite mit der höheren Fassung genommen (v1405 statt v1398).",
+                    "warum": "Der erste Bau aus der anderen Seite ergab v1399 — eine kleinere Nummer als der Stand davor; rückwärts zählen soll sie nicht.",
+                    "risiko": "Keines; die Nummer hat sonst nichts geändert."
+                },
+                {
+                    "zeit": "22:27–22:39 UTC",
+                    "was": "Ein Klebefilter für die ganze App: delete.ts und selection-flow.ts leihen Linse.TROPFEN; die zwei Schatten des alten Löschfilters stehen als drop-shadow dahinter, mit denselben Zahlen und Farben.",
+                    "warum": "Auftrag und §8: drei Filter für eine Bewegung laufen auseinander — die Zahlen zeigten es schon (×18 und ×22).",
+                    "risiko": "Der Hals des Löschen-Knopfs entsteht mit Unschärfe 7 statt 4 — die Pillen kleben beim Fliessen etwas länger zusammen; in Ruhe ändert sich nichts. Das Bild folgt mit den Gesamtbildern."
+                },
+                {
+                    "zeit": "ca. 23:10 UTC",
+                    "was": "test33 und test35 tippen den Namen ins Fenster (Strg+A, Text, Enter), statt `value` zu setzen und `[data-a=\"ok\"]` zu klicken.",
+                    "warum": "Seit E710 fragt UI.frage im Fenster des Touch Kits; ein React-Feld liest ein gesetztes `value` nicht, und den alten Knopf gibt es dort nicht. Beide waren auf claude/dialoge-im-kit allein schon rot — die Nachbarliste von E710 hatte sie nicht.",
+                    "risiko": "Keines für die Zusagen: dieselben Prüfungen, nur der Weg hinein ist der eines Menschen. 39 weitere Läufe mit demselben Muster nachgefahren, keiner rot aus diesem Grund."
                 }
             ]
         }
@@ -5194,6 +5902,58 @@ const ChronikDaten = {
             "ursache": "Beide Zweige zählten von demselben Stand aus weiter: `main` lag bei E680/test567, und jeder nahm die nächste freie Nummer — für sich. Eine Nummer ist aber erst vergeben, wenn sie auf `main` steht.",
             "beweis": "`git show 9e306b85 --stat` gegen `git log` des Zweigs; `git status` zeigte `AA pruefungen/lauf/test568.mts`.",
             "lehre": "Wer auf zwei Zweigen zugleich zählt, zählt doppelt. Beim Zusammenführen bekommt der NEUANKÖMMLING mit den wenigsten Verweisen die nächste freie Nummer (hier: eine Entscheidung und ein Lauf statt sechzehn und neun), und die alte Nummer steht als Herkunft dabei. Und gepusht war die ganze Zeit alles — gesperrt war das Zusammenführen."
+        },
+        {
+            "nr": "P121",
+            "datum": "2026-10-05",
+            "titel": "Git schneidet einen Eintrag mitten durch",
+            "schwere": "mittel",
+            "symptom": "Beim Zusammenführen von claude/rot-zuerst-stift (E708) nach E714 und E715 hatte ENTSCHEIDUNGEN.md Konflikte. Wer je Konfliktblock beide Seiten behält, bekommt einen zerschnittenen Eintrag: die ersten zwölf Zeilen von E708 standen vor E714, der Rest hinter E715.",
+            "falscheVermutung": "„Beide Seiten je Konfliktblock behalten“ reicht für Doku — beide Seiten gehören ja hinein.",
+            "wieGefunden": "Beim Ansehen der Überschriften nach dem Lösen: „## E708“ mit zwölf Zeilen, dann „## E714“, „## E715“, und danach der Rest von E708 in einem Konfliktblock.",
+            "ursache": "Git richtet die Blöcke nach Zeilen aus, nicht nach Einträgen. Die drei Fassungen teilen Trennzeilen, und an diesen gemeinsamen Zeilen hat Git den neuen Text von E708 auf zwei Konfliktblöcke verteilt.",
+            "loesung": "Die Doku nach EINTRÄGEN zusammengeführt: jeder Eintrag für sich dreiseitig, neue Einträge in Nummernfolge eingesetzt (Index E706, E708, E714, E715).",
+            "beweis": "Die Zeilen nachgezählt: das Ergebnis hat gegen jede Seite genau die Zeilen mehr, die die andere Seite gegen die Basis dazubrachte — in ENTSCHEIDUNGEN 483 und 338, dazu die eine Kopfzeile. Die Zahlen für die übrigen Dateien stehen im Commit 57c1018a.",
+            "lehre": "Doku mit Einträgen wird nach Einträgen zusammengeführt, und nachgezählt. Ein Konfliktblock ist eine Zeilengrenze, keine Eintragsgrenze."
+        },
+        {
+            "nr": "P122",
+            "datum": "2026-10-05",
+            "titel": "Zwei Seiten schreiben dieselbe falsche Zahl, und Git nennt es keinen Konflikt",
+            "schwere": "mittel",
+            "symptom": "Nach dem Zusammenführen 4 (claude/loeschen-fluessig, E709) stand in LUECKEN.md die Selbstzählung „126 Lücken, 70 offene“ — ohne Konflikt. Und in CLAUDE.md nannten sich alle fünf Läufe der zweiten Welle „Und 528“.",
+            "falscheVermutung": "Was ohne Konflikt hereinkommt, stimmt — sonst hätte Git sich gemeldet.",
+            "wieGefunden": "Neu gezählt mit der eigenen Messung von test549, statt die Zeile zu übernehmen: 127 Lücken, 71 offene.",
+            "ursache": "claude/rot-zuerst-stift und claude/loeschen-fluessig hatten die Zeile beide von „125 Lücken, 69 offene“ auf „126 Lücken, 70 offene“ geändert. Gleiche Änderung auf beiden Seiten ist für Git kein Konflikt; sie wird einmal genommen. Aber jede Seite hatte eine Lücke dazugebracht — zusammen sind es zwei. Ebenso hatte jeder Zweig seinen Lauf als den nächsten nach 527 gezählt.",
+            "loesung": "Die Zähler nach jedem Zusammenführen neu gezählt, nie von einer Seite übernommen; die „Und“-Absätze in der Folge der Testnummern neu gezählt.",
+            "beweis": "Die Messung von test549 sagt 127 Lücken und 71 offene; die Zeile, die Git ohne Konflikt genommen hatte, sagte 126 und 70.",
+            "lehre": "Zähler werden nach jedem Zusammenführen neu gezählt, nie übernommen — gerade wenn kein Konflikt kommt. Zwei Seiten, die dieselbe Zahl schreiben, haben jede für sich richtig gezählt und zusammen falsch."
+        },
+        {
+            "nr": "P123",
+            "datum": "2026-10-05",
+            "titel": "Drei Zweige, ein Escape-Griff",
+            "schwere": "mittel",
+            "symptom": "E710, E711 und E713 hatten je den EINEN Escape-Griff in schale.ts erweitert. Naiv zusammengeführt nahm ein Escape die Suche UND den Zeitmesser; und mit der Fokusregel aus E713 war test587 §7 rot (96 von 97, „Escape schliesst es — über den gemeinsamen Griff“).",
+            "falscheVermutung": "Wenn jede der drei Erweiterungen die Wächter ihres Zweigs grün hält, hält es auch die Summe.",
+            "wieGefunden": "Mit einer Sonde (Zeitmesser offen, Strg P, ein Escape): ohne `!warOffen` am losen Feld gab sie {\"vor\":{\"zm\":true,\"ov\":1},\"nach\":{\"zm\":false,\"ov\":0}} — zwei Fenster auf einen Druck. Und mit test587 nach dem Zusammenführen 8: der Fokus stand nach einer Frage auf einem Knopf der Seite, und mit der Regel aus E713 blieb das Feld offen.",
+            "ursache": "Jeder Zweig hatte den Griff für sich erweitert: E710 nahm den Zeitmesser über `data-esc-schliesst` weg; E711 merkte sich mit `warOffen`, ob beim Druck schon ein Fenster offen war — ein Druck, ein Fenster — und räumte die Meldungen über `Hinweis.escape`; E713 setzte `data-esc-knopf` an das ✕ und drückte es nur mit dem Fokus im Feld oder nirgends. Jede Regel war auf ihrem Zweig richtig; zusammen widersprachen sie sich.",
+            "loesung": "Es gilt nur noch das ✕ (E713); `warOffen` (E711) gilt auch für das Feld; und das Feld geht zu, ausser der Fokus steht in einem Eingabefeld oder bearbeitbaren Block ausserhalb des Feldes.",
+            "beweis": "Die Sonde mit der Zeile: {\"vor\":{\"zm\":true,\"ov\":1},\"nach\":{\"zm\":true,\"ov\":0}}, erst das zweite Escape schliesst den Zeitmesser; die Gegenprobe ohne `!warOffen` rot. Fokus im Text → das Feld bleibt offen, Fokus auf einem Knopf → es geht zu; die Gegenprobe ohne die Text-Bedingung rot. Danach test296 17/17, test587 97/97, test588 72/72, test590 68/68.",
+            "lehre": "Wer drei Zweige an EINEM Griff zusammenführt, prüft jede ihrer Zusagen gegen die anderen — die Wächter jedes Zweigs zusammen, nicht nacheinander."
+        },
+        {
+            "nr": "P124",
+            "datum": "2026-10-05",
+            "titel": "Drei Klebefilter für eine Bewegung",
+            "schwere": "klein",
+            "symptom": "In derselben Woche hatten drei Zweige je einen eigenen Klebefilter (Unschärfe, dann steile Alpha) gebaut: E709 `#ru-loesch-goo` (×18 − 7, Unschärfe 4), E711 `#ru-goo` (×18 − 7, Unschärfe 8), E712 `Linse.TROPFEN` (×22 − 10, Unschärfe 7). Jeder Zweig hatte einen Wächter, der „EIN Filter“ sagte, und jeder war grün.",
+            "falscheVermutung": "„EIN Filter“ in jedem Zweig heisst EIN Filter in der App.",
+            "wieGefunden": "Beim Zusammenführen; die Auftragsdatei verlangte einen („Nur ein Goo-Filter …“).",
+            "ursache": "Die drei Zweige wurden nebeneinander gebaut, getrennt, alle vom selben Stand b3cf1933 aus, und sahen einander nicht. Jeder Wächter zählte die Filter in der App seines eigenen Zweigs.",
+            "loesung": "Alle drei leihen `Linse.tropfenLeihen()`: der Filter kommt mit der ersten Leihe und geht mit der letzten.",
+            "beweis": "test589 §15 zählt EINE Alpha-Schwelle im Quelltext (in linse.ts), kein Stilblatt mit eigenem Klebefilter, und dass delete.ts, selection-flow.ts und tropfen.ts leihen. Zuerst rot eingecheckt (14ab08ad, die Schwelle in drei Dateien), dann grün (3945ebfe); die Gegenprobe wieder rot.",
+            "lehre": "„EIN Filter“ je Zweig heisst nicht EIN Filter in der App. Ein Wächter, der nur den eigenen Zweig sieht, kann das nicht finden."
         }
     ]
 };
