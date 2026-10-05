@@ -89,7 +89,7 @@ const InkStroke = (() => {
    * Was je Punkt anfaellt: zwei Wurzeln, zwei Zeichenketten, zwei Anhaenge.
    * Was NICHT mehr anfaellt: der ganze Strich.
    * --------------------------------------------------------------------- */
-  class Feder {
+  class Lauf {
     /* Die Mittellinie — dieselben Punkte, die auch gespeichert werden. */
     private pts: StrokePoint[] = [];
     private halb: number[] = [];
@@ -187,25 +187,6 @@ const InkStroke = (() => {
         ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0]![0]} ${links[0]![1]} Z`;
     }
 
-    /**
-     * Der geglaettete Mittellinien-Pfad — fuer Kugelschreiber und Marker,
-     * die als Strich (`stroke`) und nicht als Flaeche gezeichnet werden.
-     * Zeichengleich mit `InkGeometry.path(punkte())`.
-     */
-    linie(): string {
-      const pts = this.nassPts.length ? this.pts.concat(this.nassPts) : this.pts;
-      const n = pts.length;
-      if (!n) return '';
-      if (n === 1) return `M${pts[0]![0]} ${pts[0]![1]}`;
-      if (n === 2) return `M${pts[0]![0]} ${pts[0]![1]} L${pts[1]![0]} ${pts[1]![1]}`;
-      const grenze = Math.min(this.linieFest.length, Math.max(0, n - 2));
-      let aus = `M${pts[0]![0]} ${pts[0]![1]}` + this.linieFest.slice(0, grenze).join('');
-      for (let i = Math.max(1, grenze); i < n - 1; i++) aus += qStueck(pts[i - 1], pts[i]!, pts[i + 1]!);
-      return aus + ` L${pts[n - 1]![0]} ${pts[n - 1]![1]}`;
-    }
-
-    private linieFest: string[] = [];
-
     /* Alles einfrieren, was durch den neuen Punkt endgueltig geworden ist. */
     private nachziehen(): void {
       const n = this.pts.length;
@@ -222,10 +203,6 @@ const InkStroke = (() => {
         this.rechtsFest[i] = qStueck(this.rechts[i + 1], this.rechts[i]!, this.rechts[i - 1]!);
       }
       this.fest = Math.max(this.fest, Math.max(0, n - 2));
-      for (let i = Math.max(1, this.linieFest.length); i <= n - 3; i++) {
-        this.linieFest[i] = qStueck(this.pts[i - 1], this.pts[i]!, this.pts[i + 1]!);
-      }
-      if (this.linieFest.length < Math.max(0, n - 2)) this.linieFest.length = Math.max(0, n - 2);
     }
   }
 
@@ -243,11 +220,91 @@ const InkStroke = (() => {
     const len = Math.hypot(tx, ty) || 1;
     tx /= len; ty /= len;
     const w = halbAn(halb, i);
+    /* Links ist links (E704) — dieselbe Seite wie in `InkGeometry.seiten`,
+       sonst zeigten die Kappen der Feder nach innen und die des
+       trockenen Strichs nach aussen. */
     return [
-      [r2(pts[i]![0] - ty * w), r2(pts[i]![1] + tx * w)],
-      [r2(pts[i]![0] + ty * w), r2(pts[i]![1] - tx * w)]
+      [r2(pts[i]![0] + ty * w), r2(pts[i]![1] - tx * w)],
+      [r2(pts[i]![0] - ty * w), r2(pts[i]![1] + tx * w)]
     ];
   };
+
+  /* DIE FEDER KENNT GELENKE (E704): ob ein Punkt eine Ecke ist, steht mit
+   * seinem Nachfolger fest; dann ist der Lauf fertig und wird einmal
+   * gerechnet. So bleibt `test366 §1` zeichengleich. */
+  class Feder {
+    private pts: StrokePoint[] = [];
+    private halb: number[] = [];
+    /* Die fertigen Läufe, schon aneinandergehängt (jeder mit einem
+       Leerzeichen dahinter, wie `outline` sie verbindet). */
+    private fertig = '';
+    private lauf = new Lauf();
+    private nassPts: StrokePoint[] = [];
+    private linieFest: string[] = [];
+
+    laenge(): number { return this.pts.length; }
+    punkte(): StrokePoint[] { return this.pts.map(p => [p[0], p[1]] as StrokePoint); }
+    breiten(): number[] { return this.halb.slice(); }
+    /** Die Punkte, wie sie GERADE zu sehen sind — mit dem nassen Schwanz.
+       (E704) */
+    punkteMitNass(): StrokePoint[] { return this.pts.concat(this.nassPts).map(p => [p[0], p[1]] as StrokePoint); }
+    /** Wie viele Läufe der Umriss gerade hat — für den Prüflauf. */
+    laeufe(): number { return (this.fertig.match(/ Z /g) || []).length + (this.pts.length >= 2 ? 1 : 0); }
+
+    punkt(p: StrokePoint, halb: number): void {
+      const q: StrokePoint = [endlich(p[0]), endlich(p[1])];
+      const h = Math.max(0.15, Number.isFinite(halb) ? halb : 1);
+      const n = this.pts.length;
+      if (n >= 2 && (globalThis as any).InkGeometry.istEcke(this.pts[n - 2], this.pts[n - 1], q)) {
+        this.lauf.nass([], []);
+        this.fertig += this.lauf.d() + ' ';
+        this.lauf = new Lauf();
+        this.lauf.punkt(this.pts[n - 1]!, this.halb[n - 1]!);
+      }
+      this.pts.push(q);
+      this.halb.push(h);
+      this.lauf.punkt(q, h);
+      this.nassPts.length = 0;
+      this.linieNachziehen();
+    }
+
+    nass(pts: StrokePoint[], halb: number[]): void {
+      this.lauf.nass(pts, halb);
+      this.nassPts = pts.map(p => [endlich(p[0]), endlich(p[1])] as StrokePoint);
+    }
+
+    /**
+     * Der SVG-Pfad des Umrisses. Zeichengleich mit
+     * `InkGeometry.outline(punkte(), breiten())`, solange kein nasser
+     * Schwanz gesetzt ist.
+     */
+    d(): string { return this.fertig + this.lauf.d(); }
+
+    /**
+     * Der geglaettete Mittellinien-Pfad — fuer Kugelschreiber und Marker,
+     * die als Strich (`stroke`) und nicht als Flaeche gezeichnet werden.
+     * Zeichengleich mit `InkGeometry.path(punkte())`.
+     */
+    linie(): string {
+      const pts = this.nassPts.length ? this.pts.concat(this.nassPts) : this.pts;
+      const n = pts.length;
+      if (!n) return '';
+      if (n === 1) return `M${pts[0]![0]} ${pts[0]![1]}`;
+      if (n === 2) return `M${pts[0]![0]} ${pts[0]![1]} L${pts[1]![0]} ${pts[1]![1]}`;
+      const grenze = Math.min(this.linieFest.length, Math.max(0, n - 2));
+      let aus = `M${pts[0]![0]} ${pts[0]![1]}` + this.linieFest.slice(0, grenze).join('');
+      for (let i = Math.max(1, grenze); i < n - 1; i++) aus += qStueck(pts[i - 1], pts[i]!, pts[i + 1]!);
+      return aus + ` L${pts[n - 1]![0]} ${pts[n - 1]![1]}`;
+    }
+
+    private linieNachziehen(): void {
+      const n = this.pts.length;
+      for (let i = Math.max(1, this.linieFest.length); i <= n - 3; i++) {
+        this.linieFest[i] = qStueck(this.pts[i - 1], this.pts[i]!, this.pts[i + 1]!);
+      }
+      if (this.linieFest.length < Math.max(0, n - 2)) this.linieFest.length = Math.max(0, n - 2);
+    }
+  }
 
   /* ===================================================================== *
    * 2 · DER GLAETTER — stark, wo die Hand zittert; schwach, wo sie eilt
@@ -463,7 +520,8 @@ const InkStroke = (() => {
    * weit eine Vermutung reichen darf, unabhaengig davon, wie oft ein
    * Geraet sich meldet.
    */
-  const vorhersage = (pts: StrokePoint[], ms: number = VORHER_MS, abstand: number = 8): StrokePoint[] => {
+  const vorhersage = (pts: StrokePoint[], ms: number = VORHER_MS, abstand: number = 8,
+                      bremse: number = 1): StrokePoint[] => {
     const n = Array.isArray(pts) ? pts.length : 0;
     if (n < 3) return [];
     const a = pts[n - 3]!, b = pts[n - 2]!, c = pts[n - 1]!;
@@ -474,7 +532,9 @@ const InkStroke = (() => {
     /* Kippt die Richtung, wird nicht geraten. */
     if (l1 > 0.3 && (v1x * v2x + v1y * v2y) / (l1 * l2) < KEHRE) return [];
     const dt = Math.max(1, Number.isFinite(abstand) ? abstand : 8);
-    const weit = Math.min(VORHER_PX, l2 / dt * Math.max(0, ms));
+    /* Die Bremse (E704): 1 heisst wie bisher. */
+    const weit = Math.min(VORHER_PX, l2 / dt * Math.max(0, ms))
+      * Math.max(0, Math.min(1, Number.isFinite(bremse) ? bremse : 1));
     if (weit < 0.4) return [];
     const ux = v2x / l2, uy = v2y / l2;
     /* Zwei Punkte, der zweite gedaempft — so laeuft der Schwanz aus,
@@ -485,9 +545,96 @@ const InkStroke = (() => {
     ];
   };
 
-  return { Feder, glaetter, druckGlaetter, vorhersage,
+  /* 4 · DER DECKEL AUCH FÜR DEN BROWSER (E704): die Punkte aus
+   * `getPredictedEvents()` unter dieselben Regeln wie `vorhersage` —
+   * keine Kehre, höchstens so weit wie erlaubt, mal der Bremse. */
+  const deckeln = (roh: StrokePoint[], vorher: StrokePoint[], abstand: number = 8,
+                   bremse: number = 1): StrokePoint[] => {
+    const n = Array.isArray(roh) ? roh.length : 0;
+    if (n < 2 || !Array.isArray(vorher) || !vorher.length) return [];
+    const b = roh[n - 2]!, c = roh[n - 1]!;
+    const vx = c[0] - b[0], vy = c[1] - b[1];
+    const l = Math.hypot(vx, vy);
+    if (l < 0.3) return [];
+    const dt = Math.max(1, Number.isFinite(abstand) ? abstand : 8);
+    const grenze = Math.min(VORHER_PX, l / dt * VORHER_MS)
+      * Math.max(0, Math.min(1, Number.isFinite(bremse) ? bremse : 1));
+    if (grenze < 0.4) return [];
+    const aus: StrokePoint[] = [];
+    let weg = 0;
+    let von: StrokePoint = c;
+    for (const q of vorher) {
+      const qx = endlich(q[0]), qy = endlich(q[1]);
+      const dx = qx - von[0], dy = qy - von[1];
+      const s = Math.hypot(dx, dy);
+      if (s < 1e-6) continue;
+      if ((dx * vx + dy * vy) / (s * l) < KEHRE) break;
+      if (weg + s >= grenze) {
+        const t = (grenze - weg) / s;
+        aus.push([r2(von[0] + dx * t), r2(von[1] + dy * t)]);
+        break;
+      }
+      weg += s;
+      von = [qx, qy];
+      aus.push([r2(qx), r2(qy)]);
+    }
+    return aus;
+  };
+
+  /** DIE BREMSE (E704): fällt der Druck dreimal und liegt unter 60 % des
+   *  Höchsten der letzten acht, hebt der Stift ab — 0. Bremst die Hand
+   *  unter 70 % des vorigen Tempos, im selben Verhältnis. Sonst 1. */
+  const bremse = (roh: StrokePoint[], zeiten: number[], drucke: number[] = []): number => {
+    const d = Array.isArray(drucke) ? drucke.filter(v => Number.isFinite(v)) : [];
+    if (d.length >= 3) {
+      const [x, y, z] = d.slice(-3) as [number, number, number];
+      const hoch = Math.max(...d.slice(-8));
+      if (x > y && y > z && z < 0.6 * hoch) return 0;
+    }
+    const n = Array.isArray(roh) ? roh.length : 0;
+    if (n < 3 || !Array.isArray(zeiten) || zeiten.length < 2) return 1;
+    const a = roh[n - 3]!, b = roh[n - 2]!, c = roh[n - 1]!;
+    const t1 = Math.max(1, endlich(zeiten[zeiten.length - 2])), t2 = Math.max(1, endlich(zeiten[zeiten.length - 1]));
+    const v1 = Math.hypot(b[0] - a[0], b[1] - a[1]) / t1;
+    const v2 = Math.hypot(c[0] - b[0], c[1] - b[1]) / t2;
+    if (!(v1 > 0)) return 1;
+    const verhaeltnis = v2 / v1;
+    return verhaeltnis < 0.7 ? Math.max(0, verhaeltnis) : 1;
+  };
+
+  /* 5 · DAS TEMPO MACHT DEN FÜLLER DÜNNER (E704, L209 Punkt 1): gemessen an
+     den ROHEN Punkten über 32 ms, in pt/ms; bis TEMPO_AB nichts, ab TEMPO_BIS
+     die volle Stärke `eile` aus dem Register `STIFTE`. */
+  const TEMPO_AB = 0.25;        /* pt/ms — darunter schreibt die Hand, nichts wird dünner */
+  const TEMPO_BIS = 1.8;        /* pt/ms — ab hier die volle Stärke */
+  const TEMPO_FENSTER = 32;     /* ms */
+  const tempoFaktor = (v: number, staerke: number): number => {
+    if (!(staerke > 0) || !Number.isFinite(v)) return 1;
+    const t = Math.max(0, Math.min(1, (v - TEMPO_AB) / (TEMPO_BIS - TEMPO_AB)));
+    return 1 - Math.min(0.9, staerke) * t * t * (3 - 2 * t);
+  };
+  /** Ein Tempomesser mit Gedächtnis: roher Punkt und `dt` herein, pt/ms heraus. */
+  const tempoMesser = (): ((p: StrokePoint, dt: number) => number) => {
+    const stuecke: Array<{ weg: number; zeit: number }> = [];
+    let letzter: StrokePoint | null = null;
+    return (p: StrokePoint, dt: number): number => {
+      const q: StrokePoint = [endlich(p[0]), endlich(p[1])];
+      if (letzter) stuecke.push({ weg: Math.hypot(q[0] - letzter[0], q[1] - letzter[1]),
+                                  zeit: Math.max(1, Number.isFinite(dt) ? dt : 16) });
+      letzter = q;
+      let weg = 0, zeit = 0, noetig = 0;
+      for (let i = stuecke.length - 1; i >= 0; i--) {
+        weg += stuecke[i]!.weg; zeit += stuecke[i]!.zeit; noetig++;
+        if (zeit >= TEMPO_FENSTER) break;
+      }
+      if (stuecke.length > noetig + 4) stuecke.splice(0, stuecke.length - noetig - 4);
+      return zeit ? r2(weg / zeit) : 0;
+    };
+  };
+
+  return { Feder, glaetter, druckGlaetter, vorhersage, deckeln, bremse, tempoFaktor, tempoMesser,
            ALPHA_LANGSAM, ALPHA_SCHNELL, TEMPO_VOLL,
-           VORHER_MS, VORHER_PX, KEHRE };
+           VORHER_MS, VORHER_PX, KEHRE, TEMPO_AB, TEMPO_BIS, TEMPO_FENSTER };
 })();
 
 (globalThis as any).InkStroke = InkStroke;

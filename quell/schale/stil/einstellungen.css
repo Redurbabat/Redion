@@ -140,7 +140,8 @@
   background:var(--text-dim); display:block;
 }
 .schalter.an{background:var(--accent)}
-.schalter.an i{transform:translateX(16px); background:#fff}
+/* hinüber über `translate` (E702) — `transform` gehört dem Dehnen */
+.schalter.an i{translate:16px 0; background:#fff}
 
 /* ---- Der Verlauf im eingeschalteten Schalter (E462, Vorgabe 6. September)
    Redurs `.gradient-btn` legt zwei gedrehte Verläufe übereinander und
@@ -163,7 +164,7 @@
     var(--accent-text), var(--accent));
   transition:opacity var(--motion-normal) var(--ease)
 }
-.schalter.an::before{opacity:.85; animation:ez-schalter-dreh 7s linear infinite}
+.schalter.an::before{opacity:.85}
 .schalter i{z-index:1}
 @keyframes ez-schalter-dreh{to{transform:translate(-50%,-50%) rotate(360deg)}}
 /* Die Trefferfläche liegt VOR dem Verlauf — sie darf nicht überdeckt
@@ -263,6 +264,44 @@ button.schalter.an > i{
   button.schalter:not(.an):hover > i{transform:none}
 }
 
+/* ---- DER SCHALTER WIE IM KIT (E702, `Toggle.css`) -----------------------
+   Redur, 21:49: „was du beim touckit gebaut hast ich will alles so haben".
+   · Unter dem Finger DEHNT sich der Griff (18 %, verankert an seiner Seite,
+     sofort) — `data-gedrueckt` von der Druckfeder, weil das iPhone `:active`
+     beim kurzen Tipp oft nicht malt.
+   · Losgelassen FEDERT er hinüber (knappe Feder), das Dehnen geht auf der
+     Druckfeder zurück.
+   · In Ruhe STEHT er still: die 7-s-Endlosdrehung aus E462 ist weg (seit
+     E535 lief sie ohnehin nicht mehr; Redur, 16:45: „ruhige"). Beim
+     Einschalten dreht der Verlauf EINMAL — um seine Mitte: `rmo-orbit`
+     verlor das `translate(-50%,-50%)` und glitt 0,65 s zur Ecke.
+   Masse unverändert (38 × 22, Treffer 44, §37); 9 % = 16 px × 0,18 / 2. */
+button.schalter > i{
+  transition:
+    translate        var(--feder-knapp-dauer) var(--feder-knapp),
+    transform        var(--feder-druck-dauer) var(--feder-druck),
+    box-shadow       var(--motion-fast) var(--ease),
+    background-color var(--motion-fast) var(--ease);
+}
+button.schalter[data-gedrueckt]:not(.an) > i,
+button.schalter.an[data-gedrueckt] > i{
+  transition:
+    translate        var(--feder-knapp-dauer) var(--feder-knapp),
+    transform        var(--motion-instant) var(--ease),
+    box-shadow       var(--motion-fast) var(--ease),
+    background-color var(--motion-fast) var(--ease);
+}
+button.schalter[data-gedrueckt]:not(.an) > i{ transform:translateX(9%) scaleX(1.18) }
+button.schalter.an[data-gedrueckt] > i{ transform:translateX(-9%) scaleX(1.18) }
+body button.schalter[data-rmo~="toggle"][data-rmo-state="an"]::before{ animation-name:ez-schalter-dreh }
+/* Ohne Bewegung: kein Dehnen, kein Wandern — der Griff springt (wie im Kit). */
+@media (prefers-reduced-motion: reduce){
+  button.schalter[data-gedrueckt]:not(.an) > i,
+  button.schalter.an[data-gedrueckt] > i{ transform:none }
+}
+body[data-bewegung="ruhig"] button.schalter[data-gedrueckt]:not(.an) > i,
+body[data-bewegung="ruhig"] button.schalter.an[data-gedrueckt] > i{ transform:none }
+
 .ez-plan{
   background:var(--bg-card); border-radius:9px; padding:16px 18px; margin:6px 0 18px;
 }
@@ -326,7 +365,7 @@ td.td-aus input.zeilen-aus{display:none; accent-color:var(--accent-text); cursor
 table.grid tr:hover td.td-aus .zeilen-nr{display:none}
 table.grid tr:hover td.td-aus input.zeilen-aus{display:inline}
 td.td-aus input.zeilen-aus:checked{display:inline}
-table.grid tr:has(input.zeilen-aus:checked) td{background:#2eaadc18}
+table.grid tr:has(input.zeilen-aus:checked) td{background:color-mix(in srgb, var(--accent) 9%, transparent)}
 table.grid th.th-aus input{accent-color:var(--accent-text); cursor:pointer}
 table.grid tr.zieht{opacity:.4}
 table.grid tr.ziel td{border-top:2px solid var(--accent)}
@@ -514,7 +553,7 @@ html[data-theme="dark"] .karte .kachel{filter:invert(1) hue-rotate(180deg) brigh
 .linked-kopf button:hover{background:var(--bg-hover); color:var(--text)}
 
 /* --- Dateien ablegen ----------------------------------------------------------- */
-#scroll.ablegen{outline:2px dashed var(--accent); outline-offset:-14px; background:#2eaadc0a}
+#scroll.ablegen{outline:2px dashed var(--accent); outline-offset:-14px; background:color-mix(in srgb, var(--accent) 4%, transparent)}
 #scroll.ablegen::after{
   content:"Datei hier ablegen — Markdown, CSV, TSV, HTML, Bild oder Anhang";
   position:fixed; left:50%; bottom:60px; transform:translateX(-50%);
@@ -744,6 +783,9 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   }
   .einst-fenster[data-blick="liste"]   .einst-inhalt{ display:none }
   .einst-fenster[data-blick="bereich"] .einst-nav{ display:none }
+  /* hinein und zurück gleitet es (E702, `blick()` in seite.ts) */
+  .einst-inhalt.einst-push{ animation:wisch-rein-links  var(--feder-sanft-dauer) var(--feder-sanft) }
+  .einst-nav.einst-pop    { animation:wisch-rein-rechts var(--feder-sanft-dauer) var(--feder-sanft) }
   /* Der Streifen gehört zur Liste. Steht der Bereich vorn, ist die Liste
      weg — und ein Hinweis auf etwas, das gerade nicht dasteht, ist falsch. */
   .einst-mehr{ width:100%; padding-bottom:calc(3px + env(safe-area-inset-bottom)) }

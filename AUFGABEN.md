@@ -1121,6 +1121,12 @@ efeck usw alles verbessern." Die Inventur dazu steht in `messungen.md` §69.
   neu, am Telefon sichtbar als Ruckeln. Einzeln ansehen: wo es geht, auf
   `transform`/`opacity`; wo nicht (ein Fortschrittsbalken darf `width`
   haben), mit Grund stehen lassen. Erst messen (§36), dann bauen.
+- **B4 · Glas, wo es passt — GELANDET auf dem Zweig (E703, `test582`).**
+  Die Docks sind Glas, ein Schalter macht alles deckend, „Starker
+  Kontrast" hat keines, Toast und Lader stehen über den Werkzeugen, die
+  Bilder zeigen echte Unschärfe; L221 geschlossen. Offen daraus: **L226**
+  — Sands stille Schrift (Farbzweig), Redurs Wort zur Kapsel Zurück/Vor,
+  und das Kit-Glas in `bridge.css`, sobald Stufe 1b es zeigt.
 
 ---
 
@@ -1424,3 +1430,115 @@ Beide Treffer sind geklärt, und nur einer war ein Fehler an einer Fläche:
 stand nur HINTER der Regel, ausserhalb der acht Zeilen, die `test402` liest.
 `#ai .ki-quellschalter` ist ein echter Nebenweg und hat jetzt seinen
 geschriebenen Grund. `test402` ist 4/4.
+
+## Die Kurven der Kennzahlkarten aus echten Werten (L224, nach E701)
+
+E701 hat sie in Ruhe grau gemacht, damit sie nichts behaupten — gelöscht
+und erfunden wurde nichts. Offen ist Redurs Wahl: echte Tageswerte
+(`reviewVerlauf`, die sieben Tage aus „Letzte 7 Tage") oder dort, wo es
+keine gibt, keine Kurve. Zuerst ein Prüflauf, der die Kurve gegen die Zahl
+darüber hält (§30).
+
+## Das Blockmenü mit gezeichneten Zeichen (nach E701)
+
+E701 hat die Emoji in Einstellungen, ⋯-Menü der Seite, „Mehr", R-Blatt,
+Seitenwerkzeugen und Termine durch Striche aus `Register.symbole` ersetzt
+(Redur: „Gezeichnete Zeichen"). Das Menü am Griff eines Blocks
+(`editor.ts`, „Umwandeln in", „Farbe", … „Löschen", rund zwanzig Zeilen)
+trägt noch 🎨 🔠 ✍ ✨ 💬 🎴 🗑 und getippte Pfeile. Dieselbe Arbeit: jede
+Zeile am selben Ort mit demselben Wort, ein Zeichen je Zeile, Löschen rot;
+zuerst `test580` §3 um das Blockmenü erweitern und rot sehen.
+
+## Flüssige Bewegung, der Rest nach E702 (L225)
+
+Redur, 27. September, ca. 22:10: „bessere übergagnge besssere efeckten".
+E702 hat die Federn in die Schale gebracht; offen, je mit Wächter (rot
+zuerst) und Bildstreifen vor und nach:
+
+  1. Abgang und leichtes Nachschwingen für Rechner-Menüs und Dialoge — mit
+     den Inselstufen (E699 Punkt 10), nicht an den alten Klassen.
+  2. Blöcke ziehen ohne 2-px-Sprung, das Verschobene gleitet an seinen Ort
+     („bewegung-ziehen", `editor.ts:2038-2105`).
+  3. Fortschrittsbalken und Knebel über `transform` statt `width`/`left`
+     („bewegung-layoutfrei").
+  4. Die rohen Dauern und blossen `ease` auf die Marken, ausser motion.css
+     („bewegung-marken").
+  5. Das Einzeichnen der Lernwelt erst nach dem Aufbau
+     („bewegung-einzeichnen").
+  6. `sheet.ts` über `transform` statt `height`.
+
+## Der Stift nach E704 (S1 … S3) — Messung am Gerät zuerst (L227)
+
+- **S1 — „Stift messen" am iPad (stift-11).** Ein Schalter unter
+  Einstellungen, der zehn Sekunden lang Bilder, Meldungen und Vorhersagen
+  zählt und die Zahlen zum Kopieren zeigt — lokal, ohne Netz, im Aus
+  kostenlos (ein Wahrheitswert). Redur tippt ihn einmal am iPad und am
+  iPhone; die Zahlen gehen in messungen.md. Erst danach entscheidet sich die
+  Canvas-Ebene (L209 Punkt 5) und ein engerer Deckel (L227 Punkt 6).
+- **S2 — Billig absetzen (stift-10).** `finish` auf einer vollen Seite unter
+  8 ms bei 250 Punkten: Punkte einmal rechnen, Kritzel-Vorprüfung, die
+  Speicherung ein Bild später mit Nachweis über `pagehide` (§51). Wächter
+  zuerst: `test449`/`test510` (Kritzeln) müssen grün bleiben.
+- **S3 — Der Füller auf der Tafel.** `druckFaktor`/`halbeBreiten`/`STIFTE`
+  in den Kern ziehen (§5 Regel 1), dann Druck und Spitze auch auf Whiteboard
+  und Seitenfläche (L227 Punkt 4).
+
+## Farben: was nach E705 offen ist (28. September 2026)
+
+- **`chartTyp: 'pie'` ist kein Diagrammtyp.** Ein Block mit `pie` zeichnet
+  eine leere Achse statt eines Kreises (gesehen beim Bau von E705, Bild
+  `06-diagramm-pie-hell.png` im Kartenordner). Entweder `pie` als Ring
+  lesen oder beim Einlesen auf `donut` abbilden — mit Wächter.
+- **Die Schrift auf den Astfarben der Gedankenkarte rechnen** (L228), wie
+  `--auf-accent`.
+- **Die Stift- und Markerfarben** (Karte „farben-4") gehören dem Zweig
+  `claude/stift-effekte`, die Lesbarkeit der unteren Leiste unter der Linse
+  (farben-2) dem Zweig `claude/material-ueberall`, das Glas von „Starker
+  Kontrast" dem Zweig `claude/glas-wo-es-passt`.
+
+## Das Material zum Ziehen auch am Zubehör und in den Einstellungen (L229, nach E706)
+
+E706 hat das Material des Touch Kits an die untere Leiste, den
+Werkzeugflug und sechs Umschalter gebracht. Offen, jeweils mit eigenem
+Wächter (rot zuerst):
+
+1. Schieben über Stifte, Farben und Breiten der Stiftleiste
+   (`SelectionFlow.ziehbar` mit `baue`) — ohne dem Rollen der Reihe oder
+   einem Strich auf dem Blatt in die Quere zu kommen.
+2. Einstellungen mit zwei oder drei Möglichkeiten als `Segment` statt
+   `<select>` — zusammen mit den Läufen, die die Einstellungen setzen.
+3. `SelectionFlow.FEDERN` aus den Federmarken in `grund.css` lesen, sobald
+   es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
+   `--feder-druck`).
+
+## Suche und Meldungen: was aus den Szenen 07 und 08 noch fehlt (L232, nach E711)
+
+E711 hat die Suche aus der Kapsel wachsen lassen, die gleitende Marke in
+Suche, Befehlspalette und Menü mit Suche gebracht, `#toast` zum Stapel
+gemacht, der Glocke den Fächer gegeben und den Posteingang als Glaskarten.
+Offen, jeweils mit eigenem Wächter (rot zuerst):
+
+1. Escape in der Suche leert erst das Feld, dann schliesst es — zusammen mit
+   den Läufen, die heute auf „Escape schliesst" bauen.
+2. Suche und Palette als Combobox für den Vorleser (`aria-activedescendant`).
+3. Enter als Übergabe: die Scheibe hebt sich und wird zum Ergebnis.
+4. Kick und Tropfen beim Zusammenfliessen — nur, wenn Redur es will.
+5. Beim Zusammenführen der zweiten Welle: EIN Goo-Filter (`#ru-goo`) für
+   Löschen-Knopf (E709), Tropfen (E712) und Glocke (E711).
+6. Meldungen als Glas nur, wenn Redur E703 (c) dafür aufhebt (L232 Punkt 7).
+7. Die Trefferzeilen der Suche am Telefon auf 44 px (heute 39 px, schon vor
+   E711; §37, L232 Punkt 9) — mit einem Lauf, der die Höhe am Telefon misst.
+8. `test588` wartet an einigen Stellen feste Zeiten auf Bewegung (§3 das
+   Umlenken der Marke, §7 der Fächer nach dem Zeiger, §8 nach dem
+   Zusammenfliessen); am 5. Oktober um ca. 19:29 UTC unter Last einmal rot
+   in genau diesen drei Punkten, davor und danach grün. Auf das Ende der
+   Bewegung warten (`getAnimations().finished`, wie jetzt `test114` §16)
+   statt auf die Uhr — ohne die Punkte zu lockern.
+
+## Gefunden beim Durchsehen von E711, gehört zu den Farben (E705)
+
+Im Schema „Starker Kontrast" steht am Telefon auf dem aktiven Reiter der
+unteren Leiste weder Zeichen noch Wort — Schwarz auf der schwarzen Pille.
+Gesehen in den Vorher-Bildern von E711 (`b3cf1933`), also nicht von E711.
+Mit eigenem Wächter (rot zuerst), im Bogen der Farben.
+

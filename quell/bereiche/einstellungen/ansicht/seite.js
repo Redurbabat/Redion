@@ -25,33 +25,44 @@ const Einstellungen = (() => {
     const S = (k, v) => { Store.setMeta(k, v); anwenden(); };
     const GRUPPEN = [
         ['', [
-                ['konto', '👤', 'Mein Konto'],
-                ['allgemein', '⚙️', 'Einstellungen'],
-                ['benachricht', '🔔', 'Benachrichtigungen'],
-                ['daten', '⭱', 'Importieren']
+                ['konto', 'user', 'Mein Konto'],
+                ['allgemein', 'settings', 'Einstellungen'],
+                ['benachricht', 'bell', 'Benachrichtigungen'],
+                ['daten', 'upload', 'Importieren']
             ]],
         ['Funktionen', [
-                ['ki', '✨', 'Künstliche Intelligenz'],
-                ['verbindungen', '🔌', 'Verbindungen'],
-                ['mcp', '🔗', 'MCP'],
-                ['worker', '⌨️', 'Worker'],
-                ['verifiziert', '✔️', 'Verifizierte Seiten'],
-                ['oeffentlich', '🌐', 'Öffentliche Seiten'],
-                ['emoji', '😀', 'Emoji']
+                ['ki', 'sparkle', 'Künstliche Intelligenz'],
+                ['verbindungen', 'plug', 'Verbindungen'],
+                ['mcp', 'link', 'MCP'],
+                ['worker', 'keyboard', 'Worker'],
+                ['verifiziert', 'checkCircle', 'Verifizierte Seiten'],
+                ['oeffentlich', 'globe', 'Öffentliche Seiten'],
+                ['emoji', 'smile', 'Emoji']
             ]],
         ['Verwaltung', [
-                ['arbeitsplatz', '🏠', 'Arbeitsbereich'],
-                ['analysen', '📈', 'Analysen'],
-                ['bereiche', '👥', 'Bereiche'],
-                ['sicherheit', '🛡', 'Sicherheit'],
-                ['schluessel', '🔑', 'Schlüssel und APIs']
+                ['arbeitsplatz', 'workspace', 'Arbeitsbereich'],
+                ['analysen', 'chart', 'Analysen'],
+                ['bereiche', 'users', 'Bereiche'],
+                ['sicherheit', 'shield', 'Sicherheit'],
+                ['schluessel', 'key', 'Schlüssel und APIs']
             ]],
         ['Zugriff und Abrechnung', [
-                ['speicher', '📦', 'Speicher'],
-                ['abrechnung', '💳', 'Abrechnung'],
-                ['ueber', 'ℹ️', 'Über diese App']
+                ['speicher', 'database', 'Speicher'],
+                ['abrechnung', 'creditCard', 'Abrechnung'],
+                ['ueber', 'info', 'Über diese App']
             ]]
     ];
+    /** Ein Zeichen aus dem Register — oder nichts, wenn es fehlt. Eine leere
+        Zelle ist ehrlicher als ein Emoji als Ersatz: das wäre der alte
+        Zustand, nur versteckt (E701). */
+    const zeichen = (name) => {
+        try {
+            return Register.symbole.alsSvg(name, 18);
+        }
+        catch {
+            return '';
+        }
+    };
     const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
     /* ========================================================================
      * ANWENDEN — Einstellungen wirken sofort
@@ -63,6 +74,11 @@ const Einstellungen = (() => {
         document.body.classList.toggle('kontrast', !!V('kontrast', false));
         /* Barrierefreiheit: ruhige Darstellung, leichteres Lesen, hoher Kontrast */
         document.body.dataset.bewegung = V('bewegung', 'normal');
+        /* Die Inseln hören mit (E702): das Kit fragt `data-ui-motion` (L222). */
+        if (V('bewegung', 'normal') === 'ruhig')
+            document.documentElement.dataset['uiMotion'] = 'reduce';
+        else
+            delete document.documentElement.dataset['uiMotion'];
         document.body.dataset.lesen = V('lesen', 'normal');
         document.body.dataset.kontrast = V('kontrast', false) ? 'hoch' : 'normal';
         /* Das eigene Farbschema hat das letzte Wort — sonst würde die Zeile
@@ -150,13 +166,14 @@ const Einstellungen = (() => {
         o.className = 'overlay';
         o.innerHTML =
             '<div class="einst-fenster" data-blick="liste">' +
-                '<div class="einst-nav">' +
+                /* `data-material` (E706): die gewählte Zeile gleitet zur neuen. */
+                '<div class="einst-nav" data-material="einstellungen">' +
                 `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
                 `<div><b>${esc(V('arbeitsName', 'Redion'))}</b>` +
                 `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
                 GRUPPEN.map(([titel, liste]) => (titel ? `<div class="einst-grp">${titel}</div>` : '') +
                     liste.map(([id, i, n]) => `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
-                        `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
+                        `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('')).join('') +
                 '</div>' +
                 /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
                    weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`
@@ -218,6 +235,31 @@ const Einstellungen = (() => {
             new ResizeObserver(mehrPruefen).observe(navEl);
         }
         mehrPruefen();
+        /* Am Telefon: der Bereich kommt von rechts, die Liste beim Zurück von
+           links — dieselbe Ankunft wie unten beim Reiterwechsel (E702). */
+        const blick = (ziel) => {
+            if (!fenster)
+                return;
+            const vorher = fenster.getAttribute('data-blick');
+            fenster.setAttribute('data-blick', ziel);
+            if (vorher === ziel || !amTelefon() || AppEinstellung.wenigBewegung())
+                return;
+            const teil = fenster.querySelector(ziel === 'bereich' ? '.einst-inhalt' : '.einst-nav');
+            if (!teil)
+                return;
+            const klasse = ziel === 'bereich' ? 'einst-push' : 'einst-pop';
+            teil.classList.remove('einst-push', 'einst-pop');
+            void teil.offsetWidth;
+            teil.classList.add(klasse);
+            const fertig = (ev) => {
+                if (ev && ev.target !== teil)
+                    return;
+                teil.classList.remove(klasse);
+                teil.removeEventListener('animationend', fertig);
+            };
+            teil.addEventListener('animationend', fertig);
+            setTimeout(() => fertig(), 1200);
+        };
         o.addEventListener('click', e => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
                 o.remove();
@@ -226,7 +268,7 @@ const Einstellungen = (() => {
             /* Zurück zur Liste. Am Rechner kommt man hier nie hin — der Knopf
                steht dort auf `display:none`. */
             if (elVon(e)?.closest('[data-a="liste"]')) {
-                fenster?.setAttribute('data-blick', 'liste');
+                blick('liste');
                 return;
             }
             const b = elVon(e)?.closest('.einst-nav button[data-b]');
@@ -236,7 +278,7 @@ const Einstellungen = (() => {
                 /* Am Telefon eine Seite weiter; am Rechner ändert die Angabe
                    nichts, weil dort beide Spalten stehen. */
                 if (amTelefon())
-                    fenster?.setAttribute('data-blick', 'bereich');
+                    blick('bereich');
                 const inh = o.querySelector('#ei');
                 if (inh)
                     inh.scrollTop = 0;
@@ -254,7 +296,7 @@ const Einstellungen = (() => {
                 return;
             if (amTelefon() && fenster?.getAttribute('data-blick') === 'bereich') {
                 e.stopPropagation();
-                fenster.setAttribute('data-blick', 'liste');
+                blick('liste');
                 return;
             }
             document.removeEventListener('keydown', beiTaste, true);

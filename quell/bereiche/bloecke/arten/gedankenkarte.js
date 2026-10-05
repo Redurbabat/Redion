@@ -93,6 +93,14 @@ const Gedankenkarte = (() => {
         ['sechseck', 'Sechseck'],
     ];
     const farbeVon = (i) => PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#2f8ab5';
+    /* DIE ASTFARBE AUF HELLEM GRUND (E705): gespeichert bleibt sie (§9);
+       daneben derselbe Ton mit 4,6 : 1 für das helle Thema, oder `null`. */
+    const astHell = (farbe) => {
+        if (typeof Farben === 'undefined' || !Farben.parse(farbe))
+            return null;
+        const hell = Farben.inkOnLight(farbe);
+        return hell && hell !== Farben.toHex(Farben.parse(farbe) ?? [0, 0, 0]) ? hell : null;
+    };
     const uid = () => (typeof Ids !== 'undefined' && Ids.short)
         ? 'gk' + Ids.short()
         : 'gk' + Math.floor(performance.now() * 1000).toString(36);
@@ -690,11 +698,18 @@ const Gedankenkarte = (() => {
             const cx = rechtsHerum ? zu.x : zu.x + zuM.w;
             const cy = zu.y + zuM.h / 2;
             const dx = (cx - px) / 2;
-            return sv('path', {
+            const ast = sv('path', {
                 d: `M ${px.toFixed(1)} ${py.toFixed(1)} C ${(px + dx).toFixed(1)} ${py.toFixed(1)}, ` +
                     `${(cx - dx).toFixed(1)} ${cy.toFixed(1)}, ${cx.toFixed(1)} ${cy.toFixed(1)}`,
                 fill: 'none', stroke: farbe, 'stroke-width': dick, 'stroke-linecap': 'round',
             });
+            /* Im Hellen dunklere Tinte (E705, grund.css). */
+            const hell = astHell(farbe);
+            if (hell) {
+                ast.setAttribute('data-tinte', 'strich');
+                ast.style.setProperty('--tinte-hell', hell);
+            }
+            return ast;
         };
         /* ══ EINE FREIE VERBINDUNG ZEICHNEN (E628) ═══════════════════════════
            Sie darf NICHT aussehen wie ein Ast. Ein Ast sagt „gehört dazu", eine
@@ -826,6 +841,11 @@ const Gedankenkarte = (() => {
                 el.style.left = o.x.toFixed(1) + 'px';
                 el.style.top = o.y.toFixed(1) + 'px';
                 el.style.setProperty('--ast', plan.farben[id] ?? 'var(--text-dim)');
+                const hell = astHell(plan.farben[id] ?? '');
+                if (hell)
+                    el.style.setProperty('--ast-hell', hell);
+                else
+                    el.style.removeProperty('--ast-hell');
             });
             welt.style.width = plan.breite + 'px';
             welt.style.height = plan.hoehe + 'px';

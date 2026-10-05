@@ -30,6 +30,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   App.start();
   RedionMotion.start();
+  /* die Druckfeder (E702): ein Zuhörer für jeden Knopf */
+  RedionPress.start();
 
   if (typeof Ereignisse !== 'undefined') Ereignisse.melde(ARTEN.appSteht);
 });

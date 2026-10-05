@@ -547,7 +547,75 @@ Register.symbole = (() => {
         maximize: '<path d="M9 3.5H5.5a2 2 0 0 0-2 2V9"/>' +
             '<path d="M15 3.5h3.5a2 2 0 0 1 2 2V9"/>' +
             '<path d="M15 20.5h3.5a2 2 0 0 0 2-2V15"/>' +
-            '<path d="M9 20.5H5.5a2 2 0 0 1-2-2V15"/>'
+            '<path d="M9 20.5H5.5a2 2 0 0 1-2-2V15"/>',
+        /* --- Zwanzig für Menüs, Einstellungen und „Mehr" (E701) --------------
+           Redur, 27. September, im Fragebogen: „Gezeichnete Zeichen" — „Durch
+           Redions eigene Linien-Symbole ersetzen, wie in der Zeichenleiste.
+           Alles bleibt am selben Ort." Die Einstellungen trugen neunzehn
+           verschiedene farbige Emoji untereinander, das ⋯-Menü der Seite
+           dreiunddreissig, „Mehr" und das R-Blatt ihre eigenen. Für die meisten
+           Zeilen gab es hier schon das passende Zeichen; diese zwanzig fehlten.
+    
+           Dasselbe Raster wie alle darüber: 24 × 24, Strich 1,7, runde Enden,
+           `currentColor`, keine Fläche. Und dieselbe Regel wie in E273: EIN
+           Name, EIN Bild, EINE Bedeutung — „Verbindungen" heisst in den
+           Einstellungen und im Seitenmenü `plug`, nicht zweimal etwas anderes.
+           Punkte sind `h.01` wie die Augen in `smile`: ein runder Strichanfang
+           ohne Länge, damit auch ein Punkt keine Fläche ist. */
+        plug: '<path d="M9 3.2v4.4M15 3.2v4.4"/>' +
+            '<path d="M6.4 7.6h11.2v3.6a5.6 5.6 0 0 1-11.2 0z"/><path d="M12 16.8v4"/>',
+        keyboard: '<rect x="2.8" y="5.6" width="18.4" height="12.8" rx="2.4"/>' +
+            '<path d="M6.6 9.6h.01M9.9 9.6h.01M13.2 9.6h.01M16.5 9.6h.01' +
+            'M8.2 12.4h.01M11.5 12.4h.01M14.8 12.4h.01M8.4 15.2h7.2"/>',
+        globe: '<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6"/>' +
+            '<path d="M12 3.2c2.3 2.4 3.5 5.3 3.5 8.8s-1.2 6.4-3.5 8.8' +
+            'c-2.3-2.4-3.5-5.3-3.5-8.8s1.2-6.4 3.5-8.8z"/>',
+        users: '<circle cx="9.2" cy="8.4" r="3.5"/><path d="M2.8 20a6.6 6.6 0 0 1 12.8 0"/>' +
+            '<path d="M15.4 5.1a3.4 3.4 0 0 1 0 6.6"/><path d="M17.8 14.5a6.4 6.4 0 0 1 3.4 5.5"/>',
+        key: '<circle cx="7.6" cy="16.2" r="4.2"/><path d="m10.6 13.2 9.6-9.6"/>' +
+            '<path d="m17.4 6.4 2.6 2.6M14.6 9.2l2 2"/>',
+        creditCard: '<rect x="2.8" y="5.2" width="18.4" height="13.6" rx="2.4"/>' +
+            '<path d="M2.8 9.8h18.4M6.6 14.8h3.8"/>',
+        info: '<circle cx="12" cy="12" r="8.8"/><path d="M12 11v5.4M12 7.8h.01"/>',
+        cloud: '<path d="M7 18.6h10.4a4 4 0 0 0 .5-7.97 5.8 5.8 0 0 0-11.1-1.3' +
+            'A4.6 4.6 0 0 0 7 18.6z"/>',
+        archive: '<rect x="3" y="4" width="18" height="4.6" rx="1.2"/>' +
+            '<path d="M4.8 8.6v9.6a1.8 1.8 0 0 0 1.8 1.8h10.8a1.8 1.8 0 0 0 1.8-1.8V8.6"/>' +
+            '<path d="M10 12.4h4"/>',
+        /* Volle und normale Breite: dieselben zwei Ränder, die Pfeile einmal
+           hinaus, einmal hinein. Der Knopf wechselt sein Wort mit dem Zustand
+           (`kopfleiste.ts`), und das Zeichen wechselt mit. */
+        widthWide: '<path d="M3.4 5v14M20.6 5v14M7 12h10"/>' +
+            '<path d="m9.4 9.4-2.6 2.6 2.6 2.6M14.6 9.4l2.6 2.6-2.6 2.6"/>',
+        widthNarrow: '<path d="M3.4 5v14M20.6 5v14M6.2 12h4.4M17.8 12h-4.4"/>' +
+            '<path d="m8.2 9.6 2.4 2.4-2.4 2.4M15.8 9.6l-2.4 2.4 2.4 2.4"/>',
+        /* „Kleiner Text": ein grosses und ein kleines T — die Grösse IST das
+           Thema. „Schrift" dagegen ist die Familie: ein A mit seinem a. */
+        textSize: '<path d="M3.4 6.2h10M8.4 6.2v12.6M14.4 11.6h6.4M17.6 11.6v7.2"/>',
+        typeface: '<path d="m3 19 5-13.6L13 19M4.8 14.4h6.4"/>' +
+            '<circle cx="17.4" cy="15.8" r="3.1"/><path d="M20.5 12.6v6.4"/>',
+        /* Die Pfadnavigation: Stufe › Stufe — so, wie die Krume selbst aussieht.
+           Zwei Kästchen und der Winkel dazwischen; drei Striche mit Winkel
+           sahen auf dem Probeblatt aus wie ein Pfeil (›Weiter‹). */
+        crumbs: '<rect x="2.4" y="9" width="5.6" height="6" rx="1.5"/>' +
+            '<rect x="16" y="9" width="5.6" height="6" rx="1.5"/>' +
+            '<path d="m10.8 9.4 2.6 2.6-2.6 2.6"/>',
+        hash: '<path d="M9.8 3.6 7.8 20.4M16.2 3.6l-2 16.8M4.4 8.8h16M3.6 15.2h16"/>',
+        translate: '<path d="M3.4 5.8h8.4M7.6 3.4v2.4M10 5.8c-.7 3.8-2.8 6.6-6.2 8.4' +
+            'M5.6 8.8c1.2 2.3 3 4 5.2 5"/><path d="m12.4 20.4 3.8-9.2 3.8 9.2M13.6 17.6h5.2"/>',
+        moveTo: '<path d="M3.2 7.2a1.8 1.8 0 0 1 1.8-1.8h4l2 2.2h8a1.8 1.8 0 0 1 1.8 1.8v8.8' +
+            'a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8z"/>' +
+            '<path d="M8.6 13.6h6.6m-2.4-2.4 2.4 2.4-2.4 2.4"/>',
+        /* „Änderungen vorschlagen": zwei Zeilen Text und ein kleiner Stift, der
+           darin schreibt. Nicht `pencil` allein — der heisst im selben Menü
+           „Umbenennen". Das Einfügezeichen der Korrektur (‸) war der erste
+           Entwurf und sah auf dem Probeblatt aus wie ›Hochladen‹. */
+        suggest: '<path d="M3.6 6.4h14M3.6 11h8.4M3.6 15.6h4.4"/>' +
+            '<path d="M17.4 11.4a1.7 1.7 0 0 1 2.4 2.4l-6 6-3.1.8.8-3.1z"/>',
+        alarm: '<circle cx="12" cy="13.4" r="7.2"/><path d="M12 9.8v3.8l2.4 1.6"/>' +
+            '<path d="m3.8 6 3-2.4M20.2 6l-3-2.4"/>',
+        code: '<path d="m8.2 7.2-4.8 4.8 4.8 4.8M15.8 7.2l4.8 4.8-4.8 4.8"/>' +
+            '<path d="m13.6 4.8-3.2 14.4"/>'
     };
     /* ------------------------------------------------------------------------
      * AUSGABE

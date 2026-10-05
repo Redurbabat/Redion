@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-679 Entscheidungen, E1 bis E699 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+687 Entscheidungen, E1 bis E711 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E708 bis E714** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -742,6 +742,14 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E697** — Direkte Farbwahl und unterbrechungsfreier Freitext: benannte Stift-/Markerpalette, Hex-Feld, echte Deckung in der Vorschau, dieselbe Farbaktion wie im Dock. Textentwurf und Cursor überleben den Farbwähler; Eingabegeometrie höchstens einmal pro Bild, IME-Escape beendet nicht den Text. Auch aufgeklappt bleibt Zubehör werkzeugbezogen. Bestehende Marken, Farbsätze, Werkzeuggedächtnis und eigene Ordnung bleiben. Wächter `test577`, Nachbarn `test458`, `test515`, `test524`, `test527` und Stiftregressionen. *(kam als E681/test568 über `main`; beim Zusammenführen umnummeriert)*
 * **E698** — Rot zuerst, bevor das Touch Kit kommt: die KI öffnet die Einstellungen über die Schale (`App.einstellungen`) statt über den Einstellungsbereich — L207 Weg C, das Verzeichnis schrumpft auf 124 Paare / 516 Treffer (`test537`); `var(--danger, #c73939)` heisst `var(--gefahr)` (`test401`); `lernen/` darf ins Netz (`test270`, L210). Redur: „C jetzt, B später"
 * **E699** — React als Inseln in der bestehenden Schale: E80 aufgehoben (Redur: „du kannst react nutzen keien problem", „Mit React (E80 aufheben)"), sein Einwand „keine zweite Oberfläche" wird fünf prüfbare Regeln — ein Einstieg, keine neue Seite, kein Router, an Ort und Stelle, nur Ansicht; React 19.3.0 eingepackt in `quell/fremd/react/` (nicht im Start, 78 KB), das Touch Kit (UI-Kit @c192821) als Kopie in `fremd/touch/`, gebaut mit Vite 8 zu klassischen Skripten; Kit-Bauteile in Redions Farben UND der Kit-Look als Schema „Touch Kit hell/dunkel"; Federn wie im Kit (ergänzt E43/E646); Stufe 1a: Grundlage und Probe (`test578`, `test579`)
+* **E700** — Rot zuerst, ein Tupfer dazu und ein Rand zur Marke: `test362` §7 zählte 28 px 66 gegen 65, weil E697 einen 28 px breiten Farbtupfer brachte (`bausteine.css`, keine Seitenrand-Aufgabe, bleibt roh, E590); dafür heisst der Telefon-Seitenrand von `#page` in `ki.css` jetzt `var(--mobile-gutter)` wie in `bausteine.css`. Decke unverändert 65, beide Zeilen in messungen.md §72, kein Pixel anders
+* **E701** — Ruhiger, und nichts ist weg: eine Haupthandlung je Bild („PDF öffnen" im Kopf getönt bis zum Anfassen, auf „Heute" nur „Lernen starten" voll, der Themenknopf im Hellen ein grauer Mond); „Zuletzt geöffnet" dreht nur unter Zeiger oder Fokus; gezeichnete Zeichen statt Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt, Seitenwerkzeugen und Termine (Redur: „Gezeichnete Zeichen", 20 neue im Register); AUS ist grau; Kennzahlkarten ruhen grau; die Bandecke im Grund des Bandes; am Telefon weicht die Krume dem grossen Titel. Jeder Griff am selben Ort, gezählt (`test580`)
+* **E702** — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale (Redur: „Wie im UI-Kit (Empfohlen)"): fünf `--feder-*`-Marken in `grund.css` aus `motion-tokens.css` mit `@supports`-Rückfall (ergänzt E43/E646/E699 Punkt 6), der Federkern `RedionSpring` ohne React (übertragen, auf 1953 Punkten gleich dem Kit), EINE Druckfeder statt dreizehn `:active`-Skalierungen (auch der kurze Tipp am iPhone), der Schalter wie im Kit (Griff dehnt sich, keine Endlosdrehung), Blätter vom Rand mit Finger und Abgang, eine Ankunft für jeden Ortswechsel, „Ruhig" hält auch `::after`, JavaScript und die Inseln an (`test581`)
+* **E703** — Glas, wo es passt: der Dock im Dokument und die schwebende Zeichenleiste werden dichtes Glas (oben am Blatt bleibt sie deckend), Glas kommt als Scheibe statt als Nebel, EIN Schalter mit fünf Eingängen macht alles Glas deckend, „Starker Kontrast" hat keines (`data-schema`), Toast und Lader stehen über den Werkzeugen (`--melde-boden`), eine Lichtkante (`--glas-kante`), das leichte Glas folgt dem Schema (L221 gemessen, geschlossen), dunkles dichtes Glas 90 %; und die Bilder zeigen endlich echte Unschärfe (SwiftShader). Redur: „glass efeck usw alles haben", „Starker Kontrast ohne Glas" (`test582`)
+* **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
+* **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
+* **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
+* **E711** — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich (Redur zum Video „Liquid Glass": „Schau mal das auch an ich will das auch haben", Szenen 07 und 08): die Suche geht aus dem Knopf auf, der sie trägt, neue Treffer kommen nacheinander, EINE Marke gleitet mit ↑ ↓ auf der Kit-Feder (Suche, Befehlspalette, Menü mit Suche; `SelectionFlow.highlight`, kein Neubau je Pfeil) und trägt „↵ Enter"; `#toast` wird ein Stapel aus bis zu drei Meldungen (die zwei davor waren verloren), Escape räumt ab, ein Finger wischt weg; die Glocke öffnet WEITER den Posteingang, beim Zeigen oder langen Drücken fächern die letzten drei auf, „Alle gelesen" (gelesen, nicht leeren) fliesst zäh in sie zurück — EIN Goo-Filter, nur während es fliesst; der Posteingang als Glaskarten (`test588`)
 
 ---
 
@@ -2908,12 +2916,27 @@ mitgezogen.
 
 ## E43 · Bewegung: drei Dauern, drei Kurven, keine Federn
 
+> **Ergänzt durch E702 (28. September 2026) — für Redions eigene Bewegung.**
+> Redur, 27. September, ca. 21:45: „Wie im UI-Kit (Empfohlen)". Die drei
+> Kurven unten bleiben ohne Überschwingen; daneben stehen in `grund.css`
+> GENAU fünf benannte Federn des Kits (`--feder-druck`, `-knapp`, `-sanft`,
+> `-lebhaft`, `-weich`), jede nur so weit über 1 wie im Kit und mit Rückfall
+> ohne `linear()`. `test126` §7 und `test581` §1/§2 halten sie.
+
 > **Ergänzt durch E699 (27. September 2026) — für die Bauteile des Touch
 > Kits.** Redur: „Wie im UI-Kit überall". In den React-Inseln fahren die
 > Bauteile die Federn des Kits samt Überschwingen; ihre Kurven stehen im
 > Inselblatt (`quell/islands/islands.css`), nicht in `grund.css`. Für
 > Redions eigene Bewegung gilt dieser Eintrag unverändert, und `test126`
 > prüft ihn weiter.
+>
+> **Ergänzt durch E706 (28. September 2026) — für Redions eigenes
+> Material.** Redur, 21:45: „Wie im UI-Kit (Empfohlen)", 21:47: „ich will das
+> du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen
+> usw". Die wandernde Wahl (Pille der unteren Leiste, Werkzeugflug, die
+> Umschalter) fährt die Kit-Feder `snappy` (Schwung 0,14, 0,5 % Überschwingen),
+> ein losgelassenes Zeichen die Feder `press`; beide in `SelectionFlow.FEDERN`.
+> Die drei Kurven in `grund.css` und `test126` bleiben, wie sie sind.
 
 **Woher das kommt.** Redurs Vorgabe zum Bewegungssystem, und der Satz, der
 sie zusammenfasst: *„Animations must improve clarity, not distract."*
@@ -2982,6 +3005,12 @@ Ladeskelette, die Zustandswechsel der Sicherungskarte. Steht in `L10`.
 ---
 
 ## E44 · Nocturne — Redion bekommt eigene Farben
+
+> **Ergänzt durch E705 (28. September 2026) — ein leichter kühler Ton.**
+> Redur, im Fragebogen: „Leichter kühler Ton im Dunkeln“. Der Grund ist
+> `#121417` statt `#141414`, die ganze dunkle Leiter trägt Farbton 258° bei
+> Sättigung 0,006 und derselben Helligkeit. Ränder aus Licht, Violett als
+> Akzent und alles andere hier gilt unverändert.
 
 **Die grosse Änderung.** Redion trug im Kern Notions Palette: `#191919` und
 ein Himmelblau. Das war ein guter Anfang und die falsche Identität — die
@@ -36864,6 +36893,12 @@ angesehen: `bilder/dokument-rechner-hell.png`.
 E465 — Zeichnen wie GoodNotes, erster Bogen: Dreieck, rundes Rechteck, Bleistift, freie Stärke, Buchstabentasten
 --------------------------------------------------------------------------
 
+> **Ergänzt durch E704 (28. September 2026) — die Körnung des Bleistifts.**
+> Redur: „Bleistift mit Graphitkorn". Die gestrichelte Kante
+> (`stroke-dasharray 0.9 0.6`) ist einem Graphitmuster als Füllung gewichen,
+> je Farbe und Druckstufe, mit der Tinte als Rückfall — weiter ohne Filter,
+> wie hier entschieden. Deckung und Neigung (E507) unverändert.
+
 REDURS AUFTRAG, 7. September 2026, mit dem GoodNotes-Dossier (32 Seiten,
 dasselbe wie zu E265): „Du musst wirklich ohne Pause arbeiten, bis du
 Redion alles aufgeräumt hast, dass es wie GoodNotes ist — wirklich alles,
@@ -43089,6 +43124,12 @@ still weggelassen.
 E534 — Auf ad4ccbc weiterarbeiten: Herz, Wendekarte und gemessene Restfehler
 --------------------------------------------------------------------------
 
+> **Ergänzt durch E701 (28. September 2026) — nur das Aussehen in Ruhe.**
+> Herz, Ring und kleine Kurve der Kennzahlkarten sind grau, bis man die
+> Karte anfasst, mit der Tastatur erreicht oder sie einmal abspielt; der
+> Herzschlag, das Aufzeichnen des Rings und die Zahlen bleiben, wie sie
+> hier stehen. Die Kurve zeigt feste Werte (L224).
+
 Redur hat ausdrücklich den Commit `ad4ccbc782e2eb50a1e75ef56ed9a74a60451201`
 als Grundlage genannt. Er führt PR #74 zusammen; sein Dateibaum ist identisch
 mit `f1eca227`. Vorhandene Glühfäden, Kartenringe, Barcode, Statistikring und
@@ -43125,6 +43166,14 @@ nicht behauptet.
 
 E535 — Sieben Vorlagenblöcke in einem Zug
 --------------------------------------------------------------------------
+
+> **Ergänzt durch E701 (28. September 2026).** Block 07: der Kartenring
+> in „Zuletzt geöffnet" (`.rmo-recent`) dreht nur noch, solange man
+> hinzeigt oder der Fokus darin steht — die Animation ist dieselbe, nur
+> angehalten; im leeren Regal (`.bib-leer`) bleibt die Dauerrotation, wie
+> sie hier steht. Block 06: der Verlaufsschalter ist AUS grau (Deckkraft
+> .12, entsättigt) und bekommt seinen Schimmer unter Zeiger und Fokus
+> zurück; AN und die einmalige Bewegung beim Umschalten bleiben.
 
 Der Bau, den E533 beschrieb und der beim ersten Anlauf am Sitzungslimit
 starb. Diesmal in kleineren Wellen: ein Agent je Vorlagenblock, jeder auf
@@ -52958,11 +53007,24 @@ neuen zwei nicht besser halten.
 
 ## E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet
 
+> **Ergänzt durch E702 (28. September 2026).** Redur hat für Redions eigene
+> Teile — ausdrücklich auch die untere Leiste — „Wie im UI-Kit (Empfohlen)"
+> gewählt. Die Pille darf damit auf der knappen Feder des Kits fahren
+> (`--feder-knapp`, 0,5 % über, rund 0,4 px); umgestellt wird sie im Zweig
+> des Materials. Die Technik bleibt diese: vorgerechnete Keyframes auf
+> `transform`, gemalt vom Compositor (`RedionSpring.sample`).
+
 > **Ergänzt durch E699 (27. September 2026) — für die Bauteile des Touch
 > Kits.** Redur: „Wie im UI-Kit überall". Die kritisch gedämpfte Feder
 > (ζ = 1) unten gilt weiter für Redions untere Leiste und die Werkzeugleiste;
 > die Bauteile des Kits in den React-Inseln federn wie im Kit, mit
 > Überschwingen.
+>
+> **Ergänzt durch E706 (28. September 2026).** Die untere Leiste und die
+> Werkzeugleiste fahren jetzt die Kit-Feder `snappy` (ζ = 0,86) statt ζ = 1;
+> die Pille lässt sich mit dem Daumen greifen. Was hier entschieden wurde,
+> bleibt: NUR `transform`, die Bahn einmal gerechnet und dem Compositor
+> übergeben, das Tempo beim Umlenken mitgenommen (`test541` unverändert grün).
 
 Redur hat am 20. September um 10:12 Uhr eine Aufnahme der unteren Leiste
 geschickt und gefragt: *„Denkst du ist das so gut?"* — dazu sieben Punkte
@@ -53132,6 +53194,10 @@ bis 10 Orte bei 25 Bildern je Sekunde Aufnahme.
 ---
 
 ## E647 — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu
+
+> **Ergänzt durch E706 (28. September 2026).** Der Flug fährt die Feder
+> des Touch Kits (`knapp`) und dehnt sich zwischen Nachbarn in
+> Flugrichtung, um seine Mitte (E641s Deckel); der Grund bleibt am Knopf.
 
 E646 hat die untere Leiste vom Hauptfaden geholt. Die Werkzeugleiste des
 Schreibstudios (E640) hatte denselben Fehler — nur hat ihn dort noch niemand
@@ -56727,6 +56793,14 @@ Das ist die Folge von EINER Quelle und war die Absicht.
 
 ## E695 — Ein Glas statt vier, und die Dichte kommt aus der Messung
 
+> **Ergänzt durch E703 (28. September 2026) — Glas, wo es passt.** Die
+> schwebenden Werkzeugleisten sind jetzt auch Glas, das leichte Glas folgt
+> dem Schema (`color-mix` der Karte statt eines festen Werts), das dunkle
+> dichte Glas trägt 90 statt 88 % (gemessen in allen zehn Schemata), und
+> ALLES Glas wird mit einem Schalter deckend — nicht nur bei weniger
+> Transparenz. Die eine Unschärfe, die zwei Dichten nach einer Regel und
+> „auf Glas keine blasse Schrift" gelten unverändert.
+
 **Datum:** 27. September 2026 · **Wächter:** `test576` (30 Zusagen) ·
 Redur: **„Weiter an die animationen übergangen glass efeck usw alles
 verbessern"**.
@@ -56900,6 +56974,13 @@ dass es jemand sah, ist das Argument für den vollen Lauf, der seit dem
 ---
 
 ## E697 — Farbe direkt wählen und im Freitext weiterschreiben
+
+> **Ergänzt durch E704 (28. September 2026) — Tinten zuerst, Leuchtfarben
+> für den Marker.** Redur: „Neue Tintenfarben", „Echter Textmarker". Im Feld
+> stehen jetzt acht Tinten (beim Marker sechs Leuchtfarben) zuerst; die fünf
+> Grundfarben und die sechs Markerfarben von hier stehen darunter unter
+> „Weitere Farben" und bleiben wählbar. Der neue Marker beginnt in
+> Sonnengelb mit Keilspitze (0,40); „niemals rückwirkend" gilt weiter.
 
 *Umnummeriert beim Zusammenführen am 27. September 2026:* dieser Eintrag kam am
 23. September als **E681** über `main` (Codex-Zweig „dokument-stift-freitext",
@@ -57157,7 +57238,11 @@ unteren Leiste, `selection-flow.ts`) — ein ganzer Bogen für ein Bauteil.
    Bildlaufleisten und Datumsfelder der ganzen App in dem Moment, in dem
    die erste Insel lädt — die leise Fassung einer zweiten Oberfläche.
 
-6. **Federn wie im Kit — für die Bauteile des Kits.** Redur: „Wie im UI-Kit
+6. **Federn wie im Kit — für die Bauteile des Kits.** *(Ergänzt durch E702
+   am 28. September: seit Redurs Antwort von 21:45, „Wie im UI-Kit
+   (Empfohlen)", federn auch Redions eigene Teile — die Kurven stehen
+   dafür als `--feder-*` in `grund.css`, und `data-ui-motion="reduce"`
+   folgt „Ruhig".)* Redur: „Wie im UI-Kit
    überall". Die Bauteile behalten die Federn des Kits samt Überschwingen
    (`press` Bounce 0,3, `snappy` 0,14, `bouncy` 0,36). Das ergänzt E43
    („keine Federn") und E646 (nur ζ = 1) — für die Kit-Bauteile, nicht für
@@ -57315,3 +57400,1683 @@ Nachbarn `test87`, `test105`, `test109`, `test143`, `test225`, `test270`,
 `test105` §3 (der Typcheck der Inseln), `test388` §5 (React nicht beim
 Start), `test290` (das Inselblatt nimmt keinen Namensraum der Schale),
 `test47` und `test510` (zehn Schemata statt acht).
+## E700 — Rot zuerst: ein Farbtupfer dazu, ein Seitenrand zur Marke
+
+**Datum:** 27. September 2026 · **Wächter:** `test362` §7 (schon da, auf
+`main` 323f13a rot) · Anlass: **rot zuerst** (§46).
+
+**Der Fund.** `test362` §7 zählt die rohen Wiederholungen der Telefonmasse
+in `quell/schale/stil/*.css` und verlangt, dass jede Decke in
+`pruefungen/marken-decke.json` GENAU der heutige Stand ist. Auf `main`
+323f13a: 28 px **66 gegen 65**, 17/18. Grün bei `6ad2650b` (E696), rot ab dem
+Merge `0f73ba1d` (E697, Codex PR #114); auf der Codex-Seite `569a8341` stand
+es schon 65 gegen 64. Der ganze Zuwachs ist eine Zeile:
+
+```txt
+bausteine.css:5308   .blatt-color-grid button i{width:28px;height:20px;…}   Breite eines Farbtupfers (E697, 9e306b85)
+```
+
+**Warum der Tupfer roh bleibt.** Die einzige Marke mit 28 ist
+`--mobile-gutter`, der Seitenrand am Telefon. `marken.css` sagt: *„Gleiche
+Zahl bedeutet nur dann dieselbe Marke, wenn sie dieselbe Aufgabe hat."* E590
+hat es für genau diese Zahl entschieden: ein Polster, das kein Seitenrand
+ist, darf sie nicht tragen. Ein Farbtupfer ist kein Seitenrand. `1.75rem`
+oder ein `aspect-ratio` hätten die Zahl nur vor dem Zähler versteckt.
+
+**Was entschieden wurde.** Die Decke bleibt bei 65, weil eine ECHTE rohe
+Wiederholung verschwindet: `ki.css:158`, im Telefonblock
+(`max-width:820px`) und laut eigenem Kommentar der „Seitenrand nach der
+Telefon-Vorgabe (E37): 28 px", heisst jetzt
+`#page{padding:0 var(--mobile-gutter) 40vh}`. Dieselbe Aufgabe wie
+`bausteine.css:223-224` (`#page` am Telefon,
+`max(var(--mobile-gutter), env(safe-area-inset-left))`), also dieselbe Marke.
+
+```txt
++1   bausteine.css:5308   Farbtupfer, 28 px breit        andere Aufgabe, bleibt roh (E697)
+−1   ki.css:158           Seitenrand von #page, Telefon  → var(--mobile-gutter)
+     28 px roh            66 → 65 = Decke 65, marken-decke.json unverändert
+```
+
+Der Tausch steht hier und in messungen.md §72 mit beiden Zeilen, damit der
+Zuwachs nicht aus dem Blick fällt: **ohne den Tupfer stünde die Decke jetzt
+bei 64.**
+
+**Die Alternativen.** Die Decke auf 66 heben, wie E637 und E690 — ehrlich,
+aber die Decke soll nur schrumpfen, und hier lag eine Wiederholung, die
+ohnehin die Marke tragen muss. Den Tupfer auf `--mobile-gutter` setzen —
+falsch nach E590. Die Zahl umschreiben — Verstecken statt Aufräumen.
+
+**Was es kostet.** Nichts Sichtbares. Die Zeile in `ki.css` wird am Telefon
+ohnehin von `bausteine.css` überstimmt (gleiche Spezifität, spätere Datei).
+Vorher und nachher aufgenommen bei 375, 390, 428 und 700 px, Startseite und
+eine Textseite: acht Bildpaare, **kein Pixel anders**, und `#page` misst
+dieselben Polster (22 px unter 380 px, sonst 28 px). Die Bilder bleiben auf
+dem Rechner (§55.4).
+
+**Nicht in diesem Bogen.** `ki.css:176` setzt unter 380 px
+`padding-left:22px; padding-right:22px` — derselbe Fall für
+`--mobile-gutter-small` (22 px 85 → 84). Eine Änderung, ein Ziel (§43).
+
+**Geprüft:** `test362` 18/18 (vorher 17/18 auf 323f13a); Nachbarn `test87`,
+`test114`, `test221`, `test353`, `test143`, `test105`, `test109`, `test577`
+grün; `test225`, `test549`, `test550` grün. `test401` bleibt rot wie auf
+`main` (`var(--danger, #c73939)` aus E697) — das repariert E698 auf seinem
+Zweig. `npm run typecheck` sauber; `npm run bauen:ts` (Dienststand v1372)
+und `node bauen.mts` neu erzeugt.
+
+## E701 — Ruhiger, und nichts ist weg: leiser in Ruhe, jeder Griff am selben Ort
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (27. September,
+ca. 16:45 und 21:45 UTC) · **ergänzt** E534 und E535 (nur das Aussehen in
+Ruhe) · **wendet an** grund.css „Genau eine je Bild" (E263), E638, E273/E515,
+E219 · **Wächter:** `test580` (im Browser, ein freier Port) · Messung
+messungen.md §73.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC  „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC  im Fragebogen, zu den farbigen Emoji in Menüs, Einstellungen
+                und „Mehr": „Gezeichnete Zeichen (Empfohlen)" — „Durch
+                Redions eigene Linien-Symbole ersetzen, wie in der
+                Zeichenleiste. Alles bleibt am selben Ort."
+ca. 22:10 UTC  „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit
+                sehen ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles
+                kannst du nur an reddion arbeiten"
+```
+
+Dieser Eintrag ist der Teil „bischen ruhige … ohne etwas lösche". Bewegung,
+Glas, Stift, Farben und das Material sind eigene Zweige derselben Bitte
+(`claude/fluessige-bewegung`, `claude/glas-wo-es-passt`, `claude/stift-effekte`,
+`claude/bessere-farben`, `claude/material-ueberall`).
+
+**Was wurde entschieden.** Ruhiger heisst: weniger, das GLEICHZEITIG ruft —
+nicht weniger, das da ist. Sieben Stellen werden in Ruhe leiser; jede
+bekommt ihre Farbe oder Bewegung zurück, sobald man sie anfasst oder mit
+der Tastatur erreicht (E640, das UI-Kit: Schein ist Zustand, nicht
+Dauerschmuck). Kein Knopf, kein Menüeintrag, kein Weg und keine Animation
+ist gelöscht; jeder Griff steht am selben Ort mit demselben Auslöser.
+
+1. **Eine Haupthandlung je Bild.** grund.css sagt es seit E263: „Genau eine
+   je Bild — mehr macht keine wichtig." Auf „Heute" riefen vier Flächen
+   zugleich (hell): die violette Themenkugel, „PDF öffnen" im Kopf mit
+   Verlauf und Schein, „Dokumente öffnen" voll violett und „Lernen
+   starten". Jetzt ist „Lernen starten" die eine (E638). „PDF öffnen" im
+   Kopf ist in Ruhe eine getönte Pille (`--accent-schwach`, Schrift
+   `--accent-text`, 4,61 : 1 hell, 5,28 : 1 dunkel) und wird unter Zeiger
+   und Tastenfokus der volle Hauptknopf; „Dokumente öffnen" ist ein
+   Umrissknopf mit violettem Zeichen, 44 px, derselbe Griff
+   (`lernwelt.ts`, Klasse `is-primary` → `lw-desk-auf`); die Themenkugel
+   ist im Hellen ein grauer Mond, wie im Dunkeln der helle.
+2. **„Zuletzt geöffnet" ruht.** Der Kartenring im Regal drehte sich endlos
+   — im Leerlauf, am Telefon und hinter jedem Fenster darüber. Jetzt ist
+   nur sein Wiedergabezustand angehalten; unter dem Zeiger oder mit dem
+   Fokus in der Reihe dreht er wie bisher, hinter einem offenen Fenster
+   nie. Die drei Karten liegen in Ruhe flach und fächern unter dem Zeiger.
+   Das leere Regal behält seinen Ring nach E529.
+3. **Gezeichnete Zeichen.** Die Einstellungen trugen neunzehn farbige
+   Emoji untereinander, das ⋯-Menü 37 Emoji und zehn weitere getippte
+   Zeichen, „Mehr" und das R-Blatt ihre eigenen, die Seitenwerkzeuge 🖼 ↔ 🅰
+   🧩 ✨, Termine 📅 🔗 🎙 und an jeder Zeile eine Stecknadel. Jetzt steht
+   überall ein Strich aus `Register.symbole` in der stillen Farbe seiner
+   Zeile; der gewählte Bereich trägt den Akzent, Löschen bleibt rot,
+   „Beta" ist ein grauer Zettel. Zwanzig Zeichen fehlten im Register und
+   sind im selben Raster dazugekommen. E273 gilt dabei: ein Name, ein Bild,
+   eine Bedeutung — „Importieren" hat überall den Pfeil hinauf, „Mehr" im
+   R-Blatt die drei Punkte wie unten in der Leiste (vorher den Kompass),
+   „Verschlüsseln" den Schlüssel, weil das Schloss im selben Menü „Seite
+   sperren" heisst. Was ein Mensch selbst gesetzt hat (das Zeichen einer
+   Besprechungsseite), bleibt sein Emoji.
+4. **AUS ist grau.** Der Verlaufsschalter trug auch AUS den violetten
+   Schimmer (Deckkraft .5); drei Schalter untereinander sahen aus wie drei
+   angeschaltete. AUS ist jetzt .12 und entsättigt; unter Zeiger und Fokus
+   kommt der Schimmer zurück, AN bleibt .68.
+5. **Die Kennzahlkarten ruhen.** Vier gleiche violette Herzen, vier Ringe
+   und vier Kurven standen über dem Falz des Lernzentrums, auch bei null.
+   In Ruhe sind sie grau; angefasst, mit der Tastatur erreicht oder beim
+   einmaligen Abspielen farbig. Die kleine Kurve zeigt in jeder Karte
+   dieselben festen Werte — dafür sind KEINE Daten erfunden worden; die
+   Lücke steht als L224.
+6. **Die Bandecke** mit Suche, KI und Klappe blieb am Rechner
+   `--schale-grund` — im Hellen ein fast schwarzer Block am Ende des hellen
+   Bandes. Sie trägt jetzt den Grund des Bandes (`--bg-side`).
+7. **Ein Titel am Telefon.** Derselbe Name stand zweimal übereinander,
+   klein in der Kopfzeile und gross als Titel. Solange der grosse
+   gleichnamige Titel zu sehen ist, ist die kleine Krume durchsichtig;
+   rollt er unter die Kopfzeile, kehrt sie zurück (`kopfleiste.ts`, ein
+   `IntersectionObserver` je Ansicht, von jedem `pfad()` erneuert — nur
+   wenn Titel oder Name wechseln; nach Stern oder Schloss behält derselbe
+   Titel seinen Beobachter, sonst blitzte die Krume einen Takt lang auf).
+   Sie bleibt im Baum, fokussierbar und klickbar; am Rechner ändert sich
+   nichts.
+
+Der Stil steht in EINEM Block am Ende von `studio.css`, damit man den
+Bogen als Ganzes sieht; nur vorhandene Marken (§39), keine neue Datei.
+
+**Warum.** Redur hat „ruhiger" gesagt und im selben Satz „ohne etwas
+lösche". E218/E219 haben gezeigt, wie das geht: weglassen macht das
+Verbliebene wichtiger — aber nur, was weiterhin erreichbar ist. Deshalb
+misst `test580` jede Stelle zweimal: was leiser wurde, und dass die Griffe
+mit Kennung, Wort und Folge dieselben sind wie auf dem Stand davor.
+
+**Die Alternativen.** (a) Emoji nur entsättigen (`filter:grayscale`) —
+sofort machbar, aber Emoji bleiben Bilder mit eigener Strichstärke und
+Grundlinie; Redur hat „Gezeichnete Zeichen" gewählt. (b) Den Kartenring nur
+noch im leeren Regal zeigen — spart am Telefon Platz, nimmt aber etwas weg.
+(c) Die Krume am Telefon ganz ausblenden — dann fehlt der Name, sobald der
+Titel weggerollt ist. (d) Die Kurven der Kennzahlkarten weglassen — Redurs
+Frage dazu ist offen (L224).
+
+**Was es kostet.** +7,5 KB gzip im Start (messungen.md §73), gut die Hälfte
+davon Begründungen an Ort und Stelle. Wer auf dem Telefon nie zeigt, sieht
+den Ring in „Zuletzt geöffnet" nicht mehr drehen. Die violette Farbe
+unter einer eigenen Akzentfarbe gehört dem Zweig der Farben.
+
+**Gefunden auf dem Weg.** „Mehr" trug für „Importieren" und „Posteingang"
+dasselbe 📥. Das R-Blatt zeigte „Mehr" mit dem Kompass, die untere Leiste
+denselben Weg mit drei Punkten. Die Zeichen in „Dokumente öffnen" und „PDF
+importieren" sassen ohne Abstand und eine halbe Zeile zu hoch vor dem Wort
+(jetzt `inline-flex`, `gap`). Die Kurven der Kennzahlkarten zeigen feste
+Werte (L224).
+
+**Nicht in diesem Bogen.** Farbmarken, die eigene Akzentfarbe und dunkle
+Kontrollkästchen (`claude/bessere-farben`), Federn und Übergänge
+(`claude/fluessige-bewegung`), das Material (`claude/material-ueberall`),
+Glas (`claude/glas-wo-es-passt`). Der Funkelknopf „Lernen starten" ist im Dunkeln eine
+schwarze Pille auf dunklem Grund — die eine Haupthandlung, aber leise;
+seine Farbe gehört zu E638 und dem Zweig der Farben. Das Menü am Griff
+eines Blocks (`editor.ts`) trägt noch seine Emoji — es war nicht unter den
+Orten des Auftrags; es steht in AUFGABEN.
+
+**Geprüft.** `test580` 86/86 — zuerst rot eingecheckt (42 von 85 rot gegen
+515451f9, in jedem Abschnitt); die Probe „neu gezeichnet blitzt die Krume
+nicht auf" kam im Bau dazu. Gegenproben, nach dem letzten Neubau, je rot
+gesehen und zurückgenommen: (1) der ganze Stilblock heraus — 21 rot, in
+§1 bis §7; (2) ein 🧭 zurück in „Mehr", „Seiten-ID kopieren" aus dem
+⋯-Menü gestrichen, die Krume ohne Beobachter, „Dokumente öffnen" wieder
+`is-primary` — 11 rot, jede Änderung an ihrer Stelle (die gestrichene
+Zeile als „dieselben 47 Einträge"); (3) `kopfleiste.js` ohne „derselbe
+Titel, derselbe Beobachter" — genau die neue Probe rot, höchste
+Deckkraft 1; (4) alles zurück — 86/86. Nachbarn unter dem Schloss, 38
+Läufe grün (34 40 47 67 105 114 126 127 128 143 155 217 221 222 242 245
+248 272 303 353 362 384 388 392 412 430 432 436 476 482 494 495 496 531
+532 576 579 580); `test388` §5: der Start holt 2775 KB über 246 Dateien
+(Grundstand 2767, Decke 2850). Ohne Browser: 87 290 298 401 402 410 109
+537 400 550 549 225.
+
+## E702 — Flüssige Bewegung: die Federn des Touch Kits in Redions eigener Schale
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (27. September,
+ca. 21:45, im Fragebogen) · **ergänzt** E43 (benannte Federn neben den drei
+Kurven), E646 (die Pille darf später knapp federn) und E699 Punkt 6 (die
+Federn gelten jetzt auch für Redions eigene Teile) · **Wächter:** `test581`
+(neu), `test126` §7 (erweitert), `test435` §2/§6 (angepasst, strenger).
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+27.09. ca. 11:26 UTC   zu den Federn: „Wie im UI-Kit überall"
+27.09. ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die
+                       oberfläche bischen ruhige machen ohne etwas lösche also
+                       eine funktionen und ich will das es flüssigere
+                       animationen , glass efeck usw alles haben dann bessere
+                       stift efeckte beim zeichnen bessere farben"
+27.09. ca. 21:45 UTC   im Fragebogen, „Sollen auch Redions eigene Teile
+                       (Knöpfe, Menüs, Blätter von unten, untere Leiste)
+                       federn wie im UI-Kit?": „Wie im UI-Kit (Empfohlen)"
+                       (Beschreibung der Option: Knöpfe sinken beim Drücken
+                       ein und federn zurück, Blätter und Menüs kommen mit
+                       leichtem Nachschwingen. Seitenwechsel gleiten ohne
+                       Nachschwingen (ruhig).)
+27.09. ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig
+                       ich also beim stift übergangen usw"
+27.09. ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so
+                       haben mit redion passende inhalten"
+27.09. ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich
+                       am morgen die redion öfnnen eien komplet besseren webseit
+                       sehen ohne eine funktione löschen bessere ordnungen
+                       bessere übergagnge besssere efeckten , bessere
+                       oberfläsche alles kannst du nur an reddion arbeiten"
+```
+
+**Was entschieden wurde.** Redions eigene Bewegung — nicht nur die Inseln —
+fährt die Federn des Touch Kits. Acht Stücke, jedes an Ort und Stelle, keine
+Funktion weg, kein Auslöser verschoben:
+
+1. **Fünf Federn als Marken in `grund.css`** (E259: Bewegung wohnt dort):
+   `--feder-druck` (Knopf losgelassen, 575 ms, 4,6 % über), `--feder-knapp`
+   (Schalter, 542 ms, 0,5 %), `--feder-sanft` (Blätter, Seitenwechsel, 796 ms,
+   nie über 1), `--feder-lebhaft` (887 ms, 7,3 %) und `--feder-weich`
+   (923 ms, 0,15 %), jede mit `-dauer`. Die Kurven sind Zeichen für Zeichen
+   die `linear()`-Kurven aus `fremd/touch/motion-tokens.css` (UI-Kit
+   @c192821). **Rückfall:** in `:root` steht `var(--ease-enter)`, und nur ein
+   `@supports (transition-timing-function: linear(0, 1))` legt die Feder
+   darüber — Safari vor 17.2 kennt `linear()` nicht, und eine ungültige
+   Kurve in `var()` löscht die ganze Übergangsliste (der Mechanismus, den
+   E259 gemessen hat; `islands.css` hat dieselbe Lücke → L225). Unter
+   „weniger Bewegung" dauern alle fünf 1 ms. Die drei Kurven aus E43 bleiben
+   unverändert ohne Überschwingen.
+2. **Ein Federkern ohne React, beim Start da** (`src/schale/bedienung/spring.ts`
+   → `RedionSpring`, 2,3 KB gzip Code): die Rechnung des Kits (Feder lösen,
+   Kurve abtasten, Tempo aus Fingerproben, Gummiband) als ÜBERTRAGUNG in
+   Redions eigenes TypeScript, dazu `sample()` (Stützpunkte für
+   `element.animate()`, wie SelectionFlow) und `token()` (Kurve und Dauer aus
+   `grund.css`). Offen für den Zweig des Materials (`claude/material-ueberall`).
+3. **Eine Druckfeder für alles** (`src/schale/bedienung/press.ts` →
+   `RedionPress`, gestartet in `start.ts`): EIN passiver Zuhörer in der
+   Einfangphase. Jeder Knopf, Reiter, Eintrag und jede klickbare Karte sinkt
+   beim Aufsetzen sofort ein (`--press-scale` .96, breite Zeilen
+   `--card-press-scale` .985, auf der eigenen Eigenschaft `scale`), bleibt
+   mindestens 80 ms unten — damit sieht man auch den kurzen Tipp, bei dem das
+   iPhone `:active` nie malt — und federt auf `--feder-druck` zurück.
+   Dreizehn verstreute `:active{transform:scale(…)}` in sieben Stilblättern
+   geben ihr Einsinken ab (ihre Farben bleiben); die vier eigenen Druckbilder
+   aus Redurs Vorlagen (E528–E537) und der Glasknopf, der Zeitmesser, der
+   Ordnerdeckel (E601/E604), die Staffelei und der Funkelknopf (E528) bleiben
+   unberührt. Abgeschaltete Knöpfe drücken sich nicht. Ohne Bewegung: kein
+   Einsinken, aber `data-gedrueckt`, und der Knopf wird kurz blasser.
+4. **Der Schalter wie im Kit** (`einstellungen.css`): der Griff dehnt sich
+   unter dem Finger um 18 %, verankert an seiner Seite, wandert losgelassen
+   auf `--feder-knapp` hinüber (über `translate`, das Dehnen über
+   `transform`). Die 7-s-Endlosdrehung des Verlaufs (E462) ist weg — sie lief
+   seit E535 im Betrieb ohnehin nicht mehr, stand aber im Stilblatt; beim
+   Einschalten dreht der Verlauf EINMAL, jetzt um seine Mitte (Fund unten).
+5. **Blätter von unten** (`menue.ts`, rund 99 Aufrufer von `UI.menu`): vom
+   Rand herein auf `--feder-sanft` — wie das Aktionsblatt des Kits —, der
+   Grund blendet auf, das Blatt folgt dem Finger am Griff und am Titel (nach
+   oben nur als Gummiband), und weggewischt (90 px wie bisher, oder schnell
+   geschnippt) oder mit einem Tipp daneben geht es mit einem Abgang von
+   200 ms (`--ease-exit`). **Sofort bleiben:** Escape (E302), die Wahl eines
+   Eintrags und jedes `menu.remove()` eines Aufrufers — darauf verlassen
+   sich rund siebzig Prüfläufe. Unter „Ruhig" geht auch der Tipp daneben
+   sofort.
+6. **Ein Ortswechsel, eine Ankunft** (`wischen.ts`, `schale.ts`): unten auf
+   einen Reiter TIPPEN bringt den Inhalt jetzt ebenso von der Seite wie
+   WISCHEN — aus der Richtung des neuen Reiters, auf `--feder-sanft`, ohne
+   Nachschwingen („Seitenwechsel gleiten ohne Nachschwingen (ruhig)").
+   Derselbe Reiter: keine Ankunft. Und nicht zwei Bewegungen zugleich:
+   gleitet die Bühne, steigt die Ansicht nicht noch 5 px auf und die Karten
+   der Bibliothek fliegen nicht einzeln herein. In den Einstellungen am
+   Telefon schiebt sich ein Bereich von rechts herein und „Zurück" bringt
+   die Liste von links (vorher hartes `display:none`).
+7. **„Ruhige Darstellung" hält wirklich alles an:** die Sperre deckt jetzt
+   auch `::after` (26 Regeln bewegen eines), acht Stellen in JavaScript
+   fragen `AppEinstellung.wenigBewegung()` (System ODER „Ruhig") statt nur
+   das System — die Pille unten, die Ankunft der Bibliothek, der Reiter
+   oben, das Wischen, der Orb, die Werkzeugleiste des Blatts, das Rollen im
+   Dokument, die Folienübergänge — und die Bewegungsschicht (motion.ts)
+   stellt dieselbe Frage statt ihrer eigenen zwei,
+   und `<html data-ui-motion="reduce">` sagt es den Inseln (ihre
+   CSS-Bewegung hält Redions Sperre ohnehin an; die Federn des Kits in
+   JavaScript hören auf das Etikett, sobald Stufe 1b das Kit ab UI-Kit
+   13e7844 holt, L222).
+8. **Kein `transition: all` mehr:** das Loch des Rundgangs (`#rg-loch`)
+   glitt mit allem, auch dem 9999-px-Schatten; jetzt nur Lage und Grösse.
+
+**Warum.** Redur hat es gewählt, und die Wahl ist wörtlich die Beschreibung
+der Option: Knöpfe sinken und federn zurück, Seitenwechsel gleiten ohne
+Nachschwingen. Gemessen vorher (messungen §74): auf sechs Bildschirmen am
+Telefon antwortete die Mehrheit der Knöpfe auf einen Druck GAR NICHT (etwa
+Einstellungen 26 von 33), das Blatt stieg 16 px aus dem Nichts hinter einem
+in einem Bild schwarzen Grund und verschwand in einem Bild, der Tipp auf
+einen Reiter liess den Inhalt einfach dastehen, und „Ruhig" hielt die Pille,
+die Bibliothek und alle `::after` nicht an.
+
+**Blätter: sanft, nicht knapp.** Die Option sagt „Blätter und Menüs kommen
+mit leichtem Nachschwingen" — das Kit selbst, auf das Redur zeigt („Wie im
+UI-Kit"), fährt Aktionsblätter und Blätter auf `smooth` (kein Überschwingen)
+und nur Popover und Dialoge auf `snappy`. Ein Blatt, das am unteren Rand
+hängt und überschwingt, hebt sich vom Rand ab und zeigt einen Spalt. Also
+das Kit: Blätter sanft. Menüs am Rechner und Dialoge bekommen ihr leichtes
+Nachschwingen mit den Inselstufen (E699 Punkt 10: Popover und Dialog des
+Kits, `snappy`) — in L225 vermerkt.
+
+**Übertragen statt drittes Bündel.** Zwei Wege waren offen (kit-map
+„kern-2"): das Kit als drittes Vite-Bündel beim Start (`bauen-inseln.mts`,
+`buendel-bestand.json`, ein dritter Bau im Nachbau von `test578` §1, eine
+Ausnahme im Startweg von `test388`, eine eigene Deklaration für die Schale)
+oder eine Übertragung in Redions TypeScript. Die Schale ist klassisches
+TypeScript mit `module: none`; die Übertragung braucht nichts von alledem
+und kostet 2,3 KB gzip Code. Der Einwand dagegen — zwei Fassungen derselben
+Rechnung laufen auseinander (§8) — ist ein Wächter: `test581` §2 übersetzt
+die Dateien des Kits, rechnet beide auf 1953 Punkten (sieben Federn × drei
+Wege × drei Tempi × 31 Zeitpunkte) nach und verlangt GLEICHE Zahlen, dazu
+dieselben Ruhezeiten, Tempi, Gummibänder und genau die Kurven in
+`grund.css`.
+
+**Die Alternativen.** (a) Nur ζ = 1 und die Bezier-Kurven, ohne neue
+Marken (was ohne Redurs Antwort erlaubt war) — Redur hat „Wie im UI-Kit"
+gewählt. (b) Die Kit-Bauteile als React-Inseln für die Schale — +83 KB beim
+Start, rund 430 ms Aufspringen der Leiste (kit-map „arch-0"), und E699
+Punkt 4 hält React aus dem Start. (c) Die `:active`-Regeln behalten und
+nur umrechnen — dann bliebe der kurze Tipp am iPhone ohne Antwort.
+
+**Was es kostet.**
+- Start: rund 11,9 KB gzip mehr (Code und Kurven rund 8, der Rest
+  Kommentare); `test388` §5 in messungen §74.
+- Ein Knopf federt 575 ms zurück statt 140 ms; die Ankunft braucht 796 ms bis
+  zur Ruhe (sichtbar ist sie nach rund 300 ms fast da). Ein Prüflauf, der
+  gleich nach einem Tipp die Grösse DESSELBEN Knopfes misst, sieht bis zu
+  4 % weniger (Trefferflächen bleiben: das Einsinken verschiebt nichts).
+- Das Blatt verlässt den Baum nach Wischen oder Tipp daneben 200 ms später.
+- Die Druckfeder ist ein Zuhörer auf jedem `pointerdown` (ein `closest()`,
+  auf Zeichenflächen ohne Treffer).
+
+**Gefunden auf dem Weg.**
+- `rmo-orbit` (motion.css) dreht nur `rotate(360deg)` und verlor beim
+  Einschalten eines Schalters das `translate(-50%,-50%)`, das den Verlauf
+  mittig hält: 0,65 s lang glitt er zur Ecke und sprang dann zurück. Der
+  Schalter dreht jetzt mit `ez-schalter-dreh`, das den Versatz behält
+  (`test581` §4 misst den Versatz mitten in der Drehung).
+- Die Übergangsregel `.menu.blatt{transition:transform .22s}` lief am
+  Telefon nie (`blatt-hoch` lag darüber); beim Ziehen wäre sie dem Finger
+  hinterhergelaufen. Sie ist durch die Bewegung in `menue.ts` ersetzt.
+- `Wischen.einblenden` nahm die Klasse nach festen 400 ms weg — mit der
+  sanften Feder hätte das die letzte Strecke abgeschnitten; jetzt beim
+  Ende der Bewegung.
+- „Zurück" (`#btn-back`) ist beim Start abgeschaltet; die erste Fassung
+  von `test581` nahm ihn als Probe und hätte eine Druckfeder verlangt, die
+  §15 verbietet. Die Probe ist jetzt „Mehr", und ein eigener Punkt hält,
+  dass ein abgeschalteter Knopf NICHT einsinkt.
+
+**Nicht in diesem Bogen** (L225): das wandernde Material der unteren Leiste,
+der Stiftwahl und der Umschalter (`claude/material-ueberall` — nutzt
+`RedionSpring` und die Marken); Glas; Farben; Abgänge der Dialoge und
+Rechner-Menüs (Inselstufen); das Ziehen von Blöcken
+(„bewegung-ziehen"), Balken ohne Layout („bewegung-layoutfrei"), die rohen
+Dauern auf die Marken („bewegung-marken"), das Einzeichnen der Lernwelt
+(„bewegung-einzeichnen"), `sheet.ts` auf transform („bewegung-blatt-
+transform"); Querformat am Telefon ist mit Bildern noch nicht angesehen.
+
+**Gemessen, bevor gebaut wurde** (Karte „bewegung", 27. September, und
+`test581` gegen 515451f, messungen §74): das Blatt 16 von 276 px unter der
+Ruhelage im ersten Bild, der Grund sofort 1; kein Knopf der sechs Proben
+sank unter dem Finger ein; unter „Ruhig" liefen nach drei Reiterwechseln,
+Menü, Dialog und Meldung noch 7 Bewegungen; `::after` lief weiter; 17
+`:active`-Skalierungen, 1 `transition: all`; der Verlauf im Schalter stand
+−30 statt −39,6 px. Start `test388` §5: 2767 KB.
+
+**Geprüft.** `test581` 91/91 (rot gegen 515451f: 24 bestanden, 55
+durchgefallen), `test126` 29/29 (rot: 24 ok, 5 offen), `test435` 46/46
+(rot: 44/46). Gegenproben, fünf Brüche zugleich, je in einem anderen
+Abschnitt rot gesehen und byte-gleich zurückgenommen: die Endlosdrehung
+zurück (`test581` §8, `test435` §6), `::after` aus der Ruhig-Sperre
+(`test581` §7), kein Abgang (§5), eine `:active`-Skalierung zurück (§8),
+die Druckfeder mit 1,2 (§1, §2, `test126` §7). Nachbarn grün: 388 (2779 KB,
+248 Dateien), 143, 353, 362, 412, 245, 303, 114, 127, 576, 541, 296, 155,
+484, 534, 536, 539, 492, 424, 428, 430, 399, 403, 427, 431, 432, 476, 478,
+500, 494, 496, 361, 36, 37, 222, 272, 157, 579; ohne Browser 87, 290, 298,
+401, 402, 410, 109, 537, 400, 67, 105, 225, 549, 550. `test464` 62/63 — die
+Zahl der Werkzeuge (14 statt 13) aus `Marken.WERKZEUGE`, die dieser Bogen
+nicht anfasst; siehe den Commit.
+
+## E703 — Glas, wo es passt: die Docks werden Glas, ein Schalter macht alles deckend, und die Bilder zeigen endlich echte Unschärfe
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Auftrag ca. 16:45
+UTC, Fragebogen ca. 21:45 UTC, 27. September) · **ergänzt** E695 ·
+**Wächter:** `test582` (neu), `test576` (Chromium jetzt mit echter Unschärfe).
+
+Redur, wörtlich, 27. September 2026:
+
+- ca. 16:45 UTC: **„du muss mehr im redion arbeiten du kannst auch die
+  oberfläche bischen ruhige machen ohne etwas lösche also eine funktionen
+  und ich will das es flüssigere animationen , glass efeck usw alles haben
+  dann bessere stift efeckte beim zeichnen bessere farben"**
+- ca. 21:45 UTC, im Fragebogen unter „Farben": **„Starker Kontrast ohne
+  Glas"** (Beschreibung der Wahl: „Starker Kontrast: kein Glas, schwarze
+  Schrift auf Gelb" — die Schrift auf Gelb gehört dem Farbzweig)
+- ca. 21:47 UTC: **„ich will das du auch das ¨berla nutze will wo es nötig
+  ich also beim stift übergangen usw"**
+- ca. 21:49 UTC: **„was du beim touckit gebaut hast ich will alles so haben
+  mit redion passende inhalten"**
+- ca. 22:05 UTC, zum Video „Liquid Glass": **„Schau mal das auch an ich will
+  das auch haben"**
+- ca. 22:10 UTC: **„du muss ofne pause an redion arbeiten ich will wenn ich
+  am morgen die redion öfnnen eien komplet besseren webseit sehen ohne eine
+  funktione löschen bessere ordnungen bessere übergagnge besssere efeckten ,
+  bessere oberfläsche alles kannst du nur an reddion arbeiten"**
+
+**Gemessen, bevor gebaut wurde** (messungen.md §75). E695 hat EIN Glas
+gebaut. Offen blieb, WO es steht — und ob die Bilder es überhaupt zeigen.
+
+1. **Kein Bild hat je Glas gezeigt.** `bilder.mts` und `test576` starten
+   das kopflose Chromium, und das setzt seine Bilder mit dem
+   SoftwareRenderer zusammen. Der lässt jede Filterkette aus, in der `blur`
+   steht: eine harte Schwarz-Weiss-Kante hinter einem Menü blieb hart
+   (Rampe 0 px, 59 → 28 in einem Schritt). Auf jedem Bild, das Redur von
+   Glas gesehen hat, lag die Seite SCHARF hinter der Schrift — genau das
+   „Muster hinter der Schrift", das E695 verbietet. Mit SwiftShader als
+   Grafikkarte ist die Rampe 37 bis 52 px breit, wie auf dem Telefon.
+2. **Glas kam als Nebel.** `studio-arrive` (Menü, Finder) und `blatt-hoch`
+   (Blatt am Telefon) blendeten die GANZE Fläche über `opacity` ein.
+   `opacity` wirkt auf das Ergebnis samt verwischter Rückseite: in den
+   ersten Bildern jedes Menüs stand die Seite scharf durch das Glas
+   („Montage-Elektriker:innen" war durch das Menü zu lesen, zehnfach
+   verlangsamt).
+3. **Was schwebt, war grau.** Der Dock im Dokument (E619) und die
+   schwebende Zeichenleiste (unten, frei, links, rechts) lagen als deckende
+   Platte über dem Papier — die zwei grössten schwebenden Flächen, und ohne
+   Glas.
+4. **Nur ein Eingang machte Glas deckend.** `prefers-reduced-transparency`
+   tat es, an fünf Stellen einzeln. Mehr Kontrast im System, erzwungene
+   Farben, Redions „Hoher Kontrast" und das Schema „Starker Kontrast"
+   liessen Menüs und Leisten bei 88 % mit Unschärfe.
+5. **Was meldet, lag auf dem Werkzeug.** Am Rechner Toast (835–878) UND
+   Lader auf den Knöpfen des Docks (824–886), am Telefon beide auf der
+   Kapsel Zurück/Vor (708–760) — und aufeinander.
+6. **Die Präfix-Folge war an zwei Stellen verkehrt** (`.ru-fach-art`, die
+   Regel für weniger Transparenz in `studio.css`). Roh ist das harmlos;
+   geht ein Blatt durch lightningcss (wie `bridge.css`), fasst es
+   „unpräfixiert, dann `-webkit-`" zu EINER Zeile mit Präfix zusammen, und
+   Chrome hat kein Glas (L222 Punkt 3).
+
+**Was entschieden wurde.**
+
+1. **Echte Unschärfe auf jedem Bild.** `bilder.mts`, `test576` und `test582`
+   starten Chromium mit `--use-angle=swiftshader --enable-unsafe-swiftshader
+   --ignore-gpu-blocklist --enable-gpu-compositing`, mit Grund am Ort.
+   `test582` §1 misst die Rampe über einer harten Kante (≥ 12 px) und hält
+   die vier Schalter in beiden Dateien.
+
+2. **Glas kommt als Scheibe.** Menü und Finder gleiten (`glas-ankunft`:
+   `translateY(7px) scale(.985)` → nichts, dieselbe Kurve, dieselbe Dauer);
+   nur ihr INHALT blendet (`glas-inhalt`). Das Blatt am Telefon steigt
+   dieselben 16 px, ohne `opacity`; seine Einträge blenden. `opacity` an
+   einem Kind ändert die Rückseite des Elternteils nicht. Keine Feder, kein
+   Überschwingen (E699 §6 gilt für Redions eigene Bewegung weiter);
+   `studio-arrive` bleibt für alles, was kein Glas ist. Das Einblenden des
+   Inhalts hat kein Gewicht (`:where`, 0,0,0): acht verschiedene Finder
+   haben Kinder mit eigener Bewegung (der Schimmer im KI-Finder, die Zahlen
+   im Lernfinder) — deren Bewegung gewinnt, die Scheibe bleibt dieselbe.
+
+3. **Die zwei schwebenden Werkzeugleisten sind Glas, dicht** (sie tragen
+   Wörter, E695). Im Dokument trägt der FESTE Rahmen (`.blatt-reihe`) das
+   Glas, der Roller darin wird durchsichtig — seine `local`-Deckel in der
+   Farbe der Leiste wären auf Glas zwei graue Streifen. Wo es zu rollen
+   gibt, läuft der Inhalt an der Kante aus (Maske am Kind, geführt von
+   `data-mehr` aus `rollrand.ts`). Die Zeichenleiste ist Glas in den Lagen
+   unten, frei, links, rechts; **oben, am Blatt angesetzt, bleibt sie
+   deckend** — dort schwebt sie nicht, sie ist Teil des Blattes. Zurück/Vor
+   kleben am Telefon weiter deckend am Rand (E396, `test393` §3).
+
+4. **EIN Schalter macht alles Glas deckend** (`grund.css`), mit fünf
+   Eingängen: weniger Transparenz, mehr Kontrast, erzwungene Farben (je
+   Medienabfrage), `body[data-kontrast="hoch"]` und
+   `html[data-schema="kontrast"]`. Er dreht nicht Stellen um, sondern die
+   Marken (`--bg-schwebend[-dicht]` → `--bg-card`, `--glas-blur` und
+   `--schleier-blur` → `none`, die Lichtkante → eine klare Linie) — also
+   wird auch jede künftige Glasfläche mit deckend. Die Linse und zwei
+   Zierstücke tragen feste Werte und stehen darunter einzeln. Die alten
+   Einzelregeln bleiben (§43).
+
+5. **„Starker Kontrast" hat gar kein Glas** — auch keine Linse, kein
+   Zierstück, keinen verwischten Schleier. Dafür schreibt `aussehen.ts`
+   das Schema als `data-schema` an `<html>`: ob es Glas gibt, ist keine
+   Farbe und gehört nicht in die Farbtabelle. Der gewählte Reiter bleibt
+   markiert (volle Fläche mit Rand, §38). Die schwarze Schrift auf Gelb ist
+   Sache des Farbzweigs (claude/bessere-farben).
+
+6. **Ein Stapel am unteren Rand, auch am Rechner.** `--melde-boden` ist die
+   Oberkante des obersten Werkzeugs (Zeichenleiste unten, Dock, Kapsel),
+   aus Bauteilen gerechnet (`var(--touch-min)` + Polster), nicht
+   abgeschrieben. Toast und Lader stehen darüber; am Telefon gehört der
+   Lader jetzt in den Stapel, und der Toast rückt über ihn. Ist am Telefon
+   ein Blatt offen, geht der Lader darunter (er lag beim Einlesen einer PDF
+   auf den Einträgen „Zu Favoriten" und „Link kopieren"). Neben der
+   Zeichenleiste „unten" geht der Toast nach OBEN: sie klebt nur, solange
+   das Blatt unter den Rand reicht, und steht sonst irgendwo darüber — eine
+   Zahl trifft sie nicht (am Bild gesehen). Dieselbe Antwort wie bei offenen
+   Fenstern (L109, E310). Toast und Lader bleiben DECKEND: sie blenden über
+   `opacity` (`ki.css`: die aria-live-Ansage braucht das), Glas würde beim
+   Einblenden doppelt drucken, und sie liegen oft über anderem Glas.
+
+7. **Grenzen, gemessen und aufgeschrieben** (`grund.css`, messungen §75,
+   `test582` §7): im Ruhen am Telefon höchstens drei Glasflächen und ein
+   Viertel des Bildschirms (gemessen: Zeichenblatt 17,0 %, Dokument 6,7 %),
+   mit offenem Menü höchstens 60 % (50,1 %), NIE eine Unschärfe über 90 %
+   des Telefons — der Schleier hinter dem Willkommen dimmt am Telefon nur
+   noch —, EINE Unschärfe von 20 px, nie animiert. Was steht, bleibt
+   deckend: Seitenleiste, Kopf, Reiter, Einstellungen, ganze Blätter,
+   Toast, Lader, Kapsel.
+
+8. **Eine Lichtkante für alles Glas** (`--glas-kante`, je Modus in
+   `hell.css`/`dunkel.css`): Licht oben, ein Hauch Rückwurf unten, die
+   Haarlinie `--glas-rand` — die Kante aus `glass/Glass.css` des Touch Kits
+   (edge, edge-low, hairline) als Marke, ohne React. Auf Menü, Finder,
+   Auswahlleiste, Telefonleiste und beiden Docks, nur unter `@supports`;
+   ohne Unschärfe bleibt der Rand. Gemalt, nicht gerechnet: kein Preis.
+
+9. **Das leichte Glas folgt dem Schema:** `--bg-schwebend` ist jetzt
+   `color-mix(--bg-card …)` wie das dichte (74 % hell, 72 % dunkel) statt
+   eines festen Weiss oder Graus. Seine Zeichen halten über dem schlimmsten
+   Grund 3 : 1 in allen zehn Schemata — gemessen, L221 ist damit
+   geschlossen.
+
+10. **Dunkles dichtes Glas 90 statt 88 %.** Die 86 % aus E695 galten für die
+    Standard-Karte. In „Wald" und „Rosé" fiel die untere Leiste am Telefon
+    über reinem Weiss auf 4,27 und 4,48 : 1; bei 90 % sind es 4,59 und
+    4,81.
+
+11. **Der Präfix steht zuerst**, in Redions eigenen Blättern überall
+    (`test582` §11).
+
+**Die Alternativen.** (a) Die Brechung des Kits (`useGlassRefraction`) für
+Redions Flächen: nur in Chromium (das iPhone bekäme Frost), braucht eine
+React-Insel im Start, und dauernde Verschiebung widerspricht „ruhiger" —
+nein. (b) Die Dichte in den Filter legen (`brightness`, `contrast`): gleiche
+Lesbarkeit (5,02 / 4,70 gegen 4,66 / 4,68), auf echtem Inhalt kein
+sichtbarer Unterschied — nein, `--glas-blur` bleibt eine Marke. (c) Toast
+und Lader auch als Glas: doppelter Druck beim Einblenden, Glas auf Glas —
+nein. (d) Glas auf alles, auch Seitenleiste und Kopf: mehr Unruhe und mehr
+Rechenarbeit für Flächen, die nicht schweben — nein. (e) Die Kontrast-
+schalter je Stelle nachtragen: das war der Zustand, der vier von fünf
+Eingängen vergessen hat. (f) Sands stille Schrift über eine dichtere
+Fläche retten: dafür bräuchte Sand 97 % — kein Glas mehr. Die Farbe
+gehört dem Farbzweig (L226).
+
+**Was es kostet.** Messbar am Telefon (390 × 844 @3x, GPU-Weg, 2,5 s Rollen,
+messungen §75): kein Bild geht verloren (141–152 von etwa 150, mit und ohne
+Glas), die Grafikzeit steigt von etwa 0,2 auf 1,2–1,6 ms je Bild. Der Start
+(`test388` §5): 2767 → 2774 KB gzip, keine neue Datei — die knapp sieben
+KB sind fast ganz Kommentar. Zwei Prozent
+weniger Durchblick im dunklen dichten Glas. Auf weissem Papier im Hellen
+sieht der Dock fast aus wie vorher — das ist ruhig und gewollt; über einer
+farbigen Seite färbt er sich. Die Rollhinweise im Dock sind jetzt ein
+Auslaufen des Inhalts statt Deckel und Schimmer. Und eine Zahl im
+Stilblatt mehr: `--melde-boden` rechnet mit der Zusammensetzung der
+Leisten; ob die Rechtecke sich wirklich nicht schneiden, misst `test582` §6.
+
+**Gefunden auf dem Weg.** (1) Der Schleier hinter dem Willkommen war die
+teuerste Glasfläche von allen (Vorerhebung: 182–202 von 300 Bildern beim
+Rollen, zehnmal die Grafikarbeit von Leiste, Dock und Linse zusammen) —
+am Telefon dimmt er jetzt nur. (2) In „Sand" hat `--text-dim` schon auf der
+VOLLEN Karte nur 4,72 : 1; auf Glas über Schwarz 3,97. Das ist eine Farbe,
+kein Glas: `test582` nennt Sand in einer Liste, die nur schrumpfen darf
+(L226). (3) Am Telefon lagen Toast und Lader IMMER aufeinander, nicht nur
+über Werkzeugen — der Lader stand ausserhalb des Stapels.
+
+**Nicht in diesem Bogen.** Das Glas der Kit-Bauteile in `bridge.css`
+(Präfix-Folge im gebauten Inselblatt, L222 Punkt 3) — die Kit-Kopie wird
+nicht von Hand geändert, und in Stufe 1a zeigt keine Insel Glas. Die Linse
+der unteren Leiste (E639/E646, Zweig „Material überall"). Farben (claude/bessere-farben).
+Bewegung (claude/fluessige-bewegung).
+
+## E704 — Bessere Stifteffekte: Textmarker mit Keil, Füller mit Gelenken und Tempo, Bleistift mit Korn, acht Tinten
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Auftrag ca. 16:45
+UTC, Auswahl im Fragebogen ca. 21:45 UTC am 27. September) · **ergänzt**
+E465 (Körnung), E697 (Markerpalette), E351/E673 (Umriss) · **Wächter:**
+`test583` · Messung: messungen.md §76.
+
+**Redur, wörtlich.** Ca. 16:45 UTC: *„du muss mehr im redion arbeiten du
+kannst auch die oberfläche bischen ruhige machen ohne etwas lösche also eine
+funktionen und ich will das es flüssigere animationen , glass efeck usw alles
+haben dann bessere stift efeckte beim zeichnen bessere farben"*. Ca. 21:45 UTC
+im Fragebogen, alle vier gewählt: *„Echter Textmarker"*, *„Füller wie
+GoodNotes"*, *„Bleistift mit Graphitkorn"*, *„Neue Tintenfarben"* (mit den
+Beschreibungen „Keilspitze, leuchtendes Gelb, keine dunklen Kleckse bei
+Überlappung · schnelle Striche bis ~35 % dünner, Druck dicker, spitze Enden,
+keine Knicke · leichte Körnung · Königsblau, Nachtblau, Karmin, Tannengrün,
+Petrol, Aubergine, Sepia, Graphit. Alte Zeichnungen bleiben unverändert.").
+Ca. 22:10 UTC: *„… ohne eine funktione löschen bessere ordnungen bessere
+übergagnge besssere efeckten , bessere oberfläsche …"*.
+
+**Was entschieden wurde.** Zehn Dinge am Strich, alle in Redions eigenem Code
+(`core/ink/geometry.ts`, `core/ink/stroke.ts`, `bereiche/pdf/marken.ts`), kein
+fremdes Stück (§57: perfect-freehand wäre MIT, aber ein Stück mit eigener
+Zustimmung — es wurde nicht gebraucht):
+
+1. **Gelenke im Umriss (L209 Punkt 3).** An jeder Ecke — dieselbe Frage wie
+   beim Weg (`istEcke`, `ECKE_COS` 0,55, E676) — endet ein Lauf und der
+   nächste beginnt; jeder Lauf ist der alte Umriss mit eigenen Kappen. Ein
+   „M" hat volle Beine (halbe Breite im Median 1,26 statt 0,8 pt) und keine
+   Mittellinie ausserhalb der Tinte (0 statt 23 Punkte). `Feder` rechnet
+   dieselben Läufe mit (`test366 §1` bleibt zeichengleich); ohne Ecke ist es
+   ein Lauf und der alte Umriss.
+2. **Die Kappen zeigen nach aussen.** Gefunden auf dem Weg: `seiten` legte
+   „links" auf die rechte Seite der Fahrtrichtung, und die Bögen `A r r 0 0 1`
+   bogen sich nach INNEN — jeder Flächenstrich endete mit einer Kerbe, beim
+   Bleistift (ohne Spitze) in voller Breite. Jetzt runde Enden, für jeden
+   alten Strich mit (reines Aussehen, keine Daten).
+3. **Der Keil — ein echter Textmarker.** Neue Markerstriche tragen
+   `stil: 'keil'`: die Fläche, die eine schräge Kante (78°, Dicke 0,22 der
+   Höhe) überstreicht, als Vielecke im selben Drehsinn in EINEM Pfad mit
+   `nonzero` — waagrecht volle Höhe, senkrecht dünn, gerade Enden, und wo er
+   sich selbst kreuzt, wird er nicht dunkler. Deckung 0,40, multipliziert.
+   Die Farbe beginnt in Sonnengelb `#ffcf33` (statt `#e0a419`, das auf
+   Papier Beige war). Der **runde Marker bleibt wählbar** („Keil | Rund" im
+   Markerfarbfeld, gemerkt in `zeichnen:markerspitze`), und jeder alte
+   Markerstrich hat kein `stil` und zeichnet Zeichen für Zeichen wie vorher
+   (0,32).
+4. **Das Tempo macht den Füller dünner (L209 Punkt 1).** Nur mit einem
+   echten Drucksensor (Maus und Finger haben das Tempo schon im Ersatzdruck,
+   E351): der Füller bis 35 % dünner, der Pinsel bis 50 %, weich zwischen
+   0,25 und 1,8 pt/ms; die Stärke steht im Register `STIFTE` (`eile`, §8).
+   Gemessen an der Hand (rohe Punkte, 32-ms-Fenster), gespeichert als
+   optionales `tempo[]` je Punkt — nur an neuen Strichen mit Sensor.
+5. **Kugelschreiber und Marker atmen nicht mehr (stift-5).** Ein neuer Strich
+   legt seine Breite am Anfang fest (`breiteFest`, Median der ersten drei
+   Sensorwerte; ohne Sensor die gewählte Breite) — vorher wurde der ganze
+   schon geschriebene Strich dünner, wenn der Druck nachliess (−21 %).
+   `InkGeometry.scale` und „Stärke ändern" tragen das Feld mit.
+6. **Graphitkorn statt Perlenkante (E465 ergänzt).** Der Bleistift füllt mit
+   einem Muster je Farbe und Druckstufe (Kachel 3,2 pt, feste Saat, kein
+   Filter — E465 hat `feTurbulence` zu Recht verworfen) und hat seine Tinte
+   als Rückfall (`url(#redion-graphit-…) #hex`): wo das Muster fehlt
+   (ausgeschnittenes SVG, fremder Leser), malt er flach.
+7. **Der Deckel auch für die Vorhersage des Browsers (stift-4).** Die Punkte
+   aus `getPredictedEvents()` gingen ungedeckelt ins Bild; jetzt dieselben
+   Regeln wie `vorhersage`: keine Kehre, höchstens so weit wie erlaubt, und
+   eine **Bremse** — fällt der Druck dreimal und liegt unter 60 %, rät
+   nichts mehr (der Stift hebt ab); bremst die Hand, schrumpft die
+   Vermutung. Bei 2,5 px/ms und abhebendem Stift: Schwanz 0 statt 60 pt.
+   `InkStroke.vorhersage(rohDrei` bleibt stehen (`test478`).
+8. **Acht Tinten (farben-4).** Königsblau `#2346b5`, Nachtblau `#1b2552`,
+   Karmin `#b12f4f`, Tannengrün `#1d6024`, Petrol `#0c6d7f`, Aubergine
+   `#5f3295`, Sepia `#662f05`, Graphit `#3c3c3c` — gerechnet, nicht gewählt:
+   auf dem Papier (#f8f8f5) mindestens 5,62 : 1, und das engste Paar liegt
+   auch in der Nachbildung für Deuteranopie, Protanopie und Tritanopie
+   (Machado 2009) mindestens ΔE_OK 5,2 auseinander (die alten fünf: Rot und
+   Grün 4,3 für ein deuteranopes Auge). Sie stehen im Farbfeld ZUERST; die
+   fünf alten stehen darunter unter „Weitere Farben" und bleiben als Tupfer
+   in der Leiste — nichts wird umgefärbt. Beim Marker stehen sechs
+   Leuchtfarben zuerst, die Pastelle aus E697 unter „Weitere Farben".
+9. **Das Farbfeld kennt das Papier (farben-12) und die Probe schreibt
+   (stift-9).** Die Probe liegt auf `--paper` der Fläche (eine dunkle
+   eingelesene Folie ist dunkel), unter 3 : 1 steht „Kaum sichtbar auf
+   diesem Papier" in Worten (§38), und auf dunklem Papier steht Weiss
+   (`#f5f5f0`) als erste Tinte. Die Probe ist ein Schwung, gezeichnet von
+   `zeichneMarke` — Spitze, Korn und Keil sind echt. Die Deckung sitzt am
+   `<i>` wie seit E623; die Kachel-Strichprobe folgt beim Marker der Spitze.
+10. **Die Tafel und die Seitenfläche schreiben wie das Blatt (stift-1).**
+    `GfxShapes.zeichne` zieht einen Stiftstrich durch die Mittelpunkte
+    (`InkGeometry.path`, derselbe Weg wie das Blatt, §8) — auch jeden alten.
+    Beim Schreiben: alle gesammelten Ereignisse, `InkStroke.glaetter`,
+    Punkte auf zwei Stellen, und je Bild nur der wachsende Strich statt der
+    ganzen Tafel; beim Absetzen der rohe letzte Punkt und RDP. Das
+    Vorschaubild der Arbeitswelt nimmt denselben Weg.
+
+**PDF.** Ein Strich mit Ecken und ein Keilmarker gehen als mehrere Vielecke
+hinaus, die der Schreiber mit EINER Füllung schliesst (`h … h f`), damit
+`/ca` die Überlappung nicht doppelt deckt; ein Strich ohne Ecke schreibt Byte
+für Byte, was er vorher schrieb (`h f`). `/InkList` bleibt die Mittellinie.
+Das Drehen im Dokumentmodus dreht jede Tiefe.
+
+**Warum.** Redur hat es gewählt, und jeder Punkt war gemessen, bevor er gebaut
+wurde (Stift-Dossier, stift-map): Haarbeine im „M", eine Perlenkante am
+Bleistift, ein beiger runder Marker, 26 pt zurückzuckender Schwanz bei
+schneller Hand, ein atmender Kugelschreiber, Polygon-Schlaufen auf der Tafel.
+
+**Rückwärts verträglich (§9, §53.3).** Nur optionale Felder mit deutschen
+Namen an NEUEN Marken: `stil: 'keil'`, `tempo[]`, `breiteFest`. Kein
+gespeicherter Wert wird angefasst (E673). Alte Striche: gleiche Mittellinie,
+gleiche Breite, gleiche Farbe; sie gewinnen runde Kappen, Gelenke an echten
+Ecken, das Korn und — auf der Tafel — die gebogene Linie. Das Teil-Radieren
+trägt jetzt Neigung (E507) und Tempo in ihrer eigenen Länge mit (gefunden auf
+dem Weg: nach einem Teil-Radieren gehörte `neigung[i]` zu einem anderen
+Punkt, derselbe Fehler, den E507 beim Vereinfachen gefunden hatte).
+
+**Gefunden auf dem Weg: der Radierer der Seitenfläche.** Er traf nur die
+gespeicherten PUNKTE eines Stiftstrichs, nicht die Linie dazwischen. Seit das
+Absetzen auf der Seitenfläche vereinfacht (RDP, wie das Blatt), hat eine
+gerade Linie nur noch ihre zwei Enden — wer ihre Mitte radierte, traf nichts
+(`test575` §5 und §11 waren rot). `formAn` misst jetzt den Abstand zu jedem
+Stück zwischen zwei Punkten; ein Punkt allein ist ein Stück der Länge null,
+also trifft alles, was vorher traf, und dazu die Mitte.
+
+**Die Wächter, die mitgehen (§31, §47: erweitert, keiner schwächer).**
+`test438` §2 verlangte die Perlenkante (`stroke-dasharray`) als „raue Kante";
+seit E704 hält das Korn diese Zusage — der Lauf nimmt das Muster
+`url(#redion-graphit-…)` mit der Tinte als Rückfall an und verlangt weiter
+Fläche, 0,72 und den Stil. `test535` prüfte „Marker: 0,32"; jetzt prüft er
+den Keil (0,40) UND den runden Marker (0,32). `test577` prüft die Vorschau
+beim neuen Marker mit der Zahl 0,4 statt 0,32. `test561` §6 schreibt in
+Schreibtempo (5 pt je 30 ms statt je 4 ms), weil E704 den Füller im Schnellen
+absichtlich dünner macht und die Zusage der SPITZE gilt, nicht dem Tempo; der
+schnelle Strich von vorher läuft danach zusätzlich und muss nass so breit
+sein, wie das Tempo es sagt, und trocken an beiden Enden spitz. `test343`
+§1 zog seinen Druckbogen mit 13 Meldungen in derselben Millisekunde (300 pt
+in 12 ms, rund 8 m/s) — der schnellste Strich überhaupt, der seit E704 bis
+35 % dünner wird; er schreibt jetzt in Schreibtempo (150 ms je Schritt), und
+die Zusage „in der Mitte breit, an der leichten Stelle schmal" gilt
+unverändert dem Druck.
+
+**Die Alternativen.** perfect-freehand (MIT) — ein fremdes Stück mit eigener
+Zustimmung (§57), und es ersetzt die eine Rechnung, die Bildschirm und PDF
+teilen (E506); nicht nötig. Eine Scheibe an jedem Gelenk (erster Entwurf) —
+mit den nach aussen gebogenen Kappen überflüssig. Die fünf alten Farben
+umfärben (farben-4) — Redur: „Alte Zeichnungen bleiben unverändert", und
+viele Wächter halten die fünf; sie bleiben, die Tinten kommen dazu. Die Tafel
+mit dem Füller des Blatts — braucht Druck und `STIFTE` im Kern (§5 Regel 1),
+ein eigener Bogen. Eine Canvas-Ebene für den nassen Strich (L209.5) — der
+Rechner braucht rund 2 ms je Bild, unter der Schwelle von 8 ms; erst am iPad
+messen.
+
+**Was es kostet.** Umrisse mit Ecken sind länger (ein „M": 1065 → 1190 Bytes),
+ein Keilmarker mit 300 Punkten ist ein Pfad von rund 28 KB und kostet nass
+1,35 ms je Bild (der Umriss daneben 0,64 ms). Drei neue optionale Felder.
+Die Startgrösse wächst um rund 14,7 KB gzip (Code rund 8,2 KB, der Rest die
+Kommentare, die `tsc` mitnimmt — schon auf ein Drittel gekürzt); das ist mehr
+als die rund 10 KB, die jeder Zweig der Bitte vom 27. September haben
+sollte, und steht darum offen da (L227 Punkt 7). `test388` §5 misst 2782 KB
+über 246 Dateien unter der Decke 2850 (messungen §76).
+
+**Nicht in diesem Bogen.** Die Werkzeugwahl mit dem wandernden Material
+(claude/material-ueberall), Leiste und Sichtbarkeit (claude/ruhige-oberflaeche),
+die Farben der App (claude/bessere-farben), Glas (claude/glas-wo-es-passt).
+Die Kachel-Strichprobe bleibt ein Balken (18 px — ein Schwung wäre dort
+unlesbar; der Papiergrund aus E623 bleibt). stift-10 (billigeres Absetzen)
+und stift-11 (Messung am iPad) stehen in L227. Die Druckkennlinie und die
+Breite ALTER Kugelschreiberstriche (L209 Punkt 2) bleiben Redurs Frage.
+
+## E705 — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit, ein kühler Ton im Dunkeln, neun ruhigere Akzente
+
+**Datum:** 27./28. September 2026 · **Entschieden von** Redur (Auftrag ca.
+16:45 UTC, Auswahl im Fragebogen ca. 21:45 UTC) · **ergänzt** E44 (der
+dunkle Grund) · baut auf E199, E272, E421 und E414/E693 (nur die
+Darstellung) · **Wächter:** `test584` (neu),
+`test47` (Grund von „Standard" nachgezogen) · Zweig `claude/bessere-farben`.
+
+**Redur, wörtlich.** Ca. 16:45 UTC: „du muss mehr im redion arbeiten du
+kannst auch die oberfläche bischen ruhige machen ohne etwas lösche also eine
+funktionen und ich will das es flüssigere animationen , glass efeck usw alles
+haben dann bessere stift efeckte beim zeichnen bessere farben“. Ca. 21:45 UTC
+im Fragebogen, Farben (Mehrfachwahl): „9 ruhigere Akzentfarben“, „Leichter
+kühler Ton im Dunkeln“, „Untere Leiste besser lesbar“, „Starker Kontrast ohne
+Glas“ — mit der Beschreibung „Aussehen: weiterhin alles selbst wählbar; eigene
+Akzentfarbe bringt passende Schrift/Hover mit; … Starker Kontrast: kein Glas,
+schwarze Schrift auf Gelb.“ Ca. 21:47 UTC: „ich will das du auch das ¨berla
+nutze will wo es nötig ich also beim stift übergangen usw“. Ca. 21:49 UTC:
+„was du beim touckit gebaut hast ich will alles so haben mit redion passende
+inhalten“. Ca. 22:10 UTC: „du muss ofne pause an redion arbeiten ich will wenn
+ich am morgen die redion öfnnen eien komplet besseren webseit sehen ohne eine
+funktione löschen bessere ordnungen bessere übergagnge besssere efeckten ,
+bessere oberfläsche alles kannst du nur an reddion arbeiten“. Und schon ca.
+11:27 UTC zum Aussehen: „Also beiden bei der ausehen dort aollte ich die
+fraben ändern kann“.
+
+Dieser Eintrag trägt den FARBEN-Teil davon. „Untere Leiste besser lesbar“
+(die Linse über dem aktiven Reiter) gehört dem Zweig
+`claude/material-ueberall`, das Glas von „Starker Kontrast“ dem Zweig
+`claude/glas-wo-es-passt`, die Stift- und Markerfarben dem Zweig
+`claude/stift-effekte`.
+
+**Was wurde entschieden?** Farben werden GERECHNET, nicht geraten — nach der
+Regel aus E142/E199/E272: nachmessen, nicht annehmen. Im Einzelnen:
+
+1. **Jede Akzentfarbe bringt ihre Begleiter mit** (farben-1, ruhe-akzent).
+   `Farben.accentSet` (src/core/helpers/colors.ts) leitet aus der gewählten
+   Farbe in OKLCH vier Werte ab: die Schrift AUF der Fläche (`--auf-accent`:
+   Weiss, wenn es 4,5 : 1 schafft, sonst ein getöntes Beinahe-Schwarz im Ton
+   des Akzents), die Tinte (`--accent-text`: der Akzent selbst oder derselbe
+   Ton, bis er auf Grund UND Karte 4,6 hat), das Überfahren
+   (`--accent-hover`) und die Tönung (`--accent-schwach`). `Aussehen.anwenden`
+   setzt sie inline und räumt sie mit dem Schema wieder ab (`gesetzt`).
+   Eine EIGENE Farbe bringt immer alle vier; ein Schema-Akzent überschreibt
+   nichts, was das Schema selbst mitbringt (Touch Kit). Die gewählte Farbe
+   bleibt genau die gewählte. Fünf Stellen, die den Akzent als Schrift auf dem
+   Grund benutzten, nehmen jetzt die Tinte (`bausteine.css` ✓ in der
+   Farbwahl, `lernwelt.css` Plan, `tabelle.css` Werkzeug an).
+2. **„Starker Kontrast“: schwarze Schrift auf Gelb.** Das Schema bringt
+   seine Begleiter ausdrücklich mit: `--auf-accent #000000` (14,67 : 1),
+   Tinte `#ffd400`, Überfahren HELLER (`#ffe071`).
+3. **Die neun Notion-Farben neu gestimmt** (farben-3), je Modus auf einer
+   OKLCH-Helligkeit: im Hellen ≥ 4,6 auf jeder hellen Fläche (vorher Gelb
+   2,22 auf der „Sand“-Karte), im Dunkeln ≥ 5,9; die dunklen Tönungen sind
+   tief und klar statt grau-oliv (L 0,30), die hellen sichtbar, aber leise.
+   Gespeichert bleiben die Kennungen (`red`, `bg-red`), nie ein Hexwert.
+4. **Statusfarben als Tinte, Rot als Fläche getrennt** (farben-5). Dunkel
+   `--gefahr #f66d67`, `--erfolg #40cd9b`, `--warnung #f2af48`, `--info
+   #5abdf2` (Sättigung 0,12–0,17 statt bis 0,21); hell `#bb2021`, `#006e4f`,
+   `#924f00`, `#056697`. NEU `--gefahr-flaeche #ce2a29` in grund.css für
+   Weiss AUF Rot (Glocke, Gefahrknopf, Diktat, Buchdeckel-Marke): 5,27 : 1 in
+   allen zehn Schemata. Eine Farbe, eine Rolle — dieselbe Trennung wie E199.
+   „Touch Kit hell“ bekommt als Warnung `#af4f00` statt `#b45309` (4,34 auf
+   seinem Überfahren).
+5. **„Aussehen“: neun ruhigere Akzente mit Namen und „Aa“** (farben-6):
+   Violett, Indigo, Blau, Türkis, Grün, Bernstein, Koralle, Rosa, Graphit —
+   gleich hell (WCAG-Leuchtdichte um 0,15), jede Scheibe zeigt „Aa“ in der
+   Schrift, die auf ihr stehen wird, der Name steht darunter, die gewählte
+   trägt Ring, Haken und `aria-pressed` (§38). Das Feld „Eigene …“ behält den
+   Farbwähler; eine früher gespeicherte Farbe (auch eine der acht alten) gilt
+   weiter und steht dort als gewählt, mit Namen. Dazu eine kleine Vorschau
+   (Hauptknopf, Verweis, gewählter Reiter). Die Schemakarten sind ehrlich:
+   „Standard“ und „Hell“ zeigen ihren Akzentpunkt und die Flächen, die
+   wirklich gelten (vorher feste Ersatzwerte von vor E44 und ein leerer
+   Punkt).
+6. **Eingaben im Grundton** (farben-7, ruhe-8): `color-scheme` steht an
+   `input, select, textarea`, nicht an `<html>` — Kästchen, Datums- und
+   Auswahlfelder sind im Dunkeln dunkel, die Wurzel bleibt `normal`
+   (`test579` §4). Die Textauswahl nimmt den Akzent statt Notions Blau.
+7. **Diagramme mit eigener Reihe je Grundton** (farben-8, `Zusatz.DIAGRAMM`):
+   acht Töne, im Hellen und Dunkeln gestuft, Nachbarn ΔE_OK ≥ 0,19 (vorher
+   0,096), jede bunt (vorher ein Grau, das wie abgeschaltet aussah). Die
+   Farbe steht aufgelöst im `fill` (test409); ein Beobachter färbt beim
+   Wechsel des Grundtons um. `PALETTE` und `farbeVon` bleiben fürs Whiteboard.
+8. **Whiteboard und Gedankenkarte im Hellen lesbar, ohne umzufärben**
+   (farben-9). `stroke`/`fill` bleibt die gespeicherte Farbe; daneben steht
+   `--tinte-hell` (derselbe Ton, 4,6 : 1 auf hellem Grund, `Farben.inkOnLight`)
+   und `data-tinte`, und nur `html[data-theme="light"]` greift danach
+   (grund.css). Die Gedankenkarte zeichnet Rand, Ring, Zähler und Griffe mit
+   `--ast-zug`, das im Hellen `--ast-hell` ist. Zettel behalten ihre Füllung.
+9. **Ein kühler Ton im Dunkeln, und eine Leiter, die sich ableitet**
+   (farben-10). Standard dunkel: `#121417 / #181a1d / #1e2023 / #2b2d30 /
+   #323437`, dieselbe Helligkeit wie vorher, Farbton 258° wie die Schale,
+   Sättigung 0,006 — man liest es als „kühl“, nicht als Blau. Jedes Schema
+   mit eigenem Grund leitet gedämpfte Schrift, Beiwerk und „gedrückt“ aus
+   Schrift und Grund ab (`Farben.ladder`, 70/47 % dunkel, 76/58 % hell, bis
+   4,5 bzw. 3 auf Grund, Karte und Überfahren reichen).
+10. **Keine feste Signalfarbe mehr** (farben-11): die roten, grünen und
+    orangen Hexwerte in den Stilblättern stehen auf den Marken (`--gefahr`,
+    `--gefahr-flaeche`, `--erfolg`, `--warnung`, `--c-*`, `--gold-tinte`,
+    Akzent); der KI-Sendeknopf nimmt die Hauptfläche statt eines eigenen
+    Blaus. Was bunt bleibt, steht auf Papier oder in einem Bild und ist in
+    `test584` §11 mit Grund gelistet.
+
+**Warum?** Weil Redur die Farben in „Aussehen“ selbst wählen will — und eine
+Wahl, nach der der Knopf unlesbar ist, keine Wahl ist. Gemessen vor dem Bau:
+Weiss auf dem Akzent hatte in Mitternacht 3,07, in Wald 2,26, in Sand 3,87,
+in „Starker Kontrast“ 1,43; jede eigene Farbe liess violette Reiter neben
+einem grünen oder gelben Knopf. Die Notion-Farben lagen im Hellen alle unter
+4,5; das dunkle Rot auf der Karte bei 4,33; Weiss auf Rot bei 3,76; Gelb auf
+dem hellen Whiteboard bei 1,35. Kästchen waren im Dunkeln die hellsten Pixel
+des Bildschirms.
+
+**Was war die Alternative?** (a) Für jedes Schema und jede Farbe die
+Begleiter von Hand eintragen — zehn Schemata × neun Farben plus jede eigene
+Farbe; die eigene wäre nie gegangen. (b) Die Stifte, Whiteboard- und
+Gedankenkarten-Farben selbst ändern — verboten, das färbt gespeicherte
+Zeichnungen um (E414, E693, §9). (c) `color-scheme` an `<html>` — bricht
+`test579` §4 und die Inseln. (d) Die alten acht Scheiben behalten — sie sind
+Pastell und tragen keine Schrift; sie bleiben als gespeicherte Werte gültig.
+
+**Was kostet es?** Rund 250 Zeilen Rechnung in `colors.ts` (sRGB ↔ OKLab,
+Kontrast, Schnitt in den Farbraum über die Sättigung), einmal je `setzen`,
+nicht je Bild; die Tinte der Flächen wird zwischengespeichert. Das Aussehen
+ändert sich sichtbar: helles Gelb ist Senf (wie `--gold-tinte`, E272), die
+dunklen Statusfarben sind weniger grell, die neuen Akzente ernster als die
+Pastelle. `STILBLATT` in `aussehen.ts` wiederholt vier Werte aus
+`dunkel.css`/`hell.css` für die Karten, weil `cssRules` unter `file://`
+gesperrt ist (SecurityError, gemessen) — `test584` §6 vergleicht die Karte mit
+dem gerechneten Stil, damit die Wiederholung nicht lügt. Start: siehe
+messungen §77.
+
+**Gemessen, bevor gebaut wurde:** messungen.md §77 (Vorher/Nachher je
+Schema, Notion, Status, Diagramm, Whiteboard, Gedankenkarte, Leiter).
+
+**Gefunden auf dem Weg.** Die Fehlerkarte (`#fehler-karte`) war in BEIDEN
+Modi `#2a1a1a` — im Hellen dunkle Schrift auf fast Schwarz; jetzt ein Hauch
+Rot über der Karte je Modus. Die „Erledigt“-Fläche (`.home-sich
+button.fertig`) schrieb Weiss auf das helle dunkle `--erfolg` (2,0); jetzt
+`--bg`. `.blk.sel`, `#scroll.ablegen`, die Zeilen-aus-Tönung und
+`@keyframes blitz` trugen noch Notions Blau `#2eaadc`; jetzt der Akzent. Die
+weisse Zahl auf der Astfarbe der Gedankenkarte (`.gk-zahl`) ist im Dunkeln
+zu blass (L228, offen). `chartTyp: 'pie'` ist kein gültiger Typ und zeichnet
+eine leere Achse (AUFGABEN).
+
+**Geprüft:** `test584` rot gegen den Grundstand 515451f9 (10/37), grün auf
+dem Zweig (37/37); vier Gegenproben je rot gesehen (§1, §5, §7, §11).
+`test47` zieht den Grund von „Standard“ nach (#121417). Nachbarn und
+Zahlen im Commit „E705“ und in messungen §77. Der Start wächst um rund
+7,6 KB gzip.
+
+## E706 — Das Material des Touch Kits überall, wo man wählt: die Pille zum Greifen, die Wahl, die fliegt, die Linse, die in Ruhe klar ist
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Fragebogen
+27. September ca. 21:45, Tab-Leiste ca. 21:47) · **ergänzt** E43, E646 und
+E647 für Redions eigenes Material (E640 und E641 bleiben) · **Wächter:**
+`test585` · **Zweig** `claude/material-ueberall`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC   im Fragebogen, Federn in Redion selbst: „Wie im UI-Kit
+                (Empfohlen)"; Farben: „Untere Leiste besser lesbar"
+                (Beschreibung der Wahl: „Glaslinse über dem aktiven Tab in
+                Ruhe fast klar")
+ca. 21:47 UTC   schickt die Vorschau der Tab-Leiste des UI-Kits und schreibt:
+                „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Redion hatte das Material an EINER Stelle: die Pille der
+unteren Leiste (E639–E648) — eine Fläche, die auf einer kritisch gedämpften
+Feder (ζ = 1) wandert, als Keyframes auf dem Compositor. Greifen konnte man
+sie nicht, sie hob sich nicht, die Zeichen gaben beim Drücken nicht nach, und
+über dem aktiven Namen lag eine milchige Scheibe: an den Bildpunkten
+gemessen **1,83 : 1 hell, 2,09 : 1 dunkel** (Farbkarte vom 27. September).
+Die Werkzeugleiste flog (E640/E647), ihr Zubehör sprang. Alle anderen Stellen,
+an denen man EINES von wenigen wählt, sprangen: Seite/Fläche/Redion, die
+Reiter von „Heute", die Wege im Regal, die Reiter von „Aussehen", die Liste
+der Einstellungen. Und „Ruhige Darstellung" hielt die Pille nicht an — eine
+WAAPI-Bahn hält sich an kein Stilblatt.
+
+**Was entschieden wurde.**
+
+1. **Die Feder des Kits für Redions eigenes Material.** `SelectionFlow`
+   fährt die Feder `snappy` des Kits (0,36 s, Schwung 0,14 — hier `knapp`)
+   statt ζ = 1; das Loslassen eines Zeichens die Feder `press` (0,32 s,
+   0,3 — hier `druck`). Beide stehen EINMAL in `SelectionFlow.FEDERN`, mit
+   den Namen der Kit-Marken (`--ui-spring-snappy`, `--ui-spring-press`),
+   damit sie später aus Redions eigenen Marken gelesen werden können (L229)
+   — der Zweig `claude/fluessige-bewegung` führt sie als `--feder-knapp`
+   und `--feder-druck`, mit denselben Namen wie hier.
+   Was aus E646 bleibt, ist das Wichtigere: NUR `transform`, die Bahn
+   EINMAL gerechnet und dem Compositor übergeben, das Tempo beim Umlenken
+   mitgenommen. Die Dehnung ist die des Kits (`materialStretch`, 0,2 je
+   px/ms) unter E641s Deckel 0,24.
+2. **Die Pille der unteren Leiste lässt sich greifen** (`SelectionFlow.
+   ziehbar`, gebunden in `seitenleiste.ts`): gehalten hebt sie sich
+   (1,1), folgt dem Finger 1:1, dehnt sich mit dem Tempo, der Reiter unter
+   ihr leuchtet vor; über die Enden gibt sie nach wie ein Gummiband;
+   losgelassen rastet sie mit Schwung ein, und der Reiter darunter wird
+   GENAU EINMAL geklickt — derselbe Weg wie beim Tippen (`dockWechsel`).
+   Ein Tipp bleibt ein Tipp (erst nach 10 px seitwärts wird gezogen),
+   Escape bricht ab, `role="tab"` und `aria-selected` bleiben die Auskunft.
+   Die Zeichen sinken beim Drücken auf 0,9 und federn zurück.
+3. **Die Linse ist in Ruhe fast klar** (Redurs Wahl „Untere Leiste besser
+   lesbar"): 5 % Ton statt 62 % Grund; die Aufhellung
+   (`saturate(1.5) brightness(1.08)`) bleibt, sie ist die Linse (E639,
+   `test539` §2) und hebt den Grund mehr als die Schrift. Beim Fahren und
+   Halten wird sie wieder Glas (Brechung und volle Fläche in `::after`, die
+   ein- und ausblendet — auf der Pille selbst läuft weiter genau EINE
+   Bewegung, `test541` §3).
+4. **In sechs Reihen fliegt die Wahl, statt zu springen** — über ein
+   Merkmal, nicht über einen Aufruf (§5): `data-material` an
+   Seite/Fläche/Redion (`Segment`), „Heute" (`.lw-nav`, `.lw-subnav`), den
+   Wegen im Regal, den Reitern von „Aussehen", der Liste der Einstellungen
+   und der Tafel der Stiftleiste (dort `data-material-je="gruppe"`: eine
+   Farbe fliegt zu einer Farbe, nie zu einer Breite). Die Schale hört einmal
+   am Dokument zu, merkt die alte Wahl VOR dem Klick und lässt im nächsten
+   Bild eine kurzlebige Fläche im Aussehen der Wahl vom alten zum neuen Knopf
+   fliegen — auch dann, wenn die Reihe dazwischen neu gezeichnet wurde. **Der
+   Zustand bleibt am Knopf** (E640): Schrift, Gewicht und `aria-*` stehen
+   sofort da, das Ziel leuchtet derweil mit einem Fünftel seines Grundes vor
+   und wird nie leer (die Lehre aus `test478`).
+5. **Der Werkzeugflug der Stiftleiste** (E647) fährt dieselbe Feder und
+   dehnt sich zwischen Nachbarn in Flugrichtung, um seine Mitte.
+6. **Ohne Bewegung heisst aus zwei Quellen:** `prefers-reduced-motion` UND
+   „Ruhige Darstellung" (`body[data-bewegung="ruhig"]`). Dann springt die
+   Pille, nichts hebt oder dehnt sich, nichts fliegt — und die Wahl stimmt.
+
+**Warum so und nicht mit der Tab-Leiste des Kits als Insel.** Die
+Kit-Karte vom 27. September hat es gemessen: die Tab-Leiste als React-Insel
+beim Start kostete +83 KB (die ganze Decke von `test388` §5) und kam rund
+430 ms nach der gemalten Leiste (1178 gegen 720–749 ms); ihre Federn laufen
+auf `requestAnimationFrame`, also auf dem Hauptfaden — genau der Fehler, den
+E646 behoben hat. E699 Punkt 4 verbietet React beim Start ohnehin. Die
+Technik des Kits wurde deshalb in Redions eigenes TypeScript übertragen
+(Federformel, Achse, Tempomesser, Gummiband, Rastpunkt), mit Redions Marken.
+
+**Die Alternativen.** (a) Eine BLEIBENDE Fläche unter jeder Reihe, wie im
+Kit-Segment — verworfen, weil die meisten dieser Reihen bei jeder Wahl neu
+gezeichnet werden und eine gespeicherte Lage veraltet (E640: 55 px neben
+ihrem Werkzeug). (b) CSS-Übergänge auf `left`/`width` — Hauptfaden (E646).
+(c) Die Federn in `grund.css` als `linear()`-Marken — gehört dem Zweig
+`claude/fluessige-bewegung`; hier stehen sie in EINER Tafel mit den Namen
+der Kit-Marken, damit der Zusammenführende sie darauf zeigen lassen kann.
+(d) Die Linse unter die Knöpfe legen — 5,18/5,20 : 1, aber gegen E639 und
+`test539` §1.
+
+**Gemessen, bevor gebaut wurde** (messungen §78): die Linse über
+„Dokumente" 1,83 : 1 hell und 2,09 : 1 dunkel (Farbkarte vom 27. September,
+an den Bildpunkten); die Pille liess sich nicht greifen (im Filmstreifen
+„vorher" bleibt sie beim Ziehen stehen), und von den sechs Reihen flog
+keine.
+
+**Was es kostet.** Startbytes: +10,0 KB gzip (Stufe 6) über zehn Dateien —
+`selection-flow.js` +7,9 KB (ohne Kommentare 1,3 → 7,3 KB: Federformel,
+Geste, Greifen, Umschalter), `bausteine.css` +1,3 KB, `seitenleiste.js`
++0,4 KB, der Rest je unter 0,3 KB; `test388` §5: 2777 KB statt 2767 KB (Decke 2850). Das ist die
+Obergrenze, die jedem Zweig dieser Bitte zugeteilt ist (etwa 10 KB) — mehr
+darf hier nicht dazukommen, ohne dass etwas anderes geht. Zur Laufzeit: je
+Wechsel EIN kurzlebiges Element, dessen Bahn einmal gerechnet und dem
+Compositor übergeben wird; solange es fliegt, liest eine Wache je Bild zwei
+Rechtecke (Reihe und Fläche), damit ein Neuzeichnen es nicht verliert.
+Gehalten liegt über der Pille ein Brechungsfilter mehr (derselbe wie beim
+Fahren, E639). Nichts läuft in Ruhe.
+
+**Gefunden auf dem Weg.**
+
+- „Ruhige Darstellung" hielt die Pille nicht an (die Bewegungskarte hat es
+  gemessen); `SelectionFlow` fragte nur das System. Jetzt beide.
+- Die Abschaltung der App fasst `*` und `*::before`, nicht `*::after`. Das
+  neue `::after` der Pille ist deshalb ausdrücklich still gestellt.
+- Eine Reihe, die bei der Wahl neu gezeichnet wird, kann dabei als GANZE
+  wandern (ein neuer Seitenkopf darüber). Die erste Fassung hielt das für
+  einen Umbruch und flog nicht; jetzt zieht der Start mit der Reihe mit.
+- „Heute" zeichnet seine Reiterreihe nach dem Klick noch einmal. Die
+  Fläche stand zwei Bilder lang am Start und war dann weg (`test585` §5:
+  „2 Bilder, 1 Orte", zuletzt bei 397 px statt 483 px). Jetzt wacht der
+  Flug über seine Reihe: wird sie neu gezeichnet, fliegt er in der neuen
+  weiter, ab dem Ort, an dem er zuletzt stand — höchstens dreimal.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen), in einer Kopie des gebauten
+Stands, `quell/` von Hand verbogen, `test585` darüber — 80 von 91, jede
+Verbiegung genau an ihrer Stelle rot:
+
+- `knapp` mit Schwung 0 (zurück auf ζ = 1): §1 rot („0,00 px über 138 px").
+- Die Linse wieder mit 62 % `--bg-hover`: §2 rot (1,83 : 1 hell, 2,06 : 1
+  dunkel — die Aufhellung allein war es nicht).
+- Der Reiter unter der losgelassenen Pille zweimal geklickt: §3 rot
+  (`{"hl-bespr":2}`).
+- Ohne die Wache über die Reihe: §5 „Heute" rot (2 Bilder, 1 Ort).
+- `ruhig()` fragt nur das System: §7 „Ruhige Darstellung" rot in vier
+  Punkten (die Pille fährt, hebt sich auf 1,1, die Umschalter fliegen).
+
+Dazu die Nachbarn: die erste Fassung nahm der Linse auch die Aufhellung
+(`saturate(1.5)` allein). `test539` §2 („tastet den Hintergrund aber weiter
+ab") und `test576` §2 (Zierstück `#ho-pille`) wurden rot; die Aufhellung ist
+zurück, beide Wächter blieben unverändert.
+
+**Geprüft:** `test585` 91/91 (rot auf `515451f9`: 47/91). Nachbarn
+über `alle.mts`: 114 143 245 303 353 362 388 412 424 428 430 431 432 435
+472 476 477 478 484 500 532 534 535 536 539 541 576 — 25 von 27 grün, rot
+`test539` und `test576` (die Aufhellung, siehe oben); nach dem Zurückholen
+539 (51/51), 541 (25/25), 576 und 585 (91/91) grün. Ohne Browser: 87 290
+298 401 402 410 105 109 537 400 126 127 550 549 225 grün. `test388` §5:
+2777 KB. Kontrast in Ruhe 4,74 : 1 hell und 5,50 : 1 dunkel.
+
+**Nicht in diesem Bogen** (L229): Schieben über das Zubehör der
+Stiftleiste; Wahl-Listen mit zwei oder drei Möglichkeiten als Umschalter
+statt `<select>`; die Federn als Marken in `grund.css`. Die Druckfeder für
+alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
+`claude/fluessige-bewegung`, das übrige Glas `claude/glas-wo-es-passt`.
+
+
+---
+
+## E711 — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich: die Szenen 07 und 08 aus „Liquid Glass"
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video „Liquid
+Glass" 27. September ca. 22:05, Auftrag ca. 22:10) · **ergänzt** E706 (das
+Material gleitet jetzt auch durch Listen) und E116 (der Fortschritt bleibt
+am Leben, jetzt neben einem Stapel) · **Wächter:** `test588` · **Zweig**
+`claude/suche-und-meldungen`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:05 UTC   schickt das Video „LIQUID GLASS" (16 s; darin ein Suchfeld mit
+                Treffern und wandernder Auswahl und ein Stapel von
+                Mitteilungen, der zusammenfliesst) und schreibt:
+                „Schau mal das auch an ich will das auch haben"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Die Suche (`App.suche`, Strg P / Strg K, `#studio-search`,
+`btn-suche-handy`, `mb-suche`) ging als Kasten auf, der sieben Pixel
+heranrutschte. Die Wahl war eine graue Zeile, die sprang — und jeder Druck
+auf ↑ oder ↓ baute die GANZE Trefferliste neu (`zeichne()`), mit neuen
+Horchern für jede Zeile. Dasselbe in der Befehlspalette
+(`Werkzeuge.palette`); im Menü mit Suche (`UI.menuMitSuche`) sprang eine
+graue Fläche. `#toast` zeigte genau eine Meldung: drei hintereinander
+(„Link kopiert", „verschoben", „Gespeichert") liessen nur die letzte stehen,
+die zwei davor waren nach einem Bild weg. Die Glocke öffnete den
+Posteingang und sonst nichts; die Benachrichtigungen dort waren Zeilen mit
+`— Quelle` am Ende.
+
+**Was entschieden wurde.**
+
+1. **Die Kapsel wächst zum Feld.** `SelectionFlow.growFrom` lässt die
+   Scheibe der Suche aus dem Rechteck des sichtbaren Suchknopfs aufgehen
+   (Kapsel am Rechner, Lupe am Telefon, `mb-suche` im Band) — auch bei
+   Strg P und Strg K, weil dort die Suche wohnt. Bewegt wird nur
+   `transform`, auf der Feder `--feder-sanft` aus `grund.css` (E702, ohne
+   Überschwingen); nur der INHALT blendet ein, die Scheibe nicht (E703:
+   Glas kommt als Scheibe, nicht als Nebel).
+2. **Neue Treffer kommen nacheinander.** `SelectionFlow.stagger` gibt NUR
+   den neuen Zeilen `ru-kommt` (8 px von unten, 33 ms Abstand wie im Video);
+   eine Zeile, die schon dastand (Schlüssel: Seite und Stelle), kommt beim
+   nächsten Buchstaben nicht noch einmal — Bewegung ohne Anlass verbietet
+   `test114` §17.
+3. **EINE Marke gleitet.** `SelectionFlow.highlight` hält je Liste eine
+   Marke (`.ru-marke`, `aria-hidden`), die das `innerHTML` der Liste
+   überlebt; `SelectionFlow.glide` fährt sie auf der Kit-Feder `knapp` zur
+   Wahl — `folge` aus E706 in zwei Richtungen und mit Grösse (vier Bahnen:
+   links, oben, Breite, Höhe; Trefferzeilen sind verschieden hoch), mit der
+   Dehnung aus dem Tempo nur zwischen Nachbarn (E641), als Keyframes aus
+   `transform` für den Compositor. Drückt man, bevor sie angekommen ist,
+   wird sie umgelenkt und behält ihr Tempo. ↑ ↓ bauen NICHTS mehr neu: nur
+   `.on` wandert (`waehle`). In der Suche und der Palette ist die Marke der
+   Akzent mit heller Schrift und trägt am Rechner „↵ Enter"; im Menü mit
+   Suche ist sie leise (`--bg-hover`). `#q`, `#cq`, `[data-i]`, `.on`,
+   `.jetzt` bleiben, wie die Läufe sie kennen.
+4. **Der Stapel.** `#toast` bleibt die EINE Live-Region mit der NEUESTEN
+   Meldung (19 Läufe lesen ihn, `test114` misst seine Bahn). Was vorher
+   darin stand und einem ANDEREN Aufruf gehörte, rückt als Karte in
+   `#ru-toast-stapel` (`aria-hidden`: schon angesagt) — höchstens zwei, also
+   drei im Ganzen, mindestens 2,2 s lesbar, höchstens 6 s. Eine
+   Wiederholung stapelt sich nicht; ein Fortschritt (E116), der sich
+   fortschreibt, gehört sich selbst und stapelt sich nicht. Die Karten
+   ziehen auf `--feder-knapp` um. Escape ohne offenes Fenster räumt den
+   Stapel ab — über den EINEN Griff in `schale.ts` (E302), kein zweiter
+   Horcher. Am Telefon wischt ein Finger eine Karte weg; erkannt wird das
+   über die LAGE, die Karten bleiben `pointer-events:none` wie `#toast`
+   (ein Tipp geht durch sie hindurch, `test244` hat genau das gesucht).
+   `#toast` bleibt DECKEND, wie E703 (c) es entschieden hat (Glas druckte
+   beim Einblenden über `opacity` doppelt und läge oft auf anderem Glas);
+   die Karten daneben haben seine Form und dazu die Lichtkante
+   (`--glas-kante`) — keine Unschärfe im Stapel (Liquid-Plan, „Must-fix" 3:
+   das Glasbudget am Telefon).
+5. **Die Glocke fächert auf.** Der Klick auf `#studio-glocke` und
+   `mb-glocke` öffnet WEITER den Posteingang (§43: derselbe Griff am selben
+   Ort). DAZU fächern beim Zeigen (220 ms), beim langen Drücken (480 ms,
+   der Klick danach wird geschluckt) und mit ↓ die letzten drei Meldungen
+   aus der Glocke auf — Quelle, Text, Zeit —, darunter „Alle gelesen" und
+   „Posteingang öffnen" (44 px). „Alle gelesen" ruft
+   `Werkzeuge.meldungenAlleGelesen` (E276: gelesen, NICHT leeren — alle
+   Meldungen bleiben stehen), meldet „N Meldungen als gelesen markiert" wie
+   der Knopf im Posteingang, und die Karten fliessen zäh in die Glocke
+   zurück.
+6. **EIN Goo-Filter.** `SelectionFlow.goo` legt `#ru-goo` einmal im
+   Dokument an (verwischen, dann Alpha ×18 − 7, Quelle darüber) und hängt
+   ihn NUR während des Zusammenfliessens an EINE Ebene; in Ruhe trägt ihn
+   kein Element, er wird nie animiert, bewegt werden die Karten per
+   `transform`. Ruhig: kein Filter, der Fächer geht einfach zu.
+7. **Der Posteingang als Glaskarten.** Die Benachrichtigungen sind Karten:
+   die Quelle als kleine Marke über dem Text, die Zeit rechts, ungelesene
+   halbfett; Lichtkante (`--glas-kante`) statt eigener Unschärfe je Karte.
+   Dieselben Daten, dieselben Griffe (`data-meld`, `data-open`).
+8. **Ruhig und „weniger Bewegung":** kein Aufgehen, keine Staffel, die Marke
+   springt, der Stapel zieht ohne Feder um, der Fächer ohne Flug, kein Goo.
+   Gefragt wird die EINE Frage (`SelectionFlow.ruhig` →
+   `AppEinstellung.wenigBewegung`).
+
+**Warum.** Redur hat das Video geschickt und „das auch haben" geschrieben,
+und dazu „bessere übergagnge besssere efeckten … ohne eine funktione
+löschen". Zwei Stellen des Videos haben in Redion einen echten Ort mit
+echtem Inhalt: die Suche ist Redions Spotlight, und der Stapel behebt einen
+VERLUST — Meldungen, die man nicht lesen konnte. Die Marke ist dasselbe
+Material wie die Pille der unteren Leiste (E706), also keine neue Sprache.
+
+**Was die Alternative war.**
+- Die Suche als React-Insel (Kit `SearchBar` + `List`): verworfen. Strg P
+  ist Start-Chrom, R1 (E699) verbietet React ohne Handlung, und der Kit hat
+  keine gleitende Marke — die hat Redion (E706).
+- Eine Marke je Zeile (Hintergrund je `.on`) mit CSS-Übergang: so sprang
+  sie bisher; ein Übergang zwischen zwei Elementen ist kein Weg.
+- Die Liste bei jedem Pfeil neu bauen und die Marke danach suchen: der
+  Neubau zerschnitt jede Bahn und liess die Staffel bei jedem Pfeil neu
+  laufen.
+- Der Stapel als eigene Live-Region je Karte: vier Läufe lesen „EIN Balken,
+  kein Element je Meldung" (`test411`), und ein Vorleser hörte jede Meldung
+  zweimal.
+- Die Glocke öffnet den Fächer STATT des Posteingangs: das hätte den Griff
+  verändert (§43). Der Liquid-Plan hat es Redur zur Entscheidung gegeben;
+  ohne seine Antwort bleibt der Klick, und der Fächer kommt dazu.
+- Ein Goo-Filter je Karte (wie der Löschen-Knopf im Kit): ein Filter je
+  Zeile, dauernd an — verworfen (Liquid-Plan „Must-fix" 2).
+- Die Meldungen als Glas (so stand es im Auftrag der zweiten Welle):
+  E703 (c) hat Glas für Toast und Lader gemessen verworfen — doppelter
+  Druck beim Einblenden über `opacity`, Glas auf Glas. Ohne eine neue
+  Entscheidung Redurs bleibt `#toast` deckend; die Tiefe kommt aus der
+  Lichtkante (L232 Punkt 7).
+
+**Was es kostet.** Startbytes: +9,9 KB gzip über zehn Dateien (gzip -9 je
+Datei, gegen `b3cf1933`) — `hinweis.js` +4,7 KB (Stapel, Wischen, Fächer),
+`selection-flow.js` +2,5 KB (Marke, Staffel, Aufgehen, Goo), `studio.css`
++1,4 KB, `schale.js` +0,6 KB, der Rest je unter 0,4 KB; das ist die Grenze
+von etwa 10 KB, die jedem Zweig zugeteilt ist. Die Zahl aus `test388` §5
+steht in messungen §81, sobald der Lauf unter dem geteilten Schloss
+gelaufen ist. Zur Laufzeit: je Pfeil EINE Bahn für EINE Marke, einmal
+gerechnet und dem Compositor übergeben; die Staffel nur für neue Zeilen;
+der Goo-Filter nur, solange die Karten in die Glocke fliessen; am Telefon
+drei Horcher (`pointerdown/move/up`) am Fenster, die ohne Meldung sofort
+zurückkehren. Nichts läuft in Ruhe.
+
+**Gemessen, bevor gebaut wurde** (messungen.md §81): die Suche ging mit der eigenen Ankunft auf
+(`translateY(7px) scale(.985)`, aus der Mitte, nicht aus der Kapsel); ↓
+baute die ganze Liste neu, die Wahl sprang (0 Zwischenorte); keine Staffel;
+drei Meldungen hintereinander → EINE sichtbar; die Glocke öffnete nur den
+Posteingang; dort Zeilen „Text — Quelle". Bilder `vorher-*` in
+`welle2-bilder/suche/`.
+
+**Gefunden auf dem Weg.**
+- `glas-ankunft` (E703) verschiebt die Scheibe im ersten Bild um 7 px und
+  verkleinert sie; gemessen werden muss NACH dem Abschalten, sonst ginge die
+  Suche aus einem falschen Rechteck auf.
+- Eine Zeile, die gerade hereinkommt (`ru-kommt`), steht noch 8 px tiefer:
+  die Marke misst deshalb das LAYOUT (`offset…`), nicht das Bild.
+- `.ru-marke-traeger` macht aus der Chronik-Zeile („Red-ur") eine helle
+  Schrift auf Akzent — ohne Marke wäre sie weiss auf durchsichtig gewesen;
+  sie trägt jetzt dieselbe Marke.
+- Der Auftrag nannte „glass toasts". E703 (c) hat genau das mit Gründen
+  verworfen (doppelter Druck beim Einblenden über `opacity`, Glas auf
+  Glas); die erste Fassung dieses Bogens hatte `#toast` trotzdem zu Glas
+  gemacht. Zurückgenommen: `#toast` bleibt deckend, der Stapel trägt seine
+  Form und die Lichtkante (L232 Punkt 7).
+- Die Zeilenregeln der Suche und der Palette gelten nur für DIREKTE
+  Knöpfe (`.finder .res > button`, E348). Die Marke ist deshalb ein `<i>`
+  und kein Knopf: keine Zeilenregel trifft sie, und `[data-i]` zählt sie
+  nicht mit.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen): vorbereitet als fünf Verbiegungen im gebauten
+`quell/` einer Kopie, je eine mit `test588` darüber und zurück: „neubau"
+(↓ ruft wieder `zeichne()`), „springt" (die Marke ohne Bahn), „ohne-stapel"
+(`HOECHSTENS = 0`), „goo-bleibt" (der Filter bleibt nach dem Fliessen an),
+„glocke-schluckt" (der Klick öffnet den Posteingang nicht mehr). Der Lauf
+steht unter dem geteilten Schloss aus; die Ergebnisse folgen im Nachtrag
+zu E711.
+
+**Geprüft:** ohne Browser grün: 87 109 290 298 401 402 410 537 225
+549 550 126 47 400 (14 von 14), nach den letzten Doku-Änderungen noch einmal
+550 549 225 87 410 290 298 401 (8 von 8). `test588` zuletzt 39 von 43
+(28. September, ca. 11:09 UTC, vorige Fassung; offen waren §2 die Staffel,
+§3 das Umlenken mitten im Flug und §7 die 44 px der Karten im Fächer). Der
+Lauf dieser Fassung, die Nachbarn unter dem Schloss (alle Läufe, die `#q`,
+`.such`, `[data-i]`, `#toast`, die Glocke oder den Posteingang lesen, dazu
+143 353 362 388 245 296 105 585 541 576) und die Bilder stehen aus — das
+Schloss war ab ca. 14:03 UTC über eine Stunde von anderen Zweigen belegt.
+Sie folgen im Nachtrag zu E711; bis dahin ist dieser Bogen NICHT als grün
+gemeldet.
+
+**Nicht in diesem Bogen** (L232): Escape leert erst das Feld; Combobox für
+den Vorleser; Enter als Übergabe; Kick und Tropfen; Wischen mit der Maus;
+EIN Goo-Filter für die ganze zweite Welle beim Zusammenführen (E709, E712).
+
+### Nachtrag — die Durchsicht (4. und 5. Oktober 2026)
+
+**Redur, wörtlich:** am 3. Oktober um ca. 19:35 UTC „Weiter ohne pause,".
+Die Sätze oben gelten weiter — vor allem „ohne eine funktione löschen".
+
+**Wer und wie.** Sechs Prüfer nacheinander: der erste wurde am 3. Oktober um
+ca. 21:40 UTC vom Sitzungslimit abgeschnitten (Notizen in
+`scratchpad/rv-suche`, nichts eingecheckt); der zweite hat am 4. Oktober
+`test588` §11 rot eingecheckt und die Reparatur gebaut, wurde um ca.
+17:15 UTC abgeschnitten, bevor Gegenproben, Nachbarn und Bilder liefen; der
+dritte hat in der Nacht auf den 5. Oktober nachgemessen (Sonde, `test388`,
+Kontrast, vierzehn der fünfzehn Gegenproben) und diese Doku vorbereitet und
+wurde um ca. 01:30 UTC abgeschnitten, bevor Bilder, Nachbarn und Commit
+liefen. Der vierte hat am 5. Oktober ab ca. 05:00 UTC alles noch einmal
+selbst gemessen, drei weitere Fehler gefunden (Punkte 8–10, `test588` §12),
+Bilder und Sonden laufen lassen und wurde um ca. 07:57 UTC mitten in den
+Gegenproben abgeschnitten, bevor er einchecken konnte. Der fünfte hat am
+5. Oktober ab ca. 13:40 UTC die Reparatur gegen die roten Läufe geprüft,
+die acht offenen Gegenproben und `test388` laufen lassen, einen weiteren
+Fehler gefunden (Punkt 11, `test588` §13, rot eingecheckt), ihn repariert
+und wurde um ca. 15:10 UTC abgeschnitten, bevor Nachbarn und Commit liefen.
+Der sechste hat am 5. Oktober ab ca. 17:50 UTC den Endstand neu gebaut (er
+blieb Byte für Byte gleich), `test588`, die Sonden, `test388`, die Bilder
+und die Nachbarn auf genau diesem Stand laufen lassen und eingecheckt. Was
+oben als „ausstehend" steht, ist gelaufen, unter dem
+geteilten Schloss; dazu drei Sonden (Einstiege, Tastatur, Klick, Palette,
+Menü mit Suche und das Seitenmenü, Stapel, Fächer, Posteingang, Fortschritt
+neben einer fremden Meldung, Kontrast je Schema, „weniger Bewegung" und
+„Ruhige Darstellung", Fokusring, 44 px, Telefon, `file://` und
+`redion-einzeldatei.html`, Konsolenfehler) — auf dem Zweig und, wo es die
+Sache schon gab, auf dem Grundstand `b3cf1933`.
+
+**Was blieb, wie es war (§43).** Jeder Einstieg der Suche öffnet GENAU eine
+Suche mit dem Fokus in `#q`: Strg P, Strg K, `#studio-search`,
+`#btn-search`, `#mb-suche`, `#btn-suche-handy` (am Telefon auch als Tipp),
+der Befehl „Suchen"; Escape schliesst. ↑ bleibt oben, ↓ bleibt unten, genau
+eine Zeile ist `.on`, die Vorschau zeigt die Wahl, Enter öffnet sie, ein
+Mausklick (am Telefon ein Tipp) auf eine Zeile öffnet sie, Zeigen ändert
+die Wahl nicht, „Zuletzt gesucht" und „Nichts gefunden" stehen da. In der
+Palette: Strg ⇧ K, Strg Enter heftet an und löst, Enter führt aus, ↓ endet
+an der 60. Zeile (E400), ein Klick auf den Stern heftet an, ohne
+auszuführen. Im Menü mit Suche: ↓↓, Filtern, Enter löst den Klick aus.
+Gemessen auf Zweig UND Grundstand: 25 von 25 Punkten, beide gleich. Die
+Glocke: ein Klick (am Telefon ein Tipp) öffnet weiter den Posteingang; ein
+Klick auf eine Karte im Fächer tut, was derselbe Klick im Posteingang tut
+(gelesen, dann die Seite oder der Posteingang).
+
+**Gefunden und behoben** (Wächter: `test588` §11, rot gesehen gegen
+`556ffdaa` mit 46 von 57; Gegenproben unten):
+
+1. **Der Fächer ging nicht wieder zu.** Mit der Tastatur geöffnet (↓ auf der
+   Glocke) blieb er nach einem Klick daneben, nach Tab hinaus und nach
+   Strg P stehen — über der Suche (`z-index` 880 gegen 700). Am Telefon
+   blieb er nach langem Drücken stehen, bis man etwas darin antippte.
+   Jetzt: ein Klick oder Tipp daneben schliesst ihn (ein Horcher am
+   Fenster, der ohne offenen Fächer sofort zurückkehrt; der Tipp geht
+   weiter an sein Ziel); geht der Fokus woandershin, geht er mit; Tab nach
+   dem letzten Knopf führt — wie bei einem Menüknopf — zum Nachbarn der
+   Glocke, Umschalt-Tab vor dem ersten zur Glocke. Die Glocke trägt
+   `aria-expanded` und `aria-controls`.
+2. **Der Fokus fiel ins Leere.** Nach „Alle gelesen" mit der Tastatur stand
+   er auf `body`: ist nichts mehr ungelesen, nimmt `glockeFrisch` (E457)
+   die Glocke weg. Jetzt geht er an die Glocke oder, ist sie weg, an ihren
+   Nachbarn im Kopf (§38).
+3. **Die Karten flossen ins Leere.** Aus demselben Grund war die Glocke
+   schon weg, BEVOR die Karten zu ihr flossen; weil der Kopf nachrückt,
+   landeten sie auf „Konto". Jetzt steht die Glocke, bis die Karten in ihr
+   sind (gemessen: in allen Bildern des Fliessens an ihrem Ort), pulst und
+   geht danach.
+4. **Ein Escape tat zwei Dinge.** Das Feld der Suche (und der Palette) nimmt
+   sein Fenster mit einem eigenen Griff, der VOR dem gemeinsamen läuft;
+   danach sah der gemeinsame kein Fenster mehr und räumte mit DEMSELBEN
+   Druck auch die Meldungen ab — genau die Klasse, die `test296` §3 für
+   Fenster verbietet. Jetzt notiert der gemeinsame Griff im Einfangen, ob
+   ein Fenster offen WAR, und räumt nur dann ab, wenn keins offen war und
+   niemand das Escape schon genommen hat (`defaultPrevented`). Geschlossen
+   wird weiter an EINER Stelle (`test296` §5: `letztes('.overlay')` genau
+   einmal).
+5. **Die Schrift auf der Marke war nicht überall lesbar.** Gemessen wie
+   gemalt: Kürzel und Ausschnitt mit Deckkraft .82 bei 3,77 („Sand") bis
+   4,48 („Rosé"), „↵ Enter" auf der weiss getönten Fläche bei 3,64
+   („Standard") bis 4,48 („Papier"), der Stern der Palette (Grau, Gold) auf
+   dem Akzent bei 1,0 bis 2,7 — in allen zehn Schemata. Jetzt: volle
+   Schrift, der Chip ohne Tönung mit einem Rand in der Schriftfarbe, der
+   Stern folgt der Zeile (angeheftet oder nicht sagt die Form ★/☆, §38).
+   Nachher ≥ 4,5 : 1 in allen zehn Schemata (4,71 in „Sand" bis 14,67 in
+   „Starker Kontrast").
+6. **Ein Strich unter einer Meldung ging verloren.** Die Karten und `#toast`
+   sind `pointer-events:none`; der Finger landet auf dem, was darunter
+   liegt. Lag dort die Tafel (oder das Blatt im Dokumentmodus,
+   `touch-action:none`), nahm der Stapel den Zug nach 12 px an sich und
+   hielt ihn an: von 170 px kamen 8 bis 10 an, und die Meldung flog mit.
+   Das war ein Verlust an einer bestehenden Funktion (Zeichnen). Jetzt
+   gehört ein Zug der Meldung nur, wo die Fläche darunter das Waagerechte
+   dem Browser lässt — kein `touch-action`, das es selbst nimmt, kein
+   Regler, nichts, das waagerecht rollt, kein `data-kein-wisch`.
+7. **Wegwischen hing an einer zufälligen Zahl.** Unter den Karten liegt
+   meist Inhalt, der rollen darf; der Browser nimmt den Zug nach ein, zwei
+   Bewegungen an sich (`pointercancel`), und dessen Lage entschied bisher,
+   ob die Karte ging. Jetzt zählt die letzte Bewegung: deutlich zur Seite
+   (≥ 8 px) ist ein Schnippen und nimmt die Karte weg (L232 Punkt 8).
+
+Gefunden in der vierten Durchsicht (Wächter: `test588` §12, rot gesehen
+gegen `6853b992` und gegen die Reparatur der Durchsicht; Gegenproben unten):
+
+8. **Die jetzige Wahl im Menü mit Suche war nicht mehr markiert.**
+   `.ru-marke-traeger > button.on` galt für JEDE Liste mit Marke — auch für
+   das Menü mit Suche, wo `.on` nicht „die Wahl der Pfeile" heisst, sondern
+   „das gilt jetzt": „Quelle wechseln" in der Datenbank (`steuerung.ts`)
+   zeigt die jetzige Quelle so. Sie verlor ihre Fläche (`--bg-hover`) und
+   war von den anderen nicht mehr zu unterscheiden — ein Verlust an einer
+   bestehenden Anzeige. Jetzt gilt der Akzent mit heller Schrift nur in
+   `.finder .res` (Suche und Palette); im Menü bleibt `.on`, wie es war, und
+   die leise Marke gleitet auf `.jetzt` darüber.
+9. **Der Fächer flackerte, solange der Zeiger auf der Glocke ruhte.** Die
+   Karten fliegen aus der Glocke — im ersten Bild also UNTER dem ruhenden
+   Zeiger hervor. Für den Browser verliess er damit die Glocke und kam beim
+   Wegfliegen zurück; das neue `pointerenter` stellte den Fächer nach
+   220 ms neu auf, und die Karten flogen wieder heraus, immer wieder
+   (gesehen in den Streifen der Bilder). Jetzt baut ein `pointerenter` den
+   Fächer nicht neu, wenn er an dieser Glocke offen ist und nicht gerade
+   geht.
+10. **Der Fächer deckte die Blase der Glocke halb zu.** Die Blase (E462,
+   „Posteingang, 3 ungelesen") steht beim Zeigen genau dort, wo der Fächer
+   aufgeht; „…ngelesen" ragte rechts unter der ersten Karte heraus.
+   Solange der Fächer offen ist (`aria-expanded="true"`), sagt ER, was in
+   der Glocke liegt — die Blase geht, und kommt wieder, wenn er zugeht.
+
+**Gefunden, nicht von E711** (L232 Punkt 9): die Trefferzeilen der Suche
+sind am Telefon 39 px hoch — auf `b3cf1933` genauso. §37 verlangt auf dem
+Hauptweg 44 px; das ist ein eigener Bogen (mit `test362` und `test402`),
+nicht diese Durchsicht. Ebenso auf `b3cf1933` (in den Vorher-Bildern):
+im Schema „Starker Kontrast" steht am Telefon auf dem aktiven Reiter der
+unteren Leiste weder Zeichen noch Wort („Dokumente") — Schwarz auf der
+schwarzen Pille; das gehört zu den Farben (E705), nicht hierher.
+
+Gefunden in der fünften Durchsicht (Wächter: `test588` §13, rot gesehen
+gegen die Reparatur der vierten Durchsicht; Gegenproben unten):
+
+11. **Der Fächer lag über „KI" und „Favorit".** Die vierte Durchsicht hatte
+   es gemessen und Redur zur Entscheidung gelassen (L232 Punkt 10): der
+   Fächer ging am Rechner 8 px unter der Glocke auf, 340 × 242 px, und
+   deckte die zwei Knöpfe, die in der Kopfzeile der Seite DIREKT unter der
+   Glocke stehen. Wer auf der Glocke verweilte und dann zu „KI" wollte —
+   der kürzeste Weg —, fuhr in den Fächer; solange der Zeiger darauf lag,
+   blieb er offen, und ein Klick traf eine Meldung (sie galt dann als
+   gelesen, und der Posteingang ging auf) statt „KI". Auf `b3cf1933` ging
+   derselbe Weg ohne Umweg. Das ist ein Weg, der länger geworden ist — nach
+   „ohne eine funktione löschen" kein Fall für später. Jetzt geht der
+   Fächer unter der Reihe auf, die direkt unter der Glocke steht: Ziele,
+   die GANZ in ihr stehen (Oberkante unter der Glocke, Unterkante
+   höchstens 96 px darunter), abgetastet über seine Breite, solange er
+   verborgen ist (`unterDerReihe`, hinweis.ts). Am Rechner liegt er damit 71 px unter
+   der Glocke statt 8 (an 1440, 1280 und 1024 px Breite gleich, 16 px unter
+   der Reihe; am Telefon 61 statt 7, dort bleibt „Zurück" frei); „KI", „Favorit" und „…" bleiben frei, ein Klick dort
+   trifft sie. Wer IN den Fächer will, quert die schmale Reihe in weniger
+   als den 280 ms, nach denen er zugeht. Was tiefer reicht (Karten,
+   Bilder, Text), zählt nicht und schiebt ihn nicht weg — ein Fächer liegt
+   immer über etwas; nur nicht über dem, wohin man von der Glocke aus als
+   Nächstes zeigt. Ob er beim Zeigen
+   überhaupt aufgehen soll, bleibt Redurs Wahl; der Weg zu „KI" hängt
+   nicht mehr daran.
+
+**Was die Alternative war.**
+- Den Fächer unter die Fenster legen (`z-index` 600, wie `.menu`):
+  verworfen — dann deckten ihn die Suchleiste der Seite (`#findbar`, 750),
+  der Seitenblick (760) und die Leiste der Datenbank (620) zu.
+- Ein Wächter am `body`, der den Fächer schliesst, sobald ein Fenster
+  aufgeht: gebaut und wieder herausgenommen — mit der Maus geöffnet schliesst
+  ihn `pointerleave` schon (gemessen: grün auf `556ffdaa`), mit der
+  Tastatur jetzt `focusout`. Ein Wächter mehr wäre Code ohne Fall.
+- Die Karten am Telefon zu echten Zielen machen (`pointer-events`), damit
+  man sie ziehen kann: verworfen — sie lägen dann über Knöpfen und nähmen
+  ihnen den Tipp, wie es `#toast` seit jeher bewusst nicht tut (ki.css).
+- Escape ohne Fenster gar nichts mehr abräumen lassen: verworfen — es war
+  zugesagt, und ohne offenes Fenster ist es richtig.
+- Die 39-px-Zeilen am Telefon gleich mit anheben: verworfen für diesen
+  Bogen — eine Änderung, ein Ziel (§43); sie betrifft die exakten Zahlen in
+  `marken-decke.json` (`test362`) und gehört in einen eigenen Bogen.
+- (8) Die Fläche von `.on` im Menü mit Suche ein zweites Mal setzen
+  (`.menu-liste … button.on{background:var(--bg-hover)}`): verworfen — das
+  wäre die Regel aus `aufbau.css` noch einmal (§8). Den Akzent auf die zwei
+  Listen zu begrenzen, für die er gebaut ist, ist die kleinere Änderung.
+- (9) Die Karten während des Auffächerns ohne Zeiger
+  (`pointer-events:none`): verworfen — wer in der halben Sekunde in den
+  Fächer fährt, wäre für ihn nicht darin, und er ginge 280 ms später zu.
+- (10) Den Fächer tiefer, unter die Blase legen: verworfen — dann klaffte
+  zwischen Glocke und Karten eine Lücke, die der Zeiger überqueren muss,
+  und die Blase sagte, was die Karten schon zeigen.
+- (11) Den Fächer beim Zeigen gar nicht mehr aufgehen lassen (nur ↓ und
+  langes Drücken): verworfen — das nähme dem Rechner die Szene 08, die
+  Redur mit dem Video verlangt hat; das soll er selbst entscheiden, nicht
+  eine Durchsicht. Den Fächer nach links neben „KI" schieben: verworfen —
+  er stünde schräg unter der Glocke, und „Favorit" steht unter ihr selbst.
+  Ihn beim Zeigen ohne Zeiger-Ziele lassen (`pointer-events:none`):
+  verworfen — man sähe Karten und klickte auf einen unsichtbaren Knopf
+  darunter. Es Redur offen lassen (wie die vierte Durchsicht): verworfen —
+  der Weg war länger als auf `b3cf1933`, das gehört repariert, nicht
+  gefragt. Die Lücke, die (10) verwarf, ist hier die Reihe selbst (am
+  Rechner 55 px), und sie trägt genau die Knöpfe, die frei bleiben
+  sollen; der Zeiger quert sie, gemessen in `test588` §13.
+
+**Was es kostet.** Am Start (`test388` §5, 5. Oktober ca. 18:00 UTC, unter
+dem Schloss) 2838 KB gzip über 248 Dateien gegen 2825 KB auf `b3cf1933` —
+der Zweig allein kostet 13 KB, etwas mehr als die etwa 10 KB, die jedem
+Zweig der zweiten Welle zugedacht waren, und hält die Decke von 2850 KB mit
+12 KB Luft. Je Datei (gzip -9) gegen `b3cf1933` +12'973 Bytes über zehn
+Dateien, davon +3'053 aus den Durchsichten (`hinweis.js` +2'415,
+`studio.css` +406, `schale.js` +232). Zur Laufzeit: ein Horcher
+`pointerdown` am Fenster, der ohne offenen Fächer sofort zurückkehrt; ein
+Horcher `keydown` im Einfangen, der nur bei Escape einen `querySelector`
+macht; je Berührung unter einer Meldung ein Gang über die Eltern des Ziels
+(`getComputedStyle`), nur wenn eine Meldung dasteht; beim Öffnen des
+Fächers 126 Mal `elementFromPoint` (die Reihe unter der Glocke).
+
+**Geprüft.** `test588` 69 von 69 auf dem Zweig (5. Oktober ca. 17:58 UTC, unter
+dem Schloss); rot gesehen: §11 gegen `556ffdaa` (46 von 57, 4. Oktober),
+§12 gegen `6853b992` (47 von 63) und gegen die Reparatur der Durchsicht
+(58 von 63), §13 gegen die Reparatur der vierten Durchsicht (66 von 68),
+alle am 5. Oktober zwischen ca. 14:02 und 14:19 UTC mit der eingecheckten
+Fassung; die Fassung vom 28. September gegen `b3cf1933`: 17 von 43 (26
+rot), am 4. Oktober um 16:13 UTC — die Zahl, die im Commit `ec518fc7`
+fehlte. Die Sonde der zweiten Durchsicht (Einstiege, Tastatur, Klick,
+Palette, Menü mit Suche, Live-Region, Stapel, Fächer, Kontrast je Schema,
+„weniger Bewegung" und „Ruhige Darstellung", `file://` und
+`redion-einzeldatei.html`, Konsolenfehler): 81 von 81 auf dem Endstand
+(5. Oktober ca. 18:02 UTC); jeder Einstieg, jede Taste und jeder Klick, den
+es auf `b3cf1933` schon gab, tut dasselbe wie dort. Die der vierten
+(Seitenmenü am Rechner und am Telefon, Kontrast von Fächer, Stapel und
+Posteingang in allen zehn Schemata — 4,90 in „Sand" bis 13,83 in „Starker
+Kontrast" —, Fokusring ≥ 3,29 : 1, Posteingangskarten ≥ 44 px, was der
+Fächer zudeckt, Fortschritt neben einer fremden Meldung): 12 von 12 (ca.
+18:03 UTC). `test67` (Abschnittsmenü und die vier Bereiche am Telefon), bei
+der fünften Durchsicht einmal 63 von 65 unter Last, auf dem Endstand 65 von
+65, auf `b3cf1933` ebenso. Ohne Browser grün (je einzeln, ca. 17:55 UTC):
+87 88 89 92 93 103 105 106 107 109 225 290 298 400 401 402 410 537 549 550
+553 — 21 von 21.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen, je eine Verbiegung im
+gebauten `quell/` einer Kopie, `test588` darüber). Die fünf des Bauers und
+die zehn der zweiten und dritten Durchsicht (die vierte, 5. Oktober ca.
+07:41–07:57 UTC, auf einer Kopie ihres Endstands): neubau 62/63 (↓ baut neu), springt 60/63
+(die Marke gleitet nicht — Suche, Palette, Menü), ohne-stapel rot in fünf
+Punkten (Stapel, höchstens drei, Wiederholung, Lage, Escape; der Lauf brach
+danach ab), goo-bleibt rot (der Filter blieb an der Ebene; Abbruch danach),
+glocke-schluckt 60/63 (der Klick öffnet den Posteingang nicht mehr, die
+Karten im Posteingang fehlen), daneben-bleibt 62/63 (Tipp daneben am
+Telefon), tab-bleibt 62/63, fokus-faellt 62/63, ohne-aria 61/63,
+glocke-geht-sofort 62/63. Die acht, die beim Abbruch der vierten fehlten
+(die fünfte, ca. 14:04–14:17 UTC, auf derselben Kopie): zwei-auf-einen 62/63 (ein Escape nimmt
+Suche UND Stapel), strich-gefangen 61/63 (7 px vom Strich kommen an, die
+Meldung fliegt mit), blass 62/63 (Kürzel 3,99), stern-grau 62/63 (Stern
+1,03–2,67), chip-getoent 62/63 („↵ Enter" 3,64), marke-leckt 60/63 (die
+jetzige Wahl im Menü ohne Fläche, 1,07 : 1), flackert 62/63 (fünfmal neu
+in 2,6 s), blase-halb 62/63 (die Blase bei offenem Fächer). Die der
+fünften, auf einer Kopie genau dieses Endstands (ca. 15:05–15:09 UTC):
+deckt-zu 67/69 (der Fächer wieder 8 px unter der Glocke: „KI" und
+„Favorit" liegen darunter, der Klick trifft die Karte), ohne-untergrenze
+68/69 (ohne die Grenze unten schiebt eine grosse Fläche den Fächer weg).
+Eine blieb grün und wurde deshalb zurückgebaut: eine Höhengrenze von 56 px
+für die Ziele der Reihe — die Grenze unten nimmt grosse Flächen schon
+allein heraus.
+
+**Nachbarn** (unter dem geteilten Schloss, `alle.mts`, 5. Oktober ca.
+18:14–18:56 UTC, 118 Läufe — die Liste der fünften Durchsicht): 110 grün,
+8 rot. Fremd, auf `b3cf1933` genauso rot (ca. 19:11–19:20 UTC): `test86`
+(die Register „seitenansichten" und „werkzeuge" stehen nicht in seiner
+Liste), `test247` (der gezogene Strich ist nicht blau), `test425` (die
+Markierung der Segmente wirkt nicht über den Grund), `test493`
+(`-webkit-backdrop-filter: blur(8px)` in `motion.css`), `test582` (Kontrast
+„Sand" und „Wald" über dem schlimmsten Grund, 4,45–4,47). Von E711, auf
+`b3cf1933` grün — behoben in der sechsten Durchsicht (unten): `test362`
+(eine rohe `28px` mehr als die Decke), `test114` (die Filter der Suche am
+Telefon nach 600 ms 41,8 statt 42 px hoch — die Suche wächst dann noch),
+`test360` (am Finger: eine Kladde, lange gedrückt und gezogen, kommt nicht
+an — der Stapel nahm den Zug).
+
+**Bilder** (nicht eingecheckt, §55.4): `welle2-bilder/suche/` —
+`nachher-*` vom Endstand (sechste Durchsicht, 5. Oktober ca. 18:05 UTC),
+Rechner 1440 × 900 und Telefon 390 × 844, hell und dunkel, dazu „Starker
+Kontrast" (Rechner und Telefon), „Touch Kit hell" (Rechner) und „Touch Kit
+dunkel" (Telefon); Streifen alle 33 ms Bewegungszeit (Wiedergabe 1/10) für
+das Aufgehen der Suche, das Gleiten der Marke, den Stapel, das Auffächern
+und das Zusammenfliessen — vorher (`b3cf1933`) und nachher. Dazu
+`zwischen4-*` (der Stand vor §13) und `*-glocke-reihe` (der Fächer an
+1440, 1280 und 1024 px Breite und am Telefon, vor und nach §13).
+
+### Nachtrag — die sechste Durchsicht (5. Oktober 2026, abends)
+
+**Redur, wörtlich:** am 5. Oktober um ca. 14:15 UTC „Also an was du jetzt
+macht mache es jetzt fertig und danach arbeite nicht mehr weiter …" — die
+laufende Durchsicht zu Ende bringen, nichts Neues anfangen. Und weiter
+„ohne eine funktione löschen".
+
+**Was die Nachbarn fanden.** Drei Läufe, die auf `b3cf1933` grün sind, waren
+auf dem Zweig rot — alle drei von E711 selbst, keiner von einer Durchsicht:
+
+12. **Eine lange gedrückte Kladde kam am Finger nicht mehr an** (`test360`
+   §7). Die Karten des Stapels und `#toast` sind `pointer-events:none`; der
+   Finger landet auf dem Inhalt darunter. Der Wisch-Griff in `hinweis.ts`
+   fing jeden waagerechten Zug über 12 px ab und hielt ihn im Einfangen an
+   — auch den, der nach langem Drücken etwas trägt: die Kladde der
+   Bibliothek (gehoben nach 400 ms), einen Block (500 ms), eine Marke im PDF
+   (450 ms). Lag eine Meldung darüber, liess sich das nicht mehr tragen.
+   Jetzt: ruhte der Finger länger als 300 ms, bevor er losging, gehört der
+   Zug dem, was darunter liegt; ein Schnippen fängt sofort an und nimmt
+   die Karte weiter weg. Wächter: `test588` §14 (rot gesehen gegen
+   `f73a2938`), dazu `test360`.
+13. **Eine rohe `28px` zu viel** (`test362` §7, die Decke der rohen Masse:
+   66 statt 65). `.ru-toast-alt` trug `max-width:min(560px, calc(100vw −
+   28px))` — die Regel gilt nur über 760 px Breite, wo `100vw − 28px` nie
+   unter 560 fällt. Jetzt `max-width:560px`, Bild für Bild dasselbe.
+14. **Die Filter der Suche am Telefon massen 41,8 statt 42 px** (`test114`
+   §16). Seit E711 wächst die Suche aus der Kapsel (rund 0,8 s, nur
+   `transform`); `test114` mass nach 600 ms, mitten im Aufgehen, wenn
+   alles darin noch 0,5 % kleiner ist (gemessen Bild für Bild: 41,4 px bei
+   504 ms, 41,8 bei 604, 42 ab 806; mit „Ruhige Darstellung" von Anfang an
+   42). Die stehende Suche hat 42 px wie auf `b3cf1933`. `test114` misst
+   jetzt, wenn die Suche STEHT — dieselben Felder, dieselbe Grenze —, und
+   bekommt dafür einen Punkt dazu: die Suche steht spätestens 1,5 s nach
+   dem Öffnen still. Das ist keine Schwächung: geprüft wird weiter die
+   Fläche, die der Daumen trifft, und ein Aufgehen, das nicht endet, wird
+   jetzt eigens rot (Gegenproben unten).
+
+**Was die Alternative war.**
+- (12) Den Wisch-Griff nur auf die sichtbare Karte legen (`pointer-events`
+  an): verworfen — die Karte nähme den Knöpfen darunter jeden Tipp, wie es
+  `#toast` seit jeher bewusst nicht tut (L232 Punkt 8). Eine Liste der
+  Dinge, die man tragen kann (`.bib-deckel`, `.blk`, …): verworfen — sie
+  liefe jedem neuen Griff hinterher; die Zeit des Haltens sagt es für alle.
+- (14) Die Suche schneller aufgehen lassen, damit sie nach 600 ms steht:
+  verworfen — das ist die Bewegung der Szene 07, die Redur mit dem Video
+  verlangt hat, und eine Durchsicht ändert sie nicht, um einer Wartezeit
+  in einem Prüflauf zu genügen. Die 600 ms einfach auf 1000 ms setzen:
+  verworfen — eine neue Zahl, die beim nächsten Aufgehen wieder reisst;
+  „bis es steht, höchstens 1,5 s" sagt, was gemeint ist.
+
+**Was es kostet.** Am Start (`test388` §5, 5. Oktober ca. 19:40 UTC, unter
+dem Schloss) weiter 2838 KB gzip über 248 Dateien, Decke 2850 KB.
+`hinweis.js` +288 und `studio.css` +112 Bytes (gzip -9), fast nur
+Erklärung; der Zweig gegen `b3cf1933` damit +13'373 Bytes über zehn
+Dateien. Zur Laufzeit ein Zeitvergleich mehr je Berührung unter einer
+Meldung.
+
+**Geprüft.** `test360` 34 von 34, `test362` 18 von 18, `test114` 156 von
+156 (5. Oktober ca. 19:29–19:30 UTC); `test588` 72 von 72, dreimal
+hintereinander (ca. 19:46–19:52 UTC). Der erste Lauf von `test588` gleich
+nach dem Bauen (ca. 19:29 UTC) hatte drei Punkte rot, die mit der
+Berührung nichts zu tun haben (die Marke landete nach dem Umlenken 14,7 px
+daneben; der Fächer ging nach dem Zeiger und nach dem Zusammenfliessen
+nicht rechtzeitig zu) — mit der Maus kommt die neue Regel gar nicht in
+Gang, und in der Kopie derselben Fassung (Gegenprobe haelt-nicht) wie in
+den drei Läufen danach waren sie grün. Das sind feste Wartezeiten unter
+Last; es steht in AUFGABEN.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen, je eine Verbiegung im
+gebauten `quell/` einer Kopie des Endstands, `scratchpad/rv6-suche/ende7`,
+der betroffene Lauf darüber, 5. Oktober ca. 19:30–19:34 UTC):
+flach (die Filter am Telefon 40 px hoch) → `test114` „… sind mit dem
+Finger zu treffen — 4 zu flach"; laeuft (das Aufgehen fünfmal so lang) →
+`test114` „Die Suche steht spätestens 1,5 s nach dem Öffnen still"
+(`{"nach":3600,"still":false}`) und „4 zu flach"; haelt-nicht (ohne die
+Regel für das Halten) → `test588` §14 (`{"bewegt":0,"los":false}`) und
+`test360` 32 von 34 (die Ablegezone zeigt sich nicht, die Kladde kommt
+nicht an); roh28 (die alte Breite) → `test362` „66 statt 65".
+
+**Nachbarn** (unter dem Schloss, `alle.mts`, ca. 19:35–19:46 UTC, 35
+Läufe um die geänderten Stellen — Meldungen, Suche, Stile, Berührung):
+32 40 47 66 67 104 126 127 143 155 222 245 248 272 296 303 353 384 388 411
+412 430 476 484 492 510 531 534 536 539 541 576 579 584 585 — 34 grün,
+`test492` rot („Einzeldatei enthält Eingabe und Bewegungsstil ohne
+Nachladen"), auf `b3cf1933` zweimal genauso rot (ca. 19:53 UTC) — fremd,
+der bekannte Wackler aus dem Zweig der roten Inseln. Ohne Browser grün:
+87 105 109 225 290 298 401 402 410 549 550.

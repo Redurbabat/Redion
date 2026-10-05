@@ -824,7 +824,8 @@ const Bibliothek = (() => {
             { id: 'pdf', name: 'Alle PDFs' }
         ];
         return '<div class="bib-studio-navigation">' +
-            '<nav class="bib-studio-wege" aria-label="Dokumente finden">' +
+            /* `data-material` (E706): die Wahl fliegt zum neuen Weg. */
+            '<nav class="bib-studio-wege" data-material="dokumente-wege" aria-label="Dokumente finden">' +
             wege.map(weg => {
                 const an = weg.id === 'pdf' ? pdfAn : !pdfAn && zustand.reiter === weg.id;
                 return '<button type="button" data-studio-weg="' + weg.id + '"' +

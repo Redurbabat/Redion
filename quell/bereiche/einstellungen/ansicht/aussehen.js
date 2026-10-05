@@ -67,11 +67,15 @@ const Aussehen = (() => {
                 '--bg-hover': '#efefee', '--bg-input': '#f8f8f7',
                 '--line': '#e3e3e1', '--line-soft': '#eeeeec', '--text': '#242424'
             } },
+        /* Schwarze Schrift auf Gelb (E705; Redur: „Starker Kontrast ohne Glas").
+           Vorher Weiss darauf, 1,43 : 1; jetzt 14,7 : 1, Überfahren heller. */
         { id: 'kontrast', name: 'Starker Kontrast', grund: 'dark', akzent: '#ffd400', werte: {
                 '--bg': '#000000', '--bg-side': '#0a0a0a', '--bg-card': '#141414',
                 '--bg-hover': '#1f1f1f', '--bg-input': '#111111',
                 '--line': '#7a7a7a', '--line-soft': '#4a4a4a',
-                '--text': '#ffffff', '--text-dim': '#e0e0e0', '--text-faint': '#b5b5b5'
+                '--text': '#ffffff', '--text-dim': '#e0e0e0', '--text-faint': '#b5b5b5',
+                '--auf-accent': '#000000', '--accent-text': '#ffd400', '--accent-hover': '#ffe071',
+                '--accent-schwach': 'rgba(255,212,0,.18)'
             } },
         { id: 'rose', name: 'Rosé', grund: 'dark', akzent: '#e06a94', werte: {
                 '--bg': '#1a1418', '--bg-side': '#221a20', '--bg-card': '#2a2027',
@@ -119,8 +123,9 @@ const Aussehen = (() => {
            der Glocke, der Gefahrknopf unter dem Zeiger, die Marke am Buchdeckel.
            Mit dem Rosa waren das 2,65 : 1 statt 3,76 : 1 wie in jedem anderen
            dunklen Schema. Also steht `--gefahr` hier nicht: es gilt Redions
-           #ef4444 aus `dunkel.css`, und die Bauteile des Kits schreiben darauf
-           mit `--bg` (Brücke: 5,6 : 1). `test579` §5 misst es in allen zehn. */
+           Rot aus `dunkel.css`, die Bauteile des Kits schreiben darauf mit
+           `--bg`; Weiss auf Rot steht auf `--gefahr-flaeche` (E705). `test579`
+           §5 misst es in allen zehn. */
         { id: 'touchkit-hell', name: 'Touch Kit hell', grund: 'light', akzent: '#5345e0', werte: {
                 '--bg': '#f3f2f8', '--bg-side': '#e9e9ef', '--bg-card': '#ffffff',
                 '--bg-hover': '#eeeef1', '--bg-press': '#e3e2e8', '--bg-input': '#eeeef1',
@@ -128,7 +133,9 @@ const Aussehen = (() => {
                 '--text': '#0b0b10', '--text-dim': '#5e5e6b', '--text-faint': '#7a7a86',
                 '--auf-accent': '#ffffff', '--accent-text': '#5345e0', '--accent-hover': '#4336c8',
                 '--accent-schwach': 'rgba(83,69,224,.12)',
-                '--gefahr': '#b81c3c', '--erfolg': '#0f766e', '--warnung': '#b45309', '--info': '#0e7490'
+                /* Warnung eine Stufe dunkler als im Kit (#b45309: 4,34 auf dem
+                   Überfahren), E705. */
+                '--gefahr': '#b81c3c', '--erfolg': '#0f766e', '--warnung': '#af4f00', '--info': '#0e7490'
             } },
         { id: 'touchkit-dunkel', name: 'Touch Kit dunkel', grund: 'dark', akzent: '#a39dff', werte: {
                 '--bg': '#000000', '--bg-side': '#0e0e11', '--bg-card': '#1c1c21',
@@ -169,12 +176,49 @@ const Aussehen = (() => {
         (w.dataset['gesetzt'] || '').split(' ').filter(Boolean)
             .forEach(v => w.style.removeProperty(v));
         w.dataset['theme'] = sch.grund;
+        /* WELCHES SCHEMA, steht jetzt auch als Attribut da (E703). Die Werte
+           oben sind Farben; ob es Glas gibt, ist keine Farbe. „Starker
+           Kontrast" hat keines (Redur, Fragebogen: „Starker Kontrast ohne
+           Glas"), und das sagt `grund.css` an genau diesem Attribut — an einer
+           Stelle für alles Glas, statt in der Farbtabelle. */
+        w.dataset['schema'] = sch.id;
         const gesetzt = [];
-        Object.entries(sch.werte).forEach(([k, v]) => { w.style.setProperty(k, v); gesetzt.push(k); });
+        const eigen = sch.werte;
+        Object.entries(eigen).forEach(([k, v]) => { w.style.setProperty(k, v); gesetzt.push(k); });
         const akz = s.akzent || sch.akzent;
         if (akz) {
             w.style.setProperty('--accent', akz);
             gesetzt.push('--accent');
+        }
+        /* DIE BEGLEITER FOLGEN DER FARBE (E705): Leiter und Akzent-Begleiter
+           werden aus dem Schema abgeleitet, gegen die Flächen, die wirklich
+           gelten. Was ein Schema selbst mitbringt, bleibt; eine EIGENE Farbe
+           bringt immer alle vier Begleiter mit. */
+        const f = typeof Farben !== 'undefined' ? Farben : null;
+        if (f && (akz || eigen['--bg'])) {
+            const cs = getComputedStyle(w);
+            const lies = (n) => eigen[n] || cs.getPropertyValue(n).trim();
+            const setze = (n, v, immer = false) => {
+                if (!v || (!immer && eigen[n]))
+                    return;
+                w.style.setProperty(n, v);
+                if (!gesetzt.includes(n))
+                    gesetzt.push(n);
+            };
+            if (eigen['--bg']) {
+                const l = f.ladder(lies('--text'), lies('--bg'), lies('--bg-card'), lies('--bg-hover'), sch.grund);
+                setze('--text-dim', l?.dim);
+                setze('--text-faint', l?.faint);
+                setze('--bg-press', l?.press);
+            }
+            if (akz) {
+                const a = f.accentSet(akz, sch.grund, lies('--bg'), lies('--bg-card'));
+                const immer = !!s.akzent;
+                setze('--auf-accent', a?.onAccent, immer);
+                setze('--accent-text', a?.ink, immer);
+                setze('--accent-hover', a?.hover, immer);
+                setze('--accent-schwach', a?.soft, immer);
+            }
         }
         const font = (SCHRIFTEN.find(f => f[0] === s.schrift) ?? SCHRIFTEN[0])?.[2];
         if (font) {
@@ -289,6 +333,59 @@ const Aussehen = (() => {
             return false;
         return alsText(ev).toLowerCase() === soll.toLowerCase();
     };
+    /* DIE AKZENTWAHL (E705). Die Karten „Standard"/„Hell" brauchen Werte aus
+       dem Stilblatt; `cssRules` ist unter file:// gesperrt, also stehen sie
+       hier, und `test584` §6 vergleicht die Karte mit dem gerechneten Stil. */
+    const STILBLATT = {
+        dark: { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
+        light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
+    };
+    const stilblatt = (grund) => STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};
+    /** Neun Scheiben mit „Aa" in der Schrift, die auf ihnen stehen wird. */
+    const akzentWahl = (s) => {
+        const w = document.documentElement;
+        const cs = getComputedStyle(w);
+        const grund = w.dataset['theme'] === 'light' ? 'light' : 'dark';
+        const bg = cs.getPropertyValue('--bg').trim(), karte = cs.getPropertyValue('--bg-card').trim();
+        const jetzt = String(s['akzent'] || '').toLowerCase();
+        const auf = (c) => Farben.accentSet(c, grund, bg, karte)?.onAccent || '#ffffff';
+        const feld = (c, n) => {
+            const an = jetzt === c;
+            return `<button type="button" data-akz="${c}" class="au-akz${an ? ' an' : ''}" ` +
+                `aria-pressed="${an ? 'true' : 'false'}" aria-label="${esc(n)}" title="${esc(n)}">` +
+                `<span class="au-akz-probe" style="--au-akz:${c};--au-auf:${auf(c)}" aria-hidden="true">Aa</span>` +
+                (an ? '<span class="au-akz-haken" aria-hidden="true">✓</span>' : '') +
+                `<span class="au-akz-name">${esc(n)}</span></button>`;
+        };
+        /* Eine früher gewählte Farbe (auch #2eaadc …) steht als „Eigene" gewählt
+           da — nichts wird umgestellt, ohne dass jemand klickt. */
+        const bekannt = Farben.ACCENTS.some(([c]) => c === jetzt);
+        const eigen = !!jetzt && !bekannt && !!Farben.parse(jetzt);
+        const eigenName = eigen
+            ? (Farben.nachHex(jetzt) === 'Eigene Farbe' ? 'Eigene Farbe' : 'Eigene: ' + Farben.nachHex(jetzt))
+            : 'Eigene …';
+        const eigenWert = eigen ? Farben.toHex(Farben.parse(jetzt) ?? [0, 0, 0]) : '';
+        return '<div class="au-akzente" role="group" aria-label="Akzentfarbe">' +
+            Farben.ACCENTS.map(([c, n]) => feld(c, n)).join('') +
+            `<label class="au-akz au-eigen${eigen ? ' an' : ''}" title="Eigene Farbe wählen">` +
+            `<span class="au-akz-probe" style="--au-akz:${eigen ? eigenWert : 'transparent'};` +
+            `--au-auf:${eigen ? auf(eigenWert) : 'var(--text-dim)'}" aria-hidden="true">${eigen ? 'Aa' : '+'}</span>` +
+            (eigen ? '<span class="au-akz-haken" aria-hidden="true">✓</span>' : '') +
+            `<span class="au-akz-name">${esc(eigenName)}</span>` +
+            `<input type="color" id="au-frei" value="${eigen ? eigenWert : '#7552dc'}" ` +
+            `aria-label="Eigene Farbe wählen${eigen ? ' — gewählt: ' + esc(eigenName) : ''}">` +
+            '</label>' +
+            `<button type="button" data-akz="" class="au-zurueck${jetzt ? '' : ' an'}" ` +
+            `aria-pressed="${jetzt ? 'false' : 'true'}">wie im Schema</button>` +
+            '</div>';
+    };
+    /** Hauptknopf, Verweis, gewählter Reiter — nur zum Ansehen. */
+    const akzentVorschau = () => '<div class="au-akz-vorschau" aria-hidden="true">' +
+        '<span class="au-vs-titel">Vorschau</span>' +
+        '<span class="au-vs-knopf">Speichern</span>' +
+        '<span class="au-vs-verweis">ein Verweis</span>' +
+        '<span class="au-vs-reiter">Gewählter Reiter</span>' +
+        '</div>';
     /* ========================================================================
      * DIALOG
      * ======================================================================*/
@@ -298,7 +395,8 @@ const Aussehen = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(780px,95vw)">' +
                 '<div class="fh">🎨 Aussehen und Tasten<button class="icon-btn" data-a="zu">✕</button></div>' +
-                '<div class="au-reiter">' +
+                /* `data-material` (E706): der Strich unter dem Reiter fliegt hinüber. */
+                '<div class="au-reiter" data-material="aussehen-reiter">' +
                 '<button data-r="farbe" class="an">Farben</button>' +
                 '<button data-r="schrift">Schrift und Layout</button>' +
                 '<button data-r="tasten">Tastenkürzel</button>' +
@@ -328,32 +426,24 @@ const Aussehen = (() => {
                     '<div class="au-staffelei" id="au-staffelei"></div>' +
                         '<div class="au-titel">Farbschema</div>' +
                         '<div class="au-schemata">' + SCHEMATA.map(x => {
-                        const bg = x.werte['--bg'] || (x.grund === 'light' ? '#ffffff' : '#191919');
-                        const side = x.werte['--bg-side'] || (x.grund === 'light' ? '#fbfbfa' : '#202020');
-                        const tx = x.werte['--text'] || (x.grund === 'light' ? '#37352f' : '#e9e9e7');
+                        /* Ehrliche Karten (E705): Standard/Hell lesen das Stilblatt statt
+                           alter Ersatzwerte, und ihr Akzentpunkt ist nicht mehr leer. */
+                        const stil = stilblatt(x.grund);
+                        const w = x.werte;
+                        const bg = w['--bg'] || stil['--bg'] || '';
+                        const side = w['--bg-side'] || stil['--bg-side'] || '';
+                        const tx = w['--text'] || stil['--text'] || '';
+                        const punkt = x.akzent || stil['--accent'] || '';
                         return `<button data-s="${x.id}" class="au-karte${s.schema === x.id ? ' an' : ''}">` +
-                            `<span class="au-probe" style="background:${bg}">` +
-                            `<i style="background:${side}"></i>` +
-                            `<b style="background:${x.akzent}"></b>` +
-                            `<u style="background:${tx}"></u></span>` +
+                            `<span class="au-probe" style="background:${esc(bg)}">` +
+                            `<i style="background:${esc(side)}"></i>` +
+                            `<b style="background:${esc(punkt)}"></b>` +
+                            `<u style="background:${esc(tx)}"></u></span>` +
                             `<span class="au-name">${esc(x.name)}</span></button>`;
                     }).join('') + '</div>' +
                         '<div class="au-titel">Akzentfarbe</div>' +
-                        '<div class="au-akzente">' +
-                        /* ACHT FARBFELDER OHNE EIN EINZIGES WORT. Weder Titel noch
-                           Marke, und welches gewählt war, stand allein in der Umrandung
-                           — bei einem FARBwähler ist das die Regel aus §38 in Reinform.
-                           `nh-farben` machte es längst richtig; hier stand es nicht. */
-                        ['#2eaadc', '#6c8cff', '#5cbf8a', '#e0a33a', '#e06a94', '#9a6dd7', '#ff7369', '#8a8a8a']
-                            .map(c => `<button data-akz="${c}" style="background:${c}" ` +
-                            `title="${Farben.nachHex(c)}" aria-label="${Farben.nachHex(c)}" ` +
-                            `aria-pressed="${(s.akzent || '') === c ? 'true' : 'false'}" ` +
-                            `class="${(s.akzent || '') === c ? 'an' : ''}">` +
-                            `${(s.akzent || '') === c ? '✓' : ''}</button>`).join('') +
-                        '<input type="color" id="au-frei" value="' + (s.akzent || '#2eaadc') + '" ' +
-                        'title="Eigene Farbe wählen">' +
-                        '<button data-akz="" class="au-zurueck">wie im Schema</button>' +
-                        '</div>';
+                        akzentWahl(s) +
+                        akzentVorschau();
                 const platz = inhalt.querySelector('#au-staffelei');
                 if (platz && typeof Staffelei !== 'undefined') {
                     const grund = SCHEMATA.find(x => x.id === s.schema)?.grund || 'dark';
@@ -556,6 +646,9 @@ const Aussehen = (() => {
         });
         o.addEventListener('change', e => {
             if (e.target instanceof HTMLInputElement && e.target.id === 'au-gr')
+                zeichne();
+            /* Erst nach dem Farbwähler neu zeichnen, sonst schlösse er sich. */
+            if (e.target instanceof HTMLInputElement && e.target.id === 'au-frei')
                 zeichne();
         });
     };

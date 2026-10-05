@@ -1332,7 +1332,8 @@ const Lernwelt = (() => {
            Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
            darüberzusetzen. Fehlt die Marke, bleibt alles wie vorher — die
            Schale fragt nur, sie verlangt nichts. */
-        const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" aria-label="Lernen und Alltag">' + reihe.map(item => {
+        /* `data-material` (E706): die Wahl fliegt, statt zu springen. */
+        const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' + reihe.map(item => {
           const drin = item.id === zustand.ansicht ||
             ((item as any).unter || []).includes(zustand.ansicht);
           return '<button type="button" data-lw-nav="' +
@@ -1348,7 +1349,7 @@ const Lernwelt = (() => {
            dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
            zeigt, ist wieder die alte. */
         if (!hier?.unter) return haupt;
-        return haupt + '<nav class="lw-subnav" aria-label="' + esc(hier.name) + '">' +
+        return haupt + '<nav class="lw-subnav" data-material="heute-unter" aria-label="' + esc(hier.name) + '">' +
           hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
             (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
             esc(ansichtName(id)) + '</button>').join('') + '</nav>';
@@ -1368,11 +1369,19 @@ const Lernwelt = (() => {
       '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
         '<h2>Aufmachen.<br>Weiterdenken.</h2>' +
         '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
+        /* EINE HAUPTHANDLUNG JE BILD (E701, grund.css: „Genau eine je
+           Bild — mehr macht keine wichtig"). Dieses Studio steht nur auf
+           „Heute", und dort ist „Lernen starten" die eine (E638) — zwei
+           Schritte weiter unten, schwarz und funkelnd. Hier stand daneben
+           ein zweiter voller Violettknopf, und mit dem Kopf („PDF öffnen")
+           riefen drei Flächen zugleich „hier drücken". Der Knopf bleibt
+           derselbe Griff am selben Ort, 44 px hoch — nur als Umrissknopf
+           mit violettem Zeichen, so ruhig wie „PDF importieren" daneben. */
         '<div class="lw-actions">' +
           (pdf
-            ? '<button type="button" class="is-primary" data-lw-open="' + esc(seitenId) + '">' +
+            ? '<button type="button" class="lw-desk-auf" data-lw-open="' + esc(seitenId) + '">' +
                 zeichenSpan('book') + 'PDF öffnen</button>'
-            : '<button type="button" class="is-primary" data-lw-action="library">' +
+            : '<button type="button" class="lw-desk-auf" data-lw-action="library">' +
                 zeichenSpan('library') + 'Dokumente öffnen</button>') +
           '<button type="button" data-lw-action="import"' +
             (darfImportieren && importVerfuegbar ? '' : ' disabled title="' +

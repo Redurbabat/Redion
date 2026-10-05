@@ -42,6 +42,19 @@ const GfxShapes = (() => {
             el.setAttribute(k, String(v));
         return el;
     };
+    /* TINTE FÜR DEN HELLEN GRUND (E705): `stroke`/`fill` bleibt die
+       gespeicherte Farbe (E414, E693); daneben `--tinte-hell`, derselbe Ton
+       mit 4,6 : 1 auf hellem Grund, den nur das helle Thema nimmt
+       (grund.css). Zettel behalten ihre Füllung. */
+    const tinte = (el, rolle, farbe) => {
+        if (typeof Farben === 'undefined' || !Farben.parse(farbe))
+            return;
+        const hell = Farben.inkOnLight(farbe);
+        if (!hell || hell === Farben.toHex(Farben.parse(farbe) ?? [0, 0, 0]))
+            return;
+        el.setAttribute('data-tinte', rolle);
+        el.style.setProperty('--tinte-hell', hell);
+    };
     const zahl = (roh, ersatz = 0) => {
         const n = Number(roh);
         return Number.isFinite(n) ? n : ersatz;
@@ -119,8 +132,14 @@ const GfxShapes = (() => {
         const farbe = String(s.farbe || 'currentColor');
         if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
             const pts = Array.isArray(s.pts) ? s.pts : [];
+            /* DIESELBE LINIE WIE AUF DEM BLATT (E704): durch die Mittelpunkte
+               gebogen (`InkGeometry.path`, §8) — auch jeder alte Tafelstrich. */
+            const kern = globalThis.InkGeometry;
             const d = s.art === 'stift'
-                ? (pts.length ? 'M' + pts.map((q) => zahl(q?.[0]) + ' ' + zahl(q?.[1])).join(' L') : '')
+                ? (!pts.length ? ''
+                    : kern && typeof kern.path === 'function' && pts.length >= 3
+                        ? String(kern.path(pts.map((q) => [zahl(q?.[0]), zahl(q?.[1])])))
+                        : 'M' + pts.map((q) => zahl(q?.[0]) + ' ' + zahl(q?.[1])).join(' L'))
                 : `M${zahl(s.x)} ${zahl(s.y)} L${zahl(s.x) + zahl(s.w)} ${zahl(s.y) + zahl(s.h)}`;
             const p = sv('path', {
                 d, stroke: farbe, 'stroke-width': strich, fill: 'none',
@@ -129,6 +148,7 @@ const GfxShapes = (() => {
             if (s.art === 'pfeil' && o.pfeilMarke)
                 p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
             p.dataset.sid = s.id;
+            tinte(p, 'strich', farbe);
             /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
                ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
                breit und durchsichtig: er fängt den Griff, malt aber nichts. */
@@ -161,12 +181,16 @@ const GfxShapes = (() => {
                 'pointer-events': 'all'
             });
             r.dataset.sid = s.id;
+            if (s.art === 'rechteck')
+                tinte(r, 'strich', farbe);
             g.appendChild(r);
             if (s.text) {
                 const t = sv('text', {
                     x: x + 10, y: y + 22,
                     fill: s.art === 'notiz' ? '#1c1c1c' : farbe, 'font-size': 14
                 });
+                if (s.art !== 'notiz')
+                    tinte(t, 'schrift', farbe);
                 zeilenUmbruch(String(s.text), Math.abs(zahl(s.w)) - 18).forEach((z, i) => {
                     const ts = sv('tspan', { x: x + 10, dy: i ? 18 : 0 });
                     ts.textContent = z;
@@ -217,6 +241,7 @@ const GfxShapes = (() => {
                 'pointer-events': 'all' /* wie beim Rechteck, siehe dort */
             });
             e.dataset.sid = s.id;
+            tinte(e, 'strich', farbe);
             return e;
         }
         if (s.art === 'text') {
@@ -224,6 +249,7 @@ const GfxShapes = (() => {
                 'font-size': 17, 'font-weight': 500 });
             t.textContent = String(s.text || '');
             t.dataset.sid = s.id;
+            tinte(t, 'schrift', farbe);
             return t;
         }
         /* Unbekannte Art: nichts zeichnen, nichts werfen (§18). */

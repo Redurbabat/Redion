@@ -4804,3 +4804,782 @@ Schwarz (--bg) auf #ef4444, die Schrift der Kit-Bauteile      5,58 : 1
 --accent #6d4aff auf --bg-card #202020 (Akzent als Schrift)   3,16 : 1  (L222 Punkt 6)
 --accent-text #9b87ff auf --bg-card #202020                   5,67 : 1
 ```
+
+---
+
+## §72 · Ein Farbtupfer dazu, ein Seitenrand zur Marke — die 28-px-Decke (E700, 27. September 2026)
+
+(§71 ist den React-Inseln vergeben, E699 auf `claude/react-inseln-grundlage`.)
+
+`test362` §7 auf `main` 323f13a: `{16:270, 22:85, 28:66, 44:54, 46:14, 56:14}`
+gegen die Decke `{…, 28:65, …}`, 17/18. Gezählt mit dem Muster des Laufs
+(Kommentare entfernt, `(?<![\w-])28px`, alle `.css` unter `quell/schale/stil/`):
+
+```txt
+Stand                          28px roh   Decke   test362
+6ad2650b  (E696)               65         65      18/18
+569a8341  (Codex, PR #114)     65         64      rot
+0f73ba1d  (Merge, E697)        66         65      17/18
+dieser Bogen (E700)            65         65      18/18
+```
+
+**Der Tausch, je eine Zeile, je ein Urteil.** Massstab ist `marken.css`:
+gleiche Zahl heisst nur bei gleicher Aufgabe gleiche Marke.
+
+```txt
+     Datei:Zeile          was es ist                        Marke dieser Zahl   Urteil
++1   bausteine.css:5308   Breite eines Farbtupfers          --mobile-gutter     andere Aufgabe, bleibt roh
+                          (.blatt-color-grid button i,
+                          E697, 9e306b85)
+−1   ki.css:158           Seitenrand von #page am Telefon   --mobile-gutter     dieselbe Aufgabe → Marke
+                          (E37, max-width:820px)
+```
+
+**Ohne den Tupfer stünde die Decke jetzt bei 64.** Die übrigen 62 rohen
+28 px (ohne den Tupfer und die zwei Definitionen `--mobile-gutter` und
+`--tbl-kh`) sind durchgesehen: Knopf- und Zeichenmasse (28 × 28), Schatten (`0 8px 28px`),
+Schriftgrössen, Innenpolster von Karten, Abstände zwischen Blöcken, ein
+Listeneinzug — kein weiterer Seitenrand von `#page`.
+
+**Sichtbar? Nein.** Vorher und nachher mit Playwright aufgenommen
+(`isMobile`, feste Uhr, reduzierte Bewegung, Willkommensblatt weg), die
+Vorher-Reihe zweimal, um das Rauschen zu messen (0 Pixel):
+
+```txt
+Fenster       Ansicht        #page Polster (oben rechts unten links)   Pixel anders
+375 × 812     Start, Seite   0 22 243.6 22                             0, 0
+390 × 844     Start, Seite   0 28 253.2 28                             0, 0
+428 × 926     Start, Seite   0 28 277.8 28                             0, 0
+700 × 1000    Start, Seite   0 28 300 28                               0, 0
+```
+
+Alle acht Nachher-Bilder sind byte-gleich mit den Vorher-Bildern. Die Zeile
+in `ki.css` wird am Telefon ohnehin von `bausteine.css:221-225` überstimmt
+(gleiche Spezifität, spätere Datei); sie trägt jetzt trotzdem die Marke, damit
+die Zahl an einer Stelle steht. Die Bilder bleiben auf dem Rechner (§55.4).
+
+## §73 · Ruhiger, und nichts ist weg — laute Flächen, Dauerbewegung, Emoji, Start (E701, 28. September 2026)
+
+(§71 und §72 stehen auf dem Grundstand `claude/ruhig-grundstand` 515451f9;
+§74 bis §78 stehen darunter.)
+
+**Wie gemessen.** Playwright/Chromium, 1440 × 900 (Zeiger) und 390 × 844
+(`isMobile`, `hasTouch`), hell und dunkel, jede Ansicht mit echtem Inhalt
+über `Store`/`Produktwelten` aufgebaut, der Zeiger bei (2, 2). Vorher auf
+515451f9, nachher auf diesem Zweig, derselbe Aufbau (Skript im Scratchpad,
+nicht eingecheckt). Gezählt wird in der Seite:
+
+- **laut** — sichtbare Knöpfe ab 250 px², deren Fläche im Farbton des
+  Akzents gefüllt ist (deckend, Sättigung > .35, Ton ± 30°) oder deren
+  Verlauf überwiegend aus solchen Tönen besteht, dazu die Themenkugel.
+  `test580` §1 zählt zusätzlich den dunklen Funkelknopf „Lernen starten"
+  (E638) — der ist die eine Haupthandlung auf „Heute".
+- **endlos** — `document.getAnimations()` mit `playState` „running" und
+  unendlich vielen Durchläufen.
+- **Emoji** — Blätter in `.einst-nav`, `.menu`, `#r-blatt`, `.pg-tools`,
+  `.home-liste`, deren Text ein Emoji ist. Getippte Zeichen wie ⌘ ⌨ ⧉ ↔
+  zählt diese Spalte NICHT; die zählt `test580` §3 (je Zeile genau ein
+  gezeichnetes `<svg class="sym">`, kein getipptes Zeichen daneben).
+
+```txt
+Ansicht (Rechner)        laut hell   laut dunkel   endlos   Emoji
+Heute (+ „Lernen st.")   4 → 1       3 → 1         0 → 0    —
+Dokumente                2 → 1       1 → 1         1 → 0    —
+Textseite                2 → 0       1 → 0         0 → 0    4 → 0  (Seitenwerkzeuge)
+Lernen                   2 → 0       1 → 0         0 → 0    —
+Einstellungen            0 → 0       0 → 0         1 → 0    19 → 0
+⋯-Menü der Seite         2 → 0       1 → 0         0 → 0    37 → 0
+Mehr                     2 → 0       1 → 0         0 → 0    8 → 0
+Termine                  2 → 0       1 → 0         0 → 0    7 → 0
+Band offen               2 → 0       1 → 0         0 → 0    4 → 0
+
+Ansicht (Telefon)        laut hell   laut dunkel   endlos   Emoji
+Heute (+ „Lernen st.")   2 → 1       2 → 1         0 → 0    —
+Dokumente                1 → 1       1 → 1         1 → 0    —
+Einstellungen            0 → 0       0 → 0         1 → 0    19 → 0
+⋯-Menü der Seite         0 → 0       0 → 0         0 → 0    37 → 0
+R-Blatt                  1 → 1*      1 → 1*        1 → 0    11 → 0
+```
+
+\* Die eine laute Fläche unter dem R-Blatt ist „PDF öffnen" im Regal
+dahinter — die Haupthandlung jener Ansicht, nicht des Blattes.
+
+Die zwei „laut" auf „Dokumente" hell waren die violette Themenkugel und
+„PDF öffnen" im Regal; übrig ist „PDF öffnen". Die Dauerbewegung hinter
+Einstellungen und R-Blatt war der Kartenring des Regals darunter.
+
+**Gezeichnete Zeichen statt getippter, je Ort** (Zeilen mit einem getippten
+Zeichen oder Emoji, vorher → nachher; die Griffe selbst: dieselbe Kennung,
+dasselbe Wort, dieselbe Folge, nachgezählt in `test580` §3):
+
+```txt
+Einstellungen, Navigation   19 → 0     19 Bereiche
+⋯-Menü der Seite            47 → 0     47 Zeilen (Rechner in der ruhigen Fassung und Telefon)
+„Mehr"                      13 → 0     13 Wege
+R-Blatt                     12 → 0     12 Wege, dazu „Schliessen" (✕ → Zeichen `close`)
+Seitenwerkzeuge              5 → 0     5 Griffe (Telefon; am Rechner dieselben)
+Termine                      3 + n → 0 3 Karten und jede Zeile „Bevorstehend" (📌)
+```
+
+Neue Zeichen im Register: 20 (`plug`, `keyboard`, `globe`, `users`, `key`,
+`creditCard`, `info`, `cloud`, `archive`, `widthWide`, `widthNarrow`,
+`textSize`, `typeface`, `crumbs`, `hash`, `translate`, `moveTo`, `suggest`,
+`alarm`, `code`) — im Raster der übrigen 24 × 24, Strich 1,7, `currentColor`.
+
+**Start und Einzeldatei.** gzip Stufe 6 (`node:zlib`), nur die Dateien, die sich ändern
+(alle im Start):
+
+```txt
+Datei                                            roh vorher  roh nachher  gzip vorher  gzip nachher  Δ gzip
+quell/bereiche/datenbanken/ansichten/dienst.js        61601        62878      16,3 KB       16,8 KB   +0,48 KB
+quell/bereiche/einstellungen/ansicht/seite.js        103399       103803      29,7 KB       29,8 KB   +0,11 KB
+quell/bereiche/wissen/lernwelt.js                    178234       178882      46,6 KB       46,8 KB   +0,28 KB
+quell/bereiche/wissen/werkzeuge.js                   183225       183731      50,8 KB       51,1 KB   +0,23 KB
+quell/register/symbole.js                             42540        47622      14,2 KB       15,8 KB   +1,58 KB
+quell/schale/aufbau/kopfleiste.js                     25367        29795       8,3 KB        9,7 KB   +1,45 KB
+quell/schale/aufbau/schale.js                        261812       263057      75,3 KB       76,0 KB   +0,66 KB
+quell/schale/stil/studio.css                          33795        42180      15,6 KB       18,3 KB   +2,72 KB
+                                                                                           gesamt   +7,51 KB
+```
+
+Gut die Hälfte davon sind die deutschen Begründungen an Ort und Stelle
+(§39, §53). `test388` §5 misst den ganzen Start: **2767 → 2775 KB** über
+246 Dateien (Decke 2850 KB; der Grundstand 515451f9 hatte 2767 KB, §71).
+Die Einzeldatei: 11 595 462 → 11 617 437 Bytes (+21 975).
+
+## §74 · Flüssige Bewegung: Federn, Druck, Blätter, Ankunft, „Ruhig" (E702, 28. September 2026)
+
+**Womit.** Chromium 1194 (Playwright 1.56.1) über `file://`, 390 × 844 mit
+Berührung (`isMobile`, CDP `Input.dispatchTouchEvent`) und 1440 × 900.
+„Vorher" ist `git archive 515451f` (claude/ruhig-grundstand) mit den neuen
+Läufen hineinkopiert, „nachher" dieser Zweig. Bildstreifen mit CDP
+`Animation.setPlaybackRate 0.1`, ein Bild alle 33 ms Animationszeit.
+
+**Was `test581` vorher und nachher sieht:**
+
+```txt
+                                          vorher (515451f)            nachher
+Blatt (UI.menu) im ersten Bild            16 von 276 px unter Ruhe    ≥ 50 % (vom Rand)
+  Grund im ersten Bild                    1 (in einem Bild schwarz)   < 0,9, blendet auf
+  gezogen 60 px                           0 px (folgt nicht)          60 ± 3 px
+  weggewischt / daneben getippt           im selben Bild weg          200 ms Abgang, dann weg
+  Escape, Wahl eines Eintrags             sofort                      sofort (unverändert)
+Knopfdruck, sechs Proben (CDP-Berührung)  0 von 6 sinken ein          6 von 6, zurück auf linear()
+  kurzer Tipp (ab/auf ohne Pause)         kleinste Breite 1           < 0,995
+Schalter: Griff unter dem Finger          16,0 → 16,0 px              ≥ 110 % (18 %)
+  Weg hinüber                             transform, cubic-bezier     translate, --feder-knapp
+  Verlauf beim Einschalten                −30 statt −39,6 px          um die Mitte (−50 %)
+Reiter getippt (Dokumente → Termine)      keine Ankunft               wisch-rein-links, allein
+  zurück zu Dokumente                     2 Bewegungen (Kopf, Deckel) eine, von links
+Einstellungen am Telefon Liste → Bereich  hartes display:none         schiebt herein / zurück
+„Ruhig": laufende Bewegungen nach Heute,  7 (Pille ×3, .lw-nav,       0
+  Dokumente, Termine, Menü, Dialog, Toast   Kopf, 2 Deckel)
+  ::after unter „Ruhig"                   läuft (0.4s, Animation)     steht
+  <html data-ui-motion>                   fehlt                       "reduce"
+transition: all (quell/schale/stil)       1 (#rg-loch)                0
+:active{transform:scale(…)}               17 Regeln                   4 (eigene Druckbilder)
+JavaScript fragt nur das System           8 Stellen                   0 (AppEinstellung.wenigBewegung)
+```
+
+**Die Federn** (aus `fremd/touch/motion-tokens.css`, nachgerechnet von
+`test581` §2 auf 1953 Punkten, Bit für Bit gleich dem Kit):
+
+```txt
+Marke             Kit        Dauer   höchster Wert   Einsatz in E702
+--feder-druck     press      575 ms  1,0457          Knopf losgelassen, Griff zurück
+--feder-knapp     snappy     542 ms  1,0050          Griff hinüber, Blatt zurück
+--feder-sanft     smooth     796 ms  1 (nie über)    Blatt herein, jede Ankunft
+--feder-lebhaft   bouncy     887 ms  1,0729          (bereit, noch nicht benutzt)
+--feder-weich     gentle     923 ms  1,0015          (bereit, noch nicht benutzt)
+```
+
+**Die Grösse** (gzip Stufe 6, wie `test388`):
+
+```txt
+quell/schale/bedienung/spring.js     9'581 B roh   3'244 B gzip   (Code allein 2'285)
+quell/schale/bedienung/press.js      7'228 B roh   2'642 B gzip   (Code allein 1'844)
+alle geänderten Startdateien zusammen                +11,9 KB gzip  (Code und Kurven rund 8)
+```
+
+**Der Start**, gemessen mit `test388` §5 (erster Besuch über das Netz, gzip,
+bis 3,5 s nach `load`):
+
+```txt
+Grundstand 515451f (E698–E700)     2767 KB   246 Dateien
+mit E702                           2779 KB   248 Dateien   (+ spring.js, + press.js)
+Decke                              2850 KB
+```
+
+**+12 KB — über der Richtzahl von rund 10 KB je Zweig dieser Bitte.** Davon
+sind rund 8 KB Code und Kurven (Federkern 2,3, Druckfeder 1,8, Blattgeste
+1,1, die fünf `linear()`-Kurven rund 1,2, Regeln und Aufrufe rund 1,5), der
+Rest Kommentare an Ort und Stelle (§53: Deutsch für Menschen gehört zur
+Quelle). Die langen Begründungen stehen in E702, nicht im Code — die Köpfe
+von spring.ts und press.ts sind dafür von 50 auf 8 Zeilen gekürzt worden
+(vorher +14,6 KB). Die Summe aller Zweige prüft der Integrator.
+
+**Die Einzeldatei:** 11'595'462 → 11'629'653 Bytes (+34'191).
+
+**Bildstreifen** (nicht eingecheckt, §55.4): Knopfdruck, Schalter, Blatt
+auf, Blatt weggewischt, Ankunft — je vorher und nachher, am Telefon dunkel,
+dazu die Druckkurve (Breite je Bild bei Tempo 1).
+
+## §75 · Glas, wo es passt: echte Unschärfe, Grenzen, Kosten und Lesbarkeit in zehn Schemata (E703, 28. September 2026)
+
+**Fenster und Werkzeug.** Chromium 141 (Playwright 1.56.1) mit dem GPU-Weg
+`--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist
+--enable-gpu-compositing`, Telefon 390 × 844 (`isMobile`, `hasTouch`),
+Rechner 1280 × 900 und 1440 × 900. Gemessen auf dem Zweig
+`claude/glas-wo-es-passt` über dem Grundstand 515451f; „vorher" ist
+515451f selbst.
+
+**1 · Ist die Unschärfe echt?** Eine harte Kante (links Weiss, rechts
+Schwarz) hinter einem offenen Menü, eine Pixelzeile quer über die Kante,
+Breite der Rampe von 90 % auf 10 % (`test582` §1):
+
+```txt
+Chromium wie bisher (SoftwareRenderer)   0 px     59,59,59,59,59,59,59,59,28,28,28,28,28,28,28,28 (alle 10 px, hart)
+mit dem GPU-Weg                          37–52 px (drei Läufe: 50, 52, 37; die Zeile liegt je nach Menülage anders)
+```
+
+Jedes Bild aus `bilder.mts` und jede Messung aus `test576` lief bis heute
+ohne Unschärfe. Die Kontrastzahlen von E695 bleiben trotzdem richtig: die
+Streifen des Prüfmusters sind breiter als die Unschärfe, der schlimmste
+Grund ist mit und ohne derselbe.
+
+**2 · Wie viel Glas steht am Telefon?** Sichtbare Elemente mit
+`backdrop-filter` ≠ `none`, die Linse als Teil der Leiste (`test582` §7):
+
+```txt
+Szene                          Flächen   Anteil am Bild   was
+Textseite, Ruhe                1         6,7 %            untere Leiste 370×60 (+ Linse 70×48)
+Zeichenblatt, Leiste unten     2         17,0 %           untere Leiste, Zeichenleiste 310×109
+Dokument mit Dock              1         6,7 %            Dock 358×62 (die untere Leiste ist im Dokument aus)
+Menü-Blatt offen (Dokument)    2         50,1 %           Dock, Blatt 390×366
+Willkommen                     0 Vollbild-Unschärfe       der Schleier dimmt am Telefon nur
+Grenze                         ≤ 3       ≤ 25 % in Ruhe, ≤ 60 % mit Menü, nie ≥ 90 % in einer Fläche
+```
+
+**3 · Was kostet es?** 390 × 844 @3x, GPU-Weg, 2,5 s Rollen mit 6 px je
+Bild, gezählt `Display::DrawAndSwap` und die Zeit der Grafik (Runde 2 und 3
+von 3; in derselben Seite einmal mit, einmal mit per Stilblatt
+abgeschaltetem Glas):
+
+```txt
+Szene                                   Glas         Runde 2              Runde 3
+Textseite (Leiste + Linse)              ohne         142 Bilder,  26 ms   152 Bilder,   24 ms
+                                        mit          151 Bilder, 180 ms   147 Bilder,  244 ms
+Zeichenblatt, Leiste unten              ohne         152 Bilder,  30 ms   152 Bilder,   30 ms
+  (Leiste + Linse + Glas-Dock 310×109)  mit          152 Bilder, 186 ms   141 Bilder, 1583 ms *
+```
+
+Rund 150 Bilder in 2,5 s sind der Takt der Anzeige (60 je Sekunde): mit
+Glas geht keines verloren, das der Takt nicht auch ohne verliert. Die
+Grafikzeit steigt von etwa 25 auf etwa 180–240 ms je 2,5 s, also von
+0,2 auf 1,2–1,6 ms je Bild. * Der eine Ausreisser fiel in eine Zeit, in der
+vier andere Arbeitsbäume auf derselben Maschine Browser liefen; die zweite
+Runde derselben Szene gab 186 ms. Im Dokument liess sich nichts messen: die
+Probe hatte keinen Rollweg (0 Bilder in beiden Fällen).
+
+Aus der Vorerhebung vom 27. September (dasselbe Verfahren, 0976b5f, mit
+eingesetzten Probeflächen): vier Flächen mit 20 px 302–304 Bilder wie ohne
+Glas; dieselben mit 40 px ebenso, aber etwa ein Viertel mehr Grafikarbeit je
+Bild; ein Vollbild-Schleier mit 6 px dagegen 182–202 von 300 Bildern und
+etwa 2200 ms Grafikzeit gegen etwa 200 ms. Daraus die Grenzen oben: die
+Fläche und der Vollbild-Schleier treiben die Kosten, der Radius kaum.
+
+**4 · Lesbarkeit über dem schlimmsten Grund.** Muster aus Weiss, Schwarz,
+Rot und Blau (breiter als die Unschärfe), alles in der Fläche unsichtbar,
+die Schriftfarbe gegen jedes vierte Pixel; „schlimmster" ist das 1-%-Quantil
+(`test582` §3, §9, §10):
+
+```txt
+Fläche                          Modus/Gerät          schlimmster   Mitte    Grenze
+Dock im Dokument, Beschriftung  dunkel, Rechner      10,79         13,89    4,5
+                                dunkel, Telefon      10,79         13,88
+                                hell, Rechner         9,54          9,97
+                                hell, Telefon         9,54         10,00
+Zeichenleiste unten, Zeichen    dunkel, Rechner      13,56         13,89    4,5
+vorher (deckend, Deckel weg)    Dock dunkel/hell      1,12 / 1,71              (das Muster lag unter dem Roller)
+```
+
+In allen zehn Schemata (Rechner, dunkel, Dokument offen):
+
+```txt
+Schema            Menü Schrift  Gruppentitel   Dock          Telefonleiste   voll (stille Schrift)
+                  nachher       vorher→nachher vorher→nachher vorher→nachher
+standard          13,17         6,05 → 6,13    1,12 → 10,79  4,66 → 5,02     6,77
+hell              9,54          4,55 → 4,55    1,71 → 9,54   4,55 → 4,55     5,45
+nacht             12,29         6,1 → 6,2      1,21 → 10,1   4,71 → 5,09     6,82
+wald              11,34         5,6 → 5,68     1,2 → 9,23    4,27 → 4,62     6,26
+sand              8,57          3,97 → 3,97    1,67 → 8,57   3,97 → 3,97     4,72
+papier            11,97         4,51 → 4,51    1,35 → 11,97  4,51 → 4,51     5,41
+kontrast          18,42         12,49 → 13,96  1 → 18,42     9,85 → 13,96    13,96
+rose              11,7          5,84 → 5,92    1,22 → 9,55   4,48 → 4,84     6,54
+touchkit-hell     16,47         5,36 → 5,36    1,07 → 16,47  5,36 → 5,36     6,38
+touchkit-dunkel   14,2          5,97 → 6,12    1,09 → 11,72  4,62 → 5,05     6,72
+```
+
+„vorher" ist der Grundstand: der Dock deckend, das Muster lag unter dem
+durchsichtigen Rahmen und bei ausgeblendetem Inhalt offen da (deshalb 1,0
+bis 1,71); dunkles dichtes Glas 88 %. „Kontrast" ist nachher deckend (kein
+Glas, E703 Punkt 5) — darum Mitte = schlimmster = voll. **Sand** ist der
+eine Fall unter 4,5: seine stille Schrift hat schon auf der vollen Karte
+nur 4,72 : 1 (L226, Farbzweig); `test582` lässt dem Glas dort höchstens
+0,8 (gemessen 0,75). Das leichte Glas (§9, L221): in allen zehn Schemata
+über 3 : 1 für ein Zeichen in `--text-dim`.
+
+**5 · Die Dichte.** Gerechnet (sRGB-Mischung, WCAG-Leuchtdichte) für
+`--text-dim` #a7a7a7 auf dunklem Glas über reinem Weiss, gegen die Messung:
+
+```txt
+Karte             86 %    88 %    90 %    92 %    gemessen bei 88 %   bei 90 %
+Standard #202020  4,36    4,67    5,00    5,34    4,66                5,02
+Wald     #1e2921  4,01    4,29    4,59    4,90    4,27                4,62
+Rosé     #2a2027  4,20    4,50    4,81    5,14    4,48                4,84
+Mitternacht       4,41    4,72    5,05    5,40    4,71                5,09
+```
+
+Und hell (`--text-dim` #66655f über reinem Schwarz): Sand schon voll
+deckend 4,72 : 1, bei 92 % 3,96 (gemessen 3,97), bei 96 % 4,33 — erst ab
+etwa 97 % hielte Sand 4,5. Deshalb gehört Sand dem Farbzweig (L226).
+
+**6 · Der Start** (`test388` §5, gzip Stufe 6): **2767 → 2774 KB über 246 Dateien**, Decke 2850 KB (Lauf vom 28. September, 08:5x UTC, Dienststand v1385). Die knapp sieben KB (6,8) sind fast ganz Kommentar in sieben Startdateien (bausteine.css +2,7, grund.css +1,4, studio.css +1,0, pdf-studio.css +0,7, dunkel.css +0,5, aussehen.js +0,2, hell.css +0,1 KB gzip); keine neue Datei.
+
+**7 · Der Stapel am unteren Rand** (vorher, `test582` §6 rot):
+
+```txt
+Szene                      Werkzeug                   Toast            Lader
+Rechner, Zeichenleiste     Leiste 844–890             835–878 darauf   786–878 darauf
+Rechner, Dokument          Dock 824–886               835–878 darauf   786–878 darauf
+Telefon, Dokument          Kapsel 708–760, Dock 768–830   720–763 darauf   670–762 darauf, und aufeinander
+Telefon, Zeichenleiste     Leiste 632–741             720–763 darauf   670–762 darauf, und aufeinander
+```
+
+Dazu am Telefon mit offenem Blatt „Seite": der Lader lag mit `z-index:901`
+über dem Blatt (600) auf „Zu Favoriten" und „Link kopieren"; nachher 585,
+unter dem Schleier (590).
+
+Nachher schneidet sich in keiner der vier Szenen ein Rechteck, und der
+Lader liegt unter einem offenen Blatt (`test582` §6 grün). Neben der
+Zeichenleiste „unten" steht der Toast oben (sie klebt nur, solange das Blatt
+unter den Rand reicht; gerollt steht sie höher, und der Toast über dem
+Boden lag im Bild wieder auf ihr).
+
+## §76 · Bessere Stifteffekte: Umriss, Keil, Vorhersage, Tinten, Startgrösse (E704, 28. September 2026)
+
+(§73–§75 stehen darüber, §77 und §78 darunter.) Redur: „bessere stift efeckte beim zeichnen" — im Fragebogen
+„Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn",
+„Neue Tintenfarben". Gemessen in Node an `quell/core/ink/*.js` (vorher: der
+Grundstand 515451f9, nachher: dieser Zweig) und in Chromium 1194 mit
+künstlichen Stiftereignissen; Rechner, nicht iPad (L227 Punkt 1).
+
+**Der Umriss am „M"** (gespeicherte Form: zwei, drei Punkte je Bein, halbe
+Breite 1,26 pt, Mittellinie in 0,5-pt-Schritten, `test583` §1):
+
+```txt
+                          vorher      nachher
+Mittellinie ausserhalb    23 Punkte   0
+halbe Breite, Median      0,80 pt     1,26 pt   (soll 1,26)
+Pfad eines Zickzacks      1065 B      1190 B
+Umriss, 300 Punkte        0,88 ms     0,64 ms   (je Aufruf, Node)
+```
+
+**Die Kappen** (gerader Strich, halbe Breite 3): 1,5 pt vor dem Ende
+vorher draussen (Kerbe), nachher drin; 1,5 pt hinter dem Ende nachher drin.
+
+**Der Keilmarker** (300 Punkte, Höhe 10 pt): `keil` + `vieleckPfad` 1,35 ms
+je Bild, Pfad 28 481 B. Über weissem Papier: `#ffcf33` bei 0,40
+multipliziert ≈ rgb(255, 236, 173); vorher `#e0a419` bei 0,32 ≈
+rgb(245, 227, 183) (Beige).
+
+**Der Schwanz der Vorhersage** (drei rohe Punkte im 8-ms-Takt, der Browser
+rät drei weitere; Länge über den letzten rohen Punkt hinaus, pt):
+
+```txt
+Tempo px/ms   ungedeckelt   gedeckelt, stetig   Druck fällt (Bremse)
+0,2           4,8           2,8                 0
+0,45          10,8          6,3                 0
+1             24            14                  0
+2,5           60            26 (VORHER_PX)      0
+```
+
+**Die Tinten** auf dem Papier des Blatts (#f8f8f5), WCAG; kleinster
+Abstand zweier Tinten in ΔE_OK (×100), nachgebildet nach Machado 2009:
+
+```txt
+Königsblau #2346b5 7,55   Nachtblau #1b2552 13,77   Karmin #b12f4f 5,82
+Tannengrün #1d6024 7,17   Petrol    #0c6d7f  5,62   Aubergine #5f3295 8,30
+Sepia      #662f05 10,00  Graphit   #3c3c3c 10,37
+engstes Paar   normal 9,5 · deutan 5,2 · protan 6,2 · tritan 5,7
+die alten fünf normal 20,1 · deutan 4,3 (Rot/Grün) · protan 6,8 · tritan 5,9
+               auf Papier: Grün 2,88, Gelb 2,08, Blau 3,87, Rot 4,11
+```
+
+**Startgrösse und Einzeldatei.** Gezählt am 28. September ca. 08:45 UTC,
+jede geänderte Startdatei gzip -6 gegen 515451f9: marken.js +7 112,
+geometry.js +2 377, stroke.js +1 822, zeichenflaeche.js +1 057,
+seitenflaeche.js +1 014, bausteine.css +484, pdfWriter.js +387, shapes.js
++159, arbeitswelt.js +137, document-mode.js +125 — zusammen **+14 674 B**
+(ohne Kommentare rund 8,2 KB; der Rest sind die Kommentare, die `tsc`
+mitnimmt, schon auf ein Drittel gekürzt). Das ist mehr als die rund 10 KB,
+die jedem Zweig der Bitte vom 27. September zugedacht sind (L227 Punkt 7).
+`test388` §5, gemessen am 28. September ca. 09:29 UTC (Chromium, gzip wie
+ein echter Server): „Der Start holt 2782 KB (gzip) über 246 Dateien — Decke
+2850 KB" (der Grundstand: 2767 KB).
+Einzeldatei 11 595 462 → 11 645 706 B (+50 244).
+
+## §77 · Bessere Farben — Kontrast je Schema, vorher und nachher (E705, 28. September 2026)
+
+(§73 bis §76 stehen darüber.)
+
+**Wie gemessen.** WCAG-2-Kontrast und OKLCH aus sRGB (Ottosson 2020),
+vorher am Grundstand `515451f9`, nachher auf `claude/bessere-farben`. Im
+Browser mit `test584`: jede Farbe als `var(--…)` an einem Probe-Element,
+gerechnet, durch eine 1×1-Leinwand gelesen (so kommt auch `color-mix(…)` als
+Zahl an), Chromium 1194 über `file://`. Die Einzelwerte darunter zusätzlich
+in Node mit der gebauten `quell/core/helpers/colors.js`.
+
+**1 · Schrift auf dem Akzent (Hauptknopf)** — vorher war es immer Weiss:
+
+```txt
+Schema / Farbe          vorher Weiss   nachher Schrift        Überfahren   Tinte auf Grund / Karte
+Mitternacht #6c8cff     3,07           #0f1528  5,90          6,63         6,14 / 5,34
+Wald #5cbf8a            2,26           #041b0f  7,93          8,85         7,82 / 6,65
+Sand #b1743a            3,87           #231103  4,71          5,31         #93581a 5,34 / 4,64
+Rosé #e06a94            3,15           #240e15  5,80          6,48         5,75 / 4,99
+Starker Kontrast #ffd400 1,43          #000000 14,67          (#ffe071)    #ffd400 auf Schwarz
+Standard + eigen #e0a33a 2,22          #201301  8,20          —            —
+```
+
+`test584` §1: alle 210 Paare (10 Schemata × Schema-Akzent, 9 neue, 8 alte,
+3 eigene) ≥ 4,5 auf Fläche und Überfahren, Tinte ≥ 4,5 auf Grund und Karte,
+im Ton des Akzents (≤ 20°).
+
+**2 · Notion-Farben** — knappste Stelle über alle zehn Schemata, Grund,
+Karte, Überfahren und eigene Tönung: vorher Gelb auf der „Sand"-Karte 2,22
+(im Hellen alle neun unter 4,5; im Dunkeln Braun 3,75, Violett 4,30),
+nachher Blau im Schema „Sand" **4,63**. Schrift auf jeder Tönung ≥ 7.
+
+**3 · Statusfarben und Weiss auf Rot:**
+
+```txt
+                                vorher            nachher
+--gefahr dunkel auf der Karte   #ef4444  4,33     #f66d67  5,68
+--gefahr hell auf Sand-Überfahren #dc2626 3,57    #bb2021  4,64
+--erfolg dunkel auf der Karte   #22c55e  7,15     #40cd9b  8,11   (Sättigung 0,21 → 0,14)
+Weiss auf Rot (.glocke-zahl)    3,76 (Kit dunkel 2,65)   5,27 in allen zehn (--gefahr-flaeche #ce2a29)
+Touch Kit hell --warnung        #b45309  4,34     #af4f00  4,60   (auf #eeeef1)
+```
+
+**4 · Whiteboard (GfxShapes.PALETTE) und Gedankenkarte im Hellen** — die
+gespeicherte Farbe auf Weiss, und die Tinte, die jetzt gezeichnet wird:
+
+```txt
+Whiteboard   Gelb 1,35 → 5,15   Orange 1,99 → 5,19   Rot 2,66 → 5,16   Grün 2,76 → 5,17
+             Blau 3,01 → 5,13   Grau 2,81 → 5,17     Violett 3,79 → 5,18  Rosa 3,47 → 5,23
+Gedankenkarte Gelb 2,42 → 5,13  Orange 2,68 → 5,16   Türkis 3,02 → 5,25  Grün 3,34 → 5,13
+             Blau 3,87 → 5,17   Rot 3,96 → 5,19      Rosa 4,17 → 5,15    Violett 5,04 → 5,17
+```
+
+Im Dunkeln wird unverändert die gespeicherte Farbe gezeichnet; Zettel
+behalten ihre Füllung.
+
+**5 · Diagramme** — die acht gezeichneten Reihen, OKLab-Abstand ΔE_OK:
+vorher (eine Liste für beide Modi) Nachbarn 0,096, ein Grau mit Sättigung
+0,003, Gelb auf Weiss 1,35; nachher je Grundton, Nachbarn 0,196 (hell) /
+0,193 (dunkel), jede Sättigung ≥ 0,10, im Dunkeln jede ≥ 3 : 1 auf dem
+Grund. Das engste Paar überhaupt ist Orange/Rot (0,071) — sie stehen nie
+nebeneinander.
+
+**6 · Die dunkle Leiter** (OKLCH L / C / h):
+
+```txt
+          vorher                          nachher
+--bg      #141414  0,191 / 0 / —          #121417  0,190 / 0,0069 / 258°
+--bg-side #1a1a1a                         #181a1d  0,217 / 0,0066 / 258°
+--bg-card #202020                         #1e2023  0,243 / 0,0064 / 258°
+--bg-hover #2d2d2d                        #2b2d30  0,296 / 0,0061 / 258°
+--bg-press #343434                        #323437  0,324 / 0,0060 / 258°
+--text-dim #a7a7a7 7,7 / 6,8 / 5,7        #a6a8aa  7,73 / 6,84 / 5,79 (Grund / Karte / Überfahren)
+```
+
+Die Schale (`#1b1d20`) und `--bg-tief` (`#0f1012`) lagen schon bei 258°;
+jetzt ist es EINE Temperatur. Abgeleitete gedämpfte Schrift: Wald
+`#9ea6a0`, Sand `#645c52` — jeweils im Ton des Grundes.
+
+**7 · Feste Farben in den Stilblättern** (`test584` §11, bunte Werte mit
+OKLCH-Sättigung ≥ 0,06 in Farbeigenschaften ausserhalb der Markendateien):
+vorher 54 ausserhalb der Liste (716 Farbwerte gelesen), nachher 0 (657); auf der Liste stehen nur Papier-
+und Bildfarben (Laser, Auswahlgriffe, Staffelei, Deckel, Zier der Bewegung,
+Suchtreffer im Text).
+
+**8 · Start (test388 §5).** Grundstand 2767 KB über 246 Dateien (§71).
+Mit der ersten Fassung dieses Zweigs mass `test388` **2780 KB** (+12,6 KB) —
+über der Zuteilung von rund 10 KB je Zweig. 8,1 der 12,9 KB waren
+Kommentare in den Startdateien (die Begründungen stehen jetzt in E705, am
+Ort nur noch der Kern). Danach, Datei für Datei gegen den Grundstand
+gerechnet (gzip Stufe 6 wie `test388`):
+
+```txt
+colors.js +3 346 B · aussehen.js +1 410 · zeichenflaeche.js +673 · bausteine.css +588
+dunkel.css +392 · grund.css +352 · shapes.js +336 · gedankenkarte.js +271
+werkzeuge.css +168 · hell.css +140 · übrige +90             Summe +7 766 B ≈ +7,6 KB
+```
+
+Also rund 2775 KB, 75 unter der Decke 2850.
+
+## §78 · Das Material des Touch Kits: Feder, Greifen, Linse, sechs Umschalter (E706, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/material-ueberall` gegen den Grundstand
+`515451f9` (E698 + E699 + E700). Chromium von Playwright, 390 × 844
+(`isMobile`, Berührung über CDP) und 1440 × 900; Kontrast an den Bildpunkten
+(`test585` §2: dunkelster gegen hellsten Bildpunkt im Kasten des aktiven
+Namens, 0,5- und 99,5-Perzentil). Gzip Stufe 6 wie `test388`.
+
+**Die Feder, gerechnet** (`knapp` = Kit „snappy", 0,36 s, Schwung 0,14,
+gegen die alte ζ = 1, ω = 0,026/ms):
+
+```txt
+                                 vorher (ζ = 1)      nachher (knapp, ζ = 0,86)
+Anteil im ersten Bild (16,7 ms)      7,1 %               3,6 %
+Bahn zum Nachbarn (74 px)            292 ms              288 ms
+Bahn über zwei Wege (148 px)         292 ms              448 ms, 0,74 px über
+höchste Dehnung zum Nachbarn         1,175 (test541 §6)  1,105
+Nulldurchgang                        nie                 293 ms
+```
+
+**Die Linse in Ruhe — der aktive Name „Dokumente"** (vorher: Farbkarte vom
+27. September; nachher und Gegenprobe: `test585` §2):
+
+```txt
+                      vorher (515451f9)    nachher (E706)    Gegenprobe (62 %, brightness 1.08)
+hell                  1,83 : 1             4,74 : 1          1,83 : 1
+dunkel                2,06 : 1             5,50 : 1          2,06 : 1
+ohne Aufhellung       —                    4,73 / 5,11 : 1   (erste Fassung, gegen E639 und test539 §2)
+Farbkarte 27.09.      1,83 / 2,09 : 1      —
+Linse unter Knöpfen   —                    —                 5,18 / 5,20 : 1 (Alternative d, verworfen)
+```
+
+**Start (test388 §5).** 2777 KB gzip über 246 Dateien, Decke 2850 KB —
+auf dem Grundstand 2767 KB (E699, §71). +10 KB, genau die Grenze, die jedem
+Zweig dieser Bitte zugeteilt ist; es bleiben 73 KB für alle übrigen.
+
+**Was die Dateien wachsen** (gzip Stufe 6, gegen `515451f9`, Bytes):
+
+```txt
+quell/schale/bedienung/selection-flow.js     6'649 → 14'578   +7'929
+quell/schale/stil/bausteine.css            162'568 → 163'847   +1'279
+quell/schale/aufbau/seitenleiste.js         19'434 →  19'827     +393
+quell/bereiche/pdf/marken.js               128'143 → 128'366     +223
+quell/schale/bedienung/segment.js            2'697 →   2'761      +64
+quell/bereiche/einstellungen/ansicht/aussehen.js  9'991 → 10'045  +54
+quell/bereiche/wissen/bibliothek.js         34'904 →  34'956      +52
+quell/bereiche/wissen/lernwelt.js           47'668 →  47'715      +47
+quell/bereiche/einstellungen/ansicht/seite.js 30'384 → 30'421     +37
+quell/kern/einstellung/stand.js                440 →     440       ±0
+                                                       zusammen +10'077
+```
+
+Der Löwenanteil ist Code: `selection-flow.js` ohne Kommentare 1,3 → 7,3 KB
+(Federformel, Geste, Greifen, Umschalter). Die Kommentare sind gekürzt; die
+Begründungen stehen in E706, nicht im Startpaket.
+
+**Filmstreifen** (Bilder alle ~33 ms bei Wiedergabe ¼, `material-bilder/`,
+nicht eingecheckt, §55.4): untere Leiste — Tipp „Dokumente" → „Heute" und
+Ziehen „Heute" → „Termine" (10 Schritte à 34 ms, gehalten, dann los);
+Werkzeugwechsel Stift → Radierer, Farbe, Stiftart (Rechner und Telefon);
+Seite → Fläche; Aussehen Farben → Schrift und Layout; Regal Meine Ablage →
+Zuletzt geöffnet; Heute erster → zweiter Reiter; Einstellungen eine Zeile
+tiefer — je vorher und nachher, hell und dunkel. Wiedergabe ¼ über
+`Animation.setPlaybackRate`, ein Bild alle 110 ms Echtzeit, also rund alle
+27 ms Bewegungszeit.
+
+## §81 · Suche und Meldungen: Aufgehen, Staffel, gleitende Marke, Stapel, Fächer (E711, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/suche-und-meldungen` gegen den Grundstand
+`b3cf1933` (die erste Welle, E698–E706). Chromium von Playwright,
+1440 × 900 und 390 × 844 (`isMobile`, Berührung über CDP), hell und dunkel;
+Bahnen Bild für Bild über `requestAnimationFrame` (`test588`); Gzip wie
+`test388`.
+
+**Vorher gemessen, auf `b3cf1933`** (`test588` gegen den Grundstand, dazu
+die Vorher-Bilder):
+
+```txt
+Suche aufgehen            eigene Ankunft `glas-ankunft`: translateY(7px) scale(.985) → ruhig,
+                          aus der Mitte, nicht aus der Kapsel
+↓ in der Suche            baut die GANZE Liste neu (`zeichne()`), neue Knöpfe [data-i],
+                          neue Horcher je Zeile; die Wahl springt (0 Zwischenorte)
+Staffel                   keine: alle Treffer stehen im ersten Bild
+Marke                     keine (graue Fläche je Zeile, `.on`)
+drei Meldungen            sichtbar: 1 (die letzte) — die zwei davor nach einem Bild weg
+Glocke                    Klick öffnet den Posteingang; sonst nichts
+Posteingang               Zeilen „Text — Quelle", Zeit rechts, ohne Karte
+```
+
+**Nachher** (`test588`, Lauf unter dem Schloss ausstehend):
+
+```txt
+folgt im Nachtrag zu E711 (Bahn der Marke, Staffel, Stapel, Fächer, Goo — je aus test588)
+```
+
+**Start (test388 §5).** Die Zahl aus test388 §5 folgt im Nachtrag zu E711 (Lauf unter dem geteilten Schloss ausstehend); gemessen ohne Browser: +9,9 KB gzip über zehn Dateien, siehe unten.
+
+**Was die Dateien wachsen** (gzip, gegen `b3cf1933`, Bytes):
+
+```txt
+quell/schale/ueberlagerung/hinweis.js        2'450 →  7'168   +4'718
+quell/schale/bedienung/selection-flow.js    14'573 → 17'057   +2'484
+quell/schale/stil/studio.css                19'790 → 21'163   +1'373
+quell/schale/aufbau/schale.js               77'266 → 77'862     +596
+quell/bereiche/wissen/werkzeuge.js          51'691 → 51'999     +308
+quell/bereiche/datenbanken/ansichten/dienst.js 17'054 → 17'246  +192
+quell/schale/ueberlagerung/menue.js          6'408 →  6'526     +118
+quell/schale/aufbau/studio.js                2'861 →  2'934      +73
+quell/schale/aufbau/menueband.js            22'692 → 22'738      +46
+quell/kern/einstellung/stand.js                439 →    440       +1
+                                                      zusammen +9'909
+```
+
+(gzip -9 je Datei; `test388` misst über alle Startdateien mit Stufe 6.)
+
+**Filmstreifen** (nicht eingecheckt, §55.4; `welle2-bilder/suche/`):
+Aufgehen der Suche aus der Kapsel, das Gleiten der Marke bei ↓, das
+Auffächern an der Glocke und das Zusammenfliessen nach „Alle gelesen" —
+Wiedergabe 1/10 über `Animation.setPlaybackRate`, ein Bild alle 330 ms
+Echtzeit, also alle 33 ms Bewegungszeit; Rechner und Telefon, hell und
+dunkel, je vorher und nachher.
+
+### Nachtrag — die Durchsicht (4. und 5. Oktober 2026)
+
+**Wo und wie.** Derselbe Zweig nach der Durchsicht (`test588` §11 und die
+Reparatur), dieselbe Umgebung; gemessen am 5. Oktober um ca. 00:40 UTC
+unter dem geteilten Schloss, Rechner 1440 × 900, hell, Standard-Schema.
+Die Zahlen, die oben „folgen im Nachtrag" heissen:
+
+```txt
+Suche aufgehen      EINE Web-Animation auf der Scheibe, nur transform, 796 ms auf
+                    --feder-sanft (linear(), ohne Überschwingen); erstes Bild
+                    translate(613px,-118px) scale(.386,.106) = das Rechteck der Kapsel
+Staffel             nur neue Zeilen: Verzögerung 0 / 33 / 66 ms, je 200 ms
+Marke bei ↓         12 verschiedene Orte über 39 px, ruht nach 278 ms genau auf der
+                    Zeile; Höhe unterwegs bis 41,1 px (Dehnung), am Ziel 39 px;
+                    ↓ baut nichts neu (dieselben Knöpfe)
+Stapel              drei Meldungen: #toast oben 835 px (43 hoch), darüber die zwei
+                    davor bei 788 und 741 px (39 hoch, 8 px Lücke); weg nach 6,2 s
+Fächer              drei Karten auf --feder-knapp, je 542 ms, 0 / 40 / 80 ms
+                    versetzt; Knöpfe 58 / 58 / 58 / 44 / 44 px hoch
+„Alle gelesen"      Goo-Filter an EINER Ebene von 5 bis 541 ms, danach an keiner;
+                    die Glocke steht in allen Bildern des Fliessens an ihrem Ort
+                    und geht danach; Fokus am Nachbarn („Konto"); 3 von 3 gelesen,
+                    keine gelöscht
+```
+
+**Start (test388 §5).** Auf dem Endstand 2838 KB gzip über 248 Dateien,
+Decke 2850 KB; auf dem Grundstand `b3cf1933` gleich danach 2825 KB (beide
+am 5. Oktober um ca. 18:00 UTC, unter dem Schloss, sechste Durchsicht) —
+der Zweig allein kostet 13 KB (zugedacht waren je Zweig etwa 10 KB) und
+hält die Decke mit 12 KB Luft. Je Datei (gzip -9) gegen `b3cf1933`
++12'973 Bytes über zehn Dateien (`hinweis.js` +7'133, `selection-flow.js`
++2'484, `studio.css` +1'792, `schale.js` +828, `werkzeuge.js` +308,
+`dienst.js` +192, `menue.js` +118, `studio.js` +73, `menueband.js` +46,
+`stand.js` −1), davon +3'053 aus den Durchsichten (`hinweis.js` +2'415,
+`studio.css` +406, `schale.js` +232). Die dritte und die vierte Durchsicht
+hatten 2837 KB gegen 2825 KB gemessen, die fünfte (ca. 14:27 UTC) 2838
+gegen 2825 KB.
+
+**Der flackernde Fächer** (vierte Durchsicht, 5. Oktober ca. 06:10 UTC,
+gegen den Stand der Reparatur der Durchsicht, Rechner 1440 × 900): der
+Zeiger ruht in der Mitte der Glocke, 6 s lang, alle 150 ms gefragt. Die
+Glocke bekam alle ~400 ms ein `pointerleave` (der Nachfolger: die
+fliegende Karte `.ru-meldung-text` unter dem Zeiger) und ~170 ms später
+wieder ein `pointerenter` — 15 Mal in 6 s; jedes Mal baute der Fächer
+220 ms später neu auf und flog wieder heraus, `:hover` wechselte im Takt
+(die Blase blinkte mit). Mit Wiedergabe 1/10 dasselbe im Takt der
+Bewegung. Nach der Reparatur (ca. 07:09 UTC): ein `pointerleave` und ein
+`pointerenter` am Anfang (die erste Karte fliegt unter dem Zeiger hervor),
+danach 6 s lang offen und `:hover`, kein Neuaufbau.
+
+**Kontrast** (wie gemalt, Deckkraft und Tönung mitgerechnet; das kleinste
+Verhältnis je Schema):
+
+```txt
+                 Schrift auf der Marke    Fächer, Stapel, Posteingang
+                 vorher → nachher         nachher
+standard         2,16 → 5,15              6,06
+hell             1,03 → 5,70              5,50
+nacht            1,18 → 5,90              5,76
+wald             1,10 → 7,93              6,62
+sand             1,30 → 4,71              4,90
+papier           1,05 → 7,46              7,20
+kontrast         1,08 → 14,67             13,83
+rose             1,24 → 5,80              5,38
+touchkit-hell    1,00 → 6,37              5,27
+touchkit-dunkel  1,06 → 8,23              7,63
+```
+
+(„vorher" ist E711 vor der Durchsicht, gemessen von der Sonde der zweiten
+Durchsicht am 4. Oktober um ca. 16:15 UTC; das kleinste war in jedem
+Schema der Stern der Palette, Grau oder Gold auf dem Akzent. Daneben lagen
+Kürzel und Ausschnitt bei 3,77 bis 4,48 und „↵ Enter" bei 3,64 bis 4,48.)
+
+**Der Fächer über „KI"** (gefunden von der fünften Durchsicht, 5. Oktober
+ca. 14:19 UTC; nachgemessen von der sechsten um ca. 18:04 UTC mit einer
+eigenen Sonde, unter dem Schloss — auf der Reparatur der vierten Durchsicht
+und auf dem Endstand; die Seite „Elektrotechnik Skript" offen, zwei
+ungelesene Meldungen). Die Glocke unten bei 50 px. Vorher: der Fächer ab
+58 px, 8 px unter der Glocke; „KI" (70–105 px) und „Favorit" (73–102 px)
+lagen darunter — `elementFromPoint` in ihrer Mitte traf die erste Karte —,
+bei 1440 × 900, 1280 × 800 und 1024 × 768 gleich; am Telefon (langes
+Drücken auf `#mb-glocke`) ab 51 px, 7 px unter der Glocke, über „Zurück"
+(45–89 px). In `test588` §13 der Weg Glocke → „KI" in sechs Schritten,
+450 ms Ruhe, Klick: die KI blieb zu, die Karte galt als gelesen. Nachher:
+der Fächer ab 121 px, 71 px unter der Glocke und 16 px unter der Reihe, die
+bei 105 px endet (die Reihe ist 55 px hoch), an allen drei Breiten; „KI",
+„Favorit" und „…" frei, derselbe Weg öffnet die KI, der Fächer ist dann
+zu; der Weg Glocke → erste Karte (acht Schritte, je 16 ms) quert die Reihe,
+der Fächer bleibt offen. Am Telefon ab 105 px (61 px unter der Glocke),
+unten bei 281 von 844 — ganz im Bild, „Zurück" frei. Das Abtasten:
+6 × 21 = 126 Mal `elementFromPoint`, nur beim Öffnen. Mit 8 px unter der
+Reihe, wie die fünfte ihn zuerst gebaut hatte, stand er bei 113 px — genau
+auf der Trennlinie unter der Kopfzeile (114 px, in ihren Bildern von ca.
+14:28 UTC); mit 16 px steht er jetzt 7 px darunter. Die Tastatur um die Glocke ist
+dieselbe wie vorher: ↓ öffnet, Tab geht durch die Karten, „Alle gelesen",
+„Posteingang öffnen" und dann zu „Konto" — der Fächer ist zu.
+
+**Gegenproben, die noch fehlten** (fünfte Durchsicht, 5. Oktober ca. 14:04
+bis 14:17 UTC, in der Kopie des Endstands der vierten Durchsicht, je eine
+Verbiegung im gebauten `quell/`, `test588` darüber): alle acht rot —
+zwei-auf-einen 62/63, strich-gefangen 61/63, blass 62/63, stern-grau
+62/63, chip-getoent 62/63, marke-leckt 60/63, flackert 62/63, blase-halb
+62/63. Die zehn davor hatte die vierte Durchsicht um ca. 07:41 bis 07:57
+UTC gesehen.
+
+**Die sechste Durchsicht** (5. Oktober abends, unter dem Schloss).
+Nachbarn ca. 18:14–18:56 UTC, 118 Läufe: 110 grün; rot und auf `b3cf1933`
+grün nur `test360`, `test362`, `test114` (die fünf anderen Roten sind dort
+genauso rot). Die Filter der Suche am Telefon (428 × 926, wie `test114`),
+Höhe Bild für Bild nach `App.suche()`, das kleinste der vier Felder:
+
+```txt
+              0 ms   101   201   302   403   504   604   705   806 ms
+E711          4,3   14,9  29,6  37,1  40,2  41,4  41,8  41,9  42,0   (wächst bis ~806 ms)
+ruhig         42    42    42    42    42    42    42    42    42
+b3cf1933      41,4  42    42    42    42    42    42    42    42     (die alte Ankunft, 200 ms)
+```
+
+`test114` mass bei 600 ms. Unter einer Karte des Stapels am Telefon (390 ×
+844): 600 ms gehalten, dann sechs Schritte zu 20 px — vorher kam KEIN
+`pointermove` und kein `pointerup` bei der Fläche darunter an (`test588`
+§14), nachher alle. Kosten der Reparatur: `hinweis.js` +288 und
+`studio.css` +112 Bytes (gzip -9, vor allem Erklärung); der Zweig gegen
+`b3cf1933` damit +13'373 Bytes über zehn Dateien. `test388` §5 danach
+(ca. 19:40 UTC) weiter 2838 KB, Decke 2850 KB.
+
+**Der lange Druck am Telefon** (Sonde der zweiten Durchsicht): um ca. 07:08
+UTC einmal rot („langes Drücken öffnet den Fächer" — null, unter Last);
+um ca. 13:48 UTC zweimal auf dem Zweig und einmal auf der Reparatur davor
+grün (13 von 13). Der Druck hält 650 ms, der Fächer kommt nach 480 ms; bei
+voller Maschine reicht das knapp. `test588` §10 prüft denselben Weg mit
+mehr Luft und war in allen Läufen grün.

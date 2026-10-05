@@ -843,6 +843,8 @@ const Menueband = (() => {
       try { Ansichten.posteingang(); }
       catch { /* ohne Posteingang bleibt die Leiste */ }
     });
+    /* Derselbe Fächer wie an der Glocke im Studio-Kopf (E711). */
+    Hinweis.faecherBinden(glocke);
     rechts.appendChild(glocke);
 
     /* ── WAS GERADE LÄUFT (L103 Punkt 3, E322) ──────────────────────────

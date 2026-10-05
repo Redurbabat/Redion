@@ -166,6 +166,19 @@ Der Anlass war gemessen: 52 anklickbare Dinge auf dem Startbild, 67 mit
 offener Seite.
 
 
+Glas
+
+Was über der Seite schwebt, ist aus Glas: Menüs, der Finder, die
+Auswahlleiste, die untere Leiste am Telefon, der Dock im Dokument und die
+Zeichenleiste, wenn sie unten, frei oder als Spalte schwebt. Eine
+Unschärfe, eine Lichtkante, und die Seite darunter färbt das Glas. Was
+steht — Seitenleiste, Kopf, Einstellungen — bleibt deckend, ebenso
+Meldungen und der Lader; sie stehen über den Werkzeugen, nie darauf.
+Wer im System weniger Transparenz oder mehr Kontrast eingestellt hat, in
+Redion „Hoher Kontrast" einschaltet oder das Schema „Starker Kontrast"
+wählt, bekommt überall volle, deckende Flächen (E703).
+
+
 Bewegung
 
 Über der Oberfläche liegt eine eigene Schicht für Bewegung —
@@ -175,6 +188,31 @@ Knöpfe, Kacheln und Zustandsanzeigen hängen. Nichts davon wird gespeichert,
 nichts ändert Daten. Im Leerlauf steht sie still, und wer im System
 „weniger Bewegung" eingestellt hat, sieht sie gar nicht
 (`prefers-reduced-motion`).
+
+Seit E702 federt Redions eigene Oberfläche wie das Touch Kit: jeder Knopf
+sinkt beim Drücken ein und federt zurück (auch beim kurzen Tipp am iPhone),
+der Griff eines Schalters dehnt sich unter dem Finger, Blätter von unten
+kommen vom Rand, folgen dem Finger und gehen weggewischt mit einer
+Bewegung, und ein Reiterwechsel am Telefon gleitet aus der richtigen
+Richtung herein — getippt wie gewischt. Die Federn stehen als
+`--feder-*` in `grund.css`, gerechnet von `src/schale/bedienung/spring.ts`.
+„Ruhige Darstellung" in den Einstellungen hält all das an; den Inseln
+sagt es `data-ui-motion="reduce"` (ihre Federn in JavaScript hören darauf,
+sobald das Kit ab UI-Kit 13e7844 geholt ist, L222).
+
+Seit E711 geht die Suche (Strg P, Strg K, die Lupe) aus dem Knopf auf, der
+sie trägt; neue Treffer kommen nacheinander, und mit ↑ ↓ gleitet EINE Marke
+zur Wahl — in der Suche, in den Befehlen (Strg ⇧ K) und im Menü mit Suche.
+Drei Meldungen hintereinander stehen als Stapel übereinander, statt dass
+nur die letzte bleibt; Escape räumt sie ab (schliesst es gerade ein
+Fenster, bleiben sie stehen), am Telefon schnippt ein Finger eine zur Seite
+weg — ein Strich auf der Tafel oder dem Blatt, der unter einer Meldung
+beginnt, bleibt ein Strich, und was man darunter lange drückt und zieht
+(eine Kladde, einen Block), zieht man. Ein Klick auf die Glocke öffnet wie immer den
+Posteingang; wer auf ihr verweilt, sie lange drückt oder ↓ drückt, sieht
+die letzten drei Meldungen mit „Alle gelesen" (liest, löscht nichts) und
+„Posteingang öffnen"; ein Klick oder Tipp daneben, Tab oder Escape
+schliesst den Fächer wieder.
 
 
 Schnellstart
@@ -403,6 +441,8 @@ Seit August 2026 ist das Telefon die Hauptumgebung, nicht der Nebenschauplatz. R
 
 Unten fünf Wege als Kapsel, dort wo der Daumen ist: Dokumente, Heute, Lernen, Termine und Mehr. Jeder trägt seinen Namen unter dem Zeichen — auf 390 Pixel sind das 78 je Weg, und deshalb sind es fünf und nicht sechs.
 
+Die helle Fläche hinter dem gewählten Weg lässt sich mit dem Daumen greifen (E706): sie hebt sich, folgt dem Finger und rastet beim Loslassen auf dem Weg darunter ein — das wählt ihn, genau wie ein Tipp. Ein Tipp bleibt ein Tipp; Escape bricht das Ziehen ab. In Ruhe ist die Fläche fast klar, damit der Name darunter gut lesbar ist. Auch anderswo, wo man eines von wenigen wählt (Seite/Fläche/Redion, die Reiter von „Heute" und „Aussehen", die Wege im Regal, die Einstellungen, Farben, Breiten und Stifte der Stiftleiste), gleitet die Wahl zum neuen Knopf, statt zu springen. Mit „Ruhige Darstellung" oder weniger Bewegung im System springt sie wie früher.
+
 Zwischen den Bereichen lässt sich auch wischen: waagerecht über den Inhalt, und die Leiste geht einen Weg weiter. Die Geste sucht sich den nächsten Knopf und drückt ihn — damit gilt fürs Wischen alles, was fürs Tippen gilt, statt einer zweiten Logik daneben. Sie greift nicht, wo etwas waagerecht rollt, wo gezeichnet wird, wo zwei Finger zoomen oder wo der Finger ganz am Rand ansetzt; dort meint man den Browser.
 
 Suchen und KI stehen rechts in der Menüleiste, „Neu" ist der grosse Knopf im Regal und im Mehr-Blatt. Die drei schwebenden Knöpfe von früher — Suchen, KI fragen, Neue Seite — gibt es nicht mehr: zwei Leisten am unteren Rand sind eine zu viel.
@@ -478,7 +518,7 @@ Redion/
 ├─ pruefungen/
 │  ├─ alle.mts
 │  ├─ js-bestand.json
-│  └─ lauf/                    521 Läufe
+│  └─ lauf/                    527 Läufe
 │
 ├─ AUFGABEN.md · ERLEDIGTE-AUFGABEN.md
 ├─ LUECKEN.md · ENTSCHEIDUNGEN.md
@@ -1224,10 +1264,23 @@ nichts in der Sicherung. Er ist ein Finger, kein Stift.
 Fünf Farben und drei Strichbreiten stehen vorn; dazu kommen bis zu vier
 eigene Farben und ein Regler von 0,5 bis 12.
 
-Das **+ bei den Farben** öffnet direkt eine Palette: benannte Grundfarben,
-sechs Markerfarben mit transparenter Vorschau auf Papier, zuletzt verwendete
-Farben, Hex-Eingabe und Systemfarbwähler. Unter „Farbsätze &
-Stifteinstellungen“ bleiben deine gesicherten Einstellungen erreichbar.
+Das **+ bei den Farben** öffnet direkt eine Palette: zuerst acht Tinten
+(Königsblau, Nachtblau, Karmin, Tannengrün, Petrol, Aubergine, Sepia,
+Graphit — auf Papier gut lesbar und auch für ein farbschwaches Auge
+auseinanderzuhalten), darunter unter „Weitere Farben“ die fünf Grundfarben;
+beim Marker sechs Leuchtfarben, die Spitze **Keil** (gerade Enden, wie ein
+echter Textmarker) oder **Rund**, und die Pastelle unter „Weitere Farben“.
+Die Probe oben ist ein echter Strich mit dem gewählten Stift, auf dem Papier
+dieses Blatts; ist eine Tinte darauf kaum sichtbar, steht es dort in Worten.
+Dazu zuletzt verwendete Farben, Hex-Eingabe und Systemfarbwähler. Unter
+„Farbsätze & Stifteinstellungen“ bleiben deine gesicherten Einstellungen
+erreichbar. Alte Striche behalten ihre Farbe.
+
+Der **Füller** wird mit einem Stift mit Drucksensor im Schnellen bis zu
+35 % dünner und hat an Ecken volle Beine; der **Bleistift** hat
+Graphitkorn; **Kugelschreiber und Marker** behalten ihre Breite über den
+ganzen Strich. Auf dem **Whiteboard** und der Seitenfläche schreibt der
+Stift so glatt wie auf dem Blatt.
 Einen Farbtupfer auswählen wirkt sofort; eigene Farben aus Hex-Eingabe oder
 Systemfarbwähler erst mit „Farbe übernehmen“.
 
@@ -1682,7 +1735,7 @@ keine Secrets im Repo
 
 Tests
 
-Redion nutzt echte Prüfungen gegen die echte App. Es sind 521 Läufe unter
+Redion nutzt echte Prüfungen gegen die echte App. Es sind 527 Läufe unter
 `pruefungen/lauf/` (gezählt am 27. September 2026 mit
 `ls pruefungen/lauf/test*.mts | wc -l`).
 

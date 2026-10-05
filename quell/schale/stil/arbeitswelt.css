@@ -446,10 +446,7 @@
   .arbeitswelt .aw-vorlage-nutzen:hover{filter:brightness(1.08)}
 }
 
-.arbeitswelt :where(.aw-aktion,.aw-zaehler,.aw-ansicht,.aw-vorlage-nutzen,
-  .aw-navigation-eintrag,.aw-eintrag-haupt,.aw-mini):active{
-  transform:scale(var(--press-scale,.96))
-}
+/* .arbeitswelt :where(.aw-aktion, …):active: Einsinken per press.ts (E702) */
 
 /* --- Mittlere Arbeitsflächen: Navigation bleibt, Reiter werden quer ------ */
 @media(max-width:1120px){

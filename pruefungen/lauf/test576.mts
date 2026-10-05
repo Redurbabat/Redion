@@ -170,7 +170,16 @@ const server = http.createServer((a, b) => {
 });
 await new Promise<void>(f => { server.listen(0, '127.0.0.1', () => f()); });
 const PORT = (server.address() as { port: number }).port;
-const browser = await chromium.launch();
+/* DER GPU-WEG (E703): echte Unschärfe auf dem Bild. Die kopflose Schale
+   von Chromium setzt ihre Bilder mit dem SoftwareRenderer zusammen, und der
+   LÄSST jede Filterkette aus, in der `blur` steht — gemessen: eine harte
+   Schwarz-Weiss-Kante hinter einem Menü blieb hart (Rampe 0–1 px), und auf
+   jedem Bild lag die Seite SCHARF hinter dem Glas. Mit SwiftShader als
+   Grafikkarte wird sie zur Rampe von 50 px, wie auf dem Telefon.
+   „unsafe" erlaubt nur WebGL auf SwiftShader; für eine Seite auf
+   127.0.0.1 ist das gleichgültig. `test582` §1 hält diese vier Schalter. */
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+  '--ignore-gpu-blocklist', '--enable-gpu-compositing'] });
 
 /** Die App öffnen, im gewünschten Modus, mit einem MUSTER hinter der Oberfläche.
  *

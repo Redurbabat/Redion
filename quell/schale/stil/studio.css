@@ -53,7 +53,7 @@
 .studio-action{color:var(--auf-accent);background:var(--haupt-flaeche);box-shadow:var(--haupt-schein);font-weight:600;white-space:nowrap}
 .studio-icon:hover,.studio-shortcuts button:hover,.studio-search:hover{background:var(--bg-hover);border-color:var(--line)}
 .studio-action:hover{background:var(--haupt-flaeche-hover)}
-#studio-bar button:active{transform:scale(var(--press-scale))}
+/* #studio-bar button:active: Einsinken per press.ts (E702) */
 #studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .k-beschriftung{display:none}
 #studio-divider{display:none}
@@ -122,7 +122,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   body[data-schale="premium"] .k-ort.ist-hier{color:var(--accent-text);background:var(--accent-schwach);
     box-shadow:inset 3px 0 0 var(--accent);font-weight:600}
   body[data-schale="premium"] .k-knopf:hover{background:var(--bg-hover);color:var(--text)}
-  body[data-schale="premium"] .k-knopf:active{transform:scale(.98)}
+  /* .k-knopf:active: Einsinken per press.ts (E702) */
   body[data-studio-nav="kompakt"] .k-beschriftung{display:none}
   body[data-studio-nav="kompakt"] .k-knopf{justify-content:center;padding:0}
   body[data-schale="premium"] #kanten-lade{border-radius:0 var(--radius-xl) var(--radius-xl) 0;box-shadow:var(--studio-elevation);background:var(--bg-card)}
@@ -142,7 +142,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .r-sheet{animation:studio-sheet var(--motion-normal) var(--ease-enter)}
 .aw-fenster[open]>.aw-reiter-panel{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
 :is(.icon-btn,.btn,.mb-knopf,.ez-knopf){transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
-:is(.icon-btn,.btn,.mb-knopf,.ez-knopf):active:not(:disabled){transform:scale(var(--press-scale))}
+/* :is(.icon-btn,.btn,…):active: Einsinken per press.ts (E702) */
 .einst-nav{background:var(--bg-side)}
 .einst-inhalt{background:var(--bg)}
 .einst-inhalt :is(.ez-gruppe,.ez-grp){border-radius:var(--radius-xl);background:var(--bg-card);border:1px solid var(--line)}
@@ -159,7 +159,33 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
    Pixel eines schwarz-weiss-rot-blauen Musters, hell und dunkel). */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   :is(.menu,.finder,.auswahlleiste){background:var(--bg-schwebend-dicht);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}
+  /* DIE LICHTKANTE STATT DES RANDES (E703): Licht oben, Rückwurf unten,
+     Haarlinie (`--glas-kante`, hell.css/dunkel.css). So liest sich die
+     Fläche als Glasscheibe und nicht als grauer Kasten; ohne Unschärfe
+     (ausserhalb dieses Blocks) bleibt der Rand, wie er war. */
+  :is(.menu,.finder,.auswahlleiste){box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
 }
+/* ══ GLAS KOMMT ALS SCHEIBE, NICHT ALS NEBEL (E703) ═══════════════════════
+   `studio-arrive` blendet über `opacity` ein. Auf einer Glasfläche heisst
+   das: in den ersten Bildern ist die Scheibe halb durchsichtig, und die
+   Seite dahinter liegt SCHARF hinter der Schrift — `opacity` wirkt auf das
+   ganze Ergebnis, die verwischte Rückseite eingeschlossen. Gemessen mit
+   zehnfach verlangsamter Bewegung über einer PDF: „Montage-Elektriker:innen"
+   war durch das Menü zu lesen.
+   Jetzt gleitet die Scheibe (derselbe Weg, dieselbe Kurve, dieselbe Dauer)
+   und nur ihr INHALT blendet ein. `opacity` an einem Kind ändert die
+   Rückseite des Elternteils nicht. Der Satz aus `recipes/glass-morphing.md`,
+   den schon E646 zitiert: „Blur is supporting material, not the animation
+   itself." Ohne Glas ändert sich nichts Sichtbares; `studio-arrive` bleibt
+   für alles, was kein Glas ist. */
+@keyframes glas-ankunft{from{transform:translateY(7px) scale(.985)}to{transform:none}}
+@keyframes glas-inhalt{from{opacity:0}to{opacity:1}}
+:is(.menu,.finder):not(.blatt){animation-name:glas-ankunft}
+/* Der Inhalt ohne Gewicht (`:where`, 0,0,0): hat ein Kind eine eigene
+   Bewegung — der Schimmer „schreibt" im KI-Finder, die Zahlen im Lernfinder,
+   ein Lader —, gewinnt sie; es kommt dann eben ohne Einblenden. Die Scheibe
+   selbst (oben) bleibt davon unberührt. */
+:where(.menu:not(.blatt),.finder:not(.blatt))>*{animation:glas-inhalt var(--motion-fast) linear both}
 /* Auf Glas keine blasse Schrift (E695, grund.css): die stille Schrift rückt
    eine Stufe nach oben, weil `--text-faint` nur auf voller Fläche 3,9 : 1 hat. */
 :is(.menu,.finder,.auswahlleiste,#handy-oben){--text-faint:var(--text-dim)}
@@ -233,6 +259,10 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
      später lädt und sonst gewinnt. */
   #handy-oben{border-radius:calc(var(--mobile-nav-height) / 2);
                box-shadow:var(--studio-highlight),var(--studio-elevation)}
+  /* Dieselbe Lichtkante wie Menü und Dock (E703) — wo es Glas gibt. */
+  @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    #handy-oben{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
+  }
   :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
   .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}
   .lernwelt .lw-desk h2{font-size:34px;letter-spacing:-1px}
@@ -241,10 +271,15 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .lernwelt .lw-next-step{align-items:flex-start;flex-direction:column;gap:16px}
 }
 @media(prefers-reduced-transparency:reduce){
-  :is(.menu,.finder,.auswahlleiste){background:var(--bg-card);backdrop-filter:none;-webkit-backdrop-filter:none}
+  :is(.menu,.finder,.auswahlleiste){background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 @media(prefers-reduced-motion:reduce){
   :is(.finder,.dlg,.menu,.r-sheet),#kanten-lade:not([hidden]),.aw-fenster[open]>.aw-reiter-panel,#reiterleiste .reiter,.lw-insights-body{animation:none}
+  /* Die Scheibe hat hier mehr Gewicht (0,2,0) als die Zeile darüber und
+     behielte sonst ihren Namen — ohne Dauer zwar, aber ehrlich aus ist aus.
+     Der Inhalt ohne Gewicht wie oben: die eigene Bewegung eines Kindes
+     regelt sein eigenes Blatt. */
+  :is(.menu,.finder):not(.blatt),:where(.menu,.finder)>*{animation:none}
   .studio-monogram,.studio-brand:hover .studio-monogram{transform:none}
   #studio-bar button:active,body[data-schale="premium"] .k-knopf:active{transform:none}
   .lw-paper-sheet,.lw-paper-stack::before,.lw-paper-stack::after{transform:none;transition:none}
@@ -291,3 +326,221 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .studio-icon:is(:hover,:focus-visible){transform:none}
   .studio-icon[aria-label]::after{animation:none}
 }
+
+/* ===========================================================================
+   RUHIGER — UND NICHTS IST WEG (E701, test580)
+   ---------------------------------------------------------------------------
+   Redur, 27. September, ca. 16:45 UTC: „du kannst auch die oberfläche
+   bischen ruhige machen ohne etwas lösche also eine funktionen". Ruhiger
+   heisst hier: weniger, das GLEICHZEITIG ruft — nicht weniger, das da ist.
+   Jede Regel unten ändert nur, wie laut etwas in Ruhe ist; jeder Griff
+   bleibt am selben Ort mit demselben Auslöser (§43, E218/E219).
+   Farbe und Schein sind Zustand, nicht Dauerschmuck (E640, das UI-Kit:
+   „glow used as state feedback"): was man anfasst oder mit der Tastatur
+   erreicht, bekommt sie sofort zurück.
+   Alles steht in EINEM Block, damit man sieht, was dieser Bogen tut, und
+   ihn als Ganzes prüfen kann. Nur vorhandene Marken (§39).
+   =========================================================================*/
+
+/* 1 · EINE HAUPTHANDLUNG JE BILD (grund.css: „Genau eine je Bild").
+   „PDF öffnen" im Kopf ist in Ruhe eine getönte Pille — derselbe Knopf,
+   dieselbe Stelle, dasselbe Zeichen —, und wird unter dem Zeiger und unter
+   dem Tastenfokus der volle Hauptknopf mit Verlauf und Schein. Gemessen:
+   Schrift auf der Pille 4,61 : 1 hell, 5,28 : 1 dunkel. */
+#studio-import{background:var(--accent-schwach);color:var(--accent-text);box-shadow:none;
+  transition:transform var(--motion-instant) var(--ease),background var(--motion-fast) var(--ease),
+  color var(--motion-fast) var(--ease),box-shadow var(--motion-fast) var(--ease)}
+#studio-import:is(:hover,:focus-visible){background:var(--haupt-flaeche-hover);color:var(--auf-accent);
+  box-shadow:var(--haupt-schein)}
+/* Der Themenknopf im Hellen: ein grauer Mond wie im Dunkeln der helle —
+   kein zweiter violetter Fleck neben dem Kopfknopf. */
+html[data-theme="light"] .studio-orb{background:var(--text-dim);box-shadow:inset -6px -3px 0 var(--bg-side);
+  transform:rotate(-25deg)}
+/* „Dokumente öffnen" auf Heute ist ein Umrissknopf (die Klasse `is-primary`
+   ist dort weg, lernwelt.ts); das violette Zeichen sagt, wohin er führt. */
+/* Zeichen und Wort in einer Linie: das Zeichen sass bisher ohne Abstand
+   und eine halbe Zeile zu hoch vor dem Wort (auf beiden Bildern gesehen). */
+.lernwelt .lw-desk .lw-actions button{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2)}
+.lernwelt .lw-desk .lw-desk-auf [data-sym]{color:var(--accent-text)}
+.lernwelt .lw-desk .lw-desk-auf:is(:hover,:focus-visible){border-color:var(--accent-text)}
+
+/* 2 · „ZULETZT GEÖFFNET" RUHT. Der Kartenring drehte sich endlos — im
+   Leerlauf, am Telefon und hinter jedem Fenster über dem Regal. Jetzt
+   steht er, bis man hinzeigt oder die Tastatur hineinführt. Nur der
+   Wiedergabezustand wechselt, nie die Animation: sie ist nicht gelöscht,
+   nur angehalten (ergänzt E535 Block 07). Das leere Regal (.bib-leer)
+   dreht weiter wie in E529, und die ruhige Darstellung und „weniger
+   Bewegung" schalten ihn wie bisher ganz aus. */
+.rmo-recent .rmo-ring-trommel{animation-play-state:paused}
+.rmo-recent:focus-within .rmo-ring-trommel{animation-play-state:running}
+@media (hover:hover){.rmo-recent:hover .rmo-ring-trommel{animation-play-state:running}}
+body:has(.overlay,.menu.blatt,#r-blatt) .rmo-recent .rmo-ring-trommel{animation-play-state:paused}
+/* Die drei Karten liegen in Ruhe flach; der Fächer kommt mit dem Zeiger. */
+.rmo-recent .rmo-recent-card:not(:hover,:focus-visible,:active){transform:none}
+@media (hover:hover){
+  .rmo-recent .rmo-recent-track:is(:hover,:focus-within) .rmo-recent-card:not(:hover,:focus-visible,:active){
+    transform:rotateY(calc((var(--rmo-index,1) - 1) * -6deg))}
+}
+
+/* 3 · GEZEICHNETE ZEICHEN (Redur, 21:45 UTC: „Gezeichnete Zeichen"). Die
+   Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt, Seitenwerkzeugen und
+   Termine sind Striche aus `Register.symbole`; hier bekommen sie ihre
+   stille Farbe und ihre Grösse. Grau in Ruhe, `--text` unter Zeiger und
+   Tastenwahl; der gewählte Bereich trägt den Akzent, Löschen bleibt rot. */
+.einst-nav .mi{display:grid;place-items:center;color:var(--text-dim)}
+.einst-nav button:is(:hover,:focus-visible) .mi{color:var(--text)}
+.einst-nav button.on .mi{color:var(--accent-text)}
+.menu button .mi{display:grid;place-items:center;color:var(--text-dim)}
+.menu button:not(.rot):is(:hover,:focus-visible,.jetzt) .mi{color:var(--text)}
+.menu .kenn{background:var(--bg-hover);color:var(--text-dim);box-shadow:inset 0 0 0 1px var(--line)}
+.home-liste .mz{display:grid;place-items:center;color:var(--text-dim)}
+.home-liste button:is(:hover,:focus-visible) .mz{color:var(--text)}
+.home-liste button > span:first-child:has(> svg.sym){display:grid;place-items:center;flex:none;
+  width:26px;color:var(--text-dim)}
+.home-karten .hk b:has(> svg.sym){display:flex;align-items:center;gap:8px}
+.home-karten .hk b > svg.sym{color:var(--text-dim);flex:none}
+.rm-z:has(> svg.sym){display:grid;place-items:center;color:var(--text-dim)}
+.rm-z > svg.sym{width:21px;height:21px}
+.rm-zu > svg.sym{width:18px;height:18px}
+.pg-tools button:has(> svg.sym){display:inline-flex;align-items:center;gap:6px}
+@media(max-width:760px){
+  .einst-nav .mi > svg.sym,.menu.blatt button .mi > svg.sym{width:20px;height:20px}
+  .home-liste .mz > svg.sym,.home-liste button > span:first-child > svg.sym{width:21px;height:21px}
+  .home-liste button > span:first-child:has(> svg.sym){width:30px}
+}
+
+/* 4 · AUS IST GRAU. Der Verlaufsschalter trug auch AUS den violetten
+   Schimmer (Deckkraft .5) — drei Schalter untereinander sahen aus wie drei
+   angeschaltete. Jetzt leuchtet nur AN; beim Überfahren und unter dem
+   Tastenfokus kommt der Schimmer wie bisher zurück, und die einmalige
+   Bewegung beim Umschalten bleibt (ergänzt E535 Block 06). */
+body [data-rmo~="toggle"].mschalter[data-rmo-state="aus"] > .rmo-verlauf{opacity:.12;filter:saturate(0) brightness(1.2)}
+body button:is(:hover,:focus-visible) > [data-rmo~="toggle"].mschalter[data-rmo-state="aus"] > .rmo-verlauf{
+  opacity:.5;filter:saturate(.75) brightness(1.35)}
+
+/* 5 · DIE KENNZAHLKARTEN RUHEN. Vier gleiche violette Herzen, vier Ringe
+   und vier Kurven standen über dem Falz, auch bei null. In Ruhe sind sie
+   grau; angefasst, mit der Tastatur erreicht oder beim einmaligen Abspielen
+   kommt die Farbe zurück. Die Zahlen bleiben, wie sie sind. Die kleine
+   Kurve zeigt feste Werte und keine echten — sie ist deshalb in Ruhe
+   neutral (L224, ergänzt E534/E535). */
+:is(.stat-karte.lw-metrik,.rmo-health-metric) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+  transition:filter var(--motion-fast) var(--ease),opacity var(--motion-fast) var(--ease)}
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+  filter:saturate(0)}
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > .rmo-heart{opacity:.45}
+
+/* 6 · DIE ECKE DES BANDES TRÄGT DEN GRUND DES BANDES. Am Rechner ist das
+   Band seit dem Studio `--bg-side`; die Ecke rechts mit Suche, KI und
+   Klappe blieb `--schale-grund` — im Hellen ein fast schwarzer Block am
+   Ende eines hellen Bandes. Dieselben Knöpfe, dieselben Orte. */
+@media(min-width:761px){
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts,.mb-klapp){background:var(--bg-side)}
+  body[data-schale="premium"] #main > #menueband .mb-klapp{box-shadow:-8px 0 8px -6px var(--bg-side)}
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts-knopf,.mb-klapp){color:var(--text-dim)}
+  body[data-schale="premium"] #main > #menueband :is(.mb-rechts-knopf,.mb-klapp):hover{background:var(--bg-hover);color:var(--text)}
+}
+
+/* 7 · EIN TITEL AM TELEFON. Solange der grosse gleichnamige Titel zu sehen
+   ist, ist die kleine Krume durchsichtig; rollt er unter die Kopfzeile,
+   kehrt sie zurück (kopfleiste.ts setzt `data-titel-sichtbar`). Sie bleibt
+   im Baum und klickbar. Unter „weniger Bewegung" wechselt sie ohne Blende
+   (die Marke `--motion-fast` ist dort 1 ms, grund.css). */
+@media(max-width:760px){
+  #crumb > :is(a:last-child,.sep:has(+ a:last-child)){transition:opacity var(--motion-fast) var(--ease)}
+  #topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
+}
+
+/* ══ E711 · Suche wächst, Auswahl gleitet, Meldungen stapeln sich (Szenen 07/08).
+   Die Bahnen rechnet `SelectionFlow` (E706/E702); hier nur die FORM. */
+
+/* Die Scheibe wächst aus der Kapsel: ihre eigene Ankunft weicht der Bahn. */
+:is(.menu,.finder).ru-waechst{animation:none}
+.ru-waechst > *{animation:none}
+
+/* Die eine Marke: unter der Schrift, über den Karten. */
+.ru-marke-traeger{position:relative}
+:where(.ru-marke-traeger) button{position:relative;z-index:1}
+.ru-marke{position:absolute;left:0;top:0;z-index:0;display:block;pointer-events:none;
+  border-radius:var(--radius-md);background:var(--accent);
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .22),0 1px 3px rgb(0 0 0 / .18)}
+.ru-marke[hidden]{display:none}
+.ru-marke-still{background:var(--bg-hover);box-shadow:none}
+/* Akzent mit heller Schrift NUR in der Suche und der Palette (`.finder .res`): im
+   Menü mit Suche heisst `.on` „das gilt jetzt" („Quelle wechseln") und behält
+   seine Fläche und seine Schrift — sonst stand dort Weiss auf Weiss (vierte
+   Durchsicht E711, test588 §12). */
+.finder .res.ru-marke-traeger > button.on{background:transparent;color:var(--auf-accent);transition:color var(--motion-fast) var(--ease)}
+/* Kürzel und Ausschnitt voll auf der Marke: mit .82 nur 3,77–3,99 : 1 (Durchsicht E711). */
+.finder .res.ru-marke-traeger > button.on :is(.pth,.snip){color:inherit;opacity:1}
+/* Der Stern folgt auf der Marke der Zeile (Grau/Gold dort 1,0–2,7 : 1); ★/☆ sagt die Form (§38). */
+.finder .res.ru-marke-traeger > button.on > .fest,
+.finder .res.ru-marke-traeger > button.on > .fest:hover{color:inherit}
+.menu-liste.ru-marke-traeger button.jetzt{background:transparent}
+/* „↵ Enter" reitet auf der Marke — nur am Rechner (am Telefon gibt es die Taste so nicht).
+   Ohne Tönung, mit Rand in der Schriftfarbe: getönt nur 3,64 : 1 (Durchsicht E711). */
+.ru-marke-taste{position:absolute;right:10px;top:50%;translate:0 -50%;padding:2px 7px;
+  border-radius:var(--radius-sm);font:600 11px/1.4 var(--font);letter-spacing:.02em;white-space:nowrap;
+  color:var(--auf-accent);background:none;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--auf-accent) 45%,transparent)}
+.finder .res.ru-marke-traeger > button.on > .pth{margin-right:64px}
+@media(max-width:760px){
+  .ru-marke-taste{display:none}
+  .finder .res.ru-marke-traeger > button.on > .pth{margin-right:0}
+}
+/* Die neuen Treffer kommen nacheinander (33 ms Abstand, wie im Video). */
+.ru-kommt{animation:ru-kommt var(--motion-normal) var(--ease-enter) both;animation-delay:calc(var(--ru-n) * 33ms)}
+@keyframes ru-kommt{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Der Stapel: die älteren Meldungen in der Form von `#toast` — DECKEND wie
+   er (E703 (c): Glas druckte beim Einblenden über `opacity` doppelt und
+   läge oft auf anderem Glas); die Tiefe macht die Lichtkante. */
+#ru-toast-stapel{position:fixed;left:0;top:0;width:0;height:0;z-index:899}
+/* 560px allein (sechste Durchsicht E711): hier stand min(560px, 100vw - 28px) —
+   gilt aber nur über 760 px Breite, wo 100vw - 28px nie unter 560 fällt; die
+   rohe 28px zählte nur in marken-decke.json (test362) mit. Darunter gilt die
+   Telefonregel. */
+.ru-toast-alt{position:fixed;left:0;right:0;top:0;margin-inline:auto;width:fit-content;box-sizing:border-box;
+  max-width:560px;padding:9px 18px;font-size:13.5px;line-height:1.4;
+  border-radius:var(--radius-md);background:var(--bg-side);border:1px solid var(--line);color:var(--text-dim);
+  box-shadow:var(--glas-kante),var(--shadow-1);pointer-events:none}
+@media(max-width:760px){
+  .ru-toast-alt{left:14px;right:14px;width:auto;max-width:none;text-align:center}
+}
+
+/* Der Fächer: Karten ohne eigene Unschärfe — im Goo-Filter sähe sie nichts. */
+#ru-glocken-faecher{position:fixed;z-index:880;display:grid;gap:var(--space-3)}
+#ru-glocken-faecher[hidden]{display:none}
+/* Solange der Fächer offen ist, sagt ER, was in der Glocke liegt: die Blase
+   (E462) stünde genau unter ihm und ragte halb heraus (vierte Durchsicht E711). */
+#studio-glocke[aria-expanded="true"]::after{display:none}
+.ru-faecher-karten{display:grid;gap:var(--space-3)}
+.ru-meldung{display:grid;grid-template-columns:1fr auto;grid-template-areas:"quelle zeit" "text text";gap:2px 10px;
+  min-height:var(--touch-min);padding:10px 14px;text-align:left;border-radius:var(--radius-xl);
+  background:var(--bg-side);color:var(--text);box-shadow:var(--glas-kante),var(--studio-elevation)}
+.ru-meldung:hover{background:var(--bg-hover)}
+.ru-meldung-quelle{grid-area:quelle;font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
+.ru-meldung-text{grid-area:text;font-size:14px;font-weight:600;line-height:1.35}
+.ru-meldung-zeit{grid-area:zeit;font-size:11.5px;color:var(--text-dim)}
+.ru-meldung.neu .ru-meldung-quelle::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;
+  vertical-align:1px;border-radius:50%;background:var(--accent)}
+.ru-faecher-fuss{display:flex;gap:var(--space-3);justify-content:flex-end}
+.ru-faecher-fuss button{min-height:var(--touch-min);padding:0 14px;border-radius:var(--radius-pill);font-weight:600;
+  background:var(--bg-side);color:var(--text);box-shadow:var(--glas-kante),var(--shadow-1)}
+.ru-faecher-fuss button[data-faecher="gelesen"]{color:var(--accent-text)}
+:is(.ru-meldung,.ru-faecher-fuss button):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Nur während des Zusammenfliessens, an einer Ebene (SelectionFlow.goo). */
+.ru-goo-an{filter:url(#ru-goo)}
+#ru-goo-svg{position:absolute;width:0;height:0;overflow:hidden}
+
+/* Posteingang: Glaskarten mit Lichtkante, ohne Unschärfe je Karte. */
+.home-liste.pe-karten{display:grid;gap:var(--space-3);background:none;border:0;box-shadow:none;padding:0}
+.home-liste.pe-karten > .pe-karte{display:flex;align-items:center;gap:12px;width:100%;min-height:var(--touch-min);
+  padding:12px 14px;border:0;border-radius:var(--radius-xl);text-align:left;
+  background:var(--bg-side);box-shadow:var(--glas-kante),var(--shadow-1)}
+.home-liste.pe-karten > .pe-karte:hover{background:var(--bg-hover)}
+.pe-karte-inhalt{flex:1;min-width:0;display:grid;gap:2px}
+.pe-quelle{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
+.pe-karte-text{font-size:14.5px;line-height:1.4;color:var(--text)}
+.pe-karte.neu .pe-karte-text{font-weight:600}
+.pe-karte-zeit{font-size:12px;color:var(--text-dim);white-space:nowrap}

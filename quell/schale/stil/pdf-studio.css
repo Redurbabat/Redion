@@ -64,7 +64,7 @@
    hat ihre eigene Regel (Knopf deckend, nur das Zeichen blass). */
 .document-studio :is(.document-topbar,.document-commandbar,.document-inspector,.document-thumbnails) button:disabled{opacity:.45;cursor:not-allowed}
 .document-studio :is(.document-topbar,.document-commandbar) button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
-.document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:scale(var(--press-scale))}
+/* … button:active: Einsinken per press.ts (E702) */
 .document-studio .document-thumbnails.is-open{animation:studio-drawer var(--motion-normal) var(--ease-enter)}
 .document-studio .document-inspector.is-open{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
 .document-studio .document-center{background:var(--bg);scrollbar-gutter:stable}
@@ -158,7 +158,7 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    Farbe zu erkennen, sondern auch am Rahmen, und `aria-pressed` sagt sie
    ohnehin. */
 .document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:var(--bg-hover);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
-.document-drawingbar button:active:not(:disabled){transform:scale(var(--press-scale))}
+/* .document-drawingbar button:active: Einsinken per press.ts (E702) */
 /* ZURÜCK UND VOR GANZ LINKS (E490). Der Trennstrich wandert mit auf die
    andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
    halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
@@ -759,4 +759,44 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     radial-gradient(farthest-side at 0 50%, var(--roll-schatten), transparent) left / 16px 100% no-repeat scroll,
     radial-gradient(farthest-side at 100% 50%, var(--roll-schatten), transparent) right / 16px 100% no-repeat scroll,
     var(--pdf-dock)
+}
+/* ══ DER DOCK IST GLAS (E703) ═════════════════════════════════════════════
+   Redur, 27. September: „glass efeck usw alles haben". Der Dock SCHWEBT
+   über dem Papier (E619), also liegt er auf Glas wie das Menü und die
+   Telefonleiste: die rosa Seite unter ihm färbt ihn rosa, statt dass eine
+   graue Platte sie abschneidet. DICHT (E695), weil er Wörter trägt.
+
+   DAS GLAS SITZT AM FESTEN RAHMEN, NICHT AM ROLLER. Die Deckel oben sind
+   `local`-Schichten in der Farbe der Leiste — auf Glas stünden sie als zwei
+   graue Streifen da. Darum wird der Rahmen (`.blatt-reihe`, fest unten) die
+   Scheibe, und der Roller darin (`.blatt-werk`) wird durchsichtig. Wo es zu
+   rollen gibt, läuft jetzt der INHALT an der Kante aus: eine Maske am Kind,
+   und die ändert die Rückseite des Rahmens nicht. Welche Kante, sagt
+   `data-mehr` (`kern/helfer/rollrand.ts`), dasselbe Attribut, das die
+   Zeichenleiste schon liest.
+
+   Ohne Unschärfe (ausserhalb dieses Blocks) bleibt alles, wie es war: die
+   deckende Leiste mit Deckeln und Schimmer. Weniger Transparenz, mehr
+   Kontrast, „Hoher Kontrast" und „Starker Kontrast" drehen die Marken um
+   (grund.css) — dann ist der Rahmen `--bg-card`, voll deckend. */
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{
+    background:var(--bg-schwebend-dicht);
+    -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+    border-radius:1.375rem; box-shadow:var(--glas-kante), var(--shadow-3);
+    --text-faint:var(--text-dim) }
+  body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe::before{ display:none }
+  body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe .blatt-werk{
+    background:none; border-color:transparent; box-shadow:none }
+  body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe .blatt-fest{
+    background:none; border-color:var(--line-soft) }
+  body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe[data-mehr="links"] .blatt-werk{
+    -webkit-mask-image:linear-gradient(to right, transparent 0, #000 32px);
+    mask-image:linear-gradient(to right, transparent 0, #000 32px) }
+  body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe[data-mehr="rechts"] .blatt-werk{
+    -webkit-mask-image:linear-gradient(to left, transparent 0, #000 32px);
+    mask-image:linear-gradient(to left, transparent 0, #000 32px) }
+  body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe[data-mehr="beides"] .blatt-werk{
+    -webkit-mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
+    mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%) }
 }

@@ -1,5 +1,246 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 4. und 5. Oktober 2026 · E711, Durchsicht · Der Fächer geht wieder zu, ein Escape tut eines, die Marke ist lesbar, der Strich kommt an, die jetzige Wahl bleibt markiert, „KI" bleibt frei, eine Kladde lässt sich unter einer Meldung wieder tragen
+
+**Redur:** am 3. Oktober um ca. 19:35 UTC „Weiter ohne pause," — und weiter
+„ohne eine funktione löschen".
+
+**Gefunden:** Mit der Tastatur geöffnet blieb der Fächer an der Glocke nach
+einem Klick daneben, nach Tab und nach Strg P stehen (über der Suche); am
+Telefon nach langem Drücken. Nach „Alle gelesen" fiel der Fokus auf `body`,
+und die Karten flossen ins Leere, weil die Glocke schon weg war. Ein Escape
+in der Suche schloss die Suche UND räumte die Meldungen ab. Die Schrift auf
+der Marke fiel in mehreren Schemata unter 4,5 : 1 (der Stern der Palette bis
+1,0). Ein Strich auf der Tafel, der unter einer Meldung begann, kam mit 8
+von 170 px an.
+
+**Gebaut:** Klick oder Tipp daneben, Tab, ein Fokus anderswo schliessen den
+Fächer; die Glocke sagt `aria-expanded`; der Fokus bleibt im Kopf; die
+Glocke steht, bis die Karten in ihr sind. Der gemeinsame Escape-Griff merkt
+sich im Einfangen, ob ein Fenster offen war. Volle Schrift auf der Marke,
+der Chip ohne Tönung, der Stern in der Farbe der Zeile. Ein Zug unter einer
+Meldung gehört ihr nur, wo die Fläche darunter das Waagerechte nicht selbst
+nimmt; ein Schnippen zählt nach der letzten Bewegung.
+
+**Vierte Durchsicht (5. Oktober):** im Menü mit Suche verlor die jetzige
+Wahl (`.on`, „Quelle wechseln") ihre Fläche — der Akzent der Marke gilt
+jetzt nur in Suche und Palette. Der Fächer flackerte, solange der Zeiger
+auf der Glocke ruhte (die Karten fliegen unter ihm hervor) — ein
+`pointerenter` baut ihn nicht mehr neu. Er deckte die Blase der Glocke halb
+zu — sie geht, solange er offen ist. Wächter `test588` §12.
+
+**Fünfte Durchsicht (5. Oktober):** der Fächer, der beim Zeigen aufgeht,
+lag am Rechner über „KI" und „Favorit" direkt unter der Glocke; wer von der
+Glocke dorthin wollte, fuhr in ihn hinein, und ein Klick traf eine Meldung
+(die vierte Durchsicht hatte es Redur offen gelassen, L232 Punkt 10). Er
+geht jetzt unter der Reihe auf, die direkt unter der Glocke steht
+(`unterDerReihe`); wer in ihn hinein will, quert die Reihe. Wächter
+`test588` §13. Dazu die acht Gegenproben, die beim Abbruch der vierten
+Durchsicht noch fehlten. Die sechste Durchsicht (5. Oktober abends) hat den
+Endstand gemessen — `test588`, die Sonden, `test388`, die Bilder und die
+Nachbarn, unter dem Schloss — und eingecheckt.
+
+**Sechste Durchsicht (5. Oktober abends):** in den Nachbarn waren drei
+Läufe rot, die auf `b3cf1933` grün sind — alle drei von E711. Am Telefon
+kam eine lange gedrückte und gezogene Kladde nicht mehr an, wenn eine
+Meldung darüber lag (`test360`): der Stapel nahm jeden waagerechten Zug.
+Jetzt gehört ein Zug, vor dem der Finger länger als 300 ms ruhte, dem, was
+darunter liegt (Wächter `test588` §14, rot gesehen). Eine rohe `28px` zu
+viel in `studio.css` (`test362`) ist weg, Bild für Bild dasselbe. Und
+`test114` mass die Filter der Suche mitten im Aufgehen (41,8 statt 42 px);
+er misst jetzt, wenn die Suche steht, und prüft dazu, dass sie
+spätestens nach 1,5 s steht. Gegenproben (vier, alle rot gesehen) und
+35 Nachbarn im Nachtrag zu E711; `test588` 72 von 72, dreimal.
+
+**Geprüft:** `test588` §11 (rot gegen `556ffdaa`: 46 von 57), §12 (rot
+gegen `6853b992`: 47 von 63, und gegen die Reparatur der Durchsicht: 58 von
+63) und §13 (rot gegen die Reparatur der vierten Durchsicht: 66 von 68),
+danach 69 von 69 auf dem Endstand; Gegenproben und Nachbarn im Nachtrag zu
+E711, `test388` §5 2838 KB (Grundstand 2825, Decke 2850).
+Nicht von E711, aber gefunden: die Trefferzeilen am Telefon sind 39 px
+(L232 Punkt 9); im Schema „Starker Kontrast" ist am Telefon der aktive
+Reiter der unteren Leiste leer (auf `b3cf1933` genauso, E705).
+
+## 28. September 2026 · E711 · Die Suche wächst aus der Kapsel, die Meldungen stapeln sich
+
+**Redur:** um ca. 22:05 das Video „Liquid Glass" und dazu „Schau mal das
+auch an ich will das auch haben"; um ca. 22:10 „… bessere übergagnge
+besssere efeckten , bessere oberfläsche alles …" — „ohne eine funktione
+löschen".
+
+**Gebaut:** Die Suche geht aus dem Knopf auf, der sie trägt
+(`SelectionFlow.growFrom`, `--feder-sanft`); neue Treffer kommen
+nacheinander (`stagger`, nur die neuen); EINE Marke gleitet mit ↑ ↓ auf der
+Kit-Feder zur Wahl (`highlight`/`glide`, vier Bahnen, umlenkbar) — in der
+Suche, der Befehlspalette und im Menü mit Suche, ohne die Liste je Pfeil
+neu zu bauen; „↵ Enter" auf der Marke. `#toast` wird ein Stapel aus bis zu
+drei Meldungen (`#ru-toast-stapel`), Escape räumt ab, ein Finger wischt
+weg. Die Glocke öffnet weiter den Posteingang und fächert beim Zeigen oder
+langen Drücken die letzten drei Meldungen auf; „Alle gelesen" fliesst zäh
+in sie zurück (EIN Goo-Filter, nur während es fliesst). Der Posteingang
+zeigt Glaskarten.
+
+**Geprüft:** `test588` (rot auf `b3cf1933`), Nachbarn in E711.
+
+## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
+
+**Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu
+„ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift
+übergangen usw"; im Fragebogen um ca. 21:45 „Wie im UI-Kit (Empfohlen)" und
+„Untere Leiste besser lesbar"; um ca. 22:10 „… bessere übergagnge besssere
+efeckten , bessere oberfläsche alles …".
+
+**Gebaut:** `SelectionFlow` fährt die Feder des Touch Kits (`knapp`/`druck`)
+und kann greifen (`ziehbar`): die Pille der unteren Leiste hebt sich unter
+dem Daumen, folgt ihm, dehnt sich mit dem Tempo, gibt an den Enden nach wie
+ein Gummiband und rastet losgelassen mit Schwung ein — der Reiter darunter
+wird genau einmal geklickt. Ihre Zeichen sinken beim Drücken ein und federn
+zurück. Die Linse ist in Ruhe fast klar (der aktive Name ≥ 4,5 : 1), Glas
+wird sie beim Fahren und Halten. In sechs Reihen fliegt die Wahl über
+`data-material`, statt zu springen: Seite/Fläche/Redion, „Heute", die Wege
+im Regal, die Reiter von „Aussehen", die Liste der Einstellungen, das
+Zubehör der Stiftleiste (je Gruppe). Der Werkzeugflug dehnt sich zwischen
+Nachbarn. „Ruhige Darstellung" hält jetzt auch diese Bewegungen an.
+
+**Geprüft:** `test585` (neu, zuerst rot eingecheckt); die Nachbarn in der
+Commit-Nachricht. Nichts gelöscht, kein Weg verlegt: Tipp, Tastatur und
+Vorleser gehen wie vorher.
+
+**Offen:** L229 — Schieben über das Zubehör, Umschalter statt kurzer
+`<select>`s, die Federn als Marken in `grund.css`.
+
+## 28. September 2026 · E705 · Bessere Farben
+
+**Redur:** „… bessere stift efeckte beim zeichnen bessere farben" (27.
+September, ca. 16:45 UTC); im Fragebogen „9 ruhigere Akzentfarben",
+„Leichter kühler Ton im Dunkeln", „Starker Kontrast ohne Glas"; und zum
+Aussehen „Also beiden bei der ausehen dort aollte ich die fraben ändern
+kann".
+
+**Gebaut:** `Farben.accentSet` leitet zu jeder Akzentfarbe Schrift auf der
+Fläche, Tinte, Überfahren und Tönung ab — „Starker Kontrast" schreibt
+Schwarz auf Gelb, eine eigene Farbe lässt keine violetten Reste.
+„Aussehen" hat neun ruhigere Akzente mit Namen und „Aa", ein beschriftetes
+Feld „Eigene …", eine Vorschau und ehrliche Schemakarten. Der dunkle Grund
+ist leicht kühl (#121417 …), die Leiter jedes Schemas leitet sich ab.
+Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für
+Weiss auf Rot, Eingaben im Grundton (`color-scheme` an den Feldern),
+Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im
+Hellen mit dunklerer Tinte, ohne gespeicherte Farben zu ändern, und keine
+feste Signalfarbe mehr in den Stilblättern.
+
+**Geprüft:** `test584`, zuerst rot gegen den Grundstand eingecheckt;
+`test47` zieht den Grund von „Standard" nach. Zahlen in messungen.md §77.
+
+**Gefunden:** L228 (Weiss auf der Astfarbe der Gedankenkarte, im Dunkeln
+zu blass); die Fehlerkarte war in beiden Modi fast schwarz; `chartTyp:
+'pie'` zeichnet eine leere Achse (AUFGABEN).
+
+## 28. September 2026 · E704 · Bessere Stifteffekte beim Zeichnen
+
+**Redur:** „… dann bessere stift efeckte beim zeichnen bessere farben"
+(27. September, ca. 16:45 UTC) — im Fragebogen (ca. 21:45 UTC) „Echter
+Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue
+Tintenfarben".
+
+**Gefunden:** Haarbeine und Kerben im „M" (L209 Punkt 3, gemessen 23 Punkte
+der Mittellinie ausserhalb der Tinte); Kappen, die sich nach innen biegen;
+ein beiger runder Marker; eine Perlenkante am Bleistift; die Vorhersage des
+Browsers ungedeckelt (bis 60 pt Schwanz bei 2,5 px/ms); ein atmender
+Kugelschreiber (−21 %); Polygon-Schlaufen und ein Neuaufbau je Bewegung auf
+der Tafel; nach dem Teil-Radieren eine Neigung am falschen Punkt; auf der
+Seitenfläche ein Radierer, der nur Punkte traf, nicht die Linie.
+
+**Gebaut:** Gelenke und Kappen nach aussen; der Keilmarker in Sonnengelb bei
+0,40, eine Fläche, der runde wählbar; Tempo macht den Füller dünner (nur mit
+Sensor); feste Breite für Kugelschreiber und Marker; Graphitkorn mit Farbe
+als Rückfall; Deckel und Bremse für die Vorhersage; acht Tinten zuerst, die
+fünf alten unter „Weitere Farben"; die Probe auf dem echten Papier, als
+echter Strich, mit Warnung in Worten und Weiss auf dunklem Papier; Tafel und
+Seitenfläche mit Glätter, allen Ereignissen und einem Bild je Bild; das PDF
+mit mehreren Vielecken und einer Füllung.
+
+**Geprüft:** `test583` (neu, zuerst rot), die Nachbarn im Commit E704.
+Offen: L227, AUFGABEN S1–S3.
+
+## 28. September 2026 · E703 · Glas, wo es passt
+
+**Redur:** „du muss mehr im redion arbeiten du kannst auch die oberfläche
+bischen ruhige machen ohne etwas lösche also eine funktionen und ich will
+das es flüssigere animationen , glass efeck usw alles haben dann bessere
+stift efeckte beim zeichnen bessere farben" — im Fragebogen „Starker
+Kontrast ohne Glas".
+
+**Gefunden:** Kein Bild hatte je Glas gezeigt (das kopflose Chromium lässt
+jede Unschärfe weg). Menüs und das Blatt am Telefon kamen als Nebel
+(`opacity` auf der Glasfläche). Die zwei schwebenden Werkzeugleisten waren
+graue Platten. Nur „weniger Transparenz" machte Glas deckend. Toast und
+Lader lagen auf dem Dock und der Kapsel Zurück/Vor.
+
+**Gebaut:** echte Unschärfe in `bilder.mts`, `test576`, `test582`; Glas
+kommt als Scheibe (`glas-ankunft`, `glas-inhalt`); der Dock im Dokument und
+die schwebende Zeichenleiste sind dichtes Glas mit auslaufendem Rand statt
+Deckeln; ein Schalter mit fünf Eingängen dreht die Glasmarken auf deckend;
+„Starker Kontrast" ohne jedes Glas (`data-schema` an `<html>`);
+`--melde-boden` für einen Stapel über den Werkzeugen, der Lader gehört dazu;
+`--glas-kante` als Lichtkante; das leichte Glas folgt dem Schema; dunkles
+dichtes Glas 90 %; der Präfix zuerst; am Telefon verwischt der Schleier
+des Willkommens nicht mehr.
+
+**Geprüft:** `test582` (176 Zusagen, zuerst rot eingecheckt), `test576`
+mit echter Unschärfe; L221 gemessen und geschlossen.
+
+## 28. September 2026 · E702 · Flüssige Bewegung: die Federn des Touch Kits in Redions Schale
+
+**Redur:** „ich will das es flüssigere animationen … haben" (27.09., ca.
+16:45), im Fragebogen „Wie im UI-Kit (Empfohlen)" (ca. 21:45: Knöpfe sinken
+ein und federn zurück, Seitenwechsel gleiten ohne Nachschwingen), „was du
+beim touckit gebaut hast ich will alles so haben mit redion passende
+inhalten" (ca. 21:49), „bessere übergagnge besssere efeckten … ohne eine
+funktione löschen" (ca. 22:10).
+
+**Gefunden:** die Mehrheit der Knöpfe am Telefon antwortete auf Druck gar
+nicht, rund zwanzig `:active`-Regeln mit eigener Zahl, kein Einsinken beim
+kurzen Tipp am iPhone; Blätter stiegen 16 px aus dem Nichts hinter einem in
+einem Bild schwarzen Grund; Tippen auf einen Reiter ohne Ankunft; „Ruhig"
+hielt Pille, Bibliothek und `::after` nicht an; ein Schalter-Verlauf glitt
+beim Einschalten zur Ecke; ein `transition: all`.
+
+**Gebaut:** fünf `--feder-*` in `grund.css` (aus `motion-tokens.css`, mit
+Rückfall), `RedionSpring` (übertragen, 1953 Punkte gleich dem Kit),
+`RedionPress` (eine Druckfeder statt dreizehn Regeln), der Schalter wie im
+Kit, Blätter vom Rand mit Finger und Abgang, eine Ankunft für jeden
+Ortswechsel (auch in den Einstellungen am Telefon), „Ruhig" überall
+(`AppEinstellung.wenigBewegung`, `::after`, `data-ui-motion`).
+
+**Geprüft:** `test581` (neu, rot zuerst), `test126` §7, `test435`;
+Nachbarn im Commit. Offen: L225.
+
+## 28. September 2026 · E701 · Ruhiger, und nichts ist weg
+
+**Redur:** „du kannst auch die oberfläche bischen ruhige machen ohne etwas
+lösche also eine funktionen" (27. September, ca. 16:45 UTC) — und im
+Fragebogen „Gezeichnete Zeichen (Empfohlen)": „Alles bleibt am selben Ort."
+
+**Gebaut:** eine Haupthandlung je Bild (auf „Heute" nur „Lernen starten"
+voll; „PDF öffnen" im Kopf getönt bis zum Anfassen; „Dokumente öffnen" als
+Umrissknopf; der Themenknopf im Hellen ein grauer Mond); „Zuletzt
+geöffnet" dreht nur unter Zeiger oder Fokus; gezeichnete Zeichen aus
+`Register.symbole` statt Emoji in Einstellungen, ⋯-Menü, „Mehr", R-Blatt,
+Seitenwerkzeugen und Termine (20 neue Zeichen); AUS-Schalter grau;
+Kennzahlkarten in Ruhe grau; die Bandecke im Grund des Bandes; am Telefon
+blendet die Krume aus, solange der grosse gleichnamige Titel zu sehen ist.
+
+**Geprüft:** `test580`, zuerst rot eingecheckt (42 von 85 gegen 515451f9),
+jetzt 86/86 (eine Probe kam im Bau dazu: neu gezeichnet blitzt die Krume
+nicht auf); jede Zusage mit ihrer Gegenprobe. Die Griffe sind gezählt,
+nicht geschätzt: 19 + 47 + 13 + 12 + 5 + 3, je mit Kennung, Wort und Folge.
+Laute Flächen „Heute" hell 4 → 1, Dauerbewegung im Regal 1 → 0, Emoji in
+den Einstellungen 19 → 0, im ⋯-Menü 37 → 0 (messungen.md §73).
+
+**Gefunden:** L224 — die kleinen Kurven der Kennzahlkarten zeigen in jeder
+Karte dieselben festen Werte.
+
 ## 27. September 2026 · E699 · React-Inseln, Stufe 1a: die Grundlage
 
 **Redur:** „du kannst react nutzen keien problem" — im Fragebogen „Mit React

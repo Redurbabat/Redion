@@ -322,16 +322,30 @@ const Kopfleiste = (() => {
         if (!p.ohneTools && eigen) {
             const tools = document.createElement('div');
             tools.className = 'pg-tools';
+            /* GEZEICHNETE ZEICHEN STATT 🖼 ↔ ▤ ⚡ 🅰 🧩 ✨ (E701). Die Zeile bleibt
+               am Telefon stehen, wie bausteine.css es begründet („gehören zum
+               Titel") — nur rief sie mit fünf farbigen Bildchen lauter als der
+               Titel, zu dem sie gehört. Dieselben Griffe, dieselben Wörter; das
+               Zeichen nimmt die stille Farbe der Zeile an. */
+            const z = (name) => {
+                try {
+                    return Register.symbole.alsSvg(name, 15);
+                }
+                catch {
+                    return '';
+                }
+            };
             tools.innerHTML =
-                '<button data-a="cover">🖼 Cover</button>' +
-                    '<button data-a="wide">' + (p.wide ? '↹ Normale Breite' : '↔ Volle Breite') + '</button>' +
+                '<button data-a="cover">' + z('image') + 'Cover</button>' +
+                    '<button data-a="wide">' + (p.wide ? z('widthNarrow') + 'Normale Breite'
+                    : z('widthWide') + 'Volle Breite') + '</button>' +
                     (DocumentMode.available(p)
-                        ? '<button data-a="document">▤ ' + (DocumentMode.active(p) ? 'Normale Seite' : 'Dokumentmodus') + '</button>'
+                        ? '<button data-a="document">' + z('page') + (DocumentMode.active(p) ? 'Normale Seite' : 'Dokumentmodus') + '</button>'
                         : '') +
-                    (p.schoolRoot ? '<button data-a="electrical">⚡ Rechner</button>' : '') +
-                    '<button data-a="font">🅰 Schrift</button>' +
-                    '<button data-a="vorlage">🧩 Vorlage</button>' +
-                    '<button data-a="ai">✨ Mit KI</button>';
+                    (p.schoolRoot ? '<button data-a="electrical">' + z('bolt') + 'Rechner</button>' : '') +
+                    '<button data-a="font">' + z('typeface') + 'Schrift</button>' +
+                    '<button data-a="vorlage">' + z('puzzle') + 'Vorlage</button>' +
+                    '<button data-a="ai">' + z('sparkle') + 'Mit KI</button>';
             tools.addEventListener('click', e => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)
@@ -382,9 +396,78 @@ const Kopfleiste = (() => {
         return true;
     };
     /* ------------------------------------------------------------------------
+     * EIN TITEL AM TELEFON (E701)
+     * ------------------------------------------------------------------------
+     * Am Telefon stand derselbe Name zweimal übereinander: klein in der
+     * Kopfzeile (y = 58) und gross als Titel direkt darunter (y = 117) — auf
+     * Termine, Mehr, Dokumente und jeder Seite. Zweimal dasselbe übereinander
+     * hat E219 schon einmal abgeschafft („Weglassen macht das Verbliebene
+     * wichtiger").
+     *
+     * NICHTS WIRD ENTFERNT. Die Krume bleibt im Baum, fokussierbar und
+     * klickbar; sie wird nur durchsichtig, SOLANGE der grosse gleichnamige
+     * Titel zu sehen ist, und kehrt zurück, sobald er unter der Kopfzeile
+     * wegrollt — so, wie ein grosser Titel am iPhone in die Leiste wandert.
+     * Nur wenn das LETZTE Stück der Krume wirklich derselbe Name ist wie der
+     * Titel; ein anderer Pfad bleibt ganz stehen. Am Rechner ändert der
+     * Stil nichts (die Regel steht nur in der Telefon-Abfrage).
+     *
+     * Ein Beobachter, nicht ein Scroll-Horcher: er meldet sich nur, wenn der
+     * Titel die Grenze kreuzt, und kostet dazwischen nichts. Jedes `pfad()`
+     * löst den alten und setzt höchstens einen neuen.
+     * ----------------------------------------------------------------------*/
+    let titelWaechter = null;
+    let beobachtet = null;
+    const titelBeobachten = () => {
+        const bar = document.getElementById('topbar');
+        const letzte = document.querySelector('#crumb > a:last-child');
+        const scr = document.getElementById('scroll');
+        const gross = document.querySelector('#page #title') ||
+            document.querySelector('#page h1');
+        const norm = (t) => (t || '').replace(/\s+/g, ' ').trim();
+        const name = gross ? norm(gross.textContent) : '';
+        /* `endsWith`, weil die Krume einer Seite ihr Zeichen vor den Namen
+           setzt („🔥 Wärmepumpe"), der Titel aber nur den Namen trägt. */
+        const passt = !!(bar && letzte && scr && gross && name &&
+            typeof IntersectionObserver !== 'undefined' &&
+            norm(letzte.textContent).endsWith(name));
+        /* DERSELBE TITEL, DERSELBE BEOBACHTER. `pfad()` läuft auch nach dem
+           Stern oder dem Schloss — dann ist nichts anders, und ein neuer
+           Beobachter hiesse: die Krume blitzt einen Takt lang auf, bis er
+           sich meldet. */
+        if (passt && beobachtet && beobachtet.el === gross && beobachtet.name === name)
+            return;
+        titelWaechter?.disconnect();
+        titelWaechter = null;
+        beobachtet = null;
+        if (!passt || !bar || !scr || !gross) {
+            if (bar)
+                delete bar.dataset['titelSichtbar'];
+            return;
+        }
+        beobachtet = { el: gross, name };
+        /* Was die Kopfzeile vom Rollbereich verdeckt, zählt als „weg": der
+           Titel ist erst dann nicht mehr zu sehen, wenn er darunter ist. */
+        const verdeckt = Math.max(0, Math.round(bar.getBoundingClientRect().bottom - scr.getBoundingClientRect().top));
+        titelWaechter = new IntersectionObserver(eintraege => {
+            const e = eintraege[eintraege.length - 1];
+            if (!e)
+                return;
+            if (e.isIntersecting)
+                bar.dataset['titelSichtbar'] = '';
+            else
+                delete bar.dataset['titelSichtbar'];
+        }, { root: scr, rootMargin: `-${verdeckt}px 0px 0px 0px`, threshold: 0 });
+        titelWaechter.observe(gross);
+    };
+    /* ------------------------------------------------------------------------
      * Die Pfadleiste — und die Knöpfe rechts daneben.
      * ----------------------------------------------------------------------*/
     const pfad = () => {
+        pfadZeichnen();
+        titelBeobachten();
+    };
+    const pfadZeichnen = () => {
         const sonder = sonderJetzt();
         const seiteId = aktuelleSeite();
         const c = document.getElementById('crumb');

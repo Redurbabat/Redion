@@ -33,7 +33,29 @@ const Marken = (() => {
      Redion zieht 0,4/0,8/1,8. Eine abgeschriebene Zahl wäre eine falsche
      Angabe auf dem Bildschirm (§33). */
   const BREITEN_NAMEN = ['Fein', 'Mittel', 'Markant'] as const;
+  /* Die Vorgabe der HAFTNOTIZ — und bis E704 auch die des Markers. Sie
+     bleibt, was sie ist: jede Haftnotiz ohne eigene Farbe trägt sie, und
+     `test267`/`test350` kennen sie so. */
   const MARKER_FARBE = '#e0a419';
+  /* DER TEXTMARKER (E704): ein neuer Markerstrich beginnt in Sonnengelb;
+     ein vorhandener behält seine Farbe (E697). */
+  const TEXTMARKER_FARBE = '#ffcf33';
+  /* DIE ZWEI SPITZEN DES MARKERS (E704): Keil (Vorgabe, 0,40) oder Rund
+     (wie bis E704; jeder alte Markerstrich ist ein runder). */
+  const MARKER_SPITZEN = [
+    { id: 'keil', name: 'Keil', titel: 'Keilspitze — wie ein echter Textmarker: gerade Enden, dünn im Senkrechten' },
+    { id: 'rund', name: 'Rund', titel: 'Runde Spitze — der Marker, wie er bis E704 war' }
+  ] as const;
+  const MARKER_SPITZE_VORGABE = 'keil';
+  const M_MARKER_SPITZE = 'zeichnen:markerspitze';
+  const markerSpitzeLesen = (): string => {
+    const wert = typeof Store !== 'undefined' ? String(Store.getMeta(M_MARKER_SPITZE) || '') : '';
+    return MARKER_SPITZEN.some(sp => sp.id === wert) ? wert : MARKER_SPITZE_VORGABE;
+  };
+  /** Die Dicke der Keilkante im Verhältnis zu ihrer Höhe (E704). */
+  const KEIL_DICKE = 0.22;
+  /** Der Winkel der Keilkante gegen die Waagrechte, in Grad (E704). */
+  const KEIL_WINKEL = 78;
   const HISTORY_LIMIT = 100;
   /* DIE ZWISCHENABLAGE DER ZEICHENSCHICHT (E353): ein Ort fuer alle
      Flaechen, damit Kopiertes von einem Blatt auf dem naechsten landet.
@@ -145,9 +167,11 @@ const Marken = (() => {
        Bleistift (Graphit hat keine Feder), der Schutzleiter (eine Leitung
        hat eine Stärke, E490), und die Linien ohnehin. Die Zahl steht HIER,
        im Register, nicht als Sonderfall im Zeichner (§8). */
-    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain', spitze: 0.25 },
+    /* `eile` (E704): um wie viel ein schneller Strich höchstens dünner wird —
+       Redurs „bis ~35 %" beim Füller, der Pinsel etwas mehr. */
+    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain', spitze: 0.25, eile: 0.35 },
     { id: 'kugel',   name: 'Kugelschreiber', zeichen: '🖊', sym: 'penBall' },
-    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush', spitze: 0.12 },
+    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush', spitze: 0.12, eile: 0.5 },
     /* DER BLEISTIFT (E465), wie GoodNotes' Pencil: duenn, leicht
        durchscheinend, mit koerniger Kante — die Flaeche des Fuellers,
        nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
@@ -278,9 +302,33 @@ const Marken = (() => {
      trugen alle den Titel „Farbe" — beim Überfahren stand also fünfmal
      dasselbe da, und ein Vorleser las fünfmal „Farbe". Redur hat es für
      die Adern verlangt; für die fünf hier gilt derselbe Satz. */
+  /* DIE TINTEN (E704): Redurs acht Namen, die Werte gerechnet — auf dem
+     Papier mindestens 5,6 : */
+  const TINTEN = [
+    ['#2346b5', 'Königsblau'], ['#1b2552', 'Nachtblau'], ['#b12f4f', 'Karmin'],
+    ['#1d6024', 'Tannengrün'], ['#0c6d7f', 'Petrol'], ['#5f3295', 'Aubergine'],
+    ['#662f05', 'Sepia'], ['#3c3c3c', 'Graphit']
+  ] as const;
+  /* DIE LEUCHTFARBEN DES MARKERS (E704), Sonnengelb zuerst; die Pastelle
+     aus E697 bleiben unter „Weitere Farben". */
+  const LEUCHTFARBEN = [
+    ['#ffcf33', 'Sonnengelb'], ['#3ee06a', 'Leuchtgrün'], ['#2ec5ff', 'Leuchtblau'],
+    ['#ff5cb8', 'Pink'], ['#ff9a2e', 'Orange'], ['#a879ff', 'Lila']
+  ] as const;
+  const MARKER_PASTELLE = [
+    ['#ffcf33', 'Sonnengelb'], ['#79cf8b', 'Mintgrün'], ['#65c9ed', 'Himmelblau'],
+    ['#ed91be', 'Rosé'], ['#b39aef', 'Lavendel'], ['#f3aa66', 'Apricot']
+  ] as const;
+  /* „Weiss" für dunkles Papier (E704, farben-12): auf einer eingelesenen
+     dunklen Folie ist Schwarz 1,2 : 1 — unsichtbar. */
+  const PAPIERWEISS = '#f5f5f0';
   const FARBNAMEN: Record<string, string> = {
     '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
-    '#3aa757': 'Grün', '#e0a419': 'Gelb'
+    '#3aa757': 'Grün', '#e0a419': 'Gelb',
+    /* Seit E704 heissen auch die Tinten, die Leuchtfarben und die
+       Pastelle beim Namen — an jedem Tupfer, den sie einmal werden. */
+    ...Object.fromEntries([...TINTEN, ...LEUCHTFARBEN, ...MARKER_PASTELLE]),
+    [PAPIERWEISS]: 'Weiss'
   };
   /* ══ DIE WERKZEUGE — EINE BESTELLUNG, KEINE LISTE (E490, E694) ══════════
      Bis E490 standen Kennung, Zeichen, Wort und Beschreibung jedes
@@ -733,7 +781,9 @@ const Marken = (() => {
      Jetzt eine Stelle. Und weil es eine Stelle ist, kann die Strichprobe
      in der Leiste dieselbe Zahl zeigen (E623, die Probe). */
   const deckungVon = (art: string, stil: string, neigung?: number[] | number): number => {
-    if (art === 'marker') return 0.32;
+    /* DER KEIL DECKT 0,40 (E704) — Redurs „etwas kräftiger". Der runde
+       Marker und jeder alte (ohne `stil`) bleiben bei 0,32. */
+    if (art === 'marker') return stil === 'keil' ? 0.4 : 0.32;
     if (stil === 'pinsel') return 0.92;
     if (stil === 'bleistift') {
       /* FLACH IST WEICHER (E507): ein flach gehaltener Bleistift trägt
@@ -762,6 +812,12 @@ const Marken = (() => {
     return Number.isFinite(v) && v > 0 && v < 1 ? v : 1;
   };
   const spitzeLaenge = (base: number): number => Math.max(3, Math.min(12, base * 2.2));
+  /** Wie stark das Tempo diesen Stift verdünnt (E704) — aus dem Register. */
+  const eileVon = (stil: string): number => {
+    const s = (STIFTE as readonly { id: string; eile?: number }[]).find(x => x.id === stil);
+    const v = Number(s?.eile);
+    return Number.isFinite(v) && v > 0 && v < 1 ? v : 0;
+  };
 
   /* ══ DIE HALBEN BREITEN EINES FLÄCHENSTRICHS — EINE STELLE (E673) ═══════
      Sie standen ZWEIMAL, zeichengleich: in `zeichneMarke` für den
@@ -776,8 +832,13 @@ const Marken = (() => {
     const stil = String(mark?.stil || '');
     const druck: number[] = Array.isArray(mark?.pressure) ? mark.pressure.map(Number) : [];
     const neig: number[] = Array.isArray(mark?.neigung) ? mark.neigung.map(Number) : [];
+    /* DAS TEMPO (E704): nur eine Marke, die es trägt — also ein neuer Strich
+       mit Sensor —, wird im Schnellen dünner. */
+    const tempo: number[] = Array.isArray(mark?.tempo) ? mark.tempo.map(Number) : [];
+    const eile = tempo.length ? eileVon(stil) : 0;
     const halb = points.map((_p, i) => base / 2 * druckFaktor(stil,
-      druck[i] ?? druck[druck.length - 1] ?? 0.5, neig[i] ?? neig[neig.length - 1] ?? 0));
+      druck[i] ?? druck[druck.length - 1] ?? 0.5, neig[i] ?? neig[neig.length - 1] ?? 0)
+      * (eile ? InkStroke.tempoFaktor(tempo[i] ?? tempo[tempo.length - 1] ?? 0, eile) : 1));
     return InkGeometry.verjuengen(points, halb, spitzeVon(stil), spitzeLaenge(base));
   };
 
@@ -789,12 +850,148 @@ const Marken = (() => {
   const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
   const idOf = (mark: any): string => String(mark?.id || '');
   const strokeWidth = (mark: any): number => {
+    /* EINE BREITE, DIE NICHT ATMET (E704): ein neuer Strich trägt
+       `breiteFest`; ein alter hat es nicht und bleibt, wie er war. */
+    const fest = Number(mark?.breiteFest);
+    if (Number.isFinite(fest) && fest > 0) return fest;
     const base = Math.max(0.5, Number(mark?.breite) || BREITEN[1]);
     const values = Array.isArray(mark?.pressure)
       ? mark.pressure.map(Number).filter((value: number) => Number.isFinite(value)) : [];
     const average = values.length ? values.reduce((sum: number, value: number) => sum + value, 0) / values.length : 0.5;
     const pressureFactor = Math.max(0.55, Math.min(1.55, 0.65 + average * 0.7));
     return base * pressureFactor * (mark?.art === 'marker' ? 4 : 1);
+  };
+
+  /** Die Vielecke eines Keilmarkers (E704) — Bildschirm UND PDF. */
+  const keilVielecke = (mark: any, punkte: number[][]): InkPoint[][] => {
+    const h = strokeWidth(mark);
+    return InkGeometry.keil(punkte, h, h * KEIL_DICKE, KEIL_WINKEL);
+  };
+
+  /* ══ DAS GRAPHITKORN (E704, ergänzt E465) ════════════════════════════════
+     Ein Muster je Farbe und Druckstufe in EINEM verborgenen Halter, feste
+     Saat, kein Filter (E465). */
+  const GRAPHIT_KACHEL = 3.2;
+  const graphitStufe = (mark: any): number => {
+    const d: number[] = Array.isArray(mark?.pressure) ? mark.pressure.map(Number).filter(Number.isFinite) : [];
+    const mittel = d.length ? d.reduce((a, b) => a + b, 0) / d.length : 0.5;
+    return mittel < 0.35 ? 1 : mittel < 0.65 ? 2 : 3;
+  };
+  const graphitFuellung = (farbe: string, stufe: number): string => {
+    const hex = /^#[0-9a-f]{6}$/i.test(farbe) ? farbe.toLowerCase() : '#111111';
+    const id = 'redion-graphit-' + hex.slice(1) + '-' + stufe;
+    if (typeof document === 'undefined' || !document.body) return hex;
+    if (!document.getElementById(id)) {
+      let halter = document.getElementById('redion-graphit') as SVGSVGElement | null;
+      if (!halter) {
+        halter = svg('svg', { id: 'redion-graphit', width: 0, height: 0, 'aria-hidden': 'true',
+          focusable: 'false' }) as SVGSVGElement;
+        /* Nicht `display:none` — Muster darin fallen in manchen Browsern
+           aus. Null mal null und aus dem Fluss genügt. */
+        halter.style.position = 'absolute';
+        halter.appendChild(svg('defs'));
+        document.body.appendChild(halter);
+      }
+      const k = GRAPHIT_KACHEL;
+      const muster = svg('pattern', { id, width: k, height: k, patternUnits: 'userSpaceOnUse' });
+      let saat = 7 + stufe * 101;
+      const zufall = (): number => { saat = (saat * 16807) % 2147483647; return saat / 2147483647; };
+      const r2 = (v: number): number => Math.round(v * 100) / 100;
+      /* Der Grund: Graphit liegt nie ganz deckend. */
+      muster.appendChild(svg('rect', { width: k, height: k, fill: hex, opacity: [0, 0.42, 0.55, 0.68][stufe] }));
+      /* Die Körner — mehr und dichter, je fester gedrückt wurde. */
+      const koerner = [0, 20, 26, 32][stufe] ?? 26;
+      for (let i = 0; i < koerner; i++) {
+        muster.appendChild(svg('rect', { x: r2(zufall() * k), y: r2(zufall() * k),
+          width: r2(0.25 + zufall() * 0.45), height: r2(0.2 + zufall() * 0.35),
+          fill: hex, opacity: r2(0.35 + zufall() * 0.65) }));
+      }
+      /* Und das Papier, das zwischen den Körnern durchscheint. */
+      for (let i = 0; i < 8; i++) {
+        muster.appendChild(svg('rect', { x: r2(zufall() * k), y: r2(zufall() * k),
+          width: r2(0.3 + zufall() * 0.3), height: 0.25, fill: '#fff', opacity: r2(0.25 + zufall() * 0.35) }));
+      }
+      halter.querySelector('defs')?.appendChild(muster);
+    }
+    return `url(#${id}) ${hex}`;
+  };
+
+  /** Die Spitze des Markers merken (E704) — für den nächsten Strich. */
+  const markerSpitzeMerken = (id: string): void => {
+    if (typeof Store === 'undefined' || !MARKER_SPITZEN.some(sp => sp.id === id)) return;
+    try { Store.setMeta(M_MARKER_SPITZE, id); } catch { /* dann eben nur diese Sitzung */ }
+  };
+
+  /* WCAG: relative Helligkeit und Kontrast (E704, farben-12). */
+  const alsRgb = (farbe: string): [number, number, number] => {
+    const t = String(farbe || '').trim().toLowerCase();
+    const kurz = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/.exec(t);
+    const lang = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/.exec(t);
+    if (lang) return [parseInt(lang[1]!, 16), parseInt(lang[2]!, 16), parseInt(lang[3]!, 16)];
+    if (kurz) return [parseInt(kurz[1]! + kurz[1]!, 16), parseInt(kurz[2]! + kurz[2]!, 16), parseInt(kurz[3]! + kurz[3]!, 16)];
+    const rgb = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(t);
+    if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+    return [255, 255, 255];
+  };
+  const relativeHelligkeit = (farbe: string): number => {
+    const [r, g, b] = alsRgb(farbe).map(v => {
+      const x = v / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    }) as [number, number, number];
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const kontrastZu = (a: string, b: string): number => {
+    const x = relativeHelligkeit(a), y = relativeHelligkeit(b);
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  };
+  /** Das Papier unter einer Zeichenfläche: `--paper` dort, wo sie liegt (das
+     Blatt setzt es aus seiner Grundfarbe, E558; eine eingelesene Folie aus
+     ihrem Hintergrund). (E704) */
+  const papierfarbeVon = (el: Element | null | undefined): string => {
+    if (!el || typeof getComputedStyle !== 'function') return '#ffffff';
+    const roh = getComputedStyle(el).getPropertyValue('--paper').trim();
+    if (!roh) return '#ffffff';
+    if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(roh)) return roh.toLowerCase();
+    const probe = document.createElement('span');
+    probe.style.color = roh;
+    document.body.appendChild(probe);
+    const wert = getComputedStyle(probe).color;
+    probe.remove();
+    return wert || '#ffffff';
+  };
+
+  /* DIE STRICHPROBE IST EIN STRICH (E704): ein Schwung mit Druckbogen,
+     gezeichnet von `zeichneMarke` — derselbe Zeichner wie das Blatt. */
+  const strichprobeMarke = (art: 'stift' | 'marker', stil: string, farbe: string, breite: number): any => {
+    const n = 24;
+    const pts: number[][] = [];
+    const pressure: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1);
+      const x = art === 'marker' ? 5 + t * 120 : 6 + t * 188;
+      const y = art === 'marker' ? 7 - Math.sin(t * Math.PI) * 0.8 : 13 + Math.sin(t * Math.PI * 2.1) * 5 * (1 - 0.35 * t);
+      pts.push([Math.round(x * 100) / 100, Math.round(y * 100) / 100]);
+      pressure.push(Math.round((t < 0.5 ? 0.3 + t * 1 : 0.8 - (t - 0.5) * 0.9) * 100) / 100);
+    }
+    const mark: any = { id: 'strichprobe', art, farbe, breite: Math.max(0.5, Math.min(art === 'marker' ? 3.2 : 4, breite)), pts, pressure };
+    if (stil) mark.stil = stil;
+    return mark;
+  };
+  const strichprobeBild = (mark: any): SVGSVGElement => {
+    /* Das Feld ist so breit wie die Probe (sonst schrumpft `meet` sie auf die
+       Höhe): (E704) */
+    const bild = svg('svg', { viewBox: mark?.art === 'marker' ? '0 0 130 14' : '0 0 200 26', preserveAspectRatio: 'xMidYMid meet',
+      'aria-hidden': 'true', focusable: 'false' }) as SVGSVGElement;
+    const node = zeichneMarke(mark);
+    if (node) {
+      /* Die Deckung trägt das `<i>` darum herum — eine zweite am Pfad
+         verdoppelte sie. Das Mischen mit dem Papier ebenso. */
+      node.removeAttribute('opacity');
+      (node as SVGElement).style.removeProperty('mix-blend-mode');
+      node.removeAttribute('data-sid');
+      bild.appendChild(node);
+    }
+    return bild;
   };
 
   /* ══ EINE MARKE ALS PDF-ANNOTATION (E506) ════════════════════════════════
@@ -849,7 +1046,7 @@ const Marken = (() => {
    * Dieselbe Unterscheidung wie in `zeichneMarke`, aus derselben Menge.
    */
   const alsAnnotation = (mark: any): {
-    striche: number[][][]; kontur: Array<number[][] | null>;
+    striche: number[][][]; kontur: Array<number[][] | number[][][] | null>;
     farbe: [number, number, number]; breite: number; deckkraft: number; name: string;
   } | null => {
     if (!annotierbar(mark)) return null;
@@ -862,16 +1059,24 @@ const Marken = (() => {
     const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
     /* Die halben Breiten kommen seit E673 aus `halbeBreiten` — derselben
        Rechnung wie am Bildschirm, mit der Spitze. */
-    const kontur = flaeche && punkte.length >= 3
-      ? InkGeometry.outlinePunkte(punkte, halbeBreiten(mark, punkte))
-      : null;
+    /* E704: ein Vieleck je Lauf (Gelenke); ohne Ecke EINES wie vorher. */
+    const teile: number[][][] = flaeche && punkte.length >= 3
+      ? InkGeometry.outlineTeile(punkte, halbeBreiten(mark, punkte))
+      : [];
+    /* DER KEIL (E704) ist eine Fläche, keine Linie: seine Vielecke gehen
+       mit EINEM `f` ins PDF — so deckt die Überlappung nicht doppelt. */
+    const keil = mark.art === 'marker' && mark.stil === 'keil'
+      ? keilVielecke(mark, punkte) : [];
+    const kontur = keil.length ? keil : teile;
     return {
       striche: [punkte.map(q => [q[0], q[1]])],
-      kontur: [kontur && kontur.length >= 3 ? kontur.map(q => [q[0], q[1]]) : null],
+      kontur: [kontur.length === 1 ? kontur[0]!.map(q => [q[0]!, q[1]!])
+        : kontur.length > 1 ? kontur.map(t => t.map(q => [q[0]!, q[1]!])) : null],
       farbe: farbeRgb(mark.farbe),
       /* Der Marker ist auf dem Bildschirm viermal so breit wie seine Zahl
-         (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. */
-      breite: mark.art === 'marker' ? base * 4 : base,
+         (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. (E704) */
+      breite: Number(mark.breiteFest) > 0 ? Number(mark.breiteFest)
+        : mark.art === 'marker' ? base * 4 : base,
       /* Der Bleistift ist durchscheinend, und flach gehalten noch mehr —
          dieselbe Zahl wie am Bildschirm, und seit E623 buchstäblich
          dieselbe: eine Funktion, zwei Aufrufer. */
@@ -1413,12 +1618,28 @@ const Marken = (() => {
         /* FLACH IST WEICHER (E507) — die Rechnung steht seit E623 in
            `deckungVon`, zusammen mit der des PDF. */
         element.setAttribute('opacity', String(deckungVon(art, 'bleistift', neig)));
-        element.setAttribute('stroke-width', '0.7');
-        element.setAttribute('stroke-dasharray', '0.9 0.6');
+        /* DAS KORN STATT DER PERLENKANTE (E704) — siehe `graphitFuellung`.
+           Die Kante bekommt dasselbe Korn, hauchdünn: so ist sie weich,
+           nicht gezackt. */
+        const korn = graphitFuellung(color, graphitStufe(mark));
+        element.setAttribute('fill', korn);
+        element.setAttribute('stroke', korn);
+        element.setAttribute('stroke-width', '0.25');
+        element.setAttribute('data-ink-korn', String(graphitStufe(mark)));
       }
       element.setAttribute('data-sid', idOf(mark));
       element.setAttribute('data-ink-art', art);
       element.setAttribute('data-ink-stil', String(mark.stil));
+      return element;
+    } else if (art === 'marker' && mark.stil === 'keil' && points.length >= 1) {
+      /* DER KEIL (E704): EINE Fläche aus den Vielecken, die die Kante
+         überstreicht — kein Strich. */
+      element = svg('path', { d: InkGeometry.vieleckPfad(keilVielecke(mark, points)),
+        fill: color, 'fill-rule': 'nonzero', stroke: 'none',
+        opacity: deckungVon('marker', 'keil'), style: 'mix-blend-mode:multiply' });
+      element.setAttribute('data-sid', idOf(mark));
+      element.setAttribute('data-ink-art', art);
+      element.setAttribute('data-ink-stil', 'keil');
       return element;
     } else if (points.length >= 2) {
       element = svg('path', { d: InkGeometry.path(points) });
@@ -1796,6 +2017,12 @@ const Marken = (() => {
     /* Der Weg, den der laufende Strich seit dem Aufsetzen zurückgelegt hat
        (E673) — daran hängt die Spitze des nassen Strichs. */
     let wegNass = 0;
+    /* E704: Zeitabstände der rohen Meldungen und Sensorverlauf (für die
+       Bremse), der Tempomesser (nur Füller und Pinsel). */
+    let rohZeiten: number[] = [];
+    let sensorVerlauf: number[] = [];
+    let tempoMessen: ((p: [number, number], dt: number) => number) | null = null;
+    let tempoJetzt = 0;
     let selection = new Set<string>();
     let selectDrag: any = null;
     const historyUndo: any[][] = [];
@@ -2311,8 +2538,9 @@ const Marken = (() => {
       if (mark.gesperrt) return false;
       const id = idOf(mark);
       const teilbar = radierModus === 'teil' && (mark.art === 'stift' || mark.art === 'marker');
-      const stuecke: Array<{ pts: number[][]; pressure: number[] }> = teilbar
-        ? InkGeometry.splitByCircle(mark.pts, mark.pressure, center, r) : [];
+      const stuecke: Array<{ pts: number[][]; pressure: number[]; kanaele?: Record<string, number[]> }> = teilbar
+        ? InkGeometry.splitByCircle(mark.pts, mark.pressure, center, r,
+            { neigung: mark.neigung, tempo: mark.tempo }) : [];
       /* Nur am Rand gestreift, nichts abgeschnitten: dann bleibt die Marke.
          Verglichen werden die PUNKTE, nicht ihre Zahl — ein Endpunkt im
          Kreis wird durch den Eintrittspunkt ersetzt, die Zahl bleibt gleich,
@@ -2321,8 +2549,15 @@ const Marken = (() => {
       nodeFor(id)?.remove();
       gezeichnet.delete(id);
       selection.delete(id);
-      const ersatz = stuecke.map((stueck, n) =>
-        ({ ...clone(mark), id: n === 0 ? id : frischeId(), pts: stueck.pts, pressure: stueck.pressure }));
+      /* Neigung und Tempo gehen mit (E704): ein Stück trägt je Punkt genau
+         einen Wert, statt der alten Liste in der alten Länge. */
+      const ersatz = stuecke.map((stueck, n) => {
+        const neu = { ...clone(mark), id: n === 0 ? id : frischeId(), pts: stueck.pts, pressure: stueck.pressure };
+        for (const kanal of ['neigung', 'tempo'] as const) {
+          if (stueck.kanaele?.[kanal]) neu[kanal] = stueck.kanaele[kanal]; else delete neu[kanal];
+        }
+        return neu;
+      });
       marks.splice(index, 1, ...ersatz);
       ersatz.forEach(neu => { const node = zeichneMarke(neu); if (node) { flaeche.appendChild(node); merke(neu); } });
       return true;
@@ -2444,6 +2679,7 @@ const Marken = (() => {
       if (running) { runningNode?.remove(); running = null; runningNode = null; beforeRunning = null; }
       feder = null; glatt = null; druckGlatt = null;
       letzteZeit = 0; nassFlaeche = false; rohLetzter = null; rohDrei = [];
+      rohZeiten = []; sensorVerlauf = []; tempoMessen = null; tempoJetzt = 0;
       aktiverZeiger = null;
     };
     /* ══ DER LASERSTRAHL (E512) ════════════════════════════════════════════
@@ -2512,6 +2748,14 @@ const Marken = (() => {
       rohLetzter = roh;
       rohDrei.push(roh);
       if (rohDrei.length > 3) rohDrei.shift();
+      rohZeiten.push(dt);
+      if (rohZeiten.length > 3) rohZeiten.shift();
+      if (sensorZuletzt !== null && event.pointerType === 'pen') {
+        sensorVerlauf.push(sensorZuletzt);
+        if (sensorVerlauf.length > 8) sensorVerlauf.shift();
+      }
+      /* DAS TEMPO DER HAND (E704) — an den ROHEN Punkten, wie der Druck. */
+      if (tempoMessen) tempoJetzt = tempoMessen(roh as [number, number], dt);
       const druck = druckGlatt ? druckGlatt(drucken) : drucken;
       const last = running.pts[running.pts.length - 1];
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
@@ -2522,6 +2766,8 @@ const Marken = (() => {
          sie meldet. Eine `-1` heisst „nicht gemeldet"; sie wird beim
          Absetzen zu nichts, statt zu einer Null zu werden (E507). */
       if (running.neigung) running.neigung.push(neigungAus(event));
+      if (running.tempo) running.tempo.push(tempoJetzt);
+      breiteFestlegen(jetzt);
       /* Die Uhr läuft erst weiter, wenn die Hand ihren Ruhepunkt VERLÄSST
          (E490) — ein Zittern an derselben Stelle ist keine Bewegung. */
       const ruhe = running.ruhePunkt;
@@ -2544,8 +2790,30 @@ const Marken = (() => {
          Winkel ändert sich langsam, der Strich läuft schnell. */
       const neig: number[] = Array.isArray(mark?.neigung) ? mark.neigung : [];
       const n = Number(neig[neig.length - 1]);
+      /* DAS TEMPO AUCH NASS (E704), mit derselben Kurve wie trocken
+         (`halbeBreiten`) — aber nur, solange ein Sensor meldet: */
+      const eile = Array.isArray(mark?.tempo) && sensorZuletzt !== null ? eileVon(String(mark?.stil || '')) : 0;
       return base / 2 * druckFaktor(String(mark?.stil || ''), druck,
-        Number.isFinite(n) && n > 0 ? n : 0);
+        Number.isFinite(n) && n > 0 ? n : 0) * (eile ? InkStroke.tempoFaktor(tempoJetzt, eile) : 1);
+    };
+    /* DIE BREITE WIRD EINMAL FESTGELEGT (E704): Linienstifte mit Sensor nach
+       50 ms (Zeit, nicht Punkte — E504) aus dem Median bis dahin; Maus und
+       Finger die gewählte Breite. */
+    let breiteAb = 0;
+    const breiteFestlegen = (jetzt = 0): void => {
+      if (!running || Number(running.breiteFest) > 0) return;
+      const linie = running.art === 'marker'
+        || (running.art === 'stift' && !FLAECHEN_STIFTE.has(String(running.stil || '')));
+      if (!linie) return;
+      const base = Math.max(0.5, Number(running.breite) || BREITEN[1]);
+      const mal = running.art === 'marker' ? 4 : 1;
+      if (running.zeigerArt !== 'pen') { running.breiteFest = Math.round(base * mal * 100) / 100; return; }
+      if (!breiteAb) breiteAb = jetzt;
+      if (running.pressure.length < 3 || jetzt - breiteAb < 50) return;
+      const werte = running.pressure.map(Number).filter(Number.isFinite).sort((a: number, b: number) => a - b);
+      const mitte = sensorZuletzt !== null ? (werte[Math.floor(werte.length / 2)] ?? 0.5) : 0.5;
+      const faktor = Math.max(0.55, Math.min(1.55, 0.65 + mitte * 0.7));
+      running.breiteFest = Math.round(base * faktor * mal * 100) / 100;
     };
     /* DIE SPITZE DES NASSEN STRICHS (E673): dieselbe Kurve wie beim
        trockenen (`InkGeometry.spitzeFaktor`), aber nur vom Anfang her —
@@ -2575,8 +2843,17 @@ const Marken = (() => {
         runningNode = updateNode(runningNode, nasseMarke());
         return;
       }
+      /* DER KEIL (E704) rechnet seine Fläche aus dem ganzen Weg — O(n), bei
+         300 Punkten unter einer Drittel Millisekunde (messungen §76). */
+      if (running.art === 'marker' && running.stil === 'keil') {
+        runningNode.setAttribute('d', InkGeometry.vieleckPfad(keilVielecke(running, feder.punkteMitNass())));
+        return;
+      }
       const d = alsFlaeche ? feder.d() : feder.linie();
       if (d) runningNode.setAttribute('d', d);
+      /* Seit E704 steht hier meist die FESTE Breite (`breiteFestlegen`):
+         dieselbe Zahl in jedem Bild. Nur in den ersten drei Meldungen
+         eines Stifts mit Sensor gilt noch der Mittelwert. */
       if (!alsFlaeche) runningNode.setAttribute('stroke-width', String(strokeWidth(running)));
     };
     /* Die Marke, wie sie GERADE aussieht — mit mindestens zwei Punkten,
@@ -2600,18 +2877,26 @@ const Marken = (() => {
       const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
       const halb = halbeBreite(running, druck) * nassSpitze();
       let pts: number[][] = [];
+      /* DIE BREMSE (E704): hebt der Stift ab oder bremst die Hand, reicht
+         die Vermutung weniger weit — für die Punkte des Browsers wie für
+         die eigene Vorhersage. */
+      const halt = InkStroke.bremse(rohDrei as any, rohZeiten, sensorVerlauf);
       const vom = typeof (event as any).getPredictedEvents === 'function'
         ? (event as any).getPredictedEvents() as PointerEvent[] : [];
       if (vom.length) {
+        const roh: number[][] = [];
         for (const p of vom.slice(0, 3)) {
           const q = um ? um(p) : R.zuBlatt(flaeche, p);
-          if (q) pts.push(q);
+          if (q) roh.push(q);
         }
+        /* E704: die Punkte des Browsers unter denselben Deckel wie
+           `vorhersage` — keine Kehre, Länge nach Zeit, Bremse. */
+        pts = InkStroke.deckeln(rohDrei as any, roh as any, dtLetzt, halt) as any;
       }
-      if (!pts.length) {
+      if (!vom.length) {
         /* AN DEN ROHEN PUNKTEN GERECHNET (E511), nicht an `running.pts`:
            die sind geglättet und laufen selbst hinterher. */
-        pts = InkStroke.vorhersage(rohDrei as any, InkStroke.VORHER_MS, dtLetzt) as any;
+        pts = InkStroke.vorhersage(rohDrei as any, InkStroke.VORHER_MS, dtLetzt, halt) as any;
       }
       /* ══ DIE TINTE HOLT DIE SPITZE EIN (E511) ═══════════════════════════
          Vor der Vermutung steht eine MESSUNG: der letzte rohe Punkt ist
@@ -2965,6 +3250,11 @@ const Marken = (() => {
            ein Stift ohne Sensor hat seine Werte aus dem Tempo, wie ein
            Finger — und so soll es dastehen. */
         mark.druckArt = mark.zeigerArt === 'pen' && sensorZuletzt !== null ? 'stift' : 'tempo';
+      /* DAS TEMPO BLEIBT NUR MIT SENSOR (E704). Mit Maus und Finger steckt es
+         schon im Ersatzdruck (E351) — zweimal gezählt wäre es doppelt so
+         stark, und genau das hätte niemand bestellt. */
+      if (mark.druckArt !== 'stift' || !Array.isArray(mark.tempo)) delete mark.tempo;
+      tempoMessen = null; rohZeiten = []; sensorVerlauf = [];
       delete mark.zeigerArt;
       /* DIE NEIGUNG NUR, WENN SIE GEMELDET WURDE. `-1` heisst „kein
          Sensor"; ein Feld voller Nullen wäre eine Behauptung über den
@@ -3030,6 +3320,10 @@ const Marken = (() => {
              andere hat keinen, und dann darf auch keiner stehenbleiben. */
           if (form.dreh) mark.dreh = form.dreh; else delete mark.dreh;
           delete mark.pressure;
+          /* Eine Form hat keine Handschrift — auch kein Tempo und keine aus
+             dem Druck gerechnete Breite (E704). */
+          delete mark.tempo;
+          delete mark.breiteFest;
           /* DER SCHUTZLEITER ÜBERLEBT DAS GERADEZIEHEN (E490). Sonst wäre
              die eine Sache, für die man ihn braucht — eine gerade
              Erdungsleitung im Schaltplan —, genau die, bei der er vergeht:
@@ -3092,6 +3386,8 @@ const Marken = (() => {
              `neigung[i]` zu einem anderen Punkt als `pts[i]`. Der Prüflauf
              hat es gesehen: fünfzehn Neigungen zu acht Punkten. */
           const neigRoh: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
+          /* DAS TEMPO GENAUSO (E704) — dieselbe Lehre, ein Kanal mehr. */
+          const tempoRoh: number[] = Array.isArray(mark.tempo) ? mark.tempo.map(Number) : [];
           mark.pts = indizes.map(i => original[i]);
           mark.pressure = indizes.map(i => {
             const v = druckRoh[i];
@@ -3100,6 +3396,10 @@ const Marken = (() => {
           if (neigRoh.length) mark.neigung = indizes.map(i => {
             const v = neigRoh[i];
             return Number.isFinite(v) ? (v as number) : 0;
+          });
+          if (tempoRoh.length) mark.tempo = indizes.map(i => {
+            const v = tempoRoh[i] ?? tempoRoh[tempoRoh.length - 1];
+            return Math.round((Number.isFinite(v) ? (v as number) : 0) * 100) / 100;
           });
         }
       } else if (mark.pts.length < 2 ||
@@ -4033,9 +4333,19 @@ const Marken = (() => {
       beforeRunning = snapshot();
       const id = typeof Ids !== 'undefined' ? Ids.short(8) : String(marks.length + 1);
       if (tool === 'stift' || tool === 'marker') {
-        running = { id, art: tool, farbe: tool === 'marker' && color === FARBEN[0] ? MARKER_FARBE : color,
+        /* Ein Marker in der Vorgabetinte (Schwarz) nimmt seit E704 das
+           Sonnengelb — nur für diesen NEUEN Strich (E697). */
+        running = { id, art: tool, farbe: tool === 'marker' && color === FARBEN[0] ? TEXTMARKER_FARBE : color,
           breite: width, pts: [point], pressure: [], zeigerArt: e.pointerType };
         if (tool === 'stift' && stil !== 'kugel') running.stil = stil;
+        /* DIE SPITZE DES MARKERS (E704): der Keil trägt `stil: 'keil'`, der
+           runde Marker trägt — wie jeder alte — keinen. */
+        if (tool === 'marker' && markerSpitzeLesen() === 'keil') running.stil = 'keil';
+        /* DAS TEMPO wird bei Füller und Pinsel mitgeschrieben (E704). Ob es
+           bleibt, entscheidet `finish`: nur mit einem Sensor. */
+        rohZeiten = []; sensorVerlauf = []; tempoJetzt = 0;
+        tempoMessen = tool === 'stift' && eileVon(String(running.stil || '')) > 0 ? InkStroke.tempoMesser() : null;
+        if (tempoMessen) { tempoMessen(point as [number, number], 16); running.tempo = [0]; }
         /* ── DER LEITERSTIFT SETZT ZWEI DINGE (E509) ────────────────────
            `stil` ist die ZEICHENANWEISUNG — sie ist dieselbe, die ein
            Schutzleiter aus E490 trägt, damit alte und neue Striche durch
@@ -4054,6 +4364,9 @@ const Marken = (() => {
            dem ersten `druckAus`, sonst erbt er den letzten Strich. */
         sensorZuletzt = null;
         running.pressure.push(druckAus(event, point));
+        if (sensorZuletzt !== null) sensorVerlauf.push(sensorZuletzt);
+        breiteAb = 0;
+        breiteFestlegen(Number(e.timeStamp) || 0);
         const p0 = running.pressure[0];
         /* DER AUFSETZPUNKT GEHT UNGEGLAETTET DURCH (E376): ein Strich, der
            nicht dort beginnt, wo der Stift das Papier beruehrt hat, ist
@@ -4067,7 +4380,8 @@ const Marken = (() => {
         wegNass = 0;
         feder.punkt(point, halbeBreite(running, p0) * nassSpitze());
         nassFlaeche = false;
-        runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [p0, p0] });
+        runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [p0, p0],
+          ...(running.tempo ? { tempo: [0, 0] } : {}) });
       } else {
         /* Ein schwarzer Zettel mit schwarzer Vorgabetinte wäre keiner —
            die Haftnotiz nimmt als Vorgabe das Marker-Gelb (derselbe
@@ -4448,6 +4762,10 @@ const Marken = (() => {
            FARBE bleibt erlaubt, das steht so in E466. */
         if (!selection.has(idOf(alt)) || alt.breite === undefined || alt.gesperrt) continue;
         const neu = { ...alt, breite: next };
+        /* Die feste Breite (E704) geht der Breite vor — sie wächst deshalb
+           im selben Verhältnis mit, sonst änderte der Knopf nichts. */
+        if (Number(alt.breiteFest) > 0 && Number(alt.breite) > 0)
+          neu.breiteFest = Math.round(Number(alt.breiteFest) * next / Number(alt.breite) * 100) / 100;
         marks[i] = neu;
         updateNode(nodeFor(idOf(neu)), neu);
         merke(neu);
@@ -5326,6 +5644,13 @@ const Marken = (() => {
        Tafel statt den Knopf, den der Finger meint. */
     const tafel = document.createElement('div');
     tafel.className = 'blatt-tafel';
+    /* DAS ZUBEHÖR WANDERT (E706, Redur 27.09. ca. 21:47: „… also beim stift
+       übergangen usw"). Mit diesen zwei Merkmalen fliegt die Wahl in jeder
+       Gruppe (`data-gruppe`) vom alten zum neuen Knopf — `SelectionFlow` hört
+       am Dokument zu, dieser Bereich ruft es nicht (§5). Die Werkzeuge tragen
+       kein `data-gruppe` und fliegen selbst (E640); der Zustand bleibt am Knopf. */
+    tafel.dataset['material'] = 'stift-zubehoer';
+    tafel.dataset['materialJe'] = 'gruppe';
     tools.appendChild(tafel);
     tafel.innerHTML =
       button('schreiben') +
@@ -6127,28 +6452,70 @@ const Marken = (() => {
       feld.click();
     };
 
-    /* E697: Farbe ist ein direkter Griff. Die fünf bisherigen Tupfer und
-       gespeicherten Sätze bleiben; die Markerpalette gilt nur für neue
-       Entscheidungen, niemals rückwirkend für vorhandene Marken. */
+    /* E697: Farbe ist ein direkter Griff; niemals rückwirkend. Seit E704: */
     const openColorPanel = (anchor: HTMLElement): void => {
       const tool = String(Zeichenziel.werkzeugVon(controls) || 'stift');
       const marker = tool === 'marker';
-      const palette = marker ? [
-        ['#ffcf33', 'Sonnengelb'], ['#79cf8b', 'Mintgrün'], ['#65c9ed', 'Himmelblau'],
-        ['#ed91be', 'Rosé'], ['#b39aef', 'Lavendel'], ['#f3aa66', 'Apricot']
-      ] : FARBEN.map(value => [value, FARBNAMEN[value] || value]);
+      const papier = papierfarbeVon(controls.flaeche);
+      const dunkel = relativeHelligkeit(papier) < 0.2;
+      const zuerst: ReadonlyArray<readonly [string, string]> = marker ? LEUCHTFARBEN
+        : dunkel ? [[PAPIERWEISS, 'Weiss'], ...TINTEN] : TINTEN;
+      const weitere = (marker ? MARKER_PASTELLE : FARBEN.map(value => [value, FARBNAMEN[value] || value] as const))
+        .filter(([value]) => !zuerst.some(([c]) => c === value));
+      const palette: string[][] = [...zuerst, ...weitere].map(([value, name]) => [value, name]);
       InkMenu.open(anchor, marker ? 'Markerfarben' : 'Stift- & Textfarben', (body, close) => {
         body.classList.add('blatt-color-panel'); body.dataset.colorTool = tool;
         let selected = String(Zeichenziel.farbeVon(controls) || FARBEN[0]).toLowerCase();
-        if (marker && selected === FARBEN[0]) selected = MARKER_FARBE;
+        if (marker && selected === FARBEN[0]) selected = TEXTMARKER_FARBE;
         const preview = document.createElement('div'); preview.className = 'blatt-color-preview';
+        /* Das Papier dieses Blatts, als Wert der Probe — kein Stilblock (§39). */
+        preview.style.setProperty('--probe-papier', papier);
+        preview.dataset.papier = dunkel ? 'dunkel' : 'hell';
         const sample = document.createElement('span'); sample.textContent = marker ? 'Text bleibt lesbar' : 'Meine Notiz';
         const ink = document.createElement('i'); ink.setAttribute('aria-hidden', 'true');
-        ink.style.opacity = String(deckungVon(tool, stiftJetzt()));
         preview.append(sample, ink);
         const caption = document.createElement('p'); caption.className = 'blatt-color-caption';
-        caption.textContent = marker ? 'Markieren · transparente Tinte auf Papier' : 'Schreiben & Zeichnen';
-        body.append(preview, caption);
+        const hinweis = document.createElement('p'); hinweis.className = 'blatt-color-warnung';
+        hinweis.setAttribute('role', 'status');
+        /* DIE PROBE NEU SCHREIBEN — mit Farbe, Stift, Spitze und Breite, die
+           JETZT gelten. Die Deckung sitzt am `<i>` (E623: dieselbe Zahl wie
+           der Strich), nicht noch einmal am Pfad. */
+        const probeZeichnen = (): void => {
+          const spitze = markerSpitzeLesen();
+          const stil = marker ? (spitze === 'keil' ? 'keil' : '') : (stiftJetzt() || 'fueller');
+          const probe = strichprobeMarke(marker ? 'marker' : 'stift', stil, selected,
+            Number(Zeichenziel.dickeVon?.(controls)) || BREITEN[1]);
+          ink.style.opacity = String(deckungVon(tool, stil));
+          ink.dataset.stil = stil || (marker ? 'rund' : 'kugel');
+          ink.replaceChildren(strichprobeBild(probe));
+          caption.textContent = marker
+            ? `Markieren · ${spitze === 'keil' ? 'Keilspitze' : 'runde Spitze'} · transparente Tinte auf Papier`
+            : 'Schreiben & Zeichnen';
+          const k = kontrastZu(selected, papier);
+          hinweis.textContent = !marker && k < 3
+            ? `Kaum sichtbar auf diesem Papier (${String(Math.round(k * 10) / 10).replace('.', ',')} : 1)` : '';
+        };
+        body.append(preview, caption, hinweis);
+        /* DIE SPITZE DES MARKERS (E704): Keil oder Rund — zwei Knöpfe mit
+           Wort, 44 px, `aria-pressed`. */
+        if (marker) {
+          const spitzen = document.createElement('div'); spitzen.className = 'blatt-color-spitzen';
+          spitzen.setAttribute('role', 'group'); spitzen.setAttribute('aria-label', 'Spitze des Markers');
+          for (const sp of MARKER_SPITZEN) {
+            const knopf = document.createElement('button'); knopf.type = 'button';
+            knopf.dataset.markerSpitze = sp.id; knopf.title = sp.titel; knopf.textContent = sp.name;
+            knopf.setAttribute('aria-pressed', String(markerSpitzeLesen() === sp.id));
+            knopf.onclick = () => {
+              markerSpitzeMerken(sp.id);
+              staerkenBeschriften();
+              spitzen.querySelectorAll<HTMLElement>('[data-marker-spitze]').forEach(k =>
+                k.setAttribute('aria-pressed', String(k.dataset.markerSpitze === sp.id)));
+              probeZeichnen();
+            };
+            spitzen.append(knopf);
+          }
+          body.append(spitzen);
+        }
         const apply = (value: string): void => {
           if (!/^#[0-9a-f]{6}$/.test(value)) return;
           const recent = eigeneFarbeMerken(value);
@@ -6158,13 +6525,14 @@ const Marken = (() => {
           tools.querySelector<HTMLButtonElement>(`.blatt-farbe[data-c="${value}"]`)?.click();
           markiere(); close();
         };
-        const addSwatches = (colors: string[][], label: string): void => {
-          const grid = document.createElement('div'); grid.className = 'blatt-color-grid';
+        const addSwatches = (colors: string[][], label: string, klein = false): void => {
+          const grid = document.createElement('div'); grid.className = 'blatt-color-grid' + (klein ? ' blatt-color-grid-klein' : '');
           grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', label);
           for (const [value, name] of colors) {
             if (!value) continue;
             const button = document.createElement('button'); button.type = 'button';
             button.dataset.inkColor = value; button.setAttribute('aria-label', `${name} ${value}`);
+            button.title = name || value;
             button.setAttribute('aria-pressed', String(value === selected));
             const swatch = document.createElement('i'); swatch.style.background = value; swatch.setAttribute('aria-hidden', 'true');
             const text = document.createElement('span'); text.textContent = name || value;
@@ -6172,11 +6540,19 @@ const Marken = (() => {
           }
           body.append(grid);
         };
-        addSwatches(palette, marker ? 'Markerpalette' : 'Grundfarben');
+        const ueberschrift = (wort: string): void => {
+          const label = document.createElement('p'); label.className = 'blatt-color-caption'; label.textContent = wort; body.append(label);
+        };
+        ueberschrift(marker ? 'Leuchtfarben' : dunkel ? 'Tinten · für dunkles Papier zuerst Weiss' : 'Tinten');
+        addSwatches(zuerst.map(([v, n]) => [v, n]), marker ? 'Markerpalette' : 'Tinten');
+        if (weitere.length) {
+          ueberschrift('Weitere Farben');
+          addSwatches(weitere.map(([v, n]) => [v, n]), marker ? 'Weitere Markerfarben' : 'Weitere Farben', true);
+        }
         const recent = eigeneFarben().filter(value => !palette.some(([color]) => color === value));
         if (recent.length) {
-          const label = document.createElement('p'); label.className = 'blatt-color-caption'; label.textContent = 'Zuletzt verwendet'; body.append(label);
-          addSwatches(recent.map(value => [value, value]), 'Zuletzt verwendete Farben');
+          ueberschrift('Zuletzt verwendet');
+          addSwatches(recent.map(value => [value, value]), 'Zuletzt verwendete Farben', true);
         }
         const form = document.createElement('form'); form.className = 'blatt-color-custom';
         const label = document.createElement('label'); label.textContent = 'Hex-Farbe';
@@ -6192,7 +6568,7 @@ const Marken = (() => {
           const valid = /^#[0-9a-f]{6}$/.test(value);
           hex.setAttribute('aria-invalid', String(!valid)); submit.disabled = !valid;
           error.textContent = valid ? '' : 'Bitte # und sechs Hex-Zeichen eingeben.';
-          if (valid) { selected = value; picker.value = value; ink.style.background = value; }
+          if (valid) { selected = value; picker.value = value; probeZeichnen(); }
         };
         hex.addEventListener('input', update);
         picker.addEventListener('input', () => { hex.value = picker.value; update(); });
@@ -6613,7 +6989,11 @@ const Marken = (() => {
         const balken = knopf.querySelector<HTMLElement>('i');
         if (balken) {
           balken.style.background = farbeJetzt();
-          const deck = deckungVon(String(tools.dataset.tool || ''), stiftJetzt());
+          /* Beim Marker entscheidet seit E704 die SPITZE über die Deckung
+             (Keil 0,40, Rund 0,32) — die Kachel sagt, was das Blatt bekommt. */
+          const werkzeug = String(tools.dataset.tool || '');
+          const deck = deckungVon(werkzeug, werkzeug === 'marker'
+            ? (markerSpitzeLesen() === 'keil' ? 'keil' : '') : stiftJetzt());
           balken.style.opacity = String(deck);
         }
       });
@@ -7046,7 +7426,7 @@ const Marken = (() => {
       if (!alt || !neu) return;
       /* Ohne Bewegung KEIN Flug — der Zustand ist trotzdem sofort richtig,
          weil er am Knopf hängt und nicht am Flug (§38). */
-      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+      if (AppEinstellung.wenigBewegung()) return;         /* System oder „Ruhig" (E702) */
       /* ══ UNTERBRECHEN, NICHT ANSTELLEN ═══════════════════════════════
        * Wer schnell A → B → C tippt, soll EINE Fläche sehen, die ihre
        * Richtung ändert — nicht zwei, die nebeneinander herfliegen. Die
@@ -7360,6 +7740,10 @@ const Marken = (() => {
   return { schicht, leiste, zeichneMarke, verlaufDefs, annotierbar, alsAnnotation,
            FARBEN, BREITEN, STIFTE, LEITER, LASER, FORMEN, WERKZEUGE, artWort, artZeichen,
     druckFaktor, RADIERER, TASTEN,
+    /* E704 nach aussen — damit `test583` an diesen Werten misst. */
+    TINTEN, LEUCHTFARBEN, MARKER_PASTELLE, TEXTMARKER_FARBE, PAPIERWEISS, MARKER_SPITZEN,
+    deckungVon, strokeWidth, halbeBreiten, kontrastZu, relativeHelligkeit, papierfarbeVon,
+    strichprobeMarke, markerSpitzeLesen,
     /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
        zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung
        misst, die die Leiste benutzt. Eine Prüfung, die die Meta-Liste selbst

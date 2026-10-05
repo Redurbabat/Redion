@@ -592,9 +592,8 @@ const RedionMotion = (() => {
     };
     /** Rückmeldung ohne Timer oder Änderung des Arbeitszustands. */
     const play = (element, effect) => {
-        if (document.hidden || document.body.dataset.bewegung === 'ruhig' ||
-            matchMedia('(prefers-reduced-motion: reduce)').matches)
-            return;
+        if (document.hidden || AppEinstellung.wenigBewegung())
+            return; /* dieselbe Frage wie überall (E702) */
         if (effects.some(entry => entry.id === effect))
             set(element, 'data-rmo-play', effect);
     };

@@ -42,6 +42,138 @@ const Menue = (() => {
         ((window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0) &&
          innerHeight <= 500);
 
+  /* DAS BLATT BEWEGT SICH WIE IM KIT (E702; Redur, 27.09., ca. 21:45: „Wie
+   * im UI-Kit (Empfohlen)"). Wie das Aktionsblatt des Kits: herein vom Rand
+   * auf der sanften Feder, der Grund blendet auf, es folgt dem Finger (nach
+   * oben als Gummiband) und geht mit kurzem Abgang. Vorher (messungen §74):
+   * 16 px aus dem Nichts, der Grund in EINEM Bild schwarz, jedes Schliessen
+   * im selben Bild. SOFORT BLEIBEN Escape (E302), die Wahl eines Eintrags und
+   * jedes `menu.remove()` — darauf bauen rund siebzig Prüfläufe. Den Abgang
+   * bekommen nur Wegwischen und Danebentippen, und unter „Ruhig" auch sie nicht. */
+  const blattBewegung = (m: HTMLElement, grund: HTMLElement, liste: HTMLElement | null,
+                         schliessen: () => void): { herein: () => void; geht: () => void } => {
+    const ruhig = (): boolean =>
+      typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
+    const feder = (name: 'smooth' | 'snappy'): { easing: string; duration: number } =>
+      typeof RedionSpring !== 'undefined' ? RedionSpring.token(name) : { easing: 'ease-out', duration: 320 };
+    const dauer = (marke: string, sonst: number): number => {
+      const roh = getComputedStyle(document.documentElement).getPropertyValue(marke).trim();
+      const n = parseFloat(roh);
+      return Number.isFinite(n) ? (/ms$/.test(roh) ? n : n * 1000) : sonst;
+    };
+    const kurve = (marke: string, sonst: string): string =>
+      getComputedStyle(document.documentElement).getPropertyValue(marke).trim() || sonst;
+    /** Wo das Blatt gerade WIRKLICH steht (px unter der Ruhelage). */
+    const jetzt = (): number => {
+      const t = getComputedStyle(m).transform;
+      return t && t !== 'none' ? new DOMMatrixReadOnly(t).m42 : 0;
+    };
+    const deckung = (): number => {
+      const o = parseFloat(getComputedStyle(grund).opacity);
+      return Number.isFinite(o) ? o : 1;
+    };
+    let lauf: Animation[] = [];
+    const halt = (): void => { lauf.forEach(a => a.cancel()); lauf = []; };
+    let weg = false;
+
+    const herein = (): void => {
+      if (ruhig()) return;
+      const f = feder('smooth');
+      lauf = [
+        m.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }],
+          { duration: f.duration, easing: f.easing }),
+        grund.animate([{ opacity: 0 }, { opacity: 1 }],
+          { duration: dauer('--motion-slow', 320), easing: kurve('--ease', 'ease-out') })
+      ];
+    };
+
+    /** Hinaus: kurzer Abgang, dann erst aus dem Baum. */
+    const geht = (): void => {
+      if (weg || !m.isConnected) return;
+      if (ruhig()) { schliessen(); return; }
+      weg = true;
+      const von = jetzt(), grundVon = deckung();
+      halt();
+      m.style.transform = '';
+      grund.style.opacity = '';
+      const d = dauer('--motion-normal', 200), e = kurve('--ease-exit', 'ease-in');
+      lauf = [
+        m.animate([{ transform: `translateY(${von}px)` }, { transform: 'translateY(100%)' }],
+          { duration: d, easing: e, fill: 'forwards' }),
+        grund.animate([{ opacity: grundVon }, { opacity: 0 }], { duration: d, easing: e, fill: 'forwards' })
+      ];
+      let fertig = false;
+      const ende = (): void => { if (fertig) return; fertig = true; schliessen(); };
+      lauf[0]?.addEventListener('finish', ende);
+      /* spätestens dann weg, auch ohne `finish` (wie usePresence im Kit) */
+      setTimeout(ende, d + 120);
+    };
+
+    const zurueck = (von: number): void => {
+      const grundVon = deckung();
+      m.style.transform = '';
+      grund.style.opacity = '';
+      if (ruhig()) return;
+      const f = feder('snappy');
+      lauf = [
+        m.animate([{ transform: `translateY(${von}px)` }, { transform: 'translateY(0)' }],
+          { duration: f.duration, easing: f.easing }),
+        grund.animate([{ opacity: grundVon }, { opacity: 1 }],
+          { duration: dauer('--motion-normal', 200), easing: kurve('--ease', 'ease-out') })
+      ];
+    };
+
+    /* Dem Finger nach — gegriffen am Griff oder am Titel. */
+    let start: number | null = null, basis = 0, hoehe = 1, dy = 0, bild = 0;
+    const tempo = typeof RedionSpring !== 'undefined' ? RedionSpring.velocityTracker() : null;
+    const malen = (): void => {
+      bild = 0;
+      m.style.transform = `translateY(${dy.toFixed(1)}px)`;
+      grund.style.opacity = String(Math.max(0, Math.min(1, 1 - Math.max(0, dy) / hoehe)));
+    };
+    /* `touches[0]` ist bei einem `touchstart` immer da — aber der Typ sagt
+       es nicht, und eine Wischgeste, die auf `undefined` zugreift, wäre ein
+       Fehler mitten in einer Berührung. Fehlt der Finger, passiert nichts. */
+    m.addEventListener('touchstart', ev => {
+      const f = ev.touches[0];
+      const ziel = ev.target instanceof Element ? ev.target : null;
+      if (!f || weg || !ziel?.closest('.blatt-griff, .blatt-titel')) { start = null; return; }
+      basis = ruhig() ? 0 : jetzt();
+      halt();
+      hoehe = Math.max(1, m.offsetHeight);
+      start = f.clientY;
+      dy = basis;
+      tempo?.reset();
+      tempo?.add(f.clientY, ev.timeStamp);
+      if (basis) malen();
+    }, { passive: true });
+    m.addEventListener('touchmove', ev => {
+      const f = ev.touches[0];
+      if (!f || start === null) return;
+      ev.preventDefault();                   /* die Seite darunter rollt nicht mit */
+      tempo?.add(f.clientY, ev.timeStamp);
+      const roh = basis + f.clientY - start;
+      /* Nach oben nur widerwillig — ein Gummiband, kein Losreissen. */
+      dy = roh >= 0 ? roh
+        : -(typeof RedionSpring !== 'undefined' ? RedionSpring.rubberband(-roh, Math.min(hoehe, 240)) : -roh * 0.3);
+      if (ruhig()) return;
+      if (!bild) bild = requestAnimationFrame(malen);
+    }, { passive: false });
+    const los = (ev: TouchEvent): void => {
+      if (start === null) return;
+      start = null;
+      if (bild) { cancelAnimationFrame(bild); bild = 0; }
+      const v = tempo ? tempo.velocity(ev.timeStamp) : 0;   /* px je Sekunde, nach unten positiv */
+      /* 90 px (wie bisher) oder nach unten geschnippt, und die Liste steht oben */
+      if ((dy > 90 || (v > 500 && dy > 8)) && (liste?.scrollTop || 0) <= 0) geht();
+      else zurueck(dy);
+    };
+    m.addEventListener('touchend', los);
+    m.addEventListener('touchcancel', los);
+
+    return { herein, geht };
+  };
+
   /**
    * Ein Menü öffnen. `opt.titel` ist die Überschrift des Blattes auf dem
    * Telefon — am Rechner gibt es keine, weil das Menü dort beim Zeiger steht
@@ -107,9 +239,16 @@ const Menue = (() => {
       grund = document.createElement('div');
       grund.className = 'menu-grund';
       grund.setAttribute('aria-hidden', 'true');
-      grund.addEventListener('click', schliessen);
       document.body.appendChild(grund);
+      /* SOFORT IN RUHELAGE (E702). Bis hier kam `.auf` ein Bild später, und
+         die Übergangsregel von `.menu.blatt` sollte das Blatt hochfahren —
+         am Telefon lief sie nie, weil `blatt-hoch` (16 px) darüberlag. Jetzt
+         steht das Blatt vom ersten Bild an in seiner Ruhelage, und die
+         Bewegung dorthin fährt `bewegung()` unten: vom Rand herein. */
+      m.classList.add('auf');
       document.body.appendChild(m);
+      const zug = blattBewegung(m, grund, liste, schliessen);
+      grund.addEventListener('click', zug.geht);
 
       /* Fast alle Aufrufer schliessen ihr Menü nach einer Aktion mit
          `menu.remove()` — vom Grund wissen sie nichts, den gibt es nur am
@@ -117,23 +256,8 @@ const Menue = (() => {
          frass genau einen Tipp. Der Wächter nimmt ihn mit, sobald das
          Menü aus dem Baum verschwindet — egal, wer es entfernt hat. */
       waechter.observe(document.body, { childList: true });
-      /* Nach unten wischen schliesst es */
-      let start: number | null = null;
-      /* `touches[0]` ist bei einem `touchstart` immer da — aber der Typ sagt
-         es nicht, und eine Wischgeste, die auf `undefined` zugreift, wäre ein
-         Fehler mitten in einer Berührung. Fehlt der Finger, passiert nichts. */
-      m.addEventListener('touchstart', e => {
-        const f = e.touches[0];
-        const ziel = e.target instanceof Element ? e.target : null;
-        start = f && ziel?.closest('.blatt-griff, .blatt-titel') ? f.clientY : null;
-      }, { passive: true });
-      m.addEventListener('touchend', e => {
-        const f = e.changedTouches[0];
-        if (!f || start === null) return;
-        const weg = f.clientY - start;
-        start = null;
-        if (weg > 90 && (liste?.scrollTop || 0) <= 0) schliessen();
-      });
+      /* Nach unten wischen schliesst es — und seit E702 folgt das Blatt
+         dabei dem Finger (`blattBewegung`). */
       /* Einträge in Karten gruppieren — iOS-Art, wie in Notions App:
          was zwischen zwei Trennlinien steht, kommt in eine Karte. */
       const ziel = liste;
@@ -156,7 +280,7 @@ const Menue = (() => {
       /* Löschen ist rot — genau wie bei Notion */
       m.querySelectorAll('[data-a="del"], [data-a="purge"]').forEach(x => x.classList.add('rot'));
 
-      requestAnimationFrame(() => m.classList.add('auf'));
+      zug.herein();
       return m;
     }
 
@@ -213,9 +337,12 @@ const Menue = (() => {
 
     const markiere = (b: HTMLElement | null | undefined): void => {
       liste.querySelectorAll('button.jetzt').forEach(x2 => x2.classList.remove('jetzt'));
-      if (!b) return;
+      /* Die leise Marke gleitet mit (E711) — dasselbe Material wie in der
+         Suche und der Palette, hier als Fläche statt Akzent. */
+      if (!b) { SelectionFlow.highlight(liste, null, { still: true }); return; }
       b.classList.add('jetzt');
       b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      SelectionFlow.highlight(liste, b, { still: true });
     };
 
     /* Der Filter kennt die Form des Menüs nicht: Knöpfe können direkt

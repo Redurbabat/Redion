@@ -1288,8 +1288,12 @@ const Arbeitswelt = (() => {
       const kasten = rahmen[index]!;
       if (form.art === 'stift' && Array.isArray(form.pts) && form.pts.length > 1) {
         const pfad = document.createElementNS(ns, 'path');
-        pfad.setAttribute('d', 'M' + form.pts.map((punkt: any) =>
-          `${Number(punkt?.[0]) || 0} ${Number(punkt?.[1]) || 0}`).join(' L'));
+        /* Derselbe Weg wie auf der Tafel (E704): durch die Mittelpunkte
+           gebogen, aus dem Kern — keine dritte Abschrift des Strichs (§8). */
+        const punkte = form.pts.map((punkt: any) => [Number(punkt?.[0]) || 0, Number(punkt?.[1]) || 0]);
+        pfad.setAttribute('d', typeof InkGeometry !== 'undefined' && punkte.length >= 3
+          ? InkGeometry.path(punkte)
+          : 'M' + punkte.map((q: number[]) => `${q[0]} ${q[1]}`).join(' L'));
         pfad.setAttribute('stroke', farbe); pfad.setAttribute('fill', 'none');
         pfad.setAttribute('stroke-width', '3'); pfad.setAttribute('stroke-linecap', 'round');
         svg.append(pfad); return;

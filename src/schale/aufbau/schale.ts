@@ -226,10 +226,30 @@ const App = (() => {
   /* Notion kennt genau zwei Stufen, nicht drei. */
   const BENACHRICHTIGUNG = { alle: 'Kommentare', erwaehnungen: 'Erwähnungen' };
 
+  /**
+   * DAS ZEICHEN EINER MENÜZEILE, GEZEICHNET (E701).
+   *
+   * Das ⋯-Menü der Seite trug dreiunddreissig Emoji und Schriftzeichen
+   * durcheinander — Kette, Klemmbrett, Karteischrank, Eimer, Pfeile —, jedes
+   * in seiner eigenen Farbe und auf seiner eigenen Grundlinie. Redur hat am
+   * 27. September „Gezeichnete Zeichen" gewählt: „Alles bleibt am selben
+   * Ort." Jede Zeile behält Kennung, Wort, Kürzel und Platz; nur das Bild
+   * kommt jetzt aus `Register.symbole` (E273, §8: ein Katalog für Zeichen).
+   *
+   * Als fertiges `<svg>` im Text und nicht als `data-sym`, das später
+   * gefüllt wird: `Menue.menu` misst das Menü gleich nach dem Einhängen, um
+   * es am Rand zu halten — ein Zeichen, das erst danach käme, verschöbe die
+   * Messung.
+   */
+  const menueZeichen = (name: string): string => {
+    try { return Register.symbole.alsSvg(name, 16); } catch { return ''; }
+  };
+  const mi = (name: string): string => `<span class="mi">${menueZeichen(name)}</span>`;
+
   /** Eine Menüzeile mit echtem Schalter rechts — so macht es Notion. */
-  const schalterZeile = (a: any, icon: any, text: string, an: any) =>
+  const schalterZeile = (a: any, zeichen: string, text: string, an: any) =>
     `<button data-a="${a}" class="mit-schalter" role="switch" aria-checked="${an ? 'true' : 'false'}">` +
-    `<span class="mi">${icon}</span>${text}` +
+    `${mi(zeichen)}${text}` +
     `<span class="mschalter${an ? ' an' : ''}"><i></i></span></button>`;
 
   /**
@@ -486,25 +506,25 @@ const App = (() => {
             `<b class="sk-${id}">${ag}</b><span>${n}</span></button>`).join('') +
       '</div>' +
       /* Seitenaktionen — Reihenfolge wie in Notions Menü */
-      '<button data-a="link"><span class="mi">🔗</span>Link kopieren<span class="ms">Strg Alt L</span></button>' +
-      '<button data-a="inhalt"><span class="mi">📋</span>Seiteninhalte kopieren</button>' +
-      '<button data-a="dup"><span class="mi">⧉</span>Duplizieren<span class="ms">Strg D</span></button>' +
-      '<button data-a="wz-verschieben"><span class="mi">➦</span>Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
-      `<button data-a="archiv"><span class="mi">🗄</span>${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
-      '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
+      '<button data-a="link">' + mi('link') + 'Link kopieren<span class="ms">Strg Alt L</span></button>' +
+      '<button data-a="inhalt">' + mi('clipboard') + 'Seiteninhalte kopieren</button>' +
+      '<button data-a="dup">' + mi('copy') + 'Duplizieren<span class="ms">Strg D</span></button>' +
+      '<button data-a="wz-verschieben">' + mi('moveTo') + 'Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
+      `<button data-a="archiv">${mi('archive')}${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
+      '<button data-a="del">' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
       '<hr>' +
-      '<button data-a="wz-praesi"><span class="mi">▶</span>Präsentieren' +
+      '<button data-a="wz-praesi">' + mi('play') + 'Präsentieren' +
         '<span class="kenn">Beta</span><span class="ms">Strg Alt P</span></button>' +
-      schalterZeile('klein', '↕', 'Kleiner Text', p.small) +
-      schalterZeile('breit', '↔', 'Volle Breite', p.wide) +
-      schalterZeile('pfad', '🗂', 'Pfadnavigation anzeigen', p.pfad !== false) +
-      '<button data-a="anpassen"><span class="mi">⚙</span>Seite anpassen<span class="ms">▸</span></button>' +
+      schalterZeile('klein', 'textSize', 'Kleiner Text', p.small) +
+      schalterZeile('breit', 'widthWide', 'Volle Breite', p.wide) +
+      schalterZeile('pfad', 'crumbs', 'Pfadnavigation anzeigen', p.pfad !== false) +
+      '<button data-a="anpassen">' + mi('settings') + 'Seite anpassen<span class="ms">▸</span></button>' +
       '<hr>' +
-      '<button data-a="offline"><span class="mi">⭳</span>Offline verfügbar' +
+      '<button data-a="offline">' + mi('download') + 'Offline verfügbar' +
         '<span class="ms">immer</span></button>' +
       '<hr>' +
-      schalterZeile('wz-gesperrt', '🔒', 'Seite sperren', p.gesperrt) +
-      '<button data-a="mitki"><span class="mi">✨</span>Mit KI verwenden<span class="ms">▸</span></button>' +
+      schalterZeile('wz-gesperrt', 'lock', 'Seite sperren', p.gesperrt) +
+      '<button data-a="mitki">' + mi('sparkle') + 'Mit KI verwenden<span class="ms">▸</span></button>' +
       '<hr>' +
       /* Auf dem Telefon ist die Kopfzeile schmal wie in Notion: nur ☰, ‹,
          Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar.
@@ -514,40 +534,40 @@ const App = (() => {
          Bedingung an genau der Stelle, an der auch das Verstecken hängt —
          wer eines ändert, sieht das andere. */
       ((UI.amTelefon() || (typeof Ruhig !== 'undefined' && Ruhig.an()))
-        ? '<button data-a="teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
-          '<button data-a="verlauf"><span class="mi">🕘</span>Versionsverlauf</button>' +
-          '<button data-a="kopf-komm"><span class="mi">💬</span>Kommentare</button>' +
-          '<button data-a="auto"><span class="mi">⚡</span>Automationen</button><hr>'
+        ? '<button data-a="teilen">' + mi('share') + 'Teilen und ausgeben</button>' +
+          '<button data-a="verlauf">' + mi('history') + 'Versionsverlauf</button>' +
+          '<button data-a="kopf-komm">' + mi('comment') + 'Kommentare</button>' +
+          '<button data-a="auto">' + mi('bolt') + 'Automationen</button><hr>'
         : '') +
-      `<button data-a="fav"><span class="mi">${p.favorite ? '★' : '☆'}</span>` +
+      `<button data-a="fav">${mi('star')}` +
       `${p.favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten'}</button>` +
-      `<button data-a="produkt-bereiche"><span class="mi">◎</span>Lebensbereiche` +
+      `<button data-a="produkt-bereiche">${mi('circleDot')}Lebensbereiche` +
         `<span class="ms">${bereichAnzahl || 'Keine'} ▸</span></button>` +
-      '<button data-a="rename"><span class="mi">✎</span>Umbenennen</button>' +
-      '<button data-a="icon"><span class="mi">😀</span>Symbol ändern</button>' +
-      '<button data-a="cover"><span class="mi">🖼</span>Cover ändern</button>' +
-      '<button data-a="pid"><span class="mi">#</span>Seiten-ID kopieren</button>' +
-      '<button data-a="komm"><span class="mi">💬</span>Kommentare</button>' +
-      `<button data-a="vorschlag"><span class="mi">✍</span>Änderungen vorschlagen` +
+      '<button data-a="rename">' + mi('pencil') + 'Umbenennen</button>' +
+      '<button data-a="icon">' + mi('smile') + 'Symbol ändern</button>' +
+      '<button data-a="cover">' + mi('image') + 'Cover ändern</button>' +
+      '<button data-a="pid">' + mi('hash') + 'Seiten-ID kopieren</button>' +
+      '<button data-a="komm">' + mi('comment') + 'Kommentare</button>' +
+      `<button data-a="vorschlag">${mi('suggest')}Änderungen vorschlagen` +
         `<span class="ms">${p.vorschlagModus ? 'an' : 'aus'}</span></button>` +
       ((p.vorschlaege || []).length
-        ? `<button data-a="vorschlaege"><span class="mi">📝</span>Vorschläge ansehen` +
+        ? `<button data-a="vorschlaege">${mi('tasks')}Vorschläge ansehen` +
           `<span class="ms">${p.vorschlaege.length}</span></button>` : '') +
-      '<button data-a="uebersetzen"><span class="mi">🅰</span>Übersetzen<span class="ms">▸</span></button>' +
-      '<button data-a="undo"><span class="mi">↶</span>Rückgängig machen<span class="ms">Strg Z</span></button>' +
+      '<button data-a="uebersetzen">' + mi('translate') + 'Übersetzen<span class="ms">▸</span></button>' +
+      '<button data-a="undo">' + mi('undo') + 'Rückgängig machen<span class="ms">Strg Z</span></button>' +
       '<hr>' +
       /* Daten */
-      '<button data-a="export"><span class="mi">⭳</span>Als Markdown</button>' +
-      '<button data-a="import"><span class="mi">⭱</span>Markdown einlesen</button>' +
+      '<button data-a="export">' + mi('download') + 'Als Markdown</button>' +
+      '<button data-a="import">' + mi('upload') + 'Markdown einlesen</button>' +
       Werkzeuge.seitenMenueZusatz(p) +
       '<hr>' +
-      `<button data-a="stat2"><span class="mi">📈</span>Seitenaufrufe<span class="ms">${p.aufrufe || 0}</span></button>` +
-      '<button data-a="updates"><span class="mi">🕘</span>Updates und Analysen</button>' +
-      `<button data-a="benach"><span class="mi">🔔</span>Benachrichtigungen` +
+      `<button data-a="stat2">${mi('eye')}Seitenaufrufe<span class="ms">${p.aufrufe || 0}</span></button>` +
+      '<button data-a="updates">' + mi('clock') + 'Updates und Analysen</button>' +
+      `<button data-a="benach">${mi('bell')}Benachrichtigungen` +
         `<span class="ms">${(BENACHRICHTIGUNG as Record<string, string>)[p.benachrichtigung || 'alle']} ▸</span></button>` +
-      `<button data-a="verbind"><span class="mi">⊞</span>Verbindungen` +
+      `<button data-a="verbind">${mi('plug')}Verbindungen` +
         `<span class="ms">${(p.verbindungen || []).length || 'Keine'} ▸</span></button>` +
-      '<button data-a="papier"><span class="mi">🗑</span>Gelöschte Seiten</button>',
+      '<button data-a="papier">' + mi('trash') + 'Gelöschte Seiten</button>',
       r.right + 4, r.top,
       { platzhalter: 'Suchaktionen …', titel: 'Aktionen',
         fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
@@ -1123,6 +1143,14 @@ const App = (() => {
       '</div>';
     document.body.appendChild(o);
 
+    /* DIE KAPSEL WÄCHST ZUM FELD (E711, Szene 07): aus dem sichtbaren
+       Suchknopf, auch bei Strg P / Strg K; ohne ihn (und ruhig) wie bisher. */
+    const kapsel = ['studio-search', 'btn-suche-handy', 'mb-suche']
+      .map(id => document.getElementById(id))
+      .find(k => !!k && k.offsetParent !== null && k.getBoundingClientRect().width > 0);
+    const scheibe = o.querySelector<HTMLElement>('.finder.such');
+    if (scheibe && kapsel) SelectionFlow.growFrom(scheibe, kapsel.getBoundingClientRect());
+
     const inp = o.querySelector<HTMLInputElement>('#q');
     const res = o.querySelector<HTMLElement>('#res');
     if (!inp || !res) return;
@@ -1201,14 +1229,34 @@ const App = (() => {
           (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
       verlaufBinden();
-      res.querySelectorAll<HTMLElement>('button[data-i]').forEach(b => {
+      const zeilen = [...res.querySelectorAll<HTMLElement>('button[data-i]')];
+      zeilen.forEach(b => {
         b.addEventListener('click', () => {
           merkeSuche(inp.value);
           zumTreffer(treffer[Number(b.dataset.i)]); o.remove();
         });
         b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
       });
+      /* Neue Treffer kommen nacheinander (Schlüssel: Seite und Stelle), die Marke gleitet (E711). */
+      SelectionFlow.stagger(res, zeilen, zeilen.map(b => {
+        const t = treffer[Number(b.dataset.i)];
+        return String(t?.page?.id ?? '') + '#' + String(t?.blockId ?? '');
+      }));
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, res.querySelector<HTMLElement>('button.on'), { taste: '↵ Enter' });
+      zeigeVorschau(i);
+    };
+
+    /* ↑ ↓ OHNE NEUBAU (E711): hier stand `zeichne()` — jetzt wandert nur `.on`. */
+    const waehle = (k: number): void => {
+      if (!treffer.length) return;
+      i = Math.max(0, Math.min(k, treffer.length - 1));
+      res.querySelectorAll('button[data-i].on').forEach(b => b.classList.remove('on'));
+      const neu = res.querySelector<HTMLElement>(`button[data-i="${i}"]`);
+      if (!neu) { zeichne(); return; }
+      neu.classList.add('on');
+      neu.scrollIntoView({ block: 'nearest' });
+      SelectionFlow.highlight(res, neu, { taste: '↵ Enter' });
       zeigeVorschau(i);
     };
 
@@ -1398,6 +1446,7 @@ const App = (() => {
           o.remove();
           void Chronik.oeffnen();
         });
+        SelectionFlow.highlight(res, res.querySelector<HTMLElement>('[data-chr-tuer]'), { taste: '↵ Enter' });
         return;
       }
       const uiFilters = readUiFilters();
@@ -1523,8 +1572,8 @@ const App = (() => {
 
     inp.addEventListener('keydown', e => {
       if (e.key === 'Escape') { o.remove(); return; }
-      if (e.key === 'ArrowDown') { e.preventDefault(); i = Math.min(i + 1, treffer.length - 1); zeichne(); }
-      if (e.key === 'ArrowUp')   { e.preventDefault(); i = Math.max(i - 1, 0); zeichne(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); waehle(i + 1); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); waehle(i - 1); }
       if (e.key === 'Enter' && treffer[i]) { zumTreffer(treffer[i]); o.remove(); }
     });
 
@@ -1974,8 +2023,13 @@ const App = (() => {
    * Rechnung: darunter trifft der Daumen die Nachbarzeile mit.
    * ========================================================================*/
   const rMenue = (): void => {
+    /* `zeichen` IST EIN NAME AUS `Register.symbole` (E701). Hier standen
+       🔍 ⌘ 🏠 📄 🧭 ✚ ✨ ⭱ ⬇ 🗑 ⌨ ⚙ — und „Mehr" trug den Kompass, obwohl
+       unten in der Leiste derselbe Weg die drei Punkte trägt. Jetzt hat
+       jeder Weg hier dasselbe Zeichen wie überall sonst, in `currentColor`
+       und still; die Wörter, die Kennungen und die Folge bleiben. */
     const zeile = (was: string, zeichen: string, name: string, hinweis = '') =>
-      `<button data-r="${was}"><span class="rm-z">${zeichen}</span>` +
+      `<button data-r="${was}"><span class="rm-z">${menueZeichen(zeichen)}</span>` +
       `<span class="rm-n">${name}</span>` +
       (hinweis ? `<span class="rm-h">${hinweis}</span>` : '') + '</button>';
 
@@ -1984,32 +2038,32 @@ const App = (() => {
     o.innerHTML =
       '<div class="rm-kopf">' +
         '<div><b>Redion</b><span>Alles bleibt auf diesem Gerät</span></div>' +
-        '<button class="rm-zu" data-r="zu" aria-label="Schliessen">✕</button>' +
+        '<button class="rm-zu" data-r="zu" aria-label="Schliessen">' + menueZeichen('close') + '</button>' +
       '</div>' +
       '<div class="rm-rollen">' +
         '<div class="rm-gruppe">' +
-          zeile('suche', '🔍', 'Suchen') +
-          zeile('befehle', '⌘', 'Befehle') +
-          zeile('start', '🏠', 'Start') +
-          zeile('seiten', '📄', 'Seiten') +
+          zeile('suche', 'search', 'Suchen') +
+          zeile('befehle', 'command', 'Befehle') +
+          zeile('start', 'home', 'Start') +
+          zeile('seiten', 'pages', 'Seiten') +
           /* „Mehr" statt „Posteingang" (E42 §16). Der Posteingang ist kein
              eigener Weg mehr, sondern eine Zeile IN Mehr — er ist meistens
              leer, und ein Platz in der Hauptnavigation gehört dem, was man
              oft braucht. Der Kompass steht bewusst NICHT hier: die Vorgabe
              sagt ausdrücklich, er sei eine Seite in Mehr, kein Reiter. */
-          zeile('mehr', '🧭', 'Mehr') +
-          zeile('neu', '✚', 'Neue Seite') +
+          zeile('mehr', 'dots', 'Mehr') +
+          zeile('neu', 'plus', 'Neue Seite') +
           /* Die KI hat oben keinen Reiter mehr (E38). Sie ist deshalb NICHT
              weg: unten steht „KI fragen", und hier steht der Weg zu allem,
              was länger dauert als eine Frage. */
-          zeile('ki', '✨', 'KI und Verlauf') +
+          zeile('ki', 'sparkle', 'KI und Verlauf') +
         '</div>' +
         '<div class="rm-gruppe">' +
-          zeile('import', '⭱', 'Importieren') +
-          zeile('sichern', '⬇', 'Sichern', 'als Datei auf dieses Gerät') +
-          zeile('papierkorb', '🗑', 'Papierkorb') +
-          zeile('tasten', '⌨', 'Tastenkürzel') +
-          zeile('einstellungen', '⚙', 'Einstellungen') +
+          zeile('import', 'upload', 'Importieren') +
+          zeile('sichern', 'download', 'Sichern', 'als Datei auf dieses Gerät') +
+          zeile('papierkorb', 'trash', 'Papierkorb') +
+          zeile('tasten', 'keyboard', 'Tastenkürzel') +
+          zeile('einstellungen', 'settings', 'Einstellungen') +
         '</div>' +
       '</div>';
     document.body.appendChild(o);
@@ -3376,6 +3430,14 @@ const App = (() => {
        `fokus.ts` rechnet seit E223 genauso — die letzte im Dokument ist
        die oberste. Dieselbe Regel an beiden Stellen, sonst schliesst Esc
        etwas anderes, als der Fokus gerade hält. */
+    /* WAS BEIM DRUCK OFFEN WAR (Durchsicht E711): eigene Griffe (Suche,
+       Palette) nehmen ihr Fenster VOR diesem — derselbe Druck räumte dann
+       auch die Meldungen ab (zwei auf einen, vgl. test296 §3). Im Einfangen
+       wird nur notiert; geschlossen wird weiter nur unten. */
+    let warOffen = false;
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') warOffen = !!document.querySelector('.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf');
+    }, true);
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
       const letztes = (wahl: string): Element | null => {
@@ -3386,6 +3448,9 @@ const App = (() => {
       const o = letztes('.overlay');
       if (m) m.remove();
       else if (o) o.remove();
+      /* Ohne Fenster: Fächer, sonst Meldungsstapel (E711, derselbe Griff) —
+         aber nur, wenn dieses Escape nicht schon ein Fenster genommen hat. */
+      else if (!warOffen && !e.defaultPrevented && typeof Hinweis !== 'undefined') Hinweis.escape();
     });
   };
 
@@ -4268,6 +4333,10 @@ const App = (() => {
      * gewandert. Mit der Angabe fährt sie sofort los, und der Ruf aus
      * `redion:schauplatz` bestätigt sie danach. */
     const dockWechsel = (reiterId: string, knopfId: string, oeffnen: () => void) => {
+      /* woher, wohin — für die Ankunft (E702), vor dem Umschalten gelesen */
+      const vorher = typeof Wischen !== 'undefined' ? Wischen.jetzt() : -1;
+      const nachher = typeof Wischen !== 'undefined'
+        ? Wischen.reiter().findIndex(b => b.id === knopfId) : -1;
       Seitenleiste.reiter(reiterId);
       handyLeiste(knopfId);
       /* ══ ZWEI BILDER, NICHT EINES (E648) ══════════════════════════════
@@ -4289,7 +4358,11 @@ const App = (() => {
        * Aufbau kommt ins zweite. Das kostet eine Bildauffrischung Latenz
        * (rund 16 ms) und gibt dafür den Anfang der Bewegung — den Teil,
        * den das Auge braucht, um ihr folgen zu können. */
-      requestAnimationFrame(() => requestAnimationFrame(() => oeffnen()));
+      /* die Ankunft kommt mit dem neuen Inhalt, im selben Bild (E702) */
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        oeffnen();
+        if (typeof Wischen !== 'undefined') Wischen.ankunft(vorher, nachher);
+      }));
     };
     an('hl-dok', () => { PWA.schubladeZu && PWA.schubladeZu();
                          dockWechsel('dokumente', 'hl-dok', () => { Bibliothek.oeffne(); handyLeiste(); }); });

@@ -1017,12 +1017,7 @@
   .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
 }
 
-.lernwelt :where(.lw-nav button,.lw-actions button,.lw-rating button,.lw-quick button,
-  .lw-study-actions button,.lw-object-list button,.lw-task-list button,.lw-event-list button,
-  .lw-topic-list>button,.lw-path li>button,.lw-continue-card,
-  .lw-subject-grid>button):active{
-  transform:scale(var(--press-scale,.97))
-}
+/* .lernwelt :where(.lw-nav button, …):active: Einsinken per press.ts (E702) */
 
 /* --- Breite Desktops: drei ruhige Dashboard-Spalten -------------------- */
 @container (min-width:1180px){
@@ -1418,7 +1413,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   margin:0;font-size:12.5px;letter-spacing:.02em;color:var(--text-dim)
 }
 .lernwelt .lw-plan-tag h3 em{
-  margin-left:var(--space-1);font-style:normal;color:var(--accent);font-weight:640
+  margin-left:var(--space-1);font-style:normal;color:var(--accent-text);font-weight:640
 }
 .lernwelt .lw-plan-lektion{
   display:flex;flex-direction:column;gap:2px;
@@ -1427,7 +1422,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 }
 .lernwelt .lw-plan-lektion.ist-jetzt{border-color:var(--accent);background:var(--accent-schwach)}
 .lernwelt .lw-plan-lektion time{font-size:11px;color:var(--text-dim);font-variant-numeric:tabular-nums}
-.lernwelt .lw-plan-jetzt{font-style:normal;font-size:11px;color:var(--accent);font-weight:640}
+.lernwelt .lw-plan-jetzt{font-style:normal;font-size:11px;color:var(--accent-text);font-weight:640}
 .lernwelt .lw-plan-lektion strong{font-size:13px}
 .lernwelt .lw-plan-lektion span{font-size:11.5px;color:var(--text-dim)}
 .lernwelt .lw-plan-lektion small{font-size:11px;color:var(--text-dim)}

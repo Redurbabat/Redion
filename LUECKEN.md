@@ -8348,6 +8348,296 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L232 · Suche und Meldungen nach E711 — was aus den Szenen 07 und 08 noch fehlt — 28. September 2026
+
+**Gefunden beim Bau von E711**, als Rest seines Auftrags. Redur hat am
+27. September um ca. 22:05 das Video „Liquid Glass" geschickt: „Schau mal
+das auch an ich will das auch haben". E711 hat daraus gebaut: die Suche
+wächst aus der Kapsel, neue Treffer kommen nacheinander, EINE Marke gleitet
+mit ↑ ↓ (Suche, Befehlspalette, Menü mit Suche) und trägt „↵ Enter";
+`#toast` wird ein Stapel aus bis zu drei Meldungen; die Glocke fächert die
+letzten drei auf und fliesst nach „Alle gelesen" in sich zurück; der
+Posteingang zeigt Glaskarten (`test588`).
+
+**Was fehlt, ausdrücklich:**
+
+1. **Escape in der Suche leert zuerst das Feld** (Szene 07: „Escape clears
+   the text first and, pressed again, closes"). Heute schliesst Escape
+   sofort, wie seit jeher; mehrere Läufe verlassen sich darauf. Braucht
+   einen eigenen Lauf, der beide Wege zeigt.
+2. **Die Liste als Combobox für den Vorleser** (`role="combobox"` am Feld,
+   `listbox`/`option`, `aria-activedescendant`). Die Marke ist nur Bild
+   (`aria-hidden`); gesagt wird die Wahl heute nicht.
+3. **Enter als Übergabe** (Szene 07, 13,40–13,75 s): die Scheibe hebt sich,
+   der Inhalt geht, die Fläche wird zur Meldung. Heute schliesst Enter und
+   öffnet — ohne die Übergabe.
+4. **Der Kick und der Tropfen** (Szene 08, 14,50 s): vor dem
+   Zusammenfliessen ein kurzer Schlag (Skalierung und Drehung), danach ein
+   Glastropfen als „nichts mehr da". Bewusst weggelassen (ruhig, §39);
+   Redur entscheidet, ob er es will.
+5. **Wischen mit der Maus.** Am Rechner greifen die Karten des Stapels nicht
+   nach dem Zeiger (wie `#toast`, sonst verschluckten sie Klicks auf das
+   darunter); weggenommen werden sie dort mit Escape oder von selbst.
+6. **EIN Goo-Filter für alle Zweige.** `SelectionFlow.goo` legt `#ru-goo`
+   einmal an. Die Zweige `claude/loeschen-fluessig` (E709) und
+   `claude/tropfen-und-kacheln` (E712) bauen dieselbe Technik; beim
+   Zusammenführen bleibt EIN Filter.
+
+7. **Meldungen als Glas.** Der Auftrag nannte „glass toasts"; E703 (c) hat
+   Glas für Toast und Lader verworfen (doppelter Druck beim Einblenden über
+   `opacity`, Glas auf Glas). Der Stapel ist deshalb deckend mit
+   Lichtkante. Glas hier nur, wenn Redur E703 (c) dafür aufhebt.
+8. **Wegwischen ist am Telefon ein Schnippen, kein Ziehen** (Durchsicht,
+   4. Oktober). Die Karten sind `pointer-events:none` wie `#toast` — ein
+   Tipp geht durch sie hindurch. Darunter liegt meist Inhalt, der rollen
+   darf; der Browser nimmt den Zug deshalb nach ein, zwei Bewegungen an sich
+   (`pointercancel`). Gezählt wird seither die letzte Bewegung: deutlich zur
+   Seite ist ein Schnippen und nimmt die Karte weg; langsam mitziehen geht
+   nicht. Echt ziehen hiesse, die Karten am Telefon zu Zielen zu machen —
+   dann nähmen sie den Knöpfen darunter den Tipp. Redur entscheidet.
+   Seit der sechsten Durchsicht (5. Oktober): ruhte der Finger länger als
+   300 ms, bevor er losging, ist es kein Schnippen — der Zug gehört dem,
+   was darunter liegt (eine Kladde, ein Block, eine Marke im PDF werden
+   nach 400 bis 500 ms gehoben; `test588` §14, `test360`).
+9. **Die Trefferzeilen der Suche sind am Telefon 39 px hoch** (gefunden in
+   der Durchsicht, 5. Oktober; NICHT von E711 — auf `b3cf1933` genauso,
+   gemessen mit derselben Sonde). §37 verlangt 44 px auf dem Hauptweg. Die
+   Zeilen tragen jetzt die Marke; ihre Höhe hat E711 nicht angefasst. Ein
+   eigener Bogen: die Zeilen am Telefon auf `var(--touch-min)`, mit
+   `test362` (exakte Zahlen in `marken-decke.json`) und `test402` als
+   Nachbarn und einem Lauf, der die Höhe am Telefon misst.
+10. ~~**Der Fächer beim Zeigen liegt über „KI" und „Favorit"**~~ —
+   GESCHLOSSEN am 5. Oktober (fünfte Durchsicht). Gefunden in der vierten
+   Durchsicht: am Rechner ging er 8 px unter der Glocke auf, 340 × 242 px,
+   und deckte die zwei Knöpfe rechts in der Kopfzeile der Seite. Wer auf
+   der Glocke verweilte und dann dorthin wollte, fuhr in den Fächer; solange
+   der Zeiger darauf lag, blieb er offen, und ein Klick traf eine Meldung.
+   Die vierte Durchsicht liess es Redur offen; die fünfte hat es repariert,
+   weil der Weg länger war als auf `b3cf1933`: der Fächer geht jetzt unter
+   der Reihe auf, die direkt unter der Glocke steht (`unterDerReihe` in
+   hinweis.ts), „KI", „Favorit" und „…" bleiben frei. Beweis: `test588`
+   §13 — rot gegen die Reparatur der vierten Durchsicht, grün danach; die
+   Gegenprobe (Fächer wieder 8 px unter der Glocke) macht ihn wieder rot.
+   Ob der Fächer beim Zeigen überhaupt aufgehen soll, bleibt Redurs Wahl.
+
+**Was es NICHT ist:** kein Fehler. Jeder Griff geht wie vorher (Klick auf
+die Glocke, Strg P, Strg K, `#q`, `[data-i]`, Enter, Escape).
+
+---
+
+## L229 · Das Material zum Ziehen gibt es an der unteren Leiste — noch nicht am Zubehör und in den Einstellungen — 28. September 2026
+
+**Gefunden beim Bau von E706**, als Rest seines Auftrags. Redur hat am
+27. September um ca. 21:47 die Tab-Leiste seines Touch Kits geschickt: „ich
+will das du auch das ¨berla nutze will wo es nötig ich also beim stift
+übergangen usw". E706 hat das Material an drei Orten gebaut: die Pille der
+unteren Leiste lässt sich mit dem Daumen ziehen (hebt sich, dehnt sich,
+rastet ein), der Werkzeugflug der Stiftleiste fährt auf der Feder des Kits,
+und in sechs Reihen (Seite/Fläche/Redion, Heute, die Wege im Regal, die
+Reiter von „Aussehen", die Liste der Einstellungen, das Zubehör der
+Stiftleiste) fliegt die Wahl, statt zu springen (`test585`).
+
+**Was fehlt, ausdrücklich:**
+
+1. **Schieben über das Zubehör der Stiftleiste.** Die Karte (material-5)
+   schlägt vor, den Finger über Stifte, Farben und Breiten zu ziehen, mit
+   Vorschau unter dem Finger — wie an der unteren Leiste. Der Helfer dafür
+   steht (`SelectionFlow.ziehbar` mit `baue`, einer kurzlebigen Fläche),
+   ist dort aber NICHT gebunden: die Reihe rollt am Telefon waagerecht, und
+   ein Zug muss sich mit dem Rollen der Reihe und mit einem Strich auf dem
+   Blatt einigen. Das braucht einen eigenen Lauf, der beides zeigt.
+2. **Wahl-Listen mit zwei oder drei Möglichkeiten** in den Einstellungen
+   (Hell/Dunkel/System, Klein/Normal/Gross, Normal/Ruhig …) sind weiterhin
+   `<select>`. Die Karte schlägt `Segment` vor; das ändert den Weg, auf dem
+   acht Prüfläufe die Einstellungen setzen, und gehört in einen Bogen mit
+   diesen Läufen zusammen.
+3. **Die Feder als Marke.** `SelectionFlow.FEDERN` führt `knapp` und
+   `druck` mit den Zahlen des Kits (`--ui-spring-snappy`,
+   `--ui-spring-press`). Sobald `grund.css` die Kit-Federn als Marken hat
+   (Zweig `claude/fluessige-bewegung`: `--feder-knapp`, `--feder-druck`),
+   soll die Tafel sie von dort lesen —
+   die Zahlen stünden dann an EINER Stelle (§8).
+
+**Was es NICHT ist:** kein Fehler. Alles, was es vorher gab, geht wie
+vorher (Tipp, Tastatur, Vorleser, ohne Bewegung).
+
+---
+
+## L228 · Weiss auf der Astfarbe der Gedankenkarte ist im Dunkeln zu blass — 28. September 2026
+
+**Gefunden beim Bau von E705**, nicht gesucht. Die Gedankenkarte malt drei
+kleine Dinge WEISS auf die Farbe eines Astes: die Zahl an einem
+zugeklappten Ast (`.gk-zahl`), das „+" der vier Griffe (`.gk-griffel`) und
+— über `--ast-zug` — deren Fläche. Die acht Astfarben (`Gedankenkarte.PALETTE`)
+sind mittelhelle Töne; Weiss darauf hat gerechnet:
+
+```txt
+Gelb #c9a227 2,4 · Orange #e08a2e 2,7 · Türkis #3fa3a0 3,0 · Grün #4a9d5f 3,3
+Blau #2f8ab5 3,9 · Rot #d9534f 4,0 · Rosa #c2549b 4,2 · Violett #7a5cc5 5,0
+```
+
+Im Hellen nimmt die Karte seit E705 die dunklere Tinte (`--ast-hell`,
+4,6 : 1 auf hellem Grund), und Weiss darauf wird besser; im Dunkeln bleibt
+die gespeicherte Farbe, und dort ist die Zahl auf Gelb kaum zu lesen. Die
+Astfarben selbst zu ändern hiesse, gespeicherte Karten umzufärben (§9).
+
+**Was fehlt:** die Schrift auf dem Ast gerechnet statt fest — wie
+`--auf-accent` (E705): Weiss, wo es reicht, sonst ein getöntes Dunkel im Ton
+des Astes. Mit einem Punkt in `test584` oder `test529`, der die Zahl an
+einem gelben Ast misst.
+
+---
+
+## L227 · Der Stift nach E704 — was an Messung und Weg noch offen ist — 28. September 2026
+
+**Gefunden beim Bau von E704** (Redur: „bessere stift efeckte beim
+zeichnen"). Was E704 gebaut hat, steht dort und in `test583`; das hier ist der
+Rest, damit er nicht in einem Commit verschwindet (§35).
+
+1. **Das iPad ist nicht gemessen.** Alle Zahlen zum nassen Strich kommen aus
+   Chromium am Rechner mit künstlichen Stiftereignissen (CDP). Wie oft
+   Safari `getPredictedEvents` und `getCoalescedEvents` liefert, und ob ein
+   Bild dort unter 8 ms bleibt (L209 Punkt 5), weiss niemand. Vorschlag
+   stift-11: ein Schalter „Stift messen" unter Einstellungen, zehn Sekunden
+   schreiben, Zahlen zum Kopieren — lokal, ohne Netz. Erst danach eine
+   Canvas-Ebene, mit eigenem E-Eintrag.
+2. **Das Absetzen ist auf einer vollen Seite nicht billig** (stift-10):
+   6–16 ms bei 60 Punkten, 36–46 ms bei 800 Punkten mit 300 Marken (Dossier).
+   `points()` wird mehrfach gerechnet, Kritzel- und Lassoprüfung laufen
+   ohne Vorprüfung. Zielwert ≤ 8 ms bei 250 Punkten. Die Speicherung um ein
+   Bild zu verschieben braucht den Nachweis, dass `pagehide` sie mitnimmt
+   (§51).
+3. **Ein Keilmarker ist ein grosser Pfad**: 300 Punkte ≈ 28 KB `d`, nass
+   1,35 ms je Bild (messungen §76). Unter der Schwelle, aber das Zehnfache
+   des Umrisses. Wenn es drückt: gröber abtasten (heute 1 pt) oder die
+   Bänder vor dem Ablegen vereinfachen.
+4. **Auf der Tafel gibt es nur den Kugelschreiber.** Seit E704 glättet sie
+   und zeichnet durch die Mittelpunkte, aber ohne Druck, Füller, Spitze und
+   Marker. Dafür müssten `druckFaktor`, `halbeBreiten` und `STIFTE` aus
+   `bereiche/pdf/marken.ts` in den Kern (§5 Regel 1) — ein eigener Bogen.
+5. **Die Kachel-Strichprobe ist ein Balken geblieben** (18 px breit). Die
+   Probe im Farbfeld ist seit E704 ein echter Strich; in der Kachel wäre ein
+   Schwung unlesbar. Sie trägt Farbe und Deckung (E623), beim Marker die der
+   Spitze.
+6. **Die Vorhersage bei gleichmässig schneller Hand**: wer ohne Bremsen und
+   ohne Druckabfall abhebt, sieht bis zu `VORHER_PX` (26 pt) Schwanz
+   verschwinden — die Bremse greift nur, wenn Hand oder Druck es ankündigen.
+   Am Gerät messen (Punkt 1), bevor der Deckel enger wird: zu eng bringt den
+   Rückstand zurück, den E511 weggenommen hat.
+7. **Die Startgrösse wächst um 14,7 KB gzip** (messungen §76) — mehr als
+   die rund 10 KB, die jedem Zweig der Bitte vom 27. September zugedacht
+   sind. Rund 6 KB davon sind Kommentare, die `tsc` in `quell/` mitnimmt.
+   Wer zusammenführt, zählt die Summe aller Zweige gegen die 83 KB Luft unter
+   der Decke von `test388` §5; reicht sie nicht, sind die Kommentare in
+   `marken.ts` der erste Ort (das Warum steht vollständig in E704).
+
+**Wächter:** `test583` hält, was gebaut ist; für 1–7 gibt es noch keinen
+(Punkt 7 zählt `test388` §5 nur als Ganzes).
+
+---
+
+## L226 · Was das Glas nicht selbst lösen kann: Sands stille Schrift, die Kapsel, das Kit-Glas — 28. September 2026
+
+**Seit E703** ist Glas, was schwebt: Menüs, Finder, Auswahlleiste, die
+untere Leiste am Telefon und die zwei schwebenden Werkzeugleisten. `test582`
+misst die Lesbarkeit an Pixeln über dem schlimmsten Grund, in allen zehn
+Schemata. Drei Dinge bleiben offen, und keines gehört der Dichte:
+
+```txt
+1  SAND, STILLE SCHRIFT  `--text-dim` (#66655f, aus hell.css — Sand setzt nur
+                         --text) hat auf der Sand-Karte #efe6d6 schon VOLL
+                         nur 4,72 : 1. Auf Glas über reinem Schwarz: 3,97
+                         (Menü-Gruppentitel, Kürzel, Namen der unteren
+                         Leiste). Damit das Glas 4,5 hält, bräuchte Sand
+                         97 % Dichte — also kein Glas. Die Farbe gehört dem
+                         Farbzweig (claude/bessere-farben). `test582` nennt
+                         Sand in SCHEMAFARBE; die Liste darf nur schrumpfen,
+                         und ein Eintrag, den keine Messung mehr braucht,
+                         macht den Lauf rot.
+2  DIE KAPSEL ZURÜCK/VOR Im Dokument bleibt `.document-ink-history` deckend
+                         (E396, `test393` §3: nichts darf durchblitzen). Mit
+                         echter Unschärfe blitzt nichts mehr scharf durch —
+                         ob sie wie der Dock Glas wird, ist Redurs Wahl.
+3  KIT-GLAS IN DER BRÜCKE Die Glas-Bauteile des Kits (Dialog, Aktionsblatt,
+                         Popover, Toast …) schreiben die Präfix-Folge
+                         verkehrt (L222 Punkt 3) und 24 statt 20 px. Sobald
+                         Stufe 1b sie zeigt, braucht `src/islands/bridge.css`
+                         dieselbe Unschärfe (`--glas-blur`) in der richtigen
+                         Folge — `test582` §11 liest `bridge.css` schon mit.
+```
+
+**Was fehlt:** (1) eine Sand-Farbe für die stille Schrift mit mindestens
+5,4 : 1 auf der Karte, dann Sand aus `SCHEMAFARBE` streichen; (2) Redurs
+Wort zur Kapsel; (3) die Brücke, sobald eine Kit-Insel Glas zeigt.
+Geschlossen ist die Lücke, wenn `SCHEMAFARBE` leer ist, die Kapsel
+entschieden ist und `test582` §11 auch das gebaute Inselblatt liest.
+
+---
+
+## L225 · Flüssige Bewegung: was nach E702 noch aussteht — 28. September 2026
+
+**Gefunden beim Bau von E702** (Redur, 27. September, ca. 21:45: „Wie im
+UI-Kit (Empfohlen)"; ca. 22:10: „bessere übergagnge besssere efeckten").
+E702 hat die Federn des Kits in Redions Schale gebracht — Marken, Federkern,
+Druckfeder, Schalter, Blätter von unten, Ankunft, „Ruhig". Gemessen und
+nicht getan, jedes mit seinem Ort (Karte „bewegung", 27. September):
+
+```txt
+Was                                   Wo                                   Warum offen
+Rechner-Menüs und Dialoge: Abgang     menue.ts (Rechner), dialog.ts        kommt mit den Inselstufen (E699
+  und leichtes Nachschwingen          (.finder, studio-arrive)             Punkt 10: Popover, Dialog snappy)
+Material der Leiste, Stiftwahl,       seitenleiste.ts, SelectionFlow       Zweig claude/material-ueberall
+  Umschalter (knappe Feder)                                                (nutzt RedionSpring, E646 ergänzt)
+Blöcke ziehen: Marke springt 2 px     editor.ts:2038-2105                  bewegung-ziehen, kein Wächter
+Balken und Knebel über width/left     bausteine.css:3974/7781/8217/8419,   bewegung-layoutfrei
+                                      ki.css:89, motion.css:976
+157 rohe Dauern, 145 blosse `ease`    quell/schale/stil (ohne motion.css)  bewegung-marken
+Einzeichnen der Lernwelt ruckelt      motion.ts, lernwelt.ts:646-691       bewegung-einzeichnen
+  beim Aufbau
+Blatt der Datensätze bewegt height    sheet.ts:168-172, 244                bewegung-blatt-transform
+`linear()` ohne Rückfall              quell/islands/islands.css            upstream UI-Kit (L222)
+Querformat am Telefon (> 760 px,      menue.ts amTelefon()                 Bewegung gleich, nicht mit
+  grober Zeiger)                                                           Bildern angesehen
+```
+
+**Was fehlt:** jeder Punkt mit einem Wächter, rot zuerst, und Bildern vor
+und nach — am Telefon Bild für Bild (alle 33 ms), wie `test581` es für
+Druck, Schalter, Blatt und Ankunft tut.
+
+---
+
+## L224 · Die kleinen Kurven in den Kennzahlkarten zeigen feste Werte, keine echten — 28. September 2026
+
+**Gefunden beim Bau von E701**, als die Kennzahlkarten des Lernzentrums in
+Ruhe grau wurden. Jede Karte („fällige Fehler", „fällige Karten", „neue
+Karten", „nächste Wiederholung") trägt unten eine kleine Kurve
+(`.rmo-pfad`). Sie kommt aus `src/schale/bedienung/motion.ts:218-240` und
+zeichnet in JEDER Karte dieselben fünf festen Höhen:
+
+```txt
+[8, 13, 6, 17, 11]
+```
+
+Sie sieht aus wie ein Verlauf der Zahl darüber — und ist keiner. Bei
+„fällige Fehler 0" steigt und fällt dieselbe Kurve wie bei „neue Karten 4".
+Farbig im Akzent las sie sich wie eine Aussage.
+
+**Was E701 getan hat, und was nicht:** die Kurve ist in Ruhe neutral (grau,
+`filter:saturate(0)`), damit sie nichts behauptet; angefasst wird sie
+farbig wie bisher. Sie ist NICHT gelöscht (Redur, 16:45 UTC: „ohne etwas
+lösche") und es sind KEINE Daten dafür erfunden worden. Redurs Frage aus
+dem Fragebogen der Karte — grau lassen, echte Werte zeigen oder weglassen?
+— ist damit nur für die Farbe beantwortet.
+
+**Was fehlt:** echte Werte. Für „fällige Karten" und „fällige Fehler" gibt
+es sie (`reviewVerlauf` je Karte, die sieben Tage aus „Letzte 7 Tage");
+für „nächste Wiederholung" ist eine Kurve vielleicht gar nicht sinnvoll.
+Dann: die Kurve aus den echten Tageswerten zeichnen, oder dort, wo es keine
+gibt, keine zeichnen — mit einem Prüflauf, der die Kurve gegen die Zahlen
+hält (§30), und nach Redurs Wahl.
+
+---
+
 ## L223 · Im Ordnerbetrieb steht in der Fehlerliste nur „Script error." — 27. September 2026
 
 **Gefunden beim Bau von E699**, nicht gesucht. Die erste Fehlergrenze der
@@ -8453,6 +8743,13 @@ Redion bleibt bei c192821, weil Redur diesen Stand freigegeben hat
 festgenagelt in E699); ein neuer Stand kommt mit dem nächsten Holen, also
 mit Stufe 1b, und mit ihm fallen die Punkte 1, 2 und 4 hier weg.
 
+**Nachgesehen am 28. September (E703):** in Redions EIGENEN Blättern stand
+dieselbe verkehrte Folge an zwei Stellen (`.ru-fach-art` in
+`bausteine.css`, die Regel für weniger Transparenz in `studio.css`). Beide
+sind umgedreht, und `test582` §11 hält die Folge für jedes Blatt unter
+`quell/schale/stil/` und für `src/islands/bridge.css`. Im Kit bleibt Punkt 3
+offen (UI-Kit schreibt die Folge in `Button.css` weiter verkehrt).
+
 **Was fehlt:** Punkt 3, 5 und 6 in UI-Kit; dann `node
 skripte/touch-holen.mts <UI-Kit> <neuer Commit>`, die Prüfsummen in
 `fremd-bestand.json` nachziehen, für Punkt 1 `tsconfig.islands.json` auf
@@ -8463,7 +8760,7 @@ einer Insel `--accent-text` trägt.
 
 ---
 
-## L221 · Die leichten Glasleisten sind gerechnet, nicht gemessen — 27. September 2026
+## L221 · Die leichten Glasleisten sind gerechnet, nicht gemessen — GESCHLOSSEN am 28. September 2026 (E703)
 
 **Seit E695 gibt es zwei Glasdichten** mit einer Regel: Fläche mit Schrift
 dicht (`--bg-schwebend-dicht`), Fläche mit Zeichen leicht
@@ -8485,6 +8782,15 @@ erweitern — ein Dokument öffnen, das Muster darunter, den Kontrast der
 Zeichen an Pixeln messen, Grenze 3 : 1. Wenn es nicht reicht: dieselbe
 Regel wie bei der Schrift (die Zeichen auf Glas eine Stufe kräftiger),
 nicht eine dichtere Fläche.
+
+**GESCHLOSSEN am 28. September 2026 (E703), gemessen statt gerechnet.**
+`test582` §9 legt ein leichtes Glas (`.rb.glas`, 340 × 120, mit einem
+gezeichneten Zeichen) über das Prüfmuster aus Weiss, Schwarz, Rot und Blau
+und misst die Zeichenfarbe gegen jedes Pixel der Fläche, in allen zehn
+Schemata — seit E703 folgt das leichte Glas dem Schema (`color-mix` der
+Karte). Das schlimmste Prozent liegt überall über 3 : 1 (messungen §75).
+Die Rechnung von 3,05 : 1 war knapp richtig; die Stufe kräftiger war nicht
+nötig.
 
 ---
 
@@ -8654,7 +8960,11 @@ anderes sieht, gilt sein Bild.
 
 **Am Strich selbst:**
 
-1. **Das Tempo wirkt beim echten Stift nicht auf die Breite.** Der
+1. **Erledigt am 28. September (E704, `test583` §5/§6):** mit Sensor wird
+   der Füller im Schnellen bis 35 % dünner (Pinsel 50 %), gespeichert als
+   eigenes optionales `tempo[]` statt im Druck — `druckArt` bleibt wahr.
+   Der Befund von damals:
+   **Das Tempo wirkt beim echten Stift nicht auf die Breite.** Der
    Tempo→Breite-Weg ist nur der Druck-ERSATZ für Maus und Finger
    (`druckAus`); ein Stift mit Sensor bekommt reinen Sensordruck, und eine
    schnell gezogene Verbindungslinie ist so dick wie ein langsam gesetzter
@@ -8663,7 +8973,11 @@ anderes sieht, gilt sein Bild.
    neues Feld, §9) — dann sagt `druckArt: 'stift'` nur die halbe Wahrheit;
    besser ein drittes Wort. Wächter: `test343` bleibt grün; neu: gleicher
    Druck, doppeltes Tempo → schmaler.
-2. **Die Druckkennlinie ist eine Gerade, und Kugelschreiber wie Marker
+2. **Zur Hälfte erledigt am 28. September (E704, `test583` §6):** NEUE
+   Kugelschreiber- und Markerstriche legen ihre Breite am Anfang fest
+   (`breiteFest`) und atmen nicht mehr; ALTE bleiben, wie sie sind, und die
+   Kennlinie ist weiter eine Gerade — beides bleibt Redurs Frage.
+   **Die Druckkennlinie ist eine Gerade, und Kugelschreiber wie Marker
    haben EINE Breite je Strich aus dem Mittelwert**, die `nassZeichnen`
    jedes Bild neu setzt — der Anfang eines Kugelschreiberstrichs wird
    nachträglich dicker oder dünner. Ein `d^0,7` oder eine Tabelle mit
@@ -8672,7 +8986,12 @@ anderes sieht, gilt sein Bild.
    Ball pen) oder beim Aufsetzen festgehalten. **Beides ändert, wie ALTE
    Striche in der Mitte aussehen** (`strokeWidth` liest `pressure` des
    Bestands) — das ist eine Entscheidung von Redur, kein Bogen (§9, §34).
-3. **Scharfe Kehren im Umriss haben kein Gelenk** — Vermutung aus
+3. **Erledigt am 28. September (E704, `test583` §1/§2):** Gelenke an
+   jeder Ecke (Läufe mit eigenen Kappen), gemessen am „M": 0 statt 23
+   Punkte der Mittellinie ausserhalb, halbe Breite 1,26 statt 0,8 pt. Dabei
+   gefunden: die Kappen bogen sich nach innen — jetzt nach aussen.
+   Der Befund von damals:
+   **Scharfe Kehren im Umriss haben kein Gelenk** — Vermutung aus
    `seiten`/`versatz`, nicht gemessen. Bei einer Kehre um ~180° ist die
    Normale aus prev→next beliebig, und die Innenkante kreuzt sich selbst.
    Erst messen: `outlinePunkte` auf einen 30°-Zickzack, Selbstschnitte
@@ -8695,7 +9014,9 @@ anderes sieht, gilt sein Bild.
    neu; kein Lauf vergleicht nass gegen trocken NACH der Ausdünnung. Ein
    Lauf mit Hausdorff-Distanz der Konturen, Grenze ~0,3 pt; wenn rot: die
    Druck-Extrema als Pflichtpunkte behalten — RDP kennt nur die Lage.
-7. **Pinsel ist nur ein steilerer Füller; der Marker hat keine Keilspitze.**
+7. **Der Marker hat seit E704 eine Keilspitze** (28. September, `test583`
+   §3/§6; der runde bleibt wählbar). Offen bleibt:
+   **Pinsel ist nur ein steilerer Füller.**
    `azimuthAngle`, `twist`, `tangentialPressure` liest niemand (siehe
    auch L59 Neigung, E507). Nachrangig gegenüber 1–6.
 
@@ -8933,8 +9254,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 27. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 119 Lücken, 64 offene und 55 geschlossene. Der Befehl dazu ist
+**Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 126 Lücken, 70 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
