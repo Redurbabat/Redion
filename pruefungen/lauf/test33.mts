@@ -825,10 +825,19 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
                 'Der Rechner war zu langsam, nicht der Code — die zwei ' +
                 'Prüfungen zur Spaltenfolge werden übersprungen.');
   ok('Das Fenster für den Spaltennamen kommt', fensterKam);
-  await p.evaluate(() => {
-    const i = document.querySelector<HTMLInputElement>('.overlay input');
-    if (i) { i.value = 'Dazwischen'; document.querySelector<HTMLElement>('.overlay [data-a="ok"]')?.click(); }
-  });
+  /* GETIPPT, NICHT GESETZT (Zusammenführen der zweiten Welle, 5. Oktober).
+     Seit E710 fragt `UI.frage` im Fenster des Touch Kits: sein Feld ist
+     ein React-Feld, ein gesetztes `value` liest es nicht, und einen Knopf
+     `[data-a="ok"]` hat es nicht — die Spalte kam nie, der Lauf war auf
+     `claude/dialoge-im-kit` allein rot (104/105, „Die eingefügte Spalte
+     bleibt"). Ein Mensch tippt den Namen und drückt Enter; das versteht das
+     Fenster des Kits wie das bisherige (`frageAlt`). */
+  if (fensterKam) {
+    await p.locator('.overlay input').last().focus();
+    await p.keyboard.press('Control+A');
+    await p.keyboard.type('Dazwischen');
+    await p.keyboard.press('Enter');
+  }
   /* Warten, bis die Spalte wirklich im Schema steht — nicht 700 ms lang
      hoffen. Genau daran ist diese Prüfung im vollen Lauf zweimal gescheitert:
      einzeln 77/77, unter Last rot. Der Code war nie das Problem, nur die

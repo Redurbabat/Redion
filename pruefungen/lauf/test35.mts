@@ -169,11 +169,16 @@ import { chromium } from 'playwright';
     const m = [...document.querySelectorAll<HTMLElement>('.menu')].pop();
     m?.querySelector<HTMLElement>('[data-k="faehig"]')?.click();
   });
-  await p.waitForTimeout(500);
-  await p.evaluate(() => {
-    const i = document.querySelector<HTMLInputElement>('.overlay input');
-    if (i) { i.value = 'Menütest-Fähigkeit'; document.querySelector<HTMLElement>('.overlay [data-a="ok"]')?.click(); }
-  });
+  /* GETIPPT, NICHT GESETZT (Zusammenführen der zweiten Welle, 5. Oktober).
+     Seit E710 fragt `UI.frage` den Namen im Fenster des Touch Kits: ein
+     React-Feld liest ein gesetztes `value` nicht, und `[data-a="ok"]` gibt
+     es dort nicht — die Fähigkeit entstand nie (TypeError auf `seiteId`).
+     Wie ein Mensch: warten, bis das Feld da ist, tippen, Enter. */
+  await p.waitForFunction(() => !!document.querySelector('.overlay input'), null, { timeout: 8000 }).catch(() => {});
+  await p.locator('.overlay input').last().focus().catch(() => {});
+  await p.keyboard.press('Control+A');
+  await p.keyboard.type('Menütest-Fähigkeit');
+  await p.keyboard.press('Enter');
   await p.waitForTimeout(600);
   const faehig = await p.evaluate(() => KI.faehigkeiten().find((x: any) => x.name === 'Menütest-Fähigkeit'));
   console.log('   Fähigkeit aus der Seite:', JSON.stringify(faehig && faehig.name));
