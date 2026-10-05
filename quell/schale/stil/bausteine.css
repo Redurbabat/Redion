@@ -8257,7 +8257,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    ohne Unschärfe liess den Seitentext durchscheinen; am Rechner dichtes
    Glas, nur wo es Unschärfe gibt (E695). */
 .zm-karte{
-  position:fixed; right:16px; bottom:calc(var(--hunten, 0px) + 16px);
+  position:fixed; right:16px; bottom:calc(var(--melde-boden, var(--hunten, 0px)) + 16px);
   z-index:45; width:min(300px, calc(100vw - 32px));
   border:1px solid var(--line);
   border-radius:var(--radius-2xl); background:var(--bg-card);
@@ -8315,7 +8315,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    Die Lampe atmet nur, solange die Uhr läuft (dieselbe wie am
    Dreierblock, E535). */
 .zm-pille{
-  position:fixed; right:var(--space-5); bottom:calc(var(--hunten, 0px) + var(--space-5)); z-index:45;
+  position:fixed; right:var(--space-5); bottom:calc(var(--melde-boden, var(--hunten, 0px)) + var(--space-5)); z-index:45;
   display:inline-flex; align-items:center; gap:var(--space-3);
   min-height:var(--touch-min); max-width:min(300px, calc(100vw - 2 * var(--space-5)));
   padding:0 var(--space-5) 0 var(--space-4);
@@ -8342,6 +8342,46 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .zm-pille-seite{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#b9b7c2 }
 .zm-pille:hover{ background:#232129 }
 .zm-pille:focus-visible{ outline:2px solid var(--accent-text); outline-offset:3px }
+/* DIE PILLE LIEGT NICHT AUF DEN WERKZEUGEN (Durchsicht von E713). Auf
+   `--hunten` lag sie am Telefon auf der Werkzeugleiste der Fläche, auf dem
+   runden Knopf „Neu" der Notizhefte und auf dem Letzten jeder Ansicht, am
+   Rechner auf „Nachricht senden" im KI-Panel. Die Regel des Toasts (E703):
+   was nur meldet, gehört nicht auf das, womit man arbeitet.
+   1. Ihr Boden ist `--melde-boden` — über Dock und Kapsel im Dokument;
+      die Zeichenleiste unten steigt selbst (siehe unten). Die Karte geht
+      von dort auf.
+   2. Solange es sie gibt, bekommt `#scroll` ihren Platz als Polster: das
+      Letzte rollt über sie, die Fläche endet über ihr.
+   3. Der runde Knopf der Notizhefte rückt über sie (`translate`; die
+      Druckfeder auf `transform` bleibt). Beim Schreiben tritt sie zur Seite
+      wie die untere Leiste — die Uhr läuft weiter.
+   4. Ist das KI-Panel offen (am Rechner IM Layout), stehen Pille und Karte
+      links daneben (`--ki-breite`, ki.css).
+   5. Am Telefon rückt, was sonst meldet, über sie (unten).
+   Gemessen in `test590` §10. */
+body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--touch-min) + 2 * var(--space-5)) }
+@media(min-width:761px){
+  body:has(#ai.open) :is(.zm-pille, .zm-karte){ right:calc(var(--ki-breite, 0px) + var(--space-5)) }
+}
+/* Ausser bei der Zeichenleiste unten (nicht im Dokument): sie klebt in
+   `#scroll` und steigt mit dessen Polster (2.) selbst über die Pille. Auf
+   `--melde-boden` stiege die Pille ein zweites Mal mit — gemessen am
+   Telefon: Leiste 572–681, Pille 572–616, wieder auf ihr. */
+body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) :is(.zm-pille, .zm-karte){
+  bottom:calc(var(--hunten, 0px) + var(--space-5)) }
+@media(max-width:760px){
+  body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--hunten) + var(--space-7) + var(--touch-min) + var(--space-5)) }
+  body:has(#zm-pille) .nh-neu-fab{ translate:0 calc(-1 * (var(--touch-min) + var(--space-4))) }
+  body.schreibt .zm-pille{ display:none }
+  /* 5. Was sonst meldet, rückt über sie — derselbe Stapel (E703), um ihre
+     Höhe verschoben. Vorher lag ein Toast, so breit wie der Schirm, für
+     seine Sekunden genau auf ihr. Ein Toast, der oben steht (offene
+     Überlagerung, Zeichenleiste unten), bleibt oben. */
+  body:not(.schreibt):has(#zm-pille:not([hidden])) :is(#offline-streifen, #rg-einladung, .ru-lader-schwebt),
+  body:not(.schreibt):has(#zm-pille:not([hidden])):not(:has(.overlay)):is([data-dokument="an"], :not(:has(.blatt-reihe[data-lage="unten"]))) #toast{
+    translate:0 calc(-1 * (var(--touch-min) + var(--space-3)))
+  }
+}
 
 /* ============================================================================
  * DIE ELEKTRO-STARTSEITE (L65)

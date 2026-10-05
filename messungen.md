@@ -5458,3 +5458,47 @@ Bewegungszeit; `welle2-bilder/zeit/`, nicht eingecheckt, §55.4): Pille →
 Karte und Karte → Pille (Escape), die Balken wachsen, die Wahl wandert von
 „Mi" zu „Sa" — je Telefon und Rechner, hell und dunkel. Das Hochzählen läuft
 in `requestAnimationFrame` und wird von der Wiedergabe ¼ nicht gebremst.
+
+**Nachtrag — die Durchsicht (4./5. Oktober 2026).** Dieselben Fenster und
+dieselben Daten, `test590` §10–§14 gegen `fb7e590e` (44 von 60, sechzehn
+rot) und auf dem Stand der Durchsicht (60 von 60). Gemessen am Telefon:
+
+```txt
+Pille (Telefon)                    110–374 × 715–759 px, unverändert
+Fläche: Werkzeugleiste vorher      unter der Pille (Radieren … Ellipse)
+Fläche: Werkzeugleiste nachher     ca. 620–665 (im Bild), über der Pille
+Notizhefte: runder Knopf „Neu"     703–759 → ca. 647–703 (translate −56 px)
+Ende einer Ansicht                 Inhalt bis 751 → endet über 715
+Zeichenleiste unten                632–741 auf der Pille → 572–681, frei
+Toast am Telefon                   699–763 auf der Pille (10'858 px²) → darüber
+KI-Panel offen (Rechner)           Pille 1177–1424 auf drei Knöpfen → links daneben
+Monatsverlauf: Spalte              9,3 px → ≥ 32 px (zehn je Zeile, 3 Zeilen)
+Monatsverlauf: sichtbare Zahlen    0 / 30 → 30 / 30, Wochentage 5 / 30 → 30 / 30
+Summe beim Öffnen, Bild für Bild   „0, 4, 7, 0, 0, 11 …" → nur aufwärts
+Name der Pille, Wechsel in 3,2 s   3 → 0 („noch 25 Min an …")
+Escape 60 ms nach dem Tipp         Karte bleibt offen → zurück in die Pille
+```
+
+**Start (test388 §5).** 2838 KB gzip über 248 Dateien, Decke 2850 KB
+(21/21), gemessen am 5. Oktober auf dem Stand der Durchsicht. Der Bau
+mass 2835 KB vor seinen letzten 0,3 KB; die Durchsicht bringt +2,7 KB.
+
+**Was die Dateien wachsen** (gzip Stufe 6, Bytes; `b3cf1933` → `fb7e590e` →
+Durchsicht):
+
+```txt
+quell/bereiche/wissen/zeitmesser.js       4'290 →   8'571 →   8'879
+quell/bereiche/wissen/lernwelt.js        47'965 →  50'414 →  51'364
+quell/schale/stil/lernwelt.css           21'191 →  22'708 →  23'073
+quell/schale/stil/bausteine.css         168'182 → 169'334 → 170'306
+quell/schale/stil/ki.css                  4'623 →   4'623 →   4'718
+motion.css, schale.js, auftraege.js,    unverändert seit fb7e590e
+motion.js
+zusammen (neun Dateien)                389'703 → 399'908 → 402'598
+                                         +10'205 E713, +2'690 Durchsicht
+```
+
+(Gepackt mit Pythons zlib, Stufe 6; die Tabelle oben kam aus Node —
+dieselbe Stufe, einige Hundert Bytes Unterschied je grosser Datei. Darum
+wird nur innerhalb dieser Tabelle verglichen.) Die
+Einzeldatei: 11'818'312 → 11'825'765 Bytes (+7'453).

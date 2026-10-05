@@ -1,5 +1,30 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 4./5. Oktober 2026 · E713 · Durchsicht der Zeitpille und der Balkenkarte
+
+**Redur:** am 27. September um ca. 22:10 „… ohne eine funktione löschen …",
+am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
+
+**Gefunden** (je zuerst als Lauf, `test590` §10–§14 rot gegen `fb7e590e`):
+die Pille lag am Telefon auf der Werkzeugleiste der Fläche, auf dem runden
+Knopf „Neu" der Notizhefte, auf der Zeichenleiste unten und auf dem Letzten
+jeder Ansicht, am Rechner auf dem KI-Panel; ein Toast lag am Telefon auf
+ihr; der Monatsverlauf versteckte Zahlen und Wochentage, die vorher
+sichtbar waren, und seine Säulen waren am Telefon 9 px breit; beim Öffnen
+sprang die Summe zurück auf 0; der Name der Pille wechselte jede Sekunde;
+Escape mitten in der Fahrt tat nichts.
+
+**Gebaut:** die Pille steht auf `--melde-boden` und bekommt ihren Platz als
+Polster, der runde Knopf rückt über sie, beim Schreiben tritt sie zur
+Seite, neben dem offenen KI-Panel steht sie links davon; was sonst meldet,
+rückt am Telefon über sie. Der Monatsverlauf steht in Zeilen zu zehn mit
+allen Zahlen und Namen, ↑/↓ gehen eine Zeile. Ein zweites Zeichnen fährt
+weiter, statt neu anzukommen. Der Name der Pille nennt Minuten. Die
+verwischte Kopie trägt kein `data-esc-knopf` mehr.
+
+**Geprüft:** `test590` (sechs neue Zusagen-Gruppen, rot zuerst), die
+Gegenproben, Nachbarn und Startlast stehen in E713 („Die Durchsicht").
+
 ## 28. September 2026 · E713 · Die Zeitpille und die Balkenkarte
 
 **Redur:** um ca. 22:05 das Video „LIQUID GLASS" und dazu „Schau mal das

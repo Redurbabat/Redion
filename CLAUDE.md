@@ -1478,7 +1478,11 @@ Fokus folgt, dass Pause ↔ Weiter im selben Knopf tauscht und das Feld am
 Telefon deckend ist — und dasselbe ohne Fahrt, wenn weniger Bewegung
 gewünscht ist (System und „Ruhige Darstellung"). Im Lernverlauf zählt er
 Knöpfe und Namen, vergleicht die Balkenhöhen mit den echten Zahlen, wählt
-einen Tag mit Tipp und Tasten und liest den Hinweis. Gezählt am
+einen Tag mit Tipp und Tasten und liest den Hinweis. Seit der Durchsicht
+(4./5. Oktober) auch: die Pille liegt auf keinem Werkzeug und kein Toast auf
+ihr, der Monatsverlauf zeigt alle dreissig Zahlen, ein zweites Zeichnen
+zählt nicht zurück, ihr Name wechselt nicht im Sekundentakt, und Escape
+wirkt auch mitten in der Fahrt. Gezählt am
 28. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
 sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
 

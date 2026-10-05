@@ -58573,9 +58573,11 @@ beiden fehlte genau das, was das Video zeigt:
 **Was entschieden wurde.**
 
 1. **Die Pille.** Läuft die Uhr und ist das Feld zu, steht unten rechts
-   eine dunkle Pille „⏱ 24:13 · Seite" — über der unteren Leiste, nicht auf
-   ihr (`--hunten`), 44 px hoch (§37), ein Knopf mit Namen („Zeitmesser:
-   24:13 übrig an „Seite" — öffnen"). Dunkel in beiden Modi wie im Video;
+   eine dunkle Pille „⏱ 24:13 · Seite" — über der unteren Leiste und dem
+   obersten Werkzeug, nicht auf ihnen (`--melde-boden`, seit der
+   Durchsicht), 44 px hoch (§37), ein Knopf mit Namen („Zeitmesser: noch
+   25 Min an „Seite" — öffnen"; der Name nennt Minuten, die Sekunden stehen
+   sichtbar — seit der Durchsicht). Dunkel in beiden Modi wie im Video;
    sie RUHT, also ist sie deckend und kein Glas (E703: im Ruhen höchstens
    drei Glasflächen). Die Lampe darin atmet nur, solange die Uhr läuft —
    dieselbe Lampe und derselbe 4-s-Atem wie am Dreierblock (E535);
@@ -58622,7 +58624,9 @@ beiden fehlte genau das, was das Video zeigt:
    (`SelectionFlow.folge`, gedehnt zwischen Nachbarn), und ein Hinweis
    „Fr · 9 Wiederholungen" gleitet mit, fest in der Höhe und in der Karte
    geklemmt. Pfeile, Pos1 und Ende wandern; die Reihe hat EINEN Tabstopp
-   (wie `Segment`, E425). Die Karte STEHT, darum Lichtkante und ein
+   (wie `Segment`, E425). Der Monatsverlauf steht in Zeilen zu zehn, jede
+   Zahl und jeder Wochentag sichtbar wie vor E713, ↑/↓ gehen eine Zeile
+   (seit der Durchsicht). Die Karte STEHT, darum Lichtkante und ein
    einmaliger Glanz, aber keine Unschärfe (E703); Glas trägt nur der
    schwebende Hinweis.
 6. **Die Zahl zählt hoch.** Über dem Verlauf steht die Summe genau dieser
@@ -58734,7 +58738,97 @@ dem Grundstand vier von vier grün; nach der Wache 71/71, mit 202 und 208
 nachgelaufen). `test388` 21/21 (2835 KB). Ohne Browser: 87 105 109 225 290
 298 401 402 410 537 549 550 grün.
 
+**Die Durchsicht** (4./5. Oktober 2026, ein zweiter Agent, nach dem
+Wochenlimit; Redur am 3. Oktober ca. 19:35: „Weiter ohne pause,"). Gelesen
+Commit für Commit gegen `b3cf1933`, jede Taste der Karte mit Finger, Maus
+und Tastatur angefasst (Werkzeuge → Zeitmesser wie vorher, Stoppuhr, 5 Min,
+25 Min, Start, Pause/Weiter, Beenden, ✕, Escape, Pille mit Tipp, Enter und
+Leertaste; Neuladen bringt Uhr und Pille zurück; über `file://` und in der
+Einzeldatei dasselbe). Nichts fehlt, nichts ist schwerer erreichbar. Sechs
+Zusagen hielten nicht — jede zuerst als Lauf (`test590` §10–§14, gegen
+`fb7e590e` 44 von 60, sechzehn rot):
+
+1. **Die Pille lag auf Werkzeugen** (§10). Auf `--hunten` lag sie am
+   Telefon auf der Werkzeugleiste der Fläche (Radieren, Stift, Linie,
+   Pfeil, Rechteck, Ellipse), auf dem runden Knopf „Neu" der Notizhefte, auf
+   der Zeichenleiste in der Lage „unten" und auf dem Letzten jeder Ansicht;
+   am Rechner auf „Nachricht senden", „Diktieren" und dem Modellknopf des
+   KI-Panels. Jetzt gilt die Regel des Stapels (E703): ihr Boden ist
+   `--melde-boden` (über Dock und Kapsel im Dokument); solange es sie gibt,
+   bekommt `#scroll` ihren Platz als Polster; der runde Knopf rückt über
+   sie (`translate`, die Druckfeder auf `transform` bleibt); beim Schreiben
+   tritt sie zur Seite wie die untere Leiste; bei offenem KI-Panel stehen
+   Pille und Karte links daneben (`--ki-breite`, die 420 px stehen weiter
+   nur in `ki.css`). Die Zeichenleiste unten klebt in `#scroll` und steigt
+   mit dem Polster selbst — dort bleibt die Pille auf `--hunten`; auf
+   `--melde-boden` stieg sie mit und lag wieder auf ihr (gemessen: Leiste
+   572–681, Pille 572–616 px).
+2. **Ein Toast lag auf der Pille** (§10). Am Telefon ist er so breit wie
+   der Schirm und stand auf derselben Höhe — für seine Sekunden war die
+   Pille fort. Jetzt rückt, was meldet, um ihre Höhe darüber (Toast,
+   Offline-Streifen, Einladung, Lader; ein Toast, der oben steht, bleibt
+   oben). Damit ist der Punkt aus L234 erledigt.
+3. **Der Monatsverlauf war nicht mehr lesbar** (§11). Vor E713 standen alle
+   dreissig Zahlen und Wochentage sichtbar über ihren Säulen; E713 stellte
+   die dreissig Tage in EINE Reihe, versteckte Zahl und Namen
+   (`visibility:hidden`) und machte die Säule am Telefon 9,3 px breit. „ohne
+   eine funktione löschen": jetzt Zeilen zu zehn, jede Zahl und jeder Name
+   sichtbar, jede Spalte mindestens 32 px (Nebenweg, §37, Grund am Ort),
+   ↑/↓ gehen eine Zeile, Material und Hinweis stehen über IHRER Zeile.
+4. **Zweimal gezeichnet, zweimal angekommen** (§12). `zeichnen()` der
+   Lernwelt läuft beim Öffnen zweimal (sofort und nach den Bereichsdaten);
+   die Summe sprang dabei zurück („0, 4, 11, 0, 0, 11 …"). Dieselbe Karte
+   innerhalb von 1,5 s fährt jetzt weiter — das Hochzählen mit dem alten
+   Beginn und dem Wert von dort schon vor dem ersten Bild, Balken und Glanz
+   mit negativer Verzögerung (`--lw-seit`).
+5. **Der Name der Pille wechselte jede Sekunde** (§13). Nach dem Schliessen
+   steht der Fokus auf ihr; ein Bildschirmleser, der Namenswechsel am Fokus
+   ansagt, sprach im Sekundentakt. Der Name nennt jetzt Minuten („noch
+   25 Min"), die Sekunden stehen sichtbar.
+6. **Escape mitten in der Fahrt tat nichts** (§14). Die verwischte Kopie
+   behielt `data-esc-knopf`, und der eine Griff nimmt den letzten solchen
+   Knopf — den der Kopie. Sie verliert das Merkmal jetzt mit den anderen.
+
+Gegenproben, je eine Verbiegung in `quell/` einer Kopie des Baums, `test590`
+darüber:
+
+- die Regel neben dem KI-Panel aus: §10 rot (die Pille auf „Nachricht
+  senden", „Diktieren", Modellknopf);
+- der Monatsverlauf wieder in einer Reihe, Zahl und Name versteckt: §11
+  rot (0/30 Zahlen, 0/30 Namen, 9,3 px, ↑ bleibt stehen);
+- jedes Zeichnen ein neues Ankommen: §12 rot in beiden Ansichten
+  („0, 4, 7, 0, 0, 11 …");
+- der Name wieder mit Sekunden: §13 rot (drei Wechsel in 3,2 s);
+- der Toast rückt nicht: §10 rot (Schnitt 10'858 px²);
+- kein Polster: §10 rot (Fläche, Ende der Ansicht, Zeichenleiste);
+- die Pille bleibt beim Schreiben stehen: §10 rot;
+- ↑ ohne Zeile: §11 rot („27|27");
+- vor dem ersten Bild wieder 0: §12 rot in beiden Ansichten
+  („0, 4, 11, 0, 23 …");
+- nur der runde Knopf rückt nicht (das Polster bleibt): §10 rot;
+- die Ausnahme der Zeichenleiste weg: §10 rot (Leiste 572–681, Pille
+  572–616).
+§14 ist die Verbiegung selbst (die Kopie mit dem Merkmal, wie in
+`fb7e590e`): rot. Ohne eigenen roten Punkt bleibt `--melde-boden` als Boden
+der Pille im Dokument — auch auf `fb7e590e` lag sie dort auf keinem Werkzeug;
+die Zusage „Dock und Kapsel frei" ist Absicherung. Alle Verbiegungen nur in
+Kopien; `test590` auf dem Endstand 60/60.
+
+Gemessen: `test388` §5 2838 KB von 2850 (248 Dateien, 21/21). Die neun
+berührten Dateien wachsen gegen `b3cf1933` um 12'895 Bytes (gzip 6), davon
+2'690 aus der Durchsicht — fast alles Begründung am Ort. Nachbarn (67 Läufe
+über `alle.mts`, unter der Sperre): 62 grün; rot `test247`, `test332`,
+`test492` und `test582` — auf `b3cf1933` mit denselben Zusagen genauso rot,
+also fremd — und `test303`: rot durch E713 selbst, seit `fb7e590e` (der Bau
+liess ihn nicht laufen); behoben im Nachtrag der dritten Durchsicht.
+
+Gefunden, nicht von E713 und nicht hier behoben: im Schema „Starker
+Kontrast" ist am Telefon die Beschriftung der aktiven Taste der unteren
+Leiste unsichtbar — im Bild ein leeres dunkles Feld; auf `b3cf1933`
+genauso. Behoben ist es auf `claude/morgen-besser` mit „Morgen besser 6c"
+(`4d9a9a3f`, die deckende Pille liegt unter den Knöpfen) — dieser Zweig
+steht auf `b3cf1933`, davor; mit dem Zusammenführen ist es weg.
+
 **Nicht in diesem Bogen** (L234): der Ton der Zeitmarken und die laufende
 Besprechung in derselben Pille (eine gemeinsame „läuft"-Pille in der
-Schale); ein Toast, der am Telefon über die Pille rückt, statt neben ihr zu
-stehen; Wischen über die Balken (heute Tipp und Tasten).
+Schale); Wischen über die Balken (heute Tipp und Tasten).

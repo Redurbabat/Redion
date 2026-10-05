@@ -1520,5 +1520,6 @@ Offen, mit eigenem Wächter (rot zuerst):
    nicht rufen, §5), und der Ton der Zeitmarken (`audioRefSpielen`) als ihr
    zweiter Nutzer: Anhalten, Springen, Aufgehen zur Karte.
 2. Die laufende Besprechung und die Aufträge in derselben Pille.
-3. Am Telefon: ein Toast rückt über die Pille (der Stapel in `bausteine.css`).
+3. ~~Am Telefon: ein Toast rückt über die Pille~~ **ERLEDIGT** in der
+   Durchsicht von E713 (`test590` §10).
 4. Wischen über die Balken des Lernverlaufs.

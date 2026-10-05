@@ -1550,7 +1550,7 @@ const Lernwelt = (() => {
 
   /** Die Zahl zählt EINMAL hoch — v = N·(1 − e^(−7t)), wie im Video — und
    *  steht am Ende genau auf N. Ohne Bewegung steht sie sofort dort. */
-  const hochzaehlen = (el: HTMLElement | null): void => {
+  const hochzaehlen = (el: HTMLElement | null, seit = 0): void => {
     if (!el) return;
     const ziel = Number(el.dataset['lwZiel']) || 0;
     if (!ziel || wenigBewegung()) { el.textContent = String(ziel); return; }
@@ -1560,23 +1560,51 @@ const Lernwelt = (() => {
        „−3,29e+24" ins Negative). Und `t` bleibt in 0…1. */
     let beginn = -1;
     const DAUER = 1000;
-    el.textContent = '0';
+    const wert = (t: number): number => t >= 1 ? ziel : Math.min(ziel, Math.round(ziel * (1 - Math.exp(-7 * t))));
+    /* Fährt sie nach einem zweiten Zeichnen WEITER (`seit` > 0), steht
+       schon vor dem ersten Bild der Wert von dort — nicht noch einmal 0
+       (Durchsicht von E713: „0, 8, 15, 0, 47 …"). */
+    el.textContent = String(wert(Math.max(0, Math.min(1, seit / DAUER))));
+    if (seit >= DAUER) return;
     const schritt = (jetzt: number): void => {
       if (!el.isConnected) return;
-      if (beginn < 0) beginn = jetzt;
+      if (beginn < 0) beginn = jetzt - seit;
       const t = Math.max(0, Math.min(1, (jetzt - beginn) / DAUER));
-      el.textContent = String(t >= 1 ? ziel : Math.min(ziel, Math.round(ziel * (1 - Math.exp(-7 * t)))));
+      el.textContent = String(wert(t));
       if (t < 1) requestAnimationFrame(schritt);
     };
     requestAnimationFrame(schritt);
   };
 
+  /** EIN ANKOMMEN, AUCH WENN ZWEIMAL GEZEICHNET WIRD (Durchsicht von E713).
+   *  `zeichnen()` läuft beim Öffnen zweimal — sofort und noch einmal, wenn
+   *  die Bereichsdaten da sind (`ladeBereichsdaten`). Gemessen begann die
+   *  Summe dann von vorn („0, 4, 11, 0, 0, 11 …"), und die Balken fielen
+   *  zurück und stiegen neu. Dieselbe Karte (Ansicht, Tage, Summe) innerhalb
+   *  von 1,5 s fährt darum WEITER: das Hochzählen mit dem alten Beginn, die
+   *  Balken und der Glanz mit negativer Verzögerung (`--lw-seit`). */
+  const belebtAm = new Map<string, number>();
+  const ANKOMMEN_MS = 1500;
+  const seitDemAnkommen = (schluessel: string): number => {
+    const jetzt = performance.now();
+    const vorher = belebtAm.get(schluessel);
+    if (vorher !== undefined && jetzt - vorher < ANKOMMEN_MS) return jetzt - vorher;
+    belebtAm.set(schluessel, jetzt);
+    return 0;
+  };
+
   /** Die Balkenkarten einer frisch gezeichneten Ansicht beleben: Höhen
    *  setzen, hochzählen, Wahl mit Tipp und Tasten. */
-  const verlaufBeleben = (wurzel: ParentNode): void => {
+  const verlaufBeleben = (wurzel: ParentNode, ansicht = ''): void => {
     wurzel.querySelectorAll<HTMLElement>('.lw-verlauf').forEach(karte => {
       if (karte.dataset['lwLebt']) return;
       karte.dataset['lwLebt'] = '1';
+      const summe = karte.querySelector<HTMLElement>('.lw-verlauf-summe');
+      const seit = seitDemAnkommen(ansicht + ':' + (karte.dataset['lwTage'] || '') + ':' + (summe?.dataset['lwZiel'] || ''));
+      if (seit) {
+        karte.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+        karte.closest<HTMLElement>('.lw-section')?.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+      }
       const flaeche = karte.querySelector<HTMLElement>('.lw-verlauf-flaeche');
       const material = karte.querySelector<HTMLElement>('.lw-verlauf-material');
       const tipp = karte.querySelector<HTMLElement>('.lw-verlauf-tipp');
@@ -1589,7 +1617,7 @@ const Lernwelt = (() => {
         knopf.style.setProperty('--lw-anteil', String(anzahl / hoechst));
         knopf.style.setProperty('--lw-index', String(index));
       });
-      hochzaehlen(karte.querySelector<HTMLElement>('.lw-verlauf-summe'));
+      hochzaehlen(summe, seit);
 
       let gewaehlt = -1;
       const setzeX = (el: HTMLElement, x: number, nachbar: boolean, sofort: boolean): void => {
@@ -1607,7 +1635,17 @@ const Lernwelt = (() => {
         const knopf = tage[index];
         if (!knopf) return;
         if (fokus) knopf.focus({ preventScroll: true });
-        const sofort = vorher < 0;
+        /* IN ZEILEN (der Monatsverlauf, Durchsicht von E713): Material und
+           Hinweis stehen über IHRER Zeile. Die Zeile setzt `translate` (der
+           Feder gehört `transform`), die Höhe das Material selbst; ein
+           Wechsel der Zeile springt, statt quer über die Karte zu fahren. */
+        const erste = tage[0]?.offsetTop ?? 0;
+        const zeile = knopf.offsetTop - erste;
+        const sofort = vorher < 0 || (tage[vorher]?.offsetTop ?? erste) !== knopf.offsetTop;
+        material.style.translate = zeile ? '0 ' + zeile + 'px' : '';
+        material.style.bottom = 'auto';
+        material.style.height = (erste + knopf.offsetHeight - material.offsetTop) + 'px';
+        tipp.style.translate = zeile ? '0 ' + zeile + 'px' : '';
         material.style.width = knopf.offsetWidth + 'px';
         setzeX(material, knopf.offsetLeft, Math.abs(index - vorher) === 1, sofort);
         material.classList.add('an');
@@ -1634,9 +1672,14 @@ const Lernwelt = (() => {
         const knopf = (event.target as Element).closest<HTMLButtonElement>('button[data-lw-tag]');
         if (!knopf) return;
         const jetzt = Number(knopf.dataset['lwTag']);
+        /* ↑ und ↓ gehen eine Zeile, wenn es Zeilen gibt (Monatsverlauf);
+           in einer einzigen Reihe bleiben sie beim Rollen der Seite. */
+        const proZeile = tage.filter(k => k.offsetTop === tage[0]?.offsetTop).length || tage.length;
         const ziel = event.key === 'ArrowRight' ? Math.min(tage.length - 1, jetzt + 1)
           : event.key === 'ArrowLeft' ? Math.max(0, jetzt - 1)
-            : event.key === 'Home' ? 0 : event.key === 'End' ? tage.length - 1 : -2;
+            : event.key === 'ArrowUp' && jetzt - proZeile >= 0 ? jetzt - proZeile
+              : event.key === 'ArrowDown' && jetzt + proZeile < tage.length ? jetzt + proZeile
+                : event.key === 'Home' ? 0 : event.key === 'End' ? tage.length - 1 : -2;
         if (ziel === -2) return;
         event.preventDefault();
         waehle(ziel, true);
@@ -2886,7 +2929,7 @@ const Lernwelt = (() => {
     if (typeof Funkel !== 'undefined')
       Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
     /* Die Balkenkarten beleben (E713): Höhen, Hochzählen, Wahl. */
-    verlaufBeleben(root);
+    verlaufBeleben(root, zustand.ansicht);
     if (zustand.simulation && !zustand.simulation.fertig) timerStarten();
     else timerStoppen();
     reiterRollstand();

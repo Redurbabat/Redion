@@ -2523,13 +2523,16 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 /* ==========================================================================
    KI-PANEL
    ========================================================================== */
+:root{ --ki-breite:420px }
 #ai{
   /* 420, NICHT 380 (E642). Hier stand 380, und es galt seit dem
      10. September nie: `motion.css` lädt später und setzt 420. Zwei Zahlen
      für dieselbe Breite, und die frühere war ein Versprechen, das die Seite
      nicht hielt — genau der Fall, den `test332` zählt. Die Breite steht
-     jetzt HIER, im Blatt des Bauteils, und nur hier. */
-  width:420px; flex:0 0 420px; background:var(--bg-side);
+     jetzt HIER, im Blatt des Bauteils, und nur hier — seit der Durchsicht
+     von E713 als Marke an `:root`, weil die Zeitpille am Rechner neben dem
+     offenen Panel steht und dieselbe Zahl LIEST, statt sie abzuschreiben. */
+  width:var(--ki-breite); flex:0 0 var(--ki-breite); background:var(--bg-side);
   border-left:1px solid var(--line); display:none; flex-direction:column;
 }
 #ai.open{display:flex}
@@ -7746,11 +7749,23 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;
   padding-top:38px
 }
-.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-flaeche{gap:2px}
-/* Die ganze Säule ist die Trefffläche (138 px hoch), nicht der Balken. Am
-   Telefon ist sie im Monatsverlauf nur 9 px breit: dreissig Tage auf 330 px.
-   NEBENWEG (§37): der Tag ist dort auch per Pfeiltaste und über den
-   Wochenverlauf erreichbar, und die Zahl steht im Namen jedes Knopfes. */
+/* DREISSIG TAGE IN ZEILEN ZU ZEHN (Durchsicht von E713, 4. Oktober). Die
+   erste Fassung stellte sie in EINE Reihe und versteckte Zahl und Wochentag
+   — vorher (bis b3cf1933) standen alle dreissig sichtbar über ihren Säulen,
+   und am Telefon war eine Säule nur 9 px breit: der Finger traf den
+   Nachbarn. „ohne eine funktione löschen": die Zahlen bleiben auf einen
+   Blick da. Eine Spalte ist mindestens 32 px breit (NEBENWEG, §37: der
+   Monatsverlauf ist Rückschau, der tägliche Weg ist der Wochenverlauf) und
+   sonst ein Zehntel der Breite — zehn je Zeile am Telefon wie am Rechner,
+   auf ganz schmalen Schirmen weniger. Die Säule ist niedriger, damit die
+   Karte nicht dreimal so hoch wird; ↑ und ↓ gehen eine Zeile. */
+.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-flaeche{
+  grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(max(var(--space-8),calc(10% - 1px)),1fr));
+  column-gap:0;row-gap:var(--space-4)
+}
+.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-saeule{height:var(--space-10)}
+/* Die ganze Säule ist die Trefffläche, nicht der Balken: im Wochenverlauf
+   138 px hoch und ein Siebtel der Breite, im Monatsverlauf siehe oben. */
 .lernwelt .lw-verlauf-tag{
   --lw-anteil:0;--lw-index:0;
   position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:4px;
@@ -7778,21 +7793,17 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   overflow:hidden;width:100%;color:var(--text-faint);font-size:9.5px;text-align:center;
   text-overflow:ellipsis;white-space:nowrap
 }
-/* Dreissig Tage: die Zahl steht im Hinweis, und nur jeder siebte Tag trägt
-   seinen Namen — sonst liefen dreissig Wörter ineinander. */
-.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-zahl{visibility:hidden}
-.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-tag small{visibility:hidden;overflow:visible}
-.lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-tag:nth-of-type(7n+1) small{visibility:visible}
 /* Das Material hinter der Wahl (E706): EINE Fläche, von `SelectionFlow`
-   gefedert und unterwegs gedehnt. */
+   gefedert und unterwegs gedehnt. In einer tieferen Zeile setzt
+   lernwelt.ts Höhe und `translate` — waagrecht fährt weiter die Feder. */
 .lernwelt .lw-verlauf-material{
   position:absolute;left:0;top:34px;bottom:0;width:0;z-index:0;pointer-events:none;
   border-radius:var(--radius-md);background:color-mix(in srgb,var(--accent) 14%,transparent);
   opacity:0;transition:opacity var(--motion-fast) var(--ease)
 }
 .lernwelt .lw-verlauf-material.an{opacity:1}
-/* Der Hinweis: fest in der Höhe, waagrecht mit der Wahl, in der Karte
-   gehalten (das Klemmen rechnet lernwelt.ts). */
+/* Der Hinweis: über der Zeile des gewählten Tages, waagrecht mit der Wahl,
+   in der Karte gehalten (Zeile und Klemmen rechnet lernwelt.ts). */
 .lernwelt .lw-verlauf-tipp{
   position:absolute;left:0;top:0;z-index:2;pointer-events:none;
   border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);
@@ -7809,7 +7820,9 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   display:block;padding:7px 11px;font-size:12.5px;font-weight:650;white-space:nowrap;
   font-variant-numeric:tabular-nums
 }
-/* EINMAL wachsen, einmal glänzen — beim Ankommen, nie im Leerlauf. Ohne
+/* EINMAL wachsen, einmal glänzen — beim Ankommen, nie im Leerlauf; wird
+   die Ansicht gleich danach noch einmal gezeichnet, fährt alles weiter
+   (`--lw-seit`, lernwelt.ts, Durchsicht von E713). Ohne
    Bewegung (System oder „Ruhige Darstellung") stehen die Balken sofort da.
    `body:not([data-bewegung="ruhig"])` steht ausdrücklich dabei: die
    ruhige Sperre in bausteine.css erfasst `::after` nicht. */
@@ -7817,16 +7830,16 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 @media (prefers-reduced-motion:no-preference){
   body:not([data-bewegung="ruhig"]) .lernwelt .lw-verlauf-saeule i{
     animation:lw-verlauf-wachsen var(--feder-sanft-dauer) var(--feder-sanft) both;
-    animation-delay:calc(var(--lw-index) * 35ms)
+    animation-delay:calc(var(--lw-index) * 35ms - var(--lw-seit, 0ms))
   }
   body:not([data-bewegung="ruhig"]) .lernwelt .lw-verlauf[data-lw-tage="30"] .lw-verlauf-saeule i{
-    animation-delay:calc(var(--lw-index) * 12ms)
+    animation-delay:calc(var(--lw-index) * 12ms - var(--lw-seit, 0ms))
   }
   body:not([data-bewegung="ruhig"]) .lernwelt .lw-section:has(> .lw-verlauf)::after{
     content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
     background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.12) 42%,transparent 50%,
       rgba(255,255,255,.08) 56%,transparent 64%);
-    animation:lw-verlauf-glanz .7s var(--ease) .25s both
+    animation:lw-verlauf-glanz .7s var(--ease) calc(.25s - var(--lw-seit, 0ms)) both
   }
 }
 
@@ -20754,7 +20767,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    ohne Unschärfe liess den Seitentext durchscheinen; am Rechner dichtes
    Glas, nur wo es Unschärfe gibt (E695). */
 .zm-karte{
-  position:fixed; right:16px; bottom:calc(var(--hunten, 0px) + 16px);
+  position:fixed; right:16px; bottom:calc(var(--melde-boden, var(--hunten, 0px)) + 16px);
   z-index:45; width:min(300px, calc(100vw - 32px));
   border:1px solid var(--line);
   border-radius:var(--radius-2xl); background:var(--bg-card);
@@ -20812,7 +20825,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    Die Lampe atmet nur, solange die Uhr läuft (dieselbe wie am
    Dreierblock, E535). */
 .zm-pille{
-  position:fixed; right:var(--space-5); bottom:calc(var(--hunten, 0px) + var(--space-5)); z-index:45;
+  position:fixed; right:var(--space-5); bottom:calc(var(--melde-boden, var(--hunten, 0px)) + var(--space-5)); z-index:45;
   display:inline-flex; align-items:center; gap:var(--space-3);
   min-height:var(--touch-min); max-width:min(300px, calc(100vw - 2 * var(--space-5)));
   padding:0 var(--space-5) 0 var(--space-4);
@@ -20839,6 +20852,46 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .zm-pille-seite{ flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#b9b7c2 }
 .zm-pille:hover{ background:#232129 }
 .zm-pille:focus-visible{ outline:2px solid var(--accent-text); outline-offset:3px }
+/* DIE PILLE LIEGT NICHT AUF DEN WERKZEUGEN (Durchsicht von E713). Auf
+   `--hunten` lag sie am Telefon auf der Werkzeugleiste der Fläche, auf dem
+   runden Knopf „Neu" der Notizhefte und auf dem Letzten jeder Ansicht, am
+   Rechner auf „Nachricht senden" im KI-Panel. Die Regel des Toasts (E703):
+   was nur meldet, gehört nicht auf das, womit man arbeitet.
+   1. Ihr Boden ist `--melde-boden` — über Dock und Kapsel im Dokument;
+      die Zeichenleiste unten steigt selbst (siehe unten). Die Karte geht
+      von dort auf.
+   2. Solange es sie gibt, bekommt `#scroll` ihren Platz als Polster: das
+      Letzte rollt über sie, die Fläche endet über ihr.
+   3. Der runde Knopf der Notizhefte rückt über sie (`translate`; die
+      Druckfeder auf `transform` bleibt). Beim Schreiben tritt sie zur Seite
+      wie die untere Leiste — die Uhr läuft weiter.
+   4. Ist das KI-Panel offen (am Rechner IM Layout), stehen Pille und Karte
+      links daneben (`--ki-breite`, ki.css).
+   5. Am Telefon rückt, was sonst meldet, über sie (unten).
+   Gemessen in `test590` §10. */
+body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--touch-min) + 2 * var(--space-5)) }
+@media(min-width:761px){
+  body:has(#ai.open) :is(.zm-pille, .zm-karte){ right:calc(var(--ki-breite, 0px) + var(--space-5)) }
+}
+/* Ausser bei der Zeichenleiste unten (nicht im Dokument): sie klebt in
+   `#scroll` und steigt mit dessen Polster (2.) selbst über die Pille. Auf
+   `--melde-boden` stiege die Pille ein zweites Mal mit — gemessen am
+   Telefon: Leiste 572–681, Pille 572–616, wieder auf ihr. */
+body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) :is(.zm-pille, .zm-karte){
+  bottom:calc(var(--hunten, 0px) + var(--space-5)) }
+@media(max-width:760px){
+  body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--hunten) + var(--space-7) + var(--touch-min) + var(--space-5)) }
+  body:has(#zm-pille) .nh-neu-fab{ translate:0 calc(-1 * (var(--touch-min) + var(--space-4))) }
+  body.schreibt .zm-pille{ display:none }
+  /* 5. Was sonst meldet, rückt über sie — derselbe Stapel (E703), um ihre
+     Höhe verschoben. Vorher lag ein Toast, so breit wie der Schirm, für
+     seine Sekunden genau auf ihr. Ein Toast, der oben steht (offene
+     Überlagerung, Zeichenleiste unten), bleibt oben. */
+  body:not(.schreibt):has(#zm-pille:not([hidden])) :is(#offline-streifen, #rg-einladung, .ru-lader-schwebt),
+  body:not(.schreibt):has(#zm-pille:not([hidden])):not(:has(.overlay)):is([data-dokument="an"], :not(:has(.blatt-reihe[data-lage="unten"]))) #toast{
+    translate:0 calc(-1 * (var(--touch-min) + var(--space-3)))
+  }
+}
 
 /* ============================================================================
  * DIE ELEKTRO-STARTSEITE (L65)
@@ -26908,7 +26961,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1401, inhalt: '714e207831fd1ebb', gebaut: '2026-09-28T15:04:27.005Z' };
+const Stand = { fassung: 1408, inhalt: 'cf22bbe53366f2a5', gebaut: '2026-10-05T00:11:24.970Z' };
 window.Stand = Stand;
 
 </script>
@@ -167828,7 +167881,7 @@ const Lernwelt = (() => {
         ? AppEinstellung.wenigBewegung() : document.body?.dataset['bewegung'] === 'ruhig';
     /** Die Zahl zählt EINMAL hoch — v = N·(1 − e^(−7t)), wie im Video — und
      *  steht am Ende genau auf N. Ohne Bewegung steht sie sofort dort. */
-    const hochzaehlen = (el) => {
+    const hochzaehlen = (el, seit = 0) => {
         if (!el)
             return;
         const ziel = Number(el.dataset['lwZiel']) || 0;
@@ -167842,26 +167895,55 @@ const Lernwelt = (() => {
            „−3,29e+24" ins Negative). Und `t` bleibt in 0…1. */
         let beginn = -1;
         const DAUER = 1000;
-        el.textContent = '0';
+        const wert = (t) => t >= 1 ? ziel : Math.min(ziel, Math.round(ziel * (1 - Math.exp(-7 * t))));
+        /* Fährt sie nach einem zweiten Zeichnen WEITER (`seit` > 0), steht
+           schon vor dem ersten Bild der Wert von dort — nicht noch einmal 0
+           (Durchsicht von E713: „0, 8, 15, 0, 47 …"). */
+        el.textContent = String(wert(Math.max(0, Math.min(1, seit / DAUER))));
+        if (seit >= DAUER)
+            return;
         const schritt = (jetzt) => {
             if (!el.isConnected)
                 return;
             if (beginn < 0)
-                beginn = jetzt;
+                beginn = jetzt - seit;
             const t = Math.max(0, Math.min(1, (jetzt - beginn) / DAUER));
-            el.textContent = String(t >= 1 ? ziel : Math.min(ziel, Math.round(ziel * (1 - Math.exp(-7 * t)))));
+            el.textContent = String(wert(t));
             if (t < 1)
                 requestAnimationFrame(schritt);
         };
         requestAnimationFrame(schritt);
     };
+    /** EIN ANKOMMEN, AUCH WENN ZWEIMAL GEZEICHNET WIRD (Durchsicht von E713).
+     *  `zeichnen()` läuft beim Öffnen zweimal — sofort und noch einmal, wenn
+     *  die Bereichsdaten da sind (`ladeBereichsdaten`). Gemessen begann die
+     *  Summe dann von vorn („0, 4, 11, 0, 0, 11 …"), und die Balken fielen
+     *  zurück und stiegen neu. Dieselbe Karte (Ansicht, Tage, Summe) innerhalb
+     *  von 1,5 s fährt darum WEITER: das Hochzählen mit dem alten Beginn, die
+     *  Balken und der Glanz mit negativer Verzögerung (`--lw-seit`). */
+    const belebtAm = new Map();
+    const ANKOMMEN_MS = 1500;
+    const seitDemAnkommen = (schluessel) => {
+        const jetzt = performance.now();
+        const vorher = belebtAm.get(schluessel);
+        if (vorher !== undefined && jetzt - vorher < ANKOMMEN_MS)
+            return jetzt - vorher;
+        belebtAm.set(schluessel, jetzt);
+        return 0;
+    };
     /** Die Balkenkarten einer frisch gezeichneten Ansicht beleben: Höhen
      *  setzen, hochzählen, Wahl mit Tipp und Tasten. */
-    const verlaufBeleben = (wurzel) => {
+    const verlaufBeleben = (wurzel, ansicht = '') => {
         wurzel.querySelectorAll('.lw-verlauf').forEach(karte => {
             if (karte.dataset['lwLebt'])
                 return;
             karte.dataset['lwLebt'] = '1';
+            const summe = karte.querySelector('.lw-verlauf-summe');
+            const seit = seitDemAnkommen(ansicht + ':' + (karte.dataset['lwTage'] || '') + ':' + (summe?.dataset['lwZiel'] || ''));
+            if (seit) {
+                karte.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+                karte.closest('.lw-section')?.style.setProperty('--lw-seit', Math.round(seit) + 'ms');
+            }
             const flaeche = karte.querySelector('.lw-verlauf-flaeche');
             const material = karte.querySelector('.lw-verlauf-material');
             const tipp = karte.querySelector('.lw-verlauf-tipp');
@@ -167875,7 +167957,7 @@ const Lernwelt = (() => {
                 knopf.style.setProperty('--lw-anteil', String(anzahl / hoechst));
                 knopf.style.setProperty('--lw-index', String(index));
             });
-            hochzaehlen(karte.querySelector('.lw-verlauf-summe'));
+            hochzaehlen(summe, seit);
             let gewaehlt = -1;
             const setzeX = (el, x, nachbar, sofort) => {
                 if (typeof SelectionFlow !== 'undefined')
@@ -167900,7 +167982,17 @@ const Lernwelt = (() => {
                     return;
                 if (fokus)
                     knopf.focus({ preventScroll: true });
-                const sofort = vorher < 0;
+                /* IN ZEILEN (der Monatsverlauf, Durchsicht von E713): Material und
+                   Hinweis stehen über IHRER Zeile. Die Zeile setzt `translate` (der
+                   Feder gehört `transform`), die Höhe das Material selbst; ein
+                   Wechsel der Zeile springt, statt quer über die Karte zu fahren. */
+                const erste = tage[0]?.offsetTop ?? 0;
+                const zeile = knopf.offsetTop - erste;
+                const sofort = vorher < 0 || (tage[vorher]?.offsetTop ?? erste) !== knopf.offsetTop;
+                material.style.translate = zeile ? '0 ' + zeile + 'px' : '';
+                material.style.bottom = 'auto';
+                material.style.height = (erste + knopf.offsetHeight - material.offsetTop) + 'px';
+                tipp.style.translate = zeile ? '0 ' + zeile + 'px' : '';
                 material.style.width = knopf.offsetWidth + 'px';
                 setzeX(material, knopf.offsetLeft, Math.abs(index - vorher) === 1, sofort);
                 material.classList.add('an');
@@ -167929,9 +168021,14 @@ const Lernwelt = (() => {
                 if (!knopf)
                     return;
                 const jetzt = Number(knopf.dataset['lwTag']);
+                /* ↑ und ↓ gehen eine Zeile, wenn es Zeilen gibt (Monatsverlauf);
+                   in einer einzigen Reihe bleiben sie beim Rollen der Seite. */
+                const proZeile = tage.filter(k => k.offsetTop === tage[0]?.offsetTop).length || tage.length;
                 const ziel = event.key === 'ArrowRight' ? Math.min(tage.length - 1, jetzt + 1)
                     : event.key === 'ArrowLeft' ? Math.max(0, jetzt - 1)
-                        : event.key === 'Home' ? 0 : event.key === 'End' ? tage.length - 1 : -2;
+                        : event.key === 'ArrowUp' && jetzt - proZeile >= 0 ? jetzt - proZeile
+                            : event.key === 'ArrowDown' && jetzt + proZeile < tage.length ? jetzt + proZeile
+                                : event.key === 'Home' ? 0 : event.key === 'End' ? tage.length - 1 : -2;
                 if (ziel === -2)
                     return;
                 event.preventDefault();
@@ -169059,7 +169156,7 @@ const Lernwelt = (() => {
         if (typeof Funkel !== 'undefined')
             Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
         /* Die Balkenkarten beleben (E713): Höhen, Hochzählen, Wahl. */
-        verlaufBeleben(root);
+        verlaufBeleben(root, zustand.ansicht);
         if (zustand.simulation && !zustand.simulation.fertig)
             timerStarten();
         else
@@ -171556,8 +171653,14 @@ const Zeitmesser = (() => {
         const zustand = zustandVon(s);
         if (pille.dataset['zustand'] !== zustand)
             pille.dataset['zustand'] = zustand;
-        const name = 'Zeitmesser: ' + uhr + (s.art === 'timer' ? ' übrig' : ' gemessen') + ' an „' + s.seite + '"' +
-            (s.pausiert ? ', pausiert' : '') + ' — öffnen';
+        /* DER NAME NENNT MINUTEN, NICHT SEKUNDEN (Durchsicht von E713). Nach
+           dem Schliessen steht der Fokus HIER (§38: er kehrt zurück); ein Name,
+           der jede Sekunde wechselt, liesse einen Bildschirmleser, der
+           Namenswechsel am Fokus ansagt, im Sekundentakt sprechen. Die Sekunden
+           stehen sichtbar in der Pille, der Name wechselt einmal je Minute. */
+        const minuten = s.art === 'timer' ? 'noch ' + Math.ceil(s.sekunden / 60) + ' Min'
+            : s.sekunden < 60 ? 'unter 1 Min gemessen' : Math.floor(s.sekunden / 60) + ' Min gemessen';
+        const name = 'Zeitmesser: ' + minuten + ' an „' + s.seite + '"' + (s.pausiert ? ', pausiert' : '') + ' — öffnen';
         if (pille.getAttribute('aria-label') !== name)
             pille.setAttribute('aria-label', name);
         /* Eine neue Pille (etwa nach dem Neuladen) kommt sanft herein. */
@@ -171615,10 +171718,14 @@ const Zeitmesser = (() => {
         geist.className = 'zm-inhalt zm-geist';
         geist.setAttribute('aria-hidden', 'true');
         geist.inert = true;
-        geist.querySelectorAll('[data-zm], [role], [data-rmo-taste]').forEach(x => {
+        /* Auch `data-esc-knopf` geht aus der Kopie (Durchsicht von E713): der
+           Escape-Griff nimmt den LETZTEN solchen Knopf — sonst den der Kopie,
+           und Escape während der Fahrt täte nichts. */
+        geist.querySelectorAll('[data-zm], [role], [data-rmo-taste], [data-esc-knopf]').forEach(x => {
             x.removeAttribute('data-zm');
             x.removeAttribute('role');
             x.removeAttribute('data-rmo-taste');
+            x.removeAttribute('data-esc-knopf');
         });
         geist.querySelectorAll('.rmo-transport').forEach(x => x.classList.remove('rmo-transport'));
         feld.appendChild(geist);

@@ -8368,16 +8368,17 @@ Escape) — mit eigener Datei, `index.html`, GRUNDSTOCK und Startlast
 **Dazu offen:**
 - Die laufende Besprechung (`Meeting.panel`, besprechung.ts) und die
   Aufträge könnten dieselbe Pille nutzen.
-- Am Telefon rückt ein Toast nicht über die Pille (der Stapel in
-  `bausteine.css` kennt `#offline-streifen`, `#rg-einladung` und den
-  schwebenden Lader, nicht `#zm-pille`); ein Toast steht mittig, die Pille
-  rechts — sie können sich bei langem Text überdecken.
+- ~~Am Telefon rückt ein Toast nicht über die Pille~~ — erledigt in der
+  Durchsicht von E713 (4./5. Oktober): der Toast war am Telefon so breit
+  wie der Schirm und lag für seine Sekunden genau auf ihr. Jetzt rückt, was
+  meldet, um ihre Höhe darüber (`test590` §10).
 - `RedionSpring.sample` ruht bei einem Hundertstel des Weges; wer über 0…1
   rechnet, bekommt am Ende einen Sprung. E713 rechnet in Pixeln; eine
   Warnung am Helfer selbst fehlt.
-- Wischen über die Balken des Verlaufs (heute Tipp, Pfeile, Pos1/Ende). Im
-  Monatsverlauf am Telefon ist eine Säule 9 px breit — ein Nebenweg mit
-  Grund an Ort und Stelle (§37), aber Wischen wäre der bessere Weg.
+- Wischen über die Balken des Verlaufs (heute Tipp, Pfeile, Pos1/Ende).
+  Seit der Durchsicht steht der Monatsverlauf in Zeilen zu zehn, jede
+  Spalte mindestens 32 px (Nebenweg, §37) — treffbar, aber Wischen wäre der
+  schnellere Weg.
 
 **Was fehlt:** die gemeinsame Pille in `schale/`, mit Wächter (rot zuerst),
 und der Zeitmarken-Ton als ihr zweiter Nutzer.

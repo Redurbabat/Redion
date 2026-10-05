@@ -340,8 +340,14 @@ const Zeitmesser = (() => {
         const zustand = zustandVon(s);
         if (pille.dataset['zustand'] !== zustand)
             pille.dataset['zustand'] = zustand;
-        const name = 'Zeitmesser: ' + uhr + (s.art === 'timer' ? ' übrig' : ' gemessen') + ' an „' + s.seite + '"' +
-            (s.pausiert ? ', pausiert' : '') + ' — öffnen';
+        /* DER NAME NENNT MINUTEN, NICHT SEKUNDEN (Durchsicht von E713). Nach
+           dem Schliessen steht der Fokus HIER (§38: er kehrt zurück); ein Name,
+           der jede Sekunde wechselt, liesse einen Bildschirmleser, der
+           Namenswechsel am Fokus ansagt, im Sekundentakt sprechen. Die Sekunden
+           stehen sichtbar in der Pille, der Name wechselt einmal je Minute. */
+        const minuten = s.art === 'timer' ? 'noch ' + Math.ceil(s.sekunden / 60) + ' Min'
+            : s.sekunden < 60 ? 'unter 1 Min gemessen' : Math.floor(s.sekunden / 60) + ' Min gemessen';
+        const name = 'Zeitmesser: ' + minuten + ' an „' + s.seite + '"' + (s.pausiert ? ', pausiert' : '') + ' — öffnen';
         if (pille.getAttribute('aria-label') !== name)
             pille.setAttribute('aria-label', name);
         /* Eine neue Pille (etwa nach dem Neuladen) kommt sanft herein. */
@@ -399,10 +405,14 @@ const Zeitmesser = (() => {
         geist.className = 'zm-inhalt zm-geist';
         geist.setAttribute('aria-hidden', 'true');
         geist.inert = true;
-        geist.querySelectorAll('[data-zm], [role], [data-rmo-taste]').forEach(x => {
+        /* Auch `data-esc-knopf` geht aus der Kopie (Durchsicht von E713): der
+           Escape-Griff nimmt den LETZTEN solchen Knopf — sonst den der Kopie,
+           und Escape während der Fahrt täte nichts. */
+        geist.querySelectorAll('[data-zm], [role], [data-rmo-taste], [data-esc-knopf]').forEach(x => {
             x.removeAttribute('data-zm');
             x.removeAttribute('role');
             x.removeAttribute('data-rmo-taste');
+            x.removeAttribute('data-esc-knopf');
         });
         geist.querySelectorAll('.rmo-transport').forEach(x => x.classList.remove('rmo-transport'));
         feld.appendChild(geist);
