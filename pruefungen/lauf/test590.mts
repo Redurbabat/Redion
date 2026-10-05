@@ -66,6 +66,13 @@
  *      oben wie bei offenen Fenstern), und „Beenden" mitten in der Fahrt
  *      lässt keine versteckte Pille zurück.
  *
+ * DAZU AUS DER VIERTEN DURCHSICHT (5. Oktober), rot gegen den Stand der
+ * dritten:
+ *   §16 KEIN STREIFEN AUF DER OFFENEN KARTE — ohne Netz liegt der
+ *      Offline-Streifen weder am Telefon noch am Rechner (1024 px) auf ihr;
+ *      jede Taste ist zu treffen, und zugeklappt liegt er nicht auf der
+ *      Pille.
+ *
  * ─── KANN DIESER LAUF ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E713) fällt er in §1–§9: es gibt keine
  * Pille, kein Escape, keinen deckenden Boden, keine Knöpfe im Verlauf.
@@ -811,6 +818,66 @@ const blattSeite = (pc: Page, lage: string): Promise<unknown> => pc.evaluate(`(a
     p('Beenden mitten in der Fahrt: die Uhr ist aus, die Karte offen, und keine Pille bleibt zurück',
       !!mitten && !mitten.laeuft && mitten.feld && !mitten.pilleImDokument, JSON.stringify(mitten));
   } catch (e) { p('§15 läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+
+/* ══ §16 · Kein Streifen auf der offenen Karte (vierte Durchsicht) ══════════
+ * Ohne Netz steht der Streifen „⚡ Ohne Verbindung — alles Eigene läuft
+ * weiter" (pwa.ts), bis man ihn wegklickt — mit `z-index:700` über der
+ * Karte (45). Am Telefon steht er auf `--melde-boden`, also genau auf der
+ * untersten Reihe der offenen Karte: Start · Pause · Beenden. Am Rechner
+ * steht er mittig unten; in einem Fenster von 1024 px reicht er unter den
+ * linken Rand der Karte. Gemessen bei der vierten Durchsicht (5. Oktober)
+ * auf 390 × 844: Streifen 713–763 auf der Karte 462–759; von Start, Pause
+ * und Beenden war je nur 45 % frei, und ein echter Tipp auf „Pause" traf
+ * den Streifen — die Uhr lief weiter. Wer im Flugmodus lernt, kam an seine
+ * Uhr erst, nachdem er den Streifen geschlossen hatte. §15 hat den Toast
+ * nach oben geschickt; der Streifen lebt länger — die Karte steht über ihm.
+ * Verlangt: am Telefon kein Schnitt, beide im Bild, jede Taste der Karte
+ * an ihrer Mitte zu treffen (auch am Rechner); und zugeklappt liegt der
+ * Streifen nicht auf der Pille. */
+for (const handy of [true, false]) {
+  const a = await aufmachen({ handy });
+  const wo = handy ? 'Telefon' : 'Rechner 1024';
+  try {
+    console.log('\n16 · Kein Streifen auf der offenen Karte (' + wo + ')');
+    if (!handy) await a.pc.setViewportSize({ width: 1024, height: 768 });
+    await a.pc.evaluate(`(() => { Zeitmesser.panel(); Zeitmesser.start('timer', 25 * 60); })()`);
+    await a.pc.waitForTimeout(900);
+    await a.pc.context().setOffline(true);
+    await a.pc.waitForTimeout(1200);
+    const lage = await a.pc.evaluate(`(() => {
+      const s = document.getElementById('offline-streifen'), k = document.querySelector('.zm-feld');
+      if (!s || !k) return { streifen: !!s, karte: !!k, verdeckt: ['(fehlt)'] };
+      const a = s.getBoundingClientRect(), b = k.getBoundingClientRect();
+      const schnitt = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      const verdeckt = [...k.querySelectorAll('button[data-zm]')].filter(x => {
+        const r = x.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return !(e && (e === x || x.contains(e)));
+      }).map(x => (x.textContent || '').trim() || x.getAttribute('aria-label') || '');
+      return { streifen: true, karte: true, schnitt: Math.round(schnitt),
+        s: [Math.round(a.left), Math.round(a.top), Math.round(a.right), Math.round(a.bottom)],
+        k: [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)],
+        imBild: a.top >= 0 && a.bottom <= innerHeight && b.top >= 0 && b.bottom <= innerHeight, verdeckt };
+    })()`) as any;
+    /* Am Rechner (1024 px) berührt der mittige Streifen die linke untere
+       Ecke der Karte (34 × 33 px Polster, keine Taste) — dort zählt, dass
+       jede Taste frei ist; am Telefon liegt er auf der ganzen Reihe. */
+    p(wo + ', ohne Netz: ' + (handy ? 'der Streifen liegt nicht auf der offenen Karte, beide im Bild' : 'Streifen und Karte im Bild'),
+      lage.streifen && lage.karte && (!handy || lage.schnitt === 0) && lage.imBild, JSON.stringify(lage));
+    p('… und jede Taste der Karte ist an ihrer Mitte zu treffen', lage.verdeckt.length === 0, JSON.stringify(lage.verdeckt));
+    await a.pc.evaluate(`document.querySelector('.zm-feld [data-zm="zu"]')?.click()`);
+    await a.pc.waitForTimeout(900);
+    const zu = await a.pc.evaluate(`(() => {
+      const s = document.getElementById('offline-streifen'), q = document.getElementById('zm-pille');
+      if (!s || !q || q.hidden) return { streifen: !!s, pille: !!q && !q.hidden };
+      const a = s.getBoundingClientRect(), b = q.getBoundingClientRect();
+      const schnitt = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      const e = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return { streifen: true, pille: true, schnitt: Math.round(schnitt), treffbar: !!e && (e === q || q.contains(e)) };
+    })()`) as any;
+    p('… und zugeklappt liegt er nicht auf der Pille', zu.streifen && zu.pille && zu.schnitt === 0 && zu.treffbar, JSON.stringify(zu));
+  } catch (e) { p('§16 (' + wo + ') läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
   await a.zu();
 }
 
