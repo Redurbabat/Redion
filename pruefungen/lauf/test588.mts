@@ -60,6 +60,10 @@
  *      geht der Fächer EINMAL auf und bleibt (er flackerte), und er deckt
  *      die Blase der Glocke (E462) nicht halb zu: solange er offen ist,
  *      geht sie.
+ *   §13 FÜNFTE DURCHSICHT (5. Oktober): der Fächer deckt die Reihe direkt
+ *      unter der Glocke nicht zu („KI", „Favorit" in der Kopfzeile der
+ *      Seite). Wer von der Glocke dorthin will, klickt sie; wer in den
+ *      Fächer will, kommt über die Reihe hinweg hinein.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E711) fällt sie in §1–§10: es gibt weder die
@@ -67,6 +71,8 @@
  * §11 fiel gegen 556ffdaa (E711 vor der Durchsicht) — siehe den Commit
  * „test588 (rot): … Durchsicht". §12 fiel gegen denselben Stand und gegen
  * die Reparatur der Durchsicht — siehe „test588 (rot): Vierte Durchsicht".
+ * §13 fiel gegen die Reparatur der vierten Durchsicht — siehe „test588 (rot):
+ * Fünfte Durchsicht".
  *
  *   node pruefungen/lauf/test588.mts
  * ==========================================================================*/
@@ -893,6 +899,101 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
     }
     await a.zu();
   }
+}
+
+/* ==========================================================================
+ * §13 · FÜNFTE DURCHSICHT (5. Oktober): der Fächer deckt die Reihe unter
+ * der Glocke nicht zu. Er ging 8 px unter der Glocke auf, 340 × 242 px, und
+ * lag am Rechner über „KI" und „Favorit" in der Kopfzeile der Seite. Wer auf
+ * der Glocke verweilte und dann dorthin wollte — der kürzeste Weg, die
+ * Knöpfe stehen direkt darunter —, fuhr in den Fächer, und solange der
+ * Zeiger darauf lag, blieb er offen: ein Klick traf eine Meldung statt „KI".
+ * Ein Weg, der vorher ging, war länger geworden („ohne eine funktione
+ * löschen"). Gemessen am Treffer (`elementFromPoint`), nicht am Rechteck.
+ * ========================================================================*/
+{
+  console.log('\n§13 Fünfte Durchsicht: der Fächer deckt die Knöpfe unter der Glocke nicht zu');
+  const a = await aufmachen({});
+  const { pc } = a;
+  await pc.evaluate(`(() => {
+    const s = Object.values(Store.cache.blocks).find(b => b.type === 'page' && b.text === 'Elektrotechnik Skript');
+    if (s) App.oeffne(s.id);
+    Werkzeuge.posteingangMelden({ text: 'Erinnerung: Elektro lernen', quelle: 'Erinnerungen' });
+    Werkzeuge.posteingangMelden({ text: 'Karteikarten fällig: 12', quelle: 'Lernen' });
+    const t = document.getElementById('toast'); if (t) t.classList.remove('show');
+  })()`);
+  await pc.waitForTimeout(700);
+  const gl = await rechteck(pc, '#studio-glocke');
+  const mitte = gl ? { x: gl.l + gl.b / 2, y: gl.t + gl.h / 2 } : { x: 0, y: 0 };
+  /* Was direkt unter der Glocke steht und vom Fächer überlagert werden
+     KÖNNTE: kleine Ziele (≤ 56 px hoch) in der Reihe darunter, waagerecht im
+     Bereich des Fächers. Frei heisst: der Treffer in ihrer Mitte sind sie. */
+  const REIHE = `(() => {
+    const g = document.getElementById('studio-glocke').getBoundingClientRect();
+    const f = document.getElementById('ru-glocken-faecher');
+    const fr = f && !f.hidden ? f.getBoundingClientRect() : null;
+    const ziele = [...document.querySelectorAll('button, a[href], [role="button"]')].filter(e => {
+      if (!(e instanceof HTMLElement) || e.offsetParent === null || (f && f.contains(e))) return false;
+      const r = e.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && r.height <= 56 && r.top >= g.bottom - 2 && r.bottom <= g.bottom + 96
+        && r.left < g.right && r.right > g.right - 340;
+    });
+    return { offen: !!fr, oben: fr ? Math.round(fr.top) : null, unten: fr ? Math.round(fr.bottom) : null,
+      gUnten: Math.round(g.bottom), vh: innerHeight,
+      ziele: ziele.map(e => { const r = e.getBoundingClientRect();
+        const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { id: e.id || e.className.toString().slice(0, 20), frei: !!t && e.contains(t),
+          x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }; }) };
+  })()`;
+  await pc.mouse.move(mitte.x, mitte.y);
+  await pc.waitForTimeout(900);
+  const r1 = await pc.evaluate(REIHE) as { offen: boolean; oben: number | null; unten: number | null; gUnten: number; vh: number;
+    ziele: { id: string; frei: boolean; x: number; y: number }[] };
+  const ki = r1.ziele.find(z => z.id === 'btn-ai');
+  p('Zeigen auf die Glocke fächert auf — und „KI" steht in der Reihe darunter (sonst prüfte das nichts)',
+    !!gl && r1.offen && !!ki, JSON.stringify(r1));
+  p('Kein Knopf der Reihe unter der Glocke liegt unter dem Fächer (der Treffer in seiner Mitte ist er selbst)',
+    r1.offen && r1.ziele.length > 0 && r1.ziele.every(z => z.frei), JSON.stringify(r1.ziele));
+  p('… und der Fächer bleibt bei der Glocke und ganz im Bild (höchstens 96 px darunter)',
+    r1.offen && r1.oben !== null && r1.unten !== null && r1.oben - r1.gUnten <= 96 && r1.oben > r1.gUnten && r1.unten <= r1.vh,
+    JSON.stringify({ oben: r1.oben, unten: r1.unten, gUnten: r1.gUnten }));
+  /* Der Weg von der Glocke zu „KI": der Zeiger ruht dort, dann ein Klick. */
+  if (ki) {
+    for (let k = 1; k <= 6; k++) {
+      await pc.mouse.move(mitte.x + (ki.x - mitte.x) * k / 6, mitte.y + (ki.y - mitte.y) * k / 6);
+      await pc.waitForTimeout(16);
+    }
+    await pc.waitForTimeout(450);
+    await pc.mouse.down(); await pc.mouse.up();
+    await pc.waitForTimeout(400);
+  }
+  const r2 = await pc.evaluate(`({ ki: !!document.getElementById('btn-ai')?.classList.contains('on'),
+    faecher: (() => { const f = document.getElementById('ru-glocken-faecher'); return !!f && !f.hidden; })(),
+    titel: document.title })`) as { ki: boolean; faecher: boolean; titel: string };
+  p('Von der Glocke direkt zu „KI" und klicken: die KI geht auf, der Fächer ist zu', !!ki && r2.ki && !r2.faecher, JSON.stringify(r2));
+  /* Und wer IN den Fächer will, kommt weiter hinein: über die Reihe hinweg,
+     in weniger als den 280 ms, nach denen er zugeht. */
+  await pc.evaluate(`document.getElementById('btn-ai')?.classList.contains('on') && App.kiPanel ? App.kiPanel(false) : 0`);
+  await pc.mouse.move(700, 700); await pc.waitForTimeout(500);
+  await pc.mouse.move(mitte.x, mitte.y); await pc.waitForTimeout(900);
+  const karte = await rechteck(pc, '#ru-glocken-faecher .ru-meldung');
+  if (karte) {
+    const zx = karte.l + karte.b / 2, zy = karte.t + karte.h / 2;
+    for (let k = 1; k <= 8; k++) {
+      await pc.mouse.move(mitte.x + (zx - mitte.x) * k / 8, mitte.y + (zy - mitte.y) * k / 8);
+      await pc.waitForTimeout(16);
+    }
+  }
+  await pc.waitForTimeout(500);
+  const r3 = await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher');
+    const k = f && f.querySelector('.ru-meldung'); const r = k && k.getBoundingClientRect();
+    const t = r && document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return { offen: !!f && !f.hidden, aufKarte: !!t && !!k && k.contains(t) }; })()`) as { offen: boolean; aufKarte: boolean };
+  p('Von der Glocke in den Fächer (über die Reihe hinweg): er bleibt offen, der Zeiger liegt auf der Karte', !!karte && r3.offen && r3.aufKarte,
+    JSON.stringify(r3));
+  await pc.mouse.move(700, 700);
+  await pc.waitForTimeout(400);
+  await a.zu();
 }
 
 p('Keine Ausnahme im Browser', fehler.length === 0, fehler.slice(0, 3).join(' · '));
