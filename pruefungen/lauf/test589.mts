@@ -45,6 +45,8 @@
  *       die alten Felder darunter, beide zeigen denselben Stand.
  *   §11 Kein Seitenfehler.
  *   §12 Die Schrift der Kacheln ist lesbar, in jedem Schema (Durchsicht).
+ *   §13 Nachtrag: Platz unter den Knöpfen, jeder Weg aus seinem Knopf, der
+ *       Zug endet, die Uhr zählt, die Linse ist dicht, ein Beobachter.
  *
  * DURCHSICHT (4. Oktober 2026; Redur am 3. Oktober, ca. 19:35 UTC: „Weiter
  * ohne pause,"). Der Bericht des Baus ging am Wochenlimit verloren; die
@@ -67,6 +69,18 @@
  *       danach zählt.
  *   §12 Name und Stand jeder Kachel ≥ 4,5 : 1 am gerenderten Bild, in allen
  *       zehn Schemata, ohne Schalter, mit „Hoher Kontrast", mit „Ruhig".
+ *
+ * NACHTRAG DER ZWEITEN DURCHSICHT (§13; 4./5. Oktober 2026), jede Zusage
+ * gegen den Stand der ersten Durchsicht rot gesehen:
+ *   a   Die runden Knöpfe kommen oben DAZU: unter ihnen hat die Liste ihre
+ *       60 % des Fensters, wie vorher das ganze Menü.
+ *   b   „Neu erstellen" aus der Kante und „Alle Wege …" der Notizhefte
+ *       wachsen aus IHREM Knopf, nicht aus dem „+" oben rechts.
+ *   c   Ein Zug am Regler mit der Maus endet auch draussen.
+ *   d   Die Kachel „Zeitmesser" zeigt die laufende Uhr und zählt mit.
+ *   e   Die ruhende Linse ist dichtes Glas: die Schrift darunter scheint
+ *       nicht doppelt durch.
+ *   f   Je Rollfläche EIN Beobachter der Kacheln.
  *
  * KANN ER ROT WERDEN? Gegen den Stand b3cf1933 (vor E712) ist er rot, in
  * jedem Abschnitt ausser den „bleibt"-Zusagen — siehe Commit „test589 (rot)".
@@ -540,8 +554,8 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
 {
   /* KONTRAST HEISST: KEIN GLAS (Redur, 27.09., ca. 21:45: „Starker Kontrast
      ohne Glas"; grund.css schaltet dafür alles Glas deckend). Die Linse über
-     „Heute" liest keine Marke — sie trägt eine feste halbe Deckkraft und die
-     Brechung. Durchsicht E712: in allen fünf Eingängen des Schalters ist sie
+     „Heute" ist Glas mit Brechung (seit dem Nachtrag dichtes Glas, E695) —
+     ohne Glas keine Linse. Durchsicht E712: in allen fünf Eingängen des Schalters ist sie
      weg; die Überschrift bleibt. Geprüft: die beiden in Redion und „mehr
      Kontrast" im System. */
   for (const [name, weg] of [['„Hoher Kontrast"', 'einstellung'], ['Schema „Starker Kontrast"', 'schema'],
@@ -876,6 +890,175 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
       gemessen >= schemata.length * 14 && schlecht.length === 0, `${schlecht.length}: ` + schlecht.slice(0, 8).join(' · '));
   }
   await s.evaluate(() => { Einstellungen.S('kontrast', false); Einstellungen.S('bewegung', 'normal'); Aussehen.setzen({ schema: 'standard' }); });
+  await ctx.close();
+}
+
+/* ==========================================================================
+ * §13 · Nachtrag der zweiten Durchsicht (E712)
+ * ----------------------------------------------------------------------------
+ * Jede Zusage gegen den Stand der ersten Durchsicht rot gesehen:
+ *   a  Die runden Knöpfe kommen oben DAZU: unter ihnen hat die Liste so viel
+ *      Höhe wie vorher das ganze Menü (60 % des Fensters) — beim „⋯" standen
+ *      „Volle Breite", „Pfadnavigation" und „Seite anpassen" sonst unter dem
+ *      Rand, wo sie vorher zu sehen waren.
+ *   b  „Neu erstellen" aus der Kante und „Alle Wege …" der Notizhefte
+ *      wachsen aus IHREM Knopf — nicht aus dem „+" oben rechts, quer über
+ *      den Schirm (der Fund von E712, auf zwei Wegen wieder da).
+ *   c  Ein Zug am Regler mit der Maus endet auch draussen: wer danach nur
+ *      darüberfährt, stellt nichts.
+ *   d  Die Kachel „Zeitmesser" zeigt die laufende Uhr und zählt mit.
+ *   e  Die Linse trägt Schrift, also dichtes Glas (E695): die Schrift unter
+ *      ihr scheint nicht doppelt durch („Weiterdenk“ + grosses „en“).
+ * ========================================================================*/
+{
+  console.log('\n§13 · Nachtrag: Platz, Anker, Zug, Uhr, dichte Linse');
+  const { ctx, s } = await oeffnen(false);
+  await seiteAuf(s);
+
+  /* a · Platz unter den runden Knöpfen */
+  for (const [name, knopf] of [['„+"', '#studio-create'], ['„⋯"', '#btn-page-menu']] as const) {
+    await s.click(knopf); await warte(s, 900);
+    const r = await s.evaluate(() => {
+      const m = document.querySelector<HTMLElement>('.menu');
+      const k = m?.querySelector<HTMLElement>('.ru-tropfen-kopf');
+      if (!m || !k) return null;
+      const mr = m.getBoundingClientRect(), kr = k.getBoundingClientRect();
+      return { unten: Math.round(mr.bottom - kr.bottom), noetig: Math.round(m.scrollHeight - (kr.bottom - mr.top)),
+               soll: Math.round(innerHeight * 0.6), imFenster: mr.top >= 0 && mr.bottom <= innerHeight };
+    });
+    p(`${name}: unter den runden Knöpfen hat die Liste ihre 60 % des Fensters (höchstens 16 px weniger), das Menü bleibt im Fenster`,
+      !!r && r.unten >= Math.min(r.soll, r.noetig) - 16 && r.imFenster, JSON.stringify(r));
+    await s.keyboard.press('Escape'); await warte(s, 500);
+  }
+
+  /* b · Aus SEINEM Knopf: die Kante und die Notizhefte */
+  const amKnopf = (sel: string) => s.evaluate((sel: string) => {
+    const b = document.querySelector<HTMLElement>(sel)?.getBoundingClientRect();
+    const m = document.querySelector<HTMLElement>('.menu.ru-tropfen-menue')?.getBoundingClientRect();
+    if (!b || !m || !b.width) return { ok: false, knopf: null as number[] | null, menue: null as number[] | null };
+    const senkrecht = Math.min(Math.abs(m.top - b.bottom), Math.abs(b.top - m.bottom)) <= 14 && m.left < b.right && m.right > b.left;
+    const waagrecht = Math.min(Math.abs(m.left - b.right), Math.abs(b.left - m.right)) <= 14 && m.top < b.bottom && m.bottom > b.top;
+    const z = (q: DOMRect) => [q.left, q.top, q.right, q.bottom].map(Math.round);
+    return { ok: senkrecht || waagrecht, knopf: z(b), menue: z(m) };
+  }, sel);
+  /* „Neu erstellen" steht in der Kante, wenn die ruhige Fassung aus ist (E218). */
+  await s.evaluate(() => Ruhig.setzen(false)); await warte(s, 400);
+  const kanteDa = await s.evaluate(() => (document.querySelector<HTMLElement>('#kante .k-knopf[data-k="neu"]')?.getBoundingClientRect().width || 0) > 0);
+  if (kanteDa) { await s.click('#kante .k-knopf[data-k="neu"]'); await warte(s, 900); }
+  const kante = await amKnopf('#kante .k-knopf[data-k="neu"]');
+  p('„Neu erstellen" in der Kante: das Menü wächst aus diesem Knopf', kanteDa && kante.ok, JSON.stringify(kante));
+  await s.keyboard.press('Escape'); await warte(s, 400);
+  await s.evaluate(() => Ruhig.setzen(true)); await warte(s, 300);
+  await s.evaluate(() => Notebook.oeffnen()); await warte(s, 900);
+  const heftDa = await s.evaluate(() => (document.querySelector<HTMLElement>('[data-neu-menue]')?.getBoundingClientRect().width || 0) > 0);
+  if (heftDa) {
+    await s.click('[data-neu-menue]'); await warte(s, 500);
+    await s.click('.menu [data-w="alle"]'); await warte(s, 900);
+  }
+  const heft = await amKnopf('[data-neu-menue]');
+  p('Notizhefte „＋ Neu" → „Alle Wege …": das Menü wächst aus „＋ Neu"', heftDa && heft.ok, JSON.stringify(heft));
+  await s.keyboard.press('Escape'); await warte(s, 400);
+
+  /* c · Ein Zug mit der Maus endet auch draussen */
+  await s.evaluate(() => Ansichten.mehr()); await warte(s, 700);
+  const r = await s.evaluate(() => {
+    const q = document.querySelector<HTMLElement>('.ru-kacheln [data-kachel="schrift"]')?.getBoundingClientRect();
+    const t = document.querySelector<HTMLElement>('.ru-kacheln')?.getBoundingClientRect();
+    return q && t ? { x: q.left + q.width / 2, y: q.top + q.height / 2, oben: t.top } : null;
+  });
+  let zug = { los: '', haelt: true as boolean | undefined, danach: '' , draussen: false };
+  if (r) {
+    await s.mouse.move(r.x, r.y); await s.mouse.down();
+    for (let i = 1; i <= 10; i++) { await s.mouse.move(r.x, r.y - i * 16); await warte(s, 16); }
+    zug.draussen = r.y - 160 < r.oben;
+    zug.los = await s.evaluate(() => Einstellungen.V('schriftgroesse', 'normal'));
+    await s.mouse.up(); await warte(s, 100);
+    zug.haelt = await s.evaluate(() => document.querySelector('.ru-kacheln [data-kachel="schrift"]')?.hasAttribute('data-haelt'));
+    for (let i = 0; i <= 10; i++) { await s.mouse.move(r.x, r.y - 40 + i * 12); await warte(s, 16); }
+    await warte(s, 200);
+    zug.danach = await s.evaluate(() => Einstellungen.V('schriftgroesse', 'normal'));
+  }
+  gleich('Maus: über die Kacheln hinaus gezogen und draussen losgelassen — der Zug ist zu Ende, Darüberfahren stellt nichts',
+    [zug.draussen, zug.los, zug.haelt, zug.danach], [true, 'gross', false, 'gross']);
+  await s.evaluate(() => Einstellungen.S('schriftgroesse', 'normal')); await warte(s, 300);
+
+  /* d · Die Kachel „Zeitmesser" zählt mit */
+  const uhr = () => s.evaluate(() => (document.querySelector('.ru-kacheln [data-kachel="zeit"] .ru-kachel-stand')?.textContent || ''));
+  await s.evaluate(() => Zeitmesser.start('stoppuhr'));
+  await warte(s, 1300); const u1 = await uhr();
+  await warte(s, 2200); const u2 = await uhr();
+  await s.evaluate(() => Zeitmesser.stopp()); await warte(s, 600); const u3 = await uhr();
+  p('„Zeitmesser": die Kachel zeigt die laufende Uhr, zählt mit und kehrt gestoppt zu „Stoppuhr und Timer" zurück',
+    u1.startsWith('Läuft') && u2.startsWith('Läuft') && u1 !== u2 && u3 === 'Stoppuhr und Timer', JSON.stringify([u1, u2, u3]));
+
+  /* e · Die ruhende Linse ist dicht: ohne ihre Abschrift sieht man in ihr fast nichts */
+  for (const thema of ['dark', 'light'] as const) {
+    await s.evaluate((t: string) => { App.theme(t); Produktwelten.lernen('heute'); }, thema);
+    await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
+    await warte(s, 2600);
+    const kreis = await s.evaluate(() => {
+      const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+      const q = l?.getBoundingClientRect();
+      document.querySelectorAll<HTMLElement>('.ru-held-linse-glas, .ru-held-linse-frost').forEach(e => { e.style.visibility = 'hidden'; });
+      return q && q.width ? { x: q.left + q.width / 2, y: q.top + q.height / 2, r: q.width / 2 } : null;
+    });
+    await warte(s, 80);
+    let k = 99;
+    if (kreis) {
+      const bild = (await s.screenshot()).toString('base64');
+      k = await s.evaluate(async ({ b64, kreis }) => {
+        const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+        const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+        const g = c.getContext('2d')!; g.drawImage(img, 0, 0);
+        const lin = (v: number) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+        const L = (r: number, gg: number, b: number) => 0.2126 * lin(r) + 0.7152 * lin(gg) + 0.0722 * lin(b);
+        const R = Math.floor(kreis.r * 0.7), w = 2 * R;
+        const d = g.getImageData(Math.round(kreis.x - R), Math.round(kreis.y - R), w, w).data;
+        let lo = 9, hi = -1;
+        for (let i = 0; i < d.length; i += 4) {
+          const px = (i / 4) % w - R, py = Math.floor(i / 4 / w) - R;
+          if (px * px + py * py > R * R) continue;
+          const l = L(d[i]!, d[i + 1]!, d[i + 2]!); lo = Math.min(lo, l); hi = Math.max(hi, l);
+        }
+        return +((hi + 0.05) / (lo + 0.05)).toFixed(2);
+      }, { b64: bild, kreis });
+    }
+    p(`${thema === 'dark' ? 'Dunkel' : 'Hell'}: in der ruhenden Linse scheint die Schrift darunter nicht durch (ohne Abschrift < 1,5 : 1)`,
+      !!kreis && k < 1.5, String(k));
+  }
+  await s.evaluate(() => App.theme('dark'));
+  await ctx.close();
+}
+
+{
+  /* f · Je Rollfläche EIN Beobachter der Kacheln: „Mehr" fünfmal gezeichnet,
+     es lauscht weiter genau einer (vorher blieb jeder stehen, samt seinen
+     alten Kacheln). Gezählt an der echten Klasse, nur umwickelt. */
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx.addInitScript(() => {
+    const Echt = window.IntersectionObserver;
+    const alle: any[] = [];
+    (window as any).__io589 = alle;
+    window.IntersectionObserver = class extends Echt {
+      ziele: Element[] = []; aus = false;
+      constructor(cb: IntersectionObserverCallback, o?: IntersectionObserverInit) { super(cb, o); alle.push(this); }
+      override observe(t: Element): void { this.ziele.push(t); super.observe(t); }
+      override disconnect(): void { this.aus = true; super.disconnect(); }
+    } as any;
+  });
+  const s = await ctx.newPage();
+  s.on('pageerror', e => fehler.push(e.message));
+  await s.goto(`http://127.0.0.1:${PORT}/index.html`);
+  await s.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'undefined' &&
+    (document.getElementById('tree')?.children.length || 0) > 0, null, { timeout: 30000 });
+  await s.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
+  });
+  for (let i = 0; i < 5; i++) { await s.evaluate(() => Ansichten.mehr()); await warte(s, 250); }
+  const lauschen = await s.evaluate(() => ((window as any).__io589 as any[])
+    .filter(o => !o.aus && o.ziele.some((t: Element) => t.classList?.contains('ru-kacheln-gitter'))).length);
+  gleich('„Mehr" fünfmal gezeichnet: genau EIN Beobachter der Kacheln lauscht noch', lauschen, 1);
   await ctx.close();
 }
 
