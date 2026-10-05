@@ -3347,7 +3347,20 @@ const Marken = (() => {
            unten), also auch die Form. Die Tinte bleibt, wie sie ist. */
         const shapePts = letzterRoh && restFrom > 0 && restFrom <= mark.pts.length
           ? [...mark.pts.slice(0, restFrom), letzterRoh] : mark.pts;
-        const form = InkShapes.recognize(shapePts);
+        /* UND WAS VORHER ERKANNT WURDE, BLEIBT ERKANNT (E708, Durchsicht).
+           Ein schneller, kurzer Zug, still gehalten, hat bis zur Ruhe
+           weniger Punkte, als `InkShapes` verlangt (acht): 80 Einheiten in
+           vier Meldungen sind sechs bis zur Ruhe, acht in der ganzen Tinte
+           (nachgerechnet, messungen §85). Die ganze Tinte hat mehr, weil der
+           Glätter beim Halten nachzieht, und vor E708 wurde genau sie
+           gefragt: daraus wurde eine Linie, mit E708 allein blieb es ein
+           Strich (`test461` §1). Findet die Frage bis zur Ruhe nichts, kommt
+           darum die alte Frage an die ganze Tinte — so erkennt E708 alles,
+           was vorher erkannt wurde, und das Gehaltene einer zitternden Hand
+           dazu. Ein „M", ein „N", ein Zickzack: beide Fragen sagen nichts,
+           die Tinte bleibt Punkt für Punkt. */
+        const form = InkShapes.recognize(shapePts)
+          ?? (shapePts !== mark.pts ? InkShapes.recognize(mark.pts) : null);
         if (form) {
           mark.art = form.art;
           mark.pts = form.pts;

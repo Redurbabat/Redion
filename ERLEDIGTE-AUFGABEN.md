@@ -5,7 +5,7 @@
 **Redur:** um ca. 16:45 „… dann bessere stift efeckte beim zeichnen …" und
 um ca. 22:10 „… ich will wenn ich am morgen die redion öfnnen eien komplet
 besseren webseit sehen ohne eine funktione löschen …" (27. September);
-am 3. Oktober „Weiter ohne pause,".
+am 3. Oktober um ca. 19:35 „Weiter ohne pause,".
 
 **Gefunden:** drei Wächter des Zeichnens waren auf `main` und auf dem
 Grundstand `b3cf1933` rot, gesehen vom Bau von E704. Jeder mit dem Wächter
@@ -33,6 +33,12 @@ von heute gegen den Code von damals zurückverfolgt: `test461` §1/§4 und
   Gegenprobe ohne die Prüfung).
 - `test201` §1 nicht angefasst: seine Probe ist ein rechter Winkel, seit
   E676 mit Absicht eine Ecke. Der Vorschlag steht in L235 Punkt 1.
+- Durchsicht (4./5. Oktober): ein schneller, kurzer Strich, still
+  gehalten, war auf dem Grundstand eine Linie und blieb mit E708 ein
+  Strich — bis zur Ruhe hat er weniger als die acht Punkte, die die
+  Erkennung verlangt. Findet die Frage bis zur Ruhe nichts, fragt sie jetzt
+  die ganze Tinte wie vorher; `test461` §1 um zwei Zusagen erweitert, rot
+  gesehen am Kopf von E708.
 
 **Geprüft:** siehe E708 (Gegenproben, Nachbarn) und messungen §85.
 

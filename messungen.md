@@ -5484,7 +5484,8 @@ Zickzack     ±0       gehalten → keine Form        gehalten → keine Form
 jeder Zug, nur 120 ms gehalten: in beiden Ständen nicht gehalten, keine Form
 ```
 
-Wo der Grundstand „gehalten" sagte, sagt E708 dasselbe und erkennt dasselbe.
+Wo der Grundstand „gehalten" sagte, sagt E708 dasselbe und erkennt dasselbe —
+für langsam gezogene Züge wie hier; schnelle, kurze siehe „Durchsicht" unten.
 Ein „M", ein „N" und ein Zickzack bleiben Striche — und weil nur die Frage an
 `InkShapes` die gekürzten Punkte bekommt, bleibt ihre Tinte Punkt für Punkt,
 wie sie war, mit allen Ecken (der Glätter mit Ecken ist der heutige, siehe
@@ -5561,3 +5562,76 @@ Derselbe Wackler auf beiden Seiten; die Breite des Füllers folgt seit E704
 dem Tempo der Meldungen, und unter der Last von vier Bauern schwankt das
 Tempo. E708 ändert weder Breite noch Druck noch Tempo. Nicht von hier;
 gemeldet, nicht „repariert" (§31).
+
+**Durchsicht** (4./5. Oktober 2026, zweiter Prüfer). *Gehaltene Formen im
+echten App-Lauf* (Chromium von Playwright, unter der Sperre, 23:35–23:41
+UTC; Zeigerereignisse eines Stifts auf ein leeres Blatt, alle 8 ms eine
+Meldung im Zug, beim Halten alle 25 ms; jeder Zug in eigenem Kontext;
+Grundstand `b3cf1933` gegen den Kopf `7eb0998c`). Gezählt die Marke und
+ihre Punkte; „Ecken" ist der kleinste Abstand der Tinte zu jeder inneren
+Ecke des Zugs:
+
+```txt
+Zug (Einheiten je Meldung)         Halten        Grundstand    Kopf E708
+Linie 400 (3)                      ±0, 900 ms    Linie         Linie
+Linie 400 (3)                      ±2 / ±3       Strich        Linie
+Linie 400 (3)                      ±2, 120 ms    Strich        Strich
+Linie 20 (3 und 7), 40 (3), 80 (12) ±0           Linie         Linie
+Linie 20, 40, 80 (alle Schritte)   ±2            Strich        Linie
+Linie 40 (10)                      ±0, 900 ms    Linie         Strich (8)   ← verloren
+Linie 80 (20)                      ±0, 900 ms    Linie         Strich (8)   ← verloren
+Linie 400 (40)                     ±0 / ±2       Linie/Strich  Linie
+Dreieck (3)                        ±0 / ±2 / ±3  D / D / S     D / D / D
+Rechteck (3)                       ±0 / ±2 / ±3  R / S / S     R / R / R
+Kreis (3)                          ±0 / ±2       Ellipse/S     Ellipse/Ellipse
+„M" (3)                            ±0/±2/±3, 120 Strich 11/35/33/11, Ecken 0,00 — in beiden gleich
+„N", Zickzack, „L", Haken (3)      ±0 / ±2       Strich, gleiche Punktzahl, Ecken 0,00 — in beiden gleich
+Haken, 700 ms Pause in der Mitte   nicht gehalten Strich 9     Strich 9
+Linie, Pause ±2, am Ende ±2        900 ms        Strich 53     Strich 53   (L235 Punkt 2)
+```
+
+Seitenfehler in beiden: keine. Die zwei verlorenen Linien sind das, was
+`test461` §1 seit der Durchsicht hält (rot am Kopf dreimal 36/38, am
+Grundstand die neuen Zusagen dreimal grün).
+
+*Warum, ohne Browser* (Glätter und `InkShapes` des gebauten Stands im
+`vm`-Kontext, Logik wie `addSample`; schnelle, kurze Züge, alle 8 ms eine
+Meldung, dann 900 ms still oder mit ±2):
+
+```txt
+Zug, still gehalten     Tinte   bis Ruhe + Abhebepunkt   Grundstand   Kopf   Durchsicht
+60 in 15er-Schritten      8         6                    Linie        –      Linie
+80 in 20er-Schritten      8         6                    Linie        –      Linie
+80 in 12er-Schritten     12        12                    Linie        Linie  Linie
+120 in 30er-Schritten     9         8                    Linie        Linie  Linie
+```
+
+`InkShapes.recognize` verlangt acht Punkte; bis zur Ruhe sind es bei einem
+schnellen Zug weniger, die ganze Tinte hat sie, weil der Glätter beim
+Halten nachzieht. *Und über alle Formen:* 192 Züge (Linie, kurze Linie,
+Dreieck, Rechteck, „M", „N", Zickzack, „L"; 1, 3, 8, 15 Einheiten je
+Meldung; ±0, ±2, ±3; 900 und 120 ms) — die Durchsicht (Frage bis zur
+Ruhe, sonst die ganze Tinte) erkennt in **keinem** weniger als der
+Grundstand, nie eine andere Form, aus „M", „N", Zickzack und „L" nie eine
+Form, in 23 mehr; der Kopf verlor davon einen (kurze Linie, 15er-Schritte,
+±0).
+
+*Der Glätter*, nachgerechnet am Bau der Durchsicht: 5000 zufällige
+Meldungen, `glaetter(start)` gegen `b3cf1933` und `glaetter(start, false)`
+gegen `e123eb10` je grösste Abweichung 0; die beiden alten unterscheiden
+sich an 4834.
+
+*Start.* `marken.js` gzip (Stufe 6) 136'961 → 137'293 Bytes, +332 gegen
+den Kopf; `stand.js` 438 → 439. Gegen den Grundstand zusammen rund
++2,0 KB (`marken.js` +1'797, `stroke.js` +210, `stand.js` −1).
+`test388` §5 am Bau der Durchsicht (Dienststand v1398, 5. Oktober, unter
+der Sperre): „Der Start holt 2827 KB (gzip) über 248 Dateien — Decke
+2850 KB", 21 bestanden — die 332 Bytes bleiben unter der Rundung.
+
+*Nach der Reparatur*, dieselbe Sonde der gehaltenen Formen am Bau der
+Durchsicht (00:24–00:27 UTC): alle 40 Züge erkennen mindestens, was der
+Grundstand erkannte — die zwei verlorenen Linien (40 in 10er-, 80 in
+20er-Schritten, ±0) sind wieder Linien; „M", „N", Zickzack, „L" und Haken
+bleiben Striche, jede Ecke bei 0,00. Ein Zug schwankt mit dem Tempo:
+20 Einheiten in 7er-Schritten mit ±2 war am Kopf eine Linie und hier ein
+Strich (30 Punkte) — der Grundstand liess ihn ebenfalls Strich.

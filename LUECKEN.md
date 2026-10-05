@@ -8380,7 +8380,13 @@ verschwinden (§35):
    war keine 90 % des Wegs mehr); das hat E708 geheilt, indem die Erkennung
    eines gehaltenen Strichs nur bis zur Ruhe der Hand schaut. Wo eine Form
    erkannt wird, wird der Strich ersetzt; sonst steht am Ende weiter ein
-   kleines Knäuel in der Tinte. **Vorschlag:** der Sprung erst, wenn die alte
+   kleines Knäuel in der Tinte. Und eine Pause MITTEN im Strich schneidet
+   die Erkennung nicht ab (Durchsicht von E708, 4. Oktober, im echten
+   App-Lauf): eine gerade Linie, nach der Hälfte 700 ms mit ±2 Zittern
+   angehalten, weitergezogen und am Ende gehalten, bleibt auf dem
+   Grundstand und mit E708 ein Strich (53 Punkte) — gemessen ist nur der
+   Ausgang; dass es das Knäuel der Pause ist, liegt nahe, ist aber nicht
+   nachgerechnet. **Vorschlag:** der Sprung erst, wenn die alte
    Richtung weiter gegangen ist als ein Ruhekreis — oder erst die Hand
    (E708) fragen, ob sie hält. Mit Wächter (`test366` §3 auch bei ±2),
    rot zuerst, und `test564` (Zickzack, „M") als Nachbar, denn es ändert

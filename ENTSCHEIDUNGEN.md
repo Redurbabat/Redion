@@ -749,7 +749,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E704** — Bessere Stifteffekte beim Zeichnen (Redur: „bessere stift efeckte beim zeichnen", im Fragebogen „Echter Textmarker", „Füller wie GoodNotes", „Bleistift mit Graphitkorn", „Neue Tintenfarben"): der Marker mit Keilspitze in Sonnengelb bei 0,40, eine Fläche ohne dunkle Kleckse, der runde bleibt wählbar; Gelenke im Umriss (volle Beine im „M") und Kappen nach aussen; der Füller mit Sensor bis 35 % dünner im Schnellen; Kugelschreiber und Marker atmen nicht; Graphitkorn statt Perlenkante; die Vorhersage des Browsers gedeckelt und gebremst; acht Tinten zuerst, die fünf alten unter „Weitere Farben"; Probe auf dem echten Papier, als echter Strich; Tafel und Seitenfläche schreiben wie das Blatt (`test583`)
 * **E705** — Bessere Farben: jede Akzentfarbe bringt lesbare Begleiter mit (`Farben.accentSet`: Schrift auf dem Akzent, Tinte, Überfahren, Tönung — „Starker Kontrast“ schreibt Schwarz auf Gelb), neun ruhigere Akzente mit Namen und „Aa“ in „Aussehen“, ehrliche Schemakarten, ein leichter kühler Ton im Dunkeln und eine Leiter, die sich ableitet; Notion- und Statusfarben je Modus neu gestimmt, `--gefahr-flaeche` für Weiss auf Rot, Eingaben im Grundton, Diagramme mit eigener Reihe je Grundton, Whiteboard und Gedankenkarte im Hellen lesbar ohne umzufärben, keine feste Signalfarbe mehr (`test584`)
 * **E706** — Das Material des Touch Kits überall, wo man wählt (Redur: „ich will das du auch das ¨berla nutze will wo es nötig ich also beim stift übergangen usw"): die Pille der unteren Leiste lässt sich greifen (hebt sich, folgt dem Finger, dehnt sich, rastet mit Schwung ein, genau ein Klick), ihre Zeichen federn; die Linse ist in Ruhe fast klar („Untere Leiste besser lesbar", ≥ 4,5 : 1); in sechs Reihen — Seite/Fläche/Redion, Heute, Wege im Regal, Aussehen, Einstellungen, Zubehör der Stiftleiste — fliegt die Wahl über `data-material`, statt zu springen, der Zustand bleibt am Knopf; die Feder des Kits (`knapp`, `druck`) für Redions Material (ergänzt E43, E646, E647); ohne Bewegung auch bei „Ruhige Darstellung" (`test585`)
-* **E708** — Rot zuerst am Stift: drei Wächter des Zeichnens, jeder bis zum Commit zurückverfolgt. Das Halten fragt wieder die Hand — derselbe Glätter ohne den Eckensprung aus E676, die Tinte behält ihre Ecken; bei ±2 Zittern 875 ms Ruhe statt 175 —, und die Formerkennung sieht das Knäuel des Haltens nicht mehr, nur den Strich bis zur Ruhe und den Punkt, an dem die Hand abhob: der gehaltene Strich wird wieder gerade (`test461`, rot seit E676). Der Systemfarbwähler der Palette übernimmt beim Schliessen und wird ein Tupfer wie seit E351 (`test343` §6, rot seit E697, auf dem Grundstand brach er danach ab, §7/§8 liefen nicht). `test201` §1 fragt einen rechten Winkel nach einer Kurve — seit E676 mit Absicht eine Ecke; nicht angefasst, Entscheid bei Redur (L235)
+* **E708** — Rot zuerst am Stift: drei Wächter des Zeichnens, jeder bis zum Commit zurückverfolgt. Das Halten fragt wieder die Hand — derselbe Glätter ohne den Eckensprung aus E676, die Tinte behält ihre Ecken; bei ±2 Zittern 875 ms Ruhe statt 175 —, und die Formerkennung sieht das Knäuel des Haltens nicht mehr, nur den Strich bis zur Ruhe und den Punkt, an dem die Hand abhob: der gehaltene Strich wird wieder gerade (`test461`, rot seit E676). Der Systemfarbwähler der Palette übernimmt beim Schliessen und wird ein Tupfer wie seit E351 (`test343` §6, rot seit E697, auf dem Grundstand brach er danach ab, §7/§8 liefen nicht). `test201` §1 fragt einen rechten Winkel nach einer Kurve — seit E676 mit Absicht eine Ecke; nicht angefasst, Entscheid bei Redur (L235). In der Durchsicht: findet die Erkennung bis zur Ruhe nichts, fragt sie die ganze Tinte wie vorher — der schnelle, kurze, still gehaltene Strich bleibt eine Linie (`test461` §1)
 
 ---
 
@@ -58532,7 +58532,8 @@ alle übrigen Knöpfe, Schalter und Blätter gehört dem Zweig
 der Bogen ungebaut, weil das Wochenkontingent alle Arbeit anhielt) ·
 **Wächter:** `test461` §1/§4 und `test343` §6 (beide schon da, beide auf
 `main` 323f13a und auf dem Grundstand `b3cf1933` rot; `test343` §6 um eine
-Zusage erweitert, siehe 2), `test201` §1 (ebenso rot — **bleibt rot, der Entscheid gehört Redur**,
+Zusage erweitert, siehe 2; `test461` §1 in der Durchsicht um zwei, siehe
+unten), `test201` §1 (ebenso rot — **bleibt rot, der Entscheid gehört Redur**,
 L235 Punkt 1) · **ergänzt** E490, E676 und E697 (ohne eine ihrer Zahlen zu
 verschieben) · **Zweig** `claude/rot-zuerst-stift` · Anlass: **rot zuerst**
 (§46); gefunden vom Bau von E704, der alle drei auf dem Grundstand und auf
@@ -58551,8 +58552,7 @@ verschieben) · **Zweig** `claude/rot-zuerst-stift` · Anlass: **rot zuerst**
                            ohne eine funktione löschen bessere ordnungen bessere
                            übergagnge besssere efeckten , bessere oberfläsche alles
                            kannst du nur an reddion arbeiten"
-3. Okt. (Uhrzeit nicht     „Weiter ohne pause,"
-gemessen)
+3. Okt., ca. 19:35 UTC     „Weiter ohne pause,"
 ```
 
 Und was hier wieder gilt, Redur am 7. September (E490, im Kopf von
@@ -58647,7 +58647,9 @@ Nachgerechnet am 3. Oktober (messungen §85), langsam gezogen wie in
 `test564` und 900 ms gehalten: Dreieck und Rechteck werden bei ±0 in beiden
 Ständen erkannt und mit E708 jetzt auch bei ±2 und ±3; „M", „N" und
 Zickzack bleiben in beiden Ständen Striche. Wo der Grundstand „gehalten"
-sagte, sagt E708 dasselbe und erkennt dasselbe.
+sagte, sagt E708 dasselbe und erkennt dasselbe — für langsam gezogene Züge;
+für einen schnellen, kurzen, still gehaltenen Zug galt das erst nach der
+Durchsicht (unten: die zweite Frage an die ganze Tinte).
 
 *Und dabei gefunden, von `test347` §3.* Der erste Stand von 1b nahm als
 letzten Punkt den geglätteten Punkt der Hand. Mit zitternder Hand ist der
@@ -58787,3 +58789,120 @@ Erkennung sieht das Knäuel nicht); sichtbar bleibt es an einem gehaltenen
 Strich, aus dem keine Form wird. Nicht in diesem Bogen (§43: eine Änderung,
 ein Ziel) — es ist die Tinte, also E676, und braucht eigene Messung und
 Wächter.
+
+**Durchsicht** (4./5. Oktober 2026, zweiter Prüfer; `test461 (rot)`
+`2e63ab5d`, dann „E708: Durchsicht"). Nachgesehen, Commit für Commit gegen
+`b3cf1933`:
+
+* *Die Tinte.* `glaetter(start)` gleich dem Grundstand, `glaetter(start,
+  false)` gleich `e123eb10` — auf 5000 zufälligen Meldungen je grösste
+  Abweichung 0; an 4834 davon unterscheiden sich die beiden, der Vergleich
+  trennt also.
+* *`test201` §1.* Am selben Bau gibt der rechte Winkel `M0 0 L10 20 L20 15
+  L30 10`, ein Bogen (`[[0, 0], [10, 20], [30, 30]]`) `M0 0 Q10 20 20 25 L30
+  30`: geglättet wird weiter, nur die Probe fragt eine Ecke. Die Probe ist
+  von E676 überholt; der Entscheid bleibt bei Redur (L235 Punkt 1).
+* *Der Systemfarbwähler*, im echten App-Lauf über http, `file://` und die
+  Einzeldatei, am Rechner und am Telefon: auf und zu ohne neue Farbe, im
+  Wähler gesucht und zur Ausgangsfarbe zurück, ein getipptes Hex und danach
+  der Wähler auf und zu — jedes Mal bleibt die Palette offen, kein Tupfer,
+  nichts gemerkt. Eine neue Farbe wird Tupfer, markiert und gemerkt, die
+  Palette geht zu, der Fokus kommt an den Farbknopf zurück. Escape, „Farbe
+  übernehmen" und die Tupfer der Palette wie zuvor; keine Seitenfehler. Und
+  dass der Wähler auch über die Tastatur ein `click` meldet — der gemerkte
+  Ausgangswert hängt daran —, an einem leeren Farbfeld: Leertaste, Eingabe
+  und Tab mit Leertaste je ein `click`.
+* *Gehaltene Formen*, im echten App-Lauf, Grundstand gegen Zweig, 40 Züge
+  (Linie, kurze und schnelle Linien, Dreieck, Rechteck, Kreis, „M", „N",
+  Zickzack, „L", Haken, eine Pause mitten im Strich; ±0, ±2, ±3; 900 und
+  120 ms; messungen §85): „M", „N", Zickzack, „L" und Haken bleiben in
+  beiden Ständen derselbe Strich mit derselben Punktzahl, jede Ecke bei
+  0,00 Einheiten. Mit zitternder Hand werden Linie, Dreieck, Rechteck und
+  Kreis jetzt erkannt, wo der Grundstand einen Strich liess.
+
+*Gefunden:* **ein schneller, kurzer Strich, still gehalten, wurde keine
+Linie mehr.** Der Stift meldet beim Halten weiter an derselben Stelle (eine
+ruhige Hand, eine Maus):
+
+```txt
+Zug, still gehalten (±0, 900 ms)   Grundstand   E708 vor der Durchsicht   nach der Durchsicht
+40 Einheiten, 10 je Meldung        Linie        Strich (8 Punkte)         Linie
+80 Einheiten, 20 je Meldung        Linie        Strich (8 Punkte)         Linie
+```
+
+E708 fragte die Erkennung nur noch bis zur Ruhe der Hand. Ein schneller
+Zug hat bis dahin weniger Punkte, als `InkShapes` verlangt (acht) —
+nachgerechnet: 80 Einheiten in vier Meldungen sind sechs Punkte bis zur
+Ruhe und acht in der ganzen Tinte, weil der Glätter beim Halten nachzieht.
+Der Grundstand fragte die ganze Tinte und bekam seine Linie. Eine Funktion,
+die da war und mit E708 wegfiel — gegen „ohne eine funktione löschen".
+
+*Entschieden:* **findet die Frage bis zur Ruhe keine Form, fragt die
+Erkennung die ganze Tinte** — die Frage, die vor E708 gestellt wurde
+(`marken.ts`, `finish`). So erkennt E708, wo beide Stände „gehalten" sagen,
+alles, was der Grundstand erkannte, und dazu das Gehaltene einer zitternden
+Hand. Für ein „M", ein „N", ein Zickzack sagen beide Fragen nichts, und die
+Tinte bleibt Punkt für Punkt. Nachgerechnet ohne Browser (Glätter und
+`InkShapes` des Baus, messungen §85) an 192 Zügen — Linie, kurze Linie,
+Dreieck, Rechteck, „M", „N", Zickzack, „L", je mit 1, 3, 8 und 15
+Einheiten je Meldung, ±0, ±2 und ±3, 900 und 120 ms gehalten: die
+Durchsicht erkennt in keinem weniger als der Grundstand und nie eine
+andere Form, aus „M", „N", Zickzack und „L" nie eine Form, und in 23 mehr
+(das Gehaltene einer zitternden Hand). `test461` §1 hält es (zwei
+Zusagen, rot gesehen am Kopf `7eb0998c` dreimal mit 36 von 38, am
+Grundstand beide grün).
+
+*Die Alternativen.* (a) Die zweite Frage nur, wenn bis zur Ruhe weniger
+als acht Punkte bleiben — enger, aber dann hinge der Weg an einer Zahl aus
+`InkShapes`, die dort ändern darf, und die Zusage „was erkannt wurde, bleibt
+erkannt" stünde nur für diesen einen Grund. (b) Den Nachzug des Glätters
+nach der Ruhe mitzählen — dann sähe die Erkennung wieder einen Teil des
+Haltens, also des Knäuels, das 1b herausgenommen hat. (c) Die acht Punkte
+in `InkShapes` senken — das ändert die Erkennung jedes Strichs (E355,
+`test347`). *Was es kostet:* beim Absetzen eines gehaltenen Strichs, für
+den die erste Frage nichts findet, eine zweite Erkennung; +332 Bytes gzip
+(fast alles Kommentar).
+
+*Und die Uhrzeit.* „Weiter ohne pause," steht jetzt mit „ca. 19:35 UTC",
+wie in Redurs Wortlauten für diesen Auftrag festgehalten; die beiden
+Commits von E708 schrieben noch „Uhrzeit nicht gemessen".
+
+*Gegenprobe der Durchsicht* (am Bau, Dienststand v1398, unter der Sperre):
+G6 der gebaute `marken.js` des Kopfs `7eb0998c` (die Erkennung ohne zweite
+Frage) in `quell/` gedreht — `test461` 37/38, ✗ „80 Einheiten, 20 je
+Meldung … wird eine Linie" (ist `["stift:8"]`); zurückgenommen, `marken.js`
+bytegleich dem Bau. Über alle vier Läufe am Kopf war die Zusage mit 80
+Einheiten viermal rot, die mit 40 dreimal — sie hängt am Tempo der
+Meldungen und ist darum die zweite, nicht die einzige.
+
+*Geprüft* (5. Oktober, 00:12–00:27 UTC, unter der Sperre, am Bau der
+Durchsicht): `test461` 38/38, dreimal; `test343` 32/32; `test347` 31/31;
+`test201` 31/32 (§1, L235 Punkt 1). Nachbarn mit `alle.mts`, alle 34 grün:
+`test47`, `test174`, `test344`, `test345`, `test346`, `test350`,
+`test364`, `test366`, `test388`, `test437`, `test438`, `test439`,
+`test445`, `test447`, `test449`, `test451`, `test455`, `test456`,
+`test472`, `test474`, `test475`, `test477`, `test478`, `test480`,
+`test510`, `test532`, `test535`, `test561`, `test562`, `test563` (13/13),
+`test564`, `test575`, `test577`, `test583`. Ohne Sperre: `test367`,
+`test87`, `test105` (152), `test109`, `test225`, `test400`, `test537`,
+`test549`, `test550` grün. Die Sonde der gehaltenen Formen am Bau der
+Durchsicht: in allen 40 Zügen mindestens, was der Grundstand erkannte,
+„M", „N", Zickzack, „L", Haken Striche mit jeder Ecke bei 0,00; die
+Sonde des Farbwählers über die Einzeldatei grün bis auf eine Zusage der
+Sonde selbst: nach einem Mausklick auf den Wähler meldet die Leertaste im
+kopflosen Chromium kein `click` mehr, auf dem Grundstand genauso — der
+Wähler des ersten Klicks geht dort nie zu; an einem frischen Farbfeld
+meldet sie es (oben). Keine Seitenfehler.
+`npm run typecheck` sauber; `bauen:ts` (Dienststand v1398), `stand` und
+`node bauen.mts` neu, die Einzeldatei danach bytegleich nachgebaut.
+
+*Gemessen* (messungen §85): `test388` §5 „Der Start holt 2827 KB (gzip)
+über 248 Dateien — Decke 2850 KB"; `marken.js` +332 Bytes gzip gegen den
+Kopf.
+
+*Bilder* (nicht eingecheckt, §55.4; `welle2-bilder/rot/`,
+`vorher-durchsicht-…` am Kopf, `nachher-durchsicht-…` am Bau, 1440×900 und
+390×844, hell und dunkel): zwei schnelle, kurze, still gehaltene Züge und
+darunter der langsame, zitternd gehaltene aus `test461` — vorher sind die
+beiden kurzen Tintenstriche mit spitzen Enden (`stift:8`), nachher Linien
+wie der lange; keine Seitenfehler.
