@@ -65,6 +65,11 @@
  *      Seite). Wer von der Glocke dorthin will, klickt sie; wer in den
  *      Fächer will, kommt über die Reihe hinweg hinein. Eine grosse Fläche
  *      unter der Glocke schiebt ihn nicht weg.
+ *   §14 SECHSTE DURCHSICHT (5. Oktober): wer am Telefon unter einer Meldung
+ *      LANGE drückt und dann zieht, zieht, was darunter liegt (die Kladde in
+ *      der Bibliothek, ein Block, eine Marke im PDF — gehoben wird dort nach
+ *      400 bis 500 ms) — der Stapel nimmt ihm den Zug nicht weg, und die
+ *      Meldung bleibt stehen. Ein schnelles Schnippen nimmt sie weiter weg.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E711) fällt sie in §1–§10: es gibt weder die
@@ -73,7 +78,8 @@
  * „test588 (rot): … Durchsicht". §12 fiel gegen denselben Stand und gegen
  * die Reparatur der Durchsicht — siehe „test588 (rot): Vierte Durchsicht".
  * §13 fiel gegen die Reparatur der vierten Durchsicht — siehe „test588 (rot):
- * Fünfte Durchsicht".
+ * Fünfte Durchsicht". §14 fiel gegen deren Endstand (f73a2938) — siehe
+ * „test588 (rot): Sechste Durchsicht".
  *
  *   node pruefungen/lauf/test588.mts
  * ==========================================================================*/
@@ -1009,6 +1015,74 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
   await pc.mouse.move(700, 700);
   await pc.waitForTimeout(400);
   await a.zu();
+}
+
+/* ==========================================================================
+ * §14 · SECHSTE DURCHSICHT (5. Oktober): ein langer Druck unter einer
+ * Meldung gehört dem, was darunter liegt. Die Karten und `#toast` sind
+ * `pointer-events:none`; der Finger landet auf dem Inhalt darunter. Der
+ * Stapel fing jeden waagerechten Zug über 12 px ab und hielt ihn an
+ * (`stopPropagation` im Einfangen) — auch den, der nach langem Drücken
+ * etwas trägt. In `test360` kam so die Kladde am Finger nicht mehr im Fach
+ * an. Ein Schnippen fängt sofort an; wer erst lange hält, hebt etwas.
+ * Gemessen an einer Fläche, die wie die Kladde ihre Bewegung selbst nimmt
+ * (`touchmove` mit `preventDefault`, `touch-action` bleibt `auto`).
+ * ========================================================================*/
+{
+  console.log('\n§14 Sechste Durchsicht: ein langer Druck unter einer Meldung trägt, was darunter liegt');
+  const h = await aufmachen({ handy: true });
+  await h.pc.evaluate(`(async () => {
+    const page = Store.addPage(null, { text: 'Tragen unter dem Stapel', icon: '📄' });
+    await Store.flush(); App.oeffne(page.id);
+  })()`);
+  await h.pc.waitForTimeout(700);
+  await h.pc.evaluate(`(() => { UI.toast('Eins gespeichert', 9000); UI.toast('Zwei verschoben', 9000); })()`);
+  await h.pc.waitForTimeout(600);
+  /* Unter der Karte eine Fläche, die nach langem Drücken trägt (wie die
+     Kladde: ihre eigenen Horcher, keine Sperre über `touch-action`). */
+  const karte = await h.pc.evaluate(`(() => {
+    const e = document.querySelector('#ru-toast-stapel .ru-toast-alt'); if (!e) return null;
+    const r = e.getBoundingClientRect();
+    const f = document.createElement('div'); f.id = 't588-traeger';
+    f.style.cssText = 'position:fixed;z-index:5;left:' + r.left + 'px;top:' + (r.top - 10) + 'px;width:' + r.width + 'px;height:' + (r.height + 20) + 'px;background:transparent';
+    window.t588Zug = { bewegt: 0, los: false };
+    f.addEventListener('pointermove', () => { window.t588Zug.bewegt++; });
+    f.addEventListener('pointerup', () => { window.t588Zug.los = true; });
+    f.addEventListener('touchmove', ev => ev.preventDefault(), { passive: false });
+    document.body.appendChild(f);
+    return { x: r.left + 40, y: r.top + r.height / 2 };
+  })()`) as { x: number; y: number } | null;
+  if (karte) {
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: karte.x, y: karte.y }] });
+    await h.pc.waitForTimeout(600);
+    for (let i = 1; i <= 6; i++) {
+      await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: karte.x + i * 20, y: karte.y }] });
+      await h.pc.waitForTimeout(16);
+    }
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await h.pc.waitForTimeout(500);
+  }
+  const r14 = await h.pc.evaluate(`({ ...window.t588Zug,
+    karten: document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)').length,
+    verschoben: document.querySelector('#ru-toast-stapel .ru-toast-alt')?.style.translate || '' })`) as
+    { bewegt: number; los: boolean; karten: number; verschoben: string };
+  p('Telefon: lange gedrückt, dann gezogen — der Zug kommt bei dem an, was unter der Meldung liegt',
+    !!karte && r14.bewegt >= 5 && r14.los, JSON.stringify(r14));
+  p('… und die Meldung bleibt stehen (der Zug war kein Wischen)', !!karte && r14.karten === 1 && !r14.verschoben,
+    JSON.stringify(r14));
+  /* Und das Schnippen gilt weiter — auch über dieser Fläche. */
+  if (karte) {
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: karte.x, y: karte.y }] });
+    for (let i = 1; i <= 6; i++) {
+      await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: karte.x + i * 30, y: karte.y }] });
+      await h.pc.waitForTimeout(8);
+    }
+    await h.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await h.pc.waitForTimeout(500);
+  }
+  p('… ein schnelles Schnippen nimmt sie aber weiter weg', !!karte &&
+    await h.pc.evaluate(`document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)').length === 0`));
+  await h.zu();
 }
 
 p('Keine Ausnahme im Browser', fehler.length === 0, fehler.slice(0, 3).join(' · '));
