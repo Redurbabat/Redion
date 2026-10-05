@@ -47,6 +47,19 @@
  *   §9 DIE ZAHL ZÄHLT HOCH — und steht am Ende auf dem echten Wert; ohne
  *      Bewegung steht sie sofort dort.
  *
+ * DAZU AUS DER DURCHSICHT (4./5. Oktober), je zuerst rot gegen fb7e590e:
+ *   §10 DIE PILLE DECKT KEIN WERKZEUG — nicht die Zeichenleiste der Fläche,
+ *      nicht den runden Knopf der Notizhefte, nicht das Letzte einer
+ *      Ansicht, am Rechner nicht das KI-Panel; beim Schreiben tritt sie
+ *      zur Seite wie die untere Leiste; ein Toast rückt über sie.
+ *   §11 DER MONATSVERLAUF BLEIBT LESBAR — alle dreissig Zahlen und
+ *      Wochentage sichtbar wie vor E713, jeder Tag zu treffen (≥ 32 px,
+ *      Nebenweg §37), ↑/↓ gehen eine Zeile.
+ *   §12 ZWEIMAL GEZEICHNET, EINMAL ANGEKOMMEN — die Summe zählt nur
+ *      aufwärts, kein Balken fällt zurück.
+ *   §13 DER NAME DER PILLE wechselt nicht im Sekundentakt.
+ *   §14 ESCAPE MITTEN IN DER FAHRT schliesst die Karte zurück in die Pille.
+ *
  * ─── KANN DIESER LAUF ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E713) fällt er in §1–§9: es gibt keine
  * Pille, kein Escape, keinen deckenden Boden, keine Knöpfe im Verlauf.
@@ -415,6 +428,337 @@ for (const art of ['weniger', 'ruhig'] as const) {
   p('Ohne Bewegung: die Zahl steht sofort, kein Balken fährt', still.summe === 36 && still.laufend === 0, JSON.stringify(still));
   await b.zu();
   } catch (e) { p('§7–§9 laufen bis zum Ende durch', false, String(e).split('\n')[0]); }
+}
+
+/* ══ §10 · Die Pille deckt nichts, womit man arbeitet (Durchsicht) ══════════
+ * Gefunden bei der Durchsicht am 4. Oktober, am Telefon gemessen: die Pille
+ * stand auf `--hunten`, also direkt über der unteren Leiste — und damit auf
+ * allem, was dort sonst noch steht. In der Fläche lag sie auf der
+ * Werkzeugleiste (Hand, Radieren, Stift, Linie, Pfeil, Rechteck, Ellipse),
+ * in den Notizheften auf dem runden Knopf „Neu", und am Ende jeder Ansicht
+ * lag das Letzte unter ihr. Was nur meldet, gehört nicht auf das, womit man
+ * arbeitet (E703, `--melde-boden`). */
+const unterDerPille = (pc: Page): Promise<string[]> => pc.evaluate(`(() => {
+  const p = document.getElementById('zm-pille');
+  if (!p || p.hidden) return ['(keine Pille)'];
+  const r = p.getBoundingClientRect();
+  const raus = new Set();
+  for (let x = r.left + 2; x < r.right - 1; x += 5) for (let y = r.top + 2; y < r.bottom - 1; y += 5) {
+    /* Nur Punkte, an denen die Pille OBEN liegt: was über ihr liegt (ein
+       Blatt, ein Fenster), deckt sie zu — nicht umgekehrt. */
+    const stapel = document.elementsFromPoint(x, y);
+    if (!stapel[0] || !(stapel[0] === p || p.contains(stapel[0]))) continue;
+    for (const e of stapel) {
+      if (e === p || p.contains(e)) continue;
+      const k = e.closest('button, a[href], input, select, [role="button"], [role="tab"]');
+      if (k && k !== document.body) raus.add((k.getAttribute('aria-label') || k.textContent || k.className || '').trim().slice(0, 24));
+      break;
+    }
+  }
+  return [...raus];
+})()`) as Promise<string[]>;
+{
+  const a = await aufmachen({ handy: true });
+  try {
+    console.log('\n10 · Die Pille deckt kein Werkzeug (Telefon)');
+    await a.pc.evaluate(`Zeitmesser.start('timer', 25 * 60)`);
+    await a.pc.waitForTimeout(700);
+    await a.pc.evaluate(`[...document.querySelectorAll('#page .pg-ansichten button')].find(b => /Fläche/.test(b.textContent || ''))?.click()`);
+    await a.pc.waitForTimeout(1200);
+    const flaeche = await a.pc.evaluate(`!!document.querySelector('.pg-flaeche .gfx-tb-sockel')`);
+    const inDerFlaeche = await unterDerPille(a.pc);
+    p('In der Fläche liegt kein Knopf der Werkzeugleiste unter der Pille', flaeche && inDerFlaeche.length === 0,
+      JSON.stringify({ flaeche, inDerFlaeche }));
+    await a.pc.evaluate(`Register.module.oeffne('notizhefte')`);
+    await a.pc.waitForTimeout(1200);
+    const fab = await kasten(a.pc, '.nh-neu-fab');
+    const beiDenHeften = await unterDerPille(a.pc);
+    p('In den Notizheften liegt der runde Knopf „Neu" frei', !!fab && beiDenHeften.length === 0,
+      JSON.stringify({ fab, beiDenHeften }));
+    /* Am Ende einer Ansicht endet der Inhalt ÜBER der Pille — die Ansicht
+       bekommt ihren Platz als Polster dazu, wie unter einer Spielleiste. */
+    await a.pc.evaluate(`Lernwelt.oeffnen('lernen')`);
+    await a.pc.waitForTimeout(1200);
+    const ende = await a.pc.evaluate(`(async () => {
+      const s = document.getElementById('scroll');
+      s.scrollTop = s.scrollHeight;
+      await new Promise(f => setTimeout(f, 300));
+      const pille = document.getElementById('zm-pille').getBoundingClientRect();
+      const inhaltUnten = s.getBoundingClientRect().bottom - parseFloat(getComputedStyle(s).paddingBottom);
+      return { inhaltUnten: Math.round(inhaltUnten), pilleOben: Math.round(pille.top) };
+    })()`) as any;
+    p('Ganz unten in einer Ansicht endet der Inhalt über der Pille', ende.inhaltUnten <= ende.pilleOben + 0.5, JSON.stringify(ende));
+    const nochUnter = await unterDerPille(a.pc);
+    p('… und kein Knopf liegt dann unter ihr', nochUnter.length === 0, JSON.stringify(nochUnter));
+    const leiste = await kasten(a.pc, '#handy-oben');
+    const pille = await kasten(a.pc, '#zm-pille');
+    p('Die Pille steht weiter über der unteren Leiste', !!pille && !!leiste && pille.unten <= leiste.y + 0.5, JSON.stringify({ pille, leiste }));
+    /* Ein Toast rückt am Telefon über die Pille — die Regel des Stapels
+       (E703, `test582` §6: nichts, was meldet, liegt auf einem anderen).
+       Vorher lag der Toast, so breit wie der Schirm, für seine Sekunden
+       genau auf ihr, und die Pille war fort. */
+    const toast = await a.pc.evaluate(`(async () => {
+      UI.toast('Die Seite wurde in den Ordner „Semester 3" verschoben.');
+      await new Promise(f => setTimeout(f, 700));
+      const t = document.getElementById('toast').getBoundingClientRect(), q = document.getElementById('zm-pille').getBoundingClientRect();
+      const schnitt = Math.max(0, Math.min(t.right, q.right) - Math.max(t.left, q.left)) * Math.max(0, Math.min(t.bottom, q.bottom) - Math.max(t.top, q.top));
+      return { schnitt: Math.round(schnitt), toast: [Math.round(t.top), Math.round(t.bottom)], pille: [Math.round(q.top), Math.round(q.bottom)],
+        drin: t.top >= 0 && t.bottom <= innerHeight, sichtbar: document.getElementById('toast').classList.contains('show') };
+    })()`) as any;
+    p('Ein Toast liegt nicht auf der Pille — er rückt über sie', toast.sichtbar && toast.schnitt === 0 && toast.drin, JSON.stringify(toast));
+    /* Beim Schreiben (Tastatur offen, `body.schreibt`) tritt sie zur Seite
+       wie die untere Leiste — und kommt danach wieder; die Uhr läuft. */
+    const schreiben = await a.pc.evaluate(`(async () => {
+      document.body.classList.add('schreibt');
+      await new Promise(f => requestAnimationFrame(() => f(null)));
+      const weg = !(document.getElementById('zm-pille')?.getBoundingClientRect().width);
+      document.body.classList.remove('schreibt');
+      await new Promise(f => requestAnimationFrame(() => f(null)));
+      const zurueck = !!(document.getElementById('zm-pille')?.getBoundingClientRect().width);
+      return { weg, zurueck, laeuft: Zeitmesser.stand().laeuft };
+    })()`) as any;
+    p('Beim Schreiben tritt sie zur Seite wie die Leiste, danach ist sie wieder da', schreiben.weg && schreiben.zurueck && schreiben.laeuft,
+      JSON.stringify(schreiben));
+  } catch (e) { p('§10 läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+{
+  /* Am Rechner steht das KI-Panel IM Layout (420 px rechts), nicht darüber:
+     die Pille lag dort auf „Nachricht senden", „Diktieren" und dem
+     Modellknopf. */
+  const a = await aufmachen({ handy: false });
+  try {
+    console.log('\n10 · … und am Rechner nicht auf dem KI-Panel');
+    await a.pc.evaluate(`Zeitmesser.start('timer', 25 * 60)`);
+    await a.pc.waitForTimeout(700);
+    await a.pc.evaluate(`Register.module.oeffne('ki')`);
+    await a.pc.waitForTimeout(1000);
+    const ki = await a.pc.evaluate(`!!document.querySelector('#ai.open')`);
+    const unterKi = await unterDerPille(a.pc);
+    const sichtbar = await kasten(a.pc, '#zm-pille');
+    p('Mit offenem KI-Panel liegt kein Knopf unter der Pille — und sie ist zu sehen', ki && !!sichtbar && unterKi.length === 0,
+      JSON.stringify({ ki, unterKi, sichtbar }));
+  } catch (e) { p('§10 (Rechner) läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+/* … und nicht auf dem obersten Werkzeug unten: der Zeichenleiste in der
+   Lage „unten" (am Telefon zwei Zeilen über die ganze Breite), dem Dock
+   samt Kapsel im Dokument am Telefon
+   (dieselben Szenen wie `test582` §6 für Toast und Lader). Gemessen als
+   Schnitt der Rechtecke — die Leiste liegt über der Pille, also fände ein
+   Blick „was liegt unter ihr" hier nichts. */
+const pilleAufWerkzeug = (pc: Page): Promise<{ pille: unknown; auf: string[] }> => pc.evaluate(`(() => {
+  const p = document.getElementById('zm-pille');
+  const r = p && !p.hidden ? p.getBoundingClientRect() : null;
+  if (!r || !r.width) return { pille: null, auf: ['(keine Pille)'] };
+  const auf = [];
+  for (const w of ['.blatt-reihe[data-lage="unten"]', 'body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe',
+                   '.document-ink-history', '#handy-oben'])
+    for (const e of document.querySelectorAll(w)) {
+      const k = e.getBoundingClientRect(), s = getComputedStyle(e);
+      if (!k.width || !k.height || s.display === 'none' || s.visibility === 'hidden' || +s.opacity === 0) continue;
+      if (r.left < k.right && k.left < r.right && r.top < k.bottom && k.top < r.bottom) auf.push(w);
+    }
+  return { pille: [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)], auf };
+})()`) as Promise<{ pille: unknown; auf: string[] }>;
+const blattSeite = (pc: Page, lage: string): Promise<unknown> => pc.evaluate(`(async () => {
+  Store.setMeta('zeichnen:leistenlage', ${JSON.stringify(lage)});
+  const s = Store.addPage(null, { text: 'Tafelbild' });
+  Store.addBlock(s.id, 'blatt', { text: '' });
+  await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 900));
+  document.querySelectorAll('#rg-willkommen, .overlay, #rg-einladung, #rg-neu').forEach(x => x.remove());
+})()`);
+{
+  const a = await aufmachen({ handy: true });
+  try {
+    console.log('\n10 · … und nicht auf der Zeichenleiste unten (Telefon)');
+    await blattSeite(a.pc, 'unten');
+    await a.pc.evaluate(`Zeitmesser.start('timer', 25 * 60)`);
+    await a.pc.waitForTimeout(900);
+    const leiste = await kasten(a.pc, '.blatt-reihe[data-lage="unten"]');
+    const k = await pilleAufWerkzeug(a.pc);
+    p('Die Pille liegt nicht auf der Zeichenleiste in der Lage „unten"', !!leiste && k.auf.length === 0, JSON.stringify({ leiste, ...k }));
+  } catch (e) { p('§10 (Zeichenleiste) läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+{
+  const a = await aufmachen({ handy: true });
+  try {
+    console.log('\n10 · … und nicht auf Dock und Kapsel im Dokument (Telefon)');
+    await blattSeite(a.pc, 'oben');
+    await a.pc.evaluate(`(async () => {
+      DocumentMode.toggle(Store.getBlock(App.aktuelleSeite()), true);
+      await new Promise(f => setTimeout(f, 900));
+      document.querySelectorAll('#rg-willkommen, .overlay, #rg-einladung, #rg-neu').forEach(x => x.remove());
+    })()`);
+    await a.pc.waitForSelector('body[data-dokument="an"] .blatt-reihe', { timeout: 10000 });
+    await a.pc.evaluate(`Zeitmesser.start('timer', 25 * 60)`);
+    await a.pc.waitForTimeout(900);
+    const k = await pilleAufWerkzeug(a.pc);
+    p('Im Dokument liegt die Pille weder auf dem Dock noch auf der Kapsel', k.auf.length === 0, JSON.stringify(k));
+  } catch (e) { p('§10 (Dokument) läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+
+/* ══ §11 · Der Monatsverlauf bleibt lesbar (Durchsicht) ═════════════════════
+ * Vorher (bis b3cf1933) standen im „Monatsverlauf" alle dreissig Zahlen und
+ * Wochentage sichtbar über ihren Säulen, in Zeilen. Die erste Fassung von
+ * E713 stellte die dreissig Tage in EINE Reihe und versteckte Zahl und Namen
+ * (`visibility:hidden`) — lesbar nur noch, wenn man jeden Tag einzeln wählt,
+ * und am Telefon war eine Säule 9 px breit: der Finger traf den Nachbarn.
+ * „ohne eine funktione löschen" heisst: die Zahlen bleiben auf einen Blick
+ * da, und jeder Tag lässt sich treffen (§37: ein Nebenweg darf 32 px haben,
+ * nicht weniger). */
+{
+  const a = await aufmachen({ handy: true });
+  try {
+    console.log('\n11 · Der Monatsverlauf bleibt lesbar (Telefon)');
+    await a.pc.evaluate(`Lernwelt.oeffnen('fortschritt')`);
+    await a.pc.waitForTimeout(1600);
+    const monat = await a.pc.evaluate(`(() => {
+      const k = document.querySelectorAll('.lw-history')[1];
+      if (!k) return null;
+      const tage = [...k.querySelectorAll('button[data-lw-tag]')];
+      const sichtbar = e => !!e && getComputedStyle(e).visibility === 'visible' && e.getBoundingClientRect().width > 0;
+      const zahlen = tage.map(b => b.querySelector('.lw-verlauf-zahl'));
+      const namen = tage.map(b => b.querySelector('small'));
+      /* Keine zwei Zahlen überdecken sich (sonst „liefen sie ineinander"). */
+      let ueber = 0;
+      const rz = zahlen.map(z => z.getBoundingClientRect());
+      for (let i = 1; i < rz.length; i++) if (Math.abs(rz[i].top - rz[i - 1].top) < 2 && rz[i].left < rz[i - 1].right - 0.5) ueber++;
+      return { anzahl: tage.length,
+        zahlenSichtbar: zahlen.filter(sichtbar).length, namenSichtbar: namen.filter(sichtbar).length,
+        zahlenStimmen: tage.every(b => (b.querySelector('.lw-verlauf-zahl').textContent || '').trim() === b.dataset.lwAnzahl),
+        ueber, schmalste: Math.round(Math.min(...tage.map(b => b.getBoundingClientRect().width)) * 10) / 10,
+        niedrigste: Math.round(Math.min(...tage.map(b => b.getBoundingClientRect().height))) };
+    })()`) as any;
+    p('Alle dreissig Zahlen stehen sichtbar über ihren Säulen und stimmen', !!monat && monat.anzahl === 30 &&
+      monat.zahlenSichtbar === 30 && monat.zahlenStimmen && monat.ueber === 0, JSON.stringify(monat));
+    p('… und jeder Tag trägt seinen Wochentag', !!monat && monat.namenSichtbar === 30, JSON.stringify(monat));
+    p('Jeder Tag ist zu treffen: mindestens 32 px breit (Nebenweg, §37) und 44 px hoch', !!monat &&
+      monat.schmalste >= 32 && monat.niedrigste >= 44, JSON.stringify(monat));
+    /* Wahl in der zweiten Zeile: Material und Hinweis stehen an IHREM Tag. */
+    await a.pc.locator('.lw-history').nth(1).locator('button[data-lw-tag="27"]').tap();
+    await a.pc.waitForTimeout(800);
+    const wahl = await a.pc.evaluate(`(() => {
+      const k = document.querySelectorAll('.lw-history')[1];
+      const b = k.querySelector('button[data-lw-tag="27"]').getBoundingClientRect();
+      const m = k.querySelector('.lw-verlauf-material').getBoundingClientRect();
+      const t = k.querySelector('.lw-verlauf-tipp');
+      const tr = t.getBoundingClientRect(), kr = k.getBoundingClientRect();
+      return { gedrueckt: k.querySelector('button[aria-pressed="true"]')?.dataset.lwTag,
+        materialAmTag: Math.abs((m.left + m.width / 2) - (b.left + b.width / 2)) < 2 && m.top <= b.top + 1 && m.bottom >= b.bottom - 1,
+        tippUeberTag: !t.hidden && tr.bottom <= b.top + 6 && tr.bottom >= b.top - 40, tippDrin: tr.left >= kr.left - 0.5 && tr.right <= kr.right + 0.5,
+        tipp: (t.textContent || '').trim() };
+    })()`) as any;
+    p('Ein Tag weiter unten: Material und Hinweis stehen an seinem Platz', wahl.gedrueckt === '27' && wahl.materialAmTag &&
+      wahl.tippUeberTag && wahl.tippDrin && /\d+\.\d+\. · \d+ Wiederholung/.test(wahl.tipp), JSON.stringify(wahl));
+    /* ↑ und ↓ gehen eine Zeile, wenn es Zeilen gibt. */
+    await a.pc.evaluate(`document.querySelectorAll('.lw-history')[1].querySelector('button[data-lw-tag="27"]').focus()`);
+    await a.pc.keyboard.press('ArrowUp');
+    await a.pc.waitForTimeout(250);
+    const hoch = await a.pc.evaluate(`document.activeElement?.dataset?.lwTag + '|' + document.querySelectorAll('.lw-history')[1].querySelector('button[aria-pressed="true"]')?.dataset.lwTag`) as string;
+    const proZeile = await a.pc.evaluate(`(() => { const t = [...document.querySelectorAll('.lw-history')[1].querySelectorAll('button[data-lw-tag]')]; return t.filter(b => b.offsetTop === t[0].offsetTop).length; })()`) as number;
+    p('↑ geht eine Zeile hinauf (Wahl und Fokus)', hoch === String(27 - proZeile) + '|' + String(27 - proZeile), hoch + ' (je Zeile ' + proZeile + ')');
+  } catch (e) { p('§11 läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+
+/* ══ §12 · Zweimal gezeichnet, einmal angekommen (Durchsicht) ═══════════════
+ * `zeichnen()` der Lernwelt läuft beim Öffnen zweimal: sofort und noch
+ * einmal, wenn die Bereichsdaten da sind. Bei der Durchsicht gemessen, Bild
+ * für Bild: „0, 4, 11, 0, 0, 11, 13 …" — die Summe sprang zurück auf 0, und
+ * die Balken fielen zurück und stiegen neu. Ein Ankommen ist EINES. */
+{
+  const a = await aufmachen({ handy: false });
+  try {
+    console.log('\n12 · Zweimal gezeichnet, einmal angekommen');
+    for (const ansicht of ['fortschritt', 'lernen']) {
+      const spur = await a.pc.evaluate(`(async () => {
+        const werte = [], hoehen = [];
+        Lernwelt.oeffnen(${JSON.stringify(ansicht)});
+        const t0 = performance.now();
+        await new Promise(f => {
+          const s = () => {
+            const e = document.querySelector('.lw-verlauf-summe');
+            const i = document.querySelector('.lw-verlauf-tag[data-lw-tag="4"] .lw-verlauf-saeule i');
+            werte.push(e ? Number(e.textContent) : -1);
+            if (i) { const r = i.getBoundingClientRect(), q = i.parentElement.getBoundingClientRect(); hoehen.push(Math.round(q.bottom - r.top)); }
+            if (performance.now() - t0 < 1600) requestAnimationFrame(s); else f(null);
+          };
+          requestAnimationFrame(s);
+        });
+        let zahlZurueck = 0, balkenZurueck = 0;
+        for (let k = 1; k < werte.length; k++) if (werte[k] < werte[k - 1]) zahlZurueck++;
+        for (let k = 1; k < hoehen.length; k++) if (hoehen[k] < hoehen[k - 1] - 1) balkenZurueck++;
+        /* Das Ziel ist die Summe, die die Karte selbst trägt — wiederholt
+           die Einrichtung sich unter Last (siehe oben), sind es 72. */
+        const ziel = Number(document.querySelector('.lw-verlauf-summe')?.dataset.lwZiel);
+        return { bilder: werte.length, zahlZurueck, balkenZurueck, ende: werte[werte.length - 1], ziel, anfang: werte.slice(0, 8).join(',') };
+      })()`) as any;
+      p(ansicht + ': die Summe zählt nur aufwärts, und der Balken fällt nicht zurück',
+        spur.zahlZurueck === 0 && spur.balkenZurueck === 0 && spur.ziel > 0 && spur.ende === spur.ziel, JSON.stringify(spur));
+      await a.pc.evaluate(`App.oeffne(window.__seite)`);
+      await a.pc.waitForTimeout(1700);
+    }
+  } catch (e) { p('§12 läuft bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+
+/* ══ §13 · Die Pille sagt ihren Namen nicht jede Sekunde neu (Durchsicht) ═══
+ * Schliesst man die Karte, geht der Fokus auf die Pille (§3). Ihr Name
+ * („Zeitmesser: 24:13 übrig …") wechselte bis zur Durchsicht JEDE SEKUNDE —
+ * ein Bildschirmleser, der Namenswechsel am Fokus ansagt, sprach dann im
+ * Sekundentakt. Der Name nennt die Minuten; die Sekunden stehen sichtbar in
+ * der Pille. Gestartet mit 25:00: in den ersten Sekunden bleibt es „noch
+ * 25 Min" — kein Wechsel, während die sichtbare Uhr weiterläuft. */
+{
+  const a = await aufmachen({ handy: false });
+  try {
+    console.log('\n13 · Der Name der Pille wechselt nicht im Sekundentakt');
+    await a.pc.evaluate(`Zeitmesser.start('timer', 25 * 60)`);
+    await a.pc.waitForTimeout(700);
+    const spur = await a.pc.evaluate(`(async () => {
+      const p = document.getElementById('zm-pille');
+      if (!p) return null;
+      p.focus();
+      const uhr = p.querySelector('.zm-pille-uhr');
+      let namen = 0, uhren = 0;
+      const mo = new MutationObserver(l => { for (const m of l) {
+        if (m.type === 'attributes' && m.attributeName === 'aria-label') namen++;
+        else if (m.type !== 'attributes') uhren++;
+      } });
+      mo.observe(p, { attributes: true, attributeFilter: ['aria-label'] });
+      if (uhr) mo.observe(uhr, { childList: true, characterData: true, subtree: true });
+      await new Promise(f => setTimeout(f, 3200));
+      mo.disconnect();
+      return { namen, uhren, fokus: document.activeElement === p, name: p.getAttribute('aria-label') || '' };
+    })()`) as any;
+    p('Die sichtbare Uhr läuft weiter (mindestens zwei neue Sekunden)', !!spur && spur.uhren >= 2, JSON.stringify(spur));
+    p('… der Name der fokussierten Pille wechselt dabei nicht', !!spur && spur.fokus && spur.namen === 0, JSON.stringify(spur));
+    p('Der Name nennt die Minuten und die Seite', !!spur && /noch 25 Min/.test(spur.name) && /Elektrotechnik/.test(spur.name),
+      JSON.stringify(spur));
+    /* §14 · ESCAPE MITTEN IN DER FAHRT. Während die Karte aufgeht, liegt
+       ihre verwischte Kopie im Feld — bis zur Durchsicht MIT dem Merkmal
+       `data-esc-knopf` an ihrem ✕. Der eine Escape-Griff nimmt den
+       LETZTEN solchen Knopf, also den der Kopie, und der tut nichts: wer in
+       den ersten 0,4 s Escape drückte, behielt die Karte offen. */
+    console.log('\n14 · Escape mitten in der Fahrt');
+    const mitten = await a.pc.evaluate(`(async () => {
+      const p = document.getElementById('zm-pille');
+      p.click();
+      await new Promise(f => setTimeout(f, 60));
+      const kopie = !!document.querySelector('.zm-geist');
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await new Promise(f => setTimeout(f, 900));
+      return { kopie, feld: !!document.querySelector('.zm-feld'), pille: !document.getElementById('zm-pille')?.hidden,
+        knoepfeInKopie: document.querySelectorAll('.zm-geist [data-esc-knopf]').length, laeuft: Zeitmesser.stand().laeuft };
+    })()`) as any;
+    p('Escape während der Fahrt schliesst die Karte zurück in die Pille', mitten.kopie && !mitten.feld && mitten.pille && mitten.laeuft,
+      JSON.stringify(mitten));
+  } catch (e) { p('§13–§14 laufen bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
 }
 
 p('Keine Ausnahme im Browser', fehler.length === 0, fehler.slice(0, 3).join(' · '));
