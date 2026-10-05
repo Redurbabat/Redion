@@ -47,6 +47,7 @@
  *   §12 Die Schrift der Kacheln ist lesbar, in jedem Schema (Durchsicht).
  *   §13 Nachtrag: Platz unter den Knöpfen, jeder Weg aus seinem Knopf, der
  *       Zug endet, die Uhr zählt, die Linse ist dicht, ein Beobachter.
+ *   §14 Dritte Durchsicht: ein Weg aus den Einstellungen führt hinaus.
  *
  * DURCHSICHT (4. Oktober 2026; Redur am 3. Oktober, ca. 19:35 UTC: „Weiter
  * ohne pause,"). Der Bericht des Baus ging am Wochenlimit verloren; die
@@ -81,6 +82,16 @@
  *   e   Die ruhende Linse ist dichtes Glas: die Schrift darunter scheint
  *       nicht doppelt durch.
  *   f   Je Rollfläche EIN Beobachter der Kacheln.
+ *
+ * DRITTE DURCHSICHT (§14; 5. Oktober 2026), gegen den Stand des Nachtrags
+ * rot gesehen:
+ *   a   Die Kachel „Zeitmesser" in den Einstellungen öffnet das Feld der Uhr
+ *       OBEN und bedienbar — vorher ging es hinter dem Fenster der
+ *       Einstellungen auf (z 45 unter z 700, dazu von Fokus stillgelegt):
+ *       ein Griff, der sichtbar nichts tat.
+ *   b   Die Namen unter den runden Knöpfen sind lesbar (≥ 4,5 : 1 am
+ *       gerenderten Bild), in allen zehn Schemata, am Rechner und im Blatt
+ *       am Telefon — vorher am Telefon „Hell" 4,46 und „Sand" 4,36 : 1.
  *
  * KANN ER ROT WERDEN? Gegen den Stand b3cf1933 (vor E712) ist er rot, in
  * jedem Abschnitt ausser den „bleibt"-Zusagen — siehe Commit „test589 (rot)".
@@ -1060,6 +1071,117 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     .filter(o => !o.aus && o.ziele.some((t: Element) => t.classList?.contains('ru-kacheln-gitter'))).length);
   gleich('„Mehr" fünfmal gezeichnet: genau EIN Beobachter der Kacheln lauscht noch', lauschen, 1);
   await ctx.close();
+}
+
+/* ==========================================================================
+ * §14 · Dritte Durchsicht (E712)
+ * ----------------------------------------------------------------------------
+ *   a  Einstellungen → „Zeitmesser": das Feld der Uhr steht OBEN (der Punkt
+ *      in seiner Mitte gehört ihm), ist nicht stillgelegt, und ein echter
+ *      Klick auf „Stoppuhr" startet die Uhr. Vorher öffnete die Kachel das
+ *      Feld HINTER dem Fenster der Einstellungen (`.zm-feld` z 45, `.overlay`
+ *      z 700) und Fokus legte es still — man sah nichts geschehen.
+ * ========================================================================*/
+{
+  console.log('\n§14 · Dritte Durchsicht: ein Weg aus den Einstellungen führt hinaus');
+  const { ctx, s } = await oeffnen(false);
+  await s.evaluate(() => Einstellungen.oeffne('allgemein'));
+  await warte(s, 700);
+  const da = await s.evaluate(() => !!document.querySelector('#ei .ru-kacheln [data-kachel="zeit"]'));
+  if (da) { await s.click('#ei .ru-kacheln [data-kachel="zeit"]'); await warte(s, 500); }
+  const feld = await s.evaluate(() => {
+    const f = document.querySelector<HTMLElement>('.zm-feld');
+    if (!f) return { feld: false, oben: false, bedienbar: false };
+    const q = f.getBoundingClientRect();
+    const t = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2);
+    let still = false;
+    for (let x: HTMLElement | null = f; x; x = x.parentElement) if (x.inert) still = true;
+    return { feld: true, oben: !!t && f.contains(t), bedienbar: !still };
+  });
+  let laeuft = false;
+  if (feld.oben) {
+    try { await s.click('.zm-feld [data-zm="stoppuhr"]', { timeout: 2000 }); } catch { /* verdeckt: unten rot */ }
+    await warte(s, 300);
+    laeuft = await s.evaluate(() => !!Zeitmesser.stand()?.laeuft);
+  }
+  gleich('Einstellungen → „Zeitmesser": das Feld der Uhr steht oben, ist bedienbar, und „Stoppuhr" startet sie',
+    [da, feld.feld, feld.oben, feld.bedienbar, laeuft], [true, true, true, true, true]);
+  await s.evaluate(() => { try { Zeitmesser.stopp(); } catch { /* … */ } document.querySelector('.zm-feld')?.remove(); });
+  await ctx.close();
+
+  /* b · Die Namen unter den runden Knöpfen, am Bild (wie §12): Schrift
+     durchsichtig, Grund aus den Pixeln, Schriftfarbe mit der Deckkraft der
+     Ahnen darüber, der SCHLIMMSTE Pixel zählt. */
+  for (const handy of [false, true]) {
+    const { ctx: c2, s: s2 } = await oeffnen(handy);
+    await seiteAuf(s2);
+    const schemata: string[] = await s2.evaluate(() => (Aussehen.SCHEMATA as Array<{ id: string }>).map(x => x.id));
+    const schlecht: string[] = [];
+    let gemessen = 0;
+    for (const sch of schemata) {
+      await s2.evaluate((sch: string) => { Aussehen.setzen({ schema: sch }); }, sch);
+      await warte(s2, 250);
+      await s2.evaluate((h: boolean) => App.erstellenBlatt(h ? null : document.getElementById('studio-create')), handy);
+      await warte(s2, 1000);
+      const n = await s2.evaluate(() => {
+        const els = [...document.querySelectorAll<HTMLElement>('.menu .ru-tropfen-name')]
+          .filter(e => { const r = e.getBoundingClientRect(); return r.width > 2 && r.top >= 0 && r.bottom <= innerHeight; });
+        els.forEach((e, i) => {
+          e.dataset['m589n'] = String(i);
+          e.dataset['m589farbe'] = getComputedStyle(e).color;
+          let o = 1;
+          for (let x: Element | null = e; x && x !== document.documentElement; x = x.parentElement) o *= parseFloat(getComputedStyle(x).opacity) || 1;
+          e.dataset['m589deck'] = String(o);
+          e.style.setProperty('color', 'transparent', 'important');
+        });
+        return els.length;
+      });
+      await warte(s2, 60);
+      const bild = (await s2.screenshot()).toString('base64');
+      const werte = await s2.evaluate(async (b64: string) => {
+        const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+        const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+        const g = c.getContext('2d')!; g.drawImage(img, 0, 0);
+        const dpr = img.width / innerWidth;
+        const lin = (v: number) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+        const L = (r: number, gg: number, b: number) => 0.2126 * lin(r) + 0.7152 * lin(gg) + 0.0722 * lin(b);
+        const farbe = (t: string): number[] => {
+          let m = t.match(/color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.e-]+))?\)/);
+          if (m) return [+m[1]! * 255, +m[2]! * 255, +m[3]! * 255, m[4] ? +m[4] : 1];
+          m = t.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
+          return m ? [+m[1]!, +m[2]!, +m[3]!, m[4] ? +m[4] : 1] : [0, 0, 0, 1];
+        };
+        const liste: Array<{ t: string; min: number }> = [];
+        for (const e of document.querySelectorAll<HTMLElement>('[data-m589n]')) {
+          const r = e.getBoundingClientRect();
+          const x = Math.round(r.left * dpr), y = Math.round(r.top * dpr);
+          const w = Math.max(1, Math.min(c.width - x, Math.round(r.width * dpr)));
+          const h = Math.max(1, Math.min(c.height - y, Math.round(r.height * dpr)));
+          const d = g.getImageData(x, y, w, h).data;
+          const [tr, tg, tb, ta] = farbe(e.dataset['m589farbe'] || '');
+          const a = (ta ?? 1) * parseFloat(e.dataset['m589deck'] || '1');
+          let min = 99;
+          for (let i = 0; i < d.length; i += 12) {
+            const br = d[i]!, bg = d[i + 1]!, bb = d[i + 2]!;
+            const l1 = L(a * tr! + (1 - a) * br, a * tg! + (1 - a) * bg, a * tb! + (1 - a) * bb), l2 = L(br, bg, bb);
+            min = Math.min(min, (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05));
+          }
+          liste.push({ t: (e.textContent || '').trim(), min: +min.toFixed(2) });
+          e.style.removeProperty('color');
+          delete e.dataset['m589n']; delete e.dataset['m589farbe']; delete e.dataset['m589deck'];
+        }
+        return liste;
+      }, bild);
+      gemessen += n ? werte.length : 0;
+      for (const x of werte) if (x.min < 4.5) schlecht.push(`${sch}: „${x.t}" ${x.min}`);
+      await s2.keyboard.press('Escape'); await warte(s2, 400);
+      await aufraeumen(s2);
+    }
+    p(`${handy ? 'Telefon, Blatt' : 'Rechner'} „+": die Namen unter den runden Knöpfen ≥ 4,5 : 1 am schlimmsten Pixel, zehn Schemata (${gemessen} gemessen)`,
+      gemessen >= schemata.length * 3 && schlecht.length === 0, `${schlecht.length}: ` + schlecht.slice(0, 6).join(' · '));
+    await s2.evaluate(() => Aussehen.setzen({ schema: 'standard' }));
+    await c2.close();
+  }
 }
 
 console.log('\n§11 · Kein Seitenfehler');
