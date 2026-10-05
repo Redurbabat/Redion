@@ -93,6 +93,15 @@ const RedionDelete = (() => {
   const nameOf = (t: HTMLElement): string =>
     (t.getAttribute('aria-label') || t.getAttribute('title') || '').trim();
 
+  /** Der Name des Paars und der roten Pille: „Bereich „Schule" löschen" —
+   *  steckt das Wort schon im Namen der Stelle, nicht noch einmal davor
+   *  (vorher „Löschen: Bereich „Schule" löschen", bei den Agenten gar
+   *  „Löschen: Löschen"; Durchsicht 5. Oktober). */
+  const labelOf = (word: string, context: string): string =>
+    !context ? word
+      : context.toLocaleLowerCase('de').includes(word.toLocaleLowerCase('de')) ? context
+      : word + ': ' + context;
+
   const choice = (cls: string, word: string): { button: HTMLButtonElement; text: HTMLElement } => {
     const button = make('button', 'ru-loesch-wahl ' + cls) as HTMLButtonElement;
     button.type = 'button';
@@ -121,7 +130,7 @@ const RedionDelete = (() => {
 
   const build = (trigger: HTMLElement): { layer: HTMLElement; pair: HTMLElement; confirm: HTMLButtonElement; cancel: HTMLButtonElement } => {
     const word = (trigger.dataset['loeschknopf'] || '').trim() || 'Löschen';
-    const context = nameOf(trigger);
+    const label = labelOf(word, nameOf(trigger));
     const layer = make('span', 'ru-loesch');
     const goo = make('span', 'ru-loesch-goo');
     goo.setAttribute('aria-hidden', 'true');
@@ -138,10 +147,10 @@ const RedionDelete = (() => {
     const pair = make('span', 'ru-loesch-paar');
     pair.id = 'ru-loesch-paar-' + (++serial);
     pair.setAttribute('role', 'group');
-    pair.setAttribute('aria-label', context ? word + ': ' + context : word);
+    pair.setAttribute('aria-label', label);
     const ja = choice('ru-loesch-ja', word);
     const nein = choice('ru-loesch-nein', 'Abbrechen');
-    if (context && context !== word) ja.button.setAttribute('aria-label', word + ': ' + context);
+    if (label !== word) ja.button.setAttribute('aria-label', label);
     layer.append(goo, icon, pair);
     return { layer, pair, confirm: ja.button, cancel: nein.button };
   };
@@ -243,7 +252,10 @@ const RedionDelete = (() => {
     target?.focus({ preventScroll: true });
   };
 
-  /** Zu. `returnFocus`: der Fokus geht an den runden Knopf zurück. */
+  /** Zu. `returnFocus`: der Fokus geht an den runden Knopf zurück — und
+   *  ebenso, wenn er noch in den Pillen steht (Rollen, Grösse ändern, ein
+   *  Druck daneben): `inert` nähme ihn sonst, und er fiele auf den body
+   *  (Durchsicht 5. Oktober). Wer mit Tab hinausging, behält seinen Ort. */
   const close = (returnFocus: boolean): void => {
     const o = current;
     if (!o) return;
@@ -252,9 +264,10 @@ const RedionDelete = (() => {
     window.clearInterval(o.watch);
     o.trigger.setAttribute('aria-expanded', 'false');
     if (!alive(o)) { finish(o); return; }
+    const focusInside = o.pair.contains(document.activeElement);
     showUnder(o);
     o.pair.setAttribute('inert', '');
-    if (returnFocus && o.trigger.isConnected) focusBack(o.trigger);
+    if ((returnFocus || focusInside) && o.trigger.isConnected) focusBack(o.trigger);
     if (calm() || !o.trigger.isConnected) {
       /* Ohne Bewegung, oder der Knopf ist mit seiner Zeile schon weg. */
       o.layer.dataset['geht'] = '';

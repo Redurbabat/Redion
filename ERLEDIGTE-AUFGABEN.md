@@ -1,5 +1,30 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 5. Oktober 2026 · E709 Durchsicht · Der Name sagt, was weggeht; unter dem Zeiger ganz und lesbar; der Fokus fällt nicht auf den body
+
+**Redur:** „Weiter ohne pause" (3. Oktober).
+
+**Gefunden:** am Rechner ruht der Zeiger nach dem Druck auf der roten Pille
+— ihre rote Tönung beim Überfahren nahm dem roten Wort in fünf dunklen
+Schemata den Kontrast (Standard 3,94, Wald 3,81, Mitternacht 4,19, Rosé und
+Touch Kit dunkel 4,05 : 1), und bei der Übergabe blendete sie aus dem
+Durchsichtigen ein (der offene Punkt 4 von AUFGABEN). Die Agenten und
+Worker hiessen für Vorleser nur „Löschen", die Bereiche „Löschen: Bereich
+„Schule" löschen", der Papierkorb nannte die Seite nicht. Schloss das Paar
+von selbst (Grösse, Rollen, Druck daneben), fiel der Fokus auf den body.
+
+**Gebaut:** Überfahren zeigt einen Ring statt einer Tönung (beide Pillen);
+jede Stelle nennt, was weggeht, ohne das Wort zu doppeln (im Papierkorb im
+title, damit die Zeile, die zurückholt, nicht „… löschen" heisst); der
+Fokus geht beim Selbst-Schliessen an den Knopf zurück.
+
+**Geprüft:** `test586` sechs Punkte mehr, rot gesehen (49 von 52, 49 von
+54), dann 54 von 54; die Gegenproben G10–G13; Nachbarn 33 59 72 126 130
+143 144 245 296 353 362 388 412 510 grün, `test464` nur §1 „Dreizehn
+Werkzeuge" (fremd, auf `b3cf1933` genauso). Nachgesehen, welche
+Löschen-Stellen fehlen: keine weitere runde; vier neue Stellen für Redurs
+Wahl (L230 Punkt 5, AUFGABEN).
+
 ## 3. Oktober 2026 · E709 Nachtrag · Die Läufe nach den zwei Korrekturen, und eine Durchsicht
 
 **Redur:** „Weiter ohne pause".

@@ -1527,10 +1527,8 @@ jeweils mit eigenem Wächter (rot zuerst):
    der Auswahlleiste der Planfläche — beides Leistenknöpfe über einer Auswahl,
    die `test586` §2 nicht sieht. Nach Redurs Wahl liest §2 auch aus Tabellen
    gebaute Knöpfe (rot zuerst).
-4. Am Rechner, beim Öffnen (Bildstreifen 3. Oktober,
-   streifen-rechner-dunkel-papierkorb-auf, 753 ms): liegt der Zeiger noch auf
-   dem Kreis, also auf der roten Pille, blendet deren Fläche bei der Übergabe
-   (700 ms) über den Übergang fürs Überfahren aus dem Durchsichtigen ein —
-   ein Bild lang ist die Pille leer. Dieselbe Kur wie beim Zurückfliessen
-   (zwei Bilder ohne Übergang), mit einem Punkt in `test586`, rot zuerst. Am
-   Telefon gibt es kein Überfahren.
+4. In dieselbe Frage (zweite Durchsicht 5. Oktober, L230 Punkt 5): das ✕
+   der Kennzahl-Karte, das ✕ einer Freigabe in der Wolke, die eigenen Emoji
+   (das Bild löscht beim ersten Klick, ohne Frage) und das ✕ der Sortierung.
+   (Der frühere Punkt 4 — die rote Pille unter dem ruhenden Zeiger — ist am
+   5. Oktober erledigt, siehe ERLEDIGTE-AUFGABEN.)

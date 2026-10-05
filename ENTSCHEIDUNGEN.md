@@ -58724,3 +58724,65 @@ Variable, +2'009 B roh (meist Kommentar), +613 B gzip — `delete.js` und
 `loeschen.css` zusammen jetzt 10'970 B gzip (messungen §79). Noch offen, im neuen Streifen gesehen
 (AUFGABEN, L230): am Rechner blendet beim Öffnen die rote Pille unter dem
 ruhenden Zeiger ein Bild lang aus dem Durchsichtigen ein.
+
+### Nachtrag, 5. Oktober 2026 — Durchsicht: der Name sagt, was weggeht; unter dem Zeiger ganz und lesbar; der Fokus fällt nicht auf den body
+
+Redur, 3. Oktober: „Weiter ohne pause". Eine zweite Durchsicht (die erste
+wurde am 5. Oktober um ca. 00:49 UTC von der Sitzungsgrenze abgeschnitten
+und hinterliess drei Dateien ungebucht; ihre Punkte sind übernommen,
+nachgeprüft und ergänzt). Gefunden:
+
+- **Unter dem ruhenden Zeiger nicht lesbar.** Am Rechner ruht der Zeiger
+  nach dem Druck auf der roten Pille (sie liegt, wo der Kreis war). Ihre
+  Tönung beim Überfahren (14 % Rot) lag unter dem roten Wort: im dunklen
+  Standard **3,94 : 1**, in „Wald" 3,80 — unter 4,5. Dieselbe Tönung blendete
+  bei der Übergabe von der Flüssigkeit an die CSS-Pille über den
+  Farbübergang aus dem Durchsichtigen ein (`test586`: erstes Bild ohne
+  Fliessen, Deckkraft 0 — der Punkt aus AUFGABEN „Löschen-Knopf" 4).
+  Behoben: Überfahren zeigt einen **Ring** in der Farbe der Pille
+  (`inset 0 0 0 1.5px var(--gefahr)`, bei „Abbrechen" die Schrift zu 45 %),
+  die Fläche bleibt, wie sie ist, nur der Ring blendet. Alternativen: eine
+  schwächere Tönung (unter 4,5 schon in „Wald", das in Ruhe nur 4,59 hat);
+  die Tönung ohne Übergang (dann bliebe der Kontrast zu tief).
+- **Der Name doppelte oder fehlte.** Die Agenten und Worker hiessen nur
+  „Löschen" — das Paar sagte „Löschen: Löschen"; die Bereiche „Löschen:
+  Bereich „Schule" löschen"; im Papierkorb „Endgültig löschen: Endgültig
+  löschen", ohne die Seite. Jetzt nennt jede Stelle, was weggeht
+  (`Agent „…" löschen`, `Worker „…" löschen`, im Papierkorb
+  `„Nachtfahrt" endgültig löschen` im **title** — nicht im aria-label: der
+  `<span>` liegt in der Zeile, die selbst ein `<button>` ist, ein aria-label
+  ginge in ihren Namen ein, und die Zeile hiesse „… endgültig löschen",
+  obwohl sie zurückholt), und `labelOf()` setzt das Wort nur davor, wenn es
+  nicht schon im Namen steht.
+- **Der Fokus fiel auf den body,** wenn das Paar von selbst schloss
+  (Grösse ändern, Rollen, ein Druck daneben), während er noch auf
+  „Abbrechen" stand: die Pillen werden `inert`. Jetzt geht er dann an den
+  Knopf zurück (im Papierkorb an die Zeile); wer mit Tab hinausging,
+  behält seinen Ort.
+- **Zwei Fehler im Lauf selbst:** der Farbleser kannte nur `rgb()`/`rgba()`
+  — ein `color-mix()` kommt als `color(srgb …)` zurück und wurde als Schwarz
+  gelesen (der Kontrastpunkt meldete deshalb im ersten Lauf grün);
+  `papierkorbFuellen` rief `Store.addPage({ text })`, die Seiten hiessen
+  „Ohne Titel". Beides behoben.
+
+`test586` hält es (sechs Punkte mehr, rot gesehen: §2 und zwei Browserpunkte
+im ersten Lauf, 49 von 52; fünf Browserpunkte im zweiten, 49 von 54;
+danach 54 von 54). Gegenproben, je rot gesehen und zurück (`cmp` gleich):
+G10 die Tönung zurück → „ganz" und „lesbar" rot (Deckkraft 0 bei 763 ms;
+3,94 : 1), 52 von 54; G11 der Fokus folgt nicht → „Fokus wieder am Knopf"
+rot, 53 von 54; G12 der Papierkorb ohne Seitennamen → „Er nennt die Seite"
+rot, 53 von 54; G13 `labelOf()` doppelt wieder → beide Namenspunkte rot,
+52 von 54.
+
+**Nachgesehen, welche Löschen-Stellen fehlen** (alle `data-weg`/`data-del`,
+jedes ✕/🗑 und jeder Name mit „löschen"/„entfernen" im Quelltext). Kein
+weiterer runder 🗑-Knopf; neu genannt, NICHT umgestellt (Redurs Wahl, L230
+Punkt 5): das ✕ „Entfernen" der Kennzahl-Karte, das ✕ einer Freigabe in
+der Wolke, die eigenen Emoji (das Bild selbst löscht beim ersten Klick) und
+das ✕ der Sortierung. Umgestellt ist keiner: keiner ist ein runder
+Löschen-Knopf, und drei davon sind Formularzeilen.
+
+Kosten: `delete.js` 20'164 B roh (+756, meist Kommentar), `loeschen.css`
+18'772 B (+621); gzip zusammen +0,6 KB; redion-einzeldatei.html
+11'822'114 → 11'824'223 B (+2'109). `test388` §5 auf dem Zweig: 2837 KB
+gzip über 250 Dateien (vorher 2836; Grundstand `b3cf1933` 2825), Decke 2850.

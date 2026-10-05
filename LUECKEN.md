@@ -8394,9 +8394,31 @@ der Chatliste) auf `RedionDelete` gestellt. Drei Dinge sind offen:
    (`pdf/document-mode.ts`, Wort mit Zeichen, Punkt 2) und die Liste „Eine
    Vorlage löschen" (`datenbanken/steuerung.ts`, `🗑 <Name>` je Vorlage, ein
    Untermenü).
+5. **Nachgesehen am 5. Oktober (zweite Durchsicht E709)**, über jedes
+   `data-weg`/`data-del`, jedes ✕ und 🗑 und jeden Namen mit „löschen" oder
+   „entfernen" im Quelltext. Kein weiterer runder 🗑-Knopf. Neu genannt,
+   NICHT umgestellt:
+   - das ✕ „Entfernen" auf der **Kennzahl-Karte**
+     (`datenbanken/datenmodell/ansicht.ts`): nimmt eine gespeicherte
+     Kennzahl weg, ein kleines ✕ im Kopf der Karte;
+   - das ✕ einer **Freigabe in der Wolke** (`verbinden/ansicht/wolke.ts`,
+     12 px, ohne Namen): nimmt einer eingeladenen Person den Zugang;
+   - die **eigenen Emoji** in den Einstellungen
+     (`einstellungen/ansicht/seite.ts`, `data-tun="emoji-weg:…"`): das Bild
+     selbst löscht beim ersten Klick („klicken zum Entfernen"), ohne Frage;
+   - das ✕ einer **Sortierung** (`datenbanken/steuerung.ts`), wie die
+     Filterregel und die Kachel aus Punkt 3 eine Formularzeile.
+   Keiner ist ein runder Löschen-Knopf; ob sie es werden, ist Redurs Wahl
+   (mit einem Bild), wie bei 2 bis 4.
+6. **Die Warnung des alten `confirm()` im Papierkorb fehlt** (gesehen am
+   5. Oktober): es sagte „… Mit ihm gehen seine Fassungen und Anhänge. Das
+   lässt sich nicht rückgängig machen." Die rote Pille sagt „Endgültig
+   löschen" — das Unumkehrbare steht da, die Fassungen und Anhänge nennt
+   niemand mehr. Ein Satz unter dem Paar (oder im Namen der roten Pille)
+   brächte es zurück, ohne das Paar zu verbreitern.
 
-**Was fehlt:** zu 1 der Umbau der Papierkorbzeile mit Wächter; zu 2, 3
-und 4 Redurs Wahl (mit einem Bild der Leiste); zu 4 ausserdem, dass
+**Was fehlt:** zu 1 der Umbau der Papierkorbzeile mit Wächter; zu 2, 3,
+4 und 5 Redurs Wahl (mit einem Bild der Leiste); zu 6 der Satz; zu 4 ausserdem, dass
 `test586` §2 auch aus Tabellen gebaute Knöpfe liest — erst, wenn Redur
 gewählt hat, sonst würde der Wächter eine offene Wahl als Fehler melden.
 

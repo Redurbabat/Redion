@@ -184,15 +184,23 @@ body > .ru-loesch{ z-index: 580; }
   transition: none;
 }
 @media (hover: hover){
+  /* Überfahren zeigt ein RING in der Farbe der Pille, keine Tönung
+     (Durchsicht 5. Oktober, test586 §3). Rot unter dem roten Wort nahm ihm
+     in den dunklen Schemata den Kontrast (Standard 3,94 : 1, Wald 3,80 —
+     unter 4,5). Und weil der Zeiger nach dem Druck auf der roten Pille ruht,
+     blendete ihre Fläche bei der Übergabe über den Farbübergang aus dem
+     Durchsichtigen ein. Die Fläche bleibt jetzt, wie sie ist; nur der Ring
+     blendet. „Abbrechen" ebenso — wer während des Fliessens hinüberfährt,
+     sah dieselbe leere Pille. */
   .ru-loesch[data-auf]:not([data-fliesst]) .ru-loesch-ja:hover,
   .ru-loesch[data-ruhig] .ru-loesch-ja:hover{
-    background: color-mix(in srgb, var(--gefahr) 14%, var(--loesch-flaeche));
-    transition: background-color var(--motion-fast) var(--ease);
+    box-shadow: inset 0 0 0 1.5px var(--gefahr), 0 0 0 .5px var(--line), var(--shadow-1);
+    transition: box-shadow var(--motion-fast) var(--ease);
   }
   .ru-loesch[data-auf]:not([data-fliesst]) .ru-loesch-nein:hover,
   .ru-loesch[data-ruhig] .ru-loesch-nein:hover{
-    background: color-mix(in srgb, var(--text) 9%, var(--loesch-flaeche));
-    transition: background-color var(--motion-fast) var(--ease);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text) 45%, transparent), 0 0 0 .5px var(--line), var(--shadow-1);
+    transition: box-shadow var(--motion-fast) var(--ease);
   }
 }
 .ru-loesch .ru-loesch-ja:active{ background: color-mix(in srgb, var(--gefahr) 22%, var(--loesch-flaeche)); }

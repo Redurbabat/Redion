@@ -5492,3 +5492,43 @@ loeschen.css                         17'292 / 4'646 B        18'151 / 4'863 B
   zusammen gzip                      10'357 B                10'970 B (+613)
 redion-einzeldatei.html              11'820'105 B            11'822'114 B (+2'009)
 ```
+
+**Durchsicht, 5. Oktober — Kontrast unter dem Zeiger, die Übergabe, die
+Namen (unter dem Schloss, `rv5-loeschen/lauf-a.sh` und `lauf-b.sh`).**
+Kontrast der roten Pille („Endgültig löschen", `--gefahr` auf ihrer Fläche),
+gerechnet aus den berechneten Farben (WCAG; ein `color-mix()` kommt als
+`color(srgb …)` zurück und wird so gelesen):
+
+```txt
+Schema            in Ruhe   unter dem Zeiger    unter dem Zeiger
+                            vorher (Tönung)     nachher (Ring)
+Standard (dunkel) 4,80      3,94                4,80
+Hell              6,28      4,97                6,28
+Mitternacht       5,10      4,19                5,10
+Wald              4,59      3,81                4,59
+Sand              5,83      4,64                5,83
+Papier            6,28      4,97                6,28
+Starker Kontrast  5,73      4,68                5,73
+Rosé              5,01      4,05                5,01
+Touch Kit hell    5,77      4,59                5,77
+Touch Kit dunkel  4,95      4,05                4,95
+(„Abbrechen" überall 10,97 bis 17,64 : 1; das Zeichen in Ruhe wie „ja".
+ Fünf dunkle Schemata lagen unter dem Zeiger unter 4,5 — jetzt keines.)
+```
+
+```txt
+                                     ebb01d778               nach der Durchsicht
+erstes Bild ohne Fliessen,           Deckkraft 0 (769/780    1 (Fläche wie in Ruhe;
+  Zeiger auf der roten Pille         ms, Übergang aus dem    der Ring blendet)
+                                     Durchsichtigen)
+Fokus nach Grösse ändern             body                    am Knopf (Zeile)
+Name des Paars (Bereiche)            „Löschen: Bereich       „Bereich „Schule"
+                                     „Schule" löschen"       löschen"
+Name des Paars (Papierkorb)          „Endgültig löschen:     „„Nachtfahrt"
+                                     Endgültig löschen"      endgültig löschen"
+test586                              49 von 52 / 49 von 54   54 von 54
+test388 §5 (Zweig)                   2836 KB / 250 Dateien   2837 KB / 250 Dateien
+delete.js (roh / gzip, zlib 6)       19'408 / 6'075 B        20'164 / 6'359 B
+loeschen.css                         18'151 / 4'830 B        18'772 / 5'104 B
+redion-einzeldatei.html              11'822'114 B            11'824'223 B (+2'109)
+```

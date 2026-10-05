@@ -12574,15 +12574,23 @@ body > .ru-loesch{ z-index: 580; }
   transition: none;
 }
 @media (hover: hover){
+  /* Überfahren zeigt ein RING in der Farbe der Pille, keine Tönung
+     (Durchsicht 5. Oktober, test586 §3). Rot unter dem roten Wort nahm ihm
+     in den dunklen Schemata den Kontrast (Standard 3,94 : 1, Wald 3,80 —
+     unter 4,5). Und weil der Zeiger nach dem Druck auf der roten Pille ruht,
+     blendete ihre Fläche bei der Übergabe über den Farbübergang aus dem
+     Durchsichtigen ein. Die Fläche bleibt jetzt, wie sie ist; nur der Ring
+     blendet. „Abbrechen" ebenso — wer während des Fliessens hinüberfährt,
+     sah dieselbe leere Pille. */
   .ru-loesch[data-auf]:not([data-fliesst]) .ru-loesch-ja:hover,
   .ru-loesch[data-ruhig] .ru-loesch-ja:hover{
-    background: color-mix(in srgb, var(--gefahr) 14%, var(--loesch-flaeche));
-    transition: background-color var(--motion-fast) var(--ease);
+    box-shadow: inset 0 0 0 1.5px var(--gefahr), 0 0 0 .5px var(--line), var(--shadow-1);
+    transition: box-shadow var(--motion-fast) var(--ease);
   }
   .ru-loesch[data-auf]:not([data-fliesst]) .ru-loesch-nein:hover,
   .ru-loesch[data-ruhig] .ru-loesch-nein:hover{
-    background: color-mix(in srgb, var(--text) 9%, var(--loesch-flaeche));
-    transition: background-color var(--motion-fast) var(--ease);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text) 45%, transparent), 0 0 0 .5px var(--line), var(--shadow-1);
+    transition: box-shadow var(--motion-fast) var(--ease);
   }
 }
 .ru-loesch .ru-loesch-ja:active{ background: color-mix(in srgb, var(--gefahr) 22%, var(--loesch-flaeche)); }
@@ -27110,7 +27118,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1401, inhalt: '6e3588a7bc053e3a', gebaut: '2026-10-03T19:42:08.311Z' };
+const Stand = { fassung: 1402, inhalt: 'e0e77aa20a3bc199', gebaut: '2026-10-05T12:57:02.739Z' };
 window.Stand = Stand;
 
 </script>
@@ -56001,6 +56009,13 @@ const RedionDelete = (() => {
     };
     /** Was der Knopf löscht, für Vorleser: sein aria-label, sonst sein title. */
     const nameOf = (t) => (t.getAttribute('aria-label') || t.getAttribute('title') || '').trim();
+    /** Der Name des Paars und der roten Pille: „Bereich „Schule" löschen" —
+     *  steckt das Wort schon im Namen der Stelle, nicht noch einmal davor
+     *  (vorher „Löschen: Bereich „Schule" löschen", bei den Agenten gar
+     *  „Löschen: Löschen"; Durchsicht 5. Oktober). */
+    const labelOf = (word, context) => !context ? word
+        : context.toLocaleLowerCase('de').includes(word.toLocaleLowerCase('de')) ? context
+            : word + ': ' + context;
     const choice = (cls, word) => {
         const button = make('button', 'ru-loesch-wahl ' + cls);
         button.type = 'button';
@@ -56027,7 +56042,7 @@ const RedionDelete = (() => {
     };
     const build = (trigger) => {
         const word = (trigger.dataset['loeschknopf'] || '').trim() || 'Löschen';
-        const context = nameOf(trigger);
+        const label = labelOf(word, nameOf(trigger));
         const layer = make('span', 'ru-loesch');
         const goo = make('span', 'ru-loesch-goo');
         goo.setAttribute('aria-hidden', 'true');
@@ -56042,11 +56057,11 @@ const RedionDelete = (() => {
         const pair = make('span', 'ru-loesch-paar');
         pair.id = 'ru-loesch-paar-' + (++serial);
         pair.setAttribute('role', 'group');
-        pair.setAttribute('aria-label', context ? word + ': ' + context : word);
+        pair.setAttribute('aria-label', label);
         const ja = choice('ru-loesch-ja', word);
         const nein = choice('ru-loesch-nein', 'Abbrechen');
-        if (context && context !== word)
-            ja.button.setAttribute('aria-label', word + ': ' + context);
+        if (label !== word)
+            ja.button.setAttribute('aria-label', label);
         layer.append(goo, icon, pair);
         return { layer, pair, confirm: ja.button, cancel: nein.button };
     };
@@ -56151,7 +56166,10 @@ const RedionDelete = (() => {
         const target = trigger.matches(FOCUSABLE) ? trigger : trigger.closest(FOCUSABLE);
         target?.focus({ preventScroll: true });
     };
-    /** Zu. `returnFocus`: der Fokus geht an den runden Knopf zurück. */
+    /** Zu. `returnFocus`: der Fokus geht an den runden Knopf zurück — und
+     *  ebenso, wenn er noch in den Pillen steht (Rollen, Grösse ändern, ein
+     *  Druck daneben): `inert` nähme ihn sonst, und er fiele auf den body
+     *  (Durchsicht 5. Oktober). Wer mit Tab hinausging, behält seinen Ort. */
     const close = (returnFocus) => {
         const o = current;
         if (!o)
@@ -56164,9 +56182,10 @@ const RedionDelete = (() => {
             finish(o);
             return;
         }
+        const focusInside = o.pair.contains(document.activeElement);
         showUnder(o);
         o.pair.setAttribute('inert', '');
-        if (returnFocus && o.trigger.isConnected)
+        if ((returnFocus || focusInside) && o.trigger.isConnected)
             focusBack(o.trigger);
         if (calm() || !o.trigger.isConnected) {
             /* Ohne Bewegung, oder der Knopf ist mit seiner Zeile schon weg. */
@@ -136507,7 +136526,7 @@ const Agent = (() => {
                     `<span>${(a.werkzeuge || []).length} Werkzeuge · ${a.guthaben || 8} Schritte` +
                     `${a.ausloeser?.art === 'taeglich' ? ' · täglich ab ' + a.ausloeser.stunde + ' Uhr' : ''}` +
                     `${(a.wissen || []).length ? ' · ' + a.wissen.length + ' Wissensseiten' : ''}</span></span>` +
-                    `<button data-bearb="${i}">✎</button><button data-weg="${i}" data-loeschknopf aria-label="Löschen">🗑</button></div>`).join('')
+                    `<button data-bearb="${i}">✎</button><button data-weg="${i}" data-loeschknopf aria-label="Agent „${esc(a.name)}“ löschen">🗑</button></div>`).join('')
                 : '<div style="padding:18px;color:var(--text-faint);font-size:14px">' +
                     'Noch kein eigener Agent. Ein eigener Agent hat eigene Anweisungen, eigene ' +
                     'Werkzeugrechte, eigene Wissensseiten und darf zu einer festen Uhrzeit von ' +
@@ -136666,7 +136685,7 @@ const Agent = (() => {
                     `<span class="frei-name"><b>${esc(w.name)}</b>` +
                     `<span>${esc(w.beschreibung || '').slice(0, 60) || 'ohne Beschreibung'}</span></span>` +
                     `<button data-test="${i}">Testen</button>` +
-                    `<button data-bearb="${i}">✎</button><button data-weg="${i}" data-loeschknopf aria-label="Löschen">🗑</button></div>`).join('')
+                    `<button data-bearb="${i}">✎</button><button data-weg="${i}" data-loeschknopf aria-label="Worker „${esc(w.name)}“ löschen">🗑</button></div>`).join('')
                 : '<div style="padding:18px;color:var(--text-faint);font-size:14px">Noch kein Worker.</div>';
         };
         zeichne();
@@ -185076,7 +185095,14 @@ const App = (() => {
                                 `<span class="snip">gelöscht ${esc(Werkzeuge.zeitKurz(p.trashedAt))}</span></span>` +
                                 '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
                                 '<span class="pk-tat" data-a="restore-wo" title="An anderer Stelle wiederherstellen">↳</span>' +
-                                '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" title="Endgültig löschen">🗑</span>' +
+                                /* Der Name nennt die Seite (Durchsicht E709, 5. Oktober):
+                                   das Paar heisst dann „„Nachtfahrt" endgültig löschen".
+                                   Im title, NICHT im aria-label: der <span> liegt in der
+                                   Zeile, die selbst ein <button> ist — ein aria-label ginge
+                                   in ihren Namen ein, und die Zeile hiesse „… endgültig
+                                   löschen", obwohl sie zurückholt. */
+                                '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" ' +
+                                `title="„${esc(p.text || 'Ohne Titel')}“ endgültig löschen">🗑</span>` +
                                 '</button>').join('')
                         : (bloecke.length ? ''
                             : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`)) +
@@ -185088,7 +185114,8 @@ const App = (() => {
                                 `<span class="snip">aus „${esc(blockHer(b))}" · gelöscht ` +
                                 `${esc(Werkzeuge.zeitKurz(b.trashedAt))}</span></span>` +
                                 '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
-                                '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" title="Endgültig löschen">🗑</span>' +
+                                '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" ' +
+                                `title="„${esc(blockName(b))}“ endgültig löschen">🗑</span>` +
                                 '</button>').join('')
                         : '') +
                     '</div>' +

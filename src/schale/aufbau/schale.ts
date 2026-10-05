@@ -1838,7 +1838,14 @@ const App = (() => {
                   `<span class="snip">gelöscht ${esc(Werkzeuge.zeitKurz(p.trashedAt))}</span></span>` +
                   '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
                   '<span class="pk-tat" data-a="restore-wo" title="An anderer Stelle wiederherstellen">↳</span>' +
-                  '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" title="Endgültig löschen">🗑</span>' +
+                  /* Der Name nennt die Seite (Durchsicht E709, 5. Oktober):
+                     das Paar heisst dann „„Nachtfahrt" endgültig löschen".
+                     Im title, NICHT im aria-label: der <span> liegt in der
+                     Zeile, die selbst ein <button> ist — ein aria-label ginge
+                     in ihren Namen ein, und die Zeile hiesse „… endgültig
+                     löschen", obwohl sie zurückholt. */
+                  '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" ' +
+                  `title="„${esc(p.text || 'Ohne Titel')}“ endgültig löschen">🗑</span>` +
                   '</button>').join('')
               : (bloecke.length ? ''
                  : `<div class="pk-leer">${alle.length ? 'Nichts gefunden.' : 'Der Papierkorb ist leer'}</div>`)) +
@@ -1851,7 +1858,8 @@ const App = (() => {
                   `<span class="snip">aus „${esc(blockHer(b))}" · gelöscht ` +
                   `${esc(Werkzeuge.zeitKurz(b.trashedAt))}</span></span>` +
                   '<span class="pk-tat" data-a="restore" title="Wiederherstellen">↩</span>' +
-                  '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" title="Endgültig löschen">🗑</span>' +
+                  '<span class="pk-tat weg" data-a="purge" data-loeschknopf="Endgültig löschen" ' +
+                  `title="„${esc(blockName(b))}“ endgültig löschen">🗑</span>` +
                   '</button>').join('')
               : '') +
           '</div>' +

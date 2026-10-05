@@ -250,11 +250,6 @@ console.log('\n§3 · Der Papierkorb (Rechner, dunkel)');
   const knopf = pc.locator('.pk-tat[data-a="purge"]').first();
   p('Der Endgültig-Löschen-Knopf trägt data-loeschknopf',
     await knopf.getAttribute('data-loeschknopf') === 'Endgültig löschen');
-  /* Für Vorleser nennt er, WAS endgültig weggeht (Durchsicht 5. Oktober;
-     vorher hiess das Paar „Endgültig löschen: Endgültig löschen"). */
-  const pkName = await knopf.getAttribute('aria-label');
-  p('Er nennt die Seite, die endgültig weggeht', /^„(Nachtfahrt|Skizzen|Einkauf)“ endgültig löschen$/.test(pkName ?? ''),
-    String(pkName));
   /* Das Aufgehen Bild für Bild (Durchsicht 5. Oktober): am Rechner ruht der
      Zeiger nach dem Druck auf der roten Pille (sie liegt, wo der Kreis war).
      Bei der Übergabe von der Flüssigkeit an die CSS-Pille blendete deren
@@ -289,6 +284,18 @@ console.log('\n§3 · Der Papierkorb (Rechner, dunkel)');
   const z1 = await zustand(pc);
   p('Ein Druck öffnet das Paar', z1.offen && z1.expanded === 'true', JSON.stringify(z1));
   p('Der Fokus steht auf „Abbrechen" (die sichere Wahl)', z1.fokusAbbrechen);
+  /* Für Vorleser nennt das Paar, WAS endgültig weggeht (Durchsicht
+     5. Oktober; vorher hiess es „Endgültig löschen: Endgültig löschen").
+     Gelesen wird der Name des Paars und der roten Pille — nicht ein
+     aria-label am <span>: das ginge in den Namen der Zeile ein, die selbst
+     ein <button> ist und zurückholt. */
+  const pkName = await pc.evaluate(() => ({
+    paar: document.querySelector('.ru-loesch-paar')?.getAttribute('aria-label') ?? null,
+    ja: document.querySelector('.ru-loesch-ja')?.getAttribute('aria-label') ?? null,
+    zeile: document.querySelector('.pk-tat[data-a="purge"]')?.closest('button')?.getAttribute('aria-label') ?? null }));
+  const seite = /^„(Nachtfahrt|Skizzen|Einkauf)“ endgültig löschen$/;
+  p('Er nennt die Seite, die endgültig weggeht', seite.test(pkName.paar ?? '') && seite.test(pkName.ja ?? '') &&
+    pkName.zeile === null, JSON.stringify(pkName));
   p('Gelöscht ist noch nichts, gefragt hat der Browser nicht', await zahl(pc) === 3 && fragen === 0,
     `${await zahl(pc)} im Papierkorb, ${fragen} Browser-Fragen`);
   p('Die rote Pille heisst „Endgültig löschen"',
