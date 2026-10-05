@@ -170,16 +170,24 @@ const zuPruefen = erzeugt.length > 0
 p(`§3 sieht alles, was der Bau schreibt (${zuPruefen.length} Dateien, core/ allein ${quellen.length})`,
   zuPruefen.length > quellen.length, 'nur core/ — dann blieben die übrigen ungeprüft');
 const ohneWarnung: string[] = [];
+/* UND DIE WARNUNG NENNT DIE EIGENE QUELLE (Durchsicht E715). Seit E715 ist
+   die eine Zeile alles, was im .js von der Quelle erzählt — wer sie für eine
+   neue Datei abschreibt und den Pfad nicht anpasst, schickt den Leser in die
+   falsche .ts. `/\.ts/` allein merkte das nicht. */
+const fremdeQuelle: string[] = [];
 for (const rel of zuPruefen) {
   const js = _dazu(WURZEL, 'quell', rel);
   if (!_da(js)) continue;
   const kopf = _lies(js, 'utf8').slice(0, 1200);
   const warnt = /NICHT VON HAND/i.test(kopf) && /\.ts/.test(kopf);
   if (!warnt) ohneWarnung.push('quell/' + rel);
+  else if (!kopf.includes('src/' + rel.replace(/\.js$/, '.ts'))) fremdeQuelle.push('quell/' + rel);
   p('quell/' + rel + ' warnt vor Änderungen von Hand', warnt);
 }
 p(`Alle ${zuPruefen.length} erzeugten Dateien warnen`, ohneWarnung.length === 0,
   `${ohneWarnung.length} ohne: ` + ohneWarnung.slice(0, 6).join(', '));
+p('Jede Warnung nennt ihre eigene Quelle (quell/…/x.js → src/…/x.ts)', fremdeQuelle.length === 0,
+  `${fremdeQuelle.length} nennen eine andere: ` + fremdeQuelle.slice(0, 6).join(', '));
 
 /* --------------------------------------------------------------------------
  * Die Gegenrichtung: keine Importzeile

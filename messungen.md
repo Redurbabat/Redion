@@ -5509,3 +5509,60 @@ selbst gezählt, unter dem Schloss:
   `src/bereiche/pdf/marken.ts` und `marken.js` → `test105` 333 ok,
   2 offen; `removeComments: false` in `tsconfig.bauen.json` (ohne
   Neubau) → `test388` 21/22, „reist ohne Kommentare" rot.
+
+**Durchsicht (5. Oktober 2026, nach dem zweiten Abbruch).** Eine zweite
+Durchsicht brach am 4./5. Oktober ab, bevor sie etwas festhielt; ihre
+fünf offenen Änderungen (Verweise in E28, E389, E613, E688, L216, README,
+`doku/MIGRATION-REZEPT.md`, `umzug.mts`) sind geprüft und übernommen. Neu
+gemessen, auf `c287b388e` plus diese Änderungen:
+
+- *Zahlen* (jede Datei, die `index.html` beim Start holt, samt
+  `@import` ausserhalb von Kommentaren, gzip 6): 4d9a9a3fb 2826 KB über
+  248 Dateien (JS 2395,8, CSS 416,7, HTML 13,2), roh 9688 KB; der Zweig
+  1805 KB (JS 1375,5), roh 7063 KB. Einzeldatei 11'784'203 → 9'095'626
+  Bytes. Stimmt mit dem Nachtrag überein.
+- *Derselbe Code, mit einem zweiten Parser.* tsc hat die Kommentare
+  genommen; ob es dabei Code angefasst hat, sagt ein Vergleich mit tsc
+  nicht. Deshalb oxc (`rolldown/parseAst`, mit Vite schon im Haus): jedes
+  alte `.js` von 4d9a9a3fb MIT Kommentaren und jedes neue OHNE geparst,
+  der Baum ohne Positionen verglichen — 226 von 227 gleich, `stand.js`
+  gleich bis auf den Stempel. Im erzeugten Code stehen 141 Zeichenketten,
+  9 Vorlagen und 1 regulärer Ausdruck mit `//`, `/*` oder `*/` darin; alle
+  unverändert. Gegenprobe: eine Zeichenkette in `marken.js` um ein Zeichen
+  geändert → Baum anders; ein Kommentar dazu → Baum gleich.
+- *Lizenzköpfe.* Unter `src/` steht kein fremder Kopf (`Copyright`,
+  `@license`, `SPDX`, `©` nur in einer Zeichenkette für OpenStreetMap);
+  `quell/fremd/react/react.js`, `quell/fremd/pdfjs/daten.js` und
+  `quell/islands/islands.js` gehen nicht durch tsc und sind unverändert.
+- *Bilder, Grundstand gegen Zweig* (eigene Probe, unter dem Schloss;
+  index.html und Einzeldatei je Rechner 1440×900 und Telefon 390×844,
+  dunkel, weniger Bewegung, feste Uhr und fester Zufall): Willkommen,
+  Start, 13 Wege über `Register.navigation`, alle zehn Schemata (auch
+  „Starker Kontrast" und beide Touch-Kit-Schemata), „Ruhige Darstellung"
+  und Strg P — 108 Bildpaare, 107 Pixel für Pixel gleich; eines
+  (Einzeldatei, Rechner, Bibliothek) mit 152 von 1'296'000 Bildpunkten,
+  verstreut über die schräg gestellten Dokumentblätter der Grafik.
+  Nachgefahren, je Stand dreimal derselbe Ausschnitt: alle sechs Pixel
+  für Pixel gleich — ein einmaliges Rauschen beim Rastern, nicht E715.
+  Kein Seiten- und kein Konsolenfehler in allen acht Durchgängen; Strg P
+  öffnet überall die Suche; `data-bewegung="ruhig"` greift überall.
+- *Wächter.* `test105` §3 verlangt jetzt auch, dass die Zeile ihre eigene
+  Quelle nennt. Gegenprobe: in `src/core/helpers/ids.ts` und `ids.js`
+  „idz.ts" eingesetzt → `test105` 335 ok, 1 offen („Jede Warnung nennt
+  ihre eigene Quelle … quell/core/helpers/ids.js"), §2 grün;
+  zurückgenommen.
+- *Läufe.* Dateiläufe auf diesem Stand: `test87` 177 ok, `test105` 336
+  ok/0 offen, `test109` 25, `test225` 11/11, `test549` 6/6, `test550` 8/8,
+  `test578` 110/110, dazu 47, 75, 79, 88, 89, 92, 93, 101, 102, 103, 106,
+  107, 108, 110, 113, 119, 131, 203, 216, 246, 275, 290, 294, 298, 354,
+  367, 400, 401, 402, 410, 537, 553, 571 grün; `test274` 11 ok, 1 offen
+  („verwaiste Nachschlagestelle … pdf/marken.ts: redion-graphit", E704) —
+  auf 4d9a9a3fb genauso, fremd. Unter dem Schloss: `test388` 22/22 (1805
+  KB, Decke 1950), `test353` 105/105, `test143` 23, `test412` 27/27,
+  `test579` 76/76 (mit §10 ohne Netz), `test272` 153/0, `test264` 25/25,
+  `test265` 39/39, `test268` 15/15, `test222` 52, `test510` 18, `test126`
+  29, `test127` 22, `test245` 51, `test296` 17; und die Läufe, deren
+  Prüftexte in alten Kommentaren vorkamen und die bisher keiner
+  nachgefahren hatte: `test141` 27, `test183` 27, `test191` 23, `test303`
+  16, `test341` 37, `test362` 18/18, `test411` 26, `test427` 55, `test444`
+  13, `test576` 30/30, `test582` 176, `test584` 37 — alle ohne Offenes.

@@ -1519,7 +1519,8 @@ E715 hat die Kommentare aus dem erzeugten JavaScript genommen (2826 →
 1. **Beim Zusammenführen der zweiten Welle** bekommen die neuen Quellen
    `src/schale/bedienung/delete.ts`, `kacheln.ts` und `tropfen.ts` die
    erste Zeile `/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/… (npm run
-   bauen:ts). */` — `test105` §3 zeigt jede, der sie fehlt.
+   bauen:ts). */` mit ihrem eigenen Pfad — `test105` §3 zeigt jede, der
+   sie fehlt oder deren Zeile eine andere Quelle nennt.
 2. **Die Kommentare der Stilblätter** sind 261 von 417 KB CSS beim Start.
    CSS ist Quelle; sie gingen nur mit einem Bauschritt für CSS weg (§6) —
    Frage an Redur, nicht still.

@@ -29,6 +29,16 @@ später geladen.
 `tropfen.ts`) bekommen die ERZEUGT-Zeile beim Zusammenführen; die
 Kommentare der Stilblätter (261 KB) bleiben — CSS ist Quelle.
 
+**Durchsicht (5. Oktober):** derselbe Code noch einmal, diesmal mit einem
+zweiten Parser (oxc): 226 von 227 Bäumen alt mit und neu ohne Kommentare
+gleich, `stand.js` im Stempel; die Zahlen selbst gezählt; 108 Bilder
+Grundstand gegen Zweig (index.html und Einzeldatei, Rechner und Telefon,
+zehn Schemata, „Ruhige Darstellung", Strg P, 13 Wege), kein Fehler.
+`test105` §3 verlangt jetzt auch die EIGENE Quelle in der Zeile; die
+Verweise auf E715 in E28, E389, E613, E688 und L216; README ohne den
+veralteten Satz „Ein Prüflauf ist rot (L146)"; `umzug.mts` setzt die
+Zeile selbst.
+
 ## 28. September 2026 · E706 · Das Material des Touch Kits überall, wo man wählt
 
 **Redur:** um ca. 21:47 die Vorschau der Tab-Leiste aus dem UI-Kit und dazu

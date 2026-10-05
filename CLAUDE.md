@@ -2863,8 +2863,9 @@ eine Zeile, mit der jede Quelle beginnt und die tsc stehen lässt:
 
     /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/…/name.ts (npm run bauen:ts). */
 
-Wer eine neue Quelle anlegt, schreibt sie als erste Zeile; `test105` §3
-meldet jede erzeugte Datei, der sie fehlt, und `test388` §5 reisst, wenn die
+Wer eine neue Quelle anlegt, schreibt sie als erste Zeile, mit dem eigenen
+Pfad; `test105` §3 meldet jede erzeugte Datei, der sie fehlt oder deren
+Zeile eine andere Quelle nennt, und `test388` §5 reisst, wenn die
 Kommentare zurückkommen.
 
 Eine React-INSEL (E699) — die dritte Sorte erzeugtes JavaScript:

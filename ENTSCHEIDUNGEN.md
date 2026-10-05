@@ -1999,6 +1999,12 @@ Datei ohnehin migriert wird.
 
 ## E28 · Die Sprachen, die dieses Projekt benutzt
 
+> **Ergänzt durch E715 (3. Oktober 2026) — das erzeugte JavaScript reist
+> ohne Kommentare.** `tsconfig.bauen.json` setzt `removeComments`; die
+> Erklärungen stehen in `src/`. Jede Quelle beginnt mit
+> `/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/… (npm run bauen:ts). */`,
+> die tsc stehen lässt; `test105` §3 prüft sie in jeder erzeugten Datei.
+
 **Problem**
 
 „Wir schreiben TypeScript" war eine Absicht, keine Regel. Nichts hinderte
@@ -31807,6 +31813,10 @@ E389 — Der Start wartet nicht mehr auf 185 Skripte
 ================================================================================
 4. September 2026 · Redur schickte einen PageSpeed-Bericht
 
+> **Ergänzt durch E715 (3. Oktober 2026).** pdf.js bleibt beim Bedarf, wie
+> hier entschieden; die übrigen Skripte reisen seither ohne Kommentare, der
+> Start holt 1805 KB gzip unter einer Decke von 1950 (`test388` §5).
+
 DIE ZAHLEN VON GOOGLE KAMEN NICHT AN — der Netzzugang dieses Containers
 verweigert `googleapis.com` (403 am Tunnel, nachgesehen im Proxy-Status).
 Also selbst gemessen, mit derselben Drosselung, die Lighthouse mobil
@@ -49847,6 +49857,11 @@ rot, ohne dass etwas zugewachsen wäre.
 
 ## E613 — Die Chronik kommt erst, wenn jemand sie öffnet (und die Decke bekommt ihre Begründung)
 
+> **Ergänzt durch E688 (2850 KB) und E715 (3. Oktober 2026, 1950 KB).**
+> Die Chronik bleibt beim Öffnen, wie hier entschieden; die Decke in
+> `test388` §5 steht seit E715 auf 1950 KB, weil das erzeugte JavaScript
+> ohne Kommentare reist (1805 KB beim Start).
+
 **16. September 2026.** `test388 §5` war rot, und zwar seit zwölf Tagen,
 ohne dass es jemandem aufgefallen wäre — die Läufe auf GitHub brechen seit
 Wochen nach drei Sekunden ab (Konto-Ebene, kein Codefehler), und im Container
@@ -56159,6 +56174,13 @@ Reihenfolge in `index.html` fest.
 
 ## E688 — Die Startdecke steigt auf 2850 KB, und zwei Posten darin sind Inhalt, kein Code
 
+> **Ergänzt durch E715 (3. Oktober 2026) — die Decke sinkt auf 1950 KB.**
+> Das erzeugte JavaScript reist seither ohne Kommentare (`removeComments`
+> in `tsconfig.bauen.json`); der Start holt 1805 statt 2826 KB, derselbe
+> Code. Bei 2850 käme pdf.js (526 KB) unbemerkt zurück — deshalb steht die
+> Decke in `test388` §5 jetzt auf 1950. Was dieser Eintrag über das Anheben
+> sagt, gilt weiter: wer sie anhebt, zählt vorher und sieht zuerst nach L216.
+
 **Datum:** 25. September 2026 · **Wächter:** `test388 §5` (19 Zusagen) ·
 **Messung:** `messungen.md`, Abschnitt zur Startnutzlast vom 25. September
 
@@ -58602,6 +58624,12 @@ durch wie auf dem Grundstand (§86).
 **Was es kostet.**
 - Wer im Debugger des Browsers liest, sieht Code ohne Erklärung. Die erste
   Zeile sagt, welche Quelle die Erklärung trägt.
+- Fehlermeldungen nennen ihren Ort als `datei.js:Zeile` (`schale.ts`,
+  der Fehlerbalken; `pflege.ts`, die gemerkten Fehler). Die Zeile zeigt
+  weiter in die ausgelieferte Datei — aber auf eine andere Nummer als vor
+  E715. Ein Bericht von vorher passt nicht mehr Zeile für Zeile; die
+  Nummer in der `.ts` war nie dieselbe (tsc schreibt neu, Quellkarten gibt
+  es keine).
 - 227 Quellen haben eine Zeile mehr, und **jede neue Quelle braucht sie**
   — `test105` §3 meldet jede, der sie fehlt. Für das Zusammenführen der
   zweiten Welle heisst das: `src/schale/bedienung/delete.ts` (E709),
@@ -58633,3 +58661,20 @@ Kommentar aus erzeugtem JavaScript; `test264`, `test265` und `test268`
 verlangen den ERZEUGT-Kopf im erzeugten `.js` und finden ihn jetzt in der
 `/*!`-Zeile. Die Chronik (`chronik/daten.js`) warnte, nannte aber keine
 `.ts` — `test105` hätte sie nie gezählt.
+
+**Durchsicht (5. Oktober 2026, nach dem zweiten Abbruch).** Nachgeprüft,
+nicht übernommen: (1) *Derselbe Code, unabhängig von tsc* — ein zweiter
+Parser (oxc, über `rolldown/parseAst`, schon für die Inseln im Haus) liest
+jedes alte `.js` MIT Kommentaren und jedes neue OHNE: 226 von 227 Bäumen
+sind gleich, `stand.js` nur im Stempel. Zeichenketten, Vorlagen und
+reguläre Ausdrücke mit `//` oder `/* */` darin (141, 9 und 1) stehen
+unverändert; eine geänderte Zeichenkette merkt der Vergleich. (2) Die
+Zahlen selbst gezählt: 2826 → 1805 KB über 248 Dateien, roh 9688 → 7063,
+Einzeldatei 11'784'203 → 9'095'626 Bytes. (3) Kein Lizenzkopf geht
+verloren: unter `src/` steht keiner (FREMDCODE: `src/` ist Redions
+Code), React, pdf.js und die Inseln gehen nicht durch tsc. (4) `test105`
+§3 prüft jetzt auch, dass die Zeile ihre EIGENE Quelle nennt — seit E715
+ist sie alles, was das `.js` von seiner Quelle weiss. (5) Die Verweise auf
+E715 stehen jetzt auch in E28, E389, E613 und E688; README sagte noch
+„Ein Prüflauf ist rot (L146) … 2300 KB" — L146 ist seit E613
+geschlossen. Messung: `messungen.md` §86, Durchsicht.
