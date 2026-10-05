@@ -216,10 +216,13 @@ const Einstellungen = (() => {
     const fenster = o.querySelector<HTMLElement>('.einst-fenster');
 
     const zeichne = (): void => {
-      const ziel = o.querySelector('#ei');
+      const ziel = o.querySelector<HTMLElement>('#ei');
       if (ziel) ziel.innerHTML =
         '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
         '‹ Übersicht</button>' + inhalt(offenerBereich);
+      /* Glaskacheln unter „Einstellungen" (E712); die Felder bleiben (§43). */
+      if (ziel && offenerBereich === 'allgemein' && typeof Schnellkacheln !== 'undefined')
+        Schnellkacheln.einsetzen(ziel, { nach: ziel.querySelector(':scope > h2'), rolle: ziel });
       o.querySelectorAll<HTMLElement>('.einst-nav button').forEach(b =>
         b.classList.toggle('on', b.dataset.b === offenerBereich));
       binde(o);

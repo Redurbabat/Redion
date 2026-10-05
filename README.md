@@ -456,6 +456,10 @@ Die helle Fläche hinter dem gewählten Weg lässt sich mit dem Daumen greifen (
 
 Zwischen den Bereichen lässt sich auch wischen: waagerecht über den Inhalt, und die Leiste geht einen Weg weiter. Die Geste sucht sich den nächsten Knopf und drückt ihn — damit gilt fürs Wischen alles, was fürs Tippen gilt, statt einer zweiten Logik daneben. Sie greift nicht, wo etwas waagerecht rollt, wo gezeichnet wird, wo zwei Finger zoomen oder wo der Finger ganz am Rand ansetzt; dort meint man den Browser.
 
+Oben in „Mehr" stehen sieben Glaskacheln (E712): Dunkel, Fokus-Modus, Ruhige Darstellung, Hoher Kontrast, Zeitmesser und zwei Regler für Schriftgrösse und Zeilenabstand, die sich von unten füllen. Rollt man, werden sie zu einer Chipleiste, die oben klebt. Dieselben Kacheln stehen am Rechner oben in Einstellungen → Allgemein; die Auswahlfelder darunter bleiben, und beide zeigen immer denselben Stand.
+
+Das „+" und das „⋯" einer Seite fliessen wie ein Tropfen in ihr Menü (E712): das Menü wächst aus dem Knopf, oben teilen sich drei runde Glasknöpfe ab — PDF einlesen, Neue Seite, Notizbuch beim „+", Präsentieren, Merkzeichen, Teilen und ausgeben beim „⋯" —, und darunter steht jeder Eintrag wie bisher. Mit „Ruhige Darstellung" oder weniger Bewegung im System steht alles sofort da.
+
 Suchen und KI stehen rechts in der Menüleiste, „Neu" ist der grosse Knopf im Regal und im Mehr-Blatt. Die drei schwebenden Knöpfe von früher — Suchen, KI fragen, Neue Seite — gibt es nicht mehr: zwei Leisten am unteren Rand sind eine zu viel.
 
 Menüs kommen als Blatt von unten, nicht als kleines Fenster in der Ecke. Was man antippen soll, ist mindestens 44 Pixel gross.

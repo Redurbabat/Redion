@@ -548,7 +548,7 @@ const Notebook = (() => {
                 return;
             }
             if (was === 'alle')
-                return App.erstellenBlatt();
+                return App.erstellenBlatt(anker);
             setTimeout(() => App.erstellenWeg(was), 60);
         });
     };

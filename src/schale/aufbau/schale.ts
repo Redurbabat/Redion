@@ -494,6 +494,16 @@ const App = (() => {
     });
   };
 
+  /** Das Merkzeichen kippen — EIN Weg für ★, „Zu Favoriten" und den runden Knopf (E712, §8). */
+  const favoritKippen = (p: any): boolean => {
+    const jetzt = Store.getBlock(p.id) || p;
+    const neu = !jetzt.favorite;
+    Store.updateBlock(p.id, { favorite: neu });
+    p.favorite = neu;
+    zeichneBaum(); zeichneCrumbs();
+    return neu;
+  };
+
   const seitenMenue = (anker: any, p: any) => {
     const r = anker.getBoundingClientRect();
     const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -571,6 +581,21 @@ const App = (() => {
       '<button data-a="papier">' + mi('trash') + 'Gelöschte Seiten</button>',
       r.right + 4, r.top,
       { platzhalter: 'Suchaktionen …', titel: 'Aktionen',
+        /* Drei runde Abkürzungen (E712); alle Einträge bleiben darunter. */
+        anker,
+        tropfen: [
+          { id: 'wz-praesi', name: 'Präsentieren', zeichen: 'play', ziel: '[data-a="wz-praesi"]' },
+          { id: 'merkzeichen', name: 'Merkzeichen', zeichen: 'bookmark', an: !!p.favorite,
+            kippen: () => {
+              const an = favoritKippen(p);
+              /* der Eintrag darunter sagt dasselbe (Durchsicht E712) */
+              const eintrag = document.querySelector<HTMLElement>('.menu .menu-liste [data-a="fav"]');
+              if (eintrag) eintrag.innerHTML = mi('star') + (an ? 'Aus Favoriten entfernen' : 'Zu Favoriten');
+              return an;
+            } },
+          { id: 'teilen', name: 'Teilen und ausgeben', zeichen: 'share', ziel: '[data-a="teilen"]',
+            tun: () => Werkzeuge.teilenMenue(anker, p) }
+        ],
         fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
               `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
               esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
@@ -699,7 +724,7 @@ const App = (() => {
       if (a === 'verlauf')   { Werkzeuge.versionen(p); return; }
       if (a === 'kopf-komm') { document.getElementById('btn-komm')?.click(); return; }
       if (a === 'auto')      { document.getElementById('btn-auto')?.click(); return; }
-      if (a === 'fav')   { Store.updateBlock(p.id, { favorite: !p.favorite }); zeichneBaum(); }
+      if (a === 'fav')   { favoritKippen(p); }
       if (a === 'klein') { Store.updateBlock(p.id, { small: !p.small }); zeichneSeite(); }
       if (a === 'breit') { volleBreite(p); }
       if (a === 'rename') {
@@ -3060,7 +3085,7 @@ const App = (() => {
     ERSTELLEN.filter(w => !w.da || w.da())
       .map(w => ({ id: w.id, zeichen: w.zeichen, name: w.name, sub: w.sub }));
 
-  const erstellenBlatt = (): void => {
+  const erstellenBlatt = (anker?: HTMLElement | null): void => {
     /* Erst aussortieren, was es hier nicht gibt, DANN gruppieren — sonst
        bleibt eine Überschrift ohne Zeilen darunter stehen. */
     const wege = ERSTELLEN.filter(w => !w.da || w.da());
@@ -3082,7 +3107,17 @@ const App = (() => {
         '<span class="ne-pfeil">›</span></button>').join('')).join('') +
       '</div>';
 
-    const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen' });
+    /* Das Menü wächst aus dem „+" (E712; ohne Knopf: das „+" im Studio-Kopf).
+       Drei runde Abkürzungen oben, jeder Weg bleibt darunter (§43). */
+    const plus = document.getElementById('studio-create');
+    const ort = anker || (plus && plus.getBoundingClientRect().width > 0 ? plus : null);
+    const vorn = [
+      { id: 'pdf', name: 'PDF einlesen', zeichen: 'upload' },
+      { id: 'seite', name: 'Neue Seite', zeichen: 'page' },
+      { id: 'heft', name: 'Notizbuch', zeichen: 'book' }
+    ].filter(k => wege.some(w => w.id === k.id))
+     .map(k => ({ ...k, ziel: `[data-neu="${k.id}"]` }));
+    const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen', anker: ort, tropfen: vorn });
     m.addEventListener('click', (e: Event) => {
       const b = (e.target instanceof Element)
         ? e.target.closest<HTMLElement>('[data-neu]') : null;
@@ -4566,9 +4601,7 @@ const App = (() => {
     });
     an('btn-fav', () => {
       if (!seiteId) return;
-      const p = Store.getBlock(seiteId);
-      Store.updateBlock(p.id, { favorite: !p.favorite });
-      zeichneBaum(); zeichneCrumbs();
+      favoritKippen(Store.getBlock(seiteId));
     });
     /* Glocke und Wolke-Punkt hängen NICHT hier (E251, zweiter Anlauf):
        die Kopfzeile gehört der Seite, die Menüleiste der App — dort

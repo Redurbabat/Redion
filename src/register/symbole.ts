@@ -434,6 +434,14 @@ Register.symbole = (() => {
     sun:       '<circle cx="12" cy="12" r="4.2"/>' +
                '<path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7' +
                'M18.7 5.3 17 7M7 17l-1.7 1.7"/>',
+    /* Drei für die Glaskacheln in „Mehr" und den Einstellungen (E712):
+       der Mond für „Dunkel", der halbe Kreis für „Hoher Kontrast", die
+       stillen Wellen für „Ruhige Darstellung". */
+    moon:      '<path d="M19.6 14.6A7.9 7.9 0 0 1 9.4 4.4a7.9 7.9 0 1 0 10.2 10.2z"/>',
+    contrast:  '<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4v17.2"/>' +
+               '<path d="M12 6.2h5.2M12 9.1h7.6M12 12h8.4M12 14.9h7.6M12 17.8h5.2"/>',
+    calm:      '<path d="M3.6 9c2.8-1.8 5.6-1.8 8.4 0s5.6 1.8 8.4 0"/>' +
+               '<path d="M3.6 15c2.8-1.2 5.6-1.2 8.4 0s5.6 1.2 8.4 0"/>',
     rocket:    '<path d="M12 2.6c3 2.2 4.6 5.5 4.6 9.2L14.4 17H9.6L7.4 11.8C7.4 8.1 9 4.8 12 2.6z"/>' +
                '<circle cx="12" cy="10" r="1.9"/><path d="M9.6 17 7 21l3.6-1.4M14.4 17 17 21l-3.6-1.4"/>',
     box:       '<rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/>',

@@ -55,6 +55,9 @@ const Linse = (() => {
      zwei Filter war „ein Filterwert lässt sich nicht animieren"; jetzt
      wechselt die Pille zwischen KEINEM und diesem einen, und das genügt. */
   const FAHRT = 'ru-linse-fahrt';
+  /* Der Tropfen (E712): EIN Goo-Filter im selben Halter (E649), nur solange
+     es fliesst (`tropfenLeihen`); in Ruhe nur FAHRT (test539 §2). */
+  const TROPFEN = 'ru-linse-tropfen';
 
   /* Die Karte als Bild. Sie wird auf die Grösse der Linse gezogen
      (`preserveAspectRatio="none"`), die Zahlen hier sind also nur ein
@@ -101,6 +104,22 @@ const Linse = (() => {
         values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0' }),
       el('feBlend', { in: 'kr', in2: 'kg', mode: 'screen', result: 'krg' }),
       el('feBlend', { in: 'krg', in2: 'kb', mode: 'screen' })
+    );
+    return f;
+  };
+
+  /** Weich, hart geschnitten, scharf obenauf: bei 7 px berühren sich zwei
+   *  44-px-Kreise bis etwa 14 px Abstand. */
+  const tropfen = (): SVGElement => {
+    const f = el('filter', {
+      id: TROPFEN, x: '-20%', y: '-20%', width: '140%', height: '140%',
+      'color-interpolation-filters': 'sRGB'
+    });
+    f.append(
+      el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '7', result: 'weich' }),
+      el('feColorMatrix', { in: 'weich', type: 'matrix', result: 'zaeh',
+        values: '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10' }),
+      el('feComposite', { in: 'SourceGraphic', in2: 'zaeh', operator: 'atop' })
     );
     return f;
   };
@@ -184,7 +203,191 @@ const Linse = (() => {
     document.body.append(huelle);
   };
 
-  return { HALTER, FAHRT, sicherstellen };
+  /* Kommt mit der ersten Bühne, geht mit der letzten (Durchsicht E712). */
+  let tropfenNutzer = 0;
+  const tropfenLeihen = (): (() => void) => {
+    sicherstellen();
+    const defs = document.querySelector(`#${HALTER} defs`);
+    if (defs && !document.getElementById(TROPFEN)) defs.append(tropfen());
+    tropfenNutzer++;
+    let zurueck = false;
+    return () => {
+      if (zurueck) return;
+      zurueck = true;
+      tropfenNutzer = Math.max(0, tropfenNutzer - 1);
+      if (!tropfenNutzer) document.getElementById(TROPFEN)?.remove();
+    };
+  };
+
+  /* DIE LINSE ÜBER DEM SATZ (E712, Szene 03): einmal beim Ankommen über
+     „Aufmachen. / Weiterdenken.", dann Stillstand. Eine Abschrift in der
+     Linse, verschoben und um 1,2 vergrössert — nur `transform`, die Bahn
+     einmal gerechnet (Feder „knapp"). Unterwegs Milchglas (still
+     weichgezeichnet, nur Deckkraft), in Ruhe die Brechung `FAHRT`. */
+  const SATZ_GESAMT = 1650;
+  let satzBeginn = 0;
+
+  /* Ändert sich der Satz (Fenster, Schrift), legt sich die Linse neu an
+     ihren Ort, ohne neue Fahrt (Durchsicht E712). */
+  let satzBeobachter: ResizeObserver | null = null;
+  let beobachtet: HTMLElement | null = null;
+  const beobachten = (satz: HTMLElement): void => {
+    if (beobachtet === satz || typeof ResizeObserver === 'undefined') return;
+    satzBeobachter?.disconnect();
+    beobachtet = satz;
+    let mass = '';
+    satzBeobachter = new ResizeObserver(() => {
+      if (!satz.isConnected) {
+        satzBeobachter?.disconnect(); satzBeobachter = null; beobachtet = null;
+        return;
+      }
+      const r = satz.getBoundingClientRect();
+      const neu = Math.round(r.width) + '×' + Math.round(r.height) + ' ' + getComputedStyle(satz).fontSize;
+      if (!mass || neu === mass) { mass = neu; return; }
+      mass = neu;
+      ueberSatz(satz, false);
+    });
+    satzBeobachter.observe(satz);
+  };
+
+  const ueberSatz = (satz: HTMLElement, gleiten: boolean): void => {
+    const traeger = satz.parentElement;
+    if (!traeger) return;
+    traeger.querySelector(':scope > .ru-held-linse')?.remove();
+    const zeilen = [...satz.querySelectorAll<HTMLElement>('.ru-held-zeile')];
+    const z1 = zeilen[0], z2 = zeilen[zeilen.length - 1];
+    if (!z1 || !z2) return;
+    sicherstellen();
+    beobachten(satz);
+
+    const still = typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
+    const jetzt = performance.now();
+    /* Zeichnet die Ansicht gleich danach neu, läuft dieselbe Fahrt weiter. */
+    const versatz = still ? SATZ_GESAMT
+      : gleiten ? 0 : (satzBeginn && jetzt - satzBeginn < SATZ_GESAMT ? jetzt - satzBeginn : SATZ_GESAMT);
+    if (gleiten && !still) satzBeginn = jetzt;
+
+    const kasten = traeger.getBoundingClientRect();
+    const lage = (z: HTMLElement) => {
+      const r = z.getBoundingClientRect();
+      return { x: r.left - kasten.left, y: r.top - kasten.top, b: r.width, h: r.height };
+    };
+    const a = lage(z1), e = lage(z2);
+    const stil = getComputedStyle(satz);
+    const fs = parseFloat(stil.fontSize) || 40;
+    const D = Math.round(Math.max(48, Math.min(84, fs * 1.7)));
+    const S = 1.2;
+    const P0 = { x: a.x + fs * 0.4, y: a.y + a.h / 2 };
+    const P1 = { x: a.x + a.b - fs * 0.8, y: a.y + a.h / 2 };
+    const P2 = { x: e.x + e.b - fs * 0.8, y: e.y + e.h / 2 };
+
+    const linse = document.createElement('div');
+    linse.className = 'ru-held-linse';
+    linse.setAttribute('aria-hidden', 'true');
+    linse.style.width = linse.style.height = D + 'px';
+    const abschrift = (klasse: string): { huelle: HTMLElement; bild: HTMLElement } => {
+      const huelle = document.createElement('div');
+      huelle.className = klasse;
+      const bild = document.createElement('div');
+      bild.className = 'ru-held-linse-bild';
+      zeilen.forEach((z, i) => {
+        if (i) bild.append(document.createElement('br'));
+        bild.append(document.createTextNode(z.textContent || ''));
+      });
+      bild.style.font = stil.font;
+      bild.style.letterSpacing = stil.letterSpacing;
+      bild.style.width = satz.clientWidth + 'px';
+      huelle.append(bild);
+      return { huelle, bild };
+    };
+    const glasTeil = abschrift('ru-held-linse-glas');
+    const frostTeil = abschrift('ru-held-linse-frost');
+    linse.append(frostTeil.huelle, glasTeil.huelle);
+    traeger.append(linse);
+
+    /* Abschrift bei (0,0) der Linse: Verschiebung = D/2 − S·(C − H). */
+    const hr = satz.getBoundingClientRect();
+    const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
+    const lagenText = (c: { x: number; y: number }, sx = 1, sy = 1): [string, string] => [
+      `translate(${(c.x - D / 2).toFixed(2)}px,${(c.y - D / 2).toFixed(2)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`,
+      `translate(${(D / 2 - S * (c.x - H.x)).toFixed(2)}px,${(D / 2 - S * (c.y - H.y)).toFixed(2)}px) scale(${S})`
+    ];
+
+    if (still || versatz >= SATZ_GESAMT) {
+      const [l, b] = lagenText(P2);
+      linse.style.transform = l;
+      glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
+      frostTeil.huelle.style.opacity = '0';
+      return;
+    }
+
+    /* Warten, zum Ende der ersten Zeile, ruhen, zum Ende der zweiten. */
+    const feder = RedionSpring.sample(RedionSpring.preset('snappy'), 0, 1, 0, 16);
+    const T1 = 260, T2 = 900;
+    type Bild = { t: number; c: { x: number; y: number }; sx: number; sy: number };
+    const bilder: Bild[] = [{ t: 0, c: P0, sx: 1, sy: 1 }, { t: T1, c: P0, sx: 1, sy: 1 }];
+    const strecke = (von: { x: number; y: number }, nach: { x: number; y: number }, ab: number): number => {
+      let vorher = von, tv = ab;
+      feder.values.forEach((v, i) => {
+        const t = ab + Math.min(i * 16, feder.duration);
+        const c = { x: von.x + (nach.x - von.x) * v, y: von.y + (nach.y - von.y) * v };
+        const dt = Math.max(1, t - tv);
+        const tempo = Math.hypot(c.x - vorher.x, c.y - vorher.y) / dt;   /* px/ms */
+        const sx = 1 + Math.min(0.4, tempo * 0.16), sy = 1 - 0.5 * (sx - 1);
+        bilder.push({ t, c, sx, sy });
+        vorher = c; tv = t;
+      });
+      return ab + feder.duration;
+    };
+    const ende1 = strecke(P0, P1, T1);
+    bilder.push({ t: Math.max(ende1, T2 - 1), c: P1, sx: 1, sy: 1 });
+    const ende2 = strecke(P1, P2, Math.max(T2, ende1 + 20));
+    const T = Math.max(SATZ_GESAMT, ende2);
+    bilder.push({ t: T, c: P2, sx: 1, sy: 1 });
+
+    const lauf: Animation[] = [];
+    const los = (el: HTMLElement, kf: Keyframe[]): void => {
+      const an = el.animate(kf, { duration: T, easing: 'linear', fill: 'both' });
+      an.currentTime = versatz;
+      lauf.push(an);
+    };
+    los(linse, bilder.map(b => ({ offset: b.t / T, transform: lagenText(b.c, b.sx, b.sy)[0] })));
+    const innen = bilder.map(b => ({ offset: b.t / T, transform: lagenText(b.c)[1] }));
+    los(glasTeil.bild, innen);
+    los(frostTeil.bild, innen);
+    const blende = (t: number): number => t / T;
+    const scharf: Keyframe[] = [
+      { offset: 0, opacity: 1 }, { offset: blende(T1), opacity: 1 }, { offset: blende(T1 + 70), opacity: 0 },
+      { offset: blende(ende1 - 140), opacity: 0 }, { offset: blende(ende1 - 60), opacity: 1 },
+      { offset: blende(Math.max(T2, ende1 + 20)), opacity: 1 }, { offset: blende(Math.max(T2, ende1 + 20) + 70), opacity: 0 },
+      { offset: blende(ende2 - 140), opacity: 0 }, { offset: blende(ende2 - 60), opacity: 1 }, { offset: 1, opacity: 1 }
+    ].sort((x, y) => (x.offset as number) - (y.offset as number));
+    los(glasTeil.huelle, scharf);
+    los(frostTeil.huelle, scharf.map(k => ({ offset: k.offset as number, opacity: 1 - (k.opacity as number) })));
+    const pop = RedionSpring.token('bouncy');
+    const auf = linse.animate([{ scale: '0.4', opacity: 0 }, { scale: '1', opacity: 1 }],
+      { duration: pop.duration, easing: pop.easing, fill: 'both' });
+    auf.currentTime = Math.min(versatz, pop.duration);
+    lauf.push(auf);
+
+    /* Die Zeilen kommen verwischt herein (CSS, Federn aus grund.css). */
+    if (versatz < 900) {
+      satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
+      satz.classList.add('ru-held-kommt');
+      const fertig = (): void => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
+      z2.addEventListener('animationend', ev => { if (ev.target === z2) fertig(); }, { once: true });
+      setTimeout(fertig, 2400);
+    }
+    Promise.all(lauf.map(x => x.finished)).then(() => {
+      const [l, b] = lagenText(P2);
+      linse.style.transform = l;
+      glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
+      frostTeil.huelle.style.opacity = '0';
+      lauf.forEach(x => x.cancel());
+    }).catch(() => { /* abgebrochen: die Ansicht ist schon weg */ });
+  };
+
+  return { HALTER, FAHRT, TROPFEN, sicherstellen, tropfenLeihen, ueberSatz };
 })();
 
 (window as any).Linse = Linse;

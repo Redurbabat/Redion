@@ -445,7 +445,7 @@ const Kontextkante = (() => {
     { id: 'ki', name: 'Lokale KI', zeichen: 'sparkle',
       tun: () => { try { App.kiPanel(true); } catch { /* ohne KI bleibt der Knopf */ } } },
     { id: 'neu', name: 'Neu erstellen', zeichen: 'plus',
-      tun: () => { try { App.erstellenBlatt(); } catch { /* ohne Katalog nichts */ } } },
+      tun: (b?: HTMLElement) => { try { App.erstellenBlatt(b); } catch { /* ohne Katalog nichts */ } } },
     { id: 'einstellungen', name: 'Einstellungen', zeichen: 'settings',
       tun: () => { try { holen('Einstellungen')?.oeffne?.(); } catch { /* … */ } } }
   ];

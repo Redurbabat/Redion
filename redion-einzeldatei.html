@@ -837,6 +837,7 @@ html[data-theme="light"]{
   body #handy-oben #ho-pille::after{ background:none }
   body .ru-fach-art{ background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
   html body #ai .ai-head .rmo-orb-karte{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
+  body .ru-held-linse{ display:none }
 }
 /* Dieselben Zeilen für Redions eigene zwei Schalter: „Hoher Kontrast" in
    den Einstellungen (`body[data-kontrast]`, seite.ts) und das Schema
@@ -858,6 +859,16 @@ body[data-kontrast="hoch"], html[data-schema="kontrast"] > body{
   background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ai .ai-head .rmo-orb-karte{
   background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
+/* Kachel „Hoher Kontrast" an: Gelb und Schwarz des Schemas „Starker
+   Kontrast" — hier, weil Farben von Hand nur in Markendateien stehen
+   (test584 §11; Durchsicht E712). */
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-kachel[data-kachel="kontrast"]::before,
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-kachel-chip[data-kachel="kontrast"][aria-pressed="true"]{
+  background:#ffd400 }
+/* Die Linse über „Heute" ist Zier aus Glas: ohne Glas keine Linse (E712). */
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-held-linse{ display:none }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) :is(.ru-kachel, .ru-kachel-chip)[data-kachel="kontrast"][aria-pressed="true"]{
+  color:#000 }
 
 /* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder
    einzelnen Stelle, sondern hier einmal: die vier Dauern werden auf nahezu
@@ -24104,6 +24115,122 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .pe-karte.neu .pe-karte-text{font-weight:600}
 .pe-karte-zeit{font-size:12px;color:var(--text-dim);white-space:nowrap}
 
+/* 8 · TROPFEN, LINSE UND KACHELN (E712; Redur, 27.09., ca. 22:05, zum Video
+   „LIQUID GLASS": „Schau mal das auch an ich will das auch haben"). Nur
+   transform/opacity; der Tropfenfilter nur auf der Bühne, solange sie steht. */
+
+/* 8a · Drei runde Knöpfe oben im Menü (der runde Teil: --touch-min, §37). */
+.menu .ru-tropfen-kopf{display:flex;justify-content:center;gap:var(--space-2);
+  padding:var(--space-3) var(--space-2) var(--space-2);margin-bottom:var(--space-1);
+  border-bottom:1px solid var(--line-soft)}
+.menu .ru-tropfen-kopf .ru-tropfen-knopf{flex:1 1 0;width:auto;max-width:112px;display:flex;
+  flex-direction:column;align-items:center;gap:var(--space-2);padding:2px 2px var(--space-1);
+  background:none;border-radius:var(--radius-lg);text-align:center}
+.menu .ru-tropfen-kopf .ru-tropfen-knopf:hover{background:none}
+.ru-tropfen-rund{display:grid;place-items:center;width:var(--touch-min);height:var(--touch-min);
+  border-radius:50%;background:var(--bg-hover);color:var(--text);
+  box-shadow:var(--glas-kante),0 4px 12px rgba(0,0,0,.18);
+  transition:background-color var(--motion-fast) var(--ease)}
+.ru-tropfen-rund > svg{width:20px;height:20px}
+.ru-tropfen-knopf:is(:hover,:focus-visible) .ru-tropfen-rund{background:var(--bg-press)}
+.menu .ru-tropfen-kopf .ru-tropfen-knopf:focus-visible{outline:none}
+.ru-tropfen-knopf:focus-visible .ru-tropfen-rund{outline:2px solid var(--accent-text);outline-offset:2px}
+.ru-tropfen-knopf[aria-pressed="true"] .ru-tropfen-rund{color:var(--accent-text)}
+/* Volle Schrift: auf dem Glas des Blatts lag --text-dim bei 4,4 : 1 (dritte Durchsicht E712). */
+.ru-tropfen-name{font-size:11.5px;line-height:1.25;color:var(--text);max-width:100%}
+.menu.blatt .ru-tropfen-kopf{flex:none;padding:var(--space-2) var(--space-4) var(--space-3)}
+.menu.blatt .ru-tropfen-kopf .ru-tropfen-knopf{min-height:0;padding:2px;font-size:12px;border-radius:var(--radius-lg)}
+.menu.blatt .ru-tropfen-name{font-size:12px}
+/* Die Scheibe wächst aus dem Knopf (tropfen.ts) — keine zweite Ankunft. */
+.menu.ru-tropfen-menue:not(.blatt),
+.menu.ru-tropfen-menue:not(.blatt) > *{animation:none}
+/* Die Knöpfe kommen DAZU: die Liste darunter behält ihre 60vh (Nachtrag E712). */
+.menu.ru-tropfen-menue:not(.blatt){max-height:min(calc(60vh + var(--ru-tropfen-kopf,0px) + var(--space-1)),calc(100vh - var(--space-5)))}
+
+/* 8b · Die Bühne: nur während es fliesst. */
+.ru-tropfen-buehne{position:fixed;z-index:605;pointer-events:none}
+.ru-tropfen-goo{position:absolute;inset:0;
+  filter:url(#ru-linse-tropfen) drop-shadow(0 4px 10px rgba(0,0,0,.22))}
+.ru-tropfen-kreis{position:absolute;left:0;top:0;border-radius:50%;background:var(--bg-hover)}
+.ru-tropfen-geist{position:absolute;border-radius:var(--radius-2xl);transform-origin:0 0;
+  background:var(--bg-schwebend-dicht);box-shadow:var(--glas-kante),var(--studio-elevation)}
+
+/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Sie trägt
+   Schrift, also dichtes Glas (E695) — sonst stünde „ken" doppelt da. */
+.lernwelt .lw-desk-copy{position:relative}
+.ru-held-zeile{display:inline-block;position:relative}
+/* Der Dunst ist Bild: leerer Ersatztext für Vorleser (Durchsicht E712). */
+.ru-held-zeile::before{content:attr(data-zeile) / "";position:absolute;left:0;top:0;white-space:nowrap;
+  filter:blur(5px);opacity:0;pointer-events:none}
+h2.ru-held-kommt .ru-held-zeile{animation:ru-held-zeile-kommt var(--feder-knapp-dauer) var(--feder-knapp) both;
+  animation-delay:var(--ru-held-versatz,0ms)}
+h2.ru-held-kommt .ru-held-zeile::before{animation:ru-held-dunst var(--feder-knapp-dauer) linear both;
+  animation-delay:var(--ru-held-versatz,0ms)}
+h2.ru-held-kommt .ru-held-zeile:nth-of-type(2),
+h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(--ru-held-versatz,0ms) + 320ms)}
+@keyframes ru-held-zeile-kommt{0%{opacity:0;transform:translateY(.42em)}25%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes ru-held-dunst{0%{opacity:1}70%{opacity:0}100%{opacity:0}}
+.ru-held-linse{position:absolute;left:0;top:0;z-index:2;border-radius:50%;overflow:hidden;pointer-events:none;
+  transform-origin:50% 50%;background:var(--bg-schwebend-dicht);
+  box-shadow:var(--glas-kante),0 8px 20px rgba(0,0,0,.22)}
+.ru-held-linse-glas,.ru-held-linse-frost{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+.ru-held-linse-glas{filter:url(#ru-linse-fahrt)}
+.ru-held-linse-frost{opacity:0;background:color-mix(in srgb,var(--text) 7%,transparent)}
+.ru-held-linse-bild{position:absolute;left:0;top:0;margin:0;color:var(--text);white-space:nowrap;transform-origin:0 0}
+.ru-held-linse-frost .ru-held-linse-bild{filter:blur(4px)}
+
+/* 8d · Die Glaskacheln: Farbe als Deckkraft einer Schicht; Kontrast gelb, schwarz. */
+.ru-kacheln{margin:var(--space-3) 0 var(--space-5)}
+.ru-kacheln-gitter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3)}
+.ru-kachel{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:space-between;gap:var(--space-2);min-width:var(--touch-min);
+  min-height:92px;padding:var(--space-3);border-radius:var(--radius-2xl);background:var(--bg-schwebend);
+  box-shadow:var(--glas-kante),var(--shadow-1);color:var(--text);text-align:left;
+  transition:color var(--motion-normal) var(--ease)}
+.ru-kachel::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--accent);
+  opacity:0;transition:opacity var(--motion-normal) var(--ease)}
+.ru-kachel[aria-pressed="true"]{color:var(--auf-accent)}
+.ru-kachel[aria-pressed="true"]::before{opacity:1}
+.ru-kachel-breit{grid-column:span 2}
+.ru-kachel-zeichen{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  background:color-mix(in srgb,currentColor 10%,transparent)}
+.ru-kachel-zeichen > svg{width:18px;height:18px}
+.ru-kachel-name{font-size:13px;font-weight:600;line-height:1.2;max-width:100%}
+/* Stand in voller Farbe, leiser nur im Gewicht (Durchsicht E712, test589 §12). */
+.ru-kachel-stand{font-size:12px;font-weight:400;line-height:1.2;margin-top:calc(-1 * var(--space-1))}
+.ru-kachel:focus-visible,.ru-kachel-chip:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+/* Der Daumen rollt die Seite; gezogen wird mit Maus und Stift (Durchsicht E712). */
+.ru-kachel-regler{touch-action:manipulation}
+.ru-kachel-fuellung{position:absolute;inset:0;z-index:-1;transform-origin:50% 100%;
+  transform:scaleY(var(--ru-kachel-fuellung,.67));background:color-mix(in srgb,var(--accent) 30%,transparent);
+  transition:transform var(--feder-knapp-dauer) var(--feder-knapp)}
+.ru-kachel-regler[data-haelt]{box-shadow:var(--glas-kante),var(--shadow-2)}
+/* Gerollt: die Leiste (Höhe 0, klebt oben). */
+.ru-kacheln-leiste{position:sticky;top:0;z-index:4;height:0;overflow:visible}
+.ru-kacheln-leiste[hidden]{display:none}
+.ru-kacheln-reihe{display:flex;gap:var(--space-2);overflow-x:auto;scrollbar-width:none;
+  padding:var(--space-2);border-radius:var(--radius-pill);background:var(--bg-schwebend-dicht);
+  box-shadow:var(--glas-kante),var(--shadow-2)}
+.ru-kacheln-reihe::-webkit-scrollbar{display:none}
+.ru-kachel-chip{flex:none;display:inline-flex;align-items:center;gap:var(--space-2);min-height:var(--touch-min);
+  padding:0 var(--space-4) 0 var(--space-3);border-radius:var(--radius-pill);background:var(--bg-hover);
+  color:var(--text);font-size:13px;white-space:nowrap;
+  transition:background-color var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease)}
+.ru-kachel-chip[aria-pressed="true"]{background:var(--accent);color:var(--auf-accent)}
+.ru-kachel-chip .ru-kachel-zeichen{width:auto;height:auto;background:none}
+@media(max-width:760px){
+  .ru-kachel{min-height:84px;padding:var(--space-2) var(--space-3) var(--space-3)}
+  .ru-kachel-name{font-size:12px}
+  .ru-kachel-stand{font-size:11px}
+}
+/* Kleine Telefone: zwei Spalten, sonst ragt „Darstellung" über den Rand (Durchsicht E712). */
+@media(max-width:380px){
+  .ru-kacheln-gitter{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  h2.ru-held-kommt .ru-held-zeile,h2.ru-held-kommt .ru-held-zeile::before{animation:none}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -26496,7 +26623,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1407, inhalt: 'b48e9972e8b7cfd3', gebaut: '2026-10-05T21:56:57.074Z' };
+const Stand = { fassung: 1408, inhalt: 'db12170f392506b2', gebaut: '2026-10-05T22:04:41.791Z' };
 window.Stand = Stand;
 
 </script>
@@ -34158,6 +34285,11 @@ Register.symbole = (() => {
         sun: '<circle cx="12" cy="12" r="4.2"/>' +
             '<path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7' +
             'M18.7 5.3 17 7M7 17l-1.7 1.7"/>',
+        moon: '<path d="M19.6 14.6A7.9 7.9 0 0 1 9.4 4.4a7.9 7.9 0 1 0 10.2 10.2z"/>',
+        contrast: '<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4v17.2"/>' +
+            '<path d="M12 6.2h5.2M12 9.1h7.6M12 12h8.4M12 14.9h7.6M12 17.8h5.2"/>',
+        calm: '<path d="M3.6 9c2.8-1.8 5.6-1.8 8.4 0s5.6 1.8 8.4 0"/>' +
+            '<path d="M3.6 15c2.8-1.2 5.6-1.2 8.4 0s5.6 1.2 8.4 0"/>',
         rocket: '<path d="M12 2.6c3 2.2 4.6 5.5 4.6 9.2L14.4 17H9.6L7.4 11.8C7.4 8.1 9 4.8 12 2.6z"/>' +
             '<circle cx="12" cy="10" r="1.9"/><path d="M9.6 17 7 21l3.6-1.4M14.4 17 17 21l-3.6-1.4"/>',
         box: '<rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/>',
@@ -42990,6 +43122,7 @@ const Menue = (() => {
                 return;
             }
             weg = true;
+            m.dataset['abgang'] = '1';
             const von = jetzt(), grundVon = deckung();
             halt();
             m.style.transform = '';
@@ -43073,11 +43206,143 @@ const Menue = (() => {
         m.addEventListener('touchcancel', los);
         return { herein, geht };
     };
+    const zeichenSvg = (k, an) => {
+        if (k.kippen && typeof Merkzeichen !== 'undefined') {
+            return '<svg viewBox="0 0 24 24" class="sym" aria-hidden="true" focusable="false">' +
+                `<path d="${Merkzeichen.BAND}" fill="${an ? 'currentColor' : 'none'}" stroke="currentColor" ` +
+                'stroke-width="1.7" stroke-linejoin="round"></path></svg>';
+        }
+        try {
+            return Register.symbole.alsSvg(k.zeichen, 20);
+        }
+        catch {
+            return '';
+        }
+    };
+    const tropfenKopf = (knoepfe) => {
+        const kopf = document.createElement('div');
+        kopf.className = 'ru-tropfen-kopf';
+        for (const k of knoepfe) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'ru-tropfen-knopf';
+            b.dataset['tropfen'] = k.id;
+            b.setAttribute('aria-label', k.name);
+            b.title = k.name;
+            if (k.kippen)
+                b.setAttribute('aria-pressed', k.an ? 'true' : 'false');
+            const rund = document.createElement('span');
+            rund.className = 'ru-tropfen-rund';
+            rund.setAttribute('aria-hidden', 'true');
+            rund.innerHTML = zeichenSvg(k, !!k.an);
+            const name = document.createElement('span');
+            name.className = 'ru-tropfen-name';
+            name.setAttribute('aria-hidden', 'true');
+            name.textContent = k.name;
+            b.append(rund, name);
+            kopf.append(b);
+        }
+        return kopf;
+    };
+    const tropfenBinden = (m, kopf, knoepfe) => {
+        kopf.addEventListener('click', ev => {
+            const b = ev.target instanceof Element ? ev.target.closest('.ru-tropfen-knopf') : null;
+            const k = b ? knoepfe.find(x => x.id === b.dataset['tropfen']) : undefined;
+            if (!b || !k)
+                return;
+            ev.stopPropagation();
+            if (k.kippen) {
+                const an = k.kippen();
+                b.setAttribute('aria-pressed', an ? 'true' : 'false');
+                const rund = b.querySelector('.ru-tropfen-rund');
+                if (rund) {
+                    rund.innerHTML = zeichenSvg(k, an);
+                    const svg = rund.querySelector('svg');
+                    if (an && svg && !(typeof Tropfen !== 'undefined' && Tropfen.still())) {
+                        const f = typeof RedionSpring !== 'undefined' ? RedionSpring.token('bouncy') : { easing: 'ease-out', duration: 400 };
+                        svg.animate([{ scale: '0.7' }, { scale: '1.25', offset: 0.35 }, { scale: '1' }], { duration: f.duration, easing: 'ease-out' });
+                    }
+                }
+                return;
+            }
+            const eintrag = k.ziel ? m.querySelector(`.menu-liste ${k.ziel}, :scope > ${k.ziel}`) : null;
+            if (eintrag) {
+                eintrag.click();
+                return;
+            }
+            if (k.tun) {
+                m.remove();
+                k.tun();
+            }
+        });
+    };
+    const amAnker = (m, anker) => {
+        const a = anker.getBoundingClientRect();
+        const r = m.getBoundingClientRect();
+        const LUFT = 6;
+        let left = (a.left + a.width / 2 > innerWidth / 2) ? a.right - r.width : a.left;
+        let top = a.bottom + LUFT;
+        if (top + r.height > innerHeight - 8 && a.top - LUFT - r.height >= 8)
+            top = a.top - LUFT - r.height;
+        left = Math.max(8, Math.min(left, innerWidth - r.width - 8));
+        top = Math.max(8, Math.min(top, innerHeight - r.height - 8));
+        m.style.left = left + 'px';
+        m.style.top = top + 'px';
+    };
+    const rechteck = (el) => {
+        const r = el.getBoundingClientRect();
+        return { left: r.left, top: r.top, width: r.width, height: r.height };
+    };
+    const versatzY = (el) => {
+        const t = getComputedStyle(el).transform;
+        if (!t || t === 'none' || typeof DOMMatrixReadOnly === 'undefined')
+            return 0;
+        try {
+            return new DOMMatrixReadOnly(t).m42;
+        }
+        catch {
+            return 0;
+        }
+    };
+    const tropfenAuf = (m, kopf, anker, blatt) => {
+        if (typeof Tropfen === 'undefined' || Tropfen.still() || !anker.isConnected)
+            return;
+        const knoepfe = [...kopf.querySelectorAll('.ru-tropfen-rund')];
+        const unten = blatt ? versatzY(m) : 0;
+        const ziele = knoepfe.map(rechteck).map(r => ({ ...r, top: r.top - unten }));
+        const a = rechteck(anker);
+        if (!blatt)
+            Tropfen.wachsen(m, a);
+        const ankunft = Tropfen.teilen(a, ziele, blatt ? 300 : 40);
+        if (!ankunft)
+            return;
+        const kurve = typeof RedionSpring !== 'undefined' ? RedionSpring.token('press') : { easing: 'ease-out', duration: 320 };
+        [...kopf.querySelectorAll('.ru-tropfen-knopf')].forEach((b, i) => {
+            b.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 140, delay: ankunft, easing: 'linear', fill: 'backwards' });
+            const svg = b.querySelector('.ru-tropfen-rund > svg');
+            svg?.animate([{ scale: '0.2' }, { scale: '1' }], { duration: kurve.duration, delay: ankunft + i * 40, easing: kurve.easing, fill: 'backwards' });
+        });
+    };
     const menu = (html, x, y, opt = {}) => {
         document.querySelectorAll('.menu, .menu-grund').forEach(m => m.remove());
         const m = document.createElement('div');
         m.className = 'menu';
         m.innerHTML = html;
+        const kopf = opt.tropfen?.length ? tropfenKopf(opt.tropfen) : null;
+        if (kopf && opt.tropfen) {
+            m.classList.add('ru-tropfen-menue');
+            m.prepend(kopf);
+            tropfenBinden(m, kopf, opt.tropfen);
+        }
+        const anker = opt.anker && opt.anker.isConnected ? opt.anker : null;
+        let zuletzt = null;
+        const messen = () => {
+            if (!kopf || !m.isConnected || m.getAnimations().some(a => a.playState === 'running'))
+                return;
+            zuletzt = { flaeche: rechteck(m),
+                kreise: [...kopf.querySelectorAll('.ru-tropfen-rund')].map(rechteck) };
+        };
+        let nachmessen = null;
         let grund = null;
         const schliessen = () => {
             m.remove();
@@ -43097,6 +43362,11 @@ const Menue = (() => {
             grund?.remove();
             document.removeEventListener('keydown', escape, true);
             waechter.disconnect();
+            nachmessen?.disconnect();
+            if (zuletzt && anker && anker.isConnected && typeof Tropfen !== 'undefined' && !m.dataset['abgang']) {
+                const z = zuletzt;
+                Tropfen.vereinen(z.kreise, rechteck(anker), m.classList.contains('blatt') ? null : z.flaeche);
+            }
         });
         if (amTelefon()) {
             m.classList.add('blatt');
@@ -43116,7 +43386,8 @@ const Menue = (() => {
                 liste = document.createElement('div');
                 liste.className = 'menu-liste menu-liste-ohne-suche';
                 [...m.childNodes].filter(n => n !== griff &&
-                    (!(n instanceof HTMLElement) || !n.classList.contains('blatt-titel')))
+                    (!(n instanceof HTMLElement) ||
+                        (!n.classList.contains('blatt-titel') && !n.classList.contains('ru-tropfen-kopf'))))
                     .forEach(n => liste.appendChild(n));
                 m.appendChild(liste);
             }
@@ -43153,13 +43424,32 @@ const Menue = (() => {
             });
             m.querySelectorAll('[data-a="del"], [data-a="purge"]').forEach(x => x.classList.add('rot'));
             zug.herein();
+            if (kopf && anker) {
+                tropfenAuf(m, kopf, anker, true);
+                const f = typeof RedionSpring !== 'undefined' ? RedionSpring.token('smooth').duration : 320;
+                setTimeout(messen, f + 40);
+            }
             return m;
         }
         document.body.appendChild(m);
         waechter.observe(document.body, { childList: true });
-        const r = m.getBoundingClientRect();
-        m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
-        m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+        if (kopf)
+            m.style.setProperty('--ru-tropfen-kopf', kopf.offsetHeight + 'px');
+        if (anker)
+            amAnker(m, anker);
+        else {
+            const r = m.getBoundingClientRect();
+            m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
+            m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+        }
+        if (kopf && anker) {
+            messen();
+            tropfenAuf(m, kopf, anker, false);
+            if (typeof ResizeObserver !== 'undefined') {
+                nachmessen = new ResizeObserver(messen);
+                nachmessen.observe(m);
+            }
+        }
         setTimeout(() => {
             const zu = (e) => {
                 const ziel = e.target instanceof Node ? e.target : null;
@@ -43177,7 +43467,11 @@ const Menue = (() => {
             `<div class="menu-suche"><input placeholder="${opt.platzhalter || 'Filtern …'}" ` +
             'autocomplete="off" spellcheck="false"></div>' +
             '<div class="menu-liste">' + html + '</div>' +
-            (opt.fuss ? '<div class="menu-fuss">' + opt.fuss + '</div>' : ''), x, y, opt.titel === undefined ? {} : { titel: opt.titel });
+            (opt.fuss ? '<div class="menu-fuss">' + opt.fuss + '</div>' : ''), x, y, {
+            ...(opt.titel === undefined ? {} : { titel: opt.titel }),
+            ...(opt.anker ? { anker: opt.anker } : {}),
+            ...(opt.tropfen ? { tropfen: opt.tropfen } : {})
+        });
         if (opt.breite && !m.classList.contains('blatt'))
             m.style.width = String(opt.breite);
         const feld = m.querySelector('.menu-suche input');
@@ -45308,6 +45602,7 @@ const Linse = (() => {
     const NS = 'http://www.w3.org/2000/svg';
     const HALTER = 'ru-linse-halter';
     const FAHRT = 'ru-linse-fahrt';
+    const TROPFEN = 'ru-linse-tropfen';
     const KARTE = 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='52'><defs>" +
         "<linearGradient id='x' x1='0' y1='0' x2='1' y2='0'>" +
         "<stop offset='0' stop-color='#f00'/><stop offset='1' stop-color='#000'/></linearGradient>" +
@@ -45335,6 +45630,15 @@ const Linse = (() => {
             values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0' }), el('feBlend', { in: 'kr', in2: 'kg', mode: 'screen', result: 'krg' }), el('feBlend', { in: 'krg', in2: 'kb', mode: 'screen' }));
         return f;
     };
+    const tropfen = () => {
+        const f = el('filter', {
+            id: TROPFEN, x: '-20%', y: '-20%', width: '140%', height: '140%',
+            'color-interpolation-filters': 'sRGB'
+        });
+        f.append(el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '7', result: 'weich' }), el('feColorMatrix', { in: 'weich', type: 'matrix', result: 'zaeh',
+            values: '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10' }), el('feComposite', { in: 'SourceGraphic', in2: 'zaeh', operator: 'atop' }));
+        return f;
+    };
     const sicherstellen = () => {
         if (document.getElementById(HALTER))
             return;
@@ -45355,7 +45659,180 @@ const Linse = (() => {
         huelle.append(svg);
         document.body.append(huelle);
     };
-    return { HALTER, FAHRT, sicherstellen };
+    let tropfenNutzer = 0;
+    const tropfenLeihen = () => {
+        sicherstellen();
+        const defs = document.querySelector(`#${HALTER} defs`);
+        if (defs && !document.getElementById(TROPFEN))
+            defs.append(tropfen());
+        tropfenNutzer++;
+        let zurueck = false;
+        return () => {
+            if (zurueck)
+                return;
+            zurueck = true;
+            tropfenNutzer = Math.max(0, tropfenNutzer - 1);
+            if (!tropfenNutzer)
+                document.getElementById(TROPFEN)?.remove();
+        };
+    };
+    const SATZ_GESAMT = 1650;
+    let satzBeginn = 0;
+    let satzBeobachter = null;
+    let beobachtet = null;
+    const beobachten = (satz) => {
+        if (beobachtet === satz || typeof ResizeObserver === 'undefined')
+            return;
+        satzBeobachter?.disconnect();
+        beobachtet = satz;
+        let mass = '';
+        satzBeobachter = new ResizeObserver(() => {
+            if (!satz.isConnected) {
+                satzBeobachter?.disconnect();
+                satzBeobachter = null;
+                beobachtet = null;
+                return;
+            }
+            const r = satz.getBoundingClientRect();
+            const neu = Math.round(r.width) + '×' + Math.round(r.height) + ' ' + getComputedStyle(satz).fontSize;
+            if (!mass || neu === mass) {
+                mass = neu;
+                return;
+            }
+            mass = neu;
+            ueberSatz(satz, false);
+        });
+        satzBeobachter.observe(satz);
+    };
+    const ueberSatz = (satz, gleiten) => {
+        const traeger = satz.parentElement;
+        if (!traeger)
+            return;
+        traeger.querySelector(':scope > .ru-held-linse')?.remove();
+        const zeilen = [...satz.querySelectorAll('.ru-held-zeile')];
+        const z1 = zeilen[0], z2 = zeilen[zeilen.length - 1];
+        if (!z1 || !z2)
+            return;
+        sicherstellen();
+        beobachten(satz);
+        const still = typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
+        const jetzt = performance.now();
+        const versatz = still ? SATZ_GESAMT
+            : gleiten ? 0 : (satzBeginn && jetzt - satzBeginn < SATZ_GESAMT ? jetzt - satzBeginn : SATZ_GESAMT);
+        if (gleiten && !still)
+            satzBeginn = jetzt;
+        const kasten = traeger.getBoundingClientRect();
+        const lage = (z) => {
+            const r = z.getBoundingClientRect();
+            return { x: r.left - kasten.left, y: r.top - kasten.top, b: r.width, h: r.height };
+        };
+        const a = lage(z1), e = lage(z2);
+        const stil = getComputedStyle(satz);
+        const fs = parseFloat(stil.fontSize) || 40;
+        const D = Math.round(Math.max(48, Math.min(84, fs * 1.7)));
+        const S = 1.2;
+        const P0 = { x: a.x + fs * 0.4, y: a.y + a.h / 2 };
+        const P1 = { x: a.x + a.b - fs * 0.8, y: a.y + a.h / 2 };
+        const P2 = { x: e.x + e.b - fs * 0.8, y: e.y + e.h / 2 };
+        const linse = document.createElement('div');
+        linse.className = 'ru-held-linse';
+        linse.setAttribute('aria-hidden', 'true');
+        linse.style.width = linse.style.height = D + 'px';
+        const abschrift = (klasse) => {
+            const huelle = document.createElement('div');
+            huelle.className = klasse;
+            const bild = document.createElement('div');
+            bild.className = 'ru-held-linse-bild';
+            zeilen.forEach((z, i) => {
+                if (i)
+                    bild.append(document.createElement('br'));
+                bild.append(document.createTextNode(z.textContent || ''));
+            });
+            bild.style.font = stil.font;
+            bild.style.letterSpacing = stil.letterSpacing;
+            bild.style.width = satz.clientWidth + 'px';
+            huelle.append(bild);
+            return { huelle, bild };
+        };
+        const glasTeil = abschrift('ru-held-linse-glas');
+        const frostTeil = abschrift('ru-held-linse-frost');
+        linse.append(frostTeil.huelle, glasTeil.huelle);
+        traeger.append(linse);
+        const hr = satz.getBoundingClientRect();
+        const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
+        const lagenText = (c, sx = 1, sy = 1) => [
+            `translate(${(c.x - D / 2).toFixed(2)}px,${(c.y - D / 2).toFixed(2)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`,
+            `translate(${(D / 2 - S * (c.x - H.x)).toFixed(2)}px,${(D / 2 - S * (c.y - H.y)).toFixed(2)}px) scale(${S})`
+        ];
+        if (still || versatz >= SATZ_GESAMT) {
+            const [l, b] = lagenText(P2);
+            linse.style.transform = l;
+            glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
+            frostTeil.huelle.style.opacity = '0';
+            return;
+        }
+        const feder = RedionSpring.sample(RedionSpring.preset('snappy'), 0, 1, 0, 16);
+        const T1 = 260, T2 = 900;
+        const bilder = [{ t: 0, c: P0, sx: 1, sy: 1 }, { t: T1, c: P0, sx: 1, sy: 1 }];
+        const strecke = (von, nach, ab) => {
+            let vorher = von, tv = ab;
+            feder.values.forEach((v, i) => {
+                const t = ab + Math.min(i * 16, feder.duration);
+                const c = { x: von.x + (nach.x - von.x) * v, y: von.y + (nach.y - von.y) * v };
+                const dt = Math.max(1, t - tv);
+                const tempo = Math.hypot(c.x - vorher.x, c.y - vorher.y) / dt;
+                const sx = 1 + Math.min(0.4, tempo * 0.16), sy = 1 - 0.5 * (sx - 1);
+                bilder.push({ t, c, sx, sy });
+                vorher = c;
+                tv = t;
+            });
+            return ab + feder.duration;
+        };
+        const ende1 = strecke(P0, P1, T1);
+        bilder.push({ t: Math.max(ende1, T2 - 1), c: P1, sx: 1, sy: 1 });
+        const ende2 = strecke(P1, P2, Math.max(T2, ende1 + 20));
+        const T = Math.max(SATZ_GESAMT, ende2);
+        bilder.push({ t: T, c: P2, sx: 1, sy: 1 });
+        const lauf = [];
+        const los = (el, kf) => {
+            const an = el.animate(kf, { duration: T, easing: 'linear', fill: 'both' });
+            an.currentTime = versatz;
+            lauf.push(an);
+        };
+        los(linse, bilder.map(b => ({ offset: b.t / T, transform: lagenText(b.c, b.sx, b.sy)[0] })));
+        const innen = bilder.map(b => ({ offset: b.t / T, transform: lagenText(b.c)[1] }));
+        los(glasTeil.bild, innen);
+        los(frostTeil.bild, innen);
+        const blende = (t) => t / T;
+        const scharf = [
+            { offset: 0, opacity: 1 }, { offset: blende(T1), opacity: 1 }, { offset: blende(T1 + 70), opacity: 0 },
+            { offset: blende(ende1 - 140), opacity: 0 }, { offset: blende(ende1 - 60), opacity: 1 },
+            { offset: blende(Math.max(T2, ende1 + 20)), opacity: 1 }, { offset: blende(Math.max(T2, ende1 + 20) + 70), opacity: 0 },
+            { offset: blende(ende2 - 140), opacity: 0 }, { offset: blende(ende2 - 60), opacity: 1 }, { offset: 1, opacity: 1 }
+        ].sort((x, y) => x.offset - y.offset);
+        los(glasTeil.huelle, scharf);
+        los(frostTeil.huelle, scharf.map(k => ({ offset: k.offset, opacity: 1 - k.opacity })));
+        const pop = RedionSpring.token('bouncy');
+        const auf = linse.animate([{ scale: '0.4', opacity: 0 }, { scale: '1', opacity: 1 }], { duration: pop.duration, easing: pop.easing, fill: 'both' });
+        auf.currentTime = Math.min(versatz, pop.duration);
+        lauf.push(auf);
+        if (versatz < 900) {
+            satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
+            satz.classList.add('ru-held-kommt');
+            const fertig = () => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
+            z2.addEventListener('animationend', ev => { if (ev.target === z2)
+                fertig(); }, { once: true });
+            setTimeout(fertig, 2400);
+        }
+        Promise.all(lauf.map(x => x.finished)).then(() => {
+            const [l, b] = lagenText(P2);
+            linse.style.transform = l;
+            glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
+            frostTeil.huelle.style.opacity = '0';
+            lauf.forEach(x => x.cancel());
+        }).catch(() => { });
+    };
+    return { HALTER, FAHRT, TROPFEN, sicherstellen, tropfenLeihen, ueberSatz };
 })();
 window.Linse = Linse;
 
@@ -46403,6 +46880,461 @@ const SelectionFlow = (() => {
     };
 })();
 window.SelectionFlow = SelectionFlow;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/tropfen.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/tropfen.ts (npm run bauen:ts). */
+const Tropfen = (() => {
+    const still = () => typeof AppEinstellung !== 'undefined' ? AppEinstellung.wenigBewegung()
+        : window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    const mitte = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    const buehne = (alle) => {
+        const zurueck = typeof Linse !== 'undefined' ? Linse.tropfenLeihen() : () => { };
+        const RAND = 40;
+        const l = Math.min(...alle.map(r => r.left)) - RAND;
+        const t = Math.min(...alle.map(r => r.top)) - RAND;
+        const r = Math.max(...alle.map(q => q.left + q.width)) + RAND;
+        const b = Math.max(...alle.map(q => q.top + q.height)) + RAND;
+        const el = document.createElement('div');
+        el.className = 'ru-tropfen-buehne';
+        el.setAttribute('aria-hidden', 'true');
+        el.style.left = l + 'px';
+        el.style.top = t + 'px';
+        el.style.width = (r - l) + 'px';
+        el.style.height = (b - t) + 'px';
+        const goo = document.createElement('div');
+        goo.className = 'ru-tropfen-goo';
+        el.append(goo);
+        document.body.append(el);
+        return { el, goo, ox: l, oy: t, weg: () => { el.remove(); zurueck(); } };
+    };
+    const kreis = (goo, d) => {
+        const k = document.createElement('span');
+        k.className = 'ru-tropfen-kreis';
+        k.style.width = k.style.height = d + 'px';
+        goo.append(k);
+        return k;
+    };
+    const bahn = (a, b, s0, s1, feder = 'snappy') => {
+        const f = RedionSpring.sample(RedionSpring.preset(feder), 0, 1, 0, 16);
+        const kf = f.values.map((v, i) => ({
+            offset: Math.min(1, (i * 16) / f.duration),
+            transform: `translate(${(a.x + (b.x - a.x) * v).toFixed(2)}px,${(a.y + (b.y - a.y) * v).toFixed(2)}px) ` +
+                `scale(${Math.max(0.01, s0 + (s1 - s0) * v).toFixed(4)})`
+        }));
+        kf[kf.length - 1].offset = 1;
+        return { kf, dauer: f.duration };
+    };
+    const DURCHMESSER = 44;
+    const teilen = (von, nach, verzug = 40) => {
+        if (still() || !nach.length)
+            return 0;
+        const { el, goo, ox, oy, weg } = buehne([von, ...nach]);
+        const d0 = Math.max(24, Math.min(von.width, von.height));
+        const m = mitte(von);
+        const lokal = (p, d) => ({ x: p.x - ox - d / 2, y: p.y - oy - d / 2 });
+        const mutter = kreis(goo, d0);
+        const mp = lokal(m, d0);
+        const kurve = getComputedStyle(document.documentElement).getPropertyValue('--ease-enter').trim() || 'ease-out';
+        mutter.animate([
+            { transform: `translate(${mp.x}px,${mp.y}px) scale(0.85)`, opacity: 1 },
+            { transform: `translate(${mp.x}px,${mp.y}px) scale(1.18)`, opacity: 1, offset: 0.3 },
+            { transform: `translate(${mp.x}px,${mp.y}px) scale(0.2)`, opacity: 0 }
+        ], { duration: verzug + 360, easing: kurve, fill: 'both' });
+        let ankunft = 0;
+        nach.forEach((z, i) => {
+            const k = kreis(goo, DURCHMESSER);
+            const a = lokal(m, DURCHMESSER), b = lokal(mitte(z), DURCHMESSER);
+            const w = bahn(a, b, d0 / DURCHMESSER, Math.min(z.width, z.height) / DURCHMESSER);
+            const start = verzug + i * 34;
+            k.animate(w.kf, { duration: w.dauer, delay: start, easing: 'linear', fill: 'both' });
+            ankunft = Math.max(ankunft, start + Math.round(w.dauer * 0.62));
+        });
+        const aus = el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, delay: ankunft, easing: 'linear', fill: 'both' });
+        aus.finished.then(weg).catch(weg);
+        setTimeout(weg, ankunft + 6000);
+        return ankunft;
+    };
+    const vereinen = (von, nach, flaeche = null) => {
+        if (still() || !von.length)
+            return;
+        const { el, goo, ox, oy, weg } = buehne([nach, ...von, ...(flaeche ? [flaeche] : [])]);
+        const exit = getComputedStyle(document.documentElement).getPropertyValue('--ease-exit').trim() || 'ease-in';
+        if (flaeche) {
+            const g = document.createElement('div');
+            g.className = 'ru-tropfen-geist';
+            g.style.left = (flaeche.left - ox) + 'px';
+            g.style.top = (flaeche.top - oy) + 'px';
+            g.style.width = flaeche.width + 'px';
+            g.style.height = flaeche.height + 'px';
+            el.prepend(g);
+            const sx = Math.max(0.05, nach.width / flaeche.width), sy = Math.max(0.05, nach.height / flaeche.height);
+            const dx = nach.left - flaeche.left, dy = nach.top - flaeche.top;
+            g.animate([
+                { transform: 'none', opacity: 1 },
+                { transform: `translate(${dx}px,${dy}px) scale(${sx},${sy})`, opacity: 0 }
+            ], { duration: 240, easing: exit, fill: 'both' });
+        }
+        const d1 = Math.max(24, Math.min(nach.width, nach.height));
+        const ziel = mitte(nach);
+        const lokal = (p, d) => ({ x: p.x - ox - d / 2, y: p.y - oy - d / 2 });
+        let ende = 0;
+        von.forEach((q, i) => {
+            const k = kreis(goo, DURCHMESSER);
+            const a = lokal(mitte(q), DURCHMESSER), b = lokal(ziel, DURCHMESSER);
+            const w = bahn(a, b, Math.min(q.width, q.height) / DURCHMESSER, d1 / DURCHMESSER);
+            const start = (von.length - 1 - i) * 26;
+            k.animate(w.kf, { duration: w.dauer, delay: start, easing: 'linear', fill: 'both' });
+            ende = Math.max(ende, start + Math.round(w.dauer * 0.6));
+        });
+        const mutter = kreis(goo, d1);
+        const mp = lokal(ziel, d1);
+        mutter.animate([
+            { transform: `translate(${mp.x}px,${mp.y}px) scale(0.3)`, opacity: 0 },
+            { transform: `translate(${mp.x}px,${mp.y}px) scale(1.12)`, opacity: 1, offset: 0.7 },
+            { transform: `translate(${mp.x}px,${mp.y}px) scale(1)`, opacity: 0 }
+        ], { duration: ende + 160, easing: 'linear', fill: 'both' });
+        const aus = el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: ende, easing: 'linear', fill: 'both' });
+        aus.finished.then(weg).catch(weg);
+        setTimeout(weg, ende + 6000);
+    };
+    const wachsen = (flaeche, aus) => {
+        if (still())
+            return [];
+        const r = flaeche.getBoundingClientRect();
+        if (!r.width || !r.height)
+            return [];
+        const sx = Math.max(0.05, aus.width / r.width), sy = Math.max(0.05, aus.height / r.height);
+        const dx = aus.left - r.left, dy = aus.top - r.top;
+        const f = RedionSpring.sample(RedionSpring.preset('snappy'), 0, 1, 0, 16);
+        const kf = f.values.map((v, i) => ({
+            offset: Math.min(1, (i * 16) / f.duration),
+            transform: `translate(${(dx * (1 - v)).toFixed(2)}px,${(dy * (1 - v)).toFixed(2)}px) ` +
+                `scale(${(sx + (1 - sx) * v).toFixed(4)},${(sy + (1 - sy) * v).toFixed(4)})`
+        }));
+        kf[kf.length - 1].offset = 1;
+        flaeche.style.transformOrigin = '0 0';
+        const lauf = [
+            flaeche.animate(kf, { duration: f.duration, easing: 'linear' }),
+            flaeche.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 110, easing: 'linear' })
+        ];
+        [...flaeche.children].forEach(kind => {
+            if (!(kind instanceof HTMLElement) || kind.classList.contains('ru-tropfen-kopf'))
+                return;
+            lauf.push(kind.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 170, delay: 110, easing: 'linear', fill: 'backwards' }));
+        });
+        return lauf;
+    };
+    return { still, teilen, vereinen, wachsen };
+})();
+window.Tropfen = Tropfen;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/kacheln.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/kacheln.ts (npm run bauen:ts). */
+const Schnellkacheln = (() => {
+    const V = (k, sonst) => typeof Einstellungen !== 'undefined' ? Einstellungen.V(k, sonst) : sonst;
+    const S = (k, wert) => {
+        if (typeof Einstellungen !== 'undefined')
+            Einstellungen.S(k, wert);
+    };
+    const KACHELN = [
+        { id: 'dunkel', name: 'Dunkel', kurz: 'Dunkel', zeichen: 'moon', art: 'schalter',
+            an: () => document.documentElement.dataset['theme'] !== 'light',
+            tun: () => {
+                if (typeof StudioSchale !== 'undefined')
+                    StudioSchale.themaWechseln();
+                else
+                    S('theme', document.documentElement.dataset['theme'] === 'light' ? 'dark' : 'light');
+            } },
+        { id: 'fokus', name: 'Fokus-Modus', kurz: 'Fokus', zeichen: 'eye', art: 'schalter',
+            an: () => document.body.classList.contains('fokus'),
+            tun: () => { if (typeof Werkzeuge !== 'undefined')
+                Werkzeuge.fokus(); } },
+        { id: 'ruhig', name: 'Ruhige Darstellung', kurz: 'Ruhig', zeichen: 'calm', art: 'schalter',
+            an: () => V('bewegung', 'normal') === 'ruhig',
+            tun: () => S('bewegung', V('bewegung', 'normal') === 'ruhig' ? 'normal' : 'ruhig') },
+        { id: 'kontrast', name: 'Hoher Kontrast', kurz: 'Kontrast', zeichen: 'contrast', art: 'schalter',
+            an: () => !!V('kontrast', false),
+            tun: () => S('kontrast', !V('kontrast', false)) },
+        { id: 'zeit', name: 'Zeitmesser', kurz: 'Zeitmesser', zeichen: 'clock', art: 'weg', breit: true,
+            tun: () => { if (typeof Zeitmesser !== 'undefined')
+                Zeitmesser.panel(); },
+            stand: () => {
+                const z = typeof Zeitmesser !== 'undefined' ? Zeitmesser.stand() : null;
+                if (!z || !z.laeuft)
+                    return 'Stoppuhr und Timer';
+                const m = Math.floor(z.sekunden / 60), s = z.sekunden % 60;
+                return (z.pausiert ? 'Angehalten · ' : 'Läuft · ') + m + ':' + String(s).padStart(2, '0');
+            } },
+        { id: 'schrift', name: 'Schriftgrösse', kurz: 'Schrift', zeichen: 'textSize', art: 'regler',
+            schluessel: 'schriftgroesse', stufen: ['klein', 'normal', 'gross'], namen: ['Klein', 'Normal', 'Gross'],
+            teile: ['Schrift', 'grösse'] },
+        { id: 'abstand', name: 'Zeilenabstand', kurz: 'Abstand', zeichen: 'menu', art: 'regler',
+            schluessel: 'dichte', stufen: ['eng', 'normal', 'weit'], namen: ['Eng', 'Normal', 'Weit'],
+            teile: ['Zeilen', 'abstand'] }
+    ];
+    const zeichen = (name) => {
+        try {
+            return Register.symbole.alsSvg(name, 22);
+        }
+        catch {
+            return '';
+        }
+    };
+    const stufe = (k) => {
+        const i = (k.stufen || []).indexOf(String(V(k.schluessel || '', 'normal')));
+        return i < 0 ? 1 : i;
+    };
+    const standText = (k) => {
+        if (k.art === 'schalter')
+            return k.an?.() ? 'An' : 'Aus';
+        if (k.art === 'regler')
+            return (k.namen || [])[stufe(k)] || '';
+        return k.stand ? k.stand() : '';
+    };
+    const baue = (k, chip) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = chip ? 'ru-kachel-chip' : 'ru-kachel' + (k.breit ? ' ru-kachel-breit' : '') +
+            (k.art === 'regler' ? ' ru-kachel-regler' : '');
+        b.dataset['kachel'] = k.id;
+        if (k.art === 'regler' && !chip) {
+            b.setAttribute('role', 'slider');
+            b.setAttribute('aria-orientation', 'vertical');
+            b.setAttribute('aria-valuemin', '0');
+            b.setAttribute('aria-valuemax', String((k.stufen || []).length - 1));
+            b.setAttribute('aria-label', k.name);
+            const f = document.createElement('span');
+            f.className = 'ru-kachel-fuellung';
+            f.setAttribute('aria-hidden', 'true');
+            b.append(f);
+        }
+        const z = document.createElement('span');
+        z.className = 'ru-kachel-zeichen';
+        z.setAttribute('aria-hidden', 'true');
+        z.innerHTML = zeichen(k.zeichen);
+        const n = document.createElement('span');
+        n.className = 'ru-kachel-name';
+        n.textContent = chip ? k.kurz : k.teile ? k.teile.join('\u00AD') : k.name;
+        b.append(z, n);
+        if (!chip) {
+            const s = document.createElement('span');
+            s.className = 'ru-kachel-stand';
+            b.append(s);
+        }
+        return b;
+    };
+    const markieren = () => {
+        document.querySelectorAll('.ru-kachel[data-kachel], .ru-kachel-chip[data-kachel]').forEach(b => {
+            const k = KACHELN.find(x => x.id === b.dataset['kachel']);
+            if (!k)
+                return;
+            const chip = b.classList.contains('ru-kachel-chip');
+            const text = standText(k);
+            if (k.art === 'schalter')
+                b.setAttribute('aria-pressed', k.an?.() ? 'true' : 'false');
+            if (k.art === 'regler') {
+                const i = stufe(k);
+                if (chip)
+                    b.setAttribute('aria-label', k.name + ': ' + text);
+                else {
+                    b.setAttribute('aria-valuenow', String(i));
+                    b.setAttribute('aria-valuetext', text);
+                    b.style.setProperty('--ru-kachel-fuellung', String((i + 1) / (k.stufen || []).length));
+                }
+            }
+            if (k.art === 'weg' && chip)
+                b.setAttribute('aria-label', k.name + ': ' + text);
+            const s = b.querySelector('.ru-kachel-stand');
+            if (s && s.textContent !== text)
+                s.textContent = text;
+            b.title = k.name + ' — ' + text;
+        });
+        for (const [feld, wert] of [['schriftgroesse', V('schriftgroesse', 'normal')], ['dichte', V('dichte', 'normal')],
+            ['bewegung', V('bewegung', 'normal')]]) {
+            document.querySelectorAll(`select[data-set="${feld}"]`).forEach(s => {
+                if (s.value !== wert)
+                    s.value = String(wert);
+            });
+        }
+        const hoch = !!V('kontrast', false);
+        document.querySelectorAll('.schalter[data-toggle="kontrast"]').forEach(s => {
+            s.classList.toggle('an', hoch);
+            s.setAttribute('aria-checked', hoch ? 'true' : 'false');
+        });
+    };
+    const regeln = (k, schritt) => {
+        const zahl = (k.stufen || []).length;
+        const jetzt = stufe(k);
+        const neu = schritt === 'anfang' ? 0 : schritt === 'ende' ? zahl - 1
+            : Math.max(0, Math.min(zahl - 1, jetzt + schritt));
+        if (neu === jetzt)
+            return;
+        S(k.schluessel || '', (k.stufen || [])[neu]);
+        markieren();
+    };
+    const bedienen = (wurzel) => {
+        wurzel.addEventListener('click', e => {
+            const b = e.target instanceof Element ? e.target.closest('[data-kachel]') : null;
+            const k = b ? KACHELN.find(x => x.id === b.dataset['kachel']) : undefined;
+            if (!b || !k)
+                return;
+            if (b.dataset['gezogen']) {
+                delete b.dataset['gezogen'];
+                return;
+            }
+            if (k.art === 'regler') {
+                const i = stufe(k), zahl = (k.stufen || []).length;
+                S(k.schluessel || '', (k.stufen || [])[(i + 1) % zahl]);
+            }
+            else {
+                if (k.art === 'weg')
+                    b.closest('.overlay')?.remove();
+                k.tun?.();
+            }
+            markieren();
+        });
+        wurzel.addEventListener('keydown', e => {
+            const b = e.target instanceof Element ? e.target.closest('.ru-kachel-regler[data-kachel]') : null;
+            const k = b ? KACHELN.find(x => x.id === b.dataset['kachel']) : undefined;
+            if (!b || !k)
+                return;
+            const taste = {
+                ArrowUp: 1, ArrowRight: 1, PageUp: 1, ArrowDown: -1, ArrowLeft: -1, PageDown: -1,
+                Home: 'anfang', End: 'ende'
+            };
+            const s = taste[e.key];
+            if (s === undefined)
+                return;
+            e.preventDefault();
+            regeln(k, s);
+        });
+        let zug = null;
+        wurzel.addEventListener('pointerdown', e => {
+            const b = e.target instanceof Element ? e.target.closest('.ru-kachel-regler[data-kachel]') : null;
+            const k = b ? KACHELN.find(x => x.id === b.dataset['kachel']) : undefined;
+            if (!b || !k)
+                return;
+            delete b.dataset['gezogen'];
+            if (e.pointerType === 'touch')
+                return;
+            try {
+                b.setPointerCapture(e.pointerId);
+            }
+            catch { }
+            zug = { id: e.pointerId, y: e.clientY, k, b, start: stufe(k) };
+        });
+        wurzel.addEventListener('pointermove', e => {
+            if (!zug || e.pointerId !== zug.id)
+                return;
+            if (!(e.buttons & 1)) {
+                los(e);
+                return;
+            }
+            const schritte = Math.round((zug.y - e.clientY) / 28);
+            if (!schritte)
+                return;
+            zug.b.dataset['gezogen'] = '1';
+            zug.b.setAttribute('data-haelt', '');
+            const zahl = (zug.k.stufen || []).length;
+            const ziel = Math.max(0, Math.min(zahl - 1, zug.start + schritte));
+            if (ziel !== stufe(zug.k)) {
+                S(zug.k.schluessel || '', (zug.k.stufen || [])[ziel]);
+                markieren();
+            }
+        });
+        const los = (e) => {
+            if (!zug || e.pointerId !== zug.id)
+                return;
+            zug.b.removeAttribute('data-haelt');
+            zug = null;
+        };
+        wurzel.addEventListener('pointerup', los);
+        wurzel.addEventListener('pointercancel', los);
+        wurzel.addEventListener('lostpointercapture', los);
+    };
+    const beobachter = new WeakMap();
+    let horcht = false;
+    const horchen = () => {
+        if (horcht)
+            return;
+        horcht = true;
+        const nach = () => { if (document.querySelector('.ru-kachel'))
+            markieren(); };
+        new MutationObserver(nach).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-schrift', 'data-dichte', 'data-bewegung', 'data-kontrast'] });
+        new MutationObserver(nach).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        document.addEventListener('redion:zeitmesser', () => {
+            if (document.querySelector('[data-kachel="zeit"]'))
+                markieren();
+        });
+    };
+    const einsetzen = (ziel, opt = {}) => {
+        if (!ziel)
+            return;
+        ziel.querySelectorAll(':scope > .ru-kacheln, :scope > .ru-kacheln-leiste').forEach(x => x.remove());
+        const teil = document.createElement('section');
+        teil.className = 'ru-kacheln';
+        teil.setAttribute('aria-label', 'Schnelleinstellungen');
+        const gitter = document.createElement('div');
+        gitter.className = 'ru-kacheln-gitter';
+        KACHELN.forEach(k => gitter.append(baue(k, false)));
+        teil.append(gitter);
+        const leiste = document.createElement('div');
+        leiste.className = 'ru-kacheln-leiste';
+        leiste.hidden = true;
+        const reihe = document.createElement('div');
+        reihe.className = 'ru-kacheln-reihe';
+        reihe.setAttribute('role', 'group');
+        reihe.setAttribute('aria-label', 'Schnelleinstellungen');
+        KACHELN.forEach(k => reihe.append(baue(k, true)));
+        leiste.append(reihe);
+        if (opt.nach && opt.nach.parentElement === ziel)
+            opt.nach.after(teil, leiste);
+        else
+            ziel.prepend(teil, leiste);
+        bedienen(teil);
+        bedienen(leiste);
+        horchen();
+        markieren();
+        const rolle = opt.rolle || null;
+        if (!rolle || typeof IntersectionObserver === 'undefined')
+            return;
+        const zeigen = (an) => {
+            if (leiste.hidden === !an)
+                return;
+            const still = typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
+            if (an) {
+                leiste.hidden = false;
+                if (!still) {
+                    const f = typeof RedionSpring !== 'undefined' ? RedionSpring.token('snappy') : { easing: 'ease-out', duration: 300 };
+                    reihe.animate([{ opacity: 0, transform: 'translateY(-10px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: f.duration, easing: f.easing });
+                }
+            }
+            else if (still)
+                leiste.hidden = true;
+            else {
+                const a = reihe.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'linear' });
+                a.finished.then(() => { leiste.hidden = true; }).catch(() => { leiste.hidden = true; });
+            }
+        };
+        const io = new IntersectionObserver(eintraege => {
+            for (const e of eintraege) {
+                const oben = e.boundingClientRect.bottom < (e.rootBounds?.top ?? 0) + 8;
+                zeigen(!e.isIntersecting && oben);
+            }
+        }, { root: rolle, threshold: 0 });
+        beobachter.get(rolle)?.disconnect();
+        beobachter.set(rolle, io);
+        io.observe(gitter);
+    };
+    return { KACHELN, einsetzen, markieren };
+})();
+window.Schnellkacheln = Schnellkacheln;
 
 </script>
 <script>
@@ -99644,6 +100576,11 @@ const Ansichten = (() => {
                         '<span class="pth">›</span></button>').join('') +
                     '</div>').join('') +
                 '</div>';
+        if (typeof Schnellkacheln !== 'undefined') {
+            const home = wrap.querySelector('.home');
+            Schnellkacheln.einsetzen(home, { nach: home?.querySelector('h1') ?? null,
+                rolle: document.getElementById('scroll') });
+        }
         wrap.onclick = (e) => {
             const el = (e.target instanceof Element) ? e.target : null;
             const a = el?.closest('[data-a]')?.dataset.a;
@@ -100158,6 +101095,8 @@ const Einstellungen = (() => {
                 ziel.innerHTML =
                     '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
                         '‹ Übersicht</button>' + inhalt(offenerBereich);
+            if (ziel && offenerBereich === 'allgemein' && typeof Schnellkacheln !== 'undefined')
+                Schnellkacheln.einsetzen(ziel, { nach: ziel.querySelector(':scope > h2'), rolle: ziel });
             o.querySelectorAll('.einst-nav button').forEach(b => b.classList.toggle('on', b.dataset.b === offenerBereich));
             binde(o);
         };
@@ -130116,7 +131055,7 @@ const Bibliothek = (() => {
                 App.zeichneSeite();
             });
         }));
-        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt()));
+        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt(b)));
         wrap.querySelectorAll('[data-hoch]').forEach(b => b.addEventListener('click', () => geheHoch()));
         wrap.querySelectorAll('.bib-krume').forEach(krume => {
             krume.scrollLeft = krume.scrollWidth;
@@ -133872,7 +134811,8 @@ const Lernwelt = (() => {
         const importVerfuegbar = typeof Bibliothek !== 'undefined' && !!Bibliothek.pdfImportieren;
         return '<section class="lw-desk" aria-label="Dein Dokumentenstudio">' +
             '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
-            '<h2>Aufmachen.<br>Weiterdenken.</h2>' +
+            '<h2><span class="ru-held-zeile" data-zeile="Aufmachen.">Aufmachen.</span><br>' +
+            '<span class="ru-held-zeile" data-zeile="Weiterdenken.">Weiterdenken.</span></h2>' +
             '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
             '<div class="lw-actions">' +
             (pdf
@@ -134978,6 +135918,13 @@ const Lernwelt = (() => {
         else
             timerStoppen();
         reiterRollstand();
+        const satz = root.querySelector('.lw-desk h2');
+        const gleiten = neuAngekommen;
+        neuAngekommen = false;
+        if (satz && typeof Linse !== 'undefined' && Linse.ueberSatz) {
+            requestAnimationFrame(() => { if (satz.isConnected)
+                Linse.ueberSatz(satz, gleiten); });
+        }
         if (typeof Trainer !== 'undefined') {
             const platz = zustand.ansicht === 'trainer' ? root.querySelector('#lw-trainer') : null;
             if (platz)
@@ -135461,8 +136408,10 @@ const Lernwelt = (() => {
         document.removeEventListener('keydown', taste);
         zustand.root = null;
     };
+    let neuAngekommen = false;
     const render = (ziel, ansicht) => {
         abmelden();
+        neuAngekommen = true;
         zustand.root = ziel;
         const gespeichert = Store.getMeta(metaSchluessel('ansicht'), 'heute');
         zustand.ansicht = ansichtGueltig(ansicht) ? ansicht
@@ -136068,7 +137017,7 @@ const Notebook = (() => {
                 return;
             }
             if (was === 'alle')
-                return App.erstellenBlatt();
+                return App.erstellenBlatt(anker);
             setTimeout(() => App.erstellenWeg(was), 60);
         });
     };
@@ -136700,6 +137649,7 @@ const Zeitmesser = (() => {
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
     const zeichneStand = () => {
+        document.dispatchEvent(new CustomEvent('redion:zeitmesser'));
         const feld = document.querySelector('.zm-feld');
         if (!feld)
             return;
@@ -143528,8 +144478,8 @@ const Kontextkante = (() => {
             }
             catch { } } },
         { id: 'neu', name: 'Neu erstellen', zeichen: 'plus',
-            tun: () => { try {
-                App.erstellenBlatt();
+            tun: (b) => { try {
+                App.erstellenBlatt(b);
             }
             catch { } } },
         { id: 'einstellungen', name: 'Einstellungen', zeichen: 'settings',
@@ -143880,6 +144830,20 @@ const StudioSchale = (() => {
         if (b)
             b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
     };
+    const themaWechseln = () => {
+        const hell = document.documentElement.dataset.theme === 'light';
+        if (typeof Aussehen !== 'undefined') {
+            const aktuell = Aussehen.einstellung();
+            Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
+            const ziel = hell ? 'dark' : 'light';
+            const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
+            const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
+            Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
+        }
+        else
+            Einstellungen.S('theme', hell ? 'dark' : 'light');
+        themaMarkieren();
+    };
     const einstellen = (kompakt) => {
         document.body.dataset.studioNav = kompakt ? 'kompakt' : 'offen';
         const knopf = document.getElementById('studio-nav');
@@ -143901,7 +144865,7 @@ const StudioSchale = (() => {
         };
         an('studio-home', () => Bibliothek.oeffne());
         an('studio-search', () => App.suche());
-        an('studio-create', () => App.erstellenBlatt());
+        an('studio-create', () => App.erstellenBlatt(document.getElementById('studio-create')));
         an('studio-import', () => Bibliothek.pdfImportieren());
         an('studio-account', () => App.arbeitsbereich());
         an('studio-glocke', () => { try {
@@ -143927,20 +144891,7 @@ const StudioSchale = (() => {
             Menueband.schliessen();
             document.getElementById('studio-tools')?.focus();
         });
-        an('studio-theme', () => {
-            const hell = document.documentElement.dataset.theme === 'light';
-            if (typeof Aussehen !== 'undefined') {
-                const aktuell = Aussehen.einstellung();
-                Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
-                const ziel = hell ? 'dark' : 'light';
-                const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
-                const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
-                Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
-            }
-            else
-                Einstellungen.S('theme', hell ? 'dark' : 'light');
-            themaMarkieren();
-        });
+        an('studio-theme', themaWechseln);
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
@@ -144010,7 +144961,7 @@ const StudioSchale = (() => {
             }
         });
     };
-    return { start };
+    return { start, themaWechseln };
 })();
 
 </script>
@@ -145244,6 +146195,15 @@ const App = (() => {
             UI.toast(neu.includes(id) ? 'Seite mit ' + name + ' verknüpft' : 'Verknüpfung zu ' + name + ' gelöst');
         });
     };
+    const favoritKippen = (p) => {
+        const jetzt = Store.getBlock(p.id) || p;
+        const neu = !jetzt.favorite;
+        Store.updateBlock(p.id, { favorite: neu });
+        p.favorite = neu;
+        zeichneBaum();
+        zeichneCrumbs();
+        return neu;
+    };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();
         const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -145307,6 +146267,20 @@ const App = (() => {
             `<button data-a="verbind">${mi('plug')}Verbindungen` +
             `<span class="ms">${(p.verbindungen || []).length || 'Keine'} ▸</span></button>` +
             '<button data-a="papier">' + mi('trash') + 'Gelöschte Seiten</button>', r.right + 4, r.top, { platzhalter: 'Suchaktionen …', titel: 'Aktionen',
+            anker,
+            tropfen: [
+                { id: 'wz-praesi', name: 'Präsentieren', zeichen: 'play', ziel: '[data-a="wz-praesi"]' },
+                { id: 'merkzeichen', name: 'Merkzeichen', zeichen: 'bookmark', an: !!p.favorite,
+                    kippen: () => {
+                        const an = favoritKippen(p);
+                        const eintrag = document.querySelector('.menu .menu-liste [data-a="fav"]');
+                        if (eintrag)
+                            eintrag.innerHTML = mi('star') + (an ? 'Aus Favoriten entfernen' : 'Zu Favoriten');
+                        return an;
+                    } },
+                { id: 'teilen', name: 'Teilen und ausgeben', zeichen: 'share', ziel: '[data-a="teilen"]',
+                    tun: () => Werkzeuge.teilenMenue(anker, p) }
+            ],
             fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
                 `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
                 esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
@@ -145441,8 +146415,7 @@ const App = (() => {
                 return;
             }
             if (a === 'fav') {
-                Store.updateBlock(p.id, { favorite: !p.favorite });
-                zeichneBaum();
+                favoritKippen(p);
             }
             if (a === 'klein') {
                 Store.updateBlock(p.id, { small: !p.small });
@@ -147070,7 +148043,7 @@ const App = (() => {
     };
     const erstellenWege = () => ERSTELLEN.filter(w => !w.da || w.da())
         .map(w => ({ id: w.id, zeichen: w.zeichen, name: w.name, sub: w.sub }));
-    const erstellenBlatt = () => {
+    const erstellenBlatt = (anker) => {
         const wege = ERSTELLEN.filter(w => !w.da || w.da());
         const gruppen = [];
         for (const w of wege)
@@ -147081,7 +148054,15 @@ const App = (() => {
                 `<span class="ne-txt"><b>${esc(w.name)}</b><i>${esc(w.sub)}</i></span>` +
                 '<span class="ne-pfeil">›</span></button>').join('')).join('') +
             '</div>';
-        const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen' });
+        const plus = document.getElementById('studio-create');
+        const ort = anker || (plus && plus.getBoundingClientRect().width > 0 ? plus : null);
+        const vorn = [
+            { id: 'pdf', name: 'PDF einlesen', zeichen: 'upload' },
+            { id: 'seite', name: 'Neue Seite', zeichen: 'page' },
+            { id: 'heft', name: 'Notizbuch', zeichen: 'book' }
+        ].filter(k => wege.some(w => w.id === k.id))
+            .map(k => ({ ...k, ziel: `[data-neu="${k.id}"]` }));
+        const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen', anker: ort, tropfen: vorn });
         m.addEventListener('click', (e) => {
             const b = (e.target instanceof Element)
                 ? e.target.closest('[data-neu]') : null;
@@ -148034,10 +149015,7 @@ const App = (() => {
         an('btn-fav', () => {
             if (!seiteId)
                 return;
-            const p = Store.getBlock(seiteId);
-            Store.updateBlock(p.id, { favorite: !p.favorite });
-            zeichneBaum();
-            zeichneCrumbs();
+            favoritKippen(Store.getBlock(seiteId));
         });
         an('btn-page-menu', (e) => {
             const p = Store.getBlock(seiteId);

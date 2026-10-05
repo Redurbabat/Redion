@@ -478,6 +478,11 @@ const Ansichten = (() => {
                         '<span class="pth">›</span></button>').join('') +
                     '</div>').join('') +
                 '</div>';
+        if (typeof Schnellkacheln !== 'undefined') {
+            const home = wrap.querySelector('.home');
+            Schnellkacheln.einsetzen(home, { nach: home?.querySelector('h1') ?? null,
+                rolle: document.getElementById('scroll') });
+        }
         wrap.onclick = (e) => {
             const el = (e.target instanceof Element) ? e.target : null;
             const a = el?.closest('[data-a]')?.dataset.a;

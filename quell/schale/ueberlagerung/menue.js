@@ -43,6 +43,7 @@ const Menue = (() => {
                 return;
             }
             weg = true;
+            m.dataset['abgang'] = '1';
             const von = jetzt(), grundVon = deckung();
             halt();
             m.style.transform = '';
@@ -126,11 +127,143 @@ const Menue = (() => {
         m.addEventListener('touchcancel', los);
         return { herein, geht };
     };
+    const zeichenSvg = (k, an) => {
+        if (k.kippen && typeof Merkzeichen !== 'undefined') {
+            return '<svg viewBox="0 0 24 24" class="sym" aria-hidden="true" focusable="false">' +
+                `<path d="${Merkzeichen.BAND}" fill="${an ? 'currentColor' : 'none'}" stroke="currentColor" ` +
+                'stroke-width="1.7" stroke-linejoin="round"></path></svg>';
+        }
+        try {
+            return Register.symbole.alsSvg(k.zeichen, 20);
+        }
+        catch {
+            return '';
+        }
+    };
+    const tropfenKopf = (knoepfe) => {
+        const kopf = document.createElement('div');
+        kopf.className = 'ru-tropfen-kopf';
+        for (const k of knoepfe) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'ru-tropfen-knopf';
+            b.dataset['tropfen'] = k.id;
+            b.setAttribute('aria-label', k.name);
+            b.title = k.name;
+            if (k.kippen)
+                b.setAttribute('aria-pressed', k.an ? 'true' : 'false');
+            const rund = document.createElement('span');
+            rund.className = 'ru-tropfen-rund';
+            rund.setAttribute('aria-hidden', 'true');
+            rund.innerHTML = zeichenSvg(k, !!k.an);
+            const name = document.createElement('span');
+            name.className = 'ru-tropfen-name';
+            name.setAttribute('aria-hidden', 'true');
+            name.textContent = k.name;
+            b.append(rund, name);
+            kopf.append(b);
+        }
+        return kopf;
+    };
+    const tropfenBinden = (m, kopf, knoepfe) => {
+        kopf.addEventListener('click', ev => {
+            const b = ev.target instanceof Element ? ev.target.closest('.ru-tropfen-knopf') : null;
+            const k = b ? knoepfe.find(x => x.id === b.dataset['tropfen']) : undefined;
+            if (!b || !k)
+                return;
+            ev.stopPropagation();
+            if (k.kippen) {
+                const an = k.kippen();
+                b.setAttribute('aria-pressed', an ? 'true' : 'false');
+                const rund = b.querySelector('.ru-tropfen-rund');
+                if (rund) {
+                    rund.innerHTML = zeichenSvg(k, an);
+                    const svg = rund.querySelector('svg');
+                    if (an && svg && !(typeof Tropfen !== 'undefined' && Tropfen.still())) {
+                        const f = typeof RedionSpring !== 'undefined' ? RedionSpring.token('bouncy') : { easing: 'ease-out', duration: 400 };
+                        svg.animate([{ scale: '0.7' }, { scale: '1.25', offset: 0.35 }, { scale: '1' }], { duration: f.duration, easing: 'ease-out' });
+                    }
+                }
+                return;
+            }
+            const eintrag = k.ziel ? m.querySelector(`.menu-liste ${k.ziel}, :scope > ${k.ziel}`) : null;
+            if (eintrag) {
+                eintrag.click();
+                return;
+            }
+            if (k.tun) {
+                m.remove();
+                k.tun();
+            }
+        });
+    };
+    const amAnker = (m, anker) => {
+        const a = anker.getBoundingClientRect();
+        const r = m.getBoundingClientRect();
+        const LUFT = 6;
+        let left = (a.left + a.width / 2 > innerWidth / 2) ? a.right - r.width : a.left;
+        let top = a.bottom + LUFT;
+        if (top + r.height > innerHeight - 8 && a.top - LUFT - r.height >= 8)
+            top = a.top - LUFT - r.height;
+        left = Math.max(8, Math.min(left, innerWidth - r.width - 8));
+        top = Math.max(8, Math.min(top, innerHeight - r.height - 8));
+        m.style.left = left + 'px';
+        m.style.top = top + 'px';
+    };
+    const rechteck = (el) => {
+        const r = el.getBoundingClientRect();
+        return { left: r.left, top: r.top, width: r.width, height: r.height };
+    };
+    const versatzY = (el) => {
+        const t = getComputedStyle(el).transform;
+        if (!t || t === 'none' || typeof DOMMatrixReadOnly === 'undefined')
+            return 0;
+        try {
+            return new DOMMatrixReadOnly(t).m42;
+        }
+        catch {
+            return 0;
+        }
+    };
+    const tropfenAuf = (m, kopf, anker, blatt) => {
+        if (typeof Tropfen === 'undefined' || Tropfen.still() || !anker.isConnected)
+            return;
+        const knoepfe = [...kopf.querySelectorAll('.ru-tropfen-rund')];
+        const unten = blatt ? versatzY(m) : 0;
+        const ziele = knoepfe.map(rechteck).map(r => ({ ...r, top: r.top - unten }));
+        const a = rechteck(anker);
+        if (!blatt)
+            Tropfen.wachsen(m, a);
+        const ankunft = Tropfen.teilen(a, ziele, blatt ? 300 : 40);
+        if (!ankunft)
+            return;
+        const kurve = typeof RedionSpring !== 'undefined' ? RedionSpring.token('press') : { easing: 'ease-out', duration: 320 };
+        [...kopf.querySelectorAll('.ru-tropfen-knopf')].forEach((b, i) => {
+            b.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 140, delay: ankunft, easing: 'linear', fill: 'backwards' });
+            const svg = b.querySelector('.ru-tropfen-rund > svg');
+            svg?.animate([{ scale: '0.2' }, { scale: '1' }], { duration: kurve.duration, delay: ankunft + i * 40, easing: kurve.easing, fill: 'backwards' });
+        });
+    };
     const menu = (html, x, y, opt = {}) => {
         document.querySelectorAll('.menu, .menu-grund').forEach(m => m.remove());
         const m = document.createElement('div');
         m.className = 'menu';
         m.innerHTML = html;
+        const kopf = opt.tropfen?.length ? tropfenKopf(opt.tropfen) : null;
+        if (kopf && opt.tropfen) {
+            m.classList.add('ru-tropfen-menue');
+            m.prepend(kopf);
+            tropfenBinden(m, kopf, opt.tropfen);
+        }
+        const anker = opt.anker && opt.anker.isConnected ? opt.anker : null;
+        let zuletzt = null;
+        const messen = () => {
+            if (!kopf || !m.isConnected || m.getAnimations().some(a => a.playState === 'running'))
+                return;
+            zuletzt = { flaeche: rechteck(m),
+                kreise: [...kopf.querySelectorAll('.ru-tropfen-rund')].map(rechteck) };
+        };
+        let nachmessen = null;
         let grund = null;
         const schliessen = () => {
             m.remove();
@@ -150,6 +283,11 @@ const Menue = (() => {
             grund?.remove();
             document.removeEventListener('keydown', escape, true);
             waechter.disconnect();
+            nachmessen?.disconnect();
+            if (zuletzt && anker && anker.isConnected && typeof Tropfen !== 'undefined' && !m.dataset['abgang']) {
+                const z = zuletzt;
+                Tropfen.vereinen(z.kreise, rechteck(anker), m.classList.contains('blatt') ? null : z.flaeche);
+            }
         });
         if (amTelefon()) {
             m.classList.add('blatt');
@@ -169,7 +307,8 @@ const Menue = (() => {
                 liste = document.createElement('div');
                 liste.className = 'menu-liste menu-liste-ohne-suche';
                 [...m.childNodes].filter(n => n !== griff &&
-                    (!(n instanceof HTMLElement) || !n.classList.contains('blatt-titel')))
+                    (!(n instanceof HTMLElement) ||
+                        (!n.classList.contains('blatt-titel') && !n.classList.contains('ru-tropfen-kopf'))))
                     .forEach(n => liste.appendChild(n));
                 m.appendChild(liste);
             }
@@ -206,13 +345,32 @@ const Menue = (() => {
             });
             m.querySelectorAll('[data-a="del"], [data-a="purge"]').forEach(x => x.classList.add('rot'));
             zug.herein();
+            if (kopf && anker) {
+                tropfenAuf(m, kopf, anker, true);
+                const f = typeof RedionSpring !== 'undefined' ? RedionSpring.token('smooth').duration : 320;
+                setTimeout(messen, f + 40);
+            }
             return m;
         }
         document.body.appendChild(m);
         waechter.observe(document.body, { childList: true });
-        const r = m.getBoundingClientRect();
-        m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
-        m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+        if (kopf)
+            m.style.setProperty('--ru-tropfen-kopf', kopf.offsetHeight + 'px');
+        if (anker)
+            amAnker(m, anker);
+        else {
+            const r = m.getBoundingClientRect();
+            m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
+            m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+        }
+        if (kopf && anker) {
+            messen();
+            tropfenAuf(m, kopf, anker, false);
+            if (typeof ResizeObserver !== 'undefined') {
+                nachmessen = new ResizeObserver(messen);
+                nachmessen.observe(m);
+            }
+        }
         setTimeout(() => {
             const zu = (e) => {
                 const ziel = e.target instanceof Node ? e.target : null;
@@ -230,7 +388,11 @@ const Menue = (() => {
             `<div class="menu-suche"><input placeholder="${opt.platzhalter || 'Filtern …'}" ` +
             'autocomplete="off" spellcheck="false"></div>' +
             '<div class="menu-liste">' + html + '</div>' +
-            (opt.fuss ? '<div class="menu-fuss">' + opt.fuss + '</div>' : ''), x, y, opt.titel === undefined ? {} : { titel: opt.titel });
+            (opt.fuss ? '<div class="menu-fuss">' + opt.fuss + '</div>' : ''), x, y, {
+            ...(opt.titel === undefined ? {} : { titel: opt.titel }),
+            ...(opt.anker ? { anker: opt.anker } : {}),
+            ...(opt.tropfen ? { tropfen: opt.tropfen } : {})
+        });
         if (opt.breite && !m.classList.contains('blatt'))
             m.style.width = String(opt.breite);
         const feld = m.querySelector('.menu-suche input');

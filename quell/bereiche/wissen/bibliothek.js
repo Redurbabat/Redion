@@ -1131,7 +1131,7 @@ const Bibliothek = (() => {
                 App.zeichneSeite();
             });
         }));
-        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt()));
+        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt(b)));
         wrap.querySelectorAll('[data-hoch]').forEach(b => b.addEventListener('click', () => geheHoch()));
         wrap.querySelectorAll('.bib-krume').forEach(krume => {
             krume.scrollLeft = krume.scrollWidth;

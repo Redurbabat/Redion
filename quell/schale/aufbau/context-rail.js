@@ -265,8 +265,8 @@ const Kontextkante = (() => {
             }
             catch { } } },
         { id: 'neu', name: 'Neu erstellen', zeichen: 'plus',
-            tun: () => { try {
-                App.erstellenBlatt();
+            tun: (b) => { try {
+                App.erstellenBlatt(b);
             }
             catch { } } },
         { id: 'einstellungen', name: 'Einstellungen', zeichen: 'settings',

@@ -160,6 +160,7 @@ const Zeitmesser = (() => {
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
     const zeichneStand = () => {
+        document.dispatchEvent(new CustomEvent('redion:zeitmesser'));
         const feld = document.querySelector('.zm-feld');
         if (!feld)
             return;

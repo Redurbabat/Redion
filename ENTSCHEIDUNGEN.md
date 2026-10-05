@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-692 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E712 und E713** sind den Zweigen der zweiten Welle vom 28. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+693 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E713** ist dem letzten Zweig der zweiten Welle vom 28. September vergeben und folgt, sobald er landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -753,6 +753,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E709** — Der Löschen-Knopf, der zerfliesst, überall wo gelöscht wird (Redur: „Ich will das du löschen button so ist überla wo etwas zum löschen eine buton gibt"): EIN Helfer in Redions eigenem TypeScript und CSS (`RedionDelete`, nachgebaut nach DeleteButton aus dem Touch Kit, ohne React beim Start); jede Stelle macht mit einem Merkmal `data-loeschknopf` mit, ihr alter Griff bleibt am selben Ort; ein Druck, und der Kreis zerfliesst in „Löschen" und „Abbrechen", EIN Klebefilter je Dokument, an nur während des Fliessens; 23 Stellen in 16 Dateien; die zwei `confirm()` hinter einem Papierkorbknopf entfallen, „Papierkorb leeren" fragt weiter. Wächter `test586`.
 * **E710** — Die Fragen der Schale im Fenster des Touch Kits (Stufe 1b von E699; Redur: „was du beim touckit gebaut hast ich will alles so haben mit redion passende inhalten"): `Dialog.frage`, `Dialog.wahl` und `Dialog.mehrzeilig` zeichnen den Dialog des Kits (am Telefon ab drei Antworten das Aktionsblatt) am selben Auslöser mit denselben Antworten und Haken, das bisherige Fenster bleibt als Rückweg; Fokus und der gemeinsame Escape-Griff sehen mit dem Kit EINE oberste Ebene (vorher: beide `inert`), „Ruhige Darstellung" erreicht die Federn des Kits, Akzent als Schrift liest `--accent-text`, das Kit neu geholt von d21c402 und unter Redions strengen Schaltern geprüft, der Zeitmesser schliesst auf Escape; `Dialog.bestaetigen`/`Dialog.melden` für `confirm()`/`alert()`. Wächter `test587`.
 * **E711** — Die Suche wächst aus der Kapsel, die Meldungen stapeln sich (Redur zum Video „Liquid Glass": „Schau mal das auch an ich will das auch haben", Szenen 07 und 08): die Suche geht aus dem Knopf auf, der sie trägt, neue Treffer kommen nacheinander, EINE Marke gleitet mit ↑ ↓ auf der Kit-Feder (Suche, Befehlspalette, Menü mit Suche; `SelectionFlow.highlight`, kein Neubau je Pfeil) und trägt „↵ Enter"; `#toast` wird ein Stapel aus bis zu drei Meldungen (die zwei davor waren verloren), Escape räumt ab, ein Finger wischt weg; die Glocke öffnet WEITER den Posteingang, beim Zeigen oder langen Drücken fächern die letzten drei auf, „Alle gelesen" (gelesen, nicht leeren) fliesst zäh in sie zurück — EIN Goo-Filter, nur während es fliesst; der Posteingang als Glaskarten (`test588`)
+* **E712** — Tropfen, Linse und Kacheln aus dem Liquid-Glass-Video (Redur: „Schau mal das auch an ich will das auch haben“): das „+“ und das „⋯“ fliessen wie ein Tropfen in ihr Menü, das AM Knopf wächst (das „+“-Menü stand am Rechner oben links in der Ecke), oben drei runde Glasknöpfe als Abkürzungen, jeder Eintrag bleibt darunter; EIN Goo-Filter im Halter der Linse, nur während des Fliessens; die Linse gleitet einmal über „Aufmachen. / Weiterdenken.“ mit der Brechung aus linse.ts; sieben Glaskacheln oben in „Mehr“ und in den Einstellungen, gerollt eine Chipleiste, die alten Felder bleiben (`test589`)
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 
@@ -60228,6 +60229,338 @@ Läufe um die geänderten Stellen — Meldungen, Suche, Stile, Berührung):
 Nachladen"), auf `b3cf1933` zweimal genauso rot (ca. 19:53 UTC) — fremd,
 der bekannte Wackler aus dem Zweig der roten Inseln. Ohne Browser grün:
 87 105 109 225 290 298 401 402 410 549 550.
+
+## E712 — Tropfen, Linse und Kacheln: das „+“ und das „⋯“ fliessen in ihr Menü, die Linse gleitet über „Heute“, Glaskacheln oben in „Mehr“
+
+**Datum:** 28. September 2026 · **Entschieden von** Redur (Video „LIQUID
+GLASS“ ca. 22:05 UTC, Auftrag ca. 22:10 UTC) · **baut auf** E646 (ein
+Filter nur in Bewegung — so auch der Tropfen), E649 (ein Halter für die
+Filter — der Tropfen liegt darin, kein dritter) und E706 (die Feder
+„knapp“), ohne eine davon zu ändern · **Wächter:** `test589` ·
+**Zweig** `claude/tropfen-und-kacheln`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+ca. 16:45 UTC   „du muss mehr im redion arbeiten du kannst auch die oberfläche
+                bischen ruhige machen ohne etwas lösche also eine funktionen
+                und ich will das es flüssigere animationen , glass efeck usw
+                alles haben dann bessere stift efeckte beim zeichnen bessere
+                farben"
+ca. 21:45 UTC   im Fragebogen: Federn „Wie im UI-Kit (Empfohlen)"; Farben
+                „Starker Kontrast ohne Glas" („schwarze Schrift auf Gelb")
+ca. 21:47 UTC   „ich will das du auch das ¨berla nutze will wo es nötig ich
+                also beim stift übergangen usw"
+ca. 21:49 UTC   „was du beim touckit gebaut hast ich will alles so haben mit
+                redion passende inhalten"
+ca. 22:05 UTC   zum Video „LIQUID GLASS" (16 s, Urheber unbekannt):
+                „Schau mal das auch an ich will das auch haben"
+ca. 22:10 UTC   „du muss ofne pause an redion arbeiten ich will wenn ich am
+                morgen die redion öfnnen eien komplet besseren webseit sehen
+                ohne eine funktione löschen bessere ordnungen bessere
+                übergagnge besssere efeckten , bessere oberfläsche alles kannst
+                du nur an reddion arbeiten"
+```
+
+**Was war.** Das „+“ im Studio-Kopf (`#studio-create`) öffnete „Neu
+erstellen“ mit `UI.menu(html, 0, 0, …)` — am Rechner also bei (0, 0), oben
+links in der Ecke, während der Knopf oben rechts sitzt (gemessen, `test589` §1
+gegen `b3cf1933`: der Knopf bei x = 1296 bis 1334, die Scheibe bei x = 8 bis
+427, y = 8 bis 548).
+Das „⋯“ der Seite stellte sein Menü neben den Knopf, ohne Bezug. Der Satz
+auf „Heute“ stand still. Die Schalter, die man am häufigsten sucht — Hell
+oder Dunkel, Kontrast, Ruhe, Schriftgrösse, Zeilenabstand — standen als
+Auswahlfelder unten in Einstellungen → Allgemein; „Mehr“ war eine Liste.
+
+**Was entschieden wurde — drei Szenen des Videos, in Redions eigenem
+TypeScript und CSS** (kein React beim Start, E699 R1; die Federn aus E702,
+das Material aus E706 — keine zweite Feder, keine zweite Brechung):
+
+1. **01 MORPH — das Menü wächst aus dem Knopf.** `Menue.menu` kennt einen
+   `anker` und stellt das Menü AN ihn (darunter, rechtsbündig in der
+   rechten Fensterhälfte; passt es nicht, darüber). Die Glasscheibe wächst
+   per `transform` aus dem Knopf (Feder „knapp“), der Inhalt blendet nach.
+   Aus dem Knopf fliesst ein Tropfen und teilt sich in drei runde
+   Glasknöpfe oben im Menü: beim „+“ **PDF einlesen · Neue Seite ·
+   Notizbuch**, beim „⋯“ **Präsentieren · Merkzeichen · Teilen und
+   ausgeben**. Die runden Knöpfe sind ABKÜRZUNGEN: jeder löst genau den
+   Eintrag aus, der darunter unverändert steht (§43, §8 — ein Weg, zwei
+   Griffe); nur das Merkzeichen kippt an Ort und Stelle (dasselbe Band wie
+   in `merkzeichen.ts`, gefüllt oder offen). Zu fliesst es in den Knopf
+   zurück — als Bild (aria-hidden), denn Escape, die Wahl eines Eintrags
+   und jedes `menu.remove()` bleiben SOFORT (E302; rund siebzig Prüfläufe
+   bauen darauf). Am Telefon trägt das Blatt dieselben drei Knöpfe unter
+   seinem Titel; der Tropfen fällt aus dem Knopf hinein, wenn das Blatt
+   steht.
+2. **Der Goo ist EIN Filter.** `Linse.TROPFEN` (`#ru-linse-tropfen`:
+   weichzeichnen, Deckkraft hart schneiden, die scharfe Form obenauf) liegt
+   im Halter der Linse neben `FAHRT` — kein dritter Halter (E649). Keine
+   Fläche trägt ihn in Ruhe: nur die Bühne (`.ru-tropfen-buehne`), und die
+   steht nur, solange es fliesst, und nur so gross wie der Weg.
+3. **03 REFRACT — die Linse über „Heute“.** Beim Ankommen kommen
+   „Aufmachen.“ und „Weiterdenken.“ verwischt herein (eine still
+   weichgezeichnete Abschrift blendet aus, die Zeile steigt — nur Deckkraft
+   und Weg), die Linse fällt herein, gleitet zum Ende der ersten Zeile,
+   dann der zweiten, und liegt still. Unterwegs Milchglas, in Ruhe die
+   Brechung `FAHRT` aus linse.ts. Die Überschrift bleibt echte Schrift; die
+   Linse ist aria-hidden. Keine Dauerbewegung. Zeichnet „Heute“ gleich nach
+   dem Ankommen neu, läuft dieselbe Fahrt weiter statt neu zu beginnen.
+4. **04 CONTROL — Glaskacheln.** Oben in „Mehr“ (unter der Überschrift)
+   und oben in der Übersicht der Einstellungen (unter „Einstellungen“)
+   sieben Griffe: **Dunkel** (derselbe Weg wie der Kreis im Studio-Kopf,
+   jetzt `StudioSchale.themaWechseln`), **Fokus-Modus**
+   (`Werkzeuge.fokus`), **Ruhige Darstellung** (`S('bewegung')`), **Hoher
+   Kontrast** (`S('kontrast')`, gelb mit schwarzer Schrift), **Zeitmesser**
+   (breit, `Zeitmesser.panel`), **Schriftgrösse** und **Zeilenabstand** als
+   Regler mit drei Stufen, die sich von unten füllen (`S('schriftgroesse')`,
+   `S('dichte')`; Tipp, Ziehen, Pfeiltasten, Pos1/Ende). Die Farbe wechselt
+   als Deckkraft einer Schicht, das Einsinken macht `press.ts`. Gerollt
+   werden sie zur Chipleiste, die oben klebt (Höhe 0 — beim Erscheinen
+   springt nichts). Die Auswahlfelder in „Allgemein“ bleiben, wo sie sind,
+   und beide zeigen immer denselben Stand.
+5. **Ruhig und weniger Bewegung:** keine Bühne, kein Wachsen, keine
+   Fahrt — die Knöpfe, die Linse und die Kacheln stehen sofort an ihrem
+   Ort (`AppEinstellung.wenigBewegung()`, beide Quellen).
+
+**Warum.** Redur will die Szenen des Videos „auch haben“ und am Morgen
+„bessere übergagnge besssere efeckten“ sehen — „ohne eine funktione
+löschen“. Der Tropfen erklärt, WOHER ein Menü kommt, und behebt dabei einen
+echten Fehler (das „+“-Menü in der falschen Ecke). Die drei runden Knöpfe
+machen die drei häufigsten Wege einen Tipp kürzer, ohne einen anderen
+länger zu machen. Die Kacheln holen die sieben meistgesuchten Schalter aus
+dem unteren Drittel einer Einstellungsseite nach oben.
+
+**Was die Alternative war.**
+
+- *Die Szenen als React-Inseln mit dem Kit.* Abgelehnt: das „+“, das „⋯“,
+  „Heute“ und „Mehr“ sind Schale beim Start (E699 R1 — keine Insel lädt
+  ohne Zutun), und das Kit hat heute einen Goo-Filter JE Knopf, der auch in
+  Ruhe an ist (Liquid-Karte, „Must-fix“ 2).
+- *Ein zusätzlicher Schritt „⋯ alle Aktionen“ hinter drei Knöpfen*, wie die
+  Karte der Szenen vorschlug. Abgelehnt: das wäre ein Schritt mehr zu jedem
+  der dreissig Einträge (§43, „kein Zwischenschritt“).
+- *Die Linse mit dem Glas des Kits (ALEXalesha).* Abgelehnt: das wäre die
+  dritte Brechung im Dokument; `test589` §8 zählt `feDisplacementMap` und
+  verlangt genau eine.
+- *Backdrop-Filter hinter jeder Kachel.* Abgelehnt (E703, Karte „Must-fix“
+  3): sieben Glasflächen am Telefon; eine halbdurchsichtige Fläche mit
+  Lichtkante sieht auf dem ruhigen Grund fast gleich aus.
+
+**Was es kostet.** Beim Start **+14,3 KB gzip** (Stufe 6, die geänderten
+Startdateien zusammen; `test388` §5 zählt nach, Decke 2850 KB — der Lauf folgt im Nachtrag) — mehr als
+die rund 10 KB, die jedem Zweig dieser Welle zugeteilt sind (L233 Punkt 4;
+die Kommentare sind schon gekürzt, die Begründungen stehen hier). Zwei neue
+Skripte (`tropfen.js`, `kacheln.js`) mit Eintrag in `index.html` und im
+GRUNDSTOCK (§28). Während des Fliessens (≈ 0,4 s) rechnet der Goo-Filter auf
+der Bühne; in Ruhe nichts. Kein React beim Start.
+
+**Gemessen, bevor gebaut wurde** (messungen §82): die Lage des „+“-Menüs
+am Rechner (die Scheibe von x = 8 bis 427, y = 8 bis 548 — der Knopf bei
+x = 1296 bis 1334, y = 6 bis 50), die des „⋯“-Menüs (es deckte den Knopf
+zu), die Zahl der Filter im Dokument (einer, `ru-linse-fahrt`), die
+Einträge beider Menüs (jeder Weg, jede Seitenaktion — vorher wie nachher),
+die Startgrösse.
+
+**Gefunden auf dem Weg.**
+
+- `btn-fav` und der Eintrag „Zu Favoriten“ kippten das Merkzeichen mit zwei
+  Abschriften, und nur eine zeichnete die Krume neu. Jetzt EIN Weg
+  (`favoritKippen`) für ★, den Eintrag und den runden Knopf.
+- Der Kreis „Hell/Dunkel“ im Studio-Kopf war eine namenlose Funktion im
+  Klick-Horcher; die Kachel „Dunkel“ braucht denselben Weg. Jetzt
+  `StudioSchale.themaWechseln` (§8).
+- Strg N legt weiter SOFORT eine neue Seite an (`App.neueSeite`), es öffnet
+  nicht „Neu erstellen“. Die Karte der Szenen nannte Strg N als Auslöser des
+  Menüs; das stimmt nicht und bleibt so (§43, derselbe Auslöser, dieselbe
+  Wirkung).
+
+**Gegenproben** (je eine Verletzung in den erzeugten Dateien, `test589`
+rot gesehen, zurückgenommen):
+
+- **G1** `menue.js`: `amAnker` aus, das Menü wieder bei x/y — `test589` §1 rot (das „+“-Menü bei x 0–419, y 0–540), §5 rot (das „⋯“-Menü bei 0/0).
+- **G2** `tropfen.js`: die Bühne wird nie entfernt — §3 rot („In Ruhe: keine Bühne mehr“, „KEIN Element trägt den Tropfenfilter“), §4 rot („danach ist auch er weg“).
+- **G3** `lernwelt.js`: `gleiten` immer falsch — §8 rot („Beim Ankommen bewegt sie sich“: 0).
+- **G4** `tropfen.js`: `still()` immer falsch — §7 rot, ruhig und reduced-motion je dreimal (Tropfen beim Öffnen und Schliessen, 9 bzw. 6 Bewegungen am Menü).
+- **G5** `kacheln.js`: „Dunkel“ ruft `themaWechseln` nicht — §9 rot („Dunkel schaltet wie #studio-theme“).
+
+Jede Datei danach zurück; `test589` wieder 72 ok, 0 offen.
+
+**Nicht in diesem Bogen** (L233): die übrigen Szenen des Videos (02, 05–08
+gehören anderen Zweigen), das Verschmelzen der Kacheln zur Leiste mit dem
+Goo (die Leiste gleitet herein, sie fliesst nicht), und das Zurückfliessen
+am Telefon nach dem Wegwischen (das Blatt hat dort seinen eigenen Abgang).
+Der Zweig `claude/loeschen-fluessig` baut für den Löschen-Knopf ebenfalls
+einen Goo; beim Zusammenführen muss es EIN Filter bleiben — dieser hier
+(`Linse.TROPFEN`) oder der dortige, nicht beide.
+
+**Durchsicht (4. Oktober 2026).** Redur am 3. Oktober, ca. 19:35 UTC:
+„Weiter ohne pause,". Der Bericht des Baus ging am Wochenlimit verloren; die
+Browser-Nachbarn und `test388` §5 standen oben als „folgen im Nachtrag“.
+Nachgemessen gegen `f6b9f007`, `test589` um die Zusagen der Durchsicht
+erweitert (rot: 74 bestanden, 17 durchgefallen), dann behoben (91 und 0):
+
+1. **Der Tropfenfilter stand dauernd im Halter.** Punkt 2 oben („keine
+   Fläche trägt ihn in Ruhe“) stimmte, der Filter selbst aber lag ab dem
+   ersten Halter im Dokument — `test539` §2 („Der Halter hält genau diesen
+   einen Filter“) war rot: 2 statt 1. Jetzt leiht jede Bühne ihn
+   (`Linse.tropfenLeihen`): er kommt mit der ersten und geht mit der
+   letzten; überschneiden sich Öffnen und Schliessen, bleibt es einer. In
+   Ruhe hält der Halter wieder nur `FAHRT` (E646, E649).
+2. **Ein Gelb von Hand.** `test584` §11 war rot: `#ffd60a` zweimal in
+   studio.css. Die gelbe Kachel „Hoher Kontrast“ steht jetzt in grund.css
+   beim Schalter, der sie bedeutet, mit Gelb und Schwarz des Schemas
+   „Starker Kontrast“ (`#ffd400`, `#000`).
+3. **Das Merkzeichen sagte darunter das Gegenteil.** Nach dem runden
+   Merkzeichen hiess der Eintrag darunter weiter „Zu Favoriten“ — und ein
+   Tipp darauf nahm das Merkzeichen wieder weg. Jetzt heisst er sofort „Aus
+   Favoriten entfernen“.
+4. **Am Telefon flossen die Tropfen abwärts.** Die Ziele wurden gemessen,
+   als das Blatt noch unten stand (`translateY(100 %)`): jeder Tropfen
+   endete 743 px unter seinem Knopf, quer durch die Liste. Jetzt zielen sie
+   dorthin, wo die Knöpfe ankommen.
+5. **Vorleser hörten die Überschrift doppelt** („Aufmachen. Aufmachen.
+   Weiterdenken. Weiterdenken.“): der Dunst ist erzeugter Inhalt und zählte
+   zum Namen. Jetzt mit leerem Ersatztext (`content: attr(data-zeile) /
+   ""`); kennt ein Browser den nicht, fällt nur der Dunst weg.
+6. **Die Linse lag nach einer Grössenänderung neben dem Wort.** Die
+   Überschrift wächst mit dem Fenster (`clamp(28px, 3.1vw, 44px)`); bei
+   1000 px Breite schwebte ein vergrössertes „ken“ unter der Zeile. Jetzt
+   legt sie sich neu an ihren Ort, ohne neue Fahrt (ein `ResizeObserver` auf
+   dem Satz).
+7. **Kontrast heisst: keine Linse.** Redur, 27. September, ca. 21:45:
+   „Starker Kontrast ohne Glas“. Die Linse trägt feste Deckkraft und
+   Brechung; unter „Hoher Kontrast“, „Starker Kontrast“, „mehr Kontrast“,
+   weniger Transparenz und erzwungenen Farben ist sie weg, die Schrift
+   bleibt.
+8. **Der Daumen stellte die Schrift.** Die Regler trugen
+   `touch-action:none` und zählten 28 px senkrecht als Stufe: wer „Mehr“
+   auf „Schriftgrösse“ nach oben schob, rollte nicht und stellte „Gross“
+   ein; danach schluckte die liegengebliebene Marke `gezogen` den nächsten
+   Tipp. Jetzt rollt die Seite; am Telefon wird getippt (eine Stufe je
+   Tipp), gezogen mit Maus und Stift, die Pfeiltasten wie bisher.
+9. **Zwei Namen waren abgeschnitten.** Am Telefon (390 px) stand
+   „Schriftgröss“ und „Zeilenabstan“. Jetzt mit weichem Trennstrich
+   („Schrift-“ / „grösse“); Vorleser hören den Namen aus `aria-label`. Unter
+   381 px zwei Spalten, sonst ragte „Darstellung“ über den Rand.
+10. **Der Stand war zu leise.** Mit Deckkraft .75 lag „An“ auf der
+    Akzentfarbe bei 3,59 : 1 (Standard dunkel), „Normal“ auf der Füllung
+    bei 4,14 : 1 (Hell). Jetzt volle Farbe, leiser nur im Gewicht.
+    `test589` §12 misst Name und Stand jeder Kachel am gerenderten Bild,
+    zehn Schemata, ohne Schalter, mit „Hoher Kontrast“ und mit „Ruhig“.
+11. Der Grössenbeobachter des Menüs hörte nie auf; jetzt endet er mit dem
+    Menü.
+12. **Die Bilder fehlten.** Die Bildläufe des Baus scheiterten an
+    `(window as any).App` — `const App` in einem klassischen Skript ist ein
+    globaler Name, aber keine Eigenschaft von `window`; messungen §82 nannte
+    Bilder, die es nicht gab. Die Durchsicht hat sie gemacht (vorher, Bau,
+    nachher; Rechner und Telefon; hell und dunkel; Streifen zu 33 ms) und
+    angesehen; nicht eingecheckt (§55.4).
+
+**Was blieb, wie es war** (nachgeprüft gegen `b3cf1933`): jeder Eintrag im
+„+“, im „⋯“ und in „Mehr“ in derselben Folge; das „+“ am Rechner mit der
+Tastatur wie vorher (ein `UI.menu` bekommt am Rechner keinen Fokus);
+im Blatt am Telefon geht der Fokus zuerst auf den runden Knopf „PDF
+einlesen“ (vorher auf den Eintrag „PDF einlesen“ — derselbe Weg); Escape
+schliesst sofort; `file://` und `redion-einzeldatei.html` ohne Fehler;
+„Ruhig“ und weniger Bewegung: nichts bewegt sich.
+
+**Gefunden auf dem Weg, nicht aus E712:** unter „Hoher Kontrast“ (und im
+Schema „Starker Kontrast“) verdeckt die Pille der unteren Leiste am Telefon
+den Namen des gewählten Reiters — schon auf `b3cf1933`, gemessen und
+fotografiert; sie gehört zur Leiste der ersten Welle und steht in AUFGABEN.
+
+**Was die Durchsicht kostet:** +1,2 KB gzip auf die Startdateien (die
+Begründungen stehen hier, im Code nur ein Satz); `test388` §5: 2840 KB über
+250 Dateien, Decke 2850.
+
+
+**Nachtrag der zweiten Durchsicht (4./5. Oktober 2026).** Redur, 3. Oktober,
+ca. 19:35 UTC: „Weiter ohne pause,“. Die zweite Durchsicht hat jeden
+berührten Griff am Rechner und am Telefon angeklickt, die Bilder und
+Streifen angesehen und sechs weitere Stellen gefunden, an denen etwas
+schlechter erreichbar oder falsch zu sehen war als vor E712. `test589` §13
+hält sie (rot gesehen gegen den Stand der ersten Durchsicht), behoben:
+
+13. **Die runden Knöpfe nahmen der Liste Platz.** Das Menü blieb bei 60 %
+    der Fensterhöhe; die Knöpfe oben (rund 90 px beim „+“, 110 px beim „⋯“)
+    gingen davon ab. Beim „⋯“ standen „Volle Breite“, „Pfadnavigation
+    anzeigen“ und „Seite anpassen“ dadurch unter dem Rand, wo sie vorher zu
+    sehen waren. Jetzt kommen die Knöpfe DAZU: am Rechner darf ein Menü mit
+    Knöpfen um ihre Höhe grösser sein, höchstens bis 16 px unter den
+    Fensterrand (`--ru-tropfen-kopf`, studio.css 8a).
+14. **Zwei Wege zu „Neu erstellen“ wuchsen aus dem falschen Knopf.** Die
+    Kante („Neu erstellen“ am linken Rand) und „Alle Wege …“ der
+    Notizhefte riefen das Menü ohne Knopf; es wuchs dann aus dem „+“ oben
+    rechts, quer über den Schirm — der Fund von E712 auf zwei Wegen wieder
+    da (vor E712 stand es dort wenigstens links oben, nah an der Kante).
+    Jetzt gibt jeder Weg seinen Knopf mit.
+15. **Ein Zug am Regler endete nicht, wenn man draussen losliess.** Mit der
+    Maus über die Kacheln hinaus gezogen und dort losgelassen, hielt der
+    Regler den Zug fest; danach stellte schon das Darüberfahren die Schrift
+    zurück („gross“ → „klein“). Jetzt hält der Regler den Zeiger fest
+    (`setPointerCapture`), und ohne gedrückte Taste endet der Zug.
+16. **Die Kachel „Zeitmesser“ stand still.** Sie las den Stand der Uhr nur,
+    wenn sich sonst etwas änderte — bei laufender Stoppuhr stand weiter
+    „Stoppuhr und Timer“. Jetzt meldet die Uhr jeden Schritt
+    (`redion:zeitmesser`, wie `redion:meldungen`), und die Kachel zeigt
+    „Läuft · 0:03“ und zählt mit.
+17. **Die ruhende Linse zeigte „ken“ doppelt.** Sie war zu 35 % gedeckt;
+    unter der vergrösserten Abschrift schien das Wort darunter durch, und
+    „Weiterdenken.“ las sich wie „Weiterdenk“ mit einem zweiten, grösseren
+    „en“ (Kontrast im Innern ohne Abschrift: 7,2 : 1 dunkel, 4,1 : 1 hell).
+    Die Linse trägt Schrift, also ist sie dichtes Glas (E695:
+    `--bg-schwebend-dicht`) — jetzt 1,34 : 1 dunkel, 1,15 : 1 hell.
+18. **Jeder Besuch in „Mehr“ liess einen Beobachter stehen.** Die
+    Chipleiste beobachtet die Kacheln; beim nächsten Zeichnen blieb der
+    alte Beobachter samt alten Kacheln hängen. Jetzt einer je Rollfläche.
+
+Was blieb (nachgeprüft): jeder Eintrag in derselben Folge, Escape sofort,
+die Tastatur wie vorher, die Linse gleitet einmal und liegt still, unter
+„Ruhig“ und weniger Bewegung nichts.
+
+**Was der Nachtrag kostet:** +583 B gzip auf die Startdateien (kacheln.js
++315, studio.css +113, zeitmesser.js +76, menue.js +74, context-rail.js +4,
+notebook.js +1); `test388` §5: 2841 KB, Decke 2850.
+
+**Dritte Durchsicht (5. Oktober 2026).** Redur, 3. Oktober, ca. 19:35 UTC:
+„Weiter ohne pause,“. Die dritte Durchsicht hat jeden berührten Griff noch
+einmal angefasst — am Rechner mit Maus und Tastatur, am Telefon mit Finger
+und Tab — und gegen `b3cf1933` verglichen, die Schrift der neuen Teile am
+gerenderten Bild in allen zehn Schemata gemessen und die Bilder und
+Streifen nach dem Nachtrag gemacht und angesehen. `test589` §14 hält zwei
+weitere Funde (rot gesehen gegen den Stand des Nachtrags), behoben:
+
+19. **Die Uhr aus den Einstellungen ging dahinter auf.** Die Kachel
+    „Zeitmesser“ in Einstellungen → Allgemein öffnete das Feld der Uhr
+    hinter dem Fenster der Einstellungen (`.zm-feld` z 45, `.overlay`
+    z 700), und Fokus legte es still: ein Griff, der sichtbar nichts tat.
+    Jetzt schliesst ein Weg, der hinausführt, zuerst das Fenster, in dem
+    er steht — wie die Wege der Einstellungen selbst („Papierkorb“,
+    „Tastenkürzel“ …) — und das Feld steht oben und ist bedienbar. In
+    „Mehr“ ändert sich nichts.
+20. **Die Namen unter den runden Knöpfen waren zu leise.** Im Blatt am
+    Telefon lag `--text-dim` auf dem Glas des Blatts bei 4,46 : 1 („Hell“)
+    und 4,36 : 1 („Sand“). Jetzt in voller Schrift (`--text`); kleiner
+    als die Einträge sind sie weiter.
+
+Nachgeprüft und in Ordnung: die Tastatur wie vor E712 (das „+“ am Rechner
+behält den Fokus am Knopf wie vorher, Escape schliesst; im „⋯“ erreicht
+⇧Tab aus dem Suchfeld jetzt die drei runden Knöpfe, das Merkzeichen kippt
+mit der Leertaste); am Telefon geht Tab über die runden Knöpfe in dieselben
+Einträge in derselben Folge; das „⋯“ einer Zeile im Seitenbaum steht unter
+seinem Knopf statt rechts daneben, jeder Eintrag bis „Seite anpassen“ zu
+sehen wie vorher; die Chipleiste in „Mehr“ ist lesbar (alle Chips ≥ 4,5 : 1,
+auch mit „Hoher Kontrast“); `file://` und `redion-einzeldatei.html` ohne
+Fehler. Am Telefon beginnt die Liste im „⋯“-Blatt rund 100 px tiefer (das
+Blatt hat seine Höchsthöhe schon, die runden Knöpfe stehen darüber) — wie
+vorher rollt man, keiner der Einträge ist weg.
+
+**Gefunden auf dem Weg, nicht aus E712:** ein `UI.menu` am Rechner
+bekommt keinen Fokus — wer das „+“ mit der Tastatur öffnet, kommt mit Tab
+nicht hinein (auf `b3cf1933` genauso). Steht in AUFGABEN.
+
+**Was die dritte Durchsicht kostet:** +169 B gzip auf die Startdateien
+(kacheln.js +126, studio.css +43); `test388` §5: 2841 KB, Decke 2850.
 
 ## E714 — Rot zuerst, vier Inseln: ein Stilblatt ohne `<link>`, ein Wettlauf mit SwiftShader, der Keil als Fläche, vierzehn Werkzeuge
 

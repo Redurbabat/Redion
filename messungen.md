@@ -5870,6 +5870,141 @@ grün (13 von 13). Der Druck hält 650 ms, der Fächer kommt nach 480 ms; bei
 voller Maschine reicht das knapp. `test588` §10 prüft denselben Weg mit
 mehr Luft und war in allen Läufen grün.
 
+## §82 · Tropfen, Linse und Kacheln: wo die Menüs stehen, ein Filter, die Startgrösse (E712, 28. September 2026)
+
+**Wo und wie.** Zweig `claude/tropfen-und-kacheln` gegen den Grundstand
+`b3cf1933` (die erste Welle, E698–E706). Chromium von Playwright, 1440 × 900
+und 390 × 844 (`isMobile`, Berührung); Lagen aus `getBoundingClientRect`,
+gerundet; gzip Stufe 6 wie `test388`.
+
+**Wo das Menü steht** (Rechner, dunkel; Kasten links, oben, rechts, unten in px):
+
+```txt
+                      Knopf                    Menü vorher (b3cf1933)
+„+" #studio-create    1296,   6, 1334,  50     8,   8,  427, 548
+„⋯" #btn-page-menu    1394,  74, 1428, 102     1143, 74, 1436, 614
+```
+
+Vorher stand „Neu erstellen" oben links in der Ecke, 869 px vom Knopf; das
+„⋯"-Menü lag über seinem eigenen Knopf. Nachher steht jedes unter seinem
+Knopf, rechtsbündig (`Menue.amAnker`, 6 px Luft): `test589` §1 und §5
+verlangen höchstens 14 px senkrecht und waagrecht überdeckende Kanten —
+grün; die Gegenprobe G1 (ohne `amAnker`) legt beide Menüs wieder auf 0/0.
+
+**Was in den Menüs steht:** jeder Weg des Katalogs in derselben Folge und
+jede bisherige Seitenaktion — vorher und nachher dieselben (`test589` §2 und
+§5 vergleichen sie mit der Liste, die schon gegen `b3cf1933` grün war);
+dazu oben je drei runde Knöpfe von mindestens 44 × 44 px.
+
+**Filter im Dokument:** vorher einer (`ru-linse-fahrt`, die Brechung der
+Linse), nachher zwei im selben Halter (`ru-linse-fahrt`, `ru-linse-tropfen`)
+und weiter genau EIN `feDisplacementMap`. In Ruhe trägt kein Element den
+Tropfenfilter — auch nicht nach dreimal Auf und Zu (`test589` §3, §4).
+
+**Start** (`test388` §5): der Lauf unter der Sperre folgt im Nachtrag, Decke
+2850 KB. Die Dateien selbst, ohne Browser gezählt:
+
+**Was die Dateien wachsen** (gzip Stufe 6, gegen `b3cf1933`, Bytes):
+
+```txt
+quell/schale/bedienung/kacheln.js          (neu)  →  3'981   +3'981
+quell/schale/bedienung/tropfen.js          (neu)  →  2'758   +2'758
+quell/schale/bedienung/linse.js            4'619  →  7'191   +2'572
+quell/schale/ueberlagerung/menue.js        6'406  →  8'402   +1'996
+quell/schale/stil/studio.css              19'788  → 21'432   +1'644
+quell/schale/aufbau/schale.js             77'803  → 78'314     +511
+quell/bereiche/wissen/lernwelt.js         47'965  → 48'210     +245
+quell/register/symbole.js                 16'069  → 16'287     +218
+quell/bereiche/datenbanken/ansichten/dienst.js 17'192 → 17'306 +114
+quell/schale/aufbau/studio.js              2'876  →  2'983     +107
+quell/bereiche/einstellungen/ansicht/seite.js 30'870 → 30'975  +105
+index.html                                13'456  → 13'474      +18
+quell/bereiche/wissen/bibliothek.js       34'906  → 34'907       +1
+                                                    zusammen +14'270
+```
+
+Ohne Kommentare wären die vier grössten Brocken 3'339 + 2'100 B (die neuen
+Dateien) — der Rest ist Code: Federbahnen, Linsenfahrt, Kacheln mit Reglern.
+
+**Bildstreifen** (Bewegung angehalten und Bild für Bild vorgespult,
+`document.getAnimations()` → `currentTime`, genau 33 ms Abstand; nicht
+eingecheckt, §55.4): das „+" auf und zu, das „⋯" auf, die Linse über
+„Heute" (66 ms), das „+"-Blatt am Telefon. Dazu je Ort Bilder vorher und
+nachher, Rechner und Telefon, hell und dunkel.
+
+**Durchsicht (4. Oktober 2026).** Gegen `f6b9f007` nachgemessen, dieselben
+Geräte; dazu ein zweiter Lauf, der die Schrift der Kacheln am gerenderten
+Bild misst (Schrift durchsichtig, Grund aus den Pixeln, Schriftfarbe mit
+der Deckkraft der Ahnen darüber, schlimmster Pixel; `test589` §12).
+
+```txt
+                                      f6b9f007 (E712)      nach der Durchsicht
+Tropfenfilter in Ruhe (Dokument)      1                    0
+Filter im Halter der Linse in Ruhe    2 (test539 §2 rot)   1 (nur ru-linse-fahrt)
+Tropfen am Telefon: Ende → Knopf      743 px daneben       0 px
+Linse bei 1000 px Breite              neben der Zeile      auf der Zeile
+Vorleser, Überschrift „Heute“         jede Zeile zweimal   einmal
+Linse unter Kontrast (3 Wege)         sichtbar             weg
+Wisch über „Schriftgrösse“            0 px, Schrift gross  195 px, Schrift bleibt
+Kachelnamen bei 390 px                2 abgeschnitten      0
+Kachelschrift unter 4,5 : 1           9 / 25 / 15 von 140  0 / 0 / 0 von 140
+  (ohne Schalter / Kontrast / Ruhig; schlimmster Wert: „An“ 3,59 Standard
+   dunkel, „Normal“ 4,14 Hell, „Schriftgrösse“ 3,01 am abgeschnittenen Rand)
+```
+
+Start (`test388` §5): **2840 KB** gzip über 250 Dateien, Decke 2850.
+Die Durchsicht selbst: +1'225 B gzip auf die Startdateien (linse.js +419,
+menue.js +228, grund.css +195, studio.css +133, kacheln.js +130, schale.js
++102, tropfen.js +18; gegen `f6b9f007`).
+
+**Berichtigt:** Der Absatz „Bildstreifen“ oben nannte Bilder vorher und
+nachher — die Bildläufe des Baus waren aber nie gelaufen (sie warteten auf
+`window.App`, das es bei `const App` nicht gibt). Die Bilder und Streifen
+hat die Durchsicht gemacht und angesehen, nicht eingecheckt (§55.4).
+
+**Nachtrag der zweiten Durchsicht (5. Oktober 2026).** Gegen `510f3971`
+(erste Durchsicht) und nach dem Nachtrag gemessen, Rechner 1440 × 900,
+unter der Sperre; die Linse ohne ihre Abschrift (Glas und Milchglas
+verborgen), innere 70 % des Kreises, hellster gegen dunkelsten Pixel
+(`test589` §13).
+
+```txt
+                                      510f3971             nach dem Nachtrag
+Liste unter den runden Knöpfen  „+"   448 px               537 px (Menü 629 px)
+                                „⋯"   433 px               537 px (Menü 644 px)
+„Neu erstellen" aus der Kante         Menü oben rechts     an seinem Knopf
+„Alle Wege …" der Notizhefte          über „＋ Neu"         an „＋ Neu"
+Maus-Zug draussen losgelassen         bleibt offen,        endet; Darüber-
+                                      „gross" → „klein"    fahren stellt nichts
+Kachel „Zeitmesser", Uhr läuft        „Stoppuhr und Timer“ „Läuft · 0:01" …
+Linse ohne Abschrift, dunkel          7,2 : 1              1,34 : 1
+Linse ohne Abschrift, hell            4,1 : 1              1,15 : 1
+Beobachter nach fünfmal „Mehr"        5                    1
+```
+
+Start (`test388` §5): **2841 KB** gzip, Decke 2850. Der Nachtrag selbst:
++583 B gzip (kacheln.js +315, studio.css +113, zeitmesser.js +76, menue.js
++74, context-rail.js +4, notebook.js +1; gegen `510f3971`).
+
+**Dritte Durchsicht (5. Oktober 2026).** Gegen `957abea4` (Nachtrag) und
+danach, unter der Sperre; die Namen am gerenderten Bild wie `test589` §12
+(Schrift durchsichtig, Grund aus den Pixeln, Schriftfarbe mit der
+Deckkraft der Ahnen, schlimmster Pixel), zehn Schemata.
+
+```txt
+                                         957abea4             danach
+Einstellungen → „Zeitmesser“: das Feld   dahinter, still-     oben, bedienbar,
+                                         gelegt (z 45/700)    „Stoppuhr“ startet
+Namen unter den runden Knöpfen, Telefon  Hell 4,46 · Sand     ≥ 4,5 in allen zehn
+                                         4,36 : 1
+Namen unter den runden Knöpfen, Rechner  4,81 bis 13,96       ≥ 4,5 in allen zehn
+Chipleiste in „Mehr“ (je Chip im Bild)   ≥ 4,5 (70 + 70)      unverändert
+```
+
+Start (`test388` §5): **2841 KB** gzip, Decke 2850. Die dritte
+Durchsicht selbst: +169 B gzip (kacheln.js +126, studio.css +43; gegen
+`957abea4`).
+
 ## §84 · Rot zuerst, vier Inseln: Stilblatt, Wettlauf, Keil, Werkzeuge (E714, 3. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/rot-zuerst-inseln` auf `claude/morgen-besser`

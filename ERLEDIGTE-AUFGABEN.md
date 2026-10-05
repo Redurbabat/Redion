@@ -64,6 +64,58 @@ bei 700 ms fest. `test579` §9 misst in der Einzeldatei jetzt auch, dass das
 angenommene Blatt wirkt (44 px, genau eines, kein `<link>`). Beide
 Erweiterungen mit Gegenprobe rot gesehen.
 
+## 28. September 2026 · E712 · Tropfen, Linse und Kacheln aus dem Liquid-Glass-Video
+
+**Redur:** um ca. 22:05 zum Video „LIQUID GLASS": „Schau mal das auch an ich
+will das auch haben"; um ca. 22:10 „… ohne eine funktione löschen bessere
+ordnungen bessere übergagnge besssere efeckten , bessere oberfläsche …".
+
+**Gefunden:** Das „+" im Studio-Kopf öffnete „Neu erstellen" am Rechner bei
+(0, 0) — oben links, 869 px vom Knopf. Das „⋯"-Menü lag über seinem Knopf.
+Der Kreis Hell/Dunkel und das Merkzeichen hatten je zwei Abschriften.
+
+**Gebaut:** `Menue.menu` kennt einen `anker` und stellt das Menü an ihn;
+die Scheibe wächst aus dem Knopf, ein Tropfen teilt sich in drei runde
+Glasknöpfe (PDF einlesen · Neue Seite · Notizbuch; Präsentieren ·
+Merkzeichen · Teilen und ausgeben), jeder Eintrag bleibt darunter; zu
+fliesst er zurück (`tropfen.ts`, EIN Goo-Filter `Linse.TROPFEN`, nur
+während des Fliessens). Die Linse gleitet einmal über „Aufmachen. /
+Weiterdenken." (`Linse.ueberSatz`, die Brechung `FAHRT`). Sieben
+Glaskacheln oben in „Mehr" und in Einstellungen → Allgemein
+(`kacheln.ts`), gerollt eine Chipleiste; die Felder bleiben.
+`StudioSchale.themaWechseln` und `App.favoritKippen` sind je EIN Weg.
+
+**Geprüft:** `test589` (72 ok, 0 offen), rot gegen `b3cf1933` (28 ok, 44 offen); fünf
+Gegenproben rot gesehen; die dreizehn Dateiläufe grün; die Browser-Nachbarn folgen im Nachtrag.
+
+**Durchsicht (4. Oktober 2026):** zwölf Funde, alle behoben (E712,
+„Durchsicht“): der Tropfenfilter dauernd im Halter (`test539` §2 rot), ein
+Gelb von Hand (`test584` §11 rot), das Merkzeichen sagte darunter das
+Gegenteil, am Telefon flossen die Tropfen 743 px abwärts, Vorleser hörten
+die Überschrift doppelt, die Linse lag nach einer Grössenänderung neben dem
+Wort und unter Kontrast über der Schrift, der Daumen stellte die Schrift
+statt zu rollen, zwei Kachelnamen abgeschnitten, der Stand unter 4,5 : 1,
+ein Beobachter ohne Ende, die Bilder fehlten. `test589` 91 ok (rot gegen
+`f6b9f007`: 74 ok, 17 offen), zwei Gegenproben rot gesehen, die
+Browser-Nachbarn gelaufen; `test388` §5: 2840 KB.
+
+**Nachtrag der zweiten Durchsicht (5. Oktober 2026):** sechs Funde, alle
+behoben (E712 Punkte 13–18): die runden Knöpfe nahmen der Liste Platz
+(„Volle Breite", „Pfadnavigation", „Seite anpassen" unter dem Rand), „Neu
+erstellen" aus der Kante und „Alle Wege …" der Notizhefte wuchsen aus dem
+„+" oben rechts, ein Maus-Zug am Regler endete draussen nicht, die Kachel
+„Zeitmesser" stand still, die ruhende Linse zeigte „ken" doppelt, jeder
+Besuch in „Mehr" liess einen Beobachter stehen. `test589` 100 ok (rot gegen
+`510f3971`: 91 ok, 9 offen), zwei Gegenproben rot gesehen; `test388` §5:
+2841 KB.
+
+**Dritte Durchsicht (5. Oktober 2026):** zwei Funde, behoben (E712 Punkte
+19–20): die Kachel „Zeitmesser“ in den Einstellungen öffnete die Uhr
+hinter dem Fenster (stillgelegt, sichtbar nichts), die Namen unter den
+runden Knöpfen lagen im Blatt am Telefon bei 4,36 bis 4,47 : 1. `test589`
+103 ok (rot gegen `957abea4`: 101 ok, 2 offen), zwei Gegenproben rot
+gesehen, die Browser-Nachbarn gelaufen; `test388` §5: 2841 KB.
+
 ## 4. und 5. Oktober 2026 · E711, Durchsicht · Der Fächer geht wieder zu, ein Escape tut eines, die Marke ist lesbar, der Strich kommt an, die jetzige Wahl bleibt markiert, „KI" bleibt frei, eine Kladde lässt sich unter einer Meldung wieder tragen
 
 **Redur:** am 3. Oktober um ca. 19:35 UTC „Weiter ohne pause," — und weiter

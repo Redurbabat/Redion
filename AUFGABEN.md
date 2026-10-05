@@ -1511,6 +1511,28 @@ Wächter (rot zuerst):
    es sie gibt (Zweig `claude/fluessige-bewegung`: `--feder-knapp`,
    `--feder-druck`).
 
+## Der Tropfen: was nach E712 offen ist (L233, 28. September 2026)
+
+1. Die Glaskacheln beim Rollen zäh zur Leiste verschmelzen lassen (mit
+   `Linse.TROPFEN`, eigener Lauf: kein Bild fällt beim Rollen).
+2. Das Zurückfliessen am Telefon auch nach dem Wegwischen des Blatts.
+3. Beim Zusammenführen mit einem anderen Goo (Löschen-Knopf): EIN Filter.
+4. Den Start nach der zweiten Welle nachzählen (`test388` §5); E712 liegt
+   mit +14,3 KB (mit Durchsicht +15,5, mit Nachtrag +16,1, mit der dritten
+   Durchsicht +16,3) über den zugeteilten rund 10; auf dem Zweig allein
+   2841 KB von 2850.
+5. Unter „Hoher Kontrast“ und im Schema „Starker Kontrast“ verdeckt die
+   Pille der unteren Leiste am Telefon den Namen des gewählten Reiters
+   (gefunden in der Durchsicht von E712, schon auf `b3cf1933` — die Leiste
+   der ersten Welle). Mit Bild prüfen und beheben, ohne die Pille zu
+   verlieren.
+6. Ein `UI.menu` am Rechner bekommt keinen Fokus: wer das „+“ mit der
+   Tastatur öffnet (Enter), bleibt am Knopf, Tab geht an der Scheibe
+   vorbei (gefunden in der dritten Durchsicht von E712, schon auf
+   `b3cf1933` — älter als E712). Den Fokus in die Scheibe holen und
+   zurückgeben, mit Pfeiltasten, ohne die Menüs mit Suche zu stören; mit
+   Wächter (rot zuerst).
+
 ## Suche und Meldungen: was aus den Szenen 07 und 08 noch fehlt (L232, nach E711)
 
 E711 hat die Suche aus der Kapsel wachsen lassen, die gleitende Marke in

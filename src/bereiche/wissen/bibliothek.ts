@@ -1651,7 +1651,7 @@ const Bibliothek = (() => {
         });
       }));
     wrap.querySelectorAll<HTMLElement>('[data-neu-auf]').forEach(b =>
-      b.addEventListener('click', () => App.erstellenBlatt()));
+      b.addEventListener('click', () => App.erstellenBlatt(b)));
     wrap.querySelectorAll<HTMLElement>('[data-hoch]').forEach(b =>
       b.addEventListener('click', () => geheHoch()));
     /* Ist der Pfad länger als der Schirm (am Telefon schon ab der dritten
