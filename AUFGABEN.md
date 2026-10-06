@@ -1703,3 +1703,27 @@ Grund:
    „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
    Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
 
+
+## Nach E717 — der Seiteneditor ohne Stau (6. Oktober 2026)
+
+Offen geblieben, je mit dem Grund (Zweig `claude/seiteneditor-ohne-stau`):
+
+1. **Eine Stelle für „was man nicht sieht, wird nicht gezeichnet"** (L238
+   Punkt 1). Der Dokumentmodus rechnet sein Nähe-Fenster selbst, die
+   Seitenansicht hat seit E717 `Nahzeichnen` in `editor.ts`. Zusammenlegen
+   in `src/kern/helfer/`, mit `test395` §3/§7 und `test593` §2 als
+   Wächtern — ein eigener Bogen, weil er den Dokumentmodus umbaut.
+2. **Weit entfernte Seiten wieder abbauen?** (L238 Punkt 2). Nach einem
+   Rollen durch alle Seiten ist wieder alles gezeichnet, und ein Tipp
+   kostet am Telefon wieder 1,3 s (`messungen.md` §88). Zuerst klären, was
+   mit einer offenen Auswahl oder einem Text in Arbeit auf einer
+   abgebauten Seite geschieht.
+3. **Andere schwere Blöcke in der Seitenansicht** (Whiteboard,
+   Gedankenkarte, Planfläche) zeichnen weiter sofort und ganz. E717 deckt
+   `pdfseite` und `blatt`; die Schritte 1 und 2 (eine Meldung je
+   Durchgang, ein Neubau des Bands) helfen allen 46 Aufrufen von
+   `App.zeichneSeite()` in `editor.ts`. Erst messen, ob eine Seite mit
+   vielen Whiteboards ähnlich stockt.
+4. **Die Miniaturen im Dokumentmodus in Stücken bauen** — die These der
+   Codex-Zweige vom 1. Oktober, nicht die gemessene Ursache (die Karte:
+   68,8 % in `scrollIntoView`). Nur, wenn eine neue Messung es zeigt.

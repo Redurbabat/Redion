@@ -562,6 +562,7 @@ const Blocks = (() => {
         /* MIT DER TASTATUR ERREICHBAR (§38): Tab und Bild↓ landen hier, und
            der Fokus zeichnet — danach steht er in der Leiste der Seite. */
         huelle.tabIndex = 0;
+        huelle.setAttribute('role', 'group');
         huelle.setAttribute('aria-label', name);
         huelle.addEventListener('focus', () => jetzt(huelle, 'fokus'));
         huelle.addEventListener('pointerdown', () => jetzt(huelle, 'tipp'));

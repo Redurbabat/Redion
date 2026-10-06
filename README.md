@@ -1361,6 +1361,14 @@ nur vorn, sodass Ablegen und Enter genügt.
 Das Original bleibt unverändert als Anhang liegen. Redion schreibt nie in
 das PDF zurück — die Anmerkungen liegen daneben in Redion.
 
+Aus dem Dokumentmodus führt **„Seiteneditor"** (am Telefon das Seitenzeichen
+oben rechts) in die Seitenansicht, und zwar an die Seite, die man gerade
+liest. Auch dort wird nur gezeichnet, was in der Nähe ist: bei einem
+Skript mit über hundert Seiten steht die Ansicht nach einem Bruchteil einer
+Sekunde, und eine Seite, zu der man sehr schnell rollt, zeigt kurz
+„Seite N wird vorbereitet …". Kann eine Seite nicht gezeichnet werden, sagt
+sie es und bietet „Neu zeichnen" an; die übrigen bleiben bedienbar.
+
 Weitergeben lässt sich das trotzdem: **„Drucken / als PDF"** im Menüband
 druckt die Seite mit allem darauf — Seitenbild, Striche, Notizblätter — oder
 speichert sie über den Druckdialog als PDF. Die Striche gehen dabei als

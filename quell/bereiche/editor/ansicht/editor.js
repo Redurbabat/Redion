@@ -406,6 +406,7 @@ const Blocks = (() => {
             if (art === 'wartet') {
                 satz.textContent = name + ' wird vorbereitet …';
                 huelle.tabIndex = 0;
+                huelle.setAttribute('role', 'group');
                 huelle.setAttribute('aria-label', name);
                 huelle.addEventListener('focus', () => jetzt(huelle, 'fokus'));
                 huelle.addEventListener('pointerdown', () => jetzt(huelle, 'tipp'));
