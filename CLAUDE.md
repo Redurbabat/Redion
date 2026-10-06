@@ -1575,7 +1575,7 @@ sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Beim Zusamm
 *Und 533: `test593` — der Seiteneditor ohne Stau (E717). Redurs Satz vom
 29. September, „Bei pdf wenn ich seiteneditor klicke bleibt es für ca
 30-40 sekunden stiel … und dann kann dort nicht mehr bearbeiten oder
-ändern", in 46 Zusagen. Er ist synthetisch — vierzig und achtzig PDF-Seiten
+ändern", in 54 Zusagen. Er ist synthetisch — vierzig und achtzig PDF-Seiten
 ohne pdf.js und ohne Bild — und ZÄHLT, statt zu stoppen, weil die CPU mit
 anderen Läufen geteilt wird: Neubauten des Menübands am `scrollIntoView`
 seines Reiters, Meldungen des Zeichenziels über einen eigenen Horcher,
@@ -1590,7 +1590,14 @@ falsch gestellt — die Leiste ist eine `role="toolbar"` mit EINEM Tabstopp
 (E621), Tab führt richtig hinaus, die Pfeile führen weiter. Und seine
 Gegenprobe ohne `imBau` blieb bis auf einen Punkt grün: das Bündeln der
 Meldungen allein schliesst das Fenster — §9 hält seither die Zusage des
-Kerns selbst. Gezählt am 6. Oktober, im selben Bogen: `ls
+Kerns selbst. Seine §11 und §12 kamen aus der DURCHSICHT des Zweigs,
+nicht aus dem Bau: ein Platz hielt nur den Block des Blatts, nicht seine
+Kinder — `App.zeigeBlock` auf den Text in Blatt 6 schwieg, und Strg+F
+zählte „1 von 3" statt „1 von 6". Auf dem Grundstand waren beide Abschnitte
+grün; gegen den ersten Stand des Zweigs rot mit 46 von 53. Und seine
+letzte Zusage hält einen Stau durch die Hintertür: der erste Bau zählte
+„Seite N von M" als Inhalt, und „von" zeichnete beim ersten Buchstaben
+alle Seiten. Gezählt am 6. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 533.*
 
 ### Die Befehle

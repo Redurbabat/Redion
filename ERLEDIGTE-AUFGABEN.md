@@ -35,6 +35,17 @@ je rot gesehen; die Nachbarn unter dem Schloss (`messungen.md` §88); Bilder
 vorher und nachher, Rechner und Telefon, hell und dunkel, nicht im
 Verzeichnis (§55.4). Nichts entfernt. Offen: L238.
 
+**Durchsicht** (unabhängig, vor dem Push): zwei Verluste gegenüber
+`1bfaca53` gefunden und behoben — ein Sprung (`App.zeigeBlock`,
+`#block=`, Suchtreffer, Rückverweise) in ein Blatt, das noch ein Platz
+war, fand sein Ziel nicht; und Strg+F zählte nur gezeichnete Blätter.
+`Blocks.zeichneFuer` und `Blocks.zeichneFuerSuche` zeichnen jetzt vorher,
+was gebraucht wird — für Strg+F nur, was der gespeicherte INHALT eines
+Blatts trägt, damit nicht ein Buchstabe alle Seiten zeichnet; `test593`
+§11/§12 (rot 46/53, dann 54/54), vier Gegenproben je rot. Dazu: die Lesestelle vergisst sich nach einer
+Sonderansicht, und der Kommentar über die Fläche sagt, was wirklich
+geschieht (eine Mikroaufgabe später, nicht „sofort").
+
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 
 **Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von

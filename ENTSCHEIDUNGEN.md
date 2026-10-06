@@ -61368,7 +61368,7 @@ gelten die Vorgaben des Plans) · **ergänzt** E299 (die Regel „was man nicht
 sieht, wird nicht gezeichnet" gilt jetzt auch in der Seitenansicht) und
 E212 (die Aufräumregel des Zeichenziels) · **berichtigt** die Notiz in E387
 („Das hat E299 bereits gelöst" galt nur im Dokumentmodus) · **Wächter:**
-`test593` (neu), `test247` §11 (erweitert) · **Zweig**
+`test593` (neu, §11/§12 aus der Durchsicht), `test247` §11 (erweitert) · **Zweig**
 `claude/seiteneditor-ohne-stau` · **Messung:** `messungen.md` §88 ·
 **Lücke:** L238.
 
@@ -61460,10 +61460,15 @@ des Plans, weil Redur nicht geantwortet hat):
    Fokus im einen Tabstopp der Leiste, E621) oder ein Antippen (die
    Berührung geht an die Leiste weiter, damit das Band die angetippte
    Seite meint). `.blk[data-bid]` bleibt immer stehen — Verweise
-   `#block=`, Ziehen, Auswahl. Vor dem Druck des Browsers wird alles
+   `#block=`, Ziehen, Auswahl; was IN einem Platz steht, zeichnen zwei
+   Wege vorher (Punkt 8). Vor dem Druck des Browsers wird alles
    gezeichnet (`beforeprint`); „Drucken / als PDF" baut ohnehin aus dem
    Speicher (`Werkzeuge.drucken`). Ausserhalb von `#scroll` und auf der
-   Fläche (`.pg-fl-koerper`) zeichnet alles sofort, wie bisher.
+   Fläche (`.pg-fl-koerper`) wird alles gezeichnet, aber nicht im selben
+   Aufruf: am Ende des Durchgangs, eine Mikroaufgabe nach `render`, noch
+   vor dem ersten Bild. Wer im selben Aufruf misst, sieht ab dem vierten
+   Blatt den Platz in seiner gemessenen Grösse (in der Durchsicht
+   berichtigt; vorher stand hier „sofort, wie bisher").
 2. **Der Seiteneditor öffnet an der Seite, die man liest** (Frage 2: ja).
    Nach dem Wechsel steht der Block der Seite oben, die im Dokument offen
    war (`state.index`); die Höhe der Plätze stimmt schon im Durchgang,
@@ -61472,7 +61477,11 @@ des Plans, weil Redur nicht geantwortet hat):
    Zeichenziel ruft seine Horcher einmal am Ende des Durchgangs
    (`queueMicrotask`), und das Menüband vergleicht die vier Dinge, die der
    Reiter „Zeichnen" davon zeigt: ob es eine Fläche gibt, ihr Werkzeug,
-   ihre Farbe, ihre Stärke. Gleich → kein Neubau.
+   ihre Farbe, ihre Stärke. Gleich → kein Neubau. Damit baut sich das
+   Band beim Wechsel zwischen zwei Seiten mit Zeichenfläche nicht mehr
+   nebenbei mit allen anderen Reitern neu; der Reiter „Zeichnen" liest
+   genau diese vier Dinge (`register/menueband.ts`), die übrigen Reiter
+   bauen sich bei ihren eigenen Anlässen neu.
 4. **Am Telefon das Seitenzeichen statt „✕"** (Frage 4: ja). „✕"
    versprach „schliessen" für einen Knopf, der die Ansicht WECHSELT. Jetzt
    steht dort das Zeichen `page` des Umschalters Seite | Fläche | Redion
@@ -61497,7 +61506,32 @@ des Plans, weil Redur nicht geantwortet hat):
    dem Weg, siehe unten). `App.zeichneSeite` merkt sich `scrollTop`, wenn
    DIESELBE Seite in DERSELBEN Ansicht neu gezeichnet wird, und setzt ihn
    danach wieder. Ein Wechsel (andere Seite, Dokumentmodus, Fläche)
-   beginnt wie bisher.
+   beginnt wie bisher; eine Sonderansicht oder eine leere Seite
+   dazwischen löscht die Merke (in der Durchsicht nachgezogen).
+8. **Was in einem Platz steht, bleibt erreichbar** (gefunden in der
+   Durchsicht des Zweigs, `test593` §11, §12). Ein Platz hält nur den
+   Block des Blatts, nicht seine Kinder und nicht seine Marken. Auf dem
+   ersten Stand dieses Zweigs fand `App.zeigeBlock` den Text in Blatt 6
+   nicht und schwieg — derselbe Weg dient Verweisen `#block=`,
+   Suchtreffern, Rückverweisen, Erwähnungen und Sprüngen aus Kommentaren —,
+   und Strg+F („Auf dieser Seite suchen", E667) zählte „1 von 3" statt
+   „1 von 6"; der Satz „Seite N wird vorbereitet …" war selbst ein Fund.
+   Auf `1bfaca53` war beides heil (dort §11/§12 7 von 7 grün), es war also
+   ein Verlust dieses Zweigs (§43). Jetzt zeichnet `Blocks.zeichneFuer`
+   vor jedem Sprung (`rolleZu`, und der Fokus in `zeichneSeite`) das
+   Blatt oder die PDF-Seite, in dem das Ziel steht — über die
+   Elternkette, wie `klappeAuf` —, und `Blocks.zeichneFuerSuche` zeichnet
+   vor Strg+F jeden Platz, dessen Inhalt das Gesuchte enthält — aus dem
+   Speicher gelesen, und zwar genau das, was das gezeichnete Blatt als
+   Text zeigen würde: der Name eines Blatts, die getippten Marken (Text,
+   Zettel) und alles, was seine Kinder tragen. Die Suche überspringt die
+   übrigen Plätze. Nicht dazu gehören der Suchtext einer PDF-Seite (die
+   Seitenansicht hat keine Textschicht; gezeichnet würde er auch nicht
+   gefunden), die Beschriftungen der Leiste und „Seite N von M": sie
+   stehen auf jeder Seite gleich, und sie mitzuzählen zeichnete im ersten
+   Versuch beim ersten Buchstaben alle Seiten („o" steht in „von") — 1,2 s
+   am Rechner für ein Wort, das auf allen 134 Seiten steht (`messungen.md`
+   §88). `test593` §12 hält das seither mit „von".
 
 **Was es bringt** (`messungen.md` §88, derselbe Messweg):
 
@@ -61527,6 +61561,14 @@ danach wieder rund 50 000 Knoten, und ein Tipp kostet am Telefon wieder
   Aufruf. Wer im selben Aufruf das Band liest, sieht den alten Stand.
 - Zwei Stellen rechnen jetzt „was man nicht sieht" (L238 Punkt 1), und was
   einmal gezeichnet ist, bleibt gezeichnet (L238 Punkt 2).
+- Strg+F zeichnet vor dem Zählen jedes ferne Blatt, dessen Inhalt das
+  Gesuchte enthält; steht es in allen, zeichnet es alle — so viel, wie der
+  Grundstand bei JEDEM Wechsel zeichnete. Die Beschriftungen der Leiste
+  („Stift", „Marker") und die Nummer „Seite N von M" ferner Seiten zählen
+  dafür nicht mehr mit: auf `1bfaca53` fand „Seite 1" in einem Skript mit
+  134 Seiten 46 Stellen, heute die der gezeichneten Seiten. Es ist auf
+  jeder Seite derselbe Rahmen, kein Inhalt — aber die Zahl im Zähler ist
+  eine andere (L238 Punkt 3).
 - 3 KB gzip mehr beim Start (`test388` §5: 1850 → 1853 KB über dieselben
   252 Dateien, Decke 1950) — keine neue Datei.
 
@@ -61564,7 +61606,32 @@ Zusage, wenn jemand mitten im Durchgang fragt; `Nahzeichnen` aus → 38/42
 („40 gezeichnet, 0 Platzhalter"); der Klick wieder `toggle(page, false)` →
 37/44 („gesehen []", „dok ''", „PAGEERROR: Probe: Seitenansicht kaputt");
 Lesestelle aus → 43/44 („vorher 22124, nachher 0"); ohne Sprung zur
-Dokumentseite → 44/46 („abstand 27881").
+Dokumentseite → 44/46 („abstand 27881"). Aus der Durchsicht (Punkt 8):
+ohne `Blocks.zeichneFuer` in `rolleZu` → 50/53 („App.zeigeBlock auf den
+Text in Blatt 6 … imDom false, oben 0", „Ein Verweis #block= …"); ohne
+`zeichneFuerSuche` → 50/53 („Zielwort … 1 von 3", „Eine getippte Marke
+auf PDF-Seite 8 … nichts"); ohne den Filter im TreeWalker → 52/53 („Der
+Satz eines Platzes ist kein Fund — 1 von 6, marken 4, lose 4"); „Seite N
+von M" wieder im Inhalt → 53/54 („„von" … zeichnet keine fernen Seiten —
+vor 6, nach 0").
+
+**Endfassung des Wächters gegen `1bfaca53`.** Der Rot-Commit zählte 8
+von 39; im Bau kamen §9, §10 und die Lesestelle dazu (je im Commit
+begründet), in der Durchsicht §11 und §12. Die Endfassung (54 Zusagen)
+gegen eine Kopie von `1bfaca53`: 16 von 52 gezählten (§1–§7 brechen dort
+früh ab) — §11 und §12 dort grün bis auf „von", das Plätze voraussetzt
+und auf dem Grundstand keine findet („vor 0"); gegen den Stand vor der
+Durchsicht (`0389aa29`) 46 von 53, dazu „von" mit der Gegenprobe oben.
+Bilder vorher (`0389aa29`) und nachher, Rechner und Telefon, hell und
+dunkel: der Sprung in Blatt 6 und Strg+F „3 von 3" gegen „6 von 6"
+(nicht eingecheckt, §55.4).
+
+**Nachbarn.** Grün und rot stehen in `messungen.md` §88. Fremd und nicht
+auf der bekannten Liste, je auch auf dem Grundstand rot: `test351` (14
+statt 13 Werkzeugwörter seit E714; dort 21/26 mit denselben Zeilen) und
+`test533` (je nach Last: „Sie stehen alle auf EINER Höhe — ist 2", „kein
+Wort ist sichtbar — ist 1"; in der Durchsicht auf einer Kopie des
+Grundstands 55/1 und zweimal 54/2 mit denselben Zeilen).
 
 **Gefunden auf dem Weg.**
 - *`App.zeichneSeite()` setzte die Rolle auf 0,* wenn dieselbe lange Seite

@@ -6821,3 +6821,48 @@ Rot und fremd, auf `1bfaca53` genauso nachgemessen: `test201` §1
 („Freihand mit mehreren Punkten wird geglaettet — M0 0 L10 20 L20 15 L30
 10"), `test351` (14 statt 13 Werkzeugwörter seit E714; auf dem
 Grundstand 21/26 mit denselben Zeilen).
+
+**Durchsicht: Sprung und Strg+F in ferne Blätter** (6. Oktober,
+nachgetragen). Eine Sonde mit sechs Blättern (je ein Textkind) und acht
+PDF-Seiten, 1440 × 900: auf `1bfaca53` fand `App.zeigeBlock` den Text in
+Blatt 6 (`scrollTop` 5643, im Bild), auf dem ersten Stand des Zweigs
+nicht (Kind nicht im DOM, `scrollTop` 0); Strg+F „Zielwort" dort „1 von
+6", hier „1 von 3". Nach `Blocks.zeichneFuer` / `zeichneFuerSuche`
+wieder wie auf dem Grundstand (`test593` §11/§12).
+
+Was Strg+F kostet, gemessen von der Eingabe bis zum nächsten Bild in der
+Seitenansicht eines synthetischen Skripts mit 134 PDF-Seiten (ohne Bild,
+`suchtext` „Absatz N"), Einzelmessungen unter dem Schloss:
+
+```txt
+                       Grundstand 1bfaca53        dieser Zweig
+                       ms   Zähler    gezeichnet   ms   Zähler    gezeichnet
+Rechner „Absatz 99"    72   nichts       134        8   nichts        3
+Rechner „Seite 1"     138   1 von 46     134       14   1 von 1       3
+Rechner „Seite"       178   1 von 269    134       11   1 von 7       3
+Telefon „Absatz 99"    56   nichts       134        6   nichts        3
+Telefon „Seite 1"     402   1 von 46     134       28   1 von 1       3
+Telefon „Seite"       607   1 von 269    134       29   1 von 7       3
+```
+
+„Absatz 99" ist auf beiden Ständen nichts: die Seitenansicht hat keine
+Textschicht, der Suchtext steht nicht im DOM. Die Unterschiede im Zähler
+sind die Rahmenwörter ferner Seiten („Seite N von M", die Leiste), die
+nicht mehr mitzählen (L238 Punkt 3). Der erste Versuch zählte die Nummer
+mit: „Seite" zeichnete dann alle 134 Seiten, 1200 ms am Rechner, und „von"
+tat es beim ersten Buchstaben — deshalb steht in `test593` §12 seither
+„von".
+
+Nachbarn nach der Durchsicht (Stand `514e7db8`, unter dem Schloss): grün
+`test593` 54/54, `test556` 22/22, `test247` 110/0, `test189` 38/0,
+`test179` 26/0, `test181` 47/0, `test184` 31/0, `test187` 63/0, `test204`,
+`test213` 20/20, `test220` 21/21, `test229` 20/0, `test322` 19/19,
+`test340` 52/52, `test416` 9/9, `test441` 42/42, `test56` 27/27,
+`test574`, `test97`, `test395` 46/46, `test285` 53/53, `test177` 69/0,
+`test178` 74/0, `test386` 41/0, `test438` 59/59, `test455` 18/18,
+`test572`; Dateiwächter 550 549 225 401 402 537 290 298 410 400 109 87
+105 grün. `test459` und `test469` brachen im ersten Lauf nach Sekunden ab
+(„Execution context was destroyed, most likely because of a navigation",
+feste Ports 9579/9589) und waren beim Wiederholen grün (31/31, 26/26);
+`test469` tat auf einer Kopie von `1bfaca53` dasselbe (einmal grün,
+einmal derselbe Abbruch) — fremd, eine Frage der Last.

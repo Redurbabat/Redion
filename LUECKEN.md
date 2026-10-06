@@ -8381,9 +8381,25 @@ offen, damit sie nicht in einem Commit verschwinden (§35):
    aber eine Antwort darauf, was mit einer offenen Auswahl, einem Text in
    Arbeit oder einem laufenden Strich auf einer Seite passiert, die man
    gerade verlässt. Die Zahl oben sagt: am Telefon ist es spürbar.
+3. **Strg+F liest ferne Seiten aus dem Speicher, nicht aus dem DOM**
+   (nachgetragen in der Durchsicht, E717 Punkt 8). Vor dem Zählen zeichnet
+   `Blocks.zeichneFuerSuche` jeden Platz, dessen gespeicherter Inhalt das
+   Gesuchte enthält — Text, Suchtext, getippte Marken, Kinder, „Seite N
+   von M". Gelesen wird, was das gezeichnete Blatt als Inhalt zeigen
+   würde: der Name eines Blatts, getippte Marken, die Kinder. Was nur der
+   RAHMEN trägt — die Beschriftungen „Stift", „Marker", „Radieren" und die
+   Nummer „Seite N von M" —, zählt auf fernen Seiten nicht mit. Auf dem
+   Grundstand fand „Seite 1" in einem Skript mit 134 Seiten 46 Stellen
+   (alle in Nummern), heute nur die der gezeichneten Seiten. Mitzählen
+   hiesse, beim ersten Buchstaben alle Seiten zu zeichnen („o" steht in
+   „von"; gemessen 1,2 s am Rechner, `messungen.md` §88). Es ist auf
+   jeder Seite derselbe Rahmen, kein Inhalt — aber die Zahl im Zähler ist
+   eine andere. Ein Ausweg wäre ein Zähler, der Rahmenwörter ferner Seiten
+   aus dem Speicher MITzählt, ohne sie zu zeichnen; nicht gebaut.
 
-**Wächter:** `test593` §2 (Seitenansicht), `test395` §3/§7 (Dokumentmodus).
-Für Punkt 2 gibt es noch keinen.
+**Wächter:** `test593` §2 (Seitenansicht), `test395` §3/§7 (Dokumentmodus),
+`test593` §11/§12 (Sprung und Strg+F in ferne Blätter). Für Punkt 2 gibt es
+noch keinen.
 
 ---
 
