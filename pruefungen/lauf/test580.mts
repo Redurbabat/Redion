@@ -20,7 +20,10 @@
  *       Ruhe eine getönte Pille und wird erst unter Zeiger und Tastenfokus
  *       voll violett mit Schein; der Themenknopf ist im Hellen ein grauer
  *       Mond statt eines zweiten violetten Flecks. Die Schrift der getönten
- *       Pille liest sich mit 4,5 : 1 oder mehr.
+ *       Pille liest sich mit 4,5 : 1 oder mehr. Seit E720 auch in der
+ *       Lernzentrale: fünf Funkel, aber nur „Starten" leuchtet in Ruhe —
+ *       ein Funkel zählt als laut, wenn er in Ruhe Schein oder glimmende
+ *       Buchstaben trägt.
  *   §2  „Zuletzt geöffnet" ruht: der Kartenring dreht nur, solange man
  *       hinzeigt oder der Fokus darin steht — im Leerlauf, am Telefon und
  *       hinter einem offenen Fenster läuft KEINE endlose Bewegung. Die
@@ -37,7 +40,9 @@
  *   §4  Aus ist grau: der Verlaufsschalter im Menü leuchtet nur, wenn er an
  *       ist; beim Überfahren kommt der Schimmer zurück.
  *   §5  Die Kennzahlkarten im Lernzentrum ruhen: Herz, Ring und Streifen
- *       sind grau, bis man die Karte anfasst. Die Zahlen bleiben.
+ *       sind grau, bis man die Karte anfasst. Die Zahlen bleiben. Seit
+ *       E719 ist das Herz ein echter Merkknopf: grau, SOLANGE es nicht
+ *       gemerkt ist — ein gemerktes Herz behält seine Farbe als Zustand.
  *   §6  Die Ecke des Menübands trägt den Grund des Bandes — kein schwarzer
  *       Block am Ende eines hellen Bandes.
  *   §7  Ein Titel am Telefon: die kleine Krume blendet aus, solange der
@@ -153,7 +158,13 @@ const WERKZEUG = `
       const stopps = [...(cs.backgroundImage || '').matchAll(/rgba?\\([^)]+\\)/g)].map(m => window.__rgb(m[0]));
       const verlauf = (cs.backgroundImage || '').includes('gradient') && stopps.length > 0 &&
         stopps.filter(c => window.__akzentig(c, akz)).length >= Math.ceil(stopps.length / 2);
-      if (window.__akzentig(bg, akz) || verlauf || el.classList.contains('ru-funkel'))
+      /* EIN FUNKEL IST LAUT, WENN ER IN RUHE LEUCHTET (E720): Schein am
+         Knopf oder glimmende Buchstaben. Ein Funkel, der still ruht und
+         seinen Schein erst unter Zeiger, Fokus und Druck zeigt, ist ein
+         Umrissknopf — „Schein ist Zustand" (E640). */
+      const funkelLaut = el.classList.contains('ru-funkel') && (cs.boxShadow !== 'none' ||
+        [...el.querySelectorAll('.ru-funkel-b')].some(b => /glimmen/.test(getComputedStyle(b).animationName)));
+      if (window.__akzentig(bg, akz) || verlauf || funkelLaut)
         raus.push(((el.id ? '#' + el.id : el.tagName.toLowerCase()) + ' ' +
           (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\\s+/g, ' ')).slice(0, 40));
     }
@@ -297,6 +308,30 @@ for (const thema of ['light', 'dark'] as const) {
     return { hier: document.activeElement === k, sichtbar: k.matches(':focus-visible'),
              verlauf: cs.backgroundImage.includes('gradient'), schein: cs.boxShadow !== 'none' }; });
   p(`${t}: unter dem Tastenfokus ebenso`, fokus.hier && fokus.verlauf && fokus.schein, JSON.stringify(fokus));
+
+  /* DIE LERNZENTRALE (E720). Redur wollte an Fehlertraining, Neue Karten,
+     Prüfungsfokus und Trainer denselben Knopf wie an der Tagesrunde. Sie
+     sind jetzt Funkel — und ruhen still: laut bleibt nur „Starten". */
+  await s.evaluate(async () => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    const f = Store.addPage(null, { text: 'Fach für die Lernzentrale' });
+    const vorbei = new Date(Date.now() - 86400000).toISOString();
+    Store.addBlock(f.id, 'flashcard', { text: 'Fehler :: Antwort', sr: { ease: 2.3, intervall: 1, wdh: 1, faellig: vorbei },
+      reviewVerlauf: { a: { id: 'a', at: vorbei, rating: 1, algorithm: 'sm2' } } });
+    Produktwelten.lernen('lernen');
+    await new Promise(r => setTimeout(r, 1100));
+  });
+  await s.mouse.move(2, 2); await warte(s, 450);
+  const lz = await s.evaluate(() => {
+    const w = window as any;
+    const vier = [...document.querySelectorAll<HTMLElement>('.lw-study-actions button')]
+      .filter(b => !b.matches('[data-lw-train="today"]'));
+    return { laut: w.__laut() as string[], vier: vier.map(b => b.classList.contains('ru-funkel')) };
+  });
+  p(`${t}: Lernzentrale — genau EINE laute Fläche, und sie ist „Starten"`,
+    lz.laut.length === 1 && /Starten/.test(lz.laut[0] ?? ''), lz.laut.join(' · '));
+  p(`${t}: … die vier anderen Startknöpfe sind Funkel, die still ruhen (E720)`,
+    lz.vier.length === 4 && lz.vier.every(Boolean), JSON.stringify(lz.vier));
   await ctx.close();
 }
 
@@ -488,7 +523,10 @@ console.log('\n§5 Die Kennzahlkarten im Lernzentrum ruhen');
   await s.mouse.move(2, 2); await warte(s, 400);
   const lies = () => s.evaluate(() => [...document.querySelectorAll<HTMLElement>('.stat-karte.lw-metrik')].map(k => ({
     zahl: (k.querySelector('strong')?.textContent || '').trim(),
-    teile: [':scope > .rmo-heart', ':scope > .rmo-ring', ':scope > .rmo-pfad'].map(sel => {
+    /* Das Herz ist seit E719 auf den Kennzahlen aus dem Katalog ein echter
+       Merkknopf (`.lw-kennzahl-merk`); grau ist es, solange es nicht
+       gemerkt ist. */
+    teile: [':scope > :is(.rmo-heart, .lw-kennzahl-merk)', ':scope > .rmo-ring', ':scope > .rmo-pfad'].map(sel => {
       const el = k.querySelector<HTMLElement>(sel); return el ? getComputedStyle(el).filter : 'fehlt'; })
   })));
   const ruhe = await lies();
@@ -501,6 +539,20 @@ console.log('\n§5 Die Kennzahlkarten im Lernzentrum ruhen');
   const an = await lies();
   p('Angefasst: die Karte zeigt ihre Farbe wieder',
     !!an[0] && an[0].teile.every(f => !/saturate\(0\)/.test(f)), JSON.stringify(an[0]));
+  /* GEMERKT IST EIN ZUSTAND, KEIN SCHMUCK (E719): ein gemerktes Herz
+     behält seine Farbe auch in Ruhe — grau hiesse sonst „nicht gemerkt". */
+  const ziel = await s.evaluate(() => {
+    const b = document.querySelector<HTMLElement>('.stat-karte.lw-metrik > .lw-kennzahl-merk');
+    if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+  if (ziel) await s.mouse.click(ziel.x, ziel.y);
+  await s.mouse.move(2, 2); await warte(s, 500);
+  const gemerkt = await s.evaluate(() => {
+    const b = document.querySelector<HTMLElement>('.stat-karte.lw-metrik > .lw-kennzahl-merk.ist-an');
+    return b ? { filter: getComputedStyle(b).filter, deck: getComputedStyle(b).opacity } : null;
+  });
+  p('Ein gemerktes Herz behält in Ruhe seine Farbe (kein saturate(0), deckend)',
+    !!gemerkt && !/saturate\(0\)/.test(gemerkt.filter) && +gemerkt.deck > 0.9, JSON.stringify(gemerkt));
   await ctx.close();
 }
 
