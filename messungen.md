@@ -6763,3 +6763,14 @@ zusammen +4008 B. Keine neue Datei, keine Insel.
 Drei davon blieben zuerst GRÜN und haben die Wächter verschärft: die
 Herzform in Ruhe, das zweite gemalte Herz, und der Fokus, der in `test580`
 §5 jedes Herz bunt aussehen liess.
+
+**6 · Nachbarn unter dem Schloss** (auf dem Endstand): `test496` 148,
+`test494` 153, `test495` 26/26, `test265` 39, `test436` 71/71, `test581` 93,
+`test492` 55, `test208`, `test217` 27/27, `test259` 8, `test565` 54/54,
+`test126`, `test127`, `test245` 51, `test303` 16/16, `test541` 25/25,
+`test590` 68/68, `test595` 36/36, `test596` 35/35, `test580`, `test433`
+39/39, `test388` 22 — grün. `test493` rot mit 42/44
+(`-webkit-backdrop-filter: blur(8px)` in motion.css, aus E695) — auf
+`claude/morgen-besser` genauso, fremd. Die Einzeldatei allein in einem Ordner
+(file://): fünf Funkel in der Lernzentrale, das Herz ein Knopf, ein Klick
+merkt `faellige-fehler`, kein Seitenfehler.
