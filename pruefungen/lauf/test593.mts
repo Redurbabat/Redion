@@ -62,6 +62,12 @@
  *      `da`) und ist danach weg, wenn sie nie eingehängt wurde.
  *  §10 Der Seiteneditor öffnet an der Seite, die im Dokument offen war —
  *      oben im Fenster und gezeichnet (Vorgabe zu Redurs Frage 2).
+ *  §11 Ein Verweis in ein fernes Blatt findet sein Ziel: `App.zeigeBlock`
+ *      und `#block=` auf einen Textblock in Blatt 5 und 6 (die Plätze sind)
+ *      zeichnen das Blatt, rollen hin und heben hervor.
+ *  §12 Strg+F findet, was in fernen Blättern steht — sechs Stellen über
+ *      sechs Blätter, eine getippte Marke auf PDF-Seite 8 —, und der Satz
+ *      eines Platzes („… wird vorbereitet") ist kein Fund.
  *
  *   node pruefungen/lauf/test593.mts
  * ==========================================================================*/
@@ -472,6 +478,110 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
     p('Seite 25 steht oben im Fenster (0 … 40 px unter dem Rand)', lage.abstand >= -4 && lage.abstand <= 40, JSON.stringify(lage));
     p('… und sie ist gezeichnet, mit ihrer Nummer', lage.gezeichnet && /Seite 25 von 40/.test(lage.nr), JSON.stringify(lage));
   } catch (e) { p('§1–§7 laufen bis zum Ende durch', false, String(e).split('\n')[0]); }
+  await a.zu();
+}
+
+/* ==========================================================================
+ * §11–§12 Was in einem fernen Blatt steht, bleibt erreichbar
+ *
+ * Gefunden in der Durchsicht des Zweigs, nicht im ersten Bau: ein Platz
+ * hält nur den Block des Blatts (`.blk[data-bid]`), nicht seine KINDER.
+ * Der Textblock in Blatt 6 war nicht im DOM, also fand `App.zeigeBlock`
+ * (Verweise `#block=`, Suchtreffer, Rückverweise, Erwähnungen, Sprünge aus
+ * Kommentaren) nichts und schwieg; und Strg+F („Auf dieser Seite suchen",
+ * E667) zählte nur, was gezeichnet war — „1 von 3" statt „1 von 6". Auf
+ * `1bfaca53` war beides heil, weil alles gezeichnet war (§43).
+ * ========================================================================*/
+{
+  console.log('\n11 · Ein Verweis in ein fernes Blatt findet sein Ziel');
+  const a = await aufmachen(false);
+  try {
+    const seite = await a.pc.evaluate(`(async () => {
+      const s = Store.addPage(null, { text: 'Sechs Blätter' });
+      const kinder = [];
+      for (let i = 1; i <= 6; i++) {
+        const b = Store.addBlock(s.id, 'blatt', {});
+        kinder.push(Store.addBlock(b.id, 'text', { text: 'Zielwort' + i }).id);
+      }
+      for (let nr = 1; nr <= 8; nr++)
+        Store.addBlock(s.id, 'pdfseite', { text: '', nr, vonSeiten: 8, bw: 595, bh: 842,
+          marken: nr === 8 ? [{ id: 'm8', art: 'text', text: 'Randnotiz acht', point: [60, 80] }] : [] });
+      await Store.flush();
+      App.oeffne(s.id);
+      return { id: s.id, kinder };
+    })()`) as { id: string; kinder: string[] };
+    await a.pc.waitForTimeout(1200);
+    const vorher = await a.pc.evaluate(`(() => ({
+      plaetze: document.querySelectorAll('#page [data-nah="wartet"]').length,
+      kind6: !!document.querySelector('[data-bid="${seite.kinder[5]}"]')
+    }))()`) as { plaetze: number; kind6: boolean };
+    console.log(`    vorher: ${vorher.plaetze} Plätze, Kind von Blatt 6 im DOM: ${vorher.kind6}`);
+
+    /* Über `App.zeigeBlock` — denselben Weg nehmen Suchtreffer,
+       Rückverweise, Erwähnungen und Kommentarsprünge. */
+    const ziel = async (kind: string): Promise<any> => {
+      /* Die Hervorhebung lebt 1,4 s — also nach 0,6 s nachsehen, die Lage
+         erst, wenn das weiche Rollen sicher steht. */
+      await a.pc.waitForTimeout(600);
+      const hervor = await a.pc.evaluate(`(() => {
+        const z = document.querySelector('[data-bid="${kind}"]');
+        return !!z && (z.classList.contains('hebe-hervor') || !!z.closest('.hebe-hervor'));
+      })()`);
+      await a.pc.waitForTimeout(900);
+      return a.pc.evaluate(`(() => {
+        const z = document.querySelector('[data-bid="${kind}"]');
+        const r = document.getElementById('scroll').getBoundingClientRect();
+        const b = z ? z.getBoundingClientRect() : null;
+        return { imDom: !!z, imBild: !!b && b.bottom > r.top && b.top < r.bottom,
+                 oben: document.getElementById('scroll').scrollTop, hervor: ${hervor} };
+      })()`);
+    };
+    await a.pc.evaluate(`(() => { document.getElementById('scroll').scrollTop = 0; App.zeigeBlock('${seite.kinder[5]}'); })()`);
+    const z1 = await ziel(seite.kinder[5]!);
+    p('App.zeigeBlock auf den Text in Blatt 6: er steht im DOM und im Bild', z1.imDom && z1.imBild, JSON.stringify(z1));
+    p('… und er ist hervorgehoben (hebe-hervor)', z1.hervor, JSON.stringify(z1));
+
+    /* Derselbe Sprung über einen Verweis in der Adresse. */
+    await a.pc.evaluate(`(() => { App.zeichneSeite(); document.getElementById('scroll').scrollTop = 0; })()`);
+    await a.pc.waitForTimeout(600);
+    await a.pc.evaluate(`location.hash = '#block=${seite.kinder[4]}'`);
+    const z2 = await ziel(seite.kinder[4]!);
+    p('Ein Verweis #block= auf den Text in Blatt 5 rollt ihn ins Bild', z2.imDom && z2.imBild && z2.hervor, JSON.stringify(z2));
+
+    console.log('\n12 · Strg+F findet auch, was in fernen Blättern steht');
+    await a.pc.evaluate(`(() => { location.hash = ''; App.oeffne('${seite.id}'); })()`);
+    await a.pc.waitForTimeout(900);
+    await a.pc.evaluate(`(() => { document.getElementById('scroll').scrollTop = 0; })()`);
+    await a.pc.waitForTimeout(300);
+    const suche = async (wort: string): Promise<any> => {
+      await a.pc.evaluate(`(() => { document.getElementById('findbar')?.remove(); App.seitenSuche(); })()`);
+      await a.pc.waitForSelector('#findbar input');
+      await a.pc.fill('#findbar input', wort);
+      await a.pc.waitForTimeout(500);
+      return a.pc.evaluate(`(() => ({
+        zaehler: document.querySelector('#findbar .n')?.textContent || '',
+        marken: document.querySelectorAll('#page mark').length,
+        lose: [...document.querySelectorAll('#page mark')].filter(m => m.closest('.blatt-platz')).length
+      }))()`);
+    };
+    const s1 = await suche('Zielwort');
+    p('„Zielwort" über sechs Blätter: 6 Stellen („1 von 6")', s1.marken === 6 && /von 6$/.test(s1.zaehler), JSON.stringify(s1));
+    await a.pc.keyboard.press('Shift+Enter');
+    await a.pc.waitForTimeout(900);
+    const letzte = await a.pc.evaluate(`(() => {
+      const m = document.querySelector('#page mark.aktiv');
+      const r = document.getElementById('scroll').getBoundingClientRect();
+      const b = m ? m.getBoundingClientRect() : null;
+      return { text: m?.textContent || '', imBild: !!b && b.bottom > r.top && b.top < r.bottom,
+               zaehler: document.querySelector('#findbar .n')?.textContent || '' };
+    })()`) as { text: string; imBild: boolean; zaehler: string };
+    p('… Umschalt+Enter springt zur letzten Stelle in Blatt 6 und zeigt sie', letzte.imBild && /6 von 6/.test(letzte.zaehler), JSON.stringify(letzte));
+    const s2 = await suche('Randnotiz');
+    p('Eine getippte Marke auf PDF-Seite 8 wird gefunden', s2.marken === 1, JSON.stringify(s2));
+    const s3 = await suche('vorbereitet');
+    p('Der Satz eines Platzes ist kein Fund', s3.marken === 0 && s3.lose === 0, JSON.stringify(s3));
+    await a.pc.keyboard.press('Escape');
+  } catch (e) { p('§11–§12 laufen bis zum Ende durch', false, String(e).split('\n')[0]); }
   await a.zu();
 }
 
