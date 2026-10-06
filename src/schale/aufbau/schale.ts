@@ -720,6 +720,13 @@ const App = (() => {
     return true;
   };
 
+  /** Die Einträge des Seitenmenüs, die es auch an Karte, Baum und Regal
+   *  gibt — ihr Wort hier, ihre Kennung im Register (E721). */
+  const ZUR_QUELLE: Record<string, string> = {
+    fav: 'favorit', rename: 'umbenennen', icon: 'symbol', dup: 'duplizieren',
+    link: 'link', del: 'papierkorb', 'wz-verschieben': 'verschieben'
+  };
+
   const seitenMenue = (anker: any, p: any) => {
     const r = anker.getBoundingClientRect();
     const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -738,7 +745,7 @@ const App = (() => {
       '<button data-a="dup">' + mi('copy') + 'Duplizieren<span class="ms">Strg D</span></button>' +
       '<button data-a="wz-verschieben">' + mi('moveTo') + 'Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
       `<button data-a="archiv">${mi('archive')}${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
-      '<button data-a="del">' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
+      '<button data-a="del" data-gefahr>' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
       '<hr>' +
       '<button data-a="wz-praesi">' + mi('play') + 'Präsentieren' +
         '<span class="kenn">Beta</span><span class="ms">Strg Alt P</span></button>' +
@@ -833,13 +840,13 @@ const App = (() => {
       const a = b.dataset.a;
 
       /* Untermenüs bleiben offen */
-      if (a === 'icon') {
+      /* SECHS ZEILEN, EINE QUELLE (E721): was es auch an der Karte, im Baum
+         und im Regal gibt, ruft hier dieselbe Zeile in `Register.aktionen`
+         — Aufbau, Reihenfolge und Wörter dieses Menüs bleiben, wie sie sind. */
+      const quelle = ZUR_QUELLE[a || ''];
+      if (quelle) {
         m.remove();
-        UI.emojiWaehlen(anker, (em) => {
-          Store.updateBlock(p.id, { icon: em });
-          zeichneBaum();
-          if (p.id === seiteId) zeichneSeite();
-        });
+        Register.aktionen.tun(quelle, Store.getBlock(p.id) || p, { kontext: 'seite', anker });
         return;
       }
       if (a === 'inhalt') {
@@ -940,14 +947,8 @@ const App = (() => {
       if (a === 'verlauf')   { Werkzeuge.versionen(p); return; }
       if (a === 'kopf-komm') { document.getElementById('btn-komm')?.click(); return; }
       if (a === 'auto')      { document.getElementById('btn-auto')?.click(); return; }
-      if (a === 'fav')   { favoritKippen(p); }
       if (a === 'klein') { Store.updateBlock(p.id, { small: !p.small }); zeichneSeite(); }
       if (a === 'breit') { volleBreite(p); }
-      /* EIN Umbenennen (E718): dieselben Regeln wie in der Bibliothek und
-         den Notizheften — leer, Steuerzeichen, gleicher Name. */
-      if (a === 'rename') { await umbenennen(p, anker, 'Neuer Titel'); }
-      if (a === 'dup')  { dupliziereSeite(p.id, p.parentId); zeichneBaum(); UI.toast('Seite dupliziert'); }
-      if (a === 'link') { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); }
       if (a === 'pid') {
         Ablage.kopiereJetzt(p.id, 'Seiten-ID kopiert: ' + p.id);
       }
@@ -975,8 +976,6 @@ const App = (() => {
                  Werkzeuge.zeitKurz(p.edited));
       }
       if (a === 'papier') papierkorb();
-      /* EIN Papierkorb (E718): mit „Rückgängig" in der Meldung. */
-      if (a === 'del') inPapierkorb(p);
     });
   };
 
@@ -4938,6 +4937,68 @@ const App = (() => {
     b('h2', 'Deine Daten gehören dir');
     b('text', 'Unter Einstellungen kannst du jederzeit eine Sicherung speichern und wieder einlesen.');
   };
+
+  /* ========================================================================
+   * DIE AKTIONEN DER SCHALE AN EINER SEITE (E721)
+   * ------------------------------------------------------------------------
+   * Redur, Masterprompt S. 19: „beim rechts klicke sollte es mir zeigen
+   * löschen". Was man mit JEDER Seite tun kann — Ordner, Heft, PDF, Seite —,
+   * steht hier einmal im Register (`register/aktionen.ts`). Das Seitenmenü,
+   * das „…" der Bibliothek, der Ablagebaum, das ⋯ der Notizhefte, der
+   * Rechtsklick und Entf rufen dieselbe Zeile. Die Griffe dahinter sind die
+   * aus E718 (umbenennen, inPapierkorb, nachAenderung) und E712
+   * (favoritKippen) — hier kommt keiner dazu, sie bekommen nur eine Adresse.
+   * ======================================================================*/
+  const aktionenMelden = (): void => {
+    const R = typeof Register !== 'undefined' ? Register.aktionen : null;
+    if (!R) return;
+    const nichtImRegal = (o: AktionOrt): boolean => o.kontext !== 'notizhefte';
+    R.melde({ id: 'oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+      /* Ein Ordner in der Bibliothek ist ein Ort: dort heisst „Öffnen"
+         hinein (E380), und das meldet die Bibliothek selbst. */
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o) && o.art !== 'ordner',
+      tun: (p: any) => oeffne(p.id) });
+    R.melde({ id: 'favorit', zeichen: 'star', gruppe: 'merken', rang: 10,
+      name: (p: any) => (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'),
+      tun: (p: any) => { favoritKippen(p); nachAenderung(Store.getBlock(p.id) || p); } });
+    R.melde({ id: 'umbenennen', name: 'Umbenennen', zeichen: 'pencil', gruppe: 'bearbeiten', rang: 10,
+      /* Ein verschlüsseltes Heft trägt seinen Namen im Schloss (E406). */
+      gilt: (p: any, o: AktionOrt) => !(o.kontext === 'notizhefte' && p.locked),
+      tun: (p: any, o: AktionOrt) => umbenennen(p, o.anker || null,
+        o.kontext === 'seite' ? 'Neuer Titel'
+          : o.kontext === 'notizhefte' ? (p.heftArt === 'fach' ? 'Name des Fachs' : 'Name des Hefts')
+          : 'Neuer Name') });
+    R.melde({ id: 'symbol', name: 'Symbol ändern', zeichen: 'smile', gruppe: 'bearbeiten', rang: 20,
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o),
+      tun: (p: any, o: AktionOrt) => {
+        UI.emojiWaehlen(o.anker && o.anker.isConnected ? o.anker : document.body, (em: string) => {
+          Store.updateBlock(p.id, { icon: em });
+          nachAenderung(Store.getBlock(p.id));
+        });
+      } });
+    R.melde({ id: 'duplizieren', name: 'Duplizieren', zeichen: 'copy', gruppe: 'ablegen', rang: 20,
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o),
+      tun: (p: any) => {
+        dupliziereSeite(p.id, p.parentId);
+        nachAenderung(Store.getBlock(p.id));
+        UI.toast('Seite dupliziert');
+      } });
+    R.melde({ id: 'link', name: 'Link kopieren', zeichen: 'link', gruppe: 'teilen', rang: 10,
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o),
+      tun: (p: any) => Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert') });
+    /* „Löschen" heisst Papierkorb (E718) — umkehrbar, mit „Rückgängig". Das
+       endgültige Löschen hat EINEN Ort: der Papierkorb selbst (E709). */
+    R.melde({ id: 'papierkorb', name: 'In den Papierkorb', zeichen: 'trash', gruppe: 'gefahr',
+      gefahr: true, taste: 'Entf',
+      tun: (p: any, o: AktionOrt) => {
+        const name = String(p.text || '').trim() || 'Ohne Namen';
+        /* Die Regel der Notizhefte bleibt (E265, L239): ein Fach geht, seine
+           Hefte bleiben im Regal — die Meldung sagt es wie bisher. */
+        return inPapierkorb(p, o.kontext === 'notizhefte' && p.heftArt === 'fach'
+          ? { satz: 'Fach „' + name + '" liegt im Papierkorb. Seine Hefte bleiben im Regal.' } : {});
+      } });
+  };
+  aktionenMelden();
 
   return {
     start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,

@@ -265,6 +265,14 @@ const Menue = (() => {
         };
         let nachmessen = null;
         let grund = null;
+        const vorher = document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+            ? document.activeElement : null;
+        const rueckZiel = opt.rolle === 'menu'
+            ? (opt.rueckfokus || anker || vorher) : null;
+        const rueck = () => {
+            if (rueckZiel && rueckZiel.isConnected)
+                rueckZiel.focus({ preventScroll: true });
+        };
         const schliessen = () => {
             m.remove();
             grund?.remove();
@@ -275,6 +283,7 @@ const Menue = (() => {
             e.preventDefault();
             e.stopPropagation();
             schliessen();
+            rueck();
         };
         document.addEventListener('keydown', escape, true);
         const waechter = new MutationObserver(() => {
@@ -343,7 +352,7 @@ const Menue = (() => {
                 }
                 karte.appendChild(el);
             });
-            m.querySelectorAll('[data-a="del"], [data-a="purge"]').forEach(x => x.classList.add('rot'));
+            m.querySelectorAll('[data-a="del"], [data-a="purge"], [data-gefahr]').forEach(x => x.classList.add('rot'));
             zug.herein();
             if (kopf && anker) {
                 tropfenAuf(m, kopf, anker, true);
@@ -371,6 +380,8 @@ const Menue = (() => {
                 nachmessen.observe(m);
             }
         }
+        if (opt.rolle === 'menu')
+            menueRolle(m, opt, rueck);
         setTimeout(() => {
             const zu = (e) => {
                 const ziel = e.target instanceof Node ? e.target : null;
@@ -486,6 +497,261 @@ const Menue = (() => {
         setTimeout(() => feld.focus(), 30);
         return m;
     };
-    return { menu, menuMitSuche, amTelefon };
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    const zeichenVon = (name) => {
+        if (!name || typeof Register === 'undefined' || !Register.symbole)
+            return '';
+        try {
+            return Register.symbole.hat?.(name) === false ? '' : Register.symbole.alsSvg(name, 16);
+        }
+        catch {
+            return '';
+        }
+    };
+    const eintraege = (m) => [...m.querySelectorAll('[role="menuitem"], [role="menuitemradio"]')]
+        .filter(b => !b.disabled && b.getClientRects().length > 0);
+    const menueRolle = (m, opt, rueck) => {
+        m.setAttribute('role', 'menu');
+        if (opt.beschriftung)
+            m.setAttribute('aria-label', opt.beschriftung.slice(0, 120));
+        m.querySelectorAll('button').forEach(b => {
+            if (b.closest('.ru-tropfen-kopf')) {
+                b.tabIndex = -1;
+                return;
+            }
+            if (!b.getAttribute('role'))
+                b.setAttribute('role', 'menuitem');
+            b.tabIndex = -1;
+        });
+        m.querySelectorAll('hr, .sep').forEach(x => x.setAttribute('role', 'separator'));
+        m.querySelectorAll('.grp').forEach(x => x.setAttribute('role', 'presentation'));
+        m.addEventListener('keydown', e => {
+            const liste = eintraege(m);
+            if (!liste.length)
+                return;
+            const i = liste.indexOf(document.activeElement);
+            let ziel;
+            if (e.key === 'ArrowDown')
+                ziel = liste[(i + 1) % liste.length];
+            else if (e.key === 'ArrowUp')
+                ziel = liste[(i - 1 + liste.length) % liste.length];
+            else if (e.key === 'Home')
+                ziel = liste[0];
+            else if (e.key === 'End')
+                ziel = liste[liste.length - 1];
+            if (ziel) {
+                e.preventDefault();
+                e.stopPropagation();
+                ziel.focus({ preventScroll: false });
+                return;
+            }
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                m.remove();
+                rueck();
+            }
+        });
+        if (opt.fokus) {
+            const liste = eintraege(m);
+            const aktiv = opt.fokus === 'aktiv'
+                ? liste.find(b => b.getAttribute('aria-current') === 'true') : undefined;
+            (aktiv || liste[0])?.focus({ preventScroll: true });
+        }
+    };
+    const aktionen = (ding, ort, wo = {}) => {
+        const R = typeof Register !== 'undefined' ? Register.aktionen : null;
+        if (!R || !ding)
+            return null;
+        const zeilen = R.fuer(ding, ort);
+        if (!zeilen.length)
+            return null;
+        let html = '', gruppe = '';
+        for (const z of zeilen) {
+            if (gruppe && z.gruppe !== gruppe)
+                html += '<hr>';
+            gruppe = z.gruppe;
+            html += `<button type="button" data-a="${esc(z.id)}"${z.gefahr ? ' data-gefahr' : ''}>` +
+                `<span class="mi">${zeichenVon(z.zeichen)}</span>${esc(z.name)}` +
+                (z.taste ? `<span class="ms">${esc(z.taste)}</span>` : '') + '</button>';
+        }
+        const name = String(ding.text || '').trim() || 'Ohne Titel';
+        const anker = ort.anker && ort.anker.isConnected ? ort.anker : null;
+        const amZeiger = typeof wo.x === 'number' && typeof wo.y === 'number';
+        let x = wo.x ?? 0, y = wo.y ?? 0;
+        if (!amZeiger && anker) {
+            const r = anker.getBoundingClientRect();
+            x = r.left;
+            y = r.bottom + 4;
+        }
+        const m = menu(html, x, y, {
+            titel: name, rolle: 'menu', beschriftung: 'Aktionen für „' + name + '“', fokus: 'erster',
+            rueckfokus: wo.rueckfokus ?? anker,
+            ...(amZeiger || !anker ? {} : { anker })
+        });
+        m.addEventListener('click', e => {
+            const b = e.target instanceof Element ? e.target.closest('button[data-a]') : null;
+            if (!b || !m.contains(b))
+                return;
+            const id = b.dataset['a'] || '';
+            m.remove();
+            const frisch = (typeof Store !== 'undefined' && Store.getBlock(ding.id)) || ding;
+            Register.aktionen.tun(id, frisch, ort);
+        });
+        return m;
+    };
+    let schluckerWeg = null;
+    const nachzuegler = () => {
+        const schlucken = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        const arten = ['mousedown', 'mouseup', 'click'];
+        arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
+        const weg = () => {
+            arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
+            if (schluckerWeg === weg)
+                schluckerWeg = null;
+        };
+        schluckerWeg = weg;
+        setTimeout(weg, 800);
+    };
+    const nachzueglerWeg = () => { if (schluckerWeg)
+        schluckerWeg(); };
+    const HALTEN_MS = 500;
+    const WEG_PX = 10;
+    const gebunden = new WeakMap();
+    const aktionenBinden = (wurzel, auftrag) => {
+        if (gebunden.has(wurzel)) {
+            gebunden.set(wurzel, auftrag);
+            return;
+        }
+        gebunden.set(wurzel, auftrag);
+        const a = () => gebunden.get(wurzel) || auftrag;
+        const dingVon = (t) => {
+            const el = t instanceof Element ? t.closest(a().auswahl) : null;
+            return el && wurzel.contains(el) ? el : null;
+        };
+        let finger = false;
+        let zuletztHalt = 0, zuletztTaste = 0;
+        let halt = null;
+        const abbrechen = () => {
+            if (!halt)
+                return;
+            clearTimeout(halt.uhr);
+            delete halt.el.dataset['gehoben'];
+            halt = null;
+        };
+        wurzel.addEventListener('contextmenu', e => {
+            const el = dingVon(e.target);
+            if (!el)
+                return;
+            if (finger || Date.now() - zuletztHalt < 900 || Date.now() - zuletztTaste < 400) {
+                e.preventDefault();
+                return;
+            }
+            if (e.shiftKey && e.button === 2)
+                return;
+            if (a().oeffnen(el, { x: e.clientX, y: e.clientY, tastatur: false }) !== false)
+                e.preventDefault();
+        });
+        wurzel.addEventListener('keydown', e => {
+            const el = dingVon(e.target);
+            if (!el || e.target !== el)
+                return;
+            if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+                e.preventDefault();
+                e.stopPropagation();
+                zuletztTaste = Date.now();
+                a().oeffnen(el, { tastatur: true });
+                return;
+            }
+            const entf = a().entf;
+            if (e.key === 'Delete' && entf && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                if (entf(el) !== false) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        });
+        wurzel.addEventListener('touchstart', e => {
+            finger = true;
+            nachzueglerWeg();
+            abbrechen();
+            const h = a().halten;
+            if (h === false || e.touches.length !== 1)
+                return;
+            const el = dingVon(e.target);
+            const t = e.touches[0];
+            if (!el || !t || (typeof h === 'string' && !el.matches(h)))
+                return;
+            const neu = { el, x: t.clientX, y: t.clientY, gehoben: false, uhr: 0 };
+            neu.uhr = window.setTimeout(() => {
+                if (halt !== neu || !el.isConnected)
+                    return;
+                neu.gehoben = true;
+                el.dataset['gehoben'] = '';
+                if (navigator.vibrate)
+                    navigator.vibrate(12);
+            }, HALTEN_MS);
+            halt = neu;
+        }, { passive: true });
+        wurzel.addEventListener('touchmove', e => {
+            const t = e.touches[0];
+            if (!halt || !t)
+                return;
+            if (Math.abs(t.clientX - halt.x) > WEG_PX || Math.abs(t.clientY - halt.y) > WEG_PX)
+                abbrechen();
+        }, { passive: true });
+        wurzel.addEventListener('touchend', e => {
+            if (e.touches.length)
+                return;
+            finger = false;
+            if (!halt)
+                return;
+            const { el, gehoben } = halt;
+            abbrechen();
+            if (!gehoben || !el.isConnected)
+                return;
+            zuletztHalt = Date.now();
+            nachzuegler();
+            a().oeffnen(el, { tastatur: true });
+        });
+        wurzel.addEventListener('touchcancel', () => { finger = false; abbrechen(); });
+    };
+    const wahl = (w) => {
+        const html = w.gruppen.map(g => (g.name ? `<div class="grp">${esc(g.name)}</div>` : '') +
+            g.optionen.map(o => `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
+                `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
+                `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
+                `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('')).join('<hr>');
+        const r = w.anker.getBoundingClientRect();
+        w.anker.setAttribute('aria-haspopup', 'menu');
+        w.anker.setAttribute('aria-expanded', 'true');
+        const m = menu(html, r.left, r.bottom + 4, {
+            titel: w.titel, rolle: 'menu', beschriftung: w.titel, fokus: 'aktiv',
+            rueckfokus: w.anker, anker: w.anker
+        });
+        const zu = () => { w.anker.setAttribute('aria-expanded', 'false'); };
+        const wache = new MutationObserver(() => { if (!m.isConnected) {
+            zu();
+            wache.disconnect();
+        } });
+        wache.observe(document.body, { childList: true });
+        m.addEventListener('click', e => {
+            const b = e.target instanceof Element ? e.target.closest('[data-wahl]') : null;
+            if (!b || !m.contains(b))
+                return;
+            m.remove();
+            zu();
+            if (w.anker.isConnected)
+                w.anker.focus({ preventScroll: true });
+            w.beiWahl(b.dataset['wahl'] || '');
+        });
+        return m;
+    };
+    return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl,
+        nachzuegler, nachzueglerWeg, HALTEN_MS };
 })();
 window.Menue = Menue;

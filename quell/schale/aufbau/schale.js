@@ -580,6 +580,10 @@ const App = (() => {
                 } } });
         return true;
     };
+    const ZUR_QUELLE = {
+        fav: 'favorit', rename: 'umbenennen', icon: 'symbol', dup: 'duplizieren',
+        link: 'link', del: 'papierkorb', 'wz-verschieben': 'verschieben'
+    };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();
         const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -594,7 +598,7 @@ const App = (() => {
             '<button data-a="dup">' + mi('copy') + 'Duplizieren<span class="ms">Strg D</span></button>' +
             '<button data-a="wz-verschieben">' + mi('moveTo') + 'Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
             `<button data-a="archiv">${mi('archive')}${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
-            '<button data-a="del">' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
+            '<button data-a="del" data-gefahr>' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
             '<hr>' +
             '<button data-a="wz-praesi">' + mi('play') + 'Präsentieren' +
             '<span class="kenn">Beta</span><span class="ms">Strg Alt P</span></button>' +
@@ -673,14 +677,10 @@ const App = (() => {
             if (!b)
                 return;
             const a = b.dataset.a;
-            if (a === 'icon') {
+            const quelle = ZUR_QUELLE[a || ''];
+            if (quelle) {
                 m.remove();
-                UI.emojiWaehlen(anker, (em) => {
-                    Store.updateBlock(p.id, { icon: em });
-                    zeichneBaum();
-                    if (p.id === seiteId)
-                        zeichneSeite();
-                });
+                Register.aktionen.tun(quelle, Store.getBlock(p.id) || p, { kontext: 'seite', anker });
                 return;
             }
             if (a === 'inhalt') {
@@ -790,26 +790,12 @@ const App = (() => {
                 document.getElementById('btn-auto')?.click();
                 return;
             }
-            if (a === 'fav') {
-                favoritKippen(p);
-            }
             if (a === 'klein') {
                 Store.updateBlock(p.id, { small: !p.small });
                 zeichneSeite();
             }
             if (a === 'breit') {
                 volleBreite(p);
-            }
-            if (a === 'rename') {
-                await umbenennen(p, anker, 'Neuer Titel');
-            }
-            if (a === 'dup') {
-                dupliziereSeite(p.id, p.parentId);
-                zeichneBaum();
-                UI.toast('Seite dupliziert');
-            }
-            if (a === 'link') {
-                Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert');
             }
             if (a === 'pid') {
                 Ablage.kopiereJetzt(p.id, 'Seiten-ID kopiert: ' + p.id);
@@ -852,8 +838,6 @@ const App = (() => {
             }
             if (a === 'papier')
                 papierkorb();
-            if (a === 'del')
-                inPapierkorb(p);
         });
     };
     const dupliziereSeite = (id, zielEltern) => {
@@ -3470,6 +3454,49 @@ const App = (() => {
         b('h2', 'Deine Daten gehören dir');
         b('text', 'Unter Einstellungen kannst du jederzeit eine Sicherung speichern und wieder einlesen.');
     };
+    const aktionenMelden = () => {
+        const R = typeof Register !== 'undefined' ? Register.aktionen : null;
+        if (!R)
+            return;
+        const nichtImRegal = (o) => o.kontext !== 'notizhefte';
+        R.melde({ id: 'oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+            gilt: (_p, o) => nichtImRegal(o) && o.art !== 'ordner',
+            tun: (p) => oeffne(p.id) });
+        R.melde({ id: 'favorit', zeichen: 'star', gruppe: 'merken', rang: 10,
+            name: (p) => (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'),
+            tun: (p) => { favoritKippen(p); nachAenderung(Store.getBlock(p.id) || p); } });
+        R.melde({ id: 'umbenennen', name: 'Umbenennen', zeichen: 'pencil', gruppe: 'bearbeiten', rang: 10,
+            gilt: (p, o) => !(o.kontext === 'notizhefte' && p.locked),
+            tun: (p, o) => umbenennen(p, o.anker || null, o.kontext === 'seite' ? 'Neuer Titel'
+                : o.kontext === 'notizhefte' ? (p.heftArt === 'fach' ? 'Name des Fachs' : 'Name des Hefts')
+                    : 'Neuer Name') });
+        R.melde({ id: 'symbol', name: 'Symbol ändern', zeichen: 'smile', gruppe: 'bearbeiten', rang: 20,
+            gilt: (_p, o) => nichtImRegal(o),
+            tun: (p, o) => {
+                UI.emojiWaehlen(o.anker && o.anker.isConnected ? o.anker : document.body, (em) => {
+                    Store.updateBlock(p.id, { icon: em });
+                    nachAenderung(Store.getBlock(p.id));
+                });
+            } });
+        R.melde({ id: 'duplizieren', name: 'Duplizieren', zeichen: 'copy', gruppe: 'ablegen', rang: 20,
+            gilt: (_p, o) => nichtImRegal(o),
+            tun: (p) => {
+                dupliziereSeite(p.id, p.parentId);
+                nachAenderung(Store.getBlock(p.id));
+                UI.toast('Seite dupliziert');
+            } });
+        R.melde({ id: 'link', name: 'Link kopieren', zeichen: 'link', gruppe: 'teilen', rang: 10,
+            gilt: (_p, o) => nichtImRegal(o),
+            tun: (p) => Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert') });
+        R.melde({ id: 'papierkorb', name: 'In den Papierkorb', zeichen: 'trash', gruppe: 'gefahr',
+            gefahr: true, taste: 'Entf',
+            tun: (p, o) => {
+                const name = String(p.text || '').trim() || 'Ohne Namen';
+                return inPapierkorb(p, o.kontext === 'notizhefte' && p.heftArt === 'fach'
+                    ? { satz: 'Fach „' + name + '" liegt im Papierkorb. Seine Hefte bleiben im Regal.' } : {});
+            } });
+    };
+    aktionenMelden();
     return {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,

@@ -615,93 +615,16 @@ const Notebook = (() => {
             moveToFach(heftId, String(b?.dataset['z'] || '') || null);
         });
     };
-    const kontextMenue = (anker, id) => {
+    const ortVon = (anker) => ({
+        kontext: 'notizhefte', anker, hinein: (ziel) => openFach(ziel)
+    });
+    const kontextMenue = (anker, id, wo = {}) => {
         const p = Store.getBlock(id);
         if (!p)
             return;
-        const r = anker.getBoundingClientRect();
-        const html = p.locked
-            ? `<button data-k="auf">Öffnen</button>` +
-                `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
-                `<button data-k="entsperren">Entschlüsseln</button>` +
-                `<div class="sep"></div>` +
-                `<button data-k="korb">In den Papierkorb</button>`
-            : `<button data-k="auf">Öffnen</button>` +
-                `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
-                `<button data-k="name">Umbenennen</button>` +
-                `<button data-k="farbe">Farbe …</button>` +
-                `<button data-k="fach">In Fach verschieben …</button>` +
-                `<button data-k="sperren">Verschlüsseln</button>` +
-                `<div class="sep"></div>` +
-                `<button data-k="korb">In den Papierkorb</button>`;
-        const m = UI.menu(html, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
-        m.addEventListener('click', (e) => {
-            const b = e.target.closest('[data-k]');
-            if (!b)
-                return;
-            m.remove();
-            const k = b.dataset['k'];
-            if (k === 'auf')
-                return openNotebook(id);
-            if (k === 'stern')
-                return toggleFavorit(id);
-            if (k === 'farbe')
-                return farbMenue(anker, id);
-            if (k === 'fach')
-                return fachwahlMenue(anker, id);
-            if (k === 'sperren') {
-                void sperrenHier(id);
-                return;
-            }
-            if (k === 'entsperren') {
-                void entsperrenHier(id);
-                return;
-            }
-            if (k === 'name') {
-                void App.umbenennen(p, anker, 'Name des Hefts');
-                return;
-            }
-            if (k === 'korb') {
-                Store.trashBlock(id);
-                UI.toast('Ins Papierkorb gelegt — Reiter „Papierkorb" holt es zurück.');
-                renderShelf();
-            }
-        });
+        Menue.aktionen(p, ortVon(anker), { ...wo, rueckfokus: anker });
     };
-    const fachKontextMenue = (anker, id) => {
-        const f = Store.getBlock(id);
-        if (!f)
-            return;
-        const r = anker.getBoundingClientRect();
-        const kannBlick = typeof Bibliothek !== 'undefined' && !!Bibliothek.blickHinein;
-        const m = UI.menu(`<button data-k="auf">Öffnen</button>` +
-            (kannBlick ? `<button data-k="blick"><span class="mi">⌕</span>Blick hinein</button>` : '') +
-            `<button data-k="name">Umbenennen</button>` +
-            `<button data-k="farbe">Farbe …</button>` +
-            `<div class="sep"></div>` +
-            `<button data-k="korb">In den Papierkorb</button>`, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
-        m.addEventListener('click', (e) => {
-            const b = e.target.closest('[data-k]');
-            if (!b)
-                return;
-            m.remove();
-            if (b.dataset['k'] === 'auf')
-                return openFach(id);
-            if (b.dataset['k'] === 'farbe')
-                return farbMenue(anker, id);
-            if (b.dataset['k'] === 'blick')
-                return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false, (ziel) => openFach(ziel));
-            if (b.dataset['k'] === 'name') {
-                void App.umbenennen(f, anker, 'Name des Fachs');
-                return;
-            }
-            if (b.dataset['k'] === 'korb') {
-                Store.trashBlock(id);
-                UI.toast('Fach in den Papierkorb gelegt. Seine Hefte bleiben im Regal.');
-                renderShelf();
-            }
-        });
-    };
+    const fachKontextMenue = kontextMenue;
     const HEBEN_MS = 400;
     const HEBEN_PX = 6;
     const ROLL_PX = 10;
@@ -766,7 +689,7 @@ const Notebook = (() => {
             aufraeumen();
             zug = { id, zeiger: e.pointerId, x0: e.clientX, y0: e.clientY,
                 maus: e.pointerType === 'mouse', gehoben: false, uhr: null,
-                schatten: null, ueber: null };
+                schatten: null, ueber: null, bewegt: false };
             if (!zug.maus)
                 zug.uhr = window.setTimeout(() => { if (zug && !zug.gehoben)
                     heben(karte); }, HEBEN_MS);
@@ -790,6 +713,8 @@ const Notebook = (() => {
                 }
                 heben(karte);
             }
+            if (weg > ROLL_PX)
+                zug.bewegt = true;
             e.preventDefault();
             if (zug.schatten) {
                 zug.schatten.style.left = e.clientX + 'px';
@@ -809,12 +734,20 @@ const Notebook = (() => {
                 return;
             const gehoben = zug.gehoben;
             const id = zug.id;
+            const stillGehalten = gehoben && !zug.maus && !zug.bewegt;
             if (zug.schatten)
                 zug.schatten.style.visibility = 'hidden';
             const wohin = gehoben ? zielUnter(e.clientX, e.clientY) : undefined;
             aufraeumen();
             if (!gehoben)
                 return;
+            if (stillGehalten) {
+                Menue.nachzuegler();
+                const karte = wurzel.querySelector(`.bib-deckel[data-id="${CSS.escape(id)}"], .nh-zeile-auf[data-id="${CSS.escape(id)}"]`);
+                if (karte)
+                    kontextMenue(karte, id);
+                return;
+            }
             if (wohin === undefined)
                 return;
             if (ziehenAblegen(id, wohin))
@@ -830,6 +763,22 @@ const Notebook = (() => {
     };
     const bindShelf = (wurzel) => {
         bindZiehen(wurzel);
+        Menue.aktionenBinden(wurzel, {
+            auswahl: '.bib-deckel[data-id], .nh-zeile-auf[data-id], .bib-deckel[data-fach], .nh-zeile-auf[data-fach]',
+            halten: '[data-fach]',
+            oeffnen: (el, wo) => {
+                const id = el.dataset['id'] || el.dataset['fach'];
+                if (!id || !Store.getBlock(id))
+                    return false;
+                kontextMenue(el, id, wo.tastatur ? {} : { x: wo.x ?? 0, y: wo.y ?? 0 });
+                return true;
+            },
+            entf: el => {
+                const id = el.dataset['id'] || el.dataset['fach'];
+                const p = id ? Store.getBlock(id) : null;
+                return p ? Register.aktionen.taste('Entf', p, ortVon(el)) : false;
+            }
+        });
         wurzel.addEventListener('click', e => {
             if (document.body.classList.contains('nh-zieht')) {
                 e.stopPropagation();
@@ -973,6 +922,28 @@ const Notebook = (() => {
         }
         App.zeigeSonder('Notizhefte', render);
     };
+    if (typeof Register !== 'undefined' && Register.aktionen) {
+        const R = Register.aktionen;
+        const hier = (o) => o.kontext === 'notizhefte';
+        R.melde({ id: 'heft-oeffnen', name: 'Öffnen', zeichen: 'book', gruppe: 'oeffnen', rang: 10,
+            gilt: (p, o) => hier(o) && !istFach(p),
+            tun: (p) => openNotebook(p.id) });
+        R.melde({ id: 'fach-oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+            gilt: (p, o) => hier(o) && istFach(p),
+            tun: (p) => openFach(p.id) });
+        R.melde({ id: 'farbe', name: 'Farbe …', zeichen: 'palette', gruppe: 'bearbeiten', rang: 30,
+            gilt: (p, o) => (hier(o) && !p.locked) || o.kontext === 'bibliothek',
+            tun: (p, o) => farbMenue(o.anker && o.anker.isConnected ? o.anker : document.body, p.id, hier(o) ? undefined : () => App.nachAenderung(Store.getBlock(p.id))) });
+        R.melde({ id: 'sperren', name: 'Verschlüsseln', zeichen: 'lock', gruppe: 'bearbeiten', rang: 40,
+            gilt: (p, o) => hier(o) && !istFach(p) && !p.locked,
+            tun: (p) => sperrenHier(p.id) });
+        R.melde({ id: 'entsperren', name: 'Entschlüsseln', zeichen: 'lockOpen', gruppe: 'bearbeiten', rang: 40,
+            gilt: (p, o) => hier(o) && !!p.locked,
+            tun: (p) => entsperrenHier(p.id) });
+        R.melde({ id: 'fach', name: 'In Fach verschieben …', zeichen: 'moveTo', gruppe: 'ablegen', rang: 10,
+            gilt: (p, o) => hier(o) && !istFach(p) && !p.locked,
+            tun: (p, o) => fachwahlMenue(o.anker && o.anker.isConnected ? o.anker : document.body, p.id) });
+    }
     return { oeffnen, open: oeffnen, resume, render,
         farbMenue,
         istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,

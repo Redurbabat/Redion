@@ -3120,7 +3120,7 @@ const Blocks = (() => {
       '<hr>' +
       /* Der Eintrag heisst, was er tut (E718): er legt weg, endgültig
          löscht nur der Papierkorb. */
-      '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
+      '<button data-a="del" data-gefahr><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
 
     const menu = UI.menu(html, r.right + 6, r.top);
 

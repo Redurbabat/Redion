@@ -154,8 +154,9 @@ const zurBibliothek = async (s: Page, form = 'deckel'): Promise<void> => {
   await s.waitForTimeout(350);
 };
 
-const zuNotizheften = async (s: Page): Promise<void> => {
-  await s.evaluate<any>(`Store.setMeta('heft:reiter', 'dokumente'); Store.setMeta('heft:fach', ''); Notebook.oeffnen()`);
+/** Die Notizhefte öffnen — mit `fach` gleich in diesem Fach (dort liegt das Heft). */
+const zuNotizheften = async (s: Page, fach = ''): Promise<void> => {
+  await s.evaluate<any>(`Store.setMeta('heft:reiter', 'dokumente'); Store.setMeta('heft:fach', ${JSON.stringify(fach)}); Notebook.oeffnen()`);
   await s.waitForSelector('.nh-karte', { timeout: 20000 });
   await s.evaluate<any>(`document.querySelectorAll('.menu').forEach(m => m.remove())`);
   await s.waitForTimeout(300);
@@ -366,8 +367,8 @@ await r.s.evaluate<any>(`App.seitenMenue(document.getElementById('btn-page-menu'
 await r.s.waitForTimeout(250);
 await menueWahl(r.s, 'rename');
 await r.s.waitForTimeout(500);
-// d) das ⋯ der Notizhefte
-await zuNotizheften(r.s);
+// d) das ⋯ der Notizhefte (das Heft liegt im Fach)
+await zuNotizheften(r.s, r.fach);
 await r.s.evaluate<any>(`document.querySelector('[data-mehr="${r.heft}"]')?.click()`);
 await r.s.waitForTimeout(250);
 await menueWahl(r.s, 'umbenennen');
@@ -391,9 +392,7 @@ await r.s.waitForTimeout(250);
 await menueWahl(r.s, 'del');
 await r.s.waitForTimeout(300);
 const heft2 = await r.s.evaluate<any>(`(() => { const h = Store.addPage('${r.fach}', { text: 'Weg C' }); Store.addBlock(h.id, 'blatt', { papier: 'blanko' }); return h.id; })()`) as string;
-await zuNotizheften(r.s);
-await r.s.evaluate<any>(`document.querySelector('[data-mehr-fach="${r.fach}"]') && Store.setMeta('heft:fach', '${r.fach}'); Notebook.oeffnen()`);
-await r.s.waitForTimeout(400);
+await zuNotizheften(r.s, r.fach);
 await r.s.evaluate<any>(`document.querySelector('[data-mehr="${heft2}"]')?.click()`);
 await r.s.waitForTimeout(250);
 await menueWahl(r.s, 'papierkorb');
@@ -426,10 +425,11 @@ const ids8ordner = await menueIds(r.s);
 p('Ordner: „Öffnen" (hinein), „Als Seite bearbeiten" und „Blick hinein"',
   ['hinein', 'als-seite', 'blick'].every(x => ids8ordner.includes(x)), JSON.stringify(ids8ordner));
 await zu(r.s);
-await zuNotizheften(r.s);
+await zuNotizheften(r.s, r.fach);
 const rk8h = await rechtsklick(r.s, `.bib-deckel[data-id="${r.heft}"], .nh-zeile-auf[data-id="${r.heft}"]`);
 const ids8heft = await menueIds(r.s);
 p('Heft: Rechtsklick → „In Fach verschieben" und „Farbe"', rk8h.verhindert && ids8heft.includes('fach') && ids8heft.includes('farbe'), JSON.stringify(ids8heft));
+await zuNotizheften(r.s);
 const rk8f = await rechtsklick(r.s, `.nh-fach [data-fach="${r.fach}"]`);
 const ids8fach = await menueIds(r.s);
 p('Fach: Rechtsklick → „Blick hinein", aber kein „In Fach verschieben"', rk8f.verhindert && ids8fach.includes('blick') && !ids8fach.includes('fach'), JSON.stringify(ids8fach));
@@ -446,7 +446,7 @@ await r.s.evaluate<any>(`document.querySelector(${JSON.stringify(mehrSel(r.ordne
 await r.s.waitForTimeout(250);
 await rotPruefen(r.s, 'Bibliothek, Rechner hell');
 await zu(r.s);
-await zuNotizheften(r.s);
+await zuNotizheften(r.s, r.fach);
 await r.s.evaluate<any>(`document.querySelector('[data-mehr="${r.heft}"]')?.click()`);
 await r.s.waitForTimeout(250);
 await rotPruefen(r.s, 'Notizhefte, Rechner hell');
@@ -514,14 +514,20 @@ p('Die Kontextmenü-Taste auf der Zeile öffnet es auch', await r.s.evaluate<any
 await zu(r.s);
 
 console.log('\n§12 · Seitenleiste: Rechtsklick → Seitenmenü, das ⋯ hat einen Namen');
+/* Am Rechner steht der Seitenbaum in der Lade der Kante („Seiten"), nicht
+   in einer festen Leiste — dort wird er geöffnet. */
+await r.s.evaluate<any>(`document.querySelector('#kante .k-knopf[data-k="seiten"]')?.click()`);
+await r.s.waitForTimeout(500);
+/* „Notizen" heisst seit §7 anders — gesucht wird der Name, den es JETZT hat. */
+const name12 = await r.s.evaluate<any>(`Store.getBlock('${r.seite}').text`) as string;
 const zeile12 = await r.s.evaluate<any>(`(() => {
-  const z = [...document.querySelectorAll('#tree .row')].find(x => (x.querySelector('.nm')?.textContent || '') === 'Notizen');
+  const z = [...document.querySelectorAll('#tree .row')].find(x => (x.querySelector('.nm')?.textContent || '') === ${JSON.stringify(name12)});
   if (!z) return null;
   z.setAttribute('data-probe597', '1');
   const mehr = [...z.querySelectorAll('.act button')].find(b => (b.textContent || '').trim() === '⋯');
   return { name: mehr?.getAttribute('aria-label') || '', titel: mehr?.getAttribute('title') || '' };
 })()`);
-p('Das ⋯ der Zeile heisst „Aktionen für „Notizen""', !!zeile12 && /Aktionen für „Notizen“/.test(zeile12.name), JSON.stringify(zeile12));
+p(`Das ⋯ der Zeile heisst „Aktionen für „${name12}““`, !!zeile12 && zeile12.name === 'Aktionen für „' + name12 + '“', JSON.stringify(zeile12));
 const rk12 = await rechtsklick(r.s, '#tree .row[data-probe597]');
 const t12 = await r.s.evaluate<any>(`({ suche: !!document.querySelector('.menu .menu-suche input'), rename: !!document.querySelector('.menu [data-a="rename"]') })`);
 p('Rechtsklick auf die Zeile → das Seitenmenü (mit Suche und „Umbenennen")', rk12.verhindert && t12.suche && t12.rename, JSON.stringify({ rk12, t12 }));
@@ -643,7 +649,8 @@ for (const sch of schemata) {
   await sk.s.evaluate<any>(`document.querySelector(${JSON.stringify(mehrSel(sk.ordner))})?.click()`);
   await sk.s.waitForTimeout(200);
   const g = await sk.s.evaluate<any>(`(() => {
-    const hell = c => { const [r, g, b] = (c.match(/\\d+(\\.\\d+)?/g) || []).map(Number).map(v => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    /* \`color(srgb r g b / a)\` (aus color-mix) trägt Anteile 0–1, \`rgb()\` 0–255. */
+    const hell = c => { const teil = /^color\\(srgb/.test(c); const [r, g, b] = (c.match(/\\d*\\.?\\d+/g) || []).map(Number).map(v => { const x = teil ? v : v / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
       return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
     const probe = document.createElement('span'); probe.style.color = 'var(--gefahr)'; document.body.appendChild(probe);
     const soll = getComputedStyle(probe).color; probe.remove();

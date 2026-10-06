@@ -242,6 +242,17 @@
 }
 .nh-karte:hover .nh-mehr, .nh-mehr:focus-visible{ opacity:1 }
 .nh-mehr:hover{ color:var(--text); background:var(--bg-hover) }
+/* 44 × 44 ZU TREFFEN, 26 PX ZU SEHEN (E721, §37). Der Knopf selbst wird so
+   gross wie ein Finger; gemalt wird nur seine Mitte (`background-clip`).
+   Er rückt dafür um den Rand nach aussen, damit die sichtbare Scheibe genau
+   da bleibt, wo sie war. Ein unsichtbarer Hof über `::after` hätte die
+   Karte daneben überdeckt — so trifft der Finger, was er sieht. */
+.nh-karte > .nh-mehr{
+  right:-7px; top:-7px; width:var(--touch-min); height:var(--touch-min);
+  padding:9px; background-clip:content-box; border-radius:17px
+}
+/* `background` am Überfahren setzt die Clip-Angabe zurück — sie gilt weiter. */
+.nh-karte > .nh-mehr:hover{ background-clip:content-box }
 
 .nh-neu{
   display:flex; flex-direction:column; align-items:center; justify-content:center;

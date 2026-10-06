@@ -2747,3 +2747,10 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         }
     });
 }
+if (typeof Register !== 'undefined' && Register.aktionen) {
+    Register.aktionen.melde({
+        id: 'verschieben', name: 'Verschieben nach …', zeichen: 'moveTo', gruppe: 'ablegen', rang: 10,
+        gilt: (_p, o) => o.kontext !== 'notizhefte',
+        tun: (p) => Werkzeuge.verschiebenNach(p)
+    });
+}
