@@ -23,7 +23,9 @@
  *       Pille liest sich mit 4,5 : 1 oder mehr. Seit E720 auch in der
  *       Lernzentrale: fünf Funkel, aber nur „Starten" leuchtet in Ruhe —
  *       ein Funkel zählt als laut, wenn er in Ruhe Schein oder glimmende
- *       Buchstaben trägt.
+ *       Buchstaben trägt ODER sein Grund sich mit 1,5 : 1 oder mehr vom
+ *       Grund darunter abhebt oder gleich dem Funkelgrund ist (der dunkle
+ *       Grund allein ruft schon).
  *   §2  „Zuletzt geöffnet" ruht: der Kartenring dreht nur, solange man
  *       hinzeigt oder der Fokus darin steht — im Leerlauf, am Telefon und
  *       hinter einem offenen Fenster läuft KEINE endlose Bewegung. Die
@@ -162,7 +164,17 @@ const WERKZEUG = `
          Knopf oder glimmende Buchstaben. Ein Funkel, der still ruht und
          seinen Schein erst unter Zeiger, Fokus und Druck zeigt, ist ein
          Umrissknopf — „Schein ist Zustand" (E640). */
-      const funkelLaut = el.classList.contains('ru-funkel') && (cs.boxShadow !== 'none' ||
+      /* UND WENN SEIN GRUND IN RUHE DUNKEL STEHT (Durchsicht vom 6. Oktober):
+         ein Funkel mit dem Funkelgrund, aber ohne Schein und ohne Glimmen,
+         ruft trotzdem „hier drücken". Gemessen gegen den Grund darunter —
+         hebt er sich mit 1,5 : 1 oder mehr ab, ist er eine Fläche, kein Umriss;
+         und im Dunkeln, wo #101010 auf dunklem Grund kaum 1,1 : 1 hat, zählt
+         der Funkelgrund selbst (--ru-funkel-farbe). */
+      const eigen = window.__rgb(window.__farbeVon(el, cs.getPropertyValue('--ru-funkel-farbe')));
+      const funkelGrund = el.classList.contains('ru-funkel') && !!bg && bg.a >= 0.6 &&
+        (window.__kontrast(bg, window.__grundUnter(el)) >= 1.5 ||
+         (!!eigen && Math.abs(eigen.r - bg.r) + Math.abs(eigen.g - bg.g) + Math.abs(eigen.b - bg.b) < 6));
+      const funkelLaut = el.classList.contains('ru-funkel') && (cs.boxShadow !== 'none' || funkelGrund ||
         [...el.querySelectorAll('.ru-funkel-b')].some(b => /glimmen/.test(getComputedStyle(b).animationName)));
       if (window.__akzentig(bg, akz) || verlauf || funkelLaut)
         raus.push(((el.id ? '#' + el.id : el.tagName.toLowerCase()) + ' ' +
@@ -176,6 +188,18 @@ const WERKZEUG = `
     return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
   window.__ueber = (oben, unten) => ({ r: oben.r * oben.a + unten.r * (1 - oben.a), g: oben.g * oben.a + unten.g * (1 - oben.a),
     b: oben.b * oben.a + unten.b * (1 - oben.a), a: 1 });
+  /* Der Grund UNTER einem Element: die Vorfahren von innen nach aussen,
+     halbdurchsichtige übereinandergelegt, bis einer deckt (sonst weiss). */
+  /* Eine Farbe aus einer Variablen, so gerechnet, wie der Browser sie malt. */
+  window.__farbeVon = (el, wert) => { if (!String(wert || '').trim()) return '';
+    const i = document.createElement('i'); i.style.color = String(wert).trim(); el.appendChild(i);
+    const c = getComputedStyle(i).color; i.remove(); return c; };
+  window.__grundUnter = (el) => { const schichten = [];
+    for (let e = el.parentElement; e; e = e.parentElement) { const c = window.__rgb(getComputedStyle(e).backgroundColor);
+      if (c && c.a > 0) { schichten.push(c); if (c.a >= 1) break; } }
+    let grund = { r: 255, g: 255, b: 255, a: 1 };
+    for (const c of schichten.reverse()) grund = window.__ueber(c, grund);
+    return grund; };
   window.__kontrast = (a, b) => { const x = window.__lum(a), y = window.__lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
   /* Ein Zeichen in einer Zeile: genau EIN gezeichnetes <svg class="sym"> mit
      Strichen darin, und kein getipptes Zeichen daneben. */

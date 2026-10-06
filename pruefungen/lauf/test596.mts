@@ -53,6 +53,22 @@
  *      Rand und `::before` stehen wieder auf ihrem Ruhewert — und auch ein
  *      ERZWUNGENES `:hover` (wie es am iPhone nach dem Tipp kleben bleibt)
  *      malt auf einem Gerät ohne Zeiger nichts.
+ *   §9 EIN GESPERRTER KNOPF BLEIBT STILL. Mit leerem Bestand (keine
+ *      Fehler, keine Karten — der Anfang jedes neuen Lernenden) stehen
+ *      „Starten · 0", „Trainieren · 0" und „Lernen · 0" gesperrt da. Unter
+ *      dem Zeiger und mit `data-gedrueckt` darf ein gesperrter Knopf in
+ *      keiner Ansicht anders aussehen als in Ruhe — kein Licht (`::after`),
+ *      kein Buchstabenlauf, kein Rand, kein Grund. Sonst wirkt ein toter
+ *      Knopf lebendig, und das ist das Gegenteil von §1 (Durchsicht vom
+ *      6. Oktober: „Trai  en · 0" mit hellblauem Schein, gesperrt).
+ *  §10 IN ALLEN ZEHN SCHEMATA. (a) In Ruhe trägt „Starten" ein Zeichen,
+ *      das die stillen Funkel nicht tragen: Schein oder glimmende
+ *      Buchstaben (§5) — und im Starken Kontrast, wo #101010 auf Schwarz
+ *      kaum 1,04 : 1 hat, dazu eines mit Gewicht: einen Grund mit 1,5 : 1
+ *      gegen die stillen oder einen Rand von mindestens 2 px, der sich mit
+ *      3 : 1 vom Grund darunter abhebt (E701 §1: EINE laute Fläche). (b) Gedrückt (`data-gedrueckt`) liest sich die Schrift
+ *      aller fünf mit 4,5 : 1 oder mehr gegen den Grund, den sie dann hat
+ *      — ein Fingertipp darf das Wort nicht wegwischen.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   Gegen den Stand 1bfaca53 (claude/morgen-besser-2) rot — die Zeilen
@@ -423,6 +439,147 @@ for (const thema of ['dark', 'light'] as const) {
     p(`§8: ein klebendes :hover malt am Telefon keinen Schein („${ort.name}")`,
       JSON.stringify(erzwungen) === JSON.stringify(still), `ruhe ${JSON.stringify(still)} · :hover ${JSON.stringify(erzwungen)}`);
   }
+  await ctx.close();
+}
+
+/* ══ §9 Ein gesperrter Knopf bleibt still ═════════════════════════════════
+   §1 zählt nur freigegebene Knöpfe — genau deshalb sah er den gesperrten
+   Funkel nicht, der unter dem Zeiger aufleuchtete. Hier die Gegenseite:
+   leerer Bestand, jeder sichtbare GESPERRTE Knopf der Lernwelt, Ruhe gegen
+   Zeiger und gegen `data-gedrueckt`. Die Bewegungen bleiben an (der
+   Buchstabenlauf ist ein Zustand), nur die Übergänge sind null. */
+for (const thema of ['dark', 'light'] as const) {
+  const t = thema === 'dark' ? 'dunkel' : 'hell';
+  console.log(`\n§9 Ein gesperrter Knopf bleibt still — Rechner, ${t}, leerer Bestand`);
+  const { ctx, s } = await oeffnen(false, thema);
+  /* Die Beispielseiten bringen Lernkarten mit — weg damit (Papierkorb),
+     damit auch „Starten · 0" und „Lernen · 0" gesperrt dastehen. */
+  await s.evaluate(async () => {
+    for (const b of Object.values(Store.cache.blocks) as any[])
+      if (b && b.alive !== false && b.type === 'flashcard') Store.trashBlock(b.id);
+    await Store.flush();
+  });
+  await s.evaluate(OHNE_UEBERGANG);
+  await s.evaluate(BILD);
+  const laut: string[] = [];
+  let geprueft = 0;
+  const namen = new Set<string>();
+  for (const ansicht of ANSICHTEN) {
+    await s.evaluate(async (a: string) => { Produktwelten.lernen(a as never); await new Promise(r => setTimeout(r, 900)); }, ansicht);
+    await s.mouse.move(2, 2); await warte(s, 120);
+    const anzahl = await s.evaluate(() => {
+      const w = window as any;
+      const liste = [...document.querySelectorAll<HTMLButtonElement>('.lernwelt button')]
+        .filter(b => b.disabled && w.__sichtbar(b));
+      document.querySelectorAll('[data-t596]').forEach(x => x.removeAttribute('data-t596'));
+      liste.forEach((b, i) => b.setAttribute('data-t596', String(i)));
+      return liste.length;
+    });
+    for (let i = 0; i < anzahl; i++) {
+      const vor = await s.evaluate((i: number) => {
+        const w = window as any;
+        const b = document.querySelector<HTMLElement>(`[data-t596="${i}"]`);
+        if (!b) return null;
+        b.scrollIntoView({ block: 'center', inline: 'center' });
+        const r = b.getBoundingClientRect();
+        const x = r.left + r.width / 2, y = r.top + r.height / 2;
+        const oben = document.elementFromPoint(x, y);
+        return { x, y, frei: !!oben && (oben === b || b.contains(oben)), name: w.__name(b) };
+      }, i);
+      if (!vor || !vor.frei) continue;
+      await s.mouse.move(2, 2); await warte(s, 40);
+      const ruhe = await s.evaluate((i: number) => (window as any).__bild(document.querySelector(`[data-t596="${i}"]`)), i);
+      await s.mouse.move(vor.x, vor.y); await warte(s, 60);
+      const zeiger = await s.evaluate((i: number) => {
+        const b = document.querySelector(`[data-t596="${i}"]`)!;
+        return { bild: (window as any).__bild(b), hover: b.matches(':hover') };
+      }, i);
+      await s.mouse.move(2, 2); await warte(s, 40);
+      const druck = await s.evaluate((i: number) => {
+        const b = document.querySelector(`[data-t596="${i}"]`)!;
+        b.setAttribute('data-gedrueckt', ''); const bild = (window as any).__bild(b); b.removeAttribute('data-gedrueckt');
+        return bild;
+      }, i);
+      geprueft++; namen.add(ansicht + ':' + vor.name);
+      const was: string[] = [];
+      if (!zeiger.hover) was.push('kein :hover gemessen');
+      else if (zeiger.bild !== ruhe) was.push('Zeiger');
+      if (druck !== ruhe) was.push('data-gedrueckt');
+      if (was.length) laut.push(`${ansicht}: „${vor.name}" (${was.join(', ')})`);
+    }
+  }
+  const funkel = [...namen].filter(n => /Starten · 0|Trainieren · 0|Lernen · 0/.test(n));
+  p(`${t} §9: mit leerem Bestand stehen die gesperrten Funkel da (Starten, Trainieren, Lernen · 0)`,
+    funkel.length >= 3, [...namen].join(' · '));
+  p(`${t} §9: kein gesperrter Knopf ändert sich unter Zeiger oder Druck (${geprueft} geprüft)`,
+    geprueft > 0 && laut.length === 0, laut.length + ' laut: ' + laut.join(' | '));
+  await ctx.close();
+}
+
+/* ══ §10 In allen zehn Schemata ═════════════════════════════════════════ */
+const SCHEMATA = ['standard', 'hell', 'nacht', 'wald', 'sand', 'papier', 'kontrast', 'rose', 'touchkit-hell', 'touchkit-dunkel'];
+const FARBE = `(() => {
+  window.__rgb = (s) => { const m = String(s).match(/rgba?\\(([^)]+)\\)/); if (!m) return null;
+    const q = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return { r: q[0], g: q[1], b: q[2], a: q[3] ?? 1 }; };
+  window.__ueber = (o, u) => ({ r: o.r * o.a + u.r * (1 - o.a), g: o.g * o.a + u.g * (1 - o.a), b: o.b * o.a + u.b * (1 - o.a), a: 1 });
+  window.__lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
+  window.__kontrast = (a, b) => { const x = window.__lum(a), y = window.__lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  /* Der Grund unter einem Element: Vorfahren von innen nach aussen, bis einer deckt. */
+  window.__unter = (el) => { const sch = [];
+    for (let e = el.parentElement; e; e = e.parentElement) { const c = window.__rgb(getComputedStyle(e).backgroundColor);
+      if (c && c.a > 0) { sch.push(c); if (c.a >= 1) break; } }
+    let g = { r: 255, g: 255, b: 255, a: 1 }; for (const c of sch.reverse()) g = window.__ueber(c, g); return g; };
+  /* Der Grund eines Knopfes, wie er gemalt wird: Farbe, darüber die Bildschichten
+     (je Schicht die erste Farbe des Verlaufs — die Rezepte hier sind einfarbig). */
+  window.__grund = (el) => { const cs = getComputedStyle(el); let g = window.__unter(el);
+    const c = window.__rgb(cs.backgroundColor); if (c && c.a > 0) g = window.__ueber(c, g);
+    const schichten = String(cs.backgroundImage || '').split(/,\\s*(?=(?:linear|radial|conic)-gradient)/).reverse();
+    for (const sch of schichten) { const f = window.__rgb((sch.match(/rgba?\\([^)]+\\)/) || [''])[0]); if (f && f.a > 0) g = window.__ueber(f, g); }
+    return g; };
+  window.__schrift = (el) => { const b = el.querySelector('.ru-funkel-b') || el; const f = window.__rgb(getComputedStyle(b).color);
+    return f ? window.__ueber(f, window.__grund(el)) : null; };
+})()`;
+{
+  console.log('\n§10 In allen zehn Schemata — Rechner, Lernzentrale');
+  const { ctx, s } = await oeffnen(false, 'dark');
+  await s.evaluate(BESTAND);
+  await s.evaluate(OHNE_UEBERGANG);
+  await s.evaluate(FARBE);
+  const ruheFehlt: string[] = [], druckFehlt: string[] = [];
+  for (const schema of SCHEMATA) {
+    await s.evaluate(async (sch: string) => { Aussehen.setzen({ schema: sch } as never);
+      Produktwelten.lernen('lernen'); await new Promise(r => setTimeout(r, 700)); }, schema);
+    await s.mouse.move(2, 2); await warte(s, 80);
+    const m = await s.evaluate((liste: string[]) => {
+      const w = window as any;
+      const knopf = (sel: string) => document.querySelector<HTMLElement>('.lw-study-actions ' + sel);
+      const start = knopf(liste[0]!), still = knopf(liste[1]!);
+      if (!start || !still) return null;
+      const a = w.__grund(start), b = w.__grund(still);
+      const cs = getComputedStyle(start), cs2 = getComputedStyle(still);
+      const rand = parseFloat(cs.borderTopWidth), rand2 = parseFloat(cs2.borderTopWidth);
+      const randKontrast = w.__kontrast(w.__ueber(w.__rgb(cs.borderTopColor), w.__unter(start)), w.__unter(start));
+      const leuchtet = (k: HTMLElement) => getComputedStyle(k).boxShadow !== 'none' ||
+        [...k.querySelectorAll('.ru-funkel-b')].some(x => /glimmen/.test(getComputedStyle(x).animationName));
+      const ruhe = { grund: +w.__kontrast(a, b).toFixed(2), rand, rand2, randKontrast: +randKontrast.toFixed(2),
+        zeichen: leuchtet(start) && !leuchtet(still) };
+      const druck = liste.map(sel => { const k = knopf(sel); if (!k) return { sel, wert: 0 };
+        k.setAttribute('data-gedrueckt', ''); const t = w.__schrift(k), g = w.__grund(k); k.removeAttribute('data-gedrueckt');
+        return { sel, wert: t ? +w.__kontrast(t, g).toFixed(2) : 0 }; });
+      return { ruhe, druck };
+    }, FUENF);
+    if (!m) { ruheFehlt.push(schema + ': Knöpfe fehlen'); continue; }
+    const r = m.ruhe;
+    const gewicht = r.grund >= 1.5 || (r.rand >= 2 && r.rand > r.rand2 && r.randKontrast >= 3);
+    if (!r.zeichen || (schema === 'kontrast' && !gewicht))
+      ruheFehlt.push(`${schema}: Zeichen ${r.zeichen}, Grund ${r.grund} : 1, Rand ${r.rand}/${r.rand2} px, Randkontrast ${r.randKontrast}`);
+    const schwach = m.druck.filter(d => d.wert < 4.5);
+    if (schwach.length) druckFehlt.push(schema + ': ' + schwach.map(d => d.sel.replace(/\[data-lw-train="|"\]/g, '') + ' ' + d.wert).join(', '));
+    console.log(`    ${schema}: Ruhe ${JSON.stringify(r)} · Druck ${m.druck.map(d => d.wert).join(' / ')}`);
+  }
+  p('§10a: in Ruhe hebt sich „Starten" in allen zehn Schemata von den stillen Funkeln ab (im Starken Kontrast mit 3 : 1)', ruheFehlt.length === 0, ruheFehlt.join(' | '));
+  p('§10b: gedrückt liest sich die Schrift aller fünf mit ≥ 4,5 : 1 — in allen zehn Schemata', druckFehlt.length === 0, druckFehlt.join(' | '));
   await ctx.close();
 }
 

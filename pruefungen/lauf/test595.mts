@@ -35,10 +35,16 @@
  *      `faellige-fehler`; auf „Heute" steht ein Streifen „Gemerkt" mit
  *      derselben Zahl wie in der Lernzentrale, und sein Herz ist gefüllt.
  *   §4 ES ÜBERLEBT DAS NEULADEN — Knopf gedrückt, Streifen da.
- *   §5 EIN ZWEITER KLICK (im Streifen) NIMMT BEIDES WEG.
+ *   §5 EIN ZWEITER KLICK (im Streifen) NIMMT BEIDES WEG — und wer mit der
+ *      Tastatur im Streifen ein Herz löst, behält den Fokus: er springt
+ *      auf das nächste Herz im Streifen, und wenn der Streifen ganz weg
+ *      ist, auf eine Stelle in der Lernwelt (nie auf <body>, §38).
  *   §6 TASTATUR UND FINGER. Enter und Leertaste schalten; ein Fingertipp
- *      am Telefon (CDP) schaltet; der Fokus ist sichtbar.
+ *      am Telefon (CDP) schaltet; der Fokus ist sichtbar — und sein Ring
+ *      liegt ganz in der Karte, statt an ihrem Rand abgeschnitten zu werden.
  *   §7 SCHEITERT DAS SCHREIBEN, kehrt der Knopf zurück und sagt es (Toast).
+ *      Und das Zurück nimmt nur die EIGENE Änderung zurück: was ein
+ *      anderer Tab inzwischen gemerkt hat, bleibt stehen (§16).
  *   §8 OHNE BEWEGUNG springt nichts — weder mit „weniger Bewegung" noch
  *      mit `body[data-bewegung="ruhig"]`; der Zustand wechselt trotzdem.
  *   §9 EINMALIGE ZAHLEN BEKOMMEN KEIN ECHTES HERZ: die Karten im Ergebnis
@@ -248,6 +254,35 @@ p('Der Streifen ist weg (keine gemerkte Kennzahl mehr)', imStreifen !== null && 
 const liste5 = await gemerkt(s);
 p('… und die Liste ist leer', Array.isArray(liste5) && !liste5.includes('faellige-fehler'), JSON.stringify(liste5));
 
+/* §5b Der Fokus bleibt, wenn der Streifen sich ändert (Durchsicht vom
+   6. Oktober: Leertaste im Streifen → document.activeElement = BODY). */
+await ansicht(s, 'lernen');
+for (const id of ['faellige-fehler', 'neue-karten']) {
+  await s.evaluate((id: string) => document.querySelector<HTMLElement>(`.lw-learning [data-lw-merk="${id}"]`)?.click(), id);
+  await warte(s, 250);
+}
+await s.evaluate(() => Store.flush());
+await ansicht(s, 'heute');
+await s.keyboard.press('Shift');
+const fokusWo = () => s.evaluate(() => {
+  const a = document.activeElement as HTMLElement | null;
+  return { tag: a?.tagName ?? null, merk: a?.dataset?.lwMerk ?? null,
+    imStreifen: !!a?.closest('.lw-gemerkt'), inLernwelt: !!a?.closest('.lernwelt'),
+    streifen: !!document.querySelector('.lw-gemerkt') };
+});
+await s.evaluate(() => document.querySelector<HTMLElement>('.lw-gemerkt [data-lw-merk="faellige-fehler"]')?.focus());
+const f0 = await fokusWo();
+p('§5b: das Herz „fällige Fehler" im Streifen hat den Tastenfokus', f0.merk === 'faellige-fehler' && f0.imStreifen, JSON.stringify(f0));
+await s.keyboard.press('Space'); await warte(s, 400);
+const f1 = await fokusWo();
+p('§5b: Leertaste löst es — der Fokus springt auf das nächste Herz im Streifen, nicht auf <body>',
+  f1.tag === 'BUTTON' && f1.imStreifen && f1.merk === 'neue-karten', JSON.stringify(f1));
+await s.keyboard.press('Space'); await warte(s, 400);
+const f2 = await fokusWo();
+p('§5b: das letzte Herz gelöst — der Streifen ist weg, der Fokus steht in der Lernwelt, nicht auf <body>',
+  !f2.streifen && f2.tag !== 'BODY' && f2.tag !== null && f2.inLernwelt, JSON.stringify(f2));
+await s.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+
 /* ══ §6 Tastatur ════════════════════════════════════════════════════════ */
 console.log('\n§6 Tastatur und Finger');
 await ansicht(s, 'lernen');
@@ -258,6 +293,27 @@ const fokus = await s.evaluate(() => { const b = document.querySelector<HTMLElem
   if (!b || document.activeElement !== b) return null; const cs = getComputedStyle(b);
   return { sichtbar: b.matches(':focus-visible'), umriss: cs.outlineStyle !== 'none' ? parseFloat(cs.outlineWidth) : 0 }; });
 p('Der Tastenfokus steht sichtbar auf dem Herz (Umriss ≥ 2 px)', !!fokus && fokus.sichtbar && fokus.umriss >= 2, JSON.stringify(fokus));
+/* Der Ring liegt GANZ in der Karte. Die Karte schneidet ab (overflow), und
+   ein Herz bei 1 px vom Rand mit 2 px Umriss, 2 px Abstand und Schein
+   darum wurde oben und rechts gekappt (Durchsicht vom 6. Oktober). */
+const ring = await s.evaluate(() => {
+  const b = document.querySelector<HTMLElement>('[data-t595="herz"]');
+  const k = b?.closest<HTMLElement>('.stat-karte');
+  if (!b || !k) return null;
+  const cs = getComputedStyle(b);
+  const umriss = cs.outlineStyle !== 'none' ? parseFloat(cs.outlineWidth) + parseFloat(cs.outlineOffset || '0') : 0;
+  const schein = [...cs.boxShadow.matchAll(/(?:^|,)\s*(?:rgba?\([^)]*\)\s*)?(-?[\d.]+)px (-?[\d.]+)px (-?[\d.]+)px (-?[\d.]+)px(?![^,]*inset)/g)]
+    .map(m => Math.abs(parseFloat(m[1] ?? '0')) + parseFloat(m[4] ?? '0') + parseFloat(m[3] ?? '0') / 2)
+    .reduce((a, x) => Math.max(a, x), 0);
+  const aus = Math.max(umriss, schein);
+  const r = b.getBoundingClientRect(), q = k.getBoundingClientRect();
+  const kc = getComputedStyle(k);
+  const schneidet = kc.overflow !== 'visible' || kc.overflowX !== 'visible' || kc.contain.includes('paint');
+  return { aus: +aus.toFixed(1), schneidet, oben: +(r.top - aus - q.top).toFixed(1), rechts: +(q.right - (r.right + aus)).toFixed(1),
+    links: +(r.left - aus - q.left).toFixed(1) };
+});
+p('… und der Fokusring liegt ganz in der Karte (nicht abgeschnitten)',
+  !!ring && (!ring.schneidet || (ring.oben >= 0 && ring.rechts >= 0 && ring.links >= 0)), JSON.stringify(ring));
 await s.keyboard.press('Enter'); await warte(s, 350);
 const nachEnter = await s.evaluate(HERZ);
 p('Enter merkt', nachEnter?.gedrueckt === 'true', String(nachEnter?.gedrueckt));
@@ -288,6 +344,36 @@ const n7 = await s.evaluate(() => {
 await s.evaluate(() => { (Store as any).metaListeAendern = (window as any).__alt; });
 p('Der Knopf steht wieder auf „nicht gemerkt"', h7?.tag === 'BUTTON' && n7.gedrueckt === 'false', JSON.stringify(n7));
 p('… und ein Hinweis sagt, dass es nicht gemerkt wurde', n7.toast.length > 0, JSON.stringify(n7.toast));
+/* §7b Das Zurück überschreibt keinen anderen Tab. Die Nachbildung: das
+   erste Schreiben rechnet wie das echte im Zwischenspeicher, dann merkt
+   „ein anderer Tab" die Kennzahl „streak" (echt geschrieben), und erst
+   danach scheitert die Transaktion. Ein Zurück mit dem Stand vom Klick
+   (`setMeta(…, vorher)`) würde „streak" wieder löschen. */
+await s.evaluate(() => {
+  const echt = Store.metaListeAendern;
+  (window as any).__alt = echt;
+  let erster = true;
+  (Store as any).metaListeAendern = (k: string, f: (l: any[]) => any[]) => {
+    if (!erster) return echt(k, f);
+    erster = false;
+    const jetzt = Store.getMeta(k, []);
+    Store.setMeta(k, f(Array.isArray(jetzt) ? jetzt : []));
+    return echt(k, (l: any[]) => l.includes('streak') ? l : [...l, 'streak'])
+      .then(() => Promise.reject(new Error('Prüflauf: die Ablage sagt nein')));
+  };
+});
+const h7b = await s.evaluate(HERZ);
+if (h7b?.tag === 'BUTTON') await s.mouse.click(h7b.x, h7b.y);
+await warte(s, 700);
+await s.evaluate(() => { (Store as any).metaListeAendern = (window as any).__alt; });
+await s.evaluate(() => Store.flush());
+const liste7b = await gemerkt(s);
+p('§7b: nach dem Zurück steht „streak" (der andere Tab) noch da, „faellige-fehler" nicht',
+  Array.isArray(liste7b) && liste7b.includes('streak') && !liste7b.includes('faellige-fehler'), JSON.stringify(liste7b));
+await s.evaluate(async () => {
+  const k = Object.keys(Store.cache.meta).find(k => /^lernwelt:.*:kennzahlen$/.test(k));
+  if (k) await Store.metaListeAendern(k, (l: any[]) => l.filter(x => x !== 'streak'));
+});
 await ctx.close();
 
 /* ══ §6b Finger ══════════════════════════════════════════════════════════ */
