@@ -353,6 +353,24 @@
   }
   #ai.open{ transform:translateY(0) }
 
+  /* WAS DAS BLATT ÖFFNET, LIEGT ÜBER IHM (E724). Das Blatt wurde auf 920
+     gehoben, um den Hinweisstreifen (900) zu schlagen — die Ebenen, die es
+     SELBST öffnet, behielten ihre Werte vom Rechner: Menü 600, Grund 590,
+     Overlay 700, Hinweis 900, der Tropfen (E712) 605, der Stapel (E711)
+     899. Alle lagen unter ihrem Öffner, und `Fokus` machte das Blatt
+     darüber `inert`: gemalt oben, durchlässig für den Finger. Ein Tipp ins
+     sichtbare Eingabefeld wählte unsichtbar „Gemma 2 · 2B ~1,6 GB" (gemessen,
+     messungen §93). Jetzt liegen sie darüber — und alle UNTER dem R-Blatt
+     (950), den Einstellungen (940, `.overlay:has(.einst-fenster)` wiegt
+     mehr als die Overlay-Zeile hier, `:where` hält sie leicht) und den
+     Fenstern des Kits (1100, ausgenommen). Nur gehoben, nie gesenkt;
+     am Rechner gilt nichts davon, dort ist #ai eine Spalte. Wächter test599 §6. */
+  body:has(#ai.open) .menu-grund{ z-index:921 }
+  body:has(#ai.open) .menu{ z-index:924 }
+  body:has(#ai.open) .ru-tropfen-buehne{ z-index:925 }
+  body:where(:has(#ai.open)) .overlay:where(:not([data-insel-traeger])){ z-index:926 }
+  body:has(#ai.open) :is(#toast, #ru-toast-stapel){ z-index:927 }
+
   /* Der Griff oben — er sagt ohne Wort, dass man das Blatt wegwischen
      kann. `::before` statt eines Elements: die Zeile im Markup gäbe es
      am Rechner auch, und dort wäre sie sinnlos. */

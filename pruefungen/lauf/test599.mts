@@ -487,11 +487,18 @@ for (const [breit, hoch] of [[390, 844], [360, 800]] as const) {
       const z = (e: Element) => parseInt(getComputedStyle(wurzel(e)).zIndex, 10) || 0;
       const ai = document.getElementById('ai')!;
       const war = ai.inert; ai.inert = false;
+      /* Ein Hinweis trägt `pointer-events:none` — die Trefferprüfung sähe
+         durch ihn hindurch, auch wenn er oben liegt. Für die Probe trägt er
+         Zeigerereignisse; gefragt ist, was GEMALT oben liegt. */
+      const w0 = wurzel(el) as HTMLElement;
+      const pe = [el.style.pointerEvents, w0.style.pointerEvents];
+      el.style.pointerEvents = 'auto'; w0.style.pointerEvents = 'auto';
       const b = el.getBoundingClientRect();
       const x = Math.min(innerWidth - 2, Math.max(1, b.left + b.width / 2));
       const y = Math.min(innerHeight - 2, Math.max(1, b.top + Math.min(b.height / 2, 30)));
       const oben = document.elementFromPoint(x, y);
       ai.inert = war;
+      el.style.pointerEvents = pe[0] ?? ''; w0.style.pointerEvents = pe[1] ?? '';
       const wurzelEl = wurzel(el);
       return { z: z(el), ai: z(ai), getroffen: !!oben && (el.contains(oben) || wurzelEl.contains(oben)),
         oben: oben ? (oben.id || oben.className || oben.tagName).toString().slice(0, 40) : '' };
