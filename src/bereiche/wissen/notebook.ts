@@ -439,7 +439,12 @@ const Notebook = (() => {
      es beim Regal — so, wie die Hefte es seit E406 tun. */
   const setzeFarbe = (id: string, farbe: string, danach?: () => void): void => {
     Store.updateBlock(id, { color: Farben.kennung(farbe) });
-    if (danach) danach(); else renderShelf();
+    if (danach) { danach(); return; }
+    renderShelf();
+    /* UND DIE SEITENLEISTE (E718). E672 versprach „überall, wo der Ordner
+       steht" — gemessen stand die Farbe eines Fachs erst nach dem
+       nächsten fremden Neuzeichnen in der Leiste. */
+    if (typeof App !== 'undefined' && App.zeichneBaum) App.zeichneBaum();
   };
 
   /** Verschlüsseln aus dem Regal. NACH dem erfolgreichen Sperren wird
@@ -1021,13 +1026,9 @@ const Notebook = (() => {
       if (k === 'fach') return fachwahlMenue(anker, id);
       if (k === 'sperren') { void sperrenHier(id); return; }
       if (k === 'entsperren') { void entsperrenHier(id); return; }
-      if (k === 'name') {
-        void (async () => {
-          const name = await UI.frage('Name des Hefts', String(p.text || ''));
-          if (name) { Store.updateBlock(id, { text: name }); renderShelf(); }
-        })();
-        return;
-      }
+      /* EIN Umbenennen (E718): dieselben Regeln wie in der Bibliothek —
+         leer, Steuerzeichen, gleicher Name —, und die Seitenleiste mit. */
+      if (k === 'name') { void App.umbenennen(p, anker, 'Name des Hefts'); return; }
       if (k === 'korb') {
         /* Umkehrbar — der Papierkorb-Reiter holt es mit einem Klick zurück. */
         Store.trashBlock(id);
@@ -1067,13 +1068,7 @@ const Notebook = (() => {
       if (b.dataset['k'] === 'blick')
         return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false,
           (ziel: string) => openFach(ziel));
-      if (b.dataset['k'] === 'name') {
-        void (async () => {
-          const name = await UI.frage('Name des Fachs', String(f.text || ''));
-          if (name) { Store.updateBlock(id, { text: name }); renderShelf(); }
-        })();
-        return;
-      }
+      if (b.dataset['k'] === 'name') { void App.umbenennen(f, anker, 'Name des Fachs'); return; }
       if (b.dataset['k'] === 'korb') {
         /* Die Hefte darin bleiben lebendig und erscheinen als lose Hefte
            an der Wurzel — trashBlock nimmt nur das Fach heraus. */

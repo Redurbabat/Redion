@@ -223,10 +223,13 @@ const Notebook = (() => {
     };
     const setzeFarbe = (id, farbe, danach) => {
         Store.updateBlock(id, { color: Farben.kennung(farbe) });
-        if (danach)
+        if (danach) {
             danach();
-        else
-            renderShelf();
+            return;
+        }
+        renderShelf();
+        if (typeof App !== 'undefined' && App.zeichneBaum)
+            App.zeichneBaum();
     };
     const sperrenHier = async (id) => {
         const p = Store.getBlock(id);
@@ -655,13 +658,7 @@ const Notebook = (() => {
                 return;
             }
             if (k === 'name') {
-                void (async () => {
-                    const name = await UI.frage('Name des Hefts', String(p.text || ''));
-                    if (name) {
-                        Store.updateBlock(id, { text: name });
-                        renderShelf();
-                    }
-                })();
+                void App.umbenennen(p, anker, 'Name des Hefts');
                 return;
             }
             if (k === 'korb') {
@@ -695,13 +692,7 @@ const Notebook = (() => {
             if (b.dataset['k'] === 'blick')
                 return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false, (ziel) => openFach(ziel));
             if (b.dataset['k'] === 'name') {
-                void (async () => {
-                    const name = await UI.frage('Name des Fachs', String(f.text || ''));
-                    if (name) {
-                        Store.updateBlock(id, { text: name });
-                        renderShelf();
-                    }
-                })();
+                void App.umbenennen(f, anker, 'Name des Fachs');
                 return;
             }
             if (b.dataset['k'] === 'korb') {

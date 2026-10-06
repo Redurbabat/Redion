@@ -2669,6 +2669,27 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 }
 #toast.show{transform:translateX(-50%) translateY(0); opacity:1}
 
+/* EINE HANDLUNG IN DER MELDUNG (E718). „„Skizzen" liegt im Papierkorb"
+   trägt „Rückgängig" — der einzige Teil von `#toast`, der nach dem Zeiger
+   greift. 44 px (§37), ein Rahmen, nicht nur Farbe (§38). Ausgeblendet
+   (ohne `.show`) ist er unsichtbar UND aus der Tab-Folge: eine
+   durchsichtige Meldung darf keinen Knopf haben, den man trifft, ohne ihn
+   zu sehen. */
+#toast:has(.toast-aktion){display:flex; align-items:center; gap:12px; padding:5px 5px 5px 18px}
+#toast .toast-aktion{
+  pointer-events:auto; flex:none; min-height:var(--touch-min); min-width:var(--touch-min);
+  padding:0 14px; border:1px solid var(--line); border-radius:6px;
+  background:var(--bg-hover); color:var(--text); font:inherit; font-weight:600; cursor:pointer;
+}
+#toast .toast-aktion:hover{border-color:var(--text)}
+#toast .toast-aktion:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+#toast:not(.show) .toast-aktion{visibility:hidden; pointer-events:none}
+/* Steht ein Fenster offen, legt `Fokus` alles andere still (`inert`) —
+   auch `#toast`. Ein Knopf, den man sieht und der nichts tut, wäre ein
+   toter Knopf: dann steht nur der Satz da, und der Rückweg ist der
+   Papierkorb (E718). */
+#toast[inert] .toast-aktion{display:none}
+
 /* AM TELEFON STEHT UNTEN EINE LEISTE, und was nur meldet, gehört nicht auf
    das, womit man arbeitet. Ein Toast bei bottom:22px legte sich mitten
    darauf — im Bildschirmfoto vom 6. August verdeckten Toast und
@@ -13867,6 +13888,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   overflow:hidden; min-height:39px; min-width:0; overflow-wrap:break-word;
   font-weight:580; letter-spacing:-.005em
 }
+/* DAS EIGENE SYMBOL (E718) vor dem Namen — nur, wenn ein Mensch eines
+   gesetzt hat. Gerade, nicht kursiv (`<i>`), und es schrumpft nie: ein
+   halbes Emoji ist schlimmer als keines. */
+.bib-deckel-symbol{ flex:none; font-style:normal; font-size:13px; line-height:1.5 }
 .bib-deckel-mehr{
   margin-left:auto; flex:none; width:20px; height:20px; display:grid;
   place-items:center; border-radius:6px; color:var(--text-faint);
@@ -26898,7 +26923,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1415, inhalt: '488d5e7371f1a9da', gebaut: '2026-10-05T23:41:46.265Z' };
+const Stand = { fassung: 1420, inhalt: '522401f39c977c79', gebaut: '2026-10-06T05:31:29.609Z' };
 window.Stand = Stand;
 
 </script>
@@ -35064,8 +35089,8 @@ Register.bloecke = (() => {
             kurz: 'Ctrl+D', cmd: ['duplicate', 'duplizieren', 'kopieren'] },
         { id: 'a-moveto', name: 'Verschieben nach …', icon: '➦', zeichen: 'move', gruppe: 'Aktionen', aktion: 'moveto',
             cmd: ['moveto', 'verschieben', 'move'] },
-        { id: 'a-del', name: 'Block löschen', icon: '🗑', zeichen: 'trash', gruppe: 'Aktionen', aktion: 'del',
-            kurz: 'Entf', cmd: ['delete', 'loeschen', 'entfernen'] },
+        { id: 'a-del', name: 'Block in den Papierkorb', icon: '🗑', zeichen: 'trash', gruppe: 'Aktionen', aktion: 'del',
+            kurz: 'Entf', cmd: ['delete', 'loeschen', 'löschen', 'entfernen', 'papierkorb'] },
         { id: 'a-mention', name: 'Person oder Seite erwähnen', icon: '@', gruppe: 'Aktionen', aktion: 'mention',
             kurz: '@', cmd: ['mention', 'erwaehnen', 'erwaehnung'] },
         { id: 'a-date', name: 'Datum einfügen', icon: '📆', zeichen: 'calendar', gruppe: 'Aktionen', aktion: 'date',
@@ -44125,8 +44150,11 @@ const Hinweis = (() => {
         }
         ordnen();
     };
+    const gesagt = (t) => [...t.childNodes]
+        .filter(n => !(n instanceof Element && n.classList.contains('toast-aktion')))
+        .map(n => n.textContent || '').join('');
     const uebernehmen = (t, id, neu) => {
-        const alt = t.textContent || '';
+        const alt = gesagt(t);
         const altId = eigner;
         eigner = id;
         aeltere.filter(a => a.id === id || a.el.textContent === neu).forEach(gehen);
@@ -44263,7 +44291,30 @@ const Hinweis = (() => {
             z.el.style.removeProperty('opacity');
         }
     }, { capture: true });
-    const toast = (text, dauer) => {
+    const knopfAn = (t, aktion) => {
+        const k = document.createElement('button');
+        k.type = 'button';
+        k.className = 'toast-aktion';
+        k.textContent = String(aktion.text || 'Rückgängig');
+        let getan = false;
+        k.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (getan || !t.classList.contains('show'))
+                return;
+            getan = true;
+            clearTimeout(toastTimer);
+            t.classList.remove('show');
+            k.remove();
+            try {
+                aktion.tun();
+            }
+            catch (f) {
+                console.error('[Hinweis] Die Handlung der Meldung schlug fehl', f);
+            }
+        });
+        t.append(k);
+    };
+    const toast = (text, dauer, opt) => {
         const t = document.getElementById('toast');
         if (!t) {
             console.info('[Hinweis]', String(text));
@@ -44272,6 +44323,8 @@ const Hinweis = (() => {
         const id = ++zaehler;
         uebernehmen(t, id, String(text ?? ''));
         t.textContent = String(text ?? '');
+        if (opt?.aktion && typeof opt.aktion.tun === 'function')
+            knopfAn(t, opt.aktion);
         t.classList.add('show');
         clearTimeout(toastTimer);
         toastBis = Date.now() + (dauer || 2600);
@@ -44285,7 +44338,7 @@ const Hinweis = (() => {
                 toastBis = Date.now() + (dauer || 2600);
                 toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
             },
-            get textContent() { return t.textContent || ''; },
+            get textContent() { return gesagt(t); },
             remove() {
                 aeltere.filter(a => a.id === id).forEach(gehen);
                 if (eigner !== id && eigner !== 0)
@@ -85220,9 +85273,7 @@ const Blocks = (() => {
             return;
         }
         if (was === 'del') {
-            Store.trashBlock(b.id);
-            Store.purgeBlock(b.id);
-            App.zeichneSeite();
+            App.inPapierkorb(b);
             return;
         }
         if (was === 'komm') {
@@ -85309,7 +85360,7 @@ const Blocks = (() => {
             '<button data-a="ref"><span class="mi">((</span>Blockverweis kopieren</button>' +
             '<button data-a="karte"><span class="mi">🎴</span>Zur Karteikarte machen</button>' +
             '<hr>' +
-            '<button data-a="del"><span class="mi">🗑</span>Löschen<span class="ms">Del</span></button>';
+            '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
         const menu = UI.menu(html, r.right + 6, r.top);
         menu.addEventListener('click', (e) => {
             const btn = elVon(e)?.closest('button[data-a]');
@@ -85394,12 +85445,12 @@ const Blocks = (() => {
                 Ablage.kopiereJetzt(b.text || '', 'Text kopiert');
             }
             if (a === 'cut') {
-                Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
-                    if (!ging)
+                Ablage.kopiere(b.text || '').then(ging => {
+                    if (!ging) {
+                        UI.toast('Der Browser lässt das Kopieren nicht zu — der Block bleibt, wo er ist.');
                         return;
-                    Store.trashBlock(b.id);
-                    Store.purgeBlock(b.id);
-                    App.zeichneSeite();
+                    }
+                    App.inPapierkorb(b, { satz: 'Ausgeschnitten — der Block liegt im Papierkorb' });
                 });
             }
             if (a === 'komm')
@@ -85432,9 +85483,7 @@ const Blocks = (() => {
             if (a === 'ai')
                 KI.blockAktion('ai-edit', b);
             if (a === 'del') {
-                Store.trashBlock(b.id);
-                Store.purgeBlock(b.id);
-                App.zeichneSeite();
+                App.inPapierkorb(b);
             }
         });
     };
@@ -90636,11 +90685,8 @@ const Datenbank = (() => {
                 App.oeffne(row.id);
             }
             if (a === 'rename') {
-                const n = await UI.frage('Neuer Titel', row.text || '');
-                if (n !== null) {
-                    Store.updateBlock(row.id, { text: n });
+                if (await App.umbenennen(row, anker, 'Neuer Titel'))
                     App.zeichneSeite();
-                }
             }
             if (a === 'dup') {
                 const kopie = Store.addRow(coll.id, JSON.parse(JSON.stringify(row.props || {})));
@@ -92882,7 +92928,7 @@ const Datenbank = (() => {
                     `<span class="ms">${Vorrat.aktiv(coll.id) ? 'an' : 'aus'}</span></button>` : '') +
             (typeof Feldrechte !== 'undefined'
                 ? '<button data-a="feldrechte"><span class="mi">🔒</span>Rechte je Spalte</button>' : '') +
-            '<hr><button data-a="del"><span class="mi">🗑</span>Datenbank löschen</button>', r.left - 120, r.bottom + 4);
+            '<hr><button data-a="del"><span class="mi">🗑</span>In den Papierkorb</button>', r.left - 120, r.bottom + 4);
         m.addEventListener('click', e => {
             const b = elVon(e)?.closest('button[data-a]');
             if (!b)
@@ -93095,13 +93141,8 @@ const Datenbank = (() => {
                 csvImport(coll);
             if (a === 'ai')
                 KI.datenbankAuswerten(coll, view);
-            if (a === 'del') {
-                if (!confirm(`Datenbank „${coll.name}" mit allen Einträgen löschen?`))
-                    return;
-                Store.trashBlock(block.id);
-                Store.purgeBlock(block.id);
-                App.zeichneSeite();
-            }
+            if (a === 'del')
+                App.inPapierkorb(block);
         });
     };
     const formelEinruecken = (src) => {
@@ -98237,6 +98278,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         inp.focus();
     };
     const verschiebe = (p, zielId, stillerHinweis = false) => {
+        if (zielId && (String(zielId) === String(p.id) || istUnter(String(zielId), String(p.id)))) {
+            UI.toast('Ein Ordner kann nicht in sich selbst liegen');
+            return false;
+        }
         const alt = Store.getBlock(p.parentId);
         if (alt) {
             alt.content = alt.content.filter((x) => x !== p.id);
@@ -98253,6 +98298,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         App.zeichneSeite();
         if (!stillerHinweis)
             UI.toast('Verschoben');
+        return true;
     };
     const wikiUmwandeln = (p) => {
         Store.updateBlock(p.id, { wiki: !p.wiki, icon: p.wiki ? (p.icon || '📄') : '📚' });
@@ -101001,7 +101047,14 @@ const Mehrfach = (() => {
             if (e.key === 'Backspace' || e.key === 'Delete') {
                 e.preventDefault();
                 Verlauf.merke(true);
-                ids().forEach(id => { Store.trashBlock(id); Store.purgeBlock(id); });
+                const liste = ids();
+                if (liste.length === 1)
+                    App.inPapierkorb(Store.getBlock(liste[0]));
+                else {
+                    const n = liste.filter(id => App.inPapierkorb(Store.getBlock(id), { ruhig: true })).length;
+                    if (n)
+                        UI.toast(n + (n === 1 ? ' Block liegt' : ' Blöcke liegen') + ' im Papierkorb');
+                }
                 leeren();
                 App.zeichneSeite();
                 return;
@@ -130939,11 +130992,25 @@ const Bibliothek = (() => {
         const pageId = collectionPageId(collectionId);
         return !!pageId && permitted(action, pageId);
     };
+    const vorfahrWeg = (b) => {
+        let cur = b && b.parentTable !== 'collection' && b.parentId ? Store.cache.blocks[b.parentId] : null;
+        for (let n = 0; cur && n < 50; n++) {
+            if (cur.alive === false)
+                return true;
+            cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+        }
+        return false;
+    };
     const alleSeiten = () => Object.values(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
         (b.parentTable === 'collection'
             ? collectionPermitted('lesen', b.parentId)
-            : permitted('lesen', b.id)));
+            : permitted('lesen', b.id)) && !vorfahrWeg(b));
+    const VORGABE_SYMBOLE = new Set(['', '📄', '📁', '🗂', '🗂️']);
+    const eigenesSymbol = (p) => {
+        const s = String(p?.icon ?? '').trim();
+        return VORGABE_SYMBOLE.has(s) ? '' : [...s].slice(0, 4).join('');
+    };
     const quelleVon = (p) => {
         if (p.parentTable === 'collection') {
             const c = Store.cache.collections[p.parentId];
@@ -131602,7 +131669,9 @@ const Bibliothek = (() => {
             `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
             (p.favorite ? '\u2605' : '\u2606') + '</i>' +
             '</span>' +
-            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
+            '<span class="bib-deckel-name">' +
+            (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
+            '<b>' + esc(p.text || 'Ohne Titel') + '</b>' +
             '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
             '</button>';
@@ -131788,7 +131857,7 @@ const Bibliothek = (() => {
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
-                zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
+                zeichen: eigenesSymbol(p) || (kinder.length || p.heftArt === 'fach' ? 'pages' : 'page'),
                 ...(farbe ? { farbe } : {}),
                 ...(kinder.length ? { kinder } : {})
             };
@@ -132103,20 +132172,21 @@ const Bibliothek = (() => {
                         return;
                     }
                     if (a === 'stern') {
-                        Store.updateBlock(p.id, { favorite: !p.favorite });
+                        App.favoritKippen(p);
+                        App.zeichneSeite();
+                        return;
                     }
                     if (a === 'farbe') {
-                        Notebook.farbMenue(k, p.id, () => App.zeichneSeite());
+                        Notebook.farbMenue(k, p.id, () => App.nachAenderung(Store.getBlock(p.id)));
                         return;
                     }
                     if (a === 'umbenennen') {
-                        App.oeffne(p.id);
-                        setTimeout(() => document.getElementById('title')?.focus(), 80);
+                        void App.umbenennen(p, k);
                         return;
                     }
                     if (a === 'papierkorb') {
-                        Store.updateBlock(p.id, { alive: false });
-                        UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
+                        App.inPapierkorb(p);
+                        return;
                     }
                     App.zeichneSeite();
                 });
@@ -137838,10 +137908,13 @@ const Notebook = (() => {
     };
     const setzeFarbe = (id, farbe, danach) => {
         Store.updateBlock(id, { color: Farben.kennung(farbe) });
-        if (danach)
+        if (danach) {
             danach();
-        else
-            renderShelf();
+            return;
+        }
+        renderShelf();
+        if (typeof App !== 'undefined' && App.zeichneBaum)
+            App.zeichneBaum();
     };
     const sperrenHier = async (id) => {
         const p = Store.getBlock(id);
@@ -138270,13 +138343,7 @@ const Notebook = (() => {
                 return;
             }
             if (k === 'name') {
-                void (async () => {
-                    const name = await UI.frage('Name des Hefts', String(p.text || ''));
-                    if (name) {
-                        Store.updateBlock(id, { text: name });
-                        renderShelf();
-                    }
-                })();
+                void App.umbenennen(p, anker, 'Name des Hefts');
                 return;
             }
             if (k === 'korb') {
@@ -138310,13 +138377,7 @@ const Notebook = (() => {
             if (b.dataset['k'] === 'blick')
                 return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false, (ziel) => openFach(ziel));
             if (b.dataset['k'] === 'name') {
-                void (async () => {
-                    const name = await UI.frage('Name des Fachs', String(f.text || ''));
-                    if (name) {
-                        Store.updateBlock(id, { text: name });
-                        renderShelf();
-                    }
-                })();
+                void App.umbenennen(f, anker, 'Name des Fachs');
                 return;
             }
             if (b.dataset['k'] === 'korb') {
@@ -147631,6 +147692,171 @@ const App = (() => {
         zeichneCrumbs();
         return neu;
     };
+    const nachAenderung = (p) => {
+        zeichneBaum();
+        const aufDerSeite = !!p && !!seiteId &&
+            Store.pathOf(String(p.id)).some((x) => x && x.id === seiteId);
+        if (sonder || !p || aufDerSeite)
+            zeichneSeite();
+        else
+            zeichneCrumbs();
+    };
+    const nameSaeubern = (roh) => {
+        const s = String(roh ?? '').normalize('NFC')
+            .replace(/[\r\n\t\u2028\u2029\u0085]/g, ' ')
+            .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const zeichen = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+            ? [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(s)].map(g => g.segment)
+            : [...s];
+        return zeichen.slice(0, 200).join('').trim();
+    };
+    const darfBearbeiten = (id) => typeof Konten === 'undefined' || typeof Konten.darf !== 'function' || !!Konten.darf('bearbeiten', id);
+    const gleichnamig = (p, name) => {
+        const klein = name.toLocaleLowerCase('de');
+        return Object.values(Store.cache.blocks).find(b => b && b.id !== p.id && b.type === 'page' && b.alive !== false &&
+            (b.parentId ?? null) === (p.parentId ?? null) &&
+            (b.parentTable === 'collection') === (p.parentTable === 'collection') &&
+            String(b.text || '').trim().toLocaleLowerCase('de') === klein) || null;
+    };
+    const umbenennen = async (p, anker, titel = 'Neuer Name') => {
+        const id = String(p?.id || '');
+        const jetzt = id ? Store.getBlock(id) : null;
+        if (!jetzt)
+            return false;
+        if (!darfBearbeiten(id)) {
+            UI.toast('Umbenennen geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            if (anker instanceof HTMLElement && anker.isConnected)
+                anker.focus({ preventScroll: true });
+            return false;
+        }
+        const zurueck = () => {
+            let ziel = anker instanceof Element ? anker : null;
+            if (ziel && !ziel.isConnected && ziel.classList[0]) {
+                const k = '.' + CSS.escape(ziel.classList[0]);
+                const i = CSS.escape(id);
+                ziel = document.querySelector(`${k}[data-id="${i}"], ${k}[data-baum-id="${i}"], ` +
+                    `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"]`);
+            }
+            if (ziel instanceof HTMLElement && ziel.isConnected)
+                ziel.focus({ preventScroll: true });
+        };
+        const alt = String(jetzt.text || '');
+        let vorgabe = alt;
+        let leerGefragt = false;
+        for (let runde = 0; runde < 6; runde++) {
+            const antwort = await UI.frage(titel, vorgabe);
+            if (antwort === null || antwort === undefined) {
+                zurueck();
+                return false;
+            }
+            const name = nameSaeubern(antwort);
+            if (!name) {
+                UI.toast('Ein Name braucht mindestens ein Zeichen — „' + (alt || 'Ohne Titel') + '" bleibt.');
+                if (leerGefragt) {
+                    zurueck();
+                    return false;
+                }
+                leerGefragt = true;
+                vorgabe = alt;
+                continue;
+            }
+            if (name === alt) {
+                zurueck();
+                return false;
+            }
+            const doppelt = gleichnamig(jetzt, name);
+            if (doppelt) {
+                const wahl = await Dialog.wahl({
+                    titel: 'Den Namen gibt es hier schon',
+                    text: 'Im selben Ordner gibt es schon „' + String(doppelt.text || '').trim() + '".',
+                    knoepfe: [
+                        { id: 'anders', text: 'Anderen Namen wählen' },
+                        { id: 'trotzdem', text: 'Trotzdem so nennen', hinweis: 'Zwei Einträge heissen dann gleich' }
+                    ]
+                });
+                if (wahl === 'anders') {
+                    vorgabe = name;
+                    continue;
+                }
+                if (wahl !== 'trotzdem') {
+                    zurueck();
+                    return false;
+                }
+            }
+            Store.updateBlock(id, { text: name });
+            nachAenderung(Store.getBlock(id));
+            zurueck();
+            return true;
+        }
+        zurueck();
+        return false;
+    };
+    const unterseitenZahl = (id) => {
+        let n = 0;
+        const gesehen = new Set();
+        const gehe = (x) => {
+            if (gesehen.has(x))
+                return;
+            gesehen.add(x);
+            for (const k of Store.childrenOf(x)) {
+                if (!k || k.alive === false)
+                    continue;
+                if (k.type === 'page')
+                    n++;
+                gehe(String(k.id));
+            }
+        };
+        gehe(id);
+        return n;
+    };
+    const inPapierkorb = (p, opt = {}) => {
+        const id = String(p?.id || '');
+        const b = id ? Store.getBlock(id) : null;
+        if (!b || b.alive === false)
+            return false;
+        if (!darfBearbeiten(id)) {
+            if (!opt.ruhig)
+                UI.toast('In den Papierkorb geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            return false;
+        }
+        const eltern = b.parentId ? Store.getBlock(b.parentId) : null;
+        const stelle = eltern && Array.isArray(eltern.content) ? eltern.content.indexOf(id) : -1;
+        const istSeite = b.type === 'page' || b.type === 'database';
+        const sammlung = b.type === 'database' && b.collectionId ? Store.getCollection(b.collectionId) : null;
+        const name = String(b.text || '').trim() || String(sammlung?.name || '').trim() ||
+            (b.type === 'page' ? 'Ohne Titel' : '');
+        const unter = b.type === 'page' ? unterseitenZahl(id) : 0;
+        Store.trashBlock(id);
+        if (id === seiteId && !sonder) {
+            const e2 = Store.rootPages()[0];
+            oeffne(e2 ? e2.id : null);
+        }
+        else
+            nachAenderung(b);
+        if (opt.ruhig)
+            return true;
+        const satz = opt.satz ? opt.satz
+            : !istSeite || !name ? 'Block liegt im Papierkorb'
+                : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
+                    : '„' + name + '" liegt im Papierkorb';
+        UI.toast(satz, 6000, { aktion: { text: 'Rückgängig', tun: () => {
+                    const jetzt = Store.getBlock(id);
+                    if (!jetzt || jetzt.alive !== false)
+                        return;
+                    Store.restoreBlock(id);
+                    const e = jetzt.parentId ? Store.getBlock(jetzt.parentId) : null;
+                    if (e && Array.isArray(e.content) && stelle >= 0) {
+                        const ohne = e.content.filter((x) => x !== id);
+                        ohne.splice(Math.min(stelle, ohne.length), 0, id);
+                        Store.updateBlock(e.id, { content: ohne });
+                    }
+                    nachAenderung(Store.getBlock(id));
+                    UI.toast(istSeite && name ? '„' + name + '" ist zurück' : 'Block ist zurück');
+                } } });
+        return true;
+    };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();
         const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -147852,13 +148078,7 @@ const App = (() => {
                 volleBreite(p);
             }
             if (a === 'rename') {
-                const n = await UI.frage('Neuer Titel', p.text);
-                if (n !== null) {
-                    Store.updateBlock(p.id, { text: n });
-                    zeichneBaum();
-                    if (p.id === seiteId)
-                        zeichneSeite();
-                }
+                await umbenennen(p, anker, 'Neuer Titel');
             }
             if (a === 'dup') {
                 dupliziereSeite(p.id, p.parentId);
@@ -147909,15 +148129,8 @@ const App = (() => {
             }
             if (a === 'papier')
                 papierkorb();
-            if (a === 'del') {
-                Store.trashBlock(p.id);
-                zeichneBaum();
-                if (p.id === seiteId) {
-                    const e2 = Store.rootPages()[0];
-                    oeffne(e2 ? e2.id : null);
-                }
-                UI.toast('In den Papierkorb verschoben');
-            }
+            if (a === 'del')
+                inPapierkorb(p);
         });
     };
     const dupliziereSeite = (id, zielEltern) => {
@@ -150540,6 +150753,7 @@ const App = (() => {
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
         vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
+        umbenennen, nameSaeubern, inPapierkorb, nachAenderung, favoritKippen,
         kuerzlich, kommendeTermine,
         schauplatz,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,

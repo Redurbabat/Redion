@@ -3901,11 +3901,8 @@ const Datenbank = (() => {
                 App.oeffne(row.id);
             }
             if (a === 'rename') {
-                const n = await UI.frage('Neuer Titel', row.text || '');
-                if (n !== null) {
-                    Store.updateBlock(row.id, { text: n });
+                if (await App.umbenennen(row, anker, 'Neuer Titel'))
                     App.zeichneSeite();
-                }
             }
             if (a === 'dup') {
                 const kopie = Store.addRow(coll.id, JSON.parse(JSON.stringify(row.props || {})));
@@ -6147,7 +6144,7 @@ const Datenbank = (() => {
                     `<span class="ms">${Vorrat.aktiv(coll.id) ? 'an' : 'aus'}</span></button>` : '') +
             (typeof Feldrechte !== 'undefined'
                 ? '<button data-a="feldrechte"><span class="mi">🔒</span>Rechte je Spalte</button>' : '') +
-            '<hr><button data-a="del"><span class="mi">🗑</span>Datenbank löschen</button>', r.left - 120, r.bottom + 4);
+            '<hr><button data-a="del"><span class="mi">🗑</span>In den Papierkorb</button>', r.left - 120, r.bottom + 4);
         m.addEventListener('click', e => {
             const b = elVon(e)?.closest('button[data-a]');
             if (!b)
@@ -6360,13 +6357,8 @@ const Datenbank = (() => {
                 csvImport(coll);
             if (a === 'ai')
                 KI.datenbankAuswerten(coll, view);
-            if (a === 'del') {
-                if (!confirm(`Datenbank „${coll.name}" mit allen Einträgen löschen?`))
-                    return;
-                Store.trashBlock(block.id);
-                Store.purgeBlock(block.id);
-                App.zeichneSeite();
-            }
+            if (a === 'del')
+                App.inPapierkorb(block);
         });
     };
     const formelEinruecken = (src) => {

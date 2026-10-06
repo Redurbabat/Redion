@@ -70,6 +70,13 @@
  *      der Bibliothek, ein Block, eine Marke im PDF — gehoben wird dort nach
  *      400 bis 500 ms) — der Stapel nimmt ihm den Zug nicht weg, und die
  *      Meldung bleibt stehen. Ein schnelles Schnippen nimmt sie weiter weg.
+ *   §15 EINE MELDUNG MIT EINER HANDLUNG (E718). „„X" liegt im Papierkorb"
+ *      trägt einen echten Knopf „Rückgängig" — nur die NEUESTE, in `#toast`,
+ *      44 px hoch, greifbar, benannt, mit der Tastatur erreichbar. Rückt sie
+ *      in den Stapel, geht sie ohne Knopf (die Karten bleiben zeigerlos,
+ *      der Papierkorb ist dort der Rückweg) und ohne das Wort „Rückgängig"
+ *      im Text; die EINE Live-Region bleibt. Ein Druck tut es genau einmal.
+ *      Ausgeblendet ist der Knopf weder zu sehen noch mit Tab zu erreichen.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Gegen den Stand b3cf1933 (vor E711) fällt sie in §1–§10: es gibt weder die
@@ -79,7 +86,8 @@
  * die Reparatur der Durchsicht — siehe „test588 (rot): Vierte Durchsicht".
  * §13 fiel gegen die Reparatur der vierten Durchsicht — siehe „test588 (rot):
  * Fünfte Durchsicht". §14 fiel gegen deren Endstand (f73a2938) — siehe
- * „test588 (rot): Sechste Durchsicht".
+ * „test588 (rot): Sechste Durchsicht". §15 fiel gegen 1bfaca53 (vor E718) —
+ * siehe „test594 (rot)".
  *
  *   node pruefungen/lauf/test588.mts
  * ==========================================================================*/
@@ -1083,6 +1091,71 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
   p('… ein schnelles Schnippen nimmt sie aber weiter weg', !!karte &&
     await h.pc.evaluate(`document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)').length === 0`));
   await h.zu();
+}
+
+/* ==========================================================================
+ * §15 · EINE MELDUNG MIT EINER HANDLUNG (E718)
+ * ========================================================================*/
+{
+  console.log('\n§15 Eine Meldung mit „Rückgängig" auf dem Stapel');
+  const a15 = await aufmachen({ dunkel: true });
+  const pc15 = a15.pc;
+  await pc15.evaluate(`(() => {
+    window.__r588 = 0;
+    UI.toast('Eins gespeichert');
+    UI.toast('„Skizzen" liegt im Papierkorb', 6000, { aktion: { text: 'Rückgängig', tun: () => { window.__r588++; } } });
+  })()`);
+  await pc15.waitForTimeout(500);
+  const m15 = await pc15.evaluate(`(() => {
+    const t = document.getElementById('toast');
+    const k = [...t.querySelectorAll('button.toast-aktion')];
+    const r = k[0] ? k[0].getBoundingClientRect() : null;
+    const alt = [...document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)')];
+    return { knoepfe: k.length, name: k[0] ? (k[0].textContent || '').trim() : null,
+             h: r ? Math.round(r.height) : 0, zeiger: k[0] ? getComputedStyle(k[0]).pointerEvents : '',
+             tab: k[0] ? k[0].tabIndex : -9, live: t.getAttribute('aria-live'),
+             altKnoepfe: alt.reduce((n, x) => n + x.querySelectorAll('button').length, 0),
+             alt: alt.map(x => x.textContent) };
+  })()`) as any;
+  console.log('    ' + JSON.stringify(m15));
+  p('Die neueste trägt EINEN Knopf „Rückgängig", 44 px, greifbar, mit Tab erreichbar',
+    m15.knoepfe === 1 && m15.name === 'Rückgängig' && m15.h >= 44 && m15.zeiger === 'auto' && m15.tab >= 0, JSON.stringify(m15));
+  p('… #toast bleibt die EINE Live-Region, die Karte darunter hat keinen Knopf',
+    m15.live === 'polite' && m15.altKnoepfe === 0 && JSON.stringify(m15.alt) === JSON.stringify(['Eins gespeichert']), JSON.stringify(m15));
+  await pc15.click('#toast button.toast-aktion', { timeout: 3000 }).catch(() => {});
+  await pc15.waitForTimeout(300);
+  await pc15.click('#toast button.toast-aktion', { timeout: 800, force: true }).catch(() => {});
+  await pc15.waitForTimeout(300);
+  const r15 = await pc15.evaluate(`({ n: window.__r588, show: document.getElementById('toast').classList.contains('show'),
+    text: document.getElementById('toast').textContent })`) as any;
+  p('Ein Druck tut es genau einmal, und die Meldung geht', r15.n === 1, JSON.stringify(r15));
+  await pc15.evaluate(`(() => {
+    UI.toast('„Notizen" liegt im Papierkorb', 6000, { aktion: { text: 'Rückgängig', tun: () => { window.__r588++; } } });
+    UI.toast('Drei kopiert');
+  })()`);
+  await pc15.waitForTimeout(500);
+  const s15 = await pc15.evaluate(`(() => {
+    const alt = [...document.querySelectorAll('#ru-toast-stapel .ru-toast-alt:not(.geht)')];
+    return { alt: alt.map(x => x.textContent), altKnoepfe: alt.reduce((n, x) => n + x.querySelectorAll('button').length, 0),
+             neu: document.getElementById('toast').textContent,
+             knoepfe: document.querySelectorAll('#toast button.toast-aktion').length };
+  })()`) as any;
+  console.log('    ' + JSON.stringify(s15));
+  p('Rückt sie in den Stapel, geht sie ohne Knopf und ohne das Wort „Rückgängig"',
+    s15.alt[0] === '„Notizen" liegt im Papierkorb' && s15.altKnoepfe === 0, JSON.stringify(s15));
+  p('… und die neue Meldung hat keinen (sie hat keine Handlung)', s15.neu === 'Drei kopiert' && s15.knoepfe === 0,
+    JSON.stringify(s15));
+  await pc15.evaluate(`UI.toast('„Alt" liegt im Papierkorb', 300, { aktion: { text: 'Rückgängig', tun: () => {} } })`);
+  await pc15.waitForTimeout(900);
+  const v15 = await pc15.evaluate(`(() => {
+    const k = document.querySelector('#toast button.toast-aktion');
+    if (!k) return { da: false };
+    k.focus();
+    return { da: true, sicht: getComputedStyle(k).visibility, fokus: document.activeElement === k };
+  })()`) as any;
+  p('Ausgeblendet ist der Knopf weder sichtbar noch fokussierbar', !v15.da || (v15.sicht === 'hidden' && !v15.fokus),
+    JSON.stringify(v15));
+  await a15.zu();
 }
 
 p('Keine Ausnahme im Browser', fehler.length === 0, fehler.slice(0, 3).join(' · '));
