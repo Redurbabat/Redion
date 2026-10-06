@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-694 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+696 Entscheidungen, E1 bis E723 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -757,6 +757,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E713** — Die Zeitpille und die Balkenkarte (Redur: „Schau mal das auch an ich will das auch haben", Video „LIQUID GLASS", Szenen 02 und 06): läuft der Zeitmesser bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste; ein Tipp lässt die Karte aus ihr wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als stille Kopie), Escape und ✕ ziehen sie zurück; die Seite ist der Titel, der Timer hat einen echten Fortschritt, Pause ↔ Weiter tauscht im selben Knopf; am Telefon deckend. Der Lernverlauf wird eine Karte: Balken wachsen einmal, die Summe zählt hoch, ein Tag lässt sich wählen (Material aus E706, Hinweis, Pfeile) — `test590`
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
+* **E722** — Fläche: eine Leiste je Arbeitskontext (Redur, PDF Seite 18 unten: „es sollte nur die ganez unter bleiben"): die Leiste eines Whiteboards im Kasten wird herausgenommen und hängt im EINEN Schacht unten, sobald man hineintippt; `defaultPrevented` in Taste und Rad der Fläche, die Hand stiehlt keinen Strich, „Schritt vorwärts" auf der Fläche, der Tabstopp der `GfxToolbar` entsteht auch losgelöst
+* **E723** — Die Tabelle auf der Fläche (Redur, PDF Seite 18 oben: „es ist hinterden und kann nicht gut lesen"): im Kasten kein Ausbruch aus E409 (`--db-aus:0px`), die Griffe im Kasten, „Neu" beim Überfahren mit den Marken aus E705, `--db-grund` für die angeheftete Spalte, die Auswahlleiste über der Flächenleiste
 
 ---
 
@@ -33597,6 +33599,13 @@ E409 — Die Ansichten bekommen die Breite, die da ist
 ================================================================================
 5. September 2026
 
+> **Ergänzt durch E723 (6. Oktober 2026) — nicht im Kasten der Fläche.** Der
+> Ausbruch gilt für jede `.db` ab 1100 px und rechnet mit dem Rand von
+> `#page`; im Kasten der Fläche ragte die Tabelle deshalb 51 px je Seite
+> hinaus (57 im Blockkasten). Dort steht jetzt `--db-aus:0px`, und die
+> Tabelle rollt im Kasten; in Seiten- und Redion-Ansicht gilt dieser Eintrag
+> unverändert (`test404` §9).
+
 Redur: „arbeite an die ansicht funktionen". Also erst hinsehen (§55): ein
 Bildziel je Ansichtsart, alle dreizehn mit DERSELBEN Datenbank — neun Zeilen
 mit Status, Auswahl, Mehrfachauswahl, Anfang und Ende, Kosten, Fortschritt,
@@ -56291,6 +56300,13 @@ Bibliothek kommt nicht unbemerkt zurück, und die Chronik bleibt draussen.
 Edgeless-Leiste: „ich will so was haben wie die affine schau mal es nach" —
 und einen Satz später: „integriere alles zusammen"
 
+> **Ergänzt durch E722 (6. Oktober 2026) — eine Leiste je Arbeitskontext,
+> und ein Tabstopp auch losgelöst.** Auf der Fläche hängt die Leiste eines
+> Whiteboards im Kasten nicht mehr in ihm, sondern im einen Schacht unten
+> (dieselbe Instanz, herausgenommen, nicht versteckt). `tabstoppSetzen`
+> setzt den Halt jetzt auch, wenn die Wurzel noch nicht im Dokument hängt;
+> vorher hatte keine Leiste einen (`test572` §13).
+
 **Was war.** Vier Flächen, vier Werkzeugleisten, vier Klassenpräfixe
 (`.wb-`, `.gk-`, `.sp-`, `.blatt-`), vier Klick-Handler — und im Kern kein
 Werkzeugbegriff (gemessen, `doku/karte/thema-werkzeugleisten.md`). Der
@@ -56377,6 +56393,12 @@ liess was die ander 2 bereicht machen bi affine" — und, nachdem gelesen war:
 „ich will die 2 von affine 1:1 haben auch alles komplett wie es aussehn also
 wirklich komplett so und noch eine 3 für die aktuelle Redion damit wir es
 auch haben verstanden die 3 ist von uns erfunden"
+
+> **Ergänzt durch E722 und E723 (6. Oktober 2026) — der Kasten ist der Rand,
+> auch für Leisten und Tabellen.** Die Fläche hat EINEN Schacht für die
+> Werkzeugleiste (`.pg-flaeche > .gfx-tb-sockel`), eine Taste und ein Rad
+> wirken einmal (`defaultPrevented`), und eine Datenbank im Kasten bricht
+> nicht mehr aus (`--db-aus:0px`, `test404` §9).
 
 **Zuerst gelesen, dann gebaut.** Redurs erster Satz enthielt eine
 Arbeitsanweisung — „aber zuerst liess was die anderen 2 Bereiche machen bei
@@ -56679,6 +56701,11 @@ aber auch nicht nachträglich entfernt (§43: nichts löschen ohne Rückfrage).
 **Datum:** 26. September 2026 · **Wächter:** `test575` (40 Zusagen) ·
 Redur: **„weiter"** — nach E692, und in L219 stand, was der Fläche seit E690
 fehlte.
+
+> **Ergänzt durch E722 (6. Oktober 2026) — Zurück UND Vor.** Die Leiste der
+> Fläche hat „Schritt vorwärts", und beide sind gesperrt, wenn es nichts
+> gibt. Ein Zug, der in einem eingebetteten Whiteboard beginnt, gehört dem
+> Whiteboard — die Hand der Fläche schiebt dort nicht mehr (`test598` §6).
 
 **Die Reihenfolge war die Entscheidung.** Die Fläche brauchte einen
 Formenzeichner, und das Whiteboard hatte längst einen: hundertzwanzig
@@ -61332,3 +61359,249 @@ ist sie alles, was das `.js` von seiner Quelle weiss. (5) Die Verweise auf
 E715 stehen jetzt auch in E28, E389, E613 und E688; README sagte noch
 „Ein Prüflauf ist rot (L146) … 2300 KB" — L146 ist seit E613
 geschlossen. Messung: `messungen.md` §86, Durchsicht.
+
+## E722 — Fläche: eine Leiste je Arbeitskontext — das Whiteboard im Kasten bringt seine Werkzeuge in die eine Leiste unten, und eine Taste wirkt einmal
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (PDF vom
+29. September, Seite 5 Punkt 7 und Seite 18 unten; Erlaubnis vom
+3. Oktober, die obere Leiste wegzunehmen) · **ergänzt** E689 (die eine
+`GfxToolbar`), E690 (die Fläche), E693 (die Tinte unter den Kästen) und
+E682 („behandelt ist behandelt") · **Wächter:** `test598` §1–§9 (neu),
+`test572` §13, `test575` §6b (erweitert) · **Zweig**
+`claude/flaeche-eine-leiste` · **Messung:** `messungen.md` §92.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+PDF 29.09., S. 18 unten (rot markiert um die untere Leiste)
+                       „Hier wieder die zeichnen menüs ist doppelt , es
+                       sollte nur die ganez unter bleiben , seihet rote
+                       markierung ,"
+PDF 29.09., S. 5 #7    „Doppelte UI verstecken" reicht nicht — „technisch
+                       auf dieselbe Komponente verweisen"
+03.10.                 die doppelte Zeichenleiste (die obere im
+                       eingebetteten Bereich) darf weg, wenn jede Funktion
+                       an einer klaren Stelle erreichbar bleibt (§43)
+```
+
+Er hat die Fragen aus Schritt 0 nicht beantwortet; es gelten die Vorgaben
+des Plans: automatisch wechseln (Ring und Name), das Innerste gewinnt das
+Rad, zwei Zoomstände und nur der gewählte sichtbar, Gedankenkarte und
+Planfläche behalten ihre Leisten (L243), ein sichtbares Wort in der Leiste.
+
+**Was war.** Die Fläche (E690, E693) zeichnet die Blöcke einer Seite
+unverändert in ihren Kasten. Ein Whiteboard bringt dort mit, was es auf der
+Seite hat: eine eigene `GfxToolbar` (zwölf Werkzeuge, Farbe, −/+, Massstab,
+Ins Bild, Zurück, Vor, Mehr), einen eigenen Verlauf, einen eigenen
+Ausschnitt. Niemand entschied, welche Leiste die des Bildschirms ist — und
+der Wähler `.pg-flaeche .gfx-tb-sockel` (Leerschlag statt `>`) machte die
+innere zu einer schwebenden Kapsel über ihrer eigenen Zeichenfläche.
+
+**Gemessen, bevor gebaut wurde** (gegen `1bfaca53`, `messungen.md` §92):
+drei Leisten bei zwei Whiteboards (eines im Seitenkasten, eines im eigenen
+Kasten, E691); drei gewählte Werkzeuge und drei Zoomzahlen sichtbar; die
+innere Leiste oben 497 px über einer Unterkante von 561 px (§37: „darf
+nicht verdecken, was sie bedient"); ein Strg+Z im Whiteboard nahm dort UND
+auf der Fläche zurück (Fläche 1 → 0); ein Rad über dem Whiteboard zoomte es
+UND schob die Fläche, Strg+Rad zoomte die Fläche mit (0,92 → 1,02); mit der
+Hand der Fläche rückte ein Zug im Whiteboard die Fläche um 80/50 px, und das
+Whiteboard bekam keinen Strich; am Telefon massen die Knöpfe der inneren
+Leiste 11 × 11 px (mit dem Kasten verkleinert); die Fläche hatte keinen
+Knopf „Schritt vorwärts" — mit dem Finger gab es kein Wiederholen; und
+keine der Leisten war mit Tab zu erreichen (siehe 7b unten).
+
+**Was entschieden ist.**
+
+1. **Ein Schacht.** `.pg-flaeche` hat genau EINE Leiste als Kind. Was ein
+   Block in einem Kasten an `.gfx-tb-sockel` gebaut hat, nimmt die Fläche
+   heraus (`bar.remove()`) — dieselbe Instanz, mit ihren Horchern, Menüs
+   und ihrem Zustand, nicht versteckt und nicht nachgebaut. Ein Tipp oder
+   Fokus in einem Whiteboard hängt SEINE Leiste in den Schacht
+   (`replaceChild`), ein Tipp auf die Fläche, einen Kopf oder Text die der
+   Fläche zurück. Das Whiteboard trägt dann einen Ring (`.pg-fl-aktiv`), und
+   die Leiste sagt in Worten, wessen sie ist: „Fläche" oder
+   „Zeichenfläche" (§38 — der Ring allein wäre Farbe). Ein
+   `MutationObserver` nimmt auch Leisten auf, die ein Block später baut.
+   Nur DOM: `seitenflaeche.ts` nennt kein Whiteboard (§5, `test537`) —
+   sobald Gedankenkarte und Planfläche eine `GfxToolbar` bauen, kommen sie
+   von selbst in den Schacht.
+2. **Der Wähler sagt es:** `.pg-flaeche > .gfx-tb-sockel` an beiden Stellen
+   in `seitenansichten.css`.
+3. **Eine Taste, eine Wirkung.** Die Fläche fragt in `keydown` und `wheel`
+   zuerst `defaultPrevented` (die Regel aus E682, die nur in der Schale
+   stand). `beginnt` kehrt sofort um, wenn der Zeiger in einer
+   Zeichenfläche mit eigener Leiste landet — vor dem Zweig für Hand und
+   mittlere Taste und vor `setPointerCapture`. Steht der Fokus in der
+   Leiste eines Whiteboards, reicht die Fläche Strg+Z/Y als dieselbe Taste
+   an das Whiteboard weiter (die Leiste liegt ja nicht mehr in ihm). Tab vom
+   Whiteboard führt in seine Leiste, Umschalt+Tab zurück — wie in der
+   Seitenansicht, wo die Leiste im Whiteboard hängt.
+4. **Dieselben Funktionen, dasselbe Muster.** Die Leiste der Fläche hat
+   „Schritt vorwärts" (`redo`), und Zurück/Vor sind gesperrt, wenn es
+   nichts gibt (`standZeigen` wie im Whiteboard, `GfxHistory.kannZurueck/
+   kannVor`). Die Leiste der Fläche steht im Baum VOR der Ebene: Tab rückt
+   im Text des Seitenkastens Blöcke ein (wie in Notion) — hinter der Ebene
+   käme die Tastatur nie bei ihr an.
+5. **7b, im Kern: der Tabstopp entsteht auch losgelöst.** `tabstoppSetzen`
+   lief am Ende von `GfxToolbar.erstelle`, als die Wurzel noch nicht im
+   Dokument hing; `offsetParent` war für jeden Knopf `null`, kein Knopf
+   bekam `tabIndex 0`. Jetzt zählt ohne Gelegtes jeder freie Knopf, alle
+   anderen gehen auf −1, und der Halt wird beim ersten Fokus, nach dem
+   ersten Bild und beim Sperren seines Knopfs nachgesehen. Escape bringt den
+   Fokus aus einem Menü zurück zu seinem Auslöser. Kein `wb-`, kein `pg-fl`
+   im Kern (`test572` §1).
+6. **Die Zoomzahl über ihren Namen.** `stellen()` (Fläche) und `male()`
+   (Whiteboard, `zeichenflaeche.ts`) suchten ihre Zahl mit
+   `querySelector` in ihrer Fläche — losgelöst fänden sie sie nicht. Beide
+   halten jetzt das Element selbst.
+
+**Warum.** Redur verlangt „technisch auf dieselbe Komponente verweisen":
+eine Leiste unten, an der jede Funktion steht. Zwei Leisten übereinander
+hätten zwei gewählte Werkzeuge und zwei Zahlen behalten; eine Leiste, die
+mit CSS versteckt wird, hätte weiter Tasten genommen. Die eine Instanz zu
+VERSCHIEBEN hält alles an seinem Ort: das Whiteboard kennt seine Leiste,
+seine Wächter (`.wb-tools`, `[data-wz]`, `.wb-massstab`) finden sie.
+
+**Die Alternativen.**
+- *Die innere Leiste mit `hidden` im Baum lassen* (so die Codex-Zweige vom
+  1. Oktober, nur verglichen, nicht übernommen): zwei Leisten im DOM, eine
+  davon unsichtbar — `document.querySelector` fände weiter die falsche
+  zuerst, und eine versteckte Leiste mit Fokus ist eine Falle.
+- *Erst nach „Bearbeiten" wechseln*: ein Schritt mehr für jede Skizze; die
+  Vorgabe sagt automatisch.
+- *Den Zoom des Whiteboards an die Fläche binden*: änderte, was in
+  `block.sicht` steht (§9). Zwei Zoomstände bleiben, sichtbar ist einer.
+- *Gedankenkarte und Planfläche jetzt mit umziehen*: viel grösser; sie
+  behalten ihre Leisten (L243).
+
+**Was es kostet.** Rund 200 Zeilen in `seitenflaeche.ts` (die Hälfte
+Begründung, die E715 aus dem erzeugten JavaScript nimmt), 40 im Kern, eine
+Stelle in `zeichenflaeche.ts`, 30 Zeilen CSS. Start 1850 → 1853 KB gzip
+(`test388` §5, Decke 1950; zusammen mit E723 +3031 Bytes über sechs
+Dateien, `messungen.md` §92); keine neue Datei, keine Insel. Und ein geändertes Verhalten, das man kennen muss: die
+Fläche lässt sich mit Hand oder mittlerer Taste nicht mehr verschieben,
+wenn der Zug IN einem eingebetteten Whiteboard beginnt — dort schiebt die
+Hand des Whiteboards das Whiteboard. Die Fläche verschiebt man daneben, mit
+dem Rad ausserhalb, mit zwei Fingern auf dem Grund, mit −/+ und Ins Bild.
+
+**Was weg ist, und wo es bleibt (§43).** Die obere Leiste im Kasten als
+ZWEITE sichtbare Leiste. Dieselbe Instanz mit allen 19 Bedienelementen
+(zwölf Werkzeuge, Farbe, −/+, Massstab, Ins Bild, Zurück, Vor, Mehr →
+Alles löschen / Als Bild speichern) steht im Schacht unten, sobald das
+Whiteboard der Arbeitskontext ist; ein Tipp auf die Fläche bringt deren
+Werkzeuge zurück. In der Seitenansicht steht die Leiste wie bisher unter
+dem Whiteboard.
+
+**Gefunden auf dem Weg.** (1) Chrome macht einen rollenden `.gfx-tb-roller`
+ohne erreichbaren Knopf selbst zum Tabhalt — der erste Anlauf von
+`test572` §13 war deshalb gegen den alten Stand grün; jetzt muss der Fokus
+auf einem KNOPF landen (L206). (2) Der erste Anlauf von `test598` §6
+wählte erst ein Werkzeug „des Whiteboards" — im alten Stand wählte das das
+Werkzeug der Fläche um, und die Hand wurde nie geprüft. (3) Die
+`zeichenflaeche.ts`-Stelle mit `w.querySelector('.wb-massstab')` stand in
+keiner Karte; `test598` §3 hält sie seither.
+
+**Touch Kit und Fremdcode.** Kein Bauteil des Touch Kits und kein fremder
+Code: die Leiste ist Redions `GfxToolbar` (E689), der Wechsel eine Zeile
+`replaceChild`. `FREMDCODE.md` braucht keinen Eintrag (§57).
+
+**Nicht in diesem Bogen:** Gedankenkarte und Planfläche in den Schacht
+(sie bauen keine `GfxToolbar`, L243); „Alles löschen" des Whiteboards mit
+`Dialog.bestaetigen` statt `confirm()` (L243); der Zoom des Whiteboards an
+die Fläche gebunden; die Leisten des Studios (`Marken.leiste`) und der
+Reiter „Zeichnen" im Menüband.
+
+## E723 — Die Tabelle auf der Fläche: der Kasten ist der Rand, „Neu" bleibt der Hauptknopf, die Auswahlleiste über der Flächenleiste
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (PDF vom
+29. September, Seite 5 Punkt 6 und Seite 18 oben) · **ergänzt** E409 (die
+Datenbank darf über den Textrand hinaus) und E690 („der Kasten ist der
+Rand") · **Wächter:** `test404` §9 (erweitert), `test598` §10–§12 (neu) ·
+**Zweig** `claude/flaeche-eine-leiste` · **Messung:** `messungen.md` §92.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+PDF 29.09., S. 18 oben  „Fehler= hier wenn ich flach modus wähle und sieht
+                        im bild habe ich eine tabela erstellt und ds hier es
+                        ist hinterden und kann nicht gut lesen und es sollte
+                        nicht so sein ,"
+PDF 29.09., S. 5 #6     „auch Hover/Selection/Editing-Zustände prüfen",
+                        „Dark-Mode-Tokens statt lokaler Hardcodes"
+```
+
+Vorgaben des Plans, weil Schritt 0 unbeantwortet blieb: eine breite
+Datenbank ROLLT im Kasten (der Kasten wächst nicht — seine Breite ist
+gespeichert); die Auswahlleiste steht auf der Fläche ÜBER der unteren
+Leiste, nicht oben.
+
+**Was war — und was es nicht war.** Kein z-index: alles `auto`, die
+Tabelle ist ein Kind des Kastens, und wo sie auf ihm liegt, ist sie lesbar
+(6,84 : 1). Der Ausbruch aus E409 (`datenbanken.css`, ab 1100 px:
+`--db-aus: min(var(--seite-luft) + 72px, 620px)`, Breite `100% + 2 ×`,
+Rand `−1 ×`) gilt für JEDE `.db` und rechnet mit den 96 px Rand von
+`#page`. E690 hat das Cover im Kasten zurückgesetzt
+(`.pg-fl-koerper .cover{margin:0}`), die Datenbank vergessen. Die Tabelle
+ragte über den Kasten hinaus, und weil `.db`, `.db-rollbox` und
+`table.grid` keinen eigenen Grund haben, lag das Überstehende auf dem
+gepunkteten Grund — die Kante des Kastens lief mitten durch die Tabelle:
+„es ist hinterden". Dieselbe Blindheit stellte die Griffe `+ ⋮⋮`
+(`left:-46px`) neben den Kasten.
+
+**Gemessen, bevor gebaut wurde** (gegen `1bfaca53`, `messungen.md` §92):
+1920 × 1080 — Seitenkasten 51/51 px je Seite draussen, Blockkasten 57/57,
+Griffe 25 px; 1440 × 900 — 43/43, 48/48, Griffe 21. „Neu" beim Überfahren
+in allen zehn Schemata auf `--bg-hover` statt auf dem Akzent, mit
+`color:#fff` — Kontrast 1,15 in Hell und Papier, 1,16 in Touch Kit hell,
+1,35 in Sand. Die Auswahlleiste (`#sammelleiste`, fest, unten 24 px,
+z 820) über der Flächenleiste (unten 18 px, z 6): 19 446 px² Überdeckung,
+„100 %" und die Werkzeuge darunter. Die angeheftete Spalte (`th.fixiert`)
+zeichnete `--bg` (rgb 18, 20, 23) auf eine Karte in `--bg-card`
+(rgb 30, 32, 35).
+
+**Was entschieden ist.**
+1. `.pg-fl-koerper .db{--db-aus:0px}` in `seitenansichten.css`, direkt
+   unter dem Cover — derselbe Grund. `0px` mit Einheit: ein nacktes `0`
+   ist in `calc(100% + 2 * …)` ungültig. Eine breite Tabelle rollt im
+   Kasten mit der weichen Kante aus E63 (Rollrand), wie am Telefon. In der
+   Seiten- und Redion-Ansicht gilt E409 unverändert (`test404` §1–§4 und
+   die Gegenprobe in §9).
+2. Der Seitenkasten bekommt links `var(--space-10)` Rand (ab 761 px; am
+   Telefon gibt es keine Griffe), damit die Griffe im Kasten stehen. Der
+   Blockkasten blendet sie ohnehin aus (E691).
+3. `.db-tools button.new` und `button.new:hover` mit `--accent`,
+   `--accent-hover` und `--auf-accent` aus E705 — kein `filter`, kein
+   `#fff`; dasselbe Muster wie `.bib-neu:hover`. `.new.pfeil` erbt es.
+4. `--db-grund`: die Datenbank sagt, auf welchem Grund sie liegt —
+   `var(--bg)` als Vorgabe, `var(--bg-card)` im Kasten; `th.fixiert` malt
+   diesen Grund.
+5. `body:has(.pg-flaeche) #sammelleiste` steht über der Flächenleiste:
+   `calc(var(--space-6) + var(--touch-min) + var(--space-7))` am Rechner,
+   am Telefon dazu `--hunten` und `--space-10`. Die Fläche besitzt die
+   Ausnahme, also steht sie in `seitenansichten.css`. Ihre Knöpfe und der
+   Dialog aus E710 bleiben, wie sie sind.
+
+**Warum.** „Der Kasten ist der Rand" (E690) — eine Tabelle im Kasten darf
+nicht über ihn hinaus, sonst liest das Auge sie als dahinterliegend.
+Rollen statt Wachsen, weil die Breite des Kastens gespeichert ist und ein
+wachsender Kasten die anderen verschöbe.
+
+**Die Alternativen.** *Der Kasten wächst auf die Tabellenbreite* —
+änderte gespeicherte Breite und Lage. *Ein deckender Grund für die
+Tabelle* — die Kante liefe weiter hindurch. *Die Auswahlleiste oben auf der
+Fläche* — weit weg von der Hand, die gerade angehakt hat.
+
+**Was es kostet.** Neun CSS-Deklarationen in drei Stilblättern (in den
++3031 Bytes gzip aus E722 enthalten, `messungen.md` §92). Eine breite Tabelle zeigt im Kasten am Rechner weniger Spalten auf
+einmal als vorher auf dem Grund; jede bleibt durch Rollen erreichbar.
+
+**Was weg ist, und wo es bleibt (§43).** Der Ausbruch aus E409 IM Kasten der
+Fläche; jede Spalte bleibt über den Roller im Kasten erreichbar, die Kante
+zeigt, dass mehr kommt. Sonst nichts.
+
+**Touch Kit und Fremdcode.** Nur Redions eigene Marken (E705); kein
+fremder Code, kein Eintrag in `FREMDCODE.md`.
+
+**Nicht in diesem Bogen:** E409 in der Seiten- und Redion-Ansicht; die
+Auswahlleiste am Telefon ausserhalb der Fläche (sie liegt dort weiter über
+der unteren Leiste — wie bisher).

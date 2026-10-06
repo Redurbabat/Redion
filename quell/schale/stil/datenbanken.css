@@ -15,7 +15,9 @@
 /* ==========================================================================
    DATENBANKEN
    ========================================================================== */
-.db{margin:10px 0 20px; border-radius:4px; max-width:100%; min-width:0}
+/* `--db-grund`: der Grund, auf dem die Datenbank liegt — auf der Seite die
+   Seite. Die Fläche setzt im Kasten die Karte (seitenansichten.css, E723). */
+.db{margin:10px 0 20px; border-radius:4px; max-width:100%; min-width:0; --db-grund:var(--bg)}
 
 /* ----------------------------------------------------------------------------
  * EINE DATENBANK DARF ÜBER DEN TEXTRAND HINAUS (E409)
@@ -84,10 +86,16 @@
   display:flex; align-items:center; gap:4px;
 }
 .db-tools button:hover{background:var(--bg-hover); color:var(--text)}
-.db-tools .new{
+/* DER HAUPTKNOPF BLEIBT DER HAUPTKNOPF (E723). `.db-tools button:hover`
+   (0,2,1) schlug `.db-tools .new` (0,2,0): beim Überfahren wurde „Neu" grau
+   (--bg-hover), und `color:#fff` schrieb weisse Schrift darauf — 1,15 : 1 in
+   Hell und Papier, 1,16 in Touch Kit hell, 1,35 in Sand: unsichtbar. Jetzt
+   mit `button` im Wähler und den Marken je Schema aus E705, wie `.bib-neu`
+   (bausteine.css). `.new.pfeil` erbt es. */
+.db-tools button.new{
   background:var(--accent); color:var(--auf-accent); font-weight:500; padding:5px 12px;
 }
-.db-tools .new:hover{filter:brightness(1.1); color:#fff}
+.db-tools button.new:hover{background:var(--accent-hover, var(--accent)); color:var(--auf-accent)}
 .chip{
   font-size:12px; padding:3px 8px; border-radius:4px; background:var(--bg-card);
   color:var(--text-dim); display:inline-flex; align-items:center; gap:5px;

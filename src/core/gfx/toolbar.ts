@@ -247,16 +247,41 @@ const GfxToolbar = (() => {
        Dieselbe Regel wie in der Studioleiste (`marken.ts`, „roving tabindex"):
        die Leiste ist EIN Halt beim Tabben, drinnen bewegen Pfeile. Sonst
        braucht man dreissig Tabs, um an der Leiste vorbeizukommen. */
+    const alleKnoepfe = (): HTMLButtonElement[] =>
+      [...wurzel.querySelectorAll<HTMLButtonElement>('button')].filter(b => !b.closest('.gfx-tb-menue'));
     const knoepfe = (): HTMLButtonElement[] =>
-      [...wurzel.querySelectorAll<HTMLButtonElement>('button')]
-        .filter(b => !b.disabled && b.offsetParent !== null && !b.closest('.gfx-tb-menue'));
+      alleKnoepfe().filter(b => !b.disabled && b.offsetParent !== null);
+    /* DER HALT ENTSTEHT AUCH, WENN DIE LEISTE NOCH NICHT IM DOKUMENT HÄNGT
+       (E722). Bis zum 6. Oktober lief diese Zeile am Ende von `erstelle`,
+       bevor ein Aufrufer die Wurzel einhängte — `offsetParent` ist dort für
+       jeden Knopf `null`, die Liste war leer, und kein Knopf bekam
+       `tabIndex 0`. Gemessen: null Halte in beiden Leisten, eine Tab-Runde
+       von 60 Tasten erreichte keinen; erst ein MAUSKLICK auf ein Werkzeug
+       setzte einen. Ist nichts gelegt, zählt deshalb jeder freie Knopf —
+       und alle anderen gehen auf −1, damit es nie zwei Halte gibt. */
     const tabstoppSetzen = (): void => {
-      const liste = knoepfe();
+      const alle = alleKnoepfe();
+      const gelegt = knoepfe();
+      const liste = gelegt.length ? gelegt : alle.filter(b => !b.disabled);
       const gewaehlt = liste.find(b => b.dataset.wz === aktiv) ?? liste[0];
-      for (const b of liste) b.tabIndex = b === gewaehlt ? 0 : -1;
+      for (const b of alle) b.tabIndex = b === gewaehlt ? 0 : -1;
+    };
+    /** Stimmt der Halt noch? Er geht verloren, wenn sein Knopf gesperrt oder
+     *  ausgeblendet wird — dann rückt er auf einen freien nach. */
+    const haltPruefen = (): void => {
+      const liste = knoepfe();
+      if (liste.length && !liste.some(b => b.tabIndex === 0)) tabstoppSetzen();
     };
     const beiTaste = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape' && offenesMenue) { menueZu(); e.stopPropagation(); e.preventDefault(); return; }
+      if (e.key === 'Escape' && offenesMenue) {
+        /* Lag der Fokus IM Menü, ginge er mit ihm verloren — er kehrt zum
+           Knopf zurück, der es geöffnet hat (§38, E302). */
+        const imMenue = !!(document.activeElement && wurzel.querySelector('.gfx-tb-menue')?.contains(document.activeElement));
+        const ausloeser = wurzel.querySelector<HTMLElement>(`[data-menue="${CSS.escape(offenesMenue)}"]`);
+        menueZu(); e.stopPropagation(); e.preventDefault();
+        if (imMenue) ausloeser?.focus();
+        return;
+      }
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End') return;
       const liste = knoepfe();
       const jetzt = liste.indexOf(document.activeElement as HTMLButtonElement);
@@ -272,6 +297,9 @@ const GfxToolbar = (() => {
       b.focus();
     };
     wurzel.addEventListener('keydown', beiTaste);
+    /* Beim ersten Fokus und nach jedem Umhängen (die Fläche hängt Leisten in
+       ihren Schacht und wieder heraus, E722) wird der Halt nachgesehen. */
+    wurzel.addEventListener('focusin', haltPruefen);
 
     /* Ein Klick irgendwo sonst schliesst das Menü. Ein Menü, das offen bleibt,
        während man weiterzeichnet, verdeckt genau das, was man gerade tut. */
@@ -294,7 +322,9 @@ const GfxToolbar = (() => {
     };
     const setzeGesperrt = (id: string, ja: boolean): void => {
       const b = wurzel.querySelector<HTMLButtonElement>(`[data-a="${CSS.escape(id)}"]`);
-      if (b) b.disabled = ja;
+      if (!b) return;
+      b.disabled = ja;
+      if (ja && b.tabIndex === 0) tabstoppSetzen();
     };
     const zerstoere = (): void => {
       document.removeEventListener('pointerdown', beiAussen, true);
@@ -302,6 +332,9 @@ const GfxToolbar = (() => {
     };
 
     tabstoppSetzen();
+    /* Nach dem ersten Bild, wenn der Aufrufer die Leiste eingehängt hat: liegt
+       der Halt auf einem Knopf, den man nicht sieht, rückt er nach. */
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(haltPruefen);
 
     return {
       element: wurzel,

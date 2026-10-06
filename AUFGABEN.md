@@ -1703,3 +1703,15 @@ Grund:
    „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
    Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
 
+## Die Fläche nach E722/E723 (6. Oktober 2026)
+
+1. **Gedankenkarte und Planfläche auf `GfxToolbar`** (L243 Punkt 1) — dann
+   kommen sie von selbst in den einen Schacht der Fläche. Mit Wächter:
+   `test598` §1 auch mit einer Gedankenkarte im Kasten.
+2. **„Alles löschen" des Whiteboards mit `Dialog.bestaetigen`** (L243
+   Punkt 2, E710 und E709) statt `confirm()`.
+3. **Die Auswahlleiste der Tabelle am Telefon** ausserhalb der Fläche:
+   sie steht fest 24 px über dem Rand; ob sie dort die untere Leiste
+   deckt, ist nicht gemessen. Erst messen (`#sammelleiste` gegen
+   `#handy-oben`), dann entscheiden.
+

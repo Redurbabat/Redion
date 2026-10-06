@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · Fläche: eine Leiste je Arbeitskontext, die Tabelle im Kasten (E722, E723)
+
+**Redur:** PDF vom 29. September, Seite 18 unten: „Hier wieder die zeichnen
+menüs ist doppelt , es sollte nur die ganez unter bleiben , seihet rote
+markierung ,"; Seite 18 oben: „… habe ich eine tabela erstellt und ds hier
+es ist hinterden und kann nicht gut lesen".
+
+**Fund:** Ein Whiteboard im Kasten der Fläche brachte seine eigene Leiste
+mit — drei Leisten bei zwei Whiteboards, drei gewählte Werkzeuge, drei
+Zoomzahlen; eine Taste nahm zweimal zurück, ein Rad bewegte zwei
+Ausschnitte, die Hand der Fläche stahl den Strich. Keine Leiste hatte einen
+Tabstopp. Die Tabelle im Kasten ragte 51/57 px hinaus (E409 galt auch
+dort), „Neu" war beim Überfahren in den hellen Schemata unsichtbar (1,15),
+die Auswahlleiste lag auf der Flächenleiste (19 446 px²).
+
+**Gebaut:** ein Schacht in der Fläche (`seitenflaeche.ts`): die Leiste
+eines Blocks im Kasten wird herausgenommen und hängt unten, sobald man in
+ihn tippt, mit Ring und dem Wort „Zeichenfläche"; `defaultPrevented` in
+Taste und Rad; die Hand stiehlt keinen Strich; Strg+Z aus der Leiste wird
+weitergereicht; Tab vom Whiteboard in seine Leiste; „Schritt vorwärts" für
+die Fläche. Im Kern (`toolbar.ts`) der Tabstopp auch losgelöst. Im CSS
+`.pg-flaeche > .gfx-tb-sockel`, `--db-aus:0px` und `--db-grund` im Kasten,
+die Griffe im Kasten, „Neu" mit den Marken aus E705, die Auswahlleiste über
+der Flächenleiste.
+
+**Geprüft:** `test598` (neu, 48 Zusagen), `test404` §9, `test572` §13,
+`test575` §6b — je rot gegen `1bfaca53`, grün danach; neun Gegenproben;
+Nachbarn siehe Commit „E722/E723". Start 1850 → 1853 KB. Messung:
+`messungen.md` §92. Offen: L243.
+
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 
 **Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von

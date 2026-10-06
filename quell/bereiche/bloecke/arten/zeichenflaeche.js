@@ -232,9 +232,7 @@ const Zusatz = (() => {
                     }));
                 }
             }
-            const anzeige = w.querySelector('.wb-massstab');
-            if (anzeige)
-                anzeige.textContent = Math.round(sicht.z * 100) + ' %';
+            massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
         };
         const bildAdressen = new Map();
         const bildHolen = (dateiId) => {

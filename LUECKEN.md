@@ -8348,6 +8348,35 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L243 · Gedankenkarte und Planfläche im Kasten der Fläche behalten ihre eigenen Leisten, und „Alles löschen" fragt noch mit `confirm()` — 6. Oktober 2026
+
+**Gefunden beim Bau von E722** (Redur, PDF vom 29. September, Seite 18
+unten: „es sollte nur die ganez unter bleiben"). Die Fläche hat seit E722
+EINEN Schacht für die Werkzeugleiste: was ein Block im Kasten als
+`GfxToolbar` baut, hängt die Fläche in diesen Schacht, sobald man in den
+Block tippt. Zwei Dinge bleiben offen, damit sie nicht in einem Commit
+verschwinden (§35):
+
+1. **Gedankenkarte und Planfläche bauen keine `GfxToolbar`.** Ihre Leisten
+   (`.gk-…`, `.sp-…`) stehen im Kasten der Fläche wie bisher, mit eigenem
+   Zoom, und der Schacht kennt sie nicht. Sie kommen von selbst hinein,
+   sobald sie auf `GfxToolbar` umziehen (E689 hat das geplant) — die Fläche
+   sucht `.gfx-tb-sockel`, keinen Namen. Bis dahin gilt für sie auch die
+   Regel „ein Zug darin gehört ihnen" nur, wo sie selbst `preventDefault`
+   rufen (Strg+Rad der Gedankenkarte, die Tasten der Planfläche); die Hand
+   der Fläche kann dort noch schieben.
+2. **„Alles löschen" des Whiteboards fragt mit dem Fenster des Browsers**
+   (`confirm('Die ganze Zeichenfläche leeren?')`, `zeichenflaeche.ts`).
+   Seit E722 steht der Knopf auch unten in der Leiste der Fläche; der
+   Nachfolger ist `Dialog.bestaetigen` (E710) mit dem Knopf aus E709 —
+   derselbe Rest wie L231.
+
+**Wächter:** für Punkt 1 noch keiner (ein Lauf bräuchte die Gedankenkarte
+im Kasten und verlangte eine Leiste in der Fläche); Punkt 2 hält `test587`,
+sobald der Knopf umgezogen ist.
+
+---
+
 ## L235 · Zwei Fragen an die Ecke aus E676: eine Probe in `test201` und die Tinte einer zitternden Hand — 28. September 2026
 
 **Gefunden beim Bau von E708** (rot zuerst am Stift, Redur: „ohne eine
@@ -9530,7 +9559,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 131 Lücken, 75 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 132 Lücken, 76 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

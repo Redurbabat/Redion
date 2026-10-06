@@ -353,6 +353,10 @@ Datenhaltung:
 - Text direkt auf der Fläche, zweimal tippen ändert ihn
 - Grösse ändern am Griff
 - als PNG speichern
+- auf der Fläche einer Seite (Ansicht „Fläche") gibt es EINE Werkzeugleiste
+  unten: wer ins Whiteboard tippt, bekommt dort seine Werkzeuge (das
+  Whiteboard trägt dann einen Ring, die Leiste sagt „Zeichenfläche"); ein
+  Tipp daneben bringt die der Fläche zurück, mit Zurück und Vorwärts
 
 Im Workspace gibt es dafür einen eigenen Bereich mit Miniaturen.
 

@@ -161,6 +161,27 @@
    und der Kasten ist der Rand. Ein Cover mit -96 px Rand ragte sonst über
    ihn hinaus. */
 .pg-fl-koerper .cover{margin:0; border-radius:8px}
+/* DIE DATENBANK AUCH (E723). Derselbe Grund wie beim Cover eine Zeile
+   höher, nur vergessen: der Ausbruch aus E409 (datenbanken.css) gilt ab
+   1100 px für JEDE `.db` und rechnet mit den 96 px Rand von `#page`. Im
+   Kasten mit 20 px Rand ragte die Tabelle je Seite 51 px hinaus (57 im
+   Blockkasten), auf den gepunkteten Grund — Redur, PDF Seite 18: „es ist
+   hinterden und kann nicht gut lesen". Kein z-index-Fehler: alles `auto`.
+   `0px` MIT Einheit — ein nacktes `0` ist in `calc(100% + 2 * …)` ungültig,
+   und die ganze Breite fiele weg. Eine breite Tabelle rollt jetzt im Kasten,
+   mit der weichen Kante aus E63 (Rollrand), wie am Telefon.
+   `--db-grund` ist der Grund, auf dem die Tabelle liegt: hier die Karte,
+   nicht die Seite — sonst zeichnet die angeheftete Spalte einen dunkleren
+   Streifen über den Kasten (einstellungen.css, `th.fixiert`). */
+.pg-fl-koerper .db{--db-aus:0px; --db-grund:var(--bg-card)}
+/* Die Griffe `+ ⋮⋮` stehen 46 px links vom Block (aufbau.css). Auf der Seite
+   liegt dort der Rand von `#page`; im Kasten lag dort der Grund der Fläche —
+   25 px draussen, auch auf Redurs Foto. Also Platz im Kasten, mit der Marke
+   aus grund.css. Am Telefon gibt es keine Griffe (ki.css), dort bleibt der
+   schmale Rand. */
+@media(min-width:761px){
+  .pg-fl-notiz[data-fl-seite] .pg-fl-koerper{padding-left:var(--space-10)}
+}
 
 /* ----------------------------------------------------------------------------
    4 · DIE WERKZEUGLEISTE DER FLÄCHE
@@ -169,9 +190,37 @@
    stünde es dahinter (L217 gilt für die Flächen-Blöcke, hier ist es gleich
    richtig gemacht).
    --------------------------------------------------------------------------*/
-.pg-flaeche .gfx-tb-sockel{
+/* `>` UND NICHT DER LEERSCHLAG (E722). Mit `.pg-flaeche .gfx-tb-sockel`
+   schwebte auch die Leiste eines Whiteboards im Kasten als Kapsel über ihrer
+   eigenen Zeichenfläche (oben 713 < Unterkante 759, gemessen — §37: „darf
+   nicht verdecken, was sie bedient") und sah aus wie die der Fläche. Seit
+   E722 hängt nur noch eine Leiste hier, der Schacht; der Wähler sagt das. */
+.pg-flaeche > .gfx-tb-sockel{
   position:absolute; left:50%; transform:translateX(-50%);
   bottom:18px; z-index:6; max-width:calc(100% - 24px);
+}
+/* Das Wort, wessen Leiste es ist — „Fläche" oder „Zeichenfläche" (§38:
+   keine Auskunft nur über Farbe; der Ring allein wäre eine). */
+.pg-fl-kontext{
+  flex:0 0 auto; align-self:stretch; display:flex; align-items:center;
+  padding:0 var(--space-4); border-radius:var(--radius-xl);
+  /* Dieselbe Kapsel wie die Werkzeuge daneben — auf dem Bild stand das Wort
+     zuerst nackt auf dem Punktraster und las sich wie ein Rest. */
+  background:var(--bg-card); border:1px solid var(--line);
+  box-shadow:var(--schatten-schwebend);
+  font-size:12px; font-weight:600; color:var(--text-dim); white-space:nowrap;
+}
+/* Die Zeichenfläche, deren Leiste gerade im Schacht hängt. Derselbe Ring wie
+   beim Fokus (`.wb:focus-visible`), aber auch nach einem Mausklick: man soll
+   sehen, wem die Werkzeuge unten gehören. */
+.pg-flaeche .pg-fl-aktiv{box-shadow:0 0 0 2px var(--accent)}
+/* DIE AUSWAHLLEISTE DER TABELLE ÜBER DER FLÄCHENLEISTE (E723). Beide sassen
+   unten in der Mitte: `#sammelleiste` fest bei 24 px (einstellungen.css),
+   die Leiste der Fläche bei 18 px — 19 446 px² Überdeckung, „100 %" und die
+   Werkzeuge darunter. Die Fläche besitzt die Ausnahme, also steht sie hier:
+   Abstand unten + Leistenhöhe + Luft, aus Marken statt aus Zahlen. */
+body:has(.pg-flaeche) #sammelleiste{
+  bottom:calc(var(--space-6) + var(--touch-min) + var(--space-7));
 }
 .pg-fl-massstab{
   display:inline-flex; align-items:center; justify-content:center;
@@ -185,7 +234,12 @@
      Fläche endet also bereits über der unteren Leiste. Wer hier noch einmal
      `--hunten` addiert, schiebt die Werkzeugleiste um eine Leistenhöhe zu
      hoch, mitten auf den Kasten. Gemessen und auf dem Bild gesehen. */
-  .pg-flaeche .gfx-tb-sockel{bottom:12px}
+  .pg-flaeche > .gfx-tb-sockel{bottom:12px}
+  /* Am Telefon endet die Fläche über der unteren Leiste (`--hunten`), und die
+     Flächenleiste ist mit 44-px-Knöpfen höher. */
+  body:has(.pg-flaeche) #sammelleiste{
+    bottom:calc(var(--hunten) + var(--space-10) + var(--touch-min) + var(--space-7));
+  }
   /* Am Telefon ist der Kasten schmaler als die gemerkte Breite — nicht durch
      eine zweite Zahl in JavaScript, sondern hier: die gespeicherte Breite
      bleibt, was sie ist, und der Bildschirm zeigt sie kleiner. */

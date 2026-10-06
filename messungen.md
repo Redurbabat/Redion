@@ -6696,3 +6696,83 @@ gemessen, auf `c287b388e` plus diese Änderungen:
   nachgefahren hatte: `test141` 27, `test183` 27, `test191` 23, `test303`
   16, `test341` 37, `test362` 18/18, `test411` 26, `test427` 55, `test444`
   13, `test576` 30/30, `test582` 176, `test584` 37 — alle ohne Offenes.
+
+## §92 · Die Fläche: eine Leiste je Arbeitskontext, die Tabelle im Kasten (E722, E723, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/flaeche-eine-leiste` gegen `1bfaca53`
+(`claude/morgen-besser-2`). Gemessen mit den Wächtern selbst, im Browser
+(Chromium, http mit `listen(0)`), vorher in einem eigenen Arbeitsbaum auf
+`1bfaca53`, nachher auf dem Zweig: `test598` (Text, Whiteboard W1 im
+Seitenkasten, W2 im eigenen Blockkasten), `test404` §9, `test572` §13,
+`test575` §6b. Die Startlast mit `test388` §5 und je Datei mit gzip
+Stufe 6.
+
+**#7 — die Leisten** (1440 × 900, und 390 × 844 für das Telefon):
+
+```txt
+                                                vorher           nachher
+Leisten (.gfx-tb-sockel) in der Fläche          3                1 (Kind der Fläche)
+sichtbar gewählte Werkzeuge / Zoomzahlen        3 / 3            1 / 1
+Zahl des Whiteboards nach „Grösser" im Schacht  zeigt 114 %      folgt der Sicht
+                                                (die der Fläche)
+Strg+Z im Whiteboard: Formen Whiteboard/Fläche  2→1 / 1→0        2→1 / 1→1
+Strg+Z mit Fokus in seiner Leiste               Fläche zurück    Whiteboard zurück
+ein Rad über dem Whiteboard                     beide bewegt     nur das Whiteboard
+Strg+Rad über dem Whiteboard: Fläche            0,92 → 1,02      bleibt
+Hand der Fläche, Zug im Whiteboard              Fläche +80/+50,  Fläche still,
+                                                kein Strich      ein Strich
+innere Leiste über ihrer Zeichenfläche          oben 497 <       keine Leiste im
+                                                Unterkante 561   Kasten
+Telefon: Knöpfe der Leiste im Kasten            11 × 11 px       keine; Schacht 44 px
+Tabstopps je Leiste (tabIndex 0)                0                1
+Tab-Runde erreicht einen Knopf der Leiste       nie (60 Tasten)  ja
+„Schritt vorwärts" auf der Fläche               fehlt            da, gesperrt ohne Schritt
+```
+
+**#6 — die Tabelle im Kasten:**
+
+```txt
+                                                vorher           nachher
+1920 × 1080 Seitenkasten: .db draussen          51 / 51 px       0
+1920 × 1080 Blockkasten:  .db draussen          57 / 57 px       0
+1920 × 1080 Griffe `+ ⋮⋮` draussen              25 px            0
+1440 × 900 Seitenkasten / Blockkasten / Griffe  43/43, 48/48, 21 0
+Seitenansicht: .db links vor dem Textrand       > 20 px          > 20 px (E409 bleibt)
+„Neu" überfahren, Kontrast der Schrift          hell 1,15 · sand 1,35 · papier 1,15 ·
+                                                touchkit-hell 1,16 (alle zehn auf
+                                                --bg-hover)      ≥ 4,5 in allen zehn,
+                                                                 Grund = --accent-hover
+#sammelleiste ∩ Flächenleiste                   19 446 px²       0
+th.fixiert auf der Karte (dunkel)               rgb(18,20,23)    = Kasten rgb(30,32,35)
+                                                gegen 30,32,35
+```
+
+**Startlast** (`test388` §5, gzip): 1850 → 1853 KB über 252 Dateien,
+Decke 1950. Je Datei (Bytes gzip -6): `seitenflaeche.js` 7598 → 8754,
+`toolbar.js` 2368 → 2556, `zeichenflaeche.js` 16374 → 16354,
+`seitenansichten.css` 5440 → 6772 (davon das meiste Kommentar — CSS ist
+Quelle, E715), `datenbanken.css` 4386 → 4683, `einstellungen.css`
+14670 → 14748; zusammen +3031 Bytes. Keine neue Datei, keine Insel.
+
+**Gegenproben** (jede gesehen und zurückgenommen):
+
+```txt
+keydown ohne defaultPrevented   test598 §4 rot (Fläche 1 → 0), test575 §6b rot ([0,0] soll [1,0])
+wheel ohne defaultPrevented     test598 §5 rot (beide bewegt; Strg+Rad: Fläche 0,92 → 1,02)
+beginnt ohne die Ausnahme       test598 §6 rot (Fläche +80/+50, Whiteboard 1 → 1)
+keine Aufnahme in den Schacht   test598 17 rot, u. a. §1 „3 Leisten", §8 „11 × 11"
+  … und dazu der alte Wähler    §7 rot (oben 624 < Unterkante 682) — mit `>` allein grün:
+                                  die Leiste steht dann statisch unter ihrem Whiteboard
+Kern ohne Rückfall              test572 §13 rot ([] statt „zwei")
+ohne --db-aus:0px               test404 §9 rot (Seitenkasten 23/51, Blockkasten 57/57)
+Seitenkasten ohne Rand links    test404 §9 rot (Griffe 25 px draussen)
+„Neu", Auswahlleiste, th.fixiert wie vorher
+                                test598 §10, §11 (21 558 px²), §12 rot
+```
+
+Bilder (nicht eingecheckt, §55.4): vorher und nachher, 1440 × 900 und
+390 × 844, dunkel und hell — die Fläche, das gewählte Whiteboard, sein
+„Mehr", die Seitenansicht, die Tabelle im Kasten (auch 1920 × 1080 mit
+Blockkasten), eine überfahrene Zeile, eine angehakte Zeile mit der
+Auswahlleiste, „Neu" überfahren in Hell, Sand, Papier und Touch Kit hell.
+

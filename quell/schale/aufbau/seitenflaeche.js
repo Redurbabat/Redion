@@ -262,14 +262,16 @@ const Seitenflaeche = (() => {
         wrap.appendChild(flaeche);
         let sicht = sichtLesen(p.id) ?? { x: 0, y: 0, z: 1 };
         let werkzeug = 'zeiger';
+        const massstabZeigen = document.createElement('b');
+        massstabZeigen.className = 'pg-fl-massstab';
+        massstabZeigen.setAttribute('aria-live', 'polite');
+        massstabZeigen.textContent = '100 %';
         const stellen = (merken = true) => {
             const z = sicht.z;
             ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
             flaeche.style.backgroundSize = `${RASTER * z}px ${RASTER * z}px`;
             flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
-            const anzeige = flaeche.querySelector('.pg-fl-massstab');
-            if (anzeige)
-                anzeige.textContent = Math.round(z * 100) + ' %';
+            massstabZeigen.textContent = Math.round(z * 100) + ' %';
             if (merken)
                 sichtSchreiben(p.id, sicht);
         };
@@ -344,7 +346,12 @@ const Seitenflaeche = (() => {
         };
         const verlauf = GfxHistory.erstelle();
         const abbild = () => JSON.stringify(formen);
-        const merken = () => verlauf.merken(abbild());
+        const standZeigen = () => {
+            leiste.setzeGesperrt('zurueck', !verlauf.kannZurueck());
+            leiste.setzeGesperrt('vor', !verlauf.kannVor());
+        };
+        const merken = () => { verlauf.merken(abbild()); standZeigen(); };
+        const verwerfen = () => { verlauf.letztenVerwerfen(); standZeigen(); };
         const sichern = () => { formenSchreiben(p, formen); malen(); };
         const schrittZurueck = () => {
             const vorher = verlauf.zurueck(abbild());
@@ -352,6 +359,7 @@ const Seitenflaeche = (() => {
                 return;
             formen = JSON.parse(vorher);
             sichern();
+            standZeigen();
         };
         const schrittVor = () => {
             const nachher = verlauf.vor(abbild());
@@ -359,6 +367,7 @@ const Seitenflaeche = (() => {
                 return;
             formen = JSON.parse(nachher);
             sichern();
+            standZeigen();
         };
         const formAn = (fx, fy, radius) => {
             for (let i = formen.length - 1; i >= 0; i--) {
@@ -385,10 +394,6 @@ const Seitenflaeche = (() => {
         const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse'];
         const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
         malen();
-        const massstabZeigen = document.createElement('b');
-        massstabZeigen.className = 'pg-fl-massstab';
-        massstabZeigen.setAttribute('aria-live', 'polite');
-        massstabZeigen.textContent = '100 %';
         const leiste = GfxToolbar.erstelle({
             klasse: 'pg-fl-tools',
             beschriftung: 'Werkzeuge der Fläche',
@@ -397,7 +402,9 @@ const Seitenflaeche = (() => {
             aktionen: [
                 { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
                     menue: true, kapsel: 'werkzeuge' },
-                { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo' },
+                { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo', gesperrt: true },
+                { id: 'vor', name: 'Schritt vorwärts', titel: 'Schritt vorwärts (Strg + Umschalt + Z)',
+                    sym: 'redo', gesperrt: true },
                 { id: 'kleiner', name: 'Kleiner', titel: 'Kleiner (Strg + Rad)', sym: 'minus' },
                 { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
                 { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' }
@@ -429,6 +436,8 @@ const Seitenflaeche = (() => {
             aufAktion: (id) => {
                 if (id === 'zurueck')
                     schrittZurueck();
+                if (id === 'vor')
+                    schrittVor();
                 if (id === 'kleiner')
                     massstab(sicht.z / 1.25);
                 if (id === 'groesser')
@@ -437,10 +446,89 @@ const Seitenflaeche = (() => {
                     passend();
             }
         });
-        flaeche.appendChild(leiste.element);
+        flaeche.insertBefore(leiste.element, ebene);
         flaeche.dataset['wz'] = werkzeug;
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(leiste.element);
+        const gaeste = new Map();
+        let imSchacht = leiste.element;
+        let gastFlaeche = null;
+        const schildSetzen = (bar, text) => {
+            const roller = bar.querySelector('.gfx-tb-roller');
+            if (!roller)
+                return;
+            let schild = roller.querySelector(':scope > .pg-fl-kontext');
+            if (!schild) {
+                schild = document.createElement('span');
+                schild.className = 'pg-fl-kontext';
+                schild.setAttribute('aria-hidden', 'true');
+                roller.prepend(schild);
+            }
+            schild.textContent = text;
+        };
+        schildSetzen(leiste.element, 'Fläche');
+        const aufnehmen = () => {
+            for (const bar of [...ebene.querySelectorAll('.pg-fl-koerper .gfx-tb-sockel')]) {
+                const ober = bar.parentElement;
+                if (!ober)
+                    continue;
+                bar.remove();
+                gaeste.set(ober, bar);
+                const name = bar.querySelector('[role="toolbar"]')?.getAttribute('aria-label') ?? '';
+                schildSetzen(bar, name.replace(/^Werkzeuge (der|des) /, '') || 'Block');
+            }
+            for (const ober of [...gaeste.keys()]) {
+                if (flaeche.contains(ober))
+                    continue;
+                gaeste.delete(ober);
+                if (ober === gastFlaeche)
+                    schachtSetzen(null);
+            }
+        };
+        const schachtSetzen = (ober) => {
+            const neu = ober ? gaeste.get(ober) ?? null : leiste.element;
+            if (!neu || neu === imSchacht)
+                return;
+            const alt = imSchacht;
+            const fokusDrin = !!document.activeElement && alt.contains(document.activeElement);
+            if (alt.querySelector('.gfx-tb-menue'))
+                alt.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+            if (alt.parentElement === flaeche)
+                flaeche.replaceChild(neu, alt);
+            else
+                flaeche.insertBefore(neu, ebene);
+            imSchacht = neu;
+            gastFlaeche?.classList.remove('pg-fl-aktiv');
+            gastFlaeche = ober;
+            gastFlaeche?.classList.add('pg-fl-aktiv');
+            if (fokusDrin)
+                neu.querySelector('button[tabindex="0"]')?.focus({ preventScroll: true });
+        };
+        const gastVon = (ziel) => {
+            if (!(ziel instanceof Node))
+                return null;
+            for (const ober of gaeste.keys())
+                if (ober.contains(ziel))
+                    return ober;
+            return null;
+        };
+        const kontextNach = (ziel) => {
+            if (!(ziel instanceof Node) || imSchacht.contains(ziel))
+                return;
+            schachtSetzen(gastVon(ziel));
+        };
+        flaeche.addEventListener('pointerdown', (e) => kontextNach(e.target), true);
+        flaeche.addEventListener('focusin', (e) => kontextNach(e.target));
+        aufnehmen();
+        if (typeof MutationObserver === 'function') {
+            new MutationObserver((liste) => {
+                const betrifft = liste.some(m => [...m.addedNodes].some(n => n instanceof Element &&
+                    (n.matches('.gfx-tb-sockel') || !!n.querySelector('.gfx-tb-sockel'))) ||
+                    [...m.removedNodes].some(n => n instanceof Element && [...gaeste.keys()].some(o => n === o || n.contains(o))));
+                if (betrifft)
+                    aufnehmen();
+            }).observe(ebene, { childList: true, subtree: true });
+        }
         let zug = null;
         const finger = new Map();
         let kneifen = null;
@@ -462,6 +550,8 @@ const Seitenflaeche = (() => {
             pfade.forEach((pfad) => pfad.setAttribute('d', d));
         };
         const beginnt = (e) => {
+            if (gastVon(e.target))
+                return;
             finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (finger.size === 2) {
                 const [a, b] = [...finger.values()];
@@ -485,7 +575,7 @@ const Seitenflaeche = (() => {
                         sichern();
                     }
                     else
-                        verlauf.letztenVerwerfen();
+                        verwerfen();
                     aktiv = { art: 'radieren' };
                     return;
                 }
@@ -618,7 +708,7 @@ const Seitenflaeche = (() => {
                     : Math.abs(fertig.w) < 4 && Math.abs(fertig.h) < 4;
                 if (klein) {
                     formen = formen.filter(x => x !== fertig);
-                    verlauf.letztenVerwerfen();
+                    verwerfen();
                 }
                 sichern();
                 return;
@@ -643,12 +733,37 @@ const Seitenflaeche = (() => {
         };
         flaeche.tabIndex = 0;
         flaeche.addEventListener('keydown', (e) => {
+            if (e.defaultPrevented)
+                return;
             const ziel = e.target;
             if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
                 return;
+            if (e.key === 'Tab' && gastFlaeche && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const halt = imSchacht.querySelector('button[tabindex="0"]');
+                if (!e.shiftKey && ziel === gastFlaeche && halt) {
+                    e.preventDefault();
+                    halt.focus();
+                    return;
+                }
+                if (e.shiftKey && ziel === halt) {
+                    e.preventDefault();
+                    gastFlaeche.focus();
+                    return;
+                }
+            }
             if (!(e.ctrlKey || e.metaKey))
                 return;
             const taste = e.key.toLowerCase();
+            if (gastFlaeche && ziel && imSchacht.contains(ziel) &&
+                (taste === 'z' || (taste === 'y' && !e.shiftKey))) {
+                const weiter = new KeyboardEvent('keydown', {
+                    key: e.key, code: e.code, ctrlKey: e.ctrlKey, metaKey: e.metaKey,
+                    shiftKey: e.shiftKey, bubbles: true, cancelable: true
+                });
+                gastFlaeche.dispatchEvent(weiter);
+                e.preventDefault();
+                return;
+            }
             if (taste === 'z' && !e.shiftKey) {
                 e.preventDefault();
                 schrittZurueck();
@@ -692,6 +807,8 @@ const Seitenflaeche = (() => {
             aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
         });
         flaeche.addEventListener('wheel', (e) => {
+            if (e.defaultPrevented)
+                return;
             e.preventDefault();
             if (e.ctrlKey || e.metaKey) {
                 massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY);

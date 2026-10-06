@@ -387,8 +387,11 @@ const Zusatz = (() => {
           }));
         }
       }
-      const anzeige = w.querySelector('.wb-massstab');
-      if (anzeige) anzeige.textContent = Math.round(sicht.z * 100) + ' %';
+      /* Die Zahl über ihren NAMEN, nicht über `w.querySelector` (E722): auf
+         der Fläche hängt die Leiste im Schacht der Fläche, nicht im
+         Whiteboard — gesucht, fände man sie nicht, und die Zahl bliebe
+         stehen, während man zoomt. */
+      massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
     };
 
     /* `undefined` heisst „noch nicht gefragt", `null` heisst „gibt es nicht

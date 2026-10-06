@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 532 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 533 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1572,6 +1572,24 @@ Netz liegt der Offline-Streifen nicht auf der offenen Karte. Gezählt am
 sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Beim Zusammenführen nachgezählt (5. Oktober,
 `claude/morgen-besser-2`): 532.*
 
+*Und 533: `test598` — die Fläche hat EINE Werkzeugleiste je Arbeitskontext
+(E722, E723). Redurs Seite 18 aus dem PDF vom 29. September in zwölf
+Abschnitten: eine Leiste als Kind der Fläche, auch mit zwei Whiteboards
+(eines im eigenen Kasten); nach einem Tipp ins Whiteboard trägt sie dessen
+19 Bedienelemente, nach einem Tipp auf die Fläche deren acht Werkzeuge und
+„Schritt vorwärts"; ein gewähltes Werkzeug und eine Zoomzahl; Strg+Z, das
+Rad und die Hand wirken je einmal; keine Leiste über ihrer Zeichenfläche;
+am Telefon 44 px; Tab erreicht einen KNOPF. Dazu die Tabelle im Kasten:
+„Neu" überfahren in allen zehn Schemata lesbar, die Auswahlleiste nicht
+über der Flächenleiste (vorher 19 446 px²), die angeheftete Spalte auf dem
+Grund der Karte. Zweimal war er aus dem FALSCHEN Grund grün: §6 wählte
+erst ein Werkzeug „des Whiteboards" und wählte damit im alten Stand das
+der Fläche um — die Hand wurde nie geprüft; und Chrome macht einen
+rollenden Roller ohne erreichbaren Knopf selbst zum Tabhalt, also zählt
+nur ein Knopf (L206). Gegen den alten Stand rot mit 30 von 47. Gezählt am
+6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+533 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1588,7 +1606,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 532 Läufe
+npm run pruefen                      alle 533 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1678,7 +1696,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 532 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 533 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
