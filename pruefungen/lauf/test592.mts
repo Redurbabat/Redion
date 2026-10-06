@@ -53,7 +53,8 @@
  *       sichtbar (nie nur beim Überfahren), und der Tastaturfokus hat einen
  *       Ring um den Griff (wie am Greifer des Touch Kits). Mit grobem
  *       Zeiger (Finger) ist die Fläche um den Griff mindestens
- *       `--touch-min` breit UND hoch (§37).
+ *       `--touch-min` breit UND hoch (§37), und der Streifen nimmt keinem
+ *       Navigationsknopf und nicht #btn-back eine Pixelspalte vom Rand.
  *   §10 BEWEGUNG. Der Griff bewegt nur `opacity` und `transform`; unter
  *       „weniger Bewegung" und unter „Ruhige Darstellung"
  *       (`body[data-bewegung=ruhig]`) dauert das höchstens 1 ms. Keine
@@ -333,6 +334,19 @@ try {
     p('… und der Befehl führt von 260 auf 184 und vergisst die Breite', z2.kante === 260 && z3.kante === 184 && z3.meta === null,
       `${z2.kante} → ${z3.kante}, Meta ${JSON.stringify(z3.meta)}`);
     await pc.evaluate("document.querySelectorAll('.overlay').forEach(e => e.remove())");
+    /* Im Fokus-Modus ist der Trenner ausgeblendet (studio.css) — dann bietet
+       die Palette auch nicht an, eine Navigation zurückzusetzen, die man
+       nicht sieht (Durchsicht E716). Über `Werkzeuge.fokus`, den Weg des
+       Produkts, nicht über eine gesetzte Klasse. */
+    await pc.evaluate('Werkzeuge.fokus(true)');
+    const fokusTrenner = await pc.evaluate("getComputedStyle(document.getElementById('studio-divider')).display");
+    await pc.evaluate('Werkzeuge.palette()');
+    await pc.locator('#cq').fill('Navigationsbreite');
+    await pc.waitForTimeout(150);
+    const imFokus = await pc.evaluate("[...document.querySelectorAll('#cr button')].map(b => b.textContent.trim()).filter(t => /Navigationsbreite zur/.test(t)).length");
+    await pc.evaluate("document.querySelectorAll('.overlay').forEach(e => e.remove())");
+    await pc.evaluate('Werkzeuge.fokus(false)');
+    p('Im Fokus-Modus: kein Trenner und kein Palettenbefehl dafür', fokusTrenner === 'none' && imFokus === 0, `Trenner ${fokusTrenner}, ${imFokus} Treffer`);
 
     console.log('\n§6 · Neu laden: die gemerkte Breite steht wieder da');
     await pc.locator('#studio-divider').focus();
@@ -425,12 +439,27 @@ try {
       const auf = (x, y) => !!document.elementFromPoint(x, y)?.closest('#studio-divider');
       const knopf = [...document.querySelectorAll('#kante .k-knopf')].find(e => e.getBoundingClientRect().width > 0);
       const kr = knopf.getBoundingClientRect();
+      /* Und der RAND jedes Knopfs gehört dem Knopf, nicht dem Streifen: die
+         letzte Pixelspalte der Navigationsknöpfe und die erste von
+         #btn-back, auf der ganzen Höhe des Knopfs (Durchsicht E716: der
+         mittige 24-px-Streifen nahm jedem Navigationsknopf 3 px). */
+      const raender = [];
+      for (const e of document.querySelectorAll('#kante .k-knopf, #btn-back')) {
+        const b = e.getBoundingClientRect();
+        if (!b.width || !b.height || getComputedStyle(e).visibility === 'hidden') continue;
+        const x = e.id === 'btn-back' ? b.left + 0.5 : b.right - 0.5;
+        for (let yy = b.top + 1; yy < b.bottom - 1; yy += 2) {
+          const t = document.elementFromPoint(x, yy);
+          if (t && t.closest('#studio-divider')) { raender.push((e.id ? '#' + e.id : (e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 16)) + ' bei x ' + Math.round(x)); break; }
+        }
+      }
       return { min, breit: auf(k.right - h, y) && auf(k.right + h, y), hoch: auf(k.right + h, y - h) && auf(k.right + h, y + h),
-               knopf: document.elementFromPoint(kr.left + kr.width / 2, kr.top + kr.height / 2)?.closest('.k-knopf') === knopf };
-    })()`) as { min: number; breit: boolean; hoch: boolean; knopf: boolean };
+               knopf: document.elementFromPoint(kr.left + kr.width / 2, kr.top + kr.height / 2)?.closest('.k-knopf') === knopf, raender };
+    })()`) as { min: number; breit: boolean; hoch: boolean; knopf: boolean; raender: string[] };
     p(`Um den Griff ist die Fläche mindestens ${grob.min} px breit`, grob.breit);
     p(`… und mindestens ${grob.min} px hoch`, grob.hoch);
     p('… und die Navigationsknöpfe treffen weiter sich selbst', grob.knopf);
+    p('… auch an ihrem Rand: der Streifen nimmt keinem Knopf eine Pixelspalte', grob.raender.length === 0, grob.raender.join(' · ') || 'kein Rand verloren');
     await kontext.close();
   }
 
