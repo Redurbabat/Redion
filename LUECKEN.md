@@ -8348,6 +8348,42 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L242 · Ein Menü je Ding nach E721: was noch seine eigene Liste hat — 6. Oktober 2026
+
+**Gefunden beim Bau von E721** (Redur, Masterprompt S. 19: „Hier füge ...
+und oder beim rechts klicke sollte es mir zeigen löschen" — „Für den rechts
+klick bei eine dokument oder eine text usw wo es passen kann"). E721 hat die
+Dinge, die Seiten SIND — Ordner, Seite, PDF, Heft, Fach, in Bibliothek
+(Deckel, Regal, Tabelle, Ablagebaum), Notizheften, Seitenleiste und
+Seitenmenü —, auf EINE Quelle gestellt (`Register.aktionen`). Offen bleibt,
+damit es nicht in einem Commit verschwindet (§35):
+
+1. **Die Dinge IN einem Dokument behalten ihre eigenen Listen.** Kopfzeile
+   und Spalte einer Tabelle (`spreadsheet/ansicht.ts`), der Reiter eines
+   Blatts, Spalte und Zeile der Leinwand-Tabelle (`zeichenflaeche.ts`), ein
+   Kasten auf der Fläche, eine PDF-Seite (Miniatur und Seitenknopf),
+   Schaltplan und Gedankenkarte. Sie sind keine Seiten; ihre Aktionen
+   gehören nicht ins Register einer Seite. In E721 bekamen ihre
+   Lösch-Einträge nur `data-gefahr` — sie stehen jetzt am Rechner wie am
+   Telefon rot. Rechtsklick ohne Tastaturweg (Blatt-Reiter, Leinwand-Spalte)
+   haben noch keinen Binder.
+2. **Die Zeile einer Datenbank hat ihr `zeilenMenue` (mit Suche) behalten.**
+   Ihr „In den Papierkorb" ist seit E718 derselbe Griff (`App.inPapierkorb`)
+   und seit E721 rot; ihr Umbenennen ruft `App.umbenennen`. Gemeldet im
+   Register sind ihre Einträge nicht — die Datenbanken laden spät (E715),
+   und ihre Liste trägt, was es nur dort gibt (Archivieren, das Suchfeld).
+   Zwei Wege zum selben Griff, nicht zwei Griffe.
+3. **Die Zeilen der Seitenleiste und der Tabelle der Bibliothek haben
+   keinen Tabstopp.** Die Leiste ist eine virtuelle Liste; mit der Tastatur
+   führt der Weg über das ⋯ der Zeile (jetzt benannt). Die Tabelle der
+   Bibliothek kennt Rechtsklick und langes Drücken, die Tastatur erreicht
+   dieselben Dinge in Deckel und Ablagebaum.
+4. **„Rückgängig" in der Meldung ist mit Tab weiterhin erst am Ende der
+   Seite.** L239 Punkt 4 hat es diesem Zweig zugewiesen. Entf auf einer
+   Karte legt weg und meldet es; der Fokus springt dabei NICHT in die
+   Meldung — ein Fokus, der von selbst wandert, ist für den Vorleser
+   schlimmer als ein weiter Weg. Der Papierkorb bleibt der zweite Rückweg.
+
 ## L239 · Ordner nach E718: alte Papierkorb-Seiten ohne Frist, und zwei Regeln für ein Fach — 6. Oktober 2026
 
 **Gefunden beim Bau von E718** (Redur, Masterprompt S. 13: „… die ordner
@@ -9567,7 +9603,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 132 Lücken, 76 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 133 Lücken, 77 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

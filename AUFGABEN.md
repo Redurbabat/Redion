@@ -1727,4 +1727,26 @@ Gefunden beim Bau von E718, nicht dort entschieden — je mit dem Grund:
    ist 44 px und fokussierbar, aber `#toast` ist das letzte Kind von
    `body` — mit Tab kommt man erst am Ende der Seite hin. Fokus zurück oder
    Strg+Z in der Bibliothek: `claude/menue-eine-quelle` (L239 Punkt 4).
+   *Nach E721 weiter offen (L242 Punkt 4): ein Fokus, der von selbst in die
+   Meldung springt, wäre für den Vorleser schlimmer; der Papierkorb bleibt
+   der zweite Rückweg. Redurs Wort, ob Strg+Z in der Bibliothek das letzte
+   Weglegen zurücknehmen soll.*
+
+## Nach E721 (6. Oktober 2026) — Ein Menü je Ding
+
+Gefunden beim Bau von E721, nicht dort entschieden — je mit dem Grund:
+
+1. **Die Dinge IN einem Dokument** (Tabelle, Blatt-Reiter, Leinwand-Spalte,
+   Kasten auf der Fläche, PDF-Seite, Schaltplan, Gedankenkarte) haben ihre
+   eigenen Listen behalten und nur das Rot bekommen. Ob und wie sie ins
+   Register kommen, ist ein eigener Bogen (L242 Punkt 1).
+2. **Die Zeile einer Datenbank** meldet ihre Aktionen nicht im Register,
+   ihr Löschen und Umbenennen ist aber derselbe Griff. Wenn die Datenbanken
+   ohnehin umgebaut werden: ihre Einträge melden, wenn das Modul lädt (L242
+   Punkt 2).
+3. **`Menue.wahl` ist gebaut, aber noch von niemandem benutzt.** Die Zweige
+   `claude/bibliothek-eine-suche` (Ort, Art, Form) und
+   `claude/lernzentrum-kopf` (Heute ⌃, Übersicht ⌃, Fächer) ziehen darauf
+   um — keiner baut eine zweite Auswahlliste.
+
 

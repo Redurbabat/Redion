@@ -1757,11 +1757,14 @@ const treffer = (sel: string) => seite.evaluate((s: string) => {
     if (r.width < 2) { aus.push('unsichtbar'); continue; }
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const ecken = [[-21, -21], [21, -21], [-21, 21], [21, 21]];
+    let statt = '';
     const daneben = ecken.filter(([dx, dy]) => {
       const e = document.elementFromPoint(cx + (dx ?? 0), cy + (dy ?? 0));
-      return !(e && (e === k || k.contains(e)));
+      const trifft = !!e && (e === k || k.contains(e));
+      if (!trifft && !statt) statt = e ? (e.id ? '#' + e.id : e.tagName + '.' + String(e.className || '').split(' ')[0]) : 'nichts';
+      return !trifft;
     }).length;
-    if (k.tagName !== 'BUTTON' || daneben) aus.push(k.tagName + ' ' + Math.round(r.width) + '×' + Math.round(r.height) + ' · ' + daneben + ' Ecken daneben');
+    if (k.tagName !== 'BUTTON' || daneben) aus.push(k.tagName + ' ' + Math.round(r.width) + '×' + Math.round(r.height) + ' · ' + daneben + ' Ecken daneben (dort: ' + statt + ')');
   }
   return { zahl: knoepfe.length, aus };
 }, sel);

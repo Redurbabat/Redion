@@ -958,7 +958,7 @@ const ordner13 = await s13.evaluate(async () => {
 });
 await s13.waitForSelector(`.bib-deckel[data-id="${ordner13}"]`, { timeout: 15000 });
 await s13.evaluate((id: string) => {
-  document.querySelector<HTMLElement>(`.bib-deckel[data-id="${id}"] .bib-deckel-mehr`)?.click();
+  document.querySelector<HTMLElement>(`.bib-zelle:has(> .bib-deckel[data-id="${id}"]) > .bib-deckel-mehr`)?.click();
 }, ordner13);
 await s13.waitForTimeout(250);
 await s13.evaluate(() => document.querySelector<HTMLElement>('.menu button[data-a="umbenennen"]')?.click());

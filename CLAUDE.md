@@ -370,7 +370,7 @@ als Sonderfall irgendwo im Code verstreut.
 ```txt
 register/bloecke.js      register/befehle.js       register/vorlagen.js
 register/eigenschaften.js register/tasten.js       register/verbindungen.js
-register/ansichten.js    register/formeln.js
+register/ansichten.js    register/formeln.js       register/aktionen.js
 ```
 
 ---
@@ -457,6 +457,7 @@ Frage stellen, wohin sie gehört:
 | eine Verbindung | `register/verbindungen.js` |
 | Navigation | `register/navigation.js` |
 | ein Bereich | `register/module.js` |
+| eine Aktion an einem Ding (Umbenennen, Papierkorb …) | `register/aktionen.js` (E721) |
 
 **Keine doppelten Kataloge einführen.** Ein zweiter Katalog für dasselbe
 läuft mit dem ersten auseinander, und niemand merkt, welcher gilt.
@@ -928,7 +929,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 533 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 534 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1594,6 +1595,24 @@ ohne Ziel blieb in dem Ordner, in den er zuvor hineingegangen war — der
 Zustand lebt im Speicher, nicht nur im Merker. Gezählt am 6. Oktober, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 533.*
 
+*Und 534: `test597` — ein Menü je Ding (E721). Redurs Notiz unter dem Foto
+der Bibliothekskarten, auf dem er den ☆ oben rechts eingekreist hat: „Hier
+füge ... und oder beim rechts klicke sollte es mir zeigen löschen", in 75
+Zusagen über vierzehn Abschnitte: ein echtes „…" NEBEN jedem Deckel (44 ×
+44, benannt), derselbe Inhalt auf Rechtsklick, Kontextmenü-Taste,
+Umschalt+F10 und langes Drücken, Entf legt weg, Rot heisst Gefahr in allen
+zehn Schemata — und Umbenennen und Papierkorb gehen von allen Oberflächen
+durch EINE Tür, `Register.aktionen.tun`, gezählt mit einem Spion. Gegen den
+Grundstand rot mit 13 von 75. Viermal war er aus dem FALSCHEN Grund rot,
+und jedesmal sah es aus wie ein Fehler im Produkt: er suchte das Heft an
+der Wurzel des Regals, obwohl es im Fach lag; er suchte „Notizen", nachdem
+er die Seite in §7 selbst umbenannt hatte; er las `color(srgb 0.97 … /
+0.93)` als Zahlen von 0 bis 255 und rechnete einen Kontrast von 3,3 aus,
+wo 5,9 ist; und er klickte in eine Seitenleiste, die es am Rechner seit der
+neuen Schale gar nicht mehr gibt — der Baum steht dort in der Lade der
+Kante. Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
+| wc -l` sagt 534.*
+
 ### Die Befehle
 
 ```txt
@@ -1610,7 +1629,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 533 Läufe
+npm run pruefen                      alle 534 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1700,7 +1719,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 533 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 534 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

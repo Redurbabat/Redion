@@ -2637,6 +2637,11 @@
           "zeilen": 224
         },
         {
+          "pfad": "/home/user/Redion/src/register/aktionen.ts",
+          "rolle": "Register.aktionen (RegisterAktionen) — E721: was man mit einem Ding (einer Seite) tun kann. AktionEintrag {id,name|fn,zeichen,gruppe,gefahr?,taste?,rang?,gilt?(ding,ort),tun(ding,ort)}, AktionOrt {kontext,art?,anker?,hinein?}; melde, fuer(ding,ort) (geordnet nach GRUPPEN, Gefahr zuletzt, ein werfendes gilt() nimmt nur sich mit), tun(id,ding,ort) (die EINE Tür, test597 §7), taste('Entf',…), alle. Melder: schale.ts aktionenMelden (oeffnen, favorit, umbenennen, symbol, duplizieren, link, papierkorb), wissen/werkzeuge.ts (verschieben), wissen/notebook.ts (heft-/fach-oeffnen, farbe, sperren, entsperren, fach), wissen/bibliothek.ts (hinein, als-seite, blick). Gezeichnet von Menue.aktionen, gebunden von Menue.aktionenBinden (schale/ueberlagerung/menue.ts).",
+          "zeilen": 182
+        },
+        {
           "pfad": "/home/user/Redion/src/register/navigation.ts",
           "rolle": "Register.navigation — Eintrag {id,name,icon,platz,rang,tun?,zeigen?,vonAussen?,knopfId?,kuerzel?,hinweis?,gruppe?,marke?,haupt?,schauplatz?,adresse?,hauptRang?,ruhig?} Z.315-410; melde setzt vonAussen:true Z.423-429, nimmZurueck Z.431-436, anPlatz Z.441-444. Platz 'unten' ist der Anhängepunkt für fremde Bereiche (Z.38-40). Eintrag app-erweitern → Erweiterung.dialog() Z.239-240.",
           "zeilen": 449
