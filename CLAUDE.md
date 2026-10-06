@@ -1576,7 +1576,7 @@ sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Beim Zusamm
 29. September: „der linie wo man die feld grösser und kleiner macht ,
 funktioniert nicht…". Er misst überall die GEZEICHNETE Breite von `#kante`
 und nicht `aria-valuenow` — genau dieses Attribut, das der Griff selbst
-schreibt, hatte `test424` ein Jahr lang geprüft, und die Spalte stand
+schreibt, hatte `test424` seit dem 7. September geprüft, und die Spalte stand
 dabei still. Er zieht mit der Maus und mit dem Finger (CDP-Berührung),
 drückt ←/→, Umschalt, Bild↑/↓, Pos1 und Ende, bricht mit Escape und mit
 einem verlorenen Fang ab, setzt per Doppelklick und Palette zurück (184 bei
@@ -1590,7 +1590,11 @@ eine Gegenprobe im Lauf selbst: mit der Ableitung zurück auf `:root` muss
 „vorher 184, nachher 184, Inhalt ab 184, aria 244". Und einmal war er rot
 gegen MEINEN ersten Bau: die Fingerfläche war ein durchsichtiger Rand um
 die runde Pille, und die Trefferprüfung folgt der Rundung — ein Kreis,
-dessen Ecken nicht trafen. Gezählt am 6. Oktober, im selben Bogen:
+dessen Ecken nicht trafen. Und die DURCHSICHT fand zwei Stellen, die er
+nicht sah: mit dem Finger nahm der Streifen jedem Navigationsknopf die
+rechten 3 px (er prüfte nur die Mitte der Knöpfe), und die Palette bot das
+Zurücksetzen im Fokus-Modus an, in dem der Trenner ausgeblendet ist — beides steht
+jetzt in ihm, zuerst rot mit 59 von 61. Gezählt am 6. Oktober, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*
 

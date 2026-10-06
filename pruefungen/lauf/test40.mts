@@ -310,7 +310,7 @@ import { chromium } from 'playwright';
   /* AUCH BEI EINER BREITE, DIE NICHT DIE VORGABE IST (E716). Der Punkt
      „so breit wie die Studio-Navigation" oben misst bei 184 — und dort
      stimmen Kante und Attribut ZUFÄLLIG überein, auch wenn die Spalte sich
-     nie bewegt. Genau so stand der Trenner ein Jahr lang still, ohne dass
+     nie bewegt. Genau so stand der Trenner seit Anfang September still, ohne dass
      dieser Lauf es sah (Redur, 29. September: „der linie wo man die feld
      grösser und kleiner macht , funktioniert nicht…"). Deshalb hier: Ende
      drücken, dann neu laden — und beide Male die GEZEICHNETE Kante gegen

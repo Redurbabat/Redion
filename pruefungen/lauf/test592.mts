@@ -334,10 +334,12 @@ try {
     p('… und der Befehl führt von 260 auf 184 und vergisst die Breite', z2.kante === 260 && z3.kante === 184 && z3.meta === null,
       `${z2.kante} → ${z3.kante}, Meta ${JSON.stringify(z3.meta)}`);
     await pc.evaluate("document.querySelectorAll('.overlay').forEach(e => e.remove())");
-    /* Im Fokus-Modus ist der Trenner ausgeblendet (studio.css) — dann bietet
-       die Palette auch nicht an, eine Navigation zurückzusetzen, die man
-       nicht sieht (Durchsicht E716). Über `Werkzeuge.fokus`, den Weg des
-       Produkts, nicht über eine gesetzte Klasse. */
+    /* Im Fokus-Modus ist der Trenner ausgeblendet (studio.css): dort stellt
+       man die Breite nicht ein, also bietet die Palette es auch nicht an —
+       wie kompakt und im Dokument (Durchsicht E716). Die Navigation selbst
+       bleibt dabei sichtbar (Bild durchsicht-nachher/…-fokusmodus-palette).
+       Über `Werkzeuge.fokus`, den Weg des Produkts, nicht über eine
+       gesetzte Klasse. */
     await pc.evaluate('Werkzeuge.fokus(true)');
     const fokusTrenner = await pc.evaluate("getComputedStyle(document.getElementById('studio-divider')).display");
     await pc.evaluate('Werkzeuge.palette()');

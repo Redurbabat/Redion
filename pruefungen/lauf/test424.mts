@@ -76,7 +76,7 @@ try {
   await page.keyboard.press('End');
   check('Keyboard resize reaches bounded maximum', await page.locator('#studio-divider').getAttribute('aria-valuenow') === '260');
   /* DIE GEZEICHNETE BREITE, NICHT NUR DAS ATTRIBUT (E716). Die Zeile darüber
-     prüfte ein Jahr lang nur `aria-valuenow` — das Attribut, das der Griff
+     prüfte seit dem 7. September nur `aria-valuenow` — das Attribut, das der Griff
      SELBST schreibt. Die Spalte blieb dabei auf 184 stehen, weil die Breite
      auf `<body>` geschrieben und auf `<html>` aufgelöst wurde, und genau
      diese Zeile liess den Fehler durch. Eine Prüfung, die misst, was der

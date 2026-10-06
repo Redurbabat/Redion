@@ -61438,7 +61438,7 @@ gemessen, bevor eine Zeile geändert wurde: `test592` 12 von 58 gegen
    „Breite zurückgesetzt" (dieselben Worte wie der Griff der
    Seitenleiste). Doppelklick auf den Trenner und der Palettenbefehl
    „Navigationsbreite zurücksetzen" (Gruppe Ansicht, nur am Rechner, nicht
-   kompakt, nicht im Dokument) rufen dieselbe Funktion — der Befehl ist der
+   kompakt, nicht im Dokument, nicht im Fokus-Modus) rufen dieselbe Funktion — der Befehl ist der
    Weg ohne Geste für Finger und Tastatur.
 5. **Der Griff hält, was ein Trenner halten muss:** nur der erste Zeiger
    (`isPrimary`); die Bewegungen über `requestAnimationFrame` gesammelt;
@@ -61459,7 +61459,9 @@ gemessen, bevor eine Zeile geändert wurde: `test592` 12 von 58 gegen
    von 2 px `--accent-text` um den Griff, wie am Greifer des Kits, statt
    `outline:none`.
    Bewegt wird nur `transform` mit `--motion-fast`; beide Ruhe-Schichten
-   nehmen `::before` mit. Mit grobem Zeiger 24 px Streifen
+   nehmen `::before` mit. Mit grobem Zeiger 20 px Streifen — genau die
+   Lücke zwischen dem Rand der Navigationsknöpfe (Kante−9) und `#btn-back`
+   (Kante+12,5), also Kante−8 bis Kante+12, nicht mittig —
    und um den Griff eine unsichtbare Fläche von `--touch-min` im Quadrat —
    ein **Nebenweg** nach §37, mit dem Grund an Ort und Stelle: die Breite
    stellt man selten ein, und dieselbe Handlung geht über die Pfeiltasten
@@ -61495,7 +61497,16 @@ Ziehen 156 statt 184.
   sieht im Band 761–1100 jetzt 184 statt 156; Doppelklick oder Palette
   setzen zurück.
 - Die Fläche ist 16 statt 6 px breit; sie liegt über 8 px des Inhalts und
-  8 px der Navigation, aber nicht über einem Knopf (§9 in `test592`).
+  8 px der Navigation, aber nicht über einem Knopf (§9 in `test592`). Mit
+  dem Finger 20 px, und auch die nehmen keinem Knopf eine Pixelspalte
+  (§9 prüft den Rand jedes Navigationsknopfs und von `#btn-back`).
+- Ältere Stände lesen das Vergessen falsch. Zurücksetzen schreibt
+  `setMeta('studio:navigation-breite', null)`; ein Redion bis 1bfaca53 liest
+  das als `Number(null)` = 0 und klemmt auf 148. Wer nach einem
+  Zurücksetzen einen alten Tab, eine ältere `redion-einzeldatei.html` oder
+  eine `.json`-Sicherung in einem älteren Redion öffnet, sieht dort 148
+  statt 184. Es geht nichts verloren, und `setMeta(k, null)` ist hier ein
+  eingeführtes Muster (`seitenleiste.ts`); ein Ziehen behebt es.
 - Start 1850 → 1852 KB gzip (`test388` §5, Decke 1950): `studio.js` +0,7 KB,
   `studio.css` +1,3 KB (ihre Erklärungen reisen mit, CSS ist Quelle).
 
@@ -61560,6 +61571,20 @@ Ziehen 156 statt 184.
   kommt in IndexedDB erst nach dem älteren Schreiben dran. `test424`s
   Kommentar „FLUSH VOR DEM NEULADEN" verspricht mehr, als `flush` hält
   (`AUFGABEN.md`).
+- Die DURCHSICHT des Bogens fand zwei Stellen, die kein Lauf hatte, und
+  beide sind jetzt Zusagen in `test592` (zuerst rot gegen fbd76121, 59/61).
+  Mit dem Finger lag der 24-px-Streifen mittig auf der Kante und nahm
+  jedem Navigationsknopf die rechten 3 px — die Mitte der Knöpfe traf
+  weiter, deshalb sah §9 es nicht; der CSS-Kommentar behauptete das
+  Gegenteil. Der erste Gegenzug, 24 px von Kante−8 an, nahm dafür
+  `#btn-back` 3,5 px („#btn-back bei x 221"); die Lücke ist 21 px breit,
+  also ist der Streifen jetzt 20. Und die Palette bot
+  „Navigationsbreite zurücksetzen" im Fokus-Modus an, in dem der Trenner
+  ausgeblendet ist („Trenner none, 1 Treffer"). Die Navigation selbst bleibt
+  im Fokus-Modus stehen — die Durchsicht meinte, man sähe sie nicht; das
+  Bild zeigt sie. Der Grund für das Ausblenden ist ein anderer: wo der
+  Trenner fehlt, stellt man die Breite nicht ein, wie kompakt und im
+  Dokument, und dort schweigt der Befehl schon seit dem ersten Bau.
 - Die alten Griffe der Seitenleiste: `#side-griff` liegt seit jeher unter
   `.side-griff` und bekommt keinen Zeiger; am Telefon steht `.side-griff`
   als 6-px-Streifen am Rand der Schublade. Nicht angefasst (§43) — L237.

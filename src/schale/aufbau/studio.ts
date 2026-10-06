@@ -221,7 +221,11 @@ const StudioSchale = (() => {
     if (typeof Register !== 'undefined' && Register.befehle) Register.befehle.melde({
       gruppe: 'Ansicht', titel: 'Navigationsbreite zurücksetzen', tun: breiteZuruecksetzen,
       zeigen: () => matchMedia('(min-width: 761px)').matches && document.body.dataset.schale === 'premium' &&
-        document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an'
+        document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an' &&
+        /* Im Fokus-Modus ist der Trenner ausgeblendet (studio.css): dort
+           stellt man die Breite nicht ein, wie kompakt und im Dokument —
+           also auch kein Befehl dafür (test592 §5). */
+        !document.body.classList.contains('fokus')
     });
     an('studio-nav', () => {
       const kompakt = document.body.dataset.studioNav !== 'kompakt';

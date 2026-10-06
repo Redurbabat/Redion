@@ -19,8 +19,9 @@ Breite (ResizeObserver); `breiteZuruecksetzen()` für Doppelklick und den
 Palettenbefehl „Navigationsbreite zurücksetzen"; `isPrimary`, rAF,
 `lostpointercapture`, Escape, kein Merken beim Klick; Umschalt+←/→ und
 Bild↑/↓ 32 px; 16-px-Fläche mit einer Griff-Pille wie im Touch Kit (als
-Redion-CSS), Fokusrahmen, mit Finger 24 px und `--touch-min` im Quadrat um
-den Griff. Nichts entfernt; die alten Griffe der Seitenleiste bleiben
+Redion-CSS), Fokusrahmen, mit Finger 20 px (genau die Lücke zwischen den
+Knöpfen, Kante−8 bis Kante+12) und `--touch-min` im Quadrat um den Griff;
+der Palettenbefehl schweigt im Fokus-Modus. Nichts entfernt; die alten Griffe der Seitenleiste bleiben
 unberührt (L237, AUFGABEN).
 
 **Prüfung:** `test592` neu (59/59; gegen `1bfaca53` 12/58, §13 kam nach

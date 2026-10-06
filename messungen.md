@@ -6744,8 +6744,9 @@ Finger +48          Spalte 232 · aria 232 · 232     Spalte 204 · aria 204 · 
 **Trefferfläche bei 1440** (vorher gemessen, `probe`): `#kante` 0–184 mit
 1-px-Rand, erster Navigationsknopf 8–175, `#btn-back` 196–230, Trenner
 181–187. Nachher: Trenner 176–192 (16 px) — beiden Nachbarn bleiben 4 px;
-mit grobem Zeiger 172–196 (24 px, 3 px über dem Knopfrand, dessen Mitte
-weiter ihn selbst trifft) und um den Griff 44 × 44 (`test592` §9).
+mit grobem Zeiger im ersten Bau 172–196 (24 px, 3 px über dem Knopfrand,
+dessen Mitte weiter ihn selbst trifft), nach der Durchsicht 176–196 (20 px,
+siehe unten) und um den Griff 44 × 44 (`test592` §9).
 
 **Der Griff in den zehn Schemata** (1440, gezeichnete Pixel, Pille gegen
 den Grund 10 px links (Navigation) und rechts (Inhalt); Fokus: Pille gegen
@@ -6770,3 +6771,21 @@ Dateien, nachher 1852 KB über 252 Dateien — Decke 1950. Einzeln (gzip -6):
 `studio.js` 2599 → 3326 B, `studio.css` 23767 → 25065 B (die Erklärungen
 in der CSS reisen mit, sie ist Quelle), `index.html` 13497 → 13534 B. Keine
 neue Datei, kein neues Skript.
+
+**Nachtrag aus der Durchsicht** (6. Oktober 2026, file://, `hasTouch`,
+`elementFromPoint`). Mit grobem Zeiger, bei 1440 und Breite 184:
+
+```txt
+                       Streifen    Navigationsknopf endet   #btn-back beginnt   verloren
+erster Bau (fbd76121)  172–196     175                      196                 3 px je Navigationsknopf
+24 px ab Kante−8       176–200     175                      196                 #btn-back (x 221 bei Kante 208)
+nachher (20 px)        176–196     175                      196                 nichts
+```
+
+Dieselbe Sonde (Raster 1 × 2 px über Kante ± 30) bei 1440 × 900,
+1024 × 768 und 800 × 1000, Breiten 148, 184 und 260, mit Maus und Finger:
+kein Navigationsknopf und nicht `#btn-back` verliert einen Treffer; das
+44 × 44-Quadrat um den Griff bleibt mittig auf der Kante (Gegenprobe
+`left:50%` statt 8 px: „Um den Griff ist die Fläche mindestens 44 px
+breit" rot). Start unverändert 1852 KB gzip über 252 Dateien (`test388`
+§5, Decke 1950); `redion-einzeldatei.html` 9150 → 9151 KB.

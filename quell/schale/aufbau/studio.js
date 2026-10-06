@@ -221,7 +221,8 @@ const StudioSchale = (() => {
             Register.befehle.melde({
                 gruppe: 'Ansicht', titel: 'Navigationsbreite zurücksetzen', tun: breiteZuruecksetzen,
                 zeigen: () => matchMedia('(min-width: 761px)').matches && document.body.dataset.schale === 'premium' &&
-                    document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an'
+                    document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an' &&
+                    !document.body.classList.contains('fokus')
             });
         an('studio-nav', () => {
             const kompakt = document.body.dataset.studioNav !== 'kompakt';

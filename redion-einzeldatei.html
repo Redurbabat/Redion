@@ -23965,19 +23965,27 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
      Akzentlinie (im Bild gesehen, E716). */
   body[data-schale="premium"] #studio-divider:focus-visible{outline:none}
   body[data-schale="premium"] #studio-divider:focus-visible::before{outline:2px solid var(--accent-text);outline-offset:3px}
-  /* MIT DEM FINGER (§37). Der Streifen wird 24 px breit, und um den Griff
+  /* MIT DEM FINGER (§37). Der Streifen wird 20 px breit, und um den Griff
      liegt eine unsichtbare Fläche von `--touch-min` im Quadrat (`::after`).
      Ein Quadrat und kein durchsichtiger Rand um die Pille: der Rand trüge
      ihre Rundung, und die Trefferprüfung folgt der Rundung — das wäre ein
      Kreis, und seine Ecken träfen nicht (gemessen von test592 §9).
      NEBENWEG, mit Grund: die Breite der Navigation stellt man selten ein,
      und dieselbe Handlung geht auch über die Pfeiltasten am Trenner und
-     über die Palette („Navigationsbreite zurücksetzen"). Breiter auf ganzer
-     Höhe griffe der Streifen in die Navigationsknöpfe und in #btn-back
-     (zwischen ihnen liegen 21 px). */
+     über die Palette („Navigationsbreite zurücksetzen").
+     NICHT MITTIG, UND NICHT BREITER: zwischen dem rechten Rand der
+     Navigationsknöpfe (kante−9) und #btn-back (kante+12,5) liegen 21 px.
+     Der erste Stand lag mit 24 px mittig (kante−12 … kante+12) und nahm
+     jedem Navigationsknopf die rechten 3 px (Durchsicht E716); 24 px von
+     kante−8 an hätten #btn-back 3,5 px genommen (beides gemessen von
+     test592 §9). Also genau die Lücke: kante−8 bis kante+12, und Pille,
+     Linie und Quadrat sitzen 8 px vom linken Rand — wieder genau auf der
+     Kante. Die 44 px kommen vom Quadrat, nicht vom Streifen. */
   @media(pointer:coarse){
-    body[data-schale="premium"] #studio-divider{width:calc(var(--space-4)*2);margin-right:calc(var(--space-4)*-1)}
-    body[data-schale="premium"] #studio-divider::after{content:"";position:absolute;left:50%;top:50%;width:var(--touch-min);height:var(--touch-min);transform:translate(-50%,-50%)}
+    body[data-schale="premium"] #studio-divider{width:calc(var(--space-3) + var(--space-4));margin-right:calc(var(--space-4)*-1)}
+    body[data-schale="premium"] #studio-divider::before{left:var(--space-3)}
+    body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible),.studio-resizing #studio-divider{background-position:calc(var(--space-3) - 1px) 0}
+    body[data-schale="premium"] #studio-divider::after{content:"";position:absolute;left:var(--space-3);top:50%;width:var(--touch-min);height:var(--touch-min);transform:translate(-50%,-50%)}
   }
   body[data-studio-nav="kompakt"] #studio-divider,body[data-dokument="an"] #studio-divider,body.fokus #studio-divider{display:none!important}
   .studio-resizing{cursor:col-resize;user-select:none}
@@ -26940,7 +26948,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1420, inhalt: 'badc2939fca32e22', gebaut: '2026-10-06T00:36:01.394Z' };
+const Stand = { fassung: 1422, inhalt: '98ca6e3c06f687e1', gebaut: '2026-10-06T05:17:48.073Z' };
 window.Stand = Stand;
 
 </script>
@@ -146479,7 +146487,8 @@ const StudioSchale = (() => {
             Register.befehle.melde({
                 gruppe: 'Ansicht', titel: 'Navigationsbreite zurücksetzen', tun: breiteZuruecksetzen,
                 zeigen: () => matchMedia('(min-width: 761px)').matches && document.body.dataset.schale === 'premium' &&
-                    document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an'
+                    document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an' &&
+                    !document.body.classList.contains('fokus')
             });
         an('studio-nav', () => {
             const kompakt = document.body.dataset.studioNav !== 'kompakt';
