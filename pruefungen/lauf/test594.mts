@@ -49,6 +49,14 @@
  *   §15 „Löschen" im Blockmenü auf einer Unterseite und auf einer Datenbank
  *       → Papierkorb samt Kindern, nach dem Neuladen noch zurückzuholen.
  *       (Rot: WEG — trashBlock + purgeBlock, nicht in Store.trashed().)
+ *       Dazu die zwei Wege, die die Durchsicht vom 6. Oktober fand: das ⋯
+ *       der Datenbank selbst („Datenbank löschen" — ein `confirm()`, dann
+ *       purge) und Entf auf einer Mehrfachauswahl (`Mehrfach`, purge).
+ *       Beide → Papierkorb, ohne Browser-Rückfrage, nach dem Neuladen noch da.
+ *   §16 Rechte (§26, L102): wer auf DIESER Seite nur lesen darf, kann sie
+ *       weder umbenennen noch in den Papierkorb legen — gefragt wird gegen
+ *       die angefasste Seite, nicht gegen die offene. Wer bearbeiten darf,
+ *       kann es weiter.
  *
  * ─── KANN DIESER LAUF ROT WERDEN? (§55.2) ───────────────────────────────────
  * Er war es: eingecheckt als „test594 (rot)" gegen 1bfaca53, bevor E718
@@ -254,6 +262,18 @@ await kartenMenue(s, a.ordner, 'umbenennen');
 await s.waitForTimeout(500);
 await s.evaluate(`UI.frage = window.__frage594`);
 gleich('„A␇B⏎C" wird als „AB C" gespeichert', await s.evaluate(`Store.getBlock('${a.ordner}').text`), 'AB C');
+/* Die Durchsicht vom 6. Oktober: Richtungs-Überschreiber (U+202A–202E,
+   U+2066–2069) drehen einen Namen in der Anzeige um, ohne dass man es
+   sieht — und die 200er-Grenze schnitt nach Codepunkten, also mitten in
+   ein zusammengesetztes Zeichen (👨‍👩‍👧 sind fünf). */
+const s3 = await s.evaluate(`(() => {
+  const fam = '\u{1F468}\u200D\u{1F469}\u200D\u{1F467}';
+  const lang = App.nameSaeubern('a'.repeat(199) + fam + 'b');
+  return { bidi: App.nameSaeubern('Rechnung\u202Efdp.exe\u2066x\u2069'),
+           ganz: lang.endsWith(fam), schwanz: lang.slice(199) === fam, laenge: [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(lang)].length };
+})()`) as any;
+gleich('Richtungs-Überschreiber fliegen hinaus', s3.bidi, 'Rechnungfdp.exex');
+gleich('Die 200er-Grenze zählt Schriftzeichen und schneidet keines entzwei', [s3.ganz, s3.schwanz, s3.laenge], [true, true, 200]);
 await s.evaluate(`Store.updateBlock('${a.ordner}', { text: 'Kabelkunde' }); App.zeichneBaum()`);
 await zurBibliothek(s);
 
@@ -552,10 +572,63 @@ const v15 = await s.evaluate(`(() => ({
 console.log('    ' + JSON.stringify(v15));
 gleich('Unterseite und Datenbank liegen im Papierkorb, die Enkelseite ist noch da',
   [v15.unter, v15.imKorb, v15.enkel, v15.db, v15.dbImKorb], [false, true, 'da', false, true]);
+/* Das ⋯ der Datenbank selbst: „Datenbank löschen". Ein `confirm()` wird
+   bejaht, damit der alte Weg auch wirklich löscht — und gezählt, weil der
+   neue keinen mehr braucht (umkehrbar heisst: nicht vorher fragen). */
+let dialoge15 = 0;
+s.on('dialog', d => { dialoge15++; void d.accept(); });
+const db2 = await s.evaluate(`(async () => {
+  const db = Store.addDatabase('${b15.seite}', 'Zweite Tabelle 594');
+  Store.addRow(db.collectionId, {});
+  const unter2 = Store.addPage('${b15.seite}', { text: 'Ausgewählte Unterseite 594' });
+  const enkel2 = Store.addPage(unter2.id, { text: 'Ausgewählte Enkelseite 594' });
+  await Store.flush();
+  App.zeichneSeite();
+  return { db: db.block.id, coll: db.block.collectionId, unter2: unter2.id, enkel2: enkel2.id };
+})()`) as any;
+await s.waitForTimeout(700);
+await s.evaluate(`document.querySelectorAll('.menu').forEach(m => m.remove())`);
+const dbKnopf = await s.evaluate(`(() => {
+  const k = document.querySelector('.blk[data-bid="${db2.db}"] button[data-a="menu"]');
+  if (!k) return false; k.click(); return true;
+})()`);
+await s.waitForTimeout(300);
+const dbDel = await s.evaluate(`(() => {
+  const k = document.querySelector('.menu button[data-a="del"]');
+  if (!k) return ''; const t = (k.textContent || '').trim(); k.click(); return t;
+})()`) as string;
+await s.waitForTimeout(500);
+const v15b = await s.evaluate(`(() => ({
+  db: Store.getBlock('${db2.db}') ? Store.getBlock('${db2.db}').alive : 'WEG',
+  imKorb: Store.papierkorbBloecke().some(x => x.id === '${db2.db}'),
+  sammlung: !!Store.getCollection('${db2.coll}'),
+  meldung: document.getElementById('toast')?.textContent || '',
+  rueck: !!document.querySelector('#toast button.toast-aktion')
+}))()`) as any;
+console.log('    ' + JSON.stringify({ knopf: dbKnopf, eintrag: dbDel, dialoge: dialoge15, ...v15b }));
+p('Das ⋯ der Datenbank hat seinen Eintrag, und er heisst, was er tut', dbKnopf && /Papierkorb/.test(dbDel), dbDel);
+gleich('„Datenbank löschen" legt in den Papierkorb, die Sammlung bleibt, ohne Browser-Rückfrage',
+  [v15b.db, v15b.imKorb, v15b.sammlung, dialoge15], [false, true, true, 0]);
+p('… und die Meldung bietet „Rückgängig"', v15b.rueck, v15b.meldung);
+/* Entf auf einer Mehrfachauswahl (`Mehrfach`, Esc in einem Textblock). */
+await s.evaluate(`document.querySelectorAll('.menu').forEach(m => m.remove()); Mehrfach.waehle('${db2.unter2}')`);
+await s.waitForTimeout(200);
+await s.keyboard.press('Delete');
+await s.waitForTimeout(500);
+const v15c = await s.evaluate(`(() => ({
+  unter: Store.getBlock('${db2.unter2}') ? Store.getBlock('${db2.unter2}').alive : 'WEG',
+  imKorb: Store.trashed().some(x => x.id === '${db2.unter2}'),
+  enkel: Store.getBlock('${db2.enkel2}') ? 'da' : 'WEG'
+}))()`) as any;
+console.log('    ' + JSON.stringify(v15c));
+gleich('Entf auf einer Mehrfachauswahl legt in den Papierkorb, samt Enkelseite',
+  [v15c.unter, v15c.imKorb, v15c.enkel], [false, true, 'da']);
 await s.evaluate('Store.flush()');
 await s.reload();
 await s.waitForFunction("typeof Store !== 'undefined' && (document.getElementById('tree')?.children.length || 0) > 0", null, { timeout: 30000 });
 await s.waitForTimeout(600);
+gleich('Beide nach dem Neuladen noch da (im Papierkorb)',
+  await s.evaluate(`[!!Store.getBlock('${db2.db}'), !!Store.getBlock('${db2.unter2}'), !!Store.getBlock('${db2.enkel2}')]`), [true, true, true]);
 const r15 = await s.evaluate(`(async () => {
   const da = !!Store.getBlock('${b15.unter}') && !!Store.getBlock('${b15.db}');
   if (da) { Store.restoreBlock('${b15.unter}'); Store.restoreBlock('${b15.db}'); await Store.flush(); }
@@ -564,6 +637,36 @@ const r15 = await s.evaluate(`(async () => {
            kinder: (Store.getBlock('${b15.unter}')?.content || []).length };
 })()`) as any;
 gleich('Nach dem Neuladen noch da und zurückzuholen, samt Inhalt', [r15.da, r15.inhalt, r15.kinder >= 2], [true, true, true]);
+
+/* ── §16 ────────────────────────────────────────────────────────────── */
+console.log('\n§16 Rechte: gefragt wird die angefasste Seite (§26, L102)');
+await s.evaluate(`document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu,.menu').forEach(e => e.remove())`);
+const r16 = await s.evaluate(`(async () => {
+  const lese = Store.addPage(null, { text: 'Nur zum Lesen 594' });
+  const kind = Store.addPage(lese.id, { text: 'Kind zum Lesen 594' });
+  const darf = Store.addPage(null, { text: 'Zum Bearbeiten 594' });
+  const ich = Konten.aktiv().id;
+  Store.updateBlock(lese.id, { freigaben: { [ich]: 'lesen' } });
+  Store.updateBlock(darf.id, { freigaben: { [ich]: 'edit' } });
+  await Store.flush();
+  App.oeffne(darf.id);   /* offen ist eine Seite, auf der man DARF */
+  return { lese: lese.id, kind: kind.id, darf: darf.id };
+})()`) as any;
+await s.waitForTimeout(500);
+await s.evaluate(`void App.umbenennen(Store.getBlock('${r16.lese}'))`);
+const frage16 = await frageOffen(s);
+const meldung16 = await s.evaluate(`document.getElementById('toast')?.textContent || ''`) as string;
+if (frage16) { await s.keyboard.press('Escape'); await s.waitForTimeout(400); }
+p('Nur lesen: Umbenennen fragt gar nicht erst nach einem Namen', !frage16);
+p('… und sagt, warum', /Recht/.test(meldung16), meldung16);
+await s.evaluate(`App.inPapierkorb(Store.getBlock('${r16.kind}'))`);
+await s.waitForTimeout(300);
+const meldung16b = await s.evaluate(`document.getElementById('toast')?.textContent || ''`) as string;
+gleich('Nur lesen (geerbt): das Kind bleibt, wo es ist', await s.evaluate(`Store.getBlock('${r16.kind}').alive`), true);
+p('… mit einer Meldung, die es sagt', /Recht/.test(meldung16b), meldung16b);
+await s.evaluate(`App.inPapierkorb(Store.getBlock('${r16.darf}'))`);
+await s.waitForTimeout(300);
+gleich('Bearbeiten: in den Papierkorb geht weiter', await s.evaluate(`Store.getBlock('${r16.darf}').alive`), false);
 p('Keine Ausnahme im Browser (Rechner)', fehler.length === 0, fehler.slice(0, 3).join(' · '));
 await a.k.close();
 
