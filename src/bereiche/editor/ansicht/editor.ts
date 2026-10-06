@@ -455,7 +455,9 @@ const Blocks = (() => {
 
      Der Block `.blk[data-bid]` bleibt immer stehen: Verweise `#block=`,
      Ziehen, Auswahl und die Nummer der Seite hängen an ihm, nicht an der
-     Zeichnung. Gedruckt wird aus dem Speicher (`Werkzeuge.drucken`); für
+     Zeichnung. Was IN einem Platz steht (Kinder eines Blatts, Marken),
+     zeichnet `zeichneFuer` vor einem Sprung und `zeichneFuerSuche` vor
+     Strg+F — siehe unten. Gedruckt wird aus dem Speicher (`Werkzeuge.drucken`); für
      den Druck des Browsers selbst wird vorher alles gezeichnet
      (`beforeprint`).
 
@@ -643,7 +645,11 @@ const Blocks = (() => {
       const imScroll = (el: HTMLElement): boolean =>
         !!r && r.contains(el) && !el.closest('.pg-fl-koerper');
       /* Was nicht in der Seitenansicht hängt — lose gebaut, auf einer
-         Fläche, in einem anderen Rahmen —, zeichnet sofort, wie bisher. */
+         Fläche, in einem anderen Rahmen —, zeichnet hier ganz: am Ende des
+         Durchgangs, eine Mikroaufgabe nach `render`, noch vor dem ersten
+         Bild. Wer gleich nach `render` im selben Aufruf misst (Fläche,
+         „ins Bild holen"), sieht ab dem vierten Blatt den Platz in seiner
+         gemessenen Grösse, nicht die Zeichnung. */
       const warten: HTMLElement[] = [];
       for (const el of liste) {
         if (el.dataset['nah'] !== 'wartet') {
@@ -705,7 +711,99 @@ const Blocks = (() => {
       });
     }
 
-    return { blatt };
+    /* WAS IN EINEM PLATZ STEHT, MUSS ERREICHBAR BLEIBEN (§43). Ein Platz
+       hält nur den Block des Blatts, nicht seine Kinder und nicht seine
+       Marken. Gefunden in der Durchsicht des Zweigs: `App.zeigeBlock` auf
+       den Text in Blatt 6 fand nichts und schwieg (Verweise `#block=`,
+       Suchtreffer, Rückverweise, Erwähnungen und Kommentarsprünge nehmen
+       alle diesen Weg), und Strg+F zählte „1 von 3" statt „1 von 6". Auf
+       dem Grundstand war beides heil, weil alles gezeichnet war. Also
+       zeichnen die zwei Wege, die in die Seite hineingreifen, ihr Ziel
+       vorher (`test593` §11, §12). */
+    const wartendFuer = (bid: string): HTMLElement | null => {
+      for (const el of document.querySelectorAll<HTMLElement>('#page [data-nah="wartet"]'))
+        if (el.dataset['nahBid'] === bid) return el;
+      return null;
+    };
+
+    /** Das Blatt (oder die PDF-Seite) zeichnen, in dem ein Block steht —
+        über die Elternkette, wie `klappeAuf` in der Schale. Gibt zurück, ob
+        etwas gezeichnet wurde. */
+    const zeichneFuer = (blockId: string): boolean => {
+      let b: any = blockId ? Store.getBlock(blockId) : null;
+      let tiefe = 0;
+      let gezeichnet = false;
+      while (b && tiefe++ < 64) {
+        if (b.type === 'blatt' || b.type === 'pdfseite') {
+          const el = wartendFuer(String(b.id));
+          if (el) { jetzt(el, 'still'); gezeichnet = true; }
+        }
+        if (b.parentTable !== 'block' || !b.parentId) break;
+        b = Store.getBlock(String(b.parentId));
+      }
+      return gezeichnet;
+    };
+
+    /** Jede Zeichenkette in einem Wert, flach gesammelt — ohne die Felder,
+        die nur Verwaltung sind (Kennungen, Typ, Zeiten) und nie als Text
+        auf dem Blatt stehen. Zahlenlisten (die Punkte eines Strichs) werden
+        übersprungen. Lieber ein Blatt zu viel zeichnen als eine Stelle
+        verschweigen. */
+    const VERWALTUNG = new Set(['id', 'type', 'parentId', 'parentTable', 'content', 'created', 'edited',
+      'erstelltVon', 'alive', 'color', 'collectionId', 'aktiveView', 'dateiId', 'quelleId', 'icon']);
+    const zeichenketten = (wert: unknown, raus: string[], tiefe = 0): void => {
+      if (tiefe > 8) return;
+      if (typeof wert === 'string') { raus.push(wert); return; }
+      if (!wert || typeof wert !== 'object') return;
+      if (Array.isArray(wert)) {
+        for (const w of wert) if ((w && typeof w === 'object') || typeof w === 'string') zeichenketten(w, raus, tiefe + 1);
+        return;
+      }
+      for (const [k, w] of Object.entries(wert as Record<string, unknown>))
+        if (!VERWALTUNG.has(k)) zeichenketten(w, raus, tiefe + 1);
+    };
+    /** Steht das Gesuchte in dem, was das gezeichnete Blatt als TEXT zeigen
+        würde? Das ist: der Name des Blatts, die getippten Marken (Text,
+        Zettel) und alles, was seine Kinder tragen. NICHT dazu: der
+        Suchtext einer PDF-Seite (die Seitenansicht hat keine Textschicht —
+        gezeichnet würde er auch nicht gefunden), die Beschriftungen der
+        Leiste und „Seite N von M". Die stehen auf jeder Seite gleich; sie
+        mitzuzählen hiesse, beim ersten Buchstaben („o" in „von") alle 134
+        Seiten zu zeichnen — gemessen 1,2 s am Rechner, genau der Stau, den
+        E717 beseitigt (`messungen.md` §88, L238 Punkt 3). */
+    const enthaelt = (block: any, q: string): boolean => {
+      const texte: string[] = [];
+      if (!istPdf(block)) texte.push(String(block?.text ?? ''));
+      for (const m of (Array.isArray(block?.marken) ? block.marken : []))
+        if (m && (m.art === 'text' || m.art === 'zettel')) texte.push(String(m.text ?? ''));
+      const stapel: any[] = [...(Store.childrenOf(String(block.id)) as any[])];
+      let n = 0;
+      while (stapel.length && n++ < 2000) {
+        const b = stapel.pop();
+        zeichenketten(b, texte);
+        for (const k of Store.childrenOf(String(b.id)) as any[]) stapel.push(k);
+      }
+      return texte.some(t => t.toLowerCase().includes(q));
+    };
+
+    /** Vor Strg+F: jeden Platz zeichnen, dessen Inhalt das Gesuchte
+        enthält — aus dem Speicher gelesen, nicht aus dem DOM. Die übrigen
+        bleiben Platz; ihr Satz „… wird vorbereitet" ist kein Fund (die
+        Suche überspringt `.blatt-platz`). */
+    const zeichneFuerSuche = (frage: string): number => {
+      const q = String(frage || '').trim().toLowerCase();
+      if (!q) return 0;
+      let n = 0;
+      for (const el of [...document.querySelectorAll<HTMLElement>('#page [data-nah="wartet"]')]) {
+        const p = plaetze.get(el);
+        if (!p) continue;
+        const block = Store.getBlock(String(p.block.id)) ?? p.block;
+        if (enthaelt(block, q)) { jetzt(el, 'still'); n++; }
+      }
+      return n;
+    };
+
+    return { blatt, zeichneFuer, zeichneFuerSuche };
   })();
 
   /** Baut das DOM für einen Block samt Kindern. */
@@ -3951,6 +4049,9 @@ const Blocks = (() => {
     blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
     knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
     DIENSTE, einbettungsAdresse,
+    /* Was in einem wartenden Blatt steht, vor einem Sprung oder einer
+       Suche zeichnen (E717, `test593` §11, §12). */
+    zeichneFuer: Nahzeichnen.zeichneFuer, zeichneFuerSuche: Nahzeichnen.zeichneFuerSuche,
     /* Mehrfachauswahl */
     auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
     auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,

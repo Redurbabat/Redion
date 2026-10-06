@@ -540,7 +540,86 @@ const Blocks = (() => {
                 document.querySelectorAll('#page [data-nah="wartet"]').forEach(el => jetzt(el, 'still'));
             });
         }
-        return { blatt };
+        const wartendFuer = (bid) => {
+            for (const el of document.querySelectorAll('#page [data-nah="wartet"]'))
+                if (el.dataset['nahBid'] === bid)
+                    return el;
+            return null;
+        };
+        const zeichneFuer = (blockId) => {
+            let b = blockId ? Store.getBlock(blockId) : null;
+            let tiefe = 0;
+            let gezeichnet = false;
+            while (b && tiefe++ < 64) {
+                if (b.type === 'blatt' || b.type === 'pdfseite') {
+                    const el = wartendFuer(String(b.id));
+                    if (el) {
+                        jetzt(el, 'still');
+                        gezeichnet = true;
+                    }
+                }
+                if (b.parentTable !== 'block' || !b.parentId)
+                    break;
+                b = Store.getBlock(String(b.parentId));
+            }
+            return gezeichnet;
+        };
+        const VERWALTUNG = new Set(['id', 'type', 'parentId', 'parentTable', 'content', 'created', 'edited',
+            'erstelltVon', 'alive', 'color', 'collectionId', 'aktiveView', 'dateiId', 'quelleId', 'icon']);
+        const zeichenketten = (wert, raus, tiefe = 0) => {
+            if (tiefe > 8)
+                return;
+            if (typeof wert === 'string') {
+                raus.push(wert);
+                return;
+            }
+            if (!wert || typeof wert !== 'object')
+                return;
+            if (Array.isArray(wert)) {
+                for (const w of wert)
+                    if ((w && typeof w === 'object') || typeof w === 'string')
+                        zeichenketten(w, raus, tiefe + 1);
+                return;
+            }
+            for (const [k, w] of Object.entries(wert))
+                if (!VERWALTUNG.has(k))
+                    zeichenketten(w, raus, tiefe + 1);
+        };
+        const enthaelt = (block, q) => {
+            const texte = [];
+            if (!istPdf(block))
+                texte.push(String(block?.text ?? ''));
+            for (const m of (Array.isArray(block?.marken) ? block.marken : []))
+                if (m && (m.art === 'text' || m.art === 'zettel'))
+                    texte.push(String(m.text ?? ''));
+            const stapel = [...Store.childrenOf(String(block.id))];
+            let n = 0;
+            while (stapel.length && n++ < 2000) {
+                const b = stapel.pop();
+                zeichenketten(b, texte);
+                for (const k of Store.childrenOf(String(b.id)))
+                    stapel.push(k);
+            }
+            return texte.some(t => t.toLowerCase().includes(q));
+        };
+        const zeichneFuerSuche = (frage) => {
+            const q = String(frage || '').trim().toLowerCase();
+            if (!q)
+                return 0;
+            let n = 0;
+            for (const el of [...document.querySelectorAll('#page [data-nah="wartet"]')]) {
+                const p = plaetze.get(el);
+                if (!p)
+                    continue;
+                const block = Store.getBlock(String(p.block.id)) ?? p.block;
+                if (enthaelt(block, q)) {
+                    jetzt(el, 'still');
+                    n++;
+                }
+            }
+            return n;
+        };
+        return { blatt, zeichneFuer, zeichneFuerSuche };
     })();
     const render = (block, tiefe = 0, nr = 0) => {
         const t = typ(block.type);
@@ -3410,6 +3489,7 @@ const Blocks = (() => {
         blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
         knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
         DIENSTE, einbettungsAdresse,
+        zeichneFuer: Nahzeichnen.zeichneFuer, zeichneFuerSuche: Nahzeichnen.zeichneFuerSuche,
         auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
         auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
         auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,

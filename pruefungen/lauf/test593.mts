@@ -67,7 +67,9 @@
  *      zeichnen das Blatt, rollen hin und heben hervor.
  *  §12 Strg+F findet, was in fernen Blättern steht — sechs Stellen über
  *      sechs Blätter, eine getippte Marke auf PDF-Seite 8 —, und der Satz
- *      eines Platzes („… wird vorbereitet") ist kein Fund.
+ *      eines Platzes („… wird vorbereitet") ist kein Fund; und ein Wort,
+ *      das nur in den Nummern „Seite N von M" steht, zeichnet keine fernen
+ *      Seiten (sonst wäre der Stau beim ersten Buchstaben zurück).
  *
  *   node pruefungen/lauf/test593.mts
  * ==========================================================================*/
@@ -549,7 +551,22 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
     p('Ein Verweis #block= auf den Text in Blatt 5 rollt ihn ins Bild', z2.imDom && z2.imBild && z2.hervor, JSON.stringify(z2));
 
     console.log('\n12 · Strg+F findet auch, was in fernen Blättern steht');
-    await a.pc.evaluate(`(() => { location.hash = ''; App.oeffne('${seite.id}'); })()`);
+    /* Eine EIGENE Seite: §11 hat Blatt 5 und 6 gezeichnet, und was nah
+       war, zeichnet beim nächsten Mal sofort — die Gegenprobe ohne
+       `zeichneFuerSuche` blieb bei „Zielwort" sonst grün. */
+    const seite2 = await a.pc.evaluate(`(async () => {
+      const s = Store.addPage(null, { text: 'Sechs Blätter, gesucht' });
+      for (let i = 1; i <= 6; i++) {
+        const b = Store.addBlock(s.id, 'blatt', {});
+        Store.addBlock(b.id, 'text', { text: 'Zielwort' + i });
+      }
+      for (let nr = 1; nr <= 8; nr++)
+        Store.addBlock(s.id, 'pdfseite', { text: '', nr, vonSeiten: 8, bw: 595, bh: 842,
+          marken: nr === 8 ? [{ id: 'm8b', art: 'text', text: 'Randnotiz acht', point: [60, 80] }] : [] });
+      await Store.flush();
+      return s.id;
+    })()`) as string;
+    await a.pc.evaluate(`(() => { location.hash = ''; App.oeffne('${seite2}'); })()`);
     await a.pc.waitForTimeout(900);
     await a.pc.evaluate(`(() => { document.getElementById('scroll').scrollTop = 0; })()`);
     await a.pc.waitForTimeout(300);
@@ -580,6 +597,22 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
     p('Eine getippte Marke auf PDF-Seite 8 wird gefunden', s2.marken === 1, JSON.stringify(s2));
     const s3 = await suche('vorbereitet');
     p('Der Satz eines Platzes ist kein Fund', s3.marken === 0 && s3.lose === 0, JSON.stringify(s3));
+    /* Und kein Stau durch die Hintertür: „von" steht in jeder Nummer
+       „Seite N von M" und sonst nirgends. Fern wartende Seiten deshalb zu
+       zeichnen hiesse, beim ersten Buchstaben alle zu zeichnen (L238). */
+    /* Gezählt im selben Aufruf wie die Eingabe — danach rollt die Suche
+       zur ersten Stelle, und was dabei in die Nähe kommt, zeichnet der
+       Beobachter ohnehin (das ist kein Stau). */
+    const von = await a.pc.evaluate(`(() => {
+      document.getElementById('findbar')?.remove(); App.seitenSuche();
+      const inp = document.querySelector('#findbar input');
+      const vor = document.querySelectorAll('#page [data-nah="wartet"]').length;
+      inp.value = 'von'; inp.dispatchEvent(new Event('input'));
+      return { vor, nach: document.querySelectorAll('#page [data-nah="wartet"]').length,
+               zaehler: document.querySelector('#findbar .n').textContent };
+    })()`) as { vor: number; nach: number; zaehler: string };
+    p('„von" (nur in „Seite N von M") zeichnet keine fernen Seiten', von.vor > 0 && von.nach === von.vor,
+      JSON.stringify(von));
     await a.pc.keyboard.press('Escape');
   } catch (e) { p('§11–§12 laufen bis zum Ende durch', false, String(e).split('\n')[0]); }
   await a.zu();

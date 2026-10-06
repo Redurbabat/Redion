@@ -1023,6 +1023,9 @@ const App = (() => {
     kiAmDokumentAnpassen(false);
 
     if (sonder) {
+      /* Die Lesestelle gilt nur für DIESELBE Seite in DERSELBEN Ansicht —
+         eine Sonderansicht dazwischen beginnt die Zählung neu. */
+      gezeichnetAls = '';
       wrap.className = 'wide';
       wrap.innerHTML = '';
       document.body.dataset.font = 'default';
@@ -1035,6 +1038,7 @@ const App = (() => {
     const p = seiteId ? Store.getBlock(seiteId) : null;
 
     if (!p) {
+      gezeichnetAls = '';
       Inhaltsflaeche.leer(wrap);
       zeichneCrumbs();
       return;
@@ -1120,6 +1124,7 @@ const App = (() => {
 
     /* Fokus setzen */
     if (fokus) {
+      Blocks.zeichneFuer(fokus);
       const ct = document.querySelector<HTMLElement>(`[data-bid="${fokus}"] .ct`);
       if (ct instanceof HTMLElement) { if (wo === 'ende') Blocks.cursorAnsEnde(ct); else ct.focus(); }
     }
@@ -1741,7 +1746,14 @@ const App = (() => {
       if (!q) { n.textContent = ''; return; }
       const seitenKasten = document.getElementById('page');
       if (!seitenKasten) return;
-      const lauf = document.createTreeWalker(seitenKasten, NodeFilter.SHOW_TEXT);
+      /* Ein Blatt, das noch ein Platz ist (E717), trägt seinen Text nicht
+         im DOM — also erst zeichnen, was das Gesuchte enthält, und den Satz
+         der übrigen Plätze („… wird vorbereitet") nicht mitzählen. */
+      Blocks.zeichneFuerSuche(q);
+      const lauf = document.createTreeWalker(seitenKasten, NodeFilter.SHOW_TEXT, {
+        acceptNode: (k: Node) => k.parentElement?.closest('.blatt-platz')
+          ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+      });
       const knoten: Text[] = [];
       while (lauf.nextNode()) knoten.push(lauf.currentNode as Text);
       knoten.forEach(k => {
@@ -3588,6 +3600,9 @@ const App = (() => {
    *  Bild darin nachlädt und alles darunter verschiebt. */
   const rolleZu = (blockId: string): void => {
     const hin = (): boolean => {
+      /* Steht das Ziel in einem Blatt, das noch ein Platz ist (E717), gibt
+         es seinen Knoten erst, wenn das Blatt gezeichnet ist. */
+      Blocks.zeichneFuer(blockId);
       const ziel = document.querySelector(`[data-bid="${blockId}"]`);
       if (!ziel) return false;
       ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });
