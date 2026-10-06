@@ -317,6 +317,14 @@ const wirdGelesen = (k: string): boolean => {
     new RegExp(`\\.${flucht(k)}\\b`),                // view.k
     new RegExp(`\\['${flucht(k)}'\\]`)               // obj['k']
   ];
+  /* DIE QUELLEN DER KI (E724). Ein Schalter `q:name` landet in
+     `ki:quellen` und wird beim FRAGEN gelesen — `q.name` in kontext.ts,
+     `Kontext.quellen().name` in dienst.ts. Diese Form fehlte; deshalb
+     standen alle fünf als Ausnahme im Verzeichnis, mit dem Grund „gelesen
+     im Klick-Handler". Der Klick-Handler KIPPT den Wert nur; ein Leser ist
+     er nicht. So kam `q:verbindungen` durch, das niemand las. */
+  if (k.startsWith('q:'))
+    formen.push(new RegExp(`(?:\\bq|quellen\\(\\))\\.${flucht(k.slice(2))}\\b`));
   for (const t of quellen.values())
     for (const zeile of t.split('\n')) {
       if (zeile.includes(`schalter('${k}'`)) continue;   // die eigene Zeile zählt nicht

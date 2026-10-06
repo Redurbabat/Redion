@@ -64,13 +64,19 @@ try {
     });
     await page.waitForSelector('#ai.open');
     await page.waitForTimeout(800);
-    const summary = page.locator('#ai-tools summary');
-    check(`${width}: Werkzeuge zunächst geschlossen`, !await page.locator('#ai-tools').evaluate((el: HTMLDetailsElement) => el.open));
+    /* SEIT E724 KEINE SCHUBLADE. „Werkzeuge & Kontext" ist aufgelöst: die
+       Seitenaktionen stehen im leeren Chat, die Quellen am Prompt, Agent,
+       Besprechung und Protokoll im ⋯ des Kopfs. Was hier „zunächst
+       geschlossen" hiess, heisst jetzt: ohne einen Klick zu sehen. */
+    check(`${width}: Keine Schublade mehr, die Seitenaktionen stehen im leeren Chat`,
+      await page.locator('#ai-tools').count() === 0 && await page.locator('#ai .ai-start').isVisible());
     check(`${width}: Modellwahl in der Eingabe`, await page.locator('.ai-compose .model-btn').count() === 1);
     const geometry = await page.evaluate(() => {
       const input = document.querySelector('#ai-input')!.getBoundingClientRect();
       const composer = document.querySelector('.ai-compose')!.getBoundingClientRect();
-      const buttons = ['#ai-plus', '#ai-modus', '.ai-compose .model-btn', '#ai-diktat', '#ai-senden'].map(selector => {
+      /* SECHS Knöpfe seit E724 — `#ai-quellen` ist zurück am Prompt. Auch
+         bei 360 px muss jeder 44 px messen und in die Eingabe passen. */
+      const buttons = ['#ai-plus', '#ai-quellen', '#ai-modus', '.ai-compose .model-btn', '#ai-diktat', '#ai-senden'].map(selector => {
         const rect = document.querySelector(selector)!.getBoundingClientRect();
         return { selector, x: rect.x, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height };
       });
@@ -81,38 +87,68 @@ try {
     });
     check(`${width}: Große runde Eingabe mit unterer Bedienleiste`, geometry.rounded >= 20 && geometry.below, geometry);
     check(`${width}: Hauptwege mindestens 44 px, ohne Überstand`, geometry.touch && geometry.fits, geometry);
-    await summary.click();
-    check(`${width}: Vier Gruppen, zwölf unverändert erreichbare Aktionen`,
-      await page.locator('.ai-action-group').count() === 4 && await page.locator('.ai-quick button.ru-funkel').count() === 12);
+    check(`${width}: Acht Seitenaktionen ohne einen Klick erreichbar, Funkel unverändert`,
+      await page.locator('.ai-start button.ru-funkel').count() === 8);
     const protectedButton = await page.locator('#ai-db').evaluate(el => ({
       text: el.textContent!.replace(/\s+/g, ' ').trim(), letters: el.querySelectorAll('.ru-funkel-b').length,
       color: getComputedStyle(el).backgroundColor, icon: !!el.querySelector('svg')
     }));
     check(`${width}: Datenbank-Knopf behält Originaleffekt`, protectedButton.text === 'Datenbank bauen' &&
       protectedButton.letters === 14 && protectedButton.color === 'rgb(16, 16, 16)' && protectedButton.icon, protectedButton);
-    const source = page.locator('[data-qs="aktuelleSeite"]');
+    /* Die Quellen stehen im Menü am Prompt (E724). */
+    await page.locator('#ai-quellen').click();
+    const source = page.locator('.menu [data-qs="aktuelleSeite"]');
     const sourceWasOn = await source.getAttribute('aria-pressed');
     await source.click();
     check(`${width}: Quellenzustand bleibt schaltbar und vorlesbar`, await source.getAttribute('aria-pressed') !== sourceWasOn);
     await source.click();
-    let privacyWarning = false;
-    page.once('dialog', async dialog => {
-      privacyWarning = dialog.message().includes('verlässt'); await dialog.dismiss();
-    });
-    await page.locator('[data-qs="web"]').click();
-    check(`${width}: Web bleibt nach abgelehnter Datenschutzfrage aus`, privacyWarning &&
-      await page.locator('[data-qs="web"]').getAttribute('aria-pressed') === 'false');
+    /* Die Datenschutzfrage ist seit E724 ein Redion-Fenster (Dialog, E710),
+       kein `confirm()` — der Satz mit „verlässt" steht jetzt dort. */
+    let nativ = 0;
+    const zaehle = async (dialog: { dismiss: () => Promise<void> }) => { nativ++; await dialog.dismiss(); };
+    page.on('dialog', zaehle);
+    await page.locator('.menu [data-qs="web"]').click();
+    await page.waitForTimeout(700);
+    const privacyWarning = await page.evaluate(() =>
+      /verlässt/.test(document.querySelector('.overlay, [data-insel-traeger]')?.textContent || ''));
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    page.off('dialog', zaehle);
+    check(`${width}: Web bleibt nach abgelehnter Datenschutzfrage aus`, privacyWarning && nativ === 0 &&
+      await page.evaluate(() => !Kontext.quellen().web), { privacyWarning, nativ });
+    await page.evaluate(() => document.querySelectorAll('.menu,.overlay').forEach(m => m.remove()));
     await page.locator('#ai-db').click();
     check(`${width}: Bau-Knopf öffnet weiterhin seine Rückfrage`, await page.locator('.overlay').count() > 0);
     await page.keyboard.press('Escape');
-    await summary.focus(); await page.keyboard.press('Escape');
-    check(`${width}: Escape schließt Werkzeuge und behält Tastaturfokus`, await summary.evaluate(el =>
-      document.activeElement === el && !(el.parentElement as HTMLDetailsElement).open));
+    await page.evaluate(() => document.querySelectorAll('.overlay').forEach(m => m.remove()));
+    await page.locator('#ai-quellen').focus(); await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    check(`${width}: Escape schließt das Quellenmenü und behält Tastaturfokus`, await page.evaluate(() =>
+      document.activeElement?.id === 'ai-quellen' && !document.querySelector('.menu')));
     await page.locator('#ai-input').fill('Erste Zeile');
     await page.locator('#ai-input').press('Shift+Enter');
     check(`${width}: Mehrzeilige Eingabe bleibt erhalten`, (await page.locator('#ai-input').inputValue()).includes('\n'));
+    /* „SICHTBAR ÜBER DEM BLATT" (E724). Am Telefon lag jedes Menü unter dem
+       KI-Blatt (600 gegen 920) — gezählt und vermessen war es trotzdem, also
+       waren die alten Zusicherungen grün auf einem UNSICHTBAREN Menü. Gemessen
+       wird jetzt die Ebene im Wurzelstapel und der Treffer bei abgeschaltetem
+       `inert` (sonst sieht die Trefferprüfung durch das Blatt hindurch). */
+    const ueberDemBlatt = () => page.evaluate(() => {
+      const m = document.querySelector<HTMLElement>('.menu');
+      const ai = document.getElementById('ai');
+      if (!m || !ai) return false;
+      const z = (e: Element) => parseInt(getComputedStyle(e).zIndex, 10) || 0;
+      const war = ai.inert; ai.inert = false;
+      const r = m.getBoundingClientRect();
+      const oben = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(20, r.height / 2));
+      ai.inert = war;
+      return z(m) > z(ai) && !!oben && m.contains(oben);
+    });
     await page.locator('#ai-plus').click();
     check(`${width}: Anhängen-Menü bleibt erreichbar`, await page.locator('.menu').count() === 1);
+    if (width < 760) check(`${width}: … und sichtbar über dem Blatt`, await ueberDemBlatt());
     await page.keyboard.press('Escape');
     await page.locator('#ai-modus').click();
     check(`${width}: Echte KI-Modi statt erfundener Freigaben`, await page.locator('.menu [data-m="fragen"]').count() === 1);
@@ -122,6 +158,7 @@ try {
     check(`${width}: Modellmenü liegt innerhalb des Bildschirms`, await page.locator('.menu').evaluate(el => {
       const rect = el.getBoundingClientRect(); return rect.x >= -1 && rect.right <= innerWidth + 1 && rect.bottom <= innerHeight + 1;
     }));
+    if (width < 760) check(`${width}: … und sichtbar über dem Blatt`, await ueberDemBlatt());
     await page.keyboard.press('Escape');
     check(`${width}: Keine Laufzeitfehler`, errors.length === 0, errors);
     await page.locator('#ai-input').fill('');
@@ -129,7 +166,6 @@ try {
     fs.mkdirSync(path.join(root, 'bilder'), { recursive: true });
     await page.screenshot({ path: path.join(root, `bilder/ai-composer-${width}-dunkel.png`) });
     if (width === 1280) {
-      await summary.click();
       await page.screenshot({ path: path.join(root, 'bilder/ai-tools-desktop.png') });
       await page.locator('#ai').screenshot({ path: path.join(root, 'bilder/ai-panel-detail.png') });
       await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
@@ -138,7 +174,6 @@ try {
         getComputedStyle(el).animationName === 'none'));
     }
     if (width === 390) {
-      await summary.click();
       await page.screenshot({ path: path.join(root, 'bilder/ai-tools-mobile.png') });
       await page.setViewportSize({ width, height: 480 });
       check('Kleine Höhe: Senden und Eingabe bleiben sichtbar', await page.evaluate(() => {

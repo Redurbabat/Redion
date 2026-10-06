@@ -63,7 +63,10 @@ try {
     await page.locator('[data-rmo-open="' + ids.note + '"]').click();
     check('Dokumentkarte öffnet das zugehörige Dokument', await page.evaluate(() => App.aktuelleSeite()) === ids.note);
     await page.evaluate(() => App.kiPanel(true));
-    await page.locator('#ai-tools summary').click();
+    /* Seit E724 keine Schublade: die KI-Werkzeuge stehen im leeren Chat
+       (.ai-start) — ohne Klick sichtbar, sonst misst der Leerlauf nichts. */
+    await page.locator('#ai .ai-start').waitFor({ state: 'visible', timeout: 5000 });
+    check('KI-Werkzeuge stehen ohne Klick im leeren Chat', await page.locator('#ai .ai-start button.ru-funkel').count() === 8);
     await capture('KI');
     await page.waitForTimeout(1600);
     check('KI-Werkzeuge ohne Endlosschleifen im Leerlauf', await page.evaluate(() =>

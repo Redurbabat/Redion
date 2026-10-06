@@ -397,11 +397,15 @@ for (const thema of ['dark', 'light'] as const) {
     await Store.flush(); App.oeffne(note.id); App.kiPanel(true);
   });
   await s.waitForSelector('#ai.open');
-  await s.evaluate(() => { const d = document.querySelector<HTMLDetailsElement>('#ai-tools'); if (d) d.open = true; });
+  /* Seit E724 keine Schublade: die KI-Werkzeuge stehen im leeren Chat
+     (`.ai-start`), ohne Aufklappen. Fehlt der Block, ist §8 rot statt
+     stumm grün über einem Knopf, den niemand sieht. */
+  p('§8: die KI-Werkzeuge stehen ohne Schublade im leeren Chat', await s.evaluate(() =>
+    !document.getElementById('ai-tools') && !!document.querySelector('#ai .ai-start .ai-quick button.ru-funkel')));
   await warte(s, 400);
   const cdp = await ctx.newCDPSession(s);
   const ort = await s.evaluate(() => {
-    const b = [...document.querySelectorAll<HTMLElement>('#ai .ai-quick button.ru-funkel')].find(x => x.getBoundingClientRect().height > 20);
+    const b = [...document.querySelectorAll<HTMLElement>('#ai .ai-start .ai-quick button.ru-funkel')].find(x => x.getBoundingClientRect().height > 20);
     if (!b) return null;
     b.setAttribute('data-t596', 'chip');
     b.scrollIntoView({ block: 'center' });
