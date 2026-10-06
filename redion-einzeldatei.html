@@ -24332,15 +24332,17 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
   body[data-schale="premium"] #main > #menueband :is(.mb-rechts-knopf,.mb-klapp):hover{background:var(--bg-hover);color:var(--text)}
 }
 
-/* 7 · EIN TITEL AM TELEFON. Solange der grosse gleichnamige Titel zu sehen
+/* 7 · EIN TITEL — AM TELEFON, SEIT E728 AUCH AM RECHNER. Solange der grosse gleichnamige Titel zu sehen
    ist, ist die kleine Krume durchsichtig; rollt er unter die Kopfzeile,
    kehrt sie zurück (kopfleiste.ts setzt `data-titel-sichtbar`). Sie bleibt
    im Baum und klickbar. Unter „weniger Bewegung" wechselt sie ohne Blende
    (die Marke `--motion-fast` ist dort 1 ms, grund.css). */
-@media(max-width:760px){
-  #crumb > :is(a:last-child,.sep:has(+ a:last-child)){transition:opacity var(--motion-fast) var(--ease)}
-  #topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
-}
+/* AUCH AM RECHNER (E728, Vorgabe d): „Dokumente" in der Krume neben dem
+   grossen Titel „Dokumente" ist dieselbe Textdoppelung, die Redur im Kopf
+   nicht mehr will. Bis E728 galt die Regel nur bis 760 px. Der Beobachter
+   in kopfleiste.ts lief schon immer bei jeder Breite. */
+#crumb > :is(a:last-child,.sep:has(+ a:last-child)){transition:opacity var(--motion-fast) var(--ease)}
+#topbar[data-titel-sichtbar] #crumb > :is(a:last-child,.sep:has(+ a:last-child)){opacity:0}
 
 /* ══ E711 · Suche wächst, Auswahl gleitet, Meldungen stapeln sich (Szenen 07/08).
    Die Bahnen rechnet `SelectionFlow` (E706/E702); hier nur die FORM. */
@@ -27048,7 +27050,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1427, inhalt: 'e21a9507c48c817c', gebaut: '2026-10-06T08:20:02.988Z' };
+const Stand = { fassung: 1428, inhalt: 'acacff1056a33bfa', gebaut: '2026-10-06T08:29:45.302Z' };
 window.Stand = Stand;
 
 </script>

@@ -580,9 +580,20 @@ console.log('\n§7 Ein Titel am Telefon — die Krume weicht dem grossen Titel')
   const { ctx, s } = await oeffnen(false, 'dark');
   await werkzeug(s);
   await s.evaluate(() => Ansichten.termine()); await warte(s, 700);
-  const a = await s.evaluate(() => { const el = document.querySelector<HTMLElement>('#crumb > a:last-child');
-    return el ? +(+getComputedStyle(el).opacity).toFixed(2) : null; });
-  gleich('Am Rechner bleibt die Krume, wie sie war', a, 1);
+  /* BIS E728 hiess es hier „Am Rechner bleibt die Krume, wie sie war" (1).
+     Redurs Vorgabe d vom 29. September (E728) nimmt die Textdoppelung auch
+     am Rechner weg: die Regel ist jetzt dieselbe wie am Telefon — die Krume
+     tritt zurück, solange der gleichnamige Titel zu sehen ist, und kehrt
+     zurück, wenn er wegrollt. Geprüft wird beides, damit „0" nicht einfach
+     „immer weg" heissen kann. */
+  const krumeHier = () => s.evaluate(() => { const el = document.querySelector<HTMLElement>('#crumb > a:last-child');
+    return { deck: el ? +(+getComputedStyle(el).opacity).toFixed(2) : null,
+             titel: document.getElementById('topbar')?.hasAttribute('data-titel-sichtbar') ?? false }; });
+  const oben = await krumeHier();
+  p('Am Rechner: Titel zu sehen — die Krume tritt zurück (E728, wie am Telefon)', oben.titel && oben.deck === 0, JSON.stringify(oben));
+  await s.evaluate(() => { const r = document.getElementById('scroll'); if (r) r.scrollTop = 900; }); await warte(s, 600);
+  const unten = await krumeHier();
+  p('Am Rechner: … und kehrt zurück, wenn er wegrollt (oder es keinen gibt)', unten.titel ? unten.deck === 0 : unten.deck === 1, JSON.stringify(unten));
   await ctx.close();
 }
 

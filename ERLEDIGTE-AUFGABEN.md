@@ -27,7 +27,7 @@ in Ruhe grau. Die Kapsel links (x 196), rechts nur Zeichen (`upload`,
 neues `band`), die Zwillinge im Band am Rechner bei offener Lade verborgen
 (jeder ruft dieselbe Funktion), der Kopf über dem Band; die Lupe dreht sich
 einmal unter Zeiger, Fokus, Strg P und am Telefon beim Drücken, die Kapsel
-wird dabei Glas; alle Kopfknöpfe 44 × 44. Nichts entfernt ausser dem
+wird dabei Glas; alle Kopfknöpfe 44 × 44. Und als eigener Commit: „ein Titel" auch am Rechner (die Krume tritt zurück, solange der gleichnamige Titel zu sehen ist; `test580` angepasst). Nichts entfernt ausser dem
 Aussehen der Scheibe und den Regeln von `.studio-action`, die niemand mehr
 trug.
 

@@ -6885,5 +6885,9 @@ in den Seitenwerkzeugen (1363,179).
 beiden Ständen keines von beiden. „Starker Kontrast" und weniger
 Transparenz: `none`, deckend.
 
+**Ein Titel am Rechner** (1440, eine Seite „Dokumente" mit 60 Zeilen):
+vorher die letzte Krume „📄 Dokumente" bei sichtbarem Titel Deckkraft 1;
+nachher 0, weggerollt (scrollTop 1200) wieder 1.
+
 **Start:** 1852 → 1854 KB gzip über 252 Dateien (`test388` §5, Decke
 1950). `redion-einzeldatei.html` 9151 → 9157 KB.

@@ -57597,7 +57597,8 @@ und `node bauen.mts` neu erzeugt.
 > Zeichen, getönt nur unter Zeiger und Fokus (`test580` §1 fragt das
 > jetzt so). „PDF öffnen" im Kopf ist ein Zeichenknopf `upload` ohne Wort;
 > die getönte Pille in Ruhe und der volle Hauptknopf unter Zeiger und
-> Fokus bleiben.
+> Fokus bleiben. Nr. 7 „ein Titel" gilt seit E728 auch am Rechner
+> (Vorgabe d); `test580` hält das jetzt an beiden Breiten.
 
 **Datum:** 28. September 2026 · **Entschieden von** Redur (27. September,
 ca. 16:45 und 21:45 UTC) · **ergänzt** E534 und E535 (nur das Aussehen in
@@ -61886,8 +61887,14 @@ none. Kopfknöpfe 38 breit.
    Transparenz machen es über die Marken deckend; „weniger Bewegung"
    setzt die Feder auf 1 ms, „Ruhige Darstellung" nimmt die Drehung ganz.
 4. **Alle Kopfknöpfe 44 × 44** (`.studio-icon{width:var(--touch-min)}`).
-5. **Ein Titel auch am Rechner** (Vorgabe d) — als eigener Commit danach,
-   damit er sich allein zurücknehmen lässt (`test603` §8).
+5. **Ein Titel auch am Rechner** (Vorgabe d) — als eigener Commit, damit
+   er sich allein zurücknehmen lässt: E701 Nr. 7 verliert seine
+   Medienabfrage. Solange der grosse Titel „Dokumente" zu sehen ist, tritt
+   die Krume „Dokumente" zurück (Deckkraft 0, im Baum und klickbar wie am
+   Telefon); rollt er weg, kommt sie zurück. Der Beobachter in
+   `kopfleiste.ts` lief schon immer bei jeder Breite (`test603` §8,
+   `test580`, das bis dahin „Am Rechner bleibt die Krume, wie sie war"
+   hielt).
 
 **Die Vorgaben des Plans, mit denen gebaut ist** (Redur hat Schritt 0 nicht
 beantwortet): (a) „PDF öffnen" bleibt im Kopf, nur als Zeichen `upload`;
