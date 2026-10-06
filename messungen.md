@@ -6793,4 +6793,31 @@ Decke 1950. Statisch nachgezählt (jede Datei aus `index.html`, gzip 6):
 genauso: `test348` („Die grossen Knöpfe sind mindestens 44 px", auf dem
 Grundstand 31/34 mit derselben Zeile), `test470` (TimeoutError, auf dem
 Grundstand ebenso), `test332` (`.menu .kenn`, `#handy-oben`).
-Teil 2 (Dokumentmodus, PDF und Blatt in der Seitenansicht, Stift, Einzeldatei) folgt im nächsten Commit dieses Zweigs.
+**Teil 2** (Menüband, Dokumentmodus, PDF und Blatt in der Seitenansicht,
+Stift, Bewegung, Kontrast, Einzeldatei): grün `test505` 27, `test506` 53,
+`test580`, `test177` 69/0, `test178` 74/0, `test202`, `test285` 53/53,
+`test295` 24/24, `test386` 41/0, `test395` 46/46, `test466` 32/32,
+`test507` 35, `test174`, `test179` 26/0, `test180` 36/0, `test186` 28/0,
+`test210` 31/31, `test215` 50/50, `test342` 42/42, `test343` 32/32,
+`test344` 53/53, `test345` 44/44, `test346` 31/31, `test347` 31/31,
+`test349` 30/30, `test350` 14/14, `test352` 38/38, `test364` 54/54,
+`test366` 45/45, `test367` 19/19, `test437` 36/36, `test441` 42/42,
+`test445` 19/19, `test451` 22/22, `test457` 23/23, `test461` 38/38,
+`test472`–`test480` (21, 35, 30, 22, 31, 42, 43, 13, 60 — alle ohne
+Offenes), `test522` 31, `test532` 22/22, `test535`, `test561` 26/26,
+`test562` 24/24, `test563` 13/13, `test564` 11/11, `test575`, `test577`
+29/0, `test582`, `test303` 16/16, `test296` 17/17, `test541` 25/25,
+`test127`, `test576`, `test388` 22/0 (1853 KB), `test353` 105/105,
+`test143`.
+
+`test189` war rot (36/38: „Es sind vier Zeichenflächen da — ist 3, soll
+4"): er legt zwei Blätter und zwei PDF-Seiten an und zählt bei
+1280 × 720 vier Flächen — die vierte liegt weiter als eine Bildhöhe unter
+dem Fenster, ist also seit E717 ein Platz. Angepasst, nicht gelockert: er
+rollt vor dem Zählen ans Ende und zählt weiter vier, vor und nach zwanzig
+Neuzeichnungen; 38/38.
+
+Rot und fremd, auf `1bfaca53` genauso nachgemessen: `test201` §1
+(„Freihand mit mehreren Punkten wird geglaettet — M0 0 L10 20 L20 15 L30
+10"), `test351` (14 statt 13 Werkzeugwörter seit E714; auf dem
+Grundstand 21/26 mit denselben Zeilen).

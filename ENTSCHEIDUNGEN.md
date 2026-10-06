@@ -61584,6 +61584,11 @@ Dokumentseite → 44/46 („abstand 27881").
   stand (dahinter stand der Fund oben), und „Tab führt zum nächsten
   Werkzeug" widersprach E621 — die Leiste ist eine `role="toolbar"` mit
   einem Tabstopp, die Pfeile führen weiter.
+- *`test189` zählte vier Flächen, die nicht alle in der Nähe liegen.* Er
+  legt zwei Blätter und zwei PDF-Seiten an und zählt bei 1280 × 720 vier
+  Zeichenflächen — die vierte ist seit E717 ein Platz, bis man hinrollt.
+  Angepasst, nicht gelockert: er rollt vor dem Zählen ans Ende und zählt
+  weiter vier, vor und nach zwanzig Neuzeichnungen.
 
 **Fremder Code.** Keiner. Die Regel des Touch Kits („Knopf zeigt
 `aria-busy` und meldet den Zustand") ist als Redions eigener Code
