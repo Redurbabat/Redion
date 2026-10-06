@@ -31,8 +31,24 @@ const StudioSchale = (() => {
     const breiteSetzen = (wert) => {
         const breite = Math.max(148, Math.min(260, Math.round(wert)));
         document.body.style.setProperty('--studio-nav-expanded', breite + 'px');
-        document.getElementById('studio-divider')?.setAttribute('aria-valuenow', String(breite));
         return breite;
+    };
+    const gezeichnet = () => Math.round(document.getElementById('kante')?.getBoundingClientRect().width || 0);
+    const ariaNachziehen = () => {
+        const divider = document.getElementById('studio-divider');
+        const breite = gezeichnet();
+        if (!divider || breite < 148 || breite > 260 || document.body.dataset.studioNav === 'kompakt' ||
+            !matchMedia('(min-width: 761px)').matches)
+            return;
+        divider.setAttribute('aria-valuenow', String(breite));
+        divider.setAttribute('aria-valuetext', breite + ' Pixel breit');
+    };
+    const breiteZuruecksetzen = () => {
+        document.body.style.removeProperty('--studio-nav-expanded');
+        Store.setMeta(BREITE, null);
+        ariaNachziehen();
+        Kontextkante.zeichne();
+        UI.toast('Breite zurückgesetzt');
     };
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
@@ -69,8 +85,11 @@ const StudioSchale = (() => {
             return;
         gestartet = true;
         einstellen(Store.getMeta(META, false) === true);
-        const gespeichert = Number(Store.getMeta(BREITE, 184));
-        breiteSetzen(Number.isFinite(gespeichert) ? gespeichert : 184);
+        const gespeichert = Store.getMeta(BREITE, null);
+        const zahl = typeof gespeichert === 'number' ? gespeichert
+            : typeof gespeichert === 'string' && gespeichert.trim() ? Number(gespeichert) : NaN;
+        if (Number.isFinite(zahl))
+            breiteSetzen(zahl);
         const an = (id, tun) => {
             document.getElementById(id)?.addEventListener('click', tun);
         };
@@ -106,39 +125,104 @@ const StudioSchale = (() => {
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
-        let ziehen = null;
-        const jetztBreite = () => Number(divider?.getAttribute('aria-valuenow')) || 184;
-        const merken = () => { Store.setMeta(BREITE, jetztBreite()); Kontextkante.zeichne(); };
-        divider?.addEventListener('pointerdown', event => {
-            if (event.button !== 0)
+        const kante = document.getElementById('kante');
+        if (kante && typeof ResizeObserver !== 'undefined')
+            new ResizeObserver(ariaNachziehen).observe(kante);
+        ariaNachziehen();
+        let zug = null;
+        let bild = 0;
+        const merken = () => { Store.setMeta(BREITE, gezeichnet()); Kontextkante.zeichne(); };
+        const zugEnde = () => {
+            cancelAnimationFrame(bild);
+            bild = 0;
+            zug = null;
+            document.body.classList.remove('studio-resizing');
+        };
+        const zugZurueck = () => {
+            if (!zug)
                 return;
-            ziehen = { id: event.pointerId, x: event.clientX, breite: jetztBreite() };
+            if (zug.vorher)
+                document.body.style.setProperty('--studio-nav-expanded', zug.vorher);
+            else
+                document.body.style.removeProperty('--studio-nav-expanded');
+            zugEnde();
+        };
+        divider?.addEventListener('pointerdown', event => {
+            if (!event.isPrimary || event.button !== 0)
+                return;
+            zug = { id: event.pointerId, x: event.clientX, breite: gezeichnet(), letzteX: event.clientX,
+                vorher: document.body.style.getPropertyValue('--studio-nav-expanded'), bewegt: false };
             divider.setPointerCapture(event.pointerId);
             event.preventDefault();
             document.body.classList.add('studio-resizing');
         });
         divider?.addEventListener('pointermove', event => {
-            if (ziehen?.id === event.pointerId)
-                breiteSetzen(ziehen.breite + event.clientX - ziehen.x);
-        });
-        const ende = (event) => {
-            if (ziehen?.id !== event.pointerId)
+            if (zug?.id !== event.pointerId)
                 return;
-            if (event.type === 'pointercancel')
-                breiteSetzen(ziehen.breite);
-            ziehen = null;
-            document.body.classList.remove('studio-resizing');
-            merken();
-        };
-        divider?.addEventListener('pointerup', ende);
-        divider?.addEventListener('pointercancel', ende);
-        divider?.addEventListener('keydown', event => {
-            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))
+            zug.letzteX = event.clientX;
+            if (zug.letzteX !== zug.x)
+                zug.bewegt = true;
+            if (!bild)
+                bild = requestAnimationFrame(() => {
+                    bild = 0;
+                    if (zug?.bewegt)
+                        breiteSetzen(zug.breite + zug.letzteX - zug.x);
+                });
+        });
+        divider?.addEventListener('pointerup', event => {
+            if (zug?.id !== event.pointerId)
+                return;
+            const z = zug;
+            if (event.clientX !== z.x) {
+                z.letzteX = event.clientX;
+                z.bewegt = true;
+            }
+            if (z.bewegt)
+                breiteSetzen(z.breite + z.letzteX - z.x);
+            zugEnde();
+            if (z.bewegt && gezeichnet() !== z.breite)
+                merken();
+        });
+        divider?.addEventListener('pointercancel', event => { if (zug?.id === event.pointerId)
+            zugZurueck(); });
+        divider?.addEventListener('lostpointercapture', event => { if (zug?.id === event.pointerId)
+            zugZurueck(); });
+        window.addEventListener('keydown', event => {
+            if (!zug || event.key !== 'Escape')
                 return;
             event.preventDefault();
-            breiteSetzen(event.key === 'Home' ? 148 : event.key === 'End' ? 260 : jetztBreite() + (event.key === 'ArrowRight' ? 8 : -8));
-            merken();
+            event.stopImmediatePropagation();
+            const id = zug.id;
+            zugZurueck();
+            if (divider?.hasPointerCapture(id))
+                divider.releasePointerCapture(id);
+        }, true);
+        const SCHRITT = { ArrowLeft: -8, ArrowRight: 8, PageDown: -32, PageUp: 32 };
+        divider?.addEventListener('keydown', event => {
+            const jetzt = gezeichnet();
+            const schritt = SCHRITT[event.key];
+            let ziel;
+            if (event.key === 'Home')
+                ziel = 148;
+            else if (event.key === 'End')
+                ziel = 260;
+            else if (schritt !== undefined)
+                ziel = jetzt + schritt * (event.shiftKey && event.key.startsWith('Arrow') ? 4 : 1);
+            else
+                return;
+            event.preventDefault();
+            breiteSetzen(ziel);
+            ariaNachziehen();
+            if (gezeichnet() !== jetzt)
+                merken();
         });
+        divider?.addEventListener('dblclick', () => breiteZuruecksetzen());
+        if (typeof Register !== 'undefined' && Register.befehle)
+            Register.befehle.melde({
+                gruppe: 'Ansicht', titel: 'Navigationsbreite zurücksetzen', tun: breiteZuruecksetzen,
+                zeigen: () => matchMedia('(min-width: 761px)').matches && document.body.dataset.schale === 'premium' &&
+                    document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an'
+            });
         an('studio-nav', () => {
             const kompakt = document.body.dataset.studioNav !== 'kompakt';
             einstellen(kompakt);
@@ -172,5 +256,5 @@ const StudioSchale = (() => {
             }
         });
     };
-    return { start, themaWechseln };
+    return { start, themaWechseln, breiteZuruecksetzen };
 })();
