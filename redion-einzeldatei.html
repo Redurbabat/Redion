@@ -13935,7 +13935,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-zelle > .bib-deckel-mehr i{
   display:grid; place-items:center; width:26px; height:26px;
-  border-radius:var(--radius-sm); background:var(--bg-schwebend);
+  /* Deckend, nicht schwebend: auf einem Deckel mit Vorschautext stand das
+     Wort sonst DURCH die Scheibe hindurch („Redi⋯on", gesehen im Bild). */
+  border-radius:var(--radius-sm); background:var(--bg-card);
   box-shadow:0 0 0 1px var(--line); font-style:normal; font-size:15px; line-height:1
 }
 .bib-zelle > .bib-deckel-mehr:hover i,
@@ -26980,7 +26982,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1424, inhalt: '0c602fe3ca022330', gebaut: '2026-10-06T08:58:42.865Z' };
+const Stand = { fassung: 1426, inhalt: 'a9c3e22df78e948e', gebaut: '2026-10-06T09:33:05.921Z' };
 window.Stand = Stand;
 
 </script>
@@ -148134,7 +148136,7 @@ const App = (() => {
                 const k = '.' + CSS.escape(ziel.classList[0]);
                 const i = CSS.escape(id);
                 ziel = document.querySelector(`${k}[data-id="${i}"], ${k}[data-baum-id="${i}"], ` +
-                    `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"]`);
+                    `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"], ${k}[data-mehr-id="${i}"]`);
             }
             if (ziel instanceof HTMLElement && ziel.isConnected)
                 ziel.focus({ preventScroll: true });

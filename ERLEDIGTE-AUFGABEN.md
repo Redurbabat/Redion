@@ -1,5 +1,38 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E721 — Ein Menü je Ding (Masterprompt #9)
+
+**Redur** (Masterprompt vom 29. September, S. 19, unter dem Foto der
+Bibliothekskarten, den ☆ oben rechts eingekreist): „Hier füge ... und oder
+beim rechts klicke sollte es mir zeigen löschen" — „Für den rechts klick
+bei eine dokument oder eine text usw wo es passen kann". S. 13: „… und auch
+die rechtsk klickt sollte hier für die ordner haben ."
+
+**Fund** (`test597` gegen 73a956937, 13/75): das ⌄ der Bibliothekskarte war
+ein `<i aria-hidden>` von 20 × 20 IM Kartenknopf — für Tastatur und
+Vorleser nicht da; Rechtsklick auf Karte, Ablagebaum und Seitenleiste
+zeigte das Browsermenü; Umschalt+F10 tat nichts; Pfeil ab im offenen Menü
+sprang auf die Karte dahinter; langes Drücken am Telefon öffnete die Seite;
+Regal und Tabelle hatten keine Aktion; Entf tat nichts; am Rechner war
+„In den Papierkorb" nie rot. Und dieselbe Seite hatte fünf Listen von Hand.
+
+**Bau:** `Register.aktionen` (neu, `register/aktionen.ts`) — jeder Bereich
+meldet seine Aktionen; `Menue.aktionen` zeichnet daraus das Menü;
+`Menue.aktionenBinden` bindet Rechtsklick, Kontextmenü-Taste,
+Umschalt+F10, Entf und langes Drücken (E83, ein Schlucker statt zwei);
+Menüs mit Rolle, Pfeiltasten und Fokus zurück; `Menue.wahl` / `UI.wahl`.
+Das „…" ist ein Knopf neben dem Deckel (44 × 44, oben rechts); Ablagebaum
+(`baum.ts`), Regal, Tabelle, Seitenleiste (Rechtsklick → Seitenmenü, das ⋯
+benannt) und Notizhefte (Heft, Fach; halten ohne Bewegung → Menü) haben
+dasselbe Menü. Gefahr rot am Rechner wie am Telefon; `data-gefahr` auch an
+den Lösch-Einträgen in Dokumenten (L242).
+
+**Prüfung:** `test597` 75/75 (neu, rot gegen 73a956937 mit 13/75), `test37`,
+`test114` 23, `test303` §7 (erweitert, rot zuerst); fünf Gegenproben,
+Nachbarn und Messung im Commit von E721 und in `messungen.md` §91. Offen:
+L242 (die Dinge IN einem Dokument, die Datenbankzeile, „Rückgängig" mit der
+Tastatur) und die Fragen in AUFGABEN „Nach E721".
+
 ## 6. Oktober 2026 · E718 — Ordner bearbeiten (Masterprompt #12 und die Datenhälfte von #9)
 
 **Redur** (Masterprompt vom 29. September, S. 13): „hier beiM BIBLOTEK KANN

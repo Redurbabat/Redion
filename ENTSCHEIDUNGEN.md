@@ -61816,9 +61816,10 @@ also `aria-hidden`, also für Tastatur und Vorleser nicht da (§38).
   und Einträge, die es nur dort gibt.
 
 **Was es kostet.** Eine neue Datei (`register/aktionen.js`, im
-`GRUNDSTOCK` und in `index.html`). Start 1853 → START_NACH KB gzip
-(`test388` §5, Decke 1950). Ein Knopf mehr je Karte (die Ruhe-Zählung von
-`test248` misst die Startseite und blieb bei TEST248_ZAHL). Wer Menüs mit
+`GRUNDSTOCK` und in `index.html`). Start 1853 → 1859 KB gzip
+(`test388` §5, Decke 1950). Ein Knopf mehr je Karte (8 → 14 Knöpfe bei 6 Karten;
+die Ruhe-Zählung von `test248` zählt Leiste, Kopf und Menüband, nicht die
+Karten, und blieb grün). Wer Menüs mit
 Rolle öffnet, findet den Fokus im Menü statt am Auslöser — für die Maus
 unsichtbar (`:focus-visible`), für die Tastatur der Sinn der Sache. Die
 Notizhefte sagen beim Weglegen jetzt „„Messheft" liegt im Papierkorb" mit
@@ -61846,4 +61847,51 @@ Kein Menüeintrag ist irgendwo verschwunden.
   zugewiesen und bleibt offen (L242 Punkt 4): ein Fokus, der von selbst in
   die Meldung springt, wäre für den Vorleser schlimmer.
 
-GEGENPROBEN_ABSATZ
+**Gegenproben** (eigener Arbeitsbaum auf `f3a5adb12`, je eine Stelle
+heraus, gebaut ohne Fehler, `test597` rot gesehen, zurückgenommen):
+
+```txt
+G1 das „…" wieder als <i aria-hidden> statt Knopf   73/75 „Jeder der 7 Deckel … — Elektrotechnik: I | …"
+G2 kein Binder an der Bibliothek                    55/75 „Rechtsklick auf den Ordner verhindert das Browsermenü"
+G3 Seitenmenü „Umbenennen" am Register vorbei        74/75 „4 von 4 durch Register.aktionen.tun — [… 3 Einträge]"
+G4 Pfeil ab im Menü tut nichts                       73/75 „Pfeil ab geht zum zweiten Eintrag — ist 0, soll 1"
+G5 ohne Schlucker nach dem langen Drücken            70/75 „Nach 650 ms … steht das Menü — {"menue":false…}"
+```
+
+G1 und G2 liefen zuerst so, dass der Bau rot war (`noUnusedLocals`: eine
+Konstante ohne Leser, und eine Bedingung, die TypeScript als `null`
+erkannte) — §52.6 sagt, das ist keine Gegenprobe; beide wurden so
+umformuliert, dass sie bauen, und erst dieser Lauf zählt.
+
+**Nachbarn** (unter dem Schloss): `test597` 75/75, `test37` 56/56,
+`test114` (mit 23), `test303` 18/18, `test432` 48/48, `test560` 28/28,
+`test531` 19/19, `test33` 107/107, `test430` 39/39, `test429` 17/17,
+`test431` 45/45, `test35` 44/44, `test36` 28/28, `test40` 25/25, `test212`
+32/32, `test265` 39, `test358` 60/60, `test82`, `test135`, `test175`,
+`test574`, `test344` 53/53, `test110`, `test90`, `test296` 17/17, `test248`
+50, `test222` 51/51, `test272`, `test436` 71/71, `test129`, `test130`,
+`test142`, `test155`, `test165`, `test194`, `test196`, `test247` 107,
+`test586` 60/60, `test587` 101/101, `test588` 78/78, `test589`, `test590`
+68/68, `test594` 76/76, `test579` 78, `test245` 51, `test127`, `test143`,
+`test362` 18/18, `test388` 22 (1859 KB), `test412` 27/27. Die Einzeldatei
+allein in einem Ordner über `file://`: Rechtsklick auf eine Karte → neun
+Einträge, „In den Papierkorb“ legt mit Frist weg, keine Ausnahme. Datei-Wächter:
+550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105. `test587`
+war einmal rot — „der Fokus ist zurück auf seiner Karte — ist null": das
+Umbenennen gab den Fokus an den Nachfolger seines Ankers zurück und kannte
+`data-mehr-id` nicht; jetzt kennt es ihn, und der Wächter fragt nach der
+Zelle der Karte statt nach dem Deckel allein. Angepasst (nicht gelockert),
+weil das „…" neben dem Deckel steht und die Einträge `data-a` tragen:
+`test265`, `test432`, `test531`, `test560`, `test587`, `test594`. Fremde
+rote Läufe des Grundstands, nicht angefasst und nicht in dieser Liste:
+`test86`, `test201` §1, `test270`, `test274`, `test332`, `test348`,
+`test365`, `test425`, `test448`, `test470`, `test493`, `test524`.
+
+**Bilder** (§55; nicht eingecheckt, §55.4): vorher und nachher, Rechner
+1440×900 und Telefon 390×844, hell und dunkel — das Gitter mit dem „…",
+das Menü am „…", Rechtsklick, Umschalt+F10 mit Fokusrahmen, langes Drücken
+mit dem Blatt, Ablagebaum, Regal, Tabelle, Seitenleiste, Notizhefte,
+Seitenmenü, Starker Kontrast und Touch Kit. Zwei Funde kamen aus dem Bild:
+auf einem Deckel mit Vorschautext stand das Wort DURCH die Scheibe des „…"
+(„Redi⋯on") — die Scheibe ist jetzt deckend —, und die Rundung des Knopfs
+schnitt die Trefferfläche an den Ecken ab (`test114` 23).

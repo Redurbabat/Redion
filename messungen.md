@@ -6780,7 +6780,7 @@ Seitenleiste (Lade): ⋯                   BUTTON 20×20 „⋯"                
 Seitenleiste (Lade): Rechtsklick         0                                   53 (das Seitenmenü)
 Notizhefte Heft: ⋯                       BUTTON 26×26 „Mehr zu Messheft"     BUTTON 44×44 (26 px zu sehen)
 Notizhefte Heft: Rechtsklick / Umschalt  0 / 0                               7 / 7
-Notizhefte Fach: Rechtsklick             0                                   FACH_RECHTS
+Notizhefte Fach: Rechtsklick             0                                   6
 Telefon Deckel: „…"                      I 20×44 aria-hidden                 BUTTON 44×44
 Telefon Deckel: lang drücken             0, die Seite ging auf               9, keine Seite
 Telefon Ablagebaum: lang drücken         0                                   11
@@ -6804,8 +6804,9 @@ Listen von Hand für dieselbe Seite       5                                   2 
 Rot am Rechner (Seitenmenü)              rgb(241, 242, 244)                  --gefahr
 Kontrast „In den Papierkorb" (10 Schemata) —                                 5,08 (Sand) bis 6,42 (Touch Kit hell)
 test597                                  13 / 75                             75 / 75
-Start (test388 §5, gzip)                 1853 KB                             START_NACH KB (Decke 1950)
+Start (test388 §5, gzip)                 1853 KB                             1859 KB (Decke 1950)
 ```
 
-Die Ruhe-Zählung von `test248` (Startbild 1440×900) misst die Kopfzeile, die
-Kante und das Menüband, nicht die Karten: TEST248_ZEILE.
+Die Ruhe-Zählung von `test248` (1440×900) zählt Seitenleiste, Kopfzeile und
+Menüband, nicht die Karten der Bibliothek; sie blieb grün (50 Zusagen). Der
+Knopf mehr je Karte steht oben in der Tabelle: 8 → 14 Knöpfe bei 6 Karten.

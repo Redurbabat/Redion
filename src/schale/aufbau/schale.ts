@@ -604,7 +604,7 @@ const App = (() => {
         const k = '.' + CSS.escape(ziel.classList[0]);
         const i = CSS.escape(id);
         ziel = document.querySelector(`${k}[data-id="${i}"], ${k}[data-baum-id="${i}"], ` +
-          `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"]`);
+          `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"], ${k}[data-mehr-id="${i}"]`);
       }
       if (ziel instanceof HTMLElement && ziel.isConnected) ziel.focus({ preventScroll: true });
     };

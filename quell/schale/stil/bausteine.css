@@ -921,7 +921,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-zelle > .bib-deckel-mehr i{
   display:grid; place-items:center; width:26px; height:26px;
-  border-radius:var(--radius-sm); background:var(--bg-schwebend);
+  /* Deckend, nicht schwebend: auf einem Deckel mit Vorschautext stand das
+     Wort sonst DURCH die Scheibe hindurch („Redi⋯on", gesehen im Bild). */
+  border-radius:var(--radius-sm); background:var(--bg-card);
   box-shadow:0 0 0 1px var(--line); font-style:normal; font-size:15px; line-height:1
 }
 .bib-zelle > .bib-deckel-mehr:hover i,

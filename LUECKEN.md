@@ -8377,7 +8377,10 @@ damit es nicht in einem Commit verschwindet (§35):
    keinen Tabstopp.** Die Leiste ist eine virtuelle Liste; mit der Tastatur
    führt der Weg über das ⋯ der Zeile (jetzt benannt). Die Tabelle der
    Bibliothek kennt Rechtsklick und langes Drücken, die Tastatur erreicht
-   dieselben Dinge in Deckel und Ablagebaum.
+   dieselben Dinge in Deckel und Ablagebaum. Das ⋯ der Seitenleiste misst am
+   Rechner weiter 20 × 20 und erscheint beim Überfahren (E219, `test114`
+   hält das fest) — für die Maus ein Nebenweg neben dem Rechtsklick auf die
+   Zeile; am Telefon ist es gross (§37).
 4. **„Rückgängig" in der Meldung ist mit Tab weiterhin erst am Ende der
    Seite.** L239 Punkt 4 hat es diesem Zweig zugewiesen. Entf auf einer
    Karte legt weg und meldet es; der Fokus springt dabei NICHT in die
