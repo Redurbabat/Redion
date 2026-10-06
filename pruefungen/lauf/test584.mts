@@ -151,7 +151,10 @@ const ERLAUBT: ReadonlyArray<readonly [RegExp, string]> = [
   [/^\.document-(laser|lupe|treffer|verweis|region)/, 'Werkzeuge und Treffer auf dem Dokument (Papier)'],
   [/^\.ru-(staff|fach)/, 'die gemalte Staffelei und die Fächer (Bild, E609)'],
   [/^\.cover-textur-/, 'Buchdeckel (Bild)'],
-  [/^\.rmo-(liquid|orb)|\.studio-orb|^\.bib-studio-miniatur/, 'Zierbilder der Bewegung (RedionMotion)'],
+  /* `.studio-orb` stand hier bis E727 — eine Scheibe mit fester Farbe als
+     „Mond". Das Gestirn trägt nur noch Zeichen aus dem Register in
+     `currentColor`; die Ausnahme ist gestrichen, die Liste schrumpft. */
+  [/^\.rmo-(liquid|orb)|^\.bib-studio-miniatur/, 'Zierbilder der Bewegung (RedionMotion)'],
   [/#ho-pille/, 'die Linse der unteren Leiste (E639, gehört zum Material)'],
   [/--sp-(strom|schein)|\.sp-start/, 'der Stromschalter mit Glühfaden (RedionMotion, ein Bild von Licht)'],
   [/(^|\s)\.ru-(geste|drucker)|\.rmo-ticket/, 'die gezeichnete Hand, der Drucker, das Ticket (Bilder)'],
