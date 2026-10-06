@@ -24,9 +24,15 @@ Datenbankzeile), `App.nameSaeubern`, `App.nachAenderung`,
 Handlung, nur bei der neuesten Meldung), die Ring-Prüfung in
 `Werkzeuge.verschiebe`, `Bibliothek.alleSeiten` ohne Kinder weggelegter
 Ordner, das eigene Symbol auf Karte und im Ablagebaum. Editor: „Löschen",
-der Schrägstrich-Befehl und „Ausschneiden" legen in den Papierkorb.
+der Schrägstrich-Befehl und „Ausschneiden" legen in den Papierkorb. Nach
+der Durchsicht vom 6. Oktober auch das ⋯ einer Datenbank (vorher
+`confirm()` und endgültig weg, samt Sammlung) und Entf auf einer
+Mehrfachauswahl; `App.umbenennen` und `App.inPapierkorb` fragen das Recht
+an der angefassten Seite (§26); Namen ohne Richtungs-Überschreiber, die
+200er-Grenze zählt Schriftzeichen.
 
-**Prüfung:** `test594` 64/64 (neu), `test560` §7, `test587` §13, `test588`
+**Prüfung:** `test594` 76/76 (neu; nach der Durchsicht §3, §15, §16 erweitert,
+rot gegen 32749689 mit 66/76), `test560` §7, `test587` §13, `test588`
 §15 (erweitert); Nachbarn und Gegenproben im Commit von E718; Messung
 `messungen.md` §89. Offen: L239 (alte Papierkorb-Seiten ohne Frist, die
 Regel des Fachs) — Redurs Fragen.

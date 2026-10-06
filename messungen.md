@@ -6737,3 +6737,21 @@ test594                                           14 / 62                       
 
 **Startlast** (`test388` §5, gzip): 1850 KB vorher, 1852 KB nachher (252 Dateien),
 Decke 1950.
+
+**Nach der Durchsicht vom 6. Oktober** (`test594` §3, §15, §16; vorher =
+32749689, der Stand vor dem Nachtrag):
+
+```txt
+                                                 vorher (32749689)              nachher
+⋯ der Datenbank: Eintrag                          „🗑Datenbank löschen"           „In den Papierkorb"
+  Block / im Korb / Sammlung / Browser-Rückfragen "WEG" / nein / weg / 1         false / ja / da / 0
+Entf auf Mehrfachauswahl (Unterseite + Enkel)     "WEG" / nein / Enkel "WEG"     false / ja / Enkel da
+nach dem Neuladen (DB, Unterseite, Enkel)         false / true / false           true / true / true
+nur Lesen: Umbenennen                             Frage geht auf                 keine Frage, Meldung „… Recht …"
+nur Lesen (geerbt): Papierkorb                    liegt im Papierkorb            bleibt, Meldung „… Recht …"
+Bearbeiten: Papierkorb                            geht                           geht
+„Rechnung‮fdp.exe⁦x⁩"                             unverändert                    „Rechnungfdp.exex"
+199 × a + 👨‍👩‍👧 + b → Grenze 200                       halbe Familie (Codepunkte)     ganze Familie, 200 Grapheme
+test594                                           66 / 76                        76 / 76
+Start (test388 §5, gzip)                          1852 KB                        1853 KB (Decke 1950)
+```

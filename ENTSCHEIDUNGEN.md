@@ -757,7 +757,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E713** — Die Zeitpille und die Balkenkarte (Redur: „Schau mal das auch an ich will das auch haben", Video „LIQUID GLASS", Szenen 02 und 06): läuft der Zeitmesser bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste; ein Tipp lässt die Karte aus ihr wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als stille Kopie), Escape und ✕ ziehen sie zurück; die Seite ist der Titel, der Timer hat einen echten Fortschritt, Pause ↔ Weiter tauscht im selben Knopf; am Telefon deckend. Der Lernverlauf wird eine Karte: Balken wachsen einmal, die Summe zählt hoch, ein Tag lässt sich wählen (Material aus E706, Hinweis, Pfeile) — `test590`
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
-* **E718** — Ordner bearbeiten (Redur, Masterprompt S. 13: „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die ordner selbst nicht bearbeiten"): EIN Umbenennen an Ort und Stelle (`App.umbenennen`: kein Sprung auf die Seite, leer und Steuerzeichen sind kein Name, ein gleicher Name fragt nach), EIN Neuzeichnen (`App.nachAenderung`: Farbe und Name sofort in Karte, Ablagebaum und Seitenleiste), EIN Papierkorb (`App.inPapierkorb`: über `trashBlock`, mit „Rückgängig" in der Meldung; das Blockmenü legt weg statt endgültig zu löschen — eine Unterseite war samt Enkelseite fort), kein Ring beim Ziehen eines Ordners auf sein Kind, die Kinder eines weggelegten Ordners gehen mit, das eigene Symbol auf Karte und Baum. `test594` neu; `test560` §7, `test587` §13, `test588` §15.
+* **E718** — Ordner bearbeiten (Redur, Masterprompt S. 13: „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die ordner selbst nicht bearbeiten"): EIN Umbenennen an Ort und Stelle (`App.umbenennen`: kein Sprung auf die Seite, leer und Steuerzeichen sind kein Name, ein gleicher Name fragt nach), EIN Neuzeichnen (`App.nachAenderung`: Farbe und Name sofort in Karte, Ablagebaum und Seitenleiste), EIN Papierkorb (`App.inPapierkorb`: über `trashBlock`, mit „Rückgängig" in der Meldung; das Blockmenü, das ⋯ einer Datenbank und Entf auf einer Mehrfachauswahl legen weg statt endgültig zu löschen — eine Unterseite war samt Enkelseite fort, eine Datenbank samt Sammlung; gefragt wird das Recht an der angefassten Seite), kein Ring beim Ziehen eines Ordners auf sein Kind, die Kinder eines weggelegten Ordners gehen mit, das eigene Symbol auf Karte und Baum. `test594` neu; `test560` §7, `test587` §13, `test588` §15.
 
 ---
 
@@ -61359,7 +61359,8 @@ steht überall, wo der Ordner steht — jetzt auch sofort in der
 Seitenleiste) · **baut auf** E709 (das Endgültige bleibt im Papierkorb),
 E710 (die Fragen), E711 (der Stapel der Meldungen) und E712 (der Griff fürs
 Merkzeichen) auf, ohne sie zu ändern · **Wächter:** `test594` (neu, 64 Zusagen),
-`test560` §7, `test587` §13, `test588` §15 (erweitert) · **Zweig**
+`test560` §7, `test587` §13, `test588` §15 (erweitert; nach der Durchsicht
+vom 6. Oktober 76 Zusagen in sechzehn Abschnitten) · **Zweig**
 `claude/ordner-bearbeiten` · **Messung:** `messungen.md` §89.
 
 **Redurs Sätze, wörtlich** (seine Notizen im PDF; die Uhrzeit ist nicht
@@ -61440,9 +61441,12 @@ dagegen nur weg — „Löschen" hiess an drei Stellen drei Dinge.
    (Vorgabe zu Frage 3) — wie Mehrfachauswahl und Strg+⇧+⌫ schon. Andere
    Blöcke als Seiten stehen dort seit langem in „Was ausser Seiten noch im
    Papierkorb liegt" (`papierkorbBloecke`) und laufen über `trashedAt` ab.
-   Endgültig gelöscht wird nur noch im Papierkorb (E709, mit dem
-   zerfliessenden Knopf); das Weglegen trägt KEIN `data-loeschknopf` — es
-   ist umkehrbar.
+   Nach der Durchsicht vom 6. Oktober auch das ⋯ einer Datenbank („Datenbank
+   löschen", jetzt „In den Papierkorb", ohne `confirm()`) und Entf auf einer
+   Mehrfachauswahl (`Mehrfach`) — beide liefen noch `purgeBlock`. Wo
+   danach noch endgültig gelöscht wird, steht unten unter „Was bleibt
+   endgültig" — gewollt, mit Grund. Das Weglegen trägt KEIN
+   `data-loeschknopf` — es ist umkehrbar.
 4. **Die Meldung bekommt eine Handlung** (`hinweis.ts`, auf dem Stapel von
    E711; das Toast-Muster des Touch Kits: eine Meldung, höchstens ein
    Knopf): `UI.toast(text, dauer, { aktion: { text, tun } })`. Nur die
@@ -61492,7 +61496,7 @@ dagegen nur weg — „Löschen" hiess an drei Stellen drei Dinge.
   wie sie sind — sie laufen nie ab (L239).
 
 **Was es kostet.** Start 1850 → 1852 KB gzip (Decke 1950; `test388`
-§5). Keine neue Datei, kein neues Feld, keine Migration: `color`, `icon`
+§5), nach dem Nachtrag der Durchsicht 1853 KB. Keine neue Datei, kein neues Feld, keine Migration: `color`, `icon`
 und `trashedAt` gab es schon an jedem Block. Wer im Editor „Löschen"
 drückt, findet den Block jetzt im Papierkorb statt nirgends — und der
 Papierkorb wird dadurch voller, bis die Frist ihn leert. Ein Fenster, das
@@ -61500,10 +61504,40 @@ offen ist, macht `#toast` träge (Fokus): dann ist der Papierkorb der
 Rückweg, nicht der Knopf — er ist nie der einzige.
 
 **Was weg ist, und wo es bleibt (§43).** Das sofortige endgültige Löschen
-aus dem Blockmenü steht an EINER Stelle weiter: Papierkorb → „Endgültig
-löschen" (E709). Das Umbenennen auf der Seite selbst bleibt: Öffnen, Titel
-ändern. Das rohe `alive:false` der Bibliothek ist ersetzt, nicht entfernt —
-derselbe Eintrag, derselbe Auslöser, ein vollständigeres Weglegen.
+aus dem Blockmenü, dem ⋯ einer Datenbank und der Mehrfachauswahl steht an
+EINER Stelle weiter: Papierkorb → „Endgültig löschen" (E709). Die
+Browser-Rückfrage vor „Datenbank löschen" ist weg — ein „Rückgängig"
+danach ersetzt sie, weil nichts mehr endgültig ist. Das Umbenennen auf der
+Seite selbst bleibt: Öffnen, Titel ändern. Das rohe `alive:false` der
+Bibliothek ist ersetzt, nicht entfernt — derselbe Eintrag, derselbe
+Auslöser, ein vollständigeres Weglegen. **Ein leerer Name wird jetzt
+abgewiesen** — auch im Seitenmenü und bei der Datenbankzeile, wo eine leere
+Antwort vorher „Ohne Titel" ergab. Der Weg dorthin bleibt: den Titel auf
+der Seite selbst oder die Titelzelle der Zeile leeren.
+
+**Was bleibt endgültig — gewollt, nicht übersehen** (alle Stellen mit
+`purgeBlock` ausserhalb des Speichers, nachgezählt am 6. Oktober):
+
+```txt
+Papierkorb: „Endgültig löschen", „Papierkorb leeren"   schale.ts — E709, das ist sein Zweck
+Pflege: „Papierkorb jetzt leeren"                      pflege.ts — dasselbe, mit Knopf
+der leere Block nach Einfügen / Zusammenführen          editor.ts — leer, nichts geht verloren
+der Block, der zur Datenbank umgewandelt wird           editor.ts — die Umwandlung legt neu an
+„Verschieben nach" NACH dem Kopieren in die Zielseite   editor.ts — die Kopie trägt den Inhalt
+die KI nimmt ihr EIGENES Einfügen zurück                ki/dienst.ts, ki/agenten.ts
+der Platzhalter einer fehlgeschlagenen Texterkennung    dateien/recognition.ts
+Hilfe-Stand ersetzt seine eigene alte Seite             hilfe/stand.ts
+```
+
+**Rechte (§26, L102).** `App.umbenennen` und `App.inPapierkorb` sind seit
+E718 der EINE Weg — also fragen sie auch: `Konten.darf('bearbeiten', id)`,
+gegen DIE angefasste Seite, nicht gegen die offene. Wer dort nur lesen,
+kommentieren oder nichts darf, bekommt eine Meldung statt einer Frage, und
+nichts wird geschrieben. „bearbeiten", nicht „loeschen": die Rolle
+„Bearbeiten" konnte Seiten schon vor E718 weglegen, und der Papierkorb ist
+umkehrbar; ob er „loeschen" verlangen soll, gehört Redur (L239 Punkt 3).
+Ohne Konten ist man „lokal" mit Vollzugriff — für den Normalfall ändert
+sich nichts. Der Server entscheidet weiter final.
 
 **Vom Touch Kit** ist das Muster der Meldung mit einer Handlung als
 Redion-Code nachgebaut — kein fremder Code kopiert, deshalb kein Eintrag in
@@ -61535,6 +61569,40 @@ G8  ausgeblendeter Knopf ohne visibility:hidden       test588 77/78
     ✗ Ausgeblendet ist der Knopf weder sichtbar noch fokussierbar — {"sicht":"visible","fokus":true}
 zurück: test594 64/64
 ```
+
+Und nach der Durchsicht vom 6. Oktober, am gebauten JavaScript, je eine
+Stelle zurück auf den alten Stand, gelaufen, wieder eingesetzt:
+
+```txt
+G9  ⋯ der Datenbank wieder trashBlock + purgeBlock    test594 74/76
+    ✗ „Datenbank löschen" legt in den Papierkorb, die Sammlung bleibt … — ist ["WEG",false,false,0]
+G10 Mehrfach-Entf wieder trashBlock + purgeBlock       test594 74/76
+    ✗ Entf auf einer Mehrfachauswahl legt in den Papierkorb, samt Enkelseite — ist ["WEG",false,"WEG"]
+G11 darfBearbeiten sagt immer ja                     test594 72/76
+    ✗ Nur lesen (geerbt): das Kind bleibt, wo es ist — ist false, soll true
+    ✗ … mit einer Meldung, die es sagt — „Kind zum Lesen 594" liegt im PapierkorbRückgängig
+G12 ohne die Richtungs-Überschreiber im Filter       test594 75/76
+    ✗ Richtungs-Überschreiber fliegen hinaus — ist "Rechnung‮fdp.exe⁦x⁩", soll "Rechnungfdp.exex"
+G13 Grenze wieder nach Codepunkten (ohne Segmenter)   test594 75/76
+    ✗ Die 200er-Grenze zählt Schriftzeichen … — ist [false,false,200], soll [true,true,200]
+zurück: test594 76/76
+```
+
+**Nachtrag nach der Durchsicht vom 6. Oktober.** Eine unabhängige
+Durchsicht des Zweigs fand ein falsches Versprechen (§32): diese
+Entscheidung, das README und `CLAUDE.md` sagten „Löschen heisst überall
+Papierkorb", und das ⋯ einer Datenbank räumte nach einem `confirm()` den
+Block UND die Sammlung samt Zeilen endgültig weg — gemessen: `["WEG", im
+Korb false, Sammlung false]`. Dazu Entf auf einer Mehrfachauswahl
+(`Mehrfach`, im Alltag kaum erreichbar, aber derselbe Satz), die fehlende
+Rechtefrage am einen Weg, Richtungs-Überschreiber in Namen und ein Schnitt
+mitten in ein zusammengesetztes Zeichen. Alles fünf ist gebaut und in
+`test594` §3, §15 und §16 gehalten; rot zuerst gegen 32749689 mit 66 von
+76. „Ausschneiden" sagt jetzt EINE Meldung („Ausgeschnitten — der Block
+liegt im Papierkorb") statt zwei übereinander. Offen bleibt, dass der
+„Rückgängig"-Knopf mit Tab nur am Ende der Seite erreichbar ist (`#toast`
+ist das letzte Kind von `body`) — formal erfüllt §38 das, besser macht es
+`claude/menue-eine-quelle` (L239 Punkt 4).
 
 **Gefunden auf dem Weg.**
 

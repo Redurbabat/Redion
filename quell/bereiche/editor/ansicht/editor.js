@@ -2724,10 +2724,12 @@ const Blocks = (() => {
                 Ablage.kopiereJetzt(b.text || '', 'Text kopiert');
             }
             if (a === 'cut') {
-                Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
-                    if (!ging)
+                Ablage.kopiere(b.text || '').then(ging => {
+                    if (!ging) {
+                        UI.toast('Der Browser lässt das Kopieren nicht zu — der Block bleibt, wo er ist.');
                         return;
-                    App.inPapierkorb(b);
+                    }
+                    App.inPapierkorb(b, { satz: 'Ausgeschnitten — der Block liegt im Papierkorb' });
                 });
             }
             if (a === 'komm')

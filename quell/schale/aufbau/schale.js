@@ -427,11 +427,15 @@ const App = (() => {
     const nameSaeubern = (roh) => {
         const s = String(roh ?? '').normalize('NFC')
             .replace(/[\r\n\t\u2028\u2029\u0085]/g, ' ')
-            .replace(/[\u0000-\u001f\u007f-\u009f]/g, '')
+            .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
             .replace(/\s+/g, ' ')
             .trim();
-        return [...s].slice(0, 200).join('').trim();
+        const zeichen = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+            ? [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(s)].map(g => g.segment)
+            : [...s];
+        return zeichen.slice(0, 200).join('').trim();
     };
+    const darfBearbeiten = (id) => typeof Konten === 'undefined' || typeof Konten.darf !== 'function' || !!Konten.darf('bearbeiten', id);
     const gleichnamig = (p, name) => {
         const klein = name.toLocaleLowerCase('de');
         return Object.values(Store.cache.blocks).find(b => b && b.id !== p.id && b.type === 'page' && b.alive !== false &&
@@ -444,6 +448,12 @@ const App = (() => {
         const jetzt = id ? Store.getBlock(id) : null;
         if (!jetzt)
             return false;
+        if (!darfBearbeiten(id)) {
+            UI.toast('Umbenennen geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            if (anker instanceof HTMLElement && anker.isConnected)
+                anker.focus({ preventScroll: true });
+            return false;
+        }
         const zurueck = () => {
             let ziel = anker instanceof Element ? anker : null;
             if (ziel && !ziel.isConnected && ziel.classList[0]) {
@@ -524,15 +534,22 @@ const App = (() => {
         gehe(id);
         return n;
     };
-    const inPapierkorb = (p) => {
+    const inPapierkorb = (p, opt = {}) => {
         const id = String(p?.id || '');
         const b = id ? Store.getBlock(id) : null;
         if (!b || b.alive === false)
-            return;
+            return false;
+        if (!darfBearbeiten(id)) {
+            if (!opt.ruhig)
+                UI.toast('In den Papierkorb geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            return false;
+        }
         const eltern = b.parentId ? Store.getBlock(b.parentId) : null;
         const stelle = eltern && Array.isArray(eltern.content) ? eltern.content.indexOf(id) : -1;
         const istSeite = b.type === 'page' || b.type === 'database';
-        const name = String(b.text || '').trim() || (b.type === 'page' ? 'Ohne Titel' : '');
+        const sammlung = b.type === 'database' && b.collectionId ? Store.getCollection(b.collectionId) : null;
+        const name = String(b.text || '').trim() || String(sammlung?.name || '').trim() ||
+            (b.type === 'page' ? 'Ohne Titel' : '');
         const unter = b.type === 'page' ? unterseitenZahl(id) : 0;
         Store.trashBlock(id);
         if (id === seiteId && !sonder) {
@@ -541,9 +558,12 @@ const App = (() => {
         }
         else
             nachAenderung(b);
-        const satz = !istSeite || !name ? 'Block liegt im Papierkorb'
-            : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
-                : '„' + name + '" liegt im Papierkorb';
+        if (opt.ruhig)
+            return true;
+        const satz = opt.satz ? opt.satz
+            : !istSeite || !name ? 'Block liegt im Papierkorb'
+                : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
+                    : '„' + name + '" liegt im Papierkorb';
         UI.toast(satz, 6000, { aktion: { text: 'Rückgängig', tun: () => {
                     const jetzt = Store.getBlock(id);
                     if (!jetzt || jetzt.alive !== false)
@@ -558,6 +578,7 @@ const App = (() => {
                     nachAenderung(Store.getBlock(id));
                     UI.toast(istSeite && name ? '„' + name + '" ist zurück' : 'Block ist zurück');
                 } } });
+        return true;
     };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();

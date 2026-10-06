@@ -1574,12 +1574,16 @@ sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Beim Zusamm
 
 *Und 533: `test594` — Ordner bearbeiten (E718). Redurs Notiz unter dem Foto
 der Bibliothek, „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die
-ordner selbst nicht bearbeiten", in 64 Zusagen über fünfzehn Abschnitte:
+ordner selbst nicht bearbeiten", in 76 Zusagen über sechzehn Abschnitte:
 Umbenennen bleibt in der Bibliothek, „   " und Steuerzeichen sind kein Name,
 ein gleicher Name im selben Ordner fragt nach, Farbe und Symbol stehen
 sofort in Karte, Ablagebaum UND Seitenleiste, ein Ordner auf seinem eigenen
-Kind bildet keinen Ring, und „Löschen" heisst überall Papierkorb, mit
-„Rückgängig" in der Meldung. Gegen den Grundstand rot mit 14 von 62 (zwei
+Kind bildet keinen Ring, und „Löschen" in den Menüs, im ⋯ einer Datenbank
+und mit Entf heisst Papierkorb, mit „Rückgängig" in der Meldung — gefragt
+wird das Recht an der angefassten Seite. Die letzten zwei Wege und die
+Rechte fand nicht er, sondern eine Durchsicht: das README versprach
+„nichts verschwindet sofort", während „Datenbank löschen" nach einem
+`confirm()` Block UND Sammlung endgültig wegräumte. Gegen den Grundstand rot mit 14 von 62 (zwei
 Zusagen kamen danach aus dem BILD: ein „Rückgängig" über einem offenen
 Fenster tat nichts) — und
 seine schwerste Zeile ist die aus §15: eine Unterseite, im Blockmenü

@@ -539,15 +539,35 @@ const App = (() => {
    *  fliegen hinaus; Zeilenumbrüche (auch U+2028/2029) und Tabs werden zu
    *  Leerzeichen; Leerraum zusammengezogen, Ränder weg, höchstens 200
    *  Zeichen. „/" und „:" bleiben: es sind Titel, keine Dateinamen — die
-   *  Ausfuhr macht sich ihre Dateinamen selbst (`WissenDienst.sauber`). */
+   *  Ausfuhr macht sich ihre Dateinamen selbst (`WissenDienst.sauber`).
+   *
+   *  Dazu seit der Durchsicht vom 6. Oktober (E718): Richtungs-Überschreiber
+   *  (U+202A–202E, U+2066–2069) fliegen hinaus — sie drehen einen Namen in
+   *  der Anzeige um, ohne dass man es sieht („Rechnung‮fdp.exe"). Und die
+   *  200 zählen SCHRIFTZEICHEN (Grapheme), nicht Codepunkte: 👨‍👩‍👧 sind
+   *  fünf Codepunkte, und der alte Schnitt liess davon einen halben Menschen
+   *  stehen. Ohne `Intl.Segmenter` (ältere Browser) bleibt der Codepunkt-
+   *  Schnitt — schlechter, aber nicht falsch gespeichert. */
   const nameSaeubern = (roh: unknown): string => {
     const s = String(roh ?? '').normalize('NFC')
       .replace(/[\r\n\t\u2028\u2029\u0085]/g, ' ')
-      .replace(/[\u0000-\u001f\u007f-\u009f]/g, '')
+      .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
-    return [...s].slice(0, 200).join('').trim();
+    const zeichen = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+      ? [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(s)].map(g => g.segment)
+      : [...s];
+    return zeichen.slice(0, 200).join('').trim();
   };
+
+  /** Darf man das Angefasste bearbeiten? Gefragt wird gegen DIESE Kennung,
+   *  nicht gegen die offene Seite (§26, L102). Ohne Konten (`Konten` fehlt,
+   *  etwa in einer abgespeckten Einzeldatei) gibt es nichts zu sperren.
+   *  „bearbeiten", nicht „loeschen": die Rolle „Bearbeiten" konnte Seiten
+   *  schon vor E718 in den Papierkorb legen, und der Papierkorb ist
+   *  umkehrbar — ob er „loeschen" verlangen soll, gehört Redur (L239). */
+  const darfBearbeiten = (id: string): boolean =>
+    typeof Konten === 'undefined' || typeof Konten.darf !== 'function' || !!Konten.darf('bearbeiten', id);
 
   /** Wer neben `p` liegt und schon so heisst (gross/klein egal, nur Lebende). */
   const gleichnamig = (p: any, name: string): any => {
@@ -570,6 +590,11 @@ const App = (() => {
     const id = String(p?.id || '');
     const jetzt = id ? Store.getBlock(id) : null;
     if (!jetzt) return false;
+    if (!darfBearbeiten(id)) {
+      UI.toast('Umbenennen geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+      if (anker instanceof HTMLElement && anker.isConnected) anker.focus({ preventScroll: true });
+      return false;
+    }
     /* Der Fokus kehrt zurück, wo er herkam. Hat das Neuzeichnen den Anker
        ersetzt (die Bibliothek zeichnet ihre Karten neu), dann an seinen
        Nachfolger: dieselbe Klasse, dieselbe Kennung. */
@@ -641,17 +666,31 @@ const App = (() => {
    * In den Papierkorb — EINE Bedeutung von „Löschen" (E718). Über
    * `Store.trashBlock` (Frist, Protokoll, aus dem Inhalt des Elternteils,
    * der Verlauf hört mit), danach alles neu gezeichnet, und eine Meldung mit
-   * „Rückgängig", das an DIESELBE Stelle zurücklegt. Endgültig gelöscht
-   * wird nur noch im Papierkorb (E709).
+   * „Rückgängig", das an DIESELBE Stelle zurücklegt. Über diesen Griff
+   * laufen die Bibliothek, das Seitenmenü, das Blockmenü, der Schrägstrich,
+   * „Ausschneiden", das ⋯ einer Datenbank und Entf auf einer
+   * Mehrfachauswahl. Was endgültig löscht, steht in E718 unter „Was
+   * bleibt" — gewollt, nicht übersehen (E709: der Papierkorb selbst).
+   *
+   * `ruhig`: keine Meldung (wer viele auf einmal weglegt, meldet selbst).
+   * `satz`: ein eigener Anfang der Meldung (Ausschneiden). Zurück kommt, ob
+   * es geklappt hat.
    */
-  const inPapierkorb = (p: any): void => {
+  const inPapierkorb = (p: any, opt: { ruhig?: boolean; satz?: string } = {}): boolean => {
     const id = String(p?.id || '');
     const b = id ? Store.getBlock(id) : null;
-    if (!b || b.alive === false) return;
+    if (!b || b.alive === false) return false;
+    if (!darfBearbeiten(id)) {
+      if (!opt.ruhig) UI.toast('In den Papierkorb geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+      return false;
+    }
     const eltern = b.parentId ? Store.getBlock(b.parentId) : null;
     const stelle = eltern && Array.isArray(eltern.content) ? eltern.content.indexOf(id) : -1;
     const istSeite = b.type === 'page' || b.type === 'database';
-    const name = String(b.text || '').trim() || (b.type === 'page' ? 'Ohne Titel' : '');
+    /* Eine Datenbank trägt ihren Namen an der Sammlung, nicht am Block. */
+    const sammlung = b.type === 'database' && b.collectionId ? Store.getCollection(b.collectionId) : null;
+    const name = String(b.text || '').trim() || String(sammlung?.name || '').trim() ||
+      (b.type === 'page' ? 'Ohne Titel' : '');
     const unter = b.type === 'page' ? unterseitenZahl(id) : 0;
     Store.trashBlock(id);
     /* Die offene Seite geht in den Papierkorb: weiter zur ersten Seite, wie
@@ -659,7 +698,9 @@ const App = (() => {
        Bibliothek): dann bleibt man, wo man ist. */
     if (id === seiteId && !sonder) { const e2 = Store.rootPages()[0]; oeffne(e2 ? e2.id : null); }
     else nachAenderung(b);
-    const satz = !istSeite || !name ? 'Block liegt im Papierkorb'
+    if (opt.ruhig) return true;
+    const satz = opt.satz ? opt.satz
+      : !istSeite || !name ? 'Block liegt im Papierkorb'
       : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
       : '„' + name + '" liegt im Papierkorb';
     UI.toast(satz, 6000, { aktion: { text: 'Rückgängig', tun: () => {
@@ -676,6 +717,7 @@ const App = (() => {
       nachAenderung(Store.getBlock(id));
       UI.toast(istSeite && name ? '„' + name + '" ist zurück' : 'Block ist zurück');
     } } });
+    return true;
   };
 
   const seitenMenue = (anker: any, p: any) => {

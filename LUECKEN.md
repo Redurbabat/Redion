@@ -8372,6 +8372,18 @@ Dinge bleiben offen, weil sie Redur gehören (§35):
    genau diese Hefte jetzt, weil ihr Vorfahr im Papierkorb liegt. Beides
    ist eine bewusste Regel; welche für das Fach gelten soll, entscheidet
    Redur (AUFGABEN, „Nach E718").
+3. **Weglegen verlangt „bearbeiten", nicht „loeschen".** Seit der
+   Durchsicht vom 6. Oktober fragt `App.inPapierkorb` das Recht an der
+   angefassten Seite (`test594` §16). Gewählt ist „bearbeiten", weil die
+   Rolle „Bearbeiten" schon vorher weglegen konnte und der Papierkorb
+   umkehrbar ist — die Rollenbeschreibung von „Vollzugriff" sagt aber
+   „auch … die Seite löschen". Welche gilt, entscheidet Redur (AUFGABEN,
+   „Nach E718" Punkt 4).
+4. **„Rückgängig" ist mit Tab erst am Ende der Seite erreichbar.** Der
+   Knopf ist 44 px, benannt und fokussierbar (§38 formal erfüllt), aber
+   `#toast` ist das letzte Kind von `body`. Die Maus und der Finger treffen
+   ihn sofort, die Tastatur erst nach allem anderen; der Papierkorb bleibt
+   der zweite Rückweg. Gehört zu `claude/menue-eine-quelle`.
 
 ## L235 · Zwei Fragen an die Ecke aus E676: eine Probe in `test201` und die Tinte einer zitternden Hand — 28. September 2026
 

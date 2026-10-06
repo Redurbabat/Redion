@@ -3212,12 +3212,16 @@ const Blocks = (() => {
            hat, gäbe es ihn danach nirgends mehr. Vorher stand das Löschen
            gleichberechtigt daneben und lief auch, wenn das Kopieren
            abgewiesen wurde. */
-        Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
-          if (!ging) return;
+        Ablage.kopiere(b.text || '').then(ging => {
+          if (!ging) {
+            UI.toast('Der Browser lässt das Kopieren nicht zu — der Block bleibt, wo er ist.');
+            return;
+          }
           /* Kopiert wird nur der TEXT — eine Unterseite mit Inhalt passt in
              keine Zwischenablage. Darum in den Papierkorb (E718): was die
-             Zwischenablage nicht trägt, bleibt dort zurückzuholen. */
-          App.inPapierkorb(b);
+             Zwischenablage nicht trägt, bleibt dort zurückzuholen. EINE
+             Meldung, die beides sagt, statt zwei übereinander. */
+          App.inPapierkorb(b, { satz: 'Ausgeschnitten — der Block liegt im Papierkorb' });
         });
       }
       if (a === 'komm') Kommentare.neu(b);

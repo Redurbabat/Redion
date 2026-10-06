@@ -1718,4 +1718,13 @@ Gefunden beim Bau von E718, nicht dort entschieden — je mit dem Grund:
    Ablagebaum, Seitenleiste und Notizhefte, dazu „Symbol ändern" und
    „Verschieben" im Ordnermenü: `claude/menue-eine-quelle` ruft dafür
    `App.umbenennen`, `App.inPapierkorb` und `App.nachAenderung`.
+4. **Recht zum Weglegen: „bearbeiten" oder „loeschen"?** `App.inPapierkorb`
+   fragt seit der Durchsicht vom 6. Oktober `Konten.darf('bearbeiten', id)`
+   — die Rolle „Bearbeiten" konnte schon vorher weglegen, und der
+   Papierkorb ist umkehrbar. Soll Weglegen das Recht „loeschen" verlangen
+   (dann kann nur noch Vollzugriff weglegen)? Redurs Frage (L239 Punkt 3).
+5. **„Rückgängig" mit der Tastatur näher holen.** Der Knopf in der Meldung
+   ist 44 px und fokussierbar, aber `#toast` ist das letzte Kind von
+   `body` — mit Tab kommt man erst am Ende der Seite hin. Fokus zurück oder
+   Strg+Z in der Bibliothek: `claude/menue-eine-quelle` (L239 Punkt 4).
 

@@ -26923,7 +26923,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1419, inhalt: '67a5c1309de4cff4', gebaut: '2026-10-06T02:16:11.462Z' };
+const Stand = { fassung: 1420, inhalt: '522401f39c977c79', gebaut: '2026-10-06T05:31:29.609Z' };
 window.Stand = Stand;
 
 </script>
@@ -85445,10 +85445,12 @@ const Blocks = (() => {
                 Ablage.kopiereJetzt(b.text || '', 'Text kopiert');
             }
             if (a === 'cut') {
-                Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
-                    if (!ging)
+                Ablage.kopiere(b.text || '').then(ging => {
+                    if (!ging) {
+                        UI.toast('Der Browser lässt das Kopieren nicht zu — der Block bleibt, wo er ist.');
                         return;
-                    App.inPapierkorb(b);
+                    }
+                    App.inPapierkorb(b, { satz: 'Ausgeschnitten — der Block liegt im Papierkorb' });
                 });
             }
             if (a === 'komm')
@@ -92926,7 +92928,7 @@ const Datenbank = (() => {
                     `<span class="ms">${Vorrat.aktiv(coll.id) ? 'an' : 'aus'}</span></button>` : '') +
             (typeof Feldrechte !== 'undefined'
                 ? '<button data-a="feldrechte"><span class="mi">🔒</span>Rechte je Spalte</button>' : '') +
-            '<hr><button data-a="del"><span class="mi">🗑</span>Datenbank löschen</button>', r.left - 120, r.bottom + 4);
+            '<hr><button data-a="del"><span class="mi">🗑</span>In den Papierkorb</button>', r.left - 120, r.bottom + 4);
         m.addEventListener('click', e => {
             const b = elVon(e)?.closest('button[data-a]');
             if (!b)
@@ -93139,13 +93141,8 @@ const Datenbank = (() => {
                 csvImport(coll);
             if (a === 'ai')
                 KI.datenbankAuswerten(coll, view);
-            if (a === 'del') {
-                if (!confirm(`Datenbank „${coll.name}" mit allen Einträgen löschen?`))
-                    return;
-                Store.trashBlock(block.id);
-                Store.purgeBlock(block.id);
-                App.zeichneSeite();
-            }
+            if (a === 'del')
+                App.inPapierkorb(block);
         });
     };
     const formelEinruecken = (src) => {
@@ -101050,7 +101047,14 @@ const Mehrfach = (() => {
             if (e.key === 'Backspace' || e.key === 'Delete') {
                 e.preventDefault();
                 Verlauf.merke(true);
-                ids().forEach(id => { Store.trashBlock(id); Store.purgeBlock(id); });
+                const liste = ids();
+                if (liste.length === 1)
+                    App.inPapierkorb(Store.getBlock(liste[0]));
+                else {
+                    const n = liste.filter(id => App.inPapierkorb(Store.getBlock(id), { ruhig: true })).length;
+                    if (n)
+                        UI.toast(n + (n === 1 ? ' Block liegt' : ' Blöcke liegen') + ' im Papierkorb');
+                }
                 leeren();
                 App.zeichneSeite();
                 return;
@@ -147700,11 +147704,15 @@ const App = (() => {
     const nameSaeubern = (roh) => {
         const s = String(roh ?? '').normalize('NFC')
             .replace(/[\r\n\t\u2028\u2029\u0085]/g, ' ')
-            .replace(/[\u0000-\u001f\u007f-\u009f]/g, '')
+            .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
             .replace(/\s+/g, ' ')
             .trim();
-        return [...s].slice(0, 200).join('').trim();
+        const zeichen = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+            ? [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(s)].map(g => g.segment)
+            : [...s];
+        return zeichen.slice(0, 200).join('').trim();
     };
+    const darfBearbeiten = (id) => typeof Konten === 'undefined' || typeof Konten.darf !== 'function' || !!Konten.darf('bearbeiten', id);
     const gleichnamig = (p, name) => {
         const klein = name.toLocaleLowerCase('de');
         return Object.values(Store.cache.blocks).find(b => b && b.id !== p.id && b.type === 'page' && b.alive !== false &&
@@ -147717,6 +147725,12 @@ const App = (() => {
         const jetzt = id ? Store.getBlock(id) : null;
         if (!jetzt)
             return false;
+        if (!darfBearbeiten(id)) {
+            UI.toast('Umbenennen geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            if (anker instanceof HTMLElement && anker.isConnected)
+                anker.focus({ preventScroll: true });
+            return false;
+        }
         const zurueck = () => {
             let ziel = anker instanceof Element ? anker : null;
             if (ziel && !ziel.isConnected && ziel.classList[0]) {
@@ -147797,15 +147811,22 @@ const App = (() => {
         gehe(id);
         return n;
     };
-    const inPapierkorb = (p) => {
+    const inPapierkorb = (p, opt = {}) => {
         const id = String(p?.id || '');
         const b = id ? Store.getBlock(id) : null;
         if (!b || b.alive === false)
-            return;
+            return false;
+        if (!darfBearbeiten(id)) {
+            if (!opt.ruhig)
+                UI.toast('In den Papierkorb geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            return false;
+        }
         const eltern = b.parentId ? Store.getBlock(b.parentId) : null;
         const stelle = eltern && Array.isArray(eltern.content) ? eltern.content.indexOf(id) : -1;
         const istSeite = b.type === 'page' || b.type === 'database';
-        const name = String(b.text || '').trim() || (b.type === 'page' ? 'Ohne Titel' : '');
+        const sammlung = b.type === 'database' && b.collectionId ? Store.getCollection(b.collectionId) : null;
+        const name = String(b.text || '').trim() || String(sammlung?.name || '').trim() ||
+            (b.type === 'page' ? 'Ohne Titel' : '');
         const unter = b.type === 'page' ? unterseitenZahl(id) : 0;
         Store.trashBlock(id);
         if (id === seiteId && !sonder) {
@@ -147814,9 +147835,12 @@ const App = (() => {
         }
         else
             nachAenderung(b);
-        const satz = !istSeite || !name ? 'Block liegt im Papierkorb'
-            : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
-                : '„' + name + '" liegt im Papierkorb';
+        if (opt.ruhig)
+            return true;
+        const satz = opt.satz ? opt.satz
+            : !istSeite || !name ? 'Block liegt im Papierkorb'
+                : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
+                    : '„' + name + '" liegt im Papierkorb';
         UI.toast(satz, 6000, { aktion: { text: 'Rückgängig', tun: () => {
                     const jetzt = Store.getBlock(id);
                     if (!jetzt || jetzt.alive !== false)
@@ -147831,6 +147855,7 @@ const App = (() => {
                     nachAenderung(Store.getBlock(id));
                     UI.toast(istSeite && name ? '„' + name + '" ist zurück' : 'Block ist zurück');
                 } } });
+        return true;
     };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();

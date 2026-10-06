@@ -190,10 +190,13 @@ die zwei Knöpfe nur auf. „Papierkorb leeren" fragt weiter wie bisher, und
 Löschen in Menüs bleibt ein Menüeintrag (E709).
 
 „Löschen" in einem Menü — in der Bibliothek, im Seitenmenü, im Blockmenü
-des Editors — legt in den Papierkorb, nichts verschwindet sofort. Die
-Meldung danach trägt „Rückgängig", das an dieselbe Stelle zurücklegt; ein
-Ordner nimmt seinen Inhalt mit und bringt ihn zurück. Endgültig gelöscht
-wird nur im Papierkorb (E718).
+des Editors, im ⋯ einer Datenbank — und Entf auf ausgewählten Blöcken legen
+in den Papierkorb, nichts davon verschwindet sofort. Die Meldung danach
+trägt „Rückgängig", das an dieselbe Stelle zurücklegt; ein Ordner nimmt
+seinen Inhalt mit und bringt ihn zurück. Endgültig löscht der Papierkorb
+selbst („Endgültig löschen", „Papierkorb leeren"); was sonst noch ohne
+Papierkorb wegräumt — ein leerer Block nach dem Einfügen, eine Kopie nach
+dem Verschieben —, steht in E718 (E718).
 
 
 Ordner
