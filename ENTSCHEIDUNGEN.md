@@ -61501,6 +61501,30 @@ Werkzeug der Fläche um, und die Hand wurde nie geprüft. (3) Die
 `zeichenflaeche.ts`-Stelle mit `w.querySelector('.wb-massstab')` stand in
 keiner Karte; `test598` §3 hält sie seither.
 
+**Nach der Durchsicht (6. Oktober, derselbe Tag).** Eine unabhängige
+Durchsicht hat zwei Stellen gefunden, an denen „jede Funktion bleibt
+erreichbar" nicht ganz stimmte, und beide sind nachgezogen — mit dem
+Wächter zuerst rot:
+
+- *Tab hinter das Whiteboard* (§38, hart). Die Leiste hängt VOR der Ebene,
+  also sprang das Tab aus ihr zurück an den Anfang der Fläche, auf den Kopf
+  des Seitenkastens; alles nach dem Whiteboard war von dort aus mit Tab
+  nicht mehr zu erreichen. `test598` §9 rot mit „DIV [Zwei Leisten]". Jetzt
+  sucht die Fläche das erste erreichbare Element, das im Baum NACH dem
+  Whiteboard kommt (`naechsterHalt`; im Lauf der Menüknopf des nächsten
+  Kastens), und gibt es keines, macht der Browser weiter.
+- *Das gewählte Werkzeug am Telefon* (§37). Eine frisch eingehängte Leiste
+  hat ihr Rollmass verloren: mit „Text" gewählt, zur Fläche und zurück,
+  stand das Werkzeug bei 609…653 in einem Streifen 12…378. `test598` §8
+  rot. Jetzt rollt `schachtSetzen` NUR den Streifen, von Hand und ohne
+  Fahrt — `scrollIntoView` hätte auch die Fläche darüber gerollt.
+
+Dazu: zwei Kommentare nannten Zahlen, die nicht gemessen waren („160 px",
+„120 px") — sie verweisen jetzt auf `messungen.md` §92 (+80/+50 px;
+0,92 → 1,02); und der Dienststand dieses Bogens ist **v1418**, nicht v1417
+wie im Bau-Commit — die letzte CSS-Änderung (das Schild) kam nach dem
+Text. Mit der Durchsicht steht er auf v1419.
+
 **Touch Kit und Fremdcode.** Kein Bauteil des Touch Kits und kein fremder
 Code: die Leiste ist Redions `GfxToolbar` (E689), der Wechsel eine Zeile
 `replaceChild`. `FREMDCODE.md` braucht keinen Eintrag (§57).

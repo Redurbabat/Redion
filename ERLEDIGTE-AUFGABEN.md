@@ -25,7 +25,12 @@ die Fläche. Im Kern (`toolbar.ts`) der Tabstopp auch losgelöst. Im CSS
 die Griffe im Kasten, „Neu" mit den Marken aus E705, die Auswahlleiste über
 der Flächenleiste.
 
-**Geprüft:** `test598` (neu, 48 Zusagen), `test404` §9, `test572` §13,
+**Nach der Durchsicht** (derselbe Tag): Tab aus der Leiste führt weiter
+HINTER das Whiteboard statt an den Anfang der Fläche (§38), und am Telefon
+rollt der Streifen zum gewählten Werkzeug (§37) — `test598` §8/§9 je rot
+gegen `90c4dba8`, eine Gegenprobe je Stelle.
+
+**Geprüft:** `test598` (neu, 50 Zusagen), `test404` §9, `test572` §13,
 `test575` §6b — je rot gegen `1bfaca53`, grün danach; neun Gegenproben;
 Nachbarn siehe Commit „E722/E723". Start 1850 → 1853 KB. Messung:
 `messungen.md` §92. Offen: L243.

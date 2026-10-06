@@ -503,6 +503,32 @@ const Seitenflaeche = (() => {
             gastFlaeche?.classList.add('pg-fl-aktiv');
             if (fokusDrin)
                 neu.querySelector('button[tabindex="0"]')?.focus({ preventScroll: true });
+            const roller = neu.querySelector('.gfx-tb-roller');
+            const an = roller?.querySelector('[data-wz].on');
+            if (roller && an) {
+                const r = roller.getBoundingClientRect(), b = an.getBoundingClientRect();
+                if (b.right > r.right)
+                    roller.scrollLeft += b.right - r.right;
+                else if (b.left < r.left)
+                    roller.scrollLeft -= r.left - b.left;
+            }
+        };
+        const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
+        const naechsterHalt = (ober) => {
+            for (const el of document.querySelectorAll(HALTE)) {
+                if (!(ober.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))
+                    continue;
+                if (ober.contains(el) || imSchacht.contains(el))
+                    continue;
+                if (el.tabIndex < 0 || el.disabled)
+                    continue;
+                if (el.isContentEditable && el.parentElement?.isContentEditable)
+                    continue;
+                if (el.closest('[inert], [hidden], [aria-hidden="true"]') || !el.getClientRects().length)
+                    continue;
+                return el;
+            }
+            return null;
         };
         const gastVon = (ziel) => {
             if (!(ziel instanceof Node))
@@ -749,6 +775,14 @@ const Seitenflaeche = (() => {
                     e.preventDefault();
                     gastFlaeche.focus();
                     return;
+                }
+                if (!e.shiftKey && ziel && imSchacht.contains(ziel)) {
+                    const nach = naechsterHalt(gastFlaeche);
+                    if (nach) {
+                        e.preventDefault();
+                        nach.focus();
+                        return;
+                    }
                 }
             }
             if (!(e.ctrlKey || e.metaKey))

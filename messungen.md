@@ -6770,6 +6770,31 @@ Seitenkasten ohne Rand links    test404 §9 rot (Griffe 25 px draussen)
                                 test598 §10, §11 (21 558 px²), §12 rot
 ```
 
+**Nach der Durchsicht** (6. Oktober, derselbe Tag; `test598` 48 → 50
+Zusagen, gegen `90c4dba8` rot mit 48 ok, 2 rot):
+
+```txt
+                                                vorher (90c4dba8)  nachher
+Tab vom Whiteboard → Leiste → Tab               DIV [Zwei Leisten]  BUTTON [Menü dieses
+                                                (Anfang der Fläche) Kastens] (nach W1)
+Telefon 390: „Text" gewählt, Fläche, zurück     609…653 im Streifen im Streifen
+                                                12…378 (ausser Bild)
+Gegenprobe ohne `naechsterHalt`                 test598 §9 rot (DIV [Zwei Leisten])
+Gegenprobe ohne das Rollen im Schacht           test598 §8 rot (text 609…653 im Streifen 12…378)
+```
+
+Der erste Anlauf von §8 war grün aus dem falschen Grund: mit dem
+vorgegebenen Stift steht das Werkzeug gerade noch am Rand (333…377 im
+Streifen 12…378), und „Bild" bleibt nicht gewählt — es öffnet die
+Dateiwahl. Gewählt wird deshalb das letzte Werkzeug vor „Bild" (L206).
+
+Die Auswahlleiste am Telefon (`AUFGABEN.md`, Fläche Punkt 3): in der
+Fläche am Telefon rendert die Datenbank Karten ohne `input.zeilen-aus`,
+eine echte Auswahl gibt es dort also nicht. Mit einer erzwungenen
+`#sammelleiste` gemessen (Durchsicht): 601–659 gegen den Schacht 669–739
+und die untere Leiste 775–835 — 10 px Abstand. Gerechnet und erzwungen,
+nicht mit einer echten Auswahl gemessen.
+
 Bilder (nicht eingecheckt, §55.4): vorher und nachher, 1440 × 900 und
 390 × 844, dunkel und hell — die Fläche, das gewählte Whiteboard, sein
 „Mehr", die Seitenansicht, die Tabelle im Kasten (auch 1920 × 1080 mit

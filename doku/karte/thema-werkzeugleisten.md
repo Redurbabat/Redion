@@ -23,6 +23,7 @@ Stand 26. September 2026 (nach E694) · Quelle: ein Leser für Bogen 5 (E681-Kar
 
 - Es gibt jetzt EINEN Katalog: `Register.werkzeuge` (`src/register/werkzeuge.ts`, 22 Einträge = 12 Fläche + 14 Studio, vier geteilt) mit `melde/holen/alle/ids/auswahl`.
 - Und EIN Bauteil: `GfxToolbar.erstelle` (`src/core/gfx/toolbar.ts`) — quick/senior, Untermenü nach oben, ein Tabstopp mit Pfeilen, `setzeWerkzeug/setzeGesperrt/schliesse/zerstoere`; kennt keine Fläche (test572 §1 liest das gebaute JS).
+- NACHGETRAGEN (E722, 6. Oktober): `GfxToolbar` legt den Tabhalt auch dann, wenn die Wurzel noch nicht im Dokument hängt (vorher null Halte in jeder Leiste): ist kein Knopf gelegt, zählt jeder freie Knopf; beim Fokus und nach dem ersten Bild sieht `haltPruefen` nach. Weiter ohne einen Flächennamen im Kern (test572 §1, §13).
 - Das Whiteboard ist umgezogen: `.wb-tools` ist die Zusatzklasse an `.gfx-tb-sockel`, darin `.gfx-tb-roller` mit zwei Kapseln (`.gfx-tb-haupt`, `.gfx-tb-neben`); Farben und „…" sind Untermenüs; CSS `quell/schale/stil/werkzeuge.css`, Namensraum `gfx`.
 - NOCH NICHT umgezogen: Studio (`Marken.WERKZEUGE`), Menüband (`menueband.WERKZEUGE`), Gedankenkarte, Planfläche — L218 und AUFGABEN W6 5b–5e.
 - Zwei neue Lücken: L217 (am Telefon liegt die Leiste im Ruhezustand hinter `#handy-oben`, gemessen 39 px Überdeckung), L218 (drei Werkzeuglisten, gehalten von test572 §3).

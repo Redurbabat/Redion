@@ -1711,7 +1711,11 @@ Grund:
 2. **„Alles löschen" des Whiteboards mit `Dialog.bestaetigen`** (L243
    Punkt 2, E710 und E709) statt `confirm()`.
 3. **Die Auswahlleiste der Tabelle am Telefon** ausserhalb der Fläche:
-   sie steht fest 24 px über dem Rand; ob sie dort die untere Leiste
-   deckt, ist nicht gemessen. Erst messen (`#sammelleiste` gegen
-   `#handy-oben`), dann entscheiden.
+   sie steht fest 24 px über dem Rand. Der Nachbar am Telefon ist die
+   UNTERE Leiste, nicht `#handy-oben`. In der Fläche am Telefon rendert die
+   Datenbank Karten ohne `input.zeilen-aus` — die Regel
+   `body:has(.pg-flaeche) #sammelleiste{bottom:…}` ist dort also
+   gerechnet, nicht mit einer echten Auswahl gemessen (erzwungen: 601–659
+   gegen Schacht 669–739 und untere Leiste 775–835, `messungen.md` §92).
+   Ein Wächter mit einer echten Auswahl am Telefon fehlt noch.
 

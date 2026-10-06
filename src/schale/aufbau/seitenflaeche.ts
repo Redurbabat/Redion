@@ -857,6 +857,33 @@ const Seitenflaeche = (() => {
       gastFlaeche = ober;
       gastFlaeche?.classList.add('pg-fl-aktiv');
       if (fokusDrin) neu.querySelector<HTMLElement>('button[tabindex="0"]')?.focus({ preventScroll: true });
+      /* Am Telefon rollt die Leiste, und eine frisch eingehängte hat ihr
+         Rollmass verloren: das gewählte Werkzeug stünde ausserhalb des
+         Bildes (Durchsicht E722, test598 §8). Gerollt wird NUR der
+         Streifen, von Hand und ohne Fahrt — `scrollIntoView` rollte auch
+         die Fläche darüber. */
+      const roller = neu.querySelector<HTMLElement>('.gfx-tb-roller');
+      const an = roller?.querySelector<HTMLElement>('[data-wz].on');
+      if (roller && an) {
+        const r = roller.getBoundingClientRect(), b = an.getBoundingClientRect();
+        if (b.right > r.right) roller.scrollLeft += b.right - r.right;
+        else if (b.left < r.left) roller.scrollLeft -= r.left - b.left;
+      }
+    };
+
+    /** Das erste mit Tab erreichbare Element nach `ober` im Baum — nicht in
+     *  `ober` und nicht in der Leiste im Schacht. */
+    const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
+    const naechsterHalt = (ober: HTMLElement): HTMLElement | null => {
+      for (const el of document.querySelectorAll<HTMLElement>(HALTE)) {
+        if (!(ober.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+        if (ober.contains(el) || imSchacht.contains(el)) continue;
+        if (el.tabIndex < 0 || (el as HTMLButtonElement).disabled) continue;
+        if (el.isContentEditable && el.parentElement?.isContentEditable) continue;
+        if (el.closest('[inert], [hidden], [aria-hidden="true"]') || !el.getClientRects().length) continue;
+        return el;
+      }
+      return null;
     };
 
     /** Welche Zeichenfläche besitzt dieses Ziel? */
@@ -918,7 +945,8 @@ const Seitenflaeche = (() => {
     const beginnt = (e: PointerEvent): void => {
       /* EINE ZEICHENFLÄCHE IM KASTEN GEHÖRT SICH SELBST (E722). Vorher lief
          hier zuerst der Zweig für Hand und mittlere Taste und rief
-         `setPointerCapture` — gemessen: die Fläche rückte um 160 px, und das
+         `setPointerCapture` — gemessen: die Fläche rückte um +80/+50 px
+         (messungen.md §92), und das
          Whiteboard bekam keinen Strich. Auch zwei Finger darin kneifen das
          Whiteboard, nicht beide. Die Fläche verschiebt man daneben, mit dem
          Rad ausserhalb, mit zwei Fingern auf dem Grund, mit −/+ und Ins Bild. */
@@ -1116,12 +1144,23 @@ const Seitenflaeche = (() => {
       if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable)) return;
       /* TAB FÜHRT VOM WHITEBOARD IN SEINE LEISTE — wie in der Seitenansicht,
          wo die Leiste im Whiteboard hängt und also gleich danach kommt. Hier
-         hängt sie im Schacht am Ende der Fläche; ohne diese Zeilen führte
-         Tab vom Whiteboard weg und hängte die Leiste der Fläche zurück. */
+         hängt sie im Schacht am Anfang der Fläche, VOR der Ebene; ohne diese
+         Zeilen führte Tab vom Whiteboard weg und hängte die Leiste der
+         Fläche zurück. */
       if (e.key === 'Tab' && gastFlaeche && !e.ctrlKey && !e.metaKey && !e.altKey) {
         const halt = imSchacht.querySelector<HTMLElement>('button[tabindex="0"]');
         if (!e.shiftKey && ziel === gastFlaeche && halt) { e.preventDefault(); halt.focus(); return; }
         if (e.shiftKey && ziel === halt) { e.preventDefault(); gastFlaeche.focus(); return; }
+        /* … UND AUS DER LEISTE WEITER, HINTER DAS WHITEBOARD (Durchsicht
+           E722, §38). Die Leiste steht im Baum vor der Ebene; der Browser
+           ginge von ihr aus an den Anfang der Fläche zurück, und alles nach
+           dem Whiteboard wäre mit Tab nicht mehr zu erreichen (test598 §9).
+           Gesucht wird das erste erreichbare Element, das im Baum NACH dem
+           Whiteboard kommt — gibt es keines, macht der Browser weiter. */
+        if (!e.shiftKey && ziel && imSchacht.contains(ziel)) {
+          const nach = naechsterHalt(gastFlaeche);
+          if (nach) { e.preventDefault(); nach.focus(); return; }
+        }
       }
       if (!(e.ctrlKey || e.metaKey)) return;
       const taste = e.key.toLowerCase();
@@ -1199,7 +1238,8 @@ const Seitenflaeche = (() => {
     flaeche.addEventListener('wheel', (e: WheelEvent) => {
       /* Ein Rad, ein Ausschnitt (E722): hat das Whiteboard im Kasten das Rad
          genommen, bleibt die Fläche stehen. Gemessen vorher: ein Rad zoomte
-         das Whiteboard UND schob die Fläche 120 px. */
+         das Whiteboard UND schob die Fläche, und Strg+Rad zoomte sie von
+         0,92 auf 1,02 (messungen.md §92). */
       if (e.defaultPrevented) return;
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
