@@ -1703,6 +1703,21 @@ Grund:
    „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
    Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
 
+## Nach E719 und E720 — Herz und tote Knöpfe (6. Oktober 2026)
+
+1. **Was das Herz merkt — Redurs Frage 7 der Schlussliste.** Gebaut ist die
+   Vorgabe „Lieblingskennzahl" (Streifen „Gemerkt" auf Heute). Antwortet
+   Redur anders (die Karten hinter der Kennzahl merken, das Fehlertraining
+   anheften, das Herz weglassen), hält `test595` den roten Teil (echter
+   Knopf, Zustand, Speichern) weiter; nur §3/§5 sprechen vom Streifen.
+2. **Herzen, die Schmuck bleiben** (L241): Bestandsgesundheit,
+   Simulationsergebnis, Fachseite — Redurs Wahl je Stelle.
+3. **„Kein toter Knopf" für die ganze App** (L240): derselbe Zensus wie
+   `test596` §1 für Arbeitswelt, Bibliothek, Notizhefte, Finder,
+   Einstellungen und Menüs — und die Gegenseite aus `test596` §9: bleiben
+   gesperrte Knöpfe dort still? Rot zuerst; die Reparatur ist meist ein
+   Wort oder eine fehlende Hover-Zeile.
+
 ## Nach E718 (6. Oktober 2026) — Ordner bearbeiten
 
 Gefunden beim Bau von E718, nicht dort entschieden — je mit dem Grund:

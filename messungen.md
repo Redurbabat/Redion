@@ -6755,3 +6755,115 @@ Bearbeiten: Papierkorb                            geht                          
 test594                                           66 / 76                        76 / 76
 Start (test388 §5, gzip)                          1852 KB                        1853 KB (Decke 1950)
 ```
+
+## §90 · Kein toter Knopf und das Herz als Knopf: Zensus, Treffer, Tipp, Startlast (E719/E720, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/kein-toter-knopf` gegen `1bfaca53`
+(`claude/morgen-besser-2`). Chromium über Playwright, Rechner 1440 × 900 und
+Telefon 390 × 844 (Touch, `hover: none`), hell und dunkel, ein Bestand mit
+zwei fälligen Fehlern, einer fälligen Karte und drei neuen. Alles in
+`test595` und `test596`, die je auf beiden Ständen liefen; Bilder in der
+Ablage der Sitzung (§55.4).
+
+**1 · Der Zensus der toten Knöpfe** (`test596` §1). Jeder sichtbare,
+freigegebene `<button>` der Lernwelt; Übergänge auf null, Zeiger aus dem
+Bild, gemalte Eigenschaften ablesen (Knopf, `::before`, `::after`, direkte
+Kinder: Grund, Verlauf, Rand, Schrift, Schatten, Umriss, Transform, Filter,
+Deckkraft, Textschatten, Bewegung der Kinder), Zeiger auf die Mitte, wieder
+ablesen. Tot heisst: `:hover` trifft, und nichts ändert sich.
+
+```txt
+                    vorher (1bfaca53)      nachher
+                    dunkel   hell          dunkel   hell
+Heute                8/20    8/20          0/20     0/20
+Lernen (Zentrale)   12/24   12/24          0/28     0/28   (+4 Herzen)
+Fehler               4/14    4/14          0/17     0/17   (+3 Herzen)
+Lernweg              1/12    1/12          0/12     0/12
+Prüfungen            1/8     1/8           0/8      0/8
+Fortschritt         37/48   37/48          0/57     0/57   (+9 Herzen)
+zusammen            63      63             0        0
+```
+
+Von den 63 waren 44 die Tagessäulen der Verläufe (E713; „Letzte 7 Tage"
+in der Zentrale, Wochen- und Monatsverlauf in Fortschritt), die gar keine
+Hover-Regel hatten; die Zahl des Plans (20) war vor E713 gemessen. Zwei
+weitere (Tagesziel, „Alle Dokumente") hatten ebenfalls keine; die übrigen 17
+verloren gegen ihre Grundregel, weil `:where()` der Hover-Regel das Gewicht
+nahm — (0,2,0) gegen (0,2,1).
+
+**2 · Der Druck.** `data-gedrueckt` ALLEIN (ohne Zeiger, ohne `:active`,
+ohne Übergang) an den fünf Startknöpfen der Lernzentrale: vorher an 0 von 5
+eine Änderung, nachher an 5 von 5. Ein erzwungenes `:hover` (CDP) auf
+„Datenbank bauen" im KI-Fenster am Telefon: vorher voller Schein (Rand
+`hsla(210,100%,80%,.4)`, `::before` mit Licht), nachher Ruhewert.
+
+**3 · Das Herz** (`test595` §1, Karte „fällige Fehler", dunkel):
+
+```txt
+                       vorher                       nachher
+Element                SPAN.rmo-heart               BUTTON.ru-merk.lw-kennzahl-merk
+aria-hidden            true                         —
+pointer-events         none                         auto
+Grösse                 20 × 20 px                   44 × 44 px (auch am Telefon)
+Name / Zustand         —                            „Zu Favoriten: fällige Fehler",
+                                                    aria-pressed="false"
+an seiner Mitte liegt  ARTICLE.stat-karte           der Knopf
+ein Klick              nichts                       gemerkt, „Gemerkt" auf Heute,
+                                                    übersteht das Neuladen
+```
+
+**4 · Die Startlast** (`test388` §5, gzip, unter dem Schloss): 1850 KB
+über 252 Dateien auf `1bfaca53`, 1854 KB nachher — Decke 1950 KB. Je Datei
+(gzip Stufe 6): lernwelt.js +1584 B, bausteine.css +1061, lernwelt.css +620,
+motion.css +329, merkzeichen.js +254, studio.css +140, motion.js +20 —
+zusammen +4008 B. Keine neue Datei, keine Insel.
+
+**5 · Die Gegenproben** stehen in E719 und E720, je mit der roten Zeile.
+Drei davon blieben zuerst GRÜN und haben die Wächter verschärft: die
+Herzform in Ruhe, das zweite gemalte Herz, und der Fokus, der in `test580`
+§5 jedes Herz bunt aussehen liess.
+
+**6 · Nachbarn unter dem Schloss** (auf dem Endstand): `test496` 148,
+`test494` 153, `test495` 26/26, `test265` 39, `test436` 71/71, `test581` 93,
+`test492` 55, `test208`, `test217` 27/27, `test259` 8, `test565` 54/54,
+`test126`, `test127`, `test245` 51, `test303` 16/16, `test541` 25/25,
+`test590` 68/68, `test595` 36/36, `test596` 35/35, `test580`, `test433`
+39/39, `test388` 22 — grün. `test493` rot mit 42/44
+(`-webkit-backdrop-filter: blur(8px)` in motion.css, aus E695) — auf
+`claude/morgen-besser` genauso, fremd. Die Einzeldatei allein in einem Ordner
+(file://): fünf Funkel in der Lernzentrale, das Herz ein Knopf, ein Klick
+merkt `faellige-fehler`, kein Seitenfehler.
+
+**7 · Die Durchsicht vom 6. Oktober** (auf dem Stand 486e500a gemessen, dann
+gebaut; dieselben Fenster, unter dem Schloss).
+
+```txt
+                                         vorher (486e500a)      nachher
+gesperrte Knöpfe, die unter Zeiger/Druck 5 je Thema (§9)        0
+antworten (leerer Bestand, 6 Ansichten)  (1bfaca53: 2)
+Schrift gedrückt, Kontrast (§10b)        hell 3,06 · Sand 3,4 · 16,21 in allen zehn
+                                         Papier 3,08 · Kit hell 2,9
+                                         (dunkle Schemata 14–16)
+„Starten" im Starken Kontrast (§10a)     Grund 1,04 : 1,         Rand 2 px, 12,87 : 1
+                                         Rand 1 px, 1,46 : 1
+Fokus nach Leertaste im Streifen (§5b)   <body>                 das nächste Herz
+Fokusring des Herzens (§6)               3 px oben/rechts        ganz in der Karte
+                                         gekappt
+Zurück nach gescheitertem Schreiben      löscht den Eintrag      lässt ihn stehen
+(§7b, ein anderer Tab merkt „streak")    des anderen Tabs
+```
+
+Die Startlast (`test388` §5): 1855 KB gzip über 252 Dateien (vorher auf
+diesem Zweig 1854, auf 1bfaca53 1850) — Decke 1950. Der Nachtrag kostet
+rund 1 KB, fast alles Begründung in den Kommentaren der Stilblätter.
+
+Nachbarn auf dem Endstand, unter dem Schloss: `test595` 41/41, `test596`
+41/41, `test580` grün (91), `test433` 39/39, `test388` 22, `test436` 71/71,
+`test581` 93, `test582`, `test492` 55, `test496` 148, `test494` 153,
+`test495` 26/26, `test265` 39, `test208`, `test217` 27/27, `test259` 8,
+`test565` 54/54, `test126`, `test127`, `test245` 51, `test303` 16/16,
+`test541` 25/25, `test590` 68/68. Rot nur `test493` mit 42/44
+(`-webkit-backdrop-filter: blur(8px)`, fremd, aus E695 — unverändert). Die
+Einzeldatei allein in einem Ordner (file://): fünf Funkel, das Herz ein
+Knopf, ein Klick merkt `faellige-fehler`, kein Seitenfehler.
+

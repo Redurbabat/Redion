@@ -8348,6 +8348,73 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L241 · Herzen, die Schmuck bleiben: Bestandsgesundheit und einmalige Zahlen — 6. Oktober 2026
+
+**Gefunden beim Bau von E719** (Redur: „die herz beim hier funktionier nicht
+also wenn ich das klicke passiert nichts"). Auf den 22 Kennzahlen aus dem
+Katalog der Lernwelt ist das Herz seit E719 ein echter Merkknopf. An drei
+Stellen bleibt es, was es war — ein gemaltes Herz im Ring, `aria-hidden`,
+`pointer-events:none`, das beim Anfassen schlägt:
+
+1. **Die Bestandsgesundheit** (`.rmo-health-metric`, Pflege). Ihr Herz
+   heisst „Gesundheit", nicht „merken"; `test496` hält ausdrücklich, dass es
+   Schmuck ist und durchklickt.
+2. **Das Ergebnis einer Prüfungssimulation** (richtig, Fehler, Dauer) — eine
+   Zahl, die nur für DIESE Simulation gilt; sie zu „merken" hiesse, einen
+   Augenblick zu merken.
+3. **Die Zahlen einer Fachseite** (Lernkarten, offene Hausaufgaben, …) —
+   gälten nur für EIN Fach; eine merkbare Fassung bräuchte eine Kennung je
+   Fach.
+
+Alle drei sehen weiter aus wie ein Knopf und sind keiner — genau das, was
+Redur gemeldet hat. Sie zu entfernen ist eine Löschung (§43), und E604/E609
+zeigen, dass Redur entfernten Schmuck zurückholt.
+
+**Was fehlt:** Redurs Wahl, je Stelle: (a) Schmuck lassen, (b) das Herz dort
+weglassen, (c) für die Fachseite eine Kennung je Fach und dann merkbar.
+Wächter: `test595` §9 hält heute, dass die Simulation KEINEN Knopf und ihren
+Schmuck unverändert trägt; wer ihn entfernt, ändert §9 mit Redurs Wort.
+
+---
+
+## L240 · „Kein toter Knopf" gilt für die ganze App — gemessen ist bisher die Lernwelt — 6. Oktober 2026
+
+**Gefunden beim Bau von E720.** Die Regel steht seit E720 hart in CLAUDE.md
+§38 („Jeder Knopf antwortet sichtbar auf Zeigen, Druck und Tastenfokus —
+keiner wirkt tot") und als Richtwert in §39 (kein `:where()` um den
+Knopf-Teil eines Zustands). Der Wächter `test596` zählt aber nur die sechs
+Ansichten der Lernwelt, in denen Redur es gesehen hat.
+
+Gelesen, nicht gemessen — dasselbe Muster an drei Stellen ausserhalb:
+
+1. `arbeitswelt.css:567` — `.arbeitswelt :where(button,.aw-vorlage):active
+   {transform:none}` (unter weniger Bewegung) und `arbeitswelt.css:418`
+   `.arbeitswelt :where(button,input):focus-visible`.
+2. `aufbau.css:311` — `:where(.finder .res) > button:hover, … .on
+   {background:var(--bg-hover)}`: die Zeile der Finderliste wiegt (0,1,1)
+   gegen ihre Grundregel.
+3. Ob diese Regeln wirklich unterliegen, hängt an der jeweiligen Grundregel —
+   eine Zählung wie in `test596` §1 gibt es dafür noch nicht. Ein `:where()`
+   um den GANZEN Wähler ist nicht automatisch falsch (der Fokusring der
+   Lernwelt ist eines und wirkt); falsch ist es, wenn eine schwerere
+   Grundregel dieselbe Eigenschaft setzt.
+4. **Die Gegenseite: gesperrte Knöpfe** (Durchsicht vom 6. Oktober). Ein
+   gesperrter Knopf darf unter Zeiger und Druck NICHT antworten — sonst
+   wirkt ein toter Knopf lebendig. In der Lernwelt hält das `test596` §9
+   (`:where(:not(:disabled))` vor jedem Zustand, ohne Gewicht). Ausserhalb
+   ist es nicht gemessen: jede app-weite Zustandsregel, die gesperrte
+   Knöpfe nicht ausnimmt (etwa die geteilten `button:hover` in
+   bausteine.css), kann denselben Fehler haben.
+
+**Was fehlt:** derselbe Zensus für die Arbeitswelt, die Bibliothek, die
+Notizhefte, den Finder, die Einstellungen und die Menüs — hell und dunkel,
+mit Zeiger, Druck und Tastenfokus — für freigegebene Knöpfe (antworten
+sie?) und für gesperrte (bleiben sie still?). Wo er rot wird, ist die Reparatur meist
+ein Wort (`:where(` → `:is(`) oder eine fehlende Hover-Zeile, wie auf
+„Heute" das Tagesziel und „Alle Dokumente". Rot zuerst (§30).
+
+---
+
 ## L239 · Ordner nach E718: alte Papierkorb-Seiten ohne Frist, und zwei Regeln für ein Fach — 6. Oktober 2026
 
 **Gefunden beim Bau von E718** (Redur, Masterprompt S. 13: „… die ordner
@@ -9567,7 +9634,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 132 Lücken, 76 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 134 Lücken, 78 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

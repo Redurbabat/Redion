@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-695 Entscheidungen, E1 bis E718 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+697 Entscheidungen, E1 bis E720 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -758,6 +758,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 * **E718** — Ordner bearbeiten (Redur, Masterprompt S. 13: „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die ordner selbst nicht bearbeiten"): EIN Umbenennen an Ort und Stelle (`App.umbenennen`: kein Sprung auf die Seite, leer und Steuerzeichen sind kein Name, ein gleicher Name fragt nach), EIN Neuzeichnen (`App.nachAenderung`: Farbe und Name sofort in Karte, Ablagebaum und Seitenleiste), EIN Papierkorb (`App.inPapierkorb`: über `trashBlock`, mit „Rückgängig" in der Meldung; das Blockmenü, das ⋯ einer Datenbank und Entf auf einer Mehrfachauswahl legen weg statt endgültig zu löschen — eine Unterseite war samt Enkelseite fort, eine Datenbank samt Sammlung; gefragt wird das Recht an der angefassten Seite), kein Ring beim Ziehen eines Ordners auf sein Kind, die Kinder eines weggelegten Ordners gehen mit, das eigene Symbol auf Karte und Baum. `test594` neu; `test560` §7, `test587` §13, `test588` §15.
+* **E719** — Das Herz ist ein Knopf (Redur, Masterprompt S. 21/22: „die herz beim hier funktionier nicht also wenn ich das klicke passiert nichts"): das Herz der Lernwelt-Kennzahlen war Schmuck aus E534 (`aria-hidden`, `pointer-events:none`, der Klick traf die Karte); jetzt der eine Merker (`Merkzeichen`, neue WAHL `form: 'herz'`, ohne Wahl bleibt es das Band) mit Namen, Zustand und 44 px, EIN Katalog `KENNZAHLEN` (22 Kennzahlen), gemerkt je Lernendem in meta `lernwelt:<aktor>:kennzahlen`, ein Streifen „Gemerkt" auf Heute, ein Rückweg mit Hinweis, wenn das Schreiben scheitert; einmalige Zahlen und die Bestandsgesundheit bleiben Schmuck (L241). `test595` neu; `test433` §7, `test580` §5.
+* **E720** — Kein toter Knopf (Redur, Masterprompt S. 21: „… also wie bein tagesrunde … und bei alle wo eine buttons gibt füge das im enscheideung und claude.md"): 63 Knöpfe der Lernwelt antworteten nicht auf den Zeiger (`:where()` nahm den Hover-Regeln das Gewicht; Tagesziel, „Alle Dokumente" und die Tagessäulen hatten keine); `:where(` → `:is(`, Fehlertraining, Neue Karten, Prüfungsfokus und Trainer als stille Funkel (in Ruhe Umriss, unter Zeiger, Fokus und Druck die Tagesrunde), `data-gedrueckt` neben jedem `:active` des Funkels, sein Schein nur unter `@media (hover:hover)`. Neue Regel CLAUDE.md §38 (hart) und §39 (Richtwert). `test596` neu; `test580` §1.
 
 ---
 
@@ -36478,6 +36480,14 @@ GEPRÜFT. test432 (48 Punkte, neu, zwei Gegenproben rot gesehen);
 E460 — Ein Merker für „gemerkt", und er sagt es auch hörbar
 --------------------------------------------------------------------------
 
+> **Ergänzt durch E719 (6. Oktober 2026) — eine zweite Form als WAHL.** Der
+> Merker kennt jetzt `form: 'herz'` (`Merkzeichen.HERZ`, ebenfalls ein
+> Pfad, gefüllt gegen offen). Ohne Wahl bleibt es das Band — Kopfleiste,
+> Notizhefte, Regal und die Tropfen aus E712 sehen aus wie vorher. Das Herz
+> tragen nur die Kennzahlen der Lernwelt: eine gemerkte Kennzahl ist etwas
+> anderes als eine gemerkte Seite, und Redurs Herz aus der Statistik-Vorlage
+> (E534) stand dort schon. `test433` §7.
+
 ENTSCHEIDUNG. `schale/bedienung/merkzeichen.ts` ist der eine Merker für
 das Feld `favorite`: ein Lesezeichenband, gefüllt oder offen, mit
 `aria-pressed` und einem Vorlesenamen, der den Titel nennt. Er steht in
@@ -36709,6 +36719,14 @@ springt bei `display` nicht an); test435 §4 misst den Überlauf mit.
 
 E463 — Sichtbar und lustig: die Vorgaben kommen an die Wege, die man täglich geht
 --------------------------------------------------------------------------
+
+> **Ergänzt durch E720 (6. Oktober 2026) — der Funkel hat einen stillen
+> Bruder.** „Der eine Knopf je Ansicht, der etwas ANFÄNGT" bleibt laut; die
+> vier anderen Startknöpfe der Lernzentrale sind seither ebenfalls Funkel,
+> ruhen aber als Umrisspillen (bausteine.css, „Die stillen Funkel"). Der
+> Funkel zeigt den Druck jetzt auch über `data-gedrueckt` (press.ts, E702),
+> und sein Schein unter dem Zeiger gilt nur, wo es einen Zeiger gibt
+> (`@media (hover:hover)`) — am iPhone blieb er nach dem Tipp kleben.
 
 ENTSCHEIDUNG. Redur hat am 6. September zwei Sätze zu E458–E462 gesagt:
 „nicht einfach Orte, die man nicht sieht — es muss sichtbar sein" und „du
@@ -43183,6 +43201,17 @@ still weggelassen.
 
 E534 — Auf ad4ccbc weiterarbeiten: Herz, Wendekarte und gemessene Restfehler
 --------------------------------------------------------------------------
+
+> **Ergänzt durch E719 (6. Oktober 2026) — das Herz der Lernwelt ist ein
+> Knopf.** Redur: „die herz beim hier funktionier nicht also wenn ich das
+> klicke passiert nichts". Auf den Kennzahlen aus dem Katalog der Lernwelt
+> (Heute, Lernzentrale, Fehler, Fortschritt) steht an der Stelle des
+> gemalten Herzens jetzt der Merkknopf (`Merkzeichen`, Form 'herz'):
+> dieselbe Ecke, derselbe Ring, derselbe Schlag — aber mit Namen, Zustand
+> und 44 px, und er merkt die Kennzahl für den Streifen „Gemerkt" auf
+> Heute. Die Herzen der Bestandsgesundheit (`.rmo-health-metric`,
+> `test496`) und der einmaligen Zahlen (Simulationsergebnis, Fachseite)
+> bleiben Schmuck, bis Redur entscheidet (L241).
 
 > **Ergänzt durch E701 (28. September 2026) — nur das Aussehen in Ruhe.**
 > Herz, Ring und kleine Kurve der Kennzahlkarten sind grau, bis man die
@@ -57573,6 +57602,19 @@ und `node bauen.mts` neu erzeugt.
 
 ## E701 — Ruhiger, und nichts ist weg: leiser in Ruhe, jeder Griff am selben Ort
 
+> **Ergänzt durch E720 (6. Oktober 2026) — Punkt 1 in der Lernzentrale.**
+> Fehlertraining, Neue Karten, Prüfungsfokus und Trainer sind jetzt
+> derselbe Funkel wie die Tagesrunde (Redur: „wie bein tagesrunde") — aber
+> sie ruhen als Umrisspillen und zeigen den Schein nur unter Zeiger,
+> Tastenfokus und Druck. „Genau eine je Bild" gilt weiter: in Ruhe ist nur
+> „Starten" laut (`test580` §1 zählt einen Funkel seither nur, wenn er in
+> Ruhe Schein oder glimmende Buchstaben trägt).
+>
+> **Ergänzt durch E719 (6. Oktober 2026) — Punkt 5: grau, solange nicht
+> gemerkt.** Das Herz der Kennzahlen ist ein Merkknopf geworden. Es ruht
+> grau, solange es nicht gemerkt ist; ein gemerktes behält seine Farbe auch
+> in Ruhe, und durchscheinend wird der Knopf nicht (`test580` §5).
+
 **Datum:** 28. September 2026 · **Entschieden von** Redur (27. September,
 ca. 16:45 und 21:45 UTC) · **ergänzt** E534 und E535 (nur das Aussehen in
 Ruhe) · **wendet an** grund.css „Genau eine je Bild" (E263), E638, E273/E515,
@@ -61627,3 +61669,374 @@ ist das letzte Kind von `body`) — formal erfüllt §38 das, besser macht es
   „Notion-Wissen" trägt 📚, „Willkommen" 👋 — in der Seitenleiste stand das
   immer, im Ablagebaum stand ein Strich. Nebenbei unterscheidet es die
   zwei „Notion-Wissen", die das Grundgerüst und ein Mensch anlegen können.
+
+## E719 — Das Herz ist ein Knopf: es merkt die Kennzahl, und „Heute" zeigt, was gemerkt ist
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Seiten 21/22; die Vorgabe aus „Entscheidungen, die Redur
+gehören", weil er auf Schritt 0 und die Frage 7 der Schlussliste nicht
+geantwortet hat) · **ergänzt** E534 (das Herz der Lernwelt-Kennzahlen ist
+kein Schmuck mehr), E701 §5 (grau nur, solange nicht gemerkt) und E460 (der
+Merker bekommt eine zweite Form als Wahl) · **baut auf** E702 (press.ts) und
+E712 (`Merkzeichen.BAND` in den Tropfen bleibt unverändert) auf ·
+**Wächter:** `test595` (neu, 36 Zusagen; nach der Durchsicht vom
+6. Oktober 41), `test433` §7 (neu), `test580` §5 (erweitert) · **Zweig** `claude/kein-toter-knopf` · **Messung:**
+`messungen.md` §90.
+
+**Redurs Satz, wörtlich** (seine Notiz im PDF, am Foto der Lernzentrale mit
+der Karte „fällige Fehler 2"; die Uhrzeit ist nicht überliefert):
+
+```txt
+Seite 21/22   „die herz beim hier funktionier nicht also wenn ich das klicke
+               passiert nichts, behebe das problem"
+```
+
+**Gemessen, bevor gebaut wurde** (`test595` gegen 1bfaca53, 5 von 34;
+`messungen.md` §90):
+
+```txt
+Das Herz von „fällige Fehler"   SPAN.rmo-heart, aria-hidden="true",
+                                pointer-events:none, 20 × 20 px
+elementFromPoint an seiner Mitte ARTICLE.stat-karte — die Karte, ohne Rolle
+ein Klick                       nichts; kein Handler, kein Zustand
+Merkzeichen.HERZ                fehlt — der Merker kannte nur das Band
+Lernwelt.modelle.kennzahlenGemerkt   fehlt
+```
+
+Das Herz war nicht kaputt, es war nie ein Knopf: der Schmuck aus Redurs
+Statistik-Vorlage (E534) — ein Herz im Ring, das beim Zeigen schlägt —
+sieht genau so aus wie ein runder Merkknopf. Im Datenmodell gab es auch
+nichts zu schalten: `favorite` steht nur an Seiten, Kennzahlen und
+Lernkarten haben keines. „Keine Attrappen" (Masterprompt) heisst dann:
+entweder ein echter Knopf oder kein Knopf-Aussehen.
+
+**Was entschieden wurde.**
+
+1. **Das Herz merkt die KENNZAHL** (Vorgabe „Lieblingskennzahl"). Gemerkte
+   Kennzahlen stehen auf „Heute" unter dem Gruss im Streifen „Gemerkt",
+   mit derselben Karte und demselben (gefüllten) Herz — ein Klick dort
+   nimmt sie wieder heraus. Ohne Gemerktes ist „Heute" unverändert.
+2. **EIN Katalog** (`KENNZAHLEN` in `lernwelt.ts`, §8): 22 merkbare
+   Kennzahlen aus Heute (8), Lernzentrale (4), Fehler (3) und Fortschritt
+   (9, zwei davon geteilt mit Heute: Lernzeit und Streak), je Kennung,
+   Name und Wert. Ansichten und Streifen holen sie von dort — „fällige
+   Fehler" zeigt im Streifen dieselbe Zahl wie in der Lernzentrale, weil es
+   dieselbe Zeile Code ist. `kennzahlKontext()` rechnet Warteschlange,
+   Statistik, Aktivität, Fehler und nächste Prüfung erst, wenn eine
+   Kennzahl danach fragt, und nimmt, was die Ansicht schon gerechnet hat.
+3. **Das Herz ist der eine Merker der App** (`Merkzeichen.html`, E460) mit
+   der neuen WAHL `form: 'herz'`: `<button>` mit `aria-pressed`, Name „Zu
+   Favoriten: fällige Fehler" / „Aus Favoriten: …", gefüllt gegen offen
+   (ohne Farbe unterscheidbar, §38), 44 × 44 in derselben Ecke (Mitte
+   23 | 23 wie der Ring), derselbe Schlag beim Anfassen, der Kranz springt
+   nur beim Anhaken und nie ohne Bewegung. Ohne Wahl bleibt der Merker das
+   Band: Kopfleiste, Notizhefte, Regal und die Tropfen aus E712 sind
+   unverändert. `motion.ts` malt kein zweites Herz, wo ein echtes steht.
+4. **Gespeichert** wird eine Liste von Kennungen unter
+   `lernwelt:<aktor>:kennzahlen` in meta — je Lernendem wie Ansicht und
+   Tagesziel, damit Teil jeder `.json`- und `.redion`-Sicherung (§52.10).
+   Kein Feld an einem Block, keine Migration. Geschrieben wird über
+   `Store.metaListeAendern` (zwei Tabs sicher, indexdb.ts). Das Bild
+   wechselt sofort; scheitert das Schreiben, kehren Knopf und
+   Zwischenspeicher zurück, und ein Hinweis sagt es.
+5. **Auf „Heute" wird nur der Streifen nachgezeichnet**, nicht die Ansicht —
+   ein Neuzeichnen klappte die offene „Lernübersicht" zu, in der man eben
+   ein Herz gedrückt hat.
+6. **Einmalige Zahlen bekommen keinen Knopf**: das Ergebnis EINER
+   Simulation, die Zahlen EINES Fachs. Ihr Herz bleibt Schmuck, wie es war
+   — ebenso die Herzen der Bestandsgesundheit (`test496`). Ob sie gehen
+   dürfen, entscheidet Redur (§43, L241).
+
+Das Muster ist der FavoriteButton aus Redurs Touch Kit (aria-pressed,
+gefüllt/offen, Funken nur beim Anhaken) — als Redion-Code über das
+vorhandene `Merkzeichen` gebaut, keine Zeile fremder Code kopiert, keine
+Insel; `FREMDCODE.md` ist deshalb nicht betroffen.
+
+**Warum.** Ein Knopf, der wie ein Knopf aussieht und nichts tut, ist der
+Fehler, den Redur gemeldet hat — und an 24 Karten derselbe.
+
+**Was die Alternative war.** (b) Die Lernkarten hinter der Kennzahl merken
+(ein neues Feld `favorite` an Lernkarten, Typ, Export- und Importprüfung,
+eine „Favoriten-Runde") — mehr Bau und eine Datenänderung für eine Bedeutung,
+die Redur nicht genannt hat. (c) Das Herz entfernen — braucht sein Ja (§43),
+und E604/E609 zeigen, dass er entfernten Schmuck zurückholt. (d) Codex' Weg
+vom 1. Oktober (`0619d407a`, nur verglichen): das Herz heftet das
+Fehlertraining an — dann bedeutet dasselbe Herz auf „neue Karten" etwas
+anderes als auf „fällige Fehler". Antwortet Redur auf Frage 7 anders, hält
+der rote Teil von `test595` (echter Knopf, Zustand, Speichern) für jede
+echte Bedeutung.
+
+**Was es kostet.** Eine neue meta-Liste je Lernendem; rund 2,3 KB gzip im
+Start (lernwelt.js 1,6, merkzeichen.js 0,25, motion.css 0,33, studio.css
+0,14; zusammen mit E720 hebt der Zweig `test388` §5 von 1850 auf 1854 KB,
+Decke 1950); 22 Kennzahlkarten tragen einen echten
+Knopf mehr im Tabulator-Weg (nach der Zahl, nicht davor). Die Streak-Zahl
+in Fortschritt heisst bei einem Tag jetzt „1 Tag" statt „1 Tage" — sie
+kommt aus derselben Katalogzeile wie auf Heute.
+
+**Gefunden auf dem Weg.**
+
+- Die erste Gegenprobe „Herzform aus `html()` entfernt" blieb GRÜN:
+  `test595` mass die Form erst nach dem Klick, und `markieren` setzt sie
+  dort richtig. Seither prüft §1 die Form schon in Ruhe.
+- Die Gegenprobe „`:not(.ist-an)` heraus" blieb in `test580` §5 grün: der
+  Knopf behielt nach dem Klick den Fokus, `:focus-within` an der Karte
+  zählt als „angefasst", und dann ist JEDES Herz bunt. Der Lauf nimmt den
+  Fokus seither weg, bevor er misst.
+- Die Gegenprobe „gemaltes Herz nicht überspringen" blieb grün, weil der
+  echte Knopf über dem gemalten liegt und getroffen wird. Seither zählt §1
+  Karten mit zwei Herzen.
+- Der erste Lauf von §7 fand den Hinweis nicht — er hatte `#toast` selbst
+  entfernt, um alte Meldungen loszuwerden, und `UI.toast` schrieb dann in
+  die Konsole (hinweis.ts). Ein Fehler im Wächter, nicht im Produkt.
+
+**Gegenproben** (je rot gesehen und zurückgenommen):
+
+```txt
+Rückweg bei abgelehntem Schreiben heraus   test595 §7  „Der Knopf steht
+                                            wieder auf „nicht gemerkt" —
+                                            gedrueckt true"
+form:'herz' aus merkHerz()                  test595 §1  „schon in Ruhe … ein
+                                            offenes HERZ — d=M6.5 3h11…"
+Schreiben durch Promise.resolve() ersetzt   test595 §3/§4 „kennzahlenGemerkt()
+                                            … — []", „Nach dem Neuladen steht
+                                            der Streifen noch da — null"
+motion.ts malt trotzdem ein Herz            test595 §1  „4 Karten mit zwei
+                                            Herzen"
+studio.css grau auch für .ist-an            test580 §5  „Ein gemerktes Herz
+                                            behält in Ruhe seine Farbe —
+                                            filter saturate(0)"
+```
+
+**Nachtrag — die Durchsicht vom 6. Oktober** (eine unabhängige Durchsicht
+des Zweigs vor dem Push; Wächter zuerst, dann der Bau):
+
+- **Der Fokus blieb nicht.** Wer im Streifen „Gemerkt" mit der Leertaste
+  ein Herz löste, stand danach auf `<body>` — `gemerktAuffrischen()`
+  ersetzte den Streifen per `outerHTML` und entfernte ihn, wenn er leer
+  war (§38). Jetzt merkt es sich, ob der Fokus im Streifen stand, und setzt
+  ihn aufs nächste Herz im Streifen, sonst auf dieselbe Kennzahl weiter
+  unten, sonst auf die Überschrift von „Heute" (`tabindex="-1"`).
+  `test595` §5b, gegen den Stand 486e500a rot: `{"tag":"BODY",…}`.
+- **Das Zurück überschrieb einen anderen Tab.** Scheiterte das Schreiben,
+  schrieb `kennzahlMerken()` den Stand vom Klick zurück
+  (`Store.setMeta(schluessel, vorher)`) — was ein anderer Tab inzwischen
+  gemerkt hatte, war weg (§16). Jetzt nimmt es nur die eigene Änderung
+  zurück, rein und über `metaListeAendern` wie das Schreiben selbst.
+  `test595` §7b, rot: „… „streak" (der andere Tab) noch da … — []".
+- **Der Fokusring war gekappt.** Das Herz steht 1 px vom Kartenrand;
+  Umriss (2 + 2 px) und Hof (5 px) der Lernwelt ragten 3 px über die Karte,
+  die abschneidet. Der Ring liegt jetzt innen (`outline-offset:-2px`, kein
+  Hof). `test595` §6, rot: „"oben":-3,"rechts":-3".
+
+## E720 — Kein toter Knopf: jeder Knopf antwortet auf Zeigen, Druck und Tastenfokus
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Seite 21 — er hat ausdrücklich verlangt, dass es in die
+Entscheidungen und in CLAUDE.md kommt; die Vorgaben aus „Entscheidungen, die
+Redur gehören") · **ergänzt** E463 (der Funkel hat einen stillen Bruder, und
+er zeigt den Druck auch über `data-gedrueckt`) und E701 §1 (eine laute Fläche
+je Bild gilt weiter, auch mit fünf Funkeln) · **neue Regel** CLAUDE.md §38
+(hart) und §39 (Richtwert) · **baut auf** E702 (press.ts:
+`data-gedrueckt` ≥ 80 ms, `.ru-funkel` in OWN_PRESS) und E640 („Schein ist
+Zustand, nicht Dauerschmuck") auf · **Wächter:** `test596` (neu, 35
+Zusagen; nach der Durchsicht vom 6. Oktober 41), `test580` §1 (erweitert) · **Zweig** `claude/kein-toter-knopf` ·
+**Messung:** `messungen.md` §90.
+
+**Redurs Satz, wörtlich** (Notiz im PDF, am Foto der Lernzentrale; die
+Uhrzeit ist nicht überliefert):
+
+```txt
+Seite 21   „beim fählermeldung habe ich keien buttons efeck also wie bein
+            tagesrunde … und ausserdem bei der Neue karte, Prüfungsfokus …
+            und bei alle wo eine buttons gibt füge das im enscheideung und
+            claude.md"
+```
+
+**Gemessen, bevor gebaut wurde** (`test596` gegen 1bfaca53, 16 von 35;
+`messungen.md` §90). Ein Zensus: jeder sichtbare, freigegebene Knopf der
+Lernwelt, Zeiger darauf, Übergänge abgewartet, gemalte Eigenschaften
+verglichen (am Knopf, an `::before`/`::after`, an den direkten Kindern):
+
+```txt
+                 dunkel   hell
+Heute             8/20    8/20   Tagesziel ändern, PDF importieren, Lernplan
+                                 ansehen, Alle Dokumente, die vier Schnellknöpfe
+Lernen (Zentrale) 12/24  12/24   Klassische Lernansicht, Trainieren, Lernen,
+                                 Prüfungen öffnen, Kapitel anlegen + 7 Tage
+Fehler            4/14    4/14   Quelle öffnen, Diese Karte üben (je zweimal)
+Lernweg           1/12    1/12   Fortschritt erklären
+Prüfungen         1/8     1/8    Wochenprüfung simulieren
+Fortschritt      37/48   37/48   die Tagessäulen der Verläufe (E713)
+zusammen         63      63
+```
+
+Zwei Ursachen, beide bewiesen: (a) `lernwelt.css` schrieb die geteilten
+Hover-Regeln seit dem Umbau vom 24. August (47450aaa9) als
+`.lernwelt :where(… .lw-study-actions button …):hover` — `:where()` hat
+das Gewicht null, die Regel wog (0,2,0), die Grundregel jedes Knopfes
+(`.lernwelt .lw-study-actions button`) (0,2,1). Die Hover-Erklärung kam nie
+an. Dazu hatten das Tagesziel, „Alle Dokumente" und die 44 Tagessäulen des
+Verlaufs gar keine Hover-Regel. (b) Nur die Tagesrunde ist ein Funkel; der
+Funkel hatte keinen Zustand für `data-gedrueckt` — `data-gedrueckt` allein
+änderte an KEINEM der fünf Startknöpfe etwas, und ein kurzer Tipp am iPhone
+malt `:active` oft gar nicht. Und ein erzwungenes `:hover` am Telefon
+(`hover: none`) malte den vollen Schein — am iPhone bleibt `:hover` nach
+dem Tipp kleben (gesehen an den KI-Werkzeugen).
+
+**Was entschieden wurde.**
+
+1. **Die Regel** (CLAUDE.md §38, hart im Kern): *Jeder Knopf antwortet
+   sichtbar auf Zeigen, Druck und Tastenfokus — keiner wirkt tot.* Zeigen,
+   wo es einen Zeiger gibt; Druck mit Maus und Finger, auch beim kurzen
+   Tipp; Tastenfokus immer. Dieselbe Art Handlung nimmt dasselbe Bauteil:
+   Knöpfe, die etwas ANFANGEN, sind Funkel — in Ruhe still, der volle
+   Schein als Zustand. Und (§39, Richtwert): *Zustandsregeln wiegen
+   mindestens so viel wie die Grundregel — kein `:where()` um den
+   Knopf-Teil von `:hover`, `:active` oder `:focus-visible`.*
+2. **`:where(` → `:is(`** in den drei Hover-Regeln der Lernwelt (Knopf,
+   Hauptknopf, Karte). `:is()` nimmt das Gewicht seines schwersten
+   Arguments; der Funkel gewinnt weiter, weil bausteine.css später lädt.
+   Hover-Regeln für das Tagesziel, „Alle Dokumente" und die Tagessäulen
+   (ein Hauch Fläche, die Zahl deutlich, der Balken halb so kräftig wie
+   gewählt; der gewählte Tag behält seinen vollen Balken).
+3. **Fehlertraining, Neue Karten, Prüfungsfokus und Trainer sind Funkel**
+   (`Funkel.alle` in `zeichnen()` auch auf `.lw-study-actions button`) —
+   „Die stillen Funkel" in bausteine.css: in Ruhe eine Umrisspille mit
+   Grund, Schrift und Rand der Lernwelt, ohne Schein; unter Zeiger,
+   Tastenfokus und Druck GENAU die Tagesrunde (Grund #101010, Rand, Schein
+   von unten, Licht, Buchstabenlauf — `test596` §4 vergleicht Wert für
+   Wert). Die Tagesrunde bleibt die eine dunkle Fläche in Ruhe (E701 §1).
+4. **`data-gedrueckt` neben jedem `:active` des Funkels**: der kurze Tipp
+   zeigt das Drucklicht, solange press.ts den Zustand hält.
+5. **Der Schein unter dem Zeiger nur unter `@media (hover:hover)`** —
+   für jeden `.ru-funkel` der App, auch die KI-Werkzeuge. Am Telefon
+   übernehmen Tastenfokus und Druck. Die Wörter und Vorlesenamen bleiben
+   (Funkel zerlegt nur in `<span>`), alle `data-lw-train`/`data-lw-nav`
+   bleiben, wo sie waren.
+
+Das Muster ist der Druck des Touch Kits (Button: Zustand beim Drücken, auch
+beim kurzen Tipp) — als Redion-Code über den vorhandenen Funkel und press.ts
+gebaut, keine Zeile fremder Code kopiert, keine Insel; `FREMDCODE.md` ist
+nicht betroffen.
+
+**Warum.** Redur misst einen Knopf daran, ob er antwortet. Dreiundsechzig Knöpfe,
+die auf nichts reagieren, lesen sich wie „kaputt" — auch wenn sie
+funktionieren.
+
+**Was die Alternative war.** Vier gleiche dunkle Funkelpillen schon in Ruhe
+— das hätte E701 §1 („Genau eine je Bild") für die Lernzentrale
+aufgehoben; Redurs Wort war „Effekt", nicht „Farbe". Für die Regel: nur ein
+Satz in der Doku ohne Wächter — dann gälte, was §30 über nie gezählte
+Zahlen sagt.
+
+**Was es kostet.** Rund 1,7 KB gzip CSS (bausteine.css 1,06, lernwelt.css
+0,62 — fast alles die Begründungen in den Kommentaren, die im Stilblatt
+bleiben); mit E719 zusammen 1850 → 1854 KB beim Start (`test388` §5). Der Hover-Schein der Funkel fehlt
+auf Geräten ohne Zeiger ganz (gewollt). `:is()` hebt das Gewicht dreier
+Regeln — sie treffen jetzt auch, wo sie vorher still verloren; `test596`
+zählt deshalb jede Ansicht in hell und dunkel. Die Regel gilt ab jetzt
+app-weit; gemessen wird zuerst die Lernwelt — dasselbe `:where`-Muster in
+der Arbeitswelt und im Finder steht als L240.
+
+**Gefunden auf dem Weg.**
+
+- Die Zahl des Plans (20 tote Knöpfe) stammte von vor E713. Mit den
+  Tagessäulen der Verläufe, die seither Knöpfe sind und keinen
+  Hover-Zustand hatten, waren es 63.
+- Der erste Entwurf von §7 war gegen den alten Stand GRÜN: im Bild direkt
+  nach dem Tipp waren `:hover` und `:active` beide an, und die
+  Buchstaben wechselten ihre Bewegung — die Nachbildung malt, was das
+  iPhone nicht malt. Seither misst §7b `data-gedrueckt` ALLEIN.
+- §8 (der klebende Schein) liess sich durch einen Tipp nicht nachstellen —
+  Chromium lässt `:hover` nach dem Loslassen fallen. Erst ein ERZWUNGENES
+  `:hover` (CDP `CSS.forcePseudoState`) zeigte den Schein am Telefon.
+- Das Tagesziel und „Alle Dokumente" hatten keine einzige Hover-Regel —
+  keine `:where`-Frage, sondern eine fehlende Zeile.
+
+**Gegenproben** (je rot gesehen und zurückgenommen):
+
+```txt
+:is → :where in den drei Hover-Regeln       test596 §1 „dunkel · heute … 6
+                                             tot: PDF importieren · Lernplan
+                                             ansehen · Alle Aufgaben · …"
+[data-gedrueckt] aus den Funkel-Regeln       test596 §7b „5 ohne Bild" (hell
+                                             und dunkel)
+@media (hover:hover) → @media all            test596 §8 „ein klebendes :hover
+                                             malt am Telefon keinen Schein"
+„Die stillen Funkel" abgehängt               test580 §1 „Lernzentrale — genau
+                                             EINE laute Fläche … button
+                                             Starten · 5 · button Trainieren ·
+                                             1 · button Lernen · 4 · …"
+```
+
+**Nachtrag — die Durchsicht vom 6. Oktober** (eine unabhängige Durchsicht
+des Zweigs vor dem Push; die Wächter kamen zuerst und waren rot, Commit
+„test595/test596/test580 (rot)").
+
+1. **Ein gesperrter Knopf leuchtete auf** (blockierend). Mit leerem Bestand
+   — jeder neue Lernende — stehen „Starten · 0", „Trainieren · 0",
+   „Lernen · 0" und „Fehler trainieren · 0" gesperrt da. Unter dem Zeiger
+   kam das Licht (`::after` 1), der Buchstabenlauf (`rmo-letter-wisch`,
+   das Wort verwischt zu „Trai  en · 0") und der leuchtende Rand trotzdem:
+   die Ruheregeln der stillen Funkel prüften `:not(:disabled)`, die geerbten
+   Zustandsregeln nicht. Auf dem Grundstand leuchteten schon „Starten · 0"
+   und „Fehler trainieren · 0" (der gesperrte Funkel war nie ausgenommen);
+   E720 hatte drei dazugebracht, und `:is()` liess auch „Wochenprüfung
+   simulieren" heller werden. §1 zählt nur freigegebene Knöpfe und konnte
+   es nicht sehen. **Entschieden:** jede Zeiger- und Druckregel des Funkels,
+   der Buchstabenlauf in motion.css und die Zustandsregeln der Lernwelt
+   tragen `:where(:not(:disabled))` vor dem Zustand — ohne Gewicht, damit
+   keine Rangfolge kippt (mit `:not(:disabled)` hätte die Primärregel der
+   Lernwelt (0,5,1) den Funkel geschlagen). Das ist die Ausnahme, die §39
+   jetzt ausdrücklich nennt: wo ein Filter KEIN Gewicht tragen soll, ist
+   `:where()` richtig. `test596` §9, rot: „5 laut: lernen: „Starten · 0"
+   (Zeiger, data-gedrueckt) | … | pruefungen: „Wochenprüfung simulieren"
+   (Zeiger)".
+2. **Der Druck war im Hellen kaum lesbar.** Die Drucktönung
+   `hsl(210 50% 20% / .5)` lag halbdurchsichtig auf der hellen Karte; das
+   weisse Wort stand mit 3,06 : 1 auf Mittelgrau (Touch Kit hell 2,9, Sand
+   3,4). Das Rezept war das alte `:active` der Tagesrunde — seit E720
+   zeigen es fünf Knöpfe bei jedem Fingertipp. Jetzt liegt die Tönung über
+   dem Funkelgrund: 16,21 : 1 in allen zehn Schemata. `test596` §10b.
+3. **Im Starken Kontrast verschwand die eine laute Fläche.** Der
+   Funkelgrund #101010 hat auf dem Schwarz dieses Schemas 1,04 : 1, und die
+   stillen Funkel sind seit E720 auch Pillen — „Starten" und „Lernen"
+   unterschied nur noch ein schwacher Schein. Die Haupthandlung der
+   Lernwelt trägt dort einen 2-px-Rand im Akzent (12,87 : 1 gegen den
+   Grund); dieselbe Zeile für den Schalter „Hoher Kontrast". In den
+   anderen neun Schemata bleibt es beim Schein und den glimmenden
+   Buchstaben (§5) — Redurs Funkel bleibt, wie er ihn gewählt hat.
+   `test596` §10a.
+4. **`test580` §1 war schwächer als geplant.** Ein Funkel zählte nur über
+   Schein oder Glimmen als laut; ein Funkel mit dunklem Ruhegrund ohne
+   beides wäre in jeder Ansicht durchgerutscht. Jetzt zählt auch der Grund
+   (1,5 : 1 gegen den Grund darunter, oder gleich `--ru-funkel-farbe`).
+   Gegenprobe: der stille Funkel in Ruhe auf #101010 — mit dem alten
+   Massstab 91 ok, 0 offen, mit dem neuen „Lernzentrale — genau EINE laute
+   Fläche … button Trainieren · 1 · button Lernen · 4 …" (hell und dunkel).
+5. **Die Zahl in der Doku stimmte nicht.** CLAUDE.md §39 und lernwelt.css
+   sagten „zwanzig" Knöpfe hinter `:where()`; gemessen waren siebzehn
+   (63 − 44 Tagessäulen − 2 ohne Regel, `messungen.md` §90). Korrigiert.
+
+**Gegenproben zum Nachtrag** (je rot gesehen und zurückgenommen):
+
+```txt
+Funkel-Zeiger ohne :where(:not(:disabled)),   test596 §9  „5 laut: … „Starten
+lernwelt.css-Umriss ohne Ausschluss                        · 0" (Zeiger) | … |
+                                                           „Wochenprüfung
+                                                           simulieren" (Zeiger)"
+Rand im Starken Kontrast heraus               test596 §10a „kontrast: … Rand
+                                                           1/1 px"
+Druckgrund zurück auf die blosse Tönung       test596 §10b „hell: today 3.06 …"
+Buchstabenlauf und Druck ohne Ausschluss      test596 §9  „4 laut: „Starten ·
+                                                           0" (Zeiger,
+                                                           data-gedrueckt) | …"
+Fokus-Rückgabe heraus                         test595 §5b {"tag":"BODY",…}
+Zurück wieder mit setMeta(…, vorher)          test595 §7b „… — []"
+Fokusring wieder aussen                       test595 §6  "oben":-3,"rechts":-3
+```
+
+Was es zusätzlich kostet: drei CSS-Blöcke mit Begründung und rund zwanzig
+Zeilen TypeScript; die Drucktönung ist im Dunkeln etwas dunkler als vorher
+(sie liegt jetzt auf #101010 statt auf der Karte).

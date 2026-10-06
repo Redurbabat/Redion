@@ -1168,9 +1168,202 @@ const Lernwelt = (() => {
   /* Die Anatomie (Etikett oben, Zahl, Bedeutung am Boden) kommt aus der
      Schale: .stat-karte in anatomie.css (E260). .lw-metrik behält nur die
      Lernwelt-Abweichungen. */
-  const kennzahl = (wert: string, name: string, zusatz = ''): string =>
-    '<article class="stat-karte lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
-      (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
+  const kennzahl = (wert: string, name: string, zusatz = '', merkId = ''): string =>
+    '<article class="stat-karte lw-metrik"' + (merkId ? ' data-lw-kennzahl="' + esc(merkId) + '"' : '') +
+      '><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
+      (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, name) : '') + '</article>';
+
+  /* ========================================================================
+   * DIE KENNZAHLEN, DIE MAN SICH MERKEN KANN (E719)
+   * ------------------------------------------------------------------------
+   * Redur, PDF vom 29. September, Seiten 21/22: „die herz beim hier
+   * funktionier nicht also wenn ich das klicke passiert nichts". Das Herz in
+   * der Ecke jeder Kennzahl war Schmuck aus der Statistik-Vorlage (E534) —
+   * ein `aria-hidden`-Span ohne Zeiger auf einer Karte ohne Rolle. Es sah
+   * aus wie ein Knopf und war keiner.
+   *
+   * Jetzt ist es einer: das Herz merkt die KENNZAHL (Vorgabe des Plans,
+   * solange Redur die Frage 7 der Schlussliste nicht anders beantwortet).
+   * Gemerkte Kennzahlen stehen auf „Heute" im Streifen „Gemerkt".
+   *
+   * EIN KATALOG, NICHT EINUNDDREISSIG AUFRUFE (§8). Jede merkbare Kennzahl
+   * steht hier einmal: Kennung, Name, Wert. Die Ansichten und der Streifen
+   * holen sie von hier — sonst stünde „fällige Fehler" im Streifen mit
+   * einer anderen Zahl als in der Lernzentrale, sobald eine Stelle sich
+   * ändert. Kennzahlen, die nur einmal gelten (das Ergebnis EINER
+   * Simulation, die Zahlen EINES Fachs), stehen nicht im Katalog und
+   * bekommen keinen Knopf; ihr Schmuck bleibt, wie er war (L241).
+   *
+   * GESPEICHERT wird eine Liste von Kennungen unter
+   * `lernwelt:<aktor>:kennzahlen` in meta — je Lernendem, wie Ansicht und
+   * Tagesziel, und damit Teil jeder Sicherung (§52.10). Kein neues Feld an
+   * einem Block, keine Migration.
+   * ======================================================================*/
+  type KennzahlKontext = {
+    readonly queue: any; readonly stats: any; readonly spiel: any;
+    readonly fehler: LernweltFehler[]; readonly ziel: number;
+    readonly pruefung: LernweltPruefung | null; readonly stabil: number;
+  };
+  /** Was die Kennzahlen brauchen — erst gerechnet, wenn eine danach fragt. */
+  const kennzahlKontext = (vorgabe: { queue?: any; stats?: any; spiel?: any } = {}): KennzahlKontext => {
+    const merk = new Map<string, unknown>(Object.entries(vorgabe));
+    const einmal = <T>(name: string, rechnen: () => T): T => {
+      if (!merk.has(name)) merk.set(name, rechnen());
+      return merk.get(name) as T;
+    };
+    return {
+      get queue() { return einmal('queue', () => warteschlange()); },
+      get stats() { return einmal('stats', () => statistik()); },
+      get spiel() { return einmal('spiel', () => aktivitaet()); },
+      get fehler() { return einmal('fehler', () => fehlerListe()); },
+      get ziel() { return einmal('ziel', () => tagesziel()); },
+      get pruefung() {
+        return einmal('pruefung', () => pruefungen().find(item => item.tage === null || item.tage >= 0) || null);
+      },
+      get stabil() { return einmal('stabil', () => lernkarten().filter(card => zahl(card?.sr?.wdh) >= 2).length); }
+    };
+  };
+  const pruefungTage = (p: LernweltPruefung | null): string => !p ? 'keine geplant'
+    : p.tage === 0 ? 'heute' : p.tage === 1 ? 'morgen' : p.tage + ' Tage';
+
+  const KENNZAHLEN: Readonly<Record<string, { name: string; wert: (k: KennzahlKontext) => string;
+    zusatz?: (k: KennzahlKontext) => string }>> = {
+    /* Heute */
+    'heute-faellig': { name: 'fällig', wert: k => String(k.queue.errors.length + k.queue.due.length),
+      zusatz: () => 'heute zu wiederholen' },
+    'heute-neu': { name: 'neu', wert: k => String(k.queue.newCards.length), zusatz: () => 'höchstens 20 pro Runde' },
+    'heute-fehler': { name: 'Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
+      zusatz: () => 'gezielt wiederholen' },
+    'naechste-pruefung': { name: 'nächste Prüfung', wert: k => k.pruefung ? pruefungTage(k.pruefung) : '–',
+      zusatz: k => k.pruefung ? k.pruefung.titel || '' : 'keine geplant' },
+    'lernzeit': { name: 'Lernzeit', wert: k => '~' + k.spiel.minuten + ' Min.', zusatz: k => String(k.spiel.tempoSatz || '') },
+    'wochenziel': { name: 'Wochenziel', wert: k => k.spiel.woche + ' / ' + k.ziel * 7 },
+    'streak': { name: 'Streak', wert: k => k.spiel.streak + (k.spiel.streak === 1 ? ' Tag' : ' Tage') },
+    'aktivitaet': { name: 'Aktivität', wert: k => 'Level ' + k.spiel.level, zusatz: k => k.spiel.xp + ' XP' },
+    /* Lernzentrale */
+    'faellige-fehler': { name: 'fällige Fehler', wert: k => String(k.queue.errors.length) },
+    'faellige-karten': { name: 'fällige Karten', wert: k => String(k.queue.due.length) },
+    'neue-karten': { name: 'neue Karten', wert: k => String(k.queue.newCards.length) },
+    'naechste-wiederholung': { name: 'nächste Wiederholung',
+      wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
+    /* Fehler */
+    'noch-instabil': { name: 'noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
+    'inzwischen-stabil': { name: 'inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
+    'fehlversuche': { name: 'Fehlversuche', wert: k => String(k.fehler.reduce((summe, item) => summe + item.anzahl, 0)) },
+    /* Fortschritt */
+    'stabile-karten': { name: 'stabile Karten', wert: k => k.stabil + ' / ' + k.stats.total },
+    'aktuell-faellig': { name: 'aktuell fällig', wert: k => String(k.stats.due) },
+    'themen-mit-fehlern': { name: 'Themen mit Fehlern', wert: k => String(k.stats.mistakes) },
+    'naechster-termin': { name: 'nächster Termin', wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
+    'wiederholungen-woche': { name: 'Wiederholungen diese Woche', wert: k => String(k.spiel.woche) },
+    'aktivitaets-xp': { name: 'Aktivitäts-XP', wert: k => String(k.spiel.xp) },
+    'level': { name: 'Level', wert: k => String(k.spiel.level) }
+  };
+
+  /** Die gemerkten Kennungen, wie sie gespeichert sind (auch unbekannte). */
+  const kennzahlenGemerkt = (): string[] => {
+    const roh = Store.getMeta(metaSchluessel('kennzahlen'), []);
+    return Array.isArray(roh) ? roh.filter((id: unknown): id is string => typeof id === 'string') : [];
+  };
+
+  /* Das Herz: der eine Merker der App (E460) in der Herzform (E719). */
+  const merkHerz = (id: string, name: string): string => typeof Merkzeichen === 'undefined' ? '' :
+    Merkzeichen.html({ an: kennzahlenGemerkt().includes(id), name, form: 'herz',
+      klasse: 'lw-kennzahl-merk', zusatz: 'data-lw-merk="' + esc(id) + '"' });
+
+  /** Eine Kennzahl aus dem Katalog, mit ihrem Herz. */
+  const merkbar = (id: string, k: KennzahlKontext): string => {
+    const eintrag = KENNZAHLEN[id];
+    if (!eintrag) return '';
+    return kennzahl(eintrag.wert(k), eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id);
+  };
+
+  /** Der Streifen „Gemerkt" auf Heute — leer, solange nichts gemerkt ist. */
+  const gemerktStreifen = (k: KennzahlKontext): string => {
+    const ids = kennzahlenGemerkt().filter(id => KENNZAHLEN[id]);
+    if (!ids.length) return '';
+    return '<section class="lw-section lw-gemerkt" aria-labelledby="lw-gemerkt-titel"><header><div>' +
+      '<h2 id="lw-gemerkt-titel">Gemerkt</h2><p>Deine Lieblingskennzahlen — das Herz nimmt sie wieder heraus.</p>' +
+      '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k)).join('') + '</div></section>';
+  };
+
+  /* Nur den Streifen neu zeichnen, nicht die Ansicht: ein Neuzeichnen
+     klappte die offene „Lernübersicht" zu, in der man eben geklickt hat. */
+  const gemerktAuffrischen = (): void => {
+    const root = zustand.root;
+    if (!root || zustand.ansicht !== 'heute') return;
+    const alt = root.querySelector('.lw-gemerkt');
+    /* DER FOKUS BLEIBT (§38, test595 §5b). Wer im Streifen mit der Tastatur
+       ein Herz löst, verlor ihn: der Streifen wird ersetzt oder entfernt,
+       und `document.activeElement` war danach <body>. Also merken, wo er
+       stand, und ihn danach wieder hinsetzen. */
+    const aktiv = document.activeElement;
+    const herzVorher = alt && aktiv instanceof HTMLElement && alt.contains(aktiv)
+      ? aktiv.closest<HTMLElement>('[data-lw-merk]') : null;
+    const platz = herzVorher ? [...alt!.querySelectorAll('[data-lw-merk]')].indexOf(herzVorher) : -1;
+    const html = gemerktStreifen(kennzahlKontext());
+    if (alt) {
+      if (html) alt.outerHTML = html; else alt.remove();
+    } else if (html) {
+      root.querySelector('.lw-today > .lw-hero')?.insertAdjacentHTML('afterend', html);
+    }
+    if (!herzVorher) return;
+    const id = herzVorher.dataset.lwMerk;
+    const imStreifen = [...root.querySelectorAll<HTMLElement>('.lw-gemerkt [data-lw-merk]')];
+    /* Dieselbe Kennzahl, wenn sie noch im Streifen steht; sonst das Herz, das
+       an ihren Platz gerückt ist (oder das letzte); sonst dieselbe Kennzahl
+       weiter unten in der Übersicht; sonst die Überschrift der Ansicht. */
+    let ziel: HTMLElement | null = imStreifen.find(k => k.dataset.lwMerk === id) ||
+      imStreifen[Math.min(platz, imStreifen.length - 1)] ||
+      [...root.querySelectorAll<HTMLElement>('[data-lw-merk]')].find(k => k.dataset.lwMerk === id) || null;
+    if (!ziel) {
+      ziel = root.querySelector<HTMLElement>('.lw-today > .lw-hero h2');
+      if (ziel && !ziel.hasAttribute('tabindex')) ziel.setAttribute('tabindex', '-1');
+    }
+    ziel?.focus({ preventScroll: !!ziel.closest('.lw-gemerkt') });
+  };
+
+  /** Ein Herz umschalten: sofort zeigen, dann schreiben; scheitert es, zurück. */
+  const kennzahlMerken = (knopf: HTMLElement, id: string): void => {
+    const eintrag = KENNZAHLEN[id];
+    if (!eintrag || typeof Merkzeichen === 'undefined') return;
+    const schluessel = metaSchluessel('kennzahlen');
+    const an = knopf.getAttribute('aria-pressed') !== 'true';
+    /* Alle Herzen derselben Kennzahl — dieselbe Zahl steht auf Heute im
+       Streifen und in der Übersicht darunter. */
+    const stellen = (): HTMLElement[] => [...(zustand.root?.querySelectorAll<HTMLElement>('[data-lw-merk]') || [])]
+      .filter(k => k.dataset.lwMerk === id);
+    const zeigen = (wert: boolean): void => {
+      stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: eintrag.name, form: 'herz' }));
+      if (!stellen().includes(knopf)) Merkzeichen.markieren(knopf, { an: wert, name: eintrag.name, form: 'herz' });
+    };
+    zeigen(an);
+    let schreiben: Promise<unknown>;
+    try {
+      /* `metaListeAendern` rechnet zweimal (Zwischenspeicher und Ablage) und
+         ist zwischen zwei Tabs sicher (indexdb.ts). Die Änderung ist rein. */
+      schreiben = Store.metaListeAendern(schluessel, (liste: any[]) => {
+        const ohne = liste.filter(x => x !== id);
+        return an ? [...ohne, id] : ohne;
+      });
+    } catch (err) { schreiben = Promise.reject(err); }
+    gemerktAuffrischen();
+    schreiben.catch(() => {
+      /* Zurück — aber nur die EIGENE Änderung (§16, test595 §7b). Ein
+         Zurück auf den Stand vom Klick (`setMeta(…, vorher)`) hätte auch
+         gelöscht, was ein anderer Tab inzwischen gemerkt hat. Die
+         Umkehrung ist rein wie die Änderung selbst. */
+      try {
+        Store.metaListeAendern(schluessel, (liste: any[]) => {
+          const ohne = liste.filter(x => x !== id);
+          return an ? ohne : [...ohne, id];
+        }).catch(() => { /* das Bild zählt zuerst */ });
+      } catch { /* das Bild zählt zuerst */ }
+      zeigen(!an);
+      gemerktAuffrischen();
+      UI.toast('Die Kennzahl „' + eintrag.name + '" konnte nicht gemerkt werden.');
+    });
+  };
 
   const fortschritt = (wert: number, label: string): string =>
     '<div class="lw-progress"><div><span>' + esc(label) + '</span><strong>' + prozent(wert) +
@@ -1428,11 +1621,10 @@ const Lernwelt = (() => {
     const alleProjekte = sichtbareProjekte();
     const projekteGezeigt = alleProjekte.slice(0, 5);
     const naechstePruefung = pruefungen().find(item => item.tage === null || item.tage >= 0) || null;
-    const pruefungText = naechstePruefung
-      ? naechstePruefung.tage === 0 ? 'heute'
-        : naechstePruefung.tage === 1 ? 'morgen'
-        : naechstePruefung.tage + ' Tage'
-      : 'keine geplant';
+    const pruefungText = pruefungTage(naechstePruefung);
+    /* Die Kennzahlen kommen aus dem Katalog (E719) — mit denselben Werten,
+       die diese Ansicht schon gerechnet hat. */
+    const ktx = kennzahlKontext({ queue, stats, spiel });
     /* Eine klare Startfolge: Dokument öffnen, Lernrunde, dann der Tagesplan.
        Auswertungen bleiben vollständig über native Details erreichbar. */
     return '<div class="lw-today">' +
@@ -1442,6 +1634,7 @@ const Lernwelt = (() => {
         '.</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
         '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
         '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
+      gemerktStreifen(ktx) +
       dokumentEinstieg() +
       '<section class="lw-next-step" aria-label="Dein nächster Lernschritt">' +
         zeichenSpan('cards', 'lw-next-icon') + '<div><p>Ein guter nächster Schritt</p><h2>' +
@@ -1477,11 +1670,8 @@ const Lernwelt = (() => {
         zeichenSpan('chart') + '<span>Lernübersicht &amp; Fortschritt<small>Prüfungen, Themen, Projekte und deine Lernroutine</small></span>' +
         '</span><span class="lw-details-chevron" aria-hidden="true">⌄</span></summary><div class="lw-insights-body">' +
         '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
-          kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
-          kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
-          kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
-          (naechstePruefung ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
-            : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>' +
+          merkbar('heute-faellig', ktx) + merkbar('heute-neu', ktx) + merkbar('heute-fehler', ktx) +
+          merkbar('naechste-pruefung', ktx) + '</section>' +
         '<section class="lw-exam-card"><header><p>Nächste Prüfung</p>' +
           '<span class="lw-card-icon" data-sym="clipboard" aria-hidden="true"></span></header>' +
           (naechstePruefung
@@ -1497,10 +1687,8 @@ const Lernwelt = (() => {
         '</div>' +
         '<section class="lw-engagement"><header><div><p>Aktivität</p><h2>Deine Lernroutine</h2></div>' +
           '<span>Getrennt vom Wissensstand</span></header><div class="lw-metrics">' +
-          kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
-          kennzahl(spiel.woche + ' / ' + ziel * 7, 'Wochenziel') +
-          kennzahl(spiel.streak + (spiel.streak === 1 ? ' Tag' : ' Tage'), 'Streak') +
-          kennzahl('Level ' + spiel.level, 'Aktivität', spiel.xp + ' XP') +
+          merkbar('lernzeit', ktx) + merkbar('wochenziel', ktx) + merkbar('streak', ktx) +
+          merkbar('aktivitaet', ktx) +
           '</div>' + fortschritt(spiel.wochenProzent, 'Wochenfortschritt') + '</section>' +
       '</div></details></div>';
   };
@@ -1707,15 +1895,14 @@ const Lernwelt = (() => {
     const artZaehler = new Map<string, number>();
     lernkarten().forEach(card => artZaehler.set(kartenArt(card), (artZaehler.get(kartenArt(card)) || 0) + 1));
     const fokus = liste(stats.topics).find(item => item.id === zustand.themaId);
+    const ktx = kennzahlKontext({ queue, stats });
     return '<div class="lw-learning">' +
       '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
         (fokus ? esc(fokus.label) : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
         '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
       '<section class="lw-metrics">' +
-        kennzahl(String(queue.errors.length), 'fällige Fehler') +
-        kennzahl(String(queue.due.length), 'fällige Karten') +
-        kennzahl(String(queue.newCards.length), 'neue Karten') +
-        kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächste Wiederholung') +
+        merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +
+        merkbar('naechste-wiederholung', ktx) +
       '</section>' +
       '<div class="lw-study-actions">' +
         '<article>' + zeichenSpan('sun') + '<h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
@@ -1861,14 +2048,13 @@ const Lernwelt = (() => {
     if (zustand.training) return trainingAnsicht();
     const fehler = fehlerListe();
     const offen = fehler.filter(item => !item.stabil);
+    const ktx = kennzahlKontext();
     return '<div class="lw-errors"><header class="lw-page-head"><div><p>Fehlerzentrum</p><h2>Meine Fehler</h2>' +
       '<span>Jeder Eintrag bleibt mit seiner ursprünglichen Quelle verbunden.</span></div>' +
       '<button type="button" class="is-primary" data-lw-train="errors"' + (offen.length ? '' : ' disabled') +
       '>Fehler trainieren · ' + offen.length + '</button></header>' +
       '<section class="lw-metrics">' +
-        kennzahl(String(offen.length), 'noch instabil') +
-        kennzahl(String(fehler.filter(item => item.stabil).length), 'inzwischen stabil') +
-        kennzahl(String(fehler.reduce((summe, item) => summe + item.anzahl, 0)), 'Fehlversuche') +
+        merkbar('noch-instabil', ktx) + merkbar('inzwischen-stabil', ktx) + merkbar('fehlversuche', ktx) +
       '</section>' +
       (fehler.length
         ? '<div class="lw-error-list">' + fehler.map(item =>
@@ -2835,22 +3021,19 @@ const Lernwelt = (() => {
   const fortschrittAnsicht = (): string => {
     const stats = statistik();
     const spiel = aktivitaet();
-    const stabil = lernkarten().filter(card => zahl(card?.sr?.wdh) >= 2).length;
+    const ktx = kennzahlKontext({ stats, spiel });
     const wissen = stats.total ? Math.round(lernkarten().reduce((summe, card) =>
       summe + Math.min(2, zahl(card?.sr?.wdh)), 0) / (stats.total * 2) * 100) : 0;
     return '<div class="lw-progress-page"><header class="lw-page-head"><div><p>Fortschritt</p><h2>Wissen nachvollziehbar messen</h2>' +
       '<span>SM-2-Wissensstand und Motivation werden bewusst getrennt dargestellt.</span></div></header>' +
       '<section class="lw-knowledge"><header><div><p>Fachlicher Stand</p><h3>Persönlicher Lernfortschritt</h3></div>' +
         '<strong>' + wissen + ' %</strong></header>' + fortschritt(wissen, 'Gesamter Wissensstand') +
-        '<div class="lw-metrics">' + kennzahl(stabil + ' / ' + stats.total, 'stabile Karten') +
-          kennzahl(String(stats.due), 'aktuell fällig') + kennzahl(String(stats.mistakes), 'Themen mit Fehlern') +
-          kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächster Termin') + '</div></section>' +
+        '<div class="lw-metrics">' + merkbar('stabile-karten', ktx) + merkbar('aktuell-faellig', ktx) +
+          merkbar('themen-mit-fehlern', ktx) + merkbar('naechster-termin', ktx) + '</div></section>' +
       '<section class="lw-engagement"><header><div><p>Aktivität</p><h3>Routine &amp; Motivation</h3></div>' +
         '<span>kein fachlicher Nachweis</span></header><div class="lw-metrics">' +
-        kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
-        kennzahl(String(spiel.woche), 'Wiederholungen diese Woche') +
-        kennzahl(spiel.streak + ' Tage', 'Streak') + kennzahl(String(spiel.xp), 'Aktivitäts-XP') +
-        kennzahl(String(spiel.level), 'Level') + '</div>' + fortschritt(spiel.wochenProzent, 'Wochenziel') + '</section>' +
+        merkbar('lernzeit', ktx) + merkbar('wiederholungen-woche', ktx) + merkbar('streak', ktx) +
+        merkbar('aktivitaets-xp', ktx) + merkbar('level', ktx) + '</div>' + fortschritt(spiel.wochenProzent, 'Wochenziel') + '</section>' +
       '<div class="lw-dashboard-grid">' +
         sektion('Themenfortschritt', themenListe(liste(stats.topics), 40), 'SM-2, nicht XP') +
         sektion('Wochenverlauf', historie(liste(stats.logs), 7), stats.reviewedToday + ' heute') +
@@ -2928,9 +3111,13 @@ const Lernwelt = (() => {
     }
     /* „Lernen starten" glimmt (E463) — der eine Knopf je Ansicht, der
        etwas ANFÄNGT, nicht nur wechselt. Die Zeichen werden bei jedem
-       Zeichnen neu zerlegt, weil `innerHTML` sie neu schreibt. */
+       Zeichnen neu zerlegt, weil `innerHTML` sie neu schreibt.
+       KEIN TOTER KNOPF (E720): auch die vier anderen Startknöpfe der
+       Lernzentrale (Fehlertraining, Neue Karten, Prüfungsfokus, Trainer)
+       sind Funkel — Redur: „wie bein tagesrunde". Sie ruhen still
+       (bausteine.css, „Die stillen Funkel"); laut bleibt die Tagesrunde. */
     if (typeof Funkel !== 'undefined')
-      Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
+      Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"], .lw-study-actions button');
     /* Die Balkenkarten beleben (E713): Höhen, Hochzählen, Wahl. */
     verlaufBeleben(root, zustand.ansicht);
     if (zustand.simulation && !zustand.simulation.fertig) timerStarten();
@@ -3247,6 +3434,10 @@ const Lernwelt = (() => {
   const klick = (event: Event): void => {
     const element = event.target instanceof Element ? event.target : null;
     if (!element) return;
+    /* Das Herz einer Kennzahl (E719) — vor allem anderen, es liegt in einer
+       Karte, die sonst nichts tut. */
+    const merk = element.closest<HTMLElement>('[data-lw-merk]');
+    if (merk?.dataset.lwMerk) { kennzahlMerken(merk, merk.dataset.lwMerk); return; }
     const nav = element.closest<HTMLElement>('[data-lw-nav]');
     const navId = nav?.dataset.lwNav;
     if (ansichtGueltig(navId)) { wechseln(navId); return; }
@@ -3518,6 +3709,10 @@ const Lernwelt = (() => {
          hier danach fragen. Nachbauen wäre dieselbe Wahrheit an zwei
          Stellen, und die zweite geht irgendwann auseinander. */
       simulationen,
+      /* Die gemerkten Kennzahlen (E719) — aus demselben Grund hier statt
+         nachgebaut: der Schlüssel enthält den Lernenden. */
+      kennzahlenGemerkt,
+      kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name })),
       fehler: fehlerListe,
       pruefungen,
       aufgaben: sichtbareAufgaben,
