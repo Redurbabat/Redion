@@ -8348,6 +8348,31 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L239 · Ordner nach E718: alte Papierkorb-Seiten ohne Frist, und zwei Regeln für ein Fach — 6. Oktober 2026
+
+**Gefunden beim Bau von E718** (Redur, Masterprompt S. 13: „… die ordner
+farbe oder die ordner selbst nicht bearbeiten, behebe das problem"). E718
+hat das Weglegen der Bibliothek auf `Store.trashBlock` umgestellt. Zwei
+Dinge bleiben offen, weil sie Redur gehören (§35):
+
+1. **Seiten, die VOR E718 über die Bibliothek in den Papierkorb gelegt
+   wurden, tragen kein `trashedAt`.** Der alte Weg schrieb nur
+   `alive:false` (gemessen: `trashedAt` fehlt, die Seite blieb im Inhalt
+   ihres Elternteils, `test594` §13 gegen 1bfaca53). `papierkorbAufraeumen`
+   lässt Seiten ohne Stempel liegen — sie laufen nie ab, der Papierkorb
+   sortiert sie ans Ende, und „Wiederherstellen" holt sie weiter zurück.
+   Verloren ist nichts. Nachtragen (`trashedAt = edited`, einmal) wäre eine
+   Datenänderung (§9): nur mit Redurs Wort.
+2. **Ein Fach der Notizhefte folgt einer anderen Regel als ein Ordner der
+   Bibliothek.** Seit E718 ist der Inhalt eines weggelegten Ordners mit ihm
+   weg — in Alle, Zuletzt, Favoriten, Baum und Karten, wie in der
+   Seitenleiste — und kommt mit „Rückgängig" zurück. Das Fach dagegen sagt
+   „Fach in den Papierkorb gelegt. Seine Hefte bleiben im Regal."
+   (`notebook.ts`, `fachKontextMenue`) — und in der Bibliothek verschwinden
+   genau diese Hefte jetzt, weil ihr Vorfahr im Papierkorb liegt. Beides
+   ist eine bewusste Regel; welche für das Fach gelten soll, entscheidet
+   Redur (AUFGABEN, „Nach E718").
+
 ## L235 · Zwei Fragen an die Ecke aus E676: eine Probe in `test201` und die Tinte einer zitternden Hand — 28. September 2026
 
 **Gefunden beim Bau von E708** (rot zuerst am Stift, Redur: „ohne eine
@@ -9530,7 +9555,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 131 Lücken, 75 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 132 Lücken, 76 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -1,5 +1,36 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E718 — Ordner bearbeiten (Masterprompt #12 und die Datenhälfte von #9)
+
+**Redur** (Masterprompt vom 29. September, S. 13): „hier beiM BIBLOTEK KANN
+ich wie beim biblotek die ordner farbe oder die ordner selbst nicht
+bearbeiten, behebe das problem und auch die rechtsk klickt sollte hier für
+die ordner haben ." — S. 19: „… beim rechts klicke sollte es mir zeigen
+löschen".
+
+**Fund** (`test594` gegen 1bfaca53, 14/62): das ⌄ „Umbenennen" der
+Bibliothek sprang auf die Seite (gegen E380); „   " und Steuerzeichen
+wurden gespeichert; Farbe und Name erreichten die Seitenleiste nicht; ein
+eigenes Symbol fehlte auf Karte und Baum; ein Ordner auf seinem eigenen
+Kind bildete einen Ring; der Papierkorb der Bibliothek schrieb nur
+`alive:false` (kein `trashedAt`, im Inhalt des Elternteils, kein
+Protokoll, kein Rückweg) und liess die Kinder in Alle/Zuletzt/Favoriten
+stehen; und das Blockmenü löschte eine Unterseite samt Enkelseite
+ENDGÜLTIG.
+
+**Bau:** `App.umbenennen` (ein Weg für Bibliothek, Notizhefte, Seitenmenü,
+Datenbankzeile), `App.nameSaeubern`, `App.nachAenderung`,
+`App.inPapierkorb` mit „Rückgängig" in der Meldung (`hinweis.ts`: eine
+Handlung, nur bei der neuesten Meldung), die Ring-Prüfung in
+`Werkzeuge.verschiebe`, `Bibliothek.alleSeiten` ohne Kinder weggelegter
+Ordner, das eigene Symbol auf Karte und im Ablagebaum. Editor: „Löschen",
+der Schrägstrich-Befehl und „Ausschneiden" legen in den Papierkorb.
+
+**Prüfung:** `test594` 64/64 (neu), `test560` §7, `test587` §13, `test588`
+§15 (erweitert); Nachbarn und Gegenproben im Commit von E718; Messung
+`messungen.md` §89. Offen: L239 (alte Papierkorb-Seiten ohne Frist, die
+Regel des Fachs) — Redurs Fragen.
+
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 
 **Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von

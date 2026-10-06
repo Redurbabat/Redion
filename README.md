@@ -189,6 +189,21 @@ Tipp daneben schliessen, und nichts ist weg. Mit weniger Bewegung blenden
 die zwei Knöpfe nur auf. „Papierkorb leeren" fragt weiter wie bisher, und
 Löschen in Menüs bleibt ein Menüeintrag (E709).
 
+„Löschen" in einem Menü — in der Bibliothek, im Seitenmenü, im Blockmenü
+des Editors — legt in den Papierkorb, nichts verschwindet sofort. Die
+Meldung danach trägt „Rückgängig", das an dieselbe Stelle zurücklegt; ein
+Ordner nimmt seinen Inhalt mit und bringt ihn zurück. Endgültig gelöscht
+wird nur im Papierkorb (E718).
+
+
+Ordner
+
+Ordner der Bibliothek lassen sich im ⌄ an der Karte umbenennen, ohne die
+Bibliothek zu verlassen, und einfärben; Name, Farbe und ein eigenes Symbol
+stehen sofort auf der Karte, im Ablagebaum und in der Seitenleiste. Ein
+leerer Name wird nicht gespeichert, und gibt es den Namen im selben Ordner
+schon, fragt Redion nach (E718).
+
 
 Bewegung
 

@@ -6696,3 +6696,44 @@ gemessen, auf `c287b388e` plus diese Änderungen:
   nachgefahren hatte: `test141` 27, `test183` 27, `test191` 23, `test303`
   16, `test341` 37, `test362` 18/18, `test411` 26, `test427` 55, `test444`
   13, `test576` 30/30, `test582` 176, `test584` 37 — alle ohne Offenes.
+
+## §89 · Ordner bearbeiten: Name, Farbe, Symbol, Ring, Papierkorb (E718, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/ordner-bearbeiten` gegen `1bfaca53`
+(`claude/morgen-besser-2`). `test594` mit `listen(0)`, Chromium, Rechner
+1440×900 hell und dunkel, Telefon 390×844 dunkel. Gezählt wird im Speicher
+(`Store.getBlock`, `Store.trashed()`, `Store.papierkorbBloecke()`,
+`Protokoll.alle()`, `Bibliothek.alleSeiten()`) UND im Bild (`.bib-deckel`,
+`.ru-baum-zeile`, `#sidebar .row`), ohne Neuzeichnen von Hand zwischen der
+Handlung und der Messung.
+
+```txt
+                                                 vorher (1bfaca53)              nachher (E718)
+Umbenennen aus dem ⌄ der Bibliothek               öffnet die Seite, inBib false  Frage, inBib true
+  … drinnen in einem Ordner                       —                              bleibt im Ordner
+„   " (Seitenmenü, Fach)                         gespeichert "   "              alter Name, Meldung, neu gefragt
+„A␇B⏎C" + U+2028 (Bibliothek)                     —                              "AB C"
+„  Strom\u0000kunde " (Heft)                      gespeichert, wie es war        "Stromkunde"
+gleicher Name im selben Ordner                    —                              Wahl: anders / trotzdem
+Schreiben des Namens je Antwort (test587 §13)     10 (in den Seitentitel getippt) 1
+Farbe aus dem ⌄: Karte / Baum / Seitenleiste      red / red / null               red / red / red (hell), green ×3 (dunkel)
+Fach: Farbe / Name in der Seitenleiste            null / alter Name              blue / Strom
+eigenes Symbol ⚡: Karte / Baum / Seitenleiste      "" / "" / ⚡                     ⚡ / ⚡ / ⚡ (auch nach Neuladen)
+Ordner auf eigenes Kind gezogen                   parentId = Kind (Ring),        parentId null, beide da,
+                                                  beide nicht in der Leiste      „Ein Ordner kann nicht in sich selbst liegen"
+Papierkorb aus der Bibliothek:
+  trashedAt / im Inhalt des Elternteils           fehlt / ja                     gesetzt / nein
+  Protokoll „seite-weg"                           0                              1
+  Meldung                                         „„Leitungen" liegt im …"       „„Leitungen neu" und 1 Unterseite liegen im Papierkorb"
+  Knopf „Rückgängig" (Rechner / Telefon)          —                              44 px / 44 × ≥44 px, im Bild, obenauf
+  nach „Rückgängig": lebendig, Stelle im Inhalt   —                              ja, dieselbe Stelle (Index 0)
+Kinder eines weggelegten Ordners:
+  Alle / Zuletzt / Favoriten / Baum / Karten      2 / 1 / 1 / 2 / 0              0 / 0 / 0 / 0 / 0, nach Rückgängig 3 zurück
+Blockmenü „Löschen" auf Unterseite + Datenbank    "WEG", Enkel "WEG",            im Papierkorb, Enkel da,
+                                                  nach Neuladen nichts           nach Neuladen zurückzuholen (Inhalt ≥ 2)
+test594                                           14 / 62                        64 / 64 (zwei Zusagen kamen
+                                                                                  aus dem Bild dazu, §13)
+```
+
+**Startlast** (`test388` §5, gzip): 1850 KB vorher, 1852 KB nachher (252 Dateien),
+Decke 1950.

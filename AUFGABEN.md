@@ -1703,3 +1703,19 @@ Grund:
    „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
    Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
 
+## Nach E718 (6. Oktober 2026) — Ordner bearbeiten
+
+Gefunden beim Bau von E718, nicht dort entschieden — je mit dem Grund:
+
+1. **Das Fach der Notizhefte** sagt „Fach in den Papierkorb gelegt. Seine
+   Hefte bleiben im Regal." — ein Ordner der Bibliothek nimmt seit E718
+   seinen Inhalt mit (und bringt ihn mit „Rückgängig" zurück). Soll das
+   Fach derselben Regel folgen? Redurs Frage (L239 Punkt 2).
+2. **Alte Papierkorb-Seiten ohne `trashedAt`** (vor E718 über die
+   Bibliothek weggelegt) laufen nie ab. Einmal nachtragen ist eine
+   Datenänderung — nur mit Redurs Wort (L239 Punkt 1).
+3. **Der Rechtsklick, das echte „…" und die Tastatur im Menü** für Karten,
+   Ablagebaum, Seitenleiste und Notizhefte, dazu „Symbol ändern" und
+   „Verschieben" im Ordnermenü: `claude/menue-eine-quelle` ruft dafür
+   `App.umbenennen`, `App.inPapierkorb` und `App.nachAenderung`.
+
