@@ -25,7 +25,8 @@
  *      `<button>`, nicht `aria-hidden`, mindestens 44 × 44, mit
  *      `aria-pressed="false"` und dem Namen „Zu Favoriten: fällige
  *      Fehler"; an seiner Mitte liegt ER (elementFromPoint), nicht die
- *      Karte.
+ *      Karte; schon in Ruhe ist er ein offenes HERZ, und daneben steht
+ *      kein zweites, gemaltes.
  *   §2 DIE MAUS SCHALTET. Ein Klick: `aria-pressed="true"`, Name „Aus
  *      Favoriten: fällige Fehler", die Form ist ein HERZ (nicht das Band
  *      der Seitenfavoriten) und gefüllt — offen gegen gefüllt, auch ohne
@@ -181,6 +182,12 @@ p('… mindestens 44 × 44 (§37)', (h1?.breite ?? 0) >= 44 && (h1?.hoehe ?? 0) 
 p('… aria-pressed="false" und „Zu Favoriten: fällige Fehler"',
   h1?.gedrueckt === 'false' && h1?.name === 'Zu Favoriten: fällige Fehler', `${h1?.gedrueckt} · ${h1?.name}`);
 p('… und an seiner Mitte liegt ER, nicht die Karte', h1?.getroffen === 'HERZ', String(h1?.getroffen));
+const doppelt = await s.evaluate(() => [...document.querySelectorAll('.lw-learning .stat-karte.lw-metrik')]
+  .filter(k => k.querySelector(':scope > .lw-kennzahl-merk') && k.querySelector(':scope > .rmo-heart')).length);
+p('… und kein zweites, gemaltes Herz daneben (die Attrappe ist ersetzt, nicht verdoppelt)', doppelt === 0, doppelt + ' Karten mit zwei Herzen');
+const herzD = await s.evaluate(() => (window as any).Merkzeichen?.HERZ ?? null);
+p('… und schon in Ruhe ist es ein offenes HERZ (nicht das Band)', !!herzD && h1?.form === herzD && h1?.fuellung === 'none',
+  `d=${String(h1?.form).slice(0, 24)} fill=${h1?.fuellung}`);
 
 console.log('\n§2 Die Maus schaltet');
 const zahlZentrale = h1?.zahl ?? '';

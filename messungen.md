@@ -6696,3 +6696,70 @@ gemessen, auf `c287b388e` plus diese Änderungen:
   nachgefahren hatte: `test141` 27, `test183` 27, `test191` 23, `test303`
   16, `test341` 37, `test362` 18/18, `test411` 26, `test427` 55, `test444`
   13, `test576` 30/30, `test582` 176, `test584` 37 — alle ohne Offenes.
+
+## §90 · Kein toter Knopf und das Herz als Knopf: Zensus, Treffer, Tipp, Startlast (E719/E720, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/kein-toter-knopf` gegen `1bfaca53`
+(`claude/morgen-besser-2`). Chromium über Playwright, Rechner 1440 × 900 und
+Telefon 390 × 844 (Touch, `hover: none`), hell und dunkel, ein Bestand mit
+zwei fälligen Fehlern, einer fälligen Karte und drei neuen. Alles in
+`test595` und `test596`, die je auf beiden Ständen liefen; Bilder in der
+Ablage der Sitzung (§55.4).
+
+**1 · Der Zensus der toten Knöpfe** (`test596` §1). Jeder sichtbare,
+freigegebene `<button>` der Lernwelt; Übergänge auf null, Zeiger aus dem
+Bild, gemalte Eigenschaften ablesen (Knopf, `::before`, `::after`, direkte
+Kinder: Grund, Verlauf, Rand, Schrift, Schatten, Umriss, Transform, Filter,
+Deckkraft, Textschatten, Bewegung der Kinder), Zeiger auf die Mitte, wieder
+ablesen. Tot heisst: `:hover` trifft, und nichts ändert sich.
+
+```txt
+                    vorher (1bfaca53)      nachher
+                    dunkel   hell          dunkel   hell
+Heute                8/20    8/20          0/20     0/20
+Lernen (Zentrale)   12/24   12/24          0/28     0/28   (+4 Herzen)
+Fehler               4/14    4/14          0/17     0/17   (+3 Herzen)
+Lernweg              1/12    1/12          0/12     0/12
+Prüfungen            1/8     1/8           0/8      0/8
+Fortschritt         37/48   37/48          0/57     0/57   (+9 Herzen)
+zusammen            63      63             0        0
+```
+
+Von den 63 waren 44 die Tagessäulen der Verläufe (E713; „Letzte 7 Tage"
+in der Zentrale, Wochen- und Monatsverlauf in Fortschritt), die gar keine
+Hover-Regel hatten; die Zahl des Plans (20) war vor E713 gemessen. Zwei
+weitere (Tagesziel, „Alle Dokumente") hatten ebenfalls keine; die übrigen 17
+verloren gegen ihre Grundregel, weil `:where()` der Hover-Regel das Gewicht
+nahm — (0,2,0) gegen (0,2,1).
+
+**2 · Der Druck.** `data-gedrueckt` ALLEIN (ohne Zeiger, ohne `:active`,
+ohne Übergang) an den fünf Startknöpfen der Lernzentrale: vorher an 0 von 5
+eine Änderung, nachher an 5 von 5. Ein erzwungenes `:hover` (CDP) auf
+„Datenbank bauen" im KI-Fenster am Telefon: vorher voller Schein (Rand
+`hsla(210,100%,80%,.4)`, `::before` mit Licht), nachher Ruhewert.
+
+**3 · Das Herz** (`test595` §1, Karte „fällige Fehler", dunkel):
+
+```txt
+                       vorher                       nachher
+Element                SPAN.rmo-heart               BUTTON.ru-merk.lw-kennzahl-merk
+aria-hidden            true                         —
+pointer-events         none                         auto
+Grösse                 20 × 20 px                   44 × 44 px (auch am Telefon)
+Name / Zustand         —                            „Zu Favoriten: fällige Fehler",
+                                                    aria-pressed="false"
+an seiner Mitte liegt  ARTICLE.stat-karte           der Knopf
+ein Klick              nichts                       gemerkt, „Gemerkt" auf Heute,
+                                                    übersteht das Neuladen
+```
+
+**4 · Die Startlast** (`test388` §5, gzip, unter dem Schloss): 1850 KB
+über 252 Dateien auf `1bfaca53`, 1854 KB nachher — Decke 1950 KB. Je Datei
+(gzip Stufe 6): lernwelt.js +1584 B, bausteine.css +1061, lernwelt.css +620,
+motion.css +329, merkzeichen.js +254, studio.css +140, motion.js +20 —
+zusammen +4008 B. Keine neue Datei, keine Insel.
+
+**5 · Die Gegenproben** stehen in E719 und E720, je mit der roten Zeile.
+Drei davon blieben zuerst GRÜN und haben die Wächter verschärft: die
+Herzform in Ruhe, das zweite gemalte Herz, und der Fokus, der in `test580`
+§5 jedes Herz bunt aussehen liess.

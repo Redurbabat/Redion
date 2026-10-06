@@ -332,6 +332,11 @@ Lernzentrum, Lernpfad, Fehlertraining, Prüfungszentrale mit Simulation, und
 je eine Sicht für Schule/Ausbildung, Uni, Arbeit und Fortschritt. Die
 Schulansicht zeigt auch dann etwas, wenn die Ausbildungsvorlage nie
 eingerichtet wurde — sie liest, was ohnehin da ist.
+Das Herz an einer Kennzahl (fällige Fehler, Streak, Lernzeit …) merkt sie:
+gemerkte Kennzahlen stehen auf „Heute" im Streifen „Gemerkt", je Lernendem
+gespeichert und in jeder Sicherung dabei. Die Startknöpfe der Lernzentrale
+(Tagesrunde, Fehlertraining, Neue Karten, Prüfungsfokus, Trainer)
+antworten alle gleich auf Zeiger, Tastenfokus und Fingertipp.
 
 **Workspace** — Übersicht, Bibliothek, Aufgaben, Kalender, Datenbanken,
 Whiteboards, Wiki und Vorlagen, dazu Reiter und geteilte Ansicht.

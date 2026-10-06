@@ -546,6 +546,9 @@ console.log('\n§5 Die Kennzahlkarten im Lernzentrum ruhen');
     if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   });
   if (ziel) await s.mouse.click(ziel.x, ziel.y);
+  /* Der Fokus muss weg: `:focus-within` an der Karte zählt als „angefasst",
+     und dann wäre jedes Herz bunt — auch ein falsch graues (Gegenprobe). */
+  await s.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await s.mouse.move(2, 2); await warte(s, 500);
   const gemerkt = await s.evaluate(() => {
     const b = document.querySelector<HTMLElement>('.stat-karte.lw-metrik > .lw-kennzahl-merk.ist-an');

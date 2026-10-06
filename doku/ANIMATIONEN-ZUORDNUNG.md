@@ -277,3 +277,23 @@ man darauf zeigt.
 
 **Noch offen, drei Blöcke:** 1 (Ordnerkarte), 3 (Lichtkarte und
 Kippschalter), 5 (flüssiger Polygonlader).
+
+## Herz und Funkel nach E719 und E720 (6. Oktober 2026)
+
+**Statistikherz → Merkknopf (E719).** Auf den 22 Kennzahlen aus dem Katalog
+der Lernwelt (`KENNZAHLEN` in `lernwelt.ts`: Heute, Lernzentrale, Fehler,
+Fortschritt) ist das Herz kein Schmuck mehr, sondern der eine Merker
+(`Merkzeichen`, Form 'herz'): dieselbe Ecke, derselbe Ring, derselbe
+Herzschlag `rmo-heart-beat` beim Anfassen — jetzt am `<svg>` im Knopf —,
+dazu der Kranz aus E460 nur beim Anhaken. `motion.ts` malt dort kein
+zweites Herz. Schmuck bleiben die Herzen der Bestandsgesundheit
+(`.rmo-health-metric`), des Simulationsergebnisses und der Fachseite (L241).
+
+**Funkel-Orte (E720).** Laut in Ruhe: „Datenbank bauen" und „Seite aufbauen"
+(KI), „Lernen starten" (Heute), „Starten" (Tagesrunde), „Fehler trainieren"
+(Fehlerzentrum) — je der eine Knopf, der etwas anfängt. Still in Ruhe
+(Umrisspille, voller Schein unter Zeiger, Tastenfokus und Druck):
+Fehlertraining, Neue Karten, Prüfungsfokus und Trainer in der Lernzentrale.
+Die übrigen KI-Werkzeuge tragen den Funkel wie bisher. Für ALLE gilt seither:
+der Schein unter dem Zeiger nur unter `@media (hover:hover)`, und
+`data-gedrueckt` (press.ts) zeigt dasselbe Drucklicht wie `:active`.

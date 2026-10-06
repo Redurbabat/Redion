@@ -1,5 +1,33 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E719 und E720 · Das Herz ist ein Knopf, und kein Knopf wirkt tot
+
+**Redur** (Masterprompt vom 29. September, Seiten 21/22): „die herz beim
+hier funktionier nicht also wenn ich das klicke passiert nichts, behebe das
+problem" — und: „beim fählermeldung habe ich keien buttons efeck also wie
+bein tagesrunde … und bei alle wo eine buttons gibt füge das im
+enscheideung und claude.md". Auf Schritt 0 kam keine Antwort; gebaut ist
+nach den Vorgaben des Plans.
+
+**Fund.** Das Herz war Schmuck aus E534 (`aria-hidden`, `pointer-events:
+none`, der Klick traf die Karte). Und 63 Knöpfe der Lernwelt antworteten
+nicht auf den Zeiger — 17 verloren gegen ihre Grundregel, weil `:where()`
+der Hover-Regel das Gewicht nahm, 46 hatten gar keine (44 Tagessäulen aus
+E713, das Tagesziel, „Alle Dokumente"). Der Funkel zeigte einen kurzen Tipp
+nicht, und sein Schein blieb am Telefon unter dem Finger kleben.
+
+**Bau.** E719: der eine Merker (`Merkzeichen`, neue Wahl `form: 'herz'`)
+an 22 Kennzahlen aus einem Katalog, gemerkt je Lernendem in meta, Streifen
+„Gemerkt" auf Heute, Rückweg mit Hinweis. E720: `:where(` → `:is(`,
+Hover-Regeln, wo keine waren, vier stille Funkel neben der Tagesrunde,
+`data-gedrueckt` am Funkel, sein Schein nur unter `@media (hover:hover)`;
+die Regel in CLAUDE.md §38 (hart) und §39 (Richtwert).
+
+**Prüfung.** `test595` (36) und `test596` (35) neu, beide zuerst rot
+(5/34, 16/35); `test433` §7 und `test580` §1/§5 erweitert, zuerst rot. Neun
+Gegenproben, je rot gesehen. Start 1850 → 1854 KB (Decke 1950). Lücken
+L240 (die Regel für die ganze App) und L241 (Herzen, die Schmuck bleiben).
+
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 
 **Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von
