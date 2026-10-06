@@ -8398,10 +8398,18 @@ Gelesen, nicht gemessen — dasselbe Muster an drei Stellen ausserhalb:
    um den GANZEN Wähler ist nicht automatisch falsch (der Fokusring der
    Lernwelt ist eines und wirkt); falsch ist es, wenn eine schwerere
    Grundregel dieselbe Eigenschaft setzt.
+4. **Die Gegenseite: gesperrte Knöpfe** (Durchsicht vom 6. Oktober). Ein
+   gesperrter Knopf darf unter Zeiger und Druck NICHT antworten — sonst
+   wirkt ein toter Knopf lebendig. In der Lernwelt hält das `test596` §9
+   (`:where(:not(:disabled))` vor jedem Zustand, ohne Gewicht). Ausserhalb
+   ist es nicht gemessen: jede app-weite Zustandsregel, die gesperrte
+   Knöpfe nicht ausnimmt (etwa die geteilten `button:hover` in
+   bausteine.css), kann denselben Fehler haben.
 
 **Was fehlt:** derselbe Zensus für die Arbeitswelt, die Bibliothek, die
 Notizhefte, den Finder, die Einstellungen und die Menüs — hell und dunkel,
-mit Zeiger, Druck und Tastenfokus. Wo er rot wird, ist die Reparatur meist
+mit Zeiger, Druck und Tastenfokus — für freigegebene Knöpfe (antworten
+sie?) und für gesperrte (bleiben sie still?). Wo er rot wird, ist die Reparatur meist
 ein Wort (`:where(` → `:is(`) oder eine fehlende Hover-Zeile, wie auf
 „Heute" das Tagesziel und „Alle Dokumente". Rot zuerst (§30).
 

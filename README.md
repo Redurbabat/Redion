@@ -336,7 +336,8 @@ Das Herz an einer Kennzahl (fällige Fehler, Streak, Lernzeit …) merkt sie:
 gemerkte Kennzahlen stehen auf „Heute" im Streifen „Gemerkt", je Lernendem
 gespeichert und in jeder Sicherung dabei. Die Startknöpfe der Lernzentrale
 (Tagesrunde, Fehlertraining, Neue Karten, Prüfungsfokus, Trainer)
-antworten alle gleich auf Zeiger, Tastenfokus und Fingertipp.
+antworten alle gleich auf Zeiger, Tastenfokus und Fingertipp — und wenn
+einer gesperrt ist (etwa „Trainieren · 0"), bleibt er still.
 
 **Workspace** — Übersicht, Bibliothek, Aufgaben, Kalender, Datenbanken,
 Whiteboards, Wiki und Vorlagen, dazu Reiter und geteilte Ansicht.

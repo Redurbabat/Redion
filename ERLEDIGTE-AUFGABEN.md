@@ -28,6 +28,21 @@ die Regel in CLAUDE.md §38 (hart) und §39 (Richtwert).
 Gegenproben, je rot gesehen. Start 1850 → 1854 KB (Decke 1950). Lücken
 L240 (die Regel für die ganze App) und L241 (Herzen, die Schmuck bleiben).
 
+**Durchsicht vor dem Push** (6. Oktober). Eine unabhängige Durchsicht fand
+einen blockierenden Fehler: gesperrte Funkel („Trainieren · 0" bei leerem
+Bestand) leuchteten unter dem Zeiger auf und verwischten ihr Wort — ein
+toter Knopf, der lebendig tat. Dazu: der Fokus fiel auf `<body>`, wenn man
+im Streifen „Gemerkt" ein Herz löste; das Zurück nach einem gescheiterten
+Schreiben löschte, was ein anderer Tab gemerkt hatte; der Druck war im
+Hellen mit 3 : 1 kaum lesbar; im Starken Kontrast war „Starten" von
+„Lernen" kaum zu unterscheiden; der Fokusring des Herzens war gekappt;
+`test580` §1 hätte einen dunkel ruhenden Funkel durchgelassen. Zuerst die
+Wächter (`test596` §9/§10, `test595` §5b/§6/§7b, `test580` §1 geschärft),
+rot gegen 486e500a; dann der Bau — `:where(:not(:disabled))` ohne Gewicht,
+Fokus-Rückgabe, reines Zurück über `metaListeAendern`, Tönung über dem
+Funkelgrund (16,21 : 1), 2-px-Akzentrand im Starken Kontrast, Ring innen.
+Sieben Gegenproben, je rot gesehen. `test595` und `test596` je 41/41.
+
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 
 **Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von

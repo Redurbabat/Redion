@@ -1715,5 +1715,6 @@ Grund:
    Simulationsergebnis, Fachseite — Redurs Wahl je Stelle.
 3. **„Kein toter Knopf" für die ganze App** (L240): derselbe Zensus wie
    `test596` §1 für Arbeitswelt, Bibliothek, Notizhefte, Finder,
-   Einstellungen und Menüs. Rot zuerst; die Reparatur ist meist ein Wort
-   oder eine fehlende Hover-Zeile.
+   Einstellungen und Menüs — und die Gegenseite aus `test596` §9: bleiben
+   gesperrte Knöpfe dort still? Rot zuerst; die Reparatur ist meist ein
+   Wort oder eine fehlende Hover-Zeile.

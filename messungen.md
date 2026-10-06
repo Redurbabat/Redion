@@ -6774,3 +6774,37 @@ Herzform in Ruhe, das zweite gemalte Herz, und der Fokus, der in `test580`
 `claude/morgen-besser` genauso, fremd. Die Einzeldatei allein in einem Ordner
 (file://): fünf Funkel in der Lernzentrale, das Herz ein Knopf, ein Klick
 merkt `faellige-fehler`, kein Seitenfehler.
+
+**7 · Die Durchsicht vom 6. Oktober** (auf dem Stand 486e500a gemessen, dann
+gebaut; dieselben Fenster, unter dem Schloss).
+
+```txt
+                                         vorher (486e500a)      nachher
+gesperrte Knöpfe, die unter Zeiger/Druck 5 je Thema (§9)        0
+antworten (leerer Bestand, 6 Ansichten)  (1bfaca53: 2)
+Schrift gedrückt, Kontrast (§10b)        hell 3,06 · Sand 3,4 · 16,21 in allen zehn
+                                         Papier 3,08 · Kit hell 2,9
+                                         (dunkle Schemata 14–16)
+„Starten" im Starken Kontrast (§10a)     Grund 1,04 : 1,         Rand 2 px, 12,87 : 1
+                                         Rand 1 px, 1,46 : 1
+Fokus nach Leertaste im Streifen (§5b)   <body>                 das nächste Herz
+Fokusring des Herzens (§6)               3 px oben/rechts        ganz in der Karte
+                                         gekappt
+Zurück nach gescheitertem Schreiben      löscht den Eintrag      lässt ihn stehen
+(§7b, ein anderer Tab merkt „streak")    des anderen Tabs
+```
+
+Die Startlast (`test388` §5): 1855 KB gzip über 252 Dateien (vorher auf
+diesem Zweig 1854, auf 1bfaca53 1850) — Decke 1950. Der Nachtrag kostet
+rund 1 KB, fast alles Begründung in den Kommentaren der Stilblätter.
+
+Nachbarn auf dem Endstand, unter dem Schloss: `test595` 41/41, `test596`
+41/41, `test580` grün (91), `test433` 39/39, `test388` 22, `test436` 71/71,
+`test581` 93, `test582`, `test492` 55, `test496` 148, `test494` 153,
+`test495` 26/26, `test265` 39, `test208`, `test217` 27/27, `test259` 8,
+`test565` 54/54, `test126`, `test127`, `test245` 51, `test303` 16/16,
+`test541` 25/25, `test590` 68/68. Rot nur `test493` mit 42/44
+(`-webkit-backdrop-filter: blur(8px)`, fremd, aus E695 — unverändert). Die
+Einzeldatei allein in einem Ordner (file://): fünf Funkel, das Herz ein
+Knopf, ein Klick merkt `faellige-fehler`, kein Seitenfehler.
+

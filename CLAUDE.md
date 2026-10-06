@@ -1584,7 +1584,10 @@ lädt neu, nimmt es wieder heraus, lässt das Schreiben scheitern (Knopf
 zurück, Hinweis da) und prüft, dass ohne Bewegung nichts springt. Drei
 seiner Zusagen kamen erst, als eine Gegenprobe GRÜN blieb: die Form schon
 in Ruhe, kein zweites gemaltes Herz, und in `test580` §5 der Fokus weg vor
-dem Messen. Gezählt am 6. Oktober, im selben Bogen: `ls
+dem Messen. Und drei kamen aus einer Durchsicht vor dem Push: der Fokus,
+der beim Lösen im Streifen auf `<body>` fiel, der Fokusring, den die Karte
+kappte, und ein Zurück, das den Eintrag eines anderen Tabs löschte (§16).
+Gezählt am 6. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*
 
@@ -1599,8 +1602,13 @@ Startknöpfe, „Trainieren" unter dem Zeiger Wert für Wert wie „Starten", in
 Ruhe nur eine laute Fläche, `data-gedrueckt` ALLEIN zeigt sich, und ein
 erzwungenes `:hover` malt am Telefon keinen Schein. Sein erster Entwurf von
 §7 war gegen den alten Stand grün — die Nachbildung malt `:active`, wo das
-iPhone es nicht tut. Gezählt am 6. Oktober, im selben Bogen: der Befehl
-sagt 534 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+iPhone es nicht tut. Und sein §1 hatte eine blinde Seite, die erst eine
+Durchsicht sah: er zählt nur FREIGEGEBENE Knöpfe — ein gesperrtes
+„Trainieren · 0", das unter dem Zeiger aufleuchtete und sein Wort
+verwischte, ging durch. §9 misst seither die Gegenseite (ein gesperrter
+Knopf bleibt still), §10 alle zehn Schemata. Gezählt am 6. Oktober, im
+selben Bogen: der Befehl sagt 534 — auf seinem Zweig; beim Zusammenführen
+neu zu zählen.*
 
 ### Die Befehle
 
@@ -1883,6 +1891,9 @@ Speichern-Knopf 28 px hat. Deshalb: Ausnahme ja, still nein.
   Maus und Finger, auch beim kurzen Tipp (`data-gedrueckt` aus press.ts);
   Tastenfokus immer. Dieselbe Art Handlung nimmt dasselbe Bauteil: wer
   etwas ANFÄNGT, ist ein Funkel — still in Ruhe, der Schein als Zustand.
+  Und umgekehrt: ein GESPERRTER Knopf antwortet nicht — kein Licht, kein
+  Lauf unter Zeiger und Druck, sonst wirkt ein toter Knopf lebendig
+  (`test596` §9).
   Redur, 29. September: „bei alle wo eine buttons gibt füge das im
   enscheideung und claude.md". Der Wächter ist `test596` (zuerst die
   Lernwelt; der Rest der App steht als L240).
