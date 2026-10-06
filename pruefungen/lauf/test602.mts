@@ -189,8 +189,10 @@ p('Es sind zehn Schemata', SCHEMATA.length === 10, SCHEMATA.join(','));
   const namen = new Set<string>();
   let rolle = '', kuerzel = '';
   for (const id of SCHEMATA) {
-    const m = await pc.evaluate(`(() => {
+    const m = await pc.evaluate(`(async () => {
       Aussehen.setzen({ schema: ${JSON.stringify(id)}, akzent: '' });
+      /* Das Attribut zieht ein Beobachter nach — einen Takt später. */
+      await new Promise(f => requestAnimationFrame(() => f(0)));
       const k = document.getElementById('studio-theme');
       return { rolle: k.getAttribute('role') || '', an: k.getAttribute('aria-checked'), name: k.getAttribute('aria-label') || '',
                kuerzel: k.getAttribute('aria-keyshortcuts') || '', dunkel: document.documentElement.dataset.theme !== 'light' };
@@ -219,8 +221,12 @@ console.log('\n§3 Sonne und Mond aus dem Register, sichtbar in jedem Schema');
     const syms = [...k.querySelectorAll('[data-sym]')].map(e => e.dataset.sym);
     return { anzahl: svgs.length, syms, orb: !!document.querySelector('.studio-orb'),
       nurStrich: svgs.every(s => s.getAttribute('fill') === 'none' && s.getAttribute('stroke') === 'currentColor'),
-      ausRegister: [...k.querySelectorAll('[data-sym]')].every(e => e.innerHTML === Register.symbole.alsSvg(e.dataset.sym, 18) ||
-        e.innerHTML === Register.symbole.alsSvg(e.dataset.sym, Number(e.dataset.symGroesse) || 18)) };
+      /* Verglichen wird GEPARST gegen GEPARST: ein \`<path …/>\` aus dem
+         Register kommt aus dem Baum als \`<path …></path>\` zurück. */
+      ausRegister: [...k.querySelectorAll('[data-sym]')].every(e => {
+        const t = document.createElement('template');
+        t.innerHTML = Register.symbole.alsSvg(e.dataset.sym, Number(e.dataset.symGroesse) || 18);
+        return !!t.innerHTML && e.innerHTML === t.innerHTML; }) };
   })()`) as { anzahl: number; syms: string[]; orb: boolean; nurStrich: boolean; ausRegister: boolean };
   p('Zwei Zeichen im Knopf: Sonne und Mond', z.anzahl === 2 && z.syms.includes('sun') && z.syms.includes('moon'), JSON.stringify(z));
   p('… aus Register.symbole, nur Striche', z.ausRegister && z.nurStrich, JSON.stringify(z));
@@ -235,8 +241,10 @@ console.log('\n§3 Sonne und Mond aus dem Register, sichtbar in jedem Schema');
   p('Keine Regel für .studio-orb mehr', !/\.studio-orb/.test(css));
   const schwach: string[] = [];
   for (const id of SCHEMATA) {
-    const m = await pc.evaluate(`(() => {
+    const m = await pc.evaluate(`(async () => {
       Aussehen.setzen({ schema: ${JSON.stringify(id)}, akzent: '' });
+      /* Das Gestirn geht über die Feder auf — gemessen wird danach. */
+      await new Promise(f => setTimeout(f, 900));
       const k = document.getElementById('studio-theme');
       const sichtbar = [...k.querySelectorAll('[data-sym]')].filter(e => +getComputedStyle(e).opacity > 0.5);
       const z = sichtbar[0] || k;

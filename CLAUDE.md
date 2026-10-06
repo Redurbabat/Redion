@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 533 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 535 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1598,6 +1598,35 @@ jetzt in ihm, zuerst rot mit 59 von 61. Gezählt am 6. Oktober, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*
 
+*Und 534: `test602` — das Gestirn (E727). Redur am 29. September über den
+runden Knopf im Studio-Kopf: „es seiht noch nicht 100 fetig aus, also finde
+für hier ewas kreatives aus". Sein Kern ist nicht das Bild, sondern §1:
+von „Mitternacht" und „Touch Kit dunkel" aus geht er durch JEDE Tür hin und
+zurück — Klick, Strg⇧L, `App.theme()`, ◐, Staffelei, Kachel, Menüband und
+drei gemischte Paare — und verlangt das Ausgangsschema und den eigenen
+Akzent zurück. Gegen den Stand `887e71c3` war er rot mit 14 von 55, und die
+Zeile, auf die es ankommt, druckte er wörtlich: „Strg⇧L — hin
+{"schema":"hell"…} · zurück {"schema":"standard"…}" — dieselbe Funktion
+gab es dreimal mit drei Regeln. Zweimal war er aus dem FALSCHEN Grund rot:
+`aria-checked` zieht ein Beobachter einen Takt später nach, und das
+Zeichen aus dem Register kommt aus dem Baum als `<path></path>` zurück,
+nicht als `<path/>`. Gezählt am 6. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 535 — auf seinem Zweig; beim
+Zusammenführen neu zu zählen.*
+
+*Und 535: `test603` — der ruhige Kopf (E728). Redur am 29. September:
+„nur die emojis dort bleiben und alles komplet nacht links schieiben, die
+suche sollte … sich drehen wie eine mottor und glass efeckt haben wie beim
+appel." Die Lage war eine Deklaration — `margin-left:auto` an der Kapsel
+statt am ersten Zeichen —, und er misst sie bei vier Breiten. Seine
+eigenartigste Zusage ist §4: verborgene Zwillinge sind nur dann keine
+zweite Oberfläche, wenn sie dieselbe Funktion rufen; er ersetzt die Ziele
+kurz durch Zähler und drückt beide Knöpfe. Seine beste Zeile fand das
+BILD: die Blase von „Werkzeuge" lag am rechten Ende noch unter der Klappe
+des Bandes, und der Lauf hatte nur ihre Mitte gefragt. Gegen den Stand
+`887e71c3` war er rot mit 30 von 61. Gezählt am 6. Oktober, im selben
+Bogen: der Befehl sagt 535 — auf seinem Zweig.*
+
 ### Die Befehle
 
 ```txt
@@ -1614,7 +1643,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 533 Läufe
+npm run pruefen                      alle 535 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1704,7 +1733,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 533 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 535 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -64,24 +64,23 @@ const StudioSchale = (() => {
     Kontextkante.zeichne();
     UI.toast('Breite zurückgesetzt');
   };
+  /** DAS GESTIRN ZEIGT DEN ZUSTAND (E727, Entscheidung d): ein Schalter
+   *  „Dunkles Schema" wie die Staffelei und das Kontrollzentrum des
+   *  iPhones — `aria-checked` sagt, ob dunkel gilt, der Name bleibt stehen
+   *  (die Blase der Symbolreihe liest ihn), und nur der Titel nennt die
+   *  Handlung. Welches Gestirn steht, regelt `studio.css` am Attribut. */
   const themaMarkieren = (): void => {
     const hell = document.documentElement.dataset.theme === 'light';
     const b = document.getElementById('studio-theme');
-    b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
-    if (b) b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+    b?.setAttribute('aria-checked', String(!hell));
+    if (b) b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + ' (Strg ⇧ L)';
   };
-  /** Hell ↔ Dunkel, mit dem gemerkten Schema je Grund. EIN Weg für den
-   *  Kreis im Studio-Kopf und die Kachel „Dunkel" (E712, §8). */
+  /** Hell ↔ Dunkel für das Gestirn und die Kachel „Dunkel" (E712). Die
+   *  Regel steht seit E727 EINMAL in `Aussehen.grundWechseln` — hier wird
+   *  nur weitergeleitet (§8). */
   const themaWechseln = (): void => {
-    const hell = document.documentElement.dataset.theme === 'light';
-    if (typeof Aussehen !== 'undefined') {
-      const aktuell = Aussehen.einstellung();
-      Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
-      const ziel = hell ? 'dark' : 'light';
-      const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
-      const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
-      Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
-    } else Einstellungen.S('theme', hell ? 'dark' : 'light');
+    if (typeof Aussehen !== 'undefined') Aussehen.grundWechseln();
+    else Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
     themaMarkieren();
   };
   const einstellen = (kompakt: boolean): void => {

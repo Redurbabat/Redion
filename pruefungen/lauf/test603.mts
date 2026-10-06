@@ -243,10 +243,13 @@ console.log('\n§4 Lade offen: keine zweite Reihe — und die Zwillinge tun dass
     document.head.append(st);
     const k = document.getElementById('studio-tools'); const r = k.getBoundingClientRect();
     const vor = getComputedStyle(k, '::after');
-    const y = r.bottom + 8 + 10, x = r.left + r.width / 2;
-    const oben = document.elementFromPoint(x, y);
+    /* Mitte UND rechter Rand der Blase: die Ecke des Bandes (Klappe) lag
+       zuerst nur über ihrem rechten Ende (Bild, 6. Oktober). */
+    const y = r.bottom + 8 + 10;
+    const stellen = [r.left + r.width / 2, r.left + r.width / 2 + 56];
+    const oben = stellen.map(x => document.elementFromPoint(x, y));
     st.remove();
-    return { anzeige: vor.display, oben: oben ? (oben.id || oben.className || oben.tagName) : null, istKnopf: oben === k };
+    return { anzeige: vor.display, oben: oben.map(o => o ? (o.id || o.className || o.tagName) : null), istKnopf: oben.every(o => o === k) };
   })()`) as any;
   p('Die Blase von „Werkzeuge" liegt über dem offenen Band', blase.anzeige === 'block' && blase.istKnopf, JSON.stringify(blase));
   await kontext.close();
@@ -268,7 +271,7 @@ const MOTOR = (sel: string) => `(() => {
   const arten = [...new Set(kf.flatMap(x => Object.keys(x).filter(n => !['offset','easing','composite','computedOffset'].includes(n))))];
   const cs = getComputedStyle(k);
   return { namen: an.map(a => a.animationName || '?'), arten, dreh: kf.some(x => /rotate|matrix/.test(String(x.transform || ''))),
-    dauer: getComputedStyle(svg).animationDuration, glas: cs.backdropFilter, wglas: cs.webkitBackdropFilter || '', grund: cs.backgroundColor };
+    dauer: getComputedStyle(svg).animationDuration, glas: cs.backdropFilter, wglas: cs.getPropertyValue('-webkit-backdrop-filter'), grund: cs.backgroundColor };
 })()`;
 {
   const { pc, kontext } = await oeffnen();
@@ -278,8 +281,11 @@ const MOTOR = (sel: string) => `(() => {
   const zeigen = await pc.evaluate(MOTOR('#studio-search')) as any;
   p('Unter dem Zeiger: die Lupe dreht sich (eine Animation mit Drehung)', !!zeigen && zeigen.namen.length === 1 && zeigen.dreh, JSON.stringify(zeigen));
   p('… nur transform', !!zeigen && zeigen.arten.length > 0 && zeigen.arten.every((a: string) => a === 'transform'), JSON.stringify(zeigen?.arten));
-  p('… und die Kapsel ist Glas (Unschärfe aus --glas-blur, mit Präfix-Zwilling)',
-    !!zeigen && /blur\(20px\)/.test(zeigen.glas) && zeigen.glas === zeigen.wglas, JSON.stringify([zeigen?.glas, zeigen?.wglas]));
+  /* Den Präfix-Zwilling kann Chromium nicht zurückmelden: `-webkit-backdrop-
+     filter` ist dort nur ein Alias und hat keinen eigenen gerechneten Wert
+     (gemessen: ""). Ihn hält die Textprüfung darunter („im selben Block"). */
+  p('… und die Kapsel ist Glas (Unschärfe aus --glas-blur)',
+    !!zeigen && /blur\(20px\)/.test(zeigen.glas), JSON.stringify([zeigen?.glas, zeigen?.wglas]));
   const lauf = await pc.evaluate(`(() => { const svg = document.querySelector('#studio-search [data-sym] > svg');
     const a = svg.getAnimations()[0]; return a ? a.effect.getTiming().iterations : null; })()`);
   p('… genau EINE Umdrehung, kein Dauerlauf', lauf === 1, String(lauf));
@@ -332,6 +338,7 @@ const MOTOR = (sel: string) => `(() => {
   await pc.mouse.up(); await pc.waitForTimeout(300);
   await pc.evaluate(`document.querySelectorAll('.overlay,.finder').forEach(e => e.remove())`);
   p('Telefon: ⌕ dreht sich beim Drücken (Finger, nicht nur Zeiger)', !!druck && druck.namen.length === 1 && druck.dreh, JSON.stringify(druck));
+  p('Telefon: … und wird beim Drücken Glas (Vorgabe c)', !!druck && /blur\(20px\)/.test(druck.glas), JSON.stringify(druck?.glas));
   await pc.evaluate(`document.getElementById('mb-suche').blur()`);
   await pc.keyboard.press('Tab');
   await pc.evaluate(`document.getElementById('mb-suche').focus({ focusVisible: true })`);

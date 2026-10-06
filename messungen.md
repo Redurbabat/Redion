@@ -6789,3 +6789,101 @@ kein Navigationsknopf und nicht `#btn-back` verliert einen Treffer; das
 `left:50%` statt 8 px: „Um den Griff ist die Fläche mindestens 44 px
 breit" rot). Start unverändert 1852 KB gzip über 252 Dateien (`test388`
 §5, Decke 1950); `redion-einzeldatei.html` 9150 → 9151 KB.
+
+## §96 · Der Kopf: drei Türen, das Gestirn und die Lage der Suche (E727, E728, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/kopf-ruhig` gegen `887e71c3`
+(`claude/morgen-besser-2` mit `claude/trenner-zieht` zusammengeführt, vor
+der ersten Zeile Code). Chromium über file://, `index.html` (und für
+`test602` §7 / `test603` §9 die Einzeldatei), 1440 × 900 dunkel, wo nicht
+anders gesagt; frischer Kontext je Block. Die Türen wie in `test602` §1:
+`studio:schema-light` = „papier", Akzent #5cbf8a, dann hin und zurück.
+Kontrast nach WCAG zwischen der gerechneten Farbe des sichtbaren Zeichens
+und dem Grund von `#studio-bar`. Lage aus `getBoundingClientRect`, im
+Lernzentrum („Heute"), wo „PDF öffnen" im Kopf steht. Skripte im
+Kratzordner (`probe1.mts`, `probe3.mts`), nicht eingecheckt.
+
+**Drei Türen von „Mitternacht" aus** (hin → zurück):
+
+```txt
+Tür                       vorher                         nachher
+Gestirn (Klick)           papier → nacht · #5cbf8a       papier → nacht · #5cbf8a
+Strg⇧L                    hell → standard · #5cbf8a      papier → nacht · #5cbf8a
+App.theme() / ◐ / Band    hell → standard · #5cbf8a      papier → nacht · #5cbf8a
+Staffelei                 papier → nacht · ""            papier → nacht · #5cbf8a
+Kachel „Dunkel"           papier → nacht · #5cbf8a       papier → nacht · #5cbf8a
+Strg⇧L hin, Gestirn zur.  hell → standard                papier → nacht
+App.theme('dark') auf     standard                       wald (gemerkt)
+  „sand" (zuletzt „wald")
+```
+
+Von „Touch Kit dunkel" aus dasselbe Bild. `test602` gegen `887e71c3`
+14 von 55, danach 55 von 55.
+
+**Das Zeichen gegen die Leiste** (vorher: die Scheibe, gemessen an der
+Farbe des Knopfs, weil sie selbst kein Zeichen war; nachher das stehende
+Gestirn):
+
+```txt
+Schema            vorher (Knopf)   nachher (Zeichen)
+standard          7,31             Mond 7,31
+hell              5,65             Sonne 5,65
+nacht             6,79             Mond 6,79
+wald              6,62             Mond 6,62
+sand              5,60             Sonne 5,60
+papier            7,55             Sonne 7,55
+kontrast          15,00            Mond 15,00
+rose              6,68             Mond 6,68
+touchkit-hell     5,28             Sonne 5,28
+touchkit-dunkel   7,63             Mond 7,63
+```
+
+Die Sichel der Scheibe war vorher in allen sechs dunklen Schemata
+rgb(101,96,121) bzw. rgb(103,98,123) gegen eine Leiste von rgb(24,26,29)
+bis rgb(34,26,32) — die Karte zu #4 im Plan, hier nicht neu gemessen.
+
+**Die Lage beim Wechsel.** Vorher Hell und Dunkel `matrix(0.906308,
+-0.422618, 0.422618, 0.906308, 0, 0)` — dieselbe Matrix, keine Drehung.
+Nachher dunkel: Sonne `matrix(0.173648, -0.984808, …)` (−80°), Mond
+`none`; hell: Sonne `none`, Mond `matrix(0.173648, 0.984808, …)` (+80°).
+Nach dem Klick laufen zwei Übergänge (`transform`, `opacity`); vorher einer
+(`box-shadow`).
+
+**Die Suchkapsel** (x / Breite; die Navigation endet vorher bei 176,
+nachher bei 182, weil `#studio-nav` 44 statt 38 breit ist):
+
+```txt
+Fenster   vorher          nachher
+1440      794 / 317       196 / 432
+1280      669 / 282       196 / 384
+1024      535 / 160       196 / 307
+800       311 / 160       196 / 240
+```
+
+Im Regal (ohne „PDF öffnen" im Kopf) stand sie vorher bei 923 (Karte zu
+#10).
+
+**Zeichen im Kopf** (`[data-sym]` in `#studio-bar`, Lernzentrum):
+vorher `panelL, search, plus, plus, command, bell, workspace` (`plus`
+zweimal, `command` an „Werkzeuge einblenden"); nachher `panelL, search,
+sun, moon, upload, plus, band, bell, workspace` — keines zweimal.
+
+**Lade offen, 1440:** vorher im Band sichtbar `mb-suche` (1346,65),
+`mb-ki` (1376,65), `mb-konto` (1406,65) — drei Zwillinge direkt unter
+`#studio-search` und `#studio-account`; nachher keiner. `#btn-ai` bleibt
+in den Seitenwerkzeugen (1363,179).
+
+**Kopfknöpfe:** vorher `.studio-icon` 38 × 44 (`#studio-nav`,
+`#studio-theme`, `#studio-create`, `#studio-tools`, `#studio-account`),
+„PDF öffnen" 121 × 44 mit Wort; nachher alle 44 × 44, kein Überlauf bei
+761, 900, 1100 und 1440.
+
+**Motor und Glas, unter dem Zeiger:** vorher Animation keine,
+`backdrop-filter` none, Grund rgb(43,45,48); nachher eine Animation
+`studio-motor` (eine Umdrehung, nur `transform`, 887 ms auf
+`--feder-lebhaft`), `backdrop-filter: saturate(1.8) blur(20px)`. In Ruhe in
+beiden Ständen keines von beiden. „Starker Kontrast" und weniger
+Transparenz: `none`, deckend.
+
+**Start:** 1852 → 1854 KB gzip über 252 Dateien (`test388` §5, Decke
+1950). `redion-einzeldatei.html` 9151 → 9157 KB.

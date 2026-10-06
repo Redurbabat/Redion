@@ -238,6 +238,42 @@ const Aussehen = (() => {
   };
 
   /* ========================================================================
+   * HELL ↔ DUNKEL — EIN WEG FÜR JEDE TÜR (E727, §8)
+   * ------------------------------------------------------------------------
+   * Bis E727 gab es diese Regel dreimal: der Knopf im Studio-Kopf merkte
+   * sich das Schema je Grundton und behielt den Akzent, `App.theme` (Strg⇧L,
+   * ◐, Menüband, Befehlspalette, Backstage) sprang immer auf Hell bzw.
+   * Standard und merkte nichts, und die Staffelei hier unten setzte den
+   * Akzent zurück. Wer „Mitternacht" hatte und Strg⇧L zweimal drückte, kam
+   * bei „Standard" an. Jetzt fragen alle Türen hier.
+   *
+   *   · Gemerkt wird unter den Schlüsseln, die es schon gibt
+   *     (`studio:schema-light`/`-dark`) — keine Datenwanderung.
+   *   · VON WO sagt das GESPEICHERTE Schema, nicht ein Knopf oder das
+   *     Attribut: die können hinterherhinken, und dann stünde das dunkle
+   *     Schema unter dem hellen Schlüssel.
+   *   · Der eigene Akzent bleibt (Entscheidung b vom 29. September): die
+   *     Farbe gehört dem Menschen, nicht dem Grundton.
+   *   · Mit Ziel, das schon gilt, ändert sich nichts — dann wird nur das
+   *     Attribut nachgezogen, wie es `App.theme('light')` immer tat.
+   * ======================================================================*/
+  const grundWechseln = (ziel?: 'light' | 'dark'): Record<string, any> => {
+    const jetzt = einstellung();
+    const von = SCHEMATA.find(x => x.id === jetzt.schema)?.grund === 'light' ? 'light' : 'dark';
+    const zu = ziel ?? (von === 'light' ? 'dark' : 'light');
+    if (zu === von) {
+      document.documentElement.dataset['theme'] = zu;
+      Store.setMeta('theme', zu);
+      return jetzt;
+    }
+    Store.setMeta('studio:schema-' + von, jetzt.schema);
+    const vorgabe = zu === 'light' ? 'hell' : 'standard';
+    const gemerkt: unknown = Store.getMeta('studio:schema-' + zu, vorgabe);
+    const schema = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu)?.id ?? vorgabe;
+    return setzen({ schema });
+  };
+
+  /* ========================================================================
    * TASTENKÜRZEL UMBELEGEN
    * ------------------------------------------------------------------------
    * Die Liste sagt, was es gibt und was von Haus aus gilt. Wer etwas ändert,
@@ -454,22 +490,11 @@ const Aussehen = (() => {
           platz.append(Staffelei.bauen({
             hell: grund === 'light',
             beiWechsel: () => {
-              /* DIESELBE REGEL WIE IM STUDIO-KOPF (studio.ts): das zuletzt
-                 benutzte Schema des Ziel-Grundtons, sonst Hell bzw.
-                 Standard. Zwei Umschalter, eine Regel (§8).
-
-                 VON WO, sagt das GESPEICHERTE Schema — nicht der Knopf.
-                 Der kann hinterherhinken, wenn anderswo gewechselt wurde;
-                 dann stünde das dunkle Schema unter dem hellen Schlüssel,
-                 und der nächste Wechsel liefe ins Leere. */
-              const jetzt = einstellung();
-              const jetztGrund = SCHEMATA.find(x => x.id === jetzt.schema)?.grund || 'dark';
-              const hell = jetztGrund === 'dark';
-              const von = jetztGrund, zu = hell ? 'light' : 'dark';
-              Store.setMeta('studio:schema-' + von, jetzt.schema);
-              const gemerkt = Store.getMeta('studio:schema-' + zu, hell ? 'hell' : 'standard');
-              const ziel = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu);
-              setzen({ schema: ziel?.id || (hell ? 'hell' : 'standard'), akzent: '' });
+              /* DIESELBE REGEL WIE JEDE ANDERE TÜR: `grundWechseln` oben
+                 (E727). Ohne Ziel, weil das GESPEICHERTE Schema sagt, von wo
+                 aus gewechselt wird — nicht der Knopf. Bis E727 stand hier
+                 eine Kopie, die zusätzlich den Akzent zurücksetzte. */
+              grundWechseln();
               zeichne();
             }
           }).element);
@@ -622,7 +647,7 @@ const Aussehen = (() => {
 
   const start = (): void => { anwenden(); };
 
-  return { start, anwenden, setzen, einstellung, dialog,
+  return { start, anwenden, setzen, grundWechseln, einstellung, dialog,
            SCHEMATA, SCHRIFTEN, KUERZEL, kuerzelVon, alsText, ist, eigene,
            reserviert, umbelegbar };
 })();

@@ -142,8 +142,15 @@ const fokus = await seite.evaluate(() => {
 
      Gemessen wird jetzt, was ein Mensch am Rechner mit der Tastatur
      wirklich erreicht: der Reiter, „Datei", die Suche oben rechts, ein
-     Knopf der Kontextkante und einer der Kopfzeile. */
-  const proben = ['.mb-reiter-knopf', '#mb-datei', '#mb-suche',
+     Knopf der Kontextkante und einer der Kopfzeile.
+
+     SEIT E728 IST DIE SUCHE OBEN RECHTS `#studio-search` IM KOPF. Bei
+     offener Lade steht `#mb-suche` am Rechner nicht mehr ein zweites Mal
+     im Band (L117 Punkt 3) — derselbe Griff (`App.suche()`) eine Zeile
+     darüber. Ein verborgener Knopf nimmt keinen Fokus an; gemessen wird
+     deshalb der, den ein Mensch mit der Tastatur erreicht. Am Telefon
+     bleibt `#mb-suche` im Band (test40, test384). */
+  const proben = ['.mb-reiter-knopf', '#mb-datei', '#studio-search',
                   '#kante .k-knopf', '#btn-page-menu'];
   return proben.map(q => {
     const el = document.querySelector<HTMLElement>(q);
@@ -318,8 +325,10 @@ for (const [name, ruf] of DIALOGE) {
      (E223). Gemessen wurde damit die Notlösung statt des Regelfalls.
      `mb-suche` ist derselbe Griff (`App.suche()`), nur an der Stelle, an
      der er heute steht. */
+  /* Seit E728 ist es `studio-search`: dieselbe Handlung, der Knopf, der
+     am Rechner sichtbar ist (siehe oben). */
   await seite.evaluate(async (r) => {
-    document.getElementById('mb-suche')?.focus();
+    document.getElementById('studio-search')?.focus();
     (0, eval)(r);
     await new Promise(f => setTimeout(f, 450));
   }, ruf);
@@ -356,7 +365,7 @@ for (const [name, ruf] of DIALOGE) {
     fokus: (document.activeElement as HTMLElement | null)?.id || '(body)'
   }));
   p(`${name}: Escape schliesst`, zurueck.offen === 0, String(zurueck.offen));
-  p(`${name}: und der Fokus kommt zurück`, zurueck.fokus === 'mb-suche',
+  p(`${name}: und der Fokus kommt zurück`, zurueck.fokus === 'studio-search',
     zurueck.fokus + ' — vorher blieb er auf <body>, und das nächste Tab fing oben an');
 }
 

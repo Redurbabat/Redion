@@ -23884,23 +23884,22 @@ body{--studio-nav-width:var(--studio-nav-expanded,184px)}
   transform:perspective(var(--studio-perspective)) rotateY(-12deg) rotateZ(-5deg);
   transition:transform var(--motion-normal) var(--ease)}
 .studio-brand:hover .studio-monogram{transform:perspective(var(--studio-perspective)) rotateY(10deg) rotateZ(0)}
-.studio-icon,.studio-action,.studio-search,.studio-shortcuts button{
+.studio-icon,.studio-search,.studio-shortcuts button{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
   min-height:var(--touch-min);padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
   border:1px solid transparent;transition:transform var(--motion-instant) var(--ease),
   background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease);
 }
-.studio-icon{width:38px;padding:0;flex:none;color:var(--text-dim)}
+/* 44 × 44 wie jeder Hauptweg (§37, E728) — bis dahin 38 breit. */
+.studio-icon{width:var(--touch-min);padding:0;flex:none;color:var(--text-dim)}
 #studio-bar svg{width:18px;height:18px;flex:none}
 .studio-shortcuts{display:flex;align-items:center;gap:2px}
 .studio-shortcuts button{color:var(--text-dim);white-space:nowrap}
 .studio-shortcuts button[aria-current]{background:var(--bg-card);color:var(--text);box-shadow:var(--studio-highlight);border-color:var(--line);font-weight:600}
-.studio-search{margin-left:auto;width:clamp(160px,22vw,340px);justify-content:flex-start;
+.studio-search{margin-left:var(--space-2);width:clamp(240px,30vw,460px);flex:0 1 auto;min-width:160px;justify-content:flex-start;
   color:var(--text-dim);background:var(--bg-input);border-color:var(--line)}
 .studio-search kbd{margin-left:auto;font:10px var(--font);opacity:.7;white-space:nowrap}
-.studio-action{color:var(--auf-accent);background:var(--haupt-flaeche);box-shadow:var(--haupt-schein);font-weight:600;white-space:nowrap}
 .studio-icon:hover,.studio-shortcuts button:hover,.studio-search:hover{background:var(--bg-hover);border-color:var(--line)}
-.studio-action:hover{background:var(--haupt-flaeche-hover)}
 /* #studio-bar button:active: Einsinken per press.ts (E702) */
 #studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .k-beschriftung{display:none}
@@ -23936,8 +23935,6 @@ body:has(#page .bib-studio-import) #studio-import{display:none}
 body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--motion-fast) var(--ease-enter)}
 @keyframes studio-tools-enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){body[data-studio-tools="offen"] #menueband{animation:none}}
-.studio-orb{display:block;width:19px;height:19px;border-radius:50%;background:#e5defd;box-shadow:inset -6px -3px 0 #656079;transform:rotate(-25deg);transition:transform var(--motion-slow) var(--ease),box-shadow var(--motion-slow) var(--ease)}
-html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #8165df22,inset 0 1px 2px #ffffff70;transform:rotate(0)}
 
 @media(min-width:761px){
   body[data-schale="premium"]{--kante-b:var(--studio-nav-width)}
@@ -24118,11 +24115,11 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .lw-insights-body{display:grid;gap:18px;padding-bottom:24px;animation:studio-arrive var(--motion-normal) var(--ease)}
 /* Uiverse-inspired material families, implemented locally with Redion tokens.
    No imported logo/SVG/JS, no decorative permanent loader. */
-.studio-action,.bib-studio-import,.lernwelt .lw-actions button.is-primary{position:relative;isolation:isolate;overflow:hidden}
-.studio-action::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{content:"";position:absolute;inset:-60% -20%;pointer-events:none;background:linear-gradient(105deg,transparent 40%,#ffffff20 49%,transparent 58%);transform:translateX(-110%);transition:transform var(--motion-slow) var(--ease)}
-@media(hover:hover){.studio-action:hover::after,.bib-studio-import:hover::after,.lernwelt .lw-actions button.is-primary:hover::after{transform:translateX(110%)}}
-.studio-action[aria-busy="true"],.bib-studio-import[aria-busy="true"]{padding-left:38px}
-.studio-action[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{content:"";position:absolute;left:14px;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:studio-orbit 850ms linear infinite}
+.studio-search,.bib-studio-import,.lernwelt .lw-actions button.is-primary{position:relative;isolation:isolate;overflow:hidden}
+.studio-search::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{content:"";position:absolute;inset:-60% -20%;pointer-events:none;background:linear-gradient(105deg,transparent 40%,#ffffff20 49%,transparent 58%);transform:translateX(-110%);transition:transform var(--motion-slow) var(--ease)}
+@media(hover:hover){.studio-search:hover::after,.bib-studio-import:hover::after,.lernwelt .lw-actions button.is-primary:hover::after{transform:translateX(110%)}}
+.bib-studio-import[aria-busy="true"]{padding-left:38px}
+.bib-studio-import[aria-busy="true"]::before{content:"";position:absolute;left:14px;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:studio-orbit 850ms linear infinite}
 @keyframes studio-orbit{to{transform:rotate(360deg)}}
 .schalter{box-shadow:inset 0 1px 3px #00000025;border:1px solid var(--studio-line)}
 .schalter i{box-shadow:0 1px 3px #00000030,inset 0 1px 0 #ffffff70;transition:transform var(--motion-normal) var(--ease),background var(--motion-fast) var(--ease)}
@@ -24133,7 +24130,8 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   /* Auf body, nicht auf :root — derselbe Grund wie oben (E716). */
   body{--studio-nav-width:var(--studio-nav-expanded,156px)}
   .studio-shortcuts button{padding:0 8px;font-size:12px}
-  .studio-search{width:160px}
+  /* Die Kapsel behält hier ihre Breite (mindestens 240, E728): seit sie
+     links steht, nimmt ihr niemand mehr den Platz rechts weg. */
   .studio-search kbd{display:none}
 }
 @media(max-width:760px){
@@ -24173,8 +24171,8 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .studio-monogram,.studio-brand:hover .studio-monogram{transform:none}
   #studio-bar button:active,body[data-schale="premium"] .k-knopf:active{transform:none}
   .lw-paper-sheet,.lw-paper-stack::before,.lw-paper-stack::after{transform:none;transition:none}
-  .studio-action::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{display:none}
-  .studio-action[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{animation:none}
+  .studio-search::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{display:none}
+  #studio-import[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{animation:none}
 }
 
 /* ---- Die Symbolreihe im Studio-Kopf (E462, Vorgabe „iso-pro") ------------
@@ -24247,10 +24245,8 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   color var(--motion-fast) var(--ease),box-shadow var(--motion-fast) var(--ease)}
 #studio-import:is(:hover,:focus-visible){background:var(--haupt-flaeche-hover);color:var(--auf-accent);
   box-shadow:var(--haupt-schein)}
-/* Der Themenknopf im Hellen: ein grauer Mond wie im Dunkeln der helle —
-   kein zweiter violetter Fleck neben dem Kopfknopf. */
-html[data-theme="light"] .studio-orb{background:var(--text-dim);box-shadow:inset -6px -3px 0 var(--bg-side);
-  transform:rotate(-25deg)}
+/* Der Themenknopf: seit E727 das Gestirn (Block E727 unten) — in Ruhe in
+   beiden Themen ein graues Zeichen, kein zweiter violetter Fleck. */
 /* „Dokumente öffnen" auf Heute ist ein Umrissknopf (die Klasse `is-primary`
    ist dort weg, lernwelt.ts); das violette Zeichen sagt, wohin er führt. */
 /* Zeichen und Wort in einer Linie: das Zeichen sass bisher ohne Abstand
@@ -24554,6 +24550,110 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
 }
 @media(prefers-reduced-motion:reduce){
   h2.ru-held-kommt .ru-held-zeile,h2.ru-held-kommt .ru-held-zeile::before{animation:none}
+}
+
+/* ===========================================================================
+   DAS GESTIRN (E727, test602)
+   ---------------------------------------------------------------------------
+   Redur, Masterprompt vom 29. September, Seite 23: „es seiht noch nicht 100
+   fetig aus, also finde für hier ewas kreatives aus". Hier stand eine
+   Scheibe, deren „Sichel" ein Schatten in einer festen Farbe war — ein Mond
+   nur dort, wo diese Farbe zufällig gleich dem Grund der Leiste war: in
+   keinem der sechs dunklen Schemata.
+
+   Jetzt stehen Sonne und Mond aus `Register.symbole` in einem runden
+   Fenster. Der Drehpunkt liegt unter dem Knopf (ein Horizont): das aktive
+   Gestirn steht aufrecht, das andere liegt um 80° gedreht unter dem
+   Horizont. Beim Wechsel geht das eine unter und das andere auf, auf der
+   Feder aus E702 — die Sprache von SymbolSwap und „orbital" aus Redurs
+   Touch Kit, als Redion-Code nachgebaut, nichts kopiert.
+
+   WELCHES STEHT, SAGT `aria-checked` — dasselbe Attribut, das ein
+   Vorleseprogramm liest (studio.ts `themaMarkieren`). Bild und Ansage
+   können nicht auseinanderlaufen.
+
+   Nur transform und opacity bewegen sich; unter „weniger Bewegung" sind
+   die Marken 1 ms (grund.css), unter „Ruhige Darstellung" greift
+   bausteine.css (auch ::before). In Ruhe neutral (--text-dim); unter Zeiger
+   und Tastenfokus tönt sich das stehende Gestirn, mit leichtem Schein —
+   Farbe als Zustand (E701), „Starker Kontrast" ohne Schein.
+   =========================================================================*/
+.studio-gestirn{border-radius:50%}
+.studio-gestirn-fenster{position:relative;display:grid;place-items:center;width:100%;align-self:stretch;
+  border-radius:50%;overflow:hidden}
+.studio-gestirn-fenster > [data-sym]{grid-area:1/1;display:grid;place-items:center;
+  transform-origin:50% 150%;
+  transition:transform var(--feder-druck-dauer) var(--feder-druck),opacity var(--motion-normal) var(--ease)}
+/* Dunkel (aria-checked=true): der Mond steht, die Sonne ist links untergegangen. */
+.studio-gestirn-sonne{transform:rotate(-80deg);opacity:0}
+.studio-gestirn-mond{transform:none;opacity:1}
+/* Hell: die Sonne steht, der Mond ist rechts untergegangen. */
+.studio-gestirn[aria-checked="false"] .studio-gestirn-sonne{transform:none;opacity:1}
+.studio-gestirn[aria-checked="false"] .studio-gestirn-mond{transform:rotate(80deg);opacity:0}
+/* Der Horizont: eine Linie in der Farbe des Knopfs, die sich unter Zeiger
+   und Fokus von der Mitte aus zeichnet. */
+.studio-gestirn-fenster::before{content:"";position:absolute;left:24%;right:24%;bottom:9px;height:1px;
+  background:currentColor;opacity:0;transform:scaleX(0);
+  transition:transform var(--motion-normal) var(--ease),opacity var(--motion-normal) var(--ease)}
+.studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster::before{opacity:.35;transform:none}
+.studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster > [data-sym]{color:var(--accent-text);
+  filter:drop-shadow(0 0 4px color-mix(in srgb,var(--accent) 45%,transparent))}
+html[data-schema="kontrast"] .studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster > [data-sym]{filter:none}
+
+/* ===========================================================================
+   DER RUHIGE KOPF (E728, test603)
+   ---------------------------------------------------------------------------
+   Redur, Masterprompt vom 29. September, Seite 7: „nur die emojis dort
+   bleiben und alles komplet nacht links schieiben, die suche sollte …
+   sich drehen wie eine mottor und glass efeckt haben wie beim appel."
+
+   1 · DIE SUCHE STEHT LINKS. Die Kapsel trug `margin-left:auto` und schob
+       sich damit selbst in die rechte Gruppe; die Reihenfolge im Baum
+       stimmte schon. Jetzt trägt das erste Zeichen rechts den Abstand.
+   2 · RECHTS NUR ZEICHEN, KEINE DOPPELUNG. „PDF öffnen" ist ein Zeichen
+       (`upload`, wie der Tropfen „PDF einlesen", E712); das Wort bleibt für
+       Vorleser und für die Beschriftung beim Einlesen (`importBeschriften`)
+       im Knopf, nur nicht zu sehen. „Werkzeuge" trägt `band` statt ⌘.
+       Bei offener Lade stehen Suche, KI, Konto, Glocke und Aufträge nicht
+       noch einmal im Band — dieselben Ziele stehen eine Zeile darüber
+       (test603 §4 zählt, dass jeder Zwilling dieselbe Funktion ruft).
+       Am Telefon bleibt das Band, wie es ist: dort ist es die einzige
+       Zeile (L117 Punkt 3).
+   3 · MOTOR UND GLAS NUR ALS ZUSTAND. Unter Zeiger und Tastenfokus — und
+       solange die Suche offen ist, auch nach Strg P — dreht sich die Lupe
+       EINMAL auf der lebhaften Feder (das Nachschwingen ist das Einrasten
+       des Motors); am Telefon dreht `⌕` beim Drücken und im Fokus. Die
+       Kapsel wird dabei Glas nach dem Rezept aus E695, dicht, weil Schrift
+       darauf steht. In Ruhe bleibt der Kopf deckend (E703).
+   =========================================================================*/
+@media(min-width:761px){
+  #studio-theme{margin-left:auto}
+  /* Die Blase von „Werkzeuge" liegt über dem offenen Band (es kommt im
+     Baum später und deckte sie zu: „We…"). Die Ecke des Bandes
+     (`.mb-rechts`, klebend) trägt z-index 2 — der Kopf liegt eins darüber. */
+  #studio-bar{position:relative;z-index:3}
+  body[data-schale="premium"] #main > #menueband .mb-rechts :is(#mb-suche,#mb-ki,#mb-konto,#mb-glocke,#mb-auftraege){display:none}
+}
+#studio-import{position:relative}
+#studio-import > .wort{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+/* Beim Einlesen kreist an der Stelle des Zeichens derselbe Lader wie an „PDF öffnen" im Regal. */
+#studio-import[aria-busy="true"] > [data-sym]{opacity:0}
+#studio-import[aria-busy="true"]::before{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;
+  margin:-8px 0 0 -8px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;
+  animation:studio-orbit 850ms linear infinite}
+@keyframes studio-motor{to{transform:rotate(1turn)}}
+.studio-search:is(:hover,:focus-visible) > [data-sym] > svg,
+body:has(.finder.such) #studio-search > [data-sym] > svg,
+#mb-suche:is(:active,:focus-visible) > [data-sym] > svg{
+  animation:studio-motor var(--feder-lebhaft-dauer) var(--feder-lebhaft) 1}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  /* Am Telefon dieselbe Antwort auf ⌕ — beim Drücken und im Tastenfokus
+     (Vorgabe c des Plans: die oberste Zeile bleibt, wie sie ist). */
+  .studio-search:is(:hover,:focus-visible),body:has(.finder.such) #studio-search,
+  #mb-suche:is(:active,:focus-visible){
+    background:var(--bg-schwebend-dicht);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur);
+    box-shadow:var(--glas-kante)}
 }
 
 </style>
@@ -25711,10 +25811,10 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     </button>
     <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
     <button id="studio-search" class="studio-search"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
-    <button id="studio-theme" class="studio-icon studio-theme" aria-label="Farbschema wechseln" title="Hell / Dunkel"><span class="studio-orb" aria-hidden="true"></span></button>
-    <button id="studio-import" class="studio-action" data-studio-import><span data-sym="plus"></span><span class="wort">PDF öffnen</span></button>
+    <button id="studio-theme" class="studio-icon studio-gestirn" role="switch" aria-checked="true" aria-label="Dunkles Schema" aria-keyshortcuts="Control+Shift+L" title="Zum hellen Schema wechseln (Strg ⇧ L)"><span class="studio-gestirn-fenster" aria-hidden="true"><span class="studio-gestirn-sonne" data-sym="sun"></span><span class="studio-gestirn-mond" data-sym="moon"></span></span></button>
+    <button id="studio-import" class="studio-icon studio-import" data-studio-import aria-label="PDF öffnen" title="PDF öffnen"><span data-sym="upload"></span><span class="wort">PDF öffnen</span></button>
     <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
-    <button id="studio-tools" class="studio-icon" aria-label="Werkzeuge einblenden" title="Werkzeuge einblenden" aria-expanded="false" aria-controls="menueband"><span data-sym="command"></span></button>
+    <button id="studio-tools" class="studio-icon" aria-label="Werkzeuge einblenden" title="Werkzeuge einblenden" aria-expanded="false" aria-controls="menueband"><span data-sym="band"></span></button>
     <!-- GLOCKE UND WOLKENPUNKT AUCH HIER (E457). Beide wohnen im Menüband
          rechts — und das ist am Rechner seit E457 eine Lade, die zu ist. Eine
          Meldung, die man erst sieht, wenn man die Werkzeuge holt, ist keine.
@@ -26948,7 +27048,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1422, inhalt: '98ca6e3c06f687e1', gebaut: '2026-10-06T05:17:48.073Z' };
+const Stand = { fassung: 1427, inhalt: 'e21a9507c48c817c', gebaut: '2026-10-06T08:20:02.988Z' };
 window.Stand = Stand;
 
 </script>
@@ -34611,6 +34711,8 @@ Register.symbole = (() => {
             '<path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7' +
             'M18.7 5.3 17 7M7 17l-1.7 1.7"/>',
         moon: '<path d="M19.6 14.6A7.9 7.9 0 0 1 9.4 4.4a7.9 7.9 0 1 0 10.2 10.2z"/>',
+        band: '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M3 10h18"/>' +
+            '<path d="M7 6.9v.8M10.5 6.9v.8M14 6.9v.8"/>',
         contrast: '<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4v17.2"/>' +
             '<path d="M12 6.2h5.2M12 9.1h7.6M12 12h8.4M12 14.9h7.6M12 17.8h5.2"/>',
         calm: '<path d="M3.6 9c2.8-1.8 5.6-1.8 8.4 0s5.6 1.8 8.4 0"/>' +
@@ -117699,6 +117801,21 @@ const Aussehen = (() => {
         anwenden(neu);
         return neu;
     };
+    const grundWechseln = (ziel) => {
+        const jetzt = einstellung();
+        const von = SCHEMATA.find(x => x.id === jetzt.schema)?.grund === 'light' ? 'light' : 'dark';
+        const zu = ziel ?? (von === 'light' ? 'dark' : 'light');
+        if (zu === von) {
+            document.documentElement.dataset['theme'] = zu;
+            Store.setMeta('theme', zu);
+            return jetzt;
+        }
+        Store.setMeta('studio:schema-' + von, jetzt.schema);
+        const vorgabe = zu === 'light' ? 'hell' : 'standard';
+        const gemerkt = Store.getMeta('studio:schema-' + zu, vorgabe);
+        const schema = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu)?.id ?? vorgabe;
+        return setzen({ schema });
+    };
     const KUERZEL = [
         ['suche', 'Suchen', 'Ctrl+K'],
         ['palette', 'Befehle', 'Ctrl+P'],
@@ -117873,14 +117990,7 @@ const Aussehen = (() => {
                     platz.append(Staffelei.bauen({
                         hell: grund === 'light',
                         beiWechsel: () => {
-                            const jetzt = einstellung();
-                            const jetztGrund = SCHEMATA.find(x => x.id === jetzt.schema)?.grund || 'dark';
-                            const hell = jetztGrund === 'dark';
-                            const von = jetztGrund, zu = hell ? 'light' : 'dark';
-                            Store.setMeta('studio:schema-' + von, jetzt.schema);
-                            const gemerkt = Store.getMeta('studio:schema-' + zu, hell ? 'hell' : 'standard');
-                            const ziel = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu);
-                            setzen({ schema: ziel?.id || (hell ? 'hell' : 'standard'), akzent: '' });
+                            grundWechseln();
                             zeichne();
                         }
                     }).element);
@@ -118055,7 +118165,7 @@ const Aussehen = (() => {
         });
     };
     const start = () => { anwenden(); };
-    return { start, anwenden, setzen, einstellung, dialog,
+    return { start, anwenden, setzen, grundWechseln, einstellung, dialog,
         SCHEMATA, SCHRIFTEN, KUERZEL, kuerzelVon, alsText, ist, eigene,
         reserviert, umbelegbar };
 })();
@@ -146319,22 +146429,15 @@ const StudioSchale = (() => {
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
         const b = document.getElementById('studio-theme');
-        b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
+        b?.setAttribute('aria-checked', String(!hell));
         if (b)
-            b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+            b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + ' (Strg ⇧ L)';
     };
     const themaWechseln = () => {
-        const hell = document.documentElement.dataset.theme === 'light';
-        if (typeof Aussehen !== 'undefined') {
-            const aktuell = Aussehen.einstellung();
-            Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
-            const ziel = hell ? 'dark' : 'light';
-            const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
-            const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
-            Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
-        }
+        if (typeof Aussehen !== 'undefined')
+            Aussehen.grundWechseln();
         else
-            Einstellungen.S('theme', hell ? 'dark' : 'light');
+            Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
         themaMarkieren();
     };
     const einstellen = (kompakt) => {
@@ -149415,17 +149518,12 @@ const App = (() => {
         s.style.flexBasis = px + 'px';
     };
     const theme = (was) => {
-        const neu = was || (document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+        const ziel = was === 'light' || was === 'dark' ? was : undefined;
         if (typeof Aussehen !== 'undefined') {
-            const jetzt = Aussehen.einstellung();
-            const s = Aussehen.SCHEMATA.find(x => x.id === jetzt.schema);
-            if (s && s.grund !== neu) {
-                const gegen = Aussehen.SCHEMATA.find(x => x.grund === neu &&
-                    (neu === 'light' ? x.id === 'hell' : x.id === 'standard'));
-                if (gegen)
-                    Aussehen.setzen({ schema: gegen.id });
-            }
+            Aussehen.grundWechseln(ziel);
+            return;
         }
+        const neu = ziel || (document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
         document.documentElement.dataset.theme = neu;
         Store.setMeta('theme', neu);
     };

@@ -273,7 +273,7 @@ for (const thema of ['light', 'dark'] as const) {
       lern: lern ? { da: w.__sichtbar(lern), text: (lern.textContent || '').trim() } : null,
       kopf: kcs ? { verlauf: kcs.backgroundImage.includes('gradient'), schein: kcs.boxShadow !== 'none',
                     kontrast: pille ? +w.__kontrast(w.__rgb(kcs.color), pille).toFixed(2) : 0 } : null,
-      gestirnNeutral: zeichen ? w.__hsl(w.__rgb(getComputedStyle(zeichen).color)).s < 0.25 &&
+      gestirnNeutral: zeichen && gestirn ? w.__hsl(w.__rgb(getComputedStyle(zeichen).color)).s < 0.25 &&
         !w.__akzentig(w.__rgb(getComputedStyle(gestirn).backgroundColor), w.__akzentHsl()) : null
     };
   });

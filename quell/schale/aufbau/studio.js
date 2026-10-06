@@ -53,22 +53,15 @@ const StudioSchale = (() => {
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
         const b = document.getElementById('studio-theme');
-        b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
+        b?.setAttribute('aria-checked', String(!hell));
         if (b)
-            b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+            b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + ' (Strg ⇧ L)';
     };
     const themaWechseln = () => {
-        const hell = document.documentElement.dataset.theme === 'light';
-        if (typeof Aussehen !== 'undefined') {
-            const aktuell = Aussehen.einstellung();
-            Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
-            const ziel = hell ? 'dark' : 'light';
-            const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
-            const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
-            Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
-        }
+        if (typeof Aussehen !== 'undefined')
+            Aussehen.grundWechseln();
         else
-            Einstellungen.S('theme', hell ? 'dark' : 'light');
+            Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
         themaMarkieren();
     };
     const einstellen = (kompakt) => {

@@ -2699,19 +2699,16 @@ const App = (() => {
     s.style.flexBasis = px + 'px';
   };
 
+  /* HELL ↔ DUNKEL. Die Tür für Strg⇧L, ◐ in der Seitenleiste, Menüband
+     „Hell / Dunkel", die Befehlspalette, Backstage und das Kürzel „hell" —
+     die Regel selbst steht EINMAL in `Aussehen.grundWechseln` (E727, §8).
+     Bis dahin sprang dieser Rumpf immer auf Hell bzw. Standard und
+     vergass ein eigenes Schema wie „Mitternacht". Ohne `Aussehen` bleibt
+     der alte Rückfall: nur das Attribut. */
   const theme = (was?: any) => {
-    const neu = was || (document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
-    /* Mit einem eigenen Farbschema heisst „umschalten": zum passenden
-       Gegenstück wechseln, nicht das Schema übergehen. */
-    if (typeof Aussehen !== 'undefined') {
-      const jetzt = Aussehen.einstellung();
-      const s = Aussehen.SCHEMATA.find(x => x.id === jetzt.schema);
-      if (s && s.grund !== neu) {
-        const gegen = Aussehen.SCHEMATA.find(x => x.grund === neu &&
-          (neu === 'light' ? x.id === 'hell' : x.id === 'standard'));
-        if (gegen) Aussehen.setzen({ schema: gegen.id });
-      }
-    }
+    const ziel = was === 'light' || was === 'dark' ? was : undefined;
+    if (typeof Aussehen !== 'undefined') { Aussehen.grundWechseln(ziel); return; }
+    const neu = ziel || (document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
     document.documentElement.dataset.theme = neu;
     Store.setMeta('theme', neu);
   };

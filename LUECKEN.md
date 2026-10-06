@@ -5507,6 +5507,15 @@ den Prüfläufen, nicht vermutet.
    einzige Zeile ist. Im Ruhezustand (Lade zu) gibt es die Doppelung
    nicht.
 
+   > **GESCHLOSSEN durch E728 (6. Oktober 2026).** Am Rechner (ab 761 px)
+   > stehen Suche, KI, Konto, Glocke und Aufträge bei offener Lade nicht
+   > mehr rechts im Band; dieselben Ziele stehen eine Zeile darüber
+   > (`#studio-search`, `#studio-account`, `#studio-glocke`,
+   > `#studio-auftraege`; die KI als `#btn-ai`). Beleg: `test603` §4 — im
+   > Band null sichtbare Zwillinge (vorher `mb-suche`, `mb-ki`,
+   > `mb-konto`), jeder Zwilling ruft dieselbe Funktion (am Aufruf
+   > gezählt), am Telefon bei 390 px bleiben Suche, KI und Konto im Band.
+
 4. **Im ruhigen Modus zeigt die Kante keinen Kontextgriff direkt** — nur
    „Seiten" und „Werkzeuge". Redurs Auftrag sagt „wenige", der
    Laptop-Stand hat null gewählt und test430 misst genau zwei Knöpfe. Ob
@@ -8348,6 +8357,32 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L247 · Was nach dem Gestirn und dem ruhigen Kopf (E727, E728) noch offen ist — 6. Oktober 2026
+
+**Gefunden beim Bau von E727 und E728** (Redur, Masterprompt vom
+29. September: „finde für hier ewas kreatives aus" und „nur die emojis dort
+bleiben und alles komplet nacht links schieiben").
+
+1. **Am Telefon gibt es das Gestirn nicht.** Dort fehlt der Studio-Kopf;
+   Hell/Dunkel geht über die Kachel „Dunkel" (Mehr, Einstellungen) und
+   die Staffelei — seit E727 mit derselben Regel. Die oberste Zeile (das
+   Menüband) behält ihren Aufbau und bekommt nur den Motor und das Glas
+   beim Drücken auf ⌕ (Vorgabe c des Plans). Ob dort eine Kapsel links
+   stehen soll wie am Rechner, ist Redurs Frage.
+2. **◐ in der alten Seitenleiste (`#btn-theme`) ist noch ein Textzeichen.**
+   Er ruft seit E727 dieselbe Regel; nur sein Bild ist nicht aus
+   `Register.symbole`. Am Rechner ist die alte Seitenleiste ausgeblendet
+   (L237).
+3. **Der Präfix-Zwilling des Glases ist nur als Text geprüft.** Chromium
+   meldet für `-webkit-backdrop-filter` keinen eigenen Wert; `test603` §5
+   liest deshalb die Regel. Auf einem iPhone ist es nicht angesehen (wie
+   L10, L117 Punkt 5).
+
+**Wächter:** `test602`, `test603` für das Gebaute; für die drei Punkte
+keiner.
+
+---
+
 ## L237 · Drei Griffe für eine Breite: der verdeckte `#side-griff` und der verirrte `.side-griff` am Telefon — 6. Oktober 2026
 
 **Gefunden beim Bau von E716** (Redur, Masterprompt vom 29. September: „der
@@ -9573,7 +9608,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 132 Lücken, 76 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 133 Lücken, 77 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
