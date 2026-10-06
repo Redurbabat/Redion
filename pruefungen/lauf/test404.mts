@@ -15,6 +15,8 @@
  *      Balken, und die Zahl steht bei jedem davon.
  *   §6 Die Fortschrittszelle läuft nicht über.
  *   §7 Der Karteikarten-Streifen kommt nicht ungefragt.
+ *   §9 Auf der Fläche ist der Kasten der Rand: keine Datenbank und kein
+ *      Griff ragt über ihn hinaus; in der Seitenansicht gilt §1 (E723).
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Die Gegenproben stehen im Bericht zu E409; jede ist gelaufen. Zwei davon
@@ -327,6 +329,78 @@ p('Jede der dreizehn nutzt mindestens 85 % der Breite', schmal.length === 0,
   schmal.slice(0, 5).join(' | '));
 p('Und keine schneidet eine Zahl ab', zahlSchnitt.length === 0,
   zahlSchnitt.slice(0, 3).join(' | '));
+
+/* ==========================================================================
+ * §9 · AUF DER FLÄCHE IST DER KASTEN DER RAND (E723)
+ * --------------------------------------------------------------------------
+ * Redur, PDF vom 29. September, Seite 18 oben: „hier wenn ich flach modus
+ * wähle … habe ich eine tabela erstellt und ds hier es ist hinterden und kann
+ * nicht gut lesen". Gemessen am 6. Oktober gegen 1bfaca53: die Datenbank im
+ * Seitenkasten der Fläche ragte je Seite 51 px über den Kasten hinaus (57 im
+ * eigenen Blockkasten), und die Griffe `+ ⋮⋮` standen 25 px draussen. Kein
+ * z-index-Fehler: der Ausbruch aus §1 gilt für JEDE `.db` ab 1100 px — auch
+ * für die im Kasten, und die Tabelle hat keinen eigenen Grund, also liegt das
+ * Überstehende auf dem gepunkteten Grund der Fläche.
+ *
+ * Gegenprobe im selben Abschnitt: dieselbe Seite in der Seitenansicht bricht
+ * weiter aus — E409 gilt dort unverändert.
+ * ========================================================================*/
+console.log('\n§9 Auf der Fläche ist der Kasten der Rand');
+for (const [breite, hoehe] of [[1440, 900], [1920, 1080]] as [number, number][]) {
+  const s9 = await browser.newPage({ viewport: { width: breite, height: hoehe } });
+  s9.on('pageerror', e => fehler.push(e.message.slice(0, 120)));
+  await s9.goto(`http://localhost:${PORT}/index.html`);
+  await s9.waitForFunction("typeof App !== 'undefined' && typeof Store !== 'undefined'", null, { timeout: 30000 });
+  await s9.waitForTimeout(400);
+  const seite = await s9.evaluate(`(async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
+    const s = Store.addPage(null, { text: 'Tabelle auf der Fläche', seitenAnsicht: 'flaeche' });
+    Store.addBlock(s.id, 'text', { text: 'Darunter die Tabelle.' });
+    const a = Store.addDatabase(s.id, 'Neue Datenbank');
+    Store.addRow(a.collectionId, {}); Store.addRow(a.collectionId, {});
+    const b = Store.addDatabase(s.id, 'Zweite Datenbank');
+    Store.addRow(b.collectionId, {});
+    Store.updateBlock(b.block.id, { flaecheOrt: { x: 900, y: 0, w: 520, raumVersion: 1 } });
+    await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
+    await new Promise(f => setTimeout(f, 1200));
+    return s.id;
+  })()`) as string;
+  const m9 = JSON.parse(await s9.evaluate(`JSON.stringify((() => {
+    const raus = [];
+    for (const k of document.querySelectorAll('.pg-fl-notiz')) {
+      const kr = k.getBoundingClientRect();
+      const art = k.hasAttribute('data-fl-seite') ? 'Seitenkasten' : 'Blockkasten';
+      for (const d of k.querySelectorAll('.db')) {
+        const r = d.getBoundingClientRect();
+        if (r.left < kr.left - 1 || r.right > kr.right + 1)
+          raus.push(art + ': .db ' + Math.round(kr.left - r.left) + '/' + Math.round(r.right - kr.right) + ' px draussen');
+      }
+      for (const h of k.querySelectorAll('.blk > .handles')) {
+        const r = h.getBoundingClientRect();
+        if (!r.width) continue;
+        if (r.left < kr.left - 1 || r.right > kr.right + 1)
+          raus.push(art + ': Griffe ' + Math.round(kr.left - r.left) + ' px draussen');
+      }
+    }
+    return { dbs: document.querySelectorAll('.pg-fl-notiz .db').length, raus };
+  })())`) as string);
+  p(`${breite} px: zwei Datenbanken auf der Fläche (Seitenkasten und Blockkasten)`, m9.dbs === 2, String(m9.dbs));
+  p(`${breite} px: jede Datenbank und jeder Griff liegt im Kasten (±1 px)`, m9.raus.length === 0, m9.raus.join(' · '));
+  /* Die Gegenprobe: dieselbe Seite als Seite — dort bricht sie aus (E409). */
+  await s9.evaluate(`(async () => {
+    Store.updateBlock(${JSON.stringify(seite)}, { seitenAnsicht: 'seite' }); await Store.flush();
+    App.oeffne(${JSON.stringify(seite)}); await new Promise(f => setTimeout(f, 900));
+  })()`);
+  const aus = JSON.parse(await s9.evaluate(`JSON.stringify((() => {
+    const d = document.querySelector('#page .db'), t = document.querySelector('#page .blk');
+    if (!d || !t) return { da: false };
+    return { da: true, links: Math.round(t.getBoundingClientRect().left - d.getBoundingClientRect().left) };
+  })())`) as string);
+  p(`${breite} px: in der Seitenansicht bricht dieselbe Datenbank weiter aus (E409)`,
+    aus.da && aus.links > 20, JSON.stringify(aus));
+  await s9.close();
+}
 
 /* ==========================================================================
  * §10 · DIE ABGESCHNITTENE TABELLE SAGT, DASS RECHTS NOCH ETWAS KOMMT
