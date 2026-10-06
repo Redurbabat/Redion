@@ -1587,9 +1587,11 @@ erst ein Werkzeug „des Whiteboards" und wählte damit im alten Stand das
 der Fläche um — die Hand wurde nie geprüft; und Chrome macht einen
 rollenden Roller ohne erreichbaren Knopf selbst zum Tabhalt, also zählt
 nur ein Knopf (L206). Gegen den alten Stand rot mit 30 von 47. Nach
-der Durchsicht zwei Zusagen mehr, beide erst rot: Tab aus der Leiste
-führt HINTER das Whiteboard statt an den Anfang der Fläche, und am Telefon
-steht das gewählte Werkzeug im sichtbaren Teil des Streifens. Gezählt am
+der Durchsicht vier Zusagen mehr, jede erst rot: Tab aus der Leiste
+führt HINTER das Whiteboard statt an den Anfang der Fläche (am Telefon
+auf das Textfeld — ein `contenteditable` meldet `tabIndex` −1 und ist
+trotzdem ein Halt), das gewählte Werkzeug steht im sichtbaren Teil des
+Streifens, und das Schild „Zeichenfläche" rollt nicht mit hinaus. Gezählt am
 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 533 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
 

@@ -6770,8 +6770,9 @@ Seitenkasten ohne Rand links    test404 §9 rot (Griffe 25 px draussen)
                                 test598 §10, §11 (21 558 px²), §12 rot
 ```
 
-**Nach der Durchsicht** (6. Oktober, derselbe Tag; `test598` 48 → 50
-Zusagen, gegen `90c4dba8` rot mit 48 ok, 2 rot):
+**Nach der Durchsicht** (6. Oktober, derselbe Tag; `test598` 48 → 52
+Zusagen in drei roten Commits — gegen `90c4dba8` rot mit 48 ok, 2 rot,
+dann je 1 rot):
 
 ```txt
                                                 vorher (90c4dba8)  nachher
@@ -6781,7 +6782,20 @@ Telefon 390: „Text" gewählt, Fläche, zurück     609…653 im Streifen im St
                                                 12…378 (ausser Bild)
 Gegenprobe ohne `naechsterHalt`                 test598 §9 rot (DIV [Zwei Leisten])
 Gegenprobe ohne das Rollen im Schacht           test598 §8 rot (text 609…653 im Streifen 12…378)
+Schild „Zeichenfläche" nach dem Rollen          rollt hinaus        klebt links (sticky)
+Gegenprobe ohne `position:sticky`               test598 §8 rot (text 334…378 im Streifen 12…378)
+Telefon, Satz unter W1: Tab, Tab                BUTTON [Menü dieses DIV ct „Danach ein
+                                                Kastens] (W2)       Satz." (der nächste Halt)
+Gegenprobe Textfeld nur nach `tabIndex`         test598 §8 rot (BUTTON [Menü dieses Kastens])
+Einzeldatei (file://), W + Text, Tab, Tab       Rechner BUTTON,     Rechner BUTTON,
+                                                Telefon DIV vor W   Telefon DIV ct nach W
+Start (test388 §5)                              1853 KB             1853 KB
 ```
+
+`test598` steht damit bei 52 Zusagen. Gegenprobe „ohne den linken Rand
+im Rollen" blieb grün: nach dem Einhängen ist das Rollmass 0, das
+gewählte Werkzeug kommt immer von rechts — der linke Zweig ist Vorsicht,
+kein gemessener Fall.
 
 Der erste Anlauf von §8 war grün aus dem falschen Grund: mit dem
 vorgegebenen Stift steht das Werkzeug gerade noch am Rand (333…377 im

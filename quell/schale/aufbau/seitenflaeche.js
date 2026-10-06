@@ -524,7 +524,9 @@ const Seitenflaeche = (() => {
                     continue;
                 if (ober.contains(el) || imSchacht.contains(el))
                     continue;
-                if (el.tabIndex < 0 || el.disabled)
+                const ausdruecklich = el.getAttribute('tabindex');
+                const halt = ausdruecklich !== null ? el.tabIndex >= 0 : (el.tabIndex >= 0 || el.isContentEditable);
+                if (!halt || el.disabled)
                     continue;
                 if (el.isContentEditable && el.parentElement?.isContentEditable)
                     continue;

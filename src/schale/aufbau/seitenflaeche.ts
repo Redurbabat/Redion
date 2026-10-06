@@ -885,7 +885,13 @@ const Seitenflaeche = (() => {
       for (const el of document.querySelectorAll<HTMLElement>(HALTE)) {
         if (!(ober.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
         if (ober.contains(el) || imSchacht.contains(el)) continue;
-        if (el.tabIndex < 0 || (el as HTMLButtonElement).disabled) continue;
+        /* Ein Textfeld (`contenteditable` ohne eigenes `tabindex`) meldet
+           `tabIndex` −1 und ist trotzdem ein Tabhalt — am Telefon, wo die
+           Griffe ausgeblendet sind, ist es der nächste (test598 §8). Ein
+           ausdrückliches `tabindex="-1"` gilt dagegen immer. */
+        const ausdruecklich = el.getAttribute('tabindex');
+        const halt = ausdruecklich !== null ? el.tabIndex >= 0 : (el.tabIndex >= 0 || el.isContentEditable);
+        if (!halt || (el as HTMLButtonElement).disabled) continue;
         if (el.isContentEditable && el.parentElement?.isContentEditable) continue;
         if (el.closest('[inert], [hidden], [aria-hidden="true"]') || !el.getClientRects().length) continue;
         return el;

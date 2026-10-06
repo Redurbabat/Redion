@@ -27,10 +27,12 @@ der Flächenleiste.
 
 **Nach der Durchsicht** (derselbe Tag): Tab aus der Leiste führt weiter
 HINTER das Whiteboard statt an den Anfang der Fläche (§38), und am Telefon
-rollt der Streifen zum gewählten Werkzeug (§37) — `test598` §8/§9 je rot
-gegen `90c4dba8`, eine Gegenprobe je Stelle.
+rollt der Streifen zum gewählten Werkzeug (§37), das Schild „Zeichenfläche"
+klebt dabei links, und Tab am Telefon findet das Textfeld hinter dem
+Whiteboard — `test598` §8/§9 je rot vor der Reparatur, eine Gegenprobe je
+Stelle.
 
-**Geprüft:** `test598` (neu, 50 Zusagen), `test404` §9, `test572` §13,
+**Geprüft:** `test598` (neu, 52 Zusagen), `test404` §9, `test572` §13,
 `test575` §6b — je rot gegen `1bfaca53`, grün danach; neun Gegenproben;
 Nachbarn siehe Commit „E722/E723". Start 1850 → 1853 KB. Messung:
 `messungen.md` §92. Offen: L243.

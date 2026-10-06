@@ -61518,12 +61518,27 @@ Wächter zuerst rot:
   stand das Werkzeug bei 609…653 in einem Streifen 12…378. `test598` §8
   rot. Jetzt rollt `schachtSetzen` NUR den Streifen, von Hand und ohne
   Fahrt — `scrollIntoView` hätte auch die Fläche darüber gerollt.
+- *Das Schild rollte mit hinaus* (§38; gefunden auf dem Bild, nicht im
+  Lauf). Seit dem Rollen sagte am Telefon nur noch der Ring, wessen die
+  Leiste ist. Das Schild klebt jetzt links (`position:sticky`), der Roller
+  im Schacht beginnt ohne Innenabstand (sonst liefen die Werkzeuge in
+  einer 12-px-Lücke vor dem Wort sichtbar vorbei), und
+  `scroll-padding-inline-start` hält auch den Fokus mit Tab und Pfeilen
+  rechts davon. `test598` §8 rot mit „text 334…378 im Streifen 12…378".
+- *Tab am Telefon auf ein Textfeld* (§38; gefunden mit einer eigenen
+  Sonde in `redion-einzeldatei.html`). Am Telefon sind die Griffe
+  ausgeblendet, der nächste Halt nach dem Whiteboard ist ein Textfeld —
+  und ein `contenteditable` ohne eigenes `tabindex` meldet `tabIndex` −1,
+  ist aber ein Tabhalt. `naechsterHalt` übersprang es und landete im
+  Kasten daneben. `test598` §8 rot mit „BUTTON [Menü dieses Kastens]";
+  der erste Anlauf prüfte nur „irgendwo danach" und war deshalb grün
+  (L206).
 
 Dazu: zwei Kommentare nannten Zahlen, die nicht gemessen waren („160 px",
 „120 px") — sie verweisen jetzt auf `messungen.md` §92 (+80/+50 px;
 0,92 → 1,02); und der Dienststand dieses Bogens ist **v1418**, nicht v1417
 wie im Bau-Commit — die letzte CSS-Änderung (das Schild) kam nach dem
-Text. Mit der Durchsicht steht er auf v1419.
+Text. Mit der Durchsicht steht er auf v1422.
 
 **Touch Kit und Fremdcode.** Kein Bauteil des Touch Kits und kein fremder
 Code: die Leiste ist Redions `GfxToolbar` (E689), der Wechsel eine Zeile
