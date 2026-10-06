@@ -806,7 +806,9 @@ const Menue = (() => {
       /* Während ein Finger liegt, gehört die Geste dem langen Drücken —
          Android schickt dabei selbst ein contextmenu. Und eine Taste, die
          eben schon geöffnet hat, öffnet nicht ein zweites Mal. */
-      if (finger || Date.now() - zuletztHalt < 900 || Date.now() - zuletztTaste < 400) {
+      /* (Die Taste eben: nur ein contextmenu, das NICHT von der rechten
+         Maustaste kommt — ein echter Rechtsklick gleich danach gilt.) */
+      if (finger || Date.now() - zuletztHalt < 900 || (Date.now() - zuletztTaste < 400 && e.button !== 2)) {
         e.preventDefault();
         return;
       }

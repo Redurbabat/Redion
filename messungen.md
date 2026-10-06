@@ -6755,3 +6755,57 @@ Bearbeiten: Papierkorb                            geht                          
 test594                                           66 / 76                        76 / 76
 Start (test388 §5, gzip)                          1852 KB                        1853 KB (Decke 1950)
 ```
+
+## §91 · Ein Menü je Ding: Rechtsklick, „…", Umschalt+F10, langes Drücken (E721, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/menue-eine-quelle` gegen `e8c4aba9b`
+(`claude/ordner-bearbeiten`, also `claude/morgen-besser-2` mit E718).
+Gemessen über `file://` mit Chromium, Rechner 1440×900, Telefon 390×844
+(`isMobile`, `hasTouch`); ein Ordner mit zwei Kindern, eine Seite, ein Fach,
+ein Heft. „Rechtsklick" ist ein echter Klick mit der rechten Maustaste,
+„Umschalt+F10" ein Tastendruck auf dem fokussierten Ding, „lang drücken" ein
+Berührungsstrom über CDP (`touchStart`, 650 ms, `touchEnd`). Gezählt werden
+die Knöpfe im Menü, das danach offen ist (0 = kein Menü). Das Messskript
+liegt im Notizordner, nicht im Verzeichnis.
+
+```txt
+                                         vorher (e8c4aba9b)                  nachher (E721)
+Deckel: „…"                              I 20×20 aria-hidden „⌄", im Knopf    BUTTON 44×44 „Aktionen für „Messordner""
+Deckel: Rechtsklick / Umschalt+F10       0 / 0                               11 / 11
+Deckel: Tabstopps je Ordnerkarte         bib-deckel, bib-blick               bib-deckel, bib-blick, bib-deckel-mehr
+Deckel: Knöpfe im Gitter (6 Karten)      8                                   14 (+1 je Karte)
+Ablagebaum: Rechtsklick / Umschalt+F10   0 / 0                               11 / 11
+Regal / Tabelle: Rechtsklick             0 / 0                               9 / 9
+Seitenleiste (Lade): ⋯                   BUTTON 20×20 „⋯"                    BUTTON 20×20 „Aktionen für „Messordner""
+Seitenleiste (Lade): Rechtsklick         0                                   53 (das Seitenmenü)
+Notizhefte Heft: ⋯                       BUTTON 26×26 „Mehr zu Messheft"     BUTTON 44×44 (26 px zu sehen)
+Notizhefte Heft: Rechtsklick / Umschalt  0 / 0                               7 / 7
+Notizhefte Fach: Rechtsklick             0                                   FACH_RECHTS
+Telefon Deckel: „…"                      I 20×44 aria-hidden                 BUTTON 44×44
+Telefon Deckel: lang drücken             0, die Seite ging auf               9, keine Seite
+Telefon Ablagebaum: lang drücken         0                                   11
+Telefon Notizhefte Heft: lang drücken    0, das Heft ging auf                7
+Telefon Notizhefte Fach: lang drücken    0                                   6
+```
+
+Wo eine Aktion von Hand stand (Sitz der Verdrahtung, nicht der Griff
+dahinter):
+
+```txt
+                                         vorher                              nachher
+Umbenennen                               5 (Seitenmenü, ⌄ der Bibliothek,    2 (Register „umbenennen";
+                                         Heft, Fach, Datenbankzeile)          die Datenbankzeile, L242)
+In den Papierkorb                        5 Stellen, 2 Wege (App.inPapierkorb   2 Stellen, 1 Weg
+                                         dreimal, trashBlock + eigene         (Register „papierkorb";
+                                         Meldung zweimal: Heft, Fach)          die Datenbankzeile)
+Farbe                                    3 (⌄, Heft, Fach)                   1 (Register „farbe")
+Listen von Hand für dieselbe Seite       5                                   2 (Seitenmenü mit seinem Aufbau,
+                                                                              Datenbankzeile)
+Rot am Rechner (Seitenmenü)              rgb(241, 242, 244)                  --gefahr
+Kontrast „In den Papierkorb" (10 Schemata) —                                 5,08 (Sand) bis 6,42 (Touch Kit hell)
+test597                                  13 / 75                             75 / 75
+Start (test388 §5, gzip)                 1853 KB                             START_NACH KB (Decke 1950)
+```
+
+Die Ruhe-Zählung von `test248` (Startbild 1440×900) misst die Kopfzeile, die
+Kante und das Menüband, nicht die Karten: TEST248_ZEILE.

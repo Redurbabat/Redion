@@ -647,7 +647,7 @@ const Menue = (() => {
             const el = dingVon(e.target);
             if (!el)
                 return;
-            if (finger || Date.now() - zuletztHalt < 900 || Date.now() - zuletztTaste < 400) {
+            if (finger || Date.now() - zuletztHalt < 900 || (Date.now() - zuletztTaste < 400 && e.button !== 2)) {
                 e.preventDefault();
                 return;
             }

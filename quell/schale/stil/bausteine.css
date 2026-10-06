@@ -914,7 +914,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   position:absolute; right:0; top:0; z-index:3;
   width:var(--touch-min); height:var(--touch-min); margin:0; padding:0; border:0;
   display:grid; place-items:center; background:none; cursor:pointer;
-  border-radius:12px; color:var(--text-dim)
+  /* Eckig, mit Absicht: eine Rundung schneidet die Trefferfläche an den
+     Ecken ab (elementFromPoint folgt ihr) — gemessen in test114 23. Rund
+     ist nur, was man sieht. */
+  border-radius:0; color:var(--text-dim)
 }
 .bib-zelle > .bib-deckel-mehr i{
   display:grid; place-items:center; width:26px; height:26px;
@@ -924,7 +927,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-zelle > .bib-deckel-mehr:hover i,
 .bib-zelle > .bib-deckel-mehr:focus-visible i,
 .bib-zelle > .bib-deckel-mehr[aria-expanded="true"] i{ background:var(--bg-hover); color:var(--text) }
-.bib-zelle > .bib-deckel-mehr:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.bib-zelle > .bib-deckel-mehr:focus-visible{ outline:none }
+.bib-zelle > .bib-deckel-mehr:focus-visible i{ outline:2px solid var(--accent); outline-offset:2px }
 /* Der Stern rückt nach links, neben das „…" — er bleibt ein Zeichen für
    den Zustand, kein zweites kleines Ziel in derselben Ecke. */
 .bib-zelle .bib-deckel-stern{ right:40px; top:12px }

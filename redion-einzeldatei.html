@@ -9062,16 +9062,22 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 .nh-karte:hover .nh-mehr, .nh-mehr:focus-visible{ opacity:1 }
 .nh-mehr:hover{ color:var(--text); background:var(--bg-hover) }
 /* 44 × 44 ZU TREFFEN, 26 PX ZU SEHEN (E721, §37). Der Knopf selbst wird so
-   gross wie ein Finger; gemalt wird nur seine Mitte (`background-clip`).
-   Er rückt dafür um den Rand nach aussen, damit die sichtbare Scheibe genau
-   da bleibt, wo sie war. Ein unsichtbarer Hof über `::after` hätte die
-   Karte daneben überdeckt — so trifft der Finger, was er sieht. */
+   gross wie ein Finger und bleibt eckig — eine Rundung schnitte die
+   Trefferfläche an den Ecken ab (elementFromPoint folgt ihr, test114 23).
+   Gemalt wird nur die Scheibe in seiner Mitte (`::before`). Er rückt dafür
+   um den Rand nach aussen, damit die Scheibe genau da bleibt, wo sie war.
+   Ein unsichtbarer Hof über `::after` hätte die Karte daneben überdeckt —
+   so trifft der Finger, was er sieht. */
 .nh-karte > .nh-mehr{
   right:-7px; top:-7px; width:var(--touch-min); height:var(--touch-min);
-  padding:9px; background-clip:content-box; border-radius:17px
+  border-radius:0; background:none
 }
-/* `background` am Überfahren setzt die Clip-Angabe zurück — sie gilt weiter. */
-.nh-karte > .nh-mehr:hover{ background-clip:content-box }
+.nh-karte > .nh-mehr::before{
+  content:""; position:absolute; inset:9px; z-index:-1;
+  border-radius:var(--radius-sm); background:var(--bg-schwebend)
+}
+.nh-karte > .nh-mehr:hover{ background:none }
+.nh-karte > .nh-mehr:hover::before{ background:var(--bg-hover) }
 
 .nh-neu{
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -13922,7 +13928,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   position:absolute; right:0; top:0; z-index:3;
   width:var(--touch-min); height:var(--touch-min); margin:0; padding:0; border:0;
   display:grid; place-items:center; background:none; cursor:pointer;
-  border-radius:12px; color:var(--text-dim)
+  /* Eckig, mit Absicht: eine Rundung schneidet die Trefferfläche an den
+     Ecken ab (elementFromPoint folgt ihr) — gemessen in test114 23. Rund
+     ist nur, was man sieht. */
+  border-radius:0; color:var(--text-dim)
 }
 .bib-zelle > .bib-deckel-mehr i{
   display:grid; place-items:center; width:26px; height:26px;
@@ -13932,7 +13941,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-zelle > .bib-deckel-mehr:hover i,
 .bib-zelle > .bib-deckel-mehr:focus-visible i,
 .bib-zelle > .bib-deckel-mehr[aria-expanded="true"] i{ background:var(--bg-hover); color:var(--text) }
-.bib-zelle > .bib-deckel-mehr:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.bib-zelle > .bib-deckel-mehr:focus-visible{ outline:none }
+.bib-zelle > .bib-deckel-mehr:focus-visible i{ outline:2px solid var(--accent); outline-offset:2px }
 /* Der Stern rückt nach links, neben das „…" — er bleibt ein Zeichen für
    den Zustand, kein zweites kleines Ziel in derselben Ecke. */
 .bib-zelle .bib-deckel-stern{ right:40px; top:12px }
@@ -26970,7 +26980,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1422, inhalt: '70706fe46bba4bb1', gebaut: '2026-10-06T08:39:51.655Z' };
+const Stand = { fassung: 1424, inhalt: '0c602fe3ca022330', gebaut: '2026-10-06T08:58:42.865Z' };
 window.Stand = Stand;
 
 </script>
@@ -44153,7 +44163,7 @@ const Menue = (() => {
             const el = dingVon(e.target);
             if (!el)
                 return;
-            if (finger || Date.now() - zuletztHalt < 900 || Date.now() - zuletztTaste < 400) {
+            if (finger || Date.now() - zuletztHalt < 900 || (Date.now() - zuletztTaste < 400 && e.button !== 2)) {
                 e.preventDefault();
                 return;
             }
