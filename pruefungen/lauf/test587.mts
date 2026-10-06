@@ -39,6 +39,9 @@
  *       Insel, fragt das bisherige Fenster; „ruhig" schliesst im selben
  *       Bild, und `data-ui-motion` (E702) bleibt; der Rückweg für Ja/Nein hat
  *       ein sichtbares „Abbrechen" (Durchsicht, 5. Oktober).
+ *   §13 Umbenennen aus der Bibliothek (E718): die Antwort kommt an — genau
+ *       EIN Schreiben —, und das Enter, das sie gab, öffnet danach nicht
+ *       auch noch den Ordner, auf dessen Karte der Fokus zurückkehrt.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Sie WAR es: rot eingecheckt (commit „test587 (rot)") gegen den Stand
@@ -922,6 +925,60 @@ gleich('… ohne Gefahr steht die Antwort zuerst, „Abbrechen" daneben', (await
 await s12r.tap('.overlay [data-w="ja"]');
 gleich('… und ein Tipp darauf gibt true', await antwort(s12r), true);
 await k12r.close();
+
+/* ==========================================================================
+ * §13 · Umbenennen aus der Bibliothek: eine Antwort, ein Schreiben (E718)
+ * --------------------------------------------------------------------------
+ * `App.umbenennen` fragt im Fenster des Kits und kehrt danach mit dem Fokus
+ * auf die Karte zurück. Fiele das Enter der Antwort durch (kein
+ * preventDefault, §11), drückte es danach die Karte — und man stünde im
+ * Ordner statt davor. Gezählt wird jedes Schreiben des Namens.
+ * ========================================================================*/
+console.log('\n§13 · Umbenennen aus der Bibliothek: die Antwort kommt an, das Enter nicht zweimal');
+const k13 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const s13 = await k13.newPage();
+alleFehler.push(...fehlerVon(s13));
+await s13.goto(pathToFileURL(path.join(WURZEL, 'index.html')).href);
+await bereitMachen(s13);
+const ordner13 = await s13.evaluate(async () => {
+  const w = window as any;
+  Store.setMeta('bibForm', 'deckel');
+  Store.setMeta('bibOrdner', '');
+  const o = Store.addPage(null, { text: 'Ordner 587', icon: '📁' });
+  Store.addPage(o.id, { text: 'Darin' });
+  await Store.flush();
+  w.__schreiben587 = 0;
+  const alt = Store.updateBlock;
+  Store.updateBlock = function (id: string, patch: any) {
+    if (id === o.id && patch && 'text' in patch) w.__schreiben587++;
+    return alt.apply(this, arguments as any);
+  };
+  w.Bibliothek.oeffne();
+  return o.id as string;
+});
+await s13.waitForSelector(`.bib-deckel[data-id="${ordner13}"]`, { timeout: 15000 });
+await s13.evaluate((id: string) => {
+  document.querySelector<HTMLElement>(`.bib-deckel[data-id="${id}"] .bib-deckel-mehr`)?.click();
+}, ordner13);
+await s13.waitForTimeout(250);
+await s13.evaluate(() => document.querySelector<HTMLElement>('.menu button[data-a="umbenennen"]')?.click());
+p('Umbenennen fragt im Fenster des Kits', await kitOffen(s13));
+await s13.keyboard.press('Control+A');
+await s13.keyboard.type('Ordner neu');
+await s13.keyboard.press('Enter');
+await s13.waitForTimeout(700);
+const e13 = await s13.evaluate((id: string) => ({
+  text: Store.getBlock(id).text, schreiben: (window as any).__schreiben587,
+  ordner: Store.getMeta('bibOrdner', ''), inBib: !!document.querySelector('.bib-gitter'),
+  offen: document.querySelectorAll('.overlay').length,
+  fokus: (document.activeElement as HTMLElement | null)?.closest?.('.bib-deckel')?.getAttribute('data-id') ?? null
+}), ordner13);
+console.log('    ' + JSON.stringify(e13));
+gleich('Die Antwort kommt an, und genau einmal geschrieben', [e13.text, e13.schreiben], ['Ordner neu', 1]);
+gleich('Das Enter öffnet den Ordner nicht hinterher: man steht in der Bibliothek, vor ihm',
+  [e13.inBib, e13.ordner, e13.offen], [true, '', 0]);
+gleich('… und der Fokus ist zurück auf seiner Karte', e13.fokus, ordner13);
+await k13.close();
 
 console.log('');
 gleich('Keine unerwarteten Fehler auf den Seiten', alleFehler.slice(0, 5), []);

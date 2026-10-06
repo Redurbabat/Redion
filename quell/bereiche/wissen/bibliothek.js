@@ -20,11 +20,25 @@ const Bibliothek = (() => {
         const pageId = collectionPageId(collectionId);
         return !!pageId && permitted(action, pageId);
     };
+    const vorfahrWeg = (b) => {
+        let cur = b && b.parentTable !== 'collection' && b.parentId ? Store.cache.blocks[b.parentId] : null;
+        for (let n = 0; cur && n < 50; n++) {
+            if (cur.alive === false)
+                return true;
+            cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+        }
+        return false;
+    };
     const alleSeiten = () => Object.values(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
         (b.parentTable === 'collection'
             ? collectionPermitted('lesen', b.parentId)
-            : permitted('lesen', b.id)));
+            : permitted('lesen', b.id)) && !vorfahrWeg(b));
+    const VORGABE_SYMBOLE = new Set(['', '📄', '📁', '🗂', '🗂️']);
+    const eigenesSymbol = (p) => {
+        const s = String(p?.icon ?? '').trim();
+        return VORGABE_SYMBOLE.has(s) ? '' : [...s].slice(0, 4).join('');
+    };
     const quelleVon = (p) => {
         if (p.parentTable === 'collection') {
             const c = Store.cache.collections[p.parentId];
@@ -683,7 +697,9 @@ const Bibliothek = (() => {
             `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
             (p.favorite ? '\u2605' : '\u2606') + '</i>' +
             '</span>' +
-            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
+            '<span class="bib-deckel-name">' +
+            (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
+            '<b>' + esc(p.text || 'Ohne Titel') + '</b>' +
             '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
             '</button>';
@@ -869,7 +885,7 @@ const Bibliothek = (() => {
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
-                zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
+                zeichen: eigenesSymbol(p) || (kinder.length || p.heftArt === 'fach' ? 'pages' : 'page'),
                 ...(farbe ? { farbe } : {}),
                 ...(kinder.length ? { kinder } : {})
             };
@@ -1184,20 +1200,21 @@ const Bibliothek = (() => {
                         return;
                     }
                     if (a === 'stern') {
-                        Store.updateBlock(p.id, { favorite: !p.favorite });
+                        App.favoritKippen(p);
+                        App.zeichneSeite();
+                        return;
                     }
                     if (a === 'farbe') {
-                        Notebook.farbMenue(k, p.id, () => App.zeichneSeite());
+                        Notebook.farbMenue(k, p.id, () => App.nachAenderung(Store.getBlock(p.id)));
                         return;
                     }
                     if (a === 'umbenennen') {
-                        App.oeffne(p.id);
-                        setTimeout(() => document.getElementById('title')?.focus(), 80);
+                        void App.umbenennen(p, k);
                         return;
                     }
                     if (a === 'papierkorb') {
-                        Store.updateBlock(p.id, { alive: false });
-                        UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
+                        App.inPapierkorb(p);
+                        return;
                     }
                     App.zeichneSeite();
                 });

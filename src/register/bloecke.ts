@@ -125,8 +125,10 @@ Register.bloecke = (() => {
       kurz:'Ctrl+D', cmd:['duplicate','duplizieren','kopieren'] },
     { id:'a-moveto',  name:'Verschieben nach …',    icon:'➦', zeichen:'move', gruppe:'Aktionen', aktion:'moveto',
       cmd:['moveto','verschieben','move'] },
-    { id:'a-del',     name:'Block löschen',         icon:'🗑', zeichen:'trash', gruppe:'Aktionen', aktion:'del',
-      kurz:'Entf', cmd:['delete','loeschen','entfernen'] },
+    /* „In den Papierkorb" (E718): der Block geht dorthin, nicht ins Nichts;
+       „löschen" bleibt als Suchwort, damit /löschen ihn weiter findet. */
+    { id:'a-del',     name:'Block in den Papierkorb', icon:'🗑', zeichen:'trash', gruppe:'Aktionen', aktion:'del',
+      kurz:'Entf', cmd:['delete','loeschen','löschen','entfernen','papierkorb'] },
     { id:'a-mention', name:'Person oder Seite erwähnen', icon:'@', gruppe:'Aktionen', aktion:'mention',
       kurz:'@', cmd:['mention','erwaehnen','erwaehnung'] },
     { id:'a-date',    name:'Datum einfügen',        icon:'📆', zeichen:'calendar', gruppe:'Aktionen', aktion:'date',
