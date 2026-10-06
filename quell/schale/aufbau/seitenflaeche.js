@@ -506,11 +506,15 @@ const Seitenflaeche = (() => {
             const roller = neu.querySelector('.gfx-tb-roller');
             const an = roller?.querySelector('[data-wz].on');
             if (roller && an) {
+                const schild = roller.querySelector(':scope > .pg-fl-kontext');
+                const breit = schild ? schild.getBoundingClientRect().width : 0;
+                roller.style.scrollPaddingInlineStart = breit ? `${Math.ceil(breit)}px` : '';
                 const r = roller.getBoundingClientRect(), b = an.getBoundingClientRect();
+                const links = r.left + breit;
                 if (b.right > r.right)
                     roller.scrollLeft += b.right - r.right;
-                else if (b.left < r.left)
-                    roller.scrollLeft -= r.left - b.left;
+                else if (b.left < links)
+                    roller.scrollLeft -= links - b.left;
             }
         };
         const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';

@@ -865,9 +865,16 @@ const Seitenflaeche = (() => {
       const roller = neu.querySelector<HTMLElement>('.gfx-tb-roller');
       const an = roller?.querySelector<HTMLElement>('[data-wz].on');
       if (roller && an) {
+        /* Das Schild klebt links (seitenansichten.css) — sichtbar ist der
+           Streifen also erst rechts davon. Derselbe Rand gilt fürs Rollen
+           beim Fokus mit Tab und Pfeilen. */
+        const schild = roller.querySelector<HTMLElement>(':scope > .pg-fl-kontext');
+        const breit = schild ? schild.getBoundingClientRect().width : 0;
+        roller.style.scrollPaddingInlineStart = breit ? `${Math.ceil(breit)}px` : '';
         const r = roller.getBoundingClientRect(), b = an.getBoundingClientRect();
+        const links = r.left + breit;
         if (b.right > r.right) roller.scrollLeft += b.right - r.right;
-        else if (b.left < r.left) roller.scrollLeft -= r.left - b.left;
+        else if (b.left < links) roller.scrollLeft -= links - b.left;
       }
     };
 

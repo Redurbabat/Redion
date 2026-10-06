@@ -209,6 +209,11 @@
   background:var(--bg-card); border:1px solid var(--line);
   box-shadow:var(--schatten-schwebend);
   font-size:12px; font-weight:600; color:var(--text-dim); white-space:nowrap;
+  /* Am Telefon rollt der Streifen zum gewählten Werkzeug — das Wort rollt
+     nicht mit hinaus, sonst sagte nur der Ring, wessen die Leiste ist
+     (Durchsicht E722, test598 §8). Die Werkzeuge gleiten darunter durch;
+     der Grund der Kapsel ist deckend. */
+  position:sticky; left:0; z-index:1;
 }
 /* Die Zeichenfläche, deren Leiste gerade im Schacht hängt. Derselbe Ring wie
    beim Fokus (`.wb:focus-visible`), aber auch nach einem Mausklick: man soll
@@ -235,6 +240,12 @@ body:has(.pg-flaeche) #sammelleiste{
      `--hunten` addiert, schiebt die Werkzeugleiste um eine Leistenhöhe zu
      hoch, mitten auf den Kasten. Gemessen und auf dem Bild gesehen. */
   .pg-flaeche > .gfx-tb-sockel{bottom:12px}
+  /* Das Schild klebt links am Rand des Streifens (`position:sticky`). Mit
+     dem Innenabstand des Rollers (12 px, werkzeuge.css) klebte es 12 px
+     daneben, und in der Lücke liefen die Werkzeuge sichtbar vorbei — auf
+     dem Bild ein halbes „<" vor dem Wort. Im Schacht beginnt der Streifen
+     deshalb mit dem Schild selbst. */
+  .pg-flaeche > .gfx-tb-sockel .gfx-tb-roller{padding-inline-start:0}
   /* Am Telefon endet die Fläche über der unteren Leiste (`--hunten`), und die
      Flächenleiste ist mit 44-px-Knöpfen höher. */
   body:has(.pg-flaeche) #sammelleiste{

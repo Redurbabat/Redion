@@ -12502,6 +12502,11 @@ body .rmo-liquid::after {
   background:var(--bg-card); border:1px solid var(--line);
   box-shadow:var(--schatten-schwebend);
   font-size:12px; font-weight:600; color:var(--text-dim); white-space:nowrap;
+  /* Am Telefon rollt der Streifen zum gewählten Werkzeug — das Wort rollt
+     nicht mit hinaus, sonst sagte nur der Ring, wessen die Leiste ist
+     (Durchsicht E722, test598 §8). Die Werkzeuge gleiten darunter durch;
+     der Grund der Kapsel ist deckend. */
+  position:sticky; left:0; z-index:1;
 }
 /* Die Zeichenfläche, deren Leiste gerade im Schacht hängt. Derselbe Ring wie
    beim Fokus (`.wb:focus-visible`), aber auch nach einem Mausklick: man soll
@@ -12528,6 +12533,12 @@ body:has(.pg-flaeche) #sammelleiste{
      `--hunten` addiert, schiebt die Werkzeugleiste um eine Leistenhöhe zu
      hoch, mitten auf den Kasten. Gemessen und auf dem Bild gesehen. */
   .pg-flaeche > .gfx-tb-sockel{bottom:12px}
+  /* Das Schild klebt links am Rand des Streifens (`position:sticky`). Mit
+     dem Innenabstand des Rollers (12 px, werkzeuge.css) klebte es 12 px
+     daneben, und in der Lücke liefen die Werkzeuge sichtbar vorbei — auf
+     dem Bild ein halbes „<" vor dem Wort. Im Schacht beginnt der Streifen
+     deshalb mit dem Schild selbst. */
+  .pg-flaeche > .gfx-tb-sockel .gfx-tb-roller{padding-inline-start:0}
   /* Am Telefon endet die Fläche über der unteren Leiste (`--hunten`), und die
      Flächenleiste ist mit 44-px-Knöpfen höher. */
   body:has(.pg-flaeche) #sammelleiste{
@@ -26962,7 +26973,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1419, inhalt: '4a1e897406561e88', gebaut: '2026-10-06T06:00:42.815Z' };
+const Stand = { fassung: 1421, inhalt: 'ebcb61a275365948', gebaut: '2026-10-06T06:26:17.300Z' };
 window.Stand = Stand;
 
 </script>
@@ -147086,11 +147097,15 @@ const Seitenflaeche = (() => {
             const roller = neu.querySelector('.gfx-tb-roller');
             const an = roller?.querySelector('[data-wz].on');
             if (roller && an) {
+                const schild = roller.querySelector(':scope > .pg-fl-kontext');
+                const breit = schild ? schild.getBoundingClientRect().width : 0;
+                roller.style.scrollPaddingInlineStart = breit ? `${Math.ceil(breit)}px` : '';
                 const r = roller.getBoundingClientRect(), b = an.getBoundingClientRect();
+                const links = r.left + breit;
                 if (b.right > r.right)
                     roller.scrollLeft += b.right - r.right;
-                else if (b.left < r.left)
-                    roller.scrollLeft -= r.left - b.left;
+                else if (b.left < links)
+                    roller.scrollLeft -= links - b.left;
             }
         };
         const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
