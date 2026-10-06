@@ -124,7 +124,7 @@ const BESTAND = async () => {
     Store.addBlock(fach.id, 'flashcard', { text: q });
   await Store.flush();
 };
-const ansicht = (s: Page, a: string) => s.evaluate(async (a: string) => { Produktwelten.lernen(a); await new Promise(r => setTimeout(r, 1000)); }, a);
+const ansicht = (s: Page, a: string) => s.evaluate(async (a: string) => { Produktwelten.lernen(a as never); await new Promise(r => setTimeout(r, 1000)); }, a);
 
 /** Die Karte „fällige Fehler" und ihr Herz, so wie sie gerade stehen. */
 const HERZ = () => {
@@ -134,7 +134,7 @@ const HERZ = () => {
   if (!karte) return null;
   const herz = karte.querySelector<HTMLElement>(':scope > .lw-kennzahl-merk') ||
     karte.querySelector<HTMLElement>(':scope > .rmo-heart');
-  if (!herz) return { karte: true, herz: null };
+  if (!herz) return { karte: true, herz: null, x: 0, y: 0 };
   herz.setAttribute('data-t595', 'herz');
   herz.scrollIntoView({ block: 'center' });
   const r = herz.getBoundingClientRect();
@@ -264,7 +264,9 @@ console.log('\n§7 Scheitert das Schreiben, kehrt der Knopf zurück');
 await s.evaluate(() => {
   (window as any).__alt = Store.metaListeAendern;
   (Store as any).metaListeAendern = () => Promise.reject(new Error('Prüflauf: die Ablage sagt nein'));
-  document.querySelectorAll('.toast, #toast, .ui-toast').forEach(t => t.remove());
+  /* Nicht entfernen — `UI.toast` schreibt in #toast; fehlt es, geht die
+     Meldung in die Konsole (hinweis.ts). Nur den alten Text leeren. */
+  const t = document.getElementById('toast'); if (t) { t.textContent = ''; t.classList.remove('show'); }
 });
 const h7 = await s.evaluate(HERZ);
 if (h7?.tag === 'BUTTON') await s.mouse.click(h7.x, h7.y);

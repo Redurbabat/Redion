@@ -170,7 +170,7 @@ for (const thema of ['dark', 'light'] as const) {
   await s.evaluate(BILD);
   let totGesamt = 0;
   for (const ansicht of ANSICHTEN) {
-    await s.evaluate(async (a: string) => { Produktwelten.lernen(a); await new Promise(r => setTimeout(r, 900)); }, ansicht);
+    await s.evaluate(async (a: string) => { Produktwelten.lernen(a as never); await new Promise(r => setTimeout(r, 900)); }, ansicht);
     await s.mouse.move(2, 2); await warte(s, 120);
     const anzahl = await s.evaluate(() => {
       const w = window as any;

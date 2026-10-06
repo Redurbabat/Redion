@@ -747,11 +747,11 @@ body [data-rmo~="glass"]:active:not(:disabled) > :not(.rmo-glass) { opacity:.82;
 
 /* E534: Herz und Wendekarte ergänzen bestehende Statistik-/Ticketfamilien.
    Keine neuen Kennzahlen, keine zweite Live-Region und keine Leerlaufschleife. */
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > strong { padding-inline-end:32px; }
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> :is(.rmo-heart,.lw-kennzahl-merk)) > strong { padding-inline-end:32px; }
 /* Lernkarten ordnen ihr Etikett per order:-1 oben ein. Dafür bleibt unter
    dem Herz eine eigene Zeile frei; Gesundheitskarten haben das Etikett unten. */
-body .stat-karte.lw-metrik:has(> .rmo-heart) { padding-top:var(--touch-min,44px); }
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > .rmo-ring { top:8px; right:8px; bottom:auto; }
+body .stat-karte.lw-metrik:has(> :is(.rmo-heart,.lw-kennzahl-merk)) { padding-top:var(--touch-min,44px); }
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> :is(.rmo-heart,.lw-kennzahl-merk)) > .rmo-ring { top:8px; right:8px; bottom:auto; }
 body .rmo-heart { position:absolute; inset:13px 13px auto auto; width:20px; height:20px;
   color:var(--accent-text); pointer-events:none; font-size:20px; line-height:1;
   text-align:center; transform-origin:center; opacity:.8; }
@@ -766,6 +766,21 @@ body .rmo-heart { position:absolute; inset:13px 13px auto auto; width:20px; heig
 }
 body :is(.stat-karte.lw-metrik,.rmo-health-metric):is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .rmo-heart {
   animation:rmo-heart-beat .8s ease-out 1;
+}
+/* E719: DAS HERZ IST EIN KNOPF. Auf den Kennzahlen aus dem Katalog der
+   Lernwelt steht an der Stelle des gemalten Herzens der Merkknopf
+   (`Merkzeichen`, Form 'herz'): dieselbe Ecke, derselbe Ring darum
+   (Mitte 23 | 23 wie der Ring bei 8 px + 15 px), derselbe Schlag beim
+   Anfassen — aber 44 × 44 gross (§37), mit Namen und Zustand (§38), und
+   über allem Schmuck der Karte, damit der Finger IHN trifft. */
+body .stat-karte.lw-metrik > .lw-kennzahl-merk { position:absolute; inset:1px 1px auto auto; z-index:2;
+  width:var(--touch-min,44px); height:var(--touch-min,44px); padding:0; border-radius:50%; }
+body .stat-karte.lw-metrik > .lw-kennzahl-merk > .ru-merk-band { width:20px; height:20px; transform-origin:center; }
+body .stat-karte.lw-metrik:is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .lw-kennzahl-merk > .ru-merk-band {
+  animation:rmo-heart-beat .8s ease-out 1;
+}
+@media (prefers-reduced-motion:reduce) {
+  body .stat-karte.lw-metrik > .lw-kennzahl-merk > .ru-merk-band { animation:none !important; }
 }
 [data-rmo-play="metric"] { animation:none; }
 body .rmo-ticket { perspective:800px; }
