@@ -1,4 +1,4 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1418, inhalt: '378a3cf6d117080c', gebaut: '2026-10-06T02:11:37.766Z' };
+const Stand = { fassung: 1419, inhalt: '67a5c1309de4cff4', gebaut: '2026-10-06T02:16:11.462Z' };
 window.Stand = Stand;

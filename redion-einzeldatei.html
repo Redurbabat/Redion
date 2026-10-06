@@ -2675,7 +2675,7 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
    (ohne `.show`) ist er unsichtbar UND aus der Tab-Folge: eine
    durchsichtige Meldung darf keinen Knopf haben, den man trifft, ohne ihn
    zu sehen. */
-#toast:has(.toast-aktion){display:flex; align-items:center; gap:12px; padding:5px 5px 5px 16px}
+#toast:has(.toast-aktion){display:flex; align-items:center; gap:12px; padding:5px 5px 5px 18px}
 #toast .toast-aktion{
   pointer-events:auto; flex:none; min-height:var(--touch-min); min-width:var(--touch-min);
   padding:0 14px; border:1px solid var(--line); border-radius:6px;
@@ -2684,6 +2684,11 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 #toast .toast-aktion:hover{border-color:var(--text)}
 #toast .toast-aktion:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 #toast:not(.show) .toast-aktion{visibility:hidden; pointer-events:none}
+/* Steht ein Fenster offen, legt `Fokus` alles andere still (`inert`) —
+   auch `#toast`. Ein Knopf, den man sieht und der nichts tut, wäre ein
+   toter Knopf: dann steht nur der Satz da, und der Rückweg ist der
+   Papierkorb (E718). */
+#toast[inert] .toast-aktion{display:none}
 
 /* AM TELEFON STEHT UNTEN EINE LEISTE, und was nur meldet, gehört nicht auf
    das, womit man arbeitet. Ein Toast bei bottom:22px legte sich mitten
@@ -13883,6 +13888,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   overflow:hidden; min-height:39px; min-width:0; overflow-wrap:break-word;
   font-weight:580; letter-spacing:-.005em
 }
+/* DAS EIGENE SYMBOL (E718) vor dem Namen — nur, wenn ein Mensch eines
+   gesetzt hat. Gerade, nicht kursiv (`<i>`), und es schrumpft nie: ein
+   halbes Emoji ist schlimmer als keines. */
+.bib-deckel-symbol{ flex:none; font-style:normal; font-size:13px; line-height:1.5 }
 .bib-deckel-mehr{
   margin-left:auto; flex:none; width:20px; height:20px; display:grid;
   place-items:center; border-radius:6px; color:var(--text-faint);
@@ -26914,7 +26923,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1418, inhalt: '378a3cf6d117080c', gebaut: '2026-10-06T02:11:37.766Z' };
+const Stand = { fassung: 1419, inhalt: '67a5c1309de4cff4', gebaut: '2026-10-06T02:16:11.462Z' };
 window.Stand = Stand;
 
 </script>

@@ -456,6 +456,24 @@ gleich('… und trägt EINEN echten Knopf „Rückgängig"', t13.knopf, 'Rückg�
 p('… 44 px hoch, greifbar, mit der Tastatur erreichbar', t13.hoehe >= 44 && t13.zeiger === 'auto' && t13.tab >= 0,
   JSON.stringify({ h: t13.hoehe, z: t13.zeiger, tab: t13.tab }));
 p('Wegzulegen ist umkehrbar — kein Löschknopf (E709 gilt nur dem Endgültigen)', !t13.loeschknopf);
+/* Ein offenes Fenster legt `#toast` still (Fokus, `inert`): dann darf dort
+   kein Knopf stehen, der nichts tut. Nach Escape ist er wieder da. */
+await s.evaluate(`App.papierkorb()`);
+await s.waitForTimeout(500);
+const tot13 = await s.evaluate(`(() => {
+  const t = document.getElementById('toast');
+  const k = t ? t.querySelector('button.toast-aktion') : null;
+  return { inert: !!(t && t.inert), sichtbar: !!(k && k.getClientRects().length && getComputedStyle(k).visibility !== 'hidden'),
+           satz: (t && t.textContent || '').includes('im Papierkorb') };
+})()`) as any;
+p('Steht ein Fenster offen, ist `#toast` still und zeigt keinen toten Knopf (nur den Satz)',
+  !tot13.inert || (!tot13.sichtbar && tot13.satz), JSON.stringify(tot13));
+await s.keyboard.press('Escape');
+await s.waitForTimeout(400);
+p('… nach Escape steht „Rückgängig" wieder da', await s.evaluate(`(() => {
+  const k = document.querySelector('#toast button.toast-aktion');
+  return !!(k && k.getClientRects().length && !document.getElementById('toast').inert);
+})()`));
 await s.click('#toast button.toast-aktion', { timeout: 3000 }).catch(() => {});
 await s.waitForTimeout(500);
 const z13 = await s.evaluate(`(() => {
