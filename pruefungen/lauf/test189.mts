@@ -94,6 +94,14 @@ const zuhoerer = await seite.evaluate(async () => {
   Store.addBlock(s.id, 'pdfseite', { text: '', nr: 2, bw: 595, bh: 842, quelleId: 'q' });
   App.oeffne(s.id);
   await new Promise(r => setTimeout(r, 400));
+  /* Seit E717 zeichnet auch die Seitenansicht nur, was in der Nähe ist
+     (E299): die ersten drei Blätter sofort, das vierte, sobald es eine
+     Bildhöhe ans Fenster herankommt. Bei 1280 × 720 liegt es weiter weg.
+     Also hinrollen — gezählt werden weiter VIER Flächen, vor und nach den
+     zwanzig Neuzeichnungen, und das Neuzeichnen behält die Lesestelle. */
+  const rolle = document.getElementById('scroll');
+  if (rolle) rolle.scrollTop = rolle.scrollHeight;
+  await new Promise(r => setTimeout(r, 400));
 
   const vorher = (window as any).__pagehide;
   const flaechenVorher = document.querySelectorAll('svg.blatt-marken').length;
