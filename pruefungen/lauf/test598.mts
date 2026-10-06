@@ -39,7 +39,8 @@
  *       die Leiste unter dem Whiteboard, in der Fläche über keinem.
  *   §8  Am Telefon: eine Leiste, jeder Knopf 44 px, über der unteren Leiste,
  *       keine im Kasten; das gewählte Werkzeug steht im sichtbaren Teil
- *       des rollenden Streifens, und das Schild rollt nicht mit hinaus.
+ *       des rollenden Streifens, und das Schild rollt nicht mit hinaus;
+ *       Tab aus der Leiste führt auch dort hinter das Whiteboard.
  *   §9  Tastatur (§38): Tab erreicht die Leiste, Pfeile wandern, Escape
  *       schliesst ihr Menü zuerst; vom Whiteboard aus führt Tab in SEINE
  *       Leiste und Umschalt+Tab zurück — und das nächste Tab aus der
@@ -534,7 +535,7 @@ await dunkel.close();
  * §8 · Am Telefon
  * ======================================================================== */
 console.log('\n8 · Am Telefon (390 px)');
-const { pg: handy } = await bauen(390, 844, true);
+const { pg: handy, ids: idsH } = await bauen(390, 844, true);
 const w1h = await mitte(handy, `${W1} .wb-flaeche`, 0.7, 0.7);
 if (w1h) { await handy.touchscreen.tap(w1h.x, w1h.y); await handy.waitForTimeout(250); }
 /* Ein Werkzeug weit rechts im Streifen wählen, zur Fläche wechseln und
@@ -594,6 +595,31 @@ p(`Das gewählte Werkzeug (${fern}) steht nach dem Wechsel im sichtbaren Teil de
   !!fern && s8.gewaehlt.zu_sehen && s8.gewaehlt.was.startsWith(fern), s8.gewaehlt.was);
 p('… und das Wort „Zeichenfläche" bleibt dabei im Bild', s8.gewaehlt.schild, s8.gewaehlt.was);
 p('Die Leiste steht über der unteren Leiste', s8.nav === null || s8.unten <= s8.nav + 1, `${s8.unten} gegen ${s8.nav}`);
+/* Tab am Telefon (eine Tastatur am Tablet): die Griffe sind dort
+   ausgeblendet, der nächste Halt nach dem Whiteboard ist also ein TEXTFELD.
+   Ein `contenteditable` meldet `tabIndex` −1 und ist trotzdem ein Tabhalt —
+   wer nur nach `tabIndex` filtert, findet keinen und schickt Tab zurück an
+   den Anfang der Fläche (Durchsicht E722, gefunden in der Einzeldatei). */
+await handy.evaluate(async (id: string) => {
+  Store.addBlock(id, 'text', { text: 'Danach ein Satz.' }); await Store.flush(); App.oeffne(id);
+  await new Promise(f => setTimeout(f, 900));
+}, idsH.seite);
+await handy.evaluate((w: string) => document.querySelector<HTMLElement>(w)?.focus(), W1);
+await handy.waitForTimeout(150);
+await handy.keyboard.press('Tab');
+await handy.keyboard.press('Tab');
+const weiterH = await handy.evaluate(([s, w]) => {
+  const a = document.activeElement as HTMLElement | null;
+  const wb = document.querySelector(w as string);
+  if (!a || !wb || a === document.body) return { ok: false, was: 'kein Fokus' };
+  const nach = !!(wb.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) && !wb.contains(a);
+  /* Nicht irgendwohin dahinter, sondern auf den NÄCHSTEN Halt: das ist
+     hier der Satz gleich unter dem Whiteboard, nicht das zweite Whiteboard
+     im Kasten daneben. */
+  const satz = a.isContentEditable && /Danach ein Satz/.test(a.textContent ?? '');
+  return { ok: nach && satz && !a.closest(s as string), was: `${a.tagName} [${(a.getAttribute('aria-label') ?? a.textContent ?? '').trim().slice(0, 30)}]` };
+}, [SCHACHT, W1]);
+p('Telefon: Tab aus der Leiste führt auf den nächsten Halt hinter dem Whiteboard — das Textfeld', weiterH.ok, weiterH.was);
 await handy.close();
 await pg.close();
 
