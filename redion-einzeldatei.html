@@ -8179,29 +8179,34 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
    vom 24. August (47450aaa9) in `:where(…)` — das nimmt ihnen das Gewicht:
    `.lernwelt :where(… .lw-study-actions button …):hover` wiegt (0,2,0),
    die Grundregel `.lernwelt .lw-study-actions button` (0,2,1). Die
-   Grundregel gewann, und zwanzig Knöpfe in fünf Ansichten blieben unter
+   Grundregel gewann, und siebzehn Knöpfe in fünf Ansichten blieben unter
    dem Zeiger, wie sie waren — darunter „Trainieren", „Lernen" und
    „Prüfungen öffnen" in der Lernzentrale (messungen §90). `:is(…)` nimmt
    das Gewicht seines schwersten Arguments: der Zustand wiegt jetzt
    mindestens so viel wie die Grundregel (CLAUDE.md §39). Der Funkel
-   gewinnt weiter — bausteine.css lädt später, bei gleichem Gewicht. */
+   gewinnt weiter — bausteine.css lädt später, bei gleichem Gewicht.
+   EIN GESPERRTER KNOPF ANTWORTET NICHT (Durchsicht vom 6. Oktober,
+   test596 §9): mit `:is` kam der Zustand auch bei gesperrten Knöpfen an —
+   „Wochenprüfung simulieren" wurde unter dem Zeiger heller, obwohl er
+   nichts tut. `:where(:not(:disabled))` schliesst sie aus, OHNE Gewicht:
+   so bleibt jede Rangfolge oben genau, wie sie war. */
 @media(hover:hover){
-  .lernwelt .lw-nav button:hover,
-  .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:hover,
-  .lernwelt .lw-topic-list>button:hover,
-  .lernwelt .lw-past-exams button:hover,
-  .lernwelt .lw-compact-errors button:hover,
-  .lernwelt .lw-back:hover{
+  .lernwelt .lw-nav button:where(:not(:disabled)):hover,
+  .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:where(:not(:disabled)):hover,
+  .lernwelt .lw-topic-list>button:where(:not(:disabled)):hover,
+  .lernwelt .lw-past-exams button:where(:not(:disabled)):hover,
+  .lernwelt .lw-compact-errors button:where(:not(:disabled)):hover,
+  .lernwelt .lw-back:where(:not(:disabled)):hover{
     background:var(--bg-hover);color:var(--text)
   }
   .lernwelt :is(.lw-page-head>button,.lw-page-head>.lw-actions button,
     .lw-actions button,.lw-rating button,.lw-error-list footer button,
     .lw-exam-list footer button,.lw-exam-card>button,.lw-quick button,
-    .lw-study-actions button,.lw-subject-empty button,.lw-leer button):hover{
+    .lw-study-actions button,.lw-subject-empty button,.lw-leer button):where(:not(:disabled)):hover{
     border-color:var(--line-stark,var(--line));background:var(--bg-hover);color:var(--text)
   }
   .lernwelt :is(button.is-primary,.lw-actions button.is-primary,
-    .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
+    .lw-rating button.is-primary,.lw-study-actions button.is-primary):where(:not(:disabled)):hover{
     /* Der Hover-Verlauf nimmt --accent-hover und ist damit je Modus
        richtig herum (E199) — das alte brightness(1.08) war es im
        Hellmodus nicht. */
@@ -8213,23 +8218,23 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
     .lw-continue-card,.lw-subject-grid>button):hover{
     border-color:var(--line-stark,var(--line));box-shadow:var(--shadow-2)
   }
-  .lernwelt .lw-path li>button:hover{
+  .lernwelt .lw-path li>button:where(:not(:disabled)):hover{
     z-index:1;border-color:var(--accent-text);box-shadow:var(--shadow-3);transform:translateY(-2px)
   }
-  .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
-  /* Die Tage des Verlaufs (E713) sind Knöpfe — und antworten jetzt auch
-     so: ein Hauch Fläche, die Zahl wird deutlich, der Balken halb so kräftig
-     wie gewählt. Der gewählte Tag behält seinen vollen Balken. */
+  .lernwelt .lw-path li.is-stable>button:where(:not(:disabled)):hover{border-color:var(--erfolg)}
   /* Zwei Knöpfe auf „Heute", die gar keine Hover-Regel hatten: das
      Tagesziel („Tagesziel ändern") und „Alle Dokumente" über dem
      Schreibtisch. Gefunden vom Zensus in test596 §1. Die Fläche des
      Tagesziels reicht mit einem Schatten über den Knopf hinaus, weil der
      Knopf selbst keinen Innenabstand hat. */
-  .lernwelt .lw-goal button:hover{background:var(--bg-hover);box-shadow:0 0 0 6px var(--bg-hover)}
-  .lernwelt .lw-goal button:hover small{color:var(--text)}
-  .lernwelt .lw-continue>header button:hover{
+  .lernwelt .lw-goal button:where(:not(:disabled)):hover{background:var(--bg-hover);box-shadow:0 0 0 6px var(--bg-hover)}
+  .lernwelt .lw-goal button:where(:not(:disabled)):hover small{color:var(--text)}
+  .lernwelt .lw-continue>header button:where(:not(:disabled)):hover{
     border-color:var(--line-stark,var(--line));background:var(--bg-hover);color:var(--text)
   }
+  /* Die Tage des Verlaufs (E713) sind Knöpfe — und antworten jetzt auch
+     so: ein Hauch Fläche, die Zahl wird deutlich, der Balken halb so kräftig
+     wie gewählt. Der gewählte Tag behält seinen vollen Balken. */
   .lernwelt .lw-verlauf-tag:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}
   .lernwelt .lw-verlauf-tag:hover .lw-verlauf-zahl{color:var(--text)}
   .lernwelt .lw-verlauf-tag:hover:not([aria-pressed="true"]) .lw-verlauf-saeule i::after{opacity:.45}
@@ -9846,7 +9851,9 @@ body [data-rmo~="letters"] > svg { animation:none; }
   0%, 100% { filter:blur(0); }
   50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
-body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
+/* Ein gesperrter Knopf wischt nicht (test596 §9) — ohne Gewicht, damit die
+   Rangfolge bleibt. */
+body [data-rmo~="letters"]:where(:not(:disabled)):is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-wisch .55s ease-in-out 1;
   /* Zwei Namen, weil zwei Buchstabensorten zwei Zähler haben. Fehlt beides,
@@ -9973,6 +9980,11 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):is(:hover,:focus-within,:acti
 body .stat-karte.lw-metrik > .lw-kennzahl-merk { position:absolute; inset:1px 1px auto auto; z-index:2;
   width:var(--touch-min); height:var(--touch-min); padding:0; border-radius:50%; }
 body .stat-karte.lw-metrik > .lw-kennzahl-merk > .ru-merk-band { width:20px; height:20px; transform-origin:center; }
+/* Der Fokusring liegt INNEN (Durchsicht vom 6. Oktober, test595 §6): das
+   Herz steht 1 px vom Rand, und Umriss (2 + 2 px) samt Hof (5 px) der
+   Lernwelt wurden von der Karte oben und rechts abgeschnitten. Innen bleibt
+   er ganz — 2 px im Akzent, 12 px Luft bis zum Herz in der Mitte. */
+body .stat-karte.lw-metrik > .lw-kennzahl-merk:focus-visible { outline:2px solid var(--accent-text); outline-offset:-2px; box-shadow:none; }
 body .stat-karte.lw-metrik:is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .lw-kennzahl-merk > .ru-merk-band {
   animation:rmo-heart-beat .8s ease-out 1;
 }
@@ -22822,27 +22834,27 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
    (gesehen an den KI-Werkzeugen, karte-ki/handy-auf.png). Am Telefon
    übernehmen der Tastenfokus und der Druck (`data-gedrueckt`, unten). */
 @media (hover:hover){
-  .ru-funkel:hover::before{
+  .ru-funkel:where(:not(:disabled)):hover::before{
     box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
                1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
   }
-  .ru-funkel:hover::after{
+  .ru-funkel:where(:not(:disabled)):hover::after{
     opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
   }
   /* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
      auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
-  .ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
+  .ru-funkel:where(:not(:disabled)):hover, .ai-quick button.ru-funkel:where(:not(:disabled)):hover, .lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):hover{
     border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
   }
   /* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
      einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
      Endlosschleife, die E528 gerade erst abgeschaltet hat. */
-  .ru-funkel:hover > svg, #ai .ai-quick button.ru-funkel:hover > svg{
+  .ru-funkel:where(:not(:disabled)):hover > svg, #ai .ai-quick button.ru-funkel:where(:not(:disabled)):hover > svg{
     stroke:#fff; animation:none;
     filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
   }
   /* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
-  .ru-funkel:hover .ru-funkel-b{
+  .ru-funkel:where(:not(:disabled)):hover .ru-funkel-b{
     animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
     animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
   }
@@ -22852,24 +22864,35 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   50%{ transform:scale(2); filter:blur(10px) brightness(150%)
        drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton) 100% 70%)) }
 }
+/* EIN GESPERRTER FUNKEL BLEIBT STILL (Durchsicht vom 6. Oktober,
+   test596 §9). Zeiger und Druck gelten nur für einen freigegebenen Knopf:
+   `:where(:not(:disabled))` vor jedem Zustand, ohne Gewicht, damit jede
+   Rangfolge bleibt, wie sie war. Vorher leuchtete „Trainieren · 0" unter
+   dem Zeiger auf und verwischte sein Wort — ein toter Knopf, der lebendig
+   tat. (Der Tastenfokus braucht das nicht: ein gesperrter Knopf bekommt
+   ihn gar nicht.) */
 /* DER DRUCK HAT ZWEI ZEICHEN: `:active` und `data-gedrueckt` (E720).
    press.ts (E702) hält `data-gedrueckt` mindestens 80 ms — weil das
    iPhone `:active` beim kurzen Tipp oft gar nicht malt. Der Funkel steht
    in OWN_PRESS (er sinkt nicht ein), also war ein kurzer Tipp auf ihm
    unsichtbar. Jetzt trägt der Zustand dasselbe Licht wie `:active`. */
-.ru-funkel:is(:active,[data-gedrueckt]), .ai-quick button.ru-funkel:is(:active,[data-gedrueckt]),
-.lernwelt button.is-primary.ru-funkel:is(:active,[data-gedrueckt]){
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]), .ai-quick button.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]),
+.lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]){
   border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+  /* Die Tönung liegt ÜBER dem Funkelgrund, nicht über der Karte: im
+     Hellen lag sie halbdurchsichtig auf Weiss, und das weisse Wort stand
+     mit 3 : 1 auf Mittelgrau (Durchsicht vom 6. Oktober, test596 §10b). */
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
 }
-.ru-funkel:is(:active,[data-gedrueckt])::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
 /* Beim Drücken war bisher gar nichts an der Aussenkante: auf einem Gerät
    ohne Zeiger blieb der Knopf beim Tippen unverändert. */
-.ru-funkel:is(:active,[data-gedrueckt])::before{
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::before{
   box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 80%) inset,
              1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001
 }
-.ru-funkel:is(:active,[data-gedrueckt]) .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]) .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
 
 /* DIE STILLEN FUNKEL (E720, Redur: „wie bein tagesrunde"). Fehlertraining,
    Neue Karten, Prüfungsfokus und Trainer sind derselbe Knopf wie die
@@ -22905,7 +22928,8 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 }
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:active,[data-gedrueckt]){
   border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
 }
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:focus-visible,:active,[data-gedrueckt])::before{
   opacity:1
@@ -22924,8 +22948,23 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   /* Der Druck mit der Maus kommt nach dem Zeigen und muss es übertönen. */
   .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover:is(:active,[data-gedrueckt]){
     border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-    background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+    background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+               var(--ru-funkel-farbe)
   }
+}
+
+/* IM STARKEN KONTRAST BLEIBT ES EINE LAUTE FLÄCHE (Durchsicht vom
+   6. Oktober, test596 §10a). Der Funkelgrund #101010 hat auf dem Schwarz
+   dieses Schemas 1,04 : 1, und die stillen Funkel sind seit E720 auch
+   Pillen — „Starten" war von „Lernen" kaum zu unterscheiden. Hier trägt
+   die Haupthandlung einen 2-px-Rand im Akzent: ein Zeichen, das nicht an
+   der Farbe allein hängt (Breite UND Kontrast), wie grund.css „Genau eine
+   je Bild" es will. Dieselbe Zeile für den Schalter „Hoher Kontrast". */
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel{
+  border-width:2px
+}
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel:not(:hover,:active,[data-gedrueckt]){
+  border-color:var(--accent)
 }
 
 /* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */
@@ -27017,7 +27056,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1418, inhalt: 'cb6318b4e770b579', gebaut: '2026-10-06T04:04:25.017Z' };
+const Stand = { fassung: 1419, inhalt: 'b10ce8c65f08e1bd', gebaut: '2026-10-06T07:30:19.349Z' };
 window.Stand = Stand;
 
 </script>
@@ -135907,6 +135946,10 @@ const Lernwelt = (() => {
         if (!root || zustand.ansicht !== 'heute')
             return;
         const alt = root.querySelector('.lw-gemerkt');
+        const aktiv = document.activeElement;
+        const herzVorher = alt && aktiv instanceof HTMLElement && alt.contains(aktiv)
+            ? aktiv.closest('[data-lw-merk]') : null;
+        const platz = herzVorher ? [...alt.querySelectorAll('[data-lw-merk]')].indexOf(herzVorher) : -1;
         const html = gemerktStreifen(kennzahlKontext());
         if (alt) {
             if (html)
@@ -135917,13 +135960,25 @@ const Lernwelt = (() => {
         else if (html) {
             root.querySelector('.lw-today > .lw-hero')?.insertAdjacentHTML('afterend', html);
         }
+        if (!herzVorher)
+            return;
+        const id = herzVorher.dataset.lwMerk;
+        const imStreifen = [...root.querySelectorAll('.lw-gemerkt [data-lw-merk]')];
+        let ziel = imStreifen.find(k => k.dataset.lwMerk === id) ||
+            imStreifen[Math.min(platz, imStreifen.length - 1)] ||
+            [...root.querySelectorAll('[data-lw-merk]')].find(k => k.dataset.lwMerk === id) || null;
+        if (!ziel) {
+            ziel = root.querySelector('.lw-today > .lw-hero h2');
+            if (ziel && !ziel.hasAttribute('tabindex'))
+                ziel.setAttribute('tabindex', '-1');
+        }
+        ziel?.focus({ preventScroll: !!ziel.closest('.lw-gemerkt') });
     };
     const kennzahlMerken = (knopf, id) => {
         const eintrag = KENNZAHLEN[id];
         if (!eintrag || typeof Merkzeichen === 'undefined')
             return;
         const schluessel = metaSchluessel('kennzahlen');
-        const vorher = kennzahlenGemerkt();
         const an = knopf.getAttribute('aria-pressed') !== 'true';
         const stellen = () => [...(zustand.root?.querySelectorAll('[data-lw-merk]') || [])]
             .filter(k => k.dataset.lwMerk === id);
@@ -135946,7 +136001,10 @@ const Lernwelt = (() => {
         gemerktAuffrischen();
         schreiben.catch(() => {
             try {
-                Store.setMeta(schluessel, vorher);
+                Store.metaListeAendern(schluessel, (liste) => {
+                    const ohne = liste.filter(x => x !== id);
+                    return an ? ohne : [...ohne, id];
+                }).catch(() => { });
             }
             catch { }
             zeigen(!an);

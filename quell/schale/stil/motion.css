@@ -649,7 +649,9 @@ body [data-rmo~="letters"] > svg { animation:none; }
   0%, 100% { filter:blur(0); }
   50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
-body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
+/* Ein gesperrter Knopf wischt nicht (test596 §9) — ohne Gewicht, damit die
+   Rangfolge bleibt. */
+body [data-rmo~="letters"]:where(:not(:disabled)):is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-wisch .55s ease-in-out 1;
   /* Zwei Namen, weil zwei Buchstabensorten zwei Zähler haben. Fehlt beides,
@@ -776,6 +778,11 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):is(:hover,:focus-within,:acti
 body .stat-karte.lw-metrik > .lw-kennzahl-merk { position:absolute; inset:1px 1px auto auto; z-index:2;
   width:var(--touch-min); height:var(--touch-min); padding:0; border-radius:50%; }
 body .stat-karte.lw-metrik > .lw-kennzahl-merk > .ru-merk-band { width:20px; height:20px; transform-origin:center; }
+/* Der Fokusring liegt INNEN (Durchsicht vom 6. Oktober, test595 §6): das
+   Herz steht 1 px vom Rand, und Umriss (2 + 2 px) samt Hof (5 px) der
+   Lernwelt wurden von der Karte oben und rechts abgeschnitten. Innen bleibt
+   er ganz — 2 px im Akzent, 12 px Luft bis zum Herz in der Mitte. */
+body .stat-karte.lw-metrik > .lw-kennzahl-merk:focus-visible { outline:2px solid var(--accent-text); outline-offset:-2px; box-shadow:none; }
 body .stat-karte.lw-metrik:is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .lw-kennzahl-merk > .ru-merk-band {
   animation:rmo-heart-beat .8s ease-out 1;
 }

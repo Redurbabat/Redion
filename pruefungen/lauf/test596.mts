@@ -17,7 +17,8 @@
  *       `.lernwelt :where(… .lw-study-actions button …):hover` (0,2,0). Die
  *       Grundregel jedes Knopfes, etwa `.lernwelt .lw-study-actions button`
  *       (0,2,1), wiegt mehr — die Hover-Erklärung kommt nie an. Das traf
- *       nicht vier Knöpfe, sondern zwanzig in fünf Ansichten.
+ *       nicht vier Knöpfe, sondern siebzehn in fünf Ansichten (der Plan
+ *       hatte zwanzig geschätzt; gezählt hat es §1, messungen §90).
  *   (b) Nur die Tagesrunde ist ein Funkel. Der Funkel hat keinen Zustand
  *       für `data-gedrueckt` (press.ts, E702) — ein kurzer Tipp am iPhone
  *       malt `:active` oft gar nicht, also sah man nichts.

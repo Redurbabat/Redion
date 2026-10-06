@@ -1912,10 +1912,14 @@ Inline-Style-Blöcke.**
   demselben Klassenpräfix gewinnen abwechselnd, und niemand sieht es im Code.
 - **Zustandsregeln wiegen mindestens so viel wie die Grundregel — kein
   `:where()` um den Knopf-Teil von `:hover`, `:active` oder
-  `:focus-visible` (E720).** `:where()` hat das Gewicht null; zwanzig
+  `:focus-visible` (E720).** `:where()` hat das Gewicht null; siebzehn
   Knöpfe der Lernwelt blieben so unter dem Zeiger, wie sie waren, weil
-  ihre Grundregel (0,2,1) die Hover-Regel (0,2,0) schlug. `:is()` nimmt
-  das Gewicht seines schwersten Arguments.
+  ihre Grundregel (0,2,1) die Hover-Regel (0,2,0) schlug (der Plan hatte
+  zwanzig geschätzt, gemessen waren es siebzehn — messungen §90). `:is()`
+  nimmt das Gewicht seines schwersten Arguments. Und ein gesperrter Knopf
+  antwortet gar nicht: `:where(:not(:disabled))` vor dem Zustand schliesst
+  ihn aus, ohne die Rangfolge zu verschieben — dort, wo es KEIN Gewicht
+  tragen soll, ist `:where()` genau richtig (test596 §9).
 
 ---
 ---

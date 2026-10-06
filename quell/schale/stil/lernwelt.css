@@ -1090,29 +1090,34 @@
    vom 24. August (47450aaa9) in `:where(…)` — das nimmt ihnen das Gewicht:
    `.lernwelt :where(… .lw-study-actions button …):hover` wiegt (0,2,0),
    die Grundregel `.lernwelt .lw-study-actions button` (0,2,1). Die
-   Grundregel gewann, und zwanzig Knöpfe in fünf Ansichten blieben unter
+   Grundregel gewann, und siebzehn Knöpfe in fünf Ansichten blieben unter
    dem Zeiger, wie sie waren — darunter „Trainieren", „Lernen" und
    „Prüfungen öffnen" in der Lernzentrale (messungen §90). `:is(…)` nimmt
    das Gewicht seines schwersten Arguments: der Zustand wiegt jetzt
    mindestens so viel wie die Grundregel (CLAUDE.md §39). Der Funkel
-   gewinnt weiter — bausteine.css lädt später, bei gleichem Gewicht. */
+   gewinnt weiter — bausteine.css lädt später, bei gleichem Gewicht.
+   EIN GESPERRTER KNOPF ANTWORTET NICHT (Durchsicht vom 6. Oktober,
+   test596 §9): mit `:is` kam der Zustand auch bei gesperrten Knöpfen an —
+   „Wochenprüfung simulieren" wurde unter dem Zeiger heller, obwohl er
+   nichts tut. `:where(:not(:disabled))` schliesst sie aus, OHNE Gewicht:
+   so bleibt jede Rangfolge oben genau, wie sie war. */
 @media(hover:hover){
-  .lernwelt .lw-nav button:hover,
-  .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:hover,
-  .lernwelt .lw-topic-list>button:hover,
-  .lernwelt .lw-past-exams button:hover,
-  .lernwelt .lw-compact-errors button:hover,
-  .lernwelt .lw-back:hover{
+  .lernwelt .lw-nav button:where(:not(:disabled)):hover,
+  .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:where(:not(:disabled)):hover,
+  .lernwelt .lw-topic-list>button:where(:not(:disabled)):hover,
+  .lernwelt .lw-past-exams button:where(:not(:disabled)):hover,
+  .lernwelt .lw-compact-errors button:where(:not(:disabled)):hover,
+  .lernwelt .lw-back:where(:not(:disabled)):hover{
     background:var(--bg-hover);color:var(--text)
   }
   .lernwelt :is(.lw-page-head>button,.lw-page-head>.lw-actions button,
     .lw-actions button,.lw-rating button,.lw-error-list footer button,
     .lw-exam-list footer button,.lw-exam-card>button,.lw-quick button,
-    .lw-study-actions button,.lw-subject-empty button,.lw-leer button):hover{
+    .lw-study-actions button,.lw-subject-empty button,.lw-leer button):where(:not(:disabled)):hover{
     border-color:var(--line-stark,var(--line));background:var(--bg-hover);color:var(--text)
   }
   .lernwelt :is(button.is-primary,.lw-actions button.is-primary,
-    .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
+    .lw-rating button.is-primary,.lw-study-actions button.is-primary):where(:not(:disabled)):hover{
     /* Der Hover-Verlauf nimmt --accent-hover und ist damit je Modus
        richtig herum (E199) — das alte brightness(1.08) war es im
        Hellmodus nicht. */
@@ -1124,23 +1129,23 @@
     .lw-continue-card,.lw-subject-grid>button):hover{
     border-color:var(--line-stark,var(--line));box-shadow:var(--shadow-2)
   }
-  .lernwelt .lw-path li>button:hover{
+  .lernwelt .lw-path li>button:where(:not(:disabled)):hover{
     z-index:1;border-color:var(--accent-text);box-shadow:var(--shadow-3);transform:translateY(-2px)
   }
-  .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
-  /* Die Tage des Verlaufs (E713) sind Knöpfe — und antworten jetzt auch
-     so: ein Hauch Fläche, die Zahl wird deutlich, der Balken halb so kräftig
-     wie gewählt. Der gewählte Tag behält seinen vollen Balken. */
+  .lernwelt .lw-path li.is-stable>button:where(:not(:disabled)):hover{border-color:var(--erfolg)}
   /* Zwei Knöpfe auf „Heute", die gar keine Hover-Regel hatten: das
      Tagesziel („Tagesziel ändern") und „Alle Dokumente" über dem
      Schreibtisch. Gefunden vom Zensus in test596 §1. Die Fläche des
      Tagesziels reicht mit einem Schatten über den Knopf hinaus, weil der
      Knopf selbst keinen Innenabstand hat. */
-  .lernwelt .lw-goal button:hover{background:var(--bg-hover);box-shadow:0 0 0 6px var(--bg-hover)}
-  .lernwelt .lw-goal button:hover small{color:var(--text)}
-  .lernwelt .lw-continue>header button:hover{
+  .lernwelt .lw-goal button:where(:not(:disabled)):hover{background:var(--bg-hover);box-shadow:0 0 0 6px var(--bg-hover)}
+  .lernwelt .lw-goal button:where(:not(:disabled)):hover small{color:var(--text)}
+  .lernwelt .lw-continue>header button:where(:not(:disabled)):hover{
     border-color:var(--line-stark,var(--line));background:var(--bg-hover);color:var(--text)
   }
+  /* Die Tage des Verlaufs (E713) sind Knöpfe — und antworten jetzt auch
+     so: ein Hauch Fläche, die Zahl wird deutlich, der Balken halb so kräftig
+     wie gewählt. Der gewählte Tag behält seinen vollen Balken. */
   .lernwelt .lw-verlauf-tag:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}
   .lernwelt .lw-verlauf-tag:hover .lw-verlauf-zahl{color:var(--text)}
   .lernwelt .lw-verlauf-tag:hover:not([aria-pressed="true"]) .lw-verlauf-saeule i::after{opacity:.45}

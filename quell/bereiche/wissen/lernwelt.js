@@ -885,6 +885,10 @@ const Lernwelt = (() => {
         if (!root || zustand.ansicht !== 'heute')
             return;
         const alt = root.querySelector('.lw-gemerkt');
+        const aktiv = document.activeElement;
+        const herzVorher = alt && aktiv instanceof HTMLElement && alt.contains(aktiv)
+            ? aktiv.closest('[data-lw-merk]') : null;
+        const platz = herzVorher ? [...alt.querySelectorAll('[data-lw-merk]')].indexOf(herzVorher) : -1;
         const html = gemerktStreifen(kennzahlKontext());
         if (alt) {
             if (html)
@@ -895,13 +899,25 @@ const Lernwelt = (() => {
         else if (html) {
             root.querySelector('.lw-today > .lw-hero')?.insertAdjacentHTML('afterend', html);
         }
+        if (!herzVorher)
+            return;
+        const id = herzVorher.dataset.lwMerk;
+        const imStreifen = [...root.querySelectorAll('.lw-gemerkt [data-lw-merk]')];
+        let ziel = imStreifen.find(k => k.dataset.lwMerk === id) ||
+            imStreifen[Math.min(platz, imStreifen.length - 1)] ||
+            [...root.querySelectorAll('[data-lw-merk]')].find(k => k.dataset.lwMerk === id) || null;
+        if (!ziel) {
+            ziel = root.querySelector('.lw-today > .lw-hero h2');
+            if (ziel && !ziel.hasAttribute('tabindex'))
+                ziel.setAttribute('tabindex', '-1');
+        }
+        ziel?.focus({ preventScroll: !!ziel.closest('.lw-gemerkt') });
     };
     const kennzahlMerken = (knopf, id) => {
         const eintrag = KENNZAHLEN[id];
         if (!eintrag || typeof Merkzeichen === 'undefined')
             return;
         const schluessel = metaSchluessel('kennzahlen');
-        const vorher = kennzahlenGemerkt();
         const an = knopf.getAttribute('aria-pressed') !== 'true';
         const stellen = () => [...(zustand.root?.querySelectorAll('[data-lw-merk]') || [])]
             .filter(k => k.dataset.lwMerk === id);
@@ -924,7 +940,10 @@ const Lernwelt = (() => {
         gemerktAuffrischen();
         schreiben.catch(() => {
             try {
-                Store.setMeta(schluessel, vorher);
+                Store.metaListeAendern(schluessel, (liste) => {
+                    const ohne = liste.filter(x => x !== id);
+                    return an ? ohne : [...ohne, id];
+                }).catch(() => { });
             }
             catch { }
             zeigen(!an);

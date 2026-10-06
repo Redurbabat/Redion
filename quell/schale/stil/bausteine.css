@@ -9815,27 +9815,27 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
    (gesehen an den KI-Werkzeugen, karte-ki/handy-auf.png). Am Telefon
    übernehmen der Tastenfokus und der Druck (`data-gedrueckt`, unten). */
 @media (hover:hover){
-  .ru-funkel:hover::before{
+  .ru-funkel:where(:not(:disabled)):hover::before{
     box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
                1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
   }
-  .ru-funkel:hover::after{
+  .ru-funkel:where(:not(:disabled)):hover::after{
     opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
   }
   /* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
      auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
-  .ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
+  .ru-funkel:where(:not(:disabled)):hover, .ai-quick button.ru-funkel:where(:not(:disabled)):hover, .lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):hover{
     border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
   }
   /* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
      einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
      Endlosschleife, die E528 gerade erst abgeschaltet hat. */
-  .ru-funkel:hover > svg, #ai .ai-quick button.ru-funkel:hover > svg{
+  .ru-funkel:where(:not(:disabled)):hover > svg, #ai .ai-quick button.ru-funkel:where(:not(:disabled)):hover > svg{
     stroke:#fff; animation:none;
     filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
   }
   /* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
-  .ru-funkel:hover .ru-funkel-b{
+  .ru-funkel:where(:not(:disabled)):hover .ru-funkel-b{
     animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
     animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
   }
@@ -9845,24 +9845,35 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   50%{ transform:scale(2); filter:blur(10px) brightness(150%)
        drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton) 100% 70%)) }
 }
+/* EIN GESPERRTER FUNKEL BLEIBT STILL (Durchsicht vom 6. Oktober,
+   test596 §9). Zeiger und Druck gelten nur für einen freigegebenen Knopf:
+   `:where(:not(:disabled))` vor jedem Zustand, ohne Gewicht, damit jede
+   Rangfolge bleibt, wie sie war. Vorher leuchtete „Trainieren · 0" unter
+   dem Zeiger auf und verwischte sein Wort — ein toter Knopf, der lebendig
+   tat. (Der Tastenfokus braucht das nicht: ein gesperrter Knopf bekommt
+   ihn gar nicht.) */
 /* DER DRUCK HAT ZWEI ZEICHEN: `:active` und `data-gedrueckt` (E720).
    press.ts (E702) hält `data-gedrueckt` mindestens 80 ms — weil das
    iPhone `:active` beim kurzen Tipp oft gar nicht malt. Der Funkel steht
    in OWN_PRESS (er sinkt nicht ein), also war ein kurzer Tipp auf ihm
    unsichtbar. Jetzt trägt der Zustand dasselbe Licht wie `:active`. */
-.ru-funkel:is(:active,[data-gedrueckt]), .ai-quick button.ru-funkel:is(:active,[data-gedrueckt]),
-.lernwelt button.is-primary.ru-funkel:is(:active,[data-gedrueckt]){
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]), .ai-quick button.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]),
+.lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]){
   border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+  /* Die Tönung liegt ÜBER dem Funkelgrund, nicht über der Karte: im
+     Hellen lag sie halbdurchsichtig auf Weiss, und das weisse Wort stand
+     mit 3 : 1 auf Mittelgrau (Durchsicht vom 6. Oktober, test596 §10b). */
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
 }
-.ru-funkel:is(:active,[data-gedrueckt])::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
 /* Beim Drücken war bisher gar nichts an der Aussenkante: auf einem Gerät
    ohne Zeiger blieb der Knopf beim Tippen unverändert. */
-.ru-funkel:is(:active,[data-gedrueckt])::before{
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::before{
   box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 80%) inset,
              1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001
 }
-.ru-funkel:is(:active,[data-gedrueckt]) .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]) .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
 
 /* DIE STILLEN FUNKEL (E720, Redur: „wie bein tagesrunde"). Fehlertraining,
    Neue Karten, Prüfungsfokus und Trainer sind derselbe Knopf wie die
@@ -9898,7 +9909,8 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 }
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:active,[data-gedrueckt]){
   border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
 }
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:focus-visible,:active,[data-gedrueckt])::before{
   opacity:1
@@ -9917,8 +9929,23 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   /* Der Druck mit der Maus kommt nach dem Zeigen und muss es übertönen. */
   .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover:is(:active,[data-gedrueckt]){
     border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-    background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+    background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+               var(--ru-funkel-farbe)
   }
+}
+
+/* IM STARKEN KONTRAST BLEIBT ES EINE LAUTE FLÄCHE (Durchsicht vom
+   6. Oktober, test596 §10a). Der Funkelgrund #101010 hat auf dem Schwarz
+   dieses Schemas 1,04 : 1, und die stillen Funkel sind seit E720 auch
+   Pillen — „Starten" war von „Lernen" kaum zu unterscheiden. Hier trägt
+   die Haupthandlung einen 2-px-Rand im Akzent: ein Zeichen, das nicht an
+   der Farbe allein hängt (Breite UND Kontrast), wie grund.css „Genau eine
+   je Bild" es will. Dieselbe Zeile für den Schalter „Hoher Kontrast". */
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel{
+  border-width:2px
+}
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel:not(:hover,:active,[data-gedrueckt]){
+  border-color:var(--accent)
 }
 
 /* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */

@@ -1293,12 +1293,34 @@ const Lernwelt = (() => {
     const root = zustand.root;
     if (!root || zustand.ansicht !== 'heute') return;
     const alt = root.querySelector('.lw-gemerkt');
+    /* DER FOKUS BLEIBT (§38, test595 §5b). Wer im Streifen mit der Tastatur
+       ein Herz löst, verlor ihn: der Streifen wird ersetzt oder entfernt,
+       und `document.activeElement` war danach <body>. Also merken, wo er
+       stand, und ihn danach wieder hinsetzen. */
+    const aktiv = document.activeElement;
+    const herzVorher = alt && aktiv instanceof HTMLElement && alt.contains(aktiv)
+      ? aktiv.closest<HTMLElement>('[data-lw-merk]') : null;
+    const platz = herzVorher ? [...alt!.querySelectorAll('[data-lw-merk]')].indexOf(herzVorher) : -1;
     const html = gemerktStreifen(kennzahlKontext());
     if (alt) {
       if (html) alt.outerHTML = html; else alt.remove();
     } else if (html) {
       root.querySelector('.lw-today > .lw-hero')?.insertAdjacentHTML('afterend', html);
     }
+    if (!herzVorher) return;
+    const id = herzVorher.dataset.lwMerk;
+    const imStreifen = [...root.querySelectorAll<HTMLElement>('.lw-gemerkt [data-lw-merk]')];
+    /* Dieselbe Kennzahl, wenn sie noch im Streifen steht; sonst das Herz, das
+       an ihren Platz gerückt ist (oder das letzte); sonst dieselbe Kennzahl
+       weiter unten in der Übersicht; sonst die Überschrift der Ansicht. */
+    let ziel: HTMLElement | null = imStreifen.find(k => k.dataset.lwMerk === id) ||
+      imStreifen[Math.min(platz, imStreifen.length - 1)] ||
+      [...root.querySelectorAll<HTMLElement>('[data-lw-merk]')].find(k => k.dataset.lwMerk === id) || null;
+    if (!ziel) {
+      ziel = root.querySelector<HTMLElement>('.lw-today > .lw-hero h2');
+      if (ziel && !ziel.hasAttribute('tabindex')) ziel.setAttribute('tabindex', '-1');
+    }
+    ziel?.focus({ preventScroll: !!ziel.closest('.lw-gemerkt') });
   };
 
   /** Ein Herz umschalten: sofort zeigen, dann schreiben; scheitert es, zurück. */
@@ -1306,7 +1328,6 @@ const Lernwelt = (() => {
     const eintrag = KENNZAHLEN[id];
     if (!eintrag || typeof Merkzeichen === 'undefined') return;
     const schluessel = metaSchluessel('kennzahlen');
-    const vorher = kennzahlenGemerkt();
     const an = knopf.getAttribute('aria-pressed') !== 'true';
     /* Alle Herzen derselben Kennzahl — dieselbe Zahl steht auf Heute im
        Streifen und in der Übersicht darunter. */
@@ -1328,8 +1349,16 @@ const Lernwelt = (() => {
     } catch (err) { schreiben = Promise.reject(err); }
     gemerktAuffrischen();
     schreiben.catch(() => {
-      /* Zurück auf den Stand davor — im Zwischenspeicher wie im Bild. */
-      try { Store.setMeta(schluessel, vorher); } catch { /* das Bild zählt zuerst */ }
+      /* Zurück — aber nur die EIGENE Änderung (§16, test595 §7b). Ein
+         Zurück auf den Stand vom Klick (`setMeta(…, vorher)`) hätte auch
+         gelöscht, was ein anderer Tab inzwischen gemerkt hat. Die
+         Umkehrung ist rein wie die Änderung selbst. */
+      try {
+        Store.metaListeAendern(schluessel, (liste: any[]) => {
+          const ohne = liste.filter(x => x !== id);
+          return an ? ohne : [...ohne, id];
+        }).catch(() => { /* das Bild zählt zuerst */ });
+      } catch { /* das Bild zählt zuerst */ }
       zeigen(!an);
       gemerktAuffrischen();
       UI.toast('Die Kennzahl „' + eintrag.name + '" konnte nicht gemerkt werden.');
