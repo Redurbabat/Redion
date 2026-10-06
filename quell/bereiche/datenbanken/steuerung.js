@@ -3901,11 +3901,8 @@ const Datenbank = (() => {
                 App.oeffne(row.id);
             }
             if (a === 'rename') {
-                const n = await UI.frage('Neuer Titel', row.text || '');
-                if (n !== null) {
-                    Store.updateBlock(row.id, { text: n });
+                if (await App.umbenennen(row, anker, 'Neuer Titel'))
                     App.zeichneSeite();
-                }
             }
             if (a === 'dup') {
                 const kopie = Store.addRow(coll.id, JSON.parse(JSON.stringify(row.props || {})));

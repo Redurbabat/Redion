@@ -115,6 +115,22 @@
 }
 #toast.show{transform:translateX(-50%) translateY(0); opacity:1}
 
+/* EINE HANDLUNG IN DER MELDUNG (E718). „„Skizzen" liegt im Papierkorb"
+   trägt „Rückgängig" — der einzige Teil von `#toast`, der nach dem Zeiger
+   greift. 44 px (§37), ein Rahmen, nicht nur Farbe (§38). Ausgeblendet
+   (ohne `.show`) ist er unsichtbar UND aus der Tab-Folge: eine
+   durchsichtige Meldung darf keinen Knopf haben, den man trifft, ohne ihn
+   zu sehen. */
+#toast:has(.toast-aktion){display:flex; align-items:center; gap:12px; padding:5px 5px 5px 16px}
+#toast .toast-aktion{
+  pointer-events:auto; flex:none; min-height:var(--touch-min); min-width:var(--touch-min);
+  padding:0 14px; border:1px solid var(--line); border-radius:6px;
+  background:var(--bg-hover); color:var(--text); font:inherit; font-weight:600; cursor:pointer;
+}
+#toast .toast-aktion:hover{border-color:var(--text)}
+#toast .toast-aktion:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+#toast:not(.show) .toast-aktion{visibility:hidden; pointer-events:none}
+
 /* AM TELEFON STEHT UNTEN EINE LEISTE, und was nur meldet, gehört nicht auf
    das, womit man arbeitet. Ein Toast bei bottom:22px legte sich mitten
    darauf — im Bildschirmfoto vom 6. August verdeckten Toast und

@@ -1991,6 +1991,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         inp.focus();
     };
     const verschiebe = (p, zielId, stillerHinweis = false) => {
+        if (zielId && (String(zielId) === String(p.id) || istUnter(String(zielId), String(p.id)))) {
+            UI.toast('Ein Ordner kann nicht in sich selbst liegen');
+            return false;
+        }
         const alt = Store.getBlock(p.parentId);
         if (alt) {
             alt.content = alt.content.filter((x) => x !== p.id);
@@ -2007,6 +2011,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         App.zeichneSeite();
         if (!stillerHinweis)
             UI.toast('Verschoben');
+        return true;
     };
     const wikiUmwandeln = (p) => {
         Store.updateBlock(p.id, { wiki: !p.wiki, icon: p.wiki ? (p.icon || '📄') : '📚' });

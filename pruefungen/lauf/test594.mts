@@ -136,7 +136,9 @@ const aufmachen = async (o: { handy?: boolean; dunkel?: boolean } = {}): Promise
 };
 
 const zurBibliothek = async (s: Page, ordner = ''): Promise<void> => {
-  await s.evaluate(`Store.setMeta('bibOrdner', ${JSON.stringify(ordner)}); Store.setMeta('bibBaumSichtbar', true); Bibliothek.oeffne()`);
+  /* Mit Ziel: `Bibliothek.oeffne()` ohne Angabe bliebe im Ordner, in den man
+     zuletzt hineinging (der Zustand lebt im Speicher, nicht nur im Merker). */
+  await s.evaluate(`Store.setMeta('bibOrdner', ${JSON.stringify(ordner)}); Store.setMeta('bibBaumSichtbar', true); Bibliothek.oeffne(${JSON.stringify(ordner)})`);
   await s.waitForSelector('.bib-gitter .bib-deckel', { timeout: 20000 });
   await s.evaluate(`(() => { const d = document.querySelector('details.bib-ablage-baum'); if (d) d.open = true; })()`);
   await s.waitForTimeout(400);
@@ -186,7 +188,7 @@ const UEBERALL = (id: string) => `(() => {
     karte: karte ? (karte.querySelector('.bib-deckel-name b')?.textContent || '') : null,
     karteFarbe: karte ? karte.getAttribute('data-farbe') : 'KEINE KARTE',
     karteSymbol: karte ? (karte.querySelector('.bib-deckel-symbol')?.textContent || '') : null,
-    knoten: knoten ? (knoten.textContent || '').trim() : null,
+    knoten: knoten ? (knoten.querySelector('.ru-baum-name')?.textContent || '').trim() : null,
     knotenFarbe: knoten ? knoten.getAttribute('data-farbe') : 'KEIN KNOTEN',
     knotenSymbol: knoten ? (knoten.querySelector('.ru-baum-zeichen')?.textContent || '') : null,
     zeile: zeile ? (zeile.querySelector('.nm')?.textContent || '').trim() : null,
@@ -288,6 +290,9 @@ p('Notizhefte, Fach: „   " → dieselbe Meldung', /mindestens ein Zeichen/.tes
 if (await frageOffen(s)) { await s.keyboard.press('Escape'); await s.waitForTimeout(400); }
 gleich('… und das Fach behält seinen Namen', await s.evaluate(`Store.getBlock('${a.fach}').text`), 'Elektrotechnik');
 await s.evaluate(`window.__frage594 = UI.frage; UI.frage = async () => '  Strom\\u0000kunde '`);
+/* Das Heft liegt im Fach: erst hinein, dann sein ⋯. */
+await s.evaluate(`Store.setMeta('heft:fach', '${a.fach}'); Notebook.oeffnen()`);
+await s.waitForSelector(`[data-mehr="${a.heft}"]`, { timeout: 8000 }).catch(() => {});
 await s.evaluate(`document.querySelector('[data-mehr="${a.heft}"]')?.click()`);
 await s.waitForTimeout(250);
 await s.evaluate(`[...document.querySelectorAll('.menu button[data-k]')].find(x => x.getAttribute('data-k') === 'name')?.click()`);
@@ -330,7 +335,7 @@ gleich('Hell: Karte, Ablagebaum und Seitenleiste tragen „red" — ohne weitere
 
 /* ── §8 ─────────────────────────────────────────────────────────────── */
 console.log('\n§8 Farbe und Name aus den Notizheften → die Seitenleiste sofort');
-await s.evaluate('Notebook.oeffnen()');
+await s.evaluate(`Store.setMeta('heft:fach', ''); Notebook.oeffnen()`);
 await s.waitForSelector('.nh-regal', { timeout: 20000 });
 await s.waitForTimeout(400);
 await s.evaluate(`document.querySelector('[data-mehr-fach="${a.fach}"]')?.click()`);

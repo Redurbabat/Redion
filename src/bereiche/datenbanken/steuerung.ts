@@ -4548,9 +4548,12 @@ const Datenbank = (() => {
       if (a === 'komm') Kommentare.panel(row.id);
       if (a === 'eigen') { zeilePeek(row, coll); }
       if (a === 'voll') { danach && danach(); App.oeffne(row.id); }
+      /* EIN Umbenennen (E718): leer, Steuerzeichen und ein gleicher Titel
+         in derselben Datenbank werden so behandelt wie überall. Die
+         Ansicht zeichnet danach sich selbst — eine Zeile hängt an der
+         Sammlung, nicht an der offenen Seite. */
       if (a === 'rename') {
-        const n = await UI.frage('Neuer Titel', row.text || '');
-        if (n !== null) { Store.updateBlock(row.id, { text: n }); App.zeichneSeite(); }
+        if (await App.umbenennen(row, anker, 'Neuer Titel')) App.zeichneSeite();
       }
       if (a === 'dup') {
         const kopie = Store.addRow(coll.id, JSON.parse(JSON.stringify(row.props || {})));
