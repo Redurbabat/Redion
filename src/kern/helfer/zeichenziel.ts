@@ -39,7 +39,9 @@
  *     setzeFarbe / setzeStrich       dasselbe für Farbe und Strichstärke
  *     jetztFarbe / jetztDicke        was dort gewählt ist
  *     farbeVon / dickeVon            was an einer bestimmten Fläche
- *     horche(fn) / vergiss(fn) wenn sich Fläche oder Werkzeug ändern
+ *     horche(fn) / vergiss(fn) wenn sich Fläche oder Werkzeug ändern —
+ *                              einmal am Ende des Durchgangs, nicht je
+ *                              Aufruf (E717)
  *
  * Wer weg ist, wird beim nächsten Nachfragen von selbst entfernt: jede
  * Fläche kennt ihr Element, und ein Element weiss über `isConnected`, ob es
@@ -124,8 +126,43 @@ const Zeichenziel = (() => {
   let zuletzt = -1;
 
   const horcher: Array<() => void> = [];
+
+  /**
+   * EINE MELDUNG JE DURCHGANG, NICHT JE AUFRUF (E717).
+   *
+   * Hier rief `melden()` jeden Horcher SOFORT. Beim Umschalten in die
+   * Seitenansicht meldet sich jede PDF-Seite einzeln an (dazu Farbe und
+   * Stärke), und jede Meldung baute das Menüband neu — samt
+   * `scrollIntoView`, also einem vollen Layout der Seite, die gerade Seite
+   * um Seite wächst. Gemessen am 5. Oktober (`test593` §1): 83 Neubauten
+   * bei 40 PDF-Seiten, 163 bei 80, und die Dauer quadratisch — 52 s für
+   * Redurs 134 Seiten am Telefon („bleibt es für ca 30-40 sekunden stiel").
+   *
+   * Jetzt merkt sich `melden()` nur, DASS sich etwas geändert hat, und die
+   * Horcher hören es einmal, am Ende des laufenden Durchgangs
+   * (`queueMicrotask` — vor dem nächsten Bild, vor dem nächsten Tipp). Wer
+   * nachfragt, bekommt den Stand sofort; nur das Rufen wandert ans Ende.
+   *
+   * Über eine Kopie der Liste: ein Horcher, der sich beim Rufen selbst
+   * austrägt (`markiere` einer Leiste, die nicht mehr hängt), liess in der
+   * alten Schleife seinen Nachbarn aus — `splice` mitten im `for … of`.
+   */
+  let geplant = false;
+  const imBau = new Set<Eintrag>();
+  const ausrufen = (): void => {
+    geplant = false;
+    /* Der Durchgang ist zu Ende: wer jetzt hängt, ist gesehen; wer immer
+       noch lose ist, war es den ganzen Durchgang — für den gilt ab hier
+       wieder die alte Regel unten. */
+    for (const e of imBau) if (lebt(e)) e.gesehen = true;
+    imBau.clear();
+    for (const h of horcher.slice()) { try { h(); } catch { /* ein Horcher reisst nicht alles mit */ } }
+  };
   const melden = (): void => {
-    for (const h of horcher) { try { h(); } catch { /* ein Horcher reisst nicht alles mit */ } }
+    if (geplant) return;
+    geplant = true;
+    if (typeof queueMicrotask === 'function') queueMicrotask(ausrufen);
+    else void Promise.resolve().then(ausrufen);
   };
 
   const finde = (steuerung: Steuerung): number =>
@@ -162,6 +199,19 @@ const Zeichenziel = (() => {
    *   nicht die letzte   nur die zuletzt gemeldete kann mitten im Aufbau
    *                  stecken; alle davor sind es sicher nicht
    *
+   * UND EIN VIERTES, DAS VOR DEN DREIEN GILT (E717): `imBau`. Eine
+   * Fläche, die IM LAUFENDEN DURCHGANG gemeldet wurde, wird nie weggeräumt.
+   * Die drei Merkmale oben wurden nämlich mitten im Aufbau gefragt — in der
+   * eigenen Meldung der Anmeldung, die das Menüband sofort neu zeichnen
+   * liess. Beim zweiten Blatt einer Seite hing das erste schon
+   * (`jemandLebt`), das zweite war noch lose und nicht mehr das letzte
+   * gesehene — also „alt", also weg. Jede Fläche nach der ersten. Gemessen
+   * am 5. Oktober: drei Blätter, `anzahl()` 1; 134 PDF-Seiten, `anzahl()`
+   * 1. Das Menüband „Zeichnen" und die Werkzeugtasten wirkten auf Blatt 1,
+   * egal welches man anfasste (`test247` §11, `test593` §3/§4). Am Ende des
+   * Durchgangs (`ausrufen`) leert sich `imBau`; wer DANN noch lose ist, war
+   * es den ganzen Durchgang, und für den gelten die drei wieder.
+   *
    * Der erste allein reichte NICHT, und das kostete einen falschen grünen
    * Punkt. `gesehen` wird nur gesetzt, wenn jemand nachfragt, solange die
    * Fläche hängt. Beim Wechsel von Seite zu Seite fragt niemand: das
@@ -187,6 +237,7 @@ const Zeichenziel = (() => {
         const e = flaechen[i] as Eintrag;
         if (!e.steuerung.flaeche) continue;     /* ohne Element nicht prüfbar */
         if (lebt(e)) continue;
+        if (imBau.has(e)) continue;               /* mitten im Aufbau (E717) */
         if (!e.gesehen && !jemandLebt && e === letzte) continue;
         flaechen.splice(i, 1); weg++;
       }
@@ -209,9 +260,11 @@ const Zeichenziel = (() => {
     if (!steuerung || typeof steuerung.setzeWerkzeug !== 'function') return;
     aufraeumen();
     if (finde(steuerung) >= 0) return;
-    flaechen.push({ steuerung, name: String(name), werkzeug: 'schreiben',
-                    farbe: '', dicke: 0,
-                    gesehen: steuerung.flaeche?.isConnected === true });
+    const eintrag: Eintrag = { steuerung, name: String(name), werkzeug: 'schreiben',
+                               farbe: '', dicke: 0,
+                               gesehen: steuerung.flaeche?.isConnected === true };
+    flaechen.push(eintrag);
+    imBau.add(eintrag);
     /* Eine neue Fläche wird die gemeinte, wenn keine mehr da ist. Ohne das
        zeigte der Zeiger nach einem Seitenwechsel ins Leere, obwohl gerade
        ein frisches Blatt vor einem liegt. */
@@ -238,6 +291,7 @@ const Zeichenziel = (() => {
   const abmelden = (steuerung: Steuerung): void => {
     const i = finde(steuerung);
     if (i < 0) return;
+    imBau.delete(flaechen[i] as Eintrag);
     flaechen.splice(i, 1);
     if (flaechen.length === 0) zuletzt = -1;
     else if (zuletzt >= flaechen.length) zuletzt = flaechen.length - 1;
@@ -249,6 +303,7 @@ const Zeichenziel = (() => {
   const leeren = (): void => {
     if (!flaechen.length) return;
     flaechen.length = 0;
+    imBau.clear();
     zuletzt = -1;
     melden();
   };

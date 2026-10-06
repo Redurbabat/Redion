@@ -984,6 +984,20 @@ const App = (() => {
     }
   };
 
+  /* DIE LESESTELLE BLEIBT, WENN DIESELBE SEITE NEU GEZEICHNET WIRD (E717).
+     Gemessen am 5. Oktober auf `1bfaca53`, Seitenansicht mit 40 PDF-Seiten:
+     zu Seite 20 gerollt (`scrollTop` 22 124), `App.zeichneSeite()` — und
+     `scrollTop` war 0. Das Leeren von `#page` lässt die Rolle beim nächsten
+     Layout auf null schnappen, und gelesen wird hier früh (Kopf, Umschalter).
+     Auf einer Textseite fiel das kaum auf, weil der Fokus danach in den
+     neuen Block springt und ihn ins Bild holt. Auf einer PDF-Seite gibt es
+     keinen Text zum Fokussieren: wer auf Seite 60 „✂ Lernkarte" oder
+     „＋ Seite" drückte, stand danach auf Seite 1 — auch das ist „kann dort
+     nicht mehr bearbeiten oder ändern". Gemerkt wird nur für DIESELBE Seite
+     in DERSELBEN Ansicht; ein Wechsel (andere Seite, Dokumentmodus, Fläche)
+     beginnt wie bisher. */
+  let gezeichnetAls = '';
+
   const zeichneSeite = (fokus: string | null = null, wo = 'anfang') => {
     const wrap = document.getElementById('page');
     if (!wrap) return;
@@ -1030,6 +1044,10 @@ const App = (() => {
        `seitenAnsicht`; kein Feld heisst 'redion' — also genau das, was diese
        Seite immer gezeigt hat (§9). */
     const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+    const rolle = document.getElementById('scroll');
+    const als = p.id + '|' + ansicht + '|' + (DocumentMode.active(p) ? 'dokument' : 'seite');
+    const lesestelle = als === gezeichnetAls && rolle ? rolle.scrollTop : 0;
+    gezeichnetAls = als;
     wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
                      (ansicht === 'flaeche' ? ' flaeche-page' : '');
     document.body.dataset.font = p.font || 'default';
@@ -1097,6 +1115,8 @@ const App = (() => {
 
     zeichneCrumbs();
     streifenZeichnen();
+
+    if (lesestelle > 0 && rolle && !DocumentMode.active(p)) rolle.scrollTop = lesestelle;
 
     /* Fokus setzen */
     if (fokus) {

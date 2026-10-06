@@ -41,11 +41,13 @@
  *   §4 Wer Seite K anfasst und im Menüband „Zeichnen" den Marker wählt, trifft
  *      Seite K und nur sie. Die Werkzeugtaste trifft sie auch.
  *   §5 Ein Neuzeichnen nach einer Änderung baut das Band auch höchstens
- *      zweimal neu, und die Seite, auf der man steht, ist im selben Durchgang
- *      wieder gezeichnet — kein Platzhalter blitzt an der Lesestelle auf.
+ *      zweimal neu, die Lesestelle bleibt, und die Seite, auf der man steht,
+ *      ist im selben Durchgang wieder gezeichnet — kein Platzhalter blitzt
+ *      an der Lesestelle auf.
  *   §6 Ein Platzhalter ist mit der Tastatur erreichbar (`tabindex`, Name
- *      „Seite N"); der Fokus zeichnet ihn, und seine Werkzeuge sind danach
- *      mit Tab erreichbar und 44 px gross (§37, §38).
+ *      „Seite N"); der Fokus zeichnet ihn, steht danach in seiner Leiste,
+ *      und die Pfeiltasten führen darin weiter (`role="toolbar"`, E621) —
+ *      44 px gross (§37, §38).
  *   §7 Fehler werden gemeldet: wirft der Zeichner EINER Seite, zeichnen die
  *      anderen weiter, die Seite zeigt den Satz und „Neu zeichnen", eine
  *      Meldung nennt sie, und es bleibt keine Ausnahme liegen. Der Knopf
@@ -55,6 +57,11 @@
  *   §8 §1–§4 noch einmal am Telefon (390 × 844, Finger) — und dort steht
  *      kein „✕" mehr, das wie Schliessen aussieht, sondern das Seitenzeichen,
  *      und der Name sagt „Seiteneditor".
+ *   §9 Der Kern selbst: eine Fläche, die im laufenden Durchgang lose gemeldet
+ *      wurde, überlebt jede Nachfrage darin (`anzahl`, `aktive`, `jetzt`,
+ *      `da`) und ist danach weg, wenn sie nie eingehängt wurde.
+ *  §10 Der Seiteneditor öffnet an der Seite, die im Dokument offen war —
+ *      oben im Fenster und gezeichnet (Vorgabe zu Redurs Frage 2).
  *
  *   node pruefungen/lauf/test593.mts
  * ==========================================================================*/
@@ -286,11 +293,21 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
     await a.pc.waitForTimeout(600);
     const sz = await stand(a.pc);
     p('Nach App.zeichneSeite(): anzahl() = gezeichnete Flächen', sz.anzahl === sz.gezeichnet, `${sz.anzahl} gemeldet, ${sz.gezeichnet} gezeichnet`);
+    /* DIESELBE SEITE NEU GEZEICHNET — UND MAN STEHT NOCH DORT. Auf dem
+       alten Stand sprang die Rolle hier auf 0: wer auf Seite 20 etwas
+       auslöste, das neu zeichnet (✂ Lernkarte, ＋ Seite), stand danach auf
+       Seite 1. */
+    p('… und die Lesestelle bleibt bei Seite 20 (±4 px)', s20.oben > 5000 && Math.abs(sz.oben - s20.oben) <= 4, `vorher ${s20.oben}, nachher ${sz.oben}`);
 
     console.log('\n4 · Das Menüband „Zeichnen" wirkt auf die angefasste Seite');
     await markerAufK(a.pc, 20, false);
 
     console.log('\n5 · Ein Neuzeichnen nach einer Änderung bleibt billig und an Ort und Stelle');
+    /* Erst wieder zu Seite 20: §4 hat das Band aufgeklappt und getippt. Und
+       sie muss es auch WIRKLICH sein, sonst prüft „die Lesestelle bleibt"
+       eine Rolle, die ohnehin oben steht — so war dieser Punkt im ersten
+       Anlauf grün, auf dem alten Stand wie auf dem neuen. */
+    await zuSeite(a.pc, 20);
     await zaehlerAn(a.pc);
     const nachAenderung = await a.pc.evaluate(`(async () => {
       const r = document.getElementById('scroll');
@@ -303,6 +320,7 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
       const b20 = document.querySelectorAll('#page .blk.b-pdfseite[data-bid]')[19];
       return { vorher, nachher: r.scrollTop, seite20: !!b20?.querySelector('svg[data-tool]') };
     })()`) as { vorher: number; nachher: number; seite20: boolean };
+    p('(Vorbedingung: vor der Änderung steht die Rolle wirklich bei Seite 20)', nachAenderung.vorher > 5000, JSON.stringify(nachAenderung));
     await a.pc.waitForTimeout(500);
     const z5 = await a.pc.evaluate('window.__z') as { band: number; ziel: number };
     p('Einfügen + Neuzeichnen: höchstens 2 Neubauten des Menübands', z5.band <= 2, `${z5.band} Neubauten, ${z5.ziel} Meldungen`);
@@ -328,7 +346,10 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
                  inLeiste: !!a && !!a.closest('.blatt-werk') && blk.contains(a) };
       })()`) as { gezeichnet: boolean; wartet: boolean; inLeiste: boolean };
       p('Der Fokus zeichnet ihn, und der Fokus steht danach in seiner Leiste', fokus.gezeichnet && !fokus.wartet && fokus.inLeiste, JSON.stringify(fokus));
-      await a.pc.keyboard.press('Tab');
+      /* In der Leiste führen die PFEILTASTEN weiter, nicht Tab: sie ist eine
+         `role="toolbar"` mit EINEM Tabstopp (E621). Der erste Entwurf
+         drückte Tab und landete — richtig — hinter der Leiste. */
+      await a.pc.keyboard.press('ArrowRight');
       await a.pc.waitForTimeout(120);
       const weiter = await a.pc.evaluate(`(() => {
         const blk = document.querySelector('#page .blk[data-bid="${platz.bid}"]');
@@ -338,7 +359,7 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
         const nach = parseFloat(getComputedStyle(a, '::after').height) || 0;
         return { drin: true, hoch: Math.round(Math.max(r.height, nach)), breit: Math.round(r.width), name: a.getAttribute('aria-label') || a.title || a.textContent.trim() };
       })()`) as { drin: boolean; hoch?: number; name?: string };
-      p('Tab führt zum nächsten Werkzeug derselben Seite, 44 px hoch (§37)', weiter.drin && (weiter.hoch ?? 0) >= 44 && !!weiter.name, JSON.stringify(weiter));
+      p('Pfeil → führt zum nächsten Werkzeug derselben Seite, 44 px hoch (§37)', weiter.drin && (weiter.hoch ?? 0) >= 44 && !!weiter.name, JSON.stringify(weiter));
     }
 
     console.log('\n7 · Fehler werden gemeldet, nicht verschluckt');
@@ -403,6 +424,53 @@ const markerAufK = async (pc: Page, k: number, handy: boolean): Promise<void> =>
     p('Wirft der Aufbau der Seitenansicht, bleibt das Dokument offen', voll.dok === 'an' && voll.knopf, JSON.stringify(voll));
     p('… und eine Meldung nennt den Seiteneditor', voll.meldungen.some(m => /Seiteneditor/.test(m)), JSON.stringify(voll.meldungen));
     p('… und keine Ausnahme bleibt im Browser liegen', fehler.length === vorFehler, fehler.slice(vorFehler).join(' · '));
+
+    /* §9 DER KERN SELBST: EINE FLÄCHE IM BAU ÜBERLEBT JEDE NACHFRAGE IM
+       SELBEN DURCHGANG. Die Ursache war eine Aufräumregel, die mitten im
+       Aufbau gefragt wurde — vom Menüband, das die Meldung sofort hörte.
+       §1–§4 halten das über den echten Weg; dieser Punkt hält die Zusage
+       des Kerns, auch wenn jemand anderes mitten im Durchgang nachfragt:
+       eine lose gemeldete Fläche zählt, bis der Durchgang zu Ende ist, und
+       ist danach weg, wenn sie dann immer noch lose ist. */
+    console.log('\n9 · Der Kern: eine Fläche im Bau überlebt den eigenen Durchgang');
+    const kern = await a.pc.evaluate(`(async () => {
+      const lebend = Zeichenziel.anzahl();
+      const lose = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      Zeichenziel.melde({ flaeche: lose, setzeWerkzeug() {} }, 'Probe');
+      const mitten = Zeichenziel.anzahl();
+      Zeichenziel.aktive(); Zeichenziel.jetzt(); Zeichenziel.da();
+      const nachFragen = Zeichenziel.anzahl();
+      await new Promise(f => setTimeout(f, 0));
+      return { lebend, mitten, nachFragen, danach: Zeichenziel.anzahl() };
+    })()`) as { lebend: number; mitten: number; nachFragen: number; danach: number };
+    p('Mitten im Durchgang zählt die lose Fläche mit — auch nach aktive()/jetzt()/da()',
+      kern.lebend >= 1 && kern.mitten === kern.lebend + 1 && kern.nachFragen === kern.lebend + 1, JSON.stringify(kern));
+    p('… und nach dem Durchgang ist sie weg, weil sie nie eingehängt wurde', kern.danach === kern.lebend, JSON.stringify(kern));
+
+    /* §10 DER SEITENEDITOR ÖFFNET, WO MAN LIEST (Vorgabe zu Redurs Frage 2).
+       Bisher öffnete er immer oben: wer im Dokument Seite 25 las, musste
+       danach 24 Seiten zurückrollen. Jetzt steht Seite 25 oben im Fenster,
+       gezeichnet. */
+    console.log('\n10 · Der Seiteneditor öffnet an der Seite, die man im Dokument liest');
+    await a.pc.evaluate(`(() => {
+      const s = Store.getBlock('${id40}');
+      const ziel = DocumentMode.documentsIn(s)[24];
+      DocumentMode.select(s, ziel.id);
+      App.zeichneSeite();
+    })()`);
+    await a.pc.waitForTimeout(900);
+    await a.pc.click('[data-document-action="exit"]');
+    await a.pc.waitForFunction(`!document.body.dataset.dokument`, null, { timeout: 30000 });
+    await a.pc.waitForTimeout(500);
+    const lage = await a.pc.evaluate(`(() => {
+      const r = document.getElementById('scroll');
+      const b = document.querySelectorAll('#page .blk.b-pdfseite[data-bid]')[24];
+      return { abstand: Math.round(b.getBoundingClientRect().top - r.getBoundingClientRect().top),
+               oben: r.scrollTop, gezeichnet: !!b.querySelector('svg[data-tool]'),
+               nr: b.querySelector('.pdfs-nr')?.textContent || '' };
+    })()`) as { abstand: number; oben: number; gezeichnet: boolean; nr: string };
+    p('Seite 25 steht oben im Fenster (0 … 40 px unter dem Rand)', lage.abstand >= -4 && lage.abstand <= 40, JSON.stringify(lage));
+    p('… und sie ist gezeichnet, mit ihrer Nummer', lage.gezeichnet && /Seite 25 von 40/.test(lage.nr), JSON.stringify(lage));
   } catch (e) { p('§1–§7 laufen bis zum Ende durch', false, String(e).split('\n')[0]); }
   await a.zu();
 }

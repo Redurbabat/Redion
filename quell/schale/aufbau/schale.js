@@ -819,6 +819,7 @@ const App = (() => {
             kiPanel(true);
         }
     };
+    let gezeichnetAls = '';
     const zeichneSeite = (fokus = null, wo = 'anfang') => {
         const wrap = document.getElementById('page');
         if (!wrap)
@@ -842,6 +843,10 @@ const App = (() => {
             return;
         }
         const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+        const rolle = document.getElementById('scroll');
+        const als = p.id + '|' + ansicht + '|' + (DocumentMode.active(p) ? 'dokument' : 'seite');
+        const lesestelle = als === gezeichnetAls && rolle ? rolle.scrollTop : 0;
+        gezeichnetAls = als;
         wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
             (ansicht === 'flaeche' ? ' flaeche-page' : '');
         document.body.dataset.font = p.font || 'default';
@@ -877,6 +882,8 @@ const App = (() => {
         }
         zeichneCrumbs();
         streifenZeichnen();
+        if (lesestelle > 0 && rolle && !DocumentMode.active(p))
+            rolle.scrollTop = lesestelle;
         if (fokus) {
             const ct = document.querySelector(`[data-bid="${fokus}"] .ct`);
             if (ct instanceof HTMLElement) {

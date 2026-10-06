@@ -19672,6 +19672,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    warten nicht auf ein Bild), nur der Knopf selbst fängt den Zeiger. */
 .pdfs-wartet{z-index:3; pointer-events:none}
 .pdfs-wartet button{pointer-events:auto}
+/* DER PLATZ EINER NOCH NICHT GEZEICHNETEN SEITE (E717). Die Seitenansicht
+   zeichnet wie der Dokumentmodus nur, was in der Nähe ist (E299). Bis dahin
+   steht hier dieselbe Hülle: eine leere Leiste in der Höhe der echten —
+   gemessen an einer gezeichneten Hülle (`--platz-oben`), nicht geschätzt —
+   und das Papier im Seitenverhältnis der Seite. So lügt der Rollbalken
+   nicht (E399), und nichts springt, wenn die Seite kommt. */
+.blatt-platz-leiste{height:var(--platz-oben, 46px)}
+.blatt-platz{padding-bottom:var(--platz-unten, 0px)}
 /* Ein Blatt auf einer Folie (E109). Die HÖHE ist der begrenzende Wert —
    eine Folie ist breit und flach, ein Blatt hoch und schmal. `45vh` Breite
    ergibt bei A4 rund 64vh Höhe; zwei davon stehen nebeneinander bequem. */
@@ -24657,6 +24665,9 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
 .document-studio .document-topbar{padding:8px 12px;gap:12px;min-height:52px;background:var(--bg-card);flex-shrink:0}
 .document-navigation,.document-top-actions,.document-pagination,.document-zoom-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .document-studio .document-topbar button{background:transparent;border-color:transparent;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px}
+/* „Seiteneditor" (E717): am Rechner das Wort, das Seitenzeichen nur am Telefon (unten). Während der Wechsel läuft, sagt der Knopf es — `aria-busy` für das Vorlesen, blasser und der Wartezeiger für das Auge, ohne Bewegung. */
+.document-topbar [data-document-action="exit"] .dz-zeichen{display:none}
+.document-topbar [data-document-action="exit"][aria-busy="true"]{opacity:.7;cursor:progress}
 .document-studio .document-topbar button:hover{background:var(--bg-hover);color:var(--text)}
 .document-studio .document-topbar button[aria-expanded="true"]{color:var(--accent-text);background:var(--accent-schwach)}
 .document-studio .document-title{text-align:center;font-size:13px;padding-inline:6px}
@@ -24708,7 +24719,8 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
   .document-studio .document-topbar [data-document-action="exit"]{font-size:0}
   .document-studio .document-topbar [data-document-action="thumbnails"]::before{content:'▤';font-size:19px}
   .document-studio .document-topbar [data-document-action="inspector"]::before{content:'ⓘ';font-size:19px}
-  .document-studio .document-topbar [data-document-action="exit"]::before{content:'✕';font-size:18px}
+  .document-studio .document-topbar [data-document-action="exit"] .dz-zeichen{display:inline-flex;width:20px;height:20px}
+  .document-studio .document-topbar [data-document-action="exit"] .dz-zeichen svg{display:block;width:100%;height:100%}
   .document-studio .document-topbar .document-view-button{display:block;font-size:20px}
   .document-commandbar{display:none;position:absolute;top:56px;left:8px;right:8px;z-index:98;flex-wrap:wrap;padding:8px;gap:6px;border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--studio-elevation)}
   .document-studio[data-document-view="open"] .document-commandbar{display:flex}
@@ -26898,7 +26910,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1415, inhalt: '488d5e7371f1a9da', gebaut: '2026-10-05T23:41:46.265Z' };
+const Stand = { fassung: 1427, inhalt: 'c43aed86c3ceb7ff', gebaut: '2026-10-06T00:42:23.682Z' };
 window.Stand = Stand;
 
 </script>
@@ -77066,6 +77078,51 @@ const DocumentMode = (() => {
         Store.updateBlock(page.id, { dokumentModus: next ?? !page.dokumentModus });
         App.zeichneSeite();
     };
+    const seiteneditorOeffnen = (page, knopf, zielId, zielNr) => {
+        if (!page?.id)
+            return;
+        if (knopf?.getAttribute('aria-busy') === 'true')
+            return;
+        knopf?.setAttribute('aria-busy', 'true');
+        let lief = false;
+        const weiter = () => {
+            if (lief)
+                return;
+            lief = true;
+            try {
+                toggle(page, false);
+            }
+            catch (fehler) {
+                console.error('[E717] Der Seiteneditor liess sich nicht öffnen', fehler);
+                const grund = fehler instanceof Error ? fehler.message : String(fehler);
+                try {
+                    Store.updateBlock(page.id, { dokumentModus: true });
+                    App.zeichneSeite();
+                }
+                catch (zweiter) {
+                    console.error('[E717] Zurück ins Dokument ging auch nicht', zweiter);
+                }
+                UI.toast('Der Seiteneditor liess sich nicht öffnen: ' + grund, 8000);
+                return;
+            }
+            finally {
+                if (knopf?.isConnected)
+                    knopf.removeAttribute('aria-busy');
+            }
+            if (zielNr <= 0 || !zielId)
+                return;
+            const rolle = document.getElementById('scroll');
+            const ziel = document.querySelector('#page .blk[data-bid="' + (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(zielId) : zielId) + '"]');
+            if (rolle && ziel)
+                rolle.scrollTop += ziel.getBoundingClientRect().top - rolle.getBoundingClientRect().top - 8;
+        };
+        if (document.hidden || typeof requestAnimationFrame !== 'function') {
+            setTimeout(weiter, 0);
+            return;
+        }
+        requestAnimationFrame(() => { setTimeout(weiter, 0); });
+        setTimeout(weiter, 250);
+    };
     const sourceLabel = (documentBlock) => {
         if (documentBlock.type === 'pdfseite')
             return documentBlock.herkunft === 'bild'
@@ -77958,7 +78015,13 @@ const DocumentMode = (() => {
         folienKnopf.setAttribute('aria-haspopup', 'menu');
         folienKnopf.setAttribute('aria-expanded', 'false');
         folienKnopf.hidden = !istFoliensatz(page);
-        topActions.append(findButton, viewButton, inspectorButton, folienKnopf, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        const exitKnopf = topButton('exit', 'Seiteneditor', 'Seiteneditor — Dokumentmodus verlassen');
+        const exitZeichen = document.createElement('span');
+        exitZeichen.className = 'dz-zeichen';
+        exitZeichen.dataset.sym = 'page';
+        exitZeichen.setAttribute('aria-hidden', 'true');
+        exitKnopf.prepend(exitZeichen);
+        topActions.append(findButton, viewButton, inspectorButton, folienKnopf, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), exitKnopf);
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
@@ -79919,8 +79982,10 @@ const DocumentMode = (() => {
                     UI.toast('Das Regal ist gerade nicht erreichbar.');
                 return;
             }
-            if (action === 'exit')
-                toggle(page, false);
+            if (action === 'exit') {
+                seiteneditorOeffnen(page, tatKnopf, String(documents[state.index]?.id || ''), state.index);
+                return;
+            }
             if (action === 'source-actions')
                 openSourceActions(page, jetzt());
             if ((action === 'select-region' || action === 'recognize') && state.lupe) {
@@ -82983,6 +83048,232 @@ const Blocks = (() => {
         zeitmarkenSpieler = new Audio(adresse);
         spiele(zeitmarkenSpieler);
     };
+    const Nahzeichnen = (() => {
+        const SOFORT = 3;
+        let imDurchgang = 0;
+        let geplant = false;
+        let offen = [];
+        const nahe = new Set();
+        const plaetze = new WeakMap();
+        const beobachtet = new Set();
+        let beobachter = null;
+        const letzte = { pdf: null, blatt: null };
+        const gemessen = { pdf: false, blatt: false };
+        const istPdf = (block) => block?.type === 'pdfseite';
+        const nameVon = (block) => {
+            if (istPdf(block))
+                return 'Seite ' + (Number(block.nr) || 1);
+            const eigen = String(block?.text || '').trim();
+            return eigen ? eigen.slice(0, 60) : 'A4-Blatt';
+        };
+        const wurzel = () => document.getElementById('scroll');
+        const beobachten = (el) => {
+            const r = wurzel();
+            if (!r || typeof IntersectionObserver === 'undefined')
+                return;
+            if (!beobachter) {
+                beobachter = new IntersectionObserver(eintraege => {
+                    for (const e of eintraege) {
+                        const el2 = e.target;
+                        const bid = el2.dataset['nahBid'] || '';
+                        if (!el2.isConnected) {
+                            beobachter?.unobserve(el2);
+                            beobachtet.delete(el2);
+                            continue;
+                        }
+                        if (e.isIntersecting)
+                            nahe.add(bid);
+                        else
+                            nahe.delete(bid);
+                        if (e.isIntersecting && el2.dataset['nah'] === 'wartet')
+                            jetzt(el2, 'still');
+                    }
+                }, { root: r, rootMargin: '100% 0px' });
+            }
+            beobachter.observe(el);
+            beobachtet.add(el);
+        };
+        const sicher = (block, zeichne) => {
+            try {
+                const el = zeichne();
+                el.dataset['nahBid'] = String(block.id);
+                return el;
+            }
+            catch (fehler) {
+                const grund = fehler instanceof Error ? fehler.message : String(fehler);
+                console.error('[E717] ' + nameVon(block) + ' liess sich nicht zeichnen', fehler);
+                if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
+                    UI.toast(nameVon(block) + ' liess sich nicht zeichnen: ' + grund, 6000);
+                return platz(block, zeichne, 'fehler');
+            }
+        };
+        const platz = (block, zeichne, art) => {
+            const pdf = istPdf(block);
+            const name = nameVon(block);
+            const { bw, bh } = SheetSpace.masseVon(block);
+            const huelle = document.createElement('div');
+            huelle.className = 'blatt-huelle blatt-platz' + (pdf ? ' pdfs' : '');
+            huelle.dataset['nah'] = art;
+            huelle.dataset['nahBid'] = String(block.id);
+            const leiste = document.createElement('div');
+            leiste.className = 'blatt-reihe blatt-platz-leiste';
+            leiste.setAttribute('aria-hidden', 'true');
+            const papier = document.createElement('div');
+            papier.className = 'blatt-papier' + (pdf ? ' pdfs-papier' : '');
+            papier.style.setProperty('aspect-ratio', bw + ' / ' + bh);
+            const sorte = pdf ? 'pdf' : 'blatt';
+            if (!gemessen[sorte]) {
+                gemessen[sorte] = true;
+                letzte[sorte] = masse(pdf) ?? letzte[sorte];
+            }
+            const m = letzte[sorte];
+            if (m) {
+                huelle.style.setProperty('--platz-oben', m.oben + 'px');
+                huelle.style.setProperty('--platz-unten', m.unten + 'px');
+            }
+            const satz = document.createElement('div');
+            satz.className = 'pdfs-wartet';
+            papier.appendChild(satz);
+            huelle.append(leiste, papier);
+            plaetze.set(huelle, { block, zeichne });
+            if (art === 'wartet') {
+                satz.textContent = name + ' wird vorbereitet …';
+                huelle.tabIndex = 0;
+                huelle.setAttribute('aria-label', name);
+                huelle.addEventListener('focus', () => jetzt(huelle, 'fokus'));
+                huelle.addEventListener('pointerdown', () => jetzt(huelle, 'tipp'));
+            }
+            else {
+                const zeile = document.createElement('div');
+                zeile.textContent = name + ' liess sich nicht zeichnen.';
+                const k = document.createElement('button');
+                k.type = 'button';
+                k.className = 'pdfs-neu';
+                k.textContent = 'Neu zeichnen';
+                k.addEventListener('click', () => {
+                    const neu = sicher(block, zeichne);
+                    huelle.replaceWith(neu);
+                    if (neu.dataset['nah'] !== 'fehler')
+                        beobachten(neu);
+                    neu.querySelector('.pdfs-neu')?.focus();
+                });
+                satz.append(zeile, k);
+            }
+            return huelle;
+        };
+        const jetzt = (huelle, wie) => {
+            const p = plaetze.get(huelle);
+            if (!p || huelle.dataset['nah'] !== 'wartet')
+                return;
+            plaetze.delete(huelle);
+            beobachter?.unobserve(huelle);
+            beobachtet.delete(huelle);
+            const neu = sicher(p.block, p.zeichne);
+            huelle.replaceWith(neu);
+            if (neu.dataset['nah'] === 'fehler')
+                return;
+            if (neu.isConnected)
+                beobachten(neu);
+            const leiste = neu.querySelector('.blatt-werk');
+            if (wie === 'fokus') {
+                const stopp = neu.querySelector('[role="toolbar"] button[tabindex="0"]')
+                    ?? [...neu.querySelectorAll('.blatt-werk button:not([disabled])')]
+                        .find(b => b.getClientRects().length > 0);
+                stopp?.focus({ preventScroll: true });
+            }
+            else if (wie === 'tipp') {
+                leiste?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+            }
+        };
+        const masse = (pdf) => {
+            const wahl = pdf ? '#page .blatt-huelle.pdfs:not(.blatt-platz)'
+                : '#page .blatt-huelle:not(.pdfs):not(.blatt-platz)';
+            const h = document.querySelector(wahl);
+            const papier = h?.querySelector(':scope > .blatt-reihe ~ * .blatt-papier, :scope > .blatt-reihe ~ .blatt-papier');
+            if (!h || !papier)
+                return null;
+            const a = h.getBoundingClientRect(), b = papier.getBoundingClientRect();
+            if (!a.height || !b.height)
+                return null;
+            return { oben: Math.max(0, Math.round(b.top - a.top)), unten: Math.max(0, Math.round(a.bottom - b.bottom)) };
+        };
+        const abschliessen = () => {
+            geplant = false;
+            imDurchgang = 0;
+            gemessen.pdf = false;
+            gemessen.blatt = false;
+            const liste = offen;
+            offen = [];
+            for (const el of [...beobachtet]) {
+                if (!el.isConnected) {
+                    beobachter?.unobserve(el);
+                    beobachtet.delete(el);
+                }
+            }
+            const r = wurzel();
+            const imScroll = (el) => !!r && r.contains(el) && !el.closest('.pg-fl-koerper');
+            const warten = [];
+            for (const el of liste) {
+                if (el.dataset['nah'] !== 'wartet') {
+                    if (el.isConnected && imScroll(el))
+                        beobachten(el);
+                    continue;
+                }
+                if (!el.isConnected || !imScroll(el))
+                    jetzt(el, 'still');
+                else
+                    warten.push(el);
+            }
+            if (!r || !warten.length)
+                return;
+            letzte.pdf = masse(true) ?? letzte.pdf;
+            letzte.blatt = masse(false) ?? letzte.blatt;
+            for (const el of warten) {
+                const m = el.classList.contains('pdfs') ? letzte.pdf : letzte.blatt;
+                if (!m)
+                    continue;
+                el.style.setProperty('--platz-oben', m.oben + 'px');
+                el.style.setProperty('--platz-unten', m.unten + 'px');
+            }
+            const rr = r.getBoundingClientRect();
+            const rand = rr.height;
+            const jetztNah = warten.filter(el => {
+                const b = el.getBoundingClientRect();
+                return b.bottom >= rr.top - rand && b.top <= rr.bottom + rand;
+            });
+            for (const el of warten) {
+                if (jetztNah.includes(el))
+                    jetzt(el, 'still');
+                else
+                    beobachten(el);
+            }
+        };
+        const blatt = (block, zeichne) => {
+            if (!geplant) {
+                geplant = true;
+                if (typeof queueMicrotask === 'function')
+                    queueMicrotask(abschliessen);
+                else
+                    void Promise.resolve().then(abschliessen);
+            }
+            if (imDurchgang < SOFORT || nahe.has(String(block.id))) {
+                imDurchgang++;
+                const el = sicher(block, zeichne);
+                if (el.dataset['nah'] !== 'fehler')
+                    offen.push(el);
+                return el;
+            }
+            const el = platz(block, zeichne, 'wartet');
+            offen.push(el);
+            return el;
+        };
+        if (typeof window !== 'undefined') {
+            window.addEventListener('beforeprint', () => {
+                document.querySelectorAll('#page [data-nah="wartet"]').forEach(el => jetzt(el, 'still'));
+            });
+        }
+        return { blatt };
+    })();
     const render = (block, tiefe = 0, nr = 0) => {
         const t = typ(block.type);
         const el = document.createElement('div');
@@ -83371,10 +83662,10 @@ const Blocks = (() => {
                     box.appendChild(SpreadsheetView.zeichne(block));
                 break;
             case 'blatt':
-                box.appendChild(Blatt.zeichne(block));
+                box.appendChild(Nahzeichnen.blatt(block, () => Blatt.zeichne(block)));
                 break;
             case 'pdfseite':
-                box.appendChild(PdfSeite.zeichne(block));
+                box.appendChild(Nahzeichnen.blatt(block, () => PdfSeite.zeichne(block)));
                 break;
             case 'whiteboard':
                 box.appendChild(Zusatz.whiteboard(block));
@@ -121688,13 +121979,29 @@ const Zeichenziel = (() => {
     const flaechen = [];
     let zuletzt = -1;
     const horcher = [];
-    const melden = () => {
-        for (const h of horcher) {
+    let geplant = false;
+    const imBau = new Set();
+    const ausrufen = () => {
+        geplant = false;
+        for (const e of imBau)
+            if (lebt(e))
+                e.gesehen = true;
+        imBau.clear();
+        for (const h of horcher.slice()) {
             try {
                 h();
             }
             catch { }
         }
+    };
+    const melden = () => {
+        if (geplant)
+            return;
+        geplant = true;
+        if (typeof queueMicrotask === 'function')
+            queueMicrotask(ausrufen);
+        else
+            void Promise.resolve().then(ausrufen);
     };
     const finde = (steuerung) => flaechen.findIndex(f => f.steuerung === steuerung);
     const lebt = (e) => e.steuerung.flaeche?.isConnected === true;
@@ -121720,6 +122027,8 @@ const Zeichenziel = (() => {
                     continue;
                 if (lebt(e))
                     continue;
+                if (imBau.has(e))
+                    continue;
                 if (!e.gesehen && !jemandLebt && e === letzte)
                     continue;
                 flaechen.splice(i, 1);
@@ -121741,9 +122050,11 @@ const Zeichenziel = (() => {
         aufraeumen();
         if (finde(steuerung) >= 0)
             return;
-        flaechen.push({ steuerung, name: String(name), werkzeug: 'schreiben',
+        const eintrag = { steuerung, name: String(name), werkzeug: 'schreiben',
             farbe: '', dicke: 0,
-            gesehen: steuerung.flaeche?.isConnected === true });
+            gesehen: steuerung.flaeche?.isConnected === true };
+        flaechen.push(eintrag);
+        imBau.add(eintrag);
         if (zuletzt < 0 || zuletzt >= flaechen.length)
             zuletzt = flaechen.length - 1;
         melden();
@@ -121759,6 +122070,7 @@ const Zeichenziel = (() => {
         const i = finde(steuerung);
         if (i < 0)
             return;
+        imBau.delete(flaechen[i]);
         flaechen.splice(i, 1);
         if (flaechen.length === 0)
             zuletzt = -1;
@@ -121772,6 +122084,7 @@ const Zeichenziel = (() => {
         if (!flaechen.length)
             return;
         flaechen.length = 0;
+        imBau.clear();
         zuletzt = -1;
         melden();
     };
@@ -144784,10 +145097,23 @@ const Menueband = (() => {
     };
     let gebunden = false;
     let beobachtet = false;
+    let zielStand = '';
+    const zielJetzt = () => {
+        if (typeof Zeichenziel === 'undefined')
+            return '';
+        try {
+            return [Zeichenziel.da(), Zeichenziel.jetzt(), Zeichenziel.jetztFarbe(),
+                Zeichenziel.jetztDicke()].join('|');
+        }
+        catch {
+            return '';
+        }
+    };
     const zeichne = () => {
         const wurzel = document.getElementById(WURZEL);
         if (!wurzel)
             return;
+        zielStand = zielJetzt();
         const reiter = Register?.menueband?.reiter?.() || [];
         if (!reiter.length) {
             wurzel.hidden = true;
@@ -145171,7 +145497,8 @@ const Menueband = (() => {
         beobachte();
         if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
             try {
-                Zeichenziel.horche(() => zeichne());
+                Zeichenziel.horche(() => { if (zielJetzt() !== zielStand)
+                    zeichne(); });
             }
             catch { }
         }
@@ -148035,6 +148362,7 @@ const App = (() => {
             kiPanel(true);
         }
     };
+    let gezeichnetAls = '';
     const zeichneSeite = (fokus = null, wo = 'anfang') => {
         const wrap = document.getElementById('page');
         if (!wrap)
@@ -148058,6 +148386,10 @@ const App = (() => {
             return;
         }
         const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+        const rolle = document.getElementById('scroll');
+        const als = p.id + '|' + ansicht + '|' + (DocumentMode.active(p) ? 'dokument' : 'seite');
+        const lesestelle = als === gezeichnetAls && rolle ? rolle.scrollTop : 0;
+        gezeichnetAls = als;
         wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
             (ansicht === 'flaeche' ? ' flaeche-page' : '');
         document.body.dataset.font = p.font || 'default';
@@ -148093,6 +148425,8 @@ const App = (() => {
         }
         zeichneCrumbs();
         streifenZeichnen();
+        if (lesestelle > 0 && rolle && !DocumentMode.active(p))
+            rolle.scrollTop = lesestelle;
         if (fokus) {
             const ct = document.querySelector(`[data-bid="${fokus}"] .ct`);
             if (ct instanceof HTMLElement) {

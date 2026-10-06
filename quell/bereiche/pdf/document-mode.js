@@ -387,6 +387,51 @@ const DocumentMode = (() => {
         Store.updateBlock(page.id, { dokumentModus: next ?? !page.dokumentModus });
         App.zeichneSeite();
     };
+    const seiteneditorOeffnen = (page, knopf, zielId, zielNr) => {
+        if (!page?.id)
+            return;
+        if (knopf?.getAttribute('aria-busy') === 'true')
+            return;
+        knopf?.setAttribute('aria-busy', 'true');
+        let lief = false;
+        const weiter = () => {
+            if (lief)
+                return;
+            lief = true;
+            try {
+                toggle(page, false);
+            }
+            catch (fehler) {
+                console.error('[E717] Der Seiteneditor liess sich nicht öffnen', fehler);
+                const grund = fehler instanceof Error ? fehler.message : String(fehler);
+                try {
+                    Store.updateBlock(page.id, { dokumentModus: true });
+                    App.zeichneSeite();
+                }
+                catch (zweiter) {
+                    console.error('[E717] Zurück ins Dokument ging auch nicht', zweiter);
+                }
+                UI.toast('Der Seiteneditor liess sich nicht öffnen: ' + grund, 8000);
+                return;
+            }
+            finally {
+                if (knopf?.isConnected)
+                    knopf.removeAttribute('aria-busy');
+            }
+            if (zielNr <= 0 || !zielId)
+                return;
+            const rolle = document.getElementById('scroll');
+            const ziel = document.querySelector('#page .blk[data-bid="' + (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(zielId) : zielId) + '"]');
+            if (rolle && ziel)
+                rolle.scrollTop += ziel.getBoundingClientRect().top - rolle.getBoundingClientRect().top - 8;
+        };
+        if (document.hidden || typeof requestAnimationFrame !== 'function') {
+            setTimeout(weiter, 0);
+            return;
+        }
+        requestAnimationFrame(() => { setTimeout(weiter, 0); });
+        setTimeout(weiter, 250);
+    };
     const sourceLabel = (documentBlock) => {
         if (documentBlock.type === 'pdfseite')
             return documentBlock.herkunft === 'bild'
@@ -1279,7 +1324,13 @@ const DocumentMode = (() => {
         folienKnopf.setAttribute('aria-haspopup', 'menu');
         folienKnopf.setAttribute('aria-expanded', 'false');
         folienKnopf.hidden = !istFoliensatz(page);
-        topActions.append(findButton, viewButton, inspectorButton, folienKnopf, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        const exitKnopf = topButton('exit', 'Seiteneditor', 'Seiteneditor — Dokumentmodus verlassen');
+        const exitZeichen = document.createElement('span');
+        exitZeichen.className = 'dz-zeichen';
+        exitZeichen.dataset.sym = 'page';
+        exitZeichen.setAttribute('aria-hidden', 'true');
+        exitKnopf.prepend(exitZeichen);
+        topActions.append(findButton, viewButton, inspectorButton, folienKnopf, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), exitKnopf);
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
@@ -3240,8 +3291,10 @@ const DocumentMode = (() => {
                     UI.toast('Das Regal ist gerade nicht erreichbar.');
                 return;
             }
-            if (action === 'exit')
-                toggle(page, false);
+            if (action === 'exit') {
+                seiteneditorOeffnen(page, tatKnopf, String(documents[state.index]?.id || ''), state.index);
+                return;
+            }
             if (action === 'source-actions')
                 openSourceActions(page, jetzt());
             if ((action === 'select-region' || action === 'recognize') && state.lupe) {

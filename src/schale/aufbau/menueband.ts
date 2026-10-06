@@ -646,9 +646,24 @@ const Menueband = (() => {
   let gebunden = false;
   let beobachtet = false;
 
+  /* WAS DAS BAND VOM ZEICHENZIEL ZEIGT (E717). Der Reiter „Zeichnen" liest
+     genau vier Dinge: ob es eine Fläche gibt, ihr Werkzeug, ihre Farbe, ihre
+     Stärke (`register/menueband.ts`, `flaecheDa` und die `an()` der
+     Knöpfe). Ändert sich keines davon, hat ein Neubau nichts zu zeigen —
+     beim Aufbau einer Seite mit vielen Blättern ist das der Normalfall. */
+  let zielStand = '';
+  const zielJetzt = (): string => {
+    if (typeof Zeichenziel === 'undefined') return '';
+    try {
+      return [Zeichenziel.da(), Zeichenziel.jetzt(), Zeichenziel.jetztFarbe(),
+              Zeichenziel.jetztDicke()].join('|');
+    } catch { return ''; }
+  };
+
   const zeichne = (): void => {
     const wurzel = document.getElementById(WURZEL);
     if (!wurzel) return;
+    zielStand = zielJetzt();
 
     const reiter = Register?.menueband?.reiter?.() || [];
     if (!reiter.length) {
@@ -1277,8 +1292,21 @@ const Menueband = (() => {
        Blatt unsichtbar und kämen erst beim nächsten Reiterwechsel — ein
        Knopf, der da ist und nicht erscheint, ist derselbe Fehler wie einer,
        der erscheint und nichts tut. */
+    /* NUR WENN SICH FÜR DAS BAND ETWAS ÄNDERT (E717). Hier stand
+       `horche(() => zeichne())`, und das Zeichenziel rief jede Anmeldung
+       einzeln aus: beim Klick auf „Seiteneditor" baute das Band für 134
+       PDF-Seiten 271-mal neu, jedesmal mit `scrollIntoView` unten — ein
+       volles Layout der Seite, die gerade wächst. Jetzt ruft das
+       Zeichenziel einmal am Ende des Durchgangs, und hier wird nur neu
+       gebaut, wenn sich eines der vier Dinge geändert hat, die das Band
+       davon zeigt. `test593` §1 zählt es: höchstens zwei Neubauten, bei 40
+       Seiten wie bei 80. Ein Horcher je Durchgang statt je Bild
+       (`requestAnimationFrame`): das Band soll schon stimmen, wenn der
+       nächste Tipp kommt, nicht erst nach dem nächsten Bild. */
     if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
-      try { Zeichenziel.horche(() => zeichne()); } catch { /* dann eben nicht */ }
+      try {
+        Zeichenziel.horche(() => { if (zielJetzt() !== zielStand) zeichne(); });
+      } catch { /* dann eben nicht */ }
     }
 
     /* NEU ZEICHNEN, WENN DAS VOLLBILD KIPPT (E283 / L85 Punkt 1).
