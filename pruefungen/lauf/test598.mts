@@ -38,10 +38,12 @@
  *   §7  Keine Leiste verdeckt ihre Fläche (§37): in der Seitenansicht steht
  *       die Leiste unter dem Whiteboard, in der Fläche über keinem.
  *   §8  Am Telefon: eine Leiste, jeder Knopf 44 px, über der unteren Leiste,
- *       keine im Kasten.
+ *       keine im Kasten; das gewählte Werkzeug steht im sichtbaren Teil
+ *       des rollenden Streifens.
  *   §9  Tastatur (§38): Tab erreicht die Leiste, Pfeile wandern, Escape
  *       schliesst ihr Menü zuerst; vom Whiteboard aus führt Tab in SEINE
- *       Leiste und Umschalt+Tab zurück.
+ *       Leiste und Umschalt+Tab zurück — und das nächste Tab aus der
+ *       Leiste weiter HINTER das Whiteboard, nicht an den Anfang.
  *   §10 „Neu" der Tabelle bleibt beim Überfahren in allen zehn Schemata
  *       lesbar (≥ 4,5) und bleibt der Hauptknopf (nicht --bg-hover).
  *   §11 Die Auswahlleiste liegt auf der Fläche NICHT über der Flächenleiste.
@@ -408,6 +410,23 @@ p('Vom Whiteboard aus führt Tab in SEINE Leiste', vomWb.drin && vomWb.seine, JS
 await pg.keyboard.press('Shift+Tab');
 p('… und Umschalt+Tab zurück aufs Whiteboard',
   await pg.evaluate((w: string) => document.activeElement === document.querySelector(w), W1));
+/* … UND VON DER LEISTE WEITER, HINTER DAS WHITEBOARD (Durchsicht E722,
+   §38). Die Leiste hängt VOR der Ebene; ohne eigene Führung sprang das
+   zweite Tab zurück an den Anfang der Fläche — auf den Kopf des
+   Seitenkastens —, und alles hinter dem Whiteboard war von dort aus mit
+   Tab nicht mehr zu erreichen. Gesucht wird die Lage im Baum, nicht ein
+   Name: was nach dem Whiteboard kommt, ist hier der nächste Kasten. */
+await pg.keyboard.press('Tab');
+await pg.keyboard.press('Tab');
+const weiter = await pg.evaluate(([s, w]) => {
+  const a = document.activeElement as HTMLElement | null;
+  const wb = document.querySelector(w as string);
+  if (!a || !wb || a === document.body) return { ok: false, was: 'kein Fokus' };
+  const nach = !!(wb.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) && !wb.contains(a);
+  const was = `${a.tagName} [${(a.getAttribute('aria-label') ?? a.textContent ?? '').trim().slice(0, 30)}]`;
+  return { ok: nach && !a.closest(s as string), was };
+}, [SCHACHT, W1]);
+p('… und das nächste Tab führt aus der Leiste hinter das Whiteboard, nicht zurück an den Anfang', weiter.ok, weiter.was);
 
 /* ==========================================================================
  * §10–§12 · Die Tabelle im Kasten (E723)
@@ -518,6 +537,24 @@ console.log('\n8 · Am Telefon (390 px)');
 const { pg: handy } = await bauen(390, 844, true);
 const w1h = await mitte(handy, `${W1} .wb-flaeche`, 0.7, 0.7);
 if (w1h) { await handy.touchscreen.tap(w1h.x, w1h.y); await handy.waitForTimeout(250); }
+/* Ein Werkzeug weit rechts im Streifen wählen, zur Fläche wechseln und
+   zurück: die Leiste kommt frisch eingehängt in den Schacht, und ein
+   abgehängter Roller hat sein Rollmass verloren (Durchsicht E722). Der
+   Wechsel geht über den Fokus, damit das Werkzeug beim Zurückkommen nicht
+   selbst schon zeichnet. */
+const fern = await handy.evaluate((s: string) => {
+  /* „Bild" öffnet gleich die Dateiwahl und bleibt nicht gewählt — also das
+     letzte Werkzeug davor. */
+  const kn = [...document.querySelectorAll<HTMLElement>(`${s} .gfx-tb-roller [data-wz]`)]
+    .filter(b => b.dataset['wz'] !== 'bild');
+  const letzt = kn[kn.length - 1];
+  letzt?.click();
+  return letzt?.dataset['wz'] ?? '';
+}, SCHACHT);
+await handy.evaluate(() => document.querySelector<HTMLElement>('.pg-flaeche')?.focus());
+await handy.waitForTimeout(150);
+await handy.evaluate((w: string) => document.querySelector<HTMLElement>(w)?.focus(), W1);
+await handy.waitForTimeout(250);
 const s8 = await handy.evaluate((s: string) => {
   const f = document.querySelector('.pg-flaeche')!;
   const l = document.querySelector<HTMLElement>(s);
@@ -531,11 +568,24 @@ const s8 = await handy.evaluate((s: string) => {
   return { zahl: f.querySelectorAll('.gfx-tb-sockel').length,
            imKasten: f.querySelectorAll('.pg-fl-koerper .gfx-tb-sockel').length,
            seine: !!l?.querySelector('[data-wz="verbindung"]'), klein,
-           unten: l ? Math.round(l.getBoundingClientRect().bottom) : -1, nav: nr ? Math.round(nr.top) : null };
+           unten: l ? Math.round(l.getBoundingClientRect().bottom) : -1, nav: nr ? Math.round(nr.top) : null,
+           /* Das gewählte Werkzeug muss im rollenden Streifen ZU SEHEN sein,
+              nicht irgendwo rechts daneben (Durchsicht E722): sonst sagt die
+              Leiste nicht, womit der Finger gerade zeichnet. */
+           gewaehlt: (() => {
+             const ro = l?.querySelector<HTMLElement>('.gfx-tb-roller');
+             const an = ro?.querySelector<HTMLElement>('[data-wz].on');
+             if (!ro || !an) return { da: false, zu_sehen: false, was: '' };
+             const r = ro.getBoundingClientRect(), b = an.getBoundingClientRect();
+             return { da: true, zu_sehen: b.left >= r.left - 1 && b.right <= r.right + 1,
+                      was: `${an.dataset['wz']} ${Math.round(b.left)}…${Math.round(b.right)} im Streifen ${Math.round(r.left)}…${Math.round(r.right)}` };
+           })() };
 }, SCHACHT);
 p('Eine Leiste in der Fläche, keine im Kasten', s8.zahl === 1 && s8.imKasten === 0, `${s8.zahl} / im Kasten ${s8.imKasten}`);
 p('Ein Tipp ins Whiteboard bringt seine Werkzeuge in die eine Leiste', s8.seine);
 p('Jeder Knopf misst 44 px (gerenderte Box, §37)', s8.klein.length === 0, s8.klein.slice(0, 6).join(' · '));
+p(`Das gewählte Werkzeug (${fern}) steht nach dem Wechsel im sichtbaren Teil der rollenden Leiste`,
+  !!fern && s8.gewaehlt.zu_sehen && s8.gewaehlt.was.startsWith(fern), s8.gewaehlt.was);
 p('Die Leiste steht über der unteren Leiste', s8.nav === null || s8.unten <= s8.nav + 1, `${s8.unten} gegen ${s8.nav}`);
 await handy.close();
 await pg.close();
