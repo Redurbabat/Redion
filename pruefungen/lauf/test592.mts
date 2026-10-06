@@ -51,8 +51,9 @@
  *       Fläche, mittig auf der Kante); die Mitte des ersten Navigationsknopfs
  *       und `#btn-back` treffen weiter sich selbst. Der Griff ist in Ruhe
  *       sichtbar (nie nur beim Überfahren), und der Tastaturfokus hat einen
- *       Rahmen. Mit grobem Zeiger (Finger) ist die Fläche um den Griff
- *       mindestens `--touch-min` breit UND hoch (§37).
+ *       Ring um den Griff (wie am Greifer des Touch Kits). Mit grobem
+ *       Zeiger (Finger) ist die Fläche um den Griff mindestens
+ *       `--touch-min` breit UND hoch (§37).
  *   §10 BEWEGUNG. Der Griff bewegt nur `opacity` und `transform`; unter
  *       „weniger Bewegung" und unter „Ruhige Darstellung"
  *       (`body[data-bewegung=ruhig]`) dauert das höchstens 1 ms. Keine
@@ -61,6 +62,9 @@
  *       Messung rot — der Lauf KANN den Fehler sehen.
  *   §12 DIE EINZELDATEI. `redion-einzeldatei.html` zieht genauso und merkt
  *       sich die Breite über das Neuladen.
+ *   §13 IN JEDEM SCHEMA ZU SEHEN. Die Pille steht in allen zehn Schemata
+ *       (auch Touch Kit und Starker Kontrast) mit mindestens 3 : 1 gegen den
+ *       Grund daneben — gemessen an den gezeichneten Pixeln.
  *
  * Kein Port: geladen wird über file:// — `index.html` per Doppelklick und
  * die Einzeldatei, so wie Redion startet (§6, §29).
@@ -119,6 +123,20 @@ const oeffnen = async (o: Wahl = {}): Promise<Offen> => {
 
 const neuLaden = async (pc: Page): Promise<void> => {
   await pc.evaluate('Store.flush()');
+  /* `Store.flush()` wartet nicht auf den eigenen `put` von `setMeta`; unter
+     Last schnitt das Neuladen ihn ab (in `test40` gesehen). Ein Lesen über
+     eine zweite Verbindung kommt in IndexedDB erst nach dem älteren
+     Schreiben dran — danach ist die Breite auf der Platte. */
+  await pc.evaluate(`new Promise(fertig => {
+    const r = indexedDB.open(KONSTANTEN.ABLAGE_NAME);
+    r.onsuccess = () => {
+      try {
+        const g = r.result.transaction('meta', 'readonly').objectStore('meta').get(${JSON.stringify(BREITE)});
+        g.onsuccess = g.onerror = () => { r.result.close(); fertig(0); };
+      } catch { r.result.close(); fertig(0); }
+    };
+    r.onerror = () => fertig(0);
+  })`);
   await pc.reload();
   await pc.waitForFunction(BEREIT);
   await pc.waitForTimeout(900);
@@ -367,9 +385,13 @@ try {
       JSON.stringify(treffer.griff));
     await pc.keyboard.press('Shift');
     await pc.locator('#studio-divider').focus();
-    const fokus = await pc.evaluate(`(() => { const d = document.getElementById('studio-divider'); const s = getComputedStyle(d);
+    /* Der Rahmen sitzt am GRIFF (::before), wie der Fokusring am Greifer des
+       Touch Kits — am ganzen Streifen zog er zwei lange Linien neben die
+       Akzentlinie (im Bild gesehen). Gemessen wird dort, wo er gezeichnet
+       wird, und er muss da sein: ≥ 2 px, nicht `none`. */
+    const fokus = await pc.evaluate(`(() => { const d = document.getElementById('studio-divider'); const s = getComputedStyle(d, '::before');
       return { sichtbar: d.matches(':focus-visible'), stil: s.outlineStyle, dicke: parseFloat(s.outlineWidth) || 0 }; })()`) as { sichtbar: boolean; stil: string; dicke: number };
-    p('Der Tastaturfokus hat einen Rahmen (≥ 2 px)', fokus.sichtbar && fokus.stil !== 'none' && fokus.dicke >= 2, JSON.stringify(fokus));
+    p('Der Tastaturfokus hat einen Ring um den Griff (≥ 2 px)', fokus.sichtbar && fokus.stil !== 'none' && fokus.dicke >= 2, JSON.stringify(fokus));
     const name = await pc.evaluate(`(() => { const d = document.getElementById('studio-divider');
       return { rolle: d.getAttribute('role'), name: d.getAttribute('aria-label'), steuert: d.getAttribute('aria-controls'), titel: d.getAttribute('title') || '' }; })()`) as { rolle: string; name: string; steuert: string; titel: string };
     p('Der Trenner heisst, was er tut, und sagt, was er steuert', name.rolle === 'separator' && !!name.name && name.steuert === 'kante' && /Doppelklick/.test(name.titel),
@@ -427,6 +449,50 @@ try {
     await rahmen(pc);
     const z = await mass(pc);
     p('§5 bei 1024: Doppelklick führt von 260 auf 156', e.kante === 260 && z.kante === 156 && z.aria === 156, `${e.kante} → ${z.kante}, aria ${z.aria}`);
+    await kontext.close();
+  }
+
+  /* ─── §13 · Der Griff in allen zehn Schemata ─────────────────────────── */
+  {
+    console.log('\n§13 · Der Griff ist in jedem Schema zu sehen (≥ 3 : 1 gegen den Grund daneben)');
+    /* Gemessen an den GEZEICHNETEN Pixeln, nicht an `getComputedStyle`: die
+       Pille trägt Deckkraft, und ihr Grund ist zur einen Seite die
+       Navigation, zur anderen der Inhalt. Eine Rechnung über Farbwerte
+       kennt keine Kantenglättung (L206). Grenze 3 : 1 — WCAG 1.4.11 für
+       Bedienelemente, die man erkennen muss. */
+    const { pc, kontext } = await oeffnen();
+    const SCHEMATA = ['standard', 'hell', 'nacht', 'wald', 'sand', 'papier', 'kontrast', 'rose', 'touchkit-hell', 'touchkit-dunkel'];
+    const lum = (c: number[]): number => {
+      const f = (v: number): number => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
+      return 0.2126 * f(c[0] ?? 0) + 0.7152 * f(c[1] ?? 0) + 0.0722 * f(c[2] ?? 0);
+    };
+    const kontrast = (a: number[], b: number[]): number => {
+      const x = lum(a), y = lum(b);
+      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    };
+    const schwach: string[] = [];
+    let gemessen = 0;
+    for (const schema of SCHEMATA) {
+      await pc.evaluate(`Aussehen.setzen({ schema: ${JSON.stringify(schema)} })`);
+      await pc.mouse.move(700, 500);
+      await pc.waitForTimeout(250);
+      const g = await griff(pc);
+      const clip = { x: Math.round(g.x) - 20, y: Math.round(g.y) - 20, width: 40, height: 40 };
+      const bild = await pc.screenshot({ clip });
+      const px = await pc.evaluate(`(async () => {
+        const img = new Image(); img.src = 'data:image/png;base64,${bild.toString('base64')}'; await img.decode();
+        const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+        const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+        return [[20, 20], [10, 20], [30, 20]].map(([a, b]) => Array.from(x.getImageData(a, b, 1, 1).data).slice(0, 3));
+      })()`) as number[][];
+      const [pille, links, rechts] = px;
+      if (!pille || !links || !rechts) continue;
+      gemessen++;
+      const k = Math.min(kontrast(pille, links), kontrast(pille, rechts));
+      if (k < 3) schwach.push(`${schema} ${k.toFixed(2)}:1`);
+    }
+    p('In allen zehn Schemata steht der Griff mit ≥ 3 : 1 da', gemessen === SCHEMATA.length && schwach.length === 0,
+      `${gemessen} gemessen; zu schwach: ${schwach.join(', ') || '—'}`);
     await kontext.close();
   }
 

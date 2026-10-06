@@ -23951,15 +23951,20 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
      Sheet-Greifers aus dem Touch Kit, als Redion-CSS nachgebaut (kein
      fremder Code): in Ruhe zu sehen, damit Ziehen nie nur beim Überfahren
      zu entdecken ist; beim Überfahren, im Fokus und beim Ziehen in der
-     Akzentfarbe, beim Ziehen etwas gestreckt. Bewegt werden nur `opacity`
-     und `transform`; beide Ruhe-Schichten (grund.css, bausteine.css)
-     nehmen auch `::before` mit. */
+     Akzentfarbe, beim Ziehen etwas gestreckt. Bewegt wird nur `transform`;
+     beide Ruhe-Schichten (grund.css, bausteine.css) nehmen auch
+     `::before` mit. Volle Deckkraft in Ruhe: mit 0,75 stand die Pille in
+     acht der zehn Schemata unter 3 : 1 (test592 §13). */
   body[data-schale="premium"] #studio-divider{display:block;position:relative;grid-column:1;grid-row:3/-1;justify-self:end;width:calc(var(--space-3)*2);margin-right:calc(var(--space-3)*-1);z-index:4;cursor:col-resize;touch-action:none}
-  body[data-schale="premium"] #studio-divider::before{content:"";position:absolute;left:50%;top:50%;width:4px;height:36px;margin:-18px 0 0 -2px;border-radius:var(--radius-pill);background:var(--text-faint);opacity:.75;transition:opacity var(--motion-fast) var(--ease),transform var(--motion-fast) var(--ease)}
+  body[data-schale="premium"] #studio-divider::before{content:"";position:absolute;left:50%;top:50%;width:4px;height:36px;margin:-18px 0 0 -2px;border-radius:var(--radius-pill);background:var(--text-faint);transition:transform var(--motion-fast) var(--ease)}
   body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible),.studio-resizing #studio-divider{background:linear-gradient(var(--accent),var(--accent)) 50% 0/2px 100% no-repeat}
-  body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible)::before,.studio-resizing #studio-divider::before{background:var(--accent);opacity:1}
+  body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible)::before,.studio-resizing #studio-divider::before{background:var(--accent)}
   .studio-resizing #studio-divider::before{transform:scaleY(1.12)}
-  body[data-schale="premium"] #studio-divider:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  /* Der Fokus ist ein Ring um den Griff, wie am Greifer des Kits — ein
+     Rahmen um den ganzen 16-px-Streifen zog zwei lange Linien neben die
+     Akzentlinie (im Bild gesehen, E716). */
+  body[data-schale="premium"] #studio-divider:focus-visible{outline:none}
+  body[data-schale="premium"] #studio-divider:focus-visible::before{outline:2px solid var(--accent-text);outline-offset:3px}
   /* MIT DEM FINGER (§37). Der Streifen wird 24 px breit, und um den Griff
      liegt eine unsichtbare Fläche von `--touch-min` im Quadrat (`::after`).
      Ein Quadrat und kein durchsichtiger Rand um die Pille: der Rand trüge
@@ -26935,7 +26940,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1417, inhalt: 'aa3e5746e4deb301', gebaut: '2026-10-06T00:06:13.025Z' };
+const Stand = { fassung: 1420, inhalt: 'badc2939fca32e22', gebaut: '2026-10-06T00:36:01.394Z' };
 window.Stand = Stand;
 
 </script>

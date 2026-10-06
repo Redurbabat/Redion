@@ -1703,3 +1703,26 @@ Grund:
    „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
    Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
 
+
+## Nach E716 · Der Trenner zieht (6. Oktober 2026)
+
+1. **Die alten Griffe der Seitenleiste — Redurs Frage (L237).** Darf der
+   verdeckte `#side-griff` gelöscht werden (die Breite der Seitenleiste
+   bleibt am `.side-griff`, geprüft von `test52`/`test143`), und darf der
+   verirrte 6-px-Streifen `.side-griff` am Rand der Telefon-Schublade
+   verschwinden? Bis er ja sagt, bleiben beide unberührt (§43). Danach:
+   `test52` rot zuerst um „genau ein Griff" und „bei 390 px unsichtbar"
+   erweitern, dann bauen.
+2. **Die offenen Fragen aus dem Plan zu #5**, ohne Antwort mit der Vorgabe
+   gebaut (E716): Grenzen 148–260 bleiben; harte Grenze statt Gummiband;
+   Enter am Trenner tut nichts (kompakt bleibt der eine Knopf
+   `#studio-nav`). Sagt Redur anders, ist es je ein kleiner Bogen mit
+   `test592` als Nachbar.
+3. **`Store.flush()` wartet nicht auf `setMeta`** (gefunden in E716). Ein
+   Lauf, der eine Einstellung setzt und neu lädt, kann sie verlieren;
+   `test40` und `test592` lesen deshalb vor dem Neuladen über eine zweite
+   Verbindung. `test424` setzt kompakt und lädt nach `flush` neu — sein
+   Kommentar sagt, flush schütze davor, und das stimmt nicht. Entweder
+   `flush` wartet auch auf die offenen `put`s der Einstellungen (eine
+   Änderung an `indexdb.ts`, mit eigenem Prüflauf), oder die Läufe bekommen
+   einen gemeinsamen Helfer. Eigener Bogen.
