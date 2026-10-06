@@ -39,7 +39,7 @@
  *       die Leiste unter dem Whiteboard, in der Fläche über keinem.
  *   §8  Am Telefon: eine Leiste, jeder Knopf 44 px, über der unteren Leiste,
  *       keine im Kasten; das gewählte Werkzeug steht im sichtbaren Teil
- *       des rollenden Streifens.
+ *       des rollenden Streifens, und das Schild rollt nicht mit hinaus.
  *   §9  Tastatur (§38): Tab erreicht die Leiste, Pfeile wandern, Escape
  *       schliesst ihr Menü zuerst; vom Whiteboard aus führt Tab in SEINE
  *       Leiste und Umschalt+Tab zurück — und das nächste Tab aus der
@@ -575,9 +575,15 @@ const s8 = await handy.evaluate((s: string) => {
            gewaehlt: (() => {
              const ro = l?.querySelector<HTMLElement>('.gfx-tb-roller');
              const an = ro?.querySelector<HTMLElement>('[data-wz].on');
-             if (!ro || !an) return { da: false, zu_sehen: false, was: '' };
+             if (!ro || !an) return { da: false, zu_sehen: false, schild: false, was: '' };
              const r = ro.getBoundingClientRect(), b = an.getBoundingClientRect();
-             return { da: true, zu_sehen: b.left >= r.left - 1 && b.right <= r.right + 1,
+             /* … und weder unter dem Schild noch ohne es: das Wort, wessen
+                Leiste es ist, darf beim Rollen nicht mit hinausrollen (§38,
+                sonst bleibt nur der Ring in der Akzentfarbe). */
+             const sch = ro.querySelector<HTMLElement>('.pg-fl-kontext')?.getBoundingClientRect();
+             const schild = !!sch && sch.width > 0 && sch.left >= r.left - 1 && sch.right <= r.right + 1;
+             const frei = !sch || b.left >= sch.right - 1 || b.right <= sch.left + 1;
+             return { da: true, zu_sehen: b.left >= r.left - 1 && b.right <= r.right + 1 && frei, schild,
                       was: `${an.dataset['wz']} ${Math.round(b.left)}…${Math.round(b.right)} im Streifen ${Math.round(r.left)}…${Math.round(r.right)}` };
            })() };
 }, SCHACHT);
@@ -586,6 +592,7 @@ p('Ein Tipp ins Whiteboard bringt seine Werkzeuge in die eine Leiste', s8.seine)
 p('Jeder Knopf misst 44 px (gerenderte Box, §37)', s8.klein.length === 0, s8.klein.slice(0, 6).join(' · '));
 p(`Das gewählte Werkzeug (${fern}) steht nach dem Wechsel im sichtbaren Teil der rollenden Leiste`,
   !!fern && s8.gewaehlt.zu_sehen && s8.gewaehlt.was.startsWith(fern), s8.gewaehlt.was);
+p('… und das Wort „Zeichenfläche" bleibt dabei im Bild', s8.gewaehlt.schild, s8.gewaehlt.was);
 p('Die Leiste steht über der unteren Leiste', s8.nav === null || s8.unten <= s8.nav + 1, `${s8.unten} gegen ${s8.nav}`);
 await handy.close();
 await pg.close();
