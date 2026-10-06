@@ -147,6 +147,15 @@ darin steht, meldet jeder Bereich selbst an (`Register.kontext`); die Kante
 kennt keinen Bereich beim Namen. Strg + \ nimmt sie weg und holt sie
 zurück, Strg + M öffnet ihre Lade.
 
+In der Studio-Schale ist die Navigation links breiter: 184 Pixel, bei
+einem Fenster von 761 bis 1100 Pixeln 156. Ihre Breite stellt man am
+Trenner rechts davon ein — ziehen mit Maus oder Finger (148 bis 260
+Pixel), oder mit dem Fokus auf dem Trenner die Pfeiltasten, Pos1 und Ende;
+Escape mitten im Ziehen nimmt es zurück. Ein Doppelklick auf den Trenner
+oder der Befehl „Navigationsbreite zurücksetzen" in der Befehlspalette
+führt zur Vorgabe zurück. Die Breite gilt für dieses Gerät und diesen
+Browser (E716).
+
 Am Telefon gibt es die Kante nicht — 54 von 390 Pixeln wären ein Siebtel
 des Bildes. Dort bleibt die Seitenleiste, was sie immer war: die Schublade
 mit dem Seitenbaum. Es ist derselbe Baum, er wird beim Öffnen

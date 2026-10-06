@@ -6696,3 +6696,96 @@ gemessen, auf `c287b388e` plus diese Änderungen:
   nachgefahren hatte: `test141` 27, `test183` 27, `test191` 23, `test303`
   16, `test341` 37, `test362` 18/18, `test411` 26, `test427` 55, `test444`
   13, `test576` 30/30, `test582` 176, `test584` 37 — alle ohne Offenes.
+
+## §87 · Der Trenner: gezeichnete Breite gegen Attribut (E716, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/trenner-zieht` gegen `1bfaca53`
+(`claude/morgen-besser-2`, vorher gemessen in dessen eigenem Arbeitsbaum).
+Chromium über file://, `index.html` UND `redion-einzeldatei.html`, je
+1440 × 900 und 1024 × 768, frischer Kontext je Zeile-Block, die Bibliothek
+offen. „Spalte" ist `#kante.getBoundingClientRect().width` — die
+GEZEICHNETE Breite; „aria" ist `aria-valuenow` am Trenner; „Meta" ist
+`Store.getMeta('studio:navigation-breite')`. Maus: 5 Schritte zu +10 px;
+Finger: CDP `Input.dispatchTouchEvent`, 6 Schritte zu +8 px in einem
+Kontext mit Berührung; „neu geladen" = Meta 252, `Store.flush()`, Neuladen.
+Skript im Kratzordner (`messung-trenner.mts`), nicht eingecheckt.
+
+**Vorher** (`1bfaca53`) — `index.html` und Einzeldatei Ziffer für Ziffer
+gleich:
+
+```txt
+                    1440 × 900                      1024 × 768
+Start               Spalte 184 · aria 184 · –       Spalte 156 · aria 184 · –
+Maus +50            Spalte 184 · aria 234 · 234     Spalte 156 · aria 234 · 234
+Ende                Spalte 184 · aria 260 · 260     Spalte 156 · aria 260 · 260
+←                   Spalte 184 · aria 252 · 252     Spalte 156 · aria 252 · 252
+Pos1                Spalte 184 · aria 148 · 148     Spalte 156 · aria 148 · 148
+neu geladen, 252    Spalte 184 · aria 252 · 252     Spalte 156 · aria 252 · 252
+Finger +48          Spalte 184 · aria 232 · 232     Spalte 156 · aria 232 · 232
+```
+
+Die Spalte bewegt sich nie; Attribut und Gedächtnis folgen dem Griff. Bei
+1024 lügt das Attribut schon ohne jedes Ziehen (184 gegen 156).
+
+**Nachher** (E716) — `index.html` und Einzeldatei wieder Ziffer für Ziffer
+gleich:
+
+```txt
+                    1440 × 900                      1024 × 768
+Start               Spalte 184 · aria 184 · –       Spalte 156 · aria 156 · –
+Maus +50            Spalte 234 · aria 234 · 234     Spalte 206 · aria 206 · 206
+Ende                Spalte 260 · aria 260 · 260     Spalte 260 · aria 260 · 260
+←                   Spalte 252 · aria 252 · 252     Spalte 252 · aria 252 · 252
+Pos1                Spalte 148 · aria 148 · 148     Spalte 148 · aria 148 · 148
+neu geladen, 252    Spalte 252 · aria 252 · 252     Spalte 252 · aria 252 · 252
+Finger +48          Spalte 232 · aria 232 · 232     Spalte 204 · aria 204 · 204
+```
+
+**Trefferfläche bei 1440** (vorher gemessen, `probe`): `#kante` 0–184 mit
+1-px-Rand, erster Navigationsknopf 8–175, `#btn-back` 196–230, Trenner
+181–187. Nachher: Trenner 176–192 (16 px) — beiden Nachbarn bleiben 4 px;
+mit grobem Zeiger im ersten Bau 172–196 (24 px, 3 px über dem Knopfrand,
+dessen Mitte weiter ihn selbst trifft), nach der Durchsicht 176–196 (20 px,
+siehe unten) und um den Griff 44 × 44 (`test592` §9).
+
+**Der Griff in den zehn Schemata** (1440, gezeichnete Pixel, Pille gegen
+den Grund 10 px links (Navigation) und rechts (Inhalt); Fokus: Pille gegen
+die Navigation):
+
+```txt
+                  Deckkraft 0,75 (erster Bau)   Deckkraft 1 (E716)        Fokus
+standard          2,53 / 2,68                   3,63 / 3,84               3,38
+hell              2,50 / 2,59                   3,76 / 3,90               5,50
+nacht             2,52 / 2,68                   3,63 / 3,86               5,76
+wald              2,68 / 2,87                   3,86 / 4,14               7,30
+sand              2,35 / 2,56                   3,51 / 3,83               3,29
+papier            2,72 / 2,81                   4,26 / 4,42               7,20
+kontrast          5,58 / 5,92                   9,66 / 10,24             13,83
+rose              2,50 / 2,67                   3,54 / 3,78               5,38
+touchkit-hell     2,36 / 2,57                   3,50 / 3,81               5,27
+touchkit-dunkel   3,24 / 3,53                   5,21 / 5,68               8,10
+```
+
+**Start** (`test388` §5, unter dem Schloss): vorher 1850 KB gzip über 252
+Dateien, nachher 1852 KB über 252 Dateien — Decke 1950. Einzeln (gzip -6):
+`studio.js` 2599 → 3326 B, `studio.css` 23767 → 25065 B (die Erklärungen
+in der CSS reisen mit, sie ist Quelle), `index.html` 13497 → 13534 B. Keine
+neue Datei, kein neues Skript.
+
+**Nachtrag aus der Durchsicht** (6. Oktober 2026, file://, `hasTouch`,
+`elementFromPoint`). Mit grobem Zeiger, bei 1440 und Breite 184:
+
+```txt
+                       Streifen    Navigationsknopf endet   #btn-back beginnt   verloren
+erster Bau (fbd76121)  172–196     175                      196                 3 px je Navigationsknopf
+24 px ab Kante−8       176–200     175                      196                 #btn-back (x 221 bei Kante 208)
+nachher (20 px)        176–196     175                      196                 nichts
+```
+
+Dieselbe Sonde (Raster 1 × 2 px über Kante ± 30) bei 1440 × 900,
+1024 × 768 und 800 × 1000, Breiten 148, 184 und 260, mit Maus und Finger:
+kein Navigationsknopf und nicht `#btn-back` verliert einen Treffer; das
+44 × 44-Quadrat um den Griff bleibt mittig auf der Kante (Gegenprobe
+`left:50%` statt 8 px: „Um den Griff ist die Fläche mindestens 44 px
+breit" rot). Start unverändert 1852 KB gzip über 252 Dateien (`test388`
+§5, Decke 1950); `redion-einzeldatei.html` 9150 → 9151 KB.

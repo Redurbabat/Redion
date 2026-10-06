@@ -8348,6 +8348,49 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L237 · Drei Griffe für eine Breite: der verdeckte `#side-griff` und der verirrte `.side-griff` am Telefon — 6. Oktober 2026
+
+**Gefunden beim Bau von E716** (Redur, Masterprompt vom 29. September: „der
+linie wo man die feld grösser und kleiner macht , funktioniert nicht…").
+E716 hat den Trenner der Studio-Navigation (`#studio-divider`) repariert.
+Daneben stehen zwei ältere Griffe für dieselbe Handlung — „eine Spalte
+breiter ziehen" —, und keiner von beiden ist im laufenden Programm zu
+erreichen, wie er gemeint war:
+
+1. **`#side-griff` liegt unter `.side-griff`.** Die alte Seitenleiste
+   `#sidebar` trägt zwei Griffe übereinander an derselben rechten Kante:
+   `.side-griff` (z 30, `schale.ts` `seitenleisteBreite`, Grenzen 180–460,
+   Meta `seiteBreite`, Doppelklick → 240) und `#side-griff` (z 20, im Start
+   von `schale.ts`, Meta `seitenleiste`, ohne Grenze beim Wiederherstellen,
+   ohne Zurücksetzen). Der zweite bekommt nie einen Zeiger. Am Rechner ist
+   `#sidebar` ohnehin `display:none` (premium.css); `test52` und `test143`
+   blenden sie für ihre Messung kurz ein.
+2. **Am Telefon steht `.side-griff` als 6-px-Streifen mit ↔-Zeiger am
+   Rand der Schublade** (x 387–393 bei 390 px, gemessen in der Karte zu #5),
+   obwohl die Schublade die volle Breite hat — eine Seitenleiste am Telefon
+   in der Breite zu ziehen ergibt keinen Sinn; für `#side-griff` steht genau
+   dieser Satz schon in `bausteine.css`.
+3. **Drei Umsetzungen derselben Handlung.** Seit E440 gibt es den dritten,
+   den Trenner. Zusammengeführt hat sie niemand (E283 §4: „nichts gelöscht,
+   nur nichts gebaut").
+
+**Warum nicht in E716.** Löschen braucht Redurs Ja (§43), und seine
+Erlaubnisse vom 3. Oktober decken diese Griffe nicht. Die Breite der
+Seitenleiste bliebe nach (a) unter `.side-griff` erreichbar (`test52`,
+`test143`).
+
+**Vorschlag** (Frage an Redur, steht auch in `AUFGABEN.md`): (a) den
+verdeckten `#side-griff` löschen (Start in `schale.ts`, `setzeBreite`, wenn
+sonst niemand ruft, `ansichten.css`, `bausteine.css`); (b) `.side-griff` am
+Telefon ausblenden; (c) später `.side-griff` auf denselben Zeiger- und
+Tastencode wie den Trenner setzen. Mit Wächter, rot zuerst: `test52` um
+„genau ein Griff an #sidebar" und „`.side-griff` bei 390 px
+`display:none`" erweitern.
+
+**Wächter:** keiner — es gibt nur die Mechanik-Prüfung `test52`/`test143`.
+
+---
+
 ## L235 · Zwei Fragen an die Ecke aus E676: eine Probe in `test201` und die Tinte einer zitternden Hand — 28. September 2026
 
 **Gefunden beim Bau von E708** (rot zuerst am Stift, Redur: „ohne eine
@@ -9530,7 +9573,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 131 Lücken, 75 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 132 Lücken, 76 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

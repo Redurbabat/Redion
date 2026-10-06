@@ -532,6 +532,25 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* ── Der Trenner (E716) ──────────────────────────────────────────────────
+     Die Navigation auf einer gezogenen Breite (236 px) und der Griff im
+     Zustand „wird gezogen" (Akzentlinie, gestreckte Pille). Am Telefon gibt
+     es keinen Trenner — dort zeigt das Bild, dass auch keiner da ist. Die
+     übrigen Zustände (Ruhe, Fokus, 148, 260, kompakt, 1024) stehen in der
+     Bilderreihe des Bogens, nicht hier. */
+  trennerZiehen: {
+    titel: 'Der Trenner — 236 px gezogen, Griff beim Ziehen (E716)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Bibliothek.oeffne();
+      document.body.style.setProperty('--studio-nav-expanded', '236px');
+      document.body.classList.add('studio-resizing');
+      await new Promise(f => setTimeout(f, 200));
+    }
+  },
+
   /* ── Die vier Bildschirme, die seit E273 ihren Ort kennen ──────────────── */
   kantePosteingang: {
     titel: 'Posteingang — Kante mit den drei Laden',
