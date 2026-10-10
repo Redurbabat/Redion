@@ -247,7 +247,7 @@ const Bibliothek = (() => {
     const root = blocks.find(block => block?.alive !== false && block.type === 'page' &&
       (block.schoolRoot === true || block.systemRole === 'school-root') && permitted('lesen', block.id));
     if (!root) {
-      wrap.innerHTML = '<div class="school-home school-empty"><div class="school-empty-icon">🎓</div>' +
+      wrap.innerHTML = '<div class="school-home school-empty">' + schulOrt() + '<div class="school-empty-icon">🎓</div>' +
         '<h1>Ausbildungsbereich</h1><p>Lege die additive Ausbildungsvorlage an. Sie erstellt normale Seiten und Datenbanken.</p>' +
         '<button data-school-action="install" class="prim">Ausbildung einrichten</button></div>';
       wrap.querySelector('[data-school-action="install"]')?.addEventListener('click', () => {
@@ -257,6 +257,7 @@ const Bibliothek = (() => {
         }
         const page = Galerie.bauen('ausbildung'); if (page) { App.zeichneBaum(); App.oeffne(page.id); }
       });
+      schulOrtBinden(wrap);
       return;
     }
 
@@ -296,7 +297,7 @@ const Bibliothek = (() => {
     const list = (items: any[], make: (item: any) => string, empty: string): string =>
       items.length ? items.map(make).join('') : '<p class="school-none">' + esc(empty) + '</p>';
     wrap.innerHTML =
-      '<div class="school-home">' +
+      '<div class="school-home">' + schulOrt() +
         '<div class="school-hero"><div><span>🎓 Ausbildung</span><h1>' + esc(root.text || 'Ausbildung') +
           '</h1><p>Seiten, Lernstoff und Termine an einem Ort – alles bleibt normale Redion-Struktur.</p></div>' +
           '<div class="school-quick"><button data-school-action="capture">📷 Erfassen</button>' +
@@ -352,6 +353,7 @@ const Bibliothek = (() => {
     });
     wrap.querySelector('[data-school-action="learn"]')?.addEventListener('click', () => Werkzeuge.lernen());
     wrap.querySelector('[data-school-action="calculate"]')?.addEventListener('click', () => Electrical.open(root));
+    schulOrtBinden(wrap);
   };
 
   /** WIE VIELE „KÜRZLICH VERWENDET" ZEIGT (E367, L116).
@@ -1602,6 +1604,24 @@ const Bibliothek = (() => {
    * die Seite IST das Regal, der Reiter ist nur ein Filter darauf. Er
    * steht deshalb klein darunter, zusammen mit der Zahl.
    */
+  /** Die Ortspille (E725) — im Kopf der drei Formen und in der Schulansicht. */
+  const ortPille = (name: string, zahl = '', einheit = ''): string =>
+    '<button type="button" class="bib-pille bib-ort" data-orte aria-haspopup="menu" aria-expanded="false">' +
+      '<span class="bib-pille-wort">' + esc(name) + '</span>' +
+      (zahl ? '<span class="bib-pille-zahl">' + esc(zahl) +
+        '<span class="bib-pille-einheit">' + esc(einheit) + '</span></span>' : '') +
+      '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>';
+  /** „Ausbildung" ist ein Ort, kein Ende (E725): auch die Schulansicht trägt
+   *  den Ort-Wähler — vorher kam man aus ihr bis zum Neuladen nicht heraus,
+   *  weil `oeffne()` den Ort stehen lässt und es dort keinen Wähler gab. */
+  const schulOrt = (): string =>
+    '<div class="bib-wahl school-ort" role="group" aria-label="Was die Bibliothek zeigt">' +
+      ortPille(ORTE.find(o => o.id === 'schule')?.name || 'Ausbildung') + '</div>';
+  const schulOrtBinden = (wrap: HTMLElement): void => {
+    if (typeof Register !== 'undefined' && Register.symbole) Register.symbole.fuelle(wrap);
+    wrap.querySelector<HTMLElement>('[data-orte]')?.addEventListener('click', ereignis =>
+      ortMenue(ereignis.currentTarget as HTMLElement));
+  };
   const deckelKopf = (alle: any[], anzahl: number, gesamt = anzahl): string => {
     const ort = ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
     const satz = umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten');
@@ -1638,11 +1658,7 @@ const Bibliothek = (() => {
         /* Name, Zahl und Einheit stehen getrennt: am Telefon fällt das Wort
            „Dokumente" weg, nie die Zahl — eine abgeschnittene Zahl ist eine
            andere Zahl (§55.1); „60 von 313" bleibt ganz (L116). */
-        '<button type="button" class="bib-pille bib-ort" data-orte aria-haspopup="menu" aria-expanded="false">' +
-          '<span class="bib-pille-wort">' + esc(ort) + '</span>' +
-          '<span class="bib-pille-zahl"> \u00b7 ' + esc(satzZahl) +
-            '<span class="bib-pille-einheit">' + esc(satzEinheit) + '</span></span>' +
-          '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>' +
+        ortPille(ort, ' \u00b7 ' + satzZahl, satzEinheit) +
         artPille(alle) +
         /* Die Form bleibt EIN Zeichen (Entscheidung b) — das der gewählten. */
         '<button type="button" class="bib-form-knopf" data-form-wahl aria-haspopup="menu" aria-expanded="false" ' +

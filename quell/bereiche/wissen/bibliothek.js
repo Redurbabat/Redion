@@ -127,7 +127,7 @@ const Bibliothek = (() => {
         const root = blocks.find(block => block?.alive !== false && block.type === 'page' &&
             (block.schoolRoot === true || block.systemRole === 'school-root') && permitted('lesen', block.id));
         if (!root) {
-            wrap.innerHTML = '<div class="school-home school-empty"><div class="school-empty-icon">🎓</div>' +
+            wrap.innerHTML = '<div class="school-home school-empty">' + schulOrt() + '<div class="school-empty-icon">🎓</div>' +
                 '<h1>Ausbildungsbereich</h1><p>Lege die additive Ausbildungsvorlage an. Sie erstellt normale Seiten und Datenbanken.</p>' +
                 '<button data-school-action="install" class="prim">Ausbildung einrichten</button></div>';
             wrap.querySelector('[data-school-action="install"]')?.addEventListener('click', () => {
@@ -141,6 +141,7 @@ const Bibliothek = (() => {
                     App.oeffne(page.id);
                 }
             });
+            schulOrtBinden(wrap);
             return;
         }
         const children = Store.childrenOf(root.id)
@@ -179,7 +180,7 @@ const Bibliothek = (() => {
         exams.sort((a, b) => a.date - b.date);
         const list = (items, make, empty) => items.length ? items.map(make).join('') : '<p class="school-none">' + esc(empty) + '</p>';
         wrap.innerHTML =
-            '<div class="school-home">' +
+            '<div class="school-home">' + schulOrt() +
                 '<div class="school-hero"><div><span>🎓 Ausbildung</span><h1>' + esc(root.text || 'Ausbildung') +
                 '</h1><p>Seiten, Lernstoff und Termine an einem Ort – alles bleibt normale Redion-Struktur.</p></div>' +
                 '<div class="school-quick"><button data-school-action="capture">📷 Erfassen</button>' +
@@ -232,6 +233,7 @@ const Bibliothek = (() => {
         });
         wrap.querySelector('[data-school-action="learn"]')?.addEventListener('click', () => Werkzeuge.lernen());
         wrap.querySelector('[data-school-action="calculate"]')?.addEventListener('click', () => Electrical.open(root));
+        schulOrtBinden(wrap);
     };
     const DECKE_KUERZLICH = 60;
     const hatFreigaben = (p) => {
@@ -1025,6 +1027,18 @@ const Bibliothek = (() => {
         if (Vorschau.bilderNachtragen)
             Vorschau.bilderNachtragen(wrap);
     };
+    const ortPille = (name, zahl = '', einheit = '') => '<button type="button" class="bib-pille bib-ort" data-orte aria-haspopup="menu" aria-expanded="false">' +
+        '<span class="bib-pille-wort">' + esc(name) + '</span>' +
+        (zahl ? '<span class="bib-pille-zahl">' + esc(zahl) +
+            '<span class="bib-pille-einheit">' + esc(einheit) + '</span></span>' : '') +
+        '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>';
+    const schulOrt = () => '<div class="bib-wahl school-ort" role="group" aria-label="Was die Bibliothek zeigt">' +
+        ortPille(ORTE.find(o => o.id === 'schule')?.name || 'Ausbildung') + '</div>';
+    const schulOrtBinden = (wrap) => {
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        wrap.querySelector('[data-orte]')?.addEventListener('click', ereignis => ortMenue(ereignis.currentTarget));
+    };
     const deckelKopf = (alle, anzahl, gesamt = anzahl) => {
         const ort = ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
         const satz = umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten');
@@ -1044,11 +1058,7 @@ const Bibliothek = (() => {
             '><span data-sym="plus" aria-hidden="true"></span>' +
             '<span class="wort">' + IMPORT_WORT + '</span></button>' +
             '<div class="bib-wahl" role="group" aria-label="Was die Bibliothek zeigt">' +
-            '<button type="button" class="bib-pille bib-ort" data-orte aria-haspopup="menu" aria-expanded="false">' +
-            '<span class="bib-pille-wort">' + esc(ort) + '</span>' +
-            '<span class="bib-pille-zahl"> \u00b7 ' + esc(satzZahl) +
-            '<span class="bib-pille-einheit">' + esc(satzEinheit) + '</span></span>' +
-            '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>' +
+            ortPille(ort, ' \u00b7 ' + satzZahl, satzEinheit) +
             artPille(alle) +
             '<button type="button" class="bib-form-knopf" data-form-wahl aria-haspopup="menu" aria-expanded="false" ' +
             'aria-label="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '" ' +

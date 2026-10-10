@@ -24,6 +24,8 @@
 .bib-wahl .bib-form-knopf{border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--bg-card)}
 .bib-wahl .bib-form-knopf[aria-expanded="true"]{background:var(--bg-hover)}
 .bib-wahl .bib-form-knopf svg{width:18px;height:18px}
+/* Die Schulansicht trägt denselben Ort-Wähler (E725) — über ihrem Kopf. */
+.school-ort{margin:0 0 14px}
 /* 44, nicht 40: „Neu" und „PDF importieren" sind die zwei Hauptwege des
    Regals (§37 hart). Die 40 gewann am Telefon gegen `.bib-dkopf button`,
    weil `.bib-dkopf .bib-neu` spezifischer ist — test114 mass 80 × 40. */
