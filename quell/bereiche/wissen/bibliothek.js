@@ -91,6 +91,18 @@ const Bibliothek = (() => {
         { id: 'datenbank', icon: '▦', name: 'In Datenbanken' },
         { id: 'alle', icon: '▤', name: 'Alle' }
     ];
+    const ORTE = [
+        { id: 'ablage', name: 'Meine Ablage', zeichen: 'archive' },
+        { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock' },
+        { id: 'favoriten', name: 'Favoriten', zeichen: 'star' },
+        { id: 'pdf', name: 'Alle PDFs', zeichen: 'page' },
+        { id: 'geteilt', name: 'Geteilt', zeichen: 'users' },
+        { id: 'privat', name: 'Privat', zeichen: 'lock' },
+        { id: 'schule', name: 'Ausbildung', zeichen: 'book' },
+        { id: 'datenbank', name: 'In Datenbanken', zeichen: 'database' },
+        { id: 'alle', name: 'Alle', zeichen: 'grid' }
+    ];
+    const ortAktiv = () => zustand.reiter === 'alle' && zustand.art === 'pdf' ? 'pdf' : zustand.reiter;
     const SPALTEN = [
         { id: 'name', icon: '📄', name: 'Seitenbezeichnung', breit: '2fr' },
         { id: 'von', icon: '👤', name: 'Erstellt von', breit: '1fr' },
@@ -227,14 +239,27 @@ const Bibliothek = (() => {
         wrap.querySelector('[data-school-action="calculate"]')?.addEventListener('click', () => Electrical.open(root));
     };
     const DECKE_KUERZLICH = 60;
+    const hatFreigaben = (p) => {
+        if (typeof Konten === 'undefined' || !Konten.freigabenVon)
+            return false;
+        const entries = Konten.freigabenVon(p.id) || {};
+        return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
+    };
+    const reiterFilter = (reiter, alle) => {
+        if (reiter === 'kuerzlich')
+            return alle.filter(p => p.zuletztGeoeffnet || p.edited);
+        if (reiter === 'favoriten')
+            return alle.filter(p => p.favorite);
+        if (reiter === 'geteilt')
+            return alle.filter(p => hatFreigaben(p) || p.oeffentlich);
+        if (reiter === 'privat')
+            return alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
+        if (reiter === 'datenbank')
+            return alle.filter(p => p.parentTable === 'collection');
+        return null;
+    };
     const auswahl = () => {
         const alle = alleSeiten();
-        const freigaben = (p) => {
-            if (typeof Konten === 'undefined' || !Konten.freigabenVon)
-                return false;
-            const entries = Konten.freigabenVon(p.id) || {};
-            return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
-        };
         let liste = alle;
         if (zustand.reiter === 'ablage') {
             const ordner = zustand.ordner;
@@ -250,17 +275,11 @@ const Bibliothek = (() => {
             });
         }
         if (zustand.reiter === 'kuerzlich')
-            liste = alle.filter(p => p.zuletztGeoeffnet || p.edited)
+            liste = (reiterFilter('kuerzlich', alle) || [])
                 .sort((a, b) => zeitZahl(b.zuletztGeoeffnet || b.edited) -
                 zeitZahl(a.zuletztGeoeffnet || a.edited));
-        if (zustand.reiter === 'favoriten')
-            liste = alle.filter(p => p.favorite);
-        if (zustand.reiter === 'geteilt')
-            liste = alle.filter(p => freigaben(p) || p.oeffentlich);
-        if (zustand.reiter === 'privat')
-            liste = alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
-        if (zustand.reiter === 'datenbank')
-            liste = alle.filter(p => p.parentTable === 'collection');
+        else if (zustand.reiter !== 'ablage')
+            liste = reiterFilter(zustand.reiter, alle) || liste;
         if (zustand.suche) {
             const s = zustand.suche.toLowerCase();
             liste = liste.filter(p => (p.text || '').toLowerCase().includes(s));
@@ -328,6 +347,42 @@ const Bibliothek = (() => {
         const weg = ordnerWeg();
         const oben = weg.length >= 2 ? weg[weg.length - 2] : null;
         geheIn(oben ? oben.id : null);
+    };
+    const liegtIn = (p, ordnerId) => {
+        let cur = p && p.parentTable !== 'collection' && p.parentId ? Store.cache.blocks[p.parentId] : null;
+        for (let n = 0; cur && n < 50; n++) {
+            if (cur.id === ordnerId)
+                return true;
+            cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+        }
+        return false;
+    };
+    const suchBereich = () => {
+        const wurzel = document.querySelector('[data-bib-bereich]');
+        if (!wurzel || !wurzel.isConnected)
+            return null;
+        const alle = alleSeiten();
+        const ordnerId = zustand.reiter === 'ablage' ? zustand.ordner : null;
+        const ordner = ordnerId ? Store.getBlock(ordnerId) : null;
+        let liste = ordner ? alle.filter(p => liegtIn(p, ordner.id)) : (reiterFilter(zustand.reiter, alle) || alle);
+        const ort = ortAktiv();
+        const artFilter = ort === 'pdf' ? 'pdf' : zustand.art;
+        if (artFilter !== 'alle')
+            liste = liste.filter(p => artVon(p).id === artFilter);
+        const ids = new Set(liste.map(p => String(p.id)));
+        const teile = [];
+        if (ordner)
+            teile.push(String(ordner.text || 'Ohne Titel'));
+        else if (ort !== 'ablage' && ort !== 'alle')
+            teile.push(ORTE.find(o => o.id === ort)?.name || ort);
+        if (ort !== 'pdf' && zustand.art !== 'alle')
+            teile.push(ART_FILTER.find(a => a.id === zustand.art)?.name || zustand.art);
+        return {
+            name: teile.length ? 'In ‚' + teile.join(' · ') + '‘' : 'Bibliothek',
+            ordnerId: ordner ? String(ordner.id) : null,
+            art: artFilter,
+            passt: (seite) => !!seite && ids.has(String(seite.id))
+        };
     };
     const fachSeiten = (elternId) => (Store.childrenOf(elternId) || [])
         .filter((b) => b && b.alive !== false && b.type === 'page')
@@ -971,7 +1026,7 @@ const Bibliothek = (() => {
             ? alle : alle.filter(p => artVon(p).id === zustand.art);
         const vorhanden = new Set(alle.map(p => artVon(p).id));
         wrap.innerHTML =
-            '<div class="bib bib-deckel-seite">' +
+            '<div class="bib bib-deckel-seite" data-bib-bereich>' +
                 deckelKopf(alle.length, gesamt) +
                 (zustand.reiter === 'ablage'
                     ? '<div class="bib-ablage-layout">' +
@@ -1030,7 +1085,7 @@ const Bibliothek = (() => {
             .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
             .slice(0, 4);
         wrap.innerHTML =
-            '<div class="bib bib-regal-seite">' +
+            '<div class="bib bib-regal-seite" data-bib-bereich>' +
                 bibKopf(liste, regal.length, gesamt) +
                 (regal.length
                     ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
@@ -1226,7 +1281,7 @@ const Bibliothek = (() => {
         const spalten = SPALTEN.filter(s => zustand.spalten.includes(s.id));
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
-            '<div class="bib">' +
+            '<div class="bib" data-bib-bereich>' +
                 bibKopf(liste, hefte(liste).length, gesamt) +
                 '<div class="bib-kopf bib-kopf-liste">' +
                 '<div class="bib-werkzeuge">' +
@@ -1631,7 +1686,7 @@ const Bibliothek = (() => {
                     blickHinein(p, r);
             } });
     }
-    return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+    return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, suchBereich,
         pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,
         blickKnopf, mitBlick, blickAnbringen, blickHinein };
 })();

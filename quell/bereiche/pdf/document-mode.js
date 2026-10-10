@@ -256,6 +256,33 @@ const DocumentMode = (() => {
         quellen.forEach(id => { void PdfEinlesen.verweiseNachtragen(id); });
     };
     let sprungWunsch = null;
+    const findBereich = () => {
+        let w = false;
+        try {
+            w = Store.getMeta('dokFindAlle');
+        }
+        catch { }
+        return w === true || w === 'dokumente' ? 'dokumente' : w === 'ueberall' ? 'ueberall' : 'dokument';
+    };
+    let findHaken = null;
+    const findBereichMerken = (b) => {
+        try {
+            Store.setMeta('dokFindAlle', b === 'dokumente' ? true : b === 'ueberall' ? 'ueberall' : false);
+        }
+        catch { }
+        if (findHaken && findHaken.lebt())
+            findHaken.bereichZeigen(b);
+    };
+    const findenIn = async (seiteId, wort, o = {}) => {
+        const h = findHaken;
+        if (h && h.seiteId === seiteId && h.lebt())
+            return h.suchen(String(wort || ''), o);
+        if (!o.springen)
+            return null;
+        sprungWunsch = { seiteId, wort: String(wort || '') };
+        App.oeffne(seiteId);
+        return null;
+    };
     const documentsIn = (page) => {
         if (!page?.id)
             return [];
@@ -1608,15 +1635,37 @@ const DocumentMode = (() => {
         const findZahl = document.createElement('span');
         findZahl.className = 'document-find-zahl';
         findZahl.setAttribute('aria-live', 'polite');
-        const findAlleKnopf = topButton('find-alle', '📚', 'Auch in den anderen Dokumenten suchen');
-        findAlleKnopf.className = 'document-find-alle';
-        let findAlle = Store.getMeta('dokFindAlle') === true;
-        findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
-        findAlleKnopf.classList.toggle('an', findAlle);
+        let findBereichJetzt = findBereich();
+        const findBereichWahl = Segment.bauen({
+            name: 'Wo suchen',
+            wahlen: [
+                { id: 'dokument', name: 'Dieses Dokument', zeichen: 'page' },
+                { id: 'dokumente', name: 'Alle Dokumente', zeichen: 'pages' },
+                { id: 'ueberall', name: 'Überall', zeichen: 'globe' }
+            ],
+            gewaehlt: findBereichJetzt,
+            gewechselt: (id) => {
+                findBereichJetzt = id === 'dokumente' ? 'dokumente' : id === 'ueberall' ? 'ueberall' : 'dokument';
+                findBereichMerken(findBereichJetzt);
+                fremdZeigen(findFeld.value);
+                if (findBereichJetzt !== 'ueberall')
+                    findFeld.focus();
+            }
+        });
+        findBereichWahl.element.querySelectorAll('[data-seg-wahl]')
+            .forEach(k => { k.title = (k.textContent || '').trim(); });
+        const findBereichHuelle = document.createElement('div');
+        findBereichHuelle.className = 'document-find-bereich';
+        findBereichHuelle.append(findBereichWahl.element);
+        findBereichWahl.element.addEventListener('click', ereignis => {
+            const ziel = ereignis.target instanceof Element ? ereignis.target.closest('[data-seg-wahl="ueberall"]') : null;
+            if (ziel)
+                App.suche(findFeld.value, { bereich: 'ueberall' });
+        });
         const findListe = document.createElement('div');
         findListe.className = 'document-find-liste';
         findListe.hidden = true;
-        findbar.append(findFeld, findZahl, findAlleKnopf, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
+        findbar.append(findFeld, findZahl, findBereichHuelle, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
         let folienband = folienbandBauen(page, drawingbar);
         workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband ? [] : [drawingbar]), commandbar, body);
         const folienbandNachziehen = () => {
@@ -2131,7 +2180,7 @@ const DocumentMode = (() => {
         };
         const fremdZeigen = (wort) => {
             const q = String(wort || '').trim();
-            if (!findAlle || q.length < 2) {
+            if (findBereichJetzt === 'dokument' || q.length < 2) {
                 findListe.hidden = true;
                 findListe.textContent = '';
                 return;
@@ -2205,7 +2254,7 @@ const DocumentMode = (() => {
             event.preventDefault();
             zumTreffer(trefferNr + (event.shiftKey ? -1 : 1));
         });
-        const findbarSetzen = (an) => {
+        const findbarSetzen = (an, fokus = true, selbstSuchen = true) => {
             findbar.hidden = !an;
             findButton.setAttribute('aria-expanded', String(an));
             findButton.classList.toggle('an', an);
@@ -2214,8 +2263,9 @@ const DocumentMode = (() => {
                     workspace.dataset.documentView = 'closed';
                     viewButton.setAttribute('aria-expanded', 'false');
                 }
-                findFeld.focus();
-                if (findFeld.value.trim())
+                if (fokus)
+                    findFeld.focus();
+                if (selbstSuchen && findFeld.value.trim())
                     void suchen(findFeld.value);
             }
             else {
@@ -3117,18 +3167,6 @@ const DocumentMode = (() => {
                 });
                 return;
             }
-            if (action === 'find-alle') {
-                findAlle = !findAlle;
-                try {
-                    Store.setMeta('dokFindAlle', findAlle);
-                }
-                catch { }
-                findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
-                findAlleKnopf.classList.toggle('an', findAlle);
-                fremdZeigen(findFeld.value);
-                findFeld.focus();
-                return;
-            }
             if (action === 'find-next') {
                 zumTreffer(trefferNr + 1);
                 return;
@@ -3533,6 +3571,25 @@ const DocumentMode = (() => {
             staende.forEach((_stand, i) => { if (gezeichnet.has(i))
                 verweiseMalen(i); });
         });
+        findHaken = {
+            seiteId: String(page.id),
+            lebt: () => findbar.isConnected,
+            bereichZeigen: (b) => {
+                findBereichJetzt = b;
+                findBereichWahl.setzen(b);
+                fremdZeigen(findFeld.value);
+            },
+            suchen: async (wort, o) => {
+                findFeld.value = wort;
+                findbarSetzen(true, !!o.fokus, false);
+                await suchen(wort);
+                if (o.springen && treffer.length)
+                    zumTreffer(0);
+                if (o.fokus)
+                    findFeld.focus();
+                return { anzahl: treffer.length, seiten: [...new Set(treffer.map(x => x.index + 1))] };
+            }
+        };
         if (sprungWunsch && sprungWunsch.seiteId === page.id) {
             const wort = sprungWunsch.wort;
             sprungWunsch = null;
@@ -3546,6 +3603,7 @@ const DocumentMode = (() => {
     return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild, alsPdf,
         stelleIn,
         stellenSuchen: (wort) => fremdeTreffer(wort, ''),
+        findBereich, findBereichMerken, findenIn,
         freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 window.DocumentMode = DocumentMode;

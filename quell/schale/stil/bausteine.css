@@ -7069,7 +7069,28 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
    Der Schalter sieht aus wie die Lupe im Kopf, wenn er an ist — derselbe
    Zustand, dieselbe Sprache. Und er sagt es NICHT nur über die Farbe: er
    trägt `aria-pressed`, und der Rahmen wechselt mit (§38). */
-.document-find-alle.an{background:var(--accent-soft); border-color:var(--accent-text)}
+/* SEIT E725 IST ES EINE WAHL MIT DREI BEREICHEN — „Dieses Dokument · Alle
+   Dokumente · Überall", der Umschalter des Kits (`.ru-seg`). Hier stand der
+   Schalter 📚 (`.document-find-alle`); sein An-Zustand ist „Alle Dokumente".
+   Die Wahl trägt Grund, Rahmen und Gewicht (`.ru-seg-wahl[aria-checked]`),
+   nicht nur Farbe (§38). Zwischen 761 und 1100 px stehen nur die Zeichen da —
+   der Name bleibt für den Vorleser (und als Titel unter dem Zeiger); am
+   Telefon bekommt die Wahl eine eigene Zeile und ihre Namen zurück. */
+.document-find-bereich{display:flex; flex:none; min-width:0}
+@media (min-width:761px) and (max-width:1100px){
+  .document-find-bereich .ru-seg-name{position:absolute; width:1px; height:1px; overflow:hidden;
+    clip-path:inset(50%); white-space:nowrap}
+}
+@media (max-width:760px){
+  /* Das Feld darf schrumpfen, BEVOR umgebrochen wird — sonst risse der
+     Umbruch „‹ › ✕" auseinander (der Fund aus E487, unten). Die Wahl steht
+     dann allein in der zweiten Zeile, so breit wie die Leiste. */
+  .document-findbar{flex-wrap:wrap}
+  .document-findbar input{flex:1 1 6rem}
+  .document-find-bereich{order:9; flex:1 0 100%}
+  .document-find-bereich .ru-seg{width:100%}
+  .document-find-bereich .ru-seg-wahl{flex:1 1 0; padding:0 8px; font-size:12.5px}
+}
 /* DIE LISTE HÄNGT UNTER DER LEISTE, nicht im Papier: ein Treffer in einem
    anderen Dokument hat auf diesem Blatt keinen Ort.
 

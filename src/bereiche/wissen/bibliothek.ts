@@ -152,6 +152,31 @@ const Bibliothek = (() => {
     { id: 'alle',      icon: '▤',  name: 'Alle' }
   ];
 
+  /* ══ JE ORT EIN NAME (E725, Entscheidung a) ═════════════════════════════
+     Redur, Seite 13: „ich sollte von jeder kategorie nur eine sehen". Der
+     Ort stand zweimal da — als Menü hinter `.bib-ort` (die Reiter oben)
+     UND als Wege-Zeile aus dem Studio-Umbau, drei der vier Ziele unter
+     anderem Namen („Ablage"/„Meine Ablage", „Kürzlich
+     verwendet"/„Zuletzt geöffnet"). Jetzt gibt es EINE Liste mit EINEM
+     Namen je Ort — die Namen der Wege, weil Redur sie eingekreist hat.
+     „Alle PDFs" ist kein eigener Bestand: der Ort „Alle" mit der Art PDF
+     (so stand es schon am Weg). `zeichen` ist ein Name aus
+     `Register.symbole`. */
+  const ORTE: Array<{ id: string; name: string; zeichen: string }> = [
+    { id: 'ablage',    name: 'Meine Ablage',     zeichen: 'archive' },
+    { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock' },
+    { id: 'favoriten', name: 'Favoriten',        zeichen: 'star' },
+    { id: 'pdf',       name: 'Alle PDFs',        zeichen: 'page' },
+    { id: 'geteilt',   name: 'Geteilt',          zeichen: 'users' },
+    { id: 'privat',    name: 'Privat',           zeichen: 'lock' },
+    { id: 'schule',    name: 'Ausbildung',       zeichen: 'book' },
+    { id: 'datenbank', name: 'In Datenbanken',   zeichen: 'database' },
+    { id: 'alle',      name: 'Alle',             zeichen: 'grid' }
+  ];
+  /** Welcher Ort gerade gilt — „Alle PDFs" ist „Alle" mit der Art PDF. */
+  const ortAktiv = (): string =>
+    zustand.reiter === 'alle' && zustand.art === 'pdf' ? 'pdf' : zustand.reiter;
+
   const SPALTEN = [
     { id: 'name',   icon: '📄', name: 'Seitenbezeichnung', breit: '2fr' },
     { id: 'von',    icon: '👤', name: 'Erstellt von',      breit: '1fr' },
@@ -342,6 +367,26 @@ const Bibliothek = (() => {
    *  keine Bremse. Und genau deshalb muss sie sich zu erkennen geben. */
   const DECKE_KUERZLICH = 60;
 
+  /** Hat jemand anderes Zugang zu dieser Seite? */
+  const hatFreigaben = (p: any): boolean => {
+    if (typeof Konten === 'undefined' || !Konten.freigabenVon) return false;
+    const entries = Konten.freigabenVon(p.id) || {};
+    return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
+  };
+
+  /** Was ein Ort AUSSER der Ablage zeigt — flach über den ganzen Bestand.
+   *  Steht EINMAL da (§8): das Regal zeichnet daraus, und die Suche fragt
+   *  danach (E725, `suchBereich`). Für die Ablage und „Alle" gibt es keinen
+   *  Filter (`null`). */
+  const reiterFilter = (reiter: string, alle: any[]): any[] | null => {
+    if (reiter === 'kuerzlich') return alle.filter(p => p.zuletztGeoeffnet || p.edited);
+    if (reiter === 'favoriten') return alle.filter(p => p.favorite);
+    if (reiter === 'geteilt')   return alle.filter(p => hatFreigaben(p) || p.oeffentlich);
+    if (reiter === 'privat')    return alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
+    if (reiter === 'datenbank') return alle.filter(p => p.parentTable === 'collection');
+    return null;
+  };
+
   /**
    * Die Auswahl UND ihr wahrer Umfang, in einem Zug.
    *
@@ -358,11 +403,6 @@ const Bibliothek = (() => {
    */
   const auswahl = (): { liste: any[]; gesamt: number } => {
     const alle = alleSeiten();
-    const freigaben = (p: any): boolean => {
-      if (typeof Konten === 'undefined' || !Konten.freigabenVon) return false;
-      const entries = Konten.freigabenVon(p.id) || {};
-      return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
-    };
     let liste = alle;
 
     /* ---- DIE ABLAGE ZEIGT EINE EBENE (E380) -----------------------------
@@ -393,13 +433,10 @@ const Bibliothek = (() => {
     }
 
     if (zustand.reiter === 'kuerzlich')
-      liste = alle.filter(p => p.zuletztGeoeffnet || p.edited)
+      liste = (reiterFilter('kuerzlich', alle) || [])
                   .sort((a, b) => zeitZahl(b.zuletztGeoeffnet || b.edited) -
                                   zeitZahl(a.zuletztGeoeffnet || a.edited));
-    if (zustand.reiter === 'favoriten') liste = alle.filter(p => p.favorite);
-    if (zustand.reiter === 'geteilt')   liste = alle.filter(p => freigaben(p) || p.oeffentlich);
-    if (zustand.reiter === 'privat')    liste = alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
-    if (zustand.reiter === 'datenbank') liste = alle.filter(p => p.parentTable === 'collection');
+    else if (zustand.reiter !== 'ablage') liste = reiterFilter(zustand.reiter, alle) || liste;
 
     if (zustand.suche) {
       const s = zustand.suche.toLowerCase();
@@ -531,6 +568,55 @@ const Bibliothek = (() => {
     const weg = ordnerWeg();
     const oben = weg.length >= 2 ? weg[weg.length - 2] : null;
     geheIn(oben ? oben.id : null);
+  };
+
+  /* ══ WAS DIE EINE SUCHE IN DER BIBLIOTHEK DURCHSUCHT (E725) ═════════════
+     Redur, Seite 13: „die sucher hier sollte es bei der ganz obe such
+     integriert sein". Das Feld „Dokument suchen …" war eine ZWEITE, schwächere
+     Suche — ein Titelfilter auf der offenen Ebene (E282 nannte sie selbst
+     „findet nur Titel"): „Leitungsschutz" im Regalfeld fand 0 Deckel, die
+     Schalensuche dieselben Dokumente nach Inhalt.
+
+     Die Schale bekommt deshalb keinen zweiten Motor, sondern eine Frage:
+     was zeigt das Regal gerade? Die Antwort bleibt hier, im Bereich (§5) —
+     dieselbe Ablage, dieselben Orte, dieselbe Art wie beim Zeichnen, nur
+     TIEF: im Ordner der ganze Unterbaum, nicht nur die offene Ebene.
+
+     `null`, wenn die Bibliothek gerade nicht zu sehen ist — dann hat die
+     Suche keinen Bereich „Bibliothek". */
+  const liegtIn = (p: any, ordnerId: string): boolean => {
+    let cur = p && p.parentTable !== 'collection' && p.parentId ? Store.cache.blocks[p.parentId] : null;
+    for (let n = 0; cur && n < 50; n++) {               /* ein Ring darf hier nicht hängen */
+      if (cur.id === ordnerId) return true;
+      cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+    }
+    return false;
+  };
+  const suchBereich = (): { name: string; ordnerId: string | null; art: string;
+                            passt: (seite: any) => boolean } | null => {
+    const wurzel = document.querySelector<HTMLElement>('[data-bib-bereich]');
+    if (!wurzel || !wurzel.isConnected) return null;
+    const alle = alleSeiten();
+    const ordnerId = zustand.reiter === 'ablage' ? zustand.ordner : null;
+    const ordner = ordnerId ? Store.getBlock(ordnerId) : null;
+    let liste = ordner ? alle.filter(p => liegtIn(p, ordner.id)) : (reiterFilter(zustand.reiter, alle) || alle);
+    const ort = ortAktiv();
+    const artFilter = ort === 'pdf' ? 'pdf' : zustand.art;
+    if (artFilter !== 'alle') liste = liste.filter(p => artVon(p).id === artFilter);
+    const ids = new Set(liste.map(p => String(p.id)));
+    /* DER NAME SAGT, WO GESUCHT WIRD: „Bibliothek" für alles, sonst der
+       Ordner, der Ort und die Art — „In ‚Kabelkunde‘", „In ‚Favoriten‘". */
+    const teile: string[] = [];
+    if (ordner) teile.push(String(ordner.text || 'Ohne Titel'));
+    else if (ort !== 'ablage' && ort !== 'alle') teile.push(ORTE.find(o => o.id === ort)?.name || ort);
+    if (ort !== 'pdf' && zustand.art !== 'alle')
+      teile.push(ART_FILTER.find(a => a.id === zustand.art)?.name || zustand.art);
+    return {
+      name: teile.length ? 'In ‚' + teile.join(' · ') + '‘' : 'Bibliothek',
+      ordnerId: ordner ? String(ordner.id) : null,
+      art: artFilter,
+      passt: (seite: any): boolean => !!seite && ids.has(String(seite.id))
+    };
   };
 
   /* ---- BLICK HINEIN (E459) -------------------------------------------- *
@@ -1475,7 +1561,7 @@ const Bibliothek = (() => {
     const vorhanden = new Set(alle.map(p => artVon(p).id as string));
 
     wrap.innerHTML =
-      '<div class="bib bib-deckel-seite">' +
+      '<div class="bib bib-deckel-seite" data-bib-bereich>' +
         deckelKopf(alle.length, gesamt) +
         (zustand.reiter === 'ablage'
           ? '<div class="bib-ablage-layout">' +
@@ -1582,7 +1668,7 @@ const Bibliothek = (() => {
       .slice(0, 4);
 
     wrap.innerHTML =
-      '<div class="bib bib-regal-seite">' +
+      '<div class="bib bib-regal-seite" data-bib-bereich>' +
         bibKopf(liste, regal.length, gesamt) +
         (regal.length
           ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
@@ -1799,7 +1885,7 @@ const Bibliothek = (() => {
     const raster = spalten.map(s => s.breit).join(' ');
 
     wrap.innerHTML =
-      '<div class="bib">' +
+      '<div class="bib" data-bib-bereich>' +
         bibKopf(liste, hefte(liste).length, gesamt) +
         /* Eigene Klasse: `bib-kopf` trägt seit E207 Reiter und Umschalter und
            steht in BEIDEN Formen. Zwei Elemente mit demselben Namen auf einer
@@ -2287,7 +2373,7 @@ const Bibliothek = (() => {
       } });
   }
 
-  return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+  return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, suchBereich,
            pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,
            /* Der Ordnerblick als Dienst des Bereichs `wissen` (E611):
               `blickKnopf`/`mitBlick` für die Auszeichnung, `blickAnbringen`
