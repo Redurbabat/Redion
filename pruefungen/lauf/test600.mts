@@ -381,6 +381,25 @@ for (const handy of [false, true]) {
   const li = await s.evaluate<any>(`({ form: Store.getMeta('bibForm'), tab: !!document.querySelector('.bib-tab') })`);
   p(`${g}: „Als Tabelle" wird gemerkt und gezeigt`, li.form === 'liste' && li.tab, JSON.stringify(li));
 
+  /* AUSBILDUNG IST EIN ORT, KEIN ENDE (Fund des Bogens): die Schulansicht
+     hatte keinen Ort-Wähler, und `Bibliothek.oeffne()` blieb in ihr — wer
+     „Ausbildung" wählte, kam bis zum Neuladen nicht zurück in die Ablage. */
+  await zurBibliothek(s, 'deckel');
+  await klick(s, '.bib [data-orte]');
+  await s.waitForTimeout(400);
+  await klick(s, '.menu [data-wahl="schule"]');
+  await s.waitForTimeout(700);
+  const sch = await s.evaluate<any>(`({ schule: !!document.querySelector('.school-home, .school-empty'),
+    ort: (document.querySelector('[data-orte]')?.textContent || '').trim(),
+    h: Math.round(document.querySelector('[data-orte]')?.getBoundingClientRect().height || 0) })`);
+  p(`${g}: in „Ausbildung" steht derselbe Ort-Wähler`, sch.schule && /^Ausbildung/.test(sch.ort) && sch.h >= 44, JSON.stringify(sch));
+  await klick(s, '[data-orte]');
+  await s.waitForTimeout(400);
+  await klick(s, '.menu [data-wahl="ablage"]');
+  await s.waitForTimeout(700);
+  p(`${g}: … und er führt zurück in die Ablage`,
+    await s.evaluate<any>(`!!document.querySelector('.bib-gitter .bib-deckel') && !document.querySelector('.school-home, .school-empty')`));
+
   /* Eine Sammlung aus dem Ortsmenü. */
   await zurBibliothek(s, 'deckel');
   await klick(s, '.bib [data-orte]');
