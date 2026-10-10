@@ -69,11 +69,25 @@ const StudioSchale = (() => {
    *  iPhones — `aria-checked` sagt, ob dunkel gilt, der Name bleibt stehen
    *  (die Blase der Symbolreihe liest ihn), und nur der Titel nennt die
    *  Handlung. Welches Gestirn steht, regelt `studio.css` am Attribut. */
+  /* DAS GELTENDE KÜRZEL, nicht das von Haus aus (Durchsicht vom
+     10. Oktober, test602 §2). „hell" ist umbelegbar (`Aussehen.UMBELEGBAR`);
+     stand „Strg ⇧ L" fest im Titel und in `aria-keyshortcuts`, sagte der
+     Schalter nach dem Umbelegen eine Taste an, die nichts mehr tat. Die
+     Schreibweise kommt als „Ctrl+Shift+L" und wird zweimal übersetzt: für
+     Vorleser („Control+Shift+L") und für Menschen („Strg ⇧ L"). */
+  const themaKuerzel = (): string => (typeof Aussehen !== 'undefined' ? Aussehen.kuerzelVon('hell') : 'Ctrl+Shift+L');
   const themaMarkieren = (): void => {
     const hell = document.documentElement.dataset.theme === 'light';
     const b = document.getElementById('studio-theme');
-    b?.setAttribute('aria-checked', String(!hell));
-    if (b) b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + ' (Strg ⇧ L)';
+    if (!b) return;
+    b.setAttribute('aria-checked', String(!hell));
+    /* Am Pluszeichen nur trennen, wenn danach noch etwas kommt — sonst
+       zerfiele „Ctrl++" in drei Teile. */
+    const teile = themaKuerzel().split(/\+(?=.)/).filter(Boolean);
+    if (teile.length) b.setAttribute('aria-keyshortcuts', teile.map(t => (t === 'Ctrl' ? 'Control' : t)).join('+'));
+    else b.removeAttribute('aria-keyshortcuts');
+    const zeigen = teile.map(t => (t === 'Ctrl' ? 'Strg' : t === 'Shift' ? '⇧' : t)).join(' ');
+    b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + (zeigen ? ' (' + zeigen + ')' : '');
   };
   /** Hell ↔ Dunkel für das Gestirn und die Kachel „Dunkel" (E712). Die
    *  Regel steht seit E727 EINMAL in `Aussehen.grundWechseln` — hier wird
@@ -133,6 +147,11 @@ const StudioSchale = (() => {
     });
     an('studio-theme', themaWechseln);
     new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    /* Titel und Kürzel erfährt ein Mensch beim Zeigen, ein Vorleser beim
+       Fokus — dort wird nachgefragt, damit ein eben umbelegtes Kürzel gilt. */
+    const gestirn = document.getElementById('studio-theme');
+    gestirn?.addEventListener('pointerenter', themaMarkieren);
+    gestirn?.addEventListener('focus', themaMarkieren);
     themaMarkieren();
     const divider = document.getElementById('studio-divider');
     /* Das Attribut folgt der gezeichneten Kante: EIN Beobachter deckt das

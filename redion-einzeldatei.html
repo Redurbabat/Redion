@@ -24172,7 +24172,7 @@ body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--mo
   #studio-bar button:active,body[data-schale="premium"] .k-knopf:active{transform:none}
   .lw-paper-sheet,.lw-paper-stack::before,.lw-paper-stack::after{transform:none;transition:none}
   .studio-search::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{display:none}
-  #studio-import[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{animation:none}
+  .bib-studio-import[aria-busy="true"]::before{animation:none}
 }
 
 /* ---- Die Symbolreihe im Studio-Kopf (E462, Vorgabe „iso-pro") ------------
@@ -24600,7 +24600,14 @@ h2.ru-held-kommt .ru-held-zeile:nth-of-type(2)::before{animation-delay:calc(var(
 .studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster::before{opacity:.35;transform:none}
 .studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster > [data-sym]{color:var(--accent-text);
   filter:drop-shadow(0 0 4px color-mix(in srgb,var(--accent) 45%,transparent))}
-html[data-schema="kontrast"] .studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster > [data-sym]{filter:none}
+/* Kein Schein bei hohem Kontrast — auf allen drei Wegen, auf denen auch das
+   Glas deckend wird (grund.css): das Schema, der Schalter in den
+   Einstellungen und die Wünsche des Systems (Durchsicht vom 10. Oktober,
+   test602 §6). */
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster > [data-sym]{filter:none}
+@media (prefers-contrast:more), (forced-colors:active){
+  .studio-gestirn:is(:hover,:focus-visible) .studio-gestirn-fenster > [data-sym]{filter:none}
+}
 
 /* ===========================================================================
    DER RUHIGE KOPF (E728, test603)
@@ -24613,11 +24620,14 @@ html[data-schema="kontrast"] .studio-gestirn:is(:hover,:focus-visible) .studio-g
        sich damit selbst in die rechte Gruppe; die Reihenfolge im Baum
        stimmte schon. Jetzt trägt das erste Zeichen rechts den Abstand.
    2 · RECHTS NUR ZEICHEN, KEINE DOPPELUNG. „PDF öffnen" ist ein Zeichen
-       (`upload`, wie der Tropfen „PDF einlesen", E712); das Wort bleibt für
-       Vorleser und für die Beschriftung beim Einlesen (`importBeschriften`)
-       im Knopf, nur nicht zu sehen. „Werkzeuge" trägt `band` statt ⌘.
+       (`upload`, wie der Tropfen „PDF einlesen", E712); das Wort bleibt
+       im Knopf, nur nicht zu sehen: der Name kommt aus `aria-label`, und
+       `aria-describedby` zeigt auf das Wort — so hören Vorleser beim
+       Einlesen „PDF wird gelesen …", was `importBeschriften` dort
+       hineinschreibt (test603 §10). „Werkzeuge" trägt `band` statt ⌘.
        Bei offener Lade stehen Suche, KI, Konto, Glocke und Aufträge nicht
-       noch einmal im Band — dieselben Ziele stehen eine Zeile darüber
+       noch einmal im Band — Suche, Konto, Glocke und Aufträge stehen im
+       Kopf darüber, die KI als `#btn-ai` in den Seitenwerkzeugen darunter
        (test603 §4 zählt, dass jeder Zwilling dieselbe Funktion ruft).
        Am Telefon bleibt das Band, wie es ist: dort ist es die einzige
        Zeile (L117 Punkt 3).
@@ -24639,11 +24649,26 @@ html[data-schema="kontrast"] .studio-gestirn:is(:hover,:focus-visible) .studio-g
 #studio-import{position:relative}
 #studio-import > .wort{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
-/* Beim Einlesen kreist an der Stelle des Zeichens derselbe Lader wie an „PDF öffnen" im Regal. */
+/* BEIM EINLESEN EIN LADER, AN DER STELLE DES ZEICHENS (Durchsicht vom
+   10. Oktober, test603 §10). Für `[data-studio-import]` ist in RedionMotion
+   `liquid` angemeldet (motion.ts, der eine Katalog): solange `aria-busy`
+   gilt, erscheint die Blase `.rmo-liquid`. Im Knopf mit Wort stand sie
+   neben dem Wort; im 44-px-Zeichenknopf stand sie im Fluss NEBEN dem
+   verborgenen Zeichen — bei x −2, über dem Rand —, und mitten darauf
+   kreiste ein zweiter Lader. Jetzt liegt die Blase genau in der Mitte,
+   und der Kreis kommt nur, wenn keine Blase zu sehen ist: wenn es sie
+   nicht gibt oder RedionMotion den Laufzustand nicht gesetzt hat (die
+   Blase zeigt motion.css nur bei `data-rmo-state="laeuft"`).
+   Bewegung: die Blase hält motion.css an (weniger Bewegung und „Ruhig",
+   test494), den Kreis die zwei Sperren für alles (grund.css bei weniger
+   Bewegung, bausteine.css bei „Ruhig") — eine eigene Zeile oben im
+   Block „weniger Bewegung" hätte gegen die spätere Regel hier verloren
+   und stand deshalb tot da. */
 #studio-import[aria-busy="true"] > [data-sym]{opacity:0}
-#studio-import[aria-busy="true"]::before{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;
-  margin:-8px 0 0 -8px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;
-  animation:studio-orbit 850ms linear infinite}
+#studio-import[aria-busy="true"] > .rmo-liquid{position:absolute;inset:0;margin:auto}
+#studio-import[aria-busy="true"]:is(:not(:has(> .rmo-liquid)),:not([data-rmo-state="laeuft"]))::before{content:"";position:absolute;left:50%;top:50%;
+  width:12px;height:12px;margin:-8px 0 0 -8px;border:2px solid currentColor;border-right-color:transparent;
+  border-radius:50%;animation:studio-orbit 850ms linear infinite}
 @keyframes studio-motor{to{transform:rotate(1turn)}}
 .studio-search:is(:hover,:focus-visible) > [data-sym] > svg,
 body:has(.finder.such) #studio-search > [data-sym] > svg,
@@ -25814,7 +25839,7 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
     <button id="studio-search" class="studio-search"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
     <button id="studio-theme" class="studio-icon studio-gestirn" role="switch" aria-checked="true" aria-label="Dunkles Schema" aria-keyshortcuts="Control+Shift+L" title="Zum hellen Schema wechseln (Strg ⇧ L)"><span class="studio-gestirn-fenster" aria-hidden="true"><span class="studio-gestirn-sonne" data-sym="sun"></span><span class="studio-gestirn-mond" data-sym="moon"></span></span></button>
-    <button id="studio-import" class="studio-icon studio-import" data-studio-import aria-label="PDF öffnen" title="PDF öffnen"><span data-sym="upload"></span><span class="wort">PDF öffnen</span></button>
+    <button id="studio-import" class="studio-icon studio-import" data-studio-import aria-label="PDF öffnen" aria-describedby="studio-import-wort" title="PDF öffnen"><span data-sym="upload"></span><span class="wort" id="studio-import-wort">PDF öffnen</span></button>
     <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
     <button id="studio-tools" class="studio-icon" aria-label="Werkzeuge einblenden" title="Werkzeuge einblenden" aria-expanded="false" aria-controls="menueband"><span data-sym="band"></span></button>
     <!-- GLOCKE UND WOLKENPUNKT AUCH HIER (E457). Beide wohnen im Menüband
@@ -27050,7 +27075,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1428, inhalt: 'acacff1056a33bfa', gebaut: '2026-10-06T08:29:45.302Z' };
+const Stand = { fassung: 1430, inhalt: 'ab5ccd0c0e6212b6', gebaut: '2026-10-10T20:30:20.765Z' };
 window.Stand = Stand;
 
 </script>
@@ -102825,7 +102850,10 @@ const Einstellungen = (() => {
                 let wert = el.value;
                 if (el.dataset.set === 'theme' && wert === 'system')
                     wert = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                S(el.dataset.set, wert);
+                if (el.dataset.set === 'theme' && typeof Aussehen !== 'undefined' && (wert === 'light' || wert === 'dark'))
+                    Aussehen.grundWechseln(wert);
+                else
+                    S(el.dataset.set, wert);
                 App.zeichneSeite();
                 App.zeichneBaum();
             });
@@ -146428,12 +146456,20 @@ const StudioSchale = (() => {
         Kontextkante.zeichne();
         UI.toast('Breite zurückgesetzt');
     };
+    const themaKuerzel = () => (typeof Aussehen !== 'undefined' ? Aussehen.kuerzelVon('hell') : 'Ctrl+Shift+L');
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
         const b = document.getElementById('studio-theme');
-        b?.setAttribute('aria-checked', String(!hell));
-        if (b)
-            b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + ' (Strg ⇧ L)';
+        if (!b)
+            return;
+        b.setAttribute('aria-checked', String(!hell));
+        const teile = themaKuerzel().split(/\+(?=.)/).filter(Boolean);
+        if (teile.length)
+            b.setAttribute('aria-keyshortcuts', teile.map(t => (t === 'Ctrl' ? 'Control' : t)).join('+'));
+        else
+            b.removeAttribute('aria-keyshortcuts');
+        const zeigen = teile.map(t => (t === 'Ctrl' ? 'Strg' : t === 'Shift' ? '⇧' : t)).join(' ');
+        b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + (zeigen ? ' (' + zeigen + ')' : '');
     };
     const themaWechseln = () => {
         if (typeof Aussehen !== 'undefined')
@@ -146494,6 +146530,9 @@ const StudioSchale = (() => {
         });
         an('studio-theme', themaWechseln);
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        const gestirn = document.getElementById('studio-theme');
+        gestirn?.addEventListener('pointerenter', themaMarkieren);
+        gestirn?.addEventListener('focus', themaMarkieren);
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
         const kante = document.getElementById('kante');

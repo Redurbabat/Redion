@@ -718,7 +718,10 @@ const Einstellungen = (() => {
                 let wert = el.value;
                 if (el.dataset.set === 'theme' && wert === 'system')
                     wert = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                S(el.dataset.set, wert);
+                if (el.dataset.set === 'theme' && typeof Aussehen !== 'undefined' && (wert === 'light' || wert === 'dark'))
+                    Aussehen.grundWechseln(wert);
+                else
+                    S(el.dataset.set, wert);
                 App.zeichneSeite();
                 App.zeichneBaum();
             });

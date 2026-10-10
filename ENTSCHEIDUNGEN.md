@@ -36173,9 +36173,9 @@ E457 — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — u
 
 > **Ergänzt durch E728 (6. Oktober 2026) — L117 Punkt 3 ist geschlossen.**
 > Am Rechner stehen Suche, KI, Konto, Glocke und Aufträge bei offener Lade
-> nicht mehr ein zweites Mal rechts im Band; dieselben Ziele stehen eine
-> Zeile darüber im Studio-Kopf (die KI als `#btn-ai` in den
-> Seitenwerkzeugen), und `test603` §4 zählt, dass jeder Zwilling dieselbe
+> nicht mehr ein zweites Mal rechts im Band; Suche, Konto, Glocke und
+> Aufträge stehen im Studio-Kopf darüber, die KI als `#btn-ai` in den
+> Seitenwerkzeugen darunter, und `test603` §4 zählt, dass jeder Zwilling dieselbe
 > Funktion ruft. Am Telefon bleibt das Band die einzige Zeile, wie hier
 > beschlossen. Punkt 5 (der Importknopf im Regal ausgeblendet) gilt weiter.
 
@@ -61693,11 +61693,15 @@ Scheibe in Hell und Dunkel: beide `matrix(0.906308, -0.422618, …)`.
    Menüband, die Palette, Backstage und das Kürzel erledigt, ohne dass
    eine Aufrufstelle sich ändert. `StudioSchale.themaWechseln` leitet
    weiter; die Kachel „Dunkel" (E712) bleibt, wie sie ist. Die Staffelei
-   ruft `grundWechseln()` statt ihrer Kopie.
+   ruft `grundWechseln()` statt ihrer Kopie. Seit der Durchsicht vom
+   10. Oktober (Nachtrag unten) auch die achte Tür, Einstellungen →
+   Allgemein → „Erscheinungsbild".
 3. **Das Gestirn.** `#studio-theme` ist ein Schalter
    (`role="switch"`, `aria-checked` = dunkel gilt, Name „Dunkles Schema"
-   wie die Staffelei, `aria-keyshortcuts="Control+Shift+L"`, Titel „Zum
-   hellen/dunklen Schema wechseln (Strg ⇧ L)"). Darin ein rundes Fenster
+   wie die Staffelei, `aria-keyshortcuts` und Titel „Zum hellen/dunklen
+   Schema wechseln (…)" mit dem GELTENDEN Kürzel — von Haus aus
+   Control+Shift+L bzw. Strg ⇧ L, nach dem Umbelegen das neue; Nachtrag
+   unten). Darin ein rundes Fenster
    mit Sonne und Mond aus `Register.symbole` (der Mond kam mit E712). Der
    Drehpunkt liegt unter dem Knopf, ein Horizont: das stehende Gestirn ist
    aufrecht, das andere liegt um 80° gedreht unter dem Horizont. Beim
@@ -61732,8 +61736,8 @@ neue Datei. Der Entwurf aus dem Codex-Zweig `codex/pdf-masterprompt-29sep`
 (652f801c5) zeichnete Sonne und Mond als eigenes SVG ins HTML; das ist
 nicht übernommen — `Register.symbole` ist der eine Zeichenkatalog (E202).
 
-**Was es bringt** (`messungen.md` §96): jede der sieben Türen und drei
-gemischte Paare führen von „Mitternacht" und „Touch Kit dunkel" hin ins
+**Was es bringt** (`messungen.md` §96): jede der sieben Türen (seit der
+Durchsicht acht) und drei (seit der Durchsicht vier) gemischte Paare führen von „Mitternacht" und „Touch Kit dunkel" hin ins
 gemerkte helle Schema und zurück ins Ausgangsschema, der Akzent bleibt
 #5cbf8a. Das sichtbare Zeichen steht in allen zehn Schemata mit 5,28 bis
 15 : 1 gegen die Leiste. Hell und Dunkel haben verschiedene Lagen
@@ -61788,6 +61792,42 @@ Palette, Backstage und das Kürzel; `StudioSchale.themaWechseln` bleibt;
 die Staffelei bleibt in Einstellungen → Aussehen. Keine Daten und kein
 Meta-Schlüssel ändern sich (`studio:schema-light`/`-dark`, `theme`,
 `aussehen`).
+
+**Nachtrag der Durchsicht (10. Oktober 2026).** Eine unabhängige
+Durchsicht des Zweigs hat drei Stellen gefunden, an denen dieser Eintrag
+mehr versprach, als gebaut war. Alle drei sind repariert, jede mit einer
+Zusage in `test602`, die vorher rot war (gegen `e5b6df726`):
+
+1. **Die achte Tür.** Einstellungen → Allgemein → „Erscheinungsbild"
+   schrieb nur `theme`; das Schema setzte den Grundton gleich wieder
+   zurück. Von „Mitternacht" aus tat „Hell" dort nichts („hin
+   {"schema":"nacht",…,"theme":"dark"}"). Das war schon vor E727 so —
+   aber „Alle Türen fragen dort" stimmte damit nicht. Jetzt ruft die
+   Auswahl `Aussehen.grundWechseln(wert)` („Wie das System" wird vorher
+   aufgelöst, wie bisher); `test602` §1 fährt sie allein und gemischt mit
+   dem Gestirn.
+2. **Das geltende Kürzel.** „hell" steht in `UMBELEGBAR`, aber
+   `aria-keyshortcuts` stand fest in `index.html` und „(Strg ⇧ L)" fest in
+   `themaMarkieren` — nach dem Umbelegen sagte der Schalter eine Taste an,
+   die nichts mehr tat. Jetzt kommen beide aus `Aussehen.kuerzelVon('hell')`
+   und werden beim Zeigen und beim Fokus nachgefragt, also dort, wo ein
+   Mensch Titel oder Kürzel erfährt (`test602` §2: umbelegt auf Strg Alt H
+   „Control+Alt+H" und „(Strg Alt H)", zurückgesetzt wieder
+   „Control+Shift+L").
+3. **Kein Schein bei hohem Kontrast.** Der Schein unter Zeiger und Fokus
+   fiel nur im Schema „Starker Kontrast" weg; der Schalter „Hoher
+   Kontrast" (`body[data-kontrast="hoch"]`) und `prefers-contrast: more`
+   behielten ihn — anders als das Glas, das in `grund.css` für alle drei
+   deckend wird. Jetzt dieselben drei Wege, dazu `forced-colors: active`
+   (`test602` §6, mit Gegenstück: ohne hohen Kontrast ist der Schein da).
+
+Gegenproben, jede rot gesehen und zurückgenommen: die alte Auswahl
+(`S('theme', …)`) → §1 vier Zeilen rot; das feste Kürzel zurück → §2 zwei
+Zeilen rot; `body[data-kontrast]` aus der Regel und `prefers-contrast` aus
+der Medienabfrage → §6 zwei Zeilen rot. Nicht repariert, nur
+eingetragen: zwei Hinweise unter dem Zeiger (Blase „Dunkles Schema" und,
+nach der Verzögerung des Browsers, der Titel mit dem Kürzel) — L247
+Punkt 4.
 
 ## E728 — Der ruhige Kopf: die Suche links, rechts nur Zeichen, Motor und Glas nur als Zustand
 
@@ -61860,17 +61900,22 @@ none. Kopfknöpfe 38 breit.
    einlesen" im +-Menü (E712), ein Zeichen pro Handlung. Name und Titel
    bleiben „PDF öffnen" (`IMPORT_WORT`, `test482`); das Wort bleibt im
    Knopf, nur nicht zu sehen, damit `importBeschriften` beim Einlesen
-   „PDF wird gelesen …" für Vorleser schreiben kann und das Zeichen nicht
-   überschreibt. E701s Zustände bleiben: getönt in Ruhe, voll unter Zeiger
-   und Fokus. Beim Einlesen kreist an der Stelle des Zeichens der Lader.
+   „PDF wird gelesen …" hineinschreiben kann, ohne das Zeichen zu
+   überschreiben. Vorleser hören es seit der Durchsicht über
+   `aria-describedby` (der Name aus `aria-label` überdeckte es — Nachtrag
+   unten). E701s Zustände bleiben: getönt in Ruhe, voll unter Zeiger
+   und Fokus. Beim Einlesen steht an der Stelle des Zeichens genau EIN
+   Lader: die Blase aus RedionMotion (`liquid`), der Kreis nur, wenn sie
+   nicht zu sehen ist (Nachtrag unten).
    Im Regal bleibt er ausgeblendet (E457 Punkt 5). (b) „Werkzeuge
    einblenden" trägt ein neues Strichzeichen `band` (Rahmen mit dem
    Streifen oben, in dem die Werkzeuge stehen); `command` bleibt
    „Befehle". (c) Am Rechner stehen bei offener Lade Suche, KI, Konto,
-   Glocke und Aufträge nicht noch einmal im Band — dieselben Ziele stehen
-   eine Zeile darüber (`#studio-search`, `#studio-account`,
-   `#studio-glocke` mit E711s Fächer, `#studio-auftraege`; die KI als
-   `#btn-ai` in den Seitenwerkzeugen). Am Telefon bleibt das Band, wie es
+   Glocke und Aufträge nicht noch einmal im Band — Suche, Konto, Glocke
+   und Aufträge stehen im Kopf darüber (`#studio-search`,
+   `#studio-account`, `#studio-glocke` mit E711s Fächer,
+   `#studio-auftraege`), die KI als `#btn-ai` in den Seitenwerkzeugen
+   darunter. Am Telefon bleibt das Band, wie es
    ist. (d) Der Kopf liegt über dem offenen Band (`z-index` 3, eins über
    der klebenden Ecke des Bandes), also auch die Blase von „Werkzeuge".
 3. **Motor und Glas nur als Zustand.** Unter Zeiger und Tastenfokus — und
@@ -61978,6 +62023,58 @@ der Kopfleiste entfernen").** Nichts gelöscht; jede Funktion behält einen
 Ort. Der PDF-Import im Kopf: gleicher Knopf, gleiche Stelle, Zeichen statt
 Wort, dazu „+" → „PDF einlesen" und der Knopf im Regal. „Werkzeuge
 einblenden": gleicher Knopf, neues Zeichen. Die rechte Gruppe des Bandes:
-nur am Rechner bei offener Lade verborgen, dieselben Ziele eine Zeile
-darüber; am Telefon unverändert. Strg P, Strg K, `#btn-search` und
-`#btn-suche-handy` bleiben unverändert.
+nur am Rechner bei offener Lade verborgen, dieselben Ziele im Kopf
+darüber (die KI in den Seitenwerkzeugen darunter); am Telefon
+unverändert. Strg P, Strg K, `#btn-search` und `#btn-suche-handy` bleiben
+unverändert.
+
+**Nachtrag der Durchsicht (10. Oktober 2026).** Eine unabhängige
+Durchsicht fand an einem Zustand, den dieser Bogen verändert und von dem
+er kein Bild gemacht hatte, zwei Fehler, beide gegen §50 („bei
+Gestaltung: ein Bild angesehen") und der zweite gegen §32 („keine
+falschen Versprechen"):
+
+1. **Zwei Lader übereinander.** Beim Einlesen lag der neue Kreis
+   (`::before`) in der Mitte des 44-px-Knopfes, und daneben erschien die
+   Blase aus RedionMotion — `liquid` ist dort für `[data-studio-import]`
+   angemeldet (der eine Katalog, §8). Im Knopf mit Wort stand sie neben
+   dem Wort; im Zeichenknopf stand sie im Fluss neben dem verborgenen
+   Zeichen, 13 px links der Mitte und über den Rand („blase dx −13,
+   drin false"). Jetzt liegt die Blase genau an der Stelle des Zeichens
+   (`position:absolute; inset:0; margin:auto`), und der Kreis springt nur
+   ein, wenn sie nicht zu sehen ist — wenn es sie nicht gibt oder
+   RedionMotion den Laufzustand nicht gesetzt hat (motion.css zeigt sie
+   nur bei `data-rmo-state="laeuft"`). Behalten ist die Blase, weil der
+   Katalog sie dieser Stelle zuweist und sie vor E728 dort zu sehen war;
+   der Kreis kam erst mit E728 an diesen Knopf.
+2. **Vorleser hörten den Stand nicht mehr.** Der Name kam seit E728 aus
+   `aria-label` und überdeckte das verborgene Wort; der Barrierebaum sagte
+   beim Einlesen „PDF öffnen", Beschreibung „PDF öffnen" (vor E728 hiess
+   der Knopf dabei „PDF wird gelesen …"). Jetzt zeigt `aria-describedby`
+   auf das Wort (`#studio-import-wort`): der Name bleibt „PDF öffnen"
+   (`test482`), die Beschreibung sagt „PDF wird gelesen …". In Ruhe ist
+   die Beschreibung gleich dem Namen, wie vorher über den Titel.
+
+Dazu die tote Zeile: `#studio-import[aria-busy="true"]::before
+{animation:none}` stand im Block „weniger Bewegung" VOR der neuen Regel
+mit gleichem Gewicht und gewann nie. Sie ist weg; den Kreis halten die
+zwei Sperren für alles an (`grund.css` bei weniger Bewegung,
+`bausteine.css` bei „Ruhig"), die Blase hält motion.css an (`test494`).
+Gemessen: unter weniger Bewegung und „Ruhig" null endlose Animationen in
+der Blase, sonst neun.
+
+`test603` §10 fährt den echten Weg (Kopfknopf, Dateiwähler,
+`pdfImportieren`; nur der Importeur wartet, bis der Lauf ihn freigibt)
+und war gegen `e5b6df726` rot mit 68 von 73. Gegenproben, jede rot
+gesehen und zurückgenommen: ohne die Zeile für die Blase → „dunkel: … in
+der Mitte … [{"art":"blase","dx":-13,…,"drin":false}]"; ohne
+`aria-describedby` → „Vorleser: … die Beschreibung sagt den Stand —
+{"name":"PDF öffnen","beschreibung":"PDF öffnen"}"; der Kreis ohne
+Bedingung → „genau EIN Lader — blase und kreis"; die erste Fassung der
+Bedingung (`:not(:has(> .rmo-liquid))`, die nur fragte, OB es die Blase
+gibt) → „Ohne Laufzustand der Blase springt der Kreis ein — []".
+
+Ebenfalls aus der Durchsicht: `test603` §5 verlangt am Telefon zuerst,
+dass `:focus-visible` wirklich gilt (`!fv || …` war auch ohne Fokus
+grün), `test580` §7 am Rechner `!titel && deck 1` statt `titel ? deck 0 :
+deck 1`; beide waren schon grün, aus dem richtigen Grund.

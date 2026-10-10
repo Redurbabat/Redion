@@ -510,6 +510,17 @@ console.log('\n§10 Beim Einlesen — ein Lader in der Mitte, und der Vorleser h
       const h = await hoert(pc);
       p('Vorleser: der Name bleibt „PDF öffnen" (test482)', h.name === 'PDF öffnen', JSON.stringify(h));
       p('Vorleser: … und die Beschreibung sagt den Stand („PDF wird gelesen …")', /wird gelesen/.test(h.beschreibung), JSON.stringify(h));
+      /* OHNE DEN LAUFZUSTAND VON REDIONMOTION ist die Blase nicht zu sehen
+         (motion.css zeigt sie nur bei `data-rmo-state="laeuft"`) — dann muss
+         der Kreis einspringen, sonst stünde gar kein Lader da. Die erste
+         Fassung der Reparatur fragte nur, OB es die Blase gibt. */
+      await pc.evaluate(`document.getElementById('studio-import').setAttribute('data-rmo-state', 'bereit')`);
+      await pc.waitForTimeout(100);
+      const ohne = await pc.evaluate(LADER) as Lader;
+      p('Ohne Laufzustand der Blase springt der Kreis ein — genau einer, in der Mitte',
+        ohne.lader.length === 1 && ohne.lader[0]!.art === 'kreis' && Math.abs(ohne.lader[0]!.dx) <= 2 && Math.abs(ohne.lader[0]!.dy) <= 2,
+        JSON.stringify(ohne.lader));
+      await pc.evaluate(`document.getElementById('studio-import').setAttribute('data-rmo-state', 'laeuft')`);
     }
     await pc.evaluate('window.__frei()');
     await pc.waitForFunction(`!document.getElementById('studio-import').hasAttribute('aria-busy')`);

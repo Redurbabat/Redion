@@ -50,12 +50,20 @@ const StudioSchale = (() => {
         Kontextkante.zeichne();
         UI.toast('Breite zurückgesetzt');
     };
+    const themaKuerzel = () => (typeof Aussehen !== 'undefined' ? Aussehen.kuerzelVon('hell') : 'Ctrl+Shift+L');
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
         const b = document.getElementById('studio-theme');
-        b?.setAttribute('aria-checked', String(!hell));
-        if (b)
-            b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + ' (Strg ⇧ L)';
+        if (!b)
+            return;
+        b.setAttribute('aria-checked', String(!hell));
+        const teile = themaKuerzel().split(/\+(?=.)/).filter(Boolean);
+        if (teile.length)
+            b.setAttribute('aria-keyshortcuts', teile.map(t => (t === 'Ctrl' ? 'Control' : t)).join('+'));
+        else
+            b.removeAttribute('aria-keyshortcuts');
+        const zeigen = teile.map(t => (t === 'Ctrl' ? 'Strg' : t === 'Shift' ? '⇧' : t)).join(' ');
+        b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + (zeigen ? ' (' + zeigen + ')' : '');
     };
     const themaWechseln = () => {
         if (typeof Aussehen !== 'undefined')
@@ -116,6 +124,9 @@ const StudioSchale = (() => {
         });
         an('studio-theme', themaWechseln);
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        const gestirn = document.getElementById('studio-theme');
+        gestirn?.addEventListener('pointerenter', themaMarkieren);
+        gestirn?.addEventListener('focus', themaMarkieren);
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
         const kante = document.getElementById('kante');

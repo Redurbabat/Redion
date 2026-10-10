@@ -24,7 +24,7 @@
  *       und Hell mit 4,5 : 1 oder mehr — streng wie für Schrift, obwohl für
  *       ein Zeichen 3 : 1 genügten. Gemessen werden nur diese zwei
  *       Schemata; in den übrigen acht hält das Zeichen 3 : 1, aber nicht
- *       überall 4,5 (Rose 4,28, Sand 4,32, Touch Kit hell 4,43 — Durchsicht
+ *       überall 4,5 (Rose 4,28, Sand 4,33, Touch Kit hell 4,45 — Durchsicht
  *       vom 10. Oktober, messungen §96).
  *   §2  „Zuletzt geöffnet" ruht: der Kartenring dreht nur, solange man
  *       hinzeigt oder der Fokus darin steht — im Leerlauf, am Telefon und

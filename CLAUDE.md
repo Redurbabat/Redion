@@ -1611,8 +1611,8 @@ gab es dreimal mit drei Regeln. Zweimal war er aus dem FALSCHEN Grund rot:
 `aria-checked` zieht ein Beobachter einen Takt später nach, und das
 Zeichen aus dem Register kommt aus dem Baum als `<path></path>` zurück,
 nicht als `<path/>`. Gezählt am 6. Oktober, im selben Bogen: `ls
-pruefungen/lauf/test*.mts | wc -l` sagt 535 — auf seinem Zweig; beim
-Zusammenführen neu zu zählen.*
+pruefungen/lauf/test*.mts | wc -l` sagt 534 — mit `test603` im selben
+Commit 535, auf seinem Zweig; beim Zusammenführen neu zu zählen.*
 
 *Und 535: `test603` — der ruhige Kopf (E728). Redur am 29. September:
 „nur die emojis dort bleiben und alles komplet nacht links schieiben, die
@@ -1624,8 +1624,11 @@ zweite Oberfläche, wenn sie dieselbe Funktion rufen; er ersetzt die Ziele
 kurz durch Zähler und drückt beide Knöpfe. Seine beste Zeile fand das
 BILD: die Blase von „Werkzeuge" lag am rechten Ende noch unter der Klappe
 des Bandes, und der Lauf hatte nur ihre Mitte gefragt. Gegen den Stand
-`887e71c3` war er rot mit 30 von 61. Gezählt am 6. Oktober, im selben
-Bogen: der Befehl sagt 535 — auf seinem Zweig.*
+`887e71c3` war er rot mit 30 von 61. Seinen §10 brachte die Durchsicht
+vom 10. Oktober: beim Einlesen standen zwei Lader übereinander im Knopf,
+und Vorleser hörten den Stand nicht mehr — der Zustand, von dem der Bogen
+kein Bild gemacht hatte. Gezählt am 6. Oktober, im selben Bogen: der
+Befehl sagt 535 — auf seinem Zweig.*
 
 ### Die Befehle
 

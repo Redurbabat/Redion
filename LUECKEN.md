@@ -5509,9 +5509,10 @@ den Prüfläufen, nicht vermutet.
 
    > **GESCHLOSSEN durch E728 (6. Oktober 2026).** Am Rechner (ab 761 px)
    > stehen Suche, KI, Konto, Glocke und Aufträge bei offener Lade nicht
-   > mehr rechts im Band; dieselben Ziele stehen eine Zeile darüber
-   > (`#studio-search`, `#studio-account`, `#studio-glocke`,
-   > `#studio-auftraege`; die KI als `#btn-ai`). Beleg: `test603` §4 — im
+   > mehr rechts im Band; Suche, Konto, Glocke und Aufträge stehen im
+   > Kopf darüber (`#studio-search`, `#studio-account`, `#studio-glocke`,
+   > `#studio-auftraege`), die KI als `#btn-ai` in den Seitenwerkzeugen
+   > darunter. Beleg: `test603` §4 — im
    > Band null sichtbare Zwillinge (vorher `mb-suche`, `mb-ki`,
    > `mb-konto`), jeder Zwilling ruft dieselbe Funktion (am Aufruf
    > gezählt), am Telefon bei 390 px bleiben Suche, KI und Konto im Band.
@@ -8377,8 +8378,18 @@ bleiben und alles komplet nacht links schieiben").
    meldet für `-webkit-backdrop-filter` keinen eigenen Wert; `test603` §5
    liest deshalb die Regel. Auf einem iPhone ist es nicht angesehen (wie
    L10, L117 Punkt 5).
+4. **Zwei Hinweise unter dem Zeiger am Gestirn** (Durchsicht vom
+   10. Oktober): sofort die Blase der Symbolreihe („Dunkles Schema", der
+   Zustand) und nach der Verzögerung des Browsers der Titel („Zum hellen
+   Schema wechseln (Strg ⇧ L)", die Handlung mit dem Kürzel). Beide sagen
+   Verschiedenes, doppelt ist es trotzdem. Einer würde reichen, wenn die
+   Blase das Kürzel trüge — eine Frage der Gestaltung, nicht repariert.
+5. **„Strg P" in der Kapsel liest sich in hellen Schemata schwach.** Der
+   Tastenhinweis stand schon vor diesem Bogen so da und gehört nicht zum
+   Plan; gemessen ist er in `messungen.md` §96 (Nachtrag). Ein eigener
+   kleiner Kontrastbogen.
 
-**Wächter:** `test602`, `test603` für das Gebaute; für die drei Punkte
+**Wächter:** `test602`, `test603` für das Gebaute; für die fünf Punkte
 keiner.
 
 ---
