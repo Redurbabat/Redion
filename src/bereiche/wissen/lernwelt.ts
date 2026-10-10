@@ -191,49 +191,66 @@ const Lernwelt = (() => {
   ];
 
   /**
-   * NEUN REITER WAREN ZU VIELE (E206).
+   * ZWEI KLAPPEN STATT VIER REITERN UND EINER ZWEITEN REIHE (E726).
    *
-   * Redur am 26. August: „es sollte nicht so viele Bereiche haben, z. B. wie
-   * Uni / Schule Ausbildung usw." Gemessen stimmt das auch ohne Auge: neun
-   * Reiter brauchen 1016 px, am Rechner umbrachen sie auf ZWEI Reihen und
-   * kosteten damit 106 px über der Falz — mehr als jede Karte darunter, und
-   * darauf stehen zehn Wörter.
+   * Die Geschichte davor: neun Reiter brauchten 1016 px und umbrachen auf
+   * zwei Reihen (E206, Redur am 26. August: „es sollte nicht so viele
+   * Bereiche haben"). Daraus wurden vier Gruppen, und wer in einer Gruppe
+   * war, bekam darunter eine ZWEITE, kurze Reihe — „bewusst kein
+   * Aufklappmenü: ein Menü versteckt, wo man ist".
    *
-   * Vier Gruppen, und keine Ansicht geht verloren: was zusammengehört, steht
-   * unter einem Namen und klappt als zweite, kurze Reihe auf, sobald man
-   * darin ist. `ANSICHTEN` bleibt unverändert die Wahrheit über die neun —
-   * `Lernwelt.ansichten` gibt weiterhin alle neun heraus, Routen wie
-   * `#welt-lernen-uni` funktionieren weiter, und wer eine zehnte Ansicht
-   * anlegt und hier nicht einträgt, bekommt sie als eigenen Reiter statt
-   * gar nicht.
+   * Redur am 29. September, am Foto der Lernzentrale: „Ganz oben wo menü/
+   * dort sollte wo heute und was neben das ist im ^ und die unter den das
+   * die übersicht neben heute auch mit ^ es nimmt die anderen wie lernpfand
+   * , tranier esc auch mitt." Das ⌄ an den Gruppen versprach ein Menü, das
+   * es nicht gab (ein Klick sprang auf die erste Ansicht), und die zweite
+   * Reihe kostete am Telefon eine ganze Zeile, in der „Fortschritt"
+   * abgeschnitten stand.
    *
-   * `unter[0]` ist das, was der Gruppenkopf selbst öffnet.
+   * Jetzt sind es zwei Klappen in EINER Zeile: ein Hauptteil, der sagt, wo
+   * man ist (E206s Sorge bleibt eingelöst — in „Trainer" heisst er
+   * „Trainer"), und ein echtes ^ mit einem Menü. `ANSICHTEN` bleibt die
+   * Wahrheit über die zwölf; hier steht nur, welche unter welchem ^ steht.
+   * Eine Ansicht, die in keiner Klappe steht, hängt das Menü der Übersicht
+   * unter „Weitere" an — so verschwindet nichts, wenn jemand `ANSICHTEN`
+   * erweitert und diese Liste vergisst (§8: kein zweiter Katalog).
+   *
+   * `gruppen[0].unter[0]` ist, was der Hauptteil zeigt, solange man nicht
+   * in seiner Klappe ist.
    */
-  const REITER: Array<{ id: LernweltAnsicht; icon: string; name: string;
-                        unter?: LernweltAnsicht[] }> = [
-    { id: 'heute',      icon: 'today',     name: 'Heute' },
-    { id: 'lernen',     icon: 'cards',     name: 'Lernen',
-      unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] },
-    /* NOTEN GEHÖREN NEBEN DIE PRÜFUNGEN (E241). Redur: „es sollte meine
-       Schule alles begleiten, Noten, Lernen, Lernziele". Die Schulvorlage
-       legte das Notenheft seit E139 an — gerechnet hat damit niemand. */
-    { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
-      unter: ['pruefungen', 'noten'] },
-    /* Der Stundenplan steht bei „Wo du lernst": er sagt, WANN man WO ist
-       (E243/L70) — hinter dem gleichnamigen Knopf des Schul-Dashboards
-       stand vorher nur die Ausbildungsseite. */
-    { id: 'schule',     icon: 'learn',     name: 'Wo du lernst',
-      unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+  type LernweltKlappe = { id: 'heute' | 'uebersicht'; titel: string; name: string; icon: string;
+                          gruppen: Array<{ name?: string; unter: LernweltAnsicht[] }> };
+  const KLAPPEN: LernweltKlappe[] = [
+    { id: 'heute', titel: 'Heute', name: 'Heute', icon: 'today', gruppen: [
+      { unter: ['heute'] },
+      /* NOTEN GEHÖREN NEBEN DIE PRÜFUNGEN (E241). Redur: „es sollte meine
+         Schule alles begleiten, Noten, Lernen, Lernziele". Die Gruppen
+         tragen die Namen der alten Reiter — wer sie kannte, findet sie. */
+      { name: 'Prüfungen', unter: ['pruefungen', 'noten'] },
+      /* Der Stundenplan steht bei „Wo du lernst": er sagt, WANN man WO ist
+         (E243/L70). */
+      { name: 'Wo du lernst', unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+    ] },
+    { id: 'uebersicht', titel: 'Lernen', name: 'Übersicht', icon: 'cards', gruppen: [
+      { unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] }
+    ] }
   ];
 
+  /** Die Klappen, wie sie gezeichnet werden: mit „Weitere" für Ansichten,
+   *  die in keiner stehen. */
+  const klappen = (): LernweltKlappe[] => {
+    const bekannt = new Set(KLAPPEN.flatMap(k => k.gruppen.flatMap(g => g.unter)));
+    const weitere = ANSICHTEN.filter(a => !bekannt.has(a.id)).map(a => a.id);
+    if (!weitere.length) return KLAPPEN;
+    return KLAPPEN.map(k => k.id !== 'uebersicht' ? k
+      : { ...k, gruppen: [...k.gruppen, { name: 'Weitere', unter: weitere }] });
+  };
+
   /**
-   * Wie eine Ansicht in der ZWEITEN Reihe heisst.
+   * Wie eine Ansicht im Kopf und in den Menüs heisst.
    *
-   * Auf dem Bild vom 26. August stand „Lernen › Lernen": die Gruppe heisst
-   * wie ihr erster Eintrag, und untereinander gelesen sieht das aus wie ein
-   * Fehler. In der Gruppe ist der Name aber ohnehin schon gesagt — was der
-   * Unterreiter braucht, ist nur noch, WELCHER Teil davon.
-   *
+   * Auf dem Bild vom 26. August stand „Lernen › Lernen": die Gruppe hiess
+   * wie ihr erster Eintrag. Die Lernzentrale heisst darum „Übersicht".
    * `ANSICHTEN` bleibt unangetastet: dort heisst die Ansicht weiterhin
    * „Lernen", und `Lernwelt.ansichten` gibt das auch so heraus. Umbenannt
    * wird die Beschriftung, nicht die Ansicht.
@@ -243,9 +260,11 @@ const Lernwelt = (() => {
   const ansichtName = (id: string): string =>
     KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
 
-  /** Zu welcher Gruppe gehört die Ansicht, in der wir gerade sind? */
-  const gruppeVon = (ansicht: string) =>
-    REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht as LernweltAnsicht)) || null;
+  const ansichtZeichen = (id: string): string => ANSICHTEN.find(x => x.id === id)?.icon || 'cards';
+
+  /** In welcher Klappe steht die Ansicht, in der wir gerade sind? */
+  const klappeVon = (ansicht: string): LernweltKlappe | null =>
+    klappen().find(k => k.gruppen.some(g => g.unter.includes(ansicht as LernweltAnsicht))) || null;
 
   const zustand: LernweltZustand = {
     root: null,
@@ -454,13 +473,44 @@ const Lernwelt = (() => {
     return !!seite && seite !== record && direkteBereichIds(seite).includes(bereichId);
   };
 
+  /* ====================================================================
+   * DAS FACH (E726) — ein Filter wie der Lebensbereich, nur mit dem, was
+   * schon da ist. Ein Fach ist das THEMA einer Lernkarte (Seitentitel oder
+   * `quiz.topic`, genau wie `Learning.topicProgress` es zählt), nach Namen
+   * zusammengeführt mit den Zeilen der Fächer-Datenbank der Schulvorlage.
+   * Kein neues Feld an der Karte, keine Migration (§9, L246).
+   *
+   * Der Zustand ist `zustand.themaId` — der Themenfokus, der vorher nur den
+   * Titel der Lernzentrale änderte, filtert jetzt die Zahlen. Gemerkt wird
+   * er wie der Lebensbereich: `lernwelt:<aktor>:fach`.
+   * ==================================================================== */
+  const fachSchluessel = (name: unknown): string => String(name ?? '').trim().toLocaleLowerCase('de-CH');
+
+  const kartenThema = (card: any): string =>
+    typeof Learning !== 'undefined' && typeof Learning.topicLabel === 'function'
+      ? String(Learning.topicLabel(card)) : themaVon(card);
+
+  const imFach = (card: any): boolean =>
+    !zustand.themaId || fachSchluessel(kartenThema(card)) === zustand.themaId;
+
+  /** Ein Feld „Fach" einer Datenbankzeile (Prüfung, Note, Lektion): eine
+   *  Beziehung trägt Kennungen, ein Textfeld Namen — beides wird zum Namen. */
+  const imFachWert = (wert: unknown): boolean => !zustand.themaId ||
+    textListe(wert).some(eintrag => fachSchluessel(Store.getBlock(eintrag)?.text ?? eintrag) === zustand.themaId);
+
   const alleBloecke = (): any[] => Object.values<any>(Store.cache.blocks)
     .filter(block => block?.alive !== false && darfLesen(block));
 
-  const lernkartenRoh = (): any[] => {
+  /** Die Karten des Lebensbereichs — OHNE Fachfilter: daraus entsteht die
+   *  Liste der Fächer selbst. */
+  const lernkartenImBereich = (): any[] => {
     const ausLearning = typeof Learning !== 'undefined' && Learning.cards ? liste(Learning.cards()) : [];
     return ausLearning.filter(card => imBereich(card));
   };
+
+  /* Durch diese eine Stelle gehen Warteschlange, Statistik, Fehlerliste und
+     Lernpfad — der Fachfilter gilt damit überall, wo Karten gezählt werden. */
+  const lernkartenRoh = (): any[] => lernkartenImBereich().filter(imFach);
 
   /** Nur der referenzielle Store-Vertrag darf eine Nur-Lese-Karte bewerten. */
   const hatExternenLernvertrag = (api: any): boolean => {
@@ -656,8 +706,10 @@ const Lernwelt = (() => {
       const statusKey = schemaSchluessel(collection, 'status');
       Store.rowsOf(collection.id).forEach((row: any) => {
         if (!row || row.alive === false || !darfLesen(row) || !imBereich(row)) return;
-        const d = datum(zeilenWert(row, collection, datumKey));
         const fachWert = zeilenWert(row, collection, fachKey);
+        /* Mit gewähltem Fach nur seine Prüfungen (E726). */
+        if (!imFachWert(fachWert)) return;
+        const d = datum(zeilenWert(row, collection, datumKey));
         ausgabe.push({
           id: String(row.id),
           collectionId: String(collection.id),
@@ -1137,6 +1189,29 @@ const Lernwelt = (() => {
     });
   };
 
+  /** Alle Fächer, die es gibt: Themen der Karten ∪ Zeilen der
+   *  Fächer-Datenbank, je Name einmal (E726). */
+  const faecher = (): Array<{ id: string; name: string }> => {
+    const namen = new Map<string, string>();
+    lernkartenImBereich().forEach(card => {
+      const name = kartenThema(card).trim();
+      const id = fachSchluessel(name);
+      if (id && !namen.has(id)) namen.set(id, name);
+    });
+    fachZeilen().forEach(zeile => {
+      const name = String(zeile.row?.text || '').trim();
+      const id = fachSchluessel(name);
+      if (id && !namen.has(id)) namen.set(id, name);
+    });
+    return [...namen].map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'de-CH'));
+  };
+
+  const aktivesFach = (): { id: string; name: string } | null => {
+    if (!zustand.themaId) return null;
+    return faecher().find(item => item.id === zustand.themaId) || { id: zustand.themaId, name: zustand.themaId };
+  };
+
   const aktiverBereich = (): LernweltBereich => bereiche().find(item => item.id === zustand.bereichId)
     || bereiche()[0]
     || { id: 'alle', name: 'Alle Bereiche', icon: '◎', art: 'alle' };
@@ -1491,62 +1566,65 @@ const Lernwelt = (() => {
     : leer('cards', 'Noch keine Themen', 'Themen entstehen automatisch aus deinen Lernkarten.',
         'capture', 'Lernmaterial erfassen');
 
+  /** Ein ^ (E726): ein echter Knopf mit Menü, 44 breit, das gezeichnete
+   *  ⌄ aus `Register.symbole` darin — es dreht sich, solange das Menü
+   *  offen ist (`aria-expanded`), und nur mit Bewegung (lernwelt.css). */
+  const klappeKnopf = (id: string, name: string, klasse: string, innen: string): string =>
+    '<button type="button" class="' + klasse + '" data-lw-klappe="' + esc(id) + '" aria-haspopup="menu" ' +
+      'aria-expanded="false" aria-label="' + esc(name) + '">' + innen +
+      '<span class="lw-klappe-zeichen" data-sym="chevronD" aria-hidden="true"></span></button>';
+
   const kopf = (): string => {
-    const optionen = bereiche();
-    const aktiv = aktiverBereich();
+    const fach = aktivesFach();
+    const bereich = aktiverBereich();
+    const alle = !fach && bereich.id === 'alle';
+    /* DER CHIP NENNT, WAS FILTERT. Ein Fach, sonst ein Lebensbereich, sonst
+       „Alle Fächer" — und sein Name sagt beides, damit ein Vorleseprogramm
+       nicht raten muss, warum die Zahlen kleiner sind. */
+    const chipText = fach ? fach.name : bereich.id !== 'alle' ? bereich.name : 'Alle Fächer';
+    const chipName = 'Fach wählen: ' + (fach ? fach.name : 'Alle Fächer') +
+      (bereich.id !== 'alle' ? ' · Lebensbereich: ' + bereich.name : '');
     return '<header class="lw-head">' +
       '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
         '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-      /* `data-alle` sagt der CSS, ob der Filter gerade etwas TUT (E235).
-         Am Telefon zieht er in die Reiterzeile, und dort ist Platz knapp:
-         „◎ Alle Bereiche" braucht bei 16 px — der Pflichtgrösse, damit iOS
-         beim Tippen nicht hineinzoomt — rund 160 px von 368. Das ist fast
-         die halbe Zeile für die Aussage „ich filtere nicht".
-         Steht der Filter auf „alle", bleibt darum nur das Zeichen ◎ übrig;
-         sobald ein Bereich gewählt ist, steht sein Name da. */
-      '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
-        '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
-        optionen.map(item => '<option value="' + esc(item.id) + '"' +
-          (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
-        '</select></label></header>' +
+      /* FÄCHER STATT BEREICH (E726). Redur: „Und die bereiche momentan das
+         löschen oder am beste das zur fächer wechseln". Das Auswahlfeld
+         „Bereich" filterte Lebensbereiche — in einem frischen Bestand gab
+         es keinen, und es bot nur „◎ Alle Bereiche": ein Feld, das nichts
+         tun konnte. Der Chip öffnet die Fächer; der Lebensbereich lebt als
+         zweite Gruppe in seinem Menü weiter, sobald es einen gibt.
+         `data-alle` sagt der CSS weiterhin, ob der Filter gerade etwas TUT
+         (E235): am Telefon bleibt dann nur das Zeichen, 44 × 44. */
+      '<div class="lw-area" data-alle="' + (alle ? 'ja' : 'nein') + '">' +
+        klappeKnopf('faecher', chipName, 'lw-fach',
+          '<span class="lw-fach-zeichen" data-sym="filter" aria-hidden="true"></span>' +
+          '<span class="lw-fach-name">' + esc(chipText) + '</span>') +
+      '</div></header>' +
       /* Die Zeichen werden nach dem Einsetzen gefüllt — siehe `fuelleZeichen`
          unten. Hier steht nur die Stelle. */
-      /* Eine Ansicht, die in KEINER Gruppe steht, bekommt ihren eigenen
-         Reiter angehängt. So verschwindet nichts, wenn jemand `ANSICHTEN`
-         erweitert und `REITER` vergisst. */
       (() => {
-        const bekannt = new Set(REITER.flatMap(r => [r.id, ...(r.unter || [])]));
-        const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
-          .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
-        const reihe = [...REITER, ...zusatz];
-        const hier = gruppeVon(zustand.ansicht);
-
+        const hier = klappeVon(zustand.ansicht);
         /* `data-kopfzeile="eigene"` ist ein Vertrag mit der Schale, kein
            Aufruf in sie hinein (§5): am Telefon verschmilzt sie ihre eigene
            Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
            darüberzusetzen. Fehlt die Marke, bleibt alles wie vorher — die
            Schale fragt nur, sie verlangt nichts. */
-        /* `data-material` (E706): die Wahl fliegt, statt zu springen. */
-        const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' + reihe.map(item => {
-          const drin = item.id === zustand.ansicht ||
-            ((item as any).unter || []).includes(zustand.ansicht);
-          return '<button type="button" data-lw-nav="' +
-            ((item as any).unter ? (item as any).unter[0] : item.id) + '"' +
-            (drin ? ' aria-current="page" class="is-active"' : '') + '>' +
-            '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) + '</span>' +
-            ((item as any).unter
-              ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
-            '</button>';
-        }).join('') + '</nav>';
-
-        /* Die zweite Reihe steht nur da, wenn man in einer Gruppe IST — und
-           dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
-           zeigt, ist wieder die alte. */
-        if (!hier?.unter) return haupt;
-        return haupt + '<nav class="lw-subnav" data-material="heute-unter" aria-label="' + esc(hier.name) + '">' +
-          hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
-            (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
-            esc(ansichtName(id)) + '</button>').join('') + '</nav>';
+        /* `data-material` (E706): die Wahl fliegt, statt zu springen. Die
+           Hauptteile bleiben darum unmittelbare Kinder der Leiste — die
+           Schale sucht die Wahlen einer Reihe unter ihren Kindern. */
+        return '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' +
+          klappen().map(k => {
+            const drin = hier?.id === k.id;
+            const zeigt = drin ? zustand.ansicht : (k.gruppen[0]?.unter[0] || k.id);
+            /* WO MAN IST, STEHT DA (E206, E726): in „Trainer" heisst der
+               Hauptteil „Trainer" — das Menü versteckt nichts, was man
+               wissen muss. */
+            return '<button type="button" class="lw-nav-haupt' + (drin ? ' is-active' : '') +
+                '" data-lw-nav="' + esc(zeigt) + '"' + (drin ? ' aria-current="page"' : '') + '>' +
+                '<span data-sym="' + esc(ansichtZeichen(zeigt)) + '"></span><span>' +
+                esc(drin ? ansichtName(zeigt) : k.name) + '</span></button>' +
+              klappeKnopf(k.id, 'Weitere Ansichten: ' + k.titel, 'lw-klappe', '');
+          }).join('') + '</nav>';
       })();
   };
 
@@ -1898,7 +1976,7 @@ const Lernwelt = (() => {
     const ktx = kennzahlKontext({ queue, stats });
     return '<div class="lw-learning">' +
       '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
-        (fokus ? esc(fokus.label) : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
+        (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
         '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
       '<section class="lw-metrics">' +
         merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +
@@ -2178,6 +2256,7 @@ const Lernwelt = (() => {
            Sie fällt heraus, statt den Schnitt auf 12 zu heben. */
         if (note < 1 || note > 6) return;
         const fachWert = zeilenWert(row, collection, fachKey);
+        if (!imFachWert(fachWert)) return;          /* E726 */
         raus.push({
           fach: textListe(fachWert).join(', ') || String(fachWert || '') || 'Ohne Fach',
           note,
@@ -2411,6 +2490,7 @@ const Lernwelt = (() => {
         const bisRoh = String(zeilenWert(row, collection, bisKey) ?? '');
         const vonMin = uhrMin(vonRoh);
         const fachWert = zeilenWert(row, collection, fachKey);
+        if (!imFachWert(fachWert)) return;          /* E726 */
         raus.push({
           tag,
           von: vonRoh.trim(), bis: bisRoh.trim(),
@@ -3431,6 +3511,83 @@ const Lernwelt = (() => {
     }
   };
 
+  /* ====================================================================
+   * DIE ^ ÖFFNEN (E726) — über `UI.wahl` (E721), die EINE Auswahlliste der
+   * App: ✓ und aria-current am Gewählten, aria-expanded am Anker,
+   * Pfeiltasten, Escape über den gemeinsamen Griff (E302) mit dem Fokus
+   * zurück am ^; am Rechner wächst das Menü aus dem ^ (E712), am Telefon
+   * ist es ein Blatt mit Kartengruppen. Kein zweites Menü (§8).
+   * ==================================================================== */
+  /* Die Bereichsdaten (`ladeBereichsdaten`) hängen am Lebensbereich, nicht
+     am Fach — sie bleiben stehen. Neu geladen hiesse: ein zweites
+     `zeichnen` nach der Wahl, und der Fokus fiele vom Chip auf <body>. */
+  const fachSetzen = (id: string): void => {
+    zustand.themaId = id;
+    Store.setMeta(metaSchluessel('fach'), id);
+    zeichnen();
+  };
+
+  /** Der Lebensbereich — was vorher das Auswahlfeld „Bereich" tat, jetzt
+   *  die zweite Gruppe im Fächermenü (E726). Wie dort setzt ein Wechsel
+   *  Fach und Schulfach zurück: beide hängen am Bereich. */
+  const bereichSetzen = (id: string): void => {
+    zustand.bereichId = bereiche().some(item => item.id === id) ? id : 'alle';
+    zustand.extern = null;
+    zustand.ladeSchluessel = '';
+    zustand.fachId = '';
+    zustand.themaId = '';
+    Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
+    Store.setMeta(metaSchluessel('fach'), '');
+    zeichnen();
+  };
+
+  const chipFokussieren = (): void => {
+    zustand.root?.querySelector<HTMLElement>('[data-lw-klappe="faecher"]')?.focus({ preventScroll: true });
+  };
+
+  /* EIN ZWEITER KLICK SCHLIESST. Das Menü schliesst bei `mousedown`
+     ausserhalb (menue.ts) — also schon, bevor der Klick auf demselben ^
+     ankommt. Vor dem Klick merken, ob es offen WAR; sonst ginge es im
+     selben Atemzug wieder auf. */
+  let klappeDruck: { el: Element; offen: boolean; zeit: number } | null = null;
+  const druck = (event: Event): void => {
+    const k = event.target instanceof Element ? event.target.closest('[data-lw-klappe]') : null;
+    klappeDruck = k ? { el: k, offen: k.getAttribute('aria-expanded') === 'true', zeit: Date.now() } : null;
+  };
+
+  const klappeOeffnen = (anker: HTMLElement): void => {
+    const war = klappeDruck;
+    klappeDruck = null;
+    if (war && war.el === anker && war.offen && Date.now() - war.zeit < 1000) return;
+    if (anker.dataset.lwKlappe === 'faecher') {
+      const fach = zustand.themaId;
+      const gruppen: Array<{ name?: string; optionen: Array<{ id: string; name: string; zeichen?: string; aktiv?: boolean }> }> = [{
+        optionen: [{ id: 'fach:', name: 'Alle Fächer', zeichen: 'filter', aktiv: !fach },
+          ...faecher().map(item => ({ id: 'fach:' + item.id, name: item.name, aktiv: item.id === fach }))]
+      }];
+      /* Die EINE Stelle, an der der Lebensbereich weiterlebt (§43) — nur,
+         wenn es einen gibt: „Alle Bereiche" allein ist keine Wahl. */
+      const liste = bereiche();
+      if (liste.length > 1) gruppen.push({ name: 'Lebensbereich', optionen: liste.map(item => ({
+        id: 'bereich:' + item.id, name: item.name, aktiv: item.id === zustand.bereichId })) });
+      UI.wahl({ anker, titel: 'Fächer', gruppen, beiWahl: (id: string) => {
+        if (id.startsWith('bereich:')) bereichSetzen(id.slice('bereich:'.length));
+        else if (id.startsWith('fach:')) fachSetzen(id.slice('fach:'.length));
+        chipFokussieren();
+      } });
+      return;
+    }
+    const klappe = klappen().find(k => k.id === anker.dataset.lwKlappe);
+    if (!klappe) return;
+    UI.wahl({
+      anker, titel: klappe.titel,
+      gruppen: klappe.gruppen.map(g => ({ ...(g.name ? { name: g.name } : {}),
+        optionen: g.unter.map(id => ({ id, name: ansichtName(id), zeichen: ansichtZeichen(id),
+          aktiv: id === zustand.ansicht })) })),
+      beiWahl: (id: string) => { if (ansichtGueltig(id)) wechseln(id); }
+    });
+  };
+
   const klick = (event: Event): void => {
     const element = event.target instanceof Element ? event.target : null;
     if (!element) return;
@@ -3438,6 +3595,8 @@ const Lernwelt = (() => {
        Karte, die sonst nichts tut. */
     const merk = element.closest<HTMLElement>('[data-lw-merk]');
     if (merk?.dataset.lwMerk) { kennzahlMerken(merk, merk.dataset.lwMerk); return; }
+    const klappe = element.closest<HTMLElement>('[data-lw-klappe]');
+    if (klappe) { klappeOeffnen(klappe); return; }
     const nav = element.closest<HTMLElement>('[data-lw-nav]');
     const navId = nav?.dataset.lwNav;
     if (ansichtGueltig(navId)) { wechseln(navId); return; }
@@ -3473,14 +3632,18 @@ const Lernwelt = (() => {
     const source = element.closest<HTMLElement>('[data-lw-card-source]');
     if (source?.dataset.lwCardSource) { quelleOeffnen(source.dataset.lwCardSource); return; }
     const topic = element.closest<HTMLElement>('[data-lw-topic]');
+    /* EIN ZUSTAND (E726): ein Thema anklicken setzt das Fach — derselbe
+       Filter wie im Chip, gemerkt wie dort. */
     if (topic?.dataset.lwTopic) {
       zustand.themaId = topic.dataset.lwTopic;
+      Store.setMeta(metaSchluessel('fach'), zustand.themaId);
       wechseln('lernen');
       return;
     }
     const pathTopic = element.closest<HTMLElement>('[data-lw-path-topic]');
     if (pathTopic?.dataset.lwPathTopic) {
       zustand.themaId = pathTopic.dataset.lwPathTopic;
+      Store.setMeta(metaSchluessel('fach'), zustand.themaId);
       zustand.ansicht = 'lernen';
       trainingStarten('topic');
       return;
@@ -3547,21 +3710,6 @@ const Lernwelt = (() => {
     }
   };
 
-  const aenderung = (event: Event): void => {
-    const select = event.target instanceof HTMLSelectElement && event.target.matches('[data-lw-area]')
-      ? event.target
-      : null;
-    if (!select) return;
-    const gueltig = bereiche().some(item => item.id === select.value);
-    zustand.bereichId = gueltig ? select.value : 'alle';
-    zustand.extern = null;
-    zustand.ladeSchluessel = '';
-    zustand.fachId = '';
-    zustand.themaId = '';
-    Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
-    zeichnen();
-  };
-
   /**
    * Tastenkürzel in der Lernrunde: Leertaste deckt auf, 1 bis 4 bewerten.
    *
@@ -3623,7 +3771,7 @@ const Lernwelt = (() => {
     if (typeof Trainer !== 'undefined') Trainer.abmelden();
     if (zustand.root) {
       zustand.root.removeEventListener('click', klick);
-      zustand.root.removeEventListener('change', aenderung);
+      zustand.root.removeEventListener('pointerdown', druck, true);
     }
     document.removeEventListener('keydown', taste);
     zustand.root = null;
@@ -3641,12 +3789,16 @@ const Lernwelt = (() => {
       : ansichtGueltig(gespeichert) ? gespeichert : 'heute';
     const bereichGespeichert = String(Store.getMeta(metaSchluessel('bereich'), 'alle'));
     zustand.bereichId = bereiche().some(item => item.id === bereichGespeichert) ? bereichGespeichert : 'alle';
+    /* Das Fach wie den Bereich (E726): gemerkt je Lernendem, und nur, wenn
+       es das Fach noch gibt — ein verschwundenes filtert sonst alles weg. */
+    const fachGespeichert = fachSchluessel(Store.getMeta(metaSchluessel('fach'), ''));
+    zustand.themaId = fachGespeichert && faecher().some(item => item.id === fachGespeichert) ? fachGespeichert : '';
     zustand.training = null;
     zustand.simulation = null;
     zustand.extern = null;
     zustand.ladeSchluessel = '';
     ziel.addEventListener('click', klick);
-    ziel.addEventListener('change', aenderung);
+    ziel.addEventListener('pointerdown', druck, true);
     /* Am Dokument, nicht am Ziel — siehe `taste`. */
     document.addEventListener('keydown', taste);
     zeichnen();

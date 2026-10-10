@@ -15,18 +15,28 @@ const Lernwelt = (() => {
         { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' },
         { id: 'trainer', icon: 'checkCircle', name: 'Trainer' }
     ];
-    const REITER = [
-        { id: 'heute', icon: 'today', name: 'Heute' },
-        { id: 'lernen', icon: 'cards', name: 'Lernen',
-            unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] },
-        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
-            unter: ['pruefungen', 'noten'] },
-        { id: 'schule', icon: 'learn', name: 'Wo du lernst',
-            unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+    const KLAPPEN = [
+        { id: 'heute', titel: 'Heute', name: 'Heute', icon: 'today', gruppen: [
+                { unter: ['heute'] },
+                { name: 'Prüfungen', unter: ['pruefungen', 'noten'] },
+                { name: 'Wo du lernst', unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+            ] },
+        { id: 'uebersicht', titel: 'Lernen', name: 'Übersicht', icon: 'cards', gruppen: [
+                { unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] }
+            ] }
     ];
+    const klappen = () => {
+        const bekannt = new Set(KLAPPEN.flatMap(k => k.gruppen.flatMap(g => g.unter)));
+        const weitere = ANSICHTEN.filter(a => !bekannt.has(a.id)).map(a => a.id);
+        if (!weitere.length)
+            return KLAPPEN;
+        return KLAPPEN.map(k => k.id !== 'uebersicht' ? k
+            : { ...k, gruppen: [...k.gruppen, { name: 'Weitere', unter: weitere }] });
+    };
     const KURZ = { lernen: 'Übersicht' };
     const ansichtName = (id) => KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
-    const gruppeVon = (ansicht) => REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht)) || null;
+    const ansichtZeichen = (id) => ANSICHTEN.find(x => x.id === id)?.icon || 'cards';
+    const klappeVon = (ansicht) => klappen().find(k => k.gruppen.some(g => g.unter.includes(ansicht))) || null;
     const zustand = {
         root: null,
         ansicht: 'heute',
@@ -213,12 +223,19 @@ const Lernwelt = (() => {
         const seite = seiteVon(record);
         return !!seite && seite !== record && direkteBereichIds(seite).includes(bereichId);
     };
+    const fachSchluessel = (name) => String(name ?? '').trim().toLocaleLowerCase('de-CH');
+    const kartenThema = (card) => typeof Learning !== 'undefined' && typeof Learning.topicLabel === 'function'
+        ? String(Learning.topicLabel(card)) : themaVon(card);
+    const imFach = (card) => !zustand.themaId || fachSchluessel(kartenThema(card)) === zustand.themaId;
+    const imFachWert = (wert) => !zustand.themaId ||
+        textListe(wert).some(eintrag => fachSchluessel(Store.getBlock(eintrag)?.text ?? eintrag) === zustand.themaId);
     const alleBloecke = () => Object.values(Store.cache.blocks)
         .filter(block => block?.alive !== false && darfLesen(block));
-    const lernkartenRoh = () => {
+    const lernkartenImBereich = () => {
         const ausLearning = typeof Learning !== 'undefined' && Learning.cards ? liste(Learning.cards()) : [];
         return ausLearning.filter(card => imBereich(card));
     };
+    const lernkartenRoh = () => lernkartenImBereich().filter(imFach);
     const hatExternenLernvertrag = (api) => {
         const lernzustand = api?.lernzustand, vertrag = lernzustand?.VERTRAG;
         return typeof lernzustand?.lesen === 'function' &&
@@ -382,8 +399,10 @@ const Lernwelt = (() => {
             Store.rowsOf(collection.id).forEach((row) => {
                 if (!row || row.alive === false || !darfLesen(row) || !imBereich(row))
                     return;
-                const d = datum(zeilenWert(row, collection, datumKey));
                 const fachWert = zeilenWert(row, collection, fachKey);
+                if (!imFachWert(fachWert))
+                    return;
+                const d = datum(zeilenWert(row, collection, datumKey));
                 ausgabe.push({
                     id: String(row.id),
                     collectionId: String(collection.id),
@@ -796,6 +815,28 @@ const Lernwelt = (() => {
             return woerter.some(wort => suchtext.includes(wort));
         });
     };
+    const faecher = () => {
+        const namen = new Map();
+        lernkartenImBereich().forEach(card => {
+            const name = kartenThema(card).trim();
+            const id = fachSchluessel(name);
+            if (id && !namen.has(id))
+                namen.set(id, name);
+        });
+        fachZeilen().forEach(zeile => {
+            const name = String(zeile.row?.text || '').trim();
+            const id = fachSchluessel(name);
+            if (id && !namen.has(id))
+                namen.set(id, name);
+        });
+        return [...namen].map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'de-CH'));
+    };
+    const aktivesFach = () => {
+        if (!zustand.themaId)
+            return null;
+        return faecher().find(item => item.id === zustand.themaId) || { id: zustand.themaId, name: zustand.themaId };
+    };
     const aktiverBereich = () => bereiche().find(item => item.id === zustand.bereichId)
         || bereiche()[0]
         || { id: 'alle', name: 'Alle Bereiche', icon: '◎', art: 'alle' };
@@ -1011,40 +1052,35 @@ const Lernwelt = (() => {
             prozent(thema.progress) + '" aria-label="Fortschritt ' + esc(thema.label) + '"></progress></button>')
             .join('') + '</div>'
         : leer('cards', 'Noch keine Themen', 'Themen entstehen automatisch aus deinen Lernkarten.', 'capture', 'Lernmaterial erfassen');
+    const klappeKnopf = (id, name, klasse, innen) => '<button type="button" class="' + klasse + '" data-lw-klappe="' + esc(id) + '" aria-haspopup="menu" ' +
+        'aria-expanded="false" aria-label="' + esc(name) + '">' + innen +
+        '<span class="lw-klappe-zeichen" data-sym="chevronD" aria-hidden="true"></span></button>';
     const kopf = () => {
-        const optionen = bereiche();
-        const aktiv = aktiverBereich();
+        const fach = aktivesFach();
+        const bereich = aktiverBereich();
+        const alle = !fach && bereich.id === 'alle';
+        const chipText = fach ? fach.name : bereich.id !== 'alle' ? bereich.name : 'Alle Fächer';
+        const chipName = 'Fach wählen: ' + (fach ? fach.name : 'Alle Fächer') +
+            (bereich.id !== 'alle' ? ' · Lebensbereich: ' + bereich.name : '');
         return '<header class="lw-head">' +
             '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
             '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-            '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
-            '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
-            optionen.map(item => '<option value="' + esc(item.id) + '"' +
-                (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
-            '</select></label></header>' +
+            '<div class="lw-area" data-alle="' + (alle ? 'ja' : 'nein') + '">' +
+            klappeKnopf('faecher', chipName, 'lw-fach', '<span class="lw-fach-zeichen" data-sym="filter" aria-hidden="true"></span>' +
+                '<span class="lw-fach-name">' + esc(chipText) + '</span>') +
+            '</div></header>' +
             (() => {
-                const bekannt = new Set(REITER.flatMap(r => [r.id, ...(r.unter || [])]));
-                const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
-                    .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
-                const reihe = [...REITER, ...zusatz];
-                const hier = gruppeVon(zustand.ansicht);
-                const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' + reihe.map(item => {
-                    const drin = item.id === zustand.ansicht ||
-                        (item.unter || []).includes(zustand.ansicht);
-                    return '<button type="button" data-lw-nav="' +
-                        (item.unter ? item.unter[0] : item.id) + '"' +
-                        (drin ? ' aria-current="page" class="is-active"' : '') + '>' +
-                        '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) + '</span>' +
-                        (item.unter
-                            ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
-                        '</button>';
-                }).join('') + '</nav>';
-                if (!hier?.unter)
-                    return haupt;
-                return haupt + '<nav class="lw-subnav" data-material="heute-unter" aria-label="' + esc(hier.name) + '">' +
-                    hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
-                        (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
-                        esc(ansichtName(id)) + '</button>').join('') + '</nav>';
+                const hier = klappeVon(zustand.ansicht);
+                return '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' +
+                    klappen().map(k => {
+                        const drin = hier?.id === k.id;
+                        const zeigt = drin ? zustand.ansicht : (k.gruppen[0]?.unter[0] || k.id);
+                        return '<button type="button" class="lw-nav-haupt' + (drin ? ' is-active' : '') +
+                            '" data-lw-nav="' + esc(zeigt) + '"' + (drin ? ' aria-current="page"' : '') + '>' +
+                            '<span data-sym="' + esc(ansichtZeichen(zeigt)) + '"></span><span>' +
+                            esc(drin ? ansichtName(zeigt) : k.name) + '</span></button>' +
+                            klappeKnopf(k.id, 'Weitere Ansichten: ' + k.titel, 'lw-klappe', '');
+                    }).join('') + '</nav>';
             })();
     };
     const dokumentEinstieg = () => {
@@ -1361,7 +1397,7 @@ const Lernwelt = (() => {
         const ktx = kennzahlKontext({ queue, stats });
         return '<div class="lw-learning">' +
             '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
-            (fokus ? esc(fokus.label) : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
+            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
             '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
             '<section class="lw-metrics">' +
             merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +
@@ -1548,6 +1584,8 @@ const Lernwelt = (() => {
                 if (note < 1 || note > 6)
                     return;
                 const fachWert = zeilenWert(row, collection, fachKey);
+                if (!imFachWert(fachWert))
+                    return;
                 raus.push({
                     fach: textListe(fachWert).join(', ') || String(fachWert || '') || 'Ohne Fach',
                     note,
@@ -1707,6 +1745,8 @@ const Lernwelt = (() => {
                 const bisRoh = String(zeilenWert(row, collection, bisKey) ?? '');
                 const vonMin = uhrMin(vonRoh);
                 const fachWert = zeilenWert(row, collection, fachKey);
+                if (!imFachWert(fachWert))
+                    return;
                 raus.push({
                     tag,
                     von: vonRoh.trim(), bis: bisRoh.trim(),
@@ -2607,6 +2647,66 @@ const Lernwelt = (() => {
             externOeffnen(page.id);
         }
     };
+    const fachSetzen = (id) => {
+        zustand.themaId = id;
+        Store.setMeta(metaSchluessel('fach'), id);
+        zeichnen();
+    };
+    const bereichSetzen = (id) => {
+        zustand.bereichId = bereiche().some(item => item.id === id) ? id : 'alle';
+        zustand.extern = null;
+        zustand.ladeSchluessel = '';
+        zustand.fachId = '';
+        zustand.themaId = '';
+        Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
+        Store.setMeta(metaSchluessel('fach'), '');
+        zeichnen();
+    };
+    const chipFokussieren = () => {
+        zustand.root?.querySelector('[data-lw-klappe="faecher"]')?.focus({ preventScroll: true });
+    };
+    let klappeDruck = null;
+    const druck = (event) => {
+        const k = event.target instanceof Element ? event.target.closest('[data-lw-klappe]') : null;
+        klappeDruck = k ? { el: k, offen: k.getAttribute('aria-expanded') === 'true', zeit: Date.now() } : null;
+    };
+    const klappeOeffnen = (anker) => {
+        const war = klappeDruck;
+        klappeDruck = null;
+        if (war && war.el === anker && war.offen && Date.now() - war.zeit < 1000)
+            return;
+        if (anker.dataset.lwKlappe === 'faecher') {
+            const fach = zustand.themaId;
+            const gruppen = [{
+                    optionen: [{ id: 'fach:', name: 'Alle Fächer', zeichen: 'filter', aktiv: !fach },
+                        ...faecher().map(item => ({ id: 'fach:' + item.id, name: item.name, aktiv: item.id === fach }))]
+                }];
+            const liste = bereiche();
+            if (liste.length > 1)
+                gruppen.push({ name: 'Lebensbereich', optionen: liste.map(item => ({
+                        id: 'bereich:' + item.id, name: item.name, aktiv: item.id === zustand.bereichId
+                    })) });
+            UI.wahl({ anker, titel: 'Fächer', gruppen, beiWahl: (id) => {
+                    if (id.startsWith('bereich:'))
+                        bereichSetzen(id.slice('bereich:'.length));
+                    else if (id.startsWith('fach:'))
+                        fachSetzen(id.slice('fach:'.length));
+                    chipFokussieren();
+                } });
+            return;
+        }
+        const klappe = klappen().find(k => k.id === anker.dataset.lwKlappe);
+        if (!klappe)
+            return;
+        UI.wahl({
+            anker, titel: klappe.titel,
+            gruppen: klappe.gruppen.map(g => ({ ...(g.name ? { name: g.name } : {}),
+                optionen: g.unter.map(id => ({ id, name: ansichtName(id), zeichen: ansichtZeichen(id),
+                    aktiv: id === zustand.ansicht })) })),
+            beiWahl: (id) => { if (ansichtGueltig(id))
+                wechseln(id); }
+        });
+    };
     const klick = (event) => {
         const element = event.target instanceof Element ? event.target : null;
         if (!element)
@@ -2614,6 +2714,11 @@ const Lernwelt = (() => {
         const merk = element.closest('[data-lw-merk]');
         if (merk?.dataset.lwMerk) {
             kennzahlMerken(merk, merk.dataset.lwMerk);
+            return;
+        }
+        const klappe = element.closest('[data-lw-klappe]');
+        if (klappe) {
+            klappeOeffnen(klappe);
             return;
         }
         const nav = element.closest('[data-lw-nav]');
@@ -2667,12 +2772,14 @@ const Lernwelt = (() => {
         const topic = element.closest('[data-lw-topic]');
         if (topic?.dataset.lwTopic) {
             zustand.themaId = topic.dataset.lwTopic;
+            Store.setMeta(metaSchluessel('fach'), zustand.themaId);
             wechseln('lernen');
             return;
         }
         const pathTopic = element.closest('[data-lw-path-topic]');
         if (pathTopic?.dataset.lwPathTopic) {
             zustand.themaId = pathTopic.dataset.lwPathTopic;
+            Store.setMeta(metaSchluessel('fach'), zustand.themaId);
             zustand.ansicht = 'lernen';
             trainingStarten('topic');
             return;
@@ -2746,21 +2853,6 @@ const Lernwelt = (() => {
             });
         }
     };
-    const aenderung = (event) => {
-        const select = event.target instanceof HTMLSelectElement && event.target.matches('[data-lw-area]')
-            ? event.target
-            : null;
-        if (!select)
-            return;
-        const gueltig = bereiche().some(item => item.id === select.value);
-        zustand.bereichId = gueltig ? select.value : 'alle';
-        zustand.extern = null;
-        zustand.ladeSchluessel = '';
-        zustand.fachId = '';
-        zustand.themaId = '';
-        Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
-        zeichnen();
-    };
     const taste = (event) => {
         if (!zustand.root?.isConnected)
             return;
@@ -2792,7 +2884,7 @@ const Lernwelt = (() => {
             Trainer.abmelden();
         if (zustand.root) {
             zustand.root.removeEventListener('click', klick);
-            zustand.root.removeEventListener('change', aenderung);
+            zustand.root.removeEventListener('pointerdown', druck, true);
         }
         document.removeEventListener('keydown', taste);
         zustand.root = null;
@@ -2807,12 +2899,14 @@ const Lernwelt = (() => {
             : ansichtGueltig(gespeichert) ? gespeichert : 'heute';
         const bereichGespeichert = String(Store.getMeta(metaSchluessel('bereich'), 'alle'));
         zustand.bereichId = bereiche().some(item => item.id === bereichGespeichert) ? bereichGespeichert : 'alle';
+        const fachGespeichert = fachSchluessel(Store.getMeta(metaSchluessel('fach'), ''));
+        zustand.themaId = fachGespeichert && faecher().some(item => item.id === fachGespeichert) ? fachGespeichert : '';
         zustand.training = null;
         zustand.simulation = null;
         zustand.extern = null;
         zustand.ladeSchluessel = '';
         ziel.addEventListener('click', klick);
-        ziel.addEventListener('change', aenderung);
+        ziel.addEventListener('pointerdown', druck, true);
         document.addEventListener('keydown', taste);
         zeichnen();
     };

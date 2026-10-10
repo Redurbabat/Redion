@@ -1287,6 +1287,11 @@ const Learning = (() => {
 
   return {
     cards, due, dailyQueue, statistics, reviewLog, topicProgress, nextExam, splitCard,
+    /* DAS THEMA EINER KARTE, WIE `topicProgress` ES ZÄHLT (E726). Der
+       Fächerfilter der Lernwelt fragt danach, statt `topicLabel` ein
+       drittes Mal nachzubauen (`themaVon` dort ist das zweite): nur so sind
+       die gefilterten Zahlen genau die von `topicProgress` für dieses Thema. */
+    topicLabel,
     canReadCard, canEditCard,
     sourceOf, sourceLabel, makeSourceRef, jumpToSource,
     sourceMenu, createCrop, clozeFromSelection, open

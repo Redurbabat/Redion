@@ -192,10 +192,14 @@ const KOPF = () => {
 /** Ein ^ und was es gerade tut. */
 const KLAPPE = (welche: string) => {
   const k = document.querySelector<HTMLElement>(`[data-lw-klappe="${welche}"]`);
-  const m = document.querySelector<HTMLElement>('.menu[role="menu"]');
+  /* Am Rechner trägt das Menü role="menu"; das Blatt am Telefon ist ein
+     eigenes Gefäss (menue.ts) — gefragt wird darum `.menu`, die Rolle
+     prüft §3a gesondert. */
+  const m = document.querySelector<HTMLElement>('.menu');
   return {
     da: !!k,
     offen: !!m && m.isConnected,
+    rolle: m?.getAttribute('role') ?? null,
     expanded: k?.getAttribute('aria-expanded') ?? null,
     fokusAufKlappe: !!k && document.activeElement === k,
     blatt: !!m?.classList.contains('blatt'),
@@ -297,7 +301,8 @@ console.log('\n§3 Maus, Enter, Leertaste, Finger — und Escape');
     await tun();
     await warte(s, 300);
     const auf = await s.evaluate(KLAPPE, 'heute');
-    p(`§3a ${name} öffnet „Heute ^" (role=menu, aria-expanded=true)`, auf.offen && auf.expanded === 'true', JSON.stringify(auf));
+    p(`§3a ${name} öffnet „Heute ^" (role=menu, aria-expanded=true)`, auf.offen && auf.rolle === 'menu' &&
+      auf.expanded === 'true', JSON.stringify(auf));
     await zu(s);
     const nach = await s.evaluate(KLAPPE, 'heute');
     p(`§3b nach ${name}: Escape schliesst, aria-expanded=false, Fokus zurück auf dem ^`,

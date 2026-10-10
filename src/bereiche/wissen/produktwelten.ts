@@ -84,7 +84,14 @@ const Produktwelten = (() => {
     if (!treffer) return null;
     const welt = sichereWelt(treffer[1]);
     const erlaubte = welt === 'lernen'
-      ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt', 'trainer'])
+      /* NOTEN UND STUNDENPLAN FEHLTEN (E726). Beide sind Ansichten der
+         Lernwelt (`Lernwelt.ansichten`), und `lernen()` schreibt ihre Route
+         auch — gelesen wurde sie nicht: wer in den Noten neu lud, landete
+         auf „Heute". Solange die zweite Reihe dastand, war der Weg zurück
+         ein Tipp; seit sie ins „Heute ^" gezogen ist, ist die Route der
+         eine Weg, der ohne Menü hinführt (test601 §4c). */
+      ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'noten', 'stundenplan',
+                 'schule', 'uni', 'arbeit', 'fortschritt', 'trainer'])
       : new Set(['start', 'seiten', 'dateien', 'projekte', 'uebersicht', 'bibliothek',
                  'aufgaben', 'kalender', 'datenbanken', 'whiteboards', 'wiki', 'vorlagen']);
     return erlaubte.has(treffer[2] as string) ? { welt, ansicht: treffer[2] as string } : null;
