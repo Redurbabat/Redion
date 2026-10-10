@@ -57591,8 +57591,10 @@ und `node bauen.mts` neu erzeugt.
 > derselbe Funkel wie die Tagesrunde (Redur: „wie bein tagesrunde") — aber
 > sie ruhen als Umrisspillen und zeigen den Schein nur unter Zeiger,
 > Tastenfokus und Druck. „Genau eine je Bild" gilt weiter: in Ruhe ist nur
-> „Starten" laut (`test580` §1 zählt einen Funkel seither nur, wenn er in
-> Ruhe Schein oder glimmende Buchstaben trägt).
+> „Starten" laut (`test580` §1 zählt einen Funkel seither als laut, wenn er
+> in Ruhe Schein oder glimmende Buchstaben trägt — oder einen Grund, der
+> sich mit 1,5 : 1 vom Grund darunter abhebt oder gleich
+> `--ru-funkel-farbe` ist; seit der Durchsicht vom 6. Oktober, E720).
 >
 > **Ergänzt durch E719 (6. Oktober 2026) — Punkt 5: grau, solange nicht
 > gemerkt.** Das Herz der Kennzahlen ist ein Merkknopf geworden. Es ruht
@@ -61385,7 +61387,7 @@ kein Schmuck mehr), E701 §5 (grau nur, solange nicht gemerkt) und E460 (der
 Merker bekommt eine zweite Form als Wahl) · **baut auf** E702 (press.ts) und
 E712 (`Merkzeichen.BAND` in den Tropfen bleibt unverändert) auf ·
 **Wächter:** `test595` (neu, 36 Zusagen; nach der Durchsicht vom
-6. Oktober 41), `test433` §7 (neu), `test580` §5 (erweitert) · **Zweig** `claude/kein-toter-knopf` · **Messung:**
+6. Oktober 41, nach der vom 10. Oktober 44), `test433` §7 (neu), `test580` §5 (erweitert) · **Zweig** `claude/kein-toter-knopf` · **Messung:**
 `messungen.md` §90.
 
 **Redurs Satz, wörtlich** (seine Notiz im PDF, am Foto der Lernzentrale mit
@@ -61534,6 +61536,33 @@ des Zweigs vor dem Push; Wächter zuerst, dann der Bau):
   die abschneidet. Der Ring liegt jetzt innen (`outline-offset:-2px`, kein
   Hof). `test595` §6, rot: „"oben":-3,"rechts":-3".
 
+**Nachtrag — die Durchsicht vom 10. Oktober** (Wächter zuerst, Commit
+„test596/test595 (rot): Das Wort bleibt lesbar …", 5c1d9b997):
+
+- **Manche Herzen sagten nicht, was sie merken** (§38). Der Vorlesename
+  kam aus dem Kartennamen, und der ist an sechs Stellen nur in seiner
+  Ansicht verständlich: „Zu Favoriten: fällig", „… neu", „… Fehler" auf
+  Heute, „… noch instabil", „… inzwischen stabil" unter Fehler, „…
+  aktuell fällig" unter Fortschritt. Im Streifen „Gemerkt" fehlte die
+  Ansicht auch dem Auge — dort stand „fällig 3" ohne „Heute" darüber.
+  **Entschieden:** der Katalog `KENNZAHLEN` trägt für diese sechs ein Feld
+  `allein` — „heute fällige Karten", „neue Karten heute", „offene Fehler",
+  „Fehler noch instabil", „Fehler inzwischen stabil", „Karten aktuell
+  fällig". Es ist der Vorlesename des Herzens, das Etikett im Streifen und
+  der Name im Hinweis, wenn das Schreiben scheitert. Die Karte in ihrer
+  Ansicht behält das kurze Wort; gespeichert wird weiter nur die Kennung,
+  also keine Migration. Die Alternative, die Kartennamen selbst zu
+  verlängern, hätte Heute mit „heute fällige Karten" unter der Überschrift
+  „Heute" doppelt gesagt. `test595` §10, rot: „5 ohne: „fällig"
+  (heute-faellig) · „neu" (heute-neu) · „noch instabil" (noch-instabil) ·
+  „inzwischen stabil" (inzwischen-stabil) · „aktuell fällig"
+  (aktuell-faellig)". „Fehler" hat ein Hauptwort und fiel deshalb nicht
+  auf; „offene Fehler" bekam es trotzdem, weil „Zu Favoriten: Fehler"
+  wie eine Fehlermeldung klingt.
+- **Gegenprobe:** `allein` im gebauten lernwelt.js überlesen → `test595` §10 rot:
+  „5 ohne: „fällig" (heute-faellig) · „neu" (heute-neu) · „noch instabil"
+  (noch-instabil) · …" (43/44).
+
 ## E720 — Kein toter Knopf: jeder Knopf antwortet auf Zeigen, Druck und Tastenfokus
 
 **Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
@@ -61545,7 +61574,7 @@ je Bild gilt weiter, auch mit fünf Funkeln) · **neue Regel** CLAUDE.md §38
 (hart) und §39 (Richtwert) · **baut auf** E702 (press.ts:
 `data-gedrueckt` ≥ 80 ms, `.ru-funkel` in OWN_PRESS) und E640 („Schein ist
 Zustand, nicht Dauerschmuck") auf · **Wächter:** `test596` (neu, 35
-Zusagen; nach der Durchsicht vom 6. Oktober 41), `test580` §1 (erweitert) · **Zweig** `claude/kein-toter-knopf` ·
+Zusagen; nach der Durchsicht vom 6. Oktober 41, nach der vom 10. Oktober 50), `test580` §1 (erweitert) · **Zweig** `claude/kein-toter-knopf` ·
 **Messung:** `messungen.md` §90.
 
 **Redurs Satz, wörtlich** (Notiz im PDF, am Foto der Lernzentrale; die
@@ -61745,3 +61774,84 @@ Fokusring wieder aussen                       test595 §6  "oben":-3,"rechts":-3
 Was es zusätzlich kostet: drei CSS-Blöcke mit Begründung und rund zwanzig
 Zeilen TypeScript; die Drucktönung ist im Dunkeln etwas dunkler als vorher
 (sie liegt jetzt auf #101010 statt auf der Karte).
+
+**Nachtrag — die Durchsicht vom 10. Oktober** (eine zweite unabhängige
+Durchsicht vor dem Push; die Wächter kamen zuerst und waren rot, Commit
+„test596/test595 (rot): Das Wort bleibt lesbar …", 5c1d9b997).
+
+1. **Ohne Bewegung war das Wort weg** (blockierend). Die Regel „Wenn das
+   System um Ruhe bittet" in bausteine.css setzte die Buchstaben unter
+   Zeiger und Fokus auf `color:#fff` — mit `.ru-funkel:hover .ru-funkel-b`
+   (0,3,0) schlug sie motion.css' `color:inherit` (0,2,1), und sie kannte
+   weder `:disabled` noch `@media (hover:hover)`. Vor E720 lag Weiss immer
+   auf dem dunklen Funkelgrund; seit E720 ruhen vier Funkel HELL. Mit
+   `prefers-reduced-motion` stand „Trainieren · 0" (gesperrt) unter dem
+   Zeiger weiss auf rgb(251,251,250), 1,04 : 1 — und im Dunkeln änderte
+   sich der gesperrte Knopf (241 → 255), gegen den eigenen §38-Satz. Am
+   Telefon (hell) stand das Wort nach einem Tipp mit klebendem `:hover`
+   für immer weiss auf Weiss. **Entschieden:** `color:inherit` statt
+   `#fff`. Der Knopf sagt die Farbe: der laute Funkel und der stille unter
+   Zeiger, Fokus und Druck tragen `color:#fff` am Knopf und bleiben weiss
+   (16,21 : 1); der stille in Ruhe und der gesperrte tragen die Schrift der
+   Lernwelt (11,84 : 1 hell, 15,57 : 1 dunkel). Die Alternative — die Regel
+   um `:where(:not(:disabled))` und `@media (hover:hover)` zu erweitern —
+   hätte zwei Bedingungen gebraucht, wo eine Farbe die Frage beantwortet.
+   `test596` §9 (jetzt auch mit `reduce`) und §11.
+2. **Der Buchstabenlauf wischte am Telefon.** motion.css liess
+   `rmo-letter-wisch` auch auf `:hover` laufen, ohne `@media (hover:hover)`
+   — genau das, was E720 für den Schein abgeschafft hatte („der Schein
+   unter dem Zeiger nur, wo es einen Zeiger gibt"). Nach einem Tipp klebt
+   `:hover` am iPhone, und die weisse Mitte des Laufs lag eine
+   Viertelsekunde auf der hellen Pille (gemessen 100 ms rgb(110,109,104),
+   250 ms rgb(252,252,252) auf rgb(251,251,250), 400 ms zurück). Die Regel
+   ist geteilt: `:focus-visible` und `:active` wischen überall, `:hover`
+   steht unter `@media (hover:hover)`. Einfach `:hover` streichen ging
+   nicht: am Rechner gehört der Lauf zum Schein der Tagesrunde (`test596`
+   §4). `test596` §11.
+3. **Der Kommentar „Die stillen Funkel" rechnete falsch.** Er nannte für
+   die Hover-Regel der Lernwelt (0,3,1); seit `:where` → `:is` wiegt sie
+   (0,4,1), weil `:is` sein schwerstes Argument nimmt
+   (`.lw-page-head>.lw-actions button`). Ein Fehler ist es nicht — bei
+   gleichem Gewicht gewinnt die spätere Datei, und unter dem Zeiger trägt
+   die eigene Hover-Regel (0,6,1) —, aber ein Kommentar, der falsch
+   rechnet, lehrt das Falsche. Korrigiert.
+4. **Weniger Begründung im Stilblatt, mehr hier.** Die Startlast war mit
+   diesem Zweig um rund 5 KB gzip gewachsen (geschätzt waren 2), fast alles
+   Kommentare in den Stilblättern — `removeComments` gilt nur für das
+   JavaScript (E715). Die langen Begründungen in bausteine.css und
+   lernwelt.css sind auf ihren Kern gekürzt, mit einem Verweis auf diesen
+   Eintrag; nichts an den Regeln selbst. `test388` §5: 1855 → 1854 KB gzip über 252 Dateien (1bfaca53: 1850, Decke
+   1950); gzip -6 gegen ca4b23190 zusammen −793 B.
+
+**Gegenproben zum Nachtrag** (je rot gesehen und zurückgenommen):
+
+```txt
+Buchstaben ohne Bewegung wieder #fff          test596 §9  „dunkel, ohne Bewegung … 2
+                                                           laut: lernen: „Trainieren · 0"
+                                                           (Zeiger) | lernen: „Lernen · 0"
+                                                           (Zeiger)" — hell genauso
+                                              test596 §11 „hell, ohne Bewegung (reduce)
+                                                           … „Trainieren · 2" 1.04 : 1
+                                                           (1 ms: rgb(255, 255, 255) auf
+                                                           rgb(251,251,250))"
+Buchstabenlauf wieder auf :hover, ohne        test596 §11 „hell, mit Bewegung …
+@media (hover:hover)                                       „Trainieren · 2" 1 : 1 (356 ms:
+                                                           rgb(251, 251, 251) auf
+                                                           rgb(251,251,250))"
+```
+
+**Nachbarn grün** (auf 0eda8e963, unter dem Schloss): `test596` 50/50,
+`test595` 44/44, `test580`, `test433` 39/39, `test496` 148, `test494` 153,
+`test495` 26/26, `test492` 55, `test436` 71/71, `test581` 93, `test127`,
+`test245` 51, `test217` 27/27, `test265` 39, `test208`, `test259` 8,
+`test565` 54/54, `test126`, `test303` 16/16, `test541` 25/25, `test590`
+68/68, `test388` 22 (1854 KB). Rot nur `test493` 42/44 — fremd
+(`-webkit-backdrop-filter` aus E695), auf `claude/morgen-besser` genauso.
+Bilder vorher (ca4b23190) und nachher, Rechner und Telefon, hell und
+dunkel, nicht eingecheckt (§55.4). Der Touch-Kit-Funkel bleibt als
+Redion-Code nachgebaut; kein fremder Code kam dazu, FREMDCODE.md braucht
+keinen Eintrag.
+
+Was es zusätzlich kostet: eine Farbe und eine geteilte Regel; am Telefon
+wischt das Wort nicht mehr, wenn ein `:hover` klebt — beim Tastenfokus und
+beim Druck weiter.

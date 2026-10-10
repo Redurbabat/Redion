@@ -43,6 +43,21 @@ Fokus-Rückgabe, reines Zurück über `metaListeAendern`, Tönung über dem
 Funkelgrund (16,21 : 1), 2-px-Akzentrand im Starken Kontrast, Ring innen.
 Sieben Gegenproben, je rot gesehen. `test595` und `test596` je 41/41.
 
+**Zweite Durchsicht vor dem Push** (10. Oktober). Wieder ein blockierender
+Fund: ohne Bewegung (`prefers-reduced-motion`) färbte eine alte Regel die
+Buchstaben eines Funkels unter dem Zeiger weiss — seit die vier stillen
+Funkel hell ruhen, stand „Trainieren · 0" (gesperrt) am Rechner und
+„Trainieren · 2" am Telefon mit klebendem `:hover` weiss auf Weiss,
+1,04 : 1. Dazu: der Buchstabenlauf wischte am Telefon eine Viertelsekunde
+lang das Wort weg (`:hover` ohne `@media (hover:hover)`); sechs Herzen
+hiessen nur in ihrer Ansicht verständlich („Zu Favoriten: fällig"); ein
+Kommentar rechnete ein Gewicht falsch; die Kommentare in den Stilblättern
+kosteten Startlast. Zuerst die Wächter (`test596` §9 ohne Bewegung, §11
+neu, `test595` §10 neu), rot gegen ca4b23190; dann der Bau —
+`color:inherit` statt `#fff`, die Wischregel geteilt, ein Feld `allein` im
+Katalog der Kennzahlen, die Kommentare gekürzt (Start 1855 → 1854 KB).
+Drei Gegenproben, je rot gesehen. `test595` 44/44, `test596` 50/50.
+
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 
 **Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von

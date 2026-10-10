@@ -1587,7 +1587,11 @@ in Ruhe, kein zweites gemaltes Herz, und in `test580` §5 der Fokus weg vor
 dem Messen. Und drei kamen aus einer Durchsicht vor dem Push: der Fokus,
 der beim Lösen im Streifen auf `<body>` fiel, der Fokusring, den die Karte
 kappte, und ein Zurück, das den Eintrag eines anderen Tabs löschte (§16).
-Gezählt am 6. Oktober, im selben Bogen: `ls
+Sein §10 kam aus einer zweiten Durchsicht am 10. Oktober: jedes Herz muss
+ein Ding nennen — „Zu Favoriten: fällig" sagt nicht, WAS fällig ist, und im
+Streifen „Gemerkt" fehlt die Ansicht auch dem Auge. Er erkennt das Ding am
+grossen Anfangsbuchstaben des Hauptworts, und gegen den alten Stand fand er
+fünf Namen ohne eines. Gezählt am 6. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*
 
@@ -1606,7 +1610,13 @@ iPhone es nicht tut. Und sein §1 hatte eine blinde Seite, die erst eine
 Durchsicht sah: er zählt nur FREIGEGEBENE Knöpfe — ein gesperrtes
 „Trainieren · 0", das unter dem Zeiger aufleuchtete und sein Wort
 verwischte, ging durch. §9 misst seither die Gegenseite (ein gesperrter
-Knopf bleibt still), §10 alle zehn Schemata. Gezählt am 6. Oktober, im
+Knopf bleibt still), §10 alle zehn Schemata. Und eine zweite Durchsicht am
+10. Oktober fand die nächste blinde Seite: er lief nie OHNE BEWEGUNG, und
+sein erzwungenes `:hover` traf nur ein KI-Werkzeug auf dunklem Grund. Ohne
+Bewegung stand das Wort der stillen Funkel unter dem Zeiger weiss auf Weiss
+(1,04 : 1), und am Telefon wischte ein klebendes `:hover` es eine
+Viertelsekunde lang weg. §9 läuft seither auch mit `reduce`, und §11 misst
+jedes Bild über 1,4 s, nicht einen Augenblick. Gezählt am 6. Oktober, im
 selben Bogen: der Befehl sagt 534 — auf seinem Zweig; beim Zusammenführen
 neu zu zählen.*
 

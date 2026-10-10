@@ -296,4 +296,10 @@ zweites Herz. Schmuck bleiben die Herzen der Bestandsgesundheit
 Fehlertraining, Neue Karten, Prüfungsfokus und Trainer in der Lernzentrale.
 Die übrigen KI-Werkzeuge tragen den Funkel wie bisher. Für ALLE gilt seither:
 der Schein unter dem Zeiger nur unter `@media (hover:hover)`, und
-`data-gedrueckt` (press.ts) zeigt dasselbe Drucklicht wie `:active`.
+`data-gedrueckt` (press.ts) zeigt dasselbe Drucklicht wie `:active`. Seit
+der Durchsicht vom 10. Oktober gilt das auch für den Buchstabenlauf
+(`rmo-letter-wisch` in motion.css): der Zeiger löst ihn nur unter
+`@media (hover:hover)` aus, Tastenfokus und Druck überall. Und ohne
+Bewegung erben die Buchstaben die Farbe ihres Knopfes, statt weiss zu
+werden — auf der hellen Pille der stillen Funkel war das Wort sonst weg
+(`test596` §9/§11).

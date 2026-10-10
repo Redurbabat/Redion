@@ -6808,3 +6808,45 @@ Nachbarn auf dem Endstand, unter dem Schloss: `test595` 41/41, `test596`
 Einzeldatei allein in einem Ordner (file://): fünf Funkel, das Herz ein
 Knopf, ein Klick merkt `faellige-fehler`, kein Seitenfehler.
 
+**8 · Die Durchsicht vom 10. Oktober** (auf dem Stand ca4b23190 gemessen,
+dann gebaut; unter dem Schloss, file:// für die Bilder, ein freier Port für
+die Läufe).
+
+```txt
+                                          vorher (ca4b23190)        nachher
+Schrift der stillen Funkel, Telefon,      hell 1 : 1 (mit Bewegung, 11,84 : 1 in allen
+erzwungenes :hover, kleinster Wert über   Mitte des Laufs nach      drei Bewegungsarten;
+1,4 s (§11)                               340–407 ms), 1,04 : 1     dunkel 15,57 : 1
+                                          (reduce, für immer);      vorher wie nachher
+                                          dunkel 15,57 : 1
+gesperrte Knöpfe, die sich unter dem      2 je Thema („Trainieren   0
+Zeiger ändern, OHNE Bewegung (§9)         · 0", „Lernen · 0")
+Herzen ohne Ding im Vorlesenamen (test595 5 von 22 („fällig",       0 von 22
+§10)                                      „neu", „noch instabil",
+                                          „inzwischen stabil",
+                                          „aktuell fällig")
+Startlast (test388 §5, gzip)              1855 KB                   1854 KB (1bfaca53: 1850)
+```
+
+Der Lauf der Buchstaben, Zeitreihe aus der Durchsicht (hell, Telefon,
+klebendes `:hover`, mit Bewegung): 100 ms rgb(110,109,104), 250 ms
+rgb(252,252,252) auf rgb(251,251,250), 400 ms zurück auf rgb(55,53,47).
+`test596` §11 misst deshalb jedes Bild über 1,4 s, nicht einen Augenblick:
+die späten Buchstaben eines langen Wortes haben ihre weisse Mitte erst nach
+einer Sekunde.
+
+Je Datei, gzip -6, gegen ca4b23190: bausteine.css −718 B, lernwelt.css
+−288 B (gekürzte Kommentare), motion.css +86 B (die geteilte Wischregel),
+lernwelt.js +127 B (das Feld `allein`) — zusammen −793 B.
+
+Nachbarn auf dem Endstand (0eda8e963), unter dem Schloss: `test596`
+50/50, `test595` 44/44, `test580` grün, `test433` 39/39, `test496` 148,
+`test494` 153, `test495` 26/26, `test492` 55, `test436` 71/71, `test581`
+93, `test127`, `test245` 51, `test217` 27/27, `test265` 39, `test208`,
+`test259` 8, `test565` 54/54, `test126`, `test303` 16/16, `test541` 25/25,
+`test590` 68/68, `test388` 22. Rot nur `test493` mit 42/44
+(`-webkit-backdrop-filter: blur(8px)` in motion.css, fremd, aus E695 —
+unverändert). Datei-Wächter grün: 550, 549, 225, 401, 402, 537, 290, 298,
+410, 400, 109, 87, 105, 362. Die Einzeldatei allein in einem Ordner
+(file://, Telefon, hell, `reduce`, klebendes `:hover` auf „Trainieren"):
+Schrift rgb(55,53,47) auf rgb(251,251,250), kein Seitenfehler.
