@@ -95,8 +95,14 @@ const Hinweis = (() => {
 
   /** Was in `#toast` steht und einem ANDEREN Aufruf gehört, rückt zur Seite;
    *  ein Fortschritt (E116) stapelt sich nicht selbst. */
+  /** Was `#toast` SAGT — ohne den Knopf einer Handlung (E718). Sonst stünde
+   *  „… liegt im PapierkorbRückgängig" in der Karte, die in den Stapel rückt. */
+  const gesagt = (t: HTMLElement): string => [...t.childNodes]
+    .filter(n => !(n instanceof Element && n.classList.contains('toast-aktion')))
+    .map(n => n.textContent || '').join('');
+
   const uebernehmen = (t: HTMLElement, id: number, neu: string): void => {
-    const alt = t.textContent || '';
+    const alt = gesagt(t);
     const altId = eigner;
     eigner = id;
     aeltere.filter(a => a.id === id || a.el.textContent === neu).forEach(gehen);
@@ -229,7 +235,37 @@ const Hinweis = (() => {
    * Fehlt das Element, geht die Meldung in die Konsole und der Griff, den
    * `toast` zurückgibt, tut nichts — statt beim ersten Anfassen zu werfen.
    * ----------------------------------------------------------------------*/
-  const toast = (text: unknown, dauer?: number) => {
+  /* EINE HANDLUNG IN DER MELDUNG (E718, das Toast-Muster des Kits: eine
+     Meldung, höchstens ein Knopf). „„Skizzen" liegt im Papierkorb" bekommt
+     „Rückgängig" — als echten `<button>` in `#toast`, nur bei der NEUESTEN.
+     Rückt sie in den Stapel, geht sie ohne Knopf: die Karten dort greifen
+     nicht nach dem Zeiger (E711), und ihr Rückweg ist der Papierkorb. Liegt
+     ein Fenster offen, ist `#toast` mit allem anderen träge (Fokus) — dann
+     ist der Papierkorb der Rückweg, nicht dieser Knopf. Er ist nie der
+     einzige Weg zurück (§43). */
+  type Aktion = { text: string; tun: () => void };
+  const knopfAn = (t: HTMLElement, aktion: Aktion): void => {
+    const k = document.createElement('button');
+    k.type = 'button';
+    k.className = 'toast-aktion';
+    k.textContent = String(aktion.text || 'Rückgängig');
+    let getan = false;
+    k.addEventListener('click', (e: MouseEvent) => {
+      e.stopPropagation();
+      if (getan || !t.classList.contains('show')) return;
+      getan = true;
+      clearTimeout(toastTimer);
+      t.classList.remove('show');
+      k.remove();
+      try { aktion.tun(); }
+      catch (f) { console.error('[Hinweis] Die Handlung der Meldung schlug fehl', f); }
+    });
+    /* Kein Leerzeichen davor: der Abstand kommt aus dem Stilblatt (gap),
+       und `gesagt()` gäbe es sonst als letztes Zeichen der Meldung weiter. */
+    t.append(k);
+  };
+
+  const toast = (text: unknown, dauer?: number, opt?: { aktion?: Aktion }) => {
     const t = document.getElementById('toast');
     if (!t) {
       console.info('[Hinweis]', String(text));
@@ -238,6 +274,7 @@ const Hinweis = (() => {
     const id = ++zaehler;
     uebernehmen(t, id, String(text ?? ''));
     t.textContent = String(text ?? '');
+    if (opt?.aktion && typeof opt.aktion.tun === 'function') knopfAn(t, opt.aktion);
     t.classList.add('show');
     clearTimeout(toastTimer);
     toastBis = Date.now() + (dauer || 2600);
@@ -261,7 +298,7 @@ const Hinweis = (() => {
         toastBis = Date.now() + (dauer || 2600);
         toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
       },
-      get textContent() { return t.textContent || ''; },
+      get textContent() { return gesagt(t); },
       remove() {
         /* Nur die eigene Meldung nehmen, eine fremde bleibt stehen. */
         aeltere.filter(a => a.id === id).forEach(gehen);

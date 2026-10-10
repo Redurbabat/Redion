@@ -20,6 +20,11 @@ interface BaumAuftrag {
   offen?: string[];
   gewaehltGeaendert?: (id: string) => void;
   offenGeaendert?: (ids: string[]) => void;
+  /** Das Menü eines Knotens (E721): Rechtsklick, Kontextmenü-Taste,
+   *  Umschalt+F10 und langes Drücken. `false`: dieser Knoten hat keines. */
+  aktionen?: (id: string, wo: { anker: HTMLElement; x?: number; y?: number; tastatur: boolean }) => boolean | void;
+  /** Entf auf dem fokussierten Knoten. */
+  entf?: (id: string, anker: HTMLElement) => boolean | void;
 }
 
 interface BaumGriff {
@@ -80,6 +85,7 @@ const Baumansicht = (() => {
           zeile.setAttribute('aria-selected', String(gewaehlt === k.id));
           if (hatKinder) zeile.setAttribute('aria-expanded', String(offen.has(k.id)));
           if (k.deaktiviert) zeile.setAttribute('aria-disabled', 'true');
+          if (auftrag.aktionen) zeile.setAttribute('aria-haspopup', 'menu');
           zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
           zeile.style.setProperty('--baum-ebene', String(ebene - 1));
           /* DIE FARBE DES KNOTENS (E672) — noch einmal durch die Whitelist,
@@ -228,6 +234,18 @@ const Baumansicht = (() => {
     });
 
     zeichne();
+
+    /* EIN BINDER FÜR DEN GANZEN BAUM (E721) — derselbe wie an den Karten
+       der Bibliothek. Der Baum kennt kein Menü; er sagt nur, welcher Knoten
+       gemeint ist, und der Aufrufer öffnet seines. */
+    const { aktionen, entf } = auftrag;
+    if (aktionen && typeof Menue !== 'undefined') {
+      Menue.aktionenBinden(wurzel, {
+        auswahl: '[data-baum-id]',
+        oeffnen: (el, wo) => aktionen(el.dataset['baumId'] || '', { ...wo, anker: el }),
+        ...(entf ? { entf: (el: HTMLElement) => entf(el.dataset['baumId'] || '', el) } : {})
+      });
+    }
 
     return {
       element: wurzel,

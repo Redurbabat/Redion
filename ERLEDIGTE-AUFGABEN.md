@@ -1,5 +1,69 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 10. Oktober 2026 · E721 nach der Durchsicht — Decke, Ankunft, Stelle, Zeichen, Name, Meldung
+
+**Redur** (Masterprompt vom 29. September, S. 19): „Hier füge ... und oder
+beim rechts klicke sollte es mir zeigen löschen" — „Für den rechts klick
+bei eine dokument oder eine text usw wo es passen kann".
+
+**Fund** (unabhängige Durchsicht an `ef3e19693`): `test362` §7 rot (eine
+rohe 22px im Platzhalter der Ecke); die Ankunft der Karten im Studio weg
+(0 von 6 — der Wähler traf die neue `.bib-zelle` nicht); „Zu Favoriten"
+und „Duplizieren" aus dem Seitenmenü warfen eine lange Seite an den Anfang;
+das Zeichen von „In den Papierkorb" wurde unter Zeiger und Fokus weiss;
+`aria-expanded` fehlte am „…" und am ⋯; „Zuletzt geöffnet" hatte kein
+Menü; Gruppen in `UI.wahl` ohne Namen; eine scheiternde Aktion sagte
+nichts; L242 Punkt 1 behauptete zu viel. Dazu `test580`, an `ef3e19693`
+ebenfalls rot und in keiner Liste.
+
+**Bau:** Marke statt roher Zahl (`calc(var(--touch-min) / 2)`);
+`:is(.bib-deckel, .bib-zelle)` für die Ankunft; auf der Seite der alte Weg
+für Favorit und Duplizieren; `:not([data-gefahr])` in `studio.css`;
+`Menue.aufgeklappt` für aria-expanded; der Binder kennt
+`.rmo-recent-card`; `role="group"` mit Namen in `UI.wahl`; eine Meldung,
+wenn `Register.aktionen.tun` scheitert; L242 Punkt 1 genau, Punkt 5 neu
+(Schlucker am Tablet, nicht nachzustellen).
+
+**Prüfung:** `test597` 91/91 (zwölf neue Zusagen, rot gegen `ef3e19693`),
+`test362` 18/18, `test580` angepasst (Gefahr am Rechner wie am Telefon
+ausgenommen, „Löschen ist rot" jetzt für beide — die Rechner-Zeile ist am
+Grundstand rot); zehn Gegenproben in zwei Runden; Nachbarn im Nachtrag von
+E721, Zahlen in `messungen.md` §91.
+
+## 6. Oktober 2026 · E721 — Ein Menü je Ding (Masterprompt #9)
+
+**Redur** (Masterprompt vom 29. September, S. 19, unter dem Foto der
+Bibliothekskarten, den ☆ oben rechts eingekreist): „Hier füge ... und oder
+beim rechts klicke sollte es mir zeigen löschen" — „Für den rechts klick
+bei eine dokument oder eine text usw wo es passen kann". S. 13: „… und auch
+die rechtsk klickt sollte hier für die ordner haben ."
+
+**Fund** (`test597` gegen 73a956937, 13/75): das ⌄ der Bibliothekskarte war
+ein `<i aria-hidden>` von 20 × 20 IM Kartenknopf — für Tastatur und
+Vorleser nicht da; Rechtsklick auf Karte, Ablagebaum und Seitenleiste
+zeigte das Browsermenü; Umschalt+F10 tat nichts; Pfeil ab im offenen Menü
+sprang auf die Karte dahinter; langes Drücken am Telefon öffnete die Seite;
+Regal und Tabelle hatten keine Aktion; Entf tat nichts; am Rechner war
+„In den Papierkorb" nie rot. Und dieselbe Seite hatte fünf Listen von Hand.
+
+**Bau:** `Register.aktionen` (neu, `register/aktionen.ts`) — jeder Bereich
+meldet seine Aktionen; `Menue.aktionen` zeichnet daraus das Menü;
+`Menue.aktionenBinden` bindet Rechtsklick, Kontextmenü-Taste,
+Umschalt+F10, Entf und langes Drücken (E83, ein Schlucker statt zwei);
+Menüs mit Rolle, Pfeiltasten und Fokus zurück; `Menue.wahl` / `UI.wahl`.
+Das „…" ist ein Knopf neben dem Deckel (44 × 44, oben rechts); Ablagebaum
+(`baum.ts`), Regal, Tabelle, Seitenleiste (Rechtsklick → Seitenmenü, das ⋯
+benannt) und Notizhefte (Heft, Fach; halten ohne Bewegung → Menü) haben
+dasselbe Menü. Gefahr rot am Rechner wie am Telefon; `data-gefahr` auch an
+den Lösch-Einträgen in Dokumenten (L242).
+
+**Prüfung:** `test597` 79/79 (neu, rot gegen 73a956937 mit 13/75; §1b, die
+Ecke über dem Vorschautext, rot gegen 25fb7f9d5), `test37`,
+`test114` 23, `test303` §7 (erweitert, rot zuerst); fünf Gegenproben,
+Nachbarn und Messung im Commit von E721 und in `messungen.md` §91. Offen:
+L242 (die Dinge IN einem Dokument, die Datenbankzeile, „Rückgängig" mit der
+Tastatur) und die Fragen in AUFGABEN „Nach E721".
+
 ## 6. Oktober 2026 · E719 und E720 · Das Herz ist ein Knopf, und kein Knopf wirkt tot
 
 **Redur** (Masterprompt vom 29. September, Seiten 21/22): „die herz beim
@@ -42,6 +106,43 @@ rot gegen 486e500a; dann der Bau — `:where(:not(:disabled))` ohne Gewicht,
 Fokus-Rückgabe, reines Zurück über `metaListeAendern`, Tönung über dem
 Funkelgrund (16,21 : 1), 2-px-Akzentrand im Starken Kontrast, Ring innen.
 Sieben Gegenproben, je rot gesehen. `test595` und `test596` je 41/41.
+
+## 6. Oktober 2026 · E718 — Ordner bearbeiten (Masterprompt #12 und die Datenhälfte von #9)
+
+**Redur** (Masterprompt vom 29. September, S. 13): „hier beiM BIBLOTEK KANN
+ich wie beim biblotek die ordner farbe oder die ordner selbst nicht
+bearbeiten, behebe das problem und auch die rechtsk klickt sollte hier für
+die ordner haben ." — S. 19: „… beim rechts klicke sollte es mir zeigen
+löschen".
+
+**Fund** (`test594` gegen 1bfaca53, 14/62): das ⌄ „Umbenennen" der
+Bibliothek sprang auf die Seite (gegen E380); „   " und Steuerzeichen
+wurden gespeichert; Farbe und Name erreichten die Seitenleiste nicht; ein
+eigenes Symbol fehlte auf Karte und Baum; ein Ordner auf seinem eigenen
+Kind bildete einen Ring; der Papierkorb der Bibliothek schrieb nur
+`alive:false` (kein `trashedAt`, im Inhalt des Elternteils, kein
+Protokoll, kein Rückweg) und liess die Kinder in Alle/Zuletzt/Favoriten
+stehen; und das Blockmenü löschte eine Unterseite samt Enkelseite
+ENDGÜLTIG.
+
+**Bau:** `App.umbenennen` (ein Weg für Bibliothek, Notizhefte, Seitenmenü,
+Datenbankzeile), `App.nameSaeubern`, `App.nachAenderung`,
+`App.inPapierkorb` mit „Rückgängig" in der Meldung (`hinweis.ts`: eine
+Handlung, nur bei der neuesten Meldung), die Ring-Prüfung in
+`Werkzeuge.verschiebe`, `Bibliothek.alleSeiten` ohne Kinder weggelegter
+Ordner, das eigene Symbol auf Karte und im Ablagebaum. Editor: „Löschen",
+der Schrägstrich-Befehl und „Ausschneiden" legen in den Papierkorb. Nach
+der Durchsicht vom 6. Oktober auch das ⋯ einer Datenbank (vorher
+`confirm()` und endgültig weg, samt Sammlung) und Entf auf einer
+Mehrfachauswahl; `App.umbenennen` und `App.inPapierkorb` fragen das Recht
+an der angefassten Seite (§26); Namen ohne Richtungs-Überschreiber, die
+200er-Grenze zählt Schriftzeichen.
+
+**Prüfung:** `test594` 76/76 (neu; nach der Durchsicht §3, §15, §16 erweitert,
+rot gegen 32749689 mit 66/76), `test560` §7, `test587` §13, `test588`
+§15 (erweitert); Nachbarn und Gegenproben im Commit von E718; Messung
+`messungen.md` §89. Offen: L239 (alte Papierkorb-Seiten ohne Frist, die
+Regel des Fachs) — Redurs Fragen.
 
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 

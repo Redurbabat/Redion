@@ -504,6 +504,229 @@ const App = (() => {
     return neu;
   };
 
+  /* ========================================================================
+   * EIN NAME, EINE FARBE, EIN PAPIERKORB — für jede Oberfläche (E718)
+   * ------------------------------------------------------------------------
+   * Redur, Masterprompt vom 29. September, Seite 13: „hier beiM BIBLOTEK
+   * KANN ich wie beim biblotek die ordner farbe oder die ordner selbst nicht
+   * bearbeiten, behebe das problem". Gemessen war: das „Umbenennen" der
+   * Bibliothek öffnete den Ordner als Seite (gegen E380), „   " wurde als
+   * Name gespeichert, ein BEL blieb im Titel stehen, und der Papierkorb der
+   * Bibliothek schrieb `alive:false` an `Store.trashBlock` vorbei — ohne
+   * `trashedAt` (die Frist lief nie ab), im Inhalt des Elternteils, ohne
+   * Protokoll, ohne Rückweg. Und jede Oberfläche zeichnete nach einer
+   * Änderung nur sich selbst neu: die Farbe eines Fachs erreichte die
+   * Seitenleiste nicht (E672 versprach „überall").
+   *
+   * Darum stehen die drei Griffe HIER, einmal (§8), und Bibliothek,
+   * Notizhefte, Seitenmenü und Blockmenü rufen sie.
+   * ======================================================================*/
+
+  /** Nach einer Änderung an `p`: alles, was `p` zeigt, neu zeichnen.
+   *  KEIN Rundruf aus `Store.updateBlock` — der liefe bei jedem Tastendruck
+   *  (die Schale hört lokale Änderungen mit Absicht nicht). Die Seite selbst
+   *  wird nur gezeichnet, wenn eine Sonderansicht steht (Bibliothek,
+   *  Notizhefte) oder `p` auf der offenen Seite liegt — sonst verlöre ein
+   *  Schreibender seine Schreibmarke für eine Farbe im Baum. */
+  const nachAenderung = (p?: any): void => {
+    zeichneBaum();
+    const aufDerSeite = !!p && !!seiteId &&
+      Store.pathOf(String(p.id)).some((x: any) => x && x.id === seiteId);
+    if (sonder || !p || aufDerSeite) zeichneSeite(); else zeichneCrumbs();
+  };
+
+  /** Ein Name, wie er gespeichert wird: Unicode NFC; Steuerzeichen (C0, C1)
+   *  fliegen hinaus; Zeilenumbrüche (auch U+2028/2029) und Tabs werden zu
+   *  Leerzeichen; Leerraum zusammengezogen, Ränder weg, höchstens 200
+   *  Zeichen. „/" und „:" bleiben: es sind Titel, keine Dateinamen — die
+   *  Ausfuhr macht sich ihre Dateinamen selbst (`WissenDienst.sauber`).
+   *
+   *  Dazu seit der Durchsicht vom 6. Oktober (E718): Richtungs-Überschreiber
+   *  (U+202A–202E, U+2066–2069) fliegen hinaus — sie drehen einen Namen in
+   *  der Anzeige um, ohne dass man es sieht („Rechnung‮fdp.exe"). Und die
+   *  200 zählen SCHRIFTZEICHEN (Grapheme), nicht Codepunkte: 👨‍👩‍👧 sind
+   *  fünf Codepunkte, und der alte Schnitt liess davon einen halben Menschen
+   *  stehen. Ohne `Intl.Segmenter` (ältere Browser) bleibt der Codepunkt-
+   *  Schnitt — schlechter, aber nicht falsch gespeichert. */
+  const nameSaeubern = (roh: unknown): string => {
+    const s = String(roh ?? '').normalize('NFC')
+      .replace(/[\r\n\t\u2028\u2029\u0085]/g, ' ')
+      .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const zeichen = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+      ? [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(s)].map(g => g.segment)
+      : [...s];
+    return zeichen.slice(0, 200).join('').trim();
+  };
+
+  /** Darf man das Angefasste bearbeiten? Gefragt wird gegen DIESE Kennung,
+   *  nicht gegen die offene Seite (§26, L102). Ohne Konten (`Konten` fehlt,
+   *  etwa in einer abgespeckten Einzeldatei) gibt es nichts zu sperren.
+   *  „bearbeiten", nicht „loeschen": die Rolle „Bearbeiten" konnte Seiten
+   *  schon vor E718 in den Papierkorb legen, und der Papierkorb ist
+   *  umkehrbar — ob er „loeschen" verlangen soll, gehört Redur (L239). */
+  const darfBearbeiten = (id: string): boolean =>
+    typeof Konten === 'undefined' || typeof Konten.darf !== 'function' || !!Konten.darf('bearbeiten', id);
+
+  /** Wer neben `p` liegt und schon so heisst (gross/klein egal, nur Lebende). */
+  const gleichnamig = (p: any, name: string): any => {
+    const klein = name.toLocaleLowerCase('de');
+    return Object.values<any>(Store.cache.blocks).find(b =>
+      b && b.id !== p.id && b.type === 'page' && b.alive !== false &&
+      (b.parentId ?? null) === (p.parentId ?? null) &&
+      (b.parentTable === 'collection') === (p.parentTable === 'collection') &&
+      String(b.text || '').trim().toLocaleLowerCase('de') === klein) || null;
+  };
+
+  /**
+   * Umbenennen an Ort und Stelle — EIN Weg für die Bibliothek, die
+   * Notizhefte, das Seitenmenü und die Datenbankzeile. Kein Sprung auf die
+   * Seite (E380: ein Ordner ist ein Ort). Jede Antwort wird abgewartet,
+   * bevor die nächste Frage kommt (E710 nimmt den Träger beim Antworten
+   * weg — eine Frage auf eine noch gehende hätte zwei Fenster).
+   */
+  const umbenennen = async (p: any, anker?: Element | null, titel = 'Neuer Name'): Promise<boolean> => {
+    const id = String(p?.id || '');
+    const jetzt = id ? Store.getBlock(id) : null;
+    if (!jetzt) return false;
+    if (!darfBearbeiten(id)) {
+      UI.toast('Umbenennen geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+      if (anker instanceof HTMLElement && anker.isConnected) anker.focus({ preventScroll: true });
+      return false;
+    }
+    /* Der Fokus kehrt zurück, wo er herkam. Hat das Neuzeichnen den Anker
+       ersetzt (die Bibliothek zeichnet ihre Karten neu), dann an seinen
+       Nachfolger: dieselbe Klasse, dieselbe Kennung. */
+    const zurueck = (): void => {
+      let ziel: Element | null = anker instanceof Element ? anker : null;
+      if (ziel && !ziel.isConnected && ziel.classList[0]) {
+        const k = '.' + CSS.escape(ziel.classList[0]);
+        const i = CSS.escape(id);
+        ziel = document.querySelector(`${k}[data-id="${i}"], ${k}[data-baum-id="${i}"], ` +
+          `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"], ${k}[data-mehr-id="${i}"]`);
+      }
+      if (ziel instanceof HTMLElement && ziel.isConnected) ziel.focus({ preventScroll: true });
+    };
+    const alt = String(jetzt.text || '');
+    let vorgabe = alt;
+    let leerGefragt = false;
+    for (let runde = 0; runde < 6; runde++) {
+      const antwort = await UI.frage(titel, vorgabe);
+      if (antwort === null || antwort === undefined) { zurueck(); return false; }
+      const name = nameSaeubern(antwort);
+      if (!name) {
+        UI.toast('Ein Name braucht mindestens ein Zeichen — „' + (alt || 'Ohne Titel') + '" bleibt.');
+        if (leerGefragt) { zurueck(); return false; }
+        leerGefragt = true;
+        vorgabe = alt;
+        continue;
+      }
+      if (name === alt) { zurueck(); return false; }
+      const doppelt = gleichnamig(jetzt, name);
+      if (doppelt) {
+        const wahl = await Dialog.wahl({
+          titel: 'Den Namen gibt es hier schon',
+          text: 'Im selben Ordner gibt es schon „' + String(doppelt.text || '').trim() + '".',
+          knoepfe: [
+            { id: 'anders', text: 'Anderen Namen wählen' },
+            { id: 'trotzdem', text: 'Trotzdem so nennen', hinweis: 'Zwei Einträge heissen dann gleich' }
+          ]
+        });
+        if (wahl === 'anders') { vorgabe = name; continue; }
+        if (wahl !== 'trotzdem') { zurueck(); return false; }
+      }
+      Store.updateBlock(id, { text: name });
+      nachAenderung(Store.getBlock(id));
+      zurueck();
+      return true;
+    }
+    zurueck();
+    return false;
+  };
+
+  /** Wie viele lebende Seiten unter `id` hängen (für die Meldung). */
+  const unterseitenZahl = (id: string): number => {
+    let n = 0;
+    const gesehen = new Set<string>();
+    const gehe = (x: string): void => {
+      if (gesehen.has(x)) return;
+      gesehen.add(x);
+      for (const k of Store.childrenOf(x) as any[]) {
+        if (!k || k.alive === false) continue;
+        if (k.type === 'page') n++;
+        gehe(String(k.id));
+      }
+    };
+    gehe(id);
+    return n;
+  };
+
+  /**
+   * In den Papierkorb — EINE Bedeutung von „Löschen" (E718). Über
+   * `Store.trashBlock` (Frist, Protokoll, aus dem Inhalt des Elternteils,
+   * der Verlauf hört mit), danach alles neu gezeichnet, und eine Meldung mit
+   * „Rückgängig", das an DIESELBE Stelle zurücklegt. Über diesen Griff
+   * laufen die Bibliothek, das Seitenmenü, das Blockmenü, der Schrägstrich,
+   * „Ausschneiden", das ⋯ einer Datenbank und Entf auf einer
+   * Mehrfachauswahl. Was endgültig löscht, steht in E718 unter „Was
+   * bleibt" — gewollt, nicht übersehen (E709: der Papierkorb selbst).
+   *
+   * `ruhig`: keine Meldung (wer viele auf einmal weglegt, meldet selbst).
+   * `satz`: ein eigener Anfang der Meldung (Ausschneiden). Zurück kommt, ob
+   * es geklappt hat.
+   */
+  const inPapierkorb = (p: any, opt: { ruhig?: boolean; satz?: string } = {}): boolean => {
+    const id = String(p?.id || '');
+    const b = id ? Store.getBlock(id) : null;
+    if (!b || b.alive === false) return false;
+    if (!darfBearbeiten(id)) {
+      if (!opt.ruhig) UI.toast('In den Papierkorb geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+      return false;
+    }
+    const eltern = b.parentId ? Store.getBlock(b.parentId) : null;
+    const stelle = eltern && Array.isArray(eltern.content) ? eltern.content.indexOf(id) : -1;
+    const istSeite = b.type === 'page' || b.type === 'database';
+    /* Eine Datenbank trägt ihren Namen an der Sammlung, nicht am Block. */
+    const sammlung = b.type === 'database' && b.collectionId ? Store.getCollection(b.collectionId) : null;
+    const name = String(b.text || '').trim() || String(sammlung?.name || '').trim() ||
+      (b.type === 'page' ? 'Ohne Titel' : '');
+    const unter = b.type === 'page' ? unterseitenZahl(id) : 0;
+    Store.trashBlock(id);
+    /* Die offene Seite geht in den Papierkorb: weiter zur ersten Seite, wie
+       das Seitenmenü es immer tat — ausser eine Sonderansicht steht (die
+       Bibliothek): dann bleibt man, wo man ist. */
+    if (id === seiteId && !sonder) { const e2 = Store.rootPages()[0]; oeffne(e2 ? e2.id : null); }
+    else nachAenderung(b);
+    if (opt.ruhig) return true;
+    const satz = opt.satz ? opt.satz
+      : !istSeite || !name ? 'Block liegt im Papierkorb'
+      : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
+      : '„' + name + '" liegt im Papierkorb';
+    UI.toast(satz, 6000, { aktion: { text: 'Rückgängig', tun: () => {
+      const jetzt = Store.getBlock(id);
+      if (!jetzt || jetzt.alive !== false) return;
+      Store.restoreBlock(id);
+      /* An dieselbe Stelle: `restoreBlock` hängt hinten an. */
+      const e = jetzt.parentId ? Store.getBlock(jetzt.parentId) : null;
+      if (e && Array.isArray(e.content) && stelle >= 0) {
+        const ohne = e.content.filter((x: any) => x !== id);
+        ohne.splice(Math.min(stelle, ohne.length), 0, id);
+        Store.updateBlock(e.id, { content: ohne });
+      }
+      nachAenderung(Store.getBlock(id));
+      UI.toast(istSeite && name ? '„' + name + '" ist zurück' : 'Block ist zurück');
+    } } });
+    return true;
+  };
+
+  /** Die Einträge des Seitenmenüs, die es auch an Karte, Baum und Regal
+   *  gibt — ihr Wort hier, ihre Kennung im Register (E721). */
+  const ZUR_QUELLE: Record<string, string> = {
+    fav: 'favorit', rename: 'umbenennen', icon: 'symbol', dup: 'duplizieren',
+    link: 'link', del: 'papierkorb', 'wz-verschieben': 'verschieben'
+  };
+
   const seitenMenue = (anker: any, p: any) => {
     const r = anker.getBoundingClientRect();
     const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -522,7 +745,7 @@ const App = (() => {
       '<button data-a="dup">' + mi('copy') + 'Duplizieren<span class="ms">Strg D</span></button>' +
       '<button data-a="wz-verschieben">' + mi('moveTo') + 'Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
       `<button data-a="archiv">${mi('archive')}${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
-      '<button data-a="del">' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
+      '<button data-a="del" data-gefahr>' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
       '<hr>' +
       '<button data-a="wz-praesi">' + mi('play') + 'Präsentieren' +
         '<span class="kenn">Beta</span><span class="ms">Strg Alt P</span></button>' +
@@ -599,6 +822,9 @@ const App = (() => {
         fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
               `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
               esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
+    /* Das ⋯ der Seitenleiste sagt, solange dieses Menü offen ist,
+       aria-expanded=true (E721, Durchsicht vom 10. Oktober). */
+    Menue.aufgeklappt(anker instanceof HTMLElement ? anker : null, m);
 
     m.addEventListener('click', async e => {
       /* Nur die Schriftkacheln im Menü, nicht der <body> — der trägt
@@ -617,13 +843,13 @@ const App = (() => {
       const a = b.dataset.a;
 
       /* Untermenüs bleiben offen */
-      if (a === 'icon') {
+      /* SECHS ZEILEN, EINE QUELLE (E721): was es auch an der Karte, im Baum
+         und im Regal gibt, ruft hier dieselbe Zeile in `Register.aktionen`
+         — Aufbau, Reihenfolge und Wörter dieses Menüs bleiben, wie sie sind. */
+      const quelle = ZUR_QUELLE[a || ''];
+      if (quelle) {
         m.remove();
-        UI.emojiWaehlen(anker, (em) => {
-          Store.updateBlock(p.id, { icon: em });
-          zeichneBaum();
-          if (p.id === seiteId) zeichneSeite();
-        });
+        Register.aktionen.tun(quelle, Store.getBlock(p.id) || p, { kontext: 'seite', anker });
         return;
       }
       if (a === 'inhalt') {
@@ -724,15 +950,8 @@ const App = (() => {
       if (a === 'verlauf')   { Werkzeuge.versionen(p); return; }
       if (a === 'kopf-komm') { document.getElementById('btn-komm')?.click(); return; }
       if (a === 'auto')      { document.getElementById('btn-auto')?.click(); return; }
-      if (a === 'fav')   { favoritKippen(p); }
       if (a === 'klein') { Store.updateBlock(p.id, { small: !p.small }); zeichneSeite(); }
       if (a === 'breit') { volleBreite(p); }
-      if (a === 'rename') {
-        const n = await UI.frage('Neuer Titel', p.text);
-        if (n !== null) { Store.updateBlock(p.id, { text: n }); zeichneBaum(); if (p.id === seiteId) zeichneSeite(); }
-      }
-      if (a === 'dup')  { dupliziereSeite(p.id, p.parentId); zeichneBaum(); UI.toast('Seite dupliziert'); }
-      if (a === 'link') { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); }
       if (a === 'pid') {
         Ablage.kopiereJetzt(p.id, 'Seiten-ID kopiert: ' + p.id);
       }
@@ -760,12 +979,6 @@ const App = (() => {
                  Werkzeuge.zeitKurz(p.edited));
       }
       if (a === 'papier') papierkorb();
-      if (a === 'del') {
-        Store.trashBlock(p.id);
-        zeichneBaum();
-        if (p.id === seiteId) { const e2 = Store.rootPages()[0]; oeffne(e2 ? e2.id : null); }
-        UI.toast('In den Papierkorb verschoben');
-      }
     });
   };
 
@@ -4728,6 +4941,79 @@ const App = (() => {
     b('text', 'Unter Einstellungen kannst du jederzeit eine Sicherung speichern und wieder einlesen.');
   };
 
+  /* ========================================================================
+   * DIE AKTIONEN DER SCHALE AN EINER SEITE (E721)
+   * ------------------------------------------------------------------------
+   * Redur, Masterprompt S. 19: „beim rechts klicke sollte es mir zeigen
+   * löschen". Was man mit JEDER Seite tun kann — Ordner, Heft, PDF, Seite —,
+   * steht hier einmal im Register (`register/aktionen.ts`). Das Seitenmenü,
+   * das „…" der Bibliothek, der Ablagebaum, das ⋯ der Notizhefte, der
+   * Rechtsklick und Entf rufen dieselbe Zeile. Die Griffe dahinter sind die
+   * aus E718 (umbenennen, inPapierkorb, nachAenderung) und E712
+   * (favoritKippen) — hier kommt keiner dazu, sie bekommen nur eine Adresse.
+   * ======================================================================*/
+  const aktionenMelden = (): void => {
+    const R = typeof Register !== 'undefined' ? Register.aktionen : null;
+    if (!R) return;
+    const nichtImRegal = (o: AktionOrt): boolean => o.kontext !== 'notizhefte';
+    R.melde({ id: 'oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+      /* Ein Ordner in der Bibliothek ist ein Ort: dort heisst „Öffnen"
+         hinein (E380), und das meldet die Bibliothek selbst. */
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o) && o.art !== 'ordner',
+      tun: (p: any) => oeffne(p.id) });
+    /* AUF DER SEITE ZEICHNET NICHTS DIE SEITE NEU (Durchsicht vom 10. Oktober).
+       Ein Merkzeichen und eine Kopie ändern nichts, was die offene Seite
+       zeigt — vor E721 kippte „Zu Favoriten" nur Baum und Brotkrume, und
+       „Duplizieren" zeichnete nur den Baum. `nachAenderung` zeichnet die
+       offene Seite neu und wirft den Leser an den Anfang (test597 §16:
+       scrollTop 1200 → 0). Neu gezeichnet wird deshalb nur, wo eine Karte
+       oder ein Regal das Ding ZEIGT (Bibliothek, Notizhefte). */
+    const zeigtKarten = (o: AktionOrt): boolean => o.kontext !== 'seite';
+    R.melde({ id: 'favorit', zeichen: 'star', gruppe: 'merken', rang: 10,
+      name: (p: any) => (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'),
+      tun: (p: any, o: AktionOrt) => {
+        favoritKippen(p);
+        if (zeigtKarten(o)) nachAenderung(Store.getBlock(p.id) || p);
+      } });
+    R.melde({ id: 'umbenennen', name: 'Umbenennen', zeichen: 'pencil', gruppe: 'bearbeiten', rang: 10,
+      /* Ein verschlüsseltes Heft trägt seinen Namen im Schloss (E406). */
+      gilt: (p: any, o: AktionOrt) => !(o.kontext === 'notizhefte' && p.locked),
+      tun: (p: any, o: AktionOrt) => umbenennen(p, o.anker || null,
+        o.kontext === 'seite' ? 'Neuer Titel'
+          : o.kontext === 'notizhefte' ? (p.heftArt === 'fach' ? 'Name des Fachs' : 'Name des Hefts')
+          : 'Neuer Name') });
+    R.melde({ id: 'symbol', name: 'Symbol ändern', zeichen: 'smile', gruppe: 'bearbeiten', rang: 20,
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o),
+      tun: (p: any, o: AktionOrt) => {
+        UI.emojiWaehlen(o.anker && o.anker.isConnected ? o.anker : document.body, (em: string) => {
+          Store.updateBlock(p.id, { icon: em });
+          nachAenderung(Store.getBlock(p.id));
+        });
+      } });
+    R.melde({ id: 'duplizieren', name: 'Duplizieren', zeichen: 'copy', gruppe: 'ablegen', rang: 20,
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o),
+      tun: (p: any, o: AktionOrt) => {
+        dupliziereSeite(p.id, p.parentId);
+        if (zeigtKarten(o)) nachAenderung(Store.getBlock(p.id)); else zeichneBaum();
+        UI.toast('Seite dupliziert');
+      } });
+    R.melde({ id: 'link', name: 'Link kopieren', zeichen: 'link', gruppe: 'teilen', rang: 10,
+      gilt: (_p: any, o: AktionOrt) => nichtImRegal(o),
+      tun: (p: any) => Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert') });
+    /* „Löschen" heisst Papierkorb (E718) — umkehrbar, mit „Rückgängig". Das
+       endgültige Löschen hat EINEN Ort: der Papierkorb selbst (E709). */
+    R.melde({ id: 'papierkorb', name: 'In den Papierkorb', zeichen: 'trash', gruppe: 'gefahr',
+      gefahr: true, taste: 'Entf',
+      tun: (p: any, o: AktionOrt) => {
+        const name = String(p.text || '').trim() || 'Ohne Namen';
+        /* Die Regel der Notizhefte bleibt (E265, L239): ein Fach geht, seine
+           Hefte bleiben im Regal — die Meldung sagt es wie bisher. */
+        return inPapierkorb(p, o.kontext === 'notizhefte' && p.heftArt === 'fach'
+          ? { satz: 'Fach „' + name + '" liegt im Papierkorb. Seine Hefte bleiben im Regal.' } : {});
+      } });
+  };
+  aktionenMelden();
+
   return {
     start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
     zeigeBlock, blockAusHash,
@@ -4738,6 +5024,9 @@ const App = (() => {
        nichts tut (§47). */
     vollbild, vollbildAn, vollbildGeht, volleBreite,
     markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
+    /* E718: EIN Umbenennen, EIN Papierkorb, EIN Neuzeichnen nach einer
+       Änderung — für Bibliothek, Notizhefte, Seiten- und Blockmenü (§8). */
+    umbenennen, nameSaeubern, inPapierkorb, nachAenderung, favoritKippen,
     kuerzlich, kommendeTermine,
     /* Wo man gerade ist — für die Kontextkante (E272). */
     schauplatz,

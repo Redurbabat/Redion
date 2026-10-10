@@ -1181,12 +1181,28 @@ const Seitenleiste = (() => {
     });
     const mehr = document.createElement('button');
     mehr.textContent = '⋯';
+    /* EIN NAME FÜR DAS ⋯ (E721). Es hiess für den Vorleser nur „⋯" — bei
+       vierzig Zeilen vierzig gleiche Knöpfe. Jetzt sagt es, wessen
+       Aktionen es öffnet; `title` zeigt dasselbe der Maus. */
+    const zeilenName = p.text || 'Ohne Titel';
+    mehr.setAttribute('aria-label', 'Aktionen für „' + zeilenName + '“');
+    mehr.setAttribute('aria-haspopup', 'menu');
+    mehr.title = 'Aktionen für „' + zeilenName + '“';
     mehr.addEventListener('click', e => { e.stopPropagation(); seitenMenue(mehr, p); });
     act.appendChild(plus);
     act.appendChild(mehr);
 
     r.append(tw, ico, nm, act);
     r.addEventListener('click', () => oeffne(p.id));
+    /* RECHTSKLICK AUF DIE ZEILE = IHR ⋯ (E721). Dieselbe Liste, nicht eine
+       zweite: das Seitenmenü. Umschalt lässt das Menü des Browsers durch —
+       dieselbe Hintertür wie im Editor. Die Zeilen bleiben ohne Tabstopp
+       (die Liste ist virtuell); mit der Tastatur führt der Weg über das ⋯. */
+    r.addEventListener('contextmenu', e => {
+      if (e.shiftKey) return;
+      e.preventDefault();
+      seitenMenue(mehr, p);
+    });
 
     /* Seiten in der Leiste umhängen */
     r.addEventListener('dragstart', e => { e.dataTransfer?.setData('text/seite', p.id); });

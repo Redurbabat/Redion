@@ -56,8 +56,11 @@ const Hinweis = (() => {
         }
         ordnen();
     };
+    const gesagt = (t) => [...t.childNodes]
+        .filter(n => !(n instanceof Element && n.classList.contains('toast-aktion')))
+        .map(n => n.textContent || '').join('');
     const uebernehmen = (t, id, neu) => {
-        const alt = t.textContent || '';
+        const alt = gesagt(t);
         const altId = eigner;
         eigner = id;
         aeltere.filter(a => a.id === id || a.el.textContent === neu).forEach(gehen);
@@ -194,7 +197,30 @@ const Hinweis = (() => {
             z.el.style.removeProperty('opacity');
         }
     }, { capture: true });
-    const toast = (text, dauer) => {
+    const knopfAn = (t, aktion) => {
+        const k = document.createElement('button');
+        k.type = 'button';
+        k.className = 'toast-aktion';
+        k.textContent = String(aktion.text || 'Rückgängig');
+        let getan = false;
+        k.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (getan || !t.classList.contains('show'))
+                return;
+            getan = true;
+            clearTimeout(toastTimer);
+            t.classList.remove('show');
+            k.remove();
+            try {
+                aktion.tun();
+            }
+            catch (f) {
+                console.error('[Hinweis] Die Handlung der Meldung schlug fehl', f);
+            }
+        });
+        t.append(k);
+    };
+    const toast = (text, dauer, opt) => {
         const t = document.getElementById('toast');
         if (!t) {
             console.info('[Hinweis]', String(text));
@@ -203,6 +229,8 @@ const Hinweis = (() => {
         const id = ++zaehler;
         uebernehmen(t, id, String(text ?? ''));
         t.textContent = String(text ?? '');
+        if (opt?.aktion && typeof opt.aktion.tun === 'function')
+            knopfAn(t, opt.aktion);
         t.classList.add('show');
         clearTimeout(toastTimer);
         toastBis = Date.now() + (dauer || 2600);
@@ -216,7 +244,7 @@ const Hinweis = (() => {
                 toastBis = Date.now() + (dauer || 2600);
                 toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
             },
-            get textContent() { return t.textContent || ''; },
+            get textContent() { return gesagt(t); },
             remove() {
                 aeltere.filter(a => a.id === id).forEach(gehen);
                 if (eigner !== id && eigner !== 0)

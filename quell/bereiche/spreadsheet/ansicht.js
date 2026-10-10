@@ -1019,7 +1019,7 @@ const SpreadsheetView = (() => {
                     ? '<button data-a="auf"><span class="mi">↑</span>Aufsteigend sortieren</button>' +
                         '<button data-a="abv"><span class="mi">↓</span>Absteigend sortieren</button><hr>'
                     : '') +
-                `<button data-a="del"><span class="mi">🗑</span>${was} ${esc(name)} löschen</button>`;
+                `<button data-a="del" data-gefahr><span class="mi">🗑</span>${was} ${esc(name)} löschen</button>`;
             const m = Menue.menu(html, x, y, { titel: was + ' ' + name });
             m.addEventListener('click', (ev) => {
                 const b = ev.target.closest('button');
@@ -1596,7 +1596,7 @@ const SpreadsheetView = (() => {
             const m = Menue.menu('<button data-a="um"><span class="mi">✏️</span>Umbenennen</button>' +
                 '<button data-a="kopie"><span class="mi">⧉</span>Verdoppeln</button><hr>' +
                 (block.mappe.blaetter.length > 1
-                    ? '<button data-a="del"><span class="mi">🗑</span>Blatt „' + esc(b.name) + '" löschen</button>'
+                    ? '<button data-a="del" data-gefahr><span class="mi">🗑</span>Blatt „' + esc(b.name) + '" löschen</button>'
                     : '<button data-a="" disabled><span class="mi">🗑</span>Das letzte Blatt bleibt</button>'), x, y, { titel: b.name });
             m.addEventListener('click', async (ev) => {
                 const t = ev.target.closest('button');

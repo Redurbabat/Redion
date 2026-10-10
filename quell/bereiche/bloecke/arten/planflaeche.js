@@ -855,7 +855,7 @@ const Planflaeche = (() => {
                 '<hr>' +
                 '<button data-m="vorlage">Als Vorlage speichern</button>' +
                 '<button data-m="svg">Als Bild speichern (SVG)</button>' +
-                '<button data-m="leeren">Plan leeren</button>', r.left - 180, r.bottom + 6);
+                '<button data-m="leeren" data-gefahr>Plan leeren</button>', r.left - 180, r.bottom + 6);
             m.addEventListener('click', e => {
                 const b = e.target.closest('[data-m]');
                 if (!b)

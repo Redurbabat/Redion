@@ -1517,6 +1517,16 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 /* `.menu button .sub` steht vollständig in `bausteine.css`; alle drei
    Angaben hier wurden überschrieben (E340). */
 .menu hr{border:none; border-top:1px solid var(--line); margin:5px 0}
+/* GEFAHR IST ROT — am Rechner wie am Telefon (E721). Bis hierher rötete nur
+   das Blatt am Telefon, und nur `data-a="del"` und `"purge"`. Jetzt meldet
+   eine Aktion selbst, dass sie Gefahr ist (`data-gefahr`, aus
+   `Register.aktionen`), und das gilt überall. Rot ist dabei nie das einzige
+   Zeichen: das Wort sagt es, und die Gefahr steht immer zuletzt, hinter
+   einer Linie. */
+.menu button[data-gefahr], .menu button.rot{color:var(--gefahr)}
+.menu button[data-gefahr] .mi, .menu button.rot .mi{color:var(--gefahr)}
+/* Ein Menü mit Rolle führt den Fokus selbst (E721) — er muss zu sehen sein. */
+.menu[role="menu"] button:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
 .swatches{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; padding:6px}
 .swatches button{
   width:100%; aspect-ratio:1; border-radius:5px; border:1px solid var(--line);
@@ -2668,6 +2678,27 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
   pointer-events:none;
 }
 #toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+
+/* EINE HANDLUNG IN DER MELDUNG (E718). „„Skizzen" liegt im Papierkorb"
+   trägt „Rückgängig" — der einzige Teil von `#toast`, der nach dem Zeiger
+   greift. 44 px (§37), ein Rahmen, nicht nur Farbe (§38). Ausgeblendet
+   (ohne `.show`) ist er unsichtbar UND aus der Tab-Folge: eine
+   durchsichtige Meldung darf keinen Knopf haben, den man trifft, ohne ihn
+   zu sehen. */
+#toast:has(.toast-aktion){display:flex; align-items:center; gap:12px; padding:5px 5px 5px 18px}
+#toast .toast-aktion{
+  pointer-events:auto; flex:none; min-height:var(--touch-min); min-width:var(--touch-min);
+  padding:0 14px; border:1px solid var(--line); border-radius:6px;
+  background:var(--bg-hover); color:var(--text); font:inherit; font-weight:600; cursor:pointer;
+}
+#toast .toast-aktion:hover{border-color:var(--text)}
+#toast .toast-aktion:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+#toast:not(.show) .toast-aktion{visibility:hidden; pointer-events:none}
+/* Steht ein Fenster offen, legt `Fokus` alles andere still (`inert`) —
+   auch `#toast`. Ein Knopf, den man sieht und der nichts tut, wäre ein
+   toter Knopf: dann steht nur der Satz da, und der Rückweg ist der
+   Papierkorb (E718). */
+#toast[inert] .toast-aktion{display:none}
 
 /* AM TELEFON STEHT UNTEN EINE LEISTE, und was nur meldet, gehört nicht auf
    das, womit man arbeitet. Ein Toast bei bottom:22px legte sich mitten
@@ -9061,6 +9092,23 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 }
 .nh-karte:hover .nh-mehr, .nh-mehr:focus-visible{ opacity:1 }
 .nh-mehr:hover{ color:var(--text); background:var(--bg-hover) }
+/* 44 × 44 ZU TREFFEN, 26 PX ZU SEHEN (E721, §37). Der Knopf selbst wird so
+   gross wie ein Finger und bleibt eckig — eine Rundung schnitte die
+   Trefferfläche an den Ecken ab (elementFromPoint folgt ihr, test114 23).
+   Gemalt wird nur die Scheibe in seiner Mitte (`::before`). Er rückt dafür
+   um den Rand nach aussen, damit die Scheibe genau da bleibt, wo sie war.
+   Ein unsichtbarer Hof über `::after` hätte die Karte daneben überdeckt —
+   so trifft der Finger, was er sieht. */
+.nh-karte > .nh-mehr{
+  right:-7px; top:-7px; width:var(--touch-min); height:var(--touch-min);
+  border-radius:0; background:none
+}
+.nh-karte > .nh-mehr::before{
+  content:""; position:absolute; inset:9px; z-index:-1;
+  border-radius:var(--radius-sm); background:var(--bg-schwebend)
+}
+.nh-karte > .nh-mehr:hover{ background:none }
+.nh-karte > .nh-mehr:hover::before{ background:var(--bg-hover) }
 
 .nh-neu{
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -13920,12 +13968,67 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   overflow:hidden; min-height:39px; min-width:0; overflow-wrap:break-word;
   font-weight:580; letter-spacing:-.005em
 }
-.bib-deckel-mehr{
-  margin-left:auto; flex:none; width:20px; height:20px; display:grid;
-  place-items:center; border-radius:6px; color:var(--text-faint);
-  font-style:normal; font-size:13px
+/* DAS EIGENE SYMBOL (E718) vor dem Namen — nur, wenn ein Mensch eines
+   gesetzt hat. Gerade, nicht kursiv (`<i>`), und es schrumpft nie: ein
+   halbes Emoji ist schlimmer als keines. */
+.bib-deckel-symbol{ flex:none; font-style:normal; font-size:13px; line-height:1.5 }
+/* DAS „…" OBEN RECHTS AM DECKEL (E721). Redur hat auf S. 19 den ☆ oben
+   rechts eingekreist: „Hier füge ...". Ein eigener Knopf NEBEN dem Deckel
+   (in `.bib-zelle`, wie das Auge), 44 × 44 zu treffen und 26 px zu sehen —
+   die Stelle und die Art des ⋯ der Notizhefte. Er steht immer da, blass
+   in Ruhe: am Telefon gibt es kein Überfahren (§37, test303). */
+.bib-zelle > .bib-deckel-mehr{
+  position:absolute; right:0; top:0; z-index:3;
+  width:var(--touch-min); height:var(--touch-min); margin:0; padding:0; border:0;
+  display:grid; place-items:center; background:none; cursor:pointer;
+  /* Eckig, mit Absicht: eine Rundung schneidet die Trefferfläche an den
+     Ecken ab (elementFromPoint folgt ihr) — gemessen in test114 23. Rund
+     ist nur, was man sieht. */
+  border-radius:0; color:var(--text-dim)
 }
-.bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-zelle > .bib-deckel-mehr i{
+  display:grid; place-items:center; width:26px; height:26px;
+  /* Deckend, nicht schwebend: auf einem Deckel mit Vorschautext stand das
+     Wort sonst DURCH die Scheibe hindurch („Redi⋯on", gesehen im Bild). */
+  border-radius:var(--radius-sm); background:var(--bg-card);
+  box-shadow:0 0 0 1px var(--line); font-style:normal; font-size:15px; line-height:1
+}
+.bib-zelle > .bib-deckel-mehr:hover i,
+.bib-zelle > .bib-deckel-mehr:focus-visible i,
+.bib-zelle > .bib-deckel-mehr[aria-expanded="true"] i{ background:var(--bg-hover); color:var(--text) }
+.bib-zelle > .bib-deckel-mehr:focus-visible{ outline:none }
+.bib-zelle > .bib-deckel-mehr:focus-visible i{ outline:2px solid var(--accent); outline-offset:2px }
+/* Der Stern rückt nach links, neben das „…" — er bleibt ein Zeichen für
+   den Zustand, kein zweites kleines Ziel in derselben Ecke. */
+.bib-zelle .bib-deckel-stern{ right:40px; top:12px }
+/* UND DIE VORSCHAU MACHT DER ECKE PLATZ (test597 §1b). An seiner neuen
+   Stelle stand der Stern mitten in der ersten Zeile des Vorschautexts:
+   „Willkommen in Redi☆n" am Telefon, „… herausgefunden☆" am Rechner —
+   gesehen im Bild, nicht im Lauf. Eine Scheibe darunter half nur halb: sie
+   deckte die Mitte eines Worts und liess Splitter stehen („Willkommen in
+   ☆ di"), und ein angeschnittenes Wort ohne Auslassungszeichen liest sich
+   wie ein ANDERES Wort (dieselbe Lehre wie E227). Also weicht die Zeile:
+   ein Platzhalter rechts oben, so hoch wie die Ecke. Jede Zeile der
+   Vorschau ist ein eigener Block mit `overflow:hidden` und damit ein
+   Formatierungskontext — der weicht einem Float aus, statt unter ihm
+   durchzulaufen, und endet mit „…" vor dem Stern. Ordner zeichnen ihr
+   Bild mit `::before` und haben keinen Text; Bild und Handschrift liegen
+   absolut und rücken nicht. */
+.bib-zelle > .bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{
+  /* Die Höhe ist die halbe Trefferfläche des „…" (44 px, §37): so weit
+     reicht die Ecke ins Blatt. Als Marke, nicht als rohe 22px — die stünde
+     in test362s Verzeichnis der Wiederholungen (Durchsicht vom 10. Oktober). */
+  content:""; float:right; width:48px; height:calc(var(--touch-min) / 2)
+}
+/* GEHOBEN (E721): nach langem Drücken liegt das Ding ein wenig höher —
+   dieselbe Hebung wie im Kit (Popover, scale 1.04). Ohne Bewegung (System
+   oder „ruhig") bleibt es stehen und zeigt nur den Rahmen. */
+[data-gehoben]{
+  transform:scale(1.04); transition:transform var(--motion-fast) var(--ease);
+  box-shadow:0 0 0 2px var(--accent); border-radius:10px
+}
+@media (prefers-reduced-motion:reduce){ [data-gehoben]{ transform:none; transition:none } }
+body[data-bewegung="ruhig"] [data-gehoben]{ transform:none }
 .bib-deckel small{
   display:block; overflow:hidden; margin-top:2px;
   font-size:11px; white-space:nowrap; text-overflow:ellipsis
@@ -24390,7 +24493,9 @@ body:has(.overlay,.menu.blatt,#r-blatt) .rmo-recent .rmo-ring-trommel{animation-
 .einst-nav button:is(:hover,:focus-visible) .mi{color:var(--text)}
 .einst-nav button.on .mi{color:var(--accent-text)}
 .menu button .mi{display:grid;place-items:center;color:var(--text-dim)}
-.menu button:not(.rot):is(:hover,:focus-visible,.jetzt) .mi{color:var(--text)}
+/* Gefahr bleibt rot, auch unter Zeiger und Fokus: `.rot` setzt das Menü nur
+   am Telefon, `data-gefahr` meldet die Aktion selbst (E721; test597 §3, §9). */
+.menu button:not(.rot):not([data-gefahr]):is(:hover,:focus-visible,.jetzt) .mi{color:var(--text)}
 .menu .kenn{background:var(--bg-hover);color:var(--text-dim);box-shadow:inset 0 0 0 1px var(--line)}
 .home-liste .mz{display:grid;place-items:center;color:var(--text-dim)}
 .home-liste button:is(:hover,:focus-visible) .mz{color:var(--text)}
@@ -27056,7 +27161,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1419, inhalt: 'b10ce8c65f08e1bd', gebaut: '2026-10-06T07:30:19.349Z' };
+const Stand = { fassung: 1430, inhalt: '37c74bb7d43c757f', gebaut: '2026-10-10T21:29:43.147Z' };
 window.Stand = Stand;
 
 </script>
@@ -35222,8 +35327,8 @@ Register.bloecke = (() => {
             kurz: 'Ctrl+D', cmd: ['duplicate', 'duplizieren', 'kopieren'] },
         { id: 'a-moveto', name: 'Verschieben nach …', icon: '➦', zeichen: 'move', gruppe: 'Aktionen', aktion: 'moveto',
             cmd: ['moveto', 'verschieben', 'move'] },
-        { id: 'a-del', name: 'Block löschen', icon: '🗑', zeichen: 'trash', gruppe: 'Aktionen', aktion: 'del',
-            kurz: 'Entf', cmd: ['delete', 'loeschen', 'entfernen'] },
+        { id: 'a-del', name: 'Block in den Papierkorb', icon: '🗑', zeichen: 'trash', gruppe: 'Aktionen', aktion: 'del',
+            kurz: 'Entf', cmd: ['delete', 'loeschen', 'löschen', 'entfernen', 'papierkorb'] },
         { id: 'a-mention', name: 'Person oder Seite erwähnen', icon: '@', gruppe: 'Aktionen', aktion: 'mention',
             kurz: '@', cmd: ['mention', 'erwaehnen', 'erwaehnung'] },
         { id: 'a-date', name: 'Datum einfügen', icon: '📆', zeichen: 'calendar', gruppe: 'Aktionen', aktion: 'date',
@@ -37466,6 +37571,96 @@ const RegisterKontext = (() => {
         alle: () => LISTE.slice(), anzahl: () => LISTE.length };
 })();
 window.Register.kontext = RegisterKontext;
+
+</script>
+<script>
+/* ===== quell/register/aktionen.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/aktionen.ts (npm run bauen:ts). */
+window.Register = window.Register || {};
+const RegisterAktionen = (() => {
+    const GRUPPEN = ['oeffnen', 'merken', 'bearbeiten', 'ablegen', 'teilen'];
+    const eintraege = [];
+    const melde = (e) => {
+        if (!e || !e.id || typeof e.tun !== 'function') {
+            console.warn('Register.aktionen: Eintrag ohne id oder tun abgewiesen', e);
+            return;
+        }
+        const alt = eintraege.findIndex(x => x.id === e.id);
+        if (alt >= 0)
+            eintraege.splice(alt, 1, e);
+        else
+            eintraege.push(e);
+    };
+    const gilt = (e, ding, ort) => {
+        if (!ding || ding.alive === false)
+            return false;
+        if (!e.gilt)
+            return true;
+        try {
+            return !!e.gilt(ding, ort);
+        }
+        catch (f) {
+            console.warn('Register.aktionen: gilt() von „' + e.id + '" warf', f);
+            return false;
+        }
+    };
+    const rangVon = (e) => {
+        const g = e.gefahr ? 99 : GRUPPEN.indexOf(e.gruppe);
+        return (g < 0 ? GRUPPEN.length : g) * 1000 + (e.rang ?? 500);
+    };
+    const fuer = (ding, ort) => {
+        const o = ort || { kontext: '' };
+        return eintraege
+            .map((e, i) => ({ e, i }))
+            .filter(({ e }) => gilt(e, ding, o))
+            .sort((a, b) => rangVon(a.e) - rangVon(b.e) || a.i - b.i)
+            .map(({ e }) => {
+            let name = '';
+            try {
+                name = typeof e.name === 'function' ? e.name(ding, o) : e.name;
+            }
+            catch {
+                name = e.id;
+            }
+            return { id: e.id, name: String(name || e.id), zeichen: e.zeichen || '',
+                gruppe: e.gefahr ? 'gefahr' : e.gruppe, gefahr: !!e.gefahr, taste: e.taste || '' };
+        });
+    };
+    const scheitern = (e, ding, o, f) => {
+        console.error('Register.aktionen: „' + e.id + '" schlug fehl', f);
+        let name = e.id;
+        try {
+            name = String((typeof e.name === 'function' ? e.name(ding, o) : e.name) || e.id);
+        }
+        catch { }
+        if (typeof UI !== 'undefined' && UI.toast)
+            UI.toast('„' + name + '“ hat nicht geklappt.');
+    };
+    const tun = (id, ding, ort) => {
+        const e = eintraege.find(x => x.id === id);
+        const o = ort || { kontext: '' };
+        if (!e || !gilt(e, ding, o))
+            return false;
+        try {
+            const r = e.tun(ding, o);
+            if (r && typeof r.catch === 'function')
+                r.catch(f => scheitern(e, ding, o, f));
+        }
+        catch (f) {
+            scheitern(e, ding, o, f);
+            return false;
+        }
+        return true;
+    };
+    const taste = (t, ding, ort) => {
+        const z = fuer(ding, ort).find(x => x.taste === t);
+        return z ? window.Register.aktionen.tun(z.id, ding, ort) : false;
+    };
+    const alle = () => eintraege.map(e => e.id);
+    return { melde, fuer, tun, taste, alle, GRUPPEN };
+})();
+window.Register.aktionen = RegisterAktionen;
 
 </script>
 <script>
@@ -43777,6 +43972,14 @@ const Menue = (() => {
         };
         let nachmessen = null;
         let grund = null;
+        const vorher = document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+            ? document.activeElement : null;
+        const rueckZiel = opt.rolle === 'menu'
+            ? (opt.rueckfokus || anker || vorher) : null;
+        const rueck = () => {
+            if (rueckZiel && rueckZiel.isConnected)
+                rueckZiel.focus({ preventScroll: true });
+        };
         const schliessen = () => {
             m.remove();
             grund?.remove();
@@ -43787,6 +43990,7 @@ const Menue = (() => {
             e.preventDefault();
             e.stopPropagation();
             schliessen();
+            rueck();
         };
         document.addEventListener('keydown', escape, true);
         const waechter = new MutationObserver(() => {
@@ -43855,7 +44059,7 @@ const Menue = (() => {
                 }
                 karte.appendChild(el);
             });
-            m.querySelectorAll('[data-a="del"], [data-a="purge"]').forEach(x => x.classList.add('rot'));
+            m.querySelectorAll('[data-a="del"], [data-a="purge"], [data-gefahr]').forEach(x => x.classList.add('rot'));
             zug.herein();
             if (kopf && anker) {
                 tropfenAuf(m, kopf, anker, true);
@@ -43883,6 +44087,8 @@ const Menue = (() => {
                 nachmessen.observe(m);
             }
         }
+        if (opt.rolle === 'menu')
+            menueRolle(m, opt, rueck);
         setTimeout(() => {
             const zu = (e) => {
                 const ziel = e.target instanceof Node ? e.target : null;
@@ -43998,7 +44204,283 @@ const Menue = (() => {
         setTimeout(() => feld.focus(), 30);
         return m;
     };
-    return { menu, menuMitSuche, amTelefon };
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    const zeichenVon = (name) => {
+        if (!name || typeof Register === 'undefined' || !Register.symbole)
+            return '';
+        try {
+            return Register.symbole.hat?.(name) === false ? '' : Register.symbole.alsSvg(name, 16);
+        }
+        catch {
+            return '';
+        }
+    };
+    const eintraege = (m) => [...m.querySelectorAll('[role="menuitem"], [role="menuitemradio"]')]
+        .filter(b => !b.disabled && b.getClientRects().length > 0);
+    const menueRolle = (m, opt, rueck) => {
+        m.setAttribute('role', 'menu');
+        if (opt.beschriftung)
+            m.setAttribute('aria-label', opt.beschriftung.slice(0, 120));
+        m.querySelectorAll('button').forEach(b => {
+            if (b.closest('.ru-tropfen-kopf')) {
+                b.tabIndex = -1;
+                return;
+            }
+            if (!b.getAttribute('role'))
+                b.setAttribute('role', 'menuitem');
+            b.tabIndex = -1;
+        });
+        m.querySelectorAll('hr, .sep').forEach(x => x.setAttribute('role', 'separator'));
+        m.querySelectorAll('.grp').forEach(x => x.setAttribute('role', 'presentation'));
+        m.addEventListener('keydown', e => {
+            const liste = eintraege(m);
+            if (!liste.length)
+                return;
+            const i = liste.indexOf(document.activeElement);
+            let ziel;
+            if (e.key === 'ArrowDown')
+                ziel = liste[(i + 1) % liste.length];
+            else if (e.key === 'ArrowUp')
+                ziel = liste[(i - 1 + liste.length) % liste.length];
+            else if (e.key === 'Home')
+                ziel = liste[0];
+            else if (e.key === 'End')
+                ziel = liste[liste.length - 1];
+            if (ziel) {
+                e.preventDefault();
+                e.stopPropagation();
+                ziel.focus({ preventScroll: false });
+                return;
+            }
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                m.remove();
+                rueck();
+            }
+        });
+        if (opt.fokus) {
+            const liste = eintraege(m);
+            const aktiv = opt.fokus === 'aktiv'
+                ? liste.find(b => b.getAttribute('aria-current') === 'true') : undefined;
+            (aktiv || liste[0])?.focus({ preventScroll: true });
+        }
+    };
+    const offenAm = new WeakMap();
+    const aufgeklappt = (anker, m) => {
+        if (!anker || !anker.hasAttribute('aria-haspopup'))
+            return;
+        if (/^(treeitem|row|gridcell|option)$/.test(anker.getAttribute('role') || ''))
+            return;
+        anker.setAttribute('aria-expanded', 'true');
+        offenAm.set(anker, m);
+        const wache = new MutationObserver(() => {
+            if (m.isConnected)
+                return;
+            wache.disconnect();
+            if (offenAm.get(anker) !== m)
+                return;
+            offenAm.delete(anker);
+            anker.setAttribute('aria-expanded', 'false');
+        });
+        wache.observe(document.body, { childList: true });
+    };
+    const aktionen = (ding, ort, wo = {}) => {
+        const R = typeof Register !== 'undefined' ? Register.aktionen : null;
+        if (!R || !ding)
+            return null;
+        const zeilen = R.fuer(ding, ort);
+        if (!zeilen.length)
+            return null;
+        let html = '', gruppe = '';
+        for (const z of zeilen) {
+            if (gruppe && z.gruppe !== gruppe)
+                html += '<hr>';
+            gruppe = z.gruppe;
+            html += `<button type="button" data-a="${esc(z.id)}"${z.gefahr ? ' data-gefahr' : ''}>` +
+                `<span class="mi">${zeichenVon(z.zeichen)}</span>${esc(z.name)}` +
+                (z.taste ? `<span class="ms">${esc(z.taste)}</span>` : '') + '</button>';
+        }
+        const name = String(ding.text || '').trim() || 'Ohne Titel';
+        const anker = ort.anker && ort.anker.isConnected ? ort.anker : null;
+        const amZeiger = typeof wo.x === 'number' && typeof wo.y === 'number';
+        let x = wo.x ?? 0, y = wo.y ?? 0;
+        if (!amZeiger && anker) {
+            const r = anker.getBoundingClientRect();
+            x = r.left;
+            y = r.bottom + 4;
+        }
+        const m = menu(html, x, y, {
+            titel: name, rolle: 'menu', beschriftung: 'Aktionen für „' + name + '“', fokus: 'erster',
+            rueckfokus: wo.rueckfokus ?? anker,
+            ...(amZeiger || !anker ? {} : { anker })
+        });
+        aufgeklappt(anker, m);
+        m.addEventListener('click', e => {
+            const b = e.target instanceof Element ? e.target.closest('button[data-a]') : null;
+            if (!b || !m.contains(b))
+                return;
+            const id = b.dataset['a'] || '';
+            m.remove();
+            const frisch = (typeof Store !== 'undefined' && Store.getBlock(ding.id)) || ding;
+            Register.aktionen.tun(id, frisch, ort);
+        });
+        return m;
+    };
+    let schluckerWeg = null;
+    const nachzuegler = () => {
+        const schlucken = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        const arten = ['mousedown', 'mouseup', 'click'];
+        arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
+        const weg = () => {
+            arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
+            if (schluckerWeg === weg)
+                schluckerWeg = null;
+        };
+        schluckerWeg = weg;
+        setTimeout(weg, 800);
+    };
+    const nachzueglerWeg = () => { if (schluckerWeg)
+        schluckerWeg(); };
+    const HALTEN_MS = 500;
+    const WEG_PX = 10;
+    const gebunden = new WeakMap();
+    const aktionenBinden = (wurzel, auftrag) => {
+        if (gebunden.has(wurzel)) {
+            gebunden.set(wurzel, auftrag);
+            return;
+        }
+        gebunden.set(wurzel, auftrag);
+        const a = () => gebunden.get(wurzel) || auftrag;
+        const dingVon = (t) => {
+            const el = t instanceof Element ? t.closest(a().auswahl) : null;
+            return el && wurzel.contains(el) ? el : null;
+        };
+        let finger = false;
+        let zuletztHalt = 0, zuletztTaste = 0;
+        let halt = null;
+        const abbrechen = () => {
+            if (!halt)
+                return;
+            clearTimeout(halt.uhr);
+            delete halt.el.dataset['gehoben'];
+            halt = null;
+        };
+        wurzel.addEventListener('contextmenu', e => {
+            const el = dingVon(e.target);
+            if (!el)
+                return;
+            if (finger || Date.now() - zuletztHalt < 900 || (Date.now() - zuletztTaste < 400 && e.button !== 2)) {
+                e.preventDefault();
+                return;
+            }
+            if (e.shiftKey && e.button === 2)
+                return;
+            if (a().oeffnen(el, { x: e.clientX, y: e.clientY, tastatur: false }) !== false)
+                e.preventDefault();
+        });
+        wurzel.addEventListener('keydown', e => {
+            const el = dingVon(e.target);
+            if (!el || e.target !== el)
+                return;
+            if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+                e.preventDefault();
+                e.stopPropagation();
+                zuletztTaste = Date.now();
+                a().oeffnen(el, { tastatur: true });
+                return;
+            }
+            const entf = a().entf;
+            if (e.key === 'Delete' && entf && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                if (entf(el) !== false) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        });
+        wurzel.addEventListener('touchstart', e => {
+            finger = true;
+            nachzueglerWeg();
+            abbrechen();
+            const h = a().halten;
+            if (h === false || e.touches.length !== 1)
+                return;
+            const el = dingVon(e.target);
+            const t = e.touches[0];
+            if (!el || !t || (typeof h === 'string' && !el.matches(h)))
+                return;
+            const neu = { el, x: t.clientX, y: t.clientY, gehoben: false, uhr: 0 };
+            neu.uhr = window.setTimeout(() => {
+                if (halt !== neu || !el.isConnected)
+                    return;
+                neu.gehoben = true;
+                el.dataset['gehoben'] = '';
+                if (navigator.vibrate)
+                    navigator.vibrate(12);
+            }, HALTEN_MS);
+            halt = neu;
+        }, { passive: true });
+        wurzel.addEventListener('touchmove', e => {
+            const t = e.touches[0];
+            if (!halt || !t)
+                return;
+            if (Math.abs(t.clientX - halt.x) > WEG_PX || Math.abs(t.clientY - halt.y) > WEG_PX)
+                abbrechen();
+        }, { passive: true });
+        wurzel.addEventListener('touchend', e => {
+            if (e.touches.length)
+                return;
+            finger = false;
+            if (!halt)
+                return;
+            const { el, gehoben } = halt;
+            abbrechen();
+            if (!gehoben || !el.isConnected)
+                return;
+            zuletztHalt = Date.now();
+            nachzuegler();
+            a().oeffnen(el, { tastatur: true });
+        });
+        wurzel.addEventListener('touchcancel', () => { finger = false; abbrechen(); });
+    };
+    let wahlNr = 0;
+    const wahl = (w) => {
+        const html = w.gruppen.map(g => {
+            const gid = 'wahl-gruppe-' + (++wahlNr);
+            return (g.name ? `<div class="grp" id="${gid}">${esc(g.name)}</div>` : '') +
+                `<div role="group"${g.name ? ` aria-labelledby="${gid}"` : ''}>` +
+                g.optionen.map(o => `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
+                    `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
+                    `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
+                    `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('') +
+                '</div>';
+        }).join('<hr>');
+        const r = w.anker.getBoundingClientRect();
+        w.anker.setAttribute('aria-haspopup', 'menu');
+        const m = menu(html, r.left, r.bottom + 4, {
+            titel: w.titel, rolle: 'menu', beschriftung: w.titel, fokus: 'aktiv',
+            rueckfokus: w.anker, anker: w.anker
+        });
+        aufgeklappt(w.anker, m);
+        const zu = () => { w.anker.setAttribute('aria-expanded', 'false'); };
+        m.addEventListener('click', e => {
+            const b = e.target instanceof Element ? e.target.closest('[data-wahl]') : null;
+            if (!b || !m.contains(b))
+                return;
+            m.remove();
+            zu();
+            if (w.anker.isConnected)
+                w.anker.focus({ preventScroll: true });
+            w.beiWahl(b.dataset['wahl'] || '');
+        });
+        return m;
+    };
+    return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl, aufgeklappt,
+        nachzuegler, nachzueglerWeg, HALTEN_MS };
 })();
 window.Menue = Menue;
 
@@ -44283,8 +44765,11 @@ const Hinweis = (() => {
         }
         ordnen();
     };
+    const gesagt = (t) => [...t.childNodes]
+        .filter(n => !(n instanceof Element && n.classList.contains('toast-aktion')))
+        .map(n => n.textContent || '').join('');
     const uebernehmen = (t, id, neu) => {
-        const alt = t.textContent || '';
+        const alt = gesagt(t);
         const altId = eigner;
         eigner = id;
         aeltere.filter(a => a.id === id || a.el.textContent === neu).forEach(gehen);
@@ -44421,7 +44906,30 @@ const Hinweis = (() => {
             z.el.style.removeProperty('opacity');
         }
     }, { capture: true });
-    const toast = (text, dauer) => {
+    const knopfAn = (t, aktion) => {
+        const k = document.createElement('button');
+        k.type = 'button';
+        k.className = 'toast-aktion';
+        k.textContent = String(aktion.text || 'Rückgängig');
+        let getan = false;
+        k.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (getan || !t.classList.contains('show'))
+                return;
+            getan = true;
+            clearTimeout(toastTimer);
+            t.classList.remove('show');
+            k.remove();
+            try {
+                aktion.tun();
+            }
+            catch (f) {
+                console.error('[Hinweis] Die Handlung der Meldung schlug fehl', f);
+            }
+        });
+        t.append(k);
+    };
+    const toast = (text, dauer, opt) => {
         const t = document.getElementById('toast');
         if (!t) {
             console.info('[Hinweis]', String(text));
@@ -44430,6 +44938,8 @@ const Hinweis = (() => {
         const id = ++zaehler;
         uebernehmen(t, id, String(text ?? ''));
         t.textContent = String(text ?? '');
+        if (opt?.aktion && typeof opt.aktion.tun === 'function')
+            knopfAn(t, opt.aktion);
         t.classList.add('show');
         clearTimeout(toastTimer);
         toastBis = Date.now() + (dauer || 2600);
@@ -44443,7 +44953,7 @@ const Hinweis = (() => {
                 toastBis = Date.now() + (dauer || 2600);
                 toastTimer = setTimeout(() => t.classList.remove('show'), dauer || 2600);
             },
-            get textContent() { return t.textContent || ''; },
+            get textContent() { return gesagt(t); },
             remove() {
                 aeltere.filter(a => a.id === id).forEach(gehen);
                 if (eigner !== id && eigner !== 0)
@@ -45081,6 +45591,8 @@ const Baumansicht = (() => {
                         zeile.setAttribute('aria-expanded', String(offen.has(k.id)));
                     if (k.deaktiviert)
                         zeile.setAttribute('aria-disabled', 'true');
+                    if (auftrag.aktionen)
+                        zeile.setAttribute('aria-haspopup', 'menu');
                     zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
                     zeile.style.setProperty('--baum-ebene', String(ebene - 1));
                     const farbe = typeof Farben !== 'undefined' && Farben.kennung ? Farben.kennung(k.farbe) : '';
@@ -45226,6 +45738,14 @@ const Baumansicht = (() => {
             }
         });
         zeichne();
+        const { aktionen, entf } = auftrag;
+        if (aktionen && typeof Menue !== 'undefined') {
+            Menue.aktionenBinden(wurzel, {
+                auswahl: '[data-baum-id]',
+                oeffnen: (el, wo) => aktionen(el.dataset['baumId'] || '', { ...wo, anker: el }),
+                ...(entf ? { entf: (el) => entf(el.dataset['baumId'] || '', el) } : {})
+            });
+        }
         return {
             element: wurzel,
             gewaehlt: () => gewaehlt,
@@ -49384,6 +49904,8 @@ const UI = {
     menu: (...a) => Menue.menu(...a),
     menuMitSuche: (...a) => Menue.menuMitSuche(...a),
     amTelefon: () => Menue.amTelefon(),
+    wahl: (...a) => Menue.wahl(...a),
+    aktionen: (...a) => Menue.aktionen(...a),
     toast: (...a) => Hinweis.toast(...a),
     banner: (...a) => Hinweis.banner(...a),
     leer: (...a) => Hinweis.leer(...a),
@@ -56031,7 +56553,7 @@ const Zusatz = (() => {
                 '<button data-a="zurueck"><span class="mi">⇥</span>Nach rechts schieben</button>' +
                 `<button data-a="kopfsp"><span class="mi">▤</span>Als Kopfspalte<span class="ms">${kopfSpalte ? 'an' : 'aus'}</span></button>` +
                 '<button data-a="leeren"><span class="mi">␀</span>Inhalt leeren</button>' +
-                '<hr><button data-a="weg"><span class="mi">🗑</span>Spalte löschen</button>', r.left, r.bottom + 6);
+                '<hr><button data-a="weg" data-gefahr><span class="mi">🗑</span>Spalte löschen</button>', r.left, r.bottom + 6);
             m.addEventListener('click', e => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)
@@ -56068,7 +56590,7 @@ const Zusatz = (() => {
                 `<button data-a="kopf"><span class="mi">▥</span>Als Kopfzeile<span class="ms">${kopf ? 'an' : 'aus'}</span></button>` +
                 '<button data-a="dup"><span class="mi">⧉</span>Zeile duplizieren</button>' +
                 '<button data-a="leeren"><span class="mi">␀</span>Inhalt leeren</button>' +
-                '<hr><button data-a="weg"><span class="mi">🗑</span>Zeile löschen</button>', r.right + 6, r.top);
+                '<hr><button data-a="weg" data-gefahr><span class="mi">🗑</span>Zeile löschen</button>', r.right + 6, r.top);
             m.addEventListener('click', e => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)
@@ -66868,7 +67390,7 @@ const Planflaeche = (() => {
                 '<hr>' +
                 '<button data-m="vorlage">Als Vorlage speichern</button>' +
                 '<button data-m="svg">Als Bild speichern (SVG)</button>' +
-                '<button data-m="leeren">Plan leeren</button>', r.left - 180, r.bottom + 6);
+                '<button data-m="leeren" data-gefahr>Plan leeren</button>', r.left - 180, r.bottom + 6);
             m.addEventListener('click', e => {
                 const b = e.target.closest('[data-m]');
                 if (!b)
@@ -81476,7 +81998,7 @@ const SpreadsheetView = (() => {
                     ? '<button data-a="auf"><span class="mi">↑</span>Aufsteigend sortieren</button>' +
                         '<button data-a="abv"><span class="mi">↓</span>Absteigend sortieren</button><hr>'
                     : '') +
-                `<button data-a="del"><span class="mi">🗑</span>${was} ${esc(name)} löschen</button>`;
+                `<button data-a="del" data-gefahr><span class="mi">🗑</span>${was} ${esc(name)} löschen</button>`;
             const m = Menue.menu(html, x, y, { titel: was + ' ' + name });
             m.addEventListener('click', (ev) => {
                 const b = ev.target.closest('button');
@@ -82053,7 +82575,7 @@ const SpreadsheetView = (() => {
             const m = Menue.menu('<button data-a="um"><span class="mi">✏️</span>Umbenennen</button>' +
                 '<button data-a="kopie"><span class="mi">⧉</span>Verdoppeln</button><hr>' +
                 (block.mappe.blaetter.length > 1
-                    ? '<button data-a="del"><span class="mi">🗑</span>Blatt „' + esc(b.name) + '" löschen</button>'
+                    ? '<button data-a="del" data-gefahr><span class="mi">🗑</span>Blatt „' + esc(b.name) + '" löschen</button>'
                     : '<button data-a="" disabled><span class="mi">🗑</span>Das letzte Blatt bleibt</button>'), x, y, { titel: b.name });
             m.addEventListener('click', async (ev) => {
                 const t = ev.target.closest('button');
@@ -85389,9 +85911,7 @@ const Blocks = (() => {
             return;
         }
         if (was === 'del') {
-            Store.trashBlock(b.id);
-            Store.purgeBlock(b.id);
-            App.zeichneSeite();
+            App.inPapierkorb(b);
             return;
         }
         if (was === 'komm') {
@@ -85478,7 +85998,7 @@ const Blocks = (() => {
             '<button data-a="ref"><span class="mi">((</span>Blockverweis kopieren</button>' +
             '<button data-a="karte"><span class="mi">🎴</span>Zur Karteikarte machen</button>' +
             '<hr>' +
-            '<button data-a="del"><span class="mi">🗑</span>Löschen<span class="ms">Del</span></button>';
+            '<button data-a="del" data-gefahr><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
         const menu = UI.menu(html, r.right + 6, r.top);
         menu.addEventListener('click', (e) => {
             const btn = elVon(e)?.closest('button[data-a]');
@@ -85563,12 +86083,12 @@ const Blocks = (() => {
                 Ablage.kopiereJetzt(b.text || '', 'Text kopiert');
             }
             if (a === 'cut') {
-                Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
-                    if (!ging)
+                Ablage.kopiere(b.text || '').then(ging => {
+                    if (!ging) {
+                        UI.toast('Der Browser lässt das Kopieren nicht zu — der Block bleibt, wo er ist.');
                         return;
-                    Store.trashBlock(b.id);
-                    Store.purgeBlock(b.id);
-                    App.zeichneSeite();
+                    }
+                    App.inPapierkorb(b, { satz: 'Ausgeschnitten — der Block liegt im Papierkorb' });
                 });
             }
             if (a === 'komm')
@@ -85601,9 +86121,7 @@ const Blocks = (() => {
             if (a === 'ai')
                 KI.blockAktion('ai-edit', b);
             if (a === 'del') {
-                Store.trashBlock(b.id);
-                Store.purgeBlock(b.id);
-                App.zeichneSeite();
+                App.inPapierkorb(b);
             }
         });
     };
@@ -90759,7 +91277,7 @@ const Datenbank = (() => {
             (typeof Pruefsatz !== 'undefined' &&
                 Object.values(coll.schema).some(d => d.type === 'formula')
                 ? '<button data-a="festhalten"><span class="mi">✔</span>Diesen Fall festhalten</button>' : '') +
-            '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Entf</span></button>', r.left, r.bottom + 4, { platzhalter: 'Aktionen filtern …',
+            '<button data-a="del" data-gefahr><span class="mi">🗑</span>In den Papierkorb<span class="ms">Entf</span></button>', r.left, r.bottom + 4, { platzhalter: 'Aktionen filtern …',
             fuss: 'Zuletzt bearbeitet von <b>' +
                 esc(row.geaendertVon || row.erstelltVon || 'dir') + '</b><br>' +
                 esc(Einstellungen.datum(new Date(row.edited || row.created), true)) });
@@ -90805,11 +91323,8 @@ const Datenbank = (() => {
                 App.oeffne(row.id);
             }
             if (a === 'rename') {
-                const n = await UI.frage('Neuer Titel', row.text || '');
-                if (n !== null) {
-                    Store.updateBlock(row.id, { text: n });
+                if (await App.umbenennen(row, anker, 'Neuer Titel'))
                     App.zeichneSeite();
-                }
             }
             if (a === 'dup') {
                 const kopie = Store.addRow(coll.id, JSON.parse(JSON.stringify(row.props || {})));
@@ -91580,7 +92095,7 @@ const Datenbank = (() => {
             '<button data-a="dup"><span class="mi">⧉</span>Duplizieren</button>' +
             '<button data-a="vorlage"><span class="mi">🔖</span>Ansichtsvorlagen<span class="ms">▸</span></button>' +
             '<button data-a="lock"><span class="mi">🔒</span>' + (view.locked ? 'Entsperren' : 'Ansicht sperren') + '</button>' +
-            '<button data-a="del"><span class="mi">🗑</span>Ansicht löschen</button>', r.left, r.bottom + 4, { platzhalter: 'Einstellung suchen …', breite: '300px',
+            '<button data-a="del" data-gefahr><span class="mi">🗑</span>Ansicht löschen</button>', r.left, r.bottom + 4, { platzhalter: 'Einstellung suchen …', breite: '300px',
             titel: 'Einstellungen', kopf: kopfKarte });
         m.querySelector('[data-info]')?.addEventListener('click', async (ev) => {
             ev.stopPropagation();
@@ -92424,7 +92939,7 @@ const Datenbank = (() => {
             '<button data-a="neurechts"><span class="mi">⇥</span>Rechts einfügen</button>' +
             (def.type !== 'title'
                 ? '<hr><button data-a="dup"><span class="mi">⧉</span>Eigenschaft duplizieren</button>' +
-                    '<button data-a="del"><span class="mi">🗑</span>Eigenschaft löschen</button>'
+                    '<button data-a="del" data-gefahr><span class="mi">🗑</span>Eigenschaft löschen</button>'
                 : ''), r.left, r.bottom + 2);
         const nameFeld = m.querySelector('.sp-name');
         if (!nameFeld)
@@ -93051,7 +93566,7 @@ const Datenbank = (() => {
                     `<span class="ms">${Vorrat.aktiv(coll.id) ? 'an' : 'aus'}</span></button>` : '') +
             (typeof Feldrechte !== 'undefined'
                 ? '<button data-a="feldrechte"><span class="mi">🔒</span>Rechte je Spalte</button>' : '') +
-            '<hr><button data-a="del"><span class="mi">🗑</span>Datenbank löschen</button>', r.left - 120, r.bottom + 4);
+            '<hr><button data-a="del" data-gefahr><span class="mi">🗑</span>In den Papierkorb</button>', r.left - 120, r.bottom + 4);
         m.addEventListener('click', e => {
             const b = elVon(e)?.closest('button[data-a]');
             if (!b)
@@ -93264,13 +93779,8 @@ const Datenbank = (() => {
                 csvImport(coll);
             if (a === 'ai')
                 KI.datenbankAuswerten(coll, view);
-            if (a === 'del') {
-                if (!confirm(`Datenbank „${coll.name}" mit allen Einträgen löschen?`))
-                    return;
-                Store.trashBlock(block.id);
-                Store.purgeBlock(block.id);
-                App.zeichneSeite();
-            }
+            if (a === 'del')
+                App.inPapierkorb(block);
         });
     };
     const formelEinruecken = (src) => {
@@ -98406,6 +98916,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         inp.focus();
     };
     const verschiebe = (p, zielId, stillerHinweis = false) => {
+        if (zielId && (String(zielId) === String(p.id) || istUnter(String(zielId), String(p.id)))) {
+            UI.toast('Ein Ordner kann nicht in sich selbst liegen');
+            return false;
+        }
         const alt = Store.getBlock(p.parentId);
         if (alt) {
             alt.content = alt.content.filter((x) => x !== p.id);
@@ -98422,6 +98936,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         App.zeichneSeite();
         if (!stillerHinweis)
             UI.toast('Verschoben');
+        return true;
     };
     const wikiUmwandeln = (p) => {
         Store.updateBlock(p.id, { wiki: !p.wiki, icon: p.wiki ? (p.icon || '📄') : '📚' });
@@ -99155,6 +99670,13 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                 }
             }));
         }
+    });
+}
+if (typeof Register !== 'undefined' && Register.aktionen) {
+    Register.aktionen.melde({
+        id: 'verschieben', name: 'Verschieben nach …', zeichen: 'moveTo', gruppe: 'ablegen', rang: 10,
+        gilt: (_p, o) => o.kontext !== 'notizhefte',
+        tun: (p) => Werkzeuge.verschiebenNach(p)
     });
 }
 
@@ -101170,7 +101692,14 @@ const Mehrfach = (() => {
             if (e.key === 'Backspace' || e.key === 'Delete') {
                 e.preventDefault();
                 Verlauf.merke(true);
-                ids().forEach(id => { Store.trashBlock(id); Store.purgeBlock(id); });
+                const liste = ids();
+                if (liste.length === 1)
+                    App.inPapierkorb(Store.getBlock(liste[0]));
+                else {
+                    const n = liste.filter(id => App.inPapierkorb(Store.getBlock(id), { ruhig: true })).length;
+                    if (n)
+                        UI.toast(n + (n === 1 ? ' Block liegt' : ' Blöcke liegen') + ' im Papierkorb');
+                }
                 leeren();
                 App.zeichneSeite();
                 return;
@@ -112759,19 +113288,7 @@ const PWA = (() => {
             verschoben = 0;
             absetzen();
         };
-        let schluckerWeg = null;
-        const nachzuegler = () => {
-            const schlucken = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
-            const arten = ['mousedown', 'mouseup', 'click'];
-            arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
-            const weg = () => {
-                arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
-                if (schluckerWeg === weg)
-                    schluckerWeg = null;
-            };
-            schluckerWeg = weg;
-            setTimeout(weg, 800);
-        };
+        const nachzuegler = () => Menue.nachzuegler();
         const tragen = (e) => {
             if (!hebung)
                 return;
@@ -112828,8 +113345,7 @@ const PWA = (() => {
                 return;
             startX = t.clientX;
             startY = t.clientY;
-            if (schluckerWeg)
-                schluckerWeg();
+            Menue.nachzueglerWeg();
             if (hebung)
                 absetzen();
             const blk = elVon(e)?.closest('.blk');
@@ -112863,7 +113379,7 @@ const PWA = (() => {
                     gezogen = null;
                     verschoben = 0;
                     document.addEventListener('touchmove', tragen, { passive: false });
-                }, 500);
+                }, Menue.HALTEN_MS);
             }
             const zeile = elVon(e)?.closest('tbody tr[data-rid], .blk.b-todo, .liste-zeile[data-rid]');
             const schreibfeld = elVon(e)?.closest('[contenteditable="true"], textarea, input:not([type="checkbox"]):not([type="radio"])');
@@ -131108,11 +131624,25 @@ const Bibliothek = (() => {
         const pageId = collectionPageId(collectionId);
         return !!pageId && permitted(action, pageId);
     };
+    const vorfahrWeg = (b) => {
+        let cur = b && b.parentTable !== 'collection' && b.parentId ? Store.cache.blocks[b.parentId] : null;
+        for (let n = 0; cur && n < 50; n++) {
+            if (cur.alive === false)
+                return true;
+            cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+        }
+        return false;
+    };
     const alleSeiten = () => Object.values(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
         (b.parentTable === 'collection'
             ? collectionPermitted('lesen', b.parentId)
-            : permitted('lesen', b.id)));
+            : permitted('lesen', b.id)) && !vorfahrWeg(b));
+    const VORGABE_SYMBOLE = new Set(['', '📄', '📁', '🗂', '🗂️']);
+    const eigenesSymbol = (p) => {
+        const s = String(p?.icon ?? '').trim();
+        return VORGABE_SYMBOLE.has(s) ? '' : [...s].slice(0, 4).join('');
+    };
     const quelleVon = (p) => {
         if (p.parentTable === 'collection') {
             const c = Store.cache.collections[p.parentId];
@@ -131528,6 +132058,9 @@ const Bibliothek = (() => {
     const blickKnopf = (id, name) => `<button class="bib-blick" data-blick="${esc(id)}" ` +
         `aria-label="Blick in „${esc(name || 'Ohne Titel')}“" title="Blick hinein">` +
         '<i class="bib-blick-auge" aria-hidden="true"><b></b></i></button>';
+    const mehrKnopf = (id, name) => `<button type="button" class="bib-deckel-mehr" data-mehr-id="${esc(id)}" aria-haspopup="menu" ` +
+        `aria-label="Aktionen für „${esc(name || 'Ohne Titel')}“" title="Aktionen">` +
+        '<i aria-hidden="true">\u22ef</i></button>';
     const mitBlick = (deckelHtml, id, name) => '<span class="bib-zelle">' + deckelHtml + blickKnopf(id, name) + '</span>';
     const blickAnbringen = (wurzel, beiOeffnen) => {
         wurzel.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
@@ -131771,13 +132304,14 @@ const Bibliothek = (() => {
             `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
             (p.favorite ? '\u2605' : '\u2606') + '</i>' +
             '</span>' +
-            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
-            '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+            '<span class="bib-deckel-name">' +
+            (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
+            '<b>' + esc(p.text || 'Ohne Titel') + '</b></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
             '</button>';
-        if (art.id !== 'ordner')
-            return deckel;
-        return mitBlick(deckel, p.id, p.text);
+        return '<span class="bib-zelle">' + deckel +
+            (art.id === 'ordner' ? blickKnopf(p.id, p.text) : '') +
+            mehrKnopf(p.id, p.text) + '</span>';
     };
     const hefte = (liste) => {
         const nach = new Map();
@@ -131957,7 +132491,7 @@ const Bibliothek = (() => {
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
-                zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
+                zeichen: eigenesSymbol(p) || (kinder.length || p.heftArt === 'fach' ? 'pages' : 'page'),
                 ...(farbe ? { farbe } : {}),
                 ...(kinder.length ? { kinder } : {})
             };
@@ -132010,6 +132544,16 @@ const Bibliothek = (() => {
             offenGeaendert: (ids) => {
                 if (Store.setMeta)
                     Store.setMeta(BIB_BAUM_OFFEN, ids);
+            },
+            aktionen: (id, wo) => {
+                const p = id === BIB_BAUM_WURZEL ? null : Store.getBlock(id);
+                if (!p || p.alive === false)
+                    return false;
+                return !!Menue.aktionen(p, ortFuer(p, wo.anker), wo.tastatur ? { rueckfokus: wo.anker } : { x: wo.x ?? 0, y: wo.y ?? 0, rueckfokus: wo.anker });
+            },
+            entf: (id, anker) => {
+                const p = id === BIB_BAUM_WURZEL ? null : Store.getBlock(id);
+                return p ? Register.aktionen.taste('Entf', p, ortFuer(p, anker)) : false;
             }
         });
         stelle.replaceChildren(griff.element);
@@ -132106,6 +132650,27 @@ const Bibliothek = (() => {
             Register.symbole.fuelle(wrap);
         binde(wrap);
         platzNachtragen(wrap);
+    };
+    const ortFuer = (p, anker) => ({ kontext: 'bibliothek', art: artVon(p).id, anker });
+    const aktionenAnbringen = (wrap) => {
+        const wurzel = wrap.querySelector('.bib');
+        if (!wurzel || typeof Menue === 'undefined')
+            return;
+        const dingVon = (el) => Store.getBlock(el.dataset['id'] || el.dataset['rmoOpen'] || '');
+        Menue.aktionenBinden(wurzel, {
+            auswahl: '.bib-deckel[data-id], .bib-heft[data-id], .bib-hand[data-id], .bib-zeile[data-id], ' +
+                '.rmo-recent-card[data-rmo-open]',
+            oeffnen: (el, wo) => {
+                const p = dingVon(el);
+                if (!p)
+                    return false;
+                return !!Menue.aktionen(p, ortFuer(p, el), wo.tastatur ? { rueckfokus: el } : { x: wo.x ?? 0, y: wo.y ?? 0, rueckfokus: el });
+            },
+            entf: el => {
+                const p = dingVon(el);
+                return p ? Register.aktionen.taste('Entf', p, ortFuer(p, el)) : false;
+            }
+        });
     };
     const binde = (wrap) => {
         wrap.querySelectorAll('[data-rmo-open]').forEach(button => button.addEventListener('click', () => {
@@ -132227,10 +132792,7 @@ const Bibliothek = (() => {
         wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
         blickAnbringen(wrap);
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
-            k.addEventListener('click', ereignis => {
-                if (ereignis.target instanceof Element &&
-                    ereignis.target.closest('.bib-deckel-mehr'))
-                    return;
+            k.addEventListener('click', () => {
                 const id = k.dataset['id'];
                 if (!id)
                     return;
@@ -132240,57 +132802,15 @@ const Bibliothek = (() => {
                 }
                 App.oeffne(id);
             });
-            k.querySelector('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
-                ereignis.stopPropagation();
-                const id = k.dataset['id'];
-                const p = id ? Store.getBlock(id) : null;
-                if (!p)
-                    return;
-                const r = k.getBoundingClientRect();
-                const m = UI.menu(`<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
-                    (k.dataset['art'] === 'ordner'
-                        ? `<button data-a="blick"><span class="mi">\u2315</span>Blick hinein</button>` : '') +
-                    `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
-                    (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
-                    '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
-                    (typeof Notebook !== 'undefined' && typeof Notebook.farbMenue === 'function'
-                        ? '<button data-a="farbe"><span class="mi">\u25cf</span>Farbe \u2026</button>' : '') +
-                    '<div class="sep"></div>' +
-                    '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4);
-                m.addEventListener('click', ev => {
-                    const b = elVon(ev)?.closest('[data-a]');
-                    if (!b)
-                        return;
-                    const a = b.dataset['a'];
-                    m.remove();
-                    if (a === 'oeffnen') {
-                        App.oeffne(p.id);
-                        return;
-                    }
-                    if (a === 'blick') {
-                        blickHinein(p, r);
-                        return;
-                    }
-                    if (a === 'stern') {
-                        Store.updateBlock(p.id, { favorite: !p.favorite });
-                    }
-                    if (a === 'farbe') {
-                        Notebook.farbMenue(k, p.id, () => App.zeichneSeite());
-                        return;
-                    }
-                    if (a === 'umbenennen') {
-                        App.oeffne(p.id);
-                        setTimeout(() => document.getElementById('title')?.focus(), 80);
-                        return;
-                    }
-                    if (a === 'papierkorb') {
-                        Store.updateBlock(p.id, { alive: false });
-                        UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
-                    }
-                    App.zeichneSeite();
-                });
-            });
         });
+        wrap.querySelectorAll('.bib-deckel-mehr[data-mehr-id]').forEach(knopf => knopf.addEventListener('click', ereignis => {
+            ereignis.stopPropagation();
+            const p = Store.getBlock(knopf.dataset['mehrId'] || '');
+            if (!p)
+                return;
+            Menue.aktionen(p, ortFuer(p, knopf), { rueckfokus: knopf });
+        }));
+        aktionenAnbringen(wrap);
     };
     const zeichnen = (wrap) => {
         if (zustand.reiter === 'schule') {
@@ -132694,6 +133214,27 @@ const Bibliothek = (() => {
         });
     };
     const aufgaben = () => App.zeigeSonder('Meine Aufgaben', zeichneAufgaben);
+    if (typeof Register !== 'undefined' && Register.aktionen) {
+        const R = Register.aktionen;
+        const ordnerHier = (o) => o.kontext === 'bibliothek' && o.art === 'ordner';
+        R.melde({ id: 'hinein', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+            gilt: (_p, o) => ordnerHier(o),
+            tun: (p) => { geheIn(p.id); } });
+        R.melde({ id: 'als-seite', name: 'Als Seite bearbeiten', zeichen: 'page', gruppe: 'oeffnen', rang: 20,
+            gilt: (_p, o) => ordnerHier(o),
+            tun: (p) => App.oeffne(p.id) });
+        R.melde({ id: 'blick', name: 'Blick hinein', zeichen: 'eye', gruppe: 'oeffnen', rang: 30,
+            gilt: (p, o) => ordnerHier(o) ||
+                (o.kontext === 'notizhefte' && typeof Notebook !== 'undefined' && Notebook.istFach(p)),
+            tun: (p, o) => {
+                const r = o.anker && o.anker.isConnected ? o.anker.getBoundingClientRect()
+                    : new DOMRect(innerWidth / 2, innerHeight / 3, 0, 0);
+                if (o.hinein)
+                    blickHinein(p, r, false, o.hinein);
+                else
+                    blickHinein(p, r);
+            } });
+    }
     return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
         pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,
         blickKnopf, mitBlick, blickAnbringen, blickHinein };
@@ -138144,10 +138685,13 @@ const Notebook = (() => {
     };
     const setzeFarbe = (id, farbe, danach) => {
         Store.updateBlock(id, { color: Farben.kennung(farbe) });
-        if (danach)
+        if (danach) {
             danach();
-        else
-            renderShelf();
+            return;
+        }
+        renderShelf();
+        if (typeof App !== 'undefined' && App.zeichneBaum)
+            App.zeichneBaum();
     };
     const sperrenHier = async (id) => {
         const p = Store.getBlock(id);
@@ -138533,105 +139077,16 @@ const Notebook = (() => {
             moveToFach(heftId, String(b?.dataset['z'] || '') || null);
         });
     };
-    const kontextMenue = (anker, id) => {
+    const ortVon = (anker) => ({
+        kontext: 'notizhefte', anker, hinein: (ziel) => openFach(ziel)
+    });
+    const kontextMenue = (anker, id, wo = {}) => {
         const p = Store.getBlock(id);
         if (!p)
             return;
-        const r = anker.getBoundingClientRect();
-        const html = p.locked
-            ? `<button data-k="auf">Öffnen</button>` +
-                `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
-                `<button data-k="entsperren">Entschlüsseln</button>` +
-                `<div class="sep"></div>` +
-                `<button data-k="korb">In den Papierkorb</button>`
-            : `<button data-k="auf">Öffnen</button>` +
-                `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
-                `<button data-k="name">Umbenennen</button>` +
-                `<button data-k="farbe">Farbe …</button>` +
-                `<button data-k="fach">In Fach verschieben …</button>` +
-                `<button data-k="sperren">Verschlüsseln</button>` +
-                `<div class="sep"></div>` +
-                `<button data-k="korb">In den Papierkorb</button>`;
-        const m = UI.menu(html, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
-        m.addEventListener('click', (e) => {
-            const b = e.target.closest('[data-k]');
-            if (!b)
-                return;
-            m.remove();
-            const k = b.dataset['k'];
-            if (k === 'auf')
-                return openNotebook(id);
-            if (k === 'stern')
-                return toggleFavorit(id);
-            if (k === 'farbe')
-                return farbMenue(anker, id);
-            if (k === 'fach')
-                return fachwahlMenue(anker, id);
-            if (k === 'sperren') {
-                void sperrenHier(id);
-                return;
-            }
-            if (k === 'entsperren') {
-                void entsperrenHier(id);
-                return;
-            }
-            if (k === 'name') {
-                void (async () => {
-                    const name = await UI.frage('Name des Hefts', String(p.text || ''));
-                    if (name) {
-                        Store.updateBlock(id, { text: name });
-                        renderShelf();
-                    }
-                })();
-                return;
-            }
-            if (k === 'korb') {
-                Store.trashBlock(id);
-                UI.toast('Ins Papierkorb gelegt — Reiter „Papierkorb" holt es zurück.');
-                renderShelf();
-            }
-        });
+        Menue.aktionen(p, ortVon(anker), { ...wo, rueckfokus: anker });
     };
-    const fachKontextMenue = (anker, id) => {
-        const f = Store.getBlock(id);
-        if (!f)
-            return;
-        const r = anker.getBoundingClientRect();
-        const kannBlick = typeof Bibliothek !== 'undefined' && !!Bibliothek.blickHinein;
-        const m = UI.menu(`<button data-k="auf">Öffnen</button>` +
-            (kannBlick ? `<button data-k="blick"><span class="mi">⌕</span>Blick hinein</button>` : '') +
-            `<button data-k="name">Umbenennen</button>` +
-            `<button data-k="farbe">Farbe …</button>` +
-            `<div class="sep"></div>` +
-            `<button data-k="korb">In den Papierkorb</button>`, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
-        m.addEventListener('click', (e) => {
-            const b = e.target.closest('[data-k]');
-            if (!b)
-                return;
-            m.remove();
-            if (b.dataset['k'] === 'auf')
-                return openFach(id);
-            if (b.dataset['k'] === 'farbe')
-                return farbMenue(anker, id);
-            if (b.dataset['k'] === 'blick')
-                return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false, (ziel) => openFach(ziel));
-            if (b.dataset['k'] === 'name') {
-                void (async () => {
-                    const name = await UI.frage('Name des Fachs', String(f.text || ''));
-                    if (name) {
-                        Store.updateBlock(id, { text: name });
-                        renderShelf();
-                    }
-                })();
-                return;
-            }
-            if (b.dataset['k'] === 'korb') {
-                Store.trashBlock(id);
-                UI.toast('Fach in den Papierkorb gelegt. Seine Hefte bleiben im Regal.');
-                renderShelf();
-            }
-        });
-    };
+    const fachKontextMenue = kontextMenue;
     const HEBEN_MS = 400;
     const HEBEN_PX = 6;
     const ROLL_PX = 10;
@@ -138696,7 +139151,7 @@ const Notebook = (() => {
             aufraeumen();
             zug = { id, zeiger: e.pointerId, x0: e.clientX, y0: e.clientY,
                 maus: e.pointerType === 'mouse', gehoben: false, uhr: null,
-                schatten: null, ueber: null };
+                schatten: null, ueber: null, bewegt: false };
             if (!zug.maus)
                 zug.uhr = window.setTimeout(() => { if (zug && !zug.gehoben)
                     heben(karte); }, HEBEN_MS);
@@ -138720,6 +139175,8 @@ const Notebook = (() => {
                 }
                 heben(karte);
             }
+            if (weg > ROLL_PX)
+                zug.bewegt = true;
             e.preventDefault();
             if (zug.schatten) {
                 zug.schatten.style.left = e.clientX + 'px';
@@ -138739,12 +139196,20 @@ const Notebook = (() => {
                 return;
             const gehoben = zug.gehoben;
             const id = zug.id;
+            const stillGehalten = gehoben && !zug.maus && !zug.bewegt;
             if (zug.schatten)
                 zug.schatten.style.visibility = 'hidden';
             const wohin = gehoben ? zielUnter(e.clientX, e.clientY) : undefined;
             aufraeumen();
             if (!gehoben)
                 return;
+            if (stillGehalten) {
+                Menue.nachzuegler();
+                const karte = wurzel.querySelector(`.bib-deckel[data-id="${CSS.escape(id)}"], .nh-zeile-auf[data-id="${CSS.escape(id)}"]`);
+                if (karte)
+                    kontextMenue(karte, id);
+                return;
+            }
             if (wohin === undefined)
                 return;
             if (ziehenAblegen(id, wohin))
@@ -138760,6 +139225,22 @@ const Notebook = (() => {
     };
     const bindShelf = (wurzel) => {
         bindZiehen(wurzel);
+        Menue.aktionenBinden(wurzel, {
+            auswahl: '.bib-deckel[data-id], .nh-zeile-auf[data-id], .bib-deckel[data-fach], .nh-zeile-auf[data-fach]',
+            halten: '[data-fach]',
+            oeffnen: (el, wo) => {
+                const id = el.dataset['id'] || el.dataset['fach'];
+                if (!id || !Store.getBlock(id))
+                    return false;
+                kontextMenue(el, id, wo.tastatur ? {} : { x: wo.x ?? 0, y: wo.y ?? 0 });
+                return true;
+            },
+            entf: el => {
+                const id = el.dataset['id'] || el.dataset['fach'];
+                const p = id ? Store.getBlock(id) : null;
+                return p ? Register.aktionen.taste('Entf', p, ortVon(el)) : false;
+            }
+        });
         wurzel.addEventListener('click', e => {
             if (document.body.classList.contains('nh-zieht')) {
                 e.stopPropagation();
@@ -138903,6 +139384,28 @@ const Notebook = (() => {
         }
         App.zeigeSonder('Notizhefte', render);
     };
+    if (typeof Register !== 'undefined' && Register.aktionen) {
+        const R = Register.aktionen;
+        const hier = (o) => o.kontext === 'notizhefte';
+        R.melde({ id: 'heft-oeffnen', name: 'Öffnen', zeichen: 'book', gruppe: 'oeffnen', rang: 10,
+            gilt: (p, o) => hier(o) && !istFach(p),
+            tun: (p) => openNotebook(p.id) });
+        R.melde({ id: 'fach-oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+            gilt: (p, o) => hier(o) && istFach(p),
+            tun: (p) => openFach(p.id) });
+        R.melde({ id: 'farbe', name: 'Farbe …', zeichen: 'palette', gruppe: 'bearbeiten', rang: 30,
+            gilt: (p, o) => (hier(o) && !p.locked) || o.kontext === 'bibliothek',
+            tun: (p, o) => farbMenue(o.anker && o.anker.isConnected ? o.anker : document.body, p.id, hier(o) ? undefined : () => App.nachAenderung(Store.getBlock(p.id))) });
+        R.melde({ id: 'sperren', name: 'Verschlüsseln', zeichen: 'lock', gruppe: 'bearbeiten', rang: 40,
+            gilt: (p, o) => hier(o) && !istFach(p) && !p.locked,
+            tun: (p) => sperrenHier(p.id) });
+        R.melde({ id: 'entsperren', name: 'Entschlüsseln', zeichen: 'lockOpen', gruppe: 'bearbeiten', rang: 40,
+            gilt: (p, o) => hier(o) && !!p.locked,
+            tun: (p) => entsperrenHier(p.id) });
+        R.melde({ id: 'fach', name: 'In Fach verschieben …', zeichen: 'moveTo', gruppe: 'ablegen', rang: 10,
+            gilt: (p, o) => hier(o) && !istFach(p) && !p.locked,
+            tun: (p, o) => fachwahlMenue(o.anker && o.anker.isConnected ? o.anker : document.body, p.id) });
+    }
     return { oeffnen, open: oeffnen, resume, render,
         farbMenue,
         istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
@@ -144252,11 +144755,21 @@ const Seitenleiste = (() => {
         });
         const mehr = document.createElement('button');
         mehr.textContent = '⋯';
+        const zeilenName = p.text || 'Ohne Titel';
+        mehr.setAttribute('aria-label', 'Aktionen für „' + zeilenName + '“');
+        mehr.setAttribute('aria-haspopup', 'menu');
+        mehr.title = 'Aktionen für „' + zeilenName + '“';
         mehr.addEventListener('click', e => { e.stopPropagation(); seitenMenue(mehr, p); });
         act.appendChild(plus);
         act.appendChild(mehr);
         r.append(tw, ico, nm, act);
         r.addEventListener('click', () => oeffne(p.id));
+        r.addEventListener('contextmenu', e => {
+            if (e.shiftKey)
+                return;
+            e.preventDefault();
+            seitenMenue(mehr, p);
+        });
         r.addEventListener('dragstart', e => { e.dataTransfer?.setData('text/seite', p.id); });
         r.addEventListener('dragover', e => { e.preventDefault(); r.classList.add('drop'); });
         r.addEventListener('dragleave', () => r.classList.remove('drop'));
@@ -146681,7 +147194,7 @@ const StudioSchale = (() => {
                 bewegt.forEach(a => a.cancel());
                 bewegt.clear();
                 ankommen(document.querySelector('#page .bib-dkopf,#page .bib-titel,#page .aw-kopf'));
-                document.querySelectorAll('#page .bib-gitter>.bib-deckel:nth-child(-n+6)')
+                document.querySelectorAll('#page .bib-gitter > :is(.bib-deckel, .bib-zelle):nth-child(-n+6)')
                     .forEach((karte, i) => ankommen(karte, 0, 8, i * 24));
             });
         };
@@ -147937,6 +148450,175 @@ const App = (() => {
         zeichneCrumbs();
         return neu;
     };
+    const nachAenderung = (p) => {
+        zeichneBaum();
+        const aufDerSeite = !!p && !!seiteId &&
+            Store.pathOf(String(p.id)).some((x) => x && x.id === seiteId);
+        if (sonder || !p || aufDerSeite)
+            zeichneSeite();
+        else
+            zeichneCrumbs();
+    };
+    const nameSaeubern = (roh) => {
+        const s = String(roh ?? '').normalize('NFC')
+            .replace(/[\r\n\t\u2028\u2029\u0085]/g, ' ')
+            .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const zeichen = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+            ? [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(s)].map(g => g.segment)
+            : [...s];
+        return zeichen.slice(0, 200).join('').trim();
+    };
+    const darfBearbeiten = (id) => typeof Konten === 'undefined' || typeof Konten.darf !== 'function' || !!Konten.darf('bearbeiten', id);
+    const gleichnamig = (p, name) => {
+        const klein = name.toLocaleLowerCase('de');
+        return Object.values(Store.cache.blocks).find(b => b && b.id !== p.id && b.type === 'page' && b.alive !== false &&
+            (b.parentId ?? null) === (p.parentId ?? null) &&
+            (b.parentTable === 'collection') === (p.parentTable === 'collection') &&
+            String(b.text || '').trim().toLocaleLowerCase('de') === klein) || null;
+    };
+    const umbenennen = async (p, anker, titel = 'Neuer Name') => {
+        const id = String(p?.id || '');
+        const jetzt = id ? Store.getBlock(id) : null;
+        if (!jetzt)
+            return false;
+        if (!darfBearbeiten(id)) {
+            UI.toast('Umbenennen geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            if (anker instanceof HTMLElement && anker.isConnected)
+                anker.focus({ preventScroll: true });
+            return false;
+        }
+        const zurueck = () => {
+            let ziel = anker instanceof Element ? anker : null;
+            if (ziel && !ziel.isConnected && ziel.classList[0]) {
+                const k = '.' + CSS.escape(ziel.classList[0]);
+                const i = CSS.escape(id);
+                ziel = document.querySelector(`${k}[data-id="${i}"], ${k}[data-baum-id="${i}"], ` +
+                    `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"], ${k}[data-mehr-id="${i}"]`);
+            }
+            if (ziel instanceof HTMLElement && ziel.isConnected)
+                ziel.focus({ preventScroll: true });
+        };
+        const alt = String(jetzt.text || '');
+        let vorgabe = alt;
+        let leerGefragt = false;
+        for (let runde = 0; runde < 6; runde++) {
+            const antwort = await UI.frage(titel, vorgabe);
+            if (antwort === null || antwort === undefined) {
+                zurueck();
+                return false;
+            }
+            const name = nameSaeubern(antwort);
+            if (!name) {
+                UI.toast('Ein Name braucht mindestens ein Zeichen — „' + (alt || 'Ohne Titel') + '" bleibt.');
+                if (leerGefragt) {
+                    zurueck();
+                    return false;
+                }
+                leerGefragt = true;
+                vorgabe = alt;
+                continue;
+            }
+            if (name === alt) {
+                zurueck();
+                return false;
+            }
+            const doppelt = gleichnamig(jetzt, name);
+            if (doppelt) {
+                const wahl = await Dialog.wahl({
+                    titel: 'Den Namen gibt es hier schon',
+                    text: 'Im selben Ordner gibt es schon „' + String(doppelt.text || '').trim() + '".',
+                    knoepfe: [
+                        { id: 'anders', text: 'Anderen Namen wählen' },
+                        { id: 'trotzdem', text: 'Trotzdem so nennen', hinweis: 'Zwei Einträge heissen dann gleich' }
+                    ]
+                });
+                if (wahl === 'anders') {
+                    vorgabe = name;
+                    continue;
+                }
+                if (wahl !== 'trotzdem') {
+                    zurueck();
+                    return false;
+                }
+            }
+            Store.updateBlock(id, { text: name });
+            nachAenderung(Store.getBlock(id));
+            zurueck();
+            return true;
+        }
+        zurueck();
+        return false;
+    };
+    const unterseitenZahl = (id) => {
+        let n = 0;
+        const gesehen = new Set();
+        const gehe = (x) => {
+            if (gesehen.has(x))
+                return;
+            gesehen.add(x);
+            for (const k of Store.childrenOf(x)) {
+                if (!k || k.alive === false)
+                    continue;
+                if (k.type === 'page')
+                    n++;
+                gehe(String(k.id));
+            }
+        };
+        gehe(id);
+        return n;
+    };
+    const inPapierkorb = (p, opt = {}) => {
+        const id = String(p?.id || '');
+        const b = id ? Store.getBlock(id) : null;
+        if (!b || b.alive === false)
+            return false;
+        if (!darfBearbeiten(id)) {
+            if (!opt.ruhig)
+                UI.toast('In den Papierkorb geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            return false;
+        }
+        const eltern = b.parentId ? Store.getBlock(b.parentId) : null;
+        const stelle = eltern && Array.isArray(eltern.content) ? eltern.content.indexOf(id) : -1;
+        const istSeite = b.type === 'page' || b.type === 'database';
+        const sammlung = b.type === 'database' && b.collectionId ? Store.getCollection(b.collectionId) : null;
+        const name = String(b.text || '').trim() || String(sammlung?.name || '').trim() ||
+            (b.type === 'page' ? 'Ohne Titel' : '');
+        const unter = b.type === 'page' ? unterseitenZahl(id) : 0;
+        Store.trashBlock(id);
+        if (id === seiteId && !sonder) {
+            const e2 = Store.rootPages()[0];
+            oeffne(e2 ? e2.id : null);
+        }
+        else
+            nachAenderung(b);
+        if (opt.ruhig)
+            return true;
+        const satz = opt.satz ? opt.satz
+            : !istSeite || !name ? 'Block liegt im Papierkorb'
+                : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
+                    : '„' + name + '" liegt im Papierkorb';
+        UI.toast(satz, 6000, { aktion: { text: 'Rückgängig', tun: () => {
+                    const jetzt = Store.getBlock(id);
+                    if (!jetzt || jetzt.alive !== false)
+                        return;
+                    Store.restoreBlock(id);
+                    const e = jetzt.parentId ? Store.getBlock(jetzt.parentId) : null;
+                    if (e && Array.isArray(e.content) && stelle >= 0) {
+                        const ohne = e.content.filter((x) => x !== id);
+                        ohne.splice(Math.min(stelle, ohne.length), 0, id);
+                        Store.updateBlock(e.id, { content: ohne });
+                    }
+                    nachAenderung(Store.getBlock(id));
+                    UI.toast(istSeite && name ? '„' + name + '" ist zurück' : 'Block ist zurück');
+                } } });
+        return true;
+    };
+    const ZUR_QUELLE = {
+        fav: 'favorit', rename: 'umbenennen', icon: 'symbol', dup: 'duplizieren',
+        link: 'link', del: 'papierkorb', 'wz-verschieben': 'verschieben'
+    };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();
         const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -147951,7 +148633,7 @@ const App = (() => {
             '<button data-a="dup">' + mi('copy') + 'Duplizieren<span class="ms">Strg D</span></button>' +
             '<button data-a="wz-verschieben">' + mi('moveTo') + 'Verschieben nach<span class="ms">Strg ⇧ P</span></button>' +
             `<button data-a="archiv">${mi('archive')}${p.archiviert ? 'Aus dem Archiv holen' : 'Archivieren'}</button>` +
-            '<button data-a="del">' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
+            '<button data-a="del" data-gefahr>' + mi('trash') + 'In den Papierkorb verschieben<span class="ms">Entf</span></button>' +
             '<hr>' +
             '<button data-a="wz-praesi">' + mi('play') + 'Präsentieren' +
             '<span class="kenn">Beta</span><span class="ms">Strg Alt P</span></button>' +
@@ -148017,6 +148699,7 @@ const App = (() => {
             fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
                 `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
                 esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
+        Menue.aufgeklappt(anker instanceof HTMLElement ? anker : null, m);
         m.addEventListener('click', async (e) => {
             const sk = elVon(e)?.closest('button[data-schrift]');
             if (sk) {
@@ -148030,14 +148713,10 @@ const App = (() => {
             if (!b)
                 return;
             const a = b.dataset.a;
-            if (a === 'icon') {
+            const quelle = ZUR_QUELLE[a || ''];
+            if (quelle) {
                 m.remove();
-                UI.emojiWaehlen(anker, (em) => {
-                    Store.updateBlock(p.id, { icon: em });
-                    zeichneBaum();
-                    if (p.id === seiteId)
-                        zeichneSeite();
-                });
+                Register.aktionen.tun(quelle, Store.getBlock(p.id) || p, { kontext: 'seite', anker });
                 return;
             }
             if (a === 'inhalt') {
@@ -148147,32 +148826,12 @@ const App = (() => {
                 document.getElementById('btn-auto')?.click();
                 return;
             }
-            if (a === 'fav') {
-                favoritKippen(p);
-            }
             if (a === 'klein') {
                 Store.updateBlock(p.id, { small: !p.small });
                 zeichneSeite();
             }
             if (a === 'breit') {
                 volleBreite(p);
-            }
-            if (a === 'rename') {
-                const n = await UI.frage('Neuer Titel', p.text);
-                if (n !== null) {
-                    Store.updateBlock(p.id, { text: n });
-                    zeichneBaum();
-                    if (p.id === seiteId)
-                        zeichneSeite();
-                }
-            }
-            if (a === 'dup') {
-                dupliziereSeite(p.id, p.parentId);
-                zeichneBaum();
-                UI.toast('Seite dupliziert');
-            }
-            if (a === 'link') {
-                Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert');
             }
             if (a === 'pid') {
                 Ablage.kopiereJetzt(p.id, 'Seiten-ID kopiert: ' + p.id);
@@ -148215,15 +148874,6 @@ const App = (() => {
             }
             if (a === 'papier')
                 papierkorb();
-            if (a === 'del') {
-                Store.trashBlock(p.id);
-                zeichneBaum();
-                if (p.id === seiteId) {
-                    const e2 = Store.rootPages()[0];
-                    oeffne(e2 ? e2.id : null);
-                }
-                UI.toast('In den Papierkorb verschoben');
-            }
         });
     };
     const dupliziereSeite = (id, zielEltern) => {
@@ -150840,12 +151490,64 @@ const App = (() => {
         b('h2', 'Deine Daten gehören dir');
         b('text', 'Unter Einstellungen kannst du jederzeit eine Sicherung speichern und wieder einlesen.');
     };
+    const aktionenMelden = () => {
+        const R = typeof Register !== 'undefined' ? Register.aktionen : null;
+        if (!R)
+            return;
+        const nichtImRegal = (o) => o.kontext !== 'notizhefte';
+        R.melde({ id: 'oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+            gilt: (_p, o) => nichtImRegal(o) && o.art !== 'ordner',
+            tun: (p) => oeffne(p.id) });
+        const zeigtKarten = (o) => o.kontext !== 'seite';
+        R.melde({ id: 'favorit', zeichen: 'star', gruppe: 'merken', rang: 10,
+            name: (p) => (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'),
+            tun: (p, o) => {
+                favoritKippen(p);
+                if (zeigtKarten(o))
+                    nachAenderung(Store.getBlock(p.id) || p);
+            } });
+        R.melde({ id: 'umbenennen', name: 'Umbenennen', zeichen: 'pencil', gruppe: 'bearbeiten', rang: 10,
+            gilt: (p, o) => !(o.kontext === 'notizhefte' && p.locked),
+            tun: (p, o) => umbenennen(p, o.anker || null, o.kontext === 'seite' ? 'Neuer Titel'
+                : o.kontext === 'notizhefte' ? (p.heftArt === 'fach' ? 'Name des Fachs' : 'Name des Hefts')
+                    : 'Neuer Name') });
+        R.melde({ id: 'symbol', name: 'Symbol ändern', zeichen: 'smile', gruppe: 'bearbeiten', rang: 20,
+            gilt: (_p, o) => nichtImRegal(o),
+            tun: (p, o) => {
+                UI.emojiWaehlen(o.anker && o.anker.isConnected ? o.anker : document.body, (em) => {
+                    Store.updateBlock(p.id, { icon: em });
+                    nachAenderung(Store.getBlock(p.id));
+                });
+            } });
+        R.melde({ id: 'duplizieren', name: 'Duplizieren', zeichen: 'copy', gruppe: 'ablegen', rang: 20,
+            gilt: (_p, o) => nichtImRegal(o),
+            tun: (p, o) => {
+                dupliziereSeite(p.id, p.parentId);
+                if (zeigtKarten(o))
+                    nachAenderung(Store.getBlock(p.id));
+                else
+                    zeichneBaum();
+                UI.toast('Seite dupliziert');
+            } });
+        R.melde({ id: 'link', name: 'Link kopieren', zeichen: 'link', gruppe: 'teilen', rang: 10,
+            gilt: (_p, o) => nichtImRegal(o),
+            tun: (p) => Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert') });
+        R.melde({ id: 'papierkorb', name: 'In den Papierkorb', zeichen: 'trash', gruppe: 'gefahr',
+            gefahr: true, taste: 'Entf',
+            tun: (p, o) => {
+                const name = String(p.text || '').trim() || 'Ohne Namen';
+                return inPapierkorb(p, o.kontext === 'notizhefte' && p.heftArt === 'fach'
+                    ? { satz: 'Fach „' + name + '" liegt im Papierkorb. Seine Hefte bleiben im Regal.' } : {});
+            } });
+    };
+    aktionenMelden();
     return {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
         vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
+        umbenennen, nameSaeubern, inPapierkorb, nachAenderung, favoritKippen,
         kuerzlich, kommendeTermine,
         schauplatz,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,

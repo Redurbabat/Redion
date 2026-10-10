@@ -20,11 +20,25 @@ const Bibliothek = (() => {
         const pageId = collectionPageId(collectionId);
         return !!pageId && permitted(action, pageId);
     };
+    const vorfahrWeg = (b) => {
+        let cur = b && b.parentTable !== 'collection' && b.parentId ? Store.cache.blocks[b.parentId] : null;
+        for (let n = 0; cur && n < 50; n++) {
+            if (cur.alive === false)
+                return true;
+            cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+        }
+        return false;
+    };
     const alleSeiten = () => Object.values(Store.cache.blocks)
         .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
         (b.parentTable === 'collection'
             ? collectionPermitted('lesen', b.parentId)
-            : permitted('lesen', b.id)));
+            : permitted('lesen', b.id)) && !vorfahrWeg(b));
+    const VORGABE_SYMBOLE = new Set(['', '📄', '📁', '🗂', '🗂️']);
+    const eigenesSymbol = (p) => {
+        const s = String(p?.icon ?? '').trim();
+        return VORGABE_SYMBOLE.has(s) ? '' : [...s].slice(0, 4).join('');
+    };
     const quelleVon = (p) => {
         if (p.parentTable === 'collection') {
             const c = Store.cache.collections[p.parentId];
@@ -440,6 +454,9 @@ const Bibliothek = (() => {
     const blickKnopf = (id, name) => `<button class="bib-blick" data-blick="${esc(id)}" ` +
         `aria-label="Blick in „${esc(name || 'Ohne Titel')}“" title="Blick hinein">` +
         '<i class="bib-blick-auge" aria-hidden="true"><b></b></i></button>';
+    const mehrKnopf = (id, name) => `<button type="button" class="bib-deckel-mehr" data-mehr-id="${esc(id)}" aria-haspopup="menu" ` +
+        `aria-label="Aktionen für „${esc(name || 'Ohne Titel')}“" title="Aktionen">` +
+        '<i aria-hidden="true">\u22ef</i></button>';
     const mitBlick = (deckelHtml, id, name) => '<span class="bib-zelle">' + deckelHtml + blickKnopf(id, name) + '</span>';
     const blickAnbringen = (wurzel, beiOeffnen) => {
         wurzel.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
@@ -683,13 +700,14 @@ const Bibliothek = (() => {
             `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
             (p.favorite ? '\u2605' : '\u2606') + '</i>' +
             '</span>' +
-            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
-            '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+            '<span class="bib-deckel-name">' +
+            (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
+            '<b>' + esc(p.text || 'Ohne Titel') + '</b></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
             '</button>';
-        if (art.id !== 'ordner')
-            return deckel;
-        return mitBlick(deckel, p.id, p.text);
+        return '<span class="bib-zelle">' + deckel +
+            (art.id === 'ordner' ? blickKnopf(p.id, p.text) : '') +
+            mehrKnopf(p.id, p.text) + '</span>';
     };
     const hefte = (liste) => {
         const nach = new Map();
@@ -869,7 +887,7 @@ const Bibliothek = (() => {
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
-                zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
+                zeichen: eigenesSymbol(p) || (kinder.length || p.heftArt === 'fach' ? 'pages' : 'page'),
                 ...(farbe ? { farbe } : {}),
                 ...(kinder.length ? { kinder } : {})
             };
@@ -922,6 +940,16 @@ const Bibliothek = (() => {
             offenGeaendert: (ids) => {
                 if (Store.setMeta)
                     Store.setMeta(BIB_BAUM_OFFEN, ids);
+            },
+            aktionen: (id, wo) => {
+                const p = id === BIB_BAUM_WURZEL ? null : Store.getBlock(id);
+                if (!p || p.alive === false)
+                    return false;
+                return !!Menue.aktionen(p, ortFuer(p, wo.anker), wo.tastatur ? { rueckfokus: wo.anker } : { x: wo.x ?? 0, y: wo.y ?? 0, rueckfokus: wo.anker });
+            },
+            entf: (id, anker) => {
+                const p = id === BIB_BAUM_WURZEL ? null : Store.getBlock(id);
+                return p ? Register.aktionen.taste('Entf', p, ortFuer(p, anker)) : false;
             }
         });
         stelle.replaceChildren(griff.element);
@@ -1018,6 +1046,27 @@ const Bibliothek = (() => {
             Register.symbole.fuelle(wrap);
         binde(wrap);
         platzNachtragen(wrap);
+    };
+    const ortFuer = (p, anker) => ({ kontext: 'bibliothek', art: artVon(p).id, anker });
+    const aktionenAnbringen = (wrap) => {
+        const wurzel = wrap.querySelector('.bib');
+        if (!wurzel || typeof Menue === 'undefined')
+            return;
+        const dingVon = (el) => Store.getBlock(el.dataset['id'] || el.dataset['rmoOpen'] || '');
+        Menue.aktionenBinden(wurzel, {
+            auswahl: '.bib-deckel[data-id], .bib-heft[data-id], .bib-hand[data-id], .bib-zeile[data-id], ' +
+                '.rmo-recent-card[data-rmo-open]',
+            oeffnen: (el, wo) => {
+                const p = dingVon(el);
+                if (!p)
+                    return false;
+                return !!Menue.aktionen(p, ortFuer(p, el), wo.tastatur ? { rueckfokus: el } : { x: wo.x ?? 0, y: wo.y ?? 0, rueckfokus: el });
+            },
+            entf: el => {
+                const p = dingVon(el);
+                return p ? Register.aktionen.taste('Entf', p, ortFuer(p, el)) : false;
+            }
+        });
     };
     const binde = (wrap) => {
         wrap.querySelectorAll('[data-rmo-open]').forEach(button => button.addEventListener('click', () => {
@@ -1139,10 +1188,7 @@ const Bibliothek = (() => {
         wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
         blickAnbringen(wrap);
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
-            k.addEventListener('click', ereignis => {
-                if (ereignis.target instanceof Element &&
-                    ereignis.target.closest('.bib-deckel-mehr'))
-                    return;
+            k.addEventListener('click', () => {
                 const id = k.dataset['id'];
                 if (!id)
                     return;
@@ -1152,57 +1198,15 @@ const Bibliothek = (() => {
                 }
                 App.oeffne(id);
             });
-            k.querySelector('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
-                ereignis.stopPropagation();
-                const id = k.dataset['id'];
-                const p = id ? Store.getBlock(id) : null;
-                if (!p)
-                    return;
-                const r = k.getBoundingClientRect();
-                const m = UI.menu(`<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
-                    (k.dataset['art'] === 'ordner'
-                        ? `<button data-a="blick"><span class="mi">\u2315</span>Blick hinein</button>` : '') +
-                    `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
-                    (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
-                    '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
-                    (typeof Notebook !== 'undefined' && typeof Notebook.farbMenue === 'function'
-                        ? '<button data-a="farbe"><span class="mi">\u25cf</span>Farbe \u2026</button>' : '') +
-                    '<div class="sep"></div>' +
-                    '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4);
-                m.addEventListener('click', ev => {
-                    const b = elVon(ev)?.closest('[data-a]');
-                    if (!b)
-                        return;
-                    const a = b.dataset['a'];
-                    m.remove();
-                    if (a === 'oeffnen') {
-                        App.oeffne(p.id);
-                        return;
-                    }
-                    if (a === 'blick') {
-                        blickHinein(p, r);
-                        return;
-                    }
-                    if (a === 'stern') {
-                        Store.updateBlock(p.id, { favorite: !p.favorite });
-                    }
-                    if (a === 'farbe') {
-                        Notebook.farbMenue(k, p.id, () => App.zeichneSeite());
-                        return;
-                    }
-                    if (a === 'umbenennen') {
-                        App.oeffne(p.id);
-                        setTimeout(() => document.getElementById('title')?.focus(), 80);
-                        return;
-                    }
-                    if (a === 'papierkorb') {
-                        Store.updateBlock(p.id, { alive: false });
-                        UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
-                    }
-                    App.zeichneSeite();
-                });
-            });
         });
+        wrap.querySelectorAll('.bib-deckel-mehr[data-mehr-id]').forEach(knopf => knopf.addEventListener('click', ereignis => {
+            ereignis.stopPropagation();
+            const p = Store.getBlock(knopf.dataset['mehrId'] || '');
+            if (!p)
+                return;
+            Menue.aktionen(p, ortFuer(p, knopf), { rueckfokus: knopf });
+        }));
+        aktionenAnbringen(wrap);
     };
     const zeichnen = (wrap) => {
         if (zustand.reiter === 'schule') {
@@ -1606,6 +1610,27 @@ const Bibliothek = (() => {
         });
     };
     const aufgaben = () => App.zeigeSonder('Meine Aufgaben', zeichneAufgaben);
+    if (typeof Register !== 'undefined' && Register.aktionen) {
+        const R = Register.aktionen;
+        const ordnerHier = (o) => o.kontext === 'bibliothek' && o.art === 'ordner';
+        R.melde({ id: 'hinein', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+            gilt: (_p, o) => ordnerHier(o),
+            tun: (p) => { geheIn(p.id); } });
+        R.melde({ id: 'als-seite', name: 'Als Seite bearbeiten', zeichen: 'page', gruppe: 'oeffnen', rang: 20,
+            gilt: (_p, o) => ordnerHier(o),
+            tun: (p) => App.oeffne(p.id) });
+        R.melde({ id: 'blick', name: 'Blick hinein', zeichen: 'eye', gruppe: 'oeffnen', rang: 30,
+            gilt: (p, o) => ordnerHier(o) ||
+                (o.kontext === 'notizhefte' && typeof Notebook !== 'undefined' && Notebook.istFach(p)),
+            tun: (p, o) => {
+                const r = o.anker && o.anker.isConnected ? o.anker.getBoundingClientRect()
+                    : new DOMRect(innerWidth / 2, innerHeight / 3, 0, 0);
+                if (o.hinein)
+                    blickHinein(p, r, false, o.hinein);
+                else
+                    blickHinein(p, r);
+            } });
+    }
     return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
         pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,
         blickKnopf, mitBlick, blickAnbringen, blickHinein };

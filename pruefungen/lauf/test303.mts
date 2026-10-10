@@ -32,6 +32,8 @@
  *   §3 UND EINE GERETTETE wird NICHT gemeldet — dreimal, je Rettungsart.
  *   §4 IM ECHTEN BESTAND ist keine Falle mehr offen.
  *   §5 DIE ACHT von L108 haben wirklich einen Tast-Zweig bekommen.
+ *   §7 DAS „…" an Karte und Heft steht am Telefon als Knopf da — in der
+ *      echten Bibliothek und den echten Notizheften gemessen (E721).
  *
  *   node pruefungen/lauf/test303.mts
  * ==========================================================================*/
@@ -327,6 +329,52 @@ const lesen = async (telefon: boolean): Promise<Record<string, string>> => {
 
 const amTelefon = await lesen(true);
 const amRechner = await lesen(false);
+
+/* §7 · DAS „…" AN KARTE UND HEFT IST AM TELEFON EIN KNOPF, DER DASTEHT (E721).
+ *
+ * Redur hat auf Seite 19 des Masterprompts den ☆ oben rechts an jeder Karte
+ * eingekreist: „Hier füge ... und oder beim rechts klicke sollte es mir
+ * zeigen löschen". Am Telefon gibt es kein Überfahren und keinen
+ * Rechtsklick — dort ist der sichtbare Knopf der Weg (neben dem langen
+ * Drücken). Gemessen in der ECHTEN Bibliothek und den echten Notizheften,
+ * nicht an einem Gerüst: ein <i aria-hidden> im Kartenknopf ist sichtbar,
+ * aber kein Knopf, und hier zählt nur, was man treffen und benennen kann. */
+console.log('\n7 · Das „…" an Karte und Heft: am Telefon ein sichtbarer Knopf (E721)');
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const seite = await ctx.newPage();
+  await seite.goto(`http://localhost:${PORT}/index.html`);
+  await seite.waitForFunction("typeof Bibliothek !== 'undefined' && typeof Notebook !== 'undefined' && typeof Store !== 'undefined'", null, { timeout: 30000 });
+  await seite.evaluate<any>(`(async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(e => e.remove());
+    Store.addPage(null, { text: 'Probe303 Seite' });
+    Store.addPage(null, { text: 'Probe303 Fach', heftArt: 'fach' });
+    const h = Store.addPage(null, { text: 'Probe303 Heft' });
+    Store.addBlock(h.id, 'blatt', { papier: 'blanko' });
+    Store.setMeta('bibForm', 'deckel'); Store.setMeta('bibOrdner', '');
+    await Store.flush();
+    Bibliothek.oeffne('');
+  })()`);
+  await seite.waitForSelector('.bib-gitter .bib-deckel', { timeout: 20000 });
+  await seite.waitForTimeout(500);
+  const sichtbar = `(sel) => [...document.querySelectorAll(sel)].map(e => {
+    const s = getComputedStyle(e); const r = e.getBoundingClientRect();
+    return e.tagName + (s.display === 'none' || s.visibility === 'hidden' || Number(s.opacity) < 0.5 || r.width < 2 ? ':weg' : ':da');
+  })`;
+  const karten = await seite.evaluate<any>(`(() => ({ deckel: document.querySelectorAll('.bib-gitter .bib-deckel').length,
+    mehr: (${sichtbar})('.bib-gitter .bib-zelle > .bib-deckel-mehr') }))()`) as { deckel: number; mehr: string[] };
+  p('Bibliothek: jeder Deckel hat ein „…", das als KNOPF dasteht (ohne Überfahren)',
+    karten.deckel > 0 && karten.mehr.length === karten.deckel && karten.mehr.every(x => x === 'BUTTON:da'),
+    JSON.stringify(karten));
+  await seite.evaluate<any>(`Store.setMeta('heft:reiter', 'dokumente'); Store.setMeta('heft:fach', ''); Notebook.oeffnen()`);
+  await seite.waitForSelector('.nh-karte', { timeout: 20000 });
+  await seite.waitForTimeout(400);
+  const hefte = await seite.evaluate<any>(`(${sichtbar})('.nh-karte > .nh-mehr')`) as string[];
+  p('Notizhefte: das ⋯ an Heft und Fach steht als Knopf da', hefte.length >= 2 && hefte.every(x => x === 'BUTTON:da'),
+    JSON.stringify(hefte));
+  await ctx.close();
+}
 await browser.close();
 await new Promise<void>(f => server.close(() => f()));
 

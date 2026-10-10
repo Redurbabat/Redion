@@ -335,19 +335,7 @@ const PWA = (() => {
             verschoben = 0;
             absetzen();
         };
-        let schluckerWeg = null;
-        const nachzuegler = () => {
-            const schlucken = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
-            const arten = ['mousedown', 'mouseup', 'click'];
-            arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
-            const weg = () => {
-                arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
-                if (schluckerWeg === weg)
-                    schluckerWeg = null;
-            };
-            schluckerWeg = weg;
-            setTimeout(weg, 800);
-        };
+        const nachzuegler = () => Menue.nachzuegler();
         const tragen = (e) => {
             if (!hebung)
                 return;
@@ -404,8 +392,7 @@ const PWA = (() => {
                 return;
             startX = t.clientX;
             startY = t.clientY;
-            if (schluckerWeg)
-                schluckerWeg();
+            Menue.nachzueglerWeg();
             if (hebung)
                 absetzen();
             const blk = elVon(e)?.closest('.blk');
@@ -439,7 +426,7 @@ const PWA = (() => {
                     gezogen = null;
                     verschoben = 0;
                     document.addEventListener('touchmove', tragen, { passive: false });
-                }, 500);
+                }, Menue.HALTEN_MS);
             }
             const zeile = elVon(e)?.closest('tbody tr[data-rid], .blk.b-todo, .liste-zeile[data-rid]');
             const schreibfeld = elVon(e)?.closest('[contenteditable="true"], textarea, input:not([type="checkbox"]):not([type="radio"])');
