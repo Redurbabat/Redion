@@ -61,7 +61,10 @@
  *      keiner Ansicht anders aussehen als in Ruhe — kein Licht (`::after`),
  *      kein Buchstabenlauf, kein Rand, kein Grund. Sonst wirkt ein toter
  *      Knopf lebendig, und das ist das Gegenteil von §1 (Durchsicht vom
- *      6. Oktober: „Trai  en · 0" mit hellblauem Schein, gesperrt).
+ *      6. Oktober: „Trai  en · 0" mit hellblauem Schein, gesperrt). Das
+ *      gilt auch OHNE BEWEGUNG (`prefers-reduced-motion: reduce`, hell und
+ *      dunkel): dort färbte eine Regel die Buchstaben unter dem Zeiger
+ *      weiss, gesperrt oder nicht (Durchsicht vom 10. Oktober).
  *  §10 IN ALLEN ZEHN SCHEMATA. (a) In Ruhe trägt „Starten" ein Zeichen,
  *      das die stillen Funkel nicht tragen: Schein oder glimmende
  *      Buchstaben (§5) — und im Starken Kontrast, wo #101010 auf Schwarz
@@ -70,12 +73,23 @@
  *      3 : 1 vom Grund darunter abhebt (E701 §1: EINE laute Fläche). (b) Gedrückt (`data-gedrueckt`) liest sich die Schrift
  *      aller fünf mit 4,5 : 1 oder mehr gegen den Grund, den sie dann hat
  *      — ein Fingertipp darf das Wort nicht wegwischen.
+ *  §11 DAS WORT BLEIBT LESBAR. Am Telefon (390 × 844, `hover: none`) bleibt
+ *      `:hover` nach einem Tipp kleben (das iPhone, §8). Mit ERZWUNGENEM
+ *      `:hover` liest sich die Schrift der vier stillen Funkel 1,4 s lang
+ *      in jedem Bild mit 4,5 : 1 oder mehr gegen ihren Grund — hell und
+ *      dunkel, mit Bewegung, ohne Bewegung (`reduce`) und mit
+ *      `body[data-bewegung="ruhig"]`. Vorher: ohne Bewegung weiss auf der
+ *      hellen Pille (1,04 : 1, für immer), mit Bewegung wischte der
+ *      Buchstabenlauf das Wort für eine Viertelsekunde weiss (Durchsicht
+ *      vom 10. Oktober).
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   Gegen den Stand 1bfaca53 (claude/morgen-besser-2) rot — die Zeilen
  *   stehen im Commit „test596 (rot)". Die Gegenproben zu E720 stehen im
  *   Commit dazu: `:is` zurück auf `:where` → §1 rot; die Regeln für
- *   `[data-gedrueckt]` heraus → §7 rot.
+ *   `[data-gedrueckt]` heraus → §7 rot. Die Zusätze vom 10. Oktober (§9
+ *   ohne Bewegung, §11) waren gegen ca4b23190 rot — die Zeilen stehen im
+ *   Commit „test596/test595 (rot): Das Wort bleibt lesbar …".
  *
  *   node pruefungen/lauf/test596.mts
  * ==========================================================================*/
@@ -114,10 +128,11 @@ const browser = await chromium.launch();
 const fehler: string[] = [];
 const warte = (s: Page, ms: number) => s.waitForTimeout(ms);
 
-const oeffnen = async (handy: boolean, thema: 'light' | 'dark'): Promise<{ ctx: BrowserContext; s: Page }> => {
+const oeffnen = async (handy: boolean, thema: 'light' | 'dark', ohneBewegung = false): Promise<{ ctx: BrowserContext; s: Page }> => {
   const ctx = await browser.newContext({
     viewport: handy ? { width: 390, height: 844 } : { width: 1440, height: 900 },
-    ...(handy ? { isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : {})
+    ...(handy ? { isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : {}),
+    ...(ohneBewegung ? { reducedMotion: 'reduce' as const } : {})
   });
   const s = await ctx.newPage();
   s.on('pageerror', e => fehler.push(e.message));
@@ -448,11 +463,15 @@ for (const thema of ['dark', 'light'] as const) {
    Funkel nicht, der unter dem Zeiger aufleuchtete. Hier die Gegenseite:
    leerer Bestand, jeder sichtbare GESPERRTE Knopf der Lernwelt, Ruhe gegen
    Zeiger und gegen `data-gedrueckt`. Die Bewegungen bleiben an (der
-   Buchstabenlauf ist ein Zustand), nur die Übergänge sind null. */
-for (const thema of ['dark', 'light'] as const) {
-  const t = thema === 'dark' ? 'dunkel' : 'hell';
+   Buchstabenlauf ist ein Zustand), nur die Übergänge sind null.
+   Zweimal mehr ohne Bewegung (`reduce`): dort steht eine eigene Regel für
+   die Buchstaben unter dem Zeiger (bausteine.css „Wenn das System um Ruhe
+   bittet"), und sie kannte keinen gesperrten Knopf (Durchsicht vom
+   10. Oktober: „Trainieren · 0" weiss auf Weiss, 1,04 : 1). */
+for (const [thema, ohneBewegung] of [['dark', false], ['light', false], ['dark', true], ['light', true]] as const) {
+  const t = (thema === 'dark' ? 'dunkel' : 'hell') + (ohneBewegung ? ', ohne Bewegung' : '');
   console.log(`\n§9 Ein gesperrter Knopf bleibt still — Rechner, ${t}, leerer Bestand`);
-  const { ctx, s } = await oeffnen(false, thema);
+  const { ctx, s } = await oeffnen(false, thema, ohneBewegung);
   /* Die Beispielseiten bringen Lernkarten mit — weg damit (Papierkorb),
      damit auch „Starten · 0" und „Lernen · 0" gesperrt dastehen. */
   await s.evaluate(async () => {
@@ -581,6 +600,66 @@ const FARBE = `(() => {
   }
   p('§10a: in Ruhe hebt sich „Starten" in allen zehn Schemata von den stillen Funkeln ab (im Starken Kontrast mit 3 : 1)', ruheFehlt.length === 0, ruheFehlt.join(' | '));
   p('§10b: gedrückt liest sich die Schrift aller fünf mit ≥ 4,5 : 1 — in allen zehn Schemata', druckFehlt.length === 0, druckFehlt.join(' | '));
+  await ctx.close();
+}
+
+/* ══ §11 Das Wort bleibt lesbar — Telefon, klebendes :hover ══════════════
+   §8 erzwingt `:hover` nur an einem KI-Werkzeug, und dort ist der Grund
+   dunkel: weisse Buchstaben lesen sich. Die vier stillen Funkel ruhen seit
+   E720 HELL — ein Weiss, das unter einem klebenden `:hover` auf sie fällt,
+   wischt das Wort weg. Gemessen wird nicht ein Augenblick, sondern jedes
+   Bild über 1,4 s: der Buchstabenlauf hat seine weisse Mitte nach einer
+   Viertelsekunde, und die späten Buchstaben eines langen Wortes später. */
+for (const [thema, art] of [['light', 'bewegt'], ['light', 'reduce'], ['light', 'ruhig'],
+  ['dark', 'bewegt'], ['dark', 'reduce']] as const) {
+  const name = { bewegt: 'mit Bewegung', reduce: 'ohne Bewegung (reduce)', ruhig: 'data-bewegung="ruhig"' }[art];
+  const t = (thema === 'dark' ? 'dunkel' : 'hell') + ', ' + name;
+  console.log(`\n§11 Das Wort bleibt lesbar — Telefon, ${t}, erzwungenes :hover`);
+  const { ctx, s } = await oeffnen(true, thema, art === 'reduce');
+  if (art === 'ruhig') await s.evaluate(() => { document.body.dataset['bewegung'] = 'ruhig'; });
+  await s.evaluate(BESTAND);
+  await s.evaluate(FARBE);
+  await s.evaluate(async () => { Produktwelten.lernen('lernen'); await new Promise(r => setTimeout(r, 1000)); });
+  const cdp = await ctx.newCDPSession(s);
+  await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
+  const schwach: string[] = [], werte: string[] = [];
+  for (const sel of FUENF.slice(1)) {
+    const da = await s.evaluate((sel: string) => {
+      const b = document.querySelector<HTMLElement>('.lw-study-actions ' + sel);
+      document.querySelectorAll('[data-t596]').forEach(x => x.removeAttribute('data-t596'));
+      if (!b) return false;
+      b.scrollIntoView({ block: 'center' }); b.setAttribute('data-t596', 'still');
+      return true;
+    }, sel);
+    if (!da) { schwach.push(sel + ' fehlt'); continue; }
+    await warte(s, 300);
+    const { root } = await cdp.send('DOM.getDocument', { depth: 0 });
+    const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '[data-t596="still"]' });
+    await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover'] });
+    const m = await s.evaluate(async () => {
+      const w = window as any;
+      const b = document.querySelector<HTMLElement>('[data-t596="still"]')!;
+      let min = Infinity, wo = '';
+      const t0 = performance.now();
+      while (performance.now() - t0 < 1400) {
+        const g = w.__grund(b);
+        for (const x of b.querySelectorAll('.ru-funkel-b')) {
+          const farbe = getComputedStyle(x).color, f = w.__rgb(farbe);
+          if (!f) continue;
+          const k = w.__kontrast(w.__ueber(f, g), g);
+          if (k < min) { min = k; wo = `${Math.round(performance.now() - t0)} ms: ${farbe} auf rgb(${[g.r, g.g, g.b].map(Math.round).join(',')})`; }
+        }
+        await new Promise(r => requestAnimationFrame(() => r(null)));
+      }
+      return { min: +min.toFixed(2), wo, name: w.__name ? w.__name(b) : (b.textContent || '').trim() };
+    });
+    await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+    werte.push(`${m.name} ${m.min}`);
+    if (!(m.min >= 4.5)) schwach.push(`„${m.name}" ${m.min} : 1 (${m.wo})`);
+  }
+  console.log('    kleinster Kontrast je Knopf: ' + werte.join(' · '));
+  p(`${t} §11: ein klebendes :hover lässt das Wort der vier stillen Funkel lesbar (≥ 4,5 : 1 in jedem Bild über 1,4 s)`,
+    schwach.length === 0, schwach.join(' | '));
   await ctx.close();
 }
 

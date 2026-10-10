@@ -50,11 +50,19 @@
  *   §9 EINMALIGE ZAHLEN BEKOMMEN KEIN ECHTES HERZ: die Karten im Ergebnis
  *      einer Prüfungssimulation tragen keinen Knopf; ihr Schmuck bleibt,
  *      wie er war (aria-hidden, L241 — Redur entscheidet, ob er geht).
+ *  §10 JEDES HERZ SAGT, WAS ES MERKT (§38, Durchsicht vom 10. Oktober).
+ *      Ein Vorlesename steht ohne seine Ansicht da: „Zu Favoriten: fällig"
+ *      sagt nicht, WAS fällig ist, und im Streifen „Gemerkt" auf Heute
+ *      fehlt die Ansicht auch dem Auge. Also nennt jedes Herz der Lernwelt
+ *      ein Ding — ein Hauptwort (gross geschrieben) —, und im Streifen
+ *      steht über der Zahl derselbe Name wie im Herz.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   Gegen den Stand 1bfaca53 (claude/morgen-besser-2) rot — die Zeilen
  *   stehen im Commit „test595 (rot)". Die Gegenproben zu E719 stehen im
- *   Commit dazu.
+ *   Commit dazu. §10 kam mit der Durchsicht vom 10. Oktober und war gegen
+ *   ca4b23190 rot mit fünf Namen ohne Ding — Commit „test596/test595
+ *   (rot): Das Wort bleibt lesbar …".
  *
  *   node pruefungen/lauf/test595.mts
  * ==========================================================================*/
@@ -442,6 +450,46 @@ console.log('\n§9 Einmalige Zahlen bekommen kein echtes Herz');
   p('… keine davon trägt einen Merkknopf', sim.karten >= 3 && sim.knoepfe === 0, JSON.stringify(sim));
   p('… ihr Schmuck bleibt, wie er war (aria-hidden, L241)', sim.karten >= 3 && sim.schmuck === sim.karten, JSON.stringify(sim));
   await c4.close();
+}
+
+/* ══ §10 Jedes Herz sagt, was es merkt ══════════════════════════════════
+   Alle Herzen der vier Ansichten mit Kennzahlen werden gedrückt (ein Klick
+   wie von Hand), dann zeigt Heute den Streifen mit allen. Ein Hauptwort
+   erkennt man im Deutschen am grossen Anfangsbuchstaben — „fällig", „neu",
+   „noch instabil" haben keins. */
+console.log('\n§10 Jedes Herz sagt, was es merkt');
+{
+  const { ctx: c5, s: t } = await oeffnen();
+  await t.evaluate(BESTAND);
+  const herzen = new Map<string, string>();
+  for (const a of ['heute', 'lernen', 'fehler', 'fortschritt']) {
+    await ansicht(t, a);
+    const hier = await t.evaluate(async () => {
+      for (const h of [...document.querySelectorAll<HTMLElement>('.lernwelt [data-lw-merk]')]) {
+        if (h.getAttribute('aria-pressed') === 'true') continue;
+        h.click();
+        await new Promise(r => setTimeout(r, 40));
+      }
+      await new Promise(r => setTimeout(r, 200));
+      return [...document.querySelectorAll<HTMLElement>('.lernwelt [data-lw-merk]')].map(h => ({
+        id: h.dataset['lwMerk'] || '', name: (h.getAttribute('aria-label') || '').replace(/^(Zu|Aus) Favoriten: /, '') }));
+    });
+    for (const h of hier) if (h.id) herzen.set(h.id, h.name);
+  }
+  const katalog = await t.evaluate(() => (window as any).Lernwelt?.modelle?.kennzahlen?.()?.length ?? 0);
+  p(`§10: alle Kennzahlen des Katalogs haben ein Herz bekommen (${herzen.size} von ${katalog})`,
+    katalog >= 20 && herzen.size === katalog, [...herzen.keys()].join(', '));
+  const ohneDing = [...herzen].filter(([, name]) => !/(^|[\s-])\p{Lu}/u.test(name)).map(([id, name]) => `„${name}" (${id})`);
+  await ansicht(t, 'heute');
+  const streifen = await t.evaluate(() => [...document.querySelectorAll<HTMLElement>('.lw-gemerkt .stat-karte.lw-metrik')].map(k => ({
+    etikett: [...k.querySelectorAll(':scope > span')].map(x => (x.textContent || '').trim()).filter(Boolean).join(' '),
+    herz: (k.querySelector(':scope > .lw-kennzahl-merk')?.getAttribute('aria-label') || '').replace(/^(Zu|Aus) Favoriten: /, '') })));
+  const anders = streifen.filter(k => k.etikett !== k.herz).map(k => `„${k.etikett}" ≠ „${k.herz}"`);
+  p(`§10: jedes Herz nennt ein Ding — ein Hauptwort im Vorlesenamen (${herzen.size} geprüft)`,
+    herzen.size > 0 && ohneDing.length === 0, ohneDing.length + ' ohne: ' + ohneDing.join(' · '));
+  p(`§10: im Streifen „Gemerkt" steht über jeder Zahl der Name ihres Herzens (${streifen.length} Karten)`,
+    streifen.length === herzen.size && anders.length === 0, anders.join(' · '));
+  await c5.close();
 }
 
 p('Keine Fehler auf den Seiten', fehler.length === 0, fehler.slice(0, 3).join(' | '));
