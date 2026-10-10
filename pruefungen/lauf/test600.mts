@@ -469,6 +469,12 @@ for (const handy of [false, true]) {
   gleich(`${g}, Bibliothek (${handy ? '⌕' : 'Strg P'}): die Suche geht mit [Bibliothek · Überall] auf`, z.ids, ['bibliothek', 'ueberall']);
   gleich(`${g}: … die Namen`, z.namen, ['Bibliothek', 'Überall']);
   gleich(`${g}: … Vorgabe Bibliothek`, z.an, 'bibliothek');
+  /* EIN „Überall" im Kopf (Fund aus dem Bild): der Ortsfilter der Seiten
+     hiess in seiner Vorgabe ebenfalls „Überall" — neben „In ‚Kabelkunde‘"
+     las sich das wie ein Widerspruch. */
+  const ueberall = await s.evaluate<any>(`[...document.querySelectorAll('.finder.such .such-bereich [role=radio], .finder.such .such-filter option:checked')]
+    .filter(e => (e.textContent || '').trim() === 'Überall').length`);
+  gleich(`${g}: „Überall" steht im Kopf der Suche genau einmal`, ueberall, 1);
   await tippe(s, 'Leitungsschutz');
   const t = await trefferTitel(s);
   /* IM BEREICH Bibliothek — ohne Bereich fand die Schalensuche das immer,
