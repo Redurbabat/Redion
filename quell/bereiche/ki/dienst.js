@@ -1527,7 +1527,7 @@ const KI = (() => {
         const m = UI.menuMitSuche(vorn + (opt.zuerst === 'faehig' ? fHtml + sHtml : sHtml + fHtml) + bHtml +
             '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
             '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>', r.left - 40, Math.max(12, r.top - 300), { platzhalter: 'Befehl oder Fähigkeit suchen …', titel: 'KI-Befehle',
-            kopf: '<div class="grp">KI-Befehle</div>',
+            kopf: UI.amTelefon() ? '' : '<div class="grp">KI-Befehle</div>',
             fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.',
             ...(anker instanceof HTMLElement ? { anker } : {}) });
         amKnopf(anker, m);
@@ -2073,7 +2073,7 @@ const KI = (() => {
         const m = UI.menuMitSuche(fRows + '<div class="grp">Seiten</div>' +
             seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join(''), r.left, Math.max(12, r.top - 300), { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
             titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',
-            kopf: '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
+            kopf: UI.amTelefon() ? '' : '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
         const ohneAt = () => atStelle >= 0 && ta.value.charAt(atStelle) === '@'
             ? ta.value.slice(0, atStelle) + ta.value.slice(atStelle + 1) : ta.value;
         m.addEventListener('click', ev2 => {

@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 535 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 536 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1634,6 +1634,30 @@ selben Bogen: der Befehl sagt 534 — auf seinem Zweig; beim Zusammenführen
 neu zu zählen. Beim Zusammenführen nachgezählt (5. Oktober,
 `claude/morgen-besser-2`): 535.*
 
+*Und 536: `test599` — KI am Ort (E724). Redur, am Foto des KI-Fensters:
+„hier beim ki sollte alles komplet was beim werkzeuge undkontext seteh dort
+integriert sein also im passenden ortern du muss entscheiden was wo kommt
+und warum ." Er prüft jeden der 19 früheren Einträge der Schublade an
+seiner WIRKUNG von seinem neuen Ort aus — nicht, ob ein Knopf dasteht —,
+und er schickt dieselbe Aufgabe über jeden Weg ans abgehängte Modell: der
+Knopf, das Befehlsmenü, der Schrägstrich, die Palette und die Fähigkeit
+müssen Zeichen für Zeichen dieselbe Anweisung schicken (gegen den alten
+Stand: drei Fassungen von „Zusammenfassen"). Seine schwierigste Messung
+gilt dem Telefon: `inert` lässt `elementFromPoint` durch ein GEMALTES Blatt
+hindurchsehen, also war ein Menü unter dem Blatt „getroffen" — er schaltet
+`inert` für die Probe ab und fragt die Ebene im Wurzelstapel. Zweimal war
+er aus dem falschen Grund rot: ein Hinweis trägt `pointer-events:none` und
+ist für die Trefferprüfung nie oben, und er rief die Auswahlleiste unter
+einem Namen, den es nicht gibt (`Auswahlleiste` statt `Auswahl`). Seinen
+besten Fund machte er gegen den ERSTEN gebauten Stand: das Suchfeld des
+Befehlsmenüs nimmt den Fokus und mit ihm die Markierung — „Korrekturlesen"
+lief wieder auf der ganzen Seite. Zwei Zusagen kamen später dazu, beide
+zuerst rot: die offenen Einstellungen zogen nicht mit, wenn das Fenster eine
+Quelle schaltete, und am Telefon stand „KI-Befehle" als Titel des Blattes
+und gleich darunter noch einmal — gesehen im BILD, nicht im Lauf (§55.1).
+Gezählt am 6. Oktober, im selben Bogen: der Befehl sagt 536 — auf seinem
+Zweig; beim Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1650,7 +1674,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 535 Läufe
+npm run pruefen                      alle 536 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1740,7 +1764,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 535 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 536 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -125,7 +125,7 @@ try {
     await page.waitForTimeout(300);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
-    check(`${width}: Escape schließt das Quellenmenü und behält Tastaturfokus`, await page.evaluate(() =>
+    check(`${width}: Escape schliesst das Quellenmenü und behält Tastaturfokus`, await page.evaluate(() =>
       document.activeElement?.id === 'ai-quellen' && !document.querySelector('.menu')));
     await page.locator('#ai-input').fill('Erste Zeile');
     await page.locator('#ai-input').press('Shift+Enter');

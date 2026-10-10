@@ -6867,3 +6867,97 @@ Nachbarn auf dem Endstand, unter dem Schloss: `test595` 41/41, `test596`
 Einzeldatei allein in einem Ordner (file://): fünf Funkel, das Herz ein
 Knopf, ein Klick merkt `faellige-fehler`, kein Seitenfehler.
 
+
+
+## §93 · KI am Ort: Chat, Ebenen am Telefon, ein Auftrag je Befehl, „Verbundenes" (E724, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/ki-am-ort` gegen `3d180c591`
+(`claude/morgen-besser-2` mit `ordner-bearbeiten` und `kein-toter-knopf`).
+Chromium über Playwright; Rechner 1440 × 900 und 800 × 900 (Redurs
+schmales Fenster), Telefon 390 × 844 und 360 × 800 (Touch), dunkel und
+hell. Das Modell ist abgehängt: `/api/chat` antwortet aus dem Lauf, und
+jeder Körper wird mitgeschrieben. Alles in `test599`, das auf beiden
+Ständen lief; Bilder in der Ablage der Sitzung (§55.4).
+
+**1 · Der Platz im Fenster.**
+
+```txt
+                                   vorher                 nachher
+800 × 900, Chat ohne Frage         617 px (Schublade zu)  526 px — darunter „Für diese
+                                   293 px (Schublade auf)  Seite" mit allen acht Knöpfen
+Knöpfe ohne Rollen sichtbar        11 von 19 (offen)       19 von 19 erreichbar, ≤ 2 Griffe;
+                                   0 von 19 (zu)           8 + Schild + ⋯ ohne Griff
+nach der ersten Frage              617 px                  der Block geht, der Chat hat
+                                                           den ganzen Raum
+```
+
+**2 · Die Ebenen am Telefon** (`test599` §6; Ebene des Vorfahren direkt
+unter `body`, Treffer mit `#ai.inert = false` — `inert` lässt die
+Trefferprüfung sonst durch das gemalte Blatt hindurchsehen):
+
+```txt
+                       vorher                              nachher
+#ai (Blatt)            920                                 920
+„+", Modus, Modell     600, Treffer: ai-foot / ai-input /   924, Treffer: das Menü
+                       ai-head — unsichtbar, aber klickbar
+Quellen                600 (in der Schublade)              924
+Frage (Insel, E710)    1100 ✓                              1100 ✓
+Frage (Rückweg)        700, unter dem Blatt                926
+Hinweis                900, unter dem Blatt                927
+```
+
+Der teuerste Befund: am Telefon lag unter dem sichtbaren Eingabefeld die
+unsichtbare Zeile „○ Gemma 2 · 2B ~1,6 GB" des Modellmenüs.
+
+**3 · Ein Auftrag je Befehl** (`test599` §7a; dieselbe Seite, keine
+Markierung; Länge der Systemnachricht, die ans Modell ging):
+
+```txt
+„Zusammenfassen"   vorher: Knopf (Chat, „Fasse diese Seite …"),
+                   Schreibmenü („höchstens fünf Stichpunkte"),
+                   Schrägstrich (5980 Zeichen, mit Arbeitsbereich) —
+                   drei Anweisungen; Palette: kein Eintrag
+                   nachher: Knopf = Befehlsmenü = Schrägstrich = Palette
+                   = 546 Zeichen, Zeichen für Zeichen gleich
+„Text verbessern"  vorher: 483 / 342 / 342 / 5983 Zeichen auf vier Wegen
+                   nachher: Knopf = Befehlsmenü = Blockmenü = Schrägstrich
+                   = Fähigkeit „Schreibstil verbessern" = 486 Zeichen
+„Korrekturlesen" mit Markierung
+                   vorher: user = „Korrigiere Rechtschreibung, Grammatik und
+                   Zeichensetzung. Ändere sonst nichts." (die Anweisung!)
+                   nachher: user = „Die Spanung ist proportinal zum Strom."
+                   (genau die Markierung), dazu „Markierung ersetzen"
+„Zusammenfassen" mit „Diese Seite" aus
+                   vorher: die Seite fehlte ganz   nachher: sie ist die Eingabe
+```
+
+**4 · „Verbundenes"** (`test599` §8): eine gespiegelte Zeile
+(`spiegelQuelle: github:…`, Wort „Zwiebelfisch") und eine eigene
+(„Quarkbrot"), `Kontext.bauenFuerFrage('Zwiebelfisch Quarkbrot')`:
+
+```txt
+                    vorher                          nachher
+Verbundenes an      beide drin                      beide drin (wie vorher)
+Verbundenes aus     beide drin — Text gleich        nur „Quarkbrot"
+```
+
+**5 · Ein Schreiber für die Quellen** (`test599` §2, §9d): ein Schalter in
+den Einstellungen, und dann das Fenster — und umgekehrt.
+
+```txt
+                              vorher                       nachher
+Einstellungen → Fenster       Schalter im Fenster "true"   alle Schalter, Schild und
+                              bei Quelle aus; Schild alt   Zahl ziehen mit
+Fenster → offene Einstellungen  (keine Richtung)           Klasse und aria-checked ziehen mit
+                              Zwischenstand c1c6eecc2:     (rot war: wert false,
+                              checked "true", an true      checked "true")
+Webfrage                      confirm(), zwei Fassungen    ein Redion-Fenster (E710)
+```
+
+**6 · Startlast** (`test388` §5, gzip über die Leitung): vorher 1858 KB
+über 252 Dateien (`3d180c591`; `claude/morgen-besser-2` allein 1850),
+nachher 1863 KB über 253 Dateien — +5 KB für `register/ki.js` und die neuen
+Wege im Fenster. Decke 1950.
+
+**Befehl.** `node pruefungen/lauf/test599.mts` (vorher 9/92, nachher
+133/133); `node pruefungen/lauf/test388.mts` für die Startlast.

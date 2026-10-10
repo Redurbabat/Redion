@@ -1177,6 +1177,9 @@ const Einstellungen = (() => {
   /* ========================================================================
    * BEDIENUNG
    * ======================================================================*/
+  /** Der eine Zuhörer für die Quellen der KI (E724) — siehe in `binde`. */
+  let quellenZuhoerer: (() => void) | null = null;
+
   const binde = (o: any) => {
     /* Auswahlfelder und Textfelder */
     o.querySelectorAll('[data-set]').forEach((el: any) => {
@@ -1227,6 +1230,26 @@ const Einstellungen = (() => {
         if (k === 'rechtschreib') App.zeichneSeite();
       });
     });
+
+    /* Und umgekehrt (E724): schaltet das KI-Fenster eine Quelle um, während
+       diese Seite offen ist, ziehen ihre Schalter mit — sonst stünde hier
+       „an", während die Quelle aus ist. Der Wert kommt aus der Meldung
+       selbst (EIN Schreiber, `Kontext.quelleUmschalten`). Ein Zuhörer
+       höchstens: `binde` läuft bei jedem Bereichswechsel, und der vorige
+       meldet sich ab; ist das Fenster zu, meldet er sich beim nächsten Mal
+       selbst ab. */
+    quellenZuhoerer?.();
+    quellenZuhoerer = null;
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' &&
+        o.querySelector('[data-toggle^="q:"]')) {
+      quellenZuhoerer = Ereignisse.horche(ARTEN.kiQuellenGeaendert, (d: any) => {
+        if (!o.isConnected) { quellenZuhoerer?.(); quellenZuhoerer = null; return; }
+        const b = o.querySelector(`[data-toggle="q:${String(d?.quelle || '')}"]`);
+        if (!(b instanceof HTMLElement)) return;
+        b.classList.toggle('an', !!d.an);
+        b.setAttribute('aria-checked', d.an ? 'true' : 'false');
+      });
+    }
 
     /* KI-Grenzen (L104 Punkt 1, E321).
        Eigene Verdrahtung und kein `data-set`: die vier Grenzen liegen

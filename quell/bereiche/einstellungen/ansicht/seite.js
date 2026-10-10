@@ -712,6 +712,7 @@ const Einstellungen = (() => {
             zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>') +
             zeile('Stand', 'Fassung des Programms und der Weg, über den es gerade läuft', `<span class="ez-grau ez-stand" data-fassung="${esc(standFassung())}">${esc(standText())}</span>`)
     }[b] || (() => kopf('Unbekannt')))();
+    let quellenZuhoerer = null;
     const binde = (o) => {
         o.querySelectorAll('[data-set]').forEach((el) => {
             el.addEventListener('change', () => {
@@ -748,6 +749,23 @@ const Einstellungen = (() => {
                     App.zeichneSeite();
             });
         });
+        quellenZuhoerer?.();
+        quellenZuhoerer = null;
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' &&
+            o.querySelector('[data-toggle^="q:"]')) {
+            quellenZuhoerer = Ereignisse.horche(ARTEN.kiQuellenGeaendert, (d) => {
+                if (!o.isConnected) {
+                    quellenZuhoerer?.();
+                    quellenZuhoerer = null;
+                    return;
+                }
+                const b = o.querySelector(`[data-toggle="q:${String(d?.quelle || '')}"]`);
+                if (!(b instanceof HTMLElement))
+                    return;
+                b.classList.toggle('an', !!d.an);
+                b.setAttribute('aria-checked', d.an ? 'true' : 'false');
+            });
+        }
         o.querySelectorAll('[data-grenze]').forEach((el) => {
             const uebernehmen = () => {
                 const wert = Number(el.value);

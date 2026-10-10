@@ -27102,7 +27102,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1430, inhalt: '223a728ea9279eaf', gebaut: '2026-10-10T19:25:39.830Z' };
+const Stand = { fassung: 1432, inhalt: '230920bf07cbb1a4', gebaut: '2026-10-10T19:55:18.448Z' };
 window.Stand = Stand;
 
 </script>
@@ -102998,6 +102998,7 @@ const Einstellungen = (() => {
             zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>') +
             zeile('Stand', 'Fassung des Programms und der Weg, über den es gerade läuft', `<span class="ez-grau ez-stand" data-fassung="${esc(standFassung())}">${esc(standText())}</span>`)
     }[b] || (() => kopf('Unbekannt')))();
+    let quellenZuhoerer = null;
     const binde = (o) => {
         o.querySelectorAll('[data-set]').forEach((el) => {
             el.addEventListener('change', () => {
@@ -103034,6 +103035,23 @@ const Einstellungen = (() => {
                     App.zeichneSeite();
             });
         });
+        quellenZuhoerer?.();
+        quellenZuhoerer = null;
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' &&
+            o.querySelector('[data-toggle^="q:"]')) {
+            quellenZuhoerer = Ereignisse.horche(ARTEN.kiQuellenGeaendert, (d) => {
+                if (!o.isConnected) {
+                    quellenZuhoerer?.();
+                    quellenZuhoerer = null;
+                    return;
+                }
+                const b = o.querySelector(`[data-toggle="q:${String(d?.quelle || '')}"]`);
+                if (!(b instanceof HTMLElement))
+                    return;
+                b.classList.toggle('an', !!d.an);
+                b.setAttribute('aria-checked', d.an ? 'true' : 'false');
+            });
+        }
         o.querySelectorAll('[data-grenze]').forEach((el) => {
             const uebernehmen = () => {
                 const wert = Number(el.value);
@@ -142970,7 +142988,7 @@ const KI = (() => {
         const m = UI.menuMitSuche(vorn + (opt.zuerst === 'faehig' ? fHtml + sHtml : sHtml + fHtml) + bHtml +
             '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
             '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>', r.left - 40, Math.max(12, r.top - 300), { platzhalter: 'Befehl oder Fähigkeit suchen …', titel: 'KI-Befehle',
-            kopf: '<div class="grp">KI-Befehle</div>',
+            kopf: UI.amTelefon() ? '' : '<div class="grp">KI-Befehle</div>',
             fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.',
             ...(anker instanceof HTMLElement ? { anker } : {}) });
         amKnopf(anker, m);
@@ -143516,7 +143534,7 @@ const KI = (() => {
         const m = UI.menuMitSuche(fRows + '<div class="grp">Seiten</div>' +
             seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join(''), r.left, Math.max(12, r.top - 300), { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
             titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',
-            kopf: '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
+            kopf: UI.amTelefon() ? '' : '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
         const ohneAt = () => atStelle >= 0 && ta.value.charAt(atStelle) === '@'
             ? ta.value.slice(0, atStelle) + ta.value.slice(atStelle + 1) : ta.value;
         m.addEventListener('click', ev2 => {

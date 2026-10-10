@@ -1269,7 +1269,24 @@ Zusammenfassen
 Aufgaben ableiten
 Übersetzen
 Verbessern
+Karteikarten aus einer Seite (als echte Lernkarten)
 KI-Felder in Datenbanken
+
+Wo was im KI-Fenster steht
+
+Im leeren Chat stehen unter „Für diese Seite" die Aktionen, die auf die
+offene Seite wirken: Datenbank bauen, Seite aufbauen, Zusammenfassen,
+Aufgaben, Umschreiben, Übersetzen, Karteikarten und „Schreiben" — das
+Befehlsmenü mit allen Schreibbefehlen und Fähigkeiten. Nach der ersten
+Frage gehen sie aus dem Weg; „Neuer Chat" holt sie zurück. Unter dem Feld
+zeigen die Regler mit der Zahl, welche Quellen die nächste Frage sieht (Diese
+Seite, Arbeitsbereich, Datenbanken, Verbundenes, Web); ein Druck öffnet
+die Schalter. Das „+" hängt an, erwähnt eine Seite (sie wird Kontext der nächsten
+Frage), schlägt bei Wikipedia nach und öffnet die Befehle. Ein „@" vor
+dem Namen einer Fähigkeit führt sie aus — „@Korrekturlesen" und der Text
+dahinter. Agent, Besprechung, Protokoll und die KI-Einstellungen liegen im
+„⋯" oben. Derselbe Befehl tut auf jedem Weg dasselbe: im Fenster, mit
+„✨ KI" an einer Markierung, mit „/" im Text und in der Palette.
 
 
 

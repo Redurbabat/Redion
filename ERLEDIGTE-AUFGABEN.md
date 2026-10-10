@@ -1,5 +1,36 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E724 · KI am Ort: „Werkzeuge & Kontext" löst sich auf
+
+**Redur** (PDF vom 29. September, S. 16, am Foto des KI-Fensters): „hier
+beim ki sollte alles komplet was beim werkzeuge undkontext seteh dort
+integriert sein also im passenden ortern du muss entscheiden was wo kommt
+und warum ." Auf Schritt 0 kam keine Antwort; gebaut ist nach den Vorgaben
+D1–D11 des Plans.
+
+**Fund.** Die Schublade hielt 19 Bedienelemente in einem 324 px hohen
+Kasten, nach Thema geordnet; offen schrumpfte der Chat von 617 auf 293 px.
+Dahinter fünf Kataloge und zwei Läufer — „Zusammenfassen" schickte auf drei
+Wegen drei Anweisungen, „Korrekturlesen" mit Markierung nur die Anweisung.
+Am Telefon lag jedes Menü, das das KI-Blatt öffnet, UNTER ihm (600 gegen
+920), und ein Tipp ins sichtbare Feld wählte unsichtbar ein 1,6-GB-Modell.
+„Verbundenes" hatte keinen Leser, „@Fähigkeit" war nirgends gebaut.
+
+**Bau.** Jeder Eintrag wohnt, wo er wirkt: die Quellen als Schild mit Reglern
+und Zahl am Prompt, die acht Seitenaktionen im leeren Chat („Für diese
+Seite"), Nachschlagen und „Befehle und Fähigkeiten" im „+", Agent,
+Besprechung, Protokoll und die Einstellungen im ⋯ des Kopfs. EIN Katalog
+(`src/register/ki.ts`) und EIN Läufer für Knopf, Befehlsmenü, „@", „/",
+Blockmenü, „✨ KI" und Palette; Karteikarten werden echte Karteikarten.
+Die Ebenen am Telefon liegen über dem Blatt. „Verbundenes" hat einen
+Draht, die Quellen einen Schreiber (Bus), die Webfrage ein Redion-Fenster,
+„Fähigkeit löschen" zwei Schritte; die Einstellungen ziehen mit.
+
+**Prüfung.** `test599` (133) neu, zuerst rot (9/92; danach die Richtung Fenster → Einstellungen 116/117 und der doppelte Blatt-Titel 129/133); `test34`, `test436`
+§5, `test492`, `test494`, `test544`, `test411` §7, `test537` §3b, `test545`
+2b und `test596` §8 erweitert, zuerst rot. Gegenproben je rot gesehen.
+Acht Gegenproben. Start 1858 → 1863 KB (Decke 1950). Lücke L244.
+
 ## 6. Oktober 2026 · E719 und E720 · Das Herz ist ein Knopf, und kein Knopf wirkt tot
 
 **Redur** (Masterprompt vom 29. September, Seiten 21/22): „die herz beim

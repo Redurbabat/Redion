@@ -1743,3 +1743,16 @@ Gefunden beim Bau von E718, nicht dort entschieden — je mit dem Grund:
    `body` — mit Tab kommt man erst am Ende der Seite hin. Fokus zurück oder
    Strg+Z in der Bibliothek: `claude/menue-eine-quelle` (L239 Punkt 4).
 
+## Nach E724 (6. Oktober 2026) — KI am Ort
+
+Gefunden beim Bau von E724, nicht dort entschieden — je mit dem Grund:
+
+1. **KI-Befehle an Tabellen- und Datenbankzellen.** Der Katalog
+   (`Register.ki`) kennt noch kein Ziel `zelle`; das Befehlsmenü öffnet sich
+   an einer markierten Zelle nicht (L244 Punkt 1).
+2. **Erwähnte Seite trotz „Seiteninhalt mitgeben: aus"?** Heute zählt eine
+   Erwähnung nur, wenn `kiKontext` an ist. Redurs Frage (L244 Punkt 2).
+3. **Ersetzen über Auszeichnung hinweg** ohne `ct.textContent` — zuerst ein
+   Wächter, der eine Markierung über `**…**` ersetzt (L244 Punkt 3).
+4. **Die acht Funkel im leeren Chat**: laut (wie heute, Vorgabe D1) oder
+   still in Ruhe wie die Lernwelt nach E720 — Redurs Wahl (L244 Punkt 4).

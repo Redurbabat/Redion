@@ -8348,6 +8348,39 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L244 · KI am Ort: was E724 nicht gebaut hat — 6. Oktober 2026
+
+**Gefunden beim Bau von E724** (Redur: „hier beim ki sollte alles komplet
+was beim werkzeuge undkontext seteh dort integriert sein also im passenden
+ortern"). Die Schublade ist aufgelöst, jeder der 19 Einträge hat seinen Ort,
+und alle Wege laufen durch EINEN Katalog (`Register.ki`). Offen bleibt:
+
+1. **KI-Befehle für Tabellen- und Datenbankzellen.** Der Katalog kennt das
+   Ziel `datenbank` nur für „Datenbank bauen"; eine markierte Zelle oder
+   Spalte ist noch kein Ziel, und das Befehlsmenü öffnet sich dort nicht.
+2. **Eine erwähnte Seite zählt nur mit „Seiteninhalt mitgeben".** Ist
+   `kiKontext` in den Einstellungen aus, fragt `senden` gar keinen Kontext
+   — auch die ausdrücklich erwähnte Seite nicht. Ob eine Erwähnung diesen
+   Schalter übersteuern soll, ist eine Frage an Redur (der Schalter sagt
+   „nichts mitgeben", die Erwähnung „diese mitgeben").
+3. **„Ersetzen" über Auszeichnung hinweg.** Steht die Markierung genau
+   einmal im gespeicherten Text, ersetzt E724 dort (das Markdown bleibt).
+   Läuft sie über eine Auszeichnung (`**fett**` mitten in der Markierung)
+   oder steht zweimal da, fällt es auf den alten Weg zurück und schreibt
+   `ct.textContent` — derselbe Verlust wie in E668. Ein Wächter dafür fehlt.
+4. **Acht Funkel im leeren Chat gegen „eine Haupthandlung je Bild"
+   (E701).** Nach der Vorgabe D1 stehen sie nur im LEEREN Chat, wo es keine
+   andere Haupthandlung gibt; ob sie dort still ruhen sollen wie die vier
+   Funkel der Lernwelt (E720), entscheidet Redur.
+
+**Was fehlt:** zu 1 ein Ziel `zelle` im Katalog und ein Einstieg am
+Datenbankmenü; zu 2 Redurs Wort; zu 3 ein Wächter, der eine Markierung über
+`**…**` ersetzt und das Gespeicherte vergleicht; zu 4 Redurs Wahl.
+(Die Einstellungen hören seit dem 10. Oktober zu: schaltet das Fenster eine
+Quelle, während sie offen sind, zieht ihr Schalter mit — `test599` §9d.)
+
+---
+
 ## L241 · Herzen, die Schmuck bleiben: Bestandsgesundheit und einmalige Zahlen — 6. Oktober 2026
 
 **Gefunden beim Bau von E719** (Redur: „die herz beim hier funktionier nicht
@@ -9634,7 +9667,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 134 Lücken, 78 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 135 Lücken, 79 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

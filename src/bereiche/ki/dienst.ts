@@ -1955,7 +1955,9 @@ const KI = (() => {
       '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>',
       r.left - 40, Math.max(12, r.top - 300),
       { platzhalter: 'Befehl oder Fähigkeit suchen …', titel: 'KI-Befehle',
-        kopf: '<div class="grp">KI-Befehle</div>',
+        /* Am Telefon trägt das Blatt den Titel; der Kopf stünde gleich
+           darunter noch einmal (gesehen im Bild, test599 §6). */
+        kopf: UI.amTelefon() ? '' : '<div class="grp">KI-Befehle</div>',
         fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.',
         ...(anker instanceof HTMLElement ? { anker } : {}) });
     amKnopf(anker, m);
@@ -2491,7 +2493,7 @@ const KI = (() => {
       r.left, Math.max(12, r.top - 300),
       { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
         titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',
-        kopf: '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
+        kopf: UI.amTelefon() ? '' : '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
     /* Das getippte „@" fällt weg, wenn gewählt wird — es wird ersetzt. */
     const ohneAt = (): string => atStelle >= 0 && ta.value.charAt(atStelle) === '@'
       ? ta.value.slice(0, atStelle) + ta.value.slice(atStelle + 1) : ta.value;
