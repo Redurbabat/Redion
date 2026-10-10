@@ -9884,7 +9884,10 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
    Fläche je Bild (E701 §1, grund.css „HAUPTHANDLUNG. Genau eine je Bild"):
    der Schein ist Zustand, nicht Dauerschmuck (E640).
    Das Gewicht (0,4,1) schlägt die Grundregel `.lernwelt .lw-study-actions
-   button` (0,2,1) und die Hover-Regel der Lernwelt (0,3,1). */
+   button` (0,2,1). Die Hover-Regel der Lernwelt wiegt seit `:is` ebenso
+   (0,4,1) — `:is` nimmt sein schwerstes Argument, `.lw-page-head>
+   .lw-actions button` —; hier gewinnt die spätere Datei, und unter dem
+   Zeiger trägt ohnehin die eigene Hover-Regel unten (0,6,1). */
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary){
   background:var(--bg-side); color:var(--text); border-color:var(--line); box-shadow:none;
   /* Dieselbe Form wie die Tagesrunde schon in Ruhe — sonst wechselte der
@@ -9990,8 +9993,11 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   #ru-vorhang{ transition:none }
   #ru-vorhang .ru-lader-buchstabe{ animation:none; opacity:1 }
   .ru-geste-finger{ animation:none; transform:rotate(30deg) scale(var(--ru-mass)) }
+  /* `inherit`, nicht #fff: der Knopf sagt die Farbe — weiss auf dem dunklen
+     Funkelgrund, Schrift auf dem hellen Grund der stillen und gesperrten
+     (test596 §9/§11; mit #fff stand das Wort 1,04 : 1 auf Weiss). */
   .ru-funkel-b, .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b,
-  .ru-funkel > svg{ animation:none; color:#fff; opacity:1 }
+  .ru-funkel > svg{ animation:none; color:inherit; opacity:1 }
   .cover-textur .ru-textur{ animation:none }
   .bib-blick:hover .bib-blick-auge{ animation:none }
 }

@@ -650,13 +650,21 @@ body [data-rmo~="letters"] > svg { animation:none; }
   50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
 /* Ein gesperrter Knopf wischt nicht (test596 §9) — ohne Gewicht, damit die
-   Rangfolge bleibt. */
-body [data-rmo~="letters"]:where(:not(:disabled)):is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
+   Rangfolge bleibt. Und der Zeiger wischt nur, wo es einen gibt: am Telefon
+   klebt `:hover` nach dem Tipp, und das Weiss der Mitte lag eine
+   Viertelsekunde auf der hellen Pille der stillen Funkel (test596 §11).
+   Fokus und Druck wischen überall. */
+body [data-rmo~="letters"]:where(:not(:disabled)):is(:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-wisch .55s ease-in-out 1;
   /* Zwei Namen, weil zwei Buchstabensorten zwei Zähler haben. Fehlt beides,
      bleibt 0 ms — dann ist es wieder ein Knall, und das fällt auf. */
   animation-delay:var(--rmo-delay, calc(var(--ru-schritt, 0) * 80ms)); }
+@media (hover:hover) {
+  body [data-rmo~="letters"]:where(:not(:disabled)):hover :is(.rmo-letter,.ru-funkel-b) {
+    animation:rmo-letter-wisch .55s ease-in-out 1;
+    animation-delay:var(--rmo-delay, calc(var(--ru-schritt, 0) * 80ms)); }
+}
 
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
 body [data-rmo~="toggle"]::before { animation:none; }

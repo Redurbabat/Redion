@@ -807,9 +807,9 @@ const Lernwelt = (() => {
             ? '<span' + k + ' data-sym="' + esc(icon) + '" aria-hidden="true"></span>'
             : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
     };
-    const kennzahl = (wert, name, zusatz = '', merkId = '') => '<article class="stat-karte lw-metrik"' + (merkId ? ' data-lw-kennzahl="' + esc(merkId) + '"' : '') +
+    const kennzahl = (wert, name, zusatz = '', merkId = '', herzName = name) => '<article class="stat-karte lw-metrik"' + (merkId ? ' data-lw-kennzahl="' + esc(merkId) + '"' : '') +
         '><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
-        (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, name) : '') + '</article>';
+        (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, herzName) : '') + '</article>';
     const kennzahlKontext = (vorgabe = {}) => {
         const merk = new Map(Object.entries(vorgabe));
         const einmal = (name, rechnen) => {
@@ -832,10 +832,11 @@ const Lernwelt = (() => {
     const pruefungTage = (p) => !p ? 'keine geplant'
         : p.tage === 0 ? 'heute' : p.tage === 1 ? 'morgen' : p.tage + ' Tage';
     const KENNZAHLEN = {
-        'heute-faellig': { name: 'fällig', wert: k => String(k.queue.errors.length + k.queue.due.length),
-            zusatz: () => 'heute zu wiederholen' },
-        'heute-neu': { name: 'neu', wert: k => String(k.queue.newCards.length), zusatz: () => 'höchstens 20 pro Runde' },
-        'heute-fehler': { name: 'Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
+        'heute-faellig': { name: 'fällig', allein: 'heute fällige Karten',
+            wert: k => String(k.queue.errors.length + k.queue.due.length), zusatz: () => 'heute zu wiederholen' },
+        'heute-neu': { name: 'neu', allein: 'neue Karten heute', wert: k => String(k.queue.newCards.length),
+            zusatz: () => 'höchstens 20 pro Runde' },
+        'heute-fehler': { name: 'Fehler', allein: 'offene Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
             zusatz: () => 'gezielt wiederholen' },
         'naechste-pruefung': { name: 'nächste Prüfung', wert: k => k.pruefung ? pruefungTage(k.pruefung) : '–',
             zusatz: k => k.pruefung ? k.pruefung.titel || '' : 'keine geplant' },
@@ -848,11 +849,11 @@ const Lernwelt = (() => {
         'neue-karten': { name: 'neue Karten', wert: k => String(k.queue.newCards.length) },
         'naechste-wiederholung': { name: 'nächste Wiederholung',
             wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
-        'noch-instabil': { name: 'noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
-        'inzwischen-stabil': { name: 'inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
+        'noch-instabil': { name: 'noch instabil', allein: 'Fehler noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
+        'inzwischen-stabil': { name: 'inzwischen stabil', allein: 'Fehler inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
         'fehlversuche': { name: 'Fehlversuche', wert: k => String(k.fehler.reduce((summe, item) => summe + item.anzahl, 0)) },
         'stabile-karten': { name: 'stabile Karten', wert: k => k.stabil + ' / ' + k.stats.total },
-        'aktuell-faellig': { name: 'aktuell fällig', wert: k => String(k.stats.due) },
+        'aktuell-faellig': { name: 'aktuell fällig', allein: 'Karten aktuell fällig', wert: k => String(k.stats.due) },
         'themen-mit-fehlern': { name: 'Themen mit Fehlern', wert: k => String(k.stats.mistakes) },
         'naechster-termin': { name: 'nächster Termin', wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
         'wiederholungen-woche': { name: 'Wiederholungen diese Woche', wert: k => String(k.spiel.woche) },
@@ -866,11 +867,12 @@ const Lernwelt = (() => {
     const merkHerz = (id, name) => typeof Merkzeichen === 'undefined' ? '' :
         Merkzeichen.html({ an: kennzahlenGemerkt().includes(id), name, form: 'herz',
             klasse: 'lw-kennzahl-merk', zusatz: 'data-lw-merk="' + esc(id) + '"' });
-    const merkbar = (id, k) => {
+    const merkbar = (id, k, allein = false) => {
         const eintrag = KENNZAHLEN[id];
         if (!eintrag)
             return '';
-        return kennzahl(eintrag.wert(k), eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id);
+        const voll = eintrag.allein ?? eintrag.name;
+        return kennzahl(eintrag.wert(k), allein ? voll : eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id, voll);
     };
     const gemerktStreifen = (k) => {
         const ids = kennzahlenGemerkt().filter(id => KENNZAHLEN[id]);
@@ -878,7 +880,7 @@ const Lernwelt = (() => {
             return '';
         return '<section class="lw-section lw-gemerkt" aria-labelledby="lw-gemerkt-titel"><header><div>' +
             '<h2 id="lw-gemerkt-titel">Gemerkt</h2><p>Deine Lieblingskennzahlen — das Herz nimmt sie wieder heraus.</p>' +
-            '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k)).join('') + '</div></section>';
+            '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k, true)).join('') + '</div></section>';
     };
     const gemerktAuffrischen = () => {
         const root = zustand.root;
@@ -918,13 +920,14 @@ const Lernwelt = (() => {
         if (!eintrag || typeof Merkzeichen === 'undefined')
             return;
         const schluessel = metaSchluessel('kennzahlen');
+        const voll = eintrag.allein ?? eintrag.name;
         const an = knopf.getAttribute('aria-pressed') !== 'true';
         const stellen = () => [...(zustand.root?.querySelectorAll('[data-lw-merk]') || [])]
             .filter(k => k.dataset.lwMerk === id);
         const zeigen = (wert) => {
-            stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: eintrag.name, form: 'herz' }));
+            stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: voll, form: 'herz' }));
             if (!stellen().includes(knopf))
-                Merkzeichen.markieren(knopf, { an: wert, name: eintrag.name, form: 'herz' });
+                Merkzeichen.markieren(knopf, { an: wert, name: voll, form: 'herz' });
         };
         zeigen(an);
         let schreiben;
@@ -948,7 +951,7 @@ const Lernwelt = (() => {
             catch { }
             zeigen(!an);
             gemerktAuffrischen();
-            UI.toast('Die Kennzahl „' + eintrag.name + '" konnte nicht gemerkt werden.');
+            UI.toast('Die Kennzahl „' + voll + '" konnte nicht gemerkt werden.');
         });
     };
     const fortschritt = (wert, label) => '<div class="lw-progress"><div><span>' + esc(label) + '</span><strong>' + prozent(wert) +
@@ -2841,7 +2844,7 @@ const Lernwelt = (() => {
             statistik,
             simulationen,
             kennzahlenGemerkt,
-            kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name })),
+            kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name, allein: eintrag.allein ?? eintrag.name })),
             fehler: fehlerListe,
             pruefungen,
             aufgaben: sichtbareAufgaben,

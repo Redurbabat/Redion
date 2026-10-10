@@ -9852,13 +9852,21 @@ body [data-rmo~="letters"] > svg { animation:none; }
   50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
 /* Ein gesperrter Knopf wischt nicht (test596 §9) — ohne Gewicht, damit die
-   Rangfolge bleibt. */
-body [data-rmo~="letters"]:where(:not(:disabled)):is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
+   Rangfolge bleibt. Und der Zeiger wischt nur, wo es einen gibt: am Telefon
+   klebt `:hover` nach dem Tipp, und das Weiss der Mitte lag eine
+   Viertelsekunde auf der hellen Pille der stillen Funkel (test596 §11).
+   Fokus und Druck wischen überall. */
+body [data-rmo~="letters"]:where(:not(:disabled)):is(:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-wisch .55s ease-in-out 1;
   /* Zwei Namen, weil zwei Buchstabensorten zwei Zähler haben. Fehlt beides,
      bleibt 0 ms — dann ist es wieder ein Knall, und das fällt auf. */
   animation-delay:var(--rmo-delay, calc(var(--ru-schritt, 0) * 80ms)); }
+@media (hover:hover) {
+  body [data-rmo~="letters"]:where(:not(:disabled)):hover :is(.rmo-letter,.ru-funkel-b) {
+    animation:rmo-letter-wisch .55s ease-in-out 1;
+    animation-delay:var(--rmo-delay, calc(var(--ru-schritt, 0) * 80ms)); }
+}
 
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
 body [data-rmo~="toggle"]::before { animation:none; }
@@ -22903,7 +22911,10 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
    Fläche je Bild (E701 §1, grund.css „HAUPTHANDLUNG. Genau eine je Bild"):
    der Schein ist Zustand, nicht Dauerschmuck (E640).
    Das Gewicht (0,4,1) schlägt die Grundregel `.lernwelt .lw-study-actions
-   button` (0,2,1) und die Hover-Regel der Lernwelt (0,3,1). */
+   button` (0,2,1). Die Hover-Regel der Lernwelt wiegt seit `:is` ebenso
+   (0,4,1) — `:is` nimmt sein schwerstes Argument, `.lw-page-head>
+   .lw-actions button` —; hier gewinnt die spätere Datei, und unter dem
+   Zeiger trägt ohnehin die eigene Hover-Regel unten (0,6,1). */
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary){
   background:var(--bg-side); color:var(--text); border-color:var(--line); box-shadow:none;
   /* Dieselbe Form wie die Tagesrunde schon in Ruhe — sonst wechselte der
@@ -23009,8 +23020,11 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   #ru-vorhang{ transition:none }
   #ru-vorhang .ru-lader-buchstabe{ animation:none; opacity:1 }
   .ru-geste-finger{ animation:none; transform:rotate(30deg) scale(var(--ru-mass)) }
+  /* `inherit`, nicht #fff: der Knopf sagt die Farbe — weiss auf dem dunklen
+     Funkelgrund, Schrift auf dem hellen Grund der stillen und gesperrten
+     (test596 §9/§11; mit #fff stand das Wort 1,04 : 1 auf Weiss). */
   .ru-funkel-b, .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b,
-  .ru-funkel > svg{ animation:none; color:#fff; opacity:1 }
+  .ru-funkel > svg{ animation:none; color:inherit; opacity:1 }
   .cover-textur .ru-textur{ animation:none }
   .bib-blick:hover .bib-blick-auge{ animation:none }
 }
@@ -27056,7 +27070,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1419, inhalt: 'b10ce8c65f08e1bd', gebaut: '2026-10-06T07:30:19.349Z' };
+const Stand = { fassung: 1420, inhalt: 'cdcc8d209ffb0746', gebaut: '2026-10-10T17:47:01.429Z' };
 window.Stand = Stand;
 
 </script>
@@ -135868,9 +135882,9 @@ const Lernwelt = (() => {
             ? '<span' + k + ' data-sym="' + esc(icon) + '" aria-hidden="true"></span>'
             : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
     };
-    const kennzahl = (wert, name, zusatz = '', merkId = '') => '<article class="stat-karte lw-metrik"' + (merkId ? ' data-lw-kennzahl="' + esc(merkId) + '"' : '') +
+    const kennzahl = (wert, name, zusatz = '', merkId = '', herzName = name) => '<article class="stat-karte lw-metrik"' + (merkId ? ' data-lw-kennzahl="' + esc(merkId) + '"' : '') +
         '><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
-        (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, name) : '') + '</article>';
+        (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, herzName) : '') + '</article>';
     const kennzahlKontext = (vorgabe = {}) => {
         const merk = new Map(Object.entries(vorgabe));
         const einmal = (name, rechnen) => {
@@ -135893,10 +135907,11 @@ const Lernwelt = (() => {
     const pruefungTage = (p) => !p ? 'keine geplant'
         : p.tage === 0 ? 'heute' : p.tage === 1 ? 'morgen' : p.tage + ' Tage';
     const KENNZAHLEN = {
-        'heute-faellig': { name: 'fällig', wert: k => String(k.queue.errors.length + k.queue.due.length),
-            zusatz: () => 'heute zu wiederholen' },
-        'heute-neu': { name: 'neu', wert: k => String(k.queue.newCards.length), zusatz: () => 'höchstens 20 pro Runde' },
-        'heute-fehler': { name: 'Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
+        'heute-faellig': { name: 'fällig', allein: 'heute fällige Karten',
+            wert: k => String(k.queue.errors.length + k.queue.due.length), zusatz: () => 'heute zu wiederholen' },
+        'heute-neu': { name: 'neu', allein: 'neue Karten heute', wert: k => String(k.queue.newCards.length),
+            zusatz: () => 'höchstens 20 pro Runde' },
+        'heute-fehler': { name: 'Fehler', allein: 'offene Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
             zusatz: () => 'gezielt wiederholen' },
         'naechste-pruefung': { name: 'nächste Prüfung', wert: k => k.pruefung ? pruefungTage(k.pruefung) : '–',
             zusatz: k => k.pruefung ? k.pruefung.titel || '' : 'keine geplant' },
@@ -135909,11 +135924,11 @@ const Lernwelt = (() => {
         'neue-karten': { name: 'neue Karten', wert: k => String(k.queue.newCards.length) },
         'naechste-wiederholung': { name: 'nächste Wiederholung',
             wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
-        'noch-instabil': { name: 'noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
-        'inzwischen-stabil': { name: 'inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
+        'noch-instabil': { name: 'noch instabil', allein: 'Fehler noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
+        'inzwischen-stabil': { name: 'inzwischen stabil', allein: 'Fehler inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
         'fehlversuche': { name: 'Fehlversuche', wert: k => String(k.fehler.reduce((summe, item) => summe + item.anzahl, 0)) },
         'stabile-karten': { name: 'stabile Karten', wert: k => k.stabil + ' / ' + k.stats.total },
-        'aktuell-faellig': { name: 'aktuell fällig', wert: k => String(k.stats.due) },
+        'aktuell-faellig': { name: 'aktuell fällig', allein: 'Karten aktuell fällig', wert: k => String(k.stats.due) },
         'themen-mit-fehlern': { name: 'Themen mit Fehlern', wert: k => String(k.stats.mistakes) },
         'naechster-termin': { name: 'nächster Termin', wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
         'wiederholungen-woche': { name: 'Wiederholungen diese Woche', wert: k => String(k.spiel.woche) },
@@ -135927,11 +135942,12 @@ const Lernwelt = (() => {
     const merkHerz = (id, name) => typeof Merkzeichen === 'undefined' ? '' :
         Merkzeichen.html({ an: kennzahlenGemerkt().includes(id), name, form: 'herz',
             klasse: 'lw-kennzahl-merk', zusatz: 'data-lw-merk="' + esc(id) + '"' });
-    const merkbar = (id, k) => {
+    const merkbar = (id, k, allein = false) => {
         const eintrag = KENNZAHLEN[id];
         if (!eintrag)
             return '';
-        return kennzahl(eintrag.wert(k), eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id);
+        const voll = eintrag.allein ?? eintrag.name;
+        return kennzahl(eintrag.wert(k), allein ? voll : eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id, voll);
     };
     const gemerktStreifen = (k) => {
         const ids = kennzahlenGemerkt().filter(id => KENNZAHLEN[id]);
@@ -135939,7 +135955,7 @@ const Lernwelt = (() => {
             return '';
         return '<section class="lw-section lw-gemerkt" aria-labelledby="lw-gemerkt-titel"><header><div>' +
             '<h2 id="lw-gemerkt-titel">Gemerkt</h2><p>Deine Lieblingskennzahlen — das Herz nimmt sie wieder heraus.</p>' +
-            '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k)).join('') + '</div></section>';
+            '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k, true)).join('') + '</div></section>';
     };
     const gemerktAuffrischen = () => {
         const root = zustand.root;
@@ -135979,13 +135995,14 @@ const Lernwelt = (() => {
         if (!eintrag || typeof Merkzeichen === 'undefined')
             return;
         const schluessel = metaSchluessel('kennzahlen');
+        const voll = eintrag.allein ?? eintrag.name;
         const an = knopf.getAttribute('aria-pressed') !== 'true';
         const stellen = () => [...(zustand.root?.querySelectorAll('[data-lw-merk]') || [])]
             .filter(k => k.dataset.lwMerk === id);
         const zeigen = (wert) => {
-            stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: eintrag.name, form: 'herz' }));
+            stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: voll, form: 'herz' }));
             if (!stellen().includes(knopf))
-                Merkzeichen.markieren(knopf, { an: wert, name: eintrag.name, form: 'herz' });
+                Merkzeichen.markieren(knopf, { an: wert, name: voll, form: 'herz' });
         };
         zeigen(an);
         let schreiben;
@@ -136009,7 +136026,7 @@ const Lernwelt = (() => {
             catch { }
             zeigen(!an);
             gemerktAuffrischen();
-            UI.toast('Die Kennzahl „' + eintrag.name + '" konnte nicht gemerkt werden.');
+            UI.toast('Die Kennzahl „' + voll + '" konnte nicht gemerkt werden.');
         });
     };
     const fortschritt = (wert, label) => '<div class="lw-progress"><div><span>' + esc(label) + '</span><strong>' + prozent(wert) +
@@ -137902,7 +137919,7 @@ const Lernwelt = (() => {
             statistik,
             simulationen,
             kennzahlenGemerkt,
-            kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name })),
+            kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name, allein: eintrag.allein ?? eintrag.name })),
             fehler: fehlerListe,
             pruefungen,
             aufgaben: sichtbareAufgaben,

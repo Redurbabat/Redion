@@ -1168,10 +1168,10 @@ const Lernwelt = (() => {
   /* Die Anatomie (Etikett oben, Zahl, Bedeutung am Boden) kommt aus der
      Schale: .stat-karte in anatomie.css (E260). .lw-metrik behält nur die
      Lernwelt-Abweichungen. */
-  const kennzahl = (wert: string, name: string, zusatz = '', merkId = ''): string =>
+  const kennzahl = (wert: string, name: string, zusatz = '', merkId = '', herzName = name): string =>
     '<article class="stat-karte lw-metrik"' + (merkId ? ' data-lw-kennzahl="' + esc(merkId) + '"' : '') +
       '><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
-      (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, name) : '') + '</article>';
+      (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, herzName) : '') + '</article>';
 
   /* ========================================================================
    * DIE KENNZAHLEN, DIE MAN SICH MERKEN KANN (E719)
@@ -1226,13 +1226,17 @@ const Lernwelt = (() => {
   const pruefungTage = (p: LernweltPruefung | null): string => !p ? 'keine geplant'
     : p.tage === 0 ? 'heute' : p.tage === 1 ? 'morgen' : p.tage + ' Tage';
 
-  const KENNZAHLEN: Readonly<Record<string, { name: string; wert: (k: KennzahlKontext) => string;
+  /* `name` steht auf der Karte, wo die Ansicht den Rest sagt („fällig"
+     unter „Heute"). `allein` ist der Name ohne Ansicht: der Vorlesename des
+     Herzens und das Etikett im Streifen „Gemerkt" — §38, test595 §10. */
+  const KENNZAHLEN: Readonly<Record<string, { name: string; allein?: string; wert: (k: KennzahlKontext) => string;
     zusatz?: (k: KennzahlKontext) => string }>> = {
     /* Heute */
-    'heute-faellig': { name: 'fällig', wert: k => String(k.queue.errors.length + k.queue.due.length),
-      zusatz: () => 'heute zu wiederholen' },
-    'heute-neu': { name: 'neu', wert: k => String(k.queue.newCards.length), zusatz: () => 'höchstens 20 pro Runde' },
-    'heute-fehler': { name: 'Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
+    'heute-faellig': { name: 'fällig', allein: 'heute fällige Karten',
+      wert: k => String(k.queue.errors.length + k.queue.due.length), zusatz: () => 'heute zu wiederholen' },
+    'heute-neu': { name: 'neu', allein: 'neue Karten heute', wert: k => String(k.queue.newCards.length),
+      zusatz: () => 'höchstens 20 pro Runde' },
+    'heute-fehler': { name: 'Fehler', allein: 'offene Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
       zusatz: () => 'gezielt wiederholen' },
     'naechste-pruefung': { name: 'nächste Prüfung', wert: k => k.pruefung ? pruefungTage(k.pruefung) : '–',
       zusatz: k => k.pruefung ? k.pruefung.titel || '' : 'keine geplant' },
@@ -1247,12 +1251,12 @@ const Lernwelt = (() => {
     'naechste-wiederholung': { name: 'nächste Wiederholung',
       wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
     /* Fehler */
-    'noch-instabil': { name: 'noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
-    'inzwischen-stabil': { name: 'inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
+    'noch-instabil': { name: 'noch instabil', allein: 'Fehler noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
+    'inzwischen-stabil': { name: 'inzwischen stabil', allein: 'Fehler inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
     'fehlversuche': { name: 'Fehlversuche', wert: k => String(k.fehler.reduce((summe, item) => summe + item.anzahl, 0)) },
     /* Fortschritt */
     'stabile-karten': { name: 'stabile Karten', wert: k => k.stabil + ' / ' + k.stats.total },
-    'aktuell-faellig': { name: 'aktuell fällig', wert: k => String(k.stats.due) },
+    'aktuell-faellig': { name: 'aktuell fällig', allein: 'Karten aktuell fällig', wert: k => String(k.stats.due) },
     'themen-mit-fehlern': { name: 'Themen mit Fehlern', wert: k => String(k.stats.mistakes) },
     'naechster-termin': { name: 'nächster Termin', wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
     'wiederholungen-woche': { name: 'Wiederholungen diese Woche', wert: k => String(k.spiel.woche) },
@@ -1271,11 +1275,12 @@ const Lernwelt = (() => {
     Merkzeichen.html({ an: kennzahlenGemerkt().includes(id), name, form: 'herz',
       klasse: 'lw-kennzahl-merk', zusatz: 'data-lw-merk="' + esc(id) + '"' });
 
-  /** Eine Kennzahl aus dem Katalog, mit ihrem Herz. */
-  const merkbar = (id: string, k: KennzahlKontext): string => {
+  /** Eine Kennzahl aus dem Katalog, mit ihrem Herz — `allein` im Streifen. */
+  const merkbar = (id: string, k: KennzahlKontext, allein = false): string => {
     const eintrag = KENNZAHLEN[id];
     if (!eintrag) return '';
-    return kennzahl(eintrag.wert(k), eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id);
+    const voll = eintrag.allein ?? eintrag.name;
+    return kennzahl(eintrag.wert(k), allein ? voll : eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id, voll);
   };
 
   /** Der Streifen „Gemerkt" auf Heute — leer, solange nichts gemerkt ist. */
@@ -1284,7 +1289,7 @@ const Lernwelt = (() => {
     if (!ids.length) return '';
     return '<section class="lw-section lw-gemerkt" aria-labelledby="lw-gemerkt-titel"><header><div>' +
       '<h2 id="lw-gemerkt-titel">Gemerkt</h2><p>Deine Lieblingskennzahlen — das Herz nimmt sie wieder heraus.</p>' +
-      '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k)).join('') + '</div></section>';
+      '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k, true)).join('') + '</div></section>';
   };
 
   /* Nur den Streifen neu zeichnen, nicht die Ansicht: ein Neuzeichnen
@@ -1328,14 +1333,15 @@ const Lernwelt = (() => {
     const eintrag = KENNZAHLEN[id];
     if (!eintrag || typeof Merkzeichen === 'undefined') return;
     const schluessel = metaSchluessel('kennzahlen');
+    const voll = eintrag.allein ?? eintrag.name;
     const an = knopf.getAttribute('aria-pressed') !== 'true';
     /* Alle Herzen derselben Kennzahl — dieselbe Zahl steht auf Heute im
        Streifen und in der Übersicht darunter. */
     const stellen = (): HTMLElement[] => [...(zustand.root?.querySelectorAll<HTMLElement>('[data-lw-merk]') || [])]
       .filter(k => k.dataset.lwMerk === id);
     const zeigen = (wert: boolean): void => {
-      stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: eintrag.name, form: 'herz' }));
-      if (!stellen().includes(knopf)) Merkzeichen.markieren(knopf, { an: wert, name: eintrag.name, form: 'herz' });
+      stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: voll, form: 'herz' }));
+      if (!stellen().includes(knopf)) Merkzeichen.markieren(knopf, { an: wert, name: voll, form: 'herz' });
     };
     zeigen(an);
     let schreiben: Promise<unknown>;
@@ -1361,7 +1367,7 @@ const Lernwelt = (() => {
       } catch { /* das Bild zählt zuerst */ }
       zeigen(!an);
       gemerktAuffrischen();
-      UI.toast('Die Kennzahl „' + eintrag.name + '" konnte nicht gemerkt werden.');
+      UI.toast('Die Kennzahl „' + voll + '" konnte nicht gemerkt werden.');
     });
   };
 
@@ -3712,7 +3718,7 @@ const Lernwelt = (() => {
       /* Die gemerkten Kennzahlen (E719) — aus demselben Grund hier statt
          nachgebaut: der Schlüssel enthält den Lernenden. */
       kennzahlenGemerkt,
-      kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name })),
+      kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name, allein: eintrag.allein ?? eintrag.name })),
       fehler: fehlerListe,
       pruefungen,
       aufgaben: sichtbareAufgaben,
