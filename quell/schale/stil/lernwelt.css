@@ -1107,6 +1107,13 @@
   .lernwelt .lw-back:where(:not(:disabled)):hover{
     background:var(--bg-hover);color:var(--text)
   }
+  /* KEIN TOTER KNOPF AUCH IM KOPF (E720, E726). `test596` §1 fand den
+     Fächer-Chip und das ^ neben dem gewählten Hauptteil still: der Chip
+     hatte keine Hover-Regel, und die Fläche des gewählten Paars wog mehr
+     als die allgemeine. Das ^ behält die Fläche seines Paars und zeigt den
+     Zeiger am Rand; der Chip antwortet wie jeder Knopf der Lernwelt. */
+  .lernwelt .lw-fach:hover{border-color:var(--line-stark,var(--line));background:var(--bg-hover)}
+  .lernwelt .lw-nav .lw-nav-haupt.is-active + .lw-klappe:hover{border-color:var(--accent-text)}
   .lernwelt :is(.lw-page-head>button,.lw-page-head>.lw-actions button,
     .lw-actions button,.lw-rating button,.lw-error-list footer button,
     .lw-exam-list footer button,.lw-exam-card>button,.lw-quick button,
@@ -1322,6 +1329,17 @@
      davor kostete 23 px je Paar, und der Name sagt, wo man ist (E726). */
   .lernwelt .lw-nav .lw-nav-haupt>span[data-sym]{display:none}
   .lernwelt .lw-nav .lw-klappe + .lw-nav-haupt{margin-left:var(--space-1)}
+  /* FILTERT DER CHIP, BLEIBT ER HIER EIN ZEICHEN (E726). Mit dem Namen
+     („Elektrotec…", 112 px) schrumpften die Hauptteile zu „He…" und „Üb…"
+     — gesehen im Bild, nicht im Lauf (§55.1). Statt des Namens wird das
+     Zeichen GEFÜLLT: Form statt nur Farbe (§38), wie das Herz aus E719.
+     Der Name steht im `aria-label`, im Titel der Lernzentrale und mit
+     Haken im Menü. Ab 471 px ist Platz, dort steht er da. */
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach{width:var(--touch-min);max-width:none;padding:0;
+    justify-content:center;border-color:var(--accent-text);background:var(--lw-accent-soft)}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-name{display:none}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-zeichen{color:var(--accent-text)}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-zeichen>svg{fill:currentColor}
   .lernwelt .lw-hero{display:grid;gap:15px;padding:17px 14px}
   .lernwelt .lw-hero::after{right:-142px;bottom:-172px;opacity:.4}
   .lernwelt .lw-hero>div:first-child>span{margin-top:10px}

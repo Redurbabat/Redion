@@ -929,7 +929,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 536 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 537 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1663,6 +1663,24 @@ Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 534. Beim Zusammenführen nachgezählt (5. Oktober,
 `claude/morgen-besser-2`): 536.*
 
+*Und 537: `test601` — der Kopf des Lernzentrums in einer Zeile (E726).
+Redur, PDF vom 29. September, am Foto der Lernzentrale: „Ganz oben wo
+menü/ dort sollte wo heute und was neben das ist im ^ … Und die bereiche
+momentan das löschen oder am beste das zur fächer wechseln". Er zählt den
+Kopf in vier Ansichten, an Rechner und Telefon, dunkel und hell — eine
+Reihe, höchstens fünf Bedienelemente, nichts rollt —, öffnet jedes ^ mit
+Maus, Enter, Leertaste und Finger und schliesst es mit Escape, sammelt aus
+den Menüs alle zwölf Ansichten ein und fährt jede Route, und er rechnet
+die Zahlen der Lernzentrale mit gewähltem Fach gegen `topicProgress` nach.
+Gegen den Grundstand rot mit 6 von 71 — und zwei seiner roten Zeilen
+waren Funde, nicht Zusagen: ein Klick auf das Thema „Elektrotechnik"
+setzte den Titel und liess „7 + 9" stehen, wo 5 gehört hätten, und
+`#welt-lernen-noten` öffnete „Heute". Sein erster grüner Anlauf war es
+nicht: der Chip verlor nach der Wahl den Fokus, weil ein zweites Zeichnen
+hinterherkam. Gezählt am 10. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 537 — auf seinem Zweig; beim
+Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1679,7 +1697,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 536 Läufe
+npm run pruefen                      alle 537 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1769,7 +1787,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 536 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 537 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

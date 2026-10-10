@@ -47,7 +47,9 @@
  *      `Learning.topicProgress` für dieses Thema, die Prüfungen nur seine,
  *      der Chip sagt „Elektrotechnik" und hält den Fokus — und nach dem
  *      Neuladen steht alles noch so. Ein Klick in „Themen & Fächer" setzt
- *      denselben Zustand.
+ *      denselben Zustand. Am Telefon sprengt der Chip mit gewähltem Fach die
+ *      Zeile nicht: nichts rollt, kein Hauptteil ist gekürzt, und das
+ *      Zeichen ist gefüllt statt umrissen (§6o/§6p).
  *   §7 DER LEBENSBEREICH LEBT IM FÄCHERMENÜ — als Gruppe genau dann, wenn
  *      es Lebensbereiche gibt; eine Wahl setzt den Bereich wie früher.
  *   §8 OHNE BEWEGUNG dreht sich das ^ nicht — weder mit „weniger
@@ -521,6 +523,42 @@ const THEMA = (label: string) => {
   p('§6n ein Klick in „Themen & Fächer" setzt denselben Filter (Chip und Zahlen)', thema && /Geometrie/.test(geo.chip) &&
     !!geoSoll && geo.fehler + geo.karten === geoSoll.due && geo.gesamt === geoSoll.total,
     JSON.stringify({ geo, geoSoll }));
+  await ctx.close();
+}
+
+/* §6o AM TELEFON MIT GEWÄHLTEM FACH. Der Chip darf die Zeile nicht sprengen:
+   im ersten Bau zeigte er „Elektrotec…" in 112 px, und die Hauptteile
+   schrumpften zu „He…" und „Üb…" (Bild, §55.1). Gemessen wird, dass die
+   Leiste nicht rollt, kein Hauptteil abgeschnitten ist und der Chip sagt,
+   DASS er filtert — als Form, nicht nur als Farbe (§38). */
+{
+  const { ctx, s } = await oeffnen({ handy: true });
+  await s.evaluate(BESTAND);
+  await ansicht(s, 'lernen');
+  if (await s.$('[data-lw-klappe="faecher"]')) {
+    await s.tap('[data-lw-klappe="faecher"]');
+    await warte(s, 600);
+    const b = await s.$('.menu [data-wahl="fach:elektrotechnik"]');
+    if (b) await b.tap();
+    await warte(s, 900);
+  }
+  const m = await s.evaluate(() => {
+    const nav = document.querySelector<HTMLElement>('.lw-nav');
+    const chip = document.querySelector<HTMLElement>('[data-lw-klappe="faecher"]');
+    const svg = chip?.querySelector('svg');
+    return {
+      rollt: nav ? { sw: nav.scrollWidth, cw: nav.clientWidth } : null,
+      gekuerzt: [...document.querySelectorAll<HTMLElement>('.lw-nav > [data-lw-nav] > span:last-child')]
+        .filter(x => x.scrollWidth > x.clientWidth + 1).map(x => x.textContent),
+      name: chip?.getAttribute('aria-label') || '',
+      gefuellt: svg ? getComputedStyle(svg).fill : '',
+      alle: chip?.parentElement?.getAttribute('data-alle')
+    };
+  });
+  p('§6o Telefon, Fach gewählt: die Leiste rollt nicht, kein Hauptteil ist gekürzt', !!m.rollt &&
+    m.rollt.sw <= m.rollt.cw + 1 && m.gekuerzt.length === 0, JSON.stringify(m));
+  p('§6p … und der Chip sagt es: Name im aria-label, das Zeichen gefüllt statt umrissen', /Elektrotechnik/.test(m.name) &&
+    m.alle === 'nein' && !!m.gefuellt && m.gefuellt !== 'none', JSON.stringify(m));
   await ctx.close();
 }
 

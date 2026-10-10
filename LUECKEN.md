@@ -8348,6 +8348,51 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L246 · Das Fach nach E726: abgeleitet statt gespeichert, und was der Filter nicht erreicht — 10. Oktober 2026
+
+**Gefunden beim Bau von E726** (Redur, Masterprompt S. 21: „… Und die
+bereiche momentan das löschen oder am beste das zur fächer wechseln").
+E726 hat den Kopf der Lernwelt auf eine Zeile gebracht und das Auswahlfeld
+„Bereich" durch den Fächer-Chip ersetzt. Offen bleibt, damit es nicht in
+einem Commit verschwindet (§35):
+
+1. **Ein Fach ist abgeleitet, nicht gespeichert.** Es ist das Thema einer
+   Karte (Seitentitel oder `quiz.topic`, `Learning.topicLabel`) oder der
+   Name einer Zeile der Fächer-Datenbank, zusammengeführt über den
+   kleingeschriebenen Namen. „Mathe" (Seite) und „Mathematik" (Zeile) sind
+   zwei Fächer; eine Karte auf der Seite „Geometrie — Kap. 4" gehört zum
+   Fach „Geometrie — Kap. 4", nicht zu „Mathematik". Ein gespeicherter
+   Bezug Karte → Fach bräuchte ein neues Feld, einen Typ in `core/types`
+   und Prüfungen für Export und Import (§9, §13) — Redurs Entscheidung
+   (Vorgabe 2 war: kein neues Feld).
+2. **Die Trainer-Kapitel filtert das Fach nicht** (Vorgabe 4). Ihre Karten
+   zählt `Trainer.karten()`, nicht `lernkartenRoh`; die Kachel „Trainer"
+   in der Lernzentrale zeigt darum auch mit gewähltem Fach alle Kapitel.
+3. **Die untere Leiste am Telefon bietet „Heute" und „Lernen" weiter an** —
+   neben dem Kopf der Lernwelt. Das PDF sagt „Keine Navigation doppelt
+   anbieten"; erfüllt ist es nur zur Hälfte. Die Leiste ist die Navigation
+   der ganzen App (Dokumente, Termine, Mehr), der Kopf die der Lernwelt —
+   wer eins davon wegnimmt, entscheidet über die Schale (Redur).
+4. **Was der Filter nicht erreicht.** Er wirkt auf Kartenzahlen, Prüfungen,
+   Noten und Stundenplan. Aufgaben, Termine, Zuletzt, Projekte und PDFs auf
+   „Heute" filtert weiter nur der Lebensbereich — sie haben kein Feld
+   „Fach". Prüfungen, Noten und Lektionen OHNE Fach verschwinden, solange
+   ein Fach gewählt ist (sie gehören zu keinem).
+5. **Das Blatt am Telefon ist kein `role="menu"`.** `UI.wahl` gibt seinen
+   Einträgen `menuitemradio`, `Menue.menu` die Rolle aber nur am Rechner
+   (E721). Ein Vorleser findet am Telefon Einträge eines Menüs ohne Menü.
+   Das Blatt gehört dem Zweig `claude/menue-eine-quelle`; `test601` fragt
+   dort nach `.menu` und prüft die Rolle am Rechner.
+6. **Am schmalen Telefon kürzt ein langer Name, und das Fach steht nicht
+   im Chip.** Unter 470 px tragen die Hauptteile kein Zeichen; „Schule /
+   Ausbildung" neben „Übersicht" endet mit „…" (der ganze Name steht im
+   Menü, mit Haken). Ein gewähltes Fach zeigt der Chip dort nur als
+   GEFÜLLTES Zeichen — sein Name steht im `aria-label`, im Titel der
+   Lernzentrale und im Menü, auf „Heute" aber nicht sichtbar. Zwischen 471
+   und 760 px steht der Name im Chip (höchstens 112 px). Gemessen bei
+   390 px: die Leiste rollt nicht, ohne Fach (276 in 276, `test601` §1e)
+   und mit Fach (§6o).
+
 ## L242 · Ein Menü je Ding nach E721: was noch seine eigene Liste hat — 6. Oktober 2026
 
 **Gefunden beim Bau von E721** (Redur, Masterprompt S. 19: „Hier füge ...
@@ -9699,7 +9744,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 135 Lücken, 79 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 136 Lücken, 80 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

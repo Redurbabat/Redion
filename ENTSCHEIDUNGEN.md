@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-698 Entscheidungen, E1 bis E721 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+699 Entscheidungen, E1 bis E726 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -761,6 +761,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E719** — Das Herz ist ein Knopf (Redur, Masterprompt S. 21/22: „die herz beim hier funktionier nicht also wenn ich das klicke passiert nichts"): das Herz der Lernwelt-Kennzahlen war Schmuck aus E534 (`aria-hidden`, `pointer-events:none`, der Klick traf die Karte); jetzt der eine Merker (`Merkzeichen`, neue WAHL `form: 'herz'`, ohne Wahl bleibt es das Band) mit Namen, Zustand und 44 px, EIN Katalog `KENNZAHLEN` (22 Kennzahlen), gemerkt je Lernendem in meta `lernwelt:<aktor>:kennzahlen`, ein Streifen „Gemerkt" auf Heute, ein Rückweg mit Hinweis, wenn das Schreiben scheitert; einmalige Zahlen und die Bestandsgesundheit bleiben Schmuck (L241). `test595` neu; `test433` §7, `test580` §5.
 * **E720** — Kein toter Knopf (Redur, Masterprompt S. 21: „… also wie bein tagesrunde … und bei alle wo eine buttons gibt füge das im enscheideung und claude.md"): 63 Knöpfe der Lernwelt antworteten nicht auf den Zeiger (`:where()` nahm den Hover-Regeln das Gewicht; Tagesziel, „Alle Dokumente" und die Tagessäulen hatten keine); `:where(` → `:is(`, Fehlertraining, Neue Karten, Prüfungsfokus und Trainer als stille Funkel (in Ruhe Umriss, unter Zeiger, Fokus und Druck die Tagesrunde), `data-gedrueckt` neben jedem `:active` des Funkels, sein Schein nur unter `@media (hover:hover)`. Neue Regel CLAUDE.md §38 (hart) und §39 (Richtwert). `test596` neu; `test580` §1.
 * **E721** — Ein Menü je Ding (Redur, Masterprompt S. 19: „Hier füge ... und oder beim rechts klicke sollte es mir zeigen löschen“): `Register.aktionen` (neu, `register/aktionen.ts`) ist die EINE Quelle für das, was man mit einer Seite tun kann — jeder Bereich meldet seine Aktionen; `Menue.aktionen` zeichnet daraus das Menü des „…“ und des Rechtsklicks, `Menue.aktionenBinden` bindet Rechtsklick, Kontextmenü-Taste, Umschalt+F10, Entf und langes Drücken (500 ms, E83, ein Schlucker statt zwei); das „…“ ist ein Knopf NEBEN dem Deckel oben rechts (44 × 44); Ablagebaum, Regal, Tabelle, Seitenleiste und Notizhefte haben dasselbe Menü; Menüs mit Rolle, Pfeiltasten und Fokus zurück; Gefahr rot am Rechner wie am Telefon; `Menue.wahl` als die eine Auswahlliste (`test597`)
+* **E726** — Der Kopf des Lernzentrums in einer Zeile (Redur, Masterprompt S. 21: „Ganz oben wo menü/ dort sollte wo heute und was neben das ist im ^ … Und die bereiche momentan das löschen oder am beste das zur fächer wechseln"): zwei Klappen [Hauptteil | ^] statt vier Reitern und einer zweiten Reihe — „Heute ^" (Heute, Prüfungen, Noten, Schule, Stundenplan, Uni, Arbeit) und „Übersicht ^" (Übersicht, Trainer, Lernpfad, Meine Fehler, Fortschritt) über `UI.wahl`, der Hauptteil heisst wie die Ansicht; der Fächer-Chip ersetzt das Auswahlfeld „Bereich" — ein Fach ist das Thema der Karten ∪ die Fächer-Datenbank, der Filter wirkt auf Karten, Prüfungen, Noten und Stundenplan, gemerkt unter `lernwelt:<aktor>:fach`; der Lebensbereich lebt als Gruppe im Fächermenü; `#welt-lernen-noten`/`-stundenplan` öffnen wieder ihre Ansicht (`test601`)
 
 ---
 
@@ -15255,6 +15256,16 @@ ZWEI Spalten: vier Kacheln in drei Spalten liessen wieder eine allein.
 E206 — Links weniger Bereiche, und die zwei Welten haben nur noch einen Weg
 ================================================================================
 
+> **Ergänzt durch E726 (10. Oktober 2026) — das Menü gibt es jetzt, und der
+> Name sagt, wo man ist.** Redur, Masterprompt S. 21: „… wo heute und was
+> neben das ist im ^ und die unter den das die übersicht neben heute auch
+> mit ^". Aus vier Reitern und der zweiten Reihe sind zwei Klappen
+> [Hauptteil | ^] in einer Zeile geworden; das ⌄ (`lw-nav-mehr`) war
+> Schmuck auf einem Knopf, der sprang, das ^ öffnet `UI.wahl`. Die Sorge
+> dieses Eintrags — „ein Menü versteckt, wo man ist" — bleibt eingelöst:
+> der Hauptteil heisst wie die Ansicht („Trainer"). Alle zwölf bleiben
+> erreichbar, über die Menüs und `#welt-lernen-<id>` (`test601`).
+
 Redur am 26. August, wörtlich:
 
     „Links habe ich so viel Bereiche, reduziere es — aber wichtig nichts
@@ -17802,6 +17813,14 @@ aufzuschreiben ist leichter, als sie beim nächsten Mal anzuwenden.
 
 E235 — Der Kopf am Telefon: aus vier Bänken werden zwei
 ================================================================================
+
+> **Ergänzt durch E726 (10. Oktober 2026) — aus dem ◎-Chip wird der
+> Fächer-Chip.** Das Auswahlfeld „Bereich" ist ein Knopf mit Menü
+> (`[data-lw-klappe="faecher"]`): ohne Filter ein gezeichnetes Zeichen
+> (`filter`, 44 × 44) statt des ◎ aus der Schrift, mit Filter das Fach,
+> gekürzt mit „…". Der Lebensbereich lebt als Gruppe in seinem Menü. Die
+> vierte Rasterspalte (für das •••, seit E278 auf der Lernwelt `hidden`)
+> fällt weg — die Reiterzeile braucht die 44 px für zwei Paare.
 
 Redur hat ein Bildschirmfoto der Lernzentrale geschickt und einen roten
 Kasten darüber gezogen — über den ganzen oberen Bereich, mit dem Satz:
@@ -62443,3 +62462,237 @@ Ortswechsel (die vierte Karte noch halb durchsichtig).
 Das Muster bleibt das des Touch Kits, als Redion-Code nachgebaut — auch in
 diesem Nachtrag ist kein fremder Code dazugekommen, `FREMDCODE.md` braucht
 keinen Eintrag.
+
+## E726 — Der Kopf des Lernzentrums in einer Zeile: „Heute ^" und „Übersicht ^" mit echten Menüs, „Fächer" statt „Bereich"
+
+**Datum:** 10. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Seite 21 und Seite 3; die Vorgaben aus „Entscheidungen, die
+Redur gehören" zu #1, weil er auf Schritt 0 nicht geantwortet hat) ·
+**ergänzt** E206 (das ⌄ war Schmuck auf einem Knopf, der sprang — jetzt ist
+es ein ^ mit Menü, und der Hauptteil sagt, wo man ist) und E235 (aus dem
+Auswahlfeld „Bereich" mit ◎ wird der Fächer-Chip mit gezeichnetem Zeichen;
+die leere vierte Rasterspalte am Telefon fällt weg) · **baut auf** E706
+(Material auf den Hauptteilen), E712 (das Menü wächst aus dem ^), E721
+(`UI.wahl`, die eine Auswahlliste), E302 (ein Escape), E720 und E719 (die
+Lernwelt dieses Zweigs) auf · **Wächter:** `test601` (neu, 77 Zusagen in
+zehn Abschnitten), angepasst `test217` §3, `test565` §2, `test585`,
+`test206` §7 · **Zweig** `claude/lernzentrum-kopf` · **Messung:**
+`messungen.md` §95.
+
+**Redurs Satz, wörtlich** (seine Notiz im PDF, Seite 21, zum Foto der
+Lernzentrale; die Uhrzeit ist nicht überliefert):
+
+```txt
+„Ganz oben wo menü/ dort sollte wo heute und was neben das ist im ^ und die
+ unter den das die übersicht neben heute auch mit ^ es nimmt die anderen wie
+ lernpfand , tranier esc auch mitt. Und die bereiche momentan das löschen
+ oder am beste das zur fächer wechseln"
+```
+
+Gelesen mit Seite 3 des PDF: die obere Reihe („Heute | Lernen ⌄ |
+Prüfungen ⌄ | Wo du lernst ⌄") fällt in ein ^ neben „Heute"; die zweite
+Reihe („Übersicht | Trainer | Lernpfad | Meine Fehler | Fortschritt")
+wandert als „Übersicht ^" neben „Heute"; „Bereich" wird „Fächer". Das ^,
+das er meint, ist das ⌄ an den Gruppenknöpfen. Seine Zustimmung vom
+3. Oktober deckt „Bereiche → Fächer", solange die Funktion an EINER klaren
+Stelle bleibt.
+
+**Gemessen, bevor gebaut wurde** (`test601` gegen 57a023ecf, 6 von 71;
+`messungen.md` §95):
+
+```txt
+Kopf in der Übersicht (1440 und 390)    2 Reihen, 10 Bedienelemente
+⌄ an „Lernen", „Prüfungen", „Wo du …"   aria-haspopup null, aria-expanded null; ein Klick
+                                        springt auf die erste Ansicht der Gruppe
+Telefon: .lw-nav                        scrollWidth 440 in clientWidth 232, „Wo du lernst"
+                                        und „Fortschritt" ausserhalb
+Telefon: Inhalt beginnt (Übersicht)     y = 169 (auf „Heute" 119)
+„Bereich" in frischem Bestand           eine Option: „◎ Alle Bereiche"
+Thema „Elektrotechnik" angeklickt        Titel „Elektrotechnik", Zahlen 7 / 9 / 11 — unverändert
+                                        (topicProgress: due 5, total 10)
+#welt-lernen-noten / -stundenplan        öffnen „Heute"
+```
+
+**Was entschieden wurde.**
+
+1. **Eine Zeile aus zwei Klappen: [Hauptteil | ^] [Hauptteil | ^] … [Fächer]**
+   (Vorgabe 1, wörtlich). `KLAPPEN` ersetzt `REITER`: „Heute ^" trägt
+   Heute | Prüfungen, Noten | Schule / Ausbildung, Stundenplan, Uni, Arbeit
+   — die alten Gruppennamen „Prüfungen" und „Wo du lernst" stehen als
+   Überschriften im Menü, am Telefon als Kartengruppen im Blatt; „Übersicht
+   ^" trägt Übersicht, Trainer, Lernpfad, Meine Fehler, Fortschritt.
+   `ANSICHTEN` bleibt die Wahrheit über die zwölf (§8): eine Ansicht ohne
+   Klappe hängt sich unter „Weitere" an, `Lernwelt.ansichten` gibt
+   weiterhin zwölf heraus.
+2. **Der Hauptteil sagt, wo man ist** — E206s Grund für „kein
+   Aufklappmenü" („ein Menü versteckt, wo man ist") bleibt eingelöst: in
+   „Trainer" heisst er „Trainer" und trägt `aria-current="page"`, im Menü
+   steht der Haken. Ausserhalb seiner Klappe zeigt er deren erste Ansicht
+   („Heute", „Übersicht"). Die Hauptteile bleiben unmittelbare Kinder der
+   Leiste, damit das Material aus E706 zwischen ihnen fliegt.
+3. **Das ^ ist ein echter Knopf** — `aria-haspopup="menu"`,
+   `aria-expanded`, Name „Weitere Ansichten: Heute" / „… Lernen", 44 breit;
+   hoch wie die Reiter (34 px mit der Maus nach E205, 44 mit dem Finger).
+   Maus, Enter, Leertaste und Fingertipp öffnen `UI.wahl` (E721) — kein
+   zweites Menü; Escape über den gemeinsamen Griff (E302) gibt den Fokus an
+   das ^ zurück; ein zweiter Klick schliesst (ein `pointerdown` in der
+   Fangphase merkt, ob es offen WAR — das Menü schliesst schon beim
+   `mousedown`). Offen dreht sich das gezeichnete ⌄ zum ^; der Weg dorthin
+   fällt ohne Bewegung weg (beide Ebenen), der gedrehte Zustand bleibt.
+4. **Ein Fach ist, was schon da ist** (Vorgabe 2): das THEMA einer
+   Lernkarte (Seitentitel oder `quiz.topic`, dieselbe Rechnung wie
+   `Learning.topicProgress`, darum jetzt als `Learning.topicLabel`
+   ausgegeben) und die Zeilen der Fächer-Datenbank der Schulvorlage, nach
+   Namen zusammengeführt — „Elektrotechnik" steht einmal, auch wenn es Thema
+   UND Zeile ist. Kein neues Feld an der Karte, keine Migration.
+5. **Ein Zustand.** `zustand.themaId` — der Themenfokus, der vorher nur den
+   Titel der Lernzentrale änderte — ist der Fachfilter. Er wirkt an EINER
+   Stelle für die Karten (`lernkartenRoh`: Warteschlange, Statistik,
+   Fehlerliste, Lernpfad) und über das Feld „Fach" für Prüfungen, Noten und
+   Stundenplan (eine Beziehung trägt Kennungen, sie werden zum Namen der
+   Zeile). Gemerkt wird er wie der Bereich, je Lernendem:
+   `lernwelt:<aktor>:fach` (Store meta, reist mit `.json` und `.redion` wie
+   jeder Meta-Schlüssel). Klicks in „Themen & Fächer" und im Lernpfad setzen
+   denselben Zustand. Ein Fach, das es nicht mehr gibt, filtert nach dem
+   Neuladen nicht weiter.
+6. **Fächer statt Bereich, der Lebensbereich bleibt an EINER Stelle**
+   (Vorgabe 3, §43): der Chip `[data-lw-klappe="faecher"]` zeigt „Alle
+   Fächer" oder das Fach (sonst den Lebensbereich, wenn einer gewählt ist);
+   sein Menü hat „Alle Fächer" und die Fächer, und eine zweite Gruppe
+   „Lebensbereich" genau dann, wenn es Lebensbereiche gibt. Die Wahl setzt
+   `zustand.bereichId` und meta „bereich" wie das Auswahlfeld vorher (und
+   wie vorher das Fach zurück). Am Telefon ist der Chip ohne Filter ein
+   Zeichen von 44 × 44 (`filter` aus `Register.symbole` statt ◎ aus der
+   Schrift); mit Filter ist das Zeichen GEFÜLLT statt umrissen (Form, nicht
+   nur Farbe, §38) — ab 471 px steht dort der Name, gekürzt mit „…".
+7. **Der Trainer filtert nicht mit** (Vorgabe 4): seine Kapitel sind
+   Vorlagen mit eigenen Seiten; L246.
+8. **Die Routen der zwölf**: `routeAusHash` kennt jetzt auch `noten` und
+   `stundenplan` — `lernen()` schrieb beide, gelesen wurden sie nicht. Mit
+   der zweiten Reihe war das ein Tipp entfernt; jetzt ist die Route der
+   eine Weg ohne Menü.
+
+**Das Muster ist das des Touch Kits** (Menu/Popover am Rechner, ActionSheet
+am Telefon, Segmented-Material) — **nachgebaut als Redion-Code** über
+`UI.wahl` (E721) und das Material aus E706, nicht als Insel geladen und
+nicht abgeschrieben. Es ist kein fremder Code im Zweig; `FREMDCODE.md`
+braucht keinen Eintrag.
+
+**Warum.** Das ⌄ versprach ein Menü, das es nicht gab — Redur hat es so
+gelesen und genau das verlangt. Die zweite Reihe kostete am Telefon eine
+ganze Zeile (50 px) und schnitt Wörter ab, die erste rollte. Und der Filter
+oben rechts konnte in einem frischen Bestand nichts tun, während es die
+Fächer längst gab — zweimal, unverbunden: als Themen der Karten („Themen &
+Fächer") und als Datenbank der Schulvorlage. Der Themenfokus änderte den
+Titel und liess die Zahlen stehen: „Elektrotechnik" über 7 fälligen
+Fehlern, von denen 2 elektrotechnisch waren.
+
+**Die Alternativen.**
+
+- *Ein Gruppenwähler und ein Ansichtenwähler* ([Lernen ^] [Übersicht ^]).
+  Verworfen (Vorgabe 1): zwei Menüs für eine Frage, und „Heute" — der Ort,
+  an dem man jeden Tag beginnt — läge hinter einem Menü.
+- *Die zweite Reihe als Aufklapper (`aria-controls`) behalten.* So hat es
+  der Codex-Zweig vom 1. Oktober versucht (`0619d407a`, nur verglichen,
+  nichts übernommen). Verworfen: Redur will die Reihe weg, nicht benannt.
+- *Ein `<select data-lw-fach>` mit den Fächern, die an Karten gespeichert
+  sind* (derselbe Codex-Zweig). Verworfen (Vorgabe 2): in einem Bestand
+  ohne gespeichertes Fach wäre es wieder ein Feld mit einer Option — genau
+  der Fehler des Bereichsfilters.
+- *Ein gespeicherter Bezug Karte → Fach.* Verworfen für jetzt: ein neues
+  Feld braucht einen Typ in `core/types`, Export- und Importprüfungen
+  (§9, §13). L246.
+- *Am Telefon das ^ schmaler als 44.* Verworfen (§37: Hauptweg). Statt
+  dessen fällt die leere vierte Rasterspalte weg (das ••• ist auf der
+  Lernwelt seit E278 `hidden`, `test67` hält das), unter 470 px tragen die
+  Hauptteile kein Zeichen, und ein langer Name kürzt mit „…" statt die
+  Leiste rollen zu lassen.
+
+**Was es kostet.** Prüfungen und Wo du lernst sind einen Tipp weiter weg
+(„Heute ^" → Eintrag); dafür stehen alle zwölf in zwei Menüs, und der Kopf
+ist eine Zeile. Start 1865 → 1867 KB gzip (`test388` §5, Decke 1950), keine
+neue Datei. Ein Fach ist eine Heuristik über Namen: ein Thema „Mathe" und
+eine Zeile „Mathematik" sind zwei Fächer (L246). Und der Themenklick filtert
+jetzt wirklich — wer danach die ganze Lernwelt sehen will, wählt „Alle
+Fächer" im Chip.
+
+**Weg und wo es bleibt (§43; Redurs Zustimmung vom 3. Oktober für
+„Bereiche → Fächer").**
+
+```txt
+die zweite Reihe .lw-subnav           ihre fünf Ansichten im Menü „Übersicht ^", die übrigen
+                                      im Menü „Heute ^"; jede auch über #welt-lernen-<id>
+die vier Gruppenreiter                „Heute" bleibt ein Tipp (Hauptteil); Prüfungen, Noten,
+                                      Schule, Stundenplan, Uni, Arbeit im „Heute ^"
+das ⌄ (span.lw-nav-mehr, aria-hidden)  das ^ (button[data-lw-klappe]) mit Menü
+das Auswahlfeld „Bereich"             die Gruppe „Lebensbereich" im Fächermenü (zustand.bereichId,
+                                      meta „bereich" unverändert)
+der ◎-Chip am Telefon (E235)          der Fächer-Chip, 44 × 44 ohne Filter
+der Themenfokus (themaId)             derselbe Zustand, jetzt Fachfilter mit Zahlen
+```
+
+**Gefunden auf dem Weg.**
+
+- Das Blatt am Telefon trägt keine `role="menu"`, seine Einträge sind aber
+  `menuitemradio` (`Menue.menu` gibt die Rolle nur am Rechner, E721).
+  `test601` fragt dort nach `.menu` und prüft die Rolle am Rechner; das
+  Blatt selbst gehört dem Zweig `claude/menue-eine-quelle` (L246 Punkt 5).
+- Eine Gegenprobe, die eine Konstante unbenutzt lässt, baut mit TS6133
+  trotzdem eine Ausgabe (`tsc` schreibt bei Fehlern weiter) — §52.6 bleibt
+  richtig: gezählt wurde nur, was rot UND aus dem gemeinten Grund rot war.
+- `fachSetzen` hatte die Bereichsdaten neu geladen; ein zweites `zeichnen`
+  danach nahm dem Chip den Fokus (`test601` §6i, im ersten grünen Anlauf
+  rot). Die Bereichsdaten hängen am Lebensbereich, nicht am Fach.
+- **Das Bild fand, was der Lauf nicht fragte** (§55.1): mit gewähltem Fach
+  stand am Telefon „Elektrotec…" im Chip (112 px), und die Hauptteile
+  schrumpften zu „He…" und „Üb…" — `test601` war bei 75 von 75, weil er das
+  Telefon nur ohne Fach mass. §6o/§6p messen es seither (rot: „gekuerzt":
+  ["Heute","Übersicht"], „gefuellt":"none"); unter 470 px bleibt der Chip
+  ein Zeichen und wird gefüllt.
+- **Ein alter Wächter fand zwei tote Knöpfe** (`test596` §1, E720): der
+  Fächer-Chip hatte keine Hover-Regel, und das ^ neben dem gewählten
+  Hauptteil blieb unter dem Zeiger, wie es war — seine Paar-Fläche wog mehr
+  als die allgemeine Regel. Rot mit „2 tot: Fach wählen: Alle Fächer ·
+  Weitere Ansichten: Lernen" in zwölf Ansichten; jetzt antwortet der Chip
+  wie jeder Knopf der Lernwelt, und das ^ zeigt den Zeiger am Rand.
+- `test217` §3 brauchte Überlauf, um die Kante zu prüfen, und die Leiste
+  läuft nicht mehr über. Angepasst, nicht gelockert: passt sie, prüft er
+  „nein"; danach zwingt er sie auf 120 px und prüft jede alte Zusage
+  (rechts, Verlauf, Breite, ganz rechts „links"). Gegenprobe ohne
+  `Rollrand.binde`: 23 von 28.
+
+**Gegenproben** (je eine Stelle heraus, gebaut, `test601` rot gesehen,
+zurückgenommen):
+
+```txt
+G1 die zweite Reihe zurück                 §1a „[true,true,true,true]", §1b 12 Elemente, §1f „Übersicht y=163,
+                                           Heute y=207", §10 „subnav":true
+G2 aria-haspopup in Ruhe weg               §2c „["faecher",null,"false",…]" (Rechner und Telefon)
+G3 lernkartenRoh ohne Fachfilter           §6e „7 + 9 gegen 5", §6f „33 gegen 10", §6h, §6n
+G4 noten/stundenplan aus routeAusHash      §4c „noten → heute, stundenplan → heute"
+G5 kein Merken vor dem Klick               §3c „wieder: offen true, expanded true"
+G6 die Drehregel weg                       §8b „{"ruhe":"0.14s","offen":"none"}", §8c, §8d
+G7 Bereichsdaten in fachSetzen neu laden   §6i (der Chip verliert den Fokus)
+```
+
+**Nachbarn** (unter dem Schloss): `test601` 77/77, `test206` grün (mit
+zwei neuen Zusagen: zwei Hauptteile, zwei ^), `test217` 28/28, `test67`
+65/65, `test565` 54/54, `test585` 91/91, `test250` 15/15, `test208`,
+`test424` 50/50, `test580`, `test296` 17/17, `test303` 18/18, `test590`
+68/68, `test589`, `test595` 41/41, `test596` 41/41 (nach dem Fund oben),
+`test597` 91/91, `test388` 22 (1867 KB), `test143`. Ohne Browser: 550, 549,
+225, 401, 402 (zwei Zeilen `.lw-subnav button` aus `masse-bestand.json`
+gestrichen), 537, 290, 298, 410, 400, 109, 87, 105, 362 (Decke „44" 54 →
+51). Rot vor der Anpassung, mit dem Grund oben: `test217` §3 („276 in
+276"), `test565` §2 („Der Trainer hat einen Reiter in der zweiten
+Reihe"), `test585` („0 Bilder, 0 Orte" — der zweite Knopf ist jetzt das ^).
+Fremde rote Läufe des Grundstands, nicht angefasst: `test86`, `test201` §1,
+`test270`, `test274`, `test332` (dieselben zwei Zeilen wie am Grundstand),
+`test348`, `test365`, `test425`, `test448`, `test470`, `test493`, `test524`.
+
+**Bilder** (§55; nicht eingecheckt, §55.4): vorher und nachher, Rechner
+1440×900 und Telefon 390×844, dunkel und hell — der Kopf in Heute,
+Übersicht und Trainer, „Heute ^" und „Übersicht ^" offen (am Rechner aus
+dem ^, am Telefon als Blatt mit Kartengruppen), das Fächermenü mit und
+ohne Gruppe „Lebensbereich", ein gewähltes Fach mit gefilterten Zahlen, der
+Tastaturfokus auf einem ^.

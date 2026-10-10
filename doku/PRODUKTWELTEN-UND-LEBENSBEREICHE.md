@@ -59,13 +59,33 @@ Der Lotse lädt die Weltmodule defensiv über `globalThis`. Fehlt eines in einer
 
 ### 2.2 Lernwelt
 
-`src/bereiche/wissen/lernwelt.ts` stellt die Ansichten **Heute**, **Lernen**,
-**Lernpfad**, **Meine Fehler**, **Prüfungen**, **Schule/Ausbildung**, **Uni**,
-**Arbeit** und **Fortschritt** bereit.
+`src/bereiche/wissen/lernwelt.ts` stellt zwölf Ansichten bereit: **Heute**,
+**Lernen** (im Kopf „Übersicht"), **Trainer**, **Lernpfad**, **Meine Fehler**,
+**Fortschritt**, **Prüfungen**, **Noten**, **Schule/Ausbildung**,
+**Stundenplan**, **Uni** und **Arbeit**.
+
+Der Kopf ist seit E726 EINE Zeile aus zwei Klappen: „Heute ^" (Heute;
+Prüfungen, Noten; Schule/Ausbildung, Stundenplan, Uni, Arbeit) und
+„Übersicht ^" (Übersicht, Trainer, Lernpfad, Meine Fehler, Fortschritt).
+Der Hauptteil jeder Klappe heisst wie die Ansicht, in der man gerade ist;
+das ^ öffnet die Auswahlliste der Schale (`UI.wahl`). Jede der zwölf ist
+ausserdem über `#welt-lernen-<id>` erreichbar.
 
 Wichtige Eigenschaften:
 
-- Bereichsfilter werden defensiv aus `Lebensbereiche` gelesen.
+- **Fächer statt Bereich (E726).** Rechts im Kopf steht der Fächer-Chip.
+  Ein Fach ist das Thema der Lernkarten (Seitentitel oder `quiz.topic`,
+  dieselbe Rechnung wie `Learning.topicProgress`/`Learning.topicLabel`),
+  nach Namen zusammengeführt mit den Zeilen der Fächer-Datenbank der
+  Schulvorlage (`schoolKind: 'subjects'`). Der gewählte Filter wirkt auf
+  alle Kartenzahlen (Warteschlange, Statistik, Fehler, Lernpfad) und über
+  das Feld „Fach" auf Prüfungen, Noten und Stundenplan; gemerkt wird er
+  unter `lernwelt:<actorId>:fach`. Es gibt kein gespeichertes Feld
+  Karte → Fach (L246); die Trainer-Kapitel filtert er nicht.
+- Bereichsfilter werden defensiv aus `Lebensbereiche` gelesen. Seit E726
+  steht die Wahl des Lebensbereichs als zweite Gruppe im Menü des
+  Fächer-Chips — nur, wenn es Lebensbereiche gibt; gemerkt wie bisher unter
+  `lernwelt:<actorId>:bereich`.
 - Für Today und Bereichslisten werden die asynchronen Aggregatoren des
   Bereichskerns verwendet; fehlt der Kern, bleiben lokale Ableitungen aus den
   bestehenden Modulen verfügbar.

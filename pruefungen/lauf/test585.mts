@@ -487,7 +487,10 @@ console.log('\n5 · Die Umschalter: die Wahl fliegt, statt zu springen');
     await a.pc.waitForSelector('.lw-nav > button', { timeout: 15000 });
     await a.pc.waitForTimeout(900);
     const beob = a.pc.evaluate(flugBeobachten('.lw-nav > button[aria-current="page"]', 1000));
-    await a.pc.evaluate(`document.querySelectorAll('.lw-nav > button')[1].click()`);
+    /* Seit E726 stehen in der Leiste zwei Paare [Hauptteil | ^]; der
+       zweite KNOPF ist das ^ (es öffnet ein Menü, gewählt wird dort
+       nichts). Der zweite REITER ist der zweite Hauptteil. */
+    await a.pc.evaluate(`document.querySelectorAll('.lw-nav > button[data-lw-nav]')[1].click()`);
     flugPruefen('Heute, erster → zweiter Reiter', await beob as Flug);
     await a.zu();
   }

@@ -257,9 +257,28 @@ gleich('Und die Zahl „neu" auch', zahlVon('neu'), String(t.ausDenDaten.neu));
  * §3 · Die Reiterleiste sagt, dass es weitergeht
  * ========================================================================*/
 console.log('\n3 · Die Reiterleiste sagt, dass es weitergeht');
-p('Sie ist am Telefon wirklich zu schmal', (t.leiste?.scroll || 0) > (t.leiste?.klar || 0) + 2,
-  `${t.leiste?.scroll} in ${t.leiste?.klar}`);
-gleich('Und zeigt das an der rechten Kante an', t.leiste?.mehr, 'rechts');
+/* SEIT E726 PASST DIE LEISTE AM TELEFON — und das ist gewollt, nicht ein
+   Grund, diesen Abschnitt zu streichen. Aus vier Reitern und einer zweiten
+   Reihe sind zwei Klappen [Name | ^] geworden; gemessen 276 in 276 px. Eine
+   Leiste, die passt, darf keine Kante zeigen: das prüft die erste Zeile
+   (Rollrand meldet „nein"). Was dieser Abschnitt hält — „wenn es weitergeht,
+   SAGT die Leiste es, mit einem Verlauf" —, prüfen die Zeilen danach weiter,
+   und zwar an einer Leiste, die wirklich zu schmal ist: sie wird auf 120 px
+   gezwungen (Rollrand misst über ResizeObserver nach). So bleibt jede
+   Zusage stehen, statt an einer Bedingung zu hängen, die nie mehr eintritt. */
+gleich('Passt die Leiste (E726), zeigt sie keine Kante', t.leiste?.mehr,
+  (t.leiste?.scroll || 0) > (t.leiste?.klar || 0) + 2 ? 'rechts' : 'nein');
+const eng = await telefon.evaluate(async () => {
+  const leiste = document.querySelector<HTMLElement>('.lw-nav');
+  if (!leiste) return null;
+  leiste.style.maxWidth = '120px';
+  leiste.scrollLeft = 0;
+  await new Promise(r => setTimeout(r, 200));
+  return { scroll: leiste.scrollWidth, klar: leiste.clientWidth, mehr: leiste.dataset['mehr'] || '' };
+});
+p('Zu schmal gemacht, ist sie es wirklich', (eng?.scroll || 0) > (eng?.klar || 0) + 2,
+  `${eng?.scroll} in ${eng?.klar}`);
+gleich('Und zeigt das an der rechten Kante an', eng?.mehr, 'rechts');
 
 /* UND SIE ZEICHNET AUCH ETWAS. Hier stand bis zum 25. August nur die Zeile
    darüber — das Merkmal. Auf dem Bildschirmfoto endete „Meine Fehler"

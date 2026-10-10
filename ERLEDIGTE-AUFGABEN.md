@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 10. Oktober 2026 · E726 — Der Kopf des Lernzentrums in einer Zeile (Masterprompt #1)
+
+**Redur** (Masterprompt vom 29. September, S. 21, zum Foto der
+Lernzentrale): „Ganz oben wo menü/ dort sollte wo heute und was neben das
+ist im ^ und die unter den das die übersicht neben heute auch mit ^ es nimmt
+die anderen wie lernpfand , tranier esc auch mitt. Und die bereiche momentan
+das löschen oder am beste das zur fächer wechseln".
+
+**Fund** (`test601` gegen 57a023ecf, 6 von 71): zwei Reihen und zehn
+Bedienelemente über der Lernzentrale; das ⌄ an drei Gruppen war Schmuck
+(`aria-hidden`, kein Menü — ein Klick sprang auf die erste Ansicht); am
+Telefon rollte die Reiterleiste (440 in 232 px), „Fortschritt" stand
+abgeschnitten, der Inhalt begann bei y = 169 statt 119; „Bereich" bot in
+einem frischen Bestand nur „◎ Alle Bereiche"; ein Klick auf das Thema
+„Elektrotechnik" änderte den Titel und liess die Zahlen (7 / 9 / 11)
+stehen; `#welt-lernen-noten` und `-stundenplan` öffneten „Heute".
+
+**Bau:** `KLAPPEN` statt `REITER` — „Heute ^" und „Übersicht ^" als
+[Hauptteil | ^], der Hauptteil heisst wie die Ansicht, das ^ öffnet
+`UI.wahl` (E721); der Fächer-Chip statt des Auswahlfelds (Thema der Karten
+∪ Fächer-Datenbank, Filter in `lernkartenRoh` und über das Feld „Fach" in
+Prüfungen, Noten, Stundenplan, gemerkt unter `lernwelt:<aktor>:fach`); der
+Lebensbereich als Gruppe im Fächermenü; `Learning.topicLabel` ausgegeben;
+`routeAusHash` kennt `noten` und `stundenplan`; am Telefon fällt die leere
+vierte Rasterspalte weg.
+
+**Prüfung:** `test601` 77/77, sieben Gegenproben; angepasst (nicht
+gelockert) `test217` §3, `test565` §2, `test585`, `test206` §7; Nachbarn
+und Zahlen in E726 und `messungen.md` §95; offen in L246.
+
 ## 10. Oktober 2026 · E721 nach der Durchsicht — Decke, Ankunft, Stelle, Zeichen, Name, Meldung
 
 **Redur** (Masterprompt vom 29. September, S. 19): „Hier füge ... und oder
