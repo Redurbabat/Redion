@@ -62,7 +62,22 @@
  *       Telefon lang drücken und ohne Bewegung loslassen → das Menü.
  *   §14 `UI.wahl` — die EINE Auswahlliste: aria-expanded am Anker kippt,
  *       ✓ und aria-current am gewählten Eintrag, Pfeiltasten, Enter wählt,
- *       Escape gibt den Fokus zurück, Namen bleiben Text.
+ *       Escape gibt den Fokus zurück, Namen bleiben Text; eine Gruppe mit
+ *       Überschrift ist eine benannte Gruppe (role=group).
+ *
+ *   AUS DER DURCHSICHT VOM 10. OKTOBER (dazugekommen, rot gesehen):
+ *   §2  … das „…" sagt aria-expanded, solange sein Menü offen ist; und die
+ *       Karte unter „Zuletzt geöffnet" hat dasselbe Menü wie ihr Deckel.
+ *   §3  … das ZEICHEN von „In den Papierkorb" bleibt mit dem Fokus rot.
+ *   §9  … und unter dem Zeiger, in allen zehn Schemata.
+ *   §15 Die Karten kommen an: die ersten Zellen des Gitters tragen die
+ *       Ankunft des Studios (E702). (Rot: 0 von 6 — der Wähler suchte die
+ *       Karte direkt im Gitter, und dort steht seit E721 ihre Zelle.)
+ *   §16 „Zu Favoriten" und „Duplizieren" aus dem Seitenmenü lassen eine
+ *       lange Seite an ihrer Stelle und zeichnen sie nicht neu. (Rot:
+ *       scrollTop 1200 → 0, der Block war ein neues Element.)
+ *   §17 Eine Aktion, die scheitert, sagt es mit einer Meldung — sofort und
+ *       als Promise. (Rot: nur die Konsole wusste es.)
  *
  * ─── KANN DIESER LAUF ROT WERDEN? (§55.2) ───────────────────────────────────
  * Er war es: eingecheckt als „test597 (rot)" gegen 73a956937 (morgen-besser-2
@@ -272,9 +287,28 @@ await r.s.waitForTimeout(300);
 const ids2mehr = await menueIds(r.s);
 p('Das „…" öffnet ein Menü mit „In den Papierkorb"', ids2mehr.includes('papierkorb'), JSON.stringify(ids2mehr));
 gleich('Rechtsklick und „…" zeigen GENAU dieselben Einträge', ids2rk, ids2mehr);
+/* aria-haspopup verspricht dem Vorleser ein Menü; aria-expanded sagt, ob es
+   GERADE offen ist (Durchsicht vom 10. Oktober: es stand nie da, und der
+   Zustand `[aria-expanded="true"]` im Stilblatt war tot). */
+const offen2 = await r.s.evaluate<any>(`document.querySelector(${JSON.stringify(mehrSel(r.ordner))})?.getAttribute('aria-expanded') ?? null`);
+await zu(r.s);
+const zu2 = await r.s.evaluate<any>(`document.querySelector(${JSON.stringify(mehrSel(r.ordner))})?.getAttribute('aria-expanded') ?? null`);
+p('Das „…" sagt aria-expanded=true, solange sein Menü offen ist, und false danach',
+  offen2 === 'true' && zu2 === 'false', JSON.stringify({ offen2, zu2 }));
 const rk2b = await rechtsklick(r.s, kartenSel(r.seite));
 const ids2s = await menueIds(r.s);
 p('Auch eine Seite: Rechtsklick → Menü mit „In den Papierkorb"', rk2b.verhindert && ids2s.includes('papierkorb'), JSON.stringify(ids2s));
+await zu(r.s);
+/* „Zuletzt geöffnet" steht auf derselben Bibliotheksseite über den Deckeln
+   und zeigt dieselben Dokumente. Ein Rechtsklick dort gab das Browsermenü,
+   zwei Zentimeter tiefer das Menü des Dings (Durchsicht vom 10. Oktober;
+   Redur: „für den rechts klick bei eine dokument … wo es passen kann"). */
+const zuletztSel = `.rmo-recent-card[data-rmo-open="${r.seite}"]`;
+const zuletztDa = await r.s.evaluate<any>(`!!document.querySelector(${JSON.stringify(zuletztSel)})`);
+const rk2z = await rechtsklick(r.s, zuletztSel);
+const ids2z = await menueIds(r.s);
+p('„Zuletzt geöffnet": Rechtsklick auf die Karte → dasselbe Menü wie am Deckel derselben Seite',
+  zuletztDa && rk2z.verhindert && JSON.stringify(ids2z) === JSON.stringify(ids2s), JSON.stringify({ zuletztDa, rk2z, ids2z, ids2s }));
 await zu(r.s);
 
 console.log('\n§3 · Mit der Tastatur: Umschalt+F10 und Kontextmenü-Taste');
@@ -303,6 +337,18 @@ const t3ende = await r.s.evaluate<any>(`(() => { const a = document.activeElemen
   letzter: [...document.querySelectorAll('.menu [role="menuitem"]')].pop() === a }; })()`);
 p('Ende erreicht „In den Papierkorb" — rot markiert, als letzter Eintrag',
   /Papierkorb/.test(t3ende.text) && t3ende.gefahr && t3ende.letzter, JSON.stringify(t3ende));
+/* Mit dem Fokus darauf bleibt auch sein ZEICHEN rot: `studio.css` färbte das
+   Zeichen jedes fokussierten Eintrags in die Textfarbe, ausser er trug
+   `.rot` — und `.rot` setzt das Menü nur am Telefon (Durchsicht vom
+   10. Oktober: rgb(241,242,244) im Standard, rgb(255,255,255) im Kontrast). */
+const t3zeichen = await r.s.evaluate<any>(`(() => {
+  const probe = document.createElement('span'); probe.style.color = 'var(--gefahr)'; document.body.appendChild(probe);
+  const soll = getComputedStyle(probe).color; probe.remove();
+  const mi = document.activeElement?.querySelector?.('.mi');
+  return { soll, ist: mi ? getComputedStyle(mi).color : null, fokusSichtbar: !!document.activeElement?.matches?.(':focus-visible') };
+})()`);
+p('… und sein Zeichen bleibt mit dem Fokus darauf in --gefahr', !!t3zeichen.ist && t3zeichen.ist === t3zeichen.soll && t3zeichen.fokusSichtbar,
+  JSON.stringify(t3zeichen));
 await r.s.keyboard.press('Home');
 const t3home = await r.s.evaluate<any>(`[...document.querySelectorAll('.menu [role="menuitem"]')].indexOf(document.activeElement)`);
 gleich('Pos1 zurück zum ersten', t3home, 0);
@@ -564,6 +610,21 @@ p('UI.wahl öffnet ein Menü (role=menu), der Anker sagt aria-expanded=true', t1
 p('Der gewählte Eintrag trägt ✓ und aria-current', t14.haken && /Deckel/.test(t14.aktiv || ''), JSON.stringify(t14));
 p('Der Fokus steht im Menü', t14.fokus, JSON.stringify(t14));
 p('„<b>x</b>" bleibt Text', !t14.fett && (t14.text || []).includes('Regal <b>x</b>'), JSON.stringify(t14.text));
+/* Die Überschrift einer Gruppe hatte role=presentation — im Menü wurde sie
+   nie vorgelesen. Eine Gruppe mit Namen (role=group, aria-labelledby) ist
+   das, was ARIA in einem Menü dafür vorsieht (Durchsicht vom 10. Oktober). */
+const t14g = await r.s.evaluate<any>(`(() => {
+  const m = document.querySelector('.menu');
+  const g = m?.querySelector('[role="group"]');
+  if (!g) return { gruppe: false };
+  const ref = (g.getAttribute('aria-labelledby') || '').split(/\\s+/).filter(Boolean)
+    .map(id => document.getElementById(id)?.textContent || '').join(' ').trim();
+  return { gruppe: true, name: g.getAttribute('aria-label') || ref,
+    eintraege: g.querySelectorAll('[role="menuitemradio"]').length,
+    alle: m.querySelectorAll('[role="menuitemradio"]').length };
+})()`);
+p('Die Gruppe „Form" ist eine benannte Gruppe (role=group) und hält ihre drei Einträge',
+  t14g.gruppe && t14g.name === 'Form' && t14g.eintraege === 3 && t14g.alle === 3, JSON.stringify(t14g));
 await r.s.keyboard.press('ArrowDown');
 await r.s.keyboard.press('Enter');
 await r.s.waitForTimeout(250);
@@ -578,6 +639,89 @@ p('Ohne erste Wahl steht der Fokus auf dem gewählten Eintrag', /B/.test(t14foku
 await r.s.keyboard.press('Escape');
 await r.s.waitForTimeout(150);
 gleich('Escape gibt den Fokus an den Anker zurück', await r.s.evaluate<any>(`document.activeElement?.id || ''`), 'anker597');
+await r.s.evaluate<any>(`document.getElementById('anker597')?.remove()`);
+
+console.log('\n§15 · Die Karten kommen an — auch in ihrer Zelle');
+/* Das Studio lässt die ersten sechs Karten beim Ortswechsel ankommen
+   (`studio.ts`, E702). Sein Wähler suchte `.bib-gitter > .bib-deckel` —
+   seit E721 steht jede Karte in einer `.bib-zelle`, und der Wähler traf
+   nichts mehr (Durchsicht vom 10. Oktober: Grundstand 6 Treffer und 6
+   Bewegungen, E721 0 und 0). Gemessen mit erlaubter Bewegung. */
+await r.s.evaluate<any>(`App.oeffne('${r.kind}')`);
+await r.s.waitForTimeout(500);
+await r.s.evaluate<any>(`Store.setMeta('bibForm', 'deckel'); Store.setMeta('bibOrdner', ''); Bibliothek.oeffne('')`);
+await r.s.waitForSelector('.bib-gitter .bib-zelle', { timeout: 20000 });
+await r.s.waitForTimeout(60);
+const t15 = await r.s.evaluate<any>(`(() => {
+  const erste = [...document.querySelectorAll('#page .bib-gitter > *')].slice(0, 6);
+  return { zellen: erste.length, bewegt: erste.filter(e => e.getAnimations().length > 0).length,
+           ruhig: matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.dataset.bewegung === 'ruhig' };
+})()`);
+p(`Die ersten Karten des Gitters kommen an (${t15.bewegt} von ${t15.zellen} bewegt)`,
+  !t15.ruhig && t15.zellen >= 4 && t15.bewegt === t15.zellen, JSON.stringify(t15));
+await r.s.waitForTimeout(600);
+
+console.log('\n§16 · Favorit und Duplizieren aus dem Seitenmenü lassen die Seite stehen');
+/* Vor E721 kippte „Zu Favoriten" nur Baum und Brotkrume, „Duplizieren"
+   zeichnete nur den Baum. Die neuen Zeilen im Register riefen danach
+   `nachAenderung` für die OFFENE Seite — die zeichnete sie neu und warf
+   den Leser an den Anfang (Durchsicht vom 10. Oktober: scrollTop 1200 → 0). */
+const lang16 = await r.s.evaluate<any>(`(async () => {
+  const p = Store.addPage(null, { text: 'Lange Seite' });
+  for (let i = 0; i < 80; i++) Store.addBlock(p.id, 'text', { text: 'Absatz ' + (i + 1) + ' mit etwas Text, damit die Seite lang wird.' });
+  await Store.flush();
+  return p.id;
+})()`) as string;
+await r.s.evaluate<any>(`App.oeffne('${lang16}')`);
+await r.s.waitForTimeout(700);
+const stelle16 = async (): Promise<any> => r.s.evaluate<any>(`(() => {
+  const sc = document.getElementById('scroll');
+  return { oben: Math.round(sc?.scrollTop || 0), gleich: !!document.querySelector('[data-probe597b]')?.isConnected,
+           fav: !!Store.getBlock('${lang16}')?.favorite, seite: App.aktuelleSeite() };
+})()`);
+for (const [aktion, wort] of [['fav', 'Zu Favoriten'], ['dup', 'Duplizieren']] as const) {
+  await r.s.evaluate<any>(`(() => {
+    const sc = document.getElementById('scroll'); if (sc) sc.scrollTop = 1200;
+    document.querySelectorAll('[data-probe597b]').forEach(e => e.removeAttribute('data-probe597b'));
+    const b = [...document.querySelectorAll('#page .blk[data-bid]')].find(e => (e.textContent || '').includes('Absatz 30 '));
+    b?.setAttribute('data-probe597b', '1');
+  })()`);
+  await r.s.waitForTimeout(150);
+  const vor = await stelle16();
+  await r.s.evaluate<any>(`App.seitenMenue(document.getElementById('btn-page-menu') || document.body, Store.getBlock('${lang16}'))`);
+  await r.s.waitForTimeout(250);
+  const gewaehlt = await menueWahl(r.s, aktion);
+  await r.s.waitForTimeout(500);
+  const nach = await stelle16();
+  p(`„${wort}" aus dem Seitenmenü: die Seite bleibt an ihrer Stelle und wird nicht neu gezeichnet`,
+    gewaehlt && vor.oben >= 1000 && vor.gleich && Math.abs(nach.oben - vor.oben) <= 2 && nach.gleich && nach.seite === lang16,
+    JSON.stringify({ gewaehlt, vor, nach }));
+}
+gleich('„Zu Favoriten" hat trotzdem gewirkt', (await stelle16()).fav, true);
+await zu(r.s);
+
+console.log('\n§17 · Eine Aktion, die scheitert, sagt es');
+/* `Register.aktionen.tun` schrieb einen Fehler nur in die Konsole — der
+   Mensch sah nichts (§10 „Fehler sinnvoll melden", Durchsicht vom
+   10. Oktober). Eine Probe-Aktion, die wirft, einmal sofort und einmal
+   später (Promise). */
+const t17 = await r.s.evaluate<any>(`(async () => {
+  const R = Register.aktionen;
+  const toast = document.getElementById('toast');
+  R.melde({ id: 'probe597', name: 'Probe', zeichen: '', gruppe: 'teilen', gilt: (_p, o) => o.kontext === 'probe597',
+            tun: () => { throw new Error('mit Absicht'); } });
+  R.melde({ id: 'probe597b', name: 'Später', zeichen: '', gruppe: 'teilen', gilt: (_p, o) => o.kontext === 'probe597',
+            tun: () => Promise.reject(new Error('mit Absicht')) });
+  if (toast) toast.textContent = '';
+  const zurueck = R.tun('probe597', Store.getBlock('${r.seite}'), { kontext: 'probe597' });
+  const sofort = toast ? toast.textContent : '';
+  if (toast) toast.textContent = '';
+  R.tun('probe597b', Store.getBlock('${r.seite}'), { kontext: 'probe597' });
+  await new Promise(f => setTimeout(f, 50));
+  return { zurueck, sofort, spaeter: toast ? toast.textContent : '' };
+})()`);
+p('Wirft eine Aktion, steht eine Meldung mit ihrem Namen da', /Probe/.test(t17.sofort) && /nicht geklappt/.test(t17.sofort) && t17.zurueck === false, JSON.stringify(t17));
+p('… auch wenn sie erst später scheitert', /Später/.test(t17.spaeter) && /nicht geklappt/.test(t17.spaeter), JSON.stringify(t17));
 await r.k.close();
 
 /* ══ §9 dunkel am Rechner ═════════════════════════════════════════════════ */
@@ -649,6 +793,7 @@ await zurBibliothek(sk.s);
 console.log('\n§9 · Rot heisst Gefahr — in allen zehn Schemata (auch Touch Kit und Starker Kontrast)');
 const schemata = await sk.s.evaluate<any>(`(Aussehen.SCHEMATA || []).map(x => x.id)`) as string[];
 const proSchema: Record<string, string> = {};
+const zeichenFalsch: string[] = [];
 for (const sch of schemata) {
   await sk.s.evaluate<any>(`Aussehen.setzen({ schema: ${JSON.stringify(sch)}, akzent: '' })`);
   await sk.s.waitForTimeout(80);
@@ -674,8 +819,17 @@ for (const sch of schemata) {
   proSchema[sch] = (g.ist === g.soll ? '' : 'FALSCH ') + g.kontrast;
   p(`${sch}: der Papierkorb steht in --gefahr (${g.soll}), Kontrast ${g.kontrast} : 1 auf ${g.grund}`,
     !!g.ist && g.ist === g.soll && g.kontrast >= 4.5, JSON.stringify(g));
+  /* Unter dem Zeiger: das Zeichen bleibt rot (studio.css färbte es in die Textfarbe). */
+  const gm = await mitte(sk.s, '.menu [data-gefahr]');
+  if (gm) await sk.s.mouse.move(gm.x, gm.y);
+  await sk.s.waitForTimeout(60);
+  const zg = await sk.s.evaluate<any>(`(() => { const b = document.querySelector('.menu [data-gefahr]'); const mi = b?.querySelector('.mi');
+    return { hover: !!b?.matches(':hover'), ist: mi ? getComputedStyle(mi).color : null }; })()`);
+  if (!zg.hover || zg.ist !== g.soll) zeichenFalsch.push(sch + ': ' + JSON.stringify(zg) + ' soll ' + g.soll);
+  await sk.s.mouse.move(2, 2);
 }
 p('Es waren zehn Schemata', schemata.length === 10, JSON.stringify(schemata));
+p('In allen zehn Schemata bleibt das Zeichen des Papierkorbs unter dem Zeiger in --gefahr', zeichenFalsch.length === 0, zeichenFalsch.slice(0, 3).join(' | '));
 console.log('   Kontrast je Schema:', JSON.stringify(proSchema));
 await sk.k.close();
 
