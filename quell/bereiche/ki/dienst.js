@@ -1510,7 +1510,7 @@ const KI = (() => {
     };
     const befehlsMenue = (anker, opt = {}) => {
         const r = rechteckVon(anker);
-        const mark = opt.text ? null : markierung();
+        const mark = markierung();
         const liste = faehigkeiten();
         const katalogVon = (f) => kiKatalog()?.ausAlt('faehig', f.id);
         const verdeckt = new Set(liste.map((f) => katalogVon(f)?.id).filter(Boolean));
@@ -1528,7 +1528,7 @@ const KI = (() => {
             '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
             '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>', r.left - 40, Math.max(12, r.top - 300), { platzhalter: 'Befehl oder Fähigkeit suchen …', titel: 'KI-Befehle',
             kopf: UI.amTelefon() ? '' : '<div class="grp">KI-Befehle</div>',
-            fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.',
+            fuss: 'Schreibbefehle und Fähigkeiten auch im Chat mit <b>@</b> vor dem Namen.',
             ...(anker instanceof HTMLElement ? { anker } : {}) });
         amKnopf(anker, m);
         m.addEventListener('click', async (e) => {
@@ -1647,13 +1647,35 @@ const KI = (() => {
                 alsKarteikarten(antwort);
             }
             if (b.dataset.a === 'ersetzen')
-                ersetzen(antwort, quelle, opt);
+                await ersetzen(antwort, quelle, opt);
         });
         ziel.appendChild(leiste);
     };
-    const ersetzen = (antwort, quelle, opt) => {
+    const seiteDesBlocks = (id) => {
+        let b = id ? Store.getBlock(id) : null;
+        for (let n = 0; b && n < 40; n++) {
+            if (b.type === 'page')
+                return b.id;
+            b = b.parentId ? Store.getBlock(b.parentId) : null;
+        }
+        return App.aktuelleSeite();
+    };
+    const fassungVorKi = async (blockId) => {
+        try {
+            await Store.versionSpeichern(seiteDesBlocks(blockId), 'vor KI-Änderung');
+            return true;
+        }
+        catch (e) {
+            UI.toast('Die Sicherungsfassung liess sich nicht schreiben, deshalb wurde nichts ersetzt: ' +
+                (e instanceof Error ? e.message : String(e)));
+            return false;
+        }
+    };
+    const ersetzen = async (antwort, quelle, opt) => {
         if (quelle.wo === 'Block' && opt.block?.id) {
-            Store.updateBlock(opt.block.id, { text: antwort });
+            if (!await fassungVorKi(opt.block.id))
+                return;
+            Store.updateBlock(opt.block.id, { text: antwort, herkunft: 'ki' });
             App.zeichneSeite();
             UI.toast('Ersetzt');
             return;
@@ -1663,7 +1685,9 @@ const KI = (() => {
         const alt = String(bl?.text || '');
         const i = mark ? alt.indexOf(mark.text) : -1;
         if (bl && mark && i >= 0 && alt.indexOf(mark.text, i + 1) < 0) {
-            Store.updateBlock(bl.id, { text: alt.slice(0, i) + antwort + alt.slice(i + mark.text.length) });
+            if (!await fassungVorKi(bl.id))
+                return;
+            Store.updateBlock(bl.id, { text: alt.slice(0, i) + antwort + alt.slice(i + mark.text.length), herkunft: 'ki' });
             App.zeichneSeite();
             UI.toast('Ersetzt');
             return;
@@ -1675,12 +1699,15 @@ const KI = (() => {
             alsBloeckeEinfuegen(antwort);
             return;
         }
+        const blk = (bereich.startContainer instanceof Element ? bereich.startContainer : bereich.startContainer.parentElement)?.closest?.('.blk');
+        const bid = blk instanceof HTMLElement ? blk.dataset.bid || '' : '';
+        if (bid && !await fassungVorKi(bid))
+            return;
         bereich.deleteContents();
         bereich.insertNode(document.createTextNode(antwort));
-        const blk = (bereich.startContainer instanceof Element ? bereich.startContainer : bereich.startContainer.parentElement)?.closest?.('.blk');
         const ct = blk?.querySelector('.ct');
-        if (blk instanceof HTMLElement && ct && blk.dataset.bid)
-            Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+        if (bid && ct)
+            Store.updateBlock(bid, { text: ct.textContent, herkunft: 'ki' });
         UI.toast('Ersetzt');
     };
     const atBefehl = (text) => {
@@ -1697,6 +1724,10 @@ const KI = (() => {
             return null;
         kandidaten.sort((a, b) => b.name.length - a.name.length);
         const k = kandidaten[0];
+        const seite = [...erwaehnt.values()].some(t => t.length >= k.name.length && klein.startsWith(t.toLowerCase()) &&
+            (roh.length === t.length || /\s/.test(roh.charAt(t.length))));
+        if (seite)
+            return null;
         return { ...(k.f ? { f: k.f } : {}), ...(k.b ? { b: k.b } : {}), rest: roh.slice(k.name.length).trim() };
     };
     const alsBloeckeEinfuegen = (text) => {
@@ -1846,7 +1877,7 @@ const KI = (() => {
                     liste.map((f) => '<div class="we-zeile">' +
                         `<button class="we-zeile-name" data-b="${esc(f.id)}"><span>${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>` +
                         `<button class="we-zeile-weg" data-w="${esc(f.id)}" data-loeschknopf="Löschen" ` +
-                        `aria-label="Fähigkeit „${esc(f.name)}“ löschen" title="Löschen">🗑</button></div>`).join('') +
+                        `aria-label="Fähigkeit „${esc(f.name)}“ löschen" title="Fähigkeit „${esc(f.name)}“ löschen">🗑</button></div>`).join('') +
                     '</div>' +
                     '<div class="we-fuss"><button class="we-knopf" data-a="neu">Fähigkeit hinzufügen</button></div>' +
                     '</div>';
@@ -2064,14 +2095,17 @@ const KI = (() => {
     };
     const erwaehnenMenue = (ta, anker, mitFaehig, atStelle = -1) => {
         const r = rechteckVon(anker);
-        const seiten = Object.values(Store.cache.blocks)
-            .filter(x => x.type === 'page' && x.alive !== false && x.parentTable !== 'collection')
-            .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || ''))).slice(0, 60);
+        const neu = (a, b) => String(b.edited || '').localeCompare(String(a.edited || ''));
+        const alle = Object.values(Store.cache.blocks).filter(x => x.type === 'page' && x.alive !== false);
+        const seiten = alle.filter(x => x.parentTable !== 'collection').sort(neu).slice(0, 60);
+        const zeilen = alle.filter(x => x.parentTable === 'collection').sort(neu).slice(0, 40);
         const fRows = mitFaehig
             ? '<div class="grp">Fähigkeiten</div>' + faehigkeiten().map((f) => `<button data-f="${esc(f.id)}"><span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('')
             : '';
         const m = UI.menuMitSuche(fRows + '<div class="grp">Seiten</div>' +
-            seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join(''), r.left, Math.max(12, r.top - 300), { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
+            seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') +
+            (zeilen.length ? '<div class="grp">Datenbankzeilen</div>' +
+                zeilen.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '▦')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') : ''), r.left, Math.max(12, r.top - 300), { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
             titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',
             kopf: UI.amTelefon() ? '' : '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
         const ohneAt = () => atStelle >= 0 && ta.value.charAt(atStelle) === '@'

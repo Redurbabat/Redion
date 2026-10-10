@@ -1931,7 +1931,11 @@ const KI = (() => {
    */
   const befehlsMenue = (anker: any, opt: { text?: string; block?: any; zuerst?: 'faehig' | 'schreiben' } = {}) => {
     const r = rechteckVon(anker);
-    const mark = opt.text ? null : markierung();
+    /* Die Markierung wird beim ÖFFNEN gemerkt — auch wenn die Auswahlleiste
+       den Text mitgibt. Gleich nimmt das Suchfeld den Fokus und mit ihm die
+       Auswahl im Dokument; ohne Marke fiel „Markierung ersetzen" auf „als
+       neuen Block anhängen" zurück (Durchsicht 10. Oktober, test599 §7h). */
+    const mark = markierung();
     const liste = faehigkeiten();
     /* Eine eingebaute Fähigkeit IST ihr Katalogeintrag — beide zu zeigen
        wäre derselbe Befehl zweimal unter zwei Namen. Sie steht EINMAL da,
@@ -1958,7 +1962,9 @@ const KI = (() => {
         /* Am Telefon trägt das Blatt den Titel; der Kopf stünde gleich
            darunter noch einmal (gesehen im Bild, test599 §6). */
         kopf: UI.amTelefon() ? '' : '<div class="grp">KI-Befehle</div>',
-        fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.',
+        /* „@" kennt die Schreibbefehle und die Fähigkeiten (`atBefehl`), die
+           Bau-Werkzeuge nicht — sie fragen zuerst, was gebaut werden soll. */
+        fuss: 'Schreibbefehle und Fähigkeiten auch im Chat mit <b>@</b> vor dem Namen.',
         ...(anker instanceof HTMLElement ? { anker } : {}) });
     amKnopf(anker, m);
     m.addEventListener('click', async e => {
@@ -2059,18 +2065,43 @@ const KI = (() => {
       if (b.dataset.a === 'nochmal')  { schreibLauf(befehl, auftrag, opt); }
       if (b.dataset.a === 'darunter') { alsBloeckeEinfuegen(antwort); }
       if (b.dataset.a === 'karteikarten') { alsKarteikarten(antwort); }
-      if (b.dataset.a === 'ersetzen') ersetzen(antwort, quelle, opt);
+      if (b.dataset.a === 'ersetzen') await ersetzen(antwort, quelle, opt);
     });
     ziel.appendChild(leiste);
+  };
+
+  /** Die Seite, zu der ein Block gehört — für die Fassung vor dem Tausch. */
+  const seiteDesBlocks = (id: string): string => {
+    let b = id ? Store.getBlock(id) : null;
+    for (let n = 0; b && n < 40; n++) {
+      if (b.type === 'page') return b.id;
+      b = b.parentId ? Store.getBlock(b.parentId) : null;
+    }
+    return App.aktuelleSeite();
+  };
+
+  /** Eine Fassung „vor KI-Änderung" — VOR dem Schreiben, wie bei den
+      Werkzeugen des Agenten (E656, §21: KI-Ausgaben versioniert). Misslingt
+      sie, wird nichts geändert: der Tausch ohne Rückweg wäre der Schaden. */
+  const fassungVorKi = async (blockId: string): Promise<boolean> => {
+    try { await Store.versionSpeichern(seiteDesBlocks(blockId), 'vor KI-Änderung'); return true; }
+    catch (e: unknown) {
+      UI.toast('Die Sicherungsfassung liess sich nicht schreiben, deshalb wurde nichts ersetzt: ' +
+               (e instanceof Error ? e.message : String(e)));
+      return false;
+    }
   };
 
   /** Ersetzen — im gespeicherten Text, nicht im gezeichneten. Steht die
       Markierung genau einmal im Block, wird sie dort getauscht; das Markdown
       drumherum bleibt (vorher wurde `ct.textContent` zurückgeschrieben, und
-      jede Auszeichnung im Block ging verloren — der Fehler aus E668). */
-  const ersetzen = (antwort: string, quelle: ReturnType<typeof eingabe>, opt: KiLauf): void => {
+      jede Auszeichnung im Block ging verloren — der Fehler aus E668).
+      Vor jedem Tausch eine Fassung, und der Block trägt `herkunft: 'ki'`
+      (E307/E656): der Streifen sagt „hier war die KI". */
+  const ersetzen = async (antwort: string, quelle: ReturnType<typeof eingabe>, opt: KiLauf): Promise<void> => {
     if (quelle.wo === 'Block' && opt.block?.id) {
-      Store.updateBlock(opt.block.id, { text: antwort });
+      if (!await fassungVorKi(opt.block.id)) return;
+      Store.updateBlock(opt.block.id, { text: antwort, herkunft: 'ki' });
       App.zeichneSeite(); UI.toast('Ersetzt'); return;
     }
     const mark = quelle.mark;
@@ -2078,7 +2109,8 @@ const KI = (() => {
     const alt = String(bl?.text || '');
     const i = mark ? alt.indexOf(mark.text) : -1;
     if (bl && mark && i >= 0 && alt.indexOf(mark.text, i + 1) < 0) {
-      Store.updateBlock(bl.id, { text: alt.slice(0, i) + antwort + alt.slice(i + mark.text.length) });
+      if (!await fassungVorKi(bl.id)) return;
+      Store.updateBlock(bl.id, { text: alt.slice(0, i) + antwort + alt.slice(i + mark.text.length), herkunft: 'ki' });
       App.zeichneSeite(); UI.toast('Ersetzt'); return;
     }
     /* Nicht eindeutig zu finden (die Markierung läuft über Auszeichnung
@@ -2087,12 +2119,13 @@ const KI = (() => {
     const bereich = sel && sel.rangeCount && String(sel).trim() ? sel.getRangeAt(0)
       : (mark?.bereich && mark.bereich.startContainer.isConnected ? mark.bereich : null);
     if (!bereich) { alsBloeckeEinfuegen(antwort); return; }
+    const blk = (bereich.startContainer instanceof Element ? bereich.startContainer : bereich.startContainer.parentElement)?.closest?.('.blk');
+    const bid = blk instanceof HTMLElement ? blk.dataset.bid || '' : '';
+    if (bid && !await fassungVorKi(bid)) return;
     bereich.deleteContents();
     bereich.insertNode(document.createTextNode(antwort));
-    const blk = (bereich.startContainer instanceof Element ? bereich.startContainer : bereich.startContainer.parentElement)?.closest?.('.blk');
     const ct = blk?.querySelector('.ct');
-    if (blk instanceof HTMLElement && ct && blk.dataset.bid)
-      Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+    if (bid && ct) Store.updateBlock(bid, { text: ct.textContent, herkunft: 'ki' });
     UI.toast('Ersetzt');
   };
 
@@ -2112,6 +2145,12 @@ const KI = (() => {
     if (!kandidaten.length) return null;
     kandidaten.sort((a, b) => b.name.length - a.name.length);
     const k = kandidaten[0]!;
+    /* Eine ERWÄHNTE Seite geht vor, wenn ihr Titel mindestens so lang passt:
+       „@Zusammenfassen Woche …" ist die Seite „Zusammenfassen Woche", kein
+       Befehl „Zusammenfassen" auf „Woche …" (Durchsicht 10. Oktober). */
+    const seite = [...erwaehnt.values()].some(t => t.length >= k.name.length && klein.startsWith(t.toLowerCase()) &&
+      (roh.length === t.length || /\s/.test(roh.charAt(t.length))));
+    if (seite) return null;
     return { ...(k.f ? { f: k.f } : {}), ...(k.b ? { b: k.b } : {}), rest: roh.slice(k.name.length).trim() };
   };
 
@@ -2246,7 +2285,9 @@ const KI = (() => {
             liste.map((f: any) => '<div class="we-zeile">' +
               `<button class="we-zeile-name" data-b="${esc(f.id)}"><span>${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>` +
               `<button class="we-zeile-weg" data-w="${esc(f.id)}" data-loeschknopf="Löschen" ` +
-                `aria-label="Fähigkeit „${esc(f.name)}“ löschen" title="Löschen">🗑</button></div>`).join('') +
+                /* Der Hinweis nennt, WAS gelöscht wird — ein nacktes „Löschen"
+                   hörte der Vorleser als „Löschen: Löschen" (test586, E709). */
+                `aria-label="Fähigkeit „${esc(f.name)}“ löschen" title="Fähigkeit „${esc(f.name)}“ löschen">🗑</button></div>`).join('') +
           '</div>' +
           '<div class="we-fuss"><button class="we-knopf" data-a="neu">Fähigkeit hinzufügen</button></div>' +
         '</div>';
@@ -2480,16 +2521,21 @@ const KI = (() => {
    */
   const erwaehnenMenue = (ta: HTMLTextAreaElement, anker: any, mitFaehig: boolean, atStelle = -1) => {
     const r = rechteckVon(anker);
-    const seiten = Object.values<any>(Store.cache.blocks)
-      .filter(x => x.type === 'page' && x.alive !== false && x.parentTable !== 'collection')
-      .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || ''))).slice(0, 60);
+    const neu = (a: any, b: any) => String(b.edited || '').localeCompare(String(a.edited || ''));
+    const alle = Object.values<any>(Store.cache.blocks).filter(x => x.type === 'page' && x.alive !== false);
+    const seiten = alle.filter(x => x.parentTable !== 'collection').sort(neu).slice(0, 60);
+    /* Datenbankzeilen sind Seiten (§17) und waren vor E724 erwähnbar — sie
+       stehen nach den Seiten in einer eigenen Gruppe, statt zu fehlen (§43). */
+    const zeilen = alle.filter(x => x.parentTable === 'collection').sort(neu).slice(0, 40);
     const fRows = mitFaehig
       ? '<div class="grp">Fähigkeiten</div>' + faehigkeiten().map((f: any) =>
           `<button data-f="${esc(f.id)}"><span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('')
       : '';
     const m = UI.menuMitSuche(
       fRows + '<div class="grp">Seiten</div>' +
-      seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join(''),
+      seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') +
+      (zeilen.length ? '<div class="grp">Datenbankzeilen</div>' +
+        zeilen.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '▦')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') : ''),
       r.left, Math.max(12, r.top - 300),
       { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
         titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',

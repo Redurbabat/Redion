@@ -74,7 +74,11 @@
    da, und nicht nur als Farbe (§38): null aktive Quellen heisst „0". */
 #ai #ai-quellen { flex: 0 0 auto; gap: 3px; padding-inline: 6px; }
 #ai #ai-quellen .ai-quellen-zahl { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
-#ai #ai-quellen.ohne { color: var(--text-faint); }
+/* Ohne aktive Quelle sagt es die Zahl „0" und der Name des Knopfs — nicht
+   die Farbe (§38). `--text-faint` kam in fünf Schemata nur auf 3,7 bis
+   4,0 : 1 (Durchsicht 10. Oktober); der Knopf steht jetzt in Ruhe da, nicht
+   mehr hinter einer Klappe, also gilt die Lesbarkeit der übrigen Leiste. */
+#ai #ai-quellen.ohne { color: var(--text-dim); }
 
 /* Die Schalter im Quellenmenü. 32 px, und das ist ein NEBENWEG (§37, E627):
    man stellt die Quellen einmal ein und fasst sie danach selten wieder an;
@@ -91,11 +95,25 @@
    „Neuer Chat" leert #chat, und sie sind wieder da. Nur die Umgebung neu
    ordnen: Originalmasse, Schatten und Glimmen der Bau-Knöpfe bleiben (E528). */
 #ai .ai-start { padding: 2px 18px 10px; }
+/* Die Überschrift in `--text-dim`: mit `--text-faint` kam sie in sieben
+   der zehn Schemata nur auf 3,5 bis 3,9 : 1 (Durchsicht 10. Oktober) — in
+   der Schublade stand sie hinter einer Klappe, jetzt steht sie in Ruhe da. */
 #ai .ai-start h3 {
-  margin: 0 0 9px; color: var(--text-faint);
+  margin: 0 0 9px; color: var(--text-dim);
   font-size: 11px; font-weight: 600; letter-spacing: .04em;
 }
 #ai .ai-start .ai-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 7px; overflow: visible; margin: 0; }
+/* 44 px AM FINGER (§37). Die acht Seitenaktionen sind der Hauptweg des
+   leeren Chats; in der Schublade galten sie als Nebenweg mit 32 px „weil
+   aufklappbar", und der Grund ging mit ihr (Durchsicht 10. Oktober: 28 bis
+   30 px gemessen, test599 §3). Am Telefon und unter einem groben Zeiger
+   also 44 px. Am Rechner mit Maus bleiben die Originalmasse aus E528 —
+   Redur, 9. September: die beiden Bau-Knöpfe „waren ausdrücklich schon
+   richtig", und ihr Look (Funkel, Schatten, Glimmen) hängt an der Höhe.
+   Nur die Höhe wächst: Schrift, Rand und Effekt bleiben. */
+@media (max-width: 760px), (pointer: coarse) {
+  #ai .ai-start .ai-quick button { min-height: var(--touch-min); }
+}
 #ai:has(#chat .msg.u) .ai-start { display: none; }
 
 /* Kleine, abgeschlossene Bewegungen an vorhandenen Oberflächen. */
