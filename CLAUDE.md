@@ -929,7 +929,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 534 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 535 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1622,6 +1622,21 @@ die Durchsicht fand dabei, dass `test362` an seinem eigenen Stand rot war
 Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 534.*
 
+*Und 535: `test600` — die Bibliothek mit EINER Wahl je Kategorie und die
+EINE Suche, die ihren Bereich kennt (E725). Redurs Notiz unter dem Foto
+der Bibliothek, „ich sollte von jeder kategorie nur eine sehen und die
+anderen alles unterdem das beim ^ … und die sucher hier sollte es bei der
+ganz obe such integriert sein", in sieben Abschnitten: Ort, Art und Form
+je ein Wähler in einer Zeile, in Deckel, Regal und Liste, bei 1440 und
+390; jede frühere Wahl mit genau einem Namen in einem Menü; der erste
+Deckel im ersten Bild des Telefons; kein Suchfeld mehr auf der Seite; und
+Strg P, die Kapsel und ⌕ gehen in der Bibliothek mit [Bibliothek ·
+Überall], in einer PDF mit [Dieses Dokument · Alle Dokumente · Überall]
+auf — „Dieses Dokument" meldet dieselbe Zahl wie die Suchleiste, weil sie
+der Motor ist. Gegen den Grundstand rot: 30 von 191 bestanden. Gezählt am
+10. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+535.*
+
 ### Die Befehle
 
 ```txt
@@ -1638,7 +1653,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 534 Läufe
+npm run pruefen                      alle 535 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1728,7 +1743,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 534 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 535 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
