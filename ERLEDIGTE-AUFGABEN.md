@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 10. Oktober 2026 · E721 nach der Durchsicht — Decke, Ankunft, Stelle, Zeichen, Name, Meldung
+
+**Redur** (Masterprompt vom 29. September, S. 19): „Hier füge ... und oder
+beim rechts klicke sollte es mir zeigen löschen" — „Für den rechts klick
+bei eine dokument oder eine text usw wo es passen kann".
+
+**Fund** (unabhängige Durchsicht an `ef3e19693`): `test362` §7 rot (eine
+rohe 22px im Platzhalter der Ecke); die Ankunft der Karten im Studio weg
+(0 von 6 — der Wähler traf die neue `.bib-zelle` nicht); „Zu Favoriten"
+und „Duplizieren" aus dem Seitenmenü warfen eine lange Seite an den Anfang;
+das Zeichen von „In den Papierkorb" wurde unter Zeiger und Fokus weiss;
+`aria-expanded` fehlte am „…" und am ⋯; „Zuletzt geöffnet" hatte kein
+Menü; Gruppen in `UI.wahl` ohne Namen; eine scheiternde Aktion sagte
+nichts; L242 Punkt 1 behauptete zu viel. Dazu `test580`, an `ef3e19693`
+ebenfalls rot und in keiner Liste.
+
+**Bau:** Marke statt roher Zahl (`calc(var(--touch-min) / 2)`);
+`:is(.bib-deckel, .bib-zelle)` für die Ankunft; auf der Seite der alte Weg
+für Favorit und Duplizieren; `:not([data-gefahr])` in `studio.css`;
+`Menue.aufgeklappt` für aria-expanded; der Binder kennt
+`.rmo-recent-card`; `role="group"` mit Namen in `UI.wahl`; eine Meldung,
+wenn `Register.aktionen.tun` scheitert; L242 Punkt 1 genau, Punkt 5 neu
+(Schlucker am Tablet, nicht nachzustellen).
+
+**Prüfung:** `test597` 91/91 (zwölf neue Zusagen, rot gegen `ef3e19693`),
+`test362` 18/18, `test580` angepasst (Gefahr am Rechner wie am Telefon
+ausgenommen, „Löschen ist rot" jetzt für beide — die Rechner-Zeile ist am
+Grundstand rot); zehn Gegenproben in zwei Runden; Nachbarn im Nachtrag von
+E721, Zahlen in `messungen.md` §91.
+
 ## 6. Oktober 2026 · E721 — Ein Menü je Ding (Masterprompt #9)
 
 **Redur** (Masterprompt vom 29. September, S. 19, unter dem Foto der

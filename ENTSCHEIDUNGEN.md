@@ -61817,7 +61817,7 @@ also `aria-hidden`, also für Tastatur und Vorleser nicht da (§38).
 
 **Was es kostet.** Eine neue Datei (`register/aktionen.js`, im
 `GRUNDSTOCK` und in `index.html`). Start 1853 → 1859 KB gzip
-(`test388` §5, Decke 1950). Ein Knopf mehr je Karte (8 → 14 Knöpfe bei 6 Karten;
+(`test388` §5, Decke 1950; nach der Durchsicht 1860). Ein Knopf mehr je Karte (8 → 14 Knöpfe bei 6 Karten;
 die Ruhe-Zählung von `test248` zählt Leiste, Kopf und Menüband, nicht die
 Karten, und blieb grün). Wer Menüs mit
 Rolle öffnet, findet den Fokus im Menü statt am Auslöser — für die Maus
@@ -61832,7 +61832,9 @@ langes Drücken). Die Listen von Hand in `notebook.ts` (Heft, Fach) und
 `bibliothek.ts` → `Register.aktionen` (jeder Eintrag bleibt; neu dazu in der
 Bibliothek „Als Seite bearbeiten", „Symbol ändern", „Verschieben nach …",
 „Duplizieren", „Link kopieren"). Der Schlucker in `pwa.ts` → `Menue`.
-Kein Menüeintrag ist irgendwo verschwunden.
+Kein Menüeintrag ist irgendwo verschwunden. Verloren ging dabei, ohne dass es hier stand, die
+Ankunft der Karten im Studio (E702) — die Durchsicht vom 10. Oktober hat
+sie gefunden, und sie ist zurück (Nachtrag unten).
 
 **Gefunden auf dem Weg.**
 
@@ -61863,7 +61865,8 @@ Konstante ohne Leser, und eine Bedingung, die TypeScript als `null`
 erkannte) — §52.6 sagt, das ist keine Gegenprobe; beide wurden so
 umformuliert, dass sie bauen, und erst dieser Lauf zählt.
 
-**Nachbarn** (unter dem Schloss): `test597` 75/75, `test37` 56/56,
+**Nachbarn** (unter dem Schloss; Stand 6. Oktober — der Stand nach der
+Durchsicht steht im Nachtrag unten): `test597` 75/75 (heute 91/91), `test37` 56/56,
 `test114` (mit 23), `test303` 18/18, `test432` 48/48, `test560` 28/28,
 `test531` 19/19, `test33` 107/107, `test430` 39/39, `test429` 17/17,
 `test431` 45/45, `test35` 44/44, `test36` 28/28, `test40` 25/25, `test212`
@@ -61873,7 +61876,7 @@ umformuliert, dass sie bauen, und erst dieser Lauf zählt.
 `test142`, `test155`, `test165`, `test194`, `test196`, `test247` 107,
 `test586` 60/60, `test587` 101/101, `test588` 78/78, `test589`, `test590`
 68/68, `test594` 76/76, `test579` 78, `test245` 51, `test127`, `test143`,
-`test362` 18/18, `test388` 22 (1859 KB), `test412` 27/27. Die Einzeldatei
+`test362` 18/18 (an `ef3e19693` rot, siehe Nachtrag; heute 18/18), `test388` 22 (1859 KB; heute 1860), `test412` 27/27. Die Einzeldatei
 allein in einem Ordner über `file://`: Rechtsklick auf eine Karte → neun
 Einträge, „In den Papierkorb“ legt mit Frist weg, keine Ausnahme. Datei-Wächter:
 550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105. `test587`
@@ -61919,3 +61922,111 @@ Grund → rot; Stern auf `right:20px` → „Stern und „…" decken einander".
 Gemessen wird der SICHTBARE Text: ein Range über einer Zeile mit
 `overflow:hidden` meldet den ganzen Text, auch den hinter ihrem „…" — der
 erste Anlauf des Abschnitts war deshalb rot, obwohl das Bild sauber war.
+
+**Nachtrag nach der Durchsicht vom 10. Oktober.** Eine unabhängige
+Durchsicht hat an `ef3e19693` drei blockierende und mehrere kleine Funde
+gemacht. Jeder bekam zuerst einen Wächter (`test597` §2, §3, §9, §12,
+§14–§17 — rot gegen `ef3e19693` mit 80 ok und 10 offen, §12 mit 82/9),
+dann die Reparatur:
+
+- **Die Decke der Marken.** `test362` §7 war rot: der Platzhalter der
+  Ecke schrieb eine rohe `22px` („ist {"22":86}, soll {"22":85}"). Jetzt
+  `height:calc(var(--touch-min) / 2)` — die halbe Trefferfläche des „…"
+  (§37), mit dem Grund an der Stelle. `marken-decke.json` wurde NICHT
+  angehoben: das hiesse einen Wächter lockern (§31, §47).
+- **Die Ankunft der Karten.** `studio.ts` lässt die ersten sechs Karten
+  beim Ortswechsel ankommen (E702) und suchte sie als
+  `.bib-gitter>.bib-deckel`. Seit diesem Bogen steht dort die
+  `.bib-zelle` — gemessen 0 von 6 bewegt. Jetzt `:is(.bib-deckel,
+  .bib-zelle)`: die Zelle kommt mit ihrem „…" an (Notizhefte und andere
+  Gitter ohne Zelle bleiben beim Deckel).
+- **„Zu Favoriten" und „Duplizieren" aus dem Seitenmenü** riefen über das
+  Register `nachAenderung` für die offene Seite — die zeichnete sie neu
+  und warf den Leser an den Anfang (scrollTop 1200 → 0, der Block ein
+  neues Element). Vor E721 kippte „Zu Favoriten" nur Baum und
+  Brotkrume, „Duplizieren" zeichnete nur den Baum. Auf der Seite gilt
+  wieder genau das; neu gezeichnet wird nur, wo Karten das Ding zeigen
+  (Bibliothek, Notizhefte).
+- **Das Zeichen der Gefahr unter Zeiger und Fokus.** `studio.css` färbte
+  das Zeichen jedes Eintrags unter Zeiger, Fokus und `.jetzt` in die
+  Textfarbe, ausser er trug `.rot` — und `.rot` setzt das Menü nur am
+  Telefon. Das Wort blieb rot, der Papierkorb daneben wurde weiss
+  (rgb(241, 242, 244) im Standard). Jetzt auch `:not([data-gefahr])`.
+- **aria-expanded.** Das „…" und das ⋯ der Seitenleiste trugen
+  `aria-haspopup="menu"`, aber nie `aria-expanded`; der Zustand
+  `[aria-expanded="true"]` im Stilblatt war tot. `Menue.aufgeklappt(anker,
+  menü)` setzt es jetzt an einem Anker mit aria-haspopup und nimmt es
+  zurück, sobald das Menü aus dem Baum geht — egal, wer es entfernt. Eine
+  Baumzeile bleibt aussen vor (dort heisst aria-expanded „aufgeklappt").
+  Benutzt von `Menue.aktionen`, dem Seitenmenü und `UI.wahl`; das offene
+  „…" zeigt jetzt auch seinen Grund (gemessen rgb(30, 32, 35) → rgb(43,
+  45, 48) dunkel, rgb(247, 247, 245) → rgb(239, 239, 238) hell).
+- **„Zuletzt geöffnet"** steht auf derselben Bibliotheksseite über den
+  Deckeln und zeigte dieselben Dokumente ohne ihr Menü: Rechtsklick gab
+  das Browsermenü, langes Drücken öffnete die Seite. Jetzt kennt der
+  Binder `.rmo-recent-card[data-rmo-open]` — dasselbe Menü, Tastatur, Entf.
+- **Gruppen in `UI.wahl`** sind benannte Gruppen (`role="group"`,
+  `aria-labelledby` auf ihre Überschrift); die Überschrift allein trug
+  `role="presentation"` und wurde nie vorgelesen.
+- **Eine Aktion, die scheitert, sagt es.** `Register.aktionen.tun` schrieb
+  nur in die Konsole; jetzt steht dazu „„Umbenennen" hat nicht geklappt."
+  da — sofort und wenn die Aktion als Promise später scheitert (§10).
+- **L242 Punkt 1** sagte, die Lösch-Einträge von PDF-Seite, Schaltplan,
+  Gedankenkarte und Kasten seien jetzt rot — dort gibt es keinen
+  Lösch-Eintrag in einem `.menu`. Der Punkt nennt jetzt genau, welche
+  Einträge `data-gefahr` bekamen und welche noch nicht. Punkt 5 nennt den
+  Schlucker am Tablet, der sich mit CDP nicht nachstellen liess (eigene
+  Sonde bei 1024 × 1366: ein Tipp 100, 300 und 900 ms nach dem Loslassen
+  traf jedes Mal) — ohne roten Wächter keine Änderung.
+
+`test580` war an `ef3e19693` ebenfalls rot und stand in keiner Liste
+(„Rechner · ⋯-Menü: die Zeichen sind still (grau) — ist ["del"]"; am
+Grundstand 1bfaca53 grün). Er nahm die Gefahr am Telefon aus (`.rot`);
+seit diesem Bogen ist sie auch am Rechner rot (`data-gefahr`). Angepasst,
+nicht gelockert: `data-gefahr` wird ebenso ausgenommen, und „Löschen ist
+rot" gilt jetzt für Rechner UND Telefon — die neue Rechner-Zeile ist am
+Grundstand rot („Löschen ist rot wie am Telefon (E721) — false").
+
+Gegenproben (eigener Arbeitsbaum auf `1eb34ee9d`, gebaut ohne Fehler,
+in zwei Runden, je die Zeile rot gesehen und zurückgenommen):
+
+```txt
+A  Wähler der Ankunft wieder >.bib-deckel        „Die ersten Karten des Gitters kommen an (0 von 6 bewegt)"
+A  Favorit auf der Seite wieder mit nachAenderung „„Zu Favoriten" … bleibt an ihrer Stelle — oben 1200 → 0"
+A  scheitern() ohne Meldung                      „Wirft eine Aktion, steht eine Meldung … — sofort: """ (und „später")
+A  Seitenmenü ohne Menue.aufgeklappt             „Das ⋯ der Zeile sagt aria-expanded=true … — wert: null"
+B  studio.css ohne :not([data-gefahr])           „… sein Zeichen bleibt mit dem Fokus … — ist rgb(55, 53, 47)"
+                                                 und „… unter dem Zeiger in --gefahr — standard: rgb(241, 242, 244)"
+B  Binder ohne .rmo-recent-card                  „„Zuletzt geöffnet": Rechtsklick … — verhindert: false"
+B  UI.wahl-Gruppe ohne role/labelledby           „Die Gruppe „Form" ist eine benannte Gruppe — gruppe: false"
+B  Menue.aktionen ohne aufgeklappt               „Das „…" sagt aria-expanded=true … — offen2: null"
+B  Duplizieren auf der Seite mit nachAenderung   „„Duplizieren" … bleibt an ihrer Stelle — oben 1200 → 0"
+B  Platzhalter wieder height:22px                test362: „ist {"22":86}, soll {"22":85}"
+```
+
+Runde A 86 ok, 5 offen; Runde B 85 ok, 6 offen — genau die erwarteten
+Zeilen, keine andere.
+
+Nachbarn nach dem Nachtrag (unter dem Schloss): `test597` 91/91,
+`test362` 18/18, `test581` 93, `test580` grün, `test494` 153, `test432`
+48/48, `test114`, `test37` 56/56, `test303` 18/18, `test560` 28/28,
+`test531` 19/19, `test33` 107/107, `test265` 39, `test364` 54/54,
+`test587` 101, `test594` 76/76, `test388` 22 (1860 KB), `test212` 32/32,
+`test35` 44/44, `test36` 28/28, `test430` 39/39, `test429` 17/17,
+`test431` 45/45, `test589`, `test585` 91/91 (im Stück einmal rot unter
+Last — „landet genau auf der neuen Wahl", 415,8 gegen 418,2 —, allein
+grün). Datei-Wächter: 550, 549, 225, 401, 402, 537, 290, 298, 410, 400,
+109, 87, 105. Dienststand v1429.
+
+Bilder (nicht eingecheckt, §55.4), vorher `ef3e19693` und nachher, 1440 ×
+900 und 390 × 844, hell und dunkel: der Papierkorb mit dem Fokus (das
+Zeichen war weiss, jetzt rot) und unter dem Zeiger; das offene „…" nah
+(jetzt mit Grund); „Zuletzt geöffnet" mit Rechtsklick am Rechner und
+langem Drücken am Telefon (vorher: nichts am Rechner, am Telefon ging die
+Seite auf); eine lange Seite nach „Zu Favoriten" (vorher oben bei Absatz
+1, jetzt bei Absatz 31 — am Telefon bei 17); die Ankunft 70 ms nach dem
+Ortswechsel (die vierte Karte noch halb durchsichtig).
+
+Das Muster bleibt das des Touch Kits, als Redion-Code nachgebaut — auch in
+diesem Nachtrag ist kein fremder Code dazugekommen, `FREMDCODE.md` braucht
+keinen Eintrag.

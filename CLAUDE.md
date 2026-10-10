@@ -1597,8 +1597,8 @@ selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 533.*
 
 *Und 534: `test597` — ein Menü je Ding (E721). Redurs Notiz unter dem Foto
 der Bibliothekskarten, auf dem er den ☆ oben rechts eingekreist hat: „Hier
-füge ... und oder beim rechts klicke sollte es mir zeigen löschen", in 79
-Zusagen über fünfzehn Abschnitte: ein echtes „…" NEBEN jedem Deckel (44 ×
+füge ... und oder beim rechts klicke sollte es mir zeigen löschen", in 91
+Zusagen über achtzehn Abschnitte: ein echtes „…" NEBEN jedem Deckel (44 ×
 44, benannt), derselbe Inhalt auf Rechtsklick, Kontextmenü-Taste,
 Umschalt+F10 und langes Drücken, Entf legt weg, Rot heisst Gefahr in allen
 zehn Schemata — und Umbenennen und Papierkorb gehen von allen Oberflächen
@@ -1612,7 +1612,13 @@ wo 5,9 ist; und er klickte in eine Seitenleiste, die es am Rechner seit der
 neuen Schale gar nicht mehr gibt — der Baum steht dort in der Lade der
 Kante. Und einen Fund hat wieder das BILD gemacht, nicht er: der Stern,
 der für das „…" nach links rückte, stand mitten im Vorschautext — „Willkommen
-in Redi☆n"; seither misst sein §1b den sichtbaren Text unter der Ecke.
+in Redi☆n"; seither misst sein §1b den sichtbaren Text unter der Ecke. Zwölf
+Zusagen kamen nach einer unabhängigen Durchsicht dazu, jede rot gesehen:
+die Ankunft der Karten, die verloren war, weil ein Wähler die neue Zelle
+nicht traf; eine lange Seite, die nach „Zu Favoriten" an den Anfang
+sprang; ein Papierkorb, dessen Zeichen unter dem Zeiger weiss wurde. Und
+die Durchsicht fand dabei, dass `test362` an seinem eigenen Stand rot war
+— eine rohe 22px. Ein Wächter, der in der Nachbarliste fehlt, wacht nicht.
 Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 534.*
 

@@ -1748,5 +1748,13 @@ Gefunden beim Bau von E721, nicht dort entschieden — je mit dem Grund:
    `claude/bibliothek-eine-suche` (Ort, Art, Form) und
    `claude/lernzentrum-kopf` (Heute ⌃, Übersicht ⌃, Fächer) ziehen darauf
    um — keiner baut eine zweite Auswahlliste.
+4. **Nach der Durchsicht vom 10. Oktober noch offen:** die übrigen
+   Gefahr-Einträge ohne `data-gefahr` (L242 Punkt 1 nennt sie einzeln:
+   „Eine Vorlage löschen", „Alle Kacheln entfernen", „Inhalt leeren" …) —
+   jeder ist ein sichtbarer Wechsel und braucht sein Bild; und der
+   Schlucker nach langem Drücken auf einem echten Tablet (L242 Punkt 5),
+   der sich mit CDP nicht nachstellen liess. `UI.wahl` gibt seinen
+   Gruppen jetzt Namen (`role="group"`) — wer darauf umzieht, prüft das
+   Blatt am Telefon mit Überschrift über der Karte.
 
 

@@ -6823,3 +6823,30 @@ Zeichen der Ecke auf Text ohne Grund     2 (1440) · 3 (390) Deckel           0 
 test597                                  75 / 79                             79 / 79
 Start (test388 §5, gzip)                 1859 KB                             1859 KB
 ```
+
+Nachtrag 10. Oktober, nach der Durchsicht (`test597` §2, §3, §9, §12,
+§14–§17 und `test362` §7; 1440 × 900 hell, wo nicht anders gesagt):
+
+```txt
+                                         ef3e19693                           1eb34ee9d
+test362 §7: rohe 22px in den Stilblättern 86 (Decke 85)                      85
+Ankunft der ersten Karten (Studio, E702) 0 von 6 bewegt                      6 von 6
+Seitenmenü → „Zu Favoriten", lange Seite scrollTop 1200 → 0, neu gezeichnet  1200 → 1200, derselbe Block
+Seitenmenü → „Duplizieren", lange Seite  scrollTop 1200 → 0, neu gezeichnet  1200 → 1200, derselbe Block
+Zeichen „In den Papierkorb" mit Fokus    rgb(55, 53, 47) (Text)              rgb(187, 32, 33) (--gefahr)
+… unter dem Zeiger, 10 Schemata          Textfarbe (z. B. standard            --gefahr in allen zehn
+                                         rgb(241, 242, 244))
+aria-expanded am „…" offen / zu          null / null                         true / false
+aria-expanded am ⋯ der Seitenleiste      null / null                         true / false
+Grund des offenen „…" (dunkel / hell)    rgb(30, 32, 35) / rgb(247, 247, 245) rgb(43, 45, 48) / rgb(239, 239, 238)
+„Zuletzt geöffnet": Rechtsklick          Browsermenü, 0 Einträge             9 Einträge, wie der Deckel
+UI.wahl: benannte Gruppe                 keine (role=presentation)           role=group, Name „Form"
+Aktion wirft / Promise scheitert         Meldung „" / „"                     „„Probe" hat nicht geklappt."
+test597                                  80 / 90 (§12: 82 / 91)              91 / 91
+Start (test388 §5, gzip)                 1859 KB                             1860 KB (Decke 1950)
+```
+
+Tablet-Sonde für den Schlucker nach langem Drücken (L242 Punkt 5;
+1024 × 1366, Berührung über CDP, 650 ms halten, dann ein Tipp auf
+„Umbenennen"): 100, 300 und 900 ms nach dem Loslassen je ein Treffer
+(`UI.frage` einmal gerufen, Menü zu). Nicht nachzustellen — keine Änderung.
