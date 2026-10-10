@@ -649,11 +649,9 @@ body [data-rmo~="letters"] > svg { animation:none; }
   0%, 100% { filter:blur(0); }
   50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
-/* Ein gesperrter Knopf wischt nicht (test596 §9) — ohne Gewicht, damit die
-   Rangfolge bleibt. Und der Zeiger wischt nur, wo es einen gibt: am Telefon
-   klebt `:hover` nach dem Tipp, und das Weiss der Mitte lag eine
-   Viertelsekunde auf der hellen Pille der stillen Funkel (test596 §11).
-   Fokus und Druck wischen überall. */
+/* Ein gesperrter Knopf wischt nicht, ohne Gewicht (test596 §9). Der Zeiger
+   wischt nur, wo es einen gibt — am Telefon klebt `:hover`, und das Weiss
+   lag auf der hellen Pille (test596 §11). Fokus und Druck überall. */
 body [data-rmo~="letters"]:where(:not(:disabled)):is(:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-wisch .55s ease-in-out 1;

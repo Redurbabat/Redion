@@ -1086,21 +1086,11 @@
   border-color:var(--accent-text);box-shadow:0 0 0 3px var(--lw-accent-soft)
 }
 
-/* KEIN TOTER KNOPF (E720). Die drei Regeln unten standen seit dem Umbau
-   vom 24. August (47450aaa9) in `:where(…)` — das nimmt ihnen das Gewicht:
-   `.lernwelt :where(… .lw-study-actions button …):hover` wiegt (0,2,0),
-   die Grundregel `.lernwelt .lw-study-actions button` (0,2,1). Die
-   Grundregel gewann, und siebzehn Knöpfe in fünf Ansichten blieben unter
-   dem Zeiger, wie sie waren — darunter „Trainieren", „Lernen" und
-   „Prüfungen öffnen" in der Lernzentrale (messungen §90). `:is(…)` nimmt
-   das Gewicht seines schwersten Arguments: der Zustand wiegt jetzt
-   mindestens so viel wie die Grundregel (CLAUDE.md §39). Der Funkel
-   gewinnt weiter — bausteine.css lädt später, bei gleichem Gewicht.
-   EIN GESPERRTER KNOPF ANTWORTET NICHT (Durchsicht vom 6. Oktober,
-   test596 §9): mit `:is` kam der Zustand auch bei gesperrten Knöpfen an —
-   „Wochenprüfung simulieren" wurde unter dem Zeiger heller, obwohl er
-   nichts tut. `:where(:not(:disabled))` schliesst sie aus, OHNE Gewicht:
-   so bleibt jede Rangfolge oben genau, wie sie war. */
+/* KEIN TOTER KNOPF (E720). In `:where(…)` wogen diese Zustände (0,2,0) und
+   verloren gegen die Grundregel (0,2,1) — siebzehn Knöpfe blieben unter
+   dem Zeiger, wie sie waren (messungen §90). `:is(…)` nimmt das Gewicht
+   seines schwersten Arguments (CLAUDE.md §39). `:where(:not(:disabled))`
+   lässt gesperrte Knöpfe still, OHNE Gewicht (test596 §9). */
 @media(hover:hover){
   .lernwelt .lw-nav button:where(:not(:disabled)):hover,
   .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:where(:not(:disabled)):hover,

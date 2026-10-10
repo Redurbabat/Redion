@@ -8175,21 +8175,11 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   border-color:var(--accent-text);box-shadow:0 0 0 3px var(--lw-accent-soft)
 }
 
-/* KEIN TOTER KNOPF (E720). Die drei Regeln unten standen seit dem Umbau
-   vom 24. August (47450aaa9) in `:where(…)` — das nimmt ihnen das Gewicht:
-   `.lernwelt :where(… .lw-study-actions button …):hover` wiegt (0,2,0),
-   die Grundregel `.lernwelt .lw-study-actions button` (0,2,1). Die
-   Grundregel gewann, und siebzehn Knöpfe in fünf Ansichten blieben unter
-   dem Zeiger, wie sie waren — darunter „Trainieren", „Lernen" und
-   „Prüfungen öffnen" in der Lernzentrale (messungen §90). `:is(…)` nimmt
-   das Gewicht seines schwersten Arguments: der Zustand wiegt jetzt
-   mindestens so viel wie die Grundregel (CLAUDE.md §39). Der Funkel
-   gewinnt weiter — bausteine.css lädt später, bei gleichem Gewicht.
-   EIN GESPERRTER KNOPF ANTWORTET NICHT (Durchsicht vom 6. Oktober,
-   test596 §9): mit `:is` kam der Zustand auch bei gesperrten Knöpfen an —
-   „Wochenprüfung simulieren" wurde unter dem Zeiger heller, obwohl er
-   nichts tut. `:where(:not(:disabled))` schliesst sie aus, OHNE Gewicht:
-   so bleibt jede Rangfolge oben genau, wie sie war. */
+/* KEIN TOTER KNOPF (E720). In `:where(…)` wogen diese Zustände (0,2,0) und
+   verloren gegen die Grundregel (0,2,1) — siebzehn Knöpfe blieben unter
+   dem Zeiger, wie sie waren (messungen §90). `:is(…)` nimmt das Gewicht
+   seines schwersten Arguments (CLAUDE.md §39). `:where(:not(:disabled))`
+   lässt gesperrte Knöpfe still, OHNE Gewicht (test596 §9). */
 @media(hover:hover){
   .lernwelt .lw-nav button:where(:not(:disabled)):hover,
   .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:where(:not(:disabled)):hover,
@@ -9851,11 +9841,9 @@ body [data-rmo~="letters"] > svg { animation:none; }
   0%, 100% { filter:blur(0); }
   50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
-/* Ein gesperrter Knopf wischt nicht (test596 §9) — ohne Gewicht, damit die
-   Rangfolge bleibt. Und der Zeiger wischt nur, wo es einen gibt: am Telefon
-   klebt `:hover` nach dem Tipp, und das Weiss der Mitte lag eine
-   Viertelsekunde auf der hellen Pille der stillen Funkel (test596 §11).
-   Fokus und Druck wischen überall. */
+/* Ein gesperrter Knopf wischt nicht, ohne Gewicht (test596 §9). Der Zeiger
+   wischt nur, wo es einen gibt — am Telefon klebt `:hover`, und das Weiss
+   lag auf der hellen Pille (test596 §11). Fokus und Druck überall. */
 body [data-rmo~="letters"]:where(:not(:disabled)):is(:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-wisch .55s ease-in-out 1;
@@ -22836,11 +22824,8 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
   animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
 }
-/* DER SCHEIN UNTER DEM ZEIGER GIBT ES NUR, WO ES EINEN ZEIGER GIBT (E720).
-   Am iPhone bleibt `:hover` nach einem Tipp kleben, bis man woanders
-   hintippt — der Knopf leuchtete dann weiter, die Buchstaben verwischt
-   (gesehen an den KI-Werkzeugen, karte-ki/handy-auf.png). Am Telefon
-   übernehmen der Tastenfokus und der Druck (`data-gedrueckt`, unten). */
+/* Der Schein unter dem Zeiger nur, wo es einen gibt: am iPhone klebt
+   `:hover` nach dem Tipp. Am Telefon zeigen Fokus und Druck (E720). */
 @media (hover:hover){
   .ru-funkel:where(:not(:disabled)):hover::before{
     box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
@@ -22872,24 +22857,14 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   50%{ transform:scale(2); filter:blur(10px) brightness(150%)
        drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton) 100% 70%)) }
 }
-/* EIN GESPERRTER FUNKEL BLEIBT STILL (Durchsicht vom 6. Oktober,
-   test596 §9). Zeiger und Druck gelten nur für einen freigegebenen Knopf:
-   `:where(:not(:disabled))` vor jedem Zustand, ohne Gewicht, damit jede
-   Rangfolge bleibt, wie sie war. Vorher leuchtete „Trainieren · 0" unter
-   dem Zeiger auf und verwischte sein Wort — ein toter Knopf, der lebendig
-   tat. (Der Tastenfokus braucht das nicht: ein gesperrter Knopf bekommt
-   ihn gar nicht.) */
-/* DER DRUCK HAT ZWEI ZEICHEN: `:active` und `data-gedrueckt` (E720).
-   press.ts (E702) hält `data-gedrueckt` mindestens 80 ms — weil das
-   iPhone `:active` beim kurzen Tipp oft gar nicht malt. Der Funkel steht
-   in OWN_PRESS (er sinkt nicht ein), also war ein kurzer Tipp auf ihm
-   unsichtbar. Jetzt trägt der Zustand dasselbe Licht wie `:active`. */
+/* Ein gesperrter Funkel bleibt still: `:where(:not(:disabled))` vor jedem
+   Zustand, ohne Gewicht (test596 §9). Der Druck hat zwei Zeichen,
+   `:active` und `data-gedrueckt` — das iPhone malt `:active` beim kurzen
+   Tipp oft nicht, press.ts hält das Attribut 80 ms (E702, E720). */
 .ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]), .ai-quick button.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]),
 .lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]){
   border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-  /* Die Tönung liegt ÜBER dem Funkelgrund, nicht über der Karte: im
-     Hellen lag sie halbdurchsichtig auf Weiss, und das weisse Wort stand
-     mit 3 : 1 auf Mittelgrau (Durchsicht vom 6. Oktober, test596 §10b). */
+  /* Die Tönung über dem Funkelgrund, nicht über der Karte (test596 §10b). */
   background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
              var(--ru-funkel-farbe)
 }
@@ -22902,24 +22877,15 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 }
 .ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]) .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
 
-/* DIE STILLEN FUNKEL (E720, Redur: „wie bein tagesrunde"). Fehlertraining,
-   Neue Karten, Prüfungsfokus und Trainer sind derselbe Knopf wie die
-   Tagesrunde — aber in Ruhe ein Umrissknopf: Grund, Schrift und Rand der
-   Lernwelt, kein Schein, keine glimmenden Buchstaben. Unter Zeiger,
-   Tastenfokus und Druck werden sie GENAU die Tagesrunde (Grund #101010,
-   Schein von unten, Licht, Buchstabenlauf). So bleibt es bei EINER lauten
-   Fläche je Bild (E701 §1, grund.css „HAUPTHANDLUNG. Genau eine je Bild"):
-   der Schein ist Zustand, nicht Dauerschmuck (E640).
-   Das Gewicht (0,4,1) schlägt die Grundregel `.lernwelt .lw-study-actions
-   button` (0,2,1). Die Hover-Regel der Lernwelt wiegt seit `:is` ebenso
-   (0,4,1) — `:is` nimmt sein schwerstes Argument, `.lw-page-head>
-   .lw-actions button` —; hier gewinnt die spätere Datei, und unter dem
-   Zeiger trägt ohnehin die eigene Hover-Regel unten (0,6,1). */
+/* DIE STILLEN FUNKEL (E720, Redur: „wie bein tagesrunde"): in Ruhe ein
+   Umrissknopf der Lernwelt, unter Zeiger, Fokus und Druck GENAU die
+   Tagesrunde — eine laute Fläche je Bild (E701 §1, E640).
+   Gewicht (0,4,1): schlägt die Grundregel (0,2,1); die Hover-Regel der
+   Lernwelt wiegt seit `:is` ebenso (0,4,1), hier gewinnt die spätere
+   Datei, und unter dem Zeiger trägt die eigene Regel unten (0,6,1). */
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary){
   background:var(--bg-side); color:var(--text); border-color:var(--line); box-shadow:none;
-  /* Dieselbe Form wie die Tagesrunde schon in Ruhe — sonst wechselte der
-     Knopf unter dem Zeiger die Ecken, und der Schein (::before) sässe mit
-     seinem runden Rand um ein eckiges Feld. */
+  /* Schon in Ruhe die Form der Tagesrunde: kein Eckenwechsel unter dem Zeiger. */
   border-radius:var(--ru-funkel-rund)
 }
 .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary)::before{
@@ -22964,13 +22930,8 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   }
 }
 
-/* IM STARKEN KONTRAST BLEIBT ES EINE LAUTE FLÄCHE (Durchsicht vom
-   6. Oktober, test596 §10a). Der Funkelgrund #101010 hat auf dem Schwarz
-   dieses Schemas 1,04 : 1, und die stillen Funkel sind seit E720 auch
-   Pillen — „Starten" war von „Lernen" kaum zu unterscheiden. Hier trägt
-   die Haupthandlung einen 2-px-Rand im Akzent: ein Zeichen, das nicht an
-   der Farbe allein hängt (Breite UND Kontrast), wie grund.css „Genau eine
-   je Bild" es will. Dieselbe Zeile für den Schalter „Hoher Kontrast". */
+/* Im Starken Kontrast hat #101010 auf Schwarz 1,04 : 1: die Haupthandlung
+   trägt einen 2-px-Rand im Akzent, Breite UND Kontrast (test596 §10a). */
 :is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel{
   border-width:2px
 }
@@ -23020,9 +22981,7 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   #ru-vorhang{ transition:none }
   #ru-vorhang .ru-lader-buchstabe{ animation:none; opacity:1 }
   .ru-geste-finger{ animation:none; transform:rotate(30deg) scale(var(--ru-mass)) }
-  /* `inherit`, nicht #fff: der Knopf sagt die Farbe — weiss auf dem dunklen
-     Funkelgrund, Schrift auf dem hellen Grund der stillen und gesperrten
-     (test596 §9/§11; mit #fff stand das Wort 1,04 : 1 auf Weiss). */
+  /* `inherit`, nicht #fff: der Knopf sagt die Farbe (test596 §9/§11). */
   .ru-funkel-b, .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b,
   .ru-funkel > svg{ animation:none; color:inherit; opacity:1 }
   .cover-textur .ru-textur{ animation:none }
@@ -27070,7 +27029,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1420, inhalt: 'cdcc8d209ffb0746', gebaut: '2026-10-10T17:47:01.429Z' };
+const Stand = { fassung: 1421, inhalt: '657506b032632ea6', gebaut: '2026-10-10T18:00:56.688Z' };
 window.Stand = Stand;
 
 </script>
