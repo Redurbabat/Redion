@@ -51,7 +51,9 @@
  *      im Wurzelstapel ist höher, und mit `#ai.inert = false` trifft
  *      `elementFromPoint` in ihrer Mitte sie selbst (inert lässt die
  *      Trefferprüfung durch das gemalte Blatt hindurchsehen — ohne das
- *      Abschalten wäre die Probe blind, §55.2).
+ *      Abschalten wäre die Probe blind, §55.2). Dazu die Wahl hinter einem
+ *      getippten „@"; und jedes dieser Blätter nennt seinen Titel EINMAL
+ *      (nicht als Blatt-Titel und gleich darunter noch einmal als Kopf).
  *   §7 EIN KATALOG, EIN LÄUFER. (a) Jeder Weg — Knopf im leeren Chat,
  *      Befehlsmenü, Schrägstrich, Palette, Fähigkeit — schickt für dieselbe
  *      Kennung dieselbe Anweisung. (b) Ein Befehl mit Markierung schickt NUR
@@ -505,6 +507,19 @@ for (const [breit, hoch] of [[390, 844], [360, 800]] as const) {
     }, sel);
     p(`${breit} §6: ${name} liegt über dem Blatt (Ebene und Treffer)`, r && r.z > r.ai && r.getroffen, JSON.stringify(r));
   };
+  /* Ein Blatt sagt seinen Namen EINMAL: der Titel des Blattes steht nicht
+     gleich darunter noch einmal als Kopf (gesehen im Bild: „KI-Befehle" und
+     „Erwähnen" je zweimal übereinander — eine Text-Doppelung, wie Redur sie
+     am 3. Oktober aus dem Kopf nehmen liess). */
+  const einmalBenannt = async (name: string): Promise<void> => {
+    const r = await s.evaluate(() => {
+      const m = [...document.querySelectorAll<HTMLElement>('.menu')].pop();
+      const titel = (m?.querySelector('.blatt-titel')?.textContent || '').trim();
+      const koepfe = [...(m?.querySelectorAll<HTMLElement>('.grp') ?? [])].map(g => (g.textContent || '').trim());
+      return { titel, koepfe: koepfe.slice(0, 3), doppelt: !!titel && koepfe.includes(titel) };
+    });
+    p(`${breit} §6: ${name} nennt seinen Titel einmal`, !r.doppelt, JSON.stringify(r));
+  };
   await abschnitt(`${breit} §6`, async () => {
     for (const [name, knopf] of [['„+"', '#ai-plus'], ['Modus', '#ai-modus'], ['Modell', '.ai-compose .model-btn'],
       ['Quellen', '#ai-quellen'], ['⋯', '#ai-mehr'], ['Befehlsmenü', '.ai-start #ai-schreiben']] as const) {
@@ -514,8 +529,16 @@ for (const [breit, hoch] of [[390, 844], [360, 800]] as const) {
       await s.evaluate((q: string) => document.querySelector<HTMLElement>(q)?.click(), knopf);
       await warte(s, 500);
       await probe(name, '.menu');
+      await einmalBenannt(name);
       await menueZu(s); await warte(s, 150);
     }
+    /* Die Wahl hinter einem getippten „@" — auch sie ist ein Blatt. */
+    await menueZu(s);
+    await s.focus('#ai-input'); await s.keyboard.type('@'); await warte(s, 500);
+    await probe('die Wahl hinter „@"', '.menu');
+    await einmalBenannt('die Wahl hinter „@"');
+    await menueZu(s);
+    await s.evaluate(() => { const t = document.getElementById('ai-input') as HTMLTextAreaElement | null; if (t) t.value = ''; });
     /* Eine Frage: die Insel des Kits (E710). */
     await s.evaluate(() => document.querySelector<HTMLElement>('#ai-db')?.click());
     await s.waitForSelector('[data-insel-traeger]:not([data-insel-traeger="geht"]), .overlay', { timeout: 6000 }).catch(() => {});
