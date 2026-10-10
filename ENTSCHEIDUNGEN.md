@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-694 Entscheidungen, E1 bis E715 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+696 Entscheidungen, E1 bis E721 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -757,6 +757,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E713** — Die Zeitpille und die Balkenkarte (Redur: „Schau mal das auch an ich will das auch haben", Video „LIQUID GLASS", Szenen 02 und 06): läuft der Zeitmesser bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste; ein Tipp lässt die Karte aus ihr wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als stille Kopie), Escape und ✕ ziehen sie zurück; die Seite ist der Titel, der Timer hat einen echten Fortschritt, Pause ↔ Weiter tauscht im selben Knopf; am Telefon deckend. Der Lernverlauf wird eine Karte: Balken wachsen einmal, die Summe zählt hoch, ein Tag lässt sich wählen (Material aus E706, Hinweis, Pfeile) — `test590`
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
+* **E718** — Ordner bearbeiten (Redur, Masterprompt S. 13: „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die ordner selbst nicht bearbeiten"): EIN Umbenennen an Ort und Stelle (`App.umbenennen`: kein Sprung auf die Seite, leer und Steuerzeichen sind kein Name, ein gleicher Name fragt nach), EIN Neuzeichnen (`App.nachAenderung`: Farbe und Name sofort in Karte, Ablagebaum und Seitenleiste), EIN Papierkorb (`App.inPapierkorb`: über `trashBlock`, mit „Rückgängig" in der Meldung; das Blockmenü, das ⋯ einer Datenbank und Entf auf einer Mehrfachauswahl legen weg statt endgültig zu löschen — eine Unterseite war samt Enkelseite fort, eine Datenbank samt Sammlung; gefragt wird das Recht an der angefassten Seite), kein Ring beim Ziehen eines Ordners auf sein Kind, die Kinder eines weggelegten Ordners gehen mit, das eigene Symbol auf Karte und Baum. `test594` neu; `test560` §7, `test587` §13, `test588` §15.
+* **E721** — Ein Menü je Ding (Redur, Masterprompt S. 19: „Hier füge ... und oder beim rechts klicke sollte es mir zeigen löschen“): `Register.aktionen` (neu, `register/aktionen.ts`) ist die EINE Quelle für das, was man mit einer Seite tun kann — jeder Bereich meldet seine Aktionen; `Menue.aktionen` zeichnet daraus das Menü des „…“ und des Rechtsklicks, `Menue.aktionenBinden` bindet Rechtsklick, Kontextmenü-Taste, Umschalt+F10, Entf und langes Drücken (500 ms, E83, ein Schlucker statt zwei); das „…“ ist ein Knopf NEBEN dem Deckel oben rechts (44 × 44); Ablagebaum, Regal, Tabelle, Seitenleiste und Notizhefte haben dasselbe Menü; Menüs mit Rolle, Pfeiltasten und Fokus zurück; Gefahr rot am Rechner wie am Telefon; `Menue.wahl` als die eine Auswahlliste (`test597`)
 
 ---
 
@@ -6027,6 +6029,14 @@ im Paket, nach Mitternacht.
 
 
 ## E83 · Ziehen am Telefon — und zwei Altfehler, die die neue Prüfung fand
+
+> **Ergänzt durch E721 (6. Oktober 2026) — ein Langdruck für alles.** Die
+> Nachzügler-Schlucker dieses Eintrags (mousedown, mouseup, click nach dem
+> Loslassen; die 800-ms-Uhr; die neue Berührung räumt die alten Fänger weg)
+> stehen jetzt als `Menue.nachzuegler`/`nachzueglerWeg` in der Schale, und
+> die 500 ms als `Menue.HALTEN_MS`. Die Blöcke rufen sie dort, Karten,
+> Ablagebaum und Hefte auch — heben, loslassen, Menü, überall gleich
+> (`test135`, `test175`, `test597` §4/§13).
 
 **Datum:** 9. August 2026 · **Status:** Beschlossen · **Lücke:** L10
 
@@ -30982,6 +30992,13 @@ noch der verschobene.
 E380 — Das Regal bekommt Ebenen: ein Ordner ist ein Ort, kein Etikett
 ════════════════════════════════════════════════════════════════════════════
 
+> **Ergänzt durch E718 (6. Oktober 2026) — auch das Umbenennen bleibt im
+> Ort.** Das ⌄ „Umbenennen" der Bibliothek öffnete den Ordner als Seite und
+> fokussierte den Titel („ein zweites Eingabefeld wäre eine zweite
+> Wahrheit, §8"). Die Wahrheit ist das Feld `text`, und das schreibt die
+> Frage genauso; jetzt fragt `App.umbenennen` an Ort und Stelle, und man
+> bleibt in der Bibliothek, auch drinnen in einem Ordner (`test594` §1).
+
 Redur hat vier Fotos aus GoodNotes geschickt, und mit ihnen einen Satz, der
 das eigentliche Missverständnis benennt:
 
@@ -55065,6 +55082,14 @@ wenn jemand einen Satz schreibt, der wie Code aussieht.
 
 ## E672 — Ein Ordner hat eine Farbe, und man kann sie wechseln
 
+> **Ergänzt durch E718 (6. Oktober 2026) — „überall" heisst jetzt auch
+> sofort.** Die Farbe stand in der Seitenleiste erst nach dem nächsten
+> fremden Neuzeichnen: der Wähler zeichnete nur die eigene Ansicht neu, und
+> `Store.updateBlock` sagt niemandem etwas. Jetzt endet die Wahl in der
+> Bibliothek in `App.nachAenderung`, und `setzeFarbe` zeichnet ohne eigenes
+> `danach` auch die Seitenleiste (`test560` §7, `test594` §7 und §8). Der
+> Wähler und seine Signatur bleiben, wie sie sind.
+
 **Redur, 21. September 2026 (wörtlich):** „ich sollte die ordner farben
 wählen können und farben wecheln können".
 
@@ -60278,6 +60303,14 @@ der bekannte Wackler aus dem Zweig der roten Inseln. Ohne Browser grün:
 
 ## E712 — Tropfen, Linse und Kacheln: das „+“ und das „⋯“ fliessen in ihr Menü, die Linse gleitet über „Heute“, Glaskacheln oben in „Mehr“
 
+> **Ergänzt durch E721 (6. Oktober 2026) — dasselbe Menü, sieben Zeilen aus
+> dem Register.** Das Seitenmenü behält Aufbau, Tropfen und Wörter; seine
+> Einträge `fav`, `rename`, `icon`, `dup`, `link`, `del` und
+> `wz-verschieben` rufen jetzt `Register.aktionen.tun` — dieselben Zeilen
+> wie das „…" der Bibliothek und das ⋯ der Notizhefte. Die Tropfen stehen
+> nicht in der Pfeilfolge eines Menüs mit Rolle: sie sind Abkürzungen zu
+> Einträgen darunter. `favoritKippen` ist die Aktion „favorit".
+
 **Datum:** 28. September 2026 · **Entschieden von** Redur (Video „LIQUID
 GLASS“ ca. 22:05 UTC, Auftrag ca. 22:10 UTC) · **baut auf** E646 (ein
 Filter nur in Bewegung — so auch der Tropfen), E649 (ein Halter für die
@@ -61332,3 +61365,668 @@ ist sie alles, was das `.js` von seiner Quelle weiss. (5) Die Verweise auf
 E715 stehen jetzt auch in E28, E389, E613 und E688; README sagte noch
 „Ein Prüflauf ist rot (L146) … 2300 KB" — L146 ist seit E613
 geschlossen. Messung: `messungen.md` §86, Durchsicht.
+
+## E718 — Ordner bearbeiten: umbenennen an Ort und Stelle, eine Farbe überall, und „Löschen" heisst Papierkorb
+
+> **Ergänzt durch E721 (6. Oktober 2026) — die Griffe bekommen eine Adresse.**
+> Das ⌄ der Karte ist ein „…" NEBEN dem Deckel (44 × 44, benannt), dazu
+> Rechtsklick, Kontextmenü-Taste, Umschalt+F10, Entf und langes Drücken. Die
+> Listen von Hand (Bibliothek, Heft, Fach) sind `Register.aktionen`;
+> `App.umbenennen`, `App.inPapierkorb`, `App.nachAenderung` und
+> `favoritKippen` sind die Aktionen „umbenennen", „papierkorb" und
+> „favorit". Weglegen in den Notizheften geht jetzt durch
+> `App.inPapierkorb` (mit „Rückgängig"); der Satz des Fachs bleibt.
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Seiten 13 und 19; die Vorgaben aus „Entscheidungen, die
+Redur gehören", weil er auf Schritt 0 nicht geantwortet hat) · **ergänzt**
+E380 (ein Ordner ist ein Ort — jetzt auch beim Umbenennen), E672 (die Farbe
+steht überall, wo der Ordner steht — jetzt auch sofort in der
+Seitenleiste) · **baut auf** E709 (das Endgültige bleibt im Papierkorb),
+E710 (die Fragen), E711 (der Stapel der Meldungen) und E712 (der Griff fürs
+Merkzeichen) auf, ohne sie zu ändern · **Wächter:** `test594` (neu, 64 Zusagen),
+`test560` §7, `test587` §13, `test588` §15 (erweitert; nach der Durchsicht
+vom 6. Oktober 76 Zusagen in sechzehn Abschnitten) · **Zweig**
+`claude/ordner-bearbeiten` · **Messung:** `messungen.md` §89.
+
+**Redurs Sätze, wörtlich** (seine Notizen im PDF; die Uhrzeit ist nicht
+überliefert):
+
+```txt
+Seite 13   „hier beiM BIBLOTEK KANN ich wie beim biblotek die ordner farbe
+            oder die ordner selbst nicht bearbeiten, behebe das problem und
+            auch die rechtsk klickt sollte hier für die ordner haben ."
+Seite 19   „Hier füge ... und oder beim rechts klicke sollte es mir zeigen
+            löschen"
+```
+
+„wie beim biblotek" heisst hier: wie bei den Notizheften. Dort kann ein
+Fach im ⋯ seit E672 „Umbenennen" und „Farbe" an Ort und Stelle. Dieser Bogen
+macht jede Ordner-Handlung der Bibliothek WIRKLICH und SICHER; der
+Rechtsklick, das echte „…" an der Karte und die Tastatur im Menü gehören
+`claude/menue-eine-quelle`, das die Griffe von hier ruft.
+
+**Gemessen, bevor gebaut wurde** (`test594` gegen 1bfaca53, 14 von 62;
+`messungen.md` §89):
+
+```txt
+Umbenennen aus dem ⌄ der Bibliothek   → öffnet den Ordner als Seite (inBib false)
+„   " als Name (Seitenmenü, Fach)      → gespeichert: "   "
+„  Strom\u0000kunde " (Heft)           → gespeichert, wie es war
+Farbe aus dem ⌄                         → Karte red, Baum red, Seitenleiste null
+Farbe/Name eines Fachs                  → Seitenleiste null / alter Name
+eigenes Symbol ⚡                        → Karte "", Baum "", Seitenleiste ⚡
+Ordner auf eigenes Kind gezogen         → parentId = Kind (ein Ring), beide aus der Leiste
+Papierkorb aus der Bibliothek           → trashedAt fehlt, im Inhalt des Elternteils,
+                                          0 Protokolleinträge, kein Rückweg
+Kinder eines weggelegten Ordners        → in Alle 2, Zuletzt 1, Favoriten 1, Baum 2
+Blockmenü „Löschen" auf Unterseite      → "WEG" samt Enkelseite, nicht in Store.trashed(),
+  und Datenbank                           nach dem Neuladen nichts zurückzuholen
+```
+
+Die letzte Zeile ist ein Datenverlust (§51): `blockMenue` 'del', der
+Schrägstrich-Befehl 'del' und 'cut' liefen das Sofort-Muster
+`trashBlock` + `purgeBlock` (indexdb.ts, gedacht für leere Blöcke) für JEDE
+Blockart. Die Mehrfachauswahl (`auswahlLoeschen`) und Strg+⇧+⌫ legten
+dagegen nur weg — „Löschen" hiess an drei Stellen drei Dinge.
+
+**Was entschieden wurde.**
+
+1. **EIN Umbenennen: `App.umbenennen(p, anker, titel)`** in der Schale.
+   Die Bibliothek (⌄ „Umbenennen"), die Notizhefte (Heft und Fach), das
+   Seitenmenü und die Datenbankzeile rufen es. Kein Sprung auf die Seite
+   mehr (E380). Der Name geht durch `App.nameSaeubern`: NFC,
+   Zeilenumbrüche (auch U+2028/2029) und Tabs werden Leerzeichen, C0- und
+   C1-Steuerzeichen fliegen hinaus, Leerraum wird zusammengezogen, die
+   Ränder weg, höchstens 200 Zeichen. „/" und „:" bleiben — es sind Titel,
+   keine Dateinamen; die Ausfuhr macht sich ihre Dateinamen selbst
+   (`WissenDienst.sauber`). Leer → der alte Name bleibt, eine Meldung sagt
+   warum, und es wird EINMAL neu gefragt. Ein gleicher Name im selben
+   Ordner (gross/klein egal, nur Lebende, nicht er selbst) →
+   `Dialog.wahl`: „Anderen Namen wählen" oder „Trotzdem so nennen".
+   Unverändert → nichts geschrieben. Jede Antwort wird abgewartet, bevor
+   die nächste Frage kommt (E710). Danach kehrt der Fokus auf den Auslöser
+   zurück — oder, hat das Neuzeichnen ihn ersetzt, auf seinen Nachfolger
+   (dieselbe Klasse, dieselbe Kennung).
+2. **EIN Neuzeichnen nach einer Änderung: `App.nachAenderung(p)`** =
+   Seitenleiste + (Sonderansicht oder offene Seite, auf der `p` liegt) +
+   Brotkrume. Umbenennen, Papierkorb, Rückgängig und die Farbe aus der
+   Bibliothek enden darin. Der Farbwähler der Notizhefte (`setzeFarbe`,
+   Signatur unverändert, `test560` ruft ihn) zeichnet ohne eigenes
+   `danach` jetzt auch die Seitenleiste. Kein Rundruf aus
+   `Store.updateBlock` — der liefe bei jedem Tastendruck.
+3. **EIN Papierkorb: `App.inPapierkorb(p)`** über `Store.trashBlock`
+   (Frist, Protokoll, aus dem Inhalt des Elternteils, der Verlauf hört
+   mit). Die Meldung sagt, was weg ist („„Leitungen" und 1 Unterseite
+   liegen im Papierkorb") und trägt „Rückgängig", das an DIESELBE Stelle
+   zurücklegt (`restoreBlock` hängt hinten an). Die Bibliothek benutzt es
+   statt ihres rohen `alive:false`; das Seitenmenü auch. Im Editor gehen
+   „Löschen" (jetzt „In den Papierkorb"), der Schrägstrich-Befehl (jetzt
+   „Block in den Papierkorb", „löschen" bleibt Suchwort) und
+   „Ausschneiden" nach dem Kopieren für ALLE Blockarten in den Papierkorb
+   (Vorgabe zu Frage 3) — wie Mehrfachauswahl und Strg+⇧+⌫ schon. Andere
+   Blöcke als Seiten stehen dort seit langem in „Was ausser Seiten noch im
+   Papierkorb liegt" (`papierkorbBloecke`) und laufen über `trashedAt` ab.
+   Nach der Durchsicht vom 6. Oktober auch das ⋯ einer Datenbank („Datenbank
+   löschen", jetzt „In den Papierkorb", ohne `confirm()`) und Entf auf einer
+   Mehrfachauswahl (`Mehrfach`) — beide liefen noch `purgeBlock`. Wo
+   danach noch endgültig gelöscht wird, steht unten unter „Was bleibt
+   endgültig" — gewollt, mit Grund. Das Weglegen trägt KEIN
+   `data-loeschknopf` — es ist umkehrbar.
+4. **Die Meldung bekommt eine Handlung** (`hinweis.ts`, auf dem Stapel von
+   E711; das Toast-Muster des Touch Kits: eine Meldung, höchstens ein
+   Knopf): `UI.toast(text, dauer, { aktion: { text, tun } })`. Nur die
+   NEUESTE, in `#toast`, trägt einen echten `<button class="toast-aktion">`
+   — 44 px (`--touch-min`), greifbar, benannt, mit Tab erreichbar, ein
+   Rahmen statt nur Farbe. Rückt sie in den Stapel, geht sie ohne Knopf
+   und ohne das Wort (`gesagt()` liest `#toast` ohne den Knopf): die
+   Karten greifen nicht nach dem Zeiger (E711). Ausgeblendet ist der Knopf
+   unsichtbar und aus der Tab-Folge. Ein Druck wirkt einmal. `#toast`
+   bleibt die EINE Live-Region.
+5. **Ein Ordner kann nicht in sich selbst liegen.** Die Prüfung steht in
+   `Werkzeuge.verschiebe`, dem einen Weg, den Ziehen in der Seitenleiste,
+   der Wähler und die Notizhefte nehmen — vor dem ersten Schreiben, mit
+   einer Meldung; die Funktion sagt jetzt `true`/`false`.
+6. **Was mit einem Ordner im Papierkorb liegt, ist mit ihm weg.**
+   `Bibliothek.alleSeiten` lässt Seiten aus, deren Vorfahr nicht lebt
+   (höchstens 50 Schritte, über Blöcke) — Alle, Zuletzt, Favoriten, der
+   Ablagebaum und die Karten folgen, wie die Seitenleiste es immer tat.
+   Rückgängig bringt alle zurück. Die Regel der Notizhefte („Fach in den
+   Papierkorb, seine Hefte bleiben im Regal") bleibt, wie sie ist (Vorgabe
+   zu Frage 2; L239).
+7. **Das eigene Symbol steht auf Karte und im Ablagebaum** (Vorgabe zu
+   Frage 6): nur, wenn ein Mensch es gesetzt hat — 📄, 📁 und 🗂 vergibt die
+   App selbst und bleiben weg. Es ist Inhalt wie der Name, escaped auf der
+   Karte, als Text im Baum (`baum.ts` setzt Unbekanntes mit
+   `textContent`). Gesetzt wird es weiter über „Symbol ändern" im
+   Seitenmenü; ins Ordnermenü bringt es `claude/menue-eine-quelle`.
+8. **Das ⌄-„Favorit" der Bibliothek nimmt den Griff von E712**
+   (`App.favoritKippen`, jetzt herausgegeben) — es zeichnet damit auch die
+   Favoriten der Seitenleiste neu.
+
+**Die Alternativen.**
+
+- *Doppelte Namen automatisch „ (2)" nennen oder verbieten.* Verworfen
+  (Vorgabe zu Frage 1): Notion erlaubt Gleiches, und ein stilles „ (2)"
+  ändert, was der Mensch getippt hat. Gefragt wird, gespeichert wird, was
+  er will.
+- *Nur Seiten- und Datenbankblöcke in den Papierkorb, der Rest weiter
+  sofort weg.* Verworfen (Vorgabe zu Frage 3): drei Bedeutungen von
+  „Löschen" waren der Fehler; Mehrfachauswahl und Strg+⇧+⌫ legten schon
+  weg, und der Papierkorb zeigt Blöcke seit langem.
+- *Ein Rundruf aus `Store.updateBlock`* („etwas hat sich geändert").
+  Verworfen: er liefe bei jedem Tastendruck, und die Schale hört lokale
+  Änderungen mit Absicht nicht.
+- *Alte, über die Bibliothek weggelegte Seiten mit `trashedAt` nachtragen.*
+  Nicht getan (Vorgabe zu Frage 5): das ist eine Datenänderung. Sie bleiben,
+  wie sie sind — sie laufen nie ab (L239).
+
+**Was es kostet.** Start 1850 → 1852 KB gzip (Decke 1950; `test388`
+§5), nach dem Nachtrag der Durchsicht 1853 KB. Keine neue Datei, kein neues Feld, keine Migration: `color`, `icon`
+und `trashedAt` gab es schon an jedem Block. Wer im Editor „Löschen"
+drückt, findet den Block jetzt im Papierkorb statt nirgends — und der
+Papierkorb wird dadurch voller, bis die Frist ihn leert. Ein Fenster, das
+offen ist, macht `#toast` träge (Fokus): dann ist der Papierkorb der
+Rückweg, nicht der Knopf — er ist nie der einzige.
+
+**Was weg ist, und wo es bleibt (§43).** Das sofortige endgültige Löschen
+aus dem Blockmenü, dem ⋯ einer Datenbank und der Mehrfachauswahl steht an
+EINER Stelle weiter: Papierkorb → „Endgültig löschen" (E709). Die
+Browser-Rückfrage vor „Datenbank löschen" ist weg — ein „Rückgängig"
+danach ersetzt sie, weil nichts mehr endgültig ist. Das Umbenennen auf der
+Seite selbst bleibt: Öffnen, Titel ändern. Das rohe `alive:false` der
+Bibliothek ist ersetzt, nicht entfernt — derselbe Eintrag, derselbe
+Auslöser, ein vollständigeres Weglegen. **Ein leerer Name wird jetzt
+abgewiesen** — auch im Seitenmenü und bei der Datenbankzeile, wo eine leere
+Antwort vorher „Ohne Titel" ergab. Der Weg dorthin bleibt: den Titel auf
+der Seite selbst oder die Titelzelle der Zeile leeren.
+
+**Was bleibt endgültig — gewollt, nicht übersehen** (alle Stellen mit
+`purgeBlock` ausserhalb des Speichers, nachgezählt am 6. Oktober):
+
+```txt
+Papierkorb: „Endgültig löschen", „Papierkorb leeren"   schale.ts — E709, das ist sein Zweck
+Pflege: „Papierkorb jetzt leeren"                      pflege.ts — dasselbe, mit Knopf
+der leere Block nach Einfügen / Zusammenführen          editor.ts — leer, nichts geht verloren
+der Block, der zur Datenbank umgewandelt wird           editor.ts — die Umwandlung legt neu an
+„Verschieben nach" NACH dem Kopieren in die Zielseite   editor.ts — die Kopie trägt den Inhalt
+die KI nimmt ihr EIGENES Einfügen zurück                ki/dienst.ts, ki/agenten.ts
+der Platzhalter einer fehlgeschlagenen Texterkennung    dateien/recognition.ts
+Hilfe-Stand ersetzt seine eigene alte Seite             hilfe/stand.ts
+```
+
+**Rechte (§26, L102).** `App.umbenennen` und `App.inPapierkorb` sind seit
+E718 der EINE Weg — also fragen sie auch: `Konten.darf('bearbeiten', id)`,
+gegen DIE angefasste Seite, nicht gegen die offene. Wer dort nur lesen,
+kommentieren oder nichts darf, bekommt eine Meldung statt einer Frage, und
+nichts wird geschrieben. „bearbeiten", nicht „loeschen": die Rolle
+„Bearbeiten" konnte Seiten schon vor E718 weglegen, und der Papierkorb ist
+umkehrbar; ob er „loeschen" verlangen soll, gehört Redur (L239 Punkt 3).
+Ohne Konten ist man „lokal" mit Vollzugriff — für den Normalfall ändert
+sich nichts. Der Server entscheidet weiter final.
+
+**Vom Touch Kit** ist das Muster der Meldung mit einer Handlung als
+Redion-Code nachgebaut — kein fremder Code kopiert, deshalb kein Eintrag in
+`FREMDCODE.md` (§57). Die Fragen sind die Kit-Fenster von E710, das
+Endgültige der Knopf von E709.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen):
+
+In einem eigenen Arbeitsbaum, je eine Zeile heraus, gebaut, gelaufen,
+wieder eingesetzt:
+
+```txt
+G1  Ring-Prüfung in Werkzeuge.verschiebe heraus      test594 58/64
+    ✗ parentId bleibt, wie es war (kein Ring) — ist ["<Kind>","<Ordner>"]
+    ✗ Eine Meldung sagt, warum nichts geschah — Verschoben
+G2  alleSeiten ohne Vorfahrprüfung                    test594 63/64
+    ✗ Weder in Alle, Zuletzt, Favoriten noch im Baum … — ist [3,1,1,3,0]
+G3  Blockmenü löscht wieder endgültig                 test594 62/64
+    ✗ Unterseite und Datenbank liegen im Papierkorb … — ist ["WEG",false,"WEG","WEG",false]
+G4  nachAenderung ohne Seitenleiste                   test594 60/64
+    ✗ Hell: … tragen „red" — ohne weiteres Zeichnen — ist ["red","red",null]
+G5  Umbenennen ohne nameSaeubern                      test594 54/64
+    ✗ „A␇B⏎C" wird als „AB C" gespeichert — ist "A\u0007B\nC …"
+G6  der Stapel liest #toast samt Knopf                test588 77/78
+    ✗ Rückt sie in den Stapel … — alt: ["„Notizen" liegt im PapierkorbRückgängig", …]
+G7  #toast[inert] zeigt den Knopf weiter              test594 63/64
+    ✗ Steht ein Fenster offen … keinen toten Knopf — {"inert":true,"sichtbar":true}
+G8  ausgeblendeter Knopf ohne visibility:hidden       test588 77/78
+    ✗ Ausgeblendet ist der Knopf weder sichtbar noch fokussierbar — {"sicht":"visible","fokus":true}
+zurück: test594 64/64
+```
+
+Und nach der Durchsicht vom 6. Oktober, am gebauten JavaScript, je eine
+Stelle zurück auf den alten Stand, gelaufen, wieder eingesetzt:
+
+```txt
+G9  ⋯ der Datenbank wieder trashBlock + purgeBlock    test594 74/76
+    ✗ „Datenbank löschen" legt in den Papierkorb, die Sammlung bleibt … — ist ["WEG",false,false,0]
+G10 Mehrfach-Entf wieder trashBlock + purgeBlock       test594 74/76
+    ✗ Entf auf einer Mehrfachauswahl legt in den Papierkorb, samt Enkelseite — ist ["WEG",false,"WEG"]
+G11 darfBearbeiten sagt immer ja                     test594 72/76
+    ✗ Nur lesen (geerbt): das Kind bleibt, wo es ist — ist false, soll true
+    ✗ … mit einer Meldung, die es sagt — „Kind zum Lesen 594" liegt im PapierkorbRückgängig
+G12 ohne die Richtungs-Überschreiber im Filter       test594 75/76
+    ✗ Richtungs-Überschreiber fliegen hinaus — ist "Rechnung‮fdp.exe⁦x⁩", soll "Rechnungfdp.exex"
+G13 Grenze wieder nach Codepunkten (ohne Segmenter)   test594 75/76
+    ✗ Die 200er-Grenze zählt Schriftzeichen … — ist [false,false,200], soll [true,true,200]
+zurück: test594 76/76
+```
+
+**Nachtrag nach der Durchsicht vom 6. Oktober.** Eine unabhängige
+Durchsicht des Zweigs fand ein falsches Versprechen (§32): diese
+Entscheidung, das README und `CLAUDE.md` sagten „Löschen heisst überall
+Papierkorb", und das ⋯ einer Datenbank räumte nach einem `confirm()` den
+Block UND die Sammlung samt Zeilen endgültig weg — gemessen: `["WEG", im
+Korb false, Sammlung false]`. Dazu Entf auf einer Mehrfachauswahl
+(`Mehrfach`, im Alltag kaum erreichbar, aber derselbe Satz), die fehlende
+Rechtefrage am einen Weg, Richtungs-Überschreiber in Namen und ein Schnitt
+mitten in ein zusammengesetztes Zeichen. Alles fünf ist gebaut und in
+`test594` §3, §15 und §16 gehalten; rot zuerst gegen 32749689 mit 66 von
+76. „Ausschneiden" sagt jetzt EINE Meldung („Ausgeschnitten — der Block
+liegt im Papierkorb") statt zwei übereinander. Offen bleibt, dass der
+„Rückgängig"-Knopf mit Tab nur am Ende der Seite erreichbar ist (`#toast`
+ist das letzte Kind von `body`) — formal erfüllt §38 das, besser macht es
+`claude/menue-eine-quelle` (L239 Punkt 4).
+
+**Gefunden auf dem Weg.**
+
+- Der Plan nannte `test110` für den Ring-Fall von `Werkzeuge.verschiebe`.
+  `test110` prüft aber `Spreadsheet.verschiebe` — Formeln beim Ausfüllen,
+  ein anderes Ding mit demselben Wort. Der Ring-Fall steht in `test594`
+  §11.
+- `test594` war zweimal aus dem falschen Grund rot: er las den Namen im
+  Ablagebaum samt Knick („›Kabel …"), und `Bibliothek.oeffne()` ohne Ziel
+  bleibt in dem Ordner, in den man zuvor hineinging — der Zustand lebt im
+  Speicher, nicht nur im Merker `bibOrdner`.
+- `test587` §13 zeigte auf dem Grundstand, was der alte Sprung anrichtete:
+  „Ordner neu" wurde Buchstabe für Buchstabe in den Seitentitel getippt,
+  auf den das Menü gesprungen war — zehn Schreibvorgänge statt einem.
+- **Das Bild fand, was der Lauf nicht fand (§55.1).** Am Telefon stand die
+  Meldung mit „Rückgängig" über dem offenen Papierkorb — und `Fokus` legt
+  bei einem offenen Fenster alles andere still, auch `#toast`: ein Knopf,
+  den man sieht und der nichts tut. `test594` war grün, weil er den Knopf
+  nur ohne Fenster prüfte. Jetzt verschwindet er, solange `#toast` still
+  liegt (`#toast[inert]`), und §13 prüft beides (G7).
+- **Die Symbole der mitgelieferten Seiten erscheinen jetzt auch.**
+  „Notion-Wissen" trägt 📚, „Willkommen" 👋 — in der Seitenleiste stand das
+  immer, im Ablagebaum stand ein Strich. Nebenbei unterscheidet es die
+  zwei „Notion-Wissen", die das Grundgerüst und ein Mensch anlegen können.
+
+
+## E721 — Ein Menü je Ding: Rechtsklick, „…", Tastatur und langes Drücken aus EINER Quelle
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Seiten 13 und 19; die Vorgaben aus „Entscheidungen, die
+Redur gehören" zu #9, weil er auf Schritt 0 nicht geantwortet hat) ·
+**ergänzt** E83 (der Langdruck der Blöcke teilt seine Nachzügler jetzt mit
+Karten, Baum und Heften), E712 (das Seitenmenü behält Aufbau und Tropfen,
+ruft für sieben Einträge aber das Register) und E718 (das ⌄ der Bibliothek
+ist ein „…" neben dem Deckel; ihre Griffe bekommen eine Adresse) · **baut
+auf** E302 (ein Escape), E709 (das Endgültige bleibt im Papierkorb), E710
+(die Fragen), E711 (die Meldung mit „Rückgängig") und E715 (spät geladene
+Bereiche melden spät) auf · **Wächter:** `test597` (neu, 79 Zusagen in
+fünfzehn Abschnitten), `test37` (erweitert: Rot auch am Rechner und in der
+Bibliothek), `test114` 23 (erweitert: das „…" trifft ein 44-px-Finger),
+`test303` §7 (erweitert: am Telefon steht es als Knopf da) · **Zweig**
+`claude/menue-eine-quelle` · **Messung:** `messungen.md` §91.
+
+**Redurs Sätze, wörtlich** (seine Notizen im PDF; die Uhrzeit ist nicht
+überliefert):
+
+```txt
+Seite 19   „Hier füge ... und oder beim rechts klicke sollte es mir zeigen
+            löschen"
+            „Für den rechts klick bei eine dokument oder eine text usw wo es
+            passen kann"
+Seite 13   „… und auch die rechtsk klickt sollte hier für die ordner haben ."
+```
+
+Auf dem Foto von Seite 19 hat er an drei Bibliothekskarten („Heft vom
+29. Sept.", „Ohne Titel", „REITER-ROT") den ☆ oben rechts eingekreist. Dort
+gehört das „…" hin, und derselbe Inhalt auf den Rechtsklick.
+
+**Gemessen, bevor gebaut wurde** (`test597` gegen 73a956937 — morgen-besser-2
+mit ordner-bearbeiten —, 13 von 75; `messungen.md` §91):
+
+```txt
+⌄ der Bibliothekskarte                 <i aria-hidden> 20 × 20 IM Kartenknopf, tabIndex −1
+Rechtsklick Karte / Baum / Leiste      Browsermenü (defaultPrevented false), kein Menü
+Umschalt+F10 / Kontextmenü-Taste       nichts
+Pfeil ab im offenen ⌄-Menü             Fokus auf die NÄCHSTE KARTE hinter dem Menü
+Telefon, 650 ms gedrückt               kein Menü — die Seite ging auf
+Regal / Tabelle                        null Aktionen
+Entf auf einer Karte                   nichts (das Seitenmenü verspricht „· Entf")
+⋯ der Seitenleiste                     ohne Namen, ohne title
+⋯ der Notizhefte                       26 × 26, an allen vier Ecken eines 44-px-Fingers daneben
+„In den Papierkorb" am Rechner         rgb(241, 242, 244) — dieselbe Farbe wie „Link kopieren"
+```
+
+**Was entschieden wurde.**
+
+1. **Ein Register für das, was man mit einem Ding tun kann:
+   `Register.aktionen`** (`src/register/aktionen.ts`, neu). Eine Aktion
+   steht einmal: Kennung, Name (oder eine Funktion des Dings, „Zu
+   Favoriten"/„Aus Favoriten"), Strichzeichen, Gruppe, `gefahr`, `taste`,
+   `gilt(ding, ort)` und `tun(ding, ort)`. `fuer(ding, ort)` gibt die
+   geltenden Zeilen geordnet zurück, die Gefahr immer zuletzt; `tun(id,
+   ding, ort)` ist die EINE Tür; `taste('Entf', …)` geht durch dieselbe.
+   Ein `gilt()`, das wirft, nimmt nur sich selbst mit (wie
+   `Register.kontext`). **Jeder Bereich meldet seine eigenen Aktionen**
+   (§5 Regel 3, `test537`): die Schale Öffnen, Merkzeichen, Umbenennen,
+   Symbol, Duplizieren, Link, Papierkorb (die Griffe aus E712/E718); das
+   Wissen „Verschieben nach …"; die Notizhefte Öffnen (Heft, Fach), Farbe,
+   Verschlüsseln, Entschlüsseln, „In Fach verschieben"; die Bibliothek
+   „Öffnen" (hinein), „Als Seite bearbeiten", „Blick hinein".
+2. **`Menue.aktionen(ding, ort, wo)`** zeichnet ein Menü NUR aus dem
+   Register — Gruppen mit Linie, `data-gefahr` an der Gefahr. Das „…" der
+   Bibliothek, ihr Rechtsklick (Deckel, Regal, Tabelle), der Ablagebaum und
+   das ⋯ der Notizhefte (Heft und Fach) rufen es. **Das Seitenmenü behält
+   seinen Aufbau** — fünfzig Einträge, Schalter, Schriftkacheln, Tropfen,
+   Reihenfolge, Wörter (`test35`/`36`/`37`/`40`/`212`) —, ruft für `fav`,
+   `rename`, `icon`, `dup`, `link`, `del` und `wz-verschieben` aber
+   dieselben Zeilen (`ZUR_QUELLE`).
+3. **Ein Menü mit Rolle** (`opt.rolle = 'menu'`, freiwillig; immer für
+   `Menue.aktionen` und `Menue.wahl`): `role=menu` mit Namen („Aktionen für
+   „Notizen""), Einträge `menuitem`, der Fokus auf dem ersten Eintrag,
+   Pfeil auf/ab (rundum), Pos1, Ende, Tab schliesst, und Escape — derselbe
+   Weg wie immer (E302) — gibt den Fokus an den zurück, der geöffnet hat.
+   Die runden Tropfen (E712) stehen nicht in der Pfeilfolge: sie sind
+   Abkürzungen zu Einträgen darunter. Die rund hundert alten Aufrufer von
+   `Menue.menu` ändern sich nicht.
+4. **Ein Binder je Behälter: `Menue.aktionenBinden(wurzel, auftrag)`.**
+   Rechtsklick öffnet am Zeiger (Umschalt + rechte Maustaste lässt das
+   Menü des Browsers durch, wie im Editor); Kontextmenü-Taste und
+   Umschalt+F10 auf dem fokussierten Ding öffnen an ihm; Entf ruft die
+   Gefahr mit der Taste „Entf"; **langes Drücken nach E83**: 500 ms, das
+   Ding hebt sich (`data-gehoben`, scale 1.04 wie das Kit; ohne Bewegung nur
+   der Rahmen), über 10 px Weg ist es Rollen, Loslassen ohne Bewegung öffnet
+   das Menü, und die Klicks danach werden geschluckt. **Ein Langdruck, nicht
+   zwei:** der Schlucker (`nachzuegler`) stand in `einstellungen/pwa.ts`
+   und steht jetzt in `Menue`; die Blöcke rufen ihn dort (`test135`,
+   `test175` grün). Die Notizhefte heben ihre Hefte schon selbst (E368):
+   dort öffnet das Loslassen ohne Bewegung das Menü, und der Binder hält
+   nur die Fächer.
+5. **Die Bibliothekskarte: das „…" ist ein Knopf NEBEN dem Deckel**, in
+   derselben `.bib-zelle` wie das Auge, oben rechts — 44 × 44 zu treffen, 26
+   px zu sehen, benannt „Aktionen für „Name"", `aria-haspopup=menu`. JEDE
+   Karte bekommt die Zelle, nicht nur der Ordner. Der ☆ bleibt ein Zeichen
+   für den Zustand und rückt nach links daneben (Vorgabe 2); gekippt wird
+   er über „Zu Favoriten" im Menü. Der Klassenname `.bib-deckel-mehr` bleibt.
+6. **Ordner: „Öffnen" heisst hinein, „Als Seite bearbeiten" öffnet seine
+   Seite** (Vorgabe 5). Das alte ⌄ „Öffnen" öffnete die Seite — es heisst
+   jetzt so, wie es ist.
+7. **Ablagebaum** (`baum.ts`): `BaumAuftrag.aktionen` und `.entf`, die
+   Zeilen tragen dann `aria-haspopup=menu`; der Binder sitzt an der Wurzel.
+   Nicht für die Wurzel „Dokumente". **Seitenleiste:** das ⋯ heisst
+   „Aktionen für „Name"" (auch als `title`), Rechtsklick auf die Zeile
+   öffnet das Seitenmenü — dieselbe Liste wie ihr ⋯. Die Zeilen bleiben ohne
+   Tabstopp (virtuelle Liste); die Tastatur nimmt das ⋯.
+8. **Rot heisst Gefahr, überall** (`aufbau.css`): `.menu button[data-gefahr]`
+   und `.rot` in `--gefahr`, am Rechner wie am Telefon. Das Blatt am Telefon
+   rötet zusätzlich `[data-gefahr]`. Rot ist nie das einzige Zeichen: das
+   Wort sagt es, und die Gefahr steht zuletzt hinter einer Linie. Die Dinge
+   IN einem Dokument (Tabelle, Leinwand, Schaltplan, Datenbankansicht und
+   -eigenschaft, Blockmenü, Datenbankzeile) bekamen nur `data-gefahr`
+   (L242).
+9. **`Menue.wahl` / `UI.wahl` — die EINE Auswahlliste** (für die Zweige
+   `bibliothek-eine-suche` und `lernzentrum-kopf`): Gruppen,
+   `menuitemradio` mit `aria-checked`, ✓ und `aria-current` am Gewählten,
+   `aria-expanded` am Anker kippt, der Fokus steht auf dem Gewählten und
+   kehrt an den Anker zurück, alles Nutzertext escaped (§19).
+10. **Entf auf einem fokussierten Ding = Papierkorb** (Vorgabe 6), mit
+    „Rückgängig" in der Meldung (E718). Ein Feld ist kein Ding: Entf in
+    einem Eingabefeld legt nichts weg (`test597` §10).
+
+**Das Muster ist das des Touch Kits** (ContextMenu und Menu in
+`Popover.tsx`: Rechtsklick, Kontextmenü-Taste/Umschalt+F10, Halten mit
+Hebung, `role=menu`, `moveMenuFocus`, rote Gefahr) — **nachgebaut als
+Redion-Code**, nicht als Insel geladen und nicht abgeschrieben, derselbe Weg
+wie E709 beim runden Löschknopf. Es ist kein fremder Code im Zweig;
+`FREMDCODE.md` braucht keinen Eintrag.
+
+**Warum.** Dieselbe Seite hatte fünf Listen von Hand (Seitenmenü, ⌄ der
+Bibliothek, ⋯ des Hefts, ⋯ des Fachs, Zeile der Datenbank), jede als
+HTML-Zeichenkette mit eigener Verdrahtung daneben — der Vertrag von
+`Menue.menu` ist „HTML hinein, `<div>` hinaus", das Verhalten gehört dem
+Aufrufer. So entstanden drei Bedeutungen von „Löschen" (E718) und ein
+„Umbenennen", das an einer Stelle fragte und an der anderen sprang. Es gab
+keinen Ort für DAS EINE Umbenennen (§8). Und der Griff zum Menü einer Karte
+war ein Schmuck IM Kartenknopf: ein Knopf im Knopf ist kein gültiges HTML,
+also `aria-hidden`, also für Tastatur und Vorleser nicht da (§38).
+
+**Die Alternativen.**
+
+- *Die Aktionen in `Register.befehle`.* Verworfen: Befehle sind Befehle der
+  App („Neue Seite", „Suche") mit `tun()` OHNE Gegenstand — gemessen, kein
+  einziger nimmt ein Ding entgegen.
+- *Die Aktionen in `register/context.ts` (`Register.kontext.aktionen`).*
+  Spart die Zeremonie einer neuen Datei. Verworfen: die Kante fragt „wo bin
+  ich", die Aktionen fragen „was halte ich" — zwei Kataloge in einer Datei
+  sind genau das, was §8 verhindern soll, von der anderen Seite.
+- *Langdruck nach dem Kit (450 ms, öffnet noch während des Haltens).*
+  Verworfen (Vorgabe 3): Redion hat seit E83 EINEN Langdruck — heben,
+  loslassen, Menü. Zwei Gefühle in einer App sind eines zu viel.
+- *Der ☆ als zweites kleines Ziel in derselben Ecke.* Verworfen (Vorgabe 2):
+  zwei 44-px-Ziele nebeneinander auf einem 150 px breiten Deckel verdecken
+  das Bild; „Zu Favoriten" steht im Menü.
+- *Die Zeile der Datenbank auch ins Register.* Nicht in diesem Bogen (L242):
+  ihr Löschen und Umbenennen ist schon derselbe Griff, ihre Liste hat Suche
+  und Einträge, die es nur dort gibt.
+
+**Was es kostet.** Eine neue Datei (`register/aktionen.js`, im
+`GRUNDSTOCK` und in `index.html`). Start 1853 → 1859 KB gzip
+(`test388` §5, Decke 1950; nach der Durchsicht 1860). Ein Knopf mehr je Karte (8 → 14 Knöpfe bei 6 Karten;
+die Ruhe-Zählung von `test248` zählt Leiste, Kopf und Menüband, nicht die
+Karten, und blieb grün). Wer Menüs mit
+Rolle öffnet, findet den Fokus im Menü statt am Auslöser — für die Maus
+unsichtbar (`:focus-visible`), für die Tastatur der Sinn der Sache. Die
+Notizhefte sagen beim Weglegen jetzt „„Messheft" liegt im Papierkorb" mit
+„Rückgängig" statt „Ins Papierkorb gelegt — Reiter „Papierkorb" holt es
+zurück." — der Satz eines Fachs („Seine Hefte bleiben im Regal") bleibt.
+
+**Weg und wo es bleibt (§43).** Das ⌄ im Namen der Karte → das „…" oben
+rechts daneben (jeder Eintrag bleibt, dazu Rechtsklick, Tastatur, Entf und
+langes Drücken). Die Listen von Hand in `notebook.ts` (Heft, Fach) und
+`bibliothek.ts` → `Register.aktionen` (jeder Eintrag bleibt; neu dazu in der
+Bibliothek „Als Seite bearbeiten", „Symbol ändern", „Verschieben nach …",
+„Duplizieren", „Link kopieren"). Der Schlucker in `pwa.ts` → `Menue`.
+Kein Menüeintrag ist irgendwo verschwunden. Verloren ging dabei, ohne dass es hier stand, die
+Ankunft der Karten im Studio (E702) — die Durchsicht vom 10. Oktober hat
+sie gefunden, und sie ist zurück (Nachtrag unten).
+
+**Gefunden auf dem Weg.**
+
+- Am Rechner gibt es die Seitenleiste seit der neuen Schale nicht mehr als
+  Leiste (`premium.css`: `#sidebar{display:none}` ab 761 px); `#tree` zieht
+  in die Lade der Kante („Seiten"). Der Wächter klickte zuerst in eine
+  Leiste der Breite 0.
+- Chrome gibt Farben aus `color-mix()` als `color(srgb 0.97 … / 0.93)` aus
+  — Anteile von 0 bis 1. Eine Kontrastrechnung, die sie als 0–255 liest,
+  meldet 3,3 statt 5,9 (dieselbe Falle wie E695).
+- L239 Punkt 4 („Rückgängig" erst am Ende der Tab-Folge) war diesem Zweig
+  zugewiesen und bleibt offen (L242 Punkt 4): ein Fokus, der von selbst in
+  die Meldung springt, wäre für den Vorleser schlimmer.
+
+**Gegenproben** (eigener Arbeitsbaum auf `f3a5adb12`, je eine Stelle
+heraus, gebaut ohne Fehler, `test597` rot gesehen, zurückgenommen):
+
+```txt
+G1 das „…" wieder als <i aria-hidden> statt Knopf   73/75 „Jeder der 7 Deckel … — Elektrotechnik: I | …"
+G2 kein Binder an der Bibliothek                    55/75 „Rechtsklick auf den Ordner verhindert das Browsermenü"
+G3 Seitenmenü „Umbenennen" am Register vorbei        74/75 „4 von 4 durch Register.aktionen.tun — [… 3 Einträge]"
+G4 Pfeil ab im Menü tut nichts                       73/75 „Pfeil ab geht zum zweiten Eintrag — ist 0, soll 1"
+G5 ohne Schlucker nach dem langen Drücken            70/75 „Nach 650 ms … steht das Menü — {"menue":false…}"
+```
+
+G1 und G2 liefen zuerst so, dass der Bau rot war (`noUnusedLocals`: eine
+Konstante ohne Leser, und eine Bedingung, die TypeScript als `null`
+erkannte) — §52.6 sagt, das ist keine Gegenprobe; beide wurden so
+umformuliert, dass sie bauen, und erst dieser Lauf zählt.
+
+**Nachbarn** (unter dem Schloss; Stand 6. Oktober — der Stand nach der
+Durchsicht steht im Nachtrag unten): `test597` 75/75 (heute 91/91), `test37` 56/56,
+`test114` (mit 23), `test303` 18/18, `test432` 48/48, `test560` 28/28,
+`test531` 19/19, `test33` 107/107, `test430` 39/39, `test429` 17/17,
+`test431` 45/45, `test35` 44/44, `test36` 28/28, `test40` 25/25, `test212`
+32/32, `test265` 39, `test358` 60/60, `test82`, `test135`, `test175`,
+`test574`, `test344` 53/53, `test110`, `test90`, `test296` 17/17, `test248`
+50, `test222` 51/51, `test272`, `test436` 71/71, `test129`, `test130`,
+`test142`, `test155`, `test165`, `test194`, `test196`, `test247` 107,
+`test586` 60/60, `test587` 101/101, `test588` 78/78, `test589`, `test590`
+68/68, `test594` 76/76, `test579` 78, `test245` 51, `test127`, `test143`,
+`test362` 18/18 (an `ef3e19693` rot, siehe Nachtrag; heute 18/18), `test388` 22 (1859 KB; heute 1860), `test412` 27/27. Die Einzeldatei
+allein in einem Ordner über `file://`: Rechtsklick auf eine Karte → neun
+Einträge, „In den Papierkorb“ legt mit Frist weg, keine Ausnahme. Datei-Wächter:
+550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105. `test587`
+war einmal rot — „der Fokus ist zurück auf seiner Karte — ist null": das
+Umbenennen gab den Fokus an den Nachfolger seines Ankers zurück und kannte
+`data-mehr-id` nicht; jetzt kennt es ihn, und der Wächter fragt nach der
+Zelle der Karte statt nach dem Deckel allein. Angepasst (nicht gelockert),
+weil das „…" neben dem Deckel steht und die Einträge `data-a` tragen:
+`test265`, `test432`, `test531`, `test560`, `test587`, `test594`. Fremde
+rote Läufe des Grundstands, nicht angefasst und nicht in dieser Liste:
+`test86`, `test201` §1, `test270`, `test274`, `test332`, `test348`,
+`test365`, `test425`, `test448`, `test470`, `test493`, `test524`.
+
+**Bilder** (§55; nicht eingecheckt, §55.4): vorher und nachher, Rechner
+1440×900 und Telefon 390×844, hell und dunkel — das Gitter mit dem „…",
+das Menü am „…", Rechtsklick, Umschalt+F10 mit Fokusrahmen, langes Drücken
+mit dem Blatt, Ablagebaum, Regal, Tabelle, Seitenleiste, Notizhefte,
+Seitenmenü, Starker Kontrast und Touch Kit. Zwei Funde kamen aus dem Bild:
+auf einem Deckel mit Vorschautext stand das Wort DURCH die Scheibe des „…"
+(„Redi⋯on") — die Scheibe ist jetzt deckend —, und die Rundung des Knopfs
+schnitt die Trefferfläche an den Ecken ab (`test114` 23).
+
+Und ein dritter Fund aus dem Bild, nachgetragen am 10. Oktober: für das
+„…" rückte der Stern nach links (`right:40px`) — mitten in die erste Zeile
+des Vorschautexts. Am Telefon stand „Willkommen in Redi☆n", am Rechner
+„… herausgefunden☆". Der erste Gedanke war derselbe wie beim „…": eine
+deckende Scheibe unter den Stern. Das Bild danach zeigte, warum das nicht
+reicht: die Scheibe deckte die Mitte eines Worts und liess Splitter stehen
+(„Willkommen in ☆ di"), und auf den Ordnern stand sie als zweiter,
+scheinbarer Knopf da. Ein angeschnittenes Wort ohne Auslassungszeichen
+liest sich wie ein ANDERES Wort (E227). Jetzt weicht die Zeile: ein
+Platzhalter rechts oben im Blatt (`::before`, `float:right`, 48 × 22),
+und weil jede Zeile der Vorschau ein Block mit `overflow:hidden` ist, also
+ein eigener Formatierungskontext, endet sie mit „…" vor dem Stern statt
+unter ihm durchzulaufen. Ordner (ihr `::before` ist das Bild), Bilder und
+Handschrift (absolut) rücken nicht. `test597` §1b hält es bei 1440 hell und
+390 dunkel: kein Zeichen der Ecke auf sichtbarem Vorschautext ohne
+deckenden Grund, Stern und „…" decken einander nicht, und eine lange erste
+Zeile auf Höhe der Ecke endet mit „…" vor dem Stern. Gegen `25fb7f9d5` rot
+(„Stern liegt auf „Schutzleiter, Querschnit" ohne Grund"); Gegenproben:
+Platzhalter heraus → 75/79 („rechts 188, Stern links 146"); Scheibe ohne
+Grund → rot; Stern auf `right:20px` → „Stern und „…" decken einander".
+Gemessen wird der SICHTBARE Text: ein Range über einer Zeile mit
+`overflow:hidden` meldet den ganzen Text, auch den hinter ihrem „…" — der
+erste Anlauf des Abschnitts war deshalb rot, obwohl das Bild sauber war.
+
+**Nachtrag nach der Durchsicht vom 10. Oktober.** Eine unabhängige
+Durchsicht hat an `ef3e19693` drei blockierende und mehrere kleine Funde
+gemacht. Jeder bekam zuerst einen Wächter (`test597` §2, §3, §9, §12,
+§14–§17 — rot gegen `ef3e19693` mit 80 ok und 10 offen, §12 mit 82/9),
+dann die Reparatur:
+
+- **Die Decke der Marken.** `test362` §7 war rot: der Platzhalter der
+  Ecke schrieb eine rohe `22px` („ist {"22":86}, soll {"22":85}"). Jetzt
+  `height:calc(var(--touch-min) / 2)` — die halbe Trefferfläche des „…"
+  (§37), mit dem Grund an der Stelle. `marken-decke.json` wurde NICHT
+  angehoben: das hiesse einen Wächter lockern (§31, §47).
+- **Die Ankunft der Karten.** `studio.ts` lässt die ersten sechs Karten
+  beim Ortswechsel ankommen (E702) und suchte sie als
+  `.bib-gitter>.bib-deckel`. Seit diesem Bogen steht dort die
+  `.bib-zelle` — gemessen 0 von 6 bewegt. Jetzt `:is(.bib-deckel,
+  .bib-zelle)`: die Zelle kommt mit ihrem „…" an (Notizhefte und andere
+  Gitter ohne Zelle bleiben beim Deckel).
+- **„Zu Favoriten" und „Duplizieren" aus dem Seitenmenü** riefen über das
+  Register `nachAenderung` für die offene Seite — die zeichnete sie neu
+  und warf den Leser an den Anfang (scrollTop 1200 → 0, der Block ein
+  neues Element). Vor E721 kippte „Zu Favoriten" nur Baum und
+  Brotkrume, „Duplizieren" zeichnete nur den Baum. Auf der Seite gilt
+  wieder genau das; neu gezeichnet wird nur, wo Karten das Ding zeigen
+  (Bibliothek, Notizhefte).
+- **Das Zeichen der Gefahr unter Zeiger und Fokus.** `studio.css` färbte
+  das Zeichen jedes Eintrags unter Zeiger, Fokus und `.jetzt` in die
+  Textfarbe, ausser er trug `.rot` — und `.rot` setzt das Menü nur am
+  Telefon. Das Wort blieb rot, der Papierkorb daneben wurde weiss
+  (rgb(241, 242, 244) im Standard). Jetzt auch `:not([data-gefahr])`.
+- **aria-expanded.** Das „…" und das ⋯ der Seitenleiste trugen
+  `aria-haspopup="menu"`, aber nie `aria-expanded`; der Zustand
+  `[aria-expanded="true"]` im Stilblatt war tot. `Menue.aufgeklappt(anker,
+  menü)` setzt es jetzt an einem Anker mit aria-haspopup und nimmt es
+  zurück, sobald das Menü aus dem Baum geht — egal, wer es entfernt. Eine
+  Baumzeile bleibt aussen vor (dort heisst aria-expanded „aufgeklappt").
+  Benutzt von `Menue.aktionen`, dem Seitenmenü und `UI.wahl`; das offene
+  „…" zeigt jetzt auch seinen Grund (gemessen rgb(30, 32, 35) → rgb(43,
+  45, 48) dunkel, rgb(247, 247, 245) → rgb(239, 239, 238) hell).
+- **„Zuletzt geöffnet"** steht auf derselben Bibliotheksseite über den
+  Deckeln und zeigte dieselben Dokumente ohne ihr Menü: Rechtsklick gab
+  das Browsermenü, langes Drücken öffnete die Seite. Jetzt kennt der
+  Binder `.rmo-recent-card[data-rmo-open]` — dasselbe Menü, Tastatur, Entf.
+- **Gruppen in `UI.wahl`** sind benannte Gruppen (`role="group"`,
+  `aria-labelledby` auf ihre Überschrift); die Überschrift allein trug
+  `role="presentation"` und wurde nie vorgelesen.
+- **Eine Aktion, die scheitert, sagt es.** `Register.aktionen.tun` schrieb
+  nur in die Konsole; jetzt steht dazu „„Umbenennen" hat nicht geklappt."
+  da — sofort und wenn die Aktion als Promise später scheitert (§10).
+- **L242 Punkt 1** sagte, die Lösch-Einträge von PDF-Seite, Schaltplan,
+  Gedankenkarte und Kasten seien jetzt rot — dort gibt es keinen
+  Lösch-Eintrag in einem `.menu`. Der Punkt nennt jetzt genau, welche
+  Einträge `data-gefahr` bekamen und welche noch nicht. Punkt 5 nennt den
+  Schlucker am Tablet, der sich mit CDP nicht nachstellen liess (eigene
+  Sonde bei 1024 × 1366: ein Tipp 100, 300 und 900 ms nach dem Loslassen
+  traf jedes Mal) — ohne roten Wächter keine Änderung.
+
+`test580` war an `ef3e19693` ebenfalls rot und stand in keiner Liste
+(„Rechner · ⋯-Menü: die Zeichen sind still (grau) — ist ["del"]"; am
+Grundstand 1bfaca53 grün). Er nahm die Gefahr am Telefon aus (`.rot`);
+seit diesem Bogen ist sie auch am Rechner rot (`data-gefahr`). Angepasst,
+nicht gelockert: `data-gefahr` wird ebenso ausgenommen, und „Löschen ist
+rot" gilt jetzt für Rechner UND Telefon — die neue Rechner-Zeile ist am
+Grundstand rot („Löschen ist rot wie am Telefon (E721) — false").
+
+Gegenproben (eigener Arbeitsbaum auf `1eb34ee9d`, gebaut ohne Fehler,
+in zwei Runden, je die Zeile rot gesehen und zurückgenommen):
+
+```txt
+A  Wähler der Ankunft wieder >.bib-deckel        „Die ersten Karten des Gitters kommen an (0 von 6 bewegt)"
+A  Favorit auf der Seite wieder mit nachAenderung „„Zu Favoriten" … bleibt an ihrer Stelle — oben 1200 → 0"
+A  scheitern() ohne Meldung                      „Wirft eine Aktion, steht eine Meldung … — sofort: """ (und „später")
+A  Seitenmenü ohne Menue.aufgeklappt             „Das ⋯ der Zeile sagt aria-expanded=true … — wert: null"
+B  studio.css ohne :not([data-gefahr])           „… sein Zeichen bleibt mit dem Fokus … — ist rgb(55, 53, 47)"
+                                                 und „… unter dem Zeiger in --gefahr — standard: rgb(241, 242, 244)"
+B  Binder ohne .rmo-recent-card                  „„Zuletzt geöffnet": Rechtsklick … — verhindert: false"
+B  UI.wahl-Gruppe ohne role/labelledby           „Die Gruppe „Form" ist eine benannte Gruppe — gruppe: false"
+B  Menue.aktionen ohne aufgeklappt               „Das „…" sagt aria-expanded=true … — offen2: null"
+B  Duplizieren auf der Seite mit nachAenderung   „„Duplizieren" … bleibt an ihrer Stelle — oben 1200 → 0"
+B  Platzhalter wieder height:22px                test362: „ist {"22":86}, soll {"22":85}"
+```
+
+Runde A 86 ok, 5 offen; Runde B 85 ok, 6 offen — genau die erwarteten
+Zeilen, keine andere.
+
+Nachbarn nach dem Nachtrag (unter dem Schloss): `test597` 91/91,
+`test362` 18/18, `test581` 93, `test580` grün, `test494` 153, `test432`
+48/48, `test114`, `test37` 56/56, `test303` 18/18, `test560` 28/28,
+`test531` 19/19, `test33` 107/107, `test265` 39, `test364` 54/54,
+`test587` 101, `test594` 76/76, `test388` 22 (1860 KB), `test212` 32/32,
+`test35` 44/44, `test36` 28/28, `test430` 39/39, `test429` 17/17,
+`test431` 45/45, `test589`, `test585` 91/91 (im Stück einmal rot unter
+Last — „landet genau auf der neuen Wahl", 415,8 gegen 418,2 —, allein
+grün). Datei-Wächter: 550, 549, 225, 401, 402, 537, 290, 298, 410, 400,
+109, 87, 105. Dienststand v1429.
+
+Bilder (nicht eingecheckt, §55.4), vorher `ef3e19693` und nachher, 1440 ×
+900 und 390 × 844, hell und dunkel: der Papierkorb mit dem Fokus (das
+Zeichen war weiss, jetzt rot) und unter dem Zeiger; das offene „…" nah
+(jetzt mit Grund); „Zuletzt geöffnet" mit Rechtsklick am Rechner und
+langem Drücken am Telefon (vorher: nichts am Rechner, am Telefon ging die
+Seite auf); eine lange Seite nach „Zu Favoriten" (vorher oben bei Absatz
+1, jetzt bei Absatz 31 — am Telefon bei 17); die Ankunft 70 ms nach dem
+Ortswechsel (die vierte Karte noch halb durchsichtig).
+
+Das Muster bleibt das des Touch Kits, als Redion-Code nachgebaut — auch in
+diesem Nachtrag ist kein fremder Code dazugekommen, `FREMDCODE.md` braucht
+keinen Eintrag.

@@ -86,6 +86,12 @@ Elf Dateien, und jede beantwortet die Frage *„wo trage ich das ein?"*:
 | `formeln.js` | was jede Formelfunktion bedeutet |
 | `vorlagen.js` | die Galerie, mit Fassungsnummer |
 | `verbindungen.js` | jede Tür nach draussen — und was durch sie geht |
+| `aktionen.js` | was man mit einem Ding (einer Seite) tun kann — Rechtsklick, „…", Entf und langes Drücken fragen hier (E721) |
+
+(Es sind inzwischen mehr als elf; die Tabelle nennt die, nach denen man
+fragt. `aktionen.js` steht hier, weil es die Frage *„wo trage ich eine
+Aktion an einem Ordner, einer Seite, einem Heft ein?"* beantwortet — vorher
+gab es darauf fünf Antworten, eine je Menü.)
 
 Ein Register **beschreibt, es tut nicht.** Wie ein Block gezeichnet wird,
 steht im Bereich; dass es ihn gibt, steht im Register.
@@ -333,6 +339,7 @@ eine Insel, die beim Laden etwas tut.
 | eine Vorlage | `register/vorlagen.js` + der Bereich Vorlagen |
 | eine Verbindung nach draussen | `register/verbindungen.js` |
 | einen ganzen Bereich | `register/module.js` **und** `register/navigation.js` |
+| eine Aktion an einem Ding (Umbenennen, Farbe, Papierkorb …) | `register/aktionen.js` — `Register.aktionen.melde({ id, name, zeichen, gruppe, gefahr?, taste?, gilt?, tun })`; das Menü zeichnet `Menue.aktionen`, Rechtsklick und Tasten bindet `Menue.aktionenBinden` (E721) |
 
 Beispiel — eine Blockart „Warnung":
 

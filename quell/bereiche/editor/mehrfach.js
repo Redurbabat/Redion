@@ -57,7 +57,14 @@ const Mehrfach = (() => {
             if (e.key === 'Backspace' || e.key === 'Delete') {
                 e.preventDefault();
                 Verlauf.merke(true);
-                ids().forEach(id => { Store.trashBlock(id); Store.purgeBlock(id); });
+                const liste = ids();
+                if (liste.length === 1)
+                    App.inPapierkorb(Store.getBlock(liste[0]));
+                else {
+                    const n = liste.filter(id => App.inPapierkorb(Store.getBlock(id), { ruhig: true })).length;
+                    if (n)
+                        UI.toast(n + (n === 1 ? ' Block liegt' : ' Blöcke liegen') + ' im Papierkorb');
+                }
                 leeren();
                 App.zeichneSeite();
                 return;

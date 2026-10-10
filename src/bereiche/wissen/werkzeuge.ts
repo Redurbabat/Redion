@@ -2418,7 +2418,18 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
    *  die selbst einen besseren sagen (E368: das Ziehen im Regal nennt Heft
    *  und Ziel). Ohne den Zusatz bleibt alles, wie es war; zwei Sätze für
    *  eine Handlung wären einer zu viel, und der bessere ist nicht dieser. */
-  const verschiebe = (p: any, zielId: any, stillerHinweis = false) => {
+  const verschiebe = (p: any, zielId: any, stillerHinweis = false): boolean => {
+    /* KEIN RING (E718). Der Wähler oben filtert die eigenen Nachkommen —
+       das Ziehen in der Seitenleiste ruft aber genau diese Funktion mit
+       JEDEM Ziel. Ein Ordner auf seinem eigenen Kind ergab einen Ring
+       (parentId zeigt im Kreis), beide verschwanden aus Wurzel und Leiste,
+       und erreichbar blieben sie nur über die Suche. Deshalb steht die
+       Prüfung hier, im einen Weg, den alle nehmen — vor dem ersten
+       Schreiben. */
+    if (zielId && (String(zielId) === String(p.id) || istUnter(String(zielId), String(p.id)))) {
+      UI.toast('Ein Ordner kann nicht in sich selbst liegen');
+      return false;
+    }
     const alt = Store.getBlock(p.parentId);
     if (alt) {
       alt.content = alt.content.filter((x: any) => x !== p.id);
@@ -2434,6 +2445,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     App.zeichneBaum();
     App.zeichneSeite();
     if (!stillerHinweis) UI.toast('Verschoben');
+    return true;
   };
 
   /* ========================================================================
@@ -3197,5 +3209,19 @@ if (typeof Register !== 'undefined' && (Register as any).kontext) {
         }
       }));
     }
+  });
+}
+
+/* „VERSCHIEBEN NACH …" IST EINE AKTION AN JEDER SEITE (E721).
+   Bis hier stand es nur im Seitenmenü. Der Ordner in der Bibliothek, die
+   Zeile im Ablagebaum und der Rechtsklick fragen jetzt dieselbe Zeile im
+   Register — der Wähler bleibt dieser eine (er lässt die eigenen Kinder als
+   Ziel gar nicht zu, und `verschiebe` weist einen Ring ab, E718). Die Hefte
+   der Notizhefte ziehen in ein Fach und haben dafür ihren eigenen Eintrag. */
+if (typeof Register !== 'undefined' && (Register as any).aktionen) {
+  (Register as any).aktionen.melde({
+    id: 'verschieben', name: 'Verschieben nach …', zeichen: 'moveTo', gruppe: 'ablegen', rang: 10,
+    gilt: (_p: any, o: { kontext: string }) => o.kontext !== 'notizhefte',
+    tun: (p: any) => Werkzeuge.verschiebenNach(p)
   });
 }

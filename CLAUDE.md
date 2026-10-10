@@ -370,7 +370,7 @@ als Sonderfall irgendwo im Code verstreut.
 ```txt
 register/bloecke.js      register/befehle.js       register/vorlagen.js
 register/eigenschaften.js register/tasten.js       register/verbindungen.js
-register/ansichten.js    register/formeln.js
+register/ansichten.js    register/formeln.js       register/aktionen.js
 ```
 
 ---
@@ -457,6 +457,7 @@ Frage stellen, wohin sie gehört:
 | eine Verbindung | `register/verbindungen.js` |
 | Navigation | `register/navigation.js` |
 | ein Bereich | `register/module.js` |
+| eine Aktion an einem Ding (Umbenennen, Papierkorb …) | `register/aktionen.js` (E721) |
 
 **Keine doppelten Kataloge einführen.** Ein zweiter Katalog für dasselbe
 läuft mit dem ersten auseinander, und niemand merkt, welcher gilt.
@@ -928,7 +929,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 532 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 534 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1572,6 +1573,55 @@ Netz liegt der Offline-Streifen nicht auf der offenen Karte. Gezählt am
 sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Beim Zusammenführen nachgezählt (5. Oktober,
 `claude/morgen-besser-2`): 532.*
 
+*Und 533: `test594` — Ordner bearbeiten (E718). Redurs Notiz unter dem Foto
+der Bibliothek, „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die
+ordner selbst nicht bearbeiten", in 76 Zusagen über sechzehn Abschnitte:
+Umbenennen bleibt in der Bibliothek, „   " und Steuerzeichen sind kein Name,
+ein gleicher Name im selben Ordner fragt nach, Farbe und Symbol stehen
+sofort in Karte, Ablagebaum UND Seitenleiste, ein Ordner auf seinem eigenen
+Kind bildet keinen Ring, und „Löschen" in den Menüs, im ⋯ einer Datenbank
+und mit Entf heisst Papierkorb, mit „Rückgängig" in der Meldung — gefragt
+wird das Recht an der angefassten Seite. Die letzten zwei Wege und die
+Rechte fand nicht er, sondern eine Durchsicht: das README versprach
+„nichts verschwindet sofort", während „Datenbank löschen" nach einem
+`confirm()` Block UND Sammlung endgültig wegräumte. Gegen den Grundstand rot mit 14 von 62 (zwei
+Zusagen kamen danach aus dem BILD: ein „Rückgängig" über einem offenen
+Fenster tat nichts) — und
+seine schwerste Zeile ist die aus §15: eine Unterseite, im Blockmenü
+„gelöscht", stand als `"WEG"` da, samt Enkelseite, und nach dem Neuladen
+war nichts zurückzuholen. Zweimal war er aus dem FALSCHEN Grund rot: er las
+den Namen im Ablagebaum samt Knick („›Kabel …"), und `Bibliothek.oeffne()`
+ohne Ziel blieb in dem Ordner, in den er zuvor hineingegangen war — der
+Zustand lebt im Speicher, nicht nur im Merker. Gezählt am 6. Oktober, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 533.*
+
+*Und 534: `test597` — ein Menü je Ding (E721). Redurs Notiz unter dem Foto
+der Bibliothekskarten, auf dem er den ☆ oben rechts eingekreist hat: „Hier
+füge ... und oder beim rechts klicke sollte es mir zeigen löschen", in 91
+Zusagen über achtzehn Abschnitte: ein echtes „…" NEBEN jedem Deckel (44 ×
+44, benannt), derselbe Inhalt auf Rechtsklick, Kontextmenü-Taste,
+Umschalt+F10 und langes Drücken, Entf legt weg, Rot heisst Gefahr in allen
+zehn Schemata — und Umbenennen und Papierkorb gehen von allen Oberflächen
+durch EINE Tür, `Register.aktionen.tun`, gezählt mit einem Spion. Gegen den
+Grundstand rot mit 13 von 75. Viermal war er aus dem FALSCHEN Grund rot,
+und jedesmal sah es aus wie ein Fehler im Produkt: er suchte das Heft an
+der Wurzel des Regals, obwohl es im Fach lag; er suchte „Notizen", nachdem
+er die Seite in §7 selbst umbenannt hatte; er las `color(srgb 0.97 … /
+0.93)` als Zahlen von 0 bis 255 und rechnete einen Kontrast von 3,3 aus,
+wo 5,9 ist; und er klickte in eine Seitenleiste, die es am Rechner seit der
+neuen Schale gar nicht mehr gibt — der Baum steht dort in der Lade der
+Kante. Und einen Fund hat wieder das BILD gemacht, nicht er: der Stern,
+der für das „…" nach links rückte, stand mitten im Vorschautext — „Willkommen
+in Redi☆n"; seither misst sein §1b den sichtbaren Text unter der Ecke. Zwölf
+Zusagen kamen nach einer unabhängigen Durchsicht dazu, jede rot gesehen:
+die Ankunft der Karten, die verloren war, weil ein Wähler die neue Zelle
+nicht traf; eine lange Seite, die nach „Zu Favoriten" an den Anfang
+sprang; ein Papierkorb, dessen Zeichen unter dem Zeiger weiss wurde. Und
+die Durchsicht fand dabei, dass `test362` an seinem eigenen Stand rot war
+— eine rohe 22px. Ein Wächter, der in der Nachbarliste fehlt, wacht nicht.
+Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
+| wc -l` sagt 534.*
+
 ### Die Befehle
 
 ```txt
@@ -1588,7 +1638,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 532 Läufe
+npm run pruefen                      alle 534 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1678,7 +1728,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 532 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 534 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -403,21 +403,12 @@ const PWA = (() => {
        Deshalb räumt jede neue Berührung die alten Fänger weg — deren
        Nachzügler wären längst da gewesen —, und die Uhr bleibt nur als
        letzte Besenkammer. */
-    let schluckerWeg: (() => void) | null = null;
-    const nachzuegler = () => {
-      const schlucken = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
-      const arten = ['mousedown', 'mouseup', 'click'];
-      arten.forEach(t => document.addEventListener(t, schlucken, { capture: true, once: true }));
-      const weg = () => {
-        arten.forEach(t => document.removeEventListener(t, schlucken, { capture: true }));
-        /* Nur das EIGENE Merkzeichen löschen. Die 800-ms-Uhr eines alten
-           Fängers darf nicht das Merkzeichen eines neueren nullen — sonst
-           hängt der neue fest und frisst wieder den nächsten Tipp. */
-        if (schluckerWeg === weg) schluckerWeg = null;
-      };
-      schluckerWeg = weg;
-      setTimeout(weg, 800);
-    };
+    /* SEIT E721 IN DER SCHALE (`Menue.nachzuegler`). Dieselbe Geste —
+       langes Drücken, Loslassen, Menü — gibt es jetzt auch an Karten,
+       Bäumen und Heften; zwei Fänger für dieselben Nachzügler wären zwei
+       Wahrheiten, die einander die Uhr verstellen. Der Text, warum es sie
+       gibt, steht dort. */
+    const nachzuegler = (): void => Menue.nachzuegler();
 
     /* Der Finger trägt. Ein EIGENER Zuhörer, nicht der gemeinsame: der ist
        passiv, und hier muss preventDefault das Rollen der Seite anhalten —
@@ -476,7 +467,7 @@ const PWA = (() => {
       startX = t.clientX; startY = t.clientY;
 
       /* Eine neue Berührung heisst: die Nachzügler der alten sind durch. */
-      if (schluckerWeg) schluckerWeg();
+      Menue.nachzueglerWeg();
 
       /* Eine Hebung, die ein neues touchstart noch vorfindet, ist eine
          Leiche: ihr Berührungsstrom starb mit einem Neuzeichnen — die
@@ -524,7 +515,7 @@ const PWA = (() => {
           if (gezogen) { gezogen.style.transform = ''; gezogen.style.opacity = ''; }
           gezogen = null; verschoben = 0;
           document.addEventListener('touchmove', tragen, { passive: false });
-        }, 500);
+        }, Menue.HALTEN_MS);
       }
 
       /* Wischen auf einer Aufgabe oder Datenbankzeile.

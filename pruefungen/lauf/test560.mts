@@ -33,6 +33,9 @@
  *   5  Nur bekannte Farben erzeugen das Attribut (Whitelist, §19).
  *   6  Am Telefon sind die Farbfelder zu treffen (§37), jedes hat einen
  *      Namen (§38), und das gewählte sagt es (aria-pressed).
+ *   7  Die Wahl im ⌄-Menü erreicht die Seitenleiste SOFORT, ohne dass
+ *      jemand neu zeichnet (E718, `App.nachAenderung`) — §4 zeichnet vor
+ *      dem Messen von Hand, und das tut ein Mensch nicht.
  *
  * `listen(0)` statt einer festen Zahl (L205).
  *
@@ -134,7 +137,7 @@ const DECKEL = (id: string) => `(() => {
 /** Das ⌄-Menü eines Deckels öffnen und den Eintrag „Farbe" drücken. */
 const farbMenueAuf = async (s: Page, id: string): Promise<{ eintrag: boolean; felder: any[] }> => {
   await s.evaluate(`document.querySelectorAll('.menu, .ui-menu, .menue').forEach(m => m.remove())`);
-  await s.evaluate(`document.querySelector('.bib-deckel[data-id="${id}"] .bib-deckel-mehr')?.click()`);
+  await s.evaluate(`document.querySelector('.bib-zelle:has(> .bib-deckel[data-id="${id}"]) > .bib-deckel-mehr')?.click()`);
   await s.waitForTimeout(250);
   const eintrag = await s.evaluate(`(() => {
     const b = [...document.querySelectorAll('button[data-a]')].find(x => /Farbe/.test(x.textContent || ''));
@@ -227,7 +230,7 @@ p('Das Fach steht als Kachel da', fachVorher.da === true);
 await s.evaluate(`document.querySelector('[data-mehr-fach="${fach}"]')?.click()`);
 await s.waitForTimeout(250);
 const fachEintrag = await s.evaluate(`(() => {
-  const b = [...document.querySelectorAll('button[data-k]')].find(x => /Farbe/.test(x.textContent || ''));
+  const b = [...document.querySelectorAll('.menu button[data-a]')].find(x => /Farbe/.test(x.textContent || ''));
   if (!b) return false; b.click(); return true;
 })()`) as boolean;
 await s.waitForTimeout(250);
@@ -279,6 +282,26 @@ await zurBibliothek(s);
 const boese = await s.evaluate(DECKEL(ordner)) as any;
 p('Ein unbekannter Wert erzeugt kein Attribut', boese.farbe === null, String(boese.farbe));
 p('Und landet nicht im Markup', !String(boese.markup).includes('<b>x</b>'));
+await s.evaluate(`Store.updateBlock('${ordner}', { color: '' })`);
+
+/* ── 7 ────────────────────────────────────────────────────────────────── */
+/* E672 versprach „die Farbe steht überall, wo der Ordner steht …
+   Seitenleiste". §4 oben zeichnet vor dem Messen von Hand neu
+   (`Bibliothek.oeffne`) — und genau das tut ein Mensch nicht. Hier wird
+   gleich nach der WAHL im Menü gemessen, ohne ein Zeichnen dazwischen
+   (E718: `App.nachAenderung`). Die Nummer 7 folgt dem Telefon-Abschnitt 6
+   unten im Text, nicht im Ablauf: §6 braucht eine eigene Seite. */
+console.log('\n7 · Die Wahl im Menü erreicht die Seitenleiste sofort (E718)');
+await zurBibliothek(s);
+await farbMenueAuf(s, ordner);
+await waehle(s, 'purple');
+const sofort = await s.evaluate(`(() => {
+  const zeile = [...document.querySelectorAll('#sidebar .row')]
+    .find(r => (r.querySelector('.nm')?.textContent || '').includes('Kabelkunde'));
+  return zeile ? zeile.getAttribute('data-farbe') : 'KEINE ZEILE';
+})()`) as string | null;
+console.log('    Seitenleiste direkt nach der Wahl: ' + JSON.stringify(sofort));
+p('Die Zeile in der Seitenleiste trägt die neue Farbe sofort', sofort === 'purple', String(sofort));
 await s.evaluate(`Store.updateBlock('${ordner}', { color: '' })`);
 
 p('Keine Ausnahme im Browser (Rechner)', fehler.length === 0, fehler.slice(0, 2).join(' · '));

@@ -47,6 +47,8 @@ const Baumansicht = (() => {
                         zeile.setAttribute('aria-expanded', String(offen.has(k.id)));
                     if (k.deaktiviert)
                         zeile.setAttribute('aria-disabled', 'true');
+                    if (auftrag.aktionen)
+                        zeile.setAttribute('aria-haspopup', 'menu');
                     zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
                     zeile.style.setProperty('--baum-ebene', String(ebene - 1));
                     const farbe = typeof Farben !== 'undefined' && Farben.kennung ? Farben.kennung(k.farbe) : '';
@@ -192,6 +194,14 @@ const Baumansicht = (() => {
             }
         });
         zeichne();
+        const { aktionen, entf } = auftrag;
+        if (aktionen && typeof Menue !== 'undefined') {
+            Menue.aktionenBinden(wurzel, {
+                auswahl: '[data-baum-id]',
+                oeffnen: (el, wo) => aktionen(el.dataset['baumId'] || '', { ...wo, anker: el }),
+                ...(entf ? { entf: (el) => entf(el.dataset['baumId'] || '', el) } : {})
+            });
+        }
         return {
             element: wurzel,
             gewaehlt: () => gewaehlt,

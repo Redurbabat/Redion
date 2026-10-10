@@ -31,6 +31,9 @@ const UI = {
   menu:         (...a: Parameters<typeof Menue.menu>) => Menue.menu(...a),
   menuMitSuche: (...a: Parameters<typeof Menue.menuMitSuche>) => Menue.menuMitSuche(...a),
   amTelefon:    () => Menue.amTelefon(),
+  /* Die eine Auswahlliste und das Menü eines Dings (E721). */
+  wahl:         (...a: Parameters<typeof Menue.wahl>) => Menue.wahl(...a),
+  aktionen:     (...a: Parameters<typeof Menue.aktionen>) => Menue.aktionen(...a),
   toast:        (...a: Parameters<typeof Hinweis.toast>) => Hinweis.toast(...a),
   banner:       (...a: Parameters<typeof Hinweis.banner>) => Hinweis.banner(...a),
   leer:         (...a: Parameters<typeof Hinweis.leer>) => Hinweis.leer(...a),
