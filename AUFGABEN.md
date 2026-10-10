@@ -1757,4 +1757,19 @@ Gefunden beim Bau von E721, nicht dort entschieden — je mit dem Grund:
    Gruppen jetzt Namen (`role="group"`) — wer darauf umzieht, prüft das
    Blatt am Telefon mit Überschrift über der Karte.
 
+## Nach E725 (10. Oktober 2026) — Bibliothek: eine Suche
 
+Gefunden beim Bau von E725, nicht dort entschieden — je mit dem Grund:
+
+1. **Ein Sucheingang oben in einem Dokument am Telefon** (Vorgabe f, nicht
+   in dieser Welle). Heute steht die Lupe nur in der Ansichtsklappe unter
+   👁. Mit dem Platz der Dokumentleiste abstimmen (Seiteneditor, Fläche;
+   L245 Punkt 1).
+2. **Ein Bereich für die Notizhefte** („dieses Fach") — dieselbe Frage wie
+   `Bibliothek.suchBereich()`, im Bereich der Notizhefte beantwortet
+   (L245 Punkt 4).
+3. **„Im Regal zeigen"** aus der Suche im Bereich Bibliothek (L245 Punkt
+   5) — wenn Redur es will; Vorgabe c war: Treffer mit Vorschau, kein
+   Live-Filter.
+4. **Pfeiltasten im Blatt am Telefon** (`Menue.wahl`) — gehört `menue.ts`
+   (E721); heute geht Tab (L245 Punkt 3).

@@ -1626,16 +1626,22 @@ Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
 EINE Suche, die ihren Bereich kennt (E725). Redurs Notiz unter dem Foto
 der Bibliothek, „ich sollte von jeder kategorie nur eine sehen und die
 anderen alles unterdem das beim ^ … und die sucher hier sollte es bei der
-ganz obe such integriert sein", in sieben Abschnitten: Ort, Art und Form
-je ein Wähler in einer Zeile, in Deckel, Regal und Liste, bei 1440 und
-390; jede frühere Wahl mit genau einem Namen in einem Menü; der erste
-Deckel im ersten Bild des Telefons; kein Suchfeld mehr auf der Seite; und
-Strg P, die Kapsel und ⌕ gehen in der Bibliothek mit [Bibliothek ·
-Überall], in einer PDF mit [Dieses Dokument · Alle Dokumente · Überall]
-auf — „Dieses Dokument" meldet dieselbe Zahl wie die Suchleiste, weil sie
-der Motor ist. Gegen den Grundstand rot: 30 von 191 bestanden. Gezählt am
-10. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
-535.*
+ganz obe such integriert sein", in 196 Zusagen über sieben Abschnitte: Ort,
+Art und Form je ein Wähler in einer Zeile, in Deckel, Regal und Liste, bei
+1440 und 390; jede frühere Wahl mit genau einem Namen in einem Menü; der
+erste Deckel im ersten Bild des Telefons; kein Suchfeld mehr auf der
+Seite; und Strg P, die Kapsel und ⌕ gehen in der Bibliothek mit
+[Bibliothek · Überall], in einer PDF mit [Dieses Dokument · Alle Dokumente
+· Überall] auf — „Dieses Dokument" meldet dieselbe Zahl wie die
+Suchleiste, weil sie der Motor ist. Gegen den Grundstand rot: 30 von 191
+bestanden. Drei seiner Zusagen fand er gegen den eigenen Bau: wer
+„Ausbildung" wählte, kam bis zum Neuladen nicht zurück; im Kopf der Suche
+standen zwei verschiedene „Überall" übereinander; und am Telefon ist
+jedes Menü ein Blatt ohne Pfeiltasten — einmal war er deshalb aus dem
+FALSCHEN Grund rot. Und eine Zeile von `test585` war ohne Marke grün, weil
+−1 und −2 „genau aufeinander" liegen; eine leere Liste hat auch keine
+Doppel (§55.2). Gezählt am 10. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 535.*
 
 ### Die Befehle
 

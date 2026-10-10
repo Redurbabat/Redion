@@ -1,5 +1,40 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 10. Oktober 2026 · E725 — Bibliothek: eine Wahl je Kategorie, eine Suche mit Bereichen (Masterprompt #13)
+
+**Redur** (Masterprompt vom 29. September, S. 13, unter dem Foto der
+Bibliothek): „hier habe ich sehr viel zum sehe ich sollte von jeder
+kategorie nur eine sehen und die anderen alles unterdem das beim ^ … und
+die sucher hier sollte es bei der ganz obe such integriert sein beim suche
+wenn ich bei eine pdf oder eine dokument bin sollte mir wie es jetzt ist
+mir zeiget wo ich suchen will und lösche es von dem biblotek seite …";
+Zustimmung vom 3. Oktober: „die Suchleiste ‚Dokument suchen‘ der
+Bibliotheksseite in die globale Suche überführen".
+
+**Fund** (`test600` gegen `acb876c1d`, 30 von 191): 20 Bedienelemente über
+dem ersten Deckel, am Telefon der erste Deckel bei y 931 von 844; der Ort
+zweimal (Ortsmenü und Wege-Zeile, drei Ziele unter anderem Namen); die
+Regalsuche ein Titelfilter („Leitungsschutz" → 0 Deckel); die grosse Suche
+ohne Bereich, in einer PDF nur „Überall"; in der Suchleiste ein 📚.
+
+**Bau:** eine Zeile `.bib-wahl` mit Ort-, Art- und Formpille, je mit
+`Menue.wahl` (ein Name je Ort, `ORTE` statt `REITER`; die Sammlungen als
+Gruppe im Ortsmenü; die Formen nur am Formknopf); kein leeres „Zuletzt";
+keine Suchfelder auf der Seite; `Bibliothek.suchBereich()` und
+`reiterFilter` (die Ortsregeln einmal); `App.suche(vorgabe, { bereich })`
+mit Bereichszeile (`Segment`); `DocumentMode.findenIn`, `findBereich`,
+`findBereichMerken`; der Umschalter in der Suchleiste; die Ortspille auch
+in „Ausbildung"; die Vorgabe des Ortsfilters heisst „Alle Orte". Gefunden
+auf dem Weg: `App.suche(vorgabe)` suchte das Wort nicht; „Alle PDFs · 20"
+über zwei PDFs; aus „Ausbildung" kein Weg zurück; zwei „Überall" im Kopf
+der Suche.
+
+**Prüfung:** `test600` 196/196 (neu, rot gesehen, fünf Gegenproben);
+angepasst und rot gesehen: `test33`, `test202`, `test359`, `test369`,
+`test424`, `test428`, `test430`, `test459`, `test585`; Nachbarn und
+Datei-Wächter in E725; Zahlen in `messungen.md` §94; was offen ist, in
+L245. Start 1860 → 1863 KB.
+
 ## 10. Oktober 2026 · E721 nach der Durchsicht — Decke, Ankunft, Stelle, Zeichen, Name, Meldung
 
 **Redur** (Masterprompt vom 29. September, S. 19): „Hier füge ... und oder
