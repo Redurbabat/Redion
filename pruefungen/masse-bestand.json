@@ -43,11 +43,6 @@
   },
   {
    "datei": "bausteine.css",
-   "wahl": ".bib-arten button",
-   "px": 34
-  },
-  {
-   "datei": "bausteine.css",
    "wahl": ".bib-form button",
    "px": 32
   },

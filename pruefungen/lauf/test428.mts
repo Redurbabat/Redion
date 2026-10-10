@@ -120,15 +120,22 @@ try {
       }
     }
   }
-  await page.evaluate('Bibliothek.oeffne()');
-  /* Mit der Tastatur: der Ort-Wähler, Enter, Pfeile bis „Seiten & Wissen", Enter. */
-  await page.locator('.bib [data-orte]').focus();
-  await page.keyboard.press('Enter');
-  for (let n = 0; n < 20 && await page.evaluate(`document.activeElement?.getAttribute('data-wahl')`) !== 'sammlung:uebersicht'; n++)
-    await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Enter');
-  await page.waitForURL('**#seiten-wissen');
-  check('Sammlungen sind mit Tastatur bedienbar', await page.locator('.aw-fenster summary').count() === 1);
+  /* Mit der Tastatur: der Ort-Wähler, Enter, bis „Seiten & Wissen", Enter.
+     Am Rechner ist es ein Menü (Pfeiltasten), am Telefon ein Blatt (Tab) —
+     bis E725 lief diese Probe nach der Schleife oben zufällig bei 390 px
+     über das `<select>`; jetzt steht beides ausdrücklich da. */
+  for (const [width,height,taste] of [[1366,900,'ArrowDown'],[390,844,'Tab']] as const) {
+    await page.setViewportSize({width,height});
+    await page.evaluate('Bibliothek.oeffne()');
+    await page.locator('.bib [data-orte]').focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    for (let n = 0; n < 25 && await page.evaluate(`document.activeElement?.getAttribute('data-wahl')`) !== 'sammlung:uebersicht'; n++)
+      await page.keyboard.press(taste);
+    await page.keyboard.press('Enter');
+    await page.waitForURL('**#seiten-wissen');
+    check(`${width}: Sammlungen sind mit Tastatur bedienbar (${taste})`, await page.locator('.aw-fenster summary').count() === 1);
+  }
   check('Keine Laufzeitfehler', errors.length === 0);
   console.log(`\n${passed}/${passed} bestanden`);
 } finally { await browser.close(); await new Promise<void>(resolve => server.close(() => resolve())); }

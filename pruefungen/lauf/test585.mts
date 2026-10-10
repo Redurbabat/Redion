@@ -459,9 +459,10 @@ console.log('\n5 · Die Umschalter: die Wahl fliegt, statt zu springen');
   /* Die Wege im Regal — seit E725 im Ortsmenü. Die Wahl schliesst dort das
      Menü, also fliegt kein Wechsel; das Material zieht mit ins Menü: EINE
      leise Marke (E711) steht auf dem gewählten Ort und gleitet mit den
-     Pfeilen, wie in der Suche und im Menü mit Suche. */
+     Pfeilen, wie in der Suche und im Menü mit Suche. Am Rechner: dort ist es
+     ein Menü mit Pfeiltasten (am Telefon ein Blatt, E702). */
   {
-    const a = await aufmachen();
+    const a = await aufmachen({ handy: false });
     await a.pc.evaluate(`Bibliothek.oeffne()`);
     await a.pc.waitForSelector('.bib [data-orte]', { timeout: 15000 });
     await a.pc.waitForTimeout(600);

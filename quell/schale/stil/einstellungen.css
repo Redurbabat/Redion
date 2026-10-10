@@ -723,7 +723,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   /* Am Telefon füllt der Umschalter die Breite, jede Wahl gleich breit. */
   .such-bereich{padding:0 16px 10px}
   .such-bereich .ru-seg{width:100%}
-  .such-bereich .ru-seg-wahl{flex:1 1 0; padding:0 8px}
+  .such-bereich .ru-seg-wahl{flex:1 1 auto; gap:4px; padding:0 6px; font-size:12.5px}
   .such-filter select{
     flex:0 0 auto;
     min-height:42px; padding:0 32px 0 14px;

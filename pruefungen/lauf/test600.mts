@@ -292,7 +292,11 @@ for (const handy of [false, true]) {
   await s.keyboard.press('Enter');
   await s.waitForTimeout(450);
   const m = await menue(s);
-  p(`${g}: Enter öffnet das Ortsmenü (role=menu)`, m.da && m.rolle === 'menu', JSON.stringify({ da: m.da, rolle: m.rolle }));
+  /* AM TELEFON IST ES EIN BLATT VON UNTEN (`role=dialog`, E702) — das Muster
+     des Kits für eine Auswahl am Telefon; seine Einträge bleiben
+     `menuitemradio` mit ✓. Die Pfeiltasten gehören dem Menü am Rechner. */
+  const rolleOk = (r: string): boolean => handy ? ['menu', 'dialog'].includes(r) : r === 'menu';
+  p(`${g}: Enter öffnet das Ortsmenü (${handy ? 'Blatt' : 'role=menu'})`, m.da && rolleOk(m.rolle), JSON.stringify({ da: m.da, rolle: m.rolle }));
   gleich(`${g}: … und der Ort-Wähler sagt aria-expanded=true`,
     await s.evaluate<any>(`document.querySelector('.bib [data-orte]')?.getAttribute('aria-expanded')`), 'true');
   const orte = m.eintraege.filter(e => !e.id.startsWith('sammlung:'));
@@ -308,9 +312,11 @@ for (const handy of [false, true]) {
   p(`${g}: die Formen stehen NICHT mehr im Ortsmenü (Entscheidung b)`, namen.length >= ORTE.length && !FORMEN.some(f => namen.includes(f)), JSON.stringify(namen));
   gleich(`${g}: der Fokus steht auf dem gewählten Ort`, m.fokus, 'ablage');
   gleich(`${g}: … und nur er ist gewählt`, orte.filter(e => e.an === 'true').map(e => e.id), ['ablage']);
-  await s.keyboard.press('ArrowDown');
-  await s.waitForTimeout(120);
-  gleich(`${g}: Pfeil ab wandert zum nächsten Ort`, (await menue(s)).fokus, 'kuerzlich');
+  if (!handy) {
+    await s.keyboard.press('ArrowDown');
+    await s.waitForTimeout(120);
+    gleich(`${g}: Pfeil ab wandert zum nächsten Ort`, (await menue(s)).fokus, 'kuerzlich');
+  }
   await s.keyboard.press('Escape');
   await s.waitForTimeout(250);
   const nachEsc = await s.evaluate<any>(`({ menue: !!document.querySelector('.menu'),
@@ -349,7 +355,7 @@ for (const handy of [false, true]) {
   await s.keyboard.press(' ');
   await s.waitForTimeout(450);
   const am = await menue(s);
-  p(`${g}: die Leertaste öffnet das Artmenü`, am.da && am.rolle === 'menu');
+  p(`${g}: die Leertaste öffnet das Artmenü`, am.da && rolleOk(am.rolle), JSON.stringify({ da: am.da, rolle: am.rolle }));
   const artIds = am.eintraege.map(e => e.id);
   p(`${g}: … mit „Alle Arten" und den vorhandenen Arten`,
     artIds[0] === 'alle' && ['pdf', 'board', 'ordner', 'seite'].every(x => artIds.includes(x)), JSON.stringify(am.eintraege));

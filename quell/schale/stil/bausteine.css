@@ -763,16 +763,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   font-weight:760
 }
 /* Der Ort ist eine Auskunft mit einem Weg dahinter, keine Überschrift:
-   „Kürzlich verwendet · 23 Dokumente ▾". Er steht unter dem Titel, weil er
-   sich ändert und der Titel nicht. */
-.bib-ort{
-  grid-column:1 / -1; grid-row:2; justify-self:start;
-  display:flex; align-items:center; gap:5px; min-height:32px;
-  padding:0 8px 0 0; border-radius:8px; background:none; border:0;
-  cursor:pointer; color:var(--text-dim); font-size:13px
-}
-.bib-ort i{ color:var(--text-faint); font-size:13px; font-style:normal }
-.bib-ort:hover{ color:var(--text) }
+   „Zuletzt geöffnet · 23 Dokumente ⌄". Er steht unter dem Titel, weil er
+   sich ändert und der Titel nicht — seit E725 als erste Pille der Zeile
+   `.bib-wahl` (Gestalt dort, in `bibliothek-studio.css`). */
+.bib-ort{ justify-self:start }
 .bib-neu{
   grid-column:2; grid-row:1;
   display:flex; align-items:center; gap:7px;
@@ -790,20 +784,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-form-knopf:hover{ background:var(--bg-hover); color:var(--text) }
 
-/* Abstand und Aussenmass kommen aus `bibliothek-studio.css` (6px / 24px).
-   Hier bleibt, was dort fehlt: dass die Leiste eine Zeile ist und quer
-   geschoben werden kann, wenn die Arten nicht nebeneinander passen. */
-.bib-arten{
-  display:flex; overflow-x:auto; scrollbar-width:none
-}
-.bib-arten::-webkit-scrollbar{ display:none }
-/* Polster, Rundung und Schriftgrösse setzt das Studio-Blatt. */
-.bib-arten button{
-  flex:none; min-height:34px; border:0;
-  background:var(--bg-card); color:var(--text-dim); cursor:pointer
-}
-.bib-arten button:hover{ background:var(--bg-hover); color:var(--text) }
-.bib-arten button.on{ background:var(--text); color:var(--bg); font-weight:620 }
+/* Hier stand bis E725 die Artenzeile `.bib-arten` (bis elf Chips in einer
+   Bank). Die Art ist seither eine Pille in `.bib-wahl`, ihre übrigen Wahlen
+   stehen in ihrem Menü. */
 
 /* DASS es ein Raster ist, steht hier — WIE breit die Spalten sind, im
    Studio-Blatt (155–200px, am Telefon zwei feste Spalten). `display:grid`
@@ -7089,7 +7072,7 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
   .document-findbar input{flex:1 1 6rem}
   .document-find-bereich{order:9; flex:1 0 100%}
   .document-find-bereich .ru-seg{width:100%}
-  .document-find-bereich .ru-seg-wahl{flex:1 1 0; padding:0 8px; font-size:12.5px}
+  .document-find-bereich .ru-seg-wahl{flex:1 1 auto; gap:4px; padding:0 6px; font-size:12.5px}
 }
 /* DIE LISTE HÄNGT UNTER DER LEISTE, nicht im Papier: ein Treffer in einem
    anderen Dokument hat auf diesem Blatt keinen Ort.

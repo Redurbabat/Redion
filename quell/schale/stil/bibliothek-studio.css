@@ -3,34 +3,35 @@
 .bib-dkopf{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:26px}
 .bib-dkopf h1{flex:1;min-width:120px;margin:0;font-size:26px;letter-spacing:-.7px}
 .bib-dkopf .bib-krume{flex-basis:100%;order:-1}
-.bib-dkopf .bib-ort{flex-basis:100%;margin:0;text-align:left;padding:0;background:none;border:0;color:var(--text-dim)}
+/* EINE ZEILE FÜR ORT, ART UND FORM (E725) — unter dem Titel, auch am
+   Telefon. Jede Pille trägt die gewählte Antwort und ein gezeichnetes ⌄;
+   die übrigen stehen in ihrem Menü (`Menue.wahl`). 44 px (§37 hart: die
+   Wahl, wo man ist, ist ein Hauptweg). Eine gesetzte Art sagt es mit dem
+   WORT („PDF" statt „Alle Arten") UND mit Rahmen und Grund — nie nur mit
+   Farbe (§38). */
+.bib-wahl{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+.bib-pille{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;min-height:var(--touch-min);padding:0 12px 0 14px;border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--bg-card);color:var(--text);font:inherit;font-size:13.5px;font-weight:560;cursor:pointer;transition:background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease)}
+.bib-pille:hover{background:var(--bg-hover)}
+.bib-pille:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.bib-pille[aria-expanded="true"]{background:var(--bg-hover);border-color:var(--text-faint)}
+.bib-pille[data-gefiltert]{background:var(--accent-schwach);border-color:var(--accent-text);color:var(--accent-text);font-weight:640}
+.bib-pille-wort{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bib-pille-zahl{flex:none;white-space:nowrap;color:var(--text-dim)}
+.bib-pille[data-gefiltert] .bib-pille-zahl{color:inherit}
+.bib-pille-pfeil{display:inline-flex;flex:none;color:var(--text-dim)}
+.bib-pille-pfeil svg{width:14px;height:14px}
+.bib-pille[data-gefiltert] .bib-pille-pfeil{color:inherit}
+.bib-wahl .bib-form-knopf{border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--bg-card)}
+.bib-wahl .bib-form-knopf[aria-expanded="true"]{background:var(--bg-hover)}
+.bib-wahl .bib-form-knopf svg{width:18px;height:18px}
 /* 44, nicht 40: „Neu" und „PDF importieren" sind die zwei Hauptwege des
    Regals (§37 hart). Die 40 gewann am Telefon gegen `.bib-dkopf button`,
    weil `.bib-dkopf .bib-neu` spezifischer ist — test114 mass 80 × 40. */
 .bib-dkopf .bib-neu,.bib-studio-import{min-height:var(--touch-min);padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
 .bib-studio-import{background:var(--haupt-flaeche);color:var(--auf-accent);box-shadow:var(--haupt-schein)}
 .bib-dkopf .bib-neu{background:var(--bg-hover);color:var(--text);border:1px solid var(--line)}
-.bib-studio-navigation{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px}
-.bib-studio-optionen{position:relative;font-size:13px;color:var(--text-dim)}
-.bib-studio-optionen>summary{cursor:pointer;min-height:var(--touch-min);display:flex;align-items:center;gap:8px;padding-inline:10px;border-radius:var(--radius-lg);list-style:none}
-.bib-studio-optionen>summary::after{content:'⌄';font-size:14px}
-.bib-studio-optionen>summary:hover{background:var(--bg-hover);color:var(--text)}
-.bib-studio-optionen[open]>summary{background:var(--accent-schwach);color:var(--accent-text)}
-.bib-studio-optionen>select{position:absolute;top:calc(100% + 6px);left:0;z-index:10;width:220px;max-width:calc(100vw - 48px);box-shadow:var(--studio-elevation)}
-.bib-studio-optionen>summary::-webkit-details-marker{display:none}
 .bib :is(summary,select):focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
-.bib-studio-wege{display:flex;gap:4px;flex-wrap:wrap}
-.bib-studio-wege button{min-height:var(--touch-min);padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
-.bib-studio-sammlungen{max-width:100%;min-height:var(--touch-min);padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:13px}
-.bib-studio-wege button.on{background:var(--accent-schwach);color:var(--accent-text);font-weight:600}
-.bib-studio-wege button:hover{background:var(--bg-hover)}
-.bib-studio-wege button,.bib-arten button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 /* … button:active: Einsinken per press.ts (E702) */
-.bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
-.bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
-.bib-studio-suche input{width:100%;min-width:0;min-height:var(--touch-min);background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
-.bib-studio-suche:focus-within{outline:2px solid var(--accent-text);outline-offset:2px}
-.bib-studio-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .bib-studio-weiter{display:flex;align-items:center;gap:22px;padding:22px 26px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl);overflow:hidden}
 .bib-studio-weiter>div{min-width:0;flex:1}.bib-studio-weiter h2{font-size:18px;line-height:1.4;margin:6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bib-studio-eyebrow{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-text)}
@@ -38,7 +39,6 @@
 .bib-studio-weiter button{display:flex;gap:14px;align-items:center;flex-shrink:0;min-height:var(--touch-min);padding:10px 16px;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg);font-weight:600}
 .bib-studio-miniatur{display:grid;place-items:center;flex:0 0 62px;height:82px;border-radius:4px;background:#fff;color:#6556ae;box-shadow:var(--studio-paper-shadow);transform:perspective(var(--studio-perspective)) rotateY(-12deg) rotate(-6deg);overflow:hidden}
 .bib-studio-miniatur img{width:100%;height:100%;object-fit:cover}
-.bib-arten{gap:6px;margin-bottom:24px}.bib-arten button{border-radius:var(--radius-pill);padding:6px 12px;font-size:12px}
 .bib-gitter{grid-template-columns:repeat(auto-fill,minmax(155px,200px));gap:30px 26px}
 .bib-deckel{perspective:var(--studio-perspective);min-width:0}
 .bib-deckel-blatt{border-radius:6px 12px 12px 6px;border:1px solid var(--line);transition:transform var(--motion-normal) var(--ease),box-shadow var(--motion-normal) var(--ease);transform-origin:25% 80%;box-shadow:0 2px 3px #00000010,0 9px 20px #0000000d}
@@ -67,17 +67,21 @@
 @media(max-width:1100px) and (min-width:761px){.bib-dkopf h1{min-width:240px}}
 @media(max-width:760px){
   .bib-dkopf{gap:10px;margin-bottom:20px}.bib-dkopf h1{font-size:23px}
-  .bib-studio-import{order:3;flex:1 0 100%;white-space:nowrap}.bib-dkopf .bib-ort{order:4}
-  .bib-studio-suche{flex-basis:100%;margin:0;max-width:none}
-  .bib-studio-wege{display:flex;flex-wrap:nowrap;overflow-x:auto;width:100%}
-  .bib-studio-wege button{white-space:nowrap;min-height:var(--touch-min);padding-inline:10px}
-  .bib-studio-navigation{gap:10px}.bib-studio-weiter{gap:14px;padding:18px;flex-wrap:wrap}
+  .bib-studio-import{order:3;flex:1 0 100%;white-space:nowrap}.bib-wahl{order:4;flex-wrap:nowrap;gap:6px}
+  /* Am Telefon teilen Ort und Art die Zeile. Was weichen muss, ist das Wort
+     „Dokumente" und — bei einem langen Ort — sein Name („In Daten…"); die
+     Zahl und die Art bleiben ganz. „Alle …" statt „Alle Arten" war das
+     erste Bild dieses Bogens. */
+  .bib-pille{padding:0 10px 0 12px;gap:4px;font-size:13px}
+  .bib-pille-einheit{display:none}
+  .bib-wahl .bib-ort{flex:0 1 auto}.bib-wahl .bib-art,.bib-wahl .bib-form-knopf{flex:none}
+  .bib-studio-weiter{gap:14px;padding:18px;flex-wrap:wrap}
   .bib-studio-weiter button{width:100%;justify-content:space-between}.bib-studio-weiter h2{font-size:16px}
   .bib-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 18px}
-  .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:var(--touch-min)}
+  .bib-dkopf button,.bib-deckel-mehr{min-height:var(--touch-min)}
   .bib-pflege-details>summary>span{float:none;display:block;margin:4px 0 0}
 }
-@media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:is(:active,:focus-visible) .bib-deckel-blatt,.bib-studio-wege button:active,.bib-arten button:active{transform:none}.bib-deckel-blatt,.bib-deckel .bib-papier{transition:none}}
+@media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:is(:active,:focus-visible) .bib-deckel-blatt{transform:none}.bib-pille{transition:none}.bib-deckel-blatt,.bib-deckel .bib-papier{transition:none}}
 
 /* Phase C · echte Ablage-Baumansicht — nutzt dieselben Store-Seiten wie die Deckel */
 .bib-ablage-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}

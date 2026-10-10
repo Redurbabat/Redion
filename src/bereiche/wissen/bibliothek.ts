@@ -131,27 +131,6 @@ const Bibliothek = (() => {
    * BIBLIOTHEK
    * ------------------------------------------------------------------ */
 
-  const REITER = [
-    /* DIE ABLAGE IST DER ERSTE REITER UND DIE VORGABE (E380).
-       Redur hat vier Fotos aus GoodNotes geschickt: dort ist „Dokumente"
-       die ABLAGE — die Wurzel mit ihren Ordnern, und ein Tipp auf einen
-       Ordner führt eine Ebene tiefer. Redion zeigte an derselben Stelle
-       „Kürzlich verwendet", und das ist eine flache Liste über den GANZEN
-       Bestand: ein Ordner stand dort neben seinem eigenen Inhalt.
-
-       Die übrigen Reiter bleiben absichtlich flach. „Kürzlich verwendet"
-       und „Favoriten" sind Fragen über alles, nicht über eine Ebene —
-       genau wie in GoodNotes, wo sie unten als eigene Wege stehen. */
-    { id: 'ablage',    icon: '🗂', name: 'Ablage' },
-    { id: 'kuerzlich', icon: '🕘', name: 'Kürzlich verwendet' },
-    { id: 'favoriten', icon: '☆',  name: 'Favoriten' },
-    { id: 'geteilt',   icon: '👥', name: 'Geteilt' },
-    { id: 'privat',    icon: '🔒', name: 'Privat' },
-    { id: 'schule',    icon: '🎓', name: 'Ausbildung' },
-    { id: 'datenbank', icon: '▦',  name: 'In Datenbanken' },
-    { id: 'alle',      icon: '▤',  name: 'Alle' }
-  ];
-
   /* ══ JE ORT EIN NAME (E725, Entscheidung a) ═════════════════════════════
      Redur, Seite 13: „ich sollte von jeder kategorie nur eine sehen". Der
      Ort stand zweimal da — als Menü hinter `.bib-ort` (die Reiter oben)
@@ -161,7 +140,15 @@ const Bibliothek = (() => {
      Namen je Ort — die Namen der Wege, weil Redur sie eingekreist hat.
      „Alle PDFs" ist kein eigener Bestand: der Ort „Alle" mit der Art PDF
      (so stand es schon am Weg). `zeichen` ist ein Name aus
-     `Register.symbole`. */
+     `Register.symbole`. Hier standen bis E725 die REITER — dieselben Orte
+     mit den Namen der Reiter und Emojis; zwei Listen für eine Frage (§8).
+
+     DIE ABLAGE IST DER ERSTE ORT UND DIE VORGABE (E380). Redur hat vier
+     Fotos aus GoodNotes geschickt: dort ist „Dokumente" die ABLAGE — die
+     Wurzel mit ihren Ordnern, und ein Tipp auf einen Ordner führt eine
+     Ebene tiefer. Die übrigen Orte bleiben absichtlich flach: „Zuletzt
+     geöffnet" und „Favoriten" sind Fragen über alles, nicht über eine
+     Ebene — genau wie in GoodNotes, wo sie unten als eigene Wege stehen. */
   const ORTE: Array<{ id: string; name: string; zeichen: string }> = [
     { id: 'ablage',    name: 'Meine Ablage',     zeichen: 'archive' },
     { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock' },
@@ -212,6 +199,13 @@ const Bibliothek = (() => {
    * gesetzt und bekam ein Regal. Kein Wurf, keine Meldung; dieselbe Sorte
    * stiller Fehler wie `Store` an `window` (E207, `vorschau.ts`).
    */
+  /** Die drei Formen — seit E725 NUR am Formknopf, als Menü (Entscheidung
+   *  b); bis dahin standen sie zusätzlich im Ortsmenü. */
+  const FORMEN: Array<{ id: 'deckel' | 'regal' | 'liste'; name: string; zeichen: string }> = [
+    { id: 'deckel', name: 'Als Dokumente',      zeichen: 'grid' },
+    { id: 'regal',  name: 'Nach Heften ordnen', zeichen: 'library' },
+    { id: 'liste',  name: 'Als Tabelle',        zeichen: 'menu' }
+  ];
   const form = (): 'deckel' | 'regal' | 'liste' => {
     const wahl = Store.getMeta('bibForm', 'deckel');
     return wahl === 'liste' ? 'liste' : wahl === 'regal' ? 'regal' : 'deckel';
@@ -231,13 +225,16 @@ const Bibliothek = (() => {
     return (p && p.alive !== false) ? id : null;
   };
 
+  /* `suche` und `sucheOffen` standen hier bis E725 — der Titelfilter der
+     Regalsuche. Er war nie gespeichert (nur dieser Zustand im Speicher),
+     also geht mit ihm nichts verloren; gesucht wird in der EINEN Suche. */
   type Regalzustand = {
     reiter: string; ordner: string | null; sortier: string; richtung: string;
-    suche: string; sucheOffen: boolean; spalten: string[]; art: string;
+    spalten: string[]; art: string;
   };
   let zustand: Regalzustand = { reiter: 'ablage', ordner: null,
                   sortier: 'wann', richtung: 'ab',
-                  suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
+                  spalten: SPALTEN.map(s => s.id),
                   /* Der Artfilter der Deckelansicht (E236). Er steht NEBEN
                      `reiter`, nicht darin: der Reiter fragt „wo liegt es",
                      die Art fragt „was ist es". Zwei Fragen, zwei Filter. */
@@ -437,11 +434,6 @@ const Bibliothek = (() => {
                   .sort((a, b) => zeitZahl(b.zuletztGeoeffnet || b.edited) -
                                   zeitZahl(a.zuletztGeoeffnet || a.edited));
     else if (zustand.reiter !== 'ablage') liste = reiterFilter(zustand.reiter, alle) || liste;
-
-    if (zustand.suche) {
-      const s = zustand.suche.toLowerCase();
-      liste = liste.filter(p => (p.text || '').toLowerCase().includes(s));
-    }
 
     const gesamt = liste.length;
     if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
@@ -932,55 +924,36 @@ const Bibliothek = (() => {
     { id: 'seite',  name: 'Seiten' }
   ];
 
-  /** Schnellwege sind Sichten auf denselben Bestand, keine zweite Ablage. */
-  const studioNavigation = (): string => {
-    const pdfAn = zustand.reiter === 'alle' && zustand.art === 'pdf';
-    const wege = [
-      { id: 'ablage', name: 'Meine Ablage' },
-      { id: 'kuerzlich', name: 'Zuletzt geöffnet' },
-      { id: 'favoriten', name: 'Favoriten' },
-      { id: 'pdf', name: 'Alle PDFs' }
-    ];
-    return '<div class="bib-studio-navigation">' +
-      /* `data-material` (E706): die Wahl fliegt zum neuen Weg. */
-      '<nav class="bib-studio-wege" data-material="dokumente-wege" aria-label="Dokumente finden">' +
-      wege.map(weg => {
-        const an = weg.id === 'pdf' ? pdfAn : !pdfAn && zustand.reiter === weg.id;
-        return '<button type="button" data-studio-weg="' + weg.id + '"' +
-          (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
-      }).join('') + '</nav>' +
-      '<details class="bib-studio-optionen"><summary>Sammlungen</summary>' +
-      '<select class="bib-studio-sammlungen" aria-label="Weitere Bibliothek-Inhalte öffnen">' +
-        '<option value="">Dateien & Wissen …</option>' +
-        (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a =>
-          '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select></details>' +
-      '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
-        '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
-        '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
-        ' value="' + esc(zustand.suche) + '"></label>' +
-      '</div>';
-  };
+  /* DIE WEGE-ZEILE (`studioNavigation`) STAND HIER BIS E725: „Meine Ablage ·
+     Zuletzt geöffnet · Favoriten · Alle PDFs", dahinter „Sammlungen ⌄" als
+     `<details><select>` und das Feld „Dokument suchen …". Redur hat sie grün
+     umkreist und das Feld rot durchgestrichen: „ich sollte von jeder
+     kategorie nur eine sehen und die anderen alles unterdem das beim ^".
+     Die vier Wege und die sechs Sammlungen stehen seither im Ortsmenü
+     (`ortMenue`, je ein Name), gesucht wird in der EINEN Suche (E725). */
 
-  /** Bis zu drei wirklich geöffnete Dokumente, keine dekorativen Dateiatrappen. */
+  /** Bis zu drei wirklich geöffnete Dokumente — und ohne sie NICHTS.
+   *  Hier standen bis E725 zwei Attrappen, „Neue Seite" und „PDF öffnen":
+   *  dieselben Knöpfe stehen im Kopf darüber, drei Zeilen höher — am
+   *  Telefon schoben sie den ersten Deckel aus dem ersten Bild. */
   const recentCarousel = (): string => {
-    if (zustand.ordner || zustand.suche || zustand.art !== 'alle' ||
+    if (zustand.ordner || zustand.art !== 'alle' ||
       !['ablage', 'kuerzlich'].includes(zustand.reiter)) return '';
     const recent = alleSeiten().filter(p => p.zuletztGeoeffnet)
       .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet)).slice(0, 3);
+    if (!recent.length) return '';
     return '<section class="rmo-recent" aria-label="Zuletzt geöffnet"><h2>Zuletzt geöffnet</h2>' +
-      '<div class="rmo-recent-track">' + (recent.length ? recent.map((p, index) =>
+      '<div class="rmo-recent-track">' + recent.map((p, index) =>
         '<button type="button" class="rmo-recent-card" data-rmo-open="' + esc(p.id) +
         '" style="--rmo-index:' + index + '"><span>' + esc(artVon(p).name) + '</span><b>' +
         esc(p.text || 'Ohne Titel') + '</b><small>' + esc(wannText(p.zuletztGeoeffnet)) +
-        '</small></button>').join('') :
-        '<button type="button" class="rmo-recent-card" data-rmo-new><span>Loslegen</span><b>Neue Seite</b></button>' +
-        '<button type="button" class="rmo-recent-card" data-rmo-import><span>Weiterarbeiten</span><b>PDF öffnen</b></button>') +
+        '</small></button>').join('') +
       '</div></section>';
   };
 
   /** Nur ein wirklich geöffnetes PDF anbieten; Importzeit ist kein Lesefortschritt. */
   const studioWeiter = (): string => {
-    if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle') return '';
+    if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.art !== 'alle') return '';
     const letzte = alleSeiten().filter(p => p.zuletztGeoeffnet && artVon(p).id === 'pdf')
       .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet))[0];
     if (!letzte) return '';
@@ -1268,14 +1241,14 @@ const Bibliothek = (() => {
       ? gezeigt + ' von ' + gesamt + ' ' + vonForm
       : gezeigt + ' ' + (gezeigt === 1 ? eins : mehr);
 
-  const bibKopf = (liste: any[], _anzahlHefte: number, gesamt = liste.length): string => {
+  const bibKopf = (liste: any[], alle: any[], gesamt = liste.length): string => {
     /* Auch die Listenform ist in der Ablage ein Ordner-Browser (E382). Bis
        E382 hatte sie keine Brotkrume: man ging in ein Fach hinein (per
        Zeilenklick) und sah danach weder, WO man war, noch einen Weg zurück —
        der Titel stand fest auf „Bibliothek". Jetzt trägt der Kopf in der
        Ablage denselben Pfad wie die Deckelansicht (E380). */
     // One header in every saved presentation, including older notebook shelves.
-    return deckelKopf(liste.length, gesamt) + studioNavigation();
+    return deckelKopf(alle, liste.length, zustand.art === 'alle' ? gesamt : liste.length);
   };
 
   /* ====================================================================== *
@@ -1528,24 +1501,35 @@ const Bibliothek = (() => {
     stelle.replaceChildren(griff.element);
   };
   /**
-   * DIE FILTERZEILE NACH ART — und wann sie WEGBLEIBT (6. September).
+   * DIE ART — EINE PILLE STATT EINER ZEILE (E725), und wann sie WEGBLEIBT.
    *
-   * Sie stand immer da, auch als „Alle · Seiten": ein Filter mit einer
-   * einzigen Wahl filtert nichts, kostet aber eine Zeile über den Deckeln
-   * — am Telefon eine von sieben. Redur: „nicht 20 Werkzeuggruppen
-   * gleichzeitig". Jetzt erscheint sie erst, wenn es zwei Arten zu
+   * Bis E725 stand hier `artenZeile`: bis elf Chips in einer eigenen Bank
+   * („Alle · PDF · Whiteboards · Blätter …"), von Redur grün umkreist —
+   * „von jeder kategorie nur eine sehen und die anderen alles unterdem das
+   * beim ^". Jetzt steht die gewählte Art als Pille in der Zeile mit Ort
+   * und Form; die übrigen stehen in ihrem Menü, jede mit ihrer Zahl.
+   *
+   * Die Regel vom 6. September bleibt: ein Filter mit einer einzigen Wahl
+   * filtert nichts — die Pille erscheint erst, wenn es zwei Arten zu
    * unterscheiden gibt; ein gesetzter Filter bleibt immer sichtbar, sonst
    * käme man aus ihm nicht mehr heraus.
    */
-  const artenZeile = (vorhanden: Set<string>): string => {
-    const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
-                                         a.id === zustand.art);
+  const artenVon = (alle: any[]): Array<{ id: string; name: string; zahl: number }> => {
+    const zahl = new Map<string, number>();
+    alle.forEach(p => { const a = artVon(p).id as string; zahl.set(a, (zahl.get(a) || 0) + 1); });
+    return ART_FILTER
+      .filter(a => a.id === 'alle' || zahl.has(a.id) || a.id === zustand.art)
+      .map(a => ({ id: a.id, name: a.id === 'alle' ? 'Alle Arten' : a.name,
+                   zahl: a.id === 'alle' ? alle.length : (zahl.get(a.id) || 0) }));
+  };
+  const artPille = (alle: any[]): string => {
+    const arten = artenVon(alle);
     if (arten.length <= 2 && zustand.art === 'alle') return '';
-    return '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
-      arten.map(a => `<button data-art="${esc(a.id)}"` +
-        (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
-        `>${esc(a.name)}</button>`).join('') +
-      '</div>';
+    const jetzt = arten.find(a => a.id === zustand.art) || arten[0];
+    return '<button type="button" class="bib-pille bib-art" data-art-wahl aria-haspopup="menu" ' +
+      'aria-expanded="false"' + (zustand.art !== 'alle' ? ' data-gefiltert' : '') + '>' +
+      '<span class="bib-pille-wort">' + esc(jetzt ? jetzt.name : 'Alle Arten') + '</span>' +
+      '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>';
   };
 
   /* ---------------------------------------------------------------- *
@@ -1556,13 +1540,12 @@ const Bibliothek = (() => {
     const liste = zustand.art === 'alle'
       ? alle : alle.filter(p => artVon(p).id === zustand.art);
 
-    /* Welche Arten es überhaupt GIBT — ein Filter für eine Art, die
-       niemand hat, ist ein Knopf, der immer leer antwortet. */
-    const vorhanden = new Set(alle.map(p => artVon(p).id as string));
-
     wrap.innerHTML =
       '<div class="bib bib-deckel-seite" data-bib-bereich>' +
-        deckelKopf(alle.length, gesamt) +
+        /* DIE ZAHL IST DIE DER GEZEIGTEN DECKEL (E725). Mit der Art als Pille
+           stand sonst „Alle PDFs · 20" über zwei PDFs — die Zahl des Orts,
+           nicht die des Regals. Ohne Artfilter bleibt es, wie es war. */
+        deckelKopf(alle, liste.length, zustand.art === 'alle' ? gesamt : liste.length) +
         (zustand.reiter === 'ablage'
           ? '<div class="bib-ablage-layout">' +
               '<details class="bib-ablage-baum" aria-label="Ablagebaum"' +
@@ -1571,8 +1554,7 @@ const Bibliothek = (() => {
                 '<div data-bib-baum></div>' +
               '</details><div class="bib-ablage-inhalt">'
           : '') +
-        studioNavigation() + studioWeiter() + recentCarousel() +
-        artenZeile(vorhanden) +
+        studioWeiter() + recentCarousel() +
         (liste.length
           ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
           : '<p class="bib-leer">' + (zustand.art === 'alle'
@@ -1620,8 +1602,12 @@ const Bibliothek = (() => {
    * die Seite IST das Regal, der Reiter ist nur ein Filter darauf. Er
    * steht deshalb klein darunter, zusammen mit der Zahl.
    */
-  const deckelKopf = (anzahl: number, gesamt = anzahl): string => {
-    const ort = REITER.find(r => r.id === zustand.reiter)?.name || 'Alle';
+  const deckelKopf = (alle: any[], anzahl: number, gesamt = anzahl): string => {
+    const ort = ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
+    const satz = umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten');
+    const schnitt = satz.lastIndexOf(' ');
+    const satzZahl = schnitt > 0 ? satz.slice(0, schnitt) : satz;
+    const satzEinheit = schnitt > 0 ? satz.slice(schnitt) : '';
     /* DER TITEL IST DER ORDNER, IN DEM MAN STEHT (E380) — wie in GoodNotes:
        oben steht nicht die App, sondern wo man ist. An der Wurzel bleibt es
        „Dokumente". */
@@ -1643,13 +1629,27 @@ const Bibliothek = (() => {
           ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
         '><span data-sym="plus" aria-hidden="true"></span>' +
         '<span class="wort">' + IMPORT_WORT + '</span></button>' +
-      '<button class="bib-form-knopf" data-form="' + (form() === 'liste' ? 'deckel' : 'liste') + '" ' +
-        'aria-label="' + (form() === 'liste' ? 'Als Dokumente anzeigen' : 'Als Liste anzeigen') + '">' +
-        '<span data-sym="' + (form() === 'liste' ? 'library' : 'menu') + '" aria-hidden="true"></span></button>' +
-      '<button class="bib-ort" data-orte aria-haspopup="menu">' +
-        esc(ort) + ' \u00b7 ' +
-        umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten') +
-        '<i aria-hidden="true">\u25be</i></button>' +
+      /* EINE ZEILE FÜR DIE DREI FRAGEN (E725): WO (Ort), WAS (Art), WIE
+         (Form) — je die gewählte Antwort als Pille, die übrigen hinter ihr
+         als Menü (`Menue.wahl`, E721). Redur: „von jeder kategorie nur eine
+         sehen und die anderen alles unterdem das beim ^". Vorher waren es
+         drei Bänke plus Wege, und der Ort stand zweimal da. */
+      '<div class="bib-wahl" role="group" aria-label="Was die Bibliothek zeigt">' +
+        /* Name, Zahl und Einheit stehen getrennt: am Telefon fällt das Wort
+           „Dokumente" weg, nie die Zahl — eine abgeschnittene Zahl ist eine
+           andere Zahl (§55.1); „60 von 313" bleibt ganz (L116). */
+        '<button type="button" class="bib-pille bib-ort" data-orte aria-haspopup="menu" aria-expanded="false">' +
+          '<span class="bib-pille-wort">' + esc(ort) + '</span>' +
+          '<span class="bib-pille-zahl"> \u00b7 ' + esc(satzZahl) +
+            '<span class="bib-pille-einheit">' + esc(satzEinheit) + '</span></span>' +
+          '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>' +
+        artPille(alle) +
+        /* Die Form bleibt EIN Zeichen (Entscheidung b) — das der gewählten. */
+        '<button type="button" class="bib-form-knopf" data-form-wahl aria-haspopup="menu" aria-expanded="false" ' +
+          'aria-label="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '" ' +
+          'title="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '">' +
+          '<span data-sym="' + (FORMEN.find(f => f.id === form())?.zeichen || 'grid') + '" aria-hidden="true"></span></button>' +
+      '</div>' +
     '</header>';
   };
 
@@ -1669,7 +1669,7 @@ const Bibliothek = (() => {
 
     wrap.innerHTML =
       '<div class="bib bib-regal-seite" data-bib-bereich>' +
-        bibKopf(liste, regal.length, gesamt) +
+        bibKopf(liste, alle, gesamt) +
         (regal.length
           ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
           : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
@@ -1685,6 +1685,100 @@ const Bibliothek = (() => {
       Register.symbole.fuelle(wrap);
     binde(wrap);
     platzNachtragen(wrap);
+  };
+
+  /* ══ DIE DREI MENÜS DER ZEILE (E725) ═══════════════════════════════════
+     Ort, Art, Form: jedes ist `Menue.wahl` (E721) — ✓ und aria-current am
+     Gewählten, aria-expanded am Anker, Pfeiltasten, Escape gibt den Fokus
+     zurück; am Rechner steht es an seiner Pille, am Telefon kommt es als
+     Blatt mit Karten von unten. Nach der Wahl wird die Seite neu
+     gezeichnet — und der Fokus geht an die NEUE Pille, sonst stünde er
+     nach Enter auf dem Anfang des Dokuments. */
+  const pilleFokus = (wahl: string): void => {
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>('.bib ' + wahl)?.focus({ preventScroll: true }));
+  };
+  /** Die leise Marke (E711) zieht mit ins Ortsmenü: sie steht auf dem
+   *  gewählten Ort und gleitet mit dem Fokus und dem Zeiger — das Material
+   *  der Wege (E706), das dort keinen Wechsel mehr zu zeigen hat, weil die
+   *  Wahl das Menü schliesst. Nur in der Gruppe „Orte". */
+  const markeImMenue = (m: HTMLElement): void => {
+    if (typeof SelectionFlow === 'undefined') return;
+    const gruppe = m.querySelector<HTMLElement>('[role="group"]');
+    if (!gruppe) return;
+    const auf = (b: Element | null): void => {
+      const ziel = b ? b.closest<HTMLElement>('[data-wahl]') : null;
+      if (ziel && gruppe.contains(ziel)) SelectionFlow.highlight(gruppe, ziel, { still: true });
+    };
+    auf(gruppe.querySelector('[aria-current="true"]'));
+    gruppe.addEventListener('focusin', e => auf(e.target instanceof Element ? e.target : null));
+    gruppe.addEventListener('pointerover', e => auf(e.target instanceof Element ? e.target : null));
+  };
+  /** Einen Ort setzen. „Meine Ablage" führt an die Wurzel (so tat es der Weg). */
+  const ortSetzen = (id: string): void => {
+    if (id === 'pdf') { zustand.reiter = 'alle'; zustand.art = 'pdf'; }
+    else { zustand.reiter = ORTE.some(o => o.id === id) ? id : zustand.reiter; zustand.art = 'alle'; }
+    if (id === 'ablage') {
+      zustand.ordner = null;
+      if (typeof Store !== 'undefined' && Store.setMeta) Store.setMeta(ORDNER_SCHLUESSEL, '');
+    }
+    App.zeichneSeite();
+  };
+  /** Die Zeichen der sechs Sammlungen (Kennungen aus `Arbeitswelt.sammlungen`). */
+  const SAMMLUNG_ZEICHEN: Record<string, string> = {
+    uebersicht: 'pages', bibliothek: 'library', datenbanken: 'database',
+    whiteboards: 'pencil', wiki: 'graph', vorlagen: 'puzzle'
+  };
+  const ortMenue = (anker: HTMLElement): void => {
+    const aktiv = ortAktiv();
+    const sammlungen = typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen : [];
+    const m = Menue.wahl({
+      anker, titel: 'Ort',
+      gruppen: [
+        { name: 'Orte', optionen: ORTE.map(o => ({ id: o.id, name: o.name, zeichen: o.zeichen, aktiv: o.id === aktiv })) },
+        /* DIE SAMMLUNGEN (E457) — bis E725 ein `<select>` hinter „Sammlungen ⌄".
+           Sie bleiben ausserdem im Mehr-Blatt und unter ihren Adressen. */
+        ...(sammlungen.length ? [{ name: 'Sammlungen', optionen: sammlungen.map(a =>
+          ({ id: 'sammlung:' + a.id, name: a.name, zeichen: SAMMLUNG_ZEICHEN[a.id] || 'grid' })) }] : [])
+      ],
+      beiWahl: (id: string) => {
+        if (id.startsWith('sammlung:')) {
+          if (typeof Arbeitswelt !== 'undefined') Arbeitswelt.oeffnen(id.slice('sammlung:'.length));
+          return;
+        }
+        ortSetzen(id);
+        pilleFokus('[data-orte]');
+      }
+    });
+    markeImMenue(m);
+  };
+  const artMenue = (anker: HTMLElement): void => {
+    const { liste: alle } = auswahl();
+    Menue.wahl({
+      anker, titel: 'Art',
+      gruppen: [{ name: 'Arten', optionen: artenVon(alle).map(a =>
+        ({ id: a.id, name: a.name + ' \u00b7 ' + a.zahl, aktiv: a.id === zustand.art })) }],
+      beiWahl: (id: string) => {
+        zustand.art = ART_FILTER.some(a => a.id === id) ? id : 'alle';
+        App.zeichneSeite();
+        pilleFokus('[data-art-wahl]');
+      }
+    });
+  };
+  const formMenue = (anker: HTMLElement): void => {
+    const jetzt = form();
+    Menue.wahl({
+      anker, titel: 'Darstellung',
+      gruppen: [{ name: 'Darstellung', optionen: FORMEN.map(f =>
+        ({ id: f.id, name: f.name, zeichen: f.zeichen, aktiv: f.id === jetzt })) }],
+      beiWahl: (id: string) => {
+        const f = FORMEN.find(x => x.id === id);
+        if (!f) return;
+        Store.setMeta('bibForm', f.id);
+        App.zeichneSeite();
+        pilleFokus('[data-form-wahl]');
+      }
+    });
   };
 
   /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
@@ -1729,61 +1823,22 @@ const Bibliothek = (() => {
         const id = button.dataset.rmoOpen;
         if (id && permitted('lesen', id)) App.oeffne(id);
       }));
-    wrap.querySelector('[data-rmo-import]')?.addEventListener('click', pdfImportieren);
-    wrap.querySelector('[data-rmo-new]')?.addEventListener('click', () =>
-      document.getElementById('btn-neu-handy')?.click());
     wrap.querySelector<HTMLDetailsElement>('.bib-ablage-baum')?.addEventListener('toggle', event => {
       Store.setMeta('bibBaumSichtbar', (event.currentTarget as HTMLDetailsElement).open);
     });
-    wrap.querySelector<HTMLSelectElement>('.bib-studio-sammlungen')?.addEventListener('change', event => {
-      const ziel = (event.currentTarget as HTMLSelectElement).value;
-      if (ziel && typeof Arbeitswelt !== 'undefined') Arbeitswelt.oeffnen(ziel);
-    });
-    wrap.querySelectorAll<HTMLElement>('[data-studio-weg]').forEach(button =>
-      button.addEventListener('click', () => {
-        const weg = button.dataset.studioWeg || 'ablage';
-        zustand.reiter = weg === 'pdf' ? 'alle' : weg;
-        zustand.art = weg === 'pdf' ? 'pdf' : 'alle';
-        zustand.ordner = null;
-        App.zeichneSeite();
-      }));
     wrap.querySelector('[data-studio-import]')?.addEventListener('click', pdfImportieren);
     wrap.querySelector<HTMLElement>('[data-studio-weiter]')?.addEventListener('click', event => {
       const id = (event.currentTarget as HTMLElement).dataset.studioWeiter;
       if (id && permitted('lesen', id)) App.oeffne(id);
     });
-    wrap.querySelector<HTMLInputElement>('#bib-studio-suche')?.addEventListener('input', event => {
-      const input = event.currentTarget as HTMLInputElement;
-      zustand.suche = input.value;
-      const cursor = input.selectionStart;
-      App.zeichneSeite();
-      const neu = wrap.querySelector<HTMLInputElement>('#bib-studio-suche');
-      neu?.focus();
-      if (neu && cursor !== null) { try { neu.setSelectionRange(cursor, cursor); } catch { /* search inputs */ } }
-    });
-    wrap.querySelectorAll<HTMLElement>('.bib-reiter [data-r]').forEach(b =>
-      b.addEventListener('click', () => {
-        if (b.dataset['r'] === 'mehr') {
-          const r = b.getBoundingClientRect();
-          const m = UI.menu(REITER.slice(4).map(x =>
-            `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''),
-            r.left, r.bottom + 4);
-          m.addEventListener('click', ev => {
-            const x = elVon(ev)?.closest<HTMLElement>('[data-x]');
-            if (!x) return;
-            zustand.reiter = x.dataset['x'] ?? zustand.reiter; m.remove(); App.zeichneSeite();
-          });
-          return;
-        }
-        zustand.reiter = b.dataset['r'] ?? zustand.reiter;
-        App.zeichneSeite();
-      }));
-    wrap.querySelectorAll<HTMLElement>('[data-form]').forEach(b =>
-      b.addEventListener('click', () => {
-        const f = b.dataset['form'] === 'liste' ? 'liste' : b.dataset['form'] === 'deckel' ? 'deckel' : 'regal';
-        Store.setMeta('bibForm', f);
-        App.zeichneSeite();
-      }));
+    /* Hier standen bis E725: das Sammlungsfeld (`.bib-studio-sammlungen`),
+       die Wege (`[data-studio-weg]`), das Feld „Dokument suchen …" und ein
+       Griff für eine Reiterzeile `.bib-reiter [data-r]`, die in Deckel,
+       Regal und Liste seit dem 6. September nicht mehr gezeichnet wurde
+       (nur „Meine Aufgaben" trägt noch eine, ohne `data-r`). Alles steht
+       jetzt in den drei Menüs unten. */
+    wrap.querySelector<HTMLElement>('[data-form-wahl]')?.addEventListener('click', ereignis =>
+      formMenue(ereignis.currentTarget as HTMLElement));
     wrap.querySelectorAll<HTMLElement>('.bib-pflege [data-a]').forEach(b =>
       b.addEventListener('click', ereignis => {
         ereignis.stopPropagation();
@@ -1799,38 +1854,11 @@ const Bibliothek = (() => {
         if (id) App.oeffne(id);
       }));
 
-    /* --- Die Deckelansicht (E236) ---------------------------------- */
-    wrap.querySelectorAll<HTMLElement>('.bib-arten [data-art]').forEach(b =>
-      b.addEventListener('click', () => {
-        zustand.art = b.dataset['art'] ?? 'alle';
-        App.zeichneSeite();
-      }));
-    wrap.querySelectorAll<HTMLElement>('[data-orte]').forEach(b =>
-      b.addEventListener('click', () => {
-        const r = b.getBoundingClientRect();
-        /* Die Reiter als Menü hinter dem Titel — dieselbe Liste wie in der
-           Tabelle, nur nicht als eigene Bank. Sonst stünden hier vier
-           Zeilen übereinander, bevor das erste Dokument kommt. */
-        const m = UI.menu(REITER.map(x =>
-          `<button data-x="${x.id}"${zustand.reiter === x.id ? ' class="on"' : ''}>` +
-          `<span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join('') +
-          '<div class="sep"></div>' +
-          '<button data-x="__deckel"><span class="mi">\u25a6</span>Als Dokumente</button>' +
-          '<button data-x="__regal"><span class="mi">\u25a4</span>Nach Heften ordnen</button>' +
-          '<button data-x="__liste"><span class="mi">\u2630</span>Als Tabelle</button>',
-          r.left, r.bottom + 6);
-        m.addEventListener('click', ev => {
-          const x = elVon(ev)?.closest<HTMLElement>('[data-x]');
-          if (!x) return;
-          const wahl = x.dataset['x'] ?? '';
-          m.remove();
-          if (wahl === '__regal')      { Store.setMeta('bibForm', 'regal'); }
-          else if (wahl === '__deckel') { Store.setMeta('bibForm', 'deckel'); }
-          else if (wahl === '__liste') { Store.setMeta('bibForm', 'liste'); }
-          else { zustand.reiter = wahl || zustand.reiter; zustand.art = 'alle'; }
-          App.zeichneSeite();
-        });
-      }));
+    /* --- Die drei Pillen (E725) ------------------------------------- */
+    wrap.querySelector<HTMLElement>('[data-art-wahl]')?.addEventListener('click', ereignis =>
+      artMenue(ereignis.currentTarget as HTMLElement));
+    wrap.querySelector<HTMLElement>('[data-orte]')?.addEventListener('click', ereignis =>
+      ortMenue(ereignis.currentTarget as HTMLElement));
     wrap.querySelectorAll<HTMLElement>('[data-neu-auf]').forEach(b =>
       b.addEventListener('click', () => App.erstellenBlatt(b)));
     wrap.querySelectorAll<HTMLElement>('[data-hoch]').forEach(b =>
@@ -1886,22 +1914,21 @@ const Bibliothek = (() => {
 
     wrap.innerHTML =
       '<div class="bib" data-bib-bereich>' +
-        bibKopf(liste, hefte(liste).length, gesamt) +
+        bibKopf(liste, alle, gesamt) +
         /* Eigene Klasse: `bib-kopf` trägt seit E207 Reiter und Umschalter und
            steht in BEIDEN Formen. Zwei Elemente mit demselben Namen auf einer
            Seite sind zwei Dinge, die gleich aussehen sollen und es beim
            nächsten Stilzusatz nicht mehr tun. */
         '<div class="bib-kopf bib-kopf-liste">' +
           '<div class="bib-werkzeuge">' +
-            '<button data-a="filter" title="Filtern">⚟</button>' +
-            '<button data-a="suche" title="Suchen">🔍</button>' +
+            /* Hier stand „⚟ Filtern" — ein zweiter Ortswähler mit denselben
+               Orten wie die Pille im Kopf (E725: eine Wahl je Kategorie).
+               Die Lupe öffnet die EINE Suche, im Bereich des Regals. */
+            '<button data-a="suche" title="Suchen" aria-label="Suchen">🔍</button>' +
             '<button data-a="spalten" title="Eigenschaften">⚙</button>' +
             '<button data-a="neu" class="prim">Neue Seite</button>' +
           '</div>' +
         '</div>' +
-        (zustand.sucheOffen
-          ? `<div class="bib-suchzeile">🔍 <input id="bib-suche" value="${esc(zustand.suche)}" ` +
-            'placeholder="Seiten durchsuchen …"><button data-a="suchzu">✕</button></div>' : '') +
         `<div class="bib-tab" style="--bib-raster:${raster}">` +
           '<div class="bib-zeile bib-kopfzeile">' +
             spalten.map(s =>
@@ -1966,7 +1993,7 @@ const Bibliothek = (() => {
       }));
 
     /* Werkzeuge */
-    wrap.querySelectorAll('.bib-werkzeuge button, [data-a="suchzu"]').forEach((b: any) =>
+    wrap.querySelectorAll('.bib-werkzeuge button').forEach((b: any) =>
       b.addEventListener('click', () => {
         const a = b.dataset.a;
         if (a === 'neu') {
@@ -1978,21 +2005,10 @@ const Bibliothek = (() => {
           App.oeffne(p.id);
           setTimeout(() => document.getElementById('title')?.focus(), 60);
         }
-        if (a === 'suche')  { zustand.sucheOffen = true; App.zeichneSeite();
-                              document.getElementById('bib-suche')?.focus(); }
-        if (a === 'suchzu') { zustand.suche = ''; zustand.sucheOffen = false; App.zeichneSeite(); }
-        if (a === 'filter') {
-          const r = b.getBoundingClientRect();
-          const m = UI.menu('<div class="grp">Nur zeigen</div>' +
-            REITER.map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}` +
-              (zustand.reiter === x.id ? '<span class="ms">✓</span>' : '') + '</button>').join(''),
-            r.left - 160, r.bottom + 4);
-          m.addEventListener('click', ev => {
-            const x = elVon(ev)?.closest<HTMLElement>('[data-x]');
-            if (!x) return;
-            zustand.reiter = x.dataset.x ?? zustand.reiter; m.remove(); App.zeichneSeite();
-          });
-        }
+        /* DIE EINE SUCHE (E725) — sie öffnet im Bereich dessen, was das Regal
+           gerade zeigt; hier ging bis dahin die Zeile „Seiten durchsuchen …"
+           auf, ein Titelfilter auf der offenen Ebene. */
+        if (a === 'suche') App.suche();
         if (a === 'spalten') {
           const r = b.getBoundingClientRect();
           const m = UI.menu('<div class="grp">Eigenschaften</div>' +
@@ -2012,16 +2028,6 @@ const Bibliothek = (() => {
         }
       }));
 
-    const si = document.getElementById('bib-suche') as HTMLInputElement | null;
-    if (si) {
-      si.addEventListener('input', () => {
-        zustand.suche = si.value;
-        const stelle = si.selectionStart;
-        App.zeichneSeite();
-        const neu = document.getElementById('bib-suche') as HTMLInputElement | null;
-        if (neu) { neu.focus(); neu.setSelectionRange(stelle, stelle); }
-      });
-    }
   };
 
   /**
