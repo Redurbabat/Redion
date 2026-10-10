@@ -54,6 +54,11 @@
  *       sehen ist, steht die gleichnamige Krume nicht noch einmal sichtbar
  *       da; rollt er weg, kommt sie zurück.
  *   §9  DIE EINZELDATEI zeigt denselben Kopf.
+ *   §10 BEIM EINLESEN (Durchsicht vom 10. Oktober): genau EIN Lader im
+ *       44-px-Knopf, in seiner Mitte (± 2 px) und innerhalb des Kastens;
+ *       das Zeichen tritt so lange zurück. Der Vorlesename bleibt „PDF
+ *       öffnen", die Beschreibung sagt „PDF wird gelesen …" — und danach
+ *       ist alles wieder wie vorher. In Dunkel und Hell.
  *
  * Kein Port: geladen wird über file:// (§6, §29).
  *
@@ -61,6 +66,7 @@
  * ==========================================================================*/
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -203,7 +209,7 @@ console.log('\n§4 Lade offen: keine zweite Reihe — und die Zwillinge tun dass
   })()`) as any;
   p('Die Lade ist offen', v.offen === 'offen', String(v.offen));
   p('Im Band steht keine zweite Suche, KI, Konto, Glocke, Aufträge', v.band.length === 0, v.band.join(', '));
-  p('… die Ziele stehen eine Zeile darüber (Suche, Konto im Kopf, KI in den Seitenwerkzeugen)', v.kopf.length === 3, v.kopf.join(', '));
+  p('… die Ziele stehen woanders (Suche und Konto im Kopf darüber, die KI in den Seitenwerkzeugen darunter)', v.kopf.length === 3, v.kopf.join(', '));
   /* Jeder Zwilling ruft dieselbe Funktion. Gezählt wird am Aufruf: die
      Ziele werden kurz ersetzt, beide Knöpfe gedrückt (`click()` erreicht
      auch einen verborgenen), dann kommen die echten zurück. */
@@ -344,7 +350,10 @@ const MOTOR = (sel: string) => `(() => {
   await pc.evaluate(`document.getElementById('mb-suche').focus({ focusVisible: true })`);
   await pc.waitForTimeout(80);
   const fokus = await pc.evaluate(`(() => { const k = document.getElementById('mb-suche'); return { fv: k.matches(':focus-visible'), m: ${MOTOR('#mb-suche')} }; })()`) as any;
-  p('Telefon: ⌕ dreht sich unter dem Tastenfokus', !fokus.fv || (!!fokus.m && fokus.m.namen.length === 1), JSON.stringify(fokus));
+  /* Erst muss der Fokus WIRKLICH sichtbar sein — sonst prüfte die Zeile
+     nichts (Durchsicht vom 10. Oktober: `!fokus.fv || …` war auch ohne
+     :focus-visible grün). */
+  p('Telefon: ⌕ dreht sich unter dem Tastenfokus', !!fokus.fv && !!fokus.m && fokus.m.namen.length === 1, JSON.stringify(fokus));
   await kontext.close();
 }
 
@@ -421,6 +430,100 @@ console.log('\n§9 Die Einzeldatei');
   p('Die Einzeldatei: die Kapsel steht links, rechts nur Zeichen',
     abstand >= 0 && abstand <= 16 && k.rechts.every((r: any) => !r.text && r.x >= k.such.r), JSON.stringify({ abstand, rechts: k.rechts.map((r: any) => r.id + ':' + r.text) }));
   await kontext.close();
+}
+
+/* ══ §10 Beim Einlesen ═════════════════════════════════════════════════════
+ *
+ * DIE DURCHSICHT VOM 10. OKTOBER fand an einem Zustand, den dieser Bogen
+ * verändert und von dem er kein Bild gemacht hatte, zwei Fehler auf
+ * einmal: beim Einlesen lagen ZWEI Lader im 44-px-Knopf — der neue Kreis
+ * (`::before`) in der Mitte und die Blase von RedionMotion (`.rmo-liquid`,
+ * `liquid` ist für `[data-studio-import]` angemeldet) bei x −2, also über
+ * den linken Rand, und das verborgene Zeichen nach rechts geschoben. Und
+ * Vorleser hörten „PDF öffnen", wo sie bis dahin „PDF wird gelesen …"
+ * hörten: `aria-label` überdeckt das verborgene Wort, in das
+ * `importBeschriften` den Stand schreibt.
+ *
+ * Gefahren wird der ECHTE Weg — der Kopfknopf, der Dateiwähler,
+ * `pdfImportieren` mit seinem `aria-busy` und seiner Beschriftung. Nur der
+ * Importeur dahinter wartet, bis der Lauf ihn freigibt; sonst wäre der
+ * Zustand bei einer kleinen Datei vorbei, bevor jemand hinsieht.
+ * ------------------------------------------------------------------------ */
+console.log('\n§10 Beim Einlesen — ein Lader in der Mitte, und der Vorleser hört den Stand');
+{
+  const pdf = path.join(os.tmpdir(), `redion-test603-${process.pid}.pdf`);
+  fs.writeFileSync(pdf, '%PDF-1.4\n%%EOF\n');
+  /* Alles, was im Knopf als Lader sichtbar ist: die Blase und der Kreis
+     (`::before`), je mit ihrer Mitte gegen die Mitte des Knopfes. */
+  const LADER = `(() => {
+    const k = document.getElementById('studio-import'); const b = k.getBoundingClientRect();
+    const mx = b.left + b.width / 2, my = b.top + b.height / 2;
+    const lader = [];
+    const blase = k.querySelector(':scope > .rmo-liquid');
+    if (blase) {
+      const cs = getComputedStyle(blase); const r = blase.getBoundingClientRect();
+      if (cs.display !== 'none' && cs.visibility !== 'hidden' && +cs.opacity > 0.05 && r.width > 0)
+        lader.push({ art: 'blase', dx: Math.round(r.left + r.width / 2 - mx), dy: Math.round(r.top + r.height / 2 - my),
+                     drin: r.left >= b.left - 0.5 && r.right <= b.right + 0.5 && r.top >= b.top - 0.5 && r.bottom <= b.bottom + 0.5 });
+    }
+    const v = getComputedStyle(k, '::before');
+    if (v.content !== 'none' && v.content !== 'normal' && v.display !== 'none' && +v.opacity > 0.05) {
+      const w = parseFloat(v.width) + parseFloat(v.borderLeftWidth) + parseFloat(v.borderRightWidth);
+      const h = parseFloat(v.height) + parseFloat(v.borderTopWidth) + parseFloat(v.borderBottomWidth);
+      const x = b.left + k.clientLeft + parseFloat(v.left) + parseFloat(v.marginLeft);
+      const y = b.top + k.clientTop + parseFloat(v.top) + parseFloat(v.marginTop);
+      lader.push({ art: 'kreis', dx: Math.round(x + w / 2 - mx), dy: Math.round(y + h / 2 - my),
+                   drin: x >= b.left - 0.5 && x + w <= b.right + 0.5 && y >= b.top - 0.5 && y + h <= b.bottom + 0.5 });
+    }
+    const z = k.querySelector(':scope > [data-sym]');
+    return { lader, zeichen: z ? +getComputedStyle(z).opacity : null, busy: k.getAttribute('aria-busy'),
+             w: Math.round(b.width), h: Math.round(b.height) };
+  })()`;
+  type Lader = { lader: Array<{ art: string; dx: number; dy: number; drin: boolean }>; zeichen: number | null; busy: string | null; w: number; h: number };
+  /* Was ein Vorleser hört: Name und Beschreibung aus dem Barrierebaum. */
+  const hoert = async (pc: Page): Promise<{ name: string; beschreibung: string }> => {
+    const cdp = await pc.context().newCDPSession(pc);
+    const { root } = await cdp.send('DOM.getDocument', { depth: 0 });
+    const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '#studio-import' });
+    const { nodes } = await cdp.send('Accessibility.getPartialAXTree', { nodeId, fetchRelatives: false });
+    const n = nodes[0] as { name?: { value?: unknown }; description?: { value?: unknown } } | undefined;
+    await cdp.detach();
+    return { name: String(n?.name?.value ?? ''), beschreibung: String(n?.description?.value ?? '') };
+  };
+  for (const thema of ['dark', 'light'] as const) {
+    const { pc, kontext } = await oeffnen();
+    if (thema === 'light') await pc.evaluate(`Aussehen.grundWechseln('light')`);
+    await pc.evaluate(`(() => { window.__frei = null;
+      ArchivImport.dateiAlsDokument = () => new Promise(f => { window.__frei = () => f({ seiteId: null }); }); })()`);
+    const [waehler] = await Promise.all([pc.waitForEvent('filechooser'), pc.click('#studio-import')]);
+    await waehler.setFiles(pdf);
+    await pc.waitForFunction(`document.getElementById('studio-import').getAttribute('aria-busy') === 'true' && typeof window.__frei === 'function'`);
+    /* RedionMotion zieht seinen Zustand über einen Beobachter nach. */
+    await pc.mouse.move(700, 700); await pc.waitForTimeout(300);
+    const t = thema === 'light' ? 'hell' : 'dunkel';
+    const l = await pc.evaluate(LADER) as Lader;
+    p(`${t}: beim Einlesen steht genau EIN Lader im Knopf`, l.lader.length === 1, JSON.stringify(l));
+    p(`${t}: … in der Mitte des ${l.w} × ${l.h}-Kastens (± 2 px) und nicht über seinen Rand`,
+      l.lader.length >= 1 && l.lader.every(x => Math.abs(x.dx) <= 2 && Math.abs(x.dy) <= 2 && x.drin), JSON.stringify(l.lader));
+    p(`${t}: … und das Zeichen tritt so lange zurück`, l.zeichen !== null && l.zeichen < 0.05, String(l.zeichen));
+    if (thema === 'dark') {
+      const h = await hoert(pc);
+      p('Vorleser: der Name bleibt „PDF öffnen" (test482)', h.name === 'PDF öffnen', JSON.stringify(h));
+      p('Vorleser: … und die Beschreibung sagt den Stand („PDF wird gelesen …")', /wird gelesen/.test(h.beschreibung), JSON.stringify(h));
+    }
+    await pc.evaluate('window.__frei()');
+    await pc.waitForFunction(`!document.getElementById('studio-import').hasAttribute('aria-busy')`);
+    await pc.waitForTimeout(300);
+    const n = await pc.evaluate(LADER) as Lader;
+    p(`${t}: danach kein Lader mehr, und das Zeichen ist wieder da`,
+      n.lader.length === 0 && n.zeichen !== null && n.zeichen > 0.95, JSON.stringify(n));
+    if (thema === 'dark') {
+      const h = await hoert(pc);
+      p('Vorleser: danach wieder „PDF öffnen", ohne Stand', h.name === 'PDF öffnen' && !/gelesen/.test(h.beschreibung), JSON.stringify(h));
+    }
+    await kontext.close();
+  }
+  fs.rmSync(pdf, { force: true });
 }
 
 p('Keine Seitenfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));

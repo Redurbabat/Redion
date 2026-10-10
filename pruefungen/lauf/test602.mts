@@ -29,13 +29,17 @@
  *       Tür hin und zurück wieder ins Ausgangsschema: der Klick auf das
  *       Gestirn, Strg⇧L, `App.theme()`, ◐ in der Seitenleiste, die
  *       Staffelei, die Kachel „Dunkel", der Menüband-Eintrag „Hell /
- *       Dunkel" — und gemischt (hin mit der einen, zurück mit der anderen).
+ *       Dunkel", seit der Durchsicht vom 10. Oktober auch Einstellungen →
+ *       Allgemein → „Erscheinungsbild" — und gemischt (hin mit der einen,
+ *       zurück mit der anderen).
  *       Hin landet jede im gemerkten hellen Schema, und der eigene Akzent
  *       bleibt überall derselbe (Entscheidung b).
  *   §2  EIN SCHALTER. `role="switch"`, `aria-checked` sagt in allen zehn
  *       Schemata, ob gerade dunkel gilt; der Name bleibt „Dunkles Schema"
- *       (wie die Staffelei), das Kürzel steht in `aria-keyshortcuts`, und
- *       die Blase der Symbolreihe zeigt genau diesen Namen.
+ *       (wie die Staffelei), das Kürzel steht in `aria-keyshortcuts` — und
+ *       zwar das GELTENDE: nach dem Umbelegen (Einstellungen → Aussehen →
+ *       Tastenkürzel) nennen Kürzel und Titel die neue Taste —, und die
+ *       Blase der Symbolreihe zeigt genau diesen Namen.
  *   §3  ZWEI ZEICHEN AUS DEM REGISTER. Sonne und Mond sind `svg.sym` aus
  *       `Register.symbole` (nur Striche), keine `.studio-orb`, kein
  *       Hexwert in den Regeln des Gestirns; das sichtbare Zeichen steht in
@@ -51,6 +55,9 @@
  *   §6  IN RUHE NEUTRAL. Das Zeichen trägt `--text-dim`, keine
  *       Akzentfläche (E701: kein zweiter violetter Fleck); unter Zeiger und
  *       Tastenfokus tönt es sich mit `--accent-text` (Farbe als Zustand).
+ *       Der Schein dabei fällt bei hohem Kontrast weg — im Schema „Starker
+ *       Kontrast", mit dem Schalter „Hoher Kontrast" und unter
+ *       `prefers-contrast: more` (wie das Glas, grund.css).
  *   §7  DIE EINZELDATEI. `redion-einzeldatei.html` zeigt dasselbe Gestirn
  *       und schaltet.
  *
@@ -136,10 +143,26 @@ console.log('\n§1 Ein Weg — jede Tür hin und zurück, und das Schema bleibt'
     { name: '◐ in der Seitenleiste', tun: async pc => { await pc.evaluate(`document.getElementById('btn-theme').click()`); } },
     { name: 'die Staffelei', tun: staffelei },
     { name: 'die Kachel „Dunkel"', tun: async pc => { await pc.evaluate(`Schnellkacheln.KACHELN.find(k => k.id === 'dunkel').tun()`); } },
-    { name: 'Menüband „Hell / Dunkel"', tun: async pc => { await pc.evaluate(`Register.menueband.eines('a-hell').tun()`); } }
+    { name: 'Menüband „Hell / Dunkel"', tun: async pc => { await pc.evaluate(`Register.menueband.eines('a-hell').tun()`); } },
+    /* Die achte Tür (Durchsicht vom 10. Oktober): die Auswahl
+       „Erscheinungsbild" schrieb nur `theme` — von „Mitternacht" aus tat
+       „Hell" dort nichts. Gewählt wird, was gerade NICHT gilt, wie ein
+       Mensch es täte. */
+    { name: 'Einstellungen „Erscheinungsbild"', tun: async pc => {
+      await pc.evaluate(`Einstellungen.oeffne('allgemein')`);
+      await pc.waitForTimeout(150);
+      await pc.evaluate(`(() => {
+        const w = document.querySelector('.overlay select[data-set="theme"]');
+        if (!w) throw new Error('Die Auswahl „Erscheinungsbild" fehlt');
+        w.value = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+        w.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`);
+      await pc.waitForTimeout(100);
+      await pc.evaluate(`document.querySelectorAll('.overlay').forEach(o => o.remove())`);
+    } }
   ];
   const paare: Array<[Tuer, Tuer]> = TUEREN.map(t => [t, t] as [Tuer, Tuer]);
-  paare.push([TUEREN[1]!, TUEREN[0]!], [TUEREN[0]!, TUEREN[2]!], [TUEREN[4]!, TUEREN[1]!]);
+  paare.push([TUEREN[1]!, TUEREN[0]!], [TUEREN[0]!, TUEREN[2]!], [TUEREN[4]!, TUEREN[1]!], [TUEREN[7]!, TUEREN[0]!]);
   for (const start of ['nacht', 'touchkit-dunkel']) {
     for (const [hin, zurueck] of paare) {
       await pc.evaluate(`(() => {
@@ -204,6 +227,23 @@ p('Es sind zehn Schemata', SCHEMATA.length === 10, SCHEMATA.join(','));
   p('aria-checked sagt in allen zehn Schemata, ob dunkel gilt', falsch.length === 0, falsch.join(' · ') || '');
   p('Der Name bleibt in allen Schemata „Dunkles Schema"', namen.size === 1 && namen.has('Dunkles Schema'), [...namen].join(' | '));
   p('Das Kürzel steht in aria-keyshortcuts', /Control\+Shift\+L/.test(kuerzel), kuerzel || '(keins)');
+  /* UMBELEGT (Durchsicht vom 10. Oktober): „hell" steht in UMBELEGBAR.
+     Kürzel und Titel waren fest in die Startseite und in `themaMarkieren`
+     geschrieben — nach dem Umbelegen sagte der Schalter eine Taste an, die
+     nichts mehr tat. Gefragt wird beim Zeigen und beim Fokus, also dort,
+     wo ein Mensch Titel oder Kürzel überhaupt erfährt. */
+  await pc.evaluate(`Store.setMeta('kuerzel', Object.assign({}, Store.getMeta('kuerzel', {}) || {}, { hell: 'Ctrl+Alt+H' }))`);
+  await pc.focus('#studio-theme'); await pc.waitForTimeout(80);
+  const um = await pc.evaluate(`(() => { const k = document.getElementById('studio-theme');
+    return { kuerzel: k.getAttribute('aria-keyshortcuts') || '', titel: k.title }; })()`) as { kuerzel: string; titel: string };
+  p('Umbelegt auf Strg Alt H: aria-keyshortcuts nennt die neue Taste', um.kuerzel === 'Control+Alt+H', JSON.stringify(um));
+  p('… und der Titel auch, nicht mehr Strg ⇧ L', /Strg Alt H/.test(um.titel) && !/⇧ L/.test(um.titel), JSON.stringify(um));
+  await pc.evaluate(`(() => { const e = Object.assign({}, Store.getMeta('kuerzel', {}) || {}); delete e.hell; Store.setMeta('kuerzel', e); })()`);
+  await pc.evaluate(`document.getElementById('studio-theme').blur()`);
+  await pc.focus('#studio-theme'); await pc.waitForTimeout(80);
+  const zurueck = await pc.evaluate(`document.getElementById('studio-theme').getAttribute('aria-keyshortcuts')`);
+  p('Zurückgesetzt: wieder Control+Shift+L', zurueck === 'Control+Shift+L', String(zurueck));
+  await pc.evaluate(`document.getElementById('studio-theme').blur()`);
   await pc.hover('#studio-theme'); await pc.waitForTimeout(250);
   const blase = await pc.evaluate(`(() => { const k = document.getElementById('studio-theme');
     return { inhalt: getComputedStyle(k, '::after').content.replace(/^"|"$/g, ''), name: k.getAttribute('aria-label') }; })()`) as { inhalt: string; name: string };
@@ -352,6 +392,35 @@ for (const schema of ['standard', 'hell']) {
   await pc.focus('#studio-search'); await pc.keyboard.press('Tab'); await pc.waitForTimeout(700);
   const fokus = await farbe('Fokus');
   p(`${schema}: unter dem Tastenfokus ebenso`, fokus.farbe === fokus.akz, JSON.stringify(fokus));
+  await kontext.close();
+}
+
+/* HOHER KONTRAST (Durchsicht vom 10. Oktober): der Schein unter Zeiger und
+   Fokus fiel nur im Schema „Starker Kontrast" weg. Der Schalter „Hoher
+   Kontrast" (`body[data-kontrast="hoch"]`) und `prefers-contrast: more`
+   behielten ihn — anders als das Glas, das in grund.css für alle drei
+   deckend wird. */
+{
+  const schein = (pc: Page) => pc.evaluate(`(() => { const k = document.getElementById('studio-theme');
+    const z = [...k.querySelectorAll('[data-sym]')].find(e => +getComputedStyle(e).opacity > 0.5) || k;
+    return getComputedStyle(z).filter; })()`) as Promise<string>;
+  const { pc, kontext } = await oeffnen();
+  await pc.evaluate(`Aussehen.setzen({ schema: 'standard', akzent: '' })`);
+  await pc.hover('#studio-theme'); await pc.waitForTimeout(700);
+  const normal = await schein(pc);
+  p('Gegenstück: ohne hohen Kontrast trägt das Zeichen unter dem Zeiger einen Schein', /drop-shadow/.test(normal), normal);
+  await pc.mouse.move(700, 600); await pc.waitForTimeout(300);
+  await pc.evaluate(`document.body.dataset.kontrast = 'hoch'`);
+  await pc.hover('#studio-theme'); await pc.waitForTimeout(700);
+  const hoch = await schein(pc);
+  p('Schalter „Hoher Kontrast": unter dem Zeiger kein Schein', hoch === 'none', hoch);
+  await pc.mouse.move(700, 600); await pc.waitForTimeout(300);
+  await pc.evaluate(`document.body.dataset.kontrast = 'normal'`);
+  const cdp = await pc.context().newCDPSession(pc);
+  await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-contrast', value: 'more' }] });
+  await pc.hover('#studio-theme'); await pc.waitForTimeout(700);
+  const mehr = await schein(pc);
+  p('prefers-contrast: more — unter dem Zeiger kein Schein', mehr === 'none', mehr);
   await kontext.close();
 }
 

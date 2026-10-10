@@ -20,9 +20,12 @@
  *       Ruhe eine getönte Pille und wird erst unter Zeiger und Tastenfokus
  *       voll violett mit Schein; der Themenknopf (seit E727 das Gestirn) ist
  *       in Ruhe neutral statt eines zweiten violetten Flecks. Das Zeichen
- *       der getönten Pille (seit E728 ohne Wort) liest sich mit 4,5 : 1 oder
- *       mehr — streng wie für Schrift, obwohl für ein Zeichen 3 : 1
- *       genügten.
+ *       der getönten Pille (seit E728 ohne Wort) liest sich in Standard
+ *       und Hell mit 4,5 : 1 oder mehr — streng wie für Schrift, obwohl für
+ *       ein Zeichen 3 : 1 genügten. Gemessen werden nur diese zwei
+ *       Schemata; in den übrigen acht hält das Zeichen 3 : 1, aber nicht
+ *       überall 4,5 (Rose 4,28, Sand 4,32, Touch Kit hell 4,43 — Durchsicht
+ *       vom 10. Oktober, messungen §96).
  *   §2  „Zuletzt geöffnet" ruht: der Kartenring dreht nur, solange man
  *       hinzeigt oder der Fokus darin steht — im Leerlauf, am Telefon und
  *       hinter einem offenen Fenster läuft KEINE endlose Bewegung. Die
@@ -593,7 +596,10 @@ console.log('\n§7 Ein Titel am Telefon — die Krume weicht dem grossen Titel')
   p('Am Rechner: Titel zu sehen — die Krume tritt zurück (E728, wie am Telefon)', oben.titel && oben.deck === 0, JSON.stringify(oben));
   await s.evaluate(() => { const r = document.getElementById('scroll'); if (r) r.scrollTop = 900; }); await warte(s, 600);
   const unten = await krumeHier();
-  p('Am Rechner: … und kehrt zurück, wenn er wegrollt (oder es keinen gibt)', unten.titel ? unten.deck === 0 : unten.deck === 1, JSON.stringify(unten));
+  /* Strenger seit der Durchsicht vom 10. Oktober: die alte Form
+     (`unten.titel ? deck 0 : deck 1`) war auch grün, wenn der Titel nie
+     wegrollte — dann prüfte die Zeile nur §7a noch einmal. */
+  p('Am Rechner: … und kehrt zurück, wenn er wegrollt', !unten.titel && unten.deck === 1, JSON.stringify(unten));
   await ctx.close();
 }
 
