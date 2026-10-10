@@ -68,6 +68,7 @@
  *   AUS DER DURCHSICHT VOM 10. OKTOBER (dazugekommen, rot gesehen):
  *   §2  … das „…" sagt aria-expanded, solange sein Menü offen ist; und die
  *       Karte unter „Zuletzt geöffnet" hat dasselbe Menü wie ihr Deckel.
+ *   §12 … das ⋯ der Seitenleiste sagt es ebenso.
  *   §3  … das ZEICHEN von „In den Papierkorb" bleibt mit dem Fokus rot.
  *   §9  … und unter dem Zeiger, in allen zehn Schemata.
  *   §15 Die Karten kommen an: die ersten Zellen des Gitters tragen die
@@ -585,6 +586,15 @@ const rk12 = await rechtsklick(r.s, '#tree .row[data-probe597]');
 const t12 = await r.s.evaluate<any>(`({ suche: !!document.querySelector('.menu .menu-suche input'), rename: !!document.querySelector('.menu [data-a="rename"]') })`);
 p('Rechtsklick auf die Zeile → das Seitenmenü (mit Suche und „Umbenennen")', rk12.verhindert && t12.suche && t12.rename, JSON.stringify({ rk12, t12 }));
 await zu(r.s);
+/* Und das ⋯ sagt, solange sein Menü offen ist, aria-expanded=true. */
+const mehr12 = `#tree .row[data-probe597] .act button[aria-haspopup]`;
+await r.s.evaluate<any>(`document.querySelector(${JSON.stringify(mehr12)})?.click()`);
+await r.s.waitForTimeout(250);
+const offen12 = await r.s.evaluate<any>(`({ menue: !!document.querySelector('.menu'), wert: document.querySelector(${JSON.stringify(mehr12)})?.getAttribute('aria-expanded') ?? null })`);
+await zu(r.s);
+const zu12 = await r.s.evaluate<any>(`document.querySelector(${JSON.stringify(mehr12)})?.getAttribute('aria-expanded') ?? null`);
+p('Das ⋯ der Zeile sagt aria-expanded=true, solange das Seitenmenü offen ist, und false danach',
+  offen12.menue && offen12.wert === 'true' && zu12 === 'false', JSON.stringify({ offen12, zu12 }));
 
 console.log('\n§14 · UI.wahl — die eine Auswahlliste');
 await r.s.evaluate<any>(`(() => {
