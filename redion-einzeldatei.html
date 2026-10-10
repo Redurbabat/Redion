@@ -13962,7 +13962,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    Bild mit `::before` und haben keinen Text; Bild und Handschrift liegen
    absolut und rücken nicht. */
 .bib-zelle > .bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{
-  content:""; float:right; width:48px; height:22px
+  /* Die Höhe ist die halbe Trefferfläche des „…" (44 px, §37): so weit
+     reicht die Ecke ins Blatt. Als Marke, nicht als rohe 22px — die stünde
+     in test362s Verzeichnis der Wiederholungen (Durchsicht vom 10. Oktober). */
+  content:""; float:right; width:48px; height:calc(var(--touch-min) / 2)
 }
 /* GEHOBEN (E721): nach langem Drücken liegt das Ding ein wenig höher —
    dieselbe Hebung wie im Kit (Popover, scale 1.04). Ohne Bewegung (System
@@ -24336,7 +24339,9 @@ body:has(.overlay,.menu.blatt,#r-blatt) .rmo-recent .rmo-ring-trommel{animation-
 .einst-nav button:is(:hover,:focus-visible) .mi{color:var(--text)}
 .einst-nav button.on .mi{color:var(--accent-text)}
 .menu button .mi{display:grid;place-items:center;color:var(--text-dim)}
-.menu button:not(.rot):is(:hover,:focus-visible,.jetzt) .mi{color:var(--text)}
+/* Gefahr bleibt rot, auch unter Zeiger und Fokus: `.rot` setzt das Menü nur
+   am Telefon, `data-gefahr` meldet die Aktion selbst (E721; test597 §3, §9). */
+.menu button:not(.rot):not([data-gefahr]):is(:hover,:focus-visible,.jetzt) .mi{color:var(--text)}
 .menu .kenn{background:var(--bg-hover);color:var(--text-dim);box-shadow:inset 0 0 0 1px var(--line)}
 .home-liste .mz{display:grid;place-items:center;color:var(--text-dim)}
 .home-liste button:is(:hover,:focus-visible) .mz{color:var(--text)}
@@ -26998,7 +27003,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1428, inhalt: '8e760798f06fc55d', gebaut: '2026-10-10T18:53:10.123Z' };
+const Stand = { fassung: 1429, inhalt: 'be8276544e88a90a', gebaut: '2026-10-10T20:26:13.096Z' };
 window.Stand = Stand;
 
 </script>
@@ -37464,6 +37469,16 @@ const RegisterAktionen = (() => {
                 gruppe: e.gefahr ? 'gefahr' : e.gruppe, gefahr: !!e.gefahr, taste: e.taste || '' };
         });
     };
+    const scheitern = (e, ding, o, f) => {
+        console.error('Register.aktionen: „' + e.id + '" schlug fehl', f);
+        let name = e.id;
+        try {
+            name = String((typeof e.name === 'function' ? e.name(ding, o) : e.name) || e.id);
+        }
+        catch { }
+        if (typeof UI !== 'undefined' && UI.toast)
+            UI.toast('„' + name + '“ hat nicht geklappt.');
+    };
     const tun = (id, ding, ort) => {
         const e = eintraege.find(x => x.id === id);
         const o = ort || { kontext: '' };
@@ -37472,10 +37487,10 @@ const RegisterAktionen = (() => {
         try {
             const r = e.tun(ding, o);
             if (r && typeof r.catch === 'function')
-                r.catch(f => console.error('Register.aktionen: „' + id + '" schlug fehl', f));
+                r.catch(f => scheitern(e, ding, o, f));
         }
         catch (f) {
-            console.error('Register.aktionen: „' + id + '" schlug fehl', f);
+            scheitern(e, ding, o, f);
             return false;
         }
         return true;
@@ -44097,6 +44112,25 @@ const Menue = (() => {
             (aktiv || liste[0])?.focus({ preventScroll: true });
         }
     };
+    const offenAm = new WeakMap();
+    const aufgeklappt = (anker, m) => {
+        if (!anker || !anker.hasAttribute('aria-haspopup'))
+            return;
+        if (/^(treeitem|row|gridcell|option)$/.test(anker.getAttribute('role') || ''))
+            return;
+        anker.setAttribute('aria-expanded', 'true');
+        offenAm.set(anker, m);
+        const wache = new MutationObserver(() => {
+            if (m.isConnected)
+                return;
+            wache.disconnect();
+            if (offenAm.get(anker) !== m)
+                return;
+            offenAm.delete(anker);
+            anker.setAttribute('aria-expanded', 'false');
+        });
+        wache.observe(document.body, { childList: true });
+    };
     const aktionen = (ding, ort, wo = {}) => {
         const R = typeof Register !== 'undefined' ? Register.aktionen : null;
         if (!R || !ding)
@@ -44127,6 +44161,7 @@ const Menue = (() => {
             rueckfokus: wo.rueckfokus ?? anker,
             ...(amZeiger || !anker ? {} : { anker })
         });
+        aufgeklappt(anker, m);
         m.addEventListener('click', e => {
             const b = e.target instanceof Element ? e.target.closest('button[data-a]') : null;
             if (!b || !m.contains(b))
@@ -44254,25 +44289,26 @@ const Menue = (() => {
         });
         wurzel.addEventListener('touchcancel', () => { finger = false; abbrechen(); });
     };
+    let wahlNr = 0;
     const wahl = (w) => {
-        const html = w.gruppen.map(g => (g.name ? `<div class="grp">${esc(g.name)}</div>` : '') +
-            g.optionen.map(o => `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
-                `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
-                `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
-                `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('')).join('<hr>');
+        const html = w.gruppen.map(g => {
+            const gid = 'wahl-gruppe-' + (++wahlNr);
+            return (g.name ? `<div class="grp" id="${gid}">${esc(g.name)}</div>` : '') +
+                `<div role="group"${g.name ? ` aria-labelledby="${gid}"` : ''}>` +
+                g.optionen.map(o => `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
+                    `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
+                    `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
+                    `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('') +
+                '</div>';
+        }).join('<hr>');
         const r = w.anker.getBoundingClientRect();
         w.anker.setAttribute('aria-haspopup', 'menu');
-        w.anker.setAttribute('aria-expanded', 'true');
         const m = menu(html, r.left, r.bottom + 4, {
             titel: w.titel, rolle: 'menu', beschriftung: w.titel, fokus: 'aktiv',
             rueckfokus: w.anker, anker: w.anker
         });
+        aufgeklappt(w.anker, m);
         const zu = () => { w.anker.setAttribute('aria-expanded', 'false'); };
-        const wache = new MutationObserver(() => { if (!m.isConnected) {
-            zu();
-            wache.disconnect();
-        } });
-        wache.observe(document.body, { childList: true });
         m.addEventListener('click', e => {
             const b = e.target instanceof Element ? e.target.closest('[data-wahl]') : null;
             if (!b || !m.contains(b))
@@ -44285,7 +44321,7 @@ const Menue = (() => {
         });
         return m;
     };
-    return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl,
+    return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl, aufgeklappt,
         nachzuegler, nachzueglerWeg, HALTEN_MS };
 })();
 window.Menue = Menue;
@@ -132451,9 +132487,10 @@ const Bibliothek = (() => {
         const wurzel = wrap.querySelector('.bib');
         if (!wurzel || typeof Menue === 'undefined')
             return;
-        const dingVon = (el) => Store.getBlock(el.dataset['id'] || '');
+        const dingVon = (el) => Store.getBlock(el.dataset['id'] || el.dataset['rmoOpen'] || '');
         Menue.aktionenBinden(wurzel, {
-            auswahl: '.bib-deckel[data-id], .bib-heft[data-id], .bib-hand[data-id], .bib-zeile[data-id]',
+            auswahl: '.bib-deckel[data-id], .bib-heft[data-id], .bib-hand[data-id], .bib-zeile[data-id], ' +
+                '.rmo-recent-card[data-rmo-open]',
             oeffnen: (el, wo) => {
                 const p = dingVon(el);
                 if (!p)
@@ -146851,7 +146888,7 @@ const StudioSchale = (() => {
                 bewegt.forEach(a => a.cancel());
                 bewegt.clear();
                 ankommen(document.querySelector('#page .bib-dkopf,#page .bib-titel,#page .aw-kopf'));
-                document.querySelectorAll('#page .bib-gitter>.bib-deckel:nth-child(-n+6)')
+                document.querySelectorAll('#page .bib-gitter > :is(.bib-deckel, .bib-zelle):nth-child(-n+6)')
                     .forEach((karte, i) => ankommen(karte, 0, 8, i * 24));
             });
         };
@@ -148356,6 +148393,7 @@ const App = (() => {
             fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
                 `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
                 esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
+        Menue.aufgeklappt(anker instanceof HTMLElement ? anker : null, m);
         m.addEventListener('click', async (e) => {
             const sk = elVon(e)?.closest('button[data-schrift]');
             if (sk) {
@@ -151154,9 +151192,14 @@ const App = (() => {
         R.melde({ id: 'oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
             gilt: (_p, o) => nichtImRegal(o) && o.art !== 'ordner',
             tun: (p) => oeffne(p.id) });
+        const zeigtKarten = (o) => o.kontext !== 'seite';
         R.melde({ id: 'favorit', zeichen: 'star', gruppe: 'merken', rang: 10,
             name: (p) => (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'),
-            tun: (p) => { favoritKippen(p); nachAenderung(Store.getBlock(p.id) || p); } });
+            tun: (p, o) => {
+                favoritKippen(p);
+                if (zeigtKarten(o))
+                    nachAenderung(Store.getBlock(p.id) || p);
+            } });
         R.melde({ id: 'umbenennen', name: 'Umbenennen', zeichen: 'pencil', gruppe: 'bearbeiten', rang: 10,
             gilt: (p, o) => !(o.kontext === 'notizhefte' && p.locked),
             tun: (p, o) => umbenennen(p, o.anker || null, o.kontext === 'seite' ? 'Neuer Titel'
@@ -151172,9 +151215,12 @@ const App = (() => {
             } });
         R.melde({ id: 'duplizieren', name: 'Duplizieren', zeichen: 'copy', gruppe: 'ablegen', rang: 20,
             gilt: (_p, o) => nichtImRegal(o),
-            tun: (p) => {
+            tun: (p, o) => {
                 dupliziereSeite(p.id, p.parentId);
-                nachAenderung(Store.getBlock(p.id));
+                if (zeigtKarten(o))
+                    nachAenderung(Store.getBlock(p.id));
+                else
+                    zeichneBaum();
                 UI.toast('Seite dupliziert');
             } });
         R.melde({ id: 'link', name: 'Link kopieren', zeichen: 'link', gruppe: 'teilen', rang: 10,

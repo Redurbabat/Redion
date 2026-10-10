@@ -664,6 +664,7 @@ const App = (() => {
             fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
                 `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
                 esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
+        Menue.aufgeklappt(anker instanceof HTMLElement ? anker : null, m);
         m.addEventListener('click', async (e) => {
             const sk = elVon(e)?.closest('button[data-schrift]');
             if (sk) {
@@ -3462,9 +3463,14 @@ const App = (() => {
         R.melde({ id: 'oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
             gilt: (_p, o) => nichtImRegal(o) && o.art !== 'ordner',
             tun: (p) => oeffne(p.id) });
+        const zeigtKarten = (o) => o.kontext !== 'seite';
         R.melde({ id: 'favorit', zeichen: 'star', gruppe: 'merken', rang: 10,
             name: (p) => (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'),
-            tun: (p) => { favoritKippen(p); nachAenderung(Store.getBlock(p.id) || p); } });
+            tun: (p, o) => {
+                favoritKippen(p);
+                if (zeigtKarten(o))
+                    nachAenderung(Store.getBlock(p.id) || p);
+            } });
         R.melde({ id: 'umbenennen', name: 'Umbenennen', zeichen: 'pencil', gruppe: 'bearbeiten', rang: 10,
             gilt: (p, o) => !(o.kontext === 'notizhefte' && p.locked),
             tun: (p, o) => umbenennen(p, o.anker || null, o.kontext === 'seite' ? 'Neuer Titel'
@@ -3480,9 +3486,12 @@ const App = (() => {
             } });
         R.melde({ id: 'duplizieren', name: 'Duplizieren', zeichen: 'copy', gruppe: 'ablegen', rang: 20,
             gilt: (_p, o) => nichtImRegal(o),
-            tun: (p) => {
+            tun: (p, o) => {
                 dupliziereSeite(p.id, p.parentId);
-                nachAenderung(Store.getBlock(p.id));
+                if (zeigtKarten(o))
+                    nachAenderung(Store.getBlock(p.id));
+                else
+                    zeichneBaum();
                 UI.toast('Seite dupliziert');
             } });
         R.melde({ id: 'link', name: 'Link kopieren', zeichen: 'link', gruppe: 'teilen', rang: 10,

@@ -50,6 +50,16 @@ const RegisterAktionen = (() => {
                 gruppe: e.gefahr ? 'gefahr' : e.gruppe, gefahr: !!e.gefahr, taste: e.taste || '' };
         });
     };
+    const scheitern = (e, ding, o, f) => {
+        console.error('Register.aktionen: „' + e.id + '" schlug fehl', f);
+        let name = e.id;
+        try {
+            name = String((typeof e.name === 'function' ? e.name(ding, o) : e.name) || e.id);
+        }
+        catch { }
+        if (typeof UI !== 'undefined' && UI.toast)
+            UI.toast('„' + name + '“ hat nicht geklappt.');
+    };
     const tun = (id, ding, ort) => {
         const e = eintraege.find(x => x.id === id);
         const o = ort || { kontext: '' };
@@ -58,10 +68,10 @@ const RegisterAktionen = (() => {
         try {
             const r = e.tun(ding, o);
             if (r && typeof r.catch === 'function')
-                r.catch(f => console.error('Register.aktionen: „' + id + '" schlug fehl', f));
+                r.catch(f => scheitern(e, ding, o, f));
         }
         catch (f) {
-            console.error('Register.aktionen: „' + id + '" schlug fehl', f);
+            scheitern(e, ding, o, f);
             return false;
         }
         return true;

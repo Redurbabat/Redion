@@ -822,6 +822,9 @@ const App = (() => {
         fuss: `Wortzahl: <b>${woerterZaehlen(p.id)}</b> Wörter<br>` +
               `Zuletzt bearbeitet von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b><br>` +
               esc(Einstellungen.datum(new Date(p.edited || p.created), true)) });
+    /* Das ⋯ der Seitenleiste sagt, solange dieses Menü offen ist,
+       aria-expanded=true (E721, Durchsicht vom 10. Oktober). */
+    Menue.aufgeklappt(anker instanceof HTMLElement ? anker : null, m);
 
     m.addEventListener('click', async e => {
       /* Nur die Schriftkacheln im Menü, nicht der <body> — der trägt
@@ -4958,9 +4961,20 @@ const App = (() => {
          hinein (E380), und das meldet die Bibliothek selbst. */
       gilt: (_p: any, o: AktionOrt) => nichtImRegal(o) && o.art !== 'ordner',
       tun: (p: any) => oeffne(p.id) });
+    /* AUF DER SEITE ZEICHNET NICHTS DIE SEITE NEU (Durchsicht vom 10. Oktober).
+       Ein Merkzeichen und eine Kopie ändern nichts, was die offene Seite
+       zeigt — vor E721 kippte „Zu Favoriten" nur Baum und Brotkrume, und
+       „Duplizieren" zeichnete nur den Baum. `nachAenderung` zeichnet die
+       offene Seite neu und wirft den Leser an den Anfang (test597 §16:
+       scrollTop 1200 → 0). Neu gezeichnet wird deshalb nur, wo eine Karte
+       oder ein Regal das Ding ZEIGT (Bibliothek, Notizhefte). */
+    const zeigtKarten = (o: AktionOrt): boolean => o.kontext !== 'seite';
     R.melde({ id: 'favorit', zeichen: 'star', gruppe: 'merken', rang: 10,
       name: (p: any) => (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'),
-      tun: (p: any) => { favoritKippen(p); nachAenderung(Store.getBlock(p.id) || p); } });
+      tun: (p: any, o: AktionOrt) => {
+        favoritKippen(p);
+        if (zeigtKarten(o)) nachAenderung(Store.getBlock(p.id) || p);
+      } });
     R.melde({ id: 'umbenennen', name: 'Umbenennen', zeichen: 'pencil', gruppe: 'bearbeiten', rang: 10,
       /* Ein verschlüsseltes Heft trägt seinen Namen im Schloss (E406). */
       gilt: (p: any, o: AktionOrt) => !(o.kontext === 'notizhefte' && p.locked),
@@ -4978,9 +4992,9 @@ const App = (() => {
       } });
     R.melde({ id: 'duplizieren', name: 'Duplizieren', zeichen: 'copy', gruppe: 'ablegen', rang: 20,
       gilt: (_p: any, o: AktionOrt) => nichtImRegal(o),
-      tun: (p: any) => {
+      tun: (p: any, o: AktionOrt) => {
         dupliziereSeite(p.id, p.parentId);
-        nachAenderung(Store.getBlock(p.id));
+        if (zeigtKarten(o)) nachAenderung(Store.getBlock(p.id)); else zeichneBaum();
         UI.toast('Seite dupliziert');
       } });
     R.melde({ id: 'link', name: 'Link kopieren', zeichen: 'link', gruppe: 'teilen', rang: 10,

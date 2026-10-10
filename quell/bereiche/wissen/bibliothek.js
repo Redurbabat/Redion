@@ -1052,9 +1052,10 @@ const Bibliothek = (() => {
         const wurzel = wrap.querySelector('.bib');
         if (!wurzel || typeof Menue === 'undefined')
             return;
-        const dingVon = (el) => Store.getBlock(el.dataset['id'] || '');
+        const dingVon = (el) => Store.getBlock(el.dataset['id'] || el.dataset['rmoOpen'] || '');
         Menue.aktionenBinden(wurzel, {
-            auswahl: '.bib-deckel[data-id], .bib-heft[data-id], .bib-hand[data-id], .bib-zeile[data-id]',
+            auswahl: '.bib-deckel[data-id], .bib-heft[data-id], .bib-hand[data-id], .bib-zeile[data-id], ' +
+                '.rmo-recent-card[data-rmo-open]',
             oeffnen: (el, wo) => {
                 const p = dingVon(el);
                 if (!p)

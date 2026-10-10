@@ -685,6 +685,31 @@ const Menue = (() => {
     }
   };
 
+  /* ---- AUFGEKLAPPT (E721, Durchsicht vom 10. Oktober) --------------------
+     Ein Knopf mit aria-haspopup verspricht dem Vorleser ein Menü;
+     aria-expanded sagt, ob es GERADE offen ist. Es stand nie da — das „…"
+     der Karte und das ⋯ der Seitenleiste sagten nur „hat ein Menü". Hier
+     setzt es, wer ein Menü an seinem Anker öffnet, und es fällt zurück,
+     sobald das Menü aus dem Baum geht, egal wer es entfernt hat. Eine Zeile
+     eines Baums (treeitem) bleibt aussen vor: dort heisst aria-expanded
+     „aufgeklappt", nicht „Menü offen". Öffnet derselbe Anker gleich ein
+     neues Menü, setzt der Wächter des alten nichts zurück (`offenAm`). */
+  const offenAm = new WeakMap<HTMLElement, HTMLElement>();
+  const aufgeklappt = (anker: HTMLElement | null | undefined, m: HTMLElement): void => {
+    if (!anker || !anker.hasAttribute('aria-haspopup')) return;
+    if (/^(treeitem|row|gridcell|option)$/.test(anker.getAttribute('role') || '')) return;
+    anker.setAttribute('aria-expanded', 'true');
+    offenAm.set(anker, m);
+    const wache = new MutationObserver(() => {
+      if (m.isConnected) return;
+      wache.disconnect();
+      if (offenAm.get(anker) !== m) return;
+      offenAm.delete(anker);
+      anker.setAttribute('aria-expanded', 'false');
+    });
+    wache.observe(document.body, { childList: true });
+  };
+
   /** Die Aktionen eines Dings als Menü — aus `Register.aktionen`, nirgends
    *  sonst. `wo.x`/`wo.y`: am Zeiger (Rechtsklick); sonst am Anker
    *  (das „…", die Karte bei Umschalt+F10). Gibt `null` zurück, wenn es für
@@ -714,6 +739,7 @@ const Menue = (() => {
       /* Am Zeiger wächst nichts aus einem Knopf — dort steht es, wo geklickt wurde. */
       ...(amZeiger || !anker ? {} : { anker })
     });
+    aufgeklappt(anker, m);
     m.addEventListener('click', e => {
       const b = e.target instanceof Element ? e.target.closest<HTMLElement>('button[data-a]') : null;
       if (!b || !m.contains(b)) return;
@@ -885,25 +911,32 @@ const Menue = (() => {
     beiWahl: (id: string) => void;
   };
 
+  /* Jede Gruppe ist eine BENANNTE Gruppe (role=group, aria-labelledby auf
+     ihre Überschrift). Die Überschrift allein trug role=presentation und
+     wurde im Menü nie vorgelesen (Durchsicht vom 10. Oktober, test597 §14).
+     Die Überschrift bleibt ausserhalb der Gruppe stehen, damit das Blatt
+     am Telefon sie wie bisher über die Karte setzt. */
+  let wahlNr = 0;
   const wahl = (w: WahlAuftrag): HTMLDivElement => {
-    const html = w.gruppen.map(g =>
-      (g.name ? `<div class="grp">${esc(g.name)}</div>` : '') +
-      g.optionen.map(o =>
-        `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
-        `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
-        `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
-        `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('')
-    ).join('<hr>');
+    const html = w.gruppen.map(g => {
+      const gid = 'wahl-gruppe-' + (++wahlNr);
+      return (g.name ? `<div class="grp" id="${gid}">${esc(g.name)}</div>` : '') +
+        `<div role="group"${g.name ? ` aria-labelledby="${gid}"` : ''}>` +
+        g.optionen.map(o =>
+          `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
+          `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
+          `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
+          `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('') +
+        '</div>';
+    }).join('<hr>');
     const r = w.anker.getBoundingClientRect();
     w.anker.setAttribute('aria-haspopup', 'menu');
-    w.anker.setAttribute('aria-expanded', 'true');
     const m = menu(html, r.left, r.bottom + 4, {
       titel: w.titel, rolle: 'menu', beschriftung: w.titel, fokus: 'aktiv',
       rueckfokus: w.anker, anker: w.anker
     });
+    aufgeklappt(w.anker, m);
     const zu = (): void => { w.anker.setAttribute('aria-expanded', 'false'); };
-    const wache = new MutationObserver(() => { if (!m.isConnected) { zu(); wache.disconnect(); } });
-    wache.observe(document.body, { childList: true });
     m.addEventListener('click', e => {
       const b = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-wahl]') : null;
       if (!b || !m.contains(b)) return;
@@ -915,7 +948,7 @@ const Menue = (() => {
     return m;
   };
 
-  return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl,
+  return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl, aufgeklappt,
            nachzuegler, nachzueglerWeg, HALTEN_MS };
 })();
 

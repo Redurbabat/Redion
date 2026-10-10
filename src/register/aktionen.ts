@@ -148,6 +148,18 @@ const RegisterAktionen = (() => {
       });
   };
 
+  /** Ein Fehler wird gemeldet, nicht verschluckt (§10) — in der Konsole für
+   *  den, der sucht, UND als Meldung für den, der geklickt hat. Bis zur
+   *  Durchsicht vom 10. Oktober wusste es nur die Konsole: wer „Umbenennen"
+   *  wählte und nichts geschah, sah keinen Grund (test597 §17). */
+  const scheitern = (e: AktionEintrag, ding: any, o: AktionOrt, f: unknown): void => {
+    console.error('Register.aktionen: „' + e.id + '" schlug fehl', f);
+    let name = e.id;
+    try { name = String((typeof e.name === 'function' ? e.name(ding, o) : e.name) || e.id); }
+    catch { /* der Name selbst warf — dann die Kennung */ }
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast('„' + name + '“ hat nicht geklappt.');
+  };
+
   /** Eine Aktion ausführen. `false`, wenn es sie nicht gibt oder sie hier
    *  nicht gilt — dann geschieht nichts. Ein Fehler darin wird gemeldet,
    *  nicht verschluckt. */
@@ -158,9 +170,9 @@ const RegisterAktionen = (() => {
     try {
       const r = e.tun(ding, o);
       if (r && typeof (r as Promise<unknown>).catch === 'function')
-        (r as Promise<unknown>).catch(f => console.error('Register.aktionen: „' + id + '" schlug fehl', f));
+        (r as Promise<unknown>).catch(f => scheitern(e, ding, o, f));
     } catch (f) {
-      console.error('Register.aktionen: „' + id + '" schlug fehl', f);
+      scheitern(e, ding, o, f);
       return false;
     }
     return true;

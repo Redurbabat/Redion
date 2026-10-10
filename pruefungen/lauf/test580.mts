@@ -391,9 +391,13 @@ for (const handy of [false, true]) {
     return { griffe: kn.map(b => b.dataset.a + '=' + wort(b, '.mi')),
       falsch: kn.map(b => [b.dataset.a, window.__zeichen(b.querySelector('.mi'))]).filter(x => x[1]),
       emoji: kn.filter(b => window.__emoji.test(b.textContent)).map(b => b.dataset.a),
-      laut: kn.filter(b => !b.classList.contains('rot') && b.querySelector('svg.sym') &&
+      /* Still heisst: alles AUSSER der Gefahr. Am Telefon trägt sie \`.rot\`,
+         seit E721 auch am Rechner — dort als \`data-gefahr\` (Redur, S. 19:
+         „beim rechts klicke sollte es mir zeigen löschen"). Dafür prüft
+         \`rot\` unten jetzt Rechner UND Telefon. */
+      laut: kn.filter(b => !b.classList.contains('rot') && !b.hasAttribute('data-gefahr') && b.querySelector('svg.sym') &&
                            !window.__still(b.querySelector('svg.sym'))).map(b => b.dataset.a),
-      rot: (() => { const d = document.querySelector('.menu.blatt [data-a="del"] svg.sym'); if (!d) return null;
+      rot: (() => { const d = document.querySelector('.menu [data-a="del"] svg.sym'); if (!d) return null;
         const c = window.__hsl(window.__rgb(getComputedStyle(d).color)); return c.s > 0.4 && (c.h < 20 || c.h > 340); })(),
       schrift: document.querySelectorAll('.menu button[data-schrift]').length,
       kenn: kenn ? { text: kenn.textContent.trim(), grau: window.__hsl(window.__rgb(getComputedStyle(kenn).backgroundColor)).s < 0.25 } : null }; })()`) as any;
@@ -403,6 +407,7 @@ for (const handy of [false, true]) {
   gleich(`${g} · ⋯-Menü: kein Emoji`, m.emoji, []);
   gleich(`${g} · ⋯-Menü: die Zeichen sind still (grau)`, m.laut, []);
   if (handy) p('Telefon · ⋯-Menü: Löschen bleibt rot', m.rot === true, String(m.rot));
+  else p('Rechner · ⋯-Menü: Löschen ist rot wie am Telefon (E721)', m.rot === true, String(m.rot));
   p(`${g} · ⋯-Menü: „Beta" steht noch da — als grauer Zettel`,
     m.kenn?.text === 'Beta' && m.kenn?.grau === true, JSON.stringify(m.kenn));
   await aufraeumen(s);

@@ -8363,10 +8363,26 @@ damit es nicht in einem Commit verschwindet (§35):
    Blatts, Spalte und Zeile der Leinwand-Tabelle (`zeichenflaeche.ts`), ein
    Kasten auf der Fläche, eine PDF-Seite (Miniatur und Seitenknopf),
    Schaltplan und Gedankenkarte. Sie sind keine Seiten; ihre Aktionen
-   gehören nicht ins Register einer Seite. In E721 bekamen ihre
-   Lösch-Einträge nur `data-gefahr` — sie stehen jetzt am Rechner wie am
-   Telefon rot. Rechtsklick ohne Tastaturweg (Blatt-Reiter, Leinwand-Spalte)
-   haben noch keinen Binder.
+   gehören nicht ins Register einer Seite. Rechtsklick ohne Tastaturweg
+   (Blatt-Reiter, Leinwand-Spalte) haben noch keinen Binder.
+
+   **Was in E721 `data-gefahr` bekam** (und damit am Rechner wie am
+   Telefon rot steht) — nachgezählt nach der Durchsicht vom 10. Oktober,
+   die hier eine zu weite Behauptung fand: die Tabellenkalkulation
+   („Zeile/Spalte … löschen", „Blatt „…" löschen"), die Leinwand-Tabelle
+   („Spalte löschen", „Zeile löschen"), die Planfläche („Plan leeren"), das
+   Blockmenü des Editors („In den Papierkorb") und die Datenbank (Zeile „In
+   den Papierkorb" im Menü und im `zeilenMenue`, „Ansicht löschen",
+   „Eigenschaft löschen"). **PDF-Seite, Schaltplan, Gedankenkarte und der
+   Kasten auf der Fläche** haben keinen Lösch-Eintrag in einem `.menu` —
+   dort löschen eine Werkzeugleiste oder eine Taste; markiert wurde dort
+   nichts. **Noch ohne `data-gefahr`** (am Rechner also nicht rot): in der
+   Datenbank „Eine Vorlage löschen" (zwei Menüs in `steuerung.ts`) und
+   „Alle Kacheln entfernen", dazu die Fussknöpfe „Alle Regeln entfernen"
+   (Regelfenster) und „Alle entfernen" (Filterfenster);
+   auf der Leinwand zweimal „Inhalt leeren"; in der Pflege „Liste leeren";
+   bei den KI-Agenten „Verlauf leeren". „Alle Zeilen löschen" trägt seit
+   jeher `.rot` und ist überall rot.
 2. **Die Zeile einer Datenbank hat ihr `zeilenMenue` (mit Suche) behalten.**
    Ihr „In den Papierkorb" ist seit E718 derselbe Griff (`App.inPapierkorb`)
    und seit E721 rot; ihr Umbenennen ruft `App.umbenennen`. Gemeldet im
@@ -8386,6 +8402,16 @@ damit es nicht in einem Commit verschwindet (§35):
    Karte legt weg und meldet es; der Fokus springt dabei NICHT in die
    Meldung — ein Fokus, der von selbst wandert, ist für den Vorleser
    schlimmer als ein weiter Weg. Der Papierkorb bleibt der zweite Rückweg.
+5. **Der Schlucker nach langem Drücken auf einem Tablet ist ungeprüft.**
+   Nach dem Loslassen schluckt `Menue.nachzuegler` 800 ms lang das nächste
+   mousedown/mouseup/click (E83). Am Telefon räumt jede neue Berührung ihn
+   weg (`pwa.ts`); auf einem Gerät über 760 px nur eine Berührung INNERHALB
+   des Behälters, nicht eine auf dem Menü. Schickt ein echtes Tablet nach
+   einem langen Drücken keinen Klick hinterher, könnte der erste Tipp ins
+   Menü in diesen 800 ms verschluckt werden. Mit CDP liess es sich nicht
+   nachstellen (Durchsicht vom 10. Oktober; eigene Sonde bei 1024 × 1366:
+   ein Tipp 100, 300 und 900 ms nach dem Loslassen traf „Umbenennen" jedes
+   Mal) — ohne roten Wächter wird nichts geändert (§30).
 
 ## L239 · Ordner nach E718: alte Papierkorb-Seiten ohne Frist, und zwei Regeln für ein Fach — 6. Oktober 2026
 

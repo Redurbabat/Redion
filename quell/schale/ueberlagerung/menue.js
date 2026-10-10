@@ -563,6 +563,25 @@ const Menue = (() => {
             (aktiv || liste[0])?.focus({ preventScroll: true });
         }
     };
+    const offenAm = new WeakMap();
+    const aufgeklappt = (anker, m) => {
+        if (!anker || !anker.hasAttribute('aria-haspopup'))
+            return;
+        if (/^(treeitem|row|gridcell|option)$/.test(anker.getAttribute('role') || ''))
+            return;
+        anker.setAttribute('aria-expanded', 'true');
+        offenAm.set(anker, m);
+        const wache = new MutationObserver(() => {
+            if (m.isConnected)
+                return;
+            wache.disconnect();
+            if (offenAm.get(anker) !== m)
+                return;
+            offenAm.delete(anker);
+            anker.setAttribute('aria-expanded', 'false');
+        });
+        wache.observe(document.body, { childList: true });
+    };
     const aktionen = (ding, ort, wo = {}) => {
         const R = typeof Register !== 'undefined' ? Register.aktionen : null;
         if (!R || !ding)
@@ -593,6 +612,7 @@ const Menue = (() => {
             rueckfokus: wo.rueckfokus ?? anker,
             ...(amZeiger || !anker ? {} : { anker })
         });
+        aufgeklappt(anker, m);
         m.addEventListener('click', e => {
             const b = e.target instanceof Element ? e.target.closest('button[data-a]') : null;
             if (!b || !m.contains(b))
@@ -720,25 +740,26 @@ const Menue = (() => {
         });
         wurzel.addEventListener('touchcancel', () => { finger = false; abbrechen(); });
     };
+    let wahlNr = 0;
     const wahl = (w) => {
-        const html = w.gruppen.map(g => (g.name ? `<div class="grp">${esc(g.name)}</div>` : '') +
-            g.optionen.map(o => `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
-                `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
-                `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
-                `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('')).join('<hr>');
+        const html = w.gruppen.map(g => {
+            const gid = 'wahl-gruppe-' + (++wahlNr);
+            return (g.name ? `<div class="grp" id="${gid}">${esc(g.name)}</div>` : '') +
+                `<div role="group"${g.name ? ` aria-labelledby="${gid}"` : ''}>` +
+                g.optionen.map(o => `<button type="button" role="menuitemradio" data-wahl="${esc(o.id)}" ` +
+                    `aria-checked="${o.aktiv ? 'true' : 'false'}"${o.aktiv ? ' aria-current="true"' : ''}>` +
+                    `<span class="mi">${o.zeichen ? zeichenVon(o.zeichen) : ''}</span>${esc(o.name)}` +
+                    `<span class="ms wahl-haken" aria-hidden="true">${o.aktiv ? '✓' : ''}</span></button>`).join('') +
+                '</div>';
+        }).join('<hr>');
         const r = w.anker.getBoundingClientRect();
         w.anker.setAttribute('aria-haspopup', 'menu');
-        w.anker.setAttribute('aria-expanded', 'true');
         const m = menu(html, r.left, r.bottom + 4, {
             titel: w.titel, rolle: 'menu', beschriftung: w.titel, fokus: 'aktiv',
             rueckfokus: w.anker, anker: w.anker
         });
+        aufgeklappt(w.anker, m);
         const zu = () => { w.anker.setAttribute('aria-expanded', 'false'); };
-        const wache = new MutationObserver(() => { if (!m.isConnected) {
-            zu();
-            wache.disconnect();
-        } });
-        wache.observe(document.body, { childList: true });
         m.addEventListener('click', e => {
             const b = e.target instanceof Element ? e.target.closest('[data-wahl]') : null;
             if (!b || !m.contains(b))
@@ -751,7 +772,7 @@ const Menue = (() => {
         });
         return m;
     };
-    return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl,
+    return { menu, menuMitSuche, amTelefon, aktionen, aktionenBinden, wahl, aufgeklappt,
         nachzuegler, nachzueglerWeg, HALTEN_MS };
 })();
 window.Menue = Menue;

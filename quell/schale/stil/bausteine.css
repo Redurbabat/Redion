@@ -948,7 +948,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    Bild mit `::before` und haben keinen Text; Bild und Handschrift liegen
    absolut und rücken nicht. */
 .bib-zelle > .bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{
-  content:""; float:right; width:48px; height:22px
+  /* Die Höhe ist die halbe Trefferfläche des „…" (44 px, §37): so weit
+     reicht die Ecke ins Blatt. Als Marke, nicht als rohe 22px — die stünde
+     in test362s Verzeichnis der Wiederholungen (Durchsicht vom 10. Oktober). */
+  content:""; float:right; width:48px; height:calc(var(--touch-min) / 2)
 }
 /* GEHOBEN (E721): nach langem Drücken liegt das Ding ein wenig höher —
    dieselbe Hebung wie im Kit (Popover, scale 1.04). Ohne Bewegung (System
