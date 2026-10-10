@@ -1064,7 +1064,7 @@ const App = (() => {
                 '<select id="f-seit"><option value="alles">Jederzeit</option>' +
                 '<option value="tag">heute geändert</option><option value="woche">diese Woche</option>' +
                 '<option value="monat">dieser Monat</option></select>' +
-                '<select id="f-ort"><option value="">Überall</option>' +
+                '<select id="f-ort"><option value="">Alle Orte</option>' +
                 Store.rootPages().map(p2 => `<option value="${p2.id}">in ${esc(p2.text || 'Ohne Titel')}</option>`).join('') +
                 '</select>' +
                 '</div>' +
