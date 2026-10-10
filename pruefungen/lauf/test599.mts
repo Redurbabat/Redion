@@ -39,6 +39,10 @@
  *      ersten Frage weg, nach „Neuer Chat" wieder da. `#ai-db`/`#ai-seite`
  *      behalten den Look aus E528 (rgb(16, 16, 16), 14 Buchstaben). Bei
  *      800 × 900 (Redurs Fenster) steht jeder Knopf ohne Rollen im Bild.
+ *      Am Telefon (390 und 360) misst jede der acht Seitenaktionen 44 px
+ *      (§37): sie sind jetzt der Hauptweg des leeren Chats, und der
+ *      geschriebene Grund für 32 px („Nebenweg, weil aufklappbar") ging mit
+ *      der Schublade (Durchsicht 10. Oktober: 28 bis 30 px gemessen).
  *   §4 DER KOPF. `#ai-mehr` (44 px, „Mehr KI-Funktionen") öffnet ein
  *      Tropfenmenü mit Agent, Besprechung und Protokoll; Escape schliesst
  *      jedes neue Menü und gibt den Fokus seinem Knopf zurück; die
@@ -63,14 +67,23 @@
  *      (e) Eigene Fähigkeiten aus `meta` stehen im Menü und laufen. (f)
  *      „Karteikarten" legt echte Karteikarten an. (g) Im Modus „Fragen"
  *      gibt es kein „Markierung ersetzen". (h) Die Auswahlleiste „✨ KI"
- *      öffnet das Befehlsmenü, oben „Zu dieser Stelle fragen".
+ *      öffnet das Befehlsmenü, oben „Zu dieser Stelle fragen" — und ein
+ *      Befehl daraus ersetzt mit „Markierung ersetzen" die Stelle IM
+ *      gespeicherten Text: die Auszeichnung davor bleibt, kein neuer Block
+ *      entsteht. Am Block tauscht „Block ersetzen" den Text. Beide legen
+ *      VORHER eine Fassung „vor KI-Änderung" an und markieren den Block mit
+ *      herkunft „ki" (§21, E656). Der Weg „Blockmenü" in (a) fährt das
+ *      echte Blockmenü; die alte Kennung `ai-edit` läuft daneben weiter.
  *   §8 VERBUNDENES HAT EINEN DRAHT. Eine gespiegelte Zeile (spiegelQuelle)
  *      steht im Kontext, wenn „Verbundenes" an ist, und fehlt, wenn es aus
  *      ist; eine eigene Datenbank bleibt davon unberührt.
  *   §9 EHRLICHE VERSPRECHEN. (b) „@Korrekturlesen …" führt die Fähigkeit
  *      auf dem Rest aus; ein getipptes „@" öffnet die Wahl mit Seiten UND
  *      Fähigkeiten. (c) „Seite erwähnen" — und die erwähnte Seite ist
- *      Kontext der nächsten Frage. (d) Ein Schalter in den Einstellungen
+ *      Kontext der nächsten Frage; eine erwähnte Seite, deren Titel mit dem
+ *      Namen eines Befehls beginnt („Zusammenfassen Woche"), bleibt eine
+ *      Erwähnung und startet keinen Befehl; Datenbankzeilen sind erwähnbar
+ *      wie vorher (§17: eine Zeile ist eine Seite). (d) Ein Schalter in den Einstellungen
  *      bringt das Schild am Prompt mit. (e) Der Satz zum neuen Chat nennt
  *      genau die aktiven Quellen. (f) „Fähigkeit löschen" ist ein eigener
  *      Knopf, mit Tab erreichbar, fragt zuerst, Escape bricht ab. (g) Die
@@ -83,6 +96,9 @@
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   Gegen den Stand 3d180c591 (claude/morgen-besser-2 mit ordner-bearbeiten
  *   und kein-toter-knopf) rot — die Zeilen stehen im Commit „test599 (rot)".
+ *   Die Durchsicht-Zusagen (§3 am Telefon, §7h Ersetzen und Fassung, §7a
+ *   echtes Blockmenü, §9c Erwähnung gegen Befehl und Zeilen) waren gegen
+ *   d59c5bd35 rot — die Zeilen stehen im Commit „test599 (rot): Durchsicht".
  *   Die Gegenproben zu E724 stehen im Commit dazu.
  *
  *   node pruefungen/lauf/test599.mts
@@ -520,6 +536,16 @@ for (const [breit, hoch] of [[390, 844], [360, 800]] as const) {
     });
     p(`${breit} §6: ${name} nennt seinen Titel einmal`, !r.doppelt, JSON.stringify(r));
   };
+  /* §3 am Telefon: die acht Seitenaktionen sind der Hauptweg des leeren
+     Chats, also 44 px (§37). In der Schublade galten sie als Nebenweg mit
+     32 px, „weil aufklappbar" — der Grund ging mit der Schublade. */
+  await abschnitt(`${breit} §3`, async () => {
+    const k = await s.evaluate(() => [...document.querySelectorAll<HTMLElement>('#ai .ai-start button')]
+      .map(b => ({ t: (b.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 18), h: Math.round(b.getBoundingClientRect().height * 10) / 10 })));
+    const klein = k.filter(x => x.h < 44);
+    p(`${breit} §3: jede der acht Seitenaktionen misst mindestens 44 px (§37)`, k.length >= 8 && klein.length === 0,
+      k.length + ' Knöpfe, zu klein: ' + JSON.stringify(klein));
+  });
   await abschnitt(`${breit} §6`, async () => {
     for (const [name, knopf] of [['„+"', '#ai-plus'], ['Modus', '#ai-modus'], ['Modell', '.ai-compose .model-btn'],
       ['Quellen', '#ai-quellen'], ['⋯', '#ai-mehr'], ['Befehlsmenü', '.ai-start #ai-schreiben']] as const) {
@@ -638,7 +664,12 @@ await abschnitt('§7', async () => {
   await wege('besser', [
     ['Knopf', `document.querySelector('.ai-start [data-ki="besser"]').click()`],
     ['Befehlsmenü', `(async()=>{(window).__g.KI.schreibMenue(document.getElementById('ai-input'));await new Promise(f=>setTimeout(f,200));document.querySelector('.menu [data-sb="besser"]').click()})()`],
-    ['Blockmenü', `(window).__g.KI.blockAktion('ai-edit', ${mitSeite})`],
+    /* Das ECHTE Blockmenü: „Mit KI bearbeiten" am Block öffnet das
+       Befehlsmenü (E724). Bis zur Durchsicht hiess hier ein Aufruf der alten
+       Kennung „Blockmenü" — gemessen war damit ein Weg, den das Menü nicht
+       mehr nimmt. Die alte Kennung läuft weiter, unter ihrem Namen. */
+    ['Blockmenü', `(async()=>{const w=(window).__g;const b=w.Store.childrenOf(w.__seite599).find(x=>/Ohmsche/.test(x.text||''));w.Blocks.blockMenue(document.querySelector('.blk[data-bid="'+b.id+'"]'),b);await new Promise(f=>setTimeout(f,250));document.querySelector('.menu [data-a="ai"]').click();await new Promise(f=>setTimeout(f,300));document.querySelector('.menu [data-sb="besser"]').click()})()`],
+    ['alte Kennung ai-edit', `(window).__g.KI.blockAktion('ai-edit', ${mitSeite})`],
     ['Schrägstrich', `(window).__g.KI.blockAktion('ai-improve', ${mitSeite})`],
     ['Fähigkeit', `(async()=>{(window).__g.KI.faehigkeitenMenue(document.getElementById('ai-input'));await new Promise(f=>setTimeout(f,200));document.querySelector('.menu [data-f="stil"]').click()})()`]
   ]);
@@ -733,6 +764,77 @@ await abschnitt('§7', async () => {
   await warte(s, 300);
   p('§7h: … und die erste Zeile tut, was „✨ KI" bisher tat', await s.evaluate(() =>
     /Zu dieser Stelle: „Die Spanung/.test((document.getElementById('ai-input') as HTMLTextAreaElement).value)));
+
+  /* (h) „✨ KI" → Befehl → „Markierung ersetzen" tauscht IM gespeicherten
+     Text, hinter einer Auszeichnung (Durchsicht 10. Oktober: der Block blieb
+     unverändert, und die Antwort stand als NEUER Block am Ende der Seite —
+     das Suchfeld des Menüs nahm die Auswahl mit, und gemerkt war keine). */
+  await menueZu(s); await leeren(); await ohneMarkierung();
+  await s.evaluate(() => { (document.getElementById('ai-input') as HTMLTextAreaElement).value = ''; });
+  const fettId = await s.evaluate(async () => {
+    const w = (window as any).__g;
+    const b = w.Store.addBlock(w.__seite599, 'text', { text: 'Eins **fett** und die Lötstelle ist kallt.' });
+    await w.Store.flush(); w.App.zeichneSeite();
+    return String(b.id);
+  });
+  await warte(s, 300);
+  const zaehle = () => s.evaluate(() => { const w = (window as any).__g;
+    return w.Store.childrenOf(w.__seite599).filter((x: any) => x.alive !== false).length as number; });
+  const fassungen = () => s.evaluate(async () => { const w = (window as any).__g;
+    return (await w.Store.versionen(w.__seite599)).filter((v: any) => v.anlass === 'vor KI-Änderung').length as number; });
+  const blockNach = () => s.evaluate((id: string) => { const b = (window as any).__g.Store.getBlock(id);
+    return { text: String(b?.text ?? ''), herkunft: String(b?.herkunft ?? '') }; }, fettId);
+  const ersetzeKlick = () => s.evaluate(async () => {
+    const b = [...document.querySelectorAll<HTMLElement>('#chat .ki-antwortknoepfe [data-a="ersetzen"]')].pop();
+    const name = (b?.textContent || '').trim();
+    b?.click(); await new Promise(f => setTimeout(f, 600));
+    return name;
+  });
+  const bloeckeVor = await zaehle();
+  const fassVor = await fassungen();
+  p('§7h: die Markierung hinter **fett** steht', await markiere('die Lötstelle ist kallt'));
+  await s.evaluate(() => (window as any).__g.Auswahl?.zeigen());
+  await warte(s, 200);
+  await s.evaluate(() => document.querySelector<HTMLElement>('.auswahlleiste [data-a="ki"]')?.click());
+  await warte(s, 400);
+  antwortText = 'die Lötstelle ist kalt';
+  vor = rufe.length;
+  await s.evaluate(() => document.querySelector<HTMLElement>('.menu [data-sb="recht"]')?.click());
+  ruf = await naechsterRuf(s, vor);
+  p('§7h: „✨ KI" → „Korrekturlesen" schickt die Markierung', ruf?.user === 'die Lötstelle ist kallt', JSON.stringify(ruf?.user ?? null));
+  const ersName = await ersetzeKlick();
+  antwortText = 'Testantwort.';
+  const nach1 = await blockNach();
+  const bloeckeNach = await zaehle();
+  const fassNach = await fassungen();
+  p('§7h: … „Markierung ersetzen" tauscht im gespeicherten Text, **fett** bleibt',
+    ersName === 'Markierung ersetzen' && nach1.text === 'Eins **fett** und die Lötstelle ist kalt.', JSON.stringify({ ersName, ...nach1 }));
+  p('§7h: … und legt keinen neuen Block an', bloeckeNach === bloeckeVor, `${bloeckeVor} → ${bloeckeNach} Blöcke`);
+  p('§7h: … vorher eine Fassung „vor KI-Änderung", der Block trägt herkunft „ki" (§21, E656)',
+    fassNach === fassVor + 1 && nach1.herkunft === 'ki', JSON.stringify({ fassVor, fassNach, herkunft: nach1.herkunft }));
+
+  /* Am Block: „Mit KI bearbeiten" → „Text verbessern" → „Block ersetzen"
+     tauscht den GANZEN Text — gerade deshalb mit Fassung davor. */
+  await menueZu(s); await leeren(); await ohneMarkierung();
+  const fassVor2 = await fassungen();
+  antwortText = 'Zwei **fett** und die Lötstelle ist kalt.';
+  vor = rufe.length;
+  await s.evaluate(async (id: string) => {
+    const w = (window as any).__g;
+    w.Blocks.blockMenue(document.querySelector(`.blk[data-bid="${id}"]`), w.Store.getBlock(id));
+    await new Promise(f => setTimeout(f, 250));
+    document.querySelector<HTMLElement>('.menu [data-a="ai"]')?.click();
+    await new Promise(f => setTimeout(f, 300));
+    document.querySelector<HTMLElement>('.menu [data-sb="besser"]')?.click();
+  }, fettId);
+  ruf = await naechsterRuf(s, vor);
+  const ersName2 = await ersetzeKlick();
+  antwortText = 'Testantwort.';
+  const nach2 = await blockNach();
+  const fassNach2 = await fassungen();
+  p('§7h: am Block tauscht „Block ersetzen" den Text', ersName2 === 'Block ersetzen' && nach2.text === 'Zwei **fett** und die Lötstelle ist kalt.',
+    JSON.stringify({ ersName2, ...nach2 }));
+  p('§7h: … mit einer Fassung „vor KI-Änderung" davor', fassNach2 === fassVor2 + 1, JSON.stringify({ fassVor2, fassNach2 }));
   await ctx.close();
 });
 
@@ -819,6 +921,47 @@ await abschnitt('§9', async () => {
   await s.press('#ai-input', 'Enter');
   ruf = await naechsterRuf(s, vor);
   p('§9c: die erwähnte Seite ist Kontext der nächsten Frage', !!ruf && /hinter dem Zähler/.test(ruf.system), ruf ? ruf.system.slice(-120) : '(kein Ruf)');
+
+  /* Eine Seite, deren Titel mit einem Befehlsnamen beginnt: die Erwähnung
+     „@Zusammenfassen Woche …" ist eine Erwähnung, kein Befehl „Zusammenfassen"
+     auf „Woche …" (Durchsicht 10. Oktober). */
+  await s.evaluate(async () => {
+    const w = (window as any).__g;
+    const m = w.Store.addPage(null, { text: 'Zusammenfassen Woche' });
+    w.Store.addBlock(m.id, 'text', { text: 'Der Rübenacker wird am Donnerstag gepflügt.' });
+    await w.Store.flush();
+  });
+  await s.click('#ai-clear'); await warte(s, 250);
+  await s.click('#ai-plus'); await warte(s, 300);
+  await s.evaluate(() => document.querySelector<HTMLElement>('.menu [data-x="erwaehnen"]')?.click());
+  await warte(s, 400);
+  await s.evaluate(() => { const b = [...document.querySelectorAll<HTMLElement>('.menu [data-s]')].find(x => /Zusammenfassen Woche/.test(x.textContent || '')); b?.click(); });
+  await warte(s, 200);
+  await s.evaluate(() => { const t = document.getElementById('ai-input') as HTMLTextAreaElement; t.value += ' Wann wird gepflügt?'; });
+  const zf = await auftragVon(s, 'zusammenfassen');
+  vor = rufe.length;
+  await s.press('#ai-input', 'Enter');
+  ruf = await naechsterRuf(s, vor);
+  p('§9c: „@Zusammenfassen Woche …" bleibt eine Erwähnung — kein Befehl, die Seite ist Kontext',
+    !!ruf && /Wann wird gepflügt\?/.test(ruf.user) && /Rübenacker/.test(ruf.system) && !!zf && !ruf.system.includes(zf),
+    ruf ? JSON.stringify({ user: ruf.user.slice(0, 60), befehl: !!zf && ruf.system.includes(zf) }) : '(kein Ruf)');
+
+  /* Datenbankzeilen sind erwähnbar wie vor E724 (§17, §43). */
+  await s.evaluate(async () => {
+    const w = (window as any).__g;
+    const ort = w.Store.addPage(null, { text: 'Garten 599' });
+    const g = w.Store.addDatabase(ort.id, 'Beete 599', null, 'table');
+    const z = w.Store.addRow(g.collectionId, {});
+    w.Store.updateBlock(z.id, { text: 'Kohlrabizeile 599' });
+    await w.Store.flush();
+  });
+  await s.click('#ai-plus'); await warte(s, 300);
+  await s.evaluate(() => document.querySelector<HTMLElement>('.menu [data-x="erwaehnen"]')?.click());
+  await warte(s, 400);
+  const zeileDa = await s.evaluate(() => [...document.querySelectorAll<HTMLElement>('.menu [data-s]')].some(x => /Kohlrabizeile 599/.test(x.textContent || '')));
+  p('§9c: eine Datenbankzeile steht in „Seite erwähnen" (§17: eine Zeile ist eine Seite)', zeileDa);
+  await s.keyboard.press('Escape'); await menueZu(s);
+  await s.fill('#ai-input', '');
   await s.evaluate(() => { const w = (window as any).__g; ['arbeitsbereich', 'datenbanken', 'aktuelleSeite'].forEach(k => w.Kontext.quelleSetzen(k, true)); });
 
   /* (e) Der Satz zum neuen Chat. */
