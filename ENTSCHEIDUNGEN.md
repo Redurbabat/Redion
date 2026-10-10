@@ -62235,7 +62235,7 @@ war „ausdrücklich schon richtig"; sie stehen nur im LEEREN Chat, wo es
 keine andere Haupthandlung gibt.
 
 **Was es kostet.** Eine neue Skriptdatei (`register/ki.js`, im GRUNDSTOCK
-und in `index.html`); der Start holt 1863 statt 1858 KB gzip über 253 statt 252 Dateien (`test388` §5, Decke 1950; `claude/morgen-besser-2` allein 1850). Ein Index-Neubau beim
+und in `index.html`); der Start holt 1863 statt 1858 KB gzip über 253 statt 252 Dateien (`test388` §5, Decke 1950; `claude/morgen-besser-2` allein 1850), nach der Durchsicht 1864. Ein Index-Neubau beim
 ersten Öffnen (Fassung 2). Zwei Klicks statt einem für Agent, Besprechung
 und Protokoll im Fenster (Band, Seitenleiste und Palette bleiben einer).
 Die eingebauten Fähigkeiten schicken jetzt die Anweisung ihres
@@ -62396,6 +62396,15 @@ was gebaut werden soll; der Fuss sagt jetzt die Wahrheit (L244 Punkt 6).
 Gefahren am erzeugten JavaScript und an `motion.css`, nicht über
 `bauen:ts` — sonst zählte der Dienststand mit jeder Gegenprobe hoch;
 danach aus der Sicherung zurück, `bauen.sh` sagt „unverändert" (v1433).
+
+Nachbarn der Durchsicht grün: `test599` 144/144, `test586` 60/60,
+`test34` 85/85, `test436` 71/71, `test492` 59/0, `test494` 157, `test544`
+11/11, `test545` 15/15, `test557` 13/13, `test542` 10/10, `test548` 17/17,
+`test546` 13/13, `test411` 26/26, `test429` 17/17, `test596` 42/42,
+`test127`, `test245` 51/0, `test412` 27/27, `test435` 46/46, `test495`
+26/26, `test500` 45, `test581` 93/0, `test584` 37/37, `test362` 18/18,
+`test576`, `test114`, `test388` 22/0 (Start 1864 KB, Decke 1950). Rot und
+fremd: `test422` 13/14 — geerbt aus `claude/kein-toter-knopf`, siehe unten.
 
 **Wie Redion es baut — Touch Kit ohne fremden Code.** Das Quellenmenü und
 das ⋯ sind Menüs am Anker mit Tropfen aus E712, die Webfrage das Fenster

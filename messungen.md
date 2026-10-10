@@ -6957,7 +6957,9 @@ Webfrage                      confirm(), zwei Fassungen    ein Redion-Fenster (E
 **6 · Startlast** (`test388` §5, gzip über die Leitung): vorher 1858 KB
 über 252 Dateien (`3d180c591`; `claude/morgen-besser-2` allein 1850),
 nachher 1863 KB über 253 Dateien — +5 KB für `register/ki.js` und die neuen
-Wege im Fenster. Decke 1950.
+Wege im Fenster. Decke 1950. Nach der Durchsicht vom 10. Oktober 1864 KB
+über 253 Dateien (+1 KB: Fassung vor dem Tausch, Zeilen-Gruppe, die Regel
+für 44 px).
 
 **7 · Durchsicht am 10. Oktober** — gegen d59c5bd35 (vorher) und den
 Stand danach, gemessen mit `test599` und zwei Sonden über `file://`
