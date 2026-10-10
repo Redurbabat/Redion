@@ -145,7 +145,11 @@ const RedionMotion = (() => {
        die ECHTE Zahl und misst nichts — siehe den Grund in motion.css. */
     if (ids.includes('metric') && !element.matches(metricSelector)) {
       ensure(element, 'rmo-ring');
-      ensure(element, 'rmo-heart');
+      /* Trägt die Karte ein ECHTES Herz (E719: der Merkknopf der Lernwelt-
+         Kennzahlen), kommt kein gemaltes dazu — sonst stünden zwei Herzen
+         übereinander, und das obere wäre wieder die Attrappe. Der Ring,
+         der Kranz und der Schlag bleiben (E534). */
+      if (!element.querySelector(':scope > .lw-kennzahl-merk')) ensure(element, 'rmo-heart');
     }
     /* ==================================================================
        Der Glaskörper aus Vorlagenblock 8. Er hat nicht gefehlt, er war

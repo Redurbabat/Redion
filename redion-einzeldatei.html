@@ -8175,38 +8175,69 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   border-color:var(--accent-text);box-shadow:0 0 0 3px var(--lw-accent-soft)
 }
 
+/* KEIN TOTER KNOPF (E720). Die drei Regeln unten standen seit dem Umbau
+   vom 24. August (47450aaa9) in `:where(…)` — das nimmt ihnen das Gewicht:
+   `.lernwelt :where(… .lw-study-actions button …):hover` wiegt (0,2,0),
+   die Grundregel `.lernwelt .lw-study-actions button` (0,2,1). Die
+   Grundregel gewann, und siebzehn Knöpfe in fünf Ansichten blieben unter
+   dem Zeiger, wie sie waren — darunter „Trainieren", „Lernen" und
+   „Prüfungen öffnen" in der Lernzentrale (messungen §90). `:is(…)` nimmt
+   das Gewicht seines schwersten Arguments: der Zustand wiegt jetzt
+   mindestens so viel wie die Grundregel (CLAUDE.md §39). Der Funkel
+   gewinnt weiter — bausteine.css lädt später, bei gleichem Gewicht.
+   EIN GESPERRTER KNOPF ANTWORTET NICHT (Durchsicht vom 6. Oktober,
+   test596 §9): mit `:is` kam der Zustand auch bei gesperrten Knöpfen an —
+   „Wochenprüfung simulieren" wurde unter dem Zeiger heller, obwohl er
+   nichts tut. `:where(:not(:disabled))` schliesst sie aus, OHNE Gewicht:
+   so bleibt jede Rangfolge oben genau, wie sie war. */
 @media(hover:hover){
-  .lernwelt .lw-nav button:hover,
-  .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:hover,
-  .lernwelt .lw-topic-list>button:hover,
-  .lernwelt .lw-past-exams button:hover,
-  .lernwelt .lw-compact-errors button:hover,
-  .lernwelt .lw-back:hover{
+  .lernwelt .lw-nav button:where(:not(:disabled)):hover,
+  .lernwelt :where(.lw-object-list,.lw-task-list,.lw-event-list) button:where(:not(:disabled)):hover,
+  .lernwelt .lw-topic-list>button:where(:not(:disabled)):hover,
+  .lernwelt .lw-past-exams button:where(:not(:disabled)):hover,
+  .lernwelt .lw-compact-errors button:where(:not(:disabled)):hover,
+  .lernwelt .lw-back:where(:not(:disabled)):hover{
     background:var(--bg-hover);color:var(--text)
   }
-  .lernwelt :where(.lw-page-head>button,.lw-page-head>.lw-actions button,
+  .lernwelt :is(.lw-page-head>button,.lw-page-head>.lw-actions button,
     .lw-actions button,.lw-rating button,.lw-error-list footer button,
     .lw-exam-list footer button,.lw-exam-card>button,.lw-quick button,
-    .lw-study-actions button,.lw-subject-empty button,.lw-leer button):hover{
+    .lw-study-actions button,.lw-subject-empty button,.lw-leer button):where(:not(:disabled)):hover{
     border-color:var(--line-stark,var(--line));background:var(--bg-hover);color:var(--text)
   }
-  .lernwelt :where(button.is-primary,.lw-actions button.is-primary,
-    .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
+  .lernwelt :is(button.is-primary,.lw-actions button.is-primary,
+    .lw-rating button.is-primary,.lw-study-actions button.is-primary):where(:not(:disabled)):hover{
     /* Der Hover-Verlauf nimmt --accent-hover und ist damit je Modus
        richtig herum (E199) — das alte brightness(1.08) war es im
        Hellmodus nicht. */
     border-color:var(--accent-text);background:var(--haupt-flaeche-hover);
     color:var(--auf-accent)
   }
-  .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
+  .lernwelt :is(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
     .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,
     .lw-continue-card,.lw-subject-grid>button):hover{
     border-color:var(--line-stark,var(--line));box-shadow:var(--shadow-2)
   }
-  .lernwelt .lw-path li>button:hover{
+  .lernwelt .lw-path li>button:where(:not(:disabled)):hover{
     z-index:1;border-color:var(--accent-text);box-shadow:var(--shadow-3);transform:translateY(-2px)
   }
-  .lernwelt .lw-path li.is-stable>button:hover{border-color:var(--erfolg)}
+  .lernwelt .lw-path li.is-stable>button:where(:not(:disabled)):hover{border-color:var(--erfolg)}
+  /* Zwei Knöpfe auf „Heute", die gar keine Hover-Regel hatten: das
+     Tagesziel („Tagesziel ändern") und „Alle Dokumente" über dem
+     Schreibtisch. Gefunden vom Zensus in test596 §1. Die Fläche des
+     Tagesziels reicht mit einem Schatten über den Knopf hinaus, weil der
+     Knopf selbst keinen Innenabstand hat. */
+  .lernwelt .lw-goal button:where(:not(:disabled)):hover{background:var(--bg-hover);box-shadow:0 0 0 6px var(--bg-hover)}
+  .lernwelt .lw-goal button:where(:not(:disabled)):hover small{color:var(--text)}
+  .lernwelt .lw-continue>header button:where(:not(:disabled)):hover{
+    border-color:var(--line-stark,var(--line));background:var(--bg-hover);color:var(--text)
+  }
+  /* Die Tage des Verlaufs (E713) sind Knöpfe — und antworten jetzt auch
+     so: ein Hauch Fläche, die Zahl wird deutlich, der Balken halb so kräftig
+     wie gewählt. Der gewählte Tag behält seinen vollen Balken. */
+  .lernwelt .lw-verlauf-tag:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}
+  .lernwelt .lw-verlauf-tag:hover .lw-verlauf-zahl{color:var(--text)}
+  .lernwelt .lw-verlauf-tag:hover:not([aria-pressed="true"]) .lw-verlauf-saeule i::after{opacity:.45}
 }
 
 /* .lernwelt :where(.lw-nav button, …):active: Einsinken per press.ts (E702) */
@@ -9820,7 +9851,9 @@ body [data-rmo~="letters"] > svg { animation:none; }
   0%, 100% { filter:blur(0); }
   50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
-body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
+/* Ein gesperrter Knopf wischt nicht (test596 §9) — ohne Gewicht, damit die
+   Rangfolge bleibt. */
+body [data-rmo~="letters"]:where(:not(:disabled)):is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-wisch .55s ease-in-out 1;
   /* Zwei Namen, weil zwei Buchstabensorten zwei Zähler haben. Fehlt beides,
@@ -9918,11 +9951,11 @@ body [data-rmo~="glass"]:active:not(:disabled) > :not(.rmo-glass) { opacity:.82;
 
 /* E534: Herz und Wendekarte ergänzen bestehende Statistik-/Ticketfamilien.
    Keine neuen Kennzahlen, keine zweite Live-Region und keine Leerlaufschleife. */
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > strong { padding-inline-end:32px; }
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> :is(.rmo-heart,.lw-kennzahl-merk)) > strong { padding-inline-end:32px; }
 /* Lernkarten ordnen ihr Etikett per order:-1 oben ein. Dafür bleibt unter
    dem Herz eine eigene Zeile frei; Gesundheitskarten haben das Etikett unten. */
-body .stat-karte.lw-metrik:has(> .rmo-heart) { padding-top:var(--touch-min,44px); }
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > .rmo-ring { top:8px; right:8px; bottom:auto; }
+body .stat-karte.lw-metrik:has(> :is(.rmo-heart,.lw-kennzahl-merk)) { padding-top:var(--touch-min,44px); }
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> :is(.rmo-heart,.lw-kennzahl-merk)) > .rmo-ring { top:8px; right:8px; bottom:auto; }
 body .rmo-heart { position:absolute; inset:13px 13px auto auto; width:20px; height:20px;
   color:var(--accent-text); pointer-events:none; font-size:20px; line-height:1;
   text-align:center; transform-origin:center; opacity:.8; }
@@ -9937,6 +9970,26 @@ body .rmo-heart { position:absolute; inset:13px 13px auto auto; width:20px; heig
 }
 body :is(.stat-karte.lw-metrik,.rmo-health-metric):is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .rmo-heart {
   animation:rmo-heart-beat .8s ease-out 1;
+}
+/* E719: DAS HERZ IST EIN KNOPF. Auf den Kennzahlen aus dem Katalog der
+   Lernwelt steht an der Stelle des gemalten Herzens der Merkknopf
+   (`Merkzeichen`, Form 'herz'): dieselbe Ecke, derselbe Ring darum
+   (Mitte 23 | 23 wie der Ring bei 8 px + 15 px), derselbe Schlag beim
+   Anfassen — aber 44 × 44 gross (§37), mit Namen und Zustand (§38), und
+   über allem Schmuck der Karte, damit der Finger IHN trifft. */
+body .stat-karte.lw-metrik > .lw-kennzahl-merk { position:absolute; inset:1px 1px auto auto; z-index:2;
+  width:var(--touch-min); height:var(--touch-min); padding:0; border-radius:50%; }
+body .stat-karte.lw-metrik > .lw-kennzahl-merk > .ru-merk-band { width:20px; height:20px; transform-origin:center; }
+/* Der Fokusring liegt INNEN (Durchsicht vom 6. Oktober, test595 §6): das
+   Herz steht 1 px vom Rand, und Umriss (2 + 2 px) samt Hof (5 px) der
+   Lernwelt wurden von der Karte oben und rechts abgeschnitten. Innen bleibt
+   er ganz — 2 px im Akzent, 12 px Luft bis zum Herz in der Mitte. */
+body .stat-karte.lw-metrik > .lw-kennzahl-merk:focus-visible { outline:2px solid var(--accent-text); outline-offset:-2px; box-shadow:none; }
+body .stat-karte.lw-metrik:is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .lw-kennzahl-merk > .ru-merk-band {
+  animation:rmo-heart-beat .8s ease-out 1;
+}
+@media (prefers-reduced-motion:reduce) {
+  body .stat-karte.lw-metrik > .lw-kennzahl-merk > .ru-merk-band { animation:none !important; }
 }
 [data-rmo-play="metric"] { animation:none; }
 body .rmo-ticket { perspective:800px; }
@@ -22771,47 +22824,148 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-funkel:focus-visible::after{
   opacity:.6; mask-image:linear-gradient(0deg,#fff,transparent)
 }
-.ru-funkel:hover::before{
-  box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
-             1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
-}
-.ru-funkel:hover::after{
-  opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
-}
-/* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
-   auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
-.ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
-  border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
-}
-/* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
-   einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
-   Endlosschleife, die E528 gerade erst abgeschaltet hat. */
-.ru-funkel:hover > svg, #ai .ai-quick button.ru-funkel:hover > svg{
-  stroke:#fff; animation:none;
-  filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
-}
-/* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
-.ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b{
+.ru-funkel:focus-visible .ru-funkel-b{
   animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
   animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
+}
+/* DER SCHEIN UNTER DEM ZEIGER GIBT ES NUR, WO ES EINEN ZEIGER GIBT (E720).
+   Am iPhone bleibt `:hover` nach einem Tipp kleben, bis man woanders
+   hintippt — der Knopf leuchtete dann weiter, die Buchstaben verwischt
+   (gesehen an den KI-Werkzeugen, karte-ki/handy-auf.png). Am Telefon
+   übernehmen der Tastenfokus und der Druck (`data-gedrueckt`, unten). */
+@media (hover:hover){
+  .ru-funkel:where(:not(:disabled)):hover::before{
+    box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
+               1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
+  }
+  .ru-funkel:where(:not(:disabled)):hover::after{
+    opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
+  }
+  /* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
+     auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
+  .ru-funkel:where(:not(:disabled)):hover, .ai-quick button.ru-funkel:where(:not(:disabled)):hover, .lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):hover{
+    border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
+  }
+  /* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
+     einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
+     Endlosschleife, die E528 gerade erst abgeschaltet hat. */
+  .ru-funkel:where(:not(:disabled)):hover > svg, #ai .ai-quick button.ru-funkel:where(:not(:disabled)):hover > svg{
+    stroke:#fff; animation:none;
+    filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
+  }
+  /* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
+  .ru-funkel:where(:not(:disabled)):hover .ru-funkel-b{
+    animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
+    animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
+  }
 }
 @keyframes ru-funkel-platzen{
   0%,100%{ filter:blur(0) }
   50%{ transform:scale(2); filter:blur(10px) brightness(150%)
        drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton) 100% 70%)) }
 }
-.ru-funkel:active, .ai-quick button.ru-funkel:active, .lernwelt button.is-primary.ru-funkel:active{
+/* EIN GESPERRTER FUNKEL BLEIBT STILL (Durchsicht vom 6. Oktober,
+   test596 §9). Zeiger und Druck gelten nur für einen freigegebenen Knopf:
+   `:where(:not(:disabled))` vor jedem Zustand, ohne Gewicht, damit jede
+   Rangfolge bleibt, wie sie war. Vorher leuchtete „Trainieren · 0" unter
+   dem Zeiger auf und verwischte sein Wort — ein toter Knopf, der lebendig
+   tat. (Der Tastenfokus braucht das nicht: ein gesperrter Knopf bekommt
+   ihn gar nicht.) */
+/* DER DRUCK HAT ZWEI ZEICHEN: `:active` und `data-gedrueckt` (E720).
+   press.ts (E702) hält `data-gedrueckt` mindestens 80 ms — weil das
+   iPhone `:active` beim kurzen Tipp oft gar nicht malt. Der Funkel steht
+   in OWN_PRESS (er sinkt nicht ein), also war ein kurzer Tipp auf ihm
+   unsichtbar. Jetzt trägt der Zustand dasselbe Licht wie `:active`. */
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]), .ai-quick button.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]),
+.lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]){
   border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+  /* Die Tönung liegt ÜBER dem Funkelgrund, nicht über der Karte: im
+     Hellen lag sie halbdurchsichtig auf Weiss, und das weisse Wort stand
+     mit 3 : 1 auf Mittelgrau (Durchsicht vom 6. Oktober, test596 §10b). */
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
 }
-.ru-funkel:active::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
 /* Beim Drücken war bisher gar nichts an der Aussenkante: auf einem Gerät
    ohne Zeiger blieb der Knopf beim Tippen unverändert. */
-.ru-funkel:active::before{
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::before{
   box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 80%) inset,
              1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001
 }
-.ru-funkel:active .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]) .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+
+/* DIE STILLEN FUNKEL (E720, Redur: „wie bein tagesrunde"). Fehlertraining,
+   Neue Karten, Prüfungsfokus und Trainer sind derselbe Knopf wie die
+   Tagesrunde — aber in Ruhe ein Umrissknopf: Grund, Schrift und Rand der
+   Lernwelt, kein Schein, keine glimmenden Buchstaben. Unter Zeiger,
+   Tastenfokus und Druck werden sie GENAU die Tagesrunde (Grund #101010,
+   Schein von unten, Licht, Buchstabenlauf). So bleibt es bei EINER lauten
+   Fläche je Bild (E701 §1, grund.css „HAUPTHANDLUNG. Genau eine je Bild"):
+   der Schein ist Zustand, nicht Dauerschmuck (E640).
+   Das Gewicht (0,4,1) schlägt die Grundregel `.lernwelt .lw-study-actions
+   button` (0,2,1) und die Hover-Regel der Lernwelt (0,3,1). */
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary){
+  background:var(--bg-side); color:var(--text); border-color:var(--line); box-shadow:none;
+  /* Dieselbe Form wie die Tagesrunde schon in Ruhe — sonst wechselte der
+     Knopf unter dem Zeiger die Ecken, und der Schein (::before) sässe mit
+     seinem runden Rand um ein eckiges Feld. */
+  border-radius:var(--ru-funkel-rund)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary)::before{
+  opacity:0; transition:box-shadow var(--ru-funkel-zeit), opacity var(--ru-funkel-zeit)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:focus-visible,:active,[data-gedrueckt]){
+  color:#fff;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.2), inset 0 2px 2px rgba(255,255,255,.15),
+    inset 0 4px 4px rgba(255,255,255,.1), inset 0 8px 8px rgba(255,255,255,.05),
+    inset 0 15px 15px rgba(255,255,255,.05),
+    0 -1px 1px rgba(0,0,0,.02), 0 -2px 2px rgba(0,0,0,.03), 0 -4px 4px rgba(0,0,0,.05),
+    0 -8px 8px rgba(0,0,0,.06), 0 -15px 15px rgba(0,0,0,.08)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):focus-visible{
+  background:var(--ru-funkel-farbe); border-color:#fff2
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:active,[data-gedrueckt]){
+  border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:focus-visible,:active,[data-gedrueckt])::before{
+  opacity:1
+}
+@media (hover:hover){
+  .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover{
+    color:#fff; background:var(--ru-funkel-farbe); border-color:hsla(var(--ru-funkel-ton),100%,80%,.4);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.2), inset 0 2px 2px rgba(255,255,255,.15),
+      inset 0 4px 4px rgba(255,255,255,.1), inset 0 8px 8px rgba(255,255,255,.05),
+      inset 0 15px 15px rgba(255,255,255,.05),
+      0 -1px 1px rgba(0,0,0,.02), 0 -2px 2px rgba(0,0,0,.03), 0 -4px 4px rgba(0,0,0,.05),
+      0 -8px 8px rgba(0,0,0,.06), 0 -15px 15px rgba(0,0,0,.08)
+  }
+  .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover::before{ opacity:1 }
+  /* Der Druck mit der Maus kommt nach dem Zeigen und muss es übertönen. */
+  .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover:is(:active,[data-gedrueckt]){
+    border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
+    background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+               var(--ru-funkel-farbe)
+  }
+}
+
+/* IM STARKEN KONTRAST BLEIBT ES EINE LAUTE FLÄCHE (Durchsicht vom
+   6. Oktober, test596 §10a). Der Funkelgrund #101010 hat auf dem Schwarz
+   dieses Schemas 1,04 : 1, und die stillen Funkel sind seit E720 auch
+   Pillen — „Starten" war von „Lernen" kaum zu unterscheiden. Hier trägt
+   die Haupthandlung einen 2-px-Rand im Akzent: ein Zeichen, das nicht an
+   der Farbe allein hängt (Breite UND Kontrast), wie grund.css „Genau eine
+   je Bild" es will. Dieselbe Zeile für den Schalter „Hoher Kontrast". */
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel{
+  border-width:2px
+}
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel:not(:hover,:active,[data-gedrueckt]){
+  border-color:var(--accent)
+}
 
 /* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */
 .cover-textur{ position:relative; overflow:hidden }
@@ -24269,9 +24423,13 @@ body button:is(:hover,:focus-visible) > [data-rmo~="toggle"].mschalter[data-rmo-
    kommt die Farbe zurück. Die Zahlen bleiben, wie sie sind. Die kleine
    Kurve zeigt feste Werte und keine echten — sie ist deshalb in Ruhe
    neutral (L224, ergänzt E534/E535). */
-:is(.stat-karte.lw-metrik,.rmo-health-metric) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+:is(.stat-karte.lw-metrik,.rmo-health-metric) > :is(.rmo-heart,.rmo-ring,.rmo-pfad,.lw-kennzahl-merk){
   transition:filter var(--motion-fast) var(--ease),opacity var(--motion-fast) var(--ease)}
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+/* Das echte Herz (E719) ruht grau, SOLANGE es nicht gemerkt ist — ein
+   gemerktes behält seine Farbe auch in Ruhe: grau hiesse sonst „nicht
+   gemerkt". Durchscheinend wird es nicht; ein Knopf mit 45 % Deckkraft
+   wäre ein Knopf, den man nicht sieht. */
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > :is(.rmo-heart,.rmo-ring,.rmo-pfad,.lw-kennzahl-merk:not(.ist-an)){
   filter:saturate(0)}
 body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > .rmo-heart{opacity:.45}
 
@@ -26898,7 +27056,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1415, inhalt: '488d5e7371f1a9da', gebaut: '2026-10-05T23:41:46.265Z' };
+const Stand = { fassung: 1419, inhalt: 'b10ce8c65f08e1bd', gebaut: '2026-10-06T07:30:19.349Z' };
 window.Stand = Stand;
 
 </script>
@@ -45629,14 +45787,17 @@ window.Ordnerkarte = Ordnerkarte;
 const Merkzeichen = (() => {
     const NS = 'http://www.w3.org/2000/svg';
     const BAND = 'M6.5 3h11a1.5 1.5 0 0 1 1.5 1.5v16.2a.8.8 0 0 1-1.2.7L12 17.9l-5.8 3.5a.8.8 0 0 1-1.2-.7V4.5A1.5 1.5 0 0 1 6.5 3Z';
-    const band = (an) => {
+    const HERZ = 'M12 20.2l-1.15-1.04C6.75 15.45 4 12.95 4 9.9 4 7.4 5.95 5.5 8.4 5.5c1.4 0 2.75.65 3.6 1.7.85-1.05 2.2-1.7 3.6-1.7 2.45 0 4.4 1.9 4.4 4.4 0 3.05-2.75 5.55-6.85 9.26L12 20.2Z';
+    const pfadVon = (form) => form === 'herz' ? HERZ : BAND;
+    const formVon = (knopf, auftrag) => auftrag.form ?? (knopf.dataset['merkForm'] === 'herz' ? 'herz' : 'band');
+    const band = (an, form = 'band') => {
         const svg = document.createElementNS(NS, 'svg');
         svg.setAttribute('viewBox', '0 0 24 24');
         svg.setAttribute('aria-hidden', 'true');
         svg.setAttribute('focusable', 'false');
         svg.classList.add('ru-merk-band');
         const pfad = document.createElementNS(NS, 'path');
-        pfad.setAttribute('d', BAND);
+        pfad.setAttribute('d', pfadVon(form));
         pfad.setAttribute('fill', an ? 'currentColor' : 'none');
         pfad.setAttribute('stroke', 'currentColor');
         pfad.setAttribute('stroke-width', '1.7');
@@ -45647,7 +45808,7 @@ const Merkzeichen = (() => {
     const satz = (an, name) => (an ? 'Aus Favoriten' : 'Zu Favoriten') + (name ? ': ' + name : '');
     const inneres = (auftrag) => {
         const teil = document.createDocumentFragment();
-        teil.append(band(auftrag.an));
+        teil.append(band(auftrag.an, auftrag.form ?? 'band'));
         for (const klasse of ['ru-merk-kreis', 'ru-merk-funken', 'ru-merk-punkt']) {
             const i = document.createElement('i');
             i.className = klasse;
@@ -45659,12 +45820,17 @@ const Merkzeichen = (() => {
     const markieren = (knopf, auftrag) => {
         const vorher = knopf.getAttribute('aria-pressed');
         const an = !!auftrag.an;
+        const form = formVon(knopf, auftrag);
+        if (form === 'herz')
+            knopf.dataset['merkForm'] = 'herz';
+        else
+            delete knopf.dataset['merkForm'];
         knopf.classList.add('ru-merk');
         knopf.classList.toggle('ist-an', an);
         knopf.setAttribute('aria-pressed', an ? 'true' : 'false');
         knopf.setAttribute('aria-label', satz(an, auftrag.name));
         knopf.title = satz(an, auftrag.name);
-        knopf.replaceChildren(inneres({ an, ...(auftrag.name ? { name: auftrag.name } : {}) }));
+        knopf.replaceChildren(inneres({ an, form, ...(auftrag.name ? { name: auftrag.name } : {}) }));
         knopf.classList.remove('platzt');
         if (an && vorher === 'false') {
             void knopf.offsetWidth;
@@ -45687,6 +45853,7 @@ const Merkzeichen = (() => {
     };
     const html = (auftrag) => {
         const an = !!auftrag.an;
+        const form = auftrag.form ?? 'band';
         const beschriftung = satz(an, auftrag.name);
         const sicher = String(beschriftung)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -45694,16 +45861,17 @@ const Merkzeichen = (() => {
         return '<button type="button" class="ru-merk' + (an ? ' ist-an' : '') +
             (auftrag.klasse ? ' ' + auftrag.klasse : '') + '" ' +
             'aria-pressed="' + (an ? 'true' : 'false') + '" ' +
-            'title="' + sicher + '" aria-label="' + sicher + '" ' + (auftrag.zusatz || '') + '>' +
+            'title="' + sicher + '" aria-label="' + sicher + '" ' +
+            (form === 'herz' ? 'data-merk-form="herz" ' : '') + (auftrag.zusatz || '') + '>' +
             '<svg class="ru-merk-band" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-            '<path d="' + BAND + '" fill="' + (an ? 'currentColor' : 'none') +
+            '<path d="' + pfadVon(form) + '" fill="' + (an ? 'currentColor' : 'none') +
             '" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path></svg>' +
             '<i class="ru-merk-kreis" aria-hidden="true"></i>' +
             '<i class="ru-merk-funken" aria-hidden="true"></i>' +
             '<i class="ru-merk-punkt" aria-hidden="true"></i>' +
             '</button>';
     };
-    return { BAND, satz, markieren, bauen, html };
+    return { BAND, HERZ, satz, markieren, bauen, html };
 })();
 window.Merkzeichen = Merkzeichen;
 
@@ -47954,7 +48122,8 @@ const RedionMotion = (() => {
             });
         if (ids.includes('metric') && !element.matches(metricSelector)) {
             ensure(element, 'rmo-ring');
-            ensure(element, 'rmo-heart');
+            if (!element.querySelector(':scope > .lw-kennzahl-merk'))
+                ensure(element, 'rmo-heart');
         }
         if (ids.includes('glass'))
             ensure(element, 'rmo-glass', glas => {
@@ -135699,8 +135868,150 @@ const Lernwelt = (() => {
             ? '<span' + k + ' data-sym="' + esc(icon) + '" aria-hidden="true"></span>'
             : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
     };
-    const kennzahl = (wert, name, zusatz = '') => '<article class="stat-karte lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
-        (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
+    const kennzahl = (wert, name, zusatz = '', merkId = '') => '<article class="stat-karte lw-metrik"' + (merkId ? ' data-lw-kennzahl="' + esc(merkId) + '"' : '') +
+        '><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
+        (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + (merkId ? merkHerz(merkId, name) : '') + '</article>';
+    const kennzahlKontext = (vorgabe = {}) => {
+        const merk = new Map(Object.entries(vorgabe));
+        const einmal = (name, rechnen) => {
+            if (!merk.has(name))
+                merk.set(name, rechnen());
+            return merk.get(name);
+        };
+        return {
+            get queue() { return einmal('queue', () => warteschlange()); },
+            get stats() { return einmal('stats', () => statistik()); },
+            get spiel() { return einmal('spiel', () => aktivitaet()); },
+            get fehler() { return einmal('fehler', () => fehlerListe()); },
+            get ziel() { return einmal('ziel', () => tagesziel()); },
+            get pruefung() {
+                return einmal('pruefung', () => pruefungen().find(item => item.tage === null || item.tage >= 0) || null);
+            },
+            get stabil() { return einmal('stabil', () => lernkarten().filter(card => zahl(card?.sr?.wdh) >= 2).length); }
+        };
+    };
+    const pruefungTage = (p) => !p ? 'keine geplant'
+        : p.tage === 0 ? 'heute' : p.tage === 1 ? 'morgen' : p.tage + ' Tage';
+    const KENNZAHLEN = {
+        'heute-faellig': { name: 'fällig', wert: k => String(k.queue.errors.length + k.queue.due.length),
+            zusatz: () => 'heute zu wiederholen' },
+        'heute-neu': { name: 'neu', wert: k => String(k.queue.newCards.length), zusatz: () => 'höchstens 20 pro Runde' },
+        'heute-fehler': { name: 'Fehler', wert: k => String(k.fehler.filter(item => !item.stabil).length),
+            zusatz: () => 'gezielt wiederholen' },
+        'naechste-pruefung': { name: 'nächste Prüfung', wert: k => k.pruefung ? pruefungTage(k.pruefung) : '–',
+            zusatz: k => k.pruefung ? k.pruefung.titel || '' : 'keine geplant' },
+        'lernzeit': { name: 'Lernzeit', wert: k => '~' + k.spiel.minuten + ' Min.', zusatz: k => String(k.spiel.tempoSatz || '') },
+        'wochenziel': { name: 'Wochenziel', wert: k => k.spiel.woche + ' / ' + k.ziel * 7 },
+        'streak': { name: 'Streak', wert: k => k.spiel.streak + (k.spiel.streak === 1 ? ' Tag' : ' Tage') },
+        'aktivitaet': { name: 'Aktivität', wert: k => 'Level ' + k.spiel.level, zusatz: k => k.spiel.xp + ' XP' },
+        'faellige-fehler': { name: 'fällige Fehler', wert: k => String(k.queue.errors.length) },
+        'faellige-karten': { name: 'fällige Karten', wert: k => String(k.queue.due.length) },
+        'neue-karten': { name: 'neue Karten', wert: k => String(k.queue.newCards.length) },
+        'naechste-wiederholung': { name: 'nächste Wiederholung',
+            wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
+        'noch-instabil': { name: 'noch instabil', wert: k => String(k.fehler.filter(item => !item.stabil).length) },
+        'inzwischen-stabil': { name: 'inzwischen stabil', wert: k => String(k.fehler.filter(item => item.stabil).length) },
+        'fehlversuche': { name: 'Fehlversuche', wert: k => String(k.fehler.reduce((summe, item) => summe + item.anzahl, 0)) },
+        'stabile-karten': { name: 'stabile Karten', wert: k => k.stabil + ' / ' + k.stats.total },
+        'aktuell-faellig': { name: 'aktuell fällig', wert: k => String(k.stats.due) },
+        'themen-mit-fehlern': { name: 'Themen mit Fehlern', wert: k => String(k.stats.mistakes) },
+        'naechster-termin': { name: 'nächster Termin', wert: k => k.stats.nextAt ? datumText(k.stats.nextAt, true) : '—' },
+        'wiederholungen-woche': { name: 'Wiederholungen diese Woche', wert: k => String(k.spiel.woche) },
+        'aktivitaets-xp': { name: 'Aktivitäts-XP', wert: k => String(k.spiel.xp) },
+        'level': { name: 'Level', wert: k => String(k.spiel.level) }
+    };
+    const kennzahlenGemerkt = () => {
+        const roh = Store.getMeta(metaSchluessel('kennzahlen'), []);
+        return Array.isArray(roh) ? roh.filter((id) => typeof id === 'string') : [];
+    };
+    const merkHerz = (id, name) => typeof Merkzeichen === 'undefined' ? '' :
+        Merkzeichen.html({ an: kennzahlenGemerkt().includes(id), name, form: 'herz',
+            klasse: 'lw-kennzahl-merk', zusatz: 'data-lw-merk="' + esc(id) + '"' });
+    const merkbar = (id, k) => {
+        const eintrag = KENNZAHLEN[id];
+        if (!eintrag)
+            return '';
+        return kennzahl(eintrag.wert(k), eintrag.name, eintrag.zusatz ? eintrag.zusatz(k) : '', id);
+    };
+    const gemerktStreifen = (k) => {
+        const ids = kennzahlenGemerkt().filter(id => KENNZAHLEN[id]);
+        if (!ids.length)
+            return '';
+        return '<section class="lw-section lw-gemerkt" aria-labelledby="lw-gemerkt-titel"><header><div>' +
+            '<h2 id="lw-gemerkt-titel">Gemerkt</h2><p>Deine Lieblingskennzahlen — das Herz nimmt sie wieder heraus.</p>' +
+            '</div></header><div class="lw-metrics">' + ids.map(id => merkbar(id, k)).join('') + '</div></section>';
+    };
+    const gemerktAuffrischen = () => {
+        const root = zustand.root;
+        if (!root || zustand.ansicht !== 'heute')
+            return;
+        const alt = root.querySelector('.lw-gemerkt');
+        const aktiv = document.activeElement;
+        const herzVorher = alt && aktiv instanceof HTMLElement && alt.contains(aktiv)
+            ? aktiv.closest('[data-lw-merk]') : null;
+        const platz = herzVorher ? [...alt.querySelectorAll('[data-lw-merk]')].indexOf(herzVorher) : -1;
+        const html = gemerktStreifen(kennzahlKontext());
+        if (alt) {
+            if (html)
+                alt.outerHTML = html;
+            else
+                alt.remove();
+        }
+        else if (html) {
+            root.querySelector('.lw-today > .lw-hero')?.insertAdjacentHTML('afterend', html);
+        }
+        if (!herzVorher)
+            return;
+        const id = herzVorher.dataset.lwMerk;
+        const imStreifen = [...root.querySelectorAll('.lw-gemerkt [data-lw-merk]')];
+        let ziel = imStreifen.find(k => k.dataset.lwMerk === id) ||
+            imStreifen[Math.min(platz, imStreifen.length - 1)] ||
+            [...root.querySelectorAll('[data-lw-merk]')].find(k => k.dataset.lwMerk === id) || null;
+        if (!ziel) {
+            ziel = root.querySelector('.lw-today > .lw-hero h2');
+            if (ziel && !ziel.hasAttribute('tabindex'))
+                ziel.setAttribute('tabindex', '-1');
+        }
+        ziel?.focus({ preventScroll: !!ziel.closest('.lw-gemerkt') });
+    };
+    const kennzahlMerken = (knopf, id) => {
+        const eintrag = KENNZAHLEN[id];
+        if (!eintrag || typeof Merkzeichen === 'undefined')
+            return;
+        const schluessel = metaSchluessel('kennzahlen');
+        const an = knopf.getAttribute('aria-pressed') !== 'true';
+        const stellen = () => [...(zustand.root?.querySelectorAll('[data-lw-merk]') || [])]
+            .filter(k => k.dataset.lwMerk === id);
+        const zeigen = (wert) => {
+            stellen().forEach(k => Merkzeichen.markieren(k, { an: wert, name: eintrag.name, form: 'herz' }));
+            if (!stellen().includes(knopf))
+                Merkzeichen.markieren(knopf, { an: wert, name: eintrag.name, form: 'herz' });
+        };
+        zeigen(an);
+        let schreiben;
+        try {
+            schreiben = Store.metaListeAendern(schluessel, (liste) => {
+                const ohne = liste.filter(x => x !== id);
+                return an ? [...ohne, id] : ohne;
+            });
+        }
+        catch (err) {
+            schreiben = Promise.reject(err);
+        }
+        gemerktAuffrischen();
+        schreiben.catch(() => {
+            try {
+                Store.metaListeAendern(schluessel, (liste) => {
+                    const ohne = liste.filter(x => x !== id);
+                    return an ? ohne : [...ohne, id];
+                }).catch(() => { });
+            }
+            catch { }
+            zeigen(!an);
+            gemerktAuffrischen();
+            UI.toast('Die Kennzahl „' + eintrag.name + '" konnte nicht gemerkt werden.');
+        });
+    };
     const fortschritt = (wert, label) => '<div class="lw-progress"><div><span>' + esc(label) + '</span><strong>' + prozent(wert) +
         ' %</strong></div><progress max="100" value="' + prozent(wert) + '" aria-label="' +
         esc(label) + '">' + prozent(wert) + ' %</progress></div>';
@@ -135856,11 +136167,8 @@ const Lernwelt = (() => {
         const alleProjekte = sichtbareProjekte();
         const projekteGezeigt = alleProjekte.slice(0, 5);
         const naechstePruefung = pruefungen().find(item => item.tage === null || item.tage >= 0) || null;
-        const pruefungText = naechstePruefung
-            ? naechstePruefung.tage === 0 ? 'heute'
-                : naechstePruefung.tage === 1 ? 'morgen'
-                    : naechstePruefung.tage + ' Tage'
-            : 'keine geplant';
+        const pruefungText = pruefungTage(naechstePruefung);
+        const ktx = kennzahlKontext({ queue, stats, spiel });
         return '<div class="lw-today">' +
             '<section class="lw-hero lw-hero-compact"><div><p>' +
             esc(new Date().toLocaleDateString('de-CH', { weekday: 'long', day: 'numeric', month: 'long' })) +
@@ -135868,6 +136176,7 @@ const Lernwelt = (() => {
             '.</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
             '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
             '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
+            gemerktStreifen(ktx) +
             dokumentEinstieg() +
             '<section class="lw-next-step" aria-label="Dein nächster Lernschritt">' +
             zeichenSpan('cards', 'lw-next-icon') + '<div><p>Ein guter nächster Schritt</p><h2>' +
@@ -135901,11 +136210,8 @@ const Lernwelt = (() => {
             zeichenSpan('chart') + '<span>Lernübersicht &amp; Fortschritt<small>Prüfungen, Themen, Projekte und deine Lernroutine</small></span>' +
             '</span><span class="lw-details-chevron" aria-hidden="true">⌄</span></summary><div class="lw-insights-body">' +
             '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
-            kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
-            kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
-            kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
-            (naechstePruefung ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
-                : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>' +
+            merkbar('heute-faellig', ktx) + merkbar('heute-neu', ktx) + merkbar('heute-fehler', ktx) +
+            merkbar('naechste-pruefung', ktx) + '</section>' +
             '<section class="lw-exam-card"><header><p>Nächste Prüfung</p>' +
             '<span class="lw-card-icon" data-sym="clipboard" aria-hidden="true"></span></header>' +
             (naechstePruefung
@@ -135919,10 +136225,8 @@ const Lernwelt = (() => {
             '</div>' +
             '<section class="lw-engagement"><header><div><p>Aktivität</p><h2>Deine Lernroutine</h2></div>' +
             '<span>Getrennt vom Wissensstand</span></header><div class="lw-metrics">' +
-            kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
-            kennzahl(spiel.woche + ' / ' + ziel * 7, 'Wochenziel') +
-            kennzahl(spiel.streak + (spiel.streak === 1 ? ' Tag' : ' Tage'), 'Streak') +
-            kennzahl('Level ' + spiel.level, 'Aktivität', spiel.xp + ' XP') +
+            merkbar('lernzeit', ktx) + merkbar('wochenziel', ktx) + merkbar('streak', ktx) +
+            merkbar('aktivitaet', ktx) +
             '</div>' + fortschritt(spiel.wochenProzent, 'Wochenfortschritt') + '</section>' +
             '</div></details></div>';
     };
@@ -136115,15 +136419,14 @@ const Lernwelt = (() => {
         const artZaehler = new Map();
         lernkarten().forEach(card => artZaehler.set(kartenArt(card), (artZaehler.get(kartenArt(card)) || 0) + 1));
         const fokus = liste(stats.topics).find(item => item.id === zustand.themaId);
+        const ktx = kennzahlKontext({ queue, stats });
         return '<div class="lw-learning">' +
             '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
             (fokus ? esc(fokus.label) : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
             '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
             '<section class="lw-metrics">' +
-            kennzahl(String(queue.errors.length), 'fällige Fehler') +
-            kennzahl(String(queue.due.length), 'fällige Karten') +
-            kennzahl(String(queue.newCards.length), 'neue Karten') +
-            kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächste Wiederholung') +
+            merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +
+            merkbar('naechste-wiederholung', ktx) +
             '</section>' +
             '<div class="lw-study-actions">' +
             '<article>' + zeichenSpan('sun') + '<h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
@@ -136222,14 +136525,13 @@ const Lernwelt = (() => {
             return trainingAnsicht();
         const fehler = fehlerListe();
         const offen = fehler.filter(item => !item.stabil);
+        const ktx = kennzahlKontext();
         return '<div class="lw-errors"><header class="lw-page-head"><div><p>Fehlerzentrum</p><h2>Meine Fehler</h2>' +
             '<span>Jeder Eintrag bleibt mit seiner ursprünglichen Quelle verbunden.</span></div>' +
             '<button type="button" class="is-primary" data-lw-train="errors"' + (offen.length ? '' : ' disabled') +
             '>Fehler trainieren · ' + offen.length + '</button></header>' +
             '<section class="lw-metrics">' +
-            kennzahl(String(offen.length), 'noch instabil') +
-            kennzahl(String(fehler.filter(item => item.stabil).length), 'inzwischen stabil') +
-            kennzahl(String(fehler.reduce((summe, item) => summe + item.anzahl, 0)), 'Fehlversuche') +
+            merkbar('noch-instabil', ktx) + merkbar('inzwischen-stabil', ktx) + merkbar('fehlversuche', ktx) +
             '</section>' +
             (fehler.length
                 ? '<div class="lw-error-list">' + fehler.map(item => '<article class="' + (item.stabil ? 'is-stable' : 'is-open') + '"><header><div><span>' +
@@ -136968,21 +137270,18 @@ const Lernwelt = (() => {
     const fortschrittAnsicht = () => {
         const stats = statistik();
         const spiel = aktivitaet();
-        const stabil = lernkarten().filter(card => zahl(card?.sr?.wdh) >= 2).length;
+        const ktx = kennzahlKontext({ stats, spiel });
         const wissen = stats.total ? Math.round(lernkarten().reduce((summe, card) => summe + Math.min(2, zahl(card?.sr?.wdh)), 0) / (stats.total * 2) * 100) : 0;
         return '<div class="lw-progress-page"><header class="lw-page-head"><div><p>Fortschritt</p><h2>Wissen nachvollziehbar messen</h2>' +
             '<span>SM-2-Wissensstand und Motivation werden bewusst getrennt dargestellt.</span></div></header>' +
             '<section class="lw-knowledge"><header><div><p>Fachlicher Stand</p><h3>Persönlicher Lernfortschritt</h3></div>' +
             '<strong>' + wissen + ' %</strong></header>' + fortschritt(wissen, 'Gesamter Wissensstand') +
-            '<div class="lw-metrics">' + kennzahl(stabil + ' / ' + stats.total, 'stabile Karten') +
-            kennzahl(String(stats.due), 'aktuell fällig') + kennzahl(String(stats.mistakes), 'Themen mit Fehlern') +
-            kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächster Termin') + '</div></section>' +
+            '<div class="lw-metrics">' + merkbar('stabile-karten', ktx) + merkbar('aktuell-faellig', ktx) +
+            merkbar('themen-mit-fehlern', ktx) + merkbar('naechster-termin', ktx) + '</div></section>' +
             '<section class="lw-engagement"><header><div><p>Aktivität</p><h3>Routine &amp; Motivation</h3></div>' +
             '<span>kein fachlicher Nachweis</span></header><div class="lw-metrics">' +
-            kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
-            kennzahl(String(spiel.woche), 'Wiederholungen diese Woche') +
-            kennzahl(spiel.streak + ' Tage', 'Streak') + kennzahl(String(spiel.xp), 'Aktivitäts-XP') +
-            kennzahl(String(spiel.level), 'Level') + '</div>' + fortschritt(spiel.wochenProzent, 'Wochenziel') + '</section>' +
+            merkbar('lernzeit', ktx) + merkbar('wiederholungen-woche', ktx) + merkbar('streak', ktx) +
+            merkbar('aktivitaets-xp', ktx) + merkbar('level', ktx) + '</div>' + fortschritt(spiel.wochenProzent, 'Wochenziel') + '</section>' +
             '<div class="lw-dashboard-grid">' +
             sektion('Themenfortschritt', themenListe(liste(stats.topics), 40), 'SM-2, nicht XP') +
             sektion('Wochenverlauf', historie(liste(stats.logs), 7), stats.reviewedToday + ' heute') +
@@ -137057,7 +137356,7 @@ const Lernwelt = (() => {
             Register.symbole.fuelle(root);
         }
         if (typeof Funkel !== 'undefined')
-            Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
+            Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"], .lw-study-actions button');
         verlaufBeleben(root, zustand.ansicht);
         if (zustand.simulation && !zustand.simulation.fertig)
             timerStarten();
@@ -137373,6 +137672,11 @@ const Lernwelt = (() => {
         const element = event.target instanceof Element ? event.target : null;
         if (!element)
             return;
+        const merk = element.closest('[data-lw-merk]');
+        if (merk?.dataset.lwMerk) {
+            kennzahlMerken(merk, merk.dataset.lwMerk);
+            return;
+        }
         const nav = element.closest('[data-lw-nav]');
         const navId = nav?.dataset.lwNav;
         if (ansichtGueltig(navId)) {
@@ -137597,6 +137901,8 @@ const Lernwelt = (() => {
             warteschlange,
             statistik,
             simulationen,
+            kennzahlenGemerkt,
+            kennzahlen: () => Object.entries(KENNZAHLEN).map(([id, eintrag]) => ({ id, name: eintrag.name })),
             fehler: fehlerListe,
             pruefungen,
             aufgaben: sichtbareAufgaben,
