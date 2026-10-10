@@ -246,6 +246,18 @@ body:has(.pg-flaeche) #sammelleiste{
      dem Bild ein halbes „<" vor dem Wort. Im Schacht beginnt der Streifen
      deshalb mit dem Schild selbst. */
   .pg-flaeche > .gfx-tb-sockel .gfx-tb-roller{padding-inline-start:0}
+  /* Das Schild nimmt dem Streifen Platz, den die Werkzeuge brauchen:
+     „Zeichenfläche" mass mit dem Abstand vom Rechner 106 von 366 px, fast
+     ein Drittel, und fünf Werkzeuge waren ganz zu sehen (Durchsicht E722,
+     test598 §8). Am Telefon steht das Wort deshalb in zwei Zeilen —
+     `schildSetzen` teilt es vor „fläche" —, enger und eine Stufe kleiner;
+     zwei Zeilen zu 11 px passen in die 44 px der Leiste. Ganz bleibt es,
+     und lesbar: der Trennstrich steht, wo ein Setzer ihn setzte. */
+  .pg-flaeche > .gfx-tb-sockel .pg-fl-kontext{
+    padding:0 var(--space-3); font-size:11px; line-height:1.15;
+    flex-direction:column; justify-content:center; align-items:flex-start;
+  }
+  .pg-flaeche > .gfx-tb-sockel .pg-fl-kontext > span:first-child:not(:last-child)::after{content:'-'}
   /* Am Telefon endet die Fläche über der unteren Leiste (`--hunten`), und die
      Flächenleiste ist mit 44-px-Knöpfen höher. */
   body:has(.pg-flaeche) #sammelleiste{

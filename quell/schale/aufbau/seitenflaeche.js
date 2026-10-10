@@ -464,7 +464,16 @@ const Seitenflaeche = (() => {
                 schild.setAttribute('aria-hidden', 'true');
                 roller.prepend(schild);
             }
-            schild.textContent = text;
+            const teile = /^(.+?)(fläche)$/i.exec(text);
+            if (teile?.[1] && teile[2]) {
+                const vorn = document.createElement('span');
+                const hinten = document.createElement('span');
+                vorn.textContent = teile[1];
+                hinten.textContent = teile[2];
+                schild.replaceChildren(vorn, hinten);
+            }
+            else
+                schild.textContent = text;
         };
         schildSetzen(leiste.element, 'Fläche');
         const aufnehmen = () => {
@@ -475,7 +484,7 @@ const Seitenflaeche = (() => {
                 bar.remove();
                 gaeste.set(ober, bar);
                 const name = bar.querySelector('[role="toolbar"]')?.getAttribute('aria-label') ?? '';
-                schildSetzen(bar, name.replace(/^Werkzeuge (der|des) /, '') || 'Block');
+                schildSetzen(bar, name.replace(/^Werkzeuge (der|des) /, '').replace(/\s*„.*“$/, '') || 'Block');
             }
             for (const ober of [...gaeste.keys()]) {
                 if (flaeche.contains(ober))
@@ -518,7 +527,7 @@ const Seitenflaeche = (() => {
             }
         };
         const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
-        const naechsterHalt = (ober) => {
+        const naechsteHalte = function* (ober) {
             for (const el of document.querySelectorAll(HALTE)) {
                 if (!(ober.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))
                     continue;
@@ -532,9 +541,8 @@ const Seitenflaeche = (() => {
                     continue;
                 if (el.closest('[inert], [hidden], [aria-hidden="true"]') || !el.getClientRects().length)
                     continue;
-                return el;
+                yield el;
             }
-            return null;
         };
         const gastVon = (ziel) => {
             if (!(ziel instanceof Node))
@@ -783,11 +791,12 @@ const Seitenflaeche = (() => {
                     return;
                 }
                 if (!e.shiftKey && ziel && imSchacht.contains(ziel)) {
-                    const nach = naechsterHalt(gastFlaeche);
-                    if (nach) {
-                        e.preventDefault();
+                    for (const nach of naechsteHalte(gastFlaeche)) {
                         nach.focus();
-                        return;
+                        if (document.activeElement === nach) {
+                            e.preventDefault();
+                            return;
+                        }
                     }
                 }
             }
@@ -846,8 +855,29 @@ const Seitenflaeche = (() => {
             const fp = inFlaeche(e.clientX, e.clientY);
             aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
         });
+        const rolltSelbst = (e) => {
+            const quer = Math.abs(e.deltaX) > Math.abs(e.deltaY) || (e.shiftKey && e.deltaX === 0);
+            const weg = quer ? (e.deltaX || e.deltaY) : e.deltaY;
+            if (!weg)
+                return false;
+            for (let el = e.target instanceof Element ? e.target : null; el && el !== ebene && el !== flaeche; el = el.parentElement) {
+                const st = getComputedStyle(el);
+                const art = quer ? st.overflowX : st.overflowY;
+                if (art !== 'auto' && art !== 'scroll')
+                    continue;
+                const max = quer ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+                if (max <= 1)
+                    continue;
+                const stand = quer ? el.scrollLeft : el.scrollTop;
+                if (weg < 0 ? stand > 0.5 : stand < max - 0.5)
+                    return true;
+            }
+            return false;
+        };
         flaeche.addEventListener('wheel', (e) => {
             if (e.defaultPrevented)
+                return;
+            if (!(e.ctrlKey || e.metaKey) && rolltSelbst(e))
                 return;
             e.preventDefault();
             if (e.ctrlKey || e.metaKey) {

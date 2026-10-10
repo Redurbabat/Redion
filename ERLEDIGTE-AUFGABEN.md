@@ -32,10 +32,19 @@ klebt dabei links, und Tab am Telefon findet das Textfeld hinter dem
 Whiteboard — `test598` §8/§9 je rot vor der Reparatur, eine Gegenprobe je
 Stelle.
 
-**Geprüft:** `test598` (neu, 52 Zusagen), `test404` §9, `test572` §13,
-`test575` §6b — je rot gegen `1bfaca53`, grün danach; neun Gegenproben;
-Nachbarn siehe Commit „E722/E723". Start 1850 → 1853 KB. Messung:
-`messungen.md` §92. Offen: L243.
+**Nach der zweiten Durchsicht** (10. Oktober): die breite Tabelle im
+Kasten rollt auch mit dem Rad — quer und mit Umschalt rollt sie, die Fläche
+bleibt stehen (vorher schob jedes Rad die Fläche, `links 0`); die mittlere
+Taste schiebt ein Whiteboard, statt mit seinem Werkzeug zu zeichnen; die
+Leiste nennt den Titel des Whiteboards; Tab aus der Leiste bleibt nicht an
+einem Halt ohne Fokus hängen; das Schild am Telefon steht in zwei Zeilen
+(106 → 63 px, ein sechstes Werkzeug ganz im Bild); `test598` §4 und
+`test575` §6b können jetzt rot werden; README nennt L243.
+
+**Geprüft:** `test598` (neu, 66 Zusagen), `test404` §9, `test572` §13,
+`test575` §6b — je rot gegen `1bfaca53` bzw. `f338ae895`, grün danach;
+zwanzig Gegenproben; Nachbarn siehe Commits „E722/E723". Start 1850 →
+1853 KB. Messung: `messungen.md` §92. Offen: L243.
 
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 

@@ -100,7 +100,8 @@ const Zusatz = (() => {
             zusatz: { groesser: massstabZeigen },
             aktiv: werkzeug,
             klasse: 'wb-tools',
-            beschriftung: 'Werkzeuge der Zeichenfläche',
+            beschriftung: 'Werkzeuge der Zeichenfläche' +
+                (String(block.text ?? '').trim() ? ` „${String(block.text).trim()}“` : ''),
             menue: (id) => id === 'farbe' ? farbMenue() : id === 'mehr' ? mehrMenue() : null,
             aufWerkzeug: (id) => {
                 werkzeug = id;
@@ -449,10 +450,13 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
-            if (werkzeug === 'hand') {
+            const maus = e.pointerType === 'mouse';
+            if (werkzeug === 'hand' || (maus && e.button === 1)) {
                 schiebt = { x: e.clientX, y: e.clientY, sx: sicht.x, sy: sicht.y };
                 return;
             }
+            if (maus && e.button !== 0)
+                return;
             if (werkzeug === 'verbindung') {
                 const sid = e.target.dataset?.sid;
                 const s = daten.find((q) => q.id === sid && q.art !== 'verbindung');

@@ -1719,3 +1719,9 @@ Grund:
    gegen Schacht 669–739 und untere Leiste 775–835, `messungen.md` §92).
    Ein Wächter mit einer echten Auswahl am Telefon fehlt noch.
 
+4. **Umschalt+Rad auf dem Grund der Fläche** (gefunden in der zweiten
+   Durchsicht, 10. Oktober): über einer breiten Tabelle rollt Umschalt+Rad
+   seither quer, wie überall im Browser — auf dem Grund daneben schiebt es
+   die Fläche weiter LÄNGS (`deltaY` mit `shiftKey`). Ob Umschalt+Rad dort
+   quer schieben soll, wie in AFFiNE und Figma, ist eine Frage an Redur;
+   mit Wächter in `test598` §5.

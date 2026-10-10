@@ -6815,3 +6815,57 @@ Bilder (nicht eingecheckt, §55.4): vorher und nachher, 1440 × 900 und
 Blockkasten), eine überfahrene Zeile, eine angehakte Zeile mit der
 Auswahlleiste, „Neu" überfahren in Hell, Sand, Papier und Touch Kit hell.
 
+
+**Nach der zweiten Durchsicht** (10. Oktober; `test598` 52 → 66 Zusagen,
+`test575` §6b eine Vorbedingung mehr — gegen `f338ae895` rot mit 57 ok,
+9 rot, dann die Schärfung von §8 rot mit 65 ok, 1 rot). Gemessen mit
+Sonden unter dem Schloss, `file://`, 1440 × 900 und 1920 × 1080, Telefon
+390 × 844:
+
+```txt
+                                                vorher (f338ae895)        nachher
+8 Spalten im Seitenkasten, verborgen            454 px (1440 und 1920)    454 px
+Rad quer (deltaX 120) über der Tabelle          links 0; Fläche           links 120; Fläche steht
+                                                translate(248px…) →
+                                                translate(128px…)
+Umschalt+Rad (deltaY 120) danach                links 0; Fläche y −120    links 240; Fläche steht
+Rad längs über der Tabelle                      Fläche schiebt            Fläche schiebt
+ganz rechts, Rad quer                           Fläche schiebt            Fläche schiebt (weitergereicht)
+redion-einzeldatei.html allein, dasselbe        —                         links 120 / 240, Fläche steht
+mittlere Taste im Whiteboard (Rechteck gewählt) zeichnet (3 → 4)          schiebt das Whiteboard, keine Form
+Name der Leiste, W1 / W2                        zweimal „Werkzeuge der    „… „Skizze““ / „… „Zweite““
+                                                Zeichenfläche"
+Tab aus der Leiste, erster Halt verborgen       bleibt in der Leiste      ein Halt hinter dem Whiteboard
+                                                (BUTTON [Stift])
+Telefon 390: Schild / Streifen                  106 / 366 px              63 / 366 px (zwei Zeilen, 11 px)
+  … Werkzeuge ganz zu sehen, ungerollt          5                         6
+  … erster Bau (eine Zeile, 11 px, Abstand 6)   —                         87 px, weiter 5
+Seitenkasten am Rechner, Innenabstand l / r     48 / 20 px                48 / 20 px (Kosten in E723)
+Start (test388 §5), gzip über 252 Dateien       1853 KB                   1854 KB (Decke 1950)
+Dienststand                                     v1422                     v1424
+```
+
+Gegenproben, jede rot gesehen und zurückgenommen:
+
+```txt
+Strg+Z der Fläche zusätzlich an jedes Whiteboard  test598 §4 rot (Whiteboard 2 → 1),
+                                                  test575 §6b rot ([0,0] soll [0,1]) —
+                                                  mit den alten Zusagen grün
+ohne rolltSelbst                                  test598 §13 rot (links 0; translate(248px…)
+                                                  → translate(128px…); Umschalt: y −120)
+ohne den Schiebezweig der mittleren Taste         test598 §6 rot (Whiteboard unverändert)
+ohne den Titel im Namen                           test598 §7 rot (zweimal derselbe Name)
+preventDefault vor dem Fokus                      test598 §9 rot (in der Leiste: BUTTON [Stift])
+ohne die Telefonregel des Schilds                 test598 §8 rot (106 von 366 px)
+Schild einzeilig (der erste Bau)                  test598 §8 rot (87 von 366 px)
+```
+
+Die erste Fassung der Schild-Zusage verlangte ein Viertel des Streifens —
+der erste Bau erfüllte sie mit 87 px, und auf dem Bild standen weiter fünf
+Werkzeuge. Eine Zusage, die erfüllt ist, ohne dass sich für den Finger
+etwas ändert, misst das Falsche (L206); sie verlangt jetzt ein Fünftel.
+
+Bilder (nicht eingecheckt, §55.4): vorher und nachher, dunkel und hell —
+die breite Tabelle nach zwei Wischern quer (1440 × 900), ein Zug mit der
+mittleren Taste im Whiteboard (1440 × 900), das Schild im Streifen am
+Telefon (390 × 844).

@@ -757,8 +757,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E713** — Die Zeitpille und die Balkenkarte (Redur: „Schau mal das auch an ich will das auch haben", Video „LIQUID GLASS", Szenen 02 und 06): läuft der Zeitmesser bei geschlossenem Feld, steht eine dunkle Pille „⏱ 24:13 · Seite" über der unteren Leiste; ein Tipp lässt die Karte aus ihr wachsen (Feder des Materials, nur `transform`/`opacity`, Unschärfe als stille Kopie), Escape und ✕ ziehen sie zurück; die Seite ist der Titel, der Timer hat einen echten Fortschritt, Pause ↔ Weiter tauscht im selben Knopf; am Telefon deckend. Der Lernverlauf wird eine Karte: Balken wachsen einmal, die Summe zählt hoch, ein Tag lässt sich wählen (Material aus E706, Hinweis, Pfeile) — `test590`
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
-* **E722** — Fläche: eine Leiste je Arbeitskontext (Redur, PDF Seite 18 unten: „es sollte nur die ganez unter bleiben"): die Leiste eines Whiteboards im Kasten wird herausgenommen und hängt im EINEN Schacht unten, sobald man hineintippt; `defaultPrevented` in Taste und Rad der Fläche, die Hand stiehlt keinen Strich, „Schritt vorwärts" auf der Fläche, der Tabstopp der `GfxToolbar` entsteht auch losgelöst
-* **E723** — Die Tabelle auf der Fläche (Redur, PDF Seite 18 oben: „es ist hinterden und kann nicht gut lesen"): im Kasten kein Ausbruch aus E409 (`--db-aus:0px`), die Griffe im Kasten, „Neu" beim Überfahren mit den Marken aus E705, `--db-grund` für die angeheftete Spalte, die Auswahlleiste über der Flächenleiste
+* **E722** — Fläche: eine Leiste je Arbeitskontext (Redur, PDF Seite 18 unten: „es sollte nur die ganez unter bleiben"): die Leiste eines Whiteboards im Kasten wird herausgenommen und hängt im EINEN Schacht unten, sobald man hineintippt; `defaultPrevented` in Taste und Rad der Fläche, die Hand stiehlt keinen Strich, „Schritt vorwärts" auf der Fläche, der Tabstopp der `GfxToolbar` entsteht auch losgelöst; zweite Durchsicht: die mittlere Taste schiebt das Whiteboard statt zu zeichnen, die Leiste nennt den Titel des Whiteboards, Tab bleibt nicht stecken, das Schild am Telefon in zwei Zeilen
+* **E723** — Die Tabelle auf der Fläche (Redur, PDF Seite 18 oben: „es ist hinterden und kann nicht gut lesen"): im Kasten kein Ausbruch aus E409 (`--db-aus:0px`), die Griffe im Kasten, „Neu" beim Überfahren mit den Marken aus E705, `--db-grund` für die angeheftete Spalte, die Auswahlleiste über der Flächenleiste; zweite Durchsicht: das Rad quer und Umschalt+Rad rollen die breite Tabelle im Kasten, nicht die Fläche
 
 ---
 
@@ -61368,7 +61368,8 @@ geschlossen. Messung: `messungen.md` §86, Durchsicht.
 `GfxToolbar`), E690 (die Fläche), E693 (die Tinte unter den Kästen) und
 E682 („behandelt ist behandelt") · **Wächter:** `test598` §1–§9 (neu),
 `test572` §13, `test575` §6b (erweitert) · **Zweig**
-`claude/flaeche-eine-leiste` · **Messung:** `messungen.md` §92.
+`claude/flaeche-eine-leiste` · **Messung:** `messungen.md` §92 ·
+**Durchsichten:** 6. und 10. Oktober 2026 (unten).
 
 **Redurs Sätze, wörtlich:**
 
@@ -61481,8 +61482,10 @@ Stelle in `zeichenflaeche.ts`, 30 Zeilen CSS. Start 1850 → 1853 KB gzip
 Dateien, `messungen.md` §92); keine neue Datei, keine Insel. Und ein geändertes Verhalten, das man kennen muss: die
 Fläche lässt sich mit Hand oder mittlerer Taste nicht mehr verschieben,
 wenn der Zug IN einem eingebetteten Whiteboard beginnt — dort schiebt die
-Hand des Whiteboards das Whiteboard. Die Fläche verschiebt man daneben, mit
-dem Rad ausserhalb, mit zwei Fingern auf dem Grund, mit −/+ und Ins Bild.
+Hand des Whiteboards das Whiteboard, und seit der zweiten Durchsicht auch
+die mittlere Taste (vorher zeichnete sie dort mit dem gewählten Werkzeug,
+siehe unten). Die Fläche verschiebt man daneben, mit dem Rad ausserhalb,
+mit zwei Fingern auf dem Grund, mit −/+ und Ins Bild.
 
 **Was weg ist, und wo es bleibt (§43).** Die obere Leiste im Kasten als
 ZWEITE sichtbare Leiste. Dieselbe Instanz mit allen 19 Bedienelementen
@@ -61540,6 +61543,58 @@ Dazu: zwei Kommentare nannten Zahlen, die nicht gemessen waren („160 px",
 wie im Bau-Commit — die letzte CSS-Änderung (das Schild) kam nach dem
 Text. Mit der Durchsicht steht er auf v1422.
 
+**Nach der zweiten Durchsicht (10. Oktober).** Eine zweite unabhängige
+Durchsicht hat einen blockierenden Fehler in E723 gefunden (das Rad über
+der breiten Tabelle, dort beschrieben) und acht kleinere; sechs davon
+gehören hierher, einer zu E723, einer brauchte keine Änderung. Wächter zuerst rot (`6bf08068a`, `8700493cd`), dann der
+Bau:
+
+- *Ein Wächter, der nicht rot werden konnte* (§55.2). `test598` §4 („…
+  und das Whiteboard bleibt") und `test575` §6b („Strg+Z auf der Fläche
+  nimmt nur die Fläche zurück", erwartet `[0, 0]`) liefen, als das
+  Whiteboard schon nichts mehr zurückzunehmen hatte — ein Strg+Z der
+  Fläche, das fälschlich auch beim Whiteboard ankäme, wäre unsichtbar
+  geblieben. Jetzt liegt vorher ein zweiter Strich im Whiteboard, erwartet
+  wird `[0, 1]`. Gegenprobe (die Taste im gebauten `seitenflaeche.js` an
+  jedes Whiteboard weiterreichen): „Whiteboard 2 → 1" und „ist [0,0] soll
+  [0,1]" — mit den alten Zusagen wäre sie grün geblieben.
+- *Die mittlere Taste zeichnete* (gefunden von der Durchsicht). Seit
+  `beginnt` im Kasten früh aufhört, kam sie beim Whiteboard an, und dessen
+  `pointerdown` fragte nicht nach `button` — ein Zug mit der mittleren
+  Taste zog ein Rechteck. Jetzt schiebt sie das Whiteboard, wie die Hand
+  (das Innerste gewinnt); andere Maustasten als die linke zeichnen nicht.
+  Nur die Maus: ein Stift meldet über `button` seine Seitentaste. Das gilt
+  auch in der Seitenansicht, wo die mittlere Taste genauso zeichnete.
+  `test598` §6 rot mit „3 → 4"; Gegenprobe ohne den Schiebezweig rot mit
+  „Whiteboard … → …" unverändert.
+- *Welches Whiteboard?* (§38). Zwei Whiteboards gaben ihrer Leiste
+  denselben Namen, „Werkzeuge der Zeichenfläche". Der Name trägt jetzt den
+  Titel des Blocks („Werkzeuge der Zeichenfläche „Skizze““), über
+  `setAttribute` — der Titel geht nie durch HTML. Das Schild bleibt das
+  kurze Wort. `test598` §7 rot mit zweimal demselben Namen.
+- *Tab, der nicht ankommt* (§38). Die Führung aus der Leiste rief
+  `preventDefault` VOR dem Fokus und sah nicht nach, ob er ankam; ein Halt
+  mit `visibility:hidden` hat Rechtecke und nimmt keinen Fokus — das Tab
+  war verschluckt. Jetzt ist `naechsteHalte` eine Folge, und das erste
+  Element, das den Fokus wirklich nimmt, gewinnt; nimmt keines, macht der
+  Browser weiter. `test598` §9 rot mit „in der Leiste: BUTTON [Stift]".
+- *Das Schild am Telefon* (§37). „Zeichenfläche" nahm 106 von 366 px des
+  Streifens, fünf Werkzeuge waren ganz zu sehen. Der erste Bau machte es
+  enger und kleiner, in einer Zeile: 87 px — das Viertel, das der Wächter
+  verlangte, war erfüllt, und auf dem Bild standen weiter fünf Werkzeuge.
+  Der Wächter ist deshalb auf ein Fünftel verschärft (rot mit „87 von
+  366 px"), und das Wort steht am Telefon in zwei Zeilen, „Zeichen-" über
+  „fläche": 63 px, sechs Werkzeuge ganz im Bild. Geteilt wird in
+  `schildSetzen` vor „fläche" (zwei `span`, der Trennstrich ist ein
+  `::after` nur am Telefon); am Rechner stehen die Teile nebeneinander. Ein
+  kürzeres Wort hätte man lernen müssen, ein Zeichen allein sagt weniger.
+- *README* nannte EINE Leiste auf der Fläche schlechthin; Gedankenkarte
+  und Planfläche behalten ihre eigene (L243). Der halbe Satz steht jetzt
+  dort.
+
+Dienststand nach der zweiten Durchsicht: **v1424**. Start (`test388` §5):
+1853 → 1854 KB gzip.
+
 **Touch Kit und Fremdcode.** Kein Bauteil des Touch Kits und kein fremder
 Code: die Leiste ist Redions `GfxToolbar` (E689), der Wechsel eine Zeile
 `replaceChild`. `FREMDCODE.md` braucht keinen Eintrag (§57).
@@ -61555,8 +61610,9 @@ Reiter „Zeichnen" im Menüband.
 **Datum:** 6. Oktober 2026 · **Entschieden von** Redur (PDF vom
 29. September, Seite 5 Punkt 6 und Seite 18 oben) · **ergänzt** E409 (die
 Datenbank darf über den Textrand hinaus) und E690 („der Kasten ist der
-Rand") · **Wächter:** `test404` §9 (erweitert), `test598` §10–§12 (neu) ·
-**Zweig** `claude/flaeche-eine-leiste` · **Messung:** `messungen.md` §92.
+Rand") · **Wächter:** `test404` §9 (erweitert), `test598` §10–§12 (neu),
+§13 (zweite Durchsicht) · **Zweig** `claude/flaeche-eine-leiste` ·
+**Messung:** `messungen.md` §92.
 
 **Redurs Sätze, wörtlich:**
 
@@ -61633,10 +61689,65 @@ Fläche* — weit weg von der Hand, die gerade angehakt hat.
 **Was es kostet.** Neun CSS-Deklarationen in drei Stilblättern (in den
 +3031 Bytes gzip aus E722 enthalten, `messungen.md` §92). Eine breite Tabelle zeigt im Kasten am Rechner weniger Spalten auf
 einmal als vorher auf dem Grund; jede bleibt durch Rollen erreichbar.
+Und die Textspalte des Seitenkastens ist am Rechner nicht mehr gleich
+eingerückt: links 48 px (`--space-10`, damit die Griffe im Kasten stehen),
+rechts weiter 20 px — sie ist 28 px schmaler und steht 28 px weiter
+rechts (gemessen in der zweiten Durchsicht, „48px / 20px"). Ausgeglichen
+ist das nicht: rechts ebenfalls 48 px nähme dem Text noch einmal 28 px,
+ohne dass dort etwas stünde.
 
 **Was weg ist, und wo es bleibt (§43).** Der Ausbruch aus E409 IM Kasten der
-Fläche; jede Spalte bleibt über den Roller im Kasten erreichbar, die Kante
+Fläche; jede Spalte bleibt über den Roller im Kasten erreichbar — mit dem
+Rad quer, mit Umschalt+Rad, mit dem Finger, mit der Tastatur in einer
+Zelle (seit der zweiten Durchsicht wirklich, siehe unten) —, die Kante
 zeigt, dass mehr kommt. Sonst nichts.
+
+**Nach der zweiten Durchsicht (10. Oktober): das Rad gehört der Tabelle.**
+Die Durchsicht hat den Satz „rollt jetzt im Kasten" nachgeprüft, und er
+stimmte am Rechner nur halb: das Rad der Fläche rief `preventDefault` auf
+JEDES Rad und schob die Fläche. Gemessen mit acht Spalten im Seitenkasten
+(`messungen.md` §92): 454 px verborgen bei 1440 und bei 1920; ein Rad quer
+(Trackpad, `deltaX` 120) liess die Tabelle bei 0 und schob die Fläche von
+`translate(248px, 110px)` nach `translate(128px, 110px)`; Umschalt+Rad
+schob sie um 120 px nach oben. Erreichbar waren die verborgenen Spalten
+nur über einen klassischen Rollbalken (Überlagerungsbalken erscheinen erst
+beim Rollen) oder den Fokus in einer Zelle. Der Stand vor E723 hatte
+dieselbe Mechanik, verbarg aber nur 282 px — erst E723 machte das Rollen im
+Kasten zum Normalfall.
+
+- *Was entschieden ist.* Vor dem `preventDefault` fragt die Fläche, ob
+  unter dem Rad etwas im Kasten in dieser Richtung rollen KANN und noch
+  nicht am Rand steht (`rolltSelbst`: vom Ziel aufwärts bis zur Ebene,
+  `overflow` auto oder scroll, mehr Inhalt als Platz). Dann rollt der
+  Browser, mit seinem eigenen Schwung, und die Fläche bleibt stehen. Quer
+  heisst: mehr `deltaX` als `deltaY`, oder Umschalt mit einem gewöhnlichen
+  Rad. Längs rollt die Tabelle nicht, also schiebt ein Rad längs weiter die
+  Fläche; am Rand gibt sie das Rad weiter, statt es zu schlucken. Strg+Rad
+  bleibt über allem der Zoom der Fläche. Dieselbe Regel wie beim Whiteboard
+  (E722: das Innerste gewinnt), nur allgemein: sie gilt für jeden Roller im
+  Kasten, auch einen langen Codeblock.
+- *Die Alternativen.* *Nur `.db-rollbox` fragen* — ein zweiter Sonderfall
+  neben dem Whiteboard, und der nächste Roller (Code, Galerie) hätte
+  denselben Fehler. *Das Rad über einem Kasten nie nehmen* — dann rollte
+  über einem Textkasten nichts mehr, weder Fläche noch Kasten.
+  *`overscroll-behavior`* — gilt nur für das Weiterreichen NACH dem
+  Rollen, hier rollte gar nichts.
+- *Was es kostet.* 25 Zeilen in `seitenflaeche.ts` (ein `getComputedStyle`
+  je Ebene vom Ziel zur Fläche, nur beim Rad). Am Rand eines Trackpad-Wischs
+  schiebt der Rest des Wischs die Fläche weiter — so wie eine Seite im
+  Browser, die am Ende ihres inneren Rollers weiterrollt.
+- *Gemessen danach:* quer → Tabelle `links 120`, Umschalt → `240`, die
+  Fläche bleibt bei `translate(248px, 110px)` (1440) und
+  `translate(488px, 200px)` (1920); ebenso in `redion-einzeldatei.html`
+  allein im Ordner. `test598` §13 rot gegen `f338ae895` mit „links 0" und
+  „translate(248px, 110px) → translate(128px, 110px)"; Gegenprobe (der
+  Aufruf von `rolltSelbst` herausgenommen) rot mit denselben Zeilen.
+- *Gefunden auf dem Weg.* Auf dem Grund der Fläche, neben jeder Tabelle,
+  schiebt Umschalt+Rad weiter LÄNGS — über der Tabelle rollt es jetzt quer.
+  Ob es dort quer schieben soll, ist eine Frage an Redur (`AUFGABEN.md`,
+  Fläche Punkt 4); nicht in diesem Bogen.
+- *Touch Kit und Fremdcode.* Kein Muster aus dem Touch Kit, kein fremder
+  Code; `FREMDCODE.md` braucht keinen Eintrag (§57).
 
 **Touch Kit und Fremdcode.** Nur Redions eigene Marken (E705); kein
 fremder Code, kein Eintrag in `FREMDCODE.md`.

@@ -818,7 +818,21 @@ const Seitenflaeche = (() => {
         schild.setAttribute('aria-hidden', 'true');
         roller.prepend(schild);
       }
-      schild.textContent = text;
+      /* EIN ZUSAMMENGESETZTES WORT IN ZWEI TEILEN (Durchsicht E722). Am
+         Telefon nahm „Zeichenfläche" mit dem Abstand vom Rechner 106 von
+         366 px des Streifens — fünf Werkzeuge waren ganz zu sehen. Dort
+         steht es seither in zwei Zeilen, „Zeichen-" über „fläche"
+         (seitenansichten.css); am Rechner stehen die Teile nebeneinander
+         und lesen sich wie ein Wort. Der Text bleibt derselbe, nur
+         geteilt — kein zweites, kürzeres Wort, das man lernen müsste. */
+      const teile = /^(.+?)(fläche)$/i.exec(text);
+      if (teile?.[1] && teile[2]) {
+        const vorn = document.createElement('span');
+        const hinten = document.createElement('span');
+        vorn.textContent = teile[1];
+        hinten.textContent = teile[2];
+        schild.replaceChildren(vorn, hinten);
+      } else schild.textContent = text;
     };
     schildSetzen(leiste.element, 'Fläche');
 
@@ -829,7 +843,10 @@ const Seitenflaeche = (() => {
         bar.remove();
         gaeste.set(ober, bar);
         const name = bar.querySelector('[role="toolbar"]')?.getAttribute('aria-label') ?? '';
-        schildSetzen(bar, name.replace(/^Werkzeuge (der|des) /, '') || 'Block');
+        /* Der Name nennt seit der Durchsicht auch den Titel des Blocks
+           („Werkzeuge der Zeichenfläche „Skizze““), damit man beim Vorlesen
+           hört, WELCHES Whiteboard. Das Schild bleibt das kurze Wort. */
+        schildSetzen(bar, name.replace(/^Werkzeuge (der|des) /, '').replace(/\s*„.*“$/, '') || 'Block');
       }
       for (const ober of [...gaeste.keys()]) {
         if (flaeche.contains(ober)) continue;
@@ -878,10 +895,12 @@ const Seitenflaeche = (() => {
       }
     };
 
-    /** Das erste mit Tab erreichbare Element nach `ober` im Baum — nicht in
-     *  `ober` und nicht in der Leiste im Schacht. */
+    /** Die mit Tab erreichbaren Elemente nach `ober` im Baum, der Reihe
+     *  nach — nicht in `ober` und nicht in der Leiste im Schacht. Eine Folge,
+     *  nicht EIN Element: ob ein Halt den Fokus wirklich nimmt, weiss erst
+     *  `focus()` (Durchsicht E722, siehe beim Tab unten). */
     const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
-    const naechsterHalt = (ober: HTMLElement): HTMLElement | null => {
+    const naechsteHalte = function* (ober: HTMLElement): Generator<HTMLElement> {
       for (const el of document.querySelectorAll<HTMLElement>(HALTE)) {
         if (!(ober.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
         if (ober.contains(el) || imSchacht.contains(el)) continue;
@@ -894,9 +913,8 @@ const Seitenflaeche = (() => {
         if (!halt || (el as HTMLButtonElement).disabled) continue;
         if (el.isContentEditable && el.parentElement?.isContentEditable) continue;
         if (el.closest('[inert], [hidden], [aria-hidden="true"]') || !el.getClientRects().length) continue;
-        return el;
+        yield el;
       }
-      return null;
     };
 
     /** Welche Zeichenfläche besitzt dieses Ziel? */
@@ -1171,8 +1189,15 @@ const Seitenflaeche = (() => {
            Gesucht wird das erste erreichbare Element, das im Baum NACH dem
            Whiteboard kommt — gibt es keines, macht der Browser weiter. */
         if (!e.shiftKey && ziel && imSchacht.contains(ziel)) {
-          const nach = naechsterHalt(gastFlaeche);
-          if (nach) { e.preventDefault(); nach.focus(); return; }
+          /* ERST DER FOKUS, DANN DAS `preventDefault` (Durchsicht E722). Ein
+             Halt mit `visibility:hidden` oder einem `inert` aus dem Stil hat
+             Rechtecke und nimmt trotzdem keinen Fokus; vorher war das Tab
+             dann verschluckt, und der Fokus blieb in der Leiste. Jetzt geht
+             es zum nächsten — und nimmt keiner, macht der Browser weiter. */
+          for (const nach of naechsteHalte(gastFlaeche)) {
+            nach.focus();
+            if (document.activeElement === nach) { e.preventDefault(); return; }
+          }
         }
       }
       if (!(e.ctrlKey || e.metaKey)) return;
@@ -1247,6 +1272,36 @@ const Seitenflaeche = (() => {
       aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
     });
 
+    /** ROLLT UNTER DEM RAD ETWAS IM KASTEN SELBST? (Durchsicht E723)
+     *  Seit E723 bricht eine breite Tabelle nicht mehr aus dem Kasten aus, sie
+     *  rollt darin — gemessen verbergen acht Spalten im Seitenkasten 454 px.
+     *  Das Rad der Fläche nahm aber JEDES Rad: ein Wisch quer auf dem
+     *  Trackpad oder Umschalt+Rad schob die Fläche, und die Tabelle blieb
+     *  bei 0 stehen. Es gilt dieselbe Regel wie beim Whiteboard — das
+     *  Innerste gewinnt —, nur für das, was von sich aus rollt: Gesucht wird
+     *  vom Ziel aufwärts bis zur Ebene ein Element, das in der Richtung des
+     *  Rads rollen KANN und noch nicht an seinem Rand steht. Am Rand gibt es
+     *  das Rad weiter, sonst bliebe man über einer Tabelle hängen, die schon
+     *  ganz rechts steht. */
+    const rolltSelbst = (e: WheelEvent): boolean => {
+      /* Quer heisst: der Wisch geht mehr seitwärts als längs — oder Umschalt
+         hält ein gewöhnliches Rad, das der Browser dann seitwärts rollt. */
+      const quer = Math.abs(e.deltaX) > Math.abs(e.deltaY) || (e.shiftKey && e.deltaX === 0);
+      const weg = quer ? (e.deltaX || e.deltaY) : e.deltaY;
+      if (!weg) return false;
+      for (let el = e.target instanceof Element ? e.target : null;
+           el && el !== ebene && el !== flaeche; el = el.parentElement) {
+        const st = getComputedStyle(el);
+        const art = quer ? st.overflowX : st.overflowY;
+        if (art !== 'auto' && art !== 'scroll') continue;
+        const max = quer ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+        if (max <= 1) continue;
+        const stand = quer ? el.scrollLeft : el.scrollTop;
+        if (weg < 0 ? stand > 0.5 : stand < max - 0.5) return true;
+      }
+      return false;
+    };
+
     /* Rad schiebt, Strg + Rad zoomt — wie in AFFiNE und im Whiteboard. */
     flaeche.addEventListener('wheel', (e: WheelEvent) => {
       /* Ein Rad, ein Ausschnitt (E722): hat das Whiteboard im Kasten das Rad
@@ -1254,6 +1309,10 @@ const Seitenflaeche = (() => {
          das Whiteboard UND schob die Fläche, und Strg+Rad zoomte sie von
          0,92 auf 1,02 (messungen.md §92). */
       if (e.defaultPrevented) return;
+      /* … und was im Kasten selbst rollt, rollt der Browser — ohne
+         `preventDefault`, mit seinem eigenen Schwung. Strg+Rad bleibt der
+         Zoom der Fläche, auch über einer Tabelle. */
+      if (!(e.ctrlKey || e.metaKey) && rolltSelbst(e)) return;
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
         massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY);
