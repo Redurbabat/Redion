@@ -62694,5 +62694,8 @@ Fremde rote Läufe des Grundstands, nicht angefasst: `test86`, `test201` §1,
 1440×900 und Telefon 390×844, dunkel und hell — der Kopf in Heute,
 Übersicht und Trainer, „Heute ^" und „Übersicht ^" offen (am Rechner aus
 dem ^, am Telefon als Blatt mit Kartengruppen), das Fächermenü mit und
-ohne Gruppe „Lebensbereich", ein gewähltes Fach mit gefilterten Zahlen, der
-Tastaturfokus auf einem ^.
+ohne Gruppe „Lebensbereich", ein gewähltes Fach mit gefilterten Zahlen
+(am Telefon das gefüllte Zeichen), der Tastaturfokus auf einem ^; dazu
+der Trainer im Starken Kontrast und im Touch Kit (hell und dunkel). Die
+Einzeldatei allein in einem Ordner über `file://`: drei ^, „Übersicht ^"
+öffnet mit den fünf Einträgen, keine Ausnahme.
