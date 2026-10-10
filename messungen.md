@@ -6891,3 +6891,55 @@ nachher 0, weggerollt (scrollTop 1200) wieder 1.
 
 **Start:** 1852 → 1854 KB gzip über 252 Dateien (`test388` §5, Decke
 1950). `redion-einzeldatei.html` 9151 → 9157 KB.
+
+### §96 · Nachtrag der Durchsicht (10. Oktober 2026)
+
+Gemessen über `file://`, 1440 × 900, Lernzentrum, Chromium aus Playwright.
+Der Einlesezustand ist der echte Weg (Kopfknopf, Dateiwähler,
+`pdfImportieren`); nur der Importeur wartet, bis die Messung ihn freigibt
+(`test603` §10).
+
+**Beim Einlesen, Lader im 44 × 44-Knopf** (Abstand der Mitte zur Mitte des
+Knopfes): vorher (`e5b6df726`) ZWEI — die Blase von RedionMotion bei
+dx −13, über den linken Rand (`drin: false`), und der Kreis bei dx 0;
+nachher EINER, die Blase bei dx 0, dy 0, ganz im Kasten. Das Zeichen in
+beiden Ständen Deckkraft 0. Ohne Laufzustand (`data-rmo-state="bereit"`):
+der Kreis, `left` 21 px, mitten. Endlose Animationen in der Blase: neun;
+unter weniger Bewegung und „Ruhig" null.
+
+**Was ein Vorleser hört** (`Accessibility.getPartialAXTree`): vorher beim
+Einlesen Name „PDF öffnen", Beschreibung „PDF öffnen"; nachher Name „PDF
+öffnen", Beschreibung „PDF wird gelesen …"; in Ruhe in beiden Ständen
+Name und Beschreibung „PDF öffnen" (vorher aus dem Titel, nachher aus dem
+Wort).
+
+**Einstellungen → „Erscheinungsbild" = Hell, von „Mitternacht" aus**
+(gemerktes helles Schema „papier"): vorher Schema `nacht`, `data-theme`
+dark — die Auswahl zeigte „Hell", die Kachel „Dunkel" „An"; nachher
+Schema `papier`, light. Ebenso bei 390 × 844.
+
+**Das Kürzel des Gestirns, umbelegt auf Strg Alt H:** vorher
+`aria-keyshortcuts` „Control+Shift+L", Titel „… (Strg ⇧ L)"; nachher
+„Control+Alt+H" und „… (Strg Alt H)", zurückgesetzt wieder
+„Control+Shift+L".
+
+**Schein am Gestirn unter dem Zeiger** (`filter` des sichtbaren Zeichens):
+ohne hohen Kontrast in beiden Ständen `drop-shadow(… 0px 0px 4px)`; mit
+dem Schalter „Hoher Kontrast" und unter `prefers-contrast: more` vorher
+derselbe Schein, nachher `none`.
+
+**Das Zeichen in der getönten Pille „PDF öffnen", in Ruhe** (nach 700 ms
+je Schema, über dem Grund der Leiste zusammengesetzt): Standard 5,28 ·
+Hell 4,61 · Mitternacht 4,56 · Wald 5,40 · Sand 4,33 · Papier 6,03 ·
+Starker Kontrast 9,42 · Rose 4,28 · Touch Kit hell 4,45 · Touch Kit
+dunkel 6,32 — überall über 3 : 1 (Nicht-Text), in drei Schemata unter
+4,5.
+
+**„Strg P" in der Kapsel, in Ruhe** (Farbe mit `opacity: .7`): Standard
+4,24 · Hell 2,87 · Mitternacht 3,71 · Wald 3,81 · Sand 3,09 · Papier
+3,53 · Starker Kontrast 7,39 · Rose 3,87 · Touch Kit hell 2,98 · Touch
+Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
+
+**Start:** 1854 → 1855 KB gzip über 252 Dateien (`test388` §5, Decke
+1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
+v1430.

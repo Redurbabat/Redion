@@ -1741,5 +1741,7 @@ Grund:
 2. **Was L247 offen lässt:** das Gestirn am Telefon (oder eine Kapsel
    links in der obersten Zeile), ◐ in der alten Seitenleiste als Zeichen
    aus dem Register, der Präfix-Zwilling des Glases auf einem echten
-   iPhone.
+   iPhone; seit der Durchsicht vom 10. Oktober auch die zwei Hinweise
+   unter dem Zeiger am Gestirn (Punkt 4) und „Strg P" in hellen Schemata
+   unter 3 : 1 (Punkt 5, ein eigener kleiner Kontrastbogen).
 

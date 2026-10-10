@@ -1,5 +1,36 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 10. Oktober 2026 · E727, E728 (Nachtrag) · Die Durchsicht: ein Lader, der Vorleser hört den Stand, die achte Tür
+
+**Redur:** dieselben Sätze wie unten (Masterprompt vom 29. September,
+Seite 7 und Seite 23). Der Auftrag dieses Nachtrags kam aus einer
+unabhängigen Durchsicht des Zweigs `claude/kopf-ruhig`.
+
+**Fund:** Beim Einlesen standen zwei Lader im 44-px-Importknopf — die
+Blase von RedionMotion 13 px links der Mitte und über den Rand, darauf der
+neue Kreis —, und Vorleser hörten „PDF öffnen" statt „PDF wird gelesen …",
+weil `aria-label` das verborgene Wort überdeckte. Dazu drei Versprechen
+von E727, die nicht stimmten: die Auswahl „Erscheinungsbild" in den
+Einstellungen tat von „Mitternacht" aus nichts, das Kürzel des Gestirns
+stand fest (nach dem Umbelegen falsch), und der Schein unter dem Zeiger
+blieb beim Schalter „Hoher Kontrast" und bei `prefers-contrast: more`.
+
+**Bau:** Die Blase liegt genau an der Stelle des Zeichens, der Kreis nur
+ohne sie; `aria-describedby` zeigt auf das Wort; die Auswahl ruft
+`Aussehen.grundWechseln`; Kürzel und Titel aus `Aussehen.kuerzelVon('hell')`,
+nachgefragt beim Zeigen und beim Fokus; kein Schein auf allen Wegen hohen
+Kontrasts. Die tote Zeile im Block „weniger Bewegung" ist weg. Nichts
+entfernt, was vorher ging.
+
+**Prüfung:** `test603` §10 neu (gegen `e5b6df726` 68/73, jetzt 74/74),
+`test602` §1, §2, §6 erweitert (57/65, jetzt 65/65), je erst rot;
+`test603` §5 und `test580` §7 strenger (schon grün). Sieben Gegenproben
+rot gesehen. Nachbarn grün: 602, 482, 580, 584, 494, 388 (Start 1855 KB,
+Decke 1950), 47, 474, 128, 40, 384, 54, 424, 430, 437, 540, 581, 576, 435,
+589, 114, 582, 588, 303, 126, 541, 592, 272, 37, 428. Bilder vorher und nachher (Einlesen im
+Kopf, Gestirn bei hohem Kontrast, „Erscheinungsbild" bei 1440 und 390,
+hell und dunkel) — nicht im Verzeichnis (§55.4).
+
 ## 6. Oktober 2026 · E727, E728 · Das Gestirn und der ruhige Kopf
 
 **Redur:** Masterprompt vom 29. September, Seite 23 (Foto Seite 24): „das
