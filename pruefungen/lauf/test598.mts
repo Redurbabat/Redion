@@ -30,25 +30,33 @@
  *       die Zahl des Whiteboards stimmt nach dem Wechsel mit seiner Sicht.
  *   §4  EINE Taste, EINE Wirkung (E682): Strg+Z im Whiteboard und mit dem
  *       Fokus in seiner Leiste nimmt nur dort zurück, auf der Fläche nur
- *       dort.
+ *       dort — auch wenn das Whiteboard selbst einen Schritt zurücknehmen
+ *       könnte.
  *   §5  EIN Rad, EIN Ausschnitt: über dem Whiteboard bewegt sich nur das
  *       Whiteboard — mit und ohne Strg.
  *   §6  Die Hand der Fläche stiehlt keinen Strich: ein Zug IM Whiteboard
- *       zeichnet dort und schiebt die Fläche nicht.
+ *       zeichnet dort und schiebt die Fläche nicht. Die mittlere Taste
+ *       zeichnet im Whiteboard nicht, sie schiebt es.
  *   §7  Keine Leiste verdeckt ihre Fläche (§37): in der Seitenansicht steht
- *       die Leiste unter dem Whiteboard, in der Fläche über keinem.
+ *       die Leiste unter dem Whiteboard, in der Fläche über keinem. Ihr
+ *       Name sagt, WELCHES Whiteboard sie bedient.
  *   §8  Am Telefon: eine Leiste, jeder Knopf 44 px, über der unteren Leiste,
  *       keine im Kasten; das gewählte Werkzeug steht im sichtbaren Teil
- *       des rollenden Streifens, und das Schild rollt nicht mit hinaus;
+ *       des rollenden Streifens, und das Schild rollt nicht mit hinaus
+ *       und nimmt höchstens ein Viertel des Streifens;
  *       Tab aus der Leiste führt auch dort hinter das Whiteboard.
  *   §9  Tastatur (§38): Tab erreicht die Leiste, Pfeile wandern, Escape
  *       schliesst ihr Menü zuerst; vom Whiteboard aus führt Tab in SEINE
  *       Leiste und Umschalt+Tab zurück — und das nächste Tab aus der
- *       Leiste weiter HINTER das Whiteboard, nicht an den Anfang.
+ *       Leiste weiter HINTER das Whiteboard, nicht an den Anfang — auch
+ *       wenn der erste Halt dahinter keinen Fokus nimmt.
  *   §10 „Neu" der Tabelle bleibt beim Überfahren in allen zehn Schemata
  *       lesbar (≥ 4,5) und bleibt der Hauptknopf (nicht --bg-hover).
  *   §11 Die Auswahlleiste liegt auf der Fläche NICHT über der Flächenleiste.
  *   §12 Die angeheftete Spalte trägt den Grund des Kastens, nicht der Seite.
+ *   §13 Die breite Tabelle rollt im Kasten auch mit dem Rad: quer und mit
+ *       Umschalt rollt sie, die Fläche bleibt stehen; längs und am Rand
+ *       schiebt das Rad die Fläche.
  *
  * GEGEN DEN STAND 1bfaca53 ROT — die Zeilen stehen im Bericht zu E722/E723.
  *
@@ -269,6 +277,16 @@ w1n = await formenZahl(pg, ids.w1); fln = await formenZahl(pg, ids.seite);
 p('Mit dem Fokus in der Leiste des Whiteboards nimmt Strg+Z im Whiteboard zurück',
   w1n === w1Start, `Whiteboard ${w1Start + 1} → ${w1n}`);
 p('… und nicht auf der Fläche', fln === 1, `Fläche → ${fln}`);
+/* EIN SCHRITT, DEN DAS WHITEBOARD ZURÜCKNEHMEN KÖNNTE (Durchsicht E722).
+   Ohne ihn war sein Verlauf hier leer, und ein Strg+Z der Fläche, das
+   fälschlich AUCH beim Whiteboard ankäme, täte dort nichts — „das
+   Whiteboard bleibt" hätte nicht rot werden können (§55.2). Also ein
+   zweites Rechteck, mit dem Werkzeug, das es noch trägt. */
+await klick(pg, await mitte(pg, `${W1} .wb-flaeche`, 0.8, 0.8));
+await ziehen(pg, (await mitte(pg, `${W1} .wb-flaeche`, 0.2, 0.55))!, 40, 25);
+w1n = await formenZahl(pg, ids.w1);
+p('Im Whiteboard liegt wieder ein rücknehmbarer Schritt (Vorbedingung)', w1n === w1Start + 1,
+  `${w1Start} → ${w1n}`);
 await klick(pg, fleck);
 await pg.evaluate(() => document.querySelector<HTMLElement>('.pg-flaeche')?.focus());
 const vorFl = await formenZahl(pg, ids.seite);
@@ -276,7 +294,8 @@ await pg.keyboard.press('Control+z');
 await pg.waitForTimeout(250);
 fln = await formenZahl(pg, ids.seite);
 p('Auf der Fläche nimmt Strg+Z die Fläche zurück', vorFl >= 1 && fln === vorFl - 1, `${vorFl} → ${fln}`);
-p('… und das Whiteboard bleibt', await formenZahl(pg, ids.w1) === w1n);
+p('… und das Whiteboard bleibt — obwohl es einen Schritt zurücknehmen KÖNNTE',
+  await formenZahl(pg, ids.w1) === w1n, `Whiteboard ${w1n} → ${await formenZahl(pg, ids.w1)}`);
 
 console.log('\n5 · Ein Rad, ein Ausschnitt');
 const lage = () => pg.evaluate((w: string) => ({
@@ -317,6 +336,24 @@ p('Ein Zug im Whiteboard schiebt die Fläche nicht', vor6.flaeche === nach6.flae
   `${vor6.flaeche} → ${nach6.flaeche}`);
 p('… und das Whiteboard bekommt seinen Strich', await formenZahl(pg, ids.w1) === w1vor6 + 1,
   `${w1vor6} → ${await formenZahl(pg, ids.w1)}`);
+/* DIE MITTLERE TASTE (Durchsicht E722). Auf der Fläche schiebt sie die
+   Fläche; seit das Whiteboard im Kasten sich selbst gehört, kam sie bei ihm
+   an — und zeichnete mit seinem Werkzeug, hier einem Rechteck. Im Kasten
+   gewinnt das Innerste: sie schiebt das Whiteboard. */
+const w1vor6m = await formenZahl(pg, ids.w1);
+const vor6m = await lage();
+const mStart = (await mitte(pg, `${W1} .wb-flaeche`, 0.35, 0.6))!;
+await pg.mouse.move(mStart.x, mStart.y);
+await pg.mouse.down({ button: 'middle' });
+await pg.mouse.move(mStart.x + 70, mStart.y + 30, { steps: 6 });
+await pg.mouse.up({ button: 'middle' });
+await pg.waitForTimeout(200);
+const nach6m = await lage();
+p('Die mittlere Taste im Whiteboard zeichnet nicht', await formenZahl(pg, ids.w1) === w1vor6m,
+  `${w1vor6m} → ${await formenZahl(pg, ids.w1)}`);
+p('… sie schiebt das Whiteboard und nicht die Fläche (das Innerste gewinnt)',
+  vor6m.flaeche === nach6m.flaeche && vor6m.wb !== nach6m.wb,
+  `Fläche ${vor6m.flaeche === nach6m.flaeche ? 'still' : 'bewegt'}, Whiteboard ${vor6m.wb} → ${nach6m.wb}`);
 await klick(pg, fleck);
 await imSchacht(pg, '[data-wz="zeiger"]');
 
@@ -346,6 +383,23 @@ p('Das gewählte Whiteboard ist markiert (Ring) — und die Leiste sagt in Worte
   gewaehlt.da && gewaehlt.ring !== 'none' &&
   await pg.evaluate((s: string) => /Zeichenfläche/.test(document.querySelector(s)?.textContent ?? ''), SCHACHT),
   JSON.stringify(gewaehlt));
+/* WELCHES Whiteboard (Durchsicht E722, §38)? Zwei Whiteboards gaben der
+   Leiste denselben Namen, „Werkzeuge der Zeichenfläche" — wer vorlesen
+   lässt, hörte nicht, wem sie gerade gehört. Der Name trägt den Titel des
+   Blocks; das Schild bleibt das kurze Wort. */
+const namen = await pg.evaluate(async ([s, w2]) => {
+  const jetzt = () => ({
+    name: document.querySelector(`${s} [role="toolbar"]`)?.getAttribute('aria-label') ?? '',
+    schild: (document.querySelector(`${s} .pg-fl-kontext`)?.textContent ?? '').trim() });
+  const a = jetzt();
+  document.querySelector<HTMLElement>(w2 as string)?.focus();
+  await new Promise(f => setTimeout(f, 150));
+  return { a, b: jetzt() };
+}, [SCHACHT, W2]);
+p('Die Leiste nennt, WELCHES Whiteboard sie bedient — „Skizze", nach dem Wechsel „Zweite"',
+  namen.a.name.includes('„Skizze“') && namen.b.name.includes('„Zweite“'), JSON.stringify(namen));
+p('… und das Schild bleibt das kurze Wort „Zeichenfläche"',
+  namen.a.schild === 'Zeichenfläche' && namen.b.schild === 'Zeichenfläche', `${namen.a.schild} / ${namen.b.schild}`);
 /* Dieselbe Seite in der Seitenansicht: dort bleibt die Leiste UNTER dem
    Whiteboard (test572 §5). */
 await pg.evaluate(async (id: string) => {
@@ -428,6 +482,31 @@ const weiter = await pg.evaluate(([s, w]) => {
   return { ok: nach && !a.closest(s as string), was };
 }, [SCHACHT, W1]);
 p('… und das nächste Tab führt aus der Leiste hinter das Whiteboard, nicht zurück an den Anfang', weiter.ok, weiter.was);
+/* EIN HALT, DER RECHTECKE HAT UND KEINEN FOKUS NIMMT (Durchsicht E722).
+   `visibility:hidden` behält seinen Platz, `focus()` scheitert still. Die
+   Führung rief `preventDefault` VOR dem Fokus und sah nicht nach, ob er
+   ankam — das Tab war verschluckt, der Fokus blieb in der Leiste. */
+await pg.evaluate((w: string) => {
+  const k = document.createElement('button');
+  k.type = 'button'; k.id = 'f598-versteckt'; k.textContent = 'versteckt';
+  k.style.visibility = 'hidden';
+  document.querySelector(w)?.after(k);
+}, W1);
+await pg.evaluate((w: string) => document.querySelector<HTMLElement>(w)?.focus(), W1);
+await pg.waitForTimeout(100);
+await pg.keyboard.press('Tab');
+await pg.keyboard.press('Tab');
+const weiter2 = await pg.evaluate(([s, w]) => {
+  const a = document.activeElement as HTMLElement | null;
+  const wb = document.querySelector(w as string);
+  if (!a || !wb || a === document.body) return { ok: false, was: 'kein Fokus' };
+  const nach = !!(wb.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) && !wb.contains(a);
+  const was = `${a.tagName} [${(a.getAttribute('aria-label') ?? a.textContent ?? '').trim().slice(0, 30)}]`;
+  return { ok: nach && !a.closest(s as string) && a.id !== 'f598-versteckt', was: (a.closest(s as string) ? 'in der Leiste: ' : '') + was };
+}, [SCHACHT, W1]);
+p('… auch wenn der erste Halt dahinter keinen Fokus nimmt (visibility:hidden) — Tab bleibt nicht in der Leiste stecken',
+  weiter2.ok, weiter2.was);
+await pg.evaluate(() => document.getElementById('f598-versteckt')?.remove());
 
 /* ==========================================================================
  * §10–§12 · Die Tabelle im Kasten (E723)
@@ -529,6 +608,64 @@ const s12 = await tp.evaluate(() => {
 p('Es gibt eine angeheftete Spalte (Vorbedingung)', s12.da);
 p('Ihr Grund ist der Grund des Kastens (--bg-card), kein dunklerer Streifen', s12.da && s12.th === s12.kasten,
   `${s12.th} gegen ${s12.kasten}`);
+
+/* §13 · DIE BREITE TABELLE ROLLT IM KASTEN — AUCH MIT DEM RAD (Durchsicht
+   E723). Seit E723 bricht die Tabelle nicht mehr aus dem Kasten aus, sie
+   rollt darin; acht Spalten verbergen im Seitenkasten 454 px. Das Rad der
+   Fläche nahm aber JEDES Rad: ein Wisch quer auf dem Trackpad oder
+   Umschalt+Rad schob die Fläche, und die Tabelle blieb bei 0 stehen. Es
+   gilt dieselbe Regel wie beim Whiteboard — das Innerste gewinnt —, nur
+   eben für das, was im Kasten selbst rollt. Längs rollt die Tabelle nicht,
+   also schiebt ein Rad längs weiter die Fläche; und am Rand gibt sie das
+   Rad weiter, statt es zu schlucken. */
+console.log('\n13 · Die breite Tabelle rollt im Kasten — mit dem Rad');
+await tp.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Breite Tabelle', seitenAnsicht: 'flaeche' });
+  Store.addBlock(s.id, 'text', { text: 'Darüber ein Satz.' });
+  const db = Store.addDatabase(s.id, 'Breit');
+  const c = Store.getCollection(db.collectionId) as any;
+  const schema = { ...(c?.schema ?? {}) };
+  for (let i = 1; i <= 7; i++) schema['s' + i] = { name: 'Spalte ' + i, type: 'text' };
+  Store.updateCollection(db.collectionId, { schema });
+  Store.addRow(db.collectionId, {}); Store.addRow(db.collectionId, {});
+  await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 1000));
+  document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove());
+});
+const lage13 = () => tp.evaluate(() => {
+  const box = document.querySelector<HTMLElement>('.pg-fl-koerper .db-rollbox');
+  return { rollt: box ? box.scrollWidth - box.clientWidth : -1, links: Math.round(box?.scrollLeft ?? -1),
+           flaeche: document.querySelector<HTMLElement>('.pg-fl-sicht')?.style.transform ?? '' };
+});
+const rad13 = async (dx: number, dy: number, umschalt = false) => {
+  const m = await mitte(tp, '.pg-fl-koerper .db-rollbox', 0.5, 0.4);
+  if (m) await tp.mouse.move(m.x, m.y);
+  if (umschalt) await tp.keyboard.down('Shift');
+  await tp.mouse.wheel(dx, dy);
+  if (umschalt) await tp.keyboard.up('Shift');
+  await tp.waitForTimeout(250);
+  return lage13();
+};
+const v13 = await lage13();
+p('Die Tabelle ist breiter als ihr Kasten (Vorbedingung)', v13.rollt > 100, `${v13.rollt} px verborgen`);
+const n13a = await rad13(120, 0);
+p('Ein Rad quer (Trackpad) über der Tabelle rollt die Tabelle', n13a.links > 0, `links ${n13a.links}`);
+p('… und die Fläche bleibt stehen', n13a.flaeche === v13.flaeche, `${v13.flaeche} → ${n13a.flaeche}`);
+const n13b = await rad13(0, 120, true);
+p('Umschalt+Rad rollt sie weiter', n13b.links > n13a.links, `links ${n13a.links} → ${n13b.links}`);
+p('… und die Fläche bleibt stehen', n13b.flaeche === n13a.flaeche, `${n13a.flaeche} → ${n13b.flaeche}`);
+const n13c = await rad13(0, 120);
+p('Ein Rad längs über derselben Tabelle schiebt weiter die Fläche (längs rollt sie nicht)',
+  n13c.flaeche !== n13b.flaeche && n13c.links === n13b.links, `${n13b.flaeche} → ${n13c.flaeche}, links ${n13c.links}`);
+await tp.evaluate(() => {
+  const b = document.querySelector<HTMLElement>('.pg-fl-koerper .db-rollbox');
+  if (b) b.scrollLeft = b.scrollWidth;
+});
+await tp.waitForTimeout(150);
+const v13d = await lage13();
+const n13d = await rad13(120, 0);
+p('Ganz rechts angekommen gibt sie das Rad an die Fläche weiter, statt es zu schlucken',
+  n13d.flaeche !== v13d.flaeche, `${v13d.flaeche} → ${n13d.flaeche}, links ${v13d.links} → ${n13d.links}`);
 await dunkel.close();
 
 /* ==========================================================================
@@ -570,6 +707,13 @@ const s8 = await handy.evaluate((s: string) => {
            imKasten: f.querySelectorAll('.pg-fl-koerper .gfx-tb-sockel').length,
            seine: !!l?.querySelector('[data-wz="verbindung"]'), klein,
            unten: l ? Math.round(l.getBoundingClientRect().bottom) : -1, nav: nr ? Math.round(nr.top) : null,
+           /* Das Schild nimmt dem Streifen Platz weg, den die Werkzeuge
+              brauchen (Durchsicht E722): 106 von 366 px waren es. */
+           schildBreit: (() => {
+             const ro = l?.querySelector<HTMLElement>('.gfx-tb-roller');
+             const sch = ro?.querySelector<HTMLElement>('.pg-fl-kontext');
+             return ro && sch ? { w: Math.round(sch.getBoundingClientRect().width), von: Math.round(ro.getBoundingClientRect().width) } : null;
+           })(),
            /* Das gewählte Werkzeug muss im rollenden Streifen ZU SEHEN sein,
               nicht irgendwo rechts daneben (Durchsicht E722): sonst sagt die
               Leiste nicht, womit der Finger gerade zeichnet. */
@@ -594,6 +738,8 @@ p('Jeder Knopf misst 44 px (gerenderte Box, §37)', s8.klein.length === 0, s8.kl
 p(`Das gewählte Werkzeug (${fern}) steht nach dem Wechsel im sichtbaren Teil der rollenden Leiste`,
   !!fern && s8.gewaehlt.zu_sehen && s8.gewaehlt.was.startsWith(fern), s8.gewaehlt.was);
 p('… und das Wort „Zeichenfläche" bleibt dabei im Bild', s8.gewaehlt.schild, s8.gewaehlt.was);
+p('… und nimmt höchstens ein Viertel des Streifens ein', !!s8.schildBreit && s8.schildBreit.w <= s8.schildBreit.von / 4,
+  s8.schildBreit ? `${s8.schildBreit.w} von ${s8.schildBreit.von} px` : 'kein Schild');
 p('Die Leiste steht über der unteren Leiste', s8.nav === null || s8.unten <= s8.nav + 1, `${s8.unten} gegen ${s8.nav}`);
 /* Tab am Telefon (eine Tastatur am Tablet): die Griffe sind dort
    ausgeblendet, der nächste Halt nach dem Whiteboard ist also ein TEXTFELD.

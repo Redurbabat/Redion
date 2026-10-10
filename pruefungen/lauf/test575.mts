@@ -32,8 +32,9 @@
  *   §5  Der Radierer nimmt GENAU eine Form weg, nicht die Nachbarn.
  *   §6  Strg+Z nimmt den letzten Strich zurück — und nicht den Block
  *       darunter (E682).
- *   §6b … und nicht das eingebettete Whiteboard; im Whiteboard nimmt Strg+Z
- *       nur dort zurück, nicht auf der Fläche (E722).
+ *   §6b … und nicht das eingebettete Whiteboard, auch wenn es selbst einen
+ *       Schritt zurücknehmen könnte; im Whiteboard nimmt Strg+Z nur dort
+ *       zurück, nicht auf der Fläche (E722).
  *   §7  Die Zeichnung überlebt das Neuöffnen der Seite.
  *   §8  Die Tinte liegt UNTER den Kästen: im Kasten trifft der Finger den
  *       Text, nicht die Zeichnung.
@@ -418,12 +419,19 @@ await pg.keyboard.press('Control+z');
 await pg.waitForTimeout(300);
 gleich('Strg+Z im Whiteboard nimmt nur dort zurück — die Fläche behält ihre Form',
   [await zahl6(zwei.seite), await zahl6(zwei.wb)], [1, 0]);
+/* Ein zweiter Strich im Whiteboard (Durchsicht E722): ohne ihn war sein
+   Verlauf leer, und ein Strg+Z der Fläche, das fälschlich auch beim
+   Whiteboard ankäme, hätte dort nichts zurücknehmen können — [0, 0] wäre
+   so oder so herausgekommen (§55.2). */
+if (wbBox) await zug6(wbBox.x + 20, wbBox.y + 50);
+gleich('Das Whiteboard trägt wieder einen rücknehmbaren Strich (Vorbedingung)',
+  [await zahl6(zwei.seite), await zahl6(zwei.wb)], [1, 1]);
 if (frei6) await pg.mouse.click(frei6.x + 20, frei6.y + 60);
 await pg.evaluate(() => document.querySelector<HTMLElement>('.pg-flaeche')?.focus());
 await pg.keyboard.press('Control+z');
 await pg.waitForTimeout(300);
-gleich('Strg+Z auf der Fläche nimmt nur die Fläche zurück',
-  [await zahl6(zwei.seite), await zahl6(zwei.wb)], [0, 0]);
+gleich('Strg+Z auf der Fläche nimmt nur die Fläche zurück — das Whiteboard behält seinen Strich',
+  [await zahl6(zwei.seite), await zahl6(zwei.wb)], [0, 1]);
 await pg.close();
 
 /* ==========================================================================
