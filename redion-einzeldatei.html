@@ -13948,6 +13948,22 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 /* Der Stern rückt nach links, neben das „…" — er bleibt ein Zeichen für
    den Zustand, kein zweites kleines Ziel in derselben Ecke. */
 .bib-zelle .bib-deckel-stern{ right:40px; top:12px }
+/* UND DIE VORSCHAU MACHT DER ECKE PLATZ (test597 §1b). An seiner neuen
+   Stelle stand der Stern mitten in der ersten Zeile des Vorschautexts:
+   „Willkommen in Redi☆n" am Telefon, „… herausgefunden☆" am Rechner —
+   gesehen im Bild, nicht im Lauf. Eine Scheibe darunter half nur halb: sie
+   deckte die Mitte eines Worts und liess Splitter stehen („Willkommen in
+   ☆ di"), und ein angeschnittenes Wort ohne Auslassungszeichen liest sich
+   wie ein ANDERES Wort (dieselbe Lehre wie E227). Also weicht die Zeile:
+   ein Platzhalter rechts oben, so hoch wie die Ecke. Jede Zeile der
+   Vorschau ist ein eigener Block mit `overflow:hidden` und damit ein
+   Formatierungskontext — der weicht einem Float aus, statt unter ihm
+   durchzulaufen, und endet mit „…" vor dem Stern. Ordner zeichnen ihr
+   Bild mit `::before` und haben keinen Text; Bild und Handschrift liegen
+   absolut und rücken nicht. */
+.bib-zelle > .bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{
+  content:""; float:right; width:48px; height:22px
+}
 /* GEHOBEN (E721): nach langem Drücken liegt das Ding ein wenig höher —
    dieselbe Hebung wie im Kit (Popover, scale 1.04). Ohne Bewegung (System
    oder „ruhig") bleibt es stehen und zeigt nur den Rahmen. */
@@ -26982,7 +26998,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1426, inhalt: 'a9c3e22df78e948e', gebaut: '2026-10-06T09:33:05.921Z' };
+const Stand = { fassung: 1428, inhalt: '8e760798f06fc55d', gebaut: '2026-10-10T18:53:10.123Z' };
 window.Stand = Stand;
 
 </script>

@@ -1597,8 +1597,8 @@ selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 533.*
 
 *Und 534: `test597` — ein Menü je Ding (E721). Redurs Notiz unter dem Foto
 der Bibliothekskarten, auf dem er den ☆ oben rechts eingekreist hat: „Hier
-füge ... und oder beim rechts klicke sollte es mir zeigen löschen", in 75
-Zusagen über vierzehn Abschnitte: ein echtes „…" NEBEN jedem Deckel (44 ×
+füge ... und oder beim rechts klicke sollte es mir zeigen löschen", in 79
+Zusagen über fünfzehn Abschnitte: ein echtes „…" NEBEN jedem Deckel (44 ×
 44, benannt), derselbe Inhalt auf Rechtsklick, Kontextmenü-Taste,
 Umschalt+F10 und langes Drücken, Entf legt weg, Rot heisst Gefahr in allen
 zehn Schemata — und Umbenennen und Papierkorb gehen von allen Oberflächen
@@ -1610,7 +1610,10 @@ er die Seite in §7 selbst umbenannt hatte; er las `color(srgb 0.97 … /
 0.93)` als Zahlen von 0 bis 255 und rechnete einen Kontrast von 3,3 aus,
 wo 5,9 ist; und er klickte in eine Seitenleiste, die es am Rechner seit der
 neuen Schale gar nicht mehr gibt — der Baum steht dort in der Lade der
-Kante. Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
+Kante. Und einen Fund hat wieder das BILD gemacht, nicht er: der Stern,
+der für das „…" nach links rückte, stand mitten im Vorschautext — „Willkommen
+in Redi☆n"; seither misst sein §1b den sichtbaren Text unter der Ecke.
+Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 534.*
 
 ### Die Befehle

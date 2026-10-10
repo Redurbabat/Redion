@@ -23,9 +23,11 @@
  *       (Rot: ein <i aria-hidden> von 20 × 20 IM Kartenknopf.)
  *   §1b Bei 1440 (hell) und 390 (dunkel): wo der Stern oder die Scheibe des
  *       „…" auf dem Vorschautext eines Deckels liegt, liegt sie auf
- *       DECKENDEM Grund — und die beiden decken einander nicht. (Rot: der
- *       Stern rückte für das „…" nach links, mitten in die erste Zeile der
- *       Vorschau, und stand dort ohne Grund: „Redi☆n", gesehen im Bild.)
+ *       DECKENDEM Grund — und die beiden decken einander nicht. Eine lange
+ *       erste Zeile auf Höhe der Ecke weicht mit „…" und endet vor dem
+ *       Stern. (Rot: der Stern rückte für das „…" nach links, mitten in die
+ *       erste Zeile der Vorschau, und stand dort ohne Grund: „Redi☆n",
+ *       gesehen im Bild.)
  *   §2  Rechtsklick auf eine Karte → `defaultPrevented` und ein Menü mit
  *       GENAU denselben Einträgen wie ihr „…". (Rot: das Browsermenü.)
  *   §3  Umschalt+F10 und die Kontextmenü-Taste auf einer fokussierten Karte
@@ -681,7 +683,8 @@ await sk.k.close();
    Eine Seite mit langer erster Zeile, damit der Vorschautext sicher bis
    unter die Ecke reicht — sonst misst die Prüfung nichts (§55.2). Ein
    eigener Aufbau, damit die Karte die Zählungen oben nicht verschiebt. */
-const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[] }> => s.evaluate<any>(`(() => {
+type Lang = { imBand: boolean; gekuerzt: boolean; auslassung: boolean; rechts: number; sternLinks: number } | null;
+const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[]; lang: Lang }> => s.evaluate<any>(`(() => {
   const alpha = c => {
     if (!c || c === 'transparent') return 0;
     if (/^color\\(/.test(c)) { const m = c.match(/\\/\\s*([\\d.]+)\\s*\\)$/); return m ? Number(m[1]) : 1; }
@@ -689,7 +692,7 @@ const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[] }> => 
     return z.length >= 4 ? z[3] : 1;
   };
   const schneidet = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
-  const fehlt = []; let mitText = 0;
+  const fehlt = []; let mitText = 0, lang = null;
   for (const z of document.querySelectorAll('.bib-gitter .bib-zelle')) {
     const deckel = z.querySelector('.bib-deckel'), blatt = z.querySelector('.bib-deckel-blatt');
     if (!deckel || !blatt) continue;
@@ -703,10 +706,20 @@ const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[] }> => 
       if (!n.textContent.trim()) continue;
       const el = n.parentElement;
       if (!el || el.closest('.bib-deckel-stern, .bib-deckel-marke')) continue;
+      /* Sichtbar ist nur, was jeder beschneidende Vorfahr bis zum Blatt
+         durchlässt: eine Zeile mit \`overflow:hidden\` meldet im Range den
+         GANZEN Text, auch den Teil hinter ihrem „…". */
+      let k = { left: br.left, right: br.right, top: br.top, bottom: br.bottom };
+      for (let a = el; a && a !== blatt; a = a.parentElement) {
+        if (getComputedStyle(a).overflowX === 'visible') continue;
+        const ar = a.getBoundingClientRect();
+        k = { left: Math.max(k.left, ar.left), right: Math.min(k.right, ar.right),
+              top: Math.max(k.top, ar.top), bottom: Math.min(k.bottom, ar.bottom) };
+      }
       const r = document.createRange(); r.selectNodeContents(n);
       for (const q of r.getClientRects()) {
-        const c = { left: Math.max(q.left, br.left), right: Math.min(q.right, br.right),
-                    top: Math.max(q.top, br.top), bottom: Math.min(q.bottom, br.bottom) };
+        const c = { left: Math.max(q.left, k.left), right: Math.min(q.right, k.right),
+                    top: Math.max(q.top, k.top), bottom: Math.min(q.bottom, k.bottom) };
         if (c.right - c.left > 1 && c.bottom - c.top > 1) zeilen.push({ ...c, text: n.textContent.trim().slice(0, 24) });
       }
     }
@@ -722,9 +735,21 @@ const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[] }> => 
     }
     if (stern && scheibe && schneidet(stern.getBoundingClientRect(), scheibe.getBoundingClientRect()))
       fehlt.push(name + ': Stern und „…" decken einander');
+    /* Die lange Zeile: liegt sie auf der Höhe der Ecke? Sonst misst das
+       Obige nichts (§55.2). Und weicht sie mit „…" statt mit Splittern? */
+    if (name === 'Lange Vorschau' && stern) {
+      const zeile = [...blatt.querySelectorAll('*')].find(e => e.firstChild && e.firstChild.nodeType === 3 && e.textContent.startsWith('Schutzleiter'));
+      if (zeile) {
+        const zr = zeile.getBoundingClientRect(), sr = stern.getBoundingClientRect();
+        lang = { imBand: zr.top < sr.bottom && zr.bottom > sr.top,
+                 gekuerzt: zeile.scrollWidth > zeile.clientWidth + 1,
+                 auslassung: getComputedStyle(zeile).textOverflow === 'ellipsis',
+                 rechts: Math.round(zr.right - br.left), sternLinks: Math.round(sr.left - br.left) };
+      }
+    }
   }
-  return { mitText, fehlt };
-})()`) as Promise<{ mitText: number; fehlt: string[] }>;
+  return { mitText, fehlt, lang };
+})()`) as Promise<{ mitText: number; fehlt: string[]; lang: Lang }>;
 
 for (const [wo, o] of [['1440 × 900, hell', {}], ['390 × 844, dunkel', { handy: true, dunkel: true }]] as const) {
   const e = await aufmachen(o);
@@ -736,8 +761,11 @@ for (const [wo, o] of [['1440 × 900, hell', {}], ['390 × 844, dunkel', { handy
   await zurBibliothek(e.s);
   console.log('\n§1b · Die Zeichen der Ecke auf dem Vorschautext (' + wo + ')');
   const ek = await eckePruefen(e.s);
-  p(`Stern und „…" liegen auf deckendem Grund, wo sie Vorschautext berühren (${ek.mitText}× berührt)`,
-    ek.mitText >= 1 && ek.fehlt.length === 0, ek.mitText ? ek.fehlt.slice(0, 3).join(' | ') : 'nichts berührt — die Prüfung misst nichts');
+  p(`Stern und „…" liegen nie ohne deckenden Grund auf Vorschautext (${ek.mitText}× berührt, die lange Zeile auf Höhe der Ecke)`,
+    !!ek.lang && ek.lang.imBand && ek.fehlt.length === 0,
+    !ek.lang || !ek.lang.imBand ? 'die lange Zeile liegt nicht auf Höhe der Ecke — die Prüfung misst nichts ' + JSON.stringify(ek.lang) : ek.fehlt.slice(0, 3).join(' | '));
+  p('Die lange erste Zeile endet mit „…" vor dem Stern, nicht als Splitter darunter',
+    !!ek.lang && ek.lang.gekuerzt && ek.lang.auslassung && ek.lang.rechts <= ek.lang.sternLinks, JSON.stringify(ek.lang));
   await e.k.close();
 }
 

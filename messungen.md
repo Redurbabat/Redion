@@ -6810,3 +6810,16 @@ Start (test388 §5, gzip)                 1853 KB                             18
 Die Ruhe-Zählung von `test248` (1440×900) zählt Seitenleiste, Kopfzeile und
 Menüband, nicht die Karten der Bibliothek; sie blieb grün (50 Zusagen). Der
 Knopf mehr je Karte steht oben in der Tabelle: 8 → 14 Knöpfe bei 6 Karten.
+
+Nachtrag 10. Oktober — die Ecke über dem Vorschautext (`test597` §1b, eine
+Seite „Lange Vorschau" mit einer ersten Zeile, die sicher bis unter die
+Ecke reicht; Abstände in px vom linken Rand des Blatts, sichtbarer Text):
+
+```txt
+                                         ohne Platzhalter (25fb7f9d5)        mit Platzhalter (48 × 22, float)
+1440 × 900 hell: Ende der langen Zeile   188 (unter dem Stern bei 146)       vor dem Stern, mit „…"
+390 × 844 dunkel: Ende der langen Zeile  146 (unter dem Stern bei 104)       vor dem Stern, mit „…"
+Zeichen der Ecke auf Text ohne Grund     2 (1440) · 3 (390) Deckel           0 · 0
+test597                                  75 / 79                             79 / 79
+Start (test388 §5, gzip)                 1859 KB                             1859 KB
+```

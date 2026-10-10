@@ -27,7 +27,8 @@ benannt) und Notizhefte (Heft, Fach; halten ohne Bewegung → Menü) haben
 dasselbe Menü. Gefahr rot am Rechner wie am Telefon; `data-gefahr` auch an
 den Lösch-Einträgen in Dokumenten (L242).
 
-**Prüfung:** `test597` 75/75 (neu, rot gegen 73a956937 mit 13/75), `test37`,
+**Prüfung:** `test597` 79/79 (neu, rot gegen 73a956937 mit 13/75; §1b, die
+Ecke über dem Vorschautext, rot gegen 25fb7f9d5), `test37`,
 `test114` 23, `test303` §7 (erweitert, rot zuerst); fünf Gegenproben,
 Nachbarn und Messung im Commit von E721 und in `messungen.md` §91. Offen:
 L242 (die Dinge IN einem Dokument, die Datenbankzeile, „Rückgängig" mit der

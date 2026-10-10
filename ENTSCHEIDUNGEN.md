@@ -61666,8 +61666,8 @@ ruft für sieben Einträge aber das Register) und E718 (das ⌄ der Bibliothek
 ist ein „…" neben dem Deckel; ihre Griffe bekommen eine Adresse) · **baut
 auf** E302 (ein Escape), E709 (das Endgültige bleibt im Papierkorb), E710
 (die Fragen), E711 (die Meldung mit „Rückgängig") und E715 (spät geladene
-Bereiche melden spät) auf · **Wächter:** `test597` (neu, 75 Zusagen in
-vierzehn Abschnitten), `test37` (erweitert: Rot auch am Rechner und in der
+Bereiche melden spät) auf · **Wächter:** `test597` (neu, 79 Zusagen in
+fünfzehn Abschnitten), `test37` (erweitert: Rot auch am Rechner und in der
 Bibliothek), `test114` 23 (erweitert: das „…" trifft ein 44-px-Finger),
 `test303` §7 (erweitert: am Telefon steht es als Knopf da) · **Zweig**
 `claude/menue-eine-quelle` · **Messung:** `messungen.md` §91.
@@ -61895,3 +61895,27 @@ Seitenmenü, Starker Kontrast und Touch Kit. Zwei Funde kamen aus dem Bild:
 auf einem Deckel mit Vorschautext stand das Wort DURCH die Scheibe des „…"
 („Redi⋯on") — die Scheibe ist jetzt deckend —, und die Rundung des Knopfs
 schnitt die Trefferfläche an den Ecken ab (`test114` 23).
+
+Und ein dritter Fund aus dem Bild, nachgetragen am 10. Oktober: für das
+„…" rückte der Stern nach links (`right:40px`) — mitten in die erste Zeile
+des Vorschautexts. Am Telefon stand „Willkommen in Redi☆n", am Rechner
+„… herausgefunden☆". Der erste Gedanke war derselbe wie beim „…": eine
+deckende Scheibe unter den Stern. Das Bild danach zeigte, warum das nicht
+reicht: die Scheibe deckte die Mitte eines Worts und liess Splitter stehen
+(„Willkommen in ☆ di"), und auf den Ordnern stand sie als zweiter,
+scheinbarer Knopf da. Ein angeschnittenes Wort ohne Auslassungszeichen
+liest sich wie ein ANDERES Wort (E227). Jetzt weicht die Zeile: ein
+Platzhalter rechts oben im Blatt (`::before`, `float:right`, 48 × 22),
+und weil jede Zeile der Vorschau ein Block mit `overflow:hidden` ist, also
+ein eigener Formatierungskontext, endet sie mit „…" vor dem Stern statt
+unter ihm durchzulaufen. Ordner (ihr `::before` ist das Bild), Bilder und
+Handschrift (absolut) rücken nicht. `test597` §1b hält es bei 1440 hell und
+390 dunkel: kein Zeichen der Ecke auf sichtbarem Vorschautext ohne
+deckenden Grund, Stern und „…" decken einander nicht, und eine lange erste
+Zeile auf Höhe der Ecke endet mit „…" vor dem Stern. Gegen `25fb7f9d5` rot
+(„Stern liegt auf „Schutzleiter, Querschnit" ohne Grund"); Gegenproben:
+Platzhalter heraus → 75/79 („rechts 188, Stern links 146"); Scheibe ohne
+Grund → rot; Stern auf `right:20px` → „Stern und „…" decken einander".
+Gemessen wird der SICHTBARE Text: ein Range über einer Zeile mit
+`overflow:hidden` meldet den ganzen Text, auch den hinter ihrem „…" — der
+erste Anlauf des Abschnitts war deshalb rot, obwohl das Bild sauber war.
