@@ -43,7 +43,7 @@
  *   §8  Am Telefon: eine Leiste, jeder Knopf 44 px, über der unteren Leiste,
  *       keine im Kasten; das gewählte Werkzeug steht im sichtbaren Teil
  *       des rollenden Streifens, und das Schild rollt nicht mit hinaus
- *       und nimmt höchstens ein Viertel des Streifens;
+ *       und nimmt höchstens ein Fünftel des Streifens;
  *       Tab aus der Leiste führt auch dort hinter das Whiteboard.
  *   §9  Tastatur (§38): Tab erreicht die Leiste, Pfeile wandern, Escape
  *       schliesst ihr Menü zuerst; vom Whiteboard aus führt Tab in SEINE
@@ -738,7 +738,11 @@ p('Jeder Knopf misst 44 px (gerenderte Box, §37)', s8.klein.length === 0, s8.kl
 p(`Das gewählte Werkzeug (${fern}) steht nach dem Wechsel im sichtbaren Teil der rollenden Leiste`,
   !!fern && s8.gewaehlt.zu_sehen && s8.gewaehlt.was.startsWith(fern), s8.gewaehlt.was);
 p('… und das Wort „Zeichenfläche" bleibt dabei im Bild', s8.gewaehlt.schild, s8.gewaehlt.was);
-p('… und nimmt höchstens ein Viertel des Streifens ein', !!s8.schildBreit && s8.schildBreit.w <= s8.schildBreit.von / 4,
+/* Ein Fünftel, nicht ein Viertel: mit 87 von 366 px (11 px, enger, noch in
+   einer Zeile) standen weiter fünf Werkzeuge ganz im Bild — das Viertel
+   war erfüllt, gewonnen war nichts. Erst unter einem Fünftel kommt das
+   sechste dazu (Durchsicht E722). */
+p('… und nimmt höchstens ein Fünftel des Streifens ein', !!s8.schildBreit && s8.schildBreit.w <= s8.schildBreit.von / 5,
   s8.schildBreit ? `${s8.schildBreit.w} von ${s8.schildBreit.von} px` : 'kein Schild');
 p('Die Leiste steht über der unteren Leiste', s8.nav === null || s8.unten <= s8.nav + 1, `${s8.unten} gegen ${s8.nav}`);
 /* Tab am Telefon (eine Tastatur am Tablet): die Griffe sind dort
