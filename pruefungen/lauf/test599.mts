@@ -822,6 +822,25 @@ await abschnitt('§9', async () => {
   });
   p('§9d: nach einem Schalter in den Einstellungen sagen alle Quellknöpfe dasselbe', !!d && d.chips.every(c => c === String(d.wert)), JSON.stringify(d));
   p('§9d: … und das Schild am Prompt zieht mit', !!d && /^Quellen:/.test(d.schild) && /Datenbanken/.test(d.schild) === d.wert, JSON.stringify(d));
+  /* Und umgekehrt: schaltet das KI-Fenster um (sein Weg ist derselbe eine
+     Schreiber), während die Einstellungen offen sind, muss ihr Schalter
+     mitziehen — Klasse UND aria-checked. Sonst steht dort „an", während die
+     Quelle aus ist. Hin und zurück, damit der Zustand am Ende der alte ist. */
+  const d2 = await s.evaluate(async () => {
+    const w = (window as any).__g;
+    const t = document.querySelector<HTMLElement>('[data-toggle="q:datenbanken"]');
+    if (!t) return null;
+    const lies = () => ({ wert: !!w.Kontext.quellen().datenbanken,
+      checked: t.getAttribute('aria-checked'), an: t.classList.contains('an') });
+    await w.Kontext.quelleUmschalten('datenbanken'); await new Promise(f => setTimeout(f, 200));
+    const hin = lies();
+    await w.Kontext.quelleUmschalten('datenbanken'); await new Promise(f => setTimeout(f, 200));
+    const zurueck = lies();
+    return { hin, zurueck };
+  });
+  const passt = (x: { wert: boolean; checked: string | null; an: boolean }) => x.checked === String(x.wert) && x.an === x.wert;
+  p('§9d: … und umgekehrt — schaltet das KI-Fenster, zieht der Schalter in den offenen Einstellungen mit (Klasse und aria-checked)',
+    !!d2 && passt(d2.hin) && passt(d2.zurueck) && d2.hin.wert !== d2.zurueck.wert, JSON.stringify(d2));
   await dialogZu(s); await menueZu(s);
   await s.evaluate(() => document.querySelectorAll('.overlay').forEach(o => o.remove()));
 
