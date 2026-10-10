@@ -1756,3 +1756,12 @@ Gefunden beim Bau von E724, nicht dort entschieden — je mit dem Grund:
    Wächter, der eine Markierung über `**…**` ersetzt (L244 Punkt 3).
 4. **Die acht Funkel im leeren Chat**: laut (wie heute, Vorgabe D1) oder
    still in Ruhe wie die Lernwelt nach E720 — Redurs Wahl (L244 Punkt 4).
+5. **Ihre Höhe am Rechner mit Maus**: 44 px am Finger seit der Durchsicht
+   vom 10. Oktober, am Rechner die Originalmasse aus E528 — Redurs Wahl
+   (L244 Punkt 5).
+6. **„@" für die Bau-Werkzeuge** („@Datenbank bauen Kundenliste"): ein
+   Zweig in `atBefehl`, der den Rest als Antwort auf die Frage des
+   Werkzeugs nimmt (L244 Punkt 6).
+7. **`test422` auf den Zweigen mit `claude/kein-toter-knopf`**: rot seit
+   E720 (`lernwelt.ts` schreibt Ansichtsnamen als Zeichenkette), auf
+   `claude/morgen-besser-2` grün — gehört dem Zweig von E720.

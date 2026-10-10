@@ -1287,6 +1287,13 @@ dem Namen einer Fähigkeit führt sie aus — „@Korrekturlesen" und der Text
 dahinter. Agent, Besprechung, Protokoll und die KI-Einstellungen liegen im
 „⋯" oben. Derselbe Befehl tut auf jedem Weg dasselbe: im Fenster, mit
 „✨ KI" an einer Markierung, mit „/" im Text und in der Palette.
+„Markierung ersetzen" und „Block ersetzen" tauschen die Stelle im Text;
+vorher legt Redion eine Fassung „vor KI-Änderung" in den Verlauf der
+Seite, und der Block trägt den Streifen der KI. Steht die Markierung genau
+einmal im Block, bleibt die Auszeichnung drumherum (fett, kursiv); läuft
+sie über eine Auszeichnung hinweg, verliert der Block seine Auszeichnung
+— die Fassung holt sie zurück (LUECKEN.md, L244). Erwähnen lassen
+sich Seiten und Datenbankzeilen.
 
 
 

@@ -760,7 +760,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E718** — Ordner bearbeiten (Redur, Masterprompt S. 13: „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die ordner selbst nicht bearbeiten"): EIN Umbenennen an Ort und Stelle (`App.umbenennen`: kein Sprung auf die Seite, leer und Steuerzeichen sind kein Name, ein gleicher Name fragt nach), EIN Neuzeichnen (`App.nachAenderung`: Farbe und Name sofort in Karte, Ablagebaum und Seitenleiste), EIN Papierkorb (`App.inPapierkorb`: über `trashBlock`, mit „Rückgängig" in der Meldung; das Blockmenü, das ⋯ einer Datenbank und Entf auf einer Mehrfachauswahl legen weg statt endgültig zu löschen — eine Unterseite war samt Enkelseite fort, eine Datenbank samt Sammlung; gefragt wird das Recht an der angefassten Seite), kein Ring beim Ziehen eines Ordners auf sein Kind, die Kinder eines weggelegten Ordners gehen mit, das eigene Symbol auf Karte und Baum. `test594` neu; `test560` §7, `test587` §13, `test588` §15.
 * **E719** — Das Herz ist ein Knopf (Redur, Masterprompt S. 21/22: „die herz beim hier funktionier nicht also wenn ich das klicke passiert nichts"): das Herz der Lernwelt-Kennzahlen war Schmuck aus E534 (`aria-hidden`, `pointer-events:none`, der Klick traf die Karte); jetzt der eine Merker (`Merkzeichen`, neue WAHL `form: 'herz'`, ohne Wahl bleibt es das Band) mit Namen, Zustand und 44 px, EIN Katalog `KENNZAHLEN` (22 Kennzahlen), gemerkt je Lernendem in meta `lernwelt:<aktor>:kennzahlen`, ein Streifen „Gemerkt" auf Heute, ein Rückweg mit Hinweis, wenn das Schreiben scheitert; einmalige Zahlen und die Bestandsgesundheit bleiben Schmuck (L241). `test595` neu; `test433` §7, `test580` §5.
 * **E720** — Kein toter Knopf (Redur, Masterprompt S. 21: „… also wie bein tagesrunde … und bei alle wo eine buttons gibt füge das im enscheideung und claude.md"): 63 Knöpfe der Lernwelt antworteten nicht auf den Zeiger (`:where()` nahm den Hover-Regeln das Gewicht; Tagesziel, „Alle Dokumente" und die Tagessäulen hatten keine); `:where(` → `:is(`, Fehlertraining, Neue Karten, Prüfungsfokus und Trainer als stille Funkel (in Ruhe Umriss, unter Zeiger, Fokus und Druck die Tagesrunde), `data-gedrueckt` neben jedem `:active` des Funkels, sein Schein nur unter `@media (hover:hover)`. Neue Regel CLAUDE.md §38 (hart) und §39 (Richtwert). `test596` neu; `test580` §1.
-* **E724** — KI am Ort (Redur, PDF S. 16: „hier beim ki sollte alles komplet was beim werkzeuge undkontext seteh dort integriert sein also im passenden ortern du muss entscheiden was wo kommt und warum ."): die Schublade „Werkzeuge & Kontext" löst sich auf, jeder der 19 Einträge wohnt, wo er wirkt — Quellen als Schild am Prompt, Seitenaktionen im leeren Chat, Nachschlagen und Befehle im „+", Agent/Besprechung/Protokoll im ⋯; EIN Katalog `Register.ki` und EIN Läufer für Knopf, Befehlsmenü, „@", „/", „✨ KI" und Palette; was das Blatt am Telefon öffnet, liegt über ihm; „Verbundenes" hat einen Leser; ehrliche Versprechen (@Fähigkeit, Seite erwähnen als Kontext, Webfrage als Fenster, Löschen in zwei Schritten, Fenster und Einstellungen ziehen mit). Wächter `test599`.
+* **E724** — KI am Ort (Redur, PDF S. 16: „hier beim ki sollte alles komplet was beim werkzeuge undkontext seteh dort integriert sein also im passenden ortern du muss entscheiden was wo kommt und warum ."): die Schublade „Werkzeuge & Kontext" löst sich auf, jeder der 19 Einträge wohnt, wo er wirkt — Quellen als Schild am Prompt, Seitenaktionen im leeren Chat, Nachschlagen und Befehle im „+", Agent/Besprechung/Protokoll im ⋯; EIN Katalog `Register.ki` und EIN Läufer für Knopf, Befehlsmenü, „@", „/", „✨ KI" und Palette; was das Blatt am Telefon öffnet, liegt über ihm; „Verbundenes" hat einen Leser; ehrliche Versprechen (@Fähigkeit, Seite erwähnen als Kontext, Webfrage als Fenster, Löschen in zwei Schritten, Fenster und Einstellungen ziehen mit); Durchsicht 10. Oktober: „✨ KI" ersetzt an der Stelle, eine Fassung vor jedem Tausch, 44 px am Finger. Wächter `test599`.
 
 ---
 
@@ -62081,7 +62081,7 @@ einen falschen Grund weniger) und E653 (was das Blatt am Telefon öffnet,
 liegt über ihm) · **baut auf** E712 (Menü am Anker, Tropfen), E711
 (Suchmenü), E710 (`Dialog.bestaetigen`), E709 (Löschknopf), E713
 (`body:has(#ai.open)`) und E720 (der Funkel klebt am Finger nicht mehr) ·
-**Wächter:** `test599` (neu, 133 Zusagen), dazu erweitert `test34`,
+**Wächter:** `test599` (neu, 144 Zusagen), dazu erweitert `test34`,
 `test436` §5, `test492`, `test494`, `test544`, `test411` §7, `test537`
 §3b, `test545` 2b, `test596` §8 · **Zweig** `claude/ki-am-ort` ·
 **Messung:** `messungen.md` §93.
@@ -62099,7 +62099,9 @@ Masterprompt S. 7  „Keine Funktion verlieren. Wenn ein Eintrag mehrfach
 Masterprompt S. 9  „Keine Attrappen" · „Eine Quelle pro Funktion"
 ```
 
-**Gemessen, bevor gebaut wurde** (`test599` gegen 3d180c591, 9 von 92;
+**Gemessen, bevor gebaut wurde** (`test599` gegen 3d180c591, 10 von 92 —
+hier stand zuerst 9; die Durchsicht vom 10. Oktober hat den roten Commit
+b82c4af8e nachgemessen, und die Zahl lag um eins daneben;
 `messungen.md` §93). Die Schublade hielt 19 Bedienelemente in einem 324 px
 hohen Kasten mit eigener Rolle; offen schrumpfte der Chat von 617 auf
 293 px (Telefon 471 → 211), und 8 der 19 standen erst nach dem Rollen da.
@@ -62328,6 +62330,73 @@ Zusammen 1–5: 106 von 116; zurück 116 von 116, und der Inhaltsstempel des
 Dienstes war danach wieder derselbe (`223a728ea9279eaf`) — zurückgenommen
 heisst Byte für Byte.
 
+**Durchsicht am 10. Oktober — was nachgebessert ist.** Eine unabhängige
+Durchsicht hat den Stand d59c5bd35 gegen den Plan gemessen und drei
+Zusagen gefunden, die nicht hielten, dazu fünf Kleinigkeiten. Zuerst
+wurde `test599` erweitert und rot gesehen (136 von 144, Commit „test599
+(rot): Durchsicht"), dann gebaut:
+
+```txt
+gefunden                                  nachgebessert
+„✨ KI" → Befehl → „Markierung ersetzen"   befehlsMenue merkt die Markierung beim
+  liess den Block unverändert und hängte    Öffnen IMMER — auch wenn die Leiste den
+  die Antwort als NEUEN Block ans Ende      Text mitgibt (vorher `opt.text ? null`)
+  (das Suchfeld nahm die Auswahl mit)
+die acht Seitenaktionen 28–30 px hoch,    am Telefon und unter (pointer: coarse)
+  der Grund „Nebenweg, weil aufklappbar"    44 px (§37); am Rechner mit Maus die
+  ging mit der Schublade                    Originalmasse aus E528, Grund an der
+                                            Stelle in motion.css
+test586 rot: der Löschknopf der            `title` nennt die Fähigkeit wie der Name
+  Fähigkeiten hiess im title nur „Löschen"
+„Block ersetzen" / „Markierung ersetzen"  vorher eine Fassung „vor KI-Änderung",
+  ohne Fassung und ohne herkunft            der Block trägt herkunft „ki" (E656);
+                                            misslingt die Fassung, wird nichts ersetzt
+„@Zusammenfassen Woche …" (eine erwähnte  eine erwähnte Seite geht vor, wenn ihr
+  Seite) startete den Befehl                Titel mindestens so lang passt
+„Seite erwähnen" liess Datenbankzeilen    eigene Gruppe „Datenbankzeilen" nach den
+  weg — vor E724 standen sie da (§17, §43)  Seiten
+Fuss „Im Chat auch mit @ …" auch über     „Schreibbefehle und Fähigkeiten auch im
+  den Bau-Werkzeugen, die „@" nicht kennt   Chat mit @ vor dem Namen."
+„Für diese Seite" und das Schild ohne     `--text-dim`: 5,3 bis 15,0 : 1 in allen
+  Quelle in `--text-faint`: unter 4,5 : 1   zehn Schemata (messungen.md §93, 7)
+  in acht von zehn Schemata (3,3–4,3)
+§7a „Blockmenü" rief die alte Kennung     fährt das echte Blockmenü; `ai-edit`
+                                            läuft daneben unter seinem Namen
+```
+
+Die Alternative zur Markierung, die das Menü selbst merkt — eine Marke in
+`auswahlleiste.ts` bauen und mitgeben —, hätte den Editor mit dem Typ der
+KI-Marke gekoppelt (§5); die Auswahl steht beim Klick noch (die Leiste
+verhindert `mousedown`). 44 px auch am Rechner mit Maus hätte die beiden
+Bau-Knöpfe verändert, die Redur am 9. September „ausdrücklich schon
+richtig" fand; §37 ist die Regel des Fingers, und der Grund steht an der
+Stelle. „@" auch für die Bau-Werkzeuge ist nicht gebaut — sie fragen zuerst,
+was gebaut werden soll; der Fuss sagt jetzt die Wahrheit (L244 Punkt 6).
+
+**Gegenproben der Durchsicht** (je herausgenommen, rot gesehen, zurück):
+
+9. `title="Löschen"` zurück → `test586 --dateien` 15/16: „Jeder runde
+   Löschen-Knopf nennt, WAS er löscht … data-loeschknopf="Löschen" …" ✗.
+10. `opt.text ? null : markierung()` zurück → „§7h: … tauscht im
+    gespeicherten Text, **fett** bleibt — text: Eins **fett** und die
+    Lötstelle ist kallt." und „§7h: … legt keinen neuen Block an — 5 → 6".
+11. Die Prüfung der erwähnten Seite in `atBefehl` abgeschaltet → „§9c:
+    „@Zusammenfassen Woche …" bleibt eine Erwähnung — {"user":"Woche  Wann
+    wird gepflügt?","befehl":true}".
+12. Die Gruppe „Datenbankzeilen" abgeschaltet → „§9c: eine Datenbankzeile
+    steht in „Seite erwähnen"" ✗.
+13. Die Regel `min-height: var(--touch-min)` geleert → „390 §3 / 360 §3:
+    … zu klein: Datenbank bauen 30, Seite aufbauen 30, Zusammenfassen 28 …".
+    (10–13 in einem Lauf: 137 von 144, jede an ihrer Zusage.)
+14. Die Fassung in `fassungVorKi` herausgenommen → 142 von 144: „§7h: …
+    vorher eine Fassung „vor KI-Änderung" — {"fassVor":0,"fassNach":0,
+    "herkunft":"ki"}" und „… mit einer Fassung davor — {"fassVor2":0,
+    "fassNach2":0}".
+
+Gefahren am erzeugten JavaScript und an `motion.css`, nicht über
+`bauen:ts` — sonst zählte der Dienststand mit jeder Gegenprobe hoch;
+danach aus der Sicherung zurück, `bauen.sh` sagt „unverändert" (v1433).
+
 **Wie Redion es baut — Touch Kit ohne fremden Code.** Das Quellenmenü und
 das ⋯ sind Menüs am Anker mit Tropfen aus E712, die Webfrage das Fenster
 aus E710, der Löschknopf das Paar aus E709, das Befehlsmenü das Suchmenü
@@ -62338,4 +62407,9 @@ Eintrag. Keine Insel auf dem Startweg.
 **Nicht in diesem Bogen:** die Funkel-Regeln selbst (gehören
 `claude/kein-toter-knopf`, E720); ein Umbau von Einstellungen → KI (nur
 gleichgezogen); die Flächen von Agent und Besprechung; KI-Befehle für
-Tabellen- und Datenbankzellen; Modelle und Anbieter (L244).
+Tabellen- und Datenbankzellen; Modelle und Anbieter; die Höhe der acht
+Seitenaktionen am Rechner mit Maus (Redurs Wahl); „@" für die
+Bau-Werkzeuge (L244). `test422` ist auf diesem Zweig rot und war es schon
+auf 3d180c591 — geerbt aus `claude/kein-toter-knopf` (E720,
+`lernwelt.ts`), auf `claude/morgen-besser-2` grün; er gehört dort hin und
+ist hier weder repariert noch gelockert.

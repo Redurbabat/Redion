@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 10. Oktober 2026 · E724 · Durchsicht: „✨ KI" ersetzt an der Stelle, 44 px am Finger
+
+**Redur** (PDF vom 29. September, S. 16): „… dort integriert sein also im
+passenden ortern" — und E724 versprach daraus: derselbe Befehl tut auf
+jedem Weg dasselbe.
+
+**Fund** (unabhängige Durchsicht an d59c5bd35). Über „✨ KI" liess
+„Markierung ersetzen" den Block unverändert und hängte die Antwort als
+neuen Block ans Ende — das Suchfeld des Menüs nahm die Auswahl mit. Die
+acht Seitenaktionen massen 28–30 px, obwohl ihr Grund für den Nebenweg mit
+der Schublade gegangen war. `test586` war rot (ein nacktes „Löschen" im
+`title`). Ersetzen schrieb ohne Fassung und ohne `herkunft`; eine erwähnte
+Seite „Zusammenfassen Woche" startete den Befehl; Datenbankzeilen fehlten in
+„Seite erwähnen"; „Für diese Seite" und das Schild ohne Quelle lagen in acht
+von zehn Schemata unter 4,5 : 1.
+
+**Bau.** Das Befehlsmenü merkt die Markierung beim Öffnen immer; jedes
+Ersetzen legt vorher eine Fassung „vor KI-Änderung" an und markiert den
+Block mit `herkunft: 'ki'` (E656); 44 px am Telefon und unter grobem
+Zeiger, die Originalmasse am Rechner mit Maus (Grund an der Stelle);
+`--text-dim` für Überschrift und Schild; die erwähnte Seite geht vor dem
+Befehlsnamen; „Datenbankzeilen" als eigene Gruppe; der Löschknopf nennt die
+Fähigkeit auch im `title`; der Fuss des Befehlsmenüs verspricht „@" nur
+noch für Schreibbefehle und Fähigkeiten.
+
+**Prüfung.** `test599` erweitert (§3 am Telefon, §7a echtes Blockmenü, §7h
+Ersetzen mit Fassung, §9c Erwähnung und Zeilen), zuerst rot 136/144, jetzt
+144/144; `test586` 60/60. Sechs Gegenproben je rot gesehen. Lücke L244
+Punkte 5 und 6.
+
 ## 6. Oktober 2026 · E724 · KI am Ort: „Werkzeuge & Kontext" löst sich auf
 
 **Redur** (PDF vom 29. September, S. 16, am Foto des KI-Fensters): „hier
@@ -26,7 +56,7 @@ Die Ebenen am Telefon liegen über dem Blatt. „Verbundenes" hat einen
 Draht, die Quellen einen Schreiber (Bus), die Webfrage ein Redion-Fenster,
 „Fähigkeit löschen" zwei Schritte; die Einstellungen ziehen mit.
 
-**Prüfung.** `test599` (133) neu, zuerst rot (9/92; danach die Richtung Fenster → Einstellungen 116/117 und der doppelte Blatt-Titel 129/133); `test34`, `test436`
+**Prüfung.** `test599` (133) neu, zuerst rot (10/92 — hier stand zuerst 9, nachgemessen in der Durchsicht; danach die Richtung Fenster → Einstellungen 116/117 und der doppelte Blatt-Titel 129/133); `test34`, `test436`
 §5, `test492`, `test494`, `test544`, `test411` §7, `test537` §3b, `test545`
 2b und `test596` §8 erweitert, zuerst rot. Gegenproben je rot gesehen.
 Acht Gegenproben. Start 1858 → 1863 KB (Decke 1950). Lücke L244.

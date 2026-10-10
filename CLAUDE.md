@@ -457,6 +457,7 @@ Frage stellen, wohin sie gehört:
 | eine Verbindung | `register/verbindungen.js` |
 | Navigation | `register/navigation.js` |
 | ein Bereich | `register/module.js` |
+| ein KI-Befehl (Schreibbefehl, Bau-Werkzeug, eingebaute Fähigkeit) | `register/ki.js` (E724) |
 
 **Keine doppelten Kataloge einführen.** Ein zweiter Katalog für dasselbe
 läuft mit dem ersten auseinander, und niemand merkt, welcher gilt.
@@ -1655,6 +1656,14 @@ lief wieder auf der ganzen Seite. Zwei Zusagen kamen später dazu, beide
 zuerst rot: die offenen Einstellungen zogen nicht mit, wenn das Fenster eine
 Quelle schaltete, und am Telefon stand „KI-Befehle" als Titel des Blattes
 und gleich darunter noch einmal — gesehen im BILD, nicht im Lauf (§55.1).
+Und eine unabhängige Durchsicht am 10. Oktober fand, was er nicht fuhr:
+„✨ KI" → „Markierung ersetzen" hängte einen neuen Block an, statt die
+Stelle zu tauschen, weil sein §7h nur bis zum Menü ging und nicht bis zum
+Ersetzen; und sein Weg „Blockmenü" rief eine alte Kennung statt des Menüs.
+Seither fährt er beide Wege bis ins Gespeicherte, zählt die Blöcke und die
+Fassungen davor, misst die acht Seitenaktionen am Telefon (zuerst rot: 28
+bis 30 px) und hält die Erwähnung gegen den Befehl gleichen Namens. Ein
+Wächter, der beim Menü aufhört, sagt nichts über den Knopf darunter.
 Gezählt am 6. Oktober, im selben Bogen: der Befehl sagt 536 — auf seinem
 Zweig; beim Zusammenführen neu zu zählen.*
 

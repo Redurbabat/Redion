@@ -8372,12 +8372,28 @@ und alle Wege laufen durch EINEN Katalog (`Register.ki`). Offen bleibt:
    (E701).** Nach der Vorgabe D1 stehen sie nur im LEEREN Chat, wo es keine
    andere Haupthandlung gibt; ob sie dort still ruhen sollen wie die vier
    Funkel der Lernwelt (E720), entscheidet Redur.
+5. **Die Höhe der acht Seitenaktionen am Rechner mit Maus.** Am Telefon und
+   unter einem groben Zeiger messen sie seit der Durchsicht 44 px (§37); am
+   Rechner mit Maus bleiben die Originalmasse aus E528 (28–30 px), weil
+   Redur die beiden Bau-Knöpfe am 9. September „ausdrücklich schon richtig"
+   fand. Ob die Höhe zu diesem Look gehört oder auch am Rechner wachsen
+   soll, entscheidet Redur.
+6. **„@" für die Bau-Werkzeuge.** „@Name" kennt die Schreibbefehle und die
+   Fähigkeiten; „@Datenbank bauen Kundenliste" geht als gewöhnlicher Text an
+   das Modell. Der Fuss des Befehlsmenüs sagt seit der Durchsicht nur noch,
+   was stimmt („Schreibbefehle und Fähigkeiten auch im Chat mit @ …"). Ein
+   Weg wäre, den Rest als Antwort auf die Frage des Werkzeugs zu nehmen.
 
 **Was fehlt:** zu 1 ein Ziel `zelle` im Katalog und ein Einstieg am
 Datenbankmenü; zu 2 Redurs Wort; zu 3 ein Wächter, der eine Markierung über
-`**…**` ersetzt und das Gespeicherte vergleicht; zu 4 Redurs Wahl.
+`**…**` ersetzt und das Gespeicherte vergleicht; zu 4 und 5 Redurs Wahl; zu
+6 ein Zweig in `atBefehl` für die Werkzeuge.
 (Die Einstellungen hören seit dem 10. Oktober zu: schaltet das Fenster eine
-Quelle, während sie offen sind, zieht ihr Schalter mit — `test599` §9d.)
+Quelle, während sie offen sind, zieht ihr Schalter mit — `test599` §9d.
+Seit der Durchsicht am selben Tag ersetzt „✨ KI" die Markierung im
+gespeicherten Text statt einen neuen Block anzuhängen, und jedes Ersetzen
+legt vorher eine Fassung „vor KI-Änderung" an — `test599` §7h. Punkt 3
+bleibt offen: er gilt der Markierung, die ÜBER die Auszeichnung läuft.)
 
 ---
 

@@ -6959,5 +6959,53 @@ Webfrage                      confirm(), zwei Fassungen    ein Redion-Fenster (E
 nachher 1863 KB über 253 Dateien — +5 KB für `register/ki.js` und die neuen
 Wege im Fenster. Decke 1950.
 
-**Befehl.** `node pruefungen/lauf/test599.mts` (vorher 9/92, nachher
-133/133); `node pruefungen/lauf/test388.mts` für die Startlast.
+**7 · Durchsicht am 10. Oktober** — gegen d59c5bd35 (vorher) und den
+Stand danach, gemessen mit `test599` und zwei Sonden über `file://`
+(`/api/chat` abgefangen; die Sonden liegen nicht im Verzeichnis).
+
+„✨ KI" an „die Lötstelle ist kallt" im Block „Eins **fett** und die
+Lötstelle ist kallt." → „Korrekturlesen" → „Markierung ersetzen":
+
+```txt
+                      vorher                                nachher
+Block                 unverändert („… ist kallt.")          „Eins **fett** und die Lötstelle ist kalt."
+Blöcke auf der Seite  5 → 6 (Antwort als neuer Block        5 → 5
+                      am Ende, Meldung „In die Seite
+                      eingefügt")
+Fassungen „vor KI-    0 → 0                                 0 → 1 (und am Block noch einmal 1 → 2)
+Änderung"
+herkunft am Block     —                                     „ki" (Streifen am Rand)
+```
+
+Die acht Seitenaktionen im leeren Chat, Höhe in px (`test599` §3):
+
+```txt
+                      Datenbank  Seite  Zusammen-  Aufgaben  Um-        Über-   Karte-   Schreiben
+                      bauen      aufb.  fassen               schreiben  setzen  karten
+390 × 844 vorher      30         30     28         28        28         28      28       30
+390 × 844 nachher     44         44     44         44        44         44      44       44
+1440 × 900            unverändert (Maus, E528) — Grund an der Stelle in motion.css
+```
+
+Kontrast über dem wirksamen Hintergrund des KI-Fensters (Sonde
+`kontrast2`, Ebenen von innen nach aussen gemischt), alle zehn Schemata:
+
+```txt
+Schema           „Für diese Seite" (11 px)    Schild ohne Quelle („0", 12 px)
+                 vorher   nachher             vorher   nachher
+standard         3,63     7,31                3,39     6,84
+hell             3,76     5,65                3,63     5,45
+nacht            3,63     6,79                3,36     6,30
+wald             3,86     6,62                3,52     6,04
+sand             3,51     5,60                3,33     5,31
+papier           4,26     7,55                4,08     7,23
+kontrast         9,66     15,00               8,98     13,96
+rose             3,54     6,68                3,28     6,19
+touchkit-hell    3,50     5,28                4,24     6,38
+touchkit-dunkel  5,21     7,63                4,59     6,72
+```
+
+**Befehl.** `node pruefungen/lauf/test599.mts` (vorher 10/92 — hier stand
+zuerst 9, nachgemessen am roten Commit b82c4af8e; nach dem Bau 133/133;
+die Durchsicht: 136/144 gegen d59c5bd35, danach 144/144);
+`node pruefungen/lauf/test388.mts` für die Startlast.
