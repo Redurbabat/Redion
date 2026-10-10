@@ -71,7 +71,7 @@ Sie wachsen aufeinander zu: `core/` füllt sich, `kern/` leert sich, und wenn
 
 ### `register/` — die Kataloge
 
-Elf Dateien, und jede beantwortet die Frage *„wo trage ich das ein?"*:
+Zwölf davon stehen hier (weitere in `src/register/`), und jede beantwortet die Frage *„wo trage ich das ein?"*:
 
 | Datei | Wofür |
 |---|---|
@@ -86,6 +86,7 @@ Elf Dateien, und jede beantwortet die Frage *„wo trage ich das ein?"*:
 | `formeln.js` | was jede Formelfunktion bedeutet |
 | `vorlagen.js` | die Galerie, mit Fassungsnummer |
 | `verbindungen.js` | jede Tür nach draussen — und was durch sie geht |
+| `ki.js` | die KI-Befehle: worauf sie wirken, was sie verlangen, wohin das Ergebnis geht (E724) — EIN Katalog für den Chat, das Befehlsmenü, „@", „/", „✨ KI" und die Palette |
 
 Ein Register **beschreibt, es tut nicht.** Wie ein Block gezeichnet wird,
 steht im Bereich; dass es ihn gibt, steht im Register.

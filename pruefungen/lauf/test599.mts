@@ -696,7 +696,7 @@ await abschnitt('§7', async () => {
   /* (h) Die Auswahlleiste „✨ KI" öffnet das Befehlsmenü. */
   await leeren();
   await markiere(satz);
-  await s.evaluate(() => (window as any).__g.Auswahlleiste?.zeigen());
+  await s.evaluate(() => (window as any).__g.Auswahl?.zeigen());
   await warte(s, 200);
   await s.evaluate(() => document.querySelector<HTMLElement>('.auswahlleiste [data-a="ki"]')?.click());
   await warte(s, 400);

@@ -278,9 +278,13 @@ const Auswahl = (() => {
         return;
       }
       if (a === 'ki') {
+        /* „✨ KI" öffnet das EINE Befehlsmenü der KI (E724), oben „Zu dieser
+           Stelle fragen" — das, was dieser Knopf bisher allein tat. Darunter
+           die Schreibbefehle und Fähigkeiten, die mit der Markierung
+           arbeiten. Ein Aufruf getauscht, keiner dazu (§5, test537). */
+        const rr = b.getBoundingClientRect();
         weg();
-        App.kiPanel(true);
-        KI.frageMitAuswahl(text);
+        KI.befehlsMenue({ left: rr.left, top: rr.top, bottom: rr.bottom }, { text });
         return;
       }
       if (a === 'komm') { weg(); if (block) Kommentare.neu(block, text); return; }

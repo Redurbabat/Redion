@@ -3248,7 +3248,9 @@ const Blocks = (() => {
         if (b.flaecheOrt) fl.zurueckInText(b);
         else fl.aufFlaeche(b);
       }
-      if (a === 'ai')  KI.blockAktion('ai-edit', b);
+      /* „Mit KI bearbeiten" öffnet das Befehlsmenü am Block (E724) — vorher
+         lief immer derselbe eine Auftrag. Ein Aufruf getauscht, keiner dazu. */
+      if (a === 'ai')  KI.befehlsMenue(document.querySelector('.blk[data-bid="' + b.id + '"]'), { block: b });
       if (a === 'del') { App.inPapierkorb(b); }
     });
   };

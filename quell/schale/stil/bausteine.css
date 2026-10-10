@@ -380,7 +380,9 @@
     width:40px; height:5px; border-radius:3px; background:var(--line-stark);
   }
   .ai-head{ padding-top:22px }
-  .ai-quick{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+  /* Die Seitenaktionen im leeren Chat brechen am Telefon um (E724). Eine
+     seitlich rollende Reihe versteckte die Hälfte hinter dem Rand — genau
+     das „erst nach dem Rollen sichtbar", das die Schublade auflöste. */
   .ai-quick button{ flex:0 0 auto; }
 
   /* Tabellen laufen seitlich weiter, statt zu zerbrechen */
@@ -1414,6 +1416,13 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .we-liste button:hover{background:var(--bg-hover)}
 .we-liste button .ms{margin-left:auto; color:var(--text-faint); font-size:12px}
 .we-liste button.rot{color:var(--gefahr)}
+/* Eine Zeile mit zwei Knöpfen (E724): der Name bearbeitet, der eigene
+   Löschknopf löscht — erst nach dem roten Paar (E709). Vorher war „löschen"
+   ein Wort im Zeilenknopf, mit der Tastatur nicht zu erreichen. */
+.we-liste .we-zeile{display:flex; align-items:center; gap:2px}
+.we-liste .we-zeile .we-zeile-name{flex:1; min-width:0}
+.we-liste .we-zeile .we-zeile-weg{width:auto; flex:0 0 var(--touch-min); min-height:var(--touch-min);
+  justify-content:center; color:var(--text-faint)}
 .we-liste .grp{padding:12px 10px 4px; font-size:11px; color:var(--text-faint);
   text-transform:uppercase; letter-spacing:.05em}
 

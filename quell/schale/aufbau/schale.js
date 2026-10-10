@@ -240,9 +240,11 @@ const App = (() => {
             }
             UI.toast('Übersetze nach ' + ziel + ' …');
             try {
-                const antwort = await KI.frageKurz(`Übersetze den folgenden Text nach ${ziel}. Behalte die Markdown-Struktur ` +
-                    '(Überschriften, Listen, Zitate) genau bei. Gib nur die Übersetzung aus, ' +
-                    'ohne Vorrede.\n\n' + text);
+                const auftrag = (typeof Register !== 'undefined' && Register.ki)
+                    ? Register.ki.auftrag('uebersetzen', { sprache: ziel })
+                    : `Übersetze den Text in diese Sprache: ${ziel}. Gib nur die Übersetzung zurück.`;
+                const antwort = await KI.frageKurz(auftrag + ' Behalte die Markdown-Struktur ' +
+                    '(Überschriften, Listen, Zitate) genau bei, ohne Vorrede.\n\n' + text);
                 if (!antwort) {
                     UI.toast('Keine Antwort erhalten');
                     return;

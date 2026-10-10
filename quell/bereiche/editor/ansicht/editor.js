@@ -2760,7 +2760,7 @@ const Blocks = (() => {
                     fl.aufFlaeche(b);
             }
             if (a === 'ai')
-                KI.blockAktion('ai-edit', b);
+                KI.befehlsMenue(document.querySelector('.blk[data-bid="' + b.id + '"]'), { block: b });
             if (a === 'del') {
                 App.inPapierkorb(b);
             }

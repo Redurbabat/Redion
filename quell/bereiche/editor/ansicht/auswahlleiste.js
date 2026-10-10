@@ -202,9 +202,9 @@ const Auswahl = (() => {
                 return;
             }
             if (a === 'ki') {
+                const rr = b.getBoundingClientRect();
                 weg();
-                App.kiPanel(true);
-                KI.frageMitAuswahl(text);
+                KI.befehlsMenue({ left: rr.left, top: rr.top, bottom: rr.bottom }, { text });
                 return;
             }
             if (a === 'komm') {

@@ -852,37 +852,69 @@ const KI = (() => {
         });
         return d;
     };
-    const quellenLeiste = () => {
+    const QUELLEN_NAMEN = [
+        ['aktuelleSeite', '📄', 'Diese Seite'],
+        ['arbeitsbereich', '🗂', 'Arbeitsbereich'],
+        ['datenbanken', '▦', 'Datenbanken'],
+        ['verbindungen', '🔌', 'Verbundenes'],
+        ['web', '🌐', 'Web']
+    ];
+    const aktiveQuellen = () => {
         const q = Kontext.quellen();
-        const NAMEN = [
-            ['aktuelleSeite', '📄 Diese Seite'],
-            ['arbeitsbereich', '🗂 Arbeitsbereich'],
-            ['datenbanken', '▦ Datenbanken'],
-            ['verbindungen', '🔌 Verbundenes'],
-            ['web', '🌐 Web']
-        ];
-        const d = document.createElement('div');
-        d.className = 'ki-quellschalter';
-        d.innerHTML = NAMEN.map(([k, n]) => `<button data-qs="${k}" aria-pressed="${!!(k && q[k])}" class="${k && q[k] ? 'an' : ''}">${n}</button>`).join('');
-        d.addEventListener('click', e => {
+        return QUELLEN_NAMEN.filter(([k]) => q[k]).map(([, , n]) => n);
+    };
+    const quellenKnoepfe = () => {
+        const q = Kontext.quellen();
+        return QUELLEN_NAMEN.map(([k, z, n]) => `<button data-qs="${k}" aria-pressed="${!!q[k]}" class="${q[k] ? 'an' : ''}">${z} ${n}</button>`).join('');
+    };
+    const quellenBinden = (d) => {
+        d.addEventListener('click', async (e) => {
             const b = elVon(e)?.closest('[data-qs]');
             if (!b)
                 return;
             const qs = b.dataset.qs;
             if (!qs)
                 return;
-            const jetzt = Kontext.quellen()[qs];
-            if (qs === 'web' && !jetzt && Store.getMeta('ki:webFragen', true)) {
-                if (!confirm('Für Websuche wird Wikipedia angefragt. Dabei verlässt dein Suchbegriff ' +
-                    'den Rechner. Einschalten?'))
-                    return;
-            }
-            Kontext.quelleSetzen(qs, !jetzt);
-            b.classList.toggle('an', !jetzt);
-            b.setAttribute('aria-pressed', String(!jetzt));
-            UI.toast((!jetzt ? 'An: ' : 'Aus: ') + b.textContent);
+            const an = await Kontext.quelleUmschalten(qs);
+            if (an === null)
+                return;
+            UI.toast((an ? 'An: ' : 'Aus: ') + (b.textContent || '').trim());
         });
         return d;
+    };
+    const quellenLeiste = () => {
+        const d = document.createElement('div');
+        d.className = 'ki-quellschalter';
+        d.innerHTML = quellenKnoepfe();
+        return quellenBinden(d);
+    };
+    const quellenSchild = () => {
+        const k = document.getElementById('ai-quellen');
+        if (!k)
+            return;
+        const an = aktiveQuellen();
+        k.setAttribute('aria-label', 'Quellen: ' + (an.length ? an.join(', ') : 'keine') + ' — ändern');
+        const zahl = k.querySelector('.ai-quellen-zahl');
+        if (zahl)
+            zahl.textContent = String(an.length);
+        k.classList.toggle('ohne', !an.length);
+    };
+    const quellenAbgleichen = () => {
+        const q = Kontext.quellen();
+        document.querySelectorAll('[data-qs]').forEach(b => {
+            const an = !!q[b.dataset.qs || ''];
+            b.classList.toggle('an', an);
+            b.setAttribute('aria-pressed', String(an));
+        });
+        quellenSchild();
+    };
+    const kontextSatz = () => {
+        if (!Store.getMeta('kiKontext', true))
+            return 'Neuer Chat. Die KI sieht nichts aus deinem Arbeitsbereich — ' +
+                '„Seiteninhalt mitgeben" ist in den KI-Einstellungen aus.';
+        const an = aktiveQuellen();
+        return an.length ? 'Neuer Chat. Die KI sieht: ' + an.join(' · ') + '.'
+            : 'Neuer Chat. Die KI sieht nichts — alle Quellen sind aus.';
     };
     const sendenKnopf = (imLauf) => {
         const k = document.getElementById('ai-senden');
@@ -902,9 +934,19 @@ const KI = (() => {
         zustand.abbruch.abort();
         return true;
     };
+    const erwaehnt = new Map();
     const senden = async (text, mitKontext = true) => {
         if (!text.trim())
             return;
+        const at = mitKontext ? atBefehl(text.trim()) : null;
+        if (at) {
+            const lauf = at.rest ? { text: at.rest, wo: 'Eingabe' } : {};
+            if (at.f)
+                await faehigkeitAusfuehren(at.f, lauf);
+            else if (at.b)
+                await ausfuehren(at.b.id, lauf);
+            return;
+        }
         if (!zustand.bereit) {
             melde(zustand.quelle === 'ollama'
                 ? 'Ollama ist nicht erreichbar. Unten im Eingabefeld ein Modell wählen oder auf „Erneut nach Ollama suchen" klicken.'
@@ -918,7 +960,9 @@ const KI = (() => {
         let quellen = [];
         if (mitKontext && Store.getMeta('kiKontext', true)) {
             ziel.textContent = 'Sucht im Arbeitsbereich …';
-            const k = await Kontext.bauenFuerFrage(text, { anzahl: 6 });
+            const extraSeiten = [...erwaehnt].filter(([, titel]) => text.includes('@' + titel)).map(([id]) => id);
+            erwaehnt.clear();
+            const k = await Kontext.bauenFuerFrage(text, { anzahl: 6, extraSeiten });
             quellen = k.quellen;
             const tor = Kontext.darfFragen(k);
             if (!tor.ok) {
@@ -1068,23 +1112,12 @@ const KI = (() => {
         }
     };
     const blockAktion = async (art, block) => {
-        App.kiPanel(true);
-        const auftraege = {
-            'ai-write': 'Schreibe einen zusammenhängenden Absatz zu diesem Stichwort: ' + (block.text || '(leer)'),
-            'ai-summary': 'Fasse den Inhalt dieser Seite in fünf kurzen Stichpunkten zusammen. ' +
-                'Hebe Entscheidungen, offene Fragen und nächste Schritte hervor.',
-            'ai-todo': 'Leite aus dem Inhalt dieser Seite konkrete Aufgaben ab. ' +
-                'Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.',
-            'ai-edit': 'Formuliere diesen Text klarer, ohne den Sinn zu ändern:\n\n' + (block.text || ''),
-            'ai-improve': 'Verbessere diesen Text: klarer, kürzer, ohne Füllwörter. ' +
-                'Gib nur den überarbeiteten Text zurück.\n\n' + (block.text || ''),
-            'ai-translate': 'Übersetze diesen Text ins Englische. Gib nur die Übersetzung zurück.\n\n' +
-                (block.text || '')
-        };
-        const auftrag = auftraege[art];
-        if (!auftrag)
+        const b = kiKatalog()?.ausAlt('block', art);
+        if (!b)
             return;
-        await senden(auftrag, !['ai-edit', 'ai-improve', 'ai-translate'].includes(art));
+        App.kiPanel(true);
+        await ausfuehren(b.id, { block,
+            ...(b.ziel !== 'seite' && block?.text ? { text: String(block.text), wo: 'Block' } : {}) });
     };
     const protokoll = [];
     const merkeSchritt = (was, ids) => {
@@ -1380,70 +1413,155 @@ const KI = (() => {
             `Nenne drei Muster, die dir auffallen, und einen konkreten Verbesserungsvorschlag.\n\n` +
             tabelle.slice(0, 6000), false);
     };
-    const SCHREIB_BEFEHLE = [
-        { id: 'weiter', icon: '✒️', name: 'Weiterschreiben',
-            auftrag: 'Schreib den Text sinnvoll weiter. Gleiche Stimme, gleicher Ton, keine Wiederholung.' },
-        { id: 'besser', icon: '✨', name: 'Text verbessern',
-            auftrag: 'Mach den Text klarer und flüssiger, ohne den Sinn zu verändern.' },
-        { id: 'kuerzer', icon: '✂️', name: 'Kürzer machen',
-            auftrag: 'Kürze den Text auf das Wesentliche. Höchstens die Hälfte.' },
-        { id: 'laenger', icon: '📏', name: 'Länger machen',
-            auftrag: 'Führe den Text weiter aus, mit Beispielen. Nichts erfinden, was widerspricht.' },
-        { id: 'einfach', icon: '🧒', name: 'Einfacher erklären',
-            auftrag: 'Erklär denselben Inhalt so, dass ihn jemand ohne Vorwissen versteht.' },
-        { id: 'ton-formell', icon: '🎩', name: 'Ton: förmlich',
-            auftrag: 'Schreib den Text förmlich und sachlich um, in der Sie-Form.' },
-        { id: 'ton-locker', icon: '😊', name: 'Ton: locker',
-            auftrag: 'Schreib den Text locker und freundlich um, in der Du-Form.' },
-        { id: 'ton-direkt', icon: '🎯', name: 'Ton: direkt',
-            auftrag: 'Schreib den Text kurz und direkt um. Keine Höflichkeitsfloskeln.' },
-        { id: 'recht', icon: '📝', name: 'Rechtschreibung',
-            auftrag: 'Korrigiere Rechtschreibung, Zeichensetzung und Grammatik. Sonst nichts ändern.' },
-        { id: 'fassen', icon: '📋', name: 'Zusammenfassen',
-            auftrag: 'Fasse den Text in höchstens fünf Stichpunkten zusammen.' },
-        { id: 'uebersetzen', icon: '🌍', name: 'Übersetzen',
-            auftrag: 'Übersetze den Text ins Englische.', frage: 'In welche Sprache?' },
-        { id: 'ideen', icon: '💡', name: 'Ideen sammeln',
-            auftrag: 'Sammle zehn Ideen zum Thema. Je Zeile eine, ohne Nummerierung.' },
-        { id: 'gliedern', icon: '🗂', name: 'Gliederung bauen',
-            auftrag: 'Mach aus dem Text eine Gliederung mit Überschriften und Stichpunkten.' },
-        { id: 'tabelle', icon: '▦', name: 'Tabelle daraus machen',
-            auftrag: 'Mach aus dem Text eine Tabelle. Antworte als Markdown-Tabelle mit Kopfzeile.' },
-        { id: 'aufgaben', icon: '☑', name: 'Aufgaben ableiten',
-            auftrag: 'Leite konkrete Aufgaben ab. Je Zeile eine, beginnend mit einem Verb.' },
-        { id: 'fragen', icon: '❓', name: 'Rückfragen finden',
-            auftrag: 'Nenne fünf Fragen, die dieser Text offen lässt.' }
-    ];
-    const arbeitsText = () => {
-        const sel = String(getSelection() || '').trim();
-        if (sel.length > 3)
-            return { text: sel, teil: true };
-        return { text: seitenKontext(), teil: false };
+    const kiKatalog = () => (typeof Register !== 'undefined' && Register.ki) ? Register.ki : null;
+    const SCHREIB_BEFEHLE = (kiKatalog()?.alle() || [])
+        .filter((b) => b.art === 'auftrag' && b.gruppe === 'Schreiben und bearbeiten');
+    const markierung = () => {
+        const sel = getSelection();
+        const text = String(sel || '').trim();
+        if (!sel || text.length <= 3 || !sel.rangeCount)
+            return null;
+        const knoten = sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode?.parentElement;
+        if (knoten?.closest('#ai'))
+            return null;
+        const blk = knoten?.closest('.blk');
+        return { text, bereich: sel.getRangeAt(0).cloneRange(), bid: blk?.dataset.bid || '' };
     };
-    const schreibMenue = (anker2) => {
-        const r = anker2
-            ? anker2.getBoundingClientRect()
-            : { left: innerWidth / 2 - 130, bottom: 120 };
-        const m = UI.menu('<div class="grp">Schreiben und bearbeiten</div>' +
-            SCHREIB_BEFEHLE.map(b => `<button data-sb="${b.id}"><span class="mi">${b.icon}</span>${b.name}</button>`).join(''), r.left - 40, (r.bottom || 100) + 6);
+    const eingabe = (befehl, opt) => {
+        if (opt.text && opt.text.trim())
+            return { text: opt.text.trim(), wo: opt.wo || 'Markierung', mark: opt.mark || null };
+        const mark = opt.mark || markierung();
+        if (mark)
+            return { text: mark.text, wo: 'Markierung', mark };
+        if (opt.block && befehl.ziel !== 'seite' && String(opt.block.text || '').trim())
+            return { text: String(opt.block.text), wo: 'Block', mark: null };
+        return { text: seitenKontext(), wo: 'ganze Seite', mark: null };
+    };
+    const ausfuehren = async (id, opt = {}) => {
+        const b = kiKatalog()?.finde(id);
+        if (!b)
+            return;
+        if (b.art === 'werkzeug') {
+            await werkzeugAus(b.id);
+            return;
+        }
+        let auftrag = opt.auftrag || kiKatalog().auftrag(b.id);
+        if (b.frage && !opt.auftrag) {
+            const antwort = await UI.frage(b.frage, b.vorgabe || '');
+            if (!antwort)
+                return;
+            auftrag = kiKatalog().auftrag(b.id, { sprache: antwort });
+        }
+        await schreibLauf({ ...b, ...(opt.name ? { name: opt.name } : {}), ...(opt.icon ? { icon: opt.icon } : {}) }, auftrag, opt);
+    };
+    const werkzeugAus = async (id) => {
+        const b = kiKatalog()?.finde(id);
+        if (!b)
+            return;
+        if (id === 'protokoll') {
+            protokollZeigen();
+            return;
+        }
+        let vorschlag = b.vorgabe || '';
+        if (id === 'nachschlagen')
+            vorschlag = (markierung()?.text || '') || (Store.getBlock(App.aktuelleSeite())?.text || '');
+        const antwort = await UI.frage(b.frage || b.name, vorschlag);
+        if (!antwort)
+            return;
+        if (id === 'datenbank')
+            datenbankBauen(antwort);
+        if (id === 'seite')
+            seiteBauen(antwort);
+        if (id === 'nachschlagen')
+            nachschlagen(antwort);
+    };
+    const faehigkeitAusfuehren = async (f, opt = {}) => {
+        const b = kiKatalog()?.ausAlt('faehig', f.id);
+        const start = FAEHIG_START.find(x => x.id === f.id);
+        const eigeneZeile = !!f.auftrag && !!start && f.auftrag !== start.auftrag;
+        if (b) {
+            await ausfuehren(b.id, { ...opt, name: f.name, icon: f.icon || b.icon,
+                ...(eigeneZeile ? { auftrag: f.auftrag } : {}) });
+            return;
+        }
+        await schreibLauf({ id: f.id, name: f.name, icon: f.icon || '🧩', ziel: 'markierung', ausgabe: 'ersetzen' }, f.auftrag, opt);
+    };
+    const rechteckVon = (anker) => {
+        if (anker && typeof anker.getBoundingClientRect === 'function')
+            return anker.getBoundingClientRect();
+        if (anker && typeof anker.left === 'number')
+            return { left: anker.left, top: anker.top, bottom: anker.bottom ?? anker.top };
+        return { left: innerWidth / 2 - 130, top: 160, bottom: 120 };
+    };
+    const amKnopf = (anker, m) => {
+        if (!(anker instanceof HTMLElement))
+            return;
+        anker.setAttribute('aria-expanded', 'true');
+        const w = new MutationObserver(() => {
+            if (m.isConnected)
+                return;
+            w.disconnect();
+            anker.setAttribute('aria-expanded', 'false');
+            const a = document.activeElement;
+            if (anker.isConnected && (!a || a === document.body || !a.isConnected))
+                anker.focus({ preventScroll: true });
+        });
+        w.observe(document.body, { childList: true });
+    };
+    const befehlsMenue = (anker, opt = {}) => {
+        const r = rechteckVon(anker);
+        const mark = opt.text ? null : markierung();
+        const liste = faehigkeiten();
+        const katalogVon = (f) => kiKatalog()?.ausAlt('faehig', f.id);
+        const verdeckt = new Set(liste.map((f) => katalogVon(f)?.id).filter(Boolean));
+        const befehle = (kiKatalog()?.alle() || []).filter((b) => !verdeckt.has(b.id));
+        const zeile = (b) => `<button data-sb="${esc(b.id)}"><span class="mi">${b.icon}</span>${esc(b.name)}</button>`;
+        const fHtml = '<div class="grp">Fähigkeiten</div>' + liste.map((f) => `<button data-f="${esc(f.id)}"${katalogVon(f) ? ` data-sb="${esc(katalogVon(f).id)}"` : ''}>` +
+            `<span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('');
+        const sHtml = '<div class="grp">Schreiben und bearbeiten</div>' +
+            befehle.filter((b) => b.art === 'auftrag').map(zeile).join('');
+        const bHtml = (opt.text || opt.block) ? '' : '<div class="grp">Bauen und nachschlagen</div>' +
+            befehle.filter((b) => b.art === 'werkzeug').map(zeile).join('');
+        const vorn = opt.text
+            ? '<button data-k="fragen"><span class="mi">💬</span>Zu dieser Stelle fragen</button>' : '';
+        const m = UI.menuMitSuche(vorn + (opt.zuerst === 'faehig' ? fHtml + sHtml : sHtml + fHtml) + bHtml +
+            '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
+            '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>', r.left - 40, Math.max(12, r.top - 300), { platzhalter: 'Befehl oder Fähigkeit suchen …', titel: 'KI-Befehle',
+            kopf: '<div class="grp">KI-Befehle</div>',
+            fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.',
+            ...(anker instanceof HTMLElement ? { anker } : {}) });
+        amKnopf(anker, m);
         m.addEventListener('click', async (e) => {
-            const b = elVon(e)?.closest('[data-sb]');
-            if (!b)
+            const k = elVon(e)?.closest('[data-k], [data-sb], [data-f]');
+            if (!k)
                 return;
             m.remove();
-            const befehl = SCHREIB_BEFEHLE.find(x => x.id === b.dataset.sb);
-            if (!befehl)
+            if (k.dataset.k === 'fragen') {
+                App.kiPanel(true);
+                frageMitAuswahl(opt.text);
                 return;
-            let auftrag = befehl.auftrag;
-            if (befehl.frage) {
-                const antwort = await UI.frage(befehl.frage, 'Englisch');
-                if (!antwort)
-                    return;
-                auftrag = 'Übersetze den Text ins ' + antwort + '.';
             }
-            await schreibLauf(befehl, auftrag);
+            if (k.dataset.f === '__neu') {
+                faehigkeitBearbeiten();
+                return;
+            }
+            if (k.dataset.f === '__verw') {
+                faehigkeitenVerwalten();
+                return;
+            }
+            const lauf = { ...(opt.text ? { text: opt.text, wo: 'Markierung' } : {}),
+                ...(opt.block ? { block: opt.block } : {}), mark };
+            const f = k.dataset.f ? liste.find((x) => x.id === k.dataset.f) : null;
+            if (f) {
+                await faehigkeitAusfuehren(f, lauf);
+                return;
+            }
+            if (k.dataset.sb)
+                await ausfuehren(k.dataset.sb, lauf);
         });
+        return m;
     };
+    const schreibMenue = (anker2) => befehlsMenue(anker2, { zuerst: 'schreiben' });
     const zeigeAktivitaet = (ziel) => {
         const status = document.createElement('div');
         status.className = 'ki-aktivitaet';
@@ -1452,14 +1570,27 @@ const KI = (() => {
         ziel.before(status);
         return status;
     };
-    const schreibLauf = async (befehl, auftrag) => {
-        const quelle = arbeitsText();
+    const alsKarteikarten = (text) => {
+        const seite = App.aktuelleSeite();
+        const karten = String(text || '').split('\n').map(z => z.replace(/^[-*•\d.\s]+/, '').trim())
+            .filter(z => /\S\s*::\s*\S/.test(z));
+        karten.forEach(z => Store.addBlock(seite, 'flashcard', { text: z, herkunft: 'ki' }));
+        if (karten.length) {
+            App.zeichneSeite();
+            UI.toast(karten.length + ' Karteikarten eingefügt');
+        }
+        else
+            UI.toast('In der Antwort steht keine Zeile „Frage :: Antwort"');
+        return karten.length;
+    };
+    const schreibLauf = async (befehl, auftrag, opt = {}) => {
+        const quelle = eingabe(befehl, opt);
         if (!quelle.text.trim()) {
             UI.toast('Es gibt noch keinen Text.');
             return;
         }
         App.kiPanel(true);
-        schreibe('user', befehl.icon + ' ' + befehl.name + (quelle.teil ? ' (Markierung)' : ' (ganze Seite)'));
+        schreibe('user', (befehl.icon ? befehl.icon + ' ' : '') + befehl.name + ' (' + quelle.wo + ')');
         const ziel = schreibe('assistant', '');
         ziel.textContent = '…';
         const system = SYSTEM + '\n\n' + auftrag +
@@ -1487,11 +1618,16 @@ const KI = (() => {
             ziel.classList.remove('ki-schreibt');
             aktivitaet.remove();
         }
+        const ausgabe = befehl.ausgabe || 'ersetzen';
+        const ersetzbar = ausgabe === 'ersetzen' && zustand.modus !== 'fragen' &&
+            (quelle.wo === 'Markierung' || quelle.wo === 'Block') && (quelle.wo !== 'Block' || !!opt.block);
         const leiste = document.createElement('div');
         leiste.className = 'ki-antwortknoepfe';
         leiste.innerHTML =
-            '<button data-a="ersetzen">Markierung ersetzen</button>' +
-                '<button data-a="darunter">Darunter einfügen</button>' +
+            (ersetzbar ? `<button data-a="ersetzen">${quelle.wo === 'Block' ? 'Block ersetzen' : 'Markierung ersetzen'}</button>` : '') +
+                (ausgabe === 'karteikarten'
+                    ? '<button data-a="karteikarten">Als Karteikarten einfügen</button>'
+                    : '<button data-a="darunter">Darunter einfügen</button>') +
                 '<button data-a="kopieren">Kopieren</button>' +
                 '<button data-a="nochmal">Noch einmal</button>';
         leiste.addEventListener('click', async (e) => {
@@ -1502,29 +1638,66 @@ const KI = (() => {
                 Ablage.kopiereJetzt(antwort, 'Kopiert');
             }
             if (b.dataset.a === 'nochmal') {
-                schreibLauf(befehl, auftrag);
+                schreibLauf(befehl, auftrag, opt);
             }
             if (b.dataset.a === 'darunter') {
                 alsBloeckeEinfuegen(antwort);
             }
-            if (b.dataset.a === 'ersetzen') {
-                const sel = getSelection();
-                if (sel && sel.rangeCount && String(sel).trim()) {
-                    const bereich = sel.getRangeAt(0);
-                    bereich.deleteContents();
-                    bereich.insertNode(document.createTextNode(antwort));
-                    const blk = sel.anchorNode?.parentElement?.closest?.('.blk');
-                    const ct = blk?.querySelector('.ct');
-                    if (blk instanceof HTMLElement && ct && blk.dataset.bid)
-                        Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
-                    UI.toast('Ersetzt');
-                }
-                else {
-                    alsBloeckeEinfuegen(antwort);
-                }
+            if (b.dataset.a === 'karteikarten') {
+                alsKarteikarten(antwort);
             }
+            if (b.dataset.a === 'ersetzen')
+                ersetzen(antwort, quelle, opt);
         });
         ziel.appendChild(leiste);
+    };
+    const ersetzen = (antwort, quelle, opt) => {
+        if (quelle.wo === 'Block' && opt.block?.id) {
+            Store.updateBlock(opt.block.id, { text: antwort });
+            App.zeichneSeite();
+            UI.toast('Ersetzt');
+            return;
+        }
+        const mark = quelle.mark;
+        const bl = mark?.bid ? Store.getBlock(mark.bid) : null;
+        const alt = String(bl?.text || '');
+        const i = mark ? alt.indexOf(mark.text) : -1;
+        if (bl && mark && i >= 0 && alt.indexOf(mark.text, i + 1) < 0) {
+            Store.updateBlock(bl.id, { text: alt.slice(0, i) + antwort + alt.slice(i + mark.text.length) });
+            App.zeichneSeite();
+            UI.toast('Ersetzt');
+            return;
+        }
+        const sel = getSelection();
+        const bereich = sel && sel.rangeCount && String(sel).trim() ? sel.getRangeAt(0)
+            : (mark?.bereich && mark.bereich.startContainer.isConnected ? mark.bereich : null);
+        if (!bereich) {
+            alsBloeckeEinfuegen(antwort);
+            return;
+        }
+        bereich.deleteContents();
+        bereich.insertNode(document.createTextNode(antwort));
+        const blk = (bereich.startContainer instanceof Element ? bereich.startContainer : bereich.startContainer.parentElement)?.closest?.('.blk');
+        const ct = blk?.querySelector('.ct');
+        if (blk instanceof HTMLElement && ct && blk.dataset.bid)
+            Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+        UI.toast('Ersetzt');
+    };
+    const atBefehl = (text) => {
+        if (!text.startsWith('@'))
+            return null;
+        const roh = text.slice(1);
+        const klein = roh.toLowerCase();
+        const kandidaten = [
+            ...faehigkeiten().map((f) => ({ name: String(f.name || ''), f })),
+            ...(kiKatalog()?.alle() || []).filter((b) => b.art === 'auftrag').map((b) => ({ name: b.name, b }))
+        ].filter(k => k.name && klein.startsWith(k.name.toLowerCase()) &&
+            (roh.length === k.name.length || /\s/.test(roh.charAt(k.name.length))));
+        if (!kandidaten.length)
+            return null;
+        kandidaten.sort((a, b) => b.name.length - a.name.length);
+        const k = kandidaten[0];
+        return { ...(k.f ? { f: k.f } : {}), ...(k.b ? { b: k.b } : {}), rest: roh.slice(k.name.length).trim() };
     };
     const alsBloeckeEinfuegen = (text) => {
         const zeilen = String(text || '').split('\n');
@@ -1645,31 +1818,7 @@ const KI = (() => {
             }
         });
     };
-    const faehigkeitenMenue = (anker) => {
-        const r = anker.getBoundingClientRect();
-        const liste = faehigkeiten();
-        const m = UI.menuMitSuche(liste.map((f) => `<button data-f="${f.id}"><span class="mi">${f.icon}</span>${esc(f.name)}</button>`).join('') +
-            '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
-            '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>', r.left, r.top - 260, { platzhalter: 'Fähigkeit suchen …', kopf: '<div class="grp">Fähigkeiten</div>',
-            fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.' });
-        m.addEventListener('click', async (e) => {
-            const b = elVon(e)?.closest('[data-f]');
-            if (!b)
-                return;
-            m.remove();
-            if (b.dataset.f === '__neu') {
-                faehigkeitBearbeiten();
-                return;
-            }
-            if (b.dataset.f === '__verw') {
-                faehigkeitenVerwalten();
-                return;
-            }
-            const f = liste.find((x) => x.id === b.dataset.f);
-            if (f)
-                senden(f.auftrag);
-        });
-    };
+    const faehigkeitenMenue = (anker) => befehlsMenue(anker, { zuerst: 'faehig' });
     const faehigkeitBearbeiten = async (vorhanden) => {
         const name = await UI.frage('Wie heisst die Fähigkeit?', vorhanden ? vorhanden.name : '');
         if (!name)
@@ -1690,12 +1839,14 @@ const KI = (() => {
             o.innerHTML =
                 '<div class="finder we-panel">' +
                     `<div class="fh">Fähigkeiten <em>${liste.length}</em>` +
-                    '<button class="icon-btn" data-a="zu">✕</button></div>' +
+                    '<button class="icon-btn" data-a="zu" aria-label="Schliessen">✕</button></div>' +
                     '<div class="we-text">Fähigkeiten sind Aufgaben, die die KI kann. Du rufst ' +
-                    'sie im Chat mit <b>@</b> auf oder über das Menü bei markiertem Text.</div>' +
+                    'sie im Chat mit <b>@</b> vor dem Namen auf oder über das Befehlsmenü.</div>' +
                     '<div class="we-liste">' +
-                    liste.map((f) => `<button data-b="${f.id}"><span>${f.icon}</span>${esc(f.name)}` +
-                        `<span class="ms" data-w="${f.id}">löschen</span></button>`).join('') +
+                    liste.map((f) => '<div class="we-zeile">' +
+                        `<button class="we-zeile-name" data-b="${esc(f.id)}"><span>${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>` +
+                        `<button class="we-zeile-weg" data-w="${esc(f.id)}" data-loeschknopf="Löschen" ` +
+                        `aria-label="Fähigkeit „${esc(f.name)}“ löschen" title="Löschen">🗑</button></div>`).join('') +
                     '</div>' +
                     '<div class="we-fuss"><button class="we-knopf" data-a="neu">Fähigkeit hinzufügen</button></div>' +
                     '</div>';
@@ -1911,58 +2062,126 @@ const KI = (() => {
             baum.appendChild(leer);
         }
     };
+    const erwaehnenMenue = (ta, anker, mitFaehig, atStelle = -1) => {
+        const r = rechteckVon(anker);
+        const seiten = Object.values(Store.cache.blocks)
+            .filter(x => x.type === 'page' && x.alive !== false && x.parentTable !== 'collection')
+            .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || ''))).slice(0, 60);
+        const fRows = mitFaehig
+            ? '<div class="grp">Fähigkeiten</div>' + faehigkeiten().map((f) => `<button data-f="${esc(f.id)}"><span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('')
+            : '';
+        const m = UI.menuMitSuche(fRows + '<div class="grp">Seiten</div>' +
+            seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join(''), r.left, Math.max(12, r.top - 300), { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
+            titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',
+            kopf: '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
+        const ohneAt = () => atStelle >= 0 && ta.value.charAt(atStelle) === '@'
+            ? ta.value.slice(0, atStelle) + ta.value.slice(atStelle + 1) : ta.value;
+        m.addEventListener('click', ev2 => {
+            const s = elVon(ev2)?.closest('[data-s], [data-f]');
+            if (!s)
+                return;
+            m.remove();
+            if (s.dataset.f) {
+                const f = faehigkeiten().find((x) => x.id === s.dataset.f);
+                if (f)
+                    ta.value = '@' + f.name + ' ' + ohneAt().trimStart();
+            }
+            else {
+                const p = Store.getBlock(s.dataset.s);
+                const titel = (p?.text || 'Seite');
+                if (p)
+                    erwaehnt.set(p.id, titel);
+                const rest = ohneAt();
+                const vor = atStelle >= 0 ? rest.slice(0, atStelle) : rest;
+                const nach = atStelle >= 0 ? rest.slice(atStelle) : '';
+                ta.value = vor + (vor && !/\s$/.test(vor) ? ' ' : '') + '@' + titel + (nach.startsWith(' ') ? '' : ' ') + nach;
+            }
+            ta.dispatchEvent(new Event('input'));
+            ta.focus();
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+        });
+        return m;
+    };
+    const quellenMenue = (anker) => {
+        const r = anker.getBoundingClientRect();
+        const nur = Kontext.nurQuellen();
+        const m = UI.menu('<div class="grp">Quellen für die nächste Frage</div>' +
+            `<div class="ki-quellschalter">${quellenKnoepfe()}</div>` +
+            `<button data-y="nur" aria-pressed="${nur}" title="Findet sich in deinen Quellen nichts, wird das Modell nicht gefragt">` +
+            '<span class="mi">◎</span>Nur aus meinen Quellen' +
+            (nur ? '<span class="ms">✓</span>' : '') + '</button>' +
+            '<hr><button data-y="einst"><span class="mi">⚙</span>Alle KI-Einstellungen</button>', r.left, Math.max(12, r.top - 300), { anker, titel: 'Quellen' });
+        const leiste = m.querySelector('.ki-quellschalter');
+        if (leiste)
+            quellenBinden(leiste);
+        amKnopf(anker, m);
+        m.addEventListener('click', ev => {
+            const b = elVon(ev)?.closest('[data-y]');
+            if (!b)
+                return;
+            if (b.dataset.y === 'nur') {
+                const an = !Kontext.nurQuellen();
+                Kontext.nurQuellenSetzen(an);
+                b.setAttribute('aria-pressed', String(an));
+                b.querySelector('.ms')?.remove();
+                if (an)
+                    b.insertAdjacentHTML('beforeend', '<span class="ms">✓</span>');
+                UI.toast(an ? 'Nur aus meinen Quellen: an' : 'Nur aus meinen Quellen: aus');
+            }
+            if (b.dataset.y === 'einst') {
+                m.remove();
+                App.einstellungen('ki');
+            }
+        });
+        return m;
+    };
+    const mehrMenue = (anker) => {
+        const r = anker.getBoundingClientRect();
+        const mcp = (Store.getMeta('mcp:server', []) || []).length;
+        const m = UI.menu('<button id="ai-agent" data-y="agent"><span class="mi">🤖</span>Agent<span class="sub">Mehrstufige Aufgaben</span></button>' +
+            '<button id="ai-meeting" data-y="meeting"><span class="mi">🎙</span>Besprechung<span class="sub">Aufnehmen, mitschreiben, auswerten</span></button>' +
+            '<button id="ai-log" data-y="log"><span class="mi">🕘</span>Protokoll<span class="sub">Was die KI gebaut hat</span></button>' +
+            '<hr>' +
+            '<button data-y="verw"><span class="mi">🧩</span>Fähigkeiten verwalten</button>' +
+            '<button data-y="pers"><span class="mi">🎨</span>Personalisieren</button>' +
+            `<button data-y="mcp"><span class="mi">⇄</span>MCP-Server<span class="ms">${mcp}</span></button>` +
+            '<button data-y="einst"><span class="mi">⚙</span>KI-Einstellungen</button>', Math.max(12, r.right - 260), r.bottom + 6, { anker, titel: 'Mehr KI-Funktionen', tropfen: [
+                { id: 'agent', name: 'Agent', zeichen: 'robot', ziel: '[data-y="agent"]' },
+                { id: 'meeting', name: 'Besprechung', zeichen: 'mic', ziel: '[data-y="meeting"]' },
+                { id: 'log', name: 'Protokoll', zeichen: 'history', ziel: '[data-y="log"]' }
+            ] });
+        amKnopf(anker, m);
+        m.addEventListener('click', ev => {
+            const b = elVon(ev)?.closest('button[data-y]');
+            if (!b)
+                return;
+            m.remove();
+            const y = b.dataset.y;
+            if (y === 'agent')
+                Agent.panel();
+            if (y === 'meeting')
+                Meeting.panel();
+            if (y === 'log')
+                protokollZeigen();
+            if (y === 'verw')
+                faehigkeitenVerwalten();
+            if (y === 'pers')
+                personalisieren();
+            if (y === 'mcp')
+                App.einstellungen('mcp');
+            if (y === 'einst')
+                App.einstellungen('ki');
+        });
+        return m;
+    };
     const bindePanel = () => {
         const ta = document.getElementById('ai-input');
         const chat = document.getElementById('chat');
-        const actions = document.querySelector('.ai-quick');
-        if (actions && !actions.querySelector('.ai-action-group')) {
-            const prompts = Array.from(actions.querySelectorAll('button[data-p]'));
-            const groups = [
-                { name: 'Erstellen', ids: ['ai-db', 'ai-seite'], prompts: [] },
-                { name: 'Text bearbeiten', ids: ['ai-schreiben'], prompts: [0, 2, 3] },
-                { name: 'Lernen & planen', ids: ['ai-wiki'], prompts: [1, 4] },
-                { name: 'Assistenten & Verlauf', ids: ['ai-agent', 'ai-meeting', 'ai-log'], prompts: [] }
-            ];
-            for (const group of groups) {
-                const section = document.createElement('section');
-                section.className = 'ai-action-group';
-                const heading = document.createElement('h3');
-                heading.textContent = group.name;
-                section.append(heading);
-                for (const id of group.ids) {
-                    const button = document.getElementById(id);
-                    if (button)
-                        section.append(button);
-                }
-                for (const index of group.prompts) {
-                    const button = prompts[index];
-                    if (button)
-                        section.append(button);
-                }
-                actions.append(section);
-            }
-            const settings = document.querySelector('.ai-tools-settings');
-            const settingsActions = [['ai-quellen', 'Quellen & Modus'], ['ai-faehig', 'Fähigkeiten']];
-            for (const [id, label] of settingsActions) {
-                const button = document.getElementById(id);
-                if (button && settings) {
-                    button.append(' ' + label);
-                    settings.append(button);
-                }
-            }
-        }
-        const tools = document.querySelector('#ai-tools');
-        tools?.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && tools.open && !document.querySelector('.menu')) {
-                event.stopPropagation();
-                tools.open = false;
-                tools.querySelector('summary')?.focus();
-            }
-        });
-        const fuss = document.querySelector('.ai-context-group');
-        if (fuss && !fuss.querySelector('.ki-quellschalter')) {
-            fuss.append(quellenLeiste());
-        }
+        if (typeof Register !== 'undefined' && Register.befehle && kiKatalog())
+            Register.befehle.meldeLieferant(kiPalette);
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined')
+            Ereignisse.horche(ARTEN.kiQuellenGeaendert, () => quellenAbgleichen());
+        quellenSchild();
         if (!ta)
             return;
         ta.addEventListener('keydown', e => {
@@ -1978,12 +2197,23 @@ const KI = (() => {
                 senden(t);
             }
         });
-        ta.addEventListener('input', () => {
+        ta.addEventListener('input', (e) => {
             ta.style.height = 'auto';
             ta.style.height = Math.min(160, ta.scrollHeight) + 'px';
+            if (!(e instanceof InputEvent) || e.data !== '@')
+                return;
+            const pos = ta.selectionStart ?? ta.value.length;
+            if (ta.value.charAt(pos - 1) === '@' && (pos === 1 || /\s/.test(ta.value.charAt(pos - 2))))
+                erwaehnenMenue(ta, ta, true, pos - 1);
         });
-        document.querySelectorAll('.ai-quick button[data-p]').forEach(b => {
-            b.addEventListener('click', () => senden(b.dataset.p ?? ''));
+        document.querySelectorAll('.ai-start [data-ki]').forEach(b => {
+            let gemerkt = null;
+            b.addEventListener('pointerdown', () => { gemerkt = markierung(); });
+            b.addEventListener('click', () => {
+                const mark = gemerkt || markierung();
+                gemerkt = null;
+                void ausfuehren(b.dataset.ki || '', { mark });
+            });
         });
         const modusKnopf = document.getElementById('ai-modus');
         const modusZeigen = () => {
@@ -2009,7 +2239,8 @@ const KI = (() => {
                 `<button data-m="fragen"><span class="mi">💬</span>Fragen` +
                 '<span class="sub">Nur Antworten, keine Änderungen</span>' +
                 (zustand.modus === 'fragen' ? '<span class="ms">✓</span>' : '') + '</button>' +
-                '<div class="menu-fuss">Tipp: Mit Shift + Tab durch die Modi wechseln</div>', r.left - 120, r.top - 130);
+                '<div class="menu-fuss">Tipp: Mit Shift + Tab durch die Modi wechseln</div>', r.left - 120, r.top - 130, { titel: 'Modus' });
+            amKnopf(knopf, m);
             m.addEventListener('click', ev => {
                 const b = elVon(ev)?.closest('[data-m]');
                 if (!b)
@@ -2039,8 +2270,11 @@ const KI = (() => {
                 return;
             const r = knopf.getBoundingClientRect();
             const m = UI.menu('<button data-x="datei"><span class="mi">📎</span>Fotos und Dateien hinzufügen</button>' +
-                '<button data-x="erwaehnen"><span class="mi">@</span>Seiten oder Personen erwähnen</button>' +
-                '<button data-x="bild"><span class="mi">🖼</span>Bild erstellen<span class="ms">neu</span></button>', r.left, r.top - 120);
+                '<button data-x="erwaehnen"><span class="mi">@</span>Seite erwähnen</button>' +
+                '<button data-x="bild"><span class="mi">🖼</span>Bild erstellen<span class="ms">neu</span></button>' +
+                '<button id="ai-wiki" data-x="wiki"><span class="mi">📖</span>Bei Wikipedia nachschlagen</button>' +
+                '<button id="ai-faehig" data-x="befehle"><span class="mi">🧩</span>Befehle und Fähigkeiten …</button>', r.left, r.top - 220, { titel: 'Hinzufügen', anker: knopf });
+            amKnopf(knopf, m);
             m.addEventListener('click', async (ev) => {
                 const b = elVon(ev)?.closest('[data-x]');
                 if (!b)
@@ -2064,92 +2298,47 @@ const KI = (() => {
                     });
                     inp.click();
                 }
-                if (b.dataset.x === 'erwaehnen') {
-                    const seiten = Object.values(Store.cache.blocks)
-                        .filter(x => x.type === 'page' && x.alive !== false).slice(0, 60);
-                    const m2 = UI.menuMitSuche(seiten.map(p => `<button data-s="${p.id}">${p.icon || '📄'} ${esc(p.text || 'Ohne Titel')}</button>`).join(''), r.left, r.top - 300, { platzhalter: 'Seite suchen …', kopf: '<div class="grp">Erwähnen</div>' });
-                    m2.addEventListener('click', ev2 => {
-                        const s = elVon(ev2)?.closest('[data-s]');
-                        if (!s)
-                            return;
-                        const p = Store.getBlock(s.dataset.s);
-                        ta.value += (ta.value ? ' ' : '') + '@' + (p.text || 'Seite');
-                        m2.remove();
-                        ta.focus();
-                    });
-                }
+                if (b.dataset.x === 'erwaehnen')
+                    erwaehnenMenue(ta, knopf, false);
                 if (b.dataset.x === 'bild') {
                     const was = await UI.frage('Was soll auf dem Bild sein?', '');
                     if (was)
                         senden('Beschreibe ein Bild zu: ' + was +
                             '. Gib dann eine SVG-Zeichnung dazu aus, die ich einfügen kann.');
                 }
+                if (b.dataset.x === 'wiki')
+                    await werkzeugAus('nachschlagen');
+                if (b.dataset.x === 'befehle')
+                    befehlsMenue(knopf, { zuerst: 'faehig' });
             });
         });
         document.getElementById('ai-quellen')?.addEventListener('click', (e) => {
             const knopf = e.currentTarget;
-            if (!(knopf instanceof HTMLElement))
-                return;
-            const r = knopf.getBoundingClientRect();
-            const q = Kontext.quellen();
-            const anzahl = Object.values(q).filter(Boolean).length;
-            const m = UI.menu(`<button data-y="quellen"><span class="mi">⌥</span>Meine Quellen<span class="ms">${anzahl} ▸</span></button>` +
-                `<button data-y="mcp"><span class="mi">⇄</span>MCP-Server<span class="ms">` +
-                `${(Store.getMeta('mcp:server', []) || []).length} ▸</span></button>` +
-                `<button data-y="modus"><span class="mi">✎</span>Modus` +
-                `<span class="ms">${zustand.modus === 'fragen' ? 'Fragen' : 'Standard'} ▸</span></button>` +
-                '<button data-y="pers"><span class="mi">🎨</span>Personalisieren</button>', r.left, r.top - 160);
-            m.addEventListener('click', ev => {
-                const b = elVon(ev)?.closest('[data-y]');
-                if (!b)
-                    return;
-                m.remove();
-                if (b.dataset.y === 'quellen') {
-                    const q2 = UI.menu('<div class="grp">Meine Quellen</div>', r.left, r.top - 160);
-                    q2.appendChild(quellenLeiste());
-                }
-                if (b.dataset.y === 'mcp')
-                    App.einstellungen('mcp');
-                if (b.dataset.y === 'modus')
-                    modusWechseln();
-                if (b.dataset.y === 'pers')
-                    personalisieren();
-            });
+            if (knopf instanceof HTMLElement)
+                quellenMenue(knopf);
         });
-        document.getElementById('ai-faehig')?.addEventListener('click', (e) => faehigkeitenMenue(e.currentTarget));
+        document.getElementById('ai-mehr')?.addEventListener('click', (e) => {
+            const knopf = e.currentTarget;
+            if (knopf instanceof HTMLElement)
+                mehrMenue(knopf);
+        });
         document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
         if (typeof Funkel !== 'undefined')
-            Funkel.alle(document, '.ai-quick button, .ai-tools-settings button');
-        document.getElementById('ai-db')?.addEventListener('click', async () => {
-            const auftrag = await UI.frage('Was soll die Datenbank können?', 'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');
-            if (auftrag)
-                datenbankBauen(auftrag);
-        });
-        document.getElementById('ai-seite')?.addEventListener('click', async () => {
-            const auftrag = await UI.frage('Worum geht es auf der Seite?', '');
-            if (auftrag)
-                seiteBauen(auftrag);
-        });
-        document.getElementById('ai-log')?.addEventListener('click', () => protokollZeigen());
-        document.getElementById('ai-agent')?.addEventListener('click', () => Agent.panel());
-        document.getElementById('ai-meeting')?.addEventListener('click', () => Meeting.panel());
+            Funkel.alle(document, '.ai-start .ai-quick button');
+        document.getElementById('ai-db')?.addEventListener('click', () => { void werkzeugAus('datenbank'); });
+        document.getElementById('ai-seite')?.addEventListener('click', () => { void werkzeugAus('seite'); });
         document.getElementById('ai-schreiben')?.addEventListener('click', (e) => schreibMenue(e.currentTarget));
-        document.getElementById('ai-wiki')?.addEventListener('click', async () => {
-            const vorschlag = (getSelection()?.toString() || '').trim() ||
-                (Store.getBlock(App.aktuelleSeite())?.text || '');
-            const begriff = await UI.frage('Was soll ich nachschlagen?', vorschlag);
-            if (begriff)
-                nachschlagen(begriff);
-        });
         document.getElementById('ai-verlauf')?.addEventListener('click', () => verlauf());
         document.getElementById('ai-clear')?.addEventListener('click', () => {
             zustand.verlauf = [];
             if (chat)
                 chat.innerHTML = '';
-            melde('Neuer Chat. Der Inhalt der offenen Seite wird als Kontext mitgegeben.');
+            melde(kontextSatz());
         });
         melde('Alles läuft lokal. Kein Text verlässt deinen Rechner.');
     };
+    const kiPalette = () => (kiKatalog()?.alle() || []).filter((b) => b.haeufig)
+        .map((b) => ({ gruppe: 'KI', titel: b.palette || b.name, tun: () => { void ausfuehren(b.id); } }));
     const sucheOllamaJetzt = async () => {
         if (zustand.bereit || zustand.quelle === 'ollama')
             return;
@@ -2163,6 +2352,7 @@ const KI = (() => {
         zeichneModellKnopf();
     };
     return { start, bindePanel, sucheOllamaJetzt, senden, abbrechen, sendenKnopf, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+        ausfuehren, befehlsMenue, kontextSatz,
         datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
         quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
         SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,

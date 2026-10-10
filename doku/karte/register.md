@@ -49,6 +49,7 @@ Zurück zur [[Redion|Übersicht]].
 | `src/bereiche/verbinden/schnittstelle.ts` | Api — /v1/ in Notions Form, mit Token (Z.9-33, 48-50); Servicearbeiter reicht fetch() hierher durch (Z.19-24); Export Z.900. | 906 |
 | `src/schale/aufbau/schale.ts` | Die einzige Start-Reihenfolge: feste Liste von .start()-Aufrufen Z.4093-4116 (MCP.start 4104, Erweiterung.start 4110, Protokoll.start 4113) — kein Start-Register, kein Hook. | 4500 |
 | `doku/AUTOMATIONEN-UND-KNOEPFE.md` | Referenz Stand 2. August 2026 — VERALTET: sagt Z.22 „Every {frequency} ⚠ fehlt bei uns“ und Z.78-84 „Add page to / Send notification / Send mail / Define variables fehlt“, alle fünf stehen seit L16/E-Folge im Code (steuerung.ts:7578, 7802-7805). | 221 |
+| `src/register/ki.ts` | Register.ki (E724, 6. Oktober) — der EINE Katalog der KI-Befehle: 22 Einträge {id, name, icon, art:'auftrag'\|'werkzeug', gruppe, ziel:'markierung'\|'block'\|'seite'\|'datenbank'\|'chat', auftrag (EINE Fassung je Kennung), ausgabe:'ersetzen'\|'darunter'\|'karteikarten'\|'neueSeite'\|'chat', frage?, vorgabe?, haeufig?, palette?, alt:{sb,faehig,block}}; finde/alle/ausAlt/auftrag. Ersetzt fünf Kataloge (data-p-Knöpfe, SCHREIB_BEFEHLE, FAEHIG_START-Aufträge, blockAktion, die vier Palettenabschriften in wissen). Gelesen von ki/dienst.ts (ausfuehren, schreibLauf, befehlsMenue, Palettenlieferant) und schale.ts (uebersetzenMenue). Wächter test599 §7. | 194 |
 
 ## Datenmodell
 
@@ -74,6 +75,7 @@ Vier verschiedene Ablagen, keine gemeinsam. (a) REGISTER liegen nur im RAM: jede
 | `MCP.verbinden / werkzeugeHolen / werkzeugRufen / eigenerKatalog / beantworten / freigegeben / istFrei` | mcp | `src/bereiche/ki/werkzeuge.ts:430-432` | Client nur zu freigegebenen Hosts (Z.55-60); eigener Katalog = Agent.WERKZEUGE (Z.163); JSON-RPC initialize/tools/list/tools/call (Z.11, 184). |
 | `server tools/list / tools/call (MCP_WERKZEUGE)` | mcp | `server/kern.ts:1712-1753` | 5 Werkzeuge mit inputSchema; Rechte über Server-Konten (Z.1753ff). |
 | `Api.anfrage (/v1/…)` | http | `src/bereiche/verbinden/schnittstelle.ts:900` | Notion-Form mit Token und Notion-Version; im Browser beantwortet, vom Servicearbeiter durchgereicht (Z.19-27). |
+| `Register.ki.finde / alle / ausAlt / auftrag` | register | `src/register/ki.ts` | E724: worauf ein KI-Befehl wirkt, was er verlangt, wohin das Ergebnis geht. Der Läufer ist KI.ausfuehren(id, opt) in ki/dienst.ts; die Palette bekommt die häufigen über Register.befehle.meldeLieferant (kein Abschreiben). |
 
 ## Geometrie — was dieses System selbst rechnet
 
