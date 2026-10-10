@@ -21,6 +21,11 @@
  *       aria-hidden, sein Name enthält den Namen des Dings, er misst
  *       mindestens 44 × 44 und sitzt im oberen rechten Viertel des Deckels.
  *       (Rot: ein <i aria-hidden> von 20 × 20 IM Kartenknopf.)
+ *   §1b Bei 1440 (hell) und 390 (dunkel): wo der Stern oder die Scheibe des
+ *       „…" auf dem Vorschautext eines Deckels liegt, liegt sie auf
+ *       DECKENDEM Grund — und die beiden decken einander nicht. (Rot: der
+ *       Stern rückte für das „…" nach links, mitten in die erste Zeile der
+ *       Vorschau, und stand dort ohne Grund: „Redi☆n", gesehen im Bild.)
  *   §2  Rechtsklick auf eine Karte → `defaultPrevented` und ein Menü mit
  *       GENAU denselben Einträgen wie ihr „…". (Rot: das Browsermenü.)
  *   §3  Umschalt+F10 und die Kontextmenü-Taste auf einer fokussierten Karte
@@ -671,6 +676,70 @@ for (const sch of schemata) {
 p('Es waren zehn Schemata', schemata.length === 10, JSON.stringify(schemata));
 console.log('   Kontrast je Schema:', JSON.stringify(proSchema));
 await sk.k.close();
+
+/* ══ §1b die Zeichen der Ecke auf dem Vorschautext ═════════════════════════
+   Eine Seite mit langer erster Zeile, damit der Vorschautext sicher bis
+   unter die Ecke reicht — sonst misst die Prüfung nichts (§55.2). Ein
+   eigener Aufbau, damit die Karte die Zählungen oben nicht verschiebt. */
+const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[] }> => s.evaluate<any>(`(() => {
+  const alpha = c => {
+    if (!c || c === 'transparent') return 0;
+    if (/^color\\(/.test(c)) { const m = c.match(/\\/\\s*([\\d.]+)\\s*\\)$/); return m ? Number(m[1]) : 1; }
+    const z = (c.match(/[\\d.]+/g) || []).map(Number);
+    return z.length >= 4 ? z[3] : 1;
+  };
+  const schneidet = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+  const fehlt = []; let mitText = 0;
+  for (const z of document.querySelectorAll('.bib-gitter .bib-zelle')) {
+    const deckel = z.querySelector('.bib-deckel'), blatt = z.querySelector('.bib-deckel-blatt');
+    if (!deckel || !blatt) continue;
+    const name = deckel.getAttribute('title') || '';
+    const br = blatt.getBoundingClientRect();
+    /* Was vom Vorschautext zu sehen ist: jede Zeile, auf den Deckel beschnitten. */
+    const zeilen = [];
+    const w = document.createTreeWalker(blatt, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = w.nextNode())) {
+      if (!n.textContent.trim()) continue;
+      const el = n.parentElement;
+      if (!el || el.closest('.bib-deckel-stern, .bib-deckel-marke')) continue;
+      const r = document.createRange(); r.selectNodeContents(n);
+      for (const q of r.getClientRects()) {
+        const c = { left: Math.max(q.left, br.left), right: Math.min(q.right, br.right),
+                    top: Math.max(q.top, br.top), bottom: Math.min(q.bottom, br.bottom) };
+        if (c.right - c.left > 1 && c.bottom - c.top > 1) zeilen.push({ ...c, text: n.textContent.trim().slice(0, 24) });
+      }
+    }
+    const stern = z.querySelector('.bib-deckel-stern'), scheibe = z.querySelector('.bib-deckel-mehr i');
+    for (const [wer, e] of [['Stern', stern], ['„…"', scheibe]]) {
+      if (!e) continue;
+      const er = e.getBoundingClientRect();
+      const trifft = zeilen.filter(q => schneidet(q, er));
+      if (!trifft.length) continue;
+      mitText++;
+      const grund = getComputedStyle(e).backgroundColor;
+      if (alpha(grund) < 0.9) fehlt.push(name + ': ' + wer + ' liegt auf „' + trifft[0].text + '" ohne Grund (' + grund + ')');
+    }
+    if (stern && scheibe && schneidet(stern.getBoundingClientRect(), scheibe.getBoundingClientRect()))
+      fehlt.push(name + ': Stern und „…" decken einander');
+  }
+  return { mitText, fehlt };
+})()`) as Promise<{ mitText: number; fehlt: string[] }>;
+
+for (const [wo, o] of [['1440 × 900, hell', {}], ['390 × 844, dunkel', { handy: true, dunkel: true }]] as const) {
+  const e = await aufmachen(o);
+  await e.s.evaluate<any>(`(async () => {
+    const lang = Store.addPage(null, { text: 'Lange Vorschau' });
+    Store.addBlock(lang.id, 'text', { text: 'Schutzleiter, Querschnitte und Absicherung in der Unterverteilung des Altbaus' });
+    await Store.flush();
+  })()`);
+  await zurBibliothek(e.s);
+  console.log('\n§1b · Die Zeichen der Ecke auf dem Vorschautext (' + wo + ')');
+  const ek = await eckePruefen(e.s);
+  p(`Stern und „…" liegen auf deckendem Grund, wo sie Vorschautext berühren (${ek.mitText}× berührt)`,
+    ek.mitText >= 1 && ek.fehlt.length === 0, ek.mitText ? ek.fehlt.slice(0, 3).join(' | ') : 'nichts berührt — die Prüfung misst nichts');
+  await e.k.close();
+}
 
 await browser.close();
 server.close();
