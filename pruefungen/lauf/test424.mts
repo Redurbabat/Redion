@@ -122,14 +122,23 @@ try {
   check('Escape closes panel and restores focus', await page.locator('[data-document-action="thumbnails"]').evaluate(e => e === document.activeElement));
   check('UI changes do not duplicate content', await page.evaluate('Object.keys(Store.cache.blocks).length') === countBefore);
   await page.locator('[data-document-action="regal"]').click();
-  await page.locator('[data-studio-weg="pdf"]').click();
+  /* SEIT E725 steht „Alle PDFs" im Ortsmenü (ein Name je Ort), nicht mehr als
+     eigener Weg — und die Suche des Regals ist die EINE Suche im Bereich
+     Bibliothek. Das Versprechen bleibt: der echte Import ist unter „Alle
+     PDFs" zu finden, eine Suche ohne Treffer zeigt nichts, eine mit Treffer
+     zeigt ihn, und der Fokus bleibt beim Tippen im Feld. */
+  await page.locator('.bib [data-orte]').click();
+  await page.locator('.menu [data-wahl="pdf"]').click();
   check('All PDFs filter finds actual imported file', await page.locator('.bib-deckel[data-art="pdf"]').count() === 1);
-  await page.locator('#bib-studio-suche').fill('no such document');
-  check('Search filters the real library', await page.locator('.bib-deckel').count() === 0);
-  await page.locator('#bib-studio-suche').fill('Elektro');
-  check('Search retains focus after rerender', await page.locator('#bib-studio-suche').evaluate(e => e === document.activeElement));
-  check('Matching search restores result', await page.locator('.bib-deckel').count() === 1);
-  await page.locator('#bib-studio-suche').fill('');
+  await page.keyboard.press('Control+p');
+  await page.locator('.finder.such #q').waitFor({ timeout: 8000 });
+  check('Search opens in the library scope', await page.locator('.finder.such [data-seg-wahl="bibliothek"][aria-checked="true"]').count() === 1);
+  await page.locator('#q').fill('no such document');
+  check('Search in the library finds nothing for a missing title', await page.locator('#res button[data-i]').count() === 0);
+  await page.locator('#q').fill('Elektro');
+  check('Search retains focus while results change', await page.locator('#q').evaluate(e => e === document.activeElement));
+  check('Matching search finds the imported file', await page.locator('#res button[data-i]', { hasText: 'Elektro' }).count() === 1);
+  await page.keyboard.press('Escape');
   await page.waitForTimeout(3500); // Importmeldung darf die Abnahmebilder nicht verdecken.
 
   const sizes = [[1920,1080],[1600,900],[1440,900],[1366,768],[1280,800],[1024,768],[820,1180],[768,1024],[430,932],[390,844]] as const;

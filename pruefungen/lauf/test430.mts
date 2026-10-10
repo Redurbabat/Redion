@@ -65,13 +65,19 @@ try {
   for (const form of ['deckel','regal','liste']) {
     await page.evaluate(`Store.setMeta('bibForm','${form}'); Bibliothek.oeffne()`);
     check(form+': gleicher Dokumentkopf und echter Import',await page.locator('.bib-dkopf').count()===1 && await page.locator('.bib-studio-import').isVisible());
-    await page.locator('[data-studio-weg="pdf"]').click();
+    /* Seit E725: der Ort im Ortsmenü, die Sammlungen als seine Gruppe. */
+    await page.locator('.bib [data-orte]').click();
+    await page.locator('.menu [data-wahl="pdf"]').click();
     check(form+': PDF-Filter zeigt keine normalen Seiten',await page.locator('.bib-deckel[data-id],.bib-heft[data-id],.bib-zeile[data-id]').count()===0);
-    await page.locator('[data-studio-weg="ablage"]').click();
-    await page.locator('.bib-studio-optionen summary').click();
-    check(form+': alle Sammlungen zugänglich',await page.locator('.bib-studio-sammlungen').isVisible());
+    await page.locator('.bib [data-orte]').click();
+    await page.locator('.menu [data-wahl="ablage"]').click();
+    await page.locator('.bib [data-orte]').click();
+    check(form+': alle Sammlungen zugänglich',await page.locator('.menu [data-wahl^="sammlung:"]').count()===6 && await page.locator('.menu [data-wahl^="sammlung:"]').first().isVisible());
+    await page.keyboard.press('Escape');
   }
-  await page.locator('[data-form="deckel"]').click();
+  /* Die drei Formen stehen seit E725 am Formknopf, als Menü. */
+  await page.locator('.bib [data-form-wahl]').click();
+  await page.locator('.menu [data-wahl="deckel"]').click();
   check('Rückweg von Liste zu Dokumentdeckeln',await page.locator('.bib-gitter').count()===1);
   for (const theme of ['hell','standard']) {
     await page.evaluate(`Aussehen.setzen({schema:'${theme}'})`);

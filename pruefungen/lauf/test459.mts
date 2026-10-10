@@ -21,6 +21,10 @@
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   §1 → den Knopf `find-alle` aus der Leiste nehmen. Gelaufen, rot.
+ *        (Seit E725 ist der Schalter die Wahl „Dieses Dokument · Alle
+ *        Dokumente · Überall" — ein Umschalter, `role="radiogroup"`; „Alle
+ *        Dokumente" ist sein alter An-Zustand, gemerkt wie bisher als
+ *        `dokFindAlle = true`.)
  *   §2 → in `fremdeTreffer` den Vergleich `seite.id === ausser` entschärfen
  *        (`ausser + '-nie'`): die eigene Seite steht doppelt da. Gelaufen,
  *        rot — drei Funde statt zwei.
@@ -109,27 +113,27 @@ const aufbauen = async (breit = 1280, hoch = 900): Promise<Page> => {
   return s;
 };
 
-console.log('\n§1 Der Schalter');
+console.log('\n§1 Der Schalter — seit E725 die Wahl „Alle Dokumente"');
 {
   const s = await aufbauen();
   await s.waitForTimeout(1200);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.document-find-button')?.click());
   await s.waitForTimeout(300);
   const k = JSON.parse(await s.evaluate(`(() => {
-    const b = document.querySelector('[data-document-action="find-alle"]');
+    const b = document.querySelector('.document-findbar [data-seg-wahl="dokumente"]');
     if (!b) return JSON.stringify({ da: false });
     const r = b.getBoundingClientRect();
-    return JSON.stringify({ da: true, gedrueckt: b.getAttribute('aria-pressed'),
-      titel: b.getAttribute('title'), hoch: Math.round(r.height), breit: Math.round(r.width) });
+    return JSON.stringify({ da: true, gedrueckt: b.getAttribute('aria-checked'), rolle: b.getAttribute('role'),
+      titel: (b.textContent || '').trim(), hoch: Math.round(r.height), breit: Math.round(r.width) });
   })()`) as string);
-  p('Der Schalter steht in der Suchleiste', k.da, JSON.stringify(k));
+  p('Der Schalter steht in der Suchleiste', k.da && k.rolle === 'radio', JSON.stringify(k));
   p('… mit 44 px (§37)', k.hoch >= 44 && k.breit >= 44, JSON.stringify(k));
   gleich('… und ist zuerst aus', k.gedrueckt, 'false');
-  p('… sein Name nennt, was er tut', /anderen Dokumenten/.test(String(k.titel)), String(k.titel));
-  await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="find-alle"]')?.click());
+  p('… sein Name nennt, was er tut', /Alle Dokumente/.test(String(k.titel)), String(k.titel));
+  await s.evaluate(() => document.querySelector<HTMLButtonElement>('.document-findbar [data-seg-wahl="dokumente"]')?.click());
   await s.waitForTimeout(300);
   gleich('Ein Tipp schaltet ihn an',
-    await s.evaluate(`document.querySelector('[data-document-action="find-alle"]').getAttribute('aria-pressed')`), 'true');
+    await s.evaluate(`document.querySelector('.document-findbar [data-seg-wahl="dokumente"]').getAttribute('aria-checked')`), 'true');
   gleich('… und er merkt es sich', await s.evaluate(`Store.getMeta('dokFindAlle')`), true);
   await s.close();
 }
@@ -142,7 +146,7 @@ console.log('\n§2 Die Liste der fremden Seiten');
     document.querySelector<HTMLButtonElement>('.document-find-button')?.click();
   });
   await s.waitForTimeout(300);
-  await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="find-alle"]')?.click());
+  await s.evaluate(() => document.querySelector<HTMLButtonElement>('.document-findbar [data-seg-wahl="dokumente"]')?.click());
   await s.waitForTimeout(200);
   await s.evaluate(() => {
     const f = document.querySelector<HTMLInputElement>('[data-document-find]')!;
@@ -187,8 +191,8 @@ console.log('\n§2 Die Liste der fremden Seiten');
     !liste.funde.some((f: any) => /Skript/.test(f.zeile)) && liste.eigene > 0,
     JSON.stringify({ zeilen: liste.funde.map((f: any) => f.zeile), eigene: liste.eigene }));
 
-  /* AUS heisst AUS: der Schalter zurück, und die Liste ist weg. */
-  await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="find-alle"]')?.click());
+  /* AUS heisst AUS: zurück auf „Dieses Dokument", und die Liste ist weg. */
+  await s.evaluate(() => document.querySelector<HTMLButtonElement>('.document-findbar [data-seg-wahl="dokument"]')?.click());
   await s.waitForTimeout(300);
   gleich('Schalter aus: die Liste ist weg',
     await s.evaluate(`document.querySelector('.document-find-liste').hidden`), true);
@@ -203,7 +207,7 @@ console.log('\n§3 Der Sprung ins andere Dokument');
   await s.waitForTimeout(1200);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.document-find-button')?.click());
   await s.waitForTimeout(300);
-  await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="find-alle"]')?.click());
+  await s.evaluate(() => document.querySelector<HTMLButtonElement>('.document-findbar [data-seg-wahl="dokumente"]')?.click());
   await s.waitForTimeout(200);
   await s.evaluate(() => {
     const f = document.querySelector<HTMLInputElement>('[data-document-find]')!;

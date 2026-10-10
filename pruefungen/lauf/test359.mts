@@ -97,7 +97,8 @@ const reiterSetzen = async (id: string): Promise<void> => {
   }, id);
   await seite.waitForTimeout(250);
   await seite.evaluate((r: string) => {
-    document.querySelector<HTMLElement>('.menu [data-x="' + r + '"]')?.click();
+    /* Das Ortsmenü ist seit E725 die EINE Auswahlliste (`data-wahl`). */
+    document.querySelector<HTMLElement>('.menu [data-wahl="' + r + '"]')?.click();
   }, id);
   await seite.waitForTimeout(350);
 };
@@ -128,7 +129,8 @@ console.log('\n1 · Die Zahl nennt beide Seiten, solange die Decke greift');
 
 await anlegen(300);
 const satzGross = await kopfSatz();
-const erwartet = 'Kürzlich verwendet · 60 von ' + (grund + 300) + ' Dokumenten';
+/* „Kürzlich verwendet" heisst seit E725 „Zuletzt geöffnet" (ein Name je Ort). */
+const erwartet = 'Zuletzt geöffnet · 60 von ' + (grund + 300) + ' Dokumenten';
 gleich('Bei 300 neuen Seiten steht „60 von N Dokumenten"', satzGross, erwartet);
 p('Und nicht die nackte Sechzig', !/·\s*60 Dokumente/.test(satzGross),
   'genau das war der Befund: eine Decke, die aussieht wie eine Zahl');
@@ -163,36 +165,39 @@ p('Die nackte Sechzig steht nirgends als Zahl, die das Gerät nicht kennt',
 /* ========================================================================== */
 console.log('\n4 · Gesucht wird über alle kürzlich verwendeten');
 
-/* Die Suchzeile gibt es in der LISTENFORM — dort steht sie hinter dem
-   Lupenknopf. „Skript 7" ist absichtlich eine Seite, die weit ausserhalb
-   der sechzig neuesten liegt: vor E367 schnitt die Decke VOR der Suche,
-   und man bekam „nichts gefunden" für etwas, das da ist. */
+/* SEIT E725 ist die Lupe der LISTENFORM der Weg in die EINE Suche — im
+   Bereich, den das Regal gerade zeigt („In ‚Zuletzt geöffnet‘"). Die
+   Zusage bleibt dieselbe: „Skript 7" liegt weit ausserhalb der sechzig
+   neuesten, und vor E367 schnitt die Decke VOR der Suche — man bekam
+   „nichts gefunden" für etwas, das da ist. Gesucht wird der Wortlaut
+   „Skript 7" in Anführungszeichen: genau Skript 7 und 70 bis 79. */
 const suchTreffer = await seite.evaluate(async () => {
   Store.setMeta('bibForm', 'liste');
   Bibliothek.oeffne();
   await new Promise(f => setTimeout(f, 300));
   document.querySelector<HTMLElement>('[data-a="suche"]')?.click();
-  await new Promise(f => setTimeout(f, 300));
-  const feld = document.getElementById('bib-suche') as HTMLInputElement | null;
-  if (!feld) return { feldDa: false, treffer: 0, satz: '' };
-  feld.value = 'Skript 7';
+  await new Promise(f => setTimeout(f, 400));
+  const feld = document.getElementById('q') as HTMLInputElement | null;
+  const bereich = document.querySelector('.finder.such [data-seg-wahl="bibliothek"]');
+  if (!feld || !bereich) return { feldDa: false, bereich: '', treffer: 0, titel: [] as string[] };
+  feld.value = '"Skript 7"';
   feld.dispatchEvent(new Event('input', { bubbles: true }));
   await new Promise(f => setTimeout(f, 500));
-  return { feldDa: true,
-           treffer: document.querySelectorAll('.bib-zeile:not(.bib-kopfzeile)').length,
-           satz: (document.querySelector('.bib-dkopf .bib-ort')?.textContent || '')
-             .replace(/\s+/g, ' ').trim() };
+  const titel = [...document.querySelectorAll('#res button[data-i] span[style] > span')]
+    .map(t => (t.textContent || '').trim());
+  return { feldDa: true, bereich: (bereich.textContent || '').trim(), treffer: titel.length, titel };
 });
-p('Es gibt ein Suchfeld', suchTreffer.feldDa);
+p('Die Lupe öffnet die EINE Suche im Bereich des Regals', suchTreffer.feldDa, JSON.stringify(suchTreffer.bereich));
+p('… und der Bereich ist „Zuletzt geöffnet"', /Zuletzt geöffnet/.test(suchTreffer.bereich), suchTreffer.bereich);
 p('„Skript 7" findet mehr als nichts — obwohl Skript 7 nicht unter den ' +
-  'sechzig neuesten ist', suchTreffer.treffer > 0,
-  'Treffer: ' + suchTreffer.treffer + ', Kopf: ' + suchTreffer.satz);
+  'sechzig neuesten ist', suchTreffer.titel.includes('Skript 7'),
+  'Treffer: ' + suchTreffer.treffer + ' ' + JSON.stringify(suchTreffer.titel.slice(0, 4)));
 p('Gefunden werden auch Skript 70 bis 79 — elf Treffer',
   suchTreffer.treffer >= 11, 'Treffer: ' + suchTreffer.treffer);
-p('Und der Kopf deckelt diese elf NICHT — die Decke greift erst darüber',
-  !/ von /.test(suchTreffer.satz), suchTreffer.satz);
+p('Und die Decke von sechzig schneidet die Suche NICHT — sie gilt der Anzeige, nicht dem Bestand',
+  suchTreffer.titel.includes('Skript 70') && suchTreffer.titel.includes('Skript 79'), JSON.stringify(suchTreffer.titel));
 await seite.evaluate(async () => {
-  document.querySelector<HTMLElement>('[data-a="suchzu"]')?.click();
+  document.querySelectorAll('.overlay').forEach(o => o.remove());
   await new Promise(f => setTimeout(f, 300));
 });
 

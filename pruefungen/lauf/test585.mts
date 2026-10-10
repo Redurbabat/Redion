@@ -456,15 +456,45 @@ console.log('\n5 · Die Umschalter: die Wahl fliegt, statt zu springen');
     await a.zu();
   }
 
-  /* Die Wege im Regal. */
+  /* Die Wege im Regal — seit E725 im Ortsmenü. Die Wahl schliesst dort das
+     Menü, also fliegt kein Wechsel; das Material zieht mit ins Menü: EINE
+     leise Marke (E711) steht auf dem gewählten Ort und gleitet mit den
+     Pfeilen, wie in der Suche und im Menü mit Suche. */
   {
     const a = await aufmachen();
     await a.pc.evaluate(`Bibliothek.oeffne()`);
-    await a.pc.waitForSelector('.bib-studio-wege [data-studio-weg="kuerzlich"]', { timeout: 15000 });
+    await a.pc.waitForSelector('.bib [data-orte]', { timeout: 15000 });
     await a.pc.waitForTimeout(600);
-    const beob = a.pc.evaluate(flugBeobachten('.bib-studio-wege button.on'));
-    await a.pc.evaluate(`document.querySelector('.bib-studio-wege [data-studio-weg="kuerzlich"]').click()`);
-    flugPruefen('Dokumente, Meine Ablage → Zuletzt geöffnet', await beob as Flug);
+    await a.pc.evaluate(`document.querySelector('.bib [data-orte]').focus()`);
+    await a.pc.keyboard.press('Enter');
+    await a.pc.waitForTimeout(500);
+    const start = await a.pc.evaluate(`(() => {
+      const m = document.querySelector('.menu [role="group"] > .ru-marke');
+      const z = document.querySelector('.menu [data-wahl][aria-current="true"]');
+      if (!m || !z || m.hidden) return null;
+      const r = m.getBoundingClientRect(), q = z.getBoundingClientRect();
+      return { t: r.top, zt: q.top };
+    })()`) as { t: number; zt: number } | null;
+    p('Dokumente, Ortsmenü: die Marke steht auf dem gewählten Ort (Meine Ablage)',
+      !!start && Math.abs(start.t - start.zt) <= 2, JSON.stringify(start));
+    const bahn = a.pc.evaluate(`(async () => {
+      const orte = []; let laeuft = true;
+      const takt = () => { const m = document.querySelector('.menu [role="group"] > .ru-marke');
+        if (m) { const t = Math.round(m.getBoundingClientRect().top * 10) / 10; if (orte[orte.length - 1] !== t) orte.push(t); }
+        if (laeuft) requestAnimationFrame(takt); };
+      requestAnimationFrame(takt);
+      await new Promise(f => setTimeout(f, 700)); laeuft = false;
+      const m = document.querySelector('.menu [role="group"] > .ru-marke');
+      const z = document.querySelector('.menu [data-wahl="kuerzlich"]');
+      return { orte: orte.length, ende: m ? m.getBoundingClientRect().top : -1, ziel: z ? z.getBoundingClientRect().top : -2,
+               marken: document.querySelectorAll('.menu .ru-marke').length };
+    })()`);
+    await a.pc.keyboard.press('ArrowDown');
+    const b = await bahn as { orte: number; ende: number; ziel: number; marken: number };
+    p('Dokumente, Meine Ablage → Zuletzt geöffnet: die Marke gleitet (viele Zwischenorte)', b.orte >= 6, JSON.stringify(b));
+    /* Ohne Marke und ohne Ziel wären −1 und −2 auch „nah beieinander" (§55.2). */
+    p('… und landet genau auf „Zuletzt geöffnet"', b.ende >= 0 && b.ziel >= 0 && Math.abs(b.ende - b.ziel) <= 2, JSON.stringify(b));
+    p('… und es ist EINE Marke', b.marken === 1, JSON.stringify(b));
     await a.zu();
   }
 

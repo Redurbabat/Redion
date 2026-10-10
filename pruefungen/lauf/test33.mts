@@ -431,7 +431,10 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
      nicht ausgelesen, `getMeta` gab den Standard, und die Wahl war beim
      nächsten Start weg. Kein Wurf, keine Meldung. Diese Prüfung geht rot,
      wenn jemand den Wert wieder zu früh liest. */
-  await p.click('[data-form="liste"]');
+  /* Seit E725 stehen die drei Formen am Formknopf, als Menü. */
+  await p.click('.bib [data-form-wahl]');
+  await p.waitForTimeout(300);
+  await p.click('.menu [data-wahl="liste"]');
   await p.waitForTimeout(400);
   await p.evaluate(() => { App.zeichneSeite(); });
   await p.waitForTimeout(400);
@@ -451,7 +454,6 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
      die Namen von Notion stehen im Ort-Menü, nicht in einer Reiterzeile. */
   const bib = await p.evaluate(() => ({
     titel: (document.querySelector('.bib-dkopf h1')?.textContent ?? '').trim(),
-    wege: [...document.querySelectorAll<HTMLElement>('[data-studio-weg]')].map(x => (x.textContent ?? '').trim()),
     spalten: [...document.querySelectorAll<HTMLElement>('.bib-kopfzeile [data-s]')].map(x => (x.textContent ?? '').replace(/[↑↓]/g, '').trim()),
     zeilen: document.querySelectorAll('.bib-zeile[data-id]').length,
     krume: document.getElementById('crumb')?.textContent,
@@ -461,19 +463,24 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
   }));
   console.log('   Bibliothek:', JSON.stringify(bib));
   ok('Die Dokumente tragen ihren Titel', bib.titel === 'Dokumente');
-  ok('Vier Schnellwege', bib.wege.length === 4);
-  ok('Die Ablage steht vorne (E380)', (bib.wege[0] ?? '').includes('Ablage'));
-  /* Die Notion-Namen stehen im Ort-Menü — alle Reiter, auch „Privat". */
+  /* DIE VIER SCHNELLWEGE STEHEN SEIT E725 IM ORTSMENÜ — mit genau den
+     Namen, die sie als Wege trugen (ein Name je Ort, Entscheidung a), und
+     „Meine Ablage" vorne (E380). Das Ortsmenü ist die EINE Auswahlliste
+     (`Menue.wahl`, E721): seine Einträge tragen `data-wahl`. */
   await p.click('.bib-dkopf [data-orte]');
   await p.waitForTimeout(300);
   const orteMenue = await p.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('.menu [data-x], .overlay [data-x]')].map(x => (x.textContent ?? '').trim()));
+    [...document.querySelectorAll<HTMLElement>('.menu [data-wahl]')].map(x => (x.textContent ?? '').replace('✓', '').trim()));
+  ok('Vier Schnellwege', ['Meine Ablage', 'Zuletzt geöffnet', 'Favoriten', 'Alle PDFs'].every(n => orteMenue.includes(n)));
+  ok('Die Ablage steht vorne (E380)', (orteMenue[0] ?? '') === 'Meine Ablage');
   await p.evaluate(() => { document.querySelectorAll('.menu').forEach(m => m.remove()); });
   await p.waitForTimeout(200);
   const alleReiter = orteMenue.join(' | ');
   console.log('   Ort-Menü:', alleReiter);
+  /* „Kürzlich verwendet" heisst seit E725 wie der Weg, der dasselbe zeigte:
+     „Zuletzt geöffnet" — ein Name je Ort. */
   ok('Reiter heissen wie bei Notion',
-     ['Kürzlich verwendet', 'Favoriten', 'Geteilt'].every(n => alleReiter.includes(n)));
+     ['Zuletzt geöffnet', 'Favoriten', 'Geteilt'].every(n => alleReiter.includes(n)));
   ok('… und „Privat" ist über das Ort-Menü erreichbar', alleReiter.includes('Privat'));
   ok('Vier Spalten wie im Bild',
      bib.spalten.length === 4 && (bib.spalten[0] ?? '').includes('Seitenbezeichnung') &&
@@ -489,8 +496,10 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
   ok('Krume nennt den Ort', /Dokumente|Alle Seiten/.test(bib.krume || ''));
   ok('Fusszeile zählt', /Seiten?/.test(bib.fuss || ''));
 
-  /* Schnellweg Favoriten */
-  await p.click('[data-studio-weg="favoriten"]');
+  /* Schnellweg Favoriten — seit E725 im Ortsmenü */
+  await p.click('.bib-dkopf [data-orte]');
+  await p.waitForTimeout(300);
+  await p.click('.menu [data-wahl="favoriten"]');
   await p.waitForTimeout(400);
   const favs = await p.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('.bib-zeile[data-id] .bib-txt')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));
@@ -501,8 +510,8 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
   await p.click('.bib-dkopf [data-orte]');
   await p.waitForTimeout(300);
   await p.evaluate(() => {
-    const b2 = [...document.querySelectorAll<HTMLElement>('.overlay [data-x], .menu [data-x]')]
-      .find(x => x.dataset.x === 'alle');
+    const b2 = [...document.querySelectorAll<HTMLElement>('.menu [data-wahl]')]
+      .find(x => x.dataset['wahl'] === 'alle');
     b2?.click();
   });
   await p.waitForTimeout(400);
