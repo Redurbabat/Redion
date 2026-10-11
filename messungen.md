@@ -7883,3 +7883,63 @@ Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
 **Start:** 1854 → 1855 KB gzip über 252 Dateien (`test388` §5, Decke
 1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
 v1430.
+
+## §97 · Die Linse auf „Heute“ ruht neben dem Wort (E740, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/linse-neben-dem-wort` gegen 1575a183
+(`origin/main`). Chromium über einen eigenen Dateiserver (Port ≥ 9800 bzw.
+ein freier Port des Systems in `test589`), Lernzentrum → „Heute“,
+2600 ms nach dem Ankommen (weniger Bewegung: 400–500 ms). Lage aus
+`getBoundingClientRect`, die Buchstaben aus `Range.getClientRects()`
+Zeichen für Zeichen, jedes Kästchen gegen den Kreis der Linse. Rechner ohne
+Telefon-Schalter, Telefon mit `isMobile`, `hasTouch`, Pixeldichte 2.
+Skripte im Kratzordner (`probe.mts`, `schmal.mts`), nicht eingecheckt;
+die Zusagen hält `test589` §16.
+
+**Vorher** (1575a183, `test589` §16): unter der ruhenden Linse „n . k e n .“
+in allen sechs Fällen; ihr linker Rand 72,7 px (1440 × 900, Schrift 44 px,
+Linse 75 px) bzw. 56,2 px (390 × 844, Schrift 34 px, Linse 58 px) VOR dem
+Ende von „Weiterdenken.“; bei 320 px eine 58-px-Linse über „ken“.
+
+**Nachher** — kein Buchstabe unter der ruhenden Linse, in jeder Zeile:
+
+```txt
+Fenster           Schrift   Linse   Abstand zum Punkt   rechter Rand / Spalte
+1440 × 900        44 px     75 px   9,0 px              791 / 851
+1280 × 800        39,7 px   67 px   8,0 px              672 / 771
+1000 × 900        31 px     53 px   6,0 px              465 / 614
+ 800 × 900        28 px     48 px   6,0 px              440 / 497
+ 768 × 1024       28 px     48 px   6,0 px              440 / 465
+ 390 × 844        34 px     58 px   7,0 px              319 / 355
+ 360 × 780        34 px     58 px   7,0 px              319 / 325
+ 320 × 640        34 px     —       keine Linse (daneben kein Platz)
+Monospace 1440    44 px     75 px   9,0 px              834 / 851
+Monospace 390     34 px     58 px   7,0 px              352 / 355
+Serif 1440        44 px     75 px   9,0 px              766 / 851
+„lesbar“ 390      34 px     58 px   7,0 px              319 / 355
+```
+
+Hell und dunkel liegen Pixel für Pixel gleich; „weniger Bewegung“ legt die
+Linse ohne Fahrt an denselben Ort. Die Mitte der Linse liegt auf der Höhe
+der zweiten Zeile (1440: 458 in 433–482; 390: 570 in 551–589), und sie
+deckt keinen Buchstaben von Augenbraue und Absatz (`test589` §16, 1440 und
+390, hell und dunkel).
+
+**320 px, dann breiter** (`schmal.mts`): 120 ms nach dem Ankommen trägt die
+Überschrift `ru-held-kommt`, zwei Zeilen-Animationen laufen, keine Linse;
+nach 2,6 s ist alles still. Auf 390 × 844 gezogen: eine 58-px-Linse, keine
+Animation läuft, kein Seitenfehler.
+
+**Der Kontrast IN der Linse** (Abschrift ausgeblendet, das Innere bis
+0,7 · Halbmesser, hellster gegen dunkelsten Bildpunkt):
+
+```txt
+                                         dunkel     hell
+dichte Linse, angehalten über „Aufmachen."   1,29 : 1   1,15 : 1   (2 Buchstaben darunter)
+dünne Linse (35 %), angehalten ebenda        6,68 : 1   3,66 : 1   ← §13e rot
+dünne Linse (35 %), in Ruhe neben dem Wort   1,01 : 1      —       ← die alte Messung wäre grün
+```
+
+**Bytes.** `quell/schale/bedienung/linse.js` 3603 → 3676 B gzip (+73),
+`studio.css` 28451 → 28471 B gzip (+20, ein Kommentar). `test388` §5:
+1890 KB über 254 Dateien, Decke 1950.

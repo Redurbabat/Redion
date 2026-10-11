@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-708 Entscheidungen, E1 bis E729 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+709 Entscheidungen, E1 bis E740 (die Nummern zwischen **E729 und E740** sind den anderen Bögen vom 11. Oktober vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -771,6 +771,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E727** — Das Gestirn: ein Hell/Dunkel-Schalter mit einer Regel für jede Tür (Redur, Masterprompt 29. September: „es seiht noch nicht 100 fetig aus, also finde für hier ewas kreatives aus“): die „Sichel“ war ein Schatten in fester Farbe, der in keinem dunklen Schema den Grund traf, und dieselbe Funktion gab es dreimal mit drei Regeln — von „Mitternacht“ führte Strg⇧L hin und zurück nach „Standard“. Jetzt EINE Quelle `Aussehen.grundWechseln` (merkt das Schema je Grundton, behält den Akzent), alle Türen leiten weiter; Sonne und Mond aus dem Register gehen in einem runden Fenster auf und unter, `role=switch`, 44 × 44, nur transform/opacity. Ergänzt E462 und E701. `test602` neu, `test580` und `test584` angepasst
 * **E728** — Der ruhige Kopf: die Suche links, rechts nur Zeichen, Motor und Glas nur als Zustand (Redur, Masterprompt 29. September: „nur die emojis dort bleiben und alles komplet nacht links schieiben … drehen wie eine mottor und glass efeckt“): `margin-left:auto` stand an der Kapsel statt am ersten Zeichen; „PDF öffnen“ wird das Zeichen `upload`, „Werkzeuge“ trägt `band` statt ⌘, die Zwillinge im Band stehen bei offener Lade am Rechner nicht mehr doppelt (jeder ruft dieselbe Funktion, gezählt); die Lupe dreht sich einmal unter Zeiger, Fokus, Strg P und am Telefon beim Drücken, die Kapsel wird dabei Glas, in Ruhe deckend; alle Kopfknöpfe 44 × 44. Ergänzt E703 und E457, schliesst L117 Punkt 3. `test603` neu, `test482` erweitert
 * **E729** — main trotz roter Läufe, einmal (Redur, 6. Oktober: „… danch alles auf main trotz die rote läufe …"): `main` wird auf den Stand der dritten Welle vorgespult (claude/morgen-besser-3, ein leerer Zusammenführungs-Commit von origin/main und die Nachzüge danach, Zweig `claude/auf-main`), obwohl der volle Lauf rote Läufe zeigt. Rot bleiben nur Läufe, die auf claude/morgen-besser-2 Zeile für Zeile gleich rot sind (14, je mit Grund in AUFGABEN.md); was aus den eigenen Zweigen rot war, ist vorher gerichtet, ohne einen Wächter zu lockern; vier Läufe, die im vollen Lauf rot und einzeln nachgefahren grün waren, sind gemessen — drei davon verloren ein Versprechen im Prüfstand, kein Neuladen (P131). Ohne force, ein Vorspulen. Eine Ausnahme von §46 für diesen einen Stand, keine neue Regel
+* **E740** — Die Linse auf „Heute“ ruht NEBEN dem Wort (Redur, 11. Oktober: „Ja“ auf die Frage aus der Liste vom 5. Oktober, „neben dem Wort ruhen?“): die Fahrt über „Aufmachen. / Weiterdenken.“ bleibt, der Halt liegt eine Fünftel-Schriftgrösse rechts vom Punkt, auf der Höhe der zweiten Zeile, in der Spalte der Überschrift; ist daneben weniger Platz, wird die Linse kleiner, unter 40 px gibt es keine (320 px) — die Zeilen kommen trotzdem verwischt herein. In Ruhe ist sie eine leere Glasscheibe. `test589` §16 neu (jeder Buchstabe gegen den Kreis der Linse), §8 „neben“ statt „auf“, §13e an den Halt über „Aufmachen.“ verlegt. Ergänzt E712; +93 B gzip.
 
 ---
 
@@ -60528,6 +60529,14 @@ der bekannte Wackler aus dem Zweig der roten Inseln. Ohne Browser grün:
 
 ## E712 — Tropfen, Linse und Kacheln: das „+“ und das „⋯“ fliessen in ihr Menü, die Linse gleitet über „Heute“, Glaskacheln oben in „Mehr“
 
+> **Ergänzt durch E740 (11. Oktober 2026) — die Linse ruht NEBEN dem
+> Wort.** Die Fahrt aus Punkt 3 bleibt; ihr Halt lag über „ken“ (`P2 =
+> Ende der zweiten Zeile − 0,8 Schriftgrössen`), und im Gesamtbild stand
+> „Weiterdenl(en“. Seit E740 hält sie eine Fünftel-Schriftgrösse rechts
+> vom Punkt, in der Spalte der Überschrift; bei 320 px gibt es keine.
+> Redur: „Ja“ auf „neben dem Wort ruhen?“. `test589` §16; §8 heisst
+> „neben“ statt „auf“, §13e misst am Halt über „Aufmachen.“.
+
 > **Ergänzt durch E721 (6. Oktober 2026) — dasselbe Menü, sieben Zeilen aus
 > dem Register.** Das Seitenmenü behält Aufbau, Tropfen und Wörter; seine
 > Einträge `fav`, `rename`, `icon`, `dup`, `link`, `del` und
@@ -60741,6 +60750,11 @@ erweitert (rot: 74 bestanden, 17 durchgefallen), dann behoben (91 und 0):
    1000 px Breite schwebte ein vergrössertes „ken“ unter der Zeile. Jetzt
    legt sie sich neu an ihren Ort, ohne neue Fahrt (ein `ResizeObserver` auf
    dem Satz).
+   *Ergänzt durch E740 (11. Oktober 2026):* „ihr Ort“ ist seither NEBEN dem
+   Wort, rechts vom Punkt, nicht mehr über „ken“ — der Beobachter legt sie
+   dorthin, und `test589` §8 sagt „liegt weiter NEBEN der zweiten Zeile“.
+   Der Fehler hier war die alte Schriftgrösse der Abschrift und eine Lage
+   aus den Pixeln des Ankommens, nicht der Ort neben dem Wort.
 7. **Kontrast heisst: keine Linse.** Redur, 27. September, ca. 21:45:
    „Starker Kontrast ohne Glas“. Die Linse trägt feste Deckkraft und
    Brechung; unter „Hoher Kontrast“, „Starker Kontrast“, „mehr Kontrast“,
@@ -65310,3 +65324,110 @@ Stand ohne Rot", sondern der letzte geprüfte Stand MIT einer benannten
 Liste roter Läufe. Wer main holt, bekommt diese Liste mit. Der Satz in §46
 ist deshalb um einen Hinweis auf diesen Eintrag ergänzt, nicht
 umgeschrieben.
+
+## E740 — Die Linse auf „Heute“ ruht neben dem Wort, nicht über „ken“
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur („Ja“ am
+11. Oktober auf die Frage aus der Liste vom 5. Oktober: „neben dem Wort
+ruhen?“; in AUFGABEN.md stand sie als „Die Linse auf ‚Heute‘ ruht über
+‚ken‘“) · **ergänzt** E712 (Szene 03, „03 REFRACT“), ohne Fahrt, Glas,
+Feder oder Filter zu ändern · **Wächter:** `test589` §16, §8, §13e ·
+**Zweig** `claude/linse-neben-dem-wort`.
+
+**Was war.** E712 liess die Linse beim Ankommen über „Aufmachen.“ und
+„Weiterdenken.“ gleiten und am Ende der zweiten Zeile ruhen: `P2 = Ende
+der zweiten Zeile − 0,8 Schriftgrössen`. Dort lag sie über „ken“ und
+zeigte das Wort, um 1,2 vergrössert, ein zweites Mal — im Gesamtbild las
+man „Weiterdenl(en“. Gemessen mit `test589` §16 gegen 1575a183: sechs
+Zeichen unter der ruhenden Linse („n“, „.“, „k“, „e“, „n“, „.“), ihr
+linker Rand 72,7 px (Rechner) und 56,2 px (Telefon) vor dem Ende der
+Zeile; bei 320 px dasselbe mit einer 58-px-Linse.
+
+**Was entschieden wurde.**
+
+1. **Der Halt liegt neben dem Wort.** `P2 = Ende der zweiten Zeile +
+   Lücke + D/2`, auf der Mitte der Zeile. Die Lücke ist eine
+   Fünftel-Schriftgrösse (9 px bei 44 px Schrift, 7 px bei 34 px).
+2. **In der Spalte der Überschrift.** Ist rechts vom Punkt weniger Platz,
+   als die Linse gross ist, wird sie kleiner (`D = min(1,7 · Schrift auf
+   48 bis 84 begrenzt, Platz)`); unter 40 px gibt es keine — lieber keine
+   Linse als eine über der Schrift. Gemessen: bei 320 px Breite keine, ab
+   360 px 58 px (messungen.md §97).
+3. **Die Fahrt bleibt.** P0 und P1 sind dieselben: die Linse fällt herein,
+   gleitet zum Ende von „Aufmachen.“, wartet, gleitet über „Weiterdenken.“
+   hinaus und hält rechts vom Punkt. Milchglas unterwegs, Brechung `FAHRT`
+   in Ruhe, Feder „knapp“, 1650 ms — nichts davon ist neu.
+4. **Die Zeilen kommen auch ohne Linse.** Das verwischte Hereinkommen von
+   „Aufmachen.“ und „Weiterdenken.“ stand im Code NACH der Linse und wäre
+   mit ihr bei 320 px weggefallen. Es ist jetzt ein eigener Schritt
+   (`zeilenKommen`), der auch dort läuft (gemessen: zwei laufende
+   Zeilen-Animationen, keine Linse). Wird das Fenster breiter, legt der
+   Beobachter aus der Durchsicht von E712 die Linse an ihren Ort, ohne neue
+   Fahrt (320 → 390 px: eine 58-px-Linse, nichts läuft).
+5. **Die ruhende Linse ist eine leere Scheibe.** Neben dem Wort liegt unter
+   ihr leerer Grund: ihre Abschrift zeigt dort nichts, die Brechung bricht
+   nichts. Was man sieht, ist dichtes Glas mit Lichtkante und Schatten —
+   dunkel eine kaum hellere Scheibe mit hellem Rand, hell ein fast weisser
+   Stein mit weichem Schatten (Bilder vorher und nachher, Rechner und
+   Telefon, hell und dunkel, dazu „weniger Bewegung“).
+
+**Die Wächter, mit Redurs Wort geändert.**
+
+- `test589` §16 **neu**: jeder Buchstabe beider Zeilen
+  (`Range.getClientRects()`, Zeichen für Zeichen) gegen den KREIS der
+  ruhenden Linse — 1440 × 900 und 390 × 844, dunkel und hell, dazu
+  „weniger Bewegung“ an beiden Grössen. Dazu, damit „keine Linse“ nicht als
+  „neben dem Wort“ durchgeht: sie ist da, rechts neben „Weiterdenken.“,
+  höchstens eine halbe Schriftgrösse daneben, auf der Höhe der Zeile, in der
+  Spalte der Überschrift, still; darunter deckt sie weder Augenbraue noch
+  Absatz (bleibt). Bei 320 px: kein Buchstabe unter einer Linse.
+- `test589` §8: „Schmaleres Fenster: die Linse liegt weiter AUF der
+  zweiten Zeile“ heisst jetzt „… weiter NEBEN der zweiten Zeile“ —
+  dieselbe Messung bei 1000 px, nur der Ort ist der neue.
+- `test589` §13e **verlegt**: er mass den Kontrast in der Linse ohne
+  Abschrift in Ruhe, also über „ken“. Neben dem Wort läge darunter leerer
+  Grund, und die Zusage wäre immer grün — gemessen mit der dünnen Linse von
+  vor dem Nachtrag: 1,01 : 1 in Ruhe. Jetzt hält er die Fahrt am Ende der
+  ersten Zeile an (780 ms, die Linse wartet über „Aufmachen.“), prüft, dass
+  dort Buchstaben UNTER ihr liegen und sie gedeckt ist (Deckkraft ≥ 0,98 —
+  das Aufploppen auf der Feder „lebhaft“ schwingt dort noch mit 0,998
+  aus), und misst erst dann: 1,29 : 1 dunkel, 1,15 : 1 hell.
+
+**Rot gesehen.** `test589` gegen 1575a183 (Commit „test589 (rot)“):
+112 ok, 14 offen — §8 und dreizehn Zusagen in §16; der verlegte §13e war
+dort grün, er hält, was schon stimmte. Mit E740: 126 von 126.
+**Gegenprobe 1** — der alte Halt (`P2 = Ende − 0,8 Schriftgrössen`), alles
+andere wie E740: 113 ok, 13 offen (§8 und zwölf in §16; bei 320 px bleibt
+die Linse weg, die Zusage dort also grün). **Gegenprobe 2** — die Linse zu
+35 % gedeckt (`color-mix(in srgb,var(--bg-side) 35%,transparent)`, wie vor
+dem Nachtrag von E712): 124 ok, 2 offen, §13e rot mit 6,68 : 1 dunkel und
+3,66 : 1 hell. Beide Gegenproben wurden am gebauten JavaScript bzw. am
+Stilblatt gefahren und Byte für Byte zurückgesetzt (sha256 vorher =
+nachher).
+
+**Warum.** Die Überschrift ist der Satz, den man auf „Heute“ zuerst liest.
+Eine Linse, die ihn dauerhaft deckt und verdoppelt, macht aus dem
+Ankommen einen Lesefehler. Die Fahrt erklärt die Linse; in Ruhe braucht sie
+keine Schrift unter sich.
+
+**Was die Alternative war.** (a) Die Linse nach der Fahrt ausblenden: in
+Ruhe kein Glas mehr auf „Heute“ — gewählt hat Redur „neben dem Wort
+ruhen“, nicht „verschwinden“. (b) Den Halt über einen festen Punkt der
+Karte legen statt an den Satz: die Linse hinge dann nicht mehr an der
+Überschrift, deren Grösse mit dem Fenster wächst (`clamp(28px, 3.1vw,
+44px)`), und der Beobachter aus der Durchsicht von E712 hätte nichts mehr,
+woran er sie legt.
+
+**Was es kostet.** +73 B gzip auf `quell/schale/bedienung/linse.js`
+(3603 → 3676 B), +20 B gzip auf `studio.css` (ein Kommentar) — 93 B auf die
+Startdateien; `test388` §5: der Start holt 1890 KB über 254 Dateien (Decke
+1950). Bei 320 px Breite gibt es keine Linse mehr (vorher eine über
+„ken“). Und die ruhende Linse ist leer: sie ist `aria-hidden` und
+`pointer-events:none`, also kein Weg, den man treffen kann — ob eine leere
+Glasscheibe neben dem Punkt auf Dauer wie ein Knopf ohne Namen wirkt, ist
+eine Frage an Redur (in Ruhe stehen lassen oder nach der Fahrt verblassen
+lassen), nicht still entschieden; sie steht in AUFGABEN.md.
+
+**Wächter:** `test589` §16 (neu), §8 (geändert), §13e (verlegt).
+Nachbarn grün: `test539`, `test388`, `test217`, `test424`, `test580`,
+`test576`; Datei-Wächter `test105`, `test109`, `test550`.

@@ -223,11 +223,13 @@ const Linse = (() => {
     };
   };
 
-  /* DIE LINSE ÜBER DEM SATZ (E712, Szene 03): einmal beim Ankommen über
-     „Aufmachen. / Weiterdenken.", dann Stillstand. Eine Abschrift in der
-     Linse, verschoben und um 1,2 vergrössert — nur `transform`, die Bahn
-     einmal gerechnet (Feder „knapp"). Unterwegs Milchglas (still
-     weichgezeichnet, nur Deckkraft), in Ruhe die Brechung `FAHRT`. */
+  /* DIE LINSE AM SATZ (E712, Szene 03): gleitet einmal beim Ankommen über
+     „Aufmachen. / Weiterdenken." und ruht dann NEBEN dem Wort, rechts vom
+     Punkt (E740) — nicht mehr über „ken". Eine Abschrift in der Linse,
+     verschoben und um 1,2 vergrössert — nur `transform`, die Bahn einmal
+     gerechnet (Feder „knapp"). Unterwegs Milchglas (still weichgezeichnet,
+     nur Deckkraft), in Ruhe die Brechung `FAHRT`; neben dem Wort liegt
+     darunter leerer Grund, die ruhende Linse ist also eine stille Scheibe. */
   const SATZ_GESAMT = 1650;
   let satzBeginn = 0;
 
@@ -279,11 +281,38 @@ const Linse = (() => {
     const a = lage(z1), e = lage(z2);
     const stil = getComputedStyle(satz);
     const fs = parseFloat(stil.fontSize) || 40;
-    const D = Math.round(Math.max(48, Math.min(84, fs * 1.7)));
+    /* Die Überschrift im Träger: für die Abschrift und den Platz daneben. */
+    const hr = satz.getBoundingClientRect();
+    const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
+    /* NEBEN DEM WORT RUHEN (E740). Auf die Frage an Redur vom 5. Oktober
+       2026, ob die Linse „neben dem Wort ruhen" soll, sagte er am
+       11. Oktober „Ja". Hier stand `P2 = Ende der zweiten Zeile − 0,8
+       Schriftgrössen`: die Linse ruhte über „ken", und im Gesamtbild las man
+       „Weiterdenl(en". Jetzt hält sie eine Fünftel-Schriftgrösse rechts vom
+       Punkt, auf der Höhe der Zeile, und bleibt in der Spalte der
+       Überschrift: ist daneben weniger Platz als ihre Grösse, wird sie
+       kleiner; unter 40 px gibt es keine (320 px breit) — lieber keine Linse
+       als eine über der Schrift. Die Fahrt bleibt, wie sie war; nur der Halt
+       ist neu (test589 §16). */
+    const luecke = Math.round(fs * 0.2);
+    const platz = H.x + satz.clientWidth - (e.x + e.b) - luecke;
+    const D = Math.round(Math.min(Math.max(48, Math.min(84, fs * 1.7)), platz));
     const S = 1.2;
     const P0 = { x: a.x + fs * 0.4, y: a.y + a.h / 2 };
     const P1 = { x: a.x + a.b - fs * 0.8, y: a.y + a.h / 2 };
-    const P2 = { x: e.x + e.b - fs * 0.8, y: e.y + e.h / 2 };
+    const P2 = { x: e.x + e.b + luecke + D / 2, y: e.y + e.h / 2 };
+
+    /* Die Zeilen kommen verwischt herein (CSS, Federn aus grund.css) — auch
+       dort, wo neben dem Wort kein Platz für die Linse ist. */
+    const zeilenKommen = (): void => {
+      if (versatz >= 900) return;
+      satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
+      satz.classList.add('ru-held-kommt');
+      const fertig = (): void => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
+      z2.addEventListener('animationend', ev => { if (ev.target === z2) fertig(); }, { once: true });
+      setTimeout(fertig, 2400);
+    };
+    if (D < 40) { zeilenKommen(); return; }
 
     const linse = document.createElement('div');
     linse.className = 'ru-held-linse';
@@ -310,8 +339,6 @@ const Linse = (() => {
     traeger.append(linse);
 
     /* Abschrift bei (0,0) der Linse: Verschiebung = D/2 − S·(C − H). */
-    const hr = satz.getBoundingClientRect();
-    const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
     const lagenText = (c: { x: number; y: number }, sx = 1, sy = 1): [string, string] => [
       `translate(${(c.x - D / 2).toFixed(2)}px,${(c.y - D / 2).toFixed(2)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`,
       `translate(${(D / 2 - S * (c.x - H.x)).toFixed(2)}px,${(D / 2 - S * (c.y - H.y)).toFixed(2)}px) scale(${S})`
@@ -374,14 +401,7 @@ const Linse = (() => {
     auf.currentTime = Math.min(versatz, pop.duration);
     lauf.push(auf);
 
-    /* Die Zeilen kommen verwischt herein (CSS, Federn aus grund.css). */
-    if (versatz < 900) {
-      satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
-      satz.classList.add('ru-held-kommt');
-      const fertig = (): void => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
-      z2.addEventListener('animationend', ev => { if (ev.target === z2) fertig(); }, { once: true });
-      setTimeout(fertig, 2400);
-    }
+    zeilenKommen();
     Promise.all(lauf.map(x => x.finished)).then(() => {
       const [l, b] = lagenText(P2);
       linse.style.transform = l;

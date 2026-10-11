@@ -102,10 +102,11 @@
  *       gerenderten Bild), in allen zehn Schemata, am Rechner und im Blatt
  *       am Telefon — vorher am Telefon „Hell" 4,46 und „Sand" 4,36 : 1.
  *
- * NEBEN DEM WORT (§16, §8, §13e; 11. Oktober 2026, E740). Redur hatte am
- * 5. Oktober gefragt, ob die Linse „neben dem Wort ruhen" soll; am
- * 11. Oktober kam sein „Ja". Im Gesamtbild stand „Weiterdenl(en": die
- * ruhende Linse deckte „ken" und zeigte es vergrössert noch einmal. Drei
+ * NEBEN DEM WORT (§16, §8, §13e; 11. Oktober 2026, E740). In der Liste der
+ * Fragen an Redur vom 5. Oktober stand, ob die Linse „neben dem Wort
+ * ruhen" soll; am 11. Oktober kam sein „Ja". Im Gesamtbild stand
+ * „Weiterdenl(en": die ruhende Linse deckte „ken" und zeigte es
+ * vergrössert noch einmal. Drei
  * Änderungen, mit seinem Wort — §16 und §8 gegen 1575a183 rot gesehen,
  * §13e hält, was dort schon stimmte, und wird mit dünner Linse rot:
  *   §16 NEU. Jeder Buchstabe beider Zeilen (Range.getClientRects, Zeichen
@@ -576,7 +577,7 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
      es fährt dabei nichts neu los.
      NEBEN, NICHT AUF (E740). Hier stand „liegt weiter AUF der zweiten
      Zeile" — die Mitte der Linse über dem Wort. Redur hat am 11. Oktober
-     2026 „Ja" gesagt zu seiner eigenen Frage vom 5. Oktober, ob sie „neben
+     2026 „Ja" gesagt zur Frage aus der Liste vom 5. Oktober, ob sie „neben
      dem Wort ruhen" soll. Seither: ihr linker Rand liegt rechts vom Ende der
      Zeile, höchstens eine halbe Schriftgrösse daneben, ihre Mitte auf der
      Höhe der Zeile. Zeichen für Zeichen misst es §16. */
@@ -1311,8 +1312,8 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
 /* ==========================================================================
  * §16 · Die Linse ruht NEBEN dem Wort (Redur, 11. Oktober 2026)
  * ----------------------------------------------------------------------------
- * Redur am 5. Oktober, in der Liste der offenen Fragen: „neben dem Wort
- * ruhen?" — am 11. Oktober: „Ja". Im Gesamtbild stand „Weiterdenl(en": die
+ * Die Liste der Fragen an Redur vom 5. Oktober: „neben dem Wort ruhen?" —
+ * Redur am 11. Oktober: „Ja". Im Gesamtbild stand „Weiterdenl(en": die
  * ruhende Linse lag über „ken" (P2 = Ende der zweiten Zeile − 0,8 Schrift-
  * grössen) und zeigte es vergrössert ein zweites Mal (E740).
  *

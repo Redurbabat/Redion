@@ -1754,9 +1754,14 @@ Grund:
    Eigenschaft versteht), `test524` („Beide Leisten tragen den Rollschatten —
    zwei Schatten, zwei Deckel"), `test582` (Sand und Wald 4,45 : 1).
    Ein eigener „Rot zuerst"-Zweig, Wächter nur mit Redurs Wort ändern.
-2. **Die Linse auf „Heute" ruht über „ken"** (E712): im Gesamtbild steht
-   „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
-   Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
+2. **Die leere Linse neben dem Wort** (E740) — eine Frage an Redur, keine
+   Arbeit: seit dem 11. Oktober ruht die Linse auf „Heute" rechts neben
+   „Weiterdenken." (sein „Ja" auf „neben dem Wort ruhen?"; erledigt, siehe
+   ERLEDIGTE-AUFGABEN.md). In Ruhe liegt unter ihr leerer Grund, sie ist
+   also eine leere Glasscheibe. Soll sie so stehen bleiben oder nach der
+   Fahrt verblassen? Antwortet er „verblassen", hält `test589` §16 weiter
+   (kein Buchstabe unter einer Linse), und §8/§16 verlangen dann keine
+   Linse mehr in Ruhe — mit seinem Wort geändert.
 
 ## Die Fläche nach E722/E723 (6. Oktober 2026)
 
