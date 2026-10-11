@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-719 Entscheidungen, E1 bis E740 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+720 Entscheidungen, E1 bis E741 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -782,6 +782,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E738** — Alte Klemmennamen gelten beim Lesen weiter (L252, Weg 2): `frueher` an stecker, fi-schutzschalter, steckdose, steckdose-schuko und EIN Auflöser `Register.fachzeichen.klemmeFuer` (Ort vor Name) für Netzliste, `anschlussLage` und das Nachziehen in der Planfläche; die gespeicherten Daten bleiben unverändert. `test608`
 * **E739** — Die Vorlage „Dark (2017–2020)" ist eingebaut (Redur, 11. Oktober: „Ja" zu seinem Zweig `feat/dark-2017-fach-dossier`): `src/bereiche/wissen/dark-dossier.ts` als Cherry-Pick mit Redur als Autor, ohne die von Hand kopierte .js; typisiert (23 implizite `any`, `Paar = [string, string]`), Kopf „ERZEUGT", der Wikipedia-Verweis mit `%28/%29` (das Link-Muster des Editors endete an der ersten „)"), das Schaubild der Zeitlinie mit `&amp;` statt rohem `&` (vorher undekodierbar — gefunden von `test609` §4), `window.DarkDossier`; eingebunden in index.html nach nin-quiz.js und im GRUNDSTOCK. Sichtbar für jeden Nutzer des öffentlichen Repos; eigene Zusammenfassungen und eigene SVG, Netflix und Wikipedia nur verlinkt. Start 1890 → 1904 KB gzip (Decke 1950), Einzeldatei +43 725 Bytes; L216 hat damit drei Lerninhalte im Startweg. `test609` neu
 * **E740** — Die Linse auf „Heute“ ruht NEBEN dem Wort (Redur, 11. Oktober: „Ja“ auf die Frage aus der Liste vom 5. Oktober, „neben dem Wort ruhen?“): die Fahrt über „Aufmachen. / Weiterdenken.“ bleibt, der Halt liegt eine Fünftel-Schriftgrösse rechts vom Punkt, auf der Höhe der zweiten Zeile, in der Spalte der Überschrift; ist daneben weniger Platz, wird die Linse kleiner, unter 40 px gibt es keine (320 px) — die Zeilen kommen trotzdem verwischt herein. In Ruhe ist sie eine leere Glasscheibe. `test589` §16 neu (jeder Buchstabe gegen den Kreis der Linse), §8 „neben“ statt „auf“, §13e an den Halt über „Aufmachen.“ verlegt. Ergänzt E712; +93 B gzip.
+* **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 
 ---
 
@@ -63716,9 +63717,11 @@ Kasten zum Normalfall.
   „translate(248px, 110px) → translate(128px, 110px)"; Gegenprobe (der
   Aufruf von `rolltSelbst` herausgenommen) rot mit denselben Zeilen.
 - *Gefunden auf dem Weg.* Auf dem Grund der Fläche, neben jeder Tabelle,
-  schiebt Umschalt+Rad weiter LÄNGS — über der Tabelle rollt es jetzt quer.
-  Ob es dort quer schieben soll, ist eine Frage an Redur (`AUFGABEN.md`,
-  Fläche Punkt 4); nicht in diesem Bogen.
+  schob Umschalt+Rad weiter LÄNGS — über der Tabelle rollt es jetzt quer.
+  Ob es dort quer schieben soll, war eine Frage an Redur (`AUFGABEN.md`,
+  Fläche Punkt 4); nicht in diesem Bogen. Redur hat am 11. Oktober „Ja"
+  gesagt: **E741** — Umschalt+Rad schiebt dort quer, und an der Kante der
+  Tabelle kommt es quer bei der Fläche an (`test598` §14).
 - *Touch Kit und Fremdcode.* Kein Muster aus dem Touch Kit, kein fremder
   Code; `FREMDCODE.md` braucht keinen Eintrag (§57).
 
@@ -66419,3 +66422,110 @@ lassen), nicht still entschieden; sie steht in AUFGABEN.md.
 **Wächter:** `test589` §16 (neu), §8 (geändert), §13e (verlegt).
 Nachbarn grün: `test539`, `test388`, `test217`, `test424`, `test580`,
 `test576`; Datei-Wächter `test105`, `test109`, `test550`.
+
+## E741 — Umschalt+Rad schiebt die Fläche quer: auf dem Grund wie über der Tabelle, und an ihrer Kante ohne Richtungswechsel
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur („Ja" zu
+`AUFGABEN.md`, „Die Fläche nach E722/E723", Punkt 4 — eine von sechs
+Entscheidungen dieses Tages) · **ergänzt** E723 (zweite Durchsicht: das
+Rad gehört der Tabelle) und E722 (ein Rad, ein Ausschnitt) · **Wächter:**
+`test598` §14 (neu) · **Zweig** `claude/flaeche-umschalt-quer` ·
+**Messung:** `messungen.md` §92, „Nach E741".
+
+**Die Frage und die Antwort.** In `AUFGABEN.md` stand seit der zweiten
+Durchsicht von E723: „Ob Umschalt+Rad dort quer schieben soll, wie in
+AFFiNE und Figma, ist eine Frage an Redur". Die Antwort, so wie sie
+weitergegeben wurde: „Ja" — auf dem Grund quer schieben, und eine breite
+Tabelle an ihrem rechten Rand reicht Umschalt+Rad ebenfalls quer weiter.
+Ein längerer Wortlaut liegt nicht vor und wird nicht erfunden (§56).
+
+**Was war.** Ein Rad mit gehaltener Umschalttaste kommt in Chromium als
+`deltaY` (120) mit `shiftKey` an — gemessen mit Playwright unter Linux;
+das Seitwärtsrollen ist die Standardhandlung des Browsers, nicht der Wert
+des Ereignisses. `rolltSelbst` kennt diese Regel seit E723 und lässt die
+Tabelle quer rollen. Die Schiebezeile der Fläche
+(`sicht.x - e.deltaX, sicht.y - e.deltaY`) las dasselbe Ereignis als
+längs: auf dem Grund schob Umschalt+Rad die Fläche um 120 px nach oben,
+und an der rechten Kante der Tabelle wechselte dieselbe Geste die
+Richtung — quer, solange die Tabelle rollt, längs, sobald sie ansteht.
+
+**Gemessen vorher** (gegen `1575a1835`, 1440 × 900 und 1920 × 1080, je
+ein Rad zu 120): Umschalt+Rad auf dem Grund quer 0, längs −120; ganz
+rechts in der Tabelle (454 von 454 px gerollt) quer 0, längs −120; über
+der Tabelle bei 0 rollt die Tabelle (0 → 120), die Fläche steht; ein
+erzeugtes macOS-Ereignis (`deltaX` 120, `deltaY` 0, `shiftKey`) quer
+−120, längs 0; Rad allein quer 0, längs −120; Strg+Rad 1 → 1,12.
+
+**Was entschieden ist.**
+1. EINE Regel `radWeg(e)` in `seitenflaeche.ts`, über `rolltSelbst` und
+   seinem Kopfkommentar: hält Umschalt ein Rad, das nur `deltaY` meldet
+   (`deltaX === 0`), heisst es quer — `{ dx: deltaY, dy: 0 }`; sonst
+   bleibt der Wisch, wie er ist.
+2. Zwei Leser, eine Regel: `rolltSelbst` liest seine Richtung jetzt aus
+   `radWeg` (sein Verhalten ist dasselbe wie vorher — dieselbe Bedingung,
+   nur an einer Stelle), und die Schiebezeile der Fläche ebenso. Damit
+   kommt Umschalt+Rad an der Kante der Tabelle quer bei der Fläche an.
+3. Hat das System den Wisch schon gedreht — macOS meldet ein Mausrad mit
+   Umschalt als `deltaX` —, wird nicht noch einmal getauscht; sonst liefe
+   er längs. Nachgebildet mit einem erzeugten Ereignis, nicht auf einem
+   Mac gemessen.
+4. Strg/⌘+Rad bleibt der Zoom: der Zweig steht vor `radWeg`, und ein
+   Kneifen auf dem Trackpad kommt als Strg+Rad. Das Kneifen mit zwei
+   Fingern am Telefon geht über Zeiger-Ereignisse (`finger`, `kneifen`),
+   nicht über das Rad — unberührt nach dem Code; gemessen ist Strg+Rad.
+
+**Warum.** Dieselbe Geste soll auf derselben Fläche dasselbe heissen.
+Über der Tabelle, auf jeder Seite im Browser, in AFFiNE und in Figma ist
+Umschalt+Rad quer; auf dem Grund der Fläche war es das einzige Mal längs,
+und am Rand der Tabelle sprang die Richtung mitten in einer Bewegung um.
+
+**Die Alternativen.** *Mit Umschalt immer tauschen*
+(`shiftKey ? { dx: deltaY, dy: deltaX }`) — der Wisch, den macOS schon
+gedreht hat, liefe längs; genau diese Zeile ist die zweite Gegenprobe.
+*Mit Umschalt den grösseren Anteil quer legen* — drehte auch einen
+schrägen Trackpad-Wisch, den der Mensch absichtlich schräg führt, und
+wiche von der Regel ab, die `rolltSelbst` seit E723 hat. *Längs lassen* —
+dagegen hat Redur entschieden.
+
+**Was es kostet.** Eine Regel in zwei Zeilen, zwei Leser, Kommentare; die
+Einzeldatei wächst um 119 Bytes (9 545 743 → 9 545 862). Ein schräger
+Trackpad-Wisch mit Umschalt (gemessen 30/100) bleibt schräg, vorher wie
+nachher — die Regel dreht nur, was keinen Anteil quer hat. `deltaMode`
+(Zeilen statt Pixel) liest die Fläche weiterhin nicht, wie vorher.
+
+**Wächter.** `test598` §14, sechs Zusagen: ganz rechts in der Tabelle
+kommt Umschalt+Rad quer an (−120, 0); es gibt eine gesuchte leere Stelle
+(Vorbedingung); Umschalt+Rad auf dem Grund quer −120, längs 0; der
+macOS-Wisch wirkt genau einmal; Rad allein längs; Strg+Rad zoomt. Gegen
+`1575a1835` rot, 70 von 72, mit „quer 0, längs -120" an beiden Stellen;
+danach 72 von 72. Gegenproben, jede rot gesehen und zurückgenommen: die
+Schiebezeile zurück auf `e.deltaX`/`e.deltaY` — dieselben zwei Zeilen
+rot; das unbedingte Tauschen — genau die macOS-Zusage rot („quer 0,
+längs -120"). §5 bleibt, wie er ist: er hält das Whiteboard und sagt
+nichts über Umschalt (`AUFGABEN.md` nannte irrtümlich §5). Grün
+nachgefahren: `test105`, `test109`, `test537`, `test549`, `test550`,
+`test573` (31/31), `test574` (60/60), `test575` (45/45) und `test388`
+(Start 1890 KB gzip über 254 Dateien, Decke 1950).
+
+*Nach der Durchsicht, acht Zusagen.* Die sechs konnten die gebaute Regel
+weder von der verworfenen Alternative („den grösseren Anteil quer legen")
+unterscheiden noch von einer, die den Anteil längs fallen lässt: alle drei
+schieben ein gewöhnliches Umschalt+Rad und den macOS-Wisch gleich. Darum
+hält §14 jetzt auch das Versprechen aus „Was es kostet": ein erzeugter
+schräger Wisch mit Umschalt (`deltaX` 30, `deltaY` 100) schiebt die
+Fläche um genau −30, −100. Die Vorbedingung heisst „eine leere Stelle auf
+der Fläche" — `leer` sucht irgendwo auf der Fläche, nicht „neben der
+Tabelle" —, und das Lesen des `transform` der Sicht ist eine eigene
+Vorbedingung, die zeigt, was dasteht. 74 von 74. Gegenproben, je rot und
+zurückgenommen: die verworfene Regel — „quer -100, längs -30"; längs
+fallen lassen (`shiftKey ? { dx: deltaX || deltaY, dy: 0 }`) — „quer -30,
+längs 0", beide 73 von 74 an genau der neuen Zeile; der `transform` als
+gleichwertiges `matrix(…)` — die Lese-Vorbedingung rot mit „matrix(1, 0,
+0, 1, 128, -10)", die leere Stelle grün.
+
+**Touch Kit und Fremdcode.** Kein Muster aus dem Touch Kit, kein fremder
+Code; `FREMDCODE.md` braucht keinen Eintrag (§57).
+
+**Nicht in diesem Bogen:** das Whiteboard im Kasten — es zoomt mit jedem
+Rad und nimmt es der Fläche (E722), daran ändert Umschalt nichts;
+`deltaMode`.

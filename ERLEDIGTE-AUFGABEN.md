@@ -1,5 +1,52 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E741 — Umschalt+Rad schiebt die Fläche quer (Fläche nach E722/E723, Punkt 4)
+
+**Redur** (11. Oktober 2026): „Ja" zur Frage aus `AUFGABEN.md`, ob
+Umschalt+Rad auf dem Grund der Fläche quer schieben soll, wie in AFFiNE
+und Figma — und eine breite Tabelle an ihrem rechten Rand soll
+Umschalt+Rad ebenfalls quer weiterreichen.
+
+**Gefunden** (gegen `1575a1835`, 1440 × 900 und 1920 × 1080): ein Rad mit
+Umschalt kommt in Chromium als `deltaY` 120 mit `shiftKey` an. Über der
+Tabelle rollte es seit E723 quer, auf dem Grund schob es die Fläche um
+120 px LÄNGS (quer 0, längs −120), und ganz rechts in der Tabelle ebenso —
+dieselbe Geste wechselte an der Kante die Richtung. Die Schiebezeile las
+`deltaY` als längs; nur `rolltSelbst` kannte die Umschalt-Regel.
+`AUFGABEN.md` nannte als Wächter `test598` §5 — der hält das Whiteboard
+und bleibt, wie er ist; der Wächter ist §14.
+
+**Gebaut:** `radWeg(e)` in `seitenflaeche.ts` — Umschalt mit einem Rad
+ohne `deltaX` heisst quer (`{ dx: deltaY, dy: 0 }`), ein vom System schon
+gedrehter Wisch (macOS: `deltaX` gesetzt) bleibt, wie er ist. EINE Regel
+für zwei Leser: `rolltSelbst` (Verhalten unverändert) und das Schieben.
+Strg/⌘+Rad bleibt der Zoom; README nennt die Geste.
+
+**Prüfung:** `test598` §14 neu, sechs Zusagen — gegen `1575a1835` rot, 70
+von 72 („quer 0, längs -120" am Rand der Tabelle und auf dem Grund),
+danach 72 von 72. Zwei Gegenproben rot gesehen: die Schiebezeile zurück
+(dieselben zwei Zeilen), unbedingtes Tauschen (die macOS-Zusage). Dazu
+grün: `test105`, `test109`, `test537`, `test549`, `test550`, `test573`
+(31/31), `test574` (60/60), `test575` (45/45), `test388` (Start 1890 KB
+gzip, Decke 1950); Zahlen in `messungen.md` §92 („Nach E741"), auch aus
+`redion-einzeldatei.html` allein im Ordner. Kein Bild: es ändert sich
+nichts auf dem Bildschirm, nur wohin eine Geste schiebt (§55.3).
+
+**Nach der Durchsicht** (selber Zweig): §14 konnte die gebaute Regel nicht
+von der verworfenen unterscheiden („mit Umschalt den grösseren Anteil quer
+legen") und auch nicht von einer, die den Anteil längs fallen lässt — alle
+drei schieben ein gewöhnliches Umschalt+Rad und den macOS-Wisch gleich.
+Jetzt acht Zusagen: ein erzeugter schräger Wisch mit Umschalt (`deltaX`
+30, `deltaY` 100) muss die Fläche um genau −30, −100 schieben, wie E741
+verspricht; und die Vorbedingung heisst ehrlich „eine leere Stelle auf der
+Fläche" (`leer` prüft kein „neben der Tabelle"), das Lesen des `transform`
+steht als eigene Vorbedingung daneben. 74 von 74; drei Gegenproben rot
+gesehen und zurückgenommen (Bytes per sha256 gleich): die verworfene Regel
+„quer -100, längs -30", längs fallen lassen „quer -30, längs 0", beide
+73 von 74 an genau der neuen Zeile; der `transform` als gleichwertiges
+`matrix(…)` macht die Lese-Vorbedingung rot mit dem Wortlaut, während die
+leere Stelle grün bleibt.
+
 ## 11. Oktober 2026 · E740 · Die Linse auf „Heute“ ruht neben dem Wort
 
 **Redur:** „Ja“ am 11. Oktober auf die Frage aus der Liste vom 5. Oktober,

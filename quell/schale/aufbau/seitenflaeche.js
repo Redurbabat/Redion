@@ -855,9 +855,11 @@ const Seitenflaeche = (() => {
             const fp = inFlaeche(e.clientX, e.clientY);
             aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
         });
+        const radWeg = (e) => e.shiftKey && e.deltaX === 0 ? { dx: e.deltaY, dy: 0 } : { dx: e.deltaX, dy: e.deltaY };
         const rolltSelbst = (e) => {
-            const quer = Math.abs(e.deltaX) > Math.abs(e.deltaY) || (e.shiftKey && e.deltaX === 0);
-            const weg = quer ? (e.deltaX || e.deltaY) : e.deltaY;
+            const { dx, dy } = radWeg(e);
+            const quer = Math.abs(dx) > Math.abs(dy);
+            const weg = quer ? dx : dy;
             if (!weg)
                 return false;
             for (let el = e.target instanceof Element ? e.target : null; el && el !== ebene && el !== flaeche; el = el.parentElement) {
@@ -884,7 +886,8 @@ const Seitenflaeche = (() => {
                 massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY);
                 return;
             }
-            sicht = { x: sicht.x - e.deltaX, y: sicht.y - e.deltaY, z: sicht.z };
+            const { dx, dy } = radWeg(e);
+            sicht = { x: sicht.x - dx, y: sicht.y - dy, z: sicht.z };
             stellen();
         }, { passive: false });
         if (sichtLesen(p.id))

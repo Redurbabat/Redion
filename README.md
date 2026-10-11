@@ -430,6 +430,9 @@ Datenhaltung:
   einem Whiteboard zoomt das Rad das Whiteboard und die mittlere Taste
   schiebt es; über einer breiten Tabelle rollt ein Wisch quer (oder
   Umschalt+Rad) die Tabelle
+- auf dem Grund der Fläche schiebt das Rad längs und Umschalt+Rad quer
+  (wie in AFFiNE und Figma, auch wenn eine Tabelle ganz rechts das Rad
+  weiterreicht); Strg+Rad zoomt
 
 Im Workspace gibt es dafür einen eigenen Bereich mit Miniaturen.
 
