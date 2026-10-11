@@ -1,5 +1,49 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E740 · Die Linse auf „Heute“ ruht neben dem Wort
+
+**Redur:** „Ja“ am 11. Oktober auf die Frage aus der Liste vom 5. Oktober,
+„neben dem Wort ruhen?“ (AUFGABEN.md: „Die Linse auf ‚Heute‘ ruht über
+‚ken‘“).
+
+**Gefunden:** Die ruhende Linse lag über „ken“ — `P2 = Ende der zweiten
+Zeile − 0,8 Schriftgrössen` — und zeigte es vergrössert ein zweites Mal:
+im Gesamtbild „Weiterdenl(en“. Gemessen sechs Zeichen unter ihr („n . k e
+n .“), am Rechner 72,7 px, am Telefon 56,2 px vor dem Ende der Zeile, bei
+320 px dasselbe mit einer 58-px-Linse. Dazu ein Wächter, der mit dem neuen
+Ort nichts mehr gemessen hätte: `test589` §13e prüfte den Kontrast IN der
+ruhenden Linse — über leerem Grund 1,01 : 1, auch bei einer Linse aus
+Seidenpapier.
+
+**Gebaut:** In `linse.ts` hält die Linse eine Fünftel-Schriftgrösse rechts
+vom Punkt, auf der Höhe der zweiten Zeile, in der Spalte der Überschrift;
+ist daneben weniger Platz, wird sie kleiner, unter 40 px gibt es keine
+(320 px). Die Fahrt dahin ist dieselbe. Das verwischte Hereinkommen der
+Zeilen ist ein eigener Schritt und läuft auch ohne Linse. Die Kommentare in
+`linse.ts` und `studio.css` sagen jetzt, wo sie ruht. Nichts entfernt, was
+vorher ging — ausser der Linse bei 320 px, die dort nur über der Schrift
+Platz hatte.
+
+**Prüfung:** `test589` §16 neu (jeder Buchstabe beider Zeilen gegen den
+Kreis der Linse, 1440 × 900 und 390 × 844, hell und dunkel, weniger
+Bewegung, 320 px), §8 mit Redurs Wort „neben“ statt „auf“, §13e an den
+Halt über „Aufmachen.“ verlegt (angehalten bei 780 ms, Buchstaben unter
+der Linse, dann der Kontrast). Gegen 1575a183 rot mit 112 von 126, jetzt
+126 von 126. Zwei Gegenproben rot: der alte Halt (113/126) und die dünne
+Linse (124/126, §13e 6,68 und 3,66 : 1). Nachbarn grün: 539, 388 (Start
+1890 KB, Decke 1950), 217, 424, 580, 576; Datei-Wächter 105, 109, 550.
+Bilder vorher und nachher, Rechner und Telefon, hell und dunkel, dazu
+weniger Bewegung — nicht im Verzeichnis (§55.4). Offen als Frage an Redur
+(AUFGABEN.md): die ruhende Linse ist jetzt eine leere Scheibe — stehen
+lassen oder nach der Fahrt verblassen?
+
+**Durchsicht:** `test589` §16 übersprang die Abschrift IN der Linse — dass
+sie in Ruhe nichts zeigt, war behauptet, nicht gemessen. Jetzt auch jedes
+Zeichen der Abschrift gegen den Kreis (Deckkraft, Sichtbarkeit,
+Ausschnitt), in allen sieben Fällen: 133 von 133. Gegenprobe (die
+Abschrift mit dem alten Versatz, die Linse daneben): 127 ok, 6 offen —
+„k e n .“ sichtbar in der Linse.
+
 ## 11. Oktober 2026 · E739 · Die Vorlage „Dark (2017–2020)" ist eingebaut
 
 **Redur:** am 11. Oktober „Ja" auf die Frage, ob sein Zweig

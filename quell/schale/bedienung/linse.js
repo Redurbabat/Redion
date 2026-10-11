@@ -131,11 +131,29 @@ const Linse = (() => {
         const a = lage(z1), e = lage(z2);
         const stil = getComputedStyle(satz);
         const fs = parseFloat(stil.fontSize) || 40;
-        const D = Math.round(Math.max(48, Math.min(84, fs * 1.7)));
+        const hr = satz.getBoundingClientRect();
+        const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
+        const luecke = Math.round(fs * 0.2);
+        const platz = H.x + satz.clientWidth - (e.x + e.b) - luecke;
+        const D = Math.round(Math.min(Math.max(48, Math.min(84, fs * 1.7)), platz));
         const S = 1.2;
         const P0 = { x: a.x + fs * 0.4, y: a.y + a.h / 2 };
         const P1 = { x: a.x + a.b - fs * 0.8, y: a.y + a.h / 2 };
-        const P2 = { x: e.x + e.b - fs * 0.8, y: e.y + e.h / 2 };
+        const P2 = { x: e.x + e.b + luecke + D / 2, y: e.y + e.h / 2 };
+        const zeilenKommen = () => {
+            if (versatz >= 900)
+                return;
+            satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
+            satz.classList.add('ru-held-kommt');
+            const fertig = () => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
+            z2.addEventListener('animationend', ev => { if (ev.target === z2)
+                fertig(); }, { once: true });
+            setTimeout(fertig, 2400);
+        };
+        if (D < 40) {
+            zeilenKommen();
+            return;
+        }
         const linse = document.createElement('div');
         linse.className = 'ru-held-linse';
         linse.setAttribute('aria-hidden', 'true');
@@ -160,8 +178,6 @@ const Linse = (() => {
         const frostTeil = abschrift('ru-held-linse-frost');
         linse.append(frostTeil.huelle, glasTeil.huelle);
         traeger.append(linse);
-        const hr = satz.getBoundingClientRect();
-        const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
         const lagenText = (c, sx = 1, sy = 1) => [
             `translate(${(c.x - D / 2).toFixed(2)}px,${(c.y - D / 2).toFixed(2)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`,
             `translate(${(D / 2 - S * (c.x - H.x)).toFixed(2)}px,${(D / 2 - S * (c.y - H.y)).toFixed(2)}px) scale(${S})`
@@ -218,14 +234,7 @@ const Linse = (() => {
         const auf = linse.animate([{ scale: '0.4', opacity: 0 }, { scale: '1', opacity: 1 }], { duration: pop.duration, easing: pop.easing, fill: 'both' });
         auf.currentTime = Math.min(versatz, pop.duration);
         lauf.push(auf);
-        if (versatz < 900) {
-            satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
-            satz.classList.add('ru-held-kommt');
-            const fertig = () => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
-            z2.addEventListener('animationend', ev => { if (ev.target === z2)
-                fertig(); }, { once: true });
-            setTimeout(fertig, 2400);
-        }
+        zeilenKommen();
         Promise.all(lauf.map(x => x.finished)).then(() => {
             const [l, b] = lagenText(P2);
             linse.style.transform = l;

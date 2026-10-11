@@ -24990,8 +24990,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .ru-tropfen-geist{position:absolute;border-radius:var(--radius-2xl);transform-origin:0 0;
   background:var(--bg-schwebend-dicht);box-shadow:var(--glas-kante),var(--studio-elevation)}
 
-/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Sie trägt
-   Schrift, also dichtes Glas (E695) — sonst stünde „ken" doppelt da. */
+/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Unterwegs
+   trägt sie Schrift, also dichtes Glas (E695); sie ruht neben dem Wort (E740). */
 .lernwelt .lw-desk-copy{position:relative}
 .ru-held-zeile{display:inline-block;position:relative}
 /* Der Dunst ist Bild: leerer Ersatztext für Vorleser (Durchsicht E712). */
@@ -27596,7 +27596,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1463, inhalt: '35cd67a53cbcf381', gebaut: '2026-10-11T15:25:38.059Z' };
+const Stand = { fassung: 1464, inhalt: '70e2c961aef9fc9a', gebaut: '2026-10-11T15:28:20.073Z' };
 window.Stand = Stand;
 
 </script>
@@ -47344,11 +47344,29 @@ const Linse = (() => {
         const a = lage(z1), e = lage(z2);
         const stil = getComputedStyle(satz);
         const fs = parseFloat(stil.fontSize) || 40;
-        const D = Math.round(Math.max(48, Math.min(84, fs * 1.7)));
+        const hr = satz.getBoundingClientRect();
+        const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
+        const luecke = Math.round(fs * 0.2);
+        const platz = H.x + satz.clientWidth - (e.x + e.b) - luecke;
+        const D = Math.round(Math.min(Math.max(48, Math.min(84, fs * 1.7)), platz));
         const S = 1.2;
         const P0 = { x: a.x + fs * 0.4, y: a.y + a.h / 2 };
         const P1 = { x: a.x + a.b - fs * 0.8, y: a.y + a.h / 2 };
-        const P2 = { x: e.x + e.b - fs * 0.8, y: e.y + e.h / 2 };
+        const P2 = { x: e.x + e.b + luecke + D / 2, y: e.y + e.h / 2 };
+        const zeilenKommen = () => {
+            if (versatz >= 900)
+                return;
+            satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
+            satz.classList.add('ru-held-kommt');
+            const fertig = () => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
+            z2.addEventListener('animationend', ev => { if (ev.target === z2)
+                fertig(); }, { once: true });
+            setTimeout(fertig, 2400);
+        };
+        if (D < 40) {
+            zeilenKommen();
+            return;
+        }
         const linse = document.createElement('div');
         linse.className = 'ru-held-linse';
         linse.setAttribute('aria-hidden', 'true');
@@ -47373,8 +47391,6 @@ const Linse = (() => {
         const frostTeil = abschrift('ru-held-linse-frost');
         linse.append(frostTeil.huelle, glasTeil.huelle);
         traeger.append(linse);
-        const hr = satz.getBoundingClientRect();
-        const H = { x: hr.left - kasten.left, y: hr.top - kasten.top };
         const lagenText = (c, sx = 1, sy = 1) => [
             `translate(${(c.x - D / 2).toFixed(2)}px,${(c.y - D / 2).toFixed(2)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`,
             `translate(${(D / 2 - S * (c.x - H.x)).toFixed(2)}px,${(D / 2 - S * (c.y - H.y)).toFixed(2)}px) scale(${S})`
@@ -47431,14 +47447,7 @@ const Linse = (() => {
         const auf = linse.animate([{ scale: '0.4', opacity: 0 }, { scale: '1', opacity: 1 }], { duration: pop.duration, easing: pop.easing, fill: 'both' });
         auf.currentTime = Math.min(versatz, pop.duration);
         lauf.push(auf);
-        if (versatz < 900) {
-            satz.style.setProperty('--ru-held-versatz', (-versatz) + 'ms');
-            satz.classList.add('ru-held-kommt');
-            const fertig = () => { satz.classList.remove('ru-held-kommt'); satz.style.removeProperty('--ru-held-versatz'); };
-            z2.addEventListener('animationend', ev => { if (ev.target === z2)
-                fertig(); }, { once: true });
-            setTimeout(fertig, 2400);
-        }
+        zeilenKommen();
         Promise.all(lauf.map(x => x.finished)).then(() => {
             const [l, b] = lagenText(P2);
             linse.style.transform = l;

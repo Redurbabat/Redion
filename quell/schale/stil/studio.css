@@ -644,8 +644,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
 .ru-tropfen-geist{position:absolute;border-radius:var(--radius-2xl);transform-origin:0 0;
   background:var(--bg-schwebend-dicht);box-shadow:var(--glas-kante),var(--studio-elevation)}
 
-/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Sie trägt
-   Schrift, also dichtes Glas (E695) — sonst stünde „ken" doppelt da. */
+/* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Unterwegs
+   trägt sie Schrift, also dichtes Glas (E695); sie ruht neben dem Wort (E740). */
 .lernwelt .lw-desk-copy{position:relative}
 .ru-held-zeile{display:inline-block;position:relative}
 /* Der Dunst ist Bild: leerer Ersatztext für Vorleser (Durchsicht E712). */
