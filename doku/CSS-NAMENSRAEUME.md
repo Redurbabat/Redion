@@ -139,6 +139,16 @@ greift in den Namensraum des Kits; die Brücke zwischen beiden
 (`src/islands/bridge.css`) benutzt deshalb keine Klassen, sondern
 Merkmale: `data-insel`, `data-insel-wurzel`, `data-insel-fehler`.
 
+`lern` steht unten mit **6** — gezählt sind nur die `.lern-…`-Klassen des
+Lernplan-Schalters. Die klassische Lernansicht heisst `finder lern`, und
+ihre Regeln schreiben `.lern ` mit Leerzeichen dahinter (`.lern button`,
+`.lern progress`, `.lern .fh button`): seit **E734** sind es 15 Vorkommen,
+alle in `werkzeuge.css`, derselben Datei wie die Zeile unten. Der Regex
+oben (`\.xx-…`) sieht sie nicht, `test290` deshalb auch nicht; sie gehören
+trotzdem zu diesem Namensraum. Auf dem Zweig des Elektro-Bogens stand die
+Zahl deshalb auf 22 — eine Zählung nach anderer Regel als der Rest der
+Spalte; hier bleibt die Spalte bei der Regel und der Satz sagt den Rest.
+
 ## Das Verzeichnis
 
 ```

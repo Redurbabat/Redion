@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-708 Entscheidungen, E1 bis E729 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+717 Entscheidungen, E1 bis E738 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -771,6 +771,15 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E727** — Das Gestirn: ein Hell/Dunkel-Schalter mit einer Regel für jede Tür (Redur, Masterprompt 29. September: „es seiht noch nicht 100 fetig aus, also finde für hier ewas kreatives aus“): die „Sichel“ war ein Schatten in fester Farbe, der in keinem dunklen Schema den Grund traf, und dieselbe Funktion gab es dreimal mit drei Regeln — von „Mitternacht“ führte Strg⇧L hin und zurück nach „Standard“. Jetzt EINE Quelle `Aussehen.grundWechseln` (merkt das Schema je Grundton, behält den Akzent), alle Türen leiten weiter; Sonne und Mond aus dem Register gehen in einem runden Fenster auf und unter, `role=switch`, 44 × 44, nur transform/opacity. Ergänzt E462 und E701. `test602` neu, `test580` und `test584` angepasst
 * **E728** — Der ruhige Kopf: die Suche links, rechts nur Zeichen, Motor und Glas nur als Zustand (Redur, Masterprompt 29. September: „nur die emojis dort bleiben und alles komplet nacht links schieiben … drehen wie eine mottor und glass efeckt“): `margin-left:auto` stand an der Kapsel statt am ersten Zeichen; „PDF öffnen“ wird das Zeichen `upload`, „Werkzeuge“ trägt `band` statt ⌘, die Zwillinge im Band stehen bei offener Lade am Rechner nicht mehr doppelt (jeder ruft dieselbe Funktion, gezählt); die Lupe dreht sich einmal unter Zeiger, Fokus, Strg P und am Telefon beim Drücken, die Kapsel wird dabei Glas, in Ruhe deckend; alle Kopfknöpfe 44 × 44. Ergänzt E703 und E457, schliesst L117 Punkt 3. `test603` neu, `test482` erweitert
 * **E729** — main trotz roter Läufe, einmal (Redur, 6. Oktober: „… danch alles auf main trotz die rote läufe …"): `main` wird auf den Stand der dritten Welle vorgespult (claude/morgen-besser-3, ein leerer Zusammenführungs-Commit von origin/main und die Nachzüge danach, Zweig `claude/auf-main`), obwohl der volle Lauf rote Läufe zeigt. Rot bleiben nur Läufe, die auf claude/morgen-besser-2 Zeile für Zeile gleich rot sind (14, je mit Grund in AUFGABEN.md); was aus den eigenen Zweigen rot war, ist vorher gerichtet, ohne einen Wächter zu lockern; vier Läufe, die im vollen Lauf rot und einzeln nachgefahren grün waren, sind gemessen — drei davon verloren ein Versprechen im Prüfstand, kein Neuladen (P131). Ohne force, ein Vorspulen. Eine Ausnahme von §46 für diesen einen Stand, keine neue Regel
+* **E730** — Drehstrom wird mit Zeigern gerechnet, nicht mit Wurzel drei: drei Quellen zu 230 V um 120° versetzt, das komplexe System als doppelt so grosses reelles durch denselben Gauss; einphasig bleibt Zahl für Zahl reell. Blindwiderstände fehlen (L248). `test604` *(auf dem Zweig `claude/redion-elektro-simulation` als E539; beim Übernehmen umnummeriert)*
+* **E731** — Die Stromrichtung bei Wechselstrom heisst „wechselnd", nicht „vor": der Pfeil zeigt die Zählrichtung, dazu die Richtung im Scheitel von L1, mit `quer` bei 90°. `test604` §6 *(als E540; umnummeriert)*
+* **E732** — Ein Anschlussfehler wird an der Rolle der Klemme gefunden, nicht am Strom: neun Fälle mit Was und Warum, Schwere als Wort; N/PE vertauscht rechnet richtig und wird trotzdem gemeldet. `test605` *(als E541; umnummeriert)*
+* **E733** — Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom, am Bauteil — und `komplex` (Rechenweg) getrennt von `wechsel` (Bedeutung), gefunden auf dem Bild. Schliesst die Lücke, die auf dem Zweig L152 hiess. `test604` §7 *(als E542; umnummeriert)*
+* **E734** — Lernkarten „Drehstrom und die fünf Leiter", die `test607` mit der Simulation nachrechnet, und ein Stil für die klassische Lernansicht; beim Übernehmen mit `--touch-min`, Druckbild (E720) und 44-px-Schliesser. E544 des Zweigs nicht übernommen (E638, `test400`). `test606`, `test607` *(als E543; umnummeriert)*
+* **E735** — Der FI misst wirklich (Zeigersumme durch seine Pole, `fi-loest-aus`/`fi-halbe-messung`) und 13 stumme Zeichen bekommen Verhalten; dabei geänderte Klemmen an vier bestehenden Zeichen, aufgefangen durch E738. `test605` §9 *(als E545; umnummeriert)*
+* **E736** — Der ideale Übertrager (U1 = ü·U2, I2 = ü·I1) — und `PIVOT_MIN` 1e-14 statt 1e-12, weil die alte Schwelle zufällig GMIN war. `test604` §8 *(als E546; umnummeriert)*
+* **E737** — Mehrteilige Bauteile zeigen Messwerte am Plan: das Glied mit der grössten LEISTUNG, die Summe der Glieder, beim Übertrager nicht summiert. `test604` *(als E547; umnummeriert)*
+* **E738** — Alte Klemmennamen gelten beim Lesen weiter (L252, Weg 2): `frueher` an stecker, fi-schutzschalter, steckdose, steckdose-schuko und EIN Auflöser `Register.fachzeichen.klemmeFuer` (Ort vor Name) für Netzliste, `anschlussLage` und das Nachziehen in der Planfläche; die gespeicherten Daten bleiben unverändert. `test608`
 
 ---
 
@@ -65310,3 +65319,841 @@ Stand ohne Rot", sondern der letzte geprüfte Stand MIT einer benannten
 Liste roter Läufe. Wer main holt, bekommt diese Liste mit. Der Satz in §46
 ist deshalb um einen Hinweis auf diesen Eintrag ergänzt, nicht
 umgeschrieben.
+
+---
+
+## E730 — Drehstrom wird mit Zeigern gerechnet, nicht mit Wurzel drei
+
+**Datum:** 12. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test604` (§1–§5; auf dem Zweig `test498`) · **Lücke:** L248 · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E539** geschrieben (Commit 3e793e524), beim Übernehmen umnummeriert — auf `main` trug E539 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+**Was wurde entschieden?** Die Simulation rechnet ein Drehstromnetz als drei
+Spannungsquellen zu 230 V, die um 120° gegeneinander versetzt sind. Dafür
+wird das Gleichungssystem komplex: jede Grösse hat einen Betrag und einen
+Winkel. Die Aussenleiterspannung von 400 V steht nirgends im Quelltext — sie
+kommt aus der Rechnung.
+
+**Warum?** Weil die Alternative aussieht, als würde sie stimmen.
+
+Man kann 400 V als „230 mal Wurzel 3" hinschreiben und die drei Aussenleiter
+als drei gewöhnliche 230-V-Quellen behandeln. Die eine Zahl stimmt dann. Alles
+andere nicht mehr, und zwar unauffällig:
+
+* Der Strom im Neutralleiter wäre die Summe der BETRÄGE statt der Zeigersumme.
+  Bei zwei gleichen Lampen an L1 und L2 käme 0,87 A heraus statt 0,43 A.
+  Beide Zahlen sind plausibel; niemand sieht der falschen an, dass sie falsch
+  ist.
+* Bei drei gleichen Lampen käme der dreifache Strom heraus, wo in
+  Wirklichkeit **nichts** fliesst. Genau dieser Satz ist der Grund, warum ein
+  Vierleiterzähler anders aussieht als drei Zweileiterzähler, und er ist im
+  Unterricht nicht nebensächlich, sondern die Sache selbst.
+* Die Spannung zwischen L2 und L3 ist gegenüber der von L1 um 90° gedreht.
+  Aus einer Wurzel drei folgt kein einziger Winkel.
+
+Der Unterschied zwischen Stern und Dreieck ist derselbe Fall: 230 V am Strang
+gegen 400 V am Strang, und daraus die dreifache Leistung. Wer die Spannung
+einträgt statt sie zu rechnen, trägt am Klemmenbrett zwei Zahlen ein und hat
+nichts erklärt.
+
+**Was war die Alternative?** Drei Möglichkeiten standen zur Wahl:
+
+1. *Die Vereinfachung* — 400 V fest eintragen. Verworfen, siehe oben.
+2. *Ein zweiter, komplexer Löser neben dem reellen.* Verworfen: zwei Löser
+   für dieselbe Aufgabe laufen irgendwann auseinander, und dann weiss niemand
+   mehr, welcher recht hat.
+3. *Der gewählte Weg.* Ein komplexes System lässt sich als doppelt so grosses
+   reelles schreiben — Realteil und Imaginärteil als zwei Blöcke. Damit rechnet
+   weiterhin `loese`, derselbe Gauss mit Spaltenpivot wie bisher.
+
+**Was kostet es?** Zwei Dinge, beide klein:
+
+* Die Matrix ist bei Wechselstrom doppelt so gross, der Gauss also achtmal so
+  teuer. Bei Plänen mit einigen Dutzend Netzen ist das nicht messbar.
+* Es gibt jetzt zwei Wege durch die Rechnung. Damit das keine zwei Wahrheiten
+  werden, wird der komplexe Weg **nur** betreten, wenn wirklich eine Quelle
+  versetzt ist. Eine einphasige Schaltung rechnet Zahl für Zahl wie vorher —
+  `test604 §5` hält genau das fest, und `test239` hätte es sonst gemerkt.
+
+**Was dabei NICHT entschieden wurde:** Blindwiderstände. Eine Spule ist
+weiterhin eine Verbindung, ein Kondensator eine Unterbrechung, ein Motor ein
+Wirkwiderstand. Die Phasenlage kommt allein aus den Quellen — für ohmsche
+Lasten ist das die vollständige Wahrheit und keine Näherung. Die Matrix für
+den Imaginärteil steht schon da und ist überall null; wer Blindanteile
+nachrüstet, füllt sie und muss am Löser nichts ändern. Als Lücke eingetragen
+(L248).
+
+**Und ein Nebenbefund, der hierher gehört:** N und PE sind an der Quelle
+verbunden — der Sternpunkt ist geerdet, und von ihm geht der Schutzleiter aus
+(TN-S). Wer die beiden vertauscht, bekommt deshalb elektrisch **dasselbe
+Ergebnis**. Das ist keine Ungenauigkeit der Simulation, sondern der Grund,
+warum der Fehler gefährlich ist: er fällt beim Einschalten nicht auf. Eine
+Rechnung kann ihn nicht finden. Er gehört in die Fehlerprüfung, und dort ist
+er auch hingekommen.
+
+`test604`: 39 Zusagen. Gegenprobe rot gesehen — mit allen drei Quellen in
+Phase fallen 19 davon, darunter „Bei symmetrischer Last ist der Neutralleiter
+stromlos" (1,3 A statt 0 A) und „Im Neutralleiter fliesst nur EIN
+Strangstrom" (0,87 A statt 0,43 A). Genau die beiden Zahlen, um die es geht.
+
+**Ein Bild hat auch etwas gefunden** (§55.3): die Leiternamen L1 L2 L3 N PE
+lagen mittig auf ihren Anschlussstichen und waren am Bildschirm nicht mehr zu
+lesen. Kein Prüflauf konnte das sehen — die Beschriftung war ja da. Sie steht
+jetzt neben dem Stich.
+
+---
+
+## E731 — Die Stromrichtung bei Wechselstrom heisst „wechselnd“, nicht „vor“
+
+**Datum:** 12. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test604` §6 · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E540** geschrieben (Commit 2d24f4519) (Eintrag nachgetragen in Commit 5fab7faf8), beim Übernehmen umnummeriert — auf `main` trug E540 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+**Was wurde entschieden?** Jeder Messwert trägt jetzt eine Richtung. Bei
+Gleichstrom ist sie `vor` oder `rueck` und nennt die beiden Klemmen dazu.
+Bei Wechselstrom ist sie `wechselnd` — und zwar ausdrücklich, nicht als
+Notbehelf.
+
+**Warum?** Weil die Richtung fast umsonst zu haben war, und genau das die
+Falle ist.
+
+Die Knotenpotentialanalyse liefert vorzeichenbehaftete Ströme. Das Vorzeichen
+einfach als Pfeil auf den Plan zu malen, kostet nichts und ist bei einer
+Batterie richtig. Bei 230 V ist derselbe Pfeil eine **Behauptung über die
+Wirklichkeit, die nicht stimmt**: der Strom kehrt fünfzigmal je Sekunde um.
+
+Das Tückische daran ist nicht, dass es falsch ist, sondern dass es *geglaubt
+wird*. Ein Lernender hat den Pfeil bei der Batterie gesehen und dort war er
+richtig. Sieht er ihn an der Lampe wieder, schliesst er auf dasselbe — und
+niemand hat ihm widersprochen. Eine Simulation, die das tut, bringt etwas
+Falsches bei und sieht dabei besonders anschaulich aus.
+
+**Was war die Alternative?**
+
+1. *Bei Wechselstrom gar keine Richtung zeigen.* Verworfen: dann fehlt
+   gerade dort etwas, wo der Unterricht stattfindet, und die Frage „in welche
+   Richtung fliesst es denn nun“ bleibt unbeantwortet.
+2. *Den Pfeil zeigen wie bei Gleichstrom.* Verworfen, siehe oben.
+3. *Der gewählte Weg:* die Richtung heisst `wechselnd`, der Pfeil zeigt die
+   **Zählrichtung** — eine Festlegung, keine Beobachtung —, und dazu steht,
+   wohin der Strom in EINEM bestimmten Augenblick fliesst: im Scheitel von
+   L1, dem Augenblick, auf den sich alle Winkel ohnehin beziehen.
+
+**Ein Wert, der überraschen wird, und warum er richtig ist.** Neben `vor` und
+`rueck` gibt es für diesen Augenblick `quer`. Steht der Strom um 90° zur
+Bezugsphase, fliesst in genau diesem Augenblick nichts — gleich danach
+wieder. Das sieht nach einem Randfall aus, den man wegrunden könnte. Es ist
+keiner: bei Drehstrom kommt es an jedem Strang einmal je Periode vor, und
+die Spannung zwischen L2 und L3 steht dauerhaft so. Wer `quer` zu `vor`
+rundet, malt an dieser Stelle einen Pfeil, wo nichts fliesst.
+
+**Was kostet es?** Der Aufrufer muss zwei Fälle behandeln statt einem. Das
+ist der Preis dafür, dass er den zweiten nicht vergessen kann — ein einzelnes
+Vorzeichen hätte ihn gar nicht erst auf die Frage gebracht.
+
+**Was NICHT entschieden wurde:** wie der Pfeil aussieht. Gezeichnet wird der
+Plan in der Blockschicht (`schaltplan.ts`, `planflaeche.ts`), und die lag
+ausserhalb dieses Auftrags. Die Richtung steht bereit, gezeichnet ist sie
+nicht — eingetragen als **L152** (so auf dem Zweig; geschlossen durch E733,
+wo die Lücke jetzt steht), mit den zwei Bedingungen, die dabei gelten:
+nicht nur Farbe (§38), und der Satz zur Zählrichtung muss mit.
+
+`test604 §6`: 15 Zusagen. Gegenprobe rot gesehen — gibt man dem Wechselstrom
+dieselbe feste Richtung wie dem Gleichstrom, fallen 7 davon, und der Satz
+lautet dann „Der Strom fliesst von X1 nach X2.“ Über 230 V gesagt ist das
+der Fehler, um den es geht.
+
+---
+
+## E732 — Ein Anschlussfehler wird an der Rolle der Klemme gefunden, nicht am Strom
+
+**Datum:** 12. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test605` (auf dem Zweig `test499`) · **Lücke:** L249 · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E541** geschrieben (Commit 6b7b4a87c), beim Übernehmen umnummeriert — auf `main` trug E541 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+**Was wurde entschieden?** Die Simulation prüft den Anschluss getrennt von
+der Rechnung. Jedes Netz bekommt eine Leiterrolle — L1, L2, L3, N, PE —, und
+der Fehler zeigt sich daran, dass zwei Rollen zusammentreffen, die nicht
+zusammengehören. Jeder Fund trägt zwei Texte: `was` falsch ist und `warum`,
+also was in Wirklichkeit passieren würde.
+
+**Warum nicht am Strom?** Weil der gefährlichste Fehler keinen auffälligen
+Strom erzeugt.
+
+Sind Neutralleiter und Schutzleiter vertauscht, rechnet sich alles richtig.
+Die Lampe brennt, der Motor läuft, jeder Messwert stimmt — am Sternpunkt sind
+die beiden ja ohnehin verbunden (TN-S). Eine Prüfung, die auf Ströme schaut,
+kann diesen Fehler prinzipiell nicht finden. Er ist ein Zeichnungsfehler mit
+tödlicher Folge, und gefunden wird er nur dort, wo er entsteht: an der Klemme.
+
+Dass er trotzdem funktioniert, ist deshalb nicht die Entschuldigung für die
+Meldung, sondern ihr Inhalt. Der Fund sagt es wörtlich: *es funktioniert* —
+und genau darum merkt es niemand, bis der Schutzleiter irgendwo bricht und
+alle daran hängenden Gehäuse unter Spannung stehen.
+
+**Der Griff, mit dem sechs Fehler einer werden.** L und N zusammen ist ein
+Kurzschluss. L und PE ist Lebensgefahr. N und PE ist der Fehler, den niemand
+bemerkt. Zwei Aussenleiter sind 400 V statt 230 V. Das sind vier
+verschiedene Meldungen und **ein** Suchvorgang: zwei Rollen auf einem Netz.
+Danach wird nur noch gefragt, welche zwei es waren. Sechs der neun gesuchten
+Fälle fallen damit auf einmal.
+
+Die übrigen drei brauchen eigene Prüfungen: die fehlende Erdung eines Geräts
+der Schutzklasse I, das Schaltgerät im Neutralleiter (NIN 4.6.1.2.3.2) und
+der unterbrochene Rückweg.
+
+**Die Schwere steht als Wort da**, nicht als Farbe — §38 [hart]. `gefahr`,
+`fehler`, `hinweis`. Wer die Liste vorliest, muss dasselbe erfahren wie der,
+der sie ansieht.
+
+**Was war die Alternative?** Nur melden, dass etwas nicht geht. Verworfen,
+und zwar als das eigentliche Thema dieses Bogens: „Geht nicht" ist keine
+Auskunft, sondern eine Verweigerung. Der Lernwert steckt in dem Satz danach.
+`test605` prüft das ausdrücklich — jede Fehlerart muss ihre FOLGE benennen,
+und die Gegenprobe mit „Geht nicht." fällt daran durch.
+
+**Was kostet es — und die zwei Fehler, die es gekostet hat.** Eine Rolle darf
+nur setzen, wer den Leiter wirklich BESTIMMT. Beim ersten Anlauf durfte das
+zu viel:
+
+* Die Drehstromquelle markierte ihre Schutzleiterrolle an der **N-Klemme**
+  statt an der PE-Klemme. Folge: jede richtig angeschlossene Drehstromanlage
+  meldete „N und PE vertauscht", und der echte Kurzschluss L–N wurde als
+  L–PE gemeldet. Falsch, und zwar auf beiden Seiten gleichzeitig.
+* Der Motor erklärte seine **eigene** Erdungsklemme zum Schutzleiter. Damit
+  beantwortete sich die Frage „hängt dieses Gerät am Schutzleiter?" selbst
+  mit ja — auch wenn an der Klemme nichts dran war.
+
+Beide fand `test605`, und beide wären ohne `test605` §8 durchgegangen: ein Melder, der
+immer meldet, sieht von aussen aus wie ein wachsamer. Deshalb stehen dort
+vier richtig verdrahtete Anlagen, bei denen **nichts** kommen darf. Seither
+trennt der Code die beiden Begriffe: `leiter` führt einen Leiter (Quelle,
+Leitersymbol, Erdungszeichen), `schutzklemme` braucht einen.
+
+**Und eine Rolle wird nicht weitergereicht.** Hinter einem Schalter ist der
+Leiter ein geschalteter Aussenleiter und kein L1 mehr. Ihn weiter L1 zu
+nennen wäre der Anfang einer Kette falscher Meldungen — eine Rolle hat nur,
+wo sie angeschrieben ist.
+
+**Wo die Fachlichkeit herkommt:** aus Redurs Lehrunterlage der Schweizer
+Ausbildung. Daraus stammt die Norm-Stelle für den Schalter im Aussenleiter
+und die Kenngrössen des Netzes 3 × 400/230 V. Aus der Unterlage wurde nichts
+übernommen als die fachliche Regel selbst.
+
+`test605`: 39 Zusagen in acht Abschnitten. Gegenprobe rot gesehen — ohne die
+Rollenprüfung fallen 15 davon, und mit „Geht nicht." statt des Folgesatzes
+fällt zusätzlich die Zusage, die den Lernwert hält.
+
+---
+
+## E733 — Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom — und der Fehler, den erst das Bild fand
+
+**Datum:** 12. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test604` §7 · **schliesst** die Lücke, die auf dem Zweig L152 hiess (unten) · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E542** geschrieben (Commit 820bf1b30), beim Übernehmen umnummeriert — auf `main` trug E542 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+**Was wurde entschieden?** Die Stromrichtung steht jetzt im Plan. Sie sitzt am
+BAUTEIL und nicht an der Leitung, und sie unterscheidet sich in der FORM:
+**ein Pfeil bei Gleichstrom, zwei bei Wechselstrom.**
+
+**Warum am Bauteil?** Weil gerechnet wird, was durch einen Zweig fliesst. Ein
+Netz kann aus fünf Leitungen bestehen, durch die ganz verschieden viel
+fliesst — ein Pfeil auf einer davon wäre geraten. Am Bauteil ist er gemessen.
+
+**Warum die Form und nicht die Farbe?** §38 [hart]. Wer Farben nicht
+unterscheidet, muss denselben Unterschied sehen. Ein einzelner Pfeil an 230 V
+wäre ausserdem die Behauptung, die E731 verbietet: dort kehrt der Strom
+fünfzigmal je Sekunde um. Der Doppelpfeil sagt genau das, und wer ihn
+antippt, bekommt den Satz zur Zählrichtung im Klartext.
+
+### Und jetzt der Teil, der wehtut
+
+**Das Bild hat einen echten Denkfehler gefunden, den zwei Bögen und
+93 grüne Zusagen nicht gesehen haben.**
+
+Seit E730 gab es ein Kennzeichen `wechsel`. Es hiess: *diese Schaltung muss
+komplex gerechnet werden.* Und es wurde zugleich benutzt für: *hier fliesst
+Wechselstrom.* Das sind zwei verschiedene Aussagen, und sie fallen genau dort
+auseinander, wo es am meisten auffällt:
+
+> Eine einphasige 230-V-Quelle hat die Phasenlage 0. Sie wird deshalb rein
+> reell gerechnet — und ist trotzdem Wechselstrom.
+
+Folge: **der Lampenstromkreis an 230 V bekam einen festen Richtungspfeil.**
+Also genau die Lüge, gegen die E731 geschrieben wurde, und zwar im
+allerhäufigsten Fall überhaupt. Bei Drehstrom stimmte alles; beim einfachsten
+Stromkreis des ganzen Lehrmittels stimmte es nicht.
+
+**Kein Prüflauf konnte das finden**, und das ist der lehrreiche Teil: die
+Zahlen waren alle richtig. Spannung, Strom, Leistung, Helligkeit — nichts
+daran war falsch. Falsch war eine BEDEUTUNG, und Bedeutungen stehen nicht in
+Zahlen. Gesehen hat es ein Bildschirmfoto von zwei Stromkreisen
+nebeneinander, auf dem beide Pfeile gleich aussahen, obwohl die Überschrift
+„zwei Pfeile, weil er umkehrt" lautete.
+
+Das ist §55.1 noch einmal, mit einem neuen Beispiel: es gibt Fehler, die
+keine Prüfung haben KANN, weil die Prüfung dieselbe falsche Annahme teilt
+wie der Code.
+
+**Die Reparatur:** zwei getrennte Begriffe. `komplex` entscheidet den
+Rechenweg, `wechsel` die Bedeutung. Ein Bauteil sagt jetzt selbst, ob es
+Wechselspannung liefert (`wechselstrom`). Und im rein reellen Wechselstromfall
+trägt der Winkel die Richtung weiter: 0° oder 180°, mehr braucht es dort
+nicht.
+
+**Zwei weitere Funde desselben Bildes:**
+
+* Der Pfeil lag MITTEN IM SYMBOL. Der Abstand war mit 14 Einheiten fest
+  eingetragen, und der Lampenkreis ist 60 breit. Jetzt rechnet er sich aus
+  der Grösse des Symbols quer zur Stromachse.
+* Die Doppelspitze sah am Bildschirm aus wie ein dicker einfacher Pfeil.
+  Die beiden Spitzen stehen jetzt mit Abstand auseinander.
+
+**Und ein Fund in der eigenen Prüfung.** Die Zusage „der Unterschied steckt
+in der Form" verglich zuerst die ganzen BILDER der beiden Stromkreise. Die
+enthalten ohnehin verschiedene Symbole, also unterschieden sie sich immer —
+die Zusage konnte nicht rot werden. §55.2 sagt, was das dann ist. Verglichen
+wird jetzt der Pfad des Pfeils, und nur er; unter der Gegenprobe zeigt sie
+beide Male dieselbe Zeichenkette und fällt.
+
+`test604 §7`: 10 Zusagen für das gezeichnete Bild, dazu sechs neue in §5 für
+die Trennung von `wechsel` und `komplex`. Gegenprobe rot gesehen, zweifach:
+koppelt man die beiden Begriffe wieder aneinander, meldet der 230-V-Kreis
+wieder „vor"; zeichnet man beide Pfeile gleich, fällt der Formvergleich.
+
+Damit ist die Lücke geschlossen, die auf dem Zweig **L152** hiess (unten).
+
+### Die Lücke, die dieser Eintrag schliesst — auf dem Zweig L152, GESCHLOSSEN
+
+Auf dem Zweig stand die Lücke **L152 · Die Stromrichtung wird gerechnet, aber
+nicht gezeichnet**. Sie bekommt auf `main` keine eigene Nummer, weil sie im
+selben Bogen entstand und geschlossen wurde; hier steht sie, damit wer sie
+sucht, findet, warum sie weg ist (§35).
+
+Die Lücke verlangte zwei Dinge: **nicht nur Farbe** (§38) — ein Pfeil ist
+eine Form und trägt die Auskunft auch ohne Farbe —, und **bei Wechselstrom
+muss die Beschriftung mitkommen**: der Strom kehrt hundertmal je Sekunde um,
+ein Pfeil ohne den Satz zur Zählrichtung behauptet etwas Falsches. Beides ist
+eingehalten: ein Pfeil bei Gleichstrom, zwei bei Wechselstrom, und der Satz
+hängt als `<title>` daran. **GESCHLOSSEN am 12. September 2026 auf dem Zweig,
+auf `main` seit der Übernahme am 11. Oktober 2026.** Beleg: `test604` §7.
+
+### Was beim Übernehmen auf dem Bild zu sehen war
+
+Die Bilder vom 11. Oktober (Planfläche in der laufenden App, Rechner
+1440 × 900 und Telefon 390 × 844) zeigen den Pfeil an Lampe, Quellen,
+Übertrager und Klingel neben dem Symbol — aber an zwei Zeichen **im**
+Symbol: im Kasten des FI und im Kreis der Drehstromquelle. Der Abstand
+rechnet sich von der Mitte zwischen den zwei Klemmen aus; liegen die Klemmen
+nicht mittig (FI: 1 und 2 bei x = 10 in einem 60 breiten Kasten;
+Drehstromquelle: L1 und N beide unten), reicht die halbe Breite nicht aus
+dem Kasten hinaus. Steht offen in L253, nicht repariert: es ist ein Bild, kein
+Datenfehler, und eine Reparatur braucht ihren eigenen Wächter.
+
+**Was war die Alternative?** Der Pfeil an der Leitung (verworfen: ein Netz
+kann aus fünf Leitungen bestehen, durch die verschieden viel fliesst) oder
+eine Farbe für die Richtung (verworfen, §38). **Was kostet es?** Ein Pfeil
+je Bauteil mehr im Bild, und an Zeichen mit aussermittigen Klemmen steht er
+heute im Symbol (oben).
+
+---
+
+## E734 — Lernkarten, die nachgerechnet werden — und eine Lernansicht, die keinen Stil hatte
+
+**Datum:** 12. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test606` und `test607` (auf dem Zweig `test500`, `test501`) · **Lücke:** L250 · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E543** geschrieben (Commit a77c1934d), beim Übernehmen umnummeriert — auf `main` trug E543 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+Zwei Dinge in einem Bogen, weil sie dieselbe Frage beantworten: **wie kommt
+der Stoff zum Lernenden?**
+
+### Teil 1 — Der Hauptknopf sah aus wie eine Bildunterschrift
+
+Der Auftrag lautete, die Lernkarten sehen nicht gut aus. Also erst hinsehen
+(§55), dann messen (§36). Gemessen am Hauptknopf der Lernansicht:
+
+    Fläche  rgba(0, 0, 0, 0)      Rand  0px      Radius  0px      Höhe  44 px
+
+Die Höhe stimmte. Sie stimmte die ganze Zeit — `learning.ts` setzt
+`minHeight: 44px` von Hand, und §37 misst die Höhe. Gefehlt hat das
+AUSSEHEN: das Panel heisst `finder lern`, und für `lern` gab es **keine
+einzige Stilregel**. Jeder andere Dialog in Redion bringt seine eigene mit
+(`.fd-knoepfe button.prim`, `.rg-knoepfe button.prim`); dieser nicht. Die
+globale Regel `.prim{min-height:44px}` gibt Grösse und kein Bild.
+
+**Eine Grösse ist keine Sichtbarkeit.** Das ist die Lehre, und sie ist neu
+gegenüber §55.1: dort ging es um Dinge, die man nur mit Augen SIEHT. Hier
+ging es um etwas, das jeder Prüflauf hätte messen können — nur hat keiner
+die richtige Eigenschaft gemessen.
+
+Dazu kam die Gliederung: acht Zahlen in zwei Reihen untereinander, ohne einen
+Hinweis, dass die obere „heute" meint und die untere „insgesamt". Jetzt
+tragen beide eine Überschrift, und die Hauptaktion steht dazwischen.
+
+Und der Fortschrittsbalken war der Browser-Standard und damit **blau** — die
+einzige blaue Fläche in einer violetten App.
+
+Die Regeln stehen in `werkzeuge.css` und nicht in `lernwelt.css`, weil der
+Präfix `lern` laut `doku/CSS-NAMENSRAEUME.md` dorthin gehört. Zwei Dateien
+mit demselben Präfix gewinnen abwechselnd (§39).
+
+### Teil 2 — Karten, die sich nicht selbst glauben
+
+Neu ist ein zweites eingebautes Lernpaket: **Drehstrom und die fünf Leiter**,
+22 Karten in sechs Themen.
+
+Es liegt bewusst NICHT im Grundlagenpaket. Dessen Manifest sagt „algebraische
+Definitionen ohne Normregeln"; diese Karten nennen eine Normstelle. Sie dort
+hineinzulegen würde eine Zusage stillschweigend brechen.
+
+**Das Besondere ist, wie die Antworten belegt sind.** Jede Zahl — 400 V
+zwischen zwei Aussenleitern, 230 V am Strang im Stern, die dreifache Leistung
+im Dreieck, der stromlose Neutralleiter bei gleichmässiger Last — wird von
+`test607` mit `Stromfluss` NEU GERECHNET und mit der Karte verglichen. Eine
+Karte, die der Rechnung widerspricht, macht den Lauf rot.
+
+Das schliesst die häufigste Art, wie Lernmaterial falsch wird: nicht durch
+einen groben Fehler, sondern dadurch, dass sich nebenan etwas ändert und
+niemand die Karten nachzieht.
+
+### Was der Paketprüfer mir verboten hat, und zu Recht
+
+Zwei Karten trugen `norm: 'NIN 4.6.1.2.3.2'`. Die Installation schlug fehl:
+
+> Normative Frage fehler-schalter-lage braucht eine belegte Ausgabe.
+
+Der Prüfer verlangt zu jeder normativen Karte die AUSGABE der Norm. Eine
+Paragrafennummer ohne Ausgabe kann niemand nachschlagen — eine gute Regel.
+Welche NIN-Ausgabe gilt, ist hier nicht belegt.
+
+Also wurde nicht die Regel umgangen, sondern die Behauptung zurückgenommen:
+das `norm`-Feld bleibt leer, die Paragrafennummer steht im Erklärtext als
+Fingerzeig. Eine erfundene Ausgabe wäre schlimmer als keine (**L250**).
+
+### Und ein Fachfehler in meinem eigenen Text
+
+Beim Schreiben der Karte „Wie oft kehrt der Strom bei 50 Hz um?" fiel auf,
+dass der Simulator selbst die geläufige falsche Antwort gab: „die Richtung
+kehrt sich 50-mal je Sekunde um". 50 Hz sind 50 volle PERIODEN je Sekunde,
+und in jeder geht der Strom zweimal durch null — **hundertmal**. Die
+Redensart ist verbreitet und trotzdem falsch, und in einem Lehrmittel ist
+eine verbreitete falsche Zahl die schlechteste Sorte. Berichtigt in
+`simulation.ts`, `schaltplan.ts` und `test604`.
+
+`test606`: 17 Zusagen für das Aussehen der Lernansicht. Gegenprobe rot
+gesehen — ohne den Stilblock meldet sie wieder `rgba(0, 0, 0, 0)`,
+Radius 0 und `appearance: auto`.
+`test607`: 37 Zusagen für das Lernpaket. Gegenprobe rot gesehen — stellt man
+die Aussenleiterkarte auf 460 V und die Neutralleiterkarte auf „doppelt so
+gross", widerspricht die Simulation beiden.
+
+### Was beim Übernehmen geändert wurde
+
+* **Der Stil hält die Marken.** Auf dem Zweig stand `.lern button{min-height:44px;
+  padding:9px 16px}` — zwei neue rohe Zahlen, und `test362` §7 hält die Decke
+  der rohen 44px und 16px (`pruefungen/marken-decke.json`) genau. Übernommen ist
+  `min-height:var(--touch-min)` und `padding:9px 14px`; die Decke ist nicht
+  angehoben (`test362` 18/18).
+* **Kein toter Knopf** (E720, CLAUDE.md §38 [hart], auf `main` seit dem
+  6. Oktober): ein Druckbild `.lern button:is(:active,[data-gedrueckt]):not(:disabled)`
+  — `data-gedrueckt` aus press.ts, weil das iPhone `:active` beim kurzen Tipp
+  nicht malt; gesperrte Knöpfe antworten nicht.
+* **Der Schliesser im Kopf misst 44 × 44** statt 36 px hoch und 28 breit:
+  „Abbrechen" ist ein Hauptweg (§37 [hart]). Gemessen auf den Bildern vom
+  11. Oktober: vorher 28 × 44 (`icon-btn`), nachher 44 × 44.
+* **E544 des Zweigs ist nicht übernommen.** Er reparierte `test217` (die
+  Lernrunde am Telefon) und gab `test87` einen Port-Wächter. Beides hat
+  `main` längst anders: **E638** hat `test217` am 19. September gelöst (die
+  toten `order`-Regeln aus E151), und den Port hält `test400` (E405, E643).
+  Die Port-Prüfung in `test87` wäre ein zweiter Katalog für dieselbe Sache
+  (§8). Ebenso nicht übernommen: `lernwelt.ts`/`.css` des Zweigs.
+
+**Was war die Alternative?** Die Regeln nach `lernwelt.css` (verworfen: der
+Präfix `lern` gehört laut `doku/CSS-NAMENSRAEUME.md` nach `werkzeuge.css`,
+zwei Dateien mit demselben Präfix gewinnen abwechselnd, §39) und für die
+Karten die Zahlen nur hinschreiben (verworfen: dann wird eine Karte falsch,
+sobald sich nebenan etwas ändert). **Was kostet es?** 15 Stilregeln mehr in
+`werkzeuge.css`, und `test607` rechnet bei jedem Lauf die Karten nach.
+
+---
+
+## E735 — Der FI misst wirklich — und 13 stumme Zeichen bekommen Verhalten
+
+**Datum:** 13. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test605` §9 · **Lücke:** L251; die umbenannten Klemmen: L252, E738 · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E545** geschrieben (Commit 64e7a43e6), beim Übernehmen umnummeriert — auf `main` trug E545 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+**Zuerst gemessen, dann gebaut** (§36). Von 110 Fachzeichen hatten **39 kein
+elektrisches Verhalten**: sie liessen sich malen, und die Rechnung behandelte
+sie als Unterbrechung. Darunter der Motorschutzschalter, das Thermorelais,
+der Wechsler, alle Steckvorrichtungen — und der Fehlerstrom-Schutzschalter.
+
+Nach diesem Bogen sind es **26**, und die verbleibenden zerfallen sauber:
+
+| Gruppe | Anzahl | Warum ohne Verhalten |
+|---|---|---|
+| Halbleiter und Transformator | 6 | brauchen nichtlineare oder gekoppelte Modelle |
+| Knotenpunkte | 3 | werden in `netze()` eigens behandelt — richtig so |
+| Betätigungsarten (`ch-druck`, …) | 5 | sind keine Geräte, sondern Bauformen |
+| Bauplan-Zeichen (`bp-*`) | 12 | eine andere Darstellungsart, kein Stromlauf |
+
+Ehrlich offen ist also **nur die erste Zeile**.
+
+### Der FI ist das einzige Schutzgerät, das gerechnet wird
+
+Sicherung, Leitungsschutzschalter, Motorschutzschalter, Thermorelais — alle
+sind Schalter: im Betrieb zu, im Fehlerfall offen. Was sie AUSLÖST, kann diese
+Simulation nicht rechnen; dafür bräuchte es Zeit (eine Auslösekennlinie ist
+eine Kurve über Sekunden) oder Wärme (ein Bimetall).
+
+**Beim FI ist das anders, und das ist der Grund für diesen Bogen.** Er
+vergleicht, was hinfliesst, mit dem, was zurückkommt — und genau diese Summe
+kann eine Knotenpotentialanalyse bilden. Er ist damit das einzige Schutzgerät,
+das hier nicht nur gezeichnet, sondern gemessen wird.
+
+### Summiert werden Zeiger, und das ist kein Detail
+
+Dies ist E730 an einer Stelle, wo der Fehler als Sicherheitsfunktion
+daherkommt. Drei Aussenleiterströme haben zusammen den Betrag null, obwohl
+jeder einzelne gross ist. Wer im FI Beträge addiert, misst in einer völlig
+gesunden Drehstromanlage über ein Ampere Fehlerstrom.
+
+Das ist nicht nur falsch, sondern auf besonders üble Weise falsch: **ein
+Schutzschalter, der ständig fliegt, wird überbrückt.** Die Gegenprobe zeigt
+es — mit Betragssumme löst er im einphasigen wie im dreiphasigen gesunden
+Kreis aus.
+
+### Er sagt nicht nur DASS, sondern WARUM
+
+Ein FI, der auslöst, hat zwei ganz verschiedene Ursachen, und sie zu
+unterscheiden ist der eigentliche Lernwert:
+
+* **Isolationsfehler** — Strom fliesst über den Schutzleiter ab. Das ist der
+  Fall, für den es den FI gibt. Gemeldet als `fi-loest-aus`, mit der Menge.
+* **Der Neutralleiter läuft am Schalter vorbei** — dann ist die Differenz
+  immer der ganze Betriebsstrom, er fliegt beim Einschalten, und es ist gar
+  nichts defekt. Der häufigste Verdrahtungsfehler beim FI überhaupt. Gemeldet
+  als `fi-halbe-messung`, weil „Fehlerstrom" hier richtig und nutzlos wäre:
+  wer danach den Fehler beim Gerät sucht, sucht am falschen Ort.
+
+Unterschieden wird an der Frage, ob der Neutralleiter-Pol überhaupt Strom
+führt, während die Aussenleiter es tun.
+
+### Zwei Dinge, die vorher gar nicht gingen
+
+**Der FI hatte zwei Klemmen namens `N`.** Auf dem echten Gerät sind Eingang
+und Ausgang des Neutralleiters beide mit N beschriftet, und so stand es im
+Register. In der Netzliste heisst eine Klemme aber `k:teil:nr` — zwei Klemmen
+mit demselben `nr` sind damit DASSELBE Netz. Der Neutralleiter war im FI
+dauerhaft durchverbunden; er konnte gar nicht abschalten. Der Ausgang heisst
+jetzt `N2`.
+
+**Die Steckdose hatte eine einzige Klemme.** `L`, sonst nichts — der Strom
+hätte nirgends zurückgekonnt. Und die „Steckdose mit Schutzkontakt" trug den
+Schutzkontakt im Namen und nicht als Klemme: ausgerechnet das Zeichen, an dem
+sich der Schutzleiter zeigen lässt, war das eine, an dem man ihn nicht
+anschliessen konnte. Jetzt L/N beziehungsweise L/N/PE.
+
+### Und was NICHT gebaut wurde
+
+Die Steinmetzschaltung (Drehstrommotor am Einphasennetz) steht im Lehrmittel
+und ist hier **nicht** baubar: sie lebt vom Kondensator als Phasenschieber,
+und Blindwiderstände fehlen (L248). Sie zu zeichnen wäre möglich, sie zu
+rechnen nicht — und ein Kondensator, der als Unterbrechung gerechnet wird,
+macht aus der Schaltung stillschweigend einen Motor mit zwei Strängen. Lieber
+nicht vorhanden als falsch.
+
+`test605 §9`: 12 neue Zusagen, zusammen 51. Gegenprobe rot gesehen — mit
+Betragssumme fallen die beiden Zusagen „löst NICHT aus", einphasig und
+dreiphasig.
+
+**Zwei Fehler in der Prüfung selbst**, beide von ihr gefunden: der erste
+Drehstrom-Testkreis speiste eine Lampe am FI vorbei (ein echter Fehlerstrom —
+der Lauf hatte recht, die Verdrahtung war falsch), und der erste
+„Fehlerstrom"-Kreis war in Wahrheit ein umgangener Neutralleiter. Beide
+stehen jetzt als Kommentar in der Datei, weil sie genau die Unterscheidung
+zeigen, um die es geht.
+
+### Was beim Übernehmen dazukam
+
+Dieser Bogen hat an **vier Zeichen, die es auf `main` schon gab**, die Klemmen
+geändert: `stecker` (`1` → L/N), `fi-schutzschalter` (zweimal `N` → N/N2),
+`steckdose` und `steckdose-schuko` (L an neuer Stelle, dazu N und PE) —
+nachgesehen im Diff von Commit 64e7a43e6; die Lücke des Zweigs nannte E545
+und E547, es war E545 allein. Gespeicherte Pläne hätten danach still anders
+gerechnet. Auf `main` kommt der Bogen deshalb nur zusammen mit **E738**: die
+alten Namen gelten beim Lesen weiter.
+
+**Was war die Alternative?** Den FI nur zu zeichnen wie die anderen
+Schutzgeräte (verworfen: er ist das eine Schutzgerät, dessen Auslösegrund
+diese Rechnung bilden kann) und Beträge zu summieren (verworfen: in einer
+gesunden Drehstromanlage stünde über ein Ampere Fehlerstrom). **Was kostet
+es?** Zwei neue Fundarten (`fi-loest-aus`, `fi-halbe-messung`), dreizehn
+Zeichen mit Verhalten mehr — und die Klemmenänderung, die E738 auffangen muss.
+
+---
+
+## E736 — Der ideale Übertrager — und die Schwelle, die zufällig GMIN war
+
+**Datum:** 13. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test604` §8 · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E546** geschrieben (Commit 200b05d56), beim Übernehmen umnummeriert — auf `main` trug E546 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+**Was wurde entschieden?** Der Transformator wird als IDEALER Übertrager
+gerechnet: keine Verluste, kein Streufluss, kein Leerlaufstrom. Er hält zwei
+Verhältnisse ein, und das dritte folgt daraus zwingend:
+
+```txt
+U1 = ü · U2        die Spannung wird geteilt
+I2 = ü · I1        der Strom wird im selben Mass grösser
+U1·I1 = U2·I2      also geht die Leistung unverändert hindurch
+```
+
+**Warum diese Fassung?** Weil sie die kleinste ist, die im Unterricht
+trägt. Die Trafo-Aufgaben des Lehrmittels — Klingeltransformator 230 auf 12 V,
+Messwandler — fragen nach genau diesen drei Zeilen. Verluste und Streufluss
+wären für einen Netztrafo wenige Prozent und brauchten Angaben, die auf
+keinem Symbol stehen.
+
+In der Matrix bekommt er EINE Unbekannte (seinen Primärstrom) und eine Zeile
+für die Spannungsbedingung; die Sekundärseite trägt denselben Strom mit dem
+Faktor ü und umgekehrtem Vorzeichen. Das ist derselbe Griff wie bei einer
+Spannungsquelle, nur über vier Klemmen statt zwei.
+
+### Die Schwelle war zufällig GMIN, und das hat den Übertrager verhindert
+
+Der erste Übertrager rechnete gar nicht: *„Die Schaltung hat keine eindeutige
+Lösung."* Das klang nach einem Fehler im Stempel und war keiner.
+
+Gemessen — nicht vermutet — mit einer Sonde im Gauss:
+
+```txt
+Übertrager, freischwebende Sekundärseite    kleinster Pivot  9,99998e-13
+zwei ideale Quellen parallel (echt singulär)  kleinster Pivot  exakt 0
+```
+
+Die Schwelle stand auf `1e-12`. Das ist **genau der Wert von GMIN**, dem
+winzigen Leitwert, mit dem jedes Netz am Bezug hängt. Ein freischwebender
+Schaltungsteil wird NUR von GMIN gehalten — sein Pivot liegt damit
+zwangsläufig in dieser Grössenordnung, und die Prüfung erklärte ihn für
+unlösbar. Dabei ist seine Lösung völlig eindeutig.
+
+Zwischen dem Rundungsrauschen einer wirklich singulären Matrix (~1e-16) und
+GMIN (1e-12) liegen vier Grössenordnungen. `PIVOT_MIN` sitzt jetzt auf `1e-14`
+— hundertfach über dem Rauschen, hundertfach unter GMIN. Beide Werte sind
+benannt und tragen den Hinweis, dass sie zusammengehören: wer den einen
+ändert, ändert den anderen mit.
+
+**Dass die Zahl dieselbe war, war keine Absicht, sondern ein Zufall** — und
+solange nichts freischwebte, fiel er nicht auf. `test604 §8` hält jetzt beide
+Richtungen fest: der Übertrager rechnet, und zwei ideale Quellen parallel
+bleiben unlösbar.
+
+### Und ein Zirkelschluss in der eigenen Prüfung
+
+Die Zusage „die Leistung geht unverändert hindurch" verglich zuerst
+Primär- gegen Sekundärleistung — beide aus den Messwerten des Übertragers.
+Das sah zwingend aus und war wertlos: der sekundäre Strom wird als „primärer
+mal Übersetzung" ABGELEITET, also stimmt U1·I1 = U2·I2 auch dann, wenn der
+Übertrager in der Matrix falsch steht.
+
+Die Gegenprobe hat es bewiesen. Mit einem Stempel, der die Spannung
+übersetzt und den Strom nicht, blieb die Leistungszusage **grün**, während
+die Klingel 9,58 A statt 0,5 A bekam.
+
+Verglichen wird jetzt gegen die LAST. Ihre Leistung rechnet sich aus den
+Knotenspannungen und ihrem eigenen Widerstand; sie weiss nichts vom
+Übertrager und kann seinen Fehler nicht mittragen. Damit fällt die Zusage in
+der Gegenprobe von 115 W auf 6 W.
+
+Das ist §55.2 in einer Form, die dort noch nicht steht: **eine Prüfung, deren
+beide Seiten aus derselben Annahme stammen, kann nicht rot werden — auch wenn
+sie zwei verschiedene Zahlen vergleicht.**
+
+`test604 §8`: 16 Zusagen, zusammen 84. Gegenprobe rot gesehen.
+Damit ist der Transformator aus **L251** abgehakt; die fünf Halbleiter
+bleiben offen.
+
+**Was war die Alternative?** Ein Übertrager mit Verlusten und Streufluss
+(verworfen: er bräuchte Angaben, die auf keinem Symbol stehen) und die
+Schwelle einfach kleiner (verworfen ohne Messung: erst die zwei Pivots
+gemessen, dann die Zahl dazwischen gelegt). **Was kostet es?** Eine
+Unbekannte mehr je Übertrager im Gleichungssystem; `PIVOT_MIN` und `GMIN`
+müssen zusammen geändert werden.
+
+---
+
+## E737 — Mehrteilige Bauteile hatten gar keine Messwerte am Plan
+
+**Datum:** 13. September 2026 auf dem Zweig, übernommen am 11. Oktober 2026 · **Entschieden von** Redur — der Auftrag des Elektro-Bogens auf `claude/redion-elektro-simulation`; die Übernahme auf `main` hat Redur am 11. Oktober 2026 mit „Ja" bestätigt (eine von sechs Fragen an diesem Tag) · **Wächter:** `test604` (Messwerte am Plan) · **Zweig der Übernahme** `claude/elektro-simulation-auf-main`.
+
+*Umnummeriert:* auf dem Zweig `claude/redion-elektro-simulation` als **E547** geschrieben (Commit 14e1c2335), beim Übernehmen umnummeriert — auf `main` trug E547 längst einen anderen Eintrag (wie bei E697/`test577`). Der Text darunter ist der des Zweigs; geändert sind die Verweise (E539–E547 → E730–E737, L151 → L248, L153 → L249, L154 → L250, L156 → L251, test498–501 → test604–607) und, wo es so steht, was beim Übernehmen dazukam.
+
+Beim Rendern einer Übersicht des Elektro-Teils fiel auf: am Klemmenbrett, an
+der Drehstromquelle und am Übertrager stand **keine einzige Zahl**. Die
+Beschriftung am Symbol kannte `volt`, `ampere`, `quelle`, `widerstand` und
+`spule` — die drei neuen Arten nicht. Gerechnet wurde alles korrekt; es war
+nur nirgends abzulesen.
+
+Gefunden auf einem Bild. Kein Prüflauf hatte je nach diesen Zahlen gesucht.
+
+### Welches Glied zeigt ein mehrteiliges Bauteil?
+
+`werte` hält je Bauteil den Eintrag mit dem grössten STROM. Nachgemessen am
+Klemmenbrett in Stern:
+
+```txt
+U1–U2   230 V      3.833312 A   881.642 W
+V1–V2   230 V      3.833312 A   881.657 W
+W1–W2   230 V      3.833312 A   881.642 W
+U2–V2     0.0038 V 3.833312 A     0.015 W   (Brücke)
+V2–W2     0.0038 V 3.833312 A     0.015 W   (Brücke)
+```
+
+**Alle fünf führen denselben Strom.** Das muss so sein — sie liegen in Reihe.
+Der Unterschied steht in der siebten Stelle, und damit entscheidet
+Rundungsrauschen, welches Glied „den grössten Strom" hat. Heute gewinnt eine
+Wicklung; beim nächsten Plan kann es eine Brücke sein, und dann stünde
+0,004 V am Motor — die Aussage „hier liegt nichts an".
+
+Nach der LEISTUNG liegen dieselben fünf **fünf Grössenordnungen** auseinander:
+881 W gegen 0,015 W. Das ist kein knapperes Rennen, sondern gar keines.
+Deshalb wird danach ausgewählt — nicht weil der Strom die falsche Zahl wäre,
+sondern weil er an dieser Stelle nicht unterscheidet.
+
+*(Im ersten Anlauf stand als Begründung im Kommentar, der Haupt-Messwert sei
+„oft eine Brücke". Das war nicht gemessen, sondern plausibel — und die
+Gegenprobe hat es widerlegt: die Zusage blieb grün. Der Kommentar nennt jetzt
+die Messung.)*
+
+### Der Übertrager wird nicht summiert
+
+Dazu steht die Summe über alle Glieder, denn nach der Gesamtleistung des
+Motors wird in jeder Aufgabe gefragt. Beim Übertrager ist das falsch: seine
+zwei Seiten sind nicht zwei Verbraucher, sondern derselbe Leistungsfluss
+einmal hinein und einmal hinaus. Summiert stand am Klingeltrafo **12 W**,
+während die Klingel daneben 6 W zeigte. Auch das vom Bild.
+
+`test604`: 91 Zusagen. Gegenprobe rot gesehen — ohne die neue Zeile steht am
+Klemmenbrett wieder keine Zahl, und mit Summierung zeigt der Trafo wieder
+das Doppelte.
+
+**Was war die Alternative?** Weiter nach dem grössten Strom auswählen
+(verworfen: dort entscheidet das Rundungsrauschen) und am Übertrager beide
+Seiten summieren (verworfen: dieselbe Leistung zweimal). **Was kostet es?**
+Die Planfläche reicht `teilwerte` mit durch; jeder andere Aufrufer von
+`werte` bekommt weiterhin den vom Rauschen bestimmten Eintrag (L253).
+
+Auf den Bildern vom 11. Oktober stehen die Zahlen am Klemmenbrett in Stern
+(230 V, 3,83 A, 2,64 kW), an der Drehstromquelle, am FI-Kreis (435 mA, 100 W)
+und am Übertrager. Am Telefon sind sie bei 390 px nur noch wenige Pixel hoch
+— der Plan wird als Ganzes verkleinert (L253).
+
+---
+
+## E738 — Alte Klemmennamen gelten beim Lesen weiter: ein Auflöser im Register, die Daten bleiben
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur, was die Übernahme
+angeht (11. Oktober, „Ja"); der Weg — Weg 2 aus der Lücke des Zweigs (dort
+L157, hier **L252**) — steht im Auftrag der Übernahme. Wer Weg 1 oder 3
+will, sagt es; die Daten sind dabei nicht angefasst worden · **berührt** §9, §17 und §51 [hart] ·
+**Wächter:** `test608` (neu) · **Zweig** `claude/elektro-simulation-auf-main`.
+
+**Was wurde entschieden?** E735 hat an vier Zeichen, die es auf `main` schon
+gab, die Klemmen geändert:
+
+```txt
+stecker            '1' bei x=20     → L bei x=10, N bei x=30
+fi-schutzschalter  zweimal 'N'      → N oben, N2 unten
+steckdose          L bei x=30       → L bei x=20, N bei x=40
+steckdose-schuko   L bei x=30       → L bei x=10, N bei x=30, PE bei x=50
+```
+
+Ein Plan, der vorher gespeichert wurde, gilt weiter, wie er gezeichnet ist —
+und zwar ohne dass ein Byte davon umgeschrieben wird:
+
+1. Die vier Zeichen tragen `frueher`: alter Name → wo er lag (im ungedrehten
+   Zeichen) und wie die Klemme dort heute heisst. `stecker`: `1` bei (20,0) →
+   L. FI: `N` bei (50,70) → N2. Steckdose und Schuko: `L` bei (30,0) → L.
+2. **Ein** Auflöser, `Register.fachzeichen.klemmeFuer(id, nr, punkt?,
+   drehung, gespiegelt)`, in dieser Reihenfolge: heutiger Name am Ort ·
+   früherer Name am Ort · heutiger Name · früherer Name · sonst null. **Der
+   Ort geht vor dem Namen**, weil nur er die zwei `N` des alten FI
+   auseinanderhält: unten gespeichert ist es N2, obwohl `N` heute oben heisst.
+   Der Ort wird in derselben Drehung verglichen, die `anschlussLage` liefert.
+3. Drei Stellen fragen ihn: die **Netzliste** (`netze()` in simulation.ts),
+   **`anschlussLage`** (statt des blanken `|| z.anschluesse[0]`, das einen
+   unbekannten Namen an der ersten Klemme einrasten liess — heute null) und das
+   **Nachziehen der Leitungen** beim Schieben, Drehen, Spiegeln und Ziehen in
+   der Planfläche, gefragt VOR der Änderung (`endKlemmen`), beim Ziehen mit
+   der Maus einmal beim Anfassen.
+4. Brauchte ein Leitungsende einen früheren Namen oder Ort, fasst diese
+   Leitung keine ANDERE Klemme desselben Teils über den Ort — sie wurde
+   gezogen, als es die noch nicht gab.
+
+**Warum?** Gemessen, bevor gebaut wurde (Sonde: Netzliste derselben alten
+Pläne unter `main` 1575a1835, unter dem Übernahme-Commit ohne Auflöser und
+mit; `messungen.md` §97):
+
+```txt
+main     { G1:L X1:1 X3:L X5:L }  { G1:N X2:1 X4:L X6:L }
+Port     { G1:L X3:L X5:L X5:N }  { G1:N X2:N X4:L X4:N X6:L X6:N X6:PE }  { X1:L } { X2:L } …
+E738     { G1:L X1:L X3:L X5:L }  { G1:N X2:L X4:L X6:L }  und jede neue Klemme allein
+```
+
+Ohne Auflöser fiel die Leitung am Stecker ab (den Namen `1` gibt es nicht
+mehr, und der alte Ort liegt 10 px neben beiden neuen Klemmen; NAH ist 6),
+am Schuko hingen L und N zusammen — ohne Meldung, denn eine Steckdose hat
+keine Leiterrolle —, waagrecht kommende Leitungen zapften die neuen Klemmen
+an, und hinter dem alten FI band die untere `N`-Leitung über den Namen ans
+OBERE N und über den Ort an N2: der Neutralleiterpol war überbrückt, und ein
+gesunder Lampenkreis meldete „löst aus" mit 435 mA — dem ganzen Lampenstrom.
+Beim Verschieben sprang dieselbe Leitung ausserdem aufs obere N
+(`anschlussOrt(teil, 'N')`). Ein Plan, der nach einem Update still anders
+rechnet, ist der Fall, gegen den §51 steht.
+
+**Was war die Alternative?** Weg 1 — so lassen: nur vertretbar, wenn es keine
+gespeicherten Pläne mit diesen Zeichen gibt, und das lässt sich von hier aus
+nicht nachsehen (die Pläne liegen in den Browsern der Nutzer). Weg 3 — eine
+Migration beim Laden: schreibt Nutzerdaten um, muss idempotent sein (§10) und
+braucht für den FI dieselbe Ortsentscheidung wie der Auflöser; dazu würde eine
+`.redion` von gestern beim Einspielen wieder alte Namen bringen. Der Auflöser
+schreibt nichts, also kann er nichts doppelt tun, und er gilt für jede Quelle
+alter Daten gleich — Ablage, Sicherung, Vorlagen in `elektro:planvorlagen`.
+
+**Was kostet es?** Eine Abfrage je Leitungsende in der Netzliste und beim
+Nachziehen; `frueher` muss gepflegt werden, wenn wieder einmal Klemmen
+bestehender Zeichen wandern (die nächste Änderung trägt sich dort ein, statt
+die Daten umzuschreiben). Gespeichert bleibt der alte Name, solange niemand
+die Leitung neu zieht — auch nach Schieben und Drehen (`test608` §5).
+
+**Was er NICHT kann** (L253): eine Leitung OHNE Bindung, die über die neue
+Lage einer Klemme läuft — eine Sammelschiene unter einer alten Steckdose —,
+zapft die neue Klemme weiter an; ohne gespeicherten Namen gibt es nichts
+aufzulösen. Und eine alte, ungebundene Leitung am unteren FI-Anschluss hängt
+jetzt an N2 — auf `main` hing sie an gar nichts, weil `anschluesseVon` beide
+`N` an der oberen Stelle meldete (dieselbe Ursache wie in E735); das ist,
+was die Zeichnung zeigte.
+
+**Wächter:** `test608`, 51 Zusagen in sechs Abschnitten: der Auflöser
+(Ort vor Name, gedreht, unbekannt bleibt unbekannt), die Netze der alten
+Steckvorrichtungen gleich `main` mit den neuen Namen und jede neue Klemme
+allein, der alte FI (N und N2 getrennt, der Pol N–N2 führt den Lampenstrom,
+Zeigersumme unter 1 mA, keine fi-Meldung, ausgelöst trennt er), die
+gespeicherten Daten unverändert, Schieben/Drehen/Ziehen in der echten
+Planfläche, und dass der Auflöser bei allen 110 Zeichen jede heutige Klemme
+zu sich selbst auflöst. Rot zuerst: gegen den Übernahme-Commit 14 von 48
+(der erste Stand), gegen dieselben Quellen mit dem endgültigen Lauf 17 von
+51. **Vier Gegenproben**, jede rot: Auflöser weg (17/51), nur die Ort-Sperre
+heraus (46/51 — Schuko X5 L und N verbunden), nur das Nachziehen wieder nach
+gespeichertem Namen (46/51 — „b4.von liegt bei 360,100, F1:N2 bei
+360,170"), im Auflöser der Name vor dem Ort (35/51 — „ist "N", soll
+"N2""). Wieder eingesetzt 51/51.
+
+**Am Wächter geändert, bevor er grün wurde:** „N und N2 weiter zwei Netze"
+stand zuerst direkt nach dem DREHEN und blieb auch mit Auflöser rot. Die
+Sonde zeigte warum: Drehen führt ALLE Leitungen des Plans neu als Winkel
+(`leitungenNachziehen`, so schon auf `main`), und der neue Weg von b2 läuft
+5 px neben dem gedrehten N2 vorbei — angezapft. Ein Befund über das
+Nachziehen, nicht über die Namen; er steht in L253. Der Lauf prüft die Netze
+jetzt, nachdem der FI zurückgedreht und zurückgeschoben ist.

@@ -1,5 +1,47 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · Die Elektro-Simulation auf `main` — übertragen, nicht zusammengeführt (E730–E738)
+
+**Redur:** „Ja" am 11. Oktober 2026 (eine von sechs Entscheidungen an diesem
+Tag) — den Elektro-Zweig hineinnehmen. Die Frage stand in AUFGABEN.md, offene
+Punkte, 3: „Zwei alte Zweige mit Arbeit, die nirgends steht …
+Hineinnehmen oder liegen lassen — Redurs Wort."
+
+**Gefunden:** Der Zweig (11 Commits, 12./13. September) stand 443 Commits
+hinter `main`; seine Nummern E539–E547, L151–L158 und test498–501 trugen auf
+`main` längst andere Einträge, und seine erzeugten Dateien (quell/*.js,
+sw.js, sw.ts, stand.ts) wären Konflikte ohne Inhalt gewesen. Seine eigene
+Lücke L157 nannte die Gefahr, die vor dem Mergen zu entscheiden war: vier
+bestehende Zeichen (`stecker`, `fi-schutzschalter`, `steckdose`,
+`steckdose-schuko`) hatten andere Klemmen bekommen. Mit einer Sonde
+gemessen: ohne Auffangen fiel die Leitung am alten Stecker ab, am alten
+Schuko hingen L und N zusammen (ohne Meldung), und ein gesunder Lampenkreis
+hinter dem alten FI meldete „löst aus" mit 435 mA.
+
+**Gebaut:** (1) Die acht Quell- und Stildateien per `git diff | git apply
+--3way` übertragen, jede Verweisnummer umgeschrieben (E539→E730 … E547→E737,
+L154→L250, test498–501→test604–607), die Läufe als `test604`–`test607` (Ports
+unverändert). Nicht übernommen: `lernwelt.ts`/`.css`, `test217`, `test87` —
+E544 ist durch E638 und `test400` erledigt. Der Stil der Lernansicht hält die
+Marken (`--touch-min`, keine neue rohe 44px/16px), hat ein Druckbild (E720)
+und einen 44-px-Schliesser. (2) `test608` rot zuerst. (3) **E738**: `frueher`
+an den vier Zeichen und EIN Auflöser `Register.fachzeichen.klemmeFuer` (Ort vor
+Name) für Netzliste, `anschlussLage` und das Nachziehen in der Planfläche;
+gespeicherte Daten bleiben unverändert. (4) Doku: E730–E738, L248–L253 (L252
+GESCHLOSSEN), `messungen.md` §97, CLAUDE.md §30 (549 Läufe),
+`doku/CSS-NAMENSRAEUME.md`, `doku/karte/`.
+
+**Prüfung:** `test604` 91/91, `test605` 51/51, `test606` 17/17, `test607`
+37/37, `test608` 51/51 (rot gegen den Übernahme-Commit; vier Gegenproben
+rot). Datei-Wächter 550 549 225 401 402 537 290 298 410 400 109 87 105 grün;
+Nachbarn 86 203 210 211 217 238 239 240 241 242 315 362 368 388 393 438 446
+464 471 477 480 565 567 576 580 596 601 grün. Start 1890 → 1904 KB gzip
+(`test388` §5, Decke 1950). Bilder vorher/nachher (Planfläche mit laufender
+Simulation, Lernansicht; Rechner 1440 × 900, Telefon 390 × 844, dunkel und
+hell) angesehen; sie liegen nicht im Verzeichnis (§55.4). Was sie gefunden
+haben und offen bleibt — der Pfeil im FI-Kasten, die Klemmenbrett-Meldung,
+die winzigen Zahlen am Telefon —, steht in L253.
+
 ## 11. Oktober 2026 · Zusammenführen der dritten Welle auf `claude/morgen-besser-3`
 
 **Redur:** Auftragsdatei vom 5. Oktober, Schritt 2: die dreizehn Punkte aus
