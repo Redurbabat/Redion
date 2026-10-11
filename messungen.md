@@ -6913,5 +6913,6 @@ Enter gleich nach „anderes" in            Suche bleibt offen, Leiste         S
 „Dieses Dokument"                         „1 Treffer", Fokus nicht im Feld   Feld
 Klick auf den Grund der Suche             Fokus auf <body>                   Fokus zurück an die Artpille; im
                                                                              Dokument an die Suchleiste
-Start (test388 §5, gzip)                  1863 KB                            1863 KB (Decke 1950)
+Start (test388 §5, gzip)                  1863 KB                            1864 KB (Decke 1950) — die
+                                                                             Kommentare der zwei neuen Stilregeln
 ```

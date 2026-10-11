@@ -62349,6 +62349,25 @@ für „Als Dokumente" — das heisst überall sonst „Lernen". Bei 360 px
 stehen die Namen der Zeile ebenfalls ganz da (gemessen, `messungen.md`
 §94).
 
+**Nachbarn nach der Durchsicht** (unter dem Schloss, auf `1136e2118`):
+`test600` 214/214, `test585` 93/93, `test33` 107/107, `test359` 26/26,
+`test369` 48/48, `test424` 51/51, `test428` 65/65, `test430` 39/39,
+`test459` 31/31, `test202`, `test556` 22/22, `test589`, `test114`,
+`test296` 17/17, `test229` 20, `test47` 42/42, `test588` 78/78, `test494`
+153, `test580`, `test581` 93, `test264` 25, `test531` 19/19, `test476`
+31/31, `test441` 42/42, `test432` 48/48, `test597`, `test362` 18/18,
+`test222` 51/51, `test388` 22 (Start 1864 KB gzip, vorher 1863, Decke
+1950). `test332` rot wie auf dem Grundstand, mit denselben fünf toten
+Regeln (`.menu .kenn` und viermal `#handy-oben`) — keine neue. Die
+Einzeldatei allein in einem Ordner über `file://` bei 390: Bereichszeile
+in der PDF 105/105 · 94/94 · 42/42, Kopf 334 px in allen drei Formen,
+Enter vor der Uhr „1/1", keine Ausnahme. Datei-Wächter 550, 549, 225,
+401, 402, 537, 290, 298, 410, 400, 109, 87, 105 grün. `test436` nicht
+erneut gefahren (er wackelt auf beiden Ständen, L245 Punkt 9). Bilder nach
+der Durchsicht (nicht eingecheckt, §55.4): die Suche in der PDF, in der
+Bibliothek und im Ordner, die Liste, das Regal, die Bibliothek und das
+Formmenü — Rechner und Telefon, hell und dunkel.
+
 **Nachbarn** (unter dem Schloss): `test600` 196/196, `test33` 107/107,
 `test202`, `test359` 26/26, `test369` 48/48, `test424` 51/51, `test428`
 65/65, `test430` 39/39, `test459` 31/31, `test585` 91/91, `test581` 93,
