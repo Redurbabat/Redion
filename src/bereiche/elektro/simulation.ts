@@ -562,9 +562,10 @@ const Stromfluss = (() => {
 
     /* WELCHE KLEMME MEINT EIN GESPEICHERTES LEITUNGSENDE? (E738, L252)
        Der Name kommt durch `Register.fachzeichen.klemmeFuer`: ein Plan von
-       vor E735/E737 trägt am Stecker `1`, am unteren Neutralleiter des FI
-       `N` (heute N2), an Steckdose und Schuko `L` an der alten Stelle. Die
-       Daten bleiben, wie sie sind — übersetzt wird hier, beim Lesen. */
+       vor E735 (alle vier Klemmenänderungen, Commit 64e7a43e6 — L252) trägt
+       am Stecker `1`, am unteren Neutralleiter des FI `N` (heute N2), an
+       Steckdose und Schuko `L` an der alten Stelle. Die Daten bleiben, wie
+       sie sind — übersetzt wird hier, beim Lesen. */
     const teilNach = new Map<string, any>();
     (plan.teile || []).forEach((t: any) => teilNach.set(String(t.id), t));
     const endeVon = (teil: string, nr: string, p: { x: number; y: number } | undefined):

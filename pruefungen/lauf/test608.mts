@@ -1,7 +1,8 @@
 /* Suite 608 — Alte Klemmennamen bleiben gültig (E738, L252)
  * ============================================================================
- * Mit dem Elektro-Bogen (E735, E737) haben vier Zeichen, die es auf `main`
- * schon gab, andere Klemmen bekommen:
+ * Mit dem Elektro-Bogen haben vier Zeichen, die es auf `main` schon gab,
+ * andere Klemmen bekommen — alle vier mit E735 (auf dem Zweig E545, Commit
+ * 64e7a43e6; nachgesehen im Diff, wie L252 es sagt):
  *
  *     stecker            '1' bei x=20          → L bei x=10, N bei x=30
  *     fi-schutzschalter  zweimal 'N'           → N oben, N2 unten

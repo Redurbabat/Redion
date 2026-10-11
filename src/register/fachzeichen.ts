@@ -832,9 +832,10 @@ Register.fachzeichen = (() => {
       w: 40, h: 50,
       pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 16), 'M20,16 L34,32 L6,32 Z'],
       anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 }],
-      /* Vor E737 hatte der Stecker EINEN Stift, `1`, mittig bei x=20. Was
-         daran hing, war der Aussenleiter — einen Rückweg liess das Zeichen
-         gar nicht zu. Darum ist `1` heute L (E738). */
+      /* Vor E735 hatte der Stecker EINEN Stift, `1`, mittig bei x=20 (alle
+         vier geänderten Zeichen kamen mit E735, auf dem Zweig E545, Commit
+         64e7a43e6 — L252). Was daran hing, war der Aussenleiter — einen
+         Rückweg liess das Zeichen gar nicht zu. Darum ist `1` heute L (E738). */
       frueher: { '1': [{ x: 20, y: 0, heute: 'L' }] },
       erklaerung: 'Das Gegenstück zur Steckdose.'
     },
