@@ -1640,8 +1640,11 @@ standen zwei verschiedene „Überall" übereinander; und am Telefon ist
 jedes Menü ein Blatt ohne Pfeiltasten — einmal war er deshalb aus dem
 FALSCHEN Grund rot. Und eine Zeile von `test585` war ohne Marke grün, weil
 −1 und −2 „genau aufeinander" liegen; eine leere Liste hat auch keine
-Doppel (§55.2). Gezählt am 10. Oktober, im selben Bogen: `ls
-pruefungen/lauf/test*.mts | wc -l` sagt 535.*
+Doppel (§55.2). Nach der Durchsicht vom 11. Oktober hält er 214 Zusagen:
+die Bereichszeile am Telefon hatte „Dieses Dokum… · Alle Dokume… · Übe…"
+gezeigt — das Bild des Bauers zeigte es, sein Lauf nicht, weil er nach
+Namen fragte und nicht nach ihrer Breite. Gezählt am 10. Oktober, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 535.*
 
 ### Die Befehle
 

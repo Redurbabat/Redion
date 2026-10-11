@@ -759,7 +759,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 * **E718** — Ordner bearbeiten (Redur, Masterprompt S. 13: „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die ordner selbst nicht bearbeiten"): EIN Umbenennen an Ort und Stelle (`App.umbenennen`: kein Sprung auf die Seite, leer und Steuerzeichen sind kein Name, ein gleicher Name fragt nach), EIN Neuzeichnen (`App.nachAenderung`: Farbe und Name sofort in Karte, Ablagebaum und Seitenleiste), EIN Papierkorb (`App.inPapierkorb`: über `trashBlock`, mit „Rückgängig" in der Meldung; das Blockmenü, das ⋯ einer Datenbank und Entf auf einer Mehrfachauswahl legen weg statt endgültig zu löschen — eine Unterseite war samt Enkelseite fort, eine Datenbank samt Sammlung; gefragt wird das Recht an der angefassten Seite), kein Ring beim Ziehen eines Ordners auf sein Kind, die Kinder eines weggelegten Ordners gehen mit, das eigene Symbol auf Karte und Baum. `test594` neu; `test560` §7, `test587` §13, `test588` §15.
 * **E721** — Ein Menü je Ding (Redur, Masterprompt S. 19: „Hier füge ... und oder beim rechts klicke sollte es mir zeigen löschen“): `Register.aktionen` (neu, `register/aktionen.ts`) ist die EINE Quelle für das, was man mit einer Seite tun kann — jeder Bereich meldet seine Aktionen; `Menue.aktionen` zeichnet daraus das Menü des „…“ und des Rechtsklicks, `Menue.aktionenBinden` bindet Rechtsklick, Kontextmenü-Taste, Umschalt+F10, Entf und langes Drücken (500 ms, E83, ein Schlucker statt zwei); das „…“ ist ein Knopf NEBEN dem Deckel oben rechts (44 × 44); Ablagebaum, Regal, Tabelle, Seitenleiste und Notizhefte haben dasselbe Menü; Menüs mit Rolle, Pfeiltasten und Fokus zurück; Gefahr rot am Rechner wie am Telefon; `Menue.wahl` als die eine Auswahlliste (`test597`)
-* **E725** — Bibliothek: von jeder Kategorie nur eine, und EINE Suche, die ihren Bereich kennt (Redur, Masterprompt S. 13: „ich sollte von jeder kategorie nur eine sehen und die anderen alles unterdem das beim ^ … und die sucher hier sollte es bei der ganz obe such integriert sein“): Ort, Art und Form je als EINE Pille in einer Zeile mit Menü (`Menue.wahl`; ein Name je Ort, die Sammlungen als Gruppe im Ortsmenü, die Formen nur am Formknopf), kein leeres „Zuletzt“, kein Suchfeld mehr auf der Bibliotheksseite; `App.suche` mit Bereichen — [Bibliothek | „In ‚Ordner‘“ · Überall] in der Bibliothek (`Bibliothek.suchBereich`), [Dieses Dokument · Alle Dokumente · Überall] in einer PDF, wobei die Suchleiste der Motor für „Dieses Dokument“ ist (`DocumentMode.findenIn`); der Schalter 📚 der Suchleiste wird derselbe Umschalter, `dokFindAlle` bleibt die eine Erinnerung; „Ausbildung“ trägt denselben Ort-Wähler (`test600`)
+* **E725** — Bibliothek: von jeder Kategorie nur eine, und EINE Suche, die ihren Bereich kennt (Redur, Masterprompt S. 13: „ich sollte von jeder kategorie nur eine sehen und die anderen alles unterdem das beim ^ … und die sucher hier sollte es bei der ganz obe such integriert sein“): Ort, Art und Form je als EINE Pille in einer Zeile mit Menü (`Menue.wahl`; ein Name je Ort, die Sammlungen als Gruppe im Ortsmenü, die Formen nur am Formknopf), kein leeres „Zuletzt“, kein Suchfeld mehr auf der Bibliotheksseite; `App.suche` mit Bereichen — [Bibliothek | „In ‚Ordner‘“ · Überall] in der Bibliothek (`Bibliothek.suchBereich`), [Dieses Dokument · Alle Dokumente · Überall] in einer PDF, wobei die Suchleiste der Motor für „Dieses Dokument“ ist (`DocumentMode.findenIn`); der Schalter 📚 der Suchleiste wird derselbe Umschalter, `dokFindAlle` bleibt die eine Erinnerung; „Ausbildung“ trägt denselben Ort-Wähler; nach der Durchsicht ganze Namen in der Bereichszeile am Telefon, ein gleich breiter Kopf in allen Formen, Enter vor der Uhr und der Grund wie Escape (`test600`)
 
 ---
 
@@ -62072,7 +62072,8 @@ Wege zieht ins Ortsmenü) · **baut auf** E380 (die Ablage ist der erste Ort),
 E487/E500 (die Suche über Dokumente), E702 (Blätter am Telefon), E711 (die
 Suche aus der Kapsel), E712 (das Menü an seinem Anker) und E721
 (`Menue.wahl`, die eine Auswahlliste) auf · **Wächter:** `test600` (neu,
-196 Zusagen in sieben Abschnitten); angepasst, rot gesehen: `test33`,
+214 Zusagen in sieben Abschnitten — 196 beim Bau, 18 nach der Durchsicht
+vom 11. Oktober); angepasst, rot gesehen: `test33`,
 `test202`, `test359`, `test369`, `test424`, `test428`, `test430`,
 `test459`, `test585` · **Zweig** `claude/bibliothek-eine-suche` ·
 **Messung:** `messungen.md` §94.
@@ -62213,6 +62214,13 @@ Suchwege mit getrennten Wahlen statt einer Suche mit Bereichen (§8).
 - *Die Sammlungen als `menuitem` statt `menuitemradio`.* `Menue.wahl` kennt
   nur die Auswahl; eine Sammlung ist ein Ort, an den man geht — der Preis
   ist, dass sie nie ✓ trägt.
+- *Ein Bereich „Diese Seite" auch auf einer gewöhnlichen Seite* (Redur
+  schrieb „wenn ich bei eine pdf oder eine dokument bin"). Nicht in diesem
+  Bogen: die Zeile steht, wo ein Dokument offen ist (PDF, pptx, docx), denn
+  dort gibt es eine Suchleiste, die zählt und springt (E487). Eine
+  gewöhnliche Seite hat ihre eigene Leiste (Strg F, E667); sie als
+  „Diese Seite" in die Zeile zu holen, ist ein eigener Schritt (L245
+  Punkt 7). `test600` §4 hält fest, dass dort heute keine Zeile steht.
 
 **Was es kostet.** Start 1860 → 1863 KB gzip (`test388` §5, Decke 1950) —
 mehr als die geschätzten 1,5 KB, weil die Kommentare der neuen Stilregeln
@@ -62220,7 +62228,12 @@ mitreisen; keine neue Datei. Am Rechner ist ein Ortswechsel zwei Klicks
 statt einer (Pille, Eintrag), eine Art ebenso — der Preis von „nur eine
 sehen". Wer in einem Dokument Strg P drückt und „Dieses Dokument" gemerkt
 hat, öffnet beim Tippen die Suchleiste dahinter (sie ist der Motor);
-Escape schliesst erst die Suche, dann die Leiste.
+Escape schliesst erst die Suche, dann die Leiste. Wer danach in der Suche
+auf „Überall" wechselt, lässt die Leiste offen stehen — Escape (und seit
+der Durchsicht auch ein Klick auf den Grund) gibt ihr dann den Fokus und
+das Wort, das gerade im Suchfeld steht. Mit Absicht: die Leiste ist noch
+da, und ein Druck nimmt eine Ebene (E302); ein Wort, das man in „Überall"
+geändert hat, sucht sie danach im Dokument.
 
 **Weg und wo es bleibt (§43).**
 
@@ -62267,7 +62280,9 @@ Aufgaben" mit Suche, die Suchen der Datenbanken, die Befehlspalette.
   liegen nah beieinander).
 - Am Telefon ist jedes Menü ein Blatt (`role=dialog`, E702) ohne
   Pfeiltasten; mit einer Tastatur geht Tab. Das Blatt gehört `menue.ts`
-  (E721) und blieb unverändert (L245 Punkt 3).
+  (E721) und blieb unverändert (L245 Punkt 3). Die Pille sagt dabei
+  `aria-haspopup="menu"`, auch wenn ein Blatt aufgeht — das setzt
+  `Menue.wahl` so (Fund der Durchsicht, ebenfalls L245 Punkt 3).
 
 **Gegenproben** (eigene Arbeitsbäume auf `fbc180215` und `172f88029`, je eine
 Stelle, gebaut ohne Fehler, `test600` rot gesehen, zurückgenommen):
@@ -62291,6 +62306,49 @@ G4 lief zuerst so, dass der Bau rot war (`'' && …` ist für TypeScript
 „immer falsch", TS2873) — §52.6: keine Gegenprobe; erst der umformulierte
 Lauf zählt.
 
+**Nach der Durchsicht** (11. Oktober 2026). Eine unabhängige Durchsicht
+des Zweigs (Stand `ed0bf9d87`) fand einen blockierenden Fund und mehrere
+kleine. Jeder bekam zuerst seine Zusage (`287654138`, `test600` rot mit
+205 von 214), dann den Bau (`1136e2118`):
+
+```txt
+Fund                                         rot gegen ed0bf9d87                    gebaut
+Bereichszeile am Telefon (blockierend):      ["Dieses Dokument",105,101],           unter 520 px weichen die drei
+„Dieses Dokum… · Alle Dokume… · Übe…"        ["Alle Dokumente",94,91],              Zeichen; die Namen bleiben ganz
+                                             ["Überall",42,40]                      (105/105, 94/94, 42/42)
+„Meine Abla… · 7" in Regal und Liste (390)   ["Meine Ablage",83,82]                 `.bib[data-bib-bereich]` gibt am
+                                                                                    Telefon das innere Polster ab wie
+                                                                                    die Deckel seit E236: Kopf 302 →
+                                                                                    334 px in allen drei Formen
+„Als Dokumente" mit `grid` (= Ort „Alle")    "gleich":["grid"]                      `pages`, das Zeichen für Dokumente
+Enter binnen 220 ms in „Dieses Dokument"     {"suche":true,…,"fokus":false}          das Wort geht direkt an die
+tat nichts                                                                          Suchleiste, auf Treffer 1
+Klick auf den Grund: Fokus fiel auf <body>   {"fokus":false,"tag":"BODY"};          `schliessen()` wie Escape, mit
+                                             im Dokument ohne Fokus in der Leiste   `preventDefault`
+`test585` §5 nur noch am Rechner             — (die Telefonzusage fehlte)            dieselbe Marke im Blatt am Telefon
+`[data-rmo-new]` in motion.ts                — (zeigte auf die entfernte Attrappe)   gestrichen (§43: der Weg „Neue
+                                                                                    Seite" bleibt der Neu-Knopf und
+                                                                                    `#btn-neu-handy`)
+„19 Elemente" im Kopf von test600            — (gemessen waren 20)                   berichtigt
+```
+
+Ein Anlauf der Zeichenprobe war aus dem FALSCHEN Grund grün: er verglich
+`Register.symbole.alsSvg()` mit dem vom Browser serialisierten Menü, und
+„<path/>" ist nicht „<path></path>". Seither gehen beide Seiten durch den
+Browser. Die Telefonzusage von `test585` war gegen `ed0bf9d87` grün (das
+Blatt trug die Marke schon); ihre Gegenprobe: `.menu.blatt .ru-marke
+{display:none !important}` angehängt → rot „Telefon, Ortsblatt: die Marke
+steht auf dem gewählten Ort (Meine Ablage) — {"blatt":true,"t":0,
+"zt":209.89…}", 92/93, zurückgenommen.
+
+**Verworfen bei der Durchsicht:** Kurzformen („Dokument · Alle · Überall")
+— „Alle" allein sagt nicht, WAS alle; die Zeichen schon ab 760 px
+verstecken — zwischen 521 und 760 px passen sie; der Abstand der Pillen
+6 → 4 px — er hätte den einen Pixel gerettet, „· 12" nicht mehr; `cards`
+für „Als Dokumente" — das heisst überall sonst „Lernen". Bei 360 px
+stehen die Namen der Zeile ebenfalls ganz da (gemessen, `messungen.md`
+§94).
+
 **Nachbarn** (unter dem Schloss): `test600` 196/196, `test33` 107/107,
 `test202`, `test359` 26/26, `test369` 48/48, `test424` 51/51, `test428`
 65/65, `test430` 39/39, `test459` 31/31, `test585` 91/91, `test581` 93,
@@ -62299,8 +62357,13 @@ Lauf zählt.
 `test303` 18/18, `test432` 48/48, `test597` 91/91, `test594` 76/76,
 `test588` 78/78, `test229` 20, `test297` 59/59, `test478` 43/43, `test143`,
 `test47` 42/42, `test296` 17/17, `test436`
-71/71 (im Stück einmal rot unter Last — „Cannot read properties of null
-(reading 'click')" —, allein grün), `test388` 22 (1863 KB), `test362`
+71/71 (im Stück einmal rot — „Cannot read properties of null (reading
+'click')" —, allein grün; hier stand zuerst „unter Last". Die Durchsicht hat
+nachgezählt: `test436` §7 wackelt AUCH auf dem Grundstand, dort in 2 von 5
+Läufen rot, auf diesem Stand in 4 von 10, mit demselben Bild — die erste
+`.bib-zelle` ist die Karte einer Seite des Willkommensinhalts, der noch
+aufgebaut wird, und seit E721 trägt jede Karte eine `.bib-zelle`. Nicht
+von diesem Zweig; L245 Punkt 9), `test388` 22 (1863 KB), `test362`
 18/18. Die Einzeldatei allein in einem Ordner über `file://`: Ortsmenü
 mit 15 Einträgen, Strg P mit [Bibliothek · Überall], ein Treffer, keine
 Ausnahme. Datei-Wächter: 550, 549, 225, 401, 402, 537, 290, 298, 410, 400,

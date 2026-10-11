@@ -6891,3 +6891,27 @@ Mit einem wirklich geöffneten Dokument steht „Zuletzt geöffnet" wieder da
 (eine Karte) — auch dann höchstens zehn Bedienelemente über dem Raster.
 Die Einzeldatei allein in einem Ordner über `file://`: Ortsmenü 15
 Einträge, Strg P mit [Bibliothek · Überall], keine Ausnahme.
+
+**Nach der Durchsicht** (11. Oktober 2026, gegen `ed0bf9d87`, dieselben
+Daten; eine Sonde über `file://`, `isMobile`, `hasTouch`; Breite des
+Textes gegen Breite seines Kastens, `scrollWidth`/`clientWidth`):
+
+```txt
+                                          vor der Durchsicht (ed0bf9d87)     nachher (1136e2118)
+Bereichszeile in der PDF, 390             105/101 · 94/91 · 42/40 —          105/105 · 94/94 · 42/42 — ganz,
+(Dieses Dokument · Alle Dokumente ·       „Dieses Dokum… · Alle Dokume… ·    Knöpfe 134 · 124 · 72 × 44
+Überall)                                  Übe…"
+… bei 360                                 (nicht gemessen)                   105/105 · 94/94 · 42/42, Knöpfe
+                                                                             125 · 114 · 62 × 44
+Bereichszeile in der Bibliothek, 390      60/60 · 42/42                      60/60 · 42/42 (175 · 157 × 44)
+Kopfzeile Ort · Art · Form, 390           Deckel 334 · Regal 302 ·           334 · 334 · 334, links bei 28 px
+                                          Liste 302 px                       in allen drei Formen
+„Meine Ablage" in der Ortspille, 390      Deckel 83/83 · Regal 83/82 ·       83/83 in allen drei Formen
+                                          Liste 83/82 („Meine Abla…")
+Zeichen des Formknopfs „Als Dokumente"    grid (= Ort „Alle")                pages
+Enter gleich nach „anderes" in            Suche bleibt offen, Leiste         Suche zu, Leiste „1/1", Fokus im
+„Dieses Dokument"                         „1 Treffer", Fokus nicht im Feld   Feld
+Klick auf den Grund der Suche             Fokus auf <body>                   Fokus zurück an die Artpille; im
+                                                                             Dokument an die Suchleiste
+Start (test388 §5, gzip)                  1863 KB                            1863 KB (Decke 1950)
+```

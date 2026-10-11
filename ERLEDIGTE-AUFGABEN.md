@@ -1,5 +1,30 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E725 nach der Durchsicht — ganze Namen, ein gleich breiter Kopf, Enter vor der Uhr, der Grund wie Escape
+
+**Redur** (Masterprompt vom 29. September, S. 13): „… beim suche wenn ich
+bei eine pdf oder eine dokument bin sollte mir wie es jetzt ist mir zeiget
+wo ich suchen will …".
+
+**Fund** (unabhängige Durchsicht des Stands `ed0bf9d87`; `test600` rot mit
+205 von 214 in `287654138`): am Telefon zeigte die Bereichszeile in einer
+PDF „Dieses Dokum… · Alle Dokume… · Übe…" (blockierend); in Regal und
+Liste stand „Meine Abla… · 7"; „Als Dokumente" trug das Zeichen des Orts
+„Alle"; Enter binnen 220 ms in „Dieses Dokument" tat nichts; ein Klick auf
+den Grund liess den Fokus auf `<body>` fallen; `test585` prüfte die Marke
+im Ortsmenü nur noch am Rechner.
+
+**Bau** (`1136e2118`): unter 520 px weichen die Zeichen der Bereichszeile,
+die Namen bleiben ganz; `.bib[data-bib-bereich]` gibt am Telefon das innere
+Polster ab (Kopf 334 px in allen drei Formen); `pages` für „Als Dokumente";
+Enter geht vor der Uhr direkt an die Suchleiste; der Grund schliesst über
+`schliessen()`; `[data-rmo-new]` aus motion.ts.
+
+**Prüfung:** `test600` 214/214, `test585` 93/93 (die Telefonzusage mit
+eigener Gegenprobe rot gesehen); Nachbarn und Datei-Wächter in E725 („Nach
+der Durchsicht"); Zahlen in `messungen.md` §94; was offen ist, in L245
+Punkt 3, 7, 8 und 9.
+
 ## 10. Oktober 2026 · E725 — Bibliothek: eine Wahl je Kategorie, eine Suche mit Bereichen (Masterprompt #13)
 
 **Redur** (Masterprompt vom 29. September, S. 13, unter dem Foto der

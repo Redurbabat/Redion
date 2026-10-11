@@ -1772,4 +1772,14 @@ Gefunden beim Bau von E725, nicht dort entschieden — je mit dem Grund:
    5) — wenn Redur es will; Vorgabe c war: Treffer mit Vorschau, kein
    Live-Filter.
 4. **Pfeiltasten im Blatt am Telefon** (`Menue.wahl`) — gehört `menue.ts`
-   (E721); heute geht Tab (L245 Punkt 3).
+   (E721); heute geht Tab (L245 Punkt 3). Dazu: die Pille sagt
+   `aria-haspopup="menu"`, wo am Telefon ein Blatt (`role=dialog`) aufgeht.
+5. **Ein Bereich „Diese Seite" auf einer gewöhnlichen Seite** über die
+   Leiste von Strg F (E667) — Redur schrieb „pdf oder eine dokument";
+   gebaut ist die Zeile für Dokumente (L245 Punkt 7).
+6. **Die Rückgängig-Pille des Studios deckt bei 1440 px die Liste „Alle
+   Dokumente" der Suchleiste zum Teil zu** — schon auf dem Grundstand so
+   (L245 Punkt 8).
+7. **`test436` §7 stabil machen** — er wackelt auch auf dem Grundstand
+   (2 von 5); ein eigener Schritt mit eigenem Eintrag, nicht in einem
+   fremden Bogen (L245 Punkt 9).
