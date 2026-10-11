@@ -59,8 +59,8 @@ jetzt `Dialog.bestaetigen` vor jedem Löschen — drei Gegenproben rot);
 `test422` gerichtet (die Chronik zitierte den Aufruf, den er sucht, P130);
 `test453`, `test459`, `test466` öffnen in einem eigenen Schritt — die
 Meldung „Execution context was destroyed" war kein Neuladen, sondern ein
-verlorenes Versprechen im Prüfstand (P131; Sonde: 4 von 10 rot, getrennt
-15 von 15 grün); `test588` danach dreimal grün. Eine Durchsicht mit drei
+verlorenes Versprechen im Prüfstand (P131; Sonde an `test453`: 4 von 10
+rot, getrennt 15 von 15 grün); `test588` danach dreimal grün. Eine Durchsicht mit drei
 Linsen und je zwei Zweiflern (35 Prüfer) prüfte alles, was über
 morgen-besser-2 hinaus nach main geht: dreizehn Funde, alle eingearbeitet
 — darunter ein falscher Hash in der Chronik, eine falsche Zahl und zwei

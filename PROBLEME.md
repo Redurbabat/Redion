@@ -2824,7 +2824,7 @@ sind der teuerste Teil und der lehrreichste.
 
 *2026-10-11 · 🟠 mittel*
 
-**Das Bild.** Im vollen Lauf brachen test453, test459 und test466 ab: „Execution context was destroyed, most likely because of a navigation.“ — einmal, in einer Stunde unter Last. Einzeln nachgefahren auf morgen-besser-3 4 von 10 Läufen, auf morgen-besser-2 0 von 10.
+**Das Bild.** Im vollen Lauf brachen test453, test459 und test466 ab: „Execution context was destroyed, most likely because of a navigation.“ Einzeln nachgefahren mit dem alten Aufbau: test453 einmal von drei; die Sonde an test453 auf morgen-besser-3 in 4 von 10 Läufen, auf morgen-besser-2 in 0 von 10 — auch ohne andere Last.
 
 **Die falsche Vermutung.** Redion lädt die Seite neu, kurz nachdem sie offen ist — und dann wären ungespeicherte Eingaben weg (§51). Danach: der Dienst-Arbeiter steuert die Seite um.
 
@@ -2832,9 +2832,9 @@ sind der teuerste Teil und der lehrreichste.
 
 **Die Ursache.** Das abgewartete evaluate der Aufbauhelfer schrieb Daten, wartete auf Store.flush() und rief dann App.oeffne — einen langen, synchronen Schritt. In diesem Fenster verlor das Versprechen, das Playwright im Browser abwartet, seinen Halt und wurde eingesammelt; Playwright übersetzt jeden solchen Protokollfehler in „Execution context was destroyed“. Redion selbst tat alles richtig: flush aufgelöst (950 → 1368 ms), App.oeffne gelaufen, 1977 Blöcke im Speicher. Seit der dritten Welle tut der Start mehr, und das Fenster trifft öfter.
 
-**Die Lösung.** In den drei Läufen öffnet ein eigener, synchroner Schritt die Seite (das evaluate gibt die Kennung zurück). Die Zusagen der Läufe sind dieselben. 98 weitere Läufe tragen dasselbe Muster und stehen in AUFGABEN.md.
+**Die Lösung.** In den drei Läufen öffnet ein eigener, synchroner Schritt die Seite (das evaluate gibt die Kennung zurück). Die Zusagen der Läufe sind dieselben. 116 weitere Läufe tragen denselben Aufbau und stehen in AUFGABEN.md.
 
-**Der Beweis.** Sonde mit getrenntem Öffnen: 15 von 15 grün (vorher 4 von 10 rot); test453, test459, test466 je dreimal grün.
+**Der Beweis.** Sonde mit getrenntem Öffnen 15 von 15 grün (vorher 4 von 10 rot); nach der Trennung test453, test459, test466 je dreimal grün (08:39–08:43 UTC).
 
 **Die Lehre.** Eine Meldung über einen zerstörten Kontext ist eine Vermutung des Werkzeugs, keine Beobachtung. Erst messen, ob dasselbe Dokument noch dasteht — dann weiss man, ob es um Daten geht oder um den Prüfstand.
 

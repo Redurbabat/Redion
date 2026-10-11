@@ -110,11 +110,12 @@ const zweiDokumente = async (seitenImSkript = 2): Promise<Page> => {
     return skript.id as string;
   }, seitenImSkript);
   /* ÖFFNEN IN EINEM EIGENEN SCHRITT (11. Oktober 2026). Stand `App.oeffne`
-     im selben abgewarteten `evaluate` wie `Store.flush()`, verlor Playwright
-     auf morgen-besser-3 in 4 von 10 Läufen sein Versprechen („Promise was
-     collected", gemeldet als „Execution context was destroyed") — die Seite
-     lud dabei NICHT neu: dasselbe Dokument, alle Daten da, gemessen mit einer
-     Sonde. Getrennt: 15 von 15 grün. Die Zusagen des Laufs sind dieselben. */
+     im selben abgewarteten `evaluate` wie `Store.flush()`, konnte Playwright
+     sein Versprechen verlieren („Promise was collected", gemeldet als
+     „Execution context was destroyed"); dieser Lauf brach im vollen Lauf
+     vom 11. Oktober so ab. Gemessen an test453, der denselben Aufbau hat:
+     4 von 10 Läufen auf morgen-besser-3, getrennt 15 von 15 grün — und die
+     Seite lud dabei NICHT neu. Die Zusagen des Laufs sind dieselben (P131). */
   await s.evaluate((id: string) => { App.oeffne(id); }, zuOeffnen1);
   await s.waitForSelector('.document-workspace', { timeout: 15000 });
   await s.waitForTimeout(1100);
