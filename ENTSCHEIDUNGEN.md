@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-708 Entscheidungen, E1 bis E729 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+709 Entscheidungen, E1 bis E739 (**E730 bis E738** fehlen auf diesem Zweig: sie gehören den übrigen Bögen vom 11. Oktober und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -771,6 +771,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E727** — Das Gestirn: ein Hell/Dunkel-Schalter mit einer Regel für jede Tür (Redur, Masterprompt 29. September: „es seiht noch nicht 100 fetig aus, also finde für hier ewas kreatives aus“): die „Sichel“ war ein Schatten in fester Farbe, der in keinem dunklen Schema den Grund traf, und dieselbe Funktion gab es dreimal mit drei Regeln — von „Mitternacht“ führte Strg⇧L hin und zurück nach „Standard“. Jetzt EINE Quelle `Aussehen.grundWechseln` (merkt das Schema je Grundton, behält den Akzent), alle Türen leiten weiter; Sonne und Mond aus dem Register gehen in einem runden Fenster auf und unter, `role=switch`, 44 × 44, nur transform/opacity. Ergänzt E462 und E701. `test602` neu, `test580` und `test584` angepasst
 * **E728** — Der ruhige Kopf: die Suche links, rechts nur Zeichen, Motor und Glas nur als Zustand (Redur, Masterprompt 29. September: „nur die emojis dort bleiben und alles komplet nacht links schieiben … drehen wie eine mottor und glass efeckt“): `margin-left:auto` stand an der Kapsel statt am ersten Zeichen; „PDF öffnen“ wird das Zeichen `upload`, „Werkzeuge“ trägt `band` statt ⌘, die Zwillinge im Band stehen bei offener Lade am Rechner nicht mehr doppelt (jeder ruft dieselbe Funktion, gezählt); die Lupe dreht sich einmal unter Zeiger, Fokus, Strg P und am Telefon beim Drücken, die Kapsel wird dabei Glas, in Ruhe deckend; alle Kopfknöpfe 44 × 44. Ergänzt E703 und E457, schliesst L117 Punkt 3. `test603` neu, `test482` erweitert
 * **E729** — main trotz roter Läufe, einmal (Redur, 6. Oktober: „… danch alles auf main trotz die rote läufe …"): `main` wird auf den Stand der dritten Welle vorgespult (claude/morgen-besser-3, ein leerer Zusammenführungs-Commit von origin/main und die Nachzüge danach, Zweig `claude/auf-main`), obwohl der volle Lauf rote Läufe zeigt. Rot bleiben nur Läufe, die auf claude/morgen-besser-2 Zeile für Zeile gleich rot sind (14, je mit Grund in AUFGABEN.md); was aus den eigenen Zweigen rot war, ist vorher gerichtet, ohne einen Wächter zu lockern; vier Läufe, die im vollen Lauf rot und einzeln nachgefahren grün waren, sind gemessen — drei davon verloren ein Versprechen im Prüfstand, kein Neuladen (P131). Ohne force, ein Vorspulen. Eine Ausnahme von §46 für diesen einen Stand, keine neue Regel
+* **E739** — Die Vorlage „Dark (2017–2020)" ist eingebaut (Redur, 11. Oktober: „Ja" zu seinem Zweig `feat/dark-2017-fach-dossier`): `src/bereiche/wissen/dark-dossier.ts` als Cherry-Pick mit Redur als Autor, ohne die von Hand kopierte .js; typisiert (23 implizite `any`, `Paar = [string, string]`), Kopf „ERZEUGT", der Wikipedia-Verweis mit `%28/%29` (das Link-Muster des Editors endete an der ersten „)"), das Schaubild der Zeitlinie mit `&amp;` statt rohem `&` (vorher undekodierbar — gefunden von `test609` §4), `window.DarkDossier`; eingebunden in index.html nach nin-quiz.js und im GRUNDSTOCK. Sichtbar für jeden Nutzer des öffentlichen Repos; eigene Zusammenfassungen und eigene SVG, Netflix und Wikipedia nur verlinkt. Start 1890 → 1904 KB gzip (Decke 1950), Einzeldatei +43 725 Bytes; L216 hat damit drei Lerninhalte im Startweg. `test609` neu
 
 ---
 
@@ -65310,3 +65311,96 @@ Stand ohne Rot", sondern der letzte geprüfte Stand MIT einer benannten
 Liste roter Läufe. Wer main holt, bekommt diese Liste mit. Der Satz in §46
 ist deshalb um einen Hinweis auf diesen Eintrag ergänzt, nicht
 umgeschrieben.
+
+## E739 — Die Vorlage „Dark (2017–2020)" ist eingebaut: Redurs Serienfach auf main
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur (11. Oktober 2026:
+„Ja" auf die Frage, ob sein Zweig `feat/dark-2017-fach-dossier` als
+eingebaute Vorlage auf `main` kommt — AUFGABEN.md, „Nach dem Zusammenführen
+der dritten Welle", Punkt 3: „Hineinnehmen oder liegen lassen — Redurs
+Wort") · **Zweig** `claude/dark-fach` · **Wächter** `test609`.
+
+**Was entschieden wurde.**
+
+1. **Eingebaut, nicht nachgeladen.** `src/bereiche/wissen/dark-dossier.ts`
+   aus Redurs Commit 49da007a5 (30. September 2026, Autor red) kommt per
+   Cherry-Pick auf den Zweig, der Autor bleibt Redur. Die Vorlage
+   `dark-2017-dossier` meldet sich beim Start bei `Register.vorlagen` und
+   steht damit für **jeden** Nutzer in der Vorlagenliste der Arbeitswelt —
+   das Repository ist öffentlich, die Vorlage also auch. Eingesetzt legt
+   sie ein Fach an (`heftArt: 'fach'`, Vermerk `vorlage`) mit zwölf
+   Unterseiten: Schnellorientierung, Zeitlinie, drei Staffeln Folge für
+   Folge, Familien, Zeitreise-Regeln, drei Welten, Ende, Verwirrungen,
+   16 Lernkarten (`flashcard`, `Learning.cards()` zählt sie) und Quellen.
+   Der erste Block ist der Hinweis „VOLLSTÄNDIGE SPOILER".
+2. **Ohne die von Hand kopierte .js.** Redurs zweiter Commit (611a28a2c,
+   „Dark-Dossier für Browserlauf bauen") legte `quell/…/dark-dossier.js`
+   als Kopie hin. Er kommt nicht mit: das .js ist Ausgabe von
+   `npm run bauen:ts` (§54.2), und `test105` vergleicht es Zeichen für
+   Zeichen.
+3. **Lauffähig gemacht, Redurs Text unverändert.** Der Kopf „/*! ERZEUGT —
+   NICHT VON HAND ÄNDERN. Quelle: …" wie bei jeder Datei unter
+   `src/bereiche/` (`test105` §3); die 23 impliziten `any` typisiert —
+   `e[0]` ist unter `noUncheckedIndexedAccess` „vielleicht undefined",
+   deshalb tragen die vier Listen und die Lernkarten den Typ
+   `Paar = [string, string]` (die Lernkarten-Liste hat dafür den Namen
+   `lernkarten` bekommen); `(window as any).DarkDossier = DarkDossier;` wie
+   `NinQuiz`. Redurs deutsche Bezeichner bleiben (`absatz`, `punkt`,
+   `bauen` — wie bei `nin-quiz.ts`), seine Texte auch.
+4. **Zwei Stellen, die kaputt gezeichnet hätten.** Der Wikipedia-Verweis
+   hiess `…/wiki/Dark_(Fernsehserie)`. Das Link-Muster des Editors
+   (`\((https?:[^)]+)\)`, `editor.ts`) endet an der ERSTEN „)": die Adresse
+   verlor ihr Ende, und hinter dem Verweis stand eine einzelne „)" im Text.
+   Jetzt `Dark_%28Fernsehserie%29` — Wikipedia nimmt beide Schreibweisen.
+   Und — erst von `test609` §4 gefunden, vorher nicht gewusst — das
+   Schaubild der Zeitlinie trug „Adam & Sic Mundus" roh im SVG. SVG ist
+   XML; ein rohes `&` macht es undekodierbar, das Bild hatte
+   `naturalWidth` 0 und stand als kaputtes Bild auf Seite 2. Jetzt
+   `&amp;`; angezeigt wird dasselbe Wort.
+5. **Zwei Einträge (§28).** `<script src="quell/bereiche/wissen/
+   dark-dossier.js" defer>` direkt nach `nin-quiz.js` — also nach
+   `register/vorlagen.js`, sonst meldet sich die Vorlage ins Leere — und
+   dieselbe Zeile im `GRUNDSTOCK` von `src/dienst/sw.ts`.
+
+**Die Haltung zu den Rechten.** Der Inhalt ist eine eigene redaktionelle
+Zusammenfassung der Serie, kein Transkript und keine Übersetzung von
+Netflix-Texten. Die fünf Schaubilder (sechs Bildblöcke, das Weltenbild
+zweimal) sind eigene SVG, als `data:`-Adresse im Block, ohne `<image>`,
+ohne `href`, ohne Webadresse (`test609` §4). Netflix-Screenshots, Poster,
+Standbilder und Trailer stehen NICHT darin; Netflix (Titelseite, Media
+Center, Dark Guide) und Wikipedia sind nur verlinkt — so steht es auch auf
+der Quellenseite der Vorlage selbst. Redurs eigener Code, kein fremder
+(§57 betrifft ihn nicht).
+
+**Warum.** Redurs „Ja". Die Arbeit lag seit dem 30. September auf einem
+Zweig, den kein neuer Zweig und `main` nicht trugen (AUFGABEN.md, dritte
+Welle, Punkt 3) — und sie war für sich nicht lauffähig.
+
+**Was die Alternative war.** (a) **Nachladen nach L216:** das Register
+kennt die Vorlage nur dem Namen nach, der Inhalt kommt beim Einsetzen
+(wie die Chronik, E613). Das spart die 14 KB beim Start, ändert aber den
+Vertrag von `Register.vorlagen` (§8) — und genau diese Frage steht in L216
+für alle Lerninhalte offen bei Redur. Sie hier für eine Vorlage allein zu
+beantworten, hiesse für ihn zu entscheiden. (b) **Ein persönlicher
+`.redion`-Import statt einer eingebauten Vorlage:** kein Startgewicht,
+nicht sichtbar für andere Nutzer, aber auch keine Vorlage — Redur müsste
+das Fach auf jedem Gerät einspielen. Er hat zu „eingebaut" Ja gesagt.
+
+**Was es kostet** (gemessen, `messungen.md` §97). `test388` §5: der Start
+holt vorher 1890 KB gzip über 254 Dateien, nachher 1904 KB über 255 — die
+Decke steht auf 1950 KB, Luft bleiben 46 KB. `dark-dossier.js` hat 43 649
+Bytes, 14 538 gzip (Stufe 6, wie `test388`). Die Einzeldatei wächst von
+9 545 743 auf 9 589 468 Bytes (+43 725). Jeder Start lädt und parst damit
+43 KB Inhalt, den die meisten nie öffnen — L216 führt jetzt drei
+Lerninhalte im Startweg statt zwei. Und die Vorlage ist für jeden
+sichtbar, auch für den, der die Serie nicht kennt oder nicht gespoilert
+werden will (der Hinweis steht oben, nicht vor dem Einsetzen).
+
+**Wächter.** `test609` — §1 die zwei Einträge, §2 die Vorlage (12
+Unterseiten, `fach`, Vermerk, +16 Karten, `window.DarkDossier`), §3 jeder
+gezeichnete Verweis trägt die Adresse, die der Text mit Klammertiefe meint,
+§4 jedes Bild ist ein eigenes, dekodierbares SVG, §5 keine Seitenfehler.
+Gegen den Cherry-Pick allein rot mit 1 von 15; gegen den ersten
+eingebundenen Stand 23 von 24 (der Fund mit dem `&`); danach 24 von 24.
+Drei Gegenproben: die Skriptzeile heraus (3/15), die Klammern roh (20/24),
+das `&` roh (23/24).

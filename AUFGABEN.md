@@ -1707,7 +1707,9 @@ Grund:
    „Überall"). Redurs Frage, ob das so bleiben soll (P128).
 3. **Zwei alte Zweige mit Arbeit, die nirgends steht**:
    `claude/redion-elektro-simulation` und `feat/dark-2017-fach-dossier`.
-   Hineinnehmen oder liegen lassen — Redurs Wort.
+   Hineinnehmen oder liegen lassen — Redurs Wort. **`feat/dark-2017-fach-dossier`
+   ist hineingenommen** (Redur, 11. Oktober: „Ja"; E739, `test609`) — ohne
+   die von Hand kopierte .js (611a28a2c).
 4. **Am Telefon, im Gesamtbild gesehen** (beides schon auf
    morgen-besser-2 so): die Formen in den Whiteboards der Fläche stehen
    stark vergrössert und angeschnitten; in der gerollten Lernzentrale liegt

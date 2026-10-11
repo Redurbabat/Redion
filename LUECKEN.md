@@ -9721,6 +9721,18 @@ Decke seit E688 auf 2850, und diese Lücke bleibt offen.
 > Posten sind ohne Kommentare noch 17,5 KB gzip (`messungen.md` §86). Die
 > Frage an Redur bleibt, und die Lücke bleibt offen.
 
+> **Stand seit E739 (11. Oktober 2026): drei Lerninhalte im Startweg.**
+> Redurs Serienfach „Dark (2017–2020)" (`quell/bereiche/wissen/
+> dark-dossier.js`, Vorlage `dark-2017-dossier`) ist eingebaut, auf sein
+> „Ja" vom 11. Oktober — und wie die zwei anderen beim Start geladen, nicht
+> beim Einsetzen. Gemessen (gzip Stufe 6 wie `test388`): `nin-quiz.js`
+> 11 537, `staatskunde-inhalt.js` 6 369, `dark-dossier.js` 14 538 Bytes —
+> zusammen rund 31,7 KB. `test388` §5: 1890 KB über 254 Dateien vorher,
+> 1904 KB über 255 nachher, die Decke steht auf 1950 (`messungen.md` §97).
+> Nachladen wurde für die eine Vorlage bewusst NICHT gebaut: es änderte
+> den Vertrag von `Register.vorlagen` (§8), und das ist genau die Frage
+> unten — sie gehört Redur für alle drei, nicht einem Bogen für einen.
+
 **Die Frage an Redur:** sollen Lerninhalte (und künftige Kapitel — jedes
 NIN-Kapitel sind rund 4 KB gzip) grundsätzlich erst beim Öffnen des
 Trainers kommen? Wenn ja: ein Bogen mit `wissen/lerninhalt-laden.ts` nach

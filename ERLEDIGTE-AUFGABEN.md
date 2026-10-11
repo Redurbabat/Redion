@@ -1,5 +1,45 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E739 · Die Vorlage „Dark (2017–2020)" ist eingebaut
+
+**Redur:** am 11. Oktober „Ja" auf die Frage, ob sein Zweig
+`feat/dark-2017-fach-dossier` (30. September, „Dark-Serienfach mit
+Zeitlinie und Lernkarten anlegen") als eingebaute Vorlage auf `main` kommt
+— AUFGABEN.md, dritte Welle, Punkt 3: „Hineinnehmen oder liegen lassen —
+Redurs Wort".
+
+**Gefunden:** Der Zweig trug zwei Commits: die .ts (49da007a5) und eine
+von Hand kopierte .js (611a28a2c). Die .ts war für sich nicht lauffähig:
+keine Zeile in index.html und keine im GRUNDSTOCK, kein Kopf „ERZEUGT",
+23 implizite `any` (`npm run typecheck` rot), und der Wikipedia-Verweis
+`…/wiki/Dark_(Fernsehserie)` zerbrach am Link-Muster des Editors — die
+Adresse ohne Ende, eine einzelne „)" dahinter (Bild `vorher-quellen-…`).
+Dazu, erst von `test609` §4 gefunden: das Schaubild der Zeitlinie trug
+„Adam & Sic Mundus" roh im SVG — undekodierbar, auf Seite 2 stand ein
+kaputtes Bild mit dem Alternativtext (Bild `vorher-zeitlinie-…`).
+
+**Gebaut:** Cherry-Pick von 49da007a5 mit Redur als Autor, ohne
+611a28a2c (das .js erzeugt `npm run bauen:ts`). Der Kopf „ERZEUGT", die
+Parameter typisiert, `Paar = [string, string]` für die vier Listen und
+die Lernkarten, `Dark_%28Fernsehserie%29`, `&amp;` im Schaubild,
+`window.DarkDossier` wie `NinQuiz`; die Skriptzeile direkt nach
+`nin-quiz.js` (nach `register/vorlagen.js`) und dieselbe im GRUNDSTOCK.
+Redurs Bezeichner und Texte sind sonst unverändert. L216 hat einen
+„Stand": drei Lerninhalte im Startweg.
+
+**Prüfung:** `test609` neu — gegen den Cherry-Pick allein 1/15, gegen den
+ersten eingebundenen Stand 23/24 (das `&`), danach 24/24; drei Gegenproben
+rot (Skriptzeile heraus 3/15, Klammern roh 20/24, `&` roh 23/24). Grün:
+105, 109, 143, 388 (1890 → 1904 KB über 254 → 255 Dateien, Decke 1950),
+86, 565, 537, 87, 530, 550, 549; `test567` einmal rot („Gespeichert steht
+die falsche Antwort meist zuletzt" — eine Stichprobe von zwanzig
+Ankreuzkarten, die Dark-Karten liegen in dem Lauf gar nicht vor), danach
+dreimal 39/39. Einzeldatei 9 545 743 → 9 589 468 Bytes. Messung
+`messungen.md` §97. Bilder vorher (Zeitlinie, Quellen) und nachher
+(Wurzel mit Titelbild, Zeitlinie, Familien-Schaubild, Lernkarten,
+Quellen), Rechner 1440 × 900 und Telefon 390 × 844, hell und dunkel,
+ohne Seitenfehler — nicht im Verzeichnis (§55.4).
+
 ## 11. Oktober 2026 · Zusammenführen der dritten Welle auf `claude/morgen-besser-3`
 
 **Redur:** Auftragsdatei vom 5. Oktober, Schritt 2: die dreizehn Punkte aus

@@ -7883,3 +7883,52 @@ Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
 **Start:** 1854 → 1855 KB gzip über 252 Dateien (`test388` §5, Decke
 1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
 v1430.
+
+## §97 · Die Vorlage „Dark (2017–2020)": Startgewicht, Einzeldatei, sechs Schaubilder (E739, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/dark-fach` gegen `origin/main` (1575a1835).
+Startgewicht aus `test388` §5 (Chromium über einen kleinen Server mit gzip
+Stufe 6, gezählt wird, was der Start holt), je einmal vor dem Einbinden
+(Stand d8ccf76dd, die .ts noch ohne Skriptzeile) und nach E739. Grössen
+mit `stat` und `zlib.gzipSync` (Stufe 6, wie `test388`). Die Schaubilder
+aus `test609` §4: jede Unterseite mit Bild über `App.oeffne`, dann
+`naturalWidth` jedes `#page img` mit `data:image/svg+xml`, Chromium über
+file://, 1280 × 900 dunkel.
+
+**Was der Start holt** (`test388` §5, Decke 1950 KB):
+
+```txt
+                 Dateien   gzip
+vorher (main)    254       1890 KB
+nachher (E739)   255       1904 KB
+```
+
+**Die drei Lerninhalte im Startweg** (L216; Bytes, roh / gzip 6):
+
+```txt
+quell/bereiche/wissen/nin-quiz.js             44 395 / 11 537
+quell/bereiche/wissen/staatskunde-inhalt.js   24 530 /  6 369
+quell/bereiche/wissen/dark-dossier.js         43 649 / 14 538   neu
+zusammen                                     112 574 / 32 444
+```
+
+**Die Einzeldatei:** 9 545 743 → 9 589 468 Bytes (+43 725). Dienststand
+v1455 → v1457 (zwei Bauläufe mit verschiedenem Inhalt: der erste noch mit
+dem rohen `&` im Schaubild).
+
+**Die sechs Bildblöcke** (`naturalWidth` in Seitenreihenfolge — Wurzel,
+1 Orientierung, 2 Zeitlinie, 6 Familien, 7 Regeln, 8 Welten):
+
+```txt
+mit „Adam & Sic Mundus" roh       1200  1200     0  1400  1400  1200
+mit „Adam &amp; Sic Mundus"       1200  1200  1400  1400  1400  1200
+```
+
+Die Zeitlinie (1400 × 500) ist das einzige Bild mit einem `&`; als XML
+ist das SVG ohne Escape nicht wohlgeformt, und der Browser zeichnet das
+Platzhalterzeichen mit dem Alternativtext.
+
+**`test609`:** gegen d8ccf76dd 1 / 15; gegen den ersten eingebundenen
+Stand 23 / 24 (§4); nach E739 24 / 24. Gegenproben: Skriptzeile heraus
+3 / 15, Klammern roh 20 / 24 (§3: Adresse `…/wiki/Dark_(Fernsehserie`, dahinter
+„) — Veröffentlichungsdaten …"), `&` roh 23 / 24.
