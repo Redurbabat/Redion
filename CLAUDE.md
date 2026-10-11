@@ -2424,6 +2424,10 @@ rote Läufe zeigte. Rot geblieben sind nur Läufe, die auf
 Die Regel gilt weiter; das nächste Vorspulen braucht wieder einen grünen
 vollen Lauf oder sein Wort.*
 
+*Und eine zweite, am selben Tag (E743, Redur: „3.ja"): `main` steht auf
+dem Stand von Redurs sechs Ja; rot sind dreizehn Läufe, jeder schon vorher
+auf `main` rot, keiner neu. Auch sie gilt einmal.*
+
 ---
 
 ## 47. Nicht tun  **[hart]**

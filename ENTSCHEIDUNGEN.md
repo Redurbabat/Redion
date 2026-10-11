@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-721 Entscheidungen, E1 bis E742 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+722 Entscheidungen, E1 bis E743 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -784,6 +784,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E740** — Die Linse auf „Heute“ ruht NEBEN dem Wort (Redur, 11. Oktober: „Ja“ auf die Frage aus der Liste vom 5. Oktober, „neben dem Wort ruhen?“): die Fahrt über „Aufmachen. / Weiterdenken.“ bleibt, der Halt liegt eine Fünftel-Schriftgrösse rechts vom Punkt, auf der Höhe der zweiten Zeile, in der Spalte der Überschrift; ist daneben weniger Platz, wird die Linse kleiner, unter 40 px gibt es keine (320 px) — die Zeilen kommen trotzdem verwischt herein. In Ruhe ist sie eine leere Glasscheibe. `test589` §16 neu (jeder Buchstabe gegen den Kreis der Linse), §8 „neben“ statt „auf“, §13e an den Halt über „Aufmachen.“ verlegt. Ergänzt E712; +93 B gzip.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
+* **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
 
 ---
 
@@ -66644,3 +66645,72 @@ zurück auf `#133144` → wieder 25/26 mit „info 12.09, warn 12.15, fehler
 `test584` 37/37 (Schrift auf jeder Tönung ≥ 7 in allen zehn Schemata),
 `test414` 14/14, `test47` 42/42, `test332` nur mit seinen fünf bekannten
 toten Regeln. Die Messung aller zehn Schemata steht in `messungen.md` §100.
+
+## E743 — main auf den Stand von Redurs sechs Ja: die zweite Ausnahme von §46, mit dreizehn benannten roten Läufen
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur (11. Oktober,
+19:43 UTC, Zeitstempel der Sitzung) · **berührt** §46 („`main` bewegt
+sich nicht, solange etwas rot ist") — eine harte Regel; die Ausnahme
+gehört deshalb hierher, wie bei E729 · **Zweig**
+`claude/auf-main-sechs-ja`.
+
+**Redurs Antwort, wörtlich** — auf die vier Fragen des Berichts nach dem
+vollen Lauf:
+
+```txt
+19:43 UTC   1. verblassen
+            2 . Scnell lauf
+            3.ja
+            4. wie du willst
+```
+
+Die dritte Frage hiess: „`main`: auf diesen Stand ja oder nein?" — und
+davor, im selben Bericht: „Ganz grün geht es erst, wenn die 13 alten Läufe
+repariert sind. Wenn du willst, dass `main` schon vorher auf diesen Stand
+geht, reicht ein ‚Einmal', wie beim letzten Mal." Die anderen drei
+Antworten haben eigene Einträge auf eigenen Zweigen (ab E744).
+
+**Was entschieden wurde.**
+
+1. `main` wird von 1575a18 auf `claude/auf-main-sechs-ja` vorgespult:
+   `claude/sechs-ja` (die fünf Zweige von Redurs sechs Ja, E730–E742,
+   `test604`–`test609`), `claude/sechs-ja-volllauf` (das Ergebnis des
+   vollen Laufs in Doku und Chronik) und diese Entscheidung.
+2. **Die Grenze.** Rot sind auf diesem Stand genau dreizehn Läufe, und
+   jeder war auf `main` 1575a18 schon rot, mit Grund in E729 und
+   AUFGABEN.md: `test201`, `test270`, `test274`, `test332`, `test348`,
+   `test351`, `test365`, `test425`, `test448`, `test470`, `test493`,
+   `test524`, `test533`. Neu rot ist keiner. Einer weniger als bei E729:
+   `test319` ist seit E742 grün — mit Redurs „Ja" zur strengen Prüfung,
+   nicht durch einen gelockerten Wächter.
+3. **Der volle Lauf** (`node pruefungen/volllauf.mts --neu`, in Stücken zu
+   zehn, im eigenen Arbeitsbaum auf cd3d165, unter dem Schloss, ab
+   16:04 UTC; nach der Zeitgrenze der Sitzung einmal fortgesetzt): 550
+   Läufe, 537 grün, 13 rot in 158 Minuten. Nach cd3d165 änderten sich nur
+   Doku und Chronik (22ea361 und dieser Eintrag); nachgefahren auf dem
+   Endstand: die Datei-Wächter, `test388`, `test422`, `test74`.
+4. **Ohne force.** `origin/main` (1575a18) ist Vorfahr dieses Zweigs; das
+   Vorspulen ist ein gewöhnliches Fast-Forward (§43).
+5. **Einmal.** §46 gilt weiter. Die Zweige zu Redurs übrigen Antworten
+   (ab E744) landen NICHT mit diesem Vorspulen; für sie braucht es
+   wieder einen grünen vollen Lauf oder ein neues Wort.
+
+**Warum.** Redur holt Redion über `main` (`holen.bat`, L83). Ohne
+Vorspulen bekäme er den Stand von heute früh: ohne die Elektro-Simulation,
+ohne sein Fach „Dark", ohne die drei kleineren Ja. Die dreizehn roten Läufe
+sind alle älter als diese Arbeit; sie auf dem Zweig festzuhalten macht sie
+nicht grüner (§46 selbst).
+
+**Was die Alternative war.** `main` stehen lassen, bis die dreizehn
+gerichtet sind — in einem eigenen „Rot zuerst"-Zweig, bei `test351`,
+`test365` und `test493` nur mit Redurs Wort, weil dort die Richtung (Zählung
+oder Wächter) eine Frage an ihn ist (E729). Das hätte die Arbeit eines
+ganzen Tages auf Zweigen liegen lassen.
+
+**Was es kostet.** Wie bei E729: `main` ist der letzte geprüfte Stand MIT
+einer benannten Liste roter Läufe, nicht ohne. Die Liste ist kürzer
+geworden (dreizehn statt vierzehn), und sie ist dieselbe Liste — nichts
+Neues ist dazugekommen. Dass es nach E729 die zweite Ausnahme binnen eines
+Tages ist, ist selbst ein Zeichen: solange die dreizehn rot sind, wird
+jedes Vorspulen eine Ausnahme sein. Der eigene Zweig für sie steht in
+AUFGABEN.md (dritte Welle, Punkt 1).
