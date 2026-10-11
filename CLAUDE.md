@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 548 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 549 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1899,6 +1899,19 @@ eine Karte, die der Simulation widerspricht, macht ihn rot. 37 Zusagen.
 Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 548 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
 
+*Und 549: `test608` — alte Klemmennamen bleiben gültig (E738, L252). Vier
+Zeichen, die es auf `main` schon gab, haben mit dem Elektro-Bogen andere
+Klemmen bekommen (`stecker` '1' → L/N, der FI zweimal 'N' → N/N2, Steckdose
+und Schuko mit neuen Lagen). Er lädt Pläne im ALTEN Format und verlangt die
+Netze von `main` — gemessen mit einer Sonde gegen 1575a1835 —, N und N2
+getrennt, keinen Fehlerstrom im gesunden Kreis, und nach Schieben, Drehen
+und Ziehen jedes Leitungsende auf der Klemme, die es meint. Gegen den
+Übernahme-Commit ohne Auflöser war er rot mit 14 von 48: die Leitung am
+Stecker fiel ab, am Schuko hingen L und N zusammen, und der gesunde
+Lampenkreis meldete „löst aus" mit 435 mA. Gezählt am 11. Oktober, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 549 — auf seinem
+Zweig; beim Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1915,7 +1928,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 548 Läufe
+npm run pruefen                      alle 549 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2005,7 +2018,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 548 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 549 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
