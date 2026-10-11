@@ -1272,6 +1272,18 @@ const Seitenflaeche = (() => {
       aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
     });
 
+    /** WAS DAS RAD WILL, quer und längs (E741, Redur, 11. Oktober 2026:
+     *  „Ja" zu AUFGABEN, Fläche Punkt 4). Umschalt hält ein gewöhnliches
+     *  Rad, und der Browser meldet es als `deltaY` — rollt aber selbst
+     *  seitwärts, in der Tabelle wie auf jeder Seite. Auf dem Grund schob
+     *  es die Fläche deshalb LÄNGS; jetzt heisst es überall quer, wie in
+     *  AFFiNE und Figma. Hat das System den Wisch schon gedreht (macOS:
+     *  `deltaX` gesetzt, `deltaY` 0), bleibt er, wie er ist — sonst liefe
+     *  er doppelt. EINE Regel für zwei Leser: `rolltSelbst` und das
+     *  Schieben. */
+    const radWeg = (e: WheelEvent): { dx: number; dy: number } =>
+      e.shiftKey && e.deltaX === 0 ? { dx: e.deltaY, dy: 0 } : { dx: e.deltaX, dy: e.deltaY };
+
     /** ROLLT UNTER DEM RAD ETWAS IM KASTEN SELBST? (Durchsicht E723)
      *  Seit E723 bricht eine breite Tabelle nicht mehr aus dem Kasten aus, sie
      *  rollt darin — gemessen verbergen acht Spalten im Seitenkasten 454 px.
@@ -1284,10 +1296,11 @@ const Seitenflaeche = (() => {
      *  das Rad weiter, sonst bliebe man über einer Tabelle hängen, die schon
      *  ganz rechts steht. */
     const rolltSelbst = (e: WheelEvent): boolean => {
-      /* Quer heisst: der Wisch geht mehr seitwärts als längs — oder Umschalt
-         hält ein gewöhnliches Rad, das der Browser dann seitwärts rollt. */
-      const quer = Math.abs(e.deltaX) > Math.abs(e.deltaY) || (e.shiftKey && e.deltaX === 0);
-      const weg = quer ? (e.deltaX || e.deltaY) : e.deltaY;
+      /* Quer heisst: der Wisch geht mehr seitwärts als längs — Umschalt mit
+         einem gewöhnlichen Rad hat `radWeg` schon gedreht. */
+      const { dx, dy } = radWeg(e);
+      const quer = Math.abs(dx) > Math.abs(dy);
+      const weg = quer ? dx : dy;
       if (!weg) return false;
       for (let el = e.target instanceof Element ? e.target : null;
            el && el !== ebene && el !== flaeche; el = el.parentElement) {
@@ -1302,7 +1315,9 @@ const Seitenflaeche = (() => {
       return false;
     };
 
-    /* Rad schiebt, Strg + Rad zoomt — wie in AFFiNE und im Whiteboard. */
+    /* Rad schiebt, Umschalt + Rad schiebt quer, Strg + Rad zoomt — wie in
+       AFFiNE und Figma. (Das Whiteboard im Kasten zoomt mit jedem Rad; was
+       es nimmt, bleibt seins, E722.) */
     flaeche.addEventListener('wheel', (e: WheelEvent) => {
       /* Ein Rad, ein Ausschnitt (E722): hat das Whiteboard im Kasten das Rad
          genommen, bleibt die Fläche stehen. Gemessen vorher: ein Rad zoomte
@@ -1318,7 +1333,9 @@ const Seitenflaeche = (() => {
         massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY);
         return;
       }
-      sicht = { x: sicht.x - e.deltaX, y: sicht.y - e.deltaY, z: sicht.z };
+      /* Umschalt schiebt quer — dieselbe Regel wie über der Tabelle (E741). */
+      const { dx, dy } = radWeg(e);
+      sicht = { x: sicht.x - dx, y: sicht.y - dy, z: sicht.z };
       stellen();
     }, { passive: false });
 

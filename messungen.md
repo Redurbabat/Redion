@@ -7441,6 +7441,55 @@ die breite Tabelle nach zwei Wischern quer (1440 × 900), ein Zug mit der
 mittleren Taste im Whiteboard (1440 × 900), das Schild im Streifen am
 Telefon (390 × 844).
 
+
+**Nach E741: Umschalt+Rad auf dem Grund** (11. Oktober 2026; Zweig
+`claude/flaeche-umschalt-quer` gegen `1575a1835`). Gemessen mit einer
+Sonde unter dem Schloss (Kratzordner, `messe-rad.mts`, nicht
+eingecheckt): Chromium (Playwright, Linux), dunkel, frischer Kontext je
+Fenster, eine Seite in der Flächenansicht mit acht Spalten im
+Seitenkasten (454 px verborgen); gemessen wird die Verschiebung von
+`.pg-fl-sicht` je Geste, ein Rad = 120 px; die leere Stelle ist gesucht
+(`leer` aus `test598`), nicht angenommen. 1440 × 900 und 1920 × 1080
+gaben dieselben Verschiebungen (Start `translate(248px, 110px)` bzw.
+`translate(488px, 200px)`):
+
+```txt
+Geste (quer, längs in px)                         vorher (1575a1835)       nachher
+Umschalt+Rad über der Tabelle, links 0            Tabelle 0 → 120,          Tabelle 0 → 120,
+                                                  Fläche 0, 0               Fläche 0, 0
+Umschalt+Rad ganz rechts (454 von 454)            0, −120                   −120, 0
+Umschalt+Rad auf dem Grund                        0, −120                   −120, 0
+macOS-Ereignis (deltaX 120, deltaY 0, Umschalt)   −120, 0                   −120, 0
+Trackpad schräg mit Umschalt (deltaX 30, dY 100)  −30, −100                 −30, −100
+Rad allein auf dem Grund                          0, −120                   0, −120
+Strg+Rad (deltaY −120) auf dem Grund              z 1 → 1,12                z 1 → 1,12
+redion-einzeldatei.html allein im Ordner          —                         wie nachher, alle Zeilen
+Konsolenfehler                                    keine                     keine
+Einzeldatei                                       9 545 743 Bytes           9 545 862 Bytes
+Dienststand                                       v1455                     v1456
+Start (test388 §5), gzip                          nicht eigens gemessen     1890 KB über 254 Dateien
+                                                                            (Decke 1950)
+```
+
+Der Strg-Zoom hält den Punkt unter dem Zeiger fest; seine Verschiebung
+hängt deshalb an der gesuchten Stelle und ist kein Vergleichswert. Die
+macOS-Zeile ist ein erzeugtes Ereignis (`dispatchEvent`), auf keinem Mac
+gemessen. Das Kneifen mit zwei Fingern ist nicht gemessen — es geht über
+Zeiger-Ereignisse, nicht über das Rad, und der Bogen ändert nur das Rad.
+
+`test598` §14 (sechs Zusagen) gegen `1575a1835` rot, 70 von 72, danach
+72 von 72. Gegenproben, je rot gesehen und zurückgenommen:
+
+```txt
+Schiebezeile zurück auf e.deltaX / e.deltaY      §14 rot an zwei Zeilen: „quer 0, längs -120"
+                                                 (Rand der Tabelle, Grund) — 70 von 72
+unbedingtes Tauschen                             §14 rot an genau einer Zeile, der macOS-Zusage:
+  (shiftKey ? { dx: deltaY, dy: deltaX } …)      „quer 0, längs -120" — 71 von 72
+```
+
+Kein Bild (§55.3): auf dem Bildschirm ändert sich nichts, nur wohin eine
+Geste schiebt.
+
 ## §93 · KI am Ort: Chat, Ebenen am Telefon, ein Auftrag je Befehl, „Verbundenes" (E724, 6. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/ki-am-ort` gegen `3d180c591`
