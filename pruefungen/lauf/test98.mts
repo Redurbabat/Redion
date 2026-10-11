@@ -274,8 +274,16 @@ const konst = _lies(_dazu(WURZEL, 'quell/kern/einstellung/konstanten.js'), 'utf8
 p('`slice(30)` steht nicht mehr im Speichern', !/slice\(30\)/.test(store));
 p('`slice(5)` steht nicht mehr im Aufräumknopf', !/versionen\(p\.id\)[\s\S]{0,200}slice\(5\)/.test(einst));
 p('Der Knopf benutzt dieselbe Regel', /fassungenAusduennen/.test(einst));
+/* Seit E710 fragt der Knopf im Fenster des Kits (`Dialog.bestaetigen`),
+   nicht mehr mit `confirm()` — hier stand `[\s\S]{0,900}confirm\(`, und der
+   Punkt war seither rot, obwohl gefragt wurde. Jetzt strenger als vorher:
+   die Frage muss VOR jedem Löschen im Griff stehen (zwischen dem Griff und
+   der Frage kein `versionLoeschen`), ein Nein kehrt um, und erst danach
+   kommt die Schleife. Gegenproben (11. Oktober): ohne die Frage rot; die
+   Frage hinter die Schleife gesetzt rot; ein Löschen beim Sammeln, vor der
+   Frage, rot. */
 p('Der Knopf fragt, bevor er endgültig löscht',
-  /versionen-aufraeumen[\s\S]{0,900}confirm\(/.test(einst));
+  /'versionen-aufraeumen':\s*async(?:(?!versionLoeschen)[\s\S]){0,900}?if \(!\(await Dialog\.bestaetigen\(\{[\s\S]{0,300}?\}\)\)\)\s*return;\s*for \(const id of opfer\)\s*await Store\.versionLoeschen\(/.test(einst));
 p('VERSIONEN_MAX wird endlich gelesen', /VERSIONEN_MAX/.test(store),
   'die Konstante stand da und niemand hielt sich an sie');
 p('Die Konstante erklärt, warum es die Zahl gibt',
