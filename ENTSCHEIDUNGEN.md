@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-722 Entscheidungen, E1 bis E743 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+723 Entscheidungen, E1 bis E744 (**E744 bis E747** sind den Zweigen zu Redurs Antworten vom 11. Oktober abends vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -785,6 +785,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
+* **E744** — Die Linse auf „Heute“ verblasst nach der Fahrt (Redur, 11. Oktober, 19:43 UTC: „verblassen“ auf die Frage „Die leere Linse neben dem Wort“ aus AUFGABEN.md): die Fahrt aus E712/E740 bleibt, am Halt rechts vom Punkt geht die Deckkraft in 320 ms auf 0 (`--motion-slow`, `--ease-exit`, keine eigene Dauer), danach wird die Linse entfernt; in Ruhe, beim Neuzeichnen danach, bei „Ruhig“ und „weniger Bewegung“ entsteht keine. `test589` §16 misst die vier Zusagen von E740 jetzt am Halt (eine Millisekunde vor dem Ende der Fahrt), in Ruhe keine sichtbare Linse und das Verblassen Bild für Bild; §8 mit seinem Wort geändert. Gegen 97d156b03: 132 ok, 14 offen; mit E744 146 von 146. Ergänzt E740; +191 B gzip.
 
 ---
 
@@ -66440,6 +66441,11 @@ lassen), nicht still entschieden; sie steht in AUFGABEN.md.
 Nachbarn grün: `test539`, `test388`, `test217`, `test424`, `test580`,
 `test576`; Datei-Wächter `test105`, `test109`, `test550`.
 
+> **Ergänzt durch E744 (11. Oktober 2026, abends).** Die Frage aus „Was es
+> kostet“ hat Redur beantwortet: „verblassen“. Die Linse hält weiter, wo
+> E740 sie hinlegt — rechts vom Punkt —, verblasst dort aber in 320 ms und
+> ist in Ruhe nicht mehr da. Die Zusagen von §16 gelten seither AM HALT.
+
 ## E741 — Umschalt+Rad schiebt die Fläche quer: auf dem Grund wie über der Tabelle, und an ihrer Kante ohne Richtungswechsel
 
 **Datum:** 11. Oktober 2026 · **Entschieden von** Redur („Ja" zu
@@ -66714,3 +66720,133 @@ Neues ist dazugekommen. Dass es nach E729 die zweite Ausnahme binnen eines
 Tages ist, ist selbst ein Zeichen: solange die dreizehn rot sind, wird
 jedes Vorspulen eine Ausnahme sein. Der eigene Zweig für sie steht in
 AUFGABEN.md (dritte Welle, Punkt 1).
+
+## E744 — Die Linse auf „Heute“ verblasst nach der Fahrt
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur (11. Oktober,
+19:43 UTC, „1. verblassen“ — die erste von vier Antworten auf den Bericht
+nach dem vollen Lauf, siehe E743) · **ergänzt** E740 und E712 (Szene 03,
+„03 REFRACT“), ohne Fahrt, Halt, Glas, Feder oder Filter zu ändern ·
+**Wächter:** `test589` §16, §8 · **Zweig** `claude/linse-verblasst`.
+
+**Die Frage.** In AUFGABEN.md stand seit E740 „Die leere Linse neben dem
+Wort“: die Linse hält rechts von „Weiterdenken.“, über leerem Grund; ihre
+Abschrift zeigt dort nichts, ihre Brechung bricht nichts. In Ruhe war sie
+eine Glasscheibe, die nichts trägt — „stehen lassen oder nach der Fahrt
+verblassen?“. Redur: „verblassen“.
+
+**Was entschieden wurde.**
+
+1. **Die Fahrt bleibt.** Aufploppen auf der Feder „lebhaft“, Halt über
+   „Aufmachen.“ (der Halt, an dem `test589` §13e misst), Gleiten über
+   „Weiterdenken.“, Halt eine Fünftel-Schriftgrösse rechts vom Punkt;
+   Milchglas unterwegs, `FAHRT` an den Halten, 1650 ms. Die Keyframes sind
+   Zahl für Zahl dieselben — die Zeiten der Bahn stehen nur weiter oben in
+   `ueberSatz`, weil sie nicht an der Lage hängen, sondern an der Feder.
+2. **Am Halt verblasst sie.** Eine Animation der Deckkraft 1 → 0 auf
+   `.ru-held-linse`, `delay` = Ende der Fahrt, `fill: forwards` (vorher
+   wirkt sie nicht und nimmt dem Aufploppen nichts). Dauer und Kurve sind
+   keine neuen Zahlen: `--motion-slow` (320 ms, „grosse Überlagerungen“)
+   und `--ease-exit` (die Kurve für alles, was geht, E43/E259), gelesen wie
+   in `menue.ts`. Sie läuft auf derselben Uhr wie die Fahrt: zeichnet die
+   Ansicht mitten im Verblassen neu, geht es an derselben Stelle weiter.
+3. **Danach ist sie weg, nicht nur unsichtbar.** Ist alles zu Ende, wird
+   das Element entfernt. Es war schon `aria-hidden` und
+   `pointer-events:none`; ohne Element trägt es auch keine zwei Abschriften
+   und keine Brechung mehr, die niemand sieht.
+4. **Ohne Fahrt keine Linse.** In Ruhe (nach dem Verblassen), beim
+   Neuzeichnen danach (der Beobachter bei einer Grössenänderung), bei
+   „Ruhig“ und bei „weniger Bewegung“ entsteht keine. Bis hierher lag sie
+   dort still an ihrem Halt — ein Verblassen, das man nicht sehen darf, wäre
+   nur eine leere Scheibe. Die Zeilen kommen weiter verwischt herein, wo
+   sie es bisher taten.
+
+**Die Wächter, mit Redurs Wort geändert** (so hatte AUFGABEN.md es vorher
+beschrieben: „§16 hält weiter, §8/§16 verlangen in Ruhe keine Linse mehr“):
+
+- `test589` §16 **geteilt.** AM HALT: die Fahrt wird eine Millisekunde vor
+  ihrem Ende angehalten (das Ende der Animation, die `.ru-held-linse`
+  selbst bewegt) — dort gelten die vier Zusagen von E740 Zeichen für
+  Zeichen: kein Buchstabe unter der Linse, rechts neben dem Punkt auf der
+  Höhe der Zeile, in der Spalte, die Abschrift zeigt nichts; ist keine
+  Fahrt anzuhalten, ist das rot („in Ruhe keine Linse“ darf nicht „nie eine
+  Linse“ heissen, §55.2). IN RUHE: keine sichtbare Linse (Deckkraft der
+  ganzen Kette ≤ 0,02 oder kein Element), nichts läuft, an ihrer Mitte
+  fängt nichts von ihr den Zeiger, kein Buchstabe unter einer sichtbaren
+  Linse (bleibt). DAS VERBLASSEN: ein zweites Ankommen, Bild für Bild mit
+  `requestAnimationFrame` — erst voll da (≥ 0,98), dann mindestens drei
+  Bilder zwischen 0,05 und 0,95, nie wieder heller, in höchstens 700 ms
+  bei 0,02 oder darunter, am Ende weg. 1440 × 900 und 390 × 844, dunkel und
+  hell; „weniger Bewegung“ an beiden Grössen: keine Linse.
+- `test589` §8: „In Ruhe bricht die Linse mit der Brechung aus linse.ts“
+  heisst „an ihrem ersten Halt bricht die Linse …“ und wird beim Ankommen
+  gemessen, zusammen mit der Abschrift in der Grösse der Überschrift (die
+  stand bisher beim Fenster von 1000 px); dazu „nach der Fahrt verblasst“;
+  „Schmaleres Fenster“ heisst „die Grössenänderung holt keine Linse
+  zurück“; „Ruhig“ und „prefers-reduced-motion“: keine Linse statt einer
+  stillen. Alle übrigen Zusagen von §8 (aria-hidden, Bewegung beim
+  Ankommen, nur `transform`/`opacity`, Stillstand danach, echte Schrift,
+  Vorleser einmal, EINE Brechung, Kontrast ohne Glas) sind unverändert.
+- §13e bleibt, wie E740 ihn verlegt hat: er hält die Fahrt bei 780 ms an
+  und bringt sie danach mit `finish()` zu Ende — das Verblassen läuft
+  dabei mit zu Ende.
+
+**Rot gesehen.** `test589` gegen 97d156b03 (Commit 1b0c02750 „test589
+(rot)“): 132 ok, 14 offen — vier in §8 (verblasst, 1000 px, Ruhig,
+reduced-motion), in §16 je zwei in den vier Fällen mit Fahrt (in Ruhe,
+das Verblassen) und je einer in den zwei Fällen mit weniger Bewegung. Die
+Zusagen am Halt waren dort grün: sie halten, was E740 gebaut hat. Mit
+E744: 146 von 146.
+
+**Gegenproben**, je am gebauten `quell/schale/bedienung/linse.js`
+gefahren und Byte für Byte zurückgesetzt (sha256 be68c9d2… vorher =
+nachher, `git diff` leer):
+
+1. **Das Verblassen herausgenommen**, die Linse wird am Ende der Fahrt
+   trotzdem entfernt: 142 ok, 4 offen — „0 Bilder dazwischen … in 15 ms“
+   in allen vier Fällen. Ein Verschwinden ohne Übergang ist kein
+   Verblassen.
+2. **Das Verblassen und das Entfernen herausgenommen** (die Linse ruht wie
+   vor E744): 137 ok, 9 offen — „in Ruhe ist keine Linse zu sehen
+   (Deckkraft 1)“ und das Verblassen in allen vier Fällen, dazu §8
+   „verblasst“.
+3. **Der alte Ruhezweig zurück** (in Ruhe und ohne Bewegung liegt die
+   Linse still an ihrem Halt): 141 ok, 5 offen — §8 „1000 px“, „Ruhig“,
+   „prefers-reduced-motion“ und §16 in beiden Fällen mit weniger Bewegung.
+
+**Gemessen** (messungen.md §101): zwischen dem letzten vollen und dem
+ersten leeren Bild liegen in den vier Fällen 14 bis 15 Bilder (von 0,92–0,94
+auf 0,08–0,13), 279 bis 302 ms; angehalten in der Mitte (Fahrt + 160 ms)
+0,675. Die Fahrt endet bei 1650 ms, das Verblassen bei 1970 ms.
+
+**Warum.** Die Fahrt erklärt die Linse: sie vergrössert, was unter ihr
+liegt, und zeigt beim Ankommen, dass die Überschrift lebt. Neben dem Wort
+hat sie nichts mehr zu vergrössern. Eine leere Scheibe, die stehen bleibt,
+liest sich wie ein Knopf ohne Namen — und dafür hatte E740 die Frage an
+Redur offen gelassen, statt sie still zu entscheiden.
+
+**Was die Alternative war.** (a) Stehen lassen (der Stand von E740) — von
+Redur nicht gewählt. (b) Nach dem Verblassen als unsichtbares Element mit
+Deckkraft 0 stehen lassen: der Wächter liesse es zu (er misst, was man
+sieht), aber das Element trüge zwei Abschriften und eine Brechung, die
+niemand sieht, und jede künftige Messung müsste es eigens ausnehmen.
+(c) Eine eigene Dauer für das Verblassen: es gibt vier Dauern und eine
+Kurve für Gehendes (E259) — eine fünfte Zahl hätte nur sich selbst.
+(d) Die Linse gar nicht mehr anhalten, sondern im Gleiten ausblenden: dann
+gälten die Zusagen von E740 an keiner Stelle mehr, und Redurs „Ja“ zu
+„neben dem Wort“ wäre stillschweigend weg.
+
+**Was es kostet.** `quell/schale/bedienung/linse.js` 3686 → 3877 B gzip
+(+191 B, fast alles der Kommentar zu `verblassen`), zwei Kommentare in
+`studio.css` und `lernwelt.ts`; `test388` §5: 1919 KB über 255 Dateien
+(Decke 1950, unverändert gerundet). In
+Ruhe gibt es auf „Heute“ kein Glas mehr; wer die Linse sehen will, muss
+ankommen. Bei „Ruhig“ und „weniger Bewegung“ gibt es keine Linse mehr
+(vorher eine stille). `test589` wartet rund 12 s länger (vier Fälle mit
+Fahrt, je 1100 + 1200 + 3200 ms statt 2600 ms).
+
+**Wächter:** `test589` §16 (geteilt), §8 (geändert). Nachbarn grün:
+`test539` 51/51 und `test541` 25/25 (die Glaslinse der unteren Leiste, ein
+anderes Element — nicht angefasst), `test576`, `test388` 22/22, `test74`
+12/12, `test600` 214/214, `test601`; Datei-Wächter `test550`, `test549`,
+`test225`, `test105`, `test109`, `test87`, `test537`, `test400`.

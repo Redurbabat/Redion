@@ -8218,3 +8218,62 @@ denselben fünf toten Regeln wie vorher.
 selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
 `redion-einzeldatei.html` 9 545 743 → 9 546 796 Bytes. Dienststand v1455
 → v1456.
+
+## §101 · Die Linse auf „Heute" verblasst nach der Fahrt (E744, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/linse-verblasst` gegen `97d156b03`
+(origin/main). Chromium über einen eigenen Dateiserver (freier Port des
+Systems, `listen(0)`), Lernzentrum → „Heute". Die Deckkraft der Linse ist
+das Produkt von `opacity` über die ganze Kette bis zur Wurzel (−1: kein
+Element), gelesen in jedem Bild mit `requestAnimationFrame` ab dem Aufruf
+von `Produktwelten.lernen('heute')`, 3,2 s lang (`test589` §16, VERLAUF).
+Die Zeitachse beginnt beim Aufruf, nicht beim Anlegen der Linse — sie
+kommt ein Zeichnen später (gut 150 ms). Rechner ohne Telefon-Schalter,
+Telefon mit `isMobile`, `hasTouch`, Pixeldichte 2. Bilder und Halte mit
+`bilder-abend/linse-bilder.mts` im Kratzordner, nicht eingecheckt.
+
+**Vorher** (97d156b03): in allen vier Fällen ist die Linse bis zum Ende
+der Messung voll da — letztes Bild 3200–3209 ms, Deckkraft 1; kein Bild
+dazwischen. In Ruhe (2,6 s) steht sie an 716/420, 75 px (1440 × 900) bzw.
+261/541, 58 px (390 × 844), Deckkraft 1, auch bei „weniger Bewegung".
+
+**Nachher** — das Verblassen, Bild für Bild:
+
+```txt
+Fall                letztes volles   erstes leeres   Dauer    Bilder dazwischen   erstes / letztes
+                    Bild (≥ 0,98)    Bild (≤ 0,02)            (0,05 … 0,95)       Bild dazwischen
+1440 × 900 dunkel   1813 ms          2092 ms         279 ms   14                  0,929 / 0,100
+1440 × 900 hell     1781 ms          2083 ms         302 ms   15                  0,939 / 0,126
+ 390 × 844 dunkel   1819 ms          2102 ms         283 ms   15                  0,930 / 0,102
+ 390 × 844 hell     1838 ms          2138 ms         300 ms   15                  0,922 / 0,084
+```
+
+Das erste leere Bild ist in allen vier Fällen „kein Element" (−1): die
+Linse wird nach dem Verblassen entfernt. Nie wieder heller; die Werte
+fallen erst langsam, dann schneller — die Kurve `--ease-exit`
+(`cubic-bezier(0.4, 0, 1, 1)`). Ein Beispiel ganz (1440 × 900 dunkel, ms
+ab Aufruf : Deckkraft): 1842 : 0,929 · 1861 : 0,894 · 1876 : 0,854 ·
+1892 : 0,809 · 1909 : 0,761 · 1930 : 0,708 · 1943 : 0,652 · 1959 : 0,593 ·
+1976 : 0,531 · 2011 : 0,398 · 2026 : 0,327 · 2043 : 0,254 · 2059 : 0,178 ·
+2076 : 0,100.
+
+**Auf der Uhr der Fahrt** (die Animationen der Linse angehalten): Ende der
+Fahrt T = 1650 ms (die Feder „knapp" dauert 263 ms: Halt über
+„Aufmachen." 523–900 ms, Ankunft rechts vom Punkt bei 1163 ms, dort
+still bis `SATZ_GESAMT`; in Node aus `spring.js` gerechnet), Dauer des
+Verblassens 320 ms (`--motion-slow`). Bei
+1150 ms steht die Linse an 713/420 mit 76 px (gestreckt), Deckkraft 1; bei
+1649 ms am Halt 716/420, 75 px, Deckkraft 1 — derselbe Ort wie vor E744
+in Ruhe; bei 1810 ms (T + 160) Deckkraft 0,675; Telefon dieselben Zeiten,
+259/540 → 261/541, 58 px, 0,675.
+
+**In Ruhe** (2,6 s nach dem Ankommen; „weniger Bewegung" 0,5 s): keine
+Linse im Dokument, auf beiden Grössen, hell und dunkel, mit und ohne
+„weniger Bewegung"; bei 1000 px nach einer Grössenänderung ebenso, nichts
+läuft.
+
+**Bytes.** `quell/schale/bedienung/linse.js` 12 561 → 12 963 B, gzip
+(Stufe 6, wie `test388`) 3686 → 3877 B (+191); `studio.css` ein
+Kommentar. `test388` §5: der Start holt 1919 KB (gzip) über 255 Dateien,
+Decke 1950 — dieselbe Zahl wie auf dem zusammengeführten Stand der sechs
+Ja (ERLEDIGTE-AUFGABEN.md, 11. Oktober); die 191 B verschwinden im Runden.

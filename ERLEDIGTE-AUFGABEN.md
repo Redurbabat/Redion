@@ -1,5 +1,47 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E744 · Die Linse auf „Heute" verblasst nach der Fahrt
+
+**Redur:** „1. verblassen", am 11. Oktober 2026 um 19:43 UTC — auf die
+Frage aus AUFGABEN.md, „Die leere Linse neben dem Wort (E740)": seit E740
+hält die Linse rechts von „Weiterdenken.", über leerem Grund, und war in
+Ruhe eine Glasscheibe, die nichts trägt. Stehen lassen oder verblassen?
+
+**Gefunden** (Bilder vorher, 1440 × 900 und 390 × 844, hell und dunkel,
+dazu „weniger Bewegung"): in jedem Bild eine leere Scheibe neben dem Punkt
+— dunkel ein kaum hellerer Kreis mit Lichtkante, hell ein fast weisser Stein
+mit weichem Schatten; bei „weniger Bewegung" dieselbe Scheibe ohne Fahrt.
+
+**Gebaut** (`src/schale/bedienung/linse.ts`): die Fahrt bleibt Zahl für
+Zahl; am Halt eine Animation der Deckkraft 1 → 0, `delay` = Ende der Fahrt
+(1650 ms), Dauer und Kurve aus den Marken (`--motion-slow` 320 ms,
+`--ease-exit`), auf derselben Uhr wie die Fahrt; danach wird die Linse
+entfernt. In Ruhe, beim Neuzeichnen danach und ohne Bewegung entsteht
+keine. Zwei Kommentare nachgezogen (`studio.css` 8c, `lernwelt.ts`), die
+noch „ruht" bzw. „liegt still" sagten.
+
+**Geprüft:** `test589` mit Redurs Wort geändert — §16 misst die vier
+Zusagen von E740 jetzt am Halt (eine Millisekunde vor dem Ende der Fahrt
+angehalten), in Ruhe keine sichtbare Linse, und das Verblassen Bild für
+Bild (mindestens drei Bilder dazwischen, nie heller, höchstens 700 ms);
+§8: an ihrem ersten Halt bricht sie, nach der Fahrt verblasst, 1000 px
+holen keine zurück, „Ruhig" und „weniger Bewegung" ohne Linse. Rot gegen
+97d156b03 mit 132 ok, 14 offen; mit E744 146 von 146. Drei Gegenproben am
+gebauten JavaScript, je zurückgesetzt (sha256 gleich): ohne Verblassen
+142/4, ohne Verblassen und Entfernen 137/9, alter Ruhezweig 141/5.
+Gemessen: 14–15 Bilder zwischen voll und leer, 279–302 ms (messungen.md
+§101). Nachbarn grün: 539 (51/51), 541 (25/25), 576, 388 (22/22, Start
+1919 KB, Decke 1950), 74 (12/12), 600 (214/214), 601; Datei-Wächter 550,
+549, 225, 105, 109, 87, 537, 400.
+
+**Bilder nachher:** in Ruhe auf keiner Grösse und in keinem Thema eine
+Linse, die Überschrift frei; während der Fahrt (angehalten über
+„Weiterdenken.", am Halt, mitten im Verblassen bei 0,675) dieselbe Linse
+wie vorher, am Halt rechts vom Punkt.
+
+**Offen:** nichts aus dieser Frage. Die Bilder liegen im Kratzordner, nicht
+im Verzeichnis (§55.4).
+
 ## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
 
 **Der Auftrag.** Redur um 11:00 UTC: „Ja für die 6 entscheideungen" — die
