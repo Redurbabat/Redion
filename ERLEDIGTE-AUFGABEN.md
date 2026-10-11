@@ -1,5 +1,37 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E716 · Der Trenner zieht wirklich
+
+**Redur:** Masterprompt vom 29. September, Seite 25 (Foto Seite 26): „der
+linie wo man die feld grösser und kleiner macht , funktioniert nicht…"
+
+**Fund:** Die Breite der Studio-Navigation wurde als
+`--studio-nav-expanded` an `<body>` geschrieben, `--studio-nav-width` aber
+auf `:root` daraus abgeleitet — `var()` gilt dort, wo es steht. Die Spalte
+blieb bei 184 (156 bei 761–1100 px), Attribut und Gedächtnis zogen mit
+(vorher: Maus +50 → Spalte 184, aria 234; bei 1024 ohne Ziehen Spalte 156,
+aria 184). `test424` hatte nur das Attribut geprüft, das der Griff selbst
+schreibt.
+
+**Bau:** Ableitung auf `body` (studio.css, beide Stellen); der Start
+schreibt nur eine gemerkte Breite; das Attribut kommt aus der gezeichneten
+Breite (ResizeObserver); `breiteZuruecksetzen()` für Doppelklick und den
+Palettenbefehl „Navigationsbreite zurücksetzen"; `isPrimary`, rAF,
+`lostpointercapture`, Escape, kein Merken beim Klick; Umschalt+←/→ und
+Bild↑/↓ 32 px; 16-px-Fläche mit einer Griff-Pille wie im Touch Kit (als
+Redion-CSS), Fokusrahmen, mit Finger 20 px (genau die Lücke zwischen den
+Knöpfen, Kante−8 bis Kante+12) und `--touch-min` im Quadrat um den Griff;
+der Palettenbefehl schweigt im Fokus-Modus. Nichts entfernt; die alten Griffe der Seitenleiste bleiben
+unberührt (L237, AUFGABEN).
+
+**Prüfung:** `test592` neu (59/59; gegen `1bfaca53` 12/58, §13 kam nach
+dem Bild dazu), `test424`
+(52/52) und `test40` (27/27) erweitert, je erst rot. Neun Gegenproben rot
+gesehen. Nachbarn grün: 245, 272, 430, 52, 143, 303, 296, 388 (1852 KB,
+vorher 1850), 362, 412, 126. Messung `messungen.md` §87. Bilder vorher und
+nachher, 1440 und 1024 hell und dunkel, 390 dunkel — nicht im Verzeichnis
+(§55.4).
+
 ## 5. Oktober 2026 · Zusammenführen der zweiten Welle auf `claude/morgen-besser-2`
 
 **Redur:** Auftragsdatei vom 5. Oktober: „Lege `claude/morgen-besser-2` von

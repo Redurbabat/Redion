@@ -307,6 +307,52 @@ import { chromium } from 'playwright';
   ok('Die Blockgriffe sind am PC da', pc.griffe);
   ok('Die Datenbank-Werkzeugleiste ist vollständig', pc.dbLeiste >= 7, pc.dbLeiste + ' Knöpfe');
 
+  /* AUCH BEI EINER BREITE, DIE NICHT DIE VORGABE IST (E716). Der Punkt
+     „so breit wie die Studio-Navigation" oben misst bei 184 — und dort
+     stimmen Kante und Attribut ZUFÄLLIG überein, auch wenn die Spalte sich
+     nie bewegt. Genau so stand der Trenner seit Anfang September still, ohne dass
+     dieser Lauf es sah (Redur, 29. September: „der linie wo man die feld
+     grösser und kleiner macht , funktioniert nicht…"). Deshalb hier: Ende
+     drücken, dann neu laden — und beide Male die GEZEICHNETE Kante gegen
+     das Attribut messen. */
+  const kanteJetzt = () => d.evaluate(() => ({
+    kante: Math.round(document.getElementById('kante')?.getBoundingClientRect().width || 0),
+    navBreite: Number(document.getElementById('studio-divider')?.getAttribute('aria-valuenow')) || 0
+  }));
+  await d.locator('#studio-divider').focus();
+  await d.keyboard.press('End');
+  const amEnde = await kanteJetzt();
+  ok('Nach „Ende" ist die Kante wirklich 260 px breit, und der Griff sagt dasselbe',
+     amEnde.kante === 260 && amEnde.kante === amEnde.navBreite,
+     amEnde.kante + ' px, der Griff sagt ' + amEnde.navBreite);
+  await d.evaluate(() => Store.flush());
+  /* `Store.flush()` schreibt den Stapel der Blöcke — `setMeta` schreibt
+     seinen eigenen `put` daneben, und auf den wartet flush NICHT. Unter
+     Last schnitt das Neuladen ihn ab (gesehen: „184 px, der Griff sagt
+     184"). Ein Lesen über eine zweite Verbindung kommt in IndexedDB erst
+     nach dem älteren Schreiben dran — danach ist die Breite auf der Platte. */
+  await d.evaluate(() => new Promise<void>(fertig => {
+    const r = indexedDB.open(KONSTANTEN.ABLAGE_NAME);
+    r.onsuccess = () => {
+      try {
+        const g = r.result.transaction('meta', 'readonly').objectStore('meta').get('studio:navigation-breite');
+        g.onsuccess = g.onerror = () => { r.result.close(); fertig(); };
+      } catch { r.result.close(); fertig(); }
+    };
+    r.onerror = () => fertig();
+  }));
+  await d.reload();
+  await d.waitForFunction(() => typeof App !== 'undefined' && typeof StudioSchale !== 'undefined' &&
+    !!Store.cache.blocks && !!document.body.dataset.studioNav);
+  /* Unter Last kommt das erste Bild spät: auf die Übereinstimmung warten
+     (höchstens 5 s), dann messen — bleibt sie aus, misst der Punkt rot. */
+  await d.waitForFunction(() => Math.round(document.getElementById('kante')?.getBoundingClientRect().width || 0) ===
+    Number(document.getElementById('studio-divider')?.getAttribute('aria-valuenow')), null, { timeout: 5000 }).catch(() => {});
+  const nachLaden = await kanteJetzt();
+  ok('Und nach dem Neuladen steht die gemerkte Breite da — gezeichnet, nicht nur im Attribut',
+     nachLaden.kante === 260 && nachLaden.kante === nachLaden.navBreite,
+     nachLaden.kante + ' px, der Griff sagt ' + nachLaden.navBreite);
+
   console.log('\n=== OBERFLÄCHE PC UND HANDY ===');
   pruef.forEach(([n, x, z]) => console.log((x ? '✅ ' : '❌ ') + n + (x || z === undefined ? '' : '   → ' + z)));
   console.log('\n' + pruef.filter(x => x[1]).length + '/' + pruef.length + ' bestanden');

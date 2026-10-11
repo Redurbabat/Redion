@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 532 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 533 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1572,6 +1572,32 @@ Netz liegt der Offline-Streifen nicht auf der offenen Karte. Gezählt am
 sagte 528 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Beim Zusammenführen nachgezählt (5. Oktober,
 `claude/morgen-besser-2`): 532.*
 
+*Und 533: `test592` — der Trenner zieht wirklich (E716). Redur am
+29. September: „der linie wo man die feld grösser und kleiner macht ,
+funktioniert nicht…". Er misst überall die GEZEICHNETE Breite von `#kante`
+und nicht `aria-valuenow` — genau dieses Attribut, das der Griff selbst
+schreibt, hatte `test424` seit dem 7. September geprüft, und die Spalte stand
+dabei still. Er zieht mit der Maus und mit dem Finger (CDP-Berührung),
+drückt ←/→, Umschalt, Bild↑/↓, Pos1 und Ende, bricht mit Escape und mit
+einem verlorenen Fang ab, setzt per Doppelklick und Palette zurück (184 bei
+1440, 156 bei 1024), lädt neu, schaltet kompakt hin und zurück, fragt mit
+`elementFromPoint`, wer neben der Kante getroffen wird, und mit grobem
+Zeiger, ob um den Griff `--touch-min` im Quadrat liegt; in allen zehn
+Schemata misst er die Pille an gezeichneten Pixeln (≥ 3 : 1) — und das über
+file://, mit `index.html` UND der Einzeldatei, ohne Port. Seine §11 ist
+eine Gegenprobe im Lauf selbst: mit der Ableitung zurück auf `:root` muss
+§1 rot sein. Gegen den Stand `1bfaca53` war er rot mit 12 von 58 —
+„vorher 184, nachher 184, Inhalt ab 184, aria 244". Und einmal war er rot
+gegen MEINEN ersten Bau: die Fingerfläche war ein durchsichtiger Rand um
+die runde Pille, und die Trefferprüfung folgt der Rundung — ein Kreis,
+dessen Ecken nicht trafen. Und die DURCHSICHT fand zwei Stellen, die er
+nicht sah: mit dem Finger nahm der Streifen jedem Navigationsknopf die
+rechten 3 px (er prüfte nur die Mitte der Knöpfe), und die Palette bot das
+Zurücksetzen im Fokus-Modus an, in dem der Trenner ausgeblendet ist — beides steht
+jetzt in ihm, zuerst rot mit 59 von 61. Gezählt am 6. Oktober, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
+Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1588,7 +1614,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 532 Läufe
+npm run pruefen                      alle 533 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1678,7 +1704,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 532 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 533 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

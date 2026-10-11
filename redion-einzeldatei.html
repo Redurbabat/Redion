@@ -23841,7 +23841,6 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
 /* Shared Studio surfaces. Existing commands and content controllers remain the
    only source of behavior. Glass belongs to controls, paper remains opaque. */
 :root{
-  --studio-nav-width:var(--studio-nav-expanded,184px);
   --studio-bar-height:60px;
   /* `--studio-glass` ist seit E695 fort: Menüs und PDF-Leiste tragen das Glas aus §16 (`--bg-schwebend` + `--glas-blur`, grund.css). */
   --studio-line:color-mix(in srgb,var(--text) 12%,transparent);
@@ -23850,6 +23849,15 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
   --studio-paper-shadow:0 2px 3px rgb(0 0 0 / .12),0 20px 45px rgb(0 0 0 / .16);
   --studio-perspective:1100px;
 }
+/* DIE BREITE DER NAVIGATION WIRD AUF <body> ABGELEITET, NICHT AUF :root
+   (E716). `studio.ts` schreibt `--studio-nav-expanded` an den body, und
+   `var()` wird dort aufgelöst, wo die Eigenschaft STEHT. Auf <html> gab es
+   den gezogenen Wert nicht: dort galt der Ersatz 184 px, <body> erbte die
+   fertige Zahl, und die Spalte bewegte sich nie — der Griff schrieb nur
+   sein Attribut (Redur, 29. September: „der linie wo man die feld grösser
+   und kleiner macht , funktioniert nicht…"). Kompakt (62 px, weiter unten)
+   gewinnt weiter über die Spezifität von `body[data-studio-nav]`. */
+body{--studio-nav-width:var(--studio-nav-expanded,184px)}
 #studio-bar{
   display:flex;align-items:center;gap:var(--space-3);min-width:0;
   min-height:var(--studio-bar-height);padding:var(--space-3) var(--space-5);
@@ -23936,8 +23944,49 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   body[data-studio-nav="kompakt"]{--studio-nav-width:62px}
   body[data-schale="premium"] #main{grid-template-rows:auto auto auto auto minmax(0,1fr)}
   body[data-schale="premium"] #main > #studio-bar{grid-column:1/-1;grid-row:1}
-  body[data-schale="premium"] #studio-divider{display:block;grid-column:1;grid-row:3/-1;justify-self:end;width:6px;margin-right:-3px;z-index:4;cursor:col-resize;touch-action:none;border-radius:4px}
-  body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible),.studio-resizing #studio-divider{background:var(--accent);outline:none}
+  /* DER TRENNER (E716). Eine Fläche von 16 px, mittig auf der Kante; die
+     sichtbare Linie bleibt der 1-px-Rand von #kante. Gemessen bei 1440: der
+     letzte Navigationsknopf endet bei 175, #btn-back beginnt bei 196 — die
+     Fläche 176–192 lässt beiden 4 px Luft. Der Griff ist die Pille des
+     Sheet-Greifers aus dem Touch Kit, als Redion-CSS nachgebaut (kein
+     fremder Code): in Ruhe zu sehen, damit Ziehen nie nur beim Überfahren
+     zu entdecken ist; beim Überfahren, im Fokus und beim Ziehen in der
+     Akzentfarbe, beim Ziehen etwas gestreckt. Bewegt wird nur `transform`;
+     beide Ruhe-Schichten (grund.css, bausteine.css) nehmen auch
+     `::before` mit. Volle Deckkraft in Ruhe: mit 0,75 stand die Pille in
+     acht der zehn Schemata unter 3 : 1 (test592 §13). */
+  body[data-schale="premium"] #studio-divider{display:block;position:relative;grid-column:1;grid-row:3/-1;justify-self:end;width:calc(var(--space-3)*2);margin-right:calc(var(--space-3)*-1);z-index:4;cursor:col-resize;touch-action:none}
+  body[data-schale="premium"] #studio-divider::before{content:"";position:absolute;left:50%;top:50%;width:4px;height:36px;margin:-18px 0 0 -2px;border-radius:var(--radius-pill);background:var(--text-faint);transition:transform var(--motion-fast) var(--ease)}
+  body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible),.studio-resizing #studio-divider{background:linear-gradient(var(--accent),var(--accent)) 50% 0/2px 100% no-repeat}
+  body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible)::before,.studio-resizing #studio-divider::before{background:var(--accent)}
+  .studio-resizing #studio-divider::before{transform:scaleY(1.12)}
+  /* Der Fokus ist ein Ring um den Griff, wie am Greifer des Kits — ein
+     Rahmen um den ganzen 16-px-Streifen zog zwei lange Linien neben die
+     Akzentlinie (im Bild gesehen, E716). */
+  body[data-schale="premium"] #studio-divider:focus-visible{outline:none}
+  body[data-schale="premium"] #studio-divider:focus-visible::before{outline:2px solid var(--accent-text);outline-offset:3px}
+  /* MIT DEM FINGER (§37). Der Streifen wird 20 px breit, und um den Griff
+     liegt eine unsichtbare Fläche von `--touch-min` im Quadrat (`::after`).
+     Ein Quadrat und kein durchsichtiger Rand um die Pille: der Rand trüge
+     ihre Rundung, und die Trefferprüfung folgt der Rundung — das wäre ein
+     Kreis, und seine Ecken träfen nicht (gemessen von test592 §9).
+     NEBENWEG, mit Grund: die Breite der Navigation stellt man selten ein,
+     und dieselbe Handlung geht auch über die Pfeiltasten am Trenner und
+     über die Palette („Navigationsbreite zurücksetzen").
+     NICHT MITTIG, UND NICHT BREITER: zwischen dem rechten Rand der
+     Navigationsknöpfe (kante−9) und #btn-back (kante+12,5) liegen 21 px.
+     Der erste Stand lag mit 24 px mittig (kante−12 … kante+12) und nahm
+     jedem Navigationsknopf die rechten 3 px (Durchsicht E716); 24 px von
+     kante−8 an hätten #btn-back 3,5 px genommen (beides gemessen von
+     test592 §9). Also genau die Lücke: kante−8 bis kante+12, und Pille,
+     Linie und Quadrat sitzen 8 px vom linken Rand — wieder genau auf der
+     Kante. Die 44 px kommen vom Quadrat, nicht vom Streifen. */
+  @media(pointer:coarse){
+    body[data-schale="premium"] #studio-divider{width:calc(var(--space-3) + var(--space-4));margin-right:calc(var(--space-4)*-1)}
+    body[data-schale="premium"] #studio-divider::before{left:var(--space-3)}
+    body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible),.studio-resizing #studio-divider{background-position:calc(var(--space-3) - 1px) 0}
+    body[data-schale="premium"] #studio-divider::after{content:"";position:absolute;left:var(--space-3);top:50%;width:var(--touch-min);height:var(--touch-min);transform:translate(-50%,-50%)}
+  }
   body[data-studio-nav="kompakt"] #studio-divider,body[data-dokument="an"] #studio-divider,body.fokus #studio-divider{display:none!important}
   .studio-resizing{cursor:col-resize;user-select:none}
   body[data-schale="premium"] #main > #menueband{grid-column:1/-1;grid-row:2;
@@ -24081,7 +24130,8 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-mode-switch,.bib-studio-wege{isolation:isolate}
 .menu button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-3px}
 @media(max-width:1100px) and (min-width:761px){
-  :root{--studio-nav-width:var(--studio-nav-expanded,156px)}
+  /* Auf body, nicht auf :root — derselbe Grund wie oben (E716). */
+  body{--studio-nav-width:var(--studio-nav-expanded,156px)}
   .studio-shortcuts button{padding:0 8px;font-size:12px}
   .studio-search{width:160px}
   .studio-search kbd{display:none}
@@ -25676,7 +25726,7 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     <button id="studio-auftraege" class="studio-icon ru-auftrag" hidden aria-label="Aufträge" title="Aufträge"><span class="ru-auftrag-sterne" aria-hidden="true"><i class="ru-lader-stern"></i><i class="ru-lader-stern"></i><i class="ru-lader-stern"></i></span><b class="glocke-zahl" hidden aria-hidden="true"></b></button>
     <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span><i class="wolke-punkt" hidden></i></button>
   </header>
-  <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
+  <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-controls="kante" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" aria-valuetext="184 Pixel breit" title="Breite ziehen · Doppelklick: Standardbreite" tabindex="0"></div>
 
   <!-- DAS MENÜBAND (E210) — GANZ OBEN SEIT E236.
        Es stand bisher UNTER der Kopfzeile. Redur will es dort, wo es an
@@ -26898,7 +26948,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1415, inhalt: '488d5e7371f1a9da', gebaut: '2026-10-05T23:41:46.265Z' };
+const Stand = { fassung: 1422, inhalt: '98ca6e3c06f687e1', gebaut: '2026-10-06T05:17:48.073Z' };
 window.Stand = Stand;
 
 </script>
@@ -146247,8 +146297,24 @@ const StudioSchale = (() => {
     const breiteSetzen = (wert) => {
         const breite = Math.max(148, Math.min(260, Math.round(wert)));
         document.body.style.setProperty('--studio-nav-expanded', breite + 'px');
-        document.getElementById('studio-divider')?.setAttribute('aria-valuenow', String(breite));
         return breite;
+    };
+    const gezeichnet = () => Math.round(document.getElementById('kante')?.getBoundingClientRect().width || 0);
+    const ariaNachziehen = () => {
+        const divider = document.getElementById('studio-divider');
+        const breite = gezeichnet();
+        if (!divider || breite < 148 || breite > 260 || document.body.dataset.studioNav === 'kompakt' ||
+            !matchMedia('(min-width: 761px)').matches)
+            return;
+        divider.setAttribute('aria-valuenow', String(breite));
+        divider.setAttribute('aria-valuetext', breite + ' Pixel breit');
+    };
+    const breiteZuruecksetzen = () => {
+        document.body.style.removeProperty('--studio-nav-expanded');
+        Store.setMeta(BREITE, null);
+        ariaNachziehen();
+        Kontextkante.zeichne();
+        UI.toast('Breite zurückgesetzt');
     };
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
@@ -146285,8 +146351,11 @@ const StudioSchale = (() => {
             return;
         gestartet = true;
         einstellen(Store.getMeta(META, false) === true);
-        const gespeichert = Number(Store.getMeta(BREITE, 184));
-        breiteSetzen(Number.isFinite(gespeichert) ? gespeichert : 184);
+        const gespeichert = Store.getMeta(BREITE, null);
+        const zahl = typeof gespeichert === 'number' ? gespeichert
+            : typeof gespeichert === 'string' && gespeichert.trim() ? Number(gespeichert) : NaN;
+        if (Number.isFinite(zahl))
+            breiteSetzen(zahl);
         const an = (id, tun) => {
             document.getElementById(id)?.addEventListener('click', tun);
         };
@@ -146322,39 +146391,105 @@ const StudioSchale = (() => {
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
-        let ziehen = null;
-        const jetztBreite = () => Number(divider?.getAttribute('aria-valuenow')) || 184;
-        const merken = () => { Store.setMeta(BREITE, jetztBreite()); Kontextkante.zeichne(); };
-        divider?.addEventListener('pointerdown', event => {
-            if (event.button !== 0)
+        const kante = document.getElementById('kante');
+        if (kante && typeof ResizeObserver !== 'undefined')
+            new ResizeObserver(ariaNachziehen).observe(kante);
+        ariaNachziehen();
+        let zug = null;
+        let bild = 0;
+        const merken = () => { Store.setMeta(BREITE, gezeichnet()); Kontextkante.zeichne(); };
+        const zugEnde = () => {
+            cancelAnimationFrame(bild);
+            bild = 0;
+            zug = null;
+            document.body.classList.remove('studio-resizing');
+        };
+        const zugZurueck = () => {
+            if (!zug)
                 return;
-            ziehen = { id: event.pointerId, x: event.clientX, breite: jetztBreite() };
+            if (zug.vorher)
+                document.body.style.setProperty('--studio-nav-expanded', zug.vorher);
+            else
+                document.body.style.removeProperty('--studio-nav-expanded');
+            zugEnde();
+        };
+        divider?.addEventListener('pointerdown', event => {
+            if (!event.isPrimary || event.button !== 0)
+                return;
+            zug = { id: event.pointerId, x: event.clientX, breite: gezeichnet(), letzteX: event.clientX,
+                vorher: document.body.style.getPropertyValue('--studio-nav-expanded'), bewegt: false };
             divider.setPointerCapture(event.pointerId);
             event.preventDefault();
             document.body.classList.add('studio-resizing');
         });
         divider?.addEventListener('pointermove', event => {
-            if (ziehen?.id === event.pointerId)
-                breiteSetzen(ziehen.breite + event.clientX - ziehen.x);
-        });
-        const ende = (event) => {
-            if (ziehen?.id !== event.pointerId)
+            if (zug?.id !== event.pointerId)
                 return;
-            if (event.type === 'pointercancel')
-                breiteSetzen(ziehen.breite);
-            ziehen = null;
-            document.body.classList.remove('studio-resizing');
-            merken();
-        };
-        divider?.addEventListener('pointerup', ende);
-        divider?.addEventListener('pointercancel', ende);
-        divider?.addEventListener('keydown', event => {
-            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))
+            zug.letzteX = event.clientX;
+            if (zug.letzteX !== zug.x)
+                zug.bewegt = true;
+            if (!bild)
+                bild = requestAnimationFrame(() => {
+                    bild = 0;
+                    if (zug?.bewegt)
+                        breiteSetzen(zug.breite + zug.letzteX - zug.x);
+                });
+        });
+        divider?.addEventListener('pointerup', event => {
+            if (zug?.id !== event.pointerId)
+                return;
+            const z = zug;
+            if (event.clientX !== z.x) {
+                z.letzteX = event.clientX;
+                z.bewegt = true;
+            }
+            if (z.bewegt)
+                breiteSetzen(z.breite + z.letzteX - z.x);
+            zugEnde();
+            if (z.bewegt && gezeichnet() !== z.breite)
+                merken();
+        });
+        divider?.addEventListener('pointercancel', event => { if (zug?.id === event.pointerId)
+            zugZurueck(); });
+        divider?.addEventListener('lostpointercapture', event => { if (zug?.id === event.pointerId)
+            zugZurueck(); });
+        window.addEventListener('keydown', event => {
+            if (!zug || event.key !== 'Escape')
                 return;
             event.preventDefault();
-            breiteSetzen(event.key === 'Home' ? 148 : event.key === 'End' ? 260 : jetztBreite() + (event.key === 'ArrowRight' ? 8 : -8));
-            merken();
+            event.stopImmediatePropagation();
+            const id = zug.id;
+            zugZurueck();
+            if (divider?.hasPointerCapture(id))
+                divider.releasePointerCapture(id);
+        }, true);
+        const SCHRITT = { ArrowLeft: -8, ArrowRight: 8, PageDown: -32, PageUp: 32 };
+        divider?.addEventListener('keydown', event => {
+            const jetzt = gezeichnet();
+            const schritt = SCHRITT[event.key];
+            let ziel;
+            if (event.key === 'Home')
+                ziel = 148;
+            else if (event.key === 'End')
+                ziel = 260;
+            else if (schritt !== undefined)
+                ziel = jetzt + schritt * (event.shiftKey && event.key.startsWith('Arrow') ? 4 : 1);
+            else
+                return;
+            event.preventDefault();
+            breiteSetzen(ziel);
+            ariaNachziehen();
+            if (gezeichnet() !== jetzt)
+                merken();
         });
+        divider?.addEventListener('dblclick', () => breiteZuruecksetzen());
+        if (typeof Register !== 'undefined' && Register.befehle)
+            Register.befehle.melde({
+                gruppe: 'Ansicht', titel: 'Navigationsbreite zurücksetzen', tun: breiteZuruecksetzen,
+                zeigen: () => matchMedia('(min-width: 761px)').matches && document.body.dataset.schale === 'premium' &&
+                    document.body.dataset.studioNav !== 'kompakt' && document.body.dataset.dokument !== 'an' &&
+                    !document.body.classList.contains('fokus')
+            });
         an('studio-nav', () => {
             const kompakt = document.body.dataset.studioNav !== 'kompakt';
             einstellen(kompakt);
@@ -146388,7 +146523,7 @@ const StudioSchale = (() => {
             }
         });
     };
-    return { start, themaWechseln };
+    return { start, themaWechseln, breiteZuruecksetzen };
 })();
 
 </script>

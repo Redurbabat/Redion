@@ -75,8 +75,17 @@ try {
   await page.locator('#studio-divider').focus();
   await page.keyboard.press('End');
   check('Keyboard resize reaches bounded maximum', await page.locator('#studio-divider').getAttribute('aria-valuenow') === '260');
+  /* DIE GEZEICHNETE BREITE, NICHT NUR DAS ATTRIBUT (E716). Die Zeile darüber
+     prüfte seit dem 7. September nur `aria-valuenow` — das Attribut, das der Griff
+     SELBST schreibt. Die Spalte blieb dabei auf 184 stehen, weil die Breite
+     auf `<body>` geschrieben und auf `<html>` aufgelöst wurde, und genau
+     diese Zeile liess den Fehler durch. Eine Prüfung, die misst, was der
+     Griff schreibt, misst den Griff — nicht seine Wirkung. */
+  const kanteBreite = (): Promise<number> => page.evaluate("Math.round(document.getElementById('kante').getBoundingClientRect().width)") as Promise<number>;
+  check('Keyboard resize really widens the navigation to 260 px', await kanteBreite() === 260);
   await page.keyboard.press('Home');
   check('Keyboard resize reaches bounded minimum', await page.locator('#studio-divider').getAttribute('aria-valuenow') === '148');
+  check('Keyboard resize really narrows the navigation to 148 px', await kanteBreite() === 148);
   await page.evaluate("Aussehen.setzen({schema:'standard'})");
   await page.locator('#studio-theme').click();
   check('Theme button really switches to light', await page.locator('html').getAttribute('data-theme') === 'light');
