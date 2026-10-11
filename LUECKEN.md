@@ -8440,6 +8440,24 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    `test608` beim Bau: nach dem Drehen des FI läuft b2 5 px neben N2 vorbei,
    und N und N2 waren ein Netz — mit Auflöser genauso wie ohne. Das ändert die
    Netzliste eines Plans durch eine Handlung, die nur die Lage ändern sollte.
+
+   **Erledigt am 11. Oktober 2026 durch E746** (Wächter `test611`, 79/79;
+   gegen `main` 97d156b03 rot mit 47 von 79). Das Nachziehen steht jetzt an
+   EINER Stelle im Modell, `Schaltplan.nachziehen`, und Pfeiltaste, Drehen,
+   Spiegeln und Ziehen rufen nur noch sie: neu geführt wird nur, was an
+   einem bewegten Teil hängt, und nur über einen Weg, der genau das berührt,
+   was die Leitung vorher berührte — Klemmen wie Leitungen, nach der Regel
+   der Netzliste (alter Weg · nachgerückte Endstücke · Winkel · anderer
+   Winkel · Z-Wege · Hakenwege). Gemessen im Plan „Drehstrom, FI und
+   Übertrager": F1 gedreht, und die sechs Netze um den FI bleiben sechs
+   (auf `main`: eines, L–N-Kurzschluss an G2); im alten FI läuft b2 nicht
+   mehr 5 px neben N2. Was bleibt: findet sich kein solcher Weg (das Ende
+   selbst liegt schon neben einer fremden Klemme, weil jemand das Teil so
+   hingestellt hat), nimmt das Nachziehen den Weg mit den wenigsten neuen
+   Berührungen und **meldet es** („bitte die Verbindungen prüfen"); und eine
+   fremde Leitung, deren Ende NEBEN ihrer Klemme gezeichnet ist (Punkt 7),
+   rückt beim Drehen, Spiegeln und Ziehen weiterhin an die Klemme — mit
+   derselben Prüfung. Die Lücke L253 bleibt offen für die übrigen Punkte.
 5. **Die Leitersymbole melden ihre zweite Klemme an der Stelle der ersten.**
    `leiter-l1` (und l2, l3, n, pe) haben zweimal denselben Namen;
    `anschluesseVon` sucht die Lage über den Namen und findet beide Male die
@@ -8484,7 +8502,9 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    730,400 = N); X5 selbst geschoben legt a5 auf 720,400, das L des
    geschobenen X5. Danach sind die neuen Punkte gespeichert — durch die
    Handlung des Menschen —, der Name bleibt der alte. Drehen und Ziehen
-   führen dabei alle Leitungen neu (Punkt 4).
+   führten dabei alle Leitungen neu (Punkt 4; seit E746 nur noch die am
+   bewegten Teil — und eine fremde nur in genau diesem Fall, wenn ihr Ende
+   neben der Klemme liegt; die Messung oben gilt deshalb weiter).
 
    Warum nicht beim Laden umgeschrieben: das wäre eine stille Schreibung in
    Nutzerdaten ohne Handlung (§9 [hart]) — genau Weg 3, den E738 verworfen
@@ -8495,6 +8515,16 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    speichern; oder ein sichtbarer Knopf „Leitungen an die Klemmen rücken".
    Ein Wächter für das Gezeichnete fehlt; die Messung ist die Sonde
    (`messungen.md` §97).
+8. **Strg+Z macht einen Zug mit der Maus nicht rückgängig** (gefunden beim
+   Bau von E746, gemessen am 11. Oktober mit einer Sonde: zwei Widerstände,
+   R1 um 40 × 30 px gezogen — vorher 100,100, nachher 150,140, nach einmal
+   und nach zweimal Strg+Z weiter 150,140; auf `main` 97d156b03 genauso).
+   `zugEnde` ruft `aendere` erst, wenn das Teil schon geschoben ist, und
+   `aendere` merkt als Rückgängig-Schritt den Stand, den es vor SEINEM
+   Schritt sieht — den gezogenen. Drehen, Spiegeln und die Pfeiltaste sind
+   nicht betroffen (`test611` §8). Der Weg wäre klein (das Abbild beim
+   Anfassen merken und beim Loslassen übergeben); nicht gebaut, weil E746
+   nur das Nachziehen betrifft. Ein Wächter fehlt.
 
 ### Fachlich offen (vom Zweig)
 
@@ -8516,7 +8546,7 @@ entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
 entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
 weiterhin den vom Rauschen bestimmten Eintrag.
 
-**Wächter:** für die Punkte oben keiner.
+**Wächter:** für Punkt 4 `test611` (E746); für die übrigen Punkte oben keiner — auch nicht für Punkt 8.
 
 ---
 

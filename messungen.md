@@ -8218,3 +8218,62 @@ denselben fünf toten Regeln wie vorher.
 selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
 `redion-einzeldatei.html` 9 545 743 → 9 546 796 Bytes. Dienststand v1455
 → v1456.
+
+## §103 · Drehen und Ziehen zapfen nichts an: Netze, Wege, Zeit (E746, 11. Oktober 2026)
+
+**Die Netze um den FI**, Plan „Drehstrom, FI und Übertrager" (zwölf
+Leitungen, acht Teile, die Bilder der Übernahme), in der echten App
+(1440 × 900 und 390 × 844), F1 angeklickt, „r"; gruppiert aus
+`Stromfluss.netze`, nur die Gruppen mit F1:
+
+```txt
+vor dem Drehen          {E1:X1 F1:2} {E1:X2 F1:N2} {F1:1 G2:L} {F1:3} {F1:4} {F1:N G2:N}
+gedreht, main 97d156b   {E1:X1 E1:X2 F1:1 F1:2 F1:4 F1:N F1:N2 G2:L G2:N} {F1:3}   Meldung „l-n"
+gedreht, E746           wie vor dem Drehen                                          Lampe leuchtet
+```
+
+Auf `main` dabei neu geführt, ohne mit dem FI etwas zu tun zu haben: w2, w3,
+w4 (Motor), t1–t4 (Übertrager). w4 `[[170,120],[170,160],[220,160],[220,370],
+[50,370],[50,330]]` → `[[170,120],[170,330],[50,330]]`, und der neue Weg
+fasst M1:U2, V2, W2. Mit E746 bleiben alle acht Byte für Byte.
+
+**Der alte FI aus `test608`** (Pfeiltaste, dann „r"): kleinster Abstand von
+b2 zu N2 auf `main` 5 px (NAH ist 6 — angezapft, N und N2 ein Netz,
+„fi-loest-aus"); mit E746 über 6 px, N und N2 zwei Netze, die Lampe
+leuchtet, keine fi-Meldung.
+
+**`test611`**: gegen `main` 97d156b03 47 von 79, mit E746 79 von 79. Drei
+Gegenproben: alle Leitungen wieder neu (Winkel zuerst, Prüfung bleibt)
+78/79 · ohne Anzapf-Prüfung 59/79 · ohne Vorzug ausserhalb der Zeichen
+77/79 („f2 durch G2 | f3 durch F1 | f4 durch E1"). Die strenge Variante
+(`heilen` aus, fremde Leitungen nie angefasst): `test611` grün, `test608`
+67/69 („a1.nach liegt bei 320,100, X1:L bei 310,100", a3, a6).
+
+**Rechenzeit** im Browser (Chromium headless, Median aus 30 Läufen, je
+frisch gelesener Plan; `vorherMerken` und `nachziehen` getrennt):
+
+```txt
+Plan                      Handlung              vorherMerken  nachziehen  (grösster)
+W, 12 Leitungen           F1 drehen             0,3 ms        1,4 ms      15 ms
+W                         F1 drehen, spiegeln   0,2 ms        8,2 ms      28 ms
+W dreifach, 36 Leitungen  F1 drehen             0,8 ms        1,8 ms      3,5 ms
+W dreifach                F1 drehen, spiegeln   0,7 ms        19,6 ms     28,6 ms
+```
+
+Jede neu geführte Leitung fand in allen vier Fällen einen Weg der Stufe 1.
+Teuer ist der gespiegelte FI: dort liegt N oben in der rechten Spalte, und
+erst die Hakenwege (vier Strecken) erreichen es, ohne 3, 1 oder N2 zu
+streifen; der Vorzug für Wege ausserhalb der Zeichen lässt dabei mehr
+Kandidaten prüfen (vorher, ohne ihn: 3,6 ms im Plan W). Beim Ziehen mit der
+Maus fällt die Rechnung je Bewegung an.
+
+**Start:** 1919 → 1922 KB gzip über 255 Dateien (`test388` §5, Decke 1950;
+„vorher" gemessen in einem Abzug von 97d156b03). `redion-einzeldatei.html`
+9454 KB.
+
+**Beobachtet, nicht Teil von E746** (Sonde, zwei Widerstände, R1 mit der
+Maus um 40 × 30 px gezogen): Strg+Z macht den Zug nicht rückgängig — vorher
+100,100, nachher 150,140, nach einmal und nach zweimal Strg+Z weiter
+150,140; auf `main` genauso. `zugEnde` ruft `aendere` erst nach dem Zug,
+und `aendere` merkt den Stand, den es VOR seinem eigenen Schritt sieht —
+den schon gezogenen. Eingetragen in L253 als Punkt 8.

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-722 Entscheidungen, E1 bis E743 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+723 Entscheidungen, E1 bis E746 (**E744 bis E747** sind den Zweigen zu Redurs Antworten vom 11. Oktober abends vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -785,6 +785,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
+* **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). `test611`
 
 ---
 
@@ -66714,3 +66715,155 @@ Neues ist dazugekommen. Dass es nach E729 die zweite Ausnahme binnen eines
 Tages ist, ist selbst ein Zeichen: solange die dreizehn rot sind, wird
 jedes Vorspulen eine Ausnahme sein. Der eigene Zweig für sie steht in
 AUFGABEN.md (dritte Welle, Punkt 1).
+
+## E746 — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach — und keine zapft dabei etwas an
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur, was die Reihenfolge
+angeht (11. Oktober abends, „4. wie du willst" auf die Frage, welcher
+Elektro-Punkt aus L253 zuerst); gewählt ist Punkt 4, weil er still die
+Bedeutung eines Plans ändert (§46: Daten zuerst, §51). Der Weg ist ein
+Vorschlag; wer die strengere Variante unten will, sagt es · **berührt** §9,
+§17, §46, §51 [hart] · **Wächter:** `test611` (neu), `test608` · **Zweig**
+`claude/elektro-drehen-ohne-anzapfen`.
+
+**Was wurde entschieden?** Das Nachziehen der Leitungen steht an EINER
+Stelle im Modell, und die Planfläche ruft für alle vier Lageänderungen nur
+noch sie:
+
+```txt
+Schaltplan.vorherMerken(plan)          vor der Änderung: welche Klemme jedes
+                                       Ende meint (E738 — vorher endKlemmen
+                                       in der Planfläche), die Punkte, und was
+                                       jede Leitung berührt
+Schaltplan.nachziehen(plan, vorher,    danach: führt nur neu, was an einem
+  teile, { heilen, ohne, vonVorn })    bewegten Teil hängt
+Schaltplan.kontakte(plan, leitung)     die Berührungsregel, für test611 §7
+```
+
+1. **Neu geführt wird nur, was an einem bewegten Teil hängt.** Jede andere
+   Leitung behält ihre Punkte Byte für Byte — mit einer Ausnahme: liegt das
+   gezeichnete Ende einer fremden Leitung NEBEN der Klemme, die es meint
+   (ein Plan von vor E735, L253 Punkt 7), rückt es beim Drehen, Spiegeln
+   und Ziehen weiterhin an die Klemme, wie E738 es beschreibt und `test608`
+   §5 es misst (`heilen`). Die Pfeiltaste tat das nie und tut es nicht.
+2. **Ein neuer Weg muss genau das berühren, was die Leitung vorher
+   berührte** — dieselben Klemmen, dieselben Leitungen, nach der Regel der
+   Netzliste (Bindung über den Auflöser, dann jeder Punkt und jede Strecke
+   gegen jede Klemme mit `NAH`, die Ort-Sperre für alte Namen, Ende oder
+   Knick auf einer anderen Leitung). Probiert wird in fester Reihenfolge:
+   der alte Weg, wenn beide Enden geblieben sind · der alte Weg mit
+   nachgerückten Endstücken (`gleitend` — so bleibt eine gezeichnete
+   Führung erhalten) · der Winkel wie bisher (`rechtwinklig`) · der andere
+   Winkel · Z-Wege über das Raster (kürzeste zuerst, dann die nächsten zur
+   Mitte) · Hakenwege mit vier Strecken in einem Fenster von zehn Rastern.
+3. **Der erste passende Weg, der durch kein Zeichen läuft, gilt;** läuft
+   jeder passende durch ein Zeichen, der erste passende. Der alte Weg gilt
+   immer, wenn er passt — was der Mensch so gezeichnet hat, bleibt.
+4. **Passt keiner,** gilt der erste, der nichts NEUES berührt (Stufe 2),
+   sonst der mit den wenigsten neuen Berührungen (Stufe 3) — und die Fläche
+   **meldet es**: „Eine Leitung liess sich nicht so nachziehen, dass sie
+   genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen." Das
+   geschieht, wenn jemand ein Teil so hinstellt, dass die Klemme, an der
+   eine Leitung hängt, auf einer fremden Klemme liegt: kein Weg kann das
+   ändern, denn das Ende selbst liegt dort.
+5. **Beim Ziehen mit der Maus** rechnet jede Bewegung vom Anfassen aus
+   (`vonVorn`), nicht vom letzten Zwischenstand — sonst hinge der Weg davon
+   ab, wie schnell die Maus war. **Die Pfeiltaste** schob bisher nur das
+   Ende (das letzte Stück lief danach schräg); jetzt nimmt sie dieselbe
+   Stelle, und das nachgerückte Endstück hält den Weg rechtwinklig. Eine
+   Leitung, die der Mensch selbst mitgeschoben hat, fasst das Nachziehen
+   nicht an (`ohne`), wie bisher.
+
+**Warum?** Gemessen, bevor gebaut wurde (`messungen.md` §103), im Plan
+„Drehstrom, FI und Übertrager" aus den Bildern der Übernahme, auf `main`
+97d156b03, F1 angeklickt, „r":
+
+```txt
+                 Netze um den FI                                 Rechnung
+vorher (main)    {F1:1 G2:L} {F1:N G2:N} {F1:2 E1:X1} {F1:N2 E1:X2} {F1:3} {F1:4}   Lampe leuchtet
+gedreht (main)   {E1:X1 E1:X2 F1:1 F1:2 F1:4 F1:N F1:N2 G2:L G2:N} {F1:3}          „l-n", nichts gerechnet
+gedreht (E746)   wie vorher                                                         Lampe leuchtet, 435 mA
+```
+
+Dazu verlor die Motorleitung w4, die mit dem FI nichts zu tun hat, ihren
+Weg unter dem Klemmenbrett (aus sechs Punkten wurden drei, und der neue
+Winkel lief über U2, V2, W2 — „w4: G1:PE,M1:PE → G1:PE,M1:PE,M1:U2,M1:V2,
+M1:W2"), und im alten FI aus `test608` lief b2 nach dem Drehen 5 px neben
+N2. Eine Handlung, die nur die Lage ändern sollte, änderte die Schaltung —
+und ohne Meldung. Das ist der Fall, gegen den §51 steht; `test608` hatte
+ihn beim Bau gefunden und musste um ihn herum prüfen.
+
+**Was war die Alternative?**
+
+* **Streng nach dem Auftrag: fremde Leitungen NIE anfassen**, auch nicht
+  die mit einem Ende neben der Klemme. Gemessen als Variante (`heilen` aus):
+  `test611` bleibt grün, aber `test608` wird rot mit 67 von 69 — „a1.nach
+  liegt bei 320,100, X1:L bei 310,100", dasselbe für a3 und a6. Damit wäre
+  zurückgenommen, was E738 zusagt („es gibt sich, sobald … irgendein Teil
+  des Plans gedreht, gespiegelt oder gezogen wird"), und ein alter Plan
+  zeigte seine L-Leitung länger auf dem N-Stummel. Die Heilung bleibt
+  deshalb — mit derselben Prüfung, also ohne anzuzapfen. Wer die strenge
+  Fassung will: es ist ein Schalter (`heilen`) an drei Stellen, und
+  `test608` §5 müsste dann umgeschrieben werden; beides entscheidet Redur.
+* **Ein Wegsucher über das Raster** (Lee, A*): fände auch Wege mit fünf und
+  mehr Strecken. Mehr Code, mehr Kosten beim Ziehen; die feste Liste reicht
+  für jeden gemessenen Fall, und wo sie nicht reicht, meldet die Fläche es.
+* **Die Netzliste selbst fragen** (`Stromfluss.netze`): genauer, aber die
+  Planfläche liegt in `bereiche/bloecke`, die Netzliste in
+  `bereiche/elektro` — §5 Regel 1, und `test537` zählt jeden Griff nach
+  `Stromfluss` (heute 9 aus `bereiche/bloecke`). Die Berührungsregel steht
+  deshalb ein zweites Mal im Modell (`nahAnStrecke`, `beruehrung`), und
+  `test611` §7 hält sie für jede Leitung zweier Pläne gegen die Netzliste.
+
+**Was kostet es?** Rechenzeit, gemessen im Browser (`messungen.md` §103):
+im Plan „Drehstrom, FI und
+Übertrager" (12 Leitungen) braucht `vorherMerken` 0,3 ms und `nachziehen`
+nach dem Drehen des FI 1,4 ms (Median), nach Drehen und Spiegeln 8,2 ms;
+im dreifachen Plan (36 Leitungen) 1,8 und 19,6 ms. Teuer sind die
+Hakenwege — beim Ziehen mit der Maus fällt das je Bewegung an, auf einem
+schwachen Telefon spürbar. Die Regel steht zweimal (simulation.ts `aufStrecke`/`nahBei` und
+schaltplan.ts `nahAnStrecke`/`beruehrung`) — wer eine ändert, ändert beide;
+`test611` §7 merkt es. Und die Wege sehen nach dem Drehen anders aus als
+vorher: nicht mehr jeder ein Winkel von Ende zu Ende, sondern der alte Weg
+mit nachgerückten Enden oder ein Umweg um die Zeichen.
+
+**Was es NICHT verhindert.** Wer ein Teil so hinstellt, dass SEINE Klemme
+auf einer fremden Leitung liegt, verbindet es — so fängt die Netzliste über
+den Ort, und das ist die Lage, nicht das Nachziehen. Eine ungebundene
+Leitung über der neuen Lage einer Klemme bleibt L253 Punkt 6; was ein alter
+Plan vor der ersten Handlung zeichnet, bleibt Punkt 7 — beides nicht
+angefasst. Die Wege meiden Klemmen und Zeichen, aber nicht einander: zwei
+neue Leitungen dürfen sich kreuzen (eine reine Kreuzung verbindet nicht).
+Und sie meiden keine Beschriftung: auf dem Bild nach dem Drehen laufen f3
+und f4 über das „G2" neben der Lampe.
+
+**Wächter:** `test611`, 79 Zusagen in neun Abschnitten — je Handlung (F1
+drehen, spiegeln, zurückdrehen, mit der Maus ziehen, mit der Pfeiltaste
+schieben fein und mit Umschalt, T1 drehen, M1 ziehen, der alte FI mit
+Pfeiltaste, Drehen, Spiegeln, Ziehen) dieselbe Netzliste aus
+`Stromfluss.netze` (Klemmen UND Leitungen), die fremden Leitungen Byte für
+Byte, jede Leitung genau die Klemmen von vorher (die Netzliste mit der
+Leitung allein im Plan), jedes Ende auf der Klemme, die es meint; dazu kein
+neuer Weg durch ein Zeichen, Strg+Z gibt den Plan zurück, die Regel des
+Modells gleich der der Netzliste, und die Meldung genau dann, wenn es
+keinen sauberen Weg gibt. **Rot zuerst:** eingecheckt vor der Reparatur
+(a4bdd8c2c, damals 73 Zusagen, gegen `main` 44/73; §9 und die zwei
+Zusagen „kein Weg durch ein Zeichen" kamen danach und sind gegen `main`
+ebenfalls rot); im Endstand gegen 97d156b03 rot mit 47 von 79 (32 gescheitert: Netzliste, fremde Leitungen, Klemmen je Leitung, Wege durch Zeichen, „b2 … Abstand 5 px", „l-n", „fi-loest-aus", keine Meldung, kein `Schaltplan.kontakte`). **Gegenproben**, jede gefahren
+und wörtlich zurückgenommen: (1) wieder alle Leitungen neu, der Winkel
+zuerst (die Prüfung bleibt) — 78/79, „F1 gedreht: die 8 fremden Leitungen
+behalten ihre Punkte Byte für Byte — w2 … → …"; (2) die Prüfung gegen das
+Anzapfen heraus (der erste Weg gilt) — 59/79, „F1 gedreht: die Netzliste
+ist dieselbe — neu: E1:X1 E1:X2 F1:2 F1:4 F1:N2 …", „kurz: 1"; (3) der
+Vorzug für Wege ausserhalb der Zeichen heraus — 77/79, „f2 durch G2 | f3
+durch F1 | f4 durch E1". Wieder eingesetzt 79/79, `test608` 69/69.
+
+**Am Wächter geändert, bevor er grün wurde:** §8 verglich zuerst den rohen
+Block mit dem Stand nach Strg+Z und war auch auf `main` rot — die Fläche
+liest den Plan beim Öffnen mit `Schaltplan.lesen`, und der Verlauf hält
+diese Form; verglichen werden jetzt Punkte, Lagen und Bindungen. §7 meldete
+einmal „b2–b4: Modell false · Netzliste true": die Paarprobe nahm die Teile
+weg, aber nicht die Bindungen, und die Netzliste band beide Leitungen an
+denselben (nicht mehr vorhandenen) Namen „F1:N" — die Probe läuft jetzt
+ohne Bindungen. Und §1's „kein Weg durch ein Zeichen" kam erst nach dem
+Bild dazu: der Lauf war grün, und f2 lief quer durch Quelle und Lampe.

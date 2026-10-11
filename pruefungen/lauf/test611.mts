@@ -225,6 +225,32 @@ await seite.evaluate((quelle: string) => {
     return raus;
   };
 
+  /** Welche dieser Leitungen laufen mitten durch ein Zeichen? Der Kasten
+      gedreht um die Mitte des ungedrehten Zeichens, einen Punkt nach innen —
+      hier unabhängig vom Code nachgerechnet. */
+  w.durchZeichen = (bid: string, ids: string[]) => {
+    const plan = Store.getBlock(bid).plan;
+    const ks = (plan.teile as any[]).map(t => {
+      const z = Register.fachzeichen.holen(t.zeichen);
+      const m = Register.fachzeichen.masse(t.zeichen, t.drehung);
+      const cx = t.x + z.w / 2, cy = t.y + z.h / 2;
+      return { id: t.id, x1: cx - m.w / 2 + 1, y1: cy - m.h / 2 + 1, x2: cx + m.w / 2 - 1, y2: cy + m.h / 2 - 1 };
+    });
+    const raus: string[] = [];
+    (plan.leitungen as any[]).filter(l => ids.includes(l.id)).forEach(l => {
+      for (let i = 0; i + 1 < l.punkte.length; i++) {
+        const a = l.punkte[i], b = l.punkte[i + 1];
+        for (const k of ks) {
+          const quer = a.y === b.y
+            ? a.y > k.y1 && a.y < k.y2 && Math.max(Math.min(a.x, b.x), k.x1) < Math.min(Math.max(a.x, b.x), k.x2)
+            : a.x > k.x1 && a.x < k.x2 && Math.max(Math.min(a.y, b.y), k.y1) < Math.min(Math.max(a.y, b.y), k.y2);
+          if (quer) { raus.push(l.id + ' durch ' + k.id); return; }
+        }
+      }
+    });
+    return raus;
+  };
+
   /** Kleinster Abstand einer Klemme zu einer (rechtwinkligen) Leitung. */
   w.abstand = (bid: string, lid: string, tid: string, nr: string) => {
     const plan = Store.getBlock(bid).plan;
@@ -340,6 +366,10 @@ p('Vorbedingung: jede Leitung in W fasst genau ihre zwei Klemmen', einzeln.lengt
 console.log('\n1 · Den FI drehen');
 await waehle('F1');
 const dreh = await handlung('F1 gedreht', blockW, ['F1'], () => taste('r'));
+const quer1: string[] = await seite.evaluate((b: string) =>
+  (window as any).durchZeichen(b, ['f1', 'f2', 'f3', 'f4']), blockW);
+p('Kein neu geführter Weg läuft mitten durch ein Zeichen (das Bild zeigte f2 quer durch die Lampe)',
+  quer1.length === 0, quer1.join(' | '));
 p('Die Motorleitung w4 behält ihren Weg unter dem Klemmenbrett',
   dreh.nach.punkte.w4 === startW.punkte.w4, dreh.nach.punkte.w4);
 const fiNetz = await seite.evaluate((b: string) => {
@@ -431,6 +461,9 @@ await handlung('alter FI, Pfeil rechts', blockB, ['F1'], () => taste('ArrowRight
 const fiDreh = await handlung('alter FI gedreht', blockB, ['F1'], () => taste('r'), SOLL_B);
 const ab: number = await seite.evaluate((b: string) => (window as any).abstand(b, 'b2', 'F1', 'N2'), blockB);
 p(`b2 läuft nicht mehr neben N2 vorbei: Abstand über NAH (${NAH} px)`, ab > NAH, `Abstand ${ab} px`);
+const quer6: string[] = await seite.evaluate((b: string) =>
+  (window as any).durchZeichen(b, ['b1', 'b2', 'b3', 'b4']), blockB);
+p('Kein neu geführter Weg läuft mitten durch ein Zeichen', quer6.length === 0, quer6.join(' | '));
 p('N und N2 sind gleich nach dem Drehen zwei Netze',
   !fiDreh.nach.teilung.some((g: string) => g.split(' ').includes('F1:N') && g.split(' ').includes('F1:N2')),
   fiDreh.nach.teilung.join(' | '));

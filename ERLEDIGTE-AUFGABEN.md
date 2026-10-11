@@ -1,5 +1,51 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E746 · Drehen und Ziehen zapfen nichts mehr an
+
+**Redur:** „4. wie du willst", am 11. Oktober abends, zur Frage, in welcher
+Reihenfolge die Elektro-Punkte aus L253 drankommen. Zuerst Punkt 4, weil
+er still die Bedeutung eines Plans ändert (§46, §51).
+
+**Gefunden** (`test611` gegen `main` 97d156b03, 47/79): Drehen, Spiegeln und
+Ziehen führten ALLE Leitungen des Plans neu, jede als Winkel von Ende zu
+Ende. Im Plan „Drehstrom, FI und Übertrager" wurde nach dem Drehen des FI
+aus sechs Netzen um den FI eines — L und N der Quelle verbunden, „l-n",
+nichts mehr gerechnet —, die Motorleitung w4 verlor ihren Weg und lief über
+U2, V2, W2, und im alten FI aus `test608` lief b2 5 px neben N2.
+
+**Gebaut:** `Schaltplan.vorherMerken` (was vor der Änderung feststeht: die
+Klemme jedes Endes nach E738, die Punkte, was jede Leitung berührt) und
+`Schaltplan.nachziehen` (führt nur neu, was an einem bewegten Teil hängt;
+nimmt nur einen Weg, der genau dasselbe berührt wie vorher — alter Weg,
+nachgerückte Endstücke, Winkel, anderer Winkel, Z-Wege, Hakenwege —, am
+liebsten durch kein Zeichen; sonst Stufe 2/3 und eine Meldung).
+`Schaltplan.kontakte` legt die Berührungsregel offen. Die Planfläche ruft
+für Pfeiltaste, Drehen, Spiegeln und Ziehen nur noch diese Stelle;
+`endKlemmen` und `leitungenNachziehen` sind weg. Eine fremde Leitung, deren
+Ende neben seiner Klemme liegt (alter Plan), rückt beim Drehen, Spiegeln,
+Ziehen weiter an die Klemme, wie E738 es zusagt — mit derselben Prüfung.
+
+**Prüfung:** `test611` zuerst rot eingecheckt (a4bdd8c2c), dann 79/79;
+gegen `main` 47/79. Drei Gegenproben, jede rot und wörtlich zurückgenommen:
+alle Leitungen wieder neu 78/79, ohne Anzapf-Prüfung 59/79, ohne Vorzug
+ausserhalb der Zeichen 77/79. Die strenge Variante (fremde Leitungen nie
+anfassen) als Messung: `test608` 67/69 — darum bleibt die Heilung.
+Nachbarn grün: `test604`–`test608`, `test238`–`test242`, `test254`,
+`test388`, `test74`, `test568`, `test571`, `test572`; Datei-Wächter grün.
+Bilder vorher/nachher (Rechner und Telefon, hell und dunkel, dazu dreifach
+vergrösserte Ausschnitte): vorher hängen nach dem Drehen beide Leitungen
+der Quelle mit Verbindungspunkten an den linken FI-Klemmen, nachher laufen
+sie um die Zeichen herum an die richtigen, und die Lampe leuchtet (435 mA,
+100 W). Was die Bilder noch zeigen: f3 und f4 laufen über die Beschriftung
+„G2" (Beschriftungen meiden die Wege nicht), und am Telefon ist der Plan so
+klein wie vorher (L253 Punkt 3). Zahlen in `messungen.md` §103.
+
+**Offen:** L253 bleibt für die übrigen Punkte offen. Im selben Plan meldet
+die Simulation schon VOR jeder Handlung „fi-loest-aus" (auf `main` genauso,
+nicht untersucht). Und Strg+Z macht einen Zug mit der Maus nicht rückgängig
+(Sonde: nach zweimal Strg+Z steht R1 weiter am neuen Ort; auf `main`
+genauso) — eingetragen als L253 Punkt 8, nicht hier angefasst.
+
 ## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
 
 **Der Auftrag.** Redur um 11:00 UTC: „Ja für die 6 entscheideungen" — die

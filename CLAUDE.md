@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 550 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 551 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1930,6 +1930,23 @@ Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 545 auf seinem Zweig. Beim Zusammenführen nachgezählt
 (11. Oktober, `claude/sechs-ja`): 550.*
 
+*Und 551: `test611` — Drehen, Spiegeln, Ziehen und Schieben zapfen nichts an
+(E746, L253 Punkt 4). Eine Handlung, die nur die Lage eines Teils ändert,
+darf die Netzliste nicht ändern: er dreht, spiegelt, zieht und schiebt den
+FI im Plan „Drehstrom, FI und Übertrager", dreht den Übertrager, zieht das
+Klemmenbrett und fährt die Folge aus `test608` §5 am alten FI — und
+verlangt nach jeder Handlung dieselbe Netzliste, die fremden Leitungen Byte
+für Byte, und dass jede Leitung genau die Klemmen fasst, die sie vorher
+fasste (gefragt bei der Netzliste selbst, mit der Leitung allein im Plan).
+Gegen `main` war er rot mit 47 von 79: nach dem Drehen des FI wurden sechs
+Netze zu einem, L und N der Quelle verbunden, und im alten FI lief b2 5 px
+neben N2 vorbei — der Befund, den `test608` beim Bau gemacht und um den er
+herumgeprüft hatte. Sein §7 hält die Berührungsregel der Planfläche gegen
+die der Netzliste, weil sie zweimal stehen muss (§5). Er lädt über
+`listen(0)`, damit `test400` keinen neuen Port zählt. Gezählt am
+11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+551 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1946,7 +1963,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 550 Läufe
+npm run pruefen                      alle 551 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2036,7 +2053,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 550 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 551 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
