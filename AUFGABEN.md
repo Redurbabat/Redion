@@ -1916,3 +1916,22 @@ Offen geblieben, je mit dem Grund (Zweig `claude/seiteneditor-ohne-stau`):
    `flush` wartet auch auf die offenen `put`s der Einstellungen (eine
    Änderung an `indexdb.ts`, mit eigenem Prüflauf), oder die Läufe bekommen
    einen gemeinsamen Helfer. Eigener Bogen.
+
+
+## Nach E727 und E728 · Das Gestirn und der ruhige Kopf (6. Oktober 2026)
+
+1. **Die offenen Fragen aus dem Plan zu #4 und #10**, ohne Antwort mit der
+   Vorgabe gebaut: die Form ist das Gestirn (nicht die Sonne|Mond-Kapsel
+   oder der Kit-Schalter); der eigene Akzent bleibt beim Wechsel; kein
+   seitenweites Aufblenden; das Zeichen zeigt den Zustand; „PDF öffnen"
+   bleibt als Zeichen im Kopf; `band` statt ⌘; am Telefon bleibt die
+   oberste Zeile; „ein Titel" auch am Rechner; der Motor dreht auch bei
+   Strg P. Sagt Redur anders, ist es je ein kleiner Bogen mit `test602`
+   bzw. `test603` als Nachbar.
+2. **Was L247 offen lässt:** das Gestirn am Telefon (oder eine Kapsel
+   links in der obersten Zeile), ◐ in der alten Seitenleiste als Zeichen
+   aus dem Register, der Präfix-Zwilling des Glases auf einem echten
+   iPhone; seit der Durchsicht vom 10. Oktober auch die zwei Hinweise
+   unter dem Zeiger am Gestirn (Punkt 4) und „Strg P" in hellen Schemata
+   unter 3 : 1 (Punkt 5, ein eigener kleiner Kontrastbogen).
+

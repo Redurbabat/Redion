@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-705 Entscheidungen, E1 bis E726 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+707 Entscheidungen, E1 bis E728 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -768,6 +768,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E724** — KI am Ort (Redur, PDF S. 16: „hier beim ki sollte alles komplet was beim werkzeuge undkontext seteh dort integriert sein also im passenden ortern du muss entscheiden was wo kommt und warum ."): die Schublade „Werkzeuge & Kontext" löst sich auf, jeder der 19 Einträge wohnt, wo er wirkt — Quellen als Schild am Prompt, Seitenaktionen im leeren Chat, Nachschlagen und Befehle im „+", Agent/Besprechung/Protokoll im ⋯; EIN Katalog `Register.ki` und EIN Läufer für Knopf, Befehlsmenü, „@", „/", „✨ KI" und Palette; was das Blatt am Telefon öffnet, liegt über ihm; „Verbundenes" hat einen Leser; ehrliche Versprechen (@Fähigkeit, Seite erwähnen als Kontext, Webfrage als Fenster, Löschen in zwei Schritten, Fenster und Einstellungen ziehen mit); Durchsicht 10. Oktober: „✨ KI" ersetzt an der Stelle, eine Fassung vor jedem Tausch, 44 px am Finger. Wächter `test599`.
 * **E725** — Bibliothek: von jeder Kategorie nur eine, und EINE Suche, die ihren Bereich kennt (Redur, Masterprompt S. 13: „ich sollte von jeder kategorie nur eine sehen und die anderen alles unterdem das beim ^ … und die sucher hier sollte es bei der ganz obe such integriert sein“): Ort, Art und Form je als EINE Pille in einer Zeile mit Menü (`Menue.wahl`; ein Name je Ort, die Sammlungen als Gruppe im Ortsmenü, die Formen nur am Formknopf), kein leeres „Zuletzt“, kein Suchfeld mehr auf der Bibliotheksseite; `App.suche` mit Bereichen — [Bibliothek | „In ‚Ordner‘“ · Überall] in der Bibliothek (`Bibliothek.suchBereich`), [Dieses Dokument · Alle Dokumente · Überall] in einer PDF, wobei die Suchleiste der Motor für „Dieses Dokument“ ist (`DocumentMode.findenIn`); der Schalter 📚 der Suchleiste wird derselbe Umschalter, `dokFindAlle` bleibt die eine Erinnerung; „Ausbildung“ trägt denselben Ort-Wähler; nach der Durchsicht ganze Namen in der Bereichszeile am Telefon, ein gleich breiter Kopf in allen Formen, Enter vor der Uhr und der Grund wie Escape (`test600`)
 * **E726** — Der Kopf des Lernzentrums in einer Zeile (Redur, Masterprompt S. 21: „Ganz oben wo menü/ dort sollte wo heute und was neben das ist im ^ … Und die bereiche momentan das löschen oder am beste das zur fächer wechseln"): zwei Klappen [Hauptteil | ^] statt vier Reitern und einer zweiten Reihe — „Heute ^" (Heute, Prüfungen, Noten, Schule, Stundenplan, Uni, Arbeit) und „Übersicht ^" (Übersicht, Trainer, Lernpfad, Meine Fehler, Fortschritt) über `UI.wahl`, der Hauptteil heisst wie die Ansicht; der Fächer-Chip ersetzt das Auswahlfeld „Bereich" — ein Fach ist das Thema der Karten ∪ die Fächer-Datenbank, der Filter wirkt auf Karten, Prüfungen, Noten und Stundenplan, gemerkt unter `lernwelt:<aktor>:fach`; der Lebensbereich lebt als Gruppe im Fächermenü; `#welt-lernen-noten`/`-stundenplan` öffnen wieder ihre Ansicht (`test601`)
+* **E727** — Das Gestirn: ein Hell/Dunkel-Schalter mit einer Regel für jede Tür (Redur, Masterprompt 29. September: „es seiht noch nicht 100 fetig aus, also finde für hier ewas kreatives aus“): die „Sichel“ war ein Schatten in fester Farbe, der in keinem dunklen Schema den Grund traf, und dieselbe Funktion gab es dreimal mit drei Regeln — von „Mitternacht“ führte Strg⇧L hin und zurück nach „Standard“. Jetzt EINE Quelle `Aussehen.grundWechseln` (merkt das Schema je Grundton, behält den Akzent), alle Türen leiten weiter; Sonne und Mond aus dem Register gehen in einem runden Fenster auf und unter, `role=switch`, 44 × 44, nur transform/opacity. Ergänzt E462 und E701. `test602` neu, `test580` und `test584` angepasst
+* **E728** — Der ruhige Kopf: die Suche links, rechts nur Zeichen, Motor und Glas nur als Zustand (Redur, Masterprompt 29. September: „nur die emojis dort bleiben und alles komplet nacht links schieiben … drehen wie eine mottor und glass efeckt“): `margin-left:auto` stand an der Kapsel statt am ersten Zeichen; „PDF öffnen“ wird das Zeichen `upload`, „Werkzeuge“ trägt `band` statt ⌘, die Zwillinge im Band stehen bei offener Lade am Rechner nicht mehr doppelt (jeder ruft dieselbe Funktion, gezählt); die Lupe dreht sich einmal unter Zeiger, Fokus, Strg P und am Telefon beim Drücken, die Kapsel wird dabei Glas, in Ruhe deckend; alle Kopfknöpfe 44 × 44. Ergänzt E703 und E457, schliesst L117 Punkt 3. `test603` neu, `test482` erweitert
 
 ---
 
@@ -36273,6 +36275,14 @@ E457 — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — u
 > je Ort; die Formen stehen nur noch am Formknopf. Das Mehr-Blatt und die
 > Adressen der Sammlungen (#seiten-wissen usw.) bleiben (`test600` §1,
 > `test428`, `test430`).
+>
+> **Ergänzt durch E728 (6. Oktober 2026) — L117 Punkt 3 ist geschlossen.**
+> Am Rechner stehen Suche, KI, Konto, Glocke und Aufträge bei offener Lade
+> nicht mehr ein zweites Mal rechts im Band; Suche, Konto, Glocke und
+> Aufträge stehen im Studio-Kopf darüber, die KI als `#btn-ai` in den
+> Seitenwerkzeugen darunter, und `test603` §4 zählt, dass jeder Zwilling dieselbe
+> Funktion ruft. Am Telefon bleibt das Band die einzige Zeile, wie hier
+> beschlossen. Punkt 5 (der Importknopf im Regal ausgeblendet) gilt weiter.
 
 ENTSCHEIDUNG. Sechs Dinge, alle am 6. September 2026, auf Redurs Satz
 „zu kompliziert, zu viele Bereiche gleichzeitig":
@@ -36757,6 +36767,14 @@ GEPRÜFT. test434 (46 Punkte, neu, zwei Gegenproben rot gesehen);
 
 E462 — Schalter, Staffelei, Textur, Symbolreihe: die Vorgabe liefert das Aussehen, Redion den Zustand
 --------------------------------------------------------------------------
+
+> **Ergänzt durch E727 (6. Oktober 2026) — zwei Umschalter, jetzt
+> wirklich eine Regel.** Die Staffelei trug eine Kopie der Regel des
+> Studio-Kopfs, die zusätzlich den Akzent zurücksetzte, und `App.theme`
+> (Strg⇧L) eine dritte, die nichts merkte. Alle Türen fragen jetzt
+> `Aussehen.grundWechseln`; der Knopf im Kopf ist das Gestirn mit
+> `role="switch"` und dem Namen „Dunkles Schema" wie die Staffelei, und die
+> Blase der Symbolreihe zeigt diesen Namen (`test602`).
 
 ENTSCHEIDUNG. Vier weitere Vorgaben Redurs vom 6. September, vier Stellen:
 
@@ -57766,6 +57784,14 @@ und `node bauen.mts` neu erzeugt.
 > gemerkt.** Das Herz der Kennzahlen ist ein Merkknopf geworden. Es ruht
 > grau, solange es nicht gemerkt ist; ein gemerktes behält seine Farbe auch
 > in Ruhe, und durchscheinend wird der Knopf nicht (`test580` §5).
+>
+> **Ergänzt durch E727 und E728 (6. Oktober 2026).** Der „graue Mond" im
+> Hellen ist das Gestirn geworden — in Ruhe in BEIDEN Themen ein graues
+> Zeichen, getönt nur unter Zeiger und Fokus (`test580` §1 fragt das
+> jetzt so). „PDF öffnen" im Kopf ist ein Zeichenknopf `upload` ohne Wort;
+> die getönte Pille in Ruhe und der volle Hauptknopf unter Zeiger und
+> Fokus bleiben. Nr. 7 „ein Titel" gilt seit E728 auch am Rechner
+> (Vorgabe d); `test580` hält das jetzt an beiden Breiten.
 
 **Datum:** 28. September 2026 · **Entschieden von** Redur (27. September,
 ca. 16:45 und 21:45 UTC) · **ergänzt** E534 und E535 (nur das Aussehen in
@@ -58118,6 +58144,12 @@ Zahl der Werkzeuge (14 statt 13) aus `Marken.WERKZEUGE`, die dieser Bogen
 nicht anfasst; siehe den Commit.
 
 ## E703 — Glas, wo es passt: die Docks werden Glas, ein Schalter macht alles deckend, und die Bilder zeigen endlich echte Unschärfe
+
+> **Ergänzt durch E728 (6. Oktober 2026).** Der Kopf bleibt in Ruhe
+> deckend. Die Suchkapsel wird Glas nur als REAKTION — unter Zeiger,
+> Tastenfokus und solange die Suche offen ist —, nach dem Rezept aus E695
+> (`--bg-schwebend-dicht`, `--glas-blur` mit Präfix-Zwilling unter
+> `@supports`); die Ruhe-Zählung von `test582` §7 ist unverändert.
 
 **Datum:** 28. September 2026 · **Entschieden von** Redur (Auftrag ca. 16:45
 UTC, Fragebogen ca. 21:45 UTC, 27. September) · **ergänzt** E695 ·
@@ -64713,3 +64745,457 @@ Fassung; „Übersicht ^" offen (Blatt am Telefon mit dem Titel
 und dunkel). Das Muster bleibt das des Touch Kits, nachgebaut als
 Redion-Code — kein fremder Code dazugekommen; `FREMDCODE.md` braucht
 keinen Eintrag.
+
+## E727 — Das Gestirn: ein Hell/Dunkel-Schalter mit einer Regel für jede Tür
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Punkt #4; die Fragen des Plans dazu hat er nicht
+beantwortet — gebaut ist mit der Vorgabe des Plans, unten einzeln) ·
+**ergänzt** E462 (Staffelei und Symbolreihe: „zwei Umschalter, eine
+Regel") und E701 (der Themenknopf in Ruhe ohne zweiten violetten Fleck) ·
+**Wächter:** `test602` (neu), `test580` und `test584` (angepasst) ·
+**Zweig** `claude/kopf-ruhig` · **Messung:** `messungen.md` §96.
+
+**Redurs Satz, wörtlich** (PDF vom 29. September, Seite 23, mit einem Foto
+auf Seite 24; eine Uhrzeit ist nicht überliefert):
+
+```txt
+29.09.   „das hier für das sieht so nicht gut aus , es seiht noch nicht
+          100 fetig aus, also finde für hier ewas kreatives aus,"
+```
+
+Gemeint ist `#studio-theme` im Studio-Kopf `#studio-bar` (am Rechner ab
+761 px), zwischen der Suchkapsel und „+": eine helllila Scheibe von 19 px
+mit einer grau-violetten Hälfte.
+
+**Was war.** Die „Sichel" war ein `box-shadow: inset -6px -3px 0` in einer
+festen Farbe (#656079). Ein Mond entsteht so nur, wenn diese Farbe gleich
+dem Grund der Leiste ist — in keinem der sechs dunklen Schemata war sie es
+(Leiste rgb(24,26,29) bis rgb(34,26,32), Sichel rgb(101,96,121)): man sah
+eine halb beleuchtete Kugel, genau das Foto. Im Hellen nahm E701 zwar
+`--bg-side`, aber der geglättete Rand blieb als Haarlinie stehen. Beide
+Zustände drehten `rotate(-25deg)` — die Drehung beim Wechsel war tot, die
+Hintergrundfarbe sprang. Der Knopf zeigte den Zustand (Mond = dunkel),
+sein Name nannte die Handlung („Helles Farbschema einschalten"), er hatte
+keine Schalterrolle und war 38 px breit (§37). `test584` führte
+`.studio-orb` als Ausnahme für handgeschriebene Farben.
+
+**Und darunter ein zweiter Fehler: dieselbe Funktion dreimal, mit drei
+Regeln.** Der Knopf (`StudioSchale.themaWechseln`, seit E712 auch die
+Kachel „Dunkel") merkte sich das Schema je Grundton und behielt den
+Akzent. `App.theme()` — Strg⇧L, ◐ in der Seitenleiste, Menüband
+„Hell / Dunkel", Befehlspalette, Backstage, das Kürzel „hell" — sprang
+immer auf Hell bzw. Standard und merkte nichts. Die Staffelei in
+Einstellungen → Aussehen trug eine Kopie der Knopf-Regel, die zusätzlich
+den Akzent zurücksetzte. E462 hatte „zwei Umschalter, eine Regel"
+versprochen; es waren drei Regeln.
+
+**Gemessen, bevor gebaut wurde** (`messungen.md` §96, `test602` gegen
+`887e71c3` rot mit 14 von 55): von „Mitternacht" aus Strg⇧L hin und zurück
+→ „standard", Mitternacht verloren; ebenso App.theme(), ◐ und das
+Menüband; die Staffelei kam zurück, aber ohne den eigenen Akzent
+(#5cbf8a → ""); nur Knopf und Kachel hielten beides. Die Matrix der
+Scheibe in Hell und Dunkel: beide `matrix(0.906308, -0.422618, …)`.
+
+**Was entschieden wurde.**
+
+1. **Eine Quelle: `Aussehen.grundWechseln(ziel?)`** in
+   `src/bereiche/einstellungen/ansicht/aussehen.ts` — `Aussehen` besitzt
+   die Schemata und `setzen`, also gehört die Regel dorthin (§5, kein
+   Bereich greift in einen anderen). Sie merkt das aktuelle Schema unter
+   den Schlüsseln, die es schon gibt (`studio:schema-light`/`-dark`, keine
+   Datenwanderung), nimmt das gemerkte Schema des Ziel-Grundtons (sonst
+   Hell bzw. Standard), behält den eigenen Akzent und ruft `setzen`. VON
+   WO sagt das gespeicherte Schema, nicht ein Knopf. Mit einem Ziel, das
+   schon gilt, zieht sie nur das Attribut nach — wie `App.theme('light')`
+   es immer tat.
+2. **Alle Türen fragen dort.** `App.theme(was)` leitet nur noch weiter
+   (ohne `Aussehen` bleibt der alte Rückfall), also sind Strg⇧L, ◐, das
+   Menüband, die Palette, Backstage und das Kürzel erledigt, ohne dass
+   eine Aufrufstelle sich ändert. `StudioSchale.themaWechseln` leitet
+   weiter; die Kachel „Dunkel" (E712) bleibt, wie sie ist. Die Staffelei
+   ruft `grundWechseln()` statt ihrer Kopie. Seit der Durchsicht vom
+   10. Oktober (Nachtrag unten) auch die achte Tür, Einstellungen →
+   Allgemein → „Erscheinungsbild".
+3. **Das Gestirn.** `#studio-theme` ist ein Schalter
+   (`role="switch"`, `aria-checked` = dunkel gilt, Name „Dunkles Schema"
+   wie die Staffelei, `aria-keyshortcuts` und Titel „Zum hellen/dunklen
+   Schema wechseln (…)" mit dem GELTENDEN Kürzel — von Haus aus
+   Control+Shift+L bzw. Strg ⇧ L, nach dem Umbelegen das neue; Nachtrag
+   unten). Darin ein rundes Fenster
+   mit Sonne und Mond aus `Register.symbole` (der Mond kam mit E712). Der
+   Drehpunkt liegt unter dem Knopf, ein Horizont: das stehende Gestirn ist
+   aufrecht, das andere liegt um 80° gedreht unter dem Horizont. Beim
+   Wechsel geht das eine unter und das andere auf, auf der Feder aus E702
+   (`--feder-druck`). Welches steht, regelt die CSS am selben
+   `aria-checked`, das ein Vorleser liest — Bild und Ansage können nicht
+   auseinanderlaufen.
+4. **In Ruhe neutral, Farbe als Zustand.** `--text-dim`, keine Fläche;
+   unter Zeiger und Tastenfokus zeichnet sich der Horizont
+   (`::before`, `scaleX`) und das stehende Gestirn tönt sich
+   `--accent-text` mit leichtem Schein — im Schema „Starker Kontrast" ohne
+   Schein. Gedrückt sinkt es ein wie jeder Kopfknopf (press.ts, E702).
+5. **Bewegt werden nur `transform` und `opacity`.** Unter „weniger
+   Bewegung" sind die Marken 1 ms (grund.css), unter „Ruhige Darstellung"
+   greift `bausteine.css` samt `::before`; der Zustand wechselt trotzdem.
+6. **44 × 44** (§37) — die ganze Reihe, siehe E728.
+
+**Die Vorgaben des Plans, mit denen gebaut ist** (Redur hat Schritt 0 nicht
+beantwortet): (a) die Form ist das Gestirn — nicht die Sonne|Mond-Kapsel
+mit wanderndem Material und nicht der Kit-Schalter; (b) der eigene Akzent
+bleibt beim Wechsel des Grundtons, also setzt auch die Staffelei ihn nicht
+mehr zurück; (c) kein seitenweites Aufblenden beim Wechsel, nur das
+Gestirn bewegt sich; (d) das Zeichen zeigt den ZUSTAND (Mond = jetzt
+dunkel), mit `role="switch"` wie im Kontrollzentrum des iPhones und an der
+Staffelei.
+
+**Das Touch Kit.** Übernommen ist die Sprache — die Bewegung von
+`SymbolSwap`, „orbital", Schein als Zustand —, nachgebaut als Redion-CSS
+mit Redions Marken und Zeichen. Es ist kein fremder Code kopiert, also
+braucht es keinen Eintrag in `FREMDCODE.md`. Keine Insel, kein React, keine
+neue Datei. Der Entwurf aus dem Codex-Zweig `codex/pdf-masterprompt-29sep`
+(652f801c5) zeichnete Sonne und Mond als eigenes SVG ins HTML; das ist
+nicht übernommen — `Register.symbole` ist der eine Zeichenkatalog (E202).
+
+**Was es bringt** (`messungen.md` §96): jede der sieben Türen (seit der
+Durchsicht acht) und drei (seit der Durchsicht vier) gemischte Paare führen von „Mitternacht" und „Touch Kit dunkel" hin ins
+gemerkte helle Schema und zurück ins Ausgangsschema, der Akzent bleibt
+#5cbf8a. Das sichtbare Zeichen steht in allen zehn Schemata mit 5,28 bis
+15 : 1 gegen die Leiste. Hell und Dunkel haben verschiedene Lagen
+(Sonne `none`/`rotate(-80deg)`), der Wechsel läuft als zwei Übergänge
+(transform, opacity).
+
+**Was es kostet.**
+- Wer bisher mit der Staffelei wechselte, behält jetzt seinen eigenen
+  Akzent, statt ihn zu verlieren — gewollt (b), aber eine Änderung im
+  Verhalten.
+- Wer ein eigenes Schema hatte und mit Strg⇧L wechselte, landet jetzt im
+  gemerkten Schema des anderen Grundtons statt in Hell/Standard. Auch das
+  ist die Absicht; wer noch nie gewechselt hat, landet wie bisher bei
+  Hell bzw. Standard.
+- Der Name des Knopfs ist jetzt der Zustand („Dunkles Schema", an/aus),
+  nicht mehr die Handlung. Die Blase der Symbolreihe zeigt ihn; die
+  Handlung steht im Titel.
+- Start 1852 → 1854 KB gzip mit E728 zusammen (`test388` §5, Decke 1950).
+
+**Die Alternativen.**
+- *Den Mond nur umfärben* (die Sichel in `--bg-side`). Die Haarlinie bleibt,
+  und ein Zeichen aus Schatten trifft den Grund nur, solange niemand ihn
+  ändert.
+- *Die Regel in `studio.ts` lassen und `App.theme` dorthin zeigen.* Dann
+  hinge die Staffelei (Bereich Einstellungen) an der Schale; `Aussehen`
+  besitzt die Schemata ohnehin.
+- *Sonne|Mond-Kapsel (Kit-Segmented, 88 px).* Zwei Ziele für einen
+  Schalter in einer Reihe, die ruhiger werden soll (E701).
+
+**Gegenproben** (§55.2), jede rot gesehen und zurückgenommen:
+- Der alte Rumpf von `App.theme` zurück → `test602` §1 „nacht: Strg⇧L —
+  hin {"schema":"hell"…} · zurück {"schema":"standard"…}", ebenso
+  App.theme(), ◐ und das Menüband.
+- Das Orb-Markup zurück in `index.html` → `test602` §3 „anzahl 0, orb
+  true", „Keine .studio-orb mehr im Baum", §4 „laufen 0", „dunkel orb none
+  · hell orb none".
+
+**Gefunden auf dem Weg.**
+- Das BILD fand den Horizont mitten durch den Mond: das Fenster war nur so
+  hoch wie sein Inhalt (18 px), weil `height:100%` in einem Knopf mit
+  `min-height` nichts hat, woran es sich messen kann. Jetzt streckt es
+  sich (`align-self:stretch`).
+- `aria-checked` zieht ein Beobachter am Attribut `data-theme` nach — einen
+  Takt später. Der erste Lauf las im selben Takt und meldete sechs falsche
+  Schemata; der Lauf wartet jetzt einen Bildtakt, wie ein Mensch.
+
+**Funktionen (§43).** Nichts entfernt. Was wegfällt, ist das Aussehen von
+`.studio-orb` (zwei Regeln in `studio.css` und die Regel aus E701) — genau
+das, was Redur neu haben wollte; der Knopf bleibt an derselben Stelle mit
+derselben Funktion. `App.theme` bleibt die Tür für Strg⇧L, ◐, Menüband,
+Palette, Backstage und das Kürzel; `StudioSchale.themaWechseln` bleibt;
+die Staffelei bleibt in Einstellungen → Aussehen. Keine Daten und kein
+Meta-Schlüssel ändern sich (`studio:schema-light`/`-dark`, `theme`,
+`aussehen`).
+
+**Nachtrag der Durchsicht (10. Oktober 2026).** Eine unabhängige
+Durchsicht des Zweigs hat drei Stellen gefunden, an denen dieser Eintrag
+mehr versprach, als gebaut war. Alle drei sind repariert, jede mit einer
+Zusage in `test602`, die vorher rot war (gegen `e5b6df726`):
+
+1. **Die achte Tür.** Einstellungen → Allgemein → „Erscheinungsbild"
+   schrieb nur `theme`; das Schema setzte den Grundton gleich wieder
+   zurück. Von „Mitternacht" aus tat „Hell" dort nichts („hin
+   {"schema":"nacht",…,"theme":"dark"}"). Das war schon vor E727 so —
+   aber „Alle Türen fragen dort" stimmte damit nicht. Jetzt ruft die
+   Auswahl `Aussehen.grundWechseln(wert)` („Wie das System" wird vorher
+   aufgelöst, wie bisher); `test602` §1 fährt sie allein und gemischt mit
+   dem Gestirn.
+2. **Das geltende Kürzel.** „hell" steht in `UMBELEGBAR`, aber
+   `aria-keyshortcuts` stand fest in `index.html` und „(Strg ⇧ L)" fest in
+   `themaMarkieren` — nach dem Umbelegen sagte der Schalter eine Taste an,
+   die nichts mehr tat. Jetzt kommen beide aus `Aussehen.kuerzelVon('hell')`
+   und werden beim Zeigen und beim Fokus nachgefragt, also dort, wo ein
+   Mensch Titel oder Kürzel erfährt (`test602` §2: umbelegt auf Strg Alt H
+   „Control+Alt+H" und „(Strg Alt H)", zurückgesetzt wieder
+   „Control+Shift+L").
+3. **Kein Schein bei hohem Kontrast.** Der Schein unter Zeiger und Fokus
+   fiel nur im Schema „Starker Kontrast" weg; der Schalter „Hoher
+   Kontrast" (`body[data-kontrast="hoch"]`) und `prefers-contrast: more`
+   behielten ihn — anders als das Glas, das in `grund.css` für alle drei
+   deckend wird. Jetzt dieselben drei Wege, dazu `forced-colors: active`
+   (`test602` §6, mit Gegenstück: ohne hohen Kontrast ist der Schein da).
+
+Gegenproben, jede rot gesehen und zurückgenommen: die alte Auswahl
+(`S('theme', …)`) → §1 vier Zeilen rot; das feste Kürzel zurück → §2 zwei
+Zeilen rot; `body[data-kontrast]` aus der Regel und `prefers-contrast` aus
+der Medienabfrage → §6 zwei Zeilen rot. Nicht repariert, nur
+eingetragen: zwei Hinweise unter dem Zeiger (Blase „Dunkles Schema" und,
+nach der Verzögerung des Browsers, der Titel mit dem Kürzel) — L247
+Punkt 4.
+
+## E728 — Der ruhige Kopf: die Suche links, rechts nur Zeichen, Motor und Glas nur als Zustand
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Punkt #10, und seine Erlaubnis vom 3. Oktober
+„Text-/Symbol-Dopplungen der Kopfleiste entfernen"; die Fragen des Plans
+hat er nicht beantwortet — gebaut ist mit der Vorgabe, unten einzeln) ·
+**ergänzt** E703 (Glas nur als Reaktion des einen Sucheingangs, nie in
+Ruhe) und E457 (schliesst L117 Punkt 3) · **Wächter:** `test603` (neu),
+`test482` (erweitert), `test580` und `test128` (angepasst) · **Zweig**
+`claude/kopf-ruhig` · **Messung:** `messungen.md` §96.
+
+**Redurs Satz, wörtlich** (PDF vom 29. September, Seite 7; sein Bild auf
+Seite 15, rot umkreist; eine Uhrzeit ist nicht überliefert):
+
+```txt
+29.09.   „hier es sollte die sucher nur die emojis dort bleiben und alles
+          komplet nacht links schieiben, die suche sollte folgende
+          animationen haben wenn ich mist maus drauf/dürber gehe sollte es
+          die suche sich drehen wie eine mottor und glass efeckt haben wie
+          beim appel."
+```
+
+Gemeint ist der Studio-Kopf `#studio-bar` am Rechner: „Suchen & finden ·
+Strg P", ◐, „+ PDF öffnen", +, ⌘ und ⊞ standen alle rechts. „Nur die
+Emojis dort" heisst: rechts nur Zeichenknöpfe; „alles nach links": die
+Suchkapsel neben Marke und Navigationsknopf; „drehen wie ein Motor und
+Glas wie bei Apple": beim Zeigen dreht sich die Lupe, die Kapsel wird
+Glas. Am Telefon gibt es den Studio-Kopf nicht; dort ist die oberste Zeile
+das Menüband („Werkzeuge ⌄ ⌕ ✦ ⊞"), schon nur Zeichen.
+
+**Was war.**
+- Die Lage war EINE Deklaration: `.studio-search{margin-left:auto}`. Die
+  Kapsel schob sich damit selbst in die rechte Gruppe; die Reihenfolge im
+  Baum stimmte schon (Marke, Navigation, Suche, dann die Zeichen).
+- Drei Doppelungen. „PDF öffnen" trug dasselbe `plus` wie „Neu erstellen"
+  und dazu Text — zweimal „+" für zwei Handlungen. `command` (⌘) heisst in
+  Redion „Befehle" (Navigation, R-Blatt), stand aber an „Werkzeuge
+  einblenden" — ein Bild, zwei Bedeutungen (§38, wie E273). Und bei
+  offener Lade stand die rechte Gruppe des Menübands — Suche, KI, Konto,
+  Glocke, Aufträge — direkt unter denselben Zielen im Kopf; E457 hatte das
+  als L117 Punkt 3 offen gelassen, weil das Band am Telefon die einzige
+  Zeile ist und die Regel keine Medienabfrage bekam. Die Blase von
+  „Werkzeuge" lag dabei unter dem Band („We…").
+- Die Kapsel kannte nur `:hover{background:var(--bg-hover)}` — kein
+  Motor, kein Glas. E703 hatte den Kopf als stehende Fläche deckend
+  beschlossen.
+- Jeder Kopfknopf war 38 × 44 (§37).
+
+**Gemessen, bevor gebaut wurde** (`messungen.md` §96, `test603` gegen
+`887e71c3` rot mit 30 von 61): im Lernzentrum bei 1440 Kapsel x 794
+(im Regal 923), bei 1280 669, bei 1024 535 (160 breit), bei 800 311 (160
+breit) — die Navigation endet bei 176. Zeichen im Kopf `panelL, search,
+plus, plus, command, bell, workspace`. Lade offen: `mb-suche`, `mb-ki`,
+`mb-konto` sichtbar. Unter dem Zeiger: Animation keine, `backdrop-filter`
+none. Kopfknöpfe 38 breit.
+
+**Was entschieden wurde.**
+
+1. **Die Suche steht links.** `margin-left:auto` wandert von der Kapsel auf
+   `#studio-theme`, das erste Zeichen rechts. Die Kapsel steht mit
+   `--space-2` neben dem Navigationsknopf, `clamp(240px, 30vw, 460px)`
+   breit, darf bei Platzmangel bis 160 schrumpfen (nie Überlauf); auch im
+   Band 761–1100 behält sie diese Breite (vorher 160). Die
+   Tab-Reihenfolge bleibt. E711s `SelectionFlow.growFrom` misst die
+   sichtbare Kapsel — die Suche wächst ohne eine Zeile Code aus ihrem
+   neuen Ort.
+2. **Rechts nur Zeichen, jedes einmal.** (a) „PDF öffnen" ist ein
+   Zeichenknopf mit `upload` — dasselbe Zeichen wie der Tropfen „PDF
+   einlesen" im +-Menü (E712), ein Zeichen pro Handlung. Name und Titel
+   bleiben „PDF öffnen" (`IMPORT_WORT`, `test482`); das Wort bleibt im
+   Knopf, nur nicht zu sehen, damit `importBeschriften` beim Einlesen
+   „PDF wird gelesen …" hineinschreiben kann, ohne das Zeichen zu
+   überschreiben. Vorleser hören es seit der Durchsicht über
+   `aria-describedby` (der Name aus `aria-label` überdeckte es — Nachtrag
+   unten). E701s Zustände bleiben: getönt in Ruhe, voll unter Zeiger
+   und Fokus. Beim Einlesen steht an der Stelle des Zeichens genau EIN
+   Lader: die Blase aus RedionMotion (`liquid`), der Kreis nur, wenn sie
+   nicht zu sehen ist (Nachtrag unten).
+   Im Regal bleibt er ausgeblendet (E457 Punkt 5). (b) „Werkzeuge
+   einblenden" trägt ein neues Strichzeichen `band` (Rahmen mit dem
+   Streifen oben, in dem die Werkzeuge stehen); `command` bleibt
+   „Befehle". (c) Am Rechner stehen bei offener Lade Suche, KI, Konto,
+   Glocke und Aufträge nicht noch einmal im Band — Suche, Konto, Glocke
+   und Aufträge stehen im Kopf darüber (`#studio-search`,
+   `#studio-account`, `#studio-glocke` mit E711s Fächer,
+   `#studio-auftraege`), die KI als `#btn-ai` in den Seitenwerkzeugen
+   darunter. Am Telefon bleibt das Band, wie es
+   ist. (d) Der Kopf liegt über dem offenen Band (`z-index` 3, eins über
+   der klebenden Ecke des Bandes), also auch die Blase von „Werkzeuge".
+3. **Motor und Glas nur als Zustand.** Unter Zeiger und Tastenfokus — und
+   solange die Suche offen ist, also auch nach Strg P (Vorgabe e) — dreht
+   sich die Lupe EINMAL (`@keyframes studio-motor`, nur `transform`) auf
+   der lebhaften Feder aus E702: das Nachschwingen von gut 7 % liest sich
+   wie ein Motor, der anläuft und einrastet. Am Telefon dreht `⌕` beim
+   Drücken und im Tastenfokus und wird dabei Glas — nie nur beim Zeigen. Die Kapsel wird dabei
+   Glas nach dem Rezept aus E695, dicht, weil Schrift darauf steht
+   (`--bg-schwebend-dicht`, `--glas-blur` mit Präfix-Zwilling, nur unter
+   `@supports`, `--glas-kante`), dazu der vorhandene einmalige Glanzstreif
+   — kein neuer, die Kapsel steht nur mit in seiner Liste. In Ruhe bleibt
+   der Kopf deckend (E703). „Starker Kontrast", hoher Kontrast und weniger
+   Transparenz machen es über die Marken deckend; „weniger Bewegung"
+   setzt die Feder auf 1 ms, „Ruhige Darstellung" nimmt die Drehung ganz.
+4. **Alle Kopfknöpfe 44 × 44** (`.studio-icon{width:var(--touch-min)}`).
+5. **Ein Titel auch am Rechner** (Vorgabe d) — als eigener Commit, damit
+   er sich allein zurücknehmen lässt: E701 Nr. 7 verliert seine
+   Medienabfrage. Solange der grosse Titel „Dokumente" zu sehen ist, tritt
+   die Krume „Dokumente" zurück (Deckkraft 0, im Baum und klickbar wie am
+   Telefon); rollt er weg, kommt sie zurück. Der Beobachter in
+   `kopfleiste.ts` lief schon immer bei jeder Breite (`test603` §8,
+   `test580`, das bis dahin „Am Rechner bleibt die Krume, wie sie war"
+   hielt).
+
+**Die Vorgaben des Plans, mit denen gebaut ist** (Redur hat Schritt 0 nicht
+beantwortet): (a) „PDF öffnen" bleibt im Kopf, nur als Zeichen `upload`;
+(b) das neue Zeichen `band` statt ⌘; (c) am Telefon bleibt die oberste
+Zeile, sie bekommt nur Motor und Glas beim Drücken auf ⌕ (und im
+Tastenfokus); (d) „ein Titel" auch am Rechner, als
+eigener Bogen; (e) der Motor dreht auch, wenn Strg P die Suche öffnet.
+
+**Das Touch Kit.** Übernommen ist „Liquid Glass als Zustand" — gebaut mit
+Redions Glasmarken aus E695, nicht mit der Lichtbrechung des Kits. Es ist
+kein fremder Code kopiert, also braucht es keinen Eintrag in
+`FREMDCODE.md`. Keine Insel, kein React, keine neue Datei.
+
+**Die Zwillinge sind dieselben Funktionen** — das war die Bedingung des
+Plans, damit „verstecken" nicht heisst „doppelt bauen und beide laufen
+lassen". `test603` §4 ersetzt die Ziele kurz durch Zähler und drückt beide
+Knöpfe: `App.suche`, `App.arbeitsbereich`, `Ansichten.posteingang`,
+`AuftragsAnzeige.oeffnen` — je ein Aufruf aus dem Kopf und einer aus dem
+Band; die KI öffnet von `#mb-ki` und von `#btn-ai` dasselbe Fach.
+
+**Was es bringt** (`messungen.md` §96): Kapsel x 196 bei jeder Breite
+(1440: 432 breit, 1280: 384, 1024: 307, 800: 240), rechts fünf Zeichen ohne
+Text, Zeichen im Kopf `panelL, search, sun, moon, upload, plus, band,
+bell, workspace` — keines zweimal. Lade offen: keine Zwillinge im Band.
+Unter Zeiger und Fokus eine Drehung, `backdrop-filter`
+`saturate(1.8) blur(20px)`. Alle Kopfknöpfe 44 × 44, kein Überlauf von 761
+bis 1440.
+
+**Was es kostet.**
+- „PDF öffnen" ist im Kopf kein Wort mehr, nur noch ein Zeichen mit Name
+  und Blase. Wer das Wort suchte, findet dasselbe im +-Menü („PDF
+  einlesen") und als Knopf im Regal.
+- Glas im Kopf, wenn auch nur unter dem Zeiger: E703 sagte „der Kopf bleibt
+  deckend". Er bleibt es in Ruhe; die Ruhe-Zählung von `test582` §7 ist
+  unverändert.
+- Die Lupe dreht sich bei jedem Überfahren — einmal, nie im Leerlauf.
+- Start 1852 → 1854 KB gzip (mit E727, `test388` §5, Decke 1950).
+
+**Die Alternativen.**
+- *„PDF öffnen" ganz aus dem Kopf.* Er bleibt der schnelle Weg zur PDF in
+  einem Dokument und im Lernzentrum (E457); ein Zeichen ist der kleinere
+  Schritt.
+- *Die rechte Gruppe des Bandes auch am Telefon ausblenden.* Dort ist sie
+  die einzige Zeile mit Suche, KI und Konto (`test40`, `test384`).
+- *Glas in Ruhe.* E703 hat das für stehende Flächen ausgeschlossen, und
+  über einem deckenden Kopf zeigt Glas in Ruhe nichts.
+
+**Gegenproben** (§55.2), jede rot gesehen und zurückgenommen:
+- `margin-left:auto` zurück an die Kapsel → `test603` §1 „1440: … Abstand
+  550 ≤ 16 — Kapsel x 732, Navigation endet 182", ebenso 1280 und 1024.
+- Die Medienregel für die Zwillinge weg → §4 „Im Band steht keine zweite
+  Suche … — mb-suche, mb-ki, mb-konto".
+- Der Kopf mit `z-index:2` statt 3 → §4 „Die Blase von „Werkzeuge" liegt
+  über dem offenen Band — oben: studio-tools, mb-klapp".
+- Ohne `#mb-suche` in der Glasregel → §5 „Telefon: … und wird beim
+  Drücken Glas (Vorgabe c) — "none"" (die Zusage kam nach dem ersten Bau
+  dazu und war zuerst rot).
+
+**Gefunden auf dem Weg.**
+- Das BILD fand die Blase von „Werkzeuge" am rechten Ende noch unter der
+  Klappe des Bandes: `.mb-rechts` klebt mit `z-index:2`, und bei
+  Gleichstand malt der Baum das Band zuletzt. Der Lauf hatte nur die
+  Mitte der Blase gefragt; seither fragt er auch ihr rechtes Ende.
+- `.studio-action` trug sonst niemand mehr. Seine Regeln sind weg; der
+  Glanzstreif, den es trug, gehört jetzt der Kapsel, der Lader des
+  Einlesens dem Zeichenknopf. Der Glanz kann nicht an den Zeichenknopf:
+  sein `::after` ist die Blase der Symbolreihe.
+- Ein NACHBAR wurde rot, und er hatte recht: `test128` mass den
+  Fokusrahmen der „Suche oben rechts" und die Rückkehr des Fokus an
+  `#mb-suche` — bei offener Lade am Rechner, wo `#mb-suche` jetzt
+  verborgen ist und keinen Fokus mehr annimmt („#mb-suche:0", „und der
+  Fokus kommt zurück — btn-page-menu"). Er misst jetzt `#studio-search`,
+  denselben Griff, den ein Mensch dort mit der Tastatur erreicht; das
+  Versprechen bleibt, der Gegenstand wechselt.
+- Chromium meldet für `-webkit-backdrop-filter` keinen eigenen Wert (es
+  ist dort nur ein Alias, gemessen ""). Den Präfix-Zwilling hält deshalb
+  die Textprüfung im selben Lauf, nicht die gerechnete Eigenschaft.
+
+**Funktionen (§43; Redurs Erlaubnis vom 3. Oktober „Text-/Symbol-Dopplungen
+der Kopfleiste entfernen").** Nichts gelöscht; jede Funktion behält einen
+Ort. Der PDF-Import im Kopf: gleicher Knopf, gleiche Stelle, Zeichen statt
+Wort, dazu „+" → „PDF einlesen" und der Knopf im Regal. „Werkzeuge
+einblenden": gleicher Knopf, neues Zeichen. Die rechte Gruppe des Bandes:
+nur am Rechner bei offener Lade verborgen, dieselben Ziele im Kopf
+darüber (die KI in den Seitenwerkzeugen darunter); am Telefon
+unverändert. Strg P, Strg K, `#btn-search` und `#btn-suche-handy` bleiben
+unverändert.
+
+**Nachtrag der Durchsicht (10. Oktober 2026).** Eine unabhängige
+Durchsicht fand an einem Zustand, den dieser Bogen verändert und von dem
+er kein Bild gemacht hatte, zwei Fehler, beide gegen §50 („bei
+Gestaltung: ein Bild angesehen") und der zweite gegen §32 („keine
+falschen Versprechen"):
+
+1. **Zwei Lader übereinander.** Beim Einlesen lag der neue Kreis
+   (`::before`) in der Mitte des 44-px-Knopfes, und daneben erschien die
+   Blase aus RedionMotion — `liquid` ist dort für `[data-studio-import]`
+   angemeldet (der eine Katalog, §8). Im Knopf mit Wort stand sie neben
+   dem Wort; im Zeichenknopf stand sie im Fluss neben dem verborgenen
+   Zeichen, 13 px links der Mitte und über den Rand („blase dx −13,
+   drin false"). Jetzt liegt die Blase genau an der Stelle des Zeichens
+   (`position:absolute; inset:0; margin:auto`), und der Kreis springt nur
+   ein, wenn sie nicht zu sehen ist — wenn es sie nicht gibt oder
+   RedionMotion den Laufzustand nicht gesetzt hat (motion.css zeigt sie
+   nur bei `data-rmo-state="laeuft"`). Behalten ist die Blase, weil der
+   Katalog sie dieser Stelle zuweist und sie vor E728 dort zu sehen war;
+   der Kreis kam erst mit E728 an diesen Knopf.
+2. **Vorleser hörten den Stand nicht mehr.** Der Name kam seit E728 aus
+   `aria-label` und überdeckte das verborgene Wort; der Barrierebaum sagte
+   beim Einlesen „PDF öffnen", Beschreibung „PDF öffnen" (vor E728 hiess
+   der Knopf dabei „PDF wird gelesen …"). Jetzt zeigt `aria-describedby`
+   auf das Wort (`#studio-import-wort`): der Name bleibt „PDF öffnen"
+   (`test482`), die Beschreibung sagt „PDF wird gelesen …". In Ruhe ist
+   die Beschreibung gleich dem Namen, wie vorher über den Titel.
+
+Dazu die tote Zeile: `#studio-import[aria-busy="true"]::before
+{animation:none}` stand im Block „weniger Bewegung" VOR der neuen Regel
+mit gleichem Gewicht und gewann nie. Sie ist weg; den Kreis halten die
+zwei Sperren für alles an (`grund.css` bei weniger Bewegung,
+`bausteine.css` bei „Ruhig"), die Blase hält motion.css an (`test494`).
+Gemessen: unter weniger Bewegung und „Ruhig" null endlose Animationen in
+der Blase, sonst neun.
+
+`test603` §10 fährt den echten Weg (Kopfknopf, Dateiwähler,
+`pdfImportieren`; nur der Importeur wartet, bis der Lauf ihn freigibt)
+und war gegen `e5b6df726` rot mit 68 von 73. Gegenproben, jede rot
+gesehen und zurückgenommen: ohne die Zeile für die Blase → „dunkel: … in
+der Mitte … [{"art":"blase","dx":-13,…,"drin":false}]"; ohne
+`aria-describedby` → „Vorleser: … die Beschreibung sagt den Stand —
+{"name":"PDF öffnen","beschreibung":"PDF öffnen"}"; der Kreis ohne
+Bedingung → „genau EIN Lader — blase und kreis"; die erste Fassung der
+Bedingung (`:not(:has(> .rmo-liquid))`, die nur fragte, OB es die Blase
+gibt) → „Ohne Laufzustand der Blase springt der Kreis ein — []".
+
+Ebenfalls aus der Durchsicht: `test603` §5 verlangt am Telefon zuerst,
+dass `:focus-visible` wirklich gilt (`!fv || …` war auch ohne Fokus
+grün), `test580` §7 am Rechner `!titel && deck 1` statt `titel ? deck 0 :
+deck 1`; beide waren schon grün, aus dem richtigen Grund.

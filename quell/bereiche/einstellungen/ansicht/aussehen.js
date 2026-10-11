@@ -132,6 +132,21 @@ const Aussehen = (() => {
         anwenden(neu);
         return neu;
     };
+    const grundWechseln = (ziel) => {
+        const jetzt = einstellung();
+        const von = SCHEMATA.find(x => x.id === jetzt.schema)?.grund === 'light' ? 'light' : 'dark';
+        const zu = ziel ?? (von === 'light' ? 'dark' : 'light');
+        if (zu === von) {
+            document.documentElement.dataset['theme'] = zu;
+            Store.setMeta('theme', zu);
+            return jetzt;
+        }
+        Store.setMeta('studio:schema-' + von, jetzt.schema);
+        const vorgabe = zu === 'light' ? 'hell' : 'standard';
+        const gemerkt = Store.getMeta('studio:schema-' + zu, vorgabe);
+        const schema = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu)?.id ?? vorgabe;
+        return setzen({ schema });
+    };
     const KUERZEL = [
         ['suche', 'Suchen', 'Ctrl+K'],
         ['palette', 'Befehle', 'Ctrl+P'],
@@ -306,14 +321,7 @@ const Aussehen = (() => {
                     platz.append(Staffelei.bauen({
                         hell: grund === 'light',
                         beiWechsel: () => {
-                            const jetzt = einstellung();
-                            const jetztGrund = SCHEMATA.find(x => x.id === jetzt.schema)?.grund || 'dark';
-                            const hell = jetztGrund === 'dark';
-                            const von = jetztGrund, zu = hell ? 'light' : 'dark';
-                            Store.setMeta('studio:schema-' + von, jetzt.schema);
-                            const gemerkt = Store.getMeta('studio:schema-' + zu, hell ? 'hell' : 'standard');
-                            const ziel = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu);
-                            setzen({ schema: ziel?.id || (hell ? 'hell' : 'standard'), akzent: '' });
+                            grundWechseln();
                             zeichne();
                         }
                     }).element);
@@ -488,7 +496,7 @@ const Aussehen = (() => {
         });
     };
     const start = () => { anwenden(); };
-    return { start, anwenden, setzen, einstellung, dialog,
+    return { start, anwenden, setzen, grundWechseln, einstellung, dialog,
         SCHEMATA, SCHRIFTEN, KUERZEL, kuerzelVon, alsText, ist, eigene,
         reserviert, umbelegbar };
 })();

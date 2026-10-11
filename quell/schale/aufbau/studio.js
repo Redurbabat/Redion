@@ -50,25 +50,26 @@ const StudioSchale = (() => {
         Kontextkante.zeichne();
         UI.toast('Breite zurückgesetzt');
     };
+    const themaKuerzel = () => (typeof Aussehen !== 'undefined' ? Aussehen.kuerzelVon('hell') : 'Ctrl+Shift+L');
     const themaMarkieren = () => {
         const hell = document.documentElement.dataset.theme === 'light';
         const b = document.getElementById('studio-theme');
-        b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
-        if (b)
-            b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+        if (!b)
+            return;
+        b.setAttribute('aria-checked', String(!hell));
+        const teile = themaKuerzel().split(/\+(?=.)/).filter(Boolean);
+        if (teile.length)
+            b.setAttribute('aria-keyshortcuts', teile.map(t => (t === 'Ctrl' ? 'Control' : t)).join('+'));
+        else
+            b.removeAttribute('aria-keyshortcuts');
+        const zeigen = teile.map(t => (t === 'Ctrl' ? 'Strg' : t === 'Shift' ? '⇧' : t)).join(' ');
+        b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + (zeigen ? ' (' + zeigen + ')' : '');
     };
     const themaWechseln = () => {
-        const hell = document.documentElement.dataset.theme === 'light';
-        if (typeof Aussehen !== 'undefined') {
-            const aktuell = Aussehen.einstellung();
-            Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
-            const ziel = hell ? 'dark' : 'light';
-            const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
-            const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
-            Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
-        }
+        if (typeof Aussehen !== 'undefined')
+            Aussehen.grundWechseln();
         else
-            Einstellungen.S('theme', hell ? 'dark' : 'light');
+            Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
         themaMarkieren();
     };
     const einstellen = (kompakt) => {
@@ -123,6 +124,9 @@ const StudioSchale = (() => {
         });
         an('studio-theme', themaWechseln);
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        const gestirn = document.getElementById('studio-theme');
+        gestirn?.addEventListener('pointerenter', themaMarkieren);
+        gestirn?.addEventListener('focus', themaMarkieren);
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
         const kante = document.getElementById('kante');

@@ -245,12 +245,17 @@ console.log('\n§2 Der Kopfknopf bleibt, was er ist');
       kopfWort: (() => { const h = document.getElementById('studio-import');
         return h ? (h.textContent || '').replace(/\\s+/g,' ').trim() : null; })(),
       kopfZeichen: !!document.querySelector('#studio-import [data-sym] svg'),
+      kopfName: document.getElementById('studio-import')?.getAttribute('aria-label') ?? null,
       seiten: Object.values(Store.cache.blocks).filter(b => b.type === 'pdfseite' && b.alive !== false).length });
   })()`) as string) as { wort: string | null; zeichen: boolean;
-                         kopfWort: string | null; kopfZeichen: boolean; seiten: number };
+                         kopfWort: string | null; kopfZeichen: boolean; kopfName: string | null; seiten: number };
   gleich('Nach dem Import heisst er noch genauso', nachher.wort, vorher.wort);
   p('… und hat sein Zeichen noch', nachher.zeichen, JSON.stringify(nachher));
   gleich('Auch der Kopfknopf heisst noch, wie er hiess', nachher.kopfWort, 'PDF öffnen');
+  /* SEIT E728 ist der Kopfknopf ein Zeichen ohne sichtbares Wort. Sein
+     Name für Vorleser UND für die Blase der Symbolreihe ist `aria-label` —
+     auch der heisst nach dem Import noch „PDF öffnen". */
+  gleich('… auch als Vorlesename (aria-label, E728)', nachher.kopfName, 'PDF öffnen');
   p('… und hat sein Zeichen noch — er wird nie neu gezeichnet',
     nachher.kopfZeichen, JSON.stringify(nachher));
   gleich('Die drei Seiten der neuen PDF sind da', nachher.seiten, 3);

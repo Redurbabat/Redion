@@ -312,3 +312,21 @@ der Durchsicht vom 10. Oktober gilt das auch für den Buchstabenlauf
 Bewegung erben die Buchstaben die Farbe ihres Knopfes, statt weiss zu
 werden — auf der hellen Pille der stillen Funkel war das Wort sonst weg
 (`test596` §9/§11).
+
+## Nachtrag vom 6. Oktober 2026 (E727, E728) — das Gestirn und der Motor
+
+Zwei Bewegungen im Studio-Kopf, beide aus der Sprache von Redurs Touch Kit
+(`SymbolSwap`, „orbital", Glas als Zustand), als Redion-CSS mit Redions
+Marken nachgebaut — kein fremder Code, keine Insel.
+
+| Bewegung | Ort | Umsetzung |
+|---|---|---|
+| Das Gestirn (E727) | `#studio-theme` | Sonne und Mond aus `Register.symbole` in einem runden Fenster; Drehpunkt unter dem Knopf (`transform-origin: 50% 150%`). Das stehende Gestirn ist aufrecht, das andere liegt um ±80° unter dem Horizont; beim Wechsel geht eines unter, das andere auf, auf `--feder-druck`. Welches steht, sagt `aria-checked`. Unter Zeiger und Fokus zeichnet sich ein Horizont (`::before`, `scaleX`). |
+| Der Motor (E728) | Lupe in `#studio-search`, `⌕` (`#mb-suche`) am Telefon | `@keyframes studio-motor` — eine Umdrehung, nur `transform`, auf `--feder-lebhaft` (das Nachschwingen ist das Einrasten). Unter Zeiger, Tastenfokus und solange die Suche offen ist (auch nach Strg P); am Telefon beim Drücken und im Fokus. Nie im Leerlauf. |
+| Glas als Zustand (E728) | `#studio-search`, `#mb-suche` beim Drücken | Rezept aus E695, dicht; nur unter `@supports` mit Präfix-Zwilling. In Ruhe deckend (E703). |
+
+Beides bewegt nur `transform` und `opacity`. „Weniger Bewegung" setzt die
+Federn auf 1 ms (`grund.css`), „Ruhige Darstellung" nimmt Animation und
+Übergang ganz (`bausteine.css`, auch `::before`/`::after`). „Starker
+Kontrast" und weniger Transparenz machen das Glas über die Marken deckend;
+das Gestirn trägt dort keinen Schein. Wächter: `test602`, `test603`.

@@ -7729,3 +7729,157 @@ Start (test388 §5, gzip)                 1867 KB                              1
 „115 / 93" ist `scrollWidth / clientWidth` des Namens im Hauptteil. Die
 Breiten 761 bis 780 px stehen nicht in der Tabelle: dort hat der Chip in
 der ruhigen Fassung seine eigene Zeile (wie vorher), nichts kürzt.
+
+## §96 · Der Kopf: drei Türen, das Gestirn und die Lage der Suche (E727, E728, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/kopf-ruhig` gegen `887e71c3`
+(`claude/morgen-besser-2` mit `claude/trenner-zieht` zusammengeführt, vor
+der ersten Zeile Code). Chromium über file://, `index.html` (und für
+`test602` §7 / `test603` §9 die Einzeldatei), 1440 × 900 dunkel, wo nicht
+anders gesagt; frischer Kontext je Block. Die Türen wie in `test602` §1:
+`studio:schema-light` = „papier", Akzent #5cbf8a, dann hin und zurück.
+Kontrast nach WCAG zwischen der gerechneten Farbe des sichtbaren Zeichens
+und dem Grund von `#studio-bar`. Lage aus `getBoundingClientRect`, im
+Lernzentrum („Heute"), wo „PDF öffnen" im Kopf steht. Skripte im
+Kratzordner (`probe1.mts`, `probe3.mts`), nicht eingecheckt.
+
+**Drei Türen von „Mitternacht" aus** (hin → zurück):
+
+```txt
+Tür                       vorher                         nachher
+Gestirn (Klick)           papier → nacht · #5cbf8a       papier → nacht · #5cbf8a
+Strg⇧L                    hell → standard · #5cbf8a      papier → nacht · #5cbf8a
+App.theme() / ◐ / Band    hell → standard · #5cbf8a      papier → nacht · #5cbf8a
+Staffelei                 papier → nacht · ""            papier → nacht · #5cbf8a
+Kachel „Dunkel"           papier → nacht · #5cbf8a       papier → nacht · #5cbf8a
+Strg⇧L hin, Gestirn zur.  hell → standard                papier → nacht
+App.theme('dark') auf     standard                       wald (gemerkt)
+  „sand" (zuletzt „wald")
+```
+
+Von „Touch Kit dunkel" aus dasselbe Bild. `test602` gegen `887e71c3`
+14 von 55, danach 55 von 55.
+
+**Das Zeichen gegen die Leiste** (vorher: die Scheibe, gemessen an der
+Farbe des Knopfs, weil sie selbst kein Zeichen war; nachher das stehende
+Gestirn):
+
+```txt
+Schema            vorher (Knopf)   nachher (Zeichen)
+standard          7,31             Mond 7,31
+hell              5,65             Sonne 5,65
+nacht             6,79             Mond 6,79
+wald              6,62             Mond 6,62
+sand              5,60             Sonne 5,60
+papier            7,55             Sonne 7,55
+kontrast          15,00            Mond 15,00
+rose              6,68             Mond 6,68
+touchkit-hell     5,28             Sonne 5,28
+touchkit-dunkel   7,63             Mond 7,63
+```
+
+Die Sichel der Scheibe war vorher in allen sechs dunklen Schemata
+rgb(101,96,121) bzw. rgb(103,98,123) gegen eine Leiste von rgb(24,26,29)
+bis rgb(34,26,32) — die Karte zu #4 im Plan, hier nicht neu gemessen.
+
+**Die Lage beim Wechsel.** Vorher Hell und Dunkel `matrix(0.906308,
+-0.422618, 0.422618, 0.906308, 0, 0)` — dieselbe Matrix, keine Drehung.
+Nachher dunkel: Sonne `matrix(0.173648, -0.984808, …)` (−80°), Mond
+`none`; hell: Sonne `none`, Mond `matrix(0.173648, 0.984808, …)` (+80°).
+Nach dem Klick laufen zwei Übergänge (`transform`, `opacity`); vorher einer
+(`box-shadow`).
+
+**Die Suchkapsel** (x / Breite; die Navigation endet vorher bei 176,
+nachher bei 182, weil `#studio-nav` 44 statt 38 breit ist):
+
+```txt
+Fenster   vorher          nachher
+1440      794 / 317       196 / 432
+1280      669 / 282       196 / 384
+1024      535 / 160       196 / 307
+800       311 / 160       196 / 240
+```
+
+Im Regal (ohne „PDF öffnen" im Kopf) stand sie vorher bei 923 (Karte zu
+#10).
+
+**Zeichen im Kopf** (`[data-sym]` in `#studio-bar`, Lernzentrum):
+vorher `panelL, search, plus, plus, command, bell, workspace` (`plus`
+zweimal, `command` an „Werkzeuge einblenden"); nachher `panelL, search,
+sun, moon, upload, plus, band, bell, workspace` — keines zweimal.
+
+**Lade offen, 1440:** vorher im Band sichtbar `mb-suche` (1346,65),
+`mb-ki` (1376,65), `mb-konto` (1406,65) — drei Zwillinge direkt unter
+`#studio-search` und `#studio-account`; nachher keiner. `#btn-ai` bleibt
+in den Seitenwerkzeugen (1363,179).
+
+**Kopfknöpfe:** vorher `.studio-icon` 38 × 44 (`#studio-nav`,
+`#studio-theme`, `#studio-create`, `#studio-tools`, `#studio-account`),
+„PDF öffnen" 121 × 44 mit Wort; nachher alle 44 × 44, kein Überlauf bei
+761, 900, 1100 und 1440.
+
+**Motor und Glas, unter dem Zeiger:** vorher Animation keine,
+`backdrop-filter` none, Grund rgb(43,45,48); nachher eine Animation
+`studio-motor` (eine Umdrehung, nur `transform`, 887 ms auf
+`--feder-lebhaft`), `backdrop-filter: saturate(1.8) blur(20px)`. In Ruhe in
+beiden Ständen keines von beiden. „Starker Kontrast" und weniger
+Transparenz: `none`, deckend.
+
+**Ein Titel am Rechner** (1440, eine Seite „Dokumente" mit 60 Zeilen):
+vorher die letzte Krume „📄 Dokumente" bei sichtbarem Titel Deckkraft 1;
+nachher 0, weggerollt (scrollTop 1200) wieder 1.
+
+**Start:** 1852 → 1854 KB gzip über 252 Dateien (`test388` §5, Decke
+1950). `redion-einzeldatei.html` 9151 → 9157 KB.
+
+### §96 · Nachtrag der Durchsicht (10. Oktober 2026)
+
+Gemessen über `file://`, 1440 × 900, Lernzentrum, Chromium aus Playwright.
+Der Einlesezustand ist der echte Weg (Kopfknopf, Dateiwähler,
+`pdfImportieren`); nur der Importeur wartet, bis die Messung ihn freigibt
+(`test603` §10).
+
+**Beim Einlesen, Lader im 44 × 44-Knopf** (Abstand der Mitte zur Mitte des
+Knopfes): vorher (`e5b6df726`) ZWEI — die Blase von RedionMotion bei
+dx −13, über den linken Rand (`drin: false`), und der Kreis bei dx 0;
+nachher EINER, die Blase bei dx 0, dy 0, ganz im Kasten. Das Zeichen in
+beiden Ständen Deckkraft 0. Ohne Laufzustand (`data-rmo-state="bereit"`):
+der Kreis, `left` 21 px, mitten. Endlose Animationen in der Blase: neun;
+unter weniger Bewegung und „Ruhig" null.
+
+**Was ein Vorleser hört** (`Accessibility.getPartialAXTree`): vorher beim
+Einlesen Name „PDF öffnen", Beschreibung „PDF öffnen"; nachher Name „PDF
+öffnen", Beschreibung „PDF wird gelesen …"; in Ruhe in beiden Ständen
+Name und Beschreibung „PDF öffnen" (vorher aus dem Titel, nachher aus dem
+Wort).
+
+**Einstellungen → „Erscheinungsbild" = Hell, von „Mitternacht" aus**
+(gemerktes helles Schema „papier"): vorher Schema `nacht`, `data-theme`
+dark — die Auswahl zeigte „Hell", die Kachel „Dunkel" „An"; nachher
+Schema `papier`, light. Ebenso bei 390 × 844.
+
+**Das Kürzel des Gestirns, umbelegt auf Strg Alt H:** vorher
+`aria-keyshortcuts` „Control+Shift+L", Titel „… (Strg ⇧ L)"; nachher
+„Control+Alt+H" und „… (Strg Alt H)", zurückgesetzt wieder
+„Control+Shift+L".
+
+**Schein am Gestirn unter dem Zeiger** (`filter` des sichtbaren Zeichens):
+ohne hohen Kontrast in beiden Ständen `drop-shadow(… 0px 0px 4px)`; mit
+dem Schalter „Hoher Kontrast" und unter `prefers-contrast: more` vorher
+derselbe Schein, nachher `none`.
+
+**Das Zeichen in der getönten Pille „PDF öffnen", in Ruhe** (nach 700 ms
+je Schema, über dem Grund der Leiste zusammengesetzt): Standard 5,28 ·
+Hell 4,61 · Mitternacht 4,56 · Wald 5,40 · Sand 4,33 · Papier 6,03 ·
+Starker Kontrast 9,42 · Rose 4,28 · Touch Kit hell 4,45 · Touch Kit
+dunkel 6,32 — überall über 3 : 1 (Nicht-Text), in drei Schemata unter
+4,5.
+
+**„Strg P" in der Kapsel, in Ruhe** (Farbe mit `opacity: .7`): Standard
+4,24 · Hell 2,87 · Mitternacht 3,71 · Wald 3,81 · Sand 3,09 · Papier
+3,53 · Starker Kontrast 7,39 · Rose 3,87 · Touch Kit hell 2,98 · Touch
+Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
+
+**Start:** 1854 → 1855 KB gzip über 252 Dateien (`test388` §5, Decke
+1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
+v1430.

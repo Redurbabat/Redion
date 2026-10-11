@@ -18,9 +18,14 @@
  *       Bild"). Auf „Heute" ist „Lernen starten" die eine (E638); „Dokumente
  *       öffnen" steht daneben als Umrissknopf; „PDF öffnen" im Kopf ist in
  *       Ruhe eine getönte Pille und wird erst unter Zeiger und Tastenfokus
- *       voll violett mit Schein; der Themenknopf ist im Hellen ein grauer
- *       Mond statt eines zweiten violetten Flecks. Die Schrift der getönten
- *       Pille liest sich mit 4,5 : 1 oder mehr. Seit E720 auch in der
+ *       voll violett mit Schein; der Themenknopf (seit E727 das Gestirn) ist
+ *       in Ruhe neutral statt eines zweiten violetten Flecks. Das Zeichen
+ *       der getönten Pille (seit E728 ohne Wort) liest sich in Standard
+ *       und Hell mit 4,5 : 1 oder mehr — streng wie für Schrift, obwohl für
+ *       ein Zeichen 3 : 1 genügten. Gemessen werden nur diese zwei
+ *       Schemata; in den übrigen acht hält das Zeichen 3 : 1, aber nicht
+ *       überall 4,5 (Rose 4,28, Sand 4,33, Touch Kit hell 4,45 — Durchsicht
+ *       vom 10. Oktober, messungen §96). Seit E720 auch in der
  *       Lernzentrale: fünf Funkel, aber nur „Starten" leuchtet in Ruhe —
  *       ein Funkel zählt als laut, wenn er in Ruhe Schein oder glimmende
  *       Buchstaben trägt ODER sein Grund sich mit 1,5 : 1 oder mehr vom
@@ -153,7 +158,7 @@ const WERKZEUG = `
      sind (Farbe oder Verlauf aus Akzenttönen), dazu die Themenkugel und der
      dunkle Funkelknopf — alles, was „hier drücken" ruft. */
   window.__laut = () => { const akz = window.__akzentHsl(); const raus = [];
-    for (const el of document.querySelectorAll('button, a, [role=button], .studio-orb')) {
+    for (const el of document.querySelectorAll('button, a, [role=button], .studio-gestirn')) {
       if (!window.__sichtbar(el) || el.closest('[inert]')) continue;
       const r = el.getBoundingClientRect(); if (r.width * r.height < 250) continue;
       const cs = getComputedStyle(el); const bg = window.__rgb(cs.backgroundColor);
@@ -293,7 +298,9 @@ for (const thema of ['light', 'dark'] as const) {
     const leiste = document.getElementById('studio-bar');
     const grund = w.__rgb(getComputedStyle(leiste || document.body).backgroundColor);
     const pille = kcs ? w.__ueber(w.__rgb(kcs.backgroundColor), grund) : null;
-    const orb = document.querySelector('.studio-orb');
+    /* Das Gestirn (E727): das gerade sichtbare Zeichen, in Ruhe. */
+    const gestirn = document.querySelector('#studio-theme');
+    const zeichen = gestirn ? [...gestirn.querySelectorAll('[data-sym]')].find(e => +getComputedStyle(e).opacity > 0.5) : null;
     return {
       laut: w.__laut() as string[],
       dok: dok ? { da: w.__sichtbar(dok), primaer: dok.classList.contains('is-primary'),
@@ -304,7 +311,8 @@ for (const thema of ['light', 'dark'] as const) {
       lern: lern ? { da: w.__sichtbar(lern), text: (lern.textContent || '').trim() } : null,
       kopf: kcs ? { verlauf: kcs.backgroundImage.includes('gradient'), schein: kcs.boxShadow !== 'none',
                     kontrast: pille ? +w.__kontrast(w.__rgb(kcs.color), pille).toFixed(2) : 0 } : null,
-      orbGrau: orb ? w.__hsl(w.__rgb(getComputedStyle(orb).backgroundColor)).s < 0.25 : null
+      gestirnNeutral: zeichen && gestirn ? w.__hsl(w.__rgb(getComputedStyle(zeichen).color)).s < 0.25 &&
+        !w.__akzentig(w.__rgb(getComputedStyle(gestirn).backgroundColor), w.__akzentHsl()) : null
     };
   });
   const t = thema === 'light' ? 'hell' : 'dunkel';
@@ -317,8 +325,11 @@ for (const thema of ['light', 'dark'] as const) {
     !!m.dok && !m.dok.gefuellt && m.dok.rand && !m.dok.primaer, JSON.stringify(m.dok));
   p(`${t}: „PDF öffnen" im Kopf ist in Ruhe getönt — kein Verlauf, kein Schein`,
     !!m.kopf && !m.kopf.verlauf && !m.kopf.schein, JSON.stringify(m.kopf));
-  p(`${t}: … und seine Schrift liest sich (≥ 4,5 : 1)`, (m.kopf?.kontrast ?? 0) >= 4.5, String(m.kopf?.kontrast));
-  if (thema === 'light') p('hell: der Themenknopf ist ein grauer Mond, kein zweiter violetter Fleck', m.orbGrau === true);
+  p(`${t}: … und sein Zeichen liest sich (≥ 4,5 : 1)`, (m.kopf?.kontrast ?? 0) >= 4.5, String(m.kopf?.kontrast));
+  /* Bis E727: „hell: der Themenknopf ist ein grauer Mond". Das Gestirn hat
+     keinen Mond aus Farbe mehr — gefragt wird dasselbe in BEIDEN Themen:
+     in Ruhe ein graues Zeichen, keine Akzentfläche. */
+  p(`${t}: der Themenknopf ist in Ruhe neutral — kein zweiter violetter Fleck`, m.gestirnNeutral === true, String(m.gestirnNeutral));
 
   /* Unter dem Zeiger und unter dem Tastenfokus wird der Kopfknopf der volle
      Hauptknopf — die Farbe ist Zustand, nicht Dauerschmuck. */
@@ -656,9 +667,23 @@ console.log('\n§7 Ein Titel am Telefon — die Krume weicht dem grossen Titel')
   const { ctx, s } = await oeffnen(false, 'dark');
   await werkzeug(s);
   await s.evaluate(() => Ansichten.termine()); await warte(s, 700);
-  const a = await s.evaluate(() => { const el = document.querySelector<HTMLElement>('#crumb > a:last-child');
-    return el ? +(+getComputedStyle(el).opacity).toFixed(2) : null; });
-  gleich('Am Rechner bleibt die Krume, wie sie war', a, 1);
+  /* BIS E728 hiess es hier „Am Rechner bleibt die Krume, wie sie war" (1).
+     Redurs Vorgabe d vom 29. September (E728) nimmt die Textdoppelung auch
+     am Rechner weg: die Regel ist jetzt dieselbe wie am Telefon — die Krume
+     tritt zurück, solange der gleichnamige Titel zu sehen ist, und kehrt
+     zurück, wenn er wegrollt. Geprüft wird beides, damit „0" nicht einfach
+     „immer weg" heissen kann. */
+  const krumeHier = () => s.evaluate(() => { const el = document.querySelector<HTMLElement>('#crumb > a:last-child');
+    return { deck: el ? +(+getComputedStyle(el).opacity).toFixed(2) : null,
+             titel: document.getElementById('topbar')?.hasAttribute('data-titel-sichtbar') ?? false }; });
+  const oben = await krumeHier();
+  p('Am Rechner: Titel zu sehen — die Krume tritt zurück (E728, wie am Telefon)', oben.titel && oben.deck === 0, JSON.stringify(oben));
+  await s.evaluate(() => { const r = document.getElementById('scroll'); if (r) r.scrollTop = 900; }); await warte(s, 600);
+  const unten = await krumeHier();
+  /* Strenger seit der Durchsicht vom 10. Oktober: die alte Form
+     (`unten.titel ? deck 0 : deck 1`) war auch grün, wenn der Titel nie
+     wegrollte — dann prüfte die Zeile nur §7a noch einmal. */
+  p('Am Rechner: … und kehrt zurück, wenn er wegrollt', !unten.titel && unten.deck === 1, JSON.stringify(unten));
   await ctx.close();
 }
 

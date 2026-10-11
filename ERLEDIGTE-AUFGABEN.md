@@ -1,5 +1,75 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 10. Oktober 2026 · E727, E728 (Nachtrag) · Die Durchsicht: ein Lader, der Vorleser hört den Stand, die achte Tür
+
+**Redur:** dieselben Sätze wie unten (Masterprompt vom 29. September,
+Seite 7 und Seite 23). Der Auftrag dieses Nachtrags kam aus einer
+unabhängigen Durchsicht des Zweigs `claude/kopf-ruhig`.
+
+**Fund:** Beim Einlesen standen zwei Lader im 44-px-Importknopf — die
+Blase von RedionMotion 13 px links der Mitte und über den Rand, darauf der
+neue Kreis —, und Vorleser hörten „PDF öffnen" statt „PDF wird gelesen …",
+weil `aria-label` das verborgene Wort überdeckte. Dazu drei Versprechen
+von E727, die nicht stimmten: die Auswahl „Erscheinungsbild" in den
+Einstellungen tat von „Mitternacht" aus nichts, das Kürzel des Gestirns
+stand fest (nach dem Umbelegen falsch), und der Schein unter dem Zeiger
+blieb beim Schalter „Hoher Kontrast" und bei `prefers-contrast: more`.
+
+**Bau:** Die Blase liegt genau an der Stelle des Zeichens, der Kreis nur
+ohne sie; `aria-describedby` zeigt auf das Wort; die Auswahl ruft
+`Aussehen.grundWechseln`; Kürzel und Titel aus `Aussehen.kuerzelVon('hell')`,
+nachgefragt beim Zeigen und beim Fokus; kein Schein auf allen Wegen hohen
+Kontrasts. Die tote Zeile im Block „weniger Bewegung" ist weg. Nichts
+entfernt, was vorher ging.
+
+**Prüfung:** `test603` §10 neu (gegen `e5b6df726` 68/73, jetzt 74/74),
+`test602` §1, §2, §6 erweitert (57/65, jetzt 65/65), je erst rot;
+`test603` §5 und `test580` §7 strenger (schon grün). Sieben Gegenproben
+rot gesehen. Nachbarn grün: 602, 482, 580, 584, 494, 388 (Start 1855 KB,
+Decke 1950), 47, 474, 128, 40, 384, 54, 424, 430, 437, 540, 581, 576, 435,
+589, 114, 582, 588, 303, 126, 541, 592, 272, 37, 428. Bilder vorher und nachher (Einlesen im
+Kopf, Gestirn bei hohem Kontrast, „Erscheinungsbild" bei 1440 und 390,
+hell und dunkel) — nicht im Verzeichnis (§55.4).
+
+## 6. Oktober 2026 · E727, E728 · Das Gestirn und der ruhige Kopf
+
+**Redur:** Masterprompt vom 29. September, Seite 23 (Foto Seite 24): „das
+hier für das sieht so nicht gut aus , es seiht noch nicht 100 fetig aus,
+also finde für hier ewas kreatives aus," — und Seite 7 (Bild Seite 15):
+„hier es sollte die sucher nur die emojis dort bleiben und alles komplet
+nacht links schieiben, die suche sollte folgende animationen haben wenn ich
+mist maus drauf/dürber gehe sollte es die suche sich drehen wie eine mottor
+und glass efeckt haben wie beim appel."
+
+**Fund:** Die „Sichel" des Themenknopfs war ein Schatten in fester Farbe
+(#656079), der in keinem dunklen Schema den Grund traf; beide Zustände
+hatten dieselbe Matrix. Darunter dieselbe Funktion dreimal mit drei Regeln:
+von „Mitternacht" führte Strg⇧L hin und zurück nach „Standard", die
+Staffelei verlor den Akzent. Im Kopf schob `margin-left:auto` die Suche
+nach rechts (x 794 bei 1440), „PDF öffnen" trug `plus` wie „Neu" und Text,
+⌘ hiess „Werkzeuge", bei offener Lade standen Suche, KI und Konto doppelt,
+die Kapsel kannte weder Motor noch Glas, die Kopfknöpfe waren 38 breit.
+
+**Bau:** `Aussehen.grundWechseln` als eine Quelle (merkt das Schema je
+Grundton, behält den Akzent); `App.theme`, `StudioSchale.themaWechseln` und
+die Staffelei leiten weiter. Das Gestirn: Sonne und Mond aus dem Register
+in einem runden Fenster, auf- und untergehend auf der Feder, `role=switch`,
+in Ruhe grau. Die Kapsel links (x 196), rechts nur Zeichen (`upload`,
+neues `band`), die Zwillinge im Band am Rechner bei offener Lade verborgen
+(jeder ruft dieselbe Funktion), der Kopf über dem Band; die Lupe dreht sich
+einmal unter Zeiger, Fokus, Strg P und am Telefon beim Drücken, die Kapsel
+wird dabei Glas; alle Kopfknöpfe 44 × 44. Und als eigener Commit: „ein Titel" auch am Rechner (die Krume tritt zurück, solange der gleichnamige Titel zu sehen ist; `test580` angepasst). Nichts entfernt ausser dem
+Aussehen der Scheibe und den Regeln von `.studio-action`, die niemand mehr
+trug.
+
+**Prüfung:** `test602` neu (55/55; gegen `887e71c3` 14/55), `test603` neu
+(gegen `887e71c3` 30/61), `test580`, `test584` angepasst und `test482`
+erweitert, je erst rot. Gegenproben rot gesehen: der alte Rumpf von
+`App.theme`, das Orb-Markup, `margin-left:auto`, die Medienregel, der Kopf
+mit `z-index:2`, die Telefon-Glasregel. `test128` angepasst (er mass die verborgene `#mb-suche`; jetzt `#studio-search`). Nachbarn grün: 424, 589, 435, 580, 584, 482, 47, 510, 245, 127, 384, 385, 248, 430, 505, 40, 54, 114, 37, 67, 126, 128, 222, 272, 303, 436, 437, 540, 541, 576, 581, 582, 588, 592, 296, 258, 31, 315, 334, 362, 412, 388 (1854 KB, vorher 1852) und die Dateiwächter. Messung `messungen.md` §96. Bilder vorher und
+nachher, 1440/1280/1024/800 und 390, hell und dunkel, alle zehn Schemata —
+nicht im Verzeichnis (§55.4).
+
 ## 11. Oktober 2026 · E726 nach der Durchsicht — Lernpfad, Breiten, Paar, Name, Chip
 
 **Redur** (Masterprompt vom 29. September, S. 21): „… Und die bereiche

@@ -1187,7 +1187,14 @@ const Einstellungen = (() => {
         let wert = el.value;
         if (el.dataset.set === 'theme' && wert === 'system')
           wert = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        S(el.dataset.set, wert);
+        /* DIE ACHTE TÜR (Durchsicht vom 10. Oktober, test602 §1): Hell und
+           Dunkel wechseln nur über `Aussehen.grundWechseln` (E727, §8).
+           Hier wurde bis dahin nur `theme` geschrieben, und das Schema
+           setzte den Grundton gleich wieder zurück — von „Mitternacht"
+           aus tat „Hell" nichts. */
+        if (el.dataset.set === 'theme' && typeof Aussehen !== 'undefined' && (wert === 'light' || wert === 'dark'))
+          Aussehen.grundWechseln(wert);
+        else S(el.dataset.set, wert);
         App.zeichneSeite(); App.zeichneBaum();
       });
       if (el.tagName === 'INPUT') el.addEventListener('input', () => {

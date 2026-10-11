@@ -64,24 +64,37 @@ const StudioSchale = (() => {
     Kontextkante.zeichne();
     UI.toast('Breite zurückgesetzt');
   };
+  /** DAS GESTIRN ZEIGT DEN ZUSTAND (E727, Entscheidung d): ein Schalter
+   *  „Dunkles Schema" wie die Staffelei und das Kontrollzentrum des
+   *  iPhones — `aria-checked` sagt, ob dunkel gilt, der Name bleibt stehen
+   *  (die Blase der Symbolreihe liest ihn), und nur der Titel nennt die
+   *  Handlung. Welches Gestirn steht, regelt `studio.css` am Attribut. */
+  /* DAS GELTENDE KÜRZEL, nicht das von Haus aus (Durchsicht vom
+     10. Oktober, test602 §2). „hell" ist umbelegbar (`Aussehen.UMBELEGBAR`);
+     stand „Strg ⇧ L" fest im Titel und in `aria-keyshortcuts`, sagte der
+     Schalter nach dem Umbelegen eine Taste an, die nichts mehr tat. Die
+     Schreibweise kommt als „Ctrl+Shift+L" und wird zweimal übersetzt: für
+     Vorleser („Control+Shift+L") und für Menschen („Strg ⇧ L"). */
+  const themaKuerzel = (): string => (typeof Aussehen !== 'undefined' ? Aussehen.kuerzelVon('hell') : 'Ctrl+Shift+L');
   const themaMarkieren = (): void => {
     const hell = document.documentElement.dataset.theme === 'light';
     const b = document.getElementById('studio-theme');
-    b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
-    if (b) b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+    if (!b) return;
+    b.setAttribute('aria-checked', String(!hell));
+    /* Am Pluszeichen nur trennen, wenn danach noch etwas kommt — sonst
+       zerfiele „Ctrl++" in drei Teile. */
+    const teile = themaKuerzel().split(/\+(?=.)/).filter(Boolean);
+    if (teile.length) b.setAttribute('aria-keyshortcuts', teile.map(t => (t === 'Ctrl' ? 'Control' : t)).join('+'));
+    else b.removeAttribute('aria-keyshortcuts');
+    const zeigen = teile.map(t => (t === 'Ctrl' ? 'Strg' : t === 'Shift' ? '⇧' : t)).join(' ');
+    b.title = (hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln') + (zeigen ? ' (' + zeigen + ')' : '');
   };
-  /** Hell ↔ Dunkel, mit dem gemerkten Schema je Grund. EIN Weg für den
-   *  Kreis im Studio-Kopf und die Kachel „Dunkel" (E712, §8). */
+  /** Hell ↔ Dunkel für das Gestirn und die Kachel „Dunkel" (E712). Die
+   *  Regel steht seit E727 EINMAL in `Aussehen.grundWechseln` — hier wird
+   *  nur weitergeleitet (§8). */
   const themaWechseln = (): void => {
-    const hell = document.documentElement.dataset.theme === 'light';
-    if (typeof Aussehen !== 'undefined') {
-      const aktuell = Aussehen.einstellung();
-      Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
-      const ziel = hell ? 'dark' : 'light';
-      const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
-      const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
-      Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
-    } else Einstellungen.S('theme', hell ? 'dark' : 'light');
+    if (typeof Aussehen !== 'undefined') Aussehen.grundWechseln();
+    else Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
     themaMarkieren();
   };
   const einstellen = (kompakt: boolean): void => {
@@ -134,6 +147,11 @@ const StudioSchale = (() => {
     });
     an('studio-theme', themaWechseln);
     new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    /* Titel und Kürzel erfährt ein Mensch beim Zeigen, ein Vorleser beim
+       Fokus — dort wird nachgefragt, damit ein eben umbelegtes Kürzel gilt. */
+    const gestirn = document.getElementById('studio-theme');
+    gestirn?.addEventListener('pointerenter', themaMarkieren);
+    gestirn?.addEventListener('focus', themaMarkieren);
     themaMarkieren();
     const divider = document.getElementById('studio-divider');
     /* Das Attribut folgt der gezeichneten Kante: EIN Beobachter deckt das

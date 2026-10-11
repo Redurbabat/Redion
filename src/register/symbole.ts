@@ -438,6 +438,12 @@ Register.symbole = (() => {
        der Mond für „Dunkel", der halbe Kreis für „Hoher Kontrast", die
        stillen Wellen für „Ruhige Darstellung". */
     moon:      '<path d="M19.6 14.6A7.9 7.9 0 0 1 9.4 4.4a7.9 7.9 0 1 0 10.2 10.2z"/>',
+    /* „Werkzeuge einblenden" im Studio-Kopf (E728): ein Rahmen mit dem
+       Streifen oben, in dem die Werkzeuge stehen — das Band, das der Knopf
+       holt. Bis E728 trug der Knopf `command` (⌘), und das heisst in Redion
+       „Befehle" (Navigation, R-Blatt): ein Bild, zwei Bedeutungen (§38). */
+    band:      '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M3 10h18"/>' +
+               '<path d="M7 6.9v.8M10.5 6.9v.8M14 6.9v.8"/>',
     contrast:  '<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4v17.2"/>' +
                '<path d="M12 6.2h5.2M12 9.1h7.6M12 12h8.4M12 14.9h7.6M12 17.8h5.2"/>',
     calm:      '<path d="M3.6 9c2.8-1.8 5.6-1.8 8.4 0s5.6 1.8 8.4 0"/>' +
