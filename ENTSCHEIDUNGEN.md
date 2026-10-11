@@ -65352,7 +65352,7 @@ Zeile; bei 320 px dasselbe mit einer 58-px-Linse.
    als die Linse gross ist, wird sie kleiner (`D = min(1,7 · Schrift auf
    48 bis 84 begrenzt, Platz)`); unter 40 px gibt es keine — lieber keine
    Linse als eine über der Schrift. Gemessen: bei 320 px Breite keine, ab
-   360 px 58 px (messungen.md §97).
+   360 px 58 px (messungen.md §99).
 3. **Die Fahrt bleibt.** P0 und P1 sind dieselben: die Linse fällt herein,
    gleitet zum Ende von „Aufmachen.“, wartet, gleitet über „Weiterdenken.“
    hinaus und hält rechts vom Punkt. Milchglas unterwegs, Brechung `FAHRT`

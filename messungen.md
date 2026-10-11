@@ -7884,7 +7884,7 @@ Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
 1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
 v1430.
 
-## §97 · Die Linse auf „Heute“ ruht neben dem Wort (E740, 11. Oktober 2026)
+## §99 · Die Linse auf „Heute“ ruht neben dem Wort (E740, 11. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/linse-neben-dem-wort` gegen 1575a183
 (`origin/main`). Chromium über einen eigenen Dateiserver (Port ≥ 9800 bzw.
