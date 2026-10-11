@@ -8505,7 +8505,10 @@ FI E738  N und N2 getrennt, Pol N–N2 = Lampenstrom, Zeigersumme < 1 mA, keine 
 
 `test608` 51/51, gegen den Übernahme-Commit ohne Auflöser 17/51; vier
 Gegenproben rot (Auflöser weg, Ort-Sperre weg, Nachziehen nach Namen, Name
-vor Ort). Was der Auflöser NICHT kann — eine ungebundene Leitung über der
+vor Ort). Seit der Durchsicht 69/69 mit §7 — der alte FI schon gedreht
+(90°) oder gespiegelt gespeichert; die fünfte Gegenprobe (die Netzliste gibt
+dem Auflöser Drehung 0, nicht gespiegelt) ist rot mit 59/69, „434.8 mA",
+„fi-loest-aus" (E738). Was der Auflöser NICHT kann — eine ungebundene Leitung über der
 neuen Lage einer Klemme — steht in L253.
 
 ---

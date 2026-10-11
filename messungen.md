@@ -7914,7 +7914,11 @@ untere Klemme war dort nicht erreichbar (`anschluesseVon` sucht die Lage
 **`test608` gegen die Stände** (unter dem Schloss, 1400 × 1000): Übernahme-
 Commit, erster Stand des Laufs 14/48; endgültiger Lauf gegen die Quellen
 ohne Auflöser 17/51; Ort-Sperre heraus 46/51; Nachziehen nach Namen 46/51;
-Name vor Ort 35/51; E738 51/51.
+Name vor Ort 35/51; E738 51/51. Nach der Durchsicht mit §7 (der alte FI
+schon gedreht oder gespiegelt gespeichert): 69/69; `netze()` gibt dem
+Auflöser Drehung 0 und nicht gespiegelt 59/69, nur Drehung 0 64/69, nur
+nicht gespiegelt 64/69 — rot jedes Mal nur §7, mit 434,8 mA und
+„fi-loest-aus" im gesunden Kreis.
 
 **Was der Bogen zeigt** (laufende Simulation, Plan aus Drehstromquelle,
 Klemmenbrett in Stern, FI mit Lampe, Übertrager mit Klingel und einem

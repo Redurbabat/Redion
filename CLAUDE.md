@@ -1908,7 +1908,10 @@ getrennt, keinen Fehlerstrom im gesunden Kreis, und nach Schieben, Drehen
 und Ziehen jedes Leitungsende auf der Klemme, die es meint. Gegen den
 Übernahme-Commit ohne Auflöser war er rot mit 14 von 48: die Leitung am
 Stecker fiel ab, am Schuko hingen L und N zusammen, und der gesunde
-Lampenkreis meldete „löst aus" mit 435 mA. Gezählt am 11. Oktober, im
+Lampenkreis meldete „löst aus" mit 435 mA. Seit der Durchsicht hält sein
+§7 auch den FI, der schon gedreht oder gespiegelt gespeichert ist — eine
+Netzliste, die dem Auflöser die Lage des Teils verschweigt, kam vorher mit
+51 von 51 durch. Gezählt am 11. Oktober, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 549 — auf seinem
 Zweig; beim Zusammenführen neu zu zählen.*
 

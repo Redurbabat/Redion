@@ -66150,6 +66150,23 @@ gespeichertem Namen (46/51 — „b4.von liegt bei 360,100, F1:N2 bei
 360,170"), im Auflöser der Name vor dem Ort (35/51 — „ist "N", soll
 "N2""). Wieder eingesetzt 51/51.
 
+**Nachgetragen in der Durchsicht (11. Oktober): §7, der alte FI schon
+gedreht oder gespiegelt gespeichert.** Die 51 Zusagen rechneten den alten
+FI nur ungedreht; gedreht wurde er nur in der Planfläche, und die Netze
+prüft §5 erst, wenn er wieder an seinem Platz steht. Eine Netzliste, die
+dem Auflöser die Lage des Teils verschweigt (`klemmeFuer(…, 0, false)`
+statt `t.drehung, t.gespiegelt`), kam deshalb mit 51 von 51 durch. §7
+lädt Plan B noch zweimal im alten Format — der FI 90° gedreht (Plan C)
+und gespiegelt (Plan D), die Leitungsenden an den gedrehten alten Orten —
+und verlangt über `Stromfluss.netze`/`rechne` dasselbe wie §3: N und N2
+zwei Netze, der Pol N–N2 führt den Lampenstrom, Zeigersumme unter 1 mA,
+keine fi-Meldung. Seither 69 Zusagen in sieben Abschnitten. **Fünfte
+Gegenprobe**, gefahren: Lage weg 59/69, rot nur in §7 — „gedreht (90°):
+die Zeigersumme durch den FI ist null (unter 1 mA) — 434.8 mA", „gemeldet:
+fi-loest-aus", dasselbe für „gespiegelt"; nur die Drehung weg 64/69 (rot
+nur „gedreht"), nur die Spiegelung weg 64/69 (rot nur „gespiegelt").
+Wieder eingesetzt 69/69.
+
 **Am Wächter geändert, bevor er grün wurde:** „N und N2 weiter zwei Netze"
 stand zuerst direkt nach dem DREHEN und blieb auch mit Auflöser rot. Die
 Sonde zeigte warum: Drehen führt ALLE Leitungen des Plans neu als Winkel

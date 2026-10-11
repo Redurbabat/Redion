@@ -565,7 +565,10 @@ const Stromfluss = (() => {
        vor E735 (alle vier Klemmenänderungen, Commit 64e7a43e6 — L252) trägt
        am Stecker `1`, am unteren Neutralleiter des FI `N` (heute N2), an
        Steckdose und Schuko `L` an der alten Stelle. Die Daten bleiben, wie
-       sie sind — übersetzt wird hier, beim Lesen. */
+       sie sind — übersetzt wird hier, beim Lesen. Drehung und Spiegelung
+       des Teils gehen mit: ein FI, der schon gedreht gespeichert ist, hat
+       seinen alten unteren Ort gedreht, und ohne sie hielte `klemmeFuer`
+       N und N2 nicht auseinander (`test608` §7). */
     const teilNach = new Map<string, any>();
     (plan.teile || []).forEach((t: any) => teilNach.set(String(t.id), t));
     const endeVon = (teil: string, nr: string, p: { x: number; y: number } | undefined):

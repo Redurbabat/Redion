@@ -38,10 +38,13 @@
  *   §4 Die gespeicherten Daten bleiben, wie sie sind
  *   §5 Schieben, Drehen, Ziehen: jedes Leitungsende auf der richtigen Klemme
  *   §6 Alle anderen Zeichen: der Auflöser ändert nichts
+ *   §7 Der alte FI, schon GEDREHT oder GESPIEGELT gespeichert: die Netze
  *
  * KANN DIESE SUITE ROT WERDEN? (§55.2) Ja: gegen den Übernahme-Commit ohne
  * Auflöser ist sie rot in §1, §2, §3 und §5 — die Zeilen stehen im
- * Commit „test608 (rot)".
+ * Commit „test608 (rot)". §7 kam mit der Durchsicht dazu und ist rot, wenn
+ * die Netzliste dem Auflöser die Lage des Teils verschweigt (Drehung 0,
+ * nicht gespiegelt) — die Zeilen stehen im Commit „test608 §7".
  *
  *   node pruefungen/lauf/test608.mts
  * ==========================================================================*/
@@ -125,6 +128,34 @@ const PLAENE = `
         L('b2', [[130, 160], [70, 160], [70, 30], [350, 30], [350, 100]], 'G1', 'N', 'F1', 'N'),
         L('b3', [[310, 170], [310, 240], [330, 240], [330, 300]], 'F1', '2', 'E1', 'X1'),
         L('b4', [[350, 170], [350, 400], [330, 400], [330, 360]], 'F1', 'N', 'E1', 'X2')
+      ] },
+    /* Plan B mit dem FI schon GEDREHT gespeichert (90°). Das ungedrehte
+       Zeichen ist 60 × 70, gedreht wird um die Mitte (30,35): aus (x,y)
+       wird (65 − y, x + 5). Die Eingänge 1, 3, N liegen damit rechts bei
+       x = 65 (y = 15, 35, 55), die Ausgänge 2, 4 und das alte untere „N"
+       links bei x = −5 (y = 15, 35, 55); das Teil steht bei (300,100). */
+    C: { art: 'stromlauf-aufgeloest', breite: 600, hoehe: 500, texte: [], ebenen,
+      teile: [T('G1', 'wechselspannung', 100, 100),
+              { ...T('F1', 'fi-schutzschalter', 300, 100), drehung: 90 },
+              T('E1', 'lampe', 300, 300)],
+      leitungen: [
+        L('c1', [[130, 100], [130, 40], [420, 40], [420, 115], [365, 115]], 'G1', 'L', 'F1', '1'),
+        L('c2', [[130, 160], [70, 160], [70, 20], [450, 20], [450, 155], [365, 155]], 'G1', 'N', 'F1', 'N'),
+        L('c3', [[295, 115], [240, 115], [240, 250], [330, 250], [330, 300]], 'F1', '2', 'E1', 'X1'),
+        L('c4', [[295, 155], [260, 155], [260, 420], [330, 420], [330, 360]], 'F1', 'N', 'E1', 'X2')
+      ] },
+    /* Und GESPIEGELT gespeichert (ungedreht): aus x wird 60 − x. Oben 1 bei
+       x = 50, 3 bei 30, N bei 10; unten 2 bei 50, 4 bei 30, das alte
+       untere „N" bei 10. */
+    D: { art: 'stromlauf-aufgeloest', breite: 600, hoehe: 500, texte: [], ebenen,
+      teile: [T('G1', 'wechselspannung', 100, 100),
+              { ...T('F1', 'fi-schutzschalter', 300, 100), gespiegelt: true },
+              T('E1', 'lampe', 300, 300)],
+      leitungen: [
+        L('d1', [[130, 100], [130, 40], [350, 40], [350, 100]], 'G1', 'L', 'F1', '1'),
+        L('d2', [[130, 160], [70, 160], [70, 20], [310, 20], [310, 100]], 'G1', 'N', 'F1', 'N'),
+        L('d3', [[350, 170], [350, 240], [330, 240], [330, 300]], 'F1', '2', 'E1', 'X1'),
+        L('d4', [[310, 170], [310, 400], [330, 400], [330, 360]], 'F1', 'N', 'E1', 'X2')
       ] }
   };`;
 
@@ -135,7 +166,11 @@ const SOLL_ENDEN: Record<string, { von?: [string, string]; nach?: [string, strin
   a3: { von: ['G1', 'L'], nach: ['X3', 'L'] }, a4: { von: ['G1', 'N'], nach: ['X4', 'L'] },
   a5: { nach: ['X5', 'L'] },                   a6: { von: ['G1', 'N'], nach: ['X6', 'L'] },
   b1: { von: ['G1', 'L'], nach: ['F1', '1'] }, b2: { von: ['G1', 'N'], nach: ['F1', 'N'] },
-  b3: { von: ['F1', '2'], nach: ['E1', 'X1'] }, b4: { von: ['F1', 'N2'], nach: ['E1', 'X2'] }
+  b3: { von: ['F1', '2'], nach: ['E1', 'X1'] }, b4: { von: ['F1', 'N2'], nach: ['E1', 'X2'] },
+  c1: { von: ['G1', 'L'], nach: ['F1', '1'] }, c2: { von: ['G1', 'N'], nach: ['F1', 'N'] },
+  c3: { von: ['F1', '2'], nach: ['E1', 'X1'] }, c4: { von: ['F1', 'N2'], nach: ['E1', 'X2'] },
+  d1: { von: ['G1', 'L'], nach: ['F1', '1'] }, d2: { von: ['G1', 'N'], nach: ['F1', 'N'] },
+  d3: { von: ['F1', '2'], nach: ['E1', 'X1'] }, d4: { von: ['F1', 'N2'], nach: ['E1', 'X2'] }
 };
 
 const browser = await chromium.launch();
@@ -482,6 +517,81 @@ if (rest) {
   p(`Jede heutige Klemme aller ${rest.anzahl} Zeichen löst zu sich selbst auf`,
     rest.abweichend.length === 0, rest.abweichend.slice(0, 6).join(' | '));
 } else weg += 2;
+
+/* ==========================================================================
+ * §7 · Der alte FI, schon gedreht oder gespiegelt gespeichert
+ * --------------------------------------------------------------------------
+ * §3 rechnet den alten FI nur UNGEDREHT; §5 dreht ihn in der Planfläche,
+ * prüft die Netze aber erst, wenn er wieder an seinem Platz steht — gleich
+ * nach dem Drehen führt das Nachziehen ALLE Leitungen neu und zapft N2 an
+ * (L253 Punkt 4, ein Befund über das Nachziehen, nicht über die Namen).
+ * Ob die Netzliste dem Auflöser die Lage des Teils mitgibt, sah damit
+ * niemand: `klemmeFuer(…, 0, false)` statt `(…, t.drehung, t.gespiegelt)`
+ * kam mit 51 von 51 durch.
+ *
+ * Darum hier ein Plan, der SO gespeichert wurde: der FI steht schon gedreht
+ * (Plan C, 90°) oder gespiegelt (Plan D) da, die untere Leitung trägt das
+ * alte „N", und ihr Ende liegt am GEDREHTEN alten unteren Ort. Kein Klick,
+ * kein Nachziehen — nur die Netzliste und die Rechnung, wie beim Öffnen.
+ * ========================================================================*/
+console.log('\n7 · Der alte FI, schon gedreht oder gespiegelt gespeichert');
+
+const SOLL_FI = ['E1:X1 F1:2', 'E1:X2 F1:N2', 'F1:1 G1:L', 'F1:3', 'F1:4', 'F1:N G1:N'].sort();
+const lagen = await seite.evaluate((soll: any) => {
+  const plaene = (window as any).altePlaene();
+  return (['C', 'D'] as const).map(w => {
+    const plan = plaene[w];
+    const teil = (tid: string) => (plan.teile as any[]).find(t => t.id === tid);
+    /* Erst der Plan selbst: liegt jedes Ende dort, wo die Klemme, die es
+       meint, im gedrehten Zeichen gezeichnet wird? Sonst prüfte §7 einen
+       Plan, den es so nie gegeben hat. */
+    const abw: string[] = [];
+    (plan.leitungen as any[]).forEach(l => {
+      const s = soll[l.id];
+      if (!s) return;
+      ([['von', s.von, l.punkte[0]], ['nach', s.nach, l.punkte[l.punkte.length - 1]]] as any[])
+        .forEach(([wo, ende, punkt]) => {
+          const o = Schaltplan.anschlussOrt(teil(ende[0]), ende[1]);
+          if (!o || o.x !== punkt.x || o.y !== punkt.y)
+            abw.push(`${l.id}.${wo} bei ${punkt.x},${punkt.y}, ${ende[0]}:${ende[1]} bei ${o ? o.x + ',' + o.y : '—'}`);
+        });
+    });
+    const f = teil('F1');
+    const unten = (plan.leitungen as any[]).find(l => l.id === w.toLowerCase() + '4');
+    const e = Stromfluss.rechne(plan, {});
+    const pole = (e.teilwerte && e.teilwerte.F1) || {};
+    let re = 0, im = 0;
+    Object.keys(pole).forEach(k => { re += pole[k].Ire; im += pole[k].Iim; });
+    return {
+      w, abw, drehung: f.drehung, gespiegelt: f.gespiegelt, untenNr: unten.vonNr,
+      gr: (window as any).gruppen(plan), ok: e.ok,
+      funde: (e.anschlussfehler || []).map((x: any) => x.art),
+      lampe: e.werte.E1 ? { fliesst: e.werte.E1.fliesst, I: e.werte.E1.Ibetrag } : null,
+      nPol: pole['N–N2'] ? pole['N–N2'].Ibetrag : null,
+      fehlstrom: Math.hypot(re, im)
+    };
+  });
+}, SOLL_ENDEN);
+for (const r of lagen) {
+  const wie = r.w === 'C' ? 'gedreht (90°)' : 'gespiegelt';
+  p(`${wie}: der FI steht wirklich so im Plan`,
+    r.w === 'C' ? (r.drehung === 90 && !r.gespiegelt) : (r.drehung === 0 && r.gespiegelt === true),
+    JSON.stringify({ drehung: r.drehung, gespiegelt: r.gespiegelt }));
+  p(`${wie}: jedes Leitungsende liegt auf der Klemme, die es meint — in der Lage des Teils`,
+    r.abw.length === 0, r.abw.join(' | '));
+  gleich(`${wie}: die untere Leitung trägt das alte „N"`, r.untenNr, 'N');
+  gleich(`${wie}: die Netze — N oben, N2 unten, jedes an seiner Leitung`, r.gr, SOLL_FI);
+  p(`${wie}: N und N2 sind ZWEI Netze`, !inNetz(r.gr, 'F1:N', 'F1:N2'), r.gr.join(' | '));
+  p(`${wie}: der Kreis rechnet, die Lampe leuchtet`, r.ok && !!r.lampe && r.lampe.fliesst,
+    JSON.stringify({ ok: r.ok, lampe: r.lampe }));
+  p(`${wie}: der Neutralleiter läuft durch den Pol N–N2 — derselbe Strom wie in der Lampe`,
+    r.nPol !== null && !!r.lampe && Math.abs(r.nPol - r.lampe.I) < 1e-6,
+    `Pol ${r.nPol} A, Lampe ${r.lampe ? r.lampe.I : '—'} A`);
+  p(`${wie}: die Zeigersumme durch den FI ist null (unter 1 mA)`, r.fehlstrom < 0.001,
+    `${(r.fehlstrom * 1000).toFixed(1)} mA`);
+  p(`${wie}: der gesunde Kreis meldet KEINEN Fehlerstrom`,
+    !r.funde.some((a: string) => /^fi-/.test(a)), 'gemeldet: ' + (r.funde.join(', ') || '(nichts)'));
+}
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 

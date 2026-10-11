@@ -33,7 +33,8 @@ GESCHLOSSEN), `messungen.md` §97, CLAUDE.md §30 (549 Läufe),
 
 **Prüfung:** `test604` 91/91, `test605` 51/51, `test606` 17/17, `test607`
 37/37, `test608` 51/51 (rot gegen den Übernahme-Commit; vier Gegenproben
-rot). Datei-Wächter 550 549 225 401 402 537 290 298 410 400 109 87 105 grün;
+rot), nach der Durchsicht 69/69 mit §7 (der FI schon gedreht oder
+gespiegelt gespeichert; fünfte Gegenprobe rot mit 59/69). Datei-Wächter 550 549 225 401 402 537 290 298 410 400 109 87 105 grün;
 Nachbarn 86 203 210 211 217 238 239 240 241 242 315 362 368 388 393 438 446
 464 471 477 480 565 567 576 580 596 601 grün. Start 1890 → 1904 KB gzip
 (`test388` §5, Decke 1950). Bilder vorher/nachher (Planfläche mit laufender
