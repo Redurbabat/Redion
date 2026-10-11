@@ -321,7 +321,10 @@
 
   /* NOTION-FARBEN IN OKLCH (E705): Schrift L 0,765 (Gelb 0,83), ≥ 5,9 auf
      jeder dunklen Fläche; Tönungen L 0,30, klar statt grau-oliv.
-     Gespeichert bleiben die Kennungen (`red`, `bg-red`). */
+     Gespeichert bleiben die Kennungen (`red`, `bg-red`).
+     AUSNAHME `--b-blue` (E742): L 0,296 statt 0,30 — wer die Tönungen neu
+     stimmt, setzt Blau NICHT stur auf 0,30 zurück (#133144), sonst ist der
+     Info-Streifen wieder die blasseste Meldung (test319). */
   --c-default: #e9e9e7;
   --c-gray:    #b4b3ae;
   --c-brown:   #d3a891;
@@ -339,7 +342,14 @@
   --b-orange:  #42260f;
   --b-yellow:  #372d0c;
   --b-green:   #173523;
-  --b-blue:    #133144;
+  /* BLAU EINE STUFE DUNKLER ALS DIE ANDEREN (E742). Bei gleicher
+     OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb —
+     mit #133144 (L 0,300) war `.banner.info` die blasseste der drei
+     Meldungen: 12,09 gegen warn 12,15 und fehler 12,41. #123043 nimmt
+     jedem Kanal eine Stufe, Ton und Buntheit bleiben (ΔE_OK 0,004,
+     L 0,296): 12,26 gegen 12,15 und 12,41. Kein Textkontrast auf dieser
+     Fläche sinkt; gemessen in allen zehn Schemata, messungen.md. */
+  --b-blue:    #123043;
   --b-purple:  #322745;
   --b-pink:    #422232;
   --b-red:     #462220;
@@ -4717,7 +4727,7 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
 /* `.banner.info` STEHT NICHT HIER, sondern in `bausteine.css`. Das ist
    kein Versehen, sondern eine Warnung an den Nächsten: `bausteine.css`
-   lädt nach dieser Datei (index.html Zeile 68 gegen 61), und beide
+   lädt nach dieser Datei (index.html Zeile 78 gegen 61), und beide
    Selektoren wären gleich stark. Eine `info`-Regel an dieser Stelle wäre
    tot — sie sähe richtig aus, änderte aber nichts. Genau das war der
    erste Wurf von E326, und gefunden hat es kein Prüflauf, sondern das
@@ -13629,7 +13639,13 @@ body > .ru-loesch{ z-index: 580; }
    kam auf 6.65, `fehler` auf 8.31; nur `info` war zu blass, und nur im
    Dunkeln: im hellen Thema gewinnt `html[data-theme="light"] .banner`
    mit seiner höheren Stärke und setzt ohnehin `#37352f`. Mit `--text`
-   sind es 8.30:1, gleichauf mit den anderen beiden.
+   waren es damals 8.30:1, gleichauf mit den anderen beiden.
+
+   HEUTE (11. Oktober 2026, E742), mit den Tönungen aus E705: im
+   Standard-Schema info 12.26, warn 12.15, fehler 12.41 — `info` ist nicht
+   die blasseste, weil `--b-blue` in dunkel.css eine Stufe dunkler steht
+   als die übrigen Tönungen. Mit #133144 waren es 12.09 und test319 rot.
+   Alle zehn Schemata stehen in messungen.md.
 
    Die Zeile steht ZWEIMAL. Das war schon so; beide werden gepflegt,
    damit nicht die zweite die erste still überstimmt. Gelöscht wird hier
@@ -27525,7 +27541,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1455, inhalt: '98de1f84a2f425c9', gebaut: '2026-10-11T09:19:07.259Z' };
+const Stand = { fassung: 1456, inhalt: '2581fcf448f30d8d', gebaut: '2026-10-11T13:32:33.493Z' };
 window.Stand = Stand;
 
 </script>

@@ -194,7 +194,10 @@
 
   /* NOTION-FARBEN IN OKLCH (E705): Schrift L 0,765 (Gelb 0,83), ≥ 5,9 auf
      jeder dunklen Fläche; Tönungen L 0,30, klar statt grau-oliv.
-     Gespeichert bleiben die Kennungen (`red`, `bg-red`). */
+     Gespeichert bleiben die Kennungen (`red`, `bg-red`).
+     AUSNAHME `--b-blue` (E742): L 0,296 statt 0,30 — wer die Tönungen neu
+     stimmt, setzt Blau NICHT stur auf 0,30 zurück (#133144), sonst ist der
+     Info-Streifen wieder die blasseste Meldung (test319). */
   --c-default: #e9e9e7;
   --c-gray:    #b4b3ae;
   --c-brown:   #d3a891;
@@ -212,7 +215,14 @@
   --b-orange:  #42260f;
   --b-yellow:  #372d0c;
   --b-green:   #173523;
-  --b-blue:    #133144;
+  /* BLAU EINE STUFE DUNKLER ALS DIE ANDEREN (E742). Bei gleicher
+     OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb —
+     mit #133144 (L 0,300) war `.banner.info` die blasseste der drei
+     Meldungen: 12,09 gegen warn 12,15 und fehler 12,41. #123043 nimmt
+     jedem Kanal eine Stufe, Ton und Buntheit bleiben (ΔE_OK 0,004,
+     L 0,296): 12,26 gegen 12,15 und 12,41. Kein Textkontrast auf dieser
+     Fläche sinkt; gemessen in allen zehn Schemata, messungen.md. */
+  --b-blue:    #123043;
   --b-purple:  #322745;
   --b-pink:    #422232;
   --b-red:     #462220;
