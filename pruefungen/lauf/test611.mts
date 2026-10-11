@@ -35,9 +35,10 @@
  *      N2"), Spiegeln, Ziehen — und der gespeicherte alte Name bleibt
  *   §7 Die Regel im Modell ist die der Netzliste (`Schaltplan.kontakte`)
  *   §8 Rückgängig nach dem Drehen gibt den Plan Byte für Byte zurück
+ *   §9 Gibt es keinen sauberen Weg, sagt die Fläche es — und nur dann
  *
  * KANN DIESE SUITE ROT WERDEN? (§55.2) Ja — gegen 97d156b03 ist sie rot in
- * §1, §2, §3, §5, §6 und §7; die Zahl steht in E746. Die zwei Gegenproben
+ * §1, §2, §3, §4, §5, §6, §7 und §9; die Zahl steht in E746. Die zwei Gegenproben
  * (wieder alle Leitungen neu führen; die Prüfung gegen das Anzapfen
  * herausnehmen) stehen ebenfalls dort.
  *
@@ -51,6 +52,7 @@ import path from 'node:path';
 
 declare const Store: any; declare const App: any;
 declare const Schaltplan: any; declare const Stromfluss: any; declare const Register: any;
+declare const UI: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 
@@ -129,7 +131,13 @@ const PLAENE = `
         L('b2', [[130, 160], [70, 160], [70, 30], [350, 30], [350, 100]], 'G1', 'N', 'F1', 'N'),
         L('b3', [[310, 170], [310, 240], [330, 240], [330, 300]], 'F1', '2', 'E1', 'X1'),
         L('b4', [[350, 170], [350, 400], [330, 400], [330, 360]], 'F1', 'N', 'E1', 'X2')
-      ] }
+      ] },
+    /* Zwei Lampen übereinander: E1:X2 bei (130,160), E2:X1 bei (130,200).
+       Vier Raster nach unten, und E1:X2 liegt AUF E2:X1 — dann gibt es
+       keinen Weg für p1, der E2:X1 nicht berührt (§9). */
+    P: { art: 'stromlauf-aufgeloest', breite: 400, hoehe: 400, texte: [], ebenen,
+      teile: [T('E1', 'lampe', 100, 100), T('E2', 'lampe', 100, 200)],
+      leitungen: [L('p1', [[130, 160], [300, 160]], 'E1', 'X2')] }
   };`;
 
 /* Welche HEUTIGE Klemme jedes Ende meint. In W ist das der gespeicherte
@@ -155,6 +163,10 @@ await seite.evaluate((quelle: string) => {
   const w = window as any;
   // eslint-disable-next-line no-new-func
   w.plaene = new Function(quelle);
+  /* Jede Meldung mitschreiben — §9 fragt, ob das Nachziehen etwas gemeldet hat. */
+  w.meldungen = [] as string[];
+  const toast = UI.toast.bind(UI);
+  UI.toast = (...a: any[]) => { w.meldungen.push(String(a[0])); return toast(...a); };
 
   /** Welche Klemmen fasst eine Leitung? Die Netzliste selbst sagt es — mit
       der Leitung ALLEIN im Plan, damit kein Nachbar mitzählt. */
@@ -231,7 +243,7 @@ await seite.evaluate((quelle: string) => {
 
 const NAH = await seite.evaluate(() => Register.fachzeichen.NAH as number);
 
-const oeffne = async (welcher: 'W' | 'B'): Promise<string> => {
+const oeffne = async (welcher: 'W' | 'B' | 'P'): Promise<string> => {
   const id = await seite.evaluate(async (wer: string) => {
     const plan = (window as any).plaene()[wer];
     const s = Store.addPage(null, { text: 'Plan ' + wer });
@@ -499,6 +511,35 @@ if (regel) {
   p('… und die Leitung, die auf ihr endet, berührt sie', regel.probe.leitungen.includes('q2'),
     JSON.stringify(regel.probe.leitungen));
 } else { weg += 3; console.log('  ✗ (3 Zusagen übersprungen — es gibt kein Schaltplan.kontakte)'); }
+
+/* ==========================================================================
+ * §9 · Gibt es keinen sauberen Weg, sagt die Fläche es
+ * --------------------------------------------------------------------------
+ * Wer ein Teil so hinstellt, dass die Klemme, an der eine Leitung hängt, auf
+ * einer fremden Klemme liegt, verbindet beide — kein Weg kann das ändern,
+ * denn das Ende selbst liegt dort. Das ist die Lage, nicht das Nachziehen;
+ * aber die Netzliste ändert sich, und das darf nicht still geschehen (§35).
+ * Und umgekehrt: bei allen Handlungen oben (§1–§6) gab es einen Weg, also
+ * auch keine Meldung — sonst wäre die Meldung ein Rauschen, das niemand
+ * mehr liest.
+ * ========================================================================*/
+console.log('\n9 · Gibt es keinen sauberen Weg, sagt die Fläche es');
+const vorP: string[] = await seite.evaluate(() => (window as any).meldungen.slice());
+p('§1–§6: kein einziges Mal „liess sich nicht nachziehen"',
+  !vorP.some(m => /nachziehen/.test(m)), vorP.join(' | '));
+const blockP = await oeffne('P');
+await seite.waitForTimeout(300);
+await waehle('E1');
+for (let i = 0; i < 3; i++) await taste('ArrowDown');
+const nachDrei: string[] = await seite.evaluate(() => (window as any).meldungen.slice());
+p('Drei Raster nach unten: p1 findet einen Weg, keine Meldung',
+  nachDrei.length === vorP.length, nachDrei.slice(vorP.length).join(' | '));
+await taste('ArrowDown');
+const nachVier: string[] = await seite.evaluate(() => (window as any).meldungen.slice());
+p('Das vierte Raster legt E1:X2 auf E2:X1 — und die Fläche meldet es',
+  nachVier.slice(nachDrei.length).some(m => /nachziehen/.test(m)), nachVier.slice(nachDrei.length).join(' | ') || '(keine Meldung)');
+const abwP: string[] = await seite.evaluate((b: string) => (window as any).endenAbweichend(b, {}), blockP);
+p('… und p1 hängt weiter an E1:X2', abwP.length === 0, abwP.join(' | '));
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 

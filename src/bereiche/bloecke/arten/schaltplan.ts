@@ -374,8 +374,13 @@ const Schaltplan = (() => {
    *      beide Enden geblieben sind · der alte Weg mit nachgerückten
    *      Endstücken (so bleibt eine gezeichnete Führung erhalten) · der
    *      Winkel wie bisher (`rechtwinklig`) · der andere Winkel · Z-Wege
-   *      über das Raster, die kürzesten zuerst, dann die nächsten zur Mitte.
-   *      Der erste, der passt, gilt.
+   *      über das Raster, die kürzesten zuerst, dann die nächsten zur Mitte ·
+   *      Hakenwege mit vier Strecken. Der erste, der passt UND durch kein
+   *      Zeichen läuft, gilt; läuft jeder passende durch ein Zeichen, der
+   *      erste passende. (Eine Leitung quer durch die Lampe sah nach dem
+   *      Drehen des FI aus, als hinge sie an ihr — das Bild hat es gezeigt,
+   *      nicht die Netzliste.) Der alte Weg selbst gilt immer, wenn er passt:
+   *      was der Mensch so gezeichnet hat, bleibt.
    *   3. Passt keiner, gilt der erste, der nichts NEUES berührt (Stufe 2 —
    *      er verliert höchstens eine Berührung, die es vorher gab). Geht auch
    *      das nicht, weil schon das Ende neben einer fremden Klemme liegt,
@@ -645,6 +650,39 @@ const Schaltplan = (() => {
     return liste.map(e => e.weg);
   };
 
+  /**
+   * Die Kästen der Zeichen, gedreht wie gezeichnet (um die Mitte des
+   * ungedrehten Zeichens, wie `anschlussLage` dreht), um einen Punkt nach
+   * innen verkleinert: ein Weg, der eine Klemme am Rand anfährt oder an der
+   * Kante entlangläuft, liegt nicht DARIN.
+   */
+  type Kasten = { x1: number; y1: number; x2: number; y2: number };
+  const kaesten = (plan: Plan): Kasten[] => {
+    if (typeof Register === 'undefined' || !Register.fachzeichen) return [];
+    const raus: Kasten[] = [];
+    plan.teile.forEach(t => {
+      const z = Register.fachzeichen.holen(t.zeichen);
+      if (!z) return;
+      const m = Register.fachzeichen.masse(t.zeichen, t.drehung);
+      const cx = t.x + z.w / 2, cy = t.y + z.h / 2;
+      raus.push({ x1: cx - m.w / 2 + 1, y1: cy - m.h / 2 + 1, x2: cx + m.w / 2 - 1, y2: cy + m.h / 2 - 1 });
+    });
+    return raus;
+  };
+  /** Läuft ein Weg mitten durch ein Zeichen? */
+  const durchZeichen = (w: Punkt[], ks: Kasten[]): boolean => {
+    for (let i = 0; i + 1 < w.length; i++) {
+      const a = w[i]!, b = w[i + 1]!;
+      const xa = Math.min(a.x, b.x), xb = Math.max(a.x, b.x);
+      const ya = Math.min(a.y, b.y), yb = Math.max(a.y, b.y);
+      for (const k of ks) {
+        if (a.y === b.y ? (a.y > k.y1 && a.y < k.y2 && Math.max(xa, k.x1) < Math.min(xb, k.x2))
+                        : (a.x > k.x1 && a.x < k.x2 && Math.max(ya, k.y1) < Math.min(yb, k.y2))) return true;
+      }
+    }
+    return false;
+  };
+
   /** Je neu geführte Leitung: welche Stufe (1 passt genau, 2 nichts Neues, 3 am wenigsten Neues). */
   type Bericht = Array<{ id: string; stufe: 1 | 2 | 3 }>;
 
@@ -698,6 +736,7 @@ const Schaltplan = (() => {
            offene prüft ihrerseits gegen diese hier, wenn sie dran ist — so
            wird jedes Paar genau einmal verglichen. */
     const orte = klemmorte(plan);
+    const ks = kaesten(plan);
     const offen = new Set(auftrag.map(x => x.l.id));
     const breite = Number(plan.breite) || 1000, hoehe = Number(plan.hoehe) || 700;
     const bericht: Bericht = [];
@@ -725,35 +764,43 @@ const Schaltplan = (() => {
         return false;
       };
       const probiert = new Set<string>();
-      const probiere = (w: Punkt[] | null): boolean => {
+      const neu = (w: Punkt[] | null): w is Punkt[] => {
         if (!w || w.length < 2) return false;
         const s = JSON.stringify(w);
         if (probiert.has(s)) return false;
         probiert.add(s);
-        return passt(w);
+        return true;
       };
+      /* Passt ein Weg, gilt er, wenn er durch kein Zeichen läuft. Läuft er
+         durch eines, wird er gemerkt (`notfalls`) und weitergesucht. */
       let gewaehlt: Punkt[] | null = null;
+      let notfalls: Punkt[] | null = null;
+      const nimm = (w: Punkt[]): boolean => {
+        if (!durchZeichen(w, ks)) { gewaehlt = w; return true; }
+        if (!notfalls) notfalls = w;
+        return false;
+      };
+      const unveraendert = gleicherPunkt(a, alt[0]!) && gleicherPunkt(b, alt[alt.length - 1]!);
+      if (unveraendert && neu(alt) && passt(alt)) gewaehlt = alt;
       const zuerst: Array<Punkt[] | null> = [
-        gleicherPunkt(a, alt[0]!) && gleicherPunkt(b, alt[alt.length - 1]!) ? alt : null,
-        gleitend(alt, a, b),
-        ohneDoppel(rechtwinklig(a, b)),
-        andererWinkel(a, b)
-      ];
-      for (const w of zuerst) if (probiere(w)) { gewaehlt = w; break; }
-      if (!gewaehlt) for (const w of zWege(a, b, breite, hoehe)) if (probiere(w)) { gewaehlt = w; break; }
+        gleitend(alt, a, b), ohneDoppel(rechtwinklig(a, b)), andererWinkel(a, b)];
+      if (!gewaehlt) for (const w of zuerst) if (neu(w) && passt(w) && nimm(w)) break;
+      if (!gewaehlt) for (const w of zWege(a, b, breite, hoehe)) if (neu(w) && passt(w) && nimm(w)) break;
       /* Die Hakenwege sind viele: hier zählt nur, ob einer GENAU passt, und
          wer etwas Neues streift, ist nach der ersten fremden Klemme draussen. */
       if (!gewaehlt) {
         const erlaubt = { klemmen: vorK, leitungen: vorL };
         for (const w of hakenWege(a, b, breite, hoehe)) {
+          if (!neu(w)) continue;
           const k = pruefeBeruehrung(plan, l, w, orte, fertig, erlaubt);
           if (!k) continue;
           const fehlt = vor.klemmen.some(x => !k.klemmen.includes(x))
             || fertig.some(m => vorL.has(m.id) && !k.leitungen.includes(m.id));
-          if (!fehlt) { gewaehlt = w; break; }
+          if (!fehlt) { if (nimm(w)) break; continue; }
           if (!wahl.zweit) wahl.zweit = w;
         }
       }
+      if (!gewaehlt && notfalls) gewaehlt = notfalls;
       let stufe: 1 | 2 | 3 = 1;
       if (!gewaehlt) {
         stufe = wahl.zweit ? 2 : 3;

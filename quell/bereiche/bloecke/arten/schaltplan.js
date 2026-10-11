@@ -353,6 +353,33 @@ const Schaltplan = (() => {
             || p.x - q.x || p.y - q.y);
         return liste.map(e => e.weg);
     };
+    const kaesten = (plan) => {
+        if (typeof Register === 'undefined' || !Register.fachzeichen)
+            return [];
+        const raus = [];
+        plan.teile.forEach(t => {
+            const z = Register.fachzeichen.holen(t.zeichen);
+            if (!z)
+                return;
+            const m = Register.fachzeichen.masse(t.zeichen, t.drehung);
+            const cx = t.x + z.w / 2, cy = t.y + z.h / 2;
+            raus.push({ x1: cx - m.w / 2 + 1, y1: cy - m.h / 2 + 1, x2: cx + m.w / 2 - 1, y2: cy + m.h / 2 - 1 });
+        });
+        return raus;
+    };
+    const durchZeichen = (w, ks) => {
+        for (let i = 0; i + 1 < w.length; i++) {
+            const a = w[i], b = w[i + 1];
+            const xa = Math.min(a.x, b.x), xb = Math.max(a.x, b.x);
+            const ya = Math.min(a.y, b.y), yb = Math.max(a.y, b.y);
+            for (const k of ks) {
+                if (a.y === b.y ? (a.y > k.y1 && a.y < k.y2 && Math.max(xa, k.x1) < Math.min(xb, k.x2))
+                    : (a.x > k.x1 && a.x < k.x2 && Math.max(ya, k.y1) < Math.min(yb, k.y2)))
+                    return true;
+            }
+        }
+        return false;
+    };
     const nachziehen = (plan, vorher, teile, wie = {}) => {
         if (wie.vonVorn)
             plan.leitungen.forEach(l => {
@@ -388,6 +415,7 @@ const Schaltplan = (() => {
             auftrag.push({ l, a, b });
         });
         const orte = klemmorte(plan);
+        const ks = kaesten(plan);
         const offen = new Set(auftrag.map(x => x.l.id));
         const breite = Number(plan.breite) || 1000, hoehe = Number(plan.hoehe) || 700;
         const bericht = [];
@@ -419,49 +447,61 @@ const Schaltplan = (() => {
                 return false;
             };
             const probiert = new Set();
-            const probiere = (w) => {
+            const neu = (w) => {
                 if (!w || w.length < 2)
                     return false;
                 const s = JSON.stringify(w);
                 if (probiert.has(s))
                     return false;
                 probiert.add(s);
-                return passt(w);
+                return true;
             };
             let gewaehlt = null;
-            const zuerst = [
-                gleicherPunkt(a, alt[0]) && gleicherPunkt(b, alt[alt.length - 1]) ? alt : null,
-                gleitend(alt, a, b),
-                ohneDoppel(rechtwinklig(a, b)),
-                andererWinkel(a, b)
-            ];
-            for (const w of zuerst)
-                if (probiere(w)) {
+            let notfalls = null;
+            const nimm = (w) => {
+                if (!durchZeichen(w, ks)) {
                     gewaehlt = w;
-                    break;
+                    return true;
                 }
+                if (!notfalls)
+                    notfalls = w;
+                return false;
+            };
+            const unveraendert = gleicherPunkt(a, alt[0]) && gleicherPunkt(b, alt[alt.length - 1]);
+            if (unveraendert && neu(alt) && passt(alt))
+                gewaehlt = alt;
+            const zuerst = [
+                gleitend(alt, a, b), ohneDoppel(rechtwinklig(a, b)), andererWinkel(a, b)
+            ];
+            if (!gewaehlt)
+                for (const w of zuerst)
+                    if (neu(w) && passt(w) && nimm(w))
+                        break;
             if (!gewaehlt)
                 for (const w of zWege(a, b, breite, hoehe))
-                    if (probiere(w)) {
-                        gewaehlt = w;
+                    if (neu(w) && passt(w) && nimm(w))
                         break;
-                    }
             if (!gewaehlt) {
                 const erlaubt = { klemmen: vorK, leitungen: vorL };
                 for (const w of hakenWege(a, b, breite, hoehe)) {
+                    if (!neu(w))
+                        continue;
                     const k = pruefeBeruehrung(plan, l, w, orte, fertig, erlaubt);
                     if (!k)
                         continue;
                     const fehlt = vor.klemmen.some(x => !k.klemmen.includes(x))
                         || fertig.some(m => vorL.has(m.id) && !k.leitungen.includes(m.id));
                     if (!fehlt) {
-                        gewaehlt = w;
-                        break;
+                        if (nimm(w))
+                            break;
+                        continue;
                     }
                     if (!wahl.zweit)
                         wahl.zweit = w;
                 }
             }
+            if (!gewaehlt && notfalls)
+                gewaehlt = notfalls;
             let stufe = 1;
             if (!gewaehlt) {
                 stufe = wahl.zweit ? 2 : 3;
