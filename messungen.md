@@ -7884,7 +7884,7 @@ Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
 1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
 v1430.
 
-## §97 · Die Vorlage „Dark (2017–2020)": Startgewicht, Einzeldatei, sechs Schaubilder (E739, 11. Oktober 2026)
+## §98 · Die Vorlage „Dark (2017–2020)": Startgewicht, Einzeldatei, sechs Schaubilder (E739, 11. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/dark-fach` gegen `origin/main` (1575a1835).
 Startgewicht aus `test388` §5 (Chromium über einen kleinen Server mit gzip

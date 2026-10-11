@@ -9728,7 +9728,7 @@ Decke seit E688 auf 2850, und diese Lücke bleibt offen.
 > beim Einsetzen. Gemessen (gzip Stufe 6 wie `test388`): `nin-quiz.js`
 > 11 537, `staatskunde-inhalt.js` 6 369, `dark-dossier.js` 14 538 Bytes —
 > zusammen rund 31,7 KB. `test388` §5: 1890 KB über 254 Dateien vorher,
-> 1904 KB über 255 nachher, die Decke steht auf 1950 (`messungen.md` §97).
+> 1904 KB über 255 nachher, die Decke steht auf 1950 (`messungen.md` §98).
 > Nachladen wurde für die eine Vorlage bewusst NICHT gebaut: es änderte
 > den Vertrag von `Register.vorlagen` (§8), und das ist genau die Frage
 > unten — sie gehört Redur für alle drei, nicht einem Bogen für einen.

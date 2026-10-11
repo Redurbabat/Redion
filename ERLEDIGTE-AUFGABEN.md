@@ -35,7 +35,7 @@ rot (Skriptzeile heraus 3/15, Klammern roh 20/24, `&` roh 23/24). Grün:
 die falsche Antwort meist zuletzt" — eine Stichprobe von zwanzig
 Ankreuzkarten, die Dark-Karten liegen in dem Lauf gar nicht vor), danach
 dreimal 39/39. Einzeldatei 9 545 743 → 9 589 468 Bytes. Messung
-`messungen.md` §97. Bilder vorher (Zeitlinie, Quellen) und nachher
+`messungen.md` §98. Bilder vorher (Zeitlinie, Quellen) und nachher
 (Wurzel mit Titelbild, Zeitlinie, Familien-Schaubild, Lernkarten,
 Quellen), Rechner 1440 × 900 und Telefon 390 × 844, hell und dunkel,
 ohne Seitenfehler — nicht im Verzeichnis (§55.4).

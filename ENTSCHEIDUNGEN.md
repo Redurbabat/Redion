@@ -65386,7 +65386,7 @@ beantworten, hiesse für ihn zu entscheiden. (b) **Ein persönlicher
 nicht sichtbar für andere Nutzer, aber auch keine Vorlage — Redur müsste
 das Fach auf jedem Gerät einspielen. Er hat zu „eingebaut" Ja gesagt.
 
-**Was es kostet** (gemessen, `messungen.md` §97). `test388` §5: der Start
+**Was es kostet** (gemessen, `messungen.md` §98). `test388` §5: der Start
 holt vorher 1890 KB gzip über 254 Dateien, nachher 1904 KB über 255 — die
 Decke steht auf 1950 KB, Luft bleiben 46 KB. `dark-dossier.js` hat 43 649
 Bytes, 14 538 gzip (Stufe 6, wie `test388`). Die Einzeldatei wächst von
