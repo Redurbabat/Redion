@@ -33,7 +33,7 @@ const StudioSchale = (() => {
         document.body.style.setProperty('--studio-nav-expanded', breite + 'px');
         return breite;
     };
-    const gezeichnet = () => Math.round(document.getElementById('kante')?.getBoundingClientRect().width || 0);
+    const gezeichnet = () => Math.round(Kontextkante.wurzel()?.getBoundingClientRect().width || 0);
     const ariaNachziehen = () => {
         const divider = document.getElementById('studio-divider');
         const breite = gezeichnet();
@@ -129,7 +129,7 @@ const StudioSchale = (() => {
         gestirn?.addEventListener('focus', themaMarkieren);
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
-        const kante = document.getElementById('kante');
+        const kante = Kontextkante.wurzel();
         if (kante && typeof ResizeObserver !== 'undefined')
             new ResizeObserver(ariaNachziehen).observe(kante);
         ariaNachziehen();

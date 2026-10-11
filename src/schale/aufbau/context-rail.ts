@@ -841,7 +841,11 @@ const Kontextkante = (() => {
 
   return { binde, zeichne, schalten, ladeSchalten, bereichJetzt,
            ladeZu: () => { baumZurueck(); ladeZu(); },
-           offen: () => !!offenerKnopf };
+           offen: () => !!offenerKnopf,
+           /* Die Kante selbst, für wen sie misst (der Griff im Studio,
+              E716). Den Namen `kante` kennt nur diese Datei — wer ihn
+              abschreibt, schreibt eine zweite Wahrheit (§8, test274). */
+           wurzel: (): HTMLElement | null => document.getElementById(WURZEL) };
 })();
 
 (window as any).Kontextkante = Kontextkante;

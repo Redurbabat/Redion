@@ -40,7 +40,7 @@ const StudioSchale = (() => {
    *  Prüfung, die das Attribut liest, das der Griff selbst schreibt, misst
    *  den Griff und nicht seine Wirkung (E716). */
   const gezeichnet = (): number =>
-    Math.round(document.getElementById('kante')?.getBoundingClientRect().width || 0);
+    Math.round(Kontextkante.wurzel()?.getBoundingClientRect().width || 0);
   /** Das Attribut sagt, was zu sehen ist: auch im Band 761–1100 px (156)
    *  und nach dem Zurücksetzen. Kompakt (62) und unsichtbar bleibt der
    *  letzte Wert der offenen Navigation stehen — 62 läge unter
@@ -157,7 +157,7 @@ const StudioSchale = (() => {
     /* Das Attribut folgt der gezeichneten Kante: EIN Beobachter deckt das
        Ziehen, das Band 761–1100, kompakt und das Zurücksetzen. Er läuft nach
        dem Layout, liest also keine Breite mitten im Ziehen nach (E716). */
-    const kante = document.getElementById('kante');
+    const kante = Kontextkante.wurzel();
     if (kante && typeof ResizeObserver !== 'undefined') new ResizeObserver(ariaNachziehen).observe(kante);
     ariaNachziehen();
     /* Ein Zug: Zeiger, Anfangspunkt und -breite, was vorher am body stand

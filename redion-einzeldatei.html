@@ -27525,7 +27525,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1449, inhalt: 'bf8d95e720715d3a', gebaut: '2026-10-11T03:35:43.723Z' };
+const Stand = { fassung: 1451, inhalt: 'df6e41b6d2b05071', gebaut: '2026-10-11T03:49:41.684Z' };
 window.Stand = Stand;
 
 </script>
@@ -148346,7 +148346,8 @@ const Kontextkante = (() => {
     };
     return { binde, zeichne, schalten, ladeSchalten, bereichJetzt,
         ladeZu: () => { baumZurueck(); ladeZu(); },
-        offen: () => !!offenerKnopf };
+        offen: () => !!offenerKnopf,
+        wurzel: () => document.getElementById(WURZEL) };
 })();
 window.Kontextkante = Kontextkante;
 
@@ -148388,7 +148389,7 @@ const StudioSchale = (() => {
         document.body.style.setProperty('--studio-nav-expanded', breite + 'px');
         return breite;
     };
-    const gezeichnet = () => Math.round(document.getElementById('kante')?.getBoundingClientRect().width || 0);
+    const gezeichnet = () => Math.round(Kontextkante.wurzel()?.getBoundingClientRect().width || 0);
     const ariaNachziehen = () => {
         const divider = document.getElementById('studio-divider');
         const breite = gezeichnet();
@@ -148484,7 +148485,7 @@ const StudioSchale = (() => {
         gestirn?.addEventListener('focus', themaMarkieren);
         themaMarkieren();
         const divider = document.getElementById('studio-divider');
-        const kante = document.getElementById('kante');
+        const kante = Kontextkante.wurzel();
         if (kante && typeof ResizeObserver !== 'undefined')
             new ResizeObserver(ariaNachziehen).observe(kante);
         ariaNachziehen();

@@ -567,6 +567,7 @@ const Kontextkante = (() => {
     };
     return { binde, zeichne, schalten, ladeSchalten, bereichJetzt,
         ladeZu: () => { baumZurueck(); ladeZu(); },
-        offen: () => !!offenerKnopf };
+        offen: () => !!offenerKnopf,
+        wurzel: () => document.getElementById(WURZEL) };
 })();
 window.Kontextkante = Kontextkante;
