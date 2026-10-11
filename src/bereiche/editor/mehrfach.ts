@@ -86,7 +86,17 @@ const Mehrfach = (() => {
       if (e.key === 'Backspace' || e.key === 'Delete') {
         e.preventDefault();
         Verlauf.merke(true);
-        ids().forEach(id => { Store.trashBlock(id); Store.purgeBlock(id); });
+        /* In den Papierkorb, nicht weg (E718): hier stand
+           `trashBlock` + `purgeBlock`, und eine ausgewählte Unterseite war
+           samt ihren Kindern endgültig fort — während das Blockmenü daneben
+           „In den Papierkorb  Del" verspricht. Ein Block allein bekommt die
+           Meldung mit „Rückgängig" aus der Schale, mehrere eine Zählung. */
+        const liste = ids();
+        if (liste.length === 1) App.inPapierkorb(Store.getBlock(liste[0]));
+        else {
+          const n = liste.filter(id => App.inPapierkorb(Store.getBlock(id), { ruhig: true })).length;
+          if (n) UI.toast(n + (n === 1 ? ' Block liegt' : ' Blöcke liegen') + ' im Papierkorb');
+        }
         leeren(); App.zeichneSeite();
         return;
       }

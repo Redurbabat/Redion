@@ -4548,9 +4548,12 @@ const Datenbank = (() => {
       if (a === 'komm') Kommentare.panel(row.id);
       if (a === 'eigen') { zeilePeek(row, coll); }
       if (a === 'voll') { danach && danach(); App.oeffne(row.id); }
+      /* EIN Umbenennen (E718): leer, Steuerzeichen und ein gleicher Titel
+         in derselben Datenbank werden so behandelt wie überall. Die
+         Ansicht zeichnet danach sich selbst — eine Zeile hängt an der
+         Sammlung, nicht an der offenen Seite. */
       if (a === 'rename') {
-        const n = await UI.frage('Neuer Titel', row.text || '');
-        if (n !== null) { Store.updateBlock(row.id, { text: n }); App.zeichneSeite(); }
+        if (await App.umbenennen(row, anker, 'Neuer Titel')) App.zeichneSeite();
       }
       if (a === 'dup') {
         const kopie = Store.addRow(coll.id, JSON.parse(JSON.stringify(row.props || {})));
@@ -6846,7 +6849,7 @@ const Datenbank = (() => {
           `<span class="ms">${Vorrat.aktiv(coll.id) ? 'an' : 'aus'}</span></button>` : '') +
       (typeof Feldrechte !== 'undefined'
         ? '<button data-a="feldrechte"><span class="mi">🔒</span>Rechte je Spalte</button>' : '') +
-      '<hr><button data-a="del"><span class="mi">🗑</span>Datenbank löschen</button>',
+      '<hr><button data-a="del"><span class="mi">🗑</span>In den Papierkorb</button>',
       r.left - 120, r.bottom + 4);
 
     m.addEventListener('click', e => {
@@ -7024,12 +7027,12 @@ const Datenbank = (() => {
           (e instanceof Error ? e.message : String(e)))); }
       if (a === 'csvin') csvImport(coll);
       if (a === 'ai')  KI.datenbankAuswerten(coll, view);
-      if (a === 'del') {
-        if (!confirm(`Datenbank „${coll.name}" mit allen Einträgen löschen?`)) return;
-        Store.trashBlock(block.id);
-        Store.purgeBlock(block.id);
-        App.zeichneSeite();
-      }
+      /* In den Papierkorb, nicht weg (E718). Hier stand „Datenbank löschen"
+         mit einem `confirm()` und danach `purgeBlock` — der Block UND die
+         Sammlung samt Zeilen waren endgültig fort. Der Papierkorb ist
+         umkehrbar, also braucht es keine Rückfrage vorher, sondern ein
+         „Rückgängig" nachher; endgültig weg geht es im Papierkorb (E709). */
+      if (a === 'del') App.inPapierkorb(block);
     });
   };
 

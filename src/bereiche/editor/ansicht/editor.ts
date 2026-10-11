@@ -3327,7 +3327,13 @@ const Blocks = (() => {
     if (was === 'default') { Store.updateBlock(b.id, { color: '' }); App.zeichneSeite(b.id, 'ende'); return; }
     if (was === 'dup')     { dupliziere(b); return; }
     if (was === 'moveto')  { blockVerschiebenNach(b); return; }
-    if (was === 'del')     { Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite(); return; }
+    /* IN DEN PAPIERKORB, NICHT INS NICHTS (E718). Hier lief das
+       Sofort-Muster `trashBlock` + `purgeBlock` für JEDEN Block — eine
+       Unterseite war samt Inhalt und Enkelseite nach dem Neuladen fort,
+       nicht im Papierkorb. Endgültig löschen geht nur noch im Papierkorb
+       (E709); Strg+Z hilft weiter (der Verlauf hört `trashBlock`). Neu
+       gezeichnet wird in `App.inPapierkorb` (die offene Seite, der Baum). */
+    if (was === 'del')     { App.inPapierkorb(b); return; }
     if (was === 'komm')    { Kommentare.neu(b); return; }
 
     /* Erwähnung, Datum, Erinnerung und Emoji schreiben ihr Zeichen und
@@ -3491,7 +3497,9 @@ const Blocks = (() => {
       '<button data-a="ref"><span class="mi">((</span>Blockverweis kopieren</button>' +
       '<button data-a="karte"><span class="mi">🎴</span>Zur Karteikarte machen</button>' +
       '<hr>' +
-      '<button data-a="del"><span class="mi">🗑</span>Löschen<span class="ms">Del</span></button>';
+      /* Der Eintrag heisst, was er tut (E718): er legt weg, endgültig
+         löscht nur der Papierkorb. */
+      '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
 
     const menu = UI.menu(html, r.right + 6, r.top);
 
@@ -3583,9 +3591,16 @@ const Blocks = (() => {
            hat, gäbe es ihn danach nirgends mehr. Vorher stand das Löschen
            gleichberechtigt daneben und lief auch, wenn das Kopieren
            abgewiesen wurde. */
-        Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
-          if (!ging) return;
-          Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite();
+        Ablage.kopiere(b.text || '').then(ging => {
+          if (!ging) {
+            UI.toast('Der Browser lässt das Kopieren nicht zu — der Block bleibt, wo er ist.');
+            return;
+          }
+          /* Kopiert wird nur der TEXT — eine Unterseite mit Inhalt passt in
+             keine Zwischenablage. Darum in den Papierkorb (E718): was die
+             Zwischenablage nicht trägt, bleibt dort zurückzuholen. EINE
+             Meldung, die beides sagt, statt zwei übereinander. */
+          App.inPapierkorb(b, { satz: 'Ausgeschnitten — der Block liegt im Papierkorb' });
         });
       }
       if (a === 'komm') Kommentare.neu(b);
@@ -3613,7 +3628,7 @@ const Blocks = (() => {
         else fl.aufFlaeche(b);
       }
       if (a === 'ai')  KI.blockAktion('ai-edit', b);
-      if (a === 'del') { Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite(); }
+      if (a === 'del') { App.inPapierkorb(b); }
     });
   };
 

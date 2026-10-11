@@ -55,12 +55,37 @@ const Bibliothek = (() => {
    * Hilfen
    * ------------------------------------------------------------------ */
 
-  /** Alle echten Seiten — ohne Systemseiten, ohne Papierkorb. */
+  /** Liegt ein Vorfahr im Papierkorb? (E718) Dann ist die Seite mit ihm
+   *  weg — so, wie die Seitenleiste es immer schon zeigt. Gemessen war das
+   *  Gegenteil: ein weggelegter Ordner liess seine Kinder in „Alle",
+   *  „Zuletzt", „Favoriten" und an der Wurzel des Ablagebaums stehen. Über
+   *  Blöcke, nicht über die Sammlung einer Zeile; höchstens 50 Schritte
+   *  (ein Ring darf hier nicht hängen). */
+  const vorfahrWeg = (b: any): boolean => {
+    let cur = b && b.parentTable !== 'collection' && b.parentId ? Store.cache.blocks[b.parentId] : null;
+    for (let n = 0; cur && n < 50; n++) {
+      if (cur.alive === false) return true;
+      cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+    }
+    return false;
+  };
+
+  /** Alle echten Seiten — ohne Systemseiten, ohne Papierkorb, ohne das,
+   *  was mit einem Ordner im Papierkorb liegt. */
   const alleSeiten = (): any[] => Object.values<any>(Store.cache.blocks)
     .filter(b => b.type === 'page' && b.alive !== false && !b.system &&
       (b.parentTable === 'collection'
         ? collectionPermitted('lesen', b.parentId)
-        : permitted('lesen', b.id)));
+        : permitted('lesen', b.id)) && !vorfahrWeg(b));
+
+  /** Das Symbol, das ein MENSCH gesetzt hat (E718) — nicht das, das die App
+   *  beim Anlegen vergibt (📄 für Seiten, 📁 für Ordner, 🗂 für Fächer).
+   *  Es ist Inhalt wie der Name und steht in der Seitenleiste ohnehin. */
+  const VORGABE_SYMBOLE = new Set(['', '📄', '📁', '🗂', '🗂️']);
+  const eigenesSymbol = (p: any): string => {
+    const s = String(p?.icon ?? '').trim();
+    return VORGABE_SYMBOLE.has(s) ? '' : [...s].slice(0, 4).join('');
+  };
 
   /** Woher kommt die Seite: aus einer Datenbank, aus einem Bereich, privat? */
   const quelleVon = (p: any): any => {
@@ -1009,7 +1034,9 @@ const Bibliothek = (() => {
         `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
           (p.favorite ? '\u2605' : '\u2606') + '</i>' +
       '</span>' +
-      '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
+      '<span class="bib-deckel-name">' +
+        (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
+        '<b>' + esc(p.text || 'Ohne Titel') + '</b>' +
         '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
       '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
       '</button>';
@@ -1319,7 +1346,10 @@ const Bibliothek = (() => {
       return {
         id,
         name: String(p.text || 'Ohne Titel'),
-        zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
+        /* Ein eigenes Symbol (E718) geht vor dem Strich: es ist Inhalt.
+           Die Baumansicht setzt, was sie nicht im Register findet, als
+           Text (`textContent`, nie als HTML — baum.ts). */
+        zeichen: eigenesSymbol(p) || (kinder.length || p.heftArt === 'fach' ? 'pages' : 'page'),
         /* Die Ordnerfarbe wandert in den Baum (E672): wer einen Ordner blau
            macht, will ihn ÜBERALL blau sehen, nicht nur als Deckel. */
         ...(farbe ? { farbe } : {}),
@@ -1709,21 +1739,23 @@ const Bibliothek = (() => {
           m.remove();
           if (a === 'oeffnen') { App.oeffne(p.id); return; }
           if (a === 'blick')   { blickHinein(p, r); return; }
-          if (a === 'stern')   { Store.updateBlock(p.id, { favorite: !p.favorite }); }
-          if (a === 'farbe')   { Notebook.farbMenue(k, p.id, () => App.zeichneSeite()); return; }
-          if (a === 'umbenennen') {
-            /* Umbenannt wird auf der Seite selbst — ein zweites Eingabefeld
-               für denselben Titel wäre eine zweite Wahrheit (§8). */
-            App.oeffne(p.id);
-            setTimeout(() => document.getElementById('title')?.focus(), 80);
-            return;
-          }
-          if (a === 'papierkorb') {
-            /* NICHT LÖSCHEN, SONDERN IN DEN PAPIERKORB. `alive: false` ist
-               umkehrbar; `Store.removeBlock` wäre es nicht (§46). */
-            Store.updateBlock(p.id, { alive: false });
-            UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
-          }
+          /* EIN Merkzeichen (E712): derselbe Griff wie ★ und der runde Knopf
+             — er zeichnet auch die Favoriten der Seitenleiste neu. */
+          if (a === 'stern')   { App.favoritKippen(p); App.zeichneSeite(); return; }
+          /* Die Farbe erreicht ALLE Oberflächen (E672, E718), nicht nur diese. */
+          if (a === 'farbe')   { Notebook.farbMenue(k, p.id, () => App.nachAenderung(Store.getBlock(p.id))); return; }
+          /* UMBENENNEN AN ORT UND STELLE (E718). Hier stand: auf die Seite
+             springen und den Titel fokussieren — „ein zweites Eingabefeld
+             wäre eine zweite Wahrheit (§8)". Die Wahrheit ist aber das Feld
+             `text`, und das schreibt die Frage genauso; der Sprung warf
+             einen aus der Bibliothek (gegen E380). Wer den Titel auf der
+             Seite ändern will, kann das weiter: Öffnen, Titel. */
+          if (a === 'umbenennen') { void App.umbenennen(p, k); return; }
+          /* IN DEN PAPIERKORB (E718) — über `Store.trashBlock`, nicht mehr
+             mit einem rohen `alive:false`: das hatte keinen `trashedAt` (die
+             Frist lief nie ab), blieb im Inhalt des Elternteils, kam ins
+             Protokoll nicht und hatte keinen Rückweg. */
+          if (a === 'papierkorb') { App.inPapierkorb(p); return; }
           App.zeichneSeite();
         });
       });

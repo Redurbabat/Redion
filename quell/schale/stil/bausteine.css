@@ -901,6 +901,10 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   overflow:hidden; min-height:39px; min-width:0; overflow-wrap:break-word;
   font-weight:580; letter-spacing:-.005em
 }
+/* DAS EIGENE SYMBOL (E718) vor dem Namen — nur, wenn ein Mensch eines
+   gesetzt hat. Gerade, nicht kursiv (`<i>`), und es schrumpft nie: ein
+   halbes Emoji ist schlimmer als keines. */
+.bib-deckel-symbol{ flex:none; font-style:normal; font-size:13px; line-height:1.5 }
 .bib-deckel-mehr{
   margin-left:auto; flex:none; width:20px; height:20px; display:grid;
   place-items:center; border-radius:6px; color:var(--text-faint);

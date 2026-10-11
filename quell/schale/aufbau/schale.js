@@ -415,6 +415,171 @@ const App = (() => {
         zeichneCrumbs();
         return neu;
     };
+    const nachAenderung = (p) => {
+        zeichneBaum();
+        const aufDerSeite = !!p && !!seiteId &&
+            Store.pathOf(String(p.id)).some((x) => x && x.id === seiteId);
+        if (sonder || !p || aufDerSeite)
+            zeichneSeite();
+        else
+            zeichneCrumbs();
+    };
+    const nameSaeubern = (roh) => {
+        const s = String(roh ?? '').normalize('NFC')
+            .replace(/[\r\n\t\u2028\u2029\u0085]/g, ' ')
+            .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const zeichen = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+            ? [...new Intl.Segmenter('de', { granularity: 'grapheme' }).segment(s)].map(g => g.segment)
+            : [...s];
+        return zeichen.slice(0, 200).join('').trim();
+    };
+    const darfBearbeiten = (id) => typeof Konten === 'undefined' || typeof Konten.darf !== 'function' || !!Konten.darf('bearbeiten', id);
+    const gleichnamig = (p, name) => {
+        const klein = name.toLocaleLowerCase('de');
+        return Object.values(Store.cache.blocks).find(b => b && b.id !== p.id && b.type === 'page' && b.alive !== false &&
+            (b.parentId ?? null) === (p.parentId ?? null) &&
+            (b.parentTable === 'collection') === (p.parentTable === 'collection') &&
+            String(b.text || '').trim().toLocaleLowerCase('de') === klein) || null;
+    };
+    const umbenennen = async (p, anker, titel = 'Neuer Name') => {
+        const id = String(p?.id || '');
+        const jetzt = id ? Store.getBlock(id) : null;
+        if (!jetzt)
+            return false;
+        if (!darfBearbeiten(id)) {
+            UI.toast('Umbenennen geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            if (anker instanceof HTMLElement && anker.isConnected)
+                anker.focus({ preventScroll: true });
+            return false;
+        }
+        const zurueck = () => {
+            let ziel = anker instanceof Element ? anker : null;
+            if (ziel && !ziel.isConnected && ziel.classList[0]) {
+                const k = '.' + CSS.escape(ziel.classList[0]);
+                const i = CSS.escape(id);
+                ziel = document.querySelector(`${k}[data-id="${i}"], ${k}[data-baum-id="${i}"], ` +
+                    `${k}[data-mehr="${i}"], ${k}[data-mehr-fach="${i}"]`);
+            }
+            if (ziel instanceof HTMLElement && ziel.isConnected)
+                ziel.focus({ preventScroll: true });
+        };
+        const alt = String(jetzt.text || '');
+        let vorgabe = alt;
+        let leerGefragt = false;
+        for (let runde = 0; runde < 6; runde++) {
+            const antwort = await UI.frage(titel, vorgabe);
+            if (antwort === null || antwort === undefined) {
+                zurueck();
+                return false;
+            }
+            const name = nameSaeubern(antwort);
+            if (!name) {
+                UI.toast('Ein Name braucht mindestens ein Zeichen — „' + (alt || 'Ohne Titel') + '" bleibt.');
+                if (leerGefragt) {
+                    zurueck();
+                    return false;
+                }
+                leerGefragt = true;
+                vorgabe = alt;
+                continue;
+            }
+            if (name === alt) {
+                zurueck();
+                return false;
+            }
+            const doppelt = gleichnamig(jetzt, name);
+            if (doppelt) {
+                const wahl = await Dialog.wahl({
+                    titel: 'Den Namen gibt es hier schon',
+                    text: 'Im selben Ordner gibt es schon „' + String(doppelt.text || '').trim() + '".',
+                    knoepfe: [
+                        { id: 'anders', text: 'Anderen Namen wählen' },
+                        { id: 'trotzdem', text: 'Trotzdem so nennen', hinweis: 'Zwei Einträge heissen dann gleich' }
+                    ]
+                });
+                if (wahl === 'anders') {
+                    vorgabe = name;
+                    continue;
+                }
+                if (wahl !== 'trotzdem') {
+                    zurueck();
+                    return false;
+                }
+            }
+            Store.updateBlock(id, { text: name });
+            nachAenderung(Store.getBlock(id));
+            zurueck();
+            return true;
+        }
+        zurueck();
+        return false;
+    };
+    const unterseitenZahl = (id) => {
+        let n = 0;
+        const gesehen = new Set();
+        const gehe = (x) => {
+            if (gesehen.has(x))
+                return;
+            gesehen.add(x);
+            for (const k of Store.childrenOf(x)) {
+                if (!k || k.alive === false)
+                    continue;
+                if (k.type === 'page')
+                    n++;
+                gehe(String(k.id));
+            }
+        };
+        gehe(id);
+        return n;
+    };
+    const inPapierkorb = (p, opt = {}) => {
+        const id = String(p?.id || '');
+        const b = id ? Store.getBlock(id) : null;
+        if (!b || b.alive === false)
+            return false;
+        if (!darfBearbeiten(id)) {
+            if (!opt.ruhig)
+                UI.toast('In den Papierkorb geht hier nicht — dir fehlt das Recht, diese Seite zu bearbeiten.');
+            return false;
+        }
+        const eltern = b.parentId ? Store.getBlock(b.parentId) : null;
+        const stelle = eltern && Array.isArray(eltern.content) ? eltern.content.indexOf(id) : -1;
+        const istSeite = b.type === 'page' || b.type === 'database';
+        const sammlung = b.type === 'database' && b.collectionId ? Store.getCollection(b.collectionId) : null;
+        const name = String(b.text || '').trim() || String(sammlung?.name || '').trim() ||
+            (b.type === 'page' ? 'Ohne Titel' : '');
+        const unter = b.type === 'page' ? unterseitenZahl(id) : 0;
+        Store.trashBlock(id);
+        if (id === seiteId && !sonder) {
+            const e2 = Store.rootPages()[0];
+            oeffne(e2 ? e2.id : null);
+        }
+        else
+            nachAenderung(b);
+        if (opt.ruhig)
+            return true;
+        const satz = opt.satz ? opt.satz
+            : !istSeite || !name ? 'Block liegt im Papierkorb'
+                : unter ? '„' + name + '" und ' + unter + (unter === 1 ? ' Unterseite liegen' : ' Unterseiten liegen') + ' im Papierkorb'
+                    : '„' + name + '" liegt im Papierkorb';
+        UI.toast(satz, 6000, { aktion: { text: 'Rückgängig', tun: () => {
+                    const jetzt = Store.getBlock(id);
+                    if (!jetzt || jetzt.alive !== false)
+                        return;
+                    Store.restoreBlock(id);
+                    const e = jetzt.parentId ? Store.getBlock(jetzt.parentId) : null;
+                    if (e && Array.isArray(e.content) && stelle >= 0) {
+                        const ohne = e.content.filter((x) => x !== id);
+                        ohne.splice(Math.min(stelle, ohne.length), 0, id);
+                        Store.updateBlock(e.id, { content: ohne });
+                    }
+                    nachAenderung(Store.getBlock(id));
+                    UI.toast(istSeite && name ? '„' + name + '" ist zurück' : 'Block ist zurück');
+                } } });
+        return true;
+    };
     const seitenMenue = (anker, p) => {
         const r = anker.getBoundingClientRect();
         const bereichAnzahl = typeof Lebensbereiche !== 'undefined'
@@ -636,13 +801,7 @@ const App = (() => {
                 volleBreite(p);
             }
             if (a === 'rename') {
-                const n = await UI.frage('Neuer Titel', p.text);
-                if (n !== null) {
-                    Store.updateBlock(p.id, { text: n });
-                    zeichneBaum();
-                    if (p.id === seiteId)
-                        zeichneSeite();
-                }
+                await umbenennen(p, anker, 'Neuer Titel');
             }
             if (a === 'dup') {
                 dupliziereSeite(p.id, p.parentId);
@@ -693,15 +852,8 @@ const App = (() => {
             }
             if (a === 'papier')
                 papierkorb();
-            if (a === 'del') {
-                Store.trashBlock(p.id);
-                zeichneBaum();
-                if (p.id === seiteId) {
-                    const e2 = Store.rootPages()[0];
-                    oeffne(e2 ? e2.id : null);
-                }
-                UI.toast('In den Papierkorb verschoben');
-            }
+            if (a === 'del')
+                inPapierkorb(p);
         });
     };
     const dupliziereSeite = (id, zielEltern) => {
@@ -3339,6 +3491,7 @@ const App = (() => {
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
         vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
+        umbenennen, nameSaeubern, inPapierkorb, nachAenderung, favoritKippen,
         kuerzlich, kommendeTermine,
         schauplatz,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,

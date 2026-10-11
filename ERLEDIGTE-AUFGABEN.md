@@ -1,5 +1,42 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E718 — Ordner bearbeiten (Masterprompt #12 und die Datenhälfte von #9)
+
+**Redur** (Masterprompt vom 29. September, S. 13): „hier beiM BIBLOTEK KANN
+ich wie beim biblotek die ordner farbe oder die ordner selbst nicht
+bearbeiten, behebe das problem und auch die rechtsk klickt sollte hier für
+die ordner haben ." — S. 19: „… beim rechts klicke sollte es mir zeigen
+löschen".
+
+**Fund** (`test594` gegen 1bfaca53, 14/62): das ⌄ „Umbenennen" der
+Bibliothek sprang auf die Seite (gegen E380); „   " und Steuerzeichen
+wurden gespeichert; Farbe und Name erreichten die Seitenleiste nicht; ein
+eigenes Symbol fehlte auf Karte und Baum; ein Ordner auf seinem eigenen
+Kind bildete einen Ring; der Papierkorb der Bibliothek schrieb nur
+`alive:false` (kein `trashedAt`, im Inhalt des Elternteils, kein
+Protokoll, kein Rückweg) und liess die Kinder in Alle/Zuletzt/Favoriten
+stehen; und das Blockmenü löschte eine Unterseite samt Enkelseite
+ENDGÜLTIG.
+
+**Bau:** `App.umbenennen` (ein Weg für Bibliothek, Notizhefte, Seitenmenü,
+Datenbankzeile), `App.nameSaeubern`, `App.nachAenderung`,
+`App.inPapierkorb` mit „Rückgängig" in der Meldung (`hinweis.ts`: eine
+Handlung, nur bei der neuesten Meldung), die Ring-Prüfung in
+`Werkzeuge.verschiebe`, `Bibliothek.alleSeiten` ohne Kinder weggelegter
+Ordner, das eigene Symbol auf Karte und im Ablagebaum. Editor: „Löschen",
+der Schrägstrich-Befehl und „Ausschneiden" legen in den Papierkorb. Nach
+der Durchsicht vom 6. Oktober auch das ⋯ einer Datenbank (vorher
+`confirm()` und endgültig weg, samt Sammlung) und Entf auf einer
+Mehrfachauswahl; `App.umbenennen` und `App.inPapierkorb` fragen das Recht
+an der angefassten Seite (§26); Namen ohne Richtungs-Überschreiber, die
+200er-Grenze zählt Schriftzeichen.
+
+**Prüfung:** `test594` 76/76 (neu; nach der Durchsicht §3, §15, §16 erweitert,
+rot gegen 32749689 mit 66/76), `test560` §7, `test587` §13, `test588`
+§15 (erweitert); Nachbarn und Gegenproben im Commit von E718; Messung
+`messungen.md` §89. Offen: L239 (alte Papierkorb-Seiten ohne Frist, die
+Regel des Fachs) — Redurs Fragen.
+
 ## 6. Oktober 2026 · E717 · Der Seiteneditor ohne Stau
 
 **Redur** (Masterprompt vom 29. September, Seite 5; OneNote-Seite 14):

@@ -2858,9 +2858,7 @@ const Blocks = (() => {
             return;
         }
         if (was === 'del') {
-            Store.trashBlock(b.id);
-            Store.purgeBlock(b.id);
-            App.zeichneSeite();
+            App.inPapierkorb(b);
             return;
         }
         if (was === 'komm') {
@@ -2947,7 +2945,7 @@ const Blocks = (() => {
             '<button data-a="ref"><span class="mi">((</span>Blockverweis kopieren</button>' +
             '<button data-a="karte"><span class="mi">🎴</span>Zur Karteikarte machen</button>' +
             '<hr>' +
-            '<button data-a="del"><span class="mi">🗑</span>Löschen<span class="ms">Del</span></button>';
+            '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
         const menu = UI.menu(html, r.right + 6, r.top);
         menu.addEventListener('click', (e) => {
             const btn = elVon(e)?.closest('button[data-a]');
@@ -3032,12 +3030,12 @@ const Blocks = (() => {
                 Ablage.kopiereJetzt(b.text || '', 'Text kopiert');
             }
             if (a === 'cut') {
-                Ablage.kopiere(b.text || '', 'Ausgeschnitten').then(ging => {
-                    if (!ging)
+                Ablage.kopiere(b.text || '').then(ging => {
+                    if (!ging) {
+                        UI.toast('Der Browser lässt das Kopieren nicht zu — der Block bleibt, wo er ist.');
                         return;
-                    Store.trashBlock(b.id);
-                    Store.purgeBlock(b.id);
-                    App.zeichneSeite();
+                    }
+                    App.inPapierkorb(b, { satz: 'Ausgeschnitten — der Block liegt im Papierkorb' });
                 });
             }
             if (a === 'komm')
@@ -3070,9 +3068,7 @@ const Blocks = (() => {
             if (a === 'ai')
                 KI.blockAktion('ai-edit', b);
             if (a === 'del') {
-                Store.trashBlock(b.id);
-                Store.purgeBlock(b.id);
-                App.zeichneSeite();
+                App.inPapierkorb(b);
             }
         });
     };

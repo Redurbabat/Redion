@@ -6959,3 +6959,62 @@ Nachbarn nach der Durchsicht (Stand `514e7db8`, unter dem Schloss): grün
 feste Ports 9579/9589) und waren beim Wiederholen grün (31/31, 26/26);
 `test469` tat auf einer Kopie von `1bfaca53` dasselbe (einmal grün,
 einmal derselbe Abbruch) — fremd, eine Frage der Last.
+
+## §89 · Ordner bearbeiten: Name, Farbe, Symbol, Ring, Papierkorb (E718, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/ordner-bearbeiten` gegen `1bfaca53`
+(`claude/morgen-besser-2`). `test594` mit `listen(0)`, Chromium, Rechner
+1440×900 hell und dunkel, Telefon 390×844 dunkel. Gezählt wird im Speicher
+(`Store.getBlock`, `Store.trashed()`, `Store.papierkorbBloecke()`,
+`Protokoll.alle()`, `Bibliothek.alleSeiten()`) UND im Bild (`.bib-deckel`,
+`.ru-baum-zeile`, `#sidebar .row`), ohne Neuzeichnen von Hand zwischen der
+Handlung und der Messung.
+
+```txt
+                                                 vorher (1bfaca53)              nachher (E718)
+Umbenennen aus dem ⌄ der Bibliothek               öffnet die Seite, inBib false  Frage, inBib true
+  … drinnen in einem Ordner                       —                              bleibt im Ordner
+„   " (Seitenmenü, Fach)                         gespeichert "   "              alter Name, Meldung, neu gefragt
+„A␇B⏎C" + U+2028 (Bibliothek)                     —                              "AB C"
+„  Strom\u0000kunde " (Heft)                      gespeichert, wie es war        "Stromkunde"
+gleicher Name im selben Ordner                    —                              Wahl: anders / trotzdem
+Schreiben des Namens je Antwort (test587 §13)     10 (in den Seitentitel getippt) 1
+Farbe aus dem ⌄: Karte / Baum / Seitenleiste      red / red / null               red / red / red (hell), green ×3 (dunkel)
+Fach: Farbe / Name in der Seitenleiste            null / alter Name              blue / Strom
+eigenes Symbol ⚡: Karte / Baum / Seitenleiste      "" / "" / ⚡                     ⚡ / ⚡ / ⚡ (auch nach Neuladen)
+Ordner auf eigenes Kind gezogen                   parentId = Kind (Ring),        parentId null, beide da,
+                                                  beide nicht in der Leiste      „Ein Ordner kann nicht in sich selbst liegen"
+Papierkorb aus der Bibliothek:
+  trashedAt / im Inhalt des Elternteils           fehlt / ja                     gesetzt / nein
+  Protokoll „seite-weg"                           0                              1
+  Meldung                                         „„Leitungen" liegt im …"       „„Leitungen neu" und 1 Unterseite liegen im Papierkorb"
+  Knopf „Rückgängig" (Rechner / Telefon)          —                              44 px / 44 × ≥44 px, im Bild, obenauf
+  nach „Rückgängig": lebendig, Stelle im Inhalt   —                              ja, dieselbe Stelle (Index 0)
+Kinder eines weggelegten Ordners:
+  Alle / Zuletzt / Favoriten / Baum / Karten      2 / 1 / 1 / 2 / 0              0 / 0 / 0 / 0 / 0, nach Rückgängig 3 zurück
+Blockmenü „Löschen" auf Unterseite + Datenbank    "WEG", Enkel "WEG",            im Papierkorb, Enkel da,
+                                                  nach Neuladen nichts           nach Neuladen zurückzuholen (Inhalt ≥ 2)
+test594                                           14 / 62                        64 / 64 (zwei Zusagen kamen
+                                                                                  aus dem Bild dazu, §13)
+```
+
+**Startlast** (`test388` §5, gzip): 1850 KB vorher, 1852 KB nachher (252 Dateien),
+Decke 1950.
+
+**Nach der Durchsicht vom 6. Oktober** (`test594` §3, §15, §16; vorher =
+32749689, der Stand vor dem Nachtrag):
+
+```txt
+                                                 vorher (32749689)              nachher
+⋯ der Datenbank: Eintrag                          „🗑Datenbank löschen"           „In den Papierkorb"
+  Block / im Korb / Sammlung / Browser-Rückfragen "WEG" / nein / weg / 1         false / ja / da / 0
+Entf auf Mehrfachauswahl (Unterseite + Enkel)     "WEG" / nein / Enkel "WEG"     false / ja / Enkel da
+nach dem Neuladen (DB, Unterseite, Enkel)         false / true / false           true / true / true
+nur Lesen: Umbenennen                             Frage geht auf                 keine Frage, Meldung „… Recht …"
+nur Lesen (geerbt): Papierkorb                    liegt im Papierkorb            bleibt, Meldung „… Recht …"
+Bearbeiten: Papierkorb                            geht                           geht
+„Rechnung‮fdp.exe⁦x⁩"                             unverändert                    „Rechnungfdp.exex"
+199 × a + 👨‍👩‍👧 + b → Grenze 200                       halbe Familie (Codepunkte)     ganze Familie, 200 Grapheme
+test594                                           66 / 76                        76 / 76
+Start (test388 §5, gzip)                          1852 KB                        1853 KB (Decke 1950)
+```

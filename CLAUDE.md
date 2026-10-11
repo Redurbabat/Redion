@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 534 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 535 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1627,6 +1627,29 @@ alle Seiten. Gezählt am 6. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 533. Beim Zusammenführen nachgezählt (11. Oktober,
 `claude/morgen-besser-3`): 534.*
 
+*Und 535: `test594` — Ordner bearbeiten (E718). Redurs Notiz unter dem Foto
+der Bibliothek, „hier beiM BIBLOTEK KANN ich … die ordner farbe oder die
+ordner selbst nicht bearbeiten", in 76 Zusagen über sechzehn Abschnitte:
+Umbenennen bleibt in der Bibliothek, „   " und Steuerzeichen sind kein Name,
+ein gleicher Name im selben Ordner fragt nach, Farbe und Symbol stehen
+sofort in Karte, Ablagebaum UND Seitenleiste, ein Ordner auf seinem eigenen
+Kind bildet keinen Ring, und „Löschen" in den Menüs, im ⋯ einer Datenbank
+und mit Entf heisst Papierkorb, mit „Rückgängig" in der Meldung — gefragt
+wird das Recht an der angefassten Seite. Die letzten zwei Wege und die
+Rechte fand nicht er, sondern eine Durchsicht: das README versprach
+„nichts verschwindet sofort", während „Datenbank löschen" nach einem
+`confirm()` Block UND Sammlung endgültig wegräumte. Gegen den Grundstand rot mit 14 von 62 (zwei
+Zusagen kamen danach aus dem BILD: ein „Rückgängig" über einem offenen
+Fenster tat nichts) — und
+seine schwerste Zeile ist die aus §15: eine Unterseite, im Blockmenü
+„gelöscht", stand als `"WEG"` da, samt Enkelseite, und nach dem Neuladen
+war nichts zurückzuholen. Zweimal war er aus dem FALSCHEN Grund rot: er las
+den Namen im Ablagebaum samt Knick („›Kabel …"), und `Bibliothek.oeffne()`
+ohne Ziel blieb in dem Ordner, in den er zuvor hineingegangen war — der
+Zustand lebt im Speicher, nicht nur im Merker. Gezählt am 6. Oktober, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 533. Beim Zusammenführen nachgezählt (11. Oktober,
+`claude/morgen-besser-3`): 535.*
+
 ### Die Befehle
 
 ```txt
@@ -1643,7 +1666,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 534 Läufe
+npm run pruefen                      alle 535 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1733,7 +1756,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 534 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 535 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
