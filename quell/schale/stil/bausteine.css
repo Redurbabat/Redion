@@ -10234,3 +10234,13 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
               display:flex; flex-direction:column; gap:8px}
   .chr-platte{position:static; transform:none; width:auto; margin:0}
 }
+
+/* Die Stromrichtung am Bauteil (E733).
+   Ein Pfeil bei Gleichstrom, ZWEI bei Wechselstrom — der Unterschied steckt
+   in der Form und nicht in der Farbe, §38 [hart]. Wer die Farben nicht
+   unterscheidet, sieht trotzdem, dass der Strom dort umkehrt.
+   Er erbt die Stromfarbe der Leitungen, damit Pfeil und fliessender Strich
+   erkennbar dasselbe meinen. */
+.sp-richtung{stroke:var(--sp-strom); stroke-width:2; stroke-linecap:round;
+  stroke-linejoin:round; pointer-events:none}
+.sp-richtung title{pointer-events:auto}

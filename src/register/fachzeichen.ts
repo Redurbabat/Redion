@@ -61,6 +61,14 @@ Register.fachzeichen = (() => {
     kreise?: Array<{ cx: number; cy: number; r: number; voll?: boolean }>;
     /** Ein Satz für den Lernmodus — was das Bauteil tut. */
     erklaerung: string;
+    /**
+     * Klemmen, die FRÜHER anders hiessen oder anders lagen (E738, L252).
+     * Alter Name → wo er lag (im ungedrehten Zeichen) und wie die Klemme
+     * dort heute heisst. Nur für Zeichen, deren Klemmen sich geändert haben,
+     * nachdem schon Pläne damit gespeichert sein konnten. Gelesen wird es
+     * ausschliesslich von `klemmeFuer`; gespeichert wird nichts um.
+     */
+    frueher?: Record<string, Array<{ x: number; y: number; heute: string }>>;
   };
 
   const GRUPPEN: Array<[string, string, string]> = [
@@ -279,9 +287,20 @@ Register.fachzeichen = (() => {
              senkrecht(10, 60, 70), senkrecht(30, 60, 70), senkrecht(50, 60, 70),
              'M12,44 a18,18 0 0,1 36,0'],
       beschriftung: [{ x: 30, y: 30, t: 'I∆n' }],
+      /* ZWEIMAL „N" GING NICHT.
+         Auf dem echten Gerät sind Eingang und Ausgang des Neutralleiters
+         beide mit N beschriftet, und genau so stand es hier. In der
+         Netzliste heisst eine Klemme aber `k:teil:nr` — zwei Klemmen mit
+         demselben `nr` sind damit DASSELBE Netz, und der Neutralleiter war
+         im FI dauerhaft durchverbunden. Er konnte gar nicht abschalten.
+         Der Ausgang heisst deshalb `N2`. */
       anschluesse: [{ nr: '1', x: 10, y: 0 }, { nr: '3', x: 30, y: 0 }, { nr: 'N', x: 50, y: 0 },
-                    { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N', x: 50, y: 70 }],
-      erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab.'
+                    { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N2', x: 50, y: 70 }],
+      /* Ein Plan von vor E735 trägt am unteren Neutralleiter `N` — und `N`
+         ist heute der OBERE. Unterscheiden lässt sich das nur am Ort: was
+         unten bei (50,70) als `N` gespeichert ist, ist N2 (E738). */
+      frueher: { N: [{ x: 50, y: 70, heute: 'N2' }] },
+      erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab. Oben N, unten N2 — auf dem Gerät steht beide Male N.'
     },
     {
       id: 'motorschutzschalter', name: 'Motorschutzschalter', gruppe: 'schutz', kennbuchstabe: 'Q',
@@ -322,7 +341,37 @@ Register.fachzeichen = (() => {
       pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 10), senkrecht(50, 0, 16)],
       beschriftung: [{ x: 30, y: 32, t: 'M', gross: true }, { x: 30, y: 48, t: '3 ~' }],
       anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 30, y: 0 }, { nr: 'W1', x: 50, y: 0 }],
-      erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig.'
+      erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig. Mit drei Anschlüssen gezeichnet heisst: die Brücken sitzen schon.'
+    },
+    {
+      /* Das Klemmenbrett ist im Unterricht ein eigenes Zeichen und nicht nur
+         eine Innenansicht des Motors: gezeichnet wird, wo die BRÜCKEN sitzen.
+         Erst sie entscheiden, ob am Strang 230 V oder 400 V liegen — und das
+         ist die Aufgabe, nicht der Motor. Deshalb sechs Klemmen in zwei
+         Reihen, so wie sie auf dem Brett wirklich liegen: oben U1 V1 W1,
+         unten W2 U2 V2. Die untere Reihe ist gegen die obere versetzt, und
+         das ist kein Schönheitsfehler — genau dadurch wird die Dreieckbrücke
+         zu drei geraden Stegen statt zu drei gekreuzten Drähten. */
+      id: 'motor-klemmenbrett', name: 'Klemmenbrett Motor', gruppe: 'motoren', kennbuchstabe: 'M',
+      w: 140, h: 90,
+      pfad: ['M10,20 H130 V70 H10 Z',
+             senkrecht(10, 0, 20), senkrecht(50, 0, 20), senkrecht(90, 0, 20),
+             senkrecht(50, 70, 90), senkrecht(90, 70, 90), senkrecht(130, 70, 90),
+             senkrecht(10, 70, 90)],
+      kreise: [{ cx: 10, cy: 20, r: 3 }, { cx: 50, cy: 20, r: 3 }, { cx: 90, cy: 20, r: 3 },
+               { cx: 50, cy: 70, r: 3 }, { cx: 90, cy: 70, r: 3 }, { cx: 130, cy: 70, r: 3 },
+               { cx: 10, cy: 70, r: 3 }],
+      beschriftung: [{ x: 10, y: 34, t: 'U1' }, { x: 50, y: 34, t: 'V1' }, { x: 90, y: 34, t: 'W1' },
+                     { x: 50, y: 62, t: 'W2' }, { x: 90, y: 62, t: 'U2' }, { x: 130, y: 62, t: 'V2' },
+                     { x: 14, y: 62, t: 'PE' }],
+      /* Die siebte Klemme ist der Erdungsbolzen. Er gehört auf das Bild,
+         weil er auf dem Brett ist — und weil ein Klemmenbrett ohne ihn
+         zeichnen liesse, was man nicht anschliessen darf: einen Motor der
+         Schutzklasse I ohne Schutzleiter. */
+      anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 50, y: 0 }, { nr: 'W1', x: 90, y: 0 },
+                    { nr: 'W2', x: 50, y: 90 }, { nr: 'U2', x: 90, y: 90 }, { nr: 'V2', x: 130, y: 90 },
+                    { nr: 'PE', x: 10, y: 90 }],
+      erklaerung: 'Die sechs Wicklungsenden des Drehstrommotors und der Erdungsbolzen. Die Brücken machen daraus Stern (230 V am Strang) oder Dreieck (400 V am Strang).'
     },
     {
       id: 'motor-wechselstrom', name: 'Wechselstrommotor', gruppe: 'motoren', kennbuchstabe: 'M',
@@ -479,6 +528,31 @@ Register.fachzeichen = (() => {
              'M16,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0'],
       anschluesse: [{ nr: 'L', x: 30, y: 0 }, { nr: 'N', x: 30, y: 60 }],
       erklaerung: 'Liefert eine Spannung, die ihre Richtung regelmässig wechselt.'
+    },
+    {
+      /* Das Netz, an dem die Schweiz hängt: 3 × 400/230 V. Fünf Klemmen,
+         weil eine Installation fünf Leiter hat — und weil der häufigste
+         Anfängerfehler darin besteht, N und PE für dasselbe zu halten. Sie
+         SIND am Sternpunkt verbunden, und trotzdem darf man sie nicht
+         tauschen; mit nur vier Klemmen liesse sich das gar nicht zeigen. */
+      id: 'drehstromquelle', name: 'Drehstromquelle 3 × 400/230 V', gruppe: 'quellen', kennbuchstabe: 'G',
+      w: 160, h: 80,
+      kreise: [{ cx: 70, cy: 30, r: 24 }],
+      pfad: ['M56,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0',
+             senkrecht(10, 54, 80), senkrecht(40, 54, 80), senkrecht(70, 54, 80),
+             senkrecht(100, 54, 80), senkrecht(130, 54, 80),
+             waagrecht(54, 10, 130)],
+      /* Die Leiternamen stehen NEBEN ihrem Stich, nicht darauf. Mittig
+         gesetzt lagen sie auf der Linie und waren am Bildschirm nicht mehr
+         zu lesen — gefunden auf dem Bild, nicht im Prüflauf. */
+      beschriftung: [{ x: 70, y: 16, t: '3 ~' },
+                     { x: 20, y: 72, t: 'L1' }, { x: 50, y: 72, t: 'L2' },
+                     { x: 80, y: 72, t: 'L3' }, { x: 110, y: 72, t: 'N' },
+                     { x: 140, y: 72, t: 'PE' }],
+      anschluesse: [{ nr: 'L1', x: 10, y: 80 }, { nr: 'L2', x: 40, y: 80 },
+                    { nr: 'L3', x: 70, y: 80 }, { nr: 'N', x: 100, y: 80 },
+                    { nr: 'PE', x: 130, y: 80 }],
+      erklaerung: 'Drei Aussenleiter, je 230 V gegen den Neutralleiter und um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V.'
     },
     {
       id: 'erde', name: 'Erde', gruppe: 'quellen', kennbuchstabe: 'E',
@@ -725,23 +799,44 @@ Register.fachzeichen = (() => {
     {
       id: 'steckdose', name: 'Steckdose', gruppe: 'stecker', kennbuchstabe: 'X',
       w: 60, h: 40,
-      pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
-      anschluesse: [{ nr: 'L', x: 30, y: 0 }],
+      /* Eine Steckdose mit EINER Klemme lässt sich nicht anschliessen — der
+         Strom müsste irgendwo zurück. Sie hatte trotzdem nur `L`. */
+      pfad: [senkrecht(20, 0, 12), senkrecht(40, 0, 12),
+             'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
+      anschluesse: [{ nr: 'L', x: 20, y: 0 }, { nr: 'N', x: 40, y: 0 }],
+      /* Vor E735 lag L bei x=30. Der Name gilt weiter; der Eintrag sagt der
+         Netzliste, dass eine Leitung an dieser alten Stelle L meint — und
+         keine der neuen Klemmen über den Ort mitfassen darf (E738). */
+      frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
       erklaerung: 'Anschlussstelle für Geräte. Im Installationsplan der Halbkreis.'
     },
     {
       id: 'steckdose-schuko', name: 'Steckdose mit Schutzkontakt', gruppe: 'stecker', kennbuchstabe: 'X',
       w: 60, h: 40,
-      pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
-             senkrecht(30, 12, 20)],
-      anschluesse: [{ nr: 'L', x: 30, y: 0 }],
-      erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt.'
+      /* Der Schutzkontakt steht im Namen und fehlte als Klemme. Damit war
+         die eine Steckdose, an der sich der Schutzleiter zeigen lässt,
+         genau die, an der man ihn nicht anschliessen konnte. */
+      pfad: [senkrecht(10, 0, 12), senkrecht(30, 0, 12), senkrecht(50, 0, 12),
+             'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
+             waagrecht(20, 24, 36)],
+      anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 },
+                    { nr: 'PE', x: 50, y: 0 }],
+      /* Vor E735 lag L bei x=30 — genau dort, wo heute N liegt. Ohne diesen
+         Eintrag band eine alte L-Leitung über den Namen an L und über den
+         Ort an N: L und N verbunden, ohne Meldung (E738). */
+      frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
+      erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt. Schutzklasse-I-Geräte brauchen ihn.'
     },
     {
       id: 'stecker', name: 'Stecker', gruppe: 'stecker', kennbuchstabe: 'X',
       w: 40, h: 50,
-      pfad: [senkrecht(20, 0, 16), 'M20,16 L34,32 L6,32 Z'],
-      anschluesse: [{ nr: '1', x: 20, y: 0 }],
+      pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 16), 'M20,16 L34,32 L6,32 Z'],
+      anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 }],
+      /* Vor E735 hatte der Stecker EINEN Stift, `1`, mittig bei x=20 (alle
+         vier geänderten Zeichen kamen mit E735, auf dem Zweig E545, Commit
+         64e7a43e6 — L252). Was daran hing, war der Aussenleiter — einen
+         Rückweg liess das Zeichen gar nicht zu. Darum ist `1` heute L (E738). */
+      frueher: { '1': [{ x: 20, y: 0, heute: 'L' }] },
       erklaerung: 'Das Gegenstück zur Steckdose.'
     },
     {
@@ -796,6 +891,22 @@ Register.fachzeichen = (() => {
       beschriftung: [{ x: 30, y: 12, t: 'L1' }],
       anschluesse: [{ nr: 'L1', x: 0, y: 20 }, { nr: 'L1', x: 60, y: 20 }],
       erklaerung: 'Erster Aussenleiter des Drehstromnetzes.'
+    },
+    {
+      id: 'leiter-l2', name: 'Aussenleiter L2', gruppe: 'leitungen', kennbuchstabe: 'L2',
+      w: 60, h: 30,
+      pfad: [waagrecht(20, 0, 60)],
+      beschriftung: [{ x: 30, y: 12, t: 'L2' }],
+      anschluesse: [{ nr: 'L2', x: 0, y: 20 }, { nr: 'L2', x: 60, y: 20 }],
+      erklaerung: 'Zweiter Aussenleiter, um 120° gegen L1 versetzt.'
+    },
+    {
+      id: 'leiter-l3', name: 'Aussenleiter L3', gruppe: 'leitungen', kennbuchstabe: 'L3',
+      w: 60, h: 30,
+      pfad: [waagrecht(20, 0, 60)],
+      beschriftung: [{ x: 30, y: 12, t: 'L3' }],
+      anschluesse: [{ nr: 'L3', x: 0, y: 20 }, { nr: 'L3', x: 60, y: 20 }],
+      erklaerung: 'Dritter Aussenleiter, um weitere 120° versetzt.'
     },
     {
       id: 'leiter-n', name: 'Neutralleiter N', gruppe: 'leitungen', kennbuchstabe: 'N',
@@ -1157,20 +1268,17 @@ Register.fachzeichen = (() => {
   };
 
   /**
-   * Wo liegt ein Anschluss, nachdem das Zeichen gedreht und gespiegelt wurde?
-   *
-   * Das braucht der Editor, damit eine Leitung auch an einem gedrehten Symbol
-   * an der richtigen Stelle einrastet. Ohne diese Funktion müsste jede
-   * Aufrufstelle dieselbe Drehmatrix noch einmal schreiben — und eine davon
-   * würde sie falsch schreiben.
+   * Wie nah ein Leitungsende an einer Klemme liegen muss, um sie zu treffen.
+   * Die Netzliste (`Stromfluss`, simulation.ts) liest dieselbe Zahl von hier
+   * — ein Wert an zwei Stellen ist einer zu viel (L34).
    */
-  const anschlussLage = (id: string, nr: string, drehung = 0, gespiegelt = false):
-      { x: number; y: number } | null => {
-    const z = holen(id);
-    if (!z) return null;
-    const a = z.anschluesse.find(x => x.nr === nr) || z.anschluesse[0];
-    if (!a) return null;
-    let x = a.x, y = a.y;
+  const NAH = 6;
+
+  /** Ein Punkt des ungedrehten Zeichens, gedreht und gespiegelt wie das Teil. */
+  const gedreht = (z: Zeichen, x0: number, y0: number, drehung = 0, gespiegelt = false):
+      { x: number; y: number } => {
+    let x = x0;
+    const y = y0;
     if (gespiegelt) x = z.w - x;
     const grad = ((Number(drehung) || 0) % 360 + 360) % 360;
     const cx = z.w / 2, cy = z.h / 2;
@@ -1182,6 +1290,78 @@ Register.fachzeichen = (() => {
     };
   };
 
+  /**
+   * WELCHE KLEMME MEINT EIN GESPEICHERTER NAME? (E738, L252)
+   * ------------------------------------------------------------------------
+   * Eine Leitung speichert, an welcher Klemme sie hängt — als Name, und dazu
+   * ihre Punkte. Vier Zeichen haben ihre Klemmen geändert, nachdem schon
+   * Pläne damit gespeichert sein konnten (`frueher`). Die gespeicherten
+   * Daten bleiben, wie sie sind; dieser Auflöser übersetzt beim LESEN. Er
+   * ändert nichts, also ist er idempotent ohne eigene Vorkehrung.
+   *
+   * Die Reihenfolge ist die Entscheidung:
+   *   1. heute dieser Name an diesem Ort          → diese Klemme
+   *   2. früher dieser Name an diesem Ort         → die Klemme, die dort heute ist
+   *   3. heute dieser Name, egal wo               → diese Klemme
+   *   4. früher dieser Name, egal wo              → die Klemme von heute
+   *   5. sonst                                    → null, nichts wird erfunden
+   * DER ORT GEHT VOR DEM NAMEN, weil nur er die zwei `N` des alten FI
+   * auseinanderhält: unten bei (50,70) gespeichert ist es N2, obwohl `N`
+   * heute oben heisst. Wo der Ort nichts sagt (kein Punkt, oder die Leitung
+   * endet anderswo), gilt der Name.
+   *
+   * `punkt` ist das Leitungsende relativ zur linken oberen Ecke des Teils,
+   * in derselben Drehung, die `anschlussLage` liefert. `frueher: true` sagt
+   * dem Aufrufer, dass ein alter Name oder Ort nötig war — die Netzliste
+   * lässt die Leitung dann keine ANDERE Klemme desselben Teils über den Ort
+   * fassen, denn als sie gezogen wurde, gab es die dort noch nicht.
+   */
+  const klemmeFuer = (id: string, nr: string, punkt?: { x: number; y: number } | null,
+                      drehung = 0, gespiegelt = false): { nr: string; frueher: boolean } | null => {
+    const z = holen(id);
+    if (!z) return null;
+    const name = String(nr ?? '');
+    const gibtEs = (n: string): boolean => z.anschluesse.some(a => a.nr === n);
+    const trifft = (x0: number, y0: number): boolean => {
+      if (!punkt) return false;
+      const o = gedreht(z, x0, y0, drehung, gespiegelt);
+      return Math.abs(punkt.x - o.x) <= NAH && Math.abs(punkt.y - o.y) <= NAH;
+    };
+    const alt = ((z.frueher && z.frueher[name]) || []).filter(e => gibtEs(e.heute));
+    if (punkt) {
+      if (z.anschluesse.some(a => a.nr === name && trifft(a.x, a.y))) return { nr: name, frueher: false };
+      const war = alt.find(e => trifft(e.x, e.y));
+      if (war) return { nr: war.heute, frueher: true };
+    }
+    if (gibtEs(name)) return { nr: name, frueher: false };
+    const erster = alt[0];
+    if (erster) return { nr: erster.heute, frueher: true };
+    return null;
+  };
+
+  /**
+   * Wo liegt ein Anschluss, nachdem das Zeichen gedreht und gespiegelt wurde?
+   *
+   * Das braucht der Editor, damit eine Leitung auch an einem gedrehten Symbol
+   * an der richtigen Stelle einrastet. Ohne diese Funktion müsste jede
+   * Aufrufstelle dieselbe Drehmatrix noch einmal schreiben — und eine davon
+   * würde sie falsch schreiben.
+   *
+   * Der Name geht durch `klemmeFuer` (E738): ein alter Name (`stecker` „1")
+   * findet seine heutige Klemme. Hier stand `|| z.anschluesse[0]` — ein
+   * UNBEKANNTER Name rastete an der ersten Klemme ein, und die Leitung hing
+   * an etwas, das niemand gezogen hatte. Heute gibt es dafür null.
+   */
+  const anschlussLage = (id: string, nr: string, drehung = 0, gespiegelt = false):
+      { x: number; y: number } | null => {
+    const z = holen(id);
+    if (!z) return null;
+    const r = klemmeFuer(id, nr);
+    const a = r ? z.anschluesse.find(x => x.nr === r.nr) : undefined;
+    if (!a) return null;
+    return gedreht(z, a.x, a.y, drehung, gespiegelt);
+  };
+
   /** Die Aussenmasse nach einer Drehung — 90° tauscht Breite und Höhe. */
   const masse = (id: string, drehung = 0): { w: number; h: number } => {
     const z = holen(id);
@@ -1190,6 +1370,6 @@ Register.fachzeichen = (() => {
     return (grad === 90 || grad === 270) ? { w: z.h, h: z.w } : { w: z.w, h: z.h };
   };
 
-  return { RASTER, alle, holen, inGruppe, gruppen, gruppenName,
-           alsSvg, anschlussLage, masse, melde, vergiss };
+  return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
+           alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
 })();

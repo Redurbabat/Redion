@@ -1378,6 +1378,67 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   outline-offset:2px}
 
 /* ============================================================================
+ * DIE LERNANSICHT HATTE KEINEN EINZIGEN STIL (E734)
+ * ----------------------------------------------------------------------------
+ * Das Panel heisst seit jeher `finder lern`. Für `lern` gab es KEINE Regel —
+ * nachgesehen, nicht vermutet. Gemessen am Hauptknopf „Tagesrunde starten":
+ *
+ *     Fläche:  rgba(0, 0, 0, 0)      also durchsichtig
+ *     Rand:    0px
+ *     Radius:  0px
+ *
+ * Er trug die Klasse `prim`, und `prim` ist global nur `min-height:44px`.
+ * Jeder andere Dialog bringt seine eigene Regel mit (`.fd-knoepfe button.prim`,
+ * `.rg-knoepfe button.prim`); dieser hier hatte keine. Ergebnis: der wichtigste
+ * Knopf der ganzen Ansicht sah aus wie eine Bildunterschrift.
+ *
+ * WARUM DAS KEIN PRÜFLAUF GEFUNDEN HAT: die 44 px waren da. Die Höhe stimmte
+ * die ganze Zeit, und §37 misst die Höhe. Gefehlt hat das AUSSEHEN, und das
+ * sieht man nur, wenn man hinsieht (§55.1).
+ *
+ * Die Regeln stehen hier und nicht in `lernwelt.css`, weil der Präfix `lern`
+ * laut `doku/CSS-NAMENSRAEUME.md` zu dieser Datei gehört. Zwei Dateien mit
+ * demselben Präfix gewinnen abwechselnd, und niemand sieht es im Code (§39).
+ * ==========================================================================*/
+/* Die Höhe kommt aus der Marke, nicht als rohe Zahl (test362 §7: die
+   Decke der rohen 44px und 16px wird nicht angehoben). Auf dem Zweig stand
+   hier `min-height:44px; padding:9px 16px` — zwei neue rohe Zahlen. */
+.lern button{min-height:var(--touch-min); padding:9px 14px; border-radius:8px;
+  border:1px solid var(--line); background:none; color:var(--text);
+  font-size:14px; cursor:pointer}
+.lern button:hover{background:var(--bg-hover)}
+.lern button.prim{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent); font-weight:600}
+.lern button.prim:hover{filter:brightness(1.08)}
+/* Kein toter Knopf (E720, CLAUDE.md §38): auch unter dem Finger antwortet er.
+   `data-gedrueckt` (press.ts) neben `:active`, weil das iPhone `:active`
+   beim kurzen Tippen gar nicht malt. Abgeschaltete Knöpfe antworten nicht — sie tun ja
+   nichts, und ein Druckbild würde das Gegenteil behaupten. */
+.lern button:is(:active,[data-gedrueckt]):not(:disabled){background:var(--bg-hover)}
+.lern button.prim:is(:active,[data-gedrueckt]):not(:disabled){background:var(--accent);
+  filter:brightness(.92)}
+/* Ein abgeschalteter Knopf sagt es über die Deckkraft UND über den Zeiger,
+   nicht nur über die Farbe (§38). */
+.lern button:disabled{opacity:.45; cursor:default}
+.lern button:disabled:hover{background:none; filter:none}
+.lern button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+/* Der Schliesser im Kopf ist ein Symbol und kein Kasten — sonst bekäme das
+   ✕ einen Rahmen, den sonst kein Dialog in Redion hat. Gross genug für den
+   Daumen ist er trotzdem: „Abbrechen" ist ein Hauptweg (§37 [hart]), also
+   die Marke in beide Richtungen statt der 36 px vom Zweig. */
+.lern .fh button{min-height:var(--touch-min); min-width:var(--touch-min); padding:0;
+  border:none; background:none}
+.lern .fh button:hover{background:var(--bg-hover)}
+
+/* Der Fortschrittsbalken war der Browser-Standard und damit BLAU — die einzige
+   blaue Fläche in einer violetten App. Auf dem Bild fiel er sofort auf. */
+.lern progress{height:7px; border:none; border-radius:99px; overflow:hidden;
+  background:var(--bg-hover); appearance:none; -webkit-appearance:none}
+.lern progress::-webkit-progress-bar{background:var(--bg-hover); border-radius:99px}
+.lern progress::-webkit-progress-value{background:var(--accent); border-radius:99px}
+.lern progress::-moz-progress-bar{background:var(--accent); border-radius:99px}
+
+/* ============================================================================
  * L108 — der Knopfblock liess sich am Telefon nicht einstellen
  * ----------------------------------------------------------------------------
  * `.knopf-set` — das Zahnrad eines Knopf-Blocks — stand auf `opacity:0` und

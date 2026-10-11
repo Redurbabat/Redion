@@ -74,13 +74,37 @@ const Stromfluss = (() => {
   /** Eine Schalterstellung: welche Klemmenpaare sie schliesst. */
   type Stellung = { name: string; zu: Array<[string, string]> };
 
+  /**
+   * Ein Glied eines mehrteiligen Bauteils. Eine Drehstromquelle ist drei
+   * Quellen, ein Drehstrommotor drei Wicklungen — ein Symbol, mehrere
+   * Elemente im Gleichungssystem. Ohne das müsste jede Wicklung ein eigenes
+   * Symbol werden, und das Klemmenbrett aus dem Unterricht liesse sich gar
+   * nicht zeichnen.
+   */
+  type Glied = {
+    art: 'quelle' | 'widerstand' | 'leiter';
+    von: string;
+    nach: string;
+    wert?: number;
+    /** Nur bei Quellen: Phasenlage in Grad. 0 ist die Bezugsphase (L1). */
+    phase?: number;
+  };
+
+  /** Die fünf Leiter einer Schweizer Installation. */
+  type Leiterart = 'L1' | 'L2' | 'L3' | 'N' | 'PE';
+
   type Verhalten = {
     /** Wie das Bauteil in die Rechnung eingeht. */
     art: 'quelle' | 'widerstand' | 'schalter' | 'leiter' | 'offen'
-       | 'volt' | 'ampere' | 'diode' | 'spule' | 'bezug';
+       | 'volt' | 'ampere' | 'diode' | 'spule' | 'bezug' | 'mehrteilig'
+       | 'uebertrager';
     /** Klemmenpaar für die einfachen Arten. */
     von?: string;
     nach?: string;
+    /** Das zweite Klemmenpaar. Nur der Übertrager hat eines: `von`/`nach`
+        sind seine Primärseite, `von2`/`nach2` die Sekundärseite. */
+    von2?: string;
+    nach2?: string;
     /** Vorgabewert: Ohm bei Widerstand, Volt bei Quelle. */
     wert?: number;
     einheit?: string;
@@ -90,6 +114,44 @@ const Stromfluss = (() => {
     folgtSpule?: 'schliesser' | 'oeffner';
     /** Ein Satz für die Lernende, warum das Bauteil so gerechnet wird. */
     annahme?: string;
+    /** Phasenlage einer Quelle in Grad. Fehlt sie, ist sie 0 — und dann
+        bleibt die ganze Rechnung reell, genau wie vor dem Drehstrom. */
+    phase?: number;
+    /** Mehrteilige Bauteile: Drehstromquelle, Motorwicklungen, Klemmenbrett. */
+    glieder?: Glied[];
+    /**
+     * Welcher Anschluss welchen Leiter FÜHRT — und damit festlegt, was an
+     * diesem Netz für ein Leiter ist. Das dürfen nur Bauteile sagen, die den
+     * Leiter wirklich bestimmen: die Quelle, die Leitersymbole, das
+     * Erdungszeichen.
+     *
+     * Ein Gerät gehört ausdrücklich NICHT dazu, auch wenn es eine
+     * PE-Klemme hat. Sonst erklärt der Motor seine eigene, an nichts
+     * angeschlossene Erdungsklemme zum Schutzleiter — und die Prüfung „hängt
+     * dieses Gerät am Schutzleiter?" beantwortet sich selbst mit ja. Genau
+     * das ist hier einmal passiert und von `test605 §5` gefunden worden.
+     */
+    leiter?: Record<string, Leiterart>;
+    /**
+     * Liefert dieses Bauteil WECHSELSPANNUNG?
+     *
+     * Das ist etwas anderes als „muss komplex gerechnet werden". Eine
+     * einphasige 230-V-Quelle hat die Phasenlage 0 und wird deshalb rein
+     * reell gerechnet — Wechselstrom ist sie trotzdem, und ihr Strom kehrt
+     * hundertmal je Sekunde die Richtung um — 50 volle Perioden, zwei
+     * Umkehrpunkte je Periode.
+     *
+     * Die beiden zu verwechseln war ein echter Fehler und stand zwei
+     * Bögen lang im Code: der Lampenstromkreis an 230 V bekam einen festen
+     * Richtungspfeil, also genau die Behauptung, die E731 verbietet.
+     * Gefunden hat es das Bild, nicht der Prüflauf — die Zahlen stimmten ja.
+     */
+    wechselstrom?: boolean;
+    /** Schutzklasse I heisst: das Gehäuse MUSS an den Schutzleiter. */
+    schutzklasse?: 1 | 2;
+    /** Welche Klemme des GERÄTS der Schutzleiteranschluss ist. Sie führt den
+        Schutzleiter nicht, sie braucht ihn. Siehe `leiter` oben. */
+    schutzklemme?: string;
   };
 
   /* Die beiden Stellungslisten, die fast überall gebraucht werden. */
@@ -108,11 +170,37 @@ const Stromfluss = (() => {
     batterie:        { art: 'quelle', von: '+', nach: '−', wert: 12, einheit: 'V' },
     gleichspannung:  { art: 'quelle', von: '+', nach: '−', wert: 24, einheit: 'V' },
     wechselspannung: { art: 'quelle', von: 'L', nach: 'N', wert: 230, einheit: 'V',
-      annahme: 'Wechselspannung wird als Gleichspannung gleichen Effektivwerts gerechnet. Für ohmsche Lasten stimmt das Ergebnis.' },
-    generator:       { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V' },
-    erde:            { art: 'bezug', von: 'E' },
+      wechselstrom: true, leiter: { L: 'L1', N: 'N' },
+      annahme: 'Wechselspannung wird als Zeiger gerechnet: Betrag ist der Effektivwert, Winkel die Phasenlage. Für ohmsche Lasten ist das Ergebnis exakt.' },
+
+    /* ---- Drehstrom: das Netz, an dem die Schweiz hängt ----
+       3 × 400/230 V heisst: 230 V zwischen Aussenleiter und Neutralleiter,
+       400 V zwischen zwei Aussenleitern. Die 400 V werden hier NICHT
+       hingeschrieben — sie entstehen beim Rechnen aus drei Quellen, die um
+       120° gegeneinander versetzt sind. Wer sie als „230 mal Wurzel 3"
+       einträgt, bekommt zufällig dieselbe Zahl und hat den Grund verloren:
+       dass die Spannung zwischen L2 und L3 um 90° gegen die von L1 versetzt
+       ist, steht in keiner Wurzel drei.
+
+       Der Sternpunkt ist geerdet, und von ihm geht der Schutzleiter aus
+       (TN-S). Deshalb hängen N und PE hier zusammen — und genau deshalb
+       fällt beim Vertauschen der beiden elektrisch NICHTS auf. Das ist keine
+       Ungenauigkeit der Simulation, sondern der Grund, warum der Fehler
+       gefährlich ist. Bogen 3 meldet ihn, die Rechnung kann es nicht. */
+    drehstromquelle: { art: 'mehrteilig', wert: 230, einheit: 'V',
+      wechselstrom: true, leiter: { L1: 'L1', L2: 'L2', L3: 'L3', N: 'N', PE: 'PE' },
+      glieder: [
+        { art: 'quelle', von: 'L1', nach: 'N', wert: 230, phase: 0 },
+        { art: 'quelle', von: 'L2', nach: 'N', wert: 230, phase: -120 },
+        { art: 'quelle', von: 'L3', nach: 'N', wert: 230, phase: -240 },
+        { art: 'leiter', von: 'N', nach: 'PE' }
+      ],
+      annahme: 'Drehstrom wird als Zeiger gerechnet: drei Quellen zu 230 V, um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V — gerechnet, nicht eingetragen.' },
+    generator:       { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V',
+      wechselstrom: true },
+    erde:            { art: 'bezug', von: 'E', leiter: { E: 'PE' } },
     masse:           { art: 'bezug', von: 'M' },
-    schutzleiter:    { art: 'bezug', von: 'PE' },
+    schutzleiter:    { art: 'bezug', von: 'PE', leiter: { PE: 'PE' } },
 
     /* ---- Schalter: alles, was von Hand bewegt wird ---- */
     ausschalter:      { art: 'schalter', stellungen: AUF_ZU('1', '2') },
@@ -166,6 +254,15 @@ const Stromfluss = (() => {
     ] },
 
     /* ---- Kontakte: die schaltet nicht die Hand, sondern eine Spule ---- */
+    /* Der Wechsler ist ein Kontakt mit drei Klemmen: 11 ist gemeinsam, 12
+       liegt in Ruhe an, 14 nach dem Anziehen. Er wird als Schliesser
+       geführt, weil die Schleife nur „an" und „aus" kennt — die Ruhelage
+       ist damit Stellung 0 und die angezogene Stellung 1, genau wie bei
+       jedem anderen Kontakt. */
+    wechsler:            { art: 'schalter', folgtSpule: 'schliesser', stellungen: [
+      { name: 'Ruhe (11–12)', zu: [['11', '12']] },
+      { name: 'angezogen (11–14)', zu: [['11', '14']] }
+    ] },
     schliesser:          { art: 'schalter', stellungen: AUF_ZU('3', '4'), folgtSpule: 'schliesser' },
     oeffner:             { art: 'schalter', stellungen: ZU_AUF('1', '2'), folgtSpule: 'oeffner' },
     'schuetz-schliesser': { art: 'schalter', stellungen: AUF_ZU('13', '14'), folgtSpule: 'schliesser' },
@@ -196,18 +293,122 @@ const Stromfluss = (() => {
       annahme: 'Der Motor wird als reiner Wirkwiderstand gerechnet. Anlaufstrom und Blindanteil fehlen.' },
     'motor-gleichstrom':  { art: 'widerstand', von: 'A1', nach: 'A2', wert: 20, einheit: 'Ω',
       annahme: 'Ohne Gegenspannung gerechnet — der Wert gilt für den Stillstand, nicht für den Lauf.' },
+    /* ---- Der Drehstrommotor und sein Klemmenbrett ----
+       Die drei Wicklungsstränge liegen zwischen U1–U2, V1–V2 und W1–W2. Wie
+       sie verschaltet sind, machen die BRÜCKEN auf dem Klemmenbrett aus —
+       und genau das ist die Aufgabe, die im Unterricht gezeichnet wird.
+       Deshalb sind die Brücken hier Schalterstellungen und keine feste
+       Verdrahtung: wer „Stern" wählt, sieht 230 V am Strang, wer „Dreieck"
+       wählt, sieht 400 V — beides ausgerechnet, nicht angeschrieben.
+
+       Ohne Brücken ist der Motor nicht falsch angeschlossen, sondern gar
+       nicht angeschlossen. Das ist die Ruhelage, weil ein leeres
+       Klemmenbrett genau das ist, was auf dem Tisch liegt. */
+    'motor-drehstrom': { art: 'mehrteilig', wert: 60, einheit: 'Ω',
+      schutzklasse: 1,
+      glieder: [
+        { art: 'widerstand', von: 'U1', nach: 'sternpunkt', wert: 60 },
+        { art: 'widerstand', von: 'V1', nach: 'sternpunkt', wert: 60 },
+        { art: 'widerstand', von: 'W1', nach: 'sternpunkt', wert: 60 }
+      ],
+      annahme: 'Der Motor ist mit drei Anschlüssen gezeichnet und wird deshalb als fertig in Stern geschaltet gerechnet — so, wie ein Motor mit dem Schild 3 × 400/230 V am 400-V-Netz betrieben wird. Wer die Brücken selbst setzen will, nimmt das Klemmenbrett. Die Wicklungen gelten als rein ohmsch: Blindanteil, Anlaufstrom und Schlupf fehlen.' },
+
+    'motor-klemmenbrett': { art: 'mehrteilig', wert: 60, einheit: 'Ω',
+      schutzklasse: 1, schutzklemme: 'PE',
+      glieder: [
+        { art: 'widerstand', von: 'U1', nach: 'U2', wert: 60 },
+        { art: 'widerstand', von: 'V1', nach: 'V2', wert: 60 },
+        { art: 'widerstand', von: 'W1', nach: 'W2', wert: 60 }
+      ],
+      stellungen: [
+        { name: 'ohne Brücken', zu: [] },
+        { name: 'Stern', zu: [['U2', 'V2'], ['V2', 'W2']] },
+        { name: 'Dreieck', zu: [['U1', 'W2'], ['V1', 'U2'], ['W1', 'V2']] }
+      ],
+      annahme: 'Die drei Wicklungen gelten als rein ohmsch. Das Verhältnis von Stern zu Dreieck stimmt trotzdem, weil es allein an der Spannung hängt und nicht an der Art der Last.' },
+
+    /* ---- Der Übertrager ----
+       `wert` ist die ÜBERSETZUNG, nicht ein Widerstand: 230 zu 12 sind
+       19,17. Der Klingeltrafo aus dem Lehrmittel ist genau dieser Fall.
+       Am Bauteil lässt sie sich über `werte.ue` ändern — ein Messwandler
+       ist dasselbe Bauteil mit einer anderen Zahl. */
+    transformator: { art: 'uebertrager', von: '1U', nach: '1V',
+      von2: '2U', nach2: '2V', wert: 230 / 12, einheit: '',
+      annahme: 'Der Übertrager wird als ideal gerechnet: keine Verluste, kein Streufluss, kein Leerlaufstrom. Spannung wird im Verhältnis geteilt, Strom im selben Verhältnis vervielfacht, die Leistung geht unverändert hindurch. Für einen Netztrafo stimmt das auf wenige Prozent.' },
+
     'spule-induktivitaet': { art: 'leiter', von: '1', nach: '2',
       annahme: 'Bei Gleichstrom ist eine Spule eine Verbindung. Ihre Wirkung zeigt sich erst im Wechselstrom.' },
 
-    /* ---- Was den Strom durchlässt ---- */
+    /* ---- Schutzgeräte ----
+       Sie sind alle Schalter: im Betrieb geschlossen, im Fehlerfall offen.
+       Was sie AUSLÖST, kann diese Simulation nicht rechnen — dafür bräuchte
+       es Zeit (die Auslösekennlinie eines Leitungsschutzschalters ist eine
+       Kurve über Sekunden) oder Wärme (das Bimetall eines Thermorelais).
+       Sie stehen trotzdem hier und nicht als Unterbrechung: ein Plan mit
+       einem Motorschutzschalter darin muss rechnen, sonst ist der halbe
+       Motorenteil des Lehrmittels nicht zeichenbar. */
     sicherung:              { art: 'schalter', stellungen: ZU_AUF('1', '2') },
     leitungsschutzschalter: { art: 'schalter', stellungen: ZU_AUF('1', '2') },
+    motorschutzschalter:    { art: 'schalter', stellungen: [
+      { name: 'ein', zu: [['1', '2'], ['3', '4'], ['5', '6']] },
+      { name: 'ausgelöst', zu: [] }
+    ], annahme: 'Der Motorschutzschalter trennt alle drei Aussenleiter zugleich. Wann er auslöst, wird nicht gerechnet — dafür bräuchte es Zeit und Wärme.' },
+    thermorelais:           { art: 'schalter', stellungen: [
+      { name: 'ein', zu: [['1', '2'], ['3', '4'], ['5', '6']] },
+      { name: 'ausgelöst', zu: [] }
+    ], annahme: 'Das Bimetall wird nicht gerechnet. Die Stellung „ausgelöst" lässt sich von Hand wählen, um den Fall zu zeigen.' },
+
+    /* Der Fehlerstrom-Schutzschalter. Er ist als SCHALTER gebaut wie die
+       anderen — sein Besonderes steht nicht hier, sondern in der
+       Fehlerprüfung: dort wird die Summe der Ströme durch seine Pole
+       gebildet, und die ist der Fehlerstrom (E735). Das kann die Rechnung
+       wirklich, und deshalb ist er der einzige Schutz, der hier nicht nur
+       gezeichnet, sondern gemessen wird. */
+    'fi-schutzschalter':    { art: 'schalter', stellungen: [
+      { name: 'ein', zu: [['1', '2'], ['3', '4'], ['N', 'N2']] },
+      { name: 'ausgelöst', zu: [] }
+    ], schutzklemme: 'N',
+      annahme: 'Die Auslösung wird nicht selbst geschaltet — der Fehlerstrom wird aber gerechnet und gemeldet.' },
+
+    ueberspannungsableiter: { art: 'offen', von: '1', nach: 'PE',
+      annahme: 'Im Betrieb sperrt er. Er leitet erst bei einer Überspannung, und die kommt in dieser Rechnung nicht vor.' },
     klemme:                 { art: 'leiter', von: '1', nach: '2' },
     steckverbindung:        { art: 'leiter', von: '1', nach: '2' },
-    'leiter-l1':            { art: 'leiter', von: 'L1', nach: 'L1' },
-    'leiter-n':             { art: 'leiter', von: 'N', nach: 'N' },
-    'leiter-pe':            { art: 'leiter', von: 'PE', nach: 'PE' },
+    'leiter-l1':            { art: 'leiter', von: 'L1', nach: 'L1', leiter: { L1: 'L1' } },
+    'leiter-l2':            { art: 'leiter', von: 'L2', nach: 'L2', leiter: { L2: 'L2' } },
+    'leiter-l3':            { art: 'leiter', von: 'L3', nach: 'L3', leiter: { L3: 'L3' } },
+    'leiter-n':             { art: 'leiter', von: 'N', nach: 'N', leiter: { N: 'N' } },
+    'leiter-pe':            { art: 'leiter', von: 'PE', nach: 'PE', leiter: { PE: 'PE' } },
     'bp-minuterie':         { art: 'schalter', stellungen: AUF_ZU('1', '2') },
+
+    /* ---- Steckvorrichtungen ----
+       Eine Steckdose ohne Gerät ist eine Unterbrechung, und mit Gerät ist
+       sie das Gerät. Welches, weiss der Plan nicht — deshalb `offen` mit
+       einer genannten Annahme, statt einen Verbraucher zu erfinden. */
+    steckdose:          { art: 'offen', von: 'L', nach: 'N',
+      annahme: 'Was in der Steckdose steckt, wird nicht mitgerechnet. Ohne Gerät ist sie eine Unterbrechung.' },
+    'steckdose-schuko': { art: 'offen', von: 'L', nach: 'N',
+      leiter: { }, schutzklemme: 'PE',
+      annahme: 'Was in der Steckdose steckt, wird nicht mitgerechnet. Der Schutzkontakt wird geprüft, nicht gerechnet.' },
+    stecker:            { art: 'offen', von: 'L', nach: 'N',
+      annahme: 'Der Stecker allein führt nichts. Was daran hängt, steht nicht im Plan.' },
+
+    /* ---- Widerstände, die auf etwas reagieren ----
+       Alle vier ändern ihren Wert mit einer Grösse, die dieser Rechnung
+       fehlt: Temperatur, Licht, Spannung. Gerechnet wird deshalb ihr
+       Grundwert, und die Annahme sagt es. Als Unterbrechung wären sie
+       falscher — ein NTC in einer Reihenschaltung leitet ja. */
+    ptc: { art: 'widerstand', von: '1', nach: '2', wert: 100, einheit: 'Ω',
+      annahme: 'Der Kaltleiter wird mit seinem kalten Wert gerechnet. Die Temperatur kommt in dieser Rechnung nicht vor.' },
+    ntc: { art: 'widerstand', von: '1', nach: '2', wert: 10000, einheit: 'Ω',
+      annahme: 'Der Heissleiter wird mit seinem kalten Wert gerechnet. Die Temperatur kommt in dieser Rechnung nicht vor.' },
+    vdr: { art: 'widerstand', von: '1', nach: '2', wert: 1e6, einheit: 'Ω',
+      annahme: 'Der Varistor wird hochohmig gerechnet. Er leitet erst bei Überspannung, und die kommt hier nicht vor.' },
+    ldr: { art: 'widerstand', von: '1', nach: '2', wert: 10000, einheit: 'Ω',
+      annahme: 'Der Fotowiderstand wird mit einem mittleren Wert gerechnet. Die Helligkeit kommt in dieser Rechnung nicht vor.' },
+
+    frequenzmesser: { art: 'volt', von: '1', nach: '2',
+      annahme: 'Er wird wie ein Voltmeter hochohmig gerechnet. Die Frequenz selbst ist in dieser Rechnung fest — 50 Hz.' },
 
     /* ---- Was ihn sperrt ---- */
     kondensator: { art: 'offen', von: '1', nach: '2',
@@ -280,7 +481,10 @@ const Stromfluss = (() => {
     return { finde, eins, alle: () => Array.from(vater.keys()) };
   };
 
-  const NAH = 6;
+  /* Die Zahl steht im Register, damit Netzliste und `klemmeFuer` dieselbe
+     benutzen (E738); 6 ist der Rückfall, falls das Register fehlt. */
+  const NAH: number = (typeof Register !== 'undefined' && Register.fachzeichen
+    && typeof Register.fachzeichen.NAH === 'number') ? Register.fachzeichen.NAH : 6;
   const nahBei = (ax: number, ay: number, bx: number, by: number): boolean =>
     Math.abs(ax - bx) <= NAH && Math.abs(ay - by) <= NAH;
 
@@ -294,7 +498,9 @@ const Stromfluss = (() => {
     return false;
   };
 
-  type Klemme = { teil: string; nr: string; x: number; y: number; schluessel: string };
+  type Klemme = { teil: string; nr: string; x: number; y: number; schluessel: string;
+                  /** Ein innerer Knoten — er liegt nirgends und wird nie verdrahtet. */
+                  intern?: boolean };
 
   /**
    * Alle Klemmen des Plans mit ihrem Ort. Kommt aus `Schaltplan`, damit
@@ -308,6 +514,30 @@ const Stromfluss = (() => {
         ? Schaltplan.anschluesseVon(t) : [];
       liste.forEach((a: any) => raus.push({
         teil: t.id, nr: a.nr, x: a.x, y: a.y, schluessel: `k:${t.id}:${a.nr}`
+      }));
+
+      /* Innere Knoten.
+         --------------------------------------------------------------
+         Ein Drehstrommotor hat drei Anschlüsse und DREI Wicklungen. Wo die
+         sich treffen — im Sternpunkt — ist kein Anschluss: der liegt im
+         Motor und kommt nirgends heraus. Trotzdem ist er ein Netz, und ohne
+         ihn lässt sich der Motor überhaupt nicht rechnen.
+         Solche Knoten bekommen hier ihre eigene Netznummer und keinen Ort.
+         Der Ort ist bewusst NaN und nicht 0: bei 0 läge der Sternpunkt in
+         der linken oberen Ecke und würde sich mit jeder Leitung verbinden,
+         die zufällig dort vorbeikommt. Jeder Vergleich mit NaN ist falsch,
+         und genau das ist hier richtig. */
+      const v = verhalten(t.zeichen);
+      if (!v || !v.glieder) return;
+      const aussen = new Set<string>(liste.map((a: any) => String(a.nr)));
+      const innen = new Set<string>();
+      v.glieder.forEach(g => {
+        [g.von, g.nach].forEach(nr => {
+          if (!aussen.has(nr) && !innen.has(nr)) innen.add(nr);
+        });
+      });
+      innen.forEach(nr => raus.push({
+        teil: t.id, nr, x: NaN, y: NaN, schluessel: `k:${t.id}:${nr}`, intern: true
       }));
     });
     return raus;
@@ -330,22 +560,58 @@ const Stromfluss = (() => {
     const ls = (plan.leitungen || []) as any[];
     ls.forEach(l => v.finde(`l:${l.id}`));
 
+    /* WELCHE KLEMME MEINT EIN GESPEICHERTES LEITUNGSENDE? (E738, L252)
+       Der Name kommt durch `Register.fachzeichen.klemmeFuer`: ein Plan von
+       vor E735 (alle vier Klemmenänderungen, Commit 64e7a43e6 — L252) trägt
+       am Stecker `1`, am unteren Neutralleiter des FI `N` (heute N2), an
+       Steckdose und Schuko `L` an der alten Stelle. Die Daten bleiben, wie
+       sie sind — übersetzt wird hier, beim Lesen. Drehung und Spiegelung
+       des Teils gehen mit: ein FI, der schon gedreht gespeichert ist, hat
+       seinen alten unteren Ort gedreht, und ohne sie hielte `klemmeFuer`
+       N und N2 nicht auseinander (`test608` §7). */
+    const teilNach = new Map<string, any>();
+    (plan.teile || []).forEach((t: any) => teilNach.set(String(t.id), t));
+    const endeVon = (teil: string, nr: string, p: { x: number; y: number } | undefined):
+        { nr: string; frueher: boolean } => {
+      const t = teilNach.get(String(teil));
+      const F = typeof Register !== 'undefined' ? Register.fachzeichen : null;
+      if (!t || !F || typeof F.klemmeFuer !== 'function') return { nr, frueher: false };
+      const r = F.klemmeFuer(t.zeichen, nr, p ? { x: p.x - t.x, y: p.y - t.y } : null,
+                             t.drehung, t.gespiegelt);
+      return r || { nr, frueher: false };
+    };
+
     /* Leitung an Klemme — erst über die gespeicherte Bindung, dann über den
        Ort. Die Bindung ist verlässlicher; der Ort fängt die Fälle, in denen
        jemand eine Leitung von Hand an eine Klemme geschoben hat. */
     ls.forEach(l => {
       const pk = `l:${l.id}`;
-      if (l.vonTeil && l.vonNr) v.eins(pk, `k:${l.vonTeil}:${l.vonNr}`);
-      if (l.nachTeil && l.nachNr) v.eins(pk, `k:${l.nachTeil}:${l.nachNr}`);
       const punkte = (l.punkte || []) as Array<{ x: number; y: number }>;
+      /* Klemmen, die diese Leitung NICHT über den Ort fassen darf: brauchte
+         ein Ende einen alten Namen oder Ort, dann wurde die Leitung gezogen,
+         als es die übrigen Klemmen dieses Teils noch nicht gab. Am Schuko
+         liegt heute N genau dort, wo früher L lag — über den Ort gefasst
+         wären L und N verbunden, ohne dass es jemand gezeichnet hat. */
+      const nicht = new Set<string>();
+      const binde = (teil: string, nr: string, p: { x: number; y: number } | undefined): void => {
+        const r = endeVon(teil, nr, p);
+        v.eins(pk, `k:${teil}:${r.nr}`);
+        if (r.frueher) ks.forEach(k => {
+          if (k.teil === teil && k.nr !== r.nr) nicht.add(k.schluessel);
+        });
+      };
+      if (l.vonTeil && l.vonNr) binde(l.vonTeil, l.vonNr, punkte[0]);
+      if (l.nachTeil && l.nachNr) binde(l.nachTeil, l.nachNr, punkte[punkte.length - 1]);
       punkte.forEach(p => ks.forEach(k => {
-        if (nahBei(p.x, p.y, k.x, k.y)) v.eins(pk, k.schluessel);
+        if (!nicht.has(k.schluessel) && nahBei(p.x, p.y, k.x, k.y)) v.eins(pk, k.schluessel);
       }));
       /* Auch eine Klemme MITTEN auf einer Leitung zählt — so wird eine
          Sammelschiene angezapft, ohne sie zu zerschneiden. */
       for (let i = 0; i + 1 < punkte.length; i++) {
         const a = punkte[i]!, b = punkte[i + 1]!;
-        ks.forEach(k => { if (aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y)) v.eins(pk, k.schluessel); });
+        ks.forEach(k => {
+          if (!nicht.has(k.schluessel) && aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y)) v.eins(pk, k.schluessel);
+        });
       }
     });
 
@@ -411,6 +677,30 @@ const Stromfluss = (() => {
    * Teil hat keine eindeutige Lösung, und das ist eine Aussage über die
    * Zeichnung, die die Lernende hören will.
    * ----------------------------------------------------------------------*/
+  /**
+   * Ab wann ein Pivot als „null" gilt — und warum diese Zahl nicht beliebig ist.
+   *
+   * Sie muss zwischen ZWEI gemessenen Grössen liegen:
+   *
+   *   ~1e-16   das Rundungsrauschen einer wirklich singulären Matrix.
+   *            Zwei ideale Quellen parallel ergeben zwei gleiche Zeilen;
+   *            nach der Elimination bleibt dort exakt oder fast exakt null.
+   *   ~1e-12   der Leitwert GMIN, mit dem jedes Netz am Bezug hängt. Ein
+   *            freischwebender Schaltungsteil wird NUR davon gehalten, und
+   *            sein Pivot ist entsprechend klein — aber die Lösung ist
+   *            trotzdem eindeutig.
+   *
+   * Hier stand `1e-12`, also genau GMIN. Damit war jede Schaltung mit einem
+   * freischwebenden Teil „nicht eindeutig lösbar" — gemessen am ersten
+   * Transformator: Pivot 9,99998e-13, knapp darunter, und der Übertrager
+   * liess sich gar nicht rechnen. Der echte singuläre Fall lag dagegen bei
+   * exakt null. Zwischen beiden ist reichlich Platz; 1e-14 sitzt hundertfach
+   * über dem Rauschen und hundertfach unter GMIN.
+   *
+   * Wer GMIN ändert, muss diese Zahl mitändern. Sie gehören zusammen.
+   */
+  const PIVOT_MIN = 1e-14;
+
   const loese = (A: number[][], z: number[]): number[] | null => {
     const n = z.length;
     if (!n) return [];
@@ -422,7 +712,7 @@ const Stromfluss = (() => {
         const b = Math.abs(M[r]![s]!);
         if (b > betrag) { betrag = b; best = r; }
       }
-      if (betrag < 1e-12) return null;
+      if (betrag < PIVOT_MIN) return null;
       if (best !== s) { const h = M[s]!; M[s] = M[best]!; M[best] = h; }
       const p = M[s]![s]!;
       for (let r = 0; r < n; r++) {
@@ -440,6 +730,51 @@ const Stromfluss = (() => {
     return x;
   };
 
+  /**
+   * Dasselbe Gleichungssystem, nur mit komplexen Zahlen — für Drehstrom.
+   *
+   * WARUM ÜBERHAUPT KOMPLEX: Drei Quellen um 120° versetzt lassen sich mit
+   * reellen Zahlen nicht ehrlich rechnen. Man könnte 400 V zwischen zwei
+   * Aussenleitern einfach hinschreiben; dann stimmt die eine Zahl und alles
+   * andere nicht mehr — der Neutralleiterstrom bei ungleicher Last wäre die
+   * Summe der Strangströme statt ihrer ZEIGERSUMME, und bei drei gleichen
+   * Lasten käme der dreifache Strom heraus, wo in Wirklichkeit null fliesst.
+   * Genau das ist der Satz, den eine Lernende verstehen muss.
+   *
+   * WIE ES GEHT, OHNE EINEN ZWEITEN LÖSER: Ein komplexes System
+   * (Gr + jGi)·(xr + jxi) = (zr + jzi) ist dasselbe wie ein doppelt so
+   * grosses reelles:
+   *
+   *     [ Gr  −Gi ] [ xr ]   [ zr ]
+   *     [ Gi   Gr ] [ xi ] = [ zi ]
+   *
+   * Damit rechnet weiterhin `loese` — derselbe Gauss mit Spaltenpivot, der
+   * sich schon bewährt hat. Ein zweiter Löser daneben würde irgendwann
+   * anders rechnen als der erste, und niemand wüsste welcher stimmt.
+   */
+  const loeseKomplex = (Are: number[][], Aim: number[][],
+                        zre: number[], zim: number[]):
+                        { re: number[]; im: number[] } | null => {
+    const n = zre.length;
+    if (!n) return { re: [], im: [] };
+    const G: number[][] = [];
+    for (let i = 0; i < 2 * n; i++) G.push(new Array<number>(2 * n).fill(0));
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        G[i]![j] = Are[i]![j]!;
+        G[i]![j + n] = -Aim[i]![j]!;
+        G[i + n]![j] = Aim[i]![j]!;
+        G[i + n]![j + n] = Are[i]![j]!;
+      }
+    }
+    const x = loese(G, zre.concat(zim));
+    if (!x) return null;
+    return { re: x.slice(0, n), im: x.slice(n) };
+  };
+
+  /** Grad in Bogenmass — die Phasenlagen stehen in Grad, weil sie so gelehrt werden. */
+  const bogen = (grad: number): number => grad * Math.PI / 180;
+
   /* ------------------------------------------------------------------------
    * 4. DIE RECHNUNG
    * ----------------------------------------------------------------------*/
@@ -456,16 +791,73 @@ const Stromfluss = (() => {
     fliesst: boolean;
     /** Nur bei Verbrauchern: 0…1, wie hell im Verhältnis zur Nennleistung. */
     helligkeit?: number;
+    /** Effektivwert der Spannung in Volt — das, was ein Messgerät anzeigt. */
+    Ubetrag: number;
+    /** Effektivwert des Stroms in Ampere. */
+    Ibetrag: number;
+    /** Phasenlage der Spannung in Grad, 0 = Bezugsphase L1. */
+    Uwinkel: number;
+    /** Phasenlage des Stroms in Grad. */
+    Iwinkel: number;
+    /**
+     * Der Strom als Zeiger, Real- und Imaginärteil, in Ampere.
+     *
+     * Warum zusätzlich zu Betrag und Winkel: Ströme lassen sich nur so
+     * ADDIEREN. Der Fehlerstrom im FI ist die Summe der Ströme durch seine
+     * Pole, und Beträge zu addieren gäbe dort dieselbe falsche Antwort wie
+     * beim Neutralleiter (E730) — nämlich immer zu viel.
+     * Aus Betrag und Winkel liesse sich das zwar zurückrechnen, aber nur
+     * bei Wechselstrom: bei Gleichstrom steht der Winkel fest auf 0, und
+     * das Vorzeichen wäre verloren.
+     */
+    Ire: number;
+    Iim: number;
+    /** Wird dieses Bauteil mit Wechselstrom gerechnet? Dann hat `I` kein
+        Vorzeichen im Sinn einer festen Richtung — siehe `richtung`. */
+    wechsel: boolean;
+    /** Die beiden Klemmen, zwischen denen gemessen wurde. `vor` heisst:
+        von `vonKlemme` nach `nachKlemme`. */
+    vonKlemme: string;
+    nachKlemme: string;
+    /**
+     * In welche Richtung fliesst der Strom?
+     *   `vor`       von `vonKlemme` nach `nachKlemme`
+     *   `rueck`     umgekehrt
+     *   `keine`     es fliesst nichts
+     *   `wechselnd` Wechselstrom — die Richtung kehrt sich dauernd um
+     */
+    richtung: 'vor' | 'rueck' | 'keine' | 'wechselnd';
+    /**
+     * Nur bei Wechselstrom: wohin der Strom in EINEM bestimmten Augenblick
+     * fliesst, nämlich wenn die Spannung von L1 ihren Scheitel hat. Das ist
+     * der Augenblick, auf den sich alle Winkel beziehen.
+     * `quer` heisst: in genau diesem Augenblick fliesst hier nichts, weil
+     * der Strom um 90° versetzt ist. Bei Drehstrom ist das kein Sonderfall,
+     * sondern kommt an jedem Strang einmal je Periode vor.
+     */
+    richtungJetzt?: 'vor' | 'rueck' | 'quer';
+    /** Ein Satz für den Menschen — er muss bei Wechselstrom mitgesagt werden. */
+    richtungstext: string;
   };
 
   type Ergebnis = {
     ok: boolean;
     /** Was schiefging, in einem Satz für den Menschen. */
     fehler: string;
-    /** Spannung je Netz, Netznummer → Volt. */
+    /** Spannung je Netz, Netznummer → Volt. Bei Wechselstrom der Effektivwert. */
     spannung: number[];
+    /** Phasenlage je Netz in Grad. Bei Gleichstrom überall 0. */
+    spannungWinkel: number[];
+    /** Fliesst hier Wechselstrom? Entscheidet die Bedeutung der Messwerte. */
+    wechsel: boolean;
+    /** Musste mit komplexen Zeigern gerechnet werden? Entscheidet nur den
+        Rechenweg — eine einphasige Schaltung bleibt reell. */
+    komplex: boolean;
     /** Messwerte je Bauteil, nach Teil-Kennung. */
     werte: Record<string, Messwert>;
+    /** Messwerte der einzelnen Glieder mehrteiliger Bauteile:
+        Teil-Kennung → „Klemme–Klemme" → Messwert. */
+    teilwerte: Record<string, Record<string, Messwert>>;
     /** Netze, durch die Strom fliesst — für die Animation der Leitungen. */
     stromNetze: number[];
     /** Strom je Netz in Ampere, für die Geschwindigkeit der Animation. */
@@ -482,11 +874,22 @@ const Stromfluss = (() => {
     leitungNetz: Record<string, number>;
     /** Der grösste Strom im Plan — Massstab für die Geschwindigkeit der Animation. */
     maxStrom: number;
+    /**
+     * Welche Netze ein Bauteil leitend verbindet — OHNE die Spannungsquellen.
+     * Die Fehlerprüfung fragt damit „kommt man von hier zum Neutralleiter?",
+     * und über eine Quelle käme man immer hin. Ein Amperemeter ist als 0-V-
+     * Quelle gebaut, zählt hier aber als Leitung — denn genau das ist es.
+     */
+    verbindungen: Array<[number, number]>;
+    /** Was am Anschluss falsch ist. Leer heisst: nichts gefunden. */
+    anschlussfehler: Anschlussfehler[];
   };
 
   const leer = (fehler: string, warnungen: string[] = []): Ergebnis => ({
-    ok: false, fehler, spannung: [], werte: {}, stromNetze: [], netzStrom: [],
-    spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0
+    ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false, komplex: false,
+    werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
+    spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
+    verbindungen: [], anschlussfehler: []
   });
 
   /**
@@ -550,6 +953,15 @@ const Stromfluss = (() => {
           const n = netzFuer(t.id, v.nach);
           if (n >= 0) masse = n;
         }
+        /* Bei der Drehstromquelle ist es der Sternpunkt — er ist geerdet,
+           und darauf beziehen sich alle drei Strangspannungen. */
+        if (v && v.art === 'mehrteilig') {
+          (v.glieder || []).forEach(g => {
+            if (masse >= 0 || g.art !== 'quelle') return;
+            const n = netzFuer(t.id, g.nach);
+            if (n >= 0) masse = n;
+          });
+        }
       });
     }
     if (masse < 0) return leer('Der Plan hat keine Spannungsquelle. Ohne Quelle fliesst kein Strom.');
@@ -562,7 +974,15 @@ const Stromfluss = (() => {
     /* Die Bauteile in Rechenform bringen. */
     type Eintrag = {
       t: any; v: Verhalten; a: number; b: number;
-      art: 'R' | 'U'; wert: number; quelleNr?: number;
+      art: 'R' | 'U' | 'T'; wert: number; quelleNr?: number;
+      /** Nur beim Übertrager: die beiden Netze der Sekundärseite. */
+      c?: number; d?: number;
+      /** Phasenlage in Grad. Nur Quellen haben eine; alles andere ist 0. */
+      phase: number;
+      /** Die beiden Klemmen, zwischen denen das Element liegt. Nur ein
+          mehrteiliges Bauteil braucht sie: bei einem Motor sind die drei
+          Stränge sonst nicht auseinanderzuhalten. */
+      von: string; nach: string;
     };
     const eintraege: Eintrag[] = [];
     const annahmen = new Set<string>();
@@ -574,7 +994,8 @@ const Stromfluss = (() => {
       if (!v) return;
       if (v.annahme) annahmen.add(v.annahme);
 
-      const paar = (von: string, nach: string, art: 'R' | 'U', wert: number) => {
+      const paar = (von: string, nach: string, art: 'R' | 'U', wert: number,
+                    phase = 0) => {
         const a = netzFuer(t.id, von), b = netzFuer(t.id, nach);
         if (a < 0 || b < 0) return;
         if (a === b) {
@@ -587,13 +1008,49 @@ const Stromfluss = (() => {
             `${t.bmk || t.zeichen}: beide Anschlüsse hängen am selben Netz — die Quelle ist kurzgeschlossen.`);
           return;
         }
-        eintraege.push({ t, v, a, b, art, wert });
+        eintraege.push({ t, v, a, b, art, wert, phase, von, nach });
+      };
+
+      /** Vier Klemmen — bisher braucht das nur der Übertrager. */
+      const vier = (v1: string, v2: string, s1: string, s2: string, ue: number) => {
+        const a = netzFuer(t.id, v1), b = netzFuer(t.id, v2);
+        const c = netzFuer(t.id, s1), d = netzFuer(t.id, s2);
+        if (a < 0 || b < 0 || c < 0 || d < 0) return;
+        if (a === b || c === d) {
+          /* Eine kurzgeschlossene Wicklung. Beim Übertrager ist das kein
+             harmloser Kreis wie bei einem Widerstand: ist die Sekundärseite
+             gebrückt, zwingt die Bedingung U1 = ü·U2 auch die Primärseite
+             auf null, und dann liegt die Quelle am Kurzschluss. */
+          kurzschluss.push(
+            `${t.bmk || t.zeichen}: eine Wicklung ist kurzgeschlossen — beide Enden liegen am selben Netz.`);
+          return;
+        }
+        eintraege.push({ t, v, a, b, c, d, art: 'T', wert: ue, phase: 0,
+                         von: v1, nach: v2 });
       };
 
       switch (v.art) {
         case 'quelle':
-          paar(v.von!, v.nach!, 'U', spannungVon(t, v));
+          paar(v.von!, v.nach!, 'U', spannungVon(t, v), v.phase ?? 0);
           break;
+
+        /* Ein Symbol, mehrere Elemente: Drehstromquelle, Motorwicklungen.
+           Die Brücken des Klemmenbretts kommen aus der Stellungsliste und
+           laufen durch dieselbe Mechanik wie jeder andere Schalter. */
+        case 'mehrteilig': {
+          (v.glieder || []).forEach(g => {
+            if (g.art === 'quelle') paar(g.von, g.nach, 'U', g.wert ?? 230, g.phase ?? 0);
+            else if (g.art === 'widerstand') paar(g.von, g.nach, 'R', g.wert ?? 1000);
+            else paar(g.von, g.nach, 'R', KONTAKT);
+          });
+          const liste = v.stellungen || [];
+          if (liste.length) {
+            const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
+            const st = liste[idx];
+            if (st) st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
+          }
+          break;
+        }
         case 'widerstand':
         case 'spule':
           paar(v.von!, v.nach!, 'R', widerstandVon(t, v));
@@ -607,6 +1064,15 @@ const Stromfluss = (() => {
         case 'volt':
           paar(v.von!, v.nach!, 'R', 1e7);
           break;
+        case 'uebertrager': {
+          /* Die Übersetzung darf am Bauteil stehen — ein Klingeltrafo und
+             ein Messwandler sind dasselbe Bauteil mit anderen Zahlen. */
+          const eigen = t && t.werte && typeof t.werte.ue === 'number' ? t.werte.ue : NaN;
+          const ue = (Number.isFinite(eigen) && eigen > 0) ? eigen
+                   : (typeof v.wert === 'number' && v.wert > 0 ? v.wert : 1);
+          vier(v.von!, v.nach!, v.von2!, v.nach2!, ue);
+          break;
+        }
         case 'diode': {
           /* Ohne Zeitverlauf lässt sich eine Diode nur schätzen: sie wird als
              Widerstand in Durchlassrichtung gerechnet und in Sperrrichtung
@@ -631,7 +1097,11 @@ const Stromfluss = (() => {
 
     /* Spannungsquellen durchnummerieren — jede bekommt eine Unbekannte. */
     let m = 0;
-    eintraege.forEach(e => { if (e.art === 'U') e.quelleNr = m++; });
+    /* Auch der Übertrager bekommt eine Unbekannte: seinen Primärstrom. Er
+       lässt sich nicht aus den Spannungen ableiten, weil ein idealer
+       Übertrager keinen Widerstand hat — genau wie bei einer Spannungsquelle
+       ist der Strom die gesuchte Grösse und nicht die gegebene. */
+    eintraege.forEach(e => { if (e.art === 'U' || e.art === 'T') e.quelleNr = m++; });
 
     const gr = n + m;
     if (!gr) return leer('Es gibt nichts zu rechnen — alle Bauteile hängen am Bezugsnetz.', warnungen);
@@ -639,6 +1109,18 @@ const Stromfluss = (() => {
     const A: number[][] = [];
     for (let i = 0; i < gr; i++) A.push(new Array<number>(gr).fill(0));
     const z = new Array<number>(gr).fill(0);
+
+    /* Der Imaginärteil der Matrix. Er ist heute überall null, weil alle
+       Bauteile rein ohmsch gerechnet werden — eine Spule ist eine
+       Verbindung, ein Kondensator eine Unterbrechung (siehe Kopf der Datei).
+       Die Phasenlage kommt allein aus den QUELLEN, und das ist für ohmsche
+       Lasten die vollständige Wahrheit, nicht eine Näherung.
+       Er steht trotzdem hier: sobald ein Blindwiderstand dazukommt, wird er
+       gefüllt, und der Löser rechnet ohne weitere Änderung richtig weiter.
+       (Als Lücke eingetragen — heute fehlt jeder Blindanteil.) */
+    const Aim: number[][] = [];
+    for (let i = 0; i < gr; i++) Aim.push(new Array<number>(gr).fill(0));
+    const zim = new Array<number>(gr).fill(0);
 
     /* Ein winziger Leitwert von jedem Netz nach Masse — 1 TΩ, also nichts.
        Ohne ihn ist jede Schaltung mit einem freischwebenden Netz unlösbar,
@@ -649,8 +1131,15 @@ const Stromfluss = (() => {
        ist nicht falsch, sondern nur eine Festlegung. Am Ergebnis einer
        angeschlossenen Schaltung ändert der Wert nichts — er ist zwölf
        Grössenordnungen kleiner als der kleinste Verbraucher.
-       (Denselben Weg geht SPICE, und aus demselben Grund.) */
-    for (let r = 0; r < n; r++) A[r]![r] = A[r]![r]! + 1e-12;
+       (Denselben Weg geht SPICE, und aus demselben Grund.)
+
+       ER HÄNGT MIT `PIVOT_MIN` ZUSAMMEN: ein Schaltungsteil, der NUR über
+       diesen Leitwert am Bezug hängt — die Sekundärseite eines Übertragers
+       zum Beispiel —, hat einen Pivot in der Grössenordnung von GMIN. Die
+       Schwelle, ab der eine Matrix als singulär gilt, muss deshalb deutlich
+       darunter liegen. Wer den einen Wert ändert, ändert den anderen mit. */
+    const GMIN = 1e-12;
+    for (let r = 0; r < n; r++) A[r]![r] = A[r]![r]! + GMIN;
 
     eintraege.forEach(e => {
       const ra = zeile[e.a]!, rb = zeile[e.b]!;
@@ -662,15 +1151,80 @@ const Stromfluss = (() => {
           A[ra]![rb] = A[ra]![rb]! - g;
           A[rb]![ra] = A[rb]![ra]! - g;
         }
+      } else if (e.art === 'T') {
+        /* DER IDEALE ÜBERTRAGER.
+           -----------------------------------------------------------------
+           Er hat keinen Widerstand, keinen Streufluss und keine Verluste;
+           er hält nur zwei Verhältnisse ein:
+
+               U1 = ü · U2          die Spannung wird geteilt
+               I2 = ü · I1          der Strom wird im selben Mass grösser
+
+           Beides zusammen heisst: U1·I1 = U2·I2, die Leistung geht
+           unverändert hindurch. Genau das ist die Aussage, um die es im
+           Unterricht geht, und sie gilt für einen guten Netztrafo auf ein
+           paar Prozent genau.
+
+           In der Matrix braucht er EINE Unbekannte, seinen Primärstrom, und
+           eine Zeile für die Spannungsbedingung. Die Sekundärseite bekommt
+           denselben Strom mit dem Faktor ü und umgekehrtem Vorzeichen —
+           was auf der einen Seite hineingeht, kommt auf der anderen heraus.
+           Die Zeile ist symmetrisch zur Spalte, deshalb steht dasselbe
+           zweimal da. */
+        const rc = typeof e.c === 'number' ? zeile[e.c]! : -1;
+        const rd = typeof e.d === 'number' ? zeile[e.d]! : -1;
+        const q = n + e.quelleNr!;
+        const ue = e.wert;
+        /* Primärseite: der Strom fliesst von a nach b hinein. */
+        if (ra >= 0) { A[ra]![q] = A[ra]![q]! + 1; A[q]![ra] = A[q]![ra]! + 1; }
+        if (rb >= 0) { A[rb]![q] = A[rb]![q]! - 1; A[q]![rb] = A[q]![rb]! - 1; }
+        /* Sekundärseite: derselbe Strom, ü-fach, und aus c heraus. */
+        if (rc >= 0) { A[rc]![q] = A[rc]![q]! - ue; A[q]![rc] = A[q]![rc]! - ue; }
+        if (rd >= 0) { A[rd]![q] = A[rd]![q]! + ue; A[q]![rd] = A[q]![rd]! + ue; }
+        /* Die Bedingung selbst steht in z: U1 − ü·U2 = 0. */
+        z[q] = 0;
+        zim[q] = 0;
       } else {
         const q = n + e.quelleNr!;
         if (ra >= 0) { A[ra]![q] = A[ra]![q]! + 1; A[q]![ra] = A[q]![ra]! + 1; }
         if (rb >= 0) { A[rb]![q] = A[rb]![q]! - 1; A[q]![rb] = A[q]![rb]! - 1; }
-        z[q] = e.wert;
+        /* Die Quelle als Zeiger. Bei Phase 0 ist der Kosinus genau 1 und der
+           Sinus genau 0 — eine einphasige Schaltung rechnet damit Zahl für
+           Zahl so wie vor dem Drehstrom. */
+        z[q] = e.wert * Math.cos(bogen(e.phase));
+        zim[q] = e.wert * Math.sin(bogen(e.phase));
       }
     });
 
-    const x = loese(A, z);
+    /* ZWEI FRAGEN, DIE NICHT DIESELBE SIND.
+       -------------------------------------------------------------------
+       `komplex` entscheidet den RECHENWEG: nur wenn eine Quelle wirklich
+       um einen Winkel versetzt ist, braucht es die doppelt grosse Matrix.
+       Eine einphasige Schaltung bleibt reell und liefert Zahl für Zahl
+       dieselben Werte wie vor dem Drehstrom.
+
+       `wechsel` entscheidet die BEDEUTUNG: ob hier Wechselstrom fliesst.
+       Eine 230-V-Quelle ist Wechselstrom, auch wenn sie allein steht und
+       rein reell gerechnet wird — ihr Strom kehrt trotzdem hundertmal je
+       Sekunde um, und ein fester Richtungspfeil wäre eine Lüge (E731).
+       Die beiden gleichzusetzen war genau dieser Fehler. */
+    const komplex = eintraege.some(e => e.art === 'U' && (e.phase % 360) !== 0);
+    const wechsel = teile.some(t => {
+      const v = verhalten(t.zeichen);
+      return !!(v && v.wechselstrom);
+    });
+
+    let xRe: number[] | null;
+    let xIm: number[];
+    if (komplex) {
+      const k = loeseKomplex(A, Aim, z, zim);
+      xRe = k ? k.re : null;
+      xIm = k ? k.im : [];
+    } else {
+      xRe = loese(A, z);
+      xIm = new Array<number>(gr).fill(0);
+    }
+    const x = xRe;
     if (!x) return leer(
       'Die Schaltung hat keine eindeutige Lösung. Das passiert, wenn zwei ideale ' +
       'Quellen parallel liegen oder zwei Amperemeter denselben Zweig messen — ' +
@@ -680,29 +1234,154 @@ const Stromfluss = (() => {
       const r = zeile[netz];
       return (typeof r === 'number' && r >= 0) ? x[r]! : 0;
     };
+    const Uj = (netz: number): number => {
+      const r = zeile[netz];
+      return (typeof r === 'number' && r >= 0) ? (xIm[r] ?? 0) : 0;
+    };
+
+    /* Winkel in Grad, auf −180…180 gebracht. Eine Phasenlage von 240° ist
+       dieselbe wie −120°, und die zweite ist die, die im Heft steht. */
+    const winkel = (re: number, im: number): number => {
+      if (Math.abs(re) < 1e-12 && Math.abs(im) < 1e-12) return 0;
+      return Math.atan2(im, re) * 180 / Math.PI;
+    };
 
     const spannung: number[] = [];
-    for (let i = 0; i < anzahl; i++) spannung.push(U(i));
+    const spannungWinkel: number[] = [];
+    for (let i = 0; i < anzahl; i++) {
+      const re = U(i), im = Uj(i);
+      /* Bei Gleichstrom ist der Realteil die Spannung, mit Vorzeichen. Bei
+         Wechselstrom ist es der Effektivwert — das, was ein Messgerät
+         anzeigt —, und das Vorzeichen wandert in den Winkel. Im rein
+         reellen Wechselstromfall sind das 0° oder 180°, und damit steht die
+         Richtung auch dort noch im Winkel. */
+      spannung.push(wechsel ? Math.hypot(re, im) : re);
+      spannungWinkel.push(wechsel ? winkel(re, im) : 0);
+    }
 
     const werte: Record<string, Messwert> = {};
+    /* Die einzelnen Glieder eines mehrteiligen Bauteils.
+       -----------------------------------------------------------------
+       `werte` hält je Bauteil EINEN Messwert, nämlich den mit dem grössten
+       Strom. Bei einem Drehstrommotor ist das nutzlos: dort liegen drei
+       Wicklungen und zwei bis drei Brücken unter demselben Symbol, und die
+       Brücke mit ihrem Milliohm würde als „Spannung am Motor: 0,004 V"
+       durchgehen. Die Strangspannung — die Zahl, um die es im Unterricht
+       geht — wäre nirgends ablesbar.
+       Deshalb steht hier jedes Glied einzeln, nach seinen Klemmen benannt:
+       `U1–U2` ist der erste Strang. */
+    const teilwerte: Record<string, Record<string, Messwert>> = {};
     const netzStrom = new Array<number>(anzahl).fill(0);
 
     eintraege.forEach(e => {
-      const u = U(e.a) - U(e.b);
-      const i = e.art === 'R' ? u / e.wert : x[n + e.quelleNr!]!;
+      const ure = U(e.a) - U(e.b);
+      const uim = Uj(e.a) - Uj(e.b);
+      const ire = e.art === 'R' ? ure / e.wert : x[n + e.quelleNr!]!;
+      const iim = e.art === 'R' ? uim / e.wert : (xIm[n + e.quelleNr!] ?? 0);
+      /* Der Übertrager hat ZWEI Seiten und damit zwei Messwerte. Der
+         Haupteintrag zeigt die Primärseite; die Sekundärseite kommt als
+         Teilwert dazu, weil dort die interessante Zahl steht — was hinten
+         herauskommt, ist die Frage jeder Trafo-Aufgabe. */
+      if (e.art === 'T' && typeof e.c === 'number' && typeof e.d === 'number') {
+        const s2re = U(e.c) - U(e.d), s2im = Uj(e.c) - Uj(e.d);
+        const i2re = -ire * e.wert, i2im = -iim * e.wert;
+        const fach2 = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
+        const b2 = Math.hypot(s2re, s2im), j2 = Math.hypot(i2re, i2im);
+        fach2[`${e.v.von2}–${e.v.nach2}`] = {
+          teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
+          U: wechsel ? b2 : s2re, I: wechsel ? j2 : i2re,
+          P: Math.abs(s2re * i2re + s2im * i2im), fliesst: j2 > SCHWELLE,
+          Ubetrag: b2, Ibetrag: j2,
+          Uwinkel: wechsel ? winkel(s2re, s2im) : 0,
+          Iwinkel: wechsel ? winkel(i2re, i2im) : 0,
+          Ire: i2re, Iim: i2im, wechsel,
+          vonKlemme: e.v.von2 || '', nachKlemme: e.v.nach2 || '',
+          richtung: j2 <= SCHWELLE ? 'keine' : (wechsel ? 'wechselnd' : (i2re > 0 ? 'vor' : 'rueck')),
+          richtungstext: j2 <= SCHWELLE ? 'Es fliesst kein Strom.'
+            : 'Der Strom der Sekundärseite. Er ist um die Übersetzung grösser als der primäre.'
+        };
+      }
+      const uBetrag = Math.hypot(ure, uim);
+      const iBetrag = Math.hypot(ire, iim);
+      /* Wirkleistung als Zeigerprodukt: P = Re(U · I*). Bei Gleichstrom ist
+         das genau U·I wie bisher; bei Wechselstrom ist es die Leistung, die
+         wirklich in Wärme geht, und nicht das Produkt zweier Effektivwerte
+         (das wäre die Scheinleistung und bei Blindanteil zu gross). */
+      const p = Math.abs(ure * ire + uim * iim);
       const alt = werte[e.t.id];
-      const strom = Math.abs(i);
+      const strom = iBetrag;
+      const iWinkel = wechsel ? winkel(ire, iim) : 0;
+
+      /* Die Richtung.
+         -----------------------------------------------------------------
+         Bei Gleichstrom ist sie einfach: das Vorzeichen des Stroms, und es
+         kommt ohne Zusatzarbeit aus der Knotenpotentialanalyse.
+
+         Bei Wechselstrom wäre genau dieselbe Auskunft eine LÜGE. Der Strom
+         kehrt bei 50 Hz hundertmal je Sekunde seine Richtung um — 50 volle
+         Perioden, und in jeder geht er zweimal durch null. Ein Pfeil, der
+         einfach dasteht, behauptet etwas, das ein Lernender glaubt, weil es
+         bei der Batterie stimmt. Deshalb heisst die Richtung hier
+         `wechselnd`, und was der Pfeil zeigt, ist die ZÄHLRICHTUNG — eine
+         Festlegung, keine Beobachtung.
+
+         Für den einen Augenblick, auf den sich alle Winkel beziehen (den
+         Scheitel von L1), lässt sich trotzdem sagen, wohin es geht. Das ist
+         `richtungJetzt`, und dort ist `quer` ein echter Wert: steht der
+         Strom um 90° zur Bezugsphase, fliesst in DIESEM Augenblick nichts —
+         gleich danach schon. Bei Drehstrom kommt das an jedem Strang einmal
+         je Periode vor, ist also kein Randfall, den man wegrunden darf. */
+      let richtung: Messwert['richtung'];
+      let richtungJetzt: Messwert['richtungJetzt'];
+      let richtungstext: string;
+      const hin = `von ${e.von} nach ${e.nach}`;
+      const her = `von ${e.nach} nach ${e.von}`;
+      if (strom <= SCHWELLE) {
+        richtung = 'keine';
+        richtungstext = 'Es fliesst kein Strom.';
+      } else if (!wechsel) {
+        richtung = ire > 0 ? 'vor' : 'rueck';
+        richtungstext = `Der Strom fliesst ${ire > 0 ? hin : her}.`;
+      } else {
+        richtung = 'wechselnd';
+        const c = Math.cos(bogen(iWinkel));
+        richtungJetzt = Math.abs(c) < 0.02 ? 'quer' : (c > 0 ? 'vor' : 'rueck');
+        const augenblick = richtungJetzt === 'quer'
+          ? 'steht er gerade still — er ist um 90° versetzt und kehrt eben um'
+          : `fliesst er ${richtungJetzt === 'vor' ? hin : her}`;
+        richtungstext =
+          'Wechselstrom bei 50 Hz: der Strom durchläuft 50 volle Perioden je '
+          + 'Sekunde und kehrt dabei hundertmal seine Richtung um. Der Pfeil '
+          + `zeigt die Zählrichtung (${hin}). Im Augenblick des Scheitels von L1 `
+          + `${augenblick}.`;
+      }
+
+      const mach = (): Messwert => ({
+        teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
+        U: wechsel ? uBetrag : ure, I: wechsel ? iBetrag : ire,
+        P: p, fliesst: strom > SCHWELLE,
+        Ubetrag: uBetrag, Ibetrag: iBetrag,
+        Uwinkel: wechsel ? winkel(ure, uim) : 0,
+        Iwinkel: iWinkel, Ire: ire, Iim: iim,
+        wechsel, vonKlemme: e.von, nachKlemme: e.nach,
+        richtung, richtungstext,
+        ...(richtungJetzt ? { richtungJetzt } : {})
+      });
+
       /* Ein Bauteil kann mehrere Pfade haben (Hauptschalter, Serienschalter).
          Gezeigt wird der grösste Strom — das ist der, der die Sicherung
          auslöst und nach dem gefragt wird. */
       if (!alt || strom > Math.abs(alt.I)) {
-        werte[e.t.id] = {
-          teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
-          U: u, I: i, P: Math.abs(u * i), fliesst: strom > SCHWELLE
-        };
+        werte[e.t.id] = mach();
       } else if (alt) {
         alt.fliesst = alt.fliesst || strom > SCHWELLE;
       }
+      /* Die Teilwerte gab es zuerst nur für mehrteilige Bauteile (das
+         Klemmenbrett). Sie werden jetzt für JEDES Bauteil geführt, weil ein
+         Schalter genauso mehrere Pole hat — und beim FI ist der Strom durch
+         jeden einzelnen Pol die ganze Frage. */
+      const fach = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
+      fach[`${e.von}–${e.nach}`] = mach();
       netzStrom[e.a] = Math.max(netzStrom[e.a]!, strom);
       netzStrom[e.b] = Math.max(netzStrom[e.b]!, strom);
     });
@@ -745,9 +1424,14 @@ const Stromfluss = (() => {
     }
 
     return {
-      ok: true, fehler: '', spannung, werte, stromNetze, netzStrom, spulen,
+      ok: true, fehler: '', spannung, spannungWinkel, wechsel, komplex,
+      werte, teilwerte, stromNetze, netzStrom, spulen,
       annahmen: Array.from(annahmen), warnungen, durchgaenge: 1,
-      leitungNetz: netzInfo.leitungNetz, maxStrom
+      leitungNetz: netzInfo.leitungNetz, maxStrom,
+      verbindungen: eintraege
+        .filter(e => !(e.art === 'U' && e.wert !== 0))
+        .map(e => [e.a, e.b] as [number, number]),
+      anschlussfehler: []
     };
   };
 
@@ -787,8 +1471,27 @@ const Stromfluss = (() => {
     if (vorher) folger.forEach(t => {
       if (t.bmk && vorher[t.bmk]) stand[t.id] = 1;
     });
+
+    /**
+     * Die Fehlerprüfung anhängen — und zwar AUCH, wenn die Rechnung
+     * gescheitert ist.
+     *
+     * Das ist der wichtigste Fall überhaupt. Ein Kurzschluss lässt die
+     * Matrix gar nicht erst lösen; die Rechnung bricht mit „die Quelle ist
+     * kurzgeschlossen" ab. Wer die Fehlerprüfung erst danach laufen liesse,
+     * bekäme genau dort keine Erklärung, wo sie gebraucht wird — nämlich
+     * beim Fehler, der wirklich passiert ist.
+     */
+    const mitFehlern = (e: Ergebnis): Ergebnis => {
+      e.anschlussfehler = anschlussfehler(plan, netzInfo, e);
+      /* Auch in die Warnungen, damit alles, was heute schon Warnungen
+         anzeigt, den Fund ohne Änderung mitbekommt. */
+      e.anschlussfehler.forEach(f => e.warnungen.push(`${f.was} ${f.warum}`));
+      return e;
+    };
+
     let erg = einDurchgang(plan, stand, netzInfo);
-    if (!erg.ok) return erg;
+    if (!erg.ok) return mitFehlern(erg);
 
     const gesehen = new Set<string>();
     let runde = 1;
@@ -821,7 +1524,7 @@ const Stromfluss = (() => {
       gesehen.add(schluessel);
       stand = naechster;
       const neu = einDurchgang(plan, stand, netzInfo);
-      if (!neu.ok) return neu;
+      if (!neu.ok) return mitFehlern(neu);
       neu.warnungen = erg.warnungen.concat(neu.warnungen);
       erg = neu;
       runde++;
@@ -849,7 +1552,7 @@ const Stromfluss = (() => {
       if (!v) return;
       if (t.zeichen === 'verbindungspunkt' || t.zeichen === 'abzweigdose'
         || t.zeichen === 'bp-abzweigdose') return;          /* die SOLLEN das */
-      const eigene = netzInfo.klemmen.filter(k => k.teil === t.id);
+      const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
       for (let i = 0; i < eigene.length; i++) {
         for (let j = i + 1; j < eigene.length; j++) {
           const a = eigene[i]!, b = eigene[j]!;
@@ -872,6 +1575,7 @@ const Stromfluss = (() => {
     const belegt = new Set<number>();
     (plan.leitungen || []).forEach(() => { /* zählt unten über die Netze */ });
     netzInfo.klemmen.forEach(k => {
+      if (k.intern) return;   /* ein Sternpunkt gehört an keine Leitung */
       const netz = netzInfo.netzVon.get(k.schluessel);
       if (typeof netz !== 'number') return;
       const wieViele = netzInfo.klemmen.filter(
@@ -883,11 +1587,343 @@ const Stromfluss = (() => {
       }
     });
 
-    return erg;
+    return mitFehlern(erg);
   };
 
   /* ------------------------------------------------------------------------
-   * 5. ZAHLEN, DIE MAN LESEN KANN
+   * 5. WAS FALSCH ANGESCHLOSSEN IST
+   * ------------------------------------------------------------------------
+   * Eine Simulation, die bei einem Fehler nur „geht nicht" sagt, hat den
+   * Unterricht verfehlt. Der Lernwert steckt nicht in der Meldung, sondern
+   * in dem Satz danach: WAS WÜRDE IN WIRKLICHKEIT PASSIEREN.
+   *
+   * Deshalb trägt jeder Fund hier zwei Texte. `was` sagt, was falsch ist —
+   * das könnte auch ein Farbwechsel. `warum` sagt, was die Folge wäre: dass
+   * der Schutzleiter Betriebsstrom führt, dass das Gehäuse einer Bohrmaschine
+   * unter 230 V steht, dass der Fehlerstromschutzschalter nicht mehr auslöst.
+   * Ohne diesen zweiten Satz lernt niemand etwas, und der erste ist dann nur
+   * eine rote Farbe mit Worten.
+   *
+   * Und deshalb steht die Schwere als WORT da (`gefahr`, `fehler`, `hinweis`)
+   * und nicht als Farbcode: §38 [hart] — keine Information nur über Farbe.
+   * Wer die Liste vorliest, muss dasselbe erfahren wie der, der sie ansieht.
+   *
+   * DER TRICK, MIT DEM DIE HALBE PRÜFUNG AUSKOMMT
+   *
+   * Sechs der neun gesuchten Fehler sind DERSELBE Fehler: zwei Leiter, die
+   * nicht zusammengehören, landen auf demselben Netz. L und N zusammen ist
+   * ein Kurzschluss, L und PE ist Lebensgefahr, N und PE ist der Fehler, den
+   * niemand bemerkt, zwei Aussenleiter sind 400 V statt 230 V. Also wird
+   * nicht sechsmal gesucht, sondern einmal — und danach gefragt, WELCHE zwei
+   * Rollen sich getroffen haben.
+   *
+   * WARUM N UND PE ÜBERHAUPT AUFFALLEN
+   *
+   * Am Sternpunkt der Quelle sind N und PE verbunden (TN-S). Elektrisch sind
+   * die beiden deshalb kaum zu unterscheiden, und eine vertauschte
+   * Verdrahtung RECHNET SICH RICHTIG: die Lampe brennt, nichts wird warm,
+   * kein Messgerät schlägt aus. Genau das macht den Fehler gefährlich, und
+   * genau deshalb kann die Rechnung ihn nicht finden. Gefunden wird er an
+   * der ROLLE der Klemmen, nicht am Strom — er ist ein Zeichnungsfehler mit
+   * tödlicher Folge, kein Rechenfehler.
+   * ----------------------------------------------------------------------*/
+
+  type Anschlussfehler = {
+    /** Kennung der Fehlerart, für Prüfläufe und Oberfläche. */
+    art: 'l-pe' | 'l-n' | 'l-l' | 'n-pe' | 'pe-fehlt' | 'n-offen' | 'schalter-in-n'
+       | 'fi-loest-aus' | 'fi-halbe-messung';
+    /** Wie schlimm — als Wort, nicht als Farbe (§38). */
+    schwere: 'gefahr' | 'fehler' | 'hinweis';
+    /** Welche Bauteile es betrifft. */
+    teile: string[];
+    /** Was falsch ist. */
+    was: string;
+    /** Was in Wirklichkeit passieren würde. Das ist der Lernwert. */
+    warum: string;
+    /** Die Regel dahinter, wo es eine gibt. */
+    norm?: string;
+  };
+
+  /** Wie ein Leiter im Satz heisst. */
+  const leiterName = (l: Leiterart): string =>
+    l === 'PE' ? 'Schutzleiter' : l === 'N' ? 'Neutralleiter' : `Aussenleiter ${l}`;
+
+  const istAussen = (l: Leiterart): boolean => l === 'L1' || l === 'L2' || l === 'L3';
+
+  /**
+   * Welche Leiterrolle hängt an welchem Netz?
+   *
+   * Die Rolle wird NICHT weitergereicht. Hinter einem Schalter ist der Leiter
+   * ein geschalteter Aussenleiter und kein L1 mehr — in der Schweiz heisst er
+   * dann korrespondierend oder geschaltet, und ihn weiter L1 zu nennen wäre
+   * der Anfang einer Kette falscher Meldungen. Eine Rolle hat nur, wo sie
+   * ANGESCHRIEBEN ist: an der Quelle, am Leitersymbol, am Erdungszeichen.
+   */
+  const leiterrollen = (plan: any, netzInfo: ReturnType<typeof netze>):
+                       Map<number, Set<Leiterart>> => {
+    const raus = new Map<number, Set<Leiterart>>();
+    const setze = (teilId: string, nr: string, rolle: Leiterart) => {
+      const netz = netzInfo.netzVon.get(`k:${teilId}:${nr}`);
+      if (typeof netz !== 'number') return;
+      const fach = raus.get(netz) || new Set<Leiterart>();
+      fach.add(rolle);
+      raus.set(netz, fach);
+    };
+    ((plan.teile || []) as any[]).forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v) return;
+      if (v.leiter) Object.keys(v.leiter).forEach(nr => setze(t.id, nr, v.leiter![nr]!));
+    });
+    return raus;
+  };
+
+  /**
+   * Die Prüfung selbst.
+   *
+   * `stand` ist die Schalterstellung NACH dem Nachführen der Kontakte — ein
+   * offener Schliesser unterbricht den Neutralleiter genauso wie ein offener
+   * Schalter, und ob er offen ist, weiss man erst nach der Rechnung.
+   */
+  const anschlussfehler = (plan: any, netzInfo: ReturnType<typeof netze>,
+                           erg: Ergebnis): Anschlussfehler[] => {
+    const raus: Anschlussfehler[] = [];
+    const teile = (plan.teile || []) as any[];
+    const rollen = leiterrollen(plan, netzInfo);
+
+    const nameVon = (t: any): string => t.bmk || t.zeichen;
+    /** Wer hängt an diesem Netz? Für die Meldung, damit sie einen Ort hat. */
+    const teileAn = (netz: number): string[] => netzInfo.klemmen
+      .filter(k => !k.intern && netzInfo.netzVon.get(k.schluessel) === netz)
+      .map(k => k.teil);
+
+    /* ---- 1. Zwei Leiterrollen auf einem Netz --------------------------- */
+    rollen.forEach((satz, netz) => {
+      if (satz.size < 2) return;
+      const liste = Array.from(satz).sort();
+      const betroffen = teileAn(netz);
+      const hatPE = liste.includes('PE');
+      const hatN = liste.includes('N');
+      const aussen = liste.filter(istAussen);
+      const namen = liste.map(leiterName).join(' und ');
+
+      if (aussen.length && hatPE) {
+        raus.push({
+          art: 'l-pe', schwere: 'gefahr', teile: betroffen,
+          was: `${namen} liegen am selben Punkt — ein Aussenleiter ist auf den Schutzleiter verdrahtet.`,
+          warum: 'Der Schutzleiter führt dann volle Spannung, und mit ihm jedes '
+               + 'Gehäuse, das daran hängt: Waschmaschine, Herd, Bohrmaschine. '
+               + 'Wer eines davon anfasst, steht unter 230 V. Ein '
+               + 'Fehlerstromschutzschalter löst sofort aus, wenn einer da ist — '
+               + 'ist keiner da, merkt man es erst beim Anfassen.',
+          norm: 'Der Schutzleiter führt nie Betriebsspannung.'
+        });
+      } else if (aussen.length && hatN) {
+        raus.push({
+          art: 'l-n', schwere: 'gefahr', teile: betroffen,
+          was: `${namen} liegen am selben Punkt — Aussenleiter und Neutralleiter sind kurzgeschlossen.`,
+          warum: 'Ohne Verbraucher dazwischen begrenzt nur der Leitungswiderstand '
+               + 'den Strom; es fliessen einige hundert bis einige tausend Ampere. '
+               + 'Der Leitungsschutzschalter schaltet in Millisekunden ab. '
+               + 'Es knallt, der Kontakt kann verschweissen, und die Leitung wird '
+               + 'auf ihrer ganzen Länge heiss.'
+        });
+      } else if (aussen.length >= 2) {
+        raus.push({
+          art: 'l-l', schwere: 'gefahr', teile: betroffen,
+          was: `${namen} liegen am selben Punkt — zwei Aussenleiter sind zusammengeschaltet.`,
+          warum: 'Zwischen zwei Aussenleitern liegen 400 V, nicht 230 V. Der '
+               + 'Kurzschlussstrom ist entsprechend grösser als bei L gegen N, '
+               + 'und der Lichtbogen beim Abschalten ebenfalls. Sitzen die beiden '
+               + 'auf derselben Klemme eines Verbrauchers, bekommt er statt '
+               + 'Spannung gar keine — die Differenz ist dann null.'
+        });
+      } else if (hatN && hatPE) {
+        raus.push({
+          art: 'n-pe', schwere: 'gefahr', teile: betroffen,
+          was: 'Neutralleiter und Schutzleiter liegen am selben Punkt — sie sind vertauscht oder gebrückt.',
+          warum: 'Und jetzt kommt das Gefährliche: es FUNKTIONIERT. Die Lampe '
+               + 'brennt, der Motor läuft, kein Messgerät schlägt aus — am '
+               + 'Sternpunkt sind die beiden ja verbunden. Nur führt der '
+               + 'Schutzleiter jetzt den Betriebsstrom und ist nicht mehr '
+               + 'spannungsfrei. Bricht er irgendwo, stehen alle daran '
+               + 'angeschlossenen Gehäuse unter Spannung. Ein '
+               + 'Fehlerstromschutzschalter sieht die Unsymmetrie und löst aus — '
+               + 'oder er löst dauernd aus, und jemand baut ihn aus.',
+          norm: 'Im TN-S-System werden N und PE ab der Trennstelle nicht wieder verbunden.'
+        });
+      }
+    });
+
+    /* ---- 2. Schutzklasse I ohne Schutzleiter --------------------------- */
+    teile.forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v || v.schutzklasse !== 1) return;
+      const peKlemme = v.schutzklemme;
+      if (!peKlemme) return;
+      const netz = netzInfo.netzVon.get(`k:${t.id}:${peKlemme}`);
+      const dran = typeof netz === 'number'
+        && (rollen.get(netz)?.has('PE') ?? false);
+      if (dran) return;
+      raus.push({
+        art: 'pe-fehlt', schwere: 'gefahr', teile: [t.id],
+        was: `${nameVon(t)} ist ein Gerät der Schutzklasse I, aber Klemme ${peKlemme} hängt an keinem Schutzleiter.`,
+        warum: 'Schutzklasse I heisst: die Isolation allein genügt nicht, das '
+             + 'Gehäuse ist aus Metall und MUSS geerdet sein. Ohne Schutzleiter '
+             + 'läuft das Gerät völlig normal — bis eine Wicklung durchschlägt. '
+             + 'Dann steht das Gehäuse unter Spannung, es fliesst kein '
+             + 'Fehlerstrom, und keine Schutzeinrichtung schaltet ab. Der '
+             + 'Fehler wird sichtbar, wenn ihn jemand anfasst.',
+        norm: 'NIN: Schutzklasse I braucht den Schutzleiter, nicht wahlweise.'
+      });
+    });
+
+    /* ---- 3. Schalt- oder Schutzgerät im Neutralleiter ------------------ */
+    teile.forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v || v.art !== 'schalter') return;
+      const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
+      let amN = false, amL = false;
+      eigene.forEach(k => {
+        const netz = netzInfo.netzVon.get(k.schluessel);
+        if (typeof netz !== 'number') return;
+        const satz = rollen.get(netz);
+        if (!satz) return;
+        if (satz.has('N')) amN = true;
+        if (Array.from(satz).some(istAussen)) amL = true;
+      });
+      /* Ein Hauptschalter, der L UND N gemeinsam trennt, ist erlaubt — genau
+         das ist die Ausnahme in der Norm. Verboten ist der Schalter, der NUR
+         im Neutralleiter sitzt. */
+      if (!amN || amL) return;
+      raus.push({
+        art: 'schalter-in-n', schwere: 'fehler', teile: [t.id],
+        was: `${nameVon(t)} sitzt im Neutralleiter statt im Aussenleiter.`,
+        warum: 'Ausgeschaltet ist die Lampe dann zwar dunkel, aber der '
+             + 'Aussenleiter liegt weiterhin bis zur Fassung an. Wer die '
+             + 'Birne wechselt und dabei den Sockel berührt, bekommt einen '
+             + 'Schlag — obwohl der Schalter aus ist und alles danach aussieht, '
+             + 'als wäre es spannungsfrei.',
+        norm: 'NIN 4.6.1.2.3.2 — Schalter gehören in den Aussenleiter. Der '
+            + 'Neutralleiter darf nur geschaltet werden, wenn der zugehörige '
+            + 'Aussenleiter gleichzeitig mitgeschaltet wird.'
+      });
+    });
+
+    /* ---- 4. Der Fehlerstrom-Schutzschalter misst wirklich --------------
+       Der FI vergleicht, was hinfliesst, mit dem, was zurückkommt. Fehlt
+       etwas, geht es einen anderen Weg — über den Schutzleiter oder über
+       einen Menschen. Genau diese Summe kann die Rechnung bilden, und
+       deshalb ist der FI das einzige Schutzgerät hier, das nicht nur
+       gezeichnet, sondern GEMESSEN wird.
+
+       Summiert werden ZEIGER und nicht Beträge. Das ist derselbe Punkt wie
+       beim Neutralleiter (E730): drei Aussenleiterströme haben zusammen den
+       Betrag null, obwohl jeder einzelne gross ist. Wer Beträge addiert,
+       bekommt einen Fehlerstrom von mehreren Ampere in einer völlig
+       gesunden Drehstromanlage. */
+    const FI_SCHWELLE = 0.03;   /* 30 mA — der Nennfehlerstrom für Personenschutz */
+    teile.forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v || t.zeichen !== 'fi-schutzschalter') return;
+      const fach = erg.teilwerte[t.id];
+      if (!fach) return;
+      const pole = Object.keys(fach);
+      let re = 0, im = 0;
+      pole.forEach(k => { const w = fach[k]!; re += w.Ire; im += w.Iim; });
+      const fehlstrom = Math.hypot(re, im);
+      if (fehlstrom <= FI_SCHWELLE) return;
+
+      /* ER LÖST AUS. Aber WARUM — das ist die Frage, die es zu beantworten
+         gilt, und sie hat zwei ganz verschiedene Antworten.
+
+         Führt der Neutralleiter-Pol keinen Strom, während die Aussenleiter
+         welchen führen, dann ist der Rückweg gar nicht durch den Schalter
+         gelegt. Der „Fehlerstrom" ist dann der volle Betriebsstrom, es gibt
+         gar keinen Fehler, und der Schalter fliegt beim Einschalten raus.
+         Das ist ein Verdrahtungsfehler und der häufigste beim FI überhaupt
+         — ihn als „Fehlerstrom" zu melden wäre richtig und nutzlos. */
+      const nPol = fach['N–N2'];
+      const aussenFuehrt = pole.some(k => k !== 'N–N2'
+        && Math.hypot(fach[k]!.Ire, fach[k]!.Iim) > SCHWELLE);
+      if (aussenFuehrt && nPol
+          && Math.hypot(nPol.Ire, nPol.Iim) <= SCHWELLE) {
+        raus.push({
+          art: 'fi-halbe-messung', schwere: 'fehler', teile: [t.id],
+          was: `${nameVon(t)}: der Neutralleiter läuft nicht durch den Schutzschalter.`,
+          warum: 'Ein Fehlerstromschutzschalter vergleicht Hin- und Rückstrom. '
+               + 'Sieht er nur den Aussenleiter, ist die Differenz immer der '
+               + 'ganze Betriebsstrom — er löst beim Einschalten aus, und zwar '
+               + 'ohne dass irgendetwas defekt wäre. Wer dann den Fehler beim '
+               + 'Gerät sucht, sucht am falschen Ort. Beide Leiter müssen durch '
+               + 'ihn hindurch.'
+        });
+        return;
+      }
+
+      raus.push({
+        art: 'fi-loest-aus', schwere: 'gefahr', teile: [t.id],
+        was: `${nameVon(t)} löst aus: es fehlen ${zeige(fehlstrom, 'A')} — `
+           + `so viel fliesst am Neutralleiter vorbei.`,
+        warum: 'Was hinfliesst, kommt nicht zurück. Der Strom nimmt einen '
+             + 'anderen Weg: über den Schutzleiter, über ein feuchtes Gehäuse '
+             + 'oder über einen Menschen. Ab etwa 30 mA wird es für den '
+             + 'Menschen gefährlich, und genau darauf ist der Schalter '
+             + 'eingestellt. Dass er auslöst, ist hier die gute Nachricht — '
+             + 'die schlechte ist, dass es einen Fehlerstrom gibt.'
+      });
+    });
+
+    /* ---- 5. Der Neutralleiter ist unterbrochen ------------------------- */
+    /* Erreichbarkeit OHNE die Quellen: über eine Quelle käme man von jedem
+       Punkt zum Neutralleiter, und die Prüfung wäre immer grün. */
+    const hatN = Array.from(rollen.values()).some(x => x.has('N'));
+    if (hatN && erg.verbindungen.length) {
+      const v = verband();
+      erg.verbindungen.forEach(([a, b]) => v.eins(`n:${a}`, `n:${b}`));
+      const nWurzeln = new Set<string>();
+      rollen.forEach((satz, netz) => { if (satz.has('N')) nWurzeln.add(v.finde(`n:${netz}`)); });
+
+      teile.forEach(t => {
+        const vh = verhalten(t.zeichen);
+        if (!vh) return;
+        if (vh.art !== 'widerstand' && vh.art !== 'spule') return;
+        const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
+        const netze_ = eigene
+          .map(k => netzInfo.netzVon.get(k.schluessel))
+          .filter((x): x is number => typeof x === 'number');
+        if (!netze_.length) return;
+        /* Nur EINPHASIGE Verbraucher. Ein Drehstrommotor hängt an drei
+           Aussenleitern und braucht gar keinen Neutralleiter; ein Heizkörper
+           zwischen L1 und L2 auch nicht. Die ohne diese Bedingung zu melden
+           wäre die häufigste Falschmeldung überhaupt — und eine
+           Falschmeldung im Unterricht ist schlimmer als keine. */
+        const anAussen = netze_.filter(nz =>
+          Array.from(rollen.get(nz) || []).some(istAussen));
+        if (anAussen.length !== 1) return;
+        const zurueck = netze_.filter(nz => !anAussen.includes(nz));
+        if (!zurueck.length) return;
+        const kommtAn = zurueck.some(nz => nWurzeln.has(v.finde(`n:${nz}`)));
+        if (kommtAn) return;
+        raus.push({
+          art: 'n-offen', schwere: 'gefahr', teile: [t.id],
+          was: `${nameVon(t)} hängt am Aussenleiter, aber der Rückweg zum Neutralleiter ist offen.`,
+          warum: 'Es fliesst kein Strom, das Gerät bleibt also dunkel oder still — '
+               + 'und sieht damit aus wie ausgeschaltet. Es ist aber nicht '
+               + 'spannungsfrei: die volle Spannung steht bis zur Unterbrechung '
+               + 'an, und der ganze Leiter dahinter liegt über das Gerät am '
+               + 'Aussenleiter. Im Drehstromnetz ist ein unterbrochener '
+               + 'Neutralleiter noch schlimmer: die einphasigen Verbraucher '
+               + 'liegen dann in Reihe zwischen zwei Aussenleitern, und wer wenig '
+               + 'Leistung hat, bekommt weit mehr als seine 230 V.'
+        });
+      });
+    }
+
+    return raus;
+  };
+
+  /* ------------------------------------------------------------------------
+   * 6. ZAHLEN, DIE MAN LESEN KANN
    * ----------------------------------------------------------------------*/
 
   /** Eine Grösse mit Vorsatz — 0,0031 A wird zu „3.1 mA". */
@@ -920,6 +1956,7 @@ const Stromfluss = (() => {
 
   return {
     VERHALTEN, verhalten, stellungenVon, netze, rechne, zeige, loese,
+    loeseKomplex, leiterrollen,
     /* für Prüfungen sichtbar gemacht */ klemmen, aufStrecke
   };
 })();

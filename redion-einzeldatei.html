@@ -4188,6 +4188,67 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   outline-offset:2px}
 
 /* ============================================================================
+ * DIE LERNANSICHT HATTE KEINEN EINZIGEN STIL (E734)
+ * ----------------------------------------------------------------------------
+ * Das Panel heisst seit jeher `finder lern`. Für `lern` gab es KEINE Regel —
+ * nachgesehen, nicht vermutet. Gemessen am Hauptknopf „Tagesrunde starten":
+ *
+ *     Fläche:  rgba(0, 0, 0, 0)      also durchsichtig
+ *     Rand:    0px
+ *     Radius:  0px
+ *
+ * Er trug die Klasse `prim`, und `prim` ist global nur `min-height:44px`.
+ * Jeder andere Dialog bringt seine eigene Regel mit (`.fd-knoepfe button.prim`,
+ * `.rg-knoepfe button.prim`); dieser hier hatte keine. Ergebnis: der wichtigste
+ * Knopf der ganzen Ansicht sah aus wie eine Bildunterschrift.
+ *
+ * WARUM DAS KEIN PRÜFLAUF GEFUNDEN HAT: die 44 px waren da. Die Höhe stimmte
+ * die ganze Zeit, und §37 misst die Höhe. Gefehlt hat das AUSSEHEN, und das
+ * sieht man nur, wenn man hinsieht (§55.1).
+ *
+ * Die Regeln stehen hier und nicht in `lernwelt.css`, weil der Präfix `lern`
+ * laut `doku/CSS-NAMENSRAEUME.md` zu dieser Datei gehört. Zwei Dateien mit
+ * demselben Präfix gewinnen abwechselnd, und niemand sieht es im Code (§39).
+ * ==========================================================================*/
+/* Die Höhe kommt aus der Marke, nicht als rohe Zahl (test362 §7: die
+   Decke der rohen 44px und 16px wird nicht angehoben). Auf dem Zweig stand
+   hier `min-height:44px; padding:9px 16px` — zwei neue rohe Zahlen. */
+.lern button{min-height:var(--touch-min); padding:9px 14px; border-radius:8px;
+  border:1px solid var(--line); background:none; color:var(--text);
+  font-size:14px; cursor:pointer}
+.lern button:hover{background:var(--bg-hover)}
+.lern button.prim{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent); font-weight:600}
+.lern button.prim:hover{filter:brightness(1.08)}
+/* Kein toter Knopf (E720, CLAUDE.md §38): auch unter dem Finger antwortet er.
+   `data-gedrueckt` (press.ts) neben `:active`, weil das iPhone `:active`
+   beim kurzen Tippen gar nicht malt. Abgeschaltete Knöpfe antworten nicht — sie tun ja
+   nichts, und ein Druckbild würde das Gegenteil behaupten. */
+.lern button:is(:active,[data-gedrueckt]):not(:disabled){background:var(--bg-hover)}
+.lern button.prim:is(:active,[data-gedrueckt]):not(:disabled){background:var(--accent);
+  filter:brightness(.92)}
+/* Ein abgeschalteter Knopf sagt es über die Deckkraft UND über den Zeiger,
+   nicht nur über die Farbe (§38). */
+.lern button:disabled{opacity:.45; cursor:default}
+.lern button:disabled:hover{background:none; filter:none}
+.lern button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+/* Der Schliesser im Kopf ist ein Symbol und kein Kasten — sonst bekäme das
+   ✕ einen Rahmen, den sonst kein Dialog in Redion hat. Gross genug für den
+   Daumen ist er trotzdem: „Abbrechen" ist ein Hauptweg (§37 [hart]), also
+   die Marke in beide Richtungen statt der 36 px vom Zweig. */
+.lern .fh button{min-height:var(--touch-min); min-width:var(--touch-min); padding:0;
+  border:none; background:none}
+.lern .fh button:hover{background:var(--bg-hover)}
+
+/* Der Fortschrittsbalken war der Browser-Standard und damit BLAU — die einzige
+   blaue Fläche in einer violetten App. Auf dem Bild fiel er sofort auf. */
+.lern progress{height:7px; border:none; border-radius:99px; overflow:hidden;
+  background:var(--bg-hover); appearance:none; -webkit-appearance:none}
+.lern progress::-webkit-progress-bar{background:var(--bg-hover); border-radius:99px}
+.lern progress::-webkit-progress-value{background:var(--accent); border-radius:99px}
+.lern progress::-moz-progress-bar{background:var(--accent); border-radius:99px}
+
+/* ============================================================================
  * L108 — der Knopfblock liess sich am Telefon nicht einstellen
  * ----------------------------------------------------------------------------
  * `.knopf-set` — das Zahnrad eines Knopf-Blocks — stand auf `opacity:0` und
@@ -23453,6 +23514,16 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
   .chr-platte{position:static; transform:none; width:auto; margin:0}
 }
 
+/* Die Stromrichtung am Bauteil (E733).
+   Ein Pfeil bei Gleichstrom, ZWEI bei Wechselstrom — der Unterschied steckt
+   in der Form und nicht in der Farbe, §38 [hart]. Wer die Farben nicht
+   unterscheidet, sieht trotzdem, dass der Strom dort umkehrt.
+   Er erbt die Stromfarbe der Leitungen, damit Pfeil und fliessender Strich
+   erkennbar dasselbe meinen. */
+.sp-richtung{stroke:var(--sp-strom); stroke-width:2; stroke-linecap:round;
+  stroke-linejoin:round; pointer-events:none}
+.sp-richtung title{pointer-events:auto}
+
 </style>
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -27525,7 +27596,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1455, inhalt: '98de1f84a2f425c9', gebaut: '2026-10-11T09:19:07.259Z' };
+const Stand = { fassung: 1462, inhalt: 'cdf320517462412a', gebaut: '2026-10-11T12:27:21.851Z' };
 window.Stand = Stand;
 
 </script>
@@ -38361,8 +38432,9 @@ Register.fachzeichen = (() => {
                 'M12,44 a18,18 0 0,1 36,0'],
             beschriftung: [{ x: 30, y: 30, t: 'I∆n' }],
             anschluesse: [{ nr: '1', x: 10, y: 0 }, { nr: '3', x: 30, y: 0 }, { nr: 'N', x: 50, y: 0 },
-                { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N', x: 50, y: 70 }],
-            erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab.'
+                { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N2', x: 50, y: 70 }],
+            frueher: { N: [{ x: 50, y: 70, heute: 'N2' }] },
+            erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab. Oben N, unten N2 — auf dem Gerät steht beide Male N.'
         },
         {
             id: 'motorschutzschalter', name: 'Motorschutzschalter', gruppe: 'schutz', kennbuchstabe: 'Q',
@@ -38401,7 +38473,25 @@ Register.fachzeichen = (() => {
             pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 10), senkrecht(50, 0, 16)],
             beschriftung: [{ x: 30, y: 32, t: 'M', gross: true }, { x: 30, y: 48, t: '3 ~' }],
             anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 30, y: 0 }, { nr: 'W1', x: 50, y: 0 }],
-            erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig.'
+            erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig. Mit drei Anschlüssen gezeichnet heisst: die Brücken sitzen schon.'
+        },
+        {
+            id: 'motor-klemmenbrett', name: 'Klemmenbrett Motor', gruppe: 'motoren', kennbuchstabe: 'M',
+            w: 140, h: 90,
+            pfad: ['M10,20 H130 V70 H10 Z',
+                senkrecht(10, 0, 20), senkrecht(50, 0, 20), senkrecht(90, 0, 20),
+                senkrecht(50, 70, 90), senkrecht(90, 70, 90), senkrecht(130, 70, 90),
+                senkrecht(10, 70, 90)],
+            kreise: [{ cx: 10, cy: 20, r: 3 }, { cx: 50, cy: 20, r: 3 }, { cx: 90, cy: 20, r: 3 },
+                { cx: 50, cy: 70, r: 3 }, { cx: 90, cy: 70, r: 3 }, { cx: 130, cy: 70, r: 3 },
+                { cx: 10, cy: 70, r: 3 }],
+            beschriftung: [{ x: 10, y: 34, t: 'U1' }, { x: 50, y: 34, t: 'V1' }, { x: 90, y: 34, t: 'W1' },
+                { x: 50, y: 62, t: 'W2' }, { x: 90, y: 62, t: 'U2' }, { x: 130, y: 62, t: 'V2' },
+                { x: 14, y: 62, t: 'PE' }],
+            anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 50, y: 0 }, { nr: 'W1', x: 90, y: 0 },
+                { nr: 'W2', x: 50, y: 90 }, { nr: 'U2', x: 90, y: 90 }, { nr: 'V2', x: 130, y: 90 },
+                { nr: 'PE', x: 10, y: 90 }],
+            erklaerung: 'Die sechs Wicklungsenden des Drehstrommotors und der Erdungsbolzen. Die Brücken machen daraus Stern (230 V am Strang) oder Dreieck (400 V am Strang).'
         },
         {
             id: 'motor-wechselstrom', name: 'Wechselstrommotor', gruppe: 'motoren', kennbuchstabe: 'M',
@@ -38552,6 +38642,23 @@ Register.fachzeichen = (() => {
                 'M16,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0'],
             anschluesse: [{ nr: 'L', x: 30, y: 0 }, { nr: 'N', x: 30, y: 60 }],
             erklaerung: 'Liefert eine Spannung, die ihre Richtung regelmässig wechselt.'
+        },
+        {
+            id: 'drehstromquelle', name: 'Drehstromquelle 3 × 400/230 V', gruppe: 'quellen', kennbuchstabe: 'G',
+            w: 160, h: 80,
+            kreise: [{ cx: 70, cy: 30, r: 24 }],
+            pfad: ['M56,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0',
+                senkrecht(10, 54, 80), senkrecht(40, 54, 80), senkrecht(70, 54, 80),
+                senkrecht(100, 54, 80), senkrecht(130, 54, 80),
+                waagrecht(54, 10, 130)],
+            beschriftung: [{ x: 70, y: 16, t: '3 ~' },
+                { x: 20, y: 72, t: 'L1' }, { x: 50, y: 72, t: 'L2' },
+                { x: 80, y: 72, t: 'L3' }, { x: 110, y: 72, t: 'N' },
+                { x: 140, y: 72, t: 'PE' }],
+            anschluesse: [{ nr: 'L1', x: 10, y: 80 }, { nr: 'L2', x: 40, y: 80 },
+                { nr: 'L3', x: 70, y: 80 }, { nr: 'N', x: 100, y: 80 },
+                { nr: 'PE', x: 130, y: 80 }],
+            erklaerung: 'Drei Aussenleiter, je 230 V gegen den Neutralleiter und um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V.'
         },
         {
             id: 'erde', name: 'Erde', gruppe: 'quellen', kennbuchstabe: 'E',
@@ -38778,23 +38885,29 @@ Register.fachzeichen = (() => {
         {
             id: 'steckdose', name: 'Steckdose', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 60, h: 40,
-            pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
-            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
+            pfad: [senkrecht(20, 0, 12), senkrecht(40, 0, 12),
+                'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }, { nr: 'N', x: 40, y: 0 }],
+            frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
             erklaerung: 'Anschlussstelle für Geräte. Im Installationsplan der Halbkreis.'
         },
         {
             id: 'steckdose-schuko', name: 'Steckdose mit Schutzkontakt', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 60, h: 40,
-            pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
-                senkrecht(30, 12, 20)],
-            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
-            erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt.'
+            pfad: [senkrecht(10, 0, 12), senkrecht(30, 0, 12), senkrecht(50, 0, 12),
+                'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
+                waagrecht(20, 24, 36)],
+            anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 },
+                { nr: 'PE', x: 50, y: 0 }],
+            frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
+            erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt. Schutzklasse-I-Geräte brauchen ihn.'
         },
         {
             id: 'stecker', name: 'Stecker', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 40, h: 50,
-            pfad: [senkrecht(20, 0, 16), 'M20,16 L34,32 L6,32 Z'],
-            anschluesse: [{ nr: '1', x: 20, y: 0 }],
+            pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 16), 'M20,16 L34,32 L6,32 Z'],
+            anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 }],
+            frueher: { '1': [{ x: 20, y: 0, heute: 'L' }] },
             erklaerung: 'Das Gegenstück zur Steckdose.'
         },
         {
@@ -38847,6 +38960,22 @@ Register.fachzeichen = (() => {
             beschriftung: [{ x: 30, y: 12, t: 'L1' }],
             anschluesse: [{ nr: 'L1', x: 0, y: 20 }, { nr: 'L1', x: 60, y: 20 }],
             erklaerung: 'Erster Aussenleiter des Drehstromnetzes.'
+        },
+        {
+            id: 'leiter-l2', name: 'Aussenleiter L2', gruppe: 'leitungen', kennbuchstabe: 'L2',
+            w: 60, h: 30,
+            pfad: [waagrecht(20, 0, 60)],
+            beschriftung: [{ x: 30, y: 12, t: 'L2' }],
+            anschluesse: [{ nr: 'L2', x: 0, y: 20 }, { nr: 'L2', x: 60, y: 20 }],
+            erklaerung: 'Zweiter Aussenleiter, um 120° gegen L1 versetzt.'
+        },
+        {
+            id: 'leiter-l3', name: 'Aussenleiter L3', gruppe: 'leitungen', kennbuchstabe: 'L3',
+            w: 60, h: 30,
+            pfad: [waagrecht(20, 0, 60)],
+            beschriftung: [{ x: 30, y: 12, t: 'L3' }],
+            anschluesse: [{ nr: 'L3', x: 0, y: 20 }, { nr: 'L3', x: 60, y: 20 }],
+            erklaerung: 'Dritter Aussenleiter, um weitere 120° versetzt.'
         },
         {
             id: 'leiter-n', name: 'Neutralleiter N', gruppe: 'leitungen', kennbuchstabe: 'N',
@@ -39151,14 +39280,10 @@ Register.fachzeichen = (() => {
             (wandlung ? `<g transform="${wandlung}">` : '') + teile.join('') +
             (wandlung ? '</g>' : '') + '</svg>';
     };
-    const anschlussLage = (id, nr, drehung = 0, gespiegelt = false) => {
-        const z = holen(id);
-        if (!z)
-            return null;
-        const a = z.anschluesse.find(x => x.nr === nr) || z.anschluesse[0];
-        if (!a)
-            return null;
-        let x = a.x, y = a.y;
+    const NAH = 6;
+    const gedreht = (z, x0, y0, drehung = 0, gespiegelt = false) => {
+        let x = x0;
+        const y = y0;
         if (gespiegelt)
             x = z.w - x;
         const grad = ((Number(drehung) || 0) % 360 + 360) % 360;
@@ -39170,6 +39295,43 @@ Register.fachzeichen = (() => {
             y: Math.round(cy + dx * Math.sin(bogen) + dy * Math.cos(bogen))
         };
     };
+    const klemmeFuer = (id, nr, punkt, drehung = 0, gespiegelt = false) => {
+        const z = holen(id);
+        if (!z)
+            return null;
+        const name = String(nr ?? '');
+        const gibtEs = (n) => z.anschluesse.some(a => a.nr === n);
+        const trifft = (x0, y0) => {
+            if (!punkt)
+                return false;
+            const o = gedreht(z, x0, y0, drehung, gespiegelt);
+            return Math.abs(punkt.x - o.x) <= NAH && Math.abs(punkt.y - o.y) <= NAH;
+        };
+        const alt = ((z.frueher && z.frueher[name]) || []).filter(e => gibtEs(e.heute));
+        if (punkt) {
+            if (z.anschluesse.some(a => a.nr === name && trifft(a.x, a.y)))
+                return { nr: name, frueher: false };
+            const war = alt.find(e => trifft(e.x, e.y));
+            if (war)
+                return { nr: war.heute, frueher: true };
+        }
+        if (gibtEs(name))
+            return { nr: name, frueher: false };
+        const erster = alt[0];
+        if (erster)
+            return { nr: erster.heute, frueher: true };
+        return null;
+    };
+    const anschlussLage = (id, nr, drehung = 0, gespiegelt = false) => {
+        const z = holen(id);
+        if (!z)
+            return null;
+        const r = klemmeFuer(id, nr);
+        const a = r ? z.anschluesse.find(x => x.nr === r.nr) : undefined;
+        if (!a)
+            return null;
+        return gedreht(z, a.x, a.y, drehung, gespiegelt);
+    };
     const masse = (id, drehung = 0) => {
         const z = holen(id);
         if (!z)
@@ -39177,8 +39339,8 @@ Register.fachzeichen = (() => {
         const grad = ((Number(drehung) || 0) % 360 + 360) % 360;
         return (grad === 90 || grad === 270) ? { w: z.h, h: z.w } : { w: z.w, h: z.h };
     };
-    return { RASTER, alle, holen, inGruppe, gruppen, gruppenName,
-        alsSvg, anschlussLage, masse, melde, vergiss };
+    return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
+        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
 })();
 
 </script>
@@ -65872,11 +66034,22 @@ const Stromfluss = (() => {
         batterie: { art: 'quelle', von: '+', nach: '−', wert: 12, einheit: 'V' },
         gleichspannung: { art: 'quelle', von: '+', nach: '−', wert: 24, einheit: 'V' },
         wechselspannung: { art: 'quelle', von: 'L', nach: 'N', wert: 230, einheit: 'V',
-            annahme: 'Wechselspannung wird als Gleichspannung gleichen Effektivwerts gerechnet. Für ohmsche Lasten stimmt das Ergebnis.' },
-        generator: { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V' },
-        erde: { art: 'bezug', von: 'E' },
+            wechselstrom: true, leiter: { L: 'L1', N: 'N' },
+            annahme: 'Wechselspannung wird als Zeiger gerechnet: Betrag ist der Effektivwert, Winkel die Phasenlage. Für ohmsche Lasten ist das Ergebnis exakt.' },
+        drehstromquelle: { art: 'mehrteilig', wert: 230, einheit: 'V',
+            wechselstrom: true, leiter: { L1: 'L1', L2: 'L2', L3: 'L3', N: 'N', PE: 'PE' },
+            glieder: [
+                { art: 'quelle', von: 'L1', nach: 'N', wert: 230, phase: 0 },
+                { art: 'quelle', von: 'L2', nach: 'N', wert: 230, phase: -120 },
+                { art: 'quelle', von: 'L3', nach: 'N', wert: 230, phase: -240 },
+                { art: 'leiter', von: 'N', nach: 'PE' }
+            ],
+            annahme: 'Drehstrom wird als Zeiger gerechnet: drei Quellen zu 230 V, um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V — gerechnet, nicht eingetragen.' },
+        generator: { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V',
+            wechselstrom: true },
+        erde: { art: 'bezug', von: 'E', leiter: { E: 'PE' } },
         masse: { art: 'bezug', von: 'M' },
-        schutzleiter: { art: 'bezug', von: 'PE' },
+        schutzleiter: { art: 'bezug', von: 'PE', leiter: { PE: 'PE' } },
         ausschalter: { art: 'schalter', stellungen: AUF_ZU('1', '2') },
         'taster-schliesser': { art: 'schalter', stellungen: AUF_ZU('3', '4') },
         'taster-oeffner': { art: 'schalter', stellungen: ZU_AUF('1', '2') },
@@ -65921,6 +66094,10 @@ const Stromfluss = (() => {
                 { name: 'gerade', zu: [['1', '2'], ['3', '4']] },
                 { name: 'gekreuzt', zu: [['1', '4'], ['3', '2']] }
             ] },
+        wechsler: { art: 'schalter', folgtSpule: 'schliesser', stellungen: [
+                { name: 'Ruhe (11–12)', zu: [['11', '12']] },
+                { name: 'angezogen (11–14)', zu: [['11', '14']] }
+            ] },
         schliesser: { art: 'schalter', stellungen: AUF_ZU('3', '4'), folgtSpule: 'schliesser' },
         oeffner: { art: 'schalter', stellungen: ZU_AUF('1', '2'), folgtSpule: 'oeffner' },
         'schuetz-schliesser': { art: 'schalter', stellungen: AUF_ZU('13', '14'), folgtSpule: 'schliesser' },
@@ -65947,16 +66124,74 @@ const Stromfluss = (() => {
             annahme: 'Der Motor wird als reiner Wirkwiderstand gerechnet. Anlaufstrom und Blindanteil fehlen.' },
         'motor-gleichstrom': { art: 'widerstand', von: 'A1', nach: 'A2', wert: 20, einheit: 'Ω',
             annahme: 'Ohne Gegenspannung gerechnet — der Wert gilt für den Stillstand, nicht für den Lauf.' },
+        'motor-drehstrom': { art: 'mehrteilig', wert: 60, einheit: 'Ω',
+            schutzklasse: 1,
+            glieder: [
+                { art: 'widerstand', von: 'U1', nach: 'sternpunkt', wert: 60 },
+                { art: 'widerstand', von: 'V1', nach: 'sternpunkt', wert: 60 },
+                { art: 'widerstand', von: 'W1', nach: 'sternpunkt', wert: 60 }
+            ],
+            annahme: 'Der Motor ist mit drei Anschlüssen gezeichnet und wird deshalb als fertig in Stern geschaltet gerechnet — so, wie ein Motor mit dem Schild 3 × 400/230 V am 400-V-Netz betrieben wird. Wer die Brücken selbst setzen will, nimmt das Klemmenbrett. Die Wicklungen gelten als rein ohmsch: Blindanteil, Anlaufstrom und Schlupf fehlen.' },
+        'motor-klemmenbrett': { art: 'mehrteilig', wert: 60, einheit: 'Ω',
+            schutzklasse: 1, schutzklemme: 'PE',
+            glieder: [
+                { art: 'widerstand', von: 'U1', nach: 'U2', wert: 60 },
+                { art: 'widerstand', von: 'V1', nach: 'V2', wert: 60 },
+                { art: 'widerstand', von: 'W1', nach: 'W2', wert: 60 }
+            ],
+            stellungen: [
+                { name: 'ohne Brücken', zu: [] },
+                { name: 'Stern', zu: [['U2', 'V2'], ['V2', 'W2']] },
+                { name: 'Dreieck', zu: [['U1', 'W2'], ['V1', 'U2'], ['W1', 'V2']] }
+            ],
+            annahme: 'Die drei Wicklungen gelten als rein ohmsch. Das Verhältnis von Stern zu Dreieck stimmt trotzdem, weil es allein an der Spannung hängt und nicht an der Art der Last.' },
+        transformator: { art: 'uebertrager', von: '1U', nach: '1V',
+            von2: '2U', nach2: '2V', wert: 230 / 12, einheit: '',
+            annahme: 'Der Übertrager wird als ideal gerechnet: keine Verluste, kein Streufluss, kein Leerlaufstrom. Spannung wird im Verhältnis geteilt, Strom im selben Verhältnis vervielfacht, die Leistung geht unverändert hindurch. Für einen Netztrafo stimmt das auf wenige Prozent.' },
         'spule-induktivitaet': { art: 'leiter', von: '1', nach: '2',
             annahme: 'Bei Gleichstrom ist eine Spule eine Verbindung. Ihre Wirkung zeigt sich erst im Wechselstrom.' },
         sicherung: { art: 'schalter', stellungen: ZU_AUF('1', '2') },
         leitungsschutzschalter: { art: 'schalter', stellungen: ZU_AUF('1', '2') },
+        motorschutzschalter: { art: 'schalter', stellungen: [
+                { name: 'ein', zu: [['1', '2'], ['3', '4'], ['5', '6']] },
+                { name: 'ausgelöst', zu: [] }
+            ], annahme: 'Der Motorschutzschalter trennt alle drei Aussenleiter zugleich. Wann er auslöst, wird nicht gerechnet — dafür bräuchte es Zeit und Wärme.' },
+        thermorelais: { art: 'schalter', stellungen: [
+                { name: 'ein', zu: [['1', '2'], ['3', '4'], ['5', '6']] },
+                { name: 'ausgelöst', zu: [] }
+            ], annahme: 'Das Bimetall wird nicht gerechnet. Die Stellung „ausgelöst" lässt sich von Hand wählen, um den Fall zu zeigen.' },
+        'fi-schutzschalter': { art: 'schalter', stellungen: [
+                { name: 'ein', zu: [['1', '2'], ['3', '4'], ['N', 'N2']] },
+                { name: 'ausgelöst', zu: [] }
+            ], schutzklemme: 'N',
+            annahme: 'Die Auslösung wird nicht selbst geschaltet — der Fehlerstrom wird aber gerechnet und gemeldet.' },
+        ueberspannungsableiter: { art: 'offen', von: '1', nach: 'PE',
+            annahme: 'Im Betrieb sperrt er. Er leitet erst bei einer Überspannung, und die kommt in dieser Rechnung nicht vor.' },
         klemme: { art: 'leiter', von: '1', nach: '2' },
         steckverbindung: { art: 'leiter', von: '1', nach: '2' },
-        'leiter-l1': { art: 'leiter', von: 'L1', nach: 'L1' },
-        'leiter-n': { art: 'leiter', von: 'N', nach: 'N' },
-        'leiter-pe': { art: 'leiter', von: 'PE', nach: 'PE' },
+        'leiter-l1': { art: 'leiter', von: 'L1', nach: 'L1', leiter: { L1: 'L1' } },
+        'leiter-l2': { art: 'leiter', von: 'L2', nach: 'L2', leiter: { L2: 'L2' } },
+        'leiter-l3': { art: 'leiter', von: 'L3', nach: 'L3', leiter: { L3: 'L3' } },
+        'leiter-n': { art: 'leiter', von: 'N', nach: 'N', leiter: { N: 'N' } },
+        'leiter-pe': { art: 'leiter', von: 'PE', nach: 'PE', leiter: { PE: 'PE' } },
         'bp-minuterie': { art: 'schalter', stellungen: AUF_ZU('1', '2') },
+        steckdose: { art: 'offen', von: 'L', nach: 'N',
+            annahme: 'Was in der Steckdose steckt, wird nicht mitgerechnet. Ohne Gerät ist sie eine Unterbrechung.' },
+        'steckdose-schuko': { art: 'offen', von: 'L', nach: 'N',
+            leiter: {}, schutzklemme: 'PE',
+            annahme: 'Was in der Steckdose steckt, wird nicht mitgerechnet. Der Schutzkontakt wird geprüft, nicht gerechnet.' },
+        stecker: { art: 'offen', von: 'L', nach: 'N',
+            annahme: 'Der Stecker allein führt nichts. Was daran hängt, steht nicht im Plan.' },
+        ptc: { art: 'widerstand', von: '1', nach: '2', wert: 100, einheit: 'Ω',
+            annahme: 'Der Kaltleiter wird mit seinem kalten Wert gerechnet. Die Temperatur kommt in dieser Rechnung nicht vor.' },
+        ntc: { art: 'widerstand', von: '1', nach: '2', wert: 10000, einheit: 'Ω',
+            annahme: 'Der Heissleiter wird mit seinem kalten Wert gerechnet. Die Temperatur kommt in dieser Rechnung nicht vor.' },
+        vdr: { art: 'widerstand', von: '1', nach: '2', wert: 1e6, einheit: 'Ω',
+            annahme: 'Der Varistor wird hochohmig gerechnet. Er leitet erst bei Überspannung, und die kommt hier nicht vor.' },
+        ldr: { art: 'widerstand', von: '1', nach: '2', wert: 10000, einheit: 'Ω',
+            annahme: 'Der Fotowiderstand wird mit einem mittleren Wert gerechnet. Die Helligkeit kommt in dieser Rechnung nicht vor.' },
+        frequenzmesser: { art: 'volt', von: '1', nach: '2',
+            annahme: 'Er wird wie ein Voltmeter hochohmig gerechnet. Die Frequenz selbst ist in dieser Rechnung fest — 50 Hz.' },
         kondensator: { art: 'offen', von: '1', nach: '2',
             annahme: 'Bei Gleichstrom sperrt ein geladener Kondensator. Der Ladevorgang wird nicht gerechnet.' },
         elko: { art: 'offen', von: '+', nach: '−',
@@ -66012,7 +66247,8 @@ const Stromfluss = (() => {
         };
         return { finde, eins, alle: () => Array.from(vater.keys()) };
     };
-    const NAH = 6;
+    const NAH = (typeof Register !== 'undefined' && Register.fachzeichen
+        && typeof Register.fachzeichen.NAH === 'number') ? Register.fachzeichen.NAH : 6;
     const nahBei = (ax, ay, bx, by) => Math.abs(ax - bx) <= NAH && Math.abs(ay - by) <= NAH;
     const aufStrecke = (px, py, ax, ay, bx, by) => {
         if (Math.abs(ay - by) <= 1 && Math.abs(py - ay) <= NAH)
@@ -66029,6 +66265,20 @@ const Stromfluss = (() => {
             liste.forEach((a) => raus.push({
                 teil: t.id, nr: a.nr, x: a.x, y: a.y, schluessel: `k:${t.id}:${a.nr}`
             }));
+            const v = verhalten(t.zeichen);
+            if (!v || !v.glieder)
+                return;
+            const aussen = new Set(liste.map((a) => String(a.nr)));
+            const innen = new Set();
+            v.glieder.forEach(g => {
+                [g.von, g.nach].forEach(nr => {
+                    if (!aussen.has(nr) && !innen.has(nr))
+                        innen.add(nr);
+                });
+            });
+            innen.forEach(nr => raus.push({
+                teil: t.id, nr, x: NaN, y: NaN, schluessel: `k:${t.id}:${nr}`, intern: true
+            }));
         });
         return raus;
     };
@@ -66038,21 +66288,43 @@ const Stromfluss = (() => {
         ks.forEach(k => v.finde(k.schluessel));
         const ls = (plan.leitungen || []);
         ls.forEach(l => v.finde(`l:${l.id}`));
+        const teilNach = new Map();
+        (plan.teile || []).forEach((t) => teilNach.set(String(t.id), t));
+        const endeVon = (teil, nr, p) => {
+            const t = teilNach.get(String(teil));
+            const F = typeof Register !== 'undefined' ? Register.fachzeichen : null;
+            if (!t || !F || typeof F.klemmeFuer !== 'function')
+                return { nr, frueher: false };
+            const r = F.klemmeFuer(t.zeichen, nr, p ? { x: p.x - t.x, y: p.y - t.y } : null, t.drehung, t.gespiegelt);
+            return r || { nr, frueher: false };
+        };
         ls.forEach(l => {
             const pk = `l:${l.id}`;
-            if (l.vonTeil && l.vonNr)
-                v.eins(pk, `k:${l.vonTeil}:${l.vonNr}`);
-            if (l.nachTeil && l.nachNr)
-                v.eins(pk, `k:${l.nachTeil}:${l.nachNr}`);
             const punkte = (l.punkte || []);
+            const nicht = new Set();
+            const binde = (teil, nr, p) => {
+                const r = endeVon(teil, nr, p);
+                v.eins(pk, `k:${teil}:${r.nr}`);
+                if (r.frueher)
+                    ks.forEach(k => {
+                        if (k.teil === teil && k.nr !== r.nr)
+                            nicht.add(k.schluessel);
+                    });
+            };
+            if (l.vonTeil && l.vonNr)
+                binde(l.vonTeil, l.vonNr, punkte[0]);
+            if (l.nachTeil && l.nachNr)
+                binde(l.nachTeil, l.nachNr, punkte[punkte.length - 1]);
             punkte.forEach(p => ks.forEach(k => {
-                if (nahBei(p.x, p.y, k.x, k.y))
+                if (!nicht.has(k.schluessel) && nahBei(p.x, p.y, k.x, k.y))
                     v.eins(pk, k.schluessel);
             }));
             for (let i = 0; i + 1 < punkte.length; i++) {
                 const a = punkte[i], b = punkte[i + 1];
-                ks.forEach(k => { if (aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y))
-                    v.eins(pk, k.schluessel); });
+                ks.forEach(k => {
+                    if (!nicht.has(k.schluessel) && aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y))
+                        v.eins(pk, k.schluessel);
+                });
             }
         });
         for (let i = 0; i < ls.length; i++) {
@@ -66110,6 +66382,7 @@ const Stromfluss = (() => {
         });
         return { netzVon, anzahl: nummer.size, klemmen: ks, leitungNetz };
     };
+    const PIVOT_MIN = 1e-14;
     const loese = (A, z) => {
         const n = z.length;
         if (!n)
@@ -66124,7 +66397,7 @@ const Stromfluss = (() => {
                     best = r;
                 }
             }
-            if (betrag < 1e-12)
+            if (betrag < PIVOT_MIN)
                 return null;
             if (best !== s) {
                 const h = M[s];
@@ -66149,9 +66422,32 @@ const Stromfluss = (() => {
         }
         return x;
     };
+    const loeseKomplex = (Are, Aim, zre, zim) => {
+        const n = zre.length;
+        if (!n)
+            return { re: [], im: [] };
+        const G = [];
+        for (let i = 0; i < 2 * n; i++)
+            G.push(new Array(2 * n).fill(0));
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                G[i][j] = Are[i][j];
+                G[i][j + n] = -Aim[i][j];
+                G[i + n][j] = Aim[i][j];
+                G[i + n][j + n] = Are[i][j];
+            }
+        }
+        const x = loese(G, zre.concat(zim));
+        if (!x)
+            return null;
+        return { re: x.slice(0, n), im: x.slice(n) };
+    };
+    const bogen = (grad) => grad * Math.PI / 180;
     const leer = (fehler, warnungen = []) => ({
-        ok: false, fehler, spannung: [], werte: {}, stromNetze: [], netzStrom: [],
-        spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0
+        ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false, komplex: false,
+        werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
+        spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
+        verbindungen: [], anschlussfehler: []
     });
     const KONTAKT = 1e-3;
     const SCHWELLE = 1e-9;
@@ -66197,6 +66493,15 @@ const Stromfluss = (() => {
                     if (n >= 0)
                         masse = n;
                 }
+                if (v && v.art === 'mehrteilig') {
+                    (v.glieder || []).forEach(g => {
+                        if (masse >= 0 || g.art !== 'quelle')
+                            return;
+                        const n = netzFuer(t.id, g.nach);
+                        if (n >= 0)
+                            masse = n;
+                    });
+                }
             });
         }
         if (masse < 0)
@@ -66215,7 +66520,7 @@ const Stromfluss = (() => {
                 return;
             if (v.annahme)
                 annahmen.add(v.annahme);
-            const paar = (von, nach, art, wert) => {
+            const paar = (von, nach, art, wert, phase = 0) => {
                 const a = netzFuer(t.id, von), b = netzFuer(t.id, nach);
                 if (a < 0 || b < 0)
                     return;
@@ -66224,12 +66529,42 @@ const Stromfluss = (() => {
                         kurzschluss.push(`${t.bmk || t.zeichen}: beide Anschlüsse hängen am selben Netz — die Quelle ist kurzgeschlossen.`);
                     return;
                 }
-                eintraege.push({ t, v, a, b, art, wert });
+                eintraege.push({ t, v, a, b, art, wert, phase, von, nach });
+            };
+            const vier = (v1, v2, s1, s2, ue) => {
+                const a = netzFuer(t.id, v1), b = netzFuer(t.id, v2);
+                const c = netzFuer(t.id, s1), d = netzFuer(t.id, s2);
+                if (a < 0 || b < 0 || c < 0 || d < 0)
+                    return;
+                if (a === b || c === d) {
+                    kurzschluss.push(`${t.bmk || t.zeichen}: eine Wicklung ist kurzgeschlossen — beide Enden liegen am selben Netz.`);
+                    return;
+                }
+                eintraege.push({ t, v, a, b, c, d, art: 'T', wert: ue, phase: 0,
+                    von: v1, nach: v2 });
             };
             switch (v.art) {
                 case 'quelle':
-                    paar(v.von, v.nach, 'U', spannungVon(t, v));
+                    paar(v.von, v.nach, 'U', spannungVon(t, v), v.phase ?? 0);
                     break;
+                case 'mehrteilig': {
+                    (v.glieder || []).forEach(g => {
+                        if (g.art === 'quelle')
+                            paar(g.von, g.nach, 'U', g.wert ?? 230, g.phase ?? 0);
+                        else if (g.art === 'widerstand')
+                            paar(g.von, g.nach, 'R', g.wert ?? 1000);
+                        else
+                            paar(g.von, g.nach, 'R', KONTAKT);
+                    });
+                    const liste = v.stellungen || [];
+                    if (liste.length) {
+                        const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
+                        const st = liste[idx];
+                        if (st)
+                            st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
+                    }
+                    break;
+                }
                 case 'widerstand':
                 case 'spule':
                     paar(v.von, v.nach, 'R', widerstandVon(t, v));
@@ -66244,6 +66579,13 @@ const Stromfluss = (() => {
                 case 'volt':
                     paar(v.von, v.nach, 'R', 1e7);
                     break;
+                case 'uebertrager': {
+                    const eigen = t && t.werte && typeof t.werte.ue === 'number' ? t.werte.ue : NaN;
+                    const ue = (Number.isFinite(eigen) && eigen > 0) ? eigen
+                        : (typeof v.wert === 'number' && v.wert > 0 ? v.wert : 1);
+                    vier(v.von, v.nach, v.von2, v.nach2, ue);
+                    break;
+                }
                 case 'diode': {
                     const sperrt = stellung[`d:${t.id}`] === 1;
                     paar(v.von, v.nach, 'R', sperrt ? 1e9 : 1);
@@ -66263,7 +66605,7 @@ const Stromfluss = (() => {
         if (kurzschluss.length)
             return leer(kurzschluss[0], kurzschluss);
         let m = 0;
-        eintraege.forEach(e => { if (e.art === 'U')
+        eintraege.forEach(e => { if (e.art === 'U' || e.art === 'T')
             e.quelleNr = m++; });
         const gr = n + m;
         if (!gr)
@@ -66272,8 +66614,13 @@ const Stromfluss = (() => {
         for (let i = 0; i < gr; i++)
             A.push(new Array(gr).fill(0));
         const z = new Array(gr).fill(0);
+        const Aim = [];
+        for (let i = 0; i < gr; i++)
+            Aim.push(new Array(gr).fill(0));
+        const zim = new Array(gr).fill(0);
+        const GMIN = 1e-12;
         for (let r = 0; r < n; r++)
-            A[r][r] = A[r][r] + 1e-12;
+            A[r][r] = A[r][r] + GMIN;
         eintraege.forEach(e => {
             const ra = zeile[e.a], rb = zeile[e.b];
             if (e.art === 'R') {
@@ -66287,6 +66634,30 @@ const Stromfluss = (() => {
                     A[rb][ra] = A[rb][ra] - g;
                 }
             }
+            else if (e.art === 'T') {
+                const rc = typeof e.c === 'number' ? zeile[e.c] : -1;
+                const rd = typeof e.d === 'number' ? zeile[e.d] : -1;
+                const q = n + e.quelleNr;
+                const ue = e.wert;
+                if (ra >= 0) {
+                    A[ra][q] = A[ra][q] + 1;
+                    A[q][ra] = A[q][ra] + 1;
+                }
+                if (rb >= 0) {
+                    A[rb][q] = A[rb][q] - 1;
+                    A[q][rb] = A[q][rb] - 1;
+                }
+                if (rc >= 0) {
+                    A[rc][q] = A[rc][q] - ue;
+                    A[q][rc] = A[q][rc] - ue;
+                }
+                if (rd >= 0) {
+                    A[rd][q] = A[rd][q] + ue;
+                    A[q][rd] = A[q][rd] + ue;
+                }
+                z[q] = 0;
+                zim[q] = 0;
+            }
             else {
                 const q = n + e.quelleNr;
                 if (ra >= 0) {
@@ -66297,10 +66668,27 @@ const Stromfluss = (() => {
                     A[rb][q] = A[rb][q] - 1;
                     A[q][rb] = A[q][rb] - 1;
                 }
-                z[q] = e.wert;
+                z[q] = e.wert * Math.cos(bogen(e.phase));
+                zim[q] = e.wert * Math.sin(bogen(e.phase));
             }
         });
-        const x = loese(A, z);
+        const komplex = eintraege.some(e => e.art === 'U' && (e.phase % 360) !== 0);
+        const wechsel = teile.some(t => {
+            const v = verhalten(t.zeichen);
+            return !!(v && v.wechselstrom);
+        });
+        let xRe;
+        let xIm;
+        if (komplex) {
+            const k = loeseKomplex(A, Aim, z, zim);
+            xRe = k ? k.re : null;
+            xIm = k ? k.im : [];
+        }
+        else {
+            xRe = loese(A, z);
+            xIm = new Array(gr).fill(0);
+        }
+        const x = xRe;
         if (!x)
             return leer('Die Schaltung hat keine eindeutige Lösung. Das passiert, wenn zwei ideale ' +
                 'Quellen parallel liegen oder zwei Amperemeter denselben Zweig messen — ' +
@@ -66309,25 +66697,100 @@ const Stromfluss = (() => {
             const r = zeile[netz];
             return (typeof r === 'number' && r >= 0) ? x[r] : 0;
         };
+        const Uj = (netz) => {
+            const r = zeile[netz];
+            return (typeof r === 'number' && r >= 0) ? (xIm[r] ?? 0) : 0;
+        };
+        const winkel = (re, im) => {
+            if (Math.abs(re) < 1e-12 && Math.abs(im) < 1e-12)
+                return 0;
+            return Math.atan2(im, re) * 180 / Math.PI;
+        };
         const spannung = [];
-        for (let i = 0; i < anzahl; i++)
-            spannung.push(U(i));
+        const spannungWinkel = [];
+        for (let i = 0; i < anzahl; i++) {
+            const re = U(i), im = Uj(i);
+            spannung.push(wechsel ? Math.hypot(re, im) : re);
+            spannungWinkel.push(wechsel ? winkel(re, im) : 0);
+        }
         const werte = {};
+        const teilwerte = {};
         const netzStrom = new Array(anzahl).fill(0);
         eintraege.forEach(e => {
-            const u = U(e.a) - U(e.b);
-            const i = e.art === 'R' ? u / e.wert : x[n + e.quelleNr];
-            const alt = werte[e.t.id];
-            const strom = Math.abs(i);
-            if (!alt || strom > Math.abs(alt.I)) {
-                werte[e.t.id] = {
+            const ure = U(e.a) - U(e.b);
+            const uim = Uj(e.a) - Uj(e.b);
+            const ire = e.art === 'R' ? ure / e.wert : x[n + e.quelleNr];
+            const iim = e.art === 'R' ? uim / e.wert : (xIm[n + e.quelleNr] ?? 0);
+            if (e.art === 'T' && typeof e.c === 'number' && typeof e.d === 'number') {
+                const s2re = U(e.c) - U(e.d), s2im = Uj(e.c) - Uj(e.d);
+                const i2re = -ire * e.wert, i2im = -iim * e.wert;
+                const fach2 = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
+                const b2 = Math.hypot(s2re, s2im), j2 = Math.hypot(i2re, i2im);
+                fach2[`${e.v.von2}–${e.v.nach2}`] = {
                     teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
-                    U: u, I: i, P: Math.abs(u * i), fliesst: strom > SCHWELLE
+                    U: wechsel ? b2 : s2re, I: wechsel ? j2 : i2re,
+                    P: Math.abs(s2re * i2re + s2im * i2im), fliesst: j2 > SCHWELLE,
+                    Ubetrag: b2, Ibetrag: j2,
+                    Uwinkel: wechsel ? winkel(s2re, s2im) : 0,
+                    Iwinkel: wechsel ? winkel(i2re, i2im) : 0,
+                    Ire: i2re, Iim: i2im, wechsel,
+                    vonKlemme: e.v.von2 || '', nachKlemme: e.v.nach2 || '',
+                    richtung: j2 <= SCHWELLE ? 'keine' : (wechsel ? 'wechselnd' : (i2re > 0 ? 'vor' : 'rueck')),
+                    richtungstext: j2 <= SCHWELLE ? 'Es fliesst kein Strom.'
+                        : 'Der Strom der Sekundärseite. Er ist um die Übersetzung grösser als der primäre.'
                 };
+            }
+            const uBetrag = Math.hypot(ure, uim);
+            const iBetrag = Math.hypot(ire, iim);
+            const p = Math.abs(ure * ire + uim * iim);
+            const alt = werte[e.t.id];
+            const strom = iBetrag;
+            const iWinkel = wechsel ? winkel(ire, iim) : 0;
+            let richtung;
+            let richtungJetzt;
+            let richtungstext;
+            const hin = `von ${e.von} nach ${e.nach}`;
+            const her = `von ${e.nach} nach ${e.von}`;
+            if (strom <= SCHWELLE) {
+                richtung = 'keine';
+                richtungstext = 'Es fliesst kein Strom.';
+            }
+            else if (!wechsel) {
+                richtung = ire > 0 ? 'vor' : 'rueck';
+                richtungstext = `Der Strom fliesst ${ire > 0 ? hin : her}.`;
+            }
+            else {
+                richtung = 'wechselnd';
+                const c = Math.cos(bogen(iWinkel));
+                richtungJetzt = Math.abs(c) < 0.02 ? 'quer' : (c > 0 ? 'vor' : 'rueck');
+                const augenblick = richtungJetzt === 'quer'
+                    ? 'steht er gerade still — er ist um 90° versetzt und kehrt eben um'
+                    : `fliesst er ${richtungJetzt === 'vor' ? hin : her}`;
+                richtungstext =
+                    'Wechselstrom bei 50 Hz: der Strom durchläuft 50 volle Perioden je '
+                        + 'Sekunde und kehrt dabei hundertmal seine Richtung um. Der Pfeil '
+                        + `zeigt die Zählrichtung (${hin}). Im Augenblick des Scheitels von L1 `
+                        + `${augenblick}.`;
+            }
+            const mach = () => ({
+                teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
+                U: wechsel ? uBetrag : ure, I: wechsel ? iBetrag : ire,
+                P: p, fliesst: strom > SCHWELLE,
+                Ubetrag: uBetrag, Ibetrag: iBetrag,
+                Uwinkel: wechsel ? winkel(ure, uim) : 0,
+                Iwinkel: iWinkel, Ire: ire, Iim: iim,
+                wechsel, vonKlemme: e.von, nachKlemme: e.nach,
+                richtung, richtungstext,
+                ...(richtungJetzt ? { richtungJetzt } : {})
+            });
+            if (!alt || strom > Math.abs(alt.I)) {
+                werte[e.t.id] = mach();
             }
             else if (alt) {
                 alt.fliesst = alt.fliesst || strom > SCHWELLE;
             }
+            const fach = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
+            fach[`${e.von}–${e.nach}`] = mach();
             netzStrom[e.a] = Math.max(netzStrom[e.a], strom);
             netzStrom[e.b] = Math.max(netzStrom[e.b], strom);
         });
@@ -66365,9 +66828,14 @@ const Stromfluss = (() => {
                 maxStrom = netzStrom[i];
         }
         return {
-            ok: true, fehler: '', spannung, werte, stromNetze, netzStrom, spulen,
+            ok: true, fehler: '', spannung, spannungWinkel, wechsel, komplex,
+            werte, teilwerte, stromNetze, netzStrom, spulen,
             annahmen: Array.from(annahmen), warnungen, durchgaenge: 1,
-            leitungNetz: netzInfo.leitungNetz, maxStrom
+            leitungNetz: netzInfo.leitungNetz, maxStrom,
+            verbindungen: eintraege
+                .filter(e => !(e.art === 'U' && e.wert !== 0))
+                .map(e => [e.a, e.b]),
+            anschlussfehler: []
         };
     };
     const rechne = (plan, stellung = {}, vorher) => {
@@ -66385,9 +66853,14 @@ const Stromfluss = (() => {
                 if (t.bmk && vorher[t.bmk])
                     stand[t.id] = 1;
             });
+        const mitFehlern = (e) => {
+            e.anschlussfehler = anschlussfehler(plan, netzInfo, e);
+            e.anschlussfehler.forEach(f => e.warnungen.push(`${f.was} ${f.warum}`));
+            return e;
+        };
         let erg = einDurchgang(plan, stand, netzInfo);
         if (!erg.ok)
-            return erg;
+            return mitFehlern(erg);
         const gesehen = new Set();
         let runde = 1;
         const MAX = 24;
@@ -66418,7 +66891,7 @@ const Stromfluss = (() => {
             stand = naechster;
             const neu = einDurchgang(plan, stand, netzInfo);
             if (!neu.ok)
-                return neu;
+                return mitFehlern(neu);
             neu.warnungen = erg.warnungen.concat(neu.warnungen);
             erg = neu;
             runde++;
@@ -66432,7 +66905,7 @@ const Stromfluss = (() => {
             if (t.zeichen === 'verbindungspunkt' || t.zeichen === 'abzweigdose'
                 || t.zeichen === 'bp-abzweigdose')
                 return;
-            const eigene = netzInfo.klemmen.filter(k => k.teil === t.id);
+            const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
             for (let i = 0; i < eigene.length; i++) {
                 for (let j = i + 1; j < eigene.length; j++) {
                     const a = eigene[i], b = eigene[j];
@@ -66453,6 +66926,8 @@ const Stromfluss = (() => {
         const belegt = new Set();
         (plan.leitungen || []).forEach(() => { });
         netzInfo.klemmen.forEach(k => {
+            if (k.intern)
+                return;
             const netz = netzInfo.netzVon.get(k.schluessel);
             if (typeof netz !== 'number')
                 return;
@@ -66463,7 +66938,239 @@ const Stromfluss = (() => {
                 erg.warnungen.push(`${(t && t.bmk) || (t && t.zeichen) || 'Ein Bauteil'}: Anschluss ${k.nr} hängt an keiner Leitung.`);
             }
         });
-        return erg;
+        return mitFehlern(erg);
+    };
+    const leiterName = (l) => l === 'PE' ? 'Schutzleiter' : l === 'N' ? 'Neutralleiter' : `Aussenleiter ${l}`;
+    const istAussen = (l) => l === 'L1' || l === 'L2' || l === 'L3';
+    const leiterrollen = (plan, netzInfo) => {
+        const raus = new Map();
+        const setze = (teilId, nr, rolle) => {
+            const netz = netzInfo.netzVon.get(`k:${teilId}:${nr}`);
+            if (typeof netz !== 'number')
+                return;
+            const fach = raus.get(netz) || new Set();
+            fach.add(rolle);
+            raus.set(netz, fach);
+        };
+        (plan.teile || []).forEach(t => {
+            const v = verhalten(t.zeichen);
+            if (!v)
+                return;
+            if (v.leiter)
+                Object.keys(v.leiter).forEach(nr => setze(t.id, nr, v.leiter[nr]));
+        });
+        return raus;
+    };
+    const anschlussfehler = (plan, netzInfo, erg) => {
+        const raus = [];
+        const teile = (plan.teile || []);
+        const rollen = leiterrollen(plan, netzInfo);
+        const nameVon = (t) => t.bmk || t.zeichen;
+        const teileAn = (netz) => netzInfo.klemmen
+            .filter(k => !k.intern && netzInfo.netzVon.get(k.schluessel) === netz)
+            .map(k => k.teil);
+        rollen.forEach((satz, netz) => {
+            if (satz.size < 2)
+                return;
+            const liste = Array.from(satz).sort();
+            const betroffen = teileAn(netz);
+            const hatPE = liste.includes('PE');
+            const hatN = liste.includes('N');
+            const aussen = liste.filter(istAussen);
+            const namen = liste.map(leiterName).join(' und ');
+            if (aussen.length && hatPE) {
+                raus.push({
+                    art: 'l-pe', schwere: 'gefahr', teile: betroffen,
+                    was: `${namen} liegen am selben Punkt — ein Aussenleiter ist auf den Schutzleiter verdrahtet.`,
+                    warum: 'Der Schutzleiter führt dann volle Spannung, und mit ihm jedes '
+                        + 'Gehäuse, das daran hängt: Waschmaschine, Herd, Bohrmaschine. '
+                        + 'Wer eines davon anfasst, steht unter 230 V. Ein '
+                        + 'Fehlerstromschutzschalter löst sofort aus, wenn einer da ist — '
+                        + 'ist keiner da, merkt man es erst beim Anfassen.',
+                    norm: 'Der Schutzleiter führt nie Betriebsspannung.'
+                });
+            }
+            else if (aussen.length && hatN) {
+                raus.push({
+                    art: 'l-n', schwere: 'gefahr', teile: betroffen,
+                    was: `${namen} liegen am selben Punkt — Aussenleiter und Neutralleiter sind kurzgeschlossen.`,
+                    warum: 'Ohne Verbraucher dazwischen begrenzt nur der Leitungswiderstand '
+                        + 'den Strom; es fliessen einige hundert bis einige tausend Ampere. '
+                        + 'Der Leitungsschutzschalter schaltet in Millisekunden ab. '
+                        + 'Es knallt, der Kontakt kann verschweissen, und die Leitung wird '
+                        + 'auf ihrer ganzen Länge heiss.'
+                });
+            }
+            else if (aussen.length >= 2) {
+                raus.push({
+                    art: 'l-l', schwere: 'gefahr', teile: betroffen,
+                    was: `${namen} liegen am selben Punkt — zwei Aussenleiter sind zusammengeschaltet.`,
+                    warum: 'Zwischen zwei Aussenleitern liegen 400 V, nicht 230 V. Der '
+                        + 'Kurzschlussstrom ist entsprechend grösser als bei L gegen N, '
+                        + 'und der Lichtbogen beim Abschalten ebenfalls. Sitzen die beiden '
+                        + 'auf derselben Klemme eines Verbrauchers, bekommt er statt '
+                        + 'Spannung gar keine — die Differenz ist dann null.'
+                });
+            }
+            else if (hatN && hatPE) {
+                raus.push({
+                    art: 'n-pe', schwere: 'gefahr', teile: betroffen,
+                    was: 'Neutralleiter und Schutzleiter liegen am selben Punkt — sie sind vertauscht oder gebrückt.',
+                    warum: 'Und jetzt kommt das Gefährliche: es FUNKTIONIERT. Die Lampe '
+                        + 'brennt, der Motor läuft, kein Messgerät schlägt aus — am '
+                        + 'Sternpunkt sind die beiden ja verbunden. Nur führt der '
+                        + 'Schutzleiter jetzt den Betriebsstrom und ist nicht mehr '
+                        + 'spannungsfrei. Bricht er irgendwo, stehen alle daran '
+                        + 'angeschlossenen Gehäuse unter Spannung. Ein '
+                        + 'Fehlerstromschutzschalter sieht die Unsymmetrie und löst aus — '
+                        + 'oder er löst dauernd aus, und jemand baut ihn aus.',
+                    norm: 'Im TN-S-System werden N und PE ab der Trennstelle nicht wieder verbunden.'
+                });
+            }
+        });
+        teile.forEach(t => {
+            const v = verhalten(t.zeichen);
+            if (!v || v.schutzklasse !== 1)
+                return;
+            const peKlemme = v.schutzklemme;
+            if (!peKlemme)
+                return;
+            const netz = netzInfo.netzVon.get(`k:${t.id}:${peKlemme}`);
+            const dran = typeof netz === 'number'
+                && (rollen.get(netz)?.has('PE') ?? false);
+            if (dran)
+                return;
+            raus.push({
+                art: 'pe-fehlt', schwere: 'gefahr', teile: [t.id],
+                was: `${nameVon(t)} ist ein Gerät der Schutzklasse I, aber Klemme ${peKlemme} hängt an keinem Schutzleiter.`,
+                warum: 'Schutzklasse I heisst: die Isolation allein genügt nicht, das '
+                    + 'Gehäuse ist aus Metall und MUSS geerdet sein. Ohne Schutzleiter '
+                    + 'läuft das Gerät völlig normal — bis eine Wicklung durchschlägt. '
+                    + 'Dann steht das Gehäuse unter Spannung, es fliesst kein '
+                    + 'Fehlerstrom, und keine Schutzeinrichtung schaltet ab. Der '
+                    + 'Fehler wird sichtbar, wenn ihn jemand anfasst.',
+                norm: 'NIN: Schutzklasse I braucht den Schutzleiter, nicht wahlweise.'
+            });
+        });
+        teile.forEach(t => {
+            const v = verhalten(t.zeichen);
+            if (!v || v.art !== 'schalter')
+                return;
+            const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
+            let amN = false, amL = false;
+            eigene.forEach(k => {
+                const netz = netzInfo.netzVon.get(k.schluessel);
+                if (typeof netz !== 'number')
+                    return;
+                const satz = rollen.get(netz);
+                if (!satz)
+                    return;
+                if (satz.has('N'))
+                    amN = true;
+                if (Array.from(satz).some(istAussen))
+                    amL = true;
+            });
+            if (!amN || amL)
+                return;
+            raus.push({
+                art: 'schalter-in-n', schwere: 'fehler', teile: [t.id],
+                was: `${nameVon(t)} sitzt im Neutralleiter statt im Aussenleiter.`,
+                warum: 'Ausgeschaltet ist die Lampe dann zwar dunkel, aber der '
+                    + 'Aussenleiter liegt weiterhin bis zur Fassung an. Wer die '
+                    + 'Birne wechselt und dabei den Sockel berührt, bekommt einen '
+                    + 'Schlag — obwohl der Schalter aus ist und alles danach aussieht, '
+                    + 'als wäre es spannungsfrei.',
+                norm: 'NIN 4.6.1.2.3.2 — Schalter gehören in den Aussenleiter. Der '
+                    + 'Neutralleiter darf nur geschaltet werden, wenn der zugehörige '
+                    + 'Aussenleiter gleichzeitig mitgeschaltet wird.'
+            });
+        });
+        const FI_SCHWELLE = 0.03;
+        teile.forEach(t => {
+            const v = verhalten(t.zeichen);
+            if (!v || t.zeichen !== 'fi-schutzschalter')
+                return;
+            const fach = erg.teilwerte[t.id];
+            if (!fach)
+                return;
+            const pole = Object.keys(fach);
+            let re = 0, im = 0;
+            pole.forEach(k => { const w = fach[k]; re += w.Ire; im += w.Iim; });
+            const fehlstrom = Math.hypot(re, im);
+            if (fehlstrom <= FI_SCHWELLE)
+                return;
+            const nPol = fach['N–N2'];
+            const aussenFuehrt = pole.some(k => k !== 'N–N2'
+                && Math.hypot(fach[k].Ire, fach[k].Iim) > SCHWELLE);
+            if (aussenFuehrt && nPol
+                && Math.hypot(nPol.Ire, nPol.Iim) <= SCHWELLE) {
+                raus.push({
+                    art: 'fi-halbe-messung', schwere: 'fehler', teile: [t.id],
+                    was: `${nameVon(t)}: der Neutralleiter läuft nicht durch den Schutzschalter.`,
+                    warum: 'Ein Fehlerstromschutzschalter vergleicht Hin- und Rückstrom. '
+                        + 'Sieht er nur den Aussenleiter, ist die Differenz immer der '
+                        + 'ganze Betriebsstrom — er löst beim Einschalten aus, und zwar '
+                        + 'ohne dass irgendetwas defekt wäre. Wer dann den Fehler beim '
+                        + 'Gerät sucht, sucht am falschen Ort. Beide Leiter müssen durch '
+                        + 'ihn hindurch.'
+                });
+                return;
+            }
+            raus.push({
+                art: 'fi-loest-aus', schwere: 'gefahr', teile: [t.id],
+                was: `${nameVon(t)} löst aus: es fehlen ${zeige(fehlstrom, 'A')} — `
+                    + `so viel fliesst am Neutralleiter vorbei.`,
+                warum: 'Was hinfliesst, kommt nicht zurück. Der Strom nimmt einen '
+                    + 'anderen Weg: über den Schutzleiter, über ein feuchtes Gehäuse '
+                    + 'oder über einen Menschen. Ab etwa 30 mA wird es für den '
+                    + 'Menschen gefährlich, und genau darauf ist der Schalter '
+                    + 'eingestellt. Dass er auslöst, ist hier die gute Nachricht — '
+                    + 'die schlechte ist, dass es einen Fehlerstrom gibt.'
+            });
+        });
+        const hatN = Array.from(rollen.values()).some(x => x.has('N'));
+        if (hatN && erg.verbindungen.length) {
+            const v = verband();
+            erg.verbindungen.forEach(([a, b]) => v.eins(`n:${a}`, `n:${b}`));
+            const nWurzeln = new Set();
+            rollen.forEach((satz, netz) => { if (satz.has('N'))
+                nWurzeln.add(v.finde(`n:${netz}`)); });
+            teile.forEach(t => {
+                const vh = verhalten(t.zeichen);
+                if (!vh)
+                    return;
+                if (vh.art !== 'widerstand' && vh.art !== 'spule')
+                    return;
+                const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
+                const netze_ = eigene
+                    .map(k => netzInfo.netzVon.get(k.schluessel))
+                    .filter((x) => typeof x === 'number');
+                if (!netze_.length)
+                    return;
+                const anAussen = netze_.filter(nz => Array.from(rollen.get(nz) || []).some(istAussen));
+                if (anAussen.length !== 1)
+                    return;
+                const zurueck = netze_.filter(nz => !anAussen.includes(nz));
+                if (!zurueck.length)
+                    return;
+                const kommtAn = zurueck.some(nz => nWurzeln.has(v.finde(`n:${nz}`)));
+                if (kommtAn)
+                    return;
+                raus.push({
+                    art: 'n-offen', schwere: 'gefahr', teile: [t.id],
+                    was: `${nameVon(t)} hängt am Aussenleiter, aber der Rückweg zum Neutralleiter ist offen.`,
+                    warum: 'Es fliesst kein Strom, das Gerät bleibt also dunkel oder still — '
+                        + 'und sieht damit aus wie ausgeschaltet. Es ist aber nicht '
+                        + 'spannungsfrei: die volle Spannung steht bis zur Unterbrechung '
+                        + 'an, und der ganze Leiter dahinter liegt über das Gerät am '
+                        + 'Aussenleiter. Im Drehstromnetz ist ein unterbrochener '
+                        + 'Neutralleiter noch schlimmer: die einphasigen Verbraucher '
+                        + 'liegen dann in Reihe zwischen zwei Aussenleitern, und wer wenig '
+                        + 'Leistung hat, bekommt weit mehr als seine 230 V.'
+                });
+            });
+        }
+        return raus;
     };
     const zeige = (wert, einheit, stellen = 2) => {
         if (!Number.isFinite(wert))
@@ -66488,6 +67195,7 @@ const Stromfluss = (() => {
     };
     return {
         VERHALTEN, verhalten, stellungenVon, netze, rechne, zeige, loese,
+        loeseKomplex, leiterrollen,
         klemmen, aufStrecke
     };
 })();
@@ -66628,6 +67336,13 @@ const Schaltplan = (() => {
         if (!lage)
             return null;
         return { x: t.x + lage.x, y: t.y + lage.y };
+    };
+    const klemmeFuer = (t, nr, punkt) => {
+        if (!t || !nr || typeof Register === 'undefined' || !Register.fachzeichen
+            || typeof Register.fachzeichen.klemmeFuer !== 'function')
+            return nr;
+        const r = Register.fachzeichen.klemmeFuer(t.zeichen, nr, punkt ? { x: punkt.x - t.x, y: punkt.y - t.y } : null, t.drehung, t.gespiegelt);
+        return r ? r.nr : nr;
     };
     const anschluesseVon = (t) => {
         if (typeof Register === 'undefined' || !Register.fachzeichen)
@@ -66873,15 +67588,61 @@ const Schaltplan = (() => {
             let anzeige = '';
             if (w && opt.messwerte !== false && opt.strom) {
                 const art = vh ? vh.art : '';
+                const glieder = opt.strom.teilwerte?.[t.id];
+                let stark = w;
+                let summeP = 0;
+                if (glieder) {
+                    Object.keys(glieder).forEach(k => {
+                        const g = glieder[k];
+                        summeP += g.P;
+                        if (g.P > stark.P)
+                            stark = g;
+                    });
+                }
+                if (art === 'uebertrager')
+                    summeP = Math.max(w.P, stark.P);
                 const zeilen = art === 'volt' ? [zeigeZahl(Math.abs(w.U), 'V')]
                     : art === 'ampere' ? [zeigeZahl(Math.abs(w.I), 'A')]
                         : art === 'quelle' ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A')]
                             : (art === 'widerstand' || art === 'spule')
                                 ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A'),
                                     zeigeZahl(w.P, 'W')]
-                                : [];
+                                : (art === 'mehrteilig' || art === 'uebertrager')
+                                    ? [zeigeZahl(Math.abs(stark.U), 'V'), zeigeZahl(Math.abs(stark.I), 'A'),
+                                        zeigeZahl(summeP, 'W')]
+                                    : [];
                 anzeige = zeilen.map((s, i) => `<text class="sp-messwert" x="${mass.w / 2}" y="${mass.h + 14 + i * 12}" ` +
                     `text-anchor="middle" font-size="10" stroke="none">${esc(s)}</text>`).join('');
+            }
+            let pfeil = '';
+            if (w && w.fliesst && w.richtung && w.richtung !== 'keine'
+                && w.vonKlemme && w.nachKlemme) {
+                const kl = anschluesseVon(t);
+                const va = kl.find(k => k.nr === w.vonKlemme);
+                const nb = kl.find(k => k.nr === w.nachKlemme);
+                if (va && nb) {
+                    const ax = va.x - t.x, ay = va.y - t.y;
+                    const bx = nb.x - t.x, by = nb.y - t.y;
+                    const rueck = w.richtung === 'rueck';
+                    const dx = rueck ? ax - bx : bx - ax;
+                    const dy = rueck ? ay - by : by - ay;
+                    const laenge = Math.hypot(dx, dy);
+                    if (laenge > 1) {
+                        const ux = dx / laenge, uy = dy / laenge;
+                        const weg = Math.abs(uy) * mass.w / 2 + Math.abs(ux) * mass.h / 2 + 12;
+                        const mx = (ax + bx) / 2 + uy * weg;
+                        const my = (ay + by) / 2 - ux * weg;
+                        const grad = Math.atan2(dy, dx) * 180 / Math.PI;
+                        const d = w.richtung === 'wechselnd'
+                            ? 'M-13,0 H13 M13,0 L6,-5 M13,0 L6,5 M-13,0 L-6,-5 M-13,0 L-6,5'
+                            : 'M-12,0 H7 M7,0 L0,-5 M7,0 L0,5';
+                        pfeil = `<g class="sp-richtung" transform="translate(${mx.toFixed(1)} ` +
+                            `${my.toFixed(1)}) rotate(${grad.toFixed(1)})">` +
+                            `<path d="${d}" fill="none"/>` +
+                            (w.richtungstext ? `<title>${esc(w.richtungstext)}</title>` : '') +
+                            `</g>`;
+                    }
+                }
             }
             teile.push(`<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
                 `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
@@ -66889,7 +67650,7 @@ const Schaltplan = (() => {
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
                 `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
                 `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
-                `fill="transparent" stroke="none"/>` + schein + innen + anzeige +
+                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + pfeil +
                 (opt.anschluesse ? anschluesseVon(t).map(a => `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
                     `cx="${a.x - t.x}" cy="${a.y - t.y}" r="4" fill="${farbe}" stroke="none" opacity=".5"/>`).join('') : '') +
                 (opt.nummern ? anschluesseVon(t).map(a => `<text x="${a.x - t.x + 6}" y="${a.y - t.y - 4}" font-size="9" fill="${farbe}" ` +
@@ -67014,7 +67775,7 @@ const Schaltplan = (() => {
     };
     return {
         ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
-        naechstesBmk, anschlussOrt, anschluesseVon, fangeAnschluss, rechtwinklig,
+        naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc
     };
@@ -67257,7 +68018,7 @@ const Planflaeche = (() => {
             if (e && e.ok)
                 opt.strom = {
                     netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
-                    werte: e.werte, maxStrom: e.maxStrom
+                    werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
                 };
             buehne.innerHTML = Schaltplan.alsSvg(z.plan, opt);
             buehne.classList.toggle('sp-laeuft', z.simulation);
@@ -67374,7 +68135,19 @@ const Planflaeche = (() => {
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
+        const endKlemmen = () => {
+            const m = new Map();
+            z.plan.leitungen.forEach(l => {
+                const n = l.punkte.length;
+                m.set(l.id, {
+                    von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
+                    nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
+                });
+            });
+            return m;
+        };
         const verschiebe = (dx, dy) => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t) {
@@ -67389,43 +68162,45 @@ const Planflaeche = (() => {
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
                     const t = teilVon(l.vonTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, l.vonNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
                     const t = teilVon(l.nachTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, l.nachNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
             });
         };
         const drehen = () => aendere(() => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t)
                     t.drehung = ((t.drehung || 0) + 90) % 360;
             });
-            leitungenNachziehen();
+            leitungenNachziehen(ziel);
         });
         const spiegeln = () => aendere(() => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t)
                     t.gespiegelt = !t.gespiegelt;
             });
-            leitungenNachziehen();
+            leitungenNachziehen(ziel);
         });
-        const leitungenNachziehen = () => {
+        const leitungenNachziehen = (ziel) => {
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), l.vonNr);
+                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), l.nachNr);
+                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
@@ -67564,7 +68339,7 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
-            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang };
+            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
             svg.setPointerCapture(e.pointerId);
             male();
         });
@@ -67584,7 +68359,7 @@ const Planflaeche = (() => {
                         t.y = Schaltplan.rasten(a.y + dy);
                     }
                 });
-                leitungenNachziehen();
+                leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
                 buehneMalen();
                 return;
             }
@@ -101608,6 +102383,22 @@ const Learning = (() => {
         UI.toast('Lückenkarte angelegt.');
         return created;
     };
+    const gruppenTitel = (text, hinweis) => {
+        const kopf = document.createElement('div');
+        kopf.style.margin = '18px 0 8px';
+        const h = document.createElement('strong');
+        h.textContent = text;
+        h.style.fontSize = '13px';
+        h.style.letterSpacing = '.04em';
+        h.style.textTransform = 'uppercase';
+        h.style.color = 'var(--text-dim)';
+        const s = document.createElement('span');
+        s.textContent = ' · ' + hinweis;
+        s.style.fontSize = '13px';
+        s.style.color = 'var(--text-dim)';
+        kopf.append(h, s);
+        return kopf;
+    };
     const statCard = (number, labelText) => {
         const card = document.createElement('div');
         card.style.padding = '14px';
@@ -101823,6 +102614,8 @@ const Learning = (() => {
                 : stats.total ? 'Für heute ist alles erledigt.' :
                     'Noch keine Karten. Lege eine Karte an oder markiere Text und wähle „Lücke“.';
             explanation.style.lineHeight = '1.55';
+            exam.style.margin = '14px 0 0';
+            explanation.style.margin = '6px 0 14px';
             const actions = document.createElement('div');
             actions.style.display = 'grid';
             actions.style.gap = '9px';
@@ -101836,7 +102629,7 @@ const Learning = (() => {
             details.style.display = 'grid';
             details.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
             details.style.gap = '10px';
-            details.style.marginTop = '16px';
+            details.style.marginTop = '0';
             details.append(statCard(String(stats.learned) + ' / ' + String(stats.total), 'Karten mit Lernstand'), statCard(String(stats.reviewedToday), 'heute gelernt'), statCard(String(stats.againRate) + ' %', 'Nochmal-Rate'), statCard(String(stats.reviews), 'Wiederholungen'));
             const next = document.createElement('p');
             next.style.color = 'var(--text-dim)';
@@ -101894,7 +102687,7 @@ const Learning = (() => {
             algorithm.append(titel, reihe, satz);
             const auffrisch = auffrischSection();
             const richtung = verlaufSection();
-            view.body.append(grid, exam, explanation, actions, details, ...(auffrisch ? [auffrisch] : []), topicSection(stats.topics), ...(richtung ? [richtung] : []), next, algorithm);
+            view.body.append(gruppenTitel('Heute', 'was ansteht'), grid, exam, explanation, actions, gruppenTitel('Insgesamt', 'der Stand über alle Karten'), details, ...(auffrisch ? [auffrisch] : []), topicSection(stats.topics), ...(richtung ? [richtung] : []), next, algorithm);
         };
         const renderSession = () => {
             view.body.replaceChildren();
@@ -128646,11 +129439,178 @@ const Electrical = (() => {
         ],
         quarantine: []
     };
-    const pageForLearning = () => {
+    const THREE_PHASE_PACKAGE = {
+        schema: PACKAGE_SCHEMA,
+        manifest: {
+            id: 'redion.electrical.threephase', version: '1.0.0',
+            title: 'Drehstrom und die fünf Leiter', license: 'CC0-1.0',
+            licenseStatus: 'cleared', provenanceStatus: 'verified', language: 'de-CH',
+            source: 'Redion-Lernredaktion. Eigene Formulierungen; die Zahlen sind mit ' +
+                'der Simulation dieser App nachgerechnet (test607). Normstellen sind als ' +
+                'Fundstelle genannt, nicht im Wortlaut wiedergegeben.',
+            region: 'CH', created: '2026-09-12'
+        },
+        questions: [
+            { id: 'netz-strang', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Welche Spannung liegt zwischen einem Aussenleiter und dem Neutralleiter?',
+                options: ['115 V', '230 V', '400 V', '690 V'], correct: 1,
+                explanation: '230 V. Das ist die Strangspannung — die Spannung, an der jede gewöhnliche Steckdose hängt.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Betrag der Strangspannung', license: 'CC0-1.0' } },
+            { id: 'netz-aussen', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Welche Spannung liegt zwischen zwei Aussenleitern?',
+                options: ['230 V', '325 V', '400 V', '460 V'], correct: 2,
+                explanation: '400 V. Nicht 460 V — die beiden Spannungen sind um 120° versetzt und addieren sich deshalb nicht einfach.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Betrag der Aussenleiterspannung', license: 'CC0-1.0' } },
+            { id: 'netz-winkel', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Um welchen Winkel sind die drei Strangspannungen gegeneinander versetzt?',
+                options: ['60°', '90°', '120°', '180°'], correct: 2,
+                explanation: '120°. Drei gleiche Zeiger im Kreis: 360° geteilt durch drei.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Definition des symmetrischen Dreiphasensystems', license: 'CC0-1.0' } },
+            { id: 'netz-wurzel', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Warum ist die Aussenleiterspannung nicht doppelt so gross wie die Strangspannung?',
+                options: ['Weil der Neutralleiter einen Teil abführt',
+                    'Weil die beiden Spannungen um 120° versetzt sind und zeigerhaft addiert werden',
+                    'Weil der Transformator sie begrenzt',
+                    'Weil die Leitung einen Spannungsabfall verursacht'], correct: 1,
+                explanation: 'Zwei Zeiger mit 120° Versatz ergeben addiert den Faktor Wurzel 3 ≈ 1,73 — also 400 V statt 460 V.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Zeigeraddition zweier um 120° versetzter Spannungen', license: 'CC0-1.0' } },
+            { id: 'stern-strang', topic: 'Stern und Dreieck',
+                question: 'Ein Motor ist am 400-V-Netz in Stern geschaltet. Welche Spannung liegt an einem Wicklungsstrang?',
+                options: ['133 V', '230 V', '400 V', '690 V'], correct: 1,
+                explanation: '230 V. Im Stern liegt jeder Strang zwischen einem Aussenleiter und dem Sternpunkt.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Klemmenbrett in Stern', license: 'CC0-1.0' } },
+            { id: 'dreieck-strang', topic: 'Stern und Dreieck',
+                question: 'Derselbe Motor am selben Netz, aber in Dreieck gebrückt. Welche Spannung liegt jetzt am Strang?',
+                options: ['230 V', '400 V', '692 V', '133 V'], correct: 1,
+                explanation: '400 V. Im Dreieck liegt jeder Strang zwischen zwei Aussenleitern.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Klemmenbrett in Dreieck', license: 'CC0-1.0' } },
+            { id: 'stern-dreieck-leistung', topic: 'Stern und Dreieck',
+                question: 'Wie verhält sich die Leistung desselben Motors in Dreieck zu der in Stern?',
+                options: ['gleich gross', 'Wurzel 3 mal so gross', 'dreimal so gross', 'ein Drittel'], correct: 2,
+                explanation: 'Dreimal. Die Strangspannung ist Wurzel 3 mal grösser, und die Leistung geht mit dem Quadrat der Spannung — daraus wird der Faktor 3. Genau darauf beruht der Stern-Dreieck-Anlauf.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Strangleistung in beiden Schaltungen', license: 'CC0-1.0' } },
+            { id: 'klemmenbrett-stern', topic: 'Stern und Dreieck',
+                question: 'Wie werden die Brücken auf dem Klemmenbrett für Sternschaltung gesetzt?',
+                options: ['U1 mit V1 mit W1 verbinden',
+                    'U2 mit V2 mit W2 verbinden',
+                    'U1 mit U2, V1 mit V2, W1 mit W2',
+                    'Gar keine Brücken setzen'], correct: 1,
+                explanation: 'Die drei Wicklungsenden U2, V2 und W2 werden zusammengeschaltet — sie bilden den Sternpunkt. Die Anfänge U1, V1, W1 gehen an die Aussenleiter.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Aufbau des Motorenklemmenbretts', license: 'CC0-1.0' } },
+            { id: 'n-symmetrisch', topic: 'Der Neutralleiter',
+                question: 'Drei gleiche einphasige Verbraucher hängen an L1, L2 und L3. Wie viel Strom fliesst im Neutralleiter?',
+                options: ['die Summe der drei Strangströme', 'ein Strangstrom', 'Wurzel 3 mal ein Strangstrom', 'gar keiner'], correct: 3,
+                explanation: 'Gar keiner. Die drei Ströme sind um 120° versetzt und heben sich als Zeiger vollständig auf — obwohl in jedem Aussenleiter Strom fliesst.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Amperemeter im Neutralleiter', license: 'CC0-1.0' } },
+            { id: 'n-zwei-phasen', topic: 'Der Neutralleiter',
+                question: 'Zwei gleiche Verbraucher hängen an L1 und L2, keiner an L3. Wie gross ist der Strom im Neutralleiter?',
+                options: ['doppelt so gross wie ein Strangstrom', 'genauso gross wie ein Strangstrom',
+                    'halb so gross', 'null'], correct: 1,
+                explanation: 'Genauso gross wie EIN Strangstrom, nicht doppelt. Zwei um 120° versetzte Zeiger ergeben addiert wieder genau einen.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Amperemeter im Neutralleiter', license: 'CC0-1.0' } },
+            { id: 'n-unterbrochen', topic: 'Der Neutralleiter',
+                question: 'Der Neutralleiter einer Verteilung bricht. Was passiert mit den einphasigen Verbrauchern?',
+                options: ['Sie laufen unverändert weiter', 'Sie gehen alle aus und sind spannungsfrei',
+                    'Sie liegen in Reihe zwischen zwei Aussenleitern; die kleine Last bekommt Überspannung',
+                    'Der Leitungsschutzschalter löst sofort aus'], correct: 2,
+                explanation: 'Sie liegen dann paarweise in Reihe an 400 V. Die Spannung teilt sich nach dem Widerstand auf — der Verbraucher mit der kleineren Leistung bekommt deutlich mehr als seine 230 V und geht kaputt.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Spannungsteilung zweier Lasten zwischen zwei Aussenleitern', license: 'CC0-1.0' } },
+            { id: 'leiter-fuenf', topic: 'Die fünf Leiter',
+                question: 'Welche Leiter führt eine vollständige Drehstrominstallation?',
+                options: ['L1, L2, L3', 'L1, L2, L3, N', 'L1, L2, L3, PE', 'L1, L2, L3, N, PE'], correct: 3,
+                explanation: 'Drei Aussenleiter, der Neutralleiter und der Schutzleiter.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Leiter des TN-S-Systems', license: 'CC0-1.0' } },
+            { id: 'leiter-pe-strom', topic: 'Die fünf Leiter',
+                question: 'Führt der Schutzleiter im ungestörten Betrieb Strom?',
+                options: ['Ja, einen Teil des Rückstroms', 'Nein, nur im Fehlerfall',
+                    'Nur bei Drehstrom', 'Nur wenn kein Neutralleiter vorhanden ist'], correct: 1,
+                explanation: 'Nein. Der Betriebsstrom fliesst über den Neutralleiter zurück. Führt der Schutzleiter Strom, ist etwas falsch angeschlossen oder defekt.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Aufgabe des Schutzleiters im TN-S-System', license: 'CC0-1.0' } },
+            { id: 'leiter-n-pe-verbunden', topic: 'Die fünf Leiter',
+                question: 'An welcher Stelle sind Neutralleiter und Schutzleiter miteinander verbunden?',
+                options: ['An jeder Steckdose', 'Nirgends', 'Am geerdeten Sternpunkt der Speisung',
+                    'In der Abzweigdose'], correct: 2,
+                explanation: 'Am geerdeten Sternpunkt, von dem beide ausgehen. Ab dort bleiben sie getrennt — das ist der Sinn des TN-S-Systems.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Trennstelle von N und PE im TN-S-System', license: 'CC0-1.0' } },
+            { id: 'fehler-schalter-lage', topic: 'Falsch angeschlossen',
+                question: 'In welchem Leiter muss ein Schalter sitzen?',
+                options: ['Im Neutralleiter', 'Im Aussenleiter', 'Im Schutzleiter', 'Das ist gleichgültig'], correct: 1,
+                explanation: 'Im Aussenleiter. Der Neutralleiter darf nur mitgeschaltet werden, wenn der zugehörige Aussenleiter gleichzeitig mit getrennt wird (NIN 4.6.1.2.3.2).',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Anforderung an die Lage von Schaltgeräten', license: 'CC0-1.0' } },
+            { id: 'fehler-schalter-folge', topic: 'Falsch angeschlossen',
+                question: 'Ein Schalter sitzt im Neutralleiter statt im Aussenleiter. Was ist daran gefährlich?',
+                options: ['Die Lampe wird zu hell', 'Der Schalter brennt durch',
+                    'Ausgeschaltet ist die Lampe dunkel, die Fassung liegt aber weiter am Aussenleiter',
+                    'Der Leitungsschutzschalter löst aus'], correct: 2,
+                explanation: 'Die Lampe ist dunkel und sieht spannungsfrei aus. Wer die Birne wechselt und den Sockel berührt, bekommt trotzdem einen Schlag.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Folge eines Schaltgeräts im Neutralleiter', license: 'CC0-1.0' } },
+            { id: 'fehler-n-pe', topic: 'Falsch angeschlossen',
+                question: 'Neutralleiter und Schutzleiter sind an einem Gerät vertauscht. Was merkt man beim Einschalten?',
+                options: ['Nichts — es funktioniert ganz normal', 'Das Gerät läuft nicht an',
+                    'Der Leitungsschutzschalter löst sofort aus', 'Das Gerät wird zu heiss'], correct: 0,
+                explanation: 'Nichts. Genau das macht den Fehler gefährlich: der Schutzleiter führt jetzt Betriebsstrom und ist nicht mehr spannungsfrei. Bricht er irgendwo, stehen alle daran hängenden Gehäuse unter Spannung.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Folge einer Vertauschung von N und PE im TN-S-System', license: 'CC0-1.0' } },
+            { id: 'fehler-pe-fehlt', topic: 'Falsch angeschlossen',
+                question: 'Ein Gerät der Schutzklasse I wird ohne Schutzleiter angeschlossen. Was passiert?',
+                options: ['Es läuft gar nicht erst an', 'Es läuft normal, bis ein Isolationsfehler auftritt',
+                    'Der Leitungsschutzschalter löst sofort aus', 'Es wird langsamer'], correct: 1,
+                explanation: 'Es läuft normal — bis eine Wicklung durchschlägt. Dann steht das Gehäuse unter Spannung, es fliesst kein Fehlerstrom, und nichts schaltet ab. Der Fehler zeigt sich, wenn ihn jemand anfasst.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Schutzmassnahme bei Geräten der Schutzklasse I', license: 'CC0-1.0' } },
+            { id: 'fehler-l-pe', topic: 'Falsch angeschlossen',
+                question: 'Ein Aussenleiter ist versehentlich auf den Schutzleiter verdrahtet. Was ist die Folge?',
+                options: ['Der Schutzleiter wird nur warm', 'Nichts, solange kein Gerät angeschlossen ist',
+                    'Jedes daran hängende Gehäuse steht unter Spannung',
+                    'Die Spannung halbiert sich'], correct: 2,
+                explanation: 'Der Schutzleiter führt volle Spannung, und mit ihm jedes Gehäuse, das daran hängt. Ein Fehlerstromschutzschalter löst sofort aus — ist keiner da, merkt man es beim Anfassen.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Folge eines Aussenleiters am Schutzleiter', license: 'CC0-1.0' } },
+            { id: 'fehler-l-l', topic: 'Falsch angeschlossen',
+                question: 'Zwei Aussenleiter landen auf derselben Klemme eines Verbrauchers. Welche Spannung steht zwischen ihnen?',
+                options: ['0 V', '230 V', '400 V', '460 V'], correct: 2,
+                explanation: '400 V — der Kurzschlussstrom ist entsprechend grösser als bei L gegen N. Am Verbraucher selbst liegt dagegen nichts an: zwischen zwei Punkten desselben Netzes ist die Differenz null.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Aussenleiterspannung', license: 'CC0-1.0' } },
+            { id: 'richtung-wechsel', topic: 'Die Stromrichtung',
+                question: 'Wie oft kehrt der Strom bei 50 Hz je Sekunde seine Richtung um?',
+                options: ['25-mal', '50-mal', '100-mal', 'Er kehrt nie um'], correct: 2,
+                explanation: 'Hundertmal. 50 Hz sind 50 volle Perioden je Sekunde, und in jeder Periode geht der Strom zweimal durch null — einmal beim Wechsel ins Negative, einmal zurück.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Zwei Nulldurchgänge je Periode bei 50 Hz', license: 'CC0-1.0' } },
+            { id: 'richtung-pfeil', topic: 'Die Stromrichtung',
+                question: 'Was bedeutet ein Richtungspfeil an einem Bauteil in einem Wechselstromkreis?',
+                options: ['Die tatsächliche, gleichbleibende Flussrichtung',
+                    'Die Zählrichtung — eine Festlegung, gegen die gerechnet wird',
+                    'Die Richtung des Schutzleiterstroms',
+                    'Die Drehrichtung des Motors'], correct: 1,
+                explanation: 'Die Zählrichtung. Bei Wechselstrom gibt es keine feste Flussrichtung; der Pfeil sagt nur, welche Richtung als positiv gezählt wird.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Bedeutung der Zählrichtung bei Wechselgrössen', license: 'CC0-1.0' } }
+        ],
+        quarantine: []
+    };
+    const pageForLearning = (paketId = BASIC_PACKAGE.manifest.id, titel = 'Elektrotechnik – Grundlagenkarten', symbol = '⚡') => {
         const blocks = Object.values(Store.cache.blocks);
         const roots = blocks.filter(block => block?.alive !== false && block.type === 'page' && block.schoolRoot);
         const existing = blocks.filter(block => block?.alive !== false && block.type === 'page' &&
-            block.learningPackagePage === BASIC_PACKAGE.manifest.id);
+            block.learningPackagePage === paketId);
         const page = existing.find(block => permitted('bearbeiten', block.id));
         if (page)
             return page;
@@ -128662,8 +129622,7 @@ const Electrical = (() => {
         if (!root && !permitted('bearbeiten'))
             throw new Error('Du darfst keine Lernpaket-Seite anlegen.');
         return Store.addPage(root?.id || null, {
-            text: 'Elektrotechnik – Grundlagenkarten', icon: '⚡',
-            learningPackagePage: BASIC_PACKAGE.manifest.id
+            text: titel, icon: symbol, learningPackagePage: paketId
         });
     };
     const validate = (raw) => {
@@ -128776,9 +129735,11 @@ const Electrical = (() => {
                 ...(inventory ? { sourceInventory: inventory } : {})
             }, questions, quarantine };
     };
-    const installPackage = (raw) => {
+    const installPackage = (raw, ziel) => {
         const pack = validate(raw);
-        const page = pageForLearning();
+        const page = ziel
+            ? pageForLearning(ziel.paketId, ziel.titel, ziel.symbol)
+            : pageForLearning();
         if (!permitted('bearbeiten', page.id))
             throw new Error('Die Lernpaket-Seite ist nur lesbar.');
         const blocks = Store.childrenOf(page.id);
@@ -128952,7 +129913,7 @@ const Electrical = (() => {
         pKopf.textContent = 'Lernpakete';
         const pReihe = document.createElement('div');
         pReihe.className = 'electrical-actions';
-        pReihe.append(button('install', 'Grundlagenkarten installieren'), button('import', 'Lernpaket importieren'), button('export', 'Beispielpaket exportieren'), button('babat-install', 'BABAT-Paket installieren'), button('babat-export', 'BABAT-Paket exportieren'));
+        pReihe.append(button('install', 'Grundlagenkarten installieren'), button('install-drehstrom', 'Drehstromkarten installieren'), button('import', 'Lernpaket importieren'), button('export', 'Beispielpaket exportieren'), button('babat-install', 'BABAT-Paket installieren'), button('babat-export', 'BABAT-Paket exportieren'));
         pakete.append(pKopf, pReihe);
         const bauch = document.createElement('div');
         bauch.className = 'electrical-bauch';
@@ -129086,6 +130047,19 @@ const Electrical = (() => {
                     UI.banner(error instanceof Error ? error.message : String(error), 'fehler');
                 }
             }
+            if (action === 'install-drehstrom') {
+                try {
+                    const r = installPackage(THREE_PHASE_PACKAGE, {
+                        paketId: THREE_PHASE_PACKAGE.manifest.id,
+                        titel: 'Drehstrom und die fünf Leiter', symbol: '⚡'
+                    });
+                    UI.toast(r.added + ' Drehstromkarten installiert, ' + r.skipped + ' schon vorhanden.');
+                    overlay.remove();
+                }
+                catch (error) {
+                    UI.banner(error instanceof Error ? error.message : String(error), 'fehler');
+                }
+            }
             if (action === 'import')
                 importFile();
             if (action === 'export')
@@ -129114,7 +130088,8 @@ const Electrical = (() => {
         });
     };
     return { open, installPackage, validatePackage: validate, importFile,
-        loadBundledPackage: bundledPackage, BASIC_PACKAGE, BABAT_PACKAGE_FILE };
+        loadBundledPackage: bundledPackage, BASIC_PACKAGE, THREE_PHASE_PACKAGE,
+        BABAT_PACKAGE_FILE };
 })();
 window.Electrical = Electrical;
 

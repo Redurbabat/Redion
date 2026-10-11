@@ -231,7 +231,7 @@ const Planflaeche = (() => {
             if (e && e.ok)
                 opt.strom = {
                     netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
-                    werte: e.werte, maxStrom: e.maxStrom
+                    werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
                 };
             buehne.innerHTML = Schaltplan.alsSvg(z.plan, opt);
             buehne.classList.toggle('sp-laeuft', z.simulation);
@@ -348,7 +348,19 @@ const Planflaeche = (() => {
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
+        const endKlemmen = () => {
+            const m = new Map();
+            z.plan.leitungen.forEach(l => {
+                const n = l.punkte.length;
+                m.set(l.id, {
+                    von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
+                    nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
+                });
+            });
+            return m;
+        };
         const verschiebe = (dx, dy) => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t) {
@@ -363,43 +375,45 @@ const Planflaeche = (() => {
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
                     const t = teilVon(l.vonTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, l.vonNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
                     const t = teilVon(l.nachTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, l.nachNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
             });
         };
         const drehen = () => aendere(() => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t)
                     t.drehung = ((t.drehung || 0) + 90) % 360;
             });
-            leitungenNachziehen();
+            leitungenNachziehen(ziel);
         });
         const spiegeln = () => aendere(() => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t)
                     t.gespiegelt = !t.gespiegelt;
             });
-            leitungenNachziehen();
+            leitungenNachziehen(ziel);
         });
-        const leitungenNachziehen = () => {
+        const leitungenNachziehen = (ziel) => {
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), l.vonNr);
+                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), l.nachNr);
+                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
@@ -538,7 +552,7 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
-            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang };
+            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
             svg.setPointerCapture(e.pointerId);
             male();
         });
@@ -558,7 +572,7 @@ const Planflaeche = (() => {
                         t.y = Schaltplan.rasten(a.y + dy);
                     }
                 });
-                leitungenNachziehen();
+                leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
                 buehneMalen();
                 return;
             }

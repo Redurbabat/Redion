@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 544 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 549 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1868,6 +1868,53 @@ kein Bild gemacht hatte. Gezählt am 6. Oktober, im selben Bogen: der
 Befehl sagt 535 — auf seinem Zweig. Beim Zusammenführen nachgezählt (11. Oktober,
 `claude/morgen-besser-3`): 544.*
 
+*Und 545: `test604` — Drehstrom mit Zeigern, die Stromrichtung, der Pfeil
+im Plan, der Übertrager und die Messwerte mehrteiliger Bauteile (E730, E731,
+E733, E736, E737). Er entstand am 12. September auf dem Zweig
+`claude/redion-elektro-simulation` als `test498` und ist beim Übernehmen
+umnummeriert worden — dieselbe Nummer trug auf `main` längst ein anderer
+Lauf, wie bei `test577`. Seine Zusage, auf die es ankommt: bei drei gleichen
+Lampen an L1, L2, L3 fliesst im Neutralleiter NICHTS; mit allen drei Quellen
+in Phase (Gegenprobe des Zweigs) stehen dort 1,3 A. 91 Zusagen. Gezählt am
+11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+545 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+
+*Und 546: `test605` — falsch angeschlossen, und was in Wirklichkeit passieren
+würde (E732), dazu der FI, der misst (E735). Auf dem Zweig `test499`. Er hält
+vier richtig verdrahtete Anlagen, bei denen NICHTS gemeldet werden darf —
+ein Melder, der immer meldet, sieht von aussen aus wie ein wachsamer —, und
+die Zeigersumme im FI: mit Betragssumme löst er in einer gesunden
+Drehstromanlage aus. 51 Zusagen. Gezählt am 11. Oktober: 546 — auf seinem
+Zweig.*
+
+*Und 547: `test606` — die klassische Lernansicht hat einen Stil (E734). Auf
+dem Zweig `test500`. Er misst die FLÄCHE des Hauptknopfs, nicht seine Höhe:
+der Knopf war 44 px hoch und durchsichtig. 17 Zusagen. Gezählt am
+11. Oktober: 547 — auf seinem Zweig.*
+
+*Und 548: `test607` — die Drehstromkarten werden nachgerechnet, nicht
+geglaubt (E734). Auf dem Zweig `test501`. Jede Zahl auf einer Karte des
+Pakets „Drehstrom und die fünf Leiter" rechnet er mit `Stromfluss` neu;
+eine Karte, die der Simulation widerspricht, macht ihn rot. 37 Zusagen.
+Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 548 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+
+*Und 549: `test608` — alte Klemmennamen bleiben gültig (E738, L252). Vier
+Zeichen, die es auf `main` schon gab, haben mit dem Elektro-Bogen andere
+Klemmen bekommen (`stecker` '1' → L/N, der FI zweimal 'N' → N/N2, Steckdose
+und Schuko mit neuen Lagen). Er lädt Pläne im ALTEN Format und verlangt die
+Netze von `main` — gemessen mit einer Sonde gegen 1575a1835 —, N und N2
+getrennt, keinen Fehlerstrom im gesunden Kreis, und nach Schieben, Drehen
+und Ziehen jedes Leitungsende auf der Klemme, die es meint. Gegen den
+Übernahme-Commit ohne Auflöser war er rot mit 14 von 48: die Leitung am
+Stecker fiel ab, am Schuko hingen L und N zusammen, und der gesunde
+Lampenkreis meldete „löst aus" mit 435 mA. Seit der Durchsicht hält sein
+§7 auch den FI, der schon gedreht oder gespiegelt gespeichert ist — eine
+Netzliste, die dem Auflöser die Lage des Teils verschweigt, kam vorher mit
+51 von 51 durch. Gezählt am 11. Oktober, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 549 — auf seinem
+Zweig; beim Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1884,7 +1931,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 544 Läufe
+npm run pruefen                      alle 549 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1974,7 +2021,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 544 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 549 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

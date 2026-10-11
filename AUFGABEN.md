@@ -1705,9 +1705,11 @@ Grund:
    gemerkte Wahl beginnt Strg P dort mit „Dieses Dokument"; die Suche über
    alle Dokumente ist einen Schritt entfernt („Alle Dokumente",
    „Überall"). Redurs Frage, ob das so bleiben soll (P128).
-3. **Zwei alte Zweige mit Arbeit, die nirgends steht**:
-   `claude/redion-elektro-simulation` und `feat/dark-2017-fach-dossier`.
-   Hineinnehmen oder liegen lassen — Redurs Wort.
+3. **Ein alter Zweig mit Arbeit, die nirgends steht**:
+   `feat/dark-2017-fach-dossier`. Hineinnehmen oder liegen lassen — Redurs
+   Wort. *(Der zweite, `claude/redion-elektro-simulation`, ist am
+   11. Oktober nach Redurs Ja übertragen — E730–E738, `test604`–`test608`,
+   Zweig `claude/elektro-simulation-auf-main`; offen davon steht in L253.)*
 4. **Am Telefon, im Gesamtbild gesehen** (beides schon auf
    morgen-besser-2 so): die Formen in den Whiteboards der Fläche stehen
    stark vergrössert und angeschnitten; in der gerollten Lernzentrale liegt

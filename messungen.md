@@ -7883,3 +7883,79 @@ Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
 **Start:** 1854 → 1855 KB gzip über 252 Dateien (`test388` §5, Decke
 1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
 v1430.
+
+## §97 · Elektro auf main: die Netze alter Pläne, der FI, der Start (E730–E738, 11. Oktober 2026)
+
+**Methode.** Eine Sonde lädt `fachzeichen.js`, `schaltplan.js` und
+`simulation.js` eines Stands in einen Node-Kontext und gibt die Netzliste
+(`Stromfluss.netze`) und die Funde (`Stromfluss.rechne`) für dieselben zwei
+Pläne im ALTEN Format aus — Plan A: Wechselspannung, zwei Stecker (`1`), zwei
+Steckdosen und zwei Schuko (`L` bei x = 30), Leitungen senkrecht und waagrecht
+von rechts; Plan B: Wechselspannung, FI mit `N` oben UND unten, Lampe. Drei
+Stände: `main` 1575a1835, der Übernahme-Commit ohne Auflöser (6747ad51e),
+E738 (26b1eebe1). Die Pläne stehen wörtlich in `test608`.
+
+```txt
+                Plan A (Steckvorrichtungen)                         Plan B (FI)
+main            { G1:L X1:1 X3:L X5:L } { G1:N X2:1 X4:L X6:L }     { E1:X2 F1:N G1:N } …  keine Funde
+ohne Auflöser   { G1:L X3:L X5:L X5:N }                              { E1:X2 F1:N F1:N2 G1:N }
+                { G1:N X2:N X4:L X4:N X6:L X6:N X6:PE }              Fund: fi-loest-aus
+                { X1:L } { X2:L } { X1:N } { X3:N } { X5:PE }
+E738            { G1:L X1:L X3:L X5:L } { G1:N X2:L X4:L X6:L }     { E1:X2 F1:N2 } { F1:N G1:N }
+                jede neue Klemme allein (8 Netze)                    keine Funde
+```
+
+Auf `main` stehen beide `N` des FI an derselben Stelle (350,100) — die
+untere Klemme war dort nicht erreichbar (`anschluesseVon` sucht die Lage
+über den Namen). Ohne Auflöser: Fehlstrom im gesunden Kreis **434,8 mA**
+(Pol N–N2 „null", Lampe 0,435 A). Mit E738: Pol N–N2 = Lampenstrom auf
+1e-6 A, Zeigersumme < 1 mA.
+
+**`test608` gegen die Stände** (unter dem Schloss, 1400 × 1000): Übernahme-
+Commit, erster Stand des Laufs 14/48; endgültiger Lauf gegen die Quellen
+ohne Auflöser 17/51; Ort-Sperre heraus 46/51; Nachziehen nach Namen 46/51;
+Name vor Ort 35/51; E738 51/51. Nach der Durchsicht mit §7 (der alte FI
+schon gedreht oder gespiegelt gespeichert): 69/69; `netze()` gibt dem
+Auflöser Drehung 0 und nicht gespiegelt 59/69, nur Drehung 0 64/69, nur
+nicht gespiegelt 64/69 — rot jedes Mal nur §7, mit 434,8 mA und
+„fi-loest-aus" im gesunden Kreis.
+
+**Was ein alter Plan zeichnet** (Durchsicht; Sonde in der echten App unter
+dem Schloss, 1400 × 1000, Plan A wörtlich aus `test608`; das gezeichnete
+Ende ist das letzte Zahlenpaar im `d` von `path.sp-leitung`, das Netz kommt
+aus `Stromfluss.netze`):
+
+```txt
+                     a5 → Schuko X5        a1 → Stecker X1      a3 → Steckdose X3
+Klemmen heute        L 710 · N 730 · PE 750  L 310 · N 330        L 320 · N 340
+geöffnet             730,400 = N           320,100 = keine      330,400 = keine
+gerechnet            L                     L                    L
+X4 gedreht           710,400 = L           310,100 = L          320,400 = L
+X4 nur geschoben     730,400 = N           —                    —
+X5 selbst geschoben  720,400 = L (X5 +10)  —                    —
+```
+
+Ablage nach dem Öffnen gleich dem gespeicherten Plan (`JSON.stringify`
+verglichen); nach dem Schieben von X5 trägt a5 die Punkte
+`130,150 · 730,150 · 720,400` und weiter `nachNr: 'L'`. Bilder dazu nur
+in der Sonde (`x5-geoeffnet`, `x5-nach-x4-drehen`), nicht im Verzeichnis
+(§55.4). L253 Punkt 7, E738.
+
+**Was der Bogen zeigt** (laufende Simulation, Plan aus Drehstromquelle,
+Klemmenbrett in Stern, FI mit Lampe, Übertrager mit Klingel und einem
+Gleichstromkreis; abgelesen aus `.sp-messwert`): Klemmenbrett 230 V,
+3,83 A, 2,64 kW; FI-Kreis 230 V, 435 mA, Lampe 100 W; Übertrager 230 V,
+626 µA, 144 mW, Klingel 12 V, 12 mA; Batterie und Widerstand 12 V,
+120 mA, 1,44 W. 10 Richtungspfeile (`.sp-richtung`). Auf `main` derselbe
+Plan: 0 Pfeile, Drehstromquelle und Klemmenbrett nicht gezeichnet, FI-Kreis
+0 A.
+
+**Lernansicht, Hauptknopf „Tagesrunde starten"** (`getComputedStyle`):
+vorher Fläche `rgba(0, 0, 0, 0)`, Radius 0px, 44 px hoch; nachher
+`rgb(109, 74, 255)` (dunkel) bzw. `rgb(124, 58, 237)` (hell), Radius 8px,
+44 px. Schliesser im Kopf: vorher 28 × 44, nachher 44 × 44.
+
+**Start:** 1890 → 1904 KB gzip über 254 Dateien (`test388` §5, Decke
+1950). `redion-einzeldatei.html` 9 545 743 → 9 606 042 Bytes (9322 →
+9381 KB). Dienststand v1455 → v1462.
+

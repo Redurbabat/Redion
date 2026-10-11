@@ -1807,21 +1807,21 @@
       "schnittstellen": [
         {
           "name": "Schaltplan",
-          "datei": "src/bereiche/bloecke/arten/schaltplan.ts:820-828",
+          "datei": "src/bereiche/bloecke/arten/schaltplan.ts:957-962",
           "art": "global",
-          "beschreibung": "ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten, naechstesBmk, anschlussOrt, anschluesseVon, fangeAnschluss, rechtwinklig, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen, netzBauen, BEISPIELE, beispielBauen, uid, esc. Aufrufer: planflaeche.ts, elektro/aufgaben.ts, simulation.ts, skizzen.ts, arbeitsplatz.ts, dateien/ausgeben.ts:674-681"
+          "beschreibung": "ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten, naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer(teil,nr,punkt) (E738), fangeAnschluss, rechtwinklig, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen, netzBauen, BEISPIELE, beispielBauen, uid, esc. Aufrufer: planflaeche.ts, elektro/aufgaben.ts, simulation.ts, skizzen.ts, arbeitsplatz.ts, dateien/ausgeben.ts:674-681"
         },
         {
           "name": "Planflaeche",
-          "datei": "src/bereiche/bloecke/arten/planflaeche.ts:1101-1104",
+          "datei": "src/bereiche/bloecke/arten/planflaeche.ts:1124",
           "art": "global",
           "beschreibung": "zeichne(block) -> HTMLElement, paletteHtml, favoriten, favoritUmschalten, ortAus. Aufrufer: editor.ts:909-911; bereiche/pdf (bereiche-bestand.json:462)"
         },
         {
           "name": "Register.fachzeichen",
-          "datei": "src/register/fachzeichen.ts:1192-1193",
+          "datei": "src/register/fachzeichen.ts:1372-1373",
           "art": "register",
-          "beschreibung": "RASTER, alle, holen, inGruppe, gruppen, gruppenName, alsSvg(id,{farbe,strich,drehung,gespiegelt,zeigeText,zeigeAnschluesse}), anschlussLage(id,nr,drehung,gespiegelt), masse(id,drehung), melde, vergiss"
+          "beschreibung": "RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName, alsSvg(id,{farbe,strich,drehung,gespiegelt,zeigeText,zeigeAnschluesse}), anschlussLage(id,nr,drehung,gespiegelt), klemmeFuer(id,nr,punkt,drehung,gespiegelt) -> {nr,frueher}|null (alte Klemmennamen, E738), masse(id,drehung), melde, vergiss"
         },
         {
           "name": "Register.elektroformeln",
@@ -1831,9 +1831,9 @@
         },
         {
           "name": "Stromfluss",
-          "datei": "src/bereiche/elektro/simulation.ts:920-926",
+          "datei": "src/bereiche/elektro/simulation.ts:1953-1957",
           "art": "global",
-          "beschreibung": "VERHALTEN, verhalten, stellungenVon, netze, rechne(plan, stellungen, spulenStand), zeige, loese, klemmen, aufStrecke (für Prüfungen sichtbar)"
+          "beschreibung": "VERHALTEN, verhalten, stellungenVon, netze, rechne(plan, stellungen, spulenStand), zeige, loese, loeseKomplex, leiterrollen (E730, E732), klemmen, aufStrecke (für Prüfungen sichtbar)"
         },
         {
           "name": "Formelheft",

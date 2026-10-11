@@ -633,6 +633,22 @@ const Learning = (() => {
         UI.toast('Lückenkarte angelegt.');
         return created;
     };
+    const gruppenTitel = (text, hinweis) => {
+        const kopf = document.createElement('div');
+        kopf.style.margin = '18px 0 8px';
+        const h = document.createElement('strong');
+        h.textContent = text;
+        h.style.fontSize = '13px';
+        h.style.letterSpacing = '.04em';
+        h.style.textTransform = 'uppercase';
+        h.style.color = 'var(--text-dim)';
+        const s = document.createElement('span');
+        s.textContent = ' · ' + hinweis;
+        s.style.fontSize = '13px';
+        s.style.color = 'var(--text-dim)';
+        kopf.append(h, s);
+        return kopf;
+    };
     const statCard = (number, labelText) => {
         const card = document.createElement('div');
         card.style.padding = '14px';
@@ -848,6 +864,8 @@ const Learning = (() => {
                 : stats.total ? 'Für heute ist alles erledigt.' :
                     'Noch keine Karten. Lege eine Karte an oder markiere Text und wähle „Lücke“.';
             explanation.style.lineHeight = '1.55';
+            exam.style.margin = '14px 0 0';
+            explanation.style.margin = '6px 0 14px';
             const actions = document.createElement('div');
             actions.style.display = 'grid';
             actions.style.gap = '9px';
@@ -861,7 +879,7 @@ const Learning = (() => {
             details.style.display = 'grid';
             details.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
             details.style.gap = '10px';
-            details.style.marginTop = '16px';
+            details.style.marginTop = '0';
             details.append(statCard(String(stats.learned) + ' / ' + String(stats.total), 'Karten mit Lernstand'), statCard(String(stats.reviewedToday), 'heute gelernt'), statCard(String(stats.againRate) + ' %', 'Nochmal-Rate'), statCard(String(stats.reviews), 'Wiederholungen'));
             const next = document.createElement('p');
             next.style.color = 'var(--text-dim)';
@@ -919,7 +937,7 @@ const Learning = (() => {
             algorithm.append(titel, reihe, satz);
             const auffrisch = auffrischSection();
             const richtung = verlaufSection();
-            view.body.append(grid, exam, explanation, actions, details, ...(auffrisch ? [auffrisch] : []), topicSection(stats.topics), ...(richtung ? [richtung] : []), next, algorithm);
+            view.body.append(gruppenTitel('Heute', 'was ansteht'), grid, exam, explanation, actions, gruppenTitel('Insgesamt', 'der Stand über alle Karten'), details, ...(auffrisch ? [auffrisch] : []), topicSection(stats.topics), ...(richtung ? [richtung] : []), next, algorithm);
         };
         const renderSession = () => {
             view.body.replaceChildren();

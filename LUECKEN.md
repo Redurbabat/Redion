@@ -8358,6 +8358,351 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L253 · Was der Elektro-Bogen nach der Übernahme offen lässt — 11. Oktober 2026
+
+*Auf dem Zweig `claude/redion-elektro-simulation` stand diese Übersicht als
+**L158** (Commit 8e4fba4a3). Sie ist für den Stand nach der Übernahme neu
+geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
+Übernehmen hat selbst etwas gefunden.*
+
+### Was vom Zweig erledigt ist
+
+* **Bilder in der echten App** — gemacht am 11. Oktober: die Planfläche mit
+  laufender Simulation (Drehstromquelle, Klemmenbrett in Stern, FI mit Lampe,
+  Übertrager mit Klingel, ein Gleichstromkreis) und die klassische
+  Lernansicht, Rechner 1440 × 900 und Telefon 390 × 844, dunkel und hell,
+  vorher (`main`) und nachher. Auf dem Zweig waren es nur Bilder über
+  `Schaltplan.alsSvg`.
+* **Die geänderten Klemmennamen** (L252) — geschlossen durch E738.
+* **Der volle Lauf** steht weiterhin aus; gelaufen sind die übernommenen
+  Wächter `test604`–`test608`, die Datei-Wächter und 27 Nachbarn (Liste im
+  Commit E738). Nach §46 bewegt sich `main` erst nach einem vollen grünen Lauf.
+
+### Gefunden beim Übernehmen, nicht repariert
+
+1. **Der Pfeil steht an zwei Zeichen im Symbol** (Bild): im Kasten des FI und
+   im Kreis der Drehstromquelle. Der Abstand rechnet sich aus der Mitte
+   zwischen den zwei Klemmen; liegen sie nicht mittig, reicht die halbe
+   Breite nicht hinaus (E733).
+2. **Das Klemmenbrett meldet „Anschluss W2/U2/V2 hängt an keiner Leitung"**,
+   auch in der Stellung Stern, in der die Brücken genau diese drei verbinden
+   (Bild, Fusszeile der Planfläche). Die Meldung kennt nur Leitungen, nicht
+   die Brücken einer Stellung.
+3. **Am Telefon sind die Messwerte nicht zu lesen.** Der Plan wird als Ganzes
+   auf die Breite verkleinert; bei 390 px stehen 230 V und 3,83 A in wenigen
+   Pixeln Schrift (Bild `nachher-plan-handy-*`). §37 gilt für die Fläche,
+   nicht für eine Zahl darin — aber wer am Telefon lernt, braucht sie.
+4. **Drehen und Ziehen führen ALLE Leitungen neu** (`leitungenNachziehen`,
+   so schon auf `main`): jede Leitung wird ein Winkel von Ende zu Ende, und
+   der neue Weg kann eine Klemme anzapfen, die vorher frei war. Gemessen in
+   `test608` beim Bau: nach dem Drehen des FI läuft b2 5 px neben N2 vorbei,
+   und N und N2 waren ein Netz — mit Auflöser genauso wie ohne. Das ändert die
+   Netzliste eines Plans durch eine Handlung, die nur die Lage ändern sollte.
+5. **Die Leitersymbole melden ihre zweite Klemme an der Stelle der ersten.**
+   `leiter-l1` (und l2, l3, n, pe) haben zweimal denselben Namen;
+   `anschluesseVon` sucht die Lage über den Namen und findet beide Male die
+   linke — gemessen auf `main` und nach der Übernahme gleich: `L1` bei
+   (100,120) zweimal. Das rechte Ende lässt sich so nicht anfahren. Dieselbe
+   Ursache wie das doppelte `N` des FI (E735).
+6. **Eine ungebundene Leitung über der neuen Lage einer Klemme** — eine
+   Sammelschiene, an der eine alte Steckdose hing — zapft deren neue Klemmen
+   an (N, PE). E738 kann das nicht auffangen: ohne gespeicherten Namen gibt es
+   nichts aufzulösen. Ob es solche Pläne gibt, lässt sich von hier aus nicht
+   zählen; sie liegen in den Browsern der Nutzer.
+7. **Ein alter Plan ZEICHNET seine Leitung an der alten Stelle, bis die
+   Planfläche sie nachzieht** (gefunden in der Durchsicht, gemessen am
+   11. Oktober). E738 übersetzt beim Lesen — die Rechnung stimmt —, aber
+   die Punkte einer Leitung bleiben, wo sie gespeichert sind, und gezeichnet
+   wird nach den Punkten. Gemessen mit einer Sonde in der echten App
+   (1400 × 1000, Plan A aus `test608` geöffnet, das Ende aus dem `d` von
+   `path.sp-leitung` gelesen, das Netz aus `Stromfluss.netze`):
+
+   ```txt
+   Leitung        gespeichert   gezeichnetes Ende   Klemmen heute               gerechnet
+   a5 → Schuko    L             730,400 = N         L 710 · N 730 · PE 750      L
+   a1 → Stecker   1             320,100 = keine     L 310 · N 330               L
+   a3 → Steckdose L             330,400 = keine     L 320 · N 340               L
+   ```
+
+   Was man sieht: am Schuko läuft die L-Leitung in den MITTLEREN Stummel,
+   und das ist heute N — ein Plan, der auf dem Bildschirm L auf N zeigt,
+   während die Simulation (und der fliessende Strich) L rechnet. Am Stecker
+   und an der Steckdose endet die Leitung in der Lücke zwischen den zwei
+   Stummeln und sieht unverbunden aus, gerechnet ist sie an L. Den alten FI
+   betrifft es nicht: dort hat sich nur der Name geändert, die Stelle nicht
+   (b4 endet auf N2). Die Ablage ist nach dem Öffnen Byte für Byte der
+   gespeicherte Plan.
+
+   Wann es sich gibt: sobald in der Planfläche das Teil SELBST geschoben
+   wird, oder IRGENDEIN Teil des Plans gedreht, gespiegelt oder mit der Maus
+   gezogen — `leitungenNachziehen` legt dann jedes Leitungsende auf die
+   Klemme, die der Auflöser nennt. Gemessen: nach dem Drehen von X4 (einem
+   anderen Teil) enden a1 bei 310,100, a3 bei 320,400, a5 bei 710,400, jede
+   auf L; X4 nur mit der Pfeiltaste geschoben ändert an a5 nichts (bleibt
+   730,400 = N); X5 selbst geschoben legt a5 auf 720,400, das L des
+   geschobenen X5. Danach sind die neuen Punkte gespeichert — durch die
+   Handlung des Menschen —, der Name bleibt der alte. Drehen und Ziehen
+   führen dabei alle Leitungen neu (Punkt 4).
+
+   Warum nicht beim Laden umgeschrieben: das wäre eine stille Schreibung in
+   Nutzerdaten ohne Handlung (§9 [hart]) — genau Weg 3, den E738 verworfen
+   hat: sie müsste idempotent sein, eine `.redion` von gestern brächte die
+   alten Punkte zurück, und gedreht braucht sie dieselbe Ortsentscheidung
+   wie der Auflöser. Möglich, aber nicht gebaut — die Wahl gehört Redur:
+   beim ZEICHNEN das letzte Stück auf die aufgelöste Klemme legen, ohne zu
+   speichern; oder ein sichtbarer Knopf „Leitungen an die Klemmen rücken".
+   Ein Wächter für das Gezeichnete fehlt; die Messung ist die Sonde
+   (`messungen.md` §97).
+
+### Fachlich offen (vom Zweig)
+
+* **L248** Blindwiderstände — kein cos φ, keine Blindleistung, keine
+  Kompensation; deshalb keine Steinmetzschaltung.
+* **L249** Die Anschlussprüfung findet nur, was die Zeichnung hergibt;
+  Schutzklasse I greift an zwei Zeichen (Klemmenbrett mit PE-Klemme,
+  Drehstrommotor ohne).
+* **L250** Die NIN-Ausgabe ist nicht belegt.
+* **L251** Fünf Halbleiter ohne Modell.
+* **Kein Stromwandler als eigenes Zeichen** — mit dem Übertrager (E736) wäre
+  er nur eine andere Übersetzung.
+
+### Eine Schwäche, die geblieben ist (vom Zweig)
+
+`werte[teil]` hält je Bauteil das Glied mit dem grössten STROM. An einem
+Klemmenbrett führen alle Glieder denselben Strom, und welches gewinnt,
+entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
+entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
+weiterhin den vom Rauschen bestimmten Eintrag.
+
+**Wächter:** für die Punkte oben keiner.
+
+---
+
+## L252 · Geänderte Klemmennamen an vier bestehenden Zeichen — GESCHLOSSEN (E738) — 13. September 2026
+
+*Übernommen am 11. Oktober 2026 vom Zweig `claude/redion-elektro-simulation`, wo sie **L157** hiess (Commit 8e4fba4a3); beim Übernehmen umnummeriert. Der Text ist der des Zweigs, mit den Verweisen von hier (E730–E737, L248–L253, test604–607).*
+
+CLAUDE.md §9 sagt „Kennungen nicht unnötig ändern", §17 „Blöcke behalten
+stabile Kennungen". Der Bogen E735 hat an **vier Zeichen, die es
+schon gab**, Klemmen umbenannt oder verschoben (auf dem Zweig stand „E545 und E547";
+nachgesehen im Diff: alle vier in Commit 64e7a43e6). Nachgezählt im Diff gegen
+`main`:
+
+| Zeichen | vorher | nachher | Risiko |
+|---|---|---|---|
+| `stecker` | `1` bei x=20 | `L` bei x=10, `N` bei x=30 | **hoch** |
+| `fi-schutzschalter` | zweimal `N` | `N` oben, `N2` unten | **hoch** |
+| `steckdose` | `L` bei x=30 | `L` bei x=20, `N` bei x=40 | mittel |
+| `steckdose-schuko` | `L` bei x=30 | `L` bei x=10, `N`, `PE` | mittel |
+
+### Warum das gefährlich ist
+
+Eine Leitung speichert ihre Bindung als `vonTeil` + `vonNr` und zusätzlich
+ihre Punkte. `netze()` nimmt zuerst die Bindung, dann den Ort.
+
+* **`stecker`:** die Kennung `1` gibt es nicht mehr. Eine gespeicherte
+  Leitung mit `vonNr: '1'` bindet damit an eine Klemme, die nicht existiert.
+  Über den Ort geht es auch nicht: der alte Anschluss lag bei x=20, die neuen
+  liegen bei x=10 und x=30 — beide **10 px** entfernt, und `NAH` ist 6. Die
+  Leitung fällt ab. Der Plan sieht unverändert aus und rechnet anders.
+* **`fi-schutzschalter`:** hier ist es schlimmer, weil es NICHT auffällt.
+  Eine alte Leitung am unteren N trägt `vonNr: 'N'` — das bindet jetzt an den
+  OBEREN Anschluss. Über den Ort bindet dieselbe Leitung zusätzlich an `N2`
+  unten. Ergebnis: oben und unten sind verbunden, der Neutralleiter-Pol des
+  FI ist überbrückt, und der Schalter misst dauerhaft falsch. Kein Fehler,
+  keine Meldung, nur ein falsches Ergebnis.
+
+### Was zu entscheiden ist
+
+Drei Wege, und die Wahl gehört Redur:
+
+1. **So lassen.** Vertretbar, wenn es noch keine gespeicherten Pläne mit
+   `stecker` oder `fi-schutzschalter` gibt. Das ist NICHT nachgesehen worden
+   — es liesse sich über die Blöcke im Bestand zählen.
+2. **Alte Kennungen als Zweitnamen führen.** `anschluesseVon` könnte je
+   Zeichen eine Liste „früher hiess das so" mitbringen, und `netze()` würde
+   beim Binden darauf zurückfallen. Das ist der sauberste Weg und hält alte
+   Pläne am Leben.
+3. **Eine Migration.** Beim Laden eines Plans die alten `vonNr` umschreiben.
+   Mehr Aufwand, und sie muss idempotent sein (§10).
+
+*(Hier stand, wer alte Pläne mit Stecker oder FI habe, solle sie nach dem Zusammenführen ansehen. Seit E738 muss er das für die Rechnung nicht mehr — unten. Gezeichnet stehen alte Leitungen bis zum ersten Nachziehen noch an den alten Stellen: L253 Punkt 7.)*
+
+### GESCHLOSSEN am 11. Oktober 2026 durch E738 — Weg 2
+
+Gewählt ist Weg 2, so im Auftrag der Übernahme (der Übernahme selbst hat
+Redur am 11. Oktober mit „Ja" zugestimmt): die alten Namen und Lagen stehen als `frueher` an den
+vier Zeichen, und EIN Auflöser im Register (`Register.fachzeichen.klemmeFuer`,
+Ort vor Name) übersetzt beim Lesen — in der Netzliste, in `anschlussLage` und
+beim Nachziehen der Leitungen in der Planfläche. Die gespeicherten Daten
+bleiben unverändert, darum ist es idempotent ohne eigene Vorkehrung.
+
+**Beleg** (gemessen mit einer Sonde, `messungen.md` §97; Wächter `test608`):
+
+```txt
+main     { G1:L X1:1 X3:L X5:L }  { G1:N X2:1 X4:L X6:L }
+ohne     { G1:L X3:L X5:L X5:N }  { G1:N X2:N X4:L X4:N X6:L X6:N X6:PE }  { X1:L } …
+E738     { G1:L X1:L X3:L X5:L }  { G1:N X2:L X4:L X6:L }  jede neue Klemme allein
+FI ohne  N und N2 EIN Netz, „fi-loest-aus" mit 435 mA im gesunden Kreis
+FI E738  N und N2 getrennt, Pol N–N2 = Lampenstrom, Zeigersumme < 1 mA, keine Meldung
+```
+
+`test608` 51/51, gegen den Übernahme-Commit ohne Auflöser 17/51; vier
+Gegenproben rot (Auflöser weg, Ort-Sperre weg, Nachziehen nach Namen, Name
+vor Ort). Seit der Durchsicht 69/69 mit §7 — der alte FI schon gedreht
+(90°) oder gespiegelt gespeichert; die fünfte Gegenprobe (die Netzliste gibt
+dem Auflöser Drehung 0, nicht gespiegelt) ist rot mit 59/69, „434.8 mA",
+„fi-loest-aus" (E738). Was der Auflöser NICHT kann — eine ungebundene Leitung über der
+neuen Lage einer Klemme — steht in L253.
+
+---
+
+## L251 · Fünf Halbleiter haben kein Modell — 13. September 2026
+
+*Übernommen am 11. Oktober 2026 vom Zweig `claude/redion-elektro-simulation`, wo sie **L156** hiess (Commit 64e7a43e6); beim Übernehmen umnummeriert. Der Text ist der des Zweigs, mit den Verweisen von hier (E730–E737, L248–L253, test604–607).*
+
+Nachgezählt am 13. September 2026 (E735): von 110 Fachzeichen haben **26 kein
+elektrisches Verhalten**. Zwanzig davon zu Recht — Knotenpunkte werden in
+`netze()` eigens behandelt, Betätigungsarten sind keine Geräte, Bauplan-Zeichen
+gehören in eine andere Darstellungsart.
+
+**Ehrlich offen sind sechs:**
+
+~~`transformator`~~ (gebaut, E736) · `optokoppler` · `triac` ·
+`transistor-npn` · `transistor-pnp` · `thyristor`
+
+**Der Transformator ist seit E736 gebaut** — als idealer Übertrager mit
+U1 = ü·U2 und I2 = ü·I1. Damit sind Klingeltransformator und Messwandler
+rechenbar. Offen bleiben die fünf Halbleiter.
+
+Sie brauchen etwas, das diese Rechnung nicht hat:
+
+* Der **Transformator** ist genau so gebaut worden: als ideale Übersetzung
+  mit einer zusätzlichen Unbekannten für den Primärstrom (E736). Was ihm
+  fehlt, sind Verluste, Streufluss und Leerlaufstrom — für einen Netztrafo
+  wenige Prozent, und die Annahme steht am Bauteil.
+* **Thyristor, Triac, Transistoren, Optokoppler** sind nichtlinear und
+  zustandsbehaftet. Die Diode wird heute über einen zweiten Durchgang
+  nachgeführt (sperrt/leitet); für einen Thyristor käme ein Zündzustand dazu,
+  der über die Zeit erhalten bleibt.
+
+Bis dahin werden sie als Unterbrechung gerechnet — sichtbar, aber ohne
+Wirkung. Das ist die Vorgabe für ein Symbol ohne Verhalten und richtig so; es
+steht hier, damit niemand es für ein Modell hält.
+
+**Dazu eine Schaltung, die deshalb fehlt:** die Steinmetzschaltung
+(Drehstrommotor am Einphasennetz) braucht den Kondensator als Phasenschieber
+und damit Blindwiderstände (L248). Sie ist im Lehrmittel enthalten und hier
+bewusst nicht gebaut — ein Kondensator, der als Unterbrechung gerechnet wird,
+macht daraus stillschweigend einen Motor mit zwei Strängen.
+
+---
+
+## L250 · Die NIN-Ausgabe ist nicht belegt — 12. September 2026
+
+*Übernommen am 11. Oktober 2026 vom Zweig `claude/redion-elektro-simulation`, wo sie **L154** hiess (Commit a77c1934d); beim Übernehmen umnummeriert. Der Text ist der des Zweigs, mit den Verweisen von hier (E730–E737, L248–L253, test604–607).*
+
+Die Fehlerprüfung der Simulation (E732) und zwei Karten des Drehstrompakets
+(E734) berufen sich auf **NIN 4.6.1.2.3.2**: Schalter gehören in den
+Aussenleiter. Die fachliche Regel ist richtig und in der Schweizer Ausbildung
+Allgemeingut.
+
+**Welche AUSGABE der Norm gilt, ist hier nirgends belegt.** Die Unterlage,
+aus der die Paragrafennummer stammt, nennt sie nicht.
+
+Der Paketprüfer in `electrical.ts` verlangt genau das — zu jeder normativen
+Karte eine `source.edition` — und hat die Installation deshalb abgelehnt. Die
+Regel ist gut: eine Paragrafennummer ohne Ausgabe kann niemand nachschlagen.
+
+**Gelöst wurde es durch Zurücknehmen, nicht durch Umgehen.** Die Karten
+tragen kein `norm`-Feld; die Nummer steht im Erklärtext als Fingerzeig.
+
+**Was zu tun wäre:** Die geltende NIN-Ausgabe belegen — aus der Norm selbst
+oder einer zitierfähigen Quelle, nicht aus dem Gedächtnis. Dann bekommen die
+beiden Karten `norm` und `source.edition`, und `test607 §4` hält weiterhin,
+dass keine Karte sich ohne Ausgabe auf eine Norm beruft.
+
+Dasselbe gilt für die Normhinweise in `simulation.ts` (`anschlussfehler`):
+sie sind Erklärtexte und keine zitierfähigen Belege, und sie sollten es auch
+nicht vorgeben zu sein.
+
+---
+
+## L249 · Die Anschlussprüfung findet nur, was die Zeichnung hergibt — 12. September 2026
+
+*Übernommen am 11. Oktober 2026 vom Zweig `claude/redion-elektro-simulation`, wo sie **L153** hiess (Commit 6b7b4a87c); beim Übernehmen umnummeriert. Der Text ist der des Zweigs, mit den Verweisen von hier (E730–E737, L248–L253, test604–607).*
+
+Seit E732 meldet die Simulation neun Anschlussfehler mit ihrer Folge. Was sie
+NICHT kann, gehört genauso aufgeschrieben:
+
+* **Keine Leiterquerschnitte, keine Absicherung.** Ob der
+  Leitungsschutzschalter zum Querschnitt passt — die häufigste Prüffrage
+  überhaupt — kann sie nicht beurteilen. Ein Symbol trägt heute keinen
+  Querschnitt.
+* **Der FI misst seit E735, aber er schaltet nicht selbst.** Auf dem Zweig
+  stand hier „Kein Fehlerstromschutzschalter als Bauteil" — das war vor E545
+  (hier E735) geschrieben. Heute bildet die Prüfung die Zeigersumme durch
+  seine Pole und meldet `fi-loest-aus` oder `fi-halbe-messung`; die
+  Auslösung selbst (das Öffnen der Kontakte nach einer Zeit) wird nicht
+  gerechnet.
+* **Kein Schutzleiterbruch.** Ein fehlender Schutzleiter wird gefunden, ein
+  UNTERBROCHENER nicht: dafür müsste die Prüfung dieselbe Erreichbarkeits-
+  rechnung fahren wie beim Neutralleiter. Der Code dafür steht schon
+  (`verbindungen` im Ergebnis), die Prüfung fehlt.
+* **Schutzklasse steht nur am Klemmenbrett.** Alle anderen Verbraucher
+  — Lampe, Motor, Heizung — tragen keine Schutzklasse, also wird bei ihnen
+  auch kein fehlender Schutzleiter gemeldet. Das ist kein Denkfehler, sondern
+  fehlende Angabe: die Symbole haben gar keine PE-Klemme, an der man es
+  festmachen könnte.
+* **Der dreipolige Drehstrommotor wird beim offenen Neutralleiter übergangen.**
+  Absichtlich: ein Drehstrommotor braucht keinen Neutralleiter, und ihn zu
+  melden wäre die häufigste Falschmeldung. Damit fällt aber auch der Fall
+  weg, in dem ein Aussenleiter eines Motors wirklich ausfällt — der
+  Zweiphasenlauf, an dem Motoren verbrennen. Er bräuchte eine eigene
+  Prüfung.
+
+**Die Gefahr bei dieser Lücke ist nicht, dass etwas fehlt, sondern dass der
+Melder für vollständig gehalten wird.** Wer sieht, dass er den vertauschten
+Schutzleiter findet, nimmt an, er finde alles. Steht hier, damit es niemand
+annimmt.
+
+---
+
+## L248 · Die Simulation kennt keine Blindwiderstände — 12. September 2026
+
+*Übernommen am 11. Oktober 2026 vom Zweig `claude/redion-elektro-simulation`, wo sie **L151** hiess (Commit 3e793e524); beim Übernehmen umnummeriert. Der Text ist der des Zweigs, mit den Verweisen von hier (E730–E737, L248–L253, test604–607).*
+
+Seit E730 rechnet die Simulation mit Zeigern: jede Spannung und jeder Strom
+hat einen Betrag und einen Winkel. Die Winkel kommen aber **allein aus den
+Quellen**. Kein Bauteil erzeugt einen eigenen.
+
+Das heisst konkret:
+
+* Eine Spule ist weiterhin eine Verbindung, ein Kondensator eine
+  Unterbrechung. Beide sind in Wirklichkeit frequenzabhängig.
+* Ein Motor ist ein Wirkwiderstand. Der Leistungsfaktor cos φ, den jedes
+  Typenschild nennt, kommt in der Rechnung nicht vor.
+* Scheinleistung, Blindleistung und die Kompensation mit Kondensatoren sind
+  deshalb nicht rechenbar.
+
+**Für rein ohmsche Lasten ist das keine Näherung, sondern vollständig.** Alle
+Zahlen in `test604` — Strangspannung, Neutralleiterstrom, das Verhältnis von
+Stern zu Dreieck — sind exakt. Die Lücke betrifft ausschliesslich Lasten mit
+Blindanteil.
+
+**Was zu tun wäre:** Die Matrix für den Imaginärteil (`Aim` in
+`einDurchgang`) steht bereits da und ist überall null. Wer Blindanteile
+nachrüstet, füllt sie mit den Suszeptanzen und muss am Löser **nichts**
+ändern — `loeseKomplex` rechnet sie schon richtig. Dazu gehört eine
+Netzfrequenz (50 Hz) als Grösse der Rechnung, die es heute nicht gibt, und
+eine Entscheidung, was bei gemischt Gleich- und Wechselquellen gilt.
+
+Bis dahin sagt jedes betroffene Bauteil es selbst: die `annahme` am Motor,
+an der Spule und am Kondensator nennt den fehlenden Anteil im Klartext. Eine
+genannte Annahme ist besser als eine stille.
+
+---
+
 ## L247 · Was nach dem Gestirn und dem ruhigen Kopf (E727, E728) noch offen ist — 6. Oktober 2026
 
 **Gefunden beim Bau von E727 und E728** (Redur, Masterprompt vom
@@ -10038,8 +10383,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 142 Lücken, 86 offene und 56 geschlossene. Der Befehl dazu ist
+**Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 148 Lücken, 91 offene und 57 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
