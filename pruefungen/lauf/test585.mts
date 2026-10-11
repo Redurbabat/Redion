@@ -498,6 +498,33 @@ console.log('\n5 · Die Umschalter: die Wahl fliegt, statt zu springen');
     p('… und es ist EINE Marke', b.marken === 1, JSON.stringify(b));
     await a.zu();
   }
+  /* Am Telefon ist das Ortsmenü ein Blatt von unten (E702) — dieselbe
+     leise Marke steht dort auf dem gewählten Ort, und es ist EINE. Diese
+     Zusage stand hier, bevor E725 den Fall auf den Rechner verengte; die
+     Durchsicht hat sie zurückverlangt, damit das Telefon nicht ungeprüft
+     bleibt. Eine Marke, die fehlt, liefert null — kein Grün aus nichts. */
+  {
+    const a = await aufmachen({ handy: true });
+    await a.pc.evaluate(`Bibliothek.oeffne()`);
+    await a.pc.waitForSelector('.bib [data-orte]', { timeout: 15000 });
+    await a.pc.waitForTimeout(600);
+    await a.pc.evaluate(`document.querySelector('.bib [data-orte]').click()`);
+    await a.pc.waitForTimeout(700);
+    const blatt = await a.pc.evaluate(`(() => {
+      const menu = [...document.querySelectorAll('.menu')].pop();
+      if (!menu) return null;
+      const m = menu.querySelector('[role="group"] > .ru-marke');
+      const z = menu.querySelector('[data-wahl][aria-current="true"]');
+      const r = m && !m.hidden ? m.getBoundingClientRect() : null, q = z ? z.getBoundingClientRect() : null;
+      return { blatt: menu.classList.contains('blatt'), t: r ? r.top : -1, zt: q ? q.top : -2,
+               h: r ? Math.round(r.height) : 0, zh: q ? Math.round(q.height) : 0, ort: z ? z.getAttribute('data-wahl') : '',
+               marken: menu.querySelectorAll('.ru-marke').length };
+    })()`) as { blatt: boolean; t: number; zt: number; h: number; zh: number; ort: string; marken: number } | null;
+    p('Telefon, Ortsblatt: die Marke steht auf dem gewählten Ort (Meine Ablage)',
+      !!blatt && blatt.ort === 'ablage' && blatt.t >= 0 && Math.abs(blatt.t - blatt.zt) <= 2, JSON.stringify(blatt));
+    p('… und es ist EINE Marke', !!blatt && blatt.marken === 1, JSON.stringify(blatt));
+    await a.zu();
+  }
 
   /* Die Reiter von „Aussehen" — am Rechner. */
   {

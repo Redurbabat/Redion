@@ -27,11 +27,15 @@
  *       die sechs Sammlungen, die vorhandenen Arten, die drei Formen — und
  *       die Formen NICHT mehr im Ortsmenü. Enter und Leertaste öffnen,
  *       Pfeile wandern, Escape schliesst und gibt den Fokus zurück.
- *       (Rot: drei Bänke, der Ort zweimal.)
+ *       Der Name des Orts und der Art steht in jeder Form ganz da (kein
+ *       „Meine Abla…"), und die drei Formen tragen drei Zeichen, keines das
+ *       des Orts „Alle". (Rot: drei Bänke, der Ort zweimal; nach der
+ *       Durchsicht rot: „Meine Abla…" in der Liste am Telefon, `grid` für
+ *       „Als Dokumente" wie für „Alle".)
  *   §2  INHALT ZUERST: bei 390 × 844 liegt der erste Deckel im ersten Bild,
  *       am Rechner stehen höchstens zehn Bedienelemente über dem Raster,
  *       und ein leeres „Zuletzt geöffnet" zeigt nichts — keine Attrappen
- *       „Neue Seite" und „PDF öffnen". (Rot: 931 von 844, 19 Elemente.)
+ *       „Neue Seite" und „PDF öffnen". (Rot: 931 von 844, 20 Elemente.)
  *   §3  KEINE ZWEITE SUCHE: kein Suchfeld auf der Bibliotheksseite, in
  *       keiner Form; die Lupe der Liste öffnet die EINE Suche, im Bereich
  *       Bibliothek. (Rot: „Dokument suchen …" und „Seiten durchsuchen …".)
@@ -43,13 +47,19 @@
  *       sie mit [Dieses Dokument · Alle Dokumente · Überall] auf, Vorgabe
  *       aus der gemerkten Wahl der Suchleiste (auch aus dem alten
  *       Wahrheitswert); „Dieses Dokument" meldet DIESELBE Zahl wie die
- *       Suchleiste und öffnet sie mit Enter auf Treffer 1. Auf einer
- *       gewöhnlichen Seite steht keine Zeile. (Rot: keine Zeile, nirgends.)
+ *       Suchleiste und öffnet sie mit Enter auf Treffer 1 — auch, wenn
+ *       Enter schneller kommt als die Rechnung. Kein Name der Zeile ist
+ *       abgeschnitten, auch nicht bei 390. Auf einer gewöhnlichen Seite
+ *       steht keine Zeile. (Rot: keine Zeile, nirgends; nach der Durchsicht
+ *       rot: „Dieses Dokum… · Alle Dokume… · Übe…" bei 390, und Enter
+ *       binnen 220 ms tat nichts.)
  *   §5  DIE SUCHLEISTE IM DOKUMENT trägt dieselben drei Bereiche — als
  *       Umschalter mit gezeichneten Zeichen statt 📚, 44 px; „Überall"
  *       öffnet die Suche mit dem Wort, und sie findet es. (Rot: 📚.)
  *   §6  ESCAPE: ein Druck, eine Ebene — Menü vor Bibliothek, Suche vor
- *       Suchleiste.
+ *       Suchleiste. Ein Klick auf den Grund nimmt denselben Weg: der Fokus
+ *       geht zurück, oder an die Suchleiste, die „Dieses Dokument" geöffnet
+ *       hat. (Nach der Durchsicht rot: der Fokus fiel auf <body>.)
  *   §7  BEWEGUNG: das Ortsmenü steht an seiner Pille (E712) und geht mit
  *       Bewegung auf — mit „weniger Bewegung" wie mit „Ruhige Darstellung"
  *       ohne Wachsen. (Dieser Abschnitt war schon vorher grün; er hält,
@@ -219,6 +229,14 @@ const bereichZeile = (s: Page): Promise<{ suche: boolean; ids: string[]; namen: 
            filterSichtbar: !!filter && filter.getBoundingClientRect().height > 0 };
 })()`) as any;
 
+/** Die Namen der Bereichszeile, die abgeschnitten sind (Text breiter als sein Kasten). */
+const abgeschnitten = (s: Page): Promise<{ zahl: number; cut: Array<[string, number, number]> }> => s.evaluate<any>(`(() => {
+  const namen = [...document.querySelectorAll('.finder.such .such-bereich .ru-seg-name')]
+    .filter(n => n.getBoundingClientRect().width > 0);
+  return { zahl: namen.length,
+    cut: namen.filter(n => n.scrollWidth > n.clientWidth).map(n => [(n.textContent || '').trim(), n.scrollWidth, n.clientWidth]) };
+})()`) as any;
+
 /** Die Titel der Treffer in der offenen Suche. */
 const trefferTitel = (s: Page): Promise<string[]> => s.evaluate<any>(`
   [...document.querySelectorAll('#res button[data-i]')].map(b => {
@@ -259,6 +277,7 @@ for (const handy of [false, true]) {
   const g = handy ? '390' : '1440';
   const a = await aufmachen({ handy, dunkel: handy });
   const { s } = a;
+  const formZeichen: Record<string, string> = {};
   for (const form of ['deckel', 'regal', 'liste']) {
     await zurBibliothek(s, form);
     const w = await s.evaluate<any>(`(() => {
@@ -273,8 +292,13 @@ for (const handy of [false, true]) {
         hoehen: [a, b, c].map(x => x ? Math.round(x.height) : 0),
         breiten: [a, b, c].map(x => x ? Math.round(x.width) : 0),
         popup: [ort[0], art[0], form[0]].map(x => x ? x.getAttribute('aria-haspopup') : ''),
+        /* Die Wörter der Pillen: Breite des Textes gegen Breite des Kastens. */
+        worte: [ort[0], art[0]].map(x => { const w = x && x.querySelector('.bib-pille-wort');
+          return w ? [(w.textContent || '').trim(), w.scrollWidth, w.clientWidth] : ['', 0, -1]; }),
+        formZeichen: form[0] ? (form[0].querySelector('[data-sym]')?.getAttribute('data-sym') || '') : '',
         ueberlauf: document.documentElement.scrollWidth > innerWidth + 1 };
     })()`);
+    formZeichen[form] = w.formZeichen;
     gleich(`${g} ${form}: genau EIN Ort-Wähler`, w.ort, 1);
     gleich(`${g} ${form}: genau EIN Art-Wähler`, w.art, 1);
     gleich(`${g} ${form}: genau EIN Form-Wähler`, w.form, 1);
@@ -284,7 +308,17 @@ for (const handy of [false, true]) {
       JSON.stringify({ h: w.hoehen, b: w.breiten }));
     gleich(`${g} ${form}: alle drei sagen, dass sie ein Menü haben`, w.popup, ['menu', 'menu', 'menu']);
     p(`${g} ${form}: kein waagrechter Überlauf`, !w.ueberlauf);
+    /* EIN ABGESCHNITTENES WORT IST EIN ANDERES WORT (§55.1, Fund der
+       Durchsicht): in der Liste stand am Telefon „Meine Abla… · 7" — die
+       Vorgabe, nicht ein langer Ort. Nur ein langer Ort darf weichen. */
+    p(`${g} ${form}: der Name des Orts und der Art steht ganz da (kein „…")`,
+      w.worte.every((x: [string, number, number]) => x[0] !== '' && x[1] <= x[2]), JSON.stringify(w.worte));
   }
+  /* DER FORMKNOPF ZEIGT DIE FORM, NICHT „TABELLE" (Fund der Durchsicht):
+     „Als Dokumente" trug das Raster `grid` — dasselbe Zeichen wie der Ort
+     „Alle", und es zeichnet ein Tabellengitter. Drei Formen, drei Zeichen. */
+  p(`${g}: die drei Formen tragen drei verschiedene Zeichen`,
+    ['deckel', 'regal', 'liste'].every(f => !!formZeichen[f]) && new Set(Object.values(formZeichen)).size === 3, JSON.stringify(formZeichen));
 
   /* Das Ortsmenü: mit der Tastatur geöffnet, alle Namen, je einer. */
   await zurBibliothek(s, 'deckel');
@@ -310,6 +344,21 @@ for (const handy of [false, true]) {
     m.eintraege.filter(e => e.id.startsWith('sammlung:')).map(e => e.name), sammlungen);
   p(`${g}: … mit den Überschriften „Orte" und „Sammlungen"`, m.grp.includes('Orte') && m.grp.includes('Sammlungen'), JSON.stringify(m.grp));
   p(`${g}: die Formen stehen NICHT mehr im Ortsmenü (Entscheidung b)`, namen.length >= ORTE.length && !FORMEN.some(f => namen.includes(f)), JSON.stringify(namen));
+  /* … und keine Form trägt das Zeichen eines Orts im selben Kopf: der
+     Formknopf mit `grid` las sich wie der Ort „Alle". */
+  const ortZeichenGleich = await s.evaluate<any>(`(() => {
+    const mi = [...document.querySelectorAll('.menu')].pop()?.querySelector('[data-wahl="alle"] .mi');
+    const svg = mi ? mi.innerHTML.trim() : '';
+    /* Beide Seiten durch den Browser serialisiert — sonst unterscheidet
+       „<path/>" gegen „<path></path>" zwei gleiche Zeichen (so war der
+       erste Anlauf dieser Zeile grün, wo er rot sein musste). */
+    const gleichGezeichnet = z => { const d = document.createElement('span');
+      d.innerHTML = Register.symbole.alsSvg(z, 16); return d.innerHTML.trim() === svg; };
+    return { svg: svg.length, gleich: ${JSON.stringify(Object.values(formZeichen))}
+      .filter(z => z && svg && gleichGezeichnet(z)) };
+  })()`);
+  p(`${g}: keine Form trägt das Zeichen des Orts „Alle"`, ortZeichenGleich.svg > 0 && ortZeichenGleich.gleich.length === 0,
+    JSON.stringify({ ...ortZeichenGleich, formZeichen }));
   gleich(`${g}: der Fokus steht auf dem gewählten Ort`, m.fokus, 'ablage');
   gleich(`${g}: … und nur er ist gewählt`, orte.filter(e => e.an === 'true').map(e => e.id), ['ablage']);
   if (!handy) {
@@ -469,6 +518,11 @@ for (const handy of [false, true]) {
   gleich(`${g}, Bibliothek (${handy ? '⌕' : 'Strg P'}): die Suche geht mit [Bibliothek · Überall] auf`, z.ids, ['bibliothek', 'ueberall']);
   gleich(`${g}: … die Namen`, z.namen, ['Bibliothek', 'Überall']);
   gleich(`${g}: … Vorgabe Bibliothek`, z.an, 'bibliothek');
+  /* EIN ABGESCHNITTENES WORT IST EIN ANDERES WORT (§55.1, Fund der
+     Durchsicht): am Telefon stand in der PDF „Dieses Dokum… · Alle
+     Dokume… · Übe…". Gezählt wird erst, dann verglichen (§55.2). */
+  const zb = await abgeschnitten(s);
+  p(`${g}: kein Name der Bereichszeile ist abgeschnitten (Bibliothek)`, zb.zahl === 2 && zb.cut.length === 0, JSON.stringify(zb));
   /* EIN „Überall" im Kopf (Fund aus dem Bild): der Ortsfilter der Seiten
      hiess in seiner Vorgabe ebenfalls „Überall" — neben „In ‚Kabelkunde‘"
      las sich das wie ein Widerspruch. */
@@ -525,6 +579,8 @@ for (const handy of [false, true]) {
   gleich(`${g}: … die Namen`, zd.namen, ['Dieses Dokument', 'Alle Dokumente', 'Überall']);
   gleich(`${g}: … Vorgabe „Dieses Dokument" (gemerkt: false)`, zd.an, 'dokument');
   p(`${g}: … und die Seitenfilter stehen dort nicht, wo sie nichts bedeuten`, !zd.filterSichtbar);
+  const zdc = await abgeschnitten(s);
+  p(`${g}: kein Name der Bereichszeile ist abgeschnitten (PDF)`, zdc.zahl === 3 && zdc.cut.length === 0, JSON.stringify(zdc));
   await tippe(s, 'Leitungsschutz', 1400);
   const zahlen = await s.evaluate<any>(`(() => {
     const row = document.querySelector('#res [data-dokument-zahl]');
@@ -548,6 +604,26 @@ for (const handy of [false, true]) {
     !nachEnter.suche && nachEnter.offen && nachEnter.wort === 'Leitungsschutz', JSON.stringify(nachEnter));
   gleich(`${g}: … auf Treffer 1`, nachEnter.zahl, '1/3');
   p(`${g}: … und der Fokus steht im Feld der Suchleiste`, nachEnter.fokus);
+
+  /* ENTER WARTET NICHT AUF DIE UHR (Fund der Durchsicht): die Suche rechnet
+     220 ms nach dem letzten Zeichen. Wer schneller Enter drückt, fand
+     „Dieses Dokument" ohne Treffer — und Enter tat nichts. Ein anderes
+     Wort, damit die schon offene Suchleiste nicht für Grün sorgt. */
+  await imDokument(s, a.pdf);
+  await s.evaluate<any>(`Store.setMeta('dokFindAlle', false)`);
+  await suchtaste(s);
+  if (await s.$('#q')) await s.fill('#q', 'anderes');
+  await s.keyboard.press('Enter');
+  await s.waitForTimeout(900);
+  const schnell = await s.evaluate<any>(`(() => {
+    const fb = document.querySelector('.document-findbar');
+    const feld = fb && fb.querySelector('input');
+    return { suche: !!document.querySelector('.finder.such'), offen: !!fb && !fb.hidden,
+             wort: feld ? feld.value : '', zahl: (document.querySelector('.document-find-zahl')?.textContent || '').trim(),
+             fokus: !!feld && document.activeElement === feld };
+  })()`);
+  p(`${g}: Enter gleich nach dem Tippen öffnet die Suchleiste mit dem Wort auf Treffer 1`,
+    !schnell.suche && schnell.offen && schnell.wort === 'anderes' && /^1( Treffer|\/1)$/.test(schnell.zahl) && schnell.fokus, JSON.stringify(schnell));
 
   await imDokument(s, a.pdf);
   await s.evaluate<any>(`Store.setMeta('dokFindAlle', true)`);   /* der alte Wahrheitswert */
@@ -633,6 +709,23 @@ console.log('\n§6 Escape — ein Druck, eine Ebene');
     fokus: document.activeElement?.hasAttribute('data-art-wahl') || false })`);
   p('Bibliothek: Escape nimmt das Menü und lässt die Bibliothek stehen; der Fokus geht an die Pille',
     !e1.menue && e1.bib && e1.fokus, JSON.stringify(e1));
+  /* DER GRUND SCHLIESST WIE ESCAPE (Fund der Durchsicht): ein Klick
+     neben die Suche nahm sie weg, aber ohne den Fokus zurückzugeben —
+     er fiel auf <body>, und wer mit der Tastatur weitermachte, stand am
+     Anfang der Seite. Die Suche geht hier mit der Taste auf, während die
+     Artpille den Fokus hat (ohne blur), damit es ein „vorher" gibt. */
+  await fokus(s, '.bib [data-art-wahl]');
+  await s.keyboard.press('Control+p');
+  await s.waitForSelector('.finder.such #q', { timeout: 8000 }).catch(() => {});
+  await s.waitForTimeout(400);
+  const grundPunkt = await s.evaluate<any>(`(() => { const e = document.elementFromPoint(12, innerHeight - 12);
+    return !!e && e.classList.contains('overlay') && !!e.querySelector('.finder.such'); })()`);
+  await s.mouse.click(12, 900 - 12);
+  await s.waitForTimeout(350);
+  const e1b = await s.evaluate<any>(`({ suche: !!document.querySelector('.finder.such'),
+    fokus: document.activeElement?.hasAttribute('data-art-wahl') || false, tag: document.activeElement?.tagName })`);
+  p('Bibliothek: ein Klick auf den Grund schliesst die Suche, der Fokus geht an die Pille zurück',
+    grundPunkt && !e1b.suche && e1b.fokus, JSON.stringify({ grundPunkt, ...e1b }));
   await imDokument(s, a.pdf);
   await suchtaste(s);
   await tippe(s, 'Leitungsschutz', 1300);
@@ -644,6 +737,18 @@ console.log('\n§6 Escape — ein Druck, eine Ebene');
   await s.keyboard.press('Escape');
   await s.waitForTimeout(350);
   p('… der zweite nimmt die Suchleiste', await s.evaluate<any>(`!!document.querySelector('.document-findbar')?.hidden`));
+  /* Und der Grund nimmt denselben Weg wie Escape: hat „Dieses Dokument"
+     die Suchleiste geöffnet, bekommt sie den Fokus — mit dem Wort. */
+  await suchtaste(s);
+  await tippe(s, 'Leitungsschutz', 1300);
+  await s.mouse.click(12, 900 - 12);
+  await s.waitForTimeout(400);
+  const e3 = await s.evaluate<any>(`(() => { const fb = document.querySelector('.document-findbar');
+    const feld = fb && fb.querySelector('input');
+    return { suche: !!document.querySelector('.finder.such'), leiste: !!fb && !fb.hidden,
+             fokus: !!feld && document.activeElement === feld, wort: feld ? feld.value : '' }; })()`);
+  p('Dokument: ein Klick auf den Grund nimmt die Suche, die Suchleiste bleibt und hat den Fokus',
+    !e3.suche && e3.leiste && e3.fokus && e3.wort === 'Leitungsschutz', JSON.stringify(e3));
   await a.k.close();
 }
 
