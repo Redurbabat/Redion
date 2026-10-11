@@ -25,11 +25,19 @@
  *   1  Kein Job der CI fährt den vollen Lauf — und keiner heisst „alle",
  *      der nicht alle fährt.
  *   2  Genau ein Job fährt `npm run pruefen -- --schnell`, und jeder Aufruf
- *      des Orchestrators in der CI ist genau dieser. Jeder Job hat eine
- *      Zeitgrenze. Der schnelle Job baut die Einzeldatei und prüft, ob sie
- *      nachgezogen ist, holt Chromium genau dann, wenn die Auswahl einen
- *      Browser braucht, und sein Kommentar nennt die Messung und den vollen
- *      Lauf auf dem Rechner.
+ *      des Orchestrators in der CI ist genau dieser (oder seine `--liste`).
+ *      Als Aufruf des Orchestrators zählt jede Form, die einen Lauf startet:
+ *      `npm run pruefen`, `npm run-script pruefen`, `npm test`, jeder Befehl,
+ *      der `alle.mts` oder `volllauf.mts` nennt (auch über `npx`), Leerraum
+ *      zusammengezogen und ein Kommentar hinter `#` abgeschnitten. Der
+ *      schnelle Lauf steht allein in seiner Zeile — kein `|| true`, keine
+ *      Röhre, kein `continue-on-error`, die ein Rot verschlucken würden. In
+ *      package.json ist `pruefen` genau `node pruefungen/alle.mts`, ohne
+ *      `prepruefen` und `postpruefen` (npm führt beide von selbst aus).
+ *      Jeder Job hat eine Zeitgrenze. Der schnelle Job baut die Einzeldatei
+ *      und prüft, ob sie nachgezogen ist, holt Chromium genau dann, wenn die
+ *      Auswahl einen Browser braucht, und sein Kommentar nennt die Messung
+ *      und den vollen Lauf auf dem Rechner.
  *   3  Die Auswahl ist, was sie verspricht: jeder Lauf ohne Browser ist
  *      dabei; ein Lauf MIT Browser nur, wenn er in CLAUDE.md §31 beim Namen
  *      steht und in alle.mts einen Grund trägt; die Läufe aus §31 sind alle
@@ -37,12 +45,18 @@
  *      stimmt mit dem überein, was dieser Lauf selbst in der Datei liest.
  *   4  CLAUDE.md §30 sagt, was `--schnell` heisst.
  *
- * WIE „STARTET EINEN BROWSER" HIER GELESEN WIRD — unabhängig von alle.mts.
- * alle.mts erkennt einen Browserlauf daran, dass er Playwright lädt. Dieser
- * Lauf liest zusätzlich den AUFRUF (`chromium.launch(`, `launchPersistent…`,
- * `connectOverCDP(`) im Code ohne Kommentare und Zeichenketten. Ein Lauf gilt
- * hier als Browserlauf, wenn EINES von beiden zutrifft. Zwei Wege, die
- * einander gegenprüfen: übersieht alle.mts einen, sieht ihn dieser.
+ * WIE „STARTET EINEN BROWSER" HIER GELESEN WIRD — auf zwei Wegen, die
+ * einander VERGLEICHEN. Weg 1 ist der von alle.mts: die Datei lädt
+ * Playwright. Weg 2 ist unabhängig davon: der AUFRUF (`chromium.launch(`,
+ * `launchPersistent…`, `connectOverCDP(`) im Code ohne Kommentare — nur die
+ * Kommentare heraus, Zeichen für Zeichen (`ohneKommentareGenau`), die
+ * Zeichenketten bleiben stehen. Beide Wege müssen dieselben Läufe finden.
+ *
+ * Die erste Fassung las Weg 2 über `nurCode`, das auch Zeichenketten leert,
+ * und vereinigte beide Wege, statt sie zu vergleichen. In `test587` steht
+ * `'image/*'`; für `nurCode` beginnt dort ein Kommentar, der den Aufruf des
+ * Browsers verschluckt. Weg 2 kam auf 508, Weg 1 auf 509 — und die
+ * Vereinigung zeigte 509, als stimmte alles (Durchsicht von E745).
  *
  * DIE FALLE, VOR DER ER SICH SELBST SCHÜTZT. Gegen einen Stand ohne `--liste`
  * würde `alle.mts --schnell --liste` den Schalter nicht kennen und die
@@ -57,7 +71,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { nurCode } from '../hilfe/quelltext.mts';
+import { nurCode, ohneKommentareGenau } from '../hilfe/quelltext.mts';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const LAUF = path.join(WURZEL, 'pruefungen', 'lauf');
@@ -86,15 +100,31 @@ type Aufgabe = {
   name: string;
   zeit: number | null;
   schrittNamen: string[];
-  befehle: string[];      // jede Befehlszeile einzeln, getrimmt, ohne # …
+  /** Jede Befehlszeile ganz — eine Fortsetzung mit `\` angehängt, so gelesen
+   *  wie die Shell sie liest (siehe `glatt`). */
+  zeilen: string[];
+  /** Dieselben Zeilen, zerlegt in ihre einzelnen Befehle. */
+  befehle: string[];
+  /** Steht irgendwo im Job `continue-on-error` (ausser `false`)? */
+  weiterBeiFehler: boolean;
   text: string;           // der ganze Block, Kommentare eingeschlossen
 };
 
+/** So liest die Shell eine Zeile: ein Kommentar beginnt mit `#` am
+ *  Wortanfang und reicht bis zum Ende, und wie viel Leerraum zwischen zwei
+ *  Wörtern steht, ist gleich. Ohne das wäre `npm  run pruefen` (zwei
+ *  Leerzeichen) kein Aufruf und `npm run pruefen # --schnell` kein voller
+ *  Lauf — beides war in der ersten Fassung so (Durchsicht von E745). */
+const glatt = (zeile: string): string =>
+  zeile.replace(/(^|\s)#.*$/, '$1').replace(/\s+/g, ' ').trim();
+
 /** Eine Zeile kann mehrere Befehle tragen — `a && b`, `a; b`, `a || b`.
  *  Jeder zählt für sich: ein `npm run pruefen -- --liste && npm run pruefen`
- *  ist ein voller Lauf, auch wenn die Zeile mit der Liste beginnt. */
+ *  ist ein voller Lauf, auch wenn die Zeile mit der Liste beginnt. Eine
+ *  Röhre (`a | b`) bleibt EIN Befehl: hinter `| tee` endet der Schritt mit
+ *  dem Ergebnis von `tee`, und das ist nicht der schnelle Lauf. */
 const befehleIn = (zeile: string): string[] =>
-  zeile.split(/&&|\|\||;/).map(t => t.trim()).filter(Boolean);
+  glatt(zeile).split(/&&|\|\||;/).map(t => t.trim()).filter(Boolean);
 
 const aufgabenAus = (yml: string): Aufgabe[] => {
   const zeilen = yml.split('\n');
@@ -105,13 +135,20 @@ const aufgabenAus = (yml: string): Aufgabe[] => {
   /* Der Kommentar ÜBER einem Job (zwei Leerzeichen und `#`) gehört zu dem
      Job, der darauf folgt — nicht zu dem davor. */
   let vorspann = '';
+  const zeileDazu = (a: Aufgabe, zeile: string): void => {
+    const g = glatt(zeile);
+    if (!g) return;
+    a.zeilen.push(g);
+    a.befehle.push(...befehleIn(g));
+  };
   for (let i = start + 1; i < zeilen.length; i++) {
     const z = zeilen[i] ?? '';
     if (/^[^\s#]/.test(z)) break;                       // nächster oberster Schlüssel
     if (/^ {2}#/.test(z) || (vorspann && z.trim() === '')) { vorspann += z + '\n'; continue; }
     const kopf = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(z);
     if (kopf) {
-      jetzt = { id: kopf[1] ?? '', name: '', zeit: null, schrittNamen: [], befehle: [], text: vorspann };
+      jetzt = { id: kopf[1] ?? '', name: '', zeit: null, schrittNamen: [], zeilen: [], befehle: [],
+        weiterBeiFehler: false, text: vorspann };
       vorspann = '';
       liste.push(jetzt);
       continue;
@@ -123,24 +160,31 @@ const aufgabenAus = (yml: string): Aufgabe[] => {
     if (name) jetzt.name = (name[1] ?? '').replace(/^['"]|['"]$/g, '');
     const zeit = /^ {4}timeout-minutes:\s*(\d+)\s*$/.exec(z);
     if (zeit) jetzt.zeit = Number(zeit[1]);
+    if (/^\s+(?:-\s+)?continue-on-error:\s*(?!false\s*$)\S/.test(z)) jetzt.weiterBeiFehler = true;
     const schritt = /^\s+-\s+name:\s*(.+?)\s*$/.exec(z);
     if (schritt) jetzt.schrittNamen.push((schritt[1] ?? '').replace(/^['"]|['"]$/g, ''));
     const lauf = /^(\s+(?:-\s+)?)run:\s*(.*?)\s*$/.exec(z);
     if (!lauf) continue;
     const wert = lauf[2] ?? '';
     if (/^[|>][-+]?$/.test(wert)) {
-      const spalte = (lauf[1] ?? '').length;              // Spalte von `run`
+      const gefaltet = wert.startsWith('>');          // `>`: YAML faltet die Zeilen zu einer
+      const spalte = (lauf[1] ?? '').length;          // Spalte von `run`
+      let offen = '';                                 // eine Zeile, die mit `\` weitergeht
       for (let k = i + 1; k < zeilen.length; k++) {
         const b = zeilen[k] ?? '';
         if (b.trim() === '') continue;
         if ((b.match(/^ */)?.[0].length ?? 0) <= spalte) break;
         jetzt.text += b + '\n';
         const t = b.trim();
-        if (!t.startsWith('#')) jetzt.befehle.push(...befehleIn(t));
         i = k;
+        if (t.startsWith('#') && !offen) continue;
+        if (gefaltet || t.endsWith('\\')) { offen += t.replace(/\\$/, '') + ' '; continue; }
+        zeileDazu(jetzt, offen + t);
+        offen = '';
       }
+      if (offen) zeileDazu(jetzt, offen);
     } else if (wert) {
-      jetzt.befehle.push(...befehleIn(wert));
+      zeileDazu(jetzt, wert.replace(/^(['"])(.*)\1$/, '$2'));
     }
   }
   return liste;
@@ -151,19 +195,32 @@ const aufgaben = aufgabenAus(ablauf);
 console.log('\n    Jobs in pruefen.yml: ' +
   aufgaben.map(a => a.id + ' („' + a.name + '", ' + (a.zeit ?? '—') + ' min)').join(' · '));
 
-/** Ruft dieser Befehl den Orchestrator (`npm run pruefen` oder alle.mts)?
- *  Nur am ANFANG des Befehls — ein `echo "npm run pruefen …"` in einer
- *  Hilfe-Ausgabe ist Prosa, kein Aufruf. */
-const istOrchestrator = (b: string): boolean =>
-  /^npm run pruefen\b/.test(b) || /^node\s+(?:\.\/)?pruefungen\/alle\.mts\b/.test(b);
+/** Ein Befehl, der nur etwas AUSGIBT, startet nichts: ein
+ *  `echo "  npm run pruefen -- --schnell …"` in einer Hilfe ist Prosa. */
+const PROSA = /^(?:echo|printf)\b/;
 
-/** Fährt dieser Befehl den VOLLEN Lauf? Ein Orchestrator-Aufruf ohne Auswahl
- *  (keine Nummer, kein `--schnell`, kein `server`, kein `--liste`) — oder
- *  der Lauf in Stücken selbst. */
+/** Jede Form, die den Orchestrator oder den Lauf in Stücken startet —
+ *  gesucht ÜBERALL im Befehl, nicht nur am Anfang: `timeout 3600 npm run
+ *  pruefen`, `npx tsx pruefungen/alle.mts` und `env X=1 npm test` sind
+ *  Aufrufe. `npm test` gehört dazu, auch wenn package.json heute kein
+ *  `test` kennt: wer es einträgt, soll es nicht an diesem Lauf vorbei in die
+ *  CI bringen. */
+const AUFRUFE: readonly RegExp[] = [
+  /\b(?:npm|pnpm|yarn)\b(?:\s+-\S+)*\s+(?:run|run-script)\b(?:\s+-\S+)*\s+(?:pruefen|test)\b/,
+  /\b(?:npm|pnpm|yarn)\b(?:\s+-\S+)*\s+(?:test|tst|t|it|install-test)\b/,
+  /(?:^|[\s/=])alle\.mts\b/,
+  /(?:^|[\s/=])volllauf\.mts\b/,
+];
+const istOrchestrator = (b: string): boolean => !PROSA.test(b) && AUFRUFE.some(m => m.test(b));
+
+/** Fährt dieser Befehl den VOLLEN Lauf? Der Lauf in Stücken immer; sonst
+ *  ein Aufruf ohne Auswahl (keine Nummer, kein `--schnell`, kein `server`,
+ *  kein `--liste`). */
 const istVoll = (b: string): boolean => {
-  if (/^node\s+(?:\.\/)?pruefungen\/volllauf\.mts\b/.test(b)) return true;
   if (!istOrchestrator(b)) return false;
-  const rest = b.replace(/^npm run pruefen\b/, '').replace(/^node\s+(?:\.\/)?pruefungen\/alle\.mts\b/, '');
+  if (/volllauf\.mts\b/.test(b)) return true;
+  const treffer = AUFRUFE.map(m => m.exec(b)).find(t => t !== null) ?? null;
+  const rest = treffer ? b.slice(treffer.index + treffer[0].length) : b;
   return !/--schnell\b|--liste\b|\bserver\b|(^|\s)\d+(\s|$)/.test(rest);
 };
 
@@ -203,11 +260,32 @@ const andereAufrufe = aufgaben.flatMap(a =>
 p('… und jeder Aufruf des Orchestrators in der CI ist genau dieser (oder seine Liste)',
   andereAufrufe.length === 0, andereAufrufe.join(' · '));
 
+/* `npm run pruefen` ist nur so viel wert wie das, was package.json darunter
+   einträgt — und npm führt `prepruefen` und `postpruefen` von selbst davor
+   und danach aus. Ein voller Lauf dort käme an jeder Zeile oben vorbei. */
+const paket = JSON.parse(lies('package.json')) as { scripts?: Record<string, string> };
+const skripte = paket.scripts ?? {};
+p('package.json: `pruefen` ist genau `node pruefungen/alle.mts`, ohne prepruefen und postpruefen',
+  skripte['pruefen'] === 'node pruefungen/alle.mts' && !('prepruefen' in skripte) && !('postpruefen' in skripte),
+  JSON.stringify({ pruefen: skripte['pruefen'], prepruefen: skripte['prepruefen'], postpruefen: skripte['postpruefen'] }));
+
 const ohneZeit = aufgaben.filter(a => !(a.zeit !== null && a.zeit > 0));
 p('Jeder Job hat eine Zeitgrenze (timeout-minutes)', aufgaben.length > 0 && ohneZeit.length === 0,
   ohneZeit.map(a => a.id).join(', '));
 
 const schnell = schnelle[0];
+
+/* Ein Rot muss den Job rot machen. `npm run pruefen -- --schnell || true`
+   zerlegt sich in den schnellen Lauf und ein `true` — beide Befehle für sich
+   unverdächtig, zusammen ein Job, der immer grün ist. Dasselbe tun eine
+   Röhre (`| tee …` ohne pipefail) und `continue-on-error`. */
+const zeilenMitSchnell = schnell
+  ? schnell.zeilen.filter(z => befehleIn(z).some(b => !PROSA.test(b) && b.includes(SCHNELL)))
+  : [];
+p('Der schnelle Lauf steht allein in seiner Zeile, und ein Rot bricht den Job ab (kein `|| true`, keine Röhre, kein continue-on-error)',
+  !!schnell && zeilenMitSchnell.includes(SCHNELL) && !schnell.weiterBeiFehler &&
+    zeilenMitSchnell.every(z => z === SCHNELL || z === SCHNELL + ' --liste'),
+  schnell ? zeilenMitSchnell.join(' · ') + (schnell.weiterBeiFehler ? ' · continue-on-error' : '') : 'kein Job');
 p('Der schnelle Job heisst so, wie er ist (sein Name sagt „schnell")',
   !!schnell && /schnell/i.test(schnell.name), schnell ? '„' + schnell.name + '"' : 'kein Job');
 p('Er baut die Einzeldatei aus den Quellen',
@@ -224,19 +302,47 @@ const holtChromium = !!schnell &&
  * ========================================================================*/
 console.log('\n3 · Die Auswahl --schnell');
 
-/** Startet dieser Lauf einen Browser? Zwei Wege, siehe Kopf. */
+/** Startet dieser Lauf einen Browser? Zwei Wege, siehe Kopf — sie werden
+ *  VERGLICHEN, nicht vereinigt. Weg 1 ist der von alle.mts, Weg 2 liest den
+ *  Aufruf im Code ohne Kommentare. */
 const LAEDT_PLAYWRIGHT = /\bfrom\s+['"]playwright(?:-core)?['"]|\bimport\(\s*['"]playwright(?:-core)?['"]\s*\)|\brequire\(\s*['"]playwright(?:-core)?['"]\s*\)/;
 const RUFT_BROWSER = /\b(?:chromium|firefox|webkit)\s*\.\s*launch(?:PersistentContext)?\s*\(|\.connectOverCDP\s*\(/;
-const browserLaeufe = new Set<string>();
+
+/* Kann Weg 2 an der Falle vorbei, an der die erste Fassung hängenblieb?
+   Eine Probe derselben Bauart wie test587: eine Zeichenkette mit `/*` vor
+   dem Aufruf und ein echter Kommentar danach — für einen Filter, der
+   Zeichenketten nicht kennt, reicht der Kommentar vom `/*` in der
+   Zeichenkette bis dorthin und verschluckt den Aufruf. Und die Gegenrichtung: ein Aufruf, der nur in einem Kommentar
+   steht, zählt nicht. Der Aufruf ist hier zusammengesetzt, damit dieser
+   Lauf ihn nicht selbst als Zeichenkette im Code trägt — Weg 2 lässt
+   Zeichenketten stehen und hielte test610 sonst für einen Browserlauf. */
+const AUFRUF = ['chromium', 'launch()'].join('.');
+const PROBE_FALLE = "const art = 'image/" + "*';\nconst b = await " + AUFRUF + ";\n/" + "* ein echter Kommentar *" + "/\n";
+const PROBE_KOMMENTAR = 'const b = 1; /' + '* await ' + AUFRUF + ' *' + '/\n// await ' + AUFRUF + '\n';
+p('Weg 2 liest an einer Zeichenkette mit „/*" vorbei (die Falle aus test587) und zählt keinen Aufruf im Kommentar',
+  RUFT_BROWSER.test(ohneKommentareGenau(PROBE_FALLE)) && !RUFT_BROWSER.test(ohneKommentareGenau(PROBE_KOMMENTAR)));
+console.log('    zum Vergleich: `nurCode` sieht den Aufruf in der Probe ' +
+  (RUFT_BROWSER.test(nurCode(PROBE_FALLE)) ? 'auch' : 'NICHT — das war die erste Fassung'));
+
+const wegImport = new Set<string>();
+const wegAufruf = new Set<string>();
 const alleLaeufe: string[] = [];
 for (const f of fs.readdirSync(LAUF).filter(f => /\.mts$/.test(f)).sort()) {
   const name = f.replace(/\.mts$/, '');
   alleLaeufe.push(name);
   const roh = fs.readFileSync(path.join(LAUF, f), 'utf8');
-  if (LAEDT_PLAYWRIGHT.test(roh) || RUFT_BROWSER.test(nurCode(roh))) browserLaeufe.add(name);
+  if (LAEDT_PLAYWRIGHT.test(roh)) wegImport.add(name);
+  if (RUFT_BROWSER.test(ohneKommentareGenau(roh))) wegAufruf.add(name);
 }
-console.log('    gelesen: ' + alleLaeufe.length + ' Läufe, ' + browserLaeufe.size +
-  ' mit Browser, ' + (alleLaeufe.length - browserLaeufe.size) + ' ohne');
+const browserLaeufe = new Set<string>([...wegImport, ...wegAufruf]);
+console.log('    gelesen: ' + alleLaeufe.length + ' Läufe · Weg 1 (lädt Playwright) ' + wegImport.size +
+  ' · Weg 2 (ruft den Browser, im Code ohne Kommentare) ' + wegAufruf.size +
+  ' · ohne Browser ' + (alleLaeufe.length - browserLaeufe.size));
+const nurWeg1 = [...wegImport].filter(n => !wegAufruf.has(n));
+const nurWeg2 = [...wegAufruf].filter(n => !wegImport.has(n));
+p('Beide Wege finden dieselben Browserläufe',
+  wegImport.size > 0 && nurWeg1.length === 0 && nurWeg2.length === 0,
+  'nur Weg 1: ' + (nurWeg1.join(' ') || '—') + ' · nur Weg 2: ' + (nurWeg2.join(' ') || '—'));
 
 /* §31 — die Läufe, die man beim Namen kennt. Die dokumentierte Liste der
    Browserläufe, die in den schnellen Lauf dürfen. */

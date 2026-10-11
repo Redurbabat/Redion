@@ -132,14 +132,22 @@ jobs:
   # Xeon 2,8 GHz, Node 22.22): `npm run pruefen -- --schnell` fuhr 45 Läufe
   # — 43 ohne Browser, test96 und test100 mit — in 4 min 14 s; davon sind
   # 2 min 12 s die festen Pausen von drei Sekunden zwischen den Läufen. Der
-  # längste ist test105 (58 s, er baut mit tsc nach /tmp). Mit Paketen,
-  # Chromium und der Einzeldatei davor rund 7 Minuten.
+  # längste ist test105 (58 s, er baut mit tsc nach /tmp).
   #
-  # Die Zeitgrenze von 20 Minuten ist rund das Dreifache davon: ein Runner
-  # (zwei Kerne bei einem privaten Repository) kann langsamer sein als
-  # dieser Rechner, und das Holen von Chromium hängt am Netz. Wächst der
-  # Lauf über die Grenze, ist das ein Befund, kein Anlass, still zu erhöhen
-  # — neu messen, die Zahl hier und in messungen.md nachziehen.
+  # Die Schritte davor sind auf GitHub gemessen, nicht geschätzt: im Lauf
+  # 38169660632 (11. Oktober 2026, auf 97d156b, Job „Alle Prüfläufe" mit
+  # denselben Schritten wie hier) brauchten Quelltext, Node, Pakete,
+  # Chromium mit Systembibliotheken (23 s) und die Einzeldatei zusammen
+  # 32 s — Zeitstempel der Schritte aus der Schnittstelle von GitHub. Im
+  # selben Lauf brauchte test105 im Job darüber 53 s, auf dem Rechner der
+  # Sitzung 58 s: der Runner ist nicht langsamer. Wie lange der ganze
+  # schnelle Lauf auf dem Runner braucht, zeigt erst der erste Push.
+  #
+  # Die Zeitgrenze von 20 Minuten ist gut das Vierfache von Lauf und
+  # Einrichtung zusammen (4 min 14 s + 32 s): das Holen von Chromium hängt
+  # am Netz, und ein Runner kann an einem anderen Tag langsamer sein. Wächst
+  # der Lauf über die Grenze, ist das ein Befund, kein Anlass, still zu
+  # erhöhen — neu messen, die Zahl hier und in messungen.md nachziehen.
   # ---------------------------------------------------------------------------
   pruefen:
     name: Schneller Lauf (ohne Browser, dazu die Sicherung)

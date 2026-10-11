@@ -8422,23 +8422,29 @@ Prüfläufe" mehr. Der lange Job heisst „Schneller Lauf (ohne Browser, dazu
 die Sicherung)", fährt genau `npm run pruefen -- --schnell` (davor die
 Auswahl mit `--liste`), baut weiterhin die Einzeldatei und prüft, ob sie
 nachgezogen ist, holt Chromium nur für test96 und test100, und hat
-20 Minuten Zeit — rund das Dreifache von Lauf und Einrichtung. Sein
-Kommentar nennt die Messung mit Datum und sagt, dass der volle Lauf auf dem
-Rechner bleibt (`node pruefungen/volllauf.mts`, CLAUDE.md §30). Der Job
+20 Minuten Zeit — gut das Vierfache von Lauf (4 min 14 s, auf dem Rechner
+der Sitzung) und Einrichtung (32 s, auf GitHub gemessen: Zeitstempel der
+Schritte von Lauf 38169660632 auf 97d156b). Sein Kommentar nennt die
+Messungen mit Datum und sagt, dass der volle Lauf auf dem Rechner bleibt (`node pruefungen/volllauf.mts`, CLAUDE.md §30). Der Job
 „Quelltext und Logik (ohne Browser)" ist unverändert.
 
-**Beleg.** `test610` (neu, ohne Browser): gegen 97d156b grün mit 4 von 21
-— der Job fuhr den vollen Lauf, keiner fuhr `--schnell`, alle.mts kannte
-`--liste` nicht, und CLAUDE.md sagte „Dauer ungemessen"; nach E745 22/22.
-Gegenproben in E745. Wie weit der Job auf GitHub kommt, zeigt erst der
-erste Push dieses Zweigs: gemessen ist nur auf dem Rechner der Sitzung.
+**Beleg.** `test610` (neu, ohne Browser): gegen 97d156b rot mit 7 von 25
+bestanden — der Job fuhr den vollen Lauf, keiner fuhr `--schnell`, alle.mts
+kannte `--liste` nicht, und CLAUDE.md sagte „Dauer ungemessen"; nach E745
+26/26. (Hier stand zuerst „grün mit 4 von 21" — es war die erste Fassung
+von test610, und sie war ROT mit 4 von 21 bestanden.) Gegenproben in E745.
+Wie lange der ganze schnelle Lauf auf GitHub braucht, zeigt erst der erste
+Push dieses Zweigs: auf GitHub gemessen ist nur die Einrichtung.
 
 **Was offen bleibt, und es ist keine neue Lücke, sondern eine alte:** der
-schnelle Lauf enthält `test274`, und der ist auf `main` seit E729 rot (eine
-verwaiste Nachschlagestelle in `marken.ts`, E743). Die CI wird deshalb rot
-statt abgebrochen sein, bis er gerichtet ist — das ist die ehrlichere
-Meldung. Er steht in der Liste der dreizehn (AUFGABEN.md, „Nach dem
-Zusammenführen der dritten Welle", Punkt 1).
+Job „Schneller Lauf" wird auf GitHub rot sein. Der schnelle Lauf enthält
+`test274`, und der ist auf `main` seit E729 rot — ein Fehlalarm des
+Wächters, nicht der App: er meldet `redion-graphit` in `marken.ts` als
+verwaiste Nachschlagestelle, aber `marken.ts` legt den Halter selbst an
+(`svg('svg', { id: 'redion-graphit', … })`), in einer Schreibweise, die
+test274 nicht kennt. test274 zu ändern braucht Redurs Wort. Er steht in der
+Liste der dreizehn (AUFGABEN.md, „Nach dem Zusammenführen der dritten
+Welle", Punkt 1).
 
 ---
 

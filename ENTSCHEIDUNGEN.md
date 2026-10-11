@@ -66739,11 +66739,18 @@ ging mit dem alten Schalter gar nicht: `--schnell` filterte `!l.messung`,
 und `messung` traf genau einen Lauf, test73. `npm run pruefen -- --schnell`
 waren also 549 von 550 Läufen — der volle Lauf unter anderem Namen. Der
 Kopf von alle.mts versprach „~11 min" aus der Zeit der 67 Läufe, CLAUDE.md
-sagte ehrlicher „Dauer ungemessen". Abhängig von der alten Bedeutung war
-nichts: `volllauf.mts` ruft alle.mts nur mit Nummern, `package.json` kennt
-nur `pruefen`, kein Prüflauf liest den Schalter (gesucht mit grep über
-pruefungen/, *.mts, package.json und die Doku). Deshalb bekommt der Name
-seine Bedeutung, statt dass ein zweiter Schalter daneben tritt.
+sagte ehrlicher „Dauer ungemessen". Kein WERKZEUG hing an der alten
+Bedeutung: `volllauf.mts` ruft alle.mts nur mit Nummern, `package.json`
+kennt nur `pruefen`, kein Prüflauf liest den Schalter. **Die Doku aber
+schon** — hier stand zuerst „Abhängig von der alten Bedeutung war nichts",
+und das war falsch: in AUFGABEN.md, in vier Dateien unter `doku/` und im
+README stand `--schnell` als Anweisung, und gemeint war ein Lauf, der auch
+die Oberfläche prüft — meist ausdrücklich der volle. Beides tat `--schnell`
+bis dahin, weil es fast der volle war. Gefunden hat es die
+Durchsicht, nicht ich (siehe „Nach der Durchsicht berichtigt" am Ende).
+Deshalb bekommt der Name seine Bedeutung, statt dass ein zweiter Schalter
+daneben tritt — und die Stellen, die die alte meinten, sagen jetzt, was sie
+meinten.
 
 **Was entschieden wurde.**
 
@@ -66764,24 +66771,40 @@ seine Bedeutung, statt dass ein zweiter Schalter daneben tritt.
    Sicherung)"** und fährt genau `npm run pruefen -- --schnell`. Er behält
    die Einzeldatei („Einzeldatei bauen" und „Ist die Einzeldatei
    nachgezogen?"), holt Chromium nur noch für test96 und test100, und hat
-   20 Minuten statt 40 — rund das Dreifache von gemessen 4 min 14 s Lauf und
-   etwa 3 Minuten Einrichtung. Sein Kommentar nennt die Messung mit Datum
-   und Rechner und sagt, dass der volle Lauf auf dem Rechner bleibt. Die
+   20 Minuten statt 40 — gut das Vierfache von 4 min 14 s Lauf (gemessen
+   auf dem Rechner der Sitzung) und 32 s Einrichtung (gemessen auf GitHub,
+   Lauf 38169660632, siehe „Was gemessen wurde"). Sein Kommentar nennt die
+   Messungen mit Datum und Ort und sagt, dass der volle Lauf auf dem Rechner
+   bleibt. Die
    Job-Kennung `pruefen` bleibt, damit nichts, was den Job über sie findet,
    ins Leere zeigt. Der Job „Quelltext und Logik (ohne Browser)" bleibt
    unverändert bis auf zwei Kommentare, die vom „langen Lauf" sprachen.
-4. **Die Doku sagt es an allen Stellen, an denen der Schalter steht:**
-   CLAUDE.md §30 („Die Befehle" und „Der volle Lauf läuft in Stücken":
-   die CI fährt ihn nicht, für §46 zählt der volle Lauf), der Kopf von
-   alle.mts, `pruefungen/LIESMICH.md`, README, `doku/MIGRATION-REZEPT.md`
-   („und am Ende alles" war nicht mehr wahr).
+4. **Die Doku sagt es:** CLAUDE.md §30 („Die Befehle" und „Der volle Lauf
+   läuft in Stücken": die CI fährt ihn nicht, für §46 zählt der volle
+   Lauf), der Kopf von alle.mts, `pruefungen/LIESMICH.md`, das README. Hier
+   stand zuerst „an allen Stellen, an denen der Schalter steht" — das stimmte
+   nicht. Die stehenden Anweisungen, die `--schnell` in der alten Bedeutung
+   nannten, sind erst nach der Durchsicht nachgezogen (Liste am Ende), und
+   `doku/MIGRATION-REZEPT.md` hatte ich falsch behandelt: „und am Ende
+   alles" war dort GEMEINT und nicht falsch — jetzt steht der volle Lauf als
+   eigene Zeile da. Was einen vergangenen Lauf beschreibt (E386, die
+   Einträge in ERLEDIGTE-AUFGABEN.md vom September, `doku/BUENDEL-11-BIS-24.md`,
+   die Chronik), bleibt, wie es war.
 
 **Was gemessen wurde** (`messungen.md` §102): auf 97d156b 551 Läufe
 (550 test*.mts und servercheck), 509 starten einen Browser, 42 nicht; die
 42 zusammen 95 s, der längste test105 mit 58 s. `npm run pruefen --
 --schnell` mit test610: 45 Läufe in 4 min 14 s, davon 2 min 12 s die festen
 Pausen von drei Sekunden; auf dem Endstand noch einmal 3 min 57 s, 44 von
-45 grün, rot nur test274. Der volle Lauf: 158 Minuten (E743).
+45 grün, rot nur test274. Der volle Lauf: 158 Minuten (E743). Die
+Einrichtung des Jobs auf GitHub — Quelltext, Node, Pakete, Chromium mit
+Systembibliotheken (23 s), Einzeldatei — zusammen 32 s, abgelesen aus den
+Zeitstempeln der Schritte von Lauf 38169660632 (Job 114559416814, auf
+97d156b, 11. Oktober 2026, dieselben Einrichtungsschritte wie im neuen
+Job); im selben
+Lauf test105 im Job „Quelltext und Logik" 53 s, auf dem Rechner der
+Sitzung 58 s. Hier stand zuerst „etwa 3 Minuten Einrichtung" — eine
+Schätzung neben Messungen, ohne dass sie so hiess.
 
 **Warum.** Ein abgebrochener Lauf sagt über keinen einzigen Prüflauf etwas
 und sieht im Verlauf aus wie einer, der nichts gefunden hat — genau die
@@ -66794,49 +66817,94 @@ dem Rechner (E729, E743).
 nicht kürzer, über 2½ Runner-Stunden je Push. (b) das Fenster auf 360
 Minuten: einfach, aber ein Lauf von zwei Stunden je Push. Beide hat Redur
 nicht gewählt. Innerhalb von (c): ein NEUER Schalter neben `--schnell` —
-verworfen, weil nichts von der alten Bedeutung abhing und ein Name, der
-etwas anderes tut, als er sagt, genau der Fehler war. Und: die Auswahl als
+verworfen, weil kein Werkzeug von der alten Bedeutung abhing (die Doku, die
+es tat, ist nachgezogen) und ein Name, der etwas anderes tut, als er sagt,
+genau der Fehler war. Und: die Auswahl als
 feste Nummernliste — verworfen, weil sie bei jedem neuen Lauf ohne Browser
 nachgezogen werden müsste und dann so veraltet wie „67 Läufe".
 
 **Was es kostet.** Die CI prüft keinen der 507 übrigen Browserläufe mehr —
 das tat sie seit Wochen auch nicht (sie brach ab), aber jetzt sagt sie es.
 Ein grüner Haken auf GitHub heisst „der schnelle Lauf ist grün", nicht
-„alles ist grün"; für §46 zählt weiterhin nur der volle Lauf. Und: der
-schnelle Lauf enthält `test274`, der auf `main` seit E729 rot ist — der Job
-wird rot sein statt abgebrochen, bis er gerichtet ist (AUFGABEN.md, „Nach
-dem Zusammenführen der dritten Welle", Punkt 1). Gemessen ist die Dauer nur
-auf dem Rechner der Sitzung; wie lange ein Runner braucht, zeigt erst der
+„alles ist grün"; für §46 zählt weiterhin nur der volle Lauf. Und: **der
+Job „Schneller Lauf" wird auf GitHub rot sein.** Er enthält `test274`, der
+auf `main` seit E729 rot ist — ein Fehlalarm des Wächters: er meldet
+`redion-graphit` in `marken.ts` als verwaiste Nachschlagestelle, aber
+`marken.ts` legt den Halter selbst an (`svg('svg', { id: 'redion-graphit',
+… })`), in einer Schreibweise, die test274 nicht kennt. test274 zu ändern
+braucht Redurs Wort; bis dahin ist der Job rot statt abgebrochen
+(AUFGABEN.md, „Nach dem Zusammenführen der dritten Welle", Punkt 1). Die
+Einrichtung ist auf GitHub gemessen, der ganze schnelle Lauf nur auf dem
+Rechner der Sitzung; wie lange er auf einem Runner braucht, zeigt erst der
 erste Push.
 
 **Wächter.** `test610` (neu, ohne Browser, kein Port): kein Job fährt den
 vollen Lauf, keiner heisst „alle", der nicht alle fährt; genau ein Job fährt
 `npm run pruefen -- --schnell`, jeder Orchestrator-Aufruf ist dieser (oder
-seine `--liste`), jeder Job hat eine Zeitgrenze, der schnelle Job baut und
-prüft die Einzeldatei, holt Chromium genau dann, wenn die Auswahl einen
-Browser braucht, und sein Kommentar nennt Messung und `volllauf.mts`; die
-Auswahl enthält jeden Lauf ohne Browser, einen Lauf mit Browser nur, wenn
-§31 ihn nennt und alle.mts einen Grund trägt, alle aus §31, und was die
-Liste über jeden Lauf sagt, stimmt mit dem überein, was test610 auf einem
-ZWEITEN Weg liest (der Aufruf `chromium.launch(` im Code ohne Kommentare,
-nicht der Import); CLAUDE.md §30 nennt „ohne Browser" und eine Dauer.
+seine `--liste`) — als Aufruf zählt jede Form, die einen Lauf startet
+(`npm run pruefen`, `npm run-script pruefen`, `npm test`, alles, was
+`alle.mts` oder `volllauf.mts` nennt, auch über `npx`), Leerraum
+zusammengezogen und ein Kommentar hinter `#` abgeschnitten; der schnelle
+Lauf steht allein in seiner Zeile, ohne `|| true`, Röhre oder
+`continue-on-error`; in package.json ist `pruefen` genau
+`node pruefungen/alle.mts`, ohne `prepruefen` und `postpruefen`; jeder Job
+hat eine Zeitgrenze, der schnelle Job baut und prüft die Einzeldatei, holt
+Chromium genau dann, wenn die Auswahl einen Browser braucht, und sein
+Kommentar nennt Messung und `volllauf.mts`; die Auswahl enthält jeden Lauf
+ohne Browser, einen Lauf mit Browser nur, wenn §31 ihn nennt und alle.mts
+einen Grund trägt, alle aus §31, und was die Liste über jeden Lauf sagt,
+stimmt. Ob ein Lauf einen Browser startet, liest test610 auf zwei Wegen und
+VERGLEICHT sie: Weg 1 wie alle.mts (lädt die Datei Playwright?), Weg 2 der
+Aufruf `chromium.launch(` im Code, aus dem nur die Kommentare entfernt sind
+(`ohneKommentareGenau` in `pruefungen/hilfe/quelltext.mts`, Zeichen für
+Zeichen, Zeichenketten bleiben stehen). Auf 97d156b und auf dem Endstand
+finden beide dieselben 509 Läufe. CLAUDE.md §30 nennt „ohne Browser" und
+eine Dauer.
 
-**Rot zuerst.** Gegen 97d156b (Abbild über `git archive`, die endgültige
-Fassung von test610 hineinkopiert): 4 von 21 — §1 „pruefen: npm run
-pruefen", §2 „0 gefunden", §3 „alle.mts kennt `--liste`" (und deshalb
-startet er dort nichts: der alte Orchestrator hätte die Auswahl GEFAHREN,
-549 Läufe), §4 „Dauer ungemessen". Nachher 22/22.
+**Rot zuerst.** Gegen 97d156b (Abbild über `git archive`, test610 und
+`pruefungen/hilfe/quelltext.mts` in der endgültigen Fassung hineinkopiert):
+rot mit 7 von 25 bestanden — unter den roten §1 „pruefen: npm run pruefen",
+§2 „0 gefunden", §3 „alle.mts kennt `--liste`" (und deshalb startet er dort
+nichts: der alte Orchestrator hätte die Auswahl GEFAHREN, 549 Läufe), §4
+„Dauer ungemessen". Nachher 26/26. (Die erste Fassung von test610, vor der
+Durchsicht: dort rot mit 4 von 21 bestanden, nachher 22/22.)
 
-**Gegenproben**, jede eingesetzt, gefahren und Byte für Byte zurückgesetzt:
+**Gegenproben.** G1 bis G6 entstanden mit der ersten Fassung (jede
+eingesetzt, gefahren und Byte für Byte zurückgesetzt); nach der Durchsicht
+sind alle noch einmal gefahren, dazu G7 bis G18 — jede in einer frischen
+Kopie von `pruefungen/`, `.github/`, CLAUDE.md und package.json im
+Notizordner der Sitzung, der Arbeitsbaum blieb unberührt. Links die erste
+Fassung von test610 (aus bae6d8c), rechts die endgültige:
 
 ```txt
-G1  der Schritt fährt wieder `npm run pruefen`                   14/22
-G2  alle.mts nimmt test74 in die Auswahl, ohne Grund               20/22
-G3  test74 bekommt in alle.mts einen Grund, steht aber nicht in §31 21/22
-G4  der schnelle Job ohne timeout-minutes                          21/22
-G5  alle.mts erkennt keinen Browserlauf mehr (509 rutschen hinein) 19/22
-G6  „Chromium holen" fehlt, obwohl test96 und test100 dabei sind    21/22
+                                                        erste Fassung  jetzt
+G1  der Schritt fährt wieder `npm run pruefen`               14/22      17/26
+G2  alle.mts nimmt test74 in die Auswahl, ohne Grund          20/22      24/26
+G3  test74 bekommt einen Grund, steht aber nicht in §31       21/22      25/26
+G4  der schnelle Job ohne timeout-minutes                     21/22      25/26
+G5  alle.mts erkennt keinen Browserlauf mehr (506 hinein)     19/22      23/26
+G6  „Chromium holen" fehlt, obwohl test96/test100 dabei       21/22      25/26
+G7  Zusatzschritt `npm  run  pruefen` (zwei Leerzeichen)      22/22 grün 24/26
+G8  Zusatzschritt `npm run-script pruefen`                    22/22 grün 24/26
+G9  Zusatzschritt `npm test`                                  22/22 grün 24/26
+G10 Zusatzschritt `npx tsx pruefungen/alle.mts`               22/22 grün 24/26
+G11 Zusatzschritt `node pruefungen/volllauf.mts`              21/22      24/26
+G12 Zusatzschritt `node pruefungen/alle.mts`                  20/22      24/26
+G13 `npm run pruefen -- --schnell || true`                    22/22 grün 25/26
+G14 der Schritt mit `continue-on-error: true`                 22/22 grün 25/26
+G15 package.json: pruefen = node pruefungen/volllauf.mts      22/22 grün 25/26
+G16 package.json: postpruefen = node pruefungen/volllauf.mts  22/22 grün 25/26
+G17 Weg 2 wieder über `nurCode` („nur Weg 1: test587")        —          25/26
+G18 die Probe in §3 über `nurCode`                            —          25/26
+P1  soll grün sein: die Zeile mit `\` umgebrochen             14/22 rot  26/26
+P2  soll grün sein: `npm  run pruefen  --  --schnell`         16/22 rot  26/26
 ```
+
+Acht der zwölf neuen Gegenproben liess die erste Fassung grün durch — jede
+davon ein Weg, auf dem ein voller Lauf oder ein verschlucktes Rot an ihr
+vorbei in die CI gekommen wäre. P1 und P2 zeigen die andere Richtung: eine
+gleichwertige Schreibweise des schnellen Laufs war für die erste Fassung
+rot.
 
 **Was test610 an meiner eigenen Arbeit gefunden hat.** Die erste Fassung
 von `--liste` schrieb Zeile für Zeile und rief gleich danach
@@ -66848,3 +66916,41 @@ beendet wird in seinem Rückruf: 0 von 190. Dieselbe Bauart (`console.log`,
 dann `process.exit`) hat die Bilanz am Ende von alle.mts, die
 `volllauf.mts` liest; dort ist sie zwei Zeilen kurz und nie abgeschnitten
 beobachtet — nicht angefasst, eine Änderung, ein Ziel (§43).
+
+**Nach der Durchsicht berichtigt** (11. Oktober 2026, abends, auf demselben
+Zweig, bevor er landet). Eine Durchsicht fand sechs Dinge; fünf davon waren
+Fehler dieses Bogens:
+
+1. *Die alte Bedeutung hatte Abhängige.* Stehende Anweisungen nannten
+   `--schnell` und meinten den vollen Lauf oder doch einen, der die
+   Oberfläche mitprüft. Jetzt sagen sie, was sie meinten: AUFGABEN.md „Dauerhafte Regeln" (`--schnell` plus die
+   Browserläufe des geänderten Bereichs; vor dem Push der volle Lauf),
+   `doku/TYPESCRIPT-MIGRATION.md` Regel 1 (der volle Lauf),
+   `doku/MIGRATION-REZEPT.md` Schritt 8 (der schnelle UND der volle Lauf),
+   `doku/AMDION-UEBERNAHME.md` Phase 1 (der volle Lauf),
+   `doku/AUFTRAG-01-ruhiges-band.md` („Zum Schluss der volle Lauf"), das
+   README („Lokaler Ablauf" und „Schnell"), dazu ein Hinweis in
+   `doku/REDION-STUDY-SUITE-AUDIT.md`, das ohnehin beide Läufe nennt. Wo
+   sich eine Anweisung geändert hat, steht daneben, was vorher dort stand.
+2. *L254s Beleg sagte „grün mit 4 von 21".* Es war ROT mit 4 von 21
+   bestanden.
+3. *„Etwa 3 Minuten Einrichtung" und „rund 7 Minuten" waren Schätzungen*,
+   die in pruefen.yml und hier neben Messungen standen, ohne so zu heissen
+   (nur `messungen.md` nannte sie geschätzt). Jetzt stehen dort die
+   Zeiten von GitHub (32 s, Lauf 38169660632), hier, in pruefen.yml, in
+   L254 und in `messungen.md` §102.
+4. *„Beide Wege gaben dieselben 509" stimmte für test610 nicht.* Sein
+   zweiter Weg las über `nurCode`, und dort öffnet `'image/*'` in test587
+   einen Kommentar, der den Aufruf verschluckt: 508. Weil test610 die Wege
+   vereinigte, sah es niemand. Jetzt liest Weg 2 über
+   `ohneKommentareGenau` (neu in `pruefungen/hilfe/quelltext.mts`) und
+   test610 vergleicht die Wege: 509 und 509, auf 97d156b wie auf dem
+   Endstand. `ohneKommentareGenau` entfernt in allen 552 Dateien unter
+   `pruefungen/lauf/` dieselben Kommentare wie der Parser von TypeScript
+   (gemessen, Leerraum nicht verglichen); `ohneKommentare` tut das in 378.
+5. *test610 hatte Lücken* — G7 bis G10 und G13 bis G16 oben, alle von der
+   ersten Fassung grün durchgelassen.
+6. *test274 macht den Job rot* — das war kein Fehler dieses Eintrags, aber
+   er sagte es nicht deutlich genug. Jetzt steht es unter „Was es kostet",
+   in L254 und in AUFGABEN.md je einmal, mit dem Grund: ein Fehlalarm, den
+   nur Redur freigeben kann.

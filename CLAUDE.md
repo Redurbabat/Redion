@@ -1937,8 +1937,17 @@ der schnelle Job fährt genau `npm run pruefen -- --schnell` in einer
 Zeitgrenze, und die Auswahl ist, was sie verspricht — jeder Lauf ohne
 Browser, ein Lauf mit Browser nur, wenn §31 ihn beim Namen nennt. Ob ein
 Lauf einen Browser startet, liest er auf einem ZWEITEN Weg als alle.mts
-(den Aufruf `chromium.launch(` statt des Imports). Gegen `97d156b` war er
-rot mit 4 von 21 — und er hätte dort beinahe selbst 549 Läufe gestartet:
+(den Aufruf `chromium.launch(` statt des Imports) und VERGLEICHT beide —
+die erste Fassung vereinigte sie, und so fiel nicht auf, dass ihr zweiter
+Weg über `nurCode` test587 verlor (`'image/*'` öffnet dort einen
+Kommentar): 508 statt 509. Seit der Durchsicht liest er ihn über
+`ohneKommentareGenau`, und beide Wege finden dieselben 509. Und er kennt
+jetzt die Umwege, auf denen ein voller Lauf oder ein verschlucktes Rot in
+die CI käme (`npm run-script pruefen`, `npm test`, `npx … alle.mts`,
+`|| true`, ein `postpruefen` in package.json) — acht davon hatte die erste
+Fassung grün durchgelassen. Gegen
+`97d156b` war er rot mit 7 von 25 (die erste Fassung mit 4 von 21) — und
+er hätte dort beinahe selbst 549 Läufe gestartet:
 der alte Orchestrator kannte `--liste` nicht und hätte die Auswahl
 GEFAHREN. Deshalb fragt er zuerst die Quelle, ob es den Schalter gibt.
 Seinen ersten Fund machte er an meiner eigenen `--liste`: „Kopf 551,

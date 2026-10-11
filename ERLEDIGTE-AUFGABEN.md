@@ -23,9 +23,9 @@ der Kommentar nennt die Messung und `volllauf.mts`. Der schnelle Job
 „Quelltext und Logik" ist unverändert. Doku: CLAUDE.md §30, LIESMICH,
 README, MIGRATION-REZEPT, die Karte (`mcp.md`).
 
-**Geprüft:** `test610` neu — gegen 97d156b 4 von 21, nachher 22/22; sechs
-Gegenproben rot (14, 20, 21, 21, 19, 21 von 22), jede Byte für Byte
-zurückgesetzt. `npm run pruefen -- --schnell` auf dem Endstand: 45 Läufe
+**Geprüft:** `test610` neu — gegen 97d156b rot mit 4 von 21 bestanden,
+nachher 22/22; sechs Gegenproben rot (14, 20, 21, 21, 19, 21 von 22), jede
+Byte für Byte zurückgesetzt. `npm run pruefen -- --schnell` auf dem Endstand: 45 Läufe
 in 3 min 57 s, 44 grün, rot nur `test274` (auf main seit E729 rot; die
 erste Messung, 4 min 14 s, lief noch vor der Doku). Datei-Wächter 550 8/8,
 549 6/6, 225 11/11, 105 342/342, 109 25/25, 87 181/181, 537 18/18, 400 4/4,
@@ -34,8 +34,37 @@ Decke 1950). Unterwegs gefunden und gerichtet: die erste
 `--liste` war in einer Röhre in 3 von 40 Fällen abgeschnitten (danach 0 von
 190). L254 GESCHLOSSEN. Messung in `messungen.md` §102.
 
-**Offen:** wie lange ein Runner braucht, zeigt erst der erste Push; und der
-Job wird rot sein, solange `test274` rot ist.
+**Nach der Durchsicht** (am selben Abend, derselbe Zweig): stehende
+Anweisungen, die `--schnell` in der alten Bedeutung nannten, sagen jetzt,
+was sie meinten — AUFGABEN.md „Dauerhafte Regeln", `doku/TYPESCRIPT-MIGRATION.md`,
+`doku/MIGRATION-REZEPT.md` (der volle Lauf wieder als eigene Zeile),
+`doku/AMDION-UEBERNAHME.md`, `doku/AUFTRAG-01-ruhiges-band.md`, README,
+ein Hinweis in `doku/REDION-STUDY-SUITE-AUDIT.md`; E745s zwei falsche Sätze
+dazu berichtigt. L254s Beleg hiess „grün mit 4 von 21" — es war rot. Die
+geschätzte Einrichtung („rund 7 Minuten", „etwa 3 Minuten") ist durch die
+Zeiten von GitHub ersetzt: 32 s (Lauf 38169660632). test610 liest seinen
+zweiten Weg jetzt über `ohneKommentareGenau` (neu in
+`pruefungen/hilfe/quelltext.mts`, Zeichen für Zeichen; in allen 552
+Dateien dieselben Kommentare wie der Parser von TypeScript) und
+VERGLEICHT beide Wege — vorher verlor er über `nurCode` test587 (508 statt
+509), und die Vereinigung verdeckte es. Dazu fängt er `npm run-script`,
+`npm test`, `npx … alle.mts`, doppelten Leerraum, `|| true`,
+`continue-on-error` und `pruefen`/`postpruefen` in package.json; acht dieser
+zwölf neuen Gegenproben hatte die erste Fassung grün durchgelassen.
+`test610` gegen 97d156b rot mit 7 von 25, jetzt 26/26; achtzehn
+Gegenproben und zwei Positivproben in E745, jede in einer frischen Kopie
+im Notizordner. Nachbarn: 550 8/8, 549 6/6, 225 11/11, 105 342/342,
+109 25/25, 87 181/181, 537 18/18, 400 4/4, 553 6/6, 444 13/13 (nutzt
+`quelltext.mts`; versehentlich ohne das Schloss gefahren), im Browser unter
+dem Schloss 353 105/105, 388 22/22 (Start 1919 KB, Decke 1950);
+`npm run pruefen -- --schnell` unter dem Schloss: 45 Läufe, 44 grün, rot
+nur `test274`, 231 s von aussen gemessen (Warten auf das Schloss
+eingeschlossen).
+
+**Offen:** wie lange der ganze schnelle Lauf auf einem Runner braucht,
+zeigt erst der erste Push (die Einrichtung ist gemessen: 32 s); und der Job
+wird rot sein, solange `test274` rot ist — ein Fehlalarm über
+`redion-graphit` in `marken.ts`, den nur Redur freigeben kann.
 
 ## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
 
