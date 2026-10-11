@@ -356,10 +356,23 @@ const Menueband = (() => {
     };
     let gebunden = false;
     let beobachtet = false;
+    let zielStand = '';
+    const zielJetzt = () => {
+        if (typeof Zeichenziel === 'undefined')
+            return '';
+        try {
+            return [Zeichenziel.da(), Zeichenziel.jetzt(), Zeichenziel.jetztFarbe(),
+                Zeichenziel.jetztDicke()].join('|');
+        }
+        catch {
+            return '';
+        }
+    };
     const zeichne = () => {
         const wurzel = document.getElementById(WURZEL);
         if (!wurzel)
             return;
+        zielStand = zielJetzt();
         const reiter = Register?.menueband?.reiter?.() || [];
         if (!reiter.length) {
             wurzel.hidden = true;
@@ -743,7 +756,8 @@ const Menueband = (() => {
         beobachte();
         if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
             try {
-                Zeichenziel.horche(() => zeichne());
+                Zeichenziel.horche(() => { if (zielJetzt() !== zielStand)
+                    zeichne(); });
             }
             catch { }
         }

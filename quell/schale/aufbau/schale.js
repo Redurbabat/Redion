@@ -819,6 +819,7 @@ const App = (() => {
             kiPanel(true);
         }
     };
+    let gezeichnetAls = '';
     const zeichneSeite = (fokus = null, wo = 'anfang') => {
         const wrap = document.getElementById('page');
         if (!wrap)
@@ -827,6 +828,7 @@ const App = (() => {
         delete document.body.dataset['foliensatz'];
         kiAmDokumentAnpassen(false);
         if (sonder) {
+            gezeichnetAls = '';
             wrap.className = 'wide';
             wrap.innerHTML = '';
             document.body.dataset.font = 'default';
@@ -837,11 +839,16 @@ const App = (() => {
         }
         const p = seiteId ? Store.getBlock(seiteId) : null;
         if (!p) {
+            gezeichnetAls = '';
             Inhaltsflaeche.leer(wrap);
             zeichneCrumbs();
             return;
         }
         const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+        const rolle = document.getElementById('scroll');
+        const als = p.id + '|' + ansicht + '|' + (DocumentMode.active(p) ? 'dokument' : 'seite');
+        const lesestelle = als === gezeichnetAls && rolle ? rolle.scrollTop : 0;
+        gezeichnetAls = als;
         wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
             (ansicht === 'flaeche' ? ' flaeche-page' : '');
         document.body.dataset.font = p.font || 'default';
@@ -877,7 +884,10 @@ const App = (() => {
         }
         zeichneCrumbs();
         streifenZeichnen();
+        if (lesestelle > 0 && rolle && !DocumentMode.active(p))
+            rolle.scrollTop = lesestelle;
         if (fokus) {
+            Blocks.zeichneFuer(fokus);
             const ct = document.querySelector(`[data-bid="${fokus}"] .ct`);
             if (ct instanceof HTMLElement) {
                 if (wo === 'ende')
@@ -1368,7 +1378,11 @@ const App = (() => {
             const seitenKasten = document.getElementById('page');
             if (!seitenKasten)
                 return;
-            const lauf = document.createTreeWalker(seitenKasten, NodeFilter.SHOW_TEXT);
+            Blocks.zeichneFuerSuche(q);
+            const lauf = document.createTreeWalker(seitenKasten, NodeFilter.SHOW_TEXT, {
+                acceptNode: (k) => k.parentElement?.closest('.blatt-platz')
+                    ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+            });
             const knoten = [];
             while (lauf.nextNode())
                 knoten.push(lauf.currentNode);
@@ -2657,6 +2671,7 @@ const App = (() => {
     };
     const rolleZu = (blockId) => {
         const hin = () => {
+            Blocks.zeichneFuer(blockId);
             const ziel = document.querySelector(`[data-bid="${blockId}"]`);
             if (!ziel)
                 return false;

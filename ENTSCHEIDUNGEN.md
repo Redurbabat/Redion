@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-695 Entscheidungen, E1 bis E716 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+696 Entscheidungen, E1 bis E717 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -758,6 +758,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E714** — Rot zuerst, vier Inseln: `test492` (die Einzeldatei hängte für das Stilblatt der Inseln ein Blob-`<link>` ein, seit E699 — jetzt ein angenommenes Blatt), `test582` (Toast und Lader über dem Zeichenblatt: ein Wettlauf mit SwiftShader, gewartet wird auf ihre eigene Uhr), `test247` (seit E704 ist ein neuer Markerstrich der Keil, eine Fläche — gelesen wird die Tinte dort, wo sie steht), `test464` (vierzehn Werkzeuge seit E671, mit Namen) — halbiert, Gegenproben, Nachbarn
 * **E715** — Der Start holt ein Drittel weniger, und nichts fehlt: die Kommentare bleiben in `src/`, das erzeugte JavaScript reist ohne sie (`removeComments`, ausser einer Zeile „ERZEUGT — NICHT VON HAND ÄNDERN" je Datei). 2826 → 1805 KB beim Start, die Einzeldatei 11,8 → 9,1 MB, derselbe Code Zeichen für Zeichen; die Decke von `test388` §5 sinkt auf 1950, weil ihre zweite Zusicherung es verlangt, und `test105` §3 prüft die Warnung jetzt in allen 227 erzeugten Dateien statt in 46
 * **E716** — Der Trenner zieht wirklich (Redur, Masterprompt 29. September: „der linie wo man die feld grösser und kleiner macht , funktioniert nicht…"): die Breite der Navigation wurde auf `<body>` geschrieben und auf `<html>` aufgelöst — `var()` gilt dort, wo es steht —, also blieb die Spalte bei 184 (156 bei 761–1100 px), während der Griff 244 sagte. Die Ableitung steht jetzt auf `body`; das Attribut nennt die GEZEICHNETE Breite; Doppelklick und Palettenbefehl setzen zurück; Escape, verlorener Fang, Finger, Umschalt/Bild↑↓; ein Griff, in Ruhe sichtbar, mit grobem Zeiger `--touch-min` im Quadrat. Ergänzt E440, löst E283 §4 / L91 förmlich ab. `test592` neu, `test424` und `test40` erweitert
+* **E717** — Der Seiteneditor ohne Stau (Redur: „Bei pdf wenn ich seiteneditor klicke bleibt es für ca 30-40 sekunden stiel … und dann kann dort nicht mehr bearbeiten oder ändern"): das `Zeichenziel` ruft seine Horcher einmal je Durchgang statt je Anmeldung und räumt nie weg, was im laufenden Durchgang gemeldet wurde; das Menüband baut nur neu, wenn sich für den Reiter „Zeichnen" etwas ändert (83 → 1 Neubau bei 40 PDF-Seiten, 163 → 1 bei 80); E299 gilt jetzt auch in der Seitenansicht — gezeichnet wird, was nah ist, der Rest wartet als Platz mit „Seite N wird vorbereitet …"; jede Fläche ist dem Band bekannt (1 → alle), Band und Werkzeugtasten treffen die angefasste Seite; „Seiteneditor" zeigt `aria-busy`, meldet Fehler, öffnet an der Seite, die man liest, und trägt am Telefon das Seitenzeichen statt „✕"; dieselbe Seite neu gezeichnet behält die Lesestelle (`test593`, `test247` §11)
 
 ---
 
@@ -16105,6 +16106,16 @@ dabei nichts über den Fehler, den sie finden sollte.
 E212 — Zeichnen im Menüband: eine Frage, drei Fehler
 ================================================================================
 
+> **Ergänzt durch E717 (6. Oktober 2026) — die Aufräumregel.** „Die Fläche,
+> die zuletzt berührt wurde" galt nur für die ERSTE Fläche eines Aufbaus:
+> die Regel unten lief in der eigenen Meldung der Anmeldung, und jede
+> weitere Fläche war in diesem Augenblick noch lose — also „alt", also weg
+> (drei Blätter, `anzahl()` 1; 134 PDF-Seiten, `anzahl()` 1). Seither ruft
+> das Zeichenziel seine Horcher einmal am Ende des Durchgangs, und was im
+> laufenden Durchgang gemeldet wurde, räumt es nie weg (`imBau`). Band und
+> Werkzeugtasten treffen die angefasste Fläche (`test247` §11, `test593`
+> §3/§4/§9).
+
 L64 stand offen: der Reiter „Zeichnen" hatte Blatt, Whiteboard und Schaltplan
 — also, WOMIT man anfängt, nicht, WOMIT man zeichnet. Stift, Marker, Linie,
 Pfeil, Radierer standen nur an der Leiste unter der jeweiligen Fläche.
@@ -23181,6 +23192,16 @@ gewöhnliche Regel meldet nichts.
 ================================================================================
 E299 — Die Rolle: alle Seiten untereinander, das Original oben
 ================================================================================
+
+> **Ergänzt durch E717 (6. Oktober 2026) — auch in der Seitenansicht.**
+> „Was man nicht sieht, wird nicht gezeichnet" galt nur im Dokumentmodus.
+> Die Seitenansicht dahinter („Seiteneditor") zeichnete jede PDF-Seite mit
+> Leiste, Zeichenschicht und Bild — bei 134 Seiten rund 50 000 Knoten, und
+> der Wechsel fror 11 s am Rechner und 52 s am Telefon ein. Jetzt zeichnet
+> auch sie, was eine Bildhöhe um das Fenster liegt; der Rest wartet als
+> Platz in der richtigen Höhe mit „Seite N wird vorbereitet …" (`test593`
+> §2). Zwei Stellen rechnen damit dieselbe Regel (L238).
+
 1. September 2026
 
 E296 hat den Dokumentmodus so gebaut, dass EINE Seite ganz ins Bild passt und
@@ -31686,6 +31707,12 @@ test341 37/37 · test348 33/33 · test385 37/37.
 ================================================================================
 E387 — Nur die aktive Seite zeigt Werkzeuge (Audit F03)
 ================================================================================
+
+> **Berichtigt durch E717 (6. Oktober 2026).** Der Satz unten „Das hat
+> E299 bereits gelöst" stimmte nur für den Dokumentmodus. Die Seitenansicht
+> („Seiteneditor") zeichnete bis E717 alle Seiten auf einmal, und genau dort
+> stand Redurs Stau von 30 bis 40 Sekunden. Seit E717 gilt E299 auch dort.
+
 3. September 2026
 
 Der Prüfbericht, Befund F03 (P1): „Bei Seite 2 bleibt Seite 1 mit eigener
@@ -61592,3 +61619,314 @@ Ziehen 156 statt 184.
 **Funktionen (§43).** Nichts entfernt. Der Trenner, der Knopf kompakt
 (`#studio-nav`), die Pfeiltasten und die gemerkte Breite bleiben; dazu
 kommen Doppelklick, Palettenbefehl, Umschalt/Bild↑↓ und Escape.
+
+## E717 — Der Seiteneditor ohne Stau: eine Meldung je Durchgang, gezeichnet wird, was nah ist
+
+**Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Punkt 8; die fünf Fragen dazu blieben ohne Antwort, also
+gelten die Vorgaben des Plans) · **ergänzt** E299 (die Regel „was man nicht
+sieht, wird nicht gezeichnet" gilt jetzt auch in der Seitenansicht) und
+E212 (die Aufräumregel des Zeichenziels) · **berichtigt** die Notiz in E387
+(„Das hat E299 bereits gelöst" galt nur im Dokumentmodus) · **Wächter:**
+`test593` (neu, §11/§12 aus der Durchsicht), `test247` §11 (erweitert) · **Zweig**
+`claude/seiteneditor-ohne-stau` · **Messung:** `messungen.md` §88 ·
+**Lücke:** L238.
+
+**Redurs Sätze, wörtlich** (PDF vom 29. September, Seite 5 und die
+OneNote-Seite 14; eine Uhrzeit steht dort nicht):
+
+```txt
+29.09.   „Bei pdf wenn ich seiteneditor klicke bleibt es für ca 30-40
+          sekunden stiel und dann kommt die dieses seite antwortet nicht und
+          dann kann dort nicht mehr bearbeiten oder ändern ."
+29.09.   als Abnahme: „Fortschritt/Ladezustand anzeigen … Fehler werden
+          nachvollziehbar gemeldet."
+```
+
+Gemeint ist der Knopf „Seiteneditor" ganz rechts in der Leiste des
+Dokumentmodus (`[data-document-action="exit"]`, am Telefon als „✕"). Er
+verlässt den Dokumentmodus und zeichnet die Seite in der gewöhnlichen
+Seitenansicht neu: Umschalter, Titel, Dateikarte, dann jede PDF-Seite als
+Block mit eigener Zeichenleiste.
+
+**Was war — zwei Fehler, die sich gegenseitig verstärkten, und ein dritter
+dahinter.**
+
+1. *Quadratisch viele Layouts.* `Inhaltsflaeche.zeichne` hängt Block um
+   Block in das LEBENDE `#page`. Jede PDF-Seite meldet beim Bau ihrer
+   Leiste ihre Fläche beim `Zeichenziel` an (`marken.ts`, `Marken.leiste`),
+   dazu Farbe und Stärke; `melden()` rief jeden Horcher SOFORT, und der
+   Horcher des Menübands baute das ganze Band neu — samt `scrollIntoView`
+   für den gewählten Reiter (E203), also einem vollen Layout der Seite, die
+   gerade um eine PDF-Seite gewachsen war. 2N+3 Layouts einer wachsenden
+   Seite: 271 bei Redurs 134 Seiten. Die Karte hat es dreifach bewiesen
+   (Profil: 68,8 % der Zeit in `scrollIntoView`; synthetisch quadratisch;
+   Versuche an Kopien), hier rot nachgemessen: 83 Neubauten bei 40 Seiten,
+   163 bei 80 (`test593` §1).
+2. *Alles auf einmal.* Die Seitenansicht zeichnete jede Seite ganz — 134
+   Leisten, Zeichenschichten, Horcher und Bildanfragen, rund 50 000 Knoten.
+   Auch ohne Fehler 1 kostete der Wechsel damit 1 bis 2,7 s, und danach
+   jeder Tipp, jede Taste und jedes `App.zeichneSeite()` (46 Aufrufe in
+   `editor.ts`) am Telefon eine halbe bis zwei Sekunden. E299 hatte die
+   Regel nur in den Dokumentmodus gebracht.
+3. *Nur die erste Fläche blieb bekannt.* Die Aufräumregel des
+   Zeichenziels lief in der eigenen Meldung der Anmeldung — die zweite
+   Fläche war in diesem Augenblick noch lose, die erste hing schon
+   („jemand lebt"), also galt die zweite als alt und flog. Jede Fläche
+   nach der ersten. Gemessen: 134 PDF-Seiten, `anzahl()` 1; drei Blätter
+   auf einer gewöhnlichen Seite, `anzahl()` 1. Das Menüband „Zeichnen" und
+   die Werkzeugtasten wirkten deshalb auf Seite 1, gleich welche Seite man
+   anfasste — das ist Redurs „kann dort nicht mehr bearbeiten oder
+   ändern". `test247` §11 prüfte nur EIN Blatt.
+
+**Gemessen, bevor gebaut wurde** (`messungen.md` §88, Klick bis zum
+nächsten Bild, danach ein Tipp auf ein Werkzeug und eine Taste; Stand
+`1bfaca53`; Einzelmessungen auf geteilter CPU, der Wächter zählt
+deshalb):
+
+```txt
+                    Wechsel    Neubauten  Knoten   anzahl()  Tipp     Taste   Marker bei Seite 60
+Rechner synth  40    1570 ms       83     15899       1      173 ms    60 ms   Seite 1
+Rechner synth 134   11368 ms      271     50115       1      573 ms   188 ms   Seite 1
+Rechner PDF   134   11162 ms      271     50125       1      503 ms   177 ms   Seite 1
+Rechner PDF   150   12799 ms      303     55949       1      501 ms   177 ms   Seite 1
+Telefon synth 134   49138 ms      271     50026       1     3068 ms  1168 ms   Seite 1
+Telefon PDF   134   49279 ms      271     50036       1     3330 ms  1211 ms   Seite 1
+Telefon PDF   150   68234 ms      303     55860       1     3645 ms   787 ms   Seite 1
+```
+
+Redur sah 30 bis 40 Sekunden und danach Chromes „Diese Seite antwortet
+nicht" — dieselbe Grössenordnung. Neubauten = 2N+3.
+
+**Was entschieden wurde** (die fünf Fragen zu Punkt 8, je mit der Vorgabe
+des Plans, weil Redur nicht geantwortet hat):
+
+1. **E299 gilt auch in der Seitenansicht** (Frage 1: ja). EIN Helfer
+   `Nahzeichnen` in `editor.ts` für `pdfseite` und `blatt`. Die ersten drei
+   Blätter eines Durchgangs zeichnen sofort — damit bleibt jede Seite mit
+   ein bis drei Blättern genau so synchron wie bisher —, ebenso, was beim
+   letzten Blick in der Nähe stand (damit eine Änderung an der Lesestelle
+   keinen Platz aufblitzen lässt und ein Fokus im Blatt sein Ziel findet).
+   Jedes weitere Blatt bekommt erst seinen Platz: dieselbe `.blatt-huelle`,
+   eine leere `.blatt-reihe` in der GEMESSENEN Höhe der echten Leiste (an
+   der ersten gezeichneten Hülle abgelesen, wie `platzhalterSetzen` im
+   Dokumentmodus — eine feste Zahl lag im Versuch der Karte 1,3 %
+   daneben), das Papier im Seitenverhältnis aus `SheetSpace.masseVon` und
+   der Satz „Seite N wird vorbereitet …". Am Ende des Durchgangs, vor dem
+   ersten Bild, zeichnen die Plätze eine Bildhöhe um das Fenster; den
+   Rest zeichnet ein `IntersectionObserver` (Wurzel `#scroll`, eine
+   Bildhöhe Rand wie E299), ein Fokus (Tab, Bild↓; der Platz hat
+   `tabindex`, die Rolle `group` und den Namen „Seite N", danach steht der
+   Fokus im einen Tabstopp der Leiste, E621) oder ein Antippen (die
+   Berührung geht an die Leiste weiter, damit das Band die angetippte
+   Seite meint). `.blk[data-bid]` bleibt immer stehen — Verweise
+   `#block=`, Ziehen, Auswahl; was IN einem Platz steht, zeichnen zwei
+   Wege vorher (Punkt 8). Vor dem Druck des Browsers wird alles
+   gezeichnet (`beforeprint`); „Drucken / als PDF" baut ohnehin aus dem
+   Speicher (`Werkzeuge.drucken`). Ausserhalb von `#scroll` und auf der
+   Fläche (`.pg-fl-koerper`) wird alles gezeichnet, aber nicht im selben
+   Aufruf: am Ende des Durchgangs, eine Mikroaufgabe nach `render`, noch
+   vor dem ersten Bild. Wer im selben Aufruf misst, sieht ab dem vierten
+   Blatt den Platz in seiner gemessenen Grösse (in der Durchsicht
+   berichtigt; vorher stand hier „sofort, wie bisher").
+2. **Der Seiteneditor öffnet an der Seite, die man liest** (Frage 2: ja).
+   Nach dem Wechsel steht der Block der Seite oben, die im Dokument offen
+   war (`state.index`); die Höhe der Plätze stimmt schon im Durchgang,
+   also landet man auch bei Seite 37 dort.
+3. **Das Band baut nur neu, wenn sich etwas ändert** (Frage 3: ja). Das
+   Zeichenziel ruft seine Horcher einmal am Ende des Durchgangs
+   (`queueMicrotask`), und das Menüband vergleicht die vier Dinge, die der
+   Reiter „Zeichnen" davon zeigt: ob es eine Fläche gibt, ihr Werkzeug,
+   ihre Farbe, ihre Stärke. Gleich → kein Neubau. Damit baut sich das
+   Band beim Wechsel zwischen zwei Seiten mit Zeichenfläche nicht mehr
+   nebenbei mit allen anderen Reitern neu; der Reiter „Zeichnen" liest
+   genau diese vier Dinge (`register/menueband.ts`), die übrigen Reiter
+   bauen sich bei ihren eigenen Anlässen neu.
+4. **Am Telefon das Seitenzeichen statt „✕"** (Frage 4: ja). „✕"
+   versprach „schliessen" für einen Knopf, der die Ansicht WECHSELT. Jetzt
+   steht dort das Zeichen `page` des Umschalters Seite | Fläche | Redion
+   (`Register.seitenansichten`), an derselben Stelle, 44 × 44 wie vorher.
+   Der Name sagt beides: „Seiteneditor — Dokumentmodus verlassen".
+5. **Rückmeldung über den eigenen Zustand des Knopfs, keine Ladekarte**
+   (Frage 5: ja). Der Knopf trägt `aria-busy` (blasser und der
+   Wartezeiger, ohne Bewegung), dann EIN Bild Luft, dann der Wechsel. Wirft der Aufbau, bleibt man im
+   Dokument: `dokumentModus` zurück, neu zeichnen, „Der Seiteneditor liess
+   sich nicht öffnen: <Grund>", der Stapel in der Konsole. Wirft der
+   Zeichner EINER Seite, zeigt sie „Seite N liess sich nicht zeichnen." mit
+   „Neu zeichnen", eine Meldung nennt sie — die übrigen zeichnen weiter.
+   Das ist die Regel des Touch Kits („Knopf zeigt aria-busy und meldet den
+   Zustand") als Redions eigener Code; aus dem Kit ist nichts kopiert,
+   `FREMDCODE.md` braucht keinen Eintrag.
+6. **Die Aufräumregel kennt den Durchgang.** Was im laufenden Durchgang
+   gemeldet wurde, räumt `aufraeumen` nie weg (`imBau`); am Ende werden die
+   eingehängten Flächen `gesehen`, wer dann noch lose ist, fällt wie
+   bisher. Die Schnittstelle bleibt dieselbe; nur der Augenblick, in dem
+   die Horcher hören, rückt ans Ende der Aufgabe.
+7. **Dieselbe Seite neu gezeichnet behält die Lesestelle** (gefunden auf
+   dem Weg, siehe unten). `App.zeichneSeite` merkt sich `scrollTop`, wenn
+   DIESELBE Seite in DERSELBEN Ansicht neu gezeichnet wird, und setzt ihn
+   danach wieder. Ein Wechsel (andere Seite, Dokumentmodus, Fläche)
+   beginnt wie bisher; eine Sonderansicht oder eine leere Seite
+   dazwischen löscht die Merke (in der Durchsicht nachgezogen).
+8. **Was in einem Platz steht, bleibt erreichbar** (gefunden in der
+   Durchsicht des Zweigs, `test593` §11, §12). Ein Platz hält nur den
+   Block des Blatts, nicht seine Kinder und nicht seine Marken. Auf dem
+   ersten Stand dieses Zweigs fand `App.zeigeBlock` den Text in Blatt 6
+   nicht und schwieg — derselbe Weg dient Verweisen `#block=`,
+   Suchtreffern, Rückverweisen, Erwähnungen und Sprüngen aus Kommentaren —,
+   und Strg+F („Auf dieser Seite suchen", E667) zählte „1 von 3" statt
+   „1 von 6"; der Satz „Seite N wird vorbereitet …" war selbst ein Fund.
+   Auf `1bfaca53` war beides heil (dort §11/§12 7 von 7 grün), es war also
+   ein Verlust dieses Zweigs (§43). Jetzt zeichnet `Blocks.zeichneFuer`
+   vor jedem Sprung (`rolleZu`, und der Fokus in `zeichneSeite`) das
+   Blatt oder die PDF-Seite, in dem das Ziel steht — über die
+   Elternkette, wie `klappeAuf` —, und `Blocks.zeichneFuerSuche` zeichnet
+   vor Strg+F jeden Platz, dessen Inhalt das Gesuchte enthält — aus dem
+   Speicher gelesen, und zwar genau das, was das gezeichnete Blatt als
+   Text zeigen würde: der Name eines Blatts, die getippten Marken (Text,
+   Zettel) und alles, was seine Kinder tragen. Die Suche überspringt die
+   übrigen Plätze. Nicht dazu gehören der Suchtext einer PDF-Seite (die
+   Seitenansicht hat keine Textschicht; gezeichnet würde er auch nicht
+   gefunden), die Beschriftungen der Leiste und „Seite N von M": sie
+   stehen auf jeder Seite gleich, und sie mitzuzählen zeichnete im ersten
+   Versuch beim ersten Buchstaben alle Seiten („o" steht in „von") — 1,2 s
+   am Rechner für ein Wort, das auf allen 134 Seiten steht (`messungen.md`
+   §88). `test593` §12 hält das seither mit „von".
+
+**Was es bringt** (`messungen.md` §88, derselbe Messweg):
+
+```txt
+                    Wechsel    Neubauten  Knoten   anzahl()  Tipp     Taste   Marker bei Seite 60
+Rechner synth  40      93 ms        1      2761       3       31 ms    20 ms   Seite 40 (N=40)
+Rechner synth 134     164 ms        1      3600       3       27 ms    14 ms   Seite 60
+Rechner PDF   134     141 ms        1      3617       3       33 ms    15 ms   Seite 60
+Rechner PDF   150     157 ms        1      3761       3       23 ms    18 ms   Seite 60
+Telefon synth 134     135 ms        1      3521       3      101 ms    53 ms   Seite 60
+Telefon PDF   134     205 ms        1      3531       3      158 ms    62 ms   Seite 60
+Telefon PDF   150     173 ms        1      3675       3      163 ms    71 ms   Seite 60
+```
+
+Das Bild von Seite 60 ist nach dem Rollen da (vorher im echten PDF nach
+1,2 s noch nicht). Was nicht besser wird: wer durch ALLE Seiten rollt, hat
+danach wieder rund 50 000 Knoten, und ein Tipp kostet am Telefon wieder
+1,3 s (L238 Punkt 2, §88).
+
+**Was es kostet.**
+- Ein Bild Verzögerung zwischen Klick und Wechsel — mit Absicht, damit
+  der Druck zu sehen ist.
+- Auf einem sehr schnellen Wurf kann eine Seite ein Bild lang als Papier
+  mit „Seite N wird vorbereitet …" stehen, wie im Dokumentmodus seit E299.
+- Die Horcher des Zeichenziels hören eine Mikroaufgabe später — vor dem
+  nächsten Bild und vor dem nächsten Tipp, aber nicht mehr im selben
+  Aufruf. Wer im selben Aufruf das Band liest, sieht den alten Stand.
+- Zwei Stellen rechnen jetzt „was man nicht sieht" (L238 Punkt 1), und was
+  einmal gezeichnet ist, bleibt gezeichnet (L238 Punkt 2).
+- Strg+F zeichnet vor dem Zählen jedes ferne Blatt, dessen Inhalt das
+  Gesuchte enthält; steht es in allen, zeichnet es alle — so viel, wie der
+  Grundstand bei JEDEM Wechsel zeichnete. Die Beschriftungen der Leiste
+  („Stift", „Marker") und die Nummer „Seite N von M" ferner Seiten zählen
+  dafür nicht mehr mit: auf `1bfaca53` fand „Seite 1" in einem Skript mit
+  134 Seiten 46 Stellen, heute die der gezeichneten Seiten. Es ist auf
+  jeder Seite derselbe Rahmen, kein Inhalt — aber die Zahl im Zähler ist
+  eine andere (L238 Punkt 3).
+- 3 KB gzip mehr beim Start (`test388` §5: 1850 → 1853 KB über dieselben
+  252 Dateien, Decke 1950) — keine neue Datei.
+
+**Die Alternativen.**
+- *Ein Neubau je Bild (`requestAnimationFrame`) statt je Durchgang im
+  Menüband.* So stand es im Plan. Verworfen: das Band soll schon stimmen,
+  wenn der nächste Tipp kommt — ein Klick auf „Marker" und gleich danach
+  gelesen sah sonst den alten Reiter. Der Durchgang genügt: beim Wechsel
+  ist er EIN Aufruf.
+- *Nur die Leisten weglassen, alles andere zeichnen* oder *nur das Band
+  abhängen.* Die Karte hat beides gemessen: mit abgehängtem Band 3,2 s
+  am Rechner und 4,0 s am Telefon, und danach blieb jeder Tipp teuer.
+- *Die Nähe-Rechnung des Dokumentmodus herausziehen und für beide
+  benutzen.* Sie rechnet an `.document-center` in einer eigenen Rolle mit
+  `offsetTop` je Bühne; ein gemeinsamer Ort im Kern ist ein eigener Bogen
+  (L238).
+- *Eine Ladekarte* (`Lader`). Bei 0,15 s würde sie nur aufblitzen.
+- *Die Codex-Zweige vom 1. Oktober* (`0619d407a`) zeichneten `pdfseite`
+  über einen neuen Parameter von `render` erst in der Nähe (500 px Rand)
+  und bauten die Miniaturen in Stücken — Zeichenziel und Menüband blieben
+  unberührt, also blieben der quadratische Teil und die eine bekannte
+  Fläche. Nur verglichen, nichts übernommen.
+
+**Nichts entfernt (§43).** Jede Seite behält ihre ganze Leiste
+(Werkzeuge, 🔗 Verweis, ⊕ feiner rechnen, ✂ Lernkarte, „Seite N von M"),
+ihr Bild und ihre Marken — gezeichnet, sobald sie in die Nähe kommt,
+fokussiert oder angetippt wird. Am Telefon ist am selben Knopf nur das
+Zeichen ein anderes.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen): `melden()` wieder
+sofort → `test593` 27/41 („N=40: 5 Neubauten, 8 Meldungen", „1 gemeldet, 3
+gezeichnet", „Marker an Seite [1]"); ohne `imBau` → 43/44, nur §9 („lebend
+2, mitten 2") — das Bündeln allein schliesst das Fenster, `imBau` hält die
+Zusage, wenn jemand mitten im Durchgang fragt; `Nahzeichnen` aus → 38/42
+(„40 gezeichnet, 0 Platzhalter"); der Klick wieder `toggle(page, false)` →
+37/44 („gesehen []", „dok ''", „PAGEERROR: Probe: Seitenansicht kaputt");
+Lesestelle aus → 43/44 („vorher 22124, nachher 0"); ohne Sprung zur
+Dokumentseite → 44/46 („abstand 27881"). Aus der Durchsicht (Punkt 8):
+ohne `Blocks.zeichneFuer` in `rolleZu` → 50/53 („App.zeigeBlock auf den
+Text in Blatt 6 … imDom false, oben 0", „Ein Verweis #block= …"); ohne
+`zeichneFuerSuche` → 50/53 („Zielwort … 1 von 3", „Eine getippte Marke
+auf PDF-Seite 8 … nichts"); ohne den Filter im TreeWalker → 52/53 („Der
+Satz eines Platzes ist kein Fund — 1 von 6, marken 4, lose 4"); „Seite N
+von M" wieder im Inhalt → 53/54 („„von" … zeichnet keine fernen Seiten —
+vor 6, nach 0").
+
+**Endfassung des Wächters gegen `1bfaca53`.** Der Rot-Commit zählte 8
+von 39; im Bau kamen §9, §10 und die Lesestelle dazu (je im Commit
+begründet), in der Durchsicht §11 und §12. Die Endfassung (54 Zusagen)
+gegen eine Kopie von `1bfaca53`: 16 von 52 gezählten (§1–§7 brechen dort
+früh ab) — §11 und §12 dort grün bis auf „von", das Plätze voraussetzt
+und auf dem Grundstand keine findet („vor 0"); gegen den Stand vor der
+Durchsicht (`0389aa29`) 46 von 53, dazu „von" mit der Gegenprobe oben.
+Bilder vorher (`0389aa29`) und nachher, Rechner und Telefon, hell und
+dunkel: der Sprung in Blatt 6 und Strg+F „3 von 3" gegen „6 von 6"
+(nicht eingecheckt, §55.4).
+
+**Nachbarn.** Grün und rot stehen in `messungen.md` §88. Fremd und nicht
+auf der bekannten Liste, je auch auf dem Grundstand rot: `test351` (14
+statt 13 Werkzeugwörter seit E714; dort 21/26 mit denselben Zeilen) und
+`test533` (je nach Last: „Sie stehen alle auf EINER Höhe — ist 2", „kein
+Wort ist sichtbar — ist 1"; in der Durchsicht auf einer Kopie des
+Grundstands 55/1 und zweimal 54/2 mit denselben Zeilen).
+
+**Gefunden auf dem Weg.**
+- *`App.zeichneSeite()` setzte die Rolle auf 0,* wenn dieselbe lange Seite
+  neu gezeichnet wurde — auf `1bfaca53` gemessen (zu Seite 20 gerollt,
+  22 124 → 0), je nach Zustand des Bands. Auf Textseiten verdeckte das der
+  Fokus, der in den neuen Block springt; auf einer PDF-Seite stand man
+  nach „✂ Lernkarte" oder „＋ Seite" wieder auf Seite 1. `test593` §3 hält
+  es jetzt.
+- *Ein Horcher, der sich beim Rufen austrägt, liess seinen Nachbarn aus*
+  (`markiere` einer Leiste, die nicht mehr hängt: `splice` mitten im
+  `for … of`). Gerufen wird seither über eine Kopie der Liste.
+- *Auf dem Grundstand war das Bild von Seite 60 der echten PDF 1,2 s
+  nach dem Rollen noch nicht da* — 134 Bildanfragen standen gleichzeitig
+  an (die Karte sah dasselbe nach 2,7 s). Siehe §88.
+- *Zwei Zusagen des neuen Wächters waren aus dem falschen Grund grün oder
+  rot*: „die Lesestelle bleibt" mass zuerst eine Rolle, die schon oben
+  stand (dahinter stand der Fund oben), und „Tab führt zum nächsten
+  Werkzeug" widersprach E621 — die Leiste ist eine `role="toolbar"` mit
+  einem Tabstopp, die Pfeile führen weiter.
+- *`test189` zählte vier Flächen, die nicht alle in der Nähe liegen.* Er
+  legt zwei Blätter und zwei PDF-Seiten an und zählt bei 1280 × 720 vier
+  Zeichenflächen — die vierte ist seit E717 ein Platz, bis man hinrollt.
+  Angepasst, nicht gelockert: er rollt vor dem Zählen ans Ende und zählt
+  weiter vier, vor und nach zwanzig Neuzeichnungen.
+
+**Fremder Code.** Keiner. Die Regel des Touch Kits („Knopf zeigt
+`aria-busy` und meldet den Zustand") ist als Redions eigener Code
+nachgebaut, keine Insel, keine Zeile kopiert — `FREMDCODE.md` braucht
+keinen Eintrag (§57).
+
+**Nicht in diesem Bogen.** Die Nähe-Rechnung des Dokumentmodus auf den
+neuen Helfer umziehen und weit entfernte Seiten wieder abbauen (L238);
+die Miniaturen des Dokumentmodus in Stücken bauen (die These der
+Codex-Zweige, nicht die gemessene Ursache); eine Leiste statt einer je
+Seite (nicht gefragt); die Leiste der Fläche (Punkt 7,
+`claude/flaeche-eine-leiste`); die Suche im Dokument (Punkt 13,
+`claude/bibliothek-eine-suche`); andere schwere Blöcke in der
+Seitenansicht (AUFGABEN).

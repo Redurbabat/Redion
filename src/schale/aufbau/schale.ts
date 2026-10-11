@@ -984,6 +984,20 @@ const App = (() => {
     }
   };
 
+  /* DIE LESESTELLE BLEIBT, WENN DIESELBE SEITE NEU GEZEICHNET WIRD (E717).
+     Gemessen am 5. Oktober auf `1bfaca53`, Seitenansicht mit 40 PDF-Seiten:
+     zu Seite 20 gerollt (`scrollTop` 22 124), `App.zeichneSeite()` — und
+     `scrollTop` war 0. Das Leeren von `#page` lässt die Rolle beim nächsten
+     Layout auf null schnappen, und gelesen wird hier früh (Kopf, Umschalter).
+     Auf einer Textseite fiel das kaum auf, weil der Fokus danach in den
+     neuen Block springt und ihn ins Bild holt. Auf einer PDF-Seite gibt es
+     keinen Text zum Fokussieren: wer auf Seite 60 „✂ Lernkarte" oder
+     „＋ Seite" drückte, stand danach auf Seite 1 — auch das ist „kann dort
+     nicht mehr bearbeiten oder ändern". Gemerkt wird nur für DIESELBE Seite
+     in DERSELBEN Ansicht; ein Wechsel (andere Seite, Dokumentmodus, Fläche)
+     beginnt wie bisher. */
+  let gezeichnetAls = '';
+
   const zeichneSeite = (fokus: string | null = null, wo = 'anfang') => {
     const wrap = document.getElementById('page');
     if (!wrap) return;
@@ -1009,6 +1023,9 @@ const App = (() => {
     kiAmDokumentAnpassen(false);
 
     if (sonder) {
+      /* Die Lesestelle gilt nur für DIESELBE Seite in DERSELBEN Ansicht —
+         eine Sonderansicht dazwischen beginnt die Zählung neu. */
+      gezeichnetAls = '';
       wrap.className = 'wide';
       wrap.innerHTML = '';
       document.body.dataset.font = 'default';
@@ -1021,6 +1038,7 @@ const App = (() => {
     const p = seiteId ? Store.getBlock(seiteId) : null;
 
     if (!p) {
+      gezeichnetAls = '';
       Inhaltsflaeche.leer(wrap);
       zeichneCrumbs();
       return;
@@ -1030,6 +1048,10 @@ const App = (() => {
        `seitenAnsicht`; kein Feld heisst 'redion' — also genau das, was diese
        Seite immer gezeigt hat (§9). */
     const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+    const rolle = document.getElementById('scroll');
+    const als = p.id + '|' + ansicht + '|' + (DocumentMode.active(p) ? 'dokument' : 'seite');
+    const lesestelle = als === gezeichnetAls && rolle ? rolle.scrollTop : 0;
+    gezeichnetAls = als;
     wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
                      (ansicht === 'flaeche' ? ' flaeche-page' : '');
     document.body.dataset.font = p.font || 'default';
@@ -1098,8 +1120,11 @@ const App = (() => {
     zeichneCrumbs();
     streifenZeichnen();
 
+    if (lesestelle > 0 && rolle && !DocumentMode.active(p)) rolle.scrollTop = lesestelle;
+
     /* Fokus setzen */
     if (fokus) {
+      Blocks.zeichneFuer(fokus);
       const ct = document.querySelector<HTMLElement>(`[data-bid="${fokus}"] .ct`);
       if (ct instanceof HTMLElement) { if (wo === 'ende') Blocks.cursorAnsEnde(ct); else ct.focus(); }
     }
@@ -1721,7 +1746,14 @@ const App = (() => {
       if (!q) { n.textContent = ''; return; }
       const seitenKasten = document.getElementById('page');
       if (!seitenKasten) return;
-      const lauf = document.createTreeWalker(seitenKasten, NodeFilter.SHOW_TEXT);
+      /* Ein Blatt, das noch ein Platz ist (E717), trägt seinen Text nicht
+         im DOM — also erst zeichnen, was das Gesuchte enthält, und den Satz
+         der übrigen Plätze („… wird vorbereitet") nicht mitzählen. */
+      Blocks.zeichneFuerSuche(q);
+      const lauf = document.createTreeWalker(seitenKasten, NodeFilter.SHOW_TEXT, {
+        acceptNode: (k: Node) => k.parentElement?.closest('.blatt-platz')
+          ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+      });
       const knoten: Text[] = [];
       while (lauf.nextNode()) knoten.push(lauf.currentNode as Text);
       knoten.forEach(k => {
@@ -3568,6 +3600,9 @@ const App = (() => {
    *  Bild darin nachlädt und alles darunter verschiebt. */
   const rolleZu = (blockId: string): void => {
     const hin = (): boolean => {
+      /* Steht das Ziel in einem Blatt, das noch ein Platz ist (E717), gibt
+         es seinen Knoten erst, wenn das Blatt gezeichnet ist. */
+      Blocks.zeichneFuer(blockId);
       const ziel = document.querySelector(`[data-bid="${blockId}"]`);
       if (!ziel) return false;
       ziel.scrollIntoView({ behavior: 'smooth', block: 'center' });

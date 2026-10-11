@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 533 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 534 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1598,6 +1598,35 @@ jetzt in ihm, zuerst rot mit 59 von 61. Gezählt am 6. Oktober, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*
 
+*Und 534: `test593` — der Seiteneditor ohne Stau (E717). Redurs Satz vom
+29. September, „Bei pdf wenn ich seiteneditor klicke bleibt es für ca
+30-40 sekunden stiel … und dann kann dort nicht mehr bearbeiten oder
+ändern", in 54 Zusagen. Er ist synthetisch — vierzig und achtzig PDF-Seiten
+ohne pdf.js und ohne Bild — und ZÄHLT, statt zu stoppen, weil die CPU mit
+anderen Läufen geteilt wird: Neubauten des Menübands am `scrollIntoView`
+seines Reiters, Meldungen des Zeichenziels über einen eigenen Horcher,
+gezeichnete Flächen gegen `Zeichenziel.anzahl()`. Gegen den alten Stand rot
+mit 8 von 39 und den Zahlen, um die es geht: „83 Neubauten" bei 40 Seiten,
+„163" bei 80, „1 gemeldet, 40 gezeichnet", „Marker an Seite [1]". Zwei
+seiner Zusagen waren im ersten Anlauf grün aus dem FALSCHEN Grund: „die
+Lesestelle bleibt" mass eine Rolle, die ein früheres Neuzeichnen schon auf
+0 gesetzt hatte, und dahinter stand ein echter Fund (dieselbe Seite neu
+gezeichnet sprang nach oben); und „Tab führt zum nächsten Werkzeug" war
+falsch gestellt — die Leiste ist eine `role="toolbar"` mit EINEM Tabstopp
+(E621), Tab führt richtig hinaus, die Pfeile führen weiter. Und seine
+Gegenprobe ohne `imBau` blieb bis auf einen Punkt grün: das Bündeln der
+Meldungen allein schliesst das Fenster — §9 hält seither die Zusage des
+Kerns selbst. Seine §11 und §12 kamen aus der DURCHSICHT des Zweigs,
+nicht aus dem Bau: ein Platz hielt nur den Block des Blatts, nicht seine
+Kinder — `App.zeigeBlock` auf den Text in Blatt 6 schwieg, und Strg+F
+zählte „1 von 3" statt „1 von 6". Auf dem Grundstand waren beide Abschnitte
+grün; gegen den ersten Stand des Zweigs rot mit 46 von 53. Und seine
+letzte Zusage hält einen Stau durch die Hintertür: der erste Bau zählte
+„Seite N von M" als Inhalt, und „von" zeichnete beim ersten Buchstaben
+alle Seiten. Gezählt am 6. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 533. Beim Zusammenführen nachgezählt (11. Oktober,
+`claude/morgen-besser-3`): 534.*
+
 ### Die Befehle
 
 ```txt
@@ -1614,7 +1643,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 533 Läufe
+npm run pruefen                      alle 534 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1704,7 +1733,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 533 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 534 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

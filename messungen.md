@@ -6789,3 +6789,173 @@ kein Navigationsknopf und nicht `#btn-back` verliert einen Treffer; das
 `left:50%` statt 8 px: „Um den Griff ist die Fläche mindestens 44 px
 breit" rot). Start unverändert 1852 KB gzip über 252 Dateien (`test388`
 §5, Decke 1950); `redion-einzeldatei.html` 9150 → 9151 KB.
+
+## §88 · Der Seiteneditor ohne Stau: Klick, Tipp, Taste, Rollen (E717, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/seiteneditor-ohne-stau` gegen `1bfaca53`
+(`claude/morgen-besser-2`, eigener Arbeitsbaum). Ein Messskript (Playwright,
+Server auf `listen(0)`, dunkel, unter dem Schloss) legt eine Seite im
+Dokumentmodus an, klickt „Seiteneditor" und misst vom Klick bis zum
+nächsten Bild nach dem Wechsel; danach einen Tipp auf ein Werkzeug, eine
+Taste im Titel, eine Bildhöhe Rollen (je bis zum nächsten Bild), den Weg
+zurück in den Dokumentmodus; dazu die Knoten im Baum, die gezeichneten
+Flächen (`#page svg[data-tool]`), `Zeichenziel.anzahl()`, die Neubauten des
+Menübands (gezählt am `scrollIntoView` seines Reiters) und wo der Marker
+landet, wenn man Seite 60 anfasst. Drei Vorlagen: synthetisch (N
+`pdfseite`-Blöcke ohne pdf.js und ohne Bild), Redurs Skript
+`Redur_Babat_FZ_MOE_Lehrpersonen.pdf` (134 Seiten) und ein erzeugtes PDF
+mit 150 Seiten (Gitter, 250 Linien, 40 Kreise, ein Bild und Text je
+Seite). Rechner 1440 × 900, Telefon 390 × 844 (`isMobile`, Finger, DPR 2).
+Zeiten sind Einzelmessungen auf einer geteilten CPU — der Wächter
+(`test593`) zählt deshalb, statt zu stoppen.
+
+**Vorher** (`1bfaca53`):
+
+```txt
+                     Wechsel   Neubauten  Knoten  gezeichnet  anzahl()  Tipp    Taste   Marker bei Seite 60
+Rechner  synth  40     1570 ms     83      15899      40          1      173 ms   60 ms   Seite 1
+Rechner  synth  80     4704 ms    163      30459      80          1      300 ms  108 ms   Seite 1
+Rechner  synth 134    11368 ms    271      50115     134          1      573 ms  188 ms   Seite 1
+Rechner  PDF   134    11162 ms    271      50125     134          1      503 ms  177 ms   Seite 1
+Rechner  PDF   150    12799 ms    303      55949     150          1      501 ms  177 ms   Seite 1
+Telefon  synth  40     5277 ms     83      15813      40          1      963 ms  281 ms   Seite 1
+Telefon  synth  80    18365 ms    163      30373      80          1     1893 ms  506 ms   Seite 1
+Telefon  synth 134    49138 ms    271      50026     134          1     3068 ms 1168 ms   Seite 1
+Telefon  PDF   134    49279 ms    271      50036     134          1     3330 ms 1211 ms   Seite 1
+Telefon  PDF   150    68234 ms    303      55860     150          1     3645 ms  787 ms   Seite 1
+```
+
+Neubauten = 2N+3, also quadratisch viele Layouts einer wachsenden Seite;
+die Karte hatte 11,1 / 11,4 s am Rechner und 55,3 / 56,3 s am Telefon für
+das echte PDF (Profil: 68,8 % in `scrollIntoView`). Das Bild von Seite 60
+war im echten PDF 1,2 s nach dem Rollen noch nicht da (134 Bildanfragen
+gleichzeitig).
+
+**Nachher** (dieser Zweig):
+
+```txt
+                     Wechsel   Neubauten  Knoten  gezeichnet  anzahl()  Tipp    Taste   Marker bei Seite 60
+Rechner  synth  40       93 ms      1       2761       3          3       31 ms   20 ms   Seite 40 (N=40)
+Rechner  synth  80      112 ms      1       3121       3          3       26 ms   18 ms   Seite 60
+Rechner  synth 134      164 ms      1       3600       3          3       27 ms   14 ms   Seite 60
+Rechner  PDF   134      141 ms      1       3617       3          3       33 ms   15 ms   Seite 60
+Rechner  PDF   150      157 ms      1       3761       3          3       23 ms   18 ms   Seite 60
+Telefon  synth  40      160 ms      1       2675       3          3       75 ms   41 ms   Seite 40 (N=40)
+Telefon  synth  80      138 ms      1       3035       3          3       91 ms   65 ms   Seite 60
+Telefon  synth 134      135 ms      1       3521       3          3      101 ms   53 ms   Seite 60
+Telefon  PDF   134      205 ms      1       3531       3          3      158 ms   62 ms   Seite 60
+Telefon  PDF   150      173 ms      1       3675       3          3      163 ms   71 ms   Seite 60
+```
+
+Nach dem Rollen zu Seite 60 sind 6 (Rechner) bzw. 8 (Telefon) Flächen
+gezeichnet, `anzahl()` gleich; das Bild von Seite 60 ist in beiden PDFs
+da. Ein Rollen um eine Bildhöhe kostet 17–32 ms (vorher 31–592 ms), der
+Weg zurück in den Dokumentmodus 65–255 ms (vorher 102–639 ms). Seitenfehler:
+keine, in keiner Zeile.
+
+**Nach dem Rollen durch ALLE Seiten** (synthetisch 134, dieser Zweig; L238
+Punkt 2):
+
+```txt
+           Knoten   gezeichnet  anzahl()  ein Tipp danach
+Rechner    50115       134        134       285 ms
+Telefon    50029       134        134      1285 ms
+```
+
+Was einmal gezeichnet ist, bleibt gezeichnet: nach dem Weg durch alles
+steht der Baum wieder so gross da wie vorher beim Klick, und ein Tipp kostet
+am Telefon wieder über eine Sekunde (vorher 3,1 s). Der Wechsel und das
+Arbeiten an einer Stelle sind schnell; wer ein ganzes Skript durchrollt,
+trägt die Last wieder mit. Offen als L238 Punkt 2, nicht in diesem Bogen.
+
+**Startlast** (`test388` §5, gzip wie ein Server): `1bfaca53` 1850 KB über
+252 Dateien; dieser Zweig 1853 KB über 252 Dateien — keine neue Datei;
+Decke 1950. Statisch nachgezählt (jede Datei aus `index.html`, gzip 6):
+1837,0 → 1840,5 KB.
+
+**Wächter.** `test593` gegen `1bfaca53` 8/39, auf diesem Zweig 46/46;
+`test247` 110/110 (mit §11 auf drei Blättern; gegen `1bfaca53` 105/110 —
+„1 gemeldet, 3 wirklich da", der Marker auf dem ersten Blatt). Gegenproben siehe E717.
+
+**Nachbarn unter dem Schloss** (Teil 1, Stand des E717-Commits): grün
+`test438` 59/59, `test439` 38/38, `test446` 22/22, `test447` 31/31,
+`test449` 16/16, `test455` 18/18, `test456` 24/24, `test572`, `test583`
+64/64, `test40` 25/25, `test67` 65/65, `test126`, `test245` 51/0,
+`test248` 50/0, `test258` 20/0, `test272`, `test289` 11/11, `test384`
+45/45, `test385` 38/0, `test430` 39/39. Rot und fremd, auf `1bfaca53`
+genauso: `test348` („Die grossen Knöpfe sind mindestens 44 px", auf dem
+Grundstand 31/34 mit derselben Zeile), `test470` (TimeoutError, auf dem
+Grundstand ebenso), `test332` (`.menu .kenn`, `#handy-oben`).
+**Teil 2** (Menüband, Dokumentmodus, PDF und Blatt in der Seitenansicht,
+Stift, Bewegung, Kontrast, Einzeldatei): grün `test505` 27, `test506` 53,
+`test580`, `test177` 69/0, `test178` 74/0, `test202`, `test285` 53/53,
+`test295` 24/24, `test386` 41/0, `test395` 46/46, `test466` 32/32,
+`test507` 35, `test174`, `test179` 26/0, `test180` 36/0, `test186` 28/0,
+`test210` 31/31, `test215` 50/50, `test342` 42/42, `test343` 32/32,
+`test344` 53/53, `test345` 44/44, `test346` 31/31, `test347` 31/31,
+`test349` 30/30, `test350` 14/14, `test352` 38/38, `test364` 54/54,
+`test366` 45/45, `test367` 19/19, `test437` 36/36, `test441` 42/42,
+`test445` 19/19, `test451` 22/22, `test457` 23/23, `test461` 38/38,
+`test472`–`test480` (21, 35, 30, 22, 31, 42, 43, 13, 60 — alle ohne
+Offenes), `test522` 31, `test532` 22/22, `test535`, `test561` 26/26,
+`test562` 24/24, `test563` 13/13, `test564` 11/11, `test575`, `test577`
+29/0, `test582`, `test303` 16/16, `test296` 17/17, `test541` 25/25,
+`test127`, `test576`, `test388` 22/0 (1853 KB), `test353` 105/105,
+`test143`.
+
+`test189` war rot (36/38: „Es sind vier Zeichenflächen da — ist 3, soll
+4"): er legt zwei Blätter und zwei PDF-Seiten an und zählt bei
+1280 × 720 vier Flächen — die vierte liegt weiter als eine Bildhöhe unter
+dem Fenster, ist also seit E717 ein Platz. Angepasst, nicht gelockert: er
+rollt vor dem Zählen ans Ende und zählt weiter vier, vor und nach zwanzig
+Neuzeichnungen; 38/38.
+
+Rot und fremd, auf `1bfaca53` genauso nachgemessen: `test201` §1
+(„Freihand mit mehreren Punkten wird geglaettet — M0 0 L10 20 L20 15 L30
+10"), `test351` (14 statt 13 Werkzeugwörter seit E714; auf dem
+Grundstand 21/26 mit denselben Zeilen).
+
+**Durchsicht: Sprung und Strg+F in ferne Blätter** (6. Oktober,
+nachgetragen). Eine Sonde mit sechs Blättern (je ein Textkind) und acht
+PDF-Seiten, 1440 × 900: auf `1bfaca53` fand `App.zeigeBlock` den Text in
+Blatt 6 (`scrollTop` 5643, im Bild), auf dem ersten Stand des Zweigs
+nicht (Kind nicht im DOM, `scrollTop` 0); Strg+F „Zielwort" dort „1 von
+6", hier „1 von 3". Nach `Blocks.zeichneFuer` / `zeichneFuerSuche`
+wieder wie auf dem Grundstand (`test593` §11/§12).
+
+Was Strg+F kostet, gemessen von der Eingabe bis zum nächsten Bild in der
+Seitenansicht eines synthetischen Skripts mit 134 PDF-Seiten (ohne Bild,
+`suchtext` „Absatz N"), Einzelmessungen unter dem Schloss:
+
+```txt
+                       Grundstand 1bfaca53        dieser Zweig
+                       ms   Zähler    gezeichnet   ms   Zähler    gezeichnet
+Rechner „Absatz 99"    72   nichts       134        8   nichts        3
+Rechner „Seite 1"     138   1 von 46     134       14   1 von 1       3
+Rechner „Seite"       178   1 von 269    134       11   1 von 7       3
+Telefon „Absatz 99"    56   nichts       134        6   nichts        3
+Telefon „Seite 1"     402   1 von 46     134       28   1 von 1       3
+Telefon „Seite"       607   1 von 269    134       29   1 von 7       3
+```
+
+„Absatz 99" ist auf beiden Ständen nichts: die Seitenansicht hat keine
+Textschicht, der Suchtext steht nicht im DOM. Die Unterschiede im Zähler
+sind die Rahmenwörter ferner Seiten („Seite N von M", die Leiste), die
+nicht mehr mitzählen (L238 Punkt 3). Der erste Versuch zählte die Nummer
+mit: „Seite" zeichnete dann alle 134 Seiten, 1200 ms am Rechner, und „von"
+tat es beim ersten Buchstaben — deshalb steht in `test593` §12 seither
+„von".
+
+Nachbarn nach der Durchsicht (Stand `514e7db8`, unter dem Schloss): grün
+`test593` 54/54, `test556` 22/22, `test247` 110/0, `test189` 38/0,
+`test179` 26/0, `test181` 47/0, `test184` 31/0, `test187` 63/0, `test204`,
+`test213` 20/20, `test220` 21/21, `test229` 20/0, `test322` 19/19,
+`test340` 52/52, `test416` 9/9, `test441` 42/42, `test56` 27/27,
+`test574`, `test97`, `test395` 46/46, `test285` 53/53, `test177` 69/0,
+`test178` 74/0, `test386` 41/0, `test438` 59/59, `test455` 18/18,
+`test572`; Dateiwächter 550 549 225 401 402 537 290 298 410 400 109 87
+105 grün. `test459` und `test469` brachen im ersten Lauf nach Sekunden ab
+(„Execution context was destroyed, most likely because of a navigation",
+feste Ports 9579/9589) und waren beim Wiederholen grün (31/31, 26/26);
+`test469` tat auf einer Kopie von `1bfaca53` dasselbe (einmal grün,
+einmal derselbe Abbruch) — fremd, eine Frage der Last.

@@ -8348,6 +8348,61 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L238 · „Was man nicht sieht, wird nicht gezeichnet" steht an zwei Stellen — und was einmal gezeichnet ist, bleibt gezeichnet — 6. Oktober 2026
+
+**Gefunden beim Bau von E717** (der Seiteneditor ohne Stau, Redur: „Bei
+pdf wenn ich seiteneditor klicke bleibt es für ca 30-40 sekunden stiel").
+E717 hat die Regel aus E299 in die Seitenansicht geholt. Zwei Dinge bleiben
+offen, damit sie nicht in einem Commit verschwinden (§35):
+
+1. **Zwei Stellen rechnen dieselbe Regel.** Der Dokumentmodus rechnet sein
+   Nähe-Fenster selbst (`document-mode.ts`: `zeichneStand`,
+   `platzhalterSetzen`, `nachziehen` — ein Rollhorcher an
+   `.document-center`, `offsetTop` je Bühne, eine Bildhöhe Rand). Die
+   Seitenansicht hat seit E717 `Nahzeichnen` in `editor.ts` — ein
+   `IntersectionObserver` an `#scroll`, dieselbe Bildhöhe Rand, die Höhe
+   der Leiste an einer gezeichneten Hülle gemessen. Gezeichnet wird in
+   beiden Fällen von denselben zwei Zeichnern (`PdfSeite.zeichne`,
+   `Blatt.zeichne`), aber zwei Rechnungen laufen irgendwann auseinander
+   (§8). Nicht in E717 zusammengelegt, weil der Dokumentmodus Bühnen und
+   eine eigene Rolle kennt, die Seitenansicht Blöcke in `#scroll`: eine
+   gemeinsame Hilfe bräuchte einen Ort im Kern (`src/kern/helfer/`) und
+   den Umzug des Dokumentmodus — ein eigener Bogen mit `test395` §3/§7 und
+   `test593` §2 als Wächter.
+2. **Was einmal gezeichnet ist, bleibt gezeichnet.** Beide Stellen zeichnen
+   nach, nie zurück. Wer in der Seitenansicht durch alle 134 Seiten rollt,
+   hat danach wieder alle Leisten, Schichten und Bilder im Baum — wie vor
+   E717, nur verteilt über das Rollen statt in einem Klick. Gemessen
+   (`messungen.md` §88, synthetisch 134 Seiten): danach 50 115 Knoten wie
+   vorher, und ein Tipp auf ein Werkzeug kostet am Telefon wieder 1285 ms
+   (Rechner 285 ms; vorher 3068 / 573 ms, direkt nach dem Wechsel 101 /
+   27 ms). Ein Zurückbauen weit
+   entfernter Seiten wäre möglich (der Platz ist dieselbe Hülle), braucht
+   aber eine Antwort darauf, was mit einer offenen Auswahl, einem Text in
+   Arbeit oder einem laufenden Strich auf einer Seite passiert, die man
+   gerade verlässt. Die Zahl oben sagt: am Telefon ist es spürbar.
+3. **Strg+F liest ferne Seiten aus dem Speicher, nicht aus dem DOM**
+   (nachgetragen in der Durchsicht, E717 Punkt 8). Vor dem Zählen zeichnet
+   `Blocks.zeichneFuerSuche` jeden Platz, dessen gespeicherter Inhalt das
+   Gesuchte enthält — Text, Suchtext, getippte Marken, Kinder, „Seite N
+   von M". Gelesen wird, was das gezeichnete Blatt als Inhalt zeigen
+   würde: der Name eines Blatts, getippte Marken, die Kinder. Was nur der
+   RAHMEN trägt — die Beschriftungen „Stift", „Marker", „Radieren" und die
+   Nummer „Seite N von M" —, zählt auf fernen Seiten nicht mit. Auf dem
+   Grundstand fand „Seite 1" in einem Skript mit 134 Seiten 46 Stellen
+   (alle in Nummern), heute nur die der gezeichneten Seiten. Mitzählen
+   hiesse, beim ersten Buchstaben alle Seiten zu zeichnen („o" steht in
+   „von"; gemessen 1,2 s am Rechner, `messungen.md` §88). Es ist auf
+   jeder Seite derselbe Rahmen, kein Inhalt — aber die Zahl im Zähler ist
+   eine andere. Ein Ausweg wäre ein Zähler, der Rahmenwörter ferner Seiten
+   aus dem Speicher MITzählt, ohne sie zu zeichnen; nicht gebaut.
+
+**Wächter:** `test593` §2 (Seitenansicht), `test395` §3/§7 (Dokumentmodus),
+`test593` §11/§12 (Sprung und Strg+F in ferne Blätter). Für Punkt 2 gibt es
+noch keinen.
+
+---
+
 ## L237 · Drei Griffe für eine Breite: der verdeckte `#side-griff` und der verirrte `.side-griff` am Telefon — 6. Oktober 2026
 
 **Gefunden beim Bau von E716** (Redur, Masterprompt vom 29. September: „der
@@ -9573,7 +9628,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 132 Lücken, 76 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 133 Lücken, 77 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

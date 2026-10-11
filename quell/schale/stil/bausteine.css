@@ -6706,6 +6706,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    warten nicht auf ein Bild), nur der Knopf selbst fängt den Zeiger. */
 .pdfs-wartet{z-index:3; pointer-events:none}
 .pdfs-wartet button{pointer-events:auto}
+/* DER PLATZ EINER NOCH NICHT GEZEICHNETEN SEITE (E717). Die Seitenansicht
+   zeichnet wie der Dokumentmodus nur, was in der Nähe ist (E299). Bis dahin
+   steht hier dieselbe Hülle: eine leere Leiste in der Höhe der echten —
+   gemessen an einer gezeichneten Hülle (`--platz-oben`), nicht geschätzt —
+   und das Papier im Seitenverhältnis der Seite. So lügt der Rollbalken
+   nicht (E399), und nichts springt, wenn die Seite kommt. */
+.blatt-platz-leiste{height:var(--platz-oben, 46px)}
+.blatt-platz{padding-bottom:var(--platz-unten, 0px)}
 /* Ein Blatt auf einer Folie (E109). Die HÖHE ist der begrenzende Wert —
    eine Folie ist breit und flach, ein Blatt hoch und schmal. `45vh` Breite
    ergibt bei A4 rund 64vh Höhe; zwei davon stehen nebeneinander bequem. */

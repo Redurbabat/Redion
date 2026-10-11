@@ -42,7 +42,9 @@
  * §11 DIE ZEICHENWERKZEUGE (E212). Der Reiter „Zeichnen" muss auf die
  *    Fläche wirken, die gerade gemeint ist. Geprüft wird am `data-tool` der
  *    Fläche selbst, in BEIDE Richtungen (Band → Leiste und Leiste → Band),
- *    und dass sich keine toten Flächen sammeln.
+ *    und dass sich keine toten Flächen sammeln. Seit E717 auch mit DREI
+ *    Blättern auf einer Seite: alle drei gemeldet, und Band wie Taste
+ *    treffen das angefasste.
  *
  * §12 KEIN NAME BRICHT MITTEN IM WORT. „Whiteboar/d", „Fachzeich/en" — 22
  *    von 113, gefunden mit Augen, von keinem Punkt hier gemeldet, weil die
@@ -1127,6 +1129,59 @@ const nachWechseln = await seite.evaluate(() => ({
 p('Nach drei Seitenwechseln steht nur die lebende Fläche in der Liste',
   seitenIds.length < 2 || nachWechseln.anzahl === nachWechseln.svg,
   `${nachWechseln.anzahl} gemeldet, ${nachWechseln.svg} wirklich da`);
+
+/* DREI BLÄTTER AUF EINER SEITE (E717).
+   Der Kopf von `zeichenziel.ts` sagt es selbst: „Mehrere sind der
+   Normalfall: eine Seite kann drei Blätter tragen." Geprüft wurde bis hier
+   nur EIN Blatt — und genau deshalb blieb unbemerkt, dass die Aufräumregel
+   jede Fläche nach der ersten wegwarf. Sie lief in der eigenen Meldung der
+   Anmeldung, während die Hülle des zweiten Blatts noch lose war und das
+   erste schon hing („jemand lebt" — also muss die lose alt sein). Gemessen
+   am 5. Oktober auf `1bfaca53`: drei Blätter, `anzahl()` 1. Das Menüband
+   „Zeichnen" und die Werkzeugtasten wirkten dann auf Blatt 1, egal welches
+   man anfasste — Redurs „kann dort nicht mehr bearbeiten oder ändern". */
+await seite.evaluate(async () => {
+  const s3 = Store.addPage(null, { text: 'Drei Blätter' });
+  for (let i = 0; i < 3; i++) Store.addBlock(s3.id, 'blatt', {});
+  await Store.flush();
+  App.oeffne(s3.id);
+});
+await seite.waitForTimeout(1500);
+const dreiBlaetter = await seite.evaluate(() => ({
+  anzahl: Zeichenziel.anzahl(),
+  svg: document.querySelectorAll('#page svg[data-tool]').length
+}));
+p('Drei Blätter auf einer Seite: alle drei sind beim Zeichenziel gemeldet',
+  dreiBlaetter.svg === 3 && dreiBlaetter.anzahl === 3,
+  `${dreiBlaetter.anzahl} gemeldet, ${dreiBlaetter.svg} wirklich da`);
+/* Das dritte anfassen — so, wie ein Finger oder eine Maus es tut: ein
+   `pointerdown` auf seiner Fläche. Dann im Band „Zeichnen" den Marker. */
+await seite.evaluate(() => {
+  const f = document.querySelectorAll('#page svg[data-tool]')[2];
+  f?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse', isPrimary: true }));
+  f?.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse', isPrimary: true }));
+});
+await seite.waitForTimeout(200);
+await klick(seite, '#menueband [data-mb-reiter="zeichnen"]');
+await seite.waitForTimeout(400);
+await klick(seite, '#menueband [data-band="wz-marker"]');
+await seite.waitForTimeout(450);
+const werkzeugJeBlatt = (): Promise<string[]> => seite.evaluate(() =>
+  [...document.querySelectorAll('#page svg[data-tool]')].map(f => f.getAttribute('data-tool') || ''));
+const nachDrittem = await werkzeugJeBlatt();
+p('„Marker" im Band trifft das angefasste dritte Blatt — und nur dieses',
+  nachDrittem.length === 3 && nachDrittem[2] === 'marker'
+    && nachDrittem[0] !== 'marker' && nachDrittem[1] !== 'marker',
+  JSON.stringify(nachDrittem));
+/* Und die Taste geht denselben Weg (`kuerzel` → `aktiveLeiste`). */
+await seite.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur?.(); });
+await seite.keyboard.press('e');
+await seite.waitForTimeout(400);
+const nachTaste = await werkzeugJeBlatt();
+p('Die Werkzeugtaste „e" (Radierer) trifft auch das dritte Blatt',
+  nachTaste.length === 3 && nachTaste[2] === 'radierer'
+    && nachTaste[0] !== 'radierer' && nachTaste[1] !== 'radierer',
+  JSON.stringify(nachTaste));
 
 /* DIE RANDLEISTE DARF NICHT INS BAND RAGEN.
    `#rand-toc` stand auf `top:50%` von `main` — und `main` enthält seit E210

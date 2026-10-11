@@ -315,6 +315,312 @@ const Blocks = (() => {
         zeitmarkenSpieler = new Audio(adresse);
         spiele(zeitmarkenSpieler);
     };
+    const Nahzeichnen = (() => {
+        const SOFORT = 3;
+        let imDurchgang = 0;
+        let geplant = false;
+        let offen = [];
+        const nahe = new Set();
+        const plaetze = new WeakMap();
+        const beobachtet = new Set();
+        let beobachter = null;
+        const letzte = { pdf: null, blatt: null };
+        const gemessen = { pdf: false, blatt: false };
+        const istPdf = (block) => block?.type === 'pdfseite';
+        const nameVon = (block) => {
+            if (istPdf(block))
+                return 'Seite ' + (Number(block.nr) || 1);
+            const eigen = String(block?.text || '').trim();
+            return eigen ? eigen.slice(0, 60) : 'A4-Blatt';
+        };
+        const wurzel = () => document.getElementById('scroll');
+        const beobachten = (el) => {
+            const r = wurzel();
+            if (!r || typeof IntersectionObserver === 'undefined')
+                return;
+            if (!beobachter) {
+                beobachter = new IntersectionObserver(eintraege => {
+                    for (const e of eintraege) {
+                        const el2 = e.target;
+                        const bid = el2.dataset['nahBid'] || '';
+                        if (!el2.isConnected) {
+                            beobachter?.unobserve(el2);
+                            beobachtet.delete(el2);
+                            continue;
+                        }
+                        if (e.isIntersecting)
+                            nahe.add(bid);
+                        else
+                            nahe.delete(bid);
+                        if (e.isIntersecting && el2.dataset['nah'] === 'wartet')
+                            jetzt(el2, 'still');
+                    }
+                }, { root: r, rootMargin: '100% 0px' });
+            }
+            beobachter.observe(el);
+            beobachtet.add(el);
+        };
+        const sicher = (block, zeichne) => {
+            try {
+                const el = zeichne();
+                el.dataset['nahBid'] = String(block.id);
+                return el;
+            }
+            catch (fehler) {
+                const grund = fehler instanceof Error ? fehler.message : String(fehler);
+                console.error('[E717] ' + nameVon(block) + ' liess sich nicht zeichnen', fehler);
+                if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
+                    UI.toast(nameVon(block) + ' liess sich nicht zeichnen: ' + grund, 6000);
+                return platz(block, zeichne, 'fehler');
+            }
+        };
+        const platz = (block, zeichne, art) => {
+            const pdf = istPdf(block);
+            const name = nameVon(block);
+            const { bw, bh } = SheetSpace.masseVon(block);
+            const huelle = document.createElement('div');
+            huelle.className = 'blatt-huelle blatt-platz' + (pdf ? ' pdfs' : '');
+            huelle.dataset['nah'] = art;
+            huelle.dataset['nahBid'] = String(block.id);
+            const leiste = document.createElement('div');
+            leiste.className = 'blatt-reihe blatt-platz-leiste';
+            leiste.setAttribute('aria-hidden', 'true');
+            const papier = document.createElement('div');
+            papier.className = 'blatt-papier' + (pdf ? ' pdfs-papier' : '');
+            papier.style.setProperty('aspect-ratio', bw + ' / ' + bh);
+            const sorte = pdf ? 'pdf' : 'blatt';
+            if (!gemessen[sorte]) {
+                gemessen[sorte] = true;
+                letzte[sorte] = masse(pdf) ?? letzte[sorte];
+            }
+            const m = letzte[sorte];
+            if (m) {
+                huelle.style.setProperty('--platz-oben', m.oben + 'px');
+                huelle.style.setProperty('--platz-unten', m.unten + 'px');
+            }
+            const satz = document.createElement('div');
+            satz.className = 'pdfs-wartet';
+            papier.appendChild(satz);
+            huelle.append(leiste, papier);
+            plaetze.set(huelle, { block, zeichne });
+            if (art === 'wartet') {
+                satz.textContent = name + ' wird vorbereitet …';
+                huelle.tabIndex = 0;
+                huelle.setAttribute('role', 'group');
+                huelle.setAttribute('aria-label', name);
+                huelle.addEventListener('focus', () => jetzt(huelle, 'fokus'));
+                huelle.addEventListener('pointerdown', () => jetzt(huelle, 'tipp'));
+            }
+            else {
+                const zeile = document.createElement('div');
+                zeile.textContent = name + ' liess sich nicht zeichnen.';
+                const k = document.createElement('button');
+                k.type = 'button';
+                k.className = 'pdfs-neu';
+                k.textContent = 'Neu zeichnen';
+                k.addEventListener('click', () => {
+                    const neu = sicher(block, zeichne);
+                    huelle.replaceWith(neu);
+                    if (neu.dataset['nah'] !== 'fehler')
+                        beobachten(neu);
+                    neu.querySelector('.pdfs-neu')?.focus();
+                });
+                satz.append(zeile, k);
+            }
+            return huelle;
+        };
+        const jetzt = (huelle, wie) => {
+            const p = plaetze.get(huelle);
+            if (!p || huelle.dataset['nah'] !== 'wartet')
+                return;
+            plaetze.delete(huelle);
+            beobachter?.unobserve(huelle);
+            beobachtet.delete(huelle);
+            const neu = sicher(p.block, p.zeichne);
+            huelle.replaceWith(neu);
+            if (neu.dataset['nah'] === 'fehler')
+                return;
+            if (neu.isConnected)
+                beobachten(neu);
+            const leiste = neu.querySelector('.blatt-werk');
+            if (wie === 'fokus') {
+                const stopp = neu.querySelector('[role="toolbar"] button[tabindex="0"]')
+                    ?? [...neu.querySelectorAll('.blatt-werk button:not([disabled])')]
+                        .find(b => b.getClientRects().length > 0);
+                stopp?.focus({ preventScroll: true });
+            }
+            else if (wie === 'tipp') {
+                leiste?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+            }
+        };
+        const masse = (pdf) => {
+            const wahl = pdf ? '#page .blatt-huelle.pdfs:not(.blatt-platz)'
+                : '#page .blatt-huelle:not(.pdfs):not(.blatt-platz)';
+            const h = document.querySelector(wahl);
+            const papier = h?.querySelector(':scope > .blatt-reihe ~ * .blatt-papier, :scope > .blatt-reihe ~ .blatt-papier');
+            if (!h || !papier)
+                return null;
+            const a = h.getBoundingClientRect(), b = papier.getBoundingClientRect();
+            if (!a.height || !b.height)
+                return null;
+            return { oben: Math.max(0, Math.round(b.top - a.top)), unten: Math.max(0, Math.round(a.bottom - b.bottom)) };
+        };
+        const abschliessen = () => {
+            geplant = false;
+            imDurchgang = 0;
+            gemessen.pdf = false;
+            gemessen.blatt = false;
+            const liste = offen;
+            offen = [];
+            for (const el of [...beobachtet]) {
+                if (!el.isConnected) {
+                    beobachter?.unobserve(el);
+                    beobachtet.delete(el);
+                }
+            }
+            const r = wurzel();
+            const imScroll = (el) => !!r && r.contains(el) && !el.closest('.pg-fl-koerper');
+            const warten = [];
+            for (const el of liste) {
+                if (el.dataset['nah'] !== 'wartet') {
+                    if (el.isConnected && imScroll(el))
+                        beobachten(el);
+                    continue;
+                }
+                if (!el.isConnected || !imScroll(el))
+                    jetzt(el, 'still');
+                else
+                    warten.push(el);
+            }
+            if (!r || !warten.length)
+                return;
+            letzte.pdf = masse(true) ?? letzte.pdf;
+            letzte.blatt = masse(false) ?? letzte.blatt;
+            for (const el of warten) {
+                const m = el.classList.contains('pdfs') ? letzte.pdf : letzte.blatt;
+                if (!m)
+                    continue;
+                el.style.setProperty('--platz-oben', m.oben + 'px');
+                el.style.setProperty('--platz-unten', m.unten + 'px');
+            }
+            const rr = r.getBoundingClientRect();
+            const rand = rr.height;
+            const jetztNah = warten.filter(el => {
+                const b = el.getBoundingClientRect();
+                return b.bottom >= rr.top - rand && b.top <= rr.bottom + rand;
+            });
+            for (const el of warten) {
+                if (jetztNah.includes(el))
+                    jetzt(el, 'still');
+                else
+                    beobachten(el);
+            }
+        };
+        const blatt = (block, zeichne) => {
+            if (!geplant) {
+                geplant = true;
+                if (typeof queueMicrotask === 'function')
+                    queueMicrotask(abschliessen);
+                else
+                    void Promise.resolve().then(abschliessen);
+            }
+            if (imDurchgang < SOFORT || nahe.has(String(block.id))) {
+                imDurchgang++;
+                const el = sicher(block, zeichne);
+                if (el.dataset['nah'] !== 'fehler')
+                    offen.push(el);
+                return el;
+            }
+            const el = platz(block, zeichne, 'wartet');
+            offen.push(el);
+            return el;
+        };
+        if (typeof window !== 'undefined') {
+            window.addEventListener('beforeprint', () => {
+                document.querySelectorAll('#page [data-nah="wartet"]').forEach(el => jetzt(el, 'still'));
+            });
+        }
+        const wartendFuer = (bid) => {
+            for (const el of document.querySelectorAll('#page [data-nah="wartet"]'))
+                if (el.dataset['nahBid'] === bid)
+                    return el;
+            return null;
+        };
+        const zeichneFuer = (blockId) => {
+            let b = blockId ? Store.getBlock(blockId) : null;
+            let tiefe = 0;
+            let gezeichnet = false;
+            while (b && tiefe++ < 64) {
+                if (b.type === 'blatt' || b.type === 'pdfseite') {
+                    const el = wartendFuer(String(b.id));
+                    if (el) {
+                        jetzt(el, 'still');
+                        gezeichnet = true;
+                    }
+                }
+                if (b.parentTable !== 'block' || !b.parentId)
+                    break;
+                b = Store.getBlock(String(b.parentId));
+            }
+            return gezeichnet;
+        };
+        const VERWALTUNG = new Set(['id', 'type', 'parentId', 'parentTable', 'content', 'created', 'edited',
+            'erstelltVon', 'alive', 'color', 'collectionId', 'aktiveView', 'dateiId', 'quelleId', 'icon']);
+        const zeichenketten = (wert, raus, tiefe = 0) => {
+            if (tiefe > 8)
+                return;
+            if (typeof wert === 'string') {
+                raus.push(wert);
+                return;
+            }
+            if (!wert || typeof wert !== 'object')
+                return;
+            if (Array.isArray(wert)) {
+                for (const w of wert)
+                    if ((w && typeof w === 'object') || typeof w === 'string')
+                        zeichenketten(w, raus, tiefe + 1);
+                return;
+            }
+            for (const [k, w] of Object.entries(wert))
+                if (!VERWALTUNG.has(k))
+                    zeichenketten(w, raus, tiefe + 1);
+        };
+        const enthaelt = (block, q) => {
+            const texte = [];
+            if (!istPdf(block))
+                texte.push(String(block?.text ?? ''));
+            for (const m of (Array.isArray(block?.marken) ? block.marken : []))
+                if (m && (m.art === 'text' || m.art === 'zettel'))
+                    texte.push(String(m.text ?? ''));
+            const stapel = [...Store.childrenOf(String(block.id))];
+            let n = 0;
+            while (stapel.length && n++ < 2000) {
+                const b = stapel.pop();
+                zeichenketten(b, texte);
+                for (const k of Store.childrenOf(String(b.id)))
+                    stapel.push(k);
+            }
+            return texte.some(t => t.toLowerCase().includes(q));
+        };
+        const zeichneFuerSuche = (frage) => {
+            const q = String(frage || '').trim().toLowerCase();
+            if (!q)
+                return 0;
+            let n = 0;
+            for (const el of [...document.querySelectorAll('#page [data-nah="wartet"]')]) {
+                const p = plaetze.get(el);
+                if (!p)
+                    continue;
+                const block = Store.getBlock(String(p.block.id)) ?? p.block;
+                if (enthaelt(block, q)) {
+                    jetzt(el, 'still');
+                    n++;
+                }
+            }
+            return n;
+        };
+        return { blatt, zeichneFuer, zeichneFuerSuche };
+    })();
     const render = (block, tiefe = 0, nr = 0) => {
         const t = typ(block.type);
         const el = document.createElement('div');
@@ -703,10 +1009,10 @@ const Blocks = (() => {
                     box.appendChild(SpreadsheetView.zeichne(block));
                 break;
             case 'blatt':
-                box.appendChild(Blatt.zeichne(block));
+                box.appendChild(Nahzeichnen.blatt(block, () => Blatt.zeichne(block)));
                 break;
             case 'pdfseite':
-                box.appendChild(PdfSeite.zeichne(block));
+                box.appendChild(Nahzeichnen.blatt(block, () => PdfSeite.zeichne(block)));
                 break;
             case 'whiteboard':
                 box.appendChild(Zusatz.whiteboard(block));
@@ -3183,6 +3489,7 @@ const Blocks = (() => {
         blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
         knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
         DIENSTE, einbettungsAdresse,
+        zeichneFuer: Nahzeichnen.zeichneFuer, zeichneFuerSuche: Nahzeichnen.zeichneFuerSuche,
         auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
         auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
         auswahlEinfuegen, auswahlUmwandeln, auswahlEinruecken, auswahlVerschieben,

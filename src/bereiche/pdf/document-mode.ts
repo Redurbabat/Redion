@@ -632,6 +632,66 @@ const DocumentMode = (() => {
   };
 
   /**
+   * DER WEG IN DEN SEITENEDITOR (E717).
+   *
+   * Redur: „Bei pdf wenn ich seiteneditor klicke bleibt es für ca 30-40
+   * sekunden stiel und dann kommt die dieses seite antwortet nicht". Und
+   * als Abnahme: „Fortschritt/Ladezustand anzeigen … Fehler werden
+   * nachvollziehbar gemeldet".
+   *
+   * Hier stand `toggle(page, false)` direkt im Klick — eine einzige Aufgabe,
+   * die vor der schweren Arbeit nie Luft holte und nichts abfing. Der Stau
+   * selbst ist in `Zeichenziel`, im Menüband und im Editor behoben (E717);
+   * dieser Weg sorgt für das, was der Knopf SAGT:
+   *
+   *   1. `aria-busy` am Knopf, dann EIN Bild Luft, damit der Druck zu sehen
+   *      ist, bevor gearbeitet wird (`requestAnimationFrame`, dann
+   *      `setTimeout 0`; ohne sichtbares Fenster gleich `setTimeout`).
+   *   2. Wirft der Aufbau der Seitenansicht, bleibt man im Dokument statt
+   *      auf einer halben Seite: `dokumentModus` zurück, neu zeichnen, eine
+   *      Meldung mit dem Grund, der Stapel in die Konsole.
+   *   3. Die Seitenansicht öffnet an der Seite, die im Dokument gerade
+   *      offen war — nicht oben (Vorgabe zu Redurs Frage 2). Wer Seite 37
+   *      liest, soll nicht 36 Seiten zurückrollen müssen.
+   *
+   * Keine Ladekarte: nach dem Umbau dauert der Wechsel rund ein Zehntel
+   * einer Sekunde (messungen §88); eine Karte würde nur aufblitzen.
+   */
+  const seiteneditorOeffnen = (page: any, knopf: HTMLElement | null | undefined,
+                               zielId: string, zielNr: number): void => {
+    if (!page?.id) return;
+    if (knopf?.getAttribute('aria-busy') === 'true') return;   /* läuft schon */
+    knopf?.setAttribute('aria-busy', 'true');
+    let lief = false;
+    const weiter = (): void => {
+      if (lief) return;
+      lief = true;
+      try {
+        toggle(page, false);
+      } catch (fehler: unknown) {
+        console.error('[E717] Der Seiteneditor liess sich nicht öffnen', fehler);
+        const grund = fehler instanceof Error ? fehler.message : String(fehler);
+        try { Store.updateBlock(page.id, { dokumentModus: true }); App.zeichneSeite(); }
+        catch (zweiter: unknown) { console.error('[E717] Zurück ins Dokument ging auch nicht', zweiter); }
+        UI.toast('Der Seiteneditor liess sich nicht öffnen: ' + grund, 8000);
+        return;
+      } finally {
+        if (knopf?.isConnected) knopf.removeAttribute('aria-busy');
+      }
+      if (zielNr <= 0 || !zielId) return;
+      const rolle = document.getElementById('scroll');
+      const ziel = document.querySelector<HTMLElement>(
+        '#page .blk[data-bid="' + (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(zielId) : zielId) + '"]');
+      if (rolle && ziel)
+        rolle.scrollTop += ziel.getBoundingClientRect().top - rolle.getBoundingClientRect().top - 8;
+    };
+    if (document.hidden || typeof requestAnimationFrame !== 'function') { setTimeout(weiter, 0); return; }
+    requestAnimationFrame(() => { setTimeout(weiter, 0); });
+    /* Kommt kein Bild (verdecktes Fenster ohne `hidden`), nicht ewig warten. */
+    setTimeout(weiter, 250);
+  };
+
+  /**
    * Wie die Seite heisst — und bei einer Folie: WELCHE (E547).
    *
    * Hier stand für jedes `blatt` der eine Satz „A4-Blatt". Bei einer
@@ -1966,9 +2026,23 @@ const DocumentMode = (() => {
     folienKnopf.setAttribute('aria-haspopup', 'menu');
     folienKnopf.setAttribute('aria-expanded', 'false');
     folienKnopf.hidden = !istFoliensatz(page);
+    /* „SEITENEDITOR" — AM TELEFON MIT DEM SEITENZEICHEN STATT „✕" (E717).
+       Am Rechner steht das Wort. Am Telefon blendete `pdf-studio.css` es aus
+       und malte `✕` davor — ein Zeichen, das „schliessen" verspricht, für
+       einen Knopf, der die Ansicht WECHSELT (Vorgabe zu Redurs Frage 4).
+       Jetzt steht dort das Zeichen der Ansicht „Seite" aus dem Umschalter
+       Seite | Fläche | Redion (`Register.seitenansichten`, Zeichen `page`),
+       an derselben Stelle, 44 px wie vorher. Der Name sagt beides: wohin
+       der Knopf führt und was er verlässt. */
+    const exitKnopf = topButton('exit', 'Seiteneditor', 'Seiteneditor — Dokumentmodus verlassen');
+    const exitZeichen = document.createElement('span');
+    exitZeichen.className = 'dz-zeichen';
+    exitZeichen.dataset.sym = 'page';
+    exitZeichen.setAttribute('aria-hidden', 'true');
+    exitKnopf.prepend(exitZeichen);
     topActions.append(findButton, viewButton, inspectorButton, folienKnopf, zeigenKnopf,
       topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'),
-      topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+      exitKnopf);
     top.append(topActions);
     const commandbar = document.createElement('div');
     commandbar.className = 'document-commandbar';
@@ -4497,7 +4571,10 @@ const DocumentMode = (() => {
         else UI.toast('Das Regal ist gerade nicht erreichbar.');
         return;
       }
-      if (action === 'exit') toggle(page, false);
+      if (action === 'exit') {
+        seiteneditorOeffnen(page, tatKnopf, String(documents[state.index]?.id || ''), state.index);
+        return;
+      }
       if (action === 'source-actions') openSourceActions(page, jetzt());
       if ((action === 'select-region' || action === 'recognize') && state.lupe) {
         UI.toast('Schliess zuerst das Zoom-Fenster — der Ausschnitt gilt der ganzen Seite.');

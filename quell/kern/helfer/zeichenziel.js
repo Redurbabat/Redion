@@ -4,13 +4,29 @@ const Zeichenziel = (() => {
     const flaechen = [];
     let zuletzt = -1;
     const horcher = [];
-    const melden = () => {
-        for (const h of horcher) {
+    let geplant = false;
+    const imBau = new Set();
+    const ausrufen = () => {
+        geplant = false;
+        for (const e of imBau)
+            if (lebt(e))
+                e.gesehen = true;
+        imBau.clear();
+        for (const h of horcher.slice()) {
             try {
                 h();
             }
             catch { }
         }
+    };
+    const melden = () => {
+        if (geplant)
+            return;
+        geplant = true;
+        if (typeof queueMicrotask === 'function')
+            queueMicrotask(ausrufen);
+        else
+            void Promise.resolve().then(ausrufen);
     };
     const finde = (steuerung) => flaechen.findIndex(f => f.steuerung === steuerung);
     const lebt = (e) => e.steuerung.flaeche?.isConnected === true;
@@ -36,6 +52,8 @@ const Zeichenziel = (() => {
                     continue;
                 if (lebt(e))
                     continue;
+                if (imBau.has(e))
+                    continue;
                 if (!e.gesehen && !jemandLebt && e === letzte)
                     continue;
                 flaechen.splice(i, 1);
@@ -57,9 +75,11 @@ const Zeichenziel = (() => {
         aufraeumen();
         if (finde(steuerung) >= 0)
             return;
-        flaechen.push({ steuerung, name: String(name), werkzeug: 'schreiben',
+        const eintrag = { steuerung, name: String(name), werkzeug: 'schreiben',
             farbe: '', dicke: 0,
-            gesehen: steuerung.flaeche?.isConnected === true });
+            gesehen: steuerung.flaeche?.isConnected === true };
+        flaechen.push(eintrag);
+        imBau.add(eintrag);
         if (zuletzt < 0 || zuletzt >= flaechen.length)
             zuletzt = flaechen.length - 1;
         melden();
@@ -75,6 +95,7 @@ const Zeichenziel = (() => {
         const i = finde(steuerung);
         if (i < 0)
             return;
+        imBau.delete(flaechen[i]);
         flaechen.splice(i, 1);
         if (flaechen.length === 0)
             zuletzt = -1;
@@ -88,6 +109,7 @@ const Zeichenziel = (() => {
         if (!flaechen.length)
             return;
         flaechen.length = 0;
+        imBau.clear();
         zuletzt = -1;
         melden();
     };

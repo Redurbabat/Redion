@@ -1,5 +1,51 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E717 · Der Seiteneditor ohne Stau
+
+**Redur** (Masterprompt vom 29. September, Seite 5; OneNote-Seite 14):
+„Bei pdf wenn ich seiteneditor klicke bleibt es für ca 30-40 sekunden
+stiel und dann kommt die dieses seite antwortet nicht und dann kann dort
+nicht mehr bearbeiten oder ändern ." Abnahme: „Fortschritt/Ladezustand
+anzeigen … Fehler werden nachvollziehbar gemeldet."
+
+**Gefunden** (rot nachgemessen auf `1bfaca53`, `test593`): jede PDF-Seite
+meldete beim Bau ihrer Leiste ihre Fläche beim `Zeichenziel`, das jeden
+Horcher SOFORT rief; das Menüband baute sich jedes Mal neu und zwang mit
+`scrollIntoView` ein Layout der wachsenden Seite — 2N+3 Layouts, 271 bei
+134 Seiten (11,4 s am Rechner, 49 s am Telefon). Dazu zeichnete die
+Seitenansicht alle Seiten (rund 50 000 Knoten), und die Aufräumregel des
+Zeichenziels warf jede Fläche nach der ersten weg: Band und
+Werkzeugtasten trafen Seite 1, gleich welche man anfasste — auch auf jeder
+gewöhnlichen Seite mit mehreren Blättern.
+
+**Gebaut:** eine Meldung je Durchgang und `imBau` im Zeichenziel; ein
+Neubau des Bands nur, wenn sich für „Zeichnen" etwas ändert; E299 für die
+Seitenansicht (`Nahzeichnen` in `editor.ts`: gezeichnet wird, was eine
+Bildhöhe um das Fenster liegt, fokussiert oder angetippt wird; der Rest
+steht als Platz in der richtigen Höhe mit „Seite N wird vorbereitet …");
+„Seiteneditor" zeigt `aria-busy`, öffnet an der gelesenen Seite, bleibt bei
+einem Fehler im Dokument und meldet ihn; eine Seite, die sich nicht
+zeichnen lässt, sagt es und bietet „Neu zeichnen"; am Telefon das
+Seitenzeichen statt „✕". Dieselbe Seite neu gezeichnet behält die
+Lesestelle (gefunden auf dem Weg).
+
+**Geprüft:** `test593` neu (46 Zusagen, rot 8/39 gegen `1bfaca53`) und
+`test247` §11 erweitert (drei Blätter), beide zuerst rot; sechs Gegenproben
+je rot gesehen; die Nachbarn unter dem Schloss (`messungen.md` §88); Bilder
+vorher und nachher, Rechner und Telefon, hell und dunkel, nicht im
+Verzeichnis (§55.4). Nichts entfernt. Offen: L238.
+
+**Durchsicht** (unabhängig, vor dem Push): zwei Verluste gegenüber
+`1bfaca53` gefunden und behoben — ein Sprung (`App.zeigeBlock`,
+`#block=`, Suchtreffer, Rückverweise) in ein Blatt, das noch ein Platz
+war, fand sein Ziel nicht; und Strg+F zählte nur gezeichnete Blätter.
+`Blocks.zeichneFuer` und `Blocks.zeichneFuerSuche` zeichnen jetzt vorher,
+was gebraucht wird — für Strg+F nur, was der gespeicherte INHALT eines
+Blatts trägt, damit nicht ein Buchstabe alle Seiten zeichnet; `test593`
+§11/§12 (rot 46/53, dann 54/54), vier Gegenproben je rot. Dazu: die Lesestelle vergisst sich nach einer
+Sonderansicht, und der Kommentar über die Fläche sagt, was wirklich
+geschieht (eine Mikroaufgabe später, nicht „sofort").
+
 ## 6. Oktober 2026 · E716 · Der Trenner zieht wirklich
 
 **Redur:** Masterprompt vom 29. September, Seite 25 (Foto Seite 26): „der

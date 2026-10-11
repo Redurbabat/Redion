@@ -427,6 +427,385 @@ const Blocks = (() => {
     spiele(zeitmarkenSpieler);
   };
 
+  /* ══ WAS MAN NICHT SIEHT, WIRD NICHT GEZEICHNET — AUCH IN DER SEITENANSICHT
+     (E717, dehnt E299 aus) ══════════════════════════════════════════════════
+     Redur, Masterprompt vom 29. September: „Bei pdf wenn ich seiteneditor
+     klicke bleibt es für ca 30-40 sekunden stiel und dann kommt die dieses
+     seite antwortet nicht".
+
+     Der Dokumentmodus zeichnet seit E299 nur, was in der Nähe ist. Die
+     Seitenansicht dahinter („Seiteneditor") zeichnete JEDE PDF-Seite mit
+     voller Leiste, Zeichenschicht und Bild: bei 134 Seiten rund 50 000
+     Knoten, 134 Leisten, 134 Horcher, 134 Bildanfragen auf einmal — und
+     jede spätere Änderung, die `App.zeichneSeite()` ruft, noch einmal. Am
+     Telefon kostete danach ein Tipp über eine Sekunde (Karte §8).
+
+     DIE REGEL HIER. Die ersten DREI Blätter eines Durchgangs zeichnen sofort
+     — damit bleibt eine Seite mit einem, zwei oder drei Blättern genau so
+     synchron wie bisher, und wer nach `App.zeichneSeite()` gleich hineingreift,
+     findet sie. Ebenso sofort: was beim letzten Mal in der Nähe stand
+     (`nahe`), damit eine Änderung an der Lesestelle keinen Platzhalter
+     aufblitzen lässt und ein Fokus im Blatt sein Ziel findet. Jedes weitere
+     Blatt bekommt erst seinen PLATZ: dieselbe Hülle, ein Papier im
+     Seitenverhältnis der Seite und den Satz „Seite N wird vorbereitet …".
+     Am Ende des Durchgangs — vor dem ersten Bild — werden die Plätze
+     gezeichnet, die eine Bildhöhe über oder unter dem Fenster liegen; den
+     Rest zeichnet ein `IntersectionObserver` (Wurzel `#scroll`, eine
+     Bildhöhe Rand, wie E299), ein Fokus (Tab, Bild↓) oder ein Antippen.
+
+     Der Block `.blk[data-bid]` bleibt immer stehen: Verweise `#block=`,
+     Ziehen, Auswahl und die Nummer der Seite hängen an ihm, nicht an der
+     Zeichnung. Was IN einem Platz steht (Kinder eines Blatts, Marken),
+     zeichnet `zeichneFuer` vor einem Sprung und `zeichneFuerSuche` vor
+     Strg+F — siehe unten. Gedruckt wird aus dem Speicher (`Werkzeuge.drucken`); für
+     den Druck des Browsers selbst wird vorher alles gezeichnet
+     (`beforeprint`).
+
+     WARUM HIER UND NICHT IM DOKUMENTMODUS-CODE. `document-mode.ts` rechnet
+     sein Nähe-Fenster an `.document-center` mit `offsetTop` in einer
+     eigenen Rolle und kennt Stufen statt Blöcke; die Seitenansicht rollt in
+     `#scroll` und kennt Blöcke. Eine gemeinsame Hilfe bräuchte einen neuen
+     Ort im Kern — das steht als L238 offen, statt hier halb gemacht zu
+     werden. Gezeichnet wird in beiden Fällen von denselben zwei Zeichnern,
+     `PdfSeite.zeichne` und `Blatt.zeichne`. */
+  const Nahzeichnen = (() => {
+    const SOFORT = 3;
+    let imDurchgang = 0;
+    let geplant = false;
+    let offen: HTMLElement[] = [];
+    /** Blockkennungen, deren Blatt beim letzten Blick in der Nähe stand. */
+    const nahe = new Set<string>();
+    type Platz = { block: any; zeichne: () => HTMLElement };
+    const plaetze = new WeakMap<HTMLElement, Platz>();
+    const beobachtet = new Set<HTMLElement>();
+    let beobachter: IntersectionObserver | null = null;
+    /** Die gemessene Leiste je Art — im Durchgang einmal gemessen, sonst
+        die letzte Messung. */
+    type Mass = { oben: number; unten: number };
+    const letzte: { pdf: Mass | null; blatt: Mass | null } = { pdf: null, blatt: null };
+    const gemessen = { pdf: false, blatt: false };
+
+    const istPdf = (block: any): boolean => block?.type === 'pdfseite';
+    /** „Seite 14" — oder bei einem Blatt sein Name (wie im Dokumentmodus). */
+    const nameVon = (block: any): string => {
+      if (istPdf(block)) return 'Seite ' + (Number(block.nr) || 1);
+      const eigen = String(block?.text || '').trim();
+      return eigen ? eigen.slice(0, 60) : 'A4-Blatt';
+    };
+    const wurzel = (): HTMLElement | null => document.getElementById('scroll');
+
+    const beobachten = (el: HTMLElement): void => {
+      const r = wurzel();
+      if (!r || typeof IntersectionObserver === 'undefined') return;
+      if (!beobachter) {
+        beobachter = new IntersectionObserver(eintraege => {
+          for (const e of eintraege) {
+            const el2 = e.target as HTMLElement;
+            const bid = el2.dataset['nahBid'] || '';
+            if (!el2.isConnected) { beobachter?.unobserve(el2); beobachtet.delete(el2); continue; }
+            if (e.isIntersecting) nahe.add(bid); else nahe.delete(bid);
+            if (e.isIntersecting && el2.dataset['nah'] === 'wartet') jetzt(el2, 'still');
+          }
+        }, { root: r, rootMargin: '100% 0px' });
+      }
+      beobachter.observe(el);
+      beobachtet.add(el);
+    };
+
+    /** Zeichnen — und wenn der Zeichner wirft, sagt die Seite es selbst. */
+    const sicher = (block: any, zeichne: () => HTMLElement): HTMLElement => {
+      try {
+        const el = zeichne();
+        el.dataset['nahBid'] = String(block.id);
+        return el;
+      } catch (fehler: unknown) {
+        const grund = fehler instanceof Error ? fehler.message : String(fehler);
+        /* In der Konsole MIT Stapel — wer den Fehler sucht, braucht ihn. */
+        console.error('[E717] ' + nameVon(block) + ' liess sich nicht zeichnen', fehler);
+        if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
+          UI.toast(nameVon(block) + ' liess sich nicht zeichnen: ' + grund, 6000);
+        return platz(block, zeichne, 'fehler');
+      }
+    };
+
+    /** Der Platz einer Seite, die noch nicht gezeichnet ist (oder nicht konnte). */
+    const platz = (block: any, zeichne: () => HTMLElement, art: 'wartet' | 'fehler'): HTMLElement => {
+      const pdf = istPdf(block);
+      const name = nameVon(block);
+      const { bw, bh } = SheetSpace.masseVon(block);
+      const huelle = document.createElement('div');
+      huelle.className = 'blatt-huelle blatt-platz' + (pdf ? ' pdfs' : '');
+      huelle.dataset['nah'] = art;
+      huelle.dataset['nahBid'] = String(block.id);
+      const leiste = document.createElement('div');
+      leiste.className = 'blatt-reihe blatt-platz-leiste';
+      leiste.setAttribute('aria-hidden', 'true');
+      const papier = document.createElement('div');
+      papier.className = 'blatt-papier' + (pdf ? ' pdfs-papier' : '');
+      papier.style.setProperty('aspect-ratio', bw + ' / ' + bh);
+      /* Die Leistenhöhe EINMAL je Durchgang an der ersten gezeichneten Hülle
+         messen (die ersten drei hängen schon in der Seite, wenn die vierte
+         gebaut wird), sonst die letzte Messung. So stimmt die Höhe schon im
+         Durchgang — wer gleich danach zu Seite 37 rollt, landet dort. */
+      const sorte = pdf ? 'pdf' : 'blatt';
+      if (!gemessen[sorte]) { gemessen[sorte] = true; letzte[sorte] = masse(pdf) ?? letzte[sorte]; }
+      const m = letzte[sorte];
+      if (m) {
+        huelle.style.setProperty('--platz-oben', m.oben + 'px');
+        huelle.style.setProperty('--platz-unten', m.unten + 'px');
+      }
+      const satz = document.createElement('div');
+      satz.className = 'pdfs-wartet';
+      papier.appendChild(satz);
+      huelle.append(leiste, papier);
+      plaetze.set(huelle, { block, zeichne });
+      if (art === 'wartet') {
+        satz.textContent = name + ' wird vorbereitet …';
+        /* MIT DER TASTATUR ERREICHBAR (§38): Tab und Bild↓ landen hier, und
+           der Fokus zeichnet — danach steht er in der Leiste der Seite. */
+        huelle.tabIndex = 0;
+        huelle.setAttribute('role', 'group');
+        huelle.setAttribute('aria-label', name);
+        huelle.addEventListener('focus', () => jetzt(huelle, 'fokus'));
+        huelle.addEventListener('pointerdown', () => jetzt(huelle, 'tipp'));
+      } else {
+        /* Der Satz und ein Weg zurück — in der Art von `PdfSeite.wegZeigen`. */
+        const zeile = document.createElement('div');
+        zeile.textContent = name + ' liess sich nicht zeichnen.';
+        const k = document.createElement('button');
+        k.type = 'button';
+        k.className = 'pdfs-neu';
+        k.textContent = 'Neu zeichnen';
+        k.addEventListener('click', () => {
+          const neu = sicher(block, zeichne);
+          huelle.replaceWith(neu);
+          if (neu.dataset['nah'] !== 'fehler') beobachten(neu);
+          (neu.querySelector('.pdfs-neu') as HTMLElement | null)?.focus();
+        });
+        satz.append(zeile, k);
+      }
+      return huelle;
+    };
+
+    /** Einen Platz JETZT zeichnen — still (Nähe), nach einem Fokus oder
+        nach einem Tipp. */
+    const jetzt = (huelle: HTMLElement, wie: 'still' | 'fokus' | 'tipp'): void => {
+      const p = plaetze.get(huelle);
+      if (!p || huelle.dataset['nah'] !== 'wartet') return;
+      plaetze.delete(huelle);
+      beobachter?.unobserve(huelle);
+      beobachtet.delete(huelle);
+      const neu = sicher(p.block, p.zeichne);
+      huelle.replaceWith(neu);
+      if (neu.dataset['nah'] === 'fehler') return;
+      if (neu.isConnected) beobachten(neu);
+      const leiste = neu.querySelector<HTMLElement>('.blatt-werk');
+      if (wie === 'fokus') {
+        /* Auf den EINEN Tabstopp der Leiste (`role="toolbar"`, E621) — die
+           Pfeiltasten führen von dort weiter, wie überall in Redion. */
+        const stopp = neu.querySelector<HTMLElement>('[role="toolbar"] button[tabindex="0"]')
+          ?? [...neu.querySelectorAll<HTMLElement>('.blatt-werk button:not([disabled])')]
+            .find(b => b.getClientRects().length > 0);
+        stopp?.focus({ preventScroll: true });
+      } else if (wie === 'tipp') {
+        /* Wer eine wartende Seite antippt, meint DIESE Seite — dieselbe
+           Berührung, die ihre Leiste dem Zeichenziel meldet (marken.ts,
+           `pointerdown` an der Leiste). Ohne das wirkte das Menüband auf die
+           zuletzt berührte, obwohl der Finger hier lag. */
+        leiste?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      }
+    };
+
+    /** Wie hoch ist die Leiste über dem Papier, wie viel steht darunter? —
+        an einer GEZEICHNETEN Hülle derselben Art gemessen, nicht geschätzt
+        (wie `platzhalterSetzen` im Dokumentmodus). Eine feste Zahl lag im
+        Versuch 1,3 % daneben, und die Leiste bricht je nach Breite um. */
+    const masse = (pdf: boolean): { oben: number; unten: number } | null => {
+      const wahl = pdf ? '#page .blatt-huelle.pdfs:not(.blatt-platz)'
+                       : '#page .blatt-huelle:not(.pdfs):not(.blatt-platz)';
+      const h = document.querySelector<HTMLElement>(wahl);
+      const papier = h?.querySelector<HTMLElement>(':scope > .blatt-reihe ~ * .blatt-papier, :scope > .blatt-reihe ~ .blatt-papier');
+      if (!h || !papier) return null;
+      const a = h.getBoundingClientRect(), b = papier.getBoundingClientRect();
+      if (!a.height || !b.height) return null;
+      return { oben: Math.max(0, Math.round(b.top - a.top)), unten: Math.max(0, Math.round(a.bottom - b.bottom)) };
+    };
+
+    /** Das Ende des Durchgangs: messen, was nah ist, zeichnen, den Rest beobachten. */
+    const abschliessen = (): void => {
+      geplant = false;
+      imDurchgang = 0;
+      gemessen.pdf = false; gemessen.blatt = false;
+      const liste = offen;
+      offen = [];
+      for (const el of [...beobachtet]) {
+        if (!el.isConnected) { beobachter?.unobserve(el); beobachtet.delete(el); }
+      }
+      const r = wurzel();
+      const imScroll = (el: HTMLElement): boolean =>
+        !!r && r.contains(el) && !el.closest('.pg-fl-koerper');
+      /* Was nicht in der Seitenansicht hängt — lose gebaut, auf einer
+         Fläche, in einem anderen Rahmen —, zeichnet hier ganz: am Ende des
+         Durchgangs, eine Mikroaufgabe nach `render`, noch vor dem ersten
+         Bild. Wer gleich nach `render` im selben Aufruf misst (Fläche,
+         „ins Bild holen"), sieht ab dem vierten Blatt den Platz in seiner
+         gemessenen Grösse, nicht die Zeichnung. */
+      const warten: HTMLElement[] = [];
+      for (const el of liste) {
+        if (el.dataset['nah'] !== 'wartet') {
+          /* Gezeichnet: nur beobachten, damit `nahe` weiss, wo es steht. */
+          if (el.isConnected && imScroll(el)) beobachten(el);
+          continue;
+        }
+        if (!el.isConnected || !imScroll(el)) jetzt(el, 'still');
+        else warten.push(el);
+      }
+      if (!r || !warten.length) return;
+      /* Noch einmal messen — jetzt hängt alles, auch was in Spalten
+         steckte —, die Plätze nachziehen, DANN einmal lesen. */
+      letzte.pdf = masse(true) ?? letzte.pdf;
+      letzte.blatt = masse(false) ?? letzte.blatt;
+      for (const el of warten) {
+        const m = el.classList.contains('pdfs') ? letzte.pdf : letzte.blatt;
+        if (!m) continue;
+        el.style.setProperty('--platz-oben', m.oben + 'px');
+        el.style.setProperty('--platz-unten', m.unten + 'px');
+      }
+      /* Alle Lagen lesen, DANN zeichnen — sonst erzwingt jede Zeichnung
+         das nächste Layout, und die alte Rechnung käme durch die Hintertür
+         zurück. */
+      const rr = r.getBoundingClientRect();
+      const rand = rr.height;
+      const jetztNah = warten.filter(el => {
+        const b = el.getBoundingClientRect();
+        return b.bottom >= rr.top - rand && b.top <= rr.bottom + rand;
+      });
+      for (const el of warten) {
+        if (jetztNah.includes(el)) jetzt(el, 'still');
+        else beobachten(el);
+      }
+    };
+
+    /** Der Weg aus `render`: sofort zeichnen oder erst den Platz. */
+    const blatt = (block: any, zeichne: () => HTMLElement): HTMLElement => {
+      if (!geplant) {
+        geplant = true;
+        if (typeof queueMicrotask === 'function') queueMicrotask(abschliessen);
+        else void Promise.resolve().then(abschliessen);
+      }
+      if (imDurchgang < SOFORT || nahe.has(String(block.id))) {
+        imDurchgang++;
+        const el = sicher(block, zeichne);
+        if (el.dataset['nah'] !== 'fehler') offen.push(el);
+        return el;
+      }
+      const el = platz(block, zeichne, 'wartet');
+      offen.push(el);
+      return el;
+    };
+
+    /* Der Druck des Browsers druckt, was dasteht — also vorher alles. */
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeprint', () => {
+        document.querySelectorAll<HTMLElement>('#page [data-nah="wartet"]').forEach(el => jetzt(el, 'still'));
+      });
+    }
+
+    /* WAS IN EINEM PLATZ STEHT, MUSS ERREICHBAR BLEIBEN (§43). Ein Platz
+       hält nur den Block des Blatts, nicht seine Kinder und nicht seine
+       Marken. Gefunden in der Durchsicht des Zweigs: `App.zeigeBlock` auf
+       den Text in Blatt 6 fand nichts und schwieg (Verweise `#block=`,
+       Suchtreffer, Rückverweise, Erwähnungen und Kommentarsprünge nehmen
+       alle diesen Weg), und Strg+F zählte „1 von 3" statt „1 von 6". Auf
+       dem Grundstand war beides heil, weil alles gezeichnet war. Also
+       zeichnen die zwei Wege, die in die Seite hineingreifen, ihr Ziel
+       vorher (`test593` §11, §12). */
+    const wartendFuer = (bid: string): HTMLElement | null => {
+      for (const el of document.querySelectorAll<HTMLElement>('#page [data-nah="wartet"]'))
+        if (el.dataset['nahBid'] === bid) return el;
+      return null;
+    };
+
+    /** Das Blatt (oder die PDF-Seite) zeichnen, in dem ein Block steht —
+        über die Elternkette, wie `klappeAuf` in der Schale. Gibt zurück, ob
+        etwas gezeichnet wurde. */
+    const zeichneFuer = (blockId: string): boolean => {
+      let b: any = blockId ? Store.getBlock(blockId) : null;
+      let tiefe = 0;
+      let gezeichnet = false;
+      while (b && tiefe++ < 64) {
+        if (b.type === 'blatt' || b.type === 'pdfseite') {
+          const el = wartendFuer(String(b.id));
+          if (el) { jetzt(el, 'still'); gezeichnet = true; }
+        }
+        if (b.parentTable !== 'block' || !b.parentId) break;
+        b = Store.getBlock(String(b.parentId));
+      }
+      return gezeichnet;
+    };
+
+    /** Jede Zeichenkette in einem Wert, flach gesammelt — ohne die Felder,
+        die nur Verwaltung sind (Kennungen, Typ, Zeiten) und nie als Text
+        auf dem Blatt stehen. Zahlenlisten (die Punkte eines Strichs) werden
+        übersprungen. Lieber ein Blatt zu viel zeichnen als eine Stelle
+        verschweigen. */
+    const VERWALTUNG = new Set(['id', 'type', 'parentId', 'parentTable', 'content', 'created', 'edited',
+      'erstelltVon', 'alive', 'color', 'collectionId', 'aktiveView', 'dateiId', 'quelleId', 'icon']);
+    const zeichenketten = (wert: unknown, raus: string[], tiefe = 0): void => {
+      if (tiefe > 8) return;
+      if (typeof wert === 'string') { raus.push(wert); return; }
+      if (!wert || typeof wert !== 'object') return;
+      if (Array.isArray(wert)) {
+        for (const w of wert) if ((w && typeof w === 'object') || typeof w === 'string') zeichenketten(w, raus, tiefe + 1);
+        return;
+      }
+      for (const [k, w] of Object.entries(wert as Record<string, unknown>))
+        if (!VERWALTUNG.has(k)) zeichenketten(w, raus, tiefe + 1);
+    };
+    /** Steht das Gesuchte in dem, was das gezeichnete Blatt als TEXT zeigen
+        würde? Das ist: der Name des Blatts, die getippten Marken (Text,
+        Zettel) und alles, was seine Kinder tragen. NICHT dazu: der
+        Suchtext einer PDF-Seite (die Seitenansicht hat keine Textschicht —
+        gezeichnet würde er auch nicht gefunden), die Beschriftungen der
+        Leiste und „Seite N von M". Die stehen auf jeder Seite gleich; sie
+        mitzuzählen hiesse, beim ersten Buchstaben („o" in „von") alle 134
+        Seiten zu zeichnen — gemessen 1,2 s am Rechner, genau der Stau, den
+        E717 beseitigt (`messungen.md` §88, L238 Punkt 3). */
+    const enthaelt = (block: any, q: string): boolean => {
+      const texte: string[] = [];
+      if (!istPdf(block)) texte.push(String(block?.text ?? ''));
+      for (const m of (Array.isArray(block?.marken) ? block.marken : []))
+        if (m && (m.art === 'text' || m.art === 'zettel')) texte.push(String(m.text ?? ''));
+      const stapel: any[] = [...(Store.childrenOf(String(block.id)) as any[])];
+      let n = 0;
+      while (stapel.length && n++ < 2000) {
+        const b = stapel.pop();
+        zeichenketten(b, texte);
+        for (const k of Store.childrenOf(String(b.id)) as any[]) stapel.push(k);
+      }
+      return texte.some(t => t.toLowerCase().includes(q));
+    };
+
+    /** Vor Strg+F: jeden Platz zeichnen, dessen Inhalt das Gesuchte
+        enthält — aus dem Speicher gelesen, nicht aus dem DOM. Die übrigen
+        bleiben Platz; ihr Satz „… wird vorbereitet" ist kein Fund (die
+        Suche überspringt `.blatt-platz`). */
+    const zeichneFuerSuche = (frage: string): number => {
+      const q = String(frage || '').trim().toLowerCase();
+      if (!q) return 0;
+      let n = 0;
+      for (const el of [...document.querySelectorAll<HTMLElement>('#page [data-nah="wartet"]')]) {
+        const p = plaetze.get(el);
+        if (!p) continue;
+        const block = Store.getBlock(String(p.block.id)) ?? p.block;
+        if (enthaelt(block, q)) { jetzt(el, 'still'); n++; }
+      }
+      return n;
+    };
+
+    return { blatt, zeichneFuer, zeichneFuerSuche };
+  })();
+
   /** Baut das DOM für einen Block samt Kindern. */
   /**
    * @param nr Die laufende Nummer einer Nummernliste — von dem gezählt, der
@@ -901,12 +1280,12 @@ const Blocks = (() => {
          sie selbst — deshalb steht es hier und nicht in der Kinderliste
          weiter unten (E100). */
       case 'blatt':
-        box.appendChild(Blatt.zeichne(block));
+        box.appendChild(Nahzeichnen.blatt(block, () => Blatt.zeichne(block)));
         break;
 
       /* Eine PDF-Seite: Bild unten, Zeichenschicht darüber (E103). */
       case 'pdfseite':
-        box.appendChild(PdfSeite.zeichne(block));
+        box.appendChild(Nahzeichnen.blatt(block, () => PdfSeite.zeichne(block)));
         break;
 
       case 'whiteboard':
@@ -3670,6 +4049,9 @@ const Blocks = (() => {
     blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
     knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
     DIENSTE, einbettungsAdresse,
+    /* Was in einem wartenden Blatt steht, vor einem Sprung oder einer
+       Suche zeichnen (E717, `test593` §11, §12). */
+    zeichneFuer: Nahzeichnen.zeichneFuer, zeichneFuerSuche: Nahzeichnen.zeichneFuerSuche,
     /* Mehrfachauswahl */
     auswahlEinklinken, auswahlSetzen, auswahlLeeren, auswahlZeigen, auswahlBis,
     auswahlLoeschen, auswahlDuplizieren, auswahlKopieren, auswahlSchneiden,
