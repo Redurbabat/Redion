@@ -370,7 +370,9 @@ table.grid th.th-aus input{accent-color:var(--accent-text); cursor:pointer}
 table.grid tr.zieht{opacity:.4}
 table.grid tr.ziel td{border-top:2px solid var(--accent)}
 table.grid th.ziel{box-shadow:inset 2px 0 0 var(--accent)}
-table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg)}
+/* `--db-grund` statt `--bg` (E723): im Kasten der Fläche liegt die Tabelle auf
+   der Karte, und die Seitenfarbe zog dort einen dunkleren Streifen. */
+table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--db-grund, var(--bg))}
 
 #sammelleiste{
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:820;

@@ -511,6 +511,15 @@ const Seitenflaeche = (() => {
     let sicht: Sicht = sichtLesen(p.id) ?? { x: 0, y: 0, z: 1 };
     let werkzeug = 'zeiger';
 
+    /* DIE ZOOMZAHL HAT EINEN NAMEN, keinen Wähler (E722). `stellen` fragte
+       `flaeche.querySelector('.pg-fl-massstab')` — und seit die Leiste der
+       Fläche den Schacht räumt, wenn ein Whiteboard dran ist, hängt sie
+       zeitweise nicht im Baum: die Zahl bliebe stehen, während man zoomt. */
+    const massstabZeigen = document.createElement('b');
+    massstabZeigen.className = 'pg-fl-massstab';
+    massstabZeigen.setAttribute('aria-live', 'polite');
+    massstabZeigen.textContent = '100 %';
+
     const stellen = (merken = true): void => {
       const z = sicht.z;
       ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
@@ -518,8 +527,7 @@ const Seitenflaeche = (() => {
          eine Fläche und nicht eine Seite mit Punkten darauf. */
       flaeche.style.backgroundSize = `${RASTER * z}px ${RASTER * z}px`;
       flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
-      const anzeige = flaeche.querySelector('.pg-fl-massstab');
-      if (anzeige) anzeige.textContent = Math.round(z * 100) + ' %';
+      massstabZeigen.textContent = Math.round(z * 100) + ' %';
       if (merken) sichtSchreiben(p.id, sicht);
     };
 
@@ -638,7 +646,17 @@ const Seitenflaeche = (() => {
        Objekt waere schneller und traegt dafuer das Risiko, dass zwei
        Staende heimlich dieselbe Liste teilen. */
     const abbild = (): string => JSON.stringify(formen);
-    const merken = () => verlauf.merken(abbild());
+    /* ZURÜCK UND VOR SAGEN, OB ES ETWAS GIBT (E722) — dasselbe Muster wie
+       im Whiteboard (`zeichenflaeche.ts`, `standZeigen`). Ein Knopf, der
+       gedrückt aussieht und nichts tut, ist ein falsches Versprechen (§32).
+       `leiste` steht weiter unten; gerufen wird das hier erst aus Griffen,
+       also nach ihrem Bau. */
+    const standZeigen = (): void => {
+      leiste.setzeGesperrt('zurueck', !verlauf.kannZurueck());
+      leiste.setzeGesperrt('vor', !verlauf.kannVor());
+    };
+    const merken = (): void => { verlauf.merken(abbild()); standZeigen(); };
+    const verwerfen = (): void => { verlauf.letztenVerwerfen(); standZeigen(); };
     const sichern = () => { formenSchreiben(p, formen); malen(); };
 
     const schrittZurueck = (): void => {
@@ -646,12 +664,14 @@ const Seitenflaeche = (() => {
       if (vorher === null) return;
       formen = JSON.parse(vorher);
       sichern();
+      standZeigen();
     };
     const schrittVor = (): void => {
       const nachher = verlauf.vor(abbild());
       if (nachher === null) return;
       formen = JSON.parse(nachher);
       sichern();
+      standZeigen();
     };
 
     /** Welche Form liegt an dieser Stelle? Gerechnet, nicht ueber das
@@ -691,11 +711,6 @@ const Seitenflaeche = (() => {
     /* ======================================================================
      * Die Werkzeugleiste — dieselbe wie auf jeder anderen Fläche (E689)
      * ====================================================================*/
-    const massstabZeigen = document.createElement('b');
-    massstabZeigen.className = 'pg-fl-massstab';
-    massstabZeigen.setAttribute('aria-live', 'polite');
-    massstabZeigen.textContent = '100 %';
-
     const leiste = GfxToolbar.erstelle({
       klasse: 'pg-fl-tools',
       beschriftung: 'Werkzeuge der Fläche',
@@ -708,7 +723,11 @@ const Seitenflaeche = (() => {
       aktionen: [
         { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
           menue: true, kapsel: 'werkzeuge' },
-        { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo' },
+        { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo', gesperrt: true },
+        /* „Schritt vorwärts" gab es nur als Strg+Umschalt+Z — mit dem
+           Finger also gar nicht (E722). Name und Zeichen wie im Whiteboard. */
+        { id: 'vor', name: 'Schritt vorwärts', titel: 'Schritt vorwärts (Strg + Umschalt + Z)',
+          sym: 'redo', gesperrt: true },
         { id: 'kleiner', name: 'Kleiner', titel: 'Kleiner (Strg + Rad)', sym: 'minus' },
         { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
         { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' }
@@ -740,15 +759,191 @@ const Seitenflaeche = (() => {
       },
       aufAktion: (id: string) => {
         if (id === 'zurueck') schrittZurueck();
+        if (id === 'vor') schrittVor();
         if (id === 'kleiner') massstab(sicht.z / 1.25);
         if (id === 'groesser') massstab(sicht.z * 1.25);
         if (id === 'passend') passend();
       }
     });
-    flaeche.appendChild(leiste.element);
+    /* VOR die Ebene, nicht dahinter (E722): die Reihenfolge im Baum ist die
+       Reihenfolge beim Tabben. Hinter der Ebene käme man über den Text des
+       Seitenkastens nie hinaus — Tab rückt dort einen Block ein, wie in
+       Notion. So ist die Leiste der erste Halt nach der Fläche selbst. Zu
+       sehen ist sie trotzdem darüber: `z-index: 6` (seitenansichten.css). */
+    flaeche.insertBefore(leiste.element, ebene);
     flaeche.dataset['wz'] = werkzeug;
     if (typeof Register !== 'undefined' && Register.symbole)
       Register.symbole.fuelle(leiste.element);
+
+    /* ======================================================================
+     * EINE LEISTE JE ARBEITSKONTEXT — DER SCHACHT (E722)
+     * ----------------------------------------------------------------------
+     * Redur, PDF vom 29. September, Seite 18 unten: „Hier wieder die zeichnen
+     * menüs ist doppelt , es sollte nur die ganez unter bleiben". Gemessen
+     * gegen 1bfaca53: ein Whiteboard im Seitenkasten brachte seine eigene
+     * `GfxToolbar` mit (zwölf Werkzeuge, Farbe, −/+, Ins Bild, Zurück, Vor,
+     * Mehr), dazu die der Fläche unten — zwei gewählte Werkzeuge, zwei
+     * Zoomzahlen, und ein zweites Whiteboard im eigenen Kasten machte drei.
+     *
+     * DIE FLÄCHE HAT JETZT EINEN SCHACHT: genau EINE Leiste hängt als Kind
+     * an `.pg-flaeche`. Was ein Block in einem Kasten an Leiste gebaut hat,
+     * wird HERAUSGENOMMEN — nicht versteckt: dieselbe Instanz mit ihren
+     * Horchern, Menüs und ihrem Zustand liegt losgelöst bereit (Redurs
+     * Satz aus dem PDF: „technisch auf dieselbe Komponente verweisen",
+     * „Doppelte UI verstecken" reicht nicht). Ein Tipp oder der Fokus in
+     * einem Whiteboard hängt SEINE Leiste in den Schacht; ein Tipp auf die
+     * Fläche, einen Kopf oder Text hängt die der Fläche zurück.
+     *
+     * NUR DOM, KEIN NAME AUS DEM BEREICH (§5): die Fläche kennt das
+     * Whiteboard nicht. Sie sucht `.gfx-tb-sockel` im Kasten — was immer
+     * künftig eine `GfxToolbar` baut (Gedankenkarte, Planfläche, E689),
+     * kommt von selbst in den Schacht. Die Seitenansicht ist davon
+     * unberührt: dort steht die Leiste weiter unter ihrem Whiteboard.
+     * ====================================================================*/
+    /** Zeichenfläche → ihre herausgenommene Leiste. */
+    const gaeste = new Map<HTMLElement, HTMLElement>();
+    let imSchacht: HTMLElement = leiste.element;
+    let gastFlaeche: HTMLElement | null = null;
+
+    /** Ein Wort in der Leiste, WESSEN sie ist (§38: nicht nur ein Ring in
+     *  der Akzentfarbe). Vorlesen muss man es nicht — die Werkzeugleiste
+     *  trägt denselben Namen schon als `aria-label`. */
+    const schildSetzen = (bar: HTMLElement, text: string): void => {
+      const roller = bar.querySelector<HTMLElement>('.gfx-tb-roller');
+      if (!roller) return;
+      let schild = roller.querySelector<HTMLElement>(':scope > .pg-fl-kontext');
+      if (!schild) {
+        schild = document.createElement('span');
+        schild.className = 'pg-fl-kontext';
+        schild.setAttribute('aria-hidden', 'true');
+        roller.prepend(schild);
+      }
+      /* EIN ZUSAMMENGESETZTES WORT IN ZWEI TEILEN (Durchsicht E722). Am
+         Telefon nahm „Zeichenfläche" mit dem Abstand vom Rechner 106 von
+         366 px des Streifens — fünf Werkzeuge waren ganz zu sehen. Dort
+         steht es seither in zwei Zeilen, „Zeichen-" über „fläche"
+         (seitenansichten.css); am Rechner stehen die Teile nebeneinander
+         und lesen sich wie ein Wort. Der Text bleibt derselbe, nur
+         geteilt — kein zweites, kürzeres Wort, das man lernen müsste. */
+      const teile = /^(.+?)(fläche)$/i.exec(text);
+      if (teile?.[1] && teile[2]) {
+        const vorn = document.createElement('span');
+        const hinten = document.createElement('span');
+        vorn.textContent = teile[1];
+        hinten.textContent = teile[2];
+        schild.replaceChildren(vorn, hinten);
+      } else schild.textContent = text;
+    };
+    schildSetzen(leiste.element, 'Fläche');
+
+    const aufnehmen = (): void => {
+      for (const bar of [...ebene.querySelectorAll<HTMLElement>('.pg-fl-koerper .gfx-tb-sockel')]) {
+        const ober = bar.parentElement;
+        if (!ober) continue;
+        bar.remove();
+        gaeste.set(ober, bar);
+        const name = bar.querySelector('[role="toolbar"]')?.getAttribute('aria-label') ?? '';
+        /* Der Name nennt seit der Durchsicht auch den Titel des Blocks
+           („Werkzeuge der Zeichenfläche „Skizze““), damit man beim Vorlesen
+           hört, WELCHES Whiteboard. Das Schild bleibt das kurze Wort. */
+        schildSetzen(bar, name.replace(/^Werkzeuge (der|des) /, '').replace(/\s*„.*“$/, '') || 'Block');
+      }
+      for (const ober of [...gaeste.keys()]) {
+        if (flaeche.contains(ober)) continue;
+        gaeste.delete(ober);
+        if (ober === gastFlaeche) schachtSetzen(null);
+      }
+    };
+
+    /** Hängt die Leiste von `ober` in den Schacht — `null` heisst: die der
+     *  Fläche. Der Wechsel ist sofort, ohne Fahrt: es ist kein Ort, an den
+     *  etwas fährt, sondern ein anderer Arbeitskontext. */
+    const schachtSetzen = (ober: HTMLElement | null): void => {
+      const neu = ober ? gaeste.get(ober) ?? null : leiste.element;
+      if (!neu || neu === imSchacht) return;
+      const alt = imSchacht;
+      const fokusDrin = !!document.activeElement && alt.contains(document.activeElement);
+      /* Ein offenes Untermenü geht mit seiner Leiste aus dem Bild — es wird
+         vorher auf dem Weg geschlossen, den die Leiste selbst kennt. */
+      if (alt.querySelector('.gfx-tb-menue'))
+        alt.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+      if (alt.parentElement === flaeche) flaeche.replaceChild(neu, alt);
+      else flaeche.insertBefore(neu, ebene);
+      imSchacht = neu;
+      gastFlaeche?.classList.remove('pg-fl-aktiv');
+      gastFlaeche = ober;
+      gastFlaeche?.classList.add('pg-fl-aktiv');
+      if (fokusDrin) neu.querySelector<HTMLElement>('button[tabindex="0"]')?.focus({ preventScroll: true });
+      /* Am Telefon rollt die Leiste, und eine frisch eingehängte hat ihr
+         Rollmass verloren: das gewählte Werkzeug stünde ausserhalb des
+         Bildes (Durchsicht E722, test598 §8). Gerollt wird NUR der
+         Streifen, von Hand und ohne Fahrt — `scrollIntoView` rollte auch
+         die Fläche darüber. */
+      const roller = neu.querySelector<HTMLElement>('.gfx-tb-roller');
+      const an = roller?.querySelector<HTMLElement>('[data-wz].on');
+      if (roller && an) {
+        /* Das Schild klebt links (seitenansichten.css) — sichtbar ist der
+           Streifen also erst rechts davon. Derselbe Rand gilt fürs Rollen
+           beim Fokus mit Tab und Pfeilen. */
+        const schild = roller.querySelector<HTMLElement>(':scope > .pg-fl-kontext');
+        const breit = schild ? schild.getBoundingClientRect().width : 0;
+        roller.style.scrollPaddingInlineStart = breit ? `${Math.ceil(breit)}px` : '';
+        const r = roller.getBoundingClientRect(), b = an.getBoundingClientRect();
+        const links = r.left + breit;
+        if (b.right > r.right) roller.scrollLeft += b.right - r.right;
+        else if (b.left < links) roller.scrollLeft -= links - b.left;
+      }
+    };
+
+    /** Die mit Tab erreichbaren Elemente nach `ober` im Baum, der Reihe
+     *  nach — nicht in `ober` und nicht in der Leiste im Schacht. Eine Folge,
+     *  nicht EIN Element: ob ein Halt den Fokus wirklich nimmt, weiss erst
+     *  `focus()` (Durchsicht E722, siehe beim Tab unten). */
+    const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
+    const naechsteHalte = function* (ober: HTMLElement): Generator<HTMLElement> {
+      for (const el of document.querySelectorAll<HTMLElement>(HALTE)) {
+        if (!(ober.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+        if (ober.contains(el) || imSchacht.contains(el)) continue;
+        /* Ein Textfeld (`contenteditable` ohne eigenes `tabindex`) meldet
+           `tabIndex` −1 und ist trotzdem ein Tabhalt — am Telefon, wo die
+           Griffe ausgeblendet sind, ist es der nächste (test598 §8). Ein
+           ausdrückliches `tabindex="-1"` gilt dagegen immer. */
+        const ausdruecklich = el.getAttribute('tabindex');
+        const halt = ausdruecklich !== null ? el.tabIndex >= 0 : (el.tabIndex >= 0 || el.isContentEditable);
+        if (!halt || (el as HTMLButtonElement).disabled) continue;
+        if (el.isContentEditable && el.parentElement?.isContentEditable) continue;
+        if (el.closest('[inert], [hidden], [aria-hidden="true"]') || !el.getClientRects().length) continue;
+        yield el;
+      }
+    };
+
+    /** Welche Zeichenfläche besitzt dieses Ziel? */
+    const gastVon = (ziel: EventTarget | null): HTMLElement | null => {
+      if (!(ziel instanceof Node)) return null;
+      for (const ober of gaeste.keys()) if (ober.contains(ziel)) return ober;
+      return null;
+    };
+    const kontextNach = (ziel: EventTarget | null): void => {
+      if (!(ziel instanceof Node) || imSchacht.contains(ziel)) return;
+      schachtSetzen(gastVon(ziel));
+    };
+    flaeche.addEventListener('pointerdown', (e: PointerEvent) => kontextNach(e.target), true);
+    flaeche.addEventListener('focusin', (e: FocusEvent) => kontextNach(e.target));
+
+    aufnehmen();
+    /* Ein Block kann sich später zeichnen oder neu zeichnen (Nachladen,
+       Typwechsel, eine Änderung aus einem anderen Tab) — dann bringt er
+       wieder eine Leiste mit. Gesucht wird nur, wenn eine dazukam oder eine
+       Zeichenfläche verschwand. */
+    if (typeof MutationObserver === 'function') {
+      new MutationObserver((liste) => {
+        const betrifft = liste.some(m =>
+          [...m.addedNodes].some(n => n instanceof Element &&
+            (n.matches('.gfx-tb-sockel') || !!n.querySelector('.gfx-tb-sockel'))) ||
+          [...m.removedNodes].some(n => n instanceof Element && [...gaeste.keys()].some(o => n === o || n.contains(o))));
+        if (betrifft) aufnehmen();
+      }).observe(ebene, { childList: true, subtree: true });
+    }
 
     /* ======================================================================
      * Schieben, Ziehen, Zoomen
@@ -779,6 +974,14 @@ const Seitenflaeche = (() => {
     };
 
     const beginnt = (e: PointerEvent): void => {
+      /* EINE ZEICHENFLÄCHE IM KASTEN GEHÖRT SICH SELBST (E722). Vorher lief
+         hier zuerst der Zweig für Hand und mittlere Taste und rief
+         `setPointerCapture` — gemessen: die Fläche rückte um +80/+50 px
+         (messungen.md §92), und das
+         Whiteboard bekam keinen Strich. Auch zwei Finger darin kneifen das
+         Whiteboard, nicht beide. Die Fläche verschiebt man daneben, mit dem
+         Rad ausserhalb, mit zwei Fingern auf dem Grund, mit −/+ und Ins Bild. */
+      if (gastVon(e.target)) return;
       finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (finger.size === 2) {
         const [a, b] = [...finger.values()];
@@ -806,7 +1009,7 @@ const Seitenflaeche = (() => {
         if (werkzeug === 'radierer') {
           const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z);
           if (treffer) { formen = formen.filter(x => x !== treffer); sichern(); }
-          else verlauf.letztenVerwerfen();
+          else verwerfen();
           aktiv = { art: 'radieren' };
           return;
         }
@@ -934,7 +1137,7 @@ const Seitenflaeche = (() => {
         const klein = fertig.art === 'stift'
           ? fertig.pts.length < 2
           : Math.abs(fertig.w) < 4 && Math.abs(fertig.h) < 4;
-        if (klein) { formen = formen.filter(x => x !== fertig); verlauf.letztenVerwerfen(); }
+        if (klein) { formen = formen.filter(x => x !== fertig); verwerfen(); }
         sichern();
         return;
       }
@@ -963,10 +1166,55 @@ const Seitenflaeche = (() => {
        (test568). Im Text gilt das nicht: dort gehoert Strg+Z dem Feld. */
     flaeche.tabIndex = 0;
     flaeche.addEventListener('keydown', (e: KeyboardEvent) => {
+      /* BEHANDELT IST BEHANDELT (E682, hier nachgezogen in E722). Die Regel
+         stand in der Schale, nicht in der Fläche — und die Fläche horcht
+         eine Ebene ÜBER dem Whiteboard im Kasten: ein Strg+Z nahm dort
+         zurück UND hier. Das Innerste gewinnt. */
+      if (e.defaultPrevented) return;
       const ziel = e.target as HTMLElement | null;
       if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable)) return;
+      /* TAB FÜHRT VOM WHITEBOARD IN SEINE LEISTE — wie in der Seitenansicht,
+         wo die Leiste im Whiteboard hängt und also gleich danach kommt. Hier
+         hängt sie im Schacht am Anfang der Fläche, VOR der Ebene; ohne diese
+         Zeilen führte Tab vom Whiteboard weg und hängte die Leiste der
+         Fläche zurück. */
+      if (e.key === 'Tab' && gastFlaeche && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const halt = imSchacht.querySelector<HTMLElement>('button[tabindex="0"]');
+        if (!e.shiftKey && ziel === gastFlaeche && halt) { e.preventDefault(); halt.focus(); return; }
+        if (e.shiftKey && ziel === halt) { e.preventDefault(); gastFlaeche.focus(); return; }
+        /* … UND AUS DER LEISTE WEITER, HINTER DAS WHITEBOARD (Durchsicht
+           E722, §38). Die Leiste steht im Baum vor der Ebene; der Browser
+           ginge von ihr aus an den Anfang der Fläche zurück, und alles nach
+           dem Whiteboard wäre mit Tab nicht mehr zu erreichen (test598 §9).
+           Gesucht wird das erste erreichbare Element, das im Baum NACH dem
+           Whiteboard kommt — gibt es keines, macht der Browser weiter. */
+        if (!e.shiftKey && ziel && imSchacht.contains(ziel)) {
+          /* ERST DER FOKUS, DANN DAS `preventDefault` (Durchsicht E722). Ein
+             Halt mit `visibility:hidden` oder einem `inert` aus dem Stil hat
+             Rechtecke und nimmt trotzdem keinen Fokus; vorher war das Tab
+             dann verschluckt, und der Fokus blieb in der Leiste. Jetzt geht
+             es zum nächsten — und nimmt keiner, macht der Browser weiter. */
+          for (const nach of naechsteHalte(gastFlaeche)) {
+            nach.focus();
+            if (document.activeElement === nach) { e.preventDefault(); return; }
+          }
+        }
+      }
       if (!(e.ctrlKey || e.metaKey)) return;
       const taste = e.key.toLowerCase();
+      /* Steht der Fokus in der Leiste eines Whiteboards, gehört Strg+Z dem
+         Whiteboard: seine Leiste liegt im Schacht, nicht mehr in ihm, die
+         Taste käme also nie bei ihm an. Sie wird ihm gereicht — als
+         dieselbe Taste, auf demselben Weg, den es selbst kennt. */
+      if (gastFlaeche && ziel && imSchacht.contains(ziel) &&
+          (taste === 'z' || (taste === 'y' && !e.shiftKey))) {
+        const weiter = new KeyboardEvent('keydown', {
+          key: e.key, code: e.code, ctrlKey: e.ctrlKey, metaKey: e.metaKey,
+          shiftKey: e.shiftKey, bubbles: true, cancelable: true });
+        gastFlaeche.dispatchEvent(weiter);
+        e.preventDefault();
+        return;
+      }
       if (taste === 'z' && !e.shiftKey) { e.preventDefault(); schrittZurueck(); }
       else if ((taste === 'z' && e.shiftKey) || (taste === 'y' && !e.shiftKey)) {
         e.preventDefault(); schrittVor();
@@ -1024,8 +1272,47 @@ const Seitenflaeche = (() => {
       aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
     });
 
+    /** ROLLT UNTER DEM RAD ETWAS IM KASTEN SELBST? (Durchsicht E723)
+     *  Seit E723 bricht eine breite Tabelle nicht mehr aus dem Kasten aus, sie
+     *  rollt darin — gemessen verbergen acht Spalten im Seitenkasten 454 px.
+     *  Das Rad der Fläche nahm aber JEDES Rad: ein Wisch quer auf dem
+     *  Trackpad oder Umschalt+Rad schob die Fläche, und die Tabelle blieb
+     *  bei 0 stehen. Es gilt dieselbe Regel wie beim Whiteboard — das
+     *  Innerste gewinnt —, nur für das, was von sich aus rollt: Gesucht wird
+     *  vom Ziel aufwärts bis zur Ebene ein Element, das in der Richtung des
+     *  Rads rollen KANN und noch nicht an seinem Rand steht. Am Rand gibt es
+     *  das Rad weiter, sonst bliebe man über einer Tabelle hängen, die schon
+     *  ganz rechts steht. */
+    const rolltSelbst = (e: WheelEvent): boolean => {
+      /* Quer heisst: der Wisch geht mehr seitwärts als längs — oder Umschalt
+         hält ein gewöhnliches Rad, das der Browser dann seitwärts rollt. */
+      const quer = Math.abs(e.deltaX) > Math.abs(e.deltaY) || (e.shiftKey && e.deltaX === 0);
+      const weg = quer ? (e.deltaX || e.deltaY) : e.deltaY;
+      if (!weg) return false;
+      for (let el = e.target instanceof Element ? e.target : null;
+           el && el !== ebene && el !== flaeche; el = el.parentElement) {
+        const st = getComputedStyle(el);
+        const art = quer ? st.overflowX : st.overflowY;
+        if (art !== 'auto' && art !== 'scroll') continue;
+        const max = quer ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+        if (max <= 1) continue;
+        const stand = quer ? el.scrollLeft : el.scrollTop;
+        if (weg < 0 ? stand > 0.5 : stand < max - 0.5) return true;
+      }
+      return false;
+    };
+
     /* Rad schiebt, Strg + Rad zoomt — wie in AFFiNE und im Whiteboard. */
     flaeche.addEventListener('wheel', (e: WheelEvent) => {
+      /* Ein Rad, ein Ausschnitt (E722): hat das Whiteboard im Kasten das Rad
+         genommen, bleibt die Fläche stehen. Gemessen vorher: ein Rad zoomte
+         das Whiteboard UND schob die Fläche, und Strg+Rad zoomte sie von
+         0,92 auf 1,02 (messungen.md §92). */
+      if (e.defaultPrevented) return;
+      /* … und was im Kasten selbst rollt, rollt der Browser — ohne
+         `preventDefault`, mit seinem eigenen Schwung. Strg+Rad bleibt der
+         Zoom der Fläche, auch über einer Tabelle. */
+      if (!(e.ctrlKey || e.metaKey) && rolltSelbst(e)) return;
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
         massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY);

@@ -929,7 +929,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 538 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 539 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1598,28 +1598,28 @@ Zurücksetzen im Fokus-Modus an, in dem der Trenner ausgeblendet ist — beides 
 jetzt in ihm, zuerst rot mit 59 von 61. Gezählt am 6. Oktober, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
 
-*Und 533: `test595` — das Herz ist ein Knopf (E719). Redur, PDF vom
-29. September, am Foto der Lernzentrale: „die herz beim hier funktionier
-nicht also wenn ich das klicke passiert nichts". Er findet die Karte
-„fällige Fehler" und verlangt an ihrem Herz einen `<button>` statt eines
-`aria-hidden`-Spans, 44 × 44, mit Namen und `aria-pressed`, und fragt
-`elementFromPoint`, was an der Mitte WIRKLICH liegt — gegen den alten
-Stand die Karte. Dann schaltet er mit Maus, Enter, Leertaste und
-Fingertipp, liest die gemerkte Liste, den Streifen „Gemerkt" auf Heute,
-lädt neu, nimmt es wieder heraus, lässt das Schreiben scheitern (Knopf
-zurück, Hinweis da) und prüft, dass ohne Bewegung nichts springt. Drei
-seiner Zusagen kamen erst, als eine Gegenprobe GRÜN blieb: die Form schon
-in Ruhe, kein zweites gemaltes Herz, und in `test580` §5 der Fokus weg vor
-dem Messen. Und drei kamen aus einer Durchsicht vor dem Push: der Fokus,
-der beim Lösen im Streifen auf `<body>` fiel, der Fokusring, den die Karte
-kappte, und ein Zurück, das den Eintrag eines anderen Tabs löschte (§16).
-Sein §10 kam aus einer zweiten Durchsicht am 10. Oktober: jedes Herz muss
-ein Ding nennen — „Zu Favoriten: fällig" sagt nicht, WAS fällig ist, und im
-Streifen „Gemerkt" fehlt die Ansicht auch dem Auge. Er erkennt das Ding am
-grossen Anfangsbuchstaben des Hauptworts, und gegen den alten Stand fand er
-fünf Namen ohne eines. Gezählt am 6. Oktober, im selben Bogen: `ls
-pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
-Zusammenführen neu zu zählen.*
+*Und 533: `test598` — die Fläche hat EINE Werkzeugleiste je Arbeitskontext
+(E722, E723). Redurs Seite 18 aus dem PDF vom 29. September in zwölf
+Abschnitten: eine Leiste als Kind der Fläche, auch mit zwei Whiteboards
+(eines im eigenen Kasten); nach einem Tipp ins Whiteboard trägt sie dessen
+19 Bedienelemente, nach einem Tipp auf die Fläche deren acht Werkzeuge und
+„Schritt vorwärts"; ein gewähltes Werkzeug und eine Zoomzahl; Strg+Z, das
+Rad und die Hand wirken je einmal; keine Leiste über ihrer Zeichenfläche;
+am Telefon 44 px; Tab erreicht einen KNOPF. Dazu die Tabelle im Kasten:
+„Neu" überfahren in allen zehn Schemata lesbar, die Auswahlleiste nicht
+über der Flächenleiste (vorher 19 446 px²), die angeheftete Spalte auf dem
+Grund der Karte. Zweimal war er aus dem FALSCHEN Grund grün: §6 wählte
+erst ein Werkzeug „des Whiteboards" und wählte damit im alten Stand das
+der Fläche um — die Hand wurde nie geprüft; und Chrome macht einen
+rollenden Roller ohne erreichbaren Knopf selbst zum Tabhalt, also zählt
+nur ein Knopf (L206). Gegen den alten Stand rot mit 30 von 47. Nach
+der Durchsicht vier Zusagen mehr, jede erst rot: Tab aus der Leiste
+führt HINTER das Whiteboard statt an den Anfang der Fläche (am Telefon
+auf das Textfeld — ein `contenteditable` meldet `tabIndex` −1 und ist
+trotzdem ein Halt), das gewählte Werkzeug steht im sichtbaren Teil des
+Streifens, und das Schild „Zeichenfläche" rollt nicht mit hinaus. Gezählt am
+6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+533 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
 
 *Und 534: `test593` — der Seiteneditor ohne Stau (E717). Redurs Satz vom
 29. September, „Bei pdf wenn ich seiteneditor klicke bleibt es für ca
@@ -1673,7 +1673,31 @@ Zustand lebt im Speicher, nicht nur im Merker. Gezählt am 6. Oktober, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 533. Beim Zusammenführen nachgezählt (11. Oktober,
 `claude/morgen-besser-3`): 535.*
 
-*Und 536: `test596` — kein toter Knopf (E720). Redur: „beim fählermeldung
+*Und 536: `test595` — das Herz ist ein Knopf (E719). Redur, PDF vom
+29. September, am Foto der Lernzentrale: „die herz beim hier funktionier
+nicht also wenn ich das klicke passiert nichts". Er findet die Karte
+„fällige Fehler" und verlangt an ihrem Herz einen `<button>` statt eines
+`aria-hidden`-Spans, 44 × 44, mit Namen und `aria-pressed`, und fragt
+`elementFromPoint`, was an der Mitte WIRKLICH liegt — gegen den alten
+Stand die Karte. Dann schaltet er mit Maus, Enter, Leertaste und
+Fingertipp, liest die gemerkte Liste, den Streifen „Gemerkt" auf Heute,
+lädt neu, nimmt es wieder heraus, lässt das Schreiben scheitern (Knopf
+zurück, Hinweis da) und prüft, dass ohne Bewegung nichts springt. Drei
+seiner Zusagen kamen erst, als eine Gegenprobe GRÜN blieb: die Form schon
+in Ruhe, kein zweites gemaltes Herz, und in `test580` §5 der Fokus weg vor
+dem Messen. Und drei kamen aus einer Durchsicht vor dem Push: der Fokus,
+der beim Lösen im Streifen auf `<body>` fiel, der Fokusring, den die Karte
+kappte, und ein Zurück, das den Eintrag eines anderen Tabs löschte (§16).
+Sein §10 kam aus einer zweiten Durchsicht am 10. Oktober: jedes Herz muss
+ein Ding nennen — „Zu Favoriten: fällig" sagt nicht, WAS fällig ist, und im
+Streifen „Gemerkt" fehlt die Ansicht auch dem Auge. Er erkennt das Ding am
+grossen Anfangsbuchstaben des Hauptworts, und gegen den alten Stand fand er
+fünf Namen ohne eines. Gezählt am 6. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
+Zusammenführen neu zu zählen. Beim Zusammenführen nachgezählt (11. Oktober,
+`claude/morgen-besser-3`): 536.*
+
+*Und 537: `test596` — kein toter Knopf (E720). Redur: „beim fählermeldung
 habe ich keien buttons efeck also wie bein tagesrunde … und bei alle wo eine
 buttons gibt füge das im enscheideung und claude.md". Sein Kern ist ein
 ZENSUS: jeder sichtbare, freigegebene Knopf in sechs Ansichten der Lernwelt,
@@ -1697,9 +1721,9 @@ Viertelsekunde lang weg. §9 läuft seither auch mit `reduce`, und §11 misst
 jedes Bild über 1,4 s, nicht einen Augenblick. Gezählt am 6. Oktober, im
 selben Bogen: der Befehl sagt 534 — auf seinem Zweig; beim Zusammenführen
 neu zu zählen. Beim Zusammenführen nachgezählt (11. Oktober,
-`claude/morgen-besser-3`): 536.*
+`claude/morgen-besser-3`): 537.*
 
-*Und 537: `test597` — ein Menü je Ding (E721). Redurs Notiz unter dem Foto
+*Und 538: `test597` — ein Menü je Ding (E721). Redurs Notiz unter dem Foto
 der Bibliothekskarten, auf dem er den ☆ oben rechts eingekreist hat: „Hier
 füge ... und oder beim rechts klicke sollte es mir zeigen löschen", in 91
 Zusagen über achtzehn Abschnitte: ein echtes „…" NEBEN jedem Deckel (44 ×
@@ -1725,7 +1749,7 @@ die Durchsicht fand dabei, dass `test362` an seinem eigenen Stand rot war
 — eine rohe 22px. Ein Wächter, der in der Nachbarliste fehlt, wacht nicht.
 Gezählt am 6. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 534. Beim Zusammenführen nachgezählt (11. Oktober,
-`claude/morgen-besser-3`): 537.*
+`claude/morgen-besser-3`): 538.*
 
 ### Die Befehle
 
@@ -1743,7 +1767,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 538 Läufe
+npm run pruefen                      alle 539 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1833,7 +1857,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 538 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 539 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

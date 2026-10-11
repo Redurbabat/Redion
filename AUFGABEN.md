@@ -1703,6 +1703,29 @@ Grund:
    „Weiterdenl(en" — die vergrösserte Abschrift deckt die letzte Silbe.
    Redurs Frage aus der Liste vom 5. Oktober („neben dem Wort ruhen?").
 
+## Die Fläche nach E722/E723 (6. Oktober 2026)
+
+1. **Gedankenkarte und Planfläche auf `GfxToolbar`** (L243 Punkt 1) — dann
+   kommen sie von selbst in den einen Schacht der Fläche. Mit Wächter:
+   `test598` §1 auch mit einer Gedankenkarte im Kasten.
+2. **„Alles löschen" des Whiteboards mit `Dialog.bestaetigen`** (L243
+   Punkt 2, E710 und E709) statt `confirm()`.
+3. **Die Auswahlleiste der Tabelle am Telefon** ausserhalb der Fläche:
+   sie steht fest 24 px über dem Rand. Der Nachbar am Telefon ist die
+   UNTERE Leiste, nicht `#handy-oben`. In der Fläche am Telefon rendert die
+   Datenbank Karten ohne `input.zeilen-aus` — die Regel
+   `body:has(.pg-flaeche) #sammelleiste{bottom:…}` ist dort also
+   gerechnet, nicht mit einer echten Auswahl gemessen (erzwungen: 601–659
+   gegen Schacht 669–739 und untere Leiste 775–835, `messungen.md` §92).
+   Ein Wächter mit einer echten Auswahl am Telefon fehlt noch.
+
+4. **Umschalt+Rad auf dem Grund der Fläche** (gefunden in der zweiten
+   Durchsicht, 10. Oktober): über einer breiten Tabelle rollt Umschalt+Rad
+   seither quer, wie überall im Browser — auf dem Grund daneben schiebt es
+   die Fläche weiter LÄNGS (`deltaY` mit `shiftKey`). Ob Umschalt+Rad dort
+   quer schieben soll, wie in AFFiNE und Figma, ist eine Frage an Redur;
+   mit Wächter in `test598` §5.
+
 ## Nach E719 und E720 — Herz und tote Knöpfe (6. Oktober 2026)
 
 1. **Was das Herz merkt — Redurs Frage 7 der Schlussliste.** Gebaut ist die

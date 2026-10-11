@@ -32,6 +32,9 @@
  *   §5  Der Radierer nimmt GENAU eine Form weg, nicht die Nachbarn.
  *   §6  Strg+Z nimmt den letzten Strich zurück — und nicht den Block
  *       darunter (E682).
+ *   §6b … und nicht das eingebettete Whiteboard, auch wenn es selbst einen
+ *       Schritt zurücknehmen könnte; im Whiteboard nimmt Strg+Z nur dort
+ *       zurück, nicht auf der Fläche (E722).
  *   §7  Die Zeichnung überlebt das Neuöffnen der Seite.
  *   §8  Die Tinte liegt UNTER den Kästen: im Kasten trifft der Finger den
  *       Text, nicht die Zeichnung.
@@ -365,6 +368,70 @@ p('Im Kasten trifft der Finger den Text, nicht die Tinte',
 console.log('\n10 · Nichts geht verloren');
 gleich('Der Text der Seite ist unverändert',
   await pg.evaluate((id: string) => Store.getBlock(id)?.text ?? null, ids.block), TEXT);
+
+/* ==========================================================================
+ * §6b · Strg+Z gehört der Fläche — und nicht dem eingebetteten Whiteboard
+ *       (E722). Und umgekehrt.
+ * --------------------------------------------------------------------------
+ * Gemessen am 6. Oktober gegen 1bfaca53: EIN Strg+Z im Whiteboard, das im
+ * Seitenkasten liegt, nahm dort zurück UND auf der Fläche — die Fläche horchte
+ * eine Ebene höher und fragte nicht, ob die Taste schon genommen war (die
+ * Regel aus E682 stand in der Schale, nicht in der Fläche).
+ * ======================================================================== */
+console.log('\n6b · Strg+Z im eingebetteten Whiteboard');
+const zwei = await pg.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Mit Skizze', seitenAnsicht: 'flaeche' });
+  const w = Store.addBlock(s.id, 'whiteboard', { text: 'Skizze', hoehe: 260 });
+  await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 900));
+  return { seite: s.id, wb: w.id };
+});
+const zahl6 = (id: string) => pg.evaluate((i: string) =>
+  ((Store.getBlock(i) as any)?.shapes ?? []).length as number, id);
+const frei6 = await pg.evaluate(() => {
+  const f = document.querySelector('.pg-flaeche')!.getBoundingClientRect();
+  const frei = (x: number, y: number) => { const el = document.elementFromPoint(x, y);
+    return !!el && !!el.closest('.pg-flaeche') && !el.closest('.pg-fl-notiz') && !el.closest('.gfx-tb-sockel'); };
+  for (let y = f.top + 30; y < f.bottom - 140; y += 23)
+    for (let x = f.left + 30; x < f.right - 110; x += 37)
+      if (frei(x, y) && frei(x + 70, y + 50)) return { x: Math.round(x), y: Math.round(y) };
+  return null;
+});
+p('Es gibt eine freie Stelle auf der Fläche (Vorbedingung)', !!frei6);
+const zug6 = async (x: number, y: number) => {
+  await pg.mouse.move(x, y); await pg.mouse.down();
+  await pg.mouse.move(x + 60, y + 40, { steps: 5 }); await pg.mouse.up();
+  await pg.waitForTimeout(250);
+};
+if (frei6) {
+  await pg.mouse.click(frei6.x, frei6.y);
+  await pg.evaluate(() => document.querySelector<HTMLElement>('.pg-flaeche > .gfx-tb-sockel [data-wz="rechteck"]')?.click());
+  await zug6(frei6.x, frei6.y);
+}
+const wbBox = await pg.evaluate(() => {
+  const r = document.querySelector('.pg-flaeche .wb-flaeche')?.getBoundingClientRect();
+  return r ? { x: Math.round(r.left + r.width * 0.4), y: Math.round(r.top + r.height * 0.3) } : null;
+});
+if (wbBox) await zug6(wbBox.x, wbBox.y);
+gleich('Fläche und Whiteboard tragen je eine Form (Vorbedingung)',
+  [await zahl6(zwei.seite), await zahl6(zwei.wb)], [1, 1]);
+await pg.keyboard.press('Control+z');
+await pg.waitForTimeout(300);
+gleich('Strg+Z im Whiteboard nimmt nur dort zurück — die Fläche behält ihre Form',
+  [await zahl6(zwei.seite), await zahl6(zwei.wb)], [1, 0]);
+/* Ein zweiter Strich im Whiteboard (Durchsicht E722): ohne ihn war sein
+   Verlauf leer, und ein Strg+Z der Fläche, das fälschlich auch beim
+   Whiteboard ankäme, hätte dort nichts zurücknehmen können — [0, 0] wäre
+   so oder so herausgekommen (§55.2). */
+if (wbBox) await zug6(wbBox.x + 20, wbBox.y + 50);
+gleich('Das Whiteboard trägt wieder einen rücknehmbaren Strich (Vorbedingung)',
+  [await zahl6(zwei.seite), await zahl6(zwei.wb)], [1, 1]);
+if (frei6) await pg.mouse.click(frei6.x + 20, frei6.y + 60);
+await pg.evaluate(() => document.querySelector<HTMLElement>('.pg-flaeche')?.focus());
+await pg.keyboard.press('Control+z');
+await pg.waitForTimeout(300);
+gleich('Strg+Z auf der Fläche nimmt nur die Fläche zurück — das Whiteboard behält seinen Strich',
+  [await zahl6(zwei.seite), await zahl6(zwei.wb)], [0, 1]);
 await pg.close();
 
 /* ==========================================================================

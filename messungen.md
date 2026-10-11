@@ -7267,3 +7267,176 @@ Tablet-Sonde für den Schlucker nach langem Drücken (L242 Punkt 5;
 1024 × 1366, Berührung über CDP, 650 ms halten, dann ein Tipp auf
 „Umbenennen"): 100, 300 und 900 ms nach dem Loslassen je ein Treffer
 (`UI.frage` einmal gerufen, Menü zu). Nicht nachzustellen — keine Änderung.
+
+## §92 · Die Fläche: eine Leiste je Arbeitskontext, die Tabelle im Kasten (E722, E723, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/flaeche-eine-leiste` gegen `1bfaca53`
+(`claude/morgen-besser-2`). Gemessen mit den Wächtern selbst, im Browser
+(Chromium, http mit `listen(0)`), vorher in einem eigenen Arbeitsbaum auf
+`1bfaca53`, nachher auf dem Zweig: `test598` (Text, Whiteboard W1 im
+Seitenkasten, W2 im eigenen Blockkasten), `test404` §9, `test572` §13,
+`test575` §6b. Die Startlast mit `test388` §5 und je Datei mit gzip
+Stufe 6.
+
+**#7 — die Leisten** (1440 × 900, und 390 × 844 für das Telefon):
+
+```txt
+                                                vorher           nachher
+Leisten (.gfx-tb-sockel) in der Fläche          3                1 (Kind der Fläche)
+sichtbar gewählte Werkzeuge / Zoomzahlen        3 / 3            1 / 1
+Zahl des Whiteboards nach „Grösser" im Schacht  zeigt 114 %      folgt der Sicht
+                                                (die der Fläche)
+Strg+Z im Whiteboard: Formen Whiteboard/Fläche  2→1 / 1→0        2→1 / 1→1
+Strg+Z mit Fokus in seiner Leiste               Fläche zurück    Whiteboard zurück
+ein Rad über dem Whiteboard                     beide bewegt     nur das Whiteboard
+Strg+Rad über dem Whiteboard: Fläche            0,92 → 1,02      bleibt
+Hand der Fläche, Zug im Whiteboard              Fläche +80/+50,  Fläche still,
+                                                kein Strich      ein Strich
+innere Leiste über ihrer Zeichenfläche          oben 497 <       keine Leiste im
+                                                Unterkante 561   Kasten
+Telefon: Knöpfe der Leiste im Kasten            11 × 11 px       keine; Schacht 44 px
+Tabstopps je Leiste (tabIndex 0)                0                1
+Tab-Runde erreicht einen Knopf der Leiste       nie (60 Tasten)  ja
+„Schritt vorwärts" auf der Fläche               fehlt            da, gesperrt ohne Schritt
+```
+
+**#6 — die Tabelle im Kasten:**
+
+```txt
+                                                vorher           nachher
+1920 × 1080 Seitenkasten: .db draussen          51 / 51 px       0
+1920 × 1080 Blockkasten:  .db draussen          57 / 57 px       0
+1920 × 1080 Griffe `+ ⋮⋮` draussen              25 px            0
+1440 × 900 Seitenkasten / Blockkasten / Griffe  43/43, 48/48, 21 0
+Seitenansicht: .db links vor dem Textrand       > 20 px          > 20 px (E409 bleibt)
+„Neu" überfahren, Kontrast der Schrift          hell 1,15 · sand 1,35 · papier 1,15 ·
+                                                touchkit-hell 1,16 (alle zehn auf
+                                                --bg-hover)      ≥ 4,5 in allen zehn,
+                                                                 Grund = --accent-hover
+#sammelleiste ∩ Flächenleiste                   19 446 px²       0
+th.fixiert auf der Karte (dunkel)               rgb(18,20,23)    = Kasten rgb(30,32,35)
+                                                gegen 30,32,35
+```
+
+**Startlast** (`test388` §5, gzip): 1850 → 1853 KB über 252 Dateien,
+Decke 1950. Je Datei (Bytes gzip -6): `seitenflaeche.js` 7598 → 8754,
+`toolbar.js` 2368 → 2556, `zeichenflaeche.js` 16374 → 16354,
+`seitenansichten.css` 5440 → 6772 (davon das meiste Kommentar — CSS ist
+Quelle, E715), `datenbanken.css` 4386 → 4683, `einstellungen.css`
+14670 → 14748; zusammen +3031 Bytes. Keine neue Datei, keine Insel.
+
+**Gegenproben** (jede gesehen und zurückgenommen):
+
+```txt
+keydown ohne defaultPrevented   test598 §4 rot (Fläche 1 → 0), test575 §6b rot ([0,0] soll [1,0])
+wheel ohne defaultPrevented     test598 §5 rot (beide bewegt; Strg+Rad: Fläche 0,92 → 1,02)
+beginnt ohne die Ausnahme       test598 §6 rot (Fläche +80/+50, Whiteboard 1 → 1)
+keine Aufnahme in den Schacht   test598 17 rot, u. a. §1 „3 Leisten", §8 „11 × 11"
+  … und dazu der alte Wähler    §7 rot (oben 624 < Unterkante 682) — mit `>` allein grün:
+                                  die Leiste steht dann statisch unter ihrem Whiteboard
+Kern ohne Rückfall              test572 §13 rot ([] statt „zwei")
+ohne --db-aus:0px               test404 §9 rot (Seitenkasten 23/51, Blockkasten 57/57)
+Seitenkasten ohne Rand links    test404 §9 rot (Griffe 25 px draussen)
+„Neu", Auswahlleiste, th.fixiert wie vorher
+                                test598 §10, §11 (21 558 px²), §12 rot
+```
+
+**Nach der Durchsicht** (6. Oktober, derselbe Tag; `test598` 48 → 52
+Zusagen in drei roten Commits — gegen `90c4dba8` rot mit 48 ok, 2 rot,
+dann je 1 rot):
+
+```txt
+                                                vorher (90c4dba8)  nachher
+Tab vom Whiteboard → Leiste → Tab               DIV [Zwei Leisten]  BUTTON [Menü dieses
+                                                (Anfang der Fläche) Kastens] (nach W1)
+Telefon 390: „Text" gewählt, Fläche, zurück     609…653 im Streifen im Streifen
+                                                12…378 (ausser Bild)
+Gegenprobe ohne `naechsterHalt`                 test598 §9 rot (DIV [Zwei Leisten])
+Gegenprobe ohne das Rollen im Schacht           test598 §8 rot (text 609…653 im Streifen 12…378)
+Schild „Zeichenfläche" nach dem Rollen          rollt hinaus        klebt links (sticky)
+Gegenprobe ohne `position:sticky`               test598 §8 rot (text 334…378 im Streifen 12…378)
+Telefon, Satz unter W1: Tab, Tab                BUTTON [Menü dieses DIV ct „Danach ein
+                                                Kastens] (W2)       Satz." (der nächste Halt)
+Gegenprobe Textfeld nur nach `tabIndex`         test598 §8 rot (BUTTON [Menü dieses Kastens])
+Einzeldatei (file://), W + Text, Tab, Tab       Rechner BUTTON,     Rechner BUTTON,
+                                                Telefon DIV vor W   Telefon DIV ct nach W
+Start (test388 §5)                              1853 KB             1853 KB
+```
+
+`test598` steht damit bei 52 Zusagen. Gegenprobe „ohne den linken Rand
+im Rollen" blieb grün: nach dem Einhängen ist das Rollmass 0, das
+gewählte Werkzeug kommt immer von rechts — der linke Zweig ist Vorsicht,
+kein gemessener Fall.
+
+Der erste Anlauf von §8 war grün aus dem falschen Grund: mit dem
+vorgegebenen Stift steht das Werkzeug gerade noch am Rand (333…377 im
+Streifen 12…378), und „Bild" bleibt nicht gewählt — es öffnet die
+Dateiwahl. Gewählt wird deshalb das letzte Werkzeug vor „Bild" (L206).
+
+Die Auswahlleiste am Telefon (`AUFGABEN.md`, Fläche Punkt 3): in der
+Fläche am Telefon rendert die Datenbank Karten ohne `input.zeilen-aus`,
+eine echte Auswahl gibt es dort also nicht. Mit einer erzwungenen
+`#sammelleiste` gemessen (Durchsicht): 601–659 gegen den Schacht 669–739
+und die untere Leiste 775–835 — 10 px Abstand. Gerechnet und erzwungen,
+nicht mit einer echten Auswahl gemessen.
+
+Bilder (nicht eingecheckt, §55.4): vorher und nachher, 1440 × 900 und
+390 × 844, dunkel und hell — die Fläche, das gewählte Whiteboard, sein
+„Mehr", die Seitenansicht, die Tabelle im Kasten (auch 1920 × 1080 mit
+Blockkasten), eine überfahrene Zeile, eine angehakte Zeile mit der
+Auswahlleiste, „Neu" überfahren in Hell, Sand, Papier und Touch Kit hell.
+
+
+**Nach der zweiten Durchsicht** (10. Oktober; `test598` 52 → 66 Zusagen,
+`test575` §6b eine Vorbedingung mehr — gegen `f338ae895` rot mit 57 ok,
+9 rot, dann die Schärfung von §8 rot mit 65 ok, 1 rot). Gemessen mit
+Sonden unter dem Schloss, `file://`, 1440 × 900 und 1920 × 1080, Telefon
+390 × 844:
+
+```txt
+                                                vorher (f338ae895)        nachher
+8 Spalten im Seitenkasten, verborgen            454 px (1440 und 1920)    454 px
+Rad quer (deltaX 120) über der Tabelle          links 0; Fläche           links 120; Fläche steht
+                                                translate(248px…) →
+                                                translate(128px…)
+Umschalt+Rad (deltaY 120) danach                links 0; Fläche y −120    links 240; Fläche steht
+Rad längs über der Tabelle                      Fläche schiebt            Fläche schiebt
+ganz rechts, Rad quer                           Fläche schiebt            Fläche schiebt (weitergereicht)
+redion-einzeldatei.html allein, dasselbe        —                         links 120 / 240, Fläche steht
+mittlere Taste im Whiteboard (Rechteck gewählt) zeichnet (3 → 4)          schiebt das Whiteboard, keine Form
+Name der Leiste, W1 / W2                        zweimal „Werkzeuge der    „… „Skizze““ / „… „Zweite““
+                                                Zeichenfläche"
+Tab aus der Leiste, erster Halt verborgen       bleibt in der Leiste      ein Halt hinter dem Whiteboard
+                                                (BUTTON [Stift])
+Telefon 390: Schild / Streifen                  106 / 366 px              63 / 366 px (zwei Zeilen, 11 px)
+  … Werkzeuge ganz zu sehen, ungerollt          5                         6
+  … erster Bau (eine Zeile, 11 px, Abstand 6)   —                         87 px, weiter 5
+Seitenkasten am Rechner, Innenabstand l / r     48 / 20 px                48 / 20 px (Kosten in E723)
+Start (test388 §5), gzip über 252 Dateien       1853 KB                   1854 KB (Decke 1950)
+Dienststand                                     v1422                     v1424
+```
+
+Gegenproben, jede rot gesehen und zurückgenommen:
+
+```txt
+Strg+Z der Fläche zusätzlich an jedes Whiteboard  test598 §4 rot (Whiteboard 2 → 1),
+                                                  test575 §6b rot ([0,0] soll [0,1]) —
+                                                  mit den alten Zusagen grün
+ohne rolltSelbst                                  test598 §13 rot (links 0; translate(248px…)
+                                                  → translate(128px…); Umschalt: y −120)
+ohne den Schiebezweig der mittleren Taste         test598 §6 rot (Whiteboard unverändert)
+ohne den Titel im Namen                           test598 §7 rot (zweimal derselbe Name)
+preventDefault vor dem Fokus                      test598 §9 rot (in der Leiste: BUTTON [Stift])
+ohne die Telefonregel des Schilds                 test598 §8 rot (106 von 366 px)
+Schild einzeilig (der erste Bau)                  test598 §8 rot (87 von 366 px)
+```
+
+Die erste Fassung der Schild-Zusage verlangte ein Viertel des Streifens —
+der erste Bau erfüllte sie mit 87 px, und auf dem Bild standen weiter fünf
+Werkzeuge. Eine Zusage, die erfüllt ist, ohne dass sich für den Finger
+etwas ändert, misst das Falsche (L206); sie verlangt jetzt ein Fünftel.
+
+Bilder (nicht eingecheckt, §55.4): vorher und nachher, dunkel und hell —
+die breite Tabelle nach zwei Wischern quer (1440 × 900), ein Zug mit der
+mittleren Taste im Whiteboard (1440 × 900), das Schild im Streifen am
+Telefon (390 × 844).

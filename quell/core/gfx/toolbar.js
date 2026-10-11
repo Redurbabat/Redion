@@ -144,19 +144,30 @@ const GfxToolbar = (() => {
             }
         };
         wurzel.addEventListener('click', beiKlick);
-        const knoepfe = () => [...wurzel.querySelectorAll('button')]
-            .filter(b => !b.disabled && b.offsetParent !== null && !b.closest('.gfx-tb-menue'));
+        const alleKnoepfe = () => [...wurzel.querySelectorAll('button')].filter(b => !b.closest('.gfx-tb-menue'));
+        const knoepfe = () => alleKnoepfe().filter(b => !b.disabled && b.offsetParent !== null);
         const tabstoppSetzen = () => {
-            const liste = knoepfe();
+            const alle = alleKnoepfe();
+            const gelegt = knoepfe();
+            const liste = gelegt.length ? gelegt : alle.filter(b => !b.disabled);
             const gewaehlt = liste.find(b => b.dataset.wz === aktiv) ?? liste[0];
-            for (const b of liste)
+            for (const b of alle)
                 b.tabIndex = b === gewaehlt ? 0 : -1;
+        };
+        const haltPruefen = () => {
+            const liste = knoepfe();
+            if (liste.length && !liste.some(b => b.tabIndex === 0))
+                tabstoppSetzen();
         };
         const beiTaste = (e) => {
             if (e.key === 'Escape' && offenesMenue) {
+                const imMenue = !!(document.activeElement && wurzel.querySelector('.gfx-tb-menue')?.contains(document.activeElement));
+                const ausloeser = wurzel.querySelector(`[data-menue="${CSS.escape(offenesMenue)}"]`);
                 menueZu();
                 e.stopPropagation();
                 e.preventDefault();
+                if (imMenue)
+                    ausloeser?.focus();
                 return;
             }
             if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End')
@@ -178,6 +189,7 @@ const GfxToolbar = (() => {
             b.focus();
         };
         wurzel.addEventListener('keydown', beiTaste);
+        wurzel.addEventListener('focusin', haltPruefen);
         const beiAussen = (e) => {
             if (!offenesMenue)
                 return;
@@ -197,14 +209,19 @@ const GfxToolbar = (() => {
         };
         const setzeGesperrt = (id, ja) => {
             const b = wurzel.querySelector(`[data-a="${CSS.escape(id)}"]`);
-            if (b)
-                b.disabled = ja;
+            if (!b)
+                return;
+            b.disabled = ja;
+            if (ja && b.tabIndex === 0)
+                tabstoppSetzen();
         };
         const zerstoere = () => {
             document.removeEventListener('pointerdown', beiAussen, true);
             wurzel.remove();
         };
         tabstoppSetzen();
+        if (typeof requestAnimationFrame === 'function')
+            requestAnimationFrame(haltPruefen);
         return {
             element: wurzel,
             setzeWerkzeug,

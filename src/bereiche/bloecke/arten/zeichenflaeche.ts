@@ -218,7 +218,12 @@ const Zusatz = (() => {
       zusatz: { groesser: massstabZeigen },
       aktiv: werkzeug,
       klasse: 'wb-tools',
-      beschriftung: 'Werkzeuge der Zeichenfläche',
+      /* MIT DEM TITEL, WENN ES EINEN GIBT (Durchsicht E722, §38). Zwei
+         Whiteboards auf einer Seite oder auf der Fläche hiessen sonst gleich,
+         und wer vorlesen lässt, hörte nicht, welches die Leiste bedient.
+         `setAttribute` in `GfxToolbar` — der Titel geht nie durch HTML. */
+      beschriftung: 'Werkzeuge der Zeichenfläche' +
+        (String(block.text ?? '').trim() ? ` „${String(block.text).trim()}“` : ''),
       menue: (id: string) => id === 'farbe' ? farbMenue() : id === 'mehr' ? mehrMenue() : null,
       aufWerkzeug: (id: string) => {
         werkzeug = id;
@@ -387,8 +392,11 @@ const Zusatz = (() => {
           }));
         }
       }
-      const anzeige = w.querySelector('.wb-massstab');
-      if (anzeige) anzeige.textContent = Math.round(sicht.z * 100) + ' %';
+      /* Die Zahl über ihren NAMEN, nicht über `w.querySelector` (E722): auf
+         der Fläche hängt die Leiste im Schacht der Fläche, nicht im
+         Whiteboard — gesucht, fände man sie nicht, und die Zahl bliebe
+         stehen, während man zoomt. */
+      massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
     };
 
     /* `undefined` heisst „noch nicht gefragt", `null` heisst „gibt es nicht
@@ -646,10 +654,18 @@ const Zusatz = (() => {
       }
       const [x, y] = punkt(e);
 
-      if (werkzeug === 'hand') {
+      /* DIE MITTLERE TASTE SCHIEBT, DIE RECHTE ZEICHNET NICHT (Durchsicht
+         E722). Auf der Fläche schiebt die mittlere Taste die Fläche; im
+         Kasten gehört das Whiteboard sich selbst (E722), und so kam sie hier
+         an — und zeichnete mit dem gewählten Werkzeug. Jetzt tut sie, was
+         sie daneben tut, nur für den innersten Ausschnitt: sie schiebt ihn.
+         Nur die Maus: ein Stift meldet über `button` seine Seitentaste. */
+      const maus = e.pointerType === 'mouse';
+      if (werkzeug === 'hand' || (maus && e.button === 1)) {
         schiebt = { x: e.clientX, y: e.clientY, sx: sicht.x, sy: sicht.y };
         return;
       }
+      if (maus && e.button !== 0) return;
       if (werkzeug === 'verbindung') {
         const sid = e.target.dataset?.sid;
         const s = daten.find((q: any) => q.id === sid && q.art !== 'verbindung');

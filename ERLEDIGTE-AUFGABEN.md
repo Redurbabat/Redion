@@ -1,5 +1,51 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · Fläche: eine Leiste je Arbeitskontext, die Tabelle im Kasten (E722, E723)
+
+**Redur:** PDF vom 29. September, Seite 18 unten: „Hier wieder die zeichnen
+menüs ist doppelt , es sollte nur die ganez unter bleiben , seihet rote
+markierung ,"; Seite 18 oben: „… habe ich eine tabela erstellt und ds hier
+es ist hinterden und kann nicht gut lesen".
+
+**Fund:** Ein Whiteboard im Kasten der Fläche brachte seine eigene Leiste
+mit — drei Leisten bei zwei Whiteboards, drei gewählte Werkzeuge, drei
+Zoomzahlen; eine Taste nahm zweimal zurück, ein Rad bewegte zwei
+Ausschnitte, die Hand der Fläche stahl den Strich. Keine Leiste hatte einen
+Tabstopp. Die Tabelle im Kasten ragte 51/57 px hinaus (E409 galt auch
+dort), „Neu" war beim Überfahren in den hellen Schemata unsichtbar (1,15),
+die Auswahlleiste lag auf der Flächenleiste (19 446 px²).
+
+**Gebaut:** ein Schacht in der Fläche (`seitenflaeche.ts`): die Leiste
+eines Blocks im Kasten wird herausgenommen und hängt unten, sobald man in
+ihn tippt, mit Ring und dem Wort „Zeichenfläche"; `defaultPrevented` in
+Taste und Rad; die Hand stiehlt keinen Strich; Strg+Z aus der Leiste wird
+weitergereicht; Tab vom Whiteboard in seine Leiste; „Schritt vorwärts" für
+die Fläche. Im Kern (`toolbar.ts`) der Tabstopp auch losgelöst. Im CSS
+`.pg-flaeche > .gfx-tb-sockel`, `--db-aus:0px` und `--db-grund` im Kasten,
+die Griffe im Kasten, „Neu" mit den Marken aus E705, die Auswahlleiste über
+der Flächenleiste.
+
+**Nach der Durchsicht** (derselbe Tag): Tab aus der Leiste führt weiter
+HINTER das Whiteboard statt an den Anfang der Fläche (§38), und am Telefon
+rollt der Streifen zum gewählten Werkzeug (§37), das Schild „Zeichenfläche"
+klebt dabei links, und Tab am Telefon findet das Textfeld hinter dem
+Whiteboard — `test598` §8/§9 je rot vor der Reparatur, eine Gegenprobe je
+Stelle.
+
+**Nach der zweiten Durchsicht** (10. Oktober): die breite Tabelle im
+Kasten rollt auch mit dem Rad — quer und mit Umschalt rollt sie, die Fläche
+bleibt stehen (vorher schob jedes Rad die Fläche, `links 0`); die mittlere
+Taste schiebt ein Whiteboard, statt mit seinem Werkzeug zu zeichnen; die
+Leiste nennt den Titel des Whiteboards; Tab aus der Leiste bleibt nicht an
+einem Halt ohne Fokus hängen; das Schild am Telefon steht in zwei Zeilen
+(106 → 63 px, ein sechstes Werkzeug ganz im Bild); `test598` §4 und
+`test575` §6b können jetzt rot werden; README nennt L243.
+
+**Geprüft:** `test598` (neu, 66 Zusagen), `test404` §9, `test572` §13,
+`test575` §6b — je rot gegen `1bfaca53` bzw. `f338ae895`, grün danach;
+zwanzig Gegenproben; Nachbarn siehe Commits „E722/E723". Start 1850 →
+1853 KB. Messung: `messungen.md` §92. Offen: L243.
+
 ## 10. Oktober 2026 · E721 nach der Durchsicht — Decke, Ankunft, Stelle, Zeichen, Name, Meldung
 
 **Redur** (Masterprompt vom 29. September, S. 19): „Hier füge ... und oder

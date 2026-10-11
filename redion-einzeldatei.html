@@ -2363,7 +2363,9 @@ body[data-ruhig="an"] #menueband.ist-zu .mb-klapp{
 /* ==========================================================================
    DATENBANKEN
    ========================================================================== */
-.db{margin:10px 0 20px; border-radius:4px; max-width:100%; min-width:0}
+/* `--db-grund`: der Grund, auf dem die Datenbank liegt — auf der Seite die
+   Seite. Die Fläche setzt im Kasten die Karte (seitenansichten.css, E723). */
+.db{margin:10px 0 20px; border-radius:4px; max-width:100%; min-width:0; --db-grund:var(--bg)}
 
 /* ----------------------------------------------------------------------------
  * EINE DATENBANK DARF ÜBER DEN TEXTRAND HINAUS (E409)
@@ -2432,10 +2434,16 @@ body[data-ruhig="an"] #menueband.ist-zu .mb-klapp{
   display:flex; align-items:center; gap:4px;
 }
 .db-tools button:hover{background:var(--bg-hover); color:var(--text)}
-.db-tools .new{
+/* DER HAUPTKNOPF BLEIBT DER HAUPTKNOPF (E723). `.db-tools button:hover`
+   (0,2,1) schlug `.db-tools .new` (0,2,0): beim Überfahren wurde „Neu" grau
+   (--bg-hover), und `color:#fff` schrieb weisse Schrift darauf — 1,15 : 1 in
+   Hell und Papier, 1,16 in Touch Kit hell, 1,35 in Sand: unsichtbar. Jetzt
+   mit `button` im Wähler und den Marken je Schema aus E705, wie `.bib-neu`
+   (bausteine.css). `.new.pfeil` erbt es. */
+.db-tools button.new{
   background:var(--accent); color:var(--auf-accent); font-weight:500; padding:5px 12px;
 }
-.db-tools .new:hover{filter:brightness(1.1); color:#fff}
+.db-tools button.new:hover{background:var(--accent-hover, var(--accent)); color:var(--auf-accent)}
 .chip{
   font-size:12px; padding:3px 8px; border-radius:4px; background:var(--bg-card);
   color:var(--text-dim); display:inline-flex; align-items:center; gap:5px;
@@ -5107,7 +5115,9 @@ table.grid th.th-aus input{accent-color:var(--accent-text); cursor:pointer}
 table.grid tr.zieht{opacity:.4}
 table.grid tr.ziel td{border-top:2px solid var(--accent)}
 table.grid th.ziel{box-shadow:inset 2px 0 0 var(--accent)}
-table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg)}
+/* `--db-grund` statt `--bg` (E723): im Kasten der Fläche liegt die Tabelle auf
+   der Karte, und die Seitenfarbe zog dort einen dunkleren Streifen. */
+table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--db-grund, var(--bg))}
 
 #sammelleiste{
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:820;
@@ -12541,6 +12551,27 @@ body .rmo-liquid::after {
    und der Kasten ist der Rand. Ein Cover mit -96 px Rand ragte sonst über
    ihn hinaus. */
 .pg-fl-koerper .cover{margin:0; border-radius:8px}
+/* DIE DATENBANK AUCH (E723). Derselbe Grund wie beim Cover eine Zeile
+   höher, nur vergessen: der Ausbruch aus E409 (datenbanken.css) gilt ab
+   1100 px für JEDE `.db` und rechnet mit den 96 px Rand von `#page`. Im
+   Kasten mit 20 px Rand ragte die Tabelle je Seite 51 px hinaus (57 im
+   Blockkasten), auf den gepunkteten Grund — Redur, PDF Seite 18: „es ist
+   hinterden und kann nicht gut lesen". Kein z-index-Fehler: alles `auto`.
+   `0px` MIT Einheit — ein nacktes `0` ist in `calc(100% + 2 * …)` ungültig,
+   und die ganze Breite fiele weg. Eine breite Tabelle rollt jetzt im Kasten,
+   mit der weichen Kante aus E63 (Rollrand), wie am Telefon.
+   `--db-grund` ist der Grund, auf dem die Tabelle liegt: hier die Karte,
+   nicht die Seite — sonst zeichnet die angeheftete Spalte einen dunkleren
+   Streifen über den Kasten (einstellungen.css, `th.fixiert`). */
+.pg-fl-koerper .db{--db-aus:0px; --db-grund:var(--bg-card)}
+/* Die Griffe `+ ⋮⋮` stehen 46 px links vom Block (aufbau.css). Auf der Seite
+   liegt dort der Rand von `#page`; im Kasten lag dort der Grund der Fläche —
+   25 px draussen, auch auf Redurs Foto. Also Platz im Kasten, mit der Marke
+   aus grund.css. Am Telefon gibt es keine Griffe (ki.css), dort bleibt der
+   schmale Rand. */
+@media(min-width:761px){
+  .pg-fl-notiz[data-fl-seite] .pg-fl-koerper{padding-left:var(--space-10)}
+}
 
 /* ----------------------------------------------------------------------------
    4 · DIE WERKZEUGLEISTE DER FLÄCHE
@@ -12549,9 +12580,42 @@ body .rmo-liquid::after {
    stünde es dahinter (L217 gilt für die Flächen-Blöcke, hier ist es gleich
    richtig gemacht).
    --------------------------------------------------------------------------*/
-.pg-flaeche .gfx-tb-sockel{
+/* `>` UND NICHT DER LEERSCHLAG (E722). Mit `.pg-flaeche .gfx-tb-sockel`
+   schwebte auch die Leiste eines Whiteboards im Kasten als Kapsel über ihrer
+   eigenen Zeichenfläche (oben 713 < Unterkante 759, gemessen — §37: „darf
+   nicht verdecken, was sie bedient") und sah aus wie die der Fläche. Seit
+   E722 hängt nur noch eine Leiste hier, der Schacht; der Wähler sagt das. */
+.pg-flaeche > .gfx-tb-sockel{
   position:absolute; left:50%; transform:translateX(-50%);
   bottom:18px; z-index:6; max-width:calc(100% - 24px);
+}
+/* Das Wort, wessen Leiste es ist — „Fläche" oder „Zeichenfläche" (§38:
+   keine Auskunft nur über Farbe; der Ring allein wäre eine). */
+.pg-fl-kontext{
+  flex:0 0 auto; align-self:stretch; display:flex; align-items:center;
+  padding:0 var(--space-4); border-radius:var(--radius-xl);
+  /* Dieselbe Kapsel wie die Werkzeuge daneben — auf dem Bild stand das Wort
+     zuerst nackt auf dem Punktraster und las sich wie ein Rest. */
+  background:var(--bg-card); border:1px solid var(--line);
+  box-shadow:var(--schatten-schwebend);
+  font-size:12px; font-weight:600; color:var(--text-dim); white-space:nowrap;
+  /* Am Telefon rollt der Streifen zum gewählten Werkzeug — das Wort rollt
+     nicht mit hinaus, sonst sagte nur der Ring, wessen die Leiste ist
+     (Durchsicht E722, test598 §8). Die Werkzeuge gleiten darunter durch;
+     der Grund der Kapsel ist deckend. */
+  position:sticky; left:0; z-index:1;
+}
+/* Die Zeichenfläche, deren Leiste gerade im Schacht hängt. Derselbe Ring wie
+   beim Fokus (`.wb:focus-visible`), aber auch nach einem Mausklick: man soll
+   sehen, wem die Werkzeuge unten gehören. */
+.pg-flaeche .pg-fl-aktiv{box-shadow:0 0 0 2px var(--accent)}
+/* DIE AUSWAHLLEISTE DER TABELLE ÜBER DER FLÄCHENLEISTE (E723). Beide sassen
+   unten in der Mitte: `#sammelleiste` fest bei 24 px (einstellungen.css),
+   die Leiste der Fläche bei 18 px — 19 446 px² Überdeckung, „100 %" und die
+   Werkzeuge darunter. Die Fläche besitzt die Ausnahme, also steht sie hier:
+   Abstand unten + Leistenhöhe + Luft, aus Marken statt aus Zahlen. */
+body:has(.pg-flaeche) #sammelleiste{
+  bottom:calc(var(--space-6) + var(--touch-min) + var(--space-7));
 }
 .pg-fl-massstab{
   display:inline-flex; align-items:center; justify-content:center;
@@ -12565,7 +12629,30 @@ body .rmo-liquid::after {
      Fläche endet also bereits über der unteren Leiste. Wer hier noch einmal
      `--hunten` addiert, schiebt die Werkzeugleiste um eine Leistenhöhe zu
      hoch, mitten auf den Kasten. Gemessen und auf dem Bild gesehen. */
-  .pg-flaeche .gfx-tb-sockel{bottom:12px}
+  .pg-flaeche > .gfx-tb-sockel{bottom:12px}
+  /* Das Schild klebt links am Rand des Streifens (`position:sticky`). Mit
+     dem Innenabstand des Rollers (12 px, werkzeuge.css) klebte es 12 px
+     daneben, und in der Lücke liefen die Werkzeuge sichtbar vorbei — auf
+     dem Bild ein halbes „<" vor dem Wort. Im Schacht beginnt der Streifen
+     deshalb mit dem Schild selbst. */
+  .pg-flaeche > .gfx-tb-sockel .gfx-tb-roller{padding-inline-start:0}
+  /* Das Schild nimmt dem Streifen Platz, den die Werkzeuge brauchen:
+     „Zeichenfläche" mass mit dem Abstand vom Rechner 106 von 366 px, fast
+     ein Drittel, und fünf Werkzeuge waren ganz zu sehen (Durchsicht E722,
+     test598 §8). Am Telefon steht das Wort deshalb in zwei Zeilen —
+     `schildSetzen` teilt es vor „fläche" —, enger und eine Stufe kleiner;
+     zwei Zeilen zu 11 px passen in die 44 px der Leiste. Ganz bleibt es,
+     und lesbar: der Trennstrich steht, wo ein Setzer ihn setzte. */
+  .pg-flaeche > .gfx-tb-sockel .pg-fl-kontext{
+    padding:0 var(--space-3); font-size:11px; line-height:1.15;
+    flex-direction:column; justify-content:center; align-items:flex-start;
+  }
+  .pg-flaeche > .gfx-tb-sockel .pg-fl-kontext > span:first-child:not(:last-child)::after{content:'-'}
+  /* Am Telefon endet die Fläche über der unteren Leiste (`--hunten`), und die
+     Flächenleiste ist mit 44-px-Knöpfen höher. */
+  body:has(.pg-flaeche) #sammelleiste{
+    bottom:calc(var(--hunten) + var(--space-10) + var(--touch-min) + var(--space-7));
+  }
   /* Am Telefon ist der Kasten schmaler als die gemerkte Breite — nicht durch
      eine zweite Zahl in JavaScript, sondern hier: die gespeicherte Breite
      bleibt, was sie ist, und der Bildschirm zeigt sie kleiner. */
@@ -27196,7 +27283,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1442, inhalt: 'c76f58bef04f17aa', gebaut: '2026-10-11T01:53:49.068Z' };
+const Stand = { fassung: 1443, inhalt: '6364cdaaed88056f', gebaut: '2026-10-11T01:55:49.687Z' };
 window.Stand = Stand;
 
 </script>
@@ -28094,19 +28181,30 @@ const GfxToolbar = (() => {
             }
         };
         wurzel.addEventListener('click', beiKlick);
-        const knoepfe = () => [...wurzel.querySelectorAll('button')]
-            .filter(b => !b.disabled && b.offsetParent !== null && !b.closest('.gfx-tb-menue'));
+        const alleKnoepfe = () => [...wurzel.querySelectorAll('button')].filter(b => !b.closest('.gfx-tb-menue'));
+        const knoepfe = () => alleKnoepfe().filter(b => !b.disabled && b.offsetParent !== null);
         const tabstoppSetzen = () => {
-            const liste = knoepfe();
+            const alle = alleKnoepfe();
+            const gelegt = knoepfe();
+            const liste = gelegt.length ? gelegt : alle.filter(b => !b.disabled);
             const gewaehlt = liste.find(b => b.dataset.wz === aktiv) ?? liste[0];
-            for (const b of liste)
+            for (const b of alle)
                 b.tabIndex = b === gewaehlt ? 0 : -1;
+        };
+        const haltPruefen = () => {
+            const liste = knoepfe();
+            if (liste.length && !liste.some(b => b.tabIndex === 0))
+                tabstoppSetzen();
         };
         const beiTaste = (e) => {
             if (e.key === 'Escape' && offenesMenue) {
+                const imMenue = !!(document.activeElement && wurzel.querySelector('.gfx-tb-menue')?.contains(document.activeElement));
+                const ausloeser = wurzel.querySelector(`[data-menue="${CSS.escape(offenesMenue)}"]`);
                 menueZu();
                 e.stopPropagation();
                 e.preventDefault();
+                if (imMenue)
+                    ausloeser?.focus();
                 return;
             }
             if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End')
@@ -28128,6 +28226,7 @@ const GfxToolbar = (() => {
             b.focus();
         };
         wurzel.addEventListener('keydown', beiTaste);
+        wurzel.addEventListener('focusin', haltPruefen);
         const beiAussen = (e) => {
             if (!offenesMenue)
                 return;
@@ -28147,14 +28246,19 @@ const GfxToolbar = (() => {
         };
         const setzeGesperrt = (id, ja) => {
             const b = wurzel.querySelector(`[data-a="${CSS.escape(id)}"]`);
-            if (b)
-                b.disabled = ja;
+            if (!b)
+                return;
+            b.disabled = ja;
+            if (ja && b.tabIndex === 0)
+                tabstoppSetzen();
         };
         const zerstoere = () => {
             document.removeEventListener('pointerdown', beiAussen, true);
             wurzel.remove();
         };
         tabstoppSetzen();
+        if (typeof requestAnimationFrame === 'function')
+            requestAnimationFrame(haltPruefen);
         return {
             element: wurzel,
             setzeWerkzeug,
@@ -55604,7 +55708,8 @@ const Zusatz = (() => {
             zusatz: { groesser: massstabZeigen },
             aktiv: werkzeug,
             klasse: 'wb-tools',
-            beschriftung: 'Werkzeuge der Zeichenfläche',
+            beschriftung: 'Werkzeuge der Zeichenfläche' +
+                (String(block.text ?? '').trim() ? ` „${String(block.text).trim()}“` : ''),
             menue: (id) => id === 'farbe' ? farbMenue() : id === 'mehr' ? mehrMenue() : null,
             aufWerkzeug: (id) => {
                 werkzeug = id;
@@ -55736,9 +55841,7 @@ const Zusatz = (() => {
                     }));
                 }
             }
-            const anzeige = w.querySelector('.wb-massstab');
-            if (anzeige)
-                anzeige.textContent = Math.round(sicht.z * 100) + ' %';
+            massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
         };
         const bildAdressen = new Map();
         const bildHolen = (dateiId) => {
@@ -55955,10 +56058,13 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
-            if (werkzeug === 'hand') {
+            const maus = e.pointerType === 'mouse';
+            if (werkzeug === 'hand' || (maus && e.button === 1)) {
                 schiebt = { x: e.clientX, y: e.clientY, sx: sicht.x, sy: sicht.y };
                 return;
             }
+            if (maus && e.button !== 0)
+                return;
             if (werkzeug === 'verbindung') {
                 const sid = e.target.dataset?.sid;
                 const s = daten.find((q) => q.id === sid && q.art !== 'verbindung');
@@ -148101,14 +148207,16 @@ const Seitenflaeche = (() => {
         wrap.appendChild(flaeche);
         let sicht = sichtLesen(p.id) ?? { x: 0, y: 0, z: 1 };
         let werkzeug = 'zeiger';
+        const massstabZeigen = document.createElement('b');
+        massstabZeigen.className = 'pg-fl-massstab';
+        massstabZeigen.setAttribute('aria-live', 'polite');
+        massstabZeigen.textContent = '100 %';
         const stellen = (merken = true) => {
             const z = sicht.z;
             ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
             flaeche.style.backgroundSize = `${RASTER * z}px ${RASTER * z}px`;
             flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
-            const anzeige = flaeche.querySelector('.pg-fl-massstab');
-            if (anzeige)
-                anzeige.textContent = Math.round(z * 100) + ' %';
+            massstabZeigen.textContent = Math.round(z * 100) + ' %';
             if (merken)
                 sichtSchreiben(p.id, sicht);
         };
@@ -148183,7 +148291,12 @@ const Seitenflaeche = (() => {
         };
         const verlauf = GfxHistory.erstelle();
         const abbild = () => JSON.stringify(formen);
-        const merken = () => verlauf.merken(abbild());
+        const standZeigen = () => {
+            leiste.setzeGesperrt('zurueck', !verlauf.kannZurueck());
+            leiste.setzeGesperrt('vor', !verlauf.kannVor());
+        };
+        const merken = () => { verlauf.merken(abbild()); standZeigen(); };
+        const verwerfen = () => { verlauf.letztenVerwerfen(); standZeigen(); };
         const sichern = () => { formenSchreiben(p, formen); malen(); };
         const schrittZurueck = () => {
             const vorher = verlauf.zurueck(abbild());
@@ -148191,6 +148304,7 @@ const Seitenflaeche = (() => {
                 return;
             formen = JSON.parse(vorher);
             sichern();
+            standZeigen();
         };
         const schrittVor = () => {
             const nachher = verlauf.vor(abbild());
@@ -148198,6 +148312,7 @@ const Seitenflaeche = (() => {
                 return;
             formen = JSON.parse(nachher);
             sichern();
+            standZeigen();
         };
         const formAn = (fx, fy, radius) => {
             for (let i = formen.length - 1; i >= 0; i--) {
@@ -148224,10 +148339,6 @@ const Seitenflaeche = (() => {
         const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse'];
         const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
         malen();
-        const massstabZeigen = document.createElement('b');
-        massstabZeigen.className = 'pg-fl-massstab';
-        massstabZeigen.setAttribute('aria-live', 'polite');
-        massstabZeigen.textContent = '100 %';
         const leiste = GfxToolbar.erstelle({
             klasse: 'pg-fl-tools',
             beschriftung: 'Werkzeuge der Fläche',
@@ -148236,7 +148347,9 @@ const Seitenflaeche = (() => {
             aktionen: [
                 { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
                     menue: true, kapsel: 'werkzeuge' },
-                { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo' },
+                { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo', gesperrt: true },
+                { id: 'vor', name: 'Schritt vorwärts', titel: 'Schritt vorwärts (Strg + Umschalt + Z)',
+                    sym: 'redo', gesperrt: true },
                 { id: 'kleiner', name: 'Kleiner', titel: 'Kleiner (Strg + Rad)', sym: 'minus' },
                 { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
                 { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' }
@@ -148268,6 +148381,8 @@ const Seitenflaeche = (() => {
             aufAktion: (id) => {
                 if (id === 'zurueck')
                     schrittZurueck();
+                if (id === 'vor')
+                    schrittVor();
                 if (id === 'kleiner')
                     massstab(sicht.z / 1.25);
                 if (id === 'groesser')
@@ -148276,10 +148391,129 @@ const Seitenflaeche = (() => {
                     passend();
             }
         });
-        flaeche.appendChild(leiste.element);
+        flaeche.insertBefore(leiste.element, ebene);
         flaeche.dataset['wz'] = werkzeug;
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(leiste.element);
+        const gaeste = new Map();
+        let imSchacht = leiste.element;
+        let gastFlaeche = null;
+        const schildSetzen = (bar, text) => {
+            const roller = bar.querySelector('.gfx-tb-roller');
+            if (!roller)
+                return;
+            let schild = roller.querySelector(':scope > .pg-fl-kontext');
+            if (!schild) {
+                schild = document.createElement('span');
+                schild.className = 'pg-fl-kontext';
+                schild.setAttribute('aria-hidden', 'true');
+                roller.prepend(schild);
+            }
+            const teile = /^(.+?)(fläche)$/i.exec(text);
+            if (teile?.[1] && teile[2]) {
+                const vorn = document.createElement('span');
+                const hinten = document.createElement('span');
+                vorn.textContent = teile[1];
+                hinten.textContent = teile[2];
+                schild.replaceChildren(vorn, hinten);
+            }
+            else
+                schild.textContent = text;
+        };
+        schildSetzen(leiste.element, 'Fläche');
+        const aufnehmen = () => {
+            for (const bar of [...ebene.querySelectorAll('.pg-fl-koerper .gfx-tb-sockel')]) {
+                const ober = bar.parentElement;
+                if (!ober)
+                    continue;
+                bar.remove();
+                gaeste.set(ober, bar);
+                const name = bar.querySelector('[role="toolbar"]')?.getAttribute('aria-label') ?? '';
+                schildSetzen(bar, name.replace(/^Werkzeuge (der|des) /, '').replace(/\s*„.*“$/, '') || 'Block');
+            }
+            for (const ober of [...gaeste.keys()]) {
+                if (flaeche.contains(ober))
+                    continue;
+                gaeste.delete(ober);
+                if (ober === gastFlaeche)
+                    schachtSetzen(null);
+            }
+        };
+        const schachtSetzen = (ober) => {
+            const neu = ober ? gaeste.get(ober) ?? null : leiste.element;
+            if (!neu || neu === imSchacht)
+                return;
+            const alt = imSchacht;
+            const fokusDrin = !!document.activeElement && alt.contains(document.activeElement);
+            if (alt.querySelector('.gfx-tb-menue'))
+                alt.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+            if (alt.parentElement === flaeche)
+                flaeche.replaceChild(neu, alt);
+            else
+                flaeche.insertBefore(neu, ebene);
+            imSchacht = neu;
+            gastFlaeche?.classList.remove('pg-fl-aktiv');
+            gastFlaeche = ober;
+            gastFlaeche?.classList.add('pg-fl-aktiv');
+            if (fokusDrin)
+                neu.querySelector('button[tabindex="0"]')?.focus({ preventScroll: true });
+            const roller = neu.querySelector('.gfx-tb-roller');
+            const an = roller?.querySelector('[data-wz].on');
+            if (roller && an) {
+                const schild = roller.querySelector(':scope > .pg-fl-kontext');
+                const breit = schild ? schild.getBoundingClientRect().width : 0;
+                roller.style.scrollPaddingInlineStart = breit ? `${Math.ceil(breit)}px` : '';
+                const r = roller.getBoundingClientRect(), b = an.getBoundingClientRect();
+                const links = r.left + breit;
+                if (b.right > r.right)
+                    roller.scrollLeft += b.right - r.right;
+                else if (b.left < links)
+                    roller.scrollLeft -= links - b.left;
+            }
+        };
+        const HALTE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
+        const naechsteHalte = function* (ober) {
+            for (const el of document.querySelectorAll(HALTE)) {
+                if (!(ober.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))
+                    continue;
+                if (ober.contains(el) || imSchacht.contains(el))
+                    continue;
+                const ausdruecklich = el.getAttribute('tabindex');
+                const halt = ausdruecklich !== null ? el.tabIndex >= 0 : (el.tabIndex >= 0 || el.isContentEditable);
+                if (!halt || el.disabled)
+                    continue;
+                if (el.isContentEditable && el.parentElement?.isContentEditable)
+                    continue;
+                if (el.closest('[inert], [hidden], [aria-hidden="true"]') || !el.getClientRects().length)
+                    continue;
+                yield el;
+            }
+        };
+        const gastVon = (ziel) => {
+            if (!(ziel instanceof Node))
+                return null;
+            for (const ober of gaeste.keys())
+                if (ober.contains(ziel))
+                    return ober;
+            return null;
+        };
+        const kontextNach = (ziel) => {
+            if (!(ziel instanceof Node) || imSchacht.contains(ziel))
+                return;
+            schachtSetzen(gastVon(ziel));
+        };
+        flaeche.addEventListener('pointerdown', (e) => kontextNach(e.target), true);
+        flaeche.addEventListener('focusin', (e) => kontextNach(e.target));
+        aufnehmen();
+        if (typeof MutationObserver === 'function') {
+            new MutationObserver((liste) => {
+                const betrifft = liste.some(m => [...m.addedNodes].some(n => n instanceof Element &&
+                    (n.matches('.gfx-tb-sockel') || !!n.querySelector('.gfx-tb-sockel'))) ||
+                    [...m.removedNodes].some(n => n instanceof Element && [...gaeste.keys()].some(o => n === o || n.contains(o))));
+                if (betrifft)
+                    aufnehmen();
+            }).observe(ebene, { childList: true, subtree: true });
+        }
         let zug = null;
         const finger = new Map();
         let kneifen = null;
@@ -148301,6 +148535,8 @@ const Seitenflaeche = (() => {
             pfade.forEach((pfad) => pfad.setAttribute('d', d));
         };
         const beginnt = (e) => {
+            if (gastVon(e.target))
+                return;
             finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (finger.size === 2) {
                 const [a, b] = [...finger.values()];
@@ -148324,7 +148560,7 @@ const Seitenflaeche = (() => {
                         sichern();
                     }
                     else
-                        verlauf.letztenVerwerfen();
+                        verwerfen();
                     aktiv = { art: 'radieren' };
                     return;
                 }
@@ -148457,7 +148693,7 @@ const Seitenflaeche = (() => {
                     : Math.abs(fertig.w) < 4 && Math.abs(fertig.h) < 4;
                 if (klein) {
                     formen = formen.filter(x => x !== fertig);
-                    verlauf.letztenVerwerfen();
+                    verwerfen();
                 }
                 sichern();
                 return;
@@ -148482,12 +148718,46 @@ const Seitenflaeche = (() => {
         };
         flaeche.tabIndex = 0;
         flaeche.addEventListener('keydown', (e) => {
+            if (e.defaultPrevented)
+                return;
             const ziel = e.target;
             if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
                 return;
+            if (e.key === 'Tab' && gastFlaeche && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const halt = imSchacht.querySelector('button[tabindex="0"]');
+                if (!e.shiftKey && ziel === gastFlaeche && halt) {
+                    e.preventDefault();
+                    halt.focus();
+                    return;
+                }
+                if (e.shiftKey && ziel === halt) {
+                    e.preventDefault();
+                    gastFlaeche.focus();
+                    return;
+                }
+                if (!e.shiftKey && ziel && imSchacht.contains(ziel)) {
+                    for (const nach of naechsteHalte(gastFlaeche)) {
+                        nach.focus();
+                        if (document.activeElement === nach) {
+                            e.preventDefault();
+                            return;
+                        }
+                    }
+                }
+            }
             if (!(e.ctrlKey || e.metaKey))
                 return;
             const taste = e.key.toLowerCase();
+            if (gastFlaeche && ziel && imSchacht.contains(ziel) &&
+                (taste === 'z' || (taste === 'y' && !e.shiftKey))) {
+                const weiter = new KeyboardEvent('keydown', {
+                    key: e.key, code: e.code, ctrlKey: e.ctrlKey, metaKey: e.metaKey,
+                    shiftKey: e.shiftKey, bubbles: true, cancelable: true
+                });
+                gastFlaeche.dispatchEvent(weiter);
+                e.preventDefault();
+                return;
+            }
             if (taste === 'z' && !e.shiftKey) {
                 e.preventDefault();
                 schrittZurueck();
@@ -148530,7 +148800,30 @@ const Seitenflaeche = (() => {
             const fp = inFlaeche(e.clientX, e.clientY);
             aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
         });
+        const rolltSelbst = (e) => {
+            const quer = Math.abs(e.deltaX) > Math.abs(e.deltaY) || (e.shiftKey && e.deltaX === 0);
+            const weg = quer ? (e.deltaX || e.deltaY) : e.deltaY;
+            if (!weg)
+                return false;
+            for (let el = e.target instanceof Element ? e.target : null; el && el !== ebene && el !== flaeche; el = el.parentElement) {
+                const st = getComputedStyle(el);
+                const art = quer ? st.overflowX : st.overflowY;
+                if (art !== 'auto' && art !== 'scroll')
+                    continue;
+                const max = quer ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+                if (max <= 1)
+                    continue;
+                const stand = quer ? el.scrollLeft : el.scrollTop;
+                if (weg < 0 ? stand > 0.5 : stand < max - 0.5)
+                    return true;
+            }
+            return false;
+        };
         flaeche.addEventListener('wheel', (e) => {
+            if (e.defaultPrevented)
+                return;
+            if (!(e.ctrlKey || e.metaKey) && rolltSelbst(e))
+                return;
             e.preventDefault();
             if (e.ctrlKey || e.metaKey) {
                 massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY);

@@ -44,6 +44,9 @@
  *   §12 Und was ein Mensch liest, kommt aus dem Katalog: `Marken.WERKZEUGE`
  *       IST der Katalogeintrag, und jeder Name im Menüband steht im Katalog
  *       oder in `Marken.FORMEN` (E694, L218).
+ *   §13 EIN Tabstopp, auch wenn die Leiste losgelöst gebaut wurde; Tab
+ *       erreicht sie in der Seitenansicht UND in der Fläche, Pfeile wandern,
+ *       Escape schliesst ihr Menü zuerst (E722, §38).
  *
  * GEGEN DEN ALTEN STAND ist alles ab §1 rot: es gibt weder
  * `core/gfx/toolbar.js` noch `register/werkzeuge.js`, und die Leiste des
@@ -239,6 +242,7 @@ const bauen = async (breite: number, hoehe: number) => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
     const s = Store.addPage(null, { text: 'Werkzeugleiste' });
+    (window as any).__seite572 = s.id;
     Store.addBlock(s.id, 'whiteboard', { text: 'Skizze', hoehe: 360, shapes: [
       { id: 'f1', art: 'rechteck', x: 60, y: 60, w: 180, h: 90, farbe: '#529cca' }
     ] });
@@ -512,6 +516,79 @@ p('Die vier Formen heissen weiter `line`, `arrow`, `rectangle`, `ellipse`',
   ['line', 'arrow', 'rectangle', 'ellipse'].every(id => katalog.band.some((e: any) => e.id === id)),
   katalog.band.map((e: any) => e.id).join(','));
 await pgk.close();
+
+/* ==========================================================================
+ * §13 · EIN Tabstopp, auch wenn die Leiste losgelöst gebaut wurde (E722, §38)
+ * --------------------------------------------------------------------------
+ * Gemessen am 6. Oktober, gegen 1bfaca53: NULL Knöpfe mit `tabIndex 0` in
+ * beiden Leisten, und eine Tab-Runde von 60 Tasten erreichte keinen davon.
+ * `tabstoppSetzen` lief am Ende von `erstelle`, als die Wurzel noch nicht im
+ * Dokument hing — `offsetParent` ist dort für JEDEN Knopf `null`, die Liste
+ * leer, und erst ein Mausklick auf ein Werkzeug setzte einen Halt. Wer nur
+ * die Tastatur hat, kam nie an die Werkzeuge.
+ * ======================================================================== */
+console.log('\n13 · Ein Tabstopp, auch losgelöst gebaut (§38)');
+const pt = await bauen(1400, 950);
+const losgeloest = await pt.evaluate(() => {
+  const G = (window as any).GfxToolbar;
+  const l = G.erstelle({
+    werkzeuge: [{ id: 'eins', name: 'Eins', sym: 'cursor' }, { id: 'zwei', name: 'Zwei', sym: 'hand' }],
+    aktiv: 'zwei', aktionen: [{ id: 'x', name: 'Zurück', sym: 'undo' }] });
+  const halt = [...l.element.querySelectorAll('button')]
+    .filter((b: any) => b.tabIndex === 0).map((b: any) => b.dataset.wz ?? b.dataset.a);
+  l.zerstoere();
+  return halt;
+});
+p('Losgelöst gebaut trägt die Leiste schon EINEN Tabstopp — das gewählte Werkzeug',
+  losgeloest.length === 1 && losgeloest[0] === 'zwei', JSON.stringify(losgeloest));
+const halteSeite = await pt.evaluate(() =>
+  [...document.querySelectorAll<HTMLElement>('.wb-tools button')].filter(b => b.tabIndex === 0).length);
+p('Seitenansicht: die Leiste des Whiteboards ist genau EIN Tabstopp', halteSeite === 1, `${halteSeite}`);
+await pt.evaluate(() => document.querySelector<HTMLElement>('.wb')?.focus());
+await pt.keyboard.press('Tab');
+/* EIN KNOPF, nicht irgendetwas in der Leiste: Chrome macht einen Roller
+   ohne erreichbaren Knopf selbst zum Tabhalt (`.gfx-tb-roller` rollt). Der
+   erste Anlauf dieses Abschnitts war deshalb gegen den alten Stand GRÜN —
+   der Fokus lag im Roller, nicht auf einem Werkzeug (L206). */
+const imBalken = await pt.evaluate(() => ({
+  drin: !!document.activeElement?.closest('.wb-tools') && document.activeElement?.tagName === 'BUTTON',
+  name: (document.activeElement as HTMLElement | null)?.getAttribute('aria-label') ?? '' }));
+p('Tab vom Whiteboard aus erreicht seine Leiste', imBalken.drin, JSON.stringify(imBalken));
+await pt.keyboard.press('ArrowRight');
+const gewandert = await pt.evaluate(() => ({
+  drin: !!document.activeElement?.closest('.wb-tools'),
+  name: (document.activeElement as HTMLElement | null)?.getAttribute('aria-label') ?? '' }));
+p('Pfeil rechts wandert in der Leiste', imBalken.drin && gewandert.drin && gewandert.name !== imBalken.name,
+  `${imBalken.name} → ${gewandert.name}`);
+await pt.evaluate(() => document.querySelector<HTMLElement>('.wb-tools [data-menue]')?.focus());
+await pt.keyboard.press('Enter');
+await pt.waitForTimeout(150);
+const offen13 = await pt.evaluate(() => !!document.querySelector('.wb-tools .gfx-tb-menue'));
+await pt.keyboard.press('Escape');
+await pt.waitForTimeout(150);
+const zu13 = await pt.evaluate(() => ({
+  menue: !!document.querySelector('.wb-tools .gfx-tb-menue'),
+  drin: !!document.activeElement?.closest('.wb-tools') }));
+p('Enter öffnet ihr Menü, Escape schliesst es zuerst, und der Fokus bleibt in der Leiste',
+  offen13 && !zu13.menue && zu13.drin, JSON.stringify({ offen13, ...zu13 }));
+/* Dieselbe Seite als Fläche: dort ist die Leiste der Schacht (E722). */
+await pt.evaluate(async () => {
+  const id = (window as any).__seite572 as string;
+  Store.updateBlock(id, { seitenAnsicht: 'flaeche' }); await Store.flush(); App.oeffne(id);
+  await new Promise(f => setTimeout(f, 900));
+});
+const halteFlaeche = await pt.evaluate(() =>
+  [...document.querySelectorAll<HTMLElement>('.pg-flaeche > .gfx-tb-sockel button')].filter(b => b.tabIndex === 0).length);
+p('Fläche: die eine Leiste ist genau EIN Tabstopp', halteFlaeche === 1, `${halteFlaeche}`);
+await pt.evaluate(() => document.querySelector<HTMLElement>('.pg-flaeche')?.focus());
+let runde = 0, angekommen = false;
+for (; runde < 60 && !angekommen; runde++) {
+  await pt.keyboard.press('Tab');
+  angekommen = await pt.evaluate(() => !!document.activeElement?.closest('.pg-flaeche > .gfx-tb-sockel')
+    && document.activeElement?.tagName === 'BUTTON');
+}
+p('Fläche: Tab erreicht die Leiste', angekommen, `nach ${runde} Mal Tab nicht`);
+await pt.close();
 
 await browser.close();
 server.close();

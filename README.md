@@ -399,6 +399,16 @@ Datenhaltung:
 - Text direkt auf der Fläche, zweimal tippen ändert ihn
 - Grösse ändern am Griff
 - als PNG speichern
+- auf der Fläche einer Seite (Ansicht „Fläche") gibt es für Whiteboards
+  EINE Werkzeugleiste unten: wer ins Whiteboard tippt, bekommt dort seine
+  Werkzeuge (das Whiteboard trägt dann einen Ring, die Leiste sagt
+  „Zeichenfläche"); ein Tipp daneben bringt die der Fläche zurück, mit
+  Zurück und Vorwärts. Gedankenkarte und Planfläche im Kasten behalten
+  vorerst ihre eigene Leiste (L243)
+- im Kasten der Fläche gehören Rad und mittlere Taste dem Innersten: über
+  einem Whiteboard zoomt das Rad das Whiteboard und die mittlere Taste
+  schiebt es; über einer breiten Tabelle rollt ein Wisch quer (oder
+  Umschalt+Rad) die Tabelle
 
 Im Workspace gibt es dafür einen eigenen Bereich mit Miniaturen.
 
