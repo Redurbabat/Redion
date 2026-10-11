@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 549 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 550 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1915,6 +1915,21 @@ Netzliste, die dem Auflöser die Lage des Teils verschweigt, kam vorher mit
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 549 — auf seinem
 Zweig; beim Zusammenführen neu zu zählen.*
 
+*Und 550: `test609` — Redurs Serienfach „Dark (2017–2020)" ist eingebaut und
+heil (E739). Redur hatte es am 30. September auf einem eigenen Zweig
+geschrieben und am 11. Oktober „Ja" gesagt. Gegen den übernommenen Stand
+allein war der Lauf rot mit 1 von 15 — keine Skriptzeile, kein
+GRUNDSTOCK, kein `.js`. Sein §3 liest die Adresse, die der Text meint, mit
+Klammertiefe statt mit dem Muster des Editors, und genau daran zerbrach
+`…/wiki/Dark_(Fernsehserie)`: eine Adresse ohne Ende und eine einzelne „)"
+dahinter. Seine beste Zeile hat aber §4 gefunden, und niemand hatte
+danach gesucht: das Schaubild der Zeitlinie trug „Adam & Sic Mundus" roh
+im SVG — ein rohes `&` in XML, `naturalWidth` 0, ein kaputtes Bild auf
+Seite 2. Er lädt über file://, damit `test400` keinen neuen Port zählt.
+Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 545 auf seinem Zweig. Beim Zusammenführen nachgezählt
+(11. Oktober, `claude/sechs-ja`): 550.*
+
 ### Die Befehle
 
 ```txt
@@ -1931,7 +1946,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 549 Läufe
+npm run pruefen                      alle 550 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2021,7 +2036,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 549 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 550 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

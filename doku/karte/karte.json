@@ -2658,7 +2658,7 @@
         },
         {
           "pfad": "/home/user/Redion/src/register/vorlagen.ts",
-          "rolle": "Register.vorlagen — Vorlage {id, [k]:any} Z.25; melde Z.29-34; alle() mischt Galerie.VORLAGEN mit Gemeldetem Z.42-45; bauen() ruft seit E677 v.bauen() und markiert über Fassung Z.68-74; kein nimmZurueck. Aufrufer: wissen/nin-quiz.ts:461, wissen/staatskunde-inhalt.ts:367.",
+          "rolle": "Register.vorlagen — Vorlage {id, [k]:any} Z.25; melde Z.29-34; alle() mischt Galerie.VORLAGEN mit Gemeldetem Z.42-45; bauen() ruft seit E677 v.bauen() und markiert über Fassung Z.68-74; kein nimmZurueck. Aufrufer: wissen/nin-quiz.ts:461, wissen/staatskunde-inhalt.ts:367, wissen/dark-dossier.ts:330.",
           "zeilen": 91
         },
         {
@@ -2793,7 +2793,7 @@
           "name": "Register.navigation.melde / Register.module.melde / Register.ansichten.melde / Register.einstellungen.melde / Register.formeln.melde / Register.tasten.melde / Register.vorlagen.melde / Register.verbindungen.melde / Register.fachzeichen.melde / Register.elektroformeln.melde",
           "datei": "src/register/navigation.ts:423, module.ts:135, ansichten.ts:54, einstellungen.ts:118, formeln.ts:633, tasten.ts:174, vorlagen.ts:29, verbindungen.ts:107, fachzeichen.ts:1084, elektroformeln.ts:5012",
           "art": "register",
-          "beschreibung": "Je ein melde(); nimmZurueck nur bei navigation (Z.431), module (Z.156), fachzeichen (vergiss Z.1091). Aufrufer in src nur vorlagen.melde (wissen/nin-quiz.ts:461, staatskunde-inhalt.ts:367)."
+          "beschreibung": "Je ein melde(); nimmZurueck nur bei navigation (Z.431), module (Z.156), fachzeichen (vergiss Z.1091). Aufrufer in src nur vorlagen.melde (wissen/nin-quiz.ts:461, staatskunde-inhalt.ts:367, dark-dossier.ts:330)."
         },
         {
           "name": "Redion (Schnittstelle einer Erweiterung)",
