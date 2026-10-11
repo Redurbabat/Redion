@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/dark-dossier.ts (npm run bauen:ts). */
 /* ============================================================================
  * bereiche/wissen/dark-dossier.ts — DARK (2017–2020) als Redion-Fach
  * ----------------------------------------------------------------------------
@@ -7,17 +8,22 @@
  * ==========================================================================*/
 
 const DarkDossier = (() => {
-  const absatz = (elternId, text) => Store.addBlock(elternId, 'text', { text });
-  const h1 = (elternId, text) => Store.addBlock(elternId, 'h1', { text });
-  const h2 = (elternId, text) => Store.addBlock(elternId, 'h2', { text });
-  const punkt = (elternId, text) => Store.addBlock(elternId, 'bullet', { text });
-  const hinweis = (elternId, text) => Store.addBlock(elternId, 'callout', { text });
-  const trenn = (elternId) => Store.addBlock(elternId, 'divider', {});
-  const karte = (elternId, frage, antwort) => Store.addBlock(elternId, 'flashcard', {
+  /* Überschrift und Absatz, Frage und Antwort — ein Paar ist genau zwei
+     Zeichenketten (E739: sonst ist e[0] unter noUncheckedIndexedAccess
+     „vielleicht undefined“). */
+  type Paar = [string, string];
+
+  const absatz = (elternId: string, text: string) => Store.addBlock(elternId, 'text', { text });
+  const h1 = (elternId: string, text: string) => Store.addBlock(elternId, 'h1', { text });
+  const h2 = (elternId: string, text: string) => Store.addBlock(elternId, 'h2', { text });
+  const punkt = (elternId: string, text: string) => Store.addBlock(elternId, 'bullet', { text });
+  const hinweis = (elternId: string, text: string) => Store.addBlock(elternId, 'callout', { text });
+  const trenn = (elternId: string) => Store.addBlock(elternId, 'divider', {});
+  const karte = (elternId: string, frage: string, antwort: string) => Store.addBlock(elternId, 'flashcard', {
     text: frage + ' :: ' + antwort,
   });
 
-  const svg = (breite, hoehe, inhalt) =>
+  const svg = (breite: number, hoehe: number, inhalt: string): string =>
     'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="' + breite + '" height="' + hoehe +
       '" viewBox="0 0 ' + breite + ' ' + hoehe + '">' +
@@ -25,7 +31,7 @@ const DarkDossier = (() => {
       '<style>text{font-family:Arial,sans-serif;fill:#f4f4f5}.muted{fill:#a1a1aa}.accent{fill:#f6c344}.line{stroke:#f6c344;stroke-width:3;fill:none}.soft{stroke:#71717a;stroke-width:2;fill:none}.box{fill:#1d2027;stroke:#3f3f46;stroke-width:2}</style>' +
       inhalt + '</svg>');
 
-  const bild = (elternId, src, caption) => Store.addBlock(elternId, 'image', { src, caption });
+  const bild = (elternId: string, src: string, caption: string) => Store.addBlock(elternId, 'image', { src, caption });
 
   const cover = () => svg(1200, 480,
     '<circle cx="600" cy="240" r="146" class="line"/><circle cx="520" cy="240" r="146" class="line"/><circle cx="680" cy="240" r="146" class="line"/>' +
@@ -34,6 +40,9 @@ const DarkDossier = (() => {
     '<text x="600" y="304" font-size="30" text-anchor="middle">2017–2020 · Winden · Zeit · Welten · Ursprung</text>' +
     '<text x="600" y="404" font-size="22" text-anchor="middle" class="muted">Eigenes Schaubild · keine Netflix-Grafik</text>');
 
+  /* „&amp;“ statt „&“: das Schaubild ist XML, und ein rohes & macht es
+     undekodierbar — die Zeitlinie stünde als kaputtes Bild da (E739,
+     test609 §4). */
   const zeitBild = () => svg(1400, 500,
     '<text x="700" y="64" font-size="34" text-anchor="middle" font-weight="700">Die Hauptzeiten des Knotens</text>' +
     '<path d="M110 260 H1290" class="line"/>' +
@@ -41,7 +50,7 @@ const DarkDossier = (() => {
       const x = 120 + i * 234;
       return '<circle cx="' + x + '" cy="260" r="13" fill="#f6c344"/><text x="' + x + '" y="215" font-size="27" text-anchor="middle">' + jahr + '</text>' +
         '<text x="' + x + '" y="312" font-size="18" text-anchor="middle" class="muted">' +
-        ['Sic Mundus entsteht','Adam & Sic Mundus','Ulrich / Helge','Mikkel / AKW','Verschwinden','Nach Apokalypse'][i] + '</text>';
+        ['Sic Mundus entsteht','Adam &amp; Sic Mundus','Ulrich / Helge','Mikkel / AKW','Verschwinden','Nach Apokalypse'][i] + '</text>';
     }).join('') +
     '<path d="M120 350 C350 450 590 450 824 350" class="soft"/><path d="M824 350 C1050 450 1250 430 1290 350" class="soft"/>' +
     '<text x="700" y="452" font-size="21" text-anchor="middle" class="muted">Der Höhlengang verbindet zunächst 33-Jahres-Schritte; spätere Geräte lösen diese Grenze.</text>');
@@ -88,7 +97,7 @@ const DarkDossier = (() => {
     }).join('') +
     '<text x="700" y="456" font-size="19" text-anchor="middle" class="muted">Nicht jedes Gerät folgt denselben Regeln; genau deshalb kann die Handlung später die 33-Jahres-Grenze verlassen.</text>');
 
-  const seite = (elternId, titel, icon) => Store.addPage(elternId, { text: titel, icon });
+  const seite = (elternId: string, titel: string, icon: string) => Store.addPage(elternId, { text: titel, icon });
 
   const bauen = () => {
     const root = Store.addPage(null, {
@@ -150,7 +159,7 @@ const DarkDossier = (() => {
 
     const s1 = seite(root.id, '3 · Staffel 1 (2017) — Folge für Folge', '1');
     h1(s1.id, 'Staffel 1: Das Rätsel wird aufgebaut');
-    const eps1 = [
+    const eps1: Paar[] = [
       ['1 · Geheimnisse','Michael Kahnwald hat sich Monate zuvor das Leben genommen. Jonas kehrt nach Winden zurück. Beim nächtlichen Gang zur Höhle verschwindet Mikkel Nielsen; kurz darauf wird ein unbekannter toter Junge gefunden.'],
       ['2 · Lügen','Ulrich verbindet Mikkels Verschwinden mit dem seines Bruders Mads von 1986. Mikkel erwacht in 1986 und begreift anhand der Umgebung, dass er nicht nur verschwunden, sondern durch die Zeit gereist ist.'],
       ['3 · Gestern und Heute','Die Handlung zeigt Winden 1986: junge Versionen der Eltern werden sichtbar, Claudia übernimmt das Kraftwerk und Mikkel sucht einen Weg zurück. Die Zuschauer erkennen, dass die Familien über Jahrzehnte enger verbunden sind als gedacht.'],
@@ -166,7 +175,7 @@ const DarkDossier = (() => {
 
     const s2 = seite(root.id, '4 · Staffel 2 (2019) — Folge für Folge', '2');
     h1(s2.id, 'Staffel 2: Jonas trifft Adam und der Zyklus schließt sich');
-    const eps2 = [
+    const eps2: Paar[] = [
       ['1 · Anfänge und Enden','1921 zeigt Sic Mundus und einen jungen Noah. 2052 sucht Jonas nach einem Weg aus der Zukunft. 2020 rückt die Abschaltung des Kraftwerks näher, während der Countdown zur Apokalypse läuft.'],
       ['2 · Dunkle Materie','Jonas findet in der Zukunft den instabilen Gottespartikel und reist damit in eine andere Zeit. Claudias ältere und jüngere Versionen kommen einander näher; die Fässer im Kraftwerk werden als Schlüssel der Zeitphänomene wichtiger.'],
       ['3 · Gespenster','Die Angehörigen suchen weiter nach den Vermissten. Ulrich sitzt Jahrzehnte später als alter Mann in der Psychiatrie. Egon beginnt zu verstehen, dass der Gefangene von 1953 und der Mann aus seiner Gegenwart zusammengehören.'],
@@ -180,7 +189,7 @@ const DarkDossier = (() => {
 
     const s3 = seite(root.id, '5 · Staffel 3 (2020) — Folge für Folge', '3');
     h1(s3.id, 'Staffel 3: Zwei Welten sind noch nicht die ganze Wahrheit');
-    const eps3 = [
+    const eps3: Paar[] = [
       ['1 · Déjà-vu','Jonas kommt in einer Welt an, in der er selbst nie geboren wurde. Martha steht dort im Zentrum einer spiegelbildlichen Familienkonstellation. Viele Ereignisse ähneln Adams Welt, aber Rollen und Beziehungen sind verschoben.'],
       ['2 · Die Überlebenden','In Adams Welt leben die Bunker-Überlebenden nach der Apokalypse weiter. Katharina sucht Ulrich in 1987. In Evas Welt wird Jonas in die dortige Logik eingeführt und erkennt, dass Martha zu der Gegenspielerin Eva werden kann.'],
       ['3 · Adam und Eva','Eva erklärt ihr Ziel: Nicht Vernichtung, sondern Erhaltung des Knotens. Der Unbekannte — Kind von Jonas und Martha — erscheint in drei Altersstufen gleichzeitig und führt Aufgaben aus, die die Schleife sichern.'],
@@ -261,7 +270,7 @@ const DarkDossier = (() => {
     hinweis(ende.id, 'Kurzform des Endes: Nicht Jonas muss „gewinnen“ und nicht Martha muss „verlieren“. Der Knoten endet, weil seine äußere Ursache — Tannhaus’ Trauer und sein Experiment — nie entsteht.');
 
     const faq = seite(root.id, '10 · Häufige Verwirrungen', '?');
-    const fragen = [
+    const fragen: Paar[] = [
       ['Ist Adam wirklich Jonas?','Ja. Adam ist eine sehr alte Version von Jonas aus Adams Welt. Der erwachsene „Fremde“ ist die Zwischenstufe.'],
       ['Ist Eva wirklich Martha?','Ja. Eva ist die alte Martha aus der zweiten Welt.'],
       ['Warum ist Jonas Marthas Neffe?','Martha ist Mikkels Schwester. Mikkel wird zu Michael und ist Jonas’ Vater. Damit ist Martha die Tante von Jonas.'],
@@ -279,7 +288,7 @@ const DarkDossier = (() => {
 
     const cards = seite(root.id, '11 · Lernkarten', '▣');
     h1(cards.id, 'Die wichtigsten Beziehungen zum Wiederholen');
-    [
+    const lernkarten: Paar[] = [
       ['Wer ist Michael Kahnwald wirklich?','Mikkel Nielsen, der 2019 nach 1986 reist und dort aufwächst.'],
       ['Wer sind Jonas’ Eltern?','Michael/Mikkel Kahnwald und Hannah Kahnwald.'],
       ['Wer wird aus Jonas?','Zuerst der erwachsene Fremde, später Adam.'],
@@ -296,14 +305,18 @@ const DarkDossier = (() => {
       ['Was erzeugt Adams und Evas Welt?','Tannhaus’ fehlgeschlagenes Experiment in der Ursprungswelt 1986.'],
       ['Welches Ereignis verhindern Jonas und Martha im Finale?','Den tödlichen Autounfall von Marek, Sonja und Charlotte Tannhaus am 8. November 1971.'],
       ['Warum verschwindet der Knoten danach?','Ohne den Unfall baut Tannhaus die Maschine nicht; die zwei Knotenwelten werden nie erzeugt.']
-    ].forEach(k => karte(cards.id, k[0], k[1]));
+    ];
+    lernkarten.forEach(k => karte(cards.id, k[0], k[1]));
 
     const quellen = seite(root.id, '12 · Quellen, Rechte & offizielle Bilder', '↗');
     h1(quellen.id, 'Quellen für die Faktenprüfung');
     punkt(quellen.id, '[Netflix – offizielle Dark-Seite](https://www.netflix.com/de/title/80100172) — Staffeln, Folgen, Trailer und offizielle Kurzbeschreibungen.');
     punkt(quellen.id, '[Netflix Media Center – Dark](https://media.netflix.com/en/only-on-netflix/80100172) — offizielle Serien-/Staffel-Informationen.');
     punkt(quellen.id, '[Offizieller Dark Guide](https://dark.netflix.io/) — Netflix’ interaktive Figuren-, Zeit- und Weltenübersicht.');
-    punkt(quellen.id, '[Wikipedia – Dark](https://de.wikipedia.org/wiki/Dark_(Fernsehserie)) — Veröffentlichungsdaten, Episodenübersicht und Handlungsabgleich.');
+    /* Die Klammern der Adresse sind kodiert (%28/%29, E739): das Link-Muster
+       des Editors endet an der ERSTEN „)“ — roh verlöre die Adresse ihr
+       Ende, und hinter dem Verweis stünde eine einzelne „)“ (test609 §3). */
+    punkt(quellen.id, '[Wikipedia – Dark](https://de.wikipedia.org/wiki/Dark_%28Fernsehserie%29) — Veröffentlichungsdaten, Episodenübersicht und Handlungsabgleich.');
     h1(quellen.id, 'Warum hier keine Netflix-Screenshots stecken');
     absatz(quellen.id, 'Dieses Redion-Fach soll offline funktionieren und sauber weitergegeben werden können. Deshalb enthält es ausschließlich eigene Schaubilder und redaktionelle Zusammenfassungen. Offizielle Standbilder, Poster und Trailer bleiben bei Netflix und werden nur verlinkt.');
     h1(quellen.id, 'Stand');
@@ -327,3 +340,5 @@ const DarkDossier = (() => {
 
   return { bauen };
 })();
+
+(window as any).DarkDossier = DarkDossier;
