@@ -58664,7 +58664,7 @@ Zahlen im Commit „E705“ und in messungen §77. Der Start wächst um rund
 **Ergänzt durch E742 (11. Oktober 2026).** `--b-blue` steht nicht mehr bei
 L 0,30, sondern bei 0,296 (`#123043` statt `#133144`): bei gleichem OKLCH-L
 hatte das Blau mehr WCAG-Leuchtdichte als das Gelb, und der Info-Streifen
-war die blasseste der drei Meldungen (`test319`). Die übrigen neun
+war die blasseste der drei Meldungen (`test319`). Die übrigen acht
 Tönungen bleiben, wie sie hier stehen.
 
 ## E706 — Das Material des Touch Kits überall, wo man wählt: die Pille zum Greifen, die Wahl, die fliegt, die Linse, die in Ruhe klar ist
@@ -65337,7 +65337,7 @@ E729 hatte ihn als „fremd rot" mitgenommen, AUFGABEN.md fragte, ob der
 Punkt bei so hohen Werten noch etwas sagt. Redur hat geantwortet: er
 bleibt.
 
-**Die Ursache.** E705 hat die zehn dunklen Tönungen (`--b-*` in
+**Die Ursache.** E705 hat die neun dunklen Tönungen (`--b-*` in
 `dunkel.css`) auf dieselbe OKLCH-Helligkeit 0,30 gestellt — klar statt
 grau-oliv. OKLCH-Helligkeit ist aber nicht WCAG-Leuchtdichte: bei
 gleichem L hat dieses Blau mehr Leuchtdichte als dieses Gelb. OKLab
@@ -65398,7 +65398,7 @@ eine Stufe je Kanal ab, hell sind die Bilder Pixel für Pixel gleich.
   zu machen, damit einer gewinnt, wäre unehrlich.
 - **`test319` lockern** — etwa die Zeile nur unter 4,5 : 1 gelten lassen:
   Redur hat nein gesagt.
-- **Alle zehn Tönungen neu stimmen** auf gleiche WCAG-Leuchtdichte statt
+- **Alle neun Tönungen neu stimmen** auf gleiche WCAG-Leuchtdichte statt
   gleiches OKLCH-L: ein Umbau von E705, für einen Fund, den eine Stufe in
   einem Wert erledigt.
 
@@ -65415,4 +65415,4 @@ zurück auf `#133144` → wieder 25/26 mit „info 12.09, warn 12.15, fehler
 12.41"; wieder eingesetzt, Datei Byte für Byte wie gebaut. Nachbarn:
 `test584` 37/37 (Schrift auf jeder Tönung ≥ 7 in allen zehn Schemata),
 `test414` 14/14, `test47` 42/42, `test332` nur mit seinen fünf bekannten
-toten Regeln. Die Messung aller zehn Schemata steht in `messungen.md`.
+toten Regeln. Die Messung aller zehn Schemata steht in `messungen.md` §97.
