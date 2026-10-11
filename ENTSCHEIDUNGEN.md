@@ -65365,8 +65365,8 @@ Zeile; bei 320 px dasselbe mit einer 58-px-Linse.
    Beobachter aus der Durchsicht von E712 die Linse an ihren Ort, ohne neue
    Fahrt (320 → 390 px: eine 58-px-Linse, nichts läuft).
 5. **Die ruhende Linse ist eine leere Scheibe.** Neben dem Wort liegt unter
-   ihr leerer Grund: ihre Abschrift zeigt dort nichts, die Brechung bricht
-   nichts. Was man sieht, ist dichtes Glas mit Lichtkante und Schatten —
+   ihr leerer Grund: ihre Abschrift zeigt dort nichts (gemessen, `test589`
+   §16, Zeichen für Zeichen), die Brechung bricht nichts. Was man sieht, ist dichtes Glas mit Lichtkante und Schatten —
    dunkel eine kaum hellere Scheibe mit hellem Rand, hell ein fast weisser
    Stein mit weichem Schatten (Bilder vorher und nachher, Rechner und
    Telefon, hell und dunkel, dazu „weniger Bewegung“).
@@ -65381,6 +65381,20 @@ Zeile; bei 320 px dasselbe mit einer 58-px-Linse.
   höchstens eine halbe Schriftgrösse daneben, auf der Höhe der Zeile, in der
   Spalte der Überschrift, still; darunter deckt sie weder Augenbraue noch
   Absatz (bleibt). Bei 320 px: kein Buchstabe unter einer Linse.
+  **Durchsicht:** §16 übersprang jedes Zeichen IN der Linse, und was ihre
+  vergrösserte Abschrift in Ruhe zeigt, mass niemand — die Linse hätte
+  richtig neben dem Punkt ruhen und „ken.“ trotzdem vergrössert in sich
+  tragen können, das „Weiterdenl(en“ an einem anderen Ort. Seither auch
+  jedes Zeichen der Abschrift (`Range.getClientRects()` nach `transform`
+  und `scale`) gegen den Kreis, und es zählt nur, was man sehen kann:
+  Deckkraft der Kette über 0,02, `visibility` sichtbar, innerhalb jedes
+  Ausschnitts (`overflow`/`clip-path`; Kreis bei `border-radius: 50%`),
+  ein `blur()` davor verbreitert das Zeichen. In allen sieben Fällen; das
+  nächste Zeichen liegt 18,3 px (Rechner) und 14,2 px (Telefon) ausserhalb.
+  Gegenprobe — die Abschrift ruht wie vor E740 (`P2 = Ende − 0,8
+  Schriftgrössen`), die Linse daneben: 127 ok, 6 offen, „sichtbar in der
+  Linse: glas:n, glas:., glas:k, glas:e, glas:n, glas:.“; zurückgesetzt
+  (sha256 gleich): 133 von 133.
 - `test589` §8: „Schmaleres Fenster: die Linse liegt weiter AUF der
   zweiten Zeile“ heisst jetzt „… weiter NEBEN der zweiten Zeile“ —
   dieselbe Messung bei 1000 px, nur der Ort ist der neue.

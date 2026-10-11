@@ -37,6 +37,13 @@ weniger Bewegung — nicht im Verzeichnis (§55.4). Offen als Frage an Redur
 (AUFGABEN.md): die ruhende Linse ist jetzt eine leere Scheibe — stehen
 lassen oder nach der Fahrt verblassen?
 
+**Durchsicht:** `test589` §16 übersprang die Abschrift IN der Linse — dass
+sie in Ruhe nichts zeigt, war behauptet, nicht gemessen. Jetzt auch jedes
+Zeichen der Abschrift gegen den Kreis (Deckkraft, Sichtbarkeit,
+Ausschnitt), in allen sieben Fällen: 133 von 133. Gegenprobe (die
+Abschrift mit dem alten Versatz, die Linse daneben): 127 ok, 6 offen —
+„k e n .“ sichtbar in der Linse.
+
 ## 11. Oktober 2026 · Zusammenführen der dritten Welle auf `claude/morgen-besser-3`
 
 **Redur:** Auftragsdatei vom 5. Oktober, Schritt 2: die dreizehn Punkte aus

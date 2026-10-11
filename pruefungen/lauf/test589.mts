@@ -54,7 +54,8 @@
  *       App — Löschen-Knopf (E709), Meldungen (E711) und Tropfen leihen
  *       `Linse.TROPFEN`; liest nur Dateien.
  *   §16 Die Linse ruht NEBEN dem Wort (E740, Redur am 11. Oktober 2026):
- *       kein Buchstabe der Überschrift unter der ruhenden Linse.
+ *       kein Buchstabe der Überschrift unter der ruhenden Linse — und keiner
+ *       in ihrer Abschrift (Durchsicht E740).
  *
  * DURCHSICHT (4. Oktober 2026; Redur am 3. Oktober, ca. 19:35 UTC: „Weiter
  * ohne pause,"). Der Bericht des Baus ging am Wochenlimit verloren; die
@@ -115,6 +116,14 @@
  *       liegt rechts neben „Weiterdenken.", auf der Mitte der Zeile, in der
  *       Spalte der Überschrift. Bei 320 px ist daneben kein Platz: dann
  *       keine Linse statt einer über der Schrift.
+ *       DURCHSICHT: §16 übersprang jedes Zeichen IN `.ru-held-linse` — und
+ *       niemand mass, was die vergrösserte Abschrift in Ruhe zeigt. Die
+ *       Linse konnte richtig neben dem Punkt ruhen und „ken." trotzdem
+ *       vergrössert in sich tragen. Jetzt auch jedes Zeichen der Abschrift
+ *       gegen den Kreis, mit Deckkraft, Sichtbarkeit und Ausschnitt, in
+ *       allen sieben Fällen. Gegenprobe (die Abschrift ruht wie vor E740,
+ *       die Linse daneben): 127 ok, 6 offen, „sichtbar in der Linse:
+ *       glas:n, glas:., glas:k, glas:e, glas:n, glas:.".
  *   §8  GEÄNDERT. „liegt weiter AUF der zweiten Zeile" war die Zusage der
  *       ersten Durchsicht; sie heisst jetzt „liegt weiter NEBEN der zweiten
  *       Zeile". Die Messung ist dieselbe (1000 px, nichts fährt, Abschrift
@@ -1330,6 +1339,14 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
  * Und sie deckt auch darunter nichts: weder die Augenbraue noch den Absatz
  * (bleibt). Bei 320 px ist neben dem Wort kein Platz für eine Linse — dann
  * lieber keine als eine über der Schrift.
+ *
+ * UND IHRE ABSCHRIFT ZEIGT NICHTS (Durchsicht E740). Die Glyphen oben lassen
+ * die Abschrift in der Linse aus. Aber „Weiterdenl(en" kam AUS ihr: die
+ * vergrösserte Kopie, nicht die Überschrift. Ruhte die Linse neben dem
+ * Punkt und trüge ihre Abschrift noch den alten Versatz, stünde „ken."
+ * vergrössert in der leeren Scheibe — und alle Zusagen davor blieben grün.
+ * Gemessen wird deshalb auch jedes Zeichen der Abschrift, und es zählt nur,
+ * was man sehen kann (Deckkraft, `visibility`, Ausschnitt; siehe RUHE).
  * ========================================================================*/
 {
   console.log('\n§16 · Die Linse ruht NEBEN dem Wort (Redur, 11. Oktober 2026)');
@@ -1357,6 +1374,69 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     const kopf = zeilen.flatMap((z, zi) => glyphen(z, zi));
     const rest = copy ? [...copy.children].filter(e => e !== h2 && !e.classList.contains('ru-held-linse'))
       .flatMap(e => glyphen(e, -1)) : [];
+    /* DIE ABSCHRIFT IN DER LINSE (Durchsicht E740). `glyphen` lässt sie aus —
+       sie ist die Lupe, nicht die Schrift. Aber SIE war es, die
+       „Weiterdenl(en" zeigte: ruht die Linse richtig neben dem Punkt und ist
+       ihre Abschrift falsch verschoben, steht „ken." vergrössert IN der
+       leeren Scheibe, und keine Zusage oben merkt es. Gemessen wird deshalb
+       auch hier Zeichen für Zeichen (`Range.getClientRects`, nach `transform`
+       und `scale`), und ein Zeichen zählt, wenn man es sehen KANN: Deckkraft
+       der ganzen Kette bis zur Wurzel über 0,02, `visibility` sichtbar, und
+       innerhalb JEDES Ausschnitts auf dem Weg bis zur Linse — ein Element mit
+       `overflow` ungleich `visible` (oder einem `clip-path`) schneidet als
+       Kreis, wenn es `border-radius: 50%` trägt, sonst als Kasten. Ohne
+       Ausschnitt wäre jedes Zeichen sichtbar, wo es auch steht. Ein `blur()`
+       bis zum ersten Ausschnitt (das Milchglas) verbreitert das Zeichen um
+       seine doppelte Weite. `ab` ist der Abstand zum Rand des engsten
+       Ausschnitts: unter 0 heisst drinnen. */
+    type Zeichen = { ch: string; lage: string; ab: number; offen: boolean };
+    const abschrift: Zeichen[] = [];
+    if (l && getComputedStyle(l).display !== 'none') {
+      const gang = document.createTreeWalker(l, NodeFilter.SHOW_TEXT);
+      for (let n = gang.nextNode() as Text | null; n; n = gang.nextNode() as Text | null) {
+        const eltern = n.parentElement;
+        if (!eltern) continue;
+        let deck = 1;
+        for (let e: Element | null = eltern; e; e = e.parentElement) deck *= parseFloat(getComputedStyle(e).opacity);
+        const offen = getComputedStyle(eltern).visibility === 'visible' && deck > 0.02;
+        const schnitte: { kreis: boolean; b: DOMRect }[] = [];
+        let rand = 0;
+        for (let e: Element | null = eltern; e; e = e.parentElement) {
+          const cs = getComputedStyle(e);
+          if (!schnitte.length) for (const m of (cs.filter || '').matchAll(/blur\(([\d.]+)px\)/g)) rand += 2 * parseFloat(m[1]!);
+          if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible' || cs.clipPath !== 'none')
+            schnitte.push({ kreis: cs.borderRadius === '50%', b: e.getBoundingClientRect() });
+          if (e === l) break;
+        }
+        const lage = (eltern.closest('.ru-held-linse > *')?.className || '?').replace('ru-held-linse-', '');
+        for (let i = 0; i < n.data.length; i++) {
+          if (!n.data[i]!.trim()) continue;
+          const rg = document.createRange(); rg.setStart(n, i); rg.setEnd(n, i + 1);
+          for (const g0 of rg.getClientRects()) {
+            if (!g0.width || !g0.height) continue;
+            const g = { left: g0.left - rand, right: g0.right + rand, top: g0.top - rand, bottom: g0.bottom + rand };
+            let ab = -Infinity;
+            for (const { kreis, b } of schnitte) {
+              let d: number;
+              if (kreis) {
+                const kx = b.left + b.width / 2, ky = b.top + b.height / 2;
+                const nx = Math.max(g.left, Math.min(kx, g.right)), ny = Math.max(g.top, Math.min(ky, g.bottom));
+                d = Math.hypot(nx - kx, ny - ky) - b.width / 2;
+              } else d = Math.max(b.left - g.right, g.left - b.right, b.top - g.bottom, g.top - b.bottom);
+              ab = Math.max(ab, d);
+            }
+            abschrift.push({ ch: n.data[i]!, lage, ab, offen });
+          }
+        }
+      }
+    }
+    const offeneAb = abschrift.filter(z => z.offen).map(z => z.ab);
+    const abschriftWerte = {
+      abschriftZeichen: abschrift.length,
+      abschriftSichtbar: abschrift.filter(z => z.offen && z.ab < 0).map(z => `${z.lage}:${z.ch}`),
+      /* Abstand des nächsten sichtbaren Zeichens der Abschrift zum Rand (px, unter 0 drinnen). */
+      abschriftAbstand: offeneAb.length ? Math.round(Math.min(...offeneAb) * 10) / 10 : null
+    };
     const sichtbar = !!l && getComputedStyle(l).display !== 'none';
     const q = sichtbar ? l!.getBoundingClientRect() : null;
     const fs = h2 ? parseFloat(getComputedStyle(h2).fontSize) : 0;
@@ -1368,7 +1448,7 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     }).length;
     if (!q || !q.width || !h2 || !z2)
       return { linse: false, laeuft, fs, buchstaben: kopf.length, trifft: [] as string[], darunter: [] as string[],
-               daneben: NaN, aufHoehe: false, inSpalte: false, d: 0 };
+               daneben: NaN, aufHoehe: false, inSpalte: false, d: 0, ...abschriftWerte };
     const cx = q.left + q.width / 2, cy = q.top + q.height / 2, r = q.width / 2;
     const unter = (g: Glyphe) => {
       const nx = Math.max(g.r.left, Math.min(cx, g.r.right)), ny = Math.max(g.r.top, Math.min(cy, g.r.bottom));
@@ -1382,7 +1462,7 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
       daneben: Math.round((q.left - ende2) * 10) / 10,
       aufHoehe: cy >= z2.top && cy <= z2.bottom,
       inSpalte: q.left >= hr.left - 0.5 && q.right <= hr.left + h2.clientWidth + 0.5,
-      d: Math.round(q.width)
+      d: Math.round(q.width), ...abschriftWerte
     };
   };
   const faelle = [
@@ -1403,6 +1483,13 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
       r.linse && r.daneben >= 0 && r.daneben <= r.fs / 2 && r.aufHoehe, JSON.stringify(r));
     p(`${name}: in der Spalte der Überschrift, still, und darunter deckt sie nichts (bleibt)`,
       r.linse && r.inSpalte && r.laeuft === 0 && r.darunter.length === 0, JSON.stringify(r));
+    /* Durchsicht E740: die ABSCHRIFT in der ruhenden Linse zeigt keinen
+       Buchstaben — sonst stünde „ken." vergrössert neben dem Wort, das
+       „Weiterdenl(en" an einem anderen Ort. ≥ 22 gemessene Zeichen, damit
+       „keine Abschrift gefunden" nicht als „leer" durchgeht (§55.2). */
+    p(`${name}: die Abschrift in der ruhenden Linse zeigt keinen Buchstaben (${r.abschriftZeichen} Zeichen der Abschrift gemessen, Abstand des nächsten zum Rand ${r.abschriftAbstand} px, unter 0 heisst drinnen)`,
+      r.linse && r.abschriftZeichen >= 22 && r.abschriftSichtbar.length === 0,
+      `sichtbar in der Linse: ${JSON.stringify(r.abschriftSichtbar)}`);
     await ctx.close();
   }
   {
@@ -1423,6 +1510,9 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     const r = await s.evaluate(RUHE);
     p(`Telefon 320: kein Buchstabe unter einer Linse (daneben ist kein Platz — ${r.linse ? 'Linse ' + r.d + ' px' : 'keine Linse'})`,
       r.buchstaben >= 22 && r.trifft.length === 0 && r.darunter.length === 0, JSON.stringify(r));
+    p(`Telefon 320: auch in einer Linse zeigt die Abschrift keinen Buchstaben (${r.linse ? r.abschriftZeichen + ' Zeichen gemessen' : 'keine Linse, keine Abschrift'})`,
+      r.linse ? r.abschriftZeichen >= 22 && r.abschriftSichtbar.length === 0 : r.abschriftZeichen === 0,
+      `sichtbar in der Linse: ${JSON.stringify(r.abschriftSichtbar)}`);
     await ctx.close();
   }
 }
