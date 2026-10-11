@@ -1700,7 +1700,9 @@ Grund:
    durch E742** auf `claude/info-streifen-kontrast`: Redur hat „Ja"
    gesagt, der Punkt bleibt streng; `--b-blue` steht im Dunkeln eine Stufe
    dunkler (`#123043`), info 12.26 gegen warn 12.15 und fehler 12.41,
-   `test319` 26/26. `test86` ist seither grün
+   `test319` 26/26. Im vollen Lauf auf `claude/sechs-ja` (11. Oktober
+   abends, 537 von 550 grün) waren genau die übrigen dreizehn rot, kein
+   neuer. `test86` ist seither grün
    (e485d3c), `test98` auch (seit E710 suchte er `confirm(`, jetzt
    `Dialog.bestaetigen` vor jedem Löschen). `test436` war im
    Vereinigungslauf einmal rot (`null.click` in §2), danach zweimal 71/71

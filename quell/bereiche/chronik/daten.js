@@ -4632,8 +4632,8 @@ const ChronikDaten = {
                     "vonCommit": "d24bc25",
                     "bisCommit": "462abbc",
                     "zeitraum": "15:23 UTC – Ende des Tages",
-                    "dauer": "ca. 1 h und der Lauf",
-                    "pruefungen": "63 Läufe grün, keiner rot — 16 Datei-Wächter (550 549 225 105 109 87 400 537 401 402 290 298 410 362 92 94) und 47 im Browser, darunter die neuen test604–test609 sowie 589, 598, 319, 584, 600, 469, 74 und test388 (Start 1919 KB gzip, Decke 1950). Ein voller Lauf über alle 550 steht aus."
+                    "dauer": "ca. 1 h, dazu der volle Lauf (158 min)",
+                    "pruefungen": "63 Läufe grün, keiner rot — 16 Datei-Wächter (550 549 225 105 109 87 400 537 401 402 290 298 410 362 92 94) und 47 im Browser, darunter die neuen test604–test609 sowie 589, 598, 319, 584, 600, 469, 74 und test388 (Start 1919 KB gzip, Decke 1950). Danach der volle Lauf über alle 550 in Stücken (`volllauf.mts --neu`, 16:04 UTC, nach der Zeitgrenze der Sitzung einmal fortgesetzt): 537 grün, 13 rot in 158 Minuten — die dreizehn sind genau die fremden roten Läufe, die auf main schon rot waren (201 270 274 332 348 351 365 425 448 470 493 524 533); neu rot ist keiner, und test319 ist nicht mehr darunter."
                 }
             ],
             "zahlen": {
