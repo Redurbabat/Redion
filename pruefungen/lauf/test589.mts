@@ -40,7 +40,8 @@
  *   §7  Ruhig und „weniger Bewegung": kein Tropfen, kein Fliessen, sofort.
  *   §8  Die Linse über „Heute": einmal beim Ankommen, dann verblasst sie
  *       (E744); die Schrift bleibt echte Schrift; EINE Brechung im Dokument;
- *       eine Grössenänderung holt keine Linse zurück.
+ *       eine Grössenänderung holt keine Linse zurück — mitten im Verblassen
+ *       verblasst sie an derselben Stelle weiter, in der neuen Lage.
  *   §9  Die Kacheln in „Mehr" (Telefon): sieben Griffe, 44 px, jeder tut,
  *       was sein bisheriger Ort tut; beim Rollen eine Chipleiste.
  *   §10 Die Kacheln in den Einstellungen (Rechner): oben in „Allgemein",
@@ -55,8 +56,8 @@
  *       `Linse.TROPFEN`; liest nur Dateien.
  *   §16 Die Linse hält NEBEN dem Wort (E740, Redur am 11. Oktober 2026):
  *       kein Buchstabe der Überschrift unter ihr — und keiner in ihrer
- *       Abschrift (Durchsicht E740); danach verblasst sie, und in Ruhe ist
- *       keine Linse zu sehen (E744, Redur am 11. Oktober abends).
+ *       Abschrift (Durchsicht E740); danach verblasst sie ohne Sprung, und
+ *       in Ruhe ist keine Linse zu sehen (E744, Redur am 11. Oktober abends).
  *
  * DURCHSICHT (4. Oktober 2026; Redur am 3. Oktober, ca. 19:35 UTC: „Weiter
  * ohne pause,"). Der Bericht des Baus ging am Wochenlimit verloren; die
@@ -156,6 +157,30 @@
  *       bricht die Linse" (beim Ankommen gemessen); nach der Fahrt ist sie
  *       verblasst; die Grössenänderung auf 1000 px holt keine Linse zurück;
  *       „Ruhig" und „weniger Bewegung": keine Linse statt einer stillen.
+ *
+ * DURCHSICHT DES VERBLASSENS (§16, §8; 11. Oktober 2026 abends, E744). Zwei
+ * Lücken, beide am gebauten Stand belegt; die Gegenproben am Quelltext
+ * linse.ts, gebaut mit `tsc -p tsconfig.bauen.json`, danach Byte für Byte
+ * zurück (sha256 von linse.ts und linse.js gleich):
+ *   §16 KEIN SPRUNG. Ein „Verblassen", das auf 0,5 stehen bleibt und dann in
+ *       einem Schritt weg ist (Keyframes [{opacity:1},{opacity:0.5}], danach
+ *       `remove()`), war 146 von 146 grün — die Linse fiel von 0,539 auf
+ *       „kein Element". Neu, je Fall mit Fahrt: das letzte sichtbare Bild vor
+ *       „weg oder leer" zeigt höchstens 0,2, von Bild zu Bild fällt die
+ *       Deckkraft um höchstens 0,25 (gerechnet aus `--ease-exit`: über ein
+ *       Bild höchstens 0,083, zwei 0,162, drei 0,239; gemessen 0,061–0,099
+ *       und 0,080–0,082). Stockt der Browser genau dort (über 40 ms auf der
+ *       Bilduhr), wird nachgemessen, höchstens dreimal. Mit der Gegenprobe:
+ *       148 ok, 4 offen — „zeigt 0.513 … fällt höchstens 0.513".
+ *   §8  MITTEN IM VERBLASSEN NEU GEZEICHNET. Ein neues Ankommen, 1740 ms
+ *       nachdem die Linse da ist das Fenster auf 1000 px: eine neue Linse
+ *       ist da, halb verblasst (zwischen 0,05 und 0,95) und fällt weiter,
+ *       rechts vom Punkt in der neuen Lage, die Abschrift in der neuen
+ *       Grösse der Überschrift. Rot gesehen: ohne `geht.currentTime =
+ *       versatz` 151 ok, 1 offen („halb verblasst (1 …)"); der Halt von vor
+ *       E740 (über „ken") 139 ok, 13 offen („-51.3 px daneben", dazu §16 am
+ *       Halt); die Schrift des ersten Ankommens in der Abschrift 151 ok,
+ *       1 offen („44px" statt „31px").
  *
  * KANN ER ROT WERDEN? Gegen den Stand b3cf1933 (vor E712) ist er rot, in
  * jedem Abschnitt ausser den „bleibt"-Zusagen — siehe Commit „test589 (rot)".
@@ -665,6 +690,100 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
     JSON.stringify({ ...schmal, ...schmalLinse }));
   await s.setViewportSize({ width: 1440, height: 900 });
   await warte(s, 300);
+  /* MITTEN IM VERBLASSEN NEU GEZEICHNET (Durchsicht E744). linse.ts sagt
+     vom Verblassen: „Dieselbe Uhr wie die Fahrt: beim Neuzeichnen geht es
+     an derselben Stelle weiter" — und keine Zusage hielt das; die 1000 px
+     oben kommen erst, wenn alles vorbei ist. Hier: ein neues Ankommen bei
+     1440 px, und 1740 ms nachdem die Linse da ist (die Fahrt endet bei
+     1650 ms, das Verblassen bei 1970 ms) wird das Fenster 1000 px breit —
+     die Überschrift wird kleiner, der Beobachter legt eine neue Linse an,
+     gut 1800 ms nach dem Ankommen. Sie muss da sein, halb verblasst
+     (Deckkraft der Kette zwischen 0,05 und 0,95) und vier Bilder später
+     weiter gefallen; sie steht rechts vom Punkt der zweiten Zeile, in der
+     NEUEN Lage (höchstens eine halbe Schriftgrösse daneben, auf der Höhe
+     der Zeile); ihre Abschrift hat die neue Grösse der Überschrift. Fängt
+     das Verblassen beim Neuzeichnen vorne an, steht die Linse mit Deckkraft
+     1 da und bleibt so (Gegenprobe). */
+  const MITTE = 1740;
+  const vorMitte = await s.evaluate((mitte: number) => new Promise<{ da: boolean; t: number; schrift: string }>(fertig => {
+    const t0 = performance.now();
+    let da = 0;
+    const tick = (): void => {
+      const jetzt = performance.now();
+      const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+      if (l && !da) da = jetzt;
+      if (da && jetzt - da >= mitte) {
+        (window as any).__alt589 = l;
+        (window as any).__da589 = da;
+        fertig({ da: !!l, t: Math.round(jetzt - da),
+                 schrift: getComputedStyle(document.querySelector('.lw-desk h2')!).fontSize });
+      } else if (jetzt - t0 > 4000) fertig({ da: false, t: -1, schrift: '' });
+      else requestAnimationFrame(tick);
+    };
+    Produktwelten.lernen('heute');
+    requestAnimationFrame(tick);
+  }), MITTE);
+  await s.setViewportSize({ width: 1000, height: 900 });
+  const mitten = await s.evaluate(() => new Promise<{
+    neu: boolean; t1: number; d1: number; t2: number; d2: number; daneben: number; fs: number;
+    aufHoehe: boolean; abschrift: string | null; ueberschrift: string }>(fertig => {
+    const alt = (window as any).__alt589 as HTMLElement | null, da = Number((window as any).__da589);
+    const t0 = performance.now();
+    const deck = (l: HTMLElement): number => {
+      if (!l.isConnected) return 0;
+      let o = getComputedStyle(l).display === 'none' ? 0 : 1;
+      for (let e: Element | null = l; e && o > 0; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity);
+      return Math.round(o * 1000) / 1000;
+    };
+    const h2 = document.querySelector<HTMLElement>('.lw-desk h2');
+    const tick = (): void => {
+      const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+      if (!l || l === alt || !h2) {
+        if (performance.now() - t0 < 800) { requestAnimationFrame(tick); return; }
+        fertig({ neu: false, t1: Math.round(performance.now() - da), d1: l ? deck(l) : -1, t2: NaN, d2: NaN,
+                 daneben: NaN, fs: 0, aufHoehe: false, abschrift: null, ueberschrift: h2 ? getComputedStyle(h2).fontSize : '' });
+        return;
+      }
+      /* Der rechte Rand des letzten Zeichens der zweiten Zeile — des Punkts. */
+      const zeilen = [...h2.querySelectorAll<HTMLElement>('.ru-held-zeile')];
+      const z2 = zeilen[zeilen.length - 1];
+      let ende2 = -Infinity;
+      if (z2) {
+        const gang = document.createTreeWalker(z2, NodeFilter.SHOW_TEXT);
+        for (let n = gang.nextNode() as Text | null; n; n = gang.nextNode() as Text | null)
+          for (let i = 0; i < n.data.length; i++) {
+            if (!n.data[i]!.trim()) continue;
+            const rg = document.createRange(); rg.setStart(n, i); rg.setEnd(n, i + 1);
+            for (const r of rg.getClientRects()) if (r.width) ende2 = Math.max(ende2, r.right);
+          }
+      }
+      const q = l.getBoundingClientRect(), zr = z2?.getBoundingClientRect();
+      const cy = q.top + q.height / 2;
+      const bild = l.querySelector<HTMLElement>('.ru-held-linse-bild');
+      const t1 = Math.round(performance.now() - da), d1 = deck(l);
+      const daneben = Math.round((q.left - ende2) * 10) / 10, fs = parseFloat(getComputedStyle(h2).fontSize);
+      const aufHoehe = !!zr && cy >= zr.top && cy <= zr.bottom;
+      const abschrift = bild ? getComputedStyle(bild).fontSize : null;
+      let n = 0;
+      const nach = (): void => {
+        if (++n < 4) { requestAnimationFrame(nach); return; }
+        fertig({ neu: true, t1, d1, t2: Math.round(performance.now() - da), d2: deck(l), daneben, fs, aufHoehe,
+                 abschrift, ueberschrift: getComputedStyle(h2).fontSize });
+      };
+      requestAnimationFrame(nach);
+    };
+    requestAnimationFrame(tick);
+  }));
+  console.log(`    · Mitten im Verblassen: ${JSON.stringify({ vorMitte, mitten })}`);
+  p(`Mitten im Verblassen neu gezeichnet (1000 px, ${mitten.t1} ms nach dem Ankommen): eine Linse ist da, halb verblasst (${mitten.d1}, zwischen 0,05 und 0,95), und sie fällt weiter (${mitten.t2} ms: ${mitten.d2})`,
+    vorMitte.da && mitten.neu && mitten.d1 > 0.05 && mitten.d1 < 0.95 && mitten.d2 < mitten.d1,
+    JSON.stringify({ vorMitte, mitten }));
+  p(`… sie steht rechts vom Punkt in der neuen Lage (${mitten.daneben} px daneben, höchstens eine halbe Schriftgrösse, auf der Höhe der Zeile), ihre Abschrift in der neuen Grösse der Überschrift (${mitten.abschrift}, vorher ${vorMitte.schrift})`,
+    mitten.neu && mitten.daneben >= 0 && mitten.daneben <= mitten.fs / 2 && mitten.aufHoehe &&
+    mitten.abschrift === mitten.ueberschrift && mitten.ueberschrift !== vorMitte.schrift,
+    JSON.stringify({ vorMitte, mitten }));
+  await s.setViewportSize({ width: 1440, height: 900 });
+  await warte(s, 400);
   await s.evaluate(() => Einstellungen.S('bewegung', 'ruhig'));
   await s.evaluate(() => Produktwelten.lernen('heute'));
   await warte(s, 400);
@@ -1416,7 +1535,10 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
  *   `requestAnimationFrame` mitgeschrieben: erst voll da (≥ 0,98), danach
  *   mindestens drei Bilder zwischen 0,05 und 0,95, nie wieder heller, in
  *   höchstens 700 ms bei 0,02 oder darunter, und am Ende weg. Ein
- *   Verschwinden ohne Übergang wäre kein Verblassen (Gegenprobe).
+ *   Verschwinden ohne Übergang wäre kein Verblassen (Gegenprobe). Und es
+ *   springt nicht (Durchsicht E744): das letzte sichtbare Bild zeigt
+ *   höchstens 0,2, von Bild zu Bild fällt sie höchstens 0,25 — siehe KEIN
+ *   SPRUNG.
  *   WENIGER BEWEGUNG. Keine Fahrt, also kein Verblassen, also keine Linse.
  * ========================================================================*/
 {
@@ -1570,9 +1692,12 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     }
   };
   /* DAS VERBLASSEN, Bild für Bild: ein neues Ankommen, und bei jedem Bild
-     die Deckkraft der Linse (die ganze Kette; −1: kein Element). */
-  const VERLAUF = () => new Promise<[number, number][]>(fertig => {
-    const aus: [number, number][] = [];
+     die Deckkraft der Linse (die ganze Kette; −1: kein Element) — dazu die
+     Zeit der Bilduhr (`document.timeline`), nach der die Animationen
+     rechnen: sie zeigt, ob der Browser zwischen zwei Bildern gestockt hat
+     (siehe KEIN SPRUNG). */
+  const VERLAUF = () => new Promise<[number, number, number][]>(fertig => {
+    const aus: [number, number, number][] = [];
     const t0 = performance.now();
     const tick = (): void => {
       const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
@@ -1582,12 +1707,64 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
         for (let e: Element | null = l; e && o > 0; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity);
       }
       const t = performance.now() - t0;
-      aus.push([Math.round(t), Math.round(o * 1000) / 1000]);
+      aus.push([Math.round(t), Math.round(o * 1000) / 1000, Math.round(Number(document.timeline.currentTime ?? 0) * 10) / 10]);
       if (t < 3200) requestAnimationFrame(tick); else fertig(aus);
     };
     Produktwelten.lernen('heute');
     requestAnimationFrame(tick);
   });
+  /* KEIN SPRUNG (Durchsicht E744). Die Zusage über das Verblassen liess ein
+     „Verblassen" durch, das auf halbem Weg stehen bleibt und dann in einem
+     Schritt weg ist: Keyframes `[{opacity:1},{opacity:0.5}]`, danach
+     `remove()` — 146 von 146 grün; die Linse fiel von 0,539 auf „kein
+     Element". Darum zwei Zusagen dazu: das letzte sichtbare Bild, bevor die
+     Linse weg oder leer ist (≤ 0,02), zeigt höchstens 0,2 — und von einem
+     Bild zum nächsten fällt die Deckkraft um höchstens 0,25.
+     DER SPIELRAUM IST GERECHNET. `--ease-exit` (cubic-bezier(0.4, 0, 1, 1))
+     endet mit der Steigung 1/0,6; in 320 ms fällt die Deckkraft darum über
+     ein Bild (16,7 ms) höchstens um 0,083, über zwei (33,3 ms) um 0,162,
+     über drei (50 ms) um 0,239 — und das letzte Bild vor dem Ende zeigt
+     höchstens dieselben Werte. Beide Grenzen halten also auch dann, wenn
+     ein Bild ausfällt; den Sprung hält 0,25 sogar bei zwei ausgefallenen.
+     STOCKT DER BROWSER genau dort, wo eine Zusage bricht — mehr als 40 ms
+     auf der Bilduhr zwischen den zwei Bildern, also mindestens drei
+     Bildabstände —, wird mit einem neuen Ankommen nachgemessen, höchstens
+     dreimal: ein echter Sprung springt jedes Mal, ein Stocken nicht. */
+  const STOCKEN = 40;
+  const beurteilen = (v: [number, number, number][]) => {
+    const o = (x: number): number => (x < 0 ? 0 : x);
+    let voll = -1;
+    v.forEach(([, d], i) => { if (d >= 0.98) voll = i; });
+    const danach = voll >= 0 ? v.slice(voll + 1) : [];
+    const zwischen = danach.filter(([, d]) => d > 0.05 && d < 0.95);
+    const nieHeller = danach.every(([, d], i) => i === 0 || o(d) <= o(danach[i - 1]![1]) + 0.01);
+    const iWeg = voll >= 0 ? v.findIndex(([, d], i) => i > voll && d <= 0.02) : -1;
+    const wegAb = iWeg > 0 ? v[iWeg] : undefined;
+    const dauer = voll >= 0 && wegAb ? wegAb[0] - v[voll]![0] : NaN;
+    const zuletzt = v[v.length - 1]?.[1] ?? 1;
+    /* Die zwei neuen Zusagen, je mit dem Abstand der Bilder auf der Bilduhr. */
+    const letzte = iWeg > 0 ? v[iWeg - 1]! : null;
+    const letzteAbstand = letzte && wegAb ? Math.round(wegAb[2] - letzte[2]) : NaN;
+    const spruenge: { bei: number; fall: number; abstand: number }[] = [];
+    let groesster = 0, groessterAbstand = 0;
+    for (let i = Math.max(1, voll + 1); voll >= 0 && i < v.length; i++) {
+      const fall = Math.round((o(v[i - 1]![1]) - o(v[i]![1])) * 1000) / 1000;
+      const abstand = Math.round(v[i]![2] - v[i - 1]![2]);
+      if (fall > groesster) { groesster = fall; groessterAbstand = abstand; }
+      if (fall > 0.25) spruenge.push({ bei: v[i]![0], fall, abstand });
+    }
+    const letzteZuHell = !letzte || o(letzte[1]) > 0.2;
+    const sanft = !!letzte && !letzteZuHell && spruenge.length === 0;
+    /* Nur gestockt, wenn JEDER Bruch an einem Stocken liegt. */
+    const gestockt = !sanft && !!letzte && (!letzteZuHell || letzteAbstand > STOCKEN) &&
+      spruenge.every(x => x.abstand > STOCKEN);
+    return {
+      voll, zwischen, nieHeller, wegAb, dauer, zuletzt, sanft, gestockt,
+      kurz: { vollBis: voll >= 0 ? v[voll]![0] : null, wegAb: wegAb?.[0] ?? null, dauer,
+              bilder: zwischen.length, werte: zwischen.map(([t, d]) => `${t}:${d}`).join(' '), zuletzt },
+      sprung: { letzte: letzte ? letzte[1] : null, letzteAbstand, groesster, groessterAbstand, spruenge }
+    };
+  };
   const faelle = [
     ['Rechner 1440 dunkel', false, 'dark', false], ['Rechner 1440 hell', false, 'light', false],
     ['Telefon 390 dunkel', true, 'dark', false], ['Telefon 390 hell', true, 'light', false],
@@ -1637,23 +1814,21 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
       r.buchstaben >= 22 && r.trifft.length === 0 && r.darunter.length === 0 && r.abschriftSichtbar.length === 0,
       JSON.stringify({ trifft: r.trifft, darunter: r.darunter, abschrift: r.abschriftSichtbar }));
     if (!weniger) {
-      /* DAS VERBLASSEN, Bild für Bild (E744). */
-      const v = await s.evaluate(VERLAUF);
-      const o = (x: number): number => (x < 0 ? 0 : x);
-      let voll = -1;
-      v.forEach(([, d], i) => { if (d >= 0.98) voll = i; });
-      const danach = voll >= 0 ? v.slice(voll + 1) : [];
-      const zwischen = danach.filter(([, d]) => d > 0.05 && d < 0.95);
-      const nieHeller = danach.every(([, d], i) => i === 0 || o(d) <= o(danach[i - 1]![1]) + 0.01);
-      const wegAb = danach.find(([, d]) => d <= 0.02);
-      const dauer = voll >= 0 && wegAb ? wegAb[0] - v[voll]![0] : NaN;
-      const zuletzt = v[v.length - 1]?.[1] ?? 1;
-      const kurz = { vollBis: voll >= 0 ? v[voll]![0] : null, wegAb: wegAb?.[0] ?? null, dauer,
-                     bilder: zwischen.length, werte: zwischen.map(([t, d]) => `${t}:${d}`).join(' '), zuletzt };
+      /* DAS VERBLASSEN, Bild für Bild (E744); nachgemessen nur, wenn ein
+         Sprung an einem Stocken des Browsers liegt (KEIN SPRUNG oben). */
+      let b = beurteilen(await s.evaluate(VERLAUF));
+      for (let messung = 2; b.gestockt && messung <= 3; messung++) {
+        console.log(`    · ${name}: gestockt, Messung ${messung} — ${JSON.stringify(b.sprung)}`);
+        b = beurteilen(await s.evaluate(VERLAUF));
+      }
+      const { voll, zwischen, nieHeller, dauer, zuletzt, kurz } = b;
       console.log(`    · Verblassen ${name}: ${JSON.stringify(kurz)}`);
+      console.log(`    · Sprung ${name}: ${JSON.stringify(b.sprung)}`);
       p(`${name}: die Linse verblasst — erst voll da, dann ${zwischen.length} Bilder dazwischen, nie wieder heller, in ${dauer} ms, am Ende weg`,
         voll >= 0 && zwischen.length >= 3 && nieHeller && dauer > 0 && dauer <= 700 && zuletzt <= 0.02,
         JSON.stringify({ ...kurz, nieHeller }));
+      p(`${name}: das Verblassen springt nicht — das letzte sichtbare Bild zeigt ${b.sprung.letzte} (höchstens 0,2), von Bild zu Bild fällt sie höchstens ${b.sprung.groesster} (höchstens 0,25)`,
+        b.sanft, JSON.stringify({ ...b.sprung, gestockt: b.gestockt }));
     }
     await ctx.close();
   }
