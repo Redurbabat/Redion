@@ -4543,9 +4543,50 @@ const ChronikDaten = {
   {
    "datum": "2026-10-11",
    "wochentag": "Sonntag",
-   "titel": "Die Durchsichten von Bibliothek und Lernzentrum, zehn Zusammenführungen auf morgen-besser-3 — und vier rote Läufe aus den eigenen Zweigen",
-   "wasIchWeiss": "Bis 01:40 UTC liefen die Durchsichten von E725 (ganze Namen in der Bereichszeile, ein gleich breiter Kopf in allen Formen, Enter vor der Uhr) und E726 (Themenrunde ohne Filter, Platz für den Chip, bündiges Paar). Dann die zehn Zusammenführungen auf claude/morgen-besser-3 in der Folge von Teil A, von 01:45 bis 02:20 UTC. Gefunden wurden dabei drei Dinge, die keiner der zehn Zweige allein sehen konnte: eine Seite zu nehmen verlor zweimal die Zeile der anderen (P125), der Block der „Und“-Absätze in CLAUDE.md trug Doppel und einen abgeschnittenen Satz (P126), und eine rohe 46px aus E717 machte test362 rot, seit dem zweiten Zusammenführen unbemerkt (P127). Danach liefen die Wächter aller zehn Zweige gemeinsam unter dem Schloss.\n\nDer Vereinigungslauf (169 Läufe, die Wächter aus allen Commits der zehn Zweige, 02:23–ca. 03:00 UTC) stand bei 152 grün, 17 rot. Jeder rote wurde danach auf claude/morgen-besser-2 nachgefahren und Zeile für Zeile verglichen: zwölf scheitern dort genau gleich (fremd, älter als diese Welle), test436 war einmal rot und danach zweimal 71/71. Vier kamen aus den eigenen Zweigen, und jeder davon war auf seinem Zweig schon rot gewesen, ohne dass dessen Wächterliste ihn enthielt: test469 (E725 hatte die Vorgabe der Suche im Dokument geändert und den Lauf nicht nachgezogen, P128), test422 und test274 (zwei Namen, die an zwei Stellen standen, P129) und test86 (vier Register unangekündigt, zwei davon seit September).\n\nDanach, auf `claude/auf-main` (der leere Zusammenführungs-Commit von origin/main darauf), der volle Lauf in Stücken: 544 Läufe, 524 grün, 20 rot in 154 Minuten (03:55–ca. 06:30 UTC). Eine Durchsicht mit drei Linsen und je zwei Zweiflern (35 Prüfer) prüfte zugleich alles, was über morgen-besser-2 hinaus nach main geht, und fand dreizehn Dinge — das schwerste: `test422` war auf dem eingecheckten Stand wieder rot, weil die Chronik selbst den Aufruf zitierte, den der Wächter sucht (P130). Jeder rote Lauf ist danach auf morgen-besser-2 nachgefahren oder einzeln wiederholt: vierzehn sind dort gleich rot, `test98` (seit E710) und `test422` sind gerichtet, und vier waren im vollen Lauf rot und danach einzeln grün. Die vier: `test459`, `test466` und `test588` einzeln je dreimal grün, `test453` zweimal von dreien. Die Meldung „Execution context was destroyed“ von 453, 459 und 466 war KEIN Neuladen (P131): dasselbe Dokument stand danach da, alle Daten im Speicher; der Browser meldete Playwright „Promise was collected“, weil `Store.flush()` und das lange `App.oeffne` im selben abgewarteten Schritt standen. Getrennt 15 von 15 grün; die drei Läufe öffnen seither so.",
-   "nachrichten": [],
+   "titel": "Die Durchsichten von Bibliothek und Lernzentrum, zehn Zusammenführungen auf morgen-besser-3 — und vier rote Läufe aus den eigenen Zweigen; am Nachmittag Redurs sechs Ja — fünf Zweige, zusammengeführt auf claude/sechs-ja",
+   "wasIchWeiss": "Bis 01:40 UTC liefen die Durchsichten von E725 (ganze Namen in der Bereichszeile, ein gleich breiter Kopf in allen Formen, Enter vor der Uhr) und E726 (Themenrunde ohne Filter, Platz für den Chip, bündiges Paar). Dann die zehn Zusammenführungen auf claude/morgen-besser-3 in der Folge von Teil A, von 01:45 bis 02:20 UTC. Gefunden wurden dabei drei Dinge, die keiner der zehn Zweige allein sehen konnte: eine Seite zu nehmen verlor zweimal die Zeile der anderen (P125), der Block der „Und“-Absätze in CLAUDE.md trug Doppel und einen abgeschnittenen Satz (P126), und eine rohe 46px aus E717 machte test362 rot, seit dem zweiten Zusammenführen unbemerkt (P127). Danach liefen die Wächter aller zehn Zweige gemeinsam unter dem Schloss.\n\nDer Vereinigungslauf (169 Läufe, die Wächter aus allen Commits der zehn Zweige, 02:23–ca. 03:00 UTC) stand bei 152 grün, 17 rot. Jeder rote wurde danach auf claude/morgen-besser-2 nachgefahren und Zeile für Zeile verglichen: zwölf scheitern dort genau gleich (fremd, älter als diese Welle), test436 war einmal rot und danach zweimal 71/71. Vier kamen aus den eigenen Zweigen, und jeder davon war auf seinem Zweig schon rot gewesen, ohne dass dessen Wächterliste ihn enthielt: test469 (E725 hatte die Vorgabe der Suche im Dokument geändert und den Lauf nicht nachgezogen, P128), test422 und test274 (zwei Namen, die an zwei Stellen standen, P129) und test86 (vier Register unangekündigt, zwei davon seit September).\n\nDanach, auf `claude/auf-main` (der leere Zusammenführungs-Commit von origin/main darauf), der volle Lauf in Stücken: 544 Läufe, 524 grün, 20 rot in 154 Minuten (03:55–ca. 06:30 UTC). Eine Durchsicht mit drei Linsen und je zwei Zweiflern (35 Prüfer) prüfte zugleich alles, was über morgen-besser-2 hinaus nach main geht, und fand dreizehn Dinge — das schwerste: `test422` war auf dem eingecheckten Stand wieder rot, weil die Chronik selbst den Aufruf zitierte, den der Wächter sucht (P130). Jeder rote Lauf ist danach auf morgen-besser-2 nachgefahren oder einzeln wiederholt: vierzehn sind dort gleich rot, `test98` (seit E710) und `test422` sind gerichtet, und vier waren im vollen Lauf rot und danach einzeln grün. Die vier: `test459`, `test466` und `test588` einzeln je dreimal grün, `test453` zweimal von dreien. Die Meldung „Execution context was destroyed“ von 453, 459 und 466 war KEIN Neuladen (P131): dasselbe Dokument stand danach da, alle Daten im Speicher; der Browser meldete Playwright „Promise was collected“, weil `Store.flush()` und das lange `App.oeffne` im selben abgewarteten Schritt standen. Getrennt 15 von 15 grün; die drei Läufe öffnen seither so. Um 11:00 UTC beantwortete Redur die sechs Fragen des Berichts mit einem Satz: „Ja für die 6 entscheideungen“. Daraus wurden fünf Zweige (die sechste Antwort, die Arbeitsbäume, war ein Aufräumen): claude/elektro-simulation-auf-main (E730–E738, test604–test608 — der alte Zweig übertragen, nicht zusammengeführt, und beim Übertragen fanden sich geänderte Klemmennamen an vier bestehenden Zeichen, die alte Pläne still anders rechnen liessen: P132, E738), claude/dark-fach (Redurs Serienfach vom 30. September, E739, test609 — mit einem rohen „&“, das ein Schaubild zerbrach: P133), claude/linse-neben-dem-wort (E740), claude/flaeche-umschalt-quer (E741) und claude/info-streifen-kontrast (E742). Jeder Zweig mit Wächter zuerst rot, Durchsicht, Gegenproben; dann alle fünf nacheinander auf claude/sechs-ja zusammengeführt — Konflikte nur in Doku, Zählern und Erzeugtem. Die erste Antwort (die Vorgabe der Suche) änderte keinen Code, sie steht als Nachtrag in E725. Nebenbei gemessen: „Alle Prüfläufe“ in der CI bricht seit dem 5. Oktober nach 40 Minuten ab (L254). main ist nicht bewegt worden — E729 galt für den Stand der dritten Welle, nicht für diesen.",
+   "nachrichten": [
+    {
+     "zeit": "05:54 UTC",
+     "wortlaut": "Weiter",
+     "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+     "gemeint": "Den vollen Lauf auf claude/auf-main zu Ende fahren und danach main vorspulen, wie am 6. Oktober gesagt.",
+     "besser": "Derselbe Satz.",
+     "besserePrompt": "—"
+    },
+    {
+     "zeit": "08:23 UTC",
+     "wortlaut": "Was hast du bis jetzt gemacht",
+     "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+     "gemeint": "Ein Zwischenstand in einfachen Worten: was fertig ist, was noch läuft, was rot ist.",
+     "besser": "Derselbe Satz.",
+     "besserePrompt": "„Was ist seit heute früh fertig, was ist rot, und was brauchst du von mir?“ — dann kommt die Liste der Fragen gleich mit."
+    },
+    {
+     "zeit": "11:00 UTC",
+     "wortlaut": "Ja für die 6 entscheideungen",
+     "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+     "gemeint": "Alle sechs Fragen aus dem Bericht vom Vormittag mit Ja beantwortet: (1) die Suche in einem Dokument beginnt weiter mit „Dieses Dokument“, (2) claude/redion-elektro-simulation und feat/dark-2017-fach-dossier hereinnehmen, (3) die Linse auf „Heute“ ruht neben dem Wort, (4) Umschalt+Rad schiebt die Fläche quer, (5) test319 bleibt streng, also wird der Info-Streifen nachgezogen, (6) die lokalen Arbeitsbäume aufräumen.",
+     "besser": "Derselbe Satz — er ist eindeutig, weil die sechs Fragen nummeriert und je als Ja/Nein gestellt waren.",
+     "besserePrompt": "Für die Zusatzfrage ohne Nummer (die CI-Zeitgrenze in AUFGABEN eintragen?) galt das Ja nicht ausdrücklich; sie steht jetzt als Lücke L254, nicht als Entscheidung."
+    },
+    {
+     "zeit": "14:13 UTC",
+     "wortlaut": "(ein Bild, 2880 × 1800, ohne Text)",
+     "woher": "Sitzung; das Bild selbst kam hier nur als Platzhalter an, sein Inhalt war nicht lesbar",
+     "gemeint": "Nicht bekannt — nicht geraten (§56).",
+     "besser": "—",
+     "besserePrompt": "Ein Satz zum Bild („das hier ist falsch: …“) — dann bleibt die Absicht erhalten, auch wenn das Bild unterwegs verloren geht."
+    },
+    {
+     "zeit": "15:37 UTC",
+     "wortlaut": "(dasselbe Format noch einmal, ein Bild ohne Text)",
+     "woher": "Sitzung; wieder nur der Platzhalter — Redur ist gebeten, es neu zu schicken oder in einem Satz zu sagen, was darauf ist",
+     "gemeint": "Nicht bekannt — nicht geraten (§56).",
+     "besser": "—",
+     "besserePrompt": "Wie oben."
+    }
+   ],
    "arbeit": [
     {
      "was": "E725/E726 · Was die Durchsichten fanden, und ihre Nachbarn",
@@ -4582,16 +4623,34 @@ const ChronikDaten = {
      "zeitraum": "03:55–08:48 UTC",
      "dauer": "ca. 4 h 55 min (voller Lauf 03:55–06:29, Nachfahren und Sonde 07:56–08:45, Commits 08:47–08:48)",
      "pruefungen": "volllauf.mts --neu: 544 Läufe, 524 grün, 20 rot (98 201 270 274 319 332 348 351 365 422 425 448 453 459 466 470 493 524 533 588), 154 min; auf morgen-besser-2 gleich rot: 201 270 274 319 332 348 351 365 425 448 470 493 524 533; gerichtet: 98 (drei Gegenproben rot), 422; einzeln nachgefahren (alter Aufbau): 459, 466, 588 je 3 von 3 grün, 453 2 von 3; Sonde an test453: 4 von 10 rot, getrennt 15 von 15 grün; nach der Trennung 453, 459, 466 je dreimal grün; Durchsicht wf_1c6fa0b7-731: 16 Funde, 13 bestätigt"
+    },
+    {
+     "was": "Redurs sechs Ja: fünf Zweige, je mit Wächter zuerst rot, Durchsicht und Gegenproben",
+     "vonBis": "cf953cb → f00e56d (dazu d8ccf76, Redurs Commit vom 30. September, übernommen)",
+     "vonCommit": "cf953cb",
+     "bisCommit": "f00e56d",
+     "zeitraum": "11:59–14:56 UTC, die Nummern der Messungen 15:21",
+     "dauer": "ca. 3 h 20 min",
+     "pruefungen": "test604–test609 neu (608: 69/69, vier Gegenproben; 609: 24/24, drei Gegenproben); test589 §16, test598 §14, test319 je zuerst rot; Startlast je Zweig 1904 KB (Decke 1950); Nachbarn je Zweig grün"
+    },
+    {
+     "was": "Zusammenführen auf claude/sechs-ja, Nachtrag E725, L254, Vereinigungslauf",
+     "vonBis": "d24bc25 → 462abbc",
+     "vonCommit": "d24bc25",
+     "bisCommit": "462abbc",
+     "zeitraum": "15:23 UTC – Ende des Tages",
+     "dauer": "ca. 1 h und der Lauf",
+     "pruefungen": "63 Läufe grün, keiner rot — 16 Datei-Wächter (550 549 225 105 109 87 400 537 401 402 290 298 410 362 92 94) und 47 im Browser, darunter die neuen test604–test609 sowie 589, 598, 319, 584, 600, 469, 74 und test388 (Start 1919 KB gzip, Decke 1950). Ein voller Lauf über alle 550 steht aus."
     }
    ],
    "zahlen": {
-    "commits": 22,
-    "entscheidungen": 14,
-    "neuePrüfläufe": 0,
-    "gezählt": "Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: 14 — E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 708, E1 bis E729 (E716–E728 über ihre Zweige, E729 an diesem Tag), die Klausel im Kopf („**E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen“) ist gestrichen. Prüfläufe: 544. Nach b2367bc bis zum Push auf claude/auf-main: der Zusammenführungs-Commit mit origin/main (009e2fc) und die Nachzüge aus vollem Lauf und Durchsicht."
+    "commits": 60,
+    "entscheidungen": 27,
+    "neuePrüfläufe": 6,
+    "gezählt": "Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: 14 — E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 708, E1 bis E729 (E716–E728 über ihre Zweige, E729 an diesem Tag), die Klausel im Kopf („**E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen“) ist gestrichen. Prüfläufe: 544. Nach b2367bc bis zum Push auf claude/auf-main: der Zusammenführungs-Commit mit origin/main (009e2fc) und die Nachzüge aus vollem Lauf und Durchsicht. — Nachgezählt am Abend (git, Commit-Datum 11. Oktober UTC, auf claude/sechs-ja bis 462abbc): 60 Commits, danach der Abschluss mit dieser Chronik. Entscheidungen: 27 — dazu E730 bis E742 aus Redurs sechs Ja; der Kopf von ENTSCHEIDUNGEN.md sagt 721, E1 bis E742. Neue Prüfläufe: 6 (test604–test609); `ls pruefungen/lauf/test*.mts | wc -l` sagt 550."
    },
    "groesstesProblem": "Ein Werkzeug, das Doku zusammenführt, hatte selbst einen Fehler, und er sah aus wie ein sauberes Ergebnis: im „Und“-Block standen vier Läufe doppelt und ein Absatz endete mitten im Satz, und test550 war trotzdem grün, weil er Zahlen zählt, keine Absätze (P126). Gefunden hat es das Lesen beim neunten Zusammenführen, nicht ein Wächter.",
-   "interessantesteAnfrage": "Keine neue; die Zusammenführungen folgten der Auftragsdatei vom 5. Oktober.",
+   "interessantesteAnfrage": "„Ja für die 6 entscheideungen“ (11:00 UTC) — ein Satz für sechs Entscheidungen, und er war eindeutig, weil jede Frage nummeriert und als Ja/Nein gestellt war. Was nicht nummeriert war (die CI-Zeitgrenze), fiel nicht darunter.",
    "massnahmen": [
     {
      "zeit": "02:07 UTC",
@@ -4616,6 +4675,24 @@ const ChronikDaten = {
      "was": "E729: main trotz roter Läufe — eine Ausnahme von §46 für diesen einen Stand, mit ihrer Grenze: rot bleibt nur, was auf morgen-besser-2 gleich rot ist.",
      "warum": "Redur am 6. Oktober um 07:27 UTC: „… danch alles auf main trotz die rote läufe …“. §46 ist hart; die Ausnahme gehört deshalb in ENTSCHEIDUNGEN.md, und §46 bekommt einen Hinweis, keinen neuen Wortlaut.",
      "risiko": "Wer main holt, bekommt vierzehn benannte rote Läufe mit. Keiner davon ist aus dieser Welle."
+    },
+    {
+     "zeit": "12:59 UTC",
+     "was": "E738: alte Klemmennamen gelten beim Lesen weiter — ein Auflöser im Register, Ort vor Name; kein Byte gespeicherter Pläne umgeschrieben.",
+     "warum": "Beim Übertragen des Elektro-Zweigs rechneten alte Pläne mit Stecker, Schuko und FI still anders (P132). Eine Migration beim Laden hätte Nutzerdaten umgeschrieben (§9) und eine .redion von gestern wieder alte Namen gebracht.",
+     "risiko": "Gezeichnet stehen alte Leitungen bis zum ersten Nachziehen an der alten Stelle (L253 Punkt 7); eine ungebundene Leitung über einer neuen Klemme zapft sie weiter an."
+    },
+    {
+     "zeit": "11:50 UTC",
+     "was": "Die über dreissig lokalen Arbeitsbäume aus den Durchsichten mit git worktree remove aufgeräumt; die Zweige stehen unverändert.",
+     "warum": "Redurs sechste Antwort.",
+     "risiko": "Keins für Daten: jeder Zweig war gepusht; ungesicherte Sonden vorher ins Scratch-Archiv kopiert."
+    },
+    {
+     "zeit": "Abend",
+     "was": "main NICHT vorgespult.",
+     "warum": "§46: main bewegt sich erst nach einem vollen grünen Lauf. E729 war Redurs Ausnahme für den Stand der dritten Welle, nicht für jeden späteren.",
+     "risiko": "Die fünf Zweige und claude/sechs-ja liegen gepusht neben main, bis Redur „Einmal“ sagt oder ein voller Lauf grün ist."
     }
    ]
   }
@@ -6358,6 +6435,32 @@ const ChronikDaten = {
    "loesung": "In den drei Läufen öffnet ein eigener, synchroner Schritt die Seite (das evaluate gibt die Kennung zurück). Die Zusagen der Läufe sind dieselben. 116 weitere Läufe tragen denselben Aufbau und stehen in AUFGABEN.md.",
    "beweis": "Sonde mit getrenntem Öffnen 15 von 15 grün (vorher 4 von 10 rot); nach der Trennung test453, test459, test466 je dreimal grün (08:39–08:43 UTC).",
    "lehre": "Eine Meldung über einen zerstörten Kontext ist eine Vermutung des Werkzeugs, keine Beobachtung. Erst messen, ob dasselbe Dokument noch dasteht — dann weiss man, ob es um Daten geht oder um den Prüfstand."
+  },
+  {
+   "nr": "P132",
+   "datum": "2026-10-11",
+   "titel": "Ein alter Plan rechnet nach dem Update still anders",
+   "schwere": "hoch",
+   "symptom": "Nach dem Übertragen des Elektro-Zweigs (E735 hatte die Klemmen von Stecker, FI, Steckdose und Schuko geändert) fiel in alten Plänen die Leitung am Stecker ab, am Schuko hingen L und N zusammen, und hinter dem alten FI meldete ein gesunder Lampenkreis „löst aus“ mit 435 mA — ohne jede Meldung über die Ursache.",
+   "falscheVermutung": "Die neuen Klemmen sind nur genauer gezeichnet; alte Pläne binden ihre Leitungen über den Namen und rechnen weiter wie vorher. Der Zweig selbst hatte es als offene Frage (dort L157) stehen lassen, nicht als Fehler.",
+   "wieGefunden": "Mit einer Sonde VOR dem Bauen: dieselben alten Pläne als Netzliste unter main 1575a1835, unter dem Übernahme-Commit ohne Auflöser und mit (messungen.md §97). Der Unterschied stand Netz für Netz da.",
+   "ursache": "Gespeichert sind Name und Punkt des Leitungsendes. Den Namen `1` am Stecker gibt es nicht mehr, der alte Punkt liegt 10 px neben beiden neuen Klemmen (NAH ist 6); der alte FI hatte zweimal `N`, und der Name traf jetzt das OBERE N, der Ort das untere N2 — der Neutralleiterpol war überbrückt.",
+   "loesung": "E738: `frueher` an den vier Zeichen und EIN Auflöser `Register.fachzeichen.klemmeFuer` (Ort vor Name), gefragt von Netzliste, anschlussLage und Nachziehen. Die Daten bleiben, wie sie sind.",
+   "beweis": "test608 zuerst rot (14 von 48 gegen den Übernahme-Commit), danach 69/69; vier Gegenproben je rot (ohne Auflöser 17/51, ohne Ort-Sperre 46/51, Nachziehen nach Namen 46/51, Name vor Ort 35/51).",
+   "lehre": "Wer an einem bestehenden Zeichen eine Klemme umbenennt oder verschiebt, ändert gespeicherte Pläne mit — auch wenn kein Byte davon angefasst wird. Vor dem Zusammenführen die alten Daten durch den neuen Code rechnen lassen und vergleichen, nicht die neue Zeichnung ansehen."
+  },
+  {
+   "nr": "P133",
+   "datum": "2026-10-11",
+   "titel": "Ein „&“ zerbricht ein Bild",
+   "schwere": "niedrig",
+   "symptom": "Auf Seite 2 der Vorlage „Dark (2017–2020)“ stand das Schaubild der Zeitlinie als kaputtes Bild da; `naturalWidth` 0.",
+   "falscheVermutung": "Keine — niemand hatte danach gesucht; die Vorlage lief auf Redurs Zweig seit dem 30. September ohne Meldung.",
+   "wieGefunden": "test609 §4 lädt jedes Bild der Vorlage einzeln und verlangt, dass es dekodierbar ist — als allgemeine Zusage geschrieben, nicht gegen diesen Fehler.",
+   "ursache": "Das SVG trug „Adam & Sic Mundus“ roh. SVG ist XML; ein rohes `&` macht das Dokument ungültig, und der Browser zeigt dann gar nichts.",
+   "loesung": "`&amp;` im SVG (E739); angezeigt wird dasselbe Wort.",
+   "beweis": "test609 gegen den ersten eingebundenen Stand 23 von 24, danach 24/24; Gegenprobe mit dem rohen `&` wieder 23/24.",
+   "lehre": "Eine Zusage über ALLE Bilder („jedes ist dekodierbar“) findet, wonach keiner gesucht hat. Sie kostet eine Schleife und ist mehr wert als zehn Zusagen über bekannte Fälle."
   }
  ]
 } as const;

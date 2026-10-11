@@ -64450,6 +64450,15 @@ ausdrücklich, alle 26 Zusagen unverändert, Gegenprobe rot (3d83818,
 P128). Ob „Dieses Dokument" die Vorgabe in einem Dokument bleiben soll,
 steht als Frage an Redur in AUFGABEN.md.
 
+**Bestätigt (11. Oktober 2026, `claude/sechs-ja`).** Redur hat auf diese
+Frage — die erste von sechs im Bericht vom 11. Oktober — geantwortet: „Ja
+für die 6 entscheideungen". In einem Dokument beginnt Strg P ohne gemerkte
+Wahl also weiter mit „Dieses Dokument"; „Alle Dokumente" und „Überall"
+bleiben einen Schritt entfernt, und die gemerkte Wahl geht vor. Vorgabe (g)
+ist damit seine Entscheidung und nicht mehr nur der Vorschlag aus dem
+Masterprompt. Am Code ändert sich nichts — `test600` hält die Vorgabe,
+`test469` wählt „Überall" weiterhin ausdrücklich.
+
 ## E726 — Der Kopf des Lernzentrums in einer Zeile: „Heute ^" und „Übersicht ^" mit echten Menüs, „Fächer" statt „Bereich"
 
 **Datum:** 10. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom

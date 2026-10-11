@@ -1705,11 +1705,12 @@ Grund:
    `Dialog.bestaetigen` vor jedem Löschen). `test436` war im
    Vereinigungslauf einmal rot (`null.click` in §2), danach zweimal 71/71
    — beobachten.
-2. **Die Vorgabe der Suche in einem Dokument** (E725, Vorgabe g): ohne
+2. ~~**Die Vorgabe der Suche in einem Dokument** (E725, Vorgabe g): ohne
    gemerkte Wahl beginnt Strg P dort mit „Dieses Dokument"; die Suche über
    alle Dokumente ist einen Schritt entfernt („Alle Dokumente",
-   „Überall"). Redurs Frage, ob das so bleiben soll (P128).
-3. **Zwei alte Zweige mit Arbeit, die nirgends steht** — beide nach Redurs
+   „Überall"). Redurs Frage, ob das so bleiben soll (P128).~~ **Erledigt
+   am 11. Oktober 2026:** Redur „Ja" — es bleibt so (Nachtrag in E725).
+3. **Zwei alte Zweige mit Arbeit, die nirgends steht** — erledigt: beide nach Redurs
    „Ja" vom 11. Oktober hineingenommen: `claude/redion-elektro-simulation`
    (E730–E738, `test604`–`test608`, Zweig `claude/elektro-simulation-auf-main`;
    offen davon steht in L253) und `feat/dark-2017-fach-dossier` (E739,
@@ -1720,8 +1721,10 @@ Grund:
    stark vergrössert und angeschnitten; in der gerollten Lernzentrale liegt
    der Zurück-Pfeil über dem Text „SM-2 bleibt …". Je ein Bild und ein
    Wächter, bevor gebaut wird.
-5. **Die Arbeitsbäume im Scratch** (`/home/user/wt/…`, über dreissig aus
-   den Durchsichten) sind nur lokal — aufräumen nur mit Redurs Ja (§43).
+5. ~~**Die Arbeitsbäume im Scratch** (`/home/user/wt/…`, über dreissig aus
+   den Durchsichten) sind nur lokal — aufräumen nur mit Redurs Ja (§43).~~
+   **Erledigt am 11. Oktober 2026:** Redur „Ja"; aufgeräumt mit
+   `git worktree remove`, die Zweige selbst stehen unverändert.
 6. **Ein „zerstörter Kontext", der keiner ist** (gemessen am 11. Oktober,
    P131): Playwright meldet „Execution context was destroyed", obwohl die
    Seite nicht neu lädt — der Browser sagt ihm „Promise was collected", wenn

@@ -145,6 +145,8 @@ sind der teuerste Teil und der lehrreichste.
 | P129 | 2026-10-11 | Zwei Namen, je an zwei Stellen | 🟡 klein | — |
 | P130 | 2026-10-11 | Die Chronik, die einen Wächter rot macht | 🟡 klein | — |
 | P131 | 2026-10-11 | Ein Neuladen, das keines war | 🟠 mittel | — |
+| P132 | 2026-10-11 | Ein alter Plan rechnet nach dem Update still anders | hoch | — |
+| P133 | 2026-10-11 | Ein „&“ zerbricht ein Bild | niedrig | — |
 
 ---
 
@@ -2837,4 +2839,46 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Sonde mit getrenntem Öffnen 15 von 15 grün (vorher 4 von 10 rot); nach der Trennung test453, test459, test466 je dreimal grün (08:39–08:43 UTC).
 
 **Die Lehre.** Eine Meldung über einen zerstörten Kontext ist eine Vermutung des Werkzeugs, keine Beobachtung. Erst messen, ob dasselbe Dokument noch dasteht — dann weiss man, ob es um Daten geht oder um den Prüfstand.
+
+
+---
+
+## P132 · Ein alter Plan rechnet nach dem Update still anders
+
+*2026-10-11 · hoch*
+
+**Das Bild.** Nach dem Übertragen des Elektro-Zweigs (E735 hatte die Klemmen von Stecker, FI, Steckdose und Schuko geändert) fiel in alten Plänen die Leitung am Stecker ab, am Schuko hingen L und N zusammen, und hinter dem alten FI meldete ein gesunder Lampenkreis „löst aus“ mit 435 mA — ohne jede Meldung über die Ursache.
+
+**Die falsche Vermutung.** Die neuen Klemmen sind nur genauer gezeichnet; alte Pläne binden ihre Leitungen über den Namen und rechnen weiter wie vorher. Der Zweig selbst hatte es als offene Frage (dort L157) stehen lassen, nicht als Fehler.
+
+**Wie es gefunden wurde.** Mit einer Sonde VOR dem Bauen: dieselben alten Pläne als Netzliste unter main 1575a1835, unter dem Übernahme-Commit ohne Auflöser und mit (messungen.md §97). Der Unterschied stand Netz für Netz da.
+
+**Die Ursache.** Gespeichert sind Name und Punkt des Leitungsendes. Den Namen `1` am Stecker gibt es nicht mehr, der alte Punkt liegt 10 px neben beiden neuen Klemmen (NAH ist 6); der alte FI hatte zweimal `N`, und der Name traf jetzt das OBERE N, der Ort das untere N2 — der Neutralleiterpol war überbrückt.
+
+**Die Lösung.** E738: `frueher` an den vier Zeichen und EIN Auflöser `Register.fachzeichen.klemmeFuer` (Ort vor Name), gefragt von Netzliste, anschlussLage und Nachziehen. Die Daten bleiben, wie sie sind.
+
+**Der Beweis.** test608 zuerst rot (14 von 48 gegen den Übernahme-Commit), danach 69/69; vier Gegenproben je rot (ohne Auflöser 17/51, ohne Ort-Sperre 46/51, Nachziehen nach Namen 46/51, Name vor Ort 35/51).
+
+**Die Lehre.** Wer an einem bestehenden Zeichen eine Klemme umbenennt oder verschiebt, ändert gespeicherte Pläne mit — auch wenn kein Byte davon angefasst wird. Vor dem Zusammenführen die alten Daten durch den neuen Code rechnen lassen und vergleichen, nicht die neue Zeichnung ansehen.
+
+
+---
+
+## P133 · Ein „&“ zerbricht ein Bild
+
+*2026-10-11 · niedrig*
+
+**Das Bild.** Auf Seite 2 der Vorlage „Dark (2017–2020)“ stand das Schaubild der Zeitlinie als kaputtes Bild da; `naturalWidth` 0.
+
+**Die falsche Vermutung.** Keine — niemand hatte danach gesucht; die Vorlage lief auf Redurs Zweig seit dem 30. September ohne Meldung.
+
+**Wie es gefunden wurde.** test609 §4 lädt jedes Bild der Vorlage einzeln und verlangt, dass es dekodierbar ist — als allgemeine Zusage geschrieben, nicht gegen diesen Fehler.
+
+**Die Ursache.** Das SVG trug „Adam & Sic Mundus“ roh. SVG ist XML; ein rohes `&` macht das Dokument ungültig, und der Browser zeigt dann gar nichts.
+
+**Die Lösung.** `&amp;` im SVG (E739); angezeigt wird dasselbe Wort.
+
+**Der Beweis.** test609 gegen den ersten eingebundenen Stand 23 von 24, danach 24/24; Gegenprobe mit dem rohen `&` wieder 23/24.
+
+**Die Lehre.** Eine Zusage über ALLE Bilder („jedes ist dekodierbar“) findet, wonach keiner gesucht hat. Sie kostet eine Schleife und ist mehr wert als zehn Zusagen über bekannte Fälle.
 

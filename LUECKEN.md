@@ -8358,6 +8358,48 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — 11. Oktober 2026
+
+**Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
+letzten Läufe auf `main` sind beide **abgebrochen**, nicht rot und nicht
+grün —
+
+```txt
+Lauf 37376739325  e52f75eda  5. Oktober   21:34:36 → 22:14:57  cancelled
+Lauf 38128159806  1575a1835  11. Oktober  09:22:52 → 10:03:09  cancelled
+```
+
+Beide Male ist es die Aufgabe „Alle Prüfläufe", beide Male der Schritt
+„Prüfläufe", beide Male nach gut vierzig Minuten. „Quelltext und Logik
+(ohne Browser)" war beide Male in zwei Minuten grün.
+
+**Der Grund steht in der Datei selbst.** `.github/workflows/pruefen.yml`
+setzt `timeout-minutes: 40` und begründet es mit „67 Läufe … rund
+12 Minuten". Heute sind es 550 (§30), und der volle Lauf brauchte hier am
+20. September schon bei 490 Läufen 107 Minuten (Chronik). Die CI bricht
+also jeden vollen Lauf ab, bevor er fertig sein kann — und ein
+abgebrochener Lauf sagt über keinen einzigen Prüflauf etwas aus. Genau die
+Sorte, die der Kopf der Datei beschreibt: ein Lauf, der nicht stattfindet,
+sieht aus wie einer, der nichts gefunden hat.
+
+**Was das heisst:** die einzige Aussage über „alles grün" kommt seit
+mindestens dem 5. Oktober vom vollen Lauf in Stücken auf dem Rechner
+(`volllauf.mts`, §30), nicht von der CI. Das Protokoll des Abbruchs ist
+über diese Sitzung nicht lesbar (die Schnittstelle leitet zum Speicher von
+GitHub um), also ist nicht gezählt, wie weit der Lauf jeweils kam.
+
+**Was fehlt:** eine Entscheidung, keine Zeile. Drei Wege, jeder mit Preis:
+(a) die Läufe in der CI auf mehrere Aufgaben verteilen (eine Matrix nach
+Stücken, wie `volllauf.mts` sie schon kennt) — der Lauf wird in der Summe
+nicht kürzer, aber jede Aufgabe passt ins Fenster; (b) das Fenster auf das
+Gemessene anheben (GitHub erlaubt bis 360 Minuten) — einfach, aber ein
+Lauf je Push von zwei Stunden; (c) in der CI nur `--schnell` und die
+Datei-Wächter, und der volle Lauf bleibt beim Menschen — dann muss die
+Datei das sagen, statt „Alle Prüfläufe" zu heissen. Die Workflow-Datei ist
+geteilte Infrastruktur; welcher Weg, entscheidet Redur.
+
+---
+
 ## L253 · Was der Elektro-Bogen nach der Übernahme offen lässt — 11. Oktober 2026
 
 *Auf dem Zweig `claude/redion-elektro-simulation` stand diese Übersicht als
@@ -10396,7 +10438,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 148 Lücken, 91 offene und 57 geschlossene. Der Befehl dazu ist
+Datei führt 149 Lücken, 92 offene und 57 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

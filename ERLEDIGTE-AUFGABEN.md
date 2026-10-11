@@ -1,5 +1,40 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
+
+**Der Auftrag.** Redur um 11:00 UTC: „Ja für die 6 entscheideungen" — die
+sechs nummerierten Fragen aus dem Bericht vom Vormittag. Was daraus wurde:
+
+```txt
+1  Suche im Dokument beginnt mit „Dieses Dokument"   kein Code; Nachtrag in E725
+2  zwei alte Zweige hereinnehmen                     E730–E738 (Elektro), E739 (Dark)
+3  die Linse auf „Heute" ruht neben dem Wort         E740
+4  Umschalt+Rad schiebt die Fläche quer              E741
+5  test319 bleibt streng, der Info-Streifen folgt    E742
+6  die lokalen Arbeitsbäume aufräumen                git worktree remove, 11:50 UTC
+```
+
+**Gebaut** auf fünf Zweigen, je mit dem Wächter zuerst rot, einer
+Durchsicht und Gegenproben (die Einträge darunter, je einer pro Zweig):
+`claude/elektro-simulation-auf-main`, `claude/dark-fach`,
+`claude/linse-neben-dem-wort`, `claude/flaeche-umschalt-quer`,
+`claude/info-streifen-kontrast`. **Zusammengeführt** nacheinander auf
+`claude/sechs-ja` (von `main` 1575a18), Konflikte nur in der Doku (nach
+Einträgen gemischt, ohne verlorene Zeile — `verlust.py` je Schritt), in den
+Zählern und im Erzeugten (nach jedem Schritt neu gebaut). Der Stand danach:
+721 Entscheidungen, E1 bis E742 · 550 Läufe · 149 Lücken, 92 offen.
+
+**Dazu, beim Zusammenführen gemessen:** „Alle Prüfläufe" in der CI bricht
+auf `main` seit dem 5. Oktober nach vierzig Minuten ab — die Datei rechnet
+noch mit 67 Läufen. Eingetragen als **L254**, nicht repariert: welcher Weg,
+entscheidet Redur.
+
+**Geprüft auf dem zusammengeführten Stand:** 63 Läufe grün, keiner rot — 16 Datei-Wächter (550 549 225 105 109 87 400 537 401 402 290 298 410 362 92 94) und 47 im Browser, darunter die neuen test604–test609 sowie 589, 598, 319, 584, 600, 469, 74 und test388 (Start 1919 KB gzip, Decke 1950). Ein voller Lauf über alle 550 steht aus.
+
+**Nicht getan:** `main` ist nicht bewegt (§46; E729 galt für die dritte
+Welle). Was offen bleibt, steht in L253 (Elektro), in AUFGABEN.md
+(die leere Linse, Punkt 2 bei der Fläche nach E722/E723) und in L254.
+
 ## 11. Oktober 2026 · E742 · Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung
 
 **Redur:** „Ja", am 11. Oktober 2026, zu einer von sechs Fragen dieses
