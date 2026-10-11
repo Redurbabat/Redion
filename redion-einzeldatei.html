@@ -27612,7 +27612,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1469, inhalt: '808751a01b260d63', gebaut: '2026-10-11T19:48:00.168Z' };
+const Stand = { fassung: 1470, inhalt: '3c3abfbde17f1644', gebaut: '2026-10-11T20:59:44.006Z' };
 window.Stand = Stand;
 
 </script>
@@ -66247,6 +66247,10 @@ const Stromfluss = (() => {
         const v = VERHALTEN[zeichenId];
         return (v && v.stellungen) ? v.stellungen : [];
     };
+    const stellungIn = (v, stellung, teilId) => {
+        const liste = v.stellungen || [];
+        return liste[Math.max(0, Math.min(liste.length - 1, stellung[teilId] ?? 0))];
+    };
     const verband = () => {
         const vater = new Map();
         const finde = (a) => {
@@ -66581,13 +66585,9 @@ const Stromfluss = (() => {
                         else
                             paar(g.von, g.nach, 'R', KONTAKT);
                     });
-                    const liste = v.stellungen || [];
-                    if (liste.length) {
-                        const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
-                        const st = liste[idx];
-                        if (st)
-                            st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
-                    }
+                    const st = stellungIn(v, stellung, t.id);
+                    if (st)
+                        st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
                     break;
                 }
                 case 'widerstand':
@@ -66617,9 +66617,7 @@ const Stromfluss = (() => {
                     break;
                 }
                 case 'schalter': {
-                    const liste = v.stellungen || [];
-                    const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
-                    const s = liste[idx];
+                    const s = stellungIn(v, stellung, t.id);
                     if (s)
                         s.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
                     break;
@@ -66948,15 +66946,33 @@ const Stromfluss = (() => {
                 }
             }
         });
+        const knoten = verband();
+        teile.forEach(t => {
+            const v = verhalten(t.zeichen);
+            if (!v || v.art !== 'mehrteilig')
+                return;
+            const st = stellungIn(v, stand, t.id);
+            if (st)
+                st.zu.forEach(([a, b]) => {
+                    const na = netzInfo.netzVon.get(`k:${t.id}:${a}`);
+                    const nb = netzInfo.netzVon.get(`k:${t.id}:${b}`);
+                    if (typeof na === 'number' && typeof nb === 'number')
+                        knoten.eins(`n:${na}`, `n:${nb}`);
+                });
+        });
+        const knotenVon = (netz) => knoten.finde(`n:${netz}`);
         const belegt = new Set();
-        (plan.leitungen || []).forEach(() => { });
         netzInfo.klemmen.forEach(k => {
             if (k.intern)
                 return;
             const netz = netzInfo.netzVon.get(k.schluessel);
             if (typeof netz !== 'number')
                 return;
-            const wieViele = netzInfo.klemmen.filter(o => netzInfo.netzVon.get(o.schluessel) === netz).length;
+            const hier = knotenVon(netz);
+            const wieViele = netzInfo.klemmen.filter(o => {
+                const n = netzInfo.netzVon.get(o.schluessel);
+                return typeof n === 'number' && knotenVon(n) === hier;
+            }).length;
             if (wieViele <= 1 && !belegt.has(netz)) {
                 belegt.add(netz);
                 const t = teile.find(x => x.id === k.teil);

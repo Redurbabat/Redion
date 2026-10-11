@@ -453,6 +453,21 @@ const Stromfluss = (() => {
     return (v && v.stellungen) ? v.stellungen : [];
   };
 
+  /**
+   * Die Stellung, in der ein Bauteil gerade steht: ohne Eintrag die
+   * Ruhelage (die erste), eine Zahl ausserhalb der Liste auf die nächste
+   * gültige geklemmt.
+   *
+   * EINE Stelle für die Rechnung und für die Meldung offener Klemmen
+   * (E747). Läsen die beiden die Stellung verschieden, meldete die
+   * Fusszeile eine andere Schaltung als die, die gerechnet wurde.
+   */
+  const stellungIn = (v: Verhalten, stellung: Record<string, number>,
+                      teilId: string): Stellung | undefined => {
+    const liste = v.stellungen || [];
+    return liste[Math.max(0, Math.min(liste.length - 1, stellung[teilId] ?? 0))];
+  };
+
   /* ------------------------------------------------------------------------
    * 2. WELCHE ANSCHLÜSSE HÄNGEN ZUSAMMEN (die Netzliste)
    * ------------------------------------------------------------------------
@@ -1043,12 +1058,8 @@ const Stromfluss = (() => {
             else if (g.art === 'widerstand') paar(g.von, g.nach, 'R', g.wert ?? 1000);
             else paar(g.von, g.nach, 'R', KONTAKT);
           });
-          const liste = v.stellungen || [];
-          if (liste.length) {
-            const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
-            const st = liste[idx];
-            if (st) st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
-          }
+          const st = stellungIn(v, stellung, t.id);
+          if (st) st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
           break;
         }
         case 'widerstand':
@@ -1083,9 +1094,7 @@ const Stromfluss = (() => {
           break;
         }
         case 'schalter': {
-          const liste = v.stellungen || [];
-          const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
-          const s = liste[idx];
+          const s = stellungIn(v, stellung, t.id);
           if (s) s.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
           break;
         }
@@ -1571,15 +1580,49 @@ const Stromfluss = (() => {
 
     /* Offene Klemmen melden — nicht als Fehler, aber als Hinweis. Der
        häufigste Anfängerfehler ist eine Leitung, die zwei Pixel neben dem
-       Anschluss endet, und der Plan sieht dabei völlig richtig aus. */
+       Anschluss endet, und der Plan sieht dabei völlig richtig aus.
+
+       Eine Klemme hängt aber nicht nur an Leitungen. Auf dem Klemmenbrett
+       legt die eingestellte Stellung BRÜCKEN auf: im Stern verbinden sie
+       W2, U2 und V2 zum Sternpunkt, an den keine Leitung gehört; im
+       Dreieck hängt jede untere Klemme über ihre Brücke an einer oberen.
+       Hier zählte nur die Netzliste der Leitungen, und die Fusszeile
+       meldete „W2 hängt an keiner Leitung" in BEIDEN Stellungen — gerade
+       dort, wo die Brücken liegen (L253 Punkt 2, E747). Eine falsche
+       Warnung lehrt etwas Falsches. Deshalb zählt eine Brücke hier wie
+       eine gezeichnete Leitung: die Netze, die sie verbindet, sind für
+       diese Meldung EIN Knoten.
+
+       Nur die Brücken eines mehrteiligen Bauteils, nicht die Kontakte
+       eines Schalters: eine Brücke ist ein Stück Metall auf den Klemmen
+       und ersetzt die Leitung; ein geschlossener Schalter, an dessen
+       Ausgang nichts hängt, hat eine vergessene Leitung (test612 §6). Und
+       nur die Stellung, in der das Bauteil gerade steht — ohne Brücken
+       hängen W2, U2 und V2 wirklich an nichts. Die Netzliste selbst
+       bleibt, wie sie ist: sie ist die Zeichnung, die Brücken sind eine
+       Stellung, und die Rechnung bekommt sie schon oben als Kontakte. */
+    const knoten = verband();
+    teile.forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v || v.art !== 'mehrteilig') return;
+      const st = stellungIn(v, stand, t.id);
+      if (st) st.zu.forEach(([a, b]) => {
+        const na = netzInfo.netzVon.get(`k:${t.id}:${a}`);
+        const nb = netzInfo.netzVon.get(`k:${t.id}:${b}`);
+        if (typeof na === 'number' && typeof nb === 'number') knoten.eins(`n:${na}`, `n:${nb}`);
+      });
+    });
+    const knotenVon = (netz: number): string => knoten.finde(`n:${netz}`);
     const belegt = new Set<number>();
-    (plan.leitungen || []).forEach(() => { /* zählt unten über die Netze */ });
     netzInfo.klemmen.forEach(k => {
       if (k.intern) return;   /* ein Sternpunkt gehört an keine Leitung */
       const netz = netzInfo.netzVon.get(k.schluessel);
       if (typeof netz !== 'number') return;
-      const wieViele = netzInfo.klemmen.filter(
-        o => netzInfo.netzVon.get(o.schluessel) === netz).length;
+      const hier = knotenVon(netz);
+      const wieViele = netzInfo.klemmen.filter(o => {
+        const n = netzInfo.netzVon.get(o.schluessel);
+        return typeof n === 'number' && knotenVon(n) === hier;
+      }).length;
       if (wieViele <= 1 && !belegt.has(netz)) {
         belegt.add(netz);
         const t = teile.find(x => x.id === k.teil);
