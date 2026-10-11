@@ -100,7 +100,7 @@ const Bibliothek = (() => {
         { id: 'wann', icon: '🕘', name: 'Zuletzt bearbeitet', breit: '1fr' }
     ];
     const FORMEN = [
-        { id: 'deckel', name: 'Als Dokumente', zeichen: 'grid' },
+        { id: 'deckel', name: 'Als Dokumente', zeichen: 'pages' },
         { id: 'regal', name: 'Nach Heften ordnen', zeichen: 'library' },
         { id: 'liste', name: 'Als Tabelle', zeichen: 'menu' }
     ];
@@ -1063,7 +1063,7 @@ const Bibliothek = (() => {
             '<button type="button" class="bib-form-knopf" data-form-wahl aria-haspopup="menu" aria-expanded="false" ' +
             'aria-label="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '" ' +
             'title="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '">' +
-            '<span data-sym="' + (FORMEN.find(f => f.id === form())?.zeichen || 'grid') + '" aria-hidden="true"></span></button>' +
+            '<span data-sym="' + (FORMEN.find(f => f.id === form())?.zeichen || 'pages') + '" aria-hidden="true"></span></button>' +
             '</div>' +
             '</header>';
     };

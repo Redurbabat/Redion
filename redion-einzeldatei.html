@@ -5461,6 +5461,16 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .such-bereich{padding:0 16px 10px}
   .such-bereich .ru-seg{width:100%}
   .such-bereich .ru-seg-wahl{flex:1 1 auto; gap:4px; padding:0 6px; font-size:12.5px}
+}
+/* DIE NAMEN SIND WICHTIGER ALS DIE ZEICHEN (Fund der Durchsicht, §55.1).
+   Bei 390 px stand im Dokument „Dieses Dokum… · Alle Dokume… · Übe…" —
+   340 px Platz, 352 px gebraucht. Ein abgeschnittenes Wort ist ein anderes
+   Wort, „Übe…" keines. Unter 520 px weichen die drei Zeichen (je 15 px und
+   ein Abstand); die Namen bleiben ganz, und der gewählte Bereich sagt sich
+   weiter mit Grund, Rahmen und Gewicht (§38). Keine Kurzform: „Alle" allein
+   hiesse nicht mehr, WAS alle. */
+@media(max-width:520px){
+  .such-bereich .ru-seg-zeichen{display:none}
   .such-filter select{
     flex:0 0 auto;
     min-height:42px; padding:0 32px 0 14px;
@@ -14116,6 +14126,14 @@ body[data-bewegung="ruhig"] [data-gehoben]{ transform:none }
      und zwei Deckeln. `.bib.bib-deckel-seite` ist stärker und gewinnt
      unabhängig von der Reihenfolge. */
   .bib.bib-deckel-seite{ padding-left:0; padding-right:0 }
+  /* UND IN ALLEN DREI FORMEN (E725, Fund der Durchsicht): Regal und Liste
+     behielten die 16 px — ihre Kopfzeile war 302 statt 334 px breit, und
+     die Ortspille sagte „Meine Abla… · 7". Ein abgeschnittenes Wort ist ein
+     anderes Wort (§55.1). Seither steht der Kopf in allen drei Formen an
+     derselben Stelle und gleich breit; ein Formwechsel verschiebt ihn nicht
+     mehr. `[data-bib-bereich]` trägt nur die Bibliothek — „Meine Aufgaben"
+     (auch `.bib`) behält ihr Polster. */
+  .bib[data-bib-bereich]{ padding-left:0; padding-right:0 }
 }
 
 .bib-regal{
@@ -27028,7 +27046,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1435, inhalt: '9aa38bf07b78d904', gebaut: '2026-10-10T23:47:13.935Z' };
+const Stand = { fassung: 1436, inhalt: '13844fe63999e96b', gebaut: '2026-10-11T00:50:58.512Z' };
 window.Stand = Stand;
 
 </script>
@@ -48365,7 +48383,7 @@ const RedionMotion = (() => {
         { id: 'folder', place: 'Bibliotheksordner', selector: '.bib-deckel[data-art="ordner"]' },
         { id: 'sliders', place: 'Einstellungen, KI-Quellen, Datenbankfilter', selector: '#btn-settings, [data-k="einstellungen"], #ai-quellen, button[data-a="filter"]' },
         { id: 'light', place: 'Elektro, Lernen, Bestandsübersicht', selector: '.els-kachel, .stat-karte.lw-metrik, .pf-karte' },
-        { id: 'gradient', place: 'PDF öffnen, Neue Seite, KI senden', selector: '[data-studio-import], #btn-neu-handy, #ai-senden, [data-rmo-new]' },
+        { id: 'gradient', place: 'PDF öffnen, Neue Seite, KI senden', selector: '[data-studio-import], #btn-neu-handy, #ai-senden' },
         { id: 'letters', place: 'KI-Werkzeuge und Befehle', selector: '.ru-funkel, .ai-action-group button' },
         { id: 'liquid', place: 'KI-, Agenten-, Import- und Exportaufträge', selector: '.ki-aktivitaet, .ru-zustand, .ru-zk, .ru-lader, .ru-drucker, [data-studio-import], .ag-motion-status' },
         { id: 'toggle', place: 'Einstellungen und Automationen', selector: '.schalter, .mschalter' },
@@ -131618,7 +131636,7 @@ const Bibliothek = (() => {
         { id: 'wann', icon: '🕘', name: 'Zuletzt bearbeitet', breit: '1fr' }
     ];
     const FORMEN = [
-        { id: 'deckel', name: 'Als Dokumente', zeichen: 'grid' },
+        { id: 'deckel', name: 'Als Dokumente', zeichen: 'pages' },
         { id: 'regal', name: 'Nach Heften ordnen', zeichen: 'library' },
         { id: 'liste', name: 'Als Tabelle', zeichen: 'menu' }
     ];
@@ -132581,7 +132599,7 @@ const Bibliothek = (() => {
             '<button type="button" class="bib-form-knopf" data-form-wahl aria-haspopup="menu" aria-expanded="false" ' +
             'aria-label="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '" ' +
             'title="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '">' +
-            '<span data-sym="' + (FORMEN.find(f => f.id === form())?.zeichen || 'grid') + '" aria-hidden="true"></span></button>' +
+            '<span data-sym="' + (FORMEN.find(f => f.id === form())?.zeichen || 'pages') + '" aria-hidden="true"></span></button>' +
             '</div>' +
             '</header>';
     };
@@ -149375,8 +149393,20 @@ const App = (() => {
                 e.preventDefault();
                 waehle(i - 1);
             }
-            if (e.key === 'Enter' && treffer[i])
+            if (e.key !== 'Enter')
+                return;
+            if (treffer[i]) {
                 trefferOeffnen(treffer[i]);
+                return;
+            }
+            const wort = inp.value.trim();
+            if (bereich === 'dokument' && offenSeite && dokMod && wort.length >= 2) {
+                dokLauf++;
+                if (dokUhr)
+                    clearTimeout(dokUhr);
+                o.remove();
+                void dokMod.findenIn(String(offenSeite.id), wort, { springen: true, fokus: true });
+            }
         });
         const filterMarken = () => {
             o.querySelectorAll('.such-filter select').forEach(s2 => {
@@ -149387,8 +149417,10 @@ const App = (() => {
         o.querySelectorAll('.such-filter select')
             .forEach(s2 => s2.addEventListener('change', filterMarken));
         filterMarken();
-        o.addEventListener('mousedown', e => { if (e.target === o)
-            o.remove(); });
+        o.addEventListener('mousedown', e => { if (e.target === o) {
+            e.preventDefault();
+            schliessen();
+        } });
         if (vorgabe) {
             inp.value = String(vorgabe);
             suchen();

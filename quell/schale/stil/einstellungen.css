@@ -724,6 +724,16 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .such-bereich{padding:0 16px 10px}
   .such-bereich .ru-seg{width:100%}
   .such-bereich .ru-seg-wahl{flex:1 1 auto; gap:4px; padding:0 6px; font-size:12.5px}
+}
+/* DIE NAMEN SIND WICHTIGER ALS DIE ZEICHEN (Fund der Durchsicht, §55.1).
+   Bei 390 px stand im Dokument „Dieses Dokum… · Alle Dokume… · Übe…" —
+   340 px Platz, 352 px gebraucht. Ein abgeschnittenes Wort ist ein anderes
+   Wort, „Übe…" keines. Unter 520 px weichen die drei Zeichen (je 15 px und
+   ein Abstand); die Namen bleiben ganz, und der gewählte Bereich sagt sich
+   weiter mit Grund, Rahmen und Gewicht (§38). Keine Kurzform: „Alle" allein
+   hiesse nicht mehr, WAS alle. */
+@media(max-width:520px){
+  .such-bereich .ru-seg-zeichen{display:none}
   .such-filter select{
     flex:0 0 auto;
     min-height:42px; padding:0 32px 0 14px;

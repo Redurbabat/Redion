@@ -1973,7 +1973,20 @@ const App = (() => {
       if (e.key === 'Escape') { schliessen(); return; }
       if (e.key === 'ArrowDown') { e.preventDefault(); waehle(i + 1); }
       if (e.key === 'ArrowUp')   { e.preventDefault(); waehle(i - 1); }
-      if (e.key === 'Enter' && treffer[i]) trefferOeffnen(treffer[i]);
+      if (e.key !== 'Enter') return;
+      if (treffer[i]) { trefferOeffnen(treffer[i]); return; }
+      /* ENTER WARTET NICHT AUF DIE UHR (Fund der Durchsicht): „Dieses
+         Dokument" rechnet 220 ms nach dem letzten Zeichen. Wer schneller
+         Enter drückt, fand keinen Treffer — und Enter tat nichts. Dann geht
+         das Wort ohne Umweg an die Suchleiste, auf Treffer 1; sie zählt
+         selbst (sie ist der Motor, kein zweiter). */
+      const wort = inp.value.trim();
+      if (bereich === 'dokument' && offenSeite && dokMod && wort.length >= 2) {
+        dokLauf++;
+        if (dokUhr) clearTimeout(dokUhr);
+        o.remove();
+        void dokMod.findenIn(String(offenSeite.id), wort, { springen: true, fokus: true });
+      }
     });
 
     /* WELCHER FILTER IST GESETZT? Am Telefon sind die Filter Marken, und
@@ -1990,7 +2003,13 @@ const App = (() => {
       .forEach(s2 => s2.addEventListener('change', filterMarken));
     filterMarken();
 
-    o.addEventListener('mousedown', e => { if (e.target === o) o.remove(); });
+    /* Der Grund schliesst wie Escape (Fund der Durchsicht): derselbe Weg,
+       also bekommt das vorige Element den Fokus zurück — oder die
+       Suchleiste, die „Dieses Dokument" geöffnet hat. Vorher fiel er auf
+       <body>, und wer mit der Tastatur weitermachte, stand am Seitenanfang.
+       `preventDefault`: sonst setzt der Browser den Fokus NACH dem Horcher
+       auf den Ort des Klicks — und der ist dann schon weg. */
+    o.addEventListener('mousedown', e => { if (e.target === o) { e.preventDefault(); schliessen(); } });
     /* EINMAL ZEICHNEN, BEVOR JEMAND TIPPT. Ohne das blieb das leere
        Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
        überhaupt: man öffnet die Suche und hat noch nichts eingegeben.

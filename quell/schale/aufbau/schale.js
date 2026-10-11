@@ -1552,8 +1552,20 @@ const App = (() => {
                 e.preventDefault();
                 waehle(i - 1);
             }
-            if (e.key === 'Enter' && treffer[i])
+            if (e.key !== 'Enter')
+                return;
+            if (treffer[i]) {
                 trefferOeffnen(treffer[i]);
+                return;
+            }
+            const wort = inp.value.trim();
+            if (bereich === 'dokument' && offenSeite && dokMod && wort.length >= 2) {
+                dokLauf++;
+                if (dokUhr)
+                    clearTimeout(dokUhr);
+                o.remove();
+                void dokMod.findenIn(String(offenSeite.id), wort, { springen: true, fokus: true });
+            }
         });
         const filterMarken = () => {
             o.querySelectorAll('.such-filter select').forEach(s2 => {
@@ -1564,8 +1576,10 @@ const App = (() => {
         o.querySelectorAll('.such-filter select')
             .forEach(s2 => s2.addEventListener('change', filterMarken));
         filterMarken();
-        o.addEventListener('mousedown', e => { if (e.target === o)
-            o.remove(); });
+        o.addEventListener('mousedown', e => { if (e.target === o) {
+            e.preventDefault();
+            schliessen();
+        } });
         if (vorgabe) {
             inp.value = String(vorgabe);
             suchen();

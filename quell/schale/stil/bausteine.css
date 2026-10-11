@@ -1087,6 +1087,14 @@ body[data-bewegung="ruhig"] [data-gehoben]{ transform:none }
      und zwei Deckeln. `.bib.bib-deckel-seite` ist stärker und gewinnt
      unabhängig von der Reihenfolge. */
   .bib.bib-deckel-seite{ padding-left:0; padding-right:0 }
+  /* UND IN ALLEN DREI FORMEN (E725, Fund der Durchsicht): Regal und Liste
+     behielten die 16 px — ihre Kopfzeile war 302 statt 334 px breit, und
+     die Ortspille sagte „Meine Abla… · 7". Ein abgeschnittenes Wort ist ein
+     anderes Wort (§55.1). Seither steht der Kopf in allen drei Formen an
+     derselben Stelle und gleich breit; ein Formwechsel verschiebt ihn nicht
+     mehr. `[data-bib-bereich]` trägt nur die Bibliothek — „Meine Aufgaben"
+     (auch `.bib`) behält ihr Polster. */
+  .bib[data-bib-bereich]{ padding-left:0; padding-right:0 }
 }
 
 .bib-regal{
