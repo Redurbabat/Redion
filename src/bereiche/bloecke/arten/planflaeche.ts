@@ -42,9 +42,12 @@ const Planflaeche = (() => {
       ausgang: Map<string, { x: number; y: number }>;
       /** Beim Leitungziehen: der Anfangspunkt. */
       von?: { x: number; y: number; teil?: string; nr?: string };
-      /** Beim Ziehen eines Teils: welche Klemme jedes Leitungsende meint,
-          gefragt VOR der ersten Bewegung (E738). */
-      klemmen?: Map<string, { von: string | undefined; nach: string | undefined }>;
+      /** Beim Ziehen eines Teils: was VOR der ersten Bewegung feststand —
+          welche Klemme jedes Leitungsende meint (E738), die Punkte und was
+          jede Leitung berührt (E746). Jede Bewegung rechnet von hier aus. */
+      vorher?: ReturnType<typeof Schaltplan.vorherMerken>;
+      /** Was das Nachziehen bei der letzten Bewegung meldete. */
+      bericht?: ReturnType<typeof Schaltplan.nachziehen>;
     };
     /** Rückgängig und Wiederholen — der Abbild-Verlauf aus dem Kern (E687), 60 Schritte. */
     verlauf: ReturnType<typeof GfxHistory.erstelle>;
@@ -503,85 +506,83 @@ const Planflaeche = (() => {
     const teilVon = (id: string): any =>
       (z.plan.teile as any[]).find(t => t.id === id);
 
-    /* --- Welche Klemme meint jedes Leitungsende? (E738, L252) -------------
-       Gefragt wird VOR jeder Änderung, solange Leitung und Teil noch
-       zueinander passen: der Auflöser entscheidet zuerst am Ort, und nach dem
-       Schieben oder Drehen liegt das Ende nicht mehr an seiner Klemme. Beim
-       alten FI ist das der ganze Unterschied — `N` unten ist N2, `N` ohne
-       Ort ist das obere N, und ohne diese Frage sprang die untere Leitung
-       beim ersten Schieben auf den Eingang. Gespeichert wird der Name nicht
-       um; nur die Punkte rücken, wie bisher. */
-    const endKlemmen = (): Map<string, { von: string | undefined; nach: string | undefined }> => {
-      const m = new Map<string, { von: string | undefined; nach: string | undefined }>();
-      (z.plan.leitungen as any[]).forEach(l => {
-        const n = l.punkte.length;
-        m.set(l.id, {
-          von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
-          nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
-        });
-      });
-      return m;
+    /* --- Nachziehen (E738, E746) --------------------------------------------
+       Was vor einer Lageänderung feststeht — welche Klemme jedes Leitungsende
+       meint (E738: gefragt, solange Leitung und Teil noch zueinander passen),
+       die Punkte und was jede Leitung berührt —, und danach EINE Stelle, die
+       die Leitungen nachzieht: `Schaltplan.nachziehen`. Sie führt nur neu, was
+       an einem bewegten Teil hängt, und nimmt keinen Weg, der etwas berührt,
+       was die Leitung vorher nicht berührte (L253 Punkt 4). Bis E746 stand
+       hier `leitungenNachziehen`, und das führte beim Drehen, Spiegeln und
+       Ziehen ALLE Leitungen des Plans als Winkel neu: nach dem Drehen des FI
+       lief b2 5 px neben N2 vorbei, und N und N2 waren ein Netz. */
+    type Bericht = ReturnType<typeof Schaltplan.nachziehen>;
+
+    /* Liess sich eine Leitung nicht so führen, dass sie genau dasselbe
+       berührt wie vorher (Stufe 2 oder 3), soll der Mensch es wissen — eine
+       stille Änderung der Schaltung ist genau das, wogegen das Nachziehen
+       gebaut ist (§35: eine bekannte Lücke ist besser als ein stiller Fehler). */
+    const melde = (bericht: Bericht | undefined): void => {
+      if (!bericht || !bericht.some(b => b.stufe >= 2) || typeof UI === 'undefined') return;
+      UI.toast('Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen.');
     };
 
+    /** Die Kennungen der ausgewählten TEILE (Leitungen und Texte drehen nicht). */
+    const auswahlTeile = (): any[] => [...z.auswahl].map(teilVon).filter(Boolean);
+
     /* --- Verschieben (Punkt 25), mit mitziehenden Leitungen -------------- */
-    const verschiebe = (dx: number, dy: number): void => {
-      const ziel = endKlemmen();
+    const verschiebe = (dx: number, dy: number): Bericht => {
+      const vorher = Schaltplan.vorherMerken(z.plan);
+      const teile: string[] = [];
+      const eigene = new Set<string>();
       z.auswahl.forEach(id => {
         const t = teilVon(id);
-        if (t) { t.x = Schaltplan.rasten(t.x + dx); t.y = Schaltplan.rasten(t.y + dy); return; }
+        if (t) { t.x = Schaltplan.rasten(t.x + dx); t.y = Schaltplan.rasten(t.y + dy); teile.push(id); return; }
         const l = (z.plan.leitungen as any[]).find(x => x.id === id);
-        if (l) l.punkte = l.punkte.map((p: any) =>
-          ({ x: Schaltplan.rasten(p.x + dx), y: Schaltplan.rasten(p.y + dy) }));
+        if (l) {
+          l.punkte = l.punkte.map((p: any) =>
+            ({ x: Schaltplan.rasten(p.x + dx), y: Schaltplan.rasten(p.y + dy) }));
+          eigene.add(id);
+        }
       });
-      /* Und die Leitungsenden, die an einem verschobenen Teil hängen (23). */
+      /* Eine Leitung, die selbst mitgeschoben wurde, gehört dem Menschen: nur
+         ihr Ende rückt auf die Klemme eines mitgeschobenen Teils (23), wie
+         bisher — Teil und Leitung sind um denselben Schritt gewandert. */
       (z.plan.leitungen as any[]).forEach(l => {
+        if (!eigene.has(l.id)) return;
+        const ziel = vorher.klemmen.get(l.id);
         if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
           const t = teilVon(l.vonTeil);
-          const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
+          const o = t && Schaltplan.anschlussOrt(t, ziel?.von ?? l.vonNr);
           if (o && l.punkte[0]) l.punkte[0] = o;
         }
         if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
           const t = teilVon(l.nachTeil);
-          const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
+          const o = t && Schaltplan.anschlussOrt(t, ziel?.nach ?? l.nachNr);
           if (o && l.punkte.length) l.punkte[l.punkte.length - 1] = o;
         }
       });
+      /* Alle anderen, die an einem geschobenen Teil hängen, zieht dieselbe
+         Stelle nach wie beim Drehen. Ein Ende NEBEN seiner Klemme an einem
+         Teil, das stehen bleibt, rückt die Pfeiltaste nicht — das tat sie nie. */
+      return Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
     };
 
     /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) ------- */
     const drehen = (): void => aendere(() => {
-      const ziel = endKlemmen();
-      z.auswahl.forEach(id => {
-        const t = teilVon(id);
-        if (t) t.drehung = ((t.drehung || 0) + 90) % 360;
-      });
-      leitungenNachziehen(ziel);
+      const vorher = Schaltplan.vorherMerken(z.plan);
+      const teile = auswahlTeile();
+      teile.forEach(t => { t.drehung = ((t.drehung || 0) + 90) % 360; });
+      if (teile.length)
+        melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
     });
     const spiegeln = (): void => aendere(() => {
-      const ziel = endKlemmen();
-      z.auswahl.forEach(id => {
-        const t = teilVon(id);
-        if (t) t.gespiegelt = !t.gespiegelt;
-      });
-      leitungenNachziehen(ziel);
+      const vorher = Schaltplan.vorherMerken(z.plan);
+      const teile = auswahlTeile();
+      teile.forEach(t => { t.gespiegelt = !t.gespiegelt; });
+      if (teile.length)
+        melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
     });
-    /* Nach Drehen und Spiegeln liegen die Anschlüsse woanders — die
-       Leitungen, die daran hängen, müssen mit. Ohne das enden sie in der
-       Luft und der Plan sieht verbunden aus, wo er es nicht ist. */
-    const leitungenNachziehen = (ziel: Map<string, { von: string | undefined; nach: string | undefined }>): void => {
-      (z.plan.leitungen as any[]).forEach(l => {
-        if (l.vonTeil) {
-          const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
-          if (o && l.punkte[0]) l.punkte[0] = o;
-        }
-        if (l.nachTeil) {
-          const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
-          if (o && l.punkte.length) l.punkte[l.punkte.length - 1] = o;
-        }
-        if (l.punkte.length >= 2)
-          l.punkte = Schaltplan.rechtwinklig(l.punkte[0], l.punkte[l.punkte.length - 1]);
-      });
-    };
     const doppeln = (): void => aendere(() => {
       const neu: string[] = [];
       const versatz = Register.fachzeichen.RASTER * 2;
@@ -739,7 +740,7 @@ const Planflaeche = (() => {
         const t = teilVon(x);
         if (t) ausgang.set(x, { x: t.x, y: t.y });
       });
-      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
+      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan) };
       svg.setPointerCapture(e.pointerId);
       male();
     });
@@ -756,7 +757,17 @@ const Planflaeche = (() => {
           const t = teilVon(id);
           if (t) { t.x = Schaltplan.rasten(a.x + dx); t.y = Schaltplan.rasten(a.y + dy); }
         });
-        leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
+        /* Jede Bewegung rechnet vom Anfassen aus (`vonVorn`), nicht vom
+           letzten Zwischenstand — sonst hinge der Weg davon ab, wie schnell
+           die Maus war. Ist nichts über ein Raster gewandert, bleibt alles
+           wie beim Anfassen. */
+        const gewandert = [...z.zieht.ausgang].some(([id, a]) => {
+          const t = teilVon(id);
+          return t && (t.x !== a.x || t.y !== a.y);
+        });
+        const vorher = z.zieht.vorher ?? (z.zieht.vorher = Schaltplan.vorherMerken(z.plan));
+        z.zieht.bericht = Schaltplan.nachziehen(z.plan, vorher,
+          gewandert ? [...z.zieht.ausgang.keys()] : [], { heilen: gewandert, vonVorn: true });
         buehneMalen();
         return;
       }
@@ -799,7 +810,7 @@ const Planflaeche = (() => {
             const t = teilVon(id);
             return t && (t.x !== a.x || t.y !== a.y);
           });
-        if (bewegt) aendere(() => { /* schon geschoben — nur sichern */ });
+        if (bewegt) { aendere(() => { /* schon geschoben — nur sichern */ }); melde(zug.bericht); }
         else male();
         return;
       }
@@ -1022,7 +1033,9 @@ const Planflaeche = (() => {
       if (pfeile[e.key] && z.auswahl.size) {
         e.preventDefault();
         const [dx, dy] = pfeile[e.key]!;
-        aendere(() => verschiebe(dx, dy));
+        let bericht: Bericht | undefined;
+        aendere(() => { bericht = verschiebe(dx, dy); });
+        melde(bericht);
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return loeschen(); }

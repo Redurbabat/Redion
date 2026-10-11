@@ -348,6 +348,425 @@ const Schaltplan = (() => {
   };
 
   /* ------------------------------------------------------------------------
+   * NACHZIEHEN, OHNE ANZUZAPFEN (E746, L253 Punkt 4)
+   * ------------------------------------------------------------------------
+   * Dreht, spiegelt, zieht oder schiebt jemand ein Teil, müssen die Leitungen
+   * mit, die daran hängen. Bis E746 führte die Planfläche dabei beim Drehen,
+   * Spiegeln und Ziehen ALLE Leitungen des Plans neu, jede als Winkel von
+   * Ende zu Ende — und ein neuer Weg konnte eine Klemme anzapfen, die vorher
+   * frei war. Gemessen: nach dem Drehen des alten FI lief b2 5 px neben N2
+   * vorbei (test608), und im Plan „Drehstrom, FI und Übertrager" waren
+   * danach L und N der Quelle EIN Netz. Eine Handlung, die nur die Lage
+   * ändern sollte, änderte die Schaltung — das ist der Fall, gegen den §51
+   * steht.
+   *
+   * Seither gilt, in dieser Reihenfolge:
+   *
+   *   1. Neu geführt wird nur, was an einem bewegten Teil hängt. Jede andere
+   *      Leitung behält ihre Punkte Byte für Byte — mit EINER Ausnahme, die
+   *      E738 beschreibt und test608 §5 misst: liegt ihr gezeichnetes Ende
+   *      NEBEN der Klemme, die es meint (ein Plan von vor E735, L253
+   *      Punkt 7), rückt es beim Drehen, Spiegeln und Ziehen an die Klemme,
+   *      wie bisher — und mit derselben Prüfung wie jeder neue Weg.
+   *   2. Ein neuer Weg muss genau das berühren, was die Leitung vorher
+   *      berührte: dieselben Klemmen, dieselben Leitungen, nach der Regel der
+   *      Netzliste. Probiert wird in fester Reihenfolge — der alte Weg, wenn
+   *      beide Enden geblieben sind · der alte Weg mit nachgerückten
+   *      Endstücken (so bleibt eine gezeichnete Führung erhalten) · der
+   *      Winkel wie bisher (`rechtwinklig`) · der andere Winkel · Z-Wege
+   *      über das Raster, die kürzesten zuerst, dann die nächsten zur Mitte.
+   *      Der erste, der passt, gilt.
+   *   3. Passt keiner, gilt der erste, der nichts NEUES berührt (Stufe 2 —
+   *      er verliert höchstens eine Berührung, die es vorher gab). Geht auch
+   *      das nicht, weil schon das Ende neben einer fremden Klemme liegt,
+   *      gilt der mit den wenigsten neuen Berührungen (Stufe 3). Der Bericht
+   *      sagt je Leitung, welche Stufe es war; die Planfläche meldet 2 und 3.
+   *
+   * Was es NICHT verhindert: wer ein Teil so hinstellt, dass SEINE Klemme
+   * auf einer fremden Leitung liegt, verbindet es — das ist der Weg, auf dem
+   * die Netzliste über den Ort fängt („der Ort fängt die Fälle, in denen
+   * jemand eine Leitung von Hand an eine Klemme geschoben hat"). Das ist die
+   * Lage, nicht das Nachziehen.
+   * ----------------------------------------------------------------------*/
+
+  /** Die Fangweite der Netzliste — dieselbe Zahl wie dort (Register, E738). */
+  const NAH = (): number => (typeof Register !== 'undefined' && Register.fachzeichen
+    && typeof Register.fachzeichen.NAH === 'number') ? Register.fachzeichen.NAH : 6;
+
+  /**
+   * Liegt `p` auf der Strecke a–b, mit der Fangweite der Netzliste?
+   *
+   * DIESELBE Regel wie `aufStrecke` in simulation.ts (`netze()`), und sie
+   * steht mit Absicht zweimal: die Planfläche darf die Netzliste nicht rufen
+   * (§5 Regel 1, `test537` zählt jeden Griff nach `Stromfluss`). Zwei Regeln
+   * für dasselbe laufen auseinander, wenn niemand sie vergleicht — `test611`
+   * §7 hält für jede Leitung zweier Pläne die Antwort dieser Regel gegen die
+   * der Netzliste. Wer eine der beiden ändert, ändert beide.
+   */
+  const nahAnStrecke = (p: Punkt, a: Punkt, b: Punkt): boolean => {
+    const nah = NAH();
+    if (Math.abs(a.y - b.y) <= 1 && Math.abs(p.y - a.y) <= nah)
+      return p.x >= Math.min(a.x, b.x) - nah && p.x <= Math.max(a.x, b.x) + nah;
+    if (Math.abs(a.x - b.x) <= 1 && Math.abs(p.x - a.x) <= nah)
+      return p.y >= Math.min(a.y, b.y) - nah && p.y <= Math.max(a.y, b.y) + nah;
+    return false;
+  };
+
+  type Klemmort = { teil: string; nr: string; x: number; y: number; name: string };
+
+  /** Alle Klemmen des Plans mit ihrem Ort — so, wie die Netzliste sie sieht. */
+  const klemmorte = (plan: Plan): Klemmort[] => {
+    const raus: Klemmort[] = [];
+    plan.teile.forEach(t => anschluesseVon(t).forEach(a =>
+      raus.push({ teil: String(t.id), nr: a.nr, x: a.x, y: a.y, name: String(t.id) + ':' + a.nr })));
+    return raus;
+  };
+
+  /** Welche Klemme meint ein Leitungsende, und brauchte es dafür einen alten
+      Namen oder Ort? Wie `endeVon` in der Netzliste (E738). */
+  const endeGenau = (plan: Plan, teil: string, nr: string, p: Punkt | undefined):
+      { nr: string; frueher: boolean } => {
+    const t = plan.teile.find(x => String(x.id) === teil);
+    const F = (typeof Register !== 'undefined') ? Register.fachzeichen : null;
+    if (!t || !F || typeof F.klemmeFuer !== 'function') return { nr, frueher: false };
+    const r = F.klemmeFuer(t.zeichen, nr, p ? { x: p.x - t.x, y: p.y - t.y } : null,
+                           t.drehung, t.gespiegelt);
+    return r || { nr, frueher: false };
+  };
+
+  /** Was eine Leitung berührt: Klemmen als „Teil:Nr", Leitungen als Kennung. */
+  type Beruehrung = { klemmen: string[]; leitungen: string[] };
+
+  const leitungenBeruehren = (pa: Punkt[], pb: Punkt[]): boolean => {
+    for (const p of pa)
+      for (let s = 0; s + 1 < pb.length; s++) if (nahAnStrecke(p, pb[s]!, pb[s + 1]!)) return true;
+    for (const p of pb)
+      for (let s = 0; s + 1 < pa.length; s++) if (nahAnStrecke(p, pa[s]!, pa[s + 1]!)) return true;
+    return false;
+  };
+
+  /**
+   * Was berührt die Leitung `l`, wenn sie über `punkte` läuft? Die Regel der
+   * Netzliste, Schritt für Schritt: erst die gespeicherte Bindung (über den
+   * Auflöser), dann der Ort — jeder Punkt und jede Strecke gegen jede Klemme,
+   * ausser denen, die ein Ende mit altem Namen nicht fassen darf —, und
+   * zuletzt die anderen Leitungen (ein Ende oder Knick auf einer Strecke).
+   *
+   * Mit `erlaubt` bricht sie ab, sobald etwas berührt wird, das nicht darin
+   * steht, und gibt null — so kostet ein Weg, der eine fremde Klemme streift,
+   * nur die Rechnung bis zu dieser Klemme. Das braucht die lange Liste der
+   * Hakenwege unten.
+   */
+  const pruefeBeruehrung = (plan: Plan, l: Leitung, punkte: Punkt[], orte: Klemmort[],
+                            andere: Leitung[],
+                            erlaubt?: { klemmen: Set<string>; leitungen: Set<string> }): Beruehrung | null => {
+    const nah = NAH();
+    const klemmen = new Set<string>();
+    const nicht = new Set<string>();
+    const enden: Array<[string | undefined, string | undefined, Punkt | undefined]> = [
+      [l.vonTeil, l.vonNr, punkte[0]], [l.nachTeil, l.nachNr, punkte[punkte.length - 1]]];
+    for (const [tid, nr, p] of enden) {
+      if (!tid || !nr) continue;
+      const teil = String(tid);
+      const r = endeGenau(plan, teil, nr, p);
+      const name = teil + ':' + r.nr;
+      if (erlaubt && !erlaubt.klemmen.has(name)) return null;
+      klemmen.add(name);
+      if (r.frueher) orte.forEach(k => { if (k.teil === teil && k.nr !== r.nr) nicht.add(k.name); });
+    }
+    for (const k of orte) {
+      if (nicht.has(k.name) || klemmen.has(k.name)) continue;
+      let trifft = punkte.some(p => Math.abs(p.x - k.x) <= nah && Math.abs(p.y - k.y) <= nah);
+      for (let i = 0; !trifft && i + 1 < punkte.length; i++) trifft = nahAnStrecke(k, punkte[i]!, punkte[i + 1]!);
+      if (!trifft) continue;
+      if (erlaubt && !erlaubt.klemmen.has(k.name)) return null;
+      klemmen.add(k.name);
+    }
+    const leitungen: string[] = [];
+    for (const m of andere) {
+      if (m.id === l.id || !leitungenBeruehren(punkte, m.punkte)) continue;
+      if (erlaubt && !erlaubt.leitungen.has(m.id)) return null;
+      leitungen.push(m.id);
+    }
+    return { klemmen: [...klemmen].sort(), leitungen: leitungen.sort() };
+  };
+  const beruehrung = (plan: Plan, l: Leitung, punkte: Punkt[], orte: Klemmort[],
+                      andere: Leitung[]): Beruehrung =>
+    pruefeBeruehrung(plan, l, punkte, orte, andere) ?? { klemmen: [], leitungen: [] };
+
+  /** Was eine gespeicherte Leitung im Plan berührt — für Prüfläufe (test611 §7). */
+  const kontakte = (plan: Plan, l: Leitung): Beruehrung =>
+    beruehrung(plan, l, l.punkte, klemmorte(plan), plan.leitungen);
+
+  /** Was VOR einer Lageänderung feststeht. */
+  type Vorher = {
+    /** Welche Klemme jedes Leitungsende meint (E738, L252) — gefragt, solange
+        Leitung und Teil noch zueinander passen. */
+    klemmen: Map<string, { von: string | undefined; nach: string | undefined }>;
+    /** Die Punkte jeder Leitung, als Kopie. */
+    punkte: Map<string, Punkt[]>;
+    /** Was jede Leitung berührt — daran misst sich jeder neue Weg. */
+    beruehrt: Map<string, Beruehrung>;
+  };
+
+  /**
+   * Vor dem Drehen, Spiegeln, Schieben oder beim Anfassen zum Ziehen.
+   *
+   * WELCHE KLEMME MEINT JEDES LEITUNGSENDE? (E738) Gefragt wird VOR der
+   * Änderung: der Auflöser entscheidet zuerst am Ort, und nach dem Schieben
+   * oder Drehen liegt das Ende nicht mehr an seiner Klemme. Beim alten FI ist
+   * das der ganze Unterschied — `N` unten ist N2, `N` ohne Ort ist das obere
+   * N. Gespeichert wird der Name nicht um; nur die Punkte rücken.
+   */
+  const vorherMerken = (plan: Plan): Vorher => {
+    const orte = klemmorte(plan);
+    const teil = (id: string | undefined): Teil | undefined =>
+      id === undefined ? undefined : plan.teile.find(t => String(t.id) === String(id));
+    const klemmen = new Map<string, { von: string | undefined; nach: string | undefined }>();
+    const punkte = new Map<string, Punkt[]>();
+    const beruehrt = new Map<string, Beruehrung>();
+    plan.leitungen.forEach(l => {
+      const n = l.punkte.length;
+      klemmen.set(l.id, {
+        von: l.vonTeil ? klemmeFuer(teil(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
+        nach: l.nachTeil ? klemmeFuer(teil(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
+      });
+      punkte.set(l.id, l.punkte.map(p => ({ x: p.x, y: p.y })));
+      beruehrt.set(l.id, beruehrung(plan, l, l.punkte, orte, plan.leitungen));
+    });
+    return { klemmen, punkte, beruehrt };
+  };
+
+  const gleicherPunkt = (a: Punkt, b: Punkt): boolean => a.x === b.x && a.y === b.y;
+  const ohneDoppel = (ps: Punkt[]): Punkt[] =>
+    ps.filter((p, i) => i === 0 || !gleicherPunkt(p, ps[i - 1]!));
+  const allesRechtwinklig = (ps: Punkt[]): boolean =>
+    ps.every((p, i) => i === 0 || p.x === ps[i - 1]!.x || p.y === ps[i - 1]!.y);
+
+  /**
+   * Der alte Weg mit nachgerückten Endstücken. Läuft das letzte Stück
+   * senkrecht in die Klemme, wandert sein Knick waagrecht mit; läuft es
+   * waagrecht, senkrecht. Alles dazwischen bleibt, wie es gezeichnet ist —
+   * wer ein Teil um ein Raster schiebt, will seine Leitung nicht als neuen
+   * Winkel quer durch den Plan wiederfinden. Gibt null, wenn dabei eine
+   * schräge Strecke entstünde.
+   */
+  const gleitend = (alt: Punkt[], a: Punkt, b: Punkt): Punkt[] | null => {
+    const n = alt.length;
+    if (n < 2) return null;
+    if (n === 2) return (a.x === b.x || a.y === b.y) ? [a, b] : null;
+    const q = alt.map(p => ({ x: p.x, y: p.y }));
+    const ruecke = (ende: number, nachbar: number, ziel: Punkt): boolean => {
+      const e = alt[ende]!, m = alt[nachbar]!;
+      if (gleicherPunkt(e, ziel)) return true;
+      if (e.y === m.y && e.x !== m.x) q[nachbar]!.y = ziel.y;
+      else if (e.x === m.x && e.y !== m.y) q[nachbar]!.x = ziel.x;
+      else return false;
+      q[ende] = { x: ziel.x, y: ziel.y };
+      return true;
+    };
+    if (!ruecke(0, 1, a) || !ruecke(n - 1, n - 2, b)) return null;
+    const r = ohneDoppel(q);
+    return r.length >= 2 && allesRechtwinklig(r) ? r : null;
+  };
+
+  /** Der andere der zwei Winkel zwischen a und b — null, wenn es nur die Gerade gibt. */
+  const andererWinkel = (a: Punkt, b: Punkt): Punkt[] | null => {
+    if (a.x === b.x || a.y === b.y) return null;
+    const ecke = rechtwinklig(a, b)[1]!;
+    return [a, ecke.x === b.x ? { x: a.x, y: b.y } : { x: b.x, y: a.y }, b];
+  };
+
+  /**
+   * Z-Wege über das Raster: waagrecht–senkrecht–waagrecht mit dem
+   * senkrechten Stück bei jedem x, senkrecht–waagrecht–senkrecht mit dem
+   * waagrechten bei jedem y, innerhalb des Blatts. Auch Umwege (das
+   * Mittelstück ausserhalb der Enden), denn manchmal liegt zwischen den
+   * Enden eine Klemme quer. Geordnet: kürzester Weg zuerst, dann der nächste
+   * zur Mitte, dann waagrecht vor senkrecht, dann die Lage — fest, damit
+   * dieselbe Handlung immer denselben Weg gibt.
+   */
+  const zWege = (a: Punkt, b: Punkt, breite: number, hoehe: number): Punkt[][] => {
+    const r = R();
+    const liste: Array<{ weg: Punkt[]; laenge: number; abstand: number; art: number; m: number }> = [];
+    const mx0 = (a.x + b.x) / 2, my0 = (a.y + b.y) / 2;
+    if (a.y !== b.y) for (let mx = 0; mx <= breite; mx += r) {
+      if (mx === a.x || mx === b.x) continue;
+      liste.push({ weg: [a, { x: mx, y: a.y }, { x: mx, y: b.y }, b],
+                   laenge: Math.abs(mx - a.x) + Math.abs(b.y - a.y) + Math.abs(b.x - mx),
+                   abstand: Math.abs(mx - mx0), art: 0, m: mx });
+    }
+    if (a.x !== b.x) for (let my = 0; my <= hoehe; my += r) {
+      if (my === a.y || my === b.y) continue;
+      liste.push({ weg: [a, { x: a.x, y: my }, { x: b.x, y: my }, b],
+                   laenge: Math.abs(my - a.y) + Math.abs(b.x - a.x) + Math.abs(b.y - my),
+                   abstand: Math.abs(my - my0), art: 1, m: my });
+    }
+    liste.sort((p, q) => p.laenge - q.laenge || p.abstand - q.abstand || p.art - q.art || p.m - q.m);
+    return liste.map(e => e.weg);
+  };
+
+  /**
+   * Hakenwege mit vier Strecken: waagrecht–senkrecht–waagrecht–senkrecht und
+   * senkrecht–waagrecht–senkrecht–waagrecht. Sie braucht es, wenn eine Klemme
+   * nur von einer Seite frei anzufahren ist — beim gedrehten und dann
+   * gespiegelten FI liegt N oben in der rechten Spalte, darunter 3 und 1, und
+   * links daneben in derselben Zeile N2: jeder Z-Weg dorthin streift eine
+   * davon (gemessen in test611 §2, bevor es sie gab). Gesucht wird in einem
+   * Fenster von zehn Rastern um die Enden, geordnet wie die Z-Wege.
+   */
+  const hakenWege = (a: Punkt, b: Punkt, breite: number, hoehe: number): Punkt[][] => {
+    const r = R();
+    const rand = 10 * r;
+    const werte = (u: number, v: number, max: number): number[] => {
+      const raus: number[] = [];
+      const lo = Math.max(0, Math.ceil((Math.min(u, v) - rand) / r) * r);
+      const hi = Math.min(max, Math.max(u, v) + rand);
+      for (let w = lo; w <= hi; w += r) raus.push(w);
+      return raus;
+    };
+    const xs = werte(a.x, b.x, breite), ys = werte(a.y, b.y, hoehe);
+    const mx0 = (a.x + b.x) / 2, my0 = (a.y + b.y) / 2;
+    const liste: Array<{ weg: Punkt[]; laenge: number; abstand: number; art: number; x: number; y: number }> = [];
+    for (const x1 of xs) {
+      if (x1 === a.x || x1 === b.x) continue;
+      for (const y1 of ys) {
+        if (y1 === a.y || y1 === b.y) continue;
+        const laenge = Math.abs(x1 - a.x) + Math.abs(y1 - a.y) + Math.abs(b.x - x1) + Math.abs(b.y - y1);
+        const abstand = Math.abs(x1 - mx0) + Math.abs(y1 - my0);
+        liste.push({ weg: [a, { x: x1, y: a.y }, { x: x1, y: y1 }, { x: b.x, y: y1 }, b],
+                     laenge, abstand, art: 0, x: x1, y: y1 });
+        liste.push({ weg: [a, { x: a.x, y: y1 }, { x: x1, y: y1 }, { x: x1, y: b.y }, b],
+                     laenge, abstand, art: 1, x: x1, y: y1 });
+      }
+    }
+    liste.sort((p, q) => p.laenge - q.laenge || p.abstand - q.abstand || p.art - q.art
+      || p.x - q.x || p.y - q.y);
+    return liste.map(e => e.weg);
+  };
+
+  /** Je neu geführte Leitung: welche Stufe (1 passt genau, 2 nichts Neues, 3 am wenigsten Neues). */
+  type Bericht = Array<{ id: string; stufe: 1 | 2 | 3 }>;
+
+  /**
+   * Die Leitungen nach einer Lageänderung nachziehen (E746).
+   *
+   * `teile` sind die Kennungen der bewegten Teile. `heilen` rückt zusätzlich
+   * jedes gebundene Ende, das neben seiner Klemme liegt, an die Klemme (beim
+   * Drehen, Spiegeln, Ziehen — so schon vor E746; die Pfeiltaste tat es nie).
+   * `ohne` sind Leitungen, die der Mensch selbst mitgeschoben hat — sie
+   * fasst das Nachziehen nicht an. `vonVorn` setzt erst alle Leitungen auf
+   * die Punkte von `vorher` zurück: beim Ziehen mit der Maus wird bei jeder
+   * Bewegung vom Anfassen aus gerechnet, nicht vom letzten Zwischenstand.
+   */
+  const nachziehen = (plan: Plan, vorher: Vorher, teile: Iterable<string>,
+                      wie: { heilen?: boolean; ohne?: Set<string>; vonVorn?: boolean } = {}): Bericht => {
+    if (wie.vonVorn) plan.leitungen.forEach(l => {
+      const p = vorher.punkte.get(l.id);
+      if (p) l.punkte = p.map(q => ({ x: q.x, y: q.y }));
+    });
+    const bewegt = new Set<string>([...teile].map(String));
+    const heilen = !!wie.heilen;
+    const teil = (id: string | undefined): Teil | undefined =>
+      id === undefined ? undefined : plan.teile.find(t => String(t.id) === String(id));
+
+    /* 1 · Wer wird neu geführt, und wo gehören seine Enden hin? */
+    const auftrag: Array<{ l: Leitung; a: Punkt; b: Punkt }> = [];
+    plan.leitungen.forEach(l => {
+      if (wie.ohne && wie.ohne.has(l.id)) return;
+      const alt = l.punkte;
+      if (alt.length < 2) return;
+      const k = vorher.klemmen.get(l.id);
+      const vonBewegt = !!l.vonTeil && bewegt.has(String(l.vonTeil));
+      const nachBewegt = !!l.nachTeil && bewegt.has(String(l.nachTeil));
+      const ort = (tid: string | undefined, nr: string | undefined, rueck: Punkt, mit: boolean): Punkt => {
+        if (!tid || !mit) return rueck;
+        const t = teil(tid);
+        const o = t ? anschlussOrt(t, nr ?? '') : null;
+        return o || rueck;
+      };
+      const a = ort(l.vonTeil, k?.von ?? l.vonNr, alt[0]!, vonBewegt || heilen);
+      const b = ort(l.nachTeil, k?.nach ?? l.nachNr, alt[alt.length - 1]!, nachBewegt || heilen);
+      const geblieben = gleicherPunkt(a, alt[0]!) && gleicherPunkt(b, alt[alt.length - 1]!);
+      /* Eine fremde Leitung, deren Enden liegen, wo sie hingehören: kein Punkt ändert sich. */
+      if (!vonBewegt && !nachBewegt && geblieben) return;
+      auftrag.push({ l, a, b });
+    });
+
+    /* 2 · Der Reihe nach führen. Geprüft wird gegen alles, was schon steht:
+           die Leitungen, die bleiben, und die schon neu geführten. Eine noch
+           offene prüft ihrerseits gegen diese hier, wenn sie dran ist — so
+           wird jedes Paar genau einmal verglichen. */
+    const orte = klemmorte(plan);
+    const offen = new Set(auftrag.map(x => x.l.id));
+    const breite = Number(plan.breite) || 1000, hoehe = Number(plan.hoehe) || 700;
+    const bericht: Bericht = [];
+    auftrag.forEach(({ l, a, b }) => {
+      const alt = l.punkte;
+      const vor = vorher.beruehrt.get(l.id) || { klemmen: [], leitungen: [] };
+      const vorK = new Set(vor.klemmen), vorL = new Set(vor.leitungen);
+      const fertig = plan.leitungen.filter(m => m.id !== l.id && !offen.has(m.id));
+      const wahl: { zweit: Punkt[] | null; dritt: { weg: Punkt[]; neu: number } | null } =
+        { zweit: null, dritt: null };
+      const passt = (w: Punkt[]): boolean => {
+        const k = beruehrung(plan, l, w, orte, fertig);
+        const kSet = new Set(k.klemmen), lSet = new Set(k.leitungen);
+        const neuK = k.klemmen.filter(x => !vorK.has(x)).length;
+        const wegK = vor.klemmen.filter(x => !kSet.has(x)).length;
+        let neuL = 0, wegL = 0;
+        fertig.forEach(m => {
+          const jetzt = lSet.has(m.id), frueher = vorL.has(m.id);
+          if (jetzt && !frueher) neuL++;
+          if (!jetzt && frueher) wegL++;
+        });
+        if (!neuK && !wegK && !neuL && !wegL) return true;
+        if (!neuK && !neuL && !wahl.zweit) wahl.zweit = w;
+        if (!wahl.dritt || neuK + neuL < wahl.dritt.neu) wahl.dritt = { weg: w, neu: neuK + neuL };
+        return false;
+      };
+      const probiert = new Set<string>();
+      const probiere = (w: Punkt[] | null): boolean => {
+        if (!w || w.length < 2) return false;
+        const s = JSON.stringify(w);
+        if (probiert.has(s)) return false;
+        probiert.add(s);
+        return passt(w);
+      };
+      let gewaehlt: Punkt[] | null = null;
+      const zuerst: Array<Punkt[] | null> = [
+        gleicherPunkt(a, alt[0]!) && gleicherPunkt(b, alt[alt.length - 1]!) ? alt : null,
+        gleitend(alt, a, b),
+        ohneDoppel(rechtwinklig(a, b)),
+        andererWinkel(a, b)
+      ];
+      for (const w of zuerst) if (probiere(w)) { gewaehlt = w; break; }
+      if (!gewaehlt) for (const w of zWege(a, b, breite, hoehe)) if (probiere(w)) { gewaehlt = w; break; }
+      /* Die Hakenwege sind viele: hier zählt nur, ob einer GENAU passt, und
+         wer etwas Neues streift, ist nach der ersten fremden Klemme draussen. */
+      if (!gewaehlt) {
+        const erlaubt = { klemmen: vorK, leitungen: vorL };
+        for (const w of hakenWege(a, b, breite, hoehe)) {
+          const k = pruefeBeruehrung(plan, l, w, orte, fertig, erlaubt);
+          if (!k) continue;
+          const fehlt = vor.klemmen.some(x => !k.klemmen.includes(x))
+            || fertig.some(m => vorL.has(m.id) && !k.leitungen.includes(m.id));
+          if (!fehlt) { gewaehlt = w; break; }
+          if (!wahl.zweit) wahl.zweit = w;
+        }
+      }
+      let stufe: 1 | 2 | 3 = 1;
+      if (!gewaehlt) {
+        stufe = wahl.zweit ? 2 : 3;
+        gewaehlt = wahl.zweit || (wahl.dritt ? wahl.dritt.weg : null) || alt;
+      }
+      l.punkte = gewaehlt.map(p => ({ x: p.x, y: p.y }));
+      offen.delete(l.id);
+      bericht.push({ id: l.id, stufe });
+    });
+    return bericht;
+  };
+
+  /* ------------------------------------------------------------------------
    * VERBINDUNGSPUNKTE UND KREUZUNGEN (Punkte 15, 16)
    * ------------------------------------------------------------------------
    * Der Unterschied ist der wichtigste im ganzen Plan: mit Punkt sind die
@@ -957,7 +1376,7 @@ const Schaltplan = (() => {
   return {
     ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
     naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
-    verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
+    kontakte, vorherMerken, nachziehen, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
     netzBauen, BEISPIELE, beispielBauen, uid, esc
   };
 })();

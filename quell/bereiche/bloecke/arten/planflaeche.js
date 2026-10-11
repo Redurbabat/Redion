@@ -348,79 +348,63 @@ const Planflaeche = (() => {
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
-        const endKlemmen = () => {
-            const m = new Map();
-            z.plan.leitungen.forEach(l => {
-                const n = l.punkte.length;
-                m.set(l.id, {
-                    von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
-                    nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
-                });
-            });
-            return m;
+        const melde = (bericht) => {
+            if (!bericht || !bericht.some(b => b.stufe >= 2) || typeof UI === 'undefined')
+                return;
+            UI.toast('Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen.');
         };
+        const auswahlTeile = () => [...z.auswahl].map(teilVon).filter(Boolean);
         const verschiebe = (dx, dy) => {
-            const ziel = endKlemmen();
+            const vorher = Schaltplan.vorherMerken(z.plan);
+            const teile = [];
+            const eigene = new Set();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t) {
                     t.x = Schaltplan.rasten(t.x + dx);
                     t.y = Schaltplan.rasten(t.y + dy);
+                    teile.push(id);
                     return;
                 }
                 const l = z.plan.leitungen.find(x => x.id === id);
-                if (l)
+                if (l) {
                     l.punkte = l.punkte.map((p) => ({ x: Schaltplan.rasten(p.x + dx), y: Schaltplan.rasten(p.y + dy) }));
+                    eigene.add(id);
+                }
             });
             z.plan.leitungen.forEach(l => {
+                if (!eigene.has(l.id))
+                    return;
+                const ziel = vorher.klemmen.get(l.id);
                 if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
                     const t = teilVon(l.vonTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
                     const t = teilVon(l.nachTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
             });
+            return Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
         };
         const drehen = () => aendere(() => {
-            const ziel = endKlemmen();
-            z.auswahl.forEach(id => {
-                const t = teilVon(id);
-                if (t)
-                    t.drehung = ((t.drehung || 0) + 90) % 360;
-            });
-            leitungenNachziehen(ziel);
+            const vorher = Schaltplan.vorherMerken(z.plan);
+            const teile = auswahlTeile();
+            teile.forEach(t => { t.drehung = ((t.drehung || 0) + 90) % 360; });
+            if (teile.length)
+                melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
         });
         const spiegeln = () => aendere(() => {
-            const ziel = endKlemmen();
-            z.auswahl.forEach(id => {
-                const t = teilVon(id);
-                if (t)
-                    t.gespiegelt = !t.gespiegelt;
-            });
-            leitungenNachziehen(ziel);
+            const vorher = Schaltplan.vorherMerken(z.plan);
+            const teile = auswahlTeile();
+            teile.forEach(t => { t.gespiegelt = !t.gespiegelt; });
+            if (teile.length)
+                melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
         });
-        const leitungenNachziehen = (ziel) => {
-            z.plan.leitungen.forEach(l => {
-                if (l.vonTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
-                    if (o && l.punkte[0])
-                        l.punkte[0] = o;
-                }
-                if (l.nachTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
-                    if (o && l.punkte.length)
-                        l.punkte[l.punkte.length - 1] = o;
-                }
-                if (l.punkte.length >= 2)
-                    l.punkte = Schaltplan.rechtwinklig(l.punkte[0], l.punkte[l.punkte.length - 1]);
-            });
-        };
         const doppeln = () => aendere(() => {
             const neu = [];
             const versatz = Register.fachzeichen.RASTER * 2;
@@ -552,7 +536,7 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
-            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
+            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan) };
             svg.setPointerCapture(e.pointerId);
             male();
         });
@@ -572,7 +556,12 @@ const Planflaeche = (() => {
                         t.y = Schaltplan.rasten(a.y + dy);
                     }
                 });
-                leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
+                const gewandert = [...z.zieht.ausgang].some(([id, a]) => {
+                    const t = teilVon(id);
+                    return t && (t.x !== a.x || t.y !== a.y);
+                });
+                const vorher = z.zieht.vorher ?? (z.zieht.vorher = Schaltplan.vorherMerken(z.plan));
+                z.zieht.bericht = Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...z.zieht.ausgang.keys()] : [], { heilen: gewandert, vonVorn: true });
                 buehneMalen();
                 return;
             }
@@ -610,8 +599,10 @@ const Planflaeche = (() => {
                         const t = teilVon(id);
                         return t && (t.x !== a.x || t.y !== a.y);
                     });
-                if (bewegt)
+                if (bewegt) {
                     aendere(() => { });
+                    melde(zug.bericht);
+                }
                 else
                     male();
                 return;
@@ -816,7 +807,9 @@ const Planflaeche = (() => {
             if (pfeile[e.key] && z.auswahl.size) {
                 e.preventDefault();
                 const [dx, dy] = pfeile[e.key];
-                aendere(() => verschiebe(dx, dy));
+                let bericht;
+                aendere(() => { bericht = verschiebe(dx, dy); });
+                melde(bericht);
                 return;
             }
             if (e.key === 'Delete' || e.key === 'Backspace') {

@@ -169,6 +169,310 @@ const Schaltplan = (() => {
         const ecke = waagrechtZuerst ? { x: b.x, y: a.y } : { x: a.x, y: b.y };
         return [a, ecke, b];
     };
+    const NAH = () => (typeof Register !== 'undefined' && Register.fachzeichen
+        && typeof Register.fachzeichen.NAH === 'number') ? Register.fachzeichen.NAH : 6;
+    const nahAnStrecke = (p, a, b) => {
+        const nah = NAH();
+        if (Math.abs(a.y - b.y) <= 1 && Math.abs(p.y - a.y) <= nah)
+            return p.x >= Math.min(a.x, b.x) - nah && p.x <= Math.max(a.x, b.x) + nah;
+        if (Math.abs(a.x - b.x) <= 1 && Math.abs(p.x - a.x) <= nah)
+            return p.y >= Math.min(a.y, b.y) - nah && p.y <= Math.max(a.y, b.y) + nah;
+        return false;
+    };
+    const klemmorte = (plan) => {
+        const raus = [];
+        plan.teile.forEach(t => anschluesseVon(t).forEach(a => raus.push({ teil: String(t.id), nr: a.nr, x: a.x, y: a.y, name: String(t.id) + ':' + a.nr })));
+        return raus;
+    };
+    const endeGenau = (plan, teil, nr, p) => {
+        const t = plan.teile.find(x => String(x.id) === teil);
+        const F = (typeof Register !== 'undefined') ? Register.fachzeichen : null;
+        if (!t || !F || typeof F.klemmeFuer !== 'function')
+            return { nr, frueher: false };
+        const r = F.klemmeFuer(t.zeichen, nr, p ? { x: p.x - t.x, y: p.y - t.y } : null, t.drehung, t.gespiegelt);
+        return r || { nr, frueher: false };
+    };
+    const leitungenBeruehren = (pa, pb) => {
+        for (const p of pa)
+            for (let s = 0; s + 1 < pb.length; s++)
+                if (nahAnStrecke(p, pb[s], pb[s + 1]))
+                    return true;
+        for (const p of pb)
+            for (let s = 0; s + 1 < pa.length; s++)
+                if (nahAnStrecke(p, pa[s], pa[s + 1]))
+                    return true;
+        return false;
+    };
+    const pruefeBeruehrung = (plan, l, punkte, orte, andere, erlaubt) => {
+        const nah = NAH();
+        const klemmen = new Set();
+        const nicht = new Set();
+        const enden = [
+            [l.vonTeil, l.vonNr, punkte[0]], [l.nachTeil, l.nachNr, punkte[punkte.length - 1]]
+        ];
+        for (const [tid, nr, p] of enden) {
+            if (!tid || !nr)
+                continue;
+            const teil = String(tid);
+            const r = endeGenau(plan, teil, nr, p);
+            const name = teil + ':' + r.nr;
+            if (erlaubt && !erlaubt.klemmen.has(name))
+                return null;
+            klemmen.add(name);
+            if (r.frueher)
+                orte.forEach(k => { if (k.teil === teil && k.nr !== r.nr)
+                    nicht.add(k.name); });
+        }
+        for (const k of orte) {
+            if (nicht.has(k.name) || klemmen.has(k.name))
+                continue;
+            let trifft = punkte.some(p => Math.abs(p.x - k.x) <= nah && Math.abs(p.y - k.y) <= nah);
+            for (let i = 0; !trifft && i + 1 < punkte.length; i++)
+                trifft = nahAnStrecke(k, punkte[i], punkte[i + 1]);
+            if (!trifft)
+                continue;
+            if (erlaubt && !erlaubt.klemmen.has(k.name))
+                return null;
+            klemmen.add(k.name);
+        }
+        const leitungen = [];
+        for (const m of andere) {
+            if (m.id === l.id || !leitungenBeruehren(punkte, m.punkte))
+                continue;
+            if (erlaubt && !erlaubt.leitungen.has(m.id))
+                return null;
+            leitungen.push(m.id);
+        }
+        return { klemmen: [...klemmen].sort(), leitungen: leitungen.sort() };
+    };
+    const beruehrung = (plan, l, punkte, orte, andere) => pruefeBeruehrung(plan, l, punkte, orte, andere) ?? { klemmen: [], leitungen: [] };
+    const kontakte = (plan, l) => beruehrung(plan, l, l.punkte, klemmorte(plan), plan.leitungen);
+    const vorherMerken = (plan) => {
+        const orte = klemmorte(plan);
+        const teil = (id) => id === undefined ? undefined : plan.teile.find(t => String(t.id) === String(id));
+        const klemmen = new Map();
+        const punkte = new Map();
+        const beruehrt = new Map();
+        plan.leitungen.forEach(l => {
+            const n = l.punkte.length;
+            klemmen.set(l.id, {
+                von: l.vonTeil ? klemmeFuer(teil(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
+                nach: l.nachTeil ? klemmeFuer(teil(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
+            });
+            punkte.set(l.id, l.punkte.map(p => ({ x: p.x, y: p.y })));
+            beruehrt.set(l.id, beruehrung(plan, l, l.punkte, orte, plan.leitungen));
+        });
+        return { klemmen, punkte, beruehrt };
+    };
+    const gleicherPunkt = (a, b) => a.x === b.x && a.y === b.y;
+    const ohneDoppel = (ps) => ps.filter((p, i) => i === 0 || !gleicherPunkt(p, ps[i - 1]));
+    const allesRechtwinklig = (ps) => ps.every((p, i) => i === 0 || p.x === ps[i - 1].x || p.y === ps[i - 1].y);
+    const gleitend = (alt, a, b) => {
+        const n = alt.length;
+        if (n < 2)
+            return null;
+        if (n === 2)
+            return (a.x === b.x || a.y === b.y) ? [a, b] : null;
+        const q = alt.map(p => ({ x: p.x, y: p.y }));
+        const ruecke = (ende, nachbar, ziel) => {
+            const e = alt[ende], m = alt[nachbar];
+            if (gleicherPunkt(e, ziel))
+                return true;
+            if (e.y === m.y && e.x !== m.x)
+                q[nachbar].y = ziel.y;
+            else if (e.x === m.x && e.y !== m.y)
+                q[nachbar].x = ziel.x;
+            else
+                return false;
+            q[ende] = { x: ziel.x, y: ziel.y };
+            return true;
+        };
+        if (!ruecke(0, 1, a) || !ruecke(n - 1, n - 2, b))
+            return null;
+        const r = ohneDoppel(q);
+        return r.length >= 2 && allesRechtwinklig(r) ? r : null;
+    };
+    const andererWinkel = (a, b) => {
+        if (a.x === b.x || a.y === b.y)
+            return null;
+        const ecke = rechtwinklig(a, b)[1];
+        return [a, ecke.x === b.x ? { x: a.x, y: b.y } : { x: b.x, y: a.y }, b];
+    };
+    const zWege = (a, b, breite, hoehe) => {
+        const r = R();
+        const liste = [];
+        const mx0 = (a.x + b.x) / 2, my0 = (a.y + b.y) / 2;
+        if (a.y !== b.y)
+            for (let mx = 0; mx <= breite; mx += r) {
+                if (mx === a.x || mx === b.x)
+                    continue;
+                liste.push({ weg: [a, { x: mx, y: a.y }, { x: mx, y: b.y }, b],
+                    laenge: Math.abs(mx - a.x) + Math.abs(b.y - a.y) + Math.abs(b.x - mx),
+                    abstand: Math.abs(mx - mx0), art: 0, m: mx });
+            }
+        if (a.x !== b.x)
+            for (let my = 0; my <= hoehe; my += r) {
+                if (my === a.y || my === b.y)
+                    continue;
+                liste.push({ weg: [a, { x: a.x, y: my }, { x: b.x, y: my }, b],
+                    laenge: Math.abs(my - a.y) + Math.abs(b.x - a.x) + Math.abs(b.y - my),
+                    abstand: Math.abs(my - my0), art: 1, m: my });
+            }
+        liste.sort((p, q) => p.laenge - q.laenge || p.abstand - q.abstand || p.art - q.art || p.m - q.m);
+        return liste.map(e => e.weg);
+    };
+    const hakenWege = (a, b, breite, hoehe) => {
+        const r = R();
+        const rand = 10 * r;
+        const werte = (u, v, max) => {
+            const raus = [];
+            const lo = Math.max(0, Math.ceil((Math.min(u, v) - rand) / r) * r);
+            const hi = Math.min(max, Math.max(u, v) + rand);
+            for (let w = lo; w <= hi; w += r)
+                raus.push(w);
+            return raus;
+        };
+        const xs = werte(a.x, b.x, breite), ys = werte(a.y, b.y, hoehe);
+        const mx0 = (a.x + b.x) / 2, my0 = (a.y + b.y) / 2;
+        const liste = [];
+        for (const x1 of xs) {
+            if (x1 === a.x || x1 === b.x)
+                continue;
+            for (const y1 of ys) {
+                if (y1 === a.y || y1 === b.y)
+                    continue;
+                const laenge = Math.abs(x1 - a.x) + Math.abs(y1 - a.y) + Math.abs(b.x - x1) + Math.abs(b.y - y1);
+                const abstand = Math.abs(x1 - mx0) + Math.abs(y1 - my0);
+                liste.push({ weg: [a, { x: x1, y: a.y }, { x: x1, y: y1 }, { x: b.x, y: y1 }, b],
+                    laenge, abstand, art: 0, x: x1, y: y1 });
+                liste.push({ weg: [a, { x: a.x, y: y1 }, { x: x1, y: y1 }, { x: x1, y: b.y }, b],
+                    laenge, abstand, art: 1, x: x1, y: y1 });
+            }
+        }
+        liste.sort((p, q) => p.laenge - q.laenge || p.abstand - q.abstand || p.art - q.art
+            || p.x - q.x || p.y - q.y);
+        return liste.map(e => e.weg);
+    };
+    const nachziehen = (plan, vorher, teile, wie = {}) => {
+        if (wie.vonVorn)
+            plan.leitungen.forEach(l => {
+                const p = vorher.punkte.get(l.id);
+                if (p)
+                    l.punkte = p.map(q => ({ x: q.x, y: q.y }));
+            });
+        const bewegt = new Set([...teile].map(String));
+        const heilen = !!wie.heilen;
+        const teil = (id) => id === undefined ? undefined : plan.teile.find(t => String(t.id) === String(id));
+        const auftrag = [];
+        plan.leitungen.forEach(l => {
+            if (wie.ohne && wie.ohne.has(l.id))
+                return;
+            const alt = l.punkte;
+            if (alt.length < 2)
+                return;
+            const k = vorher.klemmen.get(l.id);
+            const vonBewegt = !!l.vonTeil && bewegt.has(String(l.vonTeil));
+            const nachBewegt = !!l.nachTeil && bewegt.has(String(l.nachTeil));
+            const ort = (tid, nr, rueck, mit) => {
+                if (!tid || !mit)
+                    return rueck;
+                const t = teil(tid);
+                const o = t ? anschlussOrt(t, nr ?? '') : null;
+                return o || rueck;
+            };
+            const a = ort(l.vonTeil, k?.von ?? l.vonNr, alt[0], vonBewegt || heilen);
+            const b = ort(l.nachTeil, k?.nach ?? l.nachNr, alt[alt.length - 1], nachBewegt || heilen);
+            const geblieben = gleicherPunkt(a, alt[0]) && gleicherPunkt(b, alt[alt.length - 1]);
+            if (!vonBewegt && !nachBewegt && geblieben)
+                return;
+            auftrag.push({ l, a, b });
+        });
+        const orte = klemmorte(plan);
+        const offen = new Set(auftrag.map(x => x.l.id));
+        const breite = Number(plan.breite) || 1000, hoehe = Number(plan.hoehe) || 700;
+        const bericht = [];
+        auftrag.forEach(({ l, a, b }) => {
+            const alt = l.punkte;
+            const vor = vorher.beruehrt.get(l.id) || { klemmen: [], leitungen: [] };
+            const vorK = new Set(vor.klemmen), vorL = new Set(vor.leitungen);
+            const fertig = plan.leitungen.filter(m => m.id !== l.id && !offen.has(m.id));
+            const wahl = { zweit: null, dritt: null };
+            const passt = (w) => {
+                const k = beruehrung(plan, l, w, orte, fertig);
+                const kSet = new Set(k.klemmen), lSet = new Set(k.leitungen);
+                const neuK = k.klemmen.filter(x => !vorK.has(x)).length;
+                const wegK = vor.klemmen.filter(x => !kSet.has(x)).length;
+                let neuL = 0, wegL = 0;
+                fertig.forEach(m => {
+                    const jetzt = lSet.has(m.id), frueher = vorL.has(m.id);
+                    if (jetzt && !frueher)
+                        neuL++;
+                    if (!jetzt && frueher)
+                        wegL++;
+                });
+                if (!neuK && !wegK && !neuL && !wegL)
+                    return true;
+                if (!neuK && !neuL && !wahl.zweit)
+                    wahl.zweit = w;
+                if (!wahl.dritt || neuK + neuL < wahl.dritt.neu)
+                    wahl.dritt = { weg: w, neu: neuK + neuL };
+                return false;
+            };
+            const probiert = new Set();
+            const probiere = (w) => {
+                if (!w || w.length < 2)
+                    return false;
+                const s = JSON.stringify(w);
+                if (probiert.has(s))
+                    return false;
+                probiert.add(s);
+                return passt(w);
+            };
+            let gewaehlt = null;
+            const zuerst = [
+                gleicherPunkt(a, alt[0]) && gleicherPunkt(b, alt[alt.length - 1]) ? alt : null,
+                gleitend(alt, a, b),
+                ohneDoppel(rechtwinklig(a, b)),
+                andererWinkel(a, b)
+            ];
+            for (const w of zuerst)
+                if (probiere(w)) {
+                    gewaehlt = w;
+                    break;
+                }
+            if (!gewaehlt)
+                for (const w of zWege(a, b, breite, hoehe))
+                    if (probiere(w)) {
+                        gewaehlt = w;
+                        break;
+                    }
+            if (!gewaehlt) {
+                const erlaubt = { klemmen: vorK, leitungen: vorL };
+                for (const w of hakenWege(a, b, breite, hoehe)) {
+                    const k = pruefeBeruehrung(plan, l, w, orte, fertig, erlaubt);
+                    if (!k)
+                        continue;
+                    const fehlt = vor.klemmen.some(x => !k.klemmen.includes(x))
+                        || fertig.some(m => vorL.has(m.id) && !k.leitungen.includes(m.id));
+                    if (!fehlt) {
+                        gewaehlt = w;
+                        break;
+                    }
+                    if (!wahl.zweit)
+                        wahl.zweit = w;
+                }
+            }
+            let stufe = 1;
+            if (!gewaehlt) {
+                stufe = wahl.zweit ? 2 : 3;
+                gewaehlt = wahl.zweit || (wahl.dritt ? wahl.dritt.weg : null) || alt;
+            }
+            l.punkte = gewaehlt.map(p => ({ x: p.x, y: p.y }));
+            offen.delete(l.id);
+            bericht.push({ id: l.id, stufe });
+        });
+        return bericht;
+    };
     const aufStrecke = (p, a, b) => {
         if (a.x === b.x)
             return p.x === a.x && p.y > Math.min(a.y, b.y) && p.y < Math.max(a.y, b.y);
@@ -570,7 +874,7 @@ const Schaltplan = (() => {
     return {
         ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
-        verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
+        kontakte, vorherMerken, nachziehen, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc
     };
 })();
