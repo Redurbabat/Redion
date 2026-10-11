@@ -7487,6 +7487,22 @@ unbedingtes Tauschen                             §14 rot an genau einer Zeile, 
   (shiftKey ? { dx: deltaY, dy: deltaX } …)      „quer 0, längs -120" — 71 von 72
 ```
 
+Nach der Durchsicht hält §14 auch die Zeile „Trackpad schräg mit
+Umschalt" der Tabelle oben (ein erzeugtes Ereignis, `deltaX` 30, `deltaY`
+100: −30, −100), und das Lesen des `transform` steht als eigene
+Vorbedingung neben der leeren Stelle — acht Zusagen, 74 von 74. Drei
+weitere Gegenproben, je rot gesehen und zurückgenommen (die Bytes von
+`seitenflaeche.js`, `sw.js` und der Einzeldatei danach per sha256 gleich):
+
+```txt
+den grösseren Anteil quer legen (E741 verworfen)  §14 rot an genau der neuen Zeile:
+  (shiftKey && |dY| > |dX| ? { dx: dY, dy: dX })   „quer -100, längs -30" — 73 von 74
+den Anteil längs fallen lassen                    §14 rot an genau der neuen Zeile:
+  (shiftKey ? { dx: dX || dY, dy: 0 })            „quer -30, längs 0" — 73 von 74
+transform als gleichwertiges matrix(…)            Lese-Vorbedingung rot: „matrix(1, 0, 0, 1, 128, -10)",
+                                                 leere Stelle grün — 67 von 74
+```
+
 Kein Bild (§55.3): auf dem Bildschirm ändert sich nichts, nur wohin eine
 Geste schiebt.
 

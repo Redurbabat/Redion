@@ -65398,6 +65398,22 @@ nachgefahren: `test105`, `test109`, `test537`, `test549`, `test550`,
 `test573` (31/31), `test574` (60/60), `test575` (45/45) und `test388`
 (Start 1890 KB gzip über 254 Dateien, Decke 1950).
 
+*Nach der Durchsicht, acht Zusagen.* Die sechs konnten die gebaute Regel
+weder von der verworfenen Alternative („den grösseren Anteil quer legen")
+unterscheiden noch von einer, die den Anteil längs fallen lässt: alle drei
+schieben ein gewöhnliches Umschalt+Rad und den macOS-Wisch gleich. Darum
+hält §14 jetzt auch das Versprechen aus „Was es kostet": ein erzeugter
+schräger Wisch mit Umschalt (`deltaX` 30, `deltaY` 100) schiebt die
+Fläche um genau −30, −100. Die Vorbedingung heisst „eine leere Stelle auf
+der Fläche" — `leer` sucht irgendwo auf der Fläche, nicht „neben der
+Tabelle" —, und das Lesen des `transform` der Sicht ist eine eigene
+Vorbedingung, die zeigt, was dasteht. 74 von 74. Gegenproben, je rot und
+zurückgenommen: die verworfene Regel — „quer -100, längs -30"; längs
+fallen lassen (`shiftKey ? { dx: deltaX || deltaY, dy: 0 }`) — „quer -30,
+längs 0", beide 73 von 74 an genau der neuen Zeile; der `transform` als
+gleichwertiges `matrix(…)` — die Lese-Vorbedingung rot mit „matrix(1, 0,
+0, 1, 128, -10)", die leere Stelle grün.
+
 **Touch Kit und Fremdcode.** Kein Muster aus dem Touch Kit, kein fremder
 Code; `FREMDCODE.md` braucht keinen Eintrag (§57).
 

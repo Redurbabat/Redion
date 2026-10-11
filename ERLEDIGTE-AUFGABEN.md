@@ -32,6 +32,21 @@ gzip, Decke 1950); Zahlen in `messungen.md` §92 („Nach E741"), auch aus
 `redion-einzeldatei.html` allein im Ordner. Kein Bild: es ändert sich
 nichts auf dem Bildschirm, nur wohin eine Geste schiebt (§55.3).
 
+**Nach der Durchsicht** (selber Zweig): §14 konnte die gebaute Regel nicht
+von der verworfenen unterscheiden („mit Umschalt den grösseren Anteil quer
+legen") und auch nicht von einer, die den Anteil längs fallen lässt — alle
+drei schieben ein gewöhnliches Umschalt+Rad und den macOS-Wisch gleich.
+Jetzt acht Zusagen: ein erzeugter schräger Wisch mit Umschalt (`deltaX`
+30, `deltaY` 100) muss die Fläche um genau −30, −100 schieben, wie E741
+verspricht; und die Vorbedingung heisst ehrlich „eine leere Stelle auf der
+Fläche" (`leer` prüft kein „neben der Tabelle"), das Lesen des `transform`
+steht als eigene Vorbedingung daneben. 74 von 74; drei Gegenproben rot
+gesehen und zurückgenommen (Bytes per sha256 gleich): die verworfene Regel
+„quer -100, längs -30", längs fallen lassen „quer -30, längs 0", beide
+73 von 74 an genau der neuen Zeile; der `transform` als gleichwertiges
+`matrix(…)` macht die Lese-Vorbedingung rot mit dem Wortlaut, während die
+leere Stelle grün bleibt.
+
 ## 11. Oktober 2026 · Zusammenführen der dritten Welle auf `claude/morgen-besser-3`
 
 **Redur:** Auftragsdatei vom 5. Oktober, Schritt 2: die dreizehn Punkte aus
