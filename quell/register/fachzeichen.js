@@ -205,8 +205,8 @@ Register.fachzeichen = (() => {
                 'M12,44 a18,18 0 0,1 36,0'],
             beschriftung: [{ x: 30, y: 30, t: 'I∆n' }],
             anschluesse: [{ nr: '1', x: 10, y: 0 }, { nr: '3', x: 30, y: 0 }, { nr: 'N', x: 50, y: 0 },
-                { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N', x: 50, y: 70 }],
-            erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab.'
+                { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N2', x: 50, y: 70 }],
+            erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab. Oben N, unten N2 — auf dem Gerät steht beide Male N.'
         },
         {
             id: 'motorschutzschalter', name: 'Motorschutzschalter', gruppe: 'schutz', kennbuchstabe: 'Q',
@@ -245,7 +245,25 @@ Register.fachzeichen = (() => {
             pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 10), senkrecht(50, 0, 16)],
             beschriftung: [{ x: 30, y: 32, t: 'M', gross: true }, { x: 30, y: 48, t: '3 ~' }],
             anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 30, y: 0 }, { nr: 'W1', x: 50, y: 0 }],
-            erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig.'
+            erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig. Mit drei Anschlüssen gezeichnet heisst: die Brücken sitzen schon.'
+        },
+        {
+            id: 'motor-klemmenbrett', name: 'Klemmenbrett Motor', gruppe: 'motoren', kennbuchstabe: 'M',
+            w: 140, h: 90,
+            pfad: ['M10,20 H130 V70 H10 Z',
+                senkrecht(10, 0, 20), senkrecht(50, 0, 20), senkrecht(90, 0, 20),
+                senkrecht(50, 70, 90), senkrecht(90, 70, 90), senkrecht(130, 70, 90),
+                senkrecht(10, 70, 90)],
+            kreise: [{ cx: 10, cy: 20, r: 3 }, { cx: 50, cy: 20, r: 3 }, { cx: 90, cy: 20, r: 3 },
+                { cx: 50, cy: 70, r: 3 }, { cx: 90, cy: 70, r: 3 }, { cx: 130, cy: 70, r: 3 },
+                { cx: 10, cy: 70, r: 3 }],
+            beschriftung: [{ x: 10, y: 34, t: 'U1' }, { x: 50, y: 34, t: 'V1' }, { x: 90, y: 34, t: 'W1' },
+                { x: 50, y: 62, t: 'W2' }, { x: 90, y: 62, t: 'U2' }, { x: 130, y: 62, t: 'V2' },
+                { x: 14, y: 62, t: 'PE' }],
+            anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 50, y: 0 }, { nr: 'W1', x: 90, y: 0 },
+                { nr: 'W2', x: 50, y: 90 }, { nr: 'U2', x: 90, y: 90 }, { nr: 'V2', x: 130, y: 90 },
+                { nr: 'PE', x: 10, y: 90 }],
+            erklaerung: 'Die sechs Wicklungsenden des Drehstrommotors und der Erdungsbolzen. Die Brücken machen daraus Stern (230 V am Strang) oder Dreieck (400 V am Strang).'
         },
         {
             id: 'motor-wechselstrom', name: 'Wechselstrommotor', gruppe: 'motoren', kennbuchstabe: 'M',
@@ -396,6 +414,23 @@ Register.fachzeichen = (() => {
                 'M16,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0'],
             anschluesse: [{ nr: 'L', x: 30, y: 0 }, { nr: 'N', x: 30, y: 60 }],
             erklaerung: 'Liefert eine Spannung, die ihre Richtung regelmässig wechselt.'
+        },
+        {
+            id: 'drehstromquelle', name: 'Drehstromquelle 3 × 400/230 V', gruppe: 'quellen', kennbuchstabe: 'G',
+            w: 160, h: 80,
+            kreise: [{ cx: 70, cy: 30, r: 24 }],
+            pfad: ['M56,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0',
+                senkrecht(10, 54, 80), senkrecht(40, 54, 80), senkrecht(70, 54, 80),
+                senkrecht(100, 54, 80), senkrecht(130, 54, 80),
+                waagrecht(54, 10, 130)],
+            beschriftung: [{ x: 70, y: 16, t: '3 ~' },
+                { x: 20, y: 72, t: 'L1' }, { x: 50, y: 72, t: 'L2' },
+                { x: 80, y: 72, t: 'L3' }, { x: 110, y: 72, t: 'N' },
+                { x: 140, y: 72, t: 'PE' }],
+            anschluesse: [{ nr: 'L1', x: 10, y: 80 }, { nr: 'L2', x: 40, y: 80 },
+                { nr: 'L3', x: 70, y: 80 }, { nr: 'N', x: 100, y: 80 },
+                { nr: 'PE', x: 130, y: 80 }],
+            erklaerung: 'Drei Aussenleiter, je 230 V gegen den Neutralleiter und um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V.'
         },
         {
             id: 'erde', name: 'Erde', gruppe: 'quellen', kennbuchstabe: 'E',
@@ -622,23 +657,26 @@ Register.fachzeichen = (() => {
         {
             id: 'steckdose', name: 'Steckdose', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 60, h: 40,
-            pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
-            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
+            pfad: [senkrecht(20, 0, 12), senkrecht(40, 0, 12),
+                'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }, { nr: 'N', x: 40, y: 0 }],
             erklaerung: 'Anschlussstelle für Geräte. Im Installationsplan der Halbkreis.'
         },
         {
             id: 'steckdose-schuko', name: 'Steckdose mit Schutzkontakt', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 60, h: 40,
-            pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
-                senkrecht(30, 12, 20)],
-            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
-            erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt.'
+            pfad: [senkrecht(10, 0, 12), senkrecht(30, 0, 12), senkrecht(50, 0, 12),
+                'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
+                waagrecht(20, 24, 36)],
+            anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 },
+                { nr: 'PE', x: 50, y: 0 }],
+            erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt. Schutzklasse-I-Geräte brauchen ihn.'
         },
         {
             id: 'stecker', name: 'Stecker', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 40, h: 50,
-            pfad: [senkrecht(20, 0, 16), 'M20,16 L34,32 L6,32 Z'],
-            anschluesse: [{ nr: '1', x: 20, y: 0 }],
+            pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 16), 'M20,16 L34,32 L6,32 Z'],
+            anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 }],
             erklaerung: 'Das Gegenstück zur Steckdose.'
         },
         {
@@ -691,6 +729,22 @@ Register.fachzeichen = (() => {
             beschriftung: [{ x: 30, y: 12, t: 'L1' }],
             anschluesse: [{ nr: 'L1', x: 0, y: 20 }, { nr: 'L1', x: 60, y: 20 }],
             erklaerung: 'Erster Aussenleiter des Drehstromnetzes.'
+        },
+        {
+            id: 'leiter-l2', name: 'Aussenleiter L2', gruppe: 'leitungen', kennbuchstabe: 'L2',
+            w: 60, h: 30,
+            pfad: [waagrecht(20, 0, 60)],
+            beschriftung: [{ x: 30, y: 12, t: 'L2' }],
+            anschluesse: [{ nr: 'L2', x: 0, y: 20 }, { nr: 'L2', x: 60, y: 20 }],
+            erklaerung: 'Zweiter Aussenleiter, um 120° gegen L1 versetzt.'
+        },
+        {
+            id: 'leiter-l3', name: 'Aussenleiter L3', gruppe: 'leitungen', kennbuchstabe: 'L3',
+            w: 60, h: 30,
+            pfad: [waagrecht(20, 0, 60)],
+            beschriftung: [{ x: 30, y: 12, t: 'L3' }],
+            anschluesse: [{ nr: 'L3', x: 0, y: 20 }, { nr: 'L3', x: 60, y: 20 }],
+            erklaerung: 'Dritter Aussenleiter, um weitere 120° versetzt.'
         },
         {
             id: 'leiter-n', name: 'Neutralleiter N', gruppe: 'leitungen', kennbuchstabe: 'N',

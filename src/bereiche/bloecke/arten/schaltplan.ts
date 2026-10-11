@@ -452,7 +452,15 @@ const Schaltplan = (() => {
     netzStrom: number[];
     leitungNetz: Record<string, number>;
     werte: Record<string, { U: number; I: number; P: number;
-                            fliesst: boolean; helligkeit?: number }>;
+                            fliesst: boolean; helligkeit?: number;
+                            richtung?: 'vor' | 'rueck' | 'keine' | 'wechselnd';
+                            richtungstext?: string;
+                            vonKlemme?: string; nachKlemme?: string }>;
+    /** Die einzelnen Glieder mehrteiliger Bauteile. Ohne sie steht an einem
+        Klemmenbrett keine Zahl: `werte` hält dort den Eintrag mit dem
+        grössten STROM, und das ist oft eine Brücke mit ihrem Milliohm. */
+    teilwerte?: Record<string, Record<string, { U: number; I: number; P: number;
+                                                fliesst: boolean }>>;
     maxStrom: number;
   };
 
@@ -642,16 +650,128 @@ const Schaltplan = (() => {
       let anzeige = '';
       if (w && opt.messwerte !== false && opt.strom) {
         const art = vh ? vh.art : '';
+        /* MEHRTEILIGE BAUTEILE BRAUCHEN EINEN ANDEREN GRIFF.
+           -----------------------------------------------------------------
+           An einem Klemmenbrett, einer Drehstromquelle und einem Übertrager
+           stand bisher GAR KEINE Zahl — die Liste unten kannte ihre Art
+           nicht. Das war der Fehler, und er fiel auf einem Bild auf.
+
+           WELCHES GLIED ABER? `werte` hält je Bauteil den Eintrag mit dem
+           grössten STROM, und am Klemmenbrett in Stern ist das nachgemessen:
+
+               U1–U2   230 V    3.833312 A   881.642 W
+               V1–V2   230 V    3.833312 A   881.657 W
+               W1–W2   230 V    3.833312 A   881.642 W
+               U2–V2   0.0038 V 3.833312 A     0.015 W   (Brücke)
+               V2–W2   0.0038 V 3.833312 A     0.015 W   (Brücke)
+
+           Alle fünf führen DENSELBEN Strom — der Unterschied steht in der
+           siebten Stelle. Welches Glied „den grössten Strom" hat, entscheidet
+           damit das Rundungsrauschen, und beim nächsten Plan kann es die
+           Brücke sein. Die zeigt dann 0,004 V und behauptet, am Motor liege
+           nichts an.
+
+           Nach der LEISTUNG liegen dieselben fünf fünf Grössenordnungen
+           auseinander: 881 W gegen 0,015 W. Das ist kein knapperes Rennen,
+           sondern gar keines. Deshalb wird danach ausgewählt — nicht weil
+           der Strom die falsche Zahl wäre, sondern weil er hier nicht
+           unterscheidet.
+
+           Dazu die Summe über alle Glieder, denn nach der Gesamtleistung des
+           Motors wird in jeder Aufgabe gefragt.
+
+           BEIM ÜBERTRAGER WIRD NICHT SUMMIERT. Dort sind die beiden Seiten
+           nicht zwei Verbraucher, sondern derselbe Leistungsfluss einmal
+           hinein und einmal hinaus. Summiert stand am Klingeltrafo „12 W",
+           während die Klingel daneben 6 W zeigte — auch das vom Bild. */
+        const glieder = opt.strom.teilwerte?.[t.id];
+        let stark = w;
+        let summeP = 0;
+        if (glieder) {
+          Object.keys(glieder).forEach(k => {
+            const g = glieder[k]!;
+            summeP += g.P;
+            if (g.P > stark.P) stark = g as typeof w;
+          });
+        }
+        /* Der Übertrager zeigt die durchgehende Leistung, nicht die Summe
+           seiner zwei Seiten. */
+        if (art === 'uebertrager') summeP = Math.max(w.P, stark.P);
         const zeilen = art === 'volt' ? [zeigeZahl(Math.abs(w.U), 'V')]
           : art === 'ampere' ? [zeigeZahl(Math.abs(w.I), 'A')]
           : art === 'quelle' ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A')]
           : (art === 'widerstand' || art === 'spule')
             ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A'),
                zeigeZahl(w.P, 'W')]
+          : (art === 'mehrteilig' || art === 'uebertrager')
+            ? [zeigeZahl(Math.abs(stark.U), 'V'), zeigeZahl(Math.abs(stark.I), 'A'),
+               zeigeZahl(summeP, 'W')]
           : [];
         anzeige = zeilen.map((s, i) =>
           `<text class="sp-messwert" x="${mass.w / 2}" y="${mass.h + 14 + i * 12}" ` +
           `text-anchor="middle" font-size="10" stroke="none">${esc(s)}</text>`).join('');
+      }
+
+      /* Die Stromrichtung (Punkt 31).
+         -----------------------------------------------------------------
+         Der Pfeil sitzt am BAUTEIL und nicht an der Leitung, und das ist
+         keine Bequemlichkeit: gerechnet wird der Strom durch einen ZWEIG.
+         Ein Netz kann aus fünf Leitungen bestehen, durch die ganz
+         verschieden viel fliesst; ein Pfeil auf einer davon wäre geraten.
+         Am Bauteil ist er gemessen.
+
+         GLEICHSTROM BEKOMMT EINEN PFEIL, WECHSELSTROM ZWEI. Das ist der
+         ganze Unterschied, und er steckt in der FORM, nicht in der Farbe —
+         §38 [hart]. Ein einzelner Pfeil an 230 V wäre eine Behauptung, die
+         nicht stimmt: dort kehrt der Strom hundertmal je Sekunde um (50 volle
+         Perioden, zwei Nulldurchgänge je Periode). Der
+         Doppelpfeil sagt genau das, und der Text darunter sagt es in
+         Worten, für den, der ihn antippt.
+
+         Der Pfeil steht NEBEN dem Bauteil. Wie weit, rechnet sich aus der
+         GRÖSSE des Symbols und steht nicht fest: mit festen 14 Einheiten lag
+         er beim ersten Bild mitten in der Lampe, weil deren Kreis 60 breit
+         ist. Gefunden auf dem Bild, nicht im Prüflauf — ein Pfeil war ja da.
+         Und er weicht nach der Seite aus, auf der die Messwerte NICHT
+         stehen; die hängen unter dem Symbol. */
+      let pfeil = '';
+      if (w && w.fliesst && w.richtung && w.richtung !== 'keine'
+          && w.vonKlemme && w.nachKlemme) {
+        const kl = anschluesseVon(t);
+        const va = kl.find(k => k.nr === w.vonKlemme);
+        const nb = kl.find(k => k.nr === w.nachKlemme);
+        if (va && nb) {
+          const ax = va.x - t.x, ay = va.y - t.y;
+          const bx = nb.x - t.x, by = nb.y - t.y;
+          const rueck = w.richtung === 'rueck';
+          const dx = rueck ? ax - bx : bx - ax;
+          const dy = rueck ? ay - by : by - ay;
+          const laenge = Math.hypot(dx, dy);
+          /* Liegen beide Klemmen aufeinander, gibt es keine Achse und damit
+             keine Richtung zu zeigen. Lieber nichts als einen Pfeil, der
+             irgendwohin zeigt. */
+          if (laenge > 1) {
+            const ux = dx / laenge, uy = dy / laenge;
+            /* So weit hinaus, dass das Symbol frei bleibt — quer zur
+               Stromachse gemessen, plus ein Finger Luft. */
+            const weg = Math.abs(uy) * mass.w / 2 + Math.abs(ux) * mass.h / 2 + 12;
+            const mx = (ax + bx) / 2 + uy * weg;
+            const my = (ay + by) / 2 - ux * weg;
+            const grad = Math.atan2(dy, dx) * 180 / Math.PI;
+            /* Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom. Die zwei
+               stehen mit Abstand auseinander und nicht Kopf an Kopf: als
+               Doppelspitze an einem Strich sahen sie am Bildschirm aus wie
+               ein dicker Pfeil, und damit wäre der Unterschied wieder weg. */
+            const d = w.richtung === 'wechselnd'
+              ? 'M-13,0 H13 M13,0 L6,-5 M13,0 L6,5 M-13,0 L-6,-5 M-13,0 L-6,5'
+              : 'M-12,0 H7 M7,0 L0,-5 M7,0 L0,5';
+            pfeil = `<g class="sp-richtung" transform="translate(${mx.toFixed(1)} ` +
+              `${my.toFixed(1)}) rotate(${grad.toFixed(1)})">` +
+              `<path d="${d}" fill="none"/>` +
+              (w.richtungstext ? `<title>${esc(w.richtungstext)}</title>` : '') +
+              `</g>`;
+          }
+        }
       }
 
       teile.push(
@@ -664,7 +784,7 @@ const Schaltplan = (() => {
            sind — ein Kontakt besteht fast nur aus Linien, und Linien trifft
            man mit dem Finger nicht. */
         `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
-        `fill="transparent" stroke="none"/>` + schein + innen + anzeige +
+        `fill="transparent" stroke="none"/>` + schein + innen + anzeige + pfeil +
         (opt.anschluesse ? anschluesseVon(t).map(a =>
           `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
           `cx="${a.x - t.x}" cy="${a.y - t.y}" r="4" fill="${farbe}" stroke="none" opacity=".5"/>`).join('') : '') +

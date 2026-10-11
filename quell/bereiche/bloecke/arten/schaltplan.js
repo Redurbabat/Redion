@@ -375,15 +375,61 @@ const Schaltplan = (() => {
             let anzeige = '';
             if (w && opt.messwerte !== false && opt.strom) {
                 const art = vh ? vh.art : '';
+                const glieder = opt.strom.teilwerte?.[t.id];
+                let stark = w;
+                let summeP = 0;
+                if (glieder) {
+                    Object.keys(glieder).forEach(k => {
+                        const g = glieder[k];
+                        summeP += g.P;
+                        if (g.P > stark.P)
+                            stark = g;
+                    });
+                }
+                if (art === 'uebertrager')
+                    summeP = Math.max(w.P, stark.P);
                 const zeilen = art === 'volt' ? [zeigeZahl(Math.abs(w.U), 'V')]
                     : art === 'ampere' ? [zeigeZahl(Math.abs(w.I), 'A')]
                         : art === 'quelle' ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A')]
                             : (art === 'widerstand' || art === 'spule')
                                 ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A'),
                                     zeigeZahl(w.P, 'W')]
-                                : [];
+                                : (art === 'mehrteilig' || art === 'uebertrager')
+                                    ? [zeigeZahl(Math.abs(stark.U), 'V'), zeigeZahl(Math.abs(stark.I), 'A'),
+                                        zeigeZahl(summeP, 'W')]
+                                    : [];
                 anzeige = zeilen.map((s, i) => `<text class="sp-messwert" x="${mass.w / 2}" y="${mass.h + 14 + i * 12}" ` +
                     `text-anchor="middle" font-size="10" stroke="none">${esc(s)}</text>`).join('');
+            }
+            let pfeil = '';
+            if (w && w.fliesst && w.richtung && w.richtung !== 'keine'
+                && w.vonKlemme && w.nachKlemme) {
+                const kl = anschluesseVon(t);
+                const va = kl.find(k => k.nr === w.vonKlemme);
+                const nb = kl.find(k => k.nr === w.nachKlemme);
+                if (va && nb) {
+                    const ax = va.x - t.x, ay = va.y - t.y;
+                    const bx = nb.x - t.x, by = nb.y - t.y;
+                    const rueck = w.richtung === 'rueck';
+                    const dx = rueck ? ax - bx : bx - ax;
+                    const dy = rueck ? ay - by : by - ay;
+                    const laenge = Math.hypot(dx, dy);
+                    if (laenge > 1) {
+                        const ux = dx / laenge, uy = dy / laenge;
+                        const weg = Math.abs(uy) * mass.w / 2 + Math.abs(ux) * mass.h / 2 + 12;
+                        const mx = (ax + bx) / 2 + uy * weg;
+                        const my = (ay + by) / 2 - ux * weg;
+                        const grad = Math.atan2(dy, dx) * 180 / Math.PI;
+                        const d = w.richtung === 'wechselnd'
+                            ? 'M-13,0 H13 M13,0 L6,-5 M13,0 L6,5 M-13,0 L-6,-5 M-13,0 L-6,5'
+                            : 'M-12,0 H7 M7,0 L0,-5 M7,0 L0,5';
+                        pfeil = `<g class="sp-richtung" transform="translate(${mx.toFixed(1)} ` +
+                            `${my.toFixed(1)}) rotate(${grad.toFixed(1)})">` +
+                            `<path d="${d}" fill="none"/>` +
+                            (w.richtungstext ? `<title>${esc(w.richtungstext)}</title>` : '') +
+                            `</g>`;
+                    }
+                }
             }
             teile.push(`<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
                 `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
@@ -391,7 +437,7 @@ const Schaltplan = (() => {
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
                 `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
                 `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
-                `fill="transparent" stroke="none"/>` + schein + innen + anzeige +
+                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + pfeil +
                 (opt.anschluesse ? anschluesseVon(t).map(a => `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
                     `cx="${a.x - t.x}" cy="${a.y - t.y}" r="4" fill="${farbe}" stroke="none" opacity=".5"/>`).join('') : '') +
                 (opt.nummern ? anschluesseVon(t).map(a => `<text x="${a.x - t.x + 6}" y="${a.y - t.y - 4}" font-size="9" fill="${farbe}" ` +

@@ -231,7 +231,7 @@ const Planflaeche = (() => {
             if (e && e.ok)
                 opt.strom = {
                     netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
-                    werte: e.werte, maxStrom: e.maxStrom
+                    werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
                 };
             buehne.innerHTML = Schaltplan.alsSvg(z.plan, opt);
             buehne.classList.toggle('sp-laeuft', z.simulation);

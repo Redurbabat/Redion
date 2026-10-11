@@ -43,11 +43,178 @@ const Electrical = (() => {
         ],
         quarantine: []
     };
-    const pageForLearning = () => {
+    const THREE_PHASE_PACKAGE = {
+        schema: PACKAGE_SCHEMA,
+        manifest: {
+            id: 'redion.electrical.threephase', version: '1.0.0',
+            title: 'Drehstrom und die fünf Leiter', license: 'CC0-1.0',
+            licenseStatus: 'cleared', provenanceStatus: 'verified', language: 'de-CH',
+            source: 'Redion-Lernredaktion. Eigene Formulierungen; die Zahlen sind mit ' +
+                'der Simulation dieser App nachgerechnet (test607). Normstellen sind als ' +
+                'Fundstelle genannt, nicht im Wortlaut wiedergegeben.',
+            region: 'CH', created: '2026-09-12'
+        },
+        questions: [
+            { id: 'netz-strang', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Welche Spannung liegt zwischen einem Aussenleiter und dem Neutralleiter?',
+                options: ['115 V', '230 V', '400 V', '690 V'], correct: 1,
+                explanation: '230 V. Das ist die Strangspannung — die Spannung, an der jede gewöhnliche Steckdose hängt.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Betrag der Strangspannung', license: 'CC0-1.0' } },
+            { id: 'netz-aussen', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Welche Spannung liegt zwischen zwei Aussenleitern?',
+                options: ['230 V', '325 V', '400 V', '460 V'], correct: 2,
+                explanation: '400 V. Nicht 460 V — die beiden Spannungen sind um 120° versetzt und addieren sich deshalb nicht einfach.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Betrag der Aussenleiterspannung', license: 'CC0-1.0' } },
+            { id: 'netz-winkel', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Um welchen Winkel sind die drei Strangspannungen gegeneinander versetzt?',
+                options: ['60°', '90°', '120°', '180°'], correct: 2,
+                explanation: '120°. Drei gleiche Zeiger im Kreis: 360° geteilt durch drei.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Definition des symmetrischen Dreiphasensystems', license: 'CC0-1.0' } },
+            { id: 'netz-wurzel', topic: 'Das Netz 3 × 400/230 V',
+                question: 'Warum ist die Aussenleiterspannung nicht doppelt so gross wie die Strangspannung?',
+                options: ['Weil der Neutralleiter einen Teil abführt',
+                    'Weil die beiden Spannungen um 120° versetzt sind und zeigerhaft addiert werden',
+                    'Weil der Transformator sie begrenzt',
+                    'Weil die Leitung einen Spannungsabfall verursacht'], correct: 1,
+                explanation: 'Zwei Zeiger mit 120° Versatz ergeben addiert den Faktor Wurzel 3 ≈ 1,73 — also 400 V statt 460 V.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Zeigeraddition zweier um 120° versetzter Spannungen', license: 'CC0-1.0' } },
+            { id: 'stern-strang', topic: 'Stern und Dreieck',
+                question: 'Ein Motor ist am 400-V-Netz in Stern geschaltet. Welche Spannung liegt an einem Wicklungsstrang?',
+                options: ['133 V', '230 V', '400 V', '690 V'], correct: 1,
+                explanation: '230 V. Im Stern liegt jeder Strang zwischen einem Aussenleiter und dem Sternpunkt.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Klemmenbrett in Stern', license: 'CC0-1.0' } },
+            { id: 'dreieck-strang', topic: 'Stern und Dreieck',
+                question: 'Derselbe Motor am selben Netz, aber in Dreieck gebrückt. Welche Spannung liegt jetzt am Strang?',
+                options: ['230 V', '400 V', '692 V', '133 V'], correct: 1,
+                explanation: '400 V. Im Dreieck liegt jeder Strang zwischen zwei Aussenleitern.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Klemmenbrett in Dreieck', license: 'CC0-1.0' } },
+            { id: 'stern-dreieck-leistung', topic: 'Stern und Dreieck',
+                question: 'Wie verhält sich die Leistung desselben Motors in Dreieck zu der in Stern?',
+                options: ['gleich gross', 'Wurzel 3 mal so gross', 'dreimal so gross', 'ein Drittel'], correct: 2,
+                explanation: 'Dreimal. Die Strangspannung ist Wurzel 3 mal grösser, und die Leistung geht mit dem Quadrat der Spannung — daraus wird der Faktor 3. Genau darauf beruht der Stern-Dreieck-Anlauf.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Strangleistung in beiden Schaltungen', license: 'CC0-1.0' } },
+            { id: 'klemmenbrett-stern', topic: 'Stern und Dreieck',
+                question: 'Wie werden die Brücken auf dem Klemmenbrett für Sternschaltung gesetzt?',
+                options: ['U1 mit V1 mit W1 verbinden',
+                    'U2 mit V2 mit W2 verbinden',
+                    'U1 mit U2, V1 mit V2, W1 mit W2',
+                    'Gar keine Brücken setzen'], correct: 1,
+                explanation: 'Die drei Wicklungsenden U2, V2 und W2 werden zusammengeschaltet — sie bilden den Sternpunkt. Die Anfänge U1, V1, W1 gehen an die Aussenleiter.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Aufbau des Motorenklemmenbretts', license: 'CC0-1.0' } },
+            { id: 'n-symmetrisch', topic: 'Der Neutralleiter',
+                question: 'Drei gleiche einphasige Verbraucher hängen an L1, L2 und L3. Wie viel Strom fliesst im Neutralleiter?',
+                options: ['die Summe der drei Strangströme', 'ein Strangstrom', 'Wurzel 3 mal ein Strangstrom', 'gar keiner'], correct: 3,
+                explanation: 'Gar keiner. Die drei Ströme sind um 120° versetzt und heben sich als Zeiger vollständig auf — obwohl in jedem Aussenleiter Strom fliesst.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Amperemeter im Neutralleiter', license: 'CC0-1.0' } },
+            { id: 'n-zwei-phasen', topic: 'Der Neutralleiter',
+                question: 'Zwei gleiche Verbraucher hängen an L1 und L2, keiner an L3. Wie gross ist der Strom im Neutralleiter?',
+                options: ['doppelt so gross wie ein Strangstrom', 'genauso gross wie ein Strangstrom',
+                    'halb so gross', 'null'], correct: 1,
+                explanation: 'Genauso gross wie EIN Strangstrom, nicht doppelt. Zwei um 120° versetzte Zeiger ergeben addiert wieder genau einen.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Amperemeter im Neutralleiter', license: 'CC0-1.0' } },
+            { id: 'n-unterbrochen', topic: 'Der Neutralleiter',
+                question: 'Der Neutralleiter einer Verteilung bricht. Was passiert mit den einphasigen Verbrauchern?',
+                options: ['Sie laufen unverändert weiter', 'Sie gehen alle aus und sind spannungsfrei',
+                    'Sie liegen in Reihe zwischen zwei Aussenleitern; die kleine Last bekommt Überspannung',
+                    'Der Leitungsschutzschalter löst sofort aus'], correct: 2,
+                explanation: 'Sie liegen dann paarweise in Reihe an 400 V. Die Spannung teilt sich nach dem Widerstand auf — der Verbraucher mit der kleineren Leistung bekommt deutlich mehr als seine 230 V und geht kaputt.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Spannungsteilung zweier Lasten zwischen zwei Aussenleitern', license: 'CC0-1.0' } },
+            { id: 'leiter-fuenf', topic: 'Die fünf Leiter',
+                question: 'Welche Leiter führt eine vollständige Drehstrominstallation?',
+                options: ['L1, L2, L3', 'L1, L2, L3, N', 'L1, L2, L3, PE', 'L1, L2, L3, N, PE'], correct: 3,
+                explanation: 'Drei Aussenleiter, der Neutralleiter und der Schutzleiter.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Leiter des TN-S-Systems', license: 'CC0-1.0' } },
+            { id: 'leiter-pe-strom', topic: 'Die fünf Leiter',
+                question: 'Führt der Schutzleiter im ungestörten Betrieb Strom?',
+                options: ['Ja, einen Teil des Rückstroms', 'Nein, nur im Fehlerfall',
+                    'Nur bei Drehstrom', 'Nur wenn kein Neutralleiter vorhanden ist'], correct: 1,
+                explanation: 'Nein. Der Betriebsstrom fliesst über den Neutralleiter zurück. Führt der Schutzleiter Strom, ist etwas falsch angeschlossen oder defekt.',
+                difficulty: 1, region: 'CH', norm: null,
+                source: { title: 'Aufgabe des Schutzleiters im TN-S-System', license: 'CC0-1.0' } },
+            { id: 'leiter-n-pe-verbunden', topic: 'Die fünf Leiter',
+                question: 'An welcher Stelle sind Neutralleiter und Schutzleiter miteinander verbunden?',
+                options: ['An jeder Steckdose', 'Nirgends', 'Am geerdeten Sternpunkt der Speisung',
+                    'In der Abzweigdose'], correct: 2,
+                explanation: 'Am geerdeten Sternpunkt, von dem beide ausgehen. Ab dort bleiben sie getrennt — das ist der Sinn des TN-S-Systems.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Trennstelle von N und PE im TN-S-System', license: 'CC0-1.0' } },
+            { id: 'fehler-schalter-lage', topic: 'Falsch angeschlossen',
+                question: 'In welchem Leiter muss ein Schalter sitzen?',
+                options: ['Im Neutralleiter', 'Im Aussenleiter', 'Im Schutzleiter', 'Das ist gleichgültig'], correct: 1,
+                explanation: 'Im Aussenleiter. Der Neutralleiter darf nur mitgeschaltet werden, wenn der zugehörige Aussenleiter gleichzeitig mit getrennt wird (NIN 4.6.1.2.3.2).',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Anforderung an die Lage von Schaltgeräten', license: 'CC0-1.0' } },
+            { id: 'fehler-schalter-folge', topic: 'Falsch angeschlossen',
+                question: 'Ein Schalter sitzt im Neutralleiter statt im Aussenleiter. Was ist daran gefährlich?',
+                options: ['Die Lampe wird zu hell', 'Der Schalter brennt durch',
+                    'Ausgeschaltet ist die Lampe dunkel, die Fassung liegt aber weiter am Aussenleiter',
+                    'Der Leitungsschutzschalter löst aus'], correct: 2,
+                explanation: 'Die Lampe ist dunkel und sieht spannungsfrei aus. Wer die Birne wechselt und den Sockel berührt, bekommt trotzdem einen Schlag.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Folge eines Schaltgeräts im Neutralleiter', license: 'CC0-1.0' } },
+            { id: 'fehler-n-pe', topic: 'Falsch angeschlossen',
+                question: 'Neutralleiter und Schutzleiter sind an einem Gerät vertauscht. Was merkt man beim Einschalten?',
+                options: ['Nichts — es funktioniert ganz normal', 'Das Gerät läuft nicht an',
+                    'Der Leitungsschutzschalter löst sofort aus', 'Das Gerät wird zu heiss'], correct: 0,
+                explanation: 'Nichts. Genau das macht den Fehler gefährlich: der Schutzleiter führt jetzt Betriebsstrom und ist nicht mehr spannungsfrei. Bricht er irgendwo, stehen alle daran hängenden Gehäuse unter Spannung.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Folge einer Vertauschung von N und PE im TN-S-System', license: 'CC0-1.0' } },
+            { id: 'fehler-pe-fehlt', topic: 'Falsch angeschlossen',
+                question: 'Ein Gerät der Schutzklasse I wird ohne Schutzleiter angeschlossen. Was passiert?',
+                options: ['Es läuft gar nicht erst an', 'Es läuft normal, bis ein Isolationsfehler auftritt',
+                    'Der Leitungsschutzschalter löst sofort aus', 'Es wird langsamer'], correct: 1,
+                explanation: 'Es läuft normal — bis eine Wicklung durchschlägt. Dann steht das Gehäuse unter Spannung, es fliesst kein Fehlerstrom, und nichts schaltet ab. Der Fehler zeigt sich, wenn ihn jemand anfasst.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Schutzmassnahme bei Geräten der Schutzklasse I', license: 'CC0-1.0' } },
+            { id: 'fehler-l-pe', topic: 'Falsch angeschlossen',
+                question: 'Ein Aussenleiter ist versehentlich auf den Schutzleiter verdrahtet. Was ist die Folge?',
+                options: ['Der Schutzleiter wird nur warm', 'Nichts, solange kein Gerät angeschlossen ist',
+                    'Jedes daran hängende Gehäuse steht unter Spannung',
+                    'Die Spannung halbiert sich'], correct: 2,
+                explanation: 'Der Schutzleiter führt volle Spannung, und mit ihm jedes Gehäuse, das daran hängt. Ein Fehlerstromschutzschalter löst sofort aus — ist keiner da, merkt man es beim Anfassen.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Folge eines Aussenleiters am Schutzleiter', license: 'CC0-1.0' } },
+            { id: 'fehler-l-l', topic: 'Falsch angeschlossen',
+                question: 'Zwei Aussenleiter landen auf derselben Klemme eines Verbrauchers. Welche Spannung steht zwischen ihnen?',
+                options: ['0 V', '230 V', '400 V', '460 V'], correct: 2,
+                explanation: '400 V — der Kurzschlussstrom ist entsprechend grösser als bei L gegen N. Am Verbraucher selbst liegt dagegen nichts an: zwischen zwei Punkten desselben Netzes ist die Differenz null.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Nachgerechnet mit Stromfluss: Aussenleiterspannung', license: 'CC0-1.0' } },
+            { id: 'richtung-wechsel', topic: 'Die Stromrichtung',
+                question: 'Wie oft kehrt der Strom bei 50 Hz je Sekunde seine Richtung um?',
+                options: ['25-mal', '50-mal', '100-mal', 'Er kehrt nie um'], correct: 2,
+                explanation: 'Hundertmal. 50 Hz sind 50 volle Perioden je Sekunde, und in jeder Periode geht der Strom zweimal durch null — einmal beim Wechsel ins Negative, einmal zurück.',
+                difficulty: 2, region: 'CH', norm: null,
+                source: { title: 'Zwei Nulldurchgänge je Periode bei 50 Hz', license: 'CC0-1.0' } },
+            { id: 'richtung-pfeil', topic: 'Die Stromrichtung',
+                question: 'Was bedeutet ein Richtungspfeil an einem Bauteil in einem Wechselstromkreis?',
+                options: ['Die tatsächliche, gleichbleibende Flussrichtung',
+                    'Die Zählrichtung — eine Festlegung, gegen die gerechnet wird',
+                    'Die Richtung des Schutzleiterstroms',
+                    'Die Drehrichtung des Motors'], correct: 1,
+                explanation: 'Die Zählrichtung. Bei Wechselstrom gibt es keine feste Flussrichtung; der Pfeil sagt nur, welche Richtung als positiv gezählt wird.',
+                difficulty: 3, region: 'CH', norm: null,
+                source: { title: 'Bedeutung der Zählrichtung bei Wechselgrössen', license: 'CC0-1.0' } }
+        ],
+        quarantine: []
+    };
+    const pageForLearning = (paketId = BASIC_PACKAGE.manifest.id, titel = 'Elektrotechnik – Grundlagenkarten', symbol = '⚡') => {
         const blocks = Object.values(Store.cache.blocks);
         const roots = blocks.filter(block => block?.alive !== false && block.type === 'page' && block.schoolRoot);
         const existing = blocks.filter(block => block?.alive !== false && block.type === 'page' &&
-            block.learningPackagePage === BASIC_PACKAGE.manifest.id);
+            block.learningPackagePage === paketId);
         const page = existing.find(block => permitted('bearbeiten', block.id));
         if (page)
             return page;
@@ -59,8 +226,7 @@ const Electrical = (() => {
         if (!root && !permitted('bearbeiten'))
             throw new Error('Du darfst keine Lernpaket-Seite anlegen.');
         return Store.addPage(root?.id || null, {
-            text: 'Elektrotechnik – Grundlagenkarten', icon: '⚡',
-            learningPackagePage: BASIC_PACKAGE.manifest.id
+            text: titel, icon: symbol, learningPackagePage: paketId
         });
     };
     const validate = (raw) => {
@@ -173,9 +339,11 @@ const Electrical = (() => {
                 ...(inventory ? { sourceInventory: inventory } : {})
             }, questions, quarantine };
     };
-    const installPackage = (raw) => {
+    const installPackage = (raw, ziel) => {
         const pack = validate(raw);
-        const page = pageForLearning();
+        const page = ziel
+            ? pageForLearning(ziel.paketId, ziel.titel, ziel.symbol)
+            : pageForLearning();
         if (!permitted('bearbeiten', page.id))
             throw new Error('Die Lernpaket-Seite ist nur lesbar.');
         const blocks = Store.childrenOf(page.id);
@@ -349,7 +517,7 @@ const Electrical = (() => {
         pKopf.textContent = 'Lernpakete';
         const pReihe = document.createElement('div');
         pReihe.className = 'electrical-actions';
-        pReihe.append(button('install', 'Grundlagenkarten installieren'), button('import', 'Lernpaket importieren'), button('export', 'Beispielpaket exportieren'), button('babat-install', 'BABAT-Paket installieren'), button('babat-export', 'BABAT-Paket exportieren'));
+        pReihe.append(button('install', 'Grundlagenkarten installieren'), button('install-drehstrom', 'Drehstromkarten installieren'), button('import', 'Lernpaket importieren'), button('export', 'Beispielpaket exportieren'), button('babat-install', 'BABAT-Paket installieren'), button('babat-export', 'BABAT-Paket exportieren'));
         pakete.append(pKopf, pReihe);
         const bauch = document.createElement('div');
         bauch.className = 'electrical-bauch';
@@ -483,6 +651,19 @@ const Electrical = (() => {
                     UI.banner(error instanceof Error ? error.message : String(error), 'fehler');
                 }
             }
+            if (action === 'install-drehstrom') {
+                try {
+                    const r = installPackage(THREE_PHASE_PACKAGE, {
+                        paketId: THREE_PHASE_PACKAGE.manifest.id,
+                        titel: 'Drehstrom und die fünf Leiter', symbol: '⚡'
+                    });
+                    UI.toast(r.added + ' Drehstromkarten installiert, ' + r.skipped + ' schon vorhanden.');
+                    overlay.remove();
+                }
+                catch (error) {
+                    UI.banner(error instanceof Error ? error.message : String(error), 'fehler');
+                }
+            }
             if (action === 'import')
                 importFile();
             if (action === 'export')
@@ -511,6 +692,7 @@ const Electrical = (() => {
         });
     };
     return { open, installPackage, validatePackage: validate, importFile,
-        loadBundledPackage: bundledPackage, BASIC_PACKAGE, BABAT_PACKAGE_FILE };
+        loadBundledPackage: bundledPackage, BASIC_PACKAGE, THREE_PHASE_PACKAGE,
+        BABAT_PACKAGE_FILE };
 })();
 window.Electrical = Electrical;

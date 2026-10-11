@@ -814,6 +814,32 @@ const Learning = (() => {
     return created;
   };
 
+  /**
+   * Eine kleine Überschrift über einer Zahlenreihe.
+   *
+   * Ohne sie standen in der Lernansicht ACHT Zahlen in zwei Reihen
+   * untereinander, und nichts sagte, dass die obere „heute" meint und die
+   * untere „insgesamt". Auf dem Bildschirmfoto war das die zweite Sache, die
+   * sofort auffiel: vier Kacheln, zwei Sätze, vier Kacheln — als hätte
+   * jemand dieselbe Reihe zweimal gesetzt.
+   */
+  const gruppenTitel = (text: string, hinweis: string): HTMLDivElement => {
+    const kopf = document.createElement('div');
+    kopf.style.margin = '18px 0 8px';
+    const h = document.createElement('strong');
+    h.textContent = text;
+    h.style.fontSize = '13px';
+    h.style.letterSpacing = '.04em';
+    h.style.textTransform = 'uppercase';
+    h.style.color = 'var(--text-dim)';
+    const s = document.createElement('span');
+    s.textContent = ' · ' + hinweis;
+    s.style.fontSize = '13px';
+    s.style.color = 'var(--text-dim)';
+    kopf.append(h, s);
+    return kopf;
+  };
+
   const statCard = (number: string, labelText: string): HTMLDivElement => {
     const card = document.createElement('div');
     card.style.padding = '14px';
@@ -1075,6 +1101,11 @@ const Learning = (() => {
         : stats.total ? 'Für heute ist alles erledigt.' :
           'Noch keine Karten. Lege eine Karte an oder markiere Text und wähle „Lücke“.';
       explanation.style.lineHeight = '1.55';
+      /* Die zwei Sätze klebten aneinander und am Knopf darunter: der graue
+         Prüfungssatz und der weisse Tagesrundensatz standen ohne Abstand
+         übereinander, und der Knopf begann unmittelbar danach. */
+      exam.style.margin = '14px 0 0';
+      explanation.style.margin = '6px 0 14px';
       const actions = document.createElement('div');
       actions.style.display = 'grid';
       actions.style.gap = '9px';
@@ -1088,7 +1119,7 @@ const Learning = (() => {
       details.style.display = 'grid';
       details.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
       details.style.gap = '10px';
-      details.style.marginTop = '16px';
+      details.style.marginTop = '0';   /* den Abstand trägt jetzt der Titel */
       details.append(
         statCard(String(stats.learned) + ' / ' + String(stats.total), 'Karten mit Lernstand'),
         statCard(String(stats.reviewedToday), 'heute gelernt'),
@@ -1160,7 +1191,13 @@ const Learning = (() => {
          (Themenfortschritt), dann wohin es GEHT (Verlauf). Die Richtung
          steht bewusst hinter dem Stand: sie beantwortet eine Frage, die
          man erst stellt, wenn man den Stand gesehen hat. */
-      view.body.append(grid, exam, explanation, actions, details,
+      /* Die zwei Zahlenreihen bekommen Namen. „Heute" ist die Arbeit, die
+         ansteht; „Insgesamt" ist der Stand über alles. Ohne die Titel standen
+         acht Zahlen untereinander, und die zweite Reihe sah aus wie eine
+         Wiederholung der ersten. */
+      view.body.append(gruppenTitel('Heute', 'was ansteht'), grid,
+                       exam, explanation, actions,
+                       gruppenTitel('Insgesamt', 'der Stand über alle Karten'), details,
                        ...(auffrisch ? [auffrisch] : []),
                        topicSection(stats.topics),
                        ...(richtung ? [richtung] : []),
