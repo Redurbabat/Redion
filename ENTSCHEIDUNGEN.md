@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-720 Entscheidungen, E1 bis E741 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+721 Entscheidungen, E1 bis E742 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -783,6 +783,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E739** — Die Vorlage „Dark (2017–2020)" ist eingebaut (Redur, 11. Oktober: „Ja" zu seinem Zweig `feat/dark-2017-fach-dossier`): `src/bereiche/wissen/dark-dossier.ts` als Cherry-Pick mit Redur als Autor, ohne die von Hand kopierte .js; typisiert (23 implizite `any`, `Paar = [string, string]`), Kopf „ERZEUGT", der Wikipedia-Verweis mit `%28/%29` (das Link-Muster des Editors endete an der ersten „)"), das Schaubild der Zeitlinie mit `&amp;` statt rohem `&` (vorher undekodierbar — gefunden von `test609` §4), `window.DarkDossier`; eingebunden in index.html nach nin-quiz.js und im GRUNDSTOCK. Sichtbar für jeden Nutzer des öffentlichen Repos; eigene Zusammenfassungen und eigene SVG, Netflix und Wikipedia nur verlinkt. Start 1890 → 1904 KB gzip (Decke 1950), Einzeldatei +43 725 Bytes; L216 hat damit drei Lerninhalte im Startweg. `test609` neu
 * **E740** — Die Linse auf „Heute“ ruht NEBEN dem Wort (Redur, 11. Oktober: „Ja“ auf die Frage aus der Liste vom 5. Oktober, „neben dem Wort ruhen?“): die Fahrt über „Aufmachen. / Weiterdenken.“ bleibt, der Halt liegt eine Fünftel-Schriftgrösse rechts vom Punkt, auf der Höhe der zweiten Zeile, in der Spalte der Überschrift; ist daneben weniger Platz, wird die Linse kleiner, unter 40 px gibt es keine (320 px) — die Zeilen kommen trotzdem verwischt herein. In Ruhe ist sie eine leere Glasscheibe. `test589` §16 neu (jeder Buchstabe gegen den Kreis der Linse), §8 „neben“ statt „auf“, §13e an den Halt über „Aufmachen.“ verlegt. Ergänzt E712; +93 B gzip.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
+* **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 
 ---
 
@@ -58672,6 +58673,12 @@ dem Zweig (37/37); vier Gegenproben je rot gesehen (§1, §5, §7, §11).
 Zahlen im Commit „E705“ und in messungen §77. Der Start wächst um rund
 7,6 KB gzip.
 
+**Ergänzt durch E742 (11. Oktober 2026).** `--b-blue` steht nicht mehr bei
+L 0,30, sondern bei 0,296 (`#123043` statt `#133144`): bei gleichem OKLCH-L
+hatte das Blau mehr WCAG-Leuchtdichte als das Gelb, und der Info-Streifen
+war die blasseste der drei Meldungen (`test319`). Die übrigen acht
+Tönungen bleiben, wie sie hier stehen.
+
 ## E706 — Das Material des Touch Kits überall, wo man wählt: die Pille zum Greifen, die Wahl, die fliegt, die Linse, die in Ruhe klar ist
 
 > **Ergänzt durch E725 (10. Oktober 2026) — das Material der Wege zieht ins
@@ -66529,3 +66536,102 @@ Code; `FREMDCODE.md` braucht keinen Eintrag (§57).
 **Nicht in diesem Bogen:** das Whiteboard im Kasten — es zoomt mit jedem
 Rad und nimmt es der Fläche (E722), daran ändert Umschalt nichts;
 `deltaMode`.
+
+## E742 — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur: „Ja", am
+11. Oktober 2026, zu einer von sechs Fragen dieses Tages — `test319`
+bleibt streng, und gerichtet wird die Farbe. Der Wortlaut der Frage steht
+nicht auf diesem Zweig; er gehört in die Chronik. · **berührt** §38
+(Kontrast im Hell- und Dunkelmodus), E326 (der Info-Streifen), E705 (die
+Tönungen in OKLCH) · **Zweig** `claude/info-streifen-kontrast`.
+
+**Der Fund.** `test319` §6 ist auf `origin/main` (1575a1835) rot, 25 von 26:
+
+```txt
+✗ Und `info` ist nicht die blasseste der drei — info 12.09, warn 12.15, fehler 12.41
+```
+
+E729 hatte ihn als „fremd rot" mitgenommen, AUFGABEN.md fragte, ob der
+Punkt bei so hohen Werten noch etwas sagt. Redur hat geantwortet: er
+bleibt.
+
+**Die Ursache.** E705 hat die neun dunklen Tönungen (`--b-*` in
+`dunkel.css`) auf dieselbe OKLCH-Helligkeit 0,30 gestellt — klar statt
+grau-oliv. OKLCH-Helligkeit ist aber nicht WCAG-Leuchtdichte: bei
+gleichem L hat dieses Blau mehr Leuchtdichte als dieses Gelb. OKLab
+schätzt die Helligkeit aus drei Zapfenkanälen mit einer Kubikwurzel, WCAG
+gewichtet Rot, Grün und Blau linear; eindeutig ineinander umrechnen lassen
+sich die beiden nur für Grau.
+Nachgerechnet: `#133144` (Blau) 0,02752, `#372d0c` (Gelb) 0,02716,
+`#462220` (Rot) 0,02550. Die hellere Fläche gibt der weissen Schrift den
+kleineren Kontrast — der Info-Streifen war um 0,06 der blasseste.
+
+**Was entschieden wurde.** `--b-blue: #133144` → `#123043`. Jeder Kanal
+eine Stufe dunkler; Ton und Buntheit bleiben (OKLCH h 239,2 → 239,3,
+C 0,0496 → 0,0497, ΔE_OK 0,004), die Helligkeit geht auf L 0,296. Die
+Leuchtdichte 0,02648 liegt jetzt zwischen Gelb und Rot.
+
+**Warum es in allen dunklen Schemata hält.** Die sechs dunklen Schemata
+ändern die Schrift (`--text`), nicht die Tönungen. Bei derselben hellen
+Schrift wächst der Kontrast, je dunkler die Fläche ist — wer dunkler als
+Gelb und heller als Rot steht, liegt zwischen warn und fehler, für jede
+helle Schrift. Gemessen im Browser (`Aussehen.setzen`, `getComputedStyle`,
+info / warn / fehler):
+
+```txt
+Schema            vorher                   nachher
+standard          12.09 / 12.15 / 12.41    12.26 / 12.15 / 12.41
+nacht             11.16 / 11.21 / 11.46    11.31 / 11.21 / 11.46
+wald              11.25 / 11.30 / 11.55    11.40 / 11.30 / 11.55
+kontrast          13.54 / 13.61 / 13.91    13.73 / 13.61 / 13.91
+rose              11.12 / 11.17 / 11.41    11.27 / 11.17 / 11.41
+touchkit-dunkel   12.45 / 12.51 / 12.78    12.62 / 12.51 / 12.78
+hell, sand, papier, touchkit-hell: 10.91 / 11.06 / 10.77, unverändert
+```
+
+Im Hellen ändert sich nichts: `hell.css` setzt ein eigenes `--b-blue`
+(#e4f4ff), und `html[data-theme="light"] .banner` schreibt `#37352f`.
+Dort ist `fehler` der knappste der drei, nicht `info`.
+
+**Was sonst auf `--b-blue` liegt** (Kalenderbalken, Auswahl in
+Kachelgittern, die Zeile der offenen Mail, `.bg-blue`-Blöcke, die
+Lernwelt): jede Schrift darauf ist heller als die Fläche, also steigt ihr
+Kontrast — `--c-blue` 6.53 → 6.62, `--accent-text` 4.71 → 4.78, `--text`
+12.09 → 12.26. Was sinkt, ist der Abstand der blauen Fläche zum dunklen
+Grund, um höchstens 0,02 (Standard 1.36 → 1.34, „Starker Kontrast" 1.55 →
+1.53); er bleibt grösser als der von `--b-red`. Auf dem Bild ist kein
+Unterschied zu sehen: dunkel weicht jedes geänderte Pixel um höchstens
+eine Stufe je Kanal ab, hell sind die Bilder Pixel für Pixel gleich.
+
+**Was die Alternative war.**
+
+- **`color-mix(…)`** für die Fläche: der gerechnete Wert kommt als
+  `color(srgb …)` statt `rgb()`, und die Messung in `test319` liest die
+  ersten drei Zahlen als Kanäle von 0 bis 255 — aus 0,07 würde 0,07 statt
+  18 (dieselbe Falle wie in E695; nicht gefahren, aus dem Code gelesen).
+- **Eine andere Schrift** auf dem Info-Streifen (`--auf-accent`,
+  `--paper`, `#fff`): in „Starker Kontrast" und im Touch Kit falsch, und
+  der Streifen trüge als einziger nicht `--text`.
+- **`warn` und `fehler` blasser machen**: die beiden anderen schlechter
+  zu machen, damit einer gewinnt, wäre unehrlich.
+- **`test319` lockern** — etwa die Zeile nur unter 4,5 : 1 gelten lassen:
+  Redur hat nein gesagt.
+- **Alle neun Tönungen neu stimmen** auf gleiche WCAG-Leuchtdichte statt
+  gleiches OKLCH-L: ein Umbau von E705, für einen Fund, den eine Stufe in
+  einem Wert erledigt.
+
+**Was es kostet.** Die Tönungen tragen nicht mehr alle genau L 0,30 —
+Blau steht bei 0,296. Wer die Palette neu stimmt, muss das wissen; deshalb
+steht es in `dunkel.css` an der E705-Zeile und am Wert selbst, und
+`bausteine.css` nennt die Zahlen von heute statt „8.30:1, gleichauf".
+Die zwei gleichen `.banner.info`-Zeilen in `bausteine.css` bleiben stehen
+— sie zu löschen gehört nicht zu Redurs Ja.
+
+**Wächter.** `test319` §6 („Und `info` ist nicht die blasseste der drei"),
+unverändert streng: vorher 25/26, nachher 26/26. Gegenprobe: nur der Wert
+zurück auf `#133144` → wieder 25/26 mit „info 12.09, warn 12.15, fehler
+12.41"; wieder eingesetzt, Datei Byte für Byte wie gebaut. Nachbarn:
+`test584` 37/37 (Schrift auf jeder Tönung ≥ 7 in allen zehn Schemata),
+`test414` 14/14, `test47` 42/42, `test332` nur mit seinen fünf bekannten
+toten Regeln. Die Messung aller zehn Schemata steht in `messungen.md` §100.

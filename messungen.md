@@ -8133,3 +8133,88 @@ dünne Linse (35 %), in Ruhe neben dem Wort   1,01 : 1      —       ← die al
 **Bytes.** `quell/schale/bedienung/linse.js` 3603 → 3676 B gzip (+73),
 `studio.css` 28451 → 28471 B gzip (+20, ein Kommentar). `test388` §5:
 1890 KB über 254 Dateien, Decke 1950.
+
+## §100 · Der Info-Streifen im Dunkeln (E742, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/info-streifen-kontrast` gegen `1575a1835`
+(origin/main). Chromium über file://, `index.html`, 1280 × 900. Für jedes
+der zehn Schemata `Aussehen.setzen({ schema, akzent: '' })`, dann je ein
+`div.banner.info`, `.warn`, `.fehler` an `body` gehängt und
+`getComputedStyle` gelesen; Kontrast nach WCAG 2 (Leuchtdichte mit 0,03928
+als Knick, gerundet auf zwei Stellen) zwischen `color` und
+`background-color` — dieselbe Rechnung wie `test319` §6. Das vorhandene
+`#banner` vorher entfernt. Skript im Kratzordner (`k319/sonde.mts`), nicht
+eingecheckt. „Nachher" ist `--b-blue: #123043` in `dunkel.css`, sonst
+nichts.
+
+**info / warn / fehler**, vorher (`--b-blue: #133144`) → nachher:
+
+```txt
+Schema            Grund   vorher                   nachher
+standard          dunkel  12.09 / 12.15 / 12.41    12.26 / 12.15 / 12.41
+hell              hell    10.91 / 11.06 / 10.77    10.91 / 11.06 / 10.77
+nacht             dunkel  11.16 / 11.21 / 11.46    11.31 / 11.21 / 11.46
+wald              dunkel  11.25 / 11.30 / 11.55    11.40 / 11.30 / 11.55
+sand              hell    10.91 / 11.06 / 10.77    10.91 / 11.06 / 10.77
+papier            hell    10.91 / 11.06 / 10.77    10.91 / 11.06 / 10.77
+kontrast          dunkel  13.54 / 13.61 / 13.91    13.73 / 13.61 / 13.91
+rose              dunkel  11.12 / 11.17 / 11.41    11.27 / 11.17 / 11.41
+touchkit-hell     hell    10.91 / 11.06 / 10.77    10.91 / 11.06 / 10.77
+touchkit-dunkel   dunkel  12.45 / 12.51 / 12.78    12.62 / 12.51 / 12.78
+```
+
+Vorher war `info` in allen sechs dunklen Schemata der blasseste, nachher
+in keinem. Gerechnete Fläche des Info-Streifens im Dunkeln:
+`rgb(19, 49, 68)` → `rgb(18, 48, 67)`; im Hellen `rgb(228, 244, 255)`
+vorher wie nachher (hell.css setzt ein eigenes `--b-blue`), die Schrift
+dort `rgb(55, 53, 47)` in allen vier hellen Schemata.
+
+**Die Farbe selbst** (OKLCH aus sRGB nach Björn Ottosson; Leuchtdichte nach
+WCAG 2; in Node gerechnet, `k319/kand.mts`, `k319/de.mts`):
+
+```txt
+                 OKLCH L   C       h       WCAG-Leuchtdichte
+#133144 (alt)    0,3000    0,0496  239,2   0,02752
+#123043 (neu)    0,2962    0,0497  239,3   0,02648
+#372d0c (gelb)   0,3006    0,0505   92,1   0,02716
+#462220 (rot)    0,3008    0,0554   24,2   0,02550
+ΔE_OK alt → neu  0,0039
+```
+
+**Was sonst auf `--b-blue` liegt**, Standard-Schema (in Node aus den
+Werten in `dunkel.css`, `k319/neben.mts`):
+
+```txt
+                                     vorher   nachher
+--c-blue #6dbcf2 auf --b-blue         6,531    6,620
+--accent-text #9b87ff auf --b-blue    4,710    4,775
+--text #f1f2f4 auf --b-blue          12,091   12,257
+--b-blue gegen --bg #121417           1,362    1,344
+--b-blue gegen --bg-card #1e2023      1,206    1,189
+--b-blue gegen nacht --bg #0f1117     1,393    1,374
+--b-blue gegen wald --bg #131a15      1,307    1,289
+--b-blue gegen rose --bg #1a1418      1,340    1,322
+--b-blue gegen #000000 (kontrast,     1,550    1,530
+  touchkit-dunkel)
+```
+
+Kein Textkontrast sinkt. Der Abstand der Fläche zum Grund sinkt um
+höchstens 0,02 und bleibt grösser als der von `--b-red` (Leuchtdichte
+0,02550 < 0,02648).
+
+**Bilder** (Rechner 1440 × 900, Telefon 390 × 844 mit `isMobile`,
+`hasTouch`, Pixeldichte 2; Seite mit `bg-blue`-, `bg-yellow`-, `bg-red`-
+Block und `UI.banner(…, 'info')`; Kratzordner, nicht im Verzeichnis):
+dunkel unterscheiden sich vorher und nachher in 84 168 von 1 296 000
+(Rechner) und 192 882 von 1 316 640 Pixeln (Telefon), jedes um höchstens
+eine Stufe je Kanal; hell 0 Pixel. Mit dem Auge kein Unterschied.
+
+**Läufe:** `test319` 25/26 → 26/26 (Gegenprobe mit `#133144`: 25/26);
+`test584` 37/37, `test414` 14/14, `test47` 42/42, `test332` 13/14 mit
+denselben fünf toten Regeln wie vorher.
+
+**Start:** 1890 → 1891 KB gzip über 254 Dateien (`test388` §5, Decke
+1950; „vorher" gemessen mit den drei Stilblättern von `1575a1835` im
+selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
+`redion-einzeldatei.html` 9 545 743 → 9 546 796 Bytes. Dienststand v1455
+→ v1456.

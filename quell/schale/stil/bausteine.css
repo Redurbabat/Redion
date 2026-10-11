@@ -411,7 +411,13 @@
    kam auf 6.65, `fehler` auf 8.31; nur `info` war zu blass, und nur im
    Dunkeln: im hellen Thema gewinnt `html[data-theme="light"] .banner`
    mit seiner höheren Stärke und setzt ohnehin `#37352f`. Mit `--text`
-   sind es 8.30:1, gleichauf mit den anderen beiden.
+   waren es damals 8.30:1, gleichauf mit den anderen beiden.
+
+   HEUTE (11. Oktober 2026, E742), mit den Tönungen aus E705: im
+   Standard-Schema info 12.26, warn 12.15, fehler 12.41 — `info` ist nicht
+   die blasseste, weil `--b-blue` in dunkel.css eine Stufe dunkler steht
+   als die übrigen Tönungen. Mit #133144 waren es 12.09 und test319 rot.
+   Alle zehn Schemata stehen in messungen.md.
 
    Die Zeile steht ZWEIMAL. Das war schon so; beide werden gepflegt,
    damit nicht die zweite die erste still überstimmt. Gelöscht wird hier

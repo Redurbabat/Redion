@@ -1692,11 +1692,15 @@ Grund:
    vierzehn Werkzeuge, die Wortzeile bei 1360 und 1600 px rechnet mit
    dreizehn) und `test533` („Sie stehen alle auf EINER Höhe — ist 2, soll
    1" und „kein Wort ist sichtbar — ist 1, soll 0", die Tafel aus E614).
-   Dazu `test319` („Und `info` ist nicht die blasseste der drei — info
+   ~~Dazu `test319` („Und `info` ist nicht die blasseste der drei — info
    12.09, warn 12.15, fehler 12.41"; auf morgen-besser-2 Ziffer für Ziffer
    gleich — alle drei Streifen liegen weit über 4,5 : 1, `info` nur um
    0,06 darunter; ob der Punkt bei so hohen Werten noch etwas sagt, ist
-   eine Frage an Redur, kein Nachzug). `test86` ist seither grün
+   eine Frage an Redur, kein Nachzug).~~ **Erledigt am 11. Oktober 2026
+   durch E742** auf `claude/info-streifen-kontrast`: Redur hat „Ja"
+   gesagt, der Punkt bleibt streng; `--b-blue` steht im Dunkeln eine Stufe
+   dunkler (`#123043`), info 12.26 gegen warn 12.15 und fehler 12.41,
+   `test319` 26/26. `test86` ist seither grün
    (e485d3c), `test98` auch (seit E710 suchte er `confirm(`, jetzt
    `Dialog.bestaetigen` vor jedem Löschen). `test436` war im
    Vereinigungslauf einmal rot (`null.click` in §2), danach zweimal 71/71
