@@ -8277,3 +8277,72 @@ Maus um 40 × 30 px gezogen): Strg+Z macht den Zug nicht rückgängig — vorher
 150,140; auf `main` genauso. `zugEnde` ruft `aendere` erst nach dem Zug,
 und `aendere` merkt den Stand, den es VOR seinem eigenen Schritt sieht —
 den schon gezogenen. Eingetragen in L253 als Punkt 8.
+
+### Nach der Durchsicht (11. Oktober 2026, abends)
+
+**Das Ziehen mit der Maus.** Sonde `zug.mts` (im Arbeitsordner der
+Sitzung, nicht im Verzeichnis): Plan W wie in `test611`, Chromium ohne
+Kopf, 1400 × 1000, F1 angeklickt, dann von seiner Mitte mit
+`mouse.down` und 60 `mouse.move` um 120 × 60 px (und um 30 × 30 px)
+gezogen. Gemessen wird jeder Aufruf von `Schaltplan.nachziehen` mit
+`performance.now()` um den Aufruf (ein Wrapper in der Seite), getrennt
+nach den Rechnungen je Bewegung und der einen beim Loslassen, dazu die
+ganze Zugzeit von `mouse.down` bis nach `mouse.up` und einem Bild (in
+Node gemessen, mit den Wegen zu Playwright). „×4" ist
+`Emulation.setCPUThrottlingRate` mit 4 über CDP. „Vorher" ist ein Abzug
+von fcb6d35fa (dem ersten Stand von E746), „main" ein Abzug von
+97d156b03 (rechnet beim Ziehen gar nicht nach, zeichnet aber jede
+Bewegung neu).
+
+```txt
+120 × 60 px, 60 Bewegungen
+                  Rechn.  Median     p90         grösste       >50 ms  Loslassen     ganzer Zug
+vorher  ×1 (3)    60      6,0 6,2 8,2  16,7 18,0 15,8  38,8 43,4 40,7  0  —             2375 2478 2470 ms
+vorher  ×4 (3)    60      25,6 29,4 23,9  61,9 80,1 75,6  144,8 217,3 126,8  8 12 7  —   7465 9061 7383 ms
+nachher ×1 (2)    30      0,6 0,7    1,2 1,2     3,1 4,4       0       16,5 35,0 ms  1600 1705 ms
+nachher ×4 (2)    30      2,8 2,5    6,4 7,0     13,2 9,2      0       98,4 131,5 ms 4628 4373 ms
+main    ×1 (2)    —                                                                  2036 1984 ms
+main    ×4 (2)    —                                                                  6115 6581 ms
+
+30 × 30 px, 60 Bewegungen
+vorher  ×1 (2)    60      3,8 4,0    8,4 8,3     36,1 19,3     0       —             2358 2111 ms
+vorher  ×4 (2)    60      8,3 11,4   39,6 44,3   89,3 125,2    5 4     —             6436 7454 ms
+nachher ×1 (2)    10      0,5 0,9    7,2 3,1     7,2 3,1       0       16,2 23,4 ms  1262 1268 ms
+nachher ×4 (2)    10      4,6 4,8    17,4 10,2   17,4 10,2     0       66,4 120,1 ms 2417 2567 ms
+main    ×1 (2)    —                                                                  2102 1888 ms
+main    ×4 (2)    —                                                                  6645 6318 ms
+```
+
+Die erste „vorher"-Zeile bei 120 × 60 stammt aus einem früheren Lauf
+derselben Sonde (vor der Trennung nach Bewegung und Loslassen — vorher
+ist jeder Aufruf eine Bewegung, die Zahl ist also dieselbe Grösse). Eine
+Rechnung je Bewegung gibt es nachher nur, wenn ein Teil über ein Raster
+wandert (30 von 60, 10 von 60). Der ganze Zug ist nachher schneller als
+auf `main`, weil eine Bewegung innerhalb desselben Rasters auch nicht neu
+zeichnet. Was bleibt: das Loslassen rechnet einmal voll, gedrosselt 66
+bis 132 ms in einem Stück.
+
+**Wo die billigen Wege nicht reichen** (Sonde `erkunde.mts`, ohne
+Bildschirm, im Modell): F1 im Plan W an jede Rasterlage von −100 … 200 ×
+−60 … 200 verschoben (ungespiegelt und gespiegelt), je einmal `schnell`
+und einmal voll nachgezogen. An 1143 Lagen ist das billige Ergebnis ein
+anderes als das volle, während das volle sauber ist; an einem Teil davon
+zapft das billige an — so bei 30 × 40 (f2 und f4 in Stufe 3, zwei
+geänderte Berührungen). Dort zieht `test611` §10.
+
+**Die eigene Klemme** (Plan Q aus `test611` §11): R1 bei (200,200), q
+senkrecht bei x = 250 von E1:X2 (250,110) nach E2:X1 (250,300). Gedreht
+liegt R1:1 bei (250,230); die Netzliste wird aus `E1:X2 E2:X1 l:q` zu
+`E1:X2 E2:X1 R1:1 l:q` — auf fcb6d35fa und auf `main` ohne Meldung,
+nachher mit „Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1
+— die Verbindungen haben sich geändert, bitte prüfen."
+
+**Plan A** (`test611` §12, R9 gedreht): nachher ändern sich genau a1–a6,
+die Netzliste bleibt. Gegen `main` verbindet a3 danach G1:L mit G1:N
+(„a3: G1:L,X3:L → G1:L,G1:N,X3:L") und a5 fasst R8:1. Mit
+ungeprüften geheilten Wegen (Gegenprobe 9 in E746) fassen a4 X4:N, a5
+R8:1 und a6 X6:N und X6:PE.
+
+**`test611`**: 110 von 110; gegen fcb6d35fa 101 von 110, gegen `main`
+61 von 110. **Start:** 1923 KB gzip über 255 Dateien (`test388` §5,
+Decke 1950; vor der Durchsicht 1922). `redion-einzeldatei.html` 9460 KB.

@@ -1945,7 +1945,15 @@ herumgeprüft hatte. Sein §7 hält die Berührungsregel der Planfläche gegen
 die der Netzliste, weil sie zweimal stehen muss (§5). Er lädt über
 `listen(0)`, damit `test400` keinen neuen Port zählt. Gezählt am
 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
-551 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+551 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Die Durchsicht
+hat ihn am selben Abend auf 110 Zusagen gebracht, und zwei seiner neuen
+Abschnitte halten etwas, das eine Netzliste allein nicht sieht: §10, dass
+das Ziehen nur billig rechnet und trotzdem das Ergebnis der VOLLEN Suche
+speichert — an einer Lage, an der die billigen Wege anzapfen würden,
+sonst bewiese die Zusage nichts —, und §11, dass die Fläche SAGT, wenn
+die eigene Klemme eines Teils auf einer fremden Leitung landet (R1:1 auf
+q), statt es zu verhindern. Gegen den ersten Stand von E746 war er rot
+mit 101 von 110.*
 
 ### Die Befehle
 

@@ -1,5 +1,49 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E746, Durchsicht · Ziehen billig, eigene Klemme gemeldet, Heilen gehalten
+
+**Die Durchsicht** von E746 fand drei Dinge. (1) Das Ziehen mit der Maus
+rechnete bei JEDER Bewegung die volle Wegsuche; nachgemessen (F1 um
+120 × 60 px in 60 Bewegungen, CPU vierfach gedrosselt, drei Läufe): je
+Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis 217,3 ms, 7 bis
+12 Bewegungen über 50 ms. (2) Eine Lageänderung konnte die Netzliste
+weiterhin still ändern — über die EIGENE Klemme des bewegten Teils: R1
+neben der Leitung E1:X2–E2:X1 gedreht, und R1:1 hing an ihr (auf `main`
+genauso). (3) Die Ausnahme „heilen" (alte Pläne, L253 Punkt 7) hielt nur
+`test608`, nicht `test611`.
+
+**Gebaut:** `Schaltplan.nachziehen` kennt `schnell` (nur alter Weg,
+nachgerückte Endstücke, die zwei Winkel). Die Planfläche rechnet beim
+Ziehen je Bewegung `schnell`, innerhalb desselben Rasters gar nicht, und
+beim Loslassen einmal voll, vom Anfassen aus, VOR `aendere` — gespeichert
+wird nur das. `Schaltplan.veraendert(plan, vorher)` vergleicht nach jeder
+Lageänderung, was jede Leitung berührt und welche Klemmen
+aufeinanderliegen, mit dem Stand von vorher; die Fläche sagt es beim
+Namen („Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1 — die
+Verbindungen haben sich geändert, bitte prüfen."), verhindert die Lage
+aber nicht.
+
+**Prüfung:** `test611` um §10–§12 erweitert, zuerst rot eingecheckt
+(745fba801): gegen fcb6d35fa 101/110, gegen `main` 61/110; jetzt 110/110.
+Sechs Gegenproben, jede rot und byte-genau zurückgenommen (keine volle
+Suche beim Loslassen 102/110 · jede Bewegung voll 109/110 · ohne
+Raster-Merker 109/110 · Meldung ohne `veraendert` 105/110 · `heilen` aus
+108/110 · geheilte Wege ungeprüft 106/110). Nachgemessen: je Bewegung
+gedrosselt im Median 2,5 bis 2,8 ms, höchstens 13,2 ms, keine über 50 ms;
+das Loslassen 66 bis 132 ms in einem Stück; der ganze Zug 4373 bis
+4628 ms (vorher 7383 bis 9061, `main` 6115 bis 6581). Nachbarn grün:
+`test604`–`test608`, `test238`–`test242`, `test254`, `test388` (Start
+1923 KB), `test74`; Datei-Wächter grün. Bilder (Rechner und Telefon,
+hell und dunkel): die Meldung nach dem Drehen von R1, und der Zug am FI —
+das Zwischenbild zeigt die billigen Wege (f2 läuft senkrecht bei x = 480
+mitten durch den FI und über N2, im Modell nachgerechnet: Stufe 3),
+losgelassen ist der Plan derselbe wie vor der Durchsicht.
+
+**Offen:** L253 Punkt 9 (die Meldung verhindert nichts; Zwischenbilder
+können über eine fremde Klemme laufen; das Loslassen kostet einmal die
+volle Suche; kein Wächter für die Zeit) und Punkt 8 (Strg+Z nach einem
+Zug), der mit der Meldung schwerer wiegt.
+
 ## 11. Oktober 2026 · E746 · Drehen und Ziehen zapfen nichts mehr an
 
 **Redur:** „4. wie du willst", am 11. Oktober abends, zur Frage, in welcher

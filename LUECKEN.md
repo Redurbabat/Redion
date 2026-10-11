@@ -8442,7 +8442,9 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    Netzliste eines Plans durch eine Handlung, die nur die Lage ändern sollte.
 
    **Erledigt am 11. Oktober 2026 durch E746** (Wächter `test611`, 79/79;
-   gegen `main` 97d156b03 rot mit 47 von 79). Das Nachziehen steht jetzt an
+   gegen `main` 97d156b03 rot mit 47 von 79; nach der Durchsicht 110/110,
+   gegen den ersten Stand von E746 rot mit 101 von 110, gegen `main` mit
+   61 von 110). Das Nachziehen steht jetzt an
    EINER Stelle im Modell, `Schaltplan.nachziehen`, und Pfeiltaste, Drehen,
    Spiegeln und Ziehen rufen nur noch sie: neu geführt wird nur, was an
    einem bewegten Teil hängt, und nur über einen Weg, der genau das berührt,
@@ -8457,7 +8459,21 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    Berührungen und **meldet es** („bitte die Verbindungen prüfen"); und eine
    fremde Leitung, deren Ende NEBEN ihrer Klemme gezeichnet ist (Punkt 7),
    rückt beim Drehen, Spiegeln und Ziehen weiterhin an die Klemme — mit
-   derselben Prüfung. Die Lücke L253 bleibt offen für die übrigen Punkte.
+   derselben Prüfung (seit der Durchsicht auch in `test611` §12 gehalten,
+   nicht nur in `test608`).
+
+   **Nach der Durchsicht** (11. Oktober abends) zwei Nachträge. Das Ziehen
+   mit der Maus rechnete die volle Wegsuche bei JEDER Bewegung — auf
+   vierfach gedrosselter CPU im Median 24 bis 29 ms, höchstens 217 ms je
+   Bewegung (messungen §103); jetzt rechnet eine Bewegung nur die billigen
+   Wege, und erst das Loslassen sucht einmal voll (gespeichert wird nur
+   das, `test611` §10). Und eine Lageänderung konnte die Netzliste
+   weiterhin still ändern, nämlich über die EIGENE Klemme des bewegten
+   Teils: R1 neben einer Leitung gedreht, und R1:1 hing an ihr, ohne
+   Meldung (auf `main` genauso). Das wird nicht verhindert, aber gesagt —
+   „Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1"
+   (`Schaltplan.veraendert`, `test611` §11). Was davon offen bleibt, steht
+   in Punkt 9. Die Lücke L253 bleibt offen für die übrigen Punkte.
 5. **Die Leitersymbole melden ihre zweite Klemme an der Stelle der ersten.**
    `leiter-l1` (und l2, l3, n, pe) haben zweimal denselben Namen;
    `anschluesseVon` sucht die Lage über den Namen und findet beide Male die
@@ -8524,7 +8540,37 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    Schritt sieht — den gezogenen. Drehen, Spiegeln und die Pfeiltaste sind
    nicht betroffen (`test611` §8). Der Weg wäre klein (das Abbild beim
    Anfassen merken und beim Loslassen übergeben); nicht gebaut, weil E746
-   nur das Nachziehen betrifft. Ein Wächter fehlt.
+   nur das Nachziehen betrifft. Ein Wächter fehlt. Seit der Durchsicht
+   wiegt der Punkt schwerer: die Fläche MELDET jetzt, wenn ein Zug eine
+   Klemme auf eine fremde Leitung gelegt hat (Punkt 4) — rückgängig machen
+   lässt sich genau dieser Zug aber nicht; es bleibt, das Teil
+   zurückzuziehen.
+9. **Was nach der Durchsicht von Punkt 4 bleibt** (gemessen am 11. Oktober,
+   `messungen.md` §103):
+   * **Die Meldung verhindert nichts.** Liegt eine Klemme nach einer
+     Lageänderung auf einer fremden Leitung, ist die Netzliste geändert, und
+     die Fläche sagt es; zurück geht es mit Strg+Z (Pfeiltaste, Drehen,
+     Spiegeln) oder — nach einem Zug mit der Maus — nur von Hand (Punkt 8).
+     Eine Sperre ist mit Absicht nicht gebaut (E746 Punkt 6); ob es eine
+     geben soll, entscheidet Redur.
+   * **Die Zwischenbilder beim Ziehen sind die billigen Wege.** Liegt an
+     einer Zwischenlage der billige Weg über einer fremden Klemme, ist das
+     bis zum Loslassen so zu sehen, und dann springt die Leitung auf den
+     sauberen Weg (Gegenprobe 4 in E746: f2 am FI, w4 über U2, V2, W2).
+     Gespeichert wird so ein Bild nie.
+   * **Das Loslassen kostet einmal die volle Suche**: 66 bis 132 ms in
+     einem Stück auf vierfach gedrosselter CPU (16 bis 35 ms ungedrosselt) —
+     ein Ruck im Augenblick des Loslassens, auf einem schwachen Telefon
+     spürbar. Ein Wegsucher über das Raster (die Alternative in E746) wäre
+     der Weg, das zu senken; nicht gebaut.
+   * **Zwei Klemmen aufeinander, ohne Leitung**, meldet die Fläche als
+     „liegt jetzt auf … (ohne Leitung nicht verbunden)" — die Netzliste
+     verbindet sie nicht, gezeichnet sehen sie verbunden aus. Ob sie es
+     sollte, ist eine fachliche Frage, keine des Nachziehens.
+   * Ein Wächter für die Zwischenbilder und für die Zeit fehlt: `test611`
+     §10 hält, DASS billig gerechnet wird und WAS gespeichert ist, nicht,
+     wie lange es dauert (eine Zeitgrenze im Lauf wäre auf jedem Rechner
+     anders).
 
 ### Fachlich offen (vom Zweig)
 
@@ -8546,7 +8592,7 @@ entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
 entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
 weiterhin den vom Rauschen bestimmten Eintrag.
 
-**Wächter:** für Punkt 4 `test611` (E746); für die übrigen Punkte oben keiner — auch nicht für Punkt 8.
+**Wächter:** für Punkt 4 `test611` (E746; seit der Durchsicht auch für das billige Ziehen, die Meldung und das Heilen); für die übrigen Punkte oben keiner — auch nicht für Punkt 8 und die Zeit in Punkt 9.
 
 ---
 
