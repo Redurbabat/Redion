@@ -454,6 +454,52 @@ const DocumentMode = (() => {
      Redion und die Suche geht von selbst auf. */
   let sprungWunsch: { seiteId: string; wort: string } | null = null;
 
+  /* ══ WO GESUCHT WIRD — EINE ERINNERUNG FÜR SUCHLEISTE UND SUCHE (E725) ═══
+     Redur, Seite 13: „wenn ich bei eine pdf oder eine dokument bin sollte
+     mir wie es jetzt ist mir zeiget wo ich suchen will". Bis hier war das
+     der Schalter 📚 der Suchleiste — zweiwertig, ein Emoji, und die Suche
+     oben (Strg P) wusste nichts davon. Jetzt sind es drei Bereiche, in der
+     Suchleiste UND in der Suche, mit EINER Erinnerung (`dokFindAlle`).
+
+     DER ALTE WERT BLEIBT LESBAR UND WIRD WEITER GESCHRIEBEN: `false` heisst
+     „Dieses Dokument", `true` „Alle Dokumente" — genau wie beim Schalter.
+     Nur „Überall" ist neu und steht als Text da. Eine ältere Fassung, die
+     zurückgespielt wird, liest dann „nicht true" = dieses Dokument: kein
+     Fehler, nur eine Vorliebe, die sie nicht kennt (§9, rückwärts denken). */
+  type FindBereich = 'dokument' | 'dokumente' | 'ueberall';
+  const findBereich = (): FindBereich => {
+    let w: unknown = false;
+    try { w = Store.getMeta('dokFindAlle'); } catch { /* ohne Ablage: dieses Dokument */ }
+    return w === true || w === 'dokumente' ? 'dokumente' : w === 'ueberall' ? 'ueberall' : 'dokument';
+  };
+  /** Die offene Suchleiste, damit eine Wahl in der Suche oben auch sie stellt. */
+  let findHaken: {
+    seiteId: string; lebt: () => boolean; bereichZeigen: (b: FindBereich) => void;
+    suchen: (wort: string, o: { springen?: boolean; fokus?: boolean }) => Promise<{ anzahl: number; seiten: number[] }>;
+  } | null = null;
+  const findBereichMerken = (b: FindBereich): void => {
+    try { Store.setMeta('dokFindAlle', b === 'dokumente' ? true : b === 'ueberall' ? 'ueberall' : false); }
+    catch { /* nur diese Sitzung */ }
+    if (findHaken && findHaken.lebt()) findHaken.bereichZeigen(b);
+  };
+  /**
+   * „Dieses Dokument" aus der Suche oben (E725): KEIN zweiter Motor — die
+   * Suchleiste mit ihren Kästen und ‹ › IST die Suche im Dokument. Ist das
+   * Dokument offen, sucht sie dort und gibt die Zahl zurück (die Suche oben
+   * zeigt sie); `springen` geht auf Treffer 1, `fokus` setzt den Fokus ins
+   * Feld. Ist es NICHT offen, nimmt der Sprung den Weg, den es seit E487
+   * gibt: `sprungWunsch`, dann `App.oeffne`.
+   */
+  const findenIn = async (seiteId: string, wort: string,
+                          o: { springen?: boolean; fokus?: boolean } = {}): Promise<{ anzahl: number; seiten: number[] } | null> => {
+    const h = findHaken;
+    if (h && h.seiteId === seiteId && h.lebt()) return h.suchen(String(wort || ''), o);
+    if (!o.springen) return null;
+    sprungWunsch = { seiteId, wort: String(wort || '') };
+    App.oeffne(seiteId);
+    return null;
+  };
+
   const documentsIn = (page: any): any[] => {
     if (!page?.id) return [];
     const found: any[] = [];
@@ -2577,18 +2623,47 @@ const DocumentMode = (() => {
     const findZahl = document.createElement('span');
     findZahl.className = 'document-find-zahl';
     findZahl.setAttribute('aria-live', 'polite');
-    /* DER SCHALTER „ALLE DOKUMENTE" (E487). Er steht VOR den Pfeilen, weil
-       die Pfeile dem offenen Dokument gehören und er die Frage stellt, auf
-       welches Dokument sich alles bezieht. Sein Zustand hält sich in `meta`:
-       wer über alles sucht, sucht meist wieder über alles. */
-    /* „📚" und nicht „🗂": das Karteikartenzeichen kam auf dem Bild als
-       blasses Kästchen heraus — es steht nicht in jeder Schrift. Der
-       Bücherstapel steht überall und meint dasselbe (die Bibliothek). */
-    const findAlleKnopf = topButton('find-alle', '📚', 'Auch in den anderen Dokumenten suchen');
-    findAlleKnopf.className = 'document-find-alle';
-    let findAlle = Store.getMeta('dokFindAlle') === true;
-    findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
-    findAlleKnopf.classList.toggle('an', findAlle);
+    /* WO GESUCHT WIRD (E487, seit E725 drei Bereiche). Die Wahl steht VOR
+       den Pfeilen, weil die Pfeile dem offenen Dokument gehören und sie die
+       Frage stellt, auf welches Dokument sich alles bezieht. Hier stand der
+       Schalter 📚 („Auch in den anderen Dokumenten suchen"), zweiwertig —
+       sein An-Zustand ist „Alle Dokumente", sein Aus „Dieses Dokument".
+       Dazu „Überall": das Wort geht in die EINE Suche oben, über App (kein
+       Griff in einen anderen Bereich, §5). Ein Umschalter des Kits
+       (`Segment`, radiogroup, Pfeiltasten, E706-Material) mit gezeichneten
+       Zeichen statt eines Emojis. Gemerkt wird wie bisher in `meta`: wer
+       über alles sucht, sucht meist wieder über alles. */
+    let findBereichJetzt: FindBereich = findBereich();
+    const findBereichWahl = Segment.bauen({
+      name: 'Wo suchen',
+      wahlen: [
+        { id: 'dokument',  name: 'Dieses Dokument', zeichen: 'page' },
+        { id: 'dokumente', name: 'Alle Dokumente',  zeichen: 'pages' },
+        { id: 'ueberall',  name: 'Überall',         zeichen: 'globe' }
+      ],
+      gewaehlt: findBereichJetzt,
+      gewechselt: (id: string) => {
+        findBereichJetzt = id === 'dokumente' ? 'dokumente' : id === 'ueberall' ? 'ueberall' : 'dokument';
+        findBereichMerken(findBereichJetzt);
+        fremdZeigen(findFeld.value);
+        if (findBereichJetzt !== 'ueberall') findFeld.focus();
+      }
+    });
+    /* Zwischen 761 und 1100 px stehen nur die Zeichen da: der Name auch als
+       Titel unter dem Zeiger (der Vorleser hat ihn ohnehin). */
+    findBereichWahl.element.querySelectorAll<HTMLElement>('[data-seg-wahl]')
+      .forEach(k => { k.title = (k.textContent || '').trim(); });
+    const findBereichHuelle = document.createElement('div');
+    findBereichHuelle.className = 'document-find-bereich';
+    findBereichHuelle.append(findBereichWahl.element);
+    /* „Überall" ist eine Wahl UND ein Weg: auch ein zweiter Tipp (oder Enter
+       auf der schon gewählten) bringt das Wort in die Suche oben. Die
+       Pfeiltasten wählen nur — eine Suche, die beim Durchblättern aufspringt,
+       wäre eine Falle. */
+    findBereichWahl.element.addEventListener('click', ereignis => {
+      const ziel = ereignis.target instanceof Element ? ereignis.target.closest('[data-seg-wahl="ueberall"]') : null;
+      if (ziel) App.suche(findFeld.value, { bereich: 'ueberall' });
+    });
     /* DIE LISTE DER FREMDEN TREFFER. Sie hängt UNTER der Suchleiste und
        nicht im Papier: ein Treffer in einem anderen Dokument hat auf
        diesem Blatt keinen Ort, und ein Kasten irgendwo wäre eine
@@ -2596,7 +2671,7 @@ const DocumentMode = (() => {
     const findListe = document.createElement('div');
     findListe.className = 'document-find-liste';
     findListe.hidden = true;
-    findbar.append(findFeld, findZahl, findAlleKnopf,
+    findbar.append(findFeld, findZahl, findBereichHuelle,
       topButton('find-previous', '‹', 'Voriger Treffer'),
       topButton('find-next', '›', 'Nächster Treffer'),
       topButton('find-close', '✕', 'Suche schließen'),
@@ -3431,7 +3506,7 @@ const DocumentMode = (() => {
        genau daran hing E112. */
     const fremdZeigen = (wort: string): void => {
       const q = String(wort || '').trim();
-      if (!findAlle || q.length < 2) {
+      if (findBereichJetzt === 'dokument' || q.length < 2) {
         findListe.hidden = true; findListe.textContent = ''; return;
       }
       const { liste, mehr } = fremdeTreffer(q, page.id);
@@ -3498,7 +3573,7 @@ const DocumentMode = (() => {
       event.preventDefault();
       zumTreffer(trefferNr + (event.shiftKey ? -1 : 1));
     });
-    const findbarSetzen = (an: boolean): void => {
+    const findbarSetzen = (an: boolean, fokus = true, selbstSuchen = true): void => {
       findbar.hidden = !an;
       findButton.setAttribute('aria-expanded', String(an));
       findButton.classList.toggle('an', an);
@@ -3510,8 +3585,8 @@ const DocumentMode = (() => {
           workspace.dataset.documentView = 'closed';
           viewButton.setAttribute('aria-expanded', 'false');
         }
-        findFeld.focus();
-        if (findFeld.value.trim()) void suchen(findFeld.value);
+        if (fokus) findFeld.focus();
+        if (selbstSuchen && findFeld.value.trim()) void suchen(findFeld.value);
       }
       else {
         suchLauf++; treffer = []; trefferNr = -1; trefferMalen(); findZahl.textContent = '';
@@ -4474,15 +4549,6 @@ const DocumentMode = (() => {
         });
         return;
       }
-      if (action === 'find-alle') {
-        findAlle = !findAlle;
-        try { Store.setMeta('dokFindAlle', findAlle); } catch { /* nur diese Sitzung */ }
-        findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
-        findAlleKnopf.classList.toggle('an', findAlle);
-        fremdZeigen(findFeld.value);
-        findFeld.focus();
-        return;
-      }
       if (action === 'find-next') { zumTreffer(trefferNr + 1); return; }
       if (action === 'find-previous') { zumTreffer(trefferNr - 1); return; }
       if (action === 'find-close') { findbarSetzen(false); findButton.focus(); return; }
@@ -4915,6 +4981,25 @@ const DocumentMode = (() => {
        Der Wunsch wird SOFORT gelöscht, nicht erst nach der Suche: sonst
        ginge die Suchleiste bei jedem weiteren Neuzeichnen dieser Seite
        wieder auf, und niemand wüsste, warum. */
+    /* Die Suchleiste DIESES Aufbaus ist der Motor für „Dieses Dokument" in
+       der Suche oben (E725, `findenIn`). */
+    findHaken = {
+      seiteId: String(page.id),
+      lebt: () => findbar.isConnected,
+      bereichZeigen: (b: FindBereich): void => {
+        findBereichJetzt = b;
+        findBereichWahl.setzen(b);
+        fremdZeigen(findFeld.value);
+      },
+      suchen: async (wort: string, o: { springen?: boolean; fokus?: boolean }) => {
+        findFeld.value = wort;
+        findbarSetzen(true, !!o.fokus, false);
+        await suchen(wort);
+        if (o.springen && treffer.length) zumTreffer(0);
+        if (o.fokus) findFeld.focus();
+        return { anzahl: treffer.length, seiten: [...new Set(treffer.map(x => x.index + 1))] };
+      }
+    };
     if (sprungWunsch && sprungWunsch.seiteId === page.id) {
       const wort = sprungWunsch.wort;
       sprungWunsch = null;
@@ -4937,6 +5022,9 @@ const DocumentMode = (() => {
               wie die Suche über mehrere Dokumente (E487), nur ohne die
               Seite auszunehmen, die gerade offen ist. */
            stellenSuchen: (wort: string) => fremdeTreffer(wort, ''),
+           /* E725: wo im Dokument gesucht wird (eine Erinnerung für Suchleiste
+              und Suche oben) — und „Dieses Dokument" über die Suchleiste. */
+           findBereich, findBereichMerken, findenIn,
            freigeben: (): void => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 

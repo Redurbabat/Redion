@@ -7583,3 +7583,69 @@ touchkit-dunkel  5,21     7,63                4,59     6,72
 zuerst 9, nachgemessen am roten Commit b82c4af8e; nach dem Bau 133/133;
 die Durchsicht: 136/144 gegen d59c5bd35, danach 144/144);
 `node pruefungen/lauf/test388.mts` für die Startlast.
+
+## §94 · Bibliothek: eine Wahl je Kategorie, eine Suche mit Bereichen (E725, 10. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/bibliothek-eine-suche` gegen `acb876c1d`
+(`claude/morgen-besser-2` mit `claude/menue-eine-quelle`). Chromium,
+Rechner 1440×900, Telefon 390×844 (`isMobile`, `hasTouch`); die Daten von
+`test600`: ein Ordner „Kabelkunde" mit „Absicherung" (das Wort
+„Leitungsschutz" NUR im Inhalt) und „Leitungen", „Notizen" (das Wort im
+Inhalt, Favorit), die PDF „Datenblatt" (vier Seiten, das Wort auf drei),
+die PDF „Skript B" (eine Seite mit dem Wort), das Whiteboard „Tafelbild";
+nichts wirklich geöffnet. „Bedienelemente über dem Raster" zählt sichtbare
+`button`, `a[href]`, `input`, `select`, `summary`, `[role=button]` in
+`.bib`, deren Unterkante über dem ersten Deckel liegt. Die Messskripte
+liegen im Notizordner, nicht im Verzeichnis.
+
+```txt
+                                          vorher (acb876c1d)                nachher (E725)
+Bedienelemente über dem Raster, 1440      20                                6 (Neu, PDF öffnen, Ort, Art,
+                                                                            Form, „Ordner & Seiten")
+Bedienelemente über dem Raster, 390       20                                6
+erster Deckel, 1440 × 900                 y 768                             y 309
+erster Deckel, 390 × 844                  y 931 (unter dem ersten Bild)     y 342
+der Ort wird angeboten                    2× (.bib-ort + Wege-Zeile)        1× (Ortspille)
+Attrappen im leeren „Zuletzt geöffnet"    2                                 0 (der Abschnitt fehlt)
+„Leitungsschutz" in der Bibliothek        Regalfeld: 0 Deckel               Suche, Bereich Bibliothek: 4
+                                                                            (Datenblatt S. 1, Skript B S. 1,
+                                                                            Absicherung, Notizen)
+… im Ordner „Kabelkunde"                  Regalfeld: 0                      „In ‚Kabelkunde‘": 1 (Absicherung);
+                                                                            „Überall": 4
+Strg P in der PDF „Datenblatt"            keine Bereichszeile               [Dieses Dokument · Alle Dokumente ·
+                                                                            Überall], Vorgabe gemerkt
+„Dieses Dokument": Suche / Suchleiste     —                                 3 / 3 Treffer, Enter → „1/3"
+Suchleiste: Wahl des Bereichs             📚 44×44, zweiwertig              Umschalter 3 × ≥ 44×44, Zeichen
+Ortsmenü                                  8 Reiter + 3 Formen               9 Orte + 6 Sammlungen
+Start (test388 §5, gzip)                  1860 KB                           1863 KB (Decke 1950)
+```
+
+Mit einem wirklich geöffneten Dokument steht „Zuletzt geöffnet" wieder da
+(eine Karte) — auch dann höchstens zehn Bedienelemente über dem Raster.
+Die Einzeldatei allein in einem Ordner über `file://`: Ortsmenü 15
+Einträge, Strg P mit [Bibliothek · Überall], keine Ausnahme.
+
+**Nach der Durchsicht** (11. Oktober 2026, gegen `ed0bf9d87`, dieselben
+Daten; eine Sonde über `file://`, `isMobile`, `hasTouch`; Breite des
+Textes gegen Breite seines Kastens, `scrollWidth`/`clientWidth`):
+
+```txt
+                                          vor der Durchsicht (ed0bf9d87)     nachher (1136e2118)
+Bereichszeile in der PDF, 390             105/101 · 94/91 · 42/40 —          105/105 · 94/94 · 42/42 — ganz,
+(Dieses Dokument · Alle Dokumente ·       „Dieses Dokum… · Alle Dokume… ·    Knöpfe 134 · 124 · 72 × 44
+Überall)                                  Übe…"
+… bei 360                                 (nicht gemessen)                   105/105 · 94/94 · 42/42, Knöpfe
+                                                                             125 · 114 · 62 × 44
+Bereichszeile in der Bibliothek, 390      60/60 · 42/42                      60/60 · 42/42 (175 · 157 × 44)
+Kopfzeile Ort · Art · Form, 390           Deckel 334 · Regal 302 ·           334 · 334 · 334, links bei 28 px
+                                          Liste 302 px                       in allen drei Formen
+„Meine Ablage" in der Ortspille, 390      Deckel 83/83 · Regal 83/82 ·       83/83 in allen drei Formen
+                                          Liste 83/82 („Meine Abla…")
+Zeichen des Formknopfs „Als Dokumente"    grid (= Ort „Alle")                pages
+Enter gleich nach „anderes" in            Suche bleibt offen, Leiste         Suche zu, Leiste „1/1", Fokus im
+„Dieses Dokument"                         „1 Treffer", Fokus nicht im Feld   Feld
+Klick auf den Grund der Suche             Fokus auf <body>                   Fokus zurück an die Artpille; im
+                                                                             Dokument an die Suchleiste
+Start (test388 §5, gzip)                  1863 KB                            1864 KB (Decke 1950) — die
+                                                                             Kommentare der zwei neuen Stilregeln
+```

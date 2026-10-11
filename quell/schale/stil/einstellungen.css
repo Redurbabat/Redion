@@ -487,6 +487,17 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--db
   border-radius:6px; outline:none; color:var(--text-dim); font-size:12.5px;
 }
 .such-filter select:hover{color:var(--text)}
+/* `hidden` muss gewinnen: in einem Dokument bedeuten die Seitenfilter nichts (E725). */
+.such-filter[hidden]{display:none}
+/* --- WO GESUCHT WIRD (E725) ----------------------------------------------------
+   Der Umschalter des Kits (`.ru-seg`, radiogroup) über den Filtern: im
+   Dokument „Dieses Dokument · Alle Dokumente · Überall", in der Bibliothek
+   „Bibliothek · Überall". Ein langer Ordnername („In ‚Kabelkunde‘") endet
+   mit „…" — der volle Name bleibt der Name des Knopfs für den Vorleser. */
+.such-bereich{display:flex; min-width:0; padding:0 16px 10px}
+.such-bereich .ru-seg{min-width:0; max-width:100%}
+.such-bereich .ru-seg-wahl{min-width:0}
+.such-bereich .ru-seg-name{min-width:0; max-width:26ch; overflow:hidden; text-overflow:ellipsis}
 .such-koerper{display:flex; min-height:280px}
 .such-koerper .res{flex:1; max-height:52vh; border-top:none; border-right:1px solid var(--line)}
 .such-vorschau{width:320px; flex:0 0 320px; padding:14px 16px; overflow-y:auto; max-height:52vh}
@@ -711,6 +722,20 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
     -webkit-overflow-scrolling:touch;
   }
   .such-filter::-webkit-scrollbar{ display:none }
+  /* Am Telefon füllt der Umschalter die Breite, jede Wahl gleich breit. */
+  .such-bereich{padding:0 16px 10px}
+  .such-bereich .ru-seg{width:100%}
+  .such-bereich .ru-seg-wahl{flex:1 1 auto; gap:4px; padding:0 6px; font-size:12.5px}
+}
+/* DIE NAMEN SIND WICHTIGER ALS DIE ZEICHEN (Fund der Durchsicht, §55.1).
+   Bei 390 px stand im Dokument „Dieses Dokum… · Alle Dokume… · Übe…" —
+   340 px Platz, 352 px gebraucht. Ein abgeschnittenes Wort ist ein anderes
+   Wort, „Übe…" keines. Unter 520 px weichen die drei Zeichen (je 15 px und
+   ein Abstand); die Namen bleiben ganz, und der gewählte Bereich sagt sich
+   weiter mit Grund, Rahmen und Gewicht (§38). Keine Kurzform: „Alle" allein
+   hiesse nicht mehr, WAS alle. */
+@media(max-width:520px){
+  .such-bereich .ru-seg-zeichen{display:none}
   .such-filter select{
     flex:0 0 auto;
     min-height:42px; padding:0 32px 0 14px;

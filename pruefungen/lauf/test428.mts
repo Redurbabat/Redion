@@ -61,7 +61,11 @@ try {
   check('Bibliothek öffnet direkt das Dokumentregal', new URL(page.url()).hash === '#dokumente');
   check('Workspace ist nicht mehr im Navigationsregister', await page.evaluate("!Register.navigation.eines('workspace')"));
   const collectionIds = ['uebersicht','bibliothek','datenbanken','whiteboards','wiki','vorlagen'];
-  check('Alle sechs Bibliothek-Sammlungen haben einen sichtbaren Zugang', JSON.stringify(await page.locator('.bib-studio-sammlungen option').evaluateAll(es => es.map(e => (e as HTMLOptionElement).value).filter(Boolean))) === JSON.stringify(collectionIds));
+  /* SEIT E725 stehen die Sammlungen als eigene Gruppe im Ortsmenü (ein
+     Wähler je Kategorie) — dort ist ihr sichtbarer Zugang. */
+  await page.locator('.bib [data-orte]').click();
+  check('Alle sechs Bibliothek-Sammlungen haben einen sichtbaren Zugang', JSON.stringify(await page.locator('.menu [data-wahl^="sammlung:"]').evaluateAll(es => es.map(e => String(e.getAttribute('data-wahl')).slice(9)))) === JSON.stringify(collectionIds));
+  await page.keyboard.press('Escape');
   const routes: Record<string,string> = { uebersicht:'seiten-wissen', bibliothek:'dateien-pdfs', datenbanken:'datenbanken', whiteboards:'whiteboards', wiki:'wissen-verweise', vorlagen:'vorlagen', aufgaben:'aufgaben', kalender:'kalender' };
   for (const [view, route] of Object.entries(routes)) {
     await page.evaluate(`Produktwelten.routeOeffnen(Produktwelten.routeAusHash('#welt-workspace-${view}'))`);
@@ -105,8 +109,8 @@ try {
     for (const [width,height] of [[1366,768],[820,1180],[390,844]]) {
       await page.setViewportSize({width:width!,height:height!});
       await page.evaluate('Bibliothek.oeffne()');
-      await page.locator('.bib-studio-optionen summary').click();
-      await page.locator('.bib-studio-sammlungen').selectOption('whiteboards');
+      await page.locator('.bib [data-orte]').click();
+      await page.locator('.menu [data-wahl="sammlung:whiteboards"]').click();
       await page.waitForURL('**#whiteboards');
       check(`${theme} ${width}: Sammlung über echte Bibliothek-Auswahl erreichbar`, await page.locator('.aw-board').count() >= 1);
       check(`${theme} ${width}: kein horizontaler Seitenüberlauf`, await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'));
@@ -116,12 +120,22 @@ try {
       }
     }
   }
-  await page.evaluate('Bibliothek.oeffne()');
-  await page.locator('.bib-studio-optionen summary').click();
-  await page.locator('.bib-studio-sammlungen').focus();
-  await page.keyboard.press('Home'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
-  await page.waitForURL('**#seiten-wissen');
-  check('Sammlungen sind mit Tastatur bedienbar', await page.locator('.aw-fenster summary').count() === 1);
+  /* Mit der Tastatur: der Ort-Wähler, Enter, bis „Seiten & Wissen", Enter.
+     Am Rechner ist es ein Menü (Pfeiltasten), am Telefon ein Blatt (Tab) —
+     bis E725 lief diese Probe nach der Schleife oben zufällig bei 390 px
+     über das `<select>`; jetzt steht beides ausdrücklich da. */
+  for (const [width,height,taste] of [[1366,900,'ArrowDown'],[390,844,'Tab']] as const) {
+    await page.setViewportSize({width,height});
+    await page.evaluate('Bibliothek.oeffne()');
+    await page.locator('.bib [data-orte]').focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    for (let n = 0; n < 25 && await page.evaluate(`document.activeElement?.getAttribute('data-wahl')`) !== 'sammlung:uebersicht'; n++)
+      await page.keyboard.press(taste);
+    await page.keyboard.press('Enter');
+    await page.waitForURL('**#seiten-wissen');
+    check(`${width}: Sammlungen sind mit Tastatur bedienbar (${taste})`, await page.locator('.aw-fenster summary').count() === 1);
+  }
   check('Keine Laufzeitfehler', errors.length === 0);
   console.log(`\n${passed}/${passed} bestanden`);
 } finally { await browser.close(); await new Promise<void>(resolve => server.close(() => resolve())); }

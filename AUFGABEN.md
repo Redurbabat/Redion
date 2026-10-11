@@ -1818,7 +1818,32 @@ Gefunden beim Bau von E721, nicht dort entschieden — je mit dem Grund:
    Gruppen jetzt Namen (`role="group"`) — wer darauf umzieht, prüft das
    Blatt am Telefon mit Überschrift über der Karte.
 
+## Nach E725 (10. Oktober 2026) — Bibliothek: eine Suche
 
+Gefunden beim Bau von E725, nicht dort entschieden — je mit dem Grund:
+
+1. **Ein Sucheingang oben in einem Dokument am Telefon** (Vorgabe f, nicht
+   in dieser Welle). Heute steht die Lupe nur in der Ansichtsklappe unter
+   👁. Mit dem Platz der Dokumentleiste abstimmen (Seiteneditor, Fläche;
+   L245 Punkt 1).
+2. **Ein Bereich für die Notizhefte** („dieses Fach") — dieselbe Frage wie
+   `Bibliothek.suchBereich()`, im Bereich der Notizhefte beantwortet
+   (L245 Punkt 4).
+3. **„Im Regal zeigen"** aus der Suche im Bereich Bibliothek (L245 Punkt
+   5) — wenn Redur es will; Vorgabe c war: Treffer mit Vorschau, kein
+   Live-Filter.
+4. **Pfeiltasten im Blatt am Telefon** (`Menue.wahl`) — gehört `menue.ts`
+   (E721); heute geht Tab (L245 Punkt 3). Dazu: die Pille sagt
+   `aria-haspopup="menu"`, wo am Telefon ein Blatt (`role=dialog`) aufgeht.
+5. **Ein Bereich „Diese Seite" auf einer gewöhnlichen Seite** über die
+   Leiste von Strg F (E667) — Redur schrieb „pdf oder eine dokument";
+   gebaut ist die Zeile für Dokumente (L245 Punkt 7).
+6. **Die Rückgängig-Pille des Studios deckt bei 1440 px die Liste „Alle
+   Dokumente" der Suchleiste zum Teil zu** — schon auf dem Grundstand so
+   (L245 Punkt 8).
+7. **`test436` §7 stabil machen** — er wackelt auch auf dem Grundstand
+   (2 von 5); ein eigener Schritt mit eigenem Eintrag, nicht in einem
+   fremden Bogen (L245 Punkt 9).
 
 ## Nach E717 — der Seiteneditor ohne Stau (6. Oktober 2026)
 

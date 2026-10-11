@@ -1362,11 +1362,51 @@ const App = (() => {
    * Die grosse Suche.
    *
    * @param vorgabe Ein Wort, mit dem sie schon gefüllt aufgeht — für den
-   *        Weg aus einer kleinen Suche heraus (E282: die Regal-Suche findet
-   *        nur Titel und führt hierher, statt Inhalte nachzubauen, E29).
-   *        Ohne Angabe geht sie leer auf, wie bisher.
+   *        Weg aus einer kleinen Suche heraus (E282; seit E725 aus der
+   *        Suchleiste eines Dokuments, „Überall"). Ohne Angabe geht sie leer
+   *        auf, wie bisher.
+   * @param opt `bereich`: in welchem Bereich sie aufgeht (E725) — sonst
+   *        entscheidet der Ort: im Dokument die gemerkte Wahl, in der
+   *        Bibliothek „Bibliothek", anderswo überall.
    */
-  const suche = (vorgabe?: string) => {
+  const suche = (vorgabe?: string, opt: { bereich?: string } = {}) => {
+    /* ══ DIE SUCHE KENNT IHREN BEREICH (E725) ══════════════════════════════
+       Redur, Seite 13: „die sucher hier sollte es bei der ganz obe such
+       integriert sein beim suche wenn ich bei eine pdf oder eine dokument
+       bin sollte mir wie es jetzt ist mir zeiget wo ich suchen will". Zwei
+       Suchwege mit getrennten Wahlen werden EINE Suche mit Bereichen:
+
+         im Dokument    Dieses Dokument · Alle Dokumente · Überall
+         Bibliothek     Bibliothek (im Ordner „In ‚Ordner‘") · Überall
+         anderswo       keine Zeile — überall, wie bisher
+
+       OHNE ZWEITEN MOTOR: Überall ist der Weg von hier unten; Bibliothek
+       derselbe Weg, nur mit dem, was das Regal zeigt (`Bibliothek.
+       suchBereich`, die Regel bleibt im Bereich, §5); Alle Dokumente die
+       Rechnung der Suchleiste über alle Dokumente (`stellenSuchen`, E487);
+       Dieses Dokument die Suchleiste selbst (`findenIn`) — sie zählt, sie
+       markiert, Enter springt auf Treffer 1. */
+    type Bereich = 'dokument' | 'dokumente' | 'bibliothek' | 'ueberall';
+    const dokMod = typeof DocumentMode !== 'undefined' ? DocumentMode : null;
+    const offenSeite = seiteId ? Store.getBlock(seiteId) : null;
+    const imDokument = !!(offenSeite && dokMod && document.body.dataset['dokument'] === 'an' &&
+                          dokMod.active(offenSeite));
+    const regal = !imDokument && typeof Bibliothek !== 'undefined' && Bibliothek.suchBereich
+      ? Bibliothek.suchBereich() : null;
+    const bereiche: Array<{ id: Bereich; name: string; zeichen: string }> = imDokument
+      ? [{ id: 'dokument', name: 'Dieses Dokument', zeichen: 'page' },
+         { id: 'dokumente', name: 'Alle Dokumente', zeichen: 'pages' },
+         { id: 'ueberall', name: 'Überall', zeichen: 'globe' }]
+      : regal
+      ? [{ id: 'bibliothek', name: regal.name, zeichen: 'library' },
+         { id: 'ueberall', name: 'Überall', zeichen: 'globe' }]
+      : [];
+    const gewuenscht = bereiche.find(b => b.id === opt.bereich);
+    let bereich: Bereich = gewuenscht ? gewuenscht.id
+      : imDokument && dokMod ? dokMod.findBereich() : regal ? 'bibliothek' : 'ueberall';
+    /* Wer vor dem Öffnen den Fokus hatte, bekommt ihn mit Escape zurück (§38). */
+    const vorher = document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+      ? document.activeElement : null;
     /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
        Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
        Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
@@ -1381,6 +1421,7 @@ const App = (() => {
         '<input id="q" placeholder="' + (eng ? 'Seiten, Zeilen und Inhalte suchen'
           : 'Suchen — z. B. titel:&quot;Projekt&quot;, tag:arbeit, geändert:heute, status:offen') +
           '" autocomplete="off">' +
+        (bereiche.length ? '<div class="such-bereich"></div>' : '') +
         '<div class="such-filter">' +
           '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
             '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -1389,7 +1430,10 @@ const App = (() => {
           '<select id="f-seit"><option value="alles">Jederzeit</option>' +
             '<option value="tag">heute geändert</option><option value="woche">diese Woche</option>' +
             '<option value="monat">dieser Monat</option></select>' +
-          '<select id="f-ort"><option value="">Überall</option>' +
+          /* „Alle Orte", nicht „Überall" (E725): „Überall" ist seither der
+             Bereich der Suche, und zwei „Überall" übereinander — eines neben
+             „In ‚Ordner‘" — lasen sich wie ein Widerspruch. */
+          '<select id="f-ort"><option value="">Alle Orte</option>' +
             Store.rootPages().map(p2 => `<option value="${p2.id}">in ${esc(p2.text || 'Ohne Titel')}</option>`).join('') +
           '</select>' +
         '</div>' +
@@ -1425,6 +1469,69 @@ const App = (() => {
     let treffer: any[] = [];
     let i = 0;
     let queryError = '';
+
+    /* Gehört eine Seite zum gewählten Bereich? Nur „Bibliothek" schränkt die
+       Seiten ein; die beiden Dokumentbereiche gehen eigene Wege (unten). */
+    const imBereich = (id: unknown): boolean =>
+      bereich !== 'bibliothek' || !regal || regal.passt(Store.getBlock(String(id || '')));
+    const platzhalterUeberall = inp.placeholder;
+    /** Was der Bereich am Fenster ändert: Platzhalter und Seitenfilter. Die
+     *  Filter (Titel/Inhalt, Art, Zeit, Ort) gelten Seiten — in einem
+     *  Dokument bedeuten sie nichts, also stehen sie dort nicht. */
+    const bereichAnwenden = (): void => {
+      const titel = offenSeite ? String(offenSeite.text || 'Ohne Titel') : '';
+      inp.placeholder = bereich === 'dokument' ? 'In „' + titel + '" suchen'
+        : bereich === 'dokumente' ? 'In allen Dokumenten suchen'
+        : bereich === 'bibliothek' && regal
+          ? (regal.name === 'Bibliothek' ? 'In der Bibliothek suchen' : regal.name + ' suchen')
+        : platzhalterUeberall;
+      const filter = o.querySelector<HTMLElement>('.such-filter');
+      if (filter) filter.hidden = bereich === 'dokument' || bereich === 'dokumente';
+    };
+    /* DIE BEREICHSZEILE: der Umschalter des Kits (`Segment`, radiogroup,
+       Pfeiltasten, E706-Material) über den Filtern. Eine Wahl sucht sofort
+       neu; im Dokument merkt sie sich wie die Suchleiste (EINE Erinnerung). */
+    const bereichPlatz = o.querySelector<HTMLElement>('.such-bereich');
+    if (bereichPlatz && bereiche.length) {
+      const griff = Segment.bauen({
+        name: 'Wo suchen',
+        wahlen: bereiche.map(b => ({ id: b.id, name: b.name, zeichen: b.zeichen })),
+        gewaehlt: bereich,
+        gewechselt: (id: string) => {
+          const neu = bereiche.find(b => b.id === id);
+          if (!neu) return;
+          bereich = neu.id;
+          if (imDokument && dokMod && bereich !== 'bibliothek') dokMod.findBereichMerken(bereich);
+          bereichAnwenden();
+          suchen();
+          inp.focus();
+        }
+      });
+      bereichPlatz.append(griff.element);
+    }
+    bereichAnwenden();
+    /* Hat „Dieses Dokument" die Suchleiste aufgemacht, geht Escape dorthin —
+       ein Druck, eine Ebene (E302): die Suche zu, die Leiste bleibt. */
+    let leisteBenutzt = false;
+    const schliessen = (): void => {
+      o.remove();
+      if (leisteBenutzt && offenSeite && dokMod) {
+        void dokMod.findenIn(String(offenSeite.id), inp.value.trim(), { fokus: true });
+        return;
+      }
+      if (vorher && vorher.isConnected) vorher.focus({ preventScroll: true });
+    };
+    /** Einen Treffer öffnen. „Dieses Dokument" öffnet die Suchleiste auf
+     *  Treffer 1, alles andere geht über `zumTreffer` wie bisher. */
+    const trefferOeffnen = (t2: any): void => {
+      if (t2 && t2.dokumentZahl !== undefined && dokMod) {
+        o.remove();
+        void dokMod.findenIn(String(t2.page.id), inp.value.trim(), { springen: true, fokus: true });
+        return;
+      }
+      zumTreffer(t2);
+      o.remove();
+    };
 
     /* ----------------------------------------------------------------------
      * „ZULETZT GESUCHT" (Vorgabe §17)
@@ -1488,20 +1595,22 @@ const App = (() => {
         return;
       }
       res.innerHTML = verlaufBlock() + treffer.map((t, k) =>
-        `<button data-i="${k}" ${k === i ? 'class="on"' : ''}>` +
+        `<button data-i="${k}" ${k === i ? 'class="on"' : ''}` +
+          (t.dokumentZahl !== undefined ? ` data-dokument-zahl="${Number(t.dokumentZahl)}"` : '') + '>' +
           `<span>${t.page.icon || '📄'}</span>` +
           `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
           (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
           /* Der Ausschnitt steht beim Inhaltstreffer — und seit E500 auch
              beim Dokumenttreffer, wo er die Stelle zeigt. */
-          (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
+          (t.snippet && (t.treffer === 'Inhalt' || t.blockId || t.dokumentZahl !== undefined)
+            ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
       verlaufBinden();
       const zeilen = [...res.querySelectorAll<HTMLElement>('button[data-i]')];
       zeilen.forEach(b => {
         b.addEventListener('click', () => {
           merkeSuche(inp.value);
-          zumTreffer(treffer[Number(b.dataset.i)]); o.remove();
+          trefferOeffnen(treffer[Number(b.dataset.i)]);
         });
         b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
       });
@@ -1583,8 +1692,12 @@ const App = (() => {
 
     const zuletzt = () => {
       queryError = '';
+      /* Im Dokument steht vor dem ersten Wort nichts ausser „Zuletzt gesucht":
+         die Seiten von Redion sind dort nicht gefragt. */
+      if (bereich === 'dokument') { treffer = []; i = 0; zeichne(); return; }
       treffer = Object.values<any>(Store.cache.blocks)
-        .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
+        .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' &&
+          (bereich !== 'dokumente' || !!b.dokumentModus) && imBereich(b.id))
         .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
         .slice(0, 8)
         .map(p => ({ page: p, treffer: 'Zuletzt', snippet: '' }));
@@ -1688,6 +1801,49 @@ const App = (() => {
       return documentCache;
     };
 
+    /* ── „DIESES DOKUMENT" (E725): die Suchleiste zählt, die Suche zeigt ── */
+    let dokLauf = 0;
+    let dokUhr: ReturnType<typeof setTimeout> | null = null;
+    const imDokumentSuchen = (roh: string): void => {
+      const wort = roh.trim();
+      queryError = '';
+      const lauf = ++dokLauf;
+      if (dokUhr) clearTimeout(dokUhr);
+      if (wort.length < 2 || !offenSeite || !dokMod) { treffer = []; i = 0; zeichne(); return; }
+      /* Kurz warten: die Suchleiste liest Seite um Seite, und bei jedem
+         Tastendruck neu anzufangen hiesse, nie fertig zu werden. */
+      dokUhr = setTimeout(() => {
+        void dokMod.findenIn(String(offenSeite.id), wort, { fokus: false }).then(e => {
+          if (lauf !== dokLauf || !o.isConnected) return;
+          leisteBenutzt = true;
+          const seiten = e ? e.seiten.slice(0, 12) : [];
+          treffer = e && e.anzahl ? [{ page: offenSeite, dokumentZahl: e.anzahl,
+            treffer: e.anzahl + ' Treffer',
+            snippet: (seiten.length === 1 ? 'Seite ' : 'Seiten ') + seiten.join(', ') +
+              (e.seiten.length > seiten.length ? ' …' : '') }] : [];
+          i = 0;
+          zeichne();
+        });
+      }, 220);
+    };
+    /* ── „ALLE DOKUMENTE" (E725): dieselbe Rechnung wie die Suchleiste ── */
+    const inDokumentenSuchen = (roh: string): void => {
+      queryError = '';
+      const wort = roh.split(/\s+/).filter(w => w && !/^[\p{L}]+:/u.test(w)).join(' ')
+        .replace(/["']/g, '').trim();
+      if (wort.length < 2 || !dokMod) { zuletzt(); return; }
+      const gefunden = dokMod.stellenSuchen(wort);
+      treffer = [];
+      for (const stelle of (gefunden?.liste || [])) {
+        const seite = Store.getBlock(stelle.seiteId);
+        if (!seite || seite.alive === false) continue;
+        treffer.push({ page: seite, treffer: 'Seite ' + stelle.nr, snippet: stelle.auszug,
+          pfad: Store.pfadText(seite.id) || '', blockId: stelle.blockId });
+      }
+      i = 0;
+      zeichne();
+    };
+
     const suchen = () => {
       const roh = inp.value;
       /* ══ „Red-ur" ÖFFNET DIE CHRONIK (E514) ═══════════════════════════════
@@ -1717,6 +1873,10 @@ const App = (() => {
         SelectionFlow.highlight(res, res.querySelector<HTMLElement>('[data-chr-tuer]'), { taste: '↵ Enter' });
         return;
       }
+      /* Die beiden Dokumentbereiche (E725) gehen ihre eigenen, schon
+         vorhandenen Wege — die Abfragesprache kennt keine Stellen. */
+      if (bereich === 'dokument') { imDokumentSuchen(roh); return; }
+      if (bereich === 'dokumente') { inDokumentenSuchen(roh); return; }
       const uiFilters = readUiFilters();
       const hasUiFilter = uiFilters.scope !== 'all' || uiFilters.documentType !== 'all' ||
         uiFilters.changed !== 'all' || !!uiFilters.location;
@@ -1745,7 +1905,7 @@ const App = (() => {
       const alsKennung = roh.trim().replace(/^.*#block=/, '');
       if (/^[0-9a-f]{8}-?[0-9a-f]{4}/i.test(alsKennung)) {
         const gefunden = Store.search(alsKennung);
-        if (gefunden.length && gefunden[0].treffer === 'Seiten-ID') {
+        if (gefunden.length && gefunden[0].treffer === 'Seiten-ID' && imBereich(gefunden[0].page?.id)) {
           queryError = '';
           treffer = gefunden;
           i = 0;
@@ -1764,7 +1924,7 @@ const App = (() => {
       }
       queryError = '';
       const query = QueryLanguage.applyUiFilters(parsed.query, uiFilters);
-      treffer = QueryLanguage.run(queryDocuments(), query).map(match => ({
+      treffer = QueryLanguage.run(queryDocuments().filter(d => imBereich(d.id)), query).map(match => ({
         page: Store.getBlock(match.document.id),
         treffer: match.reason,
         snippet: match.snippet,
@@ -1821,7 +1981,7 @@ const App = (() => {
           const schon = new Set(treffer.map(h => String(h.page?.id || '')));
           const gefunden = dok.stellenSuchen(freieWorte);
           for (const stelle of (gefunden?.liste || [])) {
-            if (schon.has(stelle.seiteId)) continue;
+            if (schon.has(stelle.seiteId) || !imBereich(stelle.seiteId)) continue;
             const seite = Store.getBlock(stelle.seiteId);
             if (!seite || seite.alive === false) continue;
             schon.add(stelle.seiteId);
@@ -1839,10 +1999,23 @@ const App = (() => {
     o.querySelectorAll('.such-filter select').forEach(s2 => s2.addEventListener('change', suchen));
 
     inp.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { o.remove(); return; }
+      if (e.key === 'Escape') { schliessen(); return; }
       if (e.key === 'ArrowDown') { e.preventDefault(); waehle(i + 1); }
       if (e.key === 'ArrowUp')   { e.preventDefault(); waehle(i - 1); }
-      if (e.key === 'Enter' && treffer[i]) { zumTreffer(treffer[i]); o.remove(); }
+      if (e.key !== 'Enter') return;
+      if (treffer[i]) { trefferOeffnen(treffer[i]); return; }
+      /* ENTER WARTET NICHT AUF DIE UHR (Fund der Durchsicht): „Dieses
+         Dokument" rechnet 220 ms nach dem letzten Zeichen. Wer schneller
+         Enter drückt, fand keinen Treffer — und Enter tat nichts. Dann geht
+         das Wort ohne Umweg an die Suchleiste, auf Treffer 1; sie zählt
+         selbst (sie ist der Motor, kein zweiter). */
+      const wort = inp.value.trim();
+      if (bereich === 'dokument' && offenSeite && dokMod && wort.length >= 2) {
+        dokLauf++;
+        if (dokUhr) clearTimeout(dokUhr);
+        o.remove();
+        void dokMod.findenIn(String(offenSeite.id), wort, { springen: true, fokus: true });
+      }
     });
 
     /* WELCHER FILTER IST GESETZT? Am Telefon sind die Filter Marken, und
@@ -1859,7 +2032,13 @@ const App = (() => {
       .forEach(s2 => s2.addEventListener('change', filterMarken));
     filterMarken();
 
-    o.addEventListener('mousedown', e => { if (e.target === o) o.remove(); });
+    /* Der Grund schliesst wie Escape (Fund der Durchsicht): derselbe Weg,
+       also bekommt das vorige Element den Fokus zurück — oder die
+       Suchleiste, die „Dieses Dokument" geöffnet hat. Vorher fiel er auf
+       <body>, und wer mit der Tastatur weitermachte, stand am Seitenanfang.
+       `preventDefault`: sonst setzt der Browser den Fokus NACH dem Horcher
+       auf den Ort des Klicks — und der ist dann schon weg. */
+    o.addEventListener('mousedown', e => { if (e.target === o) { e.preventDefault(); schliessen(); } });
     /* EINMAL ZEICHNEN, BEVOR JEMAND TIPPT. Ohne das blieb das leere
        Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
        überhaupt: man öffnet die Suche und hat noch nichts eingegeben.
@@ -1868,8 +2047,14 @@ const App = (() => {
        den leeren Zustand („Zuletzt gesucht") und erst der nächste
        Tastendruck die Treffer — man sähe eine Suche, die ihr eigenes Wort
        nicht kennt. */
-    if (vorgabe) inp.value = String(vorgabe);
-    zeichne();
+    /* MIT VORGABE WIRD GESUCHT (Fund von E725). Hier stand nur `zeichne()`,
+       und gezeichnet wurde die Liste „Zuletzt" — unter dem Wort, das man
+       mitgebracht hatte. Genau der Fall aus dem Satz darüber: eine Suche,
+       die ihr eigenes Wort nicht kennt. Gesehen hat es „Überall" aus der
+       Suchleiste eines Dokuments, der erste Weg, der ein Wort mitbringt
+       und dessen Treffer jemand ansieht. */
+    if (vorgabe) { inp.value = String(vorgabe); suchen(); }
+    else zeichne();
     inp.focus();
     /* Und den Anschlag ans Ende, nicht an den Anfang: wer aus dem Regal
        kommt, will weitertippen und nicht vor sein eigenes Wort geraten. */

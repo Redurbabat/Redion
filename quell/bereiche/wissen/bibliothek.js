@@ -81,21 +81,28 @@ const Bibliothek = (() => {
             return 'vor ' + Math.floor(d / 1440) + ' Tagen';
         return new Date(ms).toLocaleDateString('de-CH', { day: '2-digit', month: 'short', year: 'numeric' });
     };
-    const REITER = [
-        { id: 'ablage', icon: '🗂', name: 'Ablage' },
-        { id: 'kuerzlich', icon: '🕘', name: 'Kürzlich verwendet' },
-        { id: 'favoriten', icon: '☆', name: 'Favoriten' },
-        { id: 'geteilt', icon: '👥', name: 'Geteilt' },
-        { id: 'privat', icon: '🔒', name: 'Privat' },
-        { id: 'schule', icon: '🎓', name: 'Ausbildung' },
-        { id: 'datenbank', icon: '▦', name: 'In Datenbanken' },
-        { id: 'alle', icon: '▤', name: 'Alle' }
+    const ORTE = [
+        { id: 'ablage', name: 'Meine Ablage', zeichen: 'archive' },
+        { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock' },
+        { id: 'favoriten', name: 'Favoriten', zeichen: 'star' },
+        { id: 'pdf', name: 'Alle PDFs', zeichen: 'page' },
+        { id: 'geteilt', name: 'Geteilt', zeichen: 'users' },
+        { id: 'privat', name: 'Privat', zeichen: 'lock' },
+        { id: 'schule', name: 'Ausbildung', zeichen: 'book' },
+        { id: 'datenbank', name: 'In Datenbanken', zeichen: 'database' },
+        { id: 'alle', name: 'Alle', zeichen: 'grid' }
     ];
+    const ortAktiv = () => zustand.reiter === 'alle' && zustand.art === 'pdf' ? 'pdf' : zustand.reiter;
     const SPALTEN = [
         { id: 'name', icon: '📄', name: 'Seitenbezeichnung', breit: '2fr' },
         { id: 'von', icon: '👤', name: 'Erstellt von', breit: '1fr' },
         { id: 'quelle', icon: '📍', name: 'Quelle', breit: '1.2fr' },
         { id: 'wann', icon: '🕘', name: 'Zuletzt bearbeitet', breit: '1fr' }
+    ];
+    const FORMEN = [
+        { id: 'deckel', name: 'Als Dokumente', zeichen: 'pages' },
+        { id: 'regal', name: 'Nach Heften ordnen', zeichen: 'library' },
+        { id: 'liste', name: 'Als Tabelle', zeichen: 'menu' }
     ];
     const form = () => {
         const wahl = Store.getMeta('bibForm', 'deckel');
@@ -113,14 +120,14 @@ const Bibliothek = (() => {
     };
     let zustand = { reiter: 'ablage', ordner: null,
         sortier: 'wann', richtung: 'ab',
-        suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
+        spalten: SPALTEN.map(s => s.id),
         art: 'alle' };
     const zeichneSchule = (wrap) => {
         const blocks = Object.values(Store.cache.blocks);
         const root = blocks.find(block => block?.alive !== false && block.type === 'page' &&
             (block.schoolRoot === true || block.systemRole === 'school-root') && permitted('lesen', block.id));
         if (!root) {
-            wrap.innerHTML = '<div class="school-home school-empty"><div class="school-empty-icon">🎓</div>' +
+            wrap.innerHTML = '<div class="school-home school-empty">' + schulOrt() + '<div class="school-empty-icon">🎓</div>' +
                 '<h1>Ausbildungsbereich</h1><p>Lege die additive Ausbildungsvorlage an. Sie erstellt normale Seiten und Datenbanken.</p>' +
                 '<button data-school-action="install" class="prim">Ausbildung einrichten</button></div>';
             wrap.querySelector('[data-school-action="install"]')?.addEventListener('click', () => {
@@ -134,6 +141,7 @@ const Bibliothek = (() => {
                     App.oeffne(page.id);
                 }
             });
+            schulOrtBinden(wrap);
             return;
         }
         const children = Store.childrenOf(root.id)
@@ -172,7 +180,7 @@ const Bibliothek = (() => {
         exams.sort((a, b) => a.date - b.date);
         const list = (items, make, empty) => items.length ? items.map(make).join('') : '<p class="school-none">' + esc(empty) + '</p>';
         wrap.innerHTML =
-            '<div class="school-home">' +
+            '<div class="school-home">' + schulOrt() +
                 '<div class="school-hero"><div><span>🎓 Ausbildung</span><h1>' + esc(root.text || 'Ausbildung') +
                 '</h1><p>Seiten, Lernstoff und Termine an einem Ort – alles bleibt normale Redion-Struktur.</p></div>' +
                 '<div class="school-quick"><button data-school-action="capture">📷 Erfassen</button>' +
@@ -225,16 +233,30 @@ const Bibliothek = (() => {
         });
         wrap.querySelector('[data-school-action="learn"]')?.addEventListener('click', () => Werkzeuge.lernen());
         wrap.querySelector('[data-school-action="calculate"]')?.addEventListener('click', () => Electrical.open(root));
+        schulOrtBinden(wrap);
     };
     const DECKE_KUERZLICH = 60;
+    const hatFreigaben = (p) => {
+        if (typeof Konten === 'undefined' || !Konten.freigabenVon)
+            return false;
+        const entries = Konten.freigabenVon(p.id) || {};
+        return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
+    };
+    const reiterFilter = (reiter, alle) => {
+        if (reiter === 'kuerzlich')
+            return alle.filter(p => p.zuletztGeoeffnet || p.edited);
+        if (reiter === 'favoriten')
+            return alle.filter(p => p.favorite);
+        if (reiter === 'geteilt')
+            return alle.filter(p => hatFreigaben(p) || p.oeffentlich);
+        if (reiter === 'privat')
+            return alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
+        if (reiter === 'datenbank')
+            return alle.filter(p => p.parentTable === 'collection');
+        return null;
+    };
     const auswahl = () => {
         const alle = alleSeiten();
-        const freigaben = (p) => {
-            if (typeof Konten === 'undefined' || !Konten.freigabenVon)
-                return false;
-            const entries = Konten.freigabenVon(p.id) || {};
-            return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
-        };
         let liste = alle;
         if (zustand.reiter === 'ablage') {
             const ordner = zustand.ordner;
@@ -250,21 +272,11 @@ const Bibliothek = (() => {
             });
         }
         if (zustand.reiter === 'kuerzlich')
-            liste = alle.filter(p => p.zuletztGeoeffnet || p.edited)
+            liste = (reiterFilter('kuerzlich', alle) || [])
                 .sort((a, b) => zeitZahl(b.zuletztGeoeffnet || b.edited) -
                 zeitZahl(a.zuletztGeoeffnet || a.edited));
-        if (zustand.reiter === 'favoriten')
-            liste = alle.filter(p => p.favorite);
-        if (zustand.reiter === 'geteilt')
-            liste = alle.filter(p => freigaben(p) || p.oeffentlich);
-        if (zustand.reiter === 'privat')
-            liste = alle.filter(p => p.parentTable !== 'collection' && !p.bereich);
-        if (zustand.reiter === 'datenbank')
-            liste = alle.filter(p => p.parentTable === 'collection');
-        if (zustand.suche) {
-            const s = zustand.suche.toLowerCase();
-            liste = liste.filter(p => (p.text || '').toLowerCase().includes(s));
-        }
+        else if (zustand.reiter !== 'ablage')
+            liste = reiterFilter(zustand.reiter, alle) || liste;
         const gesamt = liste.length;
         if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
             liste = liste.slice(0, DECKE_KUERZLICH);
@@ -328,6 +340,42 @@ const Bibliothek = (() => {
         const weg = ordnerWeg();
         const oben = weg.length >= 2 ? weg[weg.length - 2] : null;
         geheIn(oben ? oben.id : null);
+    };
+    const liegtIn = (p, ordnerId) => {
+        let cur = p && p.parentTable !== 'collection' && p.parentId ? Store.cache.blocks[p.parentId] : null;
+        for (let n = 0; cur && n < 50; n++) {
+            if (cur.id === ordnerId)
+                return true;
+            cur = cur.parentTable !== 'collection' && cur.parentId ? Store.cache.blocks[cur.parentId] : null;
+        }
+        return false;
+    };
+    const suchBereich = () => {
+        const wurzel = document.querySelector('[data-bib-bereich]');
+        if (!wurzel || !wurzel.isConnected)
+            return null;
+        const alle = alleSeiten();
+        const ordnerId = zustand.reiter === 'ablage' ? zustand.ordner : null;
+        const ordner = ordnerId ? Store.getBlock(ordnerId) : null;
+        let liste = ordner ? alle.filter(p => liegtIn(p, ordner.id)) : (reiterFilter(zustand.reiter, alle) || alle);
+        const ort = ortAktiv();
+        const artFilter = ort === 'pdf' ? 'pdf' : zustand.art;
+        if (artFilter !== 'alle')
+            liste = liste.filter(p => artVon(p).id === artFilter);
+        const ids = new Set(liste.map(p => String(p.id)));
+        const teile = [];
+        if (ordner)
+            teile.push(String(ordner.text || 'Ohne Titel'));
+        else if (ort !== 'ablage' && ort !== 'alle')
+            teile.push(ORTE.find(o => o.id === ort)?.name || ort);
+        if (ort !== 'pdf' && zustand.art !== 'alle')
+            teile.push(ART_FILTER.find(a => a.id === zustand.art)?.name || zustand.art);
+        return {
+            name: teile.length ? 'In ‚' + teile.join(' · ') + '‘' : 'Bibliothek',
+            ordnerId: ordner ? String(ordner.id) : null,
+            art: artFilter,
+            passt: (seite) => !!seite && ids.has(String(seite.id))
+        };
     };
     const fachSeiten = (elternId) => (Store.childrenOf(elternId) || [])
         .filter((b) => b && b.alive !== false && b.type === 'page')
@@ -548,48 +596,23 @@ const Bibliothek = (() => {
         { id: 'datei', name: 'Dateien' },
         { id: 'seite', name: 'Seiten' }
     ];
-    const studioNavigation = () => {
-        const pdfAn = zustand.reiter === 'alle' && zustand.art === 'pdf';
-        const wege = [
-            { id: 'ablage', name: 'Meine Ablage' },
-            { id: 'kuerzlich', name: 'Zuletzt geöffnet' },
-            { id: 'favoriten', name: 'Favoriten' },
-            { id: 'pdf', name: 'Alle PDFs' }
-        ];
-        return '<div class="bib-studio-navigation">' +
-            '<nav class="bib-studio-wege" data-material="dokumente-wege" aria-label="Dokumente finden">' +
-            wege.map(weg => {
-                const an = weg.id === 'pdf' ? pdfAn : !pdfAn && zustand.reiter === weg.id;
-                return '<button type="button" data-studio-weg="' + weg.id + '"' +
-                    (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
-            }).join('') + '</nav>' +
-            '<details class="bib-studio-optionen"><summary>Sammlungen</summary>' +
-            '<select class="bib-studio-sammlungen" aria-label="Weitere Bibliothek-Inhalte öffnen">' +
-            '<option value="">Dateien & Wissen …</option>' +
-            (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select></details>' +
-            '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
-            '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
-            '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
-            ' value="' + esc(zustand.suche) + '"></label>' +
-            '</div>';
-    };
     const recentCarousel = () => {
-        if (zustand.ordner || zustand.suche || zustand.art !== 'alle' ||
+        if (zustand.ordner || zustand.art !== 'alle' ||
             !['ablage', 'kuerzlich'].includes(zustand.reiter))
             return '';
         const recent = alleSeiten().filter(p => p.zuletztGeoeffnet)
             .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet)).slice(0, 3);
+        if (!recent.length)
+            return '';
         return '<section class="rmo-recent" aria-label="Zuletzt geöffnet"><h2>Zuletzt geöffnet</h2>' +
-            '<div class="rmo-recent-track">' + (recent.length ? recent.map((p, index) => '<button type="button" class="rmo-recent-card" data-rmo-open="' + esc(p.id) +
+            '<div class="rmo-recent-track">' + recent.map((p, index) => '<button type="button" class="rmo-recent-card" data-rmo-open="' + esc(p.id) +
             '" style="--rmo-index:' + index + '"><span>' + esc(artVon(p).name) + '</span><b>' +
             esc(p.text || 'Ohne Titel') + '</b><small>' + esc(wannText(p.zuletztGeoeffnet)) +
-            '</small></button>').join('') :
-            '<button type="button" class="rmo-recent-card" data-rmo-new><span>Loslegen</span><b>Neue Seite</b></button>' +
-                '<button type="button" class="rmo-recent-card" data-rmo-import><span>Weiterarbeiten</span><b>PDF öffnen</b></button>') +
+            '</small></button>').join('') +
             '</div></section>';
     };
     const studioWeiter = () => {
-        if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle')
+        if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.art !== 'alle')
             return '';
         const letzte = alleSeiten().filter(p => p.zuletztGeoeffnet && artVon(p).id === 'pdf')
             .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet))[0];
@@ -770,8 +793,8 @@ const Bibliothek = (() => {
     const umfangSatz = (gezeigt, gesamt, eins, mehr, vonForm) => gesamt > gezeigt
         ? gezeigt + ' von ' + gesamt + ' ' + vonForm
         : gezeigt + ' ' + (gezeigt === 1 ? eins : mehr);
-    const bibKopf = (liste, _anzahlHefte, gesamt = liste.length) => {
-        return deckelKopf(liste.length, gesamt) + studioNavigation();
+    const bibKopf = (liste, alle, gesamt = liste.length) => {
+        return deckelKopf(alle, liste.length, zustand.art === 'alle' ? gesamt : liste.length);
     };
     const sicherungsKarte = () => {
         const st = Sicherung.stand();
@@ -954,25 +977,31 @@ const Bibliothek = (() => {
         });
         stelle.replaceChildren(griff.element);
     };
-    const artenZeile = (vorhanden) => {
-        const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
-            a.id === zustand.art);
+    const artenVon = (alle) => {
+        const zahl = new Map();
+        alle.forEach(p => { const a = artVon(p).id; zahl.set(a, (zahl.get(a) || 0) + 1); });
+        return ART_FILTER
+            .filter(a => a.id === 'alle' || zahl.has(a.id) || a.id === zustand.art)
+            .map(a => ({ id: a.id, name: a.id === 'alle' ? 'Alle Arten' : a.name,
+            zahl: a.id === 'alle' ? alle.length : (zahl.get(a.id) || 0) }));
+    };
+    const artPille = (alle) => {
+        const arten = artenVon(alle);
         if (arten.length <= 2 && zustand.art === 'alle')
             return '';
-        return '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
-            arten.map(a => `<button data-art="${esc(a.id)}"` +
-                (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
-                `>${esc(a.name)}</button>`).join('') +
-            '</div>';
+        const jetzt = arten.find(a => a.id === zustand.art) || arten[0];
+        return '<button type="button" class="bib-pille bib-art" data-art-wahl aria-haspopup="menu" ' +
+            'aria-expanded="false"' + (zustand.art !== 'alle' ? ' data-gefiltert' : '') + '>' +
+            '<span class="bib-pille-wort">' + esc(jetzt ? jetzt.name : 'Alle Arten') + '</span>' +
+            '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>';
     };
     const zeichneDeckel = (wrap) => {
         const { liste: alle, gesamt } = auswahl();
         const liste = zustand.art === 'alle'
             ? alle : alle.filter(p => artVon(p).id === zustand.art);
-        const vorhanden = new Set(alle.map(p => artVon(p).id));
         wrap.innerHTML =
-            '<div class="bib bib-deckel-seite">' +
-                deckelKopf(alle.length, gesamt) +
+            '<div class="bib bib-deckel-seite" data-bib-bereich>' +
+                deckelKopf(alle, liste.length, zustand.art === 'alle' ? gesamt : liste.length) +
                 (zustand.reiter === 'ablage'
                     ? '<div class="bib-ablage-layout">' +
                         '<details class="bib-ablage-baum" aria-label="Ablagebaum"' +
@@ -981,8 +1010,7 @@ const Bibliothek = (() => {
                         '<div data-bib-baum></div>' +
                         '</details><div class="bib-ablage-inhalt">'
                     : '') +
-                studioNavigation() + studioWeiter() + recentCarousel() +
-                artenZeile(vorhanden) +
+                studioWeiter() + recentCarousel() +
                 (liste.length
                     ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
                     : '<p class="bib-leer">' + (zustand.art === 'alle'
@@ -999,8 +1027,24 @@ const Bibliothek = (() => {
         if (Vorschau.bilderNachtragen)
             Vorschau.bilderNachtragen(wrap);
     };
-    const deckelKopf = (anzahl, gesamt = anzahl) => {
-        const ort = REITER.find(r => r.id === zustand.reiter)?.name || 'Alle';
+    const ortPille = (name, zahl = '', einheit = '') => '<button type="button" class="bib-pille bib-ort" data-orte aria-haspopup="menu" aria-expanded="false">' +
+        '<span class="bib-pille-wort">' + esc(name) + '</span>' +
+        (zahl ? '<span class="bib-pille-zahl">' + esc(zahl) +
+            '<span class="bib-pille-einheit">' + esc(einheit) + '</span></span>' : '') +
+        '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>';
+    const schulOrt = () => '<div class="bib-wahl school-ort" role="group" aria-label="Was die Bibliothek zeigt">' +
+        ortPille(ORTE.find(o => o.id === 'schule')?.name || 'Ausbildung') + '</div>';
+    const schulOrtBinden = (wrap) => {
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        wrap.querySelector('[data-orte]')?.addEventListener('click', ereignis => ortMenue(ereignis.currentTarget));
+    };
+    const deckelKopf = (alle, anzahl, gesamt = anzahl) => {
+        const ort = ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
+        const satz = umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten');
+        const schnitt = satz.lastIndexOf(' ');
+        const satzZahl = schnitt > 0 ? satz.slice(0, schnitt) : satz;
+        const satzEinheit = schnitt > 0 ? satz.slice(schnitt) : '';
         const weg = zustand.reiter === 'ablage' ? ordnerWeg() : [];
         const hier = weg.length ? String(weg[weg.length - 1].text || 'Ohne Titel') : 'Dokumente';
         return '<header class="bib-dkopf">' +
@@ -1013,13 +1057,14 @@ const Bibliothek = (() => {
                 ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
             '><span data-sym="plus" aria-hidden="true"></span>' +
             '<span class="wort">' + IMPORT_WORT + '</span></button>' +
-            '<button class="bib-form-knopf" data-form="' + (form() === 'liste' ? 'deckel' : 'liste') + '" ' +
-            'aria-label="' + (form() === 'liste' ? 'Als Dokumente anzeigen' : 'Als Liste anzeigen') + '">' +
-            '<span data-sym="' + (form() === 'liste' ? 'library' : 'menu') + '" aria-hidden="true"></span></button>' +
-            '<button class="bib-ort" data-orte aria-haspopup="menu">' +
-            esc(ort) + ' \u00b7 ' +
-            umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten') +
-            '<i aria-hidden="true">\u25be</i></button>' +
+            '<div class="bib-wahl" role="group" aria-label="Was die Bibliothek zeigt">' +
+            ortPille(ort, ' \u00b7 ' + satzZahl, satzEinheit) +
+            artPille(alle) +
+            '<button type="button" class="bib-form-knopf" data-form-wahl aria-haspopup="menu" aria-expanded="false" ' +
+            'aria-label="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '" ' +
+            'title="Darstellung: ' + esc(FORMEN.find(f => f.id === form())?.name || '') + '">' +
+            '<span data-sym="' + (FORMEN.find(f => f.id === form())?.zeichen || 'pages') + '" aria-hidden="true"></span></button>' +
+            '</div>' +
             '</header>';
     };
     const zeichneRegal = (wrap) => {
@@ -1030,8 +1075,8 @@ const Bibliothek = (() => {
             .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
             .slice(0, 4);
         wrap.innerHTML =
-            '<div class="bib bib-regal-seite">' +
-                bibKopf(liste, regal.length, gesamt) +
+            '<div class="bib bib-regal-seite" data-bib-bereich>' +
+                bibKopf(liste, alle, gesamt) +
                 (regal.length
                     ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
                     : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
@@ -1046,6 +1091,92 @@ const Bibliothek = (() => {
             Register.symbole.fuelle(wrap);
         binde(wrap);
         platzNachtragen(wrap);
+    };
+    const pilleFokus = (wahl) => {
+        requestAnimationFrame(() => document.querySelector('.bib ' + wahl)?.focus({ preventScroll: true }));
+    };
+    const markeImMenue = (m) => {
+        if (typeof SelectionFlow === 'undefined')
+            return;
+        const gruppe = m.querySelector('[role="group"]');
+        if (!gruppe)
+            return;
+        const auf = (b) => {
+            const ziel = b ? b.closest('[data-wahl]') : null;
+            if (ziel && gruppe.contains(ziel))
+                SelectionFlow.highlight(gruppe, ziel, { still: true });
+        };
+        auf(gruppe.querySelector('[aria-current="true"]'));
+        gruppe.addEventListener('focusin', e => auf(e.target instanceof Element ? e.target : null));
+        gruppe.addEventListener('pointerover', e => auf(e.target instanceof Element ? e.target : null));
+    };
+    const ortSetzen = (id) => {
+        if (id === 'pdf') {
+            zustand.reiter = 'alle';
+            zustand.art = 'pdf';
+        }
+        else {
+            zustand.reiter = ORTE.some(o => o.id === id) ? id : zustand.reiter;
+            zustand.art = 'alle';
+        }
+        if (id === 'ablage') {
+            zustand.ordner = null;
+            if (typeof Store !== 'undefined' && Store.setMeta)
+                Store.setMeta(ORDNER_SCHLUESSEL, '');
+        }
+        App.zeichneSeite();
+    };
+    const SAMMLUNG_ZEICHEN = {
+        uebersicht: 'pages', bibliothek: 'library', datenbanken: 'database',
+        whiteboards: 'pencil', wiki: 'graph', vorlagen: 'puzzle'
+    };
+    const ortMenue = (anker) => {
+        const aktiv = ortAktiv();
+        const sammlungen = typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen : [];
+        const m = Menue.wahl({
+            anker, titel: 'Ort',
+            gruppen: [
+                { name: 'Orte', optionen: ORTE.map(o => ({ id: o.id, name: o.name, zeichen: o.zeichen, aktiv: o.id === aktiv })) },
+                ...(sammlungen.length ? [{ name: 'Sammlungen', optionen: sammlungen.map(a => ({ id: 'sammlung:' + a.id, name: a.name, zeichen: SAMMLUNG_ZEICHEN[a.id] || 'grid' })) }] : [])
+            ],
+            beiWahl: (id) => {
+                if (id.startsWith('sammlung:')) {
+                    if (typeof Arbeitswelt !== 'undefined')
+                        Arbeitswelt.oeffnen(id.slice('sammlung:'.length));
+                    return;
+                }
+                ortSetzen(id);
+                pilleFokus('[data-orte]');
+            }
+        });
+        markeImMenue(m);
+    };
+    const artMenue = (anker) => {
+        const { liste: alle } = auswahl();
+        Menue.wahl({
+            anker, titel: 'Art',
+            gruppen: [{ name: 'Arten', optionen: artenVon(alle).map(a => ({ id: a.id, name: a.name + ' \u00b7 ' + a.zahl, aktiv: a.id === zustand.art })) }],
+            beiWahl: (id) => {
+                zustand.art = ART_FILTER.some(a => a.id === id) ? id : 'alle';
+                App.zeichneSeite();
+                pilleFokus('[data-art-wahl]');
+            }
+        });
+    };
+    const formMenue = (anker) => {
+        const jetzt = form();
+        Menue.wahl({
+            anker, titel: 'Darstellung',
+            gruppen: [{ name: 'Darstellung', optionen: FORMEN.map(f => ({ id: f.id, name: f.name, zeichen: f.zeichen, aktiv: f.id === jetzt })) }],
+            beiWahl: (id) => {
+                const f = FORMEN.find(x => x.id === id);
+                if (!f)
+                    return;
+                Store.setMeta('bibForm', f.id);
+                App.zeichneSeite();
+                pilleFokus('[data-form-wahl]');
+            }
+        });
     };
     const ortFuer = (p, anker) => ({ kontext: 'bibliothek', art: artVon(p).id, anker });
     const aktionenAnbringen = (wrap) => {
@@ -1074,65 +1205,16 @@ const Bibliothek = (() => {
             if (id && permitted('lesen', id))
                 App.oeffne(id);
         }));
-        wrap.querySelector('[data-rmo-import]')?.addEventListener('click', pdfImportieren);
-        wrap.querySelector('[data-rmo-new]')?.addEventListener('click', () => document.getElementById('btn-neu-handy')?.click());
         wrap.querySelector('.bib-ablage-baum')?.addEventListener('toggle', event => {
             Store.setMeta('bibBaumSichtbar', event.currentTarget.open);
         });
-        wrap.querySelector('.bib-studio-sammlungen')?.addEventListener('change', event => {
-            const ziel = event.currentTarget.value;
-            if (ziel && typeof Arbeitswelt !== 'undefined')
-                Arbeitswelt.oeffnen(ziel);
-        });
-        wrap.querySelectorAll('[data-studio-weg]').forEach(button => button.addEventListener('click', () => {
-            const weg = button.dataset.studioWeg || 'ablage';
-            zustand.reiter = weg === 'pdf' ? 'alle' : weg;
-            zustand.art = weg === 'pdf' ? 'pdf' : 'alle';
-            zustand.ordner = null;
-            App.zeichneSeite();
-        }));
         wrap.querySelector('[data-studio-import]')?.addEventListener('click', pdfImportieren);
         wrap.querySelector('[data-studio-weiter]')?.addEventListener('click', event => {
             const id = event.currentTarget.dataset.studioWeiter;
             if (id && permitted('lesen', id))
                 App.oeffne(id);
         });
-        wrap.querySelector('#bib-studio-suche')?.addEventListener('input', event => {
-            const input = event.currentTarget;
-            zustand.suche = input.value;
-            const cursor = input.selectionStart;
-            App.zeichneSeite();
-            const neu = wrap.querySelector('#bib-studio-suche');
-            neu?.focus();
-            if (neu && cursor !== null) {
-                try {
-                    neu.setSelectionRange(cursor, cursor);
-                }
-                catch { }
-            }
-        });
-        wrap.querySelectorAll('.bib-reiter [data-r]').forEach(b => b.addEventListener('click', () => {
-            if (b.dataset['r'] === 'mehr') {
-                const r = b.getBoundingClientRect();
-                const m = UI.menu(REITER.slice(4).map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''), r.left, r.bottom + 4);
-                m.addEventListener('click', ev => {
-                    const x = elVon(ev)?.closest('[data-x]');
-                    if (!x)
-                        return;
-                    zustand.reiter = x.dataset['x'] ?? zustand.reiter;
-                    m.remove();
-                    App.zeichneSeite();
-                });
-                return;
-            }
-            zustand.reiter = b.dataset['r'] ?? zustand.reiter;
-            App.zeichneSeite();
-        }));
-        wrap.querySelectorAll('[data-form]').forEach(b => b.addEventListener('click', () => {
-            const f = b.dataset['form'] === 'liste' ? 'liste' : b.dataset['form'] === 'deckel' ? 'deckel' : 'regal';
-            Store.setMeta('bibForm', f);
-            App.zeichneSeite();
-        }));
+        wrap.querySelector('[data-form-wahl]')?.addEventListener('click', ereignis => formMenue(ereignis.currentTarget));
         wrap.querySelectorAll('.bib-pflege [data-a]').forEach(b => b.addEventListener('click', ereignis => {
             ereignis.stopPropagation();
             if (b.dataset['a'] === 'papierkorb') {
@@ -1146,40 +1228,8 @@ const Bibliothek = (() => {
             if (id)
                 App.oeffne(id);
         }));
-        wrap.querySelectorAll('.bib-arten [data-art]').forEach(b => b.addEventListener('click', () => {
-            zustand.art = b.dataset['art'] ?? 'alle';
-            App.zeichneSeite();
-        }));
-        wrap.querySelectorAll('[data-orte]').forEach(b => b.addEventListener('click', () => {
-            const r = b.getBoundingClientRect();
-            const m = UI.menu(REITER.map(x => `<button data-x="${x.id}"${zustand.reiter === x.id ? ' class="on"' : ''}>` +
-                `<span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join('') +
-                '<div class="sep"></div>' +
-                '<button data-x="__deckel"><span class="mi">\u25a6</span>Als Dokumente</button>' +
-                '<button data-x="__regal"><span class="mi">\u25a4</span>Nach Heften ordnen</button>' +
-                '<button data-x="__liste"><span class="mi">\u2630</span>Als Tabelle</button>', r.left, r.bottom + 6);
-            m.addEventListener('click', ev => {
-                const x = elVon(ev)?.closest('[data-x]');
-                if (!x)
-                    return;
-                const wahl = x.dataset['x'] ?? '';
-                m.remove();
-                if (wahl === '__regal') {
-                    Store.setMeta('bibForm', 'regal');
-                }
-                else if (wahl === '__deckel') {
-                    Store.setMeta('bibForm', 'deckel');
-                }
-                else if (wahl === '__liste') {
-                    Store.setMeta('bibForm', 'liste');
-                }
-                else {
-                    zustand.reiter = wahl || zustand.reiter;
-                    zustand.art = 'alle';
-                }
-                App.zeichneSeite();
-            });
-        }));
+        wrap.querySelector('[data-art-wahl]')?.addEventListener('click', ereignis => artMenue(ereignis.currentTarget));
+        wrap.querySelector('[data-orte]')?.addEventListener('click', ereignis => ortMenue(ereignis.currentTarget));
         wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt(b)));
         wrap.querySelectorAll('[data-hoch]').forEach(b => b.addEventListener('click', () => geheHoch()));
         wrap.querySelectorAll('.bib-krume').forEach(krume => {
@@ -1226,19 +1276,15 @@ const Bibliothek = (() => {
         const spalten = SPALTEN.filter(s => zustand.spalten.includes(s.id));
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
-            '<div class="bib">' +
-                bibKopf(liste, hefte(liste).length, gesamt) +
+            '<div class="bib" data-bib-bereich>' +
+                bibKopf(liste, alle, gesamt) +
                 '<div class="bib-kopf bib-kopf-liste">' +
                 '<div class="bib-werkzeuge">' +
-                '<button data-a="filter" title="Filtern">⚟</button>' +
-                '<button data-a="suche" title="Suchen">🔍</button>' +
+                '<button data-a="suche" title="Suchen" aria-label="Suchen">🔍</button>' +
                 '<button data-a="spalten" title="Eigenschaften">⚙</button>' +
                 '<button data-a="neu" class="prim">Neue Seite</button>' +
                 '</div>' +
                 '</div>' +
-                (zustand.sucheOffen
-                    ? `<div class="bib-suchzeile">🔍 <input id="bib-suche" value="${esc(zustand.suche)}" ` +
-                        'placeholder="Seiten durchsuchen …"><button data-a="suchzu">✕</button></div>' : '') +
                 `<div class="bib-tab" style="--bib-raster:${raster}">` +
                 '<div class="bib-zeile bib-kopfzeile">' +
                 spalten.map(s => `<div data-s="${s.id}"><span>${s.icon}</span>${esc(s.name)}` +
@@ -1289,7 +1335,7 @@ const Bibliothek = (() => {
             }
             App.oeffne(z.dataset.id);
         }));
-        wrap.querySelectorAll('.bib-werkzeuge button, [data-a="suchzu"]').forEach((b) => b.addEventListener('click', () => {
+        wrap.querySelectorAll('.bib-werkzeuge button').forEach((b) => b.addEventListener('click', () => {
             const a = b.dataset.a;
             if (a === 'neu') {
                 if (!permitted('bearbeiten')) {
@@ -1300,30 +1346,8 @@ const Bibliothek = (() => {
                 App.oeffne(p.id);
                 setTimeout(() => document.getElementById('title')?.focus(), 60);
             }
-            if (a === 'suche') {
-                zustand.sucheOffen = true;
-                App.zeichneSeite();
-                document.getElementById('bib-suche')?.focus();
-            }
-            if (a === 'suchzu') {
-                zustand.suche = '';
-                zustand.sucheOffen = false;
-                App.zeichneSeite();
-            }
-            if (a === 'filter') {
-                const r = b.getBoundingClientRect();
-                const m = UI.menu('<div class="grp">Nur zeigen</div>' +
-                    REITER.map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}` +
-                        (zustand.reiter === x.id ? '<span class="ms">✓</span>' : '') + '</button>').join(''), r.left - 160, r.bottom + 4);
-                m.addEventListener('click', ev => {
-                    const x = elVon(ev)?.closest('[data-x]');
-                    if (!x)
-                        return;
-                    zustand.reiter = x.dataset.x ?? zustand.reiter;
-                    m.remove();
-                    App.zeichneSeite();
-                });
-            }
+            if (a === 'suche')
+                App.suche();
             if (a === 'spalten') {
                 const r = b.getBoundingClientRect();
                 const m = UI.menu('<div class="grp">Eigenschaften</div>' +
@@ -1344,19 +1368,6 @@ const Bibliothek = (() => {
                 });
             }
         }));
-        const si = document.getElementById('bib-suche');
-        if (si) {
-            si.addEventListener('input', () => {
-                zustand.suche = si.value;
-                const stelle = si.selectionStart;
-                App.zeichneSeite();
-                const neu = document.getElementById('bib-suche');
-                if (neu) {
-                    neu.focus();
-                    neu.setSelectionRange(stelle, stelle);
-                }
-            });
-        }
     };
     const oeffne = (ordnerId) => {
         try {
@@ -1631,7 +1642,7 @@ const Bibliothek = (() => {
                     blickHinein(p, r);
             } });
     }
-    return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+    return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, suchBereich,
         pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,
         blickKnopf, mitBlick, blickAnbringen, blickHinein };
 })();

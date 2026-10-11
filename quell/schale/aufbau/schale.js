@@ -1039,7 +1039,26 @@ const App = (() => {
     const zeichneCrumbs = () => Kopfleiste.pfad();
     const coverWaehlen = (p) => Kopfleiste.coverWaehlen(p);
     const streifenZeichnen = () => Inhaltsflaeche.streifen();
-    const suche = (vorgabe) => {
+    const suche = (vorgabe, opt = {}) => {
+        const dokMod = typeof DocumentMode !== 'undefined' ? DocumentMode : null;
+        const offenSeite = seiteId ? Store.getBlock(seiteId) : null;
+        const imDokument = !!(offenSeite && dokMod && document.body.dataset['dokument'] === 'an' &&
+            dokMod.active(offenSeite));
+        const regal = !imDokument && typeof Bibliothek !== 'undefined' && Bibliothek.suchBereich
+            ? Bibliothek.suchBereich() : null;
+        const bereiche = imDokument
+            ? [{ id: 'dokument', name: 'Dieses Dokument', zeichen: 'page' },
+                { id: 'dokumente', name: 'Alle Dokumente', zeichen: 'pages' },
+                { id: 'ueberall', name: 'Überall', zeichen: 'globe' }]
+            : regal
+                ? [{ id: 'bibliothek', name: regal.name, zeichen: 'library' },
+                    { id: 'ueberall', name: 'Überall', zeichen: 'globe' }]
+                : [];
+        const gewuenscht = bereiche.find(b => b.id === opt.bereich);
+        let bereich = gewuenscht ? gewuenscht.id
+            : imDokument && dokMod ? dokMod.findBereich() : regal ? 'bibliothek' : 'ueberall';
+        const vorher = document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+            ? document.activeElement : null;
         const eng = matchMedia('(max-width:760px)').matches;
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -1048,6 +1067,7 @@ const App = (() => {
                 '<input id="q" placeholder="' + (eng ? 'Seiten, Zeilen und Inhalte suchen'
                 : 'Suchen — z. B. titel:&quot;Projekt&quot;, tag:arbeit, geändert:heute, status:offen') +
                 '" autocomplete="off">' +
+                (bereiche.length ? '<div class="such-bereich"></div>' : '') +
                 '<div class="such-filter">' +
                 '<select id="f-wo"><option value="alles">Titel und Inhalt</option>' +
                 '<option value="titel">nur Titel</option><option value="inhalt">nur Inhalt</option></select>' +
@@ -1056,7 +1076,7 @@ const App = (() => {
                 '<select id="f-seit"><option value="alles">Jederzeit</option>' +
                 '<option value="tag">heute geändert</option><option value="woche">diese Woche</option>' +
                 '<option value="monat">dieser Monat</option></select>' +
-                '<select id="f-ort"><option value="">Überall</option>' +
+                '<select id="f-ort"><option value="">Alle Orte</option>' +
                 Store.rootPages().map(p2 => `<option value="${p2.id}">in ${esc(p2.text || 'Ohne Titel')}</option>`).join('') +
                 '</select>' +
                 '</div>' +
@@ -1084,6 +1104,59 @@ const App = (() => {
         let treffer = [];
         let i = 0;
         let queryError = '';
+        const imBereich = (id) => bereich !== 'bibliothek' || !regal || regal.passt(Store.getBlock(String(id || '')));
+        const platzhalterUeberall = inp.placeholder;
+        const bereichAnwenden = () => {
+            const titel = offenSeite ? String(offenSeite.text || 'Ohne Titel') : '';
+            inp.placeholder = bereich === 'dokument' ? 'In „' + titel + '" suchen'
+                : bereich === 'dokumente' ? 'In allen Dokumenten suchen'
+                    : bereich === 'bibliothek' && regal
+                        ? (regal.name === 'Bibliothek' ? 'In der Bibliothek suchen' : regal.name + ' suchen')
+                        : platzhalterUeberall;
+            const filter = o.querySelector('.such-filter');
+            if (filter)
+                filter.hidden = bereich === 'dokument' || bereich === 'dokumente';
+        };
+        const bereichPlatz = o.querySelector('.such-bereich');
+        if (bereichPlatz && bereiche.length) {
+            const griff = Segment.bauen({
+                name: 'Wo suchen',
+                wahlen: bereiche.map(b => ({ id: b.id, name: b.name, zeichen: b.zeichen })),
+                gewaehlt: bereich,
+                gewechselt: (id) => {
+                    const neu = bereiche.find(b => b.id === id);
+                    if (!neu)
+                        return;
+                    bereich = neu.id;
+                    if (imDokument && dokMod && bereich !== 'bibliothek')
+                        dokMod.findBereichMerken(bereich);
+                    bereichAnwenden();
+                    suchen();
+                    inp.focus();
+                }
+            });
+            bereichPlatz.append(griff.element);
+        }
+        bereichAnwenden();
+        let leisteBenutzt = false;
+        const schliessen = () => {
+            o.remove();
+            if (leisteBenutzt && offenSeite && dokMod) {
+                void dokMod.findenIn(String(offenSeite.id), inp.value.trim(), { fokus: true });
+                return;
+            }
+            if (vorher && vorher.isConnected)
+                vorher.focus({ preventScroll: true });
+        };
+        const trefferOeffnen = (t2) => {
+            if (t2 && t2.dokumentZahl !== undefined && dokMod) {
+                o.remove();
+                void dokMod.findenIn(String(t2.page.id), inp.value.trim(), { springen: true, fokus: true });
+                return;
+            }
+            zumTreffer(t2);
+            o.remove();
+        };
         const letzteSuchen = () => {
             try {
                 return (Store.getMeta('suchverlauf', []) || []).slice(0, 6);
@@ -1135,19 +1208,20 @@ const App = (() => {
                 verlaufBinden();
                 return;
             }
-            res.innerHTML = verlaufBlock() + treffer.map((t, k) => `<button data-i="${k}" ${k === i ? 'class="on"' : ''}>` +
+            res.innerHTML = verlaufBlock() + treffer.map((t, k) => `<button data-i="${k}" ${k === i ? 'class="on"' : ''}` +
+                (t.dokumentZahl !== undefined ? ` data-dokument-zahl="${Number(t.dokumentZahl)}"` : '') + '>' +
                 `<span>${t.page.icon || '📄'}</span>` +
                 `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
                 (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
-                (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
+                (t.snippet && (t.treffer === 'Inhalt' || t.blockId || t.dokumentZahl !== undefined)
+                    ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
                 `</span><span class="pth">${t.treffer}</span></button>`).join('');
             verlaufBinden();
             const zeilen = [...res.querySelectorAll('button[data-i]')];
             zeilen.forEach(b => {
                 b.addEventListener('click', () => {
                     merkeSuche(inp.value);
-                    zumTreffer(treffer[Number(b.dataset.i)]);
-                    o.remove();
+                    trefferOeffnen(treffer[Number(b.dataset.i)]);
                 });
                 b.addEventListener('mouseenter', () => zeigeVorschau(Number(b.dataset.i)));
             });
@@ -1225,8 +1299,15 @@ const App = (() => {
         };
         const zuletzt = () => {
             queryError = '';
+            if (bereich === 'dokument') {
+                treffer = [];
+                i = 0;
+                zeichne();
+                return;
+            }
             treffer = Object.values(Store.cache.blocks)
-                .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
+                .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' &&
+                (bereich !== 'dokumente' || !!b.dokumentModus) && imBereich(b.id))
                 .sort((a, b) => (b.edited || '').localeCompare(a.edited || ''))
                 .slice(0, 8)
                 .map(p => ({ page: p, treffer: 'Zuletzt', snippet: '' }));
@@ -1327,6 +1408,55 @@ const App = (() => {
             }).filter((document) => document !== null);
             return documentCache;
         };
+        let dokLauf = 0;
+        let dokUhr = null;
+        const imDokumentSuchen = (roh) => {
+            const wort = roh.trim();
+            queryError = '';
+            const lauf = ++dokLauf;
+            if (dokUhr)
+                clearTimeout(dokUhr);
+            if (wort.length < 2 || !offenSeite || !dokMod) {
+                treffer = [];
+                i = 0;
+                zeichne();
+                return;
+            }
+            dokUhr = setTimeout(() => {
+                void dokMod.findenIn(String(offenSeite.id), wort, { fokus: false }).then(e => {
+                    if (lauf !== dokLauf || !o.isConnected)
+                        return;
+                    leisteBenutzt = true;
+                    const seiten = e ? e.seiten.slice(0, 12) : [];
+                    treffer = e && e.anzahl ? [{ page: offenSeite, dokumentZahl: e.anzahl,
+                            treffer: e.anzahl + ' Treffer',
+                            snippet: (seiten.length === 1 ? 'Seite ' : 'Seiten ') + seiten.join(', ') +
+                                (e.seiten.length > seiten.length ? ' …' : '') }] : [];
+                    i = 0;
+                    zeichne();
+                });
+            }, 220);
+        };
+        const inDokumentenSuchen = (roh) => {
+            queryError = '';
+            const wort = roh.split(/\s+/).filter(w => w && !/^[\p{L}]+:/u.test(w)).join(' ')
+                .replace(/["']/g, '').trim();
+            if (wort.length < 2 || !dokMod) {
+                zuletzt();
+                return;
+            }
+            const gefunden = dokMod.stellenSuchen(wort);
+            treffer = [];
+            for (const stelle of (gefunden?.liste || [])) {
+                const seite = Store.getBlock(stelle.seiteId);
+                if (!seite || seite.alive === false)
+                    continue;
+                treffer.push({ page: seite, treffer: 'Seite ' + stelle.nr, snippet: stelle.auszug,
+                    pfad: Store.pfadText(seite.id) || '', blockId: stelle.blockId });
+            }
+            i = 0;
+            zeichne();
+        };
         const suchen = () => {
             const roh = inp.value;
             if (typeof Chronik !== 'undefined' && Chronik.trifft(roh)) {
@@ -1344,6 +1474,14 @@ const App = (() => {
                 SelectionFlow.highlight(res, res.querySelector('[data-chr-tuer]'), { taste: '↵ Enter' });
                 return;
             }
+            if (bereich === 'dokument') {
+                imDokumentSuchen(roh);
+                return;
+            }
+            if (bereich === 'dokumente') {
+                inDokumentenSuchen(roh);
+                return;
+            }
             const uiFilters = readUiFilters();
             const hasUiFilter = uiFilters.scope !== 'all' || uiFilters.documentType !== 'all' ||
                 uiFilters.changed !== 'all' || !!uiFilters.location;
@@ -1354,7 +1492,7 @@ const App = (() => {
             const alsKennung = roh.trim().replace(/^.*#block=/, '');
             if (/^[0-9a-f]{8}-?[0-9a-f]{4}/i.test(alsKennung)) {
                 const gefunden = Store.search(alsKennung);
-                if (gefunden.length && gefunden[0].treffer === 'Seiten-ID') {
+                if (gefunden.length && gefunden[0].treffer === 'Seiten-ID' && imBereich(gefunden[0].page?.id)) {
                     queryError = '';
                     treffer = gefunden;
                     i = 0;
@@ -1372,7 +1510,7 @@ const App = (() => {
             }
             queryError = '';
             const query = QueryLanguage.applyUiFilters(parsed.query, uiFilters);
-            treffer = QueryLanguage.run(queryDocuments(), query).map(match => ({
+            treffer = QueryLanguage.run(queryDocuments().filter(d => imBereich(d.id)), query).map(match => ({
                 page: Store.getBlock(match.document.id),
                 treffer: match.reason,
                 snippet: match.snippet,
@@ -1396,7 +1534,7 @@ const App = (() => {
                     const schon = new Set(treffer.map(h => String(h.page?.id || '')));
                     const gefunden = dok.stellenSuchen(freieWorte);
                     for (const stelle of (gefunden?.liste || [])) {
-                        if (schon.has(stelle.seiteId))
+                        if (schon.has(stelle.seiteId) || !imBereich(stelle.seiteId))
                             continue;
                         const seite = Store.getBlock(stelle.seiteId);
                         if (!seite || seite.alive === false)
@@ -1415,7 +1553,7 @@ const App = (() => {
         o.querySelectorAll('.such-filter select').forEach(s2 => s2.addEventListener('change', suchen));
         inp.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
-                o.remove();
+                schliessen();
                 return;
             }
             if (e.key === 'ArrowDown') {
@@ -1426,9 +1564,19 @@ const App = (() => {
                 e.preventDefault();
                 waehle(i - 1);
             }
-            if (e.key === 'Enter' && treffer[i]) {
-                zumTreffer(treffer[i]);
+            if (e.key !== 'Enter')
+                return;
+            if (treffer[i]) {
+                trefferOeffnen(treffer[i]);
+                return;
+            }
+            const wort = inp.value.trim();
+            if (bereich === 'dokument' && offenSeite && dokMod && wort.length >= 2) {
+                dokLauf++;
+                if (dokUhr)
+                    clearTimeout(dokUhr);
                 o.remove();
+                void dokMod.findenIn(String(offenSeite.id), wort, { springen: true, fokus: true });
             }
         });
         const filterMarken = () => {
@@ -1440,11 +1588,16 @@ const App = (() => {
         o.querySelectorAll('.such-filter select')
             .forEach(s2 => s2.addEventListener('change', filterMarken));
         filterMarken();
-        o.addEventListener('mousedown', e => { if (e.target === o)
-            o.remove(); });
-        if (vorgabe)
+        o.addEventListener('mousedown', e => { if (e.target === o) {
+            e.preventDefault();
+            schliessen();
+        } });
+        if (vorgabe) {
             inp.value = String(vorgabe);
-        zeichne();
+            suchen();
+        }
+        else
+            zeichne();
         inp.focus();
         if (vorgabe)
             inp.setSelectionRange(inp.value.length, inp.value.length);

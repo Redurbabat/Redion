@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-703 Entscheidungen, E1 bis E724 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+704 Entscheidungen, E1 bis E725 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -766,6 +766,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E722** — Fläche: eine Leiste je Arbeitskontext (Redur, PDF Seite 18 unten: „es sollte nur die ganez unter bleiben"): die Leiste eines Whiteboards im Kasten wird herausgenommen und hängt im EINEN Schacht unten, sobald man hineintippt; `defaultPrevented` in Taste und Rad der Fläche, die Hand stiehlt keinen Strich, „Schritt vorwärts" auf der Fläche, der Tabstopp der `GfxToolbar` entsteht auch losgelöst; zweite Durchsicht: die mittlere Taste schiebt das Whiteboard statt zu zeichnen, die Leiste nennt den Titel des Whiteboards, Tab bleibt nicht stecken, das Schild am Telefon in zwei Zeilen
 * **E723** — Die Tabelle auf der Fläche (Redur, PDF Seite 18 oben: „es ist hinterden und kann nicht gut lesen"): im Kasten kein Ausbruch aus E409 (`--db-aus:0px`), die Griffe im Kasten, „Neu" beim Überfahren mit den Marken aus E705, `--db-grund` für die angeheftete Spalte, die Auswahlleiste über der Flächenleiste; zweite Durchsicht: das Rad quer und Umschalt+Rad rollen die breite Tabelle im Kasten, nicht die Fläche
 * **E724** — KI am Ort (Redur, PDF S. 16: „hier beim ki sollte alles komplet was beim werkzeuge undkontext seteh dort integriert sein also im passenden ortern du muss entscheiden was wo kommt und warum ."): die Schublade „Werkzeuge & Kontext" löst sich auf, jeder der 19 Einträge wohnt, wo er wirkt — Quellen als Schild am Prompt, Seitenaktionen im leeren Chat, Nachschlagen und Befehle im „+", Agent/Besprechung/Protokoll im ⋯; EIN Katalog `Register.ki` und EIN Läufer für Knopf, Befehlsmenü, „@", „/", „✨ KI" und Palette; was das Blatt am Telefon öffnet, liegt über ihm; „Verbundenes" hat einen Leser; ehrliche Versprechen (@Fähigkeit, Seite erwähnen als Kontext, Webfrage als Fenster, Löschen in zwei Schritten, Fenster und Einstellungen ziehen mit); Durchsicht 10. Oktober: „✨ KI" ersetzt an der Stelle, eine Fassung vor jedem Tausch, 44 px am Finger. Wächter `test599`.
+* **E725** — Bibliothek: von jeder Kategorie nur eine, und EINE Suche, die ihren Bereich kennt (Redur, Masterprompt S. 13: „ich sollte von jeder kategorie nur eine sehen und die anderen alles unterdem das beim ^ … und die sucher hier sollte es bei der ganz obe such integriert sein“): Ort, Art und Form je als EINE Pille in einer Zeile mit Menü (`Menue.wahl`; ein Name je Ort, die Sammlungen als Gruppe im Ortsmenü, die Formen nur am Formknopf), kein leeres „Zuletzt“, kein Suchfeld mehr auf der Bibliotheksseite; `App.suche` mit Bereichen — [Bibliothek | „In ‚Ordner‘“ · Überall] in der Bibliothek (`Bibliothek.suchBereich`), [Dieses Dokument · Alle Dokumente · Überall] in einer PDF, wobei die Suchleiste der Motor für „Dieses Dokument“ ist (`DocumentMode.findenIn`); der Schalter 📚 der Suchleiste wird derselbe Umschalter, `dokFindAlle` bleibt die eine Erinnerung; „Ausbildung“ trägt denselben Ort-Wähler; nach der Durchsicht ganze Namen in der Bereichszeile am Telefon, ein gleich breiter Kopf in allen Formen, Enter vor der Uhr und der Grund wie Escape (`test600`)
 
 ---
 
@@ -21851,6 +21852,16 @@ typecheck grün.
 ================================================================================
 E282 — Das Regal merkt sich, wo man war (L77 Punkt 1, L78 Punkte 3 und 6)
 ================================================================================
+
+> **Ergänzt durch E725 (10. Oktober 2026) — die Regalsuche geht in der
+> EINEN Suche auf.** Redur, Seite 13: „die sucher hier sollte es bei der
+> ganz obe such integriert sein"; Zustimmung vom 3. Oktober. Das Feld
+> „Dokument suchen …" (und in der Liste „Seiten durchsuchen …") ist weg;
+> die Suche oben geht in der Bibliothek im Bereich „Bibliothek" auf (im
+> Ordner „In ‚Ordner‘") und findet dort auch Inhalt, nicht nur Titel
+> (`Bibliothek.suchBereich`). Der gemerkte Ordner und die gemerkte Form
+> bleiben, wie dieser Eintrag sie gebaut hat (`test600` §3/§4, `test359`
+> §4, `test424`).
 31. August 2026
 
 Redurs elfter Punkt aus E277: „Regalzustand persistieren, Listenbreite
@@ -36231,6 +36242,15 @@ test40.mts, sw.js, src/dienst/sw.ts, src/kern/einstellung/stand.ts.
 
 E457 — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — und was dabei rot war
 --------------------------------------------------------------------------
+
+> **Ergänzt durch E725 (10. Oktober 2026) — ein Ortsmenü statt dreier
+> Wege.** Redur, Seite 13: „ich sollte von jeder kategorie nur eine sehen
+> und die anderen alles unterdem das beim ^". Das Menü hinter `.bib-ort`,
+> die Wege-Zeile des Studios („Meine Ablage · Zuletzt geöffnet · Favoriten ·
+> Alle PDFs") und „Sammlungen ⌄" sind EIN Ortsmenü an EINER Pille, ein Name
+> je Ort; die Formen stehen nur noch am Formknopf. Das Mehr-Blatt und die
+> Adressen der Sammlungen (#seiten-wissen usw.) bleiben (`test600` §1,
+> `test428`, `test430`).
 
 ENTSCHEIDUNG. Sechs Dinge, alle am 6. September 2026, auf Redurs Satz
 „zu kompliziert, zu viele Bereiche gleichzeitig":
@@ -58587,6 +58607,13 @@ Zahlen im Commit „E705“ und in messungen §77. Der Start wächst um rund
 
 ## E706 — Das Material des Touch Kits überall, wo man wählt: die Pille zum Greifen, die Wahl, die fliegt, die Linse, die in Ruhe klar ist
 
+> **Ergänzt durch E725 (10. Oktober 2026) — das Material der Wege zieht ins
+> Ortsmenü.** Die Wege-Zeile der Bibliothek (`data-material="dokumente-wege"`)
+> ist weg; im Ortsmenü steht EINE leise Marke (E711) auf dem gewählten Ort
+> und gleitet mit Fokus und Zeiger. Die Bereichswahl der Suche und der
+> Suchleiste ist der Umschalter (`Segment`) mit eigenem Material
+> (`test585`, `test600` §4/§5).
+
 **Datum:** 28. September 2026 · **Entschieden von** Redur (Fragebogen
 27. September ca. 21:45, Tab-Leiste ca. 21:47) · **ergänzt** E43, E646 und
 E647 für Redions eigenes Material (E640 und E641 bleiben) · **Wächter:**
@@ -63207,6 +63234,7 @@ Das Muster bleibt das des Touch Kits, als Redion-Code nachgebaut — auch in
 diesem Nachtrag ist kein fremder Code dazugekommen, `FREMDCODE.md` braucht
 keinen Eintrag.
 
+
 ## E722 — Fläche: eine Leiste je Arbeitskontext — das Whiteboard im Kasten bringt seine Werkzeuge in die eine Leiste unten, und eine Taste wirkt einmal
 
 **Datum:** 6. Oktober 2026 · **Entschieden von** Redur (PDF vom
@@ -63956,3 +63984,352 @@ Bau-Werkzeuge (L244). `test422` ist auf diesem Zweig rot und war es schon
 auf 3d180c591 — geerbt aus `claude/kein-toter-knopf` (E720,
 `lernwelt.ts`), auf `claude/morgen-besser-2` grün; er gehört dort hin und
 ist hier weder repariert noch gelockert.
+
+## E725 — Bibliothek: von jeder Kategorie nur eine, und EINE Suche, die ihren Bereich kennt
+
+**Datum:** 10. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
+29. September, Seite 13; Zustimmung vom 3. Oktober „die Suchleiste
+‚Dokument suchen‘ der Bibliotheksseite in die globale Suche überführen";
+die Vorgaben (a)–(g) aus „Entscheidungen, die Redur gehören" zu #13, weil er
+auf Schritt 0 nicht geantwortet hat) · **ergänzt** E457 (die Wege, die
+Sammlungen und das Ortsmenü sind EIN Ortsmenü), E282 (die Regalsuche geht in
+die EINE Suche auf, statt dorthin weiterzuleiten) und E706 (das Material der
+Wege zieht ins Ortsmenü) · **baut auf** E380 (die Ablage ist der erste Ort),
+E487/E500 (die Suche über Dokumente), E702 (Blätter am Telefon), E711 (die
+Suche aus der Kapsel), E712 (das Menü an seinem Anker) und E721
+(`Menue.wahl`, die eine Auswahlliste) auf · **Wächter:** `test600` (neu,
+214 Zusagen in sieben Abschnitten — 196 beim Bau, 18 nach der Durchsicht
+vom 11. Oktober); angepasst, rot gesehen: `test33`,
+`test202`, `test359`, `test369`, `test424`, `test428`, `test430`,
+`test459`, `test585` · **Zweig** `claude/bibliothek-eine-suche` ·
+**Messung:** `messungen.md` §94.
+
+**Redurs Sätze, wörtlich** (seine Notiz im PDF unter dem Foto der
+Bibliothek; die Uhrzeit ist nicht überliefert):
+
+```txt
+Seite 13   „hier habe ich sehr viel zum sehe ich sollte von jeder kategorie
+            nur eine sehen und die anderen alles unterdem das beim ^ … und
+            die sucher hier sollte es bei der ganz obe such integriert sein
+            beim suche wenn ich bei eine pdf oder eine dokument bin sollte
+            mir wie es jetzt ist mir zeiget wo ich suchen will und lösche es
+            von dem biblotek seite …"
+3. Oktober „die Suchleiste ‚Dokument suchen‘ der Bibliotheksseite in die
+            globale Suche überführen"
+```
+
+Auf dem Foto hat er die Wege „Meine Ablage · Zuletzt geöffnet · Favoriten ·
+Alle PDFs · Sammlungen ⌄" und die Artenchips „Alle · PDF · Whiteboards ·
+Blätter · Datenbanken · Karteikarten · Ordner · Dateien · Seiten" grün
+umkreist und das Feld „Dokument suchen …" rot durchgestrichen.
+
+**Gemessen, bevor gebaut wurde** (`test600` gegen `acb876c1d` —
+morgen-besser-2 mit menue-eine-quelle —, 30 von 191; eine eigene Sonde mit
+denselben Daten; `messungen.md` §94):
+
+```txt
+Bedienelemente über dem ersten Deckel, 1440   20 (Neu, PDF öffnen, Form, Ort, Baum,
+                                              4 Wege, Sammlungen + Feld, „Dokument
+                                              suchen", 2 Attrappen, 5 Artenchips)
+erster Deckel, 1440 × 900 / 390 × 844         y 768 / y 931 — am Telefon kein Dokument
+                                              im ersten Bild
+der Ort                                       zweimal: `.bib-ort` (Reiter) und die Wege,
+                                              drei Ziele unter anderem Namen
+„Leitungsschutz" (nur im Inhalt)              Regalfeld 0 Deckel; die Schalensuche
+                                              findet die Dokumente nach Inhalt
+Strg P in einer PDF                           keine Bereichszeile, Ort „Überall"
+Suchleiste im Dokument                        📚, zweiwertig, 44 × 44
+```
+
+**Was entschieden wurde.**
+
+1. **Eine Zeile für die drei Fragen der Bibliothek** — WO (Ort), WAS (Art),
+   WIE (Form) —, unter dem Titel, in Deckel, Regal und Liste, auch am
+   Telefon (`.bib-wahl`). Jede steht als EINE Pille mit der gewählten
+   Antwort und einem gezeichneten ⌄ da (44 px, `aria-haspopup`,
+   `aria-expanded`); die übrigen Antworten stehen in ihrem Menü
+   (`Menue.wahl`, E721: ✓ und `aria-current` am Gewählten, Pfeiltasten am
+   Rechner, ein Blatt mit Karten am Telefon, Escape gibt den Fokus zurück).
+   Nach einer Wahl steht der Fokus auf der neuen Pille.
+2. **Je Ort EIN Name** (Vorgabe a): `ORTE` ersetzt die `REITER` — Meine
+   Ablage, Zuletzt geöffnet, Favoriten, Alle PDFs, Geteilt, Privat,
+   Ausbildung, In Datenbanken, Alle; darunter die Gruppe „Sammlungen" (die
+   sechs aus `Arbeitswelt.sammlungen`). „Alle PDFs" ist der Ort „Alle" mit
+   der Art PDF, wie am Weg.
+3. **Die Art als Pille** („Alle Arten ⌄", „PDF ⌄"), ihr Menü mit den
+   vorhandenen Arten und ihrer Zahl. Die Regel vom 6. September bleibt:
+   erst ab zwei Arten, ein gesetzter Filter immer — und er sagt es mit dem
+   Wort UND mit Rahmen und Grund, nie nur mit Farbe (§38).
+4. **Die Form am Formknopf** (Vorgabe b): ein Zeichen (das der gewählten
+   Form), dahinter die drei Formen — nicht mehr im Ortsmenü.
+5. **„Zuletzt geöffnet" zeigt ohne wirklich geöffnete Dokumente nichts**
+   (Vorgabe e) — die Attrappen „Neue Seite" und „PDF öffnen" stehen als
+   echte Knöpfe im Kopf darüber.
+6. **Keine zweite Suche auf der Bibliotheksseite.** „Dokument suchen …"
+   und „Seiten durchsuchen …" gehen; die Lupe der Liste öffnet die EINE
+   Suche. Die neue Frage `Bibliothek.suchBereich()` beantwortet, was das
+   Regal gerade zeigt — TIEF (im Ordner der Unterbaum), mit Ort und Art —,
+   die Regel bleibt im Bereich (§5). Dafür stehen die Ortsregeln EINMAL in
+   `reiterFilter` (Regal und Suche lesen beide daraus, §8).
+7. **Die EINE Suche kennt ihren Bereich** (`App.suche(vorgabe?, { bereich })`):
+   eine Zeile über den Filtern, der Umschalter des Kits (`Segment.bauen`,
+   radiogroup, Pfeiltasten, E706-Material):
+
+   ```txt
+   im Dokument   Dieses Dokument · Alle Dokumente · Überall   Vorgabe: die gemerkte Wahl (g)
+   Bibliothek    Bibliothek | „In ‚Ordner‘" · Überall         Vorgabe: Bibliothek
+   anderswo      keine Zeile                                  überall, wie bisher
+   ```
+
+   OHNE ZWEITEN MOTOR: Überall ist der bisherige Weg; Bibliothek derselbe
+   Weg mit `suchBereich().passt` auf die Treffer (findet Inhalt, anders als
+   der alte Titelfilter; Vorgabe c: Treffer mit Vorschau, das Regal wird
+   nicht live gefiltert); Alle Dokumente ist die Rechnung der Suchleiste
+   über alle Dokumente (`stellenSuchen`, E487); **Dieses Dokument ist die
+   Suchleiste selbst** (`DocumentMode.findenIn`): sie sucht mit ihren
+   Kästen, die Suche oben zeigt ihre Zahl und die Seiten, Enter schliesst
+   sie und öffnet die Leiste auf Treffer 1. Die Seitenfilter (Titel/Inhalt,
+   Art, Zeit, Ort) stehen in den Dokumentbereichen nicht — dort bedeuten sie
+   nichts.
+8. **Die Suchleiste im Dokument trägt dieselben drei Bereiche** — der
+   Schalter 📚 wird ein Umschalter mit gezeichneten Zeichen (page, pages,
+   globe); zwischen 761 und 1100 px nur die Zeichen (der Name bleibt für
+   den Vorleser und als Titel), am Telefon eine eigene Zeile. „Überall"
+   bringt das Wort in die Suche oben, über `App` (kein Griff zwischen
+   Bereichen, `test537`). **Eine Erinnerung** für Leiste und Suche:
+   `dokFindAlle` heisst weiter `false` = Dieses Dokument, `true` = Alle
+   Dokumente; nur „ueberall" ist neu (eine ältere Fassung liest es als
+   „dieses Dokument" — keine Migration, kein Datenfehler, §9).
+9. **„Ausbildung" ist ein Ort, kein Ende**: die Schulansicht trägt
+   dieselbe Ortspille (Fund des Bogens, siehe unten).
+10. **Ein „Überall" im Kopf der Suche**: die Vorgabe des Ortsfilters der
+    Seiten (`#f-ort`) heisst „Alle Orte" statt „Überall" — dieselbe
+    Funktion, ein anderes Wort, weil „Überall" seither der Bereich ist.
+
+**Das Muster ist das des Touch Kits** (Segmented, Menu/Popover und
+ActionSheet, SearchBar mit Bereichen) — **nachgebaut als Redion-Code** über
+`Segment`, `Menue.wahl` und `SelectionFlow`, nicht als Insel geladen und
+nicht abgeschrieben. Es ist kein fremder Code im Zweig; `FREMDCODE.md`
+braucht keinen Eintrag.
+
+**Warum.** Jede Kategorie zeigte alle ihre Antworten flach, jede in einer
+eigenen Bank, und der Ort stand zweimal da: E457/E380 bauten das Menü
+hinter `.bib-ort`, und daneben blieb die Wege-Zeile aus dem Studio-Umbau
+stehen — drei derselben Ziele unter anderem Namen. Dazu Sammlungen als
+eigene Bank, die Artenchips, die Attrappen, die „Neu" und „PDF öffnen" ein
+drittes und viertes Mal zeigten. Die Regalsuche war eine zweite, schwächere
+Suche (ein Titelfilter, E282 sagte selbst „findet nur Titel"), und die
+grosse Suche konnte den Ort nicht übernehmen, weil sie keinen kannte. Zwei
+Suchwege mit getrennten Wahlen statt einer Suche mit Bereichen (§8).
+
+**Die Alternativen.**
+
+- *Der Bereich „Bibliothek" über `uiFilters.location = ordnerId`* (so stand
+  es im Plan). Verworfen: der Ortsfilter der Abfragesprache kennt nur
+  Ordner, nicht Orte und Arten, und er zählt als gesetzter Filter — dann
+  liefe der Zweig, der Dokumentstellen nachliefert (E500), nicht mehr.
+  `suchBereich().passt` filtert genau, was das Regal zeigt.
+- *Ein `<select>` für den Bereich* (so die Codex-Skizze vom 1. Oktober, nur
+  verglichen). Verworfen: eine Auswahlliste versteckt die Wahl, der
+  Umschalter zeigt sie und kann Pfeiltasten; „Aktuelles Dokument" als
+  abgeschaltete Wahl ausserhalb eines Dokuments wäre Lärm.
+- *Das Regal live aus der Suche filtern.* Verworfen (Vorgabe c): die Suche
+  findet Inhalt, das Regal zeigt Deckel — zwei Antworten auf einer Fläche.
+- *Die Regalsuche behalten und ihr den Inhalt beibringen.* Verworfen: ein
+  zweiter Motor (§8), und Redur hat das Feld durchgestrichen.
+- *Die Sammlungen als `menuitem` statt `menuitemradio`.* `Menue.wahl` kennt
+  nur die Auswahl; eine Sammlung ist ein Ort, an den man geht — der Preis
+  ist, dass sie nie ✓ trägt.
+- *Ein Bereich „Diese Seite" auch auf einer gewöhnlichen Seite* (Redur
+  schrieb „wenn ich bei eine pdf oder eine dokument bin"). Nicht in diesem
+  Bogen: die Zeile steht, wo ein Dokument offen ist (PDF, pptx, docx), denn
+  dort gibt es eine Suchleiste, die zählt und springt (E487). Eine
+  gewöhnliche Seite hat ihre eigene Leiste (Strg F, E667); sie als
+  „Diese Seite" in die Zeile zu holen, ist ein eigener Schritt (L245
+  Punkt 7). `test600` §4 hält fest, dass dort heute keine Zeile steht.
+
+**Was es kostet.** Start 1860 → 1863 KB gzip (`test388` §5, Decke 1950) —
+mehr als die geschätzten 1,5 KB, weil die Kommentare der neuen Stilregeln
+mitreisen; keine neue Datei. Am Rechner ist ein Ortswechsel zwei Klicks
+statt einer (Pille, Eintrag), eine Art ebenso — der Preis von „nur eine
+sehen". Wer in einem Dokument Strg P drückt und „Dieses Dokument" gemerkt
+hat, öffnet beim Tippen die Suchleiste dahinter (sie ist der Motor);
+Escape schliesst erst die Suche, dann die Leiste. Wer danach in der Suche
+auf „Überall" wechselt, lässt die Leiste offen stehen — Escape (und seit
+der Durchsicht auch ein Klick auf den Grund) gibt ihr dann den Fokus und
+das Wort, das gerade im Suchfeld steht. Mit Absicht: die Leiste ist noch
+da, und ein Druck nimmt eine Ebene (E302); ein Wort, das man in „Überall"
+geändert hat, sucht sie danach im Dokument.
+
+**Weg und wo es bleibt (§43).**
+
+```txt
+Wege-Zeile (4 Ziele)                    → dieselben vier Namen im Ortsmenü
+„Sammlungen ⌄" (<details><select>)      → Gruppe „Sammlungen" im Ortsmenü; weiter das
+                                          Mehr-Blatt und die Adressen #seiten-wissen usw.
+Artenchips .bib-arten                   → Artpille mit Menü (Zahl je Art)
+„Dokument suchen …" (#bib-studio-suche) → die EINE Suche im Bereich Bibliothek: Kapsel,
+„Seiten durchsuchen …" (#bib-suche)       ⌕ am Telefon, Strg P, Kante „Suchen", die Lupe
+                                          der Liste (Redurs Zustimmung vom 3. Oktober)
+„⚟ Filtern" der Liste (Ortsfilter)      → die Ortspille im selben Kopf
+die drei Formen im Ortsmenü             → das Menü des Formknopfs
+Attrappen „Neue Seite"/„PDF öffnen"     → „Neu" und „PDF öffnen" im Kopf
+📚 der Suchleiste                        → die Wahl „Alle Dokumente" (sein An-Zustand)
+Griff .bib-reiter [data-r]              → ersatzlos: seit dem 6. September ohne Ziel
+#f-ort „Überall" (Vorgabe)               → dieselbe Vorgabe, Wort „Alle Orte"
+```
+
+`zustand.suche` war nie gespeichert — keine Datenfolge. Unverändert:
+Ordnerkarte „Hier suchen" (Vorgabe d), Notizhefte „Heft suchen", „Meine
+Aufgaben" mit Suche, die Suchen der Datenbanken, die Befehlspalette.
+
+**Gefunden auf dem Weg.**
+
+- **`App.suche(vorgabe)` suchte das mitgebrachte Wort nicht** — es zeichnete
+  „Zuletzt" darunter (`zeichne()` statt `suchen()`). Der Kommentar darüber
+  beschrieb genau diesen Fehler. Gefunden, weil „Überall" aus der
+  Suchleiste der erste Weg ist, der ein Wort mitbringt und dessen Treffer
+  jemand ansieht.
+- **„Alle PDFs · 20" über zwei PDFs**: der Kopf der Deckel zählte den Ort,
+  nicht die gezeigten Deckel — mit der Art als Pille stand die Zahl neben
+  dem falschen Wort. Mit gesetzter Art zählt er jetzt die Deckel.
+- **Zwei „Überall" übereinander** (Fund aus dem Bild der Suche im Ordner):
+  „In ‚Kabelkunde‘ · Überall" in der Bereichszeile und darunter die Vorgabe
+  „Überall" des Ortsfilters. `test600` §4 rot in `523d99ae4` (194/196),
+  dann „Alle Orte".
+- **Aus „Ausbildung" kam man nicht zurück** (bis zum Neuladen): die
+  Schulansicht hatte keinen Ort-Wähler, und `Bibliothek.oeffne()` lässt den
+  Ort stehen. `test600` §1 rot in `f76cb1500`, dann die Pille dort.
+- `test428` lief seine Tastaturprobe nach der Schleife zufällig bei 390 px
+  über das `<select>`; jetzt steht beides ausdrücklich da (Rechner: Pfeile,
+  Telefon: Tab). `test585` „landet genau" war ohne Marke grün (−1 und −2
+  liegen nah beieinander).
+- Am Telefon ist jedes Menü ein Blatt (`role=dialog`, E702) ohne
+  Pfeiltasten; mit einer Tastatur geht Tab. Das Blatt gehört `menue.ts`
+  (E721) und blieb unverändert (L245 Punkt 3). Die Pille sagt dabei
+  `aria-haspopup="menu"`, auch wenn ein Blatt aufgeht — das setzt
+  `Menue.wahl` so (Fund der Durchsicht, ebenfalls L245 Punkt 3).
+
+**Gegenproben** (eigene Arbeitsbäume auf `fbc180215` und `172f88029`, je eine
+Stelle, gebaut ohne Fehler, `test600` rot gesehen, zurückgenommen):
+
+```txt
+G1 die Wege-Zeile wieder über dem Raster            186/190 „keine Wege-Zeile … — ist 5, soll 0";
+                                                     „… höchstens zehn darüber — 11"
+G2 die Suche kennt ihren Ort nicht                  145/190 „die Suche geht mit [Bibliothek · Überall]
+   (imDokument/regal immer falsch)                   auf — ist []"; „… findet nur, was darin
+                                                     liegt — ist [Datenblatt, Skript B,
+                                                     Absicherung, Notizen]"
+G3 der alte Wert true wird nicht gelesen            184/190 „der alte Wert „true" heisst „Alle
+                                                     Dokumente" — ist "dokument""
+G4 die Schulansicht ohne Ortspille                  190/194 „in „Ausbildung" steht derselbe
+                                                     Ort-Wähler — {"schule":true,"ort":""}"
+G5 #f-ort wieder „Überall" (der Stand 172f88029)     194/196 „„Überall" steht im Kopf der Suche
+                                                     genau einmal — ist 2, soll 1"
+```
+
+G4 lief zuerst so, dass der Bau rot war (`'' && …` ist für TypeScript
+„immer falsch", TS2873) — §52.6: keine Gegenprobe; erst der umformulierte
+Lauf zählt.
+
+**Nach der Durchsicht** (11. Oktober 2026). Eine unabhängige Durchsicht
+des Zweigs (Stand `ed0bf9d87`) fand einen blockierenden Fund und mehrere
+kleine. Jeder bekam zuerst seine Zusage (`287654138`, `test600` rot mit
+205 von 214), dann den Bau (`1136e2118`):
+
+```txt
+Fund                                         rot gegen ed0bf9d87                    gebaut
+Bereichszeile am Telefon (blockierend):      ["Dieses Dokument",105,101],           unter 520 px weichen die drei
+„Dieses Dokum… · Alle Dokume… · Übe…"        ["Alle Dokumente",94,91],              Zeichen; die Namen bleiben ganz
+                                             ["Überall",42,40]                      (105/105, 94/94, 42/42)
+„Meine Abla… · 7" in Regal und Liste (390)   ["Meine Ablage",83,82]                 `.bib[data-bib-bereich]` gibt am
+                                                                                    Telefon das innere Polster ab wie
+                                                                                    die Deckel seit E236: Kopf 302 →
+                                                                                    334 px in allen drei Formen
+„Als Dokumente" mit `grid` (= Ort „Alle")    "gleich":["grid"]                      `pages`, das Zeichen für Dokumente
+Enter binnen 220 ms in „Dieses Dokument"     {"suche":true,…,"fokus":false}          das Wort geht direkt an die
+tat nichts                                                                          Suchleiste, auf Treffer 1
+Klick auf den Grund: Fokus fiel auf <body>   {"fokus":false,"tag":"BODY"};          `schliessen()` wie Escape, mit
+                                             im Dokument ohne Fokus in der Leiste   `preventDefault`
+`test585` §5 nur noch am Rechner             — (die Telefonzusage fehlte)            dieselbe Marke im Blatt am Telefon
+`[data-rmo-new]` in motion.ts                — (zeigte auf die entfernte Attrappe)   gestrichen (§43: der Weg „Neue
+                                                                                    Seite" bleibt der Neu-Knopf und
+                                                                                    `#btn-neu-handy`)
+„19 Elemente" im Kopf von test600            — (gemessen waren 20)                   berichtigt
+```
+
+Ein Anlauf der Zeichenprobe war aus dem FALSCHEN Grund grün: er verglich
+`Register.symbole.alsSvg()` mit dem vom Browser serialisierten Menü, und
+„<path/>" ist nicht „<path></path>". Seither gehen beide Seiten durch den
+Browser. Die Telefonzusage von `test585` war gegen `ed0bf9d87` grün (das
+Blatt trug die Marke schon); ihre Gegenprobe: `.menu.blatt .ru-marke
+{display:none !important}` angehängt → rot „Telefon, Ortsblatt: die Marke
+steht auf dem gewählten Ort (Meine Ablage) — {"blatt":true,"t":0,
+"zt":209.89…}", 92/93, zurückgenommen.
+
+**Verworfen bei der Durchsicht:** Kurzformen („Dokument · Alle · Überall")
+— „Alle" allein sagt nicht, WAS alle; die Zeichen schon ab 760 px
+verstecken — zwischen 521 und 760 px passen sie; der Abstand der Pillen
+6 → 4 px — er hätte den einen Pixel gerettet, „· 12" nicht mehr; `cards`
+für „Als Dokumente" — das heisst überall sonst „Lernen". Bei 360 px
+stehen die Namen der Zeile ebenfalls ganz da (gemessen, `messungen.md`
+§94).
+
+**Nachbarn nach der Durchsicht** (unter dem Schloss, auf `1136e2118`):
+`test600` 214/214, `test585` 93/93, `test33` 107/107, `test359` 26/26,
+`test369` 48/48, `test424` 51/51, `test428` 65/65, `test430` 39/39,
+`test459` 31/31, `test202`, `test556` 22/22, `test589`, `test114`,
+`test296` 17/17, `test229` 20, `test47` 42/42, `test588` 78/78, `test494`
+153, `test580`, `test581` 93, `test264` 25, `test531` 19/19, `test476`
+31/31, `test441` 42/42, `test432` 48/48, `test597`, `test362` 18/18,
+`test222` 51/51, `test388` 22 (Start 1864 KB gzip, vorher 1863, Decke
+1950). `test332` rot wie auf dem Grundstand, mit denselben fünf toten
+Regeln (`.menu .kenn` und viermal `#handy-oben`) — keine neue. Die
+Einzeldatei allein in einem Ordner über `file://` bei 390: Bereichszeile
+in der PDF 105/105 · 94/94 · 42/42, Kopf 334 px in allen drei Formen,
+Enter vor der Uhr „1/1", keine Ausnahme. Datei-Wächter 550, 549, 225,
+401, 402, 537, 290, 298, 410, 400, 109, 87, 105 grün. `test436` nicht
+erneut gefahren (er wackelt auf beiden Ständen, L245 Punkt 9). Bilder nach
+der Durchsicht (nicht eingecheckt, §55.4): die Suche in der PDF, in der
+Bibliothek und im Ordner, die Liste, das Regal, die Bibliothek und das
+Formmenü — Rechner und Telefon, hell und dunkel.
+
+**Nachbarn** (unter dem Schloss): `test600` 196/196, `test33` 107/107,
+`test202`, `test359` 26/26, `test369` 48/48, `test424` 51/51, `test428`
+65/65, `test430` 39/39, `test459` 31/31, `test585` 91/91, `test581` 93,
+`test264` 25, `test531` 19/19, `test476` 31/31, `test441` 42/42, `test114`,
+`test556` 22/22, `test589`, `test222` 51/51, `test272`, `test248` 50,
+`test303` 18/18, `test432` 48/48, `test597` 91/91, `test594` 76/76,
+`test588` 78/78, `test229` 20, `test297` 59/59, `test478` 43/43, `test143`,
+`test47` 42/42, `test296` 17/17, `test436`
+71/71 (im Stück einmal rot — „Cannot read properties of null (reading
+'click')" —, allein grün; hier stand zuerst „unter Last". Die Durchsicht hat
+nachgezählt: `test436` §7 wackelt AUCH auf dem Grundstand, dort in 2 von 5
+Läufen rot, auf diesem Stand in 4 von 10, mit demselben Bild — die erste
+`.bib-zelle` ist die Karte einer Seite des Willkommensinhalts, der noch
+aufgebaut wird, und seit E721 trägt jede Karte eine `.bib-zelle`. Nicht
+von diesem Zweig; L245 Punkt 9), `test388` 22 (1863 KB), `test362`
+18/18. Die Einzeldatei allein in einem Ordner über `file://`: Ortsmenü
+mit 15 Einträgen, Strg P mit [Bibliothek · Überall], ein Treffer, keine
+Ausnahme. Datei-Wächter: 550, 549, 225, 401, 402, 537, 290, 298, 410, 400,
+109, 87, 105. Fremde rote Läufe des Grundstands, nicht angefasst:
+`test86`, `test201` §1, `test270`, `test274`, `test332`, `test348`,
+`test365`, `test425`, `test448`, `test470`, `test493`, `test524`.
+
+**Bilder** (§55; nicht eingecheckt, §55.4): vorher (`acb876c1d`) und
+nachher, Rechner 1440×900 und Telefon 390×844, hell und dunkel — die
+Bibliothek mit der einen Zeile, Ortsmenü (Gruppen, ✓, Marke), Artmenü,
+Formmenü, „Alle PDFs", ein echtes „Zuletzt geöffnet", die Liste, die Suche
+im Bereich Bibliothek, im Ordner („In ‚Kabelkunde‘"), in einer PDF mit drei
+Bereichen, die Suchleiste mit dem Umschalter, „Ruhige Darstellung"; dazu
+die Zeile mit gesetzter Art und das offene Ortsmenü in allen zehn
+Schemata (auch Starker Kontrast und Touch Kit hell/dunkel). Drei Funde
+kamen aus dem Bild — die zwei „Überall" (oben) und: am Telefon stand „Alle …" statt „Alle Arten"
+(jetzt weicht das Wort „Dokumente" der Ortspille, nie die Zahl und nie die
+Art), und „Dieses Dokument" lief in der Suchleiste am Telefon über seinen
+Rand (gleich breite Wahlen; jetzt nach Inhalt).
+
+**Nicht in diesem Bogen:** ein sichtbarer Sucheingang oben in einem
+Dokument am Telefon (Vorgabe f, L245); „Im Regal zeigen" aus der Suche;
+ein Bereich für die Notizhefte; die Ordnerkarte bleibt ein örtlicher
+Filter (Vorgabe d); Pfeiltasten im Blatt am Telefon (`menue.ts`).

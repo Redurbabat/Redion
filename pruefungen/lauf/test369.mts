@@ -208,12 +208,12 @@ console.log('\n5 · Die übrigen Reiter bleiben flach');
 const flachSatz = await seite.evaluate(() => {
   document.querySelector<HTMLElement>('.bib-ort')?.click();
   return new Promise<string[]>(f => setTimeout(() => {
-    document.querySelector<HTMLElement>('.menu [data-x="kuerzlich"]')?.click();
+    document.querySelector<HTMLElement>('.menu [data-wahl="kuerzlich"]')?.click();
     setTimeout(() => f([...document.querySelectorAll('.bib-deckel .bib-deckel-name b')]
       .map(b => (b.textContent || '').trim())), 700);
   }, 400));
 });
-p('„Kürzlich verwendet" zeigt weiter über alle Ebenen',
+p('„Zuletzt geöffnet" (bis E725 „Kürzlich verwendet") zeigt weiter über alle Ebenen',
   flachSatz.includes('BT-Arbeitssicherheit') && flachSatz.includes('Redur Babat'),
   JSON.stringify(flachSatz.slice(0, 6)));
 p('… und ist damit eine Frage über alles, nicht über eine Ebene',

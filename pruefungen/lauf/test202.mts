@@ -826,7 +826,9 @@ await seite.waitForSelector('.bib');
    Sie sucht deshalb beide Auslöser. Fehlt BEIDES, wird sie rot — und das
    ist der Fall, den sie bewachen soll. */
 await seite.locator('[data-r="mehr"], [data-orte]').first().click();
-const schoolChoice = seite.locator('[data-x="schule"]').last();
+/* Seit E725 ist das Ortsmenü die EINE Auswahlliste (`Menue.wahl`, E721):
+   ihre Einträge tragen `data-wahl`. Gesucht wird weiter „Ausbildung". */
+const schoolChoice = seite.locator('.menu [data-wahl="schule"]').last();
 if (await schoolChoice.count()) {
   await schoolChoice.click();
   await seite.waitForSelector('.school-home');

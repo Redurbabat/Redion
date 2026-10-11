@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 540 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 541 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1848,6 +1848,31 @@ Gezählt am 6. Oktober, im selben Bogen: der Befehl sagt 536 — auf seinem
 Zweig; beim Zusammenführen neu zu zählen. Beim Zusammenführen nachgezählt (11. Oktober,
 `claude/morgen-besser-3`): 542.*
 
+*Und 543: `test600` — die Bibliothek mit EINER Wahl je Kategorie und die
+EINE Suche, die ihren Bereich kennt (E725). Redurs Notiz unter dem Foto
+der Bibliothek, „ich sollte von jeder kategorie nur eine sehen und die
+anderen alles unterdem das beim ^ … und die sucher hier sollte es bei der
+ganz obe such integriert sein", in 196 Zusagen über sieben Abschnitte: Ort,
+Art und Form je ein Wähler in einer Zeile, in Deckel, Regal und Liste, bei
+1440 und 390; jede frühere Wahl mit genau einem Namen in einem Menü; der
+erste Deckel im ersten Bild des Telefons; kein Suchfeld mehr auf der
+Seite; und Strg P, die Kapsel und ⌕ gehen in der Bibliothek mit
+[Bibliothek · Überall], in einer PDF mit [Dieses Dokument · Alle Dokumente
+· Überall] auf — „Dieses Dokument" meldet dieselbe Zahl wie die
+Suchleiste, weil sie der Motor ist. Gegen den Grundstand rot: 30 von 191
+bestanden. Drei seiner Zusagen fand er gegen den eigenen Bau: wer
+„Ausbildung" wählte, kam bis zum Neuladen nicht zurück; im Kopf der Suche
+standen zwei verschiedene „Überall" übereinander; und am Telefon ist
+jedes Menü ein Blatt ohne Pfeiltasten — einmal war er deshalb aus dem
+FALSCHEN Grund rot. Und eine Zeile von `test585` war ohne Marke grün, weil
+−1 und −2 „genau aufeinander" liegen; eine leere Liste hat auch keine
+Doppel (§55.2). Nach der Durchsicht vom 11. Oktober hält er 214 Zusagen:
+die Bereichszeile am Telefon hatte „Dieses Dokum… · Alle Dokume… · Übe…"
+gezeigt — das Bild des Bauers zeigte es, sein Lauf nicht, weil er nach
+Namen fragte und nicht nach ihrer Breite. Gezählt am 10. Oktober, im
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 535. Beim Zusammenführen nachgezählt (11. Oktober,
+`claude/morgen-besser-3`): 543.*
+
 ### Die Befehle
 
 ```txt
@@ -1864,7 +1889,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 540 Läufe
+npm run pruefen                      alle 541 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1954,7 +1979,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 540 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 541 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

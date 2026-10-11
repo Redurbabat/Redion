@@ -1,5 +1,65 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E725 nach der Durchsicht — ganze Namen, ein gleich breiter Kopf, Enter vor der Uhr, der Grund wie Escape
+
+**Redur** (Masterprompt vom 29. September, S. 13): „… beim suche wenn ich
+bei eine pdf oder eine dokument bin sollte mir wie es jetzt ist mir zeiget
+wo ich suchen will …".
+
+**Fund** (unabhängige Durchsicht des Stands `ed0bf9d87`; `test600` rot mit
+205 von 214 in `287654138`): am Telefon zeigte die Bereichszeile in einer
+PDF „Dieses Dokum… · Alle Dokume… · Übe…" (blockierend); in Regal und
+Liste stand „Meine Abla… · 7"; „Als Dokumente" trug das Zeichen des Orts
+„Alle"; Enter binnen 220 ms in „Dieses Dokument" tat nichts; ein Klick auf
+den Grund liess den Fokus auf `<body>` fallen; `test585` prüfte die Marke
+im Ortsmenü nur noch am Rechner.
+
+**Bau** (`1136e2118`): unter 520 px weichen die Zeichen der Bereichszeile,
+die Namen bleiben ganz; `.bib[data-bib-bereich]` gibt am Telefon das innere
+Polster ab (Kopf 334 px in allen drei Formen); `pages` für „Als Dokumente";
+Enter geht vor der Uhr direkt an die Suchleiste; der Grund schliesst über
+`schliessen()`; `[data-rmo-new]` aus motion.ts.
+
+**Prüfung:** `test600` 214/214, `test585` 93/93 (die Telefonzusage mit
+eigener Gegenprobe rot gesehen); Nachbarn und Datei-Wächter in E725 („Nach
+der Durchsicht"); Zahlen in `messungen.md` §94; was offen ist, in L245
+Punkt 3, 7, 8 und 9.
+
+## 10. Oktober 2026 · E725 — Bibliothek: eine Wahl je Kategorie, eine Suche mit Bereichen (Masterprompt #13)
+
+**Redur** (Masterprompt vom 29. September, S. 13, unter dem Foto der
+Bibliothek): „hier habe ich sehr viel zum sehe ich sollte von jeder
+kategorie nur eine sehen und die anderen alles unterdem das beim ^ … und
+die sucher hier sollte es bei der ganz obe such integriert sein beim suche
+wenn ich bei eine pdf oder eine dokument bin sollte mir wie es jetzt ist
+mir zeiget wo ich suchen will und lösche es von dem biblotek seite …";
+Zustimmung vom 3. Oktober: „die Suchleiste ‚Dokument suchen‘ der
+Bibliotheksseite in die globale Suche überführen".
+
+**Fund** (`test600` gegen `acb876c1d`, 30 von 191): 20 Bedienelemente über
+dem ersten Deckel, am Telefon der erste Deckel bei y 931 von 844; der Ort
+zweimal (Ortsmenü und Wege-Zeile, drei Ziele unter anderem Namen); die
+Regalsuche ein Titelfilter („Leitungsschutz" → 0 Deckel); die grosse Suche
+ohne Bereich, in einer PDF nur „Überall"; in der Suchleiste ein 📚.
+
+**Bau:** eine Zeile `.bib-wahl` mit Ort-, Art- und Formpille, je mit
+`Menue.wahl` (ein Name je Ort, `ORTE` statt `REITER`; die Sammlungen als
+Gruppe im Ortsmenü; die Formen nur am Formknopf); kein leeres „Zuletzt";
+keine Suchfelder auf der Seite; `Bibliothek.suchBereich()` und
+`reiterFilter` (die Ortsregeln einmal); `App.suche(vorgabe, { bereich })`
+mit Bereichszeile (`Segment`); `DocumentMode.findenIn`, `findBereich`,
+`findBereichMerken`; der Umschalter in der Suchleiste; die Ortspille auch
+in „Ausbildung"; die Vorgabe des Ortsfilters heisst „Alle Orte". Gefunden
+auf dem Weg: `App.suche(vorgabe)` suchte das Wort nicht; „Alle PDFs · 20"
+über zwei PDFs; aus „Ausbildung" kein Weg zurück; zwei „Überall" im Kopf
+der Suche.
+
+**Prüfung:** `test600` 196/196 (neu, rot gesehen, fünf Gegenproben);
+angepasst und rot gesehen: `test33`, `test202`, `test359`, `test369`,
+`test424`, `test428`, `test430`, `test459`, `test585`; Nachbarn und
+Datei-Wächter in E725; Zahlen in `messungen.md` §94; was offen ist, in
+L245. Start 1860 → 1863 KB.
+
 ## 10. Oktober 2026 · E724 · Durchsicht: „✨ KI" ersetzt an der Stelle, 44 px am Finger
 
 **Redur** (PDF vom 29. September, S. 16): „… dort integriert sein also im

@@ -8348,6 +8348,65 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L245 · Eine Suche nach E725: was noch fehlt — der Sucheingang im Dokument am Telefon und ein paar Ränder — 10. Oktober 2026
+
+**Gefunden beim Bau von E725** (Redur, Masterprompt S. 13: „… die sucher
+hier sollte es bei der ganz obe such integriert sein beim suche wenn ich
+bei eine pdf oder eine dokument bin sollte mir wie es jetzt ist mir zeiget
+wo ich suchen will"). E725 hat die Regalsuche in die EINE Suche geholt und
+ihr Bereiche gegeben (Bibliothek, Dieses Dokument, Alle Dokumente,
+Überall). Offen bleibt, damit es nicht in einem Commit verschwindet (§35):
+
+1. **Am Telefon steht in einem Dokument oben kein Sucheingang.** Die Lupe
+   der Dokumentleiste ist dort ausgeblendet (`bausteine.css`, „Am Telefon
+   steht die Lupe nicht im Kopf") und steht nur in der Ansichtsklappe unter
+   👁; die Schalensuche erreicht man mit einer Tastatur über Strg P.
+   Vorgabe (f) des Plans: nicht in dieser Welle — es ist der Platz der
+   Dokumentleiste (Titel braucht seine hundert Pixel, `test285`), mit dem
+   Seiteneditor und der Fläche abzustimmen.
+2. **Die Ordnerkarte behält „Hier suchen"** (Vorgabe d): ein örtlicher
+   Filter in der flüchtigen Karte, wie die Suchleiste im Dokument — kein
+   zweiter Motor über die Bibliothek, sondern eine Lupe über einen Ordner.
+   Mit Absicht so, aufgeschrieben, damit niemand es für einen Rest hält.
+3. **Das Blatt am Telefon (`Menue.wahl`, E702/E721) kennt keine
+   Pfeiltasten.** Mit einer Tastatur am Telefon geht Tab durch die Einträge
+   (`test428` misst es); ein Blatt ist `role=dialog`, kein `role=menu`. Das
+   Blatt gehört `menue.ts` (E721), deshalb nicht in diesem Bogen. Dazu (Fund
+   der Durchsicht vom 11. Oktober): die Pille sagt `aria-haspopup="menu"`,
+   auch wenn am Telefon ein Blatt mit `role=dialog` aufgeht — ein Vorleser
+   kündigt ein Menü an und findet einen Dialog. Auch das setzt
+   `Menue.wahl`.
+4. **Notizhefte und „Seiten & Wissen" haben keinen Bereich.** Dort geht die
+   Suche ohne Bereichszeile auf (überall). Ein Bereich „dieses Fach" wäre
+   dieselbe Frage wie `Bibliothek.suchBereich()`, nur im Bereich der
+   Notizhefte zu beantworten.
+5. **„Im Regal zeigen" fehlt.** Die Suche im Bereich Bibliothek zeigt
+   Treffer mit Vorschau und öffnet sie (Vorgabe c); einen Weg, einen
+   Treffer im Regal zu markieren, ohne ihn zu öffnen, gibt es nicht.
+6. **Die Sammlungen im Ortsmenü tragen nie ✓.** `Menue.wahl` kennt nur
+   `menuitemradio`; eine Sammlung ist ein Ort, an den man geht (sie öffnet
+   die Arbeitswelt), kein Zustand des Regals.
+7. **Auf einer gewöhnlichen Seite steht keine Bereichszeile** (Fund der
+   Durchsicht). Redur schrieb „wenn ich bei eine pdf oder eine dokument
+   bin" — gebaut ist die Zeile für Dokumente (PDF, pptx, docx), weil dort
+   die Suchleiste zählt und springt (E487). Eine gewöhnliche Seite hat ihre
+   eigene Leiste (Strg F, E667); ein Bereich „Diese Seite" über diese Leiste
+   wäre der nächste Schritt. `test600` §4 hält den heutigen Stand fest.
+8. **Am Rechner deckt die Rückgängig-Pille des Studios die Liste „Alle
+   Dokumente" der Suchleiste zum Teil zu** (Fund der Durchsicht, schon auf
+   dem Grundstand so, nicht von E725): bei 1440 px liegt sie über der
+   zweiten Zeile der Liste („Hier steht Leitungsschutz…"). Die Liste hängt
+   unter der Leiste (E487), die Pille unten links im Studio — zwei Ebenen,
+   die einander nicht kennen.
+9. **`test436` §7 wackelt — auch auf dem Grundstand** (Fund der
+   Durchsicht, nicht von E725): auf `acb876c1d` in 2 von 5 Läufen rot, auf
+   dem Stand von E725 in 4 von 10, jedes Mal „Cannot read properties of
+   null (reading 'click')". Die erste `.bib-zelle` ist dann die Karte einer
+   Seite des Willkommensinhalts, der noch aufgebaut wird; seit E721 trägt
+   jede Karte eine `.bib-zelle`. Der Lauf braucht ein Warten auf einen
+   fertigen Bestand oder einen eigenen Ordner — ein eigener Schritt, damit
+   der Wächter nicht in einem fremden Bogen verändert wird (§31).
+
 ## L244 · KI am Ort: was E724 nicht gebaut hat — 6. Oktober 2026
 
 **Gefunden beim Bau von E724** (Redur: „hier beim ki sollte alles komplet
@@ -9875,7 +9934,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 139 Lücken, 83 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 140 Lücken, 84 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -230,6 +230,21 @@ auf eine Seite in der Seitenleiste öffnet ihr Seitenmenü. Mit gedrückter
 Umschalttaste bekommst du das Menü des Browsers (E721).
 
 
+Bibliothek und Suche
+
+Über den Dokumenten der Bibliothek steht eine Zeile mit drei Fragen: wo
+(Meine Ablage, Zuletzt geöffnet, Favoriten, Alle PDFs, Geteilt, Privat,
+Ausbildung, In Datenbanken, Alle — darunter die Sammlungen), was (alle
+Arten oder eine, mit ihrer Zahl) und wie (als Dokumente, nach Heften, als
+Tabelle). Jede zeigt die gewählte Antwort; ein Tipp öffnet die übrigen.
+Gesucht wird in der einen Suche oben (Strg P, die Lupe, am Telefon ⌕): in
+der Bibliothek zuerst dort — in einem Ordner nur darin, nach Titel und
+Inhalt —, mit „Überall" in ganz Redion. In einer PDF fragt sie, wo: dieses
+Dokument (dann zählt und markiert die Suchleiste des Dokuments die
+Stellen, Enter springt zur ersten), alle Dokumente oder überall; dieselbe
+Wahl steht in der Suchleiste des Dokuments und wird gemerkt (E725).
+
+
 Bewegung
 
 Über der Oberfläche liegt eine eigene Schicht für Bewegung —
