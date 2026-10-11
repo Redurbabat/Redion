@@ -1286,20 +1286,20 @@ const Lernwelt = (() => {
   /** Was die Kennzahlen brauchen — erst gerechnet, wenn eine danach fragt. */
   const kennzahlKontext = (vorgabe: { queue?: any; stats?: any; spiel?: any } = {}): KennzahlKontext => {
     const merk = new Map<string, unknown>(Object.entries(vorgabe));
-    const einmal = <T>(name: string, rechnen: () => T): T => {
+    const gemerkt = <T>(name: string, rechnen: () => T): T => {
       if (!merk.has(name)) merk.set(name, rechnen());
       return merk.get(name) as T;
     };
     return {
-      get queue() { return einmal('queue', () => warteschlange()); },
-      get stats() { return einmal('stats', () => statistik()); },
-      get spiel() { return einmal('spiel', () => aktivitaet()); },
-      get fehler() { return einmal('fehler', () => fehlerListe()); },
-      get ziel() { return einmal('ziel', () => tagesziel()); },
+      get queue() { return gemerkt('queue', () => warteschlange()); },
+      get stats() { return gemerkt('stats', () => statistik()); },
+      get spiel() { return gemerkt('spiel', () => aktivitaet()); },
+      get fehler() { return gemerkt('fehler', () => fehlerListe()); },
+      get ziel() { return gemerkt('ziel', () => tagesziel()); },
       get pruefung() {
-        return einmal('pruefung', () => pruefungen().find(item => item.tage === null || item.tage >= 0) || null);
+        return gemerkt('pruefung', () => pruefungen().find(item => item.tage === null || item.tage >= 0) || null);
       },
-      get stabil() { return einmal('stabil', () => lernkarten().filter(card => zahl(card?.sr?.wdh) >= 2).length); }
+      get stabil() { return gemerkt('stabil', () => lernkarten().filter(card => zahl(card?.sr?.wdh) >= 2).length); }
     };
   };
   const pruefungTage = (p: LernweltPruefung | null): string => !p ? 'keine geplant'
