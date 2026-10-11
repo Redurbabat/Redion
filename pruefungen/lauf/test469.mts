@@ -118,7 +118,13 @@ const mitSkript = async (): Promise<Page> => {
 /** Die Suche öffnen und ein Wort eingeben; gibt die Trefferzeilen zurück. */
 const suchen = async (s: Page, wort: string) => {
   await s.evaluate(() => document.querySelectorAll('.overlay').forEach(o => o.remove()));
-  await s.evaluate(() => App.suche());
+  /* „Überall" AUSDRÜCKLICH (E725). Seit E725 kennt die Suche ihren Bereich,
+     und in einem offenen Dokument beginnt sie mit der gemerkten Wahl —
+     ohne Wahl „Dieses Dokument" (Vorgabe g). Dieser Lauf hält die Suche
+     ÜBER die Dokumente (E500), und das ist genau der Weg, den „Überall"
+     geht: derselbe Nachlieferblock, dieselbe Liste. Gegenprobe:
+     `bereich: 'dokument'` macht §2 rot (nur das Skript, „1 Treffer"). */
+  await s.evaluate(() => App.suche(undefined, { bereich: 'ueberall' }));
   await s.waitForSelector('.overlay #q', { timeout: 5000 });
   await s.fill('.overlay #q', wort);
   await s.waitForTimeout(600);
