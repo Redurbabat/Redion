@@ -39,6 +39,23 @@ Linse, die Überschrift frei; während der Fahrt (angehalten über
 „Weiterdenken.", am Halt, mitten im Verblassen bei 0,675) dieselbe Linse
 wie vorher, am Halt rechts vom Punkt.
 
+**Durchsicht** (11. Oktober abends): zwei Lücken im Wächter, eine falsche
+Zahl in der Entscheidung. (1) `test589` §16 liess ein „Verblassen" auf 0,5
+mit `remove()` in einem Schritt durch — 146 von 146 grün. Neu: das letzte
+sichtbare Bild vor „weg" zeigt höchstens 0,2, von Bild zu Bild fällt die
+Deckkraft höchstens um 0,25 (gerechnet aus `--ease-exit`: ein Bild 0,083,
+zwei 0,162, drei 0,239); stockt der Browser dort, wird nachgemessen. Mit
+der Gegenprobe 148 ok, 4 offen. (2) §8 misst jetzt das Neuzeichnen mitten
+im Verblassen: 1000 px bei gut 1800 ms — die Linse ist da, halb verblasst
+und weiter fallend, rechts vom Punkt in der neuen Lage, die Abschrift in
+der neuen Schriftgrösse; rot ohne `geht.currentTime = versatz` (151/1), mit
+dem Halt von vor E740 (139/13) und mit der Schrift des ersten Ankommens
+(151/1). (3) E744 „Was es kostet": die +191 B gzip sind Code, kein
+Kommentar (`removeComments`, E715) — vor allem `verblassen()`, das Dauer und
+Kurve aus den Marken liest. `test589` 152 von 152. Ein neues Bild der Fahrt,
+angehalten bei 1000, 1025 und 1050 ms, zeigt die Linse quer über „en." von
+„Weiterdenken." (das alte bei 1150 ms stand fast schon am Halt).
+
 **Offen:** nichts aus dieser Frage. Die Bilder liegen im Kratzordner, nicht
 im Verzeichnis (§55.4).
 

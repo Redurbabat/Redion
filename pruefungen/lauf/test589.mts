@@ -168,10 +168,11 @@
  *       „kein Element". Neu, je Fall mit Fahrt: das letzte sichtbare Bild vor
  *       „weg oder leer" zeigt höchstens 0,2, von Bild zu Bild fällt die
  *       Deckkraft um höchstens 0,25 (gerechnet aus `--ease-exit`: über ein
- *       Bild höchstens 0,083, zwei 0,162, drei 0,239; gemessen 0,061–0,099
- *       und 0,080–0,082). Stockt der Browser genau dort (über 40 ms auf der
- *       Bilduhr), wird nachgemessen, höchstens dreimal. Mit der Gegenprobe:
- *       148 ok, 4 offen — „zeigt 0.513 … fällt höchstens 0.513".
+ *       Bild höchstens 0,083, zwei 0,162, drei 0,239; gemessen am Bau
+ *       0,061–0,097 und 0,080–0,082). Stockt der Browser genau dort (über
+ *       40 ms auf der Bilduhr), wird nachgemessen, höchstens dreimal. Mit
+ *       der Gegenprobe: 148 ok, 4 offen — „zeigt 0.513 … fällt höchstens
+ *       0.513".
  *   §8  MITTEN IM VERBLASSEN NEU GEZEICHNET. Ein neues Ankommen, 1740 ms
  *       nachdem die Linse da ist das Fenster auf 1000 px: eine neue Linse
  *       ist da, halb verblasst (zwischen 0,05 und 0,95) und fällt weiter,

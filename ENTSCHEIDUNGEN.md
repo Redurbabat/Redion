@@ -785,7 +785,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
-* **E744** — Die Linse auf „Heute“ verblasst nach der Fahrt (Redur, 11. Oktober, 19:43 UTC: „verblassen“ auf die Frage „Die leere Linse neben dem Wort“ aus AUFGABEN.md): die Fahrt aus E712/E740 bleibt, am Halt rechts vom Punkt geht die Deckkraft in 320 ms auf 0 (`--motion-slow`, `--ease-exit`, keine eigene Dauer), danach wird die Linse entfernt; in Ruhe, beim Neuzeichnen danach, bei „Ruhig“ und „weniger Bewegung“ entsteht keine. `test589` §16 misst die vier Zusagen von E740 jetzt am Halt (eine Millisekunde vor dem Ende der Fahrt), in Ruhe keine sichtbare Linse und das Verblassen Bild für Bild; §8 mit seinem Wort geändert. Gegen 97d156b03: 132 ok, 14 offen; mit E744 146 von 146. Ergänzt E740; +191 B gzip.
+* **E744** — Die Linse auf „Heute“ verblasst nach der Fahrt (Redur, 11. Oktober, 19:43 UTC: „verblassen“ auf die Frage „Die leere Linse neben dem Wort“ aus AUFGABEN.md): die Fahrt aus E712/E740 bleibt, am Halt rechts vom Punkt geht die Deckkraft in 320 ms auf 0 (`--motion-slow`, `--ease-exit`, keine eigene Dauer), danach wird die Linse entfernt; in Ruhe, beim Neuzeichnen danach, bei „Ruhig“ und „weniger Bewegung“ entsteht keine. `test589` §16 misst die vier Zusagen von E740 jetzt am Halt (eine Millisekunde vor dem Ende der Fahrt), in Ruhe keine sichtbare Linse und das Verblassen Bild für Bild; §8 mit seinem Wort geändert. Gegen 97d156b03: 132 ok, 14 offen; mit E744 146 von 146, nach der Durchsicht 152 von 152 (§16: kein Sprung beim Verblassen; §8: mitten im Verblassen neu gezeichnet geht es an derselben Stelle weiter). Ergänzt E740; +191 B gzip (Code, kein Kommentar).
 
 ---
 
@@ -66837,13 +66837,65 @@ gälten die Zusagen von E740 an keiner Stelle mehr, und Redurs „Ja“ zu
 „neben dem Wort“ wäre stillschweigend weg.
 
 **Was es kostet.** `quell/schale/bedienung/linse.js` 3686 → 3877 B gzip
-(+191 B, fast alles der Kommentar zu `verblassen`), zwei Kommentare in
-`studio.css` und `lernwelt.ts`; `test388` §5: 1919 KB über 255 Dateien
-(Decke 1950, unverändert gerundet). In
+(+191 B; roh 12 561 → 12 963 B). Das ist Code, kein Kommentar:
+`tsconfig.bauen.json` entfernt die Kommentare (`removeComments`, E715), im
+gebauten `linse.js` steht nur der Kopfvermerk. Einzeln herausgenommen und
+neu gepackt (gzip 6, wie `test388`): `verblassen()`, das Dauer und Kurve aus
+den Marken liest, macht 168 B (ohne es 3709 B), die Animation des
+Verblassens 47 B (ohne sie 3830 B); der alte Ruhezweig — die Linse still an
+ihren Halt legen, an zwei Stellen — ist dafür weg. Hier stand „fast alles
+der Kommentar zu `verblassen`“; das war falsch (Durchsicht, siehe unten).
+Dazu zwei Kommentare in `studio.css` und `lernwelt.ts`; `test388` §5: 1919
+KB über 255 Dateien (Decke 1950, unverändert gerundet). In
 Ruhe gibt es auf „Heute“ kein Glas mehr; wer die Linse sehen will, muss
 ankommen. Bei „Ruhig“ und „weniger Bewegung“ gibt es keine Linse mehr
 (vorher eine stille). `test589` wartet rund 12 s länger (vier Fälle mit
 Fahrt, je 1100 + 1200 + 3200 ms statt 2600 ms).
+
+**Durchsicht** (11. Oktober 2026 abends). Zwei Lücken in den Wächtern und
+eine falsche Zahl in diesem Eintrag:
+
+1. **Kein Sprung.** `test589` §16 liess ein „Verblassen“ durch, das auf 0,5
+   stehen bleibt und dann in einem Schritt weg ist (Keyframes
+   `[{opacity:1},{opacity:0.5}]`, danach `remove()`): 146 von 146 grün, die
+   Linse fiel von 0,539 auf „kein Element“. Neu in jedem Fall mit Fahrt:
+   das letzte sichtbare Bild vor „weg oder leer“ zeigt höchstens 0,2, und
+   von Bild zu Bild fällt die Deckkraft um höchstens 0,25. Der Spielraum
+   ist gerechnet: `--ease-exit` endet mit der Steigung 1/0,6, in 320 ms
+   fällt die Deckkraft über ein Bild (16,7 ms) also höchstens um 0,083,
+   über zwei um 0,162, über drei um 0,239. Gemessen am Bau: letztes
+   sichtbares Bild 0,061–0,097, grösster Abfall 0,080–0,082, je 17 ms auf
+   der Bilduhr. Stockt der Browser genau dort (über 40 ms auf
+   `document.timeline`), misst der Lauf mit einem neuen Ankommen nach,
+   höchstens dreimal — ein echter Sprung springt jedes Mal. Mit der
+   Gegenprobe der Durchsicht: 148 ok, 4 offen („zeigt 0.513 … fällt
+   höchstens 0.513“).
+2. **Mitten im Verblassen neu gezeichnet.** „Dieselbe Uhr wie die Fahrt:
+   beim Neuzeichnen geht es an derselben Stelle weiter“ stand in
+   `linse.ts`, und keine Zusage hielt es. `test589` §8 misst es jetzt: ein
+   neues Ankommen bei 1440 px, 1740 ms später das Fenster auf 1000 px — die
+   neue Linse ist da, halb verblasst (0,756 bei 1789 ms nach dem Ankommen)
+   und fällt weiter (0,525 bei 1848 ms), 6 px rechts vom Punkt in der neuen
+   Lage, die Abschrift in der neuen Grösse der Überschrift (31px statt
+   44px). Rot gesehen ohne `geht.currentTime = versatz` (151 ok, 1 offen:
+   Deckkraft 1), mit dem Halt von vor E740 über „ken“ (139 ok, 13 offen:
+   „-51.3 px daneben“, dazu §16 am Halt) und mit der Schrift des ersten
+   Ankommens in der Abschrift (151 ok, 1 offen: „44px“).
+3. **„Was es kostet“** nannte die 191 B „fast alles der Kommentar zu
+   `verblassen`“ — berichtigt, siehe dort.
+
+Die Gegenproben am Quelltext `linse.ts`, gebaut mit `tsc -p
+tsconfig.bauen.json`, danach Byte für Byte zurück (sha256 von `linse.ts`
+und `linse.js` vorher = nachher). Mit der Durchsicht: `test589` 152 von 152,
+zweimal hintereinander grün. Nachbarn danach grün: `test539` 51/51,
+`test541` 25/25, `test576`, `test388` 22/22 (Start 1919 KB, Decke 1950),
+`test74` 12/12, `test600` 214/214, `test601`; Datei-Wächter `test550`,
+`test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400`.
+Das Bild „über Weiterdenken“ war bei 1150 ms aufgenommen, als die Linse
+fast schon an ihrem Halt stand (713 statt 716 px, messungen.md §101); neu
+angehalten bei 1000, 1025 und 1050 ms (die zweite Strecke läuft von 900 bis
+1163 ms) zeigt es sie als Milchglas quer über „en.“ von „Weiterdenken.“,
+Rechner und Telefon, hell und dunkel.
 
 **Wächter:** `test589` §16 (geteilt), §8 (geändert). Nachbarn grün:
 `test539` 51/51 und `test541` 25/25 (die Glaslinse der unteren Leiste, ein

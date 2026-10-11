@@ -8277,3 +8277,41 @@ läuft.
 Kommentar. `test388` §5: der Start holt 1919 KB (gzip) über 255 Dateien,
 Decke 1950 — dieselbe Zahl wie auf dem zusammengeführten Stand der sechs
 Ja (ERLEDIGTE-AUFGABEN.md, 11. Oktober); die 191 B verschwinden im Runden.
+
+**Durchsicht** (11. Oktober 2026 abends, `test589` gegen den Bau, Zweig
+`claude/linse-verblasst`, ein Lauf). Das Verblassen Bild für Bild, jetzt
+mit der Bilduhr (`document.timeline.currentTime`) neben jeder Deckkraft:
+
+```txt
+Fall                letztes sichtbares Bild   grösster Abfall von Bild zu Bild
+                    vor „weg" (≤ 0,02)        (Abstand auf der Bilduhr)
+1440 × 900 dunkel   0,069                     0,080 (17 ms)
+1440 × 900 hell     0,061                     0,080 (17 ms)
+ 390 × 844 dunkel   0,097                     0,082 (17 ms)
+ 390 × 844 hell     0,072                     0,080 (17 ms)
+```
+
+Gerechnet aus `--ease-exit` (`cubic-bezier(0.4, 0, 1, 1)`, Steigung am Ende
+1/0,6) bei 320 ms: über ein Bild (16,7 ms) höchstens 0,083, über zwei
+(33,3 ms) 0,162, über drei (50 ms) 0,239 — für den Abfall wie für das letzte
+Bild vor dem Ende. Die Grenzen der Zusage (0,2 und 0,25) halten also auch
+mit einem ausgefallenen Bild; stockt der Browser länger (über 40 ms) genau
+dort, misst der Lauf nach. Mit der Gegenprobe der Durchsicht (Keyframes
+`[{opacity:1},{opacity:0.5}]`, danach `remove()`): letztes Bild 0,502–0,529,
+Abfall ebenso gross, je 17 ms — im alten Lauf 146 von 146 grün.
+
+Mitten im Verblassen neu gezeichnet (§8): Ankommen bei 1440 px, 1748 ms
+nachdem die Linse da ist das Fenster auf 1000 px; die neue Linse steht
+1789 ms nach dem Ankommen mit Deckkraft 0,756 da, vier Bilder später
+(1848 ms) 0,525, 6 px rechts vom Punkt, die Abschrift in 31px (vorher
+44px). Ohne `geht.currentTime = versatz`: Deckkraft 1 bei 1791 ms und 1 bei
+1847 ms.
+
+**Woraus die 191 B bestehen.** Nicht aus Kommentaren:
+`tsconfig.bauen.json` entfernt sie (`removeComments`, E715), im gebauten
+`linse.js` steht nur der Kopfvermerk. Die Zeilen des gebauten Unterschieds
+gegen 97d156b03: 1 490 B dazu, 1 088 B weg (+402 roh). Einzeln
+herausgenommen und neu gepackt (gzip 6): ohne `verblassen()` (Dauer und
+Kurve aus den Marken) 3709 B, also 168 B; ohne die Animation des
+Verblassens 3830 B, also 47 B. gzip zählt nicht einzeln zusammen; die zwei
+Zahlen sagen, wo das Gewicht liegt, nicht eine Summe.
