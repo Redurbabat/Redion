@@ -8218,3 +8218,72 @@ denselben fünf toten Regeln wie vorher.
 selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
 `redion-einzeldatei.html` 9 545 743 → 9 546 796 Bytes. Dienststand v1455
 → v1456.
+
+## §102 · Der schnelle Lauf: was ohne Browser läuft und wie lange (E745, L254, 11. Oktober 2026)
+
+**Frage.** Redur hat für die CI Weg (c) aus L254 gewählt („2 . Scnell
+lauf"): nur der schnelle Lauf. Was ist schnell — gemessen, nicht
+geschätzt? Bis E745 liess `--schnell` nur test73 weg (549 von 550).
+
+**Rechner.** Der Rechner der Sitzung: 4 Kerne, Intel Xeon 2,8 GHz,
+15 GB, Linux 6.18, Node 22.22.2, Chromium aus `/opt/pw-browsers`. Gemessen
+im Arbeitsbaum `claude/ci-schnell`, alles unter dem gemeinsamen Schloss
+(`flock …/redion-browser.lock`), damit kein Browserlauf eines anderen
+Zweigs gleichzeitig lief; Last zu Beginn 0,3, am Ende 1,2.
+
+**Wer startet einen Browser?** Gezählt auf 97d156b, jede Datei unter
+`pruefungen/lauf/` gelesen: ein Lauf zählt als Browserlauf, wenn er
+Playwright lädt — und unabhängig davon, wenn er `chromium.launch(` ruft
+(beide Wege gaben dieselben 509).
+
+```txt
+Läufe (550 test*.mts + servercheck)    551
+  starten einen Browser                509
+  ohne Browser                          42
+    davon in alle.mts als „server"      6   test75 79 92 93 101, servercheck
+```
+
+**Wie lange laufen sie einzeln?** Jeder Lauf für sich (`zeiten.sh`, Zeit
+von Prozessstart bis Ende, ohne Pausen), auf 97d156b:
+
+```txt
+die 42 ohne Browser zusammen     95,0 s
+  test105   58,1 s   baut mit tsc nach /tmp und vergleicht
+  test103    8,9 s   der ZIP-Packer an seinen Grenzen
+  test578    8,4 s   baut die Inseln mit Vite nach /tmp
+  test537    3,4 s
+  test205    3,2 s
+  test216    2,7 s
+  test274    1,1 s   rot (11/12) — auf main seit E729
+  die übrigen 35   je 0,1 bis 0,6 s
+test96  (Browser, §31)    8,0 s   18 ok
+test100 (Browser, §31)    3,7 s   32 ok
+```
+
+**Der ganze schnelle Lauf**, so wie die CI ihn fährt
+(`npm run pruefen -- --schnell`, mit test610, unter dem Schloss, nach dem
+Umbau von alle.mts):
+
+```txt
+Läufe                     45   43 ohne Browser + test96 + test100
+Dauer                     4 min 14 s (253,9 s)
+  davon feste Pausen      2 min 12 s (44 × 3 s zwischen den Läufen)
+rot                       test274 (alt), test610 (Zwischenstand: CLAUDE.md
+                          noch nicht nachgezogen; nachher 22/22)
+zweite Messung, Endstand  3 min 57 s (237,3 s), 44 von 45 grün,
+                          rot nur test274 (11/12, auf main seit E729)
+zum Vergleich: voll       158 min für 550 Läufe (E743)
+```
+
+**Die Zeitgrenze in der CI** folgt daraus: Lauf 4¼ min, dazu Pakete
+(~½ min), Chromium mit Systembibliotheken (~1–2 min) und die Einzeldatei
+(~¼ min) — rund 7 Minuten; gesetzt sind 20, rund das Dreifache, weil ein
+Runner (zwei Kerne bei einem privaten Repository) langsamer sein kann und
+das Holen von Chromium am Netz hängt. Die Einrichtungszeiten sind
+geschätzt, nicht gemessen; die erste echte Zahl kommt mit dem ersten Push.
+
+**Nebenbei gemessen: `--liste` in eine Röhre.** Die erste Fassung schrieb
+Zeile für Zeile und rief gleich danach `process.exit(0)`: von 40 Aufrufen
+`alle.mts --liste` über `spawnSync` kamen 3 abgeschnitten an (240, 273,
+298 statt 552 Zeilen). Mit EINEM Schreiben und dem Ende im Rückruf: 0 von
+40, dann 0 von 150.

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-722 Entscheidungen, E1 bis E743 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+723 Entscheidungen, E1 bis E745 (**E744 bis E747** sind den Zweigen zu Redurs Antworten vom 11. Oktober abends vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -785,6 +785,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
+* **E745** — Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner (Redur, 11. Oktober, 19:43 UTC: „2 . Scnell lauf", Weg (c) aus L254): `--schnell` heisst jetzt jeder Lauf ohne Browser und dazu test96 und test100 aus §31 (45 Läufe, gemessen 4 min 14 s) statt „alles ausser test73" (549 von 550); neu `--liste`; der Job „Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) wird „Schneller Lauf (ohne Browser, dazu die Sicherung)" mit `npm run pruefen -- --schnell`, Einzeldatei-Prüfung und 20 Minuten. `test610` neu; L254 GESCHLOSSEN
 
 ---
 
@@ -66714,3 +66715,136 @@ Neues ist dazugekommen. Dass es nach E729 die zweite Ausnahme binnen eines
 Tages ist, ist selbst ein Zeichen: solange die dreizehn rot sind, wird
 jedes Vorspulen eine Ausnahme sein. Der eigene Zweig für sie steht in
 AUFGABEN.md (dritte Welle, Punkt 1).
+
+## E745 — Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner: `--schnell` heisst, was es verspricht
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur (11. Oktober,
+19:43 UTC, Zeitstempel der Sitzung) · **berührt** `.github/workflows/pruefen.yml`,
+`pruefungen/alle.mts`, CLAUDE.md §30 · **schliesst** L254 · **Zweig**
+`claude/ci-schnell`.
+
+**Redurs Antwort, wörtlich** — die zweite von vier, auf die Frage nach L254
+(„Alle Prüfläufe" in der CI kann nicht fertig werden; drei Wege (a) Matrix,
+(b) Fenster anheben, (c) nur der schnelle Lauf):
+
+```txt
+19:43 UTC   2 . Scnell lauf
+```
+
+Gemeint ist Weg (c): in der CI nur der schnelle Lauf, der volle bleibt
+beim Menschen (`node pruefungen/volllauf.mts`, §30).
+
+**Was beim Nachsehen herauskam, bevor eine Zeile geändert war.** Weg (c)
+ging mit dem alten Schalter gar nicht: `--schnell` filterte `!l.messung`,
+und `messung` traf genau einen Lauf, test73. `npm run pruefen -- --schnell`
+waren also 549 von 550 Läufen — der volle Lauf unter anderem Namen. Der
+Kopf von alle.mts versprach „~11 min" aus der Zeit der 67 Läufe, CLAUDE.md
+sagte ehrlicher „Dauer ungemessen". Abhängig von der alten Bedeutung war
+nichts: `volllauf.mts` ruft alle.mts nur mit Nummern, `package.json` kennt
+nur `pruefen`, kein Prüflauf liest den Schalter (gesucht mit grep über
+pruefungen/, *.mts, package.json und die Doku). Deshalb bekommt der Name
+seine Bedeutung, statt dass ein zweiter Schalter daneben tritt.
+
+**Was entschieden wurde.**
+
+1. **`--schnell` = jeder Lauf ohne Browser, dazu die Läufe aus §31, die
+   einen brauchen.** Ob ein Lauf einen Browser startet, liest alle.mts aus
+   der Datei (lädt sie Playwright?) — keine zweite Liste der schnellen
+   Läufe, ein neuer Lauf ohne Browser ist von selbst dabei. Mit Browser
+   dürfen nur die Einträge von `SCHNELL_MIT_BROWSER` hinein, jeder mit
+   Grund: test96 und test100, die Sicherung mit echten Bytes, die §31 beim
+   Namen nennt und die gemessen 8 und 4 Sekunden brauchen. Die übrigen vier
+   aus §31 (87, 105, 109, 537) starten keinen Browser und sind ohnehin
+   dabei. Stand heute: 45 Läufe, 43 ohne Browser, 2 mit.
+2. **`--liste`** druckt die Auswahl — jeder Lauf mit „Browser" oder „ohne
+   Browser" und dem Grund —, ohne einen Lauf zu starten. Es geht mit jedem
+   Schalter (`--liste` allein listet alle). Die CI druckt sie vor dem Lauf,
+   damit im Protokoll steht, was geprüft wurde und was nicht.
+3. **Der Job „Alle Prüfläufe" wird „Schneller Lauf (ohne Browser, dazu die
+   Sicherung)"** und fährt genau `npm run pruefen -- --schnell`. Er behält
+   die Einzeldatei („Einzeldatei bauen" und „Ist die Einzeldatei
+   nachgezogen?"), holt Chromium nur noch für test96 und test100, und hat
+   20 Minuten statt 40 — rund das Dreifache von gemessen 4 min 14 s Lauf und
+   etwa 3 Minuten Einrichtung. Sein Kommentar nennt die Messung mit Datum
+   und Rechner und sagt, dass der volle Lauf auf dem Rechner bleibt. Die
+   Job-Kennung `pruefen` bleibt, damit nichts, was den Job über sie findet,
+   ins Leere zeigt. Der Job „Quelltext und Logik (ohne Browser)" bleibt
+   unverändert bis auf zwei Kommentare, die vom „langen Lauf" sprachen.
+4. **Die Doku sagt es an allen Stellen, an denen der Schalter steht:**
+   CLAUDE.md §30 („Die Befehle" und „Der volle Lauf läuft in Stücken":
+   die CI fährt ihn nicht, für §46 zählt der volle Lauf), der Kopf von
+   alle.mts, `pruefungen/LIESMICH.md`, README, `doku/MIGRATION-REZEPT.md`
+   („und am Ende alles" war nicht mehr wahr).
+
+**Was gemessen wurde** (`messungen.md` §102): auf 97d156b 551 Läufe
+(550 test*.mts und servercheck), 509 starten einen Browser, 42 nicht; die
+42 zusammen 95 s, der längste test105 mit 58 s. `npm run pruefen --
+--schnell` mit test610: 45 Läufe in 4 min 14 s, davon 2 min 12 s die festen
+Pausen von drei Sekunden; auf dem Endstand noch einmal 3 min 57 s, 44 von
+45 grün, rot nur test274. Der volle Lauf: 158 Minuten (E743).
+
+**Warum.** Ein abgebrochener Lauf sagt über keinen einzigen Prüflauf etwas
+und sieht im Verlauf aus wie einer, der nichts gefunden hat — genau die
+Sorte, gegen die der Kopf von `pruefen.yml` geschrieben ist. Ein schneller
+Lauf, der fertig wird, sagt über 45 Läufe etwas, darunter alle sechs aus
+§31. Der volle Lauf hatte seine einzige gültige Aussage ohnehin schon auf
+dem Rechner (E729, E743).
+
+**Was die Alternativen waren.** (a) eine Matrix nach Stücken: der Lauf wird
+nicht kürzer, über 2½ Runner-Stunden je Push. (b) das Fenster auf 360
+Minuten: einfach, aber ein Lauf von zwei Stunden je Push. Beide hat Redur
+nicht gewählt. Innerhalb von (c): ein NEUER Schalter neben `--schnell` —
+verworfen, weil nichts von der alten Bedeutung abhing und ein Name, der
+etwas anderes tut, als er sagt, genau der Fehler war. Und: die Auswahl als
+feste Nummernliste — verworfen, weil sie bei jedem neuen Lauf ohne Browser
+nachgezogen werden müsste und dann so veraltet wie „67 Läufe".
+
+**Was es kostet.** Die CI prüft keinen der 507 übrigen Browserläufe mehr —
+das tat sie seit Wochen auch nicht (sie brach ab), aber jetzt sagt sie es.
+Ein grüner Haken auf GitHub heisst „der schnelle Lauf ist grün", nicht
+„alles ist grün"; für §46 zählt weiterhin nur der volle Lauf. Und: der
+schnelle Lauf enthält `test274`, der auf `main` seit E729 rot ist — der Job
+wird rot sein statt abgebrochen, bis er gerichtet ist (AUFGABEN.md, „Nach
+dem Zusammenführen der dritten Welle", Punkt 1). Gemessen ist die Dauer nur
+auf dem Rechner der Sitzung; wie lange ein Runner braucht, zeigt erst der
+erste Push.
+
+**Wächter.** `test610` (neu, ohne Browser, kein Port): kein Job fährt den
+vollen Lauf, keiner heisst „alle", der nicht alle fährt; genau ein Job fährt
+`npm run pruefen -- --schnell`, jeder Orchestrator-Aufruf ist dieser (oder
+seine `--liste`), jeder Job hat eine Zeitgrenze, der schnelle Job baut und
+prüft die Einzeldatei, holt Chromium genau dann, wenn die Auswahl einen
+Browser braucht, und sein Kommentar nennt Messung und `volllauf.mts`; die
+Auswahl enthält jeden Lauf ohne Browser, einen Lauf mit Browser nur, wenn
+§31 ihn nennt und alle.mts einen Grund trägt, alle aus §31, und was die
+Liste über jeden Lauf sagt, stimmt mit dem überein, was test610 auf einem
+ZWEITEN Weg liest (der Aufruf `chromium.launch(` im Code ohne Kommentare,
+nicht der Import); CLAUDE.md §30 nennt „ohne Browser" und eine Dauer.
+
+**Rot zuerst.** Gegen 97d156b (Abbild über `git archive`, die endgültige
+Fassung von test610 hineinkopiert): 4 von 21 — §1 „pruefen: npm run
+pruefen", §2 „0 gefunden", §3 „alle.mts kennt `--liste`" (und deshalb
+startet er dort nichts: der alte Orchestrator hätte die Auswahl GEFAHREN,
+549 Läufe), §4 „Dauer ungemessen". Nachher 22/22.
+
+**Gegenproben**, jede eingesetzt, gefahren und Byte für Byte zurückgesetzt:
+
+```txt
+G1  der Schritt fährt wieder `npm run pruefen`                   14/22
+G2  alle.mts nimmt test74 in die Auswahl, ohne Grund               20/22
+G3  test74 bekommt in alle.mts einen Grund, steht aber nicht in §31 21/22
+G4  der schnelle Job ohne timeout-minutes                          21/22
+G5  alle.mts erkennt keinen Browserlauf mehr (509 rutschen hinein) 19/22
+G6  „Chromium holen" fehlt, obwohl test96 und test100 dabei sind    21/22
+```
+
+**Was test610 an meiner eigenen Arbeit gefunden hat.** Die erste Fassung
+von `--liste` schrieb Zeile für Zeile und rief gleich danach
+`process.exit(0)`. Bei G5 meldete test610 „Kopf 551, Zeilen 463" — in eine
+Röhre schreibt Node nicht immer sofort, und was noch in der Schlange
+stand, ging mit dem Prozess unter. Nachgestellt: 3 von 40 Listen über alle
+552 Läufe kamen abgeschnitten an (240 bis 298 Zeilen). Jetzt EIN Schreiben,
+beendet wird in seinem Rückruf: 0 von 190. Dieselbe Bauart (`console.log`,
+dann `process.exit`) hat die Bilanz am Ende von alle.mts, die
+`volllauf.mts` liest; dort ist sie zwei Zeilen kurz und nie abgeschnitten
+beobachtet — nicht angefasst, eine Änderung, ein Ziel (§43).

@@ -444,7 +444,10 @@ npm install
 npx playwright install chromium
 npm run pruefen
 
-Schneller Lauf:
+Schneller Lauf — jeder Lauf ohne Browser, dazu die zwei Sicherungsläufe
+test96 und test100, rund 4 Minuten. Genau diesen fährt auch GitHub bei
+jedem Push; der volle Lauf (über zwei Stunden) bleibt auf dem eigenen
+Rechner, am besten in Stücken mit `node pruefungen/volllauf.mts`:
 
 npm run pruefen -- --schnell
 

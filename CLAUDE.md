@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 550 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 551 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1930,6 +1930,23 @@ Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 545 auf seinem Zweig. Beim Zusammenführen nachgezählt
 (11. Oktober, `claude/sechs-ja`): 550.*
 
+*Und 551: `test610` — die CI fährt den schnellen Lauf und sagt das auch
+(E745, L254). Redurs „2 . Scnell lauf" vom 11. Oktober, Weg (c): kein Job
+der CI fährt den vollen Lauf, keiner heisst „alle", der nicht alle fährt,
+der schnelle Job fährt genau `npm run pruefen -- --schnell` in einer
+Zeitgrenze, und die Auswahl ist, was sie verspricht — jeder Lauf ohne
+Browser, ein Lauf mit Browser nur, wenn §31 ihn beim Namen nennt. Ob ein
+Lauf einen Browser startet, liest er auf einem ZWEITEN Weg als alle.mts
+(den Aufruf `chromium.launch(` statt des Imports). Gegen `97d156b` war er
+rot mit 4 von 21 — und er hätte dort beinahe selbst 549 Läufe gestartet:
+der alte Orchestrator kannte `--liste` nicht und hätte die Auswahl
+GEFAHREN. Deshalb fragt er zuerst die Quelle, ob es den Schalter gibt.
+Seinen ersten Fund machte er an meiner eigenen `--liste`: „Kopf 551,
+Zeilen 463" — `process.exit` gleich nach dem Schreiben in eine Röhre
+schnitt die Liste ab (3 von 40 nachgestellt); jetzt wird erst gewartet.
+Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 551 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1945,8 +1962,13 @@ npm run bauen:ts                     IN DIESER FOLGE: 1. die Inseln
 npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
-npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 550 Läufe
+npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
+                                     Browser, dazu test96 und test100 aus
+                                     §31; am 11. Oktober 45 Läufe in
+                                     4 min 14 s gemessen — genau ihn
+                                     fährt die CI (E745)
+npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
+npm run pruefen                      alle 551 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1964,6 +1986,13 @@ Ein voller Lauf dauert länger, als eine Sitzung sicher steht. Er wird
 deshalb **in Stücken und wiederaufnehmbar** gefahren: zehn Läufe je Stück,
 eine Merkdatei hält fest, welche Stücke fertig sind. Bricht die Sitzung ab,
 geht nur das laufende Stück verloren, nicht die Stunde davor.
+
+**Die CI fährt ihn nicht.** Bis zum 11. Oktober 2026 stand in
+`pruefen.yml` ein Job „Alle Prüfläufe" mit vierzig Minuten Zeit; er wurde
+jedes Mal abgebrochen, bevor er fertig sein konnte (L254). Redur hat Weg (c)
+gewählt (E745): die CI fährt `npm run pruefen -- --schnell`, der volle Lauf
+gehört hierher, auf den Rechner. Ein grüner Haken auf GitHub heisst also
+„der schnelle Lauf ist grün" — für §46 zählt nur dieser volle Lauf.
 
 **Und dafür gibt es seit dem 20. September ein Werkzeug** (E657). Vorher war
 dieser Absatz ein Handgriff: zehn Nummern abtippen, warten, die nächsten
@@ -2036,7 +2065,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 550 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 551 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

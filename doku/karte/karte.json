@@ -3211,8 +3211,8 @@
         },
         {
           "pfad": "/home/user/Redion/pruefungen/alle.mts",
-          "rolle": "Orchestrator aller Prüfläufe: Argumente --schnell, --alt, `server`, Nummern (Z.31-38), Kindprozess je Lauf mit 3 s Pause (Kopf Z.3-6); `npm run pruefen`",
-          "zeilen": 210
+          "rolle": "Orchestrator aller Prüfläufe: Argumente --schnell, --alt, `server`, --liste, Nummern (Z.46-55), Kindprozess je Lauf mit 3 s Pause (Kopf Z.3-6); `npm run pruefen`. --schnell (E745) = jeder Lauf ohne Browser (Playwright-Import, gelesen aus der Datei) + SCHNELL_MIT_BROWSER (Z.80, test96/test100 aus §31) — das fährt die CI; --liste druckt die Auswahl ohne zu fahren und wartet aufs Schreiben, bevor es endet (Z.149), test610 prüft sie",
+          "zeilen": 283
         },
         {
           "pfad": "/home/user/Redion/pruefungen/volllauf.mts",
@@ -3329,7 +3329,7 @@
           "name": "Node-Werkzeuge (Kommandozeile)",
           "datei": "package.json scripts; bauen.mts, chronik.mts, dienststand.mts, bilder.mts, karte.mts, bruecke.mts, pruefungen/alle.mts, pruefungen/volllauf.mts",
           "art": "funktion",
-          "beschreibung": "npm run bauen | pruefen [-- --schnell | NNN | server] | typecheck | bauen:ts | stand | server | veroeffentlichen; node chronik.mts [--pruefen]; node dienststand.mts [--pruefen]; node bilder.mts [ansicht] [geraet]; node karte.mts [--pruefen]; node pruefungen/volllauf.mts [--neu|--stand|--rot|--stueck N]; node server/pruefserver.ts [port]; node bruecke.mts. Kein gemeinsamer Einstieg, kein `bin` in package.json, keine gemeinsame Argument-Auswertung (16 Dateien mit eigenem process.argv: benannte, bilder, chronik, deklarationen, dienststand, domtypen, fangfehler, fuelle, karte, rueckgabe, typenhilfe, umzug, unbenutzt, alle, messung-grosse-arbeitsbereiche, volllauf)"
+          "beschreibung": "npm run bauen | pruefen [-- --schnell [--liste] | NNN | server] | typecheck | bauen:ts | stand | server | veroeffentlichen; node chronik.mts [--pruefen]; node dienststand.mts [--pruefen]; node bilder.mts [ansicht] [geraet]; node karte.mts [--pruefen]; node pruefungen/volllauf.mts [--neu|--stand|--rot|--stueck N]; node server/pruefserver.ts [port]; node bruecke.mts. Kein gemeinsamer Einstieg, kein `bin` in package.json, keine gemeinsame Argument-Auswertung (16 Dateien mit eigenem process.argv: benannte, bilder, chronik, deklarationen, dienststand, domtypen, fangfehler, fuelle, karte, rueckgabe, typenhilfe, umzug, unbenutzt, alle, messung-grosse-arbeitsbereiche, volllauf)"
         }
       ],
       "geometrie": {

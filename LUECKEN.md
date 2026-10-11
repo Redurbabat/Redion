@@ -8358,7 +8358,7 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
-## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — 11. Oktober 2026
+## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
 letzten Läufe auf `main` sind beide **abgebrochen**, nicht rot und nicht
@@ -8397,6 +8397,48 @@ Lauf je Push von zwei Stunden; (c) in der CI nur `--schnell` und die
 Datei-Wächter, und der volle Lauf bleibt beim Menschen — dann muss die
 Datei das sagen, statt „Alle Prüfläufe" zu heissen. Die Workflow-Datei ist
 geteilte Infrastruktur; welcher Weg, entscheidet Redur.
+
+### GESCHLOSSEN am 11. Oktober 2026 durch E745 — Weg (c)
+
+Redur, 11. Oktober, 19:43 UTC, wörtlich: „2 . Scnell lauf". Beim Nachsehen
+stellte sich heraus, dass Weg (c) mit dem alten Schalter gar nicht ging:
+`--schnell` liess genau EINEN Lauf weg (test73, die Startmessung) — 549 von
+550, also praktisch der volle Lauf unter anderem Namen. Der Schalter hat
+deshalb seine Bedeutung bekommen, und die ist gemessen, nicht geschätzt
+(`messungen.md` §102):
+
+```txt
+Läufe gesamt (test*.mts + servercheck, auf 97d156b)   551
+  davon starten einen Browser                          509
+  davon ohne Browser                                    42   zusammen 95 s
+--schnell seit E745 (mit test610)                       45   = 43 ohne Browser
+                                                              + test96, test100 (§31)
+npm run pruefen -- --schnell, mit den 3-s-Pausen     4 min 14 s
+der volle Lauf (E743)                               158 min
+```
+
+**Was jetzt gilt.** `.github/workflows/pruefen.yml` hat keinen Job „Alle
+Prüfläufe" mehr. Der lange Job heisst „Schneller Lauf (ohne Browser, dazu
+die Sicherung)", fährt genau `npm run pruefen -- --schnell` (davor die
+Auswahl mit `--liste`), baut weiterhin die Einzeldatei und prüft, ob sie
+nachgezogen ist, holt Chromium nur für test96 und test100, und hat
+20 Minuten Zeit — rund das Dreifache von Lauf und Einrichtung. Sein
+Kommentar nennt die Messung mit Datum und sagt, dass der volle Lauf auf dem
+Rechner bleibt (`node pruefungen/volllauf.mts`, CLAUDE.md §30). Der Job
+„Quelltext und Logik (ohne Browser)" ist unverändert.
+
+**Beleg.** `test610` (neu, ohne Browser): gegen 97d156b grün mit 4 von 21
+— der Job fuhr den vollen Lauf, keiner fuhr `--schnell`, alle.mts kannte
+`--liste` nicht, und CLAUDE.md sagte „Dauer ungemessen"; nach E745 22/22.
+Gegenproben in E745. Wie weit der Job auf GitHub kommt, zeigt erst der
+erste Push dieses Zweigs: gemessen ist nur auf dem Rechner der Sitzung.
+
+**Was offen bleibt, und es ist keine neue Lücke, sondern eine alte:** der
+schnelle Lauf enthält `test274`, und der ist auf `main` seit E729 rot (eine
+verwaiste Nachschlagestelle in `marken.ts`, E743). Die CI wird deshalb rot
+statt abgebrochen sein, bis er gerichtet ist — das ist die ehrlichere
+Meldung. Er steht in der Liste der dreizehn (AUFGABEN.md, „Nach dem
+Zusammenführen der dritten Welle", Punkt 1).
 
 ---
 
@@ -10438,7 +10480,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 149 Lücken, 92 offene und 57 geschlossene. Der Befehl dazu ist
+Datei führt 149 Lücken, 91 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -1,5 +1,42 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E745 · Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner
+
+**Redur:** „2 . Scnell lauf", am 11. Oktober 2026 um 19:43 UTC, auf L254
+(„Alle Prüfläufe" in der CI kann nicht fertig werden) — Weg (c): in der CI
+nur der schnelle Lauf, der volle bleibt beim Menschen.
+
+**Gefunden**, bevor etwas geändert war: `--schnell` liess genau einen Lauf
+weg (test73) — 549 von 550, also kein schneller Lauf. Gemessen auf 97d156b:
+551 Läufe, 509 starten einen Browser, 42 nicht; die 42 brauchen zusammen
+95 s, test96 und test100 (§31, Sicherung mit echten Bytes) 8 und 4 s.
+
+**Gebaut:** `pruefungen/alle.mts` — `--schnell` ist jetzt jeder Lauf ohne
+Browser (aus der Datei gelesen) plus `SCHNELL_MIT_BROWSER` (test96,
+test100, je mit Grund); neu `--liste`, das die Auswahl druckt, ohne zu
+fahren, und erst nach dem Schreiben endet. `.github/workflows/pruefen.yml` —
+„Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) heisst jetzt
+„Schneller Lauf (ohne Browser, dazu die Sicherung)", fährt
+`npm run pruefen -- --schnell`, druckt vorher die Liste, baut und prüft die
+Einzeldatei weiter, holt Chromium nur für die zwei, 20 Minuten Zeit, und
+der Kommentar nennt die Messung und `volllauf.mts`. Der schnelle Job
+„Quelltext und Logik" ist unverändert. Doku: CLAUDE.md §30, LIESMICH,
+README, MIGRATION-REZEPT, die Karte (`mcp.md`).
+
+**Geprüft:** `test610` neu — gegen 97d156b 4 von 21, nachher 22/22; sechs
+Gegenproben rot (14, 20, 21, 21, 19, 21 von 22), jede Byte für Byte
+zurückgesetzt. `npm run pruefen -- --schnell` auf dem Endstand: 45 Läufe
+in 3 min 57 s, 44 grün, rot nur `test274` (auf main seit E729 rot; die
+erste Messung, 4 min 14 s, lief noch vor der Doku). Datei-Wächter 550 8/8,
+549 6/6, 225 11/11, 105 342/342, 109 25/25, 87 181/181, 537 18/18, 400 4/4,
+553 6/6, 578 115/115; im Browser 353 105/105, 388 22/22 (Start 1919 KB,
+Decke 1950). Unterwegs gefunden und gerichtet: die erste
+`--liste` war in einer Röhre in 3 von 40 Fällen abgeschnitten (danach 0 von
+190). L254 GESCHLOSSEN. Messung in `messungen.md` §102.
+
+**Offen:** wie lange ein Runner braucht, zeigt erst der erste Push; und der
+Job wird rot sein, solange `test274` rot ist.
+
 ## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
 
 **Der Auftrag.** Redur um 11:00 UTC: „Ja für die 6 entscheideungen" — die

@@ -1692,6 +1692,9 @@ Grund:
    vierzehn Werkzeuge, die Wortzeile bei 1360 und 1600 px rechnet mit
    dreizehn) und `test533` („Sie stehen alle auf EINER Höhe — ist 2, soll
    1" und „kein Wort ist sichtbar — ist 1, soll 0", die Tafel aus E614).
+   **Seit E745 eilt einer davon:** die CI fährt den schnellen Lauf (jeder
+   Lauf ohne Browser), und `test274` ist der einzige der dreizehn darin —
+   bis er gerichtet ist, ist der Job „Schneller Lauf" auf GitHub rot.
    ~~Dazu `test319` („Und `info` ist nicht die blasseste der drei — info
    12.09, warn 12.15, fehler 12.41"; auf morgen-besser-2 Ziffer für Ziffer
    gleich — alle drei Streifen liegen weit über 4,5 : 1, `info` nur um

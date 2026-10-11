@@ -159,7 +159,7 @@ node pruefungen/lauf/test87.mjs     # Quelltextregeln
 node pruefungen/lauf/test105.mjs    # erzeugtes JavaScript passt zur Quelle
 node pruefungen/lauf/test109.mts    # das Verzeichnis stimmt
 npm run typecheck                   # src/ und alle .mts, streng
-npm run pruefen -- --schnell        # und am Ende alles
+npm run pruefen -- --schnell        # der schnelle Lauf (ohne Browser, E745)
 ```
 
 > **Nicht bauen, während ein voller Lauf läuft.** Der Lauf lädt `index.html`
