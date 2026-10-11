@@ -22,13 +22,18 @@
  *      `.lw-subnav`, höchstens fünf Bedienelemente im Kopf, alle auf EINER
  *      Höhe, alle ganz im Bild; am Telefon rollt `.lw-nav` nicht mehr
  *      (scrollWidth ≤ clientWidth + 1), und der Inhalt beginnt in der
- *      Übersicht so hoch wie auf „Heute" (keine zweite Reihe).
+ *      Übersicht so hoch wie auf „Heute" (keine zweite Reihe). Auch bei
+ *      781, 800 und 860 px kürzt kein Hauptteil (§1g), und am Telefon
+ *      steht der Chip auf der Mitte der Reiter, mit und ohne die ruhige
+ *      Fassung (§1h).
  *   §2 ECHTE ^. Zwei Hauptteile (`[data-lw-nav]`, genau einer mit
  *      `aria-current="page"`) und drei ^ (`[data-lw-klappe]` heute,
  *      uebersicht, faecher) mit `aria-haspopup="menu"`,
  *      `aria-expanded="false"` in Ruhe und einem Namen; am Telefon 44 × 44,
  *      am Rechner 44 breit und so hoch wie die Reiter (E205: 34 px für die
- *      Maus); an der Mitte liegt das ^ selbst (elementFromPoint).
+ *      Maus); an der Mitte liegt das ^ selbst (elementFromPoint). Ein Paar
+ *      schliesst oben und unten bündig (§2g), und jedes ^ heisst nach
+ *      seinem Paar (§2h).
  *   §3 VIER WEGE HINEIN, EINER HINAUS. Maus, Enter, Leertaste und
  *      Fingertipp öffnen ein Menü (`role="menu"`), `aria-expanded` kippt;
  *      Escape schliesst und gibt den Fokus an das ^ zurück; ein zweiter
@@ -49,7 +54,8 @@
  *      Neuladen steht alles noch so. Ein Klick in „Themen & Fächer" setzt
  *      denselben Zustand. Am Telefon sprengt der Chip mit gewähltem Fach die
  *      Zeile nicht: nichts rollt, kein Hauptteil ist gekürzt, und das
- *      Zeichen ist gefüllt statt umrissen (§6o/§6p).
+ *      Zeichen ist gefüllt statt umrissen (§6o/§6p). Eine Stufe im
+ *      Lernpfad startet ihre Themenrunde, setzt aber KEINEN Filter (§6q).
  *   §7 DER LEBENSBEREICH LEBT IM FÄCHERMENÜ — als Gruppe genau dann, wenn
  *      es Lebensbereiche gibt; eine Wahl setzt den Bereich wie früher.
  *   §8 OHNE BEWEGUNG dreht sich das ^ nicht — weder mit „weniger
@@ -63,7 +69,9 @@
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   Gegen den Stand 57a023ecf (claude/lernzentrum-kopf vor E726) rot — die
  *   Zeilen stehen im Commit „test601 (rot)". Die Gegenproben zu E726 stehen
- *   im Commit dazu.
+ *   im Commit dazu. §1g, §1h, §2g, §2h und §6q kamen aus der Durchsicht
+ *   und waren gegen eaf3ab2c2 rot — die Zeilen stehen im Commit „test601
+ *   (rot): was die Durchsicht fand".
  *
  *   node pruefungen/lauf/test601.mts
  * ==========================================================================*/
@@ -101,10 +109,10 @@ const browser = await chromium.launch();
 const fehler: string[] = [];
 const warte = (s: Page, ms: number) => s.waitForTimeout(ms);
 
-type Wie = { handy?: boolean; thema?: 'dark' | 'light'; weniger?: boolean; url?: string };
+type Wie = { handy?: boolean; thema?: 'dark' | 'light'; weniger?: boolean; url?: string; breite?: number };
 const oeffnen = async (opt: Wie = {}): Promise<{ ctx: BrowserContext; s: Page }> => {
   const ctx = await browser.newContext({
-    viewport: opt.handy ? { width: 390, height: 844 } : { width: 1440, height: 900 },
+    viewport: opt.handy ? { width: 390, height: 844 } : { width: opt.breite ?? 1440, height: 900 },
     ...(opt.handy ? { isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : {}),
     reducedMotion: opt.weniger ? 'reduce' : 'no-preference'
   });
@@ -243,6 +251,61 @@ for (const handy of [false, true]) for (const thema of ['dark', 'light'] as cons
   await ctx.close();
 }
 
+/* §1g ZWISCHEN 781 UND 899 PX. Die ruhige Fassung hielt dem Chip rechts
+   264 px frei — so viel, wie er höchstens breit wird (230). Bei 800 px
+   blieben den Paaren 342 px, und „Schule / Ausbildung" wurde zu „Schule /
+   Ausb…", „Übersicht" zu „Über…" — auch ohne Filter (Durchsicht, Bild
+   breite-800-schule-fach.png). Gemessen wird in „Heute", „Schule /
+   Ausbildung" und „Übersicht", ohne Fach und mit dem längsten Fach. */
+console.log('\n§1g Zwischen 781 und 899 px kürzt kein Hauptteil');
+for (const breite of [781, 800, 860]) {
+  const { ctx, s } = await oeffnen({ breite });
+  await s.evaluate(BESTAND);
+  const lagen: string[] = [];
+  for (const fach of ['', 'geometrie — kap. 4']) for (const v of ['heute', 'schule', 'lernen']) {
+    await ansicht(s, v);
+    if (fach && await s.$('[data-lw-klappe="faecher"]')) {
+      await s.click('[data-lw-klappe="faecher"]');
+      await warte(s, 300);
+      await s.click(`.menu [data-wahl="fach:${fach}"]`).catch(() => {});
+      await warte(s, 600);
+    }
+    const m = await s.evaluate(() => {
+      const nav = document.querySelector<HTMLElement>('.lw-nav');
+      return {
+        rollt: nav ? nav.scrollWidth - nav.clientWidth : -1,
+        gekuerzt: [...document.querySelectorAll<HTMLElement>('.lw-nav > [data-lw-nav] > span:last-child')]
+          .filter(x => x.scrollWidth > x.clientWidth + 1).map(x => x.textContent || '')
+      };
+    });
+    if (m.rollt > 1 || m.gekuerzt.length) lagen.push(`${fach ? 'mit Fach' : 'ohne Fach'} ${v}: rollt ${m.rollt}, gekürzt ${JSON.stringify(m.gekuerzt)}`);
+  }
+  p(`§1g ${breite} × 900: kein Hauptteil gekürzt, nichts rollt (Heute, Schule, Übersicht; ohne und mit Fach)`,
+    lagen.length === 0, lagen.join(' · '));
+  await ctx.close();
+}
+
+/* §1h AM TELEFON steht der Chip auf der Mitte der Reiterkarte — mit und
+   ohne die ruhige Fassung. Die Karte trägt unten 12 px Abstand, der Chip
+   trug 0 (ruhig aus) oder 8 (ruhig an) — in einer mittig ausgerichteten
+   Rasterzeile rutschte er um die Hälfte des Unterschieds nach unten
+   (Durchsicht, ruhig-aus-390-dark.png). */
+console.log('\n§1h Am Telefon: der Chip auf der Mitte der Reiter, ruhig an und aus');
+for (const [thema, ruhig] of [['dark', 'aus'], ['light', 'aus'], ['dark', 'an']] as const) {
+  const { ctx, s } = await oeffnen({ handy: true, thema });
+  await s.evaluate(BESTAND);
+  await s.evaluate((r: string) => { document.body.dataset['ruhig'] = r; }, ruhig);
+  await ansicht(s, 'lernen');
+  const m = await s.evaluate(() => {
+    const mitte = (el: Element | null) => { if (!el) return -1; const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
+    return { nav: Math.round(mitte(document.querySelector('.lw-nav')) * 10) / 10,
+      chip: Math.round(mitte(document.querySelector('[data-lw-klappe="faecher"]')) * 10) / 10 };
+  });
+  p(`§1h Telefon ${thema === 'dark' ? 'dunkel' : 'hell'}, ruhig ${ruhig}: Mitte des Chips = Mitte der Reiterkarte (± 1 px)`,
+    m.nav > 0 && m.chip > 0 && Math.abs(m.chip - m.nav) <= 1, JSON.stringify(m));
+  await ctx.close();
+}
+
 /* ══ §2 Echte ^ ═══════════════════════════════════════════════════════════ */
 console.log('\n§2 Echte ^ — Rolle, Name, Grösse, Treffer');
 for (const handy of [false, true]) {
@@ -264,6 +327,16 @@ for (const handy of [false, true]) {
           b: Math.round(r.width), h: Math.round(r.height), treffer: !!t && (t === k || k.contains(t)) };
       }),
       reiterHoehe: reiter ? Math.round(reiter.height) : 0,
+      /* Ein Paar ist EIN Bedienteil: oben und unten bündig. Gemessen in
+         der Durchsicht: Hauptteil 138–174, ^ 139–173 — eine Stufe von
+         1 px an der Naht, die §2d nicht sehen konnte (er fragt nur, ob
+         das ^ MINDESTENS 34 hoch ist). */
+      paare: klappen.filter(k => k.dataset['lwKlappe'] !== 'faecher').map(k => {
+        const h = (k.previousElementSibling as HTMLElement | null)?.getBoundingClientRect();
+        const r = k.getBoundingClientRect();
+        return { id: k.dataset['lwKlappe'], oben: h ? Math.round((r.top - h.top) * 10) / 10 : 99,
+          unten: h ? Math.round((r.bottom - h.bottom) * 10) / 10 : 99 };
+      }),
       altesAuswahlfeld: !!document.querySelector('[data-lw-area]')
     };
   });
@@ -284,6 +357,16 @@ for (const handy of [false, true]) {
   p(`§2e ${wo}: an der Mitte jedes ^ liegt das ^ selbst`, m.klappen.length === 3 && m.klappen.every(k => k.treffer),
     JSON.stringify(m.klappen.map(k => [k.id, k.treffer])));
   p(`§2f ${wo}: das alte Auswahlfeld „Bereich" ist weg`, !m.altesAuswahlfeld);
+  p(`§2g ${wo}: jedes ^ schliesst oben und unten bündig an seinen Hauptteil an (± 0,5 px)`,
+    m.paare.length === 2 && m.paare.every(x => Math.abs(x.oben) <= 0.5 && Math.abs(x.unten) <= 0.5),
+    JSON.stringify(m.paare));
+  /* Das ^ neben „Übersicht" hiess „Weitere Ansichten: Lernen", und das
+     Blatt am Telefon trug „Lernen" als Titel — unter einem Knopf, auf dem
+     „Übersicht" steht (Durchsicht, nach-menue-uebersicht-handy-dunkel.png). */
+  const namen = Object.fromEntries(m.klappen.map(k => [k.id, k.name]));
+  p(`§2h ${wo}: jedes ^ heisst nach seinem Paar („Weitere Ansichten: Heute", „… Übersicht")`,
+    namen['heute'] === 'Weitere Ansichten: Heute' && namen['uebersicht'] === 'Weitere Ansichten: Übersicht',
+    JSON.stringify(namen));
   await ctx.close();
 }
 
@@ -559,6 +642,48 @@ const THEMA = (label: string) => {
     m.rollt.sw <= m.rollt.cw + 1 && m.gekuerzt.length === 0, JSON.stringify(m));
   p('§6p … und der Chip sagt es: Name im aria-label, das Zeichen gefüllt statt umrissen', /Elektrotechnik/.test(m.name) &&
     m.alle === 'nein' && !!m.gefuellt && m.gefuellt !== 'none', JSON.stringify(m));
+  await ctx.close();
+}
+
+/* §6q EINE THEMENRUNDE IST KEIN FILTER. Seit E726 ist `zustand.themaId` der
+   Fächerfilter; der Lernpfad setzte ihn weiter, um seine Themenrunde zu
+   starten — und schrieb ihn sogar ins Gedächtnis. Gemessen in der
+   Durchsicht: ein Klick auf eine Stufe, und der Lernpfad schrumpfte von 3
+   auf 1 Stufe, „Heute" von 16 auf 6 Karten, auch nach dem Neuladen. Die
+   Überschrift „Jedes Thema ist erreichbar" stimmte nicht mehr, und unter
+   471 px sagte es nur ein gefülltes Zeichen. Den Filter setzen der Chip
+   und „Themen & Fächer" (§6n) — eine Runde zu starten ist keine Wahl. */
+{
+  const { ctx, s } = await oeffnen();
+  await s.evaluate(BESTAND);
+  const zaehlen = async () => {
+    await ansicht(s, 'lernweg');
+    const stufen = await s.evaluate(() => document.querySelectorAll('[data-lw-path-topic]').length);
+    await ansicht(s, 'heute');
+    const heute = await s.evaluate(() => (document.querySelector('.lernwelt')?.textContent || '').match(/(\d+) Karten? für heute/)?.[1] ?? '?');
+    const chip = await s.evaluate(() => (document.querySelector<HTMLElement>('[data-lw-klappe="faecher"]')?.textContent || '').trim());
+    const fach = await s.evaluate(() => Object.keys(Store.cache.meta).filter(k => /^lernwelt:.*:fach$/.test(k))
+      .map(k => Store.cache.meta[k]).filter(Boolean));
+    return { stufen, heute, chip, fach };
+  };
+  const vorher = await zaehlen();
+  await ansicht(s, 'lernweg');
+  const runde = await s.evaluate(async () => {
+    const b = [...document.querySelectorAll<HTMLElement>('[data-lw-path-topic]')].find(x => /Elektrotechnik/.test(x.textContent || ''));
+    b?.click();
+    await new Promise(r => setTimeout(r, 900));
+    const kopf = document.querySelector<HTMLElement>('.lw-training .lw-session-head');
+    return { geklickt: !!b, titel: (kopf?.querySelector('p')?.textContent || '').trim(),
+      karten: (kopf?.querySelector('h2')?.textContent || '').trim() };
+  });
+  const soll = await s.evaluate(THEMA, 'Elektrotechnik');
+  p('§6q-1 eine Stufe im Lernpfad startet weiter die Themenrunde (nur dieses Thema)', runde.geklickt &&
+    runde.titel === 'Thema: Elektrotechnik' && !!soll && runde.karten === 'Karte 1 von ' + soll.total,
+    JSON.stringify({ runde, soll }));
+  const nachher = await zaehlen();
+  p('§6q-2 … und filtert danach nichts: Lernpfad, „Heute", Chip und Gedächtnis wie vorher',
+    nachher.stufen === vorher.stufen && nachher.heute === vorher.heute && /Alle Fächer/.test(nachher.chip) &&
+    nachher.fach.length === 0, JSON.stringify({ vorher, nachher }));
   await ctx.close();
 }
 
