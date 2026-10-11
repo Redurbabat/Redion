@@ -36,11 +36,22 @@
  *   §7 Die Regel im Modell ist die der Netzliste (`Schaltplan.kontakte`)
  *   §8 Rückgängig nach dem Drehen gibt den Plan Byte für Byte zurück
  *   §9 Gibt es keinen sauberen Weg, sagt die Fläche es — und nur dann
+ *   §10 Beim Ziehen rechnet die Fläche billig, beim Loslassen einmal voll —
+ *       und gespeichert ist das Ergebnis der vollen Suche (Durchsicht, Fund 1)
+ *   §11 Landet die EIGENE Klemme eines bewegten Teils auf einer fremden
+ *       Leitung (oder verlässt sie eine), sagt die Fläche es (Fund 2)
+ *   §12 Der alte Plan A aus `test608`: ein unbeteiligtes Teil drehen heilt
+ *       die Enden neben ihrer Klemme — und keine geheilte zapft an (Fund 3)
  *
  * KANN DIESE SUITE ROT WERDEN? (§55.2) Ja — gegen 97d156b03 ist sie rot in
  * §1, §2, §3, §4, §5, §6, §7 und §9; die Zahl steht in E746. Die zwei Gegenproben
  * (wieder alle Leitungen neu führen; die Prüfung gegen das Anzapfen
- * herausnehmen) stehen ebenfalls dort.
+ * herausnehmen) stehen ebenfalls dort. §10 und §11 kamen mit der Durchsicht
+ * und sind gegen fcb6d35fa (den ersten Stand von E746) rot: dort rechnete
+ * jede Mausbewegung voll, und eine eigene Klemme auf einer fremden Leitung
+ * blieb still. §12 ist eine Abdeckung, kein Fund — rot wird sie, wenn das
+ * Heilen fehlt oder eine geheilte Leitung ihren ersten Weg nimmt, ohne zu
+ * prüfen (beide Gegenproben in E746).
  *
  *   node pruefungen/lauf/test611.mts
  * ==========================================================================*/
@@ -137,7 +148,38 @@ const PLAENE = `
        keinen Weg für p1, der E2:X1 nicht berührt (§9). */
     P: { art: 'stromlauf-aufgeloest', breite: 400, hoehe: 400, texte: [], ebenen,
       teile: [T('E1', 'lampe', 100, 100), T('E2', 'lampe', 100, 200)],
-      leitungen: [L('p1', [[130, 160], [300, 160]], 'E1', 'X2')] }
+      leitungen: [L('p1', [[130, 160], [300, 160]], 'E1', 'X2')] },
+    /* Die Probe der Durchsicht (Fund 2): q läuft senkrecht bei x = 250 von
+       E1:X2 nach E2:X1, R1 steht daneben bei (200,200). Gedreht liegt R1:1 bei
+       (250,230) — AUF q; noch einmal gedreht ist es wieder weg. */
+    Q: { art: 'stromlauf-aufgeloest', breite: 400, hoehe: 400, texte: [], ebenen,
+      teile: [T('E1', 'lampe', 220, 50), T('E2', 'lampe', 220, 300), T('R1', 'widerstand', 200, 200)],
+      leitungen: [L('q', [[250, 110], [250, 300]], 'E1', 'X2', 'E2', 'X1')] },
+    /* Plan A aus test608, Wort für Wort (a1–a6: alte Stecker, Steckdosen und
+       Schukos, jedes Leitungsende NEBEN der Klemme, die es meint — L253
+       Punkt 7), und dazu vier Teile, jedes mit einem Zweck:
+         R9  ein Widerstand ohne Leitung — das unbeteiligte Teil, das gedreht wird;
+         R8  ein Widerstand, liegend, dessen freie Klemme 1 bei (710,300) genau
+             auf dem nächstliegenden geheilten Weg von a5 liegt (senkrecht bei
+             x = 710 auf X5:L) — ohne Prüfung zapfte die Heilung sie an;
+         E8, E9 mit z1  eine Leitung, die richtig auf ihren Klemmen liegt — sie
+             darf sich nicht rühren, nur die geheilten dürfen es. */
+    A: { art: 'stromlauf-aufgeloest', breite: 1100, hoehe: 700, texte: [], ebenen,
+      teile: [T('G1', 'wechselspannung', 100, 200),
+              T('X1', 'stecker', 300, 100), T('X2', 'stecker', 500, 100),
+              T('X3', 'steckdose', 300, 400), T('X4', 'steckdose', 500, 400),
+              T('X5', 'steckdose-schuko', 700, 400), T('X6', 'steckdose-schuko', 900, 400),
+              T('R9', 'widerstand', 1000, 100), { ...T('R8', 'widerstand', 660, 270), drehung: 90 },
+              T('E8', 'lampe', 820, 180), T('E9', 'lampe', 920, 180)],
+      leitungen: [
+        L('a1', [[130, 200], [130, 60], [320, 60], [320, 100]], 'G1', 'L', 'X1', '1'),
+        L('a2', [[130, 260], [60, 260], [60, 40], [600, 40], [600, 100], [520, 100]], 'G1', 'N', 'X2', '1'),
+        L('a3', [[130, 200], [330, 200], [330, 400]], 'G1', 'L', 'X3', 'L'),
+        L('a4', [[130, 260], [130, 500], [620, 500], [620, 400], [530, 400]], 'G1', 'N', 'X4', 'L'),
+        L('a5', [[130, 150], [730, 150], [730, 400]], null, null, 'X5', 'L'),
+        L('a6', [[130, 260], [130, 560], [1000, 560], [1000, 400], [930, 400]], 'G1', 'N', 'X6', 'L'),
+        L('z1', [[850, 240], [850, 280], [950, 280], [950, 240]], 'E8', 'X2', 'E9', 'X2')
+      ] }
   };`;
 
 /* Welche HEUTIGE Klemme jedes Ende meint. In W ist das der gespeicherte
@@ -145,6 +187,12 @@ const PLAENE = `
 const SOLL_B: Record<string, { von?: [string, string]; nach?: [string, string] }> = {
   b1: { von: ['G1', 'L'], nach: ['F1', '1'] }, b2: { von: ['G1', 'N'], nach: ['F1', 'N'] },
   b3: { von: ['F1', '2'], nach: ['E1', 'X1'] }, b4: { von: ['F1', 'N2'], nach: ['E1', 'X2'] }
+};
+/* In A meint jedes alte Ende das heutige L (test608 §5, E738). */
+const SOLL_A: Record<string, { von?: [string, string]; nach?: [string, string] }> = {
+  a1: { von: ['G1', 'L'], nach: ['X1', 'L'] }, a2: { von: ['G1', 'N'], nach: ['X2', 'L'] },
+  a3: { von: ['G1', 'L'], nach: ['X3', 'L'] }, a4: { von: ['G1', 'N'], nach: ['X4', 'L'] },
+  a5: { nach: ['X5', 'L'] }, a6: { von: ['G1', 'N'], nach: ['X6', 'L'] }
 };
 
 const browser = await chromium.launch();
@@ -269,7 +317,7 @@ await seite.evaluate((quelle: string) => {
 
 const NAH = await seite.evaluate(() => Register.fachzeichen.NAH as number);
 
-const oeffne = async (welcher: 'W' | 'B' | 'P'): Promise<string> => {
+const oeffne = async (welcher: 'W' | 'B' | 'P' | 'Q' | 'A'): Promise<string> => {
   const id = await seite.evaluate(async (wer: string) => {
     const plan = (window as any).plaene()[wer];
     const s = Store.addPage(null, { text: 'Plan ' + wer });
@@ -560,6 +608,8 @@ console.log('\n9 · Gibt es keinen sauberen Weg, sagt die Fläche es');
 const vorP: string[] = await seite.evaluate(() => (window as any).meldungen.slice());
 p('§1–§6: kein einziges Mal „liess sich nicht nachziehen"',
   !vorP.some(m => /nachziehen/.test(m)), vorP.join(' | '));
+p('§1–§6: auch keine Meldung, dass eine Klemme jetzt etwas anderes berührt',
+  !vorP.some(m => /berührt jetzt|nicht mehr|liegt jetzt auf/.test(m)), vorP.join(' | '));
 const blockP = await oeffne('P');
 await seite.waitForTimeout(300);
 await waehle('E1');
@@ -573,6 +623,241 @@ p('Das vierte Raster legt E1:X2 auf E2:X1 — und die Fläche meldet es',
   nachVier.slice(nachDrei.length).some(m => /nachziehen/.test(m)), nachVier.slice(nachDrei.length).join(' | ') || '(keine Meldung)');
 const abwP: string[] = await seite.evaluate((b: string) => (window as any).endenAbweichend(b, {}), blockP);
 p('… und p1 hängt weiter an E1:X2', abwP.length === 0, abwP.join(' | '));
+
+const nachVierText = nachVier.slice(nachDrei.length).join(' | ');
+p('… und sie sagt, WAS: E2:X1 berührt jetzt die Leitung an E1:X2',
+  /E2:X1 berührt jetzt die Leitung an E1:X2/.test(nachVierText), nachVierText || '(keine Meldung)');
+
+/* ==========================================================================
+ * Gemeinsam für §10–§12: ziehen in PLANEINHEITEN statt in Bildpunkten, und
+ * ein Spion auf `Schaltplan.nachziehen`, der jede Rechnung mitschreibt.
+ * ========================================================================*/
+/** Bildschirmpunkt zu einem Planpunkt — die Umkehrung von `ortAus`. */
+const bildpunkt = async (bid: string): Promise<(x: number, y: number) => [number, number]> => {
+  await seite.locator('.sp-wrap svg.sp-flaeche').last().scrollIntoViewIfNeeded();
+  const r = await seite.evaluate((b: string) => {
+    const s = [...document.querySelectorAll('.sp-wrap svg.sp-flaeche')].pop()!.getBoundingClientRect();
+    const plan = Store.getBlock(b).plan;
+    return { l: s.left, t: s.top, sx: s.width / plan.breite, sy: s.height / plan.hoehe };
+  }, bid);
+  return (x: number, y: number) => [r.l + x * r.sx, r.t + y * r.sy];
+};
+/**
+ * Zieht von Planpunkt `von` um `d` Planeinheiten, in `schritte` Bewegungen.
+ * `vorLoslassen` läuft, während die Maus noch unten ist.
+ */
+const zieheGenau = async (bid: string, von: [number, number], d: [number, number], schritte: number,
+                          vorLoslassen?: () => Promise<void>): Promise<void> => {
+  const bild = await bildpunkt(bid);
+  const [x0, y0] = bild(von[0], von[1]);
+  await seite.mouse.move(x0, y0);
+  await seite.mouse.down();
+  for (let i = 1; i <= schritte; i++) {
+    const [x, y] = bild(von[0] + d[0] * i / schritte, von[1] + d[1] * i / schritte);
+    await seite.mouse.move(x, y);
+  }
+  if (vorLoslassen) await vorLoslassen();
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+};
+await seite.evaluate(() => {
+  const w = window as any;
+  w.aufrufe = [] as boolean[];
+  w.nachziehenEcht = Schaltplan.nachziehen;
+  Schaltplan.nachziehen = (...a: any[]) => {
+    w.aufrufe.push(!!(a[3] && a[3].schnell));
+    return w.nachziehenEcht(...a);
+  };
+});
+const meldungenJetzt = (): Promise<string[]> => seite.evaluate(() => (window as any).meldungen.slice());
+const aufrufeJetzt = (): Promise<boolean[]> => seite.evaluate(() => (window as any).aufrufe.slice());
+
+/* ==========================================================================
+ * §10 · Beim Ziehen billig, beim Loslassen einmal voll (Durchsicht, Fund 1)
+ * --------------------------------------------------------------------------
+ * Bis zur Durchsicht rechnete jede Mausbewegung die volle Wegsuche — Z- und
+ * Hakenwege eingeschlossen. Gemessen (messungen §103): F1 im Plan W um
+ * 120 × 60 px in 60 Bewegungen gezogen, bei vierfach gedrosselter CPU je
+ * Bewegung im Median 25,6 ms, höchstens 144,8 ms. Seither rechnet eine
+ * Bewegung nur die billigen Wege (`schnell`), eine Bewegung innerhalb
+ * desselben Rasters gar nichts, und erst das Loslassen sucht einmal voll.
+ *
+ * Gezogen wird F1 in einem frischen Plan W um 30 × 40 Planeinheiten — an
+ * eine Stelle, an der die billigen Wege NICHT reichen (f1 und f3 zapften
+ * an; die Zusage „taugt nicht" hält das fest). Sonst bewiese die Zusage
+ * „gespeichert ist die volle Suche" nichts: sie wäre auch mit einem
+ * gespeicherten Zwischenbild wahr.
+ * ========================================================================*/
+console.log('\n10 · Ziehen billig, Loslassen voll');
+const blockW2 = await oeffne('W');
+await seite.waitForTimeout(300);
+const vorW2 = await zustand(blockW2);
+const meldVor10 = await meldungenJetzt();
+const SCHRITTE = 24;
+let aufrufeImZug: boolean[] = [];
+const zug10 = await handlung('F1 gezogen, 30 × 40 in 24 Bewegungen', blockW2, ['F1'], async () => {
+  const a0 = (await aufrufeJetzt()).length;
+  /* Angefasst bei (430,92): mitten im Kasten des FI (400…460 × 60…130), und
+     weit genug von einer Rasterkante, dass 30 × 40 genau 3 × 4 Raster sind. */
+  await zieheGenau(blockW2, [430, 92], [30, 40], SCHRITTE, async () => {
+    aufrufeImZug = (await aufrufeJetzt()).slice(a0);
+  });
+});
+const aufrufe10 = (await aufrufeJetzt()).slice(-(aufrufeImZug.length + 1));
+const lage10 = zug10.nach.teile.F1;
+p('Der FI steht danach 30 × 40 weiter (genau drei und vier Raster)',
+  lage10.x === 430 && lage10.y === 100, JSON.stringify(lage10));
+p(`Während des Ziehens rechnet jede Bewegung billig (${aufrufeImZug.length} Rechnungen, keine volle)`,
+  aufrufeImZug.length > 0 && aufrufeImZug.every(b => b), JSON.stringify(aufrufeImZug));
+p(`… und nur, wenn ein Teil über ein Raster wandert: ${aufrufeImZug.length} Rechnungen auf ${SCHRITTE} Bewegungen`,
+  aufrufeImZug.length > 0 && aufrufeImZug.length <= 8, `${aufrufeImZug.length} Rechnungen`);
+p('Beim Loslassen genau EINE volle Suche, als letzte',
+  aufrufe10.length === aufrufeImZug.length + 1 && aufrufe10[aufrufe10.length - 1] === false,
+  JSON.stringify(aufrufe10));
+const pruef10 = await seite.evaluate(([bid, vorJson]: [string, string]) => {
+  const w = window as any;
+  const nach = Store.getBlock(bid).plan;
+  const f = (nach.teile as any[]).find(t => t.id === 'F1');
+  /* Unabhängig nachgerechnet: der Plan von vor dem Zug, so gelesen, wie die
+     Fläche ihn liest, F1 an die Endlage, dann einmal nachziehen. Was dabei
+     angezapft wird, sagt die Netzliste selbst (je Leitung allein, wie oben),
+     nicht das Modell, das hier geprüft wird. */
+  const rechne = (schnell: boolean) => {
+    const plan = Schaltplan.lesen({ plan: JSON.parse(vorJson) });
+    const vorKlemmen = (plan.leitungen as any[]).map(l => JSON.stringify(w.klemmenDer(plan, l)));
+    const v = Schaltplan.vorherMerken(plan);
+    const t = (plan.teile as any[]).find(x => x.id === 'F1');
+    t.x = f.x; t.y = f.y;
+    w.nachziehenEcht(plan, v, ['F1'], { heilen: true, schnell });
+    const aenderungen = (plan.leitungen as any[])
+      .filter((l, i) => JSON.stringify(w.klemmenDer(plan, l)) !== vorKlemmen[i]).length;
+    return { punkte: JSON.stringify((plan.leitungen as any[]).map(l => [l.id, l.punkte])), aenderungen };
+  };
+  return { gespeichert: JSON.stringify((nach.leitungen as any[]).map(l => [l.id, l.punkte])),
+           voll: rechne(false), schnell: rechne(true) };
+}, [blockW2, vorW2.json] as [string, string]);
+p('An dieser Lage taugen die billigen Wege nicht: sie zapften an (sonst prüfte die nächste Zusage nichts)',
+  pruef10.schnell.aenderungen > 0 && pruef10.schnell.punkte !== pruef10.voll.punkte,
+  `billig ${pruef10.schnell.aenderungen} Änderungen, gleich voll: ${pruef10.schnell.punkte === pruef10.voll.punkte}`);
+p('Gespeichert ist das Ergebnis der VOLLEN Suche, Byte für Byte — kein Zwischenbild',
+  pruef10.gespeichert === pruef10.voll.punkte && pruef10.voll.aenderungen === 0,
+  `gespeichert ${pruef10.gespeichert.slice(0, 240)} · voll ${pruef10.voll.punkte.slice(0, 240)}`);
+const meldNach10 = (await meldungenJetzt()).slice(meldVor10.length);
+p('Und das Ziehen meldet nichts — es gab einen sauberen Weg', meldNach10.length === 0, meldNach10.join(' | '));
+
+/* ==========================================================================
+ * §11 · Die EIGENE Klemme auf einer fremden Leitung (Durchsicht, Fund 2)
+ * --------------------------------------------------------------------------
+ * Das Nachziehen führt nur Leitungen, die am bewegten Teil hängen. Landet
+ * aber die eigene Klemme des Teils auf einer fremden Leitung, verbindet die
+ * Netzliste sie über den Ort — gemessen in der Durchsicht, auf main wie
+ * nach E746: R1 gedreht, und aus {E1:X2 E2:X1} wird {E1:X2 E2:X1 R1:1},
+ * ohne ein Wort. Verhindert wird das nicht (vielleicht ist es gewollt), aber
+ * gesagt — und zwar, welche Klemme jetzt was berührt. Auch beim Verlassen,
+ * beim Schieben mit der Pfeiltaste und beim Ziehen (dort erst beim Loslassen).
+ * ========================================================================*/
+console.log('\n11 · Die eigene Klemme auf einer fremden Leitung');
+const blockQ = await oeffne('Q');
+await seite.waitForTimeout(300);
+const qVor = await zustand(blockQ);
+gleich('Vorher: q verbindet E1:X2 und E2:X1, R1 hängt an nichts',
+  qVor.teilung.filter((g: string) => g.includes('l:q')), ['E1:X2 E2:X1 l:q']);
+await waehle('R1');
+let m0 = (await meldungenJetzt()).length;
+await taste('r');
+const q1 = await zustand(blockQ);
+let neu11 = (await meldungenJetzt()).slice(m0);
+p('Gedreht: R1:1 liegt auf q — die Netzliste ändert sich wirklich (sonst prüfte das hier nichts)',
+  q1.teilung.includes('E1:X2 E2:X1 R1:1 l:q'), q1.teilung.join(' | '));
+p('… die Fläche lässt die Lage, wie der Mensch sie wollte (R1 ist gedreht, nichts verhindert)',
+  q1.teile.R1.drehung === 90 && q1.punkte.q === qVor.punkte.q, JSON.stringify(q1.teile.R1));
+p('… und sie sagt es: „R1:1 berührt jetzt die Leitung E1:X2–E2:X1"',
+  neu11.length === 1 && /R1:1 berührt jetzt die Leitung E1:X2–E2:X1/.test(neu11[0] ?? ''),
+  neu11.join(' | ') || '(keine Meldung)');
+m0 = (await meldungenJetzt()).length;
+await taste('r');
+const q2 = await zustand(blockQ);
+neu11 = (await meldungenJetzt()).slice(m0);
+p('Noch einmal gedreht: R1:1 ist wieder weg, und die Fläche sagt auch das',
+  !q2.teilung.some((g: string) => g.includes('R1:')  && g.includes('l:q'))
+  && neu11.length === 1 && /R1:1 berührt die Leitung E1:X2–E2:X1 nicht mehr/.test(neu11[0] ?? ''),
+  q2.teilung.join(' | ') + ' · ' + (neu11.join(' | ') || '(keine Meldung)'));
+/* Jetzt bei 180°: beide Klemmen bei x = 220. Drei Raster nach rechts, und
+   beide liegen auf q — erst beim dritten. */
+m0 = (await meldungenJetzt()).length;
+await taste('ArrowRight'); await taste('ArrowRight');
+const nachZwei = (await meldungenJetzt()).slice(m0);
+p('Pfeiltaste, zwei Raster: R1 berührt q noch nicht, keine Meldung', nachZwei.length === 0, nachZwei.join(' | '));
+await taste('ArrowRight');
+const q3 = await zustand(blockQ);
+neu11 = (await meldungenJetzt()).slice(m0);
+p('Das dritte Raster legt R1:1 und R1:2 auf q — die Fläche nennt beide',
+  q3.teilung.includes('E1:X2 E2:X1 R1:1 R1:2 l:q') && neu11.length === 1
+  && /R1:1 berührt jetzt/.test(neu11[0] ?? '') && /R1:2 berührt jetzt/.test(neu11[0] ?? ''),
+  q3.teilung.join(' | ') + ' · ' + (neu11.join(' | ') || '(keine Meldung)'));
+/* Und mit der Maus: R1 drei Raster zurück. Gemeldet wird beim Loslassen,
+   nicht bei jeder Bewegung. R1 steht bei (230,200), 180° gedreht — sein
+   Kasten ist 230…270 × 200…260; angefasst links unten, abseits von q. */
+m0 = (await meldungenJetzt()).length;
+let waehrend = -1;
+await zieheGenau(blockQ, [236, 252], [-30, 0], 9, async () => {
+  waehrend = (await meldungenJetzt()).length - m0;
+});
+const q4 = await zustand(blockQ);
+neu11 = (await meldungenJetzt()).slice(m0);
+p('Mit der Maus zurückgezogen: R1 berührt q nicht mehr',
+  q4.teile.R1.x === 200 && !q4.teilung.some((g: string) => g.includes('R1:') && g.includes('l:q')),
+  JSON.stringify(q4.teile.R1) + ' · ' + q4.teilung.join(' | '));
+p('… während des Ziehens keine Meldung, beim Loslassen genau eine, die beide Klemmen nennt',
+  waehrend === 0 && neu11.length === 1 && /R1:1 berührt die Leitung E1:X2–E2:X1 nicht mehr/.test(neu11[0] ?? '')
+  && /R1:2 berührt/.test(neu11[0] ?? ''),
+  `während ${waehrend} · ` + (neu11.join(' | ') || '(keine Meldung)'));
+
+/* ==========================================================================
+ * §12 · Der alte Plan A: Heilen, ohne anzuzapfen (Durchsicht, Fund 3)
+ * --------------------------------------------------------------------------
+ * Die eine Ausnahme von „fremde Leitungen bleiben Byte für Byte": liegt das
+ * Ende einer Leitung NEBEN der Klemme, die es meint (ein Plan von vor E735,
+ * L253 Punkt 7), rückt es beim Drehen, Spiegeln und Ziehen IRGENDEINES Teils
+ * an die Klemme (E738, test608 §5) — mit derselben Prüfung wie jeder neue
+ * Weg. test611 hatte das bis zur Durchsicht nicht abgedeckt: mit `heilen`
+ * aus blieb er grün (79/79), nur test608 wurde rot. Hier wird ein Teil
+ * gedreht, an dem KEINE Leitung hängt (R9).
+ * ========================================================================*/
+console.log('\n12 · Der alte Plan A: heilen, ohne anzuzapfen');
+const blockA = await oeffne('A');
+await seite.waitForTimeout(300);
+const aVor = await zustand(blockA);
+const abwVorA: string[] = await seite.evaluate(([b, s]: [string, any]) => (window as any).endenAbweichend(b, s),
+  [blockA, SOLL_A] as [string, any]);
+const zuHeilen = [...new Set(abwVorA.map(x => x.split('.')[0]!))].sort();
+gleich('Vorbedingung: a1–a6 enden neben ihrer Klemme, z1 liegt richtig', zuHeilen, ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']);
+const m12 = (await meldungenJetzt()).length;
+await waehle('R9');
+await taste('r');
+const aNach = await zustand(blockA);
+p('R9 ist gedreht', aNach.teile.R9.drehung === 90, JSON.stringify(aNach.teile.R9));
+const andersA = (a: string[], b: string[]) => a.filter(x => !b.includes(x));
+p('Die Netzliste ist dieselbe', JSON.stringify(aNach.teilung) === JSON.stringify(aVor.teilung),
+  'neu: ' + andersA(aNach.teilung, aVor.teilung).join(' | ') + ' · weg: ' + andersA(aVor.teilung, aNach.teilung).join(' | '));
+const geaendertA = Object.keys(aVor.punkte).filter(id => aVor.punkte[id] !== aNach.punkte[id]).sort();
+gleich('Genau die sechs Leitungen mit einem Ende neben der Klemme ändern sich — z1 bleibt Byte für Byte',
+  geaendertA, zuHeilen);
+const zapftA = Object.keys(aVor.klemmen).filter(id => JSON.stringify(aVor.klemmen[id]) !== JSON.stringify(aNach.klemmen[id]));
+p('Keine geheilte Leitung zapft an: jede fasst genau die Klemmen von vorher', zapftA.length === 0,
+  zapftA.map(id => `${id}: ${aVor.klemmen[id].join(',')} → ${aNach.klemmen[id].join(',')}`).join(' | '));
+const abwNachA: string[] = await seite.evaluate(([b, s]: [string, any]) => (window as any).endenAbweichend(b, s),
+  [blockA, SOLL_A] as [string, any]);
+p('Jedes Ende liegt danach auf der Klemme, die es meint (L)', abwNachA.length === 0, abwNachA.join(' | '));
+const r8 = await seite.evaluate((b: string) => {
+  const plan = Store.getBlock(b).plan;
+  const ni = Stromfluss.netze(plan);
+  const a5 = ni.leitungNetz.a5;
+  return ni.netzVon.get('k:R8:1') === a5;
+}, blockA);
+p('a5 läuft nicht über die freie Klemme R8:1, die auf ihrem nächsten Weg liegt', !r8);
+const meldA = (await meldungenJetzt()).slice(m12);
+p('Und das Heilen meldet nichts — es hat nichts an der Schaltung geändert', meldA.length === 0, meldA.join(' | '));
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 
