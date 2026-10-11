@@ -3211,3 +3211,17 @@ if (typeof Register !== 'undefined' && (Register as any).kontext) {
     }
   });
 }
+
+/* „VERSCHIEBEN NACH …" IST EINE AKTION AN JEDER SEITE (E721).
+   Bis hier stand es nur im Seitenmenü. Der Ordner in der Bibliothek, die
+   Zeile im Ablagebaum und der Rechtsklick fragen jetzt dieselbe Zeile im
+   Register — der Wähler bleibt dieser eine (er lässt die eigenen Kinder als
+   Ziel gar nicht zu, und `verschiebe` weist einen Ring ab, E718). Die Hefte
+   der Notizhefte ziehen in ein Fach und haben dafür ihren eigenen Eintrag. */
+if (typeof Register !== 'undefined' && (Register as any).aktionen) {
+  (Register as any).aktionen.melde({
+    id: 'verschieben', name: 'Verschieben nach …', zeichen: 'moveTo', gruppe: 'ablegen', rang: 10,
+    gilt: (_p: any, o: { kontext: string }) => o.kontext !== 'notizhefte',
+    tun: (p: any) => Werkzeuge.verschiebenNach(p)
+  });
+}

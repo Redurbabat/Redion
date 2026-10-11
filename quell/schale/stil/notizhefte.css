@@ -242,6 +242,23 @@
 }
 .nh-karte:hover .nh-mehr, .nh-mehr:focus-visible{ opacity:1 }
 .nh-mehr:hover{ color:var(--text); background:var(--bg-hover) }
+/* 44 × 44 ZU TREFFEN, 26 PX ZU SEHEN (E721, §37). Der Knopf selbst wird so
+   gross wie ein Finger und bleibt eckig — eine Rundung schnitte die
+   Trefferfläche an den Ecken ab (elementFromPoint folgt ihr, test114 23).
+   Gemalt wird nur die Scheibe in seiner Mitte (`::before`). Er rückt dafür
+   um den Rand nach aussen, damit die Scheibe genau da bleibt, wo sie war.
+   Ein unsichtbarer Hof über `::after` hätte die Karte daneben überdeckt —
+   so trifft der Finger, was er sieht. */
+.nh-karte > .nh-mehr{
+  right:-7px; top:-7px; width:var(--touch-min); height:var(--touch-min);
+  border-radius:0; background:none
+}
+.nh-karte > .nh-mehr::before{
+  content:""; position:absolute; inset:9px; z-index:-1;
+  border-radius:var(--radius-sm); background:var(--bg-schwebend)
+}
+.nh-karte > .nh-mehr:hover{ background:none }
+.nh-karte > .nh-mehr:hover::before{ background:var(--bg-hover) }
 
 .nh-neu{
   display:flex; flex-direction:column; align-items:center; justify-content:center;

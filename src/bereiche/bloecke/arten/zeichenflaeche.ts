@@ -1331,7 +1331,7 @@ const Zusatz = (() => {
         '<button data-a="zurueck"><span class="mi">⇥</span>Nach rechts schieben</button>' +
         `<button data-a="kopfsp"><span class="mi">▤</span>Als Kopfspalte<span class="ms">${kopfSpalte ? 'an' : 'aus'}</span></button>` +
         '<button data-a="leeren"><span class="mi">␀</span>Inhalt leeren</button>' +
-        '<hr><button data-a="weg"><span class="mi">🗑</span>Spalte löschen</button>',
+        '<hr><button data-a="weg" data-gefahr><span class="mi">🗑</span>Spalte löschen</button>',
         r.left, r.bottom + 6);
       m.addEventListener('click', e => {
         const b = elVon(e)?.closest<HTMLElement>('button[data-a]');
@@ -1361,7 +1361,7 @@ const Zusatz = (() => {
         `<button data-a="kopf"><span class="mi">▥</span>Als Kopfzeile<span class="ms">${kopf ? 'an' : 'aus'}</span></button>` +
         '<button data-a="dup"><span class="mi">⧉</span>Zeile duplizieren</button>' +
         '<button data-a="leeren"><span class="mi">␀</span>Inhalt leeren</button>' +
-        '<hr><button data-a="weg"><span class="mi">🗑</span>Zeile löschen</button>',
+        '<hr><button data-a="weg" data-gefahr><span class="mi">🗑</span>Zeile löschen</button>',
         r.right + 6, r.top);
       m.addEventListener('click', e => {
         const b = elVon(e)?.closest<HTMLElement>('button[data-a]');

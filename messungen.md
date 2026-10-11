@@ -7172,3 +7172,98 @@ unverändert). Datei-Wächter grün: 550, 549, 225, 401, 402, 537, 290, 298,
 410, 400, 109, 87, 105, 362. Die Einzeldatei allein in einem Ordner
 (file://, Telefon, hell, `reduce`, klebendes `:hover` auf „Trainieren"):
 Schrift rgb(55,53,47) auf rgb(251,251,250), kein Seitenfehler.
+
+## §91 · Ein Menü je Ding: Rechtsklick, „…", Umschalt+F10, langes Drücken (E721, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/menue-eine-quelle` gegen `e8c4aba9b`
+(`claude/ordner-bearbeiten`, also `claude/morgen-besser-2` mit E718).
+Gemessen über `file://` mit Chromium, Rechner 1440×900, Telefon 390×844
+(`isMobile`, `hasTouch`); ein Ordner mit zwei Kindern, eine Seite, ein Fach,
+ein Heft. „Rechtsklick" ist ein echter Klick mit der rechten Maustaste,
+„Umschalt+F10" ein Tastendruck auf dem fokussierten Ding, „lang drücken" ein
+Berührungsstrom über CDP (`touchStart`, 650 ms, `touchEnd`). Gezählt werden
+die Knöpfe im Menü, das danach offen ist (0 = kein Menü). Das Messskript
+liegt im Notizordner, nicht im Verzeichnis.
+
+```txt
+                                         vorher (e8c4aba9b)                  nachher (E721)
+Deckel: „…"                              I 20×20 aria-hidden „⌄", im Knopf    BUTTON 44×44 „Aktionen für „Messordner""
+Deckel: Rechtsklick / Umschalt+F10       0 / 0                               11 / 11
+Deckel: Tabstopps je Ordnerkarte         bib-deckel, bib-blick               bib-deckel, bib-blick, bib-deckel-mehr
+Deckel: Knöpfe im Gitter (6 Karten)      8                                   14 (+1 je Karte)
+Ablagebaum: Rechtsklick / Umschalt+F10   0 / 0                               11 / 11
+Regal / Tabelle: Rechtsklick             0 / 0                               9 / 9
+Seitenleiste (Lade): ⋯                   BUTTON 20×20 „⋯"                    BUTTON 20×20 „Aktionen für „Messordner""
+Seitenleiste (Lade): Rechtsklick         0                                   53 (das Seitenmenü)
+Notizhefte Heft: ⋯                       BUTTON 26×26 „Mehr zu Messheft"     BUTTON 44×44 (26 px zu sehen)
+Notizhefte Heft: Rechtsklick / Umschalt  0 / 0                               7 / 7
+Notizhefte Fach: Rechtsklick             0                                   6
+Telefon Deckel: „…"                      I 20×44 aria-hidden                 BUTTON 44×44
+Telefon Deckel: lang drücken             0, die Seite ging auf               9, keine Seite
+Telefon Ablagebaum: lang drücken         0                                   11
+Telefon Notizhefte Heft: lang drücken    0, das Heft ging auf                7
+Telefon Notizhefte Fach: lang drücken    0                                   6
+```
+
+Wo eine Aktion von Hand stand (Sitz der Verdrahtung, nicht der Griff
+dahinter):
+
+```txt
+                                         vorher                              nachher
+Umbenennen                               5 (Seitenmenü, ⌄ der Bibliothek,    2 (Register „umbenennen";
+                                         Heft, Fach, Datenbankzeile)          die Datenbankzeile, L242)
+In den Papierkorb                        5 Stellen, 2 Wege (App.inPapierkorb   2 Stellen, 1 Weg
+                                         dreimal, trashBlock + eigene         (Register „papierkorb";
+                                         Meldung zweimal: Heft, Fach)          die Datenbankzeile)
+Farbe                                    3 (⌄, Heft, Fach)                   1 (Register „farbe")
+Listen von Hand für dieselbe Seite       5                                   2 (Seitenmenü mit seinem Aufbau,
+                                                                              Datenbankzeile)
+Rot am Rechner (Seitenmenü)              rgb(241, 242, 244)                  --gefahr
+Kontrast „In den Papierkorb" (10 Schemata) —                                 5,08 (Sand) bis 6,42 (Touch Kit hell)
+test597                                  13 / 75                             75 / 75
+Start (test388 §5, gzip)                 1853 KB                             1859 KB (Decke 1950)
+```
+
+Die Ruhe-Zählung von `test248` (1440×900) zählt Seitenleiste, Kopfzeile und
+Menüband, nicht die Karten der Bibliothek; sie blieb grün (50 Zusagen). Der
+Knopf mehr je Karte steht oben in der Tabelle: 8 → 14 Knöpfe bei 6 Karten.
+
+Nachtrag 10. Oktober — die Ecke über dem Vorschautext (`test597` §1b, eine
+Seite „Lange Vorschau" mit einer ersten Zeile, die sicher bis unter die
+Ecke reicht; Abstände in px vom linken Rand des Blatts, sichtbarer Text):
+
+```txt
+                                         ohne Platzhalter (25fb7f9d5)        mit Platzhalter (48 × 22, float)
+1440 × 900 hell: Ende der langen Zeile   188 (unter dem Stern bei 146)       vor dem Stern, mit „…"
+390 × 844 dunkel: Ende der langen Zeile  146 (unter dem Stern bei 104)       vor dem Stern, mit „…"
+Zeichen der Ecke auf Text ohne Grund     2 (1440) · 3 (390) Deckel           0 · 0
+test597                                  75 / 79                             79 / 79
+Start (test388 §5, gzip)                 1859 KB                             1859 KB
+```
+
+Nachtrag 10. Oktober, nach der Durchsicht (`test597` §2, §3, §9, §12,
+§14–§17 und `test362` §7; 1440 × 900 hell, wo nicht anders gesagt):
+
+```txt
+                                         ef3e19693                           1eb34ee9d
+test362 §7: rohe 22px in den Stilblättern 86 (Decke 85)                      85
+Ankunft der ersten Karten (Studio, E702) 0 von 6 bewegt                      6 von 6
+Seitenmenü → „Zu Favoriten", lange Seite scrollTop 1200 → 0, neu gezeichnet  1200 → 1200, derselbe Block
+Seitenmenü → „Duplizieren", lange Seite  scrollTop 1200 → 0, neu gezeichnet  1200 → 1200, derselbe Block
+Zeichen „In den Papierkorb" mit Fokus    rgb(55, 53, 47) (Text)              rgb(187, 32, 33) (--gefahr)
+… unter dem Zeiger, 10 Schemata          Textfarbe (z. B. standard            --gefahr in allen zehn
+                                         rgb(241, 242, 244))
+aria-expanded am „…" offen / zu          null / null                         true / false
+aria-expanded am ⋯ der Seitenleiste      null / null                         true / false
+Grund des offenen „…" (dunkel / hell)    rgb(30, 32, 35) / rgb(247, 247, 245) rgb(43, 45, 48) / rgb(239, 239, 238)
+„Zuletzt geöffnet": Rechtsklick          Browsermenü, 0 Einträge             9 Einträge, wie der Deckel
+UI.wahl: benannte Gruppe                 keine (role=presentation)           role=group, Name „Form"
+Aktion wirft / Promise scheitert         Meldung „" / „"                     „„Probe" hat nicht geklappt."
+test597                                  80 / 90 (§12: 82 / 91)              91 / 91
+Start (test388 §5, gzip)                 1859 KB                             1860 KB (Decke 1950)
+```
+
+Tablet-Sonde für den Schlucker nach langem Drücken (L242 Punkt 5;
+1024 × 1366, Berührung über CDP, 650 ms halten, dann ein Tipp auf
+„Umbenennen"): 100, 300 und 900 ms nach dem Loslassen je ein Treffer
+(`UI.frage` einmal gerufen, Menü zu). Nicht nachzustellen — keine Änderung.

@@ -4511,7 +4511,7 @@ const Datenbank = (() => {
       (typeof Pruefsatz !== 'undefined' &&
        Object.values<any>(coll.schema).some(d => d.type === 'formula')
         ? '<button data-a="festhalten"><span class="mi">✔</span>Diesen Fall festhalten</button>' : '') +
-      '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Entf</span></button>',
+      '<button data-a="del" data-gefahr><span class="mi">🗑</span>In den Papierkorb<span class="ms">Entf</span></button>',
       r.left, r.bottom + 4,
       { platzhalter: 'Aktionen filtern …',
         fuss: 'Zuletzt bearbeitet von <b>' +
@@ -5365,7 +5365,7 @@ const Datenbank = (() => {
       '<button data-a="dup"><span class="mi">⧉</span>Duplizieren</button>' +
       '<button data-a="vorlage"><span class="mi">🔖</span>Ansichtsvorlagen<span class="ms">▸</span></button>' +
       '<button data-a="lock"><span class="mi">🔒</span>' + (view.locked ? 'Entsperren' : 'Ansicht sperren') + '</button>' +
-      '<button data-a="del"><span class="mi">🗑</span>Ansicht löschen</button>',
+      '<button data-a="del" data-gefahr><span class="mi">🗑</span>Ansicht löschen</button>',
       r.left, r.bottom + 4,
       { platzhalter: 'Einstellung suchen …', breite: '300px',
         titel: 'Einstellungen', kopf: kopfKarte });
@@ -6223,7 +6223,7 @@ const Datenbank = (() => {
       '<button data-a="neurechts"><span class="mi">⇥</span>Rechts einfügen</button>' +
       (def.type !== 'title'
         ? '<hr><button data-a="dup"><span class="mi">⧉</span>Eigenschaft duplizieren</button>' +
-          '<button data-a="del"><span class="mi">🗑</span>Eigenschaft löschen</button>'
+          '<button data-a="del" data-gefahr><span class="mi">🗑</span>Eigenschaft löschen</button>'
         : ''),
       r.left, r.bottom + 2);
 
@@ -6849,7 +6849,7 @@ const Datenbank = (() => {
           `<span class="ms">${Vorrat.aktiv(coll.id) ? 'an' : 'aus'}</span></button>` : '') +
       (typeof Feldrechte !== 'undefined'
         ? '<button data-a="feldrechte"><span class="mi">🔒</span>Rechte je Spalte</button>' : '') +
-      '<hr><button data-a="del"><span class="mi">🗑</span>In den Papierkorb</button>',
+      '<hr><button data-a="del" data-gefahr><span class="mi">🗑</span>In den Papierkorb</button>',
       r.left - 120, r.bottom + 4);
 
     m.addEventListener('click', e => {

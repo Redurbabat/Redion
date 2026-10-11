@@ -522,6 +522,65 @@ import { chromium } from 'playwright';
        zeichenNachher[0] === '\u{1F98A}', zeichenNachher.join(','));
   }
 
+  /* ================================================================== *
+   * 2b) „PAPIERKORB STEHT IN ROT" — AUCH AM RECHNER UND IN DER BIBLIOTHEK (E721)
+   * ------------------------------------------------------------------
+   * Bis E721 war Rot eine Sache des Telefonblatts, und nur für zwei
+   * Schreibweisen (`data-a="del"` und `"purge"`). Am Rechner stand der
+   * Papierkorb im Seitenmenü in derselben Farbe wie „Link kopieren", und
+   * im Menü einer Bibliothekskarte auch am Telefon. Redur, Masterprompt
+   * S. 19: „beim rechts klicke sollte es mir zeigen löschen" — und das
+   * Löschen muss man erkennen, bevor man es drückt.
+   * ================================================================== */
+  const gefahrRot = async (seite: any): Promise<{ soll: string; ist: string[] }> => seite.evaluate(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--gefahr)';
+    document.body.appendChild(probe);
+    const soll = getComputedStyle(probe).color;
+    probe.remove();
+    const ist = [...document.querySelectorAll<HTMLElement>('.menu button')]
+      .filter(x => /Papierkorb/.test(x.textContent || '') && !/Gelöschte/.test(x.textContent || ''))
+      .map(x => getComputedStyle(x).color);
+    return { soll, ist };
+  });
+  await p.evaluate(() => {
+    document.querySelectorAll('.menu,.menu-grund').forEach(m => m.remove());
+    Store.addPage(null, { text: 'Rot-Probe' });
+    Store.setMeta('bibForm', 'deckel'); Store.setMeta('bibOrdner', '');
+    Bibliothek.oeffne('');
+  });
+  await p.waitForTimeout(900);
+  await p.evaluate(() => {
+    const k = [...document.querySelectorAll<HTMLElement>('.bib-deckel[data-id]')]
+      .find(x => x.getAttribute('title') === 'Rot-Probe');
+    const mehr = k?.parentElement?.querySelector<HTMLElement>(':scope > .bib-deckel-mehr')
+      || k?.querySelector<HTMLElement>('.bib-deckel-mehr');
+    mehr?.click();
+  });
+  await p.waitForTimeout(600);
+  const bibRot = await gefahrRot(p);
+  ok('Bibliothek am Telefon: „In den Papierkorb" steht in Rot',
+     bibRot.ist.length === 1 && bibRot.ist[0] === bibRot.soll, bibRot);
+  await p.evaluate(() => document.querySelectorAll('.menu,.menu-grund').forEach(m => m.remove()));
+
+  const gross = await b.newPage({ viewport: { width: 1440, height: 900 } });
+  await gross.goto('file://' + WURZEL + '/index.html');
+  await gross.waitForTimeout(1900);
+  await gross.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('#rg-willkommen,.produkt-onboarding-lage,#rg-einladung').forEach(e => e.remove());
+    const s = Store.addPage(null, { text: 'Rot am Rechner' });
+    App.oeffne(s.id);
+  });
+  await gross.waitForTimeout(700);
+  await gross.evaluate(() => App.seitenMenue(document.getElementById('btn-page-menu'),
+                                             Store.getBlock(App.aktuelleSeite())));
+  await gross.waitForTimeout(500);
+  const rechnerRot = await gefahrRot(gross);
+  ok('Am Rechner: „In den Papierkorb verschieben" steht in Rot',
+     rechnerRot.ist.length === 1 && rechnerRot.ist[0] === rechnerRot.soll, rechnerRot);
+  await gross.close();
+
   console.log('\n=== ERGEBNIS ===');
   pruef.forEach(([n, x, z]: any[]) => console.log((x ? '✅ ' : '❌ ') + n +
     (!x && z !== undefined ? '   ist=' + JSON.stringify(z) : '')));

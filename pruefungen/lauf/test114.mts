@@ -1726,6 +1726,62 @@ for (const [wname, ruf, arg] of WELTEN) {
 }
 
 
+/* ==========================================================================
+ * 23 · DAS „…" AN KARTE UND HEFT TRIFFT DER FINGER (E721)
+ * --------------------------------------------------------------------------
+ * Redur hat auf Seite 19 den ☆ oben rechts an der Karte eingekreist: dort
+ * gehört das „…" hin. Bis E721 war es ein ⌄ von 20 × 20 IM Kartenknopf —
+ * `aria-hidden`, kein Knopf, am Telefon nur in der Höhe auf 44 gestreckt.
+ * Und das ⋯ der Notizhefte misst 26 × 26: sichtbar richtig, als Ziel zu
+ * klein. Gemessen wird deshalb nicht die Box allein, sondern was der Finger
+ * an den vier Ecken eines 44-px-Quadrats um die Mitte TRIFFT
+ * (`elementFromPoint`) — ein unsichtbarer Hof zählt nur, wenn er dort liegt.
+ * ========================================================================*/
+console.log('\n23 · Das „…" an Karte und Heft trifft der Finger (E721)');
+await seite.evaluate(async () => {
+  document.querySelectorAll('.menu,.menu-grund,.overlay').forEach(m => m.remove());
+  Store.addPage(null, { text: 'Fingerprobe Seite' });
+  const h = Store.addPage(null, { text: 'Fingerprobe Heft' });
+  Store.addBlock(h.id, 'blatt', { papier: 'blanko' });
+  Store.setMeta('bibForm', 'deckel'); Store.setMeta('bibOrdner', '');
+  await Store.flush();
+  (globalThis as any).Bibliothek.oeffne('');
+});
+await seite.waitForTimeout(1200);
+const treffer = (sel: string) => seite.evaluate((s: string) => {
+  const aus: string[] = [];
+  const knoepfe = [...document.querySelectorAll<HTMLElement>(s)];
+  for (const k of knoepfe) {
+    k.scrollIntoView({ block: 'center' });
+    const r = k.getBoundingClientRect();
+    if (r.width < 2) { aus.push('unsichtbar'); continue; }
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const ecken = [[-21, -21], [21, -21], [-21, 21], [21, 21]];
+    let statt = '';
+    const daneben = ecken.filter(([dx, dy]) => {
+      const e = document.elementFromPoint(cx + (dx ?? 0), cy + (dy ?? 0));
+      const trifft = !!e && (e === k || k.contains(e));
+      if (!trifft && !statt) statt = e ? (e.id ? '#' + e.id : e.tagName + '.' + String(e.className || '').split(' ')[0]) : 'nichts';
+      return !trifft;
+    }).length;
+    if (k.tagName !== 'BUTTON' || daneben) aus.push(k.tagName + ' ' + Math.round(r.width) + '×' + Math.round(r.height) + ' · ' + daneben + ' Ecken daneben (dort: ' + statt + ')');
+  }
+  return { zahl: knoepfe.length, aus };
+}, sel);
+const karte23 = await treffer('.bib-gitter .bib-zelle > .bib-deckel-mehr');
+p('Bibliothek: jedes „…" ist ein Knopf, den ein 44-px-Finger an allen vier Ecken trifft',
+  karte23.zahl > 0 && karte23.aus.length === 0,
+  karte23.zahl ? karte23.aus.slice(0, 3).join(' | ') : 'kein „…" neben den Karten');
+await seite.evaluate(() => {
+  Store.setMeta('heft:reiter', 'dokumente'); Store.setMeta('heft:fach', '');
+  (globalThis as any).Notebook.oeffnen();
+});
+await seite.waitForTimeout(900);
+const heft23 = await treffer('.nh-karte > .nh-mehr');
+p('Notizhefte: das ⋯ (26 px zu sehen) trifft der Finger auf 44 × 44',
+  heft23.zahl > 0 && heft23.aus.length === 0, heft23.aus.slice(0, 3).join(' | '));
+
+
 await browser.close();
 server.close();
 

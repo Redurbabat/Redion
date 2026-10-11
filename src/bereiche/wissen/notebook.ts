@@ -996,88 +996,23 @@ const Notebook = (() => {
     });
   };
 
-  const kontextMenue = (anker: HTMLElement, id: string): void => {
+  /* ══ DAS ⋯ EINES HEFTS UND EINES FACHS — AUS DEM REGISTER (E721) ══════
+     Hier standen zwei Listen von Hand, jede mit ihrem eigenen Umbenennen
+     und ihrem eigenen Papierkorb. Jetzt fragen beide `Register.aktionen`:
+     was die Schale an jeder Seite kann (Merkzeichen, Umbenennen,
+     Papierkorb mit „Rückgängig") und was nur die Notizhefte können (Fach,
+     Farbe, Verschlüsseln) — gemeldet unten, am Ende dieser Datei. Dieselbe
+     Liste kommt auf Rechtsklick, Umschalt+F10 und langes Drücken. */
+  const ortVon = (anker: HTMLElement | null): AktionOrt => ({
+    kontext: 'notizhefte', anker, hinein: (ziel: string) => openFach(ziel)
+  });
+  const kontextMenue = (anker: HTMLElement, id: string,
+                        wo: { x?: number; y?: number } = {}): void => {
     const p = Store.getBlock(id);
     if (!p) return;
-    const r = anker.getBoundingClientRect();
-    const html = p.locked
-      ? `<button data-k="auf">Öffnen</button>` +
-        `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
-        `<button data-k="entsperren">Entschlüsseln</button>` +
-        `<div class="sep"></div>` +
-        `<button data-k="korb">In den Papierkorb</button>`
-      : `<button data-k="auf">Öffnen</button>` +
-        `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
-        `<button data-k="name">Umbenennen</button>` +
-        `<button data-k="farbe">Farbe …</button>` +
-        `<button data-k="fach">In Fach verschieben …</button>` +
-        `<button data-k="sperren">Verschlüsseln</button>` +
-        `<div class="sep"></div>` +
-        `<button data-k="korb">In den Papierkorb</button>`;
-    const m = UI.menu(html, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
-    m.addEventListener('click', (e: Event) => {
-      const b = (e.target as Element).closest<HTMLElement>('[data-k]');
-      if (!b) return;
-      m.remove();
-      const k = b.dataset['k'];
-      if (k === 'auf') return openNotebook(id);
-      if (k === 'stern') return toggleFavorit(id);
-      if (k === 'farbe') return farbMenue(anker, id);
-      if (k === 'fach') return fachwahlMenue(anker, id);
-      if (k === 'sperren') { void sperrenHier(id); return; }
-      if (k === 'entsperren') { void entsperrenHier(id); return; }
-      /* EIN Umbenennen (E718): dieselben Regeln wie in der Bibliothek —
-         leer, Steuerzeichen, gleicher Name —, und die Seitenleiste mit. */
-      if (k === 'name') { void App.umbenennen(p, anker, 'Name des Hefts'); return; }
-      if (k === 'korb') {
-        /* Umkehrbar — der Papierkorb-Reiter holt es mit einem Klick zurück. */
-        Store.trashBlock(id);
-        UI.toast('Ins Papierkorb gelegt — Reiter „Papierkorb" holt es zurück.');
-        renderShelf();
-      }
-    });
+    Menue.aktionen(p, ortVon(anker), { ...wo, rueckfokus: anker });
   };
-
-  const fachKontextMenue = (anker: HTMLElement, id: string): void => {
-    const f = Store.getBlock(id);
-    if (!f) return;
-    const r = anker.getBoundingClientRect();
-    /* „BLICK HINEIN" AUCH HIER (E611, §37). Das Auge an der Kachel ist der
-       Weg für Maus und Stift; der Finger braucht einen genannten. In der
-       Bibliothek steht er seit E459 im ⌄-Menü — in den Notizheften fehlte
-       er, und damit gab es gar keine Möglichkeit, in ein Fach zu sehen,
-       ohne es zu öffnen. */
-    const kannBlick = typeof Bibliothek !== 'undefined' && !!Bibliothek.blickHinein;
-    const m = UI.menu(
-      `<button data-k="auf">Öffnen</button>` +
-      (kannBlick ? `<button data-k="blick"><span class="mi">⌕</span>Blick hinein</button>` : '') +
-      `<button data-k="name">Umbenennen</button>` +
-      /* „FARBE …" AUCH AM FACH (E672). Die Hefte hatten es seit E406, das
-         Fach daneben nicht — Redur, 21. September: „ich sollte die ordner
-         farben wählen können und farben wechseln können". */
-      `<button data-k="farbe">Farbe …</button>` +
-      `<div class="sep"></div>` +
-      `<button data-k="korb">In den Papierkorb</button>`,
-      Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
-    m.addEventListener('click', (e: Event) => {
-      const b = (e.target as Element).closest<HTMLElement>('[data-k]');
-      if (!b) return;
-      m.remove();
-      if (b.dataset['k'] === 'auf') return openFach(id);
-      if (b.dataset['k'] === 'farbe') return farbMenue(anker, id);
-      if (b.dataset['k'] === 'blick')
-        return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false,
-          (ziel: string) => openFach(ziel));
-      if (b.dataset['k'] === 'name') { void App.umbenennen(f, anker, 'Name des Fachs'); return; }
-      if (b.dataset['k'] === 'korb') {
-        /* Die Hefte darin bleiben lebendig und erscheinen als lose Hefte
-           an der Wurzel — trashBlock nimmt nur das Fach heraus. */
-        Store.trashBlock(id);
-        UI.toast('Fach in den Papierkorb gelegt. Seine Hefte bleiben im Regal.');
-        renderShelf();
-      }
-    });
-  };
+  const fachKontextMenue = kontextMenue;
 
   /* ------------------------------------------------------------------ *
    * Verdrahtung
@@ -1114,6 +1049,9 @@ const Notebook = (() => {
     id: string; zeiger: number; x0: number; y0: number;
     maus: boolean; gehoben: boolean; uhr: number | null;
     schatten: HTMLElement | null; ueber: HTMLElement | null;
+    /** Hat der Finger die gehobene Karte wirklich bewegt? Wenn nicht, ist
+     *  das Loslassen die Frage nach dem Menü (E83-Regel, E721). */
+    bewegt: boolean;
   };
   let zug: Zug | null = null;
 
@@ -1176,7 +1114,7 @@ const Notebook = (() => {
       aufraeumen();
       zug = { id, zeiger: e.pointerId, x0: e.clientX, y0: e.clientY,
               maus: e.pointerType === 'mouse', gehoben: false, uhr: null,
-              schatten: null, ueber: null };
+              schatten: null, ueber: null, bewegt: false };
       if (!zug.maus)
         zug.uhr = window.setTimeout(() => { if (zug && !zug.gehoben) heben(karte); }, HEBEN_MS);
     });
@@ -1193,6 +1131,7 @@ const Notebook = (() => {
         if (!karte) { aufraeumen(); return; }
         heben(karte);
       }
+      if (weg > ROLL_PX) zug.bewegt = true;
       e.preventDefault();
       if (zug.schatten) {
         zug.schatten.style.left = e.clientX + 'px';
@@ -1212,10 +1151,22 @@ const Notebook = (() => {
       if (!zug || e.pointerId !== zug.zeiger) return;
       const gehoben = zug.gehoben;
       const id = zug.id;
+      const stillGehalten = gehoben && !zug.maus && !zug.bewegt;
       if (zug.schatten) zug.schatten.style.visibility = 'hidden';
       const wohin = gehoben ? zielUnter(e.clientX, e.clientY) : undefined;
       aufraeumen();
       if (!gehoben) return;                 /* war ein Tipp — der Klick trägt */
+      /* GEHOBEN UND OHNE BEWEGUNG LOSGELASSEN → DAS MENÜ (E721). Dieselbe
+         Regel wie bei den Blöcken (E83): Tragen trägt, Halten fragt. Die
+         Klicks, die der Browser dem Loslassen nachschickt, werden
+         geschluckt — sonst öffnete der eine das Heft. */
+      if (stillGehalten) {
+        Menue.nachzuegler();
+        const karte = wurzel.querySelector<HTMLElement>(
+          `.bib-deckel[data-id="${CSS.escape(id)}"], .nh-zeile-auf[data-id="${CSS.escape(id)}"]`);
+        if (karte) kontextMenue(karte, id);
+        return;
+      }
       if (wohin === undefined) return;      /* daneben abgelegt: nichts tun */
       if (ziehenAblegen(id, wohin)) renderShelf();
     };
@@ -1241,6 +1192,24 @@ const Notebook = (() => {
 
   const bindShelf = (wurzel: HTMLElement): void => {
     bindZiehen(wurzel);
+    /* RECHTSKLICK, UMSCHALT+F10, ENTF (E721) — derselbe Binder wie in der
+       Bibliothek. Lang drücken hebt ein Heft schon selbst (oben, E368);
+       der Binder hält deshalb nur die Fächer, die nicht gezogen werden. */
+    Menue.aktionenBinden(wurzel, {
+      auswahl: '.bib-deckel[data-id], .nh-zeile-auf[data-id], .bib-deckel[data-fach], .nh-zeile-auf[data-fach]',
+      halten: '[data-fach]',
+      oeffnen: (el, wo) => {
+        const id = el.dataset['id'] || el.dataset['fach'];
+        if (!id || !Store.getBlock(id)) return false;
+        kontextMenue(el, id, wo.tastatur ? {} : { x: wo.x ?? 0, y: wo.y ?? 0 });
+        return true;
+      },
+      entf: el => {
+        const id = el.dataset['id'] || el.dataset['fach'];
+        const p = id ? Store.getBlock(id) : null;
+        return p ? Register.aktionen.taste('Entf', p, ortVon(el)) : false;
+      }
+    });
     wurzel.addEventListener('click', e => {
       /* Ein Klick, der aus einem Ziehen kommt, öffnet nichts. */
       if (document.body.classList.contains('nh-zieht')) { e.stopPropagation(); return; }
@@ -1403,6 +1372,37 @@ const Notebook = (() => {
 
   /* Die Regeln kommen mit heraus, damit ein Prüflauf sie OHNE Fenster
      messen kann — dieselbe Trennung wie bei `Wissensluecken.sammeln`. */
+  /* WAS NUR DIE NOTIZHEFTE KÖNNEN — als Aktionen im Register (E721).
+     Öffnen heisst hier „aufschlagen" (Heft) oder „hineingehen" (Fach),
+     Farbe ist der eine Wähler (E672), Fach und Verschlüsseln gibt es nur
+     am Heft. Merkzeichen, Umbenennen und Papierkorb meldet die Schale —
+     dieselben wie überall. */
+  if (typeof Register !== 'undefined' && Register.aktionen) {
+    const R = Register.aktionen;
+    const hier = (o: AktionOrt): boolean => o.kontext === 'notizhefte';
+    R.melde({ id: 'heft-oeffnen', name: 'Öffnen', zeichen: 'book', gruppe: 'oeffnen', rang: 10,
+      gilt: (p: any, o: AktionOrt) => hier(o) && !istFach(p),
+      tun: (p: any) => openNotebook(p.id) });
+    R.melde({ id: 'fach-oeffnen', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+      gilt: (p: any, o: AktionOrt) => hier(o) && istFach(p),
+      tun: (p: any) => openFach(p.id) });
+    R.melde({ id: 'farbe', name: 'Farbe …', zeichen: 'palette', gruppe: 'bearbeiten', rang: 30,
+      gilt: (p: any, o: AktionOrt) => (hier(o) && !p.locked) || o.kontext === 'bibliothek',
+      tun: (p: any, o: AktionOrt) => farbMenue(o.anker && o.anker.isConnected ? o.anker : document.body, p.id,
+        /* Im Regal zeichnet `setzeFarbe` Regal und Leiste selbst (E718);
+           anderswo zeichnet die Schale alles nach, was den Ordner zeigt. */
+        hier(o) ? undefined : () => App.nachAenderung(Store.getBlock(p.id))) });
+    R.melde({ id: 'sperren', name: 'Verschlüsseln', zeichen: 'lock', gruppe: 'bearbeiten', rang: 40,
+      gilt: (p: any, o: AktionOrt) => hier(o) && !istFach(p) && !p.locked,
+      tun: (p: any) => sperrenHier(p.id) });
+    R.melde({ id: 'entsperren', name: 'Entschlüsseln', zeichen: 'lockOpen', gruppe: 'bearbeiten', rang: 40,
+      gilt: (p: any, o: AktionOrt) => hier(o) && !!p.locked,
+      tun: (p: any) => entsperrenHier(p.id) });
+    R.melde({ id: 'fach', name: 'In Fach verschieben …', zeichen: 'moveTo', gruppe: 'ablegen', rang: 10,
+      gilt: (p: any, o: AktionOrt) => hier(o) && !istFach(p) && !p.locked,
+      tun: (p: any, o: AktionOrt) => fachwahlMenue(o.anker && o.anker.isConnected ? o.anker : document.body, p.id) });
+  }
+
   return { oeffnen, open: oeffnen, resume, render,
            /* Der Farbwähler nach aussen (E672) — für die Ordner der Bibliothek. */
            farbMenue,

@@ -905,12 +905,63 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    gesetzt hat. Gerade, nicht kursiv (`<i>`), und es schrumpft nie: ein
    halbes Emoji ist schlimmer als keines. */
 .bib-deckel-symbol{ flex:none; font-style:normal; font-size:13px; line-height:1.5 }
-.bib-deckel-mehr{
-  margin-left:auto; flex:none; width:20px; height:20px; display:grid;
-  place-items:center; border-radius:6px; color:var(--text-faint);
-  font-style:normal; font-size:13px
+/* DAS „…" OBEN RECHTS AM DECKEL (E721). Redur hat auf S. 19 den ☆ oben
+   rechts eingekreist: „Hier füge ...". Ein eigener Knopf NEBEN dem Deckel
+   (in `.bib-zelle`, wie das Auge), 44 × 44 zu treffen und 26 px zu sehen —
+   die Stelle und die Art des ⋯ der Notizhefte. Er steht immer da, blass
+   in Ruhe: am Telefon gibt es kein Überfahren (§37, test303). */
+.bib-zelle > .bib-deckel-mehr{
+  position:absolute; right:0; top:0; z-index:3;
+  width:var(--touch-min); height:var(--touch-min); margin:0; padding:0; border:0;
+  display:grid; place-items:center; background:none; cursor:pointer;
+  /* Eckig, mit Absicht: eine Rundung schneidet die Trefferfläche an den
+     Ecken ab (elementFromPoint folgt ihr) — gemessen in test114 23. Rund
+     ist nur, was man sieht. */
+  border-radius:0; color:var(--text-dim)
 }
-.bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-zelle > .bib-deckel-mehr i{
+  display:grid; place-items:center; width:26px; height:26px;
+  /* Deckend, nicht schwebend: auf einem Deckel mit Vorschautext stand das
+     Wort sonst DURCH die Scheibe hindurch („Redi⋯on", gesehen im Bild). */
+  border-radius:var(--radius-sm); background:var(--bg-card);
+  box-shadow:0 0 0 1px var(--line); font-style:normal; font-size:15px; line-height:1
+}
+.bib-zelle > .bib-deckel-mehr:hover i,
+.bib-zelle > .bib-deckel-mehr:focus-visible i,
+.bib-zelle > .bib-deckel-mehr[aria-expanded="true"] i{ background:var(--bg-hover); color:var(--text) }
+.bib-zelle > .bib-deckel-mehr:focus-visible{ outline:none }
+.bib-zelle > .bib-deckel-mehr:focus-visible i{ outline:2px solid var(--accent); outline-offset:2px }
+/* Der Stern rückt nach links, neben das „…" — er bleibt ein Zeichen für
+   den Zustand, kein zweites kleines Ziel in derselben Ecke. */
+.bib-zelle .bib-deckel-stern{ right:40px; top:12px }
+/* UND DIE VORSCHAU MACHT DER ECKE PLATZ (test597 §1b). An seiner neuen
+   Stelle stand der Stern mitten in der ersten Zeile des Vorschautexts:
+   „Willkommen in Redi☆n" am Telefon, „… herausgefunden☆" am Rechner —
+   gesehen im Bild, nicht im Lauf. Eine Scheibe darunter half nur halb: sie
+   deckte die Mitte eines Worts und liess Splitter stehen („Willkommen in
+   ☆ di"), und ein angeschnittenes Wort ohne Auslassungszeichen liest sich
+   wie ein ANDERES Wort (dieselbe Lehre wie E227). Also weicht die Zeile:
+   ein Platzhalter rechts oben, so hoch wie die Ecke. Jede Zeile der
+   Vorschau ist ein eigener Block mit `overflow:hidden` und damit ein
+   Formatierungskontext — der weicht einem Float aus, statt unter ihm
+   durchzulaufen, und endet mit „…" vor dem Stern. Ordner zeichnen ihr
+   Bild mit `::before` und haben keinen Text; Bild und Handschrift liegen
+   absolut und rücken nicht. */
+.bib-zelle > .bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{
+  /* Die Höhe ist die halbe Trefferfläche des „…" (44 px, §37): so weit
+     reicht die Ecke ins Blatt. Als Marke, nicht als rohe 22px — die stünde
+     in test362s Verzeichnis der Wiederholungen (Durchsicht vom 10. Oktober). */
+  content:""; float:right; width:48px; height:calc(var(--touch-min) / 2)
+}
+/* GEHOBEN (E721): nach langem Drücken liegt das Ding ein wenig höher —
+   dieselbe Hebung wie im Kit (Popover, scale 1.04). Ohne Bewegung (System
+   oder „ruhig") bleibt es stehen und zeigt nur den Rahmen. */
+[data-gehoben]{
+  transform:scale(1.04); transition:transform var(--motion-fast) var(--ease);
+  box-shadow:0 0 0 2px var(--accent); border-radius:10px
+}
+@media (prefers-reduced-motion:reduce){ [data-gehoben]{ transform:none; transition:none } }
+body[data-bewegung="ruhig"] [data-gehoben]{ transform:none }
 .bib-deckel small{
   display:block; overflow:hidden; margin-top:2px;
   font-size:11px; white-space:nowrap; text-overflow:ellipsis

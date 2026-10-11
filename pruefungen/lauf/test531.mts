@@ -197,7 +197,7 @@ p('Das ⋯-Menü eines Fachs geht auf', menue.da);
 p('… und bietet „Blick hinein"', /Blick hinein/.test(menue.text), menue.text.slice(0, 120));
 
 const ausMenue = await s3.evaluate(() => {
-  const b = [...document.querySelectorAll('.menu [data-k]')]
+  const b = [...document.querySelectorAll('.menu [data-a]')]
     .find(x => /Blick hinein/.test(x.textContent || '')) as HTMLElement | undefined;
   b?.click();
   return !!b;

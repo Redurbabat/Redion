@@ -244,7 +244,12 @@ const StudioSchale = (() => {
         letzterOrt = location.hash;
         bewegt.forEach(a => a.cancel()); bewegt.clear();
         ankommen(document.querySelector('#page .bib-dkopf,#page .bib-titel,#page .aw-kopf'));
-        document.querySelectorAll('#page .bib-gitter>.bib-deckel:nth-child(-n+6)')
+        /* Seit E721 steht jede Karte der Bibliothek in einer `.bib-zelle`
+           (Karte und ihr „…" nebeneinander) — die Zelle kommt an, mit
+           beiden. Der alte Wähler `>.bib-deckel` traf danach nichts mehr
+           (Durchsicht vom 10. Oktober, test597 §15). Notizhefte und andere
+           Gitter ohne Zelle bleiben beim Deckel. */
+        document.querySelectorAll('#page .bib-gitter > :is(.bib-deckel, .bib-zelle):nth-child(-n+6)')
           .forEach((karte, i) => ankommen(karte, 0, 8, i * 24));
       });
     };

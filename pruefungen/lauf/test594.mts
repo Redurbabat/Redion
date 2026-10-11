@@ -155,7 +155,7 @@ const zurBibliothek = async (s: Page, ordner = ''): Promise<void> => {
 /** Das ⌄-Menü einer Karte öffnen und einen Eintrag drücken. */
 const kartenMenue = async (s: Page, id: string, eintrag: string): Promise<boolean> => {
   await s.evaluate(`document.querySelectorAll('.menu').forEach(m => m.remove())`);
-  await s.evaluate(`document.querySelector('.bib-deckel[data-id="${id}"] .bib-deckel-mehr')?.click()`);
+  await s.evaluate(`document.querySelector('.bib-zelle:has(> .bib-deckel[data-id="${id}"]) > .bib-deckel-mehr')?.click()`);
   await s.waitForTimeout(250);
   return await s.evaluate(`(() => {
     const b = [...document.querySelectorAll('.menu button[data-a]')].find(x => x.getAttribute('data-a') === ${JSON.stringify(eintrag)});
@@ -303,7 +303,7 @@ await s.waitForSelector('.nh-regal', { timeout: 20000 });
 await s.waitForTimeout(400);
 await s.evaluate(`document.querySelector('[data-mehr-fach="${a.fach}"]')?.click()`);
 await s.waitForTimeout(250);
-await s.evaluate(`[...document.querySelectorAll('.menu button[data-k]')].find(x => x.getAttribute('data-k') === 'name')?.click()`);
+await s.evaluate(`[...document.querySelectorAll('.menu button[data-a]')].find(x => x.getAttribute('data-a') === 'umbenennen')?.click()`);
 await antworte(s, '   ');
 const nh5 = await s.evaluate(`document.getElementById('toast')?.textContent || ''`) as string;
 p('Notizhefte, Fach: „   " → dieselbe Meldung', /mindestens ein Zeichen/.test(nh5), nh5);
@@ -315,7 +315,7 @@ await s.evaluate(`Store.setMeta('heft:fach', '${a.fach}'); Notebook.oeffnen()`);
 await s.waitForSelector(`[data-mehr="${a.heft}"]`, { timeout: 8000 }).catch(() => {});
 await s.evaluate(`document.querySelector('[data-mehr="${a.heft}"]')?.click()`);
 await s.waitForTimeout(250);
-await s.evaluate(`[...document.querySelectorAll('.menu button[data-k]')].find(x => x.getAttribute('data-k') === 'name')?.click()`);
+await s.evaluate(`[...document.querySelectorAll('.menu button[data-a]')].find(x => x.getAttribute('data-a') === 'umbenennen')?.click()`);
 await s.waitForTimeout(500);
 await s.evaluate(`UI.frage = window.__frage594`);
 gleich('Notizhefte, Heft: Steuerzeichen und Ränder fliegen hinaus', await s.evaluate(`Store.getBlock('${a.heft}').text`), 'Stromkunde');
@@ -360,7 +360,7 @@ await s.waitForSelector('.nh-regal', { timeout: 20000 });
 await s.waitForTimeout(400);
 await s.evaluate(`document.querySelector('[data-mehr-fach="${a.fach}"]')?.click()`);
 await s.waitForTimeout(250);
-await s.evaluate(`[...document.querySelectorAll('.menu button[data-k]')].find(x => x.getAttribute('data-k') === 'farbe')?.click()`);
+await s.evaluate(`[...document.querySelectorAll('.menu button[data-a]')].find(x => x.getAttribute('data-a') === 'farbe')?.click()`);
 await s.waitForTimeout(250);
 await s.evaluate(`[...document.querySelectorAll('button[data-farbe]')].find(x => x.getAttribute('data-farbe') === 'blue')?.click()`);
 await s.waitForTimeout(500);
@@ -368,7 +368,7 @@ const f8 = await s.evaluate(UEBERALL(a.fach)) as any;
 gleich('Die Fach-Farbe steht sofort in der Seitenleiste', f8.zeileFarbe, 'blue');
 await s.evaluate(`document.querySelector('[data-mehr-fach="${a.fach}"]')?.click()`);
 await s.waitForTimeout(250);
-await s.evaluate(`[...document.querySelectorAll('.menu button[data-k]')].find(x => x.getAttribute('data-k') === 'name')?.click()`);
+await s.evaluate(`[...document.querySelectorAll('.menu button[data-a]')].find(x => x.getAttribute('data-a') === 'umbenennen')?.click()`);
 await antworte(s, 'Strom');
 const f8b = await s.evaluate(UEBERALL(a.fach)) as any;
 gleich('Der neue Fach-Name steht sofort in der Seitenleiste', [f8b.text, f8b.zeile], ['Strom', 'Strom']);

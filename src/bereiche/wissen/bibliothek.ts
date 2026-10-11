@@ -726,6 +726,15 @@ const Bibliothek = (() => {
       `aria-label="Blick in „${esc(name || 'Ohne Titel')}“" title="Blick hinein">` +
       '<i class="bib-blick-auge" aria-hidden="true"><b></b></i></button>';
 
+  /** Das „…" einer Karte (E721): ein echter Knopf, benannt nach dem Ding,
+   *  44 × 44 zu treffen, 26 px zu sehen. Er gehört zur Zelle, nicht in den
+   *  Deckel — dieselbe Regel wie beim Auge. Der Klassenname bleibt der des
+   *  alten ⌄ (test432, test560 drücken ihn). */
+  const mehrKnopf = (id: string, name: string): string =>
+    `<button type="button" class="bib-deckel-mehr" data-mehr-id="${esc(id)}" aria-haspopup="menu" ` +
+      `aria-label="Aktionen für „${esc(name || 'Ohne Titel')}“" title="Aktionen">` +
+      '<i aria-hidden="true">\u22ef</i></button>';
+
   /** Deckel und Auge in einer Zelle. Das Auge ist ein GESCHWISTER des
    *  Deckels, kein Kind: ein Knopf im Knopf ist kein gültiges HTML, und
    *  der Klick käme zweimal an (E463). */
@@ -1036,18 +1045,26 @@ const Bibliothek = (() => {
       '</span>' +
       '<span class="bib-deckel-name">' +
         (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
-        '<b>' + esc(p.text || 'Ohne Titel') + '</b>' +
-        '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+        '<b>' + esc(p.text || 'Ohne Titel') + '</b></span>' +
       '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
       '</button>';
-    if (art.id !== 'ordner') return deckel;
     /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
        ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
        Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
-       schaut. Auszeichnung und Verdrahtung stehen seit E611 in `mitBlick`
+       schaut. Auszeichnung und Verdrahtung stehen seit E611 in `blickKnopf`
        und `blickAnbringen`, damit die Notizhefte DASSELBE Auge bekommen
-       und nicht ein ähnliches. */
-    return mitBlick(deckel, p.id, p.text);
+       und nicht ein ähnliches.
+
+       DAS „…" OBEN RECHTS (E721). Redur hat auf S. 19 des Masterprompts den
+       ☆ oben rechts eingekreist: „Hier füge ...". Bis hier war das Menü ein
+       ⌄ von 20 × 20 IM Kartenknopf — `aria-hidden`, weil ein Knopf in einem
+       Knopf kein gültiges HTML ist, und damit für Tastatur und Vorleser gar
+       nicht da. Jetzt ist es ein eigener Knopf NEBEN dem Deckel, in derselben
+       Zelle wie das Auge — an der Stelle und in der Art des ⋯ der Notizhefte.
+       JEDE Karte bekommt die Zelle, nicht nur der Ordner. */
+    return '<span class="bib-zelle">' + deckel +
+      (art.id === 'ordner' ? blickKnopf(p.id, p.text) : '') +
+      mehrKnopf(p.id, p.text) + '</span>';
   };
 
   type Heft = { id: string; icon: string; name: string;
@@ -1406,6 +1423,19 @@ const Bibliothek = (() => {
       },
       offenGeaendert: (ids: string[]) => {
         if (Store.setMeta) Store.setMeta(BIB_BAUM_OFFEN, ids);
+      },
+      /* DER ABLAGEBAUM HAT DIESELBEN AKTIONEN WIE DIE KARTE (E721) —
+         Redur, S. 13: „auch die rechtsk klickt sollte hier für die ordner
+         haben". Nicht für die Wurzel „Dokumente": die ist kein Ding. */
+      aktionen: (id: string, wo: { anker: HTMLElement; x?: number; y?: number; tastatur: boolean }) => {
+        const p = id === BIB_BAUM_WURZEL ? null : Store.getBlock(id);
+        if (!p || p.alive === false) return false;
+        return !!Menue.aktionen(p, ortFuer(p, wo.anker),
+          wo.tastatur ? { rueckfokus: wo.anker } : { x: wo.x ?? 0, y: wo.y ?? 0, rueckfokus: wo.anker });
+      },
+      entf: (id: string, anker: HTMLElement) => {
+        const p = id === BIB_BAUM_WURZEL ? null : Store.getBlock(id);
+        return p ? Register.aktionen.taste('Entf', p, ortFuer(p, anker)) : false;
       }
     });
 
@@ -1572,6 +1602,41 @@ const Bibliothek = (() => {
   };
 
   /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
+  /* ══ EIN MENÜ JE DING IN DER BIBLIOTHEK (E721) ════════════════════════
+     Deckel, Regal, Tabelle und Ablagebaum zeigen dieselben Dinge — also
+     dieselben Aktionen, aus `Register.aktionen`. Die Bibliothek sagt dazu
+     nur, WO sie ist und WAS das Ding hier ist (ein Ordner ist ein Ort). */
+  const ortFuer = (p: any, anker: HTMLElement | null): AktionOrt =>
+    ({ kontext: 'bibliothek', art: artVon(p).id, anker });
+
+  /** Rechtsklick, Kontextmenü-Taste, Umschalt+F10, Entf und langes Drücken
+   *  an Deckel, Regal und Tabelle — EIN Binder am Wurzelelement der
+   *  Bibliothek, nicht einer je Karte. */
+  const aktionenAnbringen = (wrap: HTMLElement): void => {
+    const wurzel = wrap.querySelector<HTMLElement>('.bib');
+    if (!wurzel || typeof Menue === 'undefined') return;
+    /* „Zuletzt geöffnet" zeigt dieselben Dokumente wie die Deckel darunter
+       und trägt seine Kennung in `data-rmo-open` — dasselbe Menü dort
+       (Durchsicht vom 10. Oktober; Redur: „für den rechts klick bei eine
+       dokument … wo es passen kann"). */
+    const dingVon = (el: HTMLElement): any =>
+      Store.getBlock(el.dataset['id'] || el.dataset['rmoOpen'] || '');
+    Menue.aktionenBinden(wurzel, {
+      auswahl: '.bib-deckel[data-id], .bib-heft[data-id], .bib-hand[data-id], .bib-zeile[data-id], ' +
+        '.rmo-recent-card[data-rmo-open]',
+      oeffnen: (el, wo) => {
+        const p = dingVon(el);
+        if (!p) return false;
+        return !!Menue.aktionen(p, ortFuer(p, el),
+          wo.tastatur ? { rueckfokus: el } : { x: wo.x ?? 0, y: wo.y ?? 0, rueckfokus: el });
+      },
+      entf: el => {
+        const p = dingVon(el);
+        return p ? Register.aktionen.taste('Entf', p, ortFuer(p, el)) : false;
+      }
+    });
+  };
+
   const binde = (wrap: HTMLElement): void => {
     wrap.querySelectorAll<HTMLElement>('[data-rmo-open]').forEach(button =>
       button.addEventListener('click', () => {
@@ -1696,10 +1761,9 @@ const Bibliothek = (() => {
       b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
     blickAnbringen(wrap);
     wrap.querySelectorAll<HTMLElement>('.bib-deckel[data-id]').forEach(k => {
-      k.addEventListener('click', ereignis => {
-        /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
-        if (ereignis.target instanceof Element &&
-            ereignis.target.closest('.bib-deckel-mehr')) return;
+      k.addEventListener('click', () => {
+        /* Hier stand: ein Klick auf den ⌄ IM Namen öffnet das Menü, nicht
+           das Stück. Seit E721 steht das „…" neben dem Deckel, nicht in ihm. */
         const id = k.dataset['id'];
         if (!id) return;
         /* EIN ORDNER IST EIN ORT, KEIN DOKUMENT (E380). Bis hierher ging
@@ -1710,56 +1774,19 @@ const Bibliothek = (() => {
         if (zustand.reiter === 'ablage' && k.dataset['art'] === 'ordner') { geheIn(id); return; }
         App.oeffne(id);
       });
-      k.querySelector<HTMLElement>('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
-        ereignis.stopPropagation();
-        const id = k.dataset['id'];
-        const p = id ? Store.getBlock(id) : null;
-        if (!p) return;
-        const r = k.getBoundingClientRect();
-        const m = UI.menu(
-          `<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
-          /* NUR BEI ORDNERN. Ein Blick in eine PDF wäre die PDF — dafür
-             gibt es „Öffnen". */
-          (k.dataset['art'] === 'ordner'
-            ? `<button data-a="blick"><span class="mi">\u2315</span>Blick hinein</button>` : '') +
-          `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
-            (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
-          '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
-          /* „FARBE …" (E672): derselbe Wähler wie in den Notizheften, nur mit
-             einem anderen `danach` — hier wird die Bibliothek neu gezeichnet. */
-          (typeof Notebook !== 'undefined' && typeof Notebook.farbMenue === 'function'
-            ? '<button data-a="farbe"><span class="mi">\u25cf</span>Farbe \u2026</button>' : '') +
-          '<div class="sep"></div>' +
-          '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>',
-          Math.min(r.left, innerWidth - 230), r.bottom + 4);
-        m.addEventListener('click', ev => {
-          const b = elVon(ev)?.closest<HTMLElement>('[data-a]');
-          if (!b) return;
-          const a = b.dataset['a'];
-          m.remove();
-          if (a === 'oeffnen') { App.oeffne(p.id); return; }
-          if (a === 'blick')   { blickHinein(p, r); return; }
-          /* EIN Merkzeichen (E712): derselbe Griff wie ★ und der runde Knopf
-             — er zeichnet auch die Favoriten der Seitenleiste neu. */
-          if (a === 'stern')   { App.favoritKippen(p); App.zeichneSeite(); return; }
-          /* Die Farbe erreicht ALLE Oberflächen (E672, E718), nicht nur diese. */
-          if (a === 'farbe')   { Notebook.farbMenue(k, p.id, () => App.nachAenderung(Store.getBlock(p.id))); return; }
-          /* UMBENENNEN AN ORT UND STELLE (E718). Hier stand: auf die Seite
-             springen und den Titel fokussieren — „ein zweites Eingabefeld
-             wäre eine zweite Wahrheit (§8)". Die Wahrheit ist aber das Feld
-             `text`, und das schreibt die Frage genauso; der Sprung warf
-             einen aus der Bibliothek (gegen E380). Wer den Titel auf der
-             Seite ändern will, kann das weiter: Öffnen, Titel. */
-          if (a === 'umbenennen') { void App.umbenennen(p, k); return; }
-          /* IN DEN PAPIERKORB (E718) — über `Store.trashBlock`, nicht mehr
-             mit einem rohen `alive:false`: das hatte keinen `trashedAt` (die
-             Frist lief nie ab), blieb im Inhalt des Elternteils, kam ins
-             Protokoll nicht und hatte keinen Rückweg. */
-          if (a === 'papierkorb') { App.inPapierkorb(p); return; }
-          App.zeichneSeite();
-        });
-      });
     });
+    /* DAS „…" UND DER RECHTSKLICK (E721): beide fragen `Register.aktionen`
+       über `Menue.aktionen` — dieselbe Liste, dieselben Griffe. Hier stand
+       eine eigene Liste mit eigenem Umbenennen, eigener Farbe und eigenem
+       Papierkorb (bis E718 sogar ein rohes `alive:false`). */
+    wrap.querySelectorAll<HTMLElement>('.bib-deckel-mehr[data-mehr-id]').forEach(knopf =>
+      knopf.addEventListener('click', ereignis => {
+        ereignis.stopPropagation();
+        const p = Store.getBlock(knopf.dataset['mehrId'] || '');
+        if (!p) return;
+        Menue.aktionen(p, ortFuer(p, knopf), { rueckfokus: knopf });
+      }));
+    aktionenAnbringen(wrap);
   };
 
   const zeichnen = (wrap: HTMLElement): void => {
@@ -2236,6 +2263,30 @@ const Bibliothek = (() => {
   /* `umfangSatz` und `DECKE_KUERZLICH` kommen mit heraus, damit ein
      Prüflauf die Sprache messen kann, ohne dreihundert Seiten anzulegen
      (test359 §6) — und damit die Decke eine Zahl mit Namen bleibt. */
+  /* WAS NUR DIE BIBLIOTHEK WEISS — als Aktionen im Register (E721).
+     Ein Ordner ist hier ein Ort (E380): „Öffnen" geht hinein, „Als Seite
+     bearbeiten" öffnet seine eigene Seite (Deckel, Symbol, Text) — das, was
+     das alte ⌄ „Öffnen" nannte. „Blick hinein" gilt für Ordner und für die
+     Fächer der Notizhefte, die dafür ihr eigenes Hineingehen mitgeben. */
+  if (typeof Register !== 'undefined' && Register.aktionen) {
+    const R = Register.aktionen;
+    const ordnerHier = (o: AktionOrt): boolean => o.kontext === 'bibliothek' && o.art === 'ordner';
+    R.melde({ id: 'hinein', name: 'Öffnen', zeichen: 'arrowR', gruppe: 'oeffnen', rang: 10,
+      gilt: (_p: any, o: AktionOrt) => ordnerHier(o),
+      tun: (p: any) => { geheIn(p.id); } });
+    R.melde({ id: 'als-seite', name: 'Als Seite bearbeiten', zeichen: 'page', gruppe: 'oeffnen', rang: 20,
+      gilt: (_p: any, o: AktionOrt) => ordnerHier(o),
+      tun: (p: any) => App.oeffne(p.id) });
+    R.melde({ id: 'blick', name: 'Blick hinein', zeichen: 'eye', gruppe: 'oeffnen', rang: 30,
+      gilt: (p: any, o: AktionOrt) => ordnerHier(o) ||
+        (o.kontext === 'notizhefte' && typeof Notebook !== 'undefined' && Notebook.istFach(p)),
+      tun: (p: any, o: AktionOrt) => {
+        const r = o.anker && o.anker.isConnected ? o.anker.getBoundingClientRect()
+          : new DOMRect(innerWidth / 2, innerHeight / 3, 0, 0);
+        if (o.hinein) blickHinein(p, r, false, o.hinein); else blickHinein(p, r);
+      } });
+  }
+
   return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
            pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,
            /* Der Ordnerblick als Dienst des Bereichs `wissen` (E611):

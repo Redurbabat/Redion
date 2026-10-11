@@ -210,11 +210,24 @@ dem Verschieben —, steht in E718 (E718).
 
 Ordner
 
-Ordner der Bibliothek lassen sich im ⌄ an der Karte umbenennen, ohne die
+Ordner der Bibliothek lassen sich im „…" an der Karte umbenennen, ohne die
 Bibliothek zu verlassen, und einfärben; Name, Farbe und ein eigenes Symbol
 stehen sofort auf der Karte, im Ablagebaum und in der Seitenleiste. Ein
 leerer Name wird nicht gespeichert, und gibt es den Namen im selben Ordner
 schon, fragt Redion nach (E718).
+
+
+Rechtsklick und „…"
+
+Jede Karte der Bibliothek hat oben rechts ein „…". Dasselbe Menü öffnet
+ein Rechtsklick — auf eine Karte (auch im Regal und in der Tabelle), auf
+eine Zeile im Ablagebaum oder ein Heft und ein Fach der Notizhefte —, mit
+der Tastatur die Kontextmenü-Taste oder Umschalt+F10, und am Telefon
+langes Drücken und Loslassen. Im Menü gehen die Pfeiltasten, Escape bringt
+dich zurück, wo du warst. Entf auf einer ausgewählten Karte legt sie in den
+Papierkorb. „In den Papierkorb" steht rot und immer zuletzt. Ein Rechtsklick
+auf eine Seite in der Seitenleiste öffnet ihr Seitenmenü. Mit gedrückter
+Umschalttaste bekommst du das Menü des Browsers (E721).
 
 
 Bewegung

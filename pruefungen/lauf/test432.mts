@@ -252,10 +252,10 @@ const menue = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   const deckel = [...document.querySelectorAll('.bib-deckel')];
   const ordner = deckel.find(d => d.dataset.art === 'ordner');
   const seite = deckel.find(d => d.dataset.art !== 'ordner');
-  ordner.querySelector('.bib-deckel-mehr').click();
+  ordner.parentElement.querySelector(':scope > .bib-deckel-mehr').click();
   const beiOrdner = !!document.querySelector('.menu [data-a="blick"]');
   document.querySelector('.menu')?.remove();
-  seite.querySelector('.bib-deckel-mehr').click();
+  seite.parentElement.querySelector(':scope > .bib-deckel-mehr').click();
   const beiSeite = !!document.querySelector('.menu [data-a="blick"]');
   document.querySelector('.menu')?.remove();
   return { beiOrdner, beiSeite, name: ordner.textContent.slice(0, 20) };
@@ -265,7 +265,7 @@ p('… und NICHT bei einer gewöhnlichen Seite', menue.beiSeite === false);
 
 await s.evaluate(`(() => {
   const ordner = [...document.querySelectorAll('.bib-deckel')].find(d => d.dataset.art === 'ordner');
-  ordner.querySelector('.bib-deckel-mehr').click();
+  ordner.parentElement.querySelector(':scope > .bib-deckel-mehr').click();
   document.querySelector('.menu [data-a="blick"]').click();
 })()`);
 await s.waitForSelector('.ru-fach-lage .ru-fach', { timeout: 8000 });
@@ -311,7 +311,7 @@ await s.evaluate("Store.setMeta('bibOrdner', ''); Bibliothek.oeffne()");
 await s.waitForTimeout(600);
 const escape = JSON.parse(await s.evaluate(`(async () => {
   const ordner = [...document.querySelectorAll('.bib-deckel')].find(d => d.dataset.art === 'ordner');
-  ordner.querySelector('.bib-deckel-mehr').click();
+  ordner.parentElement.querySelector(':scope > .bib-deckel-mehr').click();
   document.querySelector('.menu [data-a="blick"]').click();
   await new Promise(r => setTimeout(r, 200));
   const da = !!document.querySelector('.ru-fach-lage');

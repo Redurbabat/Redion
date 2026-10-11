@@ -2945,7 +2945,7 @@ const Blocks = (() => {
             '<button data-a="ref"><span class="mi">((</span>Blockverweis kopieren</button>' +
             '<button data-a="karte"><span class="mi">🎴</span>Zur Karteikarte machen</button>' +
             '<hr>' +
-            '<button data-a="del"><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
+            '<button data-a="del" data-gefahr><span class="mi">🗑</span>In den Papierkorb<span class="ms">Del</span></button>';
         const menu = UI.menu(html, r.right + 6, r.top);
         menu.addEventListener('click', (e) => {
             const btn = elVon(e)?.closest('button[data-a]');

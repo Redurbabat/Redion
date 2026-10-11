@@ -958,7 +958,7 @@ const ordner13 = await s13.evaluate(async () => {
 });
 await s13.waitForSelector(`.bib-deckel[data-id="${ordner13}"]`, { timeout: 15000 });
 await s13.evaluate((id: string) => {
-  document.querySelector<HTMLElement>(`.bib-deckel[data-id="${id}"] .bib-deckel-mehr`)?.click();
+  document.querySelector<HTMLElement>(`.bib-zelle:has(> .bib-deckel[data-id="${id}"]) > .bib-deckel-mehr`)?.click();
 }, ordner13);
 await s13.waitForTimeout(250);
 await s13.evaluate(() => document.querySelector<HTMLElement>('.menu button[data-a="umbenennen"]')?.click());
@@ -971,7 +971,11 @@ const e13 = await s13.evaluate((id: string) => ({
   text: Store.getBlock(id).text, schreiben: (window as any).__schreiben587,
   ordner: Store.getMeta('bibOrdner', ''), inBib: !!document.querySelector('.bib-gitter'),
   offen: document.querySelectorAll('.overlay').length,
-  fokus: (document.activeElement as HTMLElement | null)?.closest?.('.bib-deckel')?.getAttribute('data-id') ?? null
+  /* Seit E721 öffnet das „…" NEBEN dem Deckel; der Fokus kehrt an diesen
+     Knopf zurück — er gehört zur selben Karte (.bib-zelle). */
+  fokus: ((document.activeElement as HTMLElement | null)?.closest?.('.bib-deckel')
+    ?? (document.activeElement as HTMLElement | null)?.closest?.('.bib-zelle')?.querySelector(':scope > .bib-deckel'))
+    ?.getAttribute('data-id') ?? null
 }), ordner13);
 console.log('    ' + JSON.stringify(e13));
 gleich('Die Antwort kommt an, und genau einmal geschrieben', [e13.text, e13.schreiben], ['Ordner neu', 1]);

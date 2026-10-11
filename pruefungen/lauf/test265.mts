@@ -183,7 +183,7 @@ await seite.locator('[data-zurueck]').count().then(async n => {
 });
 await seite.locator(`.nh-karte:not(.nh-fach) [data-mehr="${ids.lose}"]`).click();
 await seite.waitForTimeout(250);
-await seite.locator('.menu [data-k="fach"]').click();
+await seite.locator('.menu [data-a="fach"]').click();
 await seite.waitForTimeout(250);
 const zielKnoepfe = await seite.evaluate(() =>
   [...document.querySelectorAll('.menu [data-z]')].map(b => (b.textContent || '').trim()));
@@ -211,7 +211,7 @@ await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
 await seite.locator(`[data-mehr="${ids.lose}"]`).click();
 await seite.waitForTimeout(250);
-await seite.locator('.menu [data-k="fach"]').click();
+await seite.locator('.menu [data-a="fach"]').click();
 await seite.waitForTimeout(250);
 const ringProbe = await seite.evaluate((falle: string) => {
   const offen = !!document.querySelector('.menu [data-z-neu]');
@@ -408,7 +408,7 @@ await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
 await seite.locator(`[data-mehr="${ids.h1}"]`).click();
 await seite.waitForTimeout(250);
-await seite.locator('.menu [data-k="farbe"]').click();
+await seite.locator('.menu [data-a="farbe"]').click();
 await seite.waitForTimeout(250);
 await seite.locator('.menu .nh-farben [data-farbe="blue"]').click();
 await seite.waitForTimeout(400);
@@ -424,7 +424,7 @@ p('Blau: `color` am Block, `data-farbe` an der Karte, und die Kante IST gemessen
   parseFloat((farbProbe as any).kante) > 0, JSON.stringify(farbProbe));
 await seite.locator(`[data-mehr="${ids.h1}"]`).click();
 await seite.waitForTimeout(250);
-await seite.locator('.menu [data-k="farbe"]').click();
+await seite.locator('.menu [data-a="farbe"]').click();
 await seite.waitForTimeout(250);
 await seite.locator('.menu [data-farbe=""]').click();
 await seite.waitForTimeout(400);
@@ -458,7 +458,7 @@ await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
 await seite.locator(`[data-mehr="${ids.h2}"]`).click();
 await seite.waitForTimeout(250);
-await seite.locator('.menu [data-k="sperren"]').click();
+await seite.locator('.menu [data-a="sperren"]').click();
 await seite.waitForTimeout(1200);
 p('Verschlüsselt: locked steht, der heftArt-Merker hält das Heft in der Bibliothek',
   await seite.evaluate((a: any) => {
@@ -486,7 +486,7 @@ await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
 await seite.locator(`[data-mehr="${ids.h2}"]`).click();
 await seite.waitForTimeout(250);
-await seite.locator('.menu [data-k="entsperren"]').click();
+await seite.locator('.menu [data-a="entsperren"]').click();
 await seite.waitForTimeout(1200);
 p('Entschlüsseln bringt Blätter und Papier-Deckel zurück',
   await seite.evaluate((a: any) => {
@@ -507,7 +507,7 @@ const loseId = await seite.evaluate(() => {
 });
 await seite.locator(`[data-mehr="${loseId}"]`).click();
 await seite.waitForTimeout(250);
-await seite.locator('.menu [data-k="korb"]').click();
+await seite.locator('.menu [data-a="papierkorb"]').click();
 await seite.waitForTimeout(500);
 p('Ins Papierkorb gelegt: aus Dokumente verschwunden, der Reiter zählt es',
   await seite.evaluate((id: string) =>

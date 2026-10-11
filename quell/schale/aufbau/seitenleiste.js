@@ -781,11 +781,21 @@ const Seitenleiste = (() => {
         });
         const mehr = document.createElement('button');
         mehr.textContent = '⋯';
+        const zeilenName = p.text || 'Ohne Titel';
+        mehr.setAttribute('aria-label', 'Aktionen für „' + zeilenName + '“');
+        mehr.setAttribute('aria-haspopup', 'menu');
+        mehr.title = 'Aktionen für „' + zeilenName + '“';
         mehr.addEventListener('click', e => { e.stopPropagation(); seitenMenue(mehr, p); });
         act.appendChild(plus);
         act.appendChild(mehr);
         r.append(tw, ico, nm, act);
         r.addEventListener('click', () => oeffne(p.id));
+        r.addEventListener('contextmenu', e => {
+            if (e.shiftKey)
+                return;
+            e.preventDefault();
+            seitenMenue(mehr, p);
+        });
         r.addEventListener('dragstart', e => { e.dataTransfer?.setData('text/seite', p.id); });
         r.addEventListener('dragover', e => { e.preventDefault(); r.classList.add('drop'); });
         r.addEventListener('dragleave', () => r.classList.remove('drop'));
