@@ -231,7 +231,11 @@ const Lernwelt = (() => {
          (E243/L70). */
       { name: 'Wo du lernst', unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
     ] },
-    { id: 'uebersicht', titel: 'Lernen', name: 'Übersicht', icon: 'cards', gruppen: [
+    /* `titel` ist der Name des Menüs und des ^ („Weitere Ansichten: …").
+       Hier stand „Lernen" — der Name der alten Gruppe —, und das Blatt am
+       Telefon trug „Lernen" unter einem Knopf, auf dem „Übersicht" steht
+       (Durchsicht, test601 §2h). */
+    { id: 'uebersicht', titel: 'Übersicht', name: 'Übersicht', icon: 'cards', gruppen: [
       { unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] }
     ] }
   ];
@@ -3287,9 +3291,12 @@ const Lernwelt = (() => {
     }
     if (art === 'new') { karten = queue.newCards; titel = 'Neue Karten'; }
     if (art === 'topic') {
-      karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(zustand.themaId).toLowerCase() ||
-        themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === zustand.themaId);
-      const thema = liste(statistik().topics).find(item => item.id === zustand.themaId);
+      /* Das Thema der Runde kommt vom Lernpfad mit (`einzelneId`); ohne
+         eines gilt das gewählte Fach. */
+      const themaId = einzelneId || zustand.themaId;
+      karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(themaId).toLowerCase() ||
+        themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === themaId);
+      const thema = liste(statistik().topics).find(item => item.id === themaId);
       titel = thema ? 'Thema: ' + thema.label : 'Themenrunde';
     }
     if (art === 'exam') {
@@ -3640,12 +3647,17 @@ const Lernwelt = (() => {
       wechseln('lernen');
       return;
     }
+    /* EINE THEMENRUNDE IST KEIN FILTER (E726, Durchsicht). Der Lernpfad
+       setzte hier `zustand.themaId` — vor E726 nur der Titel der
+       Lernzentrale, seit E726 der Fächerfilter. Ein Klick auf eine Stufe
+       filterte danach die ganze Lernwelt, gemerkt über das Neuladen
+       hinaus: der Pfad schrumpfte von 3 auf 1 Stufe, „Heute" von 16 auf 6
+       Karten (test601 §6q). Das Thema reist darum nur in die Runde mit;
+       den Filter setzen der Chip und „Themen & Fächer". */
     const pathTopic = element.closest<HTMLElement>('[data-lw-path-topic]');
     if (pathTopic?.dataset.lwPathTopic) {
-      zustand.themaId = pathTopic.dataset.lwPathTopic;
-      Store.setMeta(metaSchluessel('fach'), zustand.themaId);
       zustand.ansicht = 'lernen';
-      trainingStarten('topic');
+      trainingStarten('topic', pathTopic.dataset.lwPathTopic);
       return;
     }
     const subject = element.closest<HTMLElement>('[data-lw-subject]');

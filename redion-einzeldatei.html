@@ -7222,8 +7222,9 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 }
 /* DER FÄCHER-CHIP (E726) ersetzt das Auswahlfeld „Bereich": ein Knopf mit
    Menü statt eines `<select>`, das in einem frischen Bestand nur „◎ Alle
-   Bereiche" kannte. 230 px höchstens — dieselbe Breite, die das Feld hatte,
-   damit die ruhige Fassung (`padding-right:264px` an der Leiste) stimmt. */
+   Bereiche" kannte. 230 px höchstens — dieselbe Breite, die das Feld hatte.
+   In der ruhigen Fassung deckelt `--lw-chip-decke` ihn schmaler, wenn die
+   Lernwelt schmal ist (unten bei E219). */
 .lernwelt .lw-area{display:flex;justify-content:flex-end;min-width:0}
 .lernwelt .lw-fach{
   display:inline-flex;align-items:center;gap:var(--space-2);min-width:0;max-width:230px;
@@ -7278,8 +7279,13 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
    rollende Leiste schnitt „Fortschritt" mitten im Wort ab (E726). Der
    ganze Name steht im Menü, mit Haken. */
 .lernwelt .lw-nav .lw-nav-haupt>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* `align-self:stretch`: das ^ ist so hoch wie sein Hauptteil, nicht nur
+   „mindestens 34". Der Hauptteil misst mit Zeichen und Innenabstand 36 px,
+   das ^ ohne Inhalt 34 — an der Naht stand eine Stufe von 1 px oben und
+   unten (Durchsicht, `test601` §2g). */
 .lernwelt .lw-nav .lw-klappe{
   flex:0 0 var(--lw-touch);min-width:var(--lw-touch);padding:0;margin-left:calc(var(--space-1) * -1);
+  align-self:stretch;
   border-top-left-radius:0;border-bottom-left-radius:0;
   border-left-color:var(--line)
 }
@@ -8349,10 +8355,13 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   }
   .lernwelt > *{ grid-column:1 / -1 }
   .lernwelt > .lw-nav { grid-column:2; grid-row:1; margin-bottom:12px }
-  /* Kein `margin-bottom` und `align-self:center`: die Höhe der Zeile macht
-     die Reiterkarte, und ein unterer Abstand am Chip würde ihn in einer
-     mittig ausgerichteten Zeile nach OBEN schieben. */
-  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:0;
+  /* `align-self:center` und DERSELBE untere Abstand wie die Reiterkarte
+     (12 px): die Rasterzeile ist Karte + Abstand hoch, und mittig steht nur,
+     wer denselben Abstand trägt. Hier stand `margin-bottom:0` — der Chip
+     sass 6 px unter der Mitte der Karte (ohne ruhige Fassung) und 2 px
+     darunter mit ihr, wo `--space-3` (8 px) galt (Durchsicht, `test601`
+     §1h; die ruhige Fassung zieht unten nach). */
+  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:12px;
                         align-self:center; padding-left:8px }
   /* Der Markenblock nennt „Redion / Lernen & Alltag" — beides steht schon
      oben in der Kreisleiste und in der Krume. Am Telefon war er ohnehin
@@ -8586,14 +8595,32 @@ body[data-ruhig="an"] .lernwelt .lw-head{
   justify-content:flex-end; margin-bottom:-46px; position:relative; z-index:2;
   pointer-events:none;
 }
-body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto }
-body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
+/* DER PLATZ FÜR DEN CHIP WÄCHST MIT DER LERNWELT (E726, Durchsicht). Hier
+   standen feste 264 px — so viel, wie der Chip höchstens breit wird (230)
+   und Luft. Bei 800 px Fensterbreite blieben den Paaren 342 px, und
+   „Schule / Ausbildung" neben „Übersicht" brauchen 370: beide kürzten mit
+   „…", auch ohne Filter (`test601` §1g). Jetzt deckelt `--lw-chip-decke`
+   den Chip auf 27 % der Lernwelt (bei 850 px Breite sind das wieder die
+   230), und die Leiste hält genau diese Decke frei. Beide Prozente
+   beziehen sich auf dieselbe Breite: der Kopf und die Leiste füllen die
+   Lernwelt. Ein langer Fachname kürzt im Chip mit „…" — er steht ganz im
+   `aria-label` und im Menü. */
+body[data-ruhig="an"] .lernwelt{ --lw-chip-decke:min(230px, 27%) }
+body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto; max-width:var(--lw-chip-decke) }
+body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:calc(var(--lw-chip-decke) + 34px) }
 /* Am Telefon ist daneben kein Platz — dort bleiben es zwei Zeilen. */
 @media(max-width:780px){
   body[data-ruhig="an"] .lernwelt .lw-head{
     margin-bottom:var(--space-3); justify-content:stretch; position:static;
   }
+  body[data-ruhig="an"] .lernwelt .lw-area{ max-width:none }
   body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:var(--space-2) }
+}
+/* Im Raster des Telefons steht der Chip neben der Karte (E235) und trägt
+   denselben unteren Abstand wie sie — sonst sitzt er 2 px unter ihrer
+   Mitte (`test601` §1h). */
+@media(max-width:760px){
+  body[data-ruhig="an"] .lernwelt > .lw-head{ margin-bottom:12px }
 }
 
 
@@ -27162,7 +27189,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1438, inhalt: '748b4d0a3ef75933', gebaut: '2026-10-10T22:44:54.265Z' };
+const Stand = { fassung: 1441, inhalt: 'ec8bbd61e124510f', gebaut: '2026-10-11T01:13:08.573Z' };
 window.Stand = Stand;
 
 </script>
@@ -135625,7 +135652,7 @@ const Lernwelt = (() => {
                 { name: 'Prüfungen', unter: ['pruefungen', 'noten'] },
                 { name: 'Wo du lernst', unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
             ] },
-        { id: 'uebersicht', titel: 'Lernen', name: 'Übersicht', icon: 'cards', gruppen: [
+        { id: 'uebersicht', titel: 'Übersicht', name: 'Übersicht', icon: 'cards', gruppen: [
                 { unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] }
             ] }
     ];
@@ -138006,9 +138033,10 @@ const Lernwelt = (() => {
             titel = 'Neue Karten';
         }
         if (art === 'topic') {
-            karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(zustand.themaId).toLowerCase() ||
-                themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === zustand.themaId);
-            const thema = liste(statistik().topics).find(item => item.id === zustand.themaId);
+            const themaId = einzelneId || zustand.themaId;
+            karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(themaId).toLowerCase() ||
+                themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === themaId);
+            const thema = liste(statistik().topics).find(item => item.id === themaId);
             titel = thema ? 'Thema: ' + thema.label : 'Themenrunde';
         }
         if (art === 'exam') {
@@ -138382,10 +138410,8 @@ const Lernwelt = (() => {
         }
         const pathTopic = element.closest('[data-lw-path-topic]');
         if (pathTopic?.dataset.lwPathTopic) {
-            zustand.themaId = pathTopic.dataset.lwPathTopic;
-            Store.setMeta(metaSchluessel('fach'), zustand.themaId);
             zustand.ansicht = 'lernen';
-            trainingStarten('topic');
+            trainingStarten('topic', pathTopic.dataset.lwPathTopic);
             return;
         }
         const subject = element.closest('[data-lw-subject]');

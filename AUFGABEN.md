@@ -1790,3 +1790,12 @@ Gefunden beim Bau von E721, nicht dort entschieden — je mit dem Grund:
    — doppelte Navigation nach dem PDF; eine Entscheidung über die Schale.
 4. **Das Blatt von `UI.wahl` am Telefon ohne `role="menu"`** (L246 Punkt 5)
    — gehört `claude/menue-eine-quelle`; rot zuerst in `test597` §14.
+   Wenn es landet: `test601` §3d–f prüft die Rolle auch am Telefon.
+5. **„Prüfungen" über „Prüfungen" im Menü „Heute ^"?** Die Gruppe trägt
+   den alten Reiternamen (Vorgabe 1), ihr erster Eintrag heisst genauso.
+   „Prüfungen & Noten" wäre eindeutiger, aber ein neuer Name für etwas,
+   das man kannte — Redurs Wahl (Durchsicht vom 11. Oktober).
+6. **Der Chip bekommt den Fokus vor „Heute"** (L246 Punkt 7). Ihn im
+   Auszeichnungstext hinter die Leiste zu setzen, braucht einen anderen
+   Aufbau des Kopfs (ruhige Fassung: `margin-bottom:-46px`; Telefon:
+   Raster) — rot zuerst in `test601` §3 mit der Tabulatorfolge.

@@ -36,11 +36,11 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v1438';
+const VERSION = 'notizen-v1441';
 /** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
  *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
  *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
-const INHALT = '748b4d0a3ef75933';
+const INHALT = 'ec8bbd61e124510f';
 /* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
    Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
    das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und

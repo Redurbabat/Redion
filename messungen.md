@@ -7012,3 +7012,32 @@ Start (test388 §5, gzip)                 1865 KB                              1
 
 Die Spanne von 1–2 px nachher ist der Chip, der eine Linie Rahmen höher
 sitzt als die Reiterkarte; die Prüfung erlaubt 6 px.
+
+**Nach der Durchsicht (11. Oktober 2026).** Derselbe Weg (`file://`,
+Chromium), vorher eaf3ab2c2, nachher die Reparatur aus E726 „Nach der
+Durchsicht". Für den Lernpfad: zwei Seiten „Elektrotechnik" (6 fällige
+Karten) und „Geometrie — Kapitel 4 Flächen und Körper" (9) neben der
+Willkommensseite. Für die Breiten: Rechner, ruhige Fassung (Vorgabe),
+Ansicht „Schule / Ausbildung".
+
+```txt
+                                         vorher (eaf3ab2c2)                  nachher
+Lernpfad: Stufen vor / nach einem Klick  3 / 1                               3 / 3
+„Heute" nach dem Klick (test601-Bestand) 27 → 9 Karten                       27 → 27
+Chip / meta lernwelt:<aktor>:fach        „Elektrotechnik" / gesetzt           „Alle Fächer" / leer
+Die Runde selbst (test601-Bestand)       „Thema: Elektrotechnik", Karte 1     dasselbe
+                                         von 10
+Freigehaltener Platz für den Chip        264 px bei jeder Breite              781: 193 · 800: 198 · 900: 225 ·
+(padding-right der Leiste)                                                    ab 1100: 264
+Chip mit langem Fach, 800 px             230 px                               164 px („Geometrie — K…")
+„Schule / Ausbildung" bei 800 px         115 / 93 (gekürzt)                   115 / 115
+„Übersicht" daneben, 800 px              55 / 43 (gekürzt)                    55 / 55
+Paar am Rechner (Hauptteil / ^)          138–174 / 139–173                    138–174 / 138–174
+Telefon: Mitte Reiterkarte / Chip        ruhig aus 79 / 85 · ruhig an 79 / 81  79 / 79 · 79 / 79
+Name des ^ neben „Übersicht"             „Weitere Ansichten: Lernen"          „Weitere Ansichten: Übersicht"
+test601                                  80 / 89                              89 / 89
+```
+
+„115 / 93" ist `scrollWidth / clientWidth` des Namens im Hauptteil. Die
+Breiten 761 bis 780 px stehen nicht in der Tabelle: dort hat der Chip in
+der ruhigen Fassung seine eigene Zeile (wie vorher), nichts kürzt.

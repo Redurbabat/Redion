@@ -8391,7 +8391,21 @@ einem Commit verschwindet (§35):
    Lernzentrale und im Menü, auf „Heute" aber nicht sichtbar. Zwischen 471
    und 760 px steht der Name im Chip (höchstens 112 px). Gemessen bei
    390 px: die Leiste rollt nicht, ohne Fach (276 in 276, `test601` §1e)
-   und mit Fach (§6o).
+   und mit Fach (§6o). Dasselbe gilt für einen **Lebensbereich allein**:
+   unter 471 px zeigt der Chip nur das gefüllte Zeichen (vor E726 stand
+   „Schule" bis 150 px breit da). Sind **Fach und Lebensbereich** gewählt,
+   nennt der Chip nur das Fach; der Lebensbereich steht im `aria-label`
+   und mit Haken im Menü (Durchsicht vom 11. Oktober).
+7. **Der Chip bekommt den Fokus vor „Heute".** Er steht im Kopf, also im
+   Auszeichnungstext vor der Leiste; mit der ruhigen Fassung (Vorgabe)
+   und am Telefon sitzt er aber rechts am Ende der Zeile. Die
+   Tabulatorfolge ist Chip → Heute → ^ → Übersicht → ^ und folgt damit
+   nicht dem Bild. Das alte Auswahlfeld „Bereich" hatte dieselbe Folge —
+   kein Rückschritt, aber eine Lücke: ihn hinter die Leiste zu setzen,
+   verlangt einen anderen Aufbau des Kopfs (die ruhige Fassung zieht die
+   Leiste mit `margin-bottom:-46px` unter den Kopf, am Telefon stellt ein
+   Raster beide in eine Zeile). Gefunden in der Durchsicht vom
+   11. Oktober.
 
 ## L242 · Ein Menü je Ding nach E721: was noch seine eigene Liste hat — 6. Oktober 2026
 

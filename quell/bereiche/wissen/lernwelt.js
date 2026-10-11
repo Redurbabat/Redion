@@ -21,7 +21,7 @@ const Lernwelt = (() => {
                 { name: 'Prüfungen', unter: ['pruefungen', 'noten'] },
                 { name: 'Wo du lernst', unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
             ] },
-        { id: 'uebersicht', titel: 'Lernen', name: 'Übersicht', icon: 'cards', gruppen: [
+        { id: 'uebersicht', titel: 'Übersicht', name: 'Übersicht', icon: 'cards', gruppen: [
                 { unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] }
             ] }
     ];
@@ -2402,9 +2402,10 @@ const Lernwelt = (() => {
             titel = 'Neue Karten';
         }
         if (art === 'topic') {
-            karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(zustand.themaId).toLowerCase() ||
-                themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === zustand.themaId);
-            const thema = liste(statistik().topics).find(item => item.id === zustand.themaId);
+            const themaId = einzelneId || zustand.themaId;
+            karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(themaId).toLowerCase() ||
+                themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === themaId);
+            const thema = liste(statistik().topics).find(item => item.id === themaId);
             titel = thema ? 'Thema: ' + thema.label : 'Themenrunde';
         }
         if (art === 'exam') {
@@ -2778,10 +2779,8 @@ const Lernwelt = (() => {
         }
         const pathTopic = element.closest('[data-lw-path-topic]');
         if (pathTopic?.dataset.lwPathTopic) {
-            zustand.themaId = pathTopic.dataset.lwPathTopic;
-            Store.setMeta(metaSchluessel('fach'), zustand.themaId);
             zustand.ansicht = 'lernen';
-            trainingStarten('topic');
+            trainingStarten('topic', pathTopic.dataset.lwPathTopic);
             return;
         }
         const subject = element.closest('[data-lw-subject]');

@@ -1677,7 +1677,10 @@ waren Funde, nicht Zusagen: ein Klick auf das Thema „Elektrotechnik"
 setzte den Titel und liess „7 + 9" stehen, wo 5 gehört hätten, und
 `#welt-lernen-noten` öffnete „Heute". Sein erster grüner Anlauf war es
 nicht: der Chip verlor nach der Wahl den Fokus, weil ein zweites Zeichnen
-hinterherkam. Gezählt am 10. Oktober, im selben Bogen: `ls
+hinterherkam. Die Durchsicht vom 11. Oktober gab ihm zwölf Zusagen dazu,
+rot gegen den eigenen Bau: eine Stufe im Lernpfad startet ihre Runde und
+setzt KEINEN Filter (vorher schrumpfte der Pfad von 3 auf 1 Stufe), und
+bei 800 px kürzt kein Hauptteil. Gezählt am 10. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 537 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*
 

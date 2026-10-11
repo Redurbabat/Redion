@@ -1,5 +1,30 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E726 nach der Durchsicht — Lernpfad, Breiten, Paar, Name, Chip
+
+**Redur** (Masterprompt vom 29. September, S. 21): „… Und die bereiche
+momentan das löschen oder am beste das zur fächer wechseln".
+
+**Fund** (unabhängige Durchsicht; `test601` erweitert, gegen eaf3ab2c2
+rot, 80 von 89): eine Stufe im Lernpfad setzte den Fächerfilter und
+merkte ihn (Lernpfad 3 → 1 Stufe, „Heute" 27 → 9 Karten, auch nach dem
+Neuladen); das README versprach „filtert alles"; zwischen 781 und 899 px
+kürzten „Schule / Ausbildung" und „Übersicht" auch ohne Filter (feste
+264 px für den Chip); ein Paar hatte an der Naht eine Stufe von 1 px; das
+^ neben „Übersicht" hiess „… Lernen"; der Chip sass am Telefon 6 px (ruhig
+aus) bzw. 2 px (ruhig an) unter der Mitte der Reiter.
+
+**Bau:** das Thema reist als Argument in die Themenrunde, den Filter
+setzen nur Chip und „Themen & Fächer"; README sagt, was der Filter
+erreicht und was nicht; `--lw-chip-decke: min(230px, 27%)` statt fester
+264 px; `align-self:stretch` am ^; `titel: 'Übersicht'`; der Chip trägt
+am Telefon dieselben 12 px wie die Reiterkarte; Banner an E235 und L246.6
+richtiggestellt, L246.7 (Tabulatorfolge) neu.
+
+**Prüfung:** `test601` 89/89 (§1g, §1h, §2g, §2h, §6q neu), fünf
+Gegenproben G8–G12 in zwei Bauten; Nachbarn und Zahlen in E726 „Nach der
+Durchsicht" und `messungen.md` §95.
+
 ## 10. Oktober 2026 · E726 — Der Kopf des Lernzentrums in einer Zeile (Masterprompt #1)
 
 **Redur** (Masterprompt vom 29. September, S. 21, zum Foto der

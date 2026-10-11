@@ -17817,8 +17817,11 @@ E235 — Der Kopf am Telefon: aus vier Bänken werden zwei
 > **Ergänzt durch E726 (10. Oktober 2026) — aus dem ◎-Chip wird der
 > Fächer-Chip.** Das Auswahlfeld „Bereich" ist ein Knopf mit Menü
 > (`[data-lw-klappe="faecher"]`): ohne Filter ein gezeichnetes Zeichen
-> (`filter`, 44 × 44) statt des ◎ aus der Schrift, mit Filter das Fach,
-> gekürzt mit „…". Der Lebensbereich lebt als Gruppe in seinem Menü. Die
+> (`filter`, 44 × 44) statt des ◎ aus der Schrift, mit Filter ab 471 px
+> das Fach, gekürzt mit „…" — darunter nur das GEFÜLLTE Zeichen, auch für
+> einen Lebensbereich allein (der Name steht im `aria-label`; sind Fach und
+> Lebensbereich gewählt, nennt der Chip das Fach). Der Lebensbereich lebt
+> als Gruppe in seinem Menü. Die
 > vierte Rasterspalte (für das •••, seit E278 auf der Lernwelt `hidden`)
 > fällt weg — die Reiterzeile braucht die 44 px für zwei Paare.
 
@@ -62474,8 +62477,8 @@ Auswahlfeld „Bereich" mit ◎ wird der Fächer-Chip mit gezeichnetem Zeichen;
 die leere vierte Rasterspalte am Telefon fällt weg) · **baut auf** E706
 (Material auf den Hauptteilen), E712 (das Menü wächst aus dem ^), E721
 (`UI.wahl`, die eine Auswahlliste), E302 (ein Escape), E720 und E719 (die
-Lernwelt dieses Zweigs) auf · **Wächter:** `test601` (neu, 77 Zusagen in
-zehn Abschnitten), angepasst `test217` §3, `test565` §2, `test585`,
+Lernwelt dieses Zweigs) auf · **Wächter:** `test601` (neu, 89 Zusagen in
+zehn Abschnitten — 77 im ersten Bau, zwölf aus der Durchsicht), angepasst `test217` §3, `test565` §2, `test585`,
 `test206` §7 · **Zweig** `claude/lernzentrum-kopf` · **Messung:**
 `messungen.md` §95.
 
@@ -62531,8 +62534,10 @@ Thema „Elektrotechnik" angeklickt        Titel „Elektrotechnik", Zahlen 7 / 
    („Heute", „Übersicht"). Die Hauptteile bleiben unmittelbare Kinder der
    Leiste, damit das Material aus E706 zwischen ihnen fliegt.
 3. **Das ^ ist ein echter Knopf** — `aria-haspopup="menu"`,
-   `aria-expanded`, Name „Weitere Ansichten: Heute" / „… Lernen", 44 breit;
-   hoch wie die Reiter (34 px mit der Maus nach E205, 44 mit dem Finger).
+   `aria-expanded`, Name „Weitere Ansichten: Heute" / „… Übersicht" (im
+   ersten Bau „… Lernen", nach der Alt-Gruppe — korrigiert nach der
+   Durchsicht, unten), 44 breit; so hoch wie sein Hauptteil (34 px und mehr
+   mit der Maus nach E205, 44 mit dem Finger).
    Maus, Enter, Leertaste und Fingertipp öffnen `UI.wahl` (E721) — kein
    zweites Menü; Escape über den gemeinsamen Griff (E302) gibt den Fokus an
    das ^ zurück; ein zweiter Klick schliesst (ein `pointerdown` in der
@@ -62552,8 +62557,10 @@ Thema „Elektrotechnik" angeklickt        Titel „Elektrotechnik", Zahlen 7 / 
    Stundenplan (eine Beziehung trägt Kennungen, sie werden zum Namen der
    Zeile). Gemerkt wird er wie der Bereich, je Lernendem:
    `lernwelt:<aktor>:fach` (Store meta, reist mit `.json` und `.redion` wie
-   jeder Meta-Schlüssel). Klicks in „Themen & Fächer" und im Lernpfad setzen
-   denselben Zustand. Ein Fach, das es nicht mehr gibt, filtert nach dem
+   jeder Meta-Schlüssel). Ein Klick in „Themen & Fächer" setzt denselben
+   Zustand; eine Stufe im Lernpfad startet nur ihre Themenrunde und setzt
+   KEINEN Filter (im ersten Bau setzte sie ihn — korrigiert nach der
+   Durchsicht, unten). Ein Fach, das es nicht mehr gibt, filtert nach dem
    Neuladen nicht weiter.
 6. **Fächer statt Bereich, der Lebensbereich bleibt an EINER Stelle**
    (Vorgabe 3, §43): der Chip `[data-lw-klappe="faecher"]` zeigt „Alle
@@ -62565,6 +62572,9 @@ Thema „Elektrotechnik" angeklickt        Titel „Elektrotechnik", Zahlen 7 / 
    Zeichen von 44 × 44 (`filter` aus `Register.symbole` statt ◎ aus der
    Schrift); mit Filter ist das Zeichen GEFÜLLT statt umrissen (Form, nicht
    nur Farbe, §38) — ab 471 px steht dort der Name, gekürzt mit „…".
+   Unter 471 px zeigt auch ein Lebensbereich allein nur das gefüllte
+   Zeichen; sind Fach UND Lebensbereich gewählt, nennt der Chip das Fach,
+   der Lebensbereich steht im `aria-label` und mit Haken im Menü (L246.6).
 7. **Der Trainer filtert nicht mit** (Vorgabe 4): seine Kapitel sind
    Vorlagen mit eigenen Seiten; L246.
 8. **Die Routen der zwölf**: `routeAusHash` kennt jetzt auch `noten` und
@@ -62699,3 +62709,113 @@ ohne Gruppe „Lebensbereich", ein gewähltes Fach mit gefilterten Zahlen
 der Trainer im Starken Kontrast und im Touch Kit (hell und dunkel). Die
 Einzeldatei allein in einem Ordner über `file://`: drei ^, „Übersicht ^"
 öffnet mit den fünf Einträgen, keine Ausnahme.
+
+**Nach der Durchsicht (11. Oktober 2026).** Eine unabhängige Durchsicht
+hat den Zweig gegen den Plan, die Regeln und das Bild gelesen und zwei
+blockierende und dreizehn kleinere Stellen gefunden. Zuerst wurde
+`test601` erweitert und gegen eaf3ab2c2 rot gesehen (80 von 89, Commit
+„test601 (rot): was die Durchsicht fand"), dann gebaut:
+
+1. **Eine Themenrunde ist kein Filter** (blockierend). Der Lernpfad
+   setzte `zustand.themaId`, um seine Runde zu starten — vor E726 nur der
+   Titel der Lernzentrale, seit E726 der Fächerfilter — und schrieb ihn
+   sogar unter `lernwelt:<aktor>:fach` ins Gedächtnis. Ein Klick auf eine
+   Stufe, und der Lernpfad schrumpfte von 3 auf 1 Stufe, „Heute" von 27 auf
+   9 Karten, auch nach dem Neuladen; die Überschrift „Jedes Thema ist
+   erreichbar" stimmte nicht mehr, und unter 471 px sagte es nur ein
+   gefülltes Zeichen. Der Plan nennt als Weg zum Filter nur „Themen &
+   Fächer". Jetzt reist das Thema als Argument in `trainingStarten('topic',
+   id)` mit; den Filter setzen der Chip und „Themen & Fächer" (§6q).
+   *Folge:* nach einer Themenrunde trägt die Lernzentrale wieder ihren
+   eigenen Titel — der Titel nennt, was filtert, nicht, was zuletzt geübt
+   wurde (sonst stünde wieder „Elektrotechnik" über ungefilterten Zahlen,
+   genau der Fund aus „Gemessen, bevor gebaut wurde").
+2. **Das README versprach zu viel** (blockierend, §32 „Keine falschen
+   Versprechen"): „filtert alles nach einem Fach". Jetzt steht dort, was
+   er filtert (Lernkarten, Prüfungen, Noten, Stundenplan) und was nicht
+   (Aufgaben, Termine, Zuletzt, PDFs, Trainer-Kapitel) — wie in L246.4.
+3. **Zwischen 781 und 899 px kürzte jeder breite Hauptteil** — auch ohne
+   Filter: die ruhige Fassung hielt dem Chip feste 264 px frei, bei 800 px
+   blieben den Paaren 342, „Schule / Ausbildung" neben „Übersicht"
+   brauchen 370. Jetzt deckelt `--lw-chip-decke: min(230px, 27%)` den Chip,
+   und die Leiste hält genau diese Decke frei (+ 34 px Luft). Beide
+   Prozente beziehen sich auf dieselbe Breite (Kopf und Leiste füllen die
+   Lernwelt); ab 850 px Breite der Lernwelt sind es wieder 230 + 34 (§1g).
+   Ein langer Fachname kürzt dafür früher im Chip („Geometrie — K…" bei
+   800 px) — er steht ganz im `aria-label` und mit Haken im Menü.
+4. **Ein Paar war nicht bündig**: Hauptteil 36 px, ^ 34 px (138–174 gegen
+   139–173) — eine Stufe von 1 px an der Naht, die §2d nicht sehen konnte.
+   Das ^ streckt sich jetzt auf die Höhe seines Hauptteils
+   (`align-self:stretch`, §2g).
+5. **Das ^ neben „Übersicht" hiess „Weitere Ansichten: Lernen"**, und das
+   Blatt am Telefon trug den Titel „Lernen" unter einem Knopf „Übersicht"
+   oder „Trainer". `titel` der Klappe ist jetzt „Übersicht" (§2h).
+6. **Der Chip sass am Telefon unter der Mitte der Reiterkarte** — 6 px
+   ohne die ruhige Fassung, 2 px mit ihr: die Karte trägt 12 px Abstand
+   nach unten, der Chip trug 0 bzw. 8, und in einer mittig ausgerichteten
+   Rasterzeile rutscht er um die Hälfte des Unterschieds. Er trägt jetzt
+   dieselben 12 px (§1h).
+7. **Doku richtiggestellt:** der Banner an E235 sagte „mit Filter das
+   Fach"; unter 471 px steht dort nur das gefüllte Zeichen, auch für einen
+   Lebensbereich allein, und mit Fach UND Lebensbereich nennt der Chip das
+   Fach (Punkt 6 oben und L246.6 sagen es jetzt).
+
+**Nicht in diesem Bogen: die untere Leiste am Telefon.** Das PDF sagt
+„Keine Navigation doppelt anbieten", und die Leiste bietet „Heute" und
+„Lernen" weiter an, neben dem Kopf der Lernwelt. Sie ist die Navigation
+der ganzen App (Dokumente, Termine, Mehr), der Kopf die der Lernwelt —
+wer eins davon wegnimmt, entscheidet über die Schale, und das gehört
+Redur (L246.3, AUFGABEN „Nach E726" Punkt 3).
+
+**Bewusst nicht geändert, mit Grund:**
+
+- Das Blatt von `UI.wahl` am Telefon trägt weiter kein `role="menu"` —
+  es gehört `claude/menue-eine-quelle` (L246.5, AUFGABEN Punkt 4, rot
+  zuerst in `test597` §14). Sobald es landet, prüft `test601` §3d–f die
+  Rolle auch am Telefon.
+- Die Gruppe „Prüfungen" im Menü „Heute ^" steht über dem Eintrag
+  „Prüfungen": Vorgabe 1 sagt „die alten Gruppennamen als Überschriften",
+  damit wer die alte Reihe kannte, sie wiederfindet. Eine Überschrift
+  „Prüfungen & Noten" ist eine Frage an Redur (AUFGABEN Punkt 5).
+- Die Tabulatorfolge: der Chip steht im Auszeichnungstext VOR der Leiste
+  (im Kopf), sitzt mit der ruhigen Fassung aber rechts am Ende der Zeile —
+  er bekommt den Fokus vor „Heute". Das alte Auswahlfeld hatte dieselbe
+  Folge; ihn hinter die Leiste zu setzen, verlangt einen anderen Aufbau
+  des Kopfs (die ruhige Fassung zieht die Leiste mit `margin-bottom:-46px`
+  unter den Kopf, am Telefon stellt ein Raster beide in eine Zeile).
+  L246.7, AUFGABEN Punkt 6.
+
+**Gegenproben der Durchsicht** (je herausgenommen, `test601` rot gesehen,
+zurückgenommen):
+
+```txt
+G8  der Lernpfad setzt themaId und meta „fach" wieder  §6q-2 {"vorher":{"stufen":3,"heute":"27","chip":"Alle Fächer",
+                                                       "fach":[]},"nachher":{"stufen":1,"heute":"9","chip":"Elektrotechnik",
+                                                       "fach":["elektrotechnik"]}}
+G9  titel der Klappe wieder „Lernen"                  §2h Rechner und Telefon „uebersicht":"Weitere Ansichten: Lernen"
+G10 die Leiste hält wieder feste 264 px frei          §1g 781 und 800: gekürzt ["Schule / Ausbildung","Übersicht"]
+G11 das ^ ohne align-self:stretch                     §2g Rechner [{"id":"heute","oben":1,"unten":-1},…]
+G12 der Chip am Telefon ohne die 12 px                §1h ruhig aus {"nav":79,"chip":85}, ruhig an {"nav":79,"chip":81}
+```
+
+G8 und G9 liefen in einem Bau (86 von 89), G10 bis G12 in einem zweiten
+(83 von 89) — jede rote Zeile gehört zu genau einer Stelle.
+
+**Nachbarn nach der Durchsicht** (unter dem Schloss): `test601` 89/89,
+`test206` grün, `test217` 28/28, `test67` 65/65, `test565` 54/54,
+`test585` 91/91; die übrigen zwölf liefen beim Bau-Commit noch und werden mit ihrem Ergebnis nachgetragen. Ohne Browser
+grün: 550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105, 362
+(18/18). `test332` mit denselben fremden Zeilen wie am Grundstand
+(`.menu .kenn`, `#handy-oben`).
+
+**Bilder** (§55; nicht eingecheckt, §55.4): vorher (eaf3ab2c2) und
+nachher, dunkel und hell — der Lernpfad nach einem Klick auf eine Stufe
+(Rechner und Telefon: 3 Stufen bleiben 3), die Themenrunde selbst
+(„Thema: Elektrotechnik", der Chip ungefüllt), „Heute" danach; der Kopf
+bei 800 px in „Schule / Ausbildung" ohne und mit langem Fach; das Paar
+dreifach vergrössert; der Chip am Telefon mit und ohne die ruhige
+Fassung; „Übersicht ^" offen (Blatt am Telefon mit dem Titel
+„Übersicht"); dazu das Telefon im Starken Kontrast und im Touch Kit (hell
+und dunkel). Das Muster bleibt das des Touch Kits, nachgebaut als
+Redion-Code — kein fremder Code dazugekommen; `FREMDCODE.md` braucht
+keinen Eintrag.

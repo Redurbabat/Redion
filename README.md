@@ -363,9 +363,10 @@ Lernzentrum, Lernpfad, Fehlertraining, Prüfungszentrale mit Simulation, und
 je eine Sicht für Schule/Ausbildung, Uni, Arbeit und Fortschritt. Oben
 stehen nur zwei Knöpfe mit je einem ^: „Heute ^" und „Übersicht ^" — das ^
 öffnet die übrigen Ansichten, und der Knopf daneben sagt, wo man gerade
-ist. Rechts filtert der Fächer-Chip alles nach einem Fach; ein Fach ist
-das Thema deiner Lernkarten (der Titel ihrer Seite) oder eine Zeile der
-Fächer-Datenbank aus der Schulvorlage. Die
+ist. Rechts filtert der Fächer-Chip die Lernkarten, Prüfungen, Noten und
+den Stundenplan nach einem Fach — Aufgaben, Termine, Zuletzt, PDFs und die
+Trainer-Kapitel nicht. Ein Fach ist das Thema deiner Lernkarten (der Titel
+ihrer Seite) oder eine Zeile der Fächer-Datenbank aus der Schulvorlage. Die
 Schulansicht zeigt auch dann etwas, wenn die Ausbildungsvorlage nie
 eingerichtet wurde — sie liest, was ohnehin da ist.
 Das Herz an einer Kennzahl (fällige Fehler, Streak, Lernzeit …) merkt sie:
