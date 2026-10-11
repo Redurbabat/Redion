@@ -46,8 +46,9 @@ const Planflaeche = (() => {
           welche Klemme jedes Leitungsende meint (E738), die Punkte und was
           jede Leitung berührt (E746). Jede Bewegung rechnet von hier aus. */
       vorher?: ReturnType<typeof Schaltplan.vorherMerken>;
-      /** Was das Nachziehen bei der letzten Bewegung meldete. */
-      bericht?: ReturnType<typeof Schaltplan.nachziehen>;
+      /** Wo die gezogenen Teile beim letzten Bild standen („x,y;x,y") — ist
+          seither nichts über ein Raster gewandert, gibt es nichts zu rechnen. */
+      lage?: string;
     };
     /** Rückgängig und Wiederholen — der Abbild-Verlauf aus dem Kern (E687), 60 Schritte. */
     verlauf: ReturnType<typeof GfxHistory.erstelle>;
@@ -517,21 +518,67 @@ const Planflaeche = (() => {
        Ziehen ALLE Leitungen des Plans als Winkel neu: nach dem Drehen des FI
        lief b2 5 px neben N2 vorbei, und N und N2 waren ein Netz. */
     type Bericht = ReturnType<typeof Schaltplan.nachziehen>;
+    type Aenderungen = ReturnType<typeof Schaltplan.veraendert>;
+    type Vorher = ReturnType<typeof Schaltplan.vorherMerken>;
 
-    /* Liess sich eine Leitung nicht so führen, dass sie genau dasselbe
-       berührt wie vorher (Stufe 2 oder 3), soll der Mensch es wissen — eine
-       stille Änderung der Schaltung ist genau das, wogegen das Nachziehen
-       gebaut ist (§35: eine bekannte Lücke ist besser als ein stiller Fehler). */
-    const melde = (bericht: Bericht | undefined): void => {
-      if (!bericht || !bericht.some(b => b.stufe >= 2) || typeof UI === 'undefined') return;
-      UI.toast('Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen.');
+    /* Was eine Lageänderung an der Schaltung geändert hat, soll der Mensch
+       wissen — eine stille Änderung der Schaltung ist genau das, wogegen das
+       Nachziehen gebaut ist (§35: eine bekannte Lücke ist besser als ein
+       stiller Fehler; §51). Zwei Fälle:
+         · eine Leitung liess sich nicht so führen, dass sie genau dasselbe
+           berührt wie vorher (Stufe 2 oder 3);
+         · die eigene Klemme eines bewegten Teils liegt jetzt auf einer
+           fremden Leitung oder Klemme, oder nicht mehr (`veraendert`) — das
+           verhindert die Fläche nicht, denn vielleicht ist es gewollt, aber
+           sie sagt es, und zwar WAS: „R1:1 berührt jetzt die Leitung
+           E1:X2–E2:X1". */
+    const bmk = (tid: string): string => {
+      const t = teilVon(tid);
+      return String((t && t.bmk) || tid);
+    };
+    /** „Teil:Nr" als Betriebsmittelkennzeichen und Klemme, z. B. „R1:1". */
+    const klemmeName = (k: string): string => {
+      const i = k.lastIndexOf(':');
+      return i < 0 ? k : bmk(k.slice(0, i)) + k.slice(i);
+    };
+    const leitungName = (lid: string, vorher: Vorher): string => {
+      const l = (z.plan.leitungen as any[]).find(x => x.id === lid);
+      if (!l) return 'eine Leitung';
+      const k = vorher.klemmen.get(lid);
+      const a = l.vonTeil ? bmk(l.vonTeil) + ':' + (k?.von ?? l.vonNr) : '';
+      const b = l.nachTeil ? bmk(l.nachTeil) + ':' + (k?.nach ?? l.nachNr) : '';
+      return a && b ? `die Leitung ${a}–${b}` : (a || b) ? `die Leitung an ${a || b}` : 'eine freie Leitung';
+    };
+    const melde = (was: string, bericht: Bericht | undefined, aenderungen: Aenderungen | undefined,
+                   vorher: Vorher | undefined): void => {
+      if (typeof UI === 'undefined') return;
+      const stufe = !!bericht && bericht.some(b => b.stufe >= 2);
+      const liste = aenderungen || [];
+      if (!stufe && !liste.length) return;
+      const saetze = vorher ? liste.map(a => {
+        if (a.art === 'klemme') return a.jetzt
+          ? `${klemmeName(a.klemme)} berührt jetzt ${leitungName(a.leitung, vorher)}`
+          : `${klemmeName(a.klemme)} berührt ${leitungName(a.leitung, vorher)} nicht mehr`;
+        if (a.art === 'leitung') return a.jetzt
+          ? `${leitungName(a.leitung, vorher)} berührt jetzt ${leitungName(a.andere, vorher)}`
+          : `${leitungName(a.leitung, vorher)} berührt ${leitungName(a.andere, vorher)} nicht mehr`;
+        return a.jetzt
+          ? `${klemmeName(a.klemme)} liegt jetzt auf ${klemmeName(a.andere)} (ohne Leitung nicht verbunden)`
+          : `${klemmeName(a.klemme)} liegt nicht mehr auf ${klemmeName(a.andere)}`;
+      }) : [];
+      const was3 = saetze.slice(0, 3).join('; ') + (saetze.length > 3 ? ` und ${saetze.length - 3} weitere` : '');
+      const verbunden = liste.some(a => a.art !== 'aufeinander');
+      UI.toast(stufe
+        ? 'Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen' + (was3 ? ': ' + was3 + '.' : '.')
+        : `Nach dem ${was}: ${was3} — ` + (verbunden ? 'die Verbindungen haben sich geändert, bitte prüfen.' : 'bitte prüfen.'),
+        6000);
     };
 
     /** Die Kennungen der ausgewählten TEILE (Leitungen und Texte drehen nicht). */
     const auswahlTeile = (): any[] => [...z.auswahl].map(teilVon).filter(Boolean);
 
     /* --- Verschieben (Punkt 25), mit mitziehenden Leitungen -------------- */
-    const verschiebe = (dx: number, dy: number): Bericht => {
+    const verschiebe = (dx: number, dy: number): { bericht: Bericht; aenderungen: Aenderungen; vorher: Vorher } => {
       const vorher = Schaltplan.vorherMerken(z.plan);
       const teile: string[] = [];
       const eigene = new Set<string>();
@@ -565,7 +612,8 @@ const Planflaeche = (() => {
       /* Alle anderen, die an einem geschobenen Teil hängen, zieht dieselbe
          Stelle nach wie beim Drehen. Ein Ende NEBEN seiner Klemme an einem
          Teil, das stehen bleibt, rückt die Pfeiltaste nicht — das tat sie nie. */
-      return Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
+      const bericht = Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
+      return { bericht, aenderungen: Schaltplan.veraendert(z.plan, vorher), vorher };
     };
 
     /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) ------- */
@@ -573,15 +621,19 @@ const Planflaeche = (() => {
       const vorher = Schaltplan.vorherMerken(z.plan);
       const teile = auswahlTeile();
       teile.forEach(t => { t.drehung = ((t.drehung || 0) + 90) % 360; });
-      if (teile.length)
-        melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
+      if (teile.length) {
+        const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+        melde('Drehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+      }
     });
     const spiegeln = (): void => aendere(() => {
       const vorher = Schaltplan.vorherMerken(z.plan);
       const teile = auswahlTeile();
       teile.forEach(t => { t.gespiegelt = !t.gespiegelt; });
-      if (teile.length)
-        melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
+      if (teile.length) {
+        const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+        melde('Spiegeln', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+      }
     });
     const doppeln = (): void => aendere(() => {
       const neu: string[] = [];
@@ -740,7 +792,8 @@ const Planflaeche = (() => {
         const t = teilVon(x);
         if (t) ausgang.set(x, { x: t.x, y: t.y });
       });
-      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan) };
+      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan),
+                  lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') };
       svg.setPointerCapture(e.pointerId);
       male();
     });
@@ -757,17 +810,32 @@ const Planflaeche = (() => {
           const t = teilVon(id);
           if (t) { t.x = Schaltplan.rasten(a.x + dx); t.y = Schaltplan.rasten(a.y + dy); }
         });
+        /* Steht jedes gezogene Teil noch auf demselben Raster wie beim
+           letzten Bild, gibt es nichts zu rechnen und nichts neu zu zeichnen.
+           (Eine Maus meldet viele Bewegungen je Raster.) */
+        const lage = [...z.zieht.ausgang.keys()].map(id => {
+          const t = teilVon(id);
+          return t ? t.x + ',' + t.y : '';
+        }).join(';');
+        if (lage === z.zieht.lage) return;
+        z.zieht.lage = lage;
         /* Jede Bewegung rechnet vom Anfassen aus (`vonVorn`), nicht vom
            letzten Zwischenstand — sonst hinge der Weg davon ab, wie schnell
            die Maus war. Ist nichts über ein Raster gewandert, bleibt alles
-           wie beim Anfassen. */
+           wie beim Anfassen. Und sie rechnet `schnell`: nur die billigen
+           Wege, keine Z- und Hakenwege. Das ist ein Zwischenbild — die
+           volle Suche läuft beim Loslassen, und nur sie wird gespeichert
+           (`zugEnde`). Gemessen (messungen §103, F1 um 120 × 60 px in 60
+           Bewegungen, CPU vierfach gedrosselt, drei Läufe): mit der vollen
+           Suche je Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis
+           217,3 ms; billig 2,5 bis 2,8 ms, höchstens 13,2 ms. */
         const gewandert = [...z.zieht.ausgang].some(([id, a]) => {
           const t = teilVon(id);
           return t && (t.x !== a.x || t.y !== a.y);
         });
         const vorher = z.zieht.vorher ?? (z.zieht.vorher = Schaltplan.vorherMerken(z.plan));
-        z.zieht.bericht = Schaltplan.nachziehen(z.plan, vorher,
-          gewandert ? [...z.zieht.ausgang.keys()] : [], { heilen: gewandert, vonVorn: true });
+        Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...z.zieht.ausgang.keys()] : [],
+          { heilen: gewandert, vonVorn: true, schnell: true });
         buehneMalen();
         return;
       }
@@ -810,7 +878,19 @@ const Planflaeche = (() => {
             const t = teilVon(id);
             return t && (t.x !== a.x || t.y !== a.y);
           });
-        if (bewegt) { aendere(() => { /* schon geschoben — nur sichern */ }); melde(zug.bericht); }
+        if (bewegt) {
+          /* Erst jetzt die volle Suche, einmal, vom Anfassen aus — die
+             Zwischenbilder rechneten nur die billigen Wege, und eines davon
+             darf nie gespeichert werden. Sie läuft VOR `aendere`: der
+             Rückgängig-Schritt, den `aendere` merkt, ist der Stand vor
+             SEINEM Schritt, und ein Zwischenbild darf auch dort nicht
+             hinein (zum Rückgängig nach einem Zug: L253 Punkt 8). */
+          const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
+          const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()],
+            { heilen: true, vonVorn: true });
+          aendere(() => { /* geschoben und nachgezogen — nur sichern */ });
+          melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+        }
         else male();
         return;
       }
@@ -1033,9 +1113,9 @@ const Planflaeche = (() => {
       if (pfeile[e.key] && z.auswahl.size) {
         e.preventDefault();
         const [dx, dy] = pfeile[e.key]!;
-        let bericht: Bericht | undefined;
-        aendere(() => { bericht = verschiebe(dx, dy); });
-        melde(bericht);
+        let folge: ReturnType<typeof verschiebe> | undefined;
+        aendere(() => { folge = verschiebe(dx, dy); });
+        if (folge) melde('Schieben', folge.bericht, folge.aenderungen, folge.vorher);
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return loeschen(); }

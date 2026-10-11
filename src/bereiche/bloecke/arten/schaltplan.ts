@@ -387,11 +387,22 @@ const Schaltplan = (() => {
    *      gilt der mit den wenigsten neuen Berührungen (Stufe 3). Der Bericht
    *      sagt je Leitung, welche Stufe es war; die Planfläche meldet 2 und 3.
    *
+   * Beim Ziehen mit der Maus fällt das je Bewegung an. Dort rechnet die
+   * Fläche deshalb `schnell` — nur der alte Weg, die nachgerückten
+   * Endstücke und die zwei Winkel, keine Z- und Hakenwege — und erst beim
+   * Loslassen einmal voll, vom Anfassen aus. Gespeichert wird nur das
+   * Ergebnis der vollen Suche (E746, Fund der Durchsicht: auf vierfach
+   * gedrosselter CPU brauchte jede Bewegung im Median 24 bis 29 ms,
+   * messungen §103).
+   *
    * Was es NICHT verhindert: wer ein Teil so hinstellt, dass SEINE Klemme
    * auf einer fremden Leitung liegt, verbindet es — das ist der Weg, auf dem
    * die Netzliste über den Ort fängt („der Ort fängt die Fälle, in denen
    * jemand eine Leitung von Hand an eine Klemme geschoben hat"). Das ist die
-   * Lage, nicht das Nachziehen.
+   * Lage, nicht das Nachziehen, und vielleicht ist es gewollt. Still bleibt
+   * es aber nicht: `veraendert` vergleicht danach, was jede Leitung berührt
+   * und welche Klemmen aufeinanderliegen, mit dem Stand von vorher, und die
+   * Planfläche sagt, was sich geändert hat (§35, §51).
    * ----------------------------------------------------------------------*/
 
   /** Die Fangweite der Netzliste — dieselbe Zahl wie dort (Register, E738). */
@@ -512,6 +523,26 @@ const Schaltplan = (() => {
     punkte: Map<string, Punkt[]>;
     /** Was jede Leitung berührt — daran misst sich jeder neue Weg. */
     beruehrt: Map<string, Beruehrung>;
+    /** Welche Klemmen zweier Teile aufeinanderliegen („A|B", sortiert). */
+    aufeinander: Set<string>;
+  };
+
+  /**
+   * Klemmen zweier verschiedener Teile, die mit der Fangweite der Netzliste
+   * aufeinanderliegen. Die Netzliste verbindet sie NICHT — Klemmen hängen nur
+   * über Leitungen zusammen —, aber gezeichnet sehen sie verbunden aus. Wer
+   * ein Teil so hinstellt, soll es wissen (`veraendert`).
+   */
+  const klemmenAufeinander = (orte: Klemmort[]): Set<string> => {
+    const nah = NAH();
+    const raus = new Set<string>();
+    for (let i = 0; i < orte.length; i++)
+      for (let j = i + 1; j < orte.length; j++) {
+        const a = orte[i]!, b = orte[j]!;
+        if (a.teil === b.teil || Math.abs(a.x - b.x) > nah || Math.abs(a.y - b.y) > nah) continue;
+        raus.add(a.name < b.name ? a.name + '|' + b.name : b.name + '|' + a.name);
+      }
+    return raus;
   };
 
   /**
@@ -539,7 +570,48 @@ const Schaltplan = (() => {
       punkte.set(l.id, l.punkte.map(p => ({ x: p.x, y: p.y })));
       beruehrt.set(l.id, beruehrung(plan, l, l.punkte, orte, plan.leitungen));
     });
-    return { klemmen, punkte, beruehrt };
+    return { klemmen, punkte, beruehrt, aufeinander: klemmenAufeinander(orte) };
+  };
+
+  /**
+   * Was hat sich nach einer Lageänderung an den Berührungen geändert,
+   * gemessen an `vorher`? Je Leitung die Klemmen und Leitungen, die sie jetzt
+   * berührt und vorher nicht (oder umgekehrt) — nach derselben Regel wie die
+   * Netzliste, also genau die Änderungen, die die Netzliste ändern können —,
+   * und dazu Klemmen, die jetzt aufeinanderliegen oder nicht mehr.
+   *
+   * Das Nachziehen sorgt dafür, dass eine NACHGEZOGENE Leitung dasselbe
+   * berührt wie vorher. Was es nicht verhindern kann (und nicht soll): dass
+   * die eigene Klemme eines bewegten Teils auf einer fremden Leitung landet
+   * oder sie verlässt — gemessen in der Durchsicht: R1 gedreht, und R1:1 lag
+   * auf der Leitung E1:X2–E2:X1, ohne ein Wort. Diese Liste sagt es.
+   * Ein Leitungspaar steht nur einmal darin (bei der kleineren Kennung).
+   */
+  type Aenderung =
+    | { art: 'klemme'; leitung: string; klemme: string; jetzt: boolean }
+    | { art: 'leitung'; leitung: string; andere: string; jetzt: boolean }
+    | { art: 'aufeinander'; klemme: string; andere: string; jetzt: boolean };
+  const veraendert = (plan: Plan, vorher: Vorher): Aenderung[] => {
+    const orte = klemmorte(plan);
+    const raus: Aenderung[] = [];
+    plan.leitungen.forEach(l => {
+      const vor = vorher.beruehrt.get(l.id);
+      if (!vor) return;
+      const jetzt = beruehrung(plan, l, l.punkte, orte, plan.leitungen);
+      jetzt.klemmen.forEach(k => { if (!vor.klemmen.includes(k)) raus.push({ art: 'klemme', leitung: l.id, klemme: k, jetzt: true }); });
+      vor.klemmen.forEach(k => { if (!jetzt.klemmen.includes(k)) raus.push({ art: 'klemme', leitung: l.id, klemme: k, jetzt: false }); });
+      jetzt.leitungen.forEach(m => { if (l.id < m && !vor.leitungen.includes(m)) raus.push({ art: 'leitung', leitung: l.id, andere: m, jetzt: true }); });
+      vor.leitungen.forEach(m => { if (l.id < m && !jetzt.leitungen.includes(m)
+        && plan.leitungen.some(x => x.id === m)) raus.push({ art: 'leitung', leitung: l.id, andere: m, jetzt: false }); });
+    });
+    const auf = klemmenAufeinander(orte);
+    const paar = (s: string, jetzt: boolean): Aenderung => {
+      const [a, b] = s.split('|');
+      return { art: 'aufeinander', klemme: a ?? '', andere: b ?? '', jetzt };
+    };
+    auf.forEach(s => { if (!vorher.aufeinander.has(s)) raus.push(paar(s, true)); });
+    vorher.aufeinander.forEach(s => { if (!auf.has(s)) raus.push(paar(s, false)); });
+    return raus;
   };
 
   const gleicherPunkt = (a: Punkt, b: Punkt): boolean => a.x === b.x && a.y === b.y;
@@ -696,9 +768,15 @@ const Schaltplan = (() => {
    * fasst das Nachziehen nicht an. `vonVorn` setzt erst alle Leitungen auf
    * die Punkte von `vorher` zurück: beim Ziehen mit der Maus wird bei jeder
    * Bewegung vom Anfassen aus gerechnet, nicht vom letzten Zwischenstand.
+   * `schnell` probiert nur die billigen Wege (alter Weg, nachgerückte
+   * Endstücke, die zwei Winkel) und lässt Z- und Hakenwege aus — für die
+   * Bilder WÄHREND des Ziehens. Passt dort keiner, gilt dieselbe Rangfolge
+   * wie sonst (Stufe 2, dann 3); gespeichert wird so ein Zwischenbild nie,
+   * die Planfläche rechnet beim Loslassen voll.
    */
   const nachziehen = (plan: Plan, vorher: Vorher, teile: Iterable<string>,
-                      wie: { heilen?: boolean; ohne?: Set<string>; vonVorn?: boolean } = {}): Bericht => {
+                      wie: { heilen?: boolean; ohne?: Set<string>; vonVorn?: boolean;
+                             schnell?: boolean } = {}): Bericht => {
     if (wie.vonVorn) plan.leitungen.forEach(l => {
       const p = vorher.punkte.get(l.id);
       if (p) l.punkte = p.map(q => ({ x: q.x, y: q.y }));
@@ -785,10 +863,14 @@ const Schaltplan = (() => {
       const zuerst: Array<Punkt[] | null> = [
         gleitend(alt, a, b), ohneDoppel(rechtwinklig(a, b)), andererWinkel(a, b)];
       if (!gewaehlt) for (const w of zuerst) if (neu(w) && passt(w) && nimm(w)) break;
-      if (!gewaehlt) for (const w of zWege(a, b, breite, hoehe)) if (neu(w) && passt(w) && nimm(w)) break;
+      /* Beim Ziehen (`schnell`) ist hier Schluss: die Z- und Hakenwege sind
+         die teuren — gemessen bis 217 ms je Bewegung bei vierfach
+         gedrosselter CPU (messungen §103). */
+      if (!gewaehlt && !wie.schnell)
+        for (const w of zWege(a, b, breite, hoehe)) if (neu(w) && passt(w) && nimm(w)) break;
       /* Die Hakenwege sind viele: hier zählt nur, ob einer GENAU passt, und
          wer etwas Neues streift, ist nach der ersten fremden Klemme draussen. */
-      if (!gewaehlt) {
+      if (!gewaehlt && !wie.schnell) {
         const erlaubt = { klemmen: vorK, leitungen: vorL };
         for (const w of hakenWege(a, b, breite, hoehe)) {
           if (!neu(w)) continue;
@@ -1423,7 +1505,7 @@ const Schaltplan = (() => {
   return {
     ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
     naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
-    kontakte, vorherMerken, nachziehen, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
+    kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
     netzBauen, BEISPIELE, beispielBauen, uid, esc
   };
 })();

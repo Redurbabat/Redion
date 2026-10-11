@@ -247,6 +247,18 @@ const Schaltplan = (() => {
     };
     const beruehrung = (plan, l, punkte, orte, andere) => pruefeBeruehrung(plan, l, punkte, orte, andere) ?? { klemmen: [], leitungen: [] };
     const kontakte = (plan, l) => beruehrung(plan, l, l.punkte, klemmorte(plan), plan.leitungen);
+    const klemmenAufeinander = (orte) => {
+        const nah = NAH();
+        const raus = new Set();
+        for (let i = 0; i < orte.length; i++)
+            for (let j = i + 1; j < orte.length; j++) {
+                const a = orte[i], b = orte[j];
+                if (a.teil === b.teil || Math.abs(a.x - b.x) > nah || Math.abs(a.y - b.y) > nah)
+                    continue;
+                raus.add(a.name < b.name ? a.name + '|' + b.name : b.name + '|' + a.name);
+            }
+        return raus;
+    };
     const vorherMerken = (plan) => {
         const orte = klemmorte(plan);
         const teil = (id) => id === undefined ? undefined : plan.teile.find(t => String(t.id) === String(id));
@@ -262,7 +274,38 @@ const Schaltplan = (() => {
             punkte.set(l.id, l.punkte.map(p => ({ x: p.x, y: p.y })));
             beruehrt.set(l.id, beruehrung(plan, l, l.punkte, orte, plan.leitungen));
         });
-        return { klemmen, punkte, beruehrt };
+        return { klemmen, punkte, beruehrt, aufeinander: klemmenAufeinander(orte) };
+    };
+    const veraendert = (plan, vorher) => {
+        const orte = klemmorte(plan);
+        const raus = [];
+        plan.leitungen.forEach(l => {
+            const vor = vorher.beruehrt.get(l.id);
+            if (!vor)
+                return;
+            const jetzt = beruehrung(plan, l, l.punkte, orte, plan.leitungen);
+            jetzt.klemmen.forEach(k => { if (!vor.klemmen.includes(k))
+                raus.push({ art: 'klemme', leitung: l.id, klemme: k, jetzt: true }); });
+            vor.klemmen.forEach(k => { if (!jetzt.klemmen.includes(k))
+                raus.push({ art: 'klemme', leitung: l.id, klemme: k, jetzt: false }); });
+            jetzt.leitungen.forEach(m => { if (l.id < m && !vor.leitungen.includes(m))
+                raus.push({ art: 'leitung', leitung: l.id, andere: m, jetzt: true }); });
+            vor.leitungen.forEach(m => {
+                if (l.id < m && !jetzt.leitungen.includes(m)
+                    && plan.leitungen.some(x => x.id === m))
+                    raus.push({ art: 'leitung', leitung: l.id, andere: m, jetzt: false });
+            });
+        });
+        const auf = klemmenAufeinander(orte);
+        const paar = (s, jetzt) => {
+            const [a, b] = s.split('|');
+            return { art: 'aufeinander', klemme: a ?? '', andere: b ?? '', jetzt };
+        };
+        auf.forEach(s => { if (!vorher.aufeinander.has(s))
+            raus.push(paar(s, true)); });
+        vorher.aufeinander.forEach(s => { if (!auf.has(s))
+            raus.push(paar(s, false)); });
+        return raus;
     };
     const gleicherPunkt = (a, b) => a.x === b.x && a.y === b.y;
     const ohneDoppel = (ps) => ps.filter((p, i) => i === 0 || !gleicherPunkt(p, ps[i - 1]));
@@ -477,11 +520,11 @@ const Schaltplan = (() => {
                 for (const w of zuerst)
                     if (neu(w) && passt(w) && nimm(w))
                         break;
-            if (!gewaehlt)
+            if (!gewaehlt && !wie.schnell)
                 for (const w of zWege(a, b, breite, hoehe))
                     if (neu(w) && passt(w) && nimm(w))
                         break;
-            if (!gewaehlt) {
+            if (!gewaehlt && !wie.schnell) {
                 const erlaubt = { klemmen: vorK, leitungen: vorL };
                 for (const w of hakenWege(a, b, breite, hoehe)) {
                     if (!neu(w))
@@ -914,7 +957,7 @@ const Schaltplan = (() => {
     return {
         ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
-        kontakte, vorherMerken, nachziehen, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
+        kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc
     };
 })();

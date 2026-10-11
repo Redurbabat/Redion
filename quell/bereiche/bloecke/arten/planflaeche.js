@@ -348,10 +348,48 @@ const Planflaeche = (() => {
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
-        const melde = (bericht) => {
-            if (!bericht || !bericht.some(b => b.stufe >= 2) || typeof UI === 'undefined')
+        const bmk = (tid) => {
+            const t = teilVon(tid);
+            return String((t && t.bmk) || tid);
+        };
+        const klemmeName = (k) => {
+            const i = k.lastIndexOf(':');
+            return i < 0 ? k : bmk(k.slice(0, i)) + k.slice(i);
+        };
+        const leitungName = (lid, vorher) => {
+            const l = z.plan.leitungen.find(x => x.id === lid);
+            if (!l)
+                return 'eine Leitung';
+            const k = vorher.klemmen.get(lid);
+            const a = l.vonTeil ? bmk(l.vonTeil) + ':' + (k?.von ?? l.vonNr) : '';
+            const b = l.nachTeil ? bmk(l.nachTeil) + ':' + (k?.nach ?? l.nachNr) : '';
+            return a && b ? `die Leitung ${a}–${b}` : (a || b) ? `die Leitung an ${a || b}` : 'eine freie Leitung';
+        };
+        const melde = (was, bericht, aenderungen, vorher) => {
+            if (typeof UI === 'undefined')
                 return;
-            UI.toast('Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen.');
+            const stufe = !!bericht && bericht.some(b => b.stufe >= 2);
+            const liste = aenderungen || [];
+            if (!stufe && !liste.length)
+                return;
+            const saetze = vorher ? liste.map(a => {
+                if (a.art === 'klemme')
+                    return a.jetzt
+                        ? `${klemmeName(a.klemme)} berührt jetzt ${leitungName(a.leitung, vorher)}`
+                        : `${klemmeName(a.klemme)} berührt ${leitungName(a.leitung, vorher)} nicht mehr`;
+                if (a.art === 'leitung')
+                    return a.jetzt
+                        ? `${leitungName(a.leitung, vorher)} berührt jetzt ${leitungName(a.andere, vorher)}`
+                        : `${leitungName(a.leitung, vorher)} berührt ${leitungName(a.andere, vorher)} nicht mehr`;
+                return a.jetzt
+                    ? `${klemmeName(a.klemme)} liegt jetzt auf ${klemmeName(a.andere)} (ohne Leitung nicht verbunden)`
+                    : `${klemmeName(a.klemme)} liegt nicht mehr auf ${klemmeName(a.andere)}`;
+            }) : [];
+            const was3 = saetze.slice(0, 3).join('; ') + (saetze.length > 3 ? ` und ${saetze.length - 3} weitere` : '');
+            const verbunden = liste.some(a => a.art !== 'aufeinander');
+            UI.toast(stufe
+                ? 'Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen' + (was3 ? ': ' + was3 + '.' : '.')
+                : `Nach dem ${was}: ${was3} — ` + (verbunden ? 'die Verbindungen haben sich geändert, bitte prüfen.' : 'bitte prüfen.'), 6000);
         };
         const auswahlTeile = () => [...z.auswahl].map(teilVon).filter(Boolean);
         const verschiebe = (dx, dy) => {
@@ -389,21 +427,26 @@ const Planflaeche = (() => {
                         l.punkte[l.punkte.length - 1] = o;
                 }
             });
-            return Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
+            const bericht = Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
+            return { bericht, aenderungen: Schaltplan.veraendert(z.plan, vorher), vorher };
         };
         const drehen = () => aendere(() => {
             const vorher = Schaltplan.vorherMerken(z.plan);
             const teile = auswahlTeile();
             teile.forEach(t => { t.drehung = ((t.drehung || 0) + 90) % 360; });
-            if (teile.length)
-                melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
+            if (teile.length) {
+                const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+                melde('Drehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+            }
         });
         const spiegeln = () => aendere(() => {
             const vorher = Schaltplan.vorherMerken(z.plan);
             const teile = auswahlTeile();
             teile.forEach(t => { t.gespiegelt = !t.gespiegelt; });
-            if (teile.length)
-                melde(Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true }));
+            if (teile.length) {
+                const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+                melde('Spiegeln', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+            }
         });
         const doppeln = () => aendere(() => {
             const neu = [];
@@ -536,7 +579,8 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
-            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan) };
+            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan),
+                lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') };
             svg.setPointerCapture(e.pointerId);
             male();
         });
@@ -556,12 +600,19 @@ const Planflaeche = (() => {
                         t.y = Schaltplan.rasten(a.y + dy);
                     }
                 });
+                const lage = [...z.zieht.ausgang.keys()].map(id => {
+                    const t = teilVon(id);
+                    return t ? t.x + ',' + t.y : '';
+                }).join(';');
+                if (lage === z.zieht.lage)
+                    return;
+                z.zieht.lage = lage;
                 const gewandert = [...z.zieht.ausgang].some(([id, a]) => {
                     const t = teilVon(id);
                     return t && (t.x !== a.x || t.y !== a.y);
                 });
                 const vorher = z.zieht.vorher ?? (z.zieht.vorher = Schaltplan.vorherMerken(z.plan));
-                z.zieht.bericht = Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...z.zieht.ausgang.keys()] : [], { heilen: gewandert, vonVorn: true });
+                Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...z.zieht.ausgang.keys()] : [], { heilen: gewandert, vonVorn: true, schnell: true });
                 buehneMalen();
                 return;
             }
@@ -600,8 +651,10 @@ const Planflaeche = (() => {
                         return t && (t.x !== a.x || t.y !== a.y);
                     });
                 if (bewegt) {
+                    const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
+                    const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()], { heilen: true, vonVorn: true });
                     aendere(() => { });
-                    melde(zug.bericht);
+                    melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
                 }
                 else
                     male();
@@ -807,9 +860,10 @@ const Planflaeche = (() => {
             if (pfeile[e.key] && z.auswahl.size) {
                 e.preventDefault();
                 const [dx, dy] = pfeile[e.key];
-                let bericht;
-                aendere(() => { bericht = verschiebe(dx, dy); });
-                melde(bericht);
+                let folge;
+                aendere(() => { folge = verschiebe(dx, dy); });
+                if (folge)
+                    melde('Schieben', folge.bericht, folge.aenderungen, folge.vorher);
                 return;
             }
             if (e.key === 'Delete' || e.key === 'Backspace') {

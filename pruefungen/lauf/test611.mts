@@ -678,13 +678,15 @@ const aufrufeJetzt = (): Promise<boolean[]> => seite.evaluate(() => (window as a
  * Bis zur Durchsicht rechnete jede Mausbewegung die volle Wegsuche — Z- und
  * Hakenwege eingeschlossen. Gemessen (messungen §103): F1 im Plan W um
  * 120 × 60 px in 60 Bewegungen gezogen, bei vierfach gedrosselter CPU je
- * Bewegung im Median 25,6 ms, höchstens 144,8 ms. Seither rechnet eine
+ * Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis 217,3 ms (drei
+ * Läufe). Seither rechnet eine
  * Bewegung nur die billigen Wege (`schnell`), eine Bewegung innerhalb
  * desselben Rasters gar nichts, und erst das Loslassen sucht einmal voll.
  *
  * Gezogen wird F1 in einem frischen Plan W um 30 × 40 Planeinheiten — an
- * eine Stelle, an der die billigen Wege NICHT reichen (f1 und f3 zapften
- * an; die Zusage „taugt nicht" hält das fest). Sonst bewiese die Zusage
+ * eine Stelle, an der die billigen Wege NICHT reichen (f2 und f4 fänden
+ * dort nur Stufe 3 und zapften an — gemessen im Modell, messungen §103;
+ * die Zusage „taugt nicht" hält es fest). Sonst bewiese die Zusage
  * „gespeichert ist die volle Suche" nichts: sie wäre auch mit einem
  * gespeicherten Zwischenbild wahr.
  * ========================================================================*/
@@ -723,6 +725,9 @@ const pruef10 = await seite.evaluate(([bid, vorJson]: [string, string]) => {
      angezapft wird, sagt die Netzliste selbst (je Leitung allein, wie oben),
      nicht das Modell, das hier geprüft wird. */
   const rechne = (schnell: boolean) => {
+    /* Ohne `Schaltplan.nachziehen` (main vor E746) gibt es nichts
+       nachzurechnen — dann sind beide Zusagen unten rot, nicht der Lauf weg. */
+    if (typeof w.nachziehenEcht !== 'function') return { punkte: '(kein Schaltplan.nachziehen)', aenderungen: -1 };
     const plan = Schaltplan.lesen({ plan: JSON.parse(vorJson) });
     const vorKlemmen = (plan.leitungen as any[]).map(l => JSON.stringify(w.klemmenDer(plan, l)));
     const v = Schaltplan.vorherMerken(plan);
