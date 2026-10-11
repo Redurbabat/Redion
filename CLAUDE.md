@@ -1943,7 +1943,11 @@ offenem Ausgang hat eine vergessene Leitung. Gegen 97d156b03 war er rot mit
 Brücken 25/26, Brücken jeder Stellung 22/26) treffen je andere Abschnitte.
 Sein erster Plan für die echte Planfläche hatte Leitungen mit einem Punkt
 — `Schaltplan.lesen` verwirft sie, und die Fusszeile meldete fünfzehn
-offene Klemmen statt drei. Er lädt über file://, `test400` zählt keinen
+offene Klemmen statt drei. Nach der Durchsicht im selben Zweig erweitert
+auf 38 Zusagen: eine Ecke des Dreiecks, die nur ihre eigene Brücke hält
+(U1–W2 ohne Zuleitung), wird gemeldet, und den Sternpunkt nennt die
+Stellung selbst (`sternpunkt`) — gegen den ersten Stand von E747 war er
+rot mit 33 von 38. Er lädt über file://, `test400` zählt keinen
 neuen Port. Gezählt am 11. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 551 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*

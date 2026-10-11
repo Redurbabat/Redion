@@ -56,9 +56,9 @@
  * JEDER Stellung statt der eingestellten → §3, §4, §5 und §7 rot. Gegen
  * 7560b2f22 (E747 ohne den Sternpunkt in der Stellung) rot in §4, §7 und
  * §8: die Ecke U1–W2 ohne Zuleitung schwieg. Gegenproben zum Sternpunkt:
- * die Marke `sternpunkt` aus „Stern" heraus → §1, §5, §7 und §8 rot; die
- * Regel auch für Knoten ohne Brücke → §8 rot; jede Klemme der Ecke statt
- * einer je Knoten → §4 rot.
+ * die Marke `sternpunkt` aus „Stern" heraus → §1, §4, §5, §7 und §8 rot;
+ * die Regel auch für Knoten ohne Brücke → §8 rot; jede Klemme der Ecke
+ * statt einer je Knoten → §4 und §7 rot.
  *
  *   node pruefungen/alle.mts 612
  * ==========================================================================*/

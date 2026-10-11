@@ -32,10 +32,36 @@ die Datei-Wächter. Bilder vorher/nachher (Rechner und Telefon, dunkel und
 hell, Stern, Dreieck, ohne Brücken) angesehen; Zahlen in `messungen.md`
 §104.
 
+**Nachtrag nach der Durchsicht, im selben Zweig (E747 Punkt 6):** die
+erste Fassung hatte eine richtige Meldung verschluckt. Im Dreieck ohne
+Zuleitung an U1 halten U1 und W2 einander über die Brücke, der Motor
+läuft auf zwei Aussenleitern (9,96 A), und M1 meldete nichts; ohne jede
+Leitung nur PE. Die Regel konnte den Sternpunkt {U2, V2, W2} nicht von
+der Ecke {U1, W2} unterscheiden. Jetzt sagt es die Stellung: „Stern"
+trägt `sternpunkt: ['U2', 'V2', 'W2']`, und ein Knoten, den nur die
+eigenen Brücken halten, wird gemeldet (einmal, mit U1), ausser er ist so
+markiert. Dazu ist der Kommentar an `stellungIn` berichtigt: die EINE
+Stelle innerhalb von `Stromfluss` — die Planfläche liest die Stellung für
+ihren Titel selbst (`|| 0` statt `?? 0`, verschieden nur bei NaN) und
+ruft die Hilfe bewusst nicht auf (§5 Regel 1). `test612` zuerst
+erweitert und rot eingecheckt (6b1de9eb6, gegen 7560b2f22 33/38), mit dem
+Sternpunkt 38/38 (d9b91d74d); gegen 97d156b03 20/38. Drei neue
+Gegenproben, jede wieder heraus: die Marke heraus 29/38, die Regel auch
+für Knoten ohne Brücke 37/38, jede Klemme der Ecke 34/38; die drei alten
+auf dem neuen Stand nachgemessen: 21/38, 37/38, 28/38. Nachbarn grün:
+`test604` 91, `test605` 51, `test606` 17, `test607` 37, `test608` 69,
+`test238` 77, `test239` 68, `test240` 100, `test241` 105, `test242` 42,
+`test388` 22 (Start 1919 KB), `test74` 12/12; die Datei-Wächter. Bilder
+nachher (Stern, Dreieck, ohne Brücken, Stern und Dreieck ohne U1;
+Rechner und Telefon, dunkel und hell) angesehen. `messungen.md` §104 ist
+für drei Stände neu gemessen.
+
 **Offen geblieben** (in L253 bei Punkt 2): gezeichnete Brücken heissen
-„überbrückt"; die Quelle meldet ihr freies N auch beim Drehstrommotor; im
-Dreieck ohne Zuleitung an U1 wird U1 nicht mehr gemeldet — der Preis aus
-E747.
+„überbrückt"; die Quelle meldet ihr freies N auch beim Drehstrommotor
+(eine Frage an Redur); im Plan des Bildes meldet der FI „es fehlen
+37.52 mA", obwohl die Lampe richtig angeschlossen ist; an G1 steht ohne
+Brücken „0 A" neben „317 nW"; und erreicht eine Ecke des Dreiecks eine
+fremde Klemme, schweigt die Meldung, auch wenn es die falsche ist.
 
 ## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
 

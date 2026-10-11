@@ -8222,83 +8222,142 @@ selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
 
 ## §104 · Das Klemmenbrett und die Meldung „hängt an keiner Leitung" (E747, 11. Oktober 2026)
 
-**Wo und wie.** Zweig `claude/elektro-klemmenbrett-bruecken` gegen
-`97d156b03` (origin/main). Eine Sonde im Kratzordner (`el-brett/sonde2.mts`,
-nicht eingecheckt) lädt `index.html` über einen eigenen HTTP-Server
-(`listen(0)`) in Chromium und ruft `Stromfluss.rechne` für dieselben Pläne
-zweimal: einmal mit der `simulation.js` des Arbeitsbaums, einmal mit der
-von `97d156b03` (`git show`, an derselben Adresse ausgeliefert; sonst ist
-alles gleich). „Offen" heisst: eine Warnung „M1: Anschluss … hängt an
-keiner Leitung". Der Motorplan ist Drehstromquelle G1 und Klemmenbrett M1
-mit den Leitungen w1–w4 aus dem Bild in L253 (L1–U1, L2–V1, L3–W1, PE–PE),
-N der Quelle frei.
+**Wo und wie.** Zweig `claude/elektro-klemmenbrett-bruecken`, drei Stände
+von `quell/bereiche/elektro/simulation.js`: **97d156b03** (origin/main),
+**7560b2f22** (die erste Fassung von E747: jede Brücke zählt wie eine
+Leitung) und **d9b91d74d** (E747 mit dem Sternpunkt in der Stellung). Alle
+Zahlen dieses Abschnitts sind am 11. Oktober abends nach d9b91d74d neu
+gemessen; die erste Fassung dieses Abschnitts (zwei Stände) ist damit
+ersetzt. Eine Sonde im Kratzordner (`el-brett-fix/sonde3.mts`, nicht
+eingecheckt; sie erweitert `el-brett/sonde2.mts` der ersten Fassung) lädt
+`index.html` über einen eigenen HTTP-Server (`listen(0)`) in Chromium und
+ruft `Stromfluss.rechne` für dieselben Pläne, einmal je Stand: den Stand
+des Arbeitsbaums oder eine alte `simulation.js` (`git show`, an derselben
+Adresse ausgeliefert; sonst ist alles gleich). „Offen" heisst: eine Warnung
+„M1: Anschluss … hängt an keiner Leitung". Der Motorplan ist
+Drehstromquelle G1 und Klemmenbrett M1 mit den Leitungen w1–w4 aus dem Bild
+in L253 (L1–U1, L2–V1, L3–W1, PE–PE), N der Quelle frei.
 
 **Der Plan des Bildes aus L253** (zusätzlich FI mit Lampe, Übertrager mit
-Klingel), Zahl der Warnungen je Stellung:
+Klingel), Zahl der Warnungen:
 
 ```txt
-Stellung        97d156b03   E747   was wegfällt
-ohne Brücken    7           7      —
-Stern           7           4      M1: W2, U2, V2
-Dreieck         7           4      M1: W2, U2, V2
+Stellung                   97d156b03   7560b2f22   d9b91d74d
+ohne Brücken               7           7           7
+Stern                      7           4           4
+Dreieck                    7           4           4
+Dreieck ohne Zuleitung U1  9           5           6
 ```
 
-Die vier, die bleiben, sind in allen Stellungen dieselben: „G1: Anschluss N
-hängt an keiner Leitung", „F1: Anschluss 3 …", „F1: Anschluss 4 …" und „F1
-löst aus: es fehlen 37.52 mA …" — alle vier auch auf 97d156b03, nicht von
-E747.
+Die vier, die in Stern und Dreieck bleiben, sind auf allen drei Ständen
+dieselben: „G1: Anschluss N hängt an keiner Leitung", „F1: Anschluss 3 …",
+„F1: Anschluss 4 …" und „F1 löst aus: es fehlen 37.52 mA …". Im Dreieck
+ohne U1 kommt auf 97d156b03 „M1: U1" und die drei falschen W2, U2, V2 dazu,
+auf 7560b2f22 nichts von M1, auf d9b91d74d „M1: U1".
 
-**Einzelne Fälle** (offene Klemmen von M1; dahinter die übrigen Warnungen,
-wenn sie etwas sagen):
+**Einzelne Fälle** (offene Klemmen von M1):
 
 ```txt
-Fall                                  97d156b03          E747
-Stern, alle Zuleitungen               U2 V2 W2           —
-Dreieck, alle Zuleitungen             U2 V2 W2           —
-ohne Brücken                          U2 V2 W2           U2 V2 W2
-Dreieck ohne Zuleitung an U1          U1 U2 V2 W2        —   (G1: L1 offen, beide Stände)
-Dreieck ohne alle drei Zuleitungen    U1 V1 W1 U2 V2 W2  —   (G1: L1 L2 L3 offen, beide Stände)
-Stern ohne alle drei Zuleitungen      U1 V1 W1 U2 V2 W2  U1 V1 W1
-ohne Brücken, Stern als zwei          —                  —   (dreimal „überbrückt", beide Stände)
+Fall                                  97d156b03          7560b2f22    d9b91d74d
+Stern, alle Zuleitungen               U2 V2 W2           —            —
+Dreieck, alle Zuleitungen             U2 V2 W2           —            —
+ohne Brücken                          U2 V2 W2           U2 V2 W2     U2 V2 W2
+Stern ohne Zuleitung an U1            U1 U2 V2 W2        U1           U1
+Dreieck ohne Zuleitung an U1          U1 U2 V2 W2        —            U1
+Dreieck ohne Zuleitung an V1          U2 V1 V2 W2        —            V1
+Dreieck ohne alle drei Zuleitungen    U1 V1 W1 U2 V2 W2  —            U1 V1 W1
+Dreieck ohne jede Leitung (w1–w4)     PE U1 V1 W1        PE           PE U1 V1 W1
+                                      U2 V2 W2
+Stern ohne alle drei Zuleitungen      U1 V1 W1 U2 V2 W2  U1 V1 W1     U1 V1 W1
+Stern ohne jede Leitung (w1–w4)       PE U1 V1 W1        PE U1 V1 W1  PE U1 V1 W1
+                                      U2 V2 W2
+ohne Brücken ohne jede Leitung        alle sieben        alle sieben  alle sieben
+ohne Brücken, Stern als zwei          —                  —            —
   Leitungen gezeichnet
 ```
 
-Der grösste Strom ist in jedem Fall auf beiden Ständen gleich (Stern
-3,8333 A, Dreieck 11,4998 A, Dreieck ohne U1 9,9591 A, ohne Brücken 0) —
-die Rechnung ist unverändert.
+Die übrigen Warnungen sind in jedem Fall auf allen drei Ständen gleich:
+G1 meldet jeden freien Ausgang (immer N, dazu den fehlenden Aussenleiter
+und ohne w4 PE), ohne w4 kommt die Meldung zur Schutzklasse I dazu, und
+der gezeichnete Stern ergibt dreimal „das Bauteil ist überbrückt" (W2/U2,
+W2/V2, U2/V2).
 
-**Rechenzeit:** 2000 Rechnungen des Bild-Plans in Stern, Mittel je
-Rechnung: 0,396 ms (97d156b03) gegen 0,421 ms (E747), je eine Messung.
+Der grösste Strom ist in jedem Fall auf allen drei Ständen gleich (Stern
+3,8333 A, Dreieck 11,4998 A, Dreieck ohne U1 und Dreieck ohne V1 je
+9,9591 A, Stern ohne U1 3,3197 A, ohne Brücken und ohne Zuleitungen 0) —
+die Rechnung ist unverändert. 9,9591 A ist der Leiterstrom auf zwei
+Aussenleitern: ein Strang direkt an 400 V (6,64 A) und zwei in Reihe
+(3,32 A). Und eine Grenze, gemessen mit einer zweiten Sonde
+(`el-brett-fix/probe5.mts`, file://): im Dreieck ohne Zuleitung an U1,
+mit einer Leitung von W2 an X2 der Lampe (also an N), meldet d9b91d74d gar
+nichts — die Ecke erreicht eine fremde Klemme.
+
+**Rechenzeit:** je 2000 Rechnungen des Bild-Plans in Stern, Mittel je
+Rechnung, dreimal abwechselnd unter dem Browser-Schloss:
+
+```txt
+97d156b03   0,4588   0,4030   0,3996 ms
+7560b2f22   0,4653   0,4770   0,5555 ms
+d9b91d74d   0,3016   0,4630   0,2732 ms
+```
+
+Die Streuung innerhalb eines Standes ist grösser als jeder Unterschied
+zwischen ihnen. (Die erste Fassung hatte je eine Messung, 0,396 und
+0,421 ms.)
 
 **`test612` gegen die Stände** (über file://, unter dem Schloss,
-1400 × 1000): 97d156b03 15/26; E747 26/26; Gegenprobe „Brücken übergangen"
-15/26; „Kontakte aller schaltbaren Bauteile als Brücken" 25/26; „Brücken
-jeder Stellung" 22/26.
+1400 × 1000; die zweite Fassung mit 38 Zusagen): 97d156b03 20/38;
+7560b2f22 33/38; d9b91d74d 38/38. Gegenproben auf d9b91d74d: Brücken
+übergangen 21/38; Kontakte aller schaltbaren Bauteile als Brücken 37/38;
+Brücken jeder Stellung 28/38; die Marke `sternpunkt` heraus 29/38; die
+Regel auch für Knoten ohne Brücke 37/38; jede Klemme der Ecke statt einer
+je Knoten 34/38. (Die erste Fassung mit 26 Zusagen: 97d156b03 15/26,
+7560b2f22 26/26, Gegenproben 15/26, 25/26, 22/26 — nicht nachgemessen,
+die Fassung gibt es nicht mehr.)
 
 **Bilder** (Kratzordner `bilder-abend/el-brett/`, nicht im Verzeichnis;
 Rechner 1440 × 900, Telefon 390 × 844 mit Pixeldichte 2, dunkel und hell;
-derselbe Plan, Simulation an, M1 einmal, zweimal, dreimal angetippt). Die
-Fusszeile:
+derselbe Plan, Simulation an, M1 einmal, zweimal, dreimal angetippt; dazu
+eine zweite Seite ohne die Zuleitung w1). Die Fusszeile, als Text aus dem
+DOM gelesen und in allen vier Ansichten gleich:
 
 ```txt
-                vorher (97d156b03)                         nachher (E747)
-Stern           G1 N · M1 W2 · M1 U2 · „… und 4 weitere"   G1 N · F1 3 · F1 4 · „… und 1 weitere"
-Dreieck         G1 N · M1 W2 · M1 U2 · „… und 4 weitere"   G1 N · F1 3 · F1 4 · „… und 1 weitere"
-ohne Brücken    G1 N · M1 W2 · M1 U2 · „… und 4 weitere"   gleich
+                  97d156b03                      7560b2f22                      d9b91d74d
+Stern             G1 N · M1 W2 · M1 U2 · „4"     G1 N · F1 3 · F1 4 · „1"       wie 7560b2f22
+Dreieck           G1 N · M1 W2 · M1 U2 · „4"     G1 N · F1 3 · F1 4 · „1"       wie 7560b2f22
+ohne Brücken      G1 N · M1 W2 · M1 U2 · „4"     gleich                         gleich
+Stern ohne U1     G1 L1 · G1 N · M1 U1 · „6"     G1 L1 · G1 N · M1 U1 · „3"     wie 7560b2f22
+Dreieck ohne U1   G1 L1 · G1 N · M1 U1 · „6"     G1 L1 · G1 N · F1 3 · „2"      G1 L1 · G1 N · M1 U1 · „3"
 ```
 
-Was die Bilder sonst zeigen, vorher wie nachher und nicht Teil von E747:
+(„4" heisst „… und 4 weitere".) Angesehen (d9b91d74d): der Stern am
+Rechner dunkel, die Fusszeile des Dreiecks am Telefon hell, das Dreieck
+ohne U1 am Rechner hell, am Telefon dunkel und seine Fusszeile am Telefon
+hell.
+
+Was die Bilder sonst zeigen, auf allen Ständen und nicht Teil von E747:
 das Klemmenbrett zeichnet die Brücken der Stellung nicht (nur der Titel
 beim Antippen sagt „Stern" oder „Dreieck"); ohne Brücken steht an G1
-„230 V · 0 A · 317 mW"; am Telefon liest sich die Palettenbeschriftung
-„Öffner" als „Offner" — `.sp-sym-name` hat `overflow: hidden` bei 9,5 px
-Schrift und 10,9 px Zeilenhöhe, die Punkte des Ö fallen heraus; und am
-Telefon deckt die untere Leiste die letzte Zeile der Fusszeile, solange
-man nicht weiter rollt. L253 Punkt 3 (die Messwerte am Telefon) ist auf
-denselben Bildern zu sehen.
+„230 V · 0 A · 317 nW" (Text im DOM, alle vier Ansichten, alle drei
+Stände) — je Strang 0,46 nA unter der Schwelle von 1 nA und deshalb „0 A",
+die Summe der drei Leistungen (je 0,106 µW) aber nicht; die erste Fassung
+dieses Abschnitts las im Bild „317 mW", das n ist dort vom m nicht zu
+unterscheiden. Am Telefon liest sich die Palettenbeschriftung „Öffner" als
+„Offner" — `.sp-sym-name` hat `overflow: hidden` bei 9,5 px Schrift und
+10,9 px Zeilenhöhe, die Punkte des Ö fallen heraus (aus der ersten Fassung,
+nicht nachgemessen); und am Telefon deckt die untere Leiste die letzte
+Zeile der Fusszeile („… und 3 weitere"), solange man nicht weiter rollt.
+L253 Punkt 3 (die Messwerte am Telefon) ist auf denselben Bildern zu
+sehen.
 
-**Start:** 1919 KB gzip über 255 Dateien vorher und nachher (`test388` §5,
-Decke 1950; „vorher" mit der `simulation.js` von 97d156b03 im selben
-Arbeitsbaum gemessen). `simulation.js` 58 566 → 59 173 Bytes (gzip -9
-13 513 → 13 614). `redion-einzeldatei.html` 9 665 704 → 9 666 311 Bytes.
-Dienststand v1469 → v1470.
+**Der FI im Plan des Bildes** (`Stromfluss.rechne`, ohne Brücken, alle
+drei Stände gleich): durch F1 1–2 fliessen 457,76 mA, durch N–N2
+420,24 mA, durch die Lampe E1 und die Quelle G2 je 434,78 mA; die
+Differenz in F1 ist die gemeldete von 37,52 mA. Dieselbe Meldung steht in
+allen drei Stellungen.
+
+**Start:** 1919 KB gzip über 255 Dateien auf d9b91d74d (`test388` §5,
+Decke 1950); die erste Fassung hatte für 97d156b03 und 7560b2f22 dieselbe
+Zahl. `simulation.js` 58 566 → 59 173 → 60 004 Bytes (gzip -9 13 513 →
+13 614 → 13 790). `redion-einzeldatei.html` 9 665 704 → 9 666 311 →
+9 667 142 Bytes. Dienststand v1469 → v1470 → v1471.
