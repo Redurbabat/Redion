@@ -143,6 +143,8 @@ sind der teuerste Teil und der lehrreichste.
 | P127 | 2026-10-11 | Eine rohe 46px, die test362 rot machte, und niemand fuhr test362 | 🟡 klein | — |
 | P128 | 2026-10-11 | Eine geänderte Vorgabe, und ein Lauf, der in keiner Anpassungsliste stand | 🟡 klein | — |
 | P129 | 2026-10-11 | Zwei Namen, je an zwei Stellen | 🟡 klein | — |
+| P130 | 2026-10-11 | Die Chronik, die einen Wächter rot macht | 🟡 klein | — |
+| P131 | 2026-10-11 | Ein Neuladen, das keines war | 🟠 mittel | — |
 
 ---
 
@@ -2780,7 +2782,7 @@ sind der teuerste Teil und der lehrreichste.
 
 *2026-10-11 · 🟡 klein*
 
-**Das Bild.** test422 rot: sieben „rohe Ereignisnamen“ in lernwelt.ts (`einmal('queue', …)` …). test274 rot mit einer neuen verwaisten Nachschlagestelle: `studio.ts: kante`.
+**Das Bild.** test422 rot: sieben „rohe Ereignisnamen“ in lernwelt.ts (der Merker `einmal` mit den Namen der Kennzahlen: queue, stats, spiel …). test274 rot mit einer neuen verwaisten Nachschlagestelle: `studio.ts: kante`.
 
 **Die falsche Vermutung.** Beide Wächter sind zu grob — sie lesen Text und wissen nicht, was gemeint ist.
 
@@ -2793,4 +2795,46 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test422 14/14; test274 nur noch mit seinem alten Fund; test592 61/61, test595 44/44, test596 51/51.
 
 **Die Lehre.** Wenn ein Textwächter „falsch“ anschlägt, zuerst fragen, ob der Name nicht wirklich zweimal da ist.
+
+
+---
+
+## P130 · Die Chronik, die einen Wächter rot macht
+
+*2026-10-11 · 🟡 klein*
+
+**Das Bild.** Im vollen Lauf war `test422` wieder rot, eine Stunde nachdem er gerichtet war: „Keiner schreibt den Namen als Zeichenkette — src/bereiche/chronik/daten.ts:6313 'queue'“.
+
+**Die falsche Vermutung.** Der Merker in lernwelt.ts ist zurückgekehrt, oder der Lauf liest einen alten Stand.
+
+**Wie es gefunden wurde.** Im vollen Lauf und gleichzeitig von der Durchsicht, die den eingecheckten Stand mit dem Wächter-Muster nachrechnete.
+
+**Die Ursache.** P129 beschrieb den Fund wörtlich, mit dem Aufruf in Backticks. Die Chronik wird nach `src/bereiche/chronik/daten.ts` erzeugt, und test422 liest jede `.ts` unter `src/` — also auch den Satz über den Fehler.
+
+**Die Lösung.** Der Satz in P129 nennt den Merker, ohne den Aufruf zu zitieren; neu erzeugt und gebaut (daten.ts, daten.js, Einzeldatei, Dienststand).
+
+**Der Beweis.** test422 14/14 auf dem Endstand; der zitierte Aufruf steht weder in daten.ts noch in daten.js noch in der Einzeldatei.
+
+**Die Lehre.** Was die Chronik über einen Wächter schreibt, liest der Wächter mit. Einen Fund beschreiben, nicht abschreiben.
+
+
+---
+
+## P131 · Ein Neuladen, das keines war
+
+*2026-10-11 · 🟠 mittel*
+
+**Das Bild.** Im vollen Lauf brachen test453, test459 und test466 ab: „Execution context was destroyed, most likely because of a navigation.“ — einmal, in einer Stunde unter Last. Einzeln nachgefahren auf morgen-besser-3 4 von 10 Läufen, auf morgen-besser-2 0 von 10.
+
+**Die falsche Vermutung.** Redion lädt die Seite neu, kurz nachdem sie offen ist — und dann wären ungespeicherte Eingaben weg (§51). Danach: der Dienst-Arbeiter steuert die Seite um.
+
+**Wie es gefunden wurde.** Mit einer Sonde in vier Stufen: Navigationsanfragen am Server (keine zweite), Ereignisse des Dokuments (kein pagehide, kein beforeunload, dieselbe Kennung danach), Kontexte im Browser über CDP (keiner zerstört), und zuletzt das Protokoll selbst: der Browser antwortete Playwright „Promise was collected“.
+
+**Die Ursache.** Das abgewartete evaluate der Aufbauhelfer schrieb Daten, wartete auf Store.flush() und rief dann App.oeffne — einen langen, synchronen Schritt. In diesem Fenster verlor das Versprechen, das Playwright im Browser abwartet, seinen Halt und wurde eingesammelt; Playwright übersetzt jeden solchen Protokollfehler in „Execution context was destroyed“. Redion selbst tat alles richtig: flush aufgelöst (950 → 1368 ms), App.oeffne gelaufen, 1977 Blöcke im Speicher. Seit der dritten Welle tut der Start mehr, und das Fenster trifft öfter.
+
+**Die Lösung.** In den drei Läufen öffnet ein eigener, synchroner Schritt die Seite (das evaluate gibt die Kennung zurück). Die Zusagen der Läufe sind dieselben. 98 weitere Läufe tragen dasselbe Muster und stehen in AUFGABEN.md.
+
+**Der Beweis.** Sonde mit getrenntem Öffnen: 15 von 15 grün (vorher 4 von 10 rot); test453, test459, test466 je dreimal grün.
+
+**Die Lehre.** Eine Meldung über einen zerstörten Kontext ist eine Vermutung des Werkzeugs, keine Beobachtung. Erst messen, ob dasselbe Dokument noch dasteht — dann weiss man, ob es um Daten geht oder um den Prüfstand.
 

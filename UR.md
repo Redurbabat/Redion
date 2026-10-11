@@ -3155,7 +3155,7 @@ Am Morgen kamen drei Sätze von Redur hintereinander: alles nach dem Bauen auf m
 
 - **commits:** 48
 - **entscheidungen:** 0
-- **neuePrüfläufe:** 10
+- **neuePrüfläufe:** 9
 - **gezählt:** Commits mit Datum 6. Oktober (UTC) in origin/claude/morgen-besser-2..claude/morgen-besser-3: 48. Neue Prüfläufe: test593 bis test599, test602, test603 (test592 kam am Vorabend um 23:55 UTC). Die Einträge E716–E724, E727 und E728 stehen in ihren Zweigen mit dem Datum 6. Oktober; gezählt werden sie am Tag, an dem sie auf morgen-besser-3 ankamen (11. Oktober).
 
 #### Das grösste Problem
@@ -3230,21 +3230,24 @@ Keine neue; der Tag führte die Anfrage vom 6. Oktober aus.
 
 Der Vereinigungslauf (169 Läufe, die Wächter aus allen Commits der zehn Zweige, 02:23–ca. 03:00 UTC) stand bei 152 grün, 17 rot. Jeder rote wurde danach auf claude/morgen-besser-2 nachgefahren und Zeile für Zeile verglichen: zwölf scheitern dort genau gleich (fremd, älter als diese Welle), test436 war einmal rot und danach zweimal 71/71. Vier kamen aus den eigenen Zweigen, und jeder davon war auf seinem Zweig schon rot gewesen, ohne dass dessen Wächterliste ihn enthielt: test469 (E725 hatte die Vorgabe der Suche im Dokument geändert und den Lauf nicht nachgezogen, P128), test422 und test274 (zwei Namen, die an zwei Stellen standen, P129) und test86 (vier Register unangekündigt, zwei davon seit September).
 
+Danach, auf `claude/auf-main` (der leere Zusammenführungs-Commit von origin/main darauf), der volle Lauf in Stücken: 544 Läufe, 524 grün, 20 rot in 154 Minuten (03:55–ca. 06:30 UTC). Eine Durchsicht mit drei Linsen und je zwei Zweiflern (35 Prüfer) prüfte zugleich alles, was über morgen-besser-2 hinaus nach main geht, und fand dreizehn Dinge — das schwerste: `test422` war auf dem eingecheckten Stand wieder rot, weil die Chronik selbst den Aufruf zitierte, den der Wächter sucht (P130). Jeder rote Lauf ist danach auf morgen-besser-2 nachgefahren oder einzeln wiederholt: vierzehn sind dort gleich rot, `test98` (seit E710) und `test422` sind gerichtet, und vier waren nur unter Last einmal rot. Die vier: `test459`, `test466` und `test588` einzeln je dreimal grün, `test453` zweimal von dreien. Die Meldung „Execution context was destroyed“ von 453, 459 und 466 war KEIN Neuladen (P131): dasselbe Dokument stand danach da, alle Daten im Speicher; der Browser meldete Playwright „Promise was collected“, weil `Store.flush()` und das lange `App.oeffne` im selben abgewarteten Schritt standen. Getrennt 15 von 15 grün; die drei Läufe öffnen seither so.
+
 
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
-| E725/E726 · Was die Durchsichten fanden, und ihre Nachbarn | `2876541` → `72a7089` | 00:46–01:40 UTC | ca. 55 min | test600, test585, test601 zuerst rot (2876541, 0b650db); Nachbarn grün, Startlast unverändert |
+| E725/E726 · Was die Durchsichten fanden, und ihre Nachbarn | `2876541` → `72a708f` | 00:46–01:40 UTC | ca. 55 min | test600, test585, test601 zuerst rot (2876541, 0b650db); Nachbarn grün, Startlast unverändert |
 | Zehn Zusammenführungen auf claude/morgen-besser-3 (Teil A): trenner-zieht, seiteneditor-ohne-stau, ordner-bearbeiten, kein-toter-knopf-2, menue-eine-quelle, flaeche-eine-leiste, ki-am-ort, bibliothek-eine-suche, lernzentrum-kopf, kopf-ruhig — dazwischen E717 nachgezogen | `44f8814` → `95c2f0c` | 01:45–02:20 UTC | ca. 35 min | nach jedem Zusammenführen neu gebaut und die dreizehn Datei-Wächter (550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105) grün; test362 18/18 nach 7f7eb14; test580, test593, test601, test602, test603 grün |
 | Vereinigungslauf, Vergleich jedes roten Laufs mit morgen-besser-2, vier Nachzüge | `95c2f0c` → `b2367bc` | 02:23–03:49 UTC | ca. 1 h 25 min | 169 Läufe unter dem Schloss: 152 grün, 17 rot; rot und auf morgen-besser-2 gleich rot: 201, 270, 332, 348, 351, 365, 425, 448, 470, 493, 524, 533 (dazu 274 mit seinem alten Fund); test436 einmal rot, danach 71/71 zweimal; aus den eigenen Zweigen und gerichtet: test469 26/26 (Gegenprobe rot), test422 14/14, test86 grün, test274 nur noch der alte Fund; test592 61/61, test595 44/44, test596 51/51 |
+| Voller Lauf auf claude/auf-main, Durchsicht dessen, was nach main geht, Nachfahren jedes roten Laufs, eine Sonde für den „zerstörten Kontext“ | `009e2fc` → `(vor dem Push)` | 03:55–ca. 07:30 UTC | ca. 3 h 35 min | volllauf.mts --neu: 544 Läufe, 524 grün, 20 rot (98 201 270 274 319 332 348 351 365 422 425 448 453 459 466 470 493 524 533 588), 154 min; auf morgen-besser-2 gleich rot: 201 270 274 319 332 348 351 365 425 448 470 493 524 533; gerichtet: 98 (drei Gegenproben rot), 422; einzeln nachgefahren: 459, 466, 588 je 3 von 3 grün, 453 2 von 3; Durchsicht wf_1c6fa0b7-731: 16 Funde, 13 bestätigt |
 
 #### Zahlen des Tages
 
 - **commits:** 22
 - **entscheidungen:** 13
 - **neuePrüfläufe:** 0
-- **gezählt:** Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 707, E1 bis E728, die Klausel „kommen über ihre Zweige“ ist gestrichen. Prüfläufe: 544.
+- **gezählt:** Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 707, E1 bis E728, die Klausel im Kopf („**E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen“) ist gestrichen. Prüfläufe: 544. Nach b2367bc bis zum Push auf claude/auf-main: der Zusammenführungs-Commit mit origin/main (009e2fc) und die Nachzüge aus vollem Lauf und Durchsicht.
 
 #### Das grösste Problem
 
@@ -3261,10 +3264,11 @@ Keine neue; die Zusammenführungen folgten der Auftragsdatei vom 5. Oktober.
 | 02:07 UTC | Die rohe 46px aus E717 durch `calc(var(--touch-min) + 2px)` ersetzt — dieselbe Höhe, die Decke nicht angehoben. | test362 §7 lässt das Verzeichnis der rohen Wiederholungen nur schrumpfen; mit E717 stand „46“ auf 15 statt 14. | Keins sichtbar: dieselbe Höhe, und sie gilt nur bis zur ersten Messung. test593 54/54. |
 | 02:14 UTC | Den „Und“-Block in CLAUDE.md §30 aus den Zweigen neu gebaut: je Prüflauf genau ein Absatz, die Fassung seines eigenen Zweigs, Und 528–544. | Die Zusammenführen 2–8 hatten alte und neue Fassungen nebeneinander stehen lassen und einen Absatz abgeschnitten (P126). | Ein Nachtrag, den ein ANDERER Zweig in einen fremden Absatz geschrieben hätte, ginge so verloren. Geprüft: über alle zwölf Zweige gibt es je Lauf höchstens zwei Fassungen, und die zweite war jedes Mal die spätere Fassung desselben Zweigs. |
 | 03:01–03:49 UTC | Vier Nachzüge statt gelockerter Wächter: test469 wählt „Überall“ ausdrücklich; der Merker in lernwelt.ts heisst `gemerkt`; Kontextkante gibt ihre Wurzel heraus; test86 trägt vier Register ein. | Jeder der vier war ein Befund über die eigenen Zweige, nicht über die Wächter — und keiner durfte über ein ERLAUBT oder eine weichere Zählung verschwinden (§31, §47). | test469: Die Vorgabe in einem Dokument ist jetzt „Dieses Dokument“; der Lauf hält „Überall“. Ob diese Vorgabe Redur passt, ist Vorgabe (g) aus E725 und steht im Bericht. |
+| ca. 07:30 UTC | E729: main trotz roter Läufe — eine Ausnahme von §46 für diesen einen Stand, mit ihrer Grenze: rot bleibt nur, was auf morgen-besser-2 gleich rot ist. | Redur am 6. Oktober um 07:27 UTC: „… danch alles auf main trotz die rote läufe …“. §46 ist hart; die Ausnahme gehört deshalb in ENTSCHEIDUNGEN.md, und §46 bekommt einen Hinweis, keinen neuen Wortlaut. | Wer main holt, bekommt vierzehn benannte rote Läufe mit. Keiner davon ist aus dieser Welle. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 129 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 131 Einträge.
 

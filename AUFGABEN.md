@@ -1686,9 +1686,21 @@ Grund:
    gleich rot (am 11. Oktober nachgefahren): `test201` §1, `test270`,
    `test274` (`redion-graphit` in marken.ts), `test332`, `test348`,
    `test351`, `test365`, `test425`, `test448`, `test470`, `test493`,
-   `test524`, `test533` — die Gründe stehen unten bei der zweiten Welle.
-   `test86` ist seither grün (e485d3c). `test436` war im Vereinigungslauf
-   einmal rot (`null.click` in §2), danach zweimal 71/71 — beobachten.
+   `test524`, `test533` — die Gründe stehen unten bei der zweiten Welle,
+   ausser für zwei, die dort fehlten: `test351` („Und es sind wirklich
+   dreizehn — ist 14, soll 13", dieselbe Ursache wie `test365`: seit E671
+   vierzehn Werkzeuge, die Wortzeile bei 1360 und 1600 px rechnet mit
+   dreizehn) und `test533` („Sie stehen alle auf EINER Höhe — ist 2, soll
+   1" und „kein Wort ist sichtbar — ist 1, soll 0", die Tafel aus E614).
+   Dazu `test319` („Und `info` ist nicht die blasseste der drei — info
+   12.09, warn 12.15, fehler 12.41"; auf morgen-besser-2 Ziffer für Ziffer
+   gleich — alle drei Streifen liegen weit über 4,5 : 1, `info` nur um
+   0,06 darunter; ob der Punkt bei so hohen Werten noch etwas sagt, ist
+   eine Frage an Redur, kein Nachzug). `test86` ist seither grün
+   (e485d3c), `test98` auch (seit E710 suchte er `confirm(`, jetzt
+   `Dialog.bestaetigen` vor jedem Löschen). `test436` war im
+   Vereinigungslauf einmal rot (`null.click` in §2), danach zweimal 71/71
+   — beobachten.
 2. **Die Vorgabe der Suche in einem Dokument** (E725, Vorgabe g): ohne
    gemerkte Wahl beginnt Strg P dort mit „Dieses Dokument"; die Suche über
    alle Dokumente ist einen Schritt entfernt („Alle Dokumente",
@@ -1703,6 +1715,17 @@ Grund:
    Wächter, bevor gebaut wird.
 5. **Die Arbeitsbäume im Scratch** (`/home/user/wt/…`, über dreissig aus
    den Durchsichten) sind nur lokal — aufräumen nur mit Redurs Ja (§43).
+6. **Ein „zerstörter Kontext", der keiner ist** (gemessen am 11. Oktober,
+   P131): Playwright meldet „Execution context was destroyed", obwohl die
+   Seite nicht neu lädt — der Browser sagt ihm „Promise was collected", wenn
+   `Store.flush()` und das lange `App.oeffne` im SELBEN abgewarteten
+   `evaluate` stehen. Auf morgen-besser-3 4 von 10 Läufen, auf
+   morgen-besser-2 0 von 10. In einem eigenen Schritt geöffnet: 15 von 15
+   grün; `test453`, `test459` und `test466` (die im vollen Lauf rot waren)
+   öffnen seither so. **Dasselbe Muster steht noch in 98 weiteren Läufen**:
+   172 204 209 210 212 214 220 221 222 223 247 260 285 292 295 296 299 301 341 343 344 345 346 347 348 349 351 352 385 386 395 396 404 405 406 407 408 411 412 415 436 438 439 440 441 442 443 444 445 446 447 448 449 451 452 454 455 456 457 458 461 462 463 464 465 467 468 469 470 471 472 473 475 477 478 479 480 522 523 527 529 533 534 535 536 538 539 561 562 563 574 580 585 588 589 590 593 594. Keiner davon war im vollen Lauf rot; umstellen, sobald einer
+   es wird — oder in einem eigenen Zweig alle auf einmal, mit einem
+   gemeinsamen Helfer statt hundert Kopien.
 
 ## Nach dem Zusammenführen der zweiten Welle (5. Oktober 2026)
 

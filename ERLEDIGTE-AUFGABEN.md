@@ -3,9 +3,9 @@
 ## 11. Oktober 2026 · Zusammenführen der dritten Welle auf `claude/morgen-besser-3`
 
 **Redur:** Auftragsdatei vom 5. Oktober, Schritt 2: die dreizehn Punkte aus
-dem PDF vom 29. September in zehn Zweigen, „dann alle in
-`claude/morgen-besser-3` auf `claude/morgen-besser-2` zusammenführen, in der
-Reihenfolge von Teil A"; am 6. Oktober um 07:27 UTC: „Pusche einfache alles
+dem PDF vom 29. September in zehn Zweigen, „**Am Schluss zusammenführen:**
+alle zu `claude/morgen-besser-3` auf `claude/morgen-besser-2`, in der
+Reihenfolge aus Teil A"; am 6. Oktober um 07:27 UTC: „Pusche einfache alles
 nach dem was du jetzt geabut wird und danch alles auf main trotz die rote
 läufe und schau mal die alten branchen ob du wirklich alles hast damit wir
 etwas nicht vergessen".
@@ -17,8 +17,9 @@ ordner-bearbeiten (E718) → kein-toter-knopf-2 (E719, E720) →
 menue-eine-quelle (E721) → flaeche-eine-leiste (E722, E723) → ki-am-ort
 (E724) → bibliothek-eine-suche (E725) → lernzentrum-kopf (E726) →
 kopf-ruhig (E727, E728). Die Doku nach Einträgen, die Zähler nachgezählt:
-707 Entscheidungen, E1 bis E728 (die Klausel „kommen über ihre Zweige" ist
-gestrichen); 544 Läufe; 142 Lücken, 86 offene, 56 geschlossene.
+707 Entscheidungen, E1 bis E728 (die Klausel im Kopf, „**E716 bis E728**
+sind den Zweigen des Masterprompts vom 29. September vergeben und folgen,
+sobald sie landen", ist gestrichen); 544 Läufe; 142 Lücken, 86 offene, 56 geschlossene.
 
 **Was beim Zusammenführen gefunden und gerichtet wurde:**
 - Eine Seite zu nehmen verlor zweimal die Zeile der anderen — die
@@ -49,6 +50,21 @@ Zeile für Zeile gleich rot: 201, 270, 274, 332, 348, 351, 365, 425, 448,
 den eigenen Zweigen gerichtet. Gesamtbilder vorher (morgen-besser-2) und
 nachher an allen zehn Orten, Rechner 1440 × 900 und Telefon 390 × 844, hell
 und dunkel, ohne Seitenfehler; sie liegen nicht im Verzeichnis (§55.4).
+
+**Danach, für main** (`claude/auf-main`, E729): der volle Lauf in Stücken —
+544 Läufe, 524 grün, 20 rot in 154 Minuten. Jeder rote nachgefahren:
+vierzehn sind auf morgen-besser-2 gleich rot (dazu `test319`, jetzt mit
+Grund in AUFGABEN.md); `test98` gerichtet (seit E710 suchte er `confirm(`,
+jetzt `Dialog.bestaetigen` vor jedem Löschen — drei Gegenproben rot);
+`test422` gerichtet (die Chronik zitierte den Aufruf, den er sucht, P130);
+`test453`, `test459`, `test466` öffnen in einem eigenen Schritt — die
+Meldung „Execution context was destroyed" war kein Neuladen, sondern ein
+verlorenes Versprechen im Prüfstand (P131; Sonde: 4 von 10 rot, getrennt
+15 von 15 grün); `test588` danach dreimal grün. Eine Durchsicht mit drei
+Linsen und je zwei Zweiflern (35 Prüfer) prüfte alles, was über
+morgen-besser-2 hinaus nach main geht: dreizehn Funde, alle eingearbeitet
+— darunter ein falscher Hash in der Chronik, eine falsche Zahl und zwei
+ungenaue Zitate.
 
 **Nicht hineingenommen** (die Durchsicht der alten Zweige vom 6. Oktober):
 `claude/redion-elektro-simulation` und `feat/dark-2017-fach-dossier`
