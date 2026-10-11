@@ -27596,7 +27596,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1456, inhalt: '3da3ee1fd788363f', gebaut: '2026-10-11T12:01:27.728Z' };
+const Stand = { fassung: 1462, inhalt: 'cdf320517462412a', gebaut: '2026-10-11T12:27:21.851Z' };
 window.Stand = Stand;
 
 </script>
@@ -38433,6 +38433,7 @@ Register.fachzeichen = (() => {
             beschriftung: [{ x: 30, y: 30, t: 'I∆n' }],
             anschluesse: [{ nr: '1', x: 10, y: 0 }, { nr: '3', x: 30, y: 0 }, { nr: 'N', x: 50, y: 0 },
                 { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N2', x: 50, y: 70 }],
+            frueher: { N: [{ x: 50, y: 70, heute: 'N2' }] },
             erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab. Oben N, unten N2 — auf dem Gerät steht beide Male N.'
         },
         {
@@ -38887,6 +38888,7 @@ Register.fachzeichen = (() => {
             pfad: [senkrecht(20, 0, 12), senkrecht(40, 0, 12),
                 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
             anschluesse: [{ nr: 'L', x: 20, y: 0 }, { nr: 'N', x: 40, y: 0 }],
+            frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
             erklaerung: 'Anschlussstelle für Geräte. Im Installationsplan der Halbkreis.'
         },
         {
@@ -38897,6 +38899,7 @@ Register.fachzeichen = (() => {
                 waagrecht(20, 24, 36)],
             anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 },
                 { nr: 'PE', x: 50, y: 0 }],
+            frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
             erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt. Schutzklasse-I-Geräte brauchen ihn.'
         },
         {
@@ -38904,6 +38907,7 @@ Register.fachzeichen = (() => {
             w: 40, h: 50,
             pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 16), 'M20,16 L34,32 L6,32 Z'],
             anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 }],
+            frueher: { '1': [{ x: 20, y: 0, heute: 'L' }] },
             erklaerung: 'Das Gegenstück zur Steckdose.'
         },
         {
@@ -39276,14 +39280,10 @@ Register.fachzeichen = (() => {
             (wandlung ? `<g transform="${wandlung}">` : '') + teile.join('') +
             (wandlung ? '</g>' : '') + '</svg>';
     };
-    const anschlussLage = (id, nr, drehung = 0, gespiegelt = false) => {
-        const z = holen(id);
-        if (!z)
-            return null;
-        const a = z.anschluesse.find(x => x.nr === nr) || z.anschluesse[0];
-        if (!a)
-            return null;
-        let x = a.x, y = a.y;
+    const NAH = 6;
+    const gedreht = (z, x0, y0, drehung = 0, gespiegelt = false) => {
+        let x = x0;
+        const y = y0;
         if (gespiegelt)
             x = z.w - x;
         const grad = ((Number(drehung) || 0) % 360 + 360) % 360;
@@ -39295,6 +39295,43 @@ Register.fachzeichen = (() => {
             y: Math.round(cy + dx * Math.sin(bogen) + dy * Math.cos(bogen))
         };
     };
+    const klemmeFuer = (id, nr, punkt, drehung = 0, gespiegelt = false) => {
+        const z = holen(id);
+        if (!z)
+            return null;
+        const name = String(nr ?? '');
+        const gibtEs = (n) => z.anschluesse.some(a => a.nr === n);
+        const trifft = (x0, y0) => {
+            if (!punkt)
+                return false;
+            const o = gedreht(z, x0, y0, drehung, gespiegelt);
+            return Math.abs(punkt.x - o.x) <= NAH && Math.abs(punkt.y - o.y) <= NAH;
+        };
+        const alt = ((z.frueher && z.frueher[name]) || []).filter(e => gibtEs(e.heute));
+        if (punkt) {
+            if (z.anschluesse.some(a => a.nr === name && trifft(a.x, a.y)))
+                return { nr: name, frueher: false };
+            const war = alt.find(e => trifft(e.x, e.y));
+            if (war)
+                return { nr: war.heute, frueher: true };
+        }
+        if (gibtEs(name))
+            return { nr: name, frueher: false };
+        const erster = alt[0];
+        if (erster)
+            return { nr: erster.heute, frueher: true };
+        return null;
+    };
+    const anschlussLage = (id, nr, drehung = 0, gespiegelt = false) => {
+        const z = holen(id);
+        if (!z)
+            return null;
+        const r = klemmeFuer(id, nr);
+        const a = r ? z.anschluesse.find(x => x.nr === r.nr) : undefined;
+        if (!a)
+            return null;
+        return gedreht(z, a.x, a.y, drehung, gespiegelt);
+    };
     const masse = (id, drehung = 0) => {
         const z = holen(id);
         if (!z)
@@ -39302,8 +39339,8 @@ Register.fachzeichen = (() => {
         const grad = ((Number(drehung) || 0) % 360 + 360) % 360;
         return (grad === 90 || grad === 270) ? { w: z.h, h: z.w } : { w: z.w, h: z.h };
     };
-    return { RASTER, alle, holen, inGruppe, gruppen, gruppenName,
-        alsSvg, anschlussLage, masse, melde, vergiss };
+    return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
+        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
 })();
 
 </script>
@@ -66210,7 +66247,8 @@ const Stromfluss = (() => {
         };
         return { finde, eins, alle: () => Array.from(vater.keys()) };
     };
-    const NAH = 6;
+    const NAH = (typeof Register !== 'undefined' && Register.fachzeichen
+        && typeof Register.fachzeichen.NAH === 'number') ? Register.fachzeichen.NAH : 6;
     const nahBei = (ax, ay, bx, by) => Math.abs(ax - bx) <= NAH && Math.abs(ay - by) <= NAH;
     const aufStrecke = (px, py, ax, ay, bx, by) => {
         if (Math.abs(ay - by) <= 1 && Math.abs(py - ay) <= NAH)
@@ -66250,21 +66288,43 @@ const Stromfluss = (() => {
         ks.forEach(k => v.finde(k.schluessel));
         const ls = (plan.leitungen || []);
         ls.forEach(l => v.finde(`l:${l.id}`));
+        const teilNach = new Map();
+        (plan.teile || []).forEach((t) => teilNach.set(String(t.id), t));
+        const endeVon = (teil, nr, p) => {
+            const t = teilNach.get(String(teil));
+            const F = typeof Register !== 'undefined' ? Register.fachzeichen : null;
+            if (!t || !F || typeof F.klemmeFuer !== 'function')
+                return { nr, frueher: false };
+            const r = F.klemmeFuer(t.zeichen, nr, p ? { x: p.x - t.x, y: p.y - t.y } : null, t.drehung, t.gespiegelt);
+            return r || { nr, frueher: false };
+        };
         ls.forEach(l => {
             const pk = `l:${l.id}`;
-            if (l.vonTeil && l.vonNr)
-                v.eins(pk, `k:${l.vonTeil}:${l.vonNr}`);
-            if (l.nachTeil && l.nachNr)
-                v.eins(pk, `k:${l.nachTeil}:${l.nachNr}`);
             const punkte = (l.punkte || []);
+            const nicht = new Set();
+            const binde = (teil, nr, p) => {
+                const r = endeVon(teil, nr, p);
+                v.eins(pk, `k:${teil}:${r.nr}`);
+                if (r.frueher)
+                    ks.forEach(k => {
+                        if (k.teil === teil && k.nr !== r.nr)
+                            nicht.add(k.schluessel);
+                    });
+            };
+            if (l.vonTeil && l.vonNr)
+                binde(l.vonTeil, l.vonNr, punkte[0]);
+            if (l.nachTeil && l.nachNr)
+                binde(l.nachTeil, l.nachNr, punkte[punkte.length - 1]);
             punkte.forEach(p => ks.forEach(k => {
-                if (nahBei(p.x, p.y, k.x, k.y))
+                if (!nicht.has(k.schluessel) && nahBei(p.x, p.y, k.x, k.y))
                     v.eins(pk, k.schluessel);
             }));
             for (let i = 0; i + 1 < punkte.length; i++) {
                 const a = punkte[i], b = punkte[i + 1];
-                ks.forEach(k => { if (aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y))
-                    v.eins(pk, k.schluessel); });
+                ks.forEach(k => {
+                    if (!nicht.has(k.schluessel) && aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y))
+                        v.eins(pk, k.schluessel);
+                });
             }
         });
         for (let i = 0; i < ls.length; i++) {
@@ -67277,6 +67337,13 @@ const Schaltplan = (() => {
             return null;
         return { x: t.x + lage.x, y: t.y + lage.y };
     };
+    const klemmeFuer = (t, nr, punkt) => {
+        if (!t || !nr || typeof Register === 'undefined' || !Register.fachzeichen
+            || typeof Register.fachzeichen.klemmeFuer !== 'function')
+            return nr;
+        const r = Register.fachzeichen.klemmeFuer(t.zeichen, nr, punkt ? { x: punkt.x - t.x, y: punkt.y - t.y } : null, t.drehung, t.gespiegelt);
+        return r ? r.nr : nr;
+    };
     const anschluesseVon = (t) => {
         if (typeof Register === 'undefined' || !Register.fachzeichen)
             return [];
@@ -67708,7 +67775,7 @@ const Schaltplan = (() => {
     };
     return {
         ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
-        naechstesBmk, anschlussOrt, anschluesseVon, fangeAnschluss, rechtwinklig,
+        naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc
     };
@@ -68068,7 +68135,19 @@ const Planflaeche = (() => {
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
+        const endKlemmen = () => {
+            const m = new Map();
+            z.plan.leitungen.forEach(l => {
+                const n = l.punkte.length;
+                m.set(l.id, {
+                    von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
+                    nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
+                });
+            });
+            return m;
+        };
         const verschiebe = (dx, dy) => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t) {
@@ -68083,43 +68162,45 @@ const Planflaeche = (() => {
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
                     const t = teilVon(l.vonTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, l.vonNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
                     const t = teilVon(l.nachTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, l.nachNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
             });
         };
         const drehen = () => aendere(() => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t)
                     t.drehung = ((t.drehung || 0) + 90) % 360;
             });
-            leitungenNachziehen();
+            leitungenNachziehen(ziel);
         });
         const spiegeln = () => aendere(() => {
+            const ziel = endKlemmen();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t)
                     t.gespiegelt = !t.gespiegelt;
             });
-            leitungenNachziehen();
+            leitungenNachziehen(ziel);
         });
-        const leitungenNachziehen = () => {
+        const leitungenNachziehen = (ziel) => {
             z.plan.leitungen.forEach(l => {
                 if (l.vonTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), l.vonNr);
+                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), l.nachNr);
+                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
@@ -68258,7 +68339,7 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
-            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang };
+            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
             svg.setPointerCapture(e.pointerId);
             male();
         });
@@ -68278,7 +68359,7 @@ const Planflaeche = (() => {
                         t.y = Schaltplan.rasten(a.y + dy);
                     }
                 });
-                leitungenNachziehen();
+                leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
                 buehneMalen();
                 return;
             }

@@ -219,8 +219,8 @@ if (aufl) {
      gezogen hatte. */
   gleich('anschlussLage erfindet für einen unbekannten Namen keine Klemme', aufl.lageUnbekannt, null);
 } else {
-  weg += 15;
-  console.log('  ✗ (15 Zusagen übersprungen — es gibt keinen Auflöser)');
+  weg += 14;
+  console.log('  ✗ (14 Zusagen übersprungen — es gibt keinen Auflöser)');
 }
 
 /* ==========================================================================
@@ -380,8 +380,23 @@ p('Zweimal gelesen gibt zweimal dasselbe Netz (idempotent)', zweimal);
  * ist beim alten FI das OBERE N. Die untere Leitung sprang nach dem
  * Verschieben auf den Eingang; der Plan sah verdrahtet aus, wo er es nicht
  * war.
+ *
+ * DIE NETZE PRÜFT ER ERST, WENN DER FI WIEDER AN SEINEM PLATZ STEHT.
+ * Drehen führt ALLE Leitungen des Plans neu als Winkel vom einen Ende zum
+ * anderen (`leitungenNachziehen`, so schon auf main), und beim gedrehten
+ * FI läuft der neue Weg von b2 5 px neben N2 vorbei — angezapft. Das ist
+ * ein Befund über das Nachziehen, nicht über die Namen (L253), und der
+ * erste Stand dieses Laufs hat ihn mitgemessen: „N und N2 weiter zwei
+ * Netze" war nach dem Drehen auch MIT Auflöser rot. Deshalb: hin (schieben,
+ * drehen), Enden prüfen, zurück (dreimal drehen, zurückschieben), dann die
+ * Netze; das Ziehen mit der Maus zuletzt.
  * ========================================================================*/
 console.log('\n5 · Schieben, Drehen, Ziehen');
+
+const lage = (i: string) => seite.evaluate((b: string) => {
+  const f = (Store.getBlock(b).plan.teile as any[]).find(t => t.id === 'F1');
+  return { x: f.x, y: f.y, drehung: f.drehung };
+}, i);
 
 await waehle('F1');
 await taste('ArrowRight');
@@ -390,23 +405,33 @@ p('FI mit der Pfeiltaste geschoben: jedes Ende auf seiner Klemme', abw.length ==
 await taste('r');
 abw = await endenPruefen(blockB);
 p('FI gedreht: jedes Ende auf seiner Klemme', abw.length === 0, abw.join(' | '));
-await ziehe('F1', 60, 40);
+const hin = await lage(blockB);
+p('Der FI hat sich wirklich bewegt und gedreht', hin.drehung === 90 && hin.x === 310,
+  JSON.stringify(hin));
+for (let i = 0; i < 3; i++) await taste('r');
+await taste('ArrowLeft');
 abw = await endenPruefen(blockB);
-p('FI mit der Maus gezogen: jedes Ende auf seiner Klemme', abw.length === 0, abw.join(' | '));
-const nachB = await seite.evaluate((i: string) => {
+p('Zurückgedreht und zurückgeschoben: jedes Ende auf seiner Klemme', abw.length === 0, abw.join(' | '));
+const zurueck = await seite.evaluate((i: string) => {
   const plan = Store.getBlock(i).plan;
   const f = (plan.teile as any[]).find(t => t.id === 'F1');
   const e = Stromfluss.rechne(plan, {});
-  return { gr: (window as any).gruppen(plan), drehung: f.drehung, x: f.x,
+  return { gr: (window as any).gruppen(plan), lage: { x: f.x, y: f.y, drehung: f.drehung },
            funde: (e.anschlussfehler || []).map((x: any) => x.art),
+           lampe: e.werte.E1 ? e.werte.E1.fliesst : null,
            vonNr: (plan.leitungen as any[]).find(l => l.id === 'b4').vonNr };
 }, blockB);
-p('Der FI hat sich wirklich bewegt und gedreht', nachB.drehung === 90 && nachB.x !== 300,
-  `drehung ${nachB.drehung}, x ${nachB.x}`);
-p('Danach sind N und N2 weiter zwei Netze', !inNetz(nachB.gr, 'F1:N', 'F1:N2'), nachB.gr.join(' | '));
+gleich('Der FI steht wieder an seinem Platz', zurueck.lage, { x: 300, y: 100, drehung: 0 });
+p('Danach sind N und N2 weiter zwei Netze', !inNetz(zurueck.gr, 'F1:N', 'F1:N2'), zurueck.gr.join(' | '));
+p('Die Lampe leuchtet weiter', zurueck.lampe === true);
 p('Und der gesunde Kreis meldet weiter keinen Fehlerstrom',
-  !nachB.funde.some((a: string) => /^fi-/.test(a)), nachB.funde.join(', '));
-gleich('Auch nach dem Bearbeiten steht in der Ablage der alte Name', nachB.vonNr, 'N');
+  !zurueck.funde.some((a: string) => /^fi-/.test(a)), zurueck.funde.join(', ') || '(nichts)');
+gleich('Auch nach dem Bearbeiten steht in der Ablage der alte Name', zurueck.vonNr, 'N');
+await ziehe('F1', 60, 40);
+abw = await endenPruefen(blockB);
+p('FI mit der Maus gezogen: jedes Ende auf seiner Klemme', abw.length === 0, abw.join(' | '));
+const gezogen = await lage(blockB);
+p('Er ist dabei wirklich gewandert', gezogen.x !== 300 || gezogen.y !== 100, JSON.stringify(gezogen));
 
 const blockA = await oeffne('A');
 await seite.waitForTimeout(300);

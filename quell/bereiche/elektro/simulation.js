@@ -226,7 +226,8 @@ const Stromfluss = (() => {
         };
         return { finde, eins, alle: () => Array.from(vater.keys()) };
     };
-    const NAH = 6;
+    const NAH = (typeof Register !== 'undefined' && Register.fachzeichen
+        && typeof Register.fachzeichen.NAH === 'number') ? Register.fachzeichen.NAH : 6;
     const nahBei = (ax, ay, bx, by) => Math.abs(ax - bx) <= NAH && Math.abs(ay - by) <= NAH;
     const aufStrecke = (px, py, ax, ay, bx, by) => {
         if (Math.abs(ay - by) <= 1 && Math.abs(py - ay) <= NAH)
@@ -266,21 +267,43 @@ const Stromfluss = (() => {
         ks.forEach(k => v.finde(k.schluessel));
         const ls = (plan.leitungen || []);
         ls.forEach(l => v.finde(`l:${l.id}`));
+        const teilNach = new Map();
+        (plan.teile || []).forEach((t) => teilNach.set(String(t.id), t));
+        const endeVon = (teil, nr, p) => {
+            const t = teilNach.get(String(teil));
+            const F = typeof Register !== 'undefined' ? Register.fachzeichen : null;
+            if (!t || !F || typeof F.klemmeFuer !== 'function')
+                return { nr, frueher: false };
+            const r = F.klemmeFuer(t.zeichen, nr, p ? { x: p.x - t.x, y: p.y - t.y } : null, t.drehung, t.gespiegelt);
+            return r || { nr, frueher: false };
+        };
         ls.forEach(l => {
             const pk = `l:${l.id}`;
-            if (l.vonTeil && l.vonNr)
-                v.eins(pk, `k:${l.vonTeil}:${l.vonNr}`);
-            if (l.nachTeil && l.nachNr)
-                v.eins(pk, `k:${l.nachTeil}:${l.nachNr}`);
             const punkte = (l.punkte || []);
+            const nicht = new Set();
+            const binde = (teil, nr, p) => {
+                const r = endeVon(teil, nr, p);
+                v.eins(pk, `k:${teil}:${r.nr}`);
+                if (r.frueher)
+                    ks.forEach(k => {
+                        if (k.teil === teil && k.nr !== r.nr)
+                            nicht.add(k.schluessel);
+                    });
+            };
+            if (l.vonTeil && l.vonNr)
+                binde(l.vonTeil, l.vonNr, punkte[0]);
+            if (l.nachTeil && l.nachNr)
+                binde(l.nachTeil, l.nachNr, punkte[punkte.length - 1]);
             punkte.forEach(p => ks.forEach(k => {
-                if (nahBei(p.x, p.y, k.x, k.y))
+                if (!nicht.has(k.schluessel) && nahBei(p.x, p.y, k.x, k.y))
                     v.eins(pk, k.schluessel);
             }));
             for (let i = 0; i + 1 < punkte.length; i++) {
                 const a = punkte[i], b = punkte[i + 1];
-                ks.forEach(k => { if (aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y))
-                    v.eins(pk, k.schluessel); });
+                ks.forEach(k => {
+                    if (!nicht.has(k.schluessel) && aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y))
+                        v.eins(pk, k.schluessel);
+                });
             }
         });
         for (let i = 0; i < ls.length; i++) {

@@ -42,6 +42,9 @@ const Planflaeche = (() => {
       ausgang: Map<string, { x: number; y: number }>;
       /** Beim Leitungziehen: der Anfangspunkt. */
       von?: { x: number; y: number; teil?: string; nr?: string };
+      /** Beim Ziehen eines Teils: welche Klemme jedes Leitungsende meint,
+          gefragt VOR der ersten Bewegung (E738). */
+      klemmen?: Map<string, { von: string | undefined; nach: string | undefined }>;
     };
     /** Rückgängig und Wiederholen — der Abbild-Verlauf aus dem Kern (E687), 60 Schritte. */
     verlauf: ReturnType<typeof GfxHistory.erstelle>;
@@ -500,8 +503,29 @@ const Planflaeche = (() => {
     const teilVon = (id: string): any =>
       (z.plan.teile as any[]).find(t => t.id === id);
 
+    /* --- Welche Klemme meint jedes Leitungsende? (E738, L252) -------------
+       Gefragt wird VOR jeder Änderung, solange Leitung und Teil noch
+       zueinander passen: der Auflöser entscheidet zuerst am Ort, und nach dem
+       Schieben oder Drehen liegt das Ende nicht mehr an seiner Klemme. Beim
+       alten FI ist das der ganze Unterschied — `N` unten ist N2, `N` ohne
+       Ort ist das obere N, und ohne diese Frage sprang die untere Leitung
+       beim ersten Schieben auf den Eingang. Gespeichert wird der Name nicht
+       um; nur die Punkte rücken, wie bisher. */
+    const endKlemmen = (): Map<string, { von: string | undefined; nach: string | undefined }> => {
+      const m = new Map<string, { von: string | undefined; nach: string | undefined }>();
+      (z.plan.leitungen as any[]).forEach(l => {
+        const n = l.punkte.length;
+        m.set(l.id, {
+          von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
+          nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
+        });
+      });
+      return m;
+    };
+
     /* --- Verschieben (Punkt 25), mit mitziehenden Leitungen -------------- */
     const verschiebe = (dx: number, dy: number): void => {
+      const ziel = endKlemmen();
       z.auswahl.forEach(id => {
         const t = teilVon(id);
         if (t) { t.x = Schaltplan.rasten(t.x + dx); t.y = Schaltplan.rasten(t.y + dy); return; }
@@ -513,12 +537,12 @@ const Planflaeche = (() => {
       (z.plan.leitungen as any[]).forEach(l => {
         if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
           const t = teilVon(l.vonTeil);
-          const o = t && Schaltplan.anschlussOrt(t, l.vonNr);
+          const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
           if (o && l.punkte[0]) l.punkte[0] = o;
         }
         if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
           const t = teilVon(l.nachTeil);
-          const o = t && Schaltplan.anschlussOrt(t, l.nachNr);
+          const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
           if (o && l.punkte.length) l.punkte[l.punkte.length - 1] = o;
         }
       });
@@ -526,30 +550,32 @@ const Planflaeche = (() => {
 
     /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) ------- */
     const drehen = (): void => aendere(() => {
+      const ziel = endKlemmen();
       z.auswahl.forEach(id => {
         const t = teilVon(id);
         if (t) t.drehung = ((t.drehung || 0) + 90) % 360;
       });
-      leitungenNachziehen();
+      leitungenNachziehen(ziel);
     });
     const spiegeln = (): void => aendere(() => {
+      const ziel = endKlemmen();
       z.auswahl.forEach(id => {
         const t = teilVon(id);
         if (t) t.gespiegelt = !t.gespiegelt;
       });
-      leitungenNachziehen();
+      leitungenNachziehen(ziel);
     });
     /* Nach Drehen und Spiegeln liegen die Anschlüsse woanders — die
        Leitungen, die daran hängen, müssen mit. Ohne das enden sie in der
        Luft und der Plan sieht verbunden aus, wo er es nicht ist. */
-    const leitungenNachziehen = (): void => {
+    const leitungenNachziehen = (ziel: Map<string, { von: string | undefined; nach: string | undefined }>): void => {
       (z.plan.leitungen as any[]).forEach(l => {
         if (l.vonTeil) {
-          const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), l.vonNr);
+          const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
           if (o && l.punkte[0]) l.punkte[0] = o;
         }
         if (l.nachTeil) {
-          const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), l.nachNr);
+          const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
           if (o && l.punkte.length) l.punkte[l.punkte.length - 1] = o;
         }
         if (l.punkte.length >= 2)
@@ -713,7 +739,7 @@ const Planflaeche = (() => {
         const t = teilVon(x);
         if (t) ausgang.set(x, { x: t.x, y: t.y });
       });
-      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang };
+      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
       svg.setPointerCapture(e.pointerId);
       male();
     });
@@ -730,7 +756,7 @@ const Planflaeche = (() => {
           const t = teilVon(id);
           if (t) { t.x = Schaltplan.rasten(a.x + dx); t.y = Schaltplan.rasten(a.y + dy); }
         });
-        leitungenNachziehen();
+        leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
         buehneMalen();
         return;
       }

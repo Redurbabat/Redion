@@ -206,6 +206,7 @@ Register.fachzeichen = (() => {
             beschriftung: [{ x: 30, y: 30, t: 'I∆n' }],
             anschluesse: [{ nr: '1', x: 10, y: 0 }, { nr: '3', x: 30, y: 0 }, { nr: 'N', x: 50, y: 0 },
                 { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N2', x: 50, y: 70 }],
+            frueher: { N: [{ x: 50, y: 70, heute: 'N2' }] },
             erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab. Oben N, unten N2 — auf dem Gerät steht beide Male N.'
         },
         {
@@ -660,6 +661,7 @@ Register.fachzeichen = (() => {
             pfad: [senkrecht(20, 0, 12), senkrecht(40, 0, 12),
                 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
             anschluesse: [{ nr: 'L', x: 20, y: 0 }, { nr: 'N', x: 40, y: 0 }],
+            frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
             erklaerung: 'Anschlussstelle für Geräte. Im Installationsplan der Halbkreis.'
         },
         {
@@ -670,6 +672,7 @@ Register.fachzeichen = (() => {
                 waagrecht(20, 24, 36)],
             anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 },
                 { nr: 'PE', x: 50, y: 0 }],
+            frueher: { L: [{ x: 30, y: 0, heute: 'L' }] },
             erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt. Schutzklasse-I-Geräte brauchen ihn.'
         },
         {
@@ -677,6 +680,7 @@ Register.fachzeichen = (() => {
             w: 40, h: 50,
             pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 16), 'M20,16 L34,32 L6,32 Z'],
             anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 }],
+            frueher: { '1': [{ x: 20, y: 0, heute: 'L' }] },
             erklaerung: 'Das Gegenstück zur Steckdose.'
         },
         {
@@ -1049,14 +1053,10 @@ Register.fachzeichen = (() => {
             (wandlung ? `<g transform="${wandlung}">` : '') + teile.join('') +
             (wandlung ? '</g>' : '') + '</svg>';
     };
-    const anschlussLage = (id, nr, drehung = 0, gespiegelt = false) => {
-        const z = holen(id);
-        if (!z)
-            return null;
-        const a = z.anschluesse.find(x => x.nr === nr) || z.anschluesse[0];
-        if (!a)
-            return null;
-        let x = a.x, y = a.y;
+    const NAH = 6;
+    const gedreht = (z, x0, y0, drehung = 0, gespiegelt = false) => {
+        let x = x0;
+        const y = y0;
         if (gespiegelt)
             x = z.w - x;
         const grad = ((Number(drehung) || 0) % 360 + 360) % 360;
@@ -1068,6 +1068,43 @@ Register.fachzeichen = (() => {
             y: Math.round(cy + dx * Math.sin(bogen) + dy * Math.cos(bogen))
         };
     };
+    const klemmeFuer = (id, nr, punkt, drehung = 0, gespiegelt = false) => {
+        const z = holen(id);
+        if (!z)
+            return null;
+        const name = String(nr ?? '');
+        const gibtEs = (n) => z.anschluesse.some(a => a.nr === n);
+        const trifft = (x0, y0) => {
+            if (!punkt)
+                return false;
+            const o = gedreht(z, x0, y0, drehung, gespiegelt);
+            return Math.abs(punkt.x - o.x) <= NAH && Math.abs(punkt.y - o.y) <= NAH;
+        };
+        const alt = ((z.frueher && z.frueher[name]) || []).filter(e => gibtEs(e.heute));
+        if (punkt) {
+            if (z.anschluesse.some(a => a.nr === name && trifft(a.x, a.y)))
+                return { nr: name, frueher: false };
+            const war = alt.find(e => trifft(e.x, e.y));
+            if (war)
+                return { nr: war.heute, frueher: true };
+        }
+        if (gibtEs(name))
+            return { nr: name, frueher: false };
+        const erster = alt[0];
+        if (erster)
+            return { nr: erster.heute, frueher: true };
+        return null;
+    };
+    const anschlussLage = (id, nr, drehung = 0, gespiegelt = false) => {
+        const z = holen(id);
+        if (!z)
+            return null;
+        const r = klemmeFuer(id, nr);
+        const a = r ? z.anschluesse.find(x => x.nr === r.nr) : undefined;
+        if (!a)
+            return null;
+        return gedreht(z, a.x, a.y, drehung, gespiegelt);
+    };
     const masse = (id, drehung = 0) => {
         const z = holen(id);
         if (!z)
@@ -1075,6 +1112,6 @@ Register.fachzeichen = (() => {
         const grad = ((Number(drehung) || 0) % 360 + 360) % 360;
         return (grad === 90 || grad === 270) ? { w: z.h, h: z.w } : { w: z.w, h: z.h };
     };
-    return { RASTER, alle, holen, inGruppe, gruppen, gruppenName,
-        alsSvg, anschlussLage, masse, melde, vergiss };
+    return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
+        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
 })();

@@ -131,6 +131,13 @@ const Schaltplan = (() => {
             return null;
         return { x: t.x + lage.x, y: t.y + lage.y };
     };
+    const klemmeFuer = (t, nr, punkt) => {
+        if (!t || !nr || typeof Register === 'undefined' || !Register.fachzeichen
+            || typeof Register.fachzeichen.klemmeFuer !== 'function')
+            return nr;
+        const r = Register.fachzeichen.klemmeFuer(t.zeichen, nr, punkt ? { x: punkt.x - t.x, y: punkt.y - t.y } : null, t.drehung, t.gespiegelt);
+        return r ? r.nr : nr;
+    };
     const anschluesseVon = (t) => {
         if (typeof Register === 'undefined' || !Register.fachzeichen)
             return [];
@@ -562,7 +569,7 @@ const Schaltplan = (() => {
     };
     return {
         ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
-        naechstesBmk, anschlussOrt, anschluesseVon, fangeAnschluss, rechtwinklig,
+        naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc
     };

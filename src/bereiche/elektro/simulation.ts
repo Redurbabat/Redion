@@ -481,7 +481,10 @@ const Stromfluss = (() => {
     return { finde, eins, alle: () => Array.from(vater.keys()) };
   };
 
-  const NAH = 6;
+  /* Die Zahl steht im Register, damit Netzliste und `klemmeFuer` dieselbe
+     benutzen (E738); 6 ist der Rückfall, falls das Register fehlt. */
+  const NAH: number = (typeof Register !== 'undefined' && Register.fachzeichen
+    && typeof Register.fachzeichen.NAH === 'number') ? Register.fachzeichen.NAH : 6;
   const nahBei = (ax: number, ay: number, bx: number, by: number): boolean =>
     Math.abs(ax - bx) <= NAH && Math.abs(ay - by) <= NAH;
 
@@ -557,22 +560,54 @@ const Stromfluss = (() => {
     const ls = (plan.leitungen || []) as any[];
     ls.forEach(l => v.finde(`l:${l.id}`));
 
+    /* WELCHE KLEMME MEINT EIN GESPEICHERTES LEITUNGSENDE? (E738, L252)
+       Der Name kommt durch `Register.fachzeichen.klemmeFuer`: ein Plan von
+       vor E735/E737 trägt am Stecker `1`, am unteren Neutralleiter des FI
+       `N` (heute N2), an Steckdose und Schuko `L` an der alten Stelle. Die
+       Daten bleiben, wie sie sind — übersetzt wird hier, beim Lesen. */
+    const teilNach = new Map<string, any>();
+    (plan.teile || []).forEach((t: any) => teilNach.set(String(t.id), t));
+    const endeVon = (teil: string, nr: string, p: { x: number; y: number } | undefined):
+        { nr: string; frueher: boolean } => {
+      const t = teilNach.get(String(teil));
+      const F = typeof Register !== 'undefined' ? Register.fachzeichen : null;
+      if (!t || !F || typeof F.klemmeFuer !== 'function') return { nr, frueher: false };
+      const r = F.klemmeFuer(t.zeichen, nr, p ? { x: p.x - t.x, y: p.y - t.y } : null,
+                             t.drehung, t.gespiegelt);
+      return r || { nr, frueher: false };
+    };
+
     /* Leitung an Klemme — erst über die gespeicherte Bindung, dann über den
        Ort. Die Bindung ist verlässlicher; der Ort fängt die Fälle, in denen
        jemand eine Leitung von Hand an eine Klemme geschoben hat. */
     ls.forEach(l => {
       const pk = `l:${l.id}`;
-      if (l.vonTeil && l.vonNr) v.eins(pk, `k:${l.vonTeil}:${l.vonNr}`);
-      if (l.nachTeil && l.nachNr) v.eins(pk, `k:${l.nachTeil}:${l.nachNr}`);
       const punkte = (l.punkte || []) as Array<{ x: number; y: number }>;
+      /* Klemmen, die diese Leitung NICHT über den Ort fassen darf: brauchte
+         ein Ende einen alten Namen oder Ort, dann wurde die Leitung gezogen,
+         als es die übrigen Klemmen dieses Teils noch nicht gab. Am Schuko
+         liegt heute N genau dort, wo früher L lag — über den Ort gefasst
+         wären L und N verbunden, ohne dass es jemand gezeichnet hat. */
+      const nicht = new Set<string>();
+      const binde = (teil: string, nr: string, p: { x: number; y: number } | undefined): void => {
+        const r = endeVon(teil, nr, p);
+        v.eins(pk, `k:${teil}:${r.nr}`);
+        if (r.frueher) ks.forEach(k => {
+          if (k.teil === teil && k.nr !== r.nr) nicht.add(k.schluessel);
+        });
+      };
+      if (l.vonTeil && l.vonNr) binde(l.vonTeil, l.vonNr, punkte[0]);
+      if (l.nachTeil && l.nachNr) binde(l.nachTeil, l.nachNr, punkte[punkte.length - 1]);
       punkte.forEach(p => ks.forEach(k => {
-        if (nahBei(p.x, p.y, k.x, k.y)) v.eins(pk, k.schluessel);
+        if (!nicht.has(k.schluessel) && nahBei(p.x, p.y, k.x, k.y)) v.eins(pk, k.schluessel);
       }));
       /* Auch eine Klemme MITTEN auf einer Leitung zählt — so wird eine
          Sammelschiene angezapft, ohne sie zu zerschneiden. */
       for (let i = 0; i + 1 < punkte.length; i++) {
         const a = punkte[i]!, b = punkte[i + 1]!;
-        ks.forEach(k => { if (aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y)) v.eins(pk, k.schluessel); });
+        ks.forEach(k => {
+          if (!nicht.has(k.schluessel) && aufStrecke(k.x, k.y, a.x, a.y, b.x, b.y)) v.eins(pk, k.schluessel);
+        });
       }
     });
 
