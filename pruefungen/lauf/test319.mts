@@ -185,9 +185,9 @@ console.log('\n6 · Und das Banner ist LESBAR');
  * Er mass, ob `.banner.info` einen Hintergrund hat, nachdem in
  * `ansichten.css` eine Regel dafür geschrieben worden war. Grün. Nur:
  * `.banner.info` GAB ES SCHON — in `bausteine.css`, die später lädt
- * (index.html Zeile 68 gegen 61) und bei gleicher Stärke gewinnt. Die neue
- * Regel war tot, und die Prüfung wäre auch ohne sie grün gewesen. L111 zum
- * vierten Mal.
+ * (index.html Zeile 78 gegen 61; damals 68 gegen 61) und bei gleicher
+ * Stärke gewinnt. Die neue Regel war tot, und die Prüfung wäre auch ohne
+ * sie grün gewesen. L111 zum vierten Mal.
  *
  * Gefunden hat es das BILD (§55.1): die Schrift im blauen Streifen war
  * blau, die in den anderen beiden weiss. Nachgemessen war das kein
@@ -249,7 +249,14 @@ for (const thema of ['dark', 'light'] as const)
       `${kontraste[thema][art].bg}`);
 
 /* GEGENPROBE ZUR REGEL SELBST: `info` darf nicht blasser sein als die
-   beiden anderen. Genau das war der Fund — 3.11 gegen 6.65 und 8.31. */
+   beiden anderen. Genau das war der Fund — 3.11 gegen 6.65 und 8.31.
+
+   UND SIE HAT EIN ZWEITES MAL GEFUNDEN (E742). Seit E705 tragen alle
+   Tönungen dieselbe OKLCH-Helligkeit 0,30 — und bei gleicher OKLCH-
+   Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb. Gemessen am
+   11. Oktober 2026: info 12.09, warn 12.15, fehler 12.41. Weit über 4.5,
+   aber die blasseste der drei. Redur hat am selben Tag gesagt, dass diese
+   Zeile streng bleibt: gerichtet wird die Farbe, nicht die Prüfung. */
 p('Und `info` ist nicht die blasseste der drei',
   kontraste.dark.info.k >= Math.min(kontraste.dark.warn.k, kontraste.dark.fehler.k) - 0.01,
   `info ${kontraste.dark.info.k}, warn ${kontraste.dark.warn.k}, ` +
