@@ -6784,8 +6784,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    steht hier dieselbe Hülle: eine leere Leiste in der Höhe der echten —
    gemessen an einer gezeichneten Hülle (`--platz-oben`), nicht geschätzt —
    und das Papier im Seitenverhältnis der Seite. So lügt der Rollbalken
-   nicht (E399), und nichts springt, wenn die Seite kommt. */
-.blatt-platz-leiste{height:var(--platz-oben, 46px)}
+   nicht (E399), und nichts springt, wenn die Seite kommt. Die Vorgabe
+   gilt nur, bis die erste Hülle gemessen ist — dieselbe Höhe wie vorher,
+   aber aus der Marke statt als rohe 46px (test362 §7: das Verzeichnis
+   darf nur schrumpfen). */
+.blatt-platz-leiste{height:var(--platz-oben, calc(var(--touch-min) + 2px))}
 .blatt-platz{padding-bottom:var(--platz-unten, 0px)}
 /* Ein Blatt auf einer Folie (E109). Die HÖHE ist der begrenzende Wert —
    eine Folie ist breit und flach, ein Blatt hoch und schmal. `45vh` Breite
