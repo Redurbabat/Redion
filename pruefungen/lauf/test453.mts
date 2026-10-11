@@ -75,7 +75,7 @@ const frisch = async (nurLesen = false): Promise<Page> => {
   s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
   await s.goto(`http://localhost:${PORT}/index.html`);
   await s.waitForFunction("typeof App !== 'undefined' && typeof DocumentMode !== 'undefined'");
-  await s.evaluate(async (nurLesen: boolean) => {
+  const zuOeffnen1 = await s.evaluate(async (nurLesen: boolean) => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay').forEach(o => o.remove());
     document.querySelector('.produkt-onboarding-lage')?.remove();
@@ -88,8 +88,15 @@ const frisch = async (nurLesen = false): Promise<Page> => {
         quelleId: 'q', raumVersion: 1 });
     (window as any).__seite = seite.id;
     await Store.flush();
-    App.oeffne(seite.id);
+    return seite.id as string;
   }, nurLesen);
+  /* ÖFFNEN IN EINEM EIGENEN SCHRITT (11. Oktober 2026). Stand `App.oeffne`
+     im selben abgewarteten `evaluate` wie `Store.flush()`, verlor Playwright
+     auf morgen-besser-3 in 4 von 10 Läufen sein Versprechen („Promise was
+     collected", gemeldet als „Execution context was destroyed") — die Seite
+     lud dabei NICHT neu: dasselbe Dokument, alle Daten da, gemessen mit einer
+     Sonde. Getrennt: 15 von 15 grün. Die Zusagen des Laufs sind dieselben. */
+  await s.evaluate((id: string) => { App.oeffne(id); }, zuOeffnen1);
   await s.waitForSelector('.document-workspace', { timeout: 15000 });
   await s.waitForTimeout(1300);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="thumbnails"]')?.click());

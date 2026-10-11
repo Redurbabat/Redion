@@ -86,7 +86,7 @@ const aufbauen = async (breit = 1280, hoch = 900): Promise<Page> => {
   s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
   await s.goto(`http://localhost:${PORT}/index.html`);
   await s.waitForFunction("typeof App !== 'undefined' && typeof DocumentMode !== 'undefined'");
-  await s.evaluate(async () => {
+  const zuOeffnen1 = await s.evaluate(async () => {
     Store.setMeta('rundgangGesehen', true);
     Store.setMeta('dokFindAlle', false);
     document.querySelectorAll('.overlay').forEach(o => o.remove());
@@ -106,8 +106,15 @@ const aufbauen = async (breit = 1280, hoch = 900): Promise<Page> => {
     mach('Fremdsprache', '📘', ['Ohmsches Gesetz auf Seite eins']);
     (window as any).__offen = offen.id;
     await Store.flush();
-    App.oeffne(offen.id);
+    return offen.id as string;
   });
+  /* ÖFFNEN IN EINEM EIGENEN SCHRITT (11. Oktober 2026). Stand `App.oeffne`
+     im selben abgewarteten `evaluate` wie `Store.flush()`, verlor Playwright
+     auf morgen-besser-3 in 4 von 10 Läufen sein Versprechen („Promise was
+     collected", gemeldet als „Execution context was destroyed") — die Seite
+     lud dabei NICHT neu: dasselbe Dokument, alle Daten da, gemessen mit einer
+     Sonde. Getrennt: 15 von 15 grün. Die Zusagen des Laufs sind dieselben. */
+  await s.evaluate((id: string) => { App.oeffne(id); }, zuOeffnen1);
   await s.waitForSelector('.document-workspace', { timeout: 15000 });
 
   return s;
@@ -246,7 +253,7 @@ console.log('\n§4 Nutzertext bleibt Text (§19)');
   s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
   await s.goto(`http://localhost:${PORT}/index.html`);
   await s.waitForFunction("typeof App !== 'undefined' && typeof DocumentMode !== 'undefined'");
-  await s.evaluate(async () => {
+  const zuOeffnen2 = await s.evaluate(async () => {
     Store.setMeta('rundgangGesehen', true);
     Store.setMeta('dokFindAlle', true);
     document.querySelectorAll('.overlay').forEach(o => o.remove());
@@ -264,8 +271,9 @@ console.log('\n§4 Nutzertext bleibt Text (§19)');
       suchtext: 'Gefahr <img src=y onerror="window.__geknackt=2"> im Text' });
     Store.updateBlock(boese.id, { dokumentModus: true });
     await Store.flush();
-    App.oeffne(offen.id);
+    return offen.id as string;
   });
+  await s.evaluate((id: string) => { App.oeffne(id); }, zuOeffnen2);
   await s.waitForSelector('.document-workspace', { timeout: 15000 });
   await s.waitForTimeout(1200);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('.document-find-button')?.click());

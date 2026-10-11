@@ -86,7 +86,7 @@ const zweiDokumente = async (seitenImSkript = 2): Promise<Page> => {
   s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
   await s.goto(`http://localhost:${PORT}/index.html`);
   await s.waitForFunction("typeof App !== 'undefined' && typeof DocumentMode !== 'undefined'");
-  await s.evaluate(async (wieViele: number) => {
+  const zuOeffnen1 = await s.evaluate(async (wieViele: number) => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay').forEach(o => o.remove());
     document.querySelector('.produkt-onboarding-lage')?.remove();
@@ -107,8 +107,15 @@ const zweiDokumente = async (seitenImSkript = 2): Promise<Page> => {
     Store.addBlock(eins.id, 'text', { text: 'Eigene Notizen' });
     Store.updateBlock(mit.id, { dokumentModus: true });
     await Store.flush();
-    App.oeffne(skript.id);
+    return skript.id as string;
   }, seitenImSkript);
+  /* ÖFFNEN IN EINEM EIGENEN SCHRITT (11. Oktober 2026). Stand `App.oeffne`
+     im selben abgewarteten `evaluate` wie `Store.flush()`, verlor Playwright
+     auf morgen-besser-3 in 4 von 10 Läufen sein Versprechen („Promise was
+     collected", gemeldet als „Execution context was destroyed") — die Seite
+     lud dabei NICHT neu: dasselbe Dokument, alle Daten da, gemessen mit einer
+     Sonde. Getrennt: 15 von 15 grün. Die Zusagen des Laufs sind dieselben. */
+  await s.evaluate((id: string) => { App.oeffne(id); }, zuOeffnen1);
   await s.waitForSelector('.document-workspace', { timeout: 15000 });
   await s.waitForTimeout(1100);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="inspector"]')?.click());
@@ -248,7 +255,7 @@ console.log('\n§5 Ohne anderes Dokument: es wird gesagt');
   s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
   await s.goto(`http://localhost:${PORT}/index.html`);
   await s.waitForFunction("typeof App !== 'undefined' && typeof DocumentMode !== 'undefined'");
-  await s.evaluate(async () => {
+  const zuOeffnen2 = await s.evaluate(async () => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay').forEach(o => o.remove());
     document.querySelector('.produkt-onboarding-lage')?.remove();
@@ -260,8 +267,9 @@ console.log('\n§5 Ohne anderes Dokument: es wird gesagt');
     Store.addBlock(blatt.id, 'text', { text: '' });
     Store.updateBlock(nur.id, { dokumentModus: true });
     await Store.flush();
-    App.oeffne(nur.id);
+    return nur.id as string;
   });
+  await s.evaluate((id: string) => { App.oeffne(id); }, zuOeffnen2);
   await s.waitForSelector('.document-workspace', { timeout: 15000 });
   await s.waitForTimeout(1100);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="inspector"]')?.click());
