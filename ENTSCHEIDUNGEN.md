@@ -65415,4 +65415,4 @@ zurück auf `#133144` → wieder 25/26 mit „info 12.09, warn 12.15, fehler
 12.41"; wieder eingesetzt, Datei Byte für Byte wie gebaut. Nachbarn:
 `test584` 37/37 (Schrift auf jeder Tönung ≥ 7 in allen zehn Schemata),
 `test414` 14/14, `test47` 42/42, `test332` nur mit seinen fünf bekannten
-toten Regeln. Die Messung aller zehn Schemata steht in `messungen.md` §97.
+toten Regeln. Die Messung aller zehn Schemata steht in `messungen.md` §100.

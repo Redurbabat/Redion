@@ -7884,7 +7884,7 @@ Kit dunkel 4,26. Schon vor E728 so; L247 Punkt 5.
 1950). `redion-einzeldatei.html` 9157 → 9160 KB. Dienststand v1428 →
 v1430.
 
-## §97 · Der Info-Streifen im Dunkeln (E742, 11. Oktober 2026)
+## §100 · Der Info-Streifen im Dunkeln (E742, 11. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/info-streifen-kontrast` gegen `1575a1835`
 (origin/main). Chromium über file://, `index.html`, 1280 × 900. Für jedes
