@@ -2355,6 +2355,13 @@ und je länger er wartet, desto schwerer wird sein Zusammenführen.
 `main` bleibt stehen, bis ein voller Lauf grün ist. So ist immer klar, was
 der letzte geprüfte Stand war — und `holen.bat` gibt genau den heraus (L83).
 
+*Eine Ausnahme, von Redur entschieden (E729, 11. Oktober 2026): `main` ist
+auf den Stand der dritten Welle vorgespult worden, obwohl der volle Lauf
+rote Läufe zeigte. Rot geblieben sind nur Läufe, die auf
+`claude/morgen-besser-2` gleich rot sind, benannt in E729 und AUFGABEN.md.
+Die Regel gilt weiter; das nächste Vorspulen braucht wieder einen grünen
+vollen Lauf oder sein Wort.*
+
 ---
 
 ## 47. Nicht tun  **[hart]**

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-707 Entscheidungen, E1 bis E728 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+708 Entscheidungen, E1 bis E729 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -770,6 +770,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E726** — Der Kopf des Lernzentrums in einer Zeile (Redur, Masterprompt S. 21: „Ganz oben wo menü/ dort sollte wo heute und was neben das ist im ^ … Und die bereiche momentan das löschen oder am beste das zur fächer wechseln"): zwei Klappen [Hauptteil | ^] statt vier Reitern und einer zweiten Reihe — „Heute ^" (Heute, Prüfungen, Noten, Schule, Stundenplan, Uni, Arbeit) und „Übersicht ^" (Übersicht, Trainer, Lernpfad, Meine Fehler, Fortschritt) über `UI.wahl`, der Hauptteil heisst wie die Ansicht; der Fächer-Chip ersetzt das Auswahlfeld „Bereich" — ein Fach ist das Thema der Karten ∪ die Fächer-Datenbank, der Filter wirkt auf Karten, Prüfungen, Noten und Stundenplan, gemerkt unter `lernwelt:<aktor>:fach`; der Lebensbereich lebt als Gruppe im Fächermenü; `#welt-lernen-noten`/`-stundenplan` öffnen wieder ihre Ansicht (`test601`)
 * **E727** — Das Gestirn: ein Hell/Dunkel-Schalter mit einer Regel für jede Tür (Redur, Masterprompt 29. September: „es seiht noch nicht 100 fetig aus, also finde für hier ewas kreatives aus“): die „Sichel“ war ein Schatten in fester Farbe, der in keinem dunklen Schema den Grund traf, und dieselbe Funktion gab es dreimal mit drei Regeln — von „Mitternacht“ führte Strg⇧L hin und zurück nach „Standard“. Jetzt EINE Quelle `Aussehen.grundWechseln` (merkt das Schema je Grundton, behält den Akzent), alle Türen leiten weiter; Sonne und Mond aus dem Register gehen in einem runden Fenster auf und unter, `role=switch`, 44 × 44, nur transform/opacity. Ergänzt E462 und E701. `test602` neu, `test580` und `test584` angepasst
 * **E728** — Der ruhige Kopf: die Suche links, rechts nur Zeichen, Motor und Glas nur als Zustand (Redur, Masterprompt 29. September: „nur die emojis dort bleiben und alles komplet nacht links schieiben … drehen wie eine mottor und glass efeckt“): `margin-left:auto` stand an der Kapsel statt am ersten Zeichen; „PDF öffnen“ wird das Zeichen `upload`, „Werkzeuge“ trägt `band` statt ⌘, die Zwillinge im Band stehen bei offener Lade am Rechner nicht mehr doppelt (jeder ruft dieselbe Funktion, gezählt); die Lupe dreht sich einmal unter Zeiger, Fokus, Strg P und am Telefon beim Drücken, die Kapsel wird dabei Glas, in Ruhe deckend; alle Kopfknöpfe 44 × 44. Ergänzt E703 und E457, schliesst L117 Punkt 3. `test603` neu, `test482` erweitert
+* **E729** — main trotz roter Läufe, einmal (Redur, 6. Oktober: „… danch alles auf main trotz die rote läufe …"): `main` wird auf den Stand der dritten Welle vorgespult (claude/morgen-besser-3, ein leerer Zusammenführungs-Commit von origin/main und die Nachzüge danach, Zweig `claude/auf-main`), obwohl der volle Lauf rote Läufe zeigt. Rot bleiben nur Läufe, die auf claude/morgen-besser-2 Zeile für Zeile gleich rot sind (14, je mit Grund in AUFGABEN.md); was aus den eigenen Zweigen rot war, ist vorher gerichtet, ohne einen Wächter zu lockern; vier Läufe, die nur unter Last einmal rot waren, sind nachgefahren und gemessen. Ohne force, ein Vorspulen. Eine Ausnahme von §46 für diesen einen Stand, keine neue Regel
 
 ---
 
@@ -65226,3 +65227,79 @@ Ebenfalls aus der Durchsicht: `test603` §5 verlangt am Telefon zuerst,
 dass `:focus-visible` wirklich gilt (`!fv || …` war auch ohne Fokus
 grün), `test580` §7 am Rechner `!titel && deck 1` statt `titel ? deck 0 :
 deck 1`; beide waren schon grün, aus dem richtigen Grund.
+
+## E729 — main trotz roter Läufe: Redurs Ausnahme von §46 für den Stand der dritten Welle
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur (6. Oktober, 07:24
+und 07:27 UTC, Zeitstempel der Sitzung) · **berührt** §46 („`main` bewegt
+sich nicht, solange etwas rot ist") — eine harte Regel; CLAUDE.md sagt
+dazu: „Wenn es doch sein muss, entscheidet Redur, und die Entscheidung
+kommt in `ENTSCHEIDUNGEN.md`." · **Zweig** `claude/auf-main`.
+
+**Redurs Sätze, wörtlich:**
+
+```txt
+07:24 UTC   Könntest du nacher alles auf main puschen
+07:27 UTC   Pusche einfache alles nach dem was du jetzt geabut wird und danch
+            alles auf main trotz die rote läufe und schau mal die alten
+            branchen ob du wirklich alles hast damit wir etwas nicht vergessen
+```
+
+**Was entschieden wurde.**
+
+1. `main` wird auf den Stand von `claude/auf-main` vorgespult: die dritte
+   Welle (`claude/morgen-besser-3`, E716–E728 auf morgen-besser-2), ein
+   Zusammenführungs-Commit mit `origin/main`, dessen Baum sich nicht ändert
+   (#116 und #118 stehen inhaltlich schon darin), und die Nachzüge aus
+   dem vollen Lauf und der Durchsicht. Das geschieht, obwohl der volle Lauf
+   rote Läufe zeigt.
+2. **Die Grenze.** Rot bleiben dürfen nur Läufe, die auf
+   `claude/morgen-besser-2` Zeile für Zeile gleich rot sind — älter als
+   die Welle und nicht aus ihr: `test201`, `test270`, `test274` (mit seinem
+   alten Fund), `test319`, `test332`, `test348`, `test351`, `test365`,
+   `test425`, `test448`, `test470`, `test493`, `test524`, `test533`, je
+   mit Grund in AUFGABEN.md. Was aus den eigenen Zweigen rot war — auch aus
+   der zweiten Welle —, ist vorher gerichtet, ohne einen Wächter zu
+   lockern: `test469` (P128), `test422` zweimal (P129, und P130: die
+   Chronik selbst), `test274` mit seinem zweiten Fund (P129), `test86`
+   (e485d3c) und `test98` (seit E710, dem Fenster des Kits: der Lauf
+   suchte `confirm(` und war deshalb rot, obwohl gefragt wurde; er
+   verlangt jetzt `Dialog.bestaetigen` VOR jedem Löschen im Griff — drei
+   Gegenproben rot).
+3. **Was nur einmal rot war.** `test453`, `test459`, `test466` und
+   `test588` waren im vollen Lauf rot, als die Maschine zugleich eine
+   Durchsicht mit sechzehn Prüfern trug; einzeln nachgefahren waren
+   `test459`, `test466` und `test588` je dreimal grün, `test453` zweimal
+   von drei. Die Meldung von `test453`, `test459` und `test466` („Execution context was destroyed") war kein Neuladen: mit einer Sonde gemessen stand danach dasselbe Dokument da, alle Daten im Speicher, und der Browser meldete Playwright „Promise was collected" — `Store.flush()` und das lange `App.oeffne` standen im selben abgewarteten Schritt (P131; auf morgen-besser-3 4 von 10 Läufen, auf morgen-besser-2 0 von 10). Getrennt geöffnet 15 von 15 grün; die drei Läufe öffnen seither so, ihre Zusagen sind dieselben. 98 weitere Läufe mit demselben Muster stehen in AUFGABEN.md.
+4. **Ohne force.** `origin/main` ist Vorfahr von `claude/auf-main`; das
+   Vorspulen ist ein gewöhnliches Fast-Forward (§43).
+5. **Einmal.** §46 gilt weiter. Das nächste Vorspulen braucht wieder einen
+   grünen vollen Lauf — oder ein neues Wort von Redur.
+
+**Der volle Lauf** (`node pruefungen/volllauf.mts --neu`, in Stücken zu
+zehn, im eigenen Arbeitsbaum auf 009e2fc3e, unter dem Schloss): 544
+Läufe, 524 grün, 20 rot in 154 Minuten. Nach 009e2fc3e änderten sich nur
+Doku, Chronik und `test98` — kein Produktcode; nachgefahren auf dem
+Endstand: die dreizehn Datei-Wächter, `test98`, `test422`, `test481`.
+
+**Warum.** Redur holt Redion über `main` (`holen.bat`, L83). Ohne
+Vorspulen bekäme er den Stand vom 5. Oktober (#118, e52f75e): mit E711
+aus der zweiten Welle, aber ohne ihre übrigen sieben Zweige und ohne die
+dritte Welle. Die roten Läufe, die bleiben, sind alle älter als diese
+Welle — sie auf dem Zweig festzuhalten macht sie nicht grüner (§46
+selbst: „Er auf dem Zweig festzuhalten macht das Rote nicht grüner").
+
+**Was die Alternative war.** (a) `main` stehen lassen, bis alles grün ist:
+der Stand auf main bliebe eine Woche und zwei Wellen zurück, und jede
+Woche würde das Zusammenführen schwerer. (b) Die fremden roten Läufe
+nebenbei reparieren: dafür steht in AUFGABEN.md „ein eigener ‚Rot
+zuerst'-Zweig, Wächter nur mit Redurs Wort ändern". Was dagegen aus den
+EIGENEN Zweigen rot war (auch `test98` aus E710 und `test86` aus E689 und
+E690), ist hier gerichtet — es ist kein fremder Befund, sondern ein
+eigener, der beim eigenen Bau hätte auffallen müssen.
+
+**Was es kostet.** `main` ist für diesen Stand nicht „der letzte geprüfte
+Stand ohne Rot", sondern der letzte geprüfte Stand MIT einer benannten
+Liste roter Läufe. Wer main holt, bekommt diese Liste mit. Der Satz in §46
+ist deshalb um einen Hinweis auf diesen Eintrag ergänzt, nicht
+umgeschrieben.
