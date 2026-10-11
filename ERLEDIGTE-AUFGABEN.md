@@ -1,5 +1,42 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E747 · Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2)
+
+**Redur:** „4. wie du willst", am 11. Oktober 2026 um 19:43 UTC, zur
+Reihenfolge der Elektro-Punkte aus L253. Punkt 2 kam als zweiter, weil
+eine falsche Warnung etwas Falsches lehrt.
+
+**Gefunden** (auf `97d156b03`, Plan des Bildes aus L253): in Stern UND
+Dreieck meldete die Fusszeile der Planfläche „M1: Anschluss W2 / U2 / V2
+hängt an keiner Leitung" — gerade die Klemmen, auf denen die Brücken der
+Stellung liegen. Die Rechnung kannte die Brücken seit E730; die Meldung
+offener Klemmen zählte nur Klemmen je Netz der Leitungen. Sieben
+Warnungen in jeder Stellung; von drei sichtbaren Plätzen belegten die
+falschen zwei.
+
+**Gebaut** (`src/bereiche/elektro/simulation.ts`): für die Meldung zählen
+die Brücken der eingestellten Stellung eines mehrteiligen Bauteils wie
+gezeichnete Leitungen — die Netze, die sie verbinden, sind ein Knoten.
+Schaltkontakte zählen nicht, der Verbund N–PE der Quelle nicht; die
+Netzliste bleibt, wie sie ist. EINE Hilfe `stellungIn` liest die Stellung
+für Rechnung und Meldung (vorher zweimal dieselbe Klemmung). Im Plan des
+Bildes: Stern und Dreieck 7 → 4 Warnungen, ohne Brücken 7 → 7.
+
+**Prüfung:** `test612` zuerst rot eingecheckt (gegen 97d156b03 15/26),
+mit E747 26/26; drei Gegenproben, jede wieder heraus: Brücken übergangen
+15/26, Kontakte als Brücken 25/26 (§6), Brücken jeder Stellung 22/26.
+Nachbarn grün: `test604` 91, `test605` 51, `test606` 17, `test607` 37,
+`test608` 69, `test238` 77, `test239` 68, `test240` 100, `test241` 105,
+`test242` 42, `test388` 22 (Start 1919 KB, unverändert), `test74` 12/12;
+die Datei-Wächter. Bilder vorher/nachher (Rechner und Telefon, dunkel und
+hell, Stern, Dreieck, ohne Brücken) angesehen; Zahlen in `messungen.md`
+§104.
+
+**Offen geblieben** (in L253 bei Punkt 2): gezeichnete Brücken heissen
+„überbrückt"; die Quelle meldet ihr freies N auch beim Drehstrommotor; im
+Dreieck ohne Zuleitung an U1 wird U1 nicht mehr gemeldet — der Preis aus
+E747.
+
 ## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
 
 **Der Auftrag.** Redur um 11:00 UTC: „Ja für die 6 entscheideungen" — die

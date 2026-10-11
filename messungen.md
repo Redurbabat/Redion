@@ -8218,3 +8218,87 @@ denselben fünf toten Regeln wie vorher.
 selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
 `redion-einzeldatei.html` 9 545 743 → 9 546 796 Bytes. Dienststand v1455
 → v1456.
+
+
+## §104 · Das Klemmenbrett und die Meldung „hängt an keiner Leitung" (E747, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/elektro-klemmenbrett-bruecken` gegen
+`97d156b03` (origin/main). Eine Sonde im Kratzordner (`el-brett/sonde2.mts`,
+nicht eingecheckt) lädt `index.html` über einen eigenen HTTP-Server
+(`listen(0)`) in Chromium und ruft `Stromfluss.rechne` für dieselben Pläne
+zweimal: einmal mit der `simulation.js` des Arbeitsbaums, einmal mit der
+von `97d156b03` (`git show`, an derselben Adresse ausgeliefert; sonst ist
+alles gleich). „Offen" heisst: eine Warnung „M1: Anschluss … hängt an
+keiner Leitung". Der Motorplan ist Drehstromquelle G1 und Klemmenbrett M1
+mit den Leitungen w1–w4 aus dem Bild in L253 (L1–U1, L2–V1, L3–W1, PE–PE),
+N der Quelle frei.
+
+**Der Plan des Bildes aus L253** (zusätzlich FI mit Lampe, Übertrager mit
+Klingel), Zahl der Warnungen je Stellung:
+
+```txt
+Stellung        97d156b03   E747   was wegfällt
+ohne Brücken    7           7      —
+Stern           7           4      M1: W2, U2, V2
+Dreieck         7           4      M1: W2, U2, V2
+```
+
+Die vier, die bleiben, sind in allen Stellungen dieselben: „G1: Anschluss N
+hängt an keiner Leitung", „F1: Anschluss 3 …", „F1: Anschluss 4 …" und „F1
+löst aus: es fehlen 37.52 mA …" — alle vier auch auf 97d156b03, nicht von
+E747.
+
+**Einzelne Fälle** (offene Klemmen von M1; dahinter die übrigen Warnungen,
+wenn sie etwas sagen):
+
+```txt
+Fall                                  97d156b03          E747
+Stern, alle Zuleitungen               U2 V2 W2           —
+Dreieck, alle Zuleitungen             U2 V2 W2           —
+ohne Brücken                          U2 V2 W2           U2 V2 W2
+Dreieck ohne Zuleitung an U1          U1 U2 V2 W2        —   (G1: L1 offen, beide Stände)
+Dreieck ohne alle drei Zuleitungen    U1 V1 W1 U2 V2 W2  —   (G1: L1 L2 L3 offen, beide Stände)
+Stern ohne alle drei Zuleitungen      U1 V1 W1 U2 V2 W2  U1 V1 W1
+ohne Brücken, Stern als zwei          —                  —   (dreimal „überbrückt", beide Stände)
+  Leitungen gezeichnet
+```
+
+Der grösste Strom ist in jedem Fall auf beiden Ständen gleich (Stern
+3,8333 A, Dreieck 11,4998 A, Dreieck ohne U1 9,9591 A, ohne Brücken 0) —
+die Rechnung ist unverändert.
+
+**Rechenzeit:** 2000 Rechnungen des Bild-Plans in Stern, Mittel je
+Rechnung: 0,396 ms (97d156b03) gegen 0,421 ms (E747), je eine Messung.
+
+**`test612` gegen die Stände** (über file://, unter dem Schloss,
+1400 × 1000): 97d156b03 15/26; E747 26/26; Gegenprobe „Brücken übergangen"
+15/26; „Kontakte aller schaltbaren Bauteile als Brücken" 25/26; „Brücken
+jeder Stellung" 22/26.
+
+**Bilder** (Kratzordner `bilder-abend/el-brett/`, nicht im Verzeichnis;
+Rechner 1440 × 900, Telefon 390 × 844 mit Pixeldichte 2, dunkel und hell;
+derselbe Plan, Simulation an, M1 einmal, zweimal, dreimal angetippt). Die
+Fusszeile:
+
+```txt
+                vorher (97d156b03)                         nachher (E747)
+Stern           G1 N · M1 W2 · M1 U2 · „… und 4 weitere"   G1 N · F1 3 · F1 4 · „… und 1 weitere"
+Dreieck         G1 N · M1 W2 · M1 U2 · „… und 4 weitere"   G1 N · F1 3 · F1 4 · „… und 1 weitere"
+ohne Brücken    G1 N · M1 W2 · M1 U2 · „… und 4 weitere"   gleich
+```
+
+Was die Bilder sonst zeigen, vorher wie nachher und nicht Teil von E747:
+das Klemmenbrett zeichnet die Brücken der Stellung nicht (nur der Titel
+beim Antippen sagt „Stern" oder „Dreieck"); ohne Brücken steht an G1
+„230 V · 0 A · 317 mW"; am Telefon liest sich die Palettenbeschriftung
+„Öffner" als „Offner" — `.sp-sym-name` hat `overflow: hidden` bei 9,5 px
+Schrift und 10,9 px Zeilenhöhe, die Punkte des Ö fallen heraus; und am
+Telefon deckt die untere Leiste die letzte Zeile der Fusszeile, solange
+man nicht weiter rollt. L253 Punkt 3 (die Messwerte am Telefon) ist auf
+denselben Bildern zu sehen.
+
+**Start:** 1919 KB gzip über 255 Dateien vorher und nachher (`test388` §5,
+Decke 1950; „vorher" mit der `simulation.js` von 97d156b03 im selben
+Arbeitsbaum gemessen). `simulation.js` 58 566 → 59 173 Bytes (gzip -9
+13 513 → 13 614). `redion-einzeldatei.html` 9 665 704 → 9 666 311 Bytes.
+Dienststand v1469 → v1470.

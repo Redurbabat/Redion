@@ -8430,6 +8430,29 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    auch in der Stellung Stern, in der die Brücken genau diese drei verbinden
    (Bild, Fusszeile der Planfläche). Die Meldung kennt nur Leitungen, nicht
    die Brücken einer Stellung.
+   **Erledigt (E747), 11. Oktober abends:** für diese Meldung zählen die
+   Brücken der eingestellten Stellung eines mehrteiligen Bauteils wie
+   gezeichnete Leitungen. Stern und Dreieck melden W2, U2, V2 nicht mehr,
+   ohne Brücken weiter; eine wirklich offene Klemme (W1 ohne Zuleitung, PE
+   ohne Schutzleiter) bleibt gemeldet; Schaltkontakte zählen nicht. Im Plan
+   des Bildes: in Stern und Dreieck 7 → 4 Warnungen, ohne Brücken 7 → 7.
+   Wächter `test612` (gegen 97d156b03 rot mit 15 von 26), Messung
+   `messungen.md` §104. Daneben gemessen, nicht repariert:
+   * **Gezeichnete Brücken heissen „überbrückt".** Wer in der Stellung
+     „ohne Brücken" den Stern als zwei Leitungen zeichnet (W2–U2, U2–V2),
+     bekommt drei Meldungen „M1: die Anschlüsse W2 und U2 hängen am selben
+     Netz — das Bauteil ist überbrückt" (und W2/V2, U2/V2). Die Prüfung
+     nimmt jedes Klemmenpaar eines Bauteils, nicht die zwei Enden eines
+     Glieds; bei einem mehrteiligen Bauteil ist nur U1/U2, V1/V2, W1/W2
+     wirklich überbrückt. Gemessen auf 97d156b03 und mit E747 gleich.
+   * **Die Quelle meldet ihr freies N** („G1: Anschluss N hängt an keiner
+     Leitung"), auch wenn sie nur einen Drehstrommotor speist, der keinen
+     Neutralleiter braucht — so im Plan des Bildes. Ob ein unbenutzter
+     Ausgang einer Quelle überhaupt gemeldet werden soll, ist eine eigene
+     Frage; E747 zählt den Verbund N–PE bewusst nicht als Brücke.
+   * **Im Dreieck ohne Zuleitung an U1** wird U1 nicht mehr gemeldet (die
+     Brücke U1–W2 belegt es); ist L1 der Quelle frei, steht dort „G1:
+     Anschluss L1 hängt an keiner Leitung". Der Preis aus E747.
 3. **Am Telefon sind die Messwerte nicht zu lesen.** Der Plan wird als Ganzes
    auf die Breite verkleinert; bei 390 px stehen 230 V und 3,83 A in wenigen
    Pixeln Schrift (Bild `nachher-plan-handy-*`). §37 gilt für die Fläche,
@@ -8516,7 +8539,7 @@ entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
 entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
 weiterhin den vom Rauschen bestimmten Eintrag.
 
-**Wächter:** für die Punkte oben keiner.
+**Wächter:** für Punkt 2 `test612` (E747); für die übrigen Punkte oben keiner.
 
 ---
 

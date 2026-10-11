@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 550 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 551 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1930,6 +1930,24 @@ Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 545 auf seinem Zweig. Beim Zusammenführen nachgezählt
 (11. Oktober, `claude/sechs-ja`): 550.*
 
+*Und 551: `test612` — eine Brücke des Klemmenbretts ist eine Verbindung
+(E747, L253 Punkt 2). Im Stern und im Dreieck meldete die Fusszeile der
+Planfläche „M1: Anschluss W2 hängt an keiner Leitung", dazu U2 und V2 —
+gerade die Klemmen, auf denen die Brücken der Stellung liegen. Er verlangt,
+dass dort nichts gemeldet wird, dass eine wirklich offene Klemme (W1 ohne
+Zuleitung im Stern, PE ohne Schutzleiter im Dreieck) genau allein gemeldet
+bleibt, dass ohne Brücken W2, U2 und V2 weiter gemeldet werden und dass
+ein geschlossener Schaltkontakt KEINE Brücke ist: ein Ausschalter mit
+offenem Ausgang hat eine vergessene Leitung. Gegen 97d156b03 war er rot mit
+15 von 26; seine drei Gegenproben (Brücken übergangen 15/26, Kontakte als
+Brücken 25/26, Brücken jeder Stellung 22/26) treffen je andere Abschnitte.
+Sein erster Plan für die echte Planfläche hatte Leitungen mit einem Punkt
+— `Schaltplan.lesen` verwirft sie, und die Fusszeile meldete fünfzehn
+offene Klemmen statt drei. Er lädt über file://, `test400` zählt keinen
+neuen Port. Gezählt am 11. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 551 — auf seinem Zweig; beim
+Zusammenführen neu zu zählen.*
+
 ### Die Befehle
 
 ```txt
@@ -1946,7 +1964,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 550 Läufe
+npm run pruefen                      alle 551 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2036,7 +2054,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 550 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 551 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

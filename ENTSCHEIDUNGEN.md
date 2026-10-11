@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-722 Entscheidungen, E1 bis E743 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+723 Entscheidungen, E1 bis E747 (**E744 bis E747** sind den Zweigen zu Redurs Antworten vom 11. Oktober abends vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -785,6 +785,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
+* **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung für Rechnung und Meldung. `test612` (gegen 97d156b03 rot mit 15 von 26, drei Gegenproben).
 
 ---
 
@@ -66714,3 +66715,120 @@ Neues ist dazugekommen. Dass es nach E729 die zweite Ausnahme binnen eines
 Tages ist, ist selbst ein Zeichen: solange die dreizehn rot sind, wird
 jedes Vorspulen eine Ausnahme sein. Der eigene Zweig für sie steht in
 AUFGABEN.md (dritte Welle, Punkt 1).
+
+---
+
+## E747 — Eine Brücke des Klemmenbretts belegt ihre Klemmen: keine falsche „hängt an keiner Leitung" (L253 Punkt 2)
+
+**Woher.** Redur, 11. Oktober 2026, 19:43 UTC, vierte Antwort auf den
+Bericht nach dem vollen Lauf: „4. wie du willst" — die Reihenfolge der
+Elektro-Punkte aus L253 ist damit delegiert. L253 Punkt 2 kommt als
+zweiter dran, weil eine falsche Warnung etwas Falsches lehrt. Er lautet:
+
+> Das Klemmenbrett meldet „Anschluss W2/U2/V2 hängt an keiner Leitung",
+> auch in der Stellung Stern, in der die Brücken genau diese drei verbinden
+> (Bild, Fusszeile der Planfläche). Die Meldung kennt nur Leitungen, nicht
+> die Brücken einer Stellung.
+
+**Gefunden.** Nachgemessen auf `97d156b03` mit dem Plan des Bildes aus
+L253 (Drehstromquelle mit Klemmenbrett, FI mit Lampe, Übertrager mit
+Klingel): in allen drei Stellungen dieselben sieben Warnungen, darunter
+„M1: Anschluss W2 / U2 / V2 hängt an keiner Leitung" — auch im Dreieck, wo
+jede der drei über ihre Brücke an U1, V1 oder W1 hängt. Die Fusszeile
+zeigte im Stern „⚠ G1: Anschluss N …", „⚠ M1: Anschluss W2 …",
+„⚠ M1: Anschluss U2 …" und „… und 4 weitere". Die Rechnung kannte die
+Brücken seit E730 (`einDurchgang`, Fall `mehrteilig`: jede Brücke der
+Stellung ist ein Kontakt); nur die Meldung offener Klemmen in `rechne`
+zählte Klemmen je Netz der LEITUNGEN.
+
+**Was entschieden wurde.**
+
+1. Für die Meldung „Anschluss … hängt an keiner Leitung" zählt eine Brücke
+   wie eine gezeichnete Leitung: die Netze, die eine Brücke der
+   eingestellten Stellung verbindet, sind ein Knoten. Gemeldet wird eine
+   Klemme, wenn in ihrem Knoten keine zweite Klemme liegt. Im Stern ist
+   {W2, U2, V2} ein Knoten (der Sternpunkt, an den keine Leitung gehört),
+   im Dreieck hängt W2 an U1, U2 an V1, V2 an W1 — keine Meldung. Ohne
+   Brücken hängen W2, U2 und V2 an nichts und werden weiter gemeldet.
+2. **Nur die Brücken mehrteiliger Bauteile mit Stellungen** — heute genau
+   eines, `motor-klemmenbrett`; ein künftiges zweites gilt ohne Änderung
+   mit. Die Kontakte eines SCHALTERS zählen nicht: eine Brücke ist ein
+   Stück Metall auf den Klemmen und ersetzt die Leitung; ein geschlossener
+   Ausschalter, an dessen Ausgang nichts hängt, hat eine vergessene Leitung
+   (`test612` §6). Der feste Verbund N–PE der Drehstromquelle (ein Glied
+   `leiter`) zählt auch nicht: dass N an einem Drehstrommotor frei bleiben
+   darf, liegt nicht am Verbund, sondern daran, dass der Motor keinen
+   Neutralleiter braucht — als Brücke gezählt, verschwiege er bei einer
+   Quelle, an der weder N noch PE hängt, beide.
+3. **Nur die eingestellte Stellung**: `stand` nach den Durchgängen, für das
+   Klemmenbrett also die Stellung des Menschen. Umschalten rechnet in der
+   Planfläche neu (`schalte` → `male` → `rechnen`), die Fusszeile folgt
+   ohne eigene Vorkehrung.
+4. **Die Netzliste bleibt, wie sie ist.** Sie war nicht falsch: `netze()`
+   beschreibt die Zeichnung, und die Rechnung bekommt die Brücken als
+   Kontakte. Falsch war allein die Meldung.
+5. **EINE Hilfe `stellungIn(v, stellung, teilId)`** für die Rechnung (Fälle
+   `mehrteilig` und `schalter`, vorher zweimal dieselbe Klemmung) und für
+   die Meldung — läsen beide die Stellung verschieden, meldete die
+   Fusszeile eine andere Schaltung als die gerechnete. Die tote Zeile
+   `(plan.leitungen || []).forEach(() => {})` ist mit weg.
+
+**Warum.** Die Fusszeile ist die Stelle, an der die Simulation der
+Lernenden sagt, was an der Zeichnung nicht stimmt. Eine Warnung, die bei
+JEDER richtig geschalteten Sternschaltung kommt, lehrt zweierlei Falsches:
+dass am Sternpunkt eine Leitung fehle, und dass man die gelben Meldungen
+übergehen darf. Und sie verdrängte die echten: von drei sichtbaren Plätzen
+belegte sie zwei.
+
+**Was die Alternative war.**
+
+* Die Brücken in die Netzliste nehmen (`netze(plan, stellung)`). Dann sähen
+  auch die Anschlussprüfung, die Prüfung „überbrückt" und `leitungNetz`
+  (der fliessende Strich) die Brücken, und jeder Aufrufer von `netze`
+  bekäme eine Stellung mehr — ein Eingriff in die Netzliste für einen
+  Fehler, der nur in einer Meldung sitzt.
+* Die Meldung für das Klemmenbrett beim Namen abschalten — ein Sonderfall
+  im Code statt einer Eigenschaft im Verhalten (§5 Regel 3, §8), und ohne
+  Brücken wären W2, U2, V2 dann auch nicht mehr gemeldet.
+* Eine Brücke nur zählen, wenn ihr Knoten eine Leitung erreicht. Dann
+  bliebe die Meldung für U1 im Dreieck ohne Zuleitung — aber der Sternpunkt
+  erreicht nie eine Leitung, und die falsche Warnung bliebe genau dort, wo
+  sie gefunden wurde.
+
+**Was es kostet.**
+
+* **Eine Meldung weniger, die richtig war.** Fehlt im Dreieck die
+  Zuleitung an U1, meldete `main` U1 (neben den drei falschen); jetzt
+  nicht mehr — U1 hängt über die Brücke an W2. Ist das L1 der Quelle frei,
+  bleibt die Lücke trotzdem sichtbar: „G1: Anschluss L1 hängt an keiner
+  Leitung" (gemessen, `messungen.md` §104). Speist L1 der Quelle noch etwas
+  anderes, schweigt die Meldung — genauso wie auf `main` bei Brücken, die
+  als Leitungen gezeichnet sind. Eine eigene Meldung „im Dreieck fehlt eine
+  Zuleitung" gibt es nicht.
+* Rechenzeit: 0,396 → 0,421 ms je `Stromfluss.rechne` des Bild-Plans
+  (2000 Rechnungen, je eine Messung — im Rauschen).
+* `simulation.js` 58 566 → 59 173 Bytes; `redion-einzeldatei.html`
+  9 665 704 → 9 666 311 Bytes; Dienststand v1469 → v1470.
+
+**Wächter: `test612`** — 26 Zusagen in acht Abschnitten, über file://
+(kein Port). Rot zuerst: gegen 97d156b03 rot mit **15 von 26**
+(Commit 8c2a0397a, „test612 (rot)") — §1 und §2 je zwei, §4 zwei, §5 eine,
+§7 vier; grün blieben, was schon stimmte (§3 ohne Brücken, §6 der
+Schalter, die Rechnung selbst). Mit E747 26 von 26.
+
+**Gegenproben** (jede eingesetzt, rot gesehen, wieder heraus; danach
+`git status` leer):
+
+1. Die Brücken in der Meldung wieder übergangen (`knoten.eins` heraus):
+   15 von 26 — dieselben elf Zusagen wie gegen 97d156b03.
+2. Die Kontakte ALLER schaltbaren Bauteile als Brücken (`!v.stellungen`
+   statt `v.art !== 'mehrteilig'`): 25 von 26 — §6, „ist [], soll ["2"]".
+3. Die Brücken JEDER Stellung statt der eingestellten: 22 von 26 — §3
+   („ist [], soll ["U2","V2","W2"]"), §4 (Stern ohne W1 — die
+   Dreieckbrücke W1–V2 belegte W1), §5 und die Fusszeile ohne Brücken.
+
+**Daneben gemessen, nicht repariert** (in L253 bei Punkt 2): Brücken, die
+in der Stellung „ohne Brücken" als Leitungen gezeichnet sind, ergeben drei
+Meldungen „das Bauteil ist überbrückt" (die Prüfung nimmt jedes Klemmenpaar
+eines Bauteils, nicht die zwei Enden eines Glieds); und die Quelle meldet
+ihr freies N auch dort, wo ein Drehstrommotor keinen Neutralleiter braucht.
