@@ -1,5 +1,36 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E742 · Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung
+
+**Redur:** „Ja", am 11. Oktober 2026, zu einer von sechs Fragen dieses
+Tages: `test319` bleibt streng, gerichtet wird die Farbe (AUFGABEN.md,
+„Nach dem Zusammenführen der dritten Welle", Punkt 1, hatte gefragt, ob
+der Punkt bei so hohen Werten noch etwas sagt).
+
+**Gefunden** (`test319` auf `1575a1835`, 25/26): „Und `info` ist nicht die
+blasseste der drei — info 12.09, warn 12.15, fehler 12.41". E705 gab allen
+dunklen Tönungen OKLCH L 0,30; bei gleichem L hat dieses Blau (#133144)
+mehr WCAG-Leuchtdichte als das Gelb (0,02752 gegen 0,02716), also weniger
+Kontrast zur hellen Schrift. Im Browser nachgemessen: in allen sechs
+dunklen Schemata war `info` der blasseste, in den vier hellen nie.
+
+**Gebaut:** `--b-blue` in `dunkel.css` `#133144` → `#123043`, jeder Kanal
+eine Stufe dunkler, Ton und Buntheit gleich (ΔE_OK 0,004, L 0,296); ein
+Kommentar am Wert und an der E705-Zeile, damit eine neue Stimmung der
+Palette #133144 nicht zurückbringt; `bausteine.css` nennt die Zahlen von
+heute statt „8.30:1, gleichauf" (die zwei gleichen `.banner.info`-Zeilen
+bleiben); „index.html Zeile 68 gegen 61" in `ansichten.css` und
+`test319` heisst jetzt 78 gegen 61. Standard nachher 12.26 / 12.15 / 12.41;
+kein Textkontrast auf `--b-blue` sinkt, hell unverändert.
+
+**Prüfung:** `test319` zuerst rot eingecheckt (nur Kommentare, 25/26),
+danach 26/26; Gegenprobe (nur der Wert zurück) wieder 25/26 mit denselben
+Zahlen. `test584` 37/37, `test414` 14/14, `test47` 42/42, `test332` nur
+mit seinen fünf bekannten toten Regeln, `test388` (Start 1890 → 1891 KB),
+die Datei-Wächter. Zehn Schemata vorher und nachher in `messungen.md`.
+Bilder vorher/nachher, Rechner und Telefon, dunkel und hell: kein
+sichtbarer Unterschied — die Messung ist der Beweis.
+
 ## 11. Oktober 2026 · Zusammenführen der dritten Welle auf `claude/morgen-besser-3`
 
 **Redur:** Auftragsdatei vom 5. Oktober, Schritt 2: die dreizehn Punkte aus
