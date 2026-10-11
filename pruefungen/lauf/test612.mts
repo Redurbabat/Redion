@@ -42,7 +42,7 @@
  * §2, §4, §5 und §7 — die Zahlen stehen in E747. Gegenproben dort: die
  * Brücken in der Meldung wieder übergangen → dieselben Abschnitte rot; die
  * Kontakte ALLER schaltbaren Bauteile als Brücken → §6 rot; die Brücken
- * JEDER Stellung statt der eingestellten → §3 und §5 rot.
+ * JEDER Stellung statt der eingestellten → §3, §4, §5 und §7 rot.
  *
  *   node pruefungen/alle.mts 612
  * ==========================================================================*/
