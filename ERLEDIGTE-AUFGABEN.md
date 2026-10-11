@@ -1,5 +1,63 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 6. Oktober 2026 · E719 und E720 · Das Herz ist ein Knopf, und kein Knopf wirkt tot
+
+**Redur** (Masterprompt vom 29. September, Seiten 21/22): „die herz beim
+hier funktionier nicht also wenn ich das klicke passiert nichts, behebe das
+problem" — und: „beim fählermeldung habe ich keien buttons efeck also wie
+bein tagesrunde … und bei alle wo eine buttons gibt füge das im
+enscheideung und claude.md". Auf Schritt 0 kam keine Antwort; gebaut ist
+nach den Vorgaben des Plans.
+
+**Fund.** Das Herz war Schmuck aus E534 (`aria-hidden`, `pointer-events:
+none`, der Klick traf die Karte). Und 63 Knöpfe der Lernwelt antworteten
+nicht auf den Zeiger — 17 verloren gegen ihre Grundregel, weil `:where()`
+der Hover-Regel das Gewicht nahm, 46 hatten gar keine (44 Tagessäulen aus
+E713, das Tagesziel, „Alle Dokumente"). Der Funkel zeigte einen kurzen Tipp
+nicht, und sein Schein blieb am Telefon unter dem Finger kleben.
+
+**Bau.** E719: der eine Merker (`Merkzeichen`, neue Wahl `form: 'herz'`)
+an 22 Kennzahlen aus einem Katalog, gemerkt je Lernendem in meta, Streifen
+„Gemerkt" auf Heute, Rückweg mit Hinweis. E720: `:where(` → `:is(`,
+Hover-Regeln, wo keine waren, vier stille Funkel neben der Tagesrunde,
+`data-gedrueckt` am Funkel, sein Schein nur unter `@media (hover:hover)`;
+die Regel in CLAUDE.md §38 (hart) und §39 (Richtwert).
+
+**Prüfung.** `test595` (36) und `test596` (35) neu, beide zuerst rot
+(5/34, 16/35); `test433` §7 und `test580` §1/§5 erweitert, zuerst rot. Neun
+Gegenproben, je rot gesehen. Start 1850 → 1854 KB (Decke 1950). Lücken
+L240 (die Regel für die ganze App) und L241 (Herzen, die Schmuck bleiben).
+
+**Durchsicht vor dem Push** (6. Oktober). Eine unabhängige Durchsicht fand
+einen blockierenden Fehler: gesperrte Funkel („Trainieren · 0" bei leerem
+Bestand) leuchteten unter dem Zeiger auf und verwischten ihr Wort — ein
+toter Knopf, der lebendig tat. Dazu: der Fokus fiel auf `<body>`, wenn man
+im Streifen „Gemerkt" ein Herz löste; das Zurück nach einem gescheiterten
+Schreiben löschte, was ein anderer Tab gemerkt hatte; der Druck war im
+Hellen mit 3 : 1 kaum lesbar; im Starken Kontrast war „Starten" von
+„Lernen" kaum zu unterscheiden; der Fokusring des Herzens war gekappt;
+`test580` §1 hätte einen dunkel ruhenden Funkel durchgelassen. Zuerst die
+Wächter (`test596` §9/§10, `test595` §5b/§6/§7b, `test580` §1 geschärft),
+rot gegen 486e500a; dann der Bau — `:where(:not(:disabled))` ohne Gewicht,
+Fokus-Rückgabe, reines Zurück über `metaListeAendern`, Tönung über dem
+Funkelgrund (16,21 : 1), 2-px-Akzentrand im Starken Kontrast, Ring innen.
+Sieben Gegenproben, je rot gesehen. `test595` und `test596` je 41/41.
+
+**Zweite Durchsicht vor dem Push** (10. Oktober). Wieder ein blockierender
+Fund: ohne Bewegung (`prefers-reduced-motion`) färbte eine alte Regel die
+Buchstaben eines Funkels unter dem Zeiger weiss — seit die vier stillen
+Funkel hell ruhen, stand „Trainieren · 0" (gesperrt) am Rechner und
+„Trainieren · 2" am Telefon mit klebendem `:hover` weiss auf Weiss,
+1,04 : 1. Dazu: der Buchstabenlauf wischte am Telefon eine Viertelsekunde
+lang das Wort weg (`:hover` ohne `@media (hover:hover)`); sechs Herzen
+hiessen nur in ihrer Ansicht verständlich („Zu Favoriten: fällig"); ein
+Kommentar rechnete ein Gewicht falsch; die Kommentare in den Stilblättern
+kosteten Startlast. Zuerst die Wächter (`test596` §9 ohne Bewegung, §11
+neu, `test595` §10 neu), rot gegen ca4b23190; dann der Bau —
+`color:inherit` statt `#fff`, die Wischregel geteilt, ein Feld `allein` im
+Katalog der Kennzahlen, die Kommentare gekürzt (Start 1855 → 1854 KB).
+Drei Gegenproben, je rot gesehen. `test595` 44/44, `test596` 50/50.
+
 ## 6. Oktober 2026 · E718 — Ordner bearbeiten (Masterprompt #12 und die Datenhälfte von #9)
 
 **Redur** (Masterprompt vom 29. September, S. 13): „hier beiM BIBLOTEK KANN

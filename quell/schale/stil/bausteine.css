@@ -9817,47 +9817,124 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-funkel:focus-visible::after{
   opacity:.6; mask-image:linear-gradient(0deg,#fff,transparent)
 }
-.ru-funkel:hover::before{
-  box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
-             1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
-}
-.ru-funkel:hover::after{
-  opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
-}
-/* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
-   auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
-.ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
-  border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
-}
-/* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
-   einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
-   Endlosschleife, die E528 gerade erst abgeschaltet hat. */
-.ru-funkel:hover > svg, #ai .ai-quick button.ru-funkel:hover > svg{
-  stroke:#fff; animation:none;
-  filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
-}
-/* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
-.ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b{
+.ru-funkel:focus-visible .ru-funkel-b{
   animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
   animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
+}
+/* Der Schein unter dem Zeiger nur, wo es einen gibt: am iPhone klebt
+   `:hover` nach dem Tipp. Am Telefon zeigen Fokus und Druck (E720). */
+@media (hover:hover){
+  .ru-funkel:where(:not(:disabled)):hover::before{
+    box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
+               1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
+  }
+  .ru-funkel:where(:not(:disabled)):hover::after{
+    opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
+  }
+  /* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
+     auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
+  .ru-funkel:where(:not(:disabled)):hover, .ai-quick button.ru-funkel:where(:not(:disabled)):hover, .lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):hover{
+    border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
+  }
+  /* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
+     einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
+     Endlosschleife, die E528 gerade erst abgeschaltet hat. */
+  .ru-funkel:where(:not(:disabled)):hover > svg, #ai .ai-quick button.ru-funkel:where(:not(:disabled)):hover > svg{
+    stroke:#fff; animation:none;
+    filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
+  }
+  /* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
+  .ru-funkel:where(:not(:disabled)):hover .ru-funkel-b{
+    animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
+    animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
+  }
 }
 @keyframes ru-funkel-platzen{
   0%,100%{ filter:blur(0) }
   50%{ transform:scale(2); filter:blur(10px) brightness(150%)
        drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton) 100% 70%)) }
 }
-.ru-funkel:active, .ai-quick button.ru-funkel:active, .lernwelt button.is-primary.ru-funkel:active{
+/* Ein gesperrter Funkel bleibt still: `:where(:not(:disabled))` vor jedem
+   Zustand, ohne Gewicht (test596 §9). Der Druck hat zwei Zeichen,
+   `:active` und `data-gedrueckt` — das iPhone malt `:active` beim kurzen
+   Tipp oft nicht, press.ts hält das Attribut 80 ms (E702, E720). */
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]), .ai-quick button.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]),
+.lernwelt button.is-primary.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]){
   border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
-  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+  /* Die Tönung über dem Funkelgrund, nicht über der Karte (test596 §10b). */
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
 }
-.ru-funkel:active::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
 /* Beim Drücken war bisher gar nichts an der Aussenkante: auf einem Gerät
    ohne Zeiger blieb der Knopf beim Tippen unverändert. */
-.ru-funkel:active::before{
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt])::before{
   box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 80%) inset,
              1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001
 }
-.ru-funkel:active .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+.ru-funkel:where(:not(:disabled)):is(:active,[data-gedrueckt]) .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+
+/* DIE STILLEN FUNKEL (E720, Redur: „wie bein tagesrunde"): in Ruhe ein
+   Umrissknopf der Lernwelt, unter Zeiger, Fokus und Druck GENAU die
+   Tagesrunde — eine laute Fläche je Bild (E701 §1, E640).
+   Gewicht (0,4,1): schlägt die Grundregel (0,2,1); die Hover-Regel der
+   Lernwelt wiegt seit `:is` ebenso (0,4,1), hier gewinnt die spätere
+   Datei, und unter dem Zeiger trägt die eigene Regel unten (0,6,1). */
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary){
+  background:var(--bg-side); color:var(--text); border-color:var(--line); box-shadow:none;
+  /* Schon in Ruhe die Form der Tagesrunde: kein Eckenwechsel unter dem Zeiger. */
+  border-radius:var(--ru-funkel-rund)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary)::before{
+  opacity:0; transition:box-shadow var(--ru-funkel-zeit), opacity var(--ru-funkel-zeit)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:focus-visible,:active,[data-gedrueckt]){
+  color:#fff;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.2), inset 0 2px 2px rgba(255,255,255,.15),
+    inset 0 4px 4px rgba(255,255,255,.1), inset 0 8px 8px rgba(255,255,255,.05),
+    inset 0 15px 15px rgba(255,255,255,.05),
+    0 -1px 1px rgba(0,0,0,.02), 0 -2px 2px rgba(0,0,0,.03), 0 -4px 4px rgba(0,0,0,.05),
+    0 -8px 8px rgba(0,0,0,.06), 0 -15px 15px rgba(0,0,0,.08)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):focus-visible{
+  background:var(--ru-funkel-farbe); border-color:#fff2
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:active,[data-gedrueckt]){
+  border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
+  background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+             var(--ru-funkel-farbe)
+}
+.lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):is(:focus-visible,:active,[data-gedrueckt])::before{
+  opacity:1
+}
+@media (hover:hover){
+  .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover{
+    color:#fff; background:var(--ru-funkel-farbe); border-color:hsla(var(--ru-funkel-ton),100%,80%,.4);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.2), inset 0 2px 2px rgba(255,255,255,.15),
+      inset 0 4px 4px rgba(255,255,255,.1), inset 0 8px 8px rgba(255,255,255,.05),
+      inset 0 15px 15px rgba(255,255,255,.05),
+      0 -1px 1px rgba(0,0,0,.02), 0 -2px 2px rgba(0,0,0,.03), 0 -4px 4px rgba(0,0,0,.05),
+      0 -8px 8px rgba(0,0,0,.06), 0 -15px 15px rgba(0,0,0,.08)
+  }
+  .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover::before{ opacity:1 }
+  /* Der Druck mit der Maus kommt nach dem Zeigen und muss es übertönen. */
+  .lernwelt .lw-study-actions button.ru-funkel:not(.is-primary):not(:disabled):hover:is(:active,[data-gedrueckt]){
+    border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
+    background:linear-gradient(hsl(var(--ru-funkel-ton) 50% 20% / .5), hsl(var(--ru-funkel-ton) 50% 20% / .5)),
+               var(--ru-funkel-farbe)
+  }
+}
+
+/* Im Starken Kontrast hat #101010 auf Schwarz 1,04 : 1: die Haupthandlung
+   trägt einen 2-px-Rand im Akzent, Breite UND Kontrast (test596 §10a). */
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel{
+  border-width:2px
+}
+:is(html[data-schema="kontrast"] > body, body[data-kontrast="hoch"]) .lernwelt button.is-primary.ru-funkel:not(:hover,:active,[data-gedrueckt]){
+  border-color:var(--accent)
+}
 
 /* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */
 .cover-textur{ position:relative; overflow:hidden }
@@ -9901,8 +9978,9 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   #ru-vorhang{ transition:none }
   #ru-vorhang .ru-lader-buchstabe{ animation:none; opacity:1 }
   .ru-geste-finger{ animation:none; transform:rotate(30deg) scale(var(--ru-mass)) }
+  /* `inherit`, nicht #fff: der Knopf sagt die Farbe (test596 §9/§11). */
   .ru-funkel-b, .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b,
-  .ru-funkel > svg{ animation:none; color:#fff; opacity:1 }
+  .ru-funkel > svg{ animation:none; color:inherit; opacity:1 }
   .cover-textur .ru-textur{ animation:none }
   .bib-blick:hover .bib-blick-auge{ animation:none }
 }

@@ -140,7 +140,8 @@ const RedionMotion = (() => {
             });
         if (ids.includes('metric') && !element.matches(metricSelector)) {
             ensure(element, 'rmo-ring');
-            ensure(element, 'rmo-heart');
+            if (!element.querySelector(':scope > .lw-kennzahl-merk'))
+                ensure(element, 'rmo-heart');
         }
         if (ids.includes('glass'))
             ensure(element, 'rmo-glass', glas => {

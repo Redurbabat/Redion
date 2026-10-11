@@ -479,9 +479,13 @@ body button:is(:hover,:focus-visible) > [data-rmo~="toggle"].mschalter[data-rmo-
    kommt die Farbe zurück. Die Zahlen bleiben, wie sie sind. Die kleine
    Kurve zeigt feste Werte und keine echten — sie ist deshalb in Ruhe
    neutral (L224, ergänzt E534/E535). */
-:is(.stat-karte.lw-metrik,.rmo-health-metric) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+:is(.stat-karte.lw-metrik,.rmo-health-metric) > :is(.rmo-heart,.rmo-ring,.rmo-pfad,.lw-kennzahl-merk){
   transition:filter var(--motion-fast) var(--ease),opacity var(--motion-fast) var(--ease)}
-body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > :is(.rmo-heart,.rmo-ring,.rmo-pfad){
+/* Das echte Herz (E719) ruht grau, SOLANGE es nicht gemerkt ist — ein
+   gemerktes behält seine Farbe auch in Ruhe: grau hiesse sonst „nicht
+   gemerkt". Durchscheinend wird es nicht; ein Knopf mit 45 % Deckkraft
+   wäre ein Knopf, den man nicht sieht. */
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > :is(.rmo-heart,.rmo-ring,.rmo-pfad,.lw-kennzahl-merk:not(.ist-an)){
   filter:saturate(0)}
 body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:active,[data-rmo-play]) > .rmo-heart{opacity:.45}
 

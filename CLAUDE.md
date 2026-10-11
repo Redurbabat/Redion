@@ -928,7 +928,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 535 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 537 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1596,6 +1596,28 @@ rechten 3 px (er prüfte nur die Mitte der Knöpfe), und die Palette bot das
 Zurücksetzen im Fokus-Modus an, in dem der Trenner ausgeblendet ist — beides steht
 jetzt in ihm, zuerst rot mit 59 von 61. Gezählt am 6. Oktober, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
+
+*Und 533: `test595` — das Herz ist ein Knopf (E719). Redur, PDF vom
+29. September, am Foto der Lernzentrale: „die herz beim hier funktionier
+nicht also wenn ich das klicke passiert nichts". Er findet die Karte
+„fällige Fehler" und verlangt an ihrem Herz einen `<button>` statt eines
+`aria-hidden`-Spans, 44 × 44, mit Namen und `aria-pressed`, und fragt
+`elementFromPoint`, was an der Mitte WIRKLICH liegt — gegen den alten
+Stand die Karte. Dann schaltet er mit Maus, Enter, Leertaste und
+Fingertipp, liest die gemerkte Liste, den Streifen „Gemerkt" auf Heute,
+lädt neu, nimmt es wieder heraus, lässt das Schreiben scheitern (Knopf
+zurück, Hinweis da) und prüft, dass ohne Bewegung nichts springt. Drei
+seiner Zusagen kamen erst, als eine Gegenprobe GRÜN blieb: die Form schon
+in Ruhe, kein zweites gemaltes Herz, und in `test580` §5 der Fokus weg vor
+dem Messen. Und drei kamen aus einer Durchsicht vor dem Push: der Fokus,
+der beim Lösen im Streifen auf `<body>` fiel, der Fokusring, den die Karte
+kappte, und ein Zurück, das den Eintrag eines anderen Tabs löschte (§16).
+Sein §10 kam aus einer zweiten Durchsicht am 10. Oktober: jedes Herz muss
+ein Ding nennen — „Zu Favoriten: fällig" sagt nicht, WAS fällig ist, und im
+Streifen „Gemerkt" fehlt die Ansicht auch dem Auge. Er erkennt das Ding am
+grossen Anfangsbuchstaben des Hauptworts, und gegen den alten Stand fand er
+fünf Namen ohne eines. Gezählt am 6. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
 Zusammenführen neu zu zählen.*
 
 *Und 534: `test593` — der Seiteneditor ohne Stau (E717). Redurs Satz vom
@@ -1650,6 +1672,32 @@ Zustand lebt im Speicher, nicht nur im Merker. Gezählt am 6. Oktober, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 533. Beim Zusammenführen nachgezählt (11. Oktober,
 `claude/morgen-besser-3`): 535.*
 
+*Und 536: `test596` — kein toter Knopf (E720). Redur: „beim fählermeldung
+habe ich keien buttons efeck also wie bein tagesrunde … und bei alle wo eine
+buttons gibt füge das im enscheideung und claude.md". Sein Kern ist ein
+ZENSUS: jeder sichtbare, freigegebene Knopf in sechs Ansichten der Lernwelt,
+hell und dunkel, Zeiger darauf, die gemalten Eigenschaften davor und danach
+— gegen den alten Stand 63 tote Knöpfe je Thema, 44 davon die Tagessäulen
+aus E713, die der Plan noch nicht kannte. Dazu: der Tastenfokus der fünf
+Startknöpfe, „Trainieren" unter dem Zeiger Wert für Wert wie „Starten", in
+Ruhe nur eine laute Fläche, `data-gedrueckt` ALLEIN zeigt sich, und ein
+erzwungenes `:hover` malt am Telefon keinen Schein. Sein erster Entwurf von
+§7 war gegen den alten Stand grün — die Nachbildung malt `:active`, wo das
+iPhone es nicht tut. Und sein §1 hatte eine blinde Seite, die erst eine
+Durchsicht sah: er zählt nur FREIGEGEBENE Knöpfe — ein gesperrtes
+„Trainieren · 0", das unter dem Zeiger aufleuchtete und sein Wort
+verwischte, ging durch. §9 misst seither die Gegenseite (ein gesperrter
+Knopf bleibt still), §10 alle zehn Schemata. Und eine zweite Durchsicht am
+10. Oktober fand die nächste blinde Seite: er lief nie OHNE BEWEGUNG, und
+sein erzwungenes `:hover` traf nur ein KI-Werkzeug auf dunklem Grund. Ohne
+Bewegung stand das Wort der stillen Funkel unter dem Zeiger weiss auf Weiss
+(1,04 : 1), und am Telefon wischte ein klebendes `:hover` es eine
+Viertelsekunde lang weg. §9 läuft seither auch mit `reduce`, und §11 misst
+jedes Bild über 1,4 s, nicht einen Augenblick. Gezählt am 6. Oktober, im
+selben Bogen: der Befehl sagt 534 — auf seinem Zweig; beim Zusammenführen
+neu zu zählen. Beim Zusammenführen nachgezählt (11. Oktober,
+`claude/morgen-besser-3`): 536.*
+
 ### Die Befehle
 
 ```txt
@@ -1666,7 +1714,7 @@ npm run bauen:inseln                 nur die Inseln (Teil von bauen:ts)
 npm run stand                        danach: prüft den Dienststand nach
 node bauen.mts                       danach: redion-einzeldatei.html
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 535 Läufe
+npm run pruefen                      alle 537 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -1756,7 +1804,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 535 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 537 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
@@ -1926,6 +1974,17 @@ Speichern-Knopf 28 px hat. Deshalb: Ausnahme ja, still nein.
 - **Keine Information nur über Farbe.**
 - Escape schliesst das passende Overlay (E302 hat den gemeinsamen Griff
   gebaut, L105 Punkt 1).
+- **Jeder Knopf antwortet sichtbar auf Zeigen, Druck und Tastenfokus —
+  keiner wirkt tot (E720).** Zeigen, wo es einen Zeiger gibt; Druck mit
+  Maus und Finger, auch beim kurzen Tipp (`data-gedrueckt` aus press.ts);
+  Tastenfokus immer. Dieselbe Art Handlung nimmt dasselbe Bauteil: wer
+  etwas ANFÄNGT, ist ein Funkel — still in Ruhe, der Schein als Zustand.
+  Und umgekehrt: ein GESPERRTER Knopf antwortet nicht — kein Licht, kein
+  Lauf unter Zeiger und Druck, sonst wirkt ein toter Knopf lebendig
+  (`test596` §9).
+  Redur, 29. September: „bei alle wo eine buttons gibt füge das im
+  enscheideung und claude.md". Der Wächter ist `test596` (zuerst die
+  Lernwelt; der Rest der App steht als L240).
 
 **Richtwert:**
 
@@ -1950,6 +2009,16 @@ Inline-Style-Blöcke.**
 - Animationen sparsam; `prefers-reduced-motion` respektieren.
 - Namensräume trennen (`doku/CSS-NAMENSRAEUME.md`) — zwei Bereiche mit
   demselben Klassenpräfix gewinnen abwechselnd, und niemand sieht es im Code.
+- **Zustandsregeln wiegen mindestens so viel wie die Grundregel — kein
+  `:where()` um den Knopf-Teil von `:hover`, `:active` oder
+  `:focus-visible` (E720).** `:where()` hat das Gewicht null; siebzehn
+  Knöpfe der Lernwelt blieben so unter dem Zeiger, wie sie waren, weil
+  ihre Grundregel (0,2,1) die Hover-Regel (0,2,0) schlug (der Plan hatte
+  zwanzig geschätzt, gemessen waren es siebzehn — messungen §90). `:is()`
+  nimmt das Gewicht seines schwersten Arguments. Und ein gesperrter Knopf
+  antwortet gar nicht: `:where(:not(:disabled))` vor dem Zustand schliesst
+  ihn aus, ohne die Rangfolge zu verschieben — dort, wo es KEIN Gewicht
+  tragen soll, ist `:where()` genau richtig (test596 §9).
 
 ---
 ---

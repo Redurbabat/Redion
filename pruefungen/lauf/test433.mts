@@ -14,6 +14,9 @@
  *   §4 DIE FORM ALLEIN GENÜGT: in Graustufen bleibt „gemerkt" von „nicht
  *      gemerkt" unterscheidbar.
  *   §5 OHNE BEWEGUNG springt nichts.
+ *   §7 DIE HERZFORM IST EINE WAHL (E719): `form: 'herz'` zeichnet das Herz
+ *      der Lernwelt-Kennzahlen; ohne Wahl bleibt es das Band, und ein
+ *      Umschalten behält die Form, die der Knopf schon hat.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   §2 → in `kopfleiste.ts` zurück auf `classList.toggle('on', …)`:
@@ -214,6 +217,39 @@ p('Das Band zuckt nicht', still.band === 'none');
 p('Der Punkt rollt nicht', still.punkt === 'none');
 p('… der Zustand wechselt trotzdem', still.pressed === 'true');
 await ruhig.close();
+
+console.log('\n§7 Die Herzform ist eine Wahl, keine Änderung (E719)');
+/* Die Kennzahlen der Lernwelt merken sich mit einem HERZ — Redurs Form aus
+   der Statistik-Vorlage (E534). Das Band bleibt die Vorgabe: Kopfleiste,
+   Notizhefte und die Tropfen-Schalter aus E712 (`Merkzeichen.BAND`) sehen
+   aus wie vorher. */
+const herzform = JSON.parse(await s.evaluate(`JSON.stringify((() => {
+  if (!Merkzeichen.HERZ) return { fehlt: true };
+  const d = (k) => k.querySelector('svg path')?.getAttribute('d');
+  const vorgabe = Merkzeichen.bauen({ an: false, name: 'x', beiWechsel: () => {} });
+  const herz = Merkzeichen.bauen({ an: false, name: 'x', form: 'herz', beiWechsel: () => {} });
+  document.body.append(herz);
+  const vorher = { d: d(herz), fill: herz.querySelector('svg path').getAttribute('fill') };
+  herz.click();
+  const nachher = { d: d(herz), fill: herz.querySelector('svg path').getAttribute('fill'), pressed: herz.getAttribute('aria-pressed') };
+  herz.remove();
+  const box = document.createElement('div');
+  box.innerHTML = Merkzeichen.html({ an: true, name: 'y', form: 'herz' }) + Merkzeichen.html({ an: true, name: 'y' });
+  const [hh, hb] = [...box.querySelectorAll('button')];
+  /* markieren() ohne form behält die Form, die der Knopf schon hat. */
+  Merkzeichen.markieren(hh, { an: false, name: 'y' });
+  return { band: Merkzeichen.BAND, herzD: Merkzeichen.HERZ, vorgabe: d(vorgabe), vorher, nachher,
+    htmlHerz: hb ? d(hh) : null, htmlBand: hb ? d(hb) : null, gemerktBleibtHerz: d(hh),
+    gemerktFill: hh.querySelector('svg path').getAttribute('fill') };
+})())`) as string);
+p('Merkzeichen.HERZ gibt es', !herzform.fehlt, JSON.stringify(herzform).slice(0, 120));
+p('Ohne Wahl bleibt es das Band (Kopfleiste, Hefte, Tropfen)', herzform.vorgabe === herzform.band && herzform.htmlBand === herzform.band);
+p('Mit form: \'herz\' ist es das Herz — in bauen() und html()',
+  !!herzform.herzD && herzform.vorher?.d === herzform.herzD && herzform.htmlHerz === herzform.herzD);
+p('Das Herz schaltet wie das Band: offen → gefüllt, aria-pressed',
+  herzform.vorher?.fill === 'none' && herzform.nachher?.fill === 'currentColor' && herzform.nachher?.pressed === 'true');
+p('Beim Umschalten bleibt es ein Herz', herzform.nachher?.d === herzform.herzD && herzform.gemerktBleibtHerz === herzform.herzD &&
+  herzform.gemerktFill === 'none', JSON.stringify({ d: String(herzform.gemerktBleibtHerz).slice(0, 20), fill: herzform.gemerktFill }));
 
 console.log('\n§6 Eingebunden');
 p('index.html lädt merkzeichen.js', /quell\/schale\/bedienung\/merkzeichen\.js/.test(lies('index.html')));
