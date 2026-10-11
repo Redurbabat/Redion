@@ -66069,7 +66069,9 @@ steckdose          L bei x=30       → L bei x=20, N bei x=40
 steckdose-schuko   L bei x=30       → L bei x=10, N bei x=30, PE bei x=50
 ```
 
-Ein Plan, der vorher gespeichert wurde, gilt weiter, wie er gezeichnet ist —
+Ein Plan, der vorher gespeichert wurde, rechnet weiter, wie er gezeichnet
+wurde (auf dem Bildschirm steht er bis zum ersten Nachziehen noch an den
+alten Stellen — unten, „Und er zeichnet nicht") —
 und zwar ohne dass ein Byte davon umgeschrieben wird:
 
 1. Die vier Zeichen tragen `frueher`: alter Name → wo er lag (im ungedrehten
@@ -66134,6 +66136,20 @@ aufzulösen. Und eine alte, ungebundene Leitung am unteren FI-Anschluss hängt
 jetzt an N2 — auf `main` hing sie an gar nichts, weil `anschluesseVon` beide
 `N` an der oberen Stelle meldete (dieselbe Ursache wie in E735); das ist,
 was die Zeichnung zeigte.
+
+**Und er zeichnet nicht** (L253 Punkt 7, gemessen in der Durchsicht): er
+übersetzt die Namen, nicht die Punkte, und gezeichnet wird nach den
+Punkten. Ein alter Plan zeigt seine Leitung deshalb an der ALTEN Stelle,
+bis die Planfläche sie nachzieht: am Schuko endet die L-Leitung bei
+(30,0) des Zeichens, und dort steht heute der N-Stummel — auf dem
+Bildschirm L auf N, gerechnet L; am Stecker und an der Steckdose endet sie
+in der Lücke zwischen den zwei Stummeln (10 px neben L und N) und sieht
+unverbunden aus, gerechnet L. Es gibt sich, sobald das Teil selbst
+geschoben oder irgendein Teil des Plans gedreht, gespiegelt oder gezogen
+wird (`leitungenNachziehen` legt dann jedes Ende auf die Klemme, die der
+Auflöser nennt); erst dann werden neue Punkte gespeichert, durch die
+Handlung des Menschen. Beim Laden umgeschrieben wird nicht — das wäre
+Weg 3 durch die Hintertür, eine stille Schreibung in Nutzerdaten (§9).
 
 **Wächter:** `test608`, 51 Zusagen in sechs Abschnitten: der Auflöser
 (Ort vor Name, gedreht, unbekannt bleibt unbekannt), die Netze der alten

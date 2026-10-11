@@ -7920,6 +7920,27 @@ Auflöser Drehung 0 und nicht gespiegelt 59/69, nur Drehung 0 64/69, nur
 nicht gespiegelt 64/69 — rot jedes Mal nur §7, mit 434,8 mA und
 „fi-loest-aus" im gesunden Kreis.
 
+**Was ein alter Plan zeichnet** (Durchsicht; Sonde in der echten App unter
+dem Schloss, 1400 × 1000, Plan A wörtlich aus `test608`; das gezeichnete
+Ende ist das letzte Zahlenpaar im `d` von `path.sp-leitung`, das Netz kommt
+aus `Stromfluss.netze`):
+
+```txt
+                     a5 → Schuko X5        a1 → Stecker X1      a3 → Steckdose X3
+Klemmen heute        L 710 · N 730 · PE 750  L 310 · N 330        L 320 · N 340
+geöffnet             730,400 = N           320,100 = keine      330,400 = keine
+gerechnet            L                     L                    L
+X4 gedreht           710,400 = L           310,100 = L          320,400 = L
+X4 nur geschoben     730,400 = N           —                    —
+X5 selbst geschoben  720,400 = L (X5 +10)  —                    —
+```
+
+Ablage nach dem Öffnen gleich dem gespeicherten Plan (`JSON.stringify`
+verglichen); nach dem Schieben von X5 trägt a5 die Punkte
+`130,150 · 730,150 · 720,400` und weiter `nachNr: 'L'`. Bilder dazu nur
+in der Sonde (`x5-geoeffnet`, `x5-nach-x4-drehen`), nicht im Verzeichnis
+(§55.4). L253 Punkt 7, E738.
+
 **Was der Bogen zeigt** (laufende Simulation, Plan aus Drehstromquelle,
 Klemmenbrett in Stern, FI mit Lampe, Übertrager mit Klingel und einem
 Gleichstromkreis; abgelesen aus `.sp-messwert`): Klemmenbrett 230 V,

@@ -8409,6 +8409,50 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    an (N, PE). E738 kann das nicht auffangen: ohne gespeicherten Namen gibt es
    nichts aufzulösen. Ob es solche Pläne gibt, lässt sich von hier aus nicht
    zählen; sie liegen in den Browsern der Nutzer.
+7. **Ein alter Plan ZEICHNET seine Leitung an der alten Stelle, bis die
+   Planfläche sie nachzieht** (gefunden in der Durchsicht, gemessen am
+   11. Oktober). E738 übersetzt beim Lesen — die Rechnung stimmt —, aber
+   die Punkte einer Leitung bleiben, wo sie gespeichert sind, und gezeichnet
+   wird nach den Punkten. Gemessen mit einer Sonde in der echten App
+   (1400 × 1000, Plan A aus `test608` geöffnet, das Ende aus dem `d` von
+   `path.sp-leitung` gelesen, das Netz aus `Stromfluss.netze`):
+
+   ```txt
+   Leitung        gespeichert   gezeichnetes Ende   Klemmen heute               gerechnet
+   a5 → Schuko    L             730,400 = N         L 710 · N 730 · PE 750      L
+   a1 → Stecker   1             320,100 = keine     L 310 · N 330               L
+   a3 → Steckdose L             330,400 = keine     L 320 · N 340               L
+   ```
+
+   Was man sieht: am Schuko läuft die L-Leitung in den MITTLEREN Stummel,
+   und das ist heute N — ein Plan, der auf dem Bildschirm L auf N zeigt,
+   während die Simulation (und der fliessende Strich) L rechnet. Am Stecker
+   und an der Steckdose endet die Leitung in der Lücke zwischen den zwei
+   Stummeln und sieht unverbunden aus, gerechnet ist sie an L. Den alten FI
+   betrifft es nicht: dort hat sich nur der Name geändert, die Stelle nicht
+   (b4 endet auf N2). Die Ablage ist nach dem Öffnen Byte für Byte der
+   gespeicherte Plan.
+
+   Wann es sich gibt: sobald in der Planfläche das Teil SELBST geschoben
+   wird, oder IRGENDEIN Teil des Plans gedreht, gespiegelt oder mit der Maus
+   gezogen — `leitungenNachziehen` legt dann jedes Leitungsende auf die
+   Klemme, die der Auflöser nennt. Gemessen: nach dem Drehen von X4 (einem
+   anderen Teil) enden a1 bei 310,100, a3 bei 320,400, a5 bei 710,400, jede
+   auf L; X4 nur mit der Pfeiltaste geschoben ändert an a5 nichts (bleibt
+   730,400 = N); X5 selbst geschoben legt a5 auf 720,400, das L des
+   geschobenen X5. Danach sind die neuen Punkte gespeichert — durch die
+   Handlung des Menschen —, der Name bleibt der alte. Drehen und Ziehen
+   führen dabei alle Leitungen neu (Punkt 4).
+
+   Warum nicht beim Laden umgeschrieben: das wäre eine stille Schreibung in
+   Nutzerdaten ohne Handlung (§9 [hart]) — genau Weg 3, den E738 verworfen
+   hat: sie müsste idempotent sein, eine `.redion` von gestern brächte die
+   alten Punkte zurück, und gedreht braucht sie dieselbe Ortsentscheidung
+   wie der Auflöser. Möglich, aber nicht gebaut — die Wahl gehört Redur:
+   beim ZEICHNEN das letzte Stück auf die aufgelöste Klemme legen, ohne zu
+   speichern; oder ein sichtbarer Knopf „Leitungen an die Klemmen rücken".
+   Ein Wächter für das Gezeichnete fehlt; die Messung ist die Sonde
+   (`messungen.md` §97).
 
 ### Fachlich offen (vom Zweig)
 
@@ -8482,7 +8526,7 @@ Drei Wege, und die Wahl gehört Redur:
 3. **Eine Migration.** Beim Laden eines Plans die alten `vonNr` umschreiben.
    Mehr Aufwand, und sie muss idempotent sein (§10).
 
-*(Hier stand, wer alte Pläne mit Stecker oder FI habe, solle sie nach dem Zusammenführen ansehen. Seit E738 muss er das nicht mehr — unten.)*
+*(Hier stand, wer alte Pläne mit Stecker oder FI habe, solle sie nach dem Zusammenführen ansehen. Seit E738 muss er das für die Rechnung nicht mehr — unten. Gezeichnet stehen alte Leitungen bis zum ersten Nachziehen noch an den alten Stellen: L253 Punkt 7.)*
 
 ### GESCHLOSSEN am 11. Oktober 2026 durch E738 — Weg 2
 
