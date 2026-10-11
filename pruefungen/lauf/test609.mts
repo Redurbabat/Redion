@@ -19,7 +19,9 @@
  *   §1  ZWEI EINTRÄGE (§28): `dark-dossier.js` steht in index.html NACH
  *       `register/vorlagen.js` (sonst meldet sich die Vorlage ins Leere —
  *       sie fragt `Register.vorlagen.melde` beim Laden) und im GRUNDSTOCK
- *       des Dienst-Arbeiters (sonst fehlt sie offline).
+ *       des Dienst-Arbeiters (sonst fehlt sie offline) — dort als echter
+ *       Eintrag der Liste `const GRUNDSTOCK = [ … ];`, ohne Kommentare
+ *       gelesen: eine auskommentierte Zeile legt nichts beiseite.
  *   §2  DIE VORLAGE: `Register.vorlagen` kennt `dark-2017-dossier`;
  *       `Register.vorlagen.bauen` — derselbe Weg wie „Vorlage einsetzen" in
  *       der Arbeitswelt — legt EINE Wurzelseite mit genau 12 Unterseiten an,
@@ -42,7 +44,9 @@
  * KANN DIESER LAUF ROT WERDEN? (§55.2) Ja: gegen den übernommenen Stand
  * allein (keine Skriptzeile, kein .js) ist §1 und §2 rot, und §3/§4 werden
  * gar nicht erst erreicht. Gegenproben in E739: die Skriptzeile heraus →
- * §1/§2 rot; die Klammern wieder roh → §3 rot.
+ * §1/§2 rot; die Klammern wieder roh → §3 rot; die GRUNDSTOCK-Zeile in
+ * src/dienst/sw.ts mit `//` oder `/* … *\/` auskommentiert → §1 rot (mit
+ * `swTs.includes(…)` war das grün).
  *
  *   node pruefungen/alle.mts 609
  * ==========================================================================*/
@@ -76,7 +80,39 @@ p('dark-dossier.js steht in index.html', tag > 0);
 p('… nach register/vorlagen.js (sonst meldet sie sich ins Leere)', tag > 0 && register > 0 && tag > register,
   `vorlagen.js @${register}, dark-dossier.js @${tag}`);
 p('… und trägt defer (test388)', tag > 0 && /^<script src="[^"]+" defer><\/script>/.test(indexHtml.slice(tag, tag + 120)));
-p('dark-dossier.js steht im GRUNDSTOCK des Dienst-Arbeiters', swTs.includes("'./" + SKRIPT + "'"));
+/* Der GRUNDSTOCK als Liste seiner ECHTEN Einträge: nur was zwischen
+   `const GRUNDSTOCK = [` und der schliessenden `];` steht, und ohne
+   Kommentare gelesen. Vorher stand hier `swTs.includes(…)` — und das war
+   auch mit einer auskommentierten Zeile zufrieden, oder mit dem Pfad in
+   irgendeinem Kommentar der Datei. Eine Zeile, die nur dasteht, legt
+   offline nichts beiseite; und das Offline-Laden prüft dieser Lauf nicht,
+   also muss er diese Zusage genau nehmen. Der Leser kennt Zeichenketten,
+   damit ein `//` oder `/*` IN einem Pfad keinen Kommentar beginnt. */
+const ohneKommentare = (s: string): string => {
+  let aus = '', i = 0;
+  while (i < s.length) {
+    const c = s.charAt(i), n = s.charAt(i + 1);
+    if (c === "'" || c === '"' || c === '`') {
+      let j = i + 1;
+      while (j < s.length && s.charAt(j) !== c) j += s.charAt(j) === '\\' ? 2 : 1;
+      aus += s.slice(i, j + 1); i = j + 1;
+    } else if (c === '/' && n === '/') {
+      while (i < s.length && s.charAt(i) !== '\n') i++;
+    } else if (c === '/' && n === '*') {
+      const ende = s.indexOf('*/', i + 2);
+      i = ende < 0 ? s.length : ende + 2;
+      aus += ' ';
+    } else { aus += c; i++; }
+  }
+  return aus;
+};
+const grundBlock = /^const GRUNDSTOCK = \[([\s\S]*?)\n\];/m.exec(swTs)?.[1];
+const grundstock = grundBlock === undefined ? [] :
+  ohneKommentare(grundBlock).split(',').map(e => e.trim()).filter(e => e !== '');
+p('dark-dossier.js steht im GRUNDSTOCK des Dienst-Arbeiters — als Eintrag der Liste, nicht im Kommentar',
+  grundstock.includes("'./" + SKRIPT + "'"),
+  grundBlock === undefined ? 'kein `const GRUNDSTOCK = [ … ];` in src/dienst/sw.ts'
+    : `${grundstock.length} Einträge, './${SKRIPT}' ist keiner davon`);
 p('Das erzeugte Skript liegt da', fs.existsSync(path.join(WURZEL, SKRIPT)));
 
 /* ══ Browser ═══════════════════════════════════════════════════════════════ */
