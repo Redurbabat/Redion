@@ -7036,6 +7036,7 @@ Paar am Rechner (Hauptteil / ^)          138–174 / 139–173                  
 Telefon: Mitte Reiterkarte / Chip        ruhig aus 79 / 85 · ruhig an 79 / 81  79 / 79 · 79 / 79
 Name des ^ neben „Übersicht"             „Weitere Ansichten: Lernen"          „Weitere Ansichten: Übersicht"
 test601                                  80 / 89                              89 / 89
+Start (test388 §5, gzip)                 1867 KB                              1867 KB (Decke 1950)
 ```
 
 „115 / 93" ist `scrollWidth / clientWidth` des Namens im Hauptteil. Die

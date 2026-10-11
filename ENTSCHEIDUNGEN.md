@@ -62803,7 +62803,11 @@ G8 und G9 liefen in einem Bau (86 von 89), G10 bis G12 in einem zweiten
 
 **Nachbarn nach der Durchsicht** (unter dem Schloss): `test601` 89/89,
 `test206` grün, `test217` 28/28, `test67` 65/65, `test565` 54/54,
-`test585` 91/91; die übrigen zwölf liefen beim Bau-Commit noch und werden mit ihrem Ergebnis nachgetragen. Ohne Browser
+`test585` 91/91, `test596` 41/41 (0 tote Knöpfe in allen Ansichten),
+`test597`, `test595` 41/41, `test590` 68/68, `test589`, `test250` (13
+bestanden, 0 durchgefallen), `test424` 50/50, `test388` 22 (Start 1867 KB
+gzip, wie vor der Durchsicht; Decke 1950), `test143`, `test208`,
+`test580`, `test296` 17/17, `test303` 18/18. Ohne Browser
 grün: 550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105, 362
 (18/18). `test332` mit denselben fremden Zeilen wie am Grundstand
 (`.menu .kenn`, `#handy-oben`).
