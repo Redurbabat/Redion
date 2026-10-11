@@ -7255,15 +7255,21 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 .lernwelt .lw-brand h1{
   margin:0;font-size:16px;line-height:1.2;font-weight:760;letter-spacing:-.025em
 }
-.lernwelt .lw-area{
-  display:grid;grid-template-columns:auto minmax(150px,230px);align-items:center;gap:8px;
-  color:var(--text-dim);font-size:12px;font-weight:650
-}
-.lernwelt .lw-area select{
-  width:100%;min-width:0;min-height:var(--lw-touch);padding:8px 34px 8px 11px;
+/* DER FÄCHER-CHIP (E726) ersetzt das Auswahlfeld „Bereich": ein Knopf mit
+   Menü statt eines `<select>`, das in einem frischen Bestand nur „◎ Alle
+   Bereiche" kannte. 230 px höchstens — dieselbe Breite, die das Feld hatte.
+   In der ruhigen Fassung deckelt `--lw-chip-decke` ihn schmaler, wenn die
+   Lernwelt schmal ist (unten bei E219). */
+.lernwelt .lw-area{display:flex;justify-content:flex-end;min-width:0}
+.lernwelt .lw-fach{
+  display:inline-flex;align-items:center;gap:var(--space-2);min-width:0;max-width:230px;
+  min-height:var(--lw-touch);padding:0 var(--space-3) 0 var(--space-4);
   border:1px solid var(--line);border-radius:var(--lw-radius-sm);
-  outline:none;background:var(--bg-input);color:var(--text);cursor:pointer
+  background:var(--bg-input);color:var(--text);font-size:12px;font-weight:650;cursor:pointer
 }
+.lernwelt .lw-fach-zeichen{display:grid;place-items:center;flex:none;color:var(--text-dim)}
+.lernwelt .lw-fach-zeichen>svg{width:15px;height:15px}
+.lernwelt .lw-fach-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* --- Hauptnavigation ---------------------------------------------------- */
 .lernwelt .lw-nav{
@@ -7283,58 +7289,58 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 .lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
 
 /* ============================================================================
- * DIE ZWEITE REIHE (E206)
+ * ZWEI KLAPPEN IN EINER ZEILE (E726)
  * ----------------------------------------------------------------------------
- * Aus neun Reitern wurden vier. Drei von ihnen sind Gruppen und tragen ein
- * kleines „⌄"; wer darin ist, bekommt darunter eine ZWEITE, kurze Reihe mit
- * genau den Ansichten dieser Gruppe.
+ * Bis hier: vier Reiter, drei davon mit einem kleinen „⌄", und wer in einer
+ * Gruppe war, bekam darunter eine ZWEITE Reihe (E206 — „bewusst kein
+ * Aufklappmenü"). Das ⌄ war Schmuck auf einem Knopf, der sprang; Redur las
+ * es als das ^, das es versprach, und wollte genau das: „heute und was
+ * neben das ist im ^ … die übersicht neben heute auch mit ^".
  *
- * Sie ist bewusst kein Aufklappmenü: ein Menü versteckt, wo man ist, und man
- * muss es öffnen, um zu sehen, ob es sich lohnt. Die Reihe steht da, solange
- * sie gebraucht wird, und verschwindet, sobald man die Gruppe verlässt —
- * dasselbe Verhalten, das Word und VS Code für ihre Registerkarten benutzen.
+ * Jetzt: [Hauptteil | ^] [Hauptteil | ^]. Der Hauptteil sagt, wo man ist
+ * (in „Trainer" heisst er „Trainer"), das ^ öffnet das Menü (`UI.wahl`).
+ * Beide sind unmittelbare Kinder der Leiste — das Material (E706) sucht die
+ * Wahlen einer Reihe unter ihren Kindern und fliegt zwischen den
+ * Hauptteilen.
  *
- * Ohne Rahmen und ohne Fläche: sie gehört zur Leiste darüber und soll nicht
- * wie eine zweite Leiste aussehen.
+ * 44 BREIT, IMMER. Die HÖHE folgt den Reitern: 34 px für die Maus (E205 —
+ * „44 px sind eine Fingerregel, keine Mausregel"), 44 mit dem Finger
+ * (`pointer:coarse` weiter unten, und am Telefon ohnehin).
  * ==========================================================================*/
-.lernwelt .lw-nav-mehr{ flex:none; opacity:.5; margin-left:2px }
-.lernwelt .lw-nav-mehr>svg{ width:11px; height:11px; display:block }
-.lernwelt .lw-nav button.is-active .lw-nav-mehr{ opacity:.75 }
-
-.lernwelt .lw-subnav{
-  display:flex; align-items:center; gap:var(--space-1); flex-wrap:wrap;
-  margin:calc(var(--lw-gap) * -1 + var(--space-2)) 0 var(--lw-gap);
-  padding:0 var(--space-2)
+.lernwelt .lw-nav .lw-nav-haupt{border-top-right-radius:0;border-bottom-right-radius:0;
+  flex:0 1 auto;min-width:var(--lw-touch)}
+/* Wird es eng (am Telefon „Schule / Ausbildung" neben „Übersicht"), kürzt
+   der Name mit Auslassungszeichen, statt die Leiste rollen zu lassen — eine
+   rollende Leiste schnitt „Fortschritt" mitten im Wort ab (E726). Der
+   ganze Name steht im Menü, mit Haken. */
+.lernwelt .lw-nav .lw-nav-haupt>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* `align-self:stretch`: das ^ ist so hoch wie sein Hauptteil, nicht nur
+   „mindestens 34". Der Hauptteil misst mit Zeichen und Innenabstand 36 px,
+   das ^ ohne Inhalt 34 — an der Naht stand eine Stufe von 1 px oben und
+   unten (Durchsicht, `test601` §2g). */
+.lernwelt .lw-nav .lw-klappe{
+  flex:0 0 var(--lw-touch);min-width:var(--lw-touch);padding:0;margin-left:calc(var(--space-1) * -1);
+  align-self:stretch;
+  border-top-left-radius:0;border-bottom-left-radius:0;
+  border-left-color:var(--line)
 }
-.lernwelt .lw-subnav button{
-  min-height:32px; padding:var(--space-1) var(--space-3);
-  border:1px solid transparent; border-radius:var(--radius-md);
-  color:var(--text-dim); font-size:12px; font-weight:620; white-space:nowrap;
-  transition:background var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease)
+/* Zwischen den Paaren Luft, innerhalb keine: ein Paar ist EIN Bedienteil. */
+.lernwelt .lw-nav .lw-klappe + .lw-nav-haupt{margin-left:var(--space-2)}
+/* Neben dem gewählten Hauptteil trägt das ^ dieselbe Fläche, ohne den
+   Strich darunter: das Paar gehört zusammen, gewählt ist der Hauptteil
+   (`aria-current`, Strich, Gewicht — nie die Farbe allein, §38). */
+.lernwelt .lw-nav .lw-nav-haupt.is-active + .lw-klappe{
+  border-color:var(--line-stark,var(--line));border-left-color:var(--line);background:var(--lw-accent-soft);color:var(--text)
 }
-.lernwelt .lw-subnav button.is-active{
-  background:var(--lw-accent-soft); color:var(--text); font-weight:720
+.lernwelt .lw-klappe-zeichen{
+  display:grid;place-items:center;flex:none;
+  transition:transform var(--motion-fast) var(--ease)
 }
-@media(hover:hover){
-  .lernwelt .lw-subnav button:hover{ background:var(--bg-hover); color:var(--text) }
-}
-/* Am Telefon bleibt die zweite Reihe eine Zeile zum Schieben — umbrochen
-   kostet sie zwei Zeilen Höhe, und darauf stehen vier Wörter. */
-@media(max-width:760px){
-  .lernwelt .lw-subnav{
-    flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-inline:contain;
-    scrollbar-width:none
-  }
-  .lernwelt .lw-subnav button{ flex:0 0 auto; min-height:36px }
-}
-/* 44 UND NICHT 40 (E232). Hier stand 40, ohne Begründung — die Erklärung
-   darüber betrifft nur das Nicht-Umbrechen, nicht die Höhe. §37 nennt 44 px
-   für alles, was mit dem Finger getroffen wird, und diese Zeile ist die
-   zweite Navigation: man tippt sie oft. Vier Punkte kosten nichts. */
-/* Auch in der BREITE: „Uni" ist drei Buchstaben und war 37 px breit. In
-   einer Reihe von Reitern sitzt der Nachbar direkt daneben — ein Fehltipp
-   landet dort, nicht im Leeren. Genau dann zählt die Breite. */
-@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:var(--touch-min); min-width:var(--touch-min) } }
+.lernwelt .lw-klappe-zeichen>svg{width:14px;height:14px;display:block}
+/* OFFEN DREHT SICH DAS ⌄ ZUM ^. Der gedrehte Zustand bleibt auch ohne
+   Bewegung stehen — nur der Weg dorthin fällt weg (reduced motion unten,
+   `body[data-bewegung="ruhig"]` in bausteine.css). */
+.lernwelt [data-lw-klappe][aria-expanded="true"] > .lw-klappe-zeichen{transform:rotate(180deg)}
 
 /* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
    wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
@@ -8237,9 +8243,6 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   outline:3px solid var(--accent);outline-offset:2px;
   box-shadow:0 0 0 5px var(--bg);border-radius:10px
 }
-.lernwelt .lw-area select:focus-visible{
-  border-color:var(--accent-text);box-shadow:0 0 0 3px var(--lw-accent-soft)
-}
 
 /* KEIN TOTER KNOPF (E720). In `:where(…)` wogen diese Zustände (0,2,0) und
    verloren gegen die Grundregel (0,2,1) — siebzehn Knöpfe blieben unter
@@ -8255,6 +8258,13 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   .lernwelt .lw-back:where(:not(:disabled)):hover{
     background:var(--bg-hover);color:var(--text)
   }
+  /* KEIN TOTER KNOPF AUCH IM KOPF (E720, E726). `test596` §1 fand den
+     Fächer-Chip und das ^ neben dem gewählten Hauptteil still: der Chip
+     hatte keine Hover-Regel, und die Fläche des gewählten Paars wog mehr
+     als die allgemeine. Das ^ behält die Fläche seines Paars und zeigt den
+     Zeiger am Rand; der Chip antwortet wie jeder Knopf der Lernwelt. */
+  .lernwelt .lw-fach:hover{border-color:var(--line-stark,var(--line));background:var(--bg-hover)}
+  .lernwelt .lw-nav .lw-nav-haupt.is-active + .lw-klappe:hover{border-color:var(--accent-text)}
   .lernwelt :is(.lw-page-head>button,.lw-page-head>.lw-actions button,
     .lw-actions button,.lw-rating button,.lw-error-list footer button,
     .lw-exam-list footer button,.lw-exam-card>button,.lw-quick button,
@@ -8355,59 +8365,46 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
    * eine zweite Wahrheit über denselben Aufbau. Die CSS weiss ohnehin, wie
    * breit das Gerät ist.
    * ==================================================================== */
-  /* Spalte 1 und Spalte 4 bleiben LEER. Dort stehen die zwei Knöpfe der
-     Schale — Zurück und die drei Punkte —, die am Telefon in diese Zeile
-     hineinrücken (E235, `bausteine.css`). Sie sind kein Rasterelement:
-     die Schale hält ihre Leiste an derselben Stelle, und das Raster hält
-     ihr den Platz frei. 44 px, weil ein Finger 44 braucht (§37). */
+  /* Spalte 1 bleibt LEER. Dort steht der Zurück-Knopf der Schale, der am
+     Telefon in diese Zeile hineinrückt (E235, `bausteine.css`). Er ist
+     kein Rasterelement: die Schale hält ihre Leiste an derselben Stelle,
+     und das Raster hält ihr den Platz frei. 44 px, weil ein Finger 44
+     braucht (§37). */
+  /* SPALTE 4 GIBT ES NICHT MEHR (E726). Seit E278/L68 ist das ••• auf
+     der Lernwelt `hidden` (ohne offene Seite täte es nichts, test67), und
+     die leere Spalte kostete 44 px, die der Reiterzeile fehlten: zwei
+     Paare [Name | ^] brauchen rund 230 px. Der Chip rückt an den Rand. */
   .lernwelt{
-    display:grid; grid-template-columns:44px minmax(0,1fr) auto 44px;
+    display:grid; grid-template-columns:44px minmax(0,1fr) auto;
     align-items:center
   }
   .lernwelt > *{ grid-column:1 / -1 }
   .lernwelt > .lw-nav { grid-column:2; grid-row:1; margin-bottom:12px }
-  /* Kein `margin-bottom` und `align-self:center`: die Höhe der Zeile macht
-     die Reiterkarte, und ein unterer Abstand am Chip würde ihn in einer
-     mittig ausgerichteten Zeile nach OBEN schieben. */
-  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:0;
+  /* `align-self:center` und DERSELBE untere Abstand wie die Reiterkarte
+     (12 px): die Rasterzeile ist Karte + Abstand hoch, und mittig steht nur,
+     wer denselben Abstand trägt. Hier stand `margin-bottom:0` — der Chip
+     sass 6 px unter der Mitte der Karte (ohne ruhige Fassung) und 2 px
+     darunter mit ihr, wo `--space-3` (8 px) galt (Durchsicht, `test601`
+     §1h; die ruhige Fassung zieht unten nach). */
+  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:12px;
                         align-self:center; padding-left:8px }
   /* Der Markenblock nennt „Redion / Lernen & Alltag" — beides steht schon
      oben in der Kreisleiste und in der Krume. Am Telefon war er ohnehin
      schon aus dem Bild; jetzt ist es ausgesprochen. */
   .lernwelt .lw-brand{ display:none }
-  /* Aus dem Feld wird ein Chip: die Beschriftung „Bereich" fällt weg (das
-     Zeichen ◎ und der Name stehen im Feld selbst), und breiter als nötig
-     wird er nicht. */
-  .lernwelt .lw-area{grid-template-columns:1fr;gap:0;min-width:0}
-  .lernwelt .lw-area>span{display:none}
-  /* GEMESSEN, NICHT GERATEN — UND ZWEIMAL DANEBEN. Der erste Versuch stand
-     auf `max-width:38vw`; im Bild stand dann nur „◎" und der Pfeil, denn
-     ein Auswahlfeld kürzt nicht mit Auslassungszeichen, es schneidet ab.
-     Der zweite gab ihm 132 px und rechnete mit 11.5 px Schrift — die es
-     nicht gibt: `input, textarea, select{ font-size:16px !important }`
-     steht in `bausteine.css`, damit iOS beim Tippen nicht hineinzoomt. Bei
-     16 px braucht „◎ Alle Bereiche" 120 px Text plus Pfeil und Polster,
-     zusammen rund 160 von 368 — und der Chip stand 49 px ausserhalb.
-
-     Die Antwort ist nicht eine dritte Breite, sondern eine andere Frage:
-     WOZU steht dort ein Wort, wenn es „ich filtere nicht" bedeutet? */
-  .lernwelt .lw-area select{
-    min-height:var(--touch-min);padding:7px 24px 7px 10px;border-radius:999px;
-    max-width:min(150px,40vw)
-  }
-  /* Filtert nichts → nur das Zeichen, 44 × 44. Der Text bleibt im Feld
-     (das Vorleseprogramm liest ihn, `aria-label` steht ohnehin dort), er
-     wird nur nicht gemalt; das Zeichen darüber ist Deko und fängt keine
-     Tipper ab, damit die native Auswahl weiter aufgeht. */
-  .lernwelt .lw-area[data-alle="ja"]{ position:relative; width:44px }
-  .lernwelt .lw-area[data-alle="ja"] select{
-    width:44px; min-width:var(--touch-min); padding:0; color:transparent;
-    -webkit-appearance:none; appearance:none
-  }
-  .lernwelt .lw-area[data-alle="ja"]::after{
-    content:"◎"; position:absolute; inset:0; display:grid; place-items:center;
-    color:var(--text-dim); font-size:17px; pointer-events:none
-  }
+  /* DER CHIP AM TELEFON (E235, E726). Aus dem Auswahlfeld „Bereich" ist
+     der Fächer-Chip geworden; die Frage aus E235 bleibt dieselbe: WOZU
+     steht dort ein Wort, wenn es „ich filtere nicht" bedeutet? Filtert er
+     nichts, bleibt nur das Zeichen, 44 × 44 — gezeichnet aus
+     `Register.symbole` statt des ◎ aus der Schrift. Der Name steht im
+     `aria-label` und wird nur nicht gemalt. Filtert er, steht das Fach da,
+     höchstens 150 px, mit Auslassungszeichen statt abgeschnitten (ein
+     Knopf kürzt, ein `<select>` schnitt). */
+  .lernwelt .lw-fach{min-height:var(--touch-min);max-width:min(150px,40vw);border-radius:999px;padding:0 var(--space-3)}
+  .lernwelt .lw-fach .lw-klappe-zeichen{display:none}
+  .lernwelt .lw-area[data-alle="ja"] .lw-fach{width:var(--touch-min);min-width:var(--touch-min);padding:0;justify-content:center}
+  .lernwelt .lw-area[data-alle="ja"] .lw-fach-name{display:none}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach{max-width:min(112px,30vw)}
   .lernwelt .lw-nav{
     position:sticky;z-index:5;top:0;margin-bottom:12px;padding:5px;border-radius:13px;
     box-shadow:var(--shadow-2)
@@ -8480,10 +8477,23 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 /* --- 428 × 926 und 390 × 844 ------------------------------------------ */
 @media(max-width:470px){
   .lernwelt .lw-head{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
-  .lernwelt .lw-area{grid-template-columns:64px minmax(0,1fr);gap:7px;width:100%;min-width:0}
-  .lernwelt .lw-area>span{padding:0;font-size:10px}
   .lernwelt .lw-nav button{padding-inline:9px}
   .lernwelt .lw-nav button>span:last-child{font-size:11px}
+  /* Am schmalen Telefon trägt der Hauptteil nur seinen Namen: das Zeichen
+     davor kostete 23 px je Paar, und der Name sagt, wo man ist (E726). */
+  .lernwelt .lw-nav .lw-nav-haupt>span[data-sym]{display:none}
+  .lernwelt .lw-nav .lw-klappe + .lw-nav-haupt{margin-left:var(--space-1)}
+  /* FILTERT DER CHIP, BLEIBT ER HIER EIN ZEICHEN (E726). Mit dem Namen
+     („Elektrotec…", 112 px) schrumpften die Hauptteile zu „He…" und „Üb…"
+     — gesehen im Bild, nicht im Lauf (§55.1). Statt des Namens wird das
+     Zeichen GEFÜLLT: Form statt nur Farbe (§38), wie das Herz aus E719.
+     Der Name steht im `aria-label`, im Titel der Lernzentrale und mit
+     Haken im Menü. Ab 471 px ist Platz, dort steht er da. */
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach{width:var(--touch-min);max-width:none;padding:0;
+    justify-content:center;border-color:var(--accent-text);background:var(--lw-accent-soft)}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-name{display:none}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-zeichen{color:var(--accent-text)}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-zeichen>svg{fill:currentColor}
   .lernwelt .lw-hero{display:grid;gap:15px;padding:17px 14px}
   .lernwelt .lw-hero::after{right:-142px;bottom:-172px;opacity:.4}
   .lernwelt .lw-hero>div:first-child>span{margin-top:10px}
@@ -8610,14 +8620,32 @@ body[data-ruhig="an"] .lernwelt .lw-head{
   justify-content:flex-end; margin-bottom:-46px; position:relative; z-index:2;
   pointer-events:none;
 }
-body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto }
-body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
+/* DER PLATZ FÜR DEN CHIP WÄCHST MIT DER LERNWELT (E726, Durchsicht). Hier
+   standen feste 264 px — so viel, wie der Chip höchstens breit wird (230)
+   und Luft. Bei 800 px Fensterbreite blieben den Paaren 342 px, und
+   „Schule / Ausbildung" neben „Übersicht" brauchen 370: beide kürzten mit
+   „…", auch ohne Filter (`test601` §1g). Jetzt deckelt `--lw-chip-decke`
+   den Chip auf 27 % der Lernwelt (bei 850 px Breite sind das wieder die
+   230), und die Leiste hält genau diese Decke frei. Beide Prozente
+   beziehen sich auf dieselbe Breite: der Kopf und die Leiste füllen die
+   Lernwelt. Ein langer Fachname kürzt im Chip mit „…" — er steht ganz im
+   `aria-label` und im Menü. */
+body[data-ruhig="an"] .lernwelt{ --lw-chip-decke:min(230px, 27%) }
+body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto; max-width:var(--lw-chip-decke) }
+body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:calc(var(--lw-chip-decke) + 34px) }
 /* Am Telefon ist daneben kein Platz — dort bleiben es zwei Zeilen. */
 @media(max-width:780px){
   body[data-ruhig="an"] .lernwelt .lw-head{
     margin-bottom:var(--space-3); justify-content:stretch; position:static;
   }
+  body[data-ruhig="an"] .lernwelt .lw-area{ max-width:none }
   body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:var(--space-2) }
+}
+/* Im Raster des Telefons steht der Chip neben der Karte (E235) und trägt
+   denselben unteren Abstand wie sie — sonst sitzt er 2 px unter ihrer
+   Mitte (`test601` §1h). */
+@media(max-width:760px){
+  body[data-ruhig="an"] .lernwelt > .lw-head{ margin-bottom:12px }
 }
 
 
@@ -27370,7 +27398,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1446, inhalt: '1ae28064d9843a51', gebaut: '2026-10-11T02:06:01.207Z' };
+const Stand = { fassung: 1447, inhalt: '9c44af184f404a2a', gebaut: '2026-10-11T02:10:18.528Z' };
 window.Stand = Stand;
 
 </script>
@@ -101496,6 +101524,7 @@ const Learning = (() => {
     };
     return {
         cards, due, dailyQueue, statistics, reviewLog, topicProgress, nextExam, splitCard,
+        topicLabel,
         canReadCard, canEditCard,
         sourceOf, sourceLabel, makeSourceRef, jumpToSource,
         sourceMenu, createCrop, clozeFromSelection, open
@@ -136433,18 +136462,28 @@ const Lernwelt = (() => {
         { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' },
         { id: 'trainer', icon: 'checkCircle', name: 'Trainer' }
     ];
-    const REITER = [
-        { id: 'heute', icon: 'today', name: 'Heute' },
-        { id: 'lernen', icon: 'cards', name: 'Lernen',
-            unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] },
-        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
-            unter: ['pruefungen', 'noten'] },
-        { id: 'schule', icon: 'learn', name: 'Wo du lernst',
-            unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+    const KLAPPEN = [
+        { id: 'heute', titel: 'Heute', name: 'Heute', icon: 'today', gruppen: [
+                { unter: ['heute'] },
+                { name: 'Prüfungen', unter: ['pruefungen', 'noten'] },
+                { name: 'Wo du lernst', unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+            ] },
+        { id: 'uebersicht', titel: 'Übersicht', name: 'Übersicht', icon: 'cards', gruppen: [
+                { unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] }
+            ] }
     ];
+    const klappen = () => {
+        const bekannt = new Set(KLAPPEN.flatMap(k => k.gruppen.flatMap(g => g.unter)));
+        const weitere = ANSICHTEN.filter(a => !bekannt.has(a.id)).map(a => a.id);
+        if (!weitere.length)
+            return KLAPPEN;
+        return KLAPPEN.map(k => k.id !== 'uebersicht' ? k
+            : { ...k, gruppen: [...k.gruppen, { name: 'Weitere', unter: weitere }] });
+    };
     const KURZ = { lernen: 'Übersicht' };
     const ansichtName = (id) => KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
-    const gruppeVon = (ansicht) => REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht)) || null;
+    const ansichtZeichen = (id) => ANSICHTEN.find(x => x.id === id)?.icon || 'cards';
+    const klappeVon = (ansicht) => klappen().find(k => k.gruppen.some(g => g.unter.includes(ansicht))) || null;
     const zustand = {
         root: null,
         ansicht: 'heute',
@@ -136631,12 +136670,19 @@ const Lernwelt = (() => {
         const seite = seiteVon(record);
         return !!seite && seite !== record && direkteBereichIds(seite).includes(bereichId);
     };
+    const fachSchluessel = (name) => String(name ?? '').trim().toLocaleLowerCase('de-CH');
+    const kartenThema = (card) => typeof Learning !== 'undefined' && typeof Learning.topicLabel === 'function'
+        ? String(Learning.topicLabel(card)) : themaVon(card);
+    const imFach = (card) => !zustand.themaId || fachSchluessel(kartenThema(card)) === zustand.themaId;
+    const imFachWert = (wert) => !zustand.themaId ||
+        textListe(wert).some(eintrag => fachSchluessel(Store.getBlock(eintrag)?.text ?? eintrag) === zustand.themaId);
     const alleBloecke = () => Object.values(Store.cache.blocks)
         .filter(block => block?.alive !== false && darfLesen(block));
-    const lernkartenRoh = () => {
+    const lernkartenImBereich = () => {
         const ausLearning = typeof Learning !== 'undefined' && Learning.cards ? liste(Learning.cards()) : [];
         return ausLearning.filter(card => imBereich(card));
     };
+    const lernkartenRoh = () => lernkartenImBereich().filter(imFach);
     const hatExternenLernvertrag = (api) => {
         const lernzustand = api?.lernzustand, vertrag = lernzustand?.VERTRAG;
         return typeof lernzustand?.lesen === 'function' &&
@@ -136800,8 +136846,10 @@ const Lernwelt = (() => {
             Store.rowsOf(collection.id).forEach((row) => {
                 if (!row || row.alive === false || !darfLesen(row) || !imBereich(row))
                     return;
-                const d = datum(zeilenWert(row, collection, datumKey));
                 const fachWert = zeilenWert(row, collection, fachKey);
+                if (!imFachWert(fachWert))
+                    return;
+                const d = datum(zeilenWert(row, collection, datumKey));
                 ausgabe.push({
                     id: String(row.id),
                     collectionId: String(collection.id),
@@ -137214,6 +137262,28 @@ const Lernwelt = (() => {
             return woerter.some(wort => suchtext.includes(wort));
         });
     };
+    const faecher = () => {
+        const namen = new Map();
+        lernkartenImBereich().forEach(card => {
+            const name = kartenThema(card).trim();
+            const id = fachSchluessel(name);
+            if (id && !namen.has(id))
+                namen.set(id, name);
+        });
+        fachZeilen().forEach(zeile => {
+            const name = String(zeile.row?.text || '').trim();
+            const id = fachSchluessel(name);
+            if (id && !namen.has(id))
+                namen.set(id, name);
+        });
+        return [...namen].map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'de-CH'));
+    };
+    const aktivesFach = () => {
+        if (!zustand.themaId)
+            return null;
+        return faecher().find(item => item.id === zustand.themaId) || { id: zustand.themaId, name: zustand.themaId };
+    };
     const aktiverBereich = () => bereiche().find(item => item.id === zustand.bereichId)
         || bereiche()[0]
         || { id: 'alle', name: 'Alle Bereiche', icon: '◎', art: 'alle' };
@@ -137432,40 +137502,35 @@ const Lernwelt = (() => {
             prozent(thema.progress) + '" aria-label="Fortschritt ' + esc(thema.label) + '"></progress></button>')
             .join('') + '</div>'
         : leer('cards', 'Noch keine Themen', 'Themen entstehen automatisch aus deinen Lernkarten.', 'capture', 'Lernmaterial erfassen');
+    const klappeKnopf = (id, name, klasse, innen) => '<button type="button" class="' + klasse + '" data-lw-klappe="' + esc(id) + '" aria-haspopup="menu" ' +
+        'aria-expanded="false" aria-label="' + esc(name) + '">' + innen +
+        '<span class="lw-klappe-zeichen" data-sym="chevronD" aria-hidden="true"></span></button>';
     const kopf = () => {
-        const optionen = bereiche();
-        const aktiv = aktiverBereich();
+        const fach = aktivesFach();
+        const bereich = aktiverBereich();
+        const alle = !fach && bereich.id === 'alle';
+        const chipText = fach ? fach.name : bereich.id !== 'alle' ? bereich.name : 'Alle Fächer';
+        const chipName = 'Fach wählen: ' + (fach ? fach.name : 'Alle Fächer') +
+            (bereich.id !== 'alle' ? ' · Lebensbereich: ' + bereich.name : '');
         return '<header class="lw-head">' +
             '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
             '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-            '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
-            '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
-            optionen.map(item => '<option value="' + esc(item.id) + '"' +
-                (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
-            '</select></label></header>' +
+            '<div class="lw-area" data-alle="' + (alle ? 'ja' : 'nein') + '">' +
+            klappeKnopf('faecher', chipName, 'lw-fach', '<span class="lw-fach-zeichen" data-sym="filter" aria-hidden="true"></span>' +
+                '<span class="lw-fach-name">' + esc(chipText) + '</span>') +
+            '</div></header>' +
             (() => {
-                const bekannt = new Set(REITER.flatMap(r => [r.id, ...(r.unter || [])]));
-                const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
-                    .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
-                const reihe = [...REITER, ...zusatz];
-                const hier = gruppeVon(zustand.ansicht);
-                const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' + reihe.map(item => {
-                    const drin = item.id === zustand.ansicht ||
-                        (item.unter || []).includes(zustand.ansicht);
-                    return '<button type="button" data-lw-nav="' +
-                        (item.unter ? item.unter[0] : item.id) + '"' +
-                        (drin ? ' aria-current="page" class="is-active"' : '') + '>' +
-                        '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) + '</span>' +
-                        (item.unter
-                            ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
-                        '</button>';
-                }).join('') + '</nav>';
-                if (!hier?.unter)
-                    return haupt;
-                return haupt + '<nav class="lw-subnav" data-material="heute-unter" aria-label="' + esc(hier.name) + '">' +
-                    hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
-                        (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
-                        esc(ansichtName(id)) + '</button>').join('') + '</nav>';
+                const hier = klappeVon(zustand.ansicht);
+                return '<nav class="lw-nav" data-kopfzeile="eigene" data-material="heute" aria-label="Lernen und Alltag">' +
+                    klappen().map(k => {
+                        const drin = hier?.id === k.id;
+                        const zeigt = drin ? zustand.ansicht : (k.gruppen[0]?.unter[0] || k.id);
+                        return '<button type="button" class="lw-nav-haupt' + (drin ? ' is-active' : '') +
+                            '" data-lw-nav="' + esc(zeigt) + '"' + (drin ? ' aria-current="page"' : '') + '>' +
+                            '<span data-sym="' + esc(ansichtZeichen(zeigt)) + '"></span><span>' +
+                            esc(drin ? ansichtName(zeigt) : k.name) + '</span></button>' +
+                            klappeKnopf(k.id, 'Weitere Ansichten: ' + k.titel, 'lw-klappe', '');
+                    }).join('') + '</nav>';
             })();
     };
     const dokumentEinstieg = () => {
@@ -137782,7 +137847,7 @@ const Lernwelt = (() => {
         const ktx = kennzahlKontext({ queue, stats });
         return '<div class="lw-learning">' +
             '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
-            (fokus ? esc(fokus.label) : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
+            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
             '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
             '<section class="lw-metrics">' +
             merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +
@@ -137969,6 +138034,8 @@ const Lernwelt = (() => {
                 if (note < 1 || note > 6)
                     return;
                 const fachWert = zeilenWert(row, collection, fachKey);
+                if (!imFachWert(fachWert))
+                    return;
                 raus.push({
                     fach: textListe(fachWert).join(', ') || String(fachWert || '') || 'Ohne Fach',
                     note,
@@ -138128,6 +138195,8 @@ const Lernwelt = (() => {
                 const bisRoh = String(zeilenWert(row, collection, bisKey) ?? '');
                 const vonMin = uhrMin(vonRoh);
                 const fachWert = zeilenWert(row, collection, fachKey);
+                if (!imFachWert(fachWert))
+                    return;
                 raus.push({
                     tag,
                     von: vonRoh.trim(), bis: bisRoh.trim(),
@@ -138783,9 +138852,10 @@ const Lernwelt = (() => {
             titel = 'Neue Karten';
         }
         if (art === 'topic') {
-            karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(zustand.themaId).toLowerCase() ||
-                themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === zustand.themaId);
-            const thema = liste(statistik().topics).find(item => item.id === zustand.themaId);
+            const themaId = einzelneId || zustand.themaId;
+            karten = lernkarten().filter(card => themaVon(card).toLowerCase() === String(themaId).toLowerCase() ||
+                themaVon(card).toLocaleLowerCase('de-CH').replace(/[^a-z0-9]+/g, '-') === themaId);
+            const thema = liste(statistik().topics).find(item => item.id === themaId);
             titel = thema ? 'Thema: ' + thema.label : 'Themenrunde';
         }
         if (art === 'exam') {
@@ -139028,6 +139098,66 @@ const Lernwelt = (() => {
             externOeffnen(page.id);
         }
     };
+    const fachSetzen = (id) => {
+        zustand.themaId = id;
+        Store.setMeta(metaSchluessel('fach'), id);
+        zeichnen();
+    };
+    const bereichSetzen = (id) => {
+        zustand.bereichId = bereiche().some(item => item.id === id) ? id : 'alle';
+        zustand.extern = null;
+        zustand.ladeSchluessel = '';
+        zustand.fachId = '';
+        zustand.themaId = '';
+        Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
+        Store.setMeta(metaSchluessel('fach'), '');
+        zeichnen();
+    };
+    const chipFokussieren = () => {
+        zustand.root?.querySelector('[data-lw-klappe="faecher"]')?.focus({ preventScroll: true });
+    };
+    let klappeDruck = null;
+    const druck = (event) => {
+        const k = event.target instanceof Element ? event.target.closest('[data-lw-klappe]') : null;
+        klappeDruck = k ? { el: k, offen: k.getAttribute('aria-expanded') === 'true', zeit: Date.now() } : null;
+    };
+    const klappeOeffnen = (anker) => {
+        const war = klappeDruck;
+        klappeDruck = null;
+        if (war && war.el === anker && war.offen && Date.now() - war.zeit < 1000)
+            return;
+        if (anker.dataset.lwKlappe === 'faecher') {
+            const fach = zustand.themaId;
+            const gruppen = [{
+                    optionen: [{ id: 'fach:', name: 'Alle Fächer', zeichen: 'filter', aktiv: !fach },
+                        ...faecher().map(item => ({ id: 'fach:' + item.id, name: item.name, aktiv: item.id === fach }))]
+                }];
+            const liste = bereiche();
+            if (liste.length > 1)
+                gruppen.push({ name: 'Lebensbereich', optionen: liste.map(item => ({
+                        id: 'bereich:' + item.id, name: item.name, aktiv: item.id === zustand.bereichId
+                    })) });
+            UI.wahl({ anker, titel: 'Fächer', gruppen, beiWahl: (id) => {
+                    if (id.startsWith('bereich:'))
+                        bereichSetzen(id.slice('bereich:'.length));
+                    else if (id.startsWith('fach:'))
+                        fachSetzen(id.slice('fach:'.length));
+                    chipFokussieren();
+                } });
+            return;
+        }
+        const klappe = klappen().find(k => k.id === anker.dataset.lwKlappe);
+        if (!klappe)
+            return;
+        UI.wahl({
+            anker, titel: klappe.titel,
+            gruppen: klappe.gruppen.map(g => ({ ...(g.name ? { name: g.name } : {}),
+                optionen: g.unter.map(id => ({ id, name: ansichtName(id), zeichen: ansichtZeichen(id),
+                    aktiv: id === zustand.ansicht })) })),
+            beiWahl: (id) => { if (ansichtGueltig(id))
+                wechseln(id); }
+        });
+    };
     const klick = (event) => {
         const element = event.target instanceof Element ? event.target : null;
         if (!element)
@@ -139035,6 +139165,11 @@ const Lernwelt = (() => {
         const merk = element.closest('[data-lw-merk]');
         if (merk?.dataset.lwMerk) {
             kennzahlMerken(merk, merk.dataset.lwMerk);
+            return;
+        }
+        const klappe = element.closest('[data-lw-klappe]');
+        if (klappe) {
+            klappeOeffnen(klappe);
             return;
         }
         const nav = element.closest('[data-lw-nav]');
@@ -139088,14 +139223,14 @@ const Lernwelt = (() => {
         const topic = element.closest('[data-lw-topic]');
         if (topic?.dataset.lwTopic) {
             zustand.themaId = topic.dataset.lwTopic;
+            Store.setMeta(metaSchluessel('fach'), zustand.themaId);
             wechseln('lernen');
             return;
         }
         const pathTopic = element.closest('[data-lw-path-topic]');
         if (pathTopic?.dataset.lwPathTopic) {
-            zustand.themaId = pathTopic.dataset.lwPathTopic;
             zustand.ansicht = 'lernen';
-            trainingStarten('topic');
+            trainingStarten('topic', pathTopic.dataset.lwPathTopic);
             return;
         }
         const subject = element.closest('[data-lw-subject]');
@@ -139167,21 +139302,6 @@ const Lernwelt = (() => {
             });
         }
     };
-    const aenderung = (event) => {
-        const select = event.target instanceof HTMLSelectElement && event.target.matches('[data-lw-area]')
-            ? event.target
-            : null;
-        if (!select)
-            return;
-        const gueltig = bereiche().some(item => item.id === select.value);
-        zustand.bereichId = gueltig ? select.value : 'alle';
-        zustand.extern = null;
-        zustand.ladeSchluessel = '';
-        zustand.fachId = '';
-        zustand.themaId = '';
-        Store.setMeta(metaSchluessel('bereich'), zustand.bereichId);
-        zeichnen();
-    };
     const taste = (event) => {
         if (!zustand.root?.isConnected)
             return;
@@ -139213,7 +139333,7 @@ const Lernwelt = (() => {
             Trainer.abmelden();
         if (zustand.root) {
             zustand.root.removeEventListener('click', klick);
-            zustand.root.removeEventListener('change', aenderung);
+            zustand.root.removeEventListener('pointerdown', druck, true);
         }
         document.removeEventListener('keydown', taste);
         zustand.root = null;
@@ -139228,12 +139348,14 @@ const Lernwelt = (() => {
             : ansichtGueltig(gespeichert) ? gespeichert : 'heute';
         const bereichGespeichert = String(Store.getMeta(metaSchluessel('bereich'), 'alle'));
         zustand.bereichId = bereiche().some(item => item.id === bereichGespeichert) ? bereichGespeichert : 'alle';
+        const fachGespeichert = fachSchluessel(Store.getMeta(metaSchluessel('fach'), ''));
+        zustand.themaId = fachGespeichert && faecher().some(item => item.id === fachGespeichert) ? fachGespeichert : '';
         zustand.training = null;
         zustand.simulation = null;
         zustand.extern = null;
         zustand.ladeSchluessel = '';
         ziel.addEventListener('click', klick);
-        ziel.addEventListener('change', aenderung);
+        ziel.addEventListener('pointerdown', druck, true);
         document.addEventListener('keydown', taste);
         zeichnen();
     };
@@ -142339,7 +142461,8 @@ const Produktwelten = (() => {
             return null;
         const welt = sichereWelt(treffer[1]);
         const erlaubte = welt === 'lernen'
-            ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt', 'trainer'])
+            ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'noten', 'stundenplan',
+                'schule', 'uni', 'arbeit', 'fortschritt', 'trainer'])
             : new Set(['start', 'seiten', 'dateien', 'projekte', 'uebersicht', 'bibliothek',
                 'aufgaben', 'kalender', 'datenbanken', 'whiteboards', 'wiki', 'vorlagen']);
         return erlaubte.has(treffer[2]) ? { welt, ansicht: treffer[2] } : null;

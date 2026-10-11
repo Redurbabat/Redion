@@ -7649,3 +7649,83 @@ Klick auf den Grund der Suche             Fokus auf <body>                   Fok
 Start (test388 §5, gzip)                  1863 KB                            1864 KB (Decke 1950) — die
                                                                              Kommentare der zwei neuen Stilregeln
 ```
+
+## §95 · Der Kopf des Lernzentrums: Reihen, Bedienelemente, Rollen, Fachzahlen (E726, 10. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/lernzentrum-kopf`, vorher 57a023ecf
+(`claude/morgen-besser-2` mit `kein-toter-knopf` und `menue-eine-quelle`),
+nachher E726. Gemessen über `file://` mit Chromium, Rechner 1440×900,
+Telefon 390×844 (`isMobile`, `hasTouch`), dunkel und hell — die Zahlen sind
+in beiden Themen gleich. Bestand: Seite „Elektrotechnik" mit 10 Lernkarten
+(2 Fehler, 3 fällig, 4 neu, 1 stabil), Seite „Geometrie — Kap. 4" mit 22,
+die Willkommensseite mit 1; eine Fächer-Datenbank (`schoolKind:
+'subjects'`) mit Elektrotechnik, Mathematik, Deutsch; zwei Prüfungen, deren
+Beziehung „Fach" auf Elektrotechnik bzw. Mathematik zeigt. „Bedienelemente"
+sind sichtbare Knöpfe und Auswahlfelder in `.lw-head`, `.lw-nav` und
+`.lw-subnav`; „Reihen" die Zahl verschiedener Höhen ihrer Mitten. Das
+Messskript liegt im Notizordner, nicht im Verzeichnis.
+
+```txt
+                                         vorher (57a023ecf)                  nachher (E726)
+Kopf in der Übersicht, 1440              2 Reihen, 10 Bedienelemente          1 Reihe, 5 (Chip, 2 Hauptteile, 2 ^)
+Kopf in der Übersicht, 390               2 Reihen, 10                         1 Reihe, 5
+Kopf auf „Heute"                         1 Reihe, 5                           1 Reihe, 5
+Spanne der Mitten (Übersicht)            48 px (1440) · 56 px (390)           1 px · 2 px
+Telefon: .lw-nav scrollWidth/clientWidth 440 / 232, Kanten „beides"           276 / 276, „nein"
+Telefon: ausserhalb des Bildes            „Wo du lernst", „Fortschritt"        —
+Inhalt beginnt (Übersicht), 1440         y = 235                              y = 197
+Inhalt beginnt (Übersicht), 390          y = 169 (Heute: 119)                 y = 119 (Heute: 119)
+⌄ / ^ mit aria-haspopup                  0 von 3                              3 von 3 (heute, uebersicht, faecher)
+^ am Telefon                             —                                    44 × 44, elementFromPoint trifft
+Menüeinträge ∪ Hauptteile                4 Ziele (heute, lernen, pruefungen,  12 von 12
+                                         schule)
+#welt-lernen-<id> öffnet                 10 von 12 (noten, stundenplan →      12 von 12
+                                         heute)
+„Bereich"/Fächer: Optionen               1 („◎ Alle Bereiche")                6 (Alle Fächer, Deutsch, Elektrotechnik,
+                                                                              Geometrie — Kap. 4, Mathematik, Willkommen)
+„Elektrotechnik": fällige Fehler/Karten  7 / 9 (ungefiltert, nur der Titel)   2 / 3 — Summe 5 = topicProgress.due
+„Elektrotechnik": Karten mit Quellen     33                                   10 = topicProgress.total
+„Elektrotechnik": Prüfungen              ET Klausur, Mathe-Test               ET Klausur
+Kontrast in Ruhe, 10 Schemata            —                                    Hauptteil ≥ 5,28 (Touch Kit hell),
+                                                                              ^ ≥ 5,28, Chip ≥ 10,84
+Übergang des ^ (Bewegung / reduce /      —                                    0,14 s / 0 s / 0 s, offen
+data-bewegung="ruhig")                                                        immer gedreht
+Telefon, „Elektrotechnik" gewählt         —                                    erster Bau: Chip 112 px, Hauptteile
+                                                                              „He…"/„Üb…", Leiste 208 / 208;
+                                                                              danach: Chip 44 × 44 gefüllt, nichts gekürzt
+test601                                  6 / 71                               77 / 77
+Start (test388 §5, gzip)                 1865 KB                              1867 KB (Decke 1950)
+```
+
+Die Spanne von 1–2 px nachher ist der Chip, der eine Linie Rahmen höher
+sitzt als die Reiterkarte; die Prüfung erlaubt 6 px.
+
+**Nach der Durchsicht (11. Oktober 2026).** Derselbe Weg (`file://`,
+Chromium), vorher eaf3ab2c2, nachher die Reparatur aus E726 „Nach der
+Durchsicht". Für den Lernpfad: zwei Seiten „Elektrotechnik" (6 fällige
+Karten) und „Geometrie — Kapitel 4 Flächen und Körper" (9) neben der
+Willkommensseite. Für die Breiten: Rechner, ruhige Fassung (Vorgabe),
+Ansicht „Schule / Ausbildung".
+
+```txt
+                                         vorher (eaf3ab2c2)                  nachher
+Lernpfad: Stufen vor / nach einem Klick  3 / 1                               3 / 3
+„Heute" nach dem Klick (test601-Bestand) 27 → 9 Karten                       27 → 27
+Chip / meta lernwelt:<aktor>:fach        „Elektrotechnik" / gesetzt           „Alle Fächer" / leer
+Die Runde selbst (test601-Bestand)       „Thema: Elektrotechnik", Karte 1     dasselbe
+                                         von 10
+Freigehaltener Platz für den Chip        264 px bei jeder Breite              781: 193 · 800: 198 · 900: 225 ·
+(padding-right der Leiste)                                                    ab 1100: 264
+Chip mit langem Fach, 800 px             230 px                               164 px („Geometrie — K…")
+„Schule / Ausbildung" bei 800 px         115 / 93 (gekürzt)                   115 / 115
+„Übersicht" daneben, 800 px              55 / 43 (gekürzt)                    55 / 55
+Paar am Rechner (Hauptteil / ^)          138–174 / 139–173                    138–174 / 138–174
+Telefon: Mitte Reiterkarte / Chip        ruhig aus 79 / 85 · ruhig an 79 / 81  79 / 79 · 79 / 79
+Name des ^ neben „Übersicht"             „Weitere Ansichten: Lernen"          „Weitere Ansichten: Übersicht"
+test601                                  80 / 89                              89 / 89
+Start (test388 §5, gzip)                 1867 KB                              1867 KB (Decke 1950)
+```
+
+„115 / 93" ist `scrollWidth / clientWidth` des Namens im Hauptteil. Die
+Breiten 761 bis 780 px stehen nicht in der Tabelle: dort hat der Chip in
+der ruhigen Fassung seine eigene Zeile (wie vorher), nichts kürzt.

@@ -133,13 +133,27 @@ const route = await seite.evaluate(async () => {
     ueberRoute, view: wurzel?.dataset['lwView'] || '',
     start: !!wurzel?.querySelector('.lw-trainer-start'),
     anlegen: !!wurzel?.querySelector('[data-tr-anlegen]'),
-    reiter: !!wurzel?.querySelector('.lw-subnav [data-lw-nav="trainer"]')
+    /* SEIT E726 GIBT ES KEINE ZWEITE REIHE MEHR: der Trainer steht im Menü
+       „Übersicht ^", und solange man in ihm ist, heisst der Hauptteil
+       „Trainer" (aria-current). Beides wird geprüft — das Menü wirklich
+       geöffnet, nicht nur nach einem Wähler gesucht. */
+    reiter: await (async () => {
+      const haupt = wurzel?.querySelector<HTMLElement>('.lw-nav > [data-lw-nav="trainer"][aria-current="page"]');
+      const klappe = wurzel?.querySelector<HTMLElement>('[data-lw-klappe="uebersicht"]');
+      if (!haupt || !klappe || !/Trainer/.test(haupt.textContent || '')) return false;
+      klappe.click();
+      await new Promise(r => setTimeout(r, 300));
+      const imMenue = !!document.querySelector('.menu [data-wahl="trainer"][aria-checked="true"]');
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await new Promise(r => setTimeout(r, 200));
+      return imMenue;
+    })()
   };
 });
 console.log('    ' + JSON.stringify(route));
 p('Die Route #welt-lernen-trainer öffnet den Trainer', route.view === 'trainer', JSON.stringify(route));
 p('Ohne Kapitel: die Übersicht bietet das Anlegen an', route.start && route.anlegen);
-p('Der Trainer hat einen Reiter in der zweiten Reihe', route.reiter);
+p('Der Trainer steht im Menü „Übersicht ^", angehakt, und der Hauptteil heisst „Trainer" (E726)', route.reiter);
 
 const kachel = await seite.evaluate(async () => {
   const w = { Store, Learning, Lernwelt, Register, Produktwelten, WissenDienst,

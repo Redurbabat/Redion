@@ -293,7 +293,9 @@ const reiter = await seite.evaluate(() => {
       drin: r.left >= kasten.left - 1 && r.right <= kasten.right + 1,
     };
   });
-  return { anzahl: knoepfe.length, draussen: knoepfe.filter(k => !k.drin).map(k => k.text) };
+  return { anzahl: knoepfe.length, draussen: knoepfe.filter(k => !k.drin).map(k => k.text),
+           haupt: leiste.querySelectorAll(':scope > button[data-lw-nav]').length,
+           klappen: leiste.querySelectorAll(':scope > button[data-lw-klappe][aria-haspopup="menu"]').length };
 });
 
 p('Die Reiterleiste ist da', !!reiter, 'keine .lw-nav gefunden');
@@ -308,7 +310,14 @@ if (reiter) {
 
      Die Zahl bleibt ausgeschrieben und wird nicht aus `REITER` gelesen:
      dieser Punkt soll ja gerade merken, wenn ein Reiter verschwindet. */
-  gleich('Sie hat vier Reiter mit zweiter Reihe darunter', reiter.anzahl, 4);
+  /* SEIT E726 SIND DIE VIER ZWEI PAARE: „Heute" und „Übersicht", jedes mit
+     seinem ^ (Redur, Masterprompt S. 21). Die zweite Reihe gibt es nicht
+     mehr; ihre Ansichten stehen in den Menüs der ^. Die Zahl bleibt vier
+     und ausgeschrieben — und dazu wird geprüft, dass es wirklich zwei
+     Hauptteile und zwei echte ^ sind. */
+  gleich('Sie hat vier Knöpfe: zwei Paare [Hauptteil | ^] (E726)', reiter.anzahl, 4);
+  gleich('Davon zwei Hauptteile', reiter.haupt, 2);
+  gleich('Und zwei ^ mit Menü (aria-haspopup="menu")', reiter.klappen, 2);
   gleich('Und keiner steht ausserhalb', reiter.draussen, []);
 }
 

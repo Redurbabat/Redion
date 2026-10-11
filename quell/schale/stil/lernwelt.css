@@ -100,15 +100,21 @@
 .lernwelt .lw-brand h1{
   margin:0;font-size:16px;line-height:1.2;font-weight:760;letter-spacing:-.025em
 }
-.lernwelt .lw-area{
-  display:grid;grid-template-columns:auto minmax(150px,230px);align-items:center;gap:8px;
-  color:var(--text-dim);font-size:12px;font-weight:650
-}
-.lernwelt .lw-area select{
-  width:100%;min-width:0;min-height:var(--lw-touch);padding:8px 34px 8px 11px;
+/* DER FÄCHER-CHIP (E726) ersetzt das Auswahlfeld „Bereich": ein Knopf mit
+   Menü statt eines `<select>`, das in einem frischen Bestand nur „◎ Alle
+   Bereiche" kannte. 230 px höchstens — dieselbe Breite, die das Feld hatte.
+   In der ruhigen Fassung deckelt `--lw-chip-decke` ihn schmaler, wenn die
+   Lernwelt schmal ist (unten bei E219). */
+.lernwelt .lw-area{display:flex;justify-content:flex-end;min-width:0}
+.lernwelt .lw-fach{
+  display:inline-flex;align-items:center;gap:var(--space-2);min-width:0;max-width:230px;
+  min-height:var(--lw-touch);padding:0 var(--space-3) 0 var(--space-4);
   border:1px solid var(--line);border-radius:var(--lw-radius-sm);
-  outline:none;background:var(--bg-input);color:var(--text);cursor:pointer
+  background:var(--bg-input);color:var(--text);font-size:12px;font-weight:650;cursor:pointer
 }
+.lernwelt .lw-fach-zeichen{display:grid;place-items:center;flex:none;color:var(--text-dim)}
+.lernwelt .lw-fach-zeichen>svg{width:15px;height:15px}
+.lernwelt .lw-fach-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* --- Hauptnavigation ---------------------------------------------------- */
 .lernwelt .lw-nav{
@@ -128,58 +134,58 @@
 .lernwelt .lw-nav button>span:first-child{font-size:15px;line-height:1}
 
 /* ============================================================================
- * DIE ZWEITE REIHE (E206)
+ * ZWEI KLAPPEN IN EINER ZEILE (E726)
  * ----------------------------------------------------------------------------
- * Aus neun Reitern wurden vier. Drei von ihnen sind Gruppen und tragen ein
- * kleines „⌄"; wer darin ist, bekommt darunter eine ZWEITE, kurze Reihe mit
- * genau den Ansichten dieser Gruppe.
+ * Bis hier: vier Reiter, drei davon mit einem kleinen „⌄", und wer in einer
+ * Gruppe war, bekam darunter eine ZWEITE Reihe (E206 — „bewusst kein
+ * Aufklappmenü"). Das ⌄ war Schmuck auf einem Knopf, der sprang; Redur las
+ * es als das ^, das es versprach, und wollte genau das: „heute und was
+ * neben das ist im ^ … die übersicht neben heute auch mit ^".
  *
- * Sie ist bewusst kein Aufklappmenü: ein Menü versteckt, wo man ist, und man
- * muss es öffnen, um zu sehen, ob es sich lohnt. Die Reihe steht da, solange
- * sie gebraucht wird, und verschwindet, sobald man die Gruppe verlässt —
- * dasselbe Verhalten, das Word und VS Code für ihre Registerkarten benutzen.
+ * Jetzt: [Hauptteil | ^] [Hauptteil | ^]. Der Hauptteil sagt, wo man ist
+ * (in „Trainer" heisst er „Trainer"), das ^ öffnet das Menü (`UI.wahl`).
+ * Beide sind unmittelbare Kinder der Leiste — das Material (E706) sucht die
+ * Wahlen einer Reihe unter ihren Kindern und fliegt zwischen den
+ * Hauptteilen.
  *
- * Ohne Rahmen und ohne Fläche: sie gehört zur Leiste darüber und soll nicht
- * wie eine zweite Leiste aussehen.
+ * 44 BREIT, IMMER. Die HÖHE folgt den Reitern: 34 px für die Maus (E205 —
+ * „44 px sind eine Fingerregel, keine Mausregel"), 44 mit dem Finger
+ * (`pointer:coarse` weiter unten, und am Telefon ohnehin).
  * ==========================================================================*/
-.lernwelt .lw-nav-mehr{ flex:none; opacity:.5; margin-left:2px }
-.lernwelt .lw-nav-mehr>svg{ width:11px; height:11px; display:block }
-.lernwelt .lw-nav button.is-active .lw-nav-mehr{ opacity:.75 }
-
-.lernwelt .lw-subnav{
-  display:flex; align-items:center; gap:var(--space-1); flex-wrap:wrap;
-  margin:calc(var(--lw-gap) * -1 + var(--space-2)) 0 var(--lw-gap);
-  padding:0 var(--space-2)
+.lernwelt .lw-nav .lw-nav-haupt{border-top-right-radius:0;border-bottom-right-radius:0;
+  flex:0 1 auto;min-width:var(--lw-touch)}
+/* Wird es eng (am Telefon „Schule / Ausbildung" neben „Übersicht"), kürzt
+   der Name mit Auslassungszeichen, statt die Leiste rollen zu lassen — eine
+   rollende Leiste schnitt „Fortschritt" mitten im Wort ab (E726). Der
+   ganze Name steht im Menü, mit Haken. */
+.lernwelt .lw-nav .lw-nav-haupt>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* `align-self:stretch`: das ^ ist so hoch wie sein Hauptteil, nicht nur
+   „mindestens 34". Der Hauptteil misst mit Zeichen und Innenabstand 36 px,
+   das ^ ohne Inhalt 34 — an der Naht stand eine Stufe von 1 px oben und
+   unten (Durchsicht, `test601` §2g). */
+.lernwelt .lw-nav .lw-klappe{
+  flex:0 0 var(--lw-touch);min-width:var(--lw-touch);padding:0;margin-left:calc(var(--space-1) * -1);
+  align-self:stretch;
+  border-top-left-radius:0;border-bottom-left-radius:0;
+  border-left-color:var(--line)
 }
-.lernwelt .lw-subnav button{
-  min-height:32px; padding:var(--space-1) var(--space-3);
-  border:1px solid transparent; border-radius:var(--radius-md);
-  color:var(--text-dim); font-size:12px; font-weight:620; white-space:nowrap;
-  transition:background var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease)
+/* Zwischen den Paaren Luft, innerhalb keine: ein Paar ist EIN Bedienteil. */
+.lernwelt .lw-nav .lw-klappe + .lw-nav-haupt{margin-left:var(--space-2)}
+/* Neben dem gewählten Hauptteil trägt das ^ dieselbe Fläche, ohne den
+   Strich darunter: das Paar gehört zusammen, gewählt ist der Hauptteil
+   (`aria-current`, Strich, Gewicht — nie die Farbe allein, §38). */
+.lernwelt .lw-nav .lw-nav-haupt.is-active + .lw-klappe{
+  border-color:var(--line-stark,var(--line));border-left-color:var(--line);background:var(--lw-accent-soft);color:var(--text)
 }
-.lernwelt .lw-subnav button.is-active{
-  background:var(--lw-accent-soft); color:var(--text); font-weight:720
+.lernwelt .lw-klappe-zeichen{
+  display:grid;place-items:center;flex:none;
+  transition:transform var(--motion-fast) var(--ease)
 }
-@media(hover:hover){
-  .lernwelt .lw-subnav button:hover{ background:var(--bg-hover); color:var(--text) }
-}
-/* Am Telefon bleibt die zweite Reihe eine Zeile zum Schieben — umbrochen
-   kostet sie zwei Zeilen Höhe, und darauf stehen vier Wörter. */
-@media(max-width:760px){
-  .lernwelt .lw-subnav{
-    flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-inline:contain;
-    scrollbar-width:none
-  }
-  .lernwelt .lw-subnav button{ flex:0 0 auto; min-height:36px }
-}
-/* 44 UND NICHT 40 (E232). Hier stand 40, ohne Begründung — die Erklärung
-   darüber betrifft nur das Nicht-Umbrechen, nicht die Höhe. §37 nennt 44 px
-   für alles, was mit dem Finger getroffen wird, und diese Zeile ist die
-   zweite Navigation: man tippt sie oft. Vier Punkte kosten nichts. */
-/* Auch in der BREITE: „Uni" ist drei Buchstaben und war 37 px breit. In
-   einer Reihe von Reitern sitzt der Nachbar direkt daneben — ein Fehltipp
-   landet dort, nicht im Leeren. Genau dann zählt die Breite. */
-@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:var(--touch-min); min-width:var(--touch-min) } }
+.lernwelt .lw-klappe-zeichen>svg{width:14px;height:14px;display:block}
+/* OFFEN DREHT SICH DAS ⌄ ZUM ^. Der gedrehte Zustand bleibt auch ohne
+   Bewegung stehen — nur der Weg dorthin fällt weg (reduced motion unten,
+   `body[data-bewegung="ruhig"]` in bausteine.css). */
+.lernwelt [data-lw-klappe][aria-expanded="true"] > .lw-klappe-zeichen{transform:rotate(180deg)}
 
 /* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
    wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
@@ -1082,9 +1088,6 @@
   outline:3px solid var(--accent);outline-offset:2px;
   box-shadow:0 0 0 5px var(--bg);border-radius:10px
 }
-.lernwelt .lw-area select:focus-visible{
-  border-color:var(--accent-text);box-shadow:0 0 0 3px var(--lw-accent-soft)
-}
 
 /* KEIN TOTER KNOPF (E720). In `:where(…)` wogen diese Zustände (0,2,0) und
    verloren gegen die Grundregel (0,2,1) — siebzehn Knöpfe blieben unter
@@ -1100,6 +1103,13 @@
   .lernwelt .lw-back:where(:not(:disabled)):hover{
     background:var(--bg-hover);color:var(--text)
   }
+  /* KEIN TOTER KNOPF AUCH IM KOPF (E720, E726). `test596` §1 fand den
+     Fächer-Chip und das ^ neben dem gewählten Hauptteil still: der Chip
+     hatte keine Hover-Regel, und die Fläche des gewählten Paars wog mehr
+     als die allgemeine. Das ^ behält die Fläche seines Paars und zeigt den
+     Zeiger am Rand; der Chip antwortet wie jeder Knopf der Lernwelt. */
+  .lernwelt .lw-fach:hover{border-color:var(--line-stark,var(--line));background:var(--bg-hover)}
+  .lernwelt .lw-nav .lw-nav-haupt.is-active + .lw-klappe:hover{border-color:var(--accent-text)}
   .lernwelt :is(.lw-page-head>button,.lw-page-head>.lw-actions button,
     .lw-actions button,.lw-rating button,.lw-error-list footer button,
     .lw-exam-list footer button,.lw-exam-card>button,.lw-quick button,
@@ -1200,59 +1210,46 @@
    * eine zweite Wahrheit über denselben Aufbau. Die CSS weiss ohnehin, wie
    * breit das Gerät ist.
    * ==================================================================== */
-  /* Spalte 1 und Spalte 4 bleiben LEER. Dort stehen die zwei Knöpfe der
-     Schale — Zurück und die drei Punkte —, die am Telefon in diese Zeile
-     hineinrücken (E235, `bausteine.css`). Sie sind kein Rasterelement:
-     die Schale hält ihre Leiste an derselben Stelle, und das Raster hält
-     ihr den Platz frei. 44 px, weil ein Finger 44 braucht (§37). */
+  /* Spalte 1 bleibt LEER. Dort steht der Zurück-Knopf der Schale, der am
+     Telefon in diese Zeile hineinrückt (E235, `bausteine.css`). Er ist
+     kein Rasterelement: die Schale hält ihre Leiste an derselben Stelle,
+     und das Raster hält ihr den Platz frei. 44 px, weil ein Finger 44
+     braucht (§37). */
+  /* SPALTE 4 GIBT ES NICHT MEHR (E726). Seit E278/L68 ist das ••• auf
+     der Lernwelt `hidden` (ohne offene Seite täte es nichts, test67), und
+     die leere Spalte kostete 44 px, die der Reiterzeile fehlten: zwei
+     Paare [Name | ^] brauchen rund 230 px. Der Chip rückt an den Rand. */
   .lernwelt{
-    display:grid; grid-template-columns:44px minmax(0,1fr) auto 44px;
+    display:grid; grid-template-columns:44px minmax(0,1fr) auto;
     align-items:center
   }
   .lernwelt > *{ grid-column:1 / -1 }
   .lernwelt > .lw-nav { grid-column:2; grid-row:1; margin-bottom:12px }
-  /* Kein `margin-bottom` und `align-self:center`: die Höhe der Zeile macht
-     die Reiterkarte, und ein unterer Abstand am Chip würde ihn in einer
-     mittig ausgerichteten Zeile nach OBEN schieben. */
-  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:0;
+  /* `align-self:center` und DERSELBE untere Abstand wie die Reiterkarte
+     (12 px): die Rasterzeile ist Karte + Abstand hoch, und mittig steht nur,
+     wer denselben Abstand trägt. Hier stand `margin-bottom:0` — der Chip
+     sass 6 px unter der Mitte der Karte (ohne ruhige Fassung) und 2 px
+     darunter mit ihr, wo `--space-3` (8 px) galt (Durchsicht, `test601`
+     §1h; die ruhige Fassung zieht unten nach). */
+  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:12px;
                         align-self:center; padding-left:8px }
   /* Der Markenblock nennt „Redion / Lernen & Alltag" — beides steht schon
      oben in der Kreisleiste und in der Krume. Am Telefon war er ohnehin
      schon aus dem Bild; jetzt ist es ausgesprochen. */
   .lernwelt .lw-brand{ display:none }
-  /* Aus dem Feld wird ein Chip: die Beschriftung „Bereich" fällt weg (das
-     Zeichen ◎ und der Name stehen im Feld selbst), und breiter als nötig
-     wird er nicht. */
-  .lernwelt .lw-area{grid-template-columns:1fr;gap:0;min-width:0}
-  .lernwelt .lw-area>span{display:none}
-  /* GEMESSEN, NICHT GERATEN — UND ZWEIMAL DANEBEN. Der erste Versuch stand
-     auf `max-width:38vw`; im Bild stand dann nur „◎" und der Pfeil, denn
-     ein Auswahlfeld kürzt nicht mit Auslassungszeichen, es schneidet ab.
-     Der zweite gab ihm 132 px und rechnete mit 11.5 px Schrift — die es
-     nicht gibt: `input, textarea, select{ font-size:16px !important }`
-     steht in `bausteine.css`, damit iOS beim Tippen nicht hineinzoomt. Bei
-     16 px braucht „◎ Alle Bereiche" 120 px Text plus Pfeil und Polster,
-     zusammen rund 160 von 368 — und der Chip stand 49 px ausserhalb.
-
-     Die Antwort ist nicht eine dritte Breite, sondern eine andere Frage:
-     WOZU steht dort ein Wort, wenn es „ich filtere nicht" bedeutet? */
-  .lernwelt .lw-area select{
-    min-height:var(--touch-min);padding:7px 24px 7px 10px;border-radius:999px;
-    max-width:min(150px,40vw)
-  }
-  /* Filtert nichts → nur das Zeichen, 44 × 44. Der Text bleibt im Feld
-     (das Vorleseprogramm liest ihn, `aria-label` steht ohnehin dort), er
-     wird nur nicht gemalt; das Zeichen darüber ist Deko und fängt keine
-     Tipper ab, damit die native Auswahl weiter aufgeht. */
-  .lernwelt .lw-area[data-alle="ja"]{ position:relative; width:44px }
-  .lernwelt .lw-area[data-alle="ja"] select{
-    width:44px; min-width:var(--touch-min); padding:0; color:transparent;
-    -webkit-appearance:none; appearance:none
-  }
-  .lernwelt .lw-area[data-alle="ja"]::after{
-    content:"◎"; position:absolute; inset:0; display:grid; place-items:center;
-    color:var(--text-dim); font-size:17px; pointer-events:none
-  }
+  /* DER CHIP AM TELEFON (E235, E726). Aus dem Auswahlfeld „Bereich" ist
+     der Fächer-Chip geworden; die Frage aus E235 bleibt dieselbe: WOZU
+     steht dort ein Wort, wenn es „ich filtere nicht" bedeutet? Filtert er
+     nichts, bleibt nur das Zeichen, 44 × 44 — gezeichnet aus
+     `Register.symbole` statt des ◎ aus der Schrift. Der Name steht im
+     `aria-label` und wird nur nicht gemalt. Filtert er, steht das Fach da,
+     höchstens 150 px, mit Auslassungszeichen statt abgeschnitten (ein
+     Knopf kürzt, ein `<select>` schnitt). */
+  .lernwelt .lw-fach{min-height:var(--touch-min);max-width:min(150px,40vw);border-radius:999px;padding:0 var(--space-3)}
+  .lernwelt .lw-fach .lw-klappe-zeichen{display:none}
+  .lernwelt .lw-area[data-alle="ja"] .lw-fach{width:var(--touch-min);min-width:var(--touch-min);padding:0;justify-content:center}
+  .lernwelt .lw-area[data-alle="ja"] .lw-fach-name{display:none}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach{max-width:min(112px,30vw)}
   .lernwelt .lw-nav{
     position:sticky;z-index:5;top:0;margin-bottom:12px;padding:5px;border-radius:13px;
     box-shadow:var(--shadow-2)
@@ -1325,10 +1322,23 @@
 /* --- 428 × 926 und 390 × 844 ------------------------------------------ */
 @media(max-width:470px){
   .lernwelt .lw-head{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
-  .lernwelt .lw-area{grid-template-columns:64px minmax(0,1fr);gap:7px;width:100%;min-width:0}
-  .lernwelt .lw-area>span{padding:0;font-size:10px}
   .lernwelt .lw-nav button{padding-inline:9px}
   .lernwelt .lw-nav button>span:last-child{font-size:11px}
+  /* Am schmalen Telefon trägt der Hauptteil nur seinen Namen: das Zeichen
+     davor kostete 23 px je Paar, und der Name sagt, wo man ist (E726). */
+  .lernwelt .lw-nav .lw-nav-haupt>span[data-sym]{display:none}
+  .lernwelt .lw-nav .lw-klappe + .lw-nav-haupt{margin-left:var(--space-1)}
+  /* FILTERT DER CHIP, BLEIBT ER HIER EIN ZEICHEN (E726). Mit dem Namen
+     („Elektrotec…", 112 px) schrumpften die Hauptteile zu „He…" und „Üb…"
+     — gesehen im Bild, nicht im Lauf (§55.1). Statt des Namens wird das
+     Zeichen GEFÜLLT: Form statt nur Farbe (§38), wie das Herz aus E719.
+     Der Name steht im `aria-label`, im Titel der Lernzentrale und mit
+     Haken im Menü. Ab 471 px ist Platz, dort steht er da. */
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach{width:var(--touch-min);max-width:none;padding:0;
+    justify-content:center;border-color:var(--accent-text);background:var(--lw-accent-soft)}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-name{display:none}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-zeichen{color:var(--accent-text)}
+  .lernwelt .lw-area[data-alle="nein"] .lw-fach-zeichen>svg{fill:currentColor}
   .lernwelt .lw-hero{display:grid;gap:15px;padding:17px 14px}
   .lernwelt .lw-hero::after{right:-142px;bottom:-172px;opacity:.4}
   .lernwelt .lw-hero>div:first-child>span{margin-top:10px}
@@ -1455,14 +1465,32 @@ body[data-ruhig="an"] .lernwelt .lw-head{
   justify-content:flex-end; margin-bottom:-46px; position:relative; z-index:2;
   pointer-events:none;
 }
-body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto }
-body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
+/* DER PLATZ FÜR DEN CHIP WÄCHST MIT DER LERNWELT (E726, Durchsicht). Hier
+   standen feste 264 px — so viel, wie der Chip höchstens breit wird (230)
+   und Luft. Bei 800 px Fensterbreite blieben den Paaren 342 px, und
+   „Schule / Ausbildung" neben „Übersicht" brauchen 370: beide kürzten mit
+   „…", auch ohne Filter (`test601` §1g). Jetzt deckelt `--lw-chip-decke`
+   den Chip auf 27 % der Lernwelt (bei 850 px Breite sind das wieder die
+   230), und die Leiste hält genau diese Decke frei. Beide Prozente
+   beziehen sich auf dieselbe Breite: der Kopf und die Leiste füllen die
+   Lernwelt. Ein langer Fachname kürzt im Chip mit „…" — er steht ganz im
+   `aria-label` und im Menü. */
+body[data-ruhig="an"] .lernwelt{ --lw-chip-decke:min(230px, 27%) }
+body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto; max-width:var(--lw-chip-decke) }
+body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:calc(var(--lw-chip-decke) + 34px) }
 /* Am Telefon ist daneben kein Platz — dort bleiben es zwei Zeilen. */
 @media(max-width:780px){
   body[data-ruhig="an"] .lernwelt .lw-head{
     margin-bottom:var(--space-3); justify-content:stretch; position:static;
   }
+  body[data-ruhig="an"] .lernwelt .lw-area{ max-width:none }
   body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:var(--space-2) }
+}
+/* Im Raster des Telefons steht der Chip neben der Karte (E235) und trägt
+   denselben unteren Abstand wie sie — sonst sitzt er 2 px unter ihrer
+   Mitte (`test601` §1h). */
+@media(max-width:760px){
+  body[data-ruhig="an"] .lernwelt > .lw-head{ margin-bottom:12px }
 }
 
 

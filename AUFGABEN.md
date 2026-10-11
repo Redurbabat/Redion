@@ -1741,6 +1741,30 @@ Grund:
    gesperrte Knöpfe dort still? Rot zuerst; die Reparatur ist meist ein
    Wort oder eine fehlende Hover-Zeile.
 
+
+## Nach E726 — Der Kopf des Lernzentrums (10. Oktober 2026)
+
+1. **Ein gespeichertes Fach an der Karte?** (L246 Punkt 1) Heute ist ein
+   Fach das Thema der Karte oder eine Zeile der Fächer-Datenbank, über den
+   Namen zusammengeführt. Will Redur „Mathe" und „Mathematik" als EIN Fach,
+   braucht es ein Feld, einen Typ in `core/types` und Export-/Importprüfungen
+   — rot zuerst mit `test100`.
+2. **Filtert das Fach auch die Trainer-Kapitel?** (L246 Punkt 2, Vorgabe 4
+   war nein.)
+3. **„Heute" und „Lernen" in der unteren Leiste am Telefon** (L246 Punkt 3)
+   — doppelte Navigation nach dem PDF; eine Entscheidung über die Schale.
+4. **Das Blatt von `UI.wahl` am Telefon ohne `role="menu"`** (L246 Punkt 5)
+   — gehört `claude/menue-eine-quelle`; rot zuerst in `test597` §14.
+   Wenn es landet: `test601` §3d–f prüft die Rolle auch am Telefon.
+5. **„Prüfungen" über „Prüfungen" im Menü „Heute ^"?** Die Gruppe trägt
+   den alten Reiternamen (Vorgabe 1), ihr erster Eintrag heisst genauso.
+   „Prüfungen & Noten" wäre eindeutiger, aber ein neuer Name für etwas,
+   das man kannte — Redurs Wahl (Durchsicht vom 11. Oktober).
+6. **Der Chip bekommt den Fokus vor „Heute"** (L246 Punkt 7). Ihn im
+   Auszeichnungstext hinter die Leiste zu setzen, braucht einen anderen
+   Aufbau des Kopfs (ruhige Fassung: `margin-bottom:-46px`; Telefon:
+   Raster) — rot zuerst in `test601` §3 mit der Tabulatorfolge.
+
 ## Nach E718 (6. Oktober 2026) — Ordner bearbeiten
 
 Gefunden beim Bau von E718, nicht dort entschieden — je mit dem Grund:
@@ -1808,7 +1832,8 @@ Gefunden beim Bau von E721, nicht dort entschieden — je mit dem Grund:
 3. **`Menue.wahl` ist gebaut, aber noch von niemandem benutzt.** Die Zweige
    `claude/bibliothek-eine-suche` (Ort, Art, Form) und
    `claude/lernzentrum-kopf` (Heute ⌃, Übersicht ⌃, Fächer) ziehen darauf
-   um — keiner baut eine zweite Auswahlliste.
+   um — keiner baut eine zweite Auswahlliste. *(Nachtrag 10. Oktober: das
+   Lernzentrum ist umgezogen, E726.)*
 4. **Nach der Durchsicht vom 10. Oktober noch offen:** die übrigen
    Gefahr-Einträge ohne `data-gefahr` (L242 Punkt 1 nennt sie einzeln:
    „Eine Vorlage löschen", „Alle Kacheln entfernen", „Inhalt leeren" …) —

@@ -1,5 +1,60 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E726 nach der Durchsicht — Lernpfad, Breiten, Paar, Name, Chip
+
+**Redur** (Masterprompt vom 29. September, S. 21): „… Und die bereiche
+momentan das löschen oder am beste das zur fächer wechseln".
+
+**Fund** (unabhängige Durchsicht; `test601` erweitert, gegen eaf3ab2c2
+rot, 80 von 89): eine Stufe im Lernpfad setzte den Fächerfilter und
+merkte ihn (Lernpfad 3 → 1 Stufe, „Heute" 27 → 9 Karten, auch nach dem
+Neuladen); das README versprach „filtert alles"; zwischen 781 und 899 px
+kürzten „Schule / Ausbildung" und „Übersicht" auch ohne Filter (feste
+264 px für den Chip); ein Paar hatte an der Naht eine Stufe von 1 px; das
+^ neben „Übersicht" hiess „… Lernen"; der Chip sass am Telefon 6 px (ruhig
+aus) bzw. 2 px (ruhig an) unter der Mitte der Reiter.
+
+**Bau:** das Thema reist als Argument in die Themenrunde, den Filter
+setzen nur Chip und „Themen & Fächer"; README sagt, was der Filter
+erreicht und was nicht; `--lw-chip-decke: min(230px, 27%)` statt fester
+264 px; `align-self:stretch` am ^; `titel: 'Übersicht'`; der Chip trägt
+am Telefon dieselben 12 px wie die Reiterkarte; Banner an E235 und L246.6
+richtiggestellt, L246.7 (Tabulatorfolge) neu.
+
+**Prüfung:** `test601` 89/89 (§1g, §1h, §2g, §2h, §6q neu), fünf
+Gegenproben G8–G12 in zwei Bauten; Nachbarn und Zahlen in E726 „Nach der
+Durchsicht" und `messungen.md` §95.
+
+## 10. Oktober 2026 · E726 — Der Kopf des Lernzentrums in einer Zeile (Masterprompt #1)
+
+**Redur** (Masterprompt vom 29. September, S. 21, zum Foto der
+Lernzentrale): „Ganz oben wo menü/ dort sollte wo heute und was neben das
+ist im ^ und die unter den das die übersicht neben heute auch mit ^ es nimmt
+die anderen wie lernpfand , tranier esc auch mitt. Und die bereiche momentan
+das löschen oder am beste das zur fächer wechseln".
+
+**Fund** (`test601` gegen 57a023ecf, 6 von 71): zwei Reihen und zehn
+Bedienelemente über der Lernzentrale; das ⌄ an drei Gruppen war Schmuck
+(`aria-hidden`, kein Menü — ein Klick sprang auf die erste Ansicht); am
+Telefon rollte die Reiterleiste (440 in 232 px), „Fortschritt" stand
+abgeschnitten, der Inhalt begann bei y = 169 statt 119; „Bereich" bot in
+einem frischen Bestand nur „◎ Alle Bereiche"; ein Klick auf das Thema
+„Elektrotechnik" änderte den Titel und liess die Zahlen (7 / 9 / 11)
+stehen; `#welt-lernen-noten` und `-stundenplan` öffneten „Heute".
+
+**Bau:** `KLAPPEN` statt `REITER` — „Heute ^" und „Übersicht ^" als
+[Hauptteil | ^], der Hauptteil heisst wie die Ansicht, das ^ öffnet
+`UI.wahl` (E721); der Fächer-Chip statt des Auswahlfelds (Thema der Karten
+∪ Fächer-Datenbank, Filter in `lernkartenRoh` und über das Feld „Fach" in
+Prüfungen, Noten, Stundenplan, gemerkt unter `lernwelt:<aktor>:fach`); der
+Lebensbereich als Gruppe im Fächermenü; `Learning.topicLabel` ausgegeben;
+`routeAusHash` kennt `noten` und `stundenplan`; am Telefon fällt die leere
+vierte Rasterspalte weg.
+
+**Prüfung:** `test601` 77/77, sieben Gegenproben; angepasst (nicht
+gelockert) `test217` §3, `test565` §2, `test585`, `test206` §7; Nachbarn
+und Zahlen in E726 und `messungen.md` §95; offen in L246.
+
 ## 11. Oktober 2026 · E725 nach der Durchsicht — ganze Namen, ein gleich breiter Kopf, Enter vor der Uhr, der Grund wie Escape
 
 **Redur** (Masterprompt vom 29. September, S. 13): „… beim suche wenn ich

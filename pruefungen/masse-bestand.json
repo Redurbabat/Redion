@@ -147,16 +147,6 @@
    "px": 28
   },
   {
-   "datei": "lernwelt.css",
-   "wahl": ".lernwelt .lw-subnav button",
-   "px": 32
-  },
-  {
-   "datei": "lernwelt.css",
-   "wahl": ".lernwelt .lw-subnav button",
-   "px": 36
-  },
-  {
    "datei": "notizhefte.css",
    "wahl": ".nh-farben button",
    "px": 26
