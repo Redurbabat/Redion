@@ -3084,9 +3084,187 @@ Zweige derselben Woche, je für sich geprüft und grün, hatten an zwei Stellen 
 | 22:27–22:39 UTC | Ein Klebefilter für die ganze App: delete.ts und selection-flow.ts leihen Linse.TROPFEN; die zwei Schatten des alten Löschfilters stehen als drop-shadow dahinter, mit denselben Zahlen und Farben. | Auftrag und §8: drei Filter für eine Bewegung laufen auseinander — die Zahlen zeigten es schon (×18 und ×22). | Der Hals des Löschen-Knopfs entsteht mit Unschärfe 7 statt 4 — die Pillen kleben beim Fliessen etwas länger zusammen; in Ruhe ändert sich nichts. Das Bild folgt mit den Gesamtbildern. |
 | ca. 23:10 UTC | test33 und test35 tippen den Namen ins Fenster (Strg+A, Text, Enter), statt `value` zu setzen und `[data-a="ok"]` zu klicken. | Seit E710 fragt UI.frage im Fenster des Touch Kits; ein React-Feld liest ein gesetztes `value` nicht, und den alten Knopf gibt es dort nicht. Beide waren auf claude/dialoge-im-kit allein schon rot — die Nachbarliste von E710 hatte sie nicht. | Keines für die Zusagen: dieselben Prüfungen, nur der Weg hinein ist der eines Menschen. 39 weitere Läufe mit demselben Muster nachgefahren, keiner rot aus diesem Grund. |
 
+### 2026-10-06 · Dienstag — Zehn Zweige aus dem PDF vom 29. September — jeder zuerst rot, dann gebaut, dann durchgesehen
+
+> Schritt 2 der Auftragsdatei vom 5. Oktober: die dreizehn Punkte aus Redurs PDF in zehn Zweigen, jeder einmal gepusht. Die Frage aus Schritt 0 blieb unbeantwortet, also galten die Vorgaben der Datei. Gebaut wurde nebeneinander, vom selben Stand claude/morgen-besser-2 (1bfaca53) aus: der Trenner (E716), der Seiteneditor ohne Stau (E717), Ordner bearbeiten (E718), das Herz als Knopf und kein toter Knopf (E719/E720), ein Menü je Ding (E721), eine Zeichenleiste je Arbeitskontext und die Tabelle auf der Fläche (E722/E723), der Anfang von KI am Ort (E724, 1/3) und der ruhige Kopf mit dem Gestirn (E727/E728). Jeder Wächter stand zuerst rot im Verlauf (test592 um 23:55 UTC am Vorabend, dann test593 bis test599, test602, test603), danach der Bau, danach eine unabhängige Durchsicht, deren Funde wieder zuerst als roter Wächter kamen.
+
+Am Morgen kamen drei Sätze von Redur hintereinander: alles nach dem Bauen auf main, „trotz die rote läufe“, und die alten Zweige nachsehen, damit nichts vergessen geht. Die Durchsicht der alten Zweige lief nebenher (fertig ca. 07:40 UTC): zwei Zweige tragen Arbeit, die in keinem der neuen steht — claude/redion-elektro-simulation und feat/dark-2017-fach-dossier. Sie sind nicht hineingenommen; das gehört in den Bericht an Redur. Nach 09:56 UTC stand die Arbeit bis zum 10. Oktober.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · 07:19 UTC**
+
+> Weiter
+
+**Gemeint:** Die Arbeit aus der Auftragsdatei fortsetzen.
+
+**Besser geschrieben:** Derselbe Satz.
+
+**Besserer Prompt:** —
+
+
+**2 · 07:24 UTC**
+
+> Könntest du nacher alles auf main puschen
+
+**Gemeint:** Am Ende soll alles auf main stehen, nicht nur auf Zweigen.
+
+**Besser geschrieben:** „Am Ende alles auf main.“
+
+**Besserer Prompt:** „Wenn morgen-besser-3 fertig ist: auch auf main, und sag mir, was dabei noch rot ist.“
+
+
+**3 · 07:27 UTC**
+
+> Pusche einfache alles nach dem was du jetzt geabut wird und danch alles auf main trotz die rote läufe und schau mal die alten branchen ob du wirklich alles hast damit wir etwas nicht vergessen
+
+**Gemeint:** Zwei Aufträge und eine Entscheidung: (1) nach dem Bauen alles pushen, dann auf main — auch wenn die bekannten roten Läufe rot bleiben; das hebt für dieses eine Mal §46 („main bewegt sich nicht, solange etwas rot ist“) auf und gehört deshalb als Entscheidung in ENTSCHEIDUNGEN.md; (2) die alten Zweige durchsehen, ob Arbeit fehlt.
+
+**Besser geschrieben:** „Danach alles auf main, auch mit den alten roten Läufen. Und prüf die alten Zweige auf Vergessenes.“
+
+**Besserer Prompt:** „main trotz der bekannten fremden roten Läufe — aber kein neuer rot. Liste mir die alten Zweige mit Arbeit, die nirgends drin ist.“ So ist die Grenze der Ausnahme mitgesagt.
+
+
+**4 · 08:24 UTC**
+
+> Wie lange hast du noch
+
+**Gemeint:** Wie weit die Arbeit ist und wann sie fertig wird.
+
+**Besser geschrieben:** Derselbe Satz.
+
+**Besserer Prompt:** „Wie viele der zehn Zweige sind gepusht, und was fehlt noch?“ — darauf gibt es eine Zahl statt einer Schätzung.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E716 · Der Trenner zieht wirklich (Punkt 5) — und nach der Durchsicht: der Streifen nimmt keinem Knopf den Rand, die Palette schweigt im Fokus | `71f190d` → `0b331f1` | 23:55 (5. Oktober)–05:31 UTC | ca. 5 h 35 min zwischen den Commits | test592 zuerst rot (71f190d, 10e5441), dann grün |
+| E717 · Der Seiteneditor ohne Stau (Punkt 8): eine Meldung je Durchgang, gezeichnet wird, was nah ist; nach der Durchsicht erreichen Sprung und Strg+F auch ferne Blätter | `5a49c43` → `ec28f32` | 00:05–07:02 UTC | ca. 7 h | test593 zuerst rot (5a49c43, d34e4ec), test189 rollt zum vierten Blatt, bevor er zählt |
+| E718 · Ordner bearbeiten (Punkt 12): umbenennen an Ort und Stelle, eine Farbe überall, „Löschen“ heisst Papierkorb — auch im ⋯ der Datenbank und mit Entf, und das Recht wird gefragt | `ead9273` → `e8c4aba` | 01:44–05:53 UTC | ca. 4 h 10 min | test594 zuerst rot (ead9273, 064515d) |
+| E719/E720 · Das Herz ist ein Knopf, und kein Knopf wirkt tot (Punkte 3 und 2); die Durchsicht vom 6. Oktober: ein gesperrter Knopf bleibt still, der Fokus bleibt, das Zurück schont den anderen Tab | `8d6dc93` → `ca4b231` | 03:11–08:06 UTC | ca. 5 h | test595, test596 zuerst rot (8d6dc93, f0f2f47, 774d861), test580 erweitert |
+| E722/E723 · Eine Zeichenleiste je Arbeitskontext, die Tabelle im Kasten (Punkte 7 und 6) — drei Runden Durchsicht für Tab, das Schild „Zeichenfläche“ und den Streifen am Telefon | `5aa8279` → `f338ae8` | 03:13–07:00 UTC | ca. 3 h 50 min | test598 viermal zuerst rot; test404 §9, test572 §13, test575 §6b |
+| E727/E728 · Das Gestirn und der ruhige Kopf (Punkte 1 und 10): eine Regel für Hell und Dunkel, die Suche links, rechts nur Zeichen, ein Titel auch am Rechner | `a244cbd` → `e5b6df7` | 07:19–08:30 UTC | ca. 1 h 10 min | test602, test603 zuerst rot (a244cbd) |
+| E721 · Ein Menü je Ding (Punkt 9): Rechtsklick, „…“, Tastatur und langes Drücken aus einer Quelle — Register.aktionen, Menue.aktionen, ein Binder, UI.wahl | `1f89176` → `25fb7f9` | 08:23–09:56 UTC | ca. 1 h 35 min | test597 zuerst rot (1f89176) |
+| E724 (1/3) · KI am Ort (Punkt 11): was das KI-Blatt am Telefon öffnet, liegt über ihm | `b82c4af` → `b312aed` | 09:15–09:23 UTC | ca. 10 min | test599 zuerst rot (b82c4af) |
+
+#### Zahlen des Tages
+
+- **commits:** 48
+- **entscheidungen:** 0
+- **neuePrüfläufe:** 10
+- **gezählt:** Commits mit Datum 6. Oktober (UTC) in origin/claude/morgen-besser-2..claude/morgen-besser-3: 48. Neue Prüfläufe: test593 bis test599, test602, test603 (test592 kam am Vorabend um 23:55 UTC). Die Einträge E716–E724, E727 und E728 stehen in ihren Zweigen mit dem Datum 6. Oktober; gezählt werden sie am Tag, an dem sie auf morgen-besser-3 ankamen (11. Oktober).
+
+#### Das grösste Problem
+
+Keins im Produkt. Die Schwierigkeit lag im Aufbau des Tages: neun Zweige nebeneinander vom selben Stand, ohne dass einer den anderen sah — genau das Muster, aus dem am 5. Oktober drei Klebefilter wurden (P124). Wo zwei Zweige dieselbe Datei brauchten, wurde der frühere in den späteren gezogen (ordner-bearbeiten in menue-eine-quelle und ki-am-ort, kein-toter-knopf in ki-am-ort), damit die Durchsicht den gemeinsamen Stand sah.
+
+#### Das Interessanteste, das Redur wollte
+
+„… danch alles auf main trotz die rote läufe …“ — die erste ausdrückliche Ausnahme von §46, seit Redur am 3. September „main bewegt sich nicht“ selbst als hart markiert hat. Sie wird als eigene Entscheidung eingetragen, mit ihrer Grenze: die bekannten fremden roten Läufe dürfen rot bleiben, ein neuer roter nicht.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| ca. 07:30–07:40 UTC | Die alten Zweige gegen die neuen geprüft (ein Unteragent): welcher Zweig trägt Commits, die in keinem neuen Zweig und nicht auf main stehen. | Redur: „schau mal die alten branchen ob du wirklich alles hast damit wir etwas nicht vergessen“. | Keins — nur gelesen. Zwei Zweige (claude/redion-elektro-simulation, feat/dark-2017-fach-dossier) bleiben draussen, bis Redur entscheidet. |
+
+### 2026-10-10 · Samstag — Die zweiten Durchsichten — und Bibliothek, Lernzentrum und KI am Ort fertig
+
+> Vom 6. Oktober 09:56 UTC bis zum 10. Oktober 17:44 UTC entstand kein Commit; die Sitzung stand. Um 16:57 UTC schrieb Redur „Weiter“. Danach liefen zweite Durchsichten für die Zweige vom 6. Oktober — E719/E720 (das Wort bleibt lesbar, jedes Herz sagt, was es merkt), E722/E723 (die breite Tabelle rollt im Kasten auch mit dem Rad), E721 (die Zeichen der Ecke liegen auf deckendem Grund, die Vorschau macht der Ecke Platz), E727/E728 (ein Lader, der Vorleser hört den Stand, die achte Tür) — und die drei Zweige, die noch fehlten: KI am Ort (E724, 2/3 und 3/3), Bibliothek mit einer Suche (E725) und der Kopf des Lernzentrums in einer Zeile (E726). Wieder kam jeder Fund zuerst als roter Wächter. Gegen Mitternacht waren alle zehn Zweige gepusht; claude/kein-toter-knopf-2 trägt die Durchsicht von E719/E720, weil claude/kein-toter-knopf schon gepusht war (E521).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · 16:57 UTC**
+
+> Weiter
+
+**Gemeint:** Die stehengebliebene Arbeit fortsetzen.
+
+**Besser geschrieben:** Derselbe Satz.
+
+**Besserer Prompt:** —
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E719/E720 · Die Durchsicht vom 10. Oktober: das Wort bleibt lesbar (auch ohne Bewegung), jedes Herz sagt, was es merkt; die Begründungen im Stilblatt gekürzt (Startlast) | `5c1d9b9` → `793918f` | 17:44–18:22 UTC | ca. 40 min | test595, test596 zuerst rot (5c1d9b9) |
+| E722/E723 · Zweite Durchsicht: Rad, mittlere Taste, Name der Leiste, Tab, das Schild höchstens ein Fünftel des Streifens | `6bf0806` → `cfe1a3e` | 18:01–18:37 UTC | ca. 35 min | test598 zweimal zuerst rot |
+| E724 (2/3, 3/3) · Ein Katalog (Register.ki, 22 Einträge), ein Läufer, jeder Eintrag der Schublade an seinem Ort; die Einstellungen ziehen mit; ein Blatt nennt seinen Titel einmal — und die Durchsicht: „✨ KI“ ersetzt an der Stelle, 44 px am Finger, eine Fassung vor jedem Tausch | `c1c6eec` → `52d9d7c` | 19:26–23:52 UTC | ca. 4 h 25 min | test599 dreimal zuerst rot; Startlast 1864 KB |
+| E721 · Was die Durchsicht fand: Decke, Ankunft, Stelle, Zeichen, Name, Meldung; das ⋯ der Seitenleiste sagt aria-expanded | `788496d` → `6471245` | 18:34–21:17 UTC | ca. 2 h 45 min | test597 dreimal zuerst rot |
+| E727/E728 · Die Durchsicht: ein Lader in der Mitte, der Vorleser hört den Stand, die achte Tür, das geltende Kürzel | `dcdb0ef` → `58b3a66` | 20:12–21:03 UTC | ca. 50 min | test602, test603 zuerst rot (dcdb0ef) |
+| E725 · Bibliothek (Punkt 13): von jeder Kategorie nur eine — Ort, Art und Form als je eine Pille mit Menü — und EINE Suche, die ihren Bereich kennt; „Ausbildung“ trägt denselben Ort-Wähler | `cd6cdf9` → `ed0bf9d` | 21:51–23:55 UTC | ca. 2 h | test600 dreimal zuerst rot; neun alte Läufe angepasst und zuerst rot eingecheckt (e510fd7) |
+| E726 · Der Kopf des Lernzentrums in einer Zeile (Punkt 4): Heute ^, Übersicht ^, Fächer | `79bb27b` → `eaf3ab2` | 21:45–22:55 UTC | ca. 1 h 10 min | test601 zuerst rot (79bb27b); Bilder in allen Schemata |
+
+#### Zahlen des Tages
+
+- **commits:** 40
+- **entscheidungen:** 0
+- **neuePrüfläufe:** 2
+- **gezählt:** Commits mit Datum 10. Oktober (UTC) in origin/claude/morgen-besser-2..claude/morgen-besser-3: 40. Neue Prüfläufe: test600, test601.
+
+#### Das grösste Problem
+
+Die Pause selbst: vier Tage ohne Commit mitten in Schritt 2. Was dadurch gefährdet war, ist nichts — jeder Zweig stand gepusht oder sauber eingecheckt da, und die Arbeit ging an der Stelle weiter, an der sie stand. Gerade dafür gilt „ein Zweig, ein Push“.
+
+#### Das Interessanteste, das Redur wollte
+
+Keine neue; der Tag führte die Anfrage vom 6. Oktober aus.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 21:22–21:31 UTC | menue-eine-quelle in bibliothek-eine-suche, kein-toter-knopf und menue-eine-quelle in lernzentrum-kopf gezogen, bevor deren Bau begann. | Beide brauchten UI.wahl und die Menüs aus E721; nebeneinander gebaut hätten sie dasselbe zweimal erfunden (P124). | Die Zweige tragen dadurch fremde Commits mit; beim Zusammenführen auf morgen-besser-3 kommen sie ein zweites Mal — ohne Konflikt, weil es dieselben sind. |
+
+### 2026-10-11 · Sonntag — Die Durchsichten von Bibliothek und Lernzentrum, zehn Zusammenführungen auf morgen-besser-3 — und vier rote Läufe aus den eigenen Zweigen
+
+> Bis 01:40 UTC liefen die Durchsichten von E725 (ganze Namen in der Bereichszeile, ein gleich breiter Kopf in allen Formen, Enter vor der Uhr) und E726 (Themenrunde ohne Filter, Platz für den Chip, bündiges Paar). Dann die zehn Zusammenführungen auf claude/morgen-besser-3 in der Folge von Teil A, von 01:45 bis 02:20 UTC. Gefunden wurden dabei drei Dinge, die keiner der zehn Zweige allein sehen konnte: eine Seite zu nehmen verlor zweimal die Zeile der anderen (P125), der Block der „Und“-Absätze in CLAUDE.md trug Doppel und einen abgeschnittenen Satz (P126), und eine rohe 46px aus E717 machte test362 rot, seit dem zweiten Zusammenführen unbemerkt (P127). Danach liefen die Wächter aller zehn Zweige gemeinsam unter dem Schloss.
+
+Der Vereinigungslauf (169 Läufe, die Wächter aus allen Commits der zehn Zweige, 02:23–ca. 03:00 UTC) stand bei 152 grün, 17 rot. Jeder rote wurde danach auf claude/morgen-besser-2 nachgefahren und Zeile für Zeile verglichen: zwölf scheitern dort genau gleich (fremd, älter als diese Welle), test436 war einmal rot und danach zweimal 71/71. Vier kamen aus den eigenen Zweigen, und jeder davon war auf seinem Zweig schon rot gewesen, ohne dass dessen Wächterliste ihn enthielt: test469 (E725 hatte die Vorgabe der Suche im Dokument geändert und den Lauf nicht nachgezogen, P128), test422 und test274 (zwei Namen, die an zwei Stellen standen, P129) und test86 (vier Register unangekündigt, zwei davon seit September).
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E725/E726 · Was die Durchsichten fanden, und ihre Nachbarn | `2876541` → `72a7089` | 00:46–01:40 UTC | ca. 55 min | test600, test585, test601 zuerst rot (2876541, 0b650db); Nachbarn grün, Startlast unverändert |
+| Zehn Zusammenführungen auf claude/morgen-besser-3 (Teil A): trenner-zieht, seiteneditor-ohne-stau, ordner-bearbeiten, kein-toter-knopf-2, menue-eine-quelle, flaeche-eine-leiste, ki-am-ort, bibliothek-eine-suche, lernzentrum-kopf, kopf-ruhig — dazwischen E717 nachgezogen | `44f8814` → `95c2f0c` | 01:45–02:20 UTC | ca. 35 min | nach jedem Zusammenführen neu gebaut und die dreizehn Datei-Wächter (550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105) grün; test362 18/18 nach 7f7eb14; test580, test593, test601, test602, test603 grün |
+| Vereinigungslauf, Vergleich jedes roten Laufs mit morgen-besser-2, vier Nachzüge | `95c2f0c` → `b2367bc` | 02:23–03:49 UTC | ca. 1 h 25 min | 169 Läufe unter dem Schloss: 152 grün, 17 rot; rot und auf morgen-besser-2 gleich rot: 201, 270, 332, 348, 351, 365, 425, 448, 470, 493, 524, 533 (dazu 274 mit seinem alten Fund); test436 einmal rot, danach 71/71 zweimal; aus den eigenen Zweigen und gerichtet: test469 26/26 (Gegenprobe rot), test422 14/14, test86 grün, test274 nur noch der alte Fund; test592 61/61, test595 44/44, test596 51/51 |
+
+#### Zahlen des Tages
+
+- **commits:** 22
+- **entscheidungen:** 13
+- **neuePrüfläufe:** 0
+- **gezählt:** Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 707, E1 bis E728, die Klausel „kommen über ihre Zweige“ ist gestrichen. Prüfläufe: 544.
+
+#### Das grösste Problem
+
+Ein Werkzeug, das Doku zusammenführt, hatte selbst einen Fehler, und er sah aus wie ein sauberes Ergebnis: im „Und“-Block standen vier Läufe doppelt und ein Absatz endete mitten im Satz, und test550 war trotzdem grün, weil er Zahlen zählt, keine Absätze (P126). Gefunden hat es das Lesen beim neunten Zusammenführen, nicht ein Wächter.
+
+#### Das Interessanteste, das Redur wollte
+
+Keine neue; die Zusammenführungen folgten der Auftragsdatei vom 5. Oktober.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 02:07 UTC | Die rohe 46px aus E717 durch `calc(var(--touch-min) + 2px)` ersetzt — dieselbe Höhe, die Decke nicht angehoben. | test362 §7 lässt das Verzeichnis der rohen Wiederholungen nur schrumpfen; mit E717 stand „46“ auf 15 statt 14. | Keins sichtbar: dieselbe Höhe, und sie gilt nur bis zur ersten Messung. test593 54/54. |
+| 02:14 UTC | Den „Und“-Block in CLAUDE.md §30 aus den Zweigen neu gebaut: je Prüflauf genau ein Absatz, die Fassung seines eigenen Zweigs, Und 528–544. | Die Zusammenführen 2–8 hatten alte und neue Fassungen nebeneinander stehen lassen und einen Absatz abgeschnitten (P126). | Ein Nachtrag, den ein ANDERER Zweig in einen fremden Absatz geschrieben hätte, ginge so verloren. Geprüft: über alle zwölf Zweige gibt es je Lauf höchstens zwei Fassungen, und die zweite war jedes Mal die spätere Fassung desselben Zweigs. |
+| 03:01–03:49 UTC | Vier Nachzüge statt gelockerter Wächter: test469 wählt „Überall“ ausdrücklich; der Merker in lernwelt.ts heisst `gemerkt`; Kontextkante gibt ihre Wurzel heraus; test86 trägt vier Register ein. | Jeder der vier war ein Befund über die eigenen Zweige, nicht über die Wächter — und keiner durfte über ein ERLAUBT oder eine weichere Zählung verschwinden (§31, §47). | test469: Die Vorgabe in einem Dokument ist jetzt „Dieses Dokument“; der Lauf hält „Überall“. Ob diese Vorgabe Redur passt, ist Vorgabe (g) aus E725 und steht im Bericht. |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 124 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 129 Einträge.
 

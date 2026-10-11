@@ -1677,6 +1677,33 @@ E715 hat die Kommentare aus dem erzeugten JavaScript genommen (2826 →
 3. **L216** (Lerninhalt beim Start, ohne Kommentare noch 18 KB) bleibt
    Redurs Frage.
 
+## Nach dem Zusammenführen der dritten Welle (11. Oktober 2026)
+
+Gefunden auf `claude/morgen-besser-3`, nicht dort gelöst — je mit dem
+Grund:
+
+1. **Fremde rote Wächter**, auf `claude/morgen-besser-2` Zeile für Zeile
+   gleich rot (am 11. Oktober nachgefahren): `test201` §1, `test270`,
+   `test274` (`redion-graphit` in marken.ts), `test332`, `test348`,
+   `test351`, `test365`, `test425`, `test448`, `test470`, `test493`,
+   `test524`, `test533` — die Gründe stehen unten bei der zweiten Welle.
+   `test86` ist seither grün (e485d3c). `test436` war im Vereinigungslauf
+   einmal rot (`null.click` in §2), danach zweimal 71/71 — beobachten.
+2. **Die Vorgabe der Suche in einem Dokument** (E725, Vorgabe g): ohne
+   gemerkte Wahl beginnt Strg P dort mit „Dieses Dokument"; die Suche über
+   alle Dokumente ist einen Schritt entfernt („Alle Dokumente",
+   „Überall"). Redurs Frage, ob das so bleiben soll (P128).
+3. **Zwei alte Zweige mit Arbeit, die nirgends steht**:
+   `claude/redion-elektro-simulation` und `feat/dark-2017-fach-dossier`.
+   Hineinnehmen oder liegen lassen — Redurs Wort.
+4. **Am Telefon, im Gesamtbild gesehen** (beides schon auf
+   morgen-besser-2 so): die Formen in den Whiteboards der Fläche stehen
+   stark vergrössert und angeschnitten; in der gerollten Lernzentrale liegt
+   der Zurück-Pfeil über dem Text „SM-2 bleibt …". Je ein Bild und ein
+   Wächter, bevor gebaut wird.
+5. **Die Arbeitsbäume im Scratch** (`/home/user/wt/…`, über dreissig aus
+   den Durchsichten) sind nur lokal — aufräumen nur mit Redurs Ja (§43).
+
 ## Nach dem Zusammenführen der zweiten Welle (5. Oktober 2026)
 
 Gefunden auf `claude/morgen-besser-2`, nicht dort gelöst — je mit dem
@@ -1684,7 +1711,8 @@ Grund:
 
 1. **Fremde rote Wächter, schon auf `claude/morgen-besser` rot** (dort
    nachgemessen, nicht nebenbei repariert): `test86` (neue Bereiche
-   `seitenansichten`, `werkzeuge` nicht angekündigt), `test201` §1 (die
+   `seitenansichten`, `werkzeuge` nicht angekündigt — seit dem
+   11. Oktober eingetragen und grün), `test201` §1 (die
    Probe aus L235 Punkt 1 — Redurs Frage), `test270` (im Arbeitsbaum ist
    `.git` eine Datei), `test274`, `test332` (`.menu .kenn`, `#handy-oben`),
    `test365` („Dreizehn Werkzeuge — ist 14, soll 13", seit E671 vierzehn;

@@ -61833,6 +61833,13 @@ Ziehen 156 statt 184.
 (`#studio-nav`), die Pfeiltasten und die gemerkte Breite bleiben; dazu
 kommen Doppelklick, Palettenbefehl, Umschalt/Bild↑↓ und Escape.
 
+**Nachtrag beim Zusammenführen (11. Oktober 2026, `claude/morgen-besser-3`).**
+`test274` fand im Studio zweimal `document.getElementById('kante')` — die
+Kennung entsteht in context-rail.ts als `w.id = WURZEL`, der Name stand
+also an zwei Stellen. Kontextkante gibt ihre Wurzel jetzt heraus
+(`Kontextkante.wurzel()`), der Griff fragt dort; ERLAUBT wurde nicht
+erweitert (b2367bc, P129). `test592` 61/61.
+
 ## E717 — Der Seiteneditor ohne Stau: eine Meldung je Durchgang, gezeichnet wird, was nah ist
 
 **Datum:** 6. Oktober 2026 · **Entschieden von** Redur (Masterprompt vom
@@ -62143,6 +62150,12 @@ Seite (nicht gefragt); die Leiste der Fläche (Punkt 7,
 `claude/flaeche-eine-leiste`); die Suche im Dokument (Punkt 13,
 `claude/bibliothek-eine-suche`); andere schwere Blöcke in der
 Seitenansicht (AUFGABEN).
+
+**Nachtrag beim Zusammenführen (11. Oktober 2026, `claude/morgen-besser-3`).**
+Die Vorgabe der leeren Leiste stand als rohe `46px` da und machte `test362`
+§7 rot („46": 15 gegen die Decke 14) — `test362` war nicht unter den
+Wächtern dieses Zweigs. Jetzt `calc(var(--touch-min) + 2px)`: dieselbe
+Höhe, die Decke nicht angehoben (7f7eb14, P127). `test593` 54/54.
 
 ## E718 — Ordner bearbeiten: umbenennen an Ort und Stelle, eine Farbe überall, und „Löschen" heisst Papierkorb
 
@@ -62618,6 +62631,12 @@ des Zweigs vor dem Push; Wächter zuerst, dann der Bau):
 - **Gegenprobe:** `allein` im gebauten lernwelt.js überlesen → `test595` §10 rot:
   „5 ohne: „fällig" (heute-faellig) · „neu" (heute-neu) · „noch instabil"
   (noch-instabil) · …" (43/44).
+
+**Nachtrag beim Zusammenführen (11. Oktober 2026, `claude/morgen-besser-3`).**
+Der Merker in `kennzahlKontext` hiess `einmal` — wie `einmal` des
+Ereignisbusses —, und `test422` las seine sieben Aufrufe als rohe
+Ereignisnamen. Er heisst jetzt `gemerkt`; gleiches Verhalten (058e5db,
+P129). `test422` 14/14, `test595` 44/44, `test596` 51/51.
 
 ## E720 — Kein toter Knopf: jeder Knopf antwortet auf Zeigen, Druck und Tastenfokus
 
@@ -64387,6 +64406,14 @@ Rand (gleich breite Wahlen; jetzt nach Inhalt).
 Dokument am Telefon (Vorgabe f, L245); „Im Regal zeigen" aus der Suche;
 ein Bereich für die Notizhefte; die Ordnerkarte bleibt ein örtlicher
 Filter (Vorgabe d); Pfeiltasten im Blatt am Telefon (`menue.ts`).
+
+**Nachtrag beim Zusammenführen (11. Oktober 2026, `claude/morgen-besser-3`).**
+`test469` (E500: die Schalensuche findet die Stelle) öffnet ein Dokument
+und rief `App.suche()` — seit Vorgabe (g) die Suche in DIESEM Dokument; er
+stand nicht unter den neun nachgezogenen Läufen. Er wählt jetzt „Überall"
+ausdrücklich, alle 26 Zusagen unverändert, Gegenprobe rot (3d83818,
+P128). Ob „Dieses Dokument" die Vorgabe in einem Dokument bleiben soll,
+steht als Frage an Redur in AUFGABEN.md.
 
 ## E726 — Der Kopf des Lernzentrums in einer Zeile: „Heute ^" und „Übersicht ^" mit echten Menüs, „Fächer" statt „Bereich"
 

@@ -138,6 +138,11 @@ sind der teuerste Teil und der lehrreichste.
 | P122 | 2026-10-05 | Zwei Seiten schreiben dieselbe falsche Zahl, und Git nennt es keinen Konflikt | 🟠 mittel | — |
 | P123 | 2026-10-05 | Drei Zweige, ein Escape-Griff | 🟠 mittel | — |
 | P124 | 2026-10-05 | Drei Klebefilter für eine Bewegung | 🟡 klein | — |
+| P125 | 2026-10-11 | Eine Seite nehmen verliert die Zeile der anderen | 🟠 mittel | — |
+| P126 | 2026-10-11 | Der „Und“-Block mit Doppeln und einem abgeschnittenen Satz | 🟡 klein | — |
+| P127 | 2026-10-11 | Eine rohe 46px, die test362 rot machte, und niemand fuhr test362 | 🟡 klein | — |
+| P128 | 2026-10-11 | Eine geänderte Vorgabe, und ein Lauf, der in keiner Anpassungsliste stand | 🟡 klein | — |
+| P129 | 2026-10-11 | Zwei Namen, je an zwei Stellen | 🟡 klein | — |
 
 ---
 
@@ -2683,4 +2688,109 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test589 §15 zählt EINE Alpha-Schwelle im Quelltext (in linse.ts), kein Stilblatt mit eigenem Klebefilter, und dass delete.ts, selection-flow.ts und tropfen.ts leihen. Zuerst rot eingecheckt (14ab08ad, die Schwelle in drei Dateien), dann grün (3945ebfe); die Gegenprobe wieder rot.
 
 **Die Lehre.** „EIN Filter“ je Zweig heisst nicht EIN Filter in der App. Ein Wächter, der nur den eigenen Zweig sieht, kann das nicht finden.
+
+
+---
+
+## P125 · Eine Seite nehmen verliert die Zeile der anderen
+
+*2026-10-11 · 🟠 mittel*
+
+**Das Bild.** Zweimal beim Zusammenführen auf morgen-besser-3: (1) in src/dienst/sw.ts fehlte nach dem Nehmen der Seite mit der höheren Fassung die GRUNDSTOCK-Zeile für `register/aktionen.js` (E721) — offline hätte das Register gefehlt; (2) in CLAUDE.md §8 fehlte die Zeile für `register/ki.js` (E724), weil das Werkzeug bei allem, was kein „Und“-Absatz ist, unsere Seite nahm.
+
+**Die falsche Vermutung.** sw.ts und stand.ts sind Erzeugtes — die Seite mit der höheren Fassung zu nehmen genügt, der Bau rechnet den Rest neu.
+
+**Wie es gefunden wurde.** verlust.py, ein kleines Werkzeug, das nach jedem Zusammenführen jede hinzugekommene Zeile beider Seiten im Ergebnis sucht.
+
+**Die Ursache.** sw.ts ist nur zur Hälfte erzeugt: VERSION und INHALT schreibt der Dienststand, die GRUNDSTOCK-Liste schreibt ein Mensch. Wer die ganze Datei von einer Seite nimmt, verliert die Hand der anderen. Dasselbe gilt für jede Tabelle in einer Doku, die ein Werkzeug „nach unserer Seite“ auflöst.
+
+**Die Lösung.** swmerge.py mischt sw.ts und stand.ts dreiweg und nimmt nur die Stempel von der höheren Fassung; die Zeile in CLAUDE.md von Hand zurück. Zusammenführen 2–4 nachgeprüft: dort fehlte nichts.
+
+**Der Beweis.** verlust.py meldet nach jedem der zehn Zusammenführen nur noch erwartete Zeilen (alte Stempel, alte Zählersätze); `register/aktionen.js` steht im GRUNDSTOCK und test400/test105 sind grün.
+
+**Die Lehre.** „Erzeugt“ heisst nicht „ganz erzeugt“. Vor dem Nehmen einer Seite fragen, welche Zeilen ein Mensch geschrieben hat.
+
+
+---
+
+## P126 · Der „Und“-Block mit Doppeln und einem abgeschnittenen Satz
+
+*2026-10-11 · 🟡 klein*
+
+**Das Bild.** Im Block der „Und N“-Absätze von CLAUDE.md §30 standen test594, test595, test596 und test597 je zweimal (eine alte und eine neue Fassung nebeneinander), zweimal „Und 533“, und der Absatz zu test592 endete mit „auf seinem Zweig; beim“.
+
+**Die falsche Vermutung.** test550 ist grün, also stimmt die Doku.
+
+**Wie es gefunden wurde.** Beim Lesen von verlust.py beim neunten Zusammenführen: eine Zeile „Zusammenführen neu zu zählen.*“ fehlte, und die Suche danach zeigte die Doppel.
+
+**Die Ursache.** Zwei Werkzeugfehler hintereinander. docmerge.py schlüsselt die Absätze nach ihrer Nummer N — dieselbe Fassung mit zwei Nummern (vor und nach dem Nachzählen) sind für es zwei Einträge. Und claude_und3.py beendete einen Absatz am ersten „*“ vor einer Leerzeile, auch wenn der eigentliche Absatz später endete.
+
+**Die Lösung.** und_neu.py baut den Block aus den Zweigen: je Prüflauf genau ein Absatz, aus dem Zweig, der ihn angelegt hat, nach Testnummer, fortlaufend ab 528.
+
+**Der Beweis.** Nach dem Neubau: 17 Absätze für 17 Läufe (test586–test603 ohne test591), jeder einmal, jeder endet mit „*“; test550 8/8.
+
+**Die Lehre.** Absätze, die eine Nummer tragen, nach dem schlüsseln, was sie beschreiben (der Lauf), nicht nach der Nummer, die sich beim Zusammenführen ändert. Und ein grüner Zähler sagt nichts über den Text daneben.
+
+
+---
+
+## P127 · Eine rohe 46px, die test362 rot machte, und niemand fuhr test362
+
+*2026-10-11 · 🟡 klein*
+
+**Das Bild.** test362 §7 rot: „46“: 15 gegen die Decke 14. Die neue Regel `.blatt-platz-leiste{height:var(--platz-oben, 46px)}` aus E717 (claude/seiteneditor-ohne-stau).
+
+**Die falsche Vermutung.** Ein Konflikt in pruefungen/marken-decke.json betrifft nur „16“ — die beiden Seiten hatten je eine 16px entfernt.
+
+**Wie es gefunden wurde.** Beim achten Zusammenführen: der Konflikt in marken-decke.json zwang, test362 zu fahren, und der zeigte die zweite Abweichung.
+
+**Die Ursache.** test362 stand nicht unter den Wächtern von E717 — der Zweig änderte bausteine.css, aber niemand fragte, welche Wächter Stilblätter zählen. Rot seit dem zweiten Zusammenführen, und die Datei-Wächter nach jedem Zusammenführen enthalten test362 nicht.
+
+**Die Lösung.** `calc(var(--touch-min) + 2px)` statt der rohen Zahl — dieselbe Höhe, die Decke nicht angehoben (7f7eb14).
+
+**Der Beweis.** test362 18/18 (vorher 17/18), test593 54/54.
+
+**Die Lehre.** Wer ein Stilblatt ändert, fährt die Wächter, die Stilblätter zählen (test362, test401, test402, test332) — nicht nur die, die zur Funktion gehören.
+
+
+---
+
+## P128 · Eine geänderte Vorgabe, und ein Lauf, der in keiner Anpassungsliste stand
+
+*2026-10-11 · 🟡 klein*
+
+**Das Bild.** test469 rot auf morgen-besser-3: die Schalensuche fand nur das Skript („1 Treffer“), die Mitschrift fehlte. Auf morgen-besser-2 26/26.
+
+**Die falsche Vermutung.** Die Suche über die Dokumente (E500) ist beim Umbau der Suche verlorengegangen.
+
+**Wie es gefunden wurde.** Im Vereinigungslauf; danach auf claude/bibliothek-eine-suche allein nachgefahren — dort ebenso rot.
+
+**Die Ursache.** E725 lässt die EINE Suche in einem offenen Dokument mit der gemerkten Wahl beginnen, ohne Wahl „Dieses Dokument“ (Vorgabe g). test469 öffnet ein Dokument und ruft `App.suche()`. E725 hatte neun Läufe auf die Bereiche gezogen (e510fd7); test469 stand nicht darunter, weil er nicht unter den Nachbarn des Zweigs war.
+
+**Die Lösung.** test469 wählt `App.suche(undefined, { bereich: 'ueberall' })` — der Weg, den E500 hält, unverändert.
+
+**Der Beweis.** test469 26/26; Gegenprobe `bereich: 'dokument'` wieder rot, zurückgenommen (3d83818).
+
+**Die Lehre.** Wer eine Vorgabe ändert, sucht die Läufe nach dem Aufruf (`App.suche(`), nicht nach dem Namen der Funktion im Kopf.
+
+
+---
+
+## P129 · Zwei Namen, je an zwei Stellen
+
+*2026-10-11 · 🟡 klein*
+
+**Das Bild.** test422 rot: sieben „rohe Ereignisnamen“ in lernwelt.ts (`einmal('queue', …)` …). test274 rot mit einer neuen verwaisten Nachschlagestelle: `studio.ts: kante`.
+
+**Die falsche Vermutung.** Beide Wächter sind zu grob — sie lesen Text und wissen nicht, was gemeint ist.
+
+**Wie es gefunden wurde.** Im Vereinigungslauf; test274 erst im Vergleich mit morgen-besser-2 (dort derselbe Lauf rot, aber nur mit `redion-graphit`).
+
+**Die Ursache.** Die Wächter hatten recht, nur anders als gedacht. E719 nannte einen eigenen Merker `einmal` — wie den Bus; E716 schrieb die Kennung `kante` ein zweites Mal ab, statt die Kontextkante zu fragen, die sie baut.
+
+**Die Lösung.** Der Merker heisst `gemerkt` (058e5db); Kontextkante gibt ihre Wurzel heraus, und den Namen `kante` kennt nur sie (b2367bc). Kein ERLAUBT, keine weichere Regel.
+
+**Der Beweis.** test422 14/14; test274 nur noch mit seinem alten Fund; test592 61/61, test595 44/44, test596 51/51.
+
+**Die Lehre.** Wenn ein Textwächter „falsch“ anschlägt, zuerst fragen, ob der Name nicht wirklich zweimal da ist.
 

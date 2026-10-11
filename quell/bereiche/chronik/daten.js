@@ -4305,6 +4305,297 @@ const ChronikDaten = {
                     "risiko": "Keines für die Zusagen: dieselben Prüfungen, nur der Weg hinein ist der eines Menschen. 39 weitere Läufe mit demselben Muster nachgefahren, keiner rot aus diesem Grund."
                 }
             ]
+        },
+        {
+            "datum": "2026-10-06",
+            "wochentag": "Dienstag",
+            "titel": "Zehn Zweige aus dem PDF vom 29. September — jeder zuerst rot, dann gebaut, dann durchgesehen",
+            "wasIchWeiss": "Schritt 2 der Auftragsdatei vom 5. Oktober: die dreizehn Punkte aus Redurs PDF in zehn Zweigen, jeder einmal gepusht. Die Frage aus Schritt 0 blieb unbeantwortet, also galten die Vorgaben der Datei. Gebaut wurde nebeneinander, vom selben Stand claude/morgen-besser-2 (1bfaca53) aus: der Trenner (E716), der Seiteneditor ohne Stau (E717), Ordner bearbeiten (E718), das Herz als Knopf und kein toter Knopf (E719/E720), ein Menü je Ding (E721), eine Zeichenleiste je Arbeitskontext und die Tabelle auf der Fläche (E722/E723), der Anfang von KI am Ort (E724, 1/3) und der ruhige Kopf mit dem Gestirn (E727/E728). Jeder Wächter stand zuerst rot im Verlauf (test592 um 23:55 UTC am Vorabend, dann test593 bis test599, test602, test603), danach der Bau, danach eine unabhängige Durchsicht, deren Funde wieder zuerst als roter Wächter kamen.\n\nAm Morgen kamen drei Sätze von Redur hintereinander: alles nach dem Bauen auf main, „trotz die rote läufe“, und die alten Zweige nachsehen, damit nichts vergessen geht. Die Durchsicht der alten Zweige lief nebenher (fertig ca. 07:40 UTC): zwei Zweige tragen Arbeit, die in keinem der neuen steht — claude/redion-elektro-simulation und feat/dark-2017-fach-dossier. Sie sind nicht hineingenommen; das gehört in den Bericht an Redur. Nach 09:56 UTC stand die Arbeit bis zum 10. Oktober.",
+            "nachrichten": [
+                {
+                    "zeit": "07:19 UTC",
+                    "wortlaut": "Weiter",
+                    "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+                    "gemeint": "Die Arbeit aus der Auftragsdatei fortsetzen.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "—"
+                },
+                {
+                    "zeit": "07:24 UTC",
+                    "wortlaut": "Könntest du nacher alles auf main puschen",
+                    "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+                    "gemeint": "Am Ende soll alles auf main stehen, nicht nur auf Zweigen.",
+                    "besser": "„Am Ende alles auf main.“",
+                    "besserePrompt": "„Wenn morgen-besser-3 fertig ist: auch auf main, und sag mir, was dabei noch rot ist.“"
+                },
+                {
+                    "zeit": "07:27 UTC",
+                    "wortlaut": "Pusche einfache alles nach dem was du jetzt geabut wird und danch alles auf main trotz die rote läufe und schau mal die alten branchen ob du wirklich alles hast damit wir etwas nicht vergessen",
+                    "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+                    "gemeint": "Zwei Aufträge und eine Entscheidung: (1) nach dem Bauen alles pushen, dann auf main — auch wenn die bekannten roten Läufe rot bleiben; das hebt für dieses eine Mal §46 („main bewegt sich nicht, solange etwas rot ist“) auf und gehört deshalb als Entscheidung in ENTSCHEIDUNGEN.md; (2) die alten Zweige durchsehen, ob Arbeit fehlt.",
+                    "besser": "„Danach alles auf main, auch mit den alten roten Läufen. Und prüf die alten Zweige auf Vergessenes.“",
+                    "besserePrompt": "„main trotz der bekannten fremden roten Läufe — aber kein neuer rot. Liste mir die alten Zweige mit Arbeit, die nirgends drin ist.“ So ist die Grenze der Ausnahme mitgesagt."
+                },
+                {
+                    "zeit": "08:24 UTC",
+                    "wortlaut": "Wie lange hast du noch",
+                    "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+                    "gemeint": "Wie weit die Arbeit ist und wann sie fertig wird.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "„Wie viele der zehn Zweige sind gepusht, und was fehlt noch?“ — darauf gibt es eine Zahl statt einer Schätzung."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E716 · Der Trenner zieht wirklich (Punkt 5) — und nach der Durchsicht: der Streifen nimmt keinem Knopf den Rand, die Palette schweigt im Fokus",
+                    "vonBis": "71f190d → 0b331f1",
+                    "vonCommit": "71f190d",
+                    "bisCommit": "0b331f1",
+                    "zeitraum": "23:55 (5. Oktober)–05:31 UTC",
+                    "dauer": "ca. 5 h 35 min zwischen den Commits",
+                    "pruefungen": "test592 zuerst rot (71f190d, 10e5441), dann grün"
+                },
+                {
+                    "was": "E717 · Der Seiteneditor ohne Stau (Punkt 8): eine Meldung je Durchgang, gezeichnet wird, was nah ist; nach der Durchsicht erreichen Sprung und Strg+F auch ferne Blätter",
+                    "vonBis": "5a49c43 → ec28f32",
+                    "vonCommit": "5a49c43",
+                    "bisCommit": "ec28f32",
+                    "zeitraum": "00:05–07:02 UTC",
+                    "dauer": "ca. 7 h",
+                    "pruefungen": "test593 zuerst rot (5a49c43, d34e4ec), test189 rollt zum vierten Blatt, bevor er zählt"
+                },
+                {
+                    "was": "E718 · Ordner bearbeiten (Punkt 12): umbenennen an Ort und Stelle, eine Farbe überall, „Löschen“ heisst Papierkorb — auch im ⋯ der Datenbank und mit Entf, und das Recht wird gefragt",
+                    "vonBis": "ead9273 → e8c4aba",
+                    "vonCommit": "ead9273",
+                    "bisCommit": "e8c4aba",
+                    "zeitraum": "01:44–05:53 UTC",
+                    "dauer": "ca. 4 h 10 min",
+                    "pruefungen": "test594 zuerst rot (ead9273, 064515d)"
+                },
+                {
+                    "was": "E719/E720 · Das Herz ist ein Knopf, und kein Knopf wirkt tot (Punkte 3 und 2); die Durchsicht vom 6. Oktober: ein gesperrter Knopf bleibt still, der Fokus bleibt, das Zurück schont den anderen Tab",
+                    "vonBis": "8d6dc93 → ca4b231",
+                    "vonCommit": "8d6dc93",
+                    "bisCommit": "ca4b231",
+                    "zeitraum": "03:11–08:06 UTC",
+                    "dauer": "ca. 5 h",
+                    "pruefungen": "test595, test596 zuerst rot (8d6dc93, f0f2f47, 774d861), test580 erweitert"
+                },
+                {
+                    "was": "E722/E723 · Eine Zeichenleiste je Arbeitskontext, die Tabelle im Kasten (Punkte 7 und 6) — drei Runden Durchsicht für Tab, das Schild „Zeichenfläche“ und den Streifen am Telefon",
+                    "vonBis": "5aa8279 → f338ae8",
+                    "vonCommit": "5aa8279",
+                    "bisCommit": "f338ae8",
+                    "zeitraum": "03:13–07:00 UTC",
+                    "dauer": "ca. 3 h 50 min",
+                    "pruefungen": "test598 viermal zuerst rot; test404 §9, test572 §13, test575 §6b"
+                },
+                {
+                    "was": "E727/E728 · Das Gestirn und der ruhige Kopf (Punkte 1 und 10): eine Regel für Hell und Dunkel, die Suche links, rechts nur Zeichen, ein Titel auch am Rechner",
+                    "vonBis": "a244cbd → e5b6df7",
+                    "vonCommit": "a244cbd",
+                    "bisCommit": "e5b6df7",
+                    "zeitraum": "07:19–08:30 UTC",
+                    "dauer": "ca. 1 h 10 min",
+                    "pruefungen": "test602, test603 zuerst rot (a244cbd)"
+                },
+                {
+                    "was": "E721 · Ein Menü je Ding (Punkt 9): Rechtsklick, „…“, Tastatur und langes Drücken aus einer Quelle — Register.aktionen, Menue.aktionen, ein Binder, UI.wahl",
+                    "vonBis": "1f89176 → 25fb7f9",
+                    "vonCommit": "1f89176",
+                    "bisCommit": "25fb7f9",
+                    "zeitraum": "08:23–09:56 UTC",
+                    "dauer": "ca. 1 h 35 min",
+                    "pruefungen": "test597 zuerst rot (1f89176)"
+                },
+                {
+                    "was": "E724 (1/3) · KI am Ort (Punkt 11): was das KI-Blatt am Telefon öffnet, liegt über ihm",
+                    "vonBis": "b82c4af → b312aed",
+                    "vonCommit": "b82c4af",
+                    "bisCommit": "b312aed",
+                    "zeitraum": "09:15–09:23 UTC",
+                    "dauer": "ca. 10 min",
+                    "pruefungen": "test599 zuerst rot (b82c4af)"
+                }
+            ],
+            "zahlen": {
+                "commits": 48,
+                "entscheidungen": 0,
+                "neuePrüfläufe": 10,
+                "gezählt": "Commits mit Datum 6. Oktober (UTC) in origin/claude/morgen-besser-2..claude/morgen-besser-3: 48. Neue Prüfläufe: test593 bis test599, test602, test603 (test592 kam am Vorabend um 23:55 UTC). Die Einträge E716–E724, E727 und E728 stehen in ihren Zweigen mit dem Datum 6. Oktober; gezählt werden sie am Tag, an dem sie auf morgen-besser-3 ankamen (11. Oktober)."
+            },
+            "groesstesProblem": "Keins im Produkt. Die Schwierigkeit lag im Aufbau des Tages: neun Zweige nebeneinander vom selben Stand, ohne dass einer den anderen sah — genau das Muster, aus dem am 5. Oktober drei Klebefilter wurden (P124). Wo zwei Zweige dieselbe Datei brauchten, wurde der frühere in den späteren gezogen (ordner-bearbeiten in menue-eine-quelle und ki-am-ort, kein-toter-knopf in ki-am-ort), damit die Durchsicht den gemeinsamen Stand sah.",
+            "interessantesteAnfrage": "„… danch alles auf main trotz die rote läufe …“ — die erste ausdrückliche Ausnahme von §46, seit Redur am 3. September „main bewegt sich nicht“ selbst als hart markiert hat. Sie wird als eigene Entscheidung eingetragen, mit ihrer Grenze: die bekannten fremden roten Läufe dürfen rot bleiben, ein neuer roter nicht.",
+            "massnahmen": [
+                {
+                    "zeit": "ca. 07:30–07:40 UTC",
+                    "was": "Die alten Zweige gegen die neuen geprüft (ein Unteragent): welcher Zweig trägt Commits, die in keinem neuen Zweig und nicht auf main stehen.",
+                    "warum": "Redur: „schau mal die alten branchen ob du wirklich alles hast damit wir etwas nicht vergessen“.",
+                    "risiko": "Keins — nur gelesen. Zwei Zweige (claude/redion-elektro-simulation, feat/dark-2017-fach-dossier) bleiben draussen, bis Redur entscheidet."
+                }
+            ]
+        },
+        {
+            "datum": "2026-10-10",
+            "wochentag": "Samstag",
+            "titel": "Die zweiten Durchsichten — und Bibliothek, Lernzentrum und KI am Ort fertig",
+            "wasIchWeiss": "Vom 6. Oktober 09:56 UTC bis zum 10. Oktober 17:44 UTC entstand kein Commit; die Sitzung stand. Um 16:57 UTC schrieb Redur „Weiter“. Danach liefen zweite Durchsichten für die Zweige vom 6. Oktober — E719/E720 (das Wort bleibt lesbar, jedes Herz sagt, was es merkt), E722/E723 (die breite Tabelle rollt im Kasten auch mit dem Rad), E721 (die Zeichen der Ecke liegen auf deckendem Grund, die Vorschau macht der Ecke Platz), E727/E728 (ein Lader, der Vorleser hört den Stand, die achte Tür) — und die drei Zweige, die noch fehlten: KI am Ort (E724, 2/3 und 3/3), Bibliothek mit einer Suche (E725) und der Kopf des Lernzentrums in einer Zeile (E726). Wieder kam jeder Fund zuerst als roter Wächter. Gegen Mitternacht waren alle zehn Zweige gepusht; claude/kein-toter-knopf-2 trägt die Durchsicht von E719/E720, weil claude/kein-toter-knopf schon gepusht war (E521).",
+            "nachrichten": [
+                {
+                    "zeit": "16:57 UTC",
+                    "wortlaut": "Weiter",
+                    "woher": "Zeitstempel der Sitzung (genau auf die Sekunde; hier auf Minuten gekürzt)",
+                    "gemeint": "Die stehengebliebene Arbeit fortsetzen.",
+                    "besser": "Derselbe Satz.",
+                    "besserePrompt": "—"
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E719/E720 · Die Durchsicht vom 10. Oktober: das Wort bleibt lesbar (auch ohne Bewegung), jedes Herz sagt, was es merkt; die Begründungen im Stilblatt gekürzt (Startlast)",
+                    "vonBis": "5c1d9b9 → 793918f",
+                    "vonCommit": "5c1d9b9",
+                    "bisCommit": "793918f",
+                    "zeitraum": "17:44–18:22 UTC",
+                    "dauer": "ca. 40 min",
+                    "pruefungen": "test595, test596 zuerst rot (5c1d9b9)"
+                },
+                {
+                    "was": "E722/E723 · Zweite Durchsicht: Rad, mittlere Taste, Name der Leiste, Tab, das Schild höchstens ein Fünftel des Streifens",
+                    "vonBis": "6bf0806 → cfe1a3e",
+                    "vonCommit": "6bf0806",
+                    "bisCommit": "cfe1a3e",
+                    "zeitraum": "18:01–18:37 UTC",
+                    "dauer": "ca. 35 min",
+                    "pruefungen": "test598 zweimal zuerst rot"
+                },
+                {
+                    "was": "E724 (2/3, 3/3) · Ein Katalog (Register.ki, 22 Einträge), ein Läufer, jeder Eintrag der Schublade an seinem Ort; die Einstellungen ziehen mit; ein Blatt nennt seinen Titel einmal — und die Durchsicht: „✨ KI“ ersetzt an der Stelle, 44 px am Finger, eine Fassung vor jedem Tausch",
+                    "vonBis": "c1c6eec → 52d9d7c",
+                    "vonCommit": "c1c6eec",
+                    "bisCommit": "52d9d7c",
+                    "zeitraum": "19:26–23:52 UTC",
+                    "dauer": "ca. 4 h 25 min",
+                    "pruefungen": "test599 dreimal zuerst rot; Startlast 1864 KB"
+                },
+                {
+                    "was": "E721 · Was die Durchsicht fand: Decke, Ankunft, Stelle, Zeichen, Name, Meldung; das ⋯ der Seitenleiste sagt aria-expanded",
+                    "vonBis": "788496d → 6471245",
+                    "vonCommit": "788496d",
+                    "bisCommit": "6471245",
+                    "zeitraum": "18:34–21:17 UTC",
+                    "dauer": "ca. 2 h 45 min",
+                    "pruefungen": "test597 dreimal zuerst rot"
+                },
+                {
+                    "was": "E727/E728 · Die Durchsicht: ein Lader in der Mitte, der Vorleser hört den Stand, die achte Tür, das geltende Kürzel",
+                    "vonBis": "dcdb0ef → 58b3a66",
+                    "vonCommit": "dcdb0ef",
+                    "bisCommit": "58b3a66",
+                    "zeitraum": "20:12–21:03 UTC",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "test602, test603 zuerst rot (dcdb0ef)"
+                },
+                {
+                    "was": "E725 · Bibliothek (Punkt 13): von jeder Kategorie nur eine — Ort, Art und Form als je eine Pille mit Menü — und EINE Suche, die ihren Bereich kennt; „Ausbildung“ trägt denselben Ort-Wähler",
+                    "vonBis": "cd6cdf9 → ed0bf9d",
+                    "vonCommit": "cd6cdf9",
+                    "bisCommit": "ed0bf9d",
+                    "zeitraum": "21:51–23:55 UTC",
+                    "dauer": "ca. 2 h",
+                    "pruefungen": "test600 dreimal zuerst rot; neun alte Läufe angepasst und zuerst rot eingecheckt (e510fd7)"
+                },
+                {
+                    "was": "E726 · Der Kopf des Lernzentrums in einer Zeile (Punkt 4): Heute ^, Übersicht ^, Fächer",
+                    "vonBis": "79bb27b → eaf3ab2",
+                    "vonCommit": "79bb27b",
+                    "bisCommit": "eaf3ab2",
+                    "zeitraum": "21:45–22:55 UTC",
+                    "dauer": "ca. 1 h 10 min",
+                    "pruefungen": "test601 zuerst rot (79bb27b); Bilder in allen Schemata"
+                }
+            ],
+            "zahlen": {
+                "commits": 40,
+                "entscheidungen": 0,
+                "neuePrüfläufe": 2,
+                "gezählt": "Commits mit Datum 10. Oktober (UTC) in origin/claude/morgen-besser-2..claude/morgen-besser-3: 40. Neue Prüfläufe: test600, test601."
+            },
+            "groesstesProblem": "Die Pause selbst: vier Tage ohne Commit mitten in Schritt 2. Was dadurch gefährdet war, ist nichts — jeder Zweig stand gepusht oder sauber eingecheckt da, und die Arbeit ging an der Stelle weiter, an der sie stand. Gerade dafür gilt „ein Zweig, ein Push“.",
+            "interessantesteAnfrage": "Keine neue; der Tag führte die Anfrage vom 6. Oktober aus.",
+            "massnahmen": [
+                {
+                    "zeit": "21:22–21:31 UTC",
+                    "was": "menue-eine-quelle in bibliothek-eine-suche, kein-toter-knopf und menue-eine-quelle in lernzentrum-kopf gezogen, bevor deren Bau begann.",
+                    "warum": "Beide brauchten UI.wahl und die Menüs aus E721; nebeneinander gebaut hätten sie dasselbe zweimal erfunden (P124).",
+                    "risiko": "Die Zweige tragen dadurch fremde Commits mit; beim Zusammenführen auf morgen-besser-3 kommen sie ein zweites Mal — ohne Konflikt, weil es dieselben sind."
+                }
+            ]
+        },
+        {
+            "datum": "2026-10-11",
+            "wochentag": "Sonntag",
+            "titel": "Die Durchsichten von Bibliothek und Lernzentrum, zehn Zusammenführungen auf morgen-besser-3 — und vier rote Läufe aus den eigenen Zweigen",
+            "wasIchWeiss": "Bis 01:40 UTC liefen die Durchsichten von E725 (ganze Namen in der Bereichszeile, ein gleich breiter Kopf in allen Formen, Enter vor der Uhr) und E726 (Themenrunde ohne Filter, Platz für den Chip, bündiges Paar). Dann die zehn Zusammenführungen auf claude/morgen-besser-3 in der Folge von Teil A, von 01:45 bis 02:20 UTC. Gefunden wurden dabei drei Dinge, die keiner der zehn Zweige allein sehen konnte: eine Seite zu nehmen verlor zweimal die Zeile der anderen (P125), der Block der „Und“-Absätze in CLAUDE.md trug Doppel und einen abgeschnittenen Satz (P126), und eine rohe 46px aus E717 machte test362 rot, seit dem zweiten Zusammenführen unbemerkt (P127). Danach liefen die Wächter aller zehn Zweige gemeinsam unter dem Schloss.\n\nDer Vereinigungslauf (169 Läufe, die Wächter aus allen Commits der zehn Zweige, 02:23–ca. 03:00 UTC) stand bei 152 grün, 17 rot. Jeder rote wurde danach auf claude/morgen-besser-2 nachgefahren und Zeile für Zeile verglichen: zwölf scheitern dort genau gleich (fremd, älter als diese Welle), test436 war einmal rot und danach zweimal 71/71. Vier kamen aus den eigenen Zweigen, und jeder davon war auf seinem Zweig schon rot gewesen, ohne dass dessen Wächterliste ihn enthielt: test469 (E725 hatte die Vorgabe der Suche im Dokument geändert und den Lauf nicht nachgezogen, P128), test422 und test274 (zwei Namen, die an zwei Stellen standen, P129) und test86 (vier Register unangekündigt, zwei davon seit September).",
+            "nachrichten": [],
+            "arbeit": [
+                {
+                    "was": "E725/E726 · Was die Durchsichten fanden, und ihre Nachbarn",
+                    "vonBis": "2876541 → 72a7089",
+                    "vonCommit": "2876541",
+                    "bisCommit": "72a7089",
+                    "zeitraum": "00:46–01:40 UTC",
+                    "dauer": "ca. 55 min",
+                    "pruefungen": "test600, test585, test601 zuerst rot (2876541, 0b650db); Nachbarn grün, Startlast unverändert"
+                },
+                {
+                    "was": "Zehn Zusammenführungen auf claude/morgen-besser-3 (Teil A): trenner-zieht, seiteneditor-ohne-stau, ordner-bearbeiten, kein-toter-knopf-2, menue-eine-quelle, flaeche-eine-leiste, ki-am-ort, bibliothek-eine-suche, lernzentrum-kopf, kopf-ruhig — dazwischen E717 nachgezogen",
+                    "vonBis": "44f8814 → 95c2f0c",
+                    "vonCommit": "44f8814",
+                    "bisCommit": "95c2f0c",
+                    "zeitraum": "01:45–02:20 UTC",
+                    "dauer": "ca. 35 min",
+                    "pruefungen": "nach jedem Zusammenführen neu gebaut und die dreizehn Datei-Wächter (550, 549, 225, 401, 402, 537, 290, 298, 410, 400, 109, 87, 105) grün; test362 18/18 nach 7f7eb14; test580, test593, test601, test602, test603 grün"
+                },
+                {
+                    "was": "Vereinigungslauf, Vergleich jedes roten Laufs mit morgen-besser-2, vier Nachzüge",
+                    "vonBis": "95c2f0c → b2367bc",
+                    "vonCommit": "95c2f0c",
+                    "bisCommit": "b2367bc",
+                    "zeitraum": "02:23–03:49 UTC",
+                    "dauer": "ca. 1 h 25 min",
+                    "pruefungen": "169 Läufe unter dem Schloss: 152 grün, 17 rot; rot und auf morgen-besser-2 gleich rot: 201, 270, 332, 348, 351, 365, 425, 448, 470, 493, 524, 533 (dazu 274 mit seinem alten Fund); test436 einmal rot, danach 71/71 zweimal; aus den eigenen Zweigen und gerichtet: test469 26/26 (Gegenprobe rot), test422 14/14, test86 grün, test274 nur noch der alte Fund; test592 61/61, test595 44/44, test596 51/51"
+                }
+            ],
+            "zahlen": {
+                "commits": 22,
+                "entscheidungen": 13,
+                "neuePrüfläufe": 0,
+                "gezählt": "Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 707, E1 bis E728, die Klausel „kommen über ihre Zweige“ ist gestrichen. Prüfläufe: 544."
+            },
+            "groesstesProblem": "Ein Werkzeug, das Doku zusammenführt, hatte selbst einen Fehler, und er sah aus wie ein sauberes Ergebnis: im „Und“-Block standen vier Läufe doppelt und ein Absatz endete mitten im Satz, und test550 war trotzdem grün, weil er Zahlen zählt, keine Absätze (P126). Gefunden hat es das Lesen beim neunten Zusammenführen, nicht ein Wächter.",
+            "interessantesteAnfrage": "Keine neue; die Zusammenführungen folgten der Auftragsdatei vom 5. Oktober.",
+            "massnahmen": [
+                {
+                    "zeit": "02:07 UTC",
+                    "was": "Die rohe 46px aus E717 durch `calc(var(--touch-min) + 2px)` ersetzt — dieselbe Höhe, die Decke nicht angehoben.",
+                    "warum": "test362 §7 lässt das Verzeichnis der rohen Wiederholungen nur schrumpfen; mit E717 stand „46“ auf 15 statt 14.",
+                    "risiko": "Keins sichtbar: dieselbe Höhe, und sie gilt nur bis zur ersten Messung. test593 54/54."
+                },
+                {
+                    "zeit": "02:14 UTC",
+                    "was": "Den „Und“-Block in CLAUDE.md §30 aus den Zweigen neu gebaut: je Prüflauf genau ein Absatz, die Fassung seines eigenen Zweigs, Und 528–544.",
+                    "warum": "Die Zusammenführen 2–8 hatten alte und neue Fassungen nebeneinander stehen lassen und einen Absatz abgeschnitten (P126).",
+                    "risiko": "Ein Nachtrag, den ein ANDERER Zweig in einen fremden Absatz geschrieben hätte, ginge so verloren. Geprüft: über alle zwölf Zweige gibt es je Lauf höchstens zwei Fassungen, und die zweite war jedes Mal die spätere Fassung desselben Zweigs."
+                },
+                {
+                    "zeit": "03:01–03:49 UTC",
+                    "was": "Vier Nachzüge statt gelockerter Wächter: test469 wählt „Überall“ ausdrücklich; der Merker in lernwelt.ts heisst `gemerkt`; Kontextkante gibt ihre Wurzel heraus; test86 trägt vier Register ein.",
+                    "warum": "Jeder der vier war ein Befund über die eigenen Zweige, nicht über die Wächter — und keiner durfte über ein ERLAUBT oder eine weichere Zählung verschwinden (§31, §47).",
+                    "risiko": "test469: Die Vorgabe in einem Dokument ist jetzt „Dieses Dokument“; der Lauf hält „Überall“. Ob diese Vorgabe Redur passt, ist Vorgabe (g) aus E725 und steht im Bericht."
+                }
+            ]
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -5954,6 +6245,71 @@ const ChronikDaten = {
             "loesung": "Alle drei leihen `Linse.tropfenLeihen()`: der Filter kommt mit der ersten Leihe und geht mit der letzten.",
             "beweis": "test589 §15 zählt EINE Alpha-Schwelle im Quelltext (in linse.ts), kein Stilblatt mit eigenem Klebefilter, und dass delete.ts, selection-flow.ts und tropfen.ts leihen. Zuerst rot eingecheckt (14ab08ad, die Schwelle in drei Dateien), dann grün (3945ebfe); die Gegenprobe wieder rot.",
             "lehre": "„EIN Filter“ je Zweig heisst nicht EIN Filter in der App. Ein Wächter, der nur den eigenen Zweig sieht, kann das nicht finden."
+        },
+        {
+            "nr": "P125",
+            "datum": "2026-10-11",
+            "titel": "Eine Seite nehmen verliert die Zeile der anderen",
+            "schwere": "mittel",
+            "symptom": "Zweimal beim Zusammenführen auf morgen-besser-3: (1) in src/dienst/sw.ts fehlte nach dem Nehmen der Seite mit der höheren Fassung die GRUNDSTOCK-Zeile für `register/aktionen.js` (E721) — offline hätte das Register gefehlt; (2) in CLAUDE.md §8 fehlte die Zeile für `register/ki.js` (E724), weil das Werkzeug bei allem, was kein „Und“-Absatz ist, unsere Seite nahm.",
+            "falscheVermutung": "sw.ts und stand.ts sind Erzeugtes — die Seite mit der höheren Fassung zu nehmen genügt, der Bau rechnet den Rest neu.",
+            "wieGefunden": "verlust.py, ein kleines Werkzeug, das nach jedem Zusammenführen jede hinzugekommene Zeile beider Seiten im Ergebnis sucht.",
+            "ursache": "sw.ts ist nur zur Hälfte erzeugt: VERSION und INHALT schreibt der Dienststand, die GRUNDSTOCK-Liste schreibt ein Mensch. Wer die ganze Datei von einer Seite nimmt, verliert die Hand der anderen. Dasselbe gilt für jede Tabelle in einer Doku, die ein Werkzeug „nach unserer Seite“ auflöst.",
+            "loesung": "swmerge.py mischt sw.ts und stand.ts dreiweg und nimmt nur die Stempel von der höheren Fassung; die Zeile in CLAUDE.md von Hand zurück. Zusammenführen 2–4 nachgeprüft: dort fehlte nichts.",
+            "beweis": "verlust.py meldet nach jedem der zehn Zusammenführen nur noch erwartete Zeilen (alte Stempel, alte Zählersätze); `register/aktionen.js` steht im GRUNDSTOCK und test400/test105 sind grün.",
+            "lehre": "„Erzeugt“ heisst nicht „ganz erzeugt“. Vor dem Nehmen einer Seite fragen, welche Zeilen ein Mensch geschrieben hat."
+        },
+        {
+            "nr": "P126",
+            "datum": "2026-10-11",
+            "titel": "Der „Und“-Block mit Doppeln und einem abgeschnittenen Satz",
+            "schwere": "klein",
+            "symptom": "Im Block der „Und N“-Absätze von CLAUDE.md §30 standen test594, test595, test596 und test597 je zweimal (eine alte und eine neue Fassung nebeneinander), zweimal „Und 533“, und der Absatz zu test592 endete mit „auf seinem Zweig; beim“.",
+            "falscheVermutung": "test550 ist grün, also stimmt die Doku.",
+            "wieGefunden": "Beim Lesen von verlust.py beim neunten Zusammenführen: eine Zeile „Zusammenführen neu zu zählen.*“ fehlte, und die Suche danach zeigte die Doppel.",
+            "ursache": "Zwei Werkzeugfehler hintereinander. docmerge.py schlüsselt die Absätze nach ihrer Nummer N — dieselbe Fassung mit zwei Nummern (vor und nach dem Nachzählen) sind für es zwei Einträge. Und claude_und3.py beendete einen Absatz am ersten „*“ vor einer Leerzeile, auch wenn der eigentliche Absatz später endete.",
+            "loesung": "und_neu.py baut den Block aus den Zweigen: je Prüflauf genau ein Absatz, aus dem Zweig, der ihn angelegt hat, nach Testnummer, fortlaufend ab 528.",
+            "beweis": "Nach dem Neubau: 17 Absätze für 17 Läufe (test586–test603 ohne test591), jeder einmal, jeder endet mit „*“; test550 8/8.",
+            "lehre": "Absätze, die eine Nummer tragen, nach dem schlüsseln, was sie beschreiben (der Lauf), nicht nach der Nummer, die sich beim Zusammenführen ändert. Und ein grüner Zähler sagt nichts über den Text daneben."
+        },
+        {
+            "nr": "P127",
+            "datum": "2026-10-11",
+            "titel": "Eine rohe 46px, die test362 rot machte, und niemand fuhr test362",
+            "schwere": "klein",
+            "symptom": "test362 §7 rot: „46“: 15 gegen die Decke 14. Die neue Regel `.blatt-platz-leiste{height:var(--platz-oben, 46px)}` aus E717 (claude/seiteneditor-ohne-stau).",
+            "falscheVermutung": "Ein Konflikt in pruefungen/marken-decke.json betrifft nur „16“ — die beiden Seiten hatten je eine 16px entfernt.",
+            "wieGefunden": "Beim achten Zusammenführen: der Konflikt in marken-decke.json zwang, test362 zu fahren, und der zeigte die zweite Abweichung.",
+            "ursache": "test362 stand nicht unter den Wächtern von E717 — der Zweig änderte bausteine.css, aber niemand fragte, welche Wächter Stilblätter zählen. Rot seit dem zweiten Zusammenführen, und die Datei-Wächter nach jedem Zusammenführen enthalten test362 nicht.",
+            "loesung": "`calc(var(--touch-min) + 2px)` statt der rohen Zahl — dieselbe Höhe, die Decke nicht angehoben (7f7eb14).",
+            "beweis": "test362 18/18 (vorher 17/18), test593 54/54.",
+            "lehre": "Wer ein Stilblatt ändert, fährt die Wächter, die Stilblätter zählen (test362, test401, test402, test332) — nicht nur die, die zur Funktion gehören."
+        },
+        {
+            "nr": "P128",
+            "datum": "2026-10-11",
+            "titel": "Eine geänderte Vorgabe, und ein Lauf, der in keiner Anpassungsliste stand",
+            "schwere": "klein",
+            "symptom": "test469 rot auf morgen-besser-3: die Schalensuche fand nur das Skript („1 Treffer“), die Mitschrift fehlte. Auf morgen-besser-2 26/26.",
+            "falscheVermutung": "Die Suche über die Dokumente (E500) ist beim Umbau der Suche verlorengegangen.",
+            "wieGefunden": "Im Vereinigungslauf; danach auf claude/bibliothek-eine-suche allein nachgefahren — dort ebenso rot.",
+            "ursache": "E725 lässt die EINE Suche in einem offenen Dokument mit der gemerkten Wahl beginnen, ohne Wahl „Dieses Dokument“ (Vorgabe g). test469 öffnet ein Dokument und ruft `App.suche()`. E725 hatte neun Läufe auf die Bereiche gezogen (e510fd7); test469 stand nicht darunter, weil er nicht unter den Nachbarn des Zweigs war.",
+            "loesung": "test469 wählt `App.suche(undefined, { bereich: 'ueberall' })` — der Weg, den E500 hält, unverändert.",
+            "beweis": "test469 26/26; Gegenprobe `bereich: 'dokument'` wieder rot, zurückgenommen (3d83818).",
+            "lehre": "Wer eine Vorgabe ändert, sucht die Läufe nach dem Aufruf (`App.suche(`), nicht nach dem Namen der Funktion im Kopf."
+        },
+        {
+            "nr": "P129",
+            "datum": "2026-10-11",
+            "titel": "Zwei Namen, je an zwei Stellen",
+            "schwere": "klein",
+            "symptom": "test422 rot: sieben „rohe Ereignisnamen“ in lernwelt.ts (`einmal('queue', …)` …). test274 rot mit einer neuen verwaisten Nachschlagestelle: `studio.ts: kante`.",
+            "falscheVermutung": "Beide Wächter sind zu grob — sie lesen Text und wissen nicht, was gemeint ist.",
+            "wieGefunden": "Im Vereinigungslauf; test274 erst im Vergleich mit morgen-besser-2 (dort derselbe Lauf rot, aber nur mit `redion-graphit`).",
+            "ursache": "Die Wächter hatten recht, nur anders als gedacht. E719 nannte einen eigenen Merker `einmal` — wie den Bus; E716 schrieb die Kennung `kante` ein zweites Mal ab, statt die Kontextkante zu fragen, die sie baut.",
+            "loesung": "Der Merker heisst `gemerkt` (058e5db); Kontextkante gibt ihre Wurzel heraus, und den Namen `kante` kennt nur sie (b2367bc). Kein ERLAUBT, keine weichere Regel.",
+            "beweis": "test422 14/14; test274 nur noch mit seinem alten Fund; test592 61/61, test595 44/44, test596 51/51.",
+            "lehre": "Wenn ein Textwächter „falsch“ anschlägt, zuerst fragen, ob der Name nicht wirklich zweimal da ist."
         }
     ]
 };
